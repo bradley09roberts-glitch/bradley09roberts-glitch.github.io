@@ -1,0 +1,51 @@
+PASS  world init runs once and activates the first quest          
+PASS  all other quests start locked                               
+PASS  chapter starts at 0                                         
+PASS  completion is idempotent                                    
+PASS  next quest activates                                        
+PASS  side quest with shared prerequisite activates               
+PASS  p.chill activates with p.camp                               
+PASS  Landing lamp blueprint completes p.lamp                     
+PASS  Landing restoration requested                               
+PASS  c1.round active after the names                             
+PASS  wrong first bell resets                                     
+PASS  wrong bell mid-way resets                                   
+PASS  bells in order solve the Round                              
+PASS  every main quest activates in order and completes           
+PASS  chapter counter reached 4                                   
+PASS  district landing restored                                   
+PASS  district hollin restored                                    
+PASS  district aldercross restored                                
+PASS  district glassworks restored                                
+PASS  side quests unlocked on the way                             
+PASS  the final choice is open                                    
+PASS  TRUE ending recorded, second ending refused                 
+PASS  TRUE ending restores the Deepcut and the lake               
+PASS  choice completes after the ending scene                     
+PASS  epilogue reached                                            
+PASS  no main quest left active                                   
+PASS  BLANK ending recorded                                       
+PASS  BLANK ending leaves the Deepcut in the Pall                 
+PASS  BLANK: epilogue reached                                     
+PASS  eleven keepsakes counted once each                          
+PASS  the Eleven side quest completes                             
+PASS  reloading the pack never changes quest progress             
+PASS  a dialog choice without its dialog does nothing             
+PASS  the same choice from its dialog works                       
+PASS  a used choice cannot be replayed                            
+PASS  the Hollin surge quest is active                            
+PASS  the surge starts                                            
+PASS  relighting all lamps after the minimum time wins the surge  
+PASS  winning restores Hollin                                     
+PASS  an abandoned surge resets                                   
+PASS  a reset surge has a cooldown                                
+PASS  the timed surge fails when time runs out                    
+PASS  the final encounter's quest is active                       
+PASS  the final encounter starts                                  
+PASS  it resets cleanly                                           
+PASS  winning completes it and opens the choice                   
+PASS  first join sets up the player                               
+PASS  rejoin clears the leave counter                             
+PASS  the per-second loop runs in both world states               
+
+49/49 checks passed

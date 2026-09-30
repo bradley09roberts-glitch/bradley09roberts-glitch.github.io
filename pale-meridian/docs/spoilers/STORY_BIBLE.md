@@ -125,270 +125,179 @@ Tobin led the crew that died. The eleven lost miners (see §8) exist as pale
 
 ## 4. Campaign structure
 
-Five chapters: **Prologue → 1 Hollin → 2 Aldercross → 3 Glassworks & Deepcut →
-4 The Meridian (finale)**, then an epilogue with free play.
-Design target (not measured): **6–10 hours** for a first-time solo player including
-exploration and building between beats.
+Five chapters: **Prologue → 1 Hollin → 2 Aldercross → 3 Glassworks & Deepcut → 4 The Meridian (finale)**,
+then an epilogue with free play. Design target (not measured): **6–10 hours** for a first-time solo
+player including exploration and building between beats.
 
-Rhythm by design: *curiosity* (fog, discovery) → *warmth* (a person) → *puzzle* →
-*effort* (gathering/building) → *tension* (Surge) → *relief* (the fog lifts, colour
-returns) → *revelation*.
+Rhythm by design: *curiosity* (fog, discovery) → *warmth* (a person) → *puzzle* → *effort*
+(gathering/building) → *tension* (Surge) → *relief* (the fog lifts, colour returns) → *revelation*.
+
+> This section describes the campaign **as implemented** in 1.0.0. Step-by-step solutions with
+> coordinates are in `WALKTHROUGH.md`; the generated dependency graph is `QUEST_GRAPH.md`.
 
 ---
 
 ### PROLOGUE — "The Letter" (Landing)
 
-**Opening (first 60 seconds).** The player appears at the Landing waystation on the
-south rim, facing north into grey fog, at a pale late-afternoon light. A short title
-card (≈3 s): *PALE MERIDIAN — Chart what the fog forgot.* Control is immediate.
-A noticeboard beside the waystation door has a pinned letter, glowing faintly.
+**Opening.** The player appears at the Landing waystation on the south rim, facing north into grey
+fog. A title card (*PALE MERIDIAN — Chart what the fog forgot.*) and a hint point at the
+noticeboard and the Field Journal (Quick Actions key, G by default). Control is immediate.
 
-1. **p.letter — Read the letter.** Interact with the noticeboard (interaction entity).
-   A dialog shows Tamsin's letter, addressed to the player by name. Ends by pointing
-   at her camp. First teaching moment: the dialog footer explains the **Field
-   Journal (Quick Actions key)**.
-2. **p.camp — Find Tamsin's camp.** Visible 30 blocks down the road: a tent with a
-   lantern. Detected by location. Inside: her chest (bread, torches, iron nuggets),
-   her bedroll, her **lantern** (item) and her **Field Book** (item). Picking them up
-   is not required; the quest completes on arrival and the journal notes them.
-3. **p.chill — Learn the Pall's chill.** (Teaching, automatic.) Standing in Pall
-   biomes without a light source in either hand makes the player *chilled*: a
-   warning, then Slowness and a slow Darkness pulse. Holding a torch, lantern or
-   soul lantern prevents it. Completes the first time the player stands in the Pall
-   holding a light for 5 seconds.
-4. **p.lamp — Relight the Landing lamp.** The waystation lamp post is broken: a ghost
-   outline shows the missing **2 stone bricks, 1 chain and 1 lantern**. Materials are
-   in the camp chest (nuggets + torch for the lantern; the camp chest also has the
-   bricks and chain). The quest completes when the four blocks are in place (block
-   checks at fixed coordinates, polled only while a player is within 12 blocks).
-   **Outcome:** a chime; the Landing's fog rolls back in an expanding ring; the road
-   north is revealed with lamp posts disappearing into the fog.
-5. **p.road — Follow the lamp road.** A pale figure with a lantern appears on the
-   road ~60 blocks north and dissolves when approached (*"Tamsin?"*). Objective:
-   reach Hollin's gate. Location-detected at the gate.
-
-**Recovery:** the camp chest refills its bricks/chain/lantern materials if the
-prologue lamp is incomplete and the chest is empty (checked on approach). The letter
-can be re-read from the noticeboard or the journal.
+1. **p.letter** — The noticeboard (a glowing prop) shows Tamsin's letter as a dialog; *Take the letter*
+   gives it as a book. The noticeboard always offers another copy.
+2. **p.camp** — Tamsin's camp up the road; completes on arrival. Her note explains lanterns. The camp
+   chest holds bread, torches, 8 iron nuggets, 2 stone bricks, a chain, **Tamsin's Lantern**, a map
+   and apples, and refills the lamp materials while the lamp is unbuilt.
+3. **p.chill** (optional) — completes the first time the player stands in the Pall holding a light.
+   The chill itself: warning after 8 s without light, then Slowness, then optional Darkness pulses,
+   then Mining Fatigue; a lit companion within 6 blocks or a warm block also protects.
+4. **p.lamp** — Ghost outline: **2 stone bricks, 1 chain, 1 lantern** (any variants). **Outcome:** the
+   Landing clears in an expanding ring; the global haze thins a step.
+5. **p.road** — A pale figure with a lantern stands on the road and dissolves when approached
+   (*"Tamsin?"*). Reach Hollin's gate.
 
 ---
 
 ### CHAPTER 1 — "Hollin, Unremembered"
 
-**Arrival.** Hollin in fog: grey cottages, a silent bell tower, pale moss in the
-lanes. **Odile** stands at a lamp post by the gate, holding a lamp hook.
-
-1. **c1.odile — Speak to the lamplighter.** She doesn't know her own name. She lights
-   this one lamp "because the evening needs it". She asks the Surveyor to help Hollin
-   *remember*. (Choice of tone only.)
-2. **c1.names — Recover Hollin's names.** Four places have lost their names: the
-   **Bakery**, the **Hall**, the **Well**, the **Ferry steps**. Entering each triggers
-   an *echo* — a brief ghost-scene (pale text-displays and a mannequin glimpse) that
-   reveals a name and a line of the village's life. Location-detected; any order;
-   progress 0/4.
-   * Bakery echo: *"Mirelle! The loaves!" — the smell of bread that isn't there.*
-   * Hall echo: the Round being taught to children.
-   * Well echo: Jory counting coins for the bells.
-   * Ferry echo: boats leaving for the Meridian "for the Keeper's lamp-night".
-3. **c1.round — Ring the Round.** The bell tower carries four bells, each engraved
-   with one of the recovered names. The **Lamplighters' Round** (a verse painted on
-   the Hall wall, and hummed by Odile if asked) gives the order:
-   *"Bread for the morning, water for noon, words for the evening, the ferry for
-   home."* → **Bakery, Well, Hall, Ferry**. Each bell use is detected with the
-   `any_block_use` trigger at the bell's exact position. Wrong order: a dissonant
-   clang and reset. Correct: the tower's lamp cradle unlocks (the barrier slab
-   above the stairs opens) and a **Stillglass Lamp** is revealed in the cradle
-   niche.
-4. **c1.lamp — Rebuild Hollin's Wakelamp.** Ghost outline at the top of the tower:
-   **1 Stillglass Lamp, 4 copper grates (any oxidation), 2 chains**. The Stillglass
-   Lamp comes from the Round; copper comes from mining (copper is common); chains
-   from iron. Block checks at fixed coordinates.
-5. **c1.surge — Hold the light.** Lighting the lamp starts a **Pall Surge** (≈75 s):
-   the fog thickens and pulses, and Watchers step out of the fog around the tower
-   plaza. They freeze while watched and die in one hit (unbound). A boss bar shows
-   the lamp "taking hold". Scaling: 4 Watchers + 2 per extra player, spawned in
-   waves. Leaving the plaza, dying or disconnecting pauses nothing — the surge
-   continues and completes as long as one player stays; if nobody is within 48
-   blocks for 10 s it resets cleanly (Watchers removed, lamp returns to "ready").
-6. **Outcome.** The fog rolls back from Hollin; pale moss in the lanes becomes grass
-   and flowers; the villagers regain colour. **Odile** remembers her name and
-   realises forty years have passed ("I thought it was last Tuesday."). **Mirelle**
-   and **Jory** appear in their restored colours. Revelation 1 (Odile): *the Pall
-   came the night the Deepcut fell, and the Keeper's great light on the Meridian went
-   dark the same night.*
-7. **c1.home — (optional) Make a home.** Odile offers the empty cottage beside the
-   well, "the Surveyor's Rest". Completes when a bed is placed inside it. Home plots
-   are ordinary buildable space.
+1. **c1.odile** — Odile at the only lit lamp. She lights it "because the evening needs it". The world
+   spawn moves to Hollin.
+2. **c1.names** (0/4) — Echoes at the **bakery**, **hall**, **well** and **ferry steps** reveal the four
+   families: **Dunn** (bread), **Pell** (water), **Marsh** (words), **Tarn** (the ferry).
+3. **c1.round** — The four belfry bells are engraved with the family names. The **Lamplighters' Round**
+   (painted in the Hall, hummed by Odile): *"Bread for the morning, water for noon, words for the
+   evening, the ferry for home."* → **Dunn, Pell, Marsh, Tarn**. Each bell use is an `any_block_use`
+   trigger at the bell's exact position; a wrong bell clangs and resets. Solving opens the two iron
+   hatches to the lamp cradle.
+4. **c1.lamp** — The cradle chest holds the **Stillglass Lamp**. Blueprint: lamp + **4 copper grates**
+   + **2 chains**.
+5. **c1.surge** — *Hold the Light*: the four plaza lamps are snuffed; Watchers step out of the fog
+   (2 + 2 per extra player, cap 7; −1 Story, +2 Hard). Relight the lamps (interaction prompts);
+   success when all four burn and at least 30 s have passed. Nobody in the plaza for 15 s → clean
+   reset, 10 s cooldown.
+6. **Outcome** — Hollin clears; lamps light; Odile, Mirelle and Jory regain colour. Revelation 1
+   (Odile): the Deepcut fell and the Meridian's light went dark the same night; Tamsin went east to
+   Brannoc's orchards. Odile gives the player the Surveyor's Rest.
+7. **c1.home** (optional) — place a bed in the Rest.
 
 ---
 
 ### CHAPTER 2 — "The Heartwood" (Aldercross)
 
-1. **c2.arrive — Reach Aldercross.** Location.
-2. **c2.brannoc — Speak to the orchard keeper.** Brannoc, faded and bitter, warns the
-   Surveyor off: "The trees are watching." His apiary is empty, his orchard choked by
-   pale oak around one monstrous tree: the **Heartwood**.
-3. **c2.memories — Remember Aldercross.** Three places: the **Apiary**, the **Cider
-   Press**, the **Brothers' Tree** (an old oak with carved initials *B + C*). Echoes
-   reveal Col, Brannoc's younger brother, laughing in the orchard. 0/3, any order.
-   Tamsin's second camp in the barn gives her note: *"It isn't weather. It's
-   attention. The fog is worst where the valley refuses to look."*
-4. **c2.hearts — Stop the Heartwood.** The windmill that carries the orchard's
-   Wakelamp is strangled by pale roots. Three **creaking hearts** are grown into the
-   Heartwood (trunk, east root, west root). Each spawns a heart-bound Watcher, which
-   cannot be harmed — but hitting one makes its heart pulse and shed resin particles
-   (vanilla behaviour), revealing where the heart is. Breaking all three hearts kills
-   their Watchers and withers the roots (the root blocks in the windmill are removed
-   by the script). Detection: the three heart positions no longer hold
-   `creaking_heart`.
-5. **c2.lamp — Rebuild the orchard Wakelamp.** Brannoc gives a Stillglass Lamp once
-   the roots are gone ("Col made that one. Take it."). Blueprint in the windmill cap:
-   **1 Stillglass Lamp, 4 lanterns, 2 honeycomb blocks** (the Aldercross hives yield
-   honeycomb once the roots are gone: the apiary chest is stocked with 6 honeycomb).
-6. **Outcome.** Fog lifts; the orchard greens; bees return to the hives; Brannoc
-   regains colour and memory. Revelation 2: *Col died in the Deepcut, with ten others.
-   The Keeper sent them past the safe seams for her Lens.* He gives the Surveyor
-   **Col's Token** (the first of the Eleven keepsakes, if not found already).
-   Brannoc opens trades (honey for bottles, apples for wheat).
+1. **c2.arrive** — Reach the orchard gate.
+2. **c2.brannoc** — Brannoc, faded and bitter: "Don't touch the trees. They're watching." (Before
+   Chapter 2 he only says to come back when Hollin's bells ring.)
+3. **c2.memories** (0/3) — Echoes in the **apiary**, the **cider press** and the **Brothers' Tree**
+   (*B + C*): Col, laughing. Tamsin's second camp in the press loft: her note (*"It isn't weather.
+   It's attention…"*) and her **Field Notes** book (re-obtainable from the loft prompt).
+4. **c2.hearts** (0/3) — Three natural creaking hearts in the Heartwood (trunk, east root, west root);
+   Watchers bound to them can't be hurt, but hitting one shows where its heart is. Breaking all three
+   removes the pale roots choking the windmill's stair.
+5. **c2.lamp** — Brannoc gives **Col's Stillglass Lamp** ("Col made that lamp for the mill").
+   Blueprint in the windmill cap: lamp + **4 lanterns** + **2 honeycomb blocks** (8 honeycomb in the
+   apiary shed, refilled while needed).
+6. **Outcome** — The orchard clears; bees return to the hives; eyeblossoms become cornflowers. Brannoc
+   remembers. Revelation 2: *Col died in the Deepcut with ten others. The Keeper, Hesper Vane, sent
+   them past the blue seam for her Lens.* He gives Col's token (if not already found) and a daily gift
+   of apples and honey afterwards.
 
 ---
 
 ### CHAPTER 3 — "The Glassworks" (and the Deepcut)
 
-1. **c3.arrive — Reach the Glassworks.** Location.
-2. **c3.log — Read the foreman's log.** In the office: the last shift log, including
-   the kiln procedure (*"Kiln Three: bellows UP, flue DOWN, damper UP, then feed the
-   firebox"*), and the final entry: *"Keeper's orders — past the blue seam. Tobin
-   says it will hold."* Interaction with the lectern (interaction entity).
-3. **c3.tamsin — Find Tamsin.** In the upper gallery of the mine, by a dead lamp,
-   faded. She doesn't recognise the Surveyor.
-4. **c3.remind — Help Tamsin remember.** Show her three things that are hers:
-   **her letter** (the player's copy, or the spare from the Landing noticeboard),
-   **her Field Book**, and **her theodolite** (found in the Glassworks office). Each
-   is presented through a dialog option that checks the player's inventory for the
-   tagged item. When all three are shown she regains colour, laughs at herself, and
-   explains what she learned: *the Keeper struck the Deepcut from the Long Chart; the
-   forgetting spreads from there.* She moves to Hollin (or the Meridian in Ch. 4).
-5. **c3.kiln — Restart Kiln Three.** Three levers at the kiln (bellows, flue, damper)
-   must be **UP, DOWN, UP**; then **8 coal or charcoal** must be placed in the
-   firebox barrel. Checked by lever block states and the barrel's contents.
-   Outcome: the kiln roars; the Glassworks lamp-heart is forged — a **Stillglass
-   Lamp** appears in the kiln hatch, and the **Lens Heart** (key item for Chapter 4)
-   is forged alongside it.
-6. **c3.memorial — Find the collapse.** Deep in the Deepcut, the sealed gallery and
-   the **memorial wall** with eleven blank plaques. Location. A strong echo: eleven
-   pale figures, lamps out. Revelation 3 (the major twist) via Tamsin's notes and the
-   echo of Hesper's voice: she struck her own son's name from the map.
-7. **c3.lamp — Rebuild the Glassworks Wakelamp.** At the top of the kiln tower:
-   **1 Stillglass Lamp, 4 glass blocks, 2 iron bars.**
-8. **c3.surge — The Collapse Surge.** Lighting the lamp snuffs the candles in the
-   kiln yard; Watchers come out of the mine mouth. Relight **4 candle clusters**
-   (flint and steel/fire charge; detected by block state `lit=true`) within
-   120 seconds while freezing Watchers with your gaze. Failure (time out/all players
-   gone) resets after 10 s. Success → the Glassworks district clears.
-   **The Deepcut itself (the mine and its mouth) stays in the Pall** — "no lamp holds
-   there; it isn't on the Chart."
+Order as implemented: arrive → log → Tamsin → remind → **memorial** → kiln → lamp → surge (the
+revelation now comes before the forge, so the Lens Heart is made *knowing* what the Lens is for).
+
+1. **c3.arrive** — Reach the Glassworks.
+2. **c3.log** — The foreman's log (prop on the office lectern): the Kiln Three procedure (*bellows UP,
+   flue DOWN, damper UP, then eight scoops*), Silas Crane's objection to the Keeper's orders, and the
+   last line in another hand: *"The Deepcut is down. Eleven."*
+3. **c3.tamsin** — The mine: adit with timber sets and rails (two heart-bound Watchers in pale-oak
+   posts), assay room, stair up to the upper gallery, a look-out over the stillglass cavern. Tamsin,
+   faded, counting props beside a dead lamp.
+4. **c3.remind** (0/3) — Show her three things that are hers: **her letter**, **her Field Notes**
+   (Aldercross) and **her theodolite** (Glassworks office). Each is checked in the player's inventory
+   by its custom data. Restored, she explains the rule of the world and that the Keeper struck the
+   Deepcut from the Long Chart, and sends the player to look.
+5. **c3.memorial** — Past the blue seam (signs: *SAFE LIMIT* / *KEEPER'S ORDERS: CONTINUE — T.V.*)
+   and a dug-through collapse, the **Last Gallery**: eleven pale figures facing eleven blank plaques.
+   Echo: Hesper's voice (*"Strike it. Strike all of it from the Chart."*), then Tobin's (*"It'll hold,
+   Mother."*). **The twist: the Keeper struck her own son's name from the map.** The figures' faces
+   come into focus (named dialog) once their keepsake has been found.
+6. **c3.kiln** — Three wall levers (up = off): bellows up, flue down, damper up; 8 coal/charcoal in the
+   firebox barrel. The kiln roars (campfires inside light) and the hatch chest holds a **Stillglass
+   Lamp** and the **Lens Heart**. Wrong settings: smoke and a hint.
+7. **c3.lamp** — Kiln-tower top: lamp + **4 glass** (any) + **2 iron bars**.
+8. **c3.surge** — *The Collapse*: four candle clusters in the kiln yard; Watchers from the mine mouth
+   (3 + 2 per extra player, cap 8); relight within **120 s** (prompts or flint and steel). Timeout or
+   an empty yard resets it. **Outcome:** the Glassworks clears; **the Deepcut stays in the Pall**
+   ("no lamp holds there; it isn't on the Chart"); Tamsin goes ahead to Hollin.
 
 ---
 
 ### CHAPTER 4 — "The Meridian"
 
-1. **c4.crossing — Cross to the Meridian.** With three Wakelamps lit, the lake
-   remembers its shores: the looping fog around the island is gone. Reach the island
-   by boat or by repairing the **causeway** (optional mini-build: a ghost outline of
-   the missing span). Before this chapter, approaching the island's inner ring
-   folds the player back to the Hollin jetty ("The fog folds you back to the shore.").
-2. **c4.keeper — Meet the Keeper.** Hesper sits in the dark Chart Room beside the Long
-   Chart — a floor mosaic of the valley with the north cliffs left white. She is
-   lucid, faded, courteous and immovable. The dialog reveals her side: the Lens, the
-   dig, Tobin, the striking-out. *"If you light the Lens, it will see everything. Even
-   him."* She does not stop the player; she only asks.
-3. **c4.lens — Set the Lens Heart.** At the top of the tower, the Great Lens cradle.
-   Placing the Lens Heart (dialog at the cradle, item consumed) begins the finale.
-   Tamsin, Odile and Brannoc arrive by boat (their NPCs appear on the Meridian dock
-   and gallery stairs) for the ending.
-4. **c4.unlooked — The Unlooked.** The Pall gathers into a giant Watcher in the Lens
-   gallery (circular arena, four relay lamps).
-   * **Rule 1 (readable):** it only moves when nobody is looking at it (vanilla
-     creaking logic, scaled ×2.5).
-   * **Rule 2:** every so often it **snuffs a relay lamp** — telegraphed by the lamp
-     flickering (particles + sound) for 3 seconds. While 2+ relays are dark the fog
-     thickens and the Unlooked regenerates. Relight relays by using them (interaction
-     entity) — a free action, no item needed.
-   * **Rule 3:** lesser Watchers climb out of the fog in waves (count scales with
-     players). They die in one hit.
-   * **Phases:** 100–66% snuff every 20 s; 66–33% every 12 s plus adds; below 33% it
-     *steps through the fog*, teleporting behind the player who is not watching it,
-     with a brief darkness pulse (disable-able in Comfort settings).
-   * Health: 180 + 90 per extra player. Normal damage while frozen.
-   * **Reset:** all players dead/away for 10 s → everything is removed and restored;
-     the cradle is ready again. A bed in the Keeper's quarters lets players set
-     their spawn on the island.
-5. **c4.chart — The Blank Space (final choice).** With the Unlooked gone, the Lens
-   burns and the Long Chart glows — except the white Deepcut. At the chart table the
-   Surveyor chooses (with a confirmation dialog, broadcast to all players):
-   * **"Write the names"** (ending TRUE)
-   * **"Leave it blank"** (ending BLANK)
-   Before choosing, the player can hear each companion's view (Tamsin: truth, Brannoc:
-   names, Odile: "for the living", Hesper: mercy).
+1. **c4.crossing** — Until now the island folds visitors back to the Hollin jetty. Reach it by boat
+   (moored at the jetty and the island dock) or by the causeway, whose broken span can be rebuilt
+   (optional **c4.causeway**, ghost outline, lights the causeway lamps).
+2. **c4.keeper** — Hesper in the dark Chart Room beside the **Long Chart**: a floor mosaic of the
+   valley computed from the real layout, the Deepcut white. Her side of the story; she does not stop
+   the player — *"I only ask you to think about what a blank is for."*
+3. **c4.lens** — Up the tower stair to the Lens Gallery; set the **Lens Heart** in the cradle (item
+   consumed). Tamsin, Odile and Brannoc gather in the Chart Room.
+4. **c4.unlooked** — **The Unlooked** on the Lens Gallery (circular arena, four relay lamps):
+   * Rule 1: it moves only when unobserved (a creaking at 2.5× scale; attack 5).
+   * Rule 2: it snuffs a relay lamp every 20 s (12 s below ⅔ health; +6 s on Story), telegraphed by
+     3 s of smoke; with 2+ relays dark it heals 3 HP/s. Relight relays by using them.
+   * Rule 3: below ⅔, lesser Watchers climb in (every 10 s, cap players + 1).
+   * Below ⅓ it *steps through the fog* behind a random player every 15 s (darkness pulse, optional).
+   * Health 180 + 90 per extra player (Story 110 + 60, Hard 240 + 110; extra players counted up to 3).
+   * Reset after 10 s with nobody on the gallery; beds in the Keeper's quarters.
+   Victory: a beacon lights inside the Lens; the Long Chart's frame glows.
+5. **c4.chart** — At the Long Chart the Surveyor chooses **Write the names** or **Leave it blank**,
+   each behind a confirmation, announced to everyone. Companion views: Tamsin (truth), Brannoc (names),
+   Odile (for the living), Hesper (mercy).
 
 ---
 
 ## 5. Endings (both implemented)
 
 ### Ending TRUE — "Every Name"
-* The Lens blazes across the valley. **All** Pall biomes, including the Deepcut, are
-  converted to clear biomes; the global Pall clock moves to "clear".
-* The memorial wall gains the eleven names (text displays and signs placed by script).
-  The miners' echoes fade away.
-* Hesper weeps, and in the epilogue tends a small memorial garden at the Deepcut mouth
-  (restored colours). *"I will look at it every day. That is the least of what I owe."*
-* Brannoc: at peace. Tamsin: "I'll file it. All of it. The Survey owes them that."
-* Odile: first sunrise in forty years (time set to dawn, chime).
-* Title: *Every Name.*
+* All remaining districts clear, including the Deepcut and the lake; the Pall clock moves to "clear".
+* The eleven names are written on the memorial plaques (glowing text); the memorial candles and the
+  mine's lamps light; the eleven figures are gone; the Deepcut cells of the Long Chart are coloured in.
+* Hesper, restored, tends a small garden at the mine mouth. *"I will look at it every day."*
+* Time is set to just before dawn: the first sunrise in forty years. Title: *Every Name.*
+* If all eleven keepsakes were found: the names are read aloud (extra lines, *Every Name, Spoken*).
 
 ### Ending BLANK — "The Kept Silence"
-* All districts except the Deepcut clear. The **Deepcut remains in the Pall** forever
-  (its biome is not converted, Watchers remain active there), a place the valley has
-  agreed not to chart.
-* The miners' echoes remain at the memorial; Hesper stays at the mine mouth as its
-  keeper, lucid but pale. *"Thank you. I will keep them company."*
-* Brannoc is bitter ("You let her keep him."). Tamsin: "Some blanks are a kindness. I
-  hope this one is."
-* The global Pall clock moves to "haze" (a faint haze remains world-wide).
-* Title: *The Kept Silence.*
+* All districts except the Deepcut clear; the Deepcut keeps its fog and its Watchers.
+* The eleven figures remain; Hesper keeps the mine mouth, still pale. *"I will keep them company."*
+* The Pall clock moves to "haze" (a faint haze world-wide). Title: *The Kept Silence.*
+* If all eleven keepsakes were found: Hesper accepts them (*Kept Safe*).
 
 ### After either ending
-* Credits dialog; **"Survey Complete"** journal entry; the Surveyor receives the
-  **Keeper's Glass** (a named spyglass) and the title "Keeper of the Meridian" in
-  their journal.
-* Free play continues; NPC epilogue lines reflect the ending; all restored districts
-  keep their services; the wider world is ordinary Minecraft.
+* Credits dialog; the **Keeper's Glass** (glinting spyglass, "Keeper of the Meridian") for every
+  player, including later joiners; *Survey Complete*; free play. Tamsin, Brannoc, Odile, Mirelle,
+  Jory and Hesper have ending-specific epilogue lines.
 
 ---
 
 ## 6. Optional content
 
 ### The Eleven (keepsakes)
-Eleven keepsakes of the lost miners are hidden through the valley (one per
-meaningful place). Picking one up (detected via inventory tag) records the miner's
-name in the journal and plays a short echo line. If **all eleven** are found before
-the final choice:
-* TRUE ending: the Surveyor reads every name aloud (extra ending lines, a unique
-  journal entry "Every name, spoken").
-* BLANK ending: Hesper accepts the keepsakes (extra lines, "Kept safe").
-Rewards scale gently: a **Memorial Lantern** after all eleven. See §8 for list.
+All eleven are placed in the world (see §8). Picking one up (inventory trigger on its custom data)
+records the name world-wide and plays a line about that person. All eleven: *The Eleven* completes,
+everyone receives a **Memorial Lantern**, and either ending gains extra lines.
 
 ### Survey benchmarks
-Eight old survey benchmarks (marked stone posts) around the valley — Tamsin's route.
-Each reveals a line of her field notes. All eight → the **Surveyor's Spyglass**.
+Designed but **not implemented in 1.0.0** (deferred).
 
 ### The Fen & the drowned chapel
-The western marsh holds a half-sunk chapel with the founding story of the Vale (why
-stillglass was sacred, the first Keeper's vow "to look at all of it, always"). A small
-puzzle (three sluice levers) drains the crypt and reveals one of the Eleven keepsakes
-and a **Ferryman's Oar** (a named trident-free item: an enchanted wooden shovel with
-Efficiency, flavour only). Optional; adds meaning to Hesper's broken vow.
+A half-sunk chapel in the western Fen: the **Vow of the First Keeper** on the lectern (*"I will look at
+all of it, always…"*), three sluice levers (verse: open the north, shut the middle, open the south),
+a flooded crypt behind a glass window that drains when solved: Mae Ostrander's hymn sheet and the
+**Ferryman's Oar** (wooden shovel, Efficiency II). Optional quest **s.fen**.
 
 ---
 
@@ -414,13 +323,13 @@ Efficiency, flavour only). Optional; adds meaning to Hesper's broken vow.
 | 2 | Col Hale | carved apple token | Aldercross, Brothers' Tree hollow (or Brannoc's reward) |
 | 3 | Agnes Pell | knitted scarf | Hollin, Jory's loft |
 | 4 | Wendel Tarn | tin whistle | Hollin, ferry steps boathouse |
-| 5 | Ruth Anning | pressed flower | Aldercross, apiary shelf |
+| 5 | Ruth Anning | pressed flower | Aldercross, apiary shed chest |
 | 6 | Emory Dunn | recipe card | Hollin bakery, flour bin |
-| 7 | Silas Crane | spectacles | Glassworks office desk |
+| 7 | Silas Crane | wire spectacles | Glassworks office desk barrel |
 | 8 | Nell Farrow | child's drawing | Landing waystation loft |
-| 9 | Hob Tulley | dice | Glassworks kiln yard crate |
+| 9 | Hob Tulley | bone dice | Glassworks kiln yard crate |
 | 10 | Mae Ostrander | hymn sheet | Fen chapel crypt (after sluices) |
-| 11 | Piet Lund | lamp hook | Deepcut upper gallery, beside Tamsin |
+| 11 | Piet Lund | lamp hook | Deepcut upper gallery, crate beside Tamsin |
 
 ---
 
@@ -436,6 +345,8 @@ Efficiency, flavour only). Optional; adds meaning to Hesper's broken vow.
 
 ## 10. Implementation status
 
-This bible describes the campaign as designed. The authoritative list of what is
-actually implemented, and how, is `docs/TECHNICAL.md` and `docs/PROJECT_STATUS.md`.
-Anything listed there as not implemented must not be read as present in the release.
+Sections 4–6 describe the campaign **as implemented in 1.0.0**. Differences from the original design:
+chapter 3's revelation moved before the kiln; Tamsin's three reminders are her letter, her field
+notes and her theodolite; companions gather in the Chart Room rather than arriving by boat; the orchard
+keeper gives a daily gift instead of trades; the survey benchmarks are deferred. What is verified and
+how is in `docs/TEST_REPORT.md`; nothing has yet been observed in a running game.

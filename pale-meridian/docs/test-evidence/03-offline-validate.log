@@ -1,0 +1,24 @@
+[17:52:37] [main/INFO]: [STDOUT]: [check] worldgen registries loaded
+[17:52:38] [main/INFO]: [STDOUT]: [check] dimension registries loaded
+[17:52:40] [main/INFO]: [STDOUT]: [check] macro functions: 86 instantiated OK: 86
+[17:52:40] [main/INFO]: [STDOUT]: [check] functions: files=703 loaded=703
+[17:52:40] [main/INFO]: [STDOUT]: [check] advancements: files=53 loaded=53
+[17:52:40] [main/INFO]: [STDOUT]: [check] recipes: files=0 loaded=0
+[17:52:40] [main/INFO]: [STDOUT]: [check] worldgen/biome: files=20 loaded=20
+[17:52:40] [main/INFO]: [STDOUT]: [check] worldgen/structure: files=7 loaded=7
+[17:52:40] [main/INFO]: [STDOUT]: [check] worldgen/structure_set: files=7 loaded=7
+[17:52:40] [main/INFO]: [STDOUT]: [check] worldgen/noise_settings: files=1 loaded=1
+[17:52:40] [main/INFO]: [STDOUT]: [check] worldgen/density_function: files=4 loaded=4
+[17:52:40] [main/INFO]: [STDOUT]: [check] dialog: files=155 loaded=155
+[17:52:40] [main/INFO]: [STDOUT]: [check] world_clock: files=2 loaded=2
+[17:52:40] [main/INFO]: [STDOUT]: [check] timeline: files=2 loaded=2
+[17:52:40] [main/INFO]: [STDOUT]: [check] worldgen/world_preset: files=0 loaded=0
+[17:52:40] [main/INFO]: [STDOUT]: [check] worldgen/placed_feature: files=4 loaded=4
+[17:52:40] [main/INFO]: [STDOUT]: [check] worldgen/configured_feature: files=1 loaded=1
+[17:52:40] [main/INFO]: [STDOUT]: [check] worldgen/noise: files=0 loaded=0
+[17:52:40] [main/INFO]: [STDOUT]: [check] structure templates: 8 (items decoded: 37, texts decoded: 337, loot table refs: 23)
+[17:52:40] [main/INFO]: [STDOUT]: [check] loot_table: files=5 loaded=5
+[17:52:40] [main/INFO]: [STDOUT]: [check] predicate: files=33 loaded=33
+[17:52:40] [main/INFO]: [STDOUT]: [check] item_modifier: files=0 loaded=0
+[17:52:40] [main/INFO]: [STDOUT]: [check] log warnings/errors mentioning palemeridian: 0
+[17:52:40] [main/INFO]: [STDOUT]: [check] RESULT: PASS

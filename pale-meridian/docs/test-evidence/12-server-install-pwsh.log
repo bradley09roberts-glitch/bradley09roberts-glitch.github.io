@@ -1,0 +1,16 @@
+Pale Meridian server install
+  verified fabric-server-mc.26.2-loader.0.19.5-launcher.1.1.2.jar
+  verified fabric-api-0.161.0+26.2.jar
+  verified lithium-fabric-0.25.3+mc26.2.jar
+  verified ferritecore-9.0.0-fabric.jar
+  verified appleskin-fabric-mc26.2-3.0.10.jar
+  created server.properties (private: whitelist on)
+  created eula.txt (eula=false)
+
+Install complete. Before the first start:
+  1. Read the Minecraft EULA: https://aka.ms/MinecraftEULA
+     If you agree, open eula.txt in Notepad and change eula=false to eula=true yourself.
+  2. Start the server with start-server.bat, then add your players in its console:
+       whitelist add <PlayerName>
+  3. Players connect with the Pale Meridian client pack (same version).
+See SERVER_GUIDE.md for ports, backups, updates and troubleshooting.

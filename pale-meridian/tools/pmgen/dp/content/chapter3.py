@@ -287,7 +287,7 @@ def register() -> None:
         f"function {fid('c3/hatch_refill')}",
     ]))
     # the levers repair themselves while the kiln is still cold (a broken lever would otherwise block the chapter)
-    for key, pos, initial in (("bellows", bel, "true"), ("flue", flu, "false"), ("damper", dam, "true")):
+    for key, pos, initial in (("bellows", bel, "false"), ("flue", flu, "false"), ("damper", dam, "true")):
         R.location_hooks.append(("glass_kiln", active("c3.kiln"), [
             f"execute unless block {xyz(pos)} minecraft:lever run setblock {xyz(pos)} minecraft:lever[face=wall,facing=east,powered={initial}]"]))
     R.load_hooks.append(f"execute if score c3.kiln pm.q matches 2 run function {fid('c3/kiln_relight')}")

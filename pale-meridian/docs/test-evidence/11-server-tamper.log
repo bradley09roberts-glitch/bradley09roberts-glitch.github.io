@@ -1,0 +1,13 @@
+Pale Meridian server install
+  ok (already present) fabric-server-mc.26.2-loader.0.19.5-launcher.1.1.2.jar
+  ok (already present) fabric-api-0.161.0+26.2.jar
+  ok (already present) lithium-fabric-0.25.3+mc26.2.jar
+ERROR: hash mismatch for https://cdn.modrinth.com/data/uXXizFIs/versions/d5ddUdiB/ferritecore-9.0.0-fabric.jar
+       expected sha512 deadbeef11784c19d42f89c2f433831d007603dd7193cee45fa177e4a6a9c52b384b198586e04a0f7f63cd996fed713322578bde9a8db57e1188854ae5cbe584
+       got          d81fa97e11784c19d42f89c2f433831d007603dd7193cee45fa177e4a6a9c52b384b198586e04a0f7f63cd996fed713322578bde9a8db57e1188854ae5cbe584
+       Nothing was installed for this file. Do not bypass this check.
+tampered-pin exit=1
+appleskin-fabric-mc26.2-3.0.10.jar
+fabric-api-0.161.0+26.2.jar
+lithium-fabric-0.25.3+mc26.2.jar
+palemeridian-1.0.0.jar

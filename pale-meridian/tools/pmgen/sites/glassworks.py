@@ -139,7 +139,8 @@ def build() -> list[Piece]:
     w.set(px, Y + 4, -305, "brick_slab[type=bottom]"); w.set(px, Y + 4, -302, "brick_slab[type=bottom]")
     w.fill(px, Y + 4, -304, px, Y + 4, -303, "brick_slab[type=bottom]")
     levers = {}
-    for name, z, initial in (("bellows", -304, "true"), ("flue", -303, "false"), ("damper", -302, "true")):
+    # start: bellows already right (up), flue and damper wrong, so flipping everything does not solve it
+    for name, z, initial in (("bellows", -304, "false"), ("flue", -303, "false"), ("damper", -302, "true")):
         w.set(px + 1, Y + 1, z, f"lever[face=wall,facing=east,powered={initial}]")
         levers[name] = [px + 1, Y + 1, z]
     sign(w.b, lx(px + 1), Y + 2 - ORIGIN[1], lz(-304), "east", ["BELLOWS", "", "", ""], "spruce")
