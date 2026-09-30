@@ -1,0 +1,79 @@
+profile=Profile
+profile.PERFORMANCE=Performance
+profile.BALANCED=Balanced (recommended)
+profile.HIGH=High
+profile.comment=Performance: 1024 shadows, 80-block shadow range, fast filtering. Balanced: 2048 shadows, 128 blocks, 12-tap soft filtering. High: 3072 shadows, 192 blocks, 24-tap filtering, stained-glass tinted light, light shafts and screen-space water reflections.
+
+screen.LIGHTING=Lighting
+screen.SHADOWS=Shadows
+screen.ATMOSPHERE=Atmosphere & Fog
+screen.WATER=Water
+screen.FOLIAGE=Foliage
+screen.POST=Colour & Glow
+
+option.SUN_BRIGHTNESS=Sunlight
+option.SUN_BRIGHTNESS.comment=Strength of direct sunlight.
+option.NIGHT_BRIGHTNESS=Night Brightness
+option.NIGHT_BRIGHTNESS.comment=Moonlight and night sky light. Raise it if nights are too dark on your screen.
+option.MIN_LIGHT=Cave Floor Light
+option.MIN_LIGHT.comment=Light present everywhere, even in sealed caves. It also scales with the vanilla Brightness slider.
+option.BLOCKLIGHT_STRENGTH=Torchlight Strength
+option.TORCH_WARMTH=Torchlight Warmth
+option.TORCH_WARMTH.comment=0 = neutral white torchlight, higher = warmer ember orange.
+option.HANDHELD_LIGHT=Handheld Light
+option.HANDHELD_LIGHT.comment=A torch or lantern in either hand lights the area around you.
+option.EMISSIVE_BLOCKS=Glowing Blocks
+option.EMISSIVE_BLOCKS.comment=Torches, lanterns, lava, glowstone and similar blocks glow and feed bloom.
+option.ambientOcclusionLevel=Vanilla Ambient Occlusion
+option.sunPathRotation=Sun Path Angle
+option.sunPathRotation.comment=Tilts the sun's path so shadows are not perfectly axis-aligned.
+
+option.shadowMapResolution=Shadow Resolution
+option.shadowDistance=Shadow Distance
+option.shadowDistance.comment=How far (in blocks) sun shadows are drawn. Large values cost performance.
+option.SHADOW_FILTER=Shadow Filtering
+value.SHADOW_FILTER.0=Fast (4 taps)
+value.SHADOW_FILTER.1=Soft (12 taps)
+value.SHADOW_FILTER.2=Softer (24 taps)
+option.SHADOW_SOFTNESS=Shadow Softness
+option.COLORED_SHADOWS=Tinted Glass Shadows
+option.COLORED_SHADOWS.comment=Sunlight passing through stained glass takes its colour.
+option.shadowDistanceRenderMul=Shadow Caster Range
+value.shadowDistanceRenderMul.-1.0=Unlimited
+value.shadowDistanceRenderMul.1.0=Shadow distance
+
+option.FOG_DENSITY=Distance Haze
+option.VALLEY_MIST=Valley Mist
+option.VALLEY_MIST.comment=Low-lying mist in valleys at dawn, dusk and in rain: the Emberveil veil.
+option.MIST_STRENGTH=Mist Strength
+option.VOLUMETRIC_LIGHT=Light Shafts
+option.VOLUMETRIC_LIGHT.comment=Sunbeams through fog and trees, traced through the shadow map. Costly.
+option.VL_STRENGTH=Light Shaft Strength
+option.VL_STEPS=Light Shaft Quality
+
+option.WATER_WAVES=Water Waves
+option.WAVE_STRENGTH=Wave Strength
+option.WATER_REFLECTIONS=Water Reflections
+value.WATER_REFLECTIONS.0=Sky only
+value.WATER_REFLECTIONS.1=Sky and sun glints
+value.WATER_REFLECTIONS.2=Screen-space
+option.WATER_ALPHA=Water Opacity
+option.UNDERWATER_CLARITY=Underwater Clarity
+
+option.WAVING_PLANTS=Waving Plants
+option.WAVING_LEAVES=Waving Leaves
+option.WAVING_SPEED=Wind Speed
+option.WAVING_AMOUNT=Wind Strength
+
+option.BLOOM=Bloom
+option.BLOOM_STRENGTH=Bloom Strength
+option.BLOOM_QUALITY=Bloom Quality
+value.BLOOM_QUALITY.0=Low
+value.BLOOM_QUALITY.1=Medium
+value.BLOOM_QUALITY.2=High
+option.EXPOSURE=Exposure
+option.SATURATION=Saturation
+option.CONTRAST=Contrast
+option.GRADE_STRENGTH=Ember Grade
+option.GRADE_STRENGTH.comment=Warm highlights and cool shadows. 0 disables the grade.
+option.VIGNETTE=Vignette

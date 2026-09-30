@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "group": "emberveil_almanac",
+  "ingredients": [
+    { "item": "minecraft:book" },
+    { "item": "minecraft:torch" }
+  ],
+  "result": {
+    "id": "patchouli:guide_book",
+    "count": 1,
+    "components": {
+      "patchouli:book": "emberveil:almanac"
+    }
+  }
+}

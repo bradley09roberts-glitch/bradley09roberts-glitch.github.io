@@ -1,0 +1,14 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+[[mods]]
+modId="emberveil_testkit"
+version="1.0.0"
+displayName="Emberveil Test Kit (development only)"
+description='''Scripted client automation for testing the Emberveil pack. Inactive unless -Demberveil.testkit is set.'''
+[[dependencies.emberveil_testkit]]
+    modId="neoforge"
+    type="required"
+    versionRange="[21.1,)"
+    ordering="NONE"
+    side="BOTH"

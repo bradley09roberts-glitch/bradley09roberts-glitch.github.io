@@ -1,0 +1,10 @@
+# Local caches, downloads and build outputs (reproducible via tools/)
+.cache/
+companion-mod/build/
+companion-mod/.gradle/
+companion-mod/run/
+tools/testkit/build/
+tools/testkit/.gradle/
+tools/testkit/run/
+__pycache__/
+*.pyc

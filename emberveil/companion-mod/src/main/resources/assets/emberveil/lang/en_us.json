@@ -1,0 +1,8 @@
+{
+  "key.categories.emberveil": "Emberveil",
+  "key.emberveil.open_almanac": "Open Wayfarer's Almanac",
+  "emberveil.almanac.welcome": "You carry the Wayfarer's Almanac: everything in Emberveil, in one book.",
+  "emberveil.almanac.welcome.how": "Press %s (or type /almanac) to open it any time, even without the book. Lost it? Craft Book + Torch.",
+  "emberveil.book.name": "Wayfarer's Almanac",
+  "emberveil.book.subtitle": "Emberveil Field Guide"
+}

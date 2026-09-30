@@ -1,0 +1,1937 @@
+{
+ "minecraft": "1.21.1",
+ "loader": "neoforge",
+ "mods": [
+  {
+   "slug": "sodium",
+   "title": "Sodium",
+   "project_id": "AANobbMI",
+   "version_id": "Pb3OXVqC",
+   "version_number": "mc1.21.1-0.6.13-neoforge",
+   "version_type": "release",
+   "date_published": "2025-04-04T00:08:12.456557Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LicenseRef-Polyform-Shield-1.0.0",
+   "source_url": "https://github.com/CaffeineMC/sodium",
+   "page": "https://modrinth.com/mod/sodium",
+   "filename": "sodium-neoforge-0.6.13+mc1.21.1.jar",
+   "url": "https://cdn.modrinth.com/data/AANobbMI/versions/Pb3OXVqC/sodium-neoforge-0.6.13%2Bmc1.21.1.jar",
+   "sha1": "38af70fa4dc4b2aaac636e92fdba3bedd5a025e1",
+   "sha512": "ce58f34d05d96c0a109a5cea23c741f6bdb2e6be31fc087c5989274cefca5f10ba0c08c62083cf554a51f2c7667bf46e4164383f675c844e77633aef2659996b",
+   "size": 1162994,
+   "side": "client",
+   "group": "rendering",
+   "declared_deps": []
+  },
+  {
+   "slug": "iris",
+   "title": "Iris Shaders",
+   "project_id": "YL57xq9U",
+   "version_id": "t3ruzodq",
+   "version_number": "1.8.12+1.21.1-neoforge",
+   "version_type": "release",
+   "date_published": "2025-06-17T15:51:56.477905Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/IrisShaders/Iris",
+   "page": "https://modrinth.com/mod/iris",
+   "filename": "iris-neoforge-1.8.12+mc1.21.1.jar",
+   "url": "https://cdn.modrinth.com/data/YL57xq9U/versions/t3ruzodq/iris-neoforge-1.8.12%2Bmc1.21.1.jar",
+   "sha1": "a3e6355915c7d3b2bc392724795113e51d289378",
+   "sha512": "57b8026a3c3c433cf6123d63dc6ce7e11f6d480a72926370db1fc7f2b06059bc16a753ecd7e7af659c19e90b592103196b0e89585ce4f0744a4ca433f59bcf1a",
+   "size": 2438548,
+   "side": "client",
+   "group": "rendering",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "AANobbMI",
+     "version_id": "Pb3OXVqC"
+    }
+   ]
+  },
+  {
+   "slug": "ferrite-core",
+   "title": "FerriteCore",
+   "project_id": "uXXizFIs",
+   "version_id": "x7kQWVju",
+   "version_number": "7.0.3-neoforge",
+   "version_type": "release",
+   "date_published": "2026-01-25T12:59:45.271417Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/malte0811/FerriteCore",
+   "page": "https://modrinth.com/mod/ferrite-core",
+   "filename": "ferritecore-7.0.3-neoforge.jar",
+   "url": "https://cdn.modrinth.com/data/uXXizFIs/versions/x7kQWVju/ferritecore-7.0.3-neoforge.jar",
+   "sha1": "9563692efb708b6b568df27a01ec52f6311928ef",
+   "sha512": "19af89a2075bb10a63884fa853ebf84b02c79dc3242430ecdad056fd764fdcde367a7303276b329df01b0736e2ef264c5d80c7dc92c6aebd244f556a230bb417",
+   "size": 121559,
+   "side": "both",
+   "group": "performance",
+   "declared_deps": []
+  },
+  {
+   "slug": "modernfix",
+   "title": "ModernFix",
+   "project_id": "nmDcB62a",
+   "version_id": "5HLHxQ2F",
+   "version_number": "5.27.24+mc1.21.1",
+   "version_type": "release",
+   "date_published": "2026-08-31T02:33:40.455998Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/embeddedt/ModernFix",
+   "page": "https://modrinth.com/mod/modernfix",
+   "filename": "modernfix-neoforge-5.27.24+mc1.21.1.jar",
+   "url": "https://cdn.modrinth.com/data/nmDcB62a/versions/5HLHxQ2F/modernfix-neoforge-5.27.24%2Bmc1.21.1.jar",
+   "sha1": "1fe7f8b4176e86507cc8ed5460b6acdd3dac5529",
+   "sha512": "da13fa15b2c96a74a7d5f8ea94ea404c96237b97d52c9a77e7e34ac918d28c40760a68cf3897691b317d5119ab9b85035142c3624108b13dda3516c340b96131",
+   "size": 604333,
+   "side": "both",
+   "group": "performance",
+   "declared_deps": []
+  },
+  {
+   "slug": "immediatelyfast",
+   "title": "ImmediatelyFast",
+   "project_id": "5ZwdcRci",
+   "version_id": "OUpXxw4n",
+   "version_number": "1.6.14+1.21.1-neoforge",
+   "version_type": "release",
+   "date_published": "2026-09-13T22:28:12.689713Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-or-later",
+   "source_url": "https://github.com/RaphiMC/ImmediatelyFast",
+   "page": "https://modrinth.com/mod/immediatelyfast",
+   "filename": "ImmediatelyFast-NeoForge-1.6.14+1.21.1.jar",
+   "url": "https://cdn.modrinth.com/data/5ZwdcRci/versions/OUpXxw4n/ImmediatelyFast-NeoForge-1.6.14%2B1.21.1.jar",
+   "sha1": "fee59af2f39c66d09c4c09f441c799e76af70f97",
+   "sha512": "7d1c2e6ce306f4bb9aa155f64ba87732dc2443d57fde249467a99e0ed90fec89a706252888b97f882efbc55d6044971519db704125f27ae53cd9ae40424f9b2c",
+   "size": 365195,
+   "side": "client",
+   "group": "performance",
+   "declared_deps": []
+  },
+  {
+   "slug": "entityculling",
+   "title": "Entity Culling",
+   "project_id": "NNAgCjsB",
+   "version_id": "8w8FfUPs",
+   "version_number": "1.11.2",
+   "version_type": "release",
+   "date_published": "2026-09-21T19:46:52.810258Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LicenseRef-tr7zw-Protective-License",
+   "source_url": "https://github.com/tr7zw/EntityCulling",
+   "page": "https://modrinth.com/mod/entityculling",
+   "filename": "entityculling-neoforge-1.11.2-mc1.21.1.jar",
+   "url": "https://cdn.modrinth.com/data/NNAgCjsB/versions/8w8FfUPs/entityculling-neoforge-1.11.2-mc1.21.1.jar",
+   "sha1": "2f723582d44b60b41d701a797846eaa45a3fef58",
+   "sha512": "dbb40066796ea54bfe902251ccbe743770e3fa9da555fa762da56b3f0427d4a24d3790a8c224519955185a8d1e17fbad462cd314c3acb998b9fc2c8fec257f7a",
+   "size": 1510018,
+   "side": "client",
+   "group": "performance",
+   "declared_deps": []
+  },
+  {
+   "slug": "lithium",
+   "title": "Lithium",
+   "project_id": "gvQqBUqZ",
+   "version_id": "DDUrRVCA",
+   "version_number": "mc1.21.1-0.15.4-neoforge",
+   "version_type": "release",
+   "date_published": "2026-06-27T17:11:51.285886Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/caffeinemc/lithium-fabric",
+   "page": "https://modrinth.com/mod/lithium",
+   "filename": "lithium-neoforge-0.15.4+mc1.21.1.jar",
+   "url": "https://cdn.modrinth.com/data/gvQqBUqZ/versions/DDUrRVCA/lithium-neoforge-0.15.4%2Bmc1.21.1.jar",
+   "sha1": "97212e45c963730bbfc7c44780df99317814c21b",
+   "sha512": "2735da2088b88a8bdcd4ad02a2b6fffbfd3925557cefd4fa54b5477dfb9e582ea7f521300c060f57dff1325dd21bff276b7333363ad3371ed6893e3de9eca9cd",
+   "size": 774220,
+   "side": "both",
+   "group": "performance",
+   "declared_deps": []
+  },
+  {
+   "slug": "structure-layout-optimizer",
+   "title": "Structure Layout Optimizer",
+   "project_id": "ayPU0OHc",
+   "version_id": "eTz03Gfd",
+   "version_number": "1.0.12+1.21.1-neoforge",
+   "version_type": "release",
+   "date_published": "2026-01-09T21:44:11.555524Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/TelepathicGrunt/StructureLayoutOptimizer",
+   "page": "https://modrinth.com/mod/structure-layout-optimizer",
+   "filename": "structure_layout_optimizer-neoforge-1.0.12.jar",
+   "url": "https://cdn.modrinth.com/data/ayPU0OHc/versions/eTz03Gfd/structure_layout_optimizer-neoforge-1.0.12.jar",
+   "sha1": "052c31cb9881c04c17d949345539aa8684f474bf",
+   "sha512": "8c38ebd0e221f5bfe887a40ab21caede40cadc90bfc3b8dbbc79888c07faee44d58f12a974f1c5af324c9feceaa2ed04ea62724c6453650c77e1910582914153",
+   "size": 61777,
+   "side": "both",
+   "group": "performance",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "M1953qlQ",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "clumps",
+   "title": "Clumps",
+   "project_id": "Wnxd13zP",
+   "version_id": "jo7lDoK4",
+   "version_number": "19.0.0.1",
+   "version_type": "release",
+   "date_published": "2024-08-13T07:49:19.491766Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/jaredlll08/Clumps",
+   "page": "https://modrinth.com/mod/clumps",
+   "filename": "Clumps-neoforge-1.21.1-19.0.0.1.jar",
+   "url": "https://cdn.modrinth.com/data/Wnxd13zP/versions/jo7lDoK4/Clumps-neoforge-1.21.1-19.0.0.1.jar",
+   "sha1": "fa2576297c7bd12b28aa7070e8141792bd66da4c",
+   "sha512": "314d8d8e640d73041f27e0f3f2cad7aad8b4c77dbd7fb31700ef7760362261f77085eed5289555c725d99c3f47a114e7290cd608f39c9f0f12ef74958463bdcc",
+   "size": 18382,
+   "side": "both",
+   "group": "performance",
+   "declared_deps": []
+  },
+  {
+   "slug": "geckolib",
+   "title": "Geckolib",
+   "project_id": "8BmcQJ2H",
+   "version_id": "gFmrC8Ru",
+   "version_number": "4.8.4",
+   "version_type": "release",
+   "date_published": "2026-03-03T20:06:25.035771Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/bernie-g/geckolib",
+   "page": "https://modrinth.com/mod/geckolib",
+   "filename": "geckolib-neoforge-1.21.1-4.8.4.jar",
+   "url": "https://cdn.modrinth.com/data/8BmcQJ2H/versions/gFmrC8Ru/geckolib-neoforge-1.21.1-4.8.4.jar",
+   "sha1": "eb854c8ec53ef922a5f3877a1aa4c1ce1352e0ce",
+   "sha512": "340d96149a04c57c09485f5b1c69e7f8ec3b68223c618e38b7d84c58f4280dcba3d0e9480b8fc79735d9ef5fd7da5fc8f3081d575bf4bbcd2c44b6dcf21d98c0",
+   "size": 622582,
+   "side": "both",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "curios",
+   "title": "Curios API",
+   "project_id": "vvuO3ImH",
+   "version_id": "yohfFbgD",
+   "version_number": "9.5.1+1.21.1",
+   "version_type": "release",
+   "date_published": "2025-05-14T13:34:47.415840Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-or-later",
+   "source_url": "https://github.com/TheIllusiveC4/Curios",
+   "page": "https://modrinth.com/mod/curios",
+   "filename": "curios-neoforge-9.5.1+1.21.1.jar",
+   "url": "https://cdn.modrinth.com/data/vvuO3ImH/versions/yohfFbgD/curios-neoforge-9.5.1%2B1.21.1.jar",
+   "sha1": "418fcd42e3a7844c9bdc71c9b6401fdb3894e0c4",
+   "sha512": "5981a267686b744e7e3c227f78cbcd5267c14ac6979a28e814695f4589273998563147207fef4a5cdb7cdbdc39797cd95d9e4abadb55869f18e02a38d0654ae5",
+   "size": 410690,
+   "side": "both",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "puzzles-lib",
+   "title": "Puzzles Lib",
+   "project_id": "QAGBst4M",
+   "version_id": "1TmfTuyw",
+   "version_number": "21.1.62",
+   "version_type": "release",
+   "date_published": "2026-09-29T09:35:21.427790Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "MPL-2.0",
+   "source_url": "https://github.com/Fuzss/puzzleslib",
+   "page": "https://modrinth.com/mod/puzzles-lib",
+   "filename": "puzzleslib-v21.1.62-mc1.21.1+neoforge.jar",
+   "url": "https://cdn.modrinth.com/data/QAGBst4M/versions/1TmfTuyw/puzzleslib-v21.1.62-mc1.21.1%2Bneoforge.jar",
+   "sha1": "0d1675576fe17acc1f350a5505177ae08c17299b",
+   "sha512": "241ff7229990305fe5f85521b9c11cd8e2e8d01cb94bbca987aae4d3d9ecbd9115a4b66f618a62d73ef1b569ff8c72434bc1354bbfaf2f69c0e997db034c4883",
+   "size": 1450242,
+   "side": "both",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "lionfish-api",
+   "title": "Lionfish-API",
+   "project_id": "FoVacERa",
+   "version_id": "fTRMVgyZ",
+   "version_number": "3.1",
+   "version_type": "release",
+   "date_published": "2026-06-30T09:52:22.341109Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/lender544/Lionfish-API",
+   "page": "https://modrinth.com/mod/lionfish-api",
+   "filename": "lionfishapi-3.1.jar",
+   "url": "https://cdn.modrinth.com/data/FoVacERa/versions/fTRMVgyZ/lionfishapi-3.1.jar",
+   "sha1": "353ca00ed118eb67cf11085abbbd699884722326",
+   "sha512": "fdd90f19d0424c3a837111291d6ac1547d62cbcedd43b74d3a8946912f9c5212a5ea239a6969eccf678289bcb77cbb9a937db01fdaf60e57826f9a99893d19cb",
+   "size": 91596,
+   "side": "both",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "fzzy-config",
+   "title": "Fzzy Config",
+   "project_id": "hYykXjDp",
+   "version_id": "uG7oHgw6",
+   "version_number": "0.7.7+1.21+neoforge",
+   "version_type": "release",
+   "date_published": "2026-09-15T00:36:53.806083Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LicenseRef-TDL-M",
+   "source_url": "https://github.com/fzzyhmstrs/fconfig",
+   "page": "https://modrinth.com/mod/fzzy-config",
+   "filename": "fzzy_config-0.7.7+1.21+neoforge.jar",
+   "url": "https://cdn.modrinth.com/data/hYykXjDp/versions/uG7oHgw6/fzzy_config-0.7.7%2B1.21%2Bneoforge.jar",
+   "sha1": "518eadc53c065a74a49207769209c116e77d1849",
+   "sha512": "ef03b411b0e1b241a9952e1a8fdac61979665953eb5f28116aac06530964e7378eb20a78594a47ba4d942c74dfa20d550c292014b5de8e63c42b882a33aef5a5",
+   "size": 2392693,
+   "side": "both",
+   "group": "library",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "ordsPcFz",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "kotlin-for-forge",
+   "title": "Kotlin for Forge",
+   "project_id": "ordsPcFz",
+   "version_id": "uhJhCT7X",
+   "version_number": "5.12.0",
+   "version_type": "release",
+   "date_published": "2026-06-28T16:33:47.870642Z",
+   "loaders": [
+    "forge",
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.20.6",
+    "1.21",
+    "1.21.1",
+    "1.21.2",
+    "1.21.3",
+    "1.21.4",
+    "1.21.5",
+    "1.21.6",
+    "1.21.7",
+    "1.21.8"
+   ],
+   "license": "LGPL-2.1-only",
+   "source_url": "https://github.com/thedarkcolour/KotlinForForge",
+   "page": "https://modrinth.com/mod/kotlin-for-forge",
+   "filename": "kotlinforforge-5.12.0-all.jar",
+   "url": "https://cdn.modrinth.com/data/ordsPcFz/versions/uhJhCT7X/kotlinforforge-5.12.0-all.jar",
+   "sha1": "d10d062caf1aad9aec82d7852f2fee1781735c1f",
+   "sha512": "b8c3942f4d33179edf3f102f3d870b99dd436f8b8236dbbd31aa51b888162c692cfd88927295f24dc8b4375232f4c6c17360c5d6c4823f93cbcd7cf4bdc8bd14",
+   "size": 7279264,
+   "side": "both",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "simply-tooltips",
+   "title": "Simply Tooltips",
+   "project_id": "6avVoBVB",
+   "version_id": "Zb6dytvm",
+   "version_number": "0.1.5",
+   "version_type": "release",
+   "date_published": "2026-08-23T14:06:10.431669Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LicenseRef-Timefall-Development-License-1.2",
+   "source_url": "https://github.com/Sweenus/simplytooltips",
+   "page": "https://modrinth.com/mod/simply-tooltips",
+   "filename": "SimplyTooltips-neoforge-0.1.5.jar",
+   "url": "https://cdn.modrinth.com/data/6avVoBVB/versions/Zb6dytvm/SimplyTooltips-neoforge-0.1.5.jar",
+   "sha1": "6227453d5b628b1009d6ec516a0da5b588849744",
+   "sha512": "7be6beb5f72c03b7c9f44568c11577f2ba50aec8d16af34d860294718cd2ab550691a8e82756d96c6f0bdd1111e2de8aa68db970c5762be659ad4aec69940ebd",
+   "size": 5512986,
+   "side": "both",
+   "group": "library",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "hYykXjDp",
+     "version_id": null
+    },
+    {
+     "type": "required",
+     "project_id": "lhGA9TYQ",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "architectury-api",
+   "title": "Architectury API",
+   "project_id": "lhGA9TYQ",
+   "version_id": "1IiqEQGl",
+   "version_number": "13.0.11+neoforge",
+   "version_type": "release",
+   "date_published": "2026-07-23T09:57:30.306316Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/architectury/architectury",
+   "page": "https://modrinth.com/mod/architectury-api",
+   "filename": "architectury-13.0.11-neoforge.jar",
+   "url": "https://cdn.modrinth.com/data/lhGA9TYQ/versions/1IiqEQGl/architectury-13.0.11-neoforge.jar",
+   "sha1": "008656a0702801174b8ec245ed7aad1921d6e9f1",
+   "sha512": "d9f7c3bb8162577dfb461ffdf04bd6a3563c7586934a0e2a744c14421beffb8286f0d88d4c758317003f20f99fe8072a39b9d675af061e036970d36db36027f0",
+   "size": 584734,
+   "side": "both",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "cloth-config",
+   "title": "Cloth Config API",
+   "project_id": "9s6osm5g",
+   "version_id": "izKINKFg",
+   "version_number": "15.0.140+neoforge",
+   "version_type": "release",
+   "date_published": "2024-09-16T17:18:02.926305Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/shedaniel/ClothConfig/",
+   "page": "https://modrinth.com/mod/cloth-config",
+   "filename": "cloth-config-15.0.140-neoforge.jar",
+   "url": "https://cdn.modrinth.com/data/9s6osm5g/versions/izKINKFg/cloth-config-15.0.140-neoforge.jar",
+   "sha1": "c3e5733ba4503b102589a026000fd5ce0212f6f2",
+   "sha512": "aaf9b010955b8cd294e5a92f069985b18729fd5e2cf22d351f1dff9680f15488688803ec41e77e941cbde130ceb535014ca4c868047d80ab69c2d508e216654d",
+   "size": 1163890,
+   "side": "both",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "playeranimator",
+   "title": "playerAnimator",
+   "project_id": "gedNE4y2",
+   "version_id": "HJZB6bmA",
+   "version_number": "2.0.4+1.21.1-forge",
+   "version_type": "beta",
+   "date_published": "2025-12-28T21:00:18.426451Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/KosmX/fabricPlayerAnimation",
+   "page": "https://modrinth.com/mod/playeranimator",
+   "filename": "player-animation-lib-forge-2.0.4+1.21.1.jar",
+   "url": "https://cdn.modrinth.com/data/gedNE4y2/versions/HJZB6bmA/player-animation-lib-forge-2.0.4%2B1.21.1.jar",
+   "sha1": "05be8ddcc78532b9a5520c718edc6c971cd0057c",
+   "sha512": "fc00450fb6c95ec1779021bdc726122dacb5915c6baddaacc981cd221b01b8db35f2a0dfde5d6fa6766d877266dc82f58854f571ea53cc5c4d468b80e1548a5f",
+   "size": 203149,
+   "side": "both",
+   "group": "library",
+   "declared_deps": [
+    {
+     "type": "optional",
+     "project_id": "aRnIEV0F",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "yungs-api",
+   "title": "YUNG's API",
+   "project_id": "Ua7DFN59",
+   "version_id": "2prKITKh",
+   "version_number": "1.21.1-NeoForge-5.1.9",
+   "version_type": "release",
+   "date_published": "2026-09-16T11:24:46.968948Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/YUNG-GANG/YUNGs-API",
+   "page": "https://modrinth.com/mod/yungs-api",
+   "filename": "YungsApi-1.21.1-NeoForge-5.1.9.jar",
+   "url": "https://cdn.modrinth.com/data/Ua7DFN59/versions/2prKITKh/YungsApi-1.21.1-NeoForge-5.1.9.jar",
+   "sha1": "2c4b740c8ad27bbcb2a21b85b64f011b809aed91",
+   "sha512": "7e3cf0b429e8a1c51dca094c2d8eabf12245bb42cbcd8b6e3e54959f931bef93201b81a08d200b417059aaa438e8eb445c3978a09568597bfb588199b7775967",
+   "size": 413763,
+   "side": "both",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "lithostitched",
+   "title": "Lithostitched",
+   "project_id": "XaDC71GB",
+   "version_id": "sPmtDq1X",
+   "version_number": "1.8.0-neoforge-21.1",
+   "version_type": "release",
+   "date_published": "2026-09-22T03:18:49.456663Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/Apollounknowndev/lithostitched/",
+   "page": "https://modrinth.com/mod/lithostitched",
+   "filename": "lithostitched-1.8.0-neoforge-21.1.jar",
+   "url": "https://cdn.modrinth.com/data/XaDC71GB/versions/sPmtDq1X/lithostitched-1.8.0-neoforge-21.1.jar",
+   "sha1": "fe7eb612a0fa0c41ce94d914162d298755bb25a3",
+   "sha512": "0ba80383039270dec739f669fe936d091b87027c350972c88085729333e73e723e0c722d734c0592c08ffd6c5a21c16099f2e54cf7cfbcbd3061f5e3cbd62cb4",
+   "size": 979783,
+   "side": "both",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "balm",
+   "title": "Balm",
+   "project_id": "MBAkmtvl",
+   "version_id": "CquiaiDj",
+   "version_number": "21.0.66+neoforge-1.21.1",
+   "version_type": "release",
+   "date_published": "2026-09-25T05:58:07.044187Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LicenseRef-All-Rights-Reserved",
+   "source_url": "https://github.com/TwelveIterations/Balm",
+   "page": "https://modrinth.com/mod/balm",
+   "filename": "balm-neoforge-1.21.1-21.0.66.jar",
+   "url": "https://cdn.modrinth.com/data/MBAkmtvl/versions/CquiaiDj/balm-neoforge-1.21.1-21.0.66.jar",
+   "sha1": "dd3606a349f4a3c8fb5bd0ab22905675c02b0d74",
+   "sha512": "0262d51c0e931d10c3dccefb3b5426a1622edecab243d4b15dce07a23309641370184776739765067d292d808242d088c6fbf249762689824eff9ba42c2d1e63",
+   "size": 783793,
+   "side": "both",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "sophisticated-core",
+   "title": "Sophisticated Core",
+   "project_id": "nmoqTijg",
+   "version_id": "blXGSmAb",
+   "version_number": "1.21.1-1.5.2.2343",
+   "version_type": "release",
+   "date_published": "2026-09-27T00:18:05.946280Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LicenseRef-All-Rights-Reserved",
+   "source_url": "https://github.com/P3pp3rF1y/SophisticatedCore",
+   "page": "https://modrinth.com/mod/sophisticated-core",
+   "filename": "sophisticatedcore-1.21.1-1.5.2.2343.jar",
+   "url": "https://cdn.modrinth.com/data/nmoqTijg/versions/blXGSmAb/sophisticatedcore-1.21.1-1.5.2.2343.jar",
+   "sha1": "86a5cf18608b3feec76c17a8ccac4de36d660fbc",
+   "sha512": "ecaf6db1348d61934cbce15e39bb211d9af33ae7d8f2a1bb770c911f317807c15f67450363c92b9fe178eb12e922842ddc733b54d09784b359b7677b9318b852",
+   "size": 1809363,
+   "side": "both",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "resourceful-config",
+   "title": "Resourceful Config",
+   "project_id": "M1953qlQ",
+   "version_id": "lSbyRD6v",
+   "version_number": "3.0.11",
+   "version_type": "release",
+   "date_published": "2025-04-26T17:59:04.789908Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/Team-Resourceful/Resourceful-Config",
+   "page": "https://modrinth.com/mod/resourceful-config",
+   "filename": "resourcefulconfig-neoforge-1.21-3.0.11.jar",
+   "url": "https://cdn.modrinth.com/data/M1953qlQ/versions/lSbyRD6v/resourcefulconfig-neoforge-1.21-3.0.11.jar",
+   "sha1": "6bf2b6ea9c071c00a2abcdc552667fb6f7d21031",
+   "sha512": "8e4ccc37732b3f5190e7e98df34dbc1339fe614494fcabf1aeaeab9ad8e5993522964b51be31882000c08c48a6d0096b5458364415bb81f2b2b775a7daf2eb87",
+   "size": 341009,
+   "side": "both",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "searchables",
+   "title": "Searchables",
+   "project_id": "fuuu3xnx",
+   "version_id": "iEE85X0w",
+   "version_number": "1.0.2",
+   "version_type": "release",
+   "date_published": "2024-10-21T20:44:51.147209Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/jaredlll08/searchables",
+   "page": "https://modrinth.com/mod/searchables",
+   "filename": "Searchables-neoforge-1.21.1-1.0.2.jar",
+   "url": "https://cdn.modrinth.com/data/fuuu3xnx/versions/iEE85X0w/Searchables-neoforge-1.21.1-1.0.2.jar",
+   "sha1": "5b8a0b43a474c066371b2e16f9bfb88622552a74",
+   "sha512": "d0824bac1900142ac9a53e68f7ec3b4c0d33d9366bbd3f1d0d93eed860e5eb6b5e6f5a215a69bfffa70bcb48573ff49b5a12bbaa96096ceac6636000d506027a",
+   "size": 77326,
+   "side": "client",
+   "group": "library",
+   "declared_deps": []
+  },
+  {
+   "slug": "mowzies-mobs",
+   "title": "Mowzie's Mobs",
+   "project_id": "BFbX9xcm",
+   "version_id": "xgAXTl17",
+   "version_number": "1.8.2",
+   "version_type": "release",
+   "date_published": "2026-03-15T06:52:50.101583Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LicenseRef-Mowzies-Mobs-License",
+   "source_url": "https://github.com/BobMowzie/MowziesMobs",
+   "page": "https://modrinth.com/mod/mowzies-mobs",
+   "filename": "mowziesmobs-1.21.1-1.8.2.jar",
+   "url": "https://cdn.modrinth.com/data/BFbX9xcm/versions/xgAXTl17/mowziesmobs-1.21.1-1.8.2.jar",
+   "sha1": "d64475cd77444b056ece6472c79d40293dc63c6c",
+   "sha512": "ab10d2f759df613d5094bac26c5a8bbe144786699018f7e4ae027fc4a86632aa7f96206f2c8be9970338eadef42539614a19b41d0d70b6216c3ed1c4c4421f0a",
+   "size": 36042925,
+   "side": "both",
+   "group": "creatures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "8BmcQJ2H",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "l_enders-cataclysm",
+   "title": "L_Ender's Cataclysm",
+   "project_id": "46KJle7n",
+   "version_id": "PsPYpoCC",
+   "version_number": "3.33",
+   "version_type": "release",
+   "date_published": "2026-09-20T13:46:34.684045Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "CC-BY-NC-ND-4.0",
+   "source_url": "https://github.com/lender544/new1.20.1/tree/master",
+   "page": "https://modrinth.com/mod/l_enders-cataclysm",
+   "filename": "L_Ender's Cataclysm 1.21.1-3.33.jar",
+   "url": "https://cdn.modrinth.com/data/46KJle7n/versions/PsPYpoCC/L_Ender%27s%20Cataclysm%201.21.1-3.33.jar",
+   "sha1": "f0310277167c82fd16a5c2bab220b5c5c262f133",
+   "sha512": "289f6e8364a6e432f34803a47cff8381899a1df0fdc675170323b43fd1c09579b1320d8b4e0de5df65c609b738d450c13c89e240d6d79f607888da26b7724947",
+   "size": 73375667,
+   "side": "both",
+   "group": "creatures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "FoVacERa",
+     "version_id": null
+    },
+    {
+     "type": "required",
+     "project_id": "vvuO3ImH",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "illager-invasion",
+   "title": "Illager Invasion",
+   "project_id": "jSV9w0J5",
+   "version_id": "9bEpNrvK",
+   "version_number": "v21.1.6-1.21.1-NeoForge",
+   "version_type": "release",
+   "date_published": "2025-05-03T20:29:51.632887Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/Fuzss/illagerinvasion",
+   "page": "https://modrinth.com/mod/illager-invasion",
+   "filename": "IllagerInvasion-v21.1.6-1.21.1-NeoForge.jar",
+   "url": "https://cdn.modrinth.com/data/jSV9w0J5/versions/9bEpNrvK/IllagerInvasion-v21.1.6-1.21.1-NeoForge.jar",
+   "sha1": "48bea606f6e3f10e2100349de2c6c65c76c20786",
+   "sha512": "5ad618c60d78ab9196ef386c63d5855f3eab2f90006156b786d5b4f4ea7e6bcc1fd9f61dfa45b7b2df44dd900fe9747c9ac1ccac6fdb11814e2f4a7e53d93107",
+   "size": 2361701,
+   "side": "both",
+   "group": "creatures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "QAGBst4M",
+     "version_id": null
+    },
+    {
+     "type": "optional",
+     "project_id": "5WeWGLoJ",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "mutant-monsters",
+   "title": "Mutant Monsters",
+   "project_id": "derP0ten",
+   "version_id": "dauEcrnZ",
+   "version_number": "v21.1.1-1.21.1-NeoForge",
+   "version_type": "release",
+   "date_published": "2025-11-17T14:06:01.071303Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "AGPL-3.0-only",
+   "source_url": "https://github.com/Fuzss/mutantmonsters",
+   "page": "https://modrinth.com/mod/mutant-monsters",
+   "filename": "MutantMonsters-v21.1.1-1.21.1-NeoForge.jar",
+   "url": "https://cdn.modrinth.com/data/derP0ten/versions/dauEcrnZ/MutantMonsters-v21.1.1-1.21.1-NeoForge.jar",
+   "sha1": "c9981cf323d5e0fd49387ad20dafec1f58b2c88d",
+   "sha512": "4d969c457a01e49a242ebc03112031bd338be08fc4ab36540b222b0a64e72a778a6534ad2be7c5cf72a5a74e1ce58e66e2999957f68c189c868dbc48bef44708",
+   "size": 1346730,
+   "side": "both",
+   "group": "creatures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "QAGBst4M",
+     "version_id": null
+    },
+    {
+     "type": "optional",
+     "project_id": "5WeWGLoJ",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "naturalist",
+   "title": "Naturalist",
+   "project_id": "F8BQNPWX",
+   "version_id": "ETgOvHHS",
+   "version_number": "2.0.5+1.21.1-neoforge",
+   "version_type": "release",
+   "date_published": "2026-09-28T23:09:04.932959Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LicenseRef-Custom",
+   "source_url": null,
+   "page": "https://modrinth.com/mod/naturalist",
+   "filename": "naturalist-2.0.5-neoforge-1.21.1.jar",
+   "url": "https://cdn.modrinth.com/data/F8BQNPWX/versions/ETgOvHHS/naturalist-2.0.5-neoforge-1.21.1.jar",
+   "sha1": "ea9ebf082eb978dcf583255e8fca1004a8114ab6",
+   "sha512": "7c5f1ce90a097a0e097ef60049b3ae1597295286b2e485d89c960504c150d62fd711b7286a90512f3b8bf27953a4f9d816a9c6a58700b888f59d05d5a7cb03e1",
+   "size": 11325729,
+   "side": "both",
+   "group": "creatures",
+   "declared_deps": []
+  },
+  {
+   "slug": "simply-swords",
+   "title": "Simply Swords",
+   "project_id": "bK3Ubu9p",
+   "version_id": "nS0Yahr5",
+   "version_number": "1.70.2-1.21.1",
+   "version_type": "release",
+   "date_published": "2026-08-27T11:58:58.391405Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LicenseRef-Custom",
+   "source_url": "https://github.com/Sweenus/SimplySwords",
+   "page": "https://modrinth.com/mod/simply-swords",
+   "filename": "simplyswords-neoforge-1.70.2-1.21.1.jar",
+   "url": "https://cdn.modrinth.com/data/bK3Ubu9p/versions/nS0Yahr5/simplyswords-neoforge-1.70.2-1.21.1.jar",
+   "sha1": "05b074ff774467f1fe9fb5592151b7845c321cbc",
+   "sha512": "9a231c0068318e7f62e3d5dfd81660b3f8efdcae9bcf83cfc3637c897fed29aac1941ef8007e8b29f0badfdce0c8047cfb73cd1ea486f25c69197384adfc8dcd",
+   "size": 16282660,
+   "side": "both",
+   "group": "equipment",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "hYykXjDp",
+     "version_id": null
+    },
+    {
+     "type": "required",
+     "project_id": "6avVoBVB",
+     "version_id": null
+    },
+    {
+     "type": "optional",
+     "project_id": "5sy6g3kz",
+     "version_id": null
+    },
+    {
+     "type": "required",
+     "project_id": "lhGA9TYQ",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "better-combat",
+   "title": "Better Combat",
+   "project_id": "5sy6g3kz",
+   "version_id": "VhIOvcXP",
+   "version_number": "2.4.0+1.21.1-neoforge",
+   "version_type": "release",
+   "date_published": "2026-07-14T10:59:20.462587Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LicenseRef-All-Rights-Reserved",
+   "source_url": "https://github.com/ZsoltMolnarrr/BetterCombat",
+   "page": "https://modrinth.com/mod/better-combat",
+   "filename": "bettercombat-neoforge-2.4.0+1.21.1.jar",
+   "url": "https://cdn.modrinth.com/data/5sy6g3kz/versions/VhIOvcXP/bettercombat-neoforge-2.4.0%2B1.21.1.jar",
+   "sha1": "bacbc8c86671663e9998b141c5732250c1f4d4fb",
+   "sha512": "db24730a42ae7e2dd546ee031d2f5e0dd6f9896418417a529fa21a44121761ebb29c8b8299db8f20500f7497f7b60a7d793b66c93abf37a8ea0aa3edafd80eb6",
+   "size": 1045389,
+   "side": "both",
+   "group": "equipment",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "9s6osm5g",
+     "version_id": null
+    },
+    {
+     "type": "required",
+     "project_id": "gedNE4y2",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "artifacts",
+   "title": "Artifacts",
+   "project_id": "P0Mu4wcQ",
+   "version_id": "lMfuK0o7",
+   "version_number": "13.2.5",
+   "version_type": "release",
+   "date_published": "2026-09-02T11:14:45.391471Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/ochotonida/artifacts",
+   "page": "https://modrinth.com/mod/artifacts",
+   "filename": "artifacts-neoforge-13.2.5.jar",
+   "url": "https://cdn.modrinth.com/data/P0Mu4wcQ/versions/lMfuK0o7/artifacts-neoforge-13.2.5.jar",
+   "sha1": "fb6cd3be2d034dde369ffd7558c95c6daa44189e",
+   "sha512": "9079bc8a22c237881b22b38027bbab2a8a2e685a1f49c1e1e0e5796f3e0a5509a130d73753c7b2980f12e4f00845f8e8c967ee969f1eadcd52139c2780afe09d",
+   "size": 1086922,
+   "side": "both",
+   "group": "equipment",
+   "declared_deps": [
+    {
+     "type": "optional",
+     "project_id": "9s6osm5g",
+     "version_id": null
+    },
+    {
+     "type": "optional",
+     "project_id": "jtmvUHXj",
+     "version_id": null
+    },
+    {
+     "type": "optional",
+     "project_id": "vvuO3ImH",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "immersive-armors",
+   "title": "Immersive Armors",
+   "project_id": "eE2Db4YU",
+   "version_id": "B2YtQYCh",
+   "version_number": "1.7.6+1.21.1",
+   "version_type": "release",
+   "date_published": "2026-05-12T07:38:46.602779Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "GPL-3.0-only",
+   "source_url": "https://github.com/Luke100000/ImmersiveArmors",
+   "page": "https://modrinth.com/mod/immersive-armors",
+   "filename": "immersive_armors-1.7.6+1.21.1-neoforge.jar",
+   "url": "https://cdn.modrinth.com/data/eE2Db4YU/versions/B2YtQYCh/immersive_armors-1.7.6%2B1.21.1-neoforge.jar",
+   "sha1": "4c5762af46c0beac0830d1f1e9c88332b120ceaa",
+   "sha512": "875852a2d6710c1b4da43026b345154b41751e4c1f987c7a19614c5f195a4d68ebbd93811da9868db83bf245aca2d15a35432b66730c17531f5e7006882a5d95",
+   "size": 1274167,
+   "side": "both",
+   "group": "equipment",
+   "declared_deps": []
+  },
+  {
+   "slug": "yungs-better-dungeons",
+   "title": "YUNG's Better Dungeons",
+   "project_id": "o1C1Dkj5",
+   "version_id": "D6aZn0Em",
+   "version_number": "1.21.1-NeoForge-5.1.4",
+   "version_type": "release",
+   "date_published": "2024-12-01T22:09:34.329782Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/YUNG-GANG/YUNGs-Better-Dungeons",
+   "page": "https://modrinth.com/mod/yungs-better-dungeons",
+   "filename": "YungsBetterDungeons-1.21.1-NeoForge-5.1.4.jar",
+   "url": "https://cdn.modrinth.com/data/o1C1Dkj5/versions/D6aZn0Em/YungsBetterDungeons-1.21.1-NeoForge-5.1.4.jar",
+   "sha1": "73a660c13063450e555e5e2c015ae24d606b32b4",
+   "sha512": "40513bacd13fa9860abcab507b1fc09dc51649af4b615ce466e0ec361557f02d35e6e44bea1cc17cb4120805f862aad01394eb185f46611e7be63dfd97f272df",
+   "size": 782160,
+   "side": "both",
+   "group": "structures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "Ua7DFN59",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "yungs-better-strongholds",
+   "title": "YUNG's Better Strongholds",
+   "project_id": "kidLKymU",
+   "version_id": "8U0dIfSM",
+   "version_number": "1.21.1-NeoForge-5.1.3",
+   "version_type": "release",
+   "date_published": "2025-03-06T20:03:51.120457Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/YUNG-GANG/YUNGs-Better-Strongholds",
+   "page": "https://modrinth.com/mod/yungs-better-strongholds",
+   "filename": "YungsBetterStrongholds-1.21.1-NeoForge-5.1.3.jar",
+   "url": "https://cdn.modrinth.com/data/kidLKymU/versions/8U0dIfSM/YungsBetterStrongholds-1.21.1-NeoForge-5.1.3.jar",
+   "sha1": "5d06a5850af7c577612d4592706a8e156bbe1cbf",
+   "sha512": "385d67e07f2c67af5ea387d92d92949d8f671e8f99204457b6396dbe987ac3b14c2bff765df5fcbaa68016604f82a1fc6ec5a69c012ca22ad088d1a7c9bc135d",
+   "size": 461244,
+   "side": "both",
+   "group": "structures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "Ua7DFN59",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "yungs-better-mineshafts",
+   "title": "YUNG's Better Mineshafts",
+   "project_id": "HjmxVlSr",
+   "version_id": "Go3nbneL",
+   "version_number": "1.21.1-NeoForge-5.1.1",
+   "version_type": "release",
+   "date_published": "2024-10-14T18:45:00.790338Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/YUNG-GANG/YUNGs-Better-Mineshafts",
+   "page": "https://modrinth.com/mod/yungs-better-mineshafts",
+   "filename": "YungsBetterMineshafts-1.21.1-NeoForge-5.1.1.jar",
+   "url": "https://cdn.modrinth.com/data/HjmxVlSr/versions/Go3nbneL/YungsBetterMineshafts-1.21.1-NeoForge-5.1.1.jar",
+   "sha1": "6a14e1d8201f068ca87ef8333e471c5378955906",
+   "sha512": "8b01b386f53feeaa55f0c62697578b82e00501e45e428b2a68df6bda34efb6a4b3b4e3582abf13fe767ebcb61aef9368186f53c03999958bef38f31c41a7f8b2",
+   "size": 493967,
+   "side": "both",
+   "group": "structures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "Ua7DFN59",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "yungs-better-desert-temples",
+   "title": "YUNG's Better Desert Temples",
+   "project_id": "XNlO7sBv",
+   "version_id": "GQ9iNWkI",
+   "version_number": "1.21.1-NeoForge-4.1.5",
+   "version_type": "release",
+   "date_published": "2025-03-07T22:28:41.372038Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/YUNG-GANG/YUNGs-Better-Desert-Temples",
+   "page": "https://modrinth.com/mod/yungs-better-desert-temples",
+   "filename": "YungsBetterDesertTemples-1.21.1-NeoForge-4.1.5.jar",
+   "url": "https://cdn.modrinth.com/data/XNlO7sBv/versions/GQ9iNWkI/YungsBetterDesertTemples-1.21.1-NeoForge-4.1.5.jar",
+   "sha1": "90529257dbd92558998c65178294bc7b2fd16a64",
+   "sha512": "6454c955f75f66104810e967a59ae032ddf1ccc5a854346af6bfba6e44cd456e755cd8feb1e0968be4e9132ea6c5d1cb2126fe5e85d3eb18c8d3ea3c81ffdf9a",
+   "size": 905839,
+   "side": "both",
+   "group": "structures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "Ua7DFN59",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "yungs-better-jungle-temples",
+   "title": "YUNG's Better Jungle Temples",
+   "project_id": "z9Ve58Ih",
+   "version_id": "P00i2hJn",
+   "version_number": "1.21.1-NeoForge-3.1.2",
+   "version_type": "release",
+   "date_published": "2024-11-21T04:34:30.071936Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/YUNG-GANG/YUNGs-Better-Jungle-Temples",
+   "page": "https://modrinth.com/mod/yungs-better-jungle-temples",
+   "filename": "YungsBetterJungleTemples-1.21.1-NeoForge-3.1.2.jar",
+   "url": "https://cdn.modrinth.com/data/z9Ve58Ih/versions/P00i2hJn/YungsBetterJungleTemples-1.21.1-NeoForge-3.1.2.jar",
+   "sha1": "d6b7ce6cf351b09cbd23147ff166c35cfdc572e8",
+   "sha512": "eca4233e874a55886c63d2111b8685d479771d3627bad2922582e65b78c51ba74733dc4624aabf91f2a2178a940a72d9209ae33eef74e34f84f07d62256709d9",
+   "size": 795839,
+   "side": "both",
+   "group": "structures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "Ua7DFN59",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "yungs-better-ocean-monuments",
+   "title": "YUNG's Better Ocean Monuments",
+   "project_id": "3dT9sgt4",
+   "version_id": "yFjEcj2g",
+   "version_number": "1.21.1-NeoForge-4.1.2",
+   "version_type": "release",
+   "date_published": "2024-11-21T04:35:45.546340Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/YUNG-GANG/YUNGs-Better-Ocean-Monuments",
+   "page": "https://modrinth.com/mod/yungs-better-ocean-monuments",
+   "filename": "YungsBetterOceanMonuments-1.21.1-NeoForge-4.1.2.jar",
+   "url": "https://cdn.modrinth.com/data/3dT9sgt4/versions/yFjEcj2g/YungsBetterOceanMonuments-1.21.1-NeoForge-4.1.2.jar",
+   "sha1": "fba629defdb92ad99ec4f411895afb6e19555a18",
+   "sha512": "77c864da36f1d2173e6460dc335996893a804954b8a5c274173fc95dfdbf437e80d9dce32f6060306a662fc35322566eecf5dfe24e2d3fab79bf7e0ff9fa4db6",
+   "size": 1025571,
+   "side": "both",
+   "group": "structures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "Ua7DFN59",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "yungs-better-witch-huts",
+   "title": "YUNG's Better Witch Huts",
+   "project_id": "t5FRdP87",
+   "version_id": "AvedwcIe",
+   "version_number": "1.21.1-NeoForge-4.1.1",
+   "version_type": "release",
+   "date_published": "2024-10-14T20:29:19.767506Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/YUNG-GANG/YUNGs-Better-Witch-Huts",
+   "page": "https://modrinth.com/mod/yungs-better-witch-huts",
+   "filename": "YungsBetterWitchHuts-1.21.1-NeoForge-4.1.1.jar",
+   "url": "https://cdn.modrinth.com/data/t5FRdP87/versions/AvedwcIe/YungsBetterWitchHuts-1.21.1-NeoForge-4.1.1.jar",
+   "sha1": "bbf6c91f4a2829c58bc024eaaab821986bc93de6",
+   "sha512": "9baa8a1f36a2a36efc3df58ab9347fd9f326b551ad78e3f600ed9d68862c619752ac0770804807efb15a46fcb4d9f6e2baf6a11f622d3ebb6c865662f6c7bcfd",
+   "size": 174789,
+   "side": "both",
+   "group": "structures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "Ua7DFN59",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "yungs-better-nether-fortresses",
+   "title": "YUNG's Better Nether Fortresses",
+   "project_id": "Z2mXHnxP",
+   "version_id": "iopJiJQp",
+   "version_number": "1.21.1-NeoForge-3.1.5",
+   "version_type": "release",
+   "date_published": "2025-06-01T23:34:40.452930Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/YUNG-GANG/YUNGs-Better-Fortresses",
+   "page": "https://modrinth.com/mod/yungs-better-nether-fortresses",
+   "filename": "YungsBetterNetherFortresses-1.21.1-NeoForge-3.1.5.jar",
+   "url": "https://cdn.modrinth.com/data/Z2mXHnxP/versions/iopJiJQp/YungsBetterNetherFortresses-1.21.1-NeoForge-3.1.5.jar",
+   "sha1": "4061ece2141475227646649046fc14c2da505922",
+   "sha512": "18b461298d3df1215fa3b4d2c0cb2ef1c7ed76701d8a0bb140277b21923e31abd939f0fd9b400c5bd676d739f1cda31c43b4dc753f9187251542223f3424d336",
+   "size": 609639,
+   "side": "both",
+   "group": "structures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "Ua7DFN59",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "yungs-better-end-island",
+   "title": "YUNG's Better End Island",
+   "project_id": "2BwBOmBQ",
+   "version_id": "I52NZ1qK",
+   "version_number": "1.21.1-NeoForge-3.1.2",
+   "version_type": "release",
+   "date_published": "2025-03-13T19:56:29.775018Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/yungnickyoung/YUNGs-Better-End-Island",
+   "page": "https://modrinth.com/mod/yungs-better-end-island",
+   "filename": "YungsBetterEndIsland-1.21.1-NeoForge-3.1.2.jar",
+   "url": "https://cdn.modrinth.com/data/2BwBOmBQ/versions/I52NZ1qK/YungsBetterEndIsland-1.21.1-NeoForge-3.1.2.jar",
+   "sha1": "832f2c17425debe74a9f267f4136f1a0f0221d19",
+   "sha512": "02923a1a97eb81ec13d69bdc6b7e8b36dfb9e6f1a98adfcf103707ec3afde35831ccd4b210e9b3a9c7662541c38ea593a3d94c12171b4072ea7feafa75c95f96",
+   "size": 398130,
+   "side": "both",
+   "group": "structures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "Ua7DFN59",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "yungs-bridges",
+   "title": "YUNG's Bridges",
+   "project_id": "Ht4BfYp6",
+   "version_id": "urkCzBf6",
+   "version_number": "1.21.1-NeoForge-5.1.1",
+   "version_type": "release",
+   "date_published": "2024-10-14T20:39:23.498316Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/YUNG-GANG/YUNGs-Bridges",
+   "page": "https://modrinth.com/mod/yungs-bridges",
+   "filename": "YungsBridges-1.21.1-NeoForge-5.1.1.jar",
+   "url": "https://cdn.modrinth.com/data/Ht4BfYp6/versions/urkCzBf6/YungsBridges-1.21.1-NeoForge-5.1.1.jar",
+   "sha1": "18099c2d54acd16bb8ab90a66f40fa16496d065e",
+   "sha512": "20b07ae4c08974980f976bcae32f18ccb885745d6cd50d4a5d0156eb5c51c29e49f8b2bf7dc2ae160d39b62f2332513bd9850efc5cba13697e36a2ac2848bc3b",
+   "size": 136820,
+   "side": "both",
+   "group": "structures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "Ua7DFN59",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "yungs-extras",
+   "title": "YUNG's Extras",
+   "project_id": "ZYgyPyfq",
+   "version_id": "N2EpMhR7",
+   "version_number": "1.21.1-NeoForge-5.1.1",
+   "version_type": "release",
+   "date_published": "2024-10-14T20:35:03.915159Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-only",
+   "source_url": "https://github.com/YUNG-GANG/YUNGs-Extras",
+   "page": "https://modrinth.com/mod/yungs-extras",
+   "filename": "YungsExtras-1.21.1-NeoForge-5.1.1.jar",
+   "url": "https://cdn.modrinth.com/data/ZYgyPyfq/versions/N2EpMhR7/YungsExtras-1.21.1-NeoForge-5.1.1.jar",
+   "sha1": "62833733aaf407f36bdacf648ed4b2ef9940662b",
+   "sha512": "d4ef831a034977abdcaec40a7662adbc37c32cf141c68245250da501f6ada2ce193c5351166fbcf2ffb1c452b60bfca8ac578963332aa4a1b523e43912b8cb8c",
+   "size": 198183,
+   "side": "both",
+   "group": "structures",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "Ua7DFN59",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "tectonic",
+   "title": "Tectonic",
+   "project_id": "lWDHr9jE",
+   "version_id": "n4iyW7aB",
+   "version_number": "3.0.28-neoforge-21.1",
+   "version_type": "release",
+   "date_published": "2026-09-11T03:42:57.590112Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/Apollounknowndev/tectonic",
+   "page": "https://modrinth.com/mod/tectonic",
+   "filename": "tectonic-3.0.28-neoforge-21.1.jar",
+   "url": "https://cdn.modrinth.com/data/lWDHr9jE/versions/n4iyW7aB/tectonic-3.0.28-neoforge-21.1.jar",
+   "sha1": "db15156eec4320c2997c4dd4948119472de01224",
+   "sha512": "e07b9cb54f078b7bf74c925c5cebd6643f0b4c210b8f94474e68659b69468ece7d61432f70eafe7abaa1dfa798e4638aad297987c121dc127588c2623b7f7a81",
+   "size": 451757,
+   "side": "both",
+   "group": "world",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "XaDC71GB",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "farmers-delight",
+   "title": "Farmer's Delight",
+   "project_id": "R2OftAxM",
+   "version_id": "XTVZDOol",
+   "version_number": "1.21.1-1.3.4",
+   "version_type": "release",
+   "date_published": "2026-08-29T23:21:15.190939Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/vectorwing/FarmersDelight",
+   "page": "https://modrinth.com/mod/farmers-delight",
+   "filename": "FarmersDelight-1.21.1-1.3.4.jar",
+   "url": "https://cdn.modrinth.com/data/R2OftAxM/versions/XTVZDOol/FarmersDelight-1.21.1-1.3.4.jar",
+   "sha1": "27675ddfcb8cc37e6ea1ab6c15051c7949d94657",
+   "sha512": "1f6f8796469f747cff36f477b4f589a3d69613882399f9ee7f86db36c7bca9aa4828731f43db15dc6c7f5a4c1bbe3d4092a232e8cef010b09cec0581848fda90",
+   "size": 3160490,
+   "side": "both",
+   "group": "survival",
+   "declared_deps": []
+  },
+  {
+   "slug": "comforts",
+   "title": "Comforts",
+   "project_id": "SaCpeal4",
+   "version_id": "3kpPjcTc",
+   "version_number": "9.0.5+1.21.1",
+   "version_type": "release",
+   "date_published": "2026-01-24T04:53:24.006527Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LGPL-3.0-or-later",
+   "source_url": "https://github.com/illusivesoulworks/comforts",
+   "page": "https://modrinth.com/mod/comforts",
+   "filename": "comforts-neoforge-9.0.5+1.21.1.jar",
+   "url": "https://cdn.modrinth.com/data/SaCpeal4/versions/3kpPjcTc/comforts-neoforge-9.0.5%2B1.21.1.jar",
+   "sha1": "21d6bee3821d62fe3356c51fb1d697871a3087ff",
+   "sha512": "e9de2952545e9e773a6e78fc501e8cd231ea19750c30404355b71df9928eb5bd0921a4429aeca9d0fa10e67717f77fcf7a2aae117ac953b8f7de246b0ad685e4",
+   "size": 422658,
+   "side": "both",
+   "group": "survival",
+   "declared_deps": []
+  },
+  {
+   "slug": "waystones",
+   "title": "Waystones",
+   "project_id": "LOpKHB2A",
+   "version_id": "6Z6MQ6os",
+   "version_number": "21.1.46+neoforge-1.21.1",
+   "version_type": "release",
+   "date_published": "2026-09-25T06:00:14.558396Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LicenseRef-All-Rights-Reserved",
+   "source_url": "https://github.com/TwelveIterations/Waystones",
+   "page": "https://modrinth.com/mod/waystones",
+   "filename": "waystones-neoforge-1.21.1-21.1.46.jar",
+   "url": "https://cdn.modrinth.com/data/LOpKHB2A/versions/6Z6MQ6os/waystones-neoforge-1.21.1-21.1.46.jar",
+   "sha1": "75718161662d9ec957ba22e10e497788ec1687ba",
+   "sha512": "ca90b58d884d4bc2b08a870484ae7ede397e71d31eaaf01ff2603ad498d584763e099c2094e57031522385339705d2c011ed4910bf36efae688e64935b49ece9",
+   "size": 1223229,
+   "side": "both",
+   "group": "survival",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "MBAkmtvl",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "sophisticated-backpacks",
+   "title": "Sophisticated Backpacks",
+   "project_id": "TyCTlI4b",
+   "version_id": "pJxNzk4X",
+   "version_number": "1.21.1-3.26.6.2174",
+   "version_type": "release",
+   "date_published": "2026-09-29T11:03:09.588004Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "LicenseRef-All-Rights-Reserved",
+   "source_url": "https://github.com/P3pp3rF1y/SophisticatedBackpacks",
+   "page": "https://modrinth.com/mod/sophisticated-backpacks",
+   "filename": "sophisticatedbackpacks-1.21.1-3.26.6.2174.jar",
+   "url": "https://cdn.modrinth.com/data/TyCTlI4b/versions/pJxNzk4X/sophisticatedbackpacks-1.21.1-3.26.6.2174.jar",
+   "sha1": "c4f240d4071835631da9b698481ec607b9f1f8be",
+   "sha512": "de88746802c53786c09defe878ff4e766b246a1146cd417f4985765bf032cedfb89f08778e7350820bdf67a3514ec63e58e9d8e76856332c265c1adbf7ef84b4",
+   "size": 1239554,
+   "side": "both",
+   "group": "survival",
+   "declared_deps": [
+    {
+     "type": "optional",
+     "project_id": "u6dRKJwZ",
+     "version_id": null
+    },
+    {
+     "type": "optional",
+     "project_id": "BAscRYKm",
+     "version_id": null
+    },
+    {
+     "type": "optional",
+     "project_id": "DMu0oBKf",
+     "version_id": null
+    },
+    {
+     "type": "optional",
+     "project_id": "WRaRZdTd",
+     "version_id": null
+    },
+    {
+     "type": "optional",
+     "project_id": "b1fMg6sH",
+     "version_id": null
+    },
+    {
+     "type": "optional",
+     "project_id": "vRYk0bv7",
+     "version_id": null
+    },
+    {
+     "type": "optional",
+     "project_id": "vvuO3ImH",
+     "version_id": null
+    },
+    {
+     "type": "required",
+     "project_id": "nmoqTijg",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "gravestone-mod",
+   "title": "GraveStone Mod",
+   "project_id": "RYtXKJPr",
+   "version_id": "rMGJpjaM",
+   "version_number": "neoforge-1.21.1-1.0.40",
+   "version_type": "release",
+   "date_published": "2026-08-17T17:59:05.895352Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LicenseRef-All-Rights-Reserved",
+   "source_url": "https://github.com/henkelmax/gravestone",
+   "page": "https://modrinth.com/mod/gravestone-mod",
+   "filename": "gravestone-neoforge-1.21.1-1.0.40.jar",
+   "url": "https://cdn.modrinth.com/data/RYtXKJPr/versions/rMGJpjaM/gravestone-neoforge-1.21.1-1.0.40.jar",
+   "sha1": "97230b93af34ac6581ed36b0cc98f6b16b06c04e",
+   "sha512": "5504a222d4085da1898ff6d4dff8eb1821fd14a8caaaac785554277147f984262e63925a411db3f1a34e9c7874652fb6737176bea4c0c3f01243f5eae4ea6eaa",
+   "size": 322082,
+   "side": "both",
+   "group": "survival",
+   "declared_deps": [
+    {
+     "type": "optional",
+     "project_id": "nvQzSEkH",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "explorers-compass",
+   "title": "Explorer's Compass",
+   "project_id": "RV1qfVQ8",
+   "version_id": "hIJ2Ev1Q",
+   "version_number": "1.21.1-3.4.0-neoforge",
+   "version_type": "release",
+   "date_published": "2026-04-08T01:44:31.307013Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "CC-BY-NC-SA-4.0",
+   "source_url": "https://github.com/MattCzyr/ExplorersCompass",
+   "page": "https://modrinth.com/mod/explorers-compass",
+   "filename": "ExplorersCompass-1.21.1-3.4.0-neoforge.jar",
+   "url": "https://cdn.modrinth.com/data/RV1qfVQ8/versions/hIJ2Ev1Q/ExplorersCompass-1.21.1-3.4.0-neoforge.jar",
+   "sha1": "9f62af344988a6e2d855b113e61cf0e1611c7e0f",
+   "sha512": "a1b2e385aaacb547763441fc23e9a33a0b1d67bd32094cd605ded3fbdd1c7a0e5fc4520fdfa090c29d2d3384b685e3ead91b32d20030e45632c94145ee3ec668",
+   "size": 174668,
+   "side": "both",
+   "group": "survival",
+   "declared_deps": []
+  },
+  {
+   "slug": "natures-compass",
+   "title": "Nature's Compass",
+   "project_id": "fPetb5Kh",
+   "version_id": "nFniEtJV",
+   "version_number": "1.21.1-3.4.0-neoforge",
+   "version_type": "release",
+   "date_published": "2026-04-08T01:47:47.219161Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "CC-BY-NC-SA-4.0",
+   "source_url": "https://github.com/MattCzyr/NaturesCompass",
+   "page": "https://modrinth.com/mod/natures-compass",
+   "filename": "NaturesCompass-1.21.1-3.4.0-neoforge.jar",
+   "url": "https://cdn.modrinth.com/data/fPetb5Kh/versions/nFniEtJV/NaturesCompass-1.21.1-3.4.0-neoforge.jar",
+   "sha1": "e19721873bebc4dbc1674bb101af39d0ea406b95",
+   "sha512": "5314b536bcb9a594a9cf2bbd46c82468d17e1559bd6c00da9d91e96c0814f50416799a011705f0d184bd731dac3f03dec009c76fea3d02b3556a6013f9649014",
+   "size": 224657,
+   "side": "both",
+   "group": "survival",
+   "declared_deps": []
+  },
+  {
+   "slug": "patchouli",
+   "title": "Patchouli",
+   "project_id": "nU0bVIaL",
+   "version_id": "BIogJv2D",
+   "version_number": "1.21.1-93-neoforge",
+   "version_type": "release",
+   "date_published": "2026-03-08T20:49:51.469086Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "CC-BY-NC-SA-3.0",
+   "source_url": "https://github.com/VazkiiMods/Patchouli/",
+   "page": "https://modrinth.com/mod/patchouli",
+   "filename": "Patchouli-1.21.1-93-NEOFORGE.jar",
+   "url": "https://cdn.modrinth.com/data/nU0bVIaL/versions/BIogJv2D/Patchouli-1.21.1-93-NEOFORGE.jar",
+   "sha1": "5413bb9b8fc35ebe46b06b48bf9afafbd8471140",
+   "sha512": "0b5c172db9a6eeecb5ca44b359a83548c3a60be7ff313959acdfc1e5b8039736c18e57e947d435b52d06da31159d2d02ea36e5742668dbc826308a4c99e4039f",
+   "size": 646777,
+   "side": "both",
+   "group": "interface",
+   "declared_deps": []
+  },
+  {
+   "slug": "xaeros-minimap",
+   "title": "Xaero's Minimap",
+   "project_id": "1bokaNcj",
+   "version_id": "Q1tuMQBB",
+   "version_number": "neoforge-1.21.1-26.5.0",
+   "version_type": "release",
+   "date_published": "2026-09-10T11:37:53.816631Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LicenseRef-All-Rights-Reserved",
+   "source_url": null,
+   "page": "https://modrinth.com/mod/xaeros-minimap",
+   "filename": "xaerominimap-neoforge-1.21.1-26.5.0.jar",
+   "url": "https://cdn.modrinth.com/data/1bokaNcj/versions/Q1tuMQBB/xaerominimap-neoforge-1.21.1-26.5.0.jar",
+   "sha1": "7553dddbe478d1c8c15198090217e723d27f79c4",
+   "sha512": "0fde1066dd922ac0796d166ba1bf1b843873b8d8563da3a08777df54bb377ff6466096650c730ad1b96e0aecf2d8974cd87c32165edf6a30f6653840c3f99abf",
+   "size": 2185559,
+   "side": "client",
+   "group": "interface",
+   "declared_deps": [
+    {
+     "type": "optional",
+     "project_id": "gF3BGWvG",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "xaeros-world-map",
+   "title": "Xaero's World Map",
+   "project_id": "NcUtCpym",
+   "version_id": "9Ckiihkz",
+   "version_number": "neoforge-1.21.1-1.46.0",
+   "version_type": "release",
+   "date_published": "2026-09-10T11:26:22.762444Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "LicenseRef-All-Rights-Reserved",
+   "source_url": null,
+   "page": "https://modrinth.com/mod/xaeros-world-map",
+   "filename": "xaeroworldmap-neoforge-1.21.1-1.46.0.jar",
+   "url": "https://cdn.modrinth.com/data/NcUtCpym/versions/9Ckiihkz/xaeroworldmap-neoforge-1.21.1-1.46.0.jar",
+   "sha1": "82b4ae6c0f2e13f02cbdc1325342909ed083fc24",
+   "sha512": "fb14d11d66e0a6441981b18454c86534d8f534cd159ca19fa612950521788d858f37f18fe2093bb9b43ca0a88ae9af578eced5d140ff645a7681d7e452e8a268",
+   "size": 1422680,
+   "side": "client",
+   "group": "interface",
+   "declared_deps": [
+    {
+     "type": "optional",
+     "project_id": "gF3BGWvG",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "jei",
+   "title": "Just Enough Items (JEI)",
+   "project_id": "u6dRKJwZ",
+   "version_id": "ufHUqt9b",
+   "version_number": "19.51.0.418",
+   "version_type": "release",
+   "date_published": "2026-09-02T13:30:20.012105Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/mezz/JustEnoughItems",
+   "page": "https://modrinth.com/mod/jei",
+   "filename": "jei-1.21.1-neoforge-19.51.0.418.jar",
+   "url": "https://cdn.modrinth.com/data/u6dRKJwZ/versions/ufHUqt9b/jei-1.21.1-neoforge-19.51.0.418.jar",
+   "sha1": "d19552586f686eae4ef5e7199f31604d1d3cfca7",
+   "sha512": "a6ca3abc3080f6f41033a77cb955fefe9f9ebae795c33546227f555b2d31e8d4131cc705126d14a3fbabb31097fc0e876dc0bbeb05ad907a1b796f21e57527bf",
+   "size": 1804792,
+   "side": "both",
+   "group": "interface",
+   "declared_deps": []
+  },
+  {
+   "slug": "jade",
+   "title": "Jade \ud83d\udd0d",
+   "project_id": "nvQzSEkH",
+   "version_id": "eYz2YBGT",
+   "version_number": "15.10.6+neoforge",
+   "version_type": "release",
+   "date_published": "2026-08-06T23:11:55.577664Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "CC-BY-NC-SA-4.0",
+   "source_url": "https://github.com/Snownee/Jade",
+   "page": "https://modrinth.com/mod/jade",
+   "filename": "Jade-1.21.1-NeoForge-15.10.6.jar",
+   "url": "https://cdn.modrinth.com/data/nvQzSEkH/versions/eYz2YBGT/Jade-1.21.1-NeoForge-15.10.6.jar",
+   "sha1": "88ee316e68900080b017f60c12162e2731924cf8",
+   "sha512": "dad9755dce8d85d914fc4df2baa0211f13e5839a71c1925fdd01f69081a95e30a2934e6273f8b01f0169adebe7a9dae57a8d904de0c4cb36dc17369bb474f0f2",
+   "size": 726853,
+   "side": "both",
+   "group": "interface",
+   "declared_deps": [
+    {
+     "type": "optional",
+     "project_id": "u6dRKJwZ",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "appleskin",
+   "title": "AppleSkin",
+   "project_id": "EsAfCjCV",
+   "version_id": "uAKA6Laj",
+   "version_number": "3.0.9+mc1.21",
+   "version_type": "release",
+   "date_published": "2026-04-01T04:50:54.655459Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1",
+    "1.21.2"
+   ],
+   "license": "Unlicense",
+   "source_url": "https://github.com/squeek502/AppleSkin",
+   "page": "https://modrinth.com/mod/appleskin",
+   "filename": "appleskin-neoforge-mc1.21-3.0.9.jar",
+   "url": "https://cdn.modrinth.com/data/EsAfCjCV/versions/uAKA6Laj/appleskin-neoforge-mc1.21-3.0.9.jar",
+   "sha1": "81cf0e668f991f83ac8820c386fbd6c9c3602246",
+   "sha512": "f4ea46273e407334b63e262e2555c9a8204f7b5e60f23f272fbaa83ad9e88800e0ee186aca840710df2dbe0a18b37758695fef2ae1a902c10b3706e3de772937",
+   "size": 75804,
+   "side": "both",
+   "group": "interface",
+   "declared_deps": []
+  },
+  {
+   "slug": "mouse-tweaks",
+   "title": "Mouse Tweaks",
+   "project_id": "aC3cM3Vq",
+   "version_id": "9I21YYxf",
+   "version_number": "1.21-2.26.1-neoforge",
+   "version_type": "release",
+   "date_published": "2024-08-17T15:54:27.801812Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1"
+   ],
+   "license": "BSD-3-Clause",
+   "source_url": "https://github.com/YaLTeR/MouseTweaks",
+   "page": "https://modrinth.com/mod/mouse-tweaks",
+   "filename": "MouseTweaks-neoforge-mc1.21-2.26.1.jar",
+   "url": "https://cdn.modrinth.com/data/aC3cM3Vq/versions/9I21YYxf/MouseTweaks-neoforge-mc1.21-2.26.1.jar",
+   "sha1": "6dae57f4f50f7808d2ed9a18f6cd1c0d4640c6bc",
+   "sha512": "f95c0cc881211ee0442434976775e07aae40b4a2ba4e3a85455bc57ca9d3c991e239cd98374a8abd442dc9c378dcd9001e2caa1bf69991d424b5652dd7f3483b",
+   "size": 73938,
+   "side": "client",
+   "group": "interface",
+   "declared_deps": []
+  },
+  {
+   "slug": "controlling",
+   "title": "Controlling",
+   "project_id": "xv94TkTM",
+   "version_id": "FaNppCJJ",
+   "version_number": "19.0.5",
+   "version_type": "release",
+   "date_published": "2025-03-30T23:44:43.868835Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21.1"
+   ],
+   "license": "MIT",
+   "source_url": "https://github.com/jaredlll08/Controlling",
+   "page": "https://modrinth.com/mod/controlling",
+   "filename": "Controlling-neoforge-1.21.1-19.0.5.jar",
+   "url": "https://cdn.modrinth.com/data/xv94TkTM/versions/FaNppCJJ/Controlling-neoforge-1.21.1-19.0.5.jar",
+   "sha1": "8a34424fc1428778be2fdbfa4da67b21b70bcbfe",
+   "sha512": "bd01b2a38a869ea38e5f2a8fcd601e67ea9b132b9883c6ae752bc35dff6e94f6d47b965e31c1ee5c2f6a1221653549680da779fcb5319d199aec261d221d179e",
+   "size": 77555,
+   "side": "client",
+   "group": "interface",
+   "declared_deps": [
+    {
+     "type": "required",
+     "project_id": "fuuu3xnx",
+     "version_id": null
+    }
+   ]
+  },
+  {
+   "slug": "yeetus-experimentus",
+   "title": "Yeetus Experimentus",
+   "project_id": "HaaH232J",
+   "version_id": "Pp0TjcvD",
+   "version_number": "87.0.0",
+   "version_type": "release",
+   "date_published": "2024-06-19T12:03:09.823858Z",
+   "loaders": [
+    "neoforge"
+   ],
+   "game_versions": [
+    "1.21",
+    "1.21.1",
+    "1.21.2",
+    "1.21.3",
+    "1.21.4",
+    "1.21.5",
+    "1.21.6",
+    "1.21.7",
+    "1.21.8",
+    "1.21.9",
+    "1.21.10",
+    "1.21.11"
+   ],
+   "license": "LicenseRef-All-Rights-Reserved",
+   "source_url": null,
+   "page": "https://modrinth.com/mod/yeetus-experimentus",
+   "filename": "yeetusexperimentus-neoforge-87.0.0.jar",
+   "url": "https://cdn.modrinth.com/data/HaaH232J/versions/Pp0TjcvD/yeetusexperimentus-neoforge-87.0.0.jar",
+   "sha1": "7132c346103d75a7c84da64b35b92e3a6f1ce3da",
+   "sha512": "cc2dc46dcaa0424c820cb7931fd2ceb3826669934189c011fd1ebd5692cdf7652c725034abec2828bfea2238c9615d6f9c36e3e01e21fc9eb44551eb51e06fe3",
+   "size": 570057,
+   "side": "client",
+   "group": "interface",
+   "declared_deps": []
+  }
+ ]
+}
