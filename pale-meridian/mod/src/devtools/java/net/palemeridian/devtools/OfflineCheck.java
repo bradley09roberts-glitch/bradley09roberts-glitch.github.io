@@ -438,6 +438,22 @@ public final class OfflineCheck {
 					problems.merge("zone:" + q.id(), open.get(), Integer::sum);
 				}
 			}
+			// Every site must start in a biome its structure accepts, or it silently won't generate.
+			for (var entry : worldgen.lookupOrThrow(Registries.STRUCTURE).entrySet()) {
+				if (!entry.getKey().identifier().getNamespace().equals("palemeridian")
+					|| !(entry.getValue() instanceof net.palemeridian.world.SiteStructure site)) {
+					continue;
+				}
+				net.minecraft.core.BlockPos p = site.pieces().getFirst().pos();
+				Holder<Biome> b = biomes.getNoiseBiome(net.minecraft.core.QuartPos.fromBlock(p.getX()), net.minecraft.core.QuartPos.fromBlock(p.getY()),
+					net.minecraft.core.QuartPos.fromBlock(p.getZ()), rs.sampler());
+				boolean ok = site.biomes().contains(b);
+				System.out.println("[check] seed " + seed + " structure " + entry.getKey().identifier() + " starts in " + b.unwrapKey().map(k -> k.identifier().toString()).orElse("?")
+					+ (ok ? " (accepted)" : " (REJECTED)"));
+				if (!ok) {
+					problems.merge("structure:" + entry.getKey().identifier(), 1, Integer::sum);
+				}
+			}
 			if (si == 0 && renderMap) {
 				renderMap(noiseGen, biomes, rs, heightAccessor, layout, out.resolve("valley_map_seed" + seed + ".png").toFile());
 			}

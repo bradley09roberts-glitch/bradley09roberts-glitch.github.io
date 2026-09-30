@@ -52,6 +52,11 @@ public final class SiteStructure extends Structure {
 		}));
 	}
 
+	/** The authored pieces (used by the offline checker). */
+	public List<PieceDef> pieces() {
+		return this.pieces;
+	}
+
 	@Override
 	public StructureType<?> type() {
 		return PMWorldgen.SITE_STRUCTURE;

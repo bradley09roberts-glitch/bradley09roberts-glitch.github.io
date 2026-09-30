@@ -3,6 +3,10 @@ schedule function palemeridian:core/second 20t replace
 scoreboard players add #seconds pm.world 1
 function palemeridian:player/chill_all
 function palemeridian:npc/_maintain_all
+scoreboard players operation #m pm.tmp = #seconds pm.world
+scoreboard players set #ten pm.tmp 10
+scoreboard players operation #m pm.tmp %= #ten pm.tmp
+execute if score #m pm.tmp matches 0 run function palemeridian:hud/refresh
 execute if score p.chill pm.q matches 1 as @a[gamemode=!spectator,predicate=palemeridian:in_pall,predicate=palemeridian:holding_light] run function palemeridian:q/p.chill/complete
 execute if score c1.surge pm.q matches 1 unless score #enc.hollin pm.world matches 1..2 unless score #cool.hollin pm.world > #seconds pm.world if entity @a[x=120,y=67,z=118,distance=..30,gamemode=!spectator] run function palemeridian:enc/hollin/start
 function palemeridian:enc/hollin/tick

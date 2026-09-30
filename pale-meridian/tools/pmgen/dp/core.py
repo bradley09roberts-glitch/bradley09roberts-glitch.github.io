@@ -77,6 +77,11 @@ def generate() -> None:
         "scoreboard players add #seconds pm.world 1",
         f"function {fid('player/chill_all')}",
         f"function {fid('npc/_maintain_all')}",
+        # every 10 s re-assert the objective marker: a far target's chunk may not have been loaded yet
+        "scoreboard players operation #m pm.tmp = #seconds pm.world",
+        "scoreboard players set #ten pm.tmp 10",
+        "scoreboard players operation #m pm.tmp %= #ten pm.tmp",
+        f"execute if score #m pm.tmp matches 0 run function {fid('hud/refresh')}",
         *R.slow_hooks,
     ]
     fn("core/second", second, header="Once per second (self-scheduling). All checks are gated by state and proximity.")

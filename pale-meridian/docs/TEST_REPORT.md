@@ -50,13 +50,14 @@ The Minecraft EULA was never accepted on your behalf: every `eula.txt` produced 
 | 12 | The mine's cave-free zone is solid rock (no air/fluid) on all three seeds (~26,500 blocks each) | PASS | `04-worldgen-probe.log` |
 | 13 | The valley is seed-independent (same layout on every seed) | PASS | `04-worldgen-probe.log` (identical site heights across seeds) |
 | 14 | Every structure piece is within the 8-chunk structure reach of its start | PASS | generator check (`export_site`) |
+| 14a | Every site's start position lies in a biome its structure accepts (evaluated with the real biome source), so all 7 sites generate, on all 3 seeds | PASS | `04-worldgen-probe.log` |
 
 ### Build, packaging, installers
 
 | # | Check | Result | Evidence |
 |---|---|---|---|
 | 15 | Mod compiles and builds; the build no longer launches the game (`runGameTest SKIPPED`) | PASS | `05-build.log` |
-| 16 | A clean rebuild produces a byte-identical jar (SHA-256 `13a7ecbf…`) | PASS | `06-reproducible-jar.log` |
+| 16 | A clean rebuild produces a byte-identical jar (SHA-256 `10a1d343…`) | PASS | `06-reproducible-jar.log` |
 | 17 | Release files build; checksums recorded | PASS | `07-dist.log`, `dist/SHA256SUMS.txt` |
 | 18 | The lock matches live Modrinth/Fabric metadata (exact versions, ids, sizes, hashes) | PASS | `08-lock-check.log` |
 | 19 | Every file referenced by the client `.mrpack` downloads from its URL and matches size, SHA-1 and SHA-512 (10/10) | PASS | `09-mrpack-downloads.log` |

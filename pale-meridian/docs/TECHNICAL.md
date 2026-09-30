@@ -35,7 +35,7 @@ tools/ (Python, build time)                        mod/ (Java + resources, run t
 | `python3 tools/simulate.py` | Logic simulation of the generated functions (§12). |
 | `cd mod && ./gradlew build` | Builds `build/libs/palemeridian-1.0.0.jar` (reproducible). **Never launches Minecraft.** |
 | `./gradlew offlineCheck -PcheckMode=validate` | Loads vanilla + the pack through the game's own registry, function, advancement, loot and dialog loaders, offline; decodes template items/texts; fails on any logged error. |
-| `./gradlew offlineCheck -PcheckMode=sites` | Evaluates the terrain generator on 3 seeds: site plateaus, cave holes, the mine's cave-free zone. |
+| `./gradlew offlineCheck -PcheckMode=sites` | Evaluates the terrain generator on 3 seeds: site plateaus, cave holes, the mine's cave-free zone, and that every site starts in a biome its structure accepts. |
 | `./gradlew offlineCheck -PcheckMode=map` / `heightmaps` | Renders a biome/height map; exports design heights used by the site builders. |
 | `./gradlew runGameTest -Ppm_accept_eula=true` | Runs the runtime game tests in a headless server. **Starts Minecraft**: only run it if you accept the Minecraft EULA. |
 | `python3 tools/lock_pack.py [--check]` | Resolves/verifies the pinned mod files (see `STACK_AND_LOCK.md`). |
@@ -177,7 +177,7 @@ to a host (`admin/host`). Tested design size: 1–4 players.
 | Where | Budget / measure |
 |---|---|
 | Every tick | 7 lines: selector checks for triggers, first join, rejoin, death |
-| Every second | `core/second`: 59 lines, each gated by quest state and/or player proximity; NPC maintenance returns early unless a player is within 72 blocks |
+| Every second | `core/second`: ~65 lines, each gated by quest state and/or player proximity; NPC maintenance returns early unless a player is within 72 blocks; the objective marker is re-asserted every 10 s |
 | Entities | NPCs: 1 mannequin + 1 interaction (+1 text display for props) each, spawned near players only; ghost displays only for unbuilt parts |
 | Encounters | at most 8 Watchers in a Surge; the final encounter adds at most players+1 |
 | Restoration | ring conversion of loaded chunks only, ~5 s per district; chunk-load conversion is one pass over the chunk's biome cells |
