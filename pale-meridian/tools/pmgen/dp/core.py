@@ -92,6 +92,7 @@ def generate() -> None:
         "gamerule minecraft:respawn_radius 0",
         "gamerule minecraft:spawn_patrols false",
         "gamerule minecraft:spawn_wandering_traders false",
+        "gamerule minecraft:pvp false",
         f"time of {NS}:pall pause",
         f"time of {NS}:pall set 0",
         f"time of {NS}:surge pause",
@@ -213,7 +214,6 @@ def generate() -> None:
         f"function {fid('hud/_wp_move')} with storage palemeridian:tmp poi",
     ])
     fn("hud/_wp_move", [
-        "forceload remove all" if False else None,
         "execute if data storage palemeridian:state wp_chunk run function palemeridian:hud/_wp_unforce with storage palemeridian:state wp_chunk",
         "$forceload add $(bx) $(bz)",
         "$data modify storage palemeridian:state wp_chunk set value {x:$(bx),z:$(bz)}",
@@ -381,6 +381,22 @@ def generate() -> None:
         f"tellraw @s [{{\"text\":\"{q.id}: \",\"color\":\"gray\"}},{{\"score\":{{\"name\":\"{q.id}\",\"objective\":\"pm.q\"}},\"color\":\"white\"}}]"
         for q in R.quests
     ])
+    fn("admin/force", [
+        "$tellraw @s {\"text\":\"Forcing quest $(q) (activate, then complete).\",\"color\":\"gold\"}",
+        "$scoreboard players set $(q) pm.q 1",
+        "$function palemeridian:q/$(q)/complete",
+    ], header="Operator recovery: /function palemeridian:admin/force {q:\"c1.round\"} marks a stuck quest done and runs its rewards")
+    surge_resets = sorted(p_ for p_ in R.functions if p_.startswith("enc/") and p_.endswith("/reset"))
+    fn("admin/reset_encounters", [
+        *[f"function {fid(p_)}" for p_ in surge_resets],
+        f"execute if score #boss pm.world matches 1 run function {fid('c4/boss/reset')}",
+        "tellraw @s {\"text\":\"All encounters reset (they restart when a player re-enters them).\",\"color\":\"gold\"}",
+    ], header="Operator recovery: stop and reset every running encounter")
+    fn("admin/goto", [
+        f"$function {fid('poi/get')} {{name:\"$(poi)\"}}",
+        f"function {fid('admin/_goto')} with storage palemeridian:tmp poi",
+    ], header="QA helper: /function palemeridian:admin/goto {poi:\"hollin.plaza\"} (names in tools/generated/poi.json)")
+    fn("admin/_goto", ["$tp @s $(x) $(y) $(z)"])
     fn("admin/host", ["tag @s add pm.host", "tellraw @s {\"text\":\"You are now the Pale Meridian host (can change world settings).\",\"color\":\"gold\"}"])
     fn("admin/refresh", [
         f"function {fid('q/_advance')}", f"function {fid('hud/refresh')}", f"function {fid('npc/_maintain_all')}",

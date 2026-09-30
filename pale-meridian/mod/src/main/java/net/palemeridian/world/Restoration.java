@@ -42,6 +42,8 @@ public final class Restoration {
 	}
 
 	private static final List<Job> JOBS = new ArrayList<>();
+	/** Chunks that loaded after their district was restored; their lamps are lit on the next tick. */
+	private static final Set<Long> PENDING_LAMPS = new HashSet<>();
 	private static final Map<String, Set<ResourceKey<Biome>>> PALL_BY_GROUP = new HashMap<>();
 	private static final Map<String, List<LampPosts.Post>> POSTS_BY_GROUP = new HashMap<>();
 	private static Set<String> restoredCache = Set.of();
@@ -113,10 +115,20 @@ public final class Restoration {
 				start(g);
 			}
 		}
+		ServerLevel level = server.overworld();
+		if (!PENDING_LAMPS.isEmpty()) {
+			Set<String> now = restored(server);
+			for (long key : PENDING_LAMPS) {
+				LevelChunk chunk = level.getChunkSource().getChunkNow(ChunkPos.getX(key), ChunkPos.getZ(key));
+				if (chunk != null) {
+					lightPosts(level, chunk, now);
+				}
+			}
+			PENDING_LAMPS.clear();
+		}
 		if (JOBS.isEmpty()) {
 			return;
 		}
-		ServerLevel level = server.overworld();
 		Set<String> restored = restored(server);
 		List<ChunkAccess> changed = new ArrayList<>();
 		JOBS.removeIf(job -> step(level, job, restored, changed));
@@ -183,7 +195,9 @@ public final class Restoration {
 			// Not yet sent to players in the usual case; resend in case it already was.
 			level.getChunkSource().chunkMap.resendBiomesForChunks(List.of(chunk));
 		}
-		lightPosts(level, chunk, restored);
+		// Block changes are deferred: setting blocks inside the load callback could reach into chunks
+		// that are still loading.
+		PENDING_LAMPS.add(pos.pack());
 	}
 
 	private static boolean convert(ServerLevel level, ChunkAccess chunk, Set<String> groups) {
@@ -229,7 +243,8 @@ public final class Restoration {
 					BlockState st = level.getBlockState(m);
 					if (st.getBlock() instanceof CopperBulbBlock && st.hasProperty(CopperBulbBlock.LIT)) {
 						if (!st.getValue(CopperBulbBlock.LIT)) {
-							level.setBlock(m, st.setValue(CopperBulbBlock.LIT, true), 3);
+							// Clients only: a bulb's light needs no neighbour updates (and must not power redstone here).
+							level.setBlock(m, st.setValue(CopperBulbBlock.LIT, true), net.minecraft.world.level.block.Block.UPDATE_CLIENTS);
 						}
 						break;
 					}

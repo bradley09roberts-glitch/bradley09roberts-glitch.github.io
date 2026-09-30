@@ -1,4 +1,7 @@
 {
+ "palemeridian:admin/_goto": "{x:1.5d,y:86.0d,z:2.5d}",
+ "palemeridian:admin/force": "{q:\"p.letter\"}",
+ "palemeridian:admin/goto": "{poi:\"landing.lamp\"}",
  "palemeridian:c1/bell": "{n:1}",
  "palemeridian:c4/boss/_hp": "{hp:180}",
  "palemeridian:dlg/_call": "{code:1000}",

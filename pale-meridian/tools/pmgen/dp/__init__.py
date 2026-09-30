@@ -32,6 +32,9 @@ _SAMPLE_BY_PREFIX = {
     "enc/_set_bulb": '{x:1,y:70,z:2,lit:"true"}',
     "enc/_set_candle": '{x:1,y:70,z:2,lit:"true"}',
     "c1/bell": '{n:1}',
+    "admin/force": '{q:"p.letter"}',
+    "admin/goto": '{poi:"landing.lamp"}',
+    "admin/_goto": '{x:1.5d,y:86.0d,z:2.5d}',
 }
 
 

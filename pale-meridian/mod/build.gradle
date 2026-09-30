@@ -89,3 +89,18 @@ tasks.register('offlineCheck', JavaExec) {
 	doFirst { file('build/offline-check').mkdirs() }
 	jvmArgs = ['-Xmx3G']
 }
+
+// Reproducible jars: same sources -> byte-identical jar (so its SHA-512 in the release checksums can be re-derived).
+tasks.withType(AbstractArchiveTask).configureEach {
+	preserveFileTimestamps = false
+	reproducibleFileOrder = true
+}
+
+// Never launch Minecraft as part of an ordinary build. Loom attaches runGameTest to `check`, and the
+// game-test server starts even when eula.txt says false. Running the game is the operator's decision
+// (they accept the Minecraft EULA themselves), so these tasks only run with -Ppm_accept_eula=true.
+tasks.matching { it.name in ["runGameTest", "runClientGameTest"] }.configureEach {
+	onlyIf("launching Minecraft needs the operator's own EULA acceptance: pass -Ppm_accept_eula=true") {
+		project.findProperty("pm_accept_eula") == "true"
+	}
+}

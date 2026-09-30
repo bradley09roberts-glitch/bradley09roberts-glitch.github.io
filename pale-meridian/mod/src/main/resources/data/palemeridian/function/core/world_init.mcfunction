@@ -7,6 +7,7 @@ scoreboard players set #set.difficulty pm.world 1
 gamerule minecraft:respawn_radius 0
 gamerule minecraft:spawn_patrols false
 gamerule minecraft:spawn_wandering_traders false
+gamerule minecraft:pvp false
 time of palemeridian:pall pause
 time of palemeridian:pall set 0
 time of palemeridian:surge pause
