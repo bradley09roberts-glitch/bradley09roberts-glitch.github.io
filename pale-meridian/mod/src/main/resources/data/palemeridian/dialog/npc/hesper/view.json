@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Hesper Vane",
+    "color": "dark_aqua",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Leave him in the dark, Surveyor. Leave all of them."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Let the Deepcut be the one place in Vell that is allowed to be forgotten. Some things are kinder unseen. I have had forty years to decide that, and I am still not sure. But I am asking."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave"
+    },
+    "width": 200
+  }
+}

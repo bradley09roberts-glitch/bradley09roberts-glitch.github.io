@@ -30,6 +30,7 @@ _SAMPLE_BY_PREFIX = {
     "ui/_eleven_cat": '{list:"",item:"A name"}',
     "ui/_eleven_dialog": '{list:"A name  ·  "}',
     "enc/_set_bulb": '{x:1,y:70,z:2,lit:"true"}',
+    "enc/_set_candle": '{x:1,y:70,z:2,lit:"true"}',
     "c1/bell": '{n:1}',
 }
 

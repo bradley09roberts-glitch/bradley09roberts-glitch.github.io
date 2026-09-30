@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Piet Lund"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Their face is still grey, but you know it now: Piet Lund."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Piet Lund was a lamplighter's boy who went underground to light the way."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave them be"
+    },
+    "width": 200
+  }
+}

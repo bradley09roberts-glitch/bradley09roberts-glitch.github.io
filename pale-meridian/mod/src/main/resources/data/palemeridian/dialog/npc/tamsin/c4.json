@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Tamsin Reed",
+    "color": "gold",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The Meridian. Hesper Vane's island. Everything goes back to that Lens."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Take a boat from the jetty, or walk the causeway if you fancy mending it. I'll be along when there's something to see."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave"
+    },
+    "width": 200
+  }
+}

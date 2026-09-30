@@ -1,0 +1,45 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Write the names?"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Write the eleven names into the blank, and put the Deepcut back on the Chart. The whole valley will see it, always, and the Pall will have nowhere left to hide."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "This decides the ending for everyone in this world. It cannot be undone.",
+        "color": "gold"
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "Write the names"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1039"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "Not yet"
+    },
+    "width": 200
+  }
+}

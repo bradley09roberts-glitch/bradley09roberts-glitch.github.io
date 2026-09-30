@@ -24,7 +24,7 @@ def ground_at(site: str, wx: int, wz: int) -> int:
     h = heights()[site]
     dx, dz = wx - h["x0"], wz - h["z0"]
     dx = max(0, min(h["w"] - 1, dx))
-    dz = max(0, min(h["w"] - 1, dz))
+    dz = max(0, min(h.get("d", h["w"]) - 1, dz))
     return h["ground"][dz * h["w"] + dx]
 
 

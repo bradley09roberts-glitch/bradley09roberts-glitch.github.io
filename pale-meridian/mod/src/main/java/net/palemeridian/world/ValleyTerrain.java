@@ -254,6 +254,11 @@ public final class ValleyTerrain {
 
 	/** Positive near sites and roads down to 40 blocks below the surface: suppresses caves there. */
 	public double caveGuard(int x, int y, int z) {
+		for (ValleyLayout.QuietZone q : this.l.quietZones) {
+			if (q.contains(x, y, z)) {
+				return 1.0;
+			}
+		}
 		double calm = Math.max(this.siteInfluence(x, z, 10.0), this.roadInfluence(x, z));
 		if (calm < 0.15) {
 			return -1.0E6;

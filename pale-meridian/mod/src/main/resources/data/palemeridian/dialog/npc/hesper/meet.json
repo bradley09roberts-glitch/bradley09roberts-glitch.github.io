@@ -1,0 +1,66 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Hesper Vane",
+    "color": "dark_aqua",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "You are the one who has been lighting my lamps. I felt each of them, like a hand on a shoulder I had forgotten I had."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "I am Hesper Vane. I kept the Meridian, once. I keep the dark now."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "\"Why did you let the valley fade?\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1028"
+      }
+    },
+    {
+      "label": {
+        "text": "\"Tamsin says you struck the Deepcut from the Chart.\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1029"
+      }
+    },
+    {
+      "label": {
+        "text": "\"I found the Last Gallery.\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1030"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "(Say nothing)"
+    },
+    "width": 200
+  }
+}

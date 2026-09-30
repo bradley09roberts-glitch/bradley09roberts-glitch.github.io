@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "A pale miner"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The figure's face won't come into focus, however long you look."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Something of theirs is still out in the Vale, waiting to be found."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave them be"
+    },
+    "width": 200
+  }
+}

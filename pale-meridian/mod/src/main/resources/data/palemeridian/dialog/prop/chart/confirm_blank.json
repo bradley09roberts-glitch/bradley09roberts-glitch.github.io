@@ -1,0 +1,45 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Leave it blank?"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Leave the Deepcut blank: one place the valley agrees not to look at. The rest of Vell will clear. The eleven stay in the dark, and Hesper with them."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "This decides the ending for everyone in this world. It cannot be undone.",
+        "color": "gold"
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "Leave it blank"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1040"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "Not yet"
+    },
+    "width": 200
+  }
+}

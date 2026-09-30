@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The Great Lens"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The Lens burns steadily. From up here you can see every lamp in Vell."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave"
+    },
+    "width": 200
+  }
+}

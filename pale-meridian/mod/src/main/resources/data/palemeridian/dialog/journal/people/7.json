@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Tobin Vane",
+    "color": "aqua"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "The crew lead of the Deepcut, and the Keeper's son. He promised the roof would hold.",
+        "color": "gray"
+      }
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 3"
+    }
+  }
+}

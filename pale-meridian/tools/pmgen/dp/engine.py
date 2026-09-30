@@ -565,7 +565,26 @@ def _gen_block_use() -> None:
         fn(f"use/{bid}", [f"advancement revoke @s only {fid(path)}"] + cmds)
 
 
+def _check_references() -> None:
+    """Fail generation on dangling story references (a missing POI would silently misplace an NPC)."""
+    from .. import poi
+    problems = []
+    for q in R.quests:
+        if q.target and q.target not in poi.POI:
+            problems.append(f"quest {q.id} target {q.target}")
+    for n in R.npcs:
+        for _cond, name in n.places:
+            if name not in poi.POI:
+                problems.append(f"npc {n.id} place {name}")
+        for _cond, what in n.talk:
+            if not what.startswith("/") and what not in R.dialogs:
+                problems.append(f"npc {n.id} talk dialog {what}")
+    if problems:
+        raise KeyError("dangling references: " + "; ".join(problems))
+
+
 def generate() -> None:
+    _check_references()
     _gen_areas()
     _gen_block_use()
     _gen_blueprints()

@@ -1,0 +1,18 @@
+{
+  "type": "palemeridian:site",
+  "biomes": "#palemeridian:valley",
+  "step": "top_layer_modification",
+  "spawn_overrides": {},
+  "terrain_adaptation": "none",
+  "pieces": [
+    {
+      "template": "palemeridian:glassworks/works",
+      "pos": [
+        -12,
+        64,
+        -332
+      ],
+      "rotation": "none"
+    }
+  ]
+}

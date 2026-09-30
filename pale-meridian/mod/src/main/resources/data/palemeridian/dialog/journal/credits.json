@@ -1,0 +1,43 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Pale Meridian",
+    "color": "white"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Chart what the fog forgot.",
+        "color": "gray",
+        "italic": true
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Story, world, systems and art: the Pale Meridian project. Built for Minecraft Java Edition 26.2 with Fabric. Third-party mods in the pack belong to their authors (see ATTRIBUTION.md).",
+        "color": "white"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Thank you for charting the Vale of Vell. Odile will keep the lamps lit.",
+        "color": "white"
+      }
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Continue in free play"
+    },
+    "width": 200
+  },
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close"
+}

@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/c3/lamp",
+  "display": {
+    "icon": {
+      "id": "minecraft:candle"
+    },
+    "title": "The Collapse",
+    "description": "The Pall answers the lamp from the mine mouth. Keep the Watchers in sight and relight the candles.",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

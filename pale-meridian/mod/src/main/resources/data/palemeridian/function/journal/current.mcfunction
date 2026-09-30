@@ -15,4 +15,22 @@ execute if score #cur pm.world matches 14 run return run dialog show @s palemeri
 execute if score #cur pm.world matches 15 run return run dialog show @s palemeridian:journal/obj/c2_hearts
 execute if score #cur pm.world matches 16 run return run dialog show @s palemeridian:journal/obj/c2_lamp
 execute if score #cur pm.world matches 17 run return run dialog show @s palemeridian:journal/obj/s_eleven
+execute if score #cur pm.world matches 18 run return run dialog show @s palemeridian:journal/obj/c3_arrive
+execute if score #cur pm.world matches 19 run return run dialog show @s palemeridian:journal/obj/c3_log
+execute if score #cur pm.world matches 20 run return run dialog show @s palemeridian:journal/obj/c3_tamsin
+execute if score #cur pm.world matches 21 run return run dialog show @s palemeridian:journal/obj/c3_remind
+execute if score #cur pm.world matches 22 run return run dialog show @s palemeridian:journal/obj/c3_memorial
+execute if score #cur pm.world matches 23 run return run dialog show @s palemeridian:journal/obj/c3_kiln
+execute if score #cur pm.world matches 24 run return run dialog show @s palemeridian:journal/obj/c3_lamp
+execute if score #cur pm.world matches 25 run return run dialog show @s palemeridian:journal/obj/c3_surge
+execute if score #cur pm.world matches 26 run return run dialog show @s palemeridian:journal/obj/c4_crossing
+execute if score #cur pm.world matches 27 run return run dialog show @s palemeridian:journal/obj/c4_keeper
+execute if score #cur pm.world matches 28 run return run dialog show @s palemeridian:journal/obj/c4_lens
+execute if score #cur pm.world matches 29 run return run dialog show @s palemeridian:journal/obj/c4_unlooked
+execute if score #cur pm.world matches 30 run return run dialog show @s palemeridian:journal/obj/c4_chart
+execute if score #cur pm.world matches 31 run return run dialog show @s palemeridian:journal/obj/ep_complete
+execute if score #cur pm.world matches 32 run return run dialog show @s palemeridian:journal/obj/c4_causeway
+execute if score #cur pm.world matches 33 run return run dialog show @s palemeridian:journal/obj/ep_spoken
+execute if score #cur pm.world matches 34 run return run dialog show @s palemeridian:journal/obj/ep_kept
+execute if score #cur pm.world matches 35 run return run dialog show @s palemeridian:journal/obj/s_fen
 dialog show @s palemeridian:journal/free_play

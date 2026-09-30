@@ -411,12 +411,39 @@ public final class OfflineCheck {
 				System.out.println("[check] seed " + seed + " site " + key + ": sampled=" + pts.size() + " wrongFloor=" + bad.get()
 					+ " caveHolesBelow=" + caveHoles.get() + " heights=" + new java.util.TreeMap<>(seen));
 			}
+			// Quiet zones (authored underground spaces): the natural terrain must be solid rock there,
+			// from 20 blocks above yMin up to 12 blocks below the surface, so tunnels are the only openings.
+			for (ValleyLayout.QuietZone q : layout.quietZones) {
+				List<int[]> pts = new ArrayList<>();
+				for (int x = q.x1(); x <= q.x2(); x += 6) {
+					for (int z = q.z1(); z <= q.z2(); z += 6) {
+						pts.add(new int[] {x, z});
+					}
+				}
+				java.util.concurrent.atomic.AtomicInteger open = new java.util.concurrent.atomic.AtomicInteger();
+				java.util.concurrent.atomic.AtomicInteger checked = new java.util.concurrent.atomic.AtomicInteger();
+				pts.parallelStream().forEach(pt -> {
+					int top = noiseGen.getBaseHeight(pt[0], pt[1], Heightmap.Types.OCEAN_FLOOR_WG, heightAccessor, rs) - 12;
+					NoiseColumn col = noiseGen.getBaseColumn(pt[0], pt[1], heightAccessor, rs);
+					for (int y = q.yMin() + 20; y <= top; y++) {
+						checked.incrementAndGet();
+						BlockState st = col.getBlock(y);
+						if (st.isAir() || !st.getFluidState().isEmpty()) {
+							open.incrementAndGet();
+						}
+					}
+				});
+				System.out.println("[check] seed " + seed + " quiet zone " + q.id() + ": blocks checked=" + checked.get() + " open (air/fluid)=" + open.get());
+				if (open.get() > 0) {
+					problems.merge("zone:" + q.id(), open.get(), Integer::sum);
+				}
+			}
 			if (si == 0 && renderMap) {
 				renderMap(noiseGen, biomes, rs, heightAccessor, layout, out.resolve("valley_map_seed" + seed + ".png").toFile());
 			}
 		}
 		for (var e : problems.entrySet()) {
-			fail("site " + e.getKey() + " plateau problems across seeds: " + e.getValue());
+			fail(e.getKey() + " terrain problems across seeds: " + e.getValue());
 		}
 	}
 
@@ -464,6 +491,18 @@ public final class OfflineCheck {
 			json.append("  \"").append(site.id()).append("\": {\"x0\": ").append(x0).append(", \"z0\": ").append(z0)
 				.append(", \"w\": ").append(w).append(", \"ground\": ").append(java.util.Arrays.toString(ground)).append("}");
 			System.out.println("[check] heightmap " + site.id() + " " + w + "x" + w + " exact-minus-design deviation histogram " + new java.util.TreeMap<>(hist));
+		}
+		for (ValleyLayout.QuietZone q : layout.quietZones) {
+			int x0 = q.x1(), z0 = q.z1(), w = q.x2() - q.x1() + 1, dpt = q.z2() - q.z1() + 1;
+			int[] ground = new int[w * dpt];
+			for (int dz = 0; dz < dpt; dz++) {
+				for (int dx = 0; dx < w; dx++) {
+					ground[dz * w + dx] = (int) Math.ceil(terrain.height(x0 + dx, z0 + dz));
+				}
+			}
+			json.append(",\n  \"zone:").append(q.id()).append("\": {\"x0\": ").append(x0).append(", \"z0\": ").append(z0)
+				.append(", \"w\": ").append(w).append(", \"d\": ").append(dpt).append(", \"ground\": ").append(java.util.Arrays.toString(ground)).append("}");
+			System.out.println("[check] heightmap zone:" + q.id() + " " + w + "x" + dpt + " (design heights)");
 		}
 		json.append("\n}\n");
 		Files.createDirectories(outFile.getParent());

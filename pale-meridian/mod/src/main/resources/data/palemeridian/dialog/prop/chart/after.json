@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The Long Chart"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The Chart is finished. It will be kept, and looked at."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave"
+    },
+    "width": 200
+  }
+}

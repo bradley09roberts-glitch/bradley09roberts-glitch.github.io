@@ -9,7 +9,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "You rang the Round, and the latch to the bell tower's lamp cradle fell open.",
+        "text": "The Glassworks remembers, but the Deepcut stays in the Pall: it is not on the Chart.",
         "color": "gray"
       }
     },
@@ -17,7 +17,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "Hollin's Wakelamp waits to be rebuilt at the top of the tower.",
+        "text": "Kiln Three forged a Lens Heart. The way to the Meridian, the Keeper's island in the lake, is open.",
         "color": "gray"
       }
     }

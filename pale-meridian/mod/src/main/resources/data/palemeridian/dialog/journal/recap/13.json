@@ -1,0 +1,42 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The story so far",
+    "color": "aqua"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Hollin remembers. The fog rolled back from the village and its people woke from a forty-year evening.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Odile Marsh, the lamplighter, told you the fog came the night the Deepcut mine fell, and the Keeper's great light on the Meridian went dark.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Tamsin passed through Hollin and went east, to the orchards of Aldercross.",
+        "color": "gray"
+      }
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back to the journal"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 9"
+    }
+  }
+}

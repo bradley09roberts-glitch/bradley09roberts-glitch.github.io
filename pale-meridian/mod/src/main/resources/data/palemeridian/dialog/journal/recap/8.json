@@ -9,23 +9,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "You relit the Landing lamp and the fog drew back from the south rim.",
-        "color": "gray"
-      }
-    },
-    {
-      "type": "minecraft:plain_message",
-      "width": 320,
-      "contents": {
-        "text": "The lamp road runs north into the Pall, toward the village of Hollin.",
-        "color": "gray"
-      }
-    },
-    {
-      "type": "minecraft:plain_message",
-      "width": 320,
-      "contents": {
-        "text": "On the road you glimpsed a figure with a lantern. It vanished.",
+        "text": "You reached the Glassworks under the north cliffs. The mine behind it, the Deepcut, is where Tamsin went.",
         "color": "gray"
       }
     }

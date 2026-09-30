@@ -1,0 +1,5 @@
+setblock 5 70 -298 minecraft:campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]
+setblock 3 70 -298 minecraft:campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]
+setblock 7 70 -298 minecraft:campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]
+setblock 5 70 -300 minecraft:campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]
+setblock 5 70 -296 minecraft:campfire[facing=north,lit=true,signal_fire=false,waterlogged=false]

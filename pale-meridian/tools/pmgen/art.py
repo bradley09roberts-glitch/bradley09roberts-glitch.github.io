@@ -275,6 +275,25 @@ CAST: dict[str, Look] = {
                   boots="#2a2018", hair_style="short", scarf="#40506a", seed=18),
 }
 
+# The eleven echo figures in the Deepcut (faded only). Echo 1 is the crew lead and shares his look.
+_ECHO_LOOKS = [
+    ("#c49070", "#2a1d16", "#5a4a3a", "#6a5a4a", "cap", None, "slim"),
+    ("#d8b49a", "#b58a3a", "#8a7a5a", "#4f5a3f", "long", "#7a3a2a", "slim"),
+    ("#a8704e", "#1f1a14", "#6a4a3a", "#3f4a5a", "short", None, "wide"),
+    ("#e0c2a8", "#c9a45a", "#5a6a7a", "#6a5a4a", "bun", "#40506a", "slim"),
+    ("#b98563", "#3a2a20", "#7a6a5a", "#5a4a3a", "short", None, "wide"),
+    ("#c99a78", "#6b4a2a", "#4a5a4a", "#7a6a3a", "cap", "#8c3b2e", "wide"),
+    ("#d2ad90", "#9a9aa6", "#3a3a3a", "#5d6f7c", "bald", None, "wide"),
+    ("#a07050", "#2a1d16", "#8a6a4a", "#6a4a3a", "long", "#b58a3a", "slim"),
+    ("#e8c8b0", "#d9a060", "#5a5a4a", "#4a4438", "short", None, "wide"),
+    ("#8a5a3e", "#1a1410", "#6a6a5a", "#3f3a34", "cap", "#40506a", "wide"),
+]
+for _i, (_sk, _hair, _top, _coat, _style, _scarf, _model) in enumerate(_ECHO_LOOKS, start=2):
+    CAST[f"echo_{_i}"] = Look(skin=_sk, hair=_hair, eyes="#3a3a3a", top=_top, coat=_coat, trousers="#3a3630", boots="#2a2018",
+                              hair_style=_style, hat="#6a5a4a" if _style == "cap" else None, scarf=_scarf, model=_model,
+                              beard=_hair if _model == "wide" and _i % 3 == 0 else None, seed=100 + _i)
+CAST["echo_1"] = CAST["tobin"]
+
 # which skin states are shipped per NPC (texture id suffixes)
 SKIN_STATES = {
     "tamsin": ["faded", "restored"],
@@ -285,6 +304,7 @@ SKIN_STATES = {
     "jory": ["faded", "restored"],
     "miner": ["faded", "restored"],
     "tobin": ["faded", "restored"],
+    **{f"echo_{i}": ["faded"] for i in range(1, 12)},
 }
 
 

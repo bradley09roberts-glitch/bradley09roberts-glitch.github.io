@@ -1,0 +1,63 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Vell Glassworks · No. 1 Adit · shift log"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Kiln Three: bellows UP, flue DOWN, damper UP, then feed the firebox. Eight scoops, no less. — S.C.",
+        "color": "white"
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Stillglass from the Deepcut rings when struck. The Keeper wants more of it than the mountain wants to give.",
+        "color": "gray"
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Keeper's orders: past the blue seam. Tobin says it will hold. I have told him what I think of the roof. — S. Crane, foreman",
+        "color": "white"
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "(Last entry, in another hand:) The bells are ringing in Hollin. The Deepcut is down. Eleven.",
+        "color": "gray",
+        "italic": true
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "Note the kiln procedure"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1023"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "Close the log"
+    },
+    "width": 200
+  }
+}

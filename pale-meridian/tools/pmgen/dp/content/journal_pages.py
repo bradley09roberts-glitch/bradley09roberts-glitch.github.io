@@ -4,6 +4,34 @@ from __future__ import annotations
 
 def recaps() -> list[tuple[str, list]]:
     return [
+        ("if score #ending pm.world matches 1", [
+            "You wrote the eleven names into the Long Chart. The Deepcut is on the map again, and the Pall has nowhere left to hide.",
+            "The survey is complete. Odile saw her first sunrise in forty years. Hesper tends a small garden at the mine mouth.",
+            "The Vale is yours to explore."]),
+        ("if score #ending pm.world matches 2", [
+            "You left the Deepcut blank. The rest of Vell cleared; the mine keeps its fog, its eleven, and now its Keeper.",
+            "The survey is complete. A faint haze never quite lifts, but every lamp is lit.",
+            "The Vale is yours to explore."]),
+        ("if score c4.unlooked pm.q matches 2", [
+            "The Unlooked is gone and the Great Lens burns over Vellmere.",
+            "In the Chart Room the Long Chart glows, except one white space under the north cliffs. Everyone is waiting for your decision."]),
+        ("if score c4.lens pm.q matches 2", [
+            "You set the Lens Heart in the Great Lens. Something gathered itself out of the fog on the Lens Gallery.",
+            "Your friends have come across the lake to the Meridian."]),
+        ("if score c4.keeper pm.q matches 2", [
+            "Hesper Vane, the Keeper, admitted it: she painted the Deepcut out of the Long Chart and put out the Lens, because her son Tobin died there.",
+            "She will not stop you lighting the Lens. She only asked you to think about what a blank is for."]),
+        ("if score c3.surge pm.q matches 2", [
+            "The Glassworks remembers, but the Deepcut stays in the Pall: it is not on the Chart.",
+            "Kiln Three forged a Lens Heart. The way to the Meridian, the Keeper's island in the lake, is open."]),
+        ("if score c3.memorial pm.q matches 2", [
+            "In the Last Gallery you found eleven pale figures and a wall of blank plaques.",
+            "You heard the Keeper strike the Deepcut from the Chart, and her son Tobin promise that the roof would hold."]),
+        ("if score c3.remind pm.q matches 2", [
+            "Tamsin remembered herself. The fog is attention, she says: the valley stays real because it is looked at.",
+            "Forty years ago the Keeper struck the Deepcut from the Long Chart, and the forgetting spread from there."]),
+        ("if score c3.arrive pm.q matches 2", [
+            "You reached the Glassworks under the north cliffs. The mine behind it, the Deepcut, is where Tamsin went."]),
         ("if score c2.lamp pm.q matches 2", [
             "Aldercross remembers. Bees are back in Brannoc's hives and the windmill lamp burns over the orchard.",
             "Brannoc told you what the fog made everyone forget: forty years ago the Deepcut mine collapsed and eleven miners died, his brother Col among them.",
@@ -60,7 +88,14 @@ def people() -> list[tuple[str, str, list]]:
         ("if score c2.brannoc pm.q matches 2", "Brannoc Hale", [
             "The orchard keeper and beekeeper of Aldercross. Gruff, blunt and fiercely loyal to his trees.",
             "His younger brother Col died in the Deepcut."]),
-        ("if score c2.lamp pm.q matches 2", "Hesper Vane", [
+        ("if score c2.lamp pm.q matches 2 unless score c4.keeper pm.q matches 2", "Hesper Vane", [
             "The Keeper of the Meridian, the island observatory in the lake. Brannoc says she sent the miners past the safe seam.",
             "Nobody you have met has seen her in forty years."]),
+        ("if score c4.keeper pm.q matches 2", "Hesper Vane", [
+            "The Keeper of the Meridian. Brilliant, proud and hollowed out by guilt.",
+            "She sent the Deepcut crew past the safe seam for her Great Lens. Her son Tobin led them. When the mine fell she struck it from the Chart."]),
+        ("if score c3.memorial pm.q matches 2", "Tobin Vane", [
+            "The crew lead of the Deepcut, and the Keeper's son. He promised the roof would hold."]),
+        ("if score c3.log pm.q matches 2", "Silas Crane", [
+            "Foreman of the Vell Glassworks. He told Tobin what he thought of the roof, and wrote it down."]),
     ]

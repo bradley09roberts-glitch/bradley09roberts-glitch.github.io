@@ -9,7 +9,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "Hollin remembers. The fog rolled back from the village and its people woke from a forty-year evening.",
+        "text": "Hesper Vane, the Keeper, admitted it: she painted the Deepcut out of the Long Chart and put out the Lens, because her son Tobin died there.",
         "color": "gray"
       }
     },
@@ -17,15 +17,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "Odile Marsh, the lamplighter, told you the fog came the night the Deepcut mine fell, and the Keeper's great light on the Meridian went dark.",
-        "color": "gray"
-      }
-    },
-    {
-      "type": "minecraft:plain_message",
-      "width": 320,
-      "contents": {
-        "text": "Tamsin passed through Hollin and went east, to the orchards of Aldercross.",
+        "text": "She will not stop you lighting the Lens. She only asked you to think about what a blank is for.",
         "color": "gray"
       }
     }

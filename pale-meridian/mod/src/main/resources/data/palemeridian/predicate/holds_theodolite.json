@@ -1,0 +1,14 @@
+{
+  "condition": "minecraft:entity_properties",
+  "entity": "this",
+  "predicate": {
+    "minecraft:slots": {
+      "container.*": {
+        "items": "minecraft:spyglass",
+        "predicates": {
+          "minecraft:custom_data": "{pm:{item:\"theodolite\"}}"
+        }
+      }
+    }
+  }
+}

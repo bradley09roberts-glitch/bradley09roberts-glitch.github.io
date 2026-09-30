@@ -146,6 +146,10 @@
     "southmoor": "wilds",
     "rim": "wilds"
   },
+  "quiet_zones": {
+    "_comment": "Boxes [x1, z1, x2, z2] where natural caves are suppressed above y_min (authored underground spaces).",
+    "deepcut_mine": {"box": [-28, -446, 80, -318], "y_min": 40}
+  },
   "spawn": {
     "pos": [0, 86, 352],
     "yaw": 180.0

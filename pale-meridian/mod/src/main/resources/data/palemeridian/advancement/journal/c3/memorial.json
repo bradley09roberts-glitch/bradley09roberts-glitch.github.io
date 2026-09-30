@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/c3/remind",
+  "display": {
+    "icon": {
+      "id": "minecraft:candle"
+    },
+    "title": "The Last Gallery",
+    "description": "Tamsin says the forgetting starts at the far end of the mine, past the old safe limit.",
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

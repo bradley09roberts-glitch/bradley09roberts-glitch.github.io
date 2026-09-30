@@ -15,12 +15,12 @@ from pmgen import art, poi, worldgen  # noqa: E402
 from pmgen.dp import atmosphere, core, engine, items  # noqa: E402
 from pmgen.dp import ui_pages  # noqa: E402
 from pmgen.dp import loot_tables  # noqa: E402
-from pmgen.dp.content import chapter1, chapter2, journal_pages, keepsakes, prologue  # noqa: E402
+from pmgen.dp.content import chapter1, chapter2, chapter3, chapter4, fen as fen_content, journal_pages, keepsakes, prologue  # noqa: E402
 from pmgen.dp import encounters  # noqa: E402
 from pmgen.jsonio import GENERATED  # noqa: E402
 from pmgen.paths import LAYOUT, PM_DATA, PM_ASSETS, RES  # noqa: E402
 from pmgen.sites import export_site  # noqa: E402
-from pmgen.sites import aldercross, hollin, landing  # noqa: E402
+from pmgen.sites import aldercross, deepcut, fen, glassworks, hollin, landing, meridian  # noqa: E402
 
 
 def clean_generated_dirs() -> None:
@@ -41,9 +41,13 @@ def main() -> None:
     export_site("landing", landing.build())
     export_site("hollin", hollin.build())
     export_site("aldercross", aldercross.build())
+    export_site("glassworks", glassworks.build())
+    export_site("deepcut", deepcut.build(), anchor=(24, 60, -384))
+    export_site("meridian", meridian.build(), anchor=(-10, 60, 20))
+    export_site("fen", fen.build())
     # content registration
     encounters.generate_shared()
-    for reg in (prologue.register, chapter1.register, chapter2.register, keepsakes.register):
+    for reg in (prologue.register, chapter1.register, chapter2.register, keepsakes.register, chapter3.register, chapter4.register, fen_content.register):
         reg()
     ui_pages.generate(recaps=journal_pages.recaps(), people=journal_pages.people(), eleven=keepsakes.eleven_journal())
     loot_tables.generate()

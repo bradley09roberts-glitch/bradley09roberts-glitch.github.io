@@ -1,0 +1,64 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "The Long Chart"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The Long Chart glows under the Lens: every field and lane of Vell, drawn true again. Except the north cliffs. There the stone is white, painted over by a hand that shook."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Pen and ink wait on the table. What does the Chart say about the Deepcut?"
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "Write the names"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1036"
+      }
+    },
+    {
+      "label": {
+        "text": "Leave it blank"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1037"
+      }
+    },
+    {
+      "label": {
+        "text": "Not yet. (Hear what the others think first.)"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1038"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "Step back"
+    },
+    "width": 200
+  }
+}

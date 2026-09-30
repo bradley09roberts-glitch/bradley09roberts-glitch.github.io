@@ -1,0 +1,42 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The Vow of the First Keeper"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Carved into the lectern, the letters filled with old gold:",
+        "color": "gray",
+        "italic": true
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "\"I will look at all of it, always: the fields and the fen, the living and the lost. What is looked at is kept. What is kept is not lost.\"",
+        "color": "white"
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Below, in a smaller hand: the Vale buried its dead here with their names said aloud, so the fen would remember them when the people could not.",
+        "color": "gray"
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Close"
+    },
+    "width": 200
+  }
+}

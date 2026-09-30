@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/c4/keeper",
+  "display": {
+    "icon": {
+      "id": "minecraft:heart_of_the_sea"
+    },
+    "title": "The Great Lens",
+    "description": "The Keeper will not stop you. The stair climbs to the Lens Gallery.",
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

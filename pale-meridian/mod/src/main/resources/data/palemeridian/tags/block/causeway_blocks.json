@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:stone_bricks",
+    "minecraft:stone",
+    "minecraft:cobblestone",
+    "minecraft:mossy_cobblestone",
+    "minecraft:smooth_stone",
+    "#minecraft:planks",
+    "minecraft:polished_andesite",
+    "minecraft:andesite",
+    "minecraft:deepslate_bricks",
+    "minecraft:cobbled_deepslate",
+    "minecraft:tuff_bricks",
+    "minecraft:bricks"
+  ]
+}

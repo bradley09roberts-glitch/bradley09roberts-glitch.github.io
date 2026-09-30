@@ -293,6 +293,10 @@ def build() -> list[Piece]:
     b.set(jx - 11, deck + 1, jz - 11, "lantern[hanging=false]") if b.inside(jx - 11, deck + 1, jz - 11) else None
     poi.box("hollin.ferry", *W(jx - 12, deck - 1, jz - 12), *W(jx + 4, FL + 4, jz + 4))
     poi.add("hollin.jetty_end", *W(max(0, jx - 10), deck + 1, max(0, jz - 10)))
+    # two boats moored beside the jetty (the Meridian can be reached by boat in Chapter 4)
+    from .. import nbt as _nbt
+    for (bx_, bz_) in ((74.5, 70.5), (76.5, 72.5)):
+        b.entity(bx_ - ORIGIN[0], 63.1 - ORIGIN[1], bz_ - ORIGIN[2], _nbt.Compound({"id": _nbt.String("minecraft:oak_boat")}))
     # boathouse keepsake (Wendel Tarn's tin whistle) in a barrel by the jetty foot
     wy = max(1, g0)
     b.set(jx + 2, wy, jz + 1, "barrel[facing=up,open=false]", container_nbt("minecraft:barrel", [

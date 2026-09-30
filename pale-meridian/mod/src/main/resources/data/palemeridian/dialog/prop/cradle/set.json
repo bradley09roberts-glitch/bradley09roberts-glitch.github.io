@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "The Great Lens"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The cradle waits for a heart. When it is set, the Lens will begin to look again, at everything."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "Set the Lens Heart"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1035"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "Not yet"
+    },
+    "width": 200
+  }
+}

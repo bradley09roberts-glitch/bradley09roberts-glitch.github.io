@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Hesper Vane",
+    "color": "dark_aqua",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The Keeper does not receive visitors."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave"
+    },
+    "width": 200
+  }
+}

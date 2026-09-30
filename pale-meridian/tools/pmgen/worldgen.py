@@ -78,8 +78,13 @@ def _features_for(district: str) -> list:
     base, density = DISTRICT_BASE[district]
     src = vanilla.data_json(f"data/minecraft/worldgen/biome/{base}.json")
     features = copy.deepcopy(src["features"])
-    # Never generate surface lava lakes inside the valley (story areas, fog, fire).
-    features = [[f for f in step if f != "minecraft:lake_lava_surface"] for step in features]
+    # Never generate lava lakes or lava springs inside the valley: they could open next to authored
+    # places (the Deepcut tunnels especially) and flood them. The mine district also drops water springs,
+    # dungeons and geodes so its tunnels stay exactly as built.
+    banned = {"minecraft:lake_lava_surface", "minecraft:lake_lava_underground", "minecraft:spring_lava"}
+    if district == "deepcut":
+        banned |= {"minecraft:spring_water", "minecraft:monster_room", "minecraft:monster_room_deep", "minecraft:amethyst_geode"}
+    features = [[f for f in step if f not in banned] for step in features]
     if base == "pale_garden" and density:
         replacement = {
             "sparse": "palemeridian:pale_trees_sparse",

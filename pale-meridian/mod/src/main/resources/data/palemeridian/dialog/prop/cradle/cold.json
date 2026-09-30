@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The Great Lens"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "A disc of stillglass in a brass cradle, cold as the lake. The heart of it is empty."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave"
+    },
+    "width": 200
+  }
+}

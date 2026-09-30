@@ -4,3 +4,6 @@ execute if score #ui pm.tmp matches 102 run function palemeridian:ui/people/p2
 execute if score #ui pm.tmp matches 103 run function palemeridian:ui/people/p3
 execute if score #ui pm.tmp matches 104 run function palemeridian:ui/people/p4
 execute if score #ui pm.tmp matches 105 run function palemeridian:ui/people/p5
+execute if score #ui pm.tmp matches 106 run function palemeridian:ui/people/p6
+execute if score #ui pm.tmp matches 107 run function palemeridian:ui/people/p7
+execute if score #ui pm.tmp matches 108 run function palemeridian:ui/people/p8

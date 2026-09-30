@@ -74,6 +74,36 @@
         "type": "minecraft:run_command",
         "command": "/trigger pm.ui set 105"
       }
+    },
+    {
+      "label": {
+        "text": "Hesper Vane"
+      },
+      "width": 150,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 106"
+      }
+    },
+    {
+      "label": {
+        "text": "Tobin Vane"
+      },
+      "width": 150,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 107"
+      }
+    },
+    {
+      "label": {
+        "text": "Silas Crane"
+      },
+      "width": 150,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 108"
+      }
     }
   ],
   "exit_action": {

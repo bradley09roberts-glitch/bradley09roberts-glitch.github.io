@@ -1,0 +1,18 @@
+{
+  "structures": [
+    {
+      "structure": "palemeridian:deepcut",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "palemeridian:fixed",
+    "salt": 1341144111,
+    "chunks": [
+      [
+        1,
+        -24
+      ]
+    ]
+  }
+}

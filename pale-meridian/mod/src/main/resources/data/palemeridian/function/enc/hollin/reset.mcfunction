@@ -1,4 +1,6 @@
 scoreboard players set #enc.hollin pm.world 0
+scoreboard players operation #cool.hollin pm.world = #seconds pm.world
+scoreboard players add #cool.hollin pm.world 10
 kill @e[type=creaking,tag=pm.surge.hollin]
 bossbar set palemeridian:encounter visible false
 time of palemeridian:surge pause

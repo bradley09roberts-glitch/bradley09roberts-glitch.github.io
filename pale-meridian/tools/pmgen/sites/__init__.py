@@ -16,10 +16,17 @@ class Piece:
     origin: tuple      # world coordinates of the template's (0,0,0)
 
 
-def export_site(site_id: str, pieces: list[Piece], step: str = "top_layer_modification", terrain: str = "none") -> None:
+def export_site(site_id: str, pieces: list[Piece], step: str = "top_layer_modification", terrain: str = "none",
+                anchor: tuple | None = None) -> None:
+    """Write the templates and a fixed-position structure. The structure starts in the anchor's chunk;
+    vanilla only places pieces within 8 chunks of the start, so large sites pass their centre."""
     for p in pieces:
         write_bytes(PM_DATA / "structure" / site_id / f"{p.name}.nbt", p.build.to_nbt())
-    anchor = pieces[0].origin
+    anchor = anchor or pieces[0].origin
+    for p in pieces:
+        for (x, z) in ((p.origin[0], p.origin[2]), (p.origin[0] + p.build.size_x - 1, p.origin[2] + p.build.size_z - 1)):
+            if abs((x >> 4) - (anchor[0] >> 4)) > 8 or abs((z >> 4) - (anchor[2] >> 4)) > 8:
+                raise ValueError(f"{site_id}/{p.name} reaches beyond 8 chunks of the structure start")
     write_json(PM_DATA / "worldgen" / "structure" / f"{site_id}.json", {
         "type": "palemeridian:site",
         "biomes": "#palemeridian:valley",

@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/s/eleven",
+  "display": {
+    "icon": {
+      "id": "minecraft:stone_bricks"
+    },
+    "title": "The Broken Span",
+    "description": "The causeway to the Meridian lost a span when the fog came. The old stones' outlines still glow.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

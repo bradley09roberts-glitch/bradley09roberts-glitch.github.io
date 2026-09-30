@@ -9,7 +9,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "Hollin's four places told you their names: Dunn's bakery, Pell's well, Marsh's hall and Tarn's ferry.",
+        "text": "In the Last Gallery you found eleven pale figures and a wall of blank plaques.",
         "color": "gray"
       }
     },
@@ -17,7 +17,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "Each family had a bell. The Round, painted in the Hall, says in what order they were rung.",
+        "text": "You heard the Keeper strike the Deepcut from the Chart, and her son Tobin promise that the roof would hold.",
         "color": "gray"
       }
     }

@@ -20,16 +20,9 @@
   },
   "features": [
     [],
-    [
-      "minecraft:lake_lava_underground"
-    ],
-    [
-      "minecraft:amethyst_geode"
-    ],
-    [
-      "minecraft:monster_room",
-      "minecraft:monster_room_deep"
-    ],
+    [],
+    [],
+    [],
     [
       "palemeridian:vale_roads"
     ],
@@ -66,10 +59,7 @@
       "minecraft:disk_gravel"
     ],
     [],
-    [
-      "minecraft:spring_water",
-      "minecraft:spring_lava"
-    ],
+    [],
     [
       "minecraft:glow_lichen",
       "palemeridian:pale_trees_medium",

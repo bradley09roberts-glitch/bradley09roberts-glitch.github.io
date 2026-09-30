@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/c3/kiln",
+  "display": {
+    "icon": {
+      "id": "minecraft:pearlescent_froglight"
+    },
+    "title": "The Glassworks Wakelamp",
+    "description": "The kiln hatch holds a new Stillglass Lamp. The tower's lamp cage wants four glass blocks and two iron bars.",
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "structures": [
+    {
+      "structure": "palemeridian:fen",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "palemeridian:fixed",
+    "salt": 26983741,
+    "chunks": [
+      [
+        -23,
+        3
+      ]
+    ]
+  }
+}

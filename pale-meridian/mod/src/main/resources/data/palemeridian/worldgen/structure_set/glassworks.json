@@ -1,0 +1,18 @@
+{
+  "structures": [
+    {
+      "structure": "palemeridian:glassworks",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "palemeridian:fixed",
+    "salt": 374793581,
+    "chunks": [
+      [
+        -1,
+        -21
+      ]
+    ]
+  }
+}

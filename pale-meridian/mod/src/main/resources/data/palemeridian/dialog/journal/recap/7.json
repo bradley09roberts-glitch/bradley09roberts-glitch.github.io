@@ -9,7 +9,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "You reached Hollin, a village in the fog where people have forgotten their own names.",
+        "text": "Tamsin remembered herself. The fog is attention, she says: the valley stays real because it is looked at.",
         "color": "gray"
       }
     },
@@ -17,7 +17,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "A lamplighter keeps one lamp lit at the gate and doesn't know why.",
+        "text": "Forty years ago the Keeper struck the Deepcut from the Long Chart, and the forgetting spread from there.",
         "color": "gray"
       }
     }

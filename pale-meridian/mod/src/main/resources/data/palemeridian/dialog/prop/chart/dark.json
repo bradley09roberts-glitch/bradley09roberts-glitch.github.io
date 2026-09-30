@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The Long Chart"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "A floor-wide map of the Vale, every field and lane set in coloured stone. Under the north cliffs the stone is white, as if nobody ever went there."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave"
+    },
+    "width": 200
+  }
+}

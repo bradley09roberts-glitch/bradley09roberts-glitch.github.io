@@ -9,7 +9,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "Aldercross remembers. Bees are back in Brannoc's hives and the windmill lamp burns over the orchard.",
+        "text": "You wrote the eleven names into the Long Chart. The Deepcut is on the map again, and the Pall has nowhere left to hide.",
         "color": "gray"
       }
     },
@@ -17,7 +17,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "Brannoc told you what the fog made everyone forget: forty years ago the Deepcut mine collapsed and eleven miners died, his brother Col among them.",
+        "text": "The survey is complete. Odile saw her first sunrise in forty years. Hesper tends a small garden at the mine mouth.",
         "color": "gray"
       }
     },
@@ -25,15 +25,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "The Keeper of the Meridian, Hesper Vane, had sent them past the safe seam for her great Lens.",
-        "color": "gray"
-      }
-    },
-    {
-      "type": "minecraft:plain_message",
-      "width": 320,
-      "contents": {
-        "text": "Tamsin went north, to the Glassworks under the cliffs.",
+        "text": "The Vale is yours to explore.",
         "color": "gray"
       }
     }

@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:bricks"
+    },
+    "title": "Under the Cliffs",
+    "description": "Brannoc says Tamsin went north, to the Glassworks at the foot of the cliffs.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

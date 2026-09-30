@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:air",
+    "minecraft:light",
+    "#minecraft:slabs",
+    "#minecraft:wool_carpets"
+  ]
+}

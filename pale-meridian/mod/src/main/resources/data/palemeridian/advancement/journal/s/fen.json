@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/ep/kept",
+  "display": {
+    "icon": {
+      "id": "minecraft:lever"
+    },
+    "title": "The Drowned Chapel",
+    "description": "A half-sunk chapel stands in the western Fen. Its crypt is under water, behind a glass window.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

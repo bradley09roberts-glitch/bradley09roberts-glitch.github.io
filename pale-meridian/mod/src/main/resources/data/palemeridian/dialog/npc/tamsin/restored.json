@@ -1,0 +1,54 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Tamsin Reed",
+    "color": "gold",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Tamsin Reed. Chartered Survey. Terrible at letters, apparently, since it took you a year to get mine."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Listen, while I still have all of me. The fog isn't weather. It's attention. This valley stays real because it is looked at: named, lit, charted. The Keeper's Lens on the Meridian did the looking for everyone at once."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Forty years ago the Keeper struck the Deepcut off the Long Chart. Unlooked-at, it faded, and the forgetting spread out from here like damp through a wall."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The far end of this mine, past the blue seam. That's where it starts. Go and look. Somebody has to, and I'd rather it was someone with all their edges."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "\"I'll go.\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1027"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close"
+}

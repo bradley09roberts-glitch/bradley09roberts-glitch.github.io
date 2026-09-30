@@ -9,7 +9,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "You have just arrived at the Landing, on the south rim of the Vale of Vell.",
+        "text": "With the Heartwood's three hearts broken, the pale roots let go of the windmill.",
         "color": "gray"
       }
     },
@@ -17,7 +17,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "A letter waits for you on the noticeboard.",
+        "text": "Brannoc has his brother's lamp for the windmill cap.",
         "color": "gray"
       }
     }

@@ -9,7 +9,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "Following Tamsin east, you reached the orchards of Aldercross, grown over with pale oak.",
+        "text": "You set the Lens Heart in the Great Lens. Something gathered itself out of the fog on the Lens Gallery.",
         "color": "gray"
       }
     },
@@ -17,7 +17,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "Brannoc, the orchard keeper, wants nothing to do with you, or with his own trees.",
+        "text": "Your friends have come across the lake to the Meridian.",
         "color": "gray"
       }
     }

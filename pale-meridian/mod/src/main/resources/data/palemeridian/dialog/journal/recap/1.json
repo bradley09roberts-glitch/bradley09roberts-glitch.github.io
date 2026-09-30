@@ -9,7 +9,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "With the Heartwood's three hearts broken, the pale roots let go of the windmill.",
+        "text": "You left the Deepcut blank. The rest of Vell cleared; the mine keeps its fog, its eleven, and now its Keeper.",
         "color": "gray"
       }
     },
@@ -17,7 +17,15 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "Brannoc has his brother's lamp for the windmill cap.",
+        "text": "The survey is complete. A faint haze never quite lifts, but every lamp is lit.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "The Vale is yours to explore.",
         "color": "gray"
       }
     }

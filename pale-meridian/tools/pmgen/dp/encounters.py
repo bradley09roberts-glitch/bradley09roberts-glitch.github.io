@@ -33,10 +33,19 @@ class Surge:
     interval: int = 8               # seconds between spawns while below the cap
     on_start: list = field(default_factory=list)
     on_success: list = field(default_factory=list)
+    kind: str = "bulb"              # "bulb" (copper bulbs) or "candle" (candle clusters; flint and steel also works)
+    time_limit: int = 0             # seconds; 0 = no limit. Running out resets the surge (cooldown, then retry)
+    cooldown: int = 10              # seconds before a failed/abandoned surge can start again
+
+
+LIT = {"bulb": "#palemeridian:bulbs[lit=true]", "candle": "#minecraft:candles[lit=true]"}
+ANY = {"bulb": "#palemeridian:bulbs", "candle": "#minecraft:candles"}
+SETTER = {"bulb": "enc/_set_bulb", "candle": "enc/_set_candle"}
 
 
 def register(s: Surge) -> None:
     sid = s.id
+    lit, setter = LIT[s.kind], SETTER[s.kind]
     tag = f"pm.surge.{sid}"
     state = f"#enc.{sid}"
     cx, cy, cz = s.center
@@ -47,24 +56,24 @@ def register(s: Surge) -> None:
         if name not in poi.POI:
             poi.add(f"surge.{name}", lx + 0.5, ly - 0.2, lz + 0.5)
         R.npc(NPC(f"relight_{sid}_{i}", "Dark lamp", "", "gold", "none", body=False, label="✦ Relight", size=(1.2, 1.4),
-                  places=[(f"if score {state} pm.world matches 1 unless block {lx} {ly} {lz} #palemeridian:bulbs[lit=true]", f"surge.{name}")],
+                  places=[(f"if score {state} pm.world matches 1 unless block {lx} {ly} {lz} {lit}", f"surge.{name}")],
                   talk=[("", f"/function {fid(f'enc/{sid}/relight/{i}')}")]))
         R.func(f"enc/{sid}/relight/{i}", [
             f"execute unless score {state} pm.world matches 1 run return fail",
-            f"execute if block {lx} {ly} {lz} #palemeridian:bulbs[lit=true] run return fail",
-            f"function {fid('enc/_set_bulb')} {{x:{lx},y:{ly},z:{lz},lit:\"true\"}}",
+            f"execute if block {lx} {ly} {lz} {lit} run return fail",
+            f"function {fid(setter)} {{x:{lx},y:{ly},z:{lz},lit:\"true\"}}",
             f"particle minecraft:end_rod {lx} {ly} {lz} 0.3 0.3 0.3 0.02 25 normal",
             f"playsound minecraft:block.copper_bulb.turn_on master @a {lx} {ly} {lz} 1 1",
             tellraw("@a[distance=..48]", {"text": "A lamp flares back to life.", "color": "gold", "italic": True}),
         ])
-    lamp_count_lines = [f"execute if block {x} {y} {z} #palemeridian:bulbs[lit=true] run scoreboard players add #lit pm.tmp 1" for (x, y, z) in s.lamps]
+    lamp_count_lines = [f"execute if block {x} {y} {z} {lit} run scoreboard players add #lit pm.tmp 1" for (x, y, z) in s.lamps]
     R.func(f"enc/{sid}/start", [
         f"execute if score {state} pm.world matches 1 run return fail",
         f"scoreboard players set {state} pm.world 1",
         f"scoreboard players set #t.{sid} pm.world 0",
         f"scoreboard players set #idle.{sid} pm.world 0",
         f"scoreboard players set #spawn.{sid} pm.world 0",
-        *[f"function {fid('enc/_set_bulb')} {{x:{x},y:{y},z:{z},lit:\"false\"}}" for (x, y, z) in s.lamps],
+        *[f"function {fid(setter)} {{x:{x},y:{y},z:{z},lit:\"false\"}}" for (x, y, z) in s.lamps],
         f"bossbar set palemeridian:encounter name {snbt({'text': s.title, 'color': 'red'})}",
         f"bossbar set palemeridian:encounter max {len(s.lamps)}",
         f"bossbar set palemeridian:encounter value 0",
@@ -111,6 +120,11 @@ def register(s: Surge) -> None:
         *lamp_count_lines,
         "execute store result bossbar palemeridian:encounter value run scoreboard players get #lit pm.tmp",
         f"bossbar set palemeridian:encounter players @a[x={cx},y={cy},z={cz},distance=..{s.radius + 16}]",
+        *([f"scoreboard players set #left.{sid} pm.world {s.time_limit}",
+           f"scoreboard players operation #left.{sid} pm.world -= #t.{sid} pm.world",
+           f"bossbar set palemeridian:encounter name {snbt([{'text': s.title + ' — ', 'color': 'red'}, {'score': {'name': '#left.' + sid, 'objective': 'pm.world'}, 'color': 'white'}, {'text': 's', 'color': 'white'}])}",
+           f"execute unless score #lit pm.tmp matches {len(s.lamps)}.. if score #left.{sid} pm.world matches ..0 run return run function {fid(f'enc/{sid}/fail')}"]
+          if s.time_limit else []),
         f"execute if score #lit pm.tmp matches {len(s.lamps)}.. if score #t.{sid} pm.world matches {s.min_seconds}.. run function {fid(f'enc/{sid}/success')}",
         f"execute if score #lit pm.tmp matches {len(s.lamps)}.. unless score #t.{sid} pm.world matches {s.min_seconds}.. run title @a[x={cx},y={cy},z={cz},distance=..{s.radius}] actionbar {snbt({'text': 'Hold on — the Pall is still pushing back...', 'color': 'gold'})}",
     ])
@@ -124,8 +138,14 @@ def register(s: Surge) -> None:
         *s.on_success,
         complete(s.quest),
     ])
+    R.func(f"enc/{sid}/fail", [
+        tellraw(f"@a[x={cx},y={cy},z={cz},distance=..{s.radius + 24}]", {"text": "The Pall takes the light. The surge rolls back into the fog to gather itself. (Step back in to try again.)", "color": "gray", "italic": True}),
+        f"function {fid(f'enc/{sid}/reset')}",
+    ])
     R.func(f"enc/{sid}/reset", [
         f"scoreboard players set {state} pm.world 0",
+        f"scoreboard players operation #cool.{sid} pm.world = #seconds pm.world",
+        f"scoreboard players add #cool.{sid} pm.world {s.cooldown}",
         f"kill @e[type=creaking,tag={tag}]",
         "bossbar set palemeridian:encounter visible false",
         "time of palemeridian:surge pause",
@@ -134,6 +154,7 @@ def register(s: Surge) -> None:
     ])
     # start when the quest is active and a player is in the arena; tick while running; clean leftovers
     R.slow_hooks.append(f"execute if score {s.quest} pm.q matches 1 unless score {state} pm.world matches 1..2 "
+                        f"unless score #cool.{sid} pm.world > #seconds pm.world "
                         f"if entity @a[x={cx},y={cy},z={cz},distance=..{s.radius},gamemode=!spectator] run function {fid(f'enc/{sid}/start')}")
     R.slow_hooks.append(f"function {fid(f'enc/{sid}/tick')}")
     R.slow_hooks.append(f"execute unless score {state} pm.world matches 1 run kill @e[type=creaking,tag={tag}]")
@@ -146,4 +167,7 @@ def generate_shared() -> None:
     tag("block", "palemeridian", "bulbs", [f"minecraft:{p}copper_bulb" for p in ("", "exposed_", "weathered_", "oxidized_", "waxed_", "waxed_exposed_", "waxed_weathered_", "waxed_oxidized_")])
     R.func("enc/_set_bulb", [
         "$execute if block $(x) $(y) $(z) #palemeridian:bulbs run setblock $(x) $(y) $(z) minecraft:waxed_exposed_copper_bulb[lit=$(lit)]",
+    ])
+    R.func("enc/_set_candle", [
+        "$execute if block $(x) $(y) $(z) #minecraft:candles run setblock $(x) $(y) $(z) minecraft:candle[candles=4,lit=$(lit)]",
     ])

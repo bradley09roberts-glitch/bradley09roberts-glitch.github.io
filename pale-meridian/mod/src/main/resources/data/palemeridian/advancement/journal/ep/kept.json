@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/ep/spoken",
+  "display": {
+    "icon": {
+      "id": "minecraft:chest"
+    },
+    "title": "Kept Safe",
+    "description": "All eleven were found, and entrusted to the one who keeps them now.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

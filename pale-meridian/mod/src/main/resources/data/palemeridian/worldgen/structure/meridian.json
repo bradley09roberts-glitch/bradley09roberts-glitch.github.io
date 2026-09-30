@@ -1,0 +1,27 @@
+{
+  "type": "palemeridian:site",
+  "biomes": "#palemeridian:valley",
+  "step": "top_layer_modification",
+  "spawn_overrides": {},
+  "terrain_adaptation": "none",
+  "pieces": [
+    {
+      "template": "palemeridian:meridian/island",
+      "pos": [
+        -48,
+        48,
+        -48
+      ],
+      "rotation": "none"
+    },
+    {
+      "template": "palemeridian:meridian/causeway",
+      "pos": [
+        -16,
+        48,
+        12
+      ],
+      "rotation": "none"
+    }
+  ]
+}

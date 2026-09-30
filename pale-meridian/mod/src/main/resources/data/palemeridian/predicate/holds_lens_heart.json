@@ -1,0 +1,14 @@
+{
+  "condition": "minecraft:entity_properties",
+  "entity": "this",
+  "predicate": {
+    "minecraft:slots": {
+      "container.*": {
+        "items": "minecraft:heart_of_the_sea",
+        "predicates": {
+          "minecraft:custom_data": "{pm:{item:\"lens_heart\"}}"
+        }
+      }
+    }
+  }
+}

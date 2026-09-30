@@ -31,5 +31,14 @@ execute if score #enc.hollin pm.world matches 1 run function palemeridian:enc/ho
 scoreboard objectives add pm.bread dummy
 scoreboard objectives add pm.gift2 dummy
 execute unless score #k.count pm.world matches 0.. run scoreboard players set #k.count pm.world 0
+execute if score c3.kiln pm.q matches 2 run function palemeridian:c3/kiln_relight
+execute if score #enc.glassworks pm.world matches 1 run function palemeridian:enc/glassworks/reset
+bossbar add palemeridian:boss ""
+bossbar set palemeridian:boss color white
+bossbar set palemeridian:boss style notched_10
+bossbar set palemeridian:boss name {"text":"The Unlooked","color":"white"}
+execute if score #boss pm.world matches 1 run function palemeridian:c4/boss/reset
+scoreboard objectives add pm.glass dummy
+execute if score #fen.drained pm.world matches 1 run fill -346 58 67 -337 62 73 minecraft:air replace minecraft:water
 schedule function palemeridian:core/second 20t replace
 function palemeridian:hud/refresh

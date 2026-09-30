@@ -1,0 +1,66 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Tamsin Reed",
+    "color": "gold",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "You have a Survey coat. Did they send someone? No... I sent something. A letter? I'm sure I sent something."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "I had a name. It was short. Everything here is short: short days, short names, short memory."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "Show her the letter"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1024"
+      }
+    },
+    {
+      "label": {
+        "text": "Show her the field notes"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1025"
+      }
+    },
+    {
+      "label": {
+        "text": "Show her the theodolite"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1026"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "Not yet"
+    },
+    "width": 200
+  }
+}

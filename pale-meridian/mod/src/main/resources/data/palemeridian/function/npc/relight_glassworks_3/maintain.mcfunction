@@ -1,0 +1,1 @@
+function palemeridian:npc/relight_glassworks_3/place

@@ -35,6 +35,7 @@ public final class ValleyLayout {
 
 	public final List<Site> sites;
 	public final List<Road> roads;
+	public final List<QuietZone> quietZones;
 	public final Map<String, double[]> districtSeeds;
 	public final double rimRadius, deepcutX, deepcutZ, deepcutRadius, deepcutDepthTop, boundaryNoise;
 	public final Map<String, String> districtGroups;
@@ -45,6 +46,13 @@ public final class ValleyLayout {
 	}
 
 	public record Road(String id, double width, double[][] points) {
+	}
+
+	/** Authored underground space: natural caves are suppressed inside the box above yMin. */
+	public record QuietZone(String id, int x1, int z1, int x2, int z2, int yMin) {
+		public boolean contains(int x, int y, int z) {
+			return x >= this.x1 && x <= this.x2 && z >= this.z1 && z <= this.z2 && y >= this.yMin;
+		}
 	}
 
 	private ValleyLayout(JsonObject root) {
@@ -112,6 +120,20 @@ public final class ValleyLayout {
 			roadList.add(new Road(r.get("id").getAsString(), r.get("width").getAsDouble(), p));
 		}
 		this.roads = List.copyOf(roadList);
+
+		List<QuietZone> zones = new ArrayList<>();
+		if (root.has("quiet_zones")) {
+			for (Map.Entry<String, JsonElement> e : root.getAsJsonObject("quiet_zones").entrySet()) {
+				if (e.getKey().startsWith("_")) {
+					continue;
+				}
+				JsonObject q = e.getValue().getAsJsonObject();
+				JsonArray b = q.getAsJsonArray("box");
+				zones.add(new QuietZone(e.getKey(), Math.min(b.get(0).getAsInt(), b.get(2).getAsInt()), Math.min(b.get(1).getAsInt(), b.get(3).getAsInt()),
+					Math.max(b.get(0).getAsInt(), b.get(2).getAsInt()), Math.max(b.get(1).getAsInt(), b.get(3).getAsInt()), q.get("y_min").getAsInt()));
+			}
+		}
+		this.quietZones = List.copyOf(zones);
 
 		JsonObject d = root.getAsJsonObject("districts");
 		Map<String, double[]> seeds = new LinkedHashMap<>();

@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:oak_boat"
+    },
+    "title": "The Crossing",
+    "description": "With three lamps lit, the lake remembers its shores. The island at its heart is no longer folded away.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

@@ -12,3 +12,4 @@ execute if score #chapter pm.world matches 0 unless score p.letter pm.q matches 
 execute unless score #chapter pm.world matches 0 run function palemeridian:player/late_join
 scoreboard players operation @s pm.seen = #rev pm.world
 function palemeridian:hud/refresh
+execute if score #ending pm.world matches 1.. run function palemeridian:c4/keepers_glass
