@@ -26,7 +26,7 @@ The Minecraft EULA was never accepted on your behalf: every `eula.txt` produced 
 |---|---|---|---|
 | 1 | Generator runs from a clean state and rebuilds every generated file | PASS | `01-generate.log` |
 | 2 | Regenerating produces byte-identical files (deterministic generation) | PASS | `verify_all.sh` (git diff of generated trees) |
-| 3 | Every generated file loads through the game's own loaders (offline): 788/788 functions, 55/54 advancements, 164/164 dialogs, 33/33 predicates, 5/5 loot tables, 20/20 biomes, all structures, structure sets, noise settings, density functions, world clocks, timelines, features | PASS | `03-offline-validate.log` |
+| 3 | Every generated file loads through the game's own loaders (offline): 788/788 functions, 54/54 advancements, 164/164 dialogs, 33/33 predicates, 5/5 loot tables, 20/20 biomes, all structures, structure sets, noise settings, density functions, world clocks, timelines, features | PASS | `03-offline-validate.log` |
 | 4 | All 102 macro functions instantiate with sample arguments (their commands parse) | PASS | `03-offline-validate.log` |
 | 5 | Structure templates: 37 container items and 401 text components decode with the game's codecs; all 23 loot-table references exist | PASS | `03-offline-validate.log` |
 | 6 | Zero warnings/errors mentioning the pack during loading (the checker fails on any) | PASS | `03-offline-validate.log` |
