@@ -1,0 +1,36 @@
+{
+  "criteria": {
+    "bed": {
+      "trigger": "minecraft:placed_block",
+      "conditions": {
+        "location": [
+          {
+            "condition": "minecraft:location_check",
+            "predicate": {
+              "block": {
+                "blocks": "#minecraft:beds"
+              },
+              "position": {
+                "x": {
+                  "min": 131,
+                  "max": 137
+                },
+                "y": {
+                  "min": 67,
+                  "max": 70
+                },
+                "z": {
+                  "min": 129,
+                  "max": 135
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "function": "palemeridian:c1/rest_bed"
+  }
+}

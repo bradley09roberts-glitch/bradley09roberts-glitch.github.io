@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Brannoc Hale",
+    "color": "aqua"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "The orchard keeper and beekeeper of Aldercross. Gruff, blunt and fiercely loyal to his trees.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "His younger brother Col died in the Deepcut.",
+        "color": "gray"
+      }
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 3"
+    }
+  }
+}

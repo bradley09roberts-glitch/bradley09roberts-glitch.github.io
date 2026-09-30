@@ -1,0 +1,46 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The Lamplighters' Round",
+    "color": "aqua"
+  },
+  "external_title": {
+    "text": "Objective"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Ring Hollin's four bells in the order of the Round.",
+        "color": "white"
+      },
+      "width": 300
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Each bell in the tower carries a family name. Each family kept one of Hollin's places. The Round, painted in the Hall, gives the order.",
+        "color": "gray"
+      },
+      "width": 300
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Hint: Families: Dunn kept the bakery, Pell the well, Marsh the hall, Tarn the ferry. The Round: 'Bread for the morning, water for noon, words for the evening, the ferry for home.'",
+        "color": "dark_aqua",
+        "italic": true
+      },
+      "width": 300
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back to the journal"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 1"
+    }
+  }
+}

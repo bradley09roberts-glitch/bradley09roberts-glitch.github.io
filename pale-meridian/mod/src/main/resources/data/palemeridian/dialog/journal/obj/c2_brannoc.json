@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The Orchard Keeper",
+    "color": "aqua"
+  },
+  "external_title": {
+    "text": "Objective"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Speak with the orchard keeper.",
+        "color": "white"
+      },
+      "width": 300
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "A broad, bearded man stands at the edge of his orchard as though guarding it from the trees.",
+        "color": "gray"
+      },
+      "width": 300
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back to the journal"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 1"
+    }
+  }
+}

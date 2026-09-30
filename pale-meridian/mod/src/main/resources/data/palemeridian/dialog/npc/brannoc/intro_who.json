@@ -1,0 +1,39 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Brannoc",
+    "color": "yellow",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Brannoc. I keep bees. Kept. No flowers, no bees. No bees, no Brannoc worth the name."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "\"What does the orchard need?\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1016"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "Back"
+    },
+    "width": 200
+  }
+}

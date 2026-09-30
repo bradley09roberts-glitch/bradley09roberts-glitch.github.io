@@ -1,0 +1,46 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Odile",
+    "color": "gold",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Happened? Nothing happens here. That's the trouble. It's always the same grey evening."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The bells used to ring the Round every night. Now they don't ring at all, and nobody remembers the tune."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "\"What would it take to wake it up?\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1006"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "Back"
+    },
+    "width": 200
+  }
+}

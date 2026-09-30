@@ -1,0 +1,46 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Hold the Light",
+    "color": "aqua"
+  },
+  "external_title": {
+    "text": "Objective"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Relight the four plaza lamps while the Pall pushes back.",
+        "color": "white"
+      },
+      "width": 300
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Lighting the Wakelamp woke the fog. Watchers are in the square. They move only when nobody is looking at them.",
+        "color": "gray"
+      },
+      "width": 300
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Hint: Keep your eyes on the Watchers while you walk between lamps. One hit breaks an unbound Watcher.",
+        "color": "dark_aqua",
+        "italic": true
+      },
+      "width": 300
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back to the journal"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 1"
+    }
+  }
+}

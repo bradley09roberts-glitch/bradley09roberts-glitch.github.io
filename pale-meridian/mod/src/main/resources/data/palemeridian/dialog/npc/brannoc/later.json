@@ -1,0 +1,39 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Brannoc",
+    "color": "yellow",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Honey's coming back. Apples too. Take some, you've earned them."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "Take apples and honey"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1022"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "Maybe later"
+    },
+    "width": 200
+  }
+}

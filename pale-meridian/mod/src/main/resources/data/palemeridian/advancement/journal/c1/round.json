@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/c1/names",
+  "display": {
+    "icon": {
+      "id": "minecraft:bell"
+    },
+    "title": "The Lamplighters' Round",
+    "description": "Each bell in the tower carries a family name. Each family kept one of Hollin's places. The Round, painted in the Hall, gives the order.",
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

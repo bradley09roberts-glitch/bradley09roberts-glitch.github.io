@@ -1,0 +1,40 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Odile",
+    "color": "gold",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The Round! Oh, I know this. It goes..."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Bread for the morning, water for noon, words for the evening, the ferry for home."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Every family kept a bell, you see, and every family kept a place. We rang them in the order of the day."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave"
+    },
+    "width": 200
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The Eleven",
+    "color": "aqua"
+  },
+  "external_title": {
+    "text": "Objective"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Find the keepsakes of the eleven lost miners.",
+        "color": "white"
+      },
+      "width": 300
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Eleven people never came back from the Deepcut. Things they carried are still scattered through the Vale.",
+        "color": "gray"
+      },
+      "width": 300
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Hint: Keepsakes are hidden where each person lived or worked: homes, lofts, shelves, a tree hollow, a boathouse. The journal lists every name you have found.",
+        "color": "dark_aqua",
+        "italic": true
+      },
+      "width": 300
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back to the journal"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 1"
+    }
+  }
+}

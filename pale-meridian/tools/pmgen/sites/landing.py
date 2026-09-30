@@ -101,11 +101,14 @@ def build() -> list[Piece]:
     b.set(13, F + 3, 22, "air")
     for y in range(F, F + 4):
         b.set(13, y, 22, "ladder[facing=west]")
-    # loft: dusty bed, chest (Nell's drawing is placed by the story system), shelves
+    # loft: dusty bed, chest (a keepsake of the Eleven), shelves
     bed(b, 8, F + 4, 26, "north", "light_gray")
     b.set(8, F + 4, 22, "chest[facing=south,type=single,waterlogged=false]", container_nbt("minecraft:chest", [
         item_stack_nbt("minecraft:paper", 1, name={"text": "Waystation ledger (torn)", "italic": False},
-                       lore=["Last entry: \"Road closed. The fog", "came off the water tonight.\""], slot=4)]))
+                       lore=["Last entry: \"Road closed. The fog", "came off the water tonight.\""], slot=4),
+        item_stack_nbt("minecraft:paper", 1, name={"text": "Child's drawing", "italic": False},
+                       lore=["Crayon on ledger paper: a woman with a lamp", "as big as the sun. \"MUM AT WORK\" — N.F."],
+                       custom={"pm": {"keepsake": 8}}, slot=13)]))
     b.set(11, F + 4, 27, "spruce_trapdoor[facing=north,half=bottom,open=false,powered=false,waterlogged=false]")
     poi.add("landing.loft_chest", *W(8, F + 4, 22))
 

@@ -1,0 +1,19 @@
+{
+  "criteria": {
+    "found": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "predicates": {
+              "minecraft:custom_data": "{pm:{keepsake:10}}"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "function": "palemeridian:keepsake/found/10"
+  }
+}

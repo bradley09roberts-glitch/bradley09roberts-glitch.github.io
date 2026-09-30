@@ -1,0 +1,11 @@
+{
+  "condition": "minecraft:entity_properties",
+  "entity": "this",
+  "predicate": {
+    "minecraft:slots": {
+      "container.*": {
+        "items": "minecraft:pearlescent_froglight"
+      }
+    }
+  }
+}

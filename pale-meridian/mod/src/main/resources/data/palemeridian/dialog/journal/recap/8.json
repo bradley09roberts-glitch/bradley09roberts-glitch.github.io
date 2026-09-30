@@ -1,0 +1,42 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The story so far",
+    "color": "aqua"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "You relit the Landing lamp and the fog drew back from the south rim.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "The lamp road runs north into the Pall, toward the village of Hollin.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "On the road you glimpsed a figure with a lantern. It vanished.",
+        "color": "gray"
+      }
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back to the journal"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 9"
+    }
+  }
+}

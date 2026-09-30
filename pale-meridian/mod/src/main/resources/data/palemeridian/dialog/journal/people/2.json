@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Mirelle Dunn",
+    "color": "aqua"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Hollin's baker. Brisk and generous; there is a loaf for you every morning.",
+        "color": "gray"
+      }
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 3"
+    }
+  }
+}

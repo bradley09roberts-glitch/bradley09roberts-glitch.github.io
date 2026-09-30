@@ -9,7 +9,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "Tamsin Reed, your old mentor, wrote to you from inside the fog of Vell.",
+        "text": "With the Heartwood's three hearts broken, the pale roots let go of the windmill.",
         "color": "gray"
       }
     },
@@ -17,7 +17,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "She asked you to come yourself, bring light, and relight the lamp at the Landing.",
+        "text": "Brannoc has his brother's lamp for the windmill cap.",
         "color": "gray"
       }
     }

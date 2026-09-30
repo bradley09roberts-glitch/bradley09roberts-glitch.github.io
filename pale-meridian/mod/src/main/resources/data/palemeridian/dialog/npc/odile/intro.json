@@ -1,0 +1,73 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Odile",
+    "color": "gold",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Oh — a light. You're carrying a light."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "I'm the... I light this one. Every evening. I don't remember why the others stay dark."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "You came up the Landing road? Nobody comes up the Landing road any more. The road forgets people."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "\"I'm looking for a surveyor. Tamsin Reed.\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1001"
+      }
+    },
+    {
+      "label": {
+        "text": "\"Who are you?\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1002"
+      }
+    },
+    {
+      "label": {
+        "text": "\"What happened to this place?\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1003"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "(Say nothing)"
+    },
+    "width": 200
+  }
+}

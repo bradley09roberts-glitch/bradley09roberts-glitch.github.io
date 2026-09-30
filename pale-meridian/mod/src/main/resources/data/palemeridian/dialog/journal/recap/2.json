@@ -9,7 +9,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "You have just arrived at the Landing, on the south rim of the Vale of Vell.",
+        "text": "Aldercross remembered two brothers: Brannoc and Col, and their initials in the old oak.",
         "color": "gray"
       }
     },
@@ -17,7 +17,15 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "A letter waits for you on the noticeboard.",
+        "text": "In the cider-press loft you found Tamsin's note: the fog is worst where the valley refuses to look.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "The Heartwood's roots are strangling the windmill that should carry the orchard's lamp.",
         "color": "gray"
       }
     }

@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/c2/memories",
+  "display": {
+    "icon": {
+      "id": "minecraft:creaking_heart"
+    },
+    "title": "The Heartwood",
+    "description": "Pale roots have strangled the windmill's lamp chamber. They grow from the Heartwood, and the Heartwood grows from three hearts.",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

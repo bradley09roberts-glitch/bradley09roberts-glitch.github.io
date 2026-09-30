@@ -1,0 +1,46 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The Heartwood",
+    "color": "aqua"
+  },
+  "external_title": {
+    "text": "Objective"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Break the three hearts grown into the Heartwood.",
+        "color": "white"
+      },
+      "width": 300
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Pale roots have strangled the windmill's lamp chamber. They grow from the Heartwood, and the Heartwood grows from three hearts.",
+        "color": "gray"
+      },
+      "width": 300
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Hint: A Watcher bound to a heart cannot be hurt. Hit it anyway and watch where the resin light runs: that is its heart. One heart is in the trunk, one in each root arm.",
+        "color": "dark_aqua",
+        "italic": true
+      },
+      "width": 300
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back to the journal"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 1"
+    }
+  }
+}

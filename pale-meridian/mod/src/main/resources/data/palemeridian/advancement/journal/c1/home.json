@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/p/chill",
+  "display": {
+    "icon": {
+      "id": "minecraft:red_bed"
+    },
+    "title": "A Place to Rest",
+    "description": "Odile says the empty cottage by the well was always kept for travellers. It is yours.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

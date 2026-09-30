@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Odile",
+    "color": "gold",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The latch is open? Then go up. The lamp needs its cage: copper all round it, and chains to hang from."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "My hands remember the shape even if my head doesn't."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave"
+    },
+    "width": 200
+  }
+}

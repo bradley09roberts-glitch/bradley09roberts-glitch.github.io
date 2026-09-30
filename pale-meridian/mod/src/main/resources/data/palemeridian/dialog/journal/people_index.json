@@ -24,6 +24,56 @@
         "type": "minecraft:run_command",
         "command": "/trigger pm.ui set 100"
       }
+    },
+    {
+      "label": {
+        "text": "Odile"
+      },
+      "width": 150,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 101"
+      }
+    },
+    {
+      "label": {
+        "text": "Mirelle Dunn"
+      },
+      "width": 150,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 102"
+      }
+    },
+    {
+      "label": {
+        "text": "Jory Pell"
+      },
+      "width": 150,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 103"
+      }
+    },
+    {
+      "label": {
+        "text": "Brannoc Hale"
+      },
+      "width": 150,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 104"
+      }
+    },
+    {
+      "label": {
+        "text": "Hesper Vane"
+      },
+      "width": 150,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 105"
+      }
     }
   ],
   "exit_action": {

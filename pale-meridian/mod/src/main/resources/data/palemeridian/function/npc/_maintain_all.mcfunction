@@ -1,1 +1,9 @@
 function palemeridian:npc/noticeboard/maintain
+function palemeridian:npc/relight_hollin_0/maintain
+function palemeridian:npc/relight_hollin_1/maintain
+function palemeridian:npc/relight_hollin_2/maintain
+function palemeridian:npc/relight_hollin_3/maintain
+function palemeridian:npc/odile/maintain
+function palemeridian:npc/mirelle/maintain
+function palemeridian:npc/jory/maintain
+function palemeridian:npc/brannoc/maintain

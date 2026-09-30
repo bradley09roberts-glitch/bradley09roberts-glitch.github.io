@@ -1,0 +1,40 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Brannoc",
+    "color": "yellow",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "You've seen him, haven't you. Col. My little brother. He laughed in this orchard every summer of his life."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "And the fog made a tree out of what's left."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "There's three hearts in the Heartwood. Hit one of those staring things and watch where the light runs. That's where its heart is. Break the hearts, and the roots will let go of my mill."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave"
+    },
+    "width": 200
+  }
+}

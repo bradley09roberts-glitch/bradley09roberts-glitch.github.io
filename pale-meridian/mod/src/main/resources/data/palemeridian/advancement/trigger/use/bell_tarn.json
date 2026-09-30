@@ -1,0 +1,33 @@
+{
+  "criteria": {
+    "use": {
+      "trigger": "minecraft:any_block_use",
+      "conditions": {
+        "location": [
+          {
+            "condition": "minecraft:location_check",
+            "predicate": {
+              "position": {
+                "x": {
+                  "min": 118,
+                  "max": 118
+                },
+                "y": {
+                  "min": 85,
+                  "max": 85
+                },
+                "z": {
+                  "min": 96,
+                  "max": 96
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "function": "palemeridian:use/bell_tarn"
+  }
+}

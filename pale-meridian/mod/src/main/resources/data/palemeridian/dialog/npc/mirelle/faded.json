@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Mirelle",
+    "color": "red",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "...the loaves... I was making loaves... is it morning yet?"
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave"
+    },
+    "width": 200
+  }
+}

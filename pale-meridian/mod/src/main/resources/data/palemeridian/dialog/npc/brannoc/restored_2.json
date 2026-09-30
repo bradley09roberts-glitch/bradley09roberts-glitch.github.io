@@ -1,0 +1,47 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Brannoc",
+    "color": "yellow",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The Keeper sent them past the blue seam. The safe seam. More stillglass, for her lens. Her great lens that could see the whole valley at once."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Hesper Vane. Remember that name, Surveyor. I have. For forty years. Even in the fog."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Your Tamsin went north, to the Glassworks. She had the look of someone who'd done a sum and hated the answer."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "\"I'm sorry about Col.\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1021"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close"
+}

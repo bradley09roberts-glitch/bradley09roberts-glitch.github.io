@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/c2/brannoc",
+  "display": {
+    "icon": {
+      "id": "minecraft:name_tag"
+    },
+    "title": "Remember Aldercross",
+    "description": "Brannoc won't say what the orchard has forgotten. The hives, the cider press and the old tree by the wall might.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

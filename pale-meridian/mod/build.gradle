@@ -83,6 +83,9 @@ tasks.register('offlineCheck', JavaExec) {
 	dependsOn 'classes', 'devtoolsClasses'
 	classpath = sourceSets.devtools.runtimeClasspath
 	mainClass = 'net.palemeridian.devtools.OfflineCheck'
-	args = [file('src/main/resources').absolutePath, file('build/offline-check').absolutePath, (project.findProperty('checkMode') ?: 'all')]
+	args = [file('src/main/resources').absolutePath, file('build/offline-check').absolutePath, (project.findProperty('checkMode') ?: 'all'),
+		file('../tools/generated/heightmaps.json').absolutePath]
+	workingDir = file('build/offline-check')
+	doFirst { file('build/offline-check').mkdirs() }
 	jvmArgs = ['-Xmx3G']
 }

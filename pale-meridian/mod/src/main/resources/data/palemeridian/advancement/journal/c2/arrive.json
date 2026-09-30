@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:apple"
+    },
+    "title": "The Orchard Road",
+    "description": "Odile says Tamsin went east, to Brannoc's orchards at Aldercross.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

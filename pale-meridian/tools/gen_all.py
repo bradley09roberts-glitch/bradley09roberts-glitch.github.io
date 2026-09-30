@@ -14,11 +14,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pmgen import art, poi, worldgen  # noqa: E402
 from pmgen.dp import atmosphere, core, engine, items  # noqa: E402
 from pmgen.dp import ui_pages  # noqa: E402
-from pmgen.dp.content import hollin_stub, prologue  # noqa: E402
+from pmgen.dp import loot_tables  # noqa: E402
+from pmgen.dp.content import chapter1, chapter2, journal_pages, keepsakes, prologue  # noqa: E402
+from pmgen.dp import encounters  # noqa: E402
 from pmgen.jsonio import GENERATED  # noqa: E402
 from pmgen.paths import LAYOUT, PM_DATA, PM_ASSETS, RES  # noqa: E402
 from pmgen.sites import export_site  # noqa: E402
-from pmgen.sites import landing  # noqa: E402
+from pmgen.sites import aldercross, hollin, landing  # noqa: E402
 
 
 def clean_generated_dirs() -> None:
@@ -37,30 +39,24 @@ def main() -> None:
     worldgen.generate()
     # sites (register POIs as they are built)
     export_site("landing", landing.build())
+    export_site("hollin", hollin.build())
+    export_site("aldercross", aldercross.build())
     # content registration
-    prologue_stub_order = [hollin_stub.register, prologue.register]
-    for reg in prologue_stub_order:
+    encounters.generate_shared()
+    for reg in (prologue.register, chapter1.register, chapter2.register, keepsakes.register):
         reg()
-    ui_pages.generate(
-        recaps=[
-            ("if score p.road pm.q matches 1..", ["You relit the Landing lamp and the fog drew back from the south rim.",
-                                                  "The lamp road runs north into the Pall, toward the village of Hollin.",
-                                                  "On the road you glimpsed a figure with a lantern. It vanished."]),
-            ("if score p.letter pm.q matches 2", ["Tamsin Reed, your old mentor, wrote to you from inside the fog of Vell.",
-                                                   "She asked you to come yourself, bring light, and relight the lamp at the Landing."]),
-            ("", ["You have just arrived at the Landing, on the south rim of the Vale of Vell.",
-                  "A letter waits for you on the noticeboard."]),
-        ],
-        people=[("if score p.letter pm.q matches 2", "Tamsin Reed", ["Your former mentor at the Chartered Survey. Clever, stubborn, funny when it's least appropriate.",
-                                                                     "She went into the Pall a year ago and stopped writing. Then her letter came."])],
-        eleven=[],
-    )
+    ui_pages.generate(recaps=journal_pages.recaps(), people=journal_pages.people(), eleven=keepsakes.eleven_journal())
+    loot_tables.generate()
     engine.generate()
     items.generate()
     atmosphere.generate()
     poi.write()
     core.generate()
     art.generate()
+    import json as _json
+    from pmgen.dp import MACRO_SAMPLES
+    from pmgen.paths import TOOLS
+    (TOOLS / "generated" / "macro_samples.json").write_text(_json.dumps(MACRO_SAMPLES, indent=1, sort_keys=True) + "\n")
     print(f"generated/verified {len(GENERATED)} files")
 
 

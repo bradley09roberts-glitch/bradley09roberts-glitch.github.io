@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Jory Pell",
+    "color": "aqua"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Hollin's bell-ringer, deaf in one ear and proud of his bells. His sister Agnes went up to the Deepcut and never came back.",
+        "color": "gray"
+      }
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 3"
+    }
+  }
+}

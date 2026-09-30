@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:lantern"
+    },
+    "title": "The Lamplighter",
+    "description": "Just inside Hollin's gate, an old woman is lighting the only lit lamp in the village.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

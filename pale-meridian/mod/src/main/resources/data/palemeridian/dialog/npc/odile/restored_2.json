@@ -1,0 +1,40 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Odile",
+    "color": "gold",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Forty years. Forty. I thought it was last Tuesday. I thought I'd lit that lamp perhaps a hundred times, not fourteen thousand."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "My name is Odile. Odile Marsh. I taught the Round in the hall. I remember now."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "\"What happened forty years ago?\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1009"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close"
+}

@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The story so far",
+    "color": "aqua"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "You reached Hollin, a village in the fog where people have forgotten their own names.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "A lamplighter keeps one lamp lit at the gate and doesn't know why.",
+        "color": "gray"
+      }
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back to the journal"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 9"
+    }
+  }
+}

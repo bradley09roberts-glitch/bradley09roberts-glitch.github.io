@@ -97,7 +97,7 @@ def register() -> None:
         f"playsound minecraft:block.bell.resonate master @a {xyz(lamp, 4)} 1.0 0.8",
         tellraw("@a", {"text": "The lamp catches. For a moment it burns much too bright, and the fog draws back from the Landing like a tide going out.", "color": "gray", "italic": True}),
         "scoreboard players set #r.landing pm.world 1",
-        "scoreboard players set #req.restore pm.world 1",
+        "scoreboard players set #req.landing pm.world 1",
         f"time of palemeridian:pall set 1000",
     ])
 

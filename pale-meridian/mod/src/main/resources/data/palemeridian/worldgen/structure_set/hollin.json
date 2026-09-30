@@ -1,0 +1,18 @@
+{
+  "structures": [
+    {
+      "structure": "palemeridian:hollin",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "palemeridian:fixed",
+    "salt": 1611606598,
+    "chunks": [
+      [
+        4,
+        4
+      ]
+    ]
+  }
+}

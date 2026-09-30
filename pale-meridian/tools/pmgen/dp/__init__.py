@@ -16,9 +16,29 @@ from ..paths import DATA, PM_DATA
 
 NS = "palemeridian"
 _written_fns: set[str] = set()
+MACRO_SAMPLES: dict[str, str] = {}
+
+# Sample arguments used by the offline checker to instantiate (and so fully parse) macro functions.
+_SAMPLE_BY_PREFIX = {
+    "npc/_skin": '{id:"odile",state:"faded",model:"slim"}',
+    "dlg/_call": None,  # filled in by the dialog generator (needs a real choice code)
+    "hud/wp_at": '{poi:"landing.lamp"}',
+    "hud/_wp_move": '{x:1.5d,y:86.0d,z:2.5d,yaw:0.0f,bx:1,by:86,bz:2}',
+    "hud/_wp_unforce": '{x:1,z:2}',
+    "poi/get": '{name:"landing.lamp"}',
+    "ui/_settings_show": '{bar:"On",fx:"On",wp:"On",chill:"On",keep:"Off",diff:"Normal"}',
+    "ui/_eleven_cat": '{list:"",item:"A name"}',
+    "ui/_eleven_dialog": '{list:"A name  ·  "}',
+    "enc/_set_bulb": '{x:1,y:70,z:2,lit:"true"}',
+    "c1/bell": '{n:1}',
+}
 
 
-def fn(path: str, lines: list[str] | str, header: str | None = None) -> str:
+def macro_sample(path: str, snbt_args: str) -> None:
+    MACRO_SAMPLES[f"{NS}:{path}"] = snbt_args
+
+
+def fn(path: str, lines: list[str] | str, header: str | None = None, sample: str | None = None) -> str:
     """Write data/palemeridian/function/<path>.mcfunction and return its resource id."""
     if isinstance(lines, str):
         lines = [lines]
@@ -31,6 +51,19 @@ def fn(path: str, lines: list[str] | str, header: str | None = None) -> str:
         body.append(ln)
     if path in _written_fns:
         raise ValueError(f"function {path} written twice")
+    if any(l and l.startswith("$") for l in lines):
+        smp = sample
+        if smp is None:
+            if path.startswith("npc/") and path.endswith("/spawn_at"):
+                smp = '{x:1.5d,y:67.0d,z:2.5d,yaw:90.0f,bx:1,by:67,bz:2}'
+            elif path.startswith("npc/") and path.endswith("/_at"):
+                smp = '{poi:"landing.lamp"}'
+            else:
+                smp = _SAMPLE_BY_PREFIX.get(path)
+        if smp is None and path != "dlg/_call":
+            raise ValueError(f"macro function {path} needs sample arguments for validation")
+        if smp is not None:
+            MACRO_SAMPLES[f"{NS}:{path}"] = smp
     _written_fns.add(path)
     write_text(PM_DATA / "function" / f"{path}.mcfunction", "\n".join(body))
     return f"{NS}:{path}"

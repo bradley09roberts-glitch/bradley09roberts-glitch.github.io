@@ -1,0 +1,40 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Brannoc",
+    "color": "yellow",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Help? Then remember something. Anything. This orchard's forgotten its own name."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The hives. The press. The old tree by the south wall. Go and stand in them. I can't. Not any more."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "\"I'll go.\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1018"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close"
+}

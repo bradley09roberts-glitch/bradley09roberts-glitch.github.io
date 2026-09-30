@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/c1/lamp",
+  "display": {
+    "icon": {
+      "id": "minecraft:copper_bulb"
+    },
+    "title": "Hold the Light",
+    "description": "Lighting the Wakelamp woke the fog. Watchers are in the square. They move only when nobody is looking at them.",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

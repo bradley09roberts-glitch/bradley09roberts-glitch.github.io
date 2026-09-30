@@ -1,0 +1,66 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Brannoc",
+    "color": "yellow",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Stop there. Don't touch the trees. They're watching."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The big one. The Heartwood. It wasn't big before the fog. It grew on what we forgot."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "\"Who are you?\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1013"
+      }
+    },
+    {
+      "label": {
+        "text": "\"I'm looking for Tamsin Reed.\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1014"
+      }
+    },
+    {
+      "label": {
+        "text": "\"I lit Hollin's lamp. I can help here too.\""
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1015"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "(Back away)"
+    },
+    "width": 200
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/c1/odile",
+  "display": {
+    "icon": {
+      "id": "minecraft:name_tag"
+    },
+    "title": "Hollin, Unremembered",
+    "description": "The lamplighter says places keep what people drop: the bakery, the well, the hall and the ferry steps.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

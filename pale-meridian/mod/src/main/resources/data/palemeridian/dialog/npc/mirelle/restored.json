@@ -1,0 +1,39 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Mirelle",
+    "color": "red",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "You! You're the one who rang the Round. Here, take some bread. Come by any morning; there's always a loaf for whoever keeps the lamps lit."
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "Take the bread"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1012"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "Maybe later"
+    },
+    "width": 200
+  }
+}

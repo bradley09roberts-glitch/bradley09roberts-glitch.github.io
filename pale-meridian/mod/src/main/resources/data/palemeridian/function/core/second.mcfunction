@@ -4,8 +4,29 @@ scoreboard players add #seconds pm.world 1
 function palemeridian:player/chill_all
 function palemeridian:npc/_maintain_all
 execute if score p.chill pm.q matches 1 as @a[gamemode=!spectator,predicate=palemeridian:in_pall,predicate=palemeridian:holding_light] run function palemeridian:q/p.chill/complete
+execute if score c1.surge pm.q matches 1 unless score #enc.hollin pm.world matches 1..2 if entity @a[x=120,y=67,z=118,distance=..30,gamemode=!spectator] run function palemeridian:enc/hollin/start
+function palemeridian:enc/hollin/tick
+execute unless score #enc.hollin pm.world matches 1 run kill @e[type=creaking,tag=pm.surge.hollin]
+execute if score c2.hearts pm.q matches 1 positioned 358 89 -14 if entity @a[distance=..40] run function palemeridian:c2/hearts_check
 execute if score p.camp pm.q matches 1 as @a[predicate=palemeridian:area/landing_camp] at @s run function palemeridian:loc/h0
 execute as @a[predicate=palemeridian:area/landing_camp] at @s run function palemeridian:loc/h1
 execute if score #figure pm.world matches 1 as @a[predicate=palemeridian:area/landing_figure_near] at @s run function palemeridian:loc/h2
 execute if score p.road pm.q matches 1 as @a[predicate=palemeridian:area/hollin_gate] at @s run function palemeridian:loc/h3
+execute if score c1.names pm.q matches 1 as @a[predicate=palemeridian:area/hollin_bakery] at @s run function palemeridian:loc/h4
+execute if score c1.names pm.q matches 1 as @a[predicate=palemeridian:area/hollin_well] at @s run function palemeridian:loc/h5
+execute if score c1.names pm.q matches 1 as @a[predicate=palemeridian:area/hollin_hall] at @s run function palemeridian:loc/h6
+execute if score c1.names pm.q matches 1 as @a[predicate=palemeridian:area/hollin_ferry] at @s run function palemeridian:loc/h7
+execute if score c1.lamp pm.q matches 1 as @a[predicate=palemeridian:area/hollin_tower_top] at @s run function palemeridian:loc/h8
+execute if score c1.round pm.q matches 1 as @a[predicate=palemeridian:area/hollin_belfry] at @s run function palemeridian:loc/h9
+execute if score c1.round pm.q matches 1 as @a[predicate=palemeridian:area/hollin_belfry] at @s run function palemeridian:loc/h10
+execute if score c1.round pm.q matches 1 as @a[predicate=palemeridian:area/hollin_belfry] at @s run function palemeridian:loc/h11
+execute if score c1.round pm.q matches 1 as @a[predicate=palemeridian:area/hollin_belfry] at @s run function palemeridian:loc/h12
+execute if score c2.arrive pm.q matches 1 as @a[predicate=palemeridian:area/alder_gate] at @s run function palemeridian:loc/h13
+execute if score c2.memories pm.q matches 1 as @a[predicate=palemeridian:area/alder_apiary] at @s run function palemeridian:loc/h14
+execute if score c2.memories pm.q matches 1 as @a[predicate=palemeridian:area/alder_press] at @s run function palemeridian:loc/h15
+execute if score c2.memories pm.q matches 1 as @a[predicate=palemeridian:area/alder_tree] at @s run function palemeridian:loc/h16
+execute if score #c2.mem.press pm.world matches 1 unless score #c2.note pm.world matches 1 as @a[predicate=palemeridian:area/alder_press] at @s run function palemeridian:loc/h17
+execute if score c2.lamp pm.q matches 1 as @a[predicate=palemeridian:area/alder_apiary] at @s run function palemeridian:loc/h18
 execute if score p.lamp pm.q matches 1 positioned 5 86 346 if entity @a[distance=..18] run function palemeridian:bp/landing_lamp/check
+execute if score c1.lamp pm.q matches 1 positioned 120 88 96 if entity @a[distance=..12] run function palemeridian:bp/hollin_lamp/check
+execute if score c2.lamp pm.q matches 1 positioned 356 93 -46 if entity @a[distance=..12] run function palemeridian:bp/orchard_lamp/check

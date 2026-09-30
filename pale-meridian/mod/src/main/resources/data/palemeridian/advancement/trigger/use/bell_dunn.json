@@ -1,0 +1,33 @@
+{
+  "criteria": {
+    "use": {
+      "trigger": "minecraft:any_block_use",
+      "conditions": {
+        "location": [
+          {
+            "condition": "minecraft:location_check",
+            "predicate": {
+              "position": {
+                "x": {
+                  "min": 120,
+                  "max": 120
+                },
+                "y": {
+                  "min": 85,
+                  "max": 85
+                },
+                "z": {
+                  "min": 94,
+                  "max": 94
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "function": "palemeridian:use/bell_dunn"
+  }
+}

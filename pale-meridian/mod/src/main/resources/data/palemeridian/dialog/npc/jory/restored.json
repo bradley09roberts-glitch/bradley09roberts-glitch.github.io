@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Jory",
+    "color": "dark_green",
+    "bold": true
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Forty years and not one of those bells polished. Disgraceful."
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "My sister Agnes would have had words. She went up to the Deepcut with the others, that night. Her scarf's still in my loft. I can't bring myself to move it."
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Leave"
+    },
+    "width": 200
+  }
+}

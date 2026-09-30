@@ -1,0 +1,46 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Hollin, Unremembered",
+    "color": "aqua"
+  },
+  "external_title": {
+    "text": "Objective"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Find the names of Hollin's four lost places.",
+        "color": "white"
+      },
+      "width": 300
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The lamplighter says places keep what people drop: the bakery, the well, the hall and the ferry steps.",
+        "color": "gray"
+      },
+      "width": 300
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Hint: Walk into the bakery, the hall, the well in the square and the ferry steps down by the lake.",
+        "color": "dark_aqua",
+        "italic": true
+      },
+      "width": 300
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back to the journal"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 1"
+    }
+  }
+}

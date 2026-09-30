@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/c1/round",
+  "display": {
+    "icon": {
+      "id": "minecraft:pearlescent_froglight"
+    },
+    "title": "Hollin's Wakelamp",
+    "description": "Above the belfry is the lamp cradle. The Stillglass Lamp needs its cage: four copper grates around it and two chains above.",
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

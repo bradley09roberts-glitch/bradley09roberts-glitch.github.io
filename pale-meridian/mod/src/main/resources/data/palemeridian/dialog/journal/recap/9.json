@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "The story so far",
+    "color": "aqua"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Tamsin Reed, your old mentor, wrote to you from inside the fog of Vell.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "She asked you to come yourself, bring light, and relight the lamp at the Landing.",
+        "color": "gray"
+      }
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back to the journal"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 9"
+    }
+  }
+}

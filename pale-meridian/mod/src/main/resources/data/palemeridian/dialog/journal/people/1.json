@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Odile",
+    "color": "aqua"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Hollin's lamplighter. She has lit one lamp at the gate every evening for longer than she can remember.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Since Hollin woke she knows her full name again: Odile Marsh, who taught the Round in the hall.",
+        "color": "gray"
+      }
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 3"
+    }
+  }
+}

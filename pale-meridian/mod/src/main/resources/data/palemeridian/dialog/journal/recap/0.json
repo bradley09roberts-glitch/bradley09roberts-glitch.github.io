@@ -9,7 +9,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "You relit the Landing lamp and the fog drew back from the south rim.",
+        "text": "Aldercross remembers. Bees are back in Brannoc's hives and the windmill lamp burns over the orchard.",
         "color": "gray"
       }
     },
@@ -17,7 +17,7 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "The lamp road runs north into the Pall, toward the village of Hollin.",
+        "text": "Brannoc told you what the fog made everyone forget: forty years ago the Deepcut mine collapsed and eleven miners died, his brother Col among them.",
         "color": "gray"
       }
     },
@@ -25,7 +25,15 @@
       "type": "minecraft:plain_message",
       "width": 320,
       "contents": {
-        "text": "On the road you glimpsed a figure with a lantern. It vanished.",
+        "text": "The Keeper of the Meridian, Hesper Vane, had sent them past the safe seam for her great Lens.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Tamsin went north, to the Glassworks under the cliffs.",
         "color": "gray"
       }
     }

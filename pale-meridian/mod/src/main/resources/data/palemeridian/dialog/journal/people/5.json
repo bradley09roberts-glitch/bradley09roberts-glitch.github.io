@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Hesper Vane",
+    "color": "aqua"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "The Keeper of the Meridian, the island observatory in the lake. Brannoc says she sent the miners past the safe seam.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Nobody you have met has seen her in forty years.",
+        "color": "gray"
+      }
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 3"
+    }
+  }
+}

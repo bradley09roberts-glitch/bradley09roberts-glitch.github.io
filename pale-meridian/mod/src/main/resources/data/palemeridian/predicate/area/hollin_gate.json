@@ -5,16 +5,16 @@
     "minecraft:location": {
       "position": {
         "x": {
-          "min": 100,
-          "max": 125
+          "min": 96,
+          "max": 119
         },
         "y": {
-          "min": 60,
-          "max": 81
+          "min": 66,
+          "max": 74
         },
         "z": {
-          "min": 138,
-          "max": 163
+          "min": 148,
+          "max": 168
         }
       }
     }

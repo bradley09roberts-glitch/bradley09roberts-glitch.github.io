@@ -412,7 +412,7 @@ def _gen_dialogs() -> None:
     codes = sorted(c.code for d in R.dialogs.values() for c in d.choices)
     fn("dlg/_call", [
         f"$execute if score #code pm.tmp matches {codes[0] if codes else 1000}..{codes[-1] if codes else 1000} run function {NS}:dlg/c/$(code)",
-    ])
+    ], sample=f"{{code:{codes[0] if codes else 1000}}}")
 
 
 def _gen_npcs() -> None:
@@ -426,7 +426,7 @@ def _gen_npcs() -> None:
         label_uuid = uuid_nbt(f"npc:{n.id}:label")
         label = uuid_str(f"npc:{n.id}:label")
         w, h = n.size
-        spawn = []
+        spawn = ["$execute positioned $(x) $(y) $(z) unless entity @a[distance=..72] run return fail"]
         if n.body:
             spawn.append(
                 f"$execute unless entity {body} run summon minecraft:mannequin $(x) $(y) $(z) {{UUID:{body_uuid},Rotation:[$(yaw)f,0f],"

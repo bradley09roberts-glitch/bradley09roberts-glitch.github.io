@@ -14,6 +14,21 @@ import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import net.minecraft.SharedConstants;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtAccounter;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.resources.RegistryOps;
+import net.minecraft.world.item.ItemStack;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -72,6 +87,7 @@ public final class OfflineCheck {
 		String mode = args.length > 2 ? args[2] : "all";
 		Files.createDirectories(out);
 
+		installLogCapture();
 		SharedConstants.tryDetectVersion();
 		Bootstrap.bootStrap();
 		registerModTypes();
@@ -100,14 +116,125 @@ public final class OfflineCheck {
 					LevelBasedPermissionSet.GAMEMASTER, direct, direct)
 				.join();
 			reportContent(resources, rsr, worldgen);
+			rsr.updateComponentsAndStaticRegistryTags();   // what the server does after a reload: binds item components and tags
+			checkStructures(resources, rsr);
 		}
 
+		if (mode.equals("heightmaps")) {
+			exportHeightmaps(worldgen, Path.of(args[3]));
+		}
 		if (mode.equals("sites") || mode.equals("map") || mode.equals("all")) {
 			worldgenProbe(worldgen, out, mode.equals("map"));
 		}
 
+		synchronized (LOGGED) {
+			System.out.println("[check] log warnings/errors mentioning palemeridian: " + LOGGED.size());
+			for (String l : LOGGED) {
+				fail("logged: " + l);
+			}
+		}
 		System.out.println(failures == 0 ? "[check] RESULT: PASS" : "[check] RESULT: FAIL (" + failures + " problems)");
 		System.exit(failures == 0 ? 0 : 1);
+	}
+
+	private static final List<String> LOGGED = new ArrayList<>();
+
+	/** Records every WARN/ERROR log event that mentions the mod's namespace (tags, loot tables, parse errors...). */
+	private static void installLogCapture() {
+		LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+		AbstractAppender app = new AbstractAppender("pmcheck", null, null, true, Property.EMPTY_ARRAY) {
+			@Override
+			public void append(LogEvent e) {
+				if (!e.getLevel().isMoreSpecificThan(Level.WARN)) {
+					return;
+				}
+				String all = e.getMessage().getFormattedMessage() + (e.getThrown() != null ? " " + e.getThrown() : "");
+				if (all.contains("palemeridian")) {
+					synchronized (LOGGED) {
+						LOGGED.add(e.getLevel() + " " + all);
+					}
+				}
+			}
+		};
+		app.start();
+		ctx.getConfiguration().getRootLogger().addAppender(app, Level.WARN, null);
+		ctx.updateLoggers();
+	}
+
+	/**
+	 * Decodes what the site templates carry beyond block states, with the game's own codecs:
+	 * container items (names, lore, components), sign and text-display text, and loot table references.
+	 */
+	private static void checkStructures(Path resources, ReloadableServerResources rsr) throws Exception {
+		Path dir = resources.resolve("data/palemeridian/structure");
+		HolderLookup.Provider provider = rsr.fullRegistries().lookup();
+		RegistryOps<Tag> ops = provider.createSerializationContext(NbtOps.INSTANCE);
+		java.util.Set<String> lootIds = new java.util.HashSet<>();
+		provider.lookupOrThrow(Registries.LOOT_TABLE).listElementIds().forEach(k -> lootIds.add(k.identifier().toString()));
+		int templates = 0, items = 0, texts = 0, lootRefs = 0;
+		List<Path> files;
+		try (Stream<Path> st = Files.walk(dir)) {
+			files = st.filter(f -> f.toString().endsWith(".nbt")).sorted().toList();
+		}
+		for (Path p : files) {
+			templates++;
+			CompoundTag root = NbtIo.readCompressed(p, NbtAccounter.unlimitedHeap());
+			String name = dir.relativize(p).toString();
+			ListTag blocks = root.getListOrEmpty("blocks");
+			for (int i = 0; i < blocks.size(); i++) {
+				CompoundTag be = blocks.getCompoundOrEmpty(i).getCompoundOrEmpty("nbt");
+				if (be.isEmpty()) {
+					continue;
+				}
+				for (Tag it : be.getListOrEmpty("Items")) {
+					items++;
+					var res = ItemStack.CODEC.parse(ops, it);
+					if (res.error().isPresent()) {
+						fail(name + ": item does not decode: " + it + " -> " + res.error().get().message());
+					}
+				}
+				var loot = be.getString("LootTable");
+				if (loot.isPresent()) {
+					lootRefs++;
+					if (!lootIds.contains(loot.get())) {
+						fail(name + ": missing loot table " + loot.get());
+					}
+				}
+				for (String side : List.of("front_text", "back_text")) {
+					for (Tag m : be.getCompoundOrEmpty(side).getListOrEmpty("messages")) {
+						texts++;
+						var res = ComponentSerialization.CODEC.parse(ops, m);
+						if (res.error().isPresent()) {
+							fail(name + ": sign text does not decode: " + m + " -> " + res.error().get().message());
+						}
+					}
+				}
+			}
+			ListTag ents = root.getListOrEmpty("entities");
+			for (int i = 0; i < ents.size(); i++) {
+				CompoundTag en = ents.getCompoundOrEmpty(i).getCompoundOrEmpty("nbt");
+				for (String key : List.of("text", "CustomName", "description")) {
+					if (en.contains(key)) {
+						texts++;
+						var res = ComponentSerialization.CODEC.parse(ops, en.get(key));
+						if (res.error().isPresent()) {
+							fail(name + ": entity " + key + " does not decode: " + res.error().get().message());
+						}
+					}
+				}
+			}
+		}
+		System.out.println("[check] structure templates: " + templates + " (items decoded: " + items + ", texts decoded: " + texts
+			+ ", loot table refs: " + lootRefs + ")");
+		for (var key : List.of(Registries.LOOT_TABLE, Registries.PREDICATE, Registries.ITEM_MODIFIER)) {
+			long mine = provider.lookupOrThrow(key).listElementIds().filter(k -> k.identifier().getNamespace().equals("palemeridian")).count();
+			String folder = key.identifier().getPath();
+			long filesN = countFiles(resources, "data/palemeridian/" + folder, ".json");
+			System.out.println("[check] " + folder + ": files=" + filesN + " loaded=" + mine);
+			if (filesN != mine) {
+				fail(folder + " entries that failed to load: " + (filesN - mine));
+			}
+		}
 	}
 
 	private static void fail(String msg) {
@@ -157,7 +284,38 @@ public final class OfflineCheck {
 		}
 	}
 
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	private static void checkMacros(Path resources, ReloadableServerResources rsr) throws Exception {
+		Path samples = resources.resolve("../../../../tools/generated/macro_samples.json").normalize();
+		var json = com.google.gson.JsonParser.parseString(Files.readString(samples)).getAsJsonObject();
+		var dispatcher = rsr.getCommands().getDispatcher();
+		int macros = 0, ok = 0;
+		for (var e : rsr.getFunctionLibrary().getFunctions().entrySet()) {
+			if (!e.getKey().getNamespace().equals("palemeridian")) {
+				continue;
+			}
+			if (!(e.getValue() instanceof net.minecraft.commands.functions.MacroFunction mf)) {
+				continue;
+			}
+			macros++;
+			String id = e.getKey().toString();
+			if (!json.has(id)) {
+				fail("macro function without sample arguments: " + id);
+				continue;
+			}
+			try {
+				var args = net.minecraft.nbt.TagParser.parseCompoundFully(json.get(id).getAsString());
+				mf.instantiate(args, dispatcher);
+				ok++;
+			} catch (net.minecraft.commands.FunctionInstantiationException ex) {
+				fail("macro " + id + " failed to instantiate: " + ex.messageComponent().getString());
+			}
+		}
+		System.out.println("[check] macro functions: " + macros + " instantiated OK: " + ok);
+	}
+
 	private static void reportContent(Path resources, ReloadableServerResources rsr, RegistryAccess.Frozen worldgen) throws Exception {
+		checkMacros(resources, rsr);
 		long fnFiles = countFiles(resources, "data/palemeridian/function", ".mcfunction");
 		long fnLoaded = rsr.getFunctionLibrary().getFunctions().keySet().stream().filter(id -> id.getNamespace().equals("palemeridian")).count();
 		System.out.println("[check] functions: files=" + fnFiles + " loaded=" + fnLoaded);
@@ -260,6 +418,57 @@ public final class OfflineCheck {
 		for (var e : problems.entrySet()) {
 			fail("site " + e.getKey() + " plateau problems across seeds: " + e.getValue());
 		}
+	}
+
+	/**
+	 * Export terrain heights around every site. Fast path: the designed surface from ValleyTerrain
+	 * (ceil of the design height = first air block). A sparse exact sample through the real generator
+	 * reports the deviation caused by noise interpolation.
+	 */
+	private static void exportHeightmaps(RegistryAccess.Frozen worldgen, Path outFile) throws Exception {
+		ValleyLayout layout = ValleyLayout.get();
+		net.palemeridian.world.ValleyTerrain terrain = net.palemeridian.world.ValleyTerrain.get();
+		WorldPreset preset = worldgen.lookupOrThrow(Registries.WORLD_PRESET).getValue(WorldPresets.NORMAL);
+		NoiseBasedChunkGenerator gen = (NoiseBasedChunkGenerator) preset.createWorldDimensions().dimensions().get(LevelStem.OVERWORLD).generator();
+		RandomState rs = RandomState.create(gen.generatorSettings().value(), worldgen.lookupOrThrow(Registries.NOISE), 0L);
+		LevelHeightAccessor ha = LevelHeightAccessor.create(-64, 384);
+		StringBuilder json = new StringBuilder("{\n");
+		boolean first = true;
+		java.util.concurrent.atomic.AtomicInteger maxDev = new java.util.concurrent.atomic.AtomicInteger();
+		for (ValleyLayout.Site site : layout.sites) {
+			int r = (int) Math.ceil(site.flatRadius() + site.falloff() + 12);
+			int x0 = (int) Math.floor(site.x()) - r, z0 = (int) Math.floor(site.z()) - r, w = 2 * r + 1;
+			int[] ground = new int[w * w];
+			for (int dz = 0; dz < w; dz++) {
+				for (int dx = 0; dx < w; dx++) {
+					ground[dz * w + dx] = (int) Math.ceil(terrain.height(x0 + dx, z0 + dz));
+				}
+			}
+			List<int[]> sample = new ArrayList<>();
+			for (int dz = 0; dz < w; dz += 9) {
+				for (int dx = 0; dx < w; dx += 9) {
+					sample.add(new int[] {dx, dz});
+				}
+			}
+			java.util.concurrent.ConcurrentHashMap<Integer, Integer> hist = new java.util.concurrent.ConcurrentHashMap<>();
+			sample.parallelStream().forEach(pt -> {
+				int exact = gen.getBaseHeight(x0 + pt[0], z0 + pt[1], Heightmap.Types.OCEAN_FLOOR_WG, ha, rs);
+				int dev = exact - ground[pt[1] * w + pt[0]];
+				hist.merge(dev, 1, Integer::sum);
+				maxDev.accumulateAndGet(Math.abs(dev), Math::max);
+			});
+			if (!first) {
+				json.append(",\n");
+			}
+			first = false;
+			json.append("  \"").append(site.id()).append("\": {\"x0\": ").append(x0).append(", \"z0\": ").append(z0)
+				.append(", \"w\": ").append(w).append(", \"ground\": ").append(java.util.Arrays.toString(ground)).append("}");
+			System.out.println("[check] heightmap " + site.id() + " " + w + "x" + w + " exact-minus-design deviation histogram " + new java.util.TreeMap<>(hist));
+		}
+		json.append("\n}\n");
+		Files.createDirectories(outFile.getParent());
+		Files.writeString(outFile, json.toString());
+		System.out.println("[check] wrote " + outFile + " (max |deviation| " + maxDev.get() + ")");
 	}
 
 	private static int biomeColor(String id) {

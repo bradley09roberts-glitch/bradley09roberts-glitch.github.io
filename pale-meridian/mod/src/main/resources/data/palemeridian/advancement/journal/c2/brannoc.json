@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/c2/arrive",
+  "display": {
+    "icon": {
+      "id": "minecraft:honeycomb"
+    },
+    "title": "The Orchard Keeper",
+    "description": "A broad, bearded man stands at the edge of his orchard as though guarding it from the trees.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

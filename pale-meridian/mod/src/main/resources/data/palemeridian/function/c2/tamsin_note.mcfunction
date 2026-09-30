@@ -1,0 +1,1 @@
+tellraw @a [{"text":"Tamsin's note, pinned to the loft beam: ","color":"gray","italic":true},{"text":"\"It isn't weather. It's attention. The fog is worst where the valley refuses to look. I'm going to the Glassworks. Something up there was struck off the map.\"","color":"white","italic":true}]
