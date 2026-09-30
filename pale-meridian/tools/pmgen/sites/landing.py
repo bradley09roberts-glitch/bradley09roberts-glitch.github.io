@@ -212,4 +212,6 @@ def build() -> list[Piece]:
     poi.box("landing.area", *W(0, F - 1, 0), *W(SIZE[0] - 1, F + 12, SIZE[2] - 1))
     poi.box("landing.waystation", *W(x0, F, z0), *W(x1, F + 6, z1))
     poi.add("landing.figure", 12, 86, 300)
+    from ..houses import benchmark
+    benchmark(b, ORIGIN, 4, 86, 364, 1, "west")
     return [Piece("main", b, ORIGIN)]

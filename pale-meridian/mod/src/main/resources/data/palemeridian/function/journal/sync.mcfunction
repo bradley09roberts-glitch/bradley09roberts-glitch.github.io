@@ -34,3 +34,4 @@ execute if score c4.causeway pm.q matches 2 run advancement grant @s only paleme
 execute if score ep.spoken pm.q matches 2 run advancement grant @s only palemeridian:journal/ep/spoken
 execute if score ep.kept pm.q matches 2 run advancement grant @s only palemeridian:journal/ep/kept
 execute if score s.fen pm.q matches 2 run advancement grant @s only palemeridian:journal/s/fen
+execute if score s.bench pm.q matches 2 run advancement grant @s only palemeridian:journal/s/bench

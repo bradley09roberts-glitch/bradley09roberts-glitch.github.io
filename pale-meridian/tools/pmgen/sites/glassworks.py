@@ -293,4 +293,6 @@ def build() -> list[Piece]:
 
     from ..buildkit import autoconnect
     autoconnect(b)
+    from ..houses import benchmark
+    benchmark(b, ORIGIN, 50, 70, -276, 5, "east")
     return [Piece("works", b, ORIGIN)]

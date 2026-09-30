@@ -15,7 +15,7 @@ from pmgen import art, poi, worldgen  # noqa: E402
 from pmgen.dp import atmosphere, core, engine, items  # noqa: E402
 from pmgen.dp import ui_pages  # noqa: E402
 from pmgen.dp import loot_tables  # noqa: E402
-from pmgen.dp.content import chapter1, chapter2, chapter3, chapter4, fen as fen_content, journal_pages, keepsakes, prologue  # noqa: E402
+from pmgen.dp.content import bench, chapter1, chapter2, chapter3, chapter4, fen as fen_content, journal_pages, keepsakes, prologue  # noqa: E402
 from pmgen.dp import encounters  # noqa: E402
 from pmgen.jsonio import GENERATED  # noqa: E402
 from pmgen.paths import LAYOUT, PM_DATA, PM_ASSETS, RES  # noqa: E402
@@ -47,7 +47,7 @@ def main() -> None:
     export_site("fen", fen.build())
     # content registration
     encounters.generate_shared()
-    for reg in (prologue.register, chapter1.register, chapter2.register, keepsakes.register, chapter3.register, chapter4.register, fen_content.register):
+    for reg in (prologue.register, chapter1.register, chapter2.register, keepsakes.register, chapter3.register, chapter4.register, fen_content.register, bench.register):
         reg()
     ui_pages.generate(recaps=journal_pages.recaps(), people=journal_pages.people(), eleven=keepsakes.eleven_journal())
     loot_tables.generate()

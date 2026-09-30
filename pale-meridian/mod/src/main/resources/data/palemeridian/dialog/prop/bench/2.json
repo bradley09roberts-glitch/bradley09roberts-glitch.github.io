@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Survey benchmark No. 2"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Scratched on the plate in Tamsin's hand:",
+        "color": "gray",
+        "italic": true
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "S.B. 2 — Hollin. They keep one lamp lit at the gate. Nobody can tell me why that one.",
+        "color": "white"
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Close"
+    },
+    "width": 200
+  }
+}

@@ -10,7 +10,7 @@ JDK 25.0.4.1+1, Python 3.11, Gradle 9.7.1, PowerShell 7.5.6 (test tool only). Ev
 
 | | |
 |---|---|
-| **Generated** | All data-pack files (703 functions, 53 advancements, 155 dialogs, 33 predicates, 5 loot tables, 20 biomes, worldgen), 8 structure templates, 32 textures, the POI table, the game-test fixture, the spoiler quest graph, the mod jar, the client `.mrpack`, the server zip, checksums. |
+| **Generated** | All data-pack files (788 functions, 54 advancements, 164 dialogs, 33 predicates, 5 loot tables, 20 biomes, worldgen), 8 structure templates, 32 textures, the POI table, the game-test fixture, the spoiler quest graph, the mod jar, the client `.mrpack`, the server zip, checksums. |
 | **Downloaded** | Minecraft 26.2 client and server jars from Mojang (SHA-1 verified) — used only offline by the generators and the checker, never redistributed. Build toolchain (Gradle, Loom, Fabric artifacts). For tests only: the 10 pinned mods and the Fabric server launcher (all hash-verified), PowerShell 7.5.6 from Microsoft's package feed (SHA-256 verified). |
 | **Booted** | **No Minecraft client was started. No dedicated server was started.** One *unintended* headless game-test run happened during a build (see §3). The offline checker bootstraps the game's registries and data loaders in-process without creating a server, a world or a network connection. |
 | **Client-tested** | **Nothing.** No gameplay, visuals, audio, dialogs or controls were observed in a running game. |
@@ -26,9 +26,9 @@ The Minecraft EULA was never accepted on your behalf: every `eula.txt` produced 
 |---|---|---|---|
 | 1 | Generator runs from a clean state and rebuilds every generated file | PASS | `01-generate.log` |
 | 2 | Regenerating produces byte-identical files (deterministic generation) | PASS | `verify_all.sh` (git diff of generated trees) |
-| 3 | Every generated file loads through the game's own loaders (offline): 703/703 functions, 53/53 advancements, 155/155 dialogs, 33/33 predicates, 5/5 loot tables, 20/20 biomes, all structures, structure sets, noise settings, density functions, world clocks, timelines, features | PASS | `03-offline-validate.log` |
-| 4 | All 86 macro functions instantiate with sample arguments (their commands parse) | PASS | `03-offline-validate.log` |
-| 5 | Structure templates: 37 container items and 337 text components decode with the game's codecs; all 23 loot-table references exist | PASS | `03-offline-validate.log` |
+| 3 | Every generated file loads through the game's own loaders (offline): 788/788 functions, 55/54 advancements, 164/164 dialogs, 33/33 predicates, 5/5 loot tables, 20/20 biomes, all structures, structure sets, noise settings, density functions, world clocks, timelines, features | PASS | `03-offline-validate.log` |
+| 4 | All 102 macro functions instantiate with sample arguments (their commands parse) | PASS | `03-offline-validate.log` |
+| 5 | Structure templates: 37 container items and 401 text components decode with the game's codecs; all 23 loot-table references exist | PASS | `03-offline-validate.log` |
 | 6 | Zero warnings/errors mentioning the pack during loading (the checker fails on any) | PASS | `03-offline-validate.log` |
 | 6a | Negative control: a deliberately broken tag makes the checker FAIL | PASS | run during development (checker reported `FAIL … missing following references`) |
 | 7 | No dangling references: every quest target, NPC location and NPC dialog exists (generation fails otherwise) | PASS | generator (`engine._check_references`) |
@@ -38,9 +38,9 @@ The Minecraft EULA was never accepted on your behalf: every `eula.txt` produced 
 
 | # | Check | Result | Evidence |
 |---|---|---|---|
-| 9 | Logic simulation of the generated functions: 49 checks — first-quest activation, idempotent completion, blueprint detection, bell puzzle (wrong order resets, right order solves), every main quest activating in order, district restoration flags, side-quest unlocks, both endings (TRUE/BLANK) and their world flags, second ending refused, epilogue, keepsakes counted once, reload keeps progress, dialog-choice guard (no choice without its dialog, no replay), a Surge won, abandoned and timed out, the final encounter started/reset/won, player join/rejoin/death, the per-second loop | PASS 49/49 | `02-simulate.log` |
+| 9 | Logic simulation of the generated functions: 51 checks — first-quest activation, idempotent completion, blueprint detection, bell puzzle (wrong order resets, right order solves), every main quest activating in order, district restoration flags, side-quest unlocks, both endings (TRUE/BLANK) and their world flags, second ending refused, epilogue, keepsakes counted once, reload keeps progress, dialog-choice guard (no choice without its dialog, no replay), a Surge won, abandoned and timed out, the final encounter started/reset/won, player join/rejoin/death, the per-second loop, the survey benchmarks | PASS 51/51 | `02-simulate.log` |
 | 9a | Negative control: the simulation with the quest-initialisation fix removed | FAIL 9/32 (as expected — this is how the bug in §4 was confirmed) | development run |
-| 10 | Smoke execution of all 617 non-macro functions in 4 world states under the simulator (no model errors, no runaway recursion) | PASS | development run |
+| 10 | Smoke execution of all 686 non-macro functions in 4 world states under the simulator (no model errors, no runaway recursion) | PASS | development run |
 
 ### World generation
 
@@ -57,7 +57,7 @@ The Minecraft EULA was never accepted on your behalf: every `eula.txt` produced 
 | # | Check | Result | Evidence |
 |---|---|---|---|
 | 15 | Mod compiles and builds; the build no longer launches the game (`runGameTest SKIPPED`) | PASS | `05-build.log` |
-| 16 | A clean rebuild produces a byte-identical jar (SHA-256 `10a1d343…`) | PASS | `06-reproducible-jar.log` |
+| 16 | A clean rebuild produces a byte-identical jar (SHA-256 `00fd7eb1…`) | PASS | `06-reproducible-jar.log` |
 | 17 | Release files build; checksums recorded | PASS | `07-dist.log`, `dist/SHA256SUMS.txt` |
 | 18 | The lock matches live Modrinth/Fabric metadata (exact versions, ids, sizes, hashes) | PASS | `08-lock-check.log` |
 | 19 | Every file referenced by the client `.mrpack` downloads from its URL and matches size, SHA-1 and SHA-512 (10/10) | PASS | `09-mrpack-downloads.log` |
@@ -102,7 +102,7 @@ started, no network port was opened.
 
 | Found by | Defect | Fix |
 |---|---|---|
-| Code review, then confirmed by the simulator | **Quests could never activate**: activation required `pm.q = 0`, but no quest score was ever initialised, so the campaign could not start. | `q/_init` gives every quest a state on each load and at world start, never touching existing progress. Simulator: 9/32 → 49/49. |
+| Code review, then confirmed by the simulator | **Quests could never activate**: activation required `pm.q = 0`, but no quest score was ever initialised, so the campaign could not start. | `q/_init` gives every quest a state on each load and at world start, never touching existing progress. Simulator: 9/32 → 32/32 on that scenario (now part of a 51-check run). |
 | Code review against the decompiled game | **The bell puzzle could never register a bell**: block-use triggers evaluate at the block's centre (`Vec3.atCenterOf`), but the position ranges were exact integers. The bed trigger had the same edge problem. | Ranges now cover the whole block (`[x, x+1]`). |
 | Code review | The "warm by the fire" rule only checked the block at head height, so it almost never applied. | Checks the blocks around and under the player; more light/fire blocks count. |
 | Play-flow review | New players start in the fog without a light and the opening letter takes long enough for the cold to set in. | Four torches in the starting kit, mentioned in the opening hint. |

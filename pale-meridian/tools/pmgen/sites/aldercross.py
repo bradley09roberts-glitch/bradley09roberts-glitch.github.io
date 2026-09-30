@@ -276,4 +276,6 @@ def build() -> list[Piece]:
     poi.add("aldercross.lamps", *W(50, FL, 50), lamps=[list(W(*p)) for p in lamps])
 
     autoconnect(b)
+    from ..houses import benchmark
+    benchmark(b, ORIGIN, 298, 78, -44, 4, "north")
     return [Piece("orchard", b, ORIGIN)]

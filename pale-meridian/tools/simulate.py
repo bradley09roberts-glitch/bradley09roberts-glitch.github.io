@@ -421,6 +421,16 @@ def main() -> None:
     check("eleven keepsakes counted once each", k.get("#k.count", "pm.world") == 11)
     check("the Eleven side quest completes", k.get("s.eleven", "pm.q") == 2 and k.get("#k.all", "pm.world") == 1)
 
+    # the benchmarks: each counts once, all eight complete the side quest
+    bm = Sim()
+    bm.call(f"{NS}:core/load")
+    bm.call(f"{NS}:core/tick")
+    for n in range(1, 9):
+        bm.call(f"{NS}:bench/read/{n}")
+        bm.call(f"{NS}:bench/read/{n}")
+    check("eight benchmarks counted once each", bm.get("#bench.count", "pm.world") == 8)
+    check("the benchmark side quest completes", bm.get("s.bench", "pm.q") == 2)
+
     # reload keeps progress
     before = dict(sim.scores)
     sim.call(f"{NS}:core/load")

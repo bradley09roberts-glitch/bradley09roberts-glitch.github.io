@@ -33,3 +33,11 @@ function palemeridian:npc/relay_2/maintain
 function palemeridian:npc/relay_3/maintain
 function palemeridian:npc/chart_table/maintain
 function palemeridian:npc/vow/maintain
+function palemeridian:npc/bench_1/maintain
+function palemeridian:npc/bench_2/maintain
+function palemeridian:npc/bench_3/maintain
+function palemeridian:npc/bench_4/maintain
+function palemeridian:npc/bench_5/maintain
+function palemeridian:npc/bench_6/maintain
+function palemeridian:npc/bench_7/maintain
+function palemeridian:npc/bench_8/maintain

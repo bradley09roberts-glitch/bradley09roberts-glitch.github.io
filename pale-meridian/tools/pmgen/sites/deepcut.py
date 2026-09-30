@@ -224,4 +224,6 @@ def build() -> list[Piece]:
     poi.box("deepcut.cavern", ccx - rx, ccy - ry, ccz - rz, ccx + rx, ccy + ry, ccz + rz)
 
     poi.add("deepcut.lamps", 24, Y + 3, -360, bulbs=bulbs)
+    from ..houses import benchmark
+    benchmark(b, ORIGIN, 40, 82, -360, 6, "east")
     return [Piece("mine", b, ORIGIN)]

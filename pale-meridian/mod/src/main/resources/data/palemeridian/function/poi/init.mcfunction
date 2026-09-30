@@ -17,6 +17,14 @@ data modify storage palemeridian:poi aldercross.tamsin_note set value {x:344.0d,
 data modify storage palemeridian:poi aldercross.tree set value {x:320.5d,y:81.5d,z:-3.5d,yaw:0.0f,bx:320,by:81,bz:-4}
 data modify storage palemeridian:poi aldercross.wakelamp set value {x:356.0d,y:93.0d,z:-46.0d,yaw:0.0f,bx:356,by:93,bz:-46}
 data modify storage palemeridian:poi aldercross.windmill set value {x:356.0d,y:88.5d,z:-46.0d,yaw:0.0f,bx:356,by:88,bz:-46}
+data modify storage palemeridian:poi bench.1 set value {x:3.3d,y:86.0d,z:364.5d,yaw:0.0f,bx:3,by:86,bz:364}
+data modify storage palemeridian:poi bench.2 set value {x:102.7d,y:67.0d,z:158.5d,yaw:0.0f,bx:102,by:67,bz:158}
+data modify storage palemeridian:poi bench.3 set value {x:92.5d,y:67.0d,z:90.3d,yaw:0.0f,bx:92,by:67,bz:90}
+data modify storage palemeridian:poi bench.4 set value {x:298.5d,y:78.0d,z:-44.7d,yaw:0.0f,bx:298,by:78,bz:-45}
+data modify storage palemeridian:poi bench.5 set value {x:51.7d,y:70.0d,z:-275.5d,yaw:0.0f,bx:51,by:70,bz:-276}
+data modify storage palemeridian:poi bench.6 set value {x:41.7d,y:82.0d,z:-359.5d,yaw:0.0f,bx:41,by:82,bz:-360}
+data modify storage palemeridian:poi bench.7 set value {x:-6.7d,y:68.0d,z:12.5d,yaw:0.0f,bx:-7,by:68,bz:12}
+data modify storage palemeridian:poi bench.8 set value {x:-327.3d,y:64.0d,z:75.5d,yaw:0.0f,bx:-328,by:64,bz:75}
 data modify storage palemeridian:poi deepcut.cavern set value {x:46.0d,y:74.0d,z:-382.0d,yaw:0.0f,bx:46,by:74,bz:-382}
 data modify storage palemeridian:poi deepcut.collapse set value {x:24.0d,y:72.0d,z:-395.5d,yaw:0.0f,bx:24,by:72,bz:-396}
 data modify storage palemeridian:poi deepcut.fig.1 set value {x:16.5d,y:70.0d,z:-411.5d,yaw:180.0f,bx:16,by:70,bz:-412}

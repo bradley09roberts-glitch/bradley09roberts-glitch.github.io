@@ -1,0 +1,2 @@
+tellraw @a {"text":"Eight benchmarks: the whole of Tamsin's route, charted. Whoever finds a survey this complete deserves the good spyglass.","color":"gray","italic":true}
+give @a minecraft:spyglass[minecraft:custom_name={"text":"Surveyor's Spyglass","italic":false,"color":"gold"},minecraft:lore=[{"text":"Tamsin's spare. Her initials are scratched by the eyepiece.","italic":false,"color":"gray"}],minecraft:custom_data={pm:{item:"surveyors_spyglass"}}] 1

@@ -323,4 +323,7 @@ def build() -> list[Piece]:
 
     autoconnect(b)
     poi.box("hollin.area", *W(0, 0, 0), *W(SIZE[0] - 1, SIZE[1] - 1, SIZE[2] - 1))
+    from ..houses import benchmark
+    benchmark(b, ORIGIN, 101, 67, 158, 2, "east")
+    benchmark(b, ORIGIN, 92, 67, 91, 3, "north")
     return [Piece("village", b, ORIGIN)]

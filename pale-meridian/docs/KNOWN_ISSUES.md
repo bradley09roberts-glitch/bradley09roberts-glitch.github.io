@@ -46,7 +46,6 @@ tweak after the first real session:
 
 ## 4. Not implemented from the original design
 
-- The optional **survey benchmarks** side activity (eight marker stones and a reward) is not in 1.0.0.
 - The orchard keeper offers a **daily gift** instead of the villager-style trades in the design notes.
 
 ## 5. Packaging

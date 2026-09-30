@@ -22,7 +22,7 @@ A story campaign for **Minecraft: Java Edition 26.2** (Fabric). Solo, or 2–4 f
   an island observatory, a drowned chapel in the fen — linked by lamp-lit roads. Beyond the rim the
   world is ordinary Minecraft.
 - **A complete campaign**: a prologue, four chapters and an epilogue with a real ending (the last
-  decision is yours, and the valley remembers it). About 35 quests, 150+ conversations, puzzles,
+  decision is yours, and the valley remembers it). About 36 quests, 160+ conversations, puzzles,
   building and a handful of tense encounters. Design target: 6–10 hours for a first playthrough.
 - **Places that change**: when a district remembers itself its fog lifts, colour, music and animals
   come back, lamps light, and its people change.

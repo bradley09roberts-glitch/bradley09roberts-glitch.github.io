@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Survey benchmark No. 7"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Scratched on the plate in Tamsin's hand:",
+        "color": "gray",
+        "italic": true
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "S.B. 7 — the Meridian causeway. The island keeps folding me back to shore. It isn't ready for me. Or I'm not for it.",
+        "color": "white"
+      },
+      "width": 320
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "action": {
+    "label": {
+      "text": "Close"
+    },
+    "width": 200
+  }
+}

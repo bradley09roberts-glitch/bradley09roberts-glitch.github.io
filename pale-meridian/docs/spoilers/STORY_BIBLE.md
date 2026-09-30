@@ -291,7 +291,9 @@ records the name world-wide and plays a line about that person. All eleven: *The
 everyone receives a **Memorial Lantern**, and either ending gains extra lines.
 
 ### Survey benchmarks
-Designed but **not implemented in 1.0.0** (deferred).
+Eight marked stone posts along Tamsin's route (Landing, Hollin gate, Hollin ferry lane, Aldercross,
+the Glassworks, the Deepcut gallery, the Meridian causeway end, the fen chapel), each with a line of her
+field notes. Optional quest **s.bench**; all eight → the **Surveyor's Spyglass** for everyone.
 
 ### The Fen & the drowned chapel
 A half-sunk chapel in the western Fen: the **Vow of the First Keeper** on the lectern (*"I will look at
@@ -348,5 +350,5 @@ a flooded crypt behind a glass window that drains when solved: Mae Ostrander's h
 Sections 4–6 describe the campaign **as implemented in 1.0.0**. Differences from the original design:
 chapter 3's revelation moved before the kiln; Tamsin's three reminders are her letter, her field
 notes and her theodolite; companions gather in the Chart Room rather than arriving by boat; the orchard
-keeper gives a daily gift instead of trades; the survey benchmarks are deferred. What is verified and
+keeper gives a daily gift instead of trades. What is verified and
 how is in `docs/TEST_REPORT.md`; nothing has yet been observed in a running game.

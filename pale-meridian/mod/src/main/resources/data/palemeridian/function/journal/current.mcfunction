@@ -33,4 +33,5 @@ execute if score #cur pm.world matches 32 run return run dialog show @s palemeri
 execute if score #cur pm.world matches 33 run return run dialog show @s palemeridian:journal/obj/ep_spoken
 execute if score #cur pm.world matches 34 run return run dialog show @s palemeridian:journal/obj/ep_kept
 execute if score #cur pm.world matches 35 run return run dialog show @s palemeridian:journal/obj/s_fen
+execute if score #cur pm.world matches 36 run return run dialog show @s palemeridian:journal/obj/s_bench
 dialog show @s palemeridian:journal/free_play

@@ -34,3 +34,4 @@ execute unless score c4.causeway pm.q matches 0.. run scoreboard players set c4.
 execute unless score ep.spoken pm.q matches 0.. run scoreboard players set ep.spoken pm.q 0
 execute unless score ep.kept pm.q matches 0.. run scoreboard players set ep.kept pm.q 0
 execute unless score s.fen pm.q matches 0.. run scoreboard players set s.fen pm.q 0
+execute unless score s.bench pm.q matches 0.. run scoreboard players set s.bench pm.q 0

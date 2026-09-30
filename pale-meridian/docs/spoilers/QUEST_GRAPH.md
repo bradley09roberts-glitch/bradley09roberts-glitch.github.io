@@ -71,6 +71,7 @@ flowchart TD
   ep_spoken(["ep.spoken<br/>Every Name, Spoken"])
   ep_kept(["ep.kept<br/>Kept Safe"])
   s_fen(["s.fen<br/>The Drowned Chapel"])
+  s_bench(["s.bench<br/>Tamsin's Benchmarks"])
 ```
 
 | Quest | Chapter | Main | Prerequisites | Objective | Target POI | Progress |
@@ -110,5 +111,6 @@ flowchart TD
 | `ep.spoken` | Optional | no | — | You read all eleven names aloud. | — | — |
 | `ep.kept` | Optional | no | — | You gave the keepsakes to the Keeper. | — | — |
 | `s.fen` | Optional | no | — | Drain the flooded crypt under the Fen chapel. | `fen.levers` | — |
+| `s.bench` | Optional | no | — | Find the survey benchmarks Tamsin left along her route. | — | 8 |
 
 Auto-activation: every quest with `auto=True` activates when all its prerequisites are done (`palemeridian:q/_advance`). `ep.spoken`, `ep.kept` and `s.fen` are activated by story events instead.

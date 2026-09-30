@@ -33,3 +33,4 @@ tellraw @s [{"text":"c4.causeway: ","color":"gray"},{"score":{"name":"c4.causewa
 tellraw @s [{"text":"ep.spoken: ","color":"gray"},{"score":{"name":"ep.spoken","objective":"pm.q"},"color":"white"}]
 tellraw @s [{"text":"ep.kept: ","color":"gray"},{"score":{"name":"ep.kept","objective":"pm.q"},"color":"white"}]
 tellraw @s [{"text":"s.fen: ","color":"gray"},{"score":{"name":"s.fen","objective":"pm.q"},"color":"white"}]
+tellraw @s [{"text":"s.bench: ","color":"gray"},{"score":{"name":"s.bench","objective":"pm.q"},"color":"white"}]

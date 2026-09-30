@@ -102,6 +102,7 @@ Content modules register specs with `R` (the registry); `engine.generate()` writ
 | `chapter4.py` | `c4.crossing`, `c4.keeper`, `c4.lens`, `c4.unlooked`, `c4.chart`, `c4.causeway`, `ep.complete`, `ep.spoken`, `ep.kept` | `sites/meridian.py` |
 | `keepsakes.py` | `s.eleven` | keepsakes are placed by the site builders |
 | `fen.py` | `s.fen` | `sites/fen.py` |
+| `bench.py` | `s.bench` | posts placed by every site builder (`houses.benchmark`) |
 | `journal_pages.py` | — | recap and people pages |
 
 The full dependency graph (spoilers) is generated into `docs/spoilers/QUEST_GRAPH.md`.

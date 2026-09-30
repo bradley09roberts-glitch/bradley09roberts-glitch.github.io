@@ -41,5 +41,6 @@ bossbar set palemeridian:boss name {"text":"The Unlooked","color":"white"}
 execute if score #boss pm.world matches 1 run function palemeridian:c4/boss/reset
 scoreboard objectives add pm.glass dummy
 execute if score #fen.drained pm.world matches 1 run fill -346 58 67 -337 62 73 minecraft:air replace minecraft:water
+execute unless score #bench.count pm.world matches 0.. run scoreboard players set #bench.count pm.world 0
 schedule function palemeridian:core/second 20t replace
 function palemeridian:hud/refresh

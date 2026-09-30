@@ -106,4 +106,6 @@ def build() -> list[Piece]:
             if w.get(x, Y, z) is not None and w.get(x, Y, z).name == "minecraft:air":
                 w.set(x, Y, z, "mangrove_stairs[facing=west,half=bottom,shape=straight,waterlogged=false]")
     wsign(x1 + 1, Y + 2, 68, "east", ["", "CHAPEL OF", "THE VOW", ""])
+    from ..houses import benchmark
+    benchmark(b, ORIGIN, -329, 64, 75, 8, "east")
     return [Piece("chapel", b, ORIGIN)]

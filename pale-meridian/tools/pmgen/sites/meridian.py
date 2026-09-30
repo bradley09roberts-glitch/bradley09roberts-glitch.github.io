@@ -352,4 +352,6 @@ def build() -> list[Piece]:
         cw.set(-12, deck[z] + 3, z, "waxed_exposed_copper_bulb[lit=false,powered=false]")
         clamps.append([-12, deck[z] + 3, z])
     poi.add("meridian.causeway_lamps", -10, 66, 60, lamps=clamps)
+    from ..houses import benchmark
+    benchmark(b, ORIGIN, -6, 68, 12, 7, "west")
     return [Piece("island", b, ORIGIN), Piece("causeway", cb, C_ORIGIN)]

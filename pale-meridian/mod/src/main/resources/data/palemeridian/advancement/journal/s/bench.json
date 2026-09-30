@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/s/fen",
+  "display": {
+    "icon": {
+      "id": "minecraft:chiseled_stone_bricks"
+    },
+    "title": "Tamsin's Benchmarks",
+    "description": "Low stone posts marked S.B. Every Chartered surveyor leaves them. Tamsin left eight.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

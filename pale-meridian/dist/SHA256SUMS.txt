@@ -1,3 +1,3 @@
-6d2c5e605db2c6872cc18f4f301391a7d3b16c71ed577a57712c7f3bc31bb805  PaleMeridian-1.0.0.mrpack
-caf0ae506524665c263a9d74be88d0ce3e73ec97ae0d0bfbe14daa8258feb4cb  PaleMeridian-Server-1.0.0.zip
-10a1d343b83e3f85e013a3c930dadad6536d622aba8bfd2a7ed0f8b781794f17  palemeridian-1.0.0.jar
+85c8ab4e3b176738a61a0e480fa8224750c063b68ea4adbf1eca08d1538745a0  PaleMeridian-1.0.0.mrpack
+bd3f81d8d1bdd3face5f0d02082b347bc53ceda329971116eefc541ca592f64d  PaleMeridian-Server-1.0.0.zip
+00fd7eb14dc31a4b9cfa571143bd17664ca720ad8f4da094bc1816a51b4e6fc0  palemeridian-1.0.0.jar

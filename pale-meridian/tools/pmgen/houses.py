@@ -188,3 +188,21 @@ def fence_line(b: Build, pts: list, fl: int, block: str = "spruce_fence") -> Non
 
 def sign(b: Build, x: int, y: int, z: int, facing: str, lines: list, wood: str = "spruce", color: str = "black", glowing: bool = False) -> None:
     b.set(x, y, z, f"{wood}_wall_sign[facing={facing},waterlogged=false]", sign_nbt(lines, kind="minecraft:sign", color=color, glowing=glowing))
+
+
+BENCH_FACING = {"north": (0, -1), "south": (0, 1), "east": (1, 0), "west": (-1, 0)}
+
+
+def benchmark(b: Build, origin: tuple, wx: int, wy: int, wz: int, n: int, facing: str) -> None:
+    """A Chartered Survey benchmark: a low marked stone post with a plate; registers POI bench.<n>
+    (where its interaction prompt stands). World coordinates; wy is the walking level."""
+    from . import poi
+    lx, ly, lz = wx - origin[0], wy - origin[1], wz - origin[2]
+    dx, dz = BENCH_FACING[facing]
+    if b.get(lx, ly - 1, lz) is None:
+        b.set(lx, ly - 1, lz, "stone")
+    b.set(lx, ly, lz, "chiseled_stone_bricks")
+    b.set(lx, ly + 1, lz, "stone_brick_slab[type=bottom,waterlogged=false]")
+    b.set(lx + dx, ly, lz + dz, "air")
+    sign(b, lx + dx, ly, lz + dz, facing, ["S.B.", f"No. {n}", "CHARTERED", "SURVEY"], "spruce")
+    poi.add(f"bench.{n}", wx + 0.5 + dx * 1.2, wy, wz + 0.5 + dz * 1.2)

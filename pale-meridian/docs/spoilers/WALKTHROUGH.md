@@ -148,3 +148,19 @@ the verse says *"Open the north to let the fen breathe. Shut the middle against 
 south to send it home."* → **north ON, middle OFF, south ON**. The crypt drains and its glass window
 breaks; climb down the ladder shaft in the south-east corner. Crypt: Mae Ostrander's hymn sheet and
 the **Ferryman's Oar** (wooden shovel, Efficiency II).
+
+## Tamsin's benchmarks (optional)
+
+Low marked posts (*S.B. No. n*) with a *Survey benchmark* prompt. Reading one starts **s.bench**; all
+eight give everyone the **Surveyor's Spyglass**.
+
+| # | Where |
+|---|---|
+| 1 | the Landing, east of the road (4 86 364) |
+| 2 | Hollin, west of the gate (101 67 158) |
+| 3 | Hollin, the lake lane to the ferry (92 67 91) |
+| 4 | Aldercross, south-west of the orchard gate (298 78 -44) |
+| 5 | the Glassworks road, outside the gate (50 70 -276) |
+| 6 | the Deepcut upper gallery (40 82 -360) |
+| 7 | the Meridian, by the causeway landing (-6 68 12) |
+| 8 | the fen chapel, outside the east door (-329 64 75) |

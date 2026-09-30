@@ -38,3 +38,11 @@ execute if score #clicked pm.tmp matches 32 run return run function palemeridian
 execute if score #clicked pm.tmp matches 33 run return run function palemeridian:npc/relay_3/talk
 execute if score #clicked pm.tmp matches 34 run return run function palemeridian:npc/chart_table/talk
 execute if score #clicked pm.tmp matches 35 run return run function palemeridian:npc/vow/talk
+execute if score #clicked pm.tmp matches 36 run return run function palemeridian:npc/bench_1/talk
+execute if score #clicked pm.tmp matches 37 run return run function palemeridian:npc/bench_2/talk
+execute if score #clicked pm.tmp matches 38 run return run function palemeridian:npc/bench_3/talk
+execute if score #clicked pm.tmp matches 39 run return run function palemeridian:npc/bench_4/talk
+execute if score #clicked pm.tmp matches 40 run return run function palemeridian:npc/bench_5/talk
+execute if score #clicked pm.tmp matches 41 run return run function palemeridian:npc/bench_6/talk
+execute if score #clicked pm.tmp matches 42 run return run function palemeridian:npc/bench_7/talk
+execute if score #clicked pm.tmp matches 43 run return run function palemeridian:npc/bench_8/talk
