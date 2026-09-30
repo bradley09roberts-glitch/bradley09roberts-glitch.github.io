@@ -1,0 +1,221 @@
+entries:
+  - category: wild_monsters
+    id: overview
+    name: Where Monsters Roam
+    icon: mowziesmobs:foliaath_seed
+    priority: true
+    sortnum: 0
+    pages:
+      - text: |
+          Vanilla zombies, skeletons and creepers still own the night. Emberveil adds creatures tied to particular places, so each region has its own threat:
+
+          - **Jungles:** [[wild_monsters/foliaath|Foliaaths]] and [[wild_monsters/elokosa|Elokosa]]; [[wild_monsters/mutants|Mutant Creepers]] at night.
+          - **Savannas:** the [[wild_monsters/umvuthana|Umvuthana]].
+          - **Rocky coasts:** [[wild_monsters/naga|Nagas]] at night.
+          - **Forests at night:** harmless [[wild_monsters/lantern|Lanterns]].
+      - text: |
+          - **Deep caves (below height 0):** [[wild_monsters/bluff|Bluffs]].
+          - **Any cave:** shy [[wild_monsters/grottol|Grottols]].
+          - **Dark forests and swamps:** Mutant Zombies. **Badlands:** Mutant Skeletons. **Deserts and the End's midlands:** Mutant Endermen.
+          - **Chests in underground camps:** the [[wild_monsters/mimic|Mimic]].
+
+          Mutants are rare, but each one is a mini-boss.
+    related: [creatures/approach, getting_started/danger]
+
+  - category: creatures
+    id: approach
+    name: Meeting Something New
+    icon: minecraft:spyglass
+    sortnum: 0
+    pages:
+      - text: |
+          When you meet an unfamiliar creature:
+
+          1. **Look at it.** The info overlay at the top of the screen names it and shows its health.
+          2. **Look it up.** Every creature has a page here; the Index search finds it by name.
+          3. **Watch one attack before trading blows.** Most dangerous creatures wind up visibly before a big hit.
+      - text: |
+          4. **Fight on your terms.** Back into a corridor against groups, bring a shield against heavy hitters, and do not chase fliers over cliffs.
+          5. **Leave.** Nothing in Emberveil punishes retreat. Monsters that lose sight of you give up, and your gravestone keeps your gear if things go badly.
+    related: [wild_monsters/overview, bosses/overview, utilities/jade]
+
+  - category: wild_monsters
+    id: foliaath
+    name: Foliaath
+    icon: mowziesmobs:foliaath_seed
+    sortnum: 1
+    pages:
+      - entity: mowziesmobs:foliaath
+        name: Foliaath
+        text: "$(tier1)-$(tier2). Jungles, often in clusters."
+      - text: |
+          A carnivorous plant that waits among the jungle undergrowth. It cannot move, but it lunges and bites anything that comes within reach, hard.
+
+          Approach from range, or dash in, strike and step back out of reach. Arrows and spears are the safe answer.
+      - stats: mowziesmobs:foliaath
+      - spotlight: mowziesmobs:foliaath_seed
+        text: |
+          Plant a {Foliaath Seed} in grass to grow your own guard plant. Every half-day the baby gets hungry: toss it meat. After two days it is fully grown.
+    related: [wildlife/jungle_desert, places/jungle_temple]
+
+  - category: wild_monsters
+    id: elokosa
+    name: Elokosa
+    icon: mowziesmobs:elokosa_paw_full
+    sortnum: 2
+    pages:
+      - entity: mowziesmobs:elokosa_howler
+        name: Elokosa Howler
+        text: "$(tier2). Jungles."
+      - text: |
+          Lean jungle hunters that change between a day form and a night form as the sun sets and rises. They leap through the trees, stalk their prey and fight with claw combos, pouncing leaps and a sweeping scythe strike. Hurt one badly and it tries to flee.
+
+          They keep their distance from Foliaaths. Howlers lead smaller Elokosa.
+      - stats: mowziesmobs:elokosa_howler
+        text: A paw (one chance in three) matches the moon when it dies at night; by day it is always the Paw of the New Moon.
+      - spotlight: [mowziesmobs:elokosa_paw_full, mowziesmobs:elokosa_paw_gibbous, mowziesmobs:elokosa_paw_half, mowziesmobs:elokosa_paw_crescent, mowziesmobs:elokosa_paw_new]
+        title: Moon Paws
+        text: |
+          Use a paw to curse nearby mobs: Full (Weakness), Gibbous (Slowness), Half (Mining Fatigue), Crescent (Fragility: they take more damage) or New (Eclipse, which clears and blocks all effects for a while).
+    related: [combat/mowzie_relics]
+
+  - category: wild_monsters
+    id: umvuthana
+    name: Umvuthana
+    icon: mowziesmobs:umvuthana_mask_fury
+    sortnum: 3
+    pages:
+      - entity: mowziesmobs:umvuthana_raptor
+        name: Umvuthana Raptor
+        text: "$(tier2). Savannas."
+      - text: |
+          A masked tribe that hunts the savanna. A **Raptor** leads a group of warriors; **Cranes** are healers. Each warrior's mask shows its temperament: fury, fear, rage, bliss, misery or faith.
+
+          They throw spears and fight in packs. Pull one or two away from the group, and take out a Crane before it heals the rest.
+      - stats: mowziesmobs:umvuthana
+      - spotlight: [mowziesmobs:umvuthana_mask_fury, mowziesmobs:umvuthana_mask_fear, mowziesmobs:umvuthana_mask_rage, mowziesmobs:umvuthana_mask_bliss, mowziesmobs:umvuthana_mask_misery, mowziesmobs:umvuthana_mask_faith]
+        title: Masks
+        text: Worn masks grant an effect (Strength, Speed, Haste, Jump Boost, Resistance or Health Boost). With the {Sol Visage} they call warriors to your side.
+    related: [bosses/umvuthi, places/umvuthana_grove, armour/mowzie_armour]
+
+  - category: wild_monsters
+    id: naga
+    name: Naga
+    icon: mowziesmobs:naga_fang
+    sortnum: 4
+    pages:
+      - entity: mowziesmobs:naga
+        name: Naga
+        scale: 0.7
+        text: "$(tier2). Rocky coasts and seaside hills, at night."
+      - text: |
+          Winged sea serpents that circle over coastal cliffs after dark. A Naga spits globs of poison that burst on impact, then swoops in to bite.
+
+          Fight it from cover, strafe to dodge the spit, and punish it when it dives. It is easier to hit with a bow than to chase.
+      - stats: mowziesmobs:naga
+      - spotlight: mowziesmobs:naga_fang
+        text: "{Naga Fangs} brew Potions of Poison Resistance and make the Naga Fang Dagger and blowgun darts."
+    related: [combat/mowzie_relics]
+
+  - category: wild_monsters
+    id: lantern
+    name: Lantern
+    icon: mowziesmobs:glowing_jelly
+    sortnum: 5
+    pages:
+      - entity: mowziesmobs:lantern
+        name: Lantern
+        text: "Harmless. Forests at night, in small groups."
+      - text: |
+          Glowing jelly creatures that drift through the woods after dark, lighting the undergrowth. They do not attack.
+
+          They drop {Luminous Jelly}: eat it for a short burst of night vision, handy in caves.
+      - stats: mowziesmobs:lantern
+
+  - category: wild_monsters
+    id: grottol
+    name: Grottol
+    icon: mowziesmobs:captured_grottol
+    sortnum: 6
+    pages:
+      - entity: mowziesmobs:grottol
+        name: Grottol
+        text: "Harmless and shy. Caves, below height 16."
+      - text: |
+          A rocky little creature crusted with diamond. It flees as soon as it sees you and will happily ride off in a minecart.
+
+          Only a tool that can mine diamond ore (an iron pickaxe or better) can hurt it, and one clean hit is enough. A Grottol killed that way drops a **diamond**.
+      - stats: mowziesmobs:grottol
+
+  - category: wild_monsters
+    id: bluff
+    name: Bluff
+    icon: mowziesmobs:bluff_rod
+    sortnum: 7
+    pages:
+      - entity: mowziesmobs:bluff
+        name: Bluff
+        text: "$(tier2). Dark caves below height 0, in groups of 2-3."
+      - text: |
+          A stone brute of the deep layer. From six to twelve blocks away it winds up, then launches a crushing strike that can take half your health without armour.
+
+          Watch for the wind-up and sidestep; it is slow to recover. Fight Bluffs one at a time, and never in the open with two of them.
+      - stats: mowziesmobs:bluff
+        text: Emberveil limits Bluffs to the deep layer (below height 0) so ordinary mining near the surface stays safe.
+      - spotlight: mowziesmobs:bluff_rod
+        text: The {Bluff Rod} repairs geomancy gear, and offering one to the Sculptor begins [[bosses/sculptor|his challenge]].
+    related: [bosses/sculptor]
+
+  - category: wild_monsters
+    id: mutants
+    name: Mutants
+    icon: mutantmonsters:hulk_hammer
+    sortnum: 8
+    pages:
+      - text: |
+          Rare, enormous versions of common monsters. Each is a mini-boss that appears in only a few regions (at night or in darkness):
+
+          - **Mutant Zombie:** dark forests and swamps.
+          - **Mutant Skeleton:** badlands and gravelly hills.
+          - **Mutant Creeper:** jungles.
+          - **Mutant Enderman:** deserts, and the End's outer islands.
+      - entity: mutantmonsters:mutant_zombie
+        name: Mutant Zombie
+        scale: 0.8
+        text: "$(tier3). Smashes the ground and throws you."
+      - text: |
+          **Mutant Zombies** have three lives: when one falls it gets back up, unless you set it on fire while it is down (flint and steel works). It drops the {Hulk Hammer}.
+
+          **Mutant Skeletons** fire volleys of arrows and charge; they shatter into bones you can build into armour ([[armour/mutant_armour]]).
+      - stats: mutantmonsters:mutant_zombie
+      - entity: mutantmonsters:mutant_creeper
+        name: Mutant Creeper
+        scale: 0.8
+        text: "$(tier3). Leaps and explodes. Run when it dies."
+      - text: |
+          **Mutant Creepers** leap and blow craters in the ground. When one dies it collapses, and a few seconds later it **explodes**: get well away. If you killed it, it leaves a **Creeper Minion Egg**. Let the egg hatch for a tame creeper minion, or break it for a {Creeper Shard} (sometimes just gunpowder).
+
+          **Mutant Endermen** hold blocks in four arms, hurl them, teleport and split into clones. They scatter ender pearls and eyes as they die.
+      - stats: mutantmonsters:mutant_enderman
+      - title: Chemical X
+        text: |
+          Brew a {Thick Potion} with any mutant trophy (Hulk Hammer, Creeper Shard, Endersoul Hand or Mutant Skeleton Skull) to make **Chemical X**. Thrown at a zombie, skeleton, creeper or enderman, it makes a mutant.
+
+          Thrown at a **snow golem** it makes a friendly **Mutant Snow Golem** that hurls ice at your enemies. A pig fed a fermented spider eye becomes a **Spider Pig**.
+    related: [combat/mutant_weapons, armour/mutant_armour]
+
+  - category: wild_monsters
+    id: mimic
+    name: Mimic
+    icon: minecraft:chest
+    sortnum: 9
+    pages:
+      - entity: artifacts:mimic
+        name: Mimic
+        text: "$(tier2). Disguised as a chest in underground camps."
+      - text: |
+          Abandoned campsites deep underground hold chests, and about three in ten of those "chests" are **Mimics**. Open one and it springs at you, hopping and biting.
+
+          It is worth it: a Mimic usually drops an accessory ([[armour/accessories]]). Hit it before you open it if you are unsure; a real chest does not mind.
+      - stats: artifacts:mimic
+    related: [places/campsites, armour/accessories]

@@ -1,0 +1,6 @@
+{
+ "name": "Bosses",
+ "description": "Great foes with their own arenas, attack patterns, boss bars and rewards. How to find or summon each one, what it does, and what happens if you fall.",
+ "icon": "minecraft:wither_skeleton_skull",
+ "sortnum": 2
+}

@@ -1,0 +1,40 @@
+{
+ "name": "Keys at a Glance",
+ "icon": "minecraft:oak_button",
+ "category": "emberveil:help",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "The keys below show your $(l)current$() bindings, so they stay right if you rebind them."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)Almanac: $(k:key.emberveil.open_almanac) (or $(item)/almanac$())$(li)Accessories: $(k:key.curios.open.desc)$(li)Backpack: $(k:key.sophisticatedbackpacks.open_backpack)$(li)World map: $(k:gui.xaero_open_map)$(li)New waypoint: $(k:gui.xaero_new_waypoint)$(li)Waypoint list: $(k:gui.xaero_waypoints_key)$(li)Big minimap: $(k:gui.xaero_enlarge_map)"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)Weapon ability: $(item)Use$() (right-click). Optional extra keys: $(k:key.simplyswords.mainhand_ability) / $(k:key.simplyswords.offhand_ability)$(li)Cataclysm item ability: $(k:key.cataclysm.ability)$(li)Helmet ability: $(k:key.cataclysm.helmet_ability)$(li)Chestplate ability: $(k:key.cataclysm.chestplate_ability)$(li)Boots ability: $(k:key.cataclysm.boots_ability)$(li)Feint (cancel a swing): $(k:keybinds.bettercombat.feint)",
+   "title": "Combat & gear"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)Toggle shaders: <key:iris.keybind.toggleShaders>$(li)Shader menu: <key:iris.keybind.shaderPackSelection>$(li)Details on the info overlay: hold $(k:key.jade.show_details)$(li)Recipe / uses of a hovered item: R / U in any inventory (JEI)",
+   "title": "Visuals & info"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Change anything in Options > Controls > Key Binds. The search box there also shows conflicts."
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:help/controls_notes",
+    "emberveil:utilities/jei",
+    "emberveil:combat/movesets"
+   ]
+  }
+ ],
+ "sortnum": 0,
+ "priority": true
+}

@@ -1,0 +1,13 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": [
+    "minecraft:desert",
+    "minecraft:end_midlands"
+  ],
+  "spawners": {
+    "type": "mutantmonsters:mutant_enderman",
+    "weight": 1,
+    "minCount": 1,
+    "maxCount": 1
+  }
+}

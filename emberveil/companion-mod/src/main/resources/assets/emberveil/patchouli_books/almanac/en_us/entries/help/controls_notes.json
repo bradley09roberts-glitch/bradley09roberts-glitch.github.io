@@ -1,0 +1,31 @@
+{
+ "name": "Why Some Keys Moved",
+ "icon": "minecraft:tripwire_hook",
+ "category": "emberveil:help",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "Several mods wanted the same keys. Emberveil ships these defaults so nothing fires twice:"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)Minimap \"new waypoint\" moved from B to N (B opens your backpack).$(li)Cataclysm helmet ability moved from C to X, chestplate from Y to J, boots from V to R.$(li)Simply Tooltips' tab cycling moved from G to the ` key (G opens accessories)."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)Iris \"reload shaders\" is unbound (R shows recipes in inventories).$(li)Simply Tooltips' GIF capture is unbound (H opens this book)."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Every one of these can be changed back in Options > Controls > Key Binds. Unbound items that you may want to bind: Better Combat's feint, and the Artifacts toggles (night-vision goggles, magnet, charms)."
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:help/controls"
+   ]
+  }
+ ],
+ "sortnum": 1
+}

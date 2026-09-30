@@ -1,0 +1,39 @@
+{
+ "name": "Your First Days",
+ "icon": "minecraft:wooden_axe",
+ "category": "emberveil:getting_started",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "The first session plays much like vanilla. Gather wood, make stone tools, eat, and get walls and a light source up before dark."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Things that are new near most spawns:$(li)Deer, rabbits, birds and butterflies are harmless.$(li)Boars, bears and snakes fight back if hit. Leave bear cubs alone.$(li)Fishing and hunting give more food: venison, bushmeat and fish."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Nights work as in vanilla. A $(l:systems/camping)sleeping bag$(/l) (Comforts) lets you sleep through the night anywhere without moving your spawn point, which is ideal for trips. A hammock lets you rest through the day instead.",
+   "title": "Before Nightfall"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Keep a torch in your off-hand when exploring: with shaders on it lights your surroundings. Your minimap (top left) shows terrain as you uncover it."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Large stone ruins, skeletal fortresses and anything with a boss bar are late-game. The $(l:getting_started/danger)danger guide$(/l) lists what to expect where.$(br2)Caves are ordinary near the surface. The deep layer (deepslate, below height 0) is where cave brutes such as the $(l:wild_monsters/bluff)Bluff$(/l) hunt.",
+   "title": "Places to avoid at first"
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:getting_started/early_gear",
+    "emberveil:getting_started/danger",
+    "emberveil:systems/cooking"
+   ]
+  }
+ ],
+ "sortnum": 2
+}

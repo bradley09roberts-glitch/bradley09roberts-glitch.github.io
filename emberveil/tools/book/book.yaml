@@ -1,0 +1,36 @@
+# Book-level settings for data/emberveil/patchouli_books/almanac/book.json (see build_book.py).
+landing_intro: |
+  The whole of Emberveil in one book. Pick a subject below or from the icons opposite; the last icon is the {Index} with search.
+
+  Backspace or right-click goes back. The ribbon on each page edge bookmarks it; the clock button lists recent pages.
+landing_rows:
+  - [getting_started, Start, creatures, Creatures, bosses, Bosses]
+  - [combat, Combat, armour, Armour, crafting, Crafting]
+  - [places, Places, world, World, systems, Survival]
+  - [utilities, Utilities, deeds, Deeds, help, Help]
+book:
+  name: emberveil.book.name
+  subtitle: emberveil.book.subtitle
+  use_resource_pack: true
+  i18n: true
+  version: "1"
+  model: emberveil:almanac
+  book_texture: emberveil:textures/gui/almanac_book.png
+  filler_texture: emberveil:textures/gui/almanac_filler.png
+  show_progress: false
+  show_toasts: false
+  pause_game: false
+  text_overflow_mode: resize
+  creative_tab: minecraft:tools_and_utilities
+  advancements_tab: emberveil:deeds/root
+  index_icon: emberveil:textures/item/almanac.png
+  text_color: "2B2118"
+  header_color: "7A2E0E"
+  nameplate_color: "FFD9A0"
+  link_color: "A0400C"
+  link_hover_color: "E0661A"
+  macros:
+    "$(tier1)": "$(#2e6b2a)Tier I$()"
+    "$(tier2)": "$(#8a6d12)Tier II$()"
+    "$(tier3)": "$(#b0501a)Tier III$()"
+    "$(tier4)": "$(#a3231a)Tier IV$()"

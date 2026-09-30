@@ -1,0 +1,101 @@
+categories:
+  - id: getting_started
+    name: Getting Started
+    icon: minecraft:campfire
+    sortnum: 0
+    description: |
+      What Emberveil changes, how to survive the first days, and some directions to wander in. Nothing here is required reading, and nothing is a quest.
+  - id: creatures
+    name: Creatures
+    icon: naturalist:antler
+    sortnum: 1
+    description: |
+      Everything that walks, swims or flies that vanilla Minecraft does not have: wildlife, wild monsters, new illagers and the things that lurk in ancient ruins. Grouped by where you meet them.
+  - id: wildlife
+    name: Wildlife
+    parent: creatures
+    icon: naturalist:antler
+    sortnum: 1
+    description: |
+      Animals that make the wilds feel alive. Most are harmless; a few bite back. Grouped by habitat.
+  - id: wild_monsters
+    name: Wild Monsters
+    parent: creatures
+    icon: mowziesmobs:foliaath_seed
+    sortnum: 2
+    description: |
+      Hostile creatures that roam particular biomes: ambushing plants, cave brutes, sky-serpents and rare, enormous mutants.
+  - id: illagers
+    name: The Illager Host
+    parent: creatures
+    icon: illagerinvasion:horn_of_sight
+    sortnum: 3
+    description: |
+      New illager ranks that join raids and guard forts, mansions and a hidden labyrinth.
+  - id: ruin_dwellers
+    name: Ruin Dwellers
+    parent: creatures
+    icon: cataclysm:koboleton_bone
+    sortnum: 4
+    description: |
+      Creatures that guard the ancient lairs of the Cataclysm: skeletal diggers, drowned cultists, living coral and burning revenants. Mostly found in or near their structures.
+  - id: bosses
+    name: Bosses
+    icon: minecraft:wither_skeleton_skull
+    sortnum: 2
+    description: |
+      Great foes with their own arenas, attack patterns, boss bars and rewards. How to find or summon each one, what it does, and what happens if you fall.
+  - id: combat
+    name: Weapons & Combat
+    icon: simplyswords:iron_longsword
+    sortnum: 3
+    description: |
+      Weapon movesets, weapon families, unique relic weapons and the special gear of bosses. Read this to choose a fighting style, not just a damage number.
+  - id: armour
+    name: Armour & Accessories
+    icon: artifacts:crystal_heart
+    sortnum: 4
+    description: |
+      Armour sets with real trade-offs, boss armour, and accessories worn in extra slots.
+  - id: crafting
+    name: Materials & Crafting
+    icon: minecraft:smithing_table
+    sortnum: 5
+    description: |
+      New materials, where they come from, what they make, and the workstations that use them.
+  - id: places
+    name: Places & Dungeons
+    icon: explorerscompass:explorerscompass
+    sortnum: 6
+    description: |
+      Structures worth finding: rebuilt vanilla dungeons, boss lairs, forts, a labyrinth and small curiosities. Where they appear, how to find them and what waits inside.
+  - id: world
+    name: The World
+    icon: naturescompass:naturescompass
+    sortnum: 7
+    description: |
+      Terrain, biomes, hazards and the three dimensions. Emberveil adds no new dimensions: it makes the Overworld, the Nether and the End deeper.
+  - id: systems
+    name: Survival & Systems
+    icon: farmersdelight:cooking_pot
+    sortnum: 8
+    description: |
+      Cooking and farming, travel by waystone, camping, backpacks, death and gravestones, and creatures you can keep.
+  - id: utilities
+    name: Utilities
+    icon: sophisticatedbackpacks:backpack
+    sortnum: 9
+    description: |
+      Maps, recipe browsers, info overlays and the small tools that make everything else easier.
+  - id: deeds
+    name: Deeds
+    icon: minecraft:bell
+    sortnum: 10
+    description: |
+      Optional goals for when you want something to aim at. They are ordinary advancements, saved with your world, and they unlock nothing that is otherwise hidden.
+  - id: help
+    name: Controls, Help & Visuals
+    icon: minecraft:lantern
+    sortnum: 11
+    description: |
+      Every important key, the shader pack and its profiles, performance advice, fixes for common problems and how to get this book back.

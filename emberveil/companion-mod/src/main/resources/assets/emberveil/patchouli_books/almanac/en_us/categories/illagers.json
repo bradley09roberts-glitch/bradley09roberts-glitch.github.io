@@ -1,0 +1,7 @@
+{
+ "name": "The Illager Host",
+ "description": "New illager ranks that join raids and guard forts, mansions and a hidden labyrinth.",
+ "icon": "illagerinvasion:horn_of_sight",
+ "sortnum": 3,
+ "parent": "emberveil:creatures"
+}

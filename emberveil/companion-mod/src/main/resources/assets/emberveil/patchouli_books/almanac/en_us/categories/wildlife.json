@@ -1,0 +1,7 @@
+{
+ "name": "Wildlife",
+ "description": "Animals that make the wilds feel alive. Most are harmless; a few bite back. Grouped by habitat.",
+ "icon": "naturalist:antler",
+ "sortnum": 1,
+ "parent": "emberveil:creatures"
+}

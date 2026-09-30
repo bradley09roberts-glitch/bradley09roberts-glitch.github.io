@@ -1,0 +1,32 @@
+{
+ "name": "Useful Early Equipment",
+ "icon": "simplyswords:iron_longsword",
+ "category": "emberveil:getting_started",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "You do not need anything exotic to start, but a few early items make a big difference:"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)An $(l)iron weapon from a family you like$(): a longsword for a safe all-rounder, a spear for reach, a rapier for speed. See $(l:combat/families_light)combat/families_light$(/l).$(li)A $(l)shield$(). Many bosses telegraph heavy blows you can block.$(li)$(l)Wooden or bone armour$() ($(l:armour/immersive_early)armour/immersive_early$(/l)) before you have iron."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)A $(l)backpack$() ($(l:systems/backpacks)systems/backpacks$(/l)): more room for loot on long trips.$(li)An $(l:places/finding)Explorer's Compass$(/l) to point at a structure you want to visit.$(li)A $(l)cooking pot$() ($(l:systems/cooking)systems/cooking$(/l)): hearty meals heal and keep you fed longer than raw food."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Accessories ($(l:armour/accessories)armour/accessories$(/l)) come from chests and camps, not crafting, so open every chest you find."
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:combat/movesets",
+    "emberveil:armour/overview"
+   ]
+  }
+ ],
+ "sortnum": 3
+}

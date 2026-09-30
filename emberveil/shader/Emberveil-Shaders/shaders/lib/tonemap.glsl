@@ -4,7 +4,7 @@
 #define EMBERVEIL_TONEMAP
 
 vec3 tonemapEmber(vec3 x) {
-    x *= 1.6 * EXPOSURE;
+    x *= 1.45 * EXPOSURE;
     const float W = 7.0;
     return x * (1.0 + x / (W * W)) / (1.0 + x);
 }

@@ -1,0 +1,34 @@
+{
+ "name": "Emberveil Shaders",
+ "icon": "minecraft:glowstone",
+ "category": "emberveil:help",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "Emberveil ships with its own shader pack, $(l)Emberveil Shaders$(), made for this pack: warm golden light, cool shadows, mist in the valleys at dawn and dusk, ember-toned torchlight and clear water."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "It is switched on and set to the $(l)Balanced$() profile when you first start. It is purely visual: world generation, combat and loot are the same with or without it."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)Press <key:iris.keybind.toggleShaders> to toggle shaders instantly.$(li)Press <key:iris.keybind.shaderPackSelection> (or Options > Video Settings > Shader Packs) to pick a pack.$(li)In that screen, $(item)Shader Pack Settings$() opens the options; the first line is the $(l)Profile$().",
+   "title": "Turning it on or off"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "If the screen ever looks wrong after a driver update, press <key:iris.keybind.toggleShaders> and play without shaders."
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:help/shader_profiles",
+    "emberveil:help/performance"
+   ]
+  }
+ ],
+ "sortnum": 3,
+ "priority": true
+}

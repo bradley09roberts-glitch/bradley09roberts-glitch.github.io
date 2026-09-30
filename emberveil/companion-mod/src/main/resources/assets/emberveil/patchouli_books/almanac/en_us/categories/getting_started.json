@@ -1,1 +1,6 @@
-{ "name": "Getting Started", "description": "Placeholder.", "icon": "minecraft:campfire", "sortnum": 0 }
+{
+ "name": "Getting Started",
+ "description": "What Emberveil changes, how to survive the first days, and some directions to wander in. Nothing here is required reading, and nothing is a quest.",
+ "icon": "minecraft:campfire",
+ "sortnum": 0
+}

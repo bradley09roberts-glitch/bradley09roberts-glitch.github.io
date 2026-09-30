@@ -1,0 +1,23 @@
+{
+ "name": "Getting This Book Back",
+ "icon": "minecraft:book",
+ "category": "emberveil:help",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "You are given one Wayfarer's Almanac the first time you join a world. It is never handed out again, so dying or reloading cannot fill your chests with copies.$(br2)You do not need the item to read it: press $(k:key.emberveil.open_almanac) or type $(item)/almanac$() (no cheats needed)."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Want a copy to carry or give to a friend? Combine any Book with a Torch."
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:getting_started/welcome"
+   ]
+  }
+ ],
+ "sortnum": 2
+}

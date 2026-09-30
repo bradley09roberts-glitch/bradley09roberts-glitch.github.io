@@ -1,0 +1,133 @@
+entries:
+  - category: getting_started
+    id: welcome
+    name: Welcome, Wayfarer
+    icon: emberveil:textures/item/almanac.png
+    priority: true
+    read_by_default: true
+    sortnum: 0
+    pages:
+      - text: |
+          Emberveil is a sandbox. There is no story, no quest chain and no ending: build where you like, go where you like, fight what you choose.
+
+          The world is older and wilder than usual. Ruined keeps crown the mountains, guardians sleep in forgotten chambers and ancient forges still burn. Everything in it is optional.
+      - title: What is different
+        text: |
+          - **Wander.** Taller mountains and deeper valleys, wildlife in every biome, waystones and sleeping bags for long trips.
+          - **Delve.** Almost every vanilla structure is rebuilt and bigger, and new lairs hide bosses and relic loot.
+          - **Arm.** Weapons have real movesets, unique relic weapons turn up in chests, and accessories fill new slots.
+
+          A light **hearth** layer (cooking, backpacks, camping) supports long expeditions.
+      - title: Using this Almanac
+        text: |
+          Open it any time with <key:key.emberveil.open_almanac> or by typing {/almanac}, even if the book is not in your bag. Lost the book? [[help/almanac|Make another]] from a Book and a Torch.
+
+          Click a subject to open it. Backspace or right-click goes back. The last icon on the front page is the {Index}, with a search box. The ribbon at a page edge bookmarks it.
+    related: [getting_started/first_days, getting_started/whats_new, help/controls]
+
+  - category: getting_started
+    id: whats_new
+    name: What Emberveil Changes
+    icon: minecraft:compass
+    sortnum: 1
+    pages:
+      - text: |
+          Vanilla rules still apply: you mine, craft and build exactly as before. On top of that:
+
+          - [[world/terrain|Terrain]] is reshaped: higher peaks, deeper valleys and oceans.
+          - [[wildlife/overview|Wildlife]] lives in every biome, and a few [[wild_monsters/overview|wild monsters]] prowl particular regions.
+          - [[places/overview|Structures]]: dungeons, strongholds, temples, mineshafts, fortresses and monuments are rebuilt, and new lairs are scattered about.
+      - text: |
+          - [[bosses/overview|Bosses]] live in those lairs, each with a boss bar and a real attack pattern.
+          - [[combat/movesets|Weapon movesets]] replace the single vanilla swing.
+          - [[armour/accessories|Accessory slots]] hold rings, necklaces, gloves, belts and charms.
+          - [[systems/gravestones|Gravestones]] keep your items safe when you die.
+          - [[systems/waystones|Waystones]] let you travel between places you have visited, for experience.
+          - [[help/shaders|Emberveil Shaders]] give the world its look (press <key:iris.keybind.toggleShaders> to turn them off).
+    related: [getting_started/danger, getting_started/directions]
+
+  - category: getting_started
+    id: first_days
+    name: Your First Days
+    icon: minecraft:wooden_axe
+    sortnum: 2
+    pages:
+      - text: |
+          The first session plays much like vanilla. Gather wood, make stone tools, eat, and get walls and a light source up before dark.
+
+          Things that are new near most spawns:
+          - Deer, rabbits, birds and butterflies are harmless.
+          - Boars, bears and snakes fight back if hit. Leave bear cubs alone.
+          - Fishing and hunting give more food: venison, bushmeat and fish.
+      - title: Before Nightfall
+        text: |
+          Nights work as in vanilla. A [[systems/camping|sleeping bag]] (Comforts) lets you sleep through the night anywhere without moving your spawn point, which is ideal for trips. A hammock lets you rest through the day instead.
+
+          Keep a torch in your off-hand when exploring: with shaders on it lights your surroundings. Your minimap (top left) shows terrain as you uncover it.
+      - title: Places to avoid at first
+        text: |
+          Large stone ruins, skeletal fortresses and anything with a boss bar are late-game. The [[getting_started/danger|danger guide]] lists what to expect where.
+
+          Caves are ordinary near the surface. The deep layer (deepslate, below height 0) is where cave brutes such as the [[wild_monsters/bluff|Bluff]] hunt.
+    related: [getting_started/early_gear, getting_started/danger, systems/cooking]
+
+  - category: getting_started
+    id: early_gear
+    name: Useful Early Equipment
+    icon: simplyswords:iron_longsword
+    sortnum: 3
+    pages:
+      - text: |
+          You do not need anything exotic to start, but a few early items make a big difference:
+
+          - An **iron weapon from a family you like**: a longsword for a safe all-rounder, a spear for reach, a rapier for speed. See [[combat/families_light]].
+          - A **shield**. Many bosses telegraph heavy blows you can block.
+          - **Wooden or bone armour** ([[armour/immersive_early]]) before you have iron.
+      - text: |
+          - A **backpack** ([[systems/backpacks]]): more room for loot on long trips.
+          - An [[places/finding|Explorer's Compass]] to point at a structure you want to visit.
+          - A **cooking pot** ([[systems/cooking]]): hearty meals heal and keep you fed longer than raw food.
+
+          Accessories ([[armour/accessories]]) come from chests and camps, not crafting, so open every chest you find.
+    related: [combat/movesets, armour/overview]
+
+  - category: getting_started
+    id: danger
+    name: Danger by Place
+    icon: minecraft:skeleton_skull
+    sortnum: 4
+    pages:
+      - text: |
+          Emberveil has no levels. Danger comes from **where** you are. This book rates places and foes in four tiers:
+
+          - $(tier1): what vanilla iron gear handles.
+          - $(tier2): diamond gear, good food and a plan.
+          - $(tier3): enchanted diamond or better, potions, and a retreat route.
+          - $(tier4): netherite-class gear and practice.
+      - title: Where each tier lives
+        text: |
+          - $(tier1) Plains, forests, shallow caves, villages, small dungeons, witch huts.
+          - $(tier2) Jungles and savannas at night, the deep layer, deserts' temples, strongholds, mineshafts, Wrought Chambers, Umvuthana groves, illager forts.
+          - $(tier3) Mansions, the Nether's fortresses, frozen mountain lairs, ocean monuments, the Labyrinth, the first Cataclysm lairs.
+          - $(tier4) The great Cataclysm bosses and the End.
+    related: [bosses/overview, creatures/approach]
+
+  - category: getting_started
+    id: directions
+    name: Things To Do
+    icon: minecraft:map
+    sortnum: 5
+    pages:
+      - text: |
+          Nothing in Emberveil is required. If you want a direction, here are a few ways people play it. Mix them freely.
+
+          - **The Delver** clears rebuilt dungeons, strongholds and temples for loot and accessories.
+          - **The Hunter** tracks down bosses one tier at a time.
+          - **The Collector** gathers unique relic weapons and accessories. See [[deeds/overview]].
+      - text: |
+          - **The Wanderer** maps the world, links it with waystones and records wildlife.
+          - **The Homesteader** builds a base, farms, cooks and tames companions.
+          - **The Smith** chases boss materials to forge the best armour and weapons.
+
+          The [[deeds/overview|Deeds]] tab tracks optional goals if you enjoy ticking things off.
+    related: [deeds/overview, places/overview, bosses/overview]

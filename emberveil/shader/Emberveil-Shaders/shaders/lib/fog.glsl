@@ -53,15 +53,15 @@ vec3 applyFog(vec3 color, vec3 viewPos, bool isSky) {
     float e = sunElevation();
     vec3 fogCol = skyRadiance(normalize(dirV * vec3(1.0) + normalize(upPosition) * 0.02));
     // Aerial perspective: distant land takes on the sky colour.
-    float density = 0.0016 * FOG_DENSITY * (1.0 + 2.5 * rainStrength);
+    float density = 0.0010 * FOG_DENSITY * (1.0 + 3.0 * rainStrength);
     float f = 1.0 - exp(-dist * density);
 #ifdef VALLEY_MIST
     // The veil: dense, low-lying mist in valleys at dawn/dusk and in rain; thin at midday.
-    float mistTime = 0.25 + duskFactor(e) * 1.2 + rainStrength * 1.3 + (1.0 - dayFactor(e)) * 0.35;
+    float mistTime = 0.10 + duskFactor(e) * 0.85 + rainStrength * 1.2 + (1.0 - dayFactor(e)) * 0.30;
     float heightFalloff = exp(-max(worldY - 58.0, 0.0) * 0.045);
     float eyeFalloff = exp(-max(eyeAltitude - 58.0, 0.0) * 0.012);
-    float mist = 1.0 - exp(-dist * 0.010 * heightFalloff * mistTime * MIST_STRENGTH * mix(0.6, 1.0, eyeFalloff));
-    vec3 mistCol = mix(fogCol, vec3(luma(fogCol)) * vec3(1.02, 1.0, 0.98), 0.35) * 0.95;
+    float mist = 1.0 - exp(-dist * 0.008 * heightFalloff * mistTime * MIST_STRENGTH * mix(0.6, 1.0, eyeFalloff));
+    vec3 mistCol = mix(fogCol, vec3(luma(fogCol)) * vec3(1.02, 1.0, 0.98), 0.25) * 0.92;
     color = mix(color, mistCol, sat(mist) * 0.85);
 #endif
     // Blend to sky at the render-distance edge so chunk borders never show.

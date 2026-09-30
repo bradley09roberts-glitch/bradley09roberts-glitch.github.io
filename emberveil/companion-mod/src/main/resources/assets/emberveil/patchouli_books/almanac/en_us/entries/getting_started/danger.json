@@ -1,0 +1,29 @@
+{
+ "name": "Danger by Place",
+ "icon": "minecraft:skeleton_skull",
+ "category": "emberveil:getting_started",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "Emberveil has no levels. Danger comes from $(l)where$() you are. This book rates places and foes in four tiers:"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)$(tier1): what vanilla iron gear handles.$(li)$(tier2): diamond gear, good food and a plan.$(li)$(tier3): enchanted diamond or better, potions, and a retreat route.$(li)$(tier4): netherite-class gear and practice."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)$(tier1) Plains, forests, shallow caves, villages, small dungeons, witch huts.$(li)$(tier2) Jungles and savannas at night, the deep layer, deserts' temples, strongholds, mineshafts, Wrought Chambers, Umvuthana groves, illager forts.$(li)$(tier3) Mansions, the Nether's fortresses, frozen mountain lairs, ocean monuments, the Labyrinth, the first Cataclysm lairs.$(li)$(tier4) The great Cataclysm bosses and the End.",
+   "title": "Where each tier lives"
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:bosses/overview",
+    "emberveil:creatures/approach"
+   ]
+  }
+ ],
+ "sortnum": 4
+}

@@ -1,0 +1,33 @@
+{
+ "name": "Shader Profiles",
+ "icon": "minecraft:spyglass",
+ "category": "emberveil:help",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "Three profiles change real settings:$(br2)$(l)Performance$(): 1024 shadow map, 80-block shadows, 4-tap filtering, 4 bloom levels."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(l)Balanced$() (default): 2048 shadow map, 128-block shadows, 12-tap soft filtering, 6 bloom levels.$(br2)$(l)High$(): 3072 shadow map, 192-block shadows, 24-tap filtering, stained-glass tinted light, light shafts and screen-space water reflections."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Inside Shader Pack Settings you can also change: night brightness, cave floor light (it also follows the vanilla Brightness slider), torch warmth, fog and valley mist, waves, waving plants, bloom, exposure and saturation.",
+   "title": "Tuning by hand"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Emberveil Shaders deliberately has no motion blur, film grain, chromatic aberration or depth of field."
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:help/shaders",
+    "emberveil:help/performance"
+   ]
+  }
+ ],
+ "sortnum": 4
+}

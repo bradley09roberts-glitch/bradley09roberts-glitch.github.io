@@ -1,0 +1,28 @@
+{
+ "name": "Credits",
+ "icon": "minecraft:name_tag",
+ "category": "emberveil:help",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "Emberveil is a curated modpack. The creatures, weapons, structures and systems described in this book come from the mods listed in the pack's attribution file, made by their respective authors."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Original to Emberveil: this Almanac and its art, the Emberveil Core companion mod (book delivery, keybind, spawn/loot/moveset tuning, Deeds) and Emberveil Shaders."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Main content mods:"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Mowzie's Mobs, L_Ender's Cataclysm, Illager Invasion, Mutant Monsters, Naturalist, Simply Swords, Better Combat, Artifacts, Immersive Armors, the YUNG's structure mods, Tectonic, Farmer's Delight, Comforts, Waystones, Sophisticated Backpacks, Gravestone, Explorer's and Nature's Compass, Xaero's maps, JEI, Jade and Patchouli."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Full list, versions and licences: docs/ATTRIBUTION.md in the pack's source."
+  }
+ ],
+ "sortnum": 7
+}

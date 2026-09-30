@@ -92,7 +92,7 @@ void main() {
     float emission = 0.0, subsurface = 0.0, code = CODE_NONE;
 
 #ifdef PROGRAM_TERRAIN
-    if (matId >= MAT_PLANT && matId <= MAT_UNDERWATER_PLANT) { subsurface = 1.0; code = CODE_FOLIAGE; }
+    if (matId >= MAT_PLANT && matId <= MAT_UNDERWATER_PLANT) { subsurface = matId == MAT_LEAVES ? 0.3 : 1.0; code = CODE_FOLIAGE; }
 #ifdef EMISSIVE_BLOCKS
     emission = emissionFor(matId, base.rgb);
 #endif

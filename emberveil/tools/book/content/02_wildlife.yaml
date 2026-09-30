@@ -1,0 +1,197 @@
+entries:
+  - category: wildlife
+    id: overview
+    name: Reading the Wilds
+    icon: naturalist:antler
+    priority: true
+    sortnum: 0
+    pages:
+      - text: |
+          Every biome has its own animals. They are there to make the world feel alive, but they are also food, leather and companions.
+
+          - **Harmless:** deer, birds, butterflies, fireflies, snails, moles, capybaras, tortoises.
+          - **Defensive:** bears, boars, elephants, rhinos and ostriches fight back, and parents defend their young.
+          - **Dangerous:** a few animals attack under particular conditions, described on their pages.
+      - title: Hunters of the night
+        text: |
+          Lions and tigers hunt **other animals** at night (zebras, boars, deer, even horses). They leave you alone unless you hurt them.
+
+          Alligators, piranhas, hippos and sharks are the real risk: they go after people who are **in the water**. Look before you swim.
+      - title: What they leave behind
+        text: |
+          - {Venison}, {Bushmeat}, {Drumsticks}, fish and more to cook.
+          - {Hide} (smelt it into leather), {Fur}, {Fat}, {Tooth} and {Antler}.
+          - Eggs from ducks, tortoises, ostriches and alligators, which you can hatch.
+      - spotlight: naturalist:capture_net
+        text: The **Capture Net** catches small creatures (butterflies, fireflies, dragonflies, caterpillars, ants, rats, hedgehogs, scorpions, bees and silverfish) as items you can release later.
+      - crafting: naturalist:capture_net
+        recipe2: naturalist:knapsack
+        text: A **Knapsack** picks up a **baby** animal so you can carry it home and set it down.
+      - crafting: naturalist:whistle
+        text: A **Whistle** tells a tamed animal to follow you or to wander freely. See [[wildlife/taming]].
+    related: [wildlife/woods, wildlife/savanna, wildlife/jungle_desert, wildlife/wetlands, wildlife/cold, wildlife/oceans, wildlife/taming]
+
+  - category: wildlife
+    id: woods
+    name: Forests & Plains
+    icon: naturalist:venison
+    sortnum: 1
+    pages:
+      - text: |
+          The gentle start of most journeys.
+
+          - **Deer** bolt when approached; a good source of venison and antlers.
+          - **Songbirds** (robins, finches, cardinals, sparrows, blue jays, canaries) flit between trees.
+          - **Butterflies**, **fireflies** (glowing at dusk), **snails**, **moles**, **rats** and **hedgehogs** fill the undergrowth.
+          - **Turkeys** wander forests and taigas.
+      - title: Watch out for
+        text: |
+          - **Brown and black bears** sleep through part of the day, fish for salmon and chase deer. They only fight you if provoked or if you threaten a cub.
+          - **Boars** root through savannas and forests and charge anyone who hits them.
+          - **Snakes** hunt rabbits, chickens and snails. Hit one and it bites back.
+      - entity: naturalist:bear
+        name: Bear
+        text: Forests and taigas. Honeycomb, berries, salmon or venison tempt a bear.
+      - stats: naturalist:bear
+      - stats: naturalist:boar
+        title: Boar
+    related: [wildlife/taming, systems/cooking]
+
+  - category: wildlife
+    id: savanna
+    name: Savannas
+    icon: naturalist:tooth
+    sortnum: 2
+    pages:
+      - text: |
+          The busiest biome in the Overworld.
+
+          - **Zebras** and **giraffes** graze peacefully. Giraffes eat apples and hay, and a tamed giraffe can be ridden.
+          - **Elephants** eat melon slices; a calf can be tamed, and a grown tame elephant takes a saddle.
+          - **Ostriches** are fast mounts once tamed and saddled; wild adults peck back when hit.
+          - **Vultures** circle overhead and attack zombies, husks and zombified piglins, not you.
+      - title: Careful
+        text: |
+          - **Lions** hunt zebras, rhinos and boars at night.
+          - **Rhinos** are calm, but anyone wearing a carved pumpkin gets charged.
+          - **Hippos** (savannas and jungles) attack people in the water.
+          - **Komodo dragons** doze by day in badlands, savannas and deserts. Linger within 16 blocks of one for about 20 seconds and it attacks.
+          - **Rattlesnakes** are the desert and savanna snake.
+      - entity: naturalist:elephant
+        name: Elephant
+        scale: 0.8
+        text: Savannas. Defends its calves. Melon slices tame a calf.
+      - stats: naturalist:elephant
+      - stats: naturalist:lion
+        title: Lion
+      - stats: naturalist:hippo
+        title: Hippo
+    related: [wildlife/taming, places/umvuthana_grove]
+
+  - category: wildlife
+    id: jungle_desert
+    name: Jungles, Deserts & Badlands
+    icon: naturalist:scorpion
+    sortnum: 3
+    pages:
+      - text: |
+          Hot lands with sharp teeth.
+
+          - **Tigers** (jungles, mountains, badlands, snowy slopes, dark forests) stalk boars, deer and zebras at night.
+          - **Capybaras** lounge by jungle and swamp water, and love melon.
+          - **Tortoises** and **lizards** plod about. A startled lizard sheds its tail, which regrows later.
+          - **Ant hills** dot jungles and savannas. Ants swarm anyone who angers the colony.
+      - title: Dangerous
+        text: |
+          - **Desert and jungle scorpions** hunt in darkness: at night, or in shade, they come for you.
+          - **Piranhas** fill jungle rivers and lush caves and swarm swimmers.
+          - **Coral snakes** live along jungle rivers and beaches.
+
+          Carry milk if you explore scorpion country; they poison.
+      - stats: naturalist:tiger
+      - stats: naturalist:desert_scorpion
+        title: Desert Scorpion
+      - stats: naturalist:piranha
+        title: Piranha
+    related: [wild_monsters/foliaath, places/jungle_temple]
+
+  - category: wildlife
+    id: wetlands
+    name: Swamps, Rivers & Shores
+    icon: naturalist:duck_egg
+    sortnum: 4
+    pages:
+      - text: |
+          - **Ducks** paddle on rivers and swamps and lay eggs.
+          - **Dragonflies** zip over swamp water.
+          - **Catfish** and **bass** can be fished or netted.
+          - **Crabs** scuttle along beaches and stony shores. Feed them tropical fish.
+          - **Capybaras** and **tortoises** share the warmer marshes.
+      - title: Alligators
+        text: |
+          Alligators live in swamps, mangroves and rivers. They hunt ducks, deer, frogs and catfish, and they go for **people in the water, anyone near their eggs, and anyone at all at night**.
+
+          In daylight on land they usually leave you alone. At night, keep away from the bank.
+      - entity: naturalist:alligator
+        name: Alligator
+      - stats: naturalist:alligator
+    related: [wildlife/taming, systems/cooking]
+
+  - category: wildlife
+    id: cold
+    name: Snow & Peaks
+    icon: naturalist:mammoth_meat
+    sortnum: 5
+    pages:
+      - text: |
+          - **Mammoths** roam snowy plains, ice spikes, snowy slopes and frozen peaks. They are the elephant's woolly cousins and behave the same way: calm, protective of calves, tameable as calves and rideable with a saddle. They drop mammoth meat.
+          - **Blue jays** and **canaries** nest in taigas and on mountainsides.
+          - Pale **tigers** also stalk the snowy slopes.
+
+          The mountains here are much taller than in vanilla (see [[world/terrain]]), and the lairs of [[bosses/frostmaw]] and [[bosses/sculptor]] hide among them.
+      - entity: naturalist:mammoth
+        name: Mammoth
+        scale: 0.8
+      - stats: naturalist:mammoth
+    related: [bosses/frostmaw, places/frostmaw_lair]
+
+  - category: wildlife
+    id: oceans
+    name: Oceans
+    icon: naturalist:anglerfish
+    sortnum: 6
+    pages:
+      - text: |
+          - **Whales** glide through every ocean; peaceful giants.
+          - **Rays** (eagle rays, mobula rays and stingrays), **jellyfish**, **starfish** and **clams** fill the shallows and reefs.
+          - **Anglerfish**, **blobfish** and **giant isopods** live in the deep water.
+      - title: Great white sharks
+        text: |
+          Warm and lukewarm oceans hold **great white sharks**. They hunt fish, and they come for swimmers in **dark water**: at night or in the deep.
+
+          Cross warm seas by boat after sunset. Emberveil's [[places/sunken_city|Sunken City]] and [[places/acropolis|Acropolis]] are also in the oceans, with worse things than sharks.
+      - entity: naturalist:great_white_shark
+        name: Great White Shark
+      - stats: naturalist:great_white_shark
+    related: [ruin_dwellers/deeplings, places/ocean_monument]
+
+  - category: wildlife
+    id: taming
+    name: Taming & Riding
+    icon: minecraft:lead
+    sortnum: 7
+    pages:
+      - text: |
+          Many animals can be tamed by hand-feeding. For the big ones only **babies** can be tamed, and each feeding has a one-in-three chance.
+
+          - **Babies only:** lion and tiger (raw or cooked meat), bear (honeycomb, sweet berries, salmon, venison), giraffe (apples, hay), ostrich (seeds), elephant (melon slices), hippo (melon blocks).
+      - text: |
+          - **Any age:** capybara (melon slices), hedgehog (sweet or glow berries), crab (tropical fish), duck (raw fish), rat (bread), lizard (spider eyes), tortoise (cactus, bamboo, dandelions or brown mushrooms), snake (chicken, rabbit, eggs).
+
+          Use a tamed animal with an empty hand to make it sit or stand. Use a **Whistle** on it to switch between following you and wandering freely.
+      - title: Mounts
+        text: |
+          Once tamed, **ostriches**, **elephants** and **mammoths** take a saddle and can be ridden; a tamed **giraffe** can be ridden without one. Ostriches are fast, and a giraffe gives the best view in the savanna.
+
+          Other companions: [[systems/pets|pets from other creatures]], such as Cataclysm's tiny remnant and ministrosity.
+    related: [wildlife/overview, systems/pets]

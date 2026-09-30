@@ -8,6 +8,13 @@
 #include "/lib/water.glsl"
 #include "/lib/fog.glsl"
 
+// Boolean options must appear in #ifdef/#ifndef for Iris to list them as toggles.
+#ifdef VOLUMETRIC_LIGHT
+#if !defined DIM_NETHER && !defined DIM_END
+#define DO_LIGHT_SHAFTS
+#endif
+#endif
+
 #ifdef VSH
 out vec2 texcoord;
 void main() {
@@ -28,7 +35,7 @@ uniform sampler2D colortex1;
 uniform sampler2D colortex2;
 uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
-#if defined VOLUMETRIC_LIGHT && !defined DIM_NETHER && !defined DIM_END
+#ifdef DO_LIGHT_SHAFTS
 uniform sampler2DShadow shadowtex1;
 #endif
 in vec2 texcoord;
@@ -65,7 +72,7 @@ vec3 waterSSR(vec3 color, vec3 viewPos, vec3 n, float skyLight) {
 }
 #endif
 
-#if defined VOLUMETRIC_LIGHT && !defined DIM_NETHER && !defined DIM_END
+#ifdef DO_LIGHT_SHAFTS
 // Light shafts: single-scattering march through the shadow map (Henyey-Greenstein phase).
 vec3 lightShafts(vec3 viewPos) {
     float e = sunElevation();
@@ -118,7 +125,7 @@ void main() {
         color = applyFog(color, viewPos, isSky);
     }
 
-#if defined VOLUMETRIC_LIGHT && !defined DIM_NETHER && !defined DIM_END
+#ifdef DO_LIGHT_SHAFTS
     if (isEyeInWater == 0 || isEyeInWater == 1) color += lightShafts(isSky ? normalize(viewPos) * far : viewPos);
 #endif
     outColor = vec4(color, 1.0);

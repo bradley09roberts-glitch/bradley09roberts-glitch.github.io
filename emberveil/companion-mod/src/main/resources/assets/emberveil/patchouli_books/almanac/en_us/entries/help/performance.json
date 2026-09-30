@@ -1,0 +1,32 @@
+{
+ "name": "Performance",
+ "icon": "minecraft:redstone",
+ "category": "emberveil:help",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "Emberveil runs about sixty mods. Good starting points:$(br2)$(li)Give Minecraft $(l)6 GB$() of memory (4 GB minimum; 8 GB for the High shader profile at long render distance)."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "In your launcher this is the Java memory or \"Max memory\" setting.$(li)Render distance 8 to 12 chunks, simulation distance 6 to 8.$(li)Use the Performance shader profile, or press <key:iris.keybind.toggleShaders>, on laptops and older graphics cards."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Sodium's Video Settings screen has extra options (under Quality and Performance). Entity Culling and ImmediatelyFast work without any setup."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Big structures generate in the background the first time you pass near them, so the first minutes in a new area can stutter briefly. That settles once the chunks exist."
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:help/shader_profiles",
+    "emberveil:help/troubleshooting"
+   ]
+  }
+ ],
+ "sortnum": 5
+}

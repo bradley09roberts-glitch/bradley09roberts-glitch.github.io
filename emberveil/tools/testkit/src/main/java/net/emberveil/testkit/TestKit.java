@@ -240,7 +240,13 @@ public final class TestKit {
                 return (Integer) scratch >= (a.length > 1 ? Integer.parseInt(a[1]) : 100);
             }
             case "screenshot" -> { screenshot(mc, a[1], false); return true; }
-            case "screenshot_nohud" -> { screenshot(mc, a[1], true); return true; }
+            case "screenshot_nohud" -> {
+                // Hide the HUD, let a few frames render without it, then capture.
+                if (phase == 0) { scratch = mc.options.hideGui; mc.options.hideGui = true; phase = 1; waitTicks = 4; return false; }
+                screenshot(mc, a[1], false);
+                mc.options.hideGui = (Boolean) scratch;
+                return true;
+            }
             case "hud" -> { mc.options.hideGui = !"off".equals(a[1]); return true; }
             case "key" -> {
                 KeyMapping km = findKey(mc, a[1]);

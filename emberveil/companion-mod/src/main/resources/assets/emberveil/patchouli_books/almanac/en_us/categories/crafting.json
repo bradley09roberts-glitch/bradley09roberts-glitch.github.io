@@ -1,0 +1,6 @@
+{
+ "name": "Materials & Crafting",
+ "description": "New materials, where they come from, what they make, and the workstations that use them.",
+ "icon": "minecraft:smithing_table",
+ "sortnum": 5
+}

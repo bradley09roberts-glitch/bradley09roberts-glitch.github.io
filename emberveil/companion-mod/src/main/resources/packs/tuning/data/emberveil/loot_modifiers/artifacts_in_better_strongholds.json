@@ -1,0 +1,23 @@
+{
+  "type": "neoforge:add_table",
+  "conditions": [
+    {
+      "condition": "minecraft:any_of",
+      "terms": [
+        {
+          "condition": "neoforge:loot_table_id",
+          "loot_table_id": "betterstrongholds:chests/treasure"
+        },
+        {
+          "condition": "neoforge:loot_table_id",
+          "loot_table_id": "betterstrongholds:chests/armoury"
+        },
+        {
+          "condition": "neoforge:loot_table_id",
+          "loot_table_id": "betterstrongholds:chests/grand_library"
+        }
+      ]
+    }
+  ],
+  "table": "artifacts:inject/chests/stronghold_corridor"
+}

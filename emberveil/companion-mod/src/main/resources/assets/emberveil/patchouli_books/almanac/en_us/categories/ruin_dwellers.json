@@ -1,0 +1,7 @@
+{
+ "name": "Ruin Dwellers",
+ "description": "Creatures that guard the ancient lairs of the Cataclysm: skeletal diggers, drowned cultists, living coral and burning revenants. Mostly found in or near their structures.",
+ "icon": "cataclysm:koboleton_bone",
+ "sortnum": 4,
+ "parent": "emberveil:creatures"
+}

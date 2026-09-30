@@ -1,1 +1,45 @@
-{ "name": "Welcome", "icon": "minecraft:torch", "category": "emberveil:getting_started", "pages": [ { "type": "patchouli:text", "text": "Placeholder page." } ] }
+{
+ "name": "Welcome, Wayfarer",
+ "icon": "emberveil:textures/item/almanac.png",
+ "category": "emberveil:getting_started",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "Emberveil is a sandbox. There is no story, no quest chain and no ending: build where you like, go where you like, fight what you choose."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "The world is older and wilder than usual. Ruined keeps crown the mountains, guardians sleep in forgotten chambers and ancient forges still burn. Everything in it is optional."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)$(l)Wander.$() Taller mountains and deeper valleys, wildlife in every biome, waystones and sleeping bags for long trips.$(li)$(l)Delve.$() Almost every vanilla structure is rebuilt and bigger, and new lairs hide bosses and relic loot.$(li)$(l)Arm.$() Weapons have real movesets, unique relic weapons turn up in chests, and accessories fill new slots.",
+   "title": "What is different"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "A light $(l)hearth$() layer (cooking, backpacks, camping) supports long expeditions."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Open it any time with $(k:key.emberveil.open_almanac) or by typing $(item)/almanac$(), even if the book is not in your bag. Lost the book? $(l:help/almanac)Make another$(/l) from a Book and a Torch.",
+   "title": "Using this Almanac"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "Click a subject to open it. Backspace or right-click goes back. The last icon on the front page is the $(item)Index$(), with a search box. The ribbon at a page edge bookmarks it."
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:getting_started/first_days",
+    "emberveil:getting_started/whats_new",
+    "emberveil:help/controls"
+   ]
+  }
+ ],
+ "sortnum": 0,
+ "priority": true,
+ "read_by_default": true
+}

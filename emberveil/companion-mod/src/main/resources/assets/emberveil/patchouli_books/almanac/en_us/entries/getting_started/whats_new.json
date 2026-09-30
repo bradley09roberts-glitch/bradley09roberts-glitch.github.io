@@ -1,0 +1,28 @@
+{
+ "name": "What Emberveil Changes",
+ "icon": "minecraft:compass",
+ "category": "emberveil:getting_started",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "Vanilla rules still apply: you mine, craft and build exactly as before. On top of that:"
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)$(l:world/terrain)Terrain$(/l) is reshaped: higher peaks, deeper valleys and oceans.$(li)$(l:creatures/wildlife_overview)Wildlife$(/l) lives in every biome, and a few $(l:wild_monsters/overview)wild monsters$(/l) prowl particular regions.$(li)$(l:places/overview)Structures$(/l): dungeons, strongholds, temples, mineshafts, fortresses and monuments are rebuilt, and new lairs are scattered about."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)$(l:bosses/overview)Bosses$(/l) live in those lairs, each with a boss bar and a real attack pattern.$(li)$(l:combat/movesets)Weapon movesets$(/l) replace the single vanilla swing.$(li)$(l:armour/accessories)Accessory slots$(/l) hold rings, necklaces, gloves, belts and charms.$(li)$(l:systems/gravestones)Gravestones$(/l) keep your items safe when you die.$(li)$(l:systems/waystones)Waystones$(/l) let you travel between places you have visited, for experience.$(li)$(l:help/shaders)Emberveil Shaders$(/l) give the world its look (press <key:iris.keybind.toggleShaders> to turn them off)."
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:getting_started/danger",
+    "emberveil:getting_started/directions"
+   ]
+  }
+ ],
+ "sortnum": 1
+}

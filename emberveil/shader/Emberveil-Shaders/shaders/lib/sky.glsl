@@ -50,8 +50,8 @@ vec3 skyRadiance(vec3 dirV) {
     float sunDot = dot(dirV, sunV);
     float day = dayFactor(e), dusk = duskFactor(e);
 
-    vec3 zenithDay = vec3(0.16, 0.32, 0.72) * 1.25;
-    vec3 horizonDay = vec3(0.56, 0.68, 0.86) * 1.35;
+    vec3 zenithDay = vec3(0.09, 0.24, 0.66) * 1.15;
+    vec3 horizonDay = vec3(0.40, 0.58, 0.86) * 1.12;
     vec3 zenithDusk = vec3(0.16, 0.18, 0.34);
     vec3 horizonDusk = vec3(0.95, 0.46, 0.24);
     vec3 zenithNight = vec3(0.006, 0.010, 0.026) * NIGHT_BRIGHTNESS;
@@ -59,7 +59,7 @@ vec3 skyRadiance(vec3 dirV) {
 
     // Blend the biome's own sky tint in lightly so deserts/swamps still differ.
     vec3 biome = toLinear(skyColor);
-    zenithDay = mix(zenithDay, biome * 1.3, 0.3);
+    zenithDay = mix(zenithDay, biome * 1.1, 0.25);
 
     vec3 zenith = mix(zenithNight, zenithDay, day);
     vec3 horizon = mix(horizonNight, horizonDay, day);

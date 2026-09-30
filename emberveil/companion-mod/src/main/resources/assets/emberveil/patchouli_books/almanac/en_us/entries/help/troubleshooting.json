@@ -1,0 +1,32 @@
+{
+ "name": "Common Problems",
+ "icon": "minecraft:barrier",
+ "category": "emberveil:help",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "$(l)I lost my things when I died.$() They are in your $(l:systems/gravestones)gravestone$(/l) where you fell. Your $(item)Obituary$() lists them and the coordinates."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(l)A boss healed after I fell back.$() Bosses recover when left alone. See $(l:bosses/overview)bosses/overview$(/l).$(br2)$(l)My compass will not find a structure.$() Some only appear in certain biomes or dimensions; the $(l:places/overview)Places$(/l) pages say where."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(l)The game is slow or runs out of memory.$() See $(l:help/performance)Performance$(/l).$(br2)$(l)Two keys do the same thing.$() Options > Controls > Key Binds shows conflicts in red and has a search box."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(l)Shaders look wrong.$() Press <key:iris.keybind.toggleShaders>, then try the Performance profile. Your world is unaffected.$(br2)$(l)This book is gone.$() See $(l:help/almanac)Getting This Book Back$(/l)."
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:help/controls",
+    "emberveil:help/performance"
+   ]
+  }
+ ],
+ "sortnum": 6
+}

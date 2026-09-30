@@ -1,0 +1,33 @@
+{
+ "name": "Things To Do",
+ "icon": "minecraft:map",
+ "category": "emberveil:getting_started",
+ "pages": [
+  {
+   "type": "patchouli:text",
+   "text": "Nothing in Emberveil is required. If you want a direction, here are a few ways people play it. Mix them freely."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)$(l)The Delver$() clears rebuilt dungeons, strongholds and temples for loot and accessories.$(li)$(l)The Hunter$() tracks down bosses one tier at a time.$(li)$(l)The Collector$() gathers unique relic weapons and accessories. See $(l:deeds/overview)deeds/overview$(/l)."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "$(li)$(l)The Wanderer$() maps the world, links it with waystones and records wildlife.$(li)$(l)The Homesteader$() builds a base, farms, cooks and tames companions.$(li)$(l)The Smith$() chases boss materials to forge the best armour and weapons."
+  },
+  {
+   "type": "patchouli:text",
+   "text": "The $(l:deeds/overview)Deeds$(/l) tab tracks optional goals if you enjoy ticking things off."
+  },
+  {
+   "type": "patchouli:relations",
+   "title": "See Also",
+   "entries": [
+    "emberveil:deeds/overview",
+    "emberveil:places/overview",
+    "emberveil:bosses/overview"
+   ]
+  }
+ ],
+ "sortnum": 5
+}

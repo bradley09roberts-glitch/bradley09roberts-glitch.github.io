@@ -1,0 +1,6 @@
+{
+ "name": "Deeds",
+ "description": "Optional goals for when you want something to aim at. They are ordinary advancements, saved with your world, and they unlock nothing that is otherwise hidden.",
+ "icon": "minecraft:bell",
+ "sortnum": 10
+}

@@ -1,0 +1,7 @@
+{
+ "name": "Wild Monsters",
+ "description": "Hostile creatures that roam particular biomes: ambushing plants, cave brutes, sky-serpents and rare, enormous mutants.",
+ "icon": "mowziesmobs:foliaath_seed",
+ "sortnum": 2,
+ "parent": "emberveil:creatures"
+}

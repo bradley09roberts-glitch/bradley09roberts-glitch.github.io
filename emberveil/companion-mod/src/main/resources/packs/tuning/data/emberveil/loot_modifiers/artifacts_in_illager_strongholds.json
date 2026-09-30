@@ -1,0 +1,19 @@
+{
+  "type": "neoforge:add_table",
+  "conditions": [
+    {
+      "condition": "minecraft:any_of",
+      "terms": [
+        {
+          "condition": "neoforge:loot_table_id",
+          "loot_table_id": "illagerinvasion:chests/illager_fort_tower"
+        },
+        {
+          "condition": "neoforge:loot_table_id",
+          "loot_table_id": "illagerinvasion:chests/labyrinth"
+        }
+      ]
+    }
+  ],
+  "table": "artifacts:inject/chests/woodland_mansion"
+}

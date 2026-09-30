@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "entries": [
+    "emberveil:artifacts_in_better_dungeons",
+    "emberveil:artifacts_in_better_strongholds",
+    "emberveil:artifacts_in_better_desert_temples",
+    "emberveil:artifacts_in_better_jungle_temples",
+    "emberveil:artifacts_in_better_fortresses",
+    "emberveil:artifacts_in_illager_strongholds"
+  ]
+}
