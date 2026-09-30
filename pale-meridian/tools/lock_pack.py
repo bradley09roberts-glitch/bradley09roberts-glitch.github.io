@@ -69,7 +69,8 @@ def resolve() -> dict:
             "project_client_side": proj["client_side"], "project_server_side": proj["server_side"],
             "role": role, "env": {"client": client, "server": server}, "why": why,
             "file": {"filename": f["filename"], "url": f["url"], "size": f["size"], "sha1": f["hashes"]["sha1"], "sha512": f["hashes"]["sha512"]},
-            "dependencies": [{"project_id": d.get("project_id"), "version_id": d.get("version_id"), "type": d["dependency_type"]} for d in v["dependencies"]],
+            "dependencies": sorted(({"project_id": d.get("project_id"), "version_id": d.get("version_id"), "type": d["dependency_type"]} for d in v["dependencies"]),
+                                   key=lambda d: (d["project_id"] or "", d["type"])),  # API order varies
         })
         time.sleep(0.25)
     # every required dependency must itself be in the lock

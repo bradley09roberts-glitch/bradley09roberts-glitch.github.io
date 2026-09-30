@@ -52,6 +52,9 @@ def main() -> None:
     ui_pages.generate(recaps=journal_pages.recaps(), people=journal_pages.people(), eleven=keepsakes.eleven_journal())
     loot_tables.generate()
     engine.generate()
+    from pmgen.dp import questdoc, testfixture
+    questdoc.write()
+    testfixture.write()
     items.generate()
     atmosphere.generate()
     poi.write()

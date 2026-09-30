@@ -25,6 +25,7 @@ bossbar set palemeridian:encounter color red
 function palemeridian:poi/init
 execute unless score #schema pm.world matches 1.. run scoreboard players set #schema pm.world 1
 function palemeridian:core/migrate
+function palemeridian:q/_init
 execute if score c1.round pm.q matches 2 run setblock 117 86 93 minecraft:iron_trapdoor[facing=south,half=bottom,open=true,powered=false,waterlogged=false]
 execute if score c1.round pm.q matches 2 run setblock 117 86 93 minecraft:iron_trapdoor[facing=south,half=bottom,open=true,powered=false,waterlogged=false]
 execute if score #enc.hollin pm.world matches 1 run function palemeridian:enc/hollin/reset

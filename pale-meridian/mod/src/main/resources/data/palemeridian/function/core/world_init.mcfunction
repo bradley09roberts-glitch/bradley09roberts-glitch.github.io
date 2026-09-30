@@ -12,6 +12,7 @@ time of palemeridian:pall pause
 time of palemeridian:pall set 0
 time of palemeridian:surge pause
 time of palemeridian:surge set 0
+function palemeridian:q/_init
 scoreboard players set #figure pm.world 0
 function palemeridian:q/_advance
 function palemeridian:hud/refresh

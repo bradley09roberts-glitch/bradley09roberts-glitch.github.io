@@ -5,8 +5,12 @@
 	"name": "Pale Meridian test suite",
 	"environment": "*",
 	"entrypoints": {
-		"fabric-gametest": [],
+		"fabric-gametest": [
+			"net.palemeridian.test.CampaignGameTests"
+		],
 		"fabric-client-gametest": []
 	},
-	"depends": { "palemeridian": "*" }
+	"depends": {
+		"palemeridian": "*"
+	}
 }

@@ -241,14 +241,14 @@
    },
    "dependencies": [
     {
-     "project_id": "mOgUt4GM",
-     "version_id": null,
-     "type": "optional"
-    },
-    {
      "project_id": "P7dR8mSH",
      "version_id": null,
      "type": "required"
+    },
+    {
+     "project_id": "mOgUt4GM",
+     "version_id": null,
+     "type": "optional"
     }
    ]
   },

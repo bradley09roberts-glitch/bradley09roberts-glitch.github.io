@@ -255,6 +255,12 @@ def _gen_quests() -> None:
         comp += q.on_complete
         comp += [f"function {fid('q/_advance')}", f"function {fid('hud/refresh')}"]
         fn(f"q/{q.id}/complete", comp, header=f"Quest {q.id}: {q.title} — complete (idempotent)")
+    # initialise quest scores: activation requires an explicit 0, and an unset score never matches.
+    # Only unset scores are touched, so saved progress is kept (and quests added by updates start at 0).
+    fn("q/_init", [f"execute unless score {q.id} pm.q matches 0.. run scoreboard players set {q.id} pm.q 0" for q in qs],
+       header="Give every quest a state (0 = locked) if it has none yet; never changes existing progress")
+    R.load_hooks.insert(0, f"function {fid('q/_init')}")
+    R.world_init.insert(0, f"function {fid('q/_init')}")
     # auto advance
     adv_lines = []
     for q in qs:
