@@ -1,0 +1,2 @@
+summon minecraft:mannequin 6.5 68 -7.5 {UUID:[I;-1346510212,816396625,-1713502252,534135632],Rotation:[180.0f,0f],profile:{texture:"palemeridian:entity/npc/brannoc_faded",model:"wide"},immovable:1b,Invulnerable:1b,CustomName:{"text":"Brannoc","color":"yellow"},CustomNameVisible:1b,description:{"text":"the Orchard Keeper","color":"gray","italic":true},pose:"standing",Tags:["pm.npc","pm.npc.brannoc"]}
+function palemeridian:npc/brannoc/apply_skin

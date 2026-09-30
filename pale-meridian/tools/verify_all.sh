@@ -23,6 +23,7 @@ G1=$(treehash); python3 tools/gen_all.py > /dev/null 2>&1; G2=$(treehash)
 echo "first run $G1 / second run $G2" >> "$EV/01-generate.log"
 [ "$G1" = "$G2" ]; result $? "two generator runs produce byte-identical output (01-generate.log)"
 python3 tools/simulate.py > "$EV/02-simulate.log" 2>&1; result $? "logic simulation of the campaign (02-simulate.log)"
+python3 tools/smoke.py > "$EV/02b-smoke.log" 2>&1; result $? "every function smoke-executed; per-second loop stays within the macro cache (02b-smoke.log)"
 
 cd "$ROOT/mod"
 ./gradlew --no-daemon -q offlineCheck -PcheckMode=validate 2>&1 | clean | grep "\[check\]" > "$EV/03-offline-validate.log"

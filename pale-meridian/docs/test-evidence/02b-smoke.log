@@ -1,0 +1,15 @@
+smoke: 861 functions (760 plain, 101 macro with sample arguments), 3444 runs in 4 world states
+smoke errors: 0
+per second, start of the game, every check forced true: 146 function calls, 552 commands, 0.5 macro calls
+  ok    palemeridian:hud/_wp_move: 4 calls in 30 s, 1 distinct argument sets (game caches 8)
+  ok    palemeridian:hud/_wp_unforce: 4 calls in 30 s, 1 distinct argument sets (game caches 8)
+  ok    palemeridian:hud/wp_at: 4 calls in 30 s, 1 distinct argument sets (game caches 8)
+  ok    palemeridian:poi/get: 4 calls in 30 s, 1 distinct argument sets (game caches 8)
+per second, final chapter, every check forced true: 152 function calls, 675 commands, 0.8 macro calls
+  ok    palemeridian:c4/boss/_hp: 1 calls in 30 s, 1 distinct argument sets (game caches 8)
+  ok    palemeridian:enc/_set_bulb: 4 calls in 30 s, 4 distinct argument sets (game caches 8)
+  ok    palemeridian:hud/_wp_move: 5 calls in 30 s, 1 distinct argument sets (game caches 8)
+  ok    palemeridian:hud/_wp_unforce: 5 calls in 30 s, 1 distinct argument sets (game caches 8)
+  ok    palemeridian:hud/wp_at: 5 calls in 30 s, 1 distinct argument sets (game caches 8)
+  ok    palemeridian:poi/get: 5 calls in 30 s, 1 distinct argument sets (game caches 8)
+RESULT: PASS

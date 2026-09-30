@@ -1,0 +1,2 @@
+summon minecraft:mannequin 115.5 67 151.5 {UUID:[I;-53795957,417610073,-1877395769,-63904243],Rotation:[135.0f,0f],profile:{texture:"palemeridian:entity/npc/odile_faded",model:"slim"},immovable:1b,Invulnerable:1b,CustomName:{"text":"Odile","color":"gold"},CustomNameVisible:1b,description:{"text":"the Lamplighter","color":"gray","italic":true},pose:"standing",Tags:["pm.npc","pm.npc.odile"],equipment:{mainhand:{id:"minecraft:stick",count:1}}}
+function palemeridian:npc/odile/apply_skin

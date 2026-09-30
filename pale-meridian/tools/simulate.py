@@ -39,6 +39,7 @@ class Sim:
         self.cache: dict[str, list[str]] = {}
         # world-dependent conditions: which are true in this simulation
         self.entity_default = False           # "if entity <selector>": no entities/players matched by default
+        self.entity_policy = None             # optional override per selector: fn(selector) -> bool
         self.block_default = False
 
     # ------------------------------------------------------------------ scores
@@ -279,7 +280,7 @@ class Sim:
                 return False, 6
             return {"<": v < b, "<=": v <= b, "=": v == b, ">": v > b, ">=": v >= b}[t[3]], 6
         if kind == "entity":
-            return self.entity_default, 2
+            return (self.entity_policy(t[1]) if self.entity_policy else self.entity_default), 2
         if kind == "block":
             return self.block_default, 5
         if kind == "items":
@@ -287,6 +288,9 @@ class Sim:
             return False, n
         if kind == "data":
             if t[1] == "storage":
+                if t[3].startswith("{"):                  # compound match on the root: {key:value,...}
+                    root = self.storage.get(t[2], {})
+                    return all(root.get(k) == v for k, v in parse_snbt(t[3]).items()), 4
                 return (self.sget(t[2], t[3]) is not None), 4
             return False, 4 if t[1] != "block" else 6
         if kind == "predicate":
@@ -529,6 +533,24 @@ def main() -> None:
     j.block_default = True
     j.call(f"{NS}:core/second")
     check("the per-second loop runs in both world states", True)
+
+    # NPC skins: a skin state that changed while the body was unloaded is repaired by placement
+    k = Sim()
+    k.call(f"{NS}:core/load")
+    k.call(f"{NS}:core/tick")
+    for x in order[:order.index("c2.arrive")]:
+        k.call(f"{NS}:admin/force", {"q": x})
+    check("restoring Hollin marks its people restored", all(k.sget("palemeridian:npc", n) == "restored" for n in ("odile", "mirelle", "jory")))
+    k.entity_policy = lambda sel: not sel.startswith("@s[tag=pm.skin.")   # players near; body shows no skin tag
+    k.log.clear()
+    k.call(f"{NS}:npc/odile/place")
+    skins = [c for c in k.log if c.startswith("data modify entity") and "entity/npc/odile_" in c]
+    check("placement re-applies a skin that changed while the body was unloaded",
+          any("odile_restored" in c for c in skins) and not any("odile_faded" in c for c in skins), str(skins))
+    k.entity_policy = lambda sel: True                                    # body already shows the right skin
+    k.log.clear()
+    k.call(f"{NS}:npc/odile/place")
+    check("a body already showing the right skin is left alone", not any(c.startswith("data modify entity") for c in k.log))
 
     width = max(len(r[0]) for r in results)
     fails = 0

@@ -10,7 +10,7 @@ JDK 25.0.4.1+1, Python 3.11, Gradle 9.7.1, PowerShell 7.5.6 (test tool only). Ev
 
 | | |
 |---|---|
-| **Generated** | All data-pack files (788 functions, 54 advancements, 164 dialogs, 33 predicates, 5 loot tables, 20 biomes, worldgen), 8 structure templates, 32 textures, the POI table, the game-test fixture, the spoiler quest graph, the mod jar, the client `.mrpack`, the server zip, checksums. |
+| **Generated** | All data-pack files (861 functions, 54 advancements, 164 dialogs, 33 predicates, 5 loot tables, 20 biomes, worldgen), 8 structure templates, 32 textures, the POI table, the game-test fixture, the spoiler quest graph, the mod jar, the client `.mrpack`, the server zip, checksums. |
 | **Downloaded** | Minecraft 26.2 client and server jars from Mojang (SHA-1 verified) — used only offline by the generators and the checker, never redistributed. Build toolchain (Gradle, Loom, Fabric artifacts). For tests only: the 10 pinned mods and the Fabric server launcher (all hash-verified), PowerShell 7.5.6 from Microsoft's package feed (SHA-256 verified). |
 | **Booted** | **No Minecraft client was started. No dedicated server was started.** One *unintended* headless game-test run happened during a build (see §3). The offline checker bootstraps the game's registries and data loaders in-process without creating a server, a world or a network connection. |
 | **Client-tested** | **Nothing.** No gameplay, visuals, audio, dialogs or controls were observed in a running game. |
@@ -25,9 +25,9 @@ The Minecraft EULA was never accepted on your behalf: every `eula.txt` produced 
 | # | Check | Result | Evidence |
 |---|---|---|---|
 | 1 | Generator runs from a clean state and rebuilds every generated file | PASS | `01-generate.log` |
-| 2 | Regenerating produces byte-identical files (deterministic generation) | PASS | `verify_all.sh` (git diff of generated trees) |
-| 3 | Every generated file loads through the game's own loaders (offline): 788/788 functions, 54/54 advancements, 164/164 dialogs, 33/33 predicates, 5/5 loot tables, 20/20 biomes, all structures, structure sets, noise settings, density functions, world clocks, timelines, features | PASS | `03-offline-validate.log` |
-| 4 | All 102 macro functions instantiate with sample arguments (their commands parse) | PASS | `03-offline-validate.log` |
+| 2 | Regenerating produces byte-identical files (deterministic generation) | PASS | `01-generate.log` (hash of the generated trees after two runs) |
+| 3 | Every generated file loads through the game's own loaders (offline): 861/861 functions, 54/54 advancements, 164/164 dialogs, 33/33 predicates, 5/5 loot tables, 20/20 biomes, all structures, structure sets, noise settings, density functions, world clocks, timelines, features | PASS | `03-offline-validate.log` |
+| 4 | All 101 macro functions instantiate with sample arguments (their commands parse) | PASS | `03-offline-validate.log` |
 | 5 | Structure templates: 37 container items and 401 text components decode with the game's codecs; all 23 loot-table references exist | PASS | `03-offline-validate.log` |
 | 6 | Zero warnings/errors mentioning the pack during loading (the checker fails on any) | PASS | `03-offline-validate.log` |
 | 6a | Negative control: a deliberately broken tag makes the checker FAIL | PASS | run during development (checker reported `FAIL … missing following references`) |
@@ -38,9 +38,12 @@ The Minecraft EULA was never accepted on your behalf: every `eula.txt` produced 
 
 | # | Check | Result | Evidence |
 |---|---|---|---|
-| 9 | Logic simulation of the generated functions: 51 checks — first-quest activation, idempotent completion, blueprint detection, bell puzzle (wrong order resets, right order solves), every main quest activating in order, district restoration flags, side-quest unlocks, both endings (TRUE/BLANK) and their world flags, second ending refused, epilogue, keepsakes counted once, reload keeps progress, dialog-choice guard (no choice without its dialog, no replay), a Surge won, abandoned and timed out, the final encounter started/reset/won, player join/rejoin/death, the per-second loop, the survey benchmarks | PASS 51/51 | `02-simulate.log` |
+| 9 | Logic simulation of the generated functions: 54 checks — first-quest activation, idempotent completion, blueprint detection, bell puzzle (wrong order resets, right order solves), every main quest activating in order, district restoration flags, side-quest unlocks, both endings (TRUE/BLANK) and their world flags, second ending refused, epilogue, keepsakes counted once, reload keeps progress, dialog-choice guard (no choice without its dialog, no replay), a Surge won, abandoned and timed out, the final encounter started/reset/won, player join/rejoin/death, the per-second loop, the survey benchmarks, NPC skins repaired after a change made while the NPC was unloaded (and left alone otherwise) | PASS 54/54 | `02-simulate.log` |
 | 9a | Negative control: the simulation with the quest-initialisation fix removed | FAIL 9/32 (as expected — this is how the bug in §4 was confirmed) | development run |
-| 10 | Smoke execution of all 686 non-macro functions in 4 world states under the simulator (no model errors, no runaway recursion) | PASS | development run |
+| 9b | Negative control: the NPC-skin check with the skin-repair lines removed | FAIL (as expected) | development run |
+| 10 | Smoke execution of every generated function in 4 world states under the simulator: 760 plain functions and 101 macro functions with their sample arguments, 3,444 runs (no model errors, no runaway recursion) | PASS | `02b-smoke.log` |
+| 10a | Per-second workload, 30 simulated seconds with every proximity check forced true: ~150 function calls and 550–680 commands per second, under 1 macro call per second; no macro function uses more argument sets than the game caches (8) | PASS | `02b-smoke.log` |
+| 10b | Negative control: the same workload check on the previous commit (macro-based NPC placement) | FAIL (as expected): 110–122 macro calls per second; one macro cycled through 31–36 argument sets, another through 17 | development run |
 
 ### World generation
 
@@ -57,7 +60,7 @@ The Minecraft EULA was never accepted on your behalf: every `eula.txt` produced 
 | # | Check | Result | Evidence |
 |---|---|---|---|
 | 15 | Mod compiles and builds; the build no longer launches the game (`runGameTest SKIPPED`) | PASS | `05-build.log` |
-| 16 | A clean rebuild produces a byte-identical jar (SHA-256 `00fd7eb1…`) | PASS | `06-reproducible-jar.log` |
+| 16 | A clean rebuild produces a byte-identical jar (SHA-256 `5fc42e70…`) | PASS | `06-reproducible-jar.log` |
 | 17 | Release files build; checksums recorded | PASS | `07-dist.log`, `dist/SHA256SUMS.txt` |
 | 18 | The lock matches live Modrinth/Fabric metadata (exact versions, ids, sizes, hashes) | PASS | `08-lock-check.log` |
 | 19 | Every file referenced by the client `.mrpack` downloads from its URL and matches size, SHA-1 and SHA-512 (10/10) | PASS | `09-mrpack-downloads.log` |
@@ -80,7 +83,7 @@ The Minecraft EULA was never accepted on your behalf: every `eula.txt` produced 
 | 31 | Dedicated server boots with the pack and generates the valley | NOT RUN | EULA. Follow `docs/SERVER_GUIDE.md`, then check the server log for errors mentioning `palemeridian` and run `/pmadmin status` (it should report a valley world) |
 | 32 | Client: pack imports, world creation, visuals (fog, skins, dialogs, locator bar, boss bars), sound, controls | NOT RUN | EULA + a Minecraft account + a display. See `QUICKSTART.md` |
 | 33 | Full playthrough, co-op with 2–4 players, balance of encounters, playtime | NOT RUN | needs real players |
-| 34 | Performance measurements (TPS, FPS, memory) | NOT RUN | needs a running game; budget by design in `TECHNICAL.md` §11 |
+| 34 | Performance measurements (TPS, FPS, memory) | NOT RUN | needs a running game; budget by design in `TECHNICAL.md` §11, simulated workload estimate in #10a |
 
 ## 3. Unintended game-test launch (disclosure)
 
@@ -102,7 +105,7 @@ started, no network port was opened.
 
 | Found by | Defect | Fix |
 |---|---|---|
-| Code review, then confirmed by the simulator | **Quests could never activate**: activation required `pm.q = 0`, but no quest score was ever initialised, so the campaign could not start. | `q/_init` gives every quest a state on each load and at world start, never touching existing progress. Simulator: 9/32 → 32/32 on that scenario (now part of a 51-check run). |
+| Code review, then confirmed by the simulator | **Quests could never activate**: activation required `pm.q = 0`, but no quest score was ever initialised, so the campaign could not start. | `q/_init` gives every quest a state on each load and at world start, never touching existing progress. Simulator: 9/32 → 32/32 on that scenario (now part of a 54-check run). |
 | Code review against the decompiled game | **The bell puzzle could never register a bell**: block-use triggers evaluate at the block's centre (`Vec3.atCenterOf`), but the position ranges were exact integers. The bed trigger had the same edge problem. | Ranges now cover the whole block (`[x, x+1]`). |
 | Code review | The "warm by the fire" rule only checked the block at head height, so it almost never applied. | Checks the blocks around and under the player; more light/fire blocks count. |
 | Play-flow review | New players start in the fog without a light and the opening letter takes long enough for the cold to set in. | Four torches in the starting kit, mentioned in the opening hint. |
@@ -112,6 +115,9 @@ started, no network port was opened.
 | Offline checker | Invalid block tag reference (`#minecraft:carpets`); structure items decoded before item components were bound (checker setup). | Correct tag (`#minecraft:wool_carpets`); checker finalises the reload like the server does. |
 | Worldgen review | Lava lakes/springs could generate beside authored tunnels. | Removed valley-wide; springs, dungeons, geodes also removed from the mine district. |
 | Lock check | Modrinth returns one mod's dependency list in varying order, making `--check` flaky. | Dependencies sorted in the lock. |
+| Code review (runtime cost), confirmed by `tools/smoke.py` | **A likely lag spike every second**: each nearby NPC's placement and skin went through macro functions with a different argument set per NPC. The game keeps parsed copies of only 8 argument sets per macro function (`MacroFunction.MAX_CACHE_ENTRIES`), so it would re-parse long summon and skin commands every second. | Each location's placement and each skin are plain functions with the values baked in. `tools/smoke.py` now fails if the per-second loop overflows the macro cache (#10a, #10b). |
+| Simulator (new check), after the fix above | Skins had only stayed correct because of that every-second re-application: without it, an NPC whose district was restored while its chunk was unloaded (or whose look changes in one ending without a refresh) would keep the faded skin. | The body carries a tag for the skin it shows; placement re-applies the skin when it disagrees with the saved state (#9, #9b). |
+| Code review | NPCs whose location was given in whole-block coordinates stood on the block's corner. | Such locations are centred on the block. |
 
 ## 5. What this means for your first session
 

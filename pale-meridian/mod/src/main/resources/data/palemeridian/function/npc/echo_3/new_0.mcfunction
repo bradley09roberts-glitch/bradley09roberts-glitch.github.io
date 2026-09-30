@@ -1,0 +1,2 @@
+summon minecraft:mannequin 20.5 70 -411.5 {UUID:[I;-318694745,657930222,-1446066940,992611068],Rotation:[180.0f,0f],profile:{texture:"palemeridian:entity/npc/echo_3_faded",model:"slim"},immovable:1b,Invulnerable:1b,CustomName:{"text":"A pale miner","color":"gray"},CustomNameVisible:1b,description:{"text":"","color":"gray","italic":true},pose:"standing",Tags:["pm.npc","pm.npc.echo_3"]}
+function palemeridian:npc/echo_3/apply_skin

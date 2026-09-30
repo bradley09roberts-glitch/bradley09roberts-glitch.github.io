@@ -20,7 +20,6 @@ MACRO_SAMPLES: dict[str, str] = {}
 
 # Sample arguments used by the offline checker to instantiate (and so fully parse) macro functions.
 _SAMPLE_BY_PREFIX = {
-    "npc/_skin": '{id:"odile",state:"faded",model:"slim"}',
     "dlg/_call": None,  # filled in by the dialog generator (needs a real choice code)
     "hud/wp_at": '{poi:"landing.lamp"}',
     "hud/_wp_move": '{x:1.5d,y:86.0d,z:2.5d,yaw:0.0f,bx:1,by:86,bz:2}',

@@ -1,0 +1,2 @@
+summon minecraft:mannequin 118.5 67 104.5 {UUID:[I;243020103,1585788808,-2084029037,1356488082],Rotation:[180.0f,0f],profile:{texture:"palemeridian:entity/npc/jory_faded",model:"wide"},immovable:1b,Invulnerable:1b,CustomName:{"text":"Jory","color":"dark_green"},CustomNameVisible:1b,description:{"text":"the Bell-ringer","color":"gray","italic":true},pose:"standing",Tags:["pm.npc","pm.npc.jory"]}
+function palemeridian:npc/jory/apply_skin

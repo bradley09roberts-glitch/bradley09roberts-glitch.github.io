@@ -38,6 +38,6 @@ passes the simulation. **Nothing has been verified in a running game yet** (see 
 
 ## Content size
 
-788 functions, 164 dialogs, 54 advancements, 33 predicates, 5 loot tables, 20 biomes, 8 structure
-templates, 32 textures, 152 points of interest; about 7,500 lines of Python generator code and 2,300
-lines of Java.
+861 functions, 164 dialogs, 54 advancements, 33 predicates, 5 loot tables, 20 biomes, 8 structure
+templates, 32 textures, 152 points of interest; about 7,500 lines of Python generator code, 900 lines
+of Python checks and packaging tools, and 2,300 lines of Java.

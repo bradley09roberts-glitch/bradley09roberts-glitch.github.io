@@ -1,0 +1,2 @@
+summon minecraft:mannequin 143.5 67 111.5 {UUID:[I;944488860,-1195363417,-1320596595,-155855852],Rotation:[90.0f,0f],profile:{texture:"palemeridian:entity/npc/mirelle_faded",model:"slim"},immovable:1b,Invulnerable:1b,CustomName:{"text":"Mirelle","color":"red"},CustomNameVisible:1b,description:{"text":"the Baker","color":"gray","italic":true},pose:"standing",Tags:["pm.npc","pm.npc.mirelle"]}
+function palemeridian:npc/mirelle/apply_skin

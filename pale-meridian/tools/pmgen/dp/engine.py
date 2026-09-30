@@ -10,7 +10,7 @@ import hashlib
 import struct
 from dataclasses import dataclass, field
 
-from . import NS, adv, dialog, fid, fn, predicate, snbt, tag, tellraw, xyz
+from . import NS, _num, adv, dialog, fid, fn, predicate, snbt, tag, tellraw, xyz
 
 # ------------------------------------------------------------------------------------------------
 # Specs
@@ -455,17 +455,54 @@ def _gen_npcs() -> None:
             spawn.append(f"function {fid('npc/' + n.id + '/apply_skin')}")
         fn(f"npc/{n.id}/spawn_at", spawn)
         fn(f"npc/{n.id}/despawn", [f"kill {body}", f"kill {inter}", f"kill {label}"])
-        # skin: stored per NPC in storage palemeridian:npc <id>
-        fn(f"npc/{n.id}/apply_skin", [
-            f"execute unless data storage palemeridian:npc {n.id} run data modify storage palemeridian:npc {n.id} set value \"{n.skin}\"",
-            f"data modify storage palemeridian:tmp skin set value {{id:\"{n.id}\",model:\"{n.model}\"}}",
-            f"data modify storage palemeridian:tmp skin.state set from storage palemeridian:npc {n.id}",
-            f"function {fid('npc/_skin')} with storage palemeridian:tmp skin",
-        ])
-        # placement: first matching place wins
+        # skin: the wanted state is stored per NPC in storage palemeridian:npc <id>; the body carries a
+        # pm.skin.<state> tag for the skin it shows, so placement can repair a skin whose state changed
+        # while the body was unloaded. Plain commands only: placement calls this from the per-second loop.
+        from .. import art as _art
+        states = _art.SKIN_STATES.get(n.id, [n.skin]) if n.body else []
+        skin = [f"execute unless data storage palemeridian:npc {n.id} run data modify storage palemeridian:npc {n.id} set value \"{n.skin}\""]
+        skin += [f"tag {body} remove pm.skin.{s}" for s in states]
+        for s in states:
+            want = f"execute if data storage palemeridian:npc {{{n.id}:\"{s}\"}} run"
+            skin.append(f"{want} data modify entity {body} profile set value {{texture:\"{NS}:entity/npc/{n.id}_{s}\",model:\"{n.model}\"}}")
+            skin.append(f"{want} tag {body} add pm.skin.{s}")
+        fn(f"npc/{n.id}/apply_skin", skin)
+        # placement: first matching place wins. Each place is a plain function with its coordinates baked
+        # in: this runs every second, and macro functions would be re-parsed each time (the game caches
+        # only 8 argument sets per macro function).
+        from .. import poi as _poi
         place = []
-        for cond, poi_name in n.places:
-            place.append(f"execute {cond} run return run function {fid('npc/' + n.id + '/_at')} {{poi:\"{poi_name}\"}}".replace("execute  run", "execute run"))
+        for k, (cond, poi_name) in enumerate(n.places):
+            p = _poi.POI[poi_name]
+            cx = p["x"] + 0.5 if float(p["x"]).is_integer() else p["x"]      # stand in the middle of the block
+            cz = p["z"] + 0.5 if float(p["z"]).is_integer() else p["z"]
+            x, y, z, yaw = _num(float(cx)), _num(p["y"]), _num(float(cz)), float(p.get("yaw", 0.0))
+            at = [f"execute positioned {x} {y} {z} unless entity @a[distance=..72] run return fail"]
+            if n.body:
+                at.append(f"execute unless entity {body} run function {fid(f'npc/{n.id}/new_{k}')}")
+                at.append(f"tp {body} {x} {y} {z} {yaw} 0")
+                if len(states) > 1:
+                    at += [f"execute if data storage palemeridian:npc {{{n.id}:\"{s}\"}} as {body} unless entity @s[tag=pm.skin.{s}] "
+                           f"run function {fid('npc/' + n.id + '/apply_skin')}" for s in states]
+                fn(f"npc/{n.id}/new_{k}", [
+                    f"summon minecraft:mannequin {x} {y} {z} {{UUID:{body_uuid},Rotation:[{yaw}f,0f],"
+                    f"profile:{{texture:\"{NS}:entity/npc/{n.id}_{n.skin}\",model:\"{n.model}\"}},immovable:1b,Invulnerable:1b,"
+                    f"CustomName:{snbt({'text': n.name, 'color': n.color})},CustomNameVisible:1b,description:{snbt({'text': n.role, 'color': 'gray', 'italic': True})},"
+                    f"pose:\"{n.pose}\",Tags:[\"pm.npc\",\"pm.npc.{n.id}\"]{held}}}",
+                    f"function {fid('npc/' + n.id + '/apply_skin')}",
+                ])
+            else:
+                at.append(f"execute unless entity {label} run summon minecraft:text_display {x} {y} {z} {{UUID:{label_uuid},billboard:\"center\","
+                          f"text:{snbt({'text': n.label or n.name, 'color': n.color})},background:1073741824,Tags:[\"pm.label\",\"pm.label.{n.id}\"],"
+                          f"transformation:{{left_rotation:[0f,0f,0f,1f],right_rotation:[0f,0f,0f,1f],translation:[0f,{h + 0.35}f,0f],scale:[0.8f,0.8f,0.8f]}}}}")
+                at.append(f"tp {label} {x} {y} {z}")
+            at += [
+                f"execute unless entity {inter} run summon minecraft:interaction {x} {y} {z} {{UUID:{int_uuid},width:{w}f,height:{h}f,response:1b,Tags:[\"pm.int\",\"pm.int.{n.id}\"]}}",
+                f"scoreboard players set {inter} pm.nid {n.num}",
+                f"tp {inter} {x} {y} {z}",
+            ]
+            fn(f"npc/{n.id}/at_{k}", at, header=f"{n.name} at {poi_name}")
+            place.append(f"execute {cond} run return run function {fid(f'npc/{n.id}/at_{k}')}".replace("execute  run", "execute run"))
         place.append(f"function {fid('npc/' + n.id + '/despawn')}")
         fn(f"npc/{n.id}/place", place, header="Ensure the NPC exists at the place matching the current state (no duplicates: fixed UUIDs)")
         fn(f"npc/{n.id}/_at", [
@@ -477,9 +514,6 @@ def _gen_npcs() -> None:
             action = show(what) if not what.startswith("/") else what[1:]
             talk.append(f"execute {cond} run return run {action}".replace("execute  run", "execute run"))
         fn(f"npc/{n.id}/talk", talk or ["return fail"], header=f"{n.name}: choose the conversation for the current state")
-    fn("npc/_skin", [
-        f"$data modify entity @e[type=mannequin,tag=pm.npc.$(id),limit=1] profile set value {{texture:\"{NS}:entity/npc/$(id)_$(state)\",model:\"$(model)\"}}",
-    ])
     # click dispatch
     fn("npc/_clicked", [
         f"advancement revoke @s only {fid('trigger/npc_click')}",

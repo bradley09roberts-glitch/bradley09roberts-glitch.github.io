@@ -1,0 +1,2 @@
+summon minecraft:mannequin 20.5 70 -316.5 {UUID:[I;1947847255,1917140009,-1449429436,-1734824643],Rotation:[0.0f,0f],profile:{texture:"palemeridian:entity/npc/hesper_faded",model:"slim"},immovable:1b,Invulnerable:1b,CustomName:{"text":"Hesper Vane","color":"dark_aqua"},CustomNameVisible:1b,description:{"text":"Keeper of the Meridian","color":"gray","italic":true},pose:"standing",Tags:["pm.npc","pm.npc.hesper"]}
+function palemeridian:npc/hesper/apply_skin

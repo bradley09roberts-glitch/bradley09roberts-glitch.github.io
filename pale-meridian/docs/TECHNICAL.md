@@ -33,6 +33,8 @@ tools/ (Python, build time)                        mod/ (Java + resources, run t
 |---|---|
 | `python3 tools/gen_all.py` | Regenerates `mod/src/main/resources/{data,assets}`, `tools/generated/*`, `docs/spoilers/QUEST_GRAPH.md` and the game-test fixture. Downloads the pinned 26.2 jars once into `tools/.cache` (SHA-1 verified) to read vanilla data. |
 | `python3 tools/simulate.py` | Logic simulation of the generated functions (§12). |
+| `python3 tools/smoke.py` | Runs every generated function in 4 world states under the simulator; estimates the per-second workload and checks it against the game's macro cache (§11, §12). |
+| `tools/verify_all.sh [--network]` | Runs every check that does not start Minecraft and writes the evidence logs in `docs/test-evidence/`. |
 | `cd mod && ./gradlew build` | Builds `build/libs/palemeridian-1.0.0.jar` (reproducible). **Never launches Minecraft.** |
 | `./gradlew offlineCheck -PcheckMode=validate` | Loads vanilla + the pack through the game's own registry, function, advancement, loot and dialog loaders, offline; decodes template items/texts; fails on any logged error. |
 | `./gradlew offlineCheck -PcheckMode=sites` | Evaluates the terrain generator on 3 seeds: site plateaus, cave holes, the mine's cave-free zone, and that every site starts in a biome its structure accepts. |
@@ -84,7 +86,7 @@ Content modules register specs with `R` (the registry); `engine.generate()` writ
 |---|---|---|
 | `Quest` | `q/<id>/activate`, `complete`, `hud`; `q/_advance`, `q/_init`, `hud/refresh`; journal advancements `journal/<chapter>/<quest>`; objective dialogs `journal/obj/<id>` | HUD = boss bar + locator-bar waypoint for the latest active main quest |
 | `Dlg` + `Choice` | `dialog/<id>.json`, `dlg/show/<id>`, `dlg/c/<code>`, `dlg/handle`, `dlg/_call` | choices send `/trigger pm.talk set <code>`; codes are validated against `pm.dctx` |
-| `NPC` | `npc/<id>/{spawn_at,place,_at,talk,despawn,apply_skin,maintain}`, `npc/_clicked`, `trigger/npc_click` | body = mannequin (skin from the mod's textures, faded/restored), click target = interaction entity, props = text display + interaction. Fixed UUIDs make duplicates impossible; spawned only when a player is within 72 blocks; placement follows campaign state |
+| `NPC` | `npc/<id>/{place,at_<k>,new_<k>,talk,despawn,apply_skin,maintain}`, `npc/<id>/{spawn_at,_at}` (macros, for tests and operators), `npc/_clicked`, `trigger/npc_click` | body = mannequin (skin from the mod's textures, faded/restored), click target = interaction entity, props = text display + interaction. Fixed UUIDs make duplicates impossible; spawned only when a player is within 72 blocks; placement follows campaign state. `place` picks the first matching `at_<k>`, a plain function with that location's coordinates baked in (`new_<k>` summons the body the first time), so the once-a-second maintenance never instantiates a macro. The body carries a `pm.skin.<state>` tag for the skin it shows; `at_<k>` re-runs `apply_skin` when that disagrees with `palemeridian:npc <id>` (a district restored while the NPC's chunk was unloaded) |
 | `Blueprint` + `Part` | `bp/<id>/{check,done}`, block tags `bp/<id>_<n>` | glowing ghost block displays for missing parts; checked once a second only near players |
 | `Area` | predicates `area/<id>`, location hooks `loc/h<n>` | location objectives, checked once a second, gated by quest state |
 | block use | advancements `trigger/use/<id>` (`any_block_use` at an exact position) | the bell puzzle |
@@ -178,7 +180,8 @@ to a host (`admin/host`). Tested design size: 1–4 players.
 | Where | Budget / measure |
 |---|---|
 | Every tick | 7 lines: selector checks for triggers, first join, rejoin, death |
-| Every second | `core/second`: ~65 lines, each gated by quest state and/or player proximity; NPC maintenance returns early unless a player is within 72 blocks; the objective marker is re-asserted every 10 s |
+| Every second | `core/second`: ~60 lines, each gated by quest state and/or player proximity; NPC maintenance returns early unless a player is within 72 blocks; the objective marker is re-asserted every 10 s. Worst case estimated by `tools/smoke.py` with every proximity check forced true: ~150 function calls and 550–680 commands per second (logic simulation, not a timing) |
+| Macros | The game keeps parsed copies of at most 8 argument sets per macro function (`MacroFunction.MAX_CACHE_ENTRIES` in 26.2) and re-parses beyond that. Nothing on the per-second path cycles through more: NPC placement and skins are plain functions; the objective marker's macros run on quest changes and the 10-s refresh with unchanged arguments. `tools/smoke.py` fails if any macro function exceeds 8 argument sets in 30 simulated seconds |
 | Entities | NPCs: 1 mannequin + 1 interaction (+1 text display for props) each, spawned near players only; ghost displays only for unbuilt parts |
 | Encounters | at most 8 Watchers in a Surge; the final encounter adds at most players+1 |
 | Restoration | ring conversion of loaded chunks only, ~5 s per district; chunk-load conversion is one pass over the chunk's biome cells |
@@ -193,8 +196,11 @@ to a host (`admin/host`). Tested design size: 1–4 players.
   that mentions the pack; probes terrain on 3 seeds.
 - **`tools/simulate.py`**: executes the generated functions with a small interpreter (scoreboard,
   execute conditions and stores, functions with macros and storage, return, schedule) and checks the
-  campaign end to end. World-dependent conditions use a fixed policy (no entities / all or no blocks).
-  It is a logic simulation, not the game.
+  campaign end to end. World-dependent conditions use a fixed policy (no entities / all or no blocks,
+  or a per-selector rule in a few checks). It is a logic simulation, not the game.
+- **`tools/smoke.py`**: runs every generated function (macros with their sample arguments) in 4 world
+  states and fails on any simulator error; simulates 30 s of the per-second loop and fails if a macro
+  function would overflow the game's macro cache.
 - **Game tests** (`mod/src/gametest/java/…/CampaignGameTests.java`): the same scenario plus NPC
   uniqueness and keepsake recording, in a real headless server. Only run with explicit EULA opt-in.
 
@@ -219,4 +225,4 @@ to a host (`admin/host`). Tested design size: 1–4 players.
 | Skins, sprites, icon | `tools/pmgen/art.py` |
 | Site preview images | `tools/pmgen/render.py` → `docs/previews/` |
 | Lock, client pack, server package | `tools/lock_pack.py`, `pack/lock.json`, `tools/build_dist.py`, `server/*` |
-| Checks | `mod/src/devtools/…/OfflineCheck.java`, `tools/simulate.py`, `mod/src/gametest/…` |
+| Checks | `mod/src/devtools/…/OfflineCheck.java`, `tools/simulate.py`, `tools/smoke.py`, `tools/verify_all.sh`, `mod/src/gametest/…` |

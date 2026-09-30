@@ -10,7 +10,6 @@
  "palemeridian:hud/_wp_move": "{x:1.5d,y:86.0d,z:2.5d,yaw:0.0f,bx:1,by:86,bz:2}",
  "palemeridian:hud/_wp_unforce": "{x:1,z:2}",
  "palemeridian:hud/wp_at": "{poi:\"landing.lamp\"}",
- "palemeridian:npc/_skin": "{id:\"odile\",state:\"faded\",model:\"slim\"}",
  "palemeridian:npc/bench_1/_at": "{poi:\"landing.lamp\"}",
  "palemeridian:npc/bench_1/spawn_at": "{x:1.5d,y:67.0d,z:2.5d,yaw:90.0f,bx:1,by:67,bz:2}",
  "palemeridian:npc/bench_2/_at": "{poi:\"landing.lamp\"}",

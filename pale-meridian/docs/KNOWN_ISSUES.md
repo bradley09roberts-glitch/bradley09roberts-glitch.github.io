@@ -16,7 +16,7 @@ tweak after the first real session:
 | Encounter balance | Creature counts, timings and health were set by design, not tuned by play. The comfort menu has a gentler setting. | `encounters.py`, `content/chapter*.py` |
 | The final encounter | Uses a much larger version of a vanilla creature; its movement on the arena and the "blink" landing spots are the least predictable part. It resets cleanly if something goes wrong. | `content/chapter4.py` (`c4/boss/*`) |
 | Fog and haze | Values are chosen for mood; nights in the fog might be darker than intended. | `worldgen.py` (biome attributes), `atmosphere.py` |
-| Performance | Budgeted by design, not measured. | `TECHNICAL.md` §11 |
+| Performance | Budgeted by design and estimated in simulation, not measured in a running game. | `TECHNICAL.md` §11 |
 
 ## 2. Gameplay notes
 

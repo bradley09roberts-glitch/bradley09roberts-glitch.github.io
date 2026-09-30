@@ -1,0 +1,2 @@
+summon minecraft:mannequin -1.5 68 -7.5 {UUID:[I;-614333002,-500025164,-1969331602,1960972479],Rotation:[180.0f,0f],profile:{texture:"palemeridian:entity/npc/tamsin_faded",model:"slim"},immovable:1b,Invulnerable:1b,CustomName:{"text":"Tamsin Reed","color":"gold"},CustomNameVisible:1b,description:{"text":"Chartered Survey","color":"gray","italic":true},pose:"standing",Tags:["pm.npc","pm.npc.tamsin"],equipment:{mainhand:{id:"minecraft:lantern",count:1}}}
+function palemeridian:npc/tamsin/apply_skin
