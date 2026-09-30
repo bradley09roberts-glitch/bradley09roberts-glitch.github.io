@@ -1,0 +1,112 @@
+{
+ "hollin.gate": {
+  "x": 112,
+  "y": 67,
+  "z": 150
+ },
+ "landing.area": {
+  "box": [
+   -24,
+   85,
+   328,
+   23,
+   98,
+   381
+  ],
+  "x": -0.5,
+  "y": 91.5,
+  "z": 354.5
+ },
+ "landing.camp": {
+  "box": [
+   10,
+   85,
+   329,
+   22,
+   92,
+   342
+  ],
+  "x": 16.0,
+  "y": 88.5,
+  "z": 335.5
+ },
+ "landing.camp_chest": {
+  "x": 18,
+  "y": 86,
+  "z": 332
+ },
+ "landing.figure": {
+  "x": 12,
+  "y": 86,
+  "z": 300
+ },
+ "landing.lamp": {
+  "parts": [
+   {
+    "block": "stone_bricks",
+    "pos": [
+     5,
+     87,
+     346
+    ]
+   },
+   {
+    "block": "stone_bricks",
+    "pos": [
+     5,
+     88,
+     346
+    ]
+   },
+   {
+    "block": "iron_chain[axis=y]",
+    "pos": [
+     5,
+     89,
+     346
+    ]
+   },
+   {
+    "block": "lantern[hanging=false]",
+    "pos": [
+     5,
+     90,
+     346
+    ]
+   }
+  ],
+  "x": 5,
+  "y": 86,
+  "z": 346
+ },
+ "landing.loft_chest": {
+  "x": -16,
+  "y": 90,
+  "z": 350
+ },
+ "landing.noticeboard": {
+  "facing": "east",
+  "x": -2.5,
+  "y": 87,
+  "z": 349.0
+ },
+ "landing.spawn": {
+  "x": 0,
+  "y": 86,
+  "yaw": 180.0,
+  "z": 352
+ },
+ "landing.waystation": {
+  "box": [
+   -18,
+   86,
+   348,
+   -10,
+   92,
+   356
+  ],
+  "x": -14.0,
+  "y": 89.0,
+  "z": 352.0
+ }
+}

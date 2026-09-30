@@ -1,0 +1,5 @@
+tellraw @s [{"text":"p.letter: ","color":"gray"},{"score":{"name":"p.letter","objective":"pm.q"},"color":"white"}]
+tellraw @s [{"text":"p.camp: ","color":"gray"},{"score":{"name":"p.camp","objective":"pm.q"},"color":"white"}]
+tellraw @s [{"text":"p.lamp: ","color":"gray"},{"score":{"name":"p.lamp","objective":"pm.q"},"color":"white"}]
+tellraw @s [{"text":"p.road: ","color":"gray"},{"score":{"name":"p.road","objective":"pm.q"},"color":"white"}]
+tellraw @s [{"text":"p.chill: ","color":"gray"},{"score":{"name":"p.chill","objective":"pm.q"},"color":"white"}]

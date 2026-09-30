@@ -1,0 +1,104 @@
+{
+  "type": "minecraft:notice",
+  "title": {
+    "text": "Help and controls",
+    "color": "aqua"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": [
+        {
+          "text": "Field Journal: ",
+          "color": "yellow"
+        },
+        {
+          "keybind": "key.quickActions",
+          "color": "white"
+        },
+        {
+          "text": " (Quick Actions), the pause menu, or the links inside your Field Book.",
+          "color": "gray"
+        }
+      ]
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": [
+        {
+          "text": "Talk: ",
+          "color": "yellow"
+        },
+        {
+          "keybind": "key.use",
+          "color": "white"
+        },
+        {
+          "text": " on a person or a glowing object.",
+          "color": "gray"
+        }
+      ]
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": [
+        {
+          "text": "Journal entries: ",
+          "color": "yellow"
+        },
+        {
+          "keybind": "key.advancements",
+          "color": "white"
+        },
+        {
+          "text": " opens the Field Journal tab of the advancements screen.",
+          "color": "gray"
+        }
+      ]
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "The Pall: standing in the fog without light slowly chills you. Hold a torch or lantern in either hand, or stay near a companion who does.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Watchers move only while nobody is looking at them. Keep your eyes on them.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "Ghostly outlines show missing pieces of broken lamps. Place the matching blocks to rebuild them.",
+        "color": "gray"
+      }
+    },
+    {
+      "type": "minecraft:plain_message",
+      "width": 320,
+      "contents": {
+        "text": "The glowing marker on your locator bar points to your current objective (toggle it in Comfort settings).",
+        "color": "gray"
+      }
+    }
+  ],
+  "action": {
+    "label": {
+      "text": "Back"
+    },
+    "action": {
+      "type": "minecraft:run_command",
+      "command": "/trigger pm.ui set 9"
+    }
+  }
+}

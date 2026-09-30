@@ -1,0 +1,1 @@
+$dialog show @s {type:"minecraft:notice",title:{text:"Names found",color:"aqua"},body:[{type:"minecraft:plain_message",width:300,contents:{text:"$(list)",color:"white"}}],action:{label:{text:"Back"},action:{type:"minecraft:run_command",command:"/trigger pm.ui set 9"}}}

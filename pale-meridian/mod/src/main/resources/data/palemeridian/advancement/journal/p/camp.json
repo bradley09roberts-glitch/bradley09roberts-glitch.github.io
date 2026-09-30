@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/p/letter",
+  "display": {
+    "icon": {
+      "id": "minecraft:campfire"
+    },
+    "title": "Tamsin's Camp",
+    "description": "Her letter says her camp is up the road, and to take what you need.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

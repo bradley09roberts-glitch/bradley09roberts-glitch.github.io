@@ -1,0 +1,14 @@
+# build outputs and caches (never commit)
+mod/build/
+mod/.gradle/
+mod/run/
+mod/bin/
+mod/out/
+tools/.cache/
+**/__pycache__/
+*.pyc
+# third-party jars must never be committed (use the pinned installer/manifest instead)
+*.jar
+!mod/gradle/wrapper/gradle-wrapper.jar
+dist/work/
+mod/logs/

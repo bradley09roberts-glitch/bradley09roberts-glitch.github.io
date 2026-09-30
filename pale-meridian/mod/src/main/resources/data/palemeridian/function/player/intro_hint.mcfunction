@@ -1,0 +1,1 @@
+tellraw @a[scores={pm.seen=0}] [{"text":"\n A letter is pinned to the noticeboard beside the waystation. ","color":"gray"},{"text":"[Use it]","color":"aqua"},{"text":"\n Your Field Journal: press ","color":"gray"},{"keybind":"key.quickActions","color":"yellow"},{"text":" (Quick Actions) or open the pause menu.\n","color":"gray"}]

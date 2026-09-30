@@ -1,0 +1,12 @@
+{
+	"schemaVersion": 1,
+	"id": "palemeridian-tests",
+	"version": "1.0.0",
+	"name": "Pale Meridian test suite",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-gametest": [],
+		"fabric-client-gametest": []
+	},
+	"depends": { "palemeridian": "*" }
+}

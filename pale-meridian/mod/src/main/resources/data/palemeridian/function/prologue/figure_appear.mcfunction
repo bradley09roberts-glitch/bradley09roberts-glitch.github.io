@@ -1,0 +1,2 @@
+execute unless entity 1644f473-6fca-31b3-97e7-c1bc29fafe4b run summon minecraft:mannequin 12 86 300 {UUID:[I;373617779,1875521971,-1746419268,704314955],Rotation:[0f,0f],profile:{texture:"palemeridian:entity/npc/tamsin_faded",model:"slim"},immovable:1b,Invulnerable:1b,hide_description:1b,equipment:{mainhand:{id:"minecraft:lantern",count:1}},Tags:["pm.figure"]}
+scoreboard players set #figure pm.world 1

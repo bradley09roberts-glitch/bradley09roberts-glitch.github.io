@@ -1,0 +1,40 @@
+{
+  "clock": "palemeridian:surge",
+  "period_ticks": 80,
+  "tracks": {
+    "minecraft:visual/fog_end_distance": {
+      "modifier": "multiply",
+      "keyframes": [
+        {
+          "ticks": 0,
+          "value": 1.0
+        },
+        {
+          "ticks": 40,
+          "value": 0.55
+        },
+        {
+          "ticks": 79,
+          "value": 1.0
+        }
+      ]
+    },
+    "minecraft:visual/fog_color": {
+      "modifier": "multiply",
+      "keyframes": [
+        {
+          "ticks": 0,
+          "value": "#ffffff"
+        },
+        {
+          "ticks": 40,
+          "value": "#e8b8b0"
+        },
+        {
+          "ticks": 79,
+          "value": "#ffffff"
+        }
+      ]
+    }
+  }
+}

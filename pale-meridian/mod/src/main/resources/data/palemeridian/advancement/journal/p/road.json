@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/p/lamp",
+  "display": {
+    "icon": {
+      "id": "minecraft:compass"
+    },
+    "title": "Into the Pall",
+    "description": "Beyond the Landing the road runs north into the fog, marked by old lamp posts. Carry a light.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

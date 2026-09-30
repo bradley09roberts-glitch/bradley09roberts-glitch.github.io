@@ -1,0 +1,21 @@
+{
+	"schemaVersion": 1,
+	"id": "palemeridian",
+	"version": "${version}",
+	"name": "Pale Meridian",
+	"description": "A story campaign for Minecraft: chart what the fog forgot.",
+	"authors": ["Pale Meridian project"],
+	"license": "MIT",
+	"icon": "assets/palemeridian/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["net.palemeridian.PaleMeridian"],
+		"client": ["net.palemeridian.client.PaleMeridianClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

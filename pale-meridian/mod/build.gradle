@@ -1,0 +1,88 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+loom {
+	splitEnvironmentSourceSets()
+
+	mods {
+		"palemeridian" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
+fabricApi {
+	configureTests {
+		createSourceSet = true
+		modId = "palemeridian-tests"
+		enableGameTests = true
+		enableClientGameTests = true
+		// Running Minecraft (including game tests) requires agreeing to the Minecraft EULA
+		// (https://aka.ms/MinecraftEULA). This is deliberately left false: the person running
+		// the tests must opt in themselves, e.g. `./gradlew runGameTest -Ppm_accept_eula=true`.
+		eula = (project.findProperty("pm_accept_eula") ?: "false").toBoolean()
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+	it.options.encoding = "UTF-8"
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+	def projectName = project.name
+	inputs.property "projectName", projectName
+	from("../LICENSE") {
+		rename { "${it}_$projectName" }
+	}
+}
+
+// ---------------------------------------------------------------------------------------------
+// Offline checks (development only; never shipped). These do not start a server or a world:
+// they load the data pack through Minecraft's registry/resource loaders and probe worldgen maths.
+// ---------------------------------------------------------------------------------------------
+sourceSets {
+	devtools {
+		compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+		runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+	}
+}
+
+tasks.register('offlineCheck', JavaExec) {
+	group = 'verification'
+	description = 'Validate the data pack with the game parsers and probe the valley terrain (no server, no world).'
+	dependsOn 'classes', 'devtoolsClasses'
+	classpath = sourceSets.devtools.runtimeClasspath
+	mainClass = 'net.palemeridian.devtools.OfflineCheck'
+	args = [file('src/main/resources').absolutePath, file('build/offline-check').absolutePath, (project.findProperty('checkMode') ?: 'all')]
+	jvmArgs = ['-Xmx3G']
+}

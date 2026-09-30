@@ -1,0 +1,51 @@
+{
+  "dimensions": {
+    "minecraft:overworld": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:noise",
+        "settings": "palemeridian:vale",
+        "biome_source": {
+          "type": "palemeridian:valley",
+          "vanilla": {
+            "type": "minecraft:multi_noise",
+            "preset": "minecraft:overworld"
+          },
+          "districts": {
+            "landing": "palemeridian:landing_pall",
+            "hollin": "palemeridian:hollin_pall",
+            "aldercross": "palemeridian:aldercross_pall",
+            "glassworks": "palemeridian:glassworks_pall",
+            "deepcut": "palemeridian:deepcut_pall",
+            "mere": "palemeridian:mere_pall",
+            "fen": "palemeridian:fen_pall",
+            "westwood": "palemeridian:westwood_pall",
+            "southmoor": "palemeridian:southmoor_pall",
+            "rim": "palemeridian:rim_pall"
+          }
+        }
+      }
+    },
+    "minecraft:the_end": {
+      "type": "minecraft:the_end",
+      "generator": {
+        "type": "minecraft:noise",
+        "biome_source": {
+          "type": "minecraft:the_end"
+        },
+        "settings": "minecraft:end"
+      }
+    },
+    "minecraft:the_nether": {
+      "type": "minecraft:the_nether",
+      "generator": {
+        "type": "minecraft:noise",
+        "biome_source": {
+          "type": "minecraft:multi_noise",
+          "preset": "minecraft:nether"
+        },
+        "settings": "minecraft:nether"
+      }
+    }
+  }
+}

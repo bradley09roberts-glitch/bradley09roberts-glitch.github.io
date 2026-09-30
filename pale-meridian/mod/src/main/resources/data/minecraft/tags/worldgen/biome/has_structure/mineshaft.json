@@ -1,0 +1,25 @@
+{
+  "replace": false,
+  "values": [
+    "palemeridian:landing_pall",
+    "palemeridian:landing_clear",
+    "palemeridian:hollin_pall",
+    "palemeridian:hollin_clear",
+    "palemeridian:aldercross_pall",
+    "palemeridian:aldercross_clear",
+    "palemeridian:glassworks_pall",
+    "palemeridian:glassworks_clear",
+    "palemeridian:deepcut_pall",
+    "palemeridian:deepcut_clear",
+    "palemeridian:mere_pall",
+    "palemeridian:mere_clear",
+    "palemeridian:fen_pall",
+    "palemeridian:fen_clear",
+    "palemeridian:westwood_pall",
+    "palemeridian:westwood_clear",
+    "palemeridian:southmoor_pall",
+    "palemeridian:southmoor_clear",
+    "palemeridian:rim_pall",
+    "palemeridian:rim_clear"
+  ]
+}

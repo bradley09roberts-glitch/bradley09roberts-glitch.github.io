@@ -1,0 +1,153 @@
+{
+  "_comment": "Single source of truth for the valley geometry. Consumed by tools/pmgen (Python) to generate the Java class ValleyLayout.java, structure placements, predicates and functions. Coordinates are absolute world block coordinates. 'floor' is the Y of the first air block above ground (the player's feet level) on a site plateau.",
+  "schema": 1,
+  "valley": {
+    "center": [0, 0],
+    "inner_radius": 430,
+    "blend_outer_radius": 600,
+    "biome_radius": 455,
+    "floor_height": 67.5,
+    "rim_height": 94.0,
+    "rim_start": 250,
+    "rim_hill_amplitude": 16.0,
+    "hill_amplitude": 4.5
+  },
+  "lake": {
+    "center": [-10, -10],
+    "radius_x": 130,
+    "radius_z": 112,
+    "depth": 15.0,
+    "shore_width": 0.3,
+    "water_level": 63
+  },
+  "cliff": {
+    "_comment": "North cliffs behind the Glassworks. Line z = base_z + curve * (x - x0)^2 ; terrain north of the line rises by 'height' over 'width' blocks.",
+    "base_z": -326,
+    "x0": 20,
+    "curve": 0.0012,
+    "x_min": -170,
+    "x_max": 210,
+    "edge_fade": 70,
+    "height": 42.0,
+    "width": 9.0
+  },
+  "fen": {
+    "center": [-330, 60],
+    "radius": 115,
+    "height": 62.6,
+    "pool_noise": 1.6
+  },
+  "sites": {
+    "landing": {
+      "center": [0, 360],
+      "floor": 86,
+      "flat_radius": 26,
+      "falloff": 26,
+      "district": "landing"
+    },
+    "hollin": {
+      "center": [120, 118],
+      "floor": 67,
+      "flat_radius": 56,
+      "falloff": 30,
+      "district": "hollin"
+    },
+    "aldercross": {
+      "center": [330, -40],
+      "floor": 78,
+      "flat_radius": 54,
+      "falloff": 34,
+      "district": "aldercross"
+    },
+    "glassworks": {
+      "center": [24, -290],
+      "floor": 70,
+      "flat_radius": 28,
+      "falloff": 20,
+      "district": "glassworks"
+    },
+    "meridian": {
+      "center": [-10, -10],
+      "floor": 68,
+      "flat_radius": 25,
+      "falloff": 9,
+      "district": "mere",
+      "island": true
+    },
+    "fen_chapel": {
+      "center": [-340, 70],
+      "floor": 64,
+      "flat_radius": 14,
+      "falloff": 12,
+      "district": "fen"
+    },
+    "causeway_s": {
+      "center": [-10, 106],
+      "floor": 66,
+      "flat_radius": 8,
+      "falloff": 14,
+      "district": "mere"
+    }
+  },
+  "roads": [
+    {
+      "id": "landing_hollin",
+      "width": 3,
+      "points": [[0, 425], [0, 385], [0, 360], [12, 318], [40, 262], [78, 200], [104, 160], [118, 132]]
+    },
+    {
+      "id": "hollin_east",
+      "width": 3,
+      "points": [[150, 108], [196, 80], [238, 40], [282, 4], [306, -22], [318, -34]]
+    },
+    {
+      "id": "east_glassworks",
+      "width": 3,
+      "points": [[196, 80], [182, 10], [172, -60], [150, -150], [104, -226], [60, -268], [36, -284]]
+    },
+    {
+      "id": "hollin_causeway",
+      "width": 3,
+      "points": [[84, 110], [48, 118], [14, 116], [-10, 110]]
+    },
+    {
+      "id": "causeway_fen",
+      "width": 3,
+      "points": [[-10, 110], [-70, 118], [-140, 112], [-210, 96], [-270, 80], [-322, 72]]
+    }
+  ],
+  "districts": {
+    "_comment": "Voronoi-style seeds for the biome layout (x, z, weight). The lake ellipse is always 'mere'; r >= rim_radius is 'rim'. 'deepcut' is the region north of the cliff line within deepcut_radius of its seed.",
+    "seeds": {
+      "landing": [0, 350, 0.75],
+      "hollin": [120, 118, 1.0],
+      "aldercross": [330, -40, 1.0],
+      "glassworks": [24, -270, 0.9],
+      "fen": [-330, 60, 1.1],
+      "westwood": [-240, -210, 1.2],
+      "southmoor": [-190, 300, 1.1]
+    },
+    "rim_radius": 400,
+    "deepcut_seed": [24, -372],
+    "deepcut_radius": 120,
+    "deepcut_depth_top": 118,
+    "boundary_noise": 26.0
+  },
+  "district_groups": {
+    "_comment": "Which story district owns each biome region. 'westwood', 'southmoor' and 'rim' clear at the finale together with 'mere'.",
+    "landing": "landing",
+    "hollin": "hollin",
+    "aldercross": "aldercross",
+    "glassworks": "glassworks",
+    "deepcut": "deepcut",
+    "mere": "mere",
+    "fen": "fen",
+    "westwood": "wilds",
+    "southmoor": "wilds",
+    "rim": "wilds"
+  },
+  "spawn": {
+    "pos": [0, 86, 352],
+    "yaw": 180.0
+  }
+}

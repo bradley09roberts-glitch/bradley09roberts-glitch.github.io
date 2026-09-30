@@ -1,0 +1,102 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "Field Journal",
+    "color": "aqua"
+  },
+  "external_title": {
+    "text": "Pale Meridian: Field Journal"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Surveyor's notes. Everything the valley has taught you so far.",
+        "color": "gray",
+        "italic": true
+      }
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "Current objective"
+      },
+      "width": 260,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 1"
+      }
+    },
+    {
+      "label": {
+        "text": "Recap: the story so far"
+      },
+      "width": 260,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 2"
+      }
+    },
+    {
+      "label": {
+        "text": "People of the Vale"
+      },
+      "width": 260,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 3"
+      }
+    },
+    {
+      "label": {
+        "text": "The Eleven"
+      },
+      "width": 260,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 4"
+      }
+    },
+    {
+      "label": {
+        "text": "Help and controls"
+      },
+      "width": 260,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 5"
+      }
+    },
+    {
+      "label": {
+        "text": "Comfort and accessibility"
+      },
+      "width": 260,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 6"
+      }
+    },
+    {
+      "label": {
+        "text": "Replace a lost Field Book"
+      },
+      "width": 260,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.ui set 7"
+      }
+    }
+  ],
+  "exit_action": {
+    "label": {
+      "text": "Close"
+    },
+    "width": 200
+  },
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close"
+}

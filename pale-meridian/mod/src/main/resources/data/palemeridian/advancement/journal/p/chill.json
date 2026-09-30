@@ -1,0 +1,19 @@
+{
+  "parent": "palemeridian:journal/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:torch"
+    },
+    "title": "Cold Without Light",
+    "description": "The Pall chills anyone who walks in it without a light.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

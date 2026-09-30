@@ -1,0 +1,79 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "A letter, addressed to you"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Surveyor —",
+        "color": "white"
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "If this reaches you, then I'm sorry, and also: I was right. The Vale of Vell is not gone. It is here, under the fog they call the Pall, and there are people in it who have forgotten their own names.",
+        "color": "white"
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "Don't send the Survey. Come yourself. Bring light. The fog is cold without it.",
+        "color": "white"
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "The lamp at the Landing has gone dark. Light it and the road will remember you. My camp is up the road. Take what you need.",
+        "color": "white"
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "— T.R.",
+        "color": "gray"
+      },
+      "width": 320
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "P.S. If you see me in the fog, don't follow. It won't be me. Not yet.",
+        "color": "dark_gray",
+        "italic": true
+      },
+      "width": 320
+    }
+  ],
+  "columns": 1,
+  "actions": [
+    {
+      "label": {
+        "text": "Take the letter and go"
+      },
+      "width": 300,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "/trigger pm.talk set 1000"
+      }
+    }
+  ],
+  "can_close_with_escape": true,
+  "pause": false,
+  "after_action": "close",
+  "exit_action": {
+    "label": {
+      "text": "Leave it for now"
+    },
+    "width": 200
+  }
+}
