@@ -134,6 +134,7 @@ def generate() -> None:
         tellraw("@a[scores={pm.seen=0}]", [
             {"text": "\n A letter is pinned to the noticeboard beside the waystation. ", "color": "gray"},
             {"text": "[Use it]", "color": "aqua"},
+            {"text": "\n The fog is cold: hold one of your torches while you're in it.", "color": "gray"},
             {"text": "\n Your Field Journal: press ", "color": "gray"}, {"keybind": "key.quickActions", "color": "yellow"},
             {"text": " (Quick Actions) or open the pause menu.\n", "color": "gray"}]),
     ])
@@ -188,7 +189,7 @@ def generate() -> None:
         f"execute unless predicate {fid('in_pall')} run return run function {fid('player/chill_warm')}",
         f"execute if predicate {fid('holding_light')} run return run function {fid('player/chill_warm')}",
         f"execute if entity @a[distance=0.1..6,predicate={fid('holding_light')}] run return run function {fid('player/chill_warm')}",
-        f"execute if block ~ ~1 ~ #palemeridian:warm_blocks run return run function {fid('player/chill_warm')}",
+        f"execute if function {fid('player/_near_warm')} run return run function {fid('player/chill_warm')}",
         "scoreboard players add @s pm.chill 1",
         "execute if score @s pm.chill matches 8 run title @s actionbar {\"text\":\"The Pall is cold without light. Hold a torch or lantern.\",\"color\":\"gray\",\"italic\":true}",
         "execute if score @s pm.chill matches 20.. run effect give @s minecraft:slowness 3 0 true",
@@ -198,7 +199,12 @@ def generate() -> None:
         "execute if score @s pm.chill matches 50.. run effect give @s minecraft:mining_fatigue 3 0 true",
         "execute if score @s pm.chill matches 60.. run scoreboard players set @s pm.chill 60",
     ])
-    tag("block", NS, "warm_blocks", ["#minecraft:campfires", "minecraft:lantern", "minecraft:soul_lantern", "minecraft:torch"])
+    tag("block", NS, "warm_blocks", ["#minecraft:campfires", "#palemeridian:lanterns", "minecraft:torch", "minecraft:wall_torch",
+                                     "minecraft:soul_torch", "minecraft:soul_wall_torch", "minecraft:copper_torch", "minecraft:copper_wall_torch",
+                                     "minecraft:fire", "minecraft:soul_fire", "minecraft:jack_o_lantern", "minecraft:furnace", "minecraft:blast_furnace"])
+    # warm = a light/fire block right next to you (feet or head level, or underfoot)
+    near = ["~1 ~ ~", "~-1 ~ ~", "~ ~ ~1", "~ ~ ~-1", "~1 ~1 ~", "~-1 ~1 ~", "~ ~1 ~1", "~ ~1 ~-1", "~ ~-1 ~", "~ ~ ~"]
+    fn("player/_near_warm", [f"execute if block {p} #palemeridian:warm_blocks run return 1" for p in near] + ["return fail"])
     fn("player/chill_warm", [
         "execute if score @s pm.chill matches 1.. run scoreboard players remove @s pm.chill 2",
         "execute if score @s pm.chill matches ..-1 run scoreboard players set @s pm.chill 0",
@@ -232,6 +238,7 @@ def generate() -> None:
     # ---------------------------------------------------------------- items / kit
     fn("items/give_kit", [
         "execute unless score @s pm.kit matches 1.. run function palemeridian:items/field_book",
+        "execute unless score @s pm.kit matches 1.. run give @s minecraft:torch 4",
         "scoreboard players set @s pm.kit 1",
     ])
 

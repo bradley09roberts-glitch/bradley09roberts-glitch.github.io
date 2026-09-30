@@ -56,7 +56,7 @@ The Minecraft EULA was never accepted on your behalf: every `eula.txt` produced 
 | # | Check | Result | Evidence |
 |---|---|---|---|
 | 15 | Mod compiles and builds; the build no longer launches the game (`runGameTest SKIPPED`) | PASS | `05-build.log` |
-| 16 | A clean rebuild produces a byte-identical jar (SHA-256 `81a5bab5…`) | PASS | `06-reproducible-jar.log` |
+| 16 | A clean rebuild produces a byte-identical jar (SHA-256 `13a7ecbf…`) | PASS | `06-reproducible-jar.log` |
 | 17 | Release files build; checksums recorded | PASS | `07-dist.log`, `dist/SHA256SUMS.txt` |
 | 18 | The lock matches live Modrinth/Fabric metadata (exact versions, ids, sizes, hashes) | PASS | `08-lock-check.log` |
 | 19 | Every file referenced by the client `.mrpack` downloads from its URL and matches size, SHA-1 and SHA-512 (10/10) | PASS | `09-mrpack-downloads.log` |
@@ -102,6 +102,9 @@ started, no network port was opened.
 | Found by | Defect | Fix |
 |---|---|---|
 | Code review, then confirmed by the simulator | **Quests could never activate**: activation required `pm.q = 0`, but no quest score was ever initialised, so the campaign could not start. | `q/_init` gives every quest a state on each load and at world start, never touching existing progress. Simulator: 9/32 → 49/49. |
+| Code review against the decompiled game | **The bell puzzle could never register a bell**: block-use triggers evaluate at the block's centre (`Vec3.atCenterOf`), but the position ranges were exact integers. The bed trigger had the same edge problem. | Ranges now cover the whole block (`[x, x+1]`). |
+| Code review | The "warm by the fire" rule only checked the block at head height, so it almost never applied. | Checks the blocks around and under the player; more light/fire blocks count. |
+| Play-flow review | New players start in the fog without a light and the opening letter takes long enough for the cold to set in. | Four torches in the starting kit, mentioned in the opening hint. |
 | Installer test | Java version check read the wrong line when `JAVA_TOOL_OPTIONS` is set (Java prints an extra first line). | Both installers look for the `version "…"` line. |
 | Build | The build launched the game-test server (§3). | Tasks gated behind an explicit opt-in. |
 | Code review | Lighting lamp posts inside the chunk-load callback could reach into chunks still loading. | Deferred to the next tick; client-only block updates. |

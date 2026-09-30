@@ -1,29 +1,29 @@
-[17:52:55] [main/INFO]: [STDOUT]: [check] worldgen registries loaded
-[17:52:55] [main/INFO]: [STDOUT]: [check] dimension registries loaded
-[17:52:55] [main/INFO]: [STDOUT]: [check] overworld biome source: net.palemeridian.world.ValleyBiomeSource
-[17:52:58] [main/INFO]: [STDOUT]: [check] seed 0 site landing: sampled=81 wrongFloor=0 caveHolesBelow=0 heights={86=81}
-[17:53:04] [main/INFO]: [STDOUT]: [check] seed 0 site hollin: sampled=484 wrongFloor=0 caveHolesBelow=0 heights={67=484}
-[17:53:09] [main/INFO]: [STDOUT]: [check] seed 0 site aldercross: sampled=441 wrongFloor=0 caveHolesBelow=0 heights={78=441}
-[17:53:10] [main/INFO]: [STDOUT]: [check] seed 0 site glassworks: sampled=88 wrongFloor=0 caveHolesBelow=0 heights={70=88}
-[17:53:11] [main/INFO]: [STDOUT]: [check] seed 0 site meridian: sampled=69 wrongFloor=0 caveHolesBelow=0 heights={68=69}
-[17:53:12] [main/INFO]: [STDOUT]: [check] seed 0 site fen_chapel: sampled=13 wrongFloor=0 caveHolesBelow=0 heights={64=13}
-[17:53:12] [main/INFO]: [STDOUT]: [check] seed 0 site causeway_s: sampled=0 wrongFloor=0 caveHolesBelow=0 heights={}
-[17:53:17] [main/INFO]: [STDOUT]: [check] seed 0 quiet zone deepcut_mine: blocks checked=26502 open (air/fluid)=0
-[17:53:18] [main/INFO]: [STDOUT]: [check] seed 12345 site landing: sampled=81 wrongFloor=0 caveHolesBelow=0 heights={86=81}
-[17:53:24] [main/INFO]: [STDOUT]: [check] seed 12345 site hollin: sampled=484 wrongFloor=0 caveHolesBelow=0 heights={67=484}
-[17:53:30] [main/INFO]: [STDOUT]: [check] seed 12345 site aldercross: sampled=441 wrongFloor=0 caveHolesBelow=0 heights={78=441}
-[17:53:31] [main/INFO]: [STDOUT]: [check] seed 12345 site glassworks: sampled=88 wrongFloor=0 caveHolesBelow=0 heights={70=88}
-[17:53:32] [main/INFO]: [STDOUT]: [check] seed 12345 site meridian: sampled=69 wrongFloor=0 caveHolesBelow=0 heights={68=69}
-[17:53:32] [main/INFO]: [STDOUT]: [check] seed 12345 site fen_chapel: sampled=13 wrongFloor=0 caveHolesBelow=0 heights={64=13}
-[17:53:32] [main/INFO]: [STDOUT]: [check] seed 12345 site causeway_s: sampled=0 wrongFloor=0 caveHolesBelow=0 heights={}
-[17:53:37] [main/INFO]: [STDOUT]: [check] seed 12345 quiet zone deepcut_mine: blocks checked=26516 open (air/fluid)=0
-[17:53:38] [main/INFO]: [STDOUT]: [check] seed -987654321 site landing: sampled=81 wrongFloor=0 caveHolesBelow=0 heights={86=81}
-[17:53:44] [main/INFO]: [STDOUT]: [check] seed -987654321 site hollin: sampled=484 wrongFloor=0 caveHolesBelow=0 heights={67=484}
-[17:53:49] [main/INFO]: [STDOUT]: [check] seed -987654321 site aldercross: sampled=441 wrongFloor=0 caveHolesBelow=0 heights={78=441}
-[17:53:50] [main/INFO]: [STDOUT]: [check] seed -987654321 site glassworks: sampled=88 wrongFloor=0 caveHolesBelow=0 heights={70=88}
-[17:53:51] [main/INFO]: [STDOUT]: [check] seed -987654321 site meridian: sampled=69 wrongFloor=0 caveHolesBelow=0 heights={68=69}
-[17:53:51] [main/INFO]: [STDOUT]: [check] seed -987654321 site fen_chapel: sampled=13 wrongFloor=0 caveHolesBelow=0 heights={64=13}
-[17:53:51] [main/INFO]: [STDOUT]: [check] seed -987654321 site causeway_s: sampled=0 wrongFloor=0 caveHolesBelow=0 heights={}
-[17:53:55] [main/INFO]: [STDOUT]: [check] seed -987654321 quiet zone deepcut_mine: blocks checked=26488 open (air/fluid)=0
-[17:53:55] [main/INFO]: [STDOUT]: [check] log warnings/errors mentioning palemeridian: 0
-[17:53:55] [main/INFO]: [STDOUT]: [check] RESULT: PASS
+[18:00:45] [main/INFO]: [STDOUT]: [check] worldgen registries loaded
+[18:00:45] [main/INFO]: [STDOUT]: [check] dimension registries loaded
+[18:00:45] [main/INFO]: [STDOUT]: [check] overworld biome source: net.palemeridian.world.ValleyBiomeSource
+[18:00:47] [main/INFO]: [STDOUT]: [check] seed 0 site landing: sampled=81 wrongFloor=0 caveHolesBelow=0 heights={86=81}
+[18:00:53] [main/INFO]: [STDOUT]: [check] seed 0 site hollin: sampled=484 wrongFloor=0 caveHolesBelow=0 heights={67=484}
+[18:00:58] [main/INFO]: [STDOUT]: [check] seed 0 site aldercross: sampled=441 wrongFloor=0 caveHolesBelow=0 heights={78=441}
+[18:00:59] [main/INFO]: [STDOUT]: [check] seed 0 site glassworks: sampled=88 wrongFloor=0 caveHolesBelow=0 heights={70=88}
+[18:01:00] [main/INFO]: [STDOUT]: [check] seed 0 site meridian: sampled=69 wrongFloor=0 caveHolesBelow=0 heights={68=69}
+[18:01:01] [main/INFO]: [STDOUT]: [check] seed 0 site fen_chapel: sampled=13 wrongFloor=0 caveHolesBelow=0 heights={64=13}
+[18:01:01] [main/INFO]: [STDOUT]: [check] seed 0 site causeway_s: sampled=0 wrongFloor=0 caveHolesBelow=0 heights={}
+[18:01:06] [main/INFO]: [STDOUT]: [check] seed 0 quiet zone deepcut_mine: blocks checked=26502 open (air/fluid)=0
+[18:01:07] [main/INFO]: [STDOUT]: [check] seed 12345 site landing: sampled=81 wrongFloor=0 caveHolesBelow=0 heights={86=81}
+[18:01:12] [main/INFO]: [STDOUT]: [check] seed 12345 site hollin: sampled=484 wrongFloor=0 caveHolesBelow=0 heights={67=484}
+[18:01:18] [main/INFO]: [STDOUT]: [check] seed 12345 site aldercross: sampled=441 wrongFloor=0 caveHolesBelow=0 heights={78=441}
+[18:01:20] [main/INFO]: [STDOUT]: [check] seed 12345 site glassworks: sampled=88 wrongFloor=0 caveHolesBelow=0 heights={70=88}
+[18:01:20] [main/INFO]: [STDOUT]: [check] seed 12345 site meridian: sampled=69 wrongFloor=0 caveHolesBelow=0 heights={68=69}
+[18:01:21] [main/INFO]: [STDOUT]: [check] seed 12345 site fen_chapel: sampled=13 wrongFloor=0 caveHolesBelow=0 heights={64=13}
+[18:01:21] [main/INFO]: [STDOUT]: [check] seed 12345 site causeway_s: sampled=0 wrongFloor=0 caveHolesBelow=0 heights={}
+[18:01:25] [main/INFO]: [STDOUT]: [check] seed 12345 quiet zone deepcut_mine: blocks checked=26516 open (air/fluid)=0
+[18:01:26] [main/INFO]: [STDOUT]: [check] seed -987654321 site landing: sampled=81 wrongFloor=0 caveHolesBelow=0 heights={86=81}
+[18:01:32] [main/INFO]: [STDOUT]: [check] seed -987654321 site hollin: sampled=484 wrongFloor=0 caveHolesBelow=0 heights={67=484}
+[18:01:37] [main/INFO]: [STDOUT]: [check] seed -987654321 site aldercross: sampled=441 wrongFloor=0 caveHolesBelow=0 heights={78=441}
+[18:01:38] [main/INFO]: [STDOUT]: [check] seed -987654321 site glassworks: sampled=88 wrongFloor=0 caveHolesBelow=0 heights={70=88}
+[18:01:39] [main/INFO]: [STDOUT]: [check] seed -987654321 site meridian: sampled=69 wrongFloor=0 caveHolesBelow=0 heights={68=69}
+[18:01:39] [main/INFO]: [STDOUT]: [check] seed -987654321 site fen_chapel: sampled=13 wrongFloor=0 caveHolesBelow=0 heights={64=13}
+[18:01:39] [main/INFO]: [STDOUT]: [check] seed -987654321 site causeway_s: sampled=0 wrongFloor=0 caveHolesBelow=0 heights={}
+[18:01:43] [main/INFO]: [STDOUT]: [check] seed -987654321 quiet zone deepcut_mine: blocks checked=26488 open (air/fluid)=0
+[18:01:43] [main/INFO]: [STDOUT]: [check] log warnings/errors mentioning palemeridian: 0
+[18:01:43] [main/INFO]: [STDOUT]: [check] RESULT: PASS

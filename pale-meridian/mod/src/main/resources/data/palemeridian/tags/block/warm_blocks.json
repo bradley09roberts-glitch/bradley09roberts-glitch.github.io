@@ -2,8 +2,17 @@
   "replace": false,
   "values": [
     "#minecraft:campfires",
-    "minecraft:lantern",
-    "minecraft:soul_lantern",
-    "minecraft:torch"
+    "#palemeridian:lanterns",
+    "minecraft:torch",
+    "minecraft:wall_torch",
+    "minecraft:soul_torch",
+    "minecraft:soul_wall_torch",
+    "minecraft:copper_torch",
+    "minecraft:copper_wall_torch",
+    "minecraft:fire",
+    "minecraft:soul_fire",
+    "minecraft:jack_o_lantern",
+    "minecraft:furnace",
+    "minecraft:blast_furnace"
   ]
 }

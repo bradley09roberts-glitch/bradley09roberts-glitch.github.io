@@ -191,7 +191,7 @@ def register() -> None:
     adv("trigger/rest_bed", {
         "criteria": {"bed": {"trigger": "minecraft:placed_block", "conditions": {"location": [
             {"condition": "minecraft:location_check", "predicate": {"block": {"blocks": "#minecraft:beds"},
-                                                                    "position": {"x": {"min": rest[0], "max": rest[3]}, "y": {"min": rest[1], "max": rest[4]}, "z": {"min": rest[2], "max": rest[5]}}}}]}}},
+                                                                    "position": {"x": {"min": rest[0], "max": rest[3] + 1}, "y": {"min": rest[1], "max": rest[4] + 1}, "z": {"min": rest[2], "max": rest[5] + 1}}}}]}}},
         "rewards": {"function": fid("c1/rest_bed")},
     })
     R.func("c1/rest_bed", ["advancement revoke @s only palemeridian:trigger/rest_bed", complete("c1.home"),

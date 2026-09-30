@@ -1,7 +1,7 @@
 execute unless predicate palemeridian:in_pall run return run function palemeridian:player/chill_warm
 execute if predicate palemeridian:holding_light run return run function palemeridian:player/chill_warm
 execute if entity @a[distance=0.1..6,predicate=palemeridian:holding_light] run return run function palemeridian:player/chill_warm
-execute if block ~ ~1 ~ #palemeridian:warm_blocks run return run function palemeridian:player/chill_warm
+execute if function palemeridian:player/_near_warm run return run function palemeridian:player/chill_warm
 scoreboard players add @s pm.chill 1
 execute if score @s pm.chill matches 8 run title @s actionbar {"text":"The Pall is cold without light. Hold a torch or lantern.","color":"gray","italic":true}
 execute if score @s pm.chill matches 20.. run effect give @s minecraft:slowness 3 0 true

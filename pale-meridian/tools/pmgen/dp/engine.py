@@ -562,10 +562,11 @@ def _gen_block_use() -> None:
     for bid, pos, cmds in R.block_use:
         x, y, z = pos
         path = f"trigger/use/{bid}"
+        # The trigger evaluates at the block's centre (Vec3.atCenterOf), so match the whole block [x, x+1).
         adv(path, {
             "criteria": {"use": {"trigger": "minecraft:any_block_use", "conditions": {
                 "location": [{"condition": "minecraft:location_check",
-                              "predicate": {"position": {"x": {"min": x, "max": x}, "y": {"min": y, "max": y}, "z": {"min": z, "max": z}}}}]}}},
+                              "predicate": {"position": {"x": {"min": x, "max": x + 1}, "y": {"min": y, "max": y + 1}, "z": {"min": z, "max": z + 1}}}}]}}},
             "rewards": {"function": fid(f"use/{bid}")},
         })
         fn(f"use/{bid}", [f"advancement revoke @s only {fid(path)}"] + cmds)
