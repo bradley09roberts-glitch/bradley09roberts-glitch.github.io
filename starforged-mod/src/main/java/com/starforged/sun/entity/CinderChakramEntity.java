@@ -3,6 +3,7 @@ package com.starforged.sun.entity;
 import com.starforged.registry.ModDamageTypes;
 import com.starforged.registry.ModParticles;
 import com.starforged.sun.SunEntities;
+import com.starforged.sun.SunSounds;
 import com.starforged.util.Combat;
 import java.util.HashSet;
 import java.util.Set;
@@ -16,6 +17,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.ClipContext;
@@ -24,18 +27,23 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 /**
- * The thrown Cinder Chakram: a spinning ring of fire that slices through every enemy in its path,
- * ricochets off walls, then flies back to its owner's hand.
+ * The thrown Cinder Chakram: a spinning ring of fire that slices through every enemy in its path, leaps from
+ * the first foe it cuts to up to {@value #MAX_CHAINS} more nearby, ricochets off walls, then flies back to its owner's hand.
  */
 public class CinderChakramEntity extends Projectile {
     private static final EntityDataAccessor<Boolean> DATA_RETURNING = SynchedEntityData.defineId(CinderChakramEntity.class, EntityDataSerializers.BOOLEAN);
     private static final int OUTBOUND_TICKS = 18;
+    private static final int MAX_CHAINS = 3;
+    private static final double CHAIN_RANGE = 10.0;
     private final Set<Integer> hitOutbound = new HashSet<>();
     private final Set<Integer> hitReturning = new HashSet<>();
     private float damage = 9.0F;
     private int life;
+    private int chains;
+    private int outboundUntil = OUTBOUND_TICKS;
 
     public CinderChakramEntity(EntityType<? extends CinderChakramEntity> type, Level level) {
         super(type, level);
@@ -50,6 +58,33 @@ public class CinderChakramEntity extends Projectile {
         chakram.setDeltaMovement(owner.getLookAngle().scale(1.6));
         level.addFreshEntity(chakram);
         return chakram;
+    }
+
+    /** Leaps towards the closest enemy near {@code from} that this throw has not cut yet. */
+    private boolean chainFrom(ServerLevel server, @Nullable Entity owner, LivingEntity from) {
+        LivingEntity next = null;
+        double best = Double.MAX_VALUE;
+        for (LivingEntity candidate : Combat.targetsAround(server, owner, from.position(), CHAIN_RANGE)) {
+            boolean hostile = candidate instanceof Enemy || candidate instanceof Mob mob && owner != null && mob.getTarget() == owner;
+            if (candidate == from || !hostile || this.hitOutbound.contains(candidate.getId()) || !from.hasLineOfSight(candidate)) {
+                continue;
+            }
+            double distance = candidate.distanceToSqr(from);
+            if (distance < best) {
+                best = distance;
+                next = candidate;
+            }
+        }
+        if (next == null) {
+            return false;
+        }
+        this.chains++;
+        Vec3 aim = next.position().add(0, next.getBbHeight() * 0.5, 0).subtract(this.position());
+        this.setDeltaMovement(aim.normalize().scale(1.7));
+        this.outboundUntil = this.life + 12;
+        server.sendParticles(ModParticles.SOLAR_SPARK.get(), this.getX(), this.getY(), this.getZ(), 12, 0.2, 0.2, 0.2, 0.15);
+        server.playSound(null, this.getX(), this.getY(), this.getZ(), SunSounds.CHAKRAM_THROW.get(), SoundSource.PLAYERS, 0.7F, 1.3F + this.chains * 0.15F);
+        return true;
     }
 
     @Override
@@ -75,7 +110,7 @@ public class CinderChakramEntity extends Projectile {
                 this.discard();
                 return;
             }
-            if (!this.returning() && this.life > OUTBOUND_TICKS) {
+            if (!this.returning() && this.life > this.outboundUntil) {
                 this.entityData.set(DATA_RETURNING, true);
             }
         }
@@ -110,6 +145,7 @@ public class CinderChakramEntity extends Projectile {
 
         if (this.level() instanceof ServerLevel server) {
             Set<Integer> hit = this.returning() ? this.hitReturning : this.hitOutbound;
+            boolean chained = false;
             for (LivingEntity victim : server.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(0.6),
                 e -> e != owner && e.isAlive() && Combat.canHit(server, owner, e))) {
                 if (hit.add(victim.getId())) {
@@ -117,6 +153,9 @@ public class CinderChakramEntity extends Projectile {
                     victim.igniteForSeconds(5.0F);
                     server.sendParticles(ParticleTypes.FLAME, victim.getX(), victim.getY() + victim.getBbHeight() * 0.5, victim.getZ(), 10, 0.2, 0.3, 0.2, 0.05);
                     server.playSound(null, victim.getX(), victim.getY(), victim.getZ(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8F, 1.4F);
+                    if (!chained && !this.returning() && this.chains < MAX_CHAINS) {
+                        chained = this.chainFrom(server, owner, victim);
+                    }
                 }
             }
         } else {

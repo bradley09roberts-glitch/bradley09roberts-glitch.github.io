@@ -4,6 +4,7 @@ import com.mojang.serialization.MapCodec;
 import com.starforged.registry.ModParticles;
 import com.starforged.sun.world.SunlandsTravel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
@@ -39,6 +40,11 @@ public class SolarGatewayBlock extends Block implements Portal {
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return SHAPE;
+    }
+
+    @Override
+    protected boolean skipRendering(BlockState state, BlockState neighborState, Direction direction) {
+        return neighborState.is(this) || super.skipRendering(state, neighborState, direction);
     }
 
     @Override

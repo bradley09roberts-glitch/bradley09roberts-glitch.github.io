@@ -151,7 +151,9 @@ public class NebulaRayEntity extends TamableAnimal {
 
     @Override
     public void travel(Vec3 input) {
-        float speed = (float) this.getAttributeValue(Attributes.FLYING_SPEED) * (this.isVehicle() ? 1.6F : 0.5F);
+        // Ridden input is a full-strength vector, so the push per tick has to stay small: with air drag of 0.91 the
+        // cruise speed settles at push / 0.09 blocks per tick (~20 blocks a second for this mount).
+        float speed = (float) this.getAttributeValue(Attributes.FLYING_SPEED) * (this.isVehicle() ? 0.22F : 0.5F);
         this.travelFlying(input, speed, speed, speed);
     }
 

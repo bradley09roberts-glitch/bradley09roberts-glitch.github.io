@@ -547,7 +547,7 @@ public final class StarforgedRenderers {
                 poseStack.translate(0.0F, 0.6F, 0.0F);
                 poseStack.mulPose(Axis.XP.rotationDegrees(70.0F));
                 poseStack.mulPose(Axis.ZP.rotationDegrees(state.spin));
-                Beams.quad(poseStack, collector, RenderTypes.entityTranslucentEmissive(DISK), s * 3.2F, 0xFFFFFFFF);
+                Beams.quad(poseStack, collector, Beams.glow(DISK), s * 3.2F, 0xFFFFFFFF);
                 poseStack.popPose();
                 // Event horizon (always faces the camera).
                 Beams.billboard(poseStack, collector, camera, CORE, 0.0F, 0.6F, 0.0F, s * 2.0F, 0xFFFFFFFF, -state.spin * 0.3F);
@@ -583,7 +583,7 @@ public final class StarforgedRenderers {
             poseStack.mulPose(Axis.YP.rotationDegrees(-state.yaw));
             poseStack.mulPose(Axis.XP.rotationDegrees(state.pitch - 90.0F));
             int alpha = (int) (255 * state.fade);
-            Beams.quad(poseStack, collector, RenderTypes.entityTranslucentEmissive(TEXTURE), 3.4F, (alpha << 24) | 0xFFFFFF);
+            Beams.quad(poseStack, collector, Beams.glow(TEXTURE), 3.4F, (alpha << 24) | 0xFFFFFF);
             poseStack.popPose();
             super.submit(state, poseStack, collector, camera);
         }
@@ -602,6 +602,14 @@ public final class StarforgedRenderers {
                 .setOverlay(OverlayTexture.NO_OVERLAY)
                 .setLight(FULL_BRIGHT)
                 .setNormal(pose, 0.0F, 1.0F, 0.0F);
+        }
+
+        /**
+         * Render type for glowing effect sprites: unlit and unshaded, so a billboard is equally bright from every angle (the
+         * entity emissive types shade each face by its normal, which dims camera-facing quads).
+         */
+        public static RenderType glow(Identifier texture) {
+            return RenderTypes.eyes(texture);
         }
 
         /** A flat double-sided square of side {@code size} in the XY plane of the current pose. */
@@ -626,7 +634,7 @@ public final class StarforgedRenderers {
             poseStack.translate(x, y, z);
             poseStack.mulPose(camera.orientation);
             poseStack.mulPose(Axis.ZP.rotationDegrees(roll));
-            quad(poseStack, collector, RenderTypes.entityTranslucentEmissive(texture), size, color);
+            quad(poseStack, collector, glow(texture), size, color);
             poseStack.popPose();
         }
 
@@ -647,7 +655,7 @@ public final class StarforgedRenderers {
             float h = width / 2.0F;
             float scroll = -age * 0.08F;
             float vEnd = scroll + length * 0.25F;
-            RenderType type = RenderTypes.entityTranslucentEmissive(texture);
+            RenderType type = glow(texture);
             for (int plane = 0; plane < 2; plane++) {
                 final boolean xPlane = plane == 0;
                 collector.submitCustomGeometry(poseStack, type, (pose, buffer) -> {

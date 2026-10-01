@@ -47,7 +47,11 @@ public class FlareGreatswordItem extends Item {
                     Fx.ring(server, ParticleTypes.FLAME, center, r * 2.0, 24 + r * 12, 0.25, 0.25);
                 }
                 Fx.ring(server, ModParticles.SOLAR_SPARK.get(), center, 1.0, 60, 0.6, 0.3);
-                server.sendParticles(ParticleTypes.EXPLOSION_EMITTER, center.x, center.y, center.z, 1, 0, 0, 0, 0);
+                for (int i = 0; i < 8; i++) {
+                    double angle = i * Math.PI / 4.0;
+                    server.sendParticles(ParticleTypes.EXPLOSION, center.x + Math.cos(angle) * 4.0, center.y, center.z + Math.sin(angle) * 4.0,
+                        1, 0, 0, 0, 0);
+                }
                 server.playSound(null, player.getX(), player.getY(), player.getZ(), SunSounds.GREATSWORD_FLARE.get(), SoundSource.PLAYERS, 1.6F, 0.7F);
                 Fx.shake(server, center, 16.0, 0.8F, 12);
                 player.getCooldowns().addCooldown(stack, 160);

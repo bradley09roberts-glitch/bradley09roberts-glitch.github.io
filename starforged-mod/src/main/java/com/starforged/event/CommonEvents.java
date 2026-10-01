@@ -27,6 +27,7 @@ public final class CommonEvents {
 
     public static void register() {
         TickEvent.ServerTickEvent.Post.BUS.addListener(CommonEvents::onServerTick);
+        TickEvent.LevelTickEvent.Pre.BUS.addListener(event -> com.starforged.sun.world.SunlandsTravel.suppressWeather(event.level()));
         TickEvent.PlayerTickEvent.Post.BUS.addListener(CommonEvents::onPlayerTick);
         LivingFallEvent.BUS.addListener(CommonEvents::onFall);
         LivingHurtEvent.BUS.addListener(CommonEvents::onHurt);

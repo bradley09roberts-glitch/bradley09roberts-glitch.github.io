@@ -118,10 +118,15 @@ def blocks():
         "elements": elements([([0, 0, 0], [16, 3, 16]), ([2, 3, 2], [14, 10, 14]), ([0, 10, 0], [16, 14, 16])])})
     simple_state("sun_altar")
 
+    # The pool's sides are culled against neighbouring gateway blocks (SolarGatewayBlock.skipRendering),
+    # so a 3x3 gateway reads as one sheet of light instead of nine boxes.
     g = sid("block/solar_gateway")
+    pool = elements([([0, 0, 0], [16, 12, 16])])
+    for face in ("north", "south", "east", "west", "down"):
+        pool[0]["faces"][face]["cullface"] = face
     write(f"{A}/models/block/solar_gateway.json", {
         "parent": "minecraft:block/block", "textures": {"particle": g, "side": g, "top": g, "bottom": g},
-        "elements": elements([([0, 0, 0], [16, 12, 16])])})
+        "elements": pool})
     simple_state("solar_gateway")
 
 
@@ -327,11 +332,11 @@ def lang():
         "ability.starforged.solar_eruption.title": "Sneak + Right-click: Eruption",
         "ability.starforged.solar_eruption.text": "Plant the blade and erupt in a ring of sunfire.",
         "ability.starforged.phoenix_bow.title": "Phoenix Shot",
-        "ability.starforged.phoenix_bow.text": "Needs no arrows. Homing phoenixes of flame; a full draw looses three.",
+        "ability.starforged.phoenix_bow.text": "Needs no arrows. Homing phoenixes of flame; a full draw looses three that hunt separate foes.",
         "ability.starforged.helios_scepter.title": "Right-click: Miniature Sun",
         "ability.starforged.helios_scepter.text": "Summon a sun that orbits you for 20 seconds, lancing enemies with sunbeams.",
         "ability.starforged.cinder_chakram.title": "Right-click: Throw",
-        "ability.starforged.cinder_chakram.text": "A ring of fire that slices through every enemy and flies back to you.",
+        "ability.starforged.cinder_chakram.text": "A ring of fire that leaps between up to four enemies, then flies back to you.",
         "ability.starforged.sunburst_flask.title": "Throw: Sunburst",
         "ability.starforged.sunburst_flask.text": "A blinding solar flash that burns, dazzles and slows.",
         "ability.starforged.solar_key.title": "Use on the ground: Solar Gateway",

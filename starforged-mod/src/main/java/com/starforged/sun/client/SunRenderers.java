@@ -416,7 +416,7 @@ public final class SunRenderers {
             poseStack.translate(0.0F, 0.15F, 0.0F);
             poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
             poseStack.mulPose(Axis.ZP.rotationDegrees(state.spin));
-            Beams.quad(poseStack, collector, RenderTypes.entityTranslucentEmissive(TEXTURE), 1.1F, 0xFFFFFFFF);
+            Beams.quad(poseStack, collector, Beams.glow(TEXTURE), 1.1F, 0xFFFFFFFF);
             poseStack.popPose();
             Beams.billboard(poseStack, collector, camera, FLARE, 0.0F, 0.15F, 0.0F, 1.4F, 0x88FF8A30, state.spin * 0.2F);
             super.submit(state, poseStack, collector, camera);

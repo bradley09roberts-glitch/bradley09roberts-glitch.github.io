@@ -224,7 +224,7 @@ public final class SunAbilities {
     // --- Solar Lance dash ------------------------------------------------------------------------------------------
 
     public static void startDash(ServerPlayer player, Vec3 direction, float damage) {
-        DASHES.put(player.getUUID(), new Dash(8, direction, damage));
+        DASHES.put(player.getUUID(), new Dash(10, direction, damage));
     }
 
     public static boolean isDashing(Player player) {
@@ -236,8 +236,10 @@ public final class SunAbilities {
         player.setDeltaMovement(velocity.x, Math.max(velocity.y, -0.2) + 0.02, velocity.z);
         player.hurtMarked = true;
         player.resetFallDistance();
-        level.sendParticles(ParticleTypes.FLAME, player.getX(), player.getY() + 1.0, player.getZ(), 6, 0.3, 0.4, 0.3, 0.02);
-        level.sendParticles(ModParticles.SOLAR_SPARK.get(), player.getX(), player.getY() + 1.0, player.getZ(), 4, 0.3, 0.4, 0.3, 0.05);
+        // The trail streams out behind the rider so the flames never block their own view.
+        Vec3 trail = player.position().subtract(dash.direction.multiply(1, 0, 1).scale(1.4)).add(0, 0.9, 0);
+        level.sendParticles(ParticleTypes.FLAME, trail.x, trail.y, trail.z, 6, 0.3, 0.4, 0.3, 0.02);
+        level.sendParticles(ModParticles.SOLAR_SPARK.get(), trail.x, trail.y, trail.z, 4, 0.3, 0.4, 0.3, 0.05);
         for (LivingEntity victim : Combat.targetsAround(level, player, player.position().add(0, 1.0, 0), 2.2)) {
             if (dash.hit.add(victim.getId())) {
                 victim.hurtServer(level, ModDamageTypes.source(level, ModDamageTypes.SUNFIRE, player), dash.damage);

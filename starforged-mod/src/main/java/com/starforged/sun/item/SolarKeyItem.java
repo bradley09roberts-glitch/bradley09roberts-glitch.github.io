@@ -46,6 +46,12 @@ public class SolarKeyItem extends Item {
                 return InteractionResult.FAIL;
             }
             BlockPos center = context.getClickedPos().above();
+            // Push the gate out in front of the player so it never forms underneath them: they step in when ready.
+            BlockPos feet = player.blockPosition();
+            Direction facing = player.getDirection();
+            while (Math.max(Math.abs(center.getX() - feet.getX()), Math.abs(center.getZ() - feet.getZ())) < 3) {
+                center = center.relative(facing);
+            }
             GatewayBuilder.build(server, center);
             Vec3 c = Vec3.atBottomCenterOf(center);
             Fx.column(server, ModParticles.SOLAR_SPARK.get(), c, 10.0, 120, 1.2, 0.2);

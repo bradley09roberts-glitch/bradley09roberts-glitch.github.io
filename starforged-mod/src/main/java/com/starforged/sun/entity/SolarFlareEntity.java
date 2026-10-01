@@ -158,6 +158,10 @@ public class SolarFlareEntity extends Projectile {
         super.onHitEntity(hitResult);
         if (this.level() instanceof ServerLevel server) {
             Entity target = hitResult.getEntity();
+            if (this.kind() == Kind.PHOENIX && target instanceof LivingEntity living) {
+                // A Phoenix Bow volley lands as one strike: each flare ignores the hit cooldown of the one before.
+                living.invulnerableTime = 0;
+            }
             if (target.hurtServer(server, ModDamageTypes.source(server, ModDamageTypes.SUNFIRE, this, this.getOwner()), this.damage)) {
                 target.igniteForSeconds(4.0F);
             }

@@ -30,6 +30,17 @@ public final class SunlandsTravel {
     private SunlandsTravel() {
     }
 
+    /**
+     * The Sunlands sit above the weather. Every dimension shares the Overworld's weather, so without this a storm back
+     * home would grey out the golden sky (and could even call lightning down on the temples).
+     */
+    public static void suppressWeather(Level level) {
+        if (level.dimension() == SUNLANDS && (level.getRainLevel(1.0F) > 0.0F || level.getThunderLevel(1.0F) > 0.0F)) {
+            level.setRainLevel(0.0F);
+            level.setThunderLevel(0.0F);
+        }
+    }
+
     public static boolean isSunlands(Level level) {
         return level.dimension() == SUNLANDS;
     }
