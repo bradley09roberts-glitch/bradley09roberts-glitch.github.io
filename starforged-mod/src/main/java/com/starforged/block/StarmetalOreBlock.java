@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
  */
 public class StarmetalOreBlock extends DropExperienceBlock {
     public static final MapCodec<StarmetalOreBlock> CODEC = RecordCodecBuilder.mapCodec(
-        i -> i.group(IntProvider.codec(0, 10).fieldOf("experience").forGetter(b -> b.xp), propertiesCodec()).apply(i, StarmetalOreBlock::new)
+        i -> i.group(net.minecraft.util.valueproviders.IntProviders.codec(0, 10).fieldOf("experience").forGetter(b -> b.xp), propertiesCodec()).apply(i, StarmetalOreBlock::new)
     );
     private final IntProvider xp;
 

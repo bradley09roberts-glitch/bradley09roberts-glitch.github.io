@@ -298,6 +298,6 @@ public class MeteorEntity extends Entity {
     }
 
     public boolean isAlliedToSovereign() {
-        return this.getType().is(ModTags.SOVEREIGN_ALLIES);
+        return this.is(ModTags.SOVEREIGN_ALLIES);
     }
 }

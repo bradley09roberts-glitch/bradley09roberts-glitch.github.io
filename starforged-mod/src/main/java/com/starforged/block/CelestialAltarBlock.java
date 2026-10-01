@@ -66,7 +66,7 @@ public class CelestialAltarBlock extends Block {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (!level.isClientSide()) {
-            player.displayClientMessage(Component.translatable("block.starforged.celestial_altar.hint").withStyle(ChatFormatting.LIGHT_PURPLE), true);
+            player.sendOverlayMessage(Component.translatable("block.starforged.celestial_altar.hint").withStyle(ChatFormatting.LIGHT_PURPLE));
         }
         return InteractionResult.SUCCESS;
     }

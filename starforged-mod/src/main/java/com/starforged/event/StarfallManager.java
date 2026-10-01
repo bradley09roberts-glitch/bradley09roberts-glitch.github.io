@@ -137,7 +137,7 @@ public final class StarfallManager {
             player.connection.send(new ClientboundSetTitlesAnimationPacket(15, 70, 25));
             player.connection.send(new ClientboundSetSubtitleTextPacket(Component.translatable("event.starforged.starfall.subtitle").withStyle(ChatFormatting.LIGHT_PURPLE)));
             player.connection.send(new ClientboundSetTitleTextPacket(Component.translatable("event.starforged.starfall.title").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)));
-            player.displayClientMessage(Component.translatable("event.starforged.starfall.begin").withStyle(ChatFormatting.LIGHT_PURPLE), false);
+            player.sendSystemMessage(Component.translatable("event.starforged.starfall.begin").withStyle(ChatFormatting.LIGHT_PURPLE));
             level.playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.STARFALL_BEGIN.get(), SoundSource.AMBIENT, 1.0F, 1.0F);
         }
         syncSky(level.getServer());
@@ -148,7 +148,7 @@ public final class StarfallManager {
         data.forcedUntil = 0L;
         data.setDirty();
         for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
-            player.displayClientMessage(Component.translatable("event.starforged.starfall.end").withStyle(ChatFormatting.GRAY), false);
+            player.sendSystemMessage(Component.translatable("event.starforged.starfall.end").withStyle(ChatFormatting.GRAY));
         }
         syncSky(level.getServer());
     }

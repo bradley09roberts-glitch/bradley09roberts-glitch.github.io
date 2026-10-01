@@ -69,7 +69,7 @@ public final class CommonEvents {
         DamageSource source = event.getSource();
 
         // Starlight weapons burn the voidborn.
-        if (victim.getType().is(ModTags.VOIDBORN) && source.getEntity() instanceof LivingEntity attacker && source.getDirectEntity() == attacker) {
+        if (victim.is(ModTags.VOIDBORN) && source.getEntity() instanceof LivingEntity attacker && source.getDirectEntity() == attacker) {
             ItemStack weapon = attacker.getMainHandItem();
             if (weapon.is(ModItems.STARMETAL_SWORD.get()) || weapon.is(ModItems.ECLIPSE_BLADE.get()) || weapon.is(ModItems.METEOR_HAMMER.get())
                 || weapon.is(ModItems.STARMETAL_AXE.get())) {
@@ -77,7 +77,7 @@ public final class CommonEvents {
             }
         }
         // The Eclipse Crown shields its wearer from the Sovereign's servants.
-        if (source.getEntity() != null && source.getEntity().getType().is(ModTags.VOIDBORN) && ArmorAbilities.hasEclipseCrown(victim)) {
+        if (source.getEntity() != null && source.getEntity().is(ModTags.VOIDBORN) && ArmorAbilities.hasEclipseCrown(victim)) {
             event.setAmount(event.getAmount() * 0.75F);
         }
         ArmorAbilities.onHurt(victim, source);

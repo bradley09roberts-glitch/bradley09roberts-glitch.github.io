@@ -60,7 +60,7 @@ public class AstralEggItem extends Item {
             Fx.burst(server, ModParticles.STAR_SPARKLE.get(), pos.add(0, 0.4, 0), 40, 0.4, 0.12);
             Fx.burst(server, ParticleTypes.HEART, pos.add(0, 0.8, 0), 5, 0.4, 0.05);
             server.playSound(null, pos.x, pos.y, pos.z, ModSounds.EGG_HATCH.get(), SoundSource.NEUTRAL, 1.0F, 1.0F);
-            player.displayClientMessage(Component.translatable("item.starforged.astral_egg.hatched"), true);
+            player.sendOverlayMessage(Component.translatable("item.starforged.astral_egg.hatched"));
             stack.consume(1, player);
         }
         return InteractionResult.SUCCESS;

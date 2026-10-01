@@ -40,7 +40,7 @@ public class RiftPearlItem extends Item {
         if (level instanceof ServerLevel server) {
             Vec3 destination = findDestination(server, player);
             if (destination == null) {
-                player.displayClientMessage(Component.translatable("item.starforged.rift_pearl.blocked"), true);
+                player.sendOverlayMessage(Component.translatable("item.starforged.rift_pearl.blocked"));
                 return InteractionResult.FAIL;
             }
             Vec3 origin = player.position();

@@ -39,7 +39,7 @@ public class AstralCompassItem extends Item {
             player.getCooldowns().addCooldown(stack, 60);
             BlockPos found = server.findNearestMapStructure(ModTags.OBSERVATORIES, player.blockPosition(), 100, false);
             if (found == null) {
-                player.displayClientMessage(Component.translatable("item.starforged.astral_compass.none").withStyle(ChatFormatting.GRAY), true);
+                player.sendOverlayMessage(Component.translatable("item.starforged.astral_compass.none").withStyle(ChatFormatting.GRAY));
                 server.playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.COMPASS_PING.get(), SoundSource.PLAYERS, 0.6F, 0.5F);
                 return InteractionResult.FAIL;
             }
@@ -48,8 +48,8 @@ public class AstralCompassItem extends Item {
             Vec3 to = Vec3.atCenterOf(found).subtract(player.position());
             int distance = (int) Math.sqrt(to.x * to.x + to.z * to.z);
             String dir = direction(to);
-            player.displayClientMessage(Component.translatable("item.starforged.astral_compass.found", distance,
-                Component.translatable("direction.starforged." + dir)).withStyle(ChatFormatting.AQUA), true);
+            player.sendOverlayMessage(Component.translatable("item.starforged.astral_compass.found", distance,
+                Component.translatable("direction.starforged." + dir)).withStyle(ChatFormatting.AQUA));
             server.playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.COMPASS_PING.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
 
             Vec3 flat = new Vec3(to.x, 0, to.z).normalize();

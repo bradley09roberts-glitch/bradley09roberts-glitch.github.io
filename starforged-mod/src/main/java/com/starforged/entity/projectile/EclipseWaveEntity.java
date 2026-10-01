@@ -80,11 +80,11 @@ public class EclipseWaveEntity extends Projectile {
                     continue;
                 }
                 this.alreadyHit.add(target.getId());
-                float amount = target.getType().is(ModTags.VOIDBORN) ? this.damage * 1.5F : this.damage;
+                float amount = target.is(ModTags.VOIDBORN) ? this.damage * 1.5F : this.damage;
                 if (target.hurtServer(server, ModDamageTypes.source(server, ModDamageTypes.ECLIPSE_BEAM, this, owner), amount)) {
                     target.addEffect(new MobEffectInstance(MobEffects.GLOWING, 80, 0), owner);
                     Vec3 push = motion.multiply(1, 0, 1).normalize();
-                    target.knockback(0.6, -push.x, -push.z);
+                    com.starforged.util.Combat.knock(target, 0.6, push);
                 }
                 server.sendParticles(ModParticles.ECLIPSE_FLARE.get(), target.getX(), target.getY(0.5), target.getZ(), 3, 0.2, 0.2, 0.2, 0.02);
             }

@@ -158,7 +158,7 @@ public class StarboltEntity extends Projectile implements ItemSupplier {
         Entity target = hitResult.getEntity();
         Entity owner = this.getOwner();
         float amount = this.damage;
-        if (this.variant() == Variant.STAR && target.getType().is(ModTags.VOIDBORN)) {
+        if (this.variant() == Variant.STAR && target.is(ModTags.VOIDBORN)) {
             amount *= 1.5F;
         }
         if (target.hurtServer(server, ModDamageTypes.source(server, ModDamageTypes.STARLIGHT, this, owner), amount) && target instanceof LivingEntity living) {
@@ -168,7 +168,7 @@ public class StarboltEntity extends Projectile implements ItemSupplier {
                 living.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 40, 1), owner);
             }
             Vec3 push = this.getDeltaMovement().multiply(1, 0, 1).normalize();
-            living.knockback(0.25, -push.x, -push.z);
+            com.starforged.util.Combat.knock(living, 0.25, push);
         }
     }
 

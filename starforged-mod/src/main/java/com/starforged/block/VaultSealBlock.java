@@ -68,7 +68,7 @@ public class VaultSealBlock extends Block {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (!level.isClientSide()) {
-            player.displayClientMessage(Component.translatable("block.starforged.vault_seal.hint"), true);
+            player.sendOverlayMessage(Component.translatable("block.starforged.vault_seal.hint"));
         }
         return InteractionResult.SUCCESS;
     }

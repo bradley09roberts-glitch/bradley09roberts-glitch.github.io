@@ -33,7 +33,7 @@ public class GravityGauntletItem extends Item {
         Entity target = Targeting.lookEntity(player, RANGE);
         if (!(target instanceof LivingEntity living) || !GravityGrips.canGrab(player, living)) {
             if (!level.isClientSide()) {
-                player.displayClientMessage(Component.translatable("item.starforged.gravity_gauntlet.nothing"), true);
+                player.sendOverlayMessage(Component.translatable("item.starforged.gravity_gauntlet.nothing"));
             }
             return InteractionResult.FAIL;
         }

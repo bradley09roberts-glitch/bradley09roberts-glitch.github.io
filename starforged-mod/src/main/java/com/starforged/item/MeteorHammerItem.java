@@ -61,7 +61,7 @@ public class MeteorHammerItem extends Item {
         Vec3 away = target.position().subtract(attacker.position()).multiply(1, 0, 1);
         if (away.lengthSqr() > 1.0E-4) {
             away = away.normalize();
-            target.knockback(1.2, -away.x, -away.z);
+            com.starforged.util.Combat.knock(target, 1.2, away);
         }
         if (attacker.level() instanceof ServerLevel server) {
             server.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY(0.5), target.getZ(), 12, 0.3, 0.3, 0.3, 0.3);

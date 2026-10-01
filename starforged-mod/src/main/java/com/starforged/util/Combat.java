@@ -47,13 +47,25 @@ public final class Combat {
         if (target instanceof OwnableEntity ownable && ownable.getOwner() == attacker) {
             return false;
         }
-        if (attacker instanceof Player && target instanceof Player && !level.getServer().isPvpAllowed()) {
+        if (attacker instanceof Player && target instanceof Player && !level.getGameRules().get(net.minecraft.world.level.gamerules.GameRules.PVP)) {
             return false;
         }
-        if (attacker.getType().is(ModTags.SOVEREIGN_ALLIES) && target.getType().is(ModTags.SOVEREIGN_ALLIES)) {
+        if (attacker.is(ModTags.SOVEREIGN_ALLIES) && target.is(ModTags.SOVEREIGN_ALLIES)) {
             return false;
         }
         return !attacker.isAlliedTo(target);
+    }
+
+    /** Knocks {@code target} along the horizontal direction {@code dir}. */
+    public static void knock(LivingEntity target, double strength, Vec3 dir) {
+        Vec3 flat = new Vec3(dir.x, 0, dir.z);
+        if (flat.lengthSqr() < 1.0E-4) {
+            return;
+        }
+        double resist = 1.0 - Math.min(0.9, target.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE));
+        flat = flat.normalize().scale(strength * resist);
+        target.setDeltaMovement(target.getDeltaMovement().add(flat.x, target.onGround() ? 0.25 * strength * resist : 0.0, flat.z));
+        target.hurtMarked = true;
     }
 
     /** Pushes {@code target} away from {@code origin} horizontally with some lift. */
