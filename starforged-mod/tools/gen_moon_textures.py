@@ -133,47 +133,45 @@ def orrery_staff():
 
 
 def phase_daggers():
-    img, px = new()
-    for flip in (False, True):
-        for i in range(8):
-            x, y = 2 + i, 13 - i
-            if flip:
-                x = 15 - x
-            c = MOON[6] if i > 3 else MOON[4]
-            px[x, y] = hexc(c)
-            if i > 3:
-                px[x + (-1 if flip else 1) if 0 <= x + (-1 if flip else 1) < 16 else x, y] = hexc(MOON[5])
-        gx, gy = (5, 11) if not flip else (10, 11)
-        for d in (-1, 0, 1):
-            px[gx + d, gy + d * (1 if not flip else -1)] = hexc(GLOW[2])
-        hx, hy = (2, 14) if not flip else (13, 14)
-        px[hx, hy] = hexc(SLATE[1])
-        px[hx - (1 if not flip else -1), hy + 1] = hexc(SLATE[2])
-    px[9, 6] = hexc("#ffffff")
-    px[6, 6] = hexc("#ffffff")
+    # Two crossed moonsilver daggers, glowing guards at the crossing.
+    rows = [
+        "................",
+        ".W............W.",
+        ".Wa..........aW.",
+        "..Wa........aW..",
+        "...Wa......aW...",
+        "....Wa....aW....",
+        ".....Wa..aW.....",
+        "......WaaW......",
+        ".....gGaaGg.....",
+        "....g.GhhG.g....",
+        "......hGGh......",
+        ".....h....h.....",
+        "....h......h....",
+        "...o........o...",
+        "................",
+        "................",
+    ]
+    img = T.sprite(rows, {"W": "#ffffff", "a": MOON[5], "g": GLOW[2], "G": GLOW[3], "h": SLATE[2], "o": GLOW[1]})
     item(outline(img), "phase_daggers")
 
 
-def moonshot_crossbow():
-    img, px = new()
-    # Stock along the diagonal.
-    W.line(px, (2, 13), (10, 5), SLATE[2])
-    W.line(px, (3, 13), (11, 5), SLATE[1])
-    px[1, 14] = hexc(SLATE[0])
-    px[2, 14] = hexc(SLATE[0])
-    # Limbs: an arc across the front.
-    for i in range(-6, 7):
-        t = i / 6.0
-        x = round(11 + t * 4 - abs(t) * 1.5 + (-1 if i < 0 else 0))
-        y = round(5 + t * 4 + abs(t) * 1.5)
-        x, y = round(10.5 + i * 0.65 - abs(i) * 0.35), round(5.5 - i * 0.65 - abs(i) * 0.35)
-        if 0 <= x < 16 and 0 <= y < 16:
-            px[x, y] = hexc(MOON[6] if abs(i) < 5 else MOON[4])
-    # String and glowing bolt.
-    W.line(px, (7, 3), (13, 9), (200, 220, 255, 200))
-    W.line(px, (8, 8), (13, 3), GLOW[3])
-    px[14, 2] = hexc("#ffffff")
-    item(outline(img), "moonshot_crossbow")
+def moonshot_crossbow(vanilla):
+    # Vanilla crossbow silhouette in moonsilver and slate, loaded with a glowing bolt of moonlight.
+    im = Image.open(os.path.join(vanilla, "crossbow_standby.png")).convert("RGBA")
+    px = im.load()
+    for y in range(16):
+        for x in range(16):
+            c = px[x, y]
+            if not c[3]:
+                continue
+            if W.is_wood(c):
+                px[x, y] = lerp(hexc(MOON[1]), hexc(MOON[5]), min(1.0, W.lum(c) / 130.0))
+            else:
+                px[x, y] = ramp([MOON[2], MOON[4], MOON[6], "#ffffff"], min(1.0, W.lum(c) / 200.0))
+    for (x, y, col) in ((6, 9, GLOW[1]), (7, 8, GLOW[2]), (8, 7, GLOW[3]), (9, 6, GLOW[4]), (10, 5, "#ffffff")):
+        px[x, y] = hexc(col)
+    item(im, "moonshot_crossbow")
 
 
 def stasis_bell():
@@ -792,7 +790,7 @@ def main():
     tidecaller_glaive()
     orrery_staff()
     phase_daggers()
-    moonshot_crossbow()
+    moonshot_crossbow(vanilla)
     stasis_bell()
     tether_hook()
     lunar_key()

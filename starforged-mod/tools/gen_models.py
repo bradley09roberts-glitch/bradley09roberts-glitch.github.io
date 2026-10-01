@@ -822,8 +822,9 @@ def moonkit():
 
 def moonleaper():
     eyes = [("west", 2, 2, 1, 1, "#7ac0ff", True), ("east", 4, 2, 1, 1, "#7ac0ff", True)]
-    ear = lambda side, sx: P(f"{side}_ear", pivot=(sx * 2, -6, 1), rot=(15, 0, sx * 10), cubes=[C((-1, -11, -0.5), (2, 11, 1), "leaper_coat")],
-                             children=[P(f"{side}_ear_glow", pivot=(0, -11, 0), cubes=[C((-1, -2, -0.6), (2, 2, 1.2), "moon_glow")])])
+    # Short, splayed ears: long upright ones fill a rider's view.
+    ear = lambda side, sx: P(f"{side}_ear", pivot=(sx * 2.5, -6, 1), rot=(15, 0, sx * 28), cubes=[C((-1, -7, -0.5), (2, 7, 1), "leaper_coat")],
+                             children=[P(f"{side}_ear_glow", pivot=(0, -7, 0), cubes=[C((-1, -2, -0.6), (2, 2, 1.2), "moon_glow")])])
     hind = lambda side, sx: P(f"{side}_hind_leg", pivot=(sx * 5, 14, 5), cubes=[C((-2.5, -3, -4), (5, 8, 8), "leaper_coat")],
                               children=[P(f"{side}_foot", pivot=(0, 5, 0), cubes=[C((-2, 0, -6), (4, 3, 9), "leaper_dark")])])
     front = lambda side, sx: P(f"{side}_front_leg", pivot=(sx * 3, 14, -5), cubes=[C((-1.5, 0, -1.5), (3, 10, 3), "leaper_dark")])

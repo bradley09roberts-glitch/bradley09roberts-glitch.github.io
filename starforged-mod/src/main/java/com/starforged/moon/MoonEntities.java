@@ -43,7 +43,7 @@ public final class MoonEntities {
     public static final RegistryObject<EntityType<UmbralLurkerEntity>> UMBRAL_LURKER = register("umbral_lurker",
         EntityType.Builder.of(UmbralLurkerEntity::new, MobCategory.MONSTER).sized(0.7F, 2.4F).eyeHeight(2.1F).clientTrackingRange(10));
     public static final RegistryObject<EntityType<MoonkitEntity>> MOONKIT = register("moonkit",
-        EntityType.Builder.of(MoonkitEntity::new, MobCategory.CREATURE).sized(0.6F, 0.6F).eyeHeight(0.5F).clientTrackingRange(10));
+        EntityType.Builder.of(MoonkitEntity::new, MobCategory.CREATURE).sized(0.6F, 0.8F).eyeHeight(0.65F).clientTrackingRange(10));
     public static final RegistryObject<EntityType<MoonleaperEntity>> MOONLEAPER = register("moonleaper",
         EntityType.Builder.of(MoonleaperEntity::new, MobCategory.CREATURE).sized(1.4F, 1.7F).eyeHeight(1.5F)
             .passengerAttachments(new Vec3(0.0, 1.45, 0.1)).clientTrackingRange(12));

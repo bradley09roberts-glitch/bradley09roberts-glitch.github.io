@@ -11,6 +11,11 @@ Beat it and the **Sunforged** expansion opens: forge a *Solar Key* from its hear
 **the Sunlands** (a dimension of eternal noon with four new biomes), mine sunstone for **Sunsteel** gear that outclasses
 netherite, tame ember hounds, ride a phoenix, solve the **Sun Temple**, and face **the Sun Warden, Last Light of the Sky**.
 
+Beat the Warden and **Moonforged** follows: cool its heart into a *Lunar Key* and cross to **the Pale Reach**, a moon
+of endless night with **low gravity** and **tides** that turn every five minutes. Leap across crater fields, tame a
+Moonkit that sniffs out ore, ride a Moonleaper, solve the clockwork puzzle of a **Tidal Orrery**, and face
+**the Pale Matriarch, Mother of Tides**.
+
 ![The Eclipse Sovereign](docs/screenshots/boss_singularity.png)
 
 ---
@@ -26,7 +31,7 @@ netherite, tame ember hounds, ride a phoenix, solve the **Sun Temple**, and face
 
 1. In the CurseForge app, go to **Minecraft → Create Custom Profile**, pick **26.2** and the **Forge 65.1.0** loader, then click **Create**.
 2. On the profile, click **⋯ → Open Folder**, then open the **`mods`** folder (create it if it isn't there).
-3. Copy **[`release/starforged-1.1.0.jar`](release/starforged-1.1.0.jar)** into that `mods` folder.
+3. Copy **[`release/starforged-1.2.0.jar`](release/starforged-1.2.0.jar)** into that `mods` folder.
 4. Click **Play**. You should see *Starforged* in the **Mods** list on the title screen.
 
 *Without CurseForge:* run the official installer
@@ -53,8 +58,13 @@ Create a **Creative** world with **cheats on**, then type:
 | `/starforged sunlands` | Sends you straight to the Sunlands |
 | `/starforged suntemple` | Builds a full **Sun Temple** where you stand |
 | `/starforged sunwarden` | Places a Sun Altar ahead of you and plays the **Sun Warden's rising cinematic** |
+| `/starforged moonkit` | Gives every Moonforged weapon and gadget, a Lunar Key, a Tidal Sigil and Moonsilver armor |
+| `/starforged palereach` | Sends you straight to the Pale Reach |
+| `/starforged orrery` | Builds a full **Tidal Orrery** where you stand |
+| `/starforged matriarch` | Places a Moon Altar ahead of you and plays the **Pale Matriarch's rising cinematic** |
+| `/starforged tide` / `tide turn` | Shows how long until the tide turns / turns it right now |
 
-All items are also in the **Starforged** and **Sunforged** creative tabs.
+All items are also in the **Starforged**, **Sunforged** and **Moonforged** creative tabs.
 
 **Filming tips**
 - Switch to **Survival** (`/gamemode survival`) for the boss fight. Like vanilla bosses, the Sovereign doesn't attack creative players. `/effect give @s resistance 600 3` keeps you alive for B-roll.
@@ -220,6 +230,100 @@ Craft a **Sunfire Sigil** (Sunsteel Block, Solar Essence and Ember Shards) and u
 
 ![Sun Warden](docs/screenshots/sun_warden_title.png)
 
+## ☾ Moonforged: the third tier
+
+![The Pale Reach](docs/screenshots/moon_landscape.png)
+
+### Getting there
+1. Defeat the Sun Warden and take its **Heart of the Sun**.
+2. Craft a **Lunar Key**: Heart of the Sun in the middle, a Block of Sunsteel on each side, an Ender Pearl above and
+   below, and Amethyst Shards in the corners.
+3. Use the key on the ground in the Overworld. A **Lunar Gateway** shimmers open a few blocks ahead. Step in.
+   A matching gateway waits on the other side to take you home.
+
+### The Pale Reach
+A moon under a black, star-filled sky where it is always night.
+- **Low gravity.** You jump about three blocks high and fall slowly, and falls hurt far less. So do the creatures.
+- **The Tide Cycle.** Every five minutes the tide turns, with a title card and a swell of sound.
+  - **High Tide:** gravity grows even weaker, the Reach's creatures grow stronger and faster, and the Moonsilver set gives Speed and Haste.
+  - **Low Tide:** the **Tidal Clams** of the Silver Seas open. Right-click one for a **Lunar Pearl**.
+  - `/starforged tide` tells you how long is left.
+
+| Biome | What you'll find |
+|---|---|
+| **Regolith Flats** | Grey crater plains, moonpetals, boulders, Regolith Skimmers and Moonleaper herds |
+| **Silver Seas** | Shallow silver-sand seas full of Tidal Clams |
+| **Selenite Hollows** | Forests of glowing selenite crystal, rich Moonsilver veins and Selenite Sentinels |
+| **The Far Side** | Nearly lightless black regolith. Umbral Lurkers hunt here |
+| **Shattered Rim** | Jagged highlands under drifting **floating islands** |
+
+**Moonsilver Ore** needs a Sunsteel pickaxe or better. Diamond and netherite can't mine it.
+
+### Moonsilver (the new top tier)
+Smelt *Raw Moonsilver* into **Moonsilver Ingots**. Tools use a breeze rod handle.
+
+| | Moonsilver | Sunsteel | Netherite |
+|---|---|---|---|
+| Tool durability | 3200 | 2600 | 2031 |
+| Mining speed | 11 | 10.5 | 9 |
+| Armor toughness | 4 | 3.5 | 3 |
+
+Full Moonsilver set (**Lunar Ward**):
+- absorbs one heavy hit every 30 seconds and slows the attacker;
+- **sneak + jump** toggles light gravity, even back in the Overworld;
+- gives Speed and Haste at High Tide.
+
+### Weapons and gadgets
+| Item | Ability |
+|---|---|
+| **Crescent Glaive** | Right-click: hurl it in a wide double orbit around you. Sneak + right-click: **Gravity Nail** pins every enemy around you to the ground |
+| **Orrery Staff** | Three little moons orbit you. Right-click flings one; they re-form. Sneak + right-click: **Moonfall** merges them into one moon that crashes down where you aim |
+| **Phase Daggers** | Three charges. Dash straight through enemies, leaving crescent cuts that detonate a moment later |
+| **Moonshot Crossbow** | Needs no bolts. Shots of hard moonlight ricochet up to five times. Sneak + right-click: a **Gravity Beacon** drags enemies together |
+| **Stasis Bell** | Time stands still around you for four seconds: creatures and projectiles freeze mid-air |
+| **Tether Hook** | Grapple: hook a creature to reel it in, or a block to swing from it |
+| **Tidecaller Glaive** *(boss drop)* | Right-click: a rolling **Silver Tide** wave. Sneak + right-click: **reverse gravity**, so enemies float up and then slam down |
+
+![Moonforged weapons](docs/screenshots/moon_weapons.png)
+
+### Armor
+| Armor | Ability |
+|---|---|
+| **Moonsilver set** | Lunar Ward, Gravity Shift and High Tide speed (see above) |
+| **Crown of Tides** *(boss drop)* | Water Breathing and light gravity. Creatures lurking in the dark nearby are outlined |
+
+### Creatures
+| Creature | |
+|---|---|
+| **Regolith Skimmer** | Swims *through* the regolith with only its fin showing, then erupts beneath you. It can't be hurt while submerged, except by explosions |
+| **Lunar Moth** | Drawn to light. It snuffs out torches and lanterns (if mob griefing is on), hunts players holding a light source, and inflicts Darkness |
+| **Selenite Sentinel** | Crystal guardian that **reflects projectiles**, fires shard volleys and slams the ground |
+| **Umbral Lurker** | Only moves while you aren't looking at it |
+| **Moonkit** *(pet)* | Tame with a **Lunar Pearl**. Its **Lunar Scent** traces glimmering trails to nearby ores and chests (only you see them), and it digs up treats. Right-click with an empty hand to sit |
+| **Moonleaper** *(mount)* | Tame with **Moonpetals** and ride it. Hold jump to charge a huge leap (watch the bar above your hotbar); landing sends out a shockwave |
+
+![Pale Reach creatures](docs/screenshots/moon_creatures.png)
+
+### The Tidal Orrery
+A round observatory-temple in the Regolith Flats, Selenite Hollows and Far Side. Inside:
+- A moonlit hall with a channel of Tidal Clams, **Gravity Plates** that fling you upward (sneak to cross safely), and Selenite Sentinel and Lunar Moth spawners.
+- The **orrery puzzle.** Four **Orrery Rings** stand around the central console. Right-click a ring to turn it through the phases of the moon.
+  The **Lunar Mural** on the wall behind each ring shows the phase it must show. Then pull the **Orrery Console**:
+  - all four right: the orrery aligns and the **Moon Seals** dissolve, opening the vault and the shaft to the roof;
+  - any wrong: gravity inverts and the sentinels wake.
+- On the roof: the **Moon Altar**.
+
+### Boss: The Pale Matriarch (1024 HP)
+Craft a **Tidal Sigil** (a Block of Moonsilver, Lunar Pearls and Lunar Dust; vaults often hold one) and use it on the Moon Altar.
+- **Entrance.** The sea climbs into the air and gathers into a hanging sphere, gravity fails so everyone floats, and the Matriarch emerges from the water to her title card.
+- **Waxing Moon:** tidal waves to jump, a charged Gravity Lance, moonlet volleys, crescent blades, teleports and dives.
+- **Inversion (66%).** She rises out of reach, tethered to three **Lunar Anchors**, and your gravity flips. Shatter all three anchors (4 hits each) and she crashes down, **stunned and taking 50% more damage**. Each anchor leaves a stone shelter behind.
+- **New Moon (33%).** Darkness falls and three **Echoes** appear. Hit an echo and you're blinded while she heals. Only one of them is real.
+- **Moonfall (15%).** A moon falls on the summit. When it lands, hide under the anchors' shelters, or take the full impact.
+- **Rewards.** Tidecaller Glaive, Crown of Tides, Heart of the Moon, Moonsilver, Lunar Pearls, a chance at the Stasis Bell, and the *Eclipse of the Moon* challenge advancement.
+
+![Inversion](docs/screenshots/moon_inversion.png)
+
 ---
 
 ## Screenshots
@@ -241,6 +345,13 @@ Weapons: [weapons.png](docs/screenshots/weapons.png)
 | ![Supernova](docs/screenshots/sun_supernova.png) | ![Riding a Solar Phoenix](docs/screenshots/sun_phoenix_ride.png) |
 | ![Solar Gateway](docs/screenshots/sun_gateway.png) | ![Sunforged weapons](docs/screenshots/sun_weapons.png) |
 
+**Moonforged**
+| | |
+|---|---|
+| ![Selenite Hollows](docs/screenshots/moon_hollows.png) | ![Moonforged kit](docs/screenshots/moon_kit.png) |
+| ![Tidal Orrery](docs/screenshots/moon_orrery.png) | ![Tidal Orrery interior](docs/screenshots/moon_orrery_interior.png) |
+| ![Orrery aligned](docs/screenshots/moon_orrery_aligned.png) | ![Pale Reach creatures](docs/screenshots/moon_creatures.png) |
+
 ---
 
 ## Configuration
@@ -261,14 +372,16 @@ Weapons: [weapons.png](docs/screenshots/weapons.png)
 Requires JDK 25.
 ```
 cd starforged-mod
-./gradlew build          # → build/libs/starforged-1.1.0.jar
+./gradlew build          # → build/libs/starforged-1.2.0.jar
 ./gradlew runClient      # dev client
 ./gradlew runServer      # dev server
 ```
 Textures, models, sounds and data files are generated by the scripts in `tools/` (Python 3 with Pillow and NumPy;
 `ffmpeg` with libvorbis is needed for the sounds):
 `gen_textures.py`, `gen_models.py`, `gen_sounds.py` and `gen_data.py`, plus `gen_sun_textures.py`, `gen_sun_sounds.py`
-and `gen_sun_data.py` for Sunforged (run each `_sun_` script after its base script). Run `gen_weapons.py --vanilla <vanilla item texture folder>` after
+and `gen_sun_data.py` for Sunforged and `gen_moon_textures.py`, `gen_moon_sounds.py` and `gen_moon_data.py` for
+Moonforged (run each `_sun_` script after its base script, and each `_moon_` script after that;
+`gen_sun_textures.py` and `gen_moon_textures.py` also take `--vanilla`). Run `gen_weapons.py --vanilla <vanilla item texture folder>` after
 `gen_textures.py`: it redraws the weapon and tool sprites (the Starmetal tools reuse the vanilla diamond tool shapes).
 
 ## Tested
@@ -284,5 +397,8 @@ and `gen_sun_data.py` for Sunforged (run each `_sun_` script after its base scri
   - Sunforged: all four Sunlands biomes, gateway travel both ways, every Sunforged weapon and armor ability,
     taming the Ember Hound, hatching and riding the Solar Phoenix, the brazier puzzle, and the Sun Warden fight
     through both Supernova outcomes, death and loot
+  - Moonforged: all five Pale Reach biomes, gateway travel, low gravity and both tides, every Moonforged weapon,
+    taming the Moonkit (and its Lunar Scent) and the Moonleaper (including the charged leap), Tidal Clams,
+    the orrery puzzle (failure and success), and the Pale Matriarch through Inversion, New Moon, Moonfall, death and loot
 
 License: MIT.
