@@ -1,0 +1,86 @@
+{
+  "attributes": {
+    "minecraft:audio/background_music": {
+      "default": {
+        "max_delay": 24000,
+        "min_delay": 12000,
+        "sound": "minecraft:music.overworld.badlands"
+      }
+    },
+    "minecraft:visual/sky_color": "#ffae66",
+    "minecraft:visual/fog_color": "#ffcf9a",
+    "minecraft:visual/ambient_particles": [
+      {
+        "particle": {
+          "type": "starforged:ash_flake"
+        },
+        "probability": 0.0015
+      }
+    ]
+  },
+  "carvers": [
+    "minecraft:cave",
+    "minecraft:canyon"
+  ],
+  "downfall": 0.0,
+  "effects": {
+    "water_color": "#ff8a3a",
+    "grass_color": "#c8a050",
+    "foliage_color": "#b08040"
+  },
+  "features": [
+    [],
+    [
+      "starforged:sun_lava_lake"
+    ],
+    [],
+    [],
+    [],
+    [],
+    [
+      "starforged:ore_sunstone",
+      "starforged:ore_ember_magma"
+    ],
+    [],
+    [],
+    [
+      "starforged:sunbloom_patch",
+      "starforged:ember_crystals_sparse",
+      "starforged:sun_fire_patch"
+    ],
+    []
+  ],
+  "has_precipitation": false,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [
+      {
+        "type": "starforged:solar_phoenix",
+        "weight": 3,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "misc": [],
+    "monster": [
+      {
+        "type": "starforged:ember_hound",
+        "weight": 40,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "starforged:cinder_imp",
+        "weight": 25,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "temperature": 2.0
+}

@@ -46,6 +46,40 @@ public final class ModCreativeTabs {
         })
         .build());
 
+    private static final List<Supplier<? extends Item>> SUN_ORDER = List.of(
+        com.starforged.sun.SunItems.SOLAR_KEY, com.starforged.sun.SunItems.FLARE_GREATSWORD, com.starforged.sun.SunItems.SOLAR_LANCE,
+        com.starforged.sun.SunItems.PHOENIX_BOW, com.starforged.sun.SunItems.HELIOS_SCEPTER, com.starforged.sun.SunItems.CINDER_CHAKRAM,
+        com.starforged.sun.SunItems.SUNBURST_FLASK, com.starforged.sun.SunItems.PHOENIX_MANTLE, com.starforged.sun.SunItems.MAGMA_TREADS,
+        com.starforged.sun.SunItems.SOLAR_CROWN,
+        com.starforged.sun.SunItems.SUNSTEEL_HELMET, com.starforged.sun.SunItems.SUNSTEEL_CHESTPLATE, com.starforged.sun.SunItems.SUNSTEEL_LEGGINGS,
+        com.starforged.sun.SunItems.SUNSTEEL_BOOTS, com.starforged.sun.SunItems.SUNSTEEL_SWORD, com.starforged.sun.SunItems.SUNSTEEL_PICKAXE,
+        com.starforged.sun.SunItems.SUNSTEEL_AXE, com.starforged.sun.SunItems.SUNSTEEL_SHOVEL, com.starforged.sun.SunItems.SUNSTEEL_HOE,
+        com.starforged.sun.SunItems.RAW_SUNSTEEL, com.starforged.sun.SunItems.SUNSTEEL_INGOT, com.starforged.sun.SunItems.EMBER_SHARD,
+        com.starforged.sun.SunItems.SOLAR_ESSENCE, com.starforged.sun.SunItems.PHOENIX_FEATHER, com.starforged.sun.SunItems.SUNFIRE_SIGIL,
+        com.starforged.sun.SunItems.SUN_HEART, com.starforged.sun.SunItems.PHOENIX_EGG,
+        com.starforged.sun.SunItems.SCORCHSTONE, com.starforged.sun.SunItems.SUNSTONE_ORE, com.starforged.sun.SunItems.SUNSAND,
+        com.starforged.sun.SunItems.ASHEN_SOIL, com.starforged.sun.SunItems.EMBER_CRYSTAL_CLUSTER, com.starforged.sun.SunItems.SUNBLOOM,
+        com.starforged.sun.SunItems.SUNSTEEL_BLOCK, com.starforged.sun.SunItems.SUNBAKED_BRICKS, com.starforged.sun.SunItems.CRACKED_SUNBAKED_BRICKS,
+        com.starforged.sun.SunItems.CHISELED_SUNBAKED_BRICKS, com.starforged.sun.SunItems.SUNBAKED_BRICK_STAIRS,
+        com.starforged.sun.SunItems.SUNBAKED_BRICK_SLAB, com.starforged.sun.SunItems.SOLAR_GLASS, com.starforged.sun.SunItems.SUN_LANTERN,
+        com.starforged.sun.SunItems.SOLAR_BRAZIER, com.starforged.sun.SunItems.SUNFIRE_VENT, com.starforged.sun.SunItems.SUN_SEAL,
+        com.starforged.sun.SunItems.SUN_ALTAR,
+        com.starforged.sun.SunItems.CINDER_IMP_SPAWN_EGG, com.starforged.sun.SunItems.MAGMA_CRAWLER_SPAWN_EGG,
+        com.starforged.sun.SunItems.EMBER_HOUND_SPAWN_EGG, com.starforged.sun.SunItems.ASHEN_KNIGHT_SPAWN_EGG,
+        com.starforged.sun.SunItems.SOLAR_PHOENIX_SPAWN_EGG, com.starforged.sun.SunItems.SUN_WARDEN_SPAWN_EGG
+    );
+
+    public static final RegistryObject<CreativeModeTab> SUNFORGED = TABS.register("sunforged", () -> CreativeModeTab.builder()
+        .title(Component.translatable("itemGroup.starforged.sunforged"))
+        .withTabsBefore(STARFORGED.getId())
+        .icon(() -> new ItemStack(com.starforged.sun.SunItems.FLARE_GREATSWORD.get()))
+        .displayItems((params, output) -> {
+            for (Supplier<? extends Item> item : SUN_ORDER) {
+                output.accept(item.get());
+            }
+        })
+        .build());
+
     private ModCreativeTabs() {
     }
 }

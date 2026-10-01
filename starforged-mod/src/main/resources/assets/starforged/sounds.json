@@ -377,5 +377,293 @@
         "name": "starforged:crystal_shatter"
       }
     ]
+  },
+  "block.solar_brazier.ignite": {
+    "subtitle": "subtitles.starforged.block.solar_brazier.ignite",
+    "sounds": [
+      {
+        "name": "starforged:sun_brazier_ignite"
+      }
+    ]
+  },
+  "block.sun_seal.open": {
+    "subtitle": "subtitles.starforged.block.sun_seal.open",
+    "sounds": [
+      {
+        "name": "starforged:sun_seal_open"
+      }
+    ]
+  },
+  "block.sunfire_vent.erupt": {
+    "subtitle": "subtitles.starforged.block.sunfire_vent.erupt",
+    "sounds": [
+      {
+        "name": "starforged:sun_vent_erupt"
+      }
+    ]
+  },
+  "block.sun_altar.activate": {
+    "subtitle": "subtitles.starforged.block.sun_altar.activate",
+    "sounds": [
+      {
+        "name": "starforged:sun_altar_activate"
+      }
+    ]
+  },
+  "block.solar_gateway.travel": {
+    "subtitle": "subtitles.starforged.block.solar_gateway.travel",
+    "sounds": [
+      {
+        "name": "starforged:sun_gateway_travel"
+      }
+    ]
+  },
+  "item.solar_key.forge": {
+    "subtitle": "subtitles.starforged.item.solar_key.forge",
+    "sounds": [
+      {
+        "name": "starforged:sun_gateway_form"
+      }
+    ]
+  },
+  "item.solar_lance.dash": {
+    "subtitle": "subtitles.starforged.item.solar_lance.dash",
+    "sounds": [
+      {
+        "name": "starforged:sun_lance_dash"
+      }
+    ]
+  },
+  "item.flare_greatsword.flare": {
+    "subtitle": "subtitles.starforged.item.flare_greatsword.flare",
+    "sounds": [
+      {
+        "name": "starforged:sun_greatsword_flare"
+      }
+    ]
+  },
+  "item.phoenix_bow.shoot": {
+    "subtitle": "subtitles.starforged.item.phoenix_bow.shoot",
+    "sounds": [
+      {
+        "name": "starforged:sun_bow_shoot"
+      }
+    ]
+  },
+  "item.helios_scepter.summon": {
+    "subtitle": "subtitles.starforged.item.helios_scepter.summon",
+    "sounds": [
+      {
+        "name": "starforged:sun_scepter_summon"
+      }
+    ]
+  },
+  "item.cinder_chakram.throw": {
+    "subtitle": "subtitles.starforged.item.cinder_chakram.throw",
+    "sounds": [
+      {
+        "name": "starforged:sun_chakram_throw"
+      }
+    ]
+  },
+  "item.sunburst_flask.burst": {
+    "subtitle": "subtitles.starforged.item.sunburst_flask.burst",
+    "sounds": [
+      {
+        "name": "starforged:sun_flask_burst"
+      }
+    ]
+  },
+  "item.phoenix_mantle.rebirth": {
+    "subtitle": "subtitles.starforged.item.phoenix_mantle.rebirth",
+    "sounds": [
+      {
+        "name": "starforged:sun_rebirth"
+      }
+    ]
+  },
+  "item.phoenix_egg.hatch": {
+    "subtitle": "subtitles.starforged.item.phoenix_egg.hatch",
+    "sounds": [
+      {
+        "name": "starforged:sun_egg_hatch"
+      }
+    ]
+  },
+  "entity.cinder_imp.ambient": {
+    "subtitle": "subtitles.starforged.entity.cinder_imp.ambient",
+    "sounds": [
+      {
+        "name": "starforged:imp_ambient"
+      }
+    ]
+  },
+  "entity.cinder_imp.hurt": {
+    "subtitle": "subtitles.starforged.entity.cinder_imp.hurt",
+    "sounds": [
+      {
+        "name": "starforged:imp_hurt"
+      }
+    ]
+  },
+  "entity.cinder_imp.death": {
+    "subtitle": "subtitles.starforged.entity.cinder_imp.death",
+    "sounds": [
+      {
+        "name": "starforged:imp_death"
+      }
+    ]
+  },
+  "entity.magma_crawler.ambient": {
+    "subtitle": "subtitles.starforged.entity.magma_crawler.ambient",
+    "sounds": [
+      {
+        "name": "starforged:crawler_ambient"
+      }
+    ]
+  },
+  "entity.magma_crawler.death": {
+    "subtitle": "subtitles.starforged.entity.magma_crawler.death",
+    "sounds": [
+      {
+        "name": "starforged:crawler_death"
+      }
+    ]
+  },
+  "entity.ember_hound.ambient": {
+    "subtitle": "subtitles.starforged.entity.ember_hound.ambient",
+    "sounds": [
+      {
+        "name": "starforged:hound_ambient"
+      }
+    ]
+  },
+  "entity.ember_hound.growl": {
+    "subtitle": "subtitles.starforged.entity.ember_hound.growl",
+    "sounds": [
+      {
+        "name": "starforged:hound_growl"
+      }
+    ]
+  },
+  "entity.ember_hound.death": {
+    "subtitle": "subtitles.starforged.entity.ember_hound.death",
+    "sounds": [
+      {
+        "name": "starforged:hound_death"
+      }
+    ]
+  },
+  "entity.ashen_knight.ambient": {
+    "subtitle": "subtitles.starforged.entity.ashen_knight.ambient",
+    "sounds": [
+      {
+        "name": "starforged:knight_ambient"
+      }
+    ]
+  },
+  "entity.ashen_knight.block": {
+    "subtitle": "subtitles.starforged.entity.ashen_knight.block",
+    "sounds": [
+      {
+        "name": "starforged:knight_block"
+      }
+    ]
+  },
+  "entity.ashen_knight.death": {
+    "subtitle": "subtitles.starforged.entity.ashen_knight.death",
+    "sounds": [
+      {
+        "name": "starforged:knight_death"
+      }
+    ]
+  },
+  "entity.solar_phoenix.ambient": {
+    "subtitle": "subtitles.starforged.entity.solar_phoenix.ambient",
+    "sounds": [
+      {
+        "name": "starforged:phoenix_ambient"
+      }
+    ]
+  },
+  "entity.solar_phoenix.cry": {
+    "subtitle": "subtitles.starforged.entity.solar_phoenix.cry",
+    "sounds": [
+      {
+        "name": "starforged:phoenix_cry"
+      }
+    ]
+  },
+  "entity.sun_warden.roar": {
+    "subtitle": "subtitles.starforged.entity.sun_warden.roar",
+    "sounds": [
+      {
+        "name": "starforged:warden_roar"
+      }
+    ]
+  },
+  "entity.sun_warden.hurt": {
+    "subtitle": "subtitles.starforged.entity.sun_warden.hurt",
+    "sounds": [
+      {
+        "name": "starforged:warden_hurt"
+      }
+    ]
+  },
+  "entity.sun_warden.death": {
+    "subtitle": "subtitles.starforged.entity.sun_warden.death",
+    "sounds": [
+      {
+        "name": "starforged:warden_death"
+      }
+    ]
+  },
+  "entity.sun_warden.flare": {
+    "subtitle": "subtitles.starforged.entity.sun_warden.flare",
+    "sounds": [
+      {
+        "name": "starforged:warden_flare"
+      }
+    ]
+  },
+  "entity.sun_warden.beam": {
+    "subtitle": "subtitles.starforged.entity.sun_warden.beam",
+    "sounds": [
+      {
+        "name": "starforged:warden_beam"
+      }
+    ]
+  },
+  "entity.sun_warden.pillar": {
+    "subtitle": "subtitles.starforged.entity.sun_warden.pillar",
+    "sounds": [
+      {
+        "name": "starforged:warden_pillar"
+      }
+    ]
+  },
+  "entity.sun_warden.slam": {
+    "subtitle": "subtitles.starforged.entity.sun_warden.slam",
+    "sounds": [
+      {
+        "name": "starforged:warden_slam"
+      }
+    ]
+  },
+  "entity.sun_warden.supernova": {
+    "subtitle": "subtitles.starforged.entity.sun_warden.supernova",
+    "sounds": [
+      {
+        "name": "starforged:warden_supernova"
+      }
+    ]
+  },
+  "entity.solar_pylon.shatter": {
+    "subtitle": "subtitles.starforged.entity.solar_pylon.shatter",
+    "sounds": [
+      {
+        "name": "starforged:pylon_shatter"
+      }
+    ]
   }
 }

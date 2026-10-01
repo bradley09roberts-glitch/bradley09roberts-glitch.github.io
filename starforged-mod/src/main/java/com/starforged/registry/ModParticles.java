@@ -24,6 +24,11 @@ public final class ModParticles {
     /** A bright streak that crosses the night sky during a Starfall (client-side ambience). */
     public static final RegistryObject<SimpleParticleType> SHOOTING_STAR = PARTICLES.register("shooting_star", () -> new SimpleParticleType(true));
 
+    /** Golden-orange spark that rises off sunfire (Sunforged). */
+    public static final RegistryObject<SimpleParticleType> SOLAR_SPARK = PARTICLES.register("solar_spark", () -> new SimpleParticleType(true));
+    /** Grey ash flake that drifts on the Sunlands wind. */
+    public static final RegistryObject<SimpleParticleType> ASH_FLAKE = PARTICLES.register("ash_flake", () -> new SimpleParticleType(false));
+
     private ModParticles() {
     }
 }

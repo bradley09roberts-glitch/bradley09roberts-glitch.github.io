@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "starforged:sunsteel_boots",
+    "minecraft:magma_block",
+    "minecraft:magma_block",
+    "starforged:solar_essence"
+  ],
+  "result": {
+    "id": "starforged:magma_treads"
+  }
+}

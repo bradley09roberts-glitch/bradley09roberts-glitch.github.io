@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starforged:starmetal_hoe"
+    "starforged:starmetal_hoe",
+    "starforged:sunsteel_hoe"
   ]
 }

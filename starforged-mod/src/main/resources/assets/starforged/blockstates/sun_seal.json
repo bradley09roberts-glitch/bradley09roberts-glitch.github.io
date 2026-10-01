@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "opening=false": {
+      "model": "starforged:block/sun_seal"
+    },
+    "opening=true": {
+      "model": "starforged:block/sun_seal"
+    }
+  }
+}

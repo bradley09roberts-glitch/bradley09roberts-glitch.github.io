@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "E": "starforged:ember_shard",
+    "G": "minecraft:glowstone"
+  },
+  "pattern": [
+    " E ",
+    "EGE",
+    " E "
+  ],
+  "result": {
+    "id": "starforged:sun_lantern",
+    "count": 2
+  }
+}

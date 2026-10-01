@@ -12,6 +12,18 @@
     "starforged:astral_brick_slab",
     "starforged:celestial_altar",
     "starforged:gravity_rune",
-    "starforged:starfire_rune"
+    "starforged:starfire_rune",
+    "starforged:scorchstone",
+    "starforged:sunstone_ore",
+    "starforged:ember_crystal_cluster",
+    "starforged:sunsteel_block",
+    "starforged:sunbaked_bricks",
+    "starforged:cracked_sunbaked_bricks",
+    "starforged:chiseled_sunbaked_bricks",
+    "starforged:sunbaked_brick_stairs",
+    "starforged:sunbaked_brick_slab",
+    "starforged:solar_brazier",
+    "starforged:sunfire_vent",
+    "starforged:sun_altar"
   ]
 }

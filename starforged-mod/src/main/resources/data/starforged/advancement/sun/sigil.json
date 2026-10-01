@@ -1,0 +1,35 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.sun.sigil.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.sun.sigil.description"
+    },
+    "icon": {
+      "id": "starforged:sunfire_sigil"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "sigil": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "starforged:sunfire_sigil"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "sigil"
+    ]
+  ],
+  "parent": "starforged:sun/temple"
+}

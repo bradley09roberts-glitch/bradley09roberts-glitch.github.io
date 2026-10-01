@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "starforged:block/sunfire_vent_active",
+    "side": "starforged:block/sunbaked_bricks",
+    "bottom": "starforged:block/sunbaked_bricks"
+  }
+}

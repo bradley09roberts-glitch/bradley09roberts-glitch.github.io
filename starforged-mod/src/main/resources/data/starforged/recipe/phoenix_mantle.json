@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "F": "starforged:phoenix_feather",
+    "A": "starforged:solar_essence",
+    "C": "starforged:sunsteel_chestplate"
+  },
+  "pattern": [
+    "FAF",
+    "FCF",
+    "FAF"
+  ],
+  "result": {
+    "id": "starforged:phoenix_mantle"
+  }
+}

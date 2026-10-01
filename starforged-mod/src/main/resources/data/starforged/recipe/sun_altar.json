@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "A": "starforged:solar_essence",
+    "C": "starforged:chiseled_sunbaked_bricks",
+    "S": "starforged:sunsteel_block"
+  },
+  "pattern": [
+    " A ",
+    "CSC",
+    "SSS"
+  ],
+  "result": {
+    "id": "starforged:sun_altar"
+  }
+}

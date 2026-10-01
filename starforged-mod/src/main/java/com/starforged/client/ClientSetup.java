@@ -36,6 +36,7 @@ public final class ClientSetup {
     public static void init(BusGroup modBus) {
         EntityRenderersEvent.RegisterLayerDefinitions.BUS.addListener(ModLayers::register);
         EntityRenderersEvent.RegisterRenderers.BUS.addListener(StarforgedRenderers::register);
+        EntityRenderersEvent.RegisterRenderers.BUS.addListener(com.starforged.sun.client.SunRenderers::register);
         RegisterParticleProvidersEvent.BUS.addListener(StarforgedParticle::register);
         TickEvent.ClientTickEvent.Post.BUS.addListener(e -> onClientTick());
         ViewportEvent.ComputeCameraAngles.BUS.addListener(ClientSetup::onCameraAngles);
@@ -87,7 +88,8 @@ public final class ClientSetup {
 
     /** Nebula Cloak: gliding is powered by a gentle starwind - no rockets needed. */
     private static void tickNebulaCloak(LocalPlayer player) {
-        if (!player.isFallFlying() || !player.getItemBySlot(EquipmentSlot.CHEST).is(ModItems.NEBULA_CLOAK.get())) {
+        boolean phoenix = player.getItemBySlot(EquipmentSlot.CHEST).is(com.starforged.sun.SunItems.PHOENIX_MANTLE.get());
+        if (!player.isFallFlying() || !(phoenix || player.getItemBySlot(EquipmentSlot.CHEST).is(ModItems.NEBULA_CLOAK.get()))) {
             return;
         }
         Vec3 look = player.getLookAngle();
@@ -97,7 +99,7 @@ public final class ClientSetup {
         }
         if (player.tickCount % 2 == 0) {
             RandomSource random = player.getRandom();
-            player.level().addParticle(ModParticles.STAR_SPARKLE.get(), player.getX() + (random.nextDouble() - 0.5), player.getY() + 0.8,
+            player.level().addParticle(phoenix ? ModParticles.SOLAR_SPARK.get() : ModParticles.STAR_SPARKLE.get(), player.getX() + (random.nextDouble() - 0.5), player.getY() + 0.8,
                 player.getZ() + (random.nextDouble() - 0.5), -motion.x * 0.2, -motion.y * 0.2, -motion.z * 0.2);
         }
     }

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "X": "starforged:sunsteel_ingot",
+    "#": "minecraft:blaze_rod"
+  },
+  "pattern": [
+    "X",
+    "X",
+    "#"
+  ],
+  "result": {
+    "id": "starforged:sunsteel_sword"
+  }
+}

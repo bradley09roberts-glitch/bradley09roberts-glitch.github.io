@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starforged:starmetal_axe"
+    "starforged:starmetal_axe",
+    "starforged:sunsteel_axe"
   ]
 }

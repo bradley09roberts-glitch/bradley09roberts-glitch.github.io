@@ -19,7 +19,9 @@ public class StarforgedParticle extends SingleQuadParticle {
         VOID(0xB06CFF, 0x2A0F4F, -0.004F, 34, 0.18F, 0.95F, false),
         EMBER(0xFFC060, 0xFF3A10, -0.006F, 24, 0.14F, 0.93F, false),
         FLARE(0xFFFFFF, 0xB45CFF, 0.0F, 14, 0.6F, 0.9F, false),
-        SHOOTING(0xFFFFFF, 0xFFD27A, 0.0F, 34, 0.5F, 1.0F, true);
+        SHOOTING(0xFFFFFF, 0xFFD27A, 0.0F, 34, 0.5F, 1.0F, true),
+        SOLAR(0xFFF6B0, 0xFF6A10, -0.008F, 28, 0.13F, 0.94F, false),
+        ASH(0x9a948e, 0x4a4542, 0.0015F, 90, 0.09F, 0.98F, false);
 
         final int start;
         final int end;
@@ -96,6 +98,9 @@ public class StarforgedParticle extends SingleQuadParticle {
 
     @Override
     public int getLightCoords(float partialTick) {
+        if (this.style == Style.ASH) {
+            return super.getLightCoords(partialTick);
+        }
         return 15728880;
     }
 
@@ -111,5 +116,7 @@ public class StarforgedParticle extends SingleQuadParticle {
         event.registerSpriteSet(ModParticles.METEOR_EMBER.get(), sprites -> provider(sprites, Style.EMBER));
         event.registerSpriteSet(ModParticles.ECLIPSE_FLARE.get(), sprites -> provider(sprites, Style.FLARE));
         event.registerSpriteSet(ModParticles.SHOOTING_STAR.get(), sprites -> provider(sprites, Style.SHOOTING));
+        event.registerSpriteSet(ModParticles.SOLAR_SPARK.get(), sprites -> provider(sprites, Style.SOLAR));
+        event.registerSpriteSet(ModParticles.ASH_FLAKE.get(), sprites -> provider(sprites, Style.ASH));
     }
 }

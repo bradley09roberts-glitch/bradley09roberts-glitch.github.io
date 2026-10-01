@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "starforged:sunsteel"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "starforged:sunsteel"
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.sun.sunsteel.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.sun.sunsteel.description"
+    },
+    "icon": {
+      "id": "starforged:sunsteel_ingot"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ingot": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "starforged:sunsteel_ingot"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ingot"
+    ]
+  ],
+  "parent": "starforged:sun/sunlands"
+}

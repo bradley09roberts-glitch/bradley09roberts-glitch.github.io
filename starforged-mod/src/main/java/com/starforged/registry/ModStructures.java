@@ -19,6 +19,12 @@ public final class ModStructures {
     public static final RegistryObject<StructurePieceType> OBSERVATORY_PIECE = PIECE_TYPES.register("observatory_piece",
         () -> (StructurePieceType.ContextlessType) ObservatoryPiece::new);
 
+    public static final RegistryObject<StructureType<com.starforged.sun.world.SunTempleStructure>> SUN_TEMPLE = STRUCTURE_TYPES.register("sun_temple",
+        () -> () -> com.starforged.sun.world.SunTempleStructure.CODEC);
+
+    public static final RegistryObject<StructurePieceType> SUN_TEMPLE_PIECE = PIECE_TYPES.register("sun_temple_piece",
+        () -> (StructurePieceType.ContextlessType) com.starforged.sun.world.SunTemplePiece::new);
+
     private ModStructures() {
     }
 }

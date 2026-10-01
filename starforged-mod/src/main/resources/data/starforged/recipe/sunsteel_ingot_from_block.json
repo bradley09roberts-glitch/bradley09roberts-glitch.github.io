@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "starforged:sunsteel_block"
+  ],
+  "result": {
+    "id": "starforged:sunsteel_ingot",
+    "count": 9
+  }
+}

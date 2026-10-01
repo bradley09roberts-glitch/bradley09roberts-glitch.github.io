@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "starforged:phoenix"
+      }
+    ],
+    "wings": [
+      {
+        "texture": "starforged:phoenix"
+      }
+    ]
+  }
+}

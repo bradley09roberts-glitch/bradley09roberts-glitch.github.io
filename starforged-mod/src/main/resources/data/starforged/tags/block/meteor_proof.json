@@ -9,6 +9,9 @@
     "minecraft:reinforced_deepslate",
     "minecraft:spawner",
     "starforged:celestial_altar",
-    "starforged:vault_seal"
+    "starforged:vault_seal",
+    "starforged:sun_altar",
+    "starforged:sun_seal",
+    "starforged:solar_gateway"
   ]
 }

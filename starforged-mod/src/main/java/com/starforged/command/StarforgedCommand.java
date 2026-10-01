@@ -74,6 +74,18 @@ public final class StarforgedCommand {
             .then(Commands.literal("observatory")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(StarforgedCommand::observatory))
+            .then(Commands.literal("sunlands")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(StarforgedCommand::sunlands))
+            .then(Commands.literal("suntemple")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(StarforgedCommand::sunTemple))
+            .then(Commands.literal("sunwarden")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(StarforgedCommand::sunWarden))
+            .then(Commands.literal("sunkit")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(StarforgedCommand::sunKit))
             .then(Commands.literal("locate")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(c -> run(c, "locate structure #starforged:observatories"))));
@@ -90,6 +102,10 @@ public final class StarforgedCommand {
             {"/starforged observatory", "build a Fallen Observatory here"},
             {"/starforged locate", "find the nearest Fallen Observatory"},
             {"/starforged boss", "summon the Eclipse Sovereign (cinematic)"},
+            {"/starforged sunkit", "every Sunforged weapon, gadget & armor"},
+            {"/starforged sunlands", "travel to the Sunlands right now"},
+            {"/starforged suntemple", "build a Sun Temple here"},
+            {"/starforged sunwarden", "summon the Sun Warden (cinematic)"},
         };
         for (String[] line : lines) {
             source.sendSuccess(() -> Component.literal(line[0]).withStyle(ChatFormatting.AQUA)
@@ -140,6 +156,64 @@ public final class StarforgedCommand {
         }
         int topY = floorY + 1;
         c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.observatory", at.getX(), topY, at.getZ()), true);
+        return 1;
+    }
+
+    private static int sunlands(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        com.starforged.sun.world.SunlandsTravel.sendToSunlands(c.getSource().getPlayerOrException());
+        return 1;
+    }
+
+    private static int sunTemple(CommandContext<CommandSourceStack> c) {
+        ServerLevel level = c.getSource().getLevel();
+        BlockPos at = BlockPos.containing(c.getSource().getPosition());
+        int floorY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, at.getX(), at.getZ()) - 1;
+        com.starforged.sun.world.SunTemplePiece piece = new com.starforged.sun.world.SunTemplePiece(
+            at.getX() - com.starforged.sun.world.SunTemplePiece.CENTER, floorY, at.getZ() - com.starforged.sun.world.SunTemplePiece.CENTER);
+        BoundingBox box = piece.getBoundingBox();
+        RandomSource random = level.getRandom();
+        for (int cx = box.minX() >> 4; cx <= box.maxX() >> 4; cx++) {
+            for (int cz = box.minZ() >> 4; cz <= box.maxZ() >> 4; cz++) {
+                level.getChunk(cx, cz);
+                BoundingBox chunkBox = new BoundingBox(cx << 4, level.getMinY(), cz << 4, (cx << 4) + 15, level.getMaxY(), (cz << 4) + 15);
+                piece.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), random, chunkBox, new ChunkPos(cx, cz), at);
+            }
+        }
+        int topY = floorY + 1;
+        c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.suntemple", at.getX(), topY, at.getZ()), true);
+        return 1;
+    }
+
+    private static int sunWarden(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer player = c.getSource().getPlayerOrException();
+        ServerLevel level = player.level();
+        Vec3 look = player.getLookAngle().multiply(1, 0, 1).normalize();
+        BlockPos altar = BlockPos.containing(player.position().add(look.scale(8.0)));
+        level.setBlock(altar, com.starforged.sun.SunBlocks.SUN_ALTAR.get().defaultBlockState(), Block.UPDATE_ALL);
+        com.starforged.sun.boss.SunSummoning.begin(level, altar, player.position());
+        c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.sunwarden"), true);
+        return 1;
+    }
+
+    private static int sunKit(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer player = c.getSource().getPlayerOrException();
+        List<Supplier<? extends Item>> gear = List.of(
+            com.starforged.sun.SunItems.FLARE_GREATSWORD, com.starforged.sun.SunItems.SOLAR_LANCE, com.starforged.sun.SunItems.PHOENIX_BOW,
+            com.starforged.sun.SunItems.HELIOS_SCEPTER, com.starforged.sun.SunItems.CINDER_CHAKRAM, com.starforged.sun.SunItems.SOLAR_KEY,
+            com.starforged.sun.SunItems.SUNFIRE_SIGIL, com.starforged.sun.SunItems.PHOENIX_EGG, com.starforged.sun.SunItems.SUNSTEEL_PICKAXE,
+            com.starforged.sun.SunItems.SUNSTEEL_SWORD, com.starforged.sun.SunItems.SUNSTEEL_HELMET, com.starforged.sun.SunItems.SUNSTEEL_LEGGINGS);
+        for (Supplier<? extends Item> item : gear) {
+            player.getInventory().add(new ItemStack(item.get()));
+        }
+        player.getInventory().add(new ItemStack(com.starforged.sun.SunItems.SUNBURST_FLASK.get(), 16));
+        player.getInventory().add(new ItemStack(com.starforged.sun.SunItems.SOLAR_ESSENCE.get(), 32));
+        player.getInventory().add(new ItemStack(com.starforged.sun.SunItems.SUNBLOOM.get(), 16));
+        player.getInventory().add(new ItemStack(com.starforged.sun.SunItems.EMBER_SHARD.get(), 16));
+        player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(com.starforged.sun.SunItems.SOLAR_CROWN.get()));
+        player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(com.starforged.sun.SunItems.PHOENIX_MANTLE.get()));
+        player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(com.starforged.sun.SunItems.SUNSTEEL_LEGGINGS.get()));
+        player.setItemSlot(EquipmentSlot.FEET, new ItemStack(com.starforged.sun.SunItems.MAGMA_TREADS.get()));
+        c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.sunkit"), true);
         return 1;
     }
 

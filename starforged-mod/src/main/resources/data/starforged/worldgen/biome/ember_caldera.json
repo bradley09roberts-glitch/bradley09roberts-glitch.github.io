@@ -1,0 +1,80 @@
+{
+  "attributes": {
+    "minecraft:audio/background_music": {
+      "default": {
+        "max_delay": 24000,
+        "min_delay": 12000,
+        "sound": "minecraft:music.nether.nether_wastes"
+      }
+    },
+    "minecraft:visual/sky_color": "#ff7a3e",
+    "minecraft:visual/fog_color": "#ffa070",
+    "minecraft:visual/ambient_particles": [
+      {
+        "particle": {
+          "type": "starforged:ash_flake"
+        },
+        "probability": 0.004
+      }
+    ]
+  },
+  "carvers": [
+    "minecraft:cave",
+    "minecraft:canyon"
+  ],
+  "downfall": 0.0,
+  "effects": {
+    "water_color": "#ff8a3a",
+    "grass_color": "#c8a050",
+    "foliage_color": "#b08040"
+  },
+  "features": [
+    [],
+    [
+      "starforged:sun_lava_lake"
+    ],
+    [],
+    [],
+    [
+      "starforged:sun_delta"
+    ],
+    [],
+    [
+      "starforged:ore_sunstone",
+      "starforged:ore_ember_magma"
+    ],
+    [],
+    [],
+    [
+      "starforged:ember_crystals",
+      "starforged:sun_fire_patch"
+    ],
+    []
+  ],
+  "has_precipitation": false,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [],
+    "misc": [],
+    "monster": [
+      {
+        "type": "starforged:magma_crawler",
+        "weight": 50,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "starforged:cinder_imp",
+        "weight": 30,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "temperature": 2.0
+}

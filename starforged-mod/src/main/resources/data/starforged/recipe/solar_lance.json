@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "E": "starforged:ember_shard",
+    "I": "starforged:sunsteel_ingot",
+    "R": "minecraft:blaze_rod"
+  },
+  "pattern": [
+    " EI",
+    " RE",
+    "R  "
+  ],
+  "result": {
+    "id": "starforged:solar_lance"
+  }
+}

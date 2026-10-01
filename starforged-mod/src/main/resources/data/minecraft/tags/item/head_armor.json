@@ -2,6 +2,8 @@
   "replace": false,
   "values": [
     "starforged:starmetal_helmet",
-    "starforged:eclipse_crown"
+    "starforged:eclipse_crown",
+    "starforged:sunsteel_helmet",
+    "starforged:solar_crown"
   ]
 }

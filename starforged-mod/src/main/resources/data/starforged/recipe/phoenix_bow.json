@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "starforged:sunsteel_ingot",
+    "S": "minecraft:string",
+    "P": "starforged:phoenix_feather"
+  },
+  "pattern": [
+    " IS",
+    "P S",
+    " IS"
+  ],
+  "result": {
+    "id": "starforged:phoenix_bow"
+  }
+}

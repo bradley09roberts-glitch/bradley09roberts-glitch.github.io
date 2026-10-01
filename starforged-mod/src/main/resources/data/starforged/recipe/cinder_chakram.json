@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "starforged:sunsteel_ingot",
+    "A": "starforged:solar_essence"
+  },
+  "pattern": [
+    " I ",
+    "IAI",
+    " I "
+  ],
+  "result": {
+    "id": "starforged:cinder_chakram"
+  }
+}

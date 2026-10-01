@@ -1,0 +1,39 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.sun.phoenix.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.sun.phoenix.description"
+    },
+    "icon": {
+      "id": "starforged:phoenix_egg"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "tame": {
+      "trigger": "minecraft:tame_animal",
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "minecraft:entity_type": "starforged:solar_phoenix"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "tame"
+    ]
+  ],
+  "parent": "starforged:sun/hound"
+}

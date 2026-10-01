@@ -1,0 +1,39 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.sun.hound.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.sun.hound.description"
+    },
+    "icon": {
+      "id": "starforged:solar_essence"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "tame": {
+      "trigger": "minecraft:tame_animal",
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "minecraft:entity_type": "starforged:ember_hound"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "tame"
+    ]
+  ],
+  "parent": "starforged:sun/sunlands"
+}

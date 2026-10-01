@@ -3,6 +3,9 @@
   "values": [
     "starforged:starmetal_sword",
     "starforged:eclipse_blade",
-    "starforged:void_scythe"
+    "starforged:void_scythe",
+    "starforged:sunsteel_sword",
+    "starforged:flare_greatsword",
+    "starforged:solar_lance"
   ]
 }

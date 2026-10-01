@@ -15,7 +15,11 @@ public class StarforgedArmorItem extends Item {
         STARMETAL_SET("ability.starforged.starmetal_set"),
         COMET_BOOTS("ability.starforged.comet_boots"),
         NEBULA_CLOAK("ability.starforged.nebula_cloak"),
-        ECLIPSE_CROWN("ability.starforged.eclipse_crown");
+        ECLIPSE_CROWN("ability.starforged.eclipse_crown"),
+        SUNSTEEL_SET("ability.starforged.sunsteel_set"),
+        PHOENIX_MANTLE("ability.starforged.phoenix_mantle"),
+        MAGMA_TREADS("ability.starforged.magma_treads"),
+        SOLAR_CROWN("ability.starforged.solar_crown");
 
         private final String key;
 

@@ -1,0 +1,82 @@
+{
+  "attributes": {
+    "minecraft:audio/background_music": {
+      "default": {
+        "max_delay": 24000,
+        "min_delay": 12000,
+        "sound": "minecraft:music.overworld.desert"
+      }
+    },
+    "minecraft:visual/sky_color": "#ffcb7a",
+    "minecraft:visual/fog_color": "#ffe2b0"
+  },
+  "carvers": [
+    "minecraft:cave",
+    "minecraft:canyon"
+  ],
+  "downfall": 0.0,
+  "effects": {
+    "water_color": "#ff8a3a",
+    "grass_color": "#c8a050",
+    "foliage_color": "#b08040"
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "starforged:ore_sunstone",
+      "starforged:ore_sunstone_rich",
+      "starforged:ore_ember_magma"
+    ],
+    [],
+    [],
+    [
+      "starforged:dead_bush_dunes",
+      "starforged:sunbloom_dunes"
+    ],
+    []
+  ],
+  "has_precipitation": false,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [
+      {
+        "type": "starforged:solar_phoenix",
+        "weight": 3,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "misc": [],
+    "monster": [
+      {
+        "type": "starforged:magma_crawler",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "starforged:cinder_imp",
+        "weight": 30,
+        "minCount": 2,
+        "maxCount": 3
+      },
+      {
+        "type": "starforged:ashen_knight",
+        "weight": 6,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "temperature": 2.0
+}

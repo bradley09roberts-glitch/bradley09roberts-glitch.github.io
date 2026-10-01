@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starforged:starmetal_block"
+    "starforged:starmetal_block",
+    "starforged:sunsteel_block"
   ]
 }

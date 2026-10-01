@@ -111,6 +111,9 @@ public final class ArmorAbilities {
         if (hasCometBoots(entity)) {
             return 0.0F;
         }
+        if (entity instanceof Player dasher && com.starforged.sun.event.SunAbilities.isDashing(dasher)) {
+            return 0.0F;
+        }
         if (entity instanceof Player player && HammerSlams.isFallImmune(player)) {
             return 0.0F;
         }

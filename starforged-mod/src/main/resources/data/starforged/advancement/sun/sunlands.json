@@ -1,0 +1,31 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.sun.sunlands.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.sun.sunlands.description"
+    },
+    "icon": {
+      "id": "starforged:ashen_soil"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "enter": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "starforged:sunlands"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "enter"
+    ]
+  ],
+  "parent": "starforged:sun/root"
+}

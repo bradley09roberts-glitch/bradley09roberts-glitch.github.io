@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starforged:starmetal_leggings"
+    "starforged:starmetal_leggings",
+    "starforged:sunsteel_leggings"
   ]
 }

@@ -1,0 +1,35 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.sun.greatsword.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.sun.greatsword.description"
+    },
+    "icon": {
+      "id": "starforged:flare_greatsword"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "blade": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "starforged:flare_greatsword"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "blade"
+    ]
+  ],
+  "parent": "starforged:sun/warden"
+}

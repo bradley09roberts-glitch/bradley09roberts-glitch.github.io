@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "experience": 1.2,
+  "ingredient": "starforged:raw_sunsteel",
+  "result": {
+    "id": "starforged:sunsteel_ingot"
+  },
+  "cookingtime": 200
+}

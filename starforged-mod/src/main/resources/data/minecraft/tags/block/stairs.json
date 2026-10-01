@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starforged:astral_brick_stairs"
+    "starforged:astral_brick_stairs",
+    "starforged:sunbaked_brick_stairs"
   ]
 }

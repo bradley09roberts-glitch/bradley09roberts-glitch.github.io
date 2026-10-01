@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "starforged:block/solar_brazier"
+    },
+    "lit=true": {
+      "model": "starforged:block/solar_brazier_lit"
+    }
+  }
+}

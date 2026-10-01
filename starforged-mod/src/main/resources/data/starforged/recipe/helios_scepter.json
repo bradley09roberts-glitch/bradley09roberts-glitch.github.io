@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "A": "starforged:solar_essence",
+    "E": "starforged:ember_crystal_cluster",
+    "I": "starforged:sunsteel_ingot"
+  },
+  "pattern": [
+    " AE",
+    " IA",
+    "I  "
+  ],
+  "result": {
+    "id": "starforged:helios_scepter"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "G": "minecraft:glass",
+    "E": "starforged:ember_shard"
+  },
+  "pattern": [
+    "GGG",
+    "GEG",
+    "GGG"
+  ],
+  "result": {
+    "id": "starforged:solar_glass",
+    "count": 8
+  }
+}

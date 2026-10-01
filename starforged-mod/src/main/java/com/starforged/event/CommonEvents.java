@@ -41,6 +41,8 @@ public final class CommonEvents {
             EclipseFields.tick(level);
             GravityGrips.tickThrown(level);
             EclipseSummoning.tick(level);
+            com.starforged.sun.boss.SunSummoning.tick(level);
+            com.starforged.sun.event.SunAbilities.tickLevel(level);
             if (level.dimension() == Level.OVERWORLD) {
                 StarfallManager.tick(level);
             }
@@ -51,6 +53,7 @@ public final class CommonEvents {
         if (event.player() instanceof ServerPlayer player) {
             HammerSlams.tick(player);
             ArmorAbilities.tick(player);
+            com.starforged.sun.event.SunAbilities.tick(player);
         }
     }
 
@@ -81,11 +84,16 @@ public final class CommonEvents {
             event.setAmount(event.getAmount() * 0.75F);
         }
         ArmorAbilities.onHurt(victim, source);
+        com.starforged.sun.event.SunAbilities.onHurt(victim, source);
         return false;
     }
 
     private static boolean onDeath(LivingDeathEvent event) {
+        if (event.getEntity() instanceof Player player && com.starforged.sun.event.SunAbilities.tryRebirth(player)) {
+            return true;
+        }
         if (event.getEntity() instanceof Player player) {
+            com.starforged.sun.event.SunAbilities.clear(player);
             HammerSlams.clear(player);
             GravityGrips.clear(player);
         }

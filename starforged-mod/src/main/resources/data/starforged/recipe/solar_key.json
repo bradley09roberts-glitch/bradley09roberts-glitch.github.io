@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "D": "starforged:stardust",
+    "S": "starforged:starmetal_block",
+    "H": "starforged:sovereign_heart"
+  },
+  "pattern": [
+    "DSD",
+    "SHS",
+    "DSD"
+  ],
+  "result": {
+    "id": "starforged:solar_key"
+  }
+}

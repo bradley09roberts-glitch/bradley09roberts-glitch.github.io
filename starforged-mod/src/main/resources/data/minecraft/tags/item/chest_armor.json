@@ -2,6 +2,8 @@
   "replace": false,
   "values": [
     "starforged:starmetal_chestplate",
-    "starforged:nebula_cloak"
+    "starforged:nebula_cloak",
+    "starforged:sunsteel_chestplate",
+    "starforged:phoenix_mantle"
   ]
 }

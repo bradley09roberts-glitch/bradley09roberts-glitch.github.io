@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "experience": 0.1,
+  "ingredient": "starforged:sunsand",
+  "result": {
+    "id": "starforged:sunbaked_bricks"
+  },
+  "cookingtime": 200
+}

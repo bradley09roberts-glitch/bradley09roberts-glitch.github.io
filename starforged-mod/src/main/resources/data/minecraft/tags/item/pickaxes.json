@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "starforged:starmetal_pickaxe",
-    "starforged:meteor_hammer"
+    "starforged:meteor_hammer",
+    "starforged:sunsteel_pickaxe"
   ]
 }

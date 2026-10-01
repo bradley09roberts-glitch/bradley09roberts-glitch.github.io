@@ -1,0 +1,46 @@
+{
+  "variants": {
+    "phase=0": {
+      "model": "starforged:block/sunfire_vent"
+    },
+    "phase=1": {
+      "model": "starforged:block/sunfire_vent_warning"
+    },
+    "phase=2": {
+      "model": "starforged:block/sunfire_vent_active"
+    },
+    "phase=3": {
+      "model": "starforged:block/sunfire_vent_active"
+    },
+    "phase=4": {
+      "model": "starforged:block/sunfire_vent_active"
+    },
+    "phase=5": {
+      "model": "starforged:block/sunfire_vent_active"
+    },
+    "phase=6": {
+      "model": "starforged:block/sunfire_vent_active"
+    },
+    "phase=7": {
+      "model": "starforged:block/sunfire_vent_active"
+    },
+    "phase=8": {
+      "model": "starforged:block/sunfire_vent_active"
+    },
+    "phase=9": {
+      "model": "starforged:block/sunfire_vent_active"
+    },
+    "phase=10": {
+      "model": "starforged:block/sunfire_vent_active"
+    },
+    "phase=11": {
+      "model": "starforged:block/sunfire_vent_active"
+    },
+    "phase=12": {
+      "model": "starforged:block/sunfire_vent_active"
+    },
+    "phase=13": {
+      "model": "starforged:block/sunfire_vent_active"
+    }
+  }
+}

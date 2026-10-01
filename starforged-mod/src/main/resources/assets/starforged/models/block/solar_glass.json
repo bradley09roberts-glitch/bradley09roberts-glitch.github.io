@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": {
+      "sprite": "starforged:block/solar_glass",
+      "force_translucent": true
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "minecraft:glass_bottle",
+    "starforged:ember_shard",
+    "starforged:solar_essence"
+  ],
+  "result": {
+    "id": "starforged:sunburst_flask",
+    "count": 2
+  }
+}

@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starforged:astral_brick_slab"
+    "starforged:astral_brick_slab",
+    "starforged:sunbaked_brick_slab"
   ]
 }

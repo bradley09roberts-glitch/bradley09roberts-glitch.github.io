@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "G": "minecraft:gold_ingot",
+    "E": "starforged:ember_shard"
+  },
+  "pattern": [
+    "G G",
+    "GEG",
+    " G "
+  ],
+  "result": {
+    "id": "starforged:solar_brazier"
+  }
+}

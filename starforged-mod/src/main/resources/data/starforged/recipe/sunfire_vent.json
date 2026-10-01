@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "B": "starforged:sunbaked_bricks",
+    "I": "minecraft:iron_bars",
+    "E": "starforged:ember_shard"
+  },
+  "pattern": [
+    "BIB",
+    "IEI",
+    "BIB"
+  ],
+  "result": {
+    "id": "starforged:sunfire_vent",
+    "count": 4
+  }
+}

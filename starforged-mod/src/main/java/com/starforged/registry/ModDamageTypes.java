@@ -20,6 +20,8 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> STARLIGHT = key("starlight");
     public static final ResourceKey<DamageType> VOID_REND = key("void_rend");
     public static final ResourceKey<DamageType> SHOCKWAVE = key("shockwave");
+    public static final ResourceKey<DamageType> SUNFIRE = key("sunfire");
+    public static final ResourceKey<DamageType> SOLAR_BEAM = key("solar_beam");
 
     public static DamageSource source(Level level, ResourceKey<DamageType> type, @Nullable Entity direct, @Nullable Entity causing) {
         return new DamageSource(level.registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(type), direct, causing);

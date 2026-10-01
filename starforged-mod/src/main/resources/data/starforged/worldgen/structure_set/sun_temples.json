@@ -1,0 +1,14 @@
+{
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 772461903,
+    "separation": 6,
+    "spacing": 20
+  },
+  "structures": [
+    {
+      "structure": "starforged:sun_temple",
+      "weight": 1
+    }
+  ]
+}

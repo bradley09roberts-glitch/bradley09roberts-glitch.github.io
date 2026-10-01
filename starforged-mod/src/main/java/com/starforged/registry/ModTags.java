@@ -12,6 +12,8 @@ public final class ModTags {
     public static final TagKey<Item> STARMETAL_REPAIR = item("starmetal_repair_materials");
     public static final TagKey<Item> ECLIPSE_REPAIR = item("eclipse_repair_materials");
     public static final TagKey<Item> STARLING_FOOD = item("starling_food");
+    public static final TagKey<Item> SUNSTEEL_REPAIR = item("sunsteel_repair_materials");
+    public static final TagKey<Item> SOLAR_REPAIR = item("solar_repair_materials");
 
     public static final TagKey<Block> METEOR_PROOF = block("meteor_proof");
 
@@ -20,6 +22,9 @@ public final class ModTags {
     /** Creatures allied with the Eclipse Sovereign (never targeted by its attacks). */
     public static final TagKey<EntityType<?>> SOVEREIGN_ALLIES = entity("sovereign_allies");
 
+    /** Creatures that fight for the Sun Warden. */
+    public static final TagKey<EntityType<?>> WARDEN_ALLIES = entity("warden_allies");
+    public static final TagKey<Structure> SUN_TEMPLES = TagKey.create(Registries.STRUCTURE, Starforged.id("sun_temples"));
     public static final TagKey<Structure> OBSERVATORIES = TagKey.create(Registries.STRUCTURE, Starforged.id("observatories"));
 
     private static TagKey<Item> item(String name) {

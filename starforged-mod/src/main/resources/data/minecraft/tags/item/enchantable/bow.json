@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starforged:constellation_bow"
+    "starforged:constellation_bow",
+    "starforged:phoenix_bow"
   ]
 }

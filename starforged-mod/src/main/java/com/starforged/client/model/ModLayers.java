@@ -15,6 +15,13 @@ public final class ModLayers {
     public static final ModelLayerLocation NEBULA_RAY = layer("nebula_ray");
     public static final ModelLayerLocation ECLIPSE_SOVEREIGN = layer("eclipse_sovereign");
     public static final ModelLayerLocation ECLIPSE_CRYSTAL = layer("eclipse_crystal");
+    public static final ModelLayerLocation CINDER_IMP = layer("cinder_imp");
+    public static final ModelLayerLocation MAGMA_CRAWLER = layer("magma_crawler");
+    public static final ModelLayerLocation EMBER_HOUND = layer("ember_hound");
+    public static final ModelLayerLocation ASHEN_KNIGHT = layer("ashen_knight");
+    public static final ModelLayerLocation SOLAR_PHOENIX = layer("solar_phoenix");
+    public static final ModelLayerLocation SUN_WARDEN = layer("sun_warden");
+    public static final ModelLayerLocation SOLAR_PYLON = layer("solar_pylon");
 
     private ModLayers() {
     }
@@ -33,6 +40,13 @@ public final class ModLayers {
         event.registerLayerDefinition(NEBULA_RAY, ModelGeometry::nebulaRay);
         event.registerLayerDefinition(ECLIPSE_SOVEREIGN, ModelGeometry::eclipseSovereign);
         event.registerLayerDefinition(ECLIPSE_CRYSTAL, ModelGeometry::eclipseCrystal);
+        event.registerLayerDefinition(CINDER_IMP, ModelGeometry::cinderImp);
+        event.registerLayerDefinition(MAGMA_CRAWLER, ModelGeometry::magmaCrawler);
+        event.registerLayerDefinition(EMBER_HOUND, ModelGeometry::emberHound);
+        event.registerLayerDefinition(ASHEN_KNIGHT, ModelGeometry::ashenKnight);
+        event.registerLayerDefinition(SOLAR_PHOENIX, ModelGeometry::solarPhoenix);
+        event.registerLayerDefinition(SUN_WARDEN, ModelGeometry::sunWarden);
+        event.registerLayerDefinition(SOLAR_PYLON, ModelGeometry::solarPylon);
     }
 
     /** Looks up a nested part by slash-separated path, e.g. "body/chest/head". */

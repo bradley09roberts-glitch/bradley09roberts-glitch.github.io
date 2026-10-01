@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "E": "starforged:ember_shard",
+    "A": "starforged:solar_essence",
+    "B": "starforged:sunsteel_block"
+  },
+  "pattern": [
+    "EAE",
+    "ABA",
+    "EAE"
+  ],
+  "result": {
+    "id": "starforged:sunfire_sigil"
+  }
+}

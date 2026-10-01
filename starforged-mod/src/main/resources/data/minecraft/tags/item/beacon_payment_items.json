@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starforged:starmetal_ingot"
+    "starforged:starmetal_ingot",
+    "starforged:sunsteel_ingot"
   ]
 }

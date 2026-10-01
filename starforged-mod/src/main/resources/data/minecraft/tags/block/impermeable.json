@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starforged:starglass"
+    "starforged:starglass",
+    "starforged:solar_glass"
   ]
 }

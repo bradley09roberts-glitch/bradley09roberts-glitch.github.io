@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starforged:starmetal_shovel"
+    "starforged:starmetal_shovel",
+    "starforged:sunsteel_shovel"
   ]
 }

@@ -1,6 +1,9 @@
 {
   "replace": false,
   "values": [
-    "starforged:celestial_altar"
+    "starforged:celestial_altar",
+    "starforged:sunstone_ore",
+    "starforged:sunsteel_block",
+    "starforged:sun_altar"
   ]
 }

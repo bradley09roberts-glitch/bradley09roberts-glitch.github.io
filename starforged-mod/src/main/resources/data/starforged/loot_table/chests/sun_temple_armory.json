@@ -1,0 +1,145 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "starforged:sunsteel_sword",
+          "weight": 3,
+          "functions": [
+            {
+              "function": "minecraft:enchant_randomly"
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:sunsteel_pickaxe",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:sunsteel_helmet",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:sunsteel_chestplate",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:sunsteel_leggings",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:sunsteel_boots",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:solar_lance",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:cinder_chakram",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:magma_treads",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:phoenix_bow",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:helios_scepter",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "rolls": {
+        "type": "minecraft:uniform",
+        "min": 3,
+        "max": 6
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "starforged:sunsteel_ingot",
+          "weight": 6,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 5
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:sunburst_flask",
+          "weight": 4,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 4
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:solar_essence",
+          "weight": 4,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:diamond",
+          "weight": 2,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:golden_apple",
+          "weight": 2
+        }
+      ]
+    }
+  ],
+  "random_sequence": "starforged:chests/sun_temple_armory"
+}
