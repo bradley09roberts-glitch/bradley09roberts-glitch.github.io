@@ -140,7 +140,7 @@ public class PaleMatriarchEntity extends Monster {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-            .add(Attributes.MAX_HEALTH, 1100.0)
+            .add(Attributes.MAX_HEALTH, 1024.0)
             .add(Attributes.ARMOR, 14.0)
             .add(Attributes.ARMOR_TOUGHNESS, 8.0)
             .add(Attributes.ATTACK_DAMAGE, 14.0)

@@ -88,7 +88,8 @@ public class MoonshotBoltEntity extends Projectile {
         Vec3 motion = this.getDeltaMovement();
         this.setPos(this.getX() + motion.x, this.getY() + motion.y, this.getZ() + motion.z);
         ProjectileUtil.rotateTowardsMovement(this, 1.0F);
-        if (this.level().isClientSide()) {
+        // No trail for the first ticks: right in front of the shooter's eyes the sparks would fill the screen.
+        if (this.level().isClientSide() && this.tickCount > 2) {
             this.level().addParticle(ModParticles.LUNAR_GLIMMER.get(), this.getX(), this.getY(), this.getZ(), 0.0, 0.0, 0.0);
         }
     }

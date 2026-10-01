@@ -33,7 +33,7 @@ public class TidalOrreryStructure extends Structure {
         }
         int[] sorted = heights.clone();
         Arrays.sort(sorted);
-        if (sorted[sorted.length - 1] - sorted[0] > 14) {
+        if (sorted[sorted.length - 1] - sorted[0] > 24) {
             return Optional.empty();
         }
         int base = Math.max(sorted[sorted.length / 2], generator.getSeaLevel() + 1) - 1;

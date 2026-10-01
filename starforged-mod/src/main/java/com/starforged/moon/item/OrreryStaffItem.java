@@ -77,8 +77,8 @@ public class OrreryStaffItem extends Item {
             int moons = MoonCharges.get(stack, MOONS);
             for (int i = 0; i < moons; i++) {
                 double a = owner.tickCount * 0.12 + i * Math.PI * 2 / MOONS;
-                level.sendParticles(ModParticles.LUNAR_GLIMMER.get(), owner.getX() + Math.cos(a) * 1.1, owner.getY() + 1.3 + Math.sin(a * 2) * 0.15,
-                    owner.getZ() + Math.sin(a) * 1.1, 1, 0, 0, 0, 0);
+                level.sendParticles(ModParticles.LUNAR_GLIMMER.get(), owner.getX() + Math.cos(a) * 1.5, owner.getY() + 0.9 + Math.sin(a * 2) * 0.15,
+                    owner.getZ() + Math.sin(a) * 1.5, 1, 0, 0, 0, 0);
             }
         }
     }

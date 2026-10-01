@@ -129,7 +129,7 @@ public class MoonletEntity extends Projectile {
         }
         Vec3 motion = this.getDeltaMovement();
         this.setPos(this.getX() + motion.x, this.getY() + motion.y, this.getZ() + motion.z);
-        if (this.level().isClientSide()) {
+        if (this.level().isClientSide() && (this.tickCount > 2 || kind == Kind.MOONFALL)) {
             int count = kind == Kind.MOONFALL ? 6 : 2;
             float s = this.size();
             for (int i = 0; i < count; i++) {

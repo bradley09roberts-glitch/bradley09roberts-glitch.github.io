@@ -39,7 +39,7 @@ public class MatriarchEchoEntity extends Monster {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-            .add(Attributes.MAX_HEALTH, 1100.0)
+            .add(Attributes.MAX_HEALTH, 1024.0)
             .add(Attributes.FOLLOW_RANGE, 64.0)
             .add(Attributes.KNOCKBACK_RESISTANCE, 1.0);
     }

@@ -581,13 +581,17 @@ def tags():
 # ----------------------------------------------------------------------------------------------------------------
 
 BIOMES = {
-    # name: (temperature, humidity, continentalness, sky, fog, sky light factor, music)
+    # name: (temperature, humidity, continentalness, sky, fog, sky light factor, music). The Shattered Rim takes the most
+    # eroded (jagged) land regardless of climate; see EROSION.
     "regolith_flats": ((-1.0, 0.0), (-1.0, 1.0), (-0.15, 1.0), "#06070d", "#1c2232", 0.75, "minecraft:music.overworld.snowy_slopes"),
     "silver_seas": ((-1.0, 1.0), (-1.0, 1.0), (-1.0, -0.15), "#070912", "#22304a", 0.8, "minecraft:music.overworld.frozen_peaks"),
     "selenite_hollows": ((0.0, 1.0), (0.0, 1.0), (-0.15, 1.0), "#080a14", "#202a44", 0.7, "minecraft:music.overworld.lush_caves"),
-    "far_side": ((0.0, 0.5), (-1.0, 0.0), (-0.15, 1.0), "#020204", "#0a0a10", 0.25, "minecraft:music.overworld.deep_dark"),
-    "shattered_rim": ((0.5, 1.0), (-1.0, 0.0), (-0.15, 1.0), "#05060c", "#181c2a", 0.65, "minecraft:music.overworld.jagged_peaks"),
+    "far_side": ((0.0, 1.0), (-1.0, 0.0), (-0.15, 1.0), "#020204", "#0a0a10", 0.25, "minecraft:music.overworld.deep_dark"),
+    "shattered_rim": ((-1.0, 1.0), (-1.0, 1.0), (-0.15, 1.0), "#05060c", "#181c2a", 0.65, "minecraft:music.overworld.jagged_peaks"),
 }
+
+
+EROSION = {"shattered_rim": (-1.0, -0.4)}
 
 
 def features():
@@ -687,10 +691,10 @@ def worldgen():
             "minecraft:visual/sky_color": sky,
             "minecraft:visual/fog_color": fog,
             "minecraft:visual/sky_light_factor": light,
-            "minecraft:visual/ambient_particles": [{"particle": {"type": sid("moon_dust")}, "probability": 0.004 if name != "far_side" else 0.0015}],
+            "minecraft:visual/ambient_particles": [{"particle": {"type": sid("moon_dust")}, "probability": 0.0005 if name != "far_side" else 0.0002}],
         }
         if name == "selenite_hollows":
-            attributes["minecraft:visual/ambient_particles"].append({"particle": {"type": sid("lunar_glimmer")}, "probability": 0.002})
+            attributes["minecraft:visual/ambient_particles"].append({"particle": {"type": sid("lunar_glimmer")}, "probability": 0.0008})
         write(f"{D}/worldgen/biome/{name}.json", {
             "attributes": attributes,
             "carvers": ["minecraft:cave", "minecraft:canyon"],
@@ -798,7 +802,8 @@ def worldgen():
     biomes = []
     for name, (temp, hum, cont, *_rest) in BIOMES.items():
         biomes.append({"biome": sid(name), "parameters": {
-            "temperature": list(temp), "humidity": list(hum), "continentalness": list(cont), "erosion": [-1.0, 1.0],
+            "temperature": list(temp), "humidity": list(hum), "continentalness": list(cont),
+            "erosion": list(EROSION.get(name, (-1.0, 1.0) if name == "silver_seas" else (-0.4, 1.0))),
             "weirdness": [-1.0, 1.0], "depth": 0.0, "offset": 0.0}})
     write(f"{D}/dimension/pale_reach.json", {
         "type": sid("pale_reach"),

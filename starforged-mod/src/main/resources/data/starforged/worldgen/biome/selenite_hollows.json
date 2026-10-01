@@ -15,13 +15,13 @@
         "particle": {
           "type": "starforged:moon_dust"
         },
-        "probability": 0.004
+        "probability": 0.0005
       },
       {
         "particle": {
           "type": "starforged:lunar_glimmer"
         },
-        "probability": 0.002
+        "probability": 0.0008
       }
     ]
   },

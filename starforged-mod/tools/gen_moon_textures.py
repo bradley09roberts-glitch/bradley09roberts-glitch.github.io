@@ -722,15 +722,26 @@ def effects():
                 px[x, y] = lerp(hexc("#9cc8ff"), hexc("#ffffff"), edge)[:3] + (int(255 * min(1.0, edge * 1.5)),)
     save(img, "entity/crescent.png")
 
-    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    # Tide wave: a curling crest with foam, soft left/right edges (the renderer overlaps several of these side by side)
+    # and a body that fades out towards the ground.
+    size = 64
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     px = img.load()
-    for y in range(32):
-        for x in range(32):
-            t = y / 31
-            foam = y < 5 and (x * 7 + y * 3) % 5 < 3
-            col = hexc("#ffffff") if foam else lerp(hexc("#cfe0f6"), hexc("#4f7ab8"), t)
-            alpha = int(255 * (1.0 - t * 0.6))
-            px[x, y] = col[:3] + (alpha,)
+    for x in range(size):
+        u = x / (size - 1)
+        side = math.sin(math.pi * u) ** 0.8
+        crest = 0.22 + 0.10 * math.sin(u * math.pi * 2.0 + 0.6) + 0.05 * math.sin(u * math.pi * 6.0)
+        for y in range(size):
+            v = y / (size - 1)
+            if v < crest:
+                continue
+            depth = (v - crest) / (1.0 - crest)
+            foam = depth < 0.12 and ((x * 5 + y * 3) % 7 < 4 or depth < 0.05)
+            col = hexc("#ffffff") if foam else lerp(hexc("#d8ecff"), hexc("#3f6eb4"), min(1.0, depth * 1.3))
+            streak = 0.12 * math.sin(x * 0.9 + y * 0.35) if not foam else 0.0
+            col = lerp(col, hexc("#ffffff"), max(0.0, streak))
+            alpha = side * (1.0 - depth) ** 1.4 * (1.0 if foam else 0.85)
+            px[x, y] = col[:3] + (int(255 * max(0.0, min(1.0, alpha))),)
     save(img, "entity/tide_wave.png")
 
 

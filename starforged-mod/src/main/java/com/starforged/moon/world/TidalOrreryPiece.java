@@ -280,7 +280,7 @@ public class TidalOrreryPiece extends StructurePiece {
         int[][] dirs = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
         for (int i = 0; i < 4; i++) {
             int target = targetPhase(this.ox(), this.oz(), i);
-            int start = (target + 1 + i) & 3;
+            int start = (target + 1 + i % 3) & 3;
             this.set(CENTER + dirs[i][0] * 3, 1, CENTER + dirs[i][1] * 3,
                 MoonBlocks.ORRERY_RING.get().defaultBlockState().setValue(OrreryRingBlock.PHASE, start));
             int mx = CENTER + dirs[i][0] * 18;

@@ -15,7 +15,7 @@
         "particle": {
           "type": "starforged:moon_dust"
         },
-        "probability": 0.004
+        "probability": 0.0005
       }
     ]
   },

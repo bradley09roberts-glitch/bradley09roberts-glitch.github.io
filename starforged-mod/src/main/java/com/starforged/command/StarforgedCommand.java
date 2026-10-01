@@ -105,7 +105,14 @@ public final class StarforgedCommand {
                 .executes(c -> {
                     c.getSource().sendSuccess(() -> com.starforged.moon.world.MoonTides.describe(c.getSource().getLevel()), false);
                     return 1;
-                }))
+                })
+                .then(Commands.literal("turn")
+                    .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                    .executes(c -> {
+                        com.starforged.moon.world.MoonTides.turn(c.getSource().getLevel());
+                        c.getSource().sendSuccess(() -> com.starforged.moon.world.MoonTides.describe(c.getSource().getLevel()), true);
+                        return 1;
+                    })))
             .then(Commands.literal("locate")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(c -> run(c, "locate structure #starforged:observatories"))));
@@ -131,6 +138,7 @@ public final class StarforgedCommand {
             {"/starforged orrery", "build a Tidal Orrery here"},
             {"/starforged matriarch", "summon the Pale Matriarch (cinematic)"},
             {"/starforged tide", "how long until the tide turns"},
+            {"/starforged tide turn", "turn the tide right now"},
         };
         for (String[] line : lines) {
             source.sendSuccess(() -> Component.literal(line[0]).withStyle(ChatFormatting.AQUA)

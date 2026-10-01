@@ -22,8 +22,8 @@ public class StarforgedParticle extends SingleQuadParticle {
         SHOOTING(0xFFFFFF, 0xFFD27A, 0.0F, 34, 0.5F, 1.0F, true),
         SOLAR(0xFFF6B0, 0xFF6A10, -0.008F, 28, 0.13F, 0.94F, false),
         ASH(0x9a948e, 0x4a4542, 0.0015F, 90, 0.09F, 0.98F, false),
-        DUST(0xE8ECF4, 0x8E96A8, -0.0012F, 80, 0.08F, 0.985F, false),
-        GLIMMER(0xFFFFFF, 0x9CC8FF, -0.004F, 30, 0.14F, 0.93F, false);
+        DUST(0xE8ECF4, 0xB4BCCC, -0.0012F, 80, 0.045F, 0.985F, false),
+        GLIMMER(0xFFFFFF, 0x9CC8FF, -0.004F, 30, 0.075F, 0.93F, false);
 
         final int start;
         final int end;
