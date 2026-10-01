@@ -14,6 +14,9 @@ public final class ModFeatures {
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> METEOR_CRATER = FEATURES.register("meteor_crater",
         () -> new CraterFeature(NoneFeatureConfiguration.CODEC));
 
+    public static final RegistryObject<Feature<NoneFeatureConfiguration>> FLOATING_ISLAND = FEATURES.register("floating_island",
+        () -> new com.starforged.moon.world.FloatingIslandFeature(NoneFeatureConfiguration.CODEC));
+
     private ModFeatures() {
     }
 }

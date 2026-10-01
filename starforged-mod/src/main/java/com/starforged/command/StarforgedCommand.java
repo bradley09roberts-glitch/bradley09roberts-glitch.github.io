@@ -86,6 +86,26 @@ public final class StarforgedCommand {
             .then(Commands.literal("sunkit")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(StarforgedCommand::sunKit))
+            .then(Commands.literal("palereach")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(c -> {
+                    com.starforged.moon.world.PaleReachTravel.sendToPaleReach(c.getSource().getPlayerOrException());
+                    return 1;
+                }))
+            .then(Commands.literal("orrery")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(StarforgedCommand::orrery))
+            .then(Commands.literal("matriarch")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(StarforgedCommand::matriarch))
+            .then(Commands.literal("moonkit")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(StarforgedCommand::moonKit))
+            .then(Commands.literal("tide")
+                .executes(c -> {
+                    c.getSource().sendSuccess(() -> com.starforged.moon.world.MoonTides.describe(c.getSource().getLevel()), false);
+                    return 1;
+                }))
             .then(Commands.literal("locate")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(c -> run(c, "locate structure #starforged:observatories"))));
@@ -106,6 +126,11 @@ public final class StarforgedCommand {
             {"/starforged sunlands", "travel to the Sunlands right now"},
             {"/starforged suntemple", "build a Sun Temple here"},
             {"/starforged sunwarden", "summon the Sun Warden (cinematic)"},
+            {"/starforged moonkit", "every Moonforged weapon, gadget & armor"},
+            {"/starforged palereach", "travel to the Pale Reach right now"},
+            {"/starforged orrery", "build a Tidal Orrery here"},
+            {"/starforged matriarch", "summon the Pale Matriarch (cinematic)"},
+            {"/starforged tide", "how long until the tide turns"},
         };
         for (String[] line : lines) {
             source.sendSuccess(() -> Component.literal(line[0]).withStyle(ChatFormatting.AQUA)
@@ -192,6 +217,57 @@ public final class StarforgedCommand {
         level.setBlock(altar, com.starforged.sun.SunBlocks.SUN_ALTAR.get().defaultBlockState(), Block.UPDATE_ALL);
         com.starforged.sun.boss.SunSummoning.begin(level, altar, player.position());
         c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.sunwarden"), true);
+        return 1;
+    }
+
+    private static int orrery(CommandContext<CommandSourceStack> c) {
+        ServerLevel level = c.getSource().getLevel();
+        BlockPos at = BlockPos.containing(c.getSource().getPosition());
+        int floorY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, at.getX(), at.getZ()) - 1;
+        com.starforged.moon.world.TidalOrreryPiece piece = new com.starforged.moon.world.TidalOrreryPiece(
+            at.getX() - com.starforged.moon.world.TidalOrreryPiece.CENTER, floorY, at.getZ() - com.starforged.moon.world.TidalOrreryPiece.CENTER);
+        BoundingBox box = piece.getBoundingBox();
+        RandomSource random = level.getRandom();
+        for (int cx = box.minX() >> 4; cx <= box.maxX() >> 4; cx++) {
+            for (int cz = box.minZ() >> 4; cz <= box.maxZ() >> 4; cz++) {
+                level.getChunk(cx, cz);
+                BoundingBox chunkBox = new BoundingBox(cx << 4, level.getMinY(), cz << 4, (cx << 4) + 15, level.getMaxY(), (cz << 4) + 15);
+                piece.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), random, chunkBox, new ChunkPos(cx, cz), at);
+            }
+        }
+        int topY = floorY + 1;
+        c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.orrery", at.getX(), topY, at.getZ()), true);
+        return 1;
+    }
+
+    private static int matriarch(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer player = c.getSource().getPlayerOrException();
+        ServerLevel level = player.level();
+        Vec3 look = player.getLookAngle().multiply(1, 0, 1).normalize();
+        BlockPos altar = BlockPos.containing(player.position().add(look.scale(10.0)));
+        level.setBlock(altar, com.starforged.moon.MoonBlocks.MOON_ALTAR.get().defaultBlockState(), Block.UPDATE_ALL);
+        com.starforged.moon.boss.MatriarchSummoning.begin(level, altar);
+        c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.matriarch"), true);
+        return 1;
+    }
+
+    private static int moonKit(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer player = c.getSource().getPlayerOrException();
+        List<Supplier<? extends Item>> gear = List.of(
+            com.starforged.moon.MoonItems.TIDECALLER_GLAIVE, com.starforged.moon.MoonItems.CRESCENT_GLAIVE, com.starforged.moon.MoonItems.ORRERY_STAFF,
+            com.starforged.moon.MoonItems.PHASE_DAGGERS, com.starforged.moon.MoonItems.MOONSHOT_CROSSBOW, com.starforged.moon.MoonItems.STASIS_BELL,
+            com.starforged.moon.MoonItems.TETHER_HOOK, com.starforged.moon.MoonItems.LUNAR_KEY, com.starforged.moon.MoonItems.TIDAL_SIGIL,
+            com.starforged.moon.MoonItems.MOONSILVER_PICKAXE, com.starforged.moon.MoonItems.MOONSILVER_SWORD, com.starforged.moon.MoonItems.CROWN_OF_TIDES);
+        for (Supplier<? extends Item> item : gear) {
+            player.getInventory().add(new ItemStack(item.get()));
+        }
+        player.getInventory().add(new ItemStack(com.starforged.moon.MoonItems.LUNAR_PEARL.get(), 16));
+        player.getInventory().add(new ItemStack(com.starforged.moon.MoonItems.MOONPETAL.get(), 16));
+        player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(com.starforged.moon.MoonItems.MOONSILVER_HELMET.get()));
+        player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(com.starforged.moon.MoonItems.MOONSILVER_CHESTPLATE.get()));
+        player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(com.starforged.moon.MoonItems.MOONSILVER_LEGGINGS.get()));
+        player.setItemSlot(EquipmentSlot.FEET, new ItemStack(com.starforged.moon.MoonItems.MOONSILVER_BOOTS.get()));
+        c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.moonkit"), true);
         return 1;
     }
 

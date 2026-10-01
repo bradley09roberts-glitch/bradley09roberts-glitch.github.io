@@ -36,13 +36,17 @@ public final class Starforged {
 
         ModSounds.SOUNDS.register(modBus);
         com.starforged.sun.SunSounds.SOUNDS.register(modBus);
+        com.starforged.moon.MoonSounds.SOUNDS.register(modBus);
         ModParticles.PARTICLES.register(modBus);
         ModBlocks.BLOCKS.register(modBus);
         com.starforged.sun.SunBlocks.BLOCKS.register(modBus);
+        com.starforged.moon.MoonBlocks.BLOCKS.register(modBus);
         ModEntities.ENTITIES.register(modBus);
         com.starforged.sun.SunEntities.ENTITIES.register(modBus);
+        com.starforged.moon.MoonEntities.ENTITIES.register(modBus);
         ModItems.ITEMS.register(modBus);
         com.starforged.sun.SunItems.ITEMS.register(modBus);
+        com.starforged.moon.MoonItems.ITEMS.register(modBus);
         ModCreativeTabs.TABS.register(modBus);
         ModStructures.STRUCTURE_TYPES.register(modBus);
         ModStructures.PIECE_TYPES.register(modBus);
@@ -51,8 +55,10 @@ public final class Starforged {
         FMLCommonSetupEvent.getBus(modBus).addListener(this::commonSetup);
         EntityAttributeCreationEvent.BUS.addListener(ModEntities::registerAttributes);
         EntityAttributeCreationEvent.BUS.addListener(com.starforged.sun.SunEntities::registerAttributes);
+        EntityAttributeCreationEvent.BUS.addListener(com.starforged.moon.MoonEntities::registerAttributes);
         SpawnPlacementRegisterEvent.BUS.addListener(ModEntities::registerSpawnPlacements);
         SpawnPlacementRegisterEvent.BUS.addListener(com.starforged.sun.SunEntities::registerSpawnPlacements);
+        SpawnPlacementRegisterEvent.BUS.addListener(com.starforged.moon.MoonEntities::registerSpawnPlacements);
 
         context.registerConfig(ModConfig.Type.COMMON, StarforgedConfig.SPEC);
 

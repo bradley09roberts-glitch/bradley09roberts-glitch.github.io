@@ -29,6 +29,11 @@ public final class ModParticles {
     /** Grey ash flake that drifts on the Sunlands wind. */
     public static final RegistryObject<SimpleParticleType> ASH_FLAKE = PARTICLES.register("ash_flake", () -> new SimpleParticleType(false));
 
+    /** Silver moon dust that drifts slowly upward in low gravity (Moonforged). */
+    public static final RegistryObject<SimpleParticleType> MOON_DUST = PARTICLES.register("moon_dust", () -> new SimpleParticleType(true));
+    /** Pale blue-white lunar glimmer (Moonforged weapons and the Matriarch). */
+    public static final RegistryObject<SimpleParticleType> LUNAR_GLIMMER = PARTICLES.register("lunar_glimmer", () -> new SimpleParticleType(true));
+
     private ModParticles() {
     }
 }

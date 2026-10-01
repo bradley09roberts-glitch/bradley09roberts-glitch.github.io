@@ -80,6 +80,74 @@ public final class ModCreativeTabs {
         })
         .build());
 
+    private static final List<Supplier<? extends Item>> MOON_ORDER = List.of(
+        com.starforged.moon.MoonItems.LUNAR_KEY,
+        com.starforged.moon.MoonItems.TIDECALLER_GLAIVE,
+        com.starforged.moon.MoonItems.CRESCENT_GLAIVE,
+        com.starforged.moon.MoonItems.ORRERY_STAFF,
+        com.starforged.moon.MoonItems.PHASE_DAGGERS,
+        com.starforged.moon.MoonItems.MOONSHOT_CROSSBOW,
+        com.starforged.moon.MoonItems.STASIS_BELL,
+        com.starforged.moon.MoonItems.TETHER_HOOK,
+        com.starforged.moon.MoonItems.CROWN_OF_TIDES,
+        com.starforged.moon.MoonItems.MOONSILVER_HELMET,
+        com.starforged.moon.MoonItems.MOONSILVER_CHESTPLATE,
+        com.starforged.moon.MoonItems.MOONSILVER_LEGGINGS,
+        com.starforged.moon.MoonItems.MOONSILVER_BOOTS,
+        com.starforged.moon.MoonItems.MOONSILVER_SWORD,
+        com.starforged.moon.MoonItems.MOONSILVER_PICKAXE,
+        com.starforged.moon.MoonItems.MOONSILVER_AXE,
+        com.starforged.moon.MoonItems.MOONSILVER_SHOVEL,
+        com.starforged.moon.MoonItems.MOONSILVER_HOE,
+        com.starforged.moon.MoonItems.RAW_MOONSILVER,
+        com.starforged.moon.MoonItems.MOONSILVER_INGOT,
+        com.starforged.moon.MoonItems.SELENITE_SHARD,
+        com.starforged.moon.MoonItems.LUNAR_DUST,
+        com.starforged.moon.MoonItems.LUNAR_PEARL,
+        com.starforged.moon.MoonItems.TIDAL_SIGIL,
+        com.starforged.moon.MoonItems.MOON_HEART,
+        com.starforged.moon.MoonItems.MOONSTONE,
+        com.starforged.moon.MoonItems.REGOLITH,
+        com.starforged.moon.MoonItems.UMBRAL_REGOLITH,
+        com.starforged.moon.MoonItems.SILVER_SAND,
+        com.starforged.moon.MoonItems.MOONSILVER_ORE,
+        com.starforged.moon.MoonItems.SELENITE_CLUSTER,
+        com.starforged.moon.MoonItems.MOONPETAL,
+        com.starforged.moon.MoonItems.TIDAL_CLAM,
+        com.starforged.moon.MoonItems.MOONSILVER_BLOCK,
+        com.starforged.moon.MoonItems.LUNAR_BRICKS,
+        com.starforged.moon.MoonItems.CRACKED_LUNAR_BRICKS,
+        com.starforged.moon.MoonItems.CHISELED_LUNAR_BRICKS,
+        com.starforged.moon.MoonItems.LUNAR_BRICK_STAIRS,
+        com.starforged.moon.MoonItems.LUNAR_BRICK_SLAB,
+        com.starforged.moon.MoonItems.MOON_GLASS,
+        com.starforged.moon.MoonItems.MOON_LANTERN,
+        com.starforged.moon.MoonItems.GRAVITY_PLATE,
+        com.starforged.moon.MoonItems.ORRERY_RING,
+        com.starforged.moon.MoonItems.LUNAR_MURAL,
+        com.starforged.moon.MoonItems.ORRERY_CONSOLE,
+        com.starforged.moon.MoonItems.MOON_SEAL,
+        com.starforged.moon.MoonItems.MOON_ALTAR,
+        com.starforged.moon.MoonItems.REGOLITH_SKIMMER_SPAWN_EGG,
+        com.starforged.moon.MoonItems.LUNAR_MOTH_SPAWN_EGG,
+        com.starforged.moon.MoonItems.SELENITE_SENTINEL_SPAWN_EGG,
+        com.starforged.moon.MoonItems.UMBRAL_LURKER_SPAWN_EGG,
+        com.starforged.moon.MoonItems.MOONKIT_SPAWN_EGG,
+        com.starforged.moon.MoonItems.MOONLEAPER_SPAWN_EGG,
+        com.starforged.moon.MoonItems.PALE_MATRIARCH_SPAWN_EGG
+    );
+
+    public static final RegistryObject<CreativeModeTab> MOONFORGED = TABS.register("moonforged", () -> CreativeModeTab.builder()
+        .title(Component.translatable("itemGroup.starforged.moonforged"))
+        .withTabsBefore(SUNFORGED.getId())
+        .icon(() -> new ItemStack(com.starforged.moon.MoonItems.TIDECALLER_GLAIVE.get()))
+        .displayItems((params, output) -> {
+            for (Supplier<? extends Item> item : MOON_ORDER) {
+                output.accept(item.get());
+            }
+        })
+        .build());
+
     private ModCreativeTabs() {
     }
 }

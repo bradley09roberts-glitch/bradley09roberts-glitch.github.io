@@ -25,6 +25,12 @@ public final class ModStructures {
     public static final RegistryObject<StructurePieceType> SUN_TEMPLE_PIECE = PIECE_TYPES.register("sun_temple_piece",
         () -> (StructurePieceType.ContextlessType) com.starforged.sun.world.SunTemplePiece::new);
 
+    public static final RegistryObject<StructureType<com.starforged.moon.world.TidalOrreryStructure>> TIDAL_ORRERY = STRUCTURE_TYPES.register(
+        "tidal_orrery", () -> () -> com.starforged.moon.world.TidalOrreryStructure.CODEC);
+
+    public static final RegistryObject<StructurePieceType> TIDAL_ORRERY_PIECE = PIECE_TYPES.register("tidal_orrery_piece",
+        () -> (StructurePieceType.ContextlessType) com.starforged.moon.world.TidalOrreryPiece::new);
+
     private ModStructures() {
     }
 }

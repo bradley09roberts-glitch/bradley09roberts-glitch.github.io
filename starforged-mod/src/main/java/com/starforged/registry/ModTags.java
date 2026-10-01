@@ -15,7 +15,16 @@ public final class ModTags {
     public static final TagKey<Item> SUNSTEEL_REPAIR = item("sunsteel_repair_materials");
     public static final TagKey<Item> SOLAR_REPAIR = item("solar_repair_materials");
 
+    public static final TagKey<Item> MOONSILVER_REPAIR = item("moonsilver_repair_materials");
+    public static final TagKey<Item> TIDAL_REPAIR = item("tidal_repair_materials");
+
     public static final TagKey<Block> METEOR_PROOF = block("meteor_proof");
+    /** Blocks Sunsteel tools cannot harvest (Moonsilver Ore). */
+    public static final TagKey<Block> INCORRECT_FOR_SUNSTEEL = block("incorrect_for_sunsteel_tool");
+    /** Blocks Moonsilver tools cannot harvest (none yet - top tier). */
+    public static final TagKey<Block> INCORRECT_FOR_MOONSILVER = block("incorrect_for_moonsilver_tool");
+    /** Light sources a Lunar Moth will snuff out. */
+    public static final TagKey<Block> MOTH_LIGHTS = block("lunar_moth_lights");
 
     /** Voidborn creatures take bonus damage from starlight weapons. */
     public static final TagKey<EntityType<?>> VOIDBORN = entity("voidborn");
@@ -24,6 +33,11 @@ public final class ModTags {
 
     /** Creatures that fight for the Sun Warden. */
     public static final TagKey<EntityType<?>> WARDEN_ALLIES = entity("warden_allies");
+    /** Creatures that fight for the Pale Matriarch. */
+    public static final TagKey<EntityType<?>> MATRIARCH_ALLIES = entity("matriarch_allies");
+    /** Creatures of the Pale Reach that grow stronger at high tide. */
+    public static final TagKey<EntityType<?>> TIDEBOUND = entity("tidebound");
+    public static final TagKey<Structure> TIDAL_ORRERIES = TagKey.create(Registries.STRUCTURE, Starforged.id("tidal_orreries"));
     public static final TagKey<Structure> SUN_TEMPLES = TagKey.create(Registries.STRUCTURE, Starforged.id("sun_temples"));
     public static final TagKey<Structure> OBSERVATORIES = TagKey.create(Registries.STRUCTURE, Starforged.id("observatories"));
 

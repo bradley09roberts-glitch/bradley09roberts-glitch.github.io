@@ -6,7 +6,6 @@ import java.util.EnumMap;
 import java.util.Map;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.equipment.ArmorType;
@@ -18,10 +17,10 @@ import net.minecraft.world.item.equipment.EquipmentAssets;
  */
 public final class SunMaterials {
     public static final ToolMaterial SUNSTEEL = new ToolMaterial(
-        BlockTags.INCORRECT_FOR_NETHERITE_TOOL, 2600, 10.5F, 4.5F, 20, ModTags.SUNSTEEL_REPAIR
+        ModTags.INCORRECT_FOR_SUNSTEEL, 2600, 10.5F, 4.5F, 20, ModTags.SUNSTEEL_REPAIR
     );
     public static final ToolMaterial SOLAR = new ToolMaterial(
-        BlockTags.INCORRECT_FOR_NETHERITE_TOOL, 3800, 12.0F, 6.0F, 24, ModTags.SOLAR_REPAIR
+        ModTags.INCORRECT_FOR_SUNSTEEL, 3800, 12.0F, 6.0F, 24, ModTags.SOLAR_REPAIR
     );
 
     public static final ResourceKey<EquipmentAsset> SUNSTEEL_ASSET = asset("sunsteel");
