@@ -363,6 +363,7 @@ def lang(events):
         "commands.starforged.meteor": "Called down %s meteor(s)",
         "commands.starforged.kit": "✦ You are Starforged. (Kit given)",
         "commands.starforged.boss": "✦ The summoning ritual has begun...",
+        "commands.starforged.observatory": "✦ A Fallen Observatory rises at %s, %s, %s",
         "direction.starforged.north": "north", "direction.starforged.northeast": "northeast", "direction.starforged.east": "east",
         "direction.starforged.southeast": "southeast", "direction.starforged.south": "south", "direction.starforged.southwest": "southwest",
         "direction.starforged.west": "west", "direction.starforged.northwest": "northwest",
@@ -486,7 +487,7 @@ def recipes():
     shaped("singularity_grenade", [" G ", "GVG", " G "], {"G": "minecraft:glass", "V": sid("void_essence")}, sid("singularity_grenade"), 2, "equipment")
     shaped("rift_pearl", ["AVA", "VEV", "AVA"], {"A": sid("astral_shard"), "V": sid("void_essence"), "E": "minecraft:ender_pearl"}, sid("rift_pearl"), category="equipment")
     shaped("gravity_gauntlet", ["IAI", "IVI", " I "], {"I": I, "A": sid("astral_shard"), "V": sid("void_essence")}, sid("gravity_gauntlet"), category="equipment")
-    shaped("astral_compass", [" D ", "DCD", " A "], {"D": sid("stardust"), "C": "minecraft:compass", "A": sid("astral_shard")}, sid("astral_compass"), category="tools")
+    shaped("astral_compass", [" D ", "DCD", " A "], {"D": sid("stardust"), "C": "minecraft:compass", "A": sid("astral_shard")}, sid("astral_compass"), category="equipment")
     shaped("eclipse_sigil", ["VAV", "ACA", "VAV"], {"V": sid("void_essence"), "A": sid("astral_shard"), "C": sid("celestial_core")}, sid("eclipse_sigil"))
     shaped("nebula_cloak", ["VPV", "SCS", "VPV"], {"V": sid("void_essence"), "P": "minecraft:phantom_membrane", "S": sid("astral_shard"),
                                                    "C": sid("starmetal_chestplate")}, sid("nebula_cloak"), category="equipment")

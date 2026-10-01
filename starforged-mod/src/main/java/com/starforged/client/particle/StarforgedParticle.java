@@ -7,14 +7,11 @@ import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.RandomSource;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 
 /**
  * One full-bright, animated, fading particle class configured per Starforged particle type.
  */
-@OnlyIn(Dist.CLIENT)
 public class StarforgedParticle extends SingleQuadParticle {
     public enum Style {
         STAR(0xFFF3C2, 0xFFD27A, 0.0F, 22, 0.16F, 0.96F, false),

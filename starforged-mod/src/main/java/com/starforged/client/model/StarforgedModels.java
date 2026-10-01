@@ -14,14 +14,11 @@ import net.minecraft.client.model.Model;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.util.Mth;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
 /**
  * Animated models for every Starforged creature. Geometry comes from {@link ModelGeometry}; the procedural
  * animations live here.
  */
-@OnlyIn(Dist.CLIENT)
 public final class StarforgedModels {
     private StarforgedModels() {
     }

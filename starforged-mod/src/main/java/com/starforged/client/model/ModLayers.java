@@ -3,11 +3,8 @@ package com.starforged.client.model;
 import com.starforged.Starforged;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 
-@OnlyIn(Dist.CLIENT)
 public final class ModLayers {
     public static final ModelLayerLocation STAR_MITE = layer("star_mite");
     public static final ModelLayerLocation VOID_STALKER = layer("void_stalker");

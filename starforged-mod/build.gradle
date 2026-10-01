@@ -30,7 +30,12 @@ minecraft {
             systemProperty 'forge.enabledGameTestNamespaces', 'starforged'
         }
 
-        register('client')
+        register('client') {
+            // Optional: ./gradlew runClient -PquickPlay=localhost joins a server straight away (handy for testing).
+            if (project.hasProperty('quickPlay')) {
+                args '--quickPlayMultiplayer', project.property('quickPlay')
+            }
+        }
 
         register('server') {
             args '--nogui'

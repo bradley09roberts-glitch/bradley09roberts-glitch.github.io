@@ -1,5 +1,11 @@
 package com.starforged.command;
 
+import com.starforged.world.ObservatoryPiece;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -67,7 +73,7 @@ public final class StarforgedCommand {
                 .executes(StarforgedCommand::boss))
             .then(Commands.literal("observatory")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
-                .executes(c -> run(c, "place structure starforged:fallen_observatory ~ ~ ~")))
+                .executes(StarforgedCommand::observatory))
             .then(Commands.literal("locate")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(c -> run(c, "locate structure #starforged:observatories"))));
@@ -115,6 +121,26 @@ public final class StarforgedCommand {
         }
         c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.meteor", count), true);
         return count;
+    }
+
+    /** Builds a Fallen Observatory centred on the ground below the command source, whatever the terrain. */
+    private static int observatory(CommandContext<CommandSourceStack> c) {
+        ServerLevel level = c.getSource().getLevel();
+        BlockPos at = BlockPos.containing(c.getSource().getPosition());
+        int floorY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, at.getX(), at.getZ()) - 1;
+        ObservatoryPiece piece = new ObservatoryPiece(at.getX() - ObservatoryPiece.CENTER, floorY, at.getZ() - ObservatoryPiece.CENTER);
+        BoundingBox box = piece.getBoundingBox();
+        RandomSource random = level.getRandom();
+        for (int cx = box.minX() >> 4; cx <= box.maxX() >> 4; cx++) {
+            for (int cz = box.minZ() >> 4; cz <= box.maxZ() >> 4; cz++) {
+                level.getChunk(cx, cz);
+                BoundingBox chunkBox = new BoundingBox(cx << 4, level.getMinY(), cz << 4, (cx << 4) + 15, level.getMaxY(), (cz << 4) + 15);
+                piece.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), random, chunkBox, new ChunkPos(cx, cz), at);
+            }
+        }
+        int topY = floorY + 1;
+        c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.observatory", at.getX(), topY, at.getZ()), true);
+        return 1;
     }
 
     private static int kit(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {

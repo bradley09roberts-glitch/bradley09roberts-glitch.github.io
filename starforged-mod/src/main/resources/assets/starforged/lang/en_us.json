@@ -142,6 +142,7 @@
   "commands.starforged.meteor": "Called down %s meteor(s)",
   "commands.starforged.kit": "✦ You are Starforged. (Kit given)",
   "commands.starforged.boss": "✦ The summoning ritual has begun...",
+  "commands.starforged.observatory": "✦ A Fallen Observatory rises at %s, %s, %s",
   "direction.starforged.north": "north",
   "direction.starforged.northeast": "northeast",
   "direction.starforged.east": "east",

@@ -4,12 +4,9 @@ import net.minecraft.client.renderer.block.BlockModelRenderState;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jspecify.annotations.Nullable;
 
 /** Render states for every Starforged entity. */
-@OnlyIn(Dist.CLIENT)
 public final class StarforgedRenderStates {
     private StarforgedRenderStates() {
     }

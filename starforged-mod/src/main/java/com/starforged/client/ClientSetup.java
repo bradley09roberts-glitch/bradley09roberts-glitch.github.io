@@ -15,8 +15,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
@@ -27,7 +25,6 @@ import net.minecraftforge.eventbus.api.bus.BusGroup;
 /**
  * Client bootstrap: renderers, model layers, particles and client-side effects.
  */
-@OnlyIn(Dist.CLIENT)
 public final class ClientSetup {
     private static boolean jumpWasDown;
     private static int airTicks;

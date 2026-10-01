@@ -246,10 +246,10 @@ public class EclipseSovereignEntity extends Monster {
             this.home = this.blockPosition().below(8);
         }
 
-        // Abandoned fights end with the Sovereign withdrawing into the sky.
+        // Abandoned fights end with the Sovereign withdrawing into the sky. Spectating creative players keep it here (for filming).
         Player nearest = level.getNearestPlayer(this, 96.0);
-        if (nearest == null || nearest.isCreative() && level.getNearestPlayer(this.getX(), this.getY(), this.getZ(), 96.0, true) == null) {
-            if (++this.idleNoPlayers > 600) {
+        if (nearest == null) {
+            if (++this.idleNoPlayers > 1200) {
                 this.retreat(level);
                 return;
             }

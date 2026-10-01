@@ -63,11 +63,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 
-@OnlyIn(Dist.CLIENT)
 public final class StarforgedRenderers {
     public static final int FULL_BRIGHT = 15728880;
     private static final BlockDisplayContext BLOCK_CONTEXT = BlockDisplayContext.create();

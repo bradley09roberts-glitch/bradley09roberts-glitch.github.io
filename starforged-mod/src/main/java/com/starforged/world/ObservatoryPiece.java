@@ -104,7 +104,9 @@ public class ObservatoryPiece extends StructurePiece {
     }
 
     private BlockState get(int x, int y, int z) {
-        return this.level.getBlockState(this.at(x, y, z));
+        BlockPos pos = this.at(x, y, z);
+        // Only read inside the chunk being generated: neighbouring chunks may not exist yet.
+        return this.chunkBox.isInside(pos) ? this.level.getBlockState(pos) : Blocks.AIR.defaultBlockState();
     }
 
     private static double radius(int x, int z) {
