@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": "starforged:lunar_pearl",
+    "D": "starforged:lunar_dust",
+    "B": "starforged:moonsilver_block"
+  },
+  "pattern": [
+    "PDP",
+    "DBD",
+    "PDP"
+  ],
+  "result": {
+    "id": "starforged:tidal_sigil"
+  }
+}

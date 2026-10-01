@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starforged:sunbloom"
+    "starforged:sunbloom",
+    "starforged:moonpetal"
   ]
 }

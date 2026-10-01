@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "starforged:moonsilver_ingot",
+    "C": "minecraft:iron_chain",
+    "S": "starforged:selenite_shard"
+  },
+  "pattern": [
+    "  I",
+    " CS",
+    "C  "
+  ],
+  "result": {
+    "id": "starforged:tether_hook"
+  }
+}

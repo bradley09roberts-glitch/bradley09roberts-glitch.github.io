@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "S": "starforged:selenite_shard",
+    "I": "starforged:moonsilver_ingot",
+    "R": "minecraft:breeze_rod"
+  },
+  "pattern": [
+    " SI",
+    " RS",
+    "R  "
+  ],
+  "result": {
+    "id": "starforged:crescent_glaive"
+  }
+}

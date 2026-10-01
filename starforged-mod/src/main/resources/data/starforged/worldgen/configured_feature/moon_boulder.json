@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:block_blob",
+  "config": {
+    "state": {
+      "Name": "starforged:moonstone"
+    },
+    "can_place_on": {
+      "type": "minecraft:matching_blocks",
+      "blocks": [
+        "starforged:regolith",
+        "starforged:umbral_regolith",
+        "starforged:moonstone"
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "starforged:moonsilver_ingot",
+    "C": "minecraft:crossbow",
+    "S": "minecraft:string",
+    "P": "starforged:lunar_pearl"
+  },
+  "pattern": [
+    "ICI",
+    "SPS",
+    " I "
+  ],
+  "result": {
+    "id": "starforged:moonshot_crossbow"
+  }
+}

@@ -115,6 +115,31 @@ MATERIALS = {
     "pylon_stone": dict(base="#b8844a", dark="#6a4420", light="#e0b47a", pattern="glyph", vein="#ffd060"),
     "pylon_crystal": dict(base="#ffd060", dark="#ff8a20", light="#ffffff", pattern="crystal", glow=True),
     "crystal_core": dict(base="#ffffff", dark="#e0c8ff", light="#ffffff", pattern="flat", glow=True),
+    # --- Moonforged ---
+    "skimmer_hide": dict(base="#8e96a8", dark="#525a6c", light="#b8c0d0", pattern="plates"),
+    "skimmer_belly": dict(base="#d8dce6", dark="#a0a6b4", light="#f0f2f8", pattern="noise"),
+    "skimmer_fin": dict(base="#c8d0e0", dark="#7a8296", light="#eef2fa", pattern="edged", edge="#9cf0ff", glow=False),
+    "moth_body": dict(base="#3a3550", dark="#1c1a28", light="#5a5478", pattern="noise"),
+    "moth_wing": dict(base="#d8d4ea", dark="#8e88aa", light="#f6f4ff", pattern="feather"),
+    "moth_glow": dict(base="#bfe8ff", dark="#7ac0ff", light="#ffffff", pattern="flat", glow=True),
+    "selenite": dict(base="#dfe8f4", dark="#9aa8c0", light="#ffffff", pattern="crystal"),
+    "selenite_core": dict(base="#bfe8ff", dark="#6ab8ff", light="#ffffff", pattern="star", glow=True),
+    "selenite_stone": dict(base="#7c8496", dark="#4a5062", light="#a2aabb", pattern="bricks"),
+    "lurker_skin": dict(base="#121218", dark="#050508", light="#24242e", pattern="noise"),
+    "lurker_face": dict(base="#e8e6f0", dark="#a8a6b4", light="#ffffff", pattern="mask"),
+    "moonkit_fur": dict(base="#d8dce6", dark="#9aa0b0", light="#f4f6fa", pattern="noise"),
+    "moonkit_dark": dict(base="#7e8496", dark="#4e5262", light="#a0a6b6", pattern="noise"),
+    "moon_glow": dict(base="#a8d8ff", dark="#6ab0ff", light="#ffffff", pattern="flat", glow=True),
+    "leaper_coat": dict(base="#c8cce0", dark="#8a8ea6", light="#eceef8", pattern="stars"),
+    "leaper_dark": dict(base="#6e7290", dark="#3e4058", light="#9094b0", pattern="noise"),
+    "matriarch_robe": dict(base="#cfd8ea", dark="#8e98b4", light="#f2f6ff", pattern="robe", trim="#9cc8ff"),
+    "matriarch_skin": dict(base="#e8eef8", dark="#aab4c8", light="#ffffff", pattern="mask"),
+    "matriarch_dark": dict(base="#2a3048", dark="#141826", light="#444c6a", pattern="nebula"),
+    "matriarch_core": dict(base="#ffffff", dark="#9cc8ff", light="#ffffff", pattern="star", glow=True),
+    "matriarch_crown": dict(base="#e0e8ff", dark="#8e9ab8", light="#ffffff", pattern="metal"),
+    "matriarch_crescent": dict(base="#dff0ff", dark="#8cc0ff", light="#ffffff", pattern="edged", edge="#ffffff", glow=True),
+    "anchor_stone": dict(base="#aab2c4", dark="#6a7286", light="#d4dae6", pattern="glyph", vein="#9cc8ff"),
+    "anchor_crystal": dict(base="#bfe8ff", dark="#6ab0ff", light="#ffffff", pattern="crystal", glow=True),
 }
 
 
@@ -713,6 +738,142 @@ def solar_pylon():
     ], 64, 64
 
 
+def regolith_skimmer():
+    eyes = [("west", 1, 1, 1, 1, "#9cf0ff", True), ("east", 4, 1, 1, 1, "#9cf0ff", True)]
+    fin = lambda side, sx: P(f"{side}_fin", pivot=(sx * 5, 1, -1), rot=(0, 0, sx * -8),
+                             cubes=[C((-11 if sx < 0 else 0, -0.5, -5), (11, 1, 9), "skimmer_hide")])
+    return [
+        P("body", pivot=(0, 21, 0), cubes=[C((-5, -2.5, -8), (10, 5, 16), "skimmer_hide"), C((-4.5, 2.5, -7), (9, 0.5, 14), "skimmer_belly")],
+          children=[
+              P("head", pivot=(0, 0, -8), cubes=[C((-4, -2, -6), (8, 4, 6), "skimmer_hide", decals=eyes)],
+                children=[P("jaw", pivot=(0, 1.5, -1), cubes=[C((-3.5, 0, -5), (7, 1.5, 5), "skimmer_belly",
+                                                                  decals=[("north", 0, 0, 7, 1, "#f2f2f2", False)])])]),
+              fin("right", -1), fin("left", 1),
+              P("tail1", pivot=(0, 0, 8), cubes=[C((-2.5, -2, 0), (5, 4, 8), "skimmer_hide")],
+                children=[P("tail2", pivot=(0, 0, 8), cubes=[C((-1, -1.5, 0), (2, 3, 7), "skimmer_hide"),
+                                                              C((-5, -0.5, 4), (10, 1, 4), "skimmer_fin")])]),
+          ]),
+        P("dorsal", pivot=(0, 18.5, 1), rot=(-20, 0, 0), cubes=[C((-0.5, -7, -3), (1, 7, 6), "skimmer_fin")]),
+    ], 128, 64
+
+
+def lunar_moth():
+    eyes = [("north", 0, 1, 1, 1, "#bfe8ff", True), ("north", 3, 1, 1, 1, "#bfe8ff", True)]
+    wing = lambda name, sx, z, w, d, rz: P(name, pivot=(sx * 1.5, -0.5, z), rot=(0, 0, rz),
+                                          cubes=[C((-w if sx < 0 else 0, -0.5, -d / 2), (w, 1, d), "moth_wing",
+                                                   decals=[("top", w // 2 - 1, d // 2 - 1, 3, 3, "#7ac0ff", True)])])
+    antenna = lambda side, sx: P(f"{side}_antenna", pivot=(sx * 1, -3, -2), rot=(-35, 0, sx * 20), cubes=[C((-0.5, -5, -0.5), (1, 5, 1), "moth_glow")])
+    return [
+        P("body", pivot=(0, 14, 0), cubes=[C((-2, -2, -3), (4, 4, 6), "moth_body"), C((-1.5, -1.5, 3), (3, 3, 6), "moth_body")],
+          children=[
+              P("head", pivot=(0, -0.5, -3), cubes=[C((-2, -2.5, -3), (4, 4, 3), "moth_body", decals=eyes)],
+                children=[antenna("right", -1), antenna("left", 1)]),
+              wing("right_wing", -1, -1, 12, 10, 0), wing("left_wing", 1, -1, 12, 10, 0),
+              wing("right_hind_wing", -1, 4, 9, 7, 0), wing("left_hind_wing", 1, 4, 9, 7, 0),
+          ]),
+    ], 64, 64
+
+
+def selenite_sentinel():
+    face = [("north", 1, 3, 4, 1, "#bfe8ff", True), ("north", 2, 4, 2, 1, "#bfe8ff", True)]
+    shards = [P(f"shard_{i}", pivot=(x, -9, 3), rot=(-25, 0, rz), cubes=[C((-1.5, -h, -1.5), (3, h, 3), "selenite")])
+              for i, (x, h, rz) in enumerate([(-4, 8, -15), (0, 11, 0), (4, 7, 15)])]
+    arm = lambda side, sx: P(f"{side}_arm", pivot=(sx * 8.5, -6, 0), cubes=[C((-2.5, -2, -2.5), (5, 18, 5), "selenite"),
+                                                                            C((-3, 12, -3), (6, 5, 6), "selenite_stone")])
+    return [
+        P("body", pivot=(0, 4, 0), cubes=[C((-6, -10, -3.5), (12, 10, 7), "selenite_stone"), C((-2.5, -8, -3.8), (5, 5, 1), "selenite_core")],
+          children=shards),
+        P("head", pivot=(0, -6, -1), cubes=[C((-3, -7, -3), (6, 7, 6), "selenite", decals=face)],
+          children=[P("crest", pivot=(0, -7, 0), rot=(0, 45, 0), cubes=[C((-1.5, -5, -1.5), (3, 5, 3), "selenite")])]),
+        arm("right", -1), arm("left", 1),
+        P("right_leg", pivot=(-3, 4, 0), cubes=[C((-2.5, 0, -2.5), (5, 20, 5), "selenite_stone")]),
+        P("left_leg", pivot=(3, 4, 0), cubes=[C((-2.5, 0, -2.5), (5, 20, 5), "selenite_stone")]),
+    ], 128, 64
+
+
+def umbral_lurker():
+    face = [("north", 1, 2, 1, 2, "#ffffff", True), ("north", 4, 2, 1, 2, "#ffffff", True), ("north", 2, 6, 2, 1, "#2a2a32", False)]
+    return [
+        P("head", pivot=(0, -6, 0), cubes=[C((-3, -8, -3), (6, 8, 6), "lurker_skin"), C((-3, -7, -3.2), (6, 6, 0.5), "lurker_face", decals=face)]),
+        P("body", pivot=(0, -6, 0), cubes=[C((-3, 0, -1.5), (6, 13, 3), "lurker_skin")]),
+        P("right_arm", pivot=(-4, -5, 0), cubes=[C((-1, -1, -1), (2, 20, 2), "lurker_skin")]),
+        P("left_arm", pivot=(4, -5, 0), cubes=[C((-1, -1, -1), (2, 20, 2), "lurker_skin")]),
+        P("right_leg", pivot=(-1.5, 7, 0), cubes=[C((-1, 0, -1), (2, 17, 2), "lurker_skin")]),
+        P("left_leg", pivot=(1.5, 7, 0), cubes=[C((-1, 0, -1), (2, 17, 2), "lurker_skin")]),
+    ], 64, 64
+
+
+def moonkit():
+    eyes = [("north", 1, 1, 1, 1, "#7ac0ff", True), ("north", 3, 1, 1, 1, "#7ac0ff", True)]
+    ear = lambda side, sx: P(f"{side}_ear", pivot=(sx * 1.5, -3, -1), cubes=[C((-1, -2, -0.5), (2, 2, 1), "moonkit_dark")])
+    leg = lambda name, x, z: P(name, pivot=(x, 20, z), cubes=[C((-1, 0, -1), (2, 4, 2), "moonkit_dark")])
+    return [
+        P("body", pivot=(0, 17, 1), cubes=[C((-2.5, -2, -4), (5, 4, 8), "moonkit_fur")]),
+        P("head", pivot=(0, 16, -3), cubes=[C((-2.5, -3, -4), (5, 4, 4), "moonkit_fur", decals=eyes)],
+          children=[P("snout", pivot=(0, -0.5, -4), cubes=[C((-1, -0.5, -2), (2, 2, 2), "moonkit_fur",
+                                                              decals=[("north", 0, 0, 2, 1, "#2a2e3a", False)])]),
+                    ear("right", -1), ear("left", 1)]),
+        leg("right_front_leg", -1.3, -1.5), leg("left_front_leg", 1.3, -1.5),
+        leg("right_hind_leg", -1.3, 3.5), leg("left_hind_leg", 1.3, 3.5),
+        P("tail", pivot=(0, 16, 5), rot=(30, 0, 0), cubes=[C((-1.5, -1.5, 0), (3, 3, 6), "moonkit_fur")],
+          children=[P("tail_tip", pivot=(0, 0, 6), cubes=[C((-1.5, -1.5, 0), (3, 3, 3), "moon_glow")])]),
+    ], 64, 32
+
+
+def moonleaper():
+    eyes = [("west", 2, 2, 1, 1, "#7ac0ff", True), ("east", 4, 2, 1, 1, "#7ac0ff", True)]
+    ear = lambda side, sx: P(f"{side}_ear", pivot=(sx * 2, -6, 1), rot=(15, 0, sx * 10), cubes=[C((-1, -11, -0.5), (2, 11, 1), "leaper_coat")],
+                             children=[P(f"{side}_ear_glow", pivot=(0, -11, 0), cubes=[C((-1, -2, -0.6), (2, 2, 1.2), "moon_glow")])])
+    hind = lambda side, sx: P(f"{side}_hind_leg", pivot=(sx * 5, 14, 5), cubes=[C((-2.5, -3, -4), (5, 8, 8), "leaper_coat")],
+                              children=[P(f"{side}_foot", pivot=(0, 5, 0), cubes=[C((-2, 0, -6), (4, 3, 9), "leaper_dark")])])
+    front = lambda side, sx: P(f"{side}_front_leg", pivot=(sx * 3, 14, -5), cubes=[C((-1.5, 0, -1.5), (3, 10, 3), "leaper_dark")])
+    return [
+        P("body", pivot=(0, 12, 1), rot=(-12, 0, 0), cubes=[C((-5, -5, -8), (10, 10, 15), "leaper_coat")],
+          children=[P("tail", pivot=(0, -1, 7), cubes=[C((-2, -2, 0), (4, 4, 3), "moon_glow")])]),
+        P("head", pivot=(0, 6, -7), cubes=[C((-3.5, -6, -6), (7, 7, 7), "leaper_coat", decals=eyes),
+                                          C((-1.5, -2.5, -7), (3, 2, 1), "leaper_dark")],
+          children=[ear("right", -1), ear("left", 1)]),
+        hind("right", -1), hind("left", 1),
+        front("right", -1), front("left", 1),
+    ], 128, 64
+
+
+def pale_matriarch():
+    face = [("north", 1, 3, 2, 1, "#9cc8ff", True), ("north", 4, 3, 2, 1, "#9cc8ff", True)]
+    horn = lambda side, sx: P(f"{side}_horn", pivot=(sx * 3, -8, 0), rot=(0, 0, sx * 35),
+                              cubes=[C((-1, -7, -1), (2, 7, 2), "matriarch_crescent")],
+                              children=[P(f"{side}_horn_tip", pivot=(0, -7, 0), rot=(0, 0, sx * -60), cubes=[C((-1, -5, -1), (2, 5, 2), "matriarch_crescent")])])
+    arm = lambda side, sx: P(f"{side}_arm", pivot=(sx * 6.5, -14, 0), rot=(0, 0, sx * -10),
+                             cubes=[C((-1.5, -1, -1.5), (3, 14, 3), "matriarch_robe")],
+                             children=[P(f"{side}_hand", pivot=(0, 13, 0), cubes=[C((-1.5, 0, -1.5), (3, 4, 3), "matriarch_skin")])])
+    crescent = [P(f"halo_{i}", pivot=(math.cos(a) * 9, math.sin(a) * 9, 0), rot=(0, 0, math.degrees(a) + 90),
+                  cubes=[C((-1.5, -2.5, -0.5), (3, 5, 1), "matriarch_crescent")])
+                for i, a in enumerate([math.radians(d) for d in range(100, 381, 28)])]
+    return [
+        P("skirt", pivot=(0, 6, 0), cubes=[C((-7, 0, -5), (14, 16, 10), "matriarch_robe"), C((-5, 16, -3.5), (10, 3, 7), "matriarch_dark")],
+          children=[P("torso", pivot=(0, 0, 0), cubes=[C((-5, -14, -3), (10, 14, 6), "matriarch_robe"),
+                                                         C((-2.5, -11, -3.4), (5, 5, 1), "matriarch_core")],
+                      children=[
+                          P("head", pivot=(0, -14, 0), cubes=[C((-3.5, -8, -3.5), (7, 8, 7), "matriarch_skin", decals=face),
+                                                             C((-4, -8.5, 0), (8, 14, 4), "matriarch_dark")],
+                            children=[horn("right", -1), horn("left", 1)]),
+                          arm("right", -1), arm("left", 1),
+                          P("halo", pivot=(0, -19, 6), children=crescent),
+                          P("veil", pivot=(0, -14, 3.5), rot=(8, 0, 0), cubes=[C((-6, 0, 0), (12, 22, 1), "matriarch_dark")]),
+                      ])]),
+    ], 256, 128
+
+
+def lunar_anchor():
+    shards = [P(f"shard_{i}", pivot=(math.cos(i * math.pi / 2) * 5, -2, math.sin(i * math.pi / 2) * 5), rot=(20, i * 90, 15),
+                cubes=[C((-1, -2, -1), (2, 4, 2), "anchor_crystal")]) for i in range(4)]
+    return [
+        P("base", pivot=(0, 24, 0), cubes=[C((-5, -3, -5), (10, 3, 10), "anchor_stone")]),
+        P("shaft", pivot=(0, 21, 0), rot=(0, 45, 0), cubes=[C((-2.5, -22, -2.5), (5, 22, 5), "anchor_stone")]),
+        P("top", pivot=(0, -5, 0), children=[P("gem", pivot=(0, 0, 0), rot=(45, 0, 45), cubes=[C((-3, -3, -3), (6, 6, 6), "anchor_crystal")])] + shards),
+    ], 64, 64
+
+
 MODELS = [
     ("star_mite", "starMite", star_mite, 101),
     ("void_stalker", "voidStalker", void_stalker, 202),
@@ -730,6 +891,14 @@ MODELS = [
     ("solar_phoenix", "solarPhoenix", solar_phoenix, 1005),
     ("sun_warden", "sunWarden", sun_warden, 1006),
     ("solar_pylon", "solarPylon", solar_pylon, 1007),
+    ("regolith_skimmer", "regolithSkimmer", regolith_skimmer, 2001),
+    ("lunar_moth", "lunarMoth", lunar_moth, 2002),
+    ("selenite_sentinel", "seleniteSentinel", selenite_sentinel, 2003),
+    ("umbral_lurker", "umbralLurker", umbral_lurker, 2004),
+    ("moonkit", "moonkit", moonkit, 2005),
+    ("moonleaper", "moonleaper", moonleaper, 2006),
+    ("pale_matriarch", "paleMatriarch", pale_matriarch, 2007),
+    ("lunar_anchor", "lunarAnchor", lunar_anchor, 2008),
 ]
 
 

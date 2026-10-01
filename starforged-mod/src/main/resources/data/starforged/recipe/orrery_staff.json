@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": "starforged:lunar_pearl",
+    "S": "starforged:selenite_shard",
+    "I": "starforged:moonsilver_ingot"
+  },
+  "pattern": [
+    " PS",
+    " IP",
+    "I  "
+  ],
+  "result": {
+    "id": "starforged:orrery_staff"
+  }
+}

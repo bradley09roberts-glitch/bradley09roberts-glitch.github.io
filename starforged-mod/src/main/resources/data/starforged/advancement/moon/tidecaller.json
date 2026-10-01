@@ -1,0 +1,35 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.moon.tidecaller.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.moon.tidecaller.description"
+    },
+    "icon": {
+      "id": "starforged:tidecaller_glaive"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "blade": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "starforged:tidecaller_glaive"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "blade"
+    ]
+  ],
+  "parent": "starforged:moon/matriarch"
+}

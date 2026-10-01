@@ -1,0 +1,31 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.moon.pale_reach.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.moon.pale_reach.description"
+    },
+    "icon": {
+      "id": "starforged:regolith"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "enter": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "starforged:pale_reach"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "enter"
+    ]
+  ],
+  "parent": "starforged:moon/root"
+}

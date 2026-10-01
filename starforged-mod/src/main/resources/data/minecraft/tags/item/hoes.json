@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "starforged:starmetal_hoe",
-    "starforged:sunsteel_hoe"
+    "starforged:sunsteel_hoe",
+    "starforged:moonsilver_hoe"
   ]
 }

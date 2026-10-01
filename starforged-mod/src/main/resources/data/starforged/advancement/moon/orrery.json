@@ -1,0 +1,41 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.moon.orrery.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.moon.orrery.description"
+    },
+    "icon": {
+      "id": "starforged:chiseled_lunar_bricks"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "enter": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "minecraft:location": {
+                "structures": "starforged:tidal_orrery"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "enter"
+    ]
+  ],
+  "parent": "starforged:moon/pale_reach"
+}

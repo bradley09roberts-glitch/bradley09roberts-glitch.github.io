@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "starforged:regolith_skimmer",
+    "starforged:lunar_moth",
+    "starforged:selenite_sentinel",
+    "starforged:umbral_lurker"
+  ]
+}

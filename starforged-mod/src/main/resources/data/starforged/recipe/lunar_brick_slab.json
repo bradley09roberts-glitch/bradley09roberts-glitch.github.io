@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "#": "starforged:lunar_bricks"
+  },
+  "pattern": [
+    "###"
+  ],
+  "result": {
+    "id": "starforged:lunar_brick_slab",
+    "count": 6
+  }
+}

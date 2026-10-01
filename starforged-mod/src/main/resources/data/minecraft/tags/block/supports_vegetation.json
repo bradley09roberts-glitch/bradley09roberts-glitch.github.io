@@ -2,6 +2,9 @@
   "replace": false,
   "values": [
     "starforged:ashen_soil",
-    "starforged:sunsand"
+    "starforged:sunsand",
+    "starforged:regolith",
+    "starforged:silver_sand",
+    "starforged:umbral_regolith"
   ]
 }

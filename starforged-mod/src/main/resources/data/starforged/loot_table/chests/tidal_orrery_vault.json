@@ -1,0 +1,166 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "starforged:tidal_sigil",
+          "weight": 1
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 0.65
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "starforged:orrery_staff",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:moonshot_crossbow",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:phase_daggers",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:crescent_glaive",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:tether_hook",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:stasis_bell",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "starforged:moonsilver_helmet",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:moonsilver_chestplate",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:moonsilver_leggings",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:moonsilver_boots",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "rolls": {
+        "type": "minecraft:uniform",
+        "min": 4,
+        "max": 7
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "starforged:lunar_pearl",
+          "weight": 5,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:moonsilver_block",
+          "weight": 2,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:diamond",
+          "weight": 4,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 5
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:enchanted_golden_apple",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:book",
+          "weight": 3,
+          "functions": [
+            {
+              "function": "minecraft:enchant_randomly"
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:lunar_dust",
+          "weight": 5,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 3,
+                "max": 8
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "random_sequence": "starforged:chests/tidal_orrery_vault"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "experience": 1.4,
+  "ingredient": "starforged:moonsilver_ore",
+  "result": {
+    "id": "starforged:moonsilver_ingot"
+  },
+  "cookingtime": 100
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "S": "starforged:selenite_shard",
+    "G": "minecraft:glowstone"
+  },
+  "pattern": [
+    " S ",
+    "SGS",
+    " S "
+  ],
+  "result": {
+    "id": "starforged:moon_lantern",
+    "count": 2
+  }
+}

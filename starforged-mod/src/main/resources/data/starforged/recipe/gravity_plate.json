@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "D": "starforged:lunar_dust",
+    "B": "starforged:lunar_bricks",
+    "S": "starforged:selenite_shard"
+  },
+  "pattern": [
+    " D ",
+    "BSB"
+  ],
+  "result": {
+    "id": "starforged:gravity_plate",
+    "count": 2
+  }
+}

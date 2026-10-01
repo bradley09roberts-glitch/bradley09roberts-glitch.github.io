@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "open=false,pearl=false": {
+      "model": "starforged:block/tidal_clam"
+    },
+    "open=false,pearl=true": {
+      "model": "starforged:block/tidal_clam"
+    },
+    "open=true,pearl=false": {
+      "model": "starforged:block/tidal_clam_open_empty"
+    },
+    "open=true,pearl=true": {
+      "model": "starforged:block/tidal_clam_open"
+    }
+  }
+}

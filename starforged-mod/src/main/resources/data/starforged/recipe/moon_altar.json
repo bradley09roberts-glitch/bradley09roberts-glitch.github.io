@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "P": "starforged:lunar_pearl",
+    "C": "starforged:chiseled_lunar_bricks",
+    "M": "starforged:moonsilver_block"
+  },
+  "pattern": [
+    " P ",
+    "CMC",
+    "MMM"
+  ],
+  "result": {
+    "id": "starforged:moon_altar"
+  }
+}

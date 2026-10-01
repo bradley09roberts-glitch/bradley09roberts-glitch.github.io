@@ -1,0 +1,35 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.moon.pearl.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.moon.pearl.description"
+    },
+    "icon": {
+      "id": "starforged:lunar_pearl"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "pearl": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "starforged:lunar_pearl"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "pearl"
+    ]
+  ],
+  "parent": "starforged:moon/pale_reach"
+}

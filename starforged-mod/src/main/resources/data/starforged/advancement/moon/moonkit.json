@@ -1,0 +1,39 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.moon.moonkit.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.moon.moonkit.description"
+    },
+    "icon": {
+      "id": "starforged:moonkit_spawn_egg"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "tame": {
+      "trigger": "minecraft:tame_animal",
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "minecraft:entity_type": "starforged:moonkit"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "tame"
+    ]
+  ],
+  "parent": "starforged:moon/pearl"
+}

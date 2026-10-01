@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "phase=0": {
+      "model": "starforged:block/lunar_mural_new"
+    },
+    "phase=1": {
+      "model": "starforged:block/lunar_mural_waxing"
+    },
+    "phase=2": {
+      "model": "starforged:block/lunar_mural_full"
+    },
+    "phase=3": {
+      "model": "starforged:block/lunar_mural_waning"
+    }
+  }
+}

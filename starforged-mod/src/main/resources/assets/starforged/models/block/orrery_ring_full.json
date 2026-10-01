@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "starforged:block/orrery_ring_full",
+    "side": "starforged:block/orrery_ring_side",
+    "bottom": "starforged:block/orrery_ring_side"
+  }
+}

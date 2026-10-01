@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "experience": 1.4,
+  "ingredient": "starforged:raw_moonsilver",
+  "result": {
+    "id": "starforged:moonsilver_ingot"
+  },
+  "cookingtime": 200
+}

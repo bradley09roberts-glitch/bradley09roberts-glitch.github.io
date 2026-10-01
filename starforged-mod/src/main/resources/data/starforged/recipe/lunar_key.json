@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "A": "minecraft:amethyst_shard",
+    "P": "minecraft:ender_pearl",
+    "S": "starforged:sunsteel_block",
+    "H": "starforged:sun_heart"
+  },
+  "pattern": [
+    "APA",
+    "SHS",
+    "APA"
+  ],
+  "result": {
+    "id": "starforged:lunar_key"
+  }
+}

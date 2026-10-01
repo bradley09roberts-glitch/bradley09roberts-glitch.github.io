@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "starforged:moonsilver"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "starforged:moonsilver"
+      }
+    ]
+  }
+}

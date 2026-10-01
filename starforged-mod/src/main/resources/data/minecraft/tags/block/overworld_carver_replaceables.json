@@ -3,6 +3,10 @@
   "values": [
     "starforged:scorchstone",
     "starforged:sunsand",
-    "starforged:ashen_soil"
+    "starforged:ashen_soil",
+    "starforged:moonstone",
+    "starforged:regolith",
+    "starforged:umbral_regolith",
+    "starforged:silver_sand"
   ]
 }

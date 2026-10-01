@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "starforged:pale_matriarch",
+    "starforged:matriarch_echo",
+    "starforged:lunar_anchor",
+    "starforged:selenite_sentinel"
+  ]
+}

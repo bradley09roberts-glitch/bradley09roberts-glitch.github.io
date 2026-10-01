@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "starforged:astral_brick_stairs",
-    "starforged:sunbaked_brick_stairs"
+    "starforged:sunbaked_brick_stairs",
+    "starforged:lunar_brick_stairs"
   ]
 }

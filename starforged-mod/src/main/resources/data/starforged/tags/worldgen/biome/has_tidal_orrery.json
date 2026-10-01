@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "starforged:regolith_flats",
+    "starforged:selenite_hollows",
+    "starforged:far_side"
+  ]
+}

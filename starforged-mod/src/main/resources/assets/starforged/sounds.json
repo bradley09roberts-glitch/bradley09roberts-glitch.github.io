@@ -665,5 +665,373 @@
         "name": "starforged:pylon_shatter"
       }
     ]
+  },
+  "item.lunar_key.forge": {
+    "subtitle": "subtitles.starforged.item.lunar_key.forge",
+    "sounds": [
+      {
+        "name": "starforged:moon_gateway_form"
+      }
+    ]
+  },
+  "block.lunar_gateway.travel": {
+    "subtitle": "subtitles.starforged.block.lunar_gateway.travel",
+    "sounds": [
+      {
+        "name": "starforged:moon_gateway_travel"
+      }
+    ]
+  },
+  "event.tide.high": {
+    "subtitle": "subtitles.starforged.event.tide.high",
+    "sounds": [
+      {
+        "name": "starforged:moon_tide_high"
+      }
+    ]
+  },
+  "event.tide.low": {
+    "subtitle": "subtitles.starforged.event.tide.low",
+    "sounds": [
+      {
+        "name": "starforged:moon_tide_low"
+      }
+    ]
+  },
+  "block.tidal_clam.open": {
+    "subtitle": "subtitles.starforged.block.tidal_clam.open",
+    "sounds": [
+      {
+        "name": "starforged:moon_clam_open"
+      }
+    ]
+  },
+  "block.gravity_plate.launch": {
+    "subtitle": "subtitles.starforged.block.gravity_plate.launch",
+    "sounds": [
+      {
+        "name": "starforged:moon_gravity_plate"
+      }
+    ]
+  },
+  "block.orrery_ring.turn": {
+    "subtitle": "subtitles.starforged.block.orrery_ring.turn",
+    "sounds": [
+      {
+        "name": "starforged:moon_ring_turn"
+      }
+    ]
+  },
+  "block.orrery.align": {
+    "subtitle": "subtitles.starforged.block.orrery.align",
+    "sounds": [
+      {
+        "name": "starforged:moon_orrery_align"
+      }
+    ]
+  },
+  "block.orrery.misalign": {
+    "subtitle": "subtitles.starforged.block.orrery.misalign",
+    "sounds": [
+      {
+        "name": "starforged:moon_orrery_fail"
+      }
+    ]
+  },
+  "block.moon_seal.open": {
+    "subtitle": "subtitles.starforged.block.moon_seal.open",
+    "sounds": [
+      {
+        "name": "starforged:moon_seal_open"
+      }
+    ]
+  },
+  "block.moon_altar.activate": {
+    "subtitle": "subtitles.starforged.block.moon_altar.activate",
+    "sounds": [
+      {
+        "name": "starforged:moon_altar_activate"
+      }
+    ]
+  },
+  "item.crescent_glaive.throw": {
+    "subtitle": "subtitles.starforged.item.crescent_glaive.throw",
+    "sounds": [
+      {
+        "name": "starforged:moon_glaive_throw"
+      }
+    ]
+  },
+  "item.orrery_staff.fire": {
+    "subtitle": "subtitles.starforged.item.orrery_staff.fire",
+    "sounds": [
+      {
+        "name": "starforged:moon_staff_fire"
+      }
+    ]
+  },
+  "item.orrery_staff.moonfall": {
+    "subtitle": "subtitles.starforged.item.orrery_staff.moonfall",
+    "sounds": [
+      {
+        "name": "starforged:moon_staff_moonfall"
+      }
+    ]
+  },
+  "item.phase_daggers.dash": {
+    "subtitle": "subtitles.starforged.item.phase_daggers.dash",
+    "sounds": [
+      {
+        "name": "starforged:moon_dagger_phase"
+      }
+    ]
+  },
+  "item.phase_daggers.detonate": {
+    "subtitle": "subtitles.starforged.item.phase_daggers.detonate",
+    "sounds": [
+      {
+        "name": "starforged:moon_dagger_detonate"
+      }
+    ]
+  },
+  "item.moonshot_crossbow.ricochet": {
+    "subtitle": "subtitles.starforged.item.moonshot_crossbow.ricochet",
+    "sounds": [
+      {
+        "name": "starforged:moon_bolt_ricochet"
+      }
+    ]
+  },
+  "item.stasis_bell.ring": {
+    "subtitle": "subtitles.starforged.item.stasis_bell.ring",
+    "sounds": [
+      {
+        "name": "starforged:moon_bell_ring"
+      }
+    ]
+  },
+  "item.tether_hook.fire": {
+    "subtitle": "subtitles.starforged.item.tether_hook.fire",
+    "sounds": [
+      {
+        "name": "starforged:moon_hook_fire"
+      }
+    ]
+  },
+  "item.tidecaller_glaive.wave": {
+    "subtitle": "subtitles.starforged.item.tidecaller_glaive.wave",
+    "sounds": [
+      {
+        "name": "starforged:moon_tide_wave"
+      }
+    ]
+  },
+  "item.lunar_ward.break": {
+    "subtitle": "subtitles.starforged.item.lunar_ward.break",
+    "sounds": [
+      {
+        "name": "starforged:moon_ward_break"
+      }
+    ]
+  },
+  "entity.regolith_skimmer.ambient": {
+    "subtitle": "subtitles.starforged.entity.regolith_skimmer.ambient",
+    "sounds": [
+      {
+        "name": "starforged:skimmer_ambient"
+      }
+    ]
+  },
+  "entity.regolith_skimmer.erupt": {
+    "subtitle": "subtitles.starforged.entity.regolith_skimmer.erupt",
+    "sounds": [
+      {
+        "name": "starforged:skimmer_erupt"
+      }
+    ]
+  },
+  "entity.regolith_skimmer.death": {
+    "subtitle": "subtitles.starforged.entity.regolith_skimmer.death",
+    "sounds": [
+      {
+        "name": "starforged:skimmer_death"
+      }
+    ]
+  },
+  "entity.lunar_moth.ambient": {
+    "subtitle": "subtitles.starforged.entity.lunar_moth.ambient",
+    "sounds": [
+      {
+        "name": "starforged:moth_ambient"
+      }
+    ]
+  },
+  "entity.lunar_moth.eat": {
+    "subtitle": "subtitles.starforged.entity.lunar_moth.eat",
+    "sounds": [
+      {
+        "name": "starforged:moth_eat"
+      }
+    ]
+  },
+  "entity.lunar_moth.death": {
+    "subtitle": "subtitles.starforged.entity.lunar_moth.death",
+    "sounds": [
+      {
+        "name": "starforged:moth_death"
+      }
+    ]
+  },
+  "entity.selenite_sentinel.ambient": {
+    "subtitle": "subtitles.starforged.entity.selenite_sentinel.ambient",
+    "sounds": [
+      {
+        "name": "starforged:sentinel_ambient"
+      }
+    ]
+  },
+  "entity.selenite_sentinel.reflect": {
+    "subtitle": "subtitles.starforged.entity.selenite_sentinel.reflect",
+    "sounds": [
+      {
+        "name": "starforged:sentinel_reflect"
+      }
+    ]
+  },
+  "entity.selenite_sentinel.death": {
+    "subtitle": "subtitles.starforged.entity.selenite_sentinel.death",
+    "sounds": [
+      {
+        "name": "starforged:sentinel_death"
+      }
+    ]
+  },
+  "entity.umbral_lurker.ambient": {
+    "subtitle": "subtitles.starforged.entity.umbral_lurker.ambient",
+    "sounds": [
+      {
+        "name": "starforged:lurker_ambient"
+      }
+    ]
+  },
+  "entity.umbral_lurker.lunge": {
+    "subtitle": "subtitles.starforged.entity.umbral_lurker.lunge",
+    "sounds": [
+      {
+        "name": "starforged:lurker_lunge"
+      }
+    ]
+  },
+  "entity.umbral_lurker.death": {
+    "subtitle": "subtitles.starforged.entity.umbral_lurker.death",
+    "sounds": [
+      {
+        "name": "starforged:lurker_death"
+      }
+    ]
+  },
+  "entity.moonkit.ambient": {
+    "subtitle": "subtitles.starforged.entity.moonkit.ambient",
+    "sounds": [
+      {
+        "name": "starforged:moonkit_ambient"
+      }
+    ]
+  },
+  "entity.moonkit.sniff": {
+    "subtitle": "subtitles.starforged.entity.moonkit.sniff",
+    "sounds": [
+      {
+        "name": "starforged:moonkit_sniff"
+      }
+    ]
+  },
+  "entity.moonleaper.ambient": {
+    "subtitle": "subtitles.starforged.entity.moonleaper.ambient",
+    "sounds": [
+      {
+        "name": "starforged:leaper_ambient"
+      }
+    ]
+  },
+  "entity.moonleaper.leap": {
+    "subtitle": "subtitles.starforged.entity.moonleaper.leap",
+    "sounds": [
+      {
+        "name": "starforged:leaper_leap"
+      }
+    ]
+  },
+  "entity.pale_matriarch.roar": {
+    "subtitle": "subtitles.starforged.entity.pale_matriarch.roar",
+    "sounds": [
+      {
+        "name": "starforged:matriarch_roar"
+      }
+    ]
+  },
+  "entity.pale_matriarch.hurt": {
+    "subtitle": "subtitles.starforged.entity.pale_matriarch.hurt",
+    "sounds": [
+      {
+        "name": "starforged:matriarch_hurt"
+      }
+    ]
+  },
+  "entity.pale_matriarch.death": {
+    "subtitle": "subtitles.starforged.entity.pale_matriarch.death",
+    "sounds": [
+      {
+        "name": "starforged:matriarch_death"
+      }
+    ]
+  },
+  "entity.pale_matriarch.wave": {
+    "subtitle": "subtitles.starforged.entity.pale_matriarch.wave",
+    "sounds": [
+      {
+        "name": "starforged:matriarch_wave"
+      }
+    ]
+  },
+  "entity.pale_matriarch.lance": {
+    "subtitle": "subtitles.starforged.entity.pale_matriarch.lance",
+    "sounds": [
+      {
+        "name": "starforged:matriarch_lance"
+      }
+    ]
+  },
+  "entity.pale_matriarch.teleport": {
+    "subtitle": "subtitles.starforged.entity.pale_matriarch.teleport",
+    "sounds": [
+      {
+        "name": "starforged:matriarch_teleport"
+      }
+    ]
+  },
+  "entity.pale_matriarch.inversion": {
+    "subtitle": "subtitles.starforged.entity.pale_matriarch.inversion",
+    "sounds": [
+      {
+        "name": "starforged:matriarch_inversion"
+      }
+    ]
+  },
+  "entity.pale_matriarch.moonfall": {
+    "subtitle": "subtitles.starforged.entity.pale_matriarch.moonfall",
+    "sounds": [
+      {
+        "name": "starforged:matriarch_moonfall"
+      }
+    ]
+  },
+  "entity.lunar_anchor.shatter": {
+    "subtitle": "subtitles.starforged.entity.lunar_anchor.shatter",
+    "sounds": [
+      {
+        "name": "starforged:anchor_shatter"
+      }
+    ]
   }
 }

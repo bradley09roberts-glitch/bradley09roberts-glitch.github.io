@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "starforged:moonsilver_ingot",
+    "D": "starforged:lunar_dust",
+    "R": "minecraft:breeze_rod"
+  },
+  "pattern": [
+    "I I",
+    " D ",
+    "R R"
+  ],
+  "result": {
+    "id": "starforged:phase_daggers"
+  }
+}

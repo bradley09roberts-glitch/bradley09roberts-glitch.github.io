@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:simple_block",
+  "config": {
+    "to_place": {
+      "type": "minecraft:simple_state_provider",
+      "state": {
+        "Name": "starforged:tidal_clam",
+        "Properties": {
+          "open": "false",
+          "pearl": "true"
+        }
+      }
+    }
+  }
+}

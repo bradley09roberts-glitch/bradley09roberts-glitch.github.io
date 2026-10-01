@@ -22,6 +22,14 @@ public final class ModLayers {
     public static final ModelLayerLocation SOLAR_PHOENIX = layer("solar_phoenix");
     public static final ModelLayerLocation SUN_WARDEN = layer("sun_warden");
     public static final ModelLayerLocation SOLAR_PYLON = layer("solar_pylon");
+    public static final ModelLayerLocation REGOLITH_SKIMMER = layer("regolith_skimmer");
+    public static final ModelLayerLocation LUNAR_MOTH = layer("lunar_moth");
+    public static final ModelLayerLocation SELENITE_SENTINEL = layer("selenite_sentinel");
+    public static final ModelLayerLocation UMBRAL_LURKER = layer("umbral_lurker");
+    public static final ModelLayerLocation MOONKIT = layer("moonkit");
+    public static final ModelLayerLocation MOONLEAPER = layer("moonleaper");
+    public static final ModelLayerLocation PALE_MATRIARCH = layer("pale_matriarch");
+    public static final ModelLayerLocation LUNAR_ANCHOR = layer("lunar_anchor");
 
     private ModLayers() {
     }
@@ -47,6 +55,14 @@ public final class ModLayers {
         event.registerLayerDefinition(SOLAR_PHOENIX, ModelGeometry::solarPhoenix);
         event.registerLayerDefinition(SUN_WARDEN, ModelGeometry::sunWarden);
         event.registerLayerDefinition(SOLAR_PYLON, ModelGeometry::solarPylon);
+        event.registerLayerDefinition(REGOLITH_SKIMMER, ModelGeometry::regolithSkimmer);
+        event.registerLayerDefinition(LUNAR_MOTH, ModelGeometry::lunarMoth);
+        event.registerLayerDefinition(SELENITE_SENTINEL, ModelGeometry::seleniteSentinel);
+        event.registerLayerDefinition(UMBRAL_LURKER, ModelGeometry::umbralLurker);
+        event.registerLayerDefinition(MOONKIT, ModelGeometry::moonkit);
+        event.registerLayerDefinition(MOONLEAPER, ModelGeometry::moonleaper);
+        event.registerLayerDefinition(PALE_MATRIARCH, ModelGeometry::paleMatriarch);
+        event.registerLayerDefinition(LUNAR_ANCHOR, ModelGeometry::lunarAnchor);
     }
 
     /** Looks up a nested part by slash-separated path, e.g. "body/chest/head". */

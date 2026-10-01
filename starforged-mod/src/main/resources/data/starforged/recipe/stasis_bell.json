@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "starforged:moonsilver_ingot",
+    "P": "starforged:lunar_pearl",
+    "D": "starforged:lunar_dust"
+  },
+  "pattern": [
+    " I ",
+    "IPI",
+    "IDI"
+  ],
+  "result": {
+    "id": "starforged:stasis_bell"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "starforged:block/lunar_bricks",
+    "side": "starforged:block/lunar_bricks",
+    "top": "starforged:block/lunar_bricks"
+  }
+}

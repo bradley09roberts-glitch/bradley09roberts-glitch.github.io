@@ -1,0 +1,97 @@
+{
+  "attributes": {
+    "minecraft:audio/background_music": {
+      "default": {
+        "max_delay": 24000,
+        "min_delay": 12000,
+        "sound": "minecraft:music.overworld.lush_caves"
+      }
+    },
+    "minecraft:visual/sky_color": "#080a14",
+    "minecraft:visual/fog_color": "#202a44",
+    "minecraft:visual/sky_light_factor": 0.7,
+    "minecraft:visual/ambient_particles": [
+      {
+        "particle": {
+          "type": "starforged:moon_dust"
+        },
+        "probability": 0.004
+      },
+      {
+        "particle": {
+          "type": "starforged:lunar_glimmer"
+        },
+        "probability": 0.002
+      }
+    ]
+  },
+  "carvers": [
+    "minecraft:cave",
+    "minecraft:canyon"
+  ],
+  "downfall": 0.0,
+  "effects": {
+    "water_color": "#8fb4e8",
+    "grass_color": "#a8b4c8",
+    "foliage_color": "#98a4bc"
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "starforged:ore_moonsilver",
+      "starforged:ore_moonsilver_rich"
+    ],
+    [],
+    [],
+    [
+      "starforged:selenite_dense",
+      "starforged:selenite_caves",
+      "starforged:moonpetal_patch"
+    ],
+    []
+  ],
+  "has_precipitation": false,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [
+      {
+        "type": "starforged:moonkit",
+        "weight": 8,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "misc": [],
+    "monster": [
+      {
+        "type": "starforged:selenite_sentinel",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 1
+      },
+      {
+        "type": "starforged:lunar_moth",
+        "weight": 30,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "starforged:regolith_skimmer",
+        "weight": 15,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "temperature": 0.3
+}

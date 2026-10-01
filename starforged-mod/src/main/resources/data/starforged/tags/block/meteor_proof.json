@@ -12,6 +12,12 @@
     "starforged:vault_seal",
     "starforged:sun_altar",
     "starforged:sun_seal",
-    "starforged:solar_gateway"
+    "starforged:solar_gateway",
+    "starforged:moon_seal",
+    "starforged:orrery_ring",
+    "starforged:lunar_mural",
+    "starforged:orrery_console",
+    "starforged:moon_altar",
+    "starforged:lunar_gateway"
   ]
 }

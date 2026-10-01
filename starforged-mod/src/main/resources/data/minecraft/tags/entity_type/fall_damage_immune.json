@@ -2,6 +2,10 @@
   "replace": false,
   "values": [
     "starforged:cinder_imp",
-    "starforged:solar_phoenix"
+    "starforged:solar_phoenix",
+    "starforged:lunar_moth",
+    "starforged:moonleaper",
+    "starforged:pale_matriarch",
+    "starforged:matriarch_echo"
   ]
 }
