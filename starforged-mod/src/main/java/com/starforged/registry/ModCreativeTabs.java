@@ -148,6 +148,100 @@ public final class ModCreativeTabs {
         })
         .build());
 
+    private static final List<Supplier<? extends Item>> TEMPEST_ORDER = List.of(
+        com.starforged.tempest.TempestItems.SKYBREAKER_CORE,
+        com.starforged.tempest.TempestItems.SKYBREAKER_HALBERD,
+        com.starforged.tempest.TempestItems.TEMPEST_JAVELIN,
+        com.starforged.tempest.TempestItems.GALE_BLADES,
+        com.starforged.tempest.TempestItems.STORMHOOK,
+        com.starforged.tempest.TempestItems.ARC_CANNON,
+        com.starforged.tempest.TempestItems.SKYCLEAVER,
+        com.starforged.tempest.TempestItems.TEMPEST_CROWN,
+        com.starforged.tempest.TempestItems.AETHERIUM_HELMET,
+        com.starforged.tempest.TempestItems.AETHERIUM_CHESTPLATE,
+        com.starforged.tempest.TempestItems.AETHERIUM_LEGGINGS,
+        com.starforged.tempest.TempestItems.AETHERIUM_BOOTS,
+        com.starforged.tempest.TempestItems.AETHERIUM_SWORD,
+        com.starforged.tempest.TempestItems.AETHERIUM_PICKAXE,
+        com.starforged.tempest.TempestItems.AETHERIUM_AXE,
+        com.starforged.tempest.TempestItems.AETHERIUM_SHOVEL,
+        com.starforged.tempest.TempestItems.AETHERIUM_HOE,
+        com.starforged.tempest.TempestItems.RAW_AETHERIUM,
+        com.starforged.tempest.TempestItems.AETHERIUM_INGOT,
+        com.starforged.tempest.TempestItems.CHARGED_AETHERIUM_INGOT,
+        com.starforged.tempest.TempestItems.THUNDER_SHARD,
+        com.starforged.tempest.TempestItems.STATIC_MOTE,
+        com.starforged.tempest.TempestItems.CHARGED_AETHER_DUST,
+        com.starforged.tempest.TempestItems.SHARDWING_CRYSTAL,
+        com.starforged.tempest.TempestItems.STORM_FEATHER,
+        com.starforged.tempest.TempestItems.STORMBOUND_PLATE,
+        com.starforged.tempest.TempestItems.CHARGED_SCRAP,
+        com.starforged.tempest.TempestItems.THUNDERJAW_HORN,
+        com.starforged.tempest.TempestItems.STORMHIDE,
+        com.starforged.tempest.TempestItems.BREEZE_SHARD,
+        com.starforged.tempest.TempestItems.ALPHA_CONDUCTOR_HORN,
+        com.starforged.tempest.TempestItems.STORMHEART,
+        com.starforged.tempest.TempestItems.TEMPEST_SIGIL,
+        com.starforged.tempest.TempestItems.STORMSTONE,
+        com.starforged.tempest.TempestItems.SKYROCK,
+        com.starforged.tempest.TempestItems.SKYSOIL,
+        com.starforged.tempest.TempestItems.STORMGRASS,
+        com.starforged.tempest.TempestItems.STORMWOOD_LOG,
+        com.starforged.tempest.TempestItems.STORMWOOD_PLANKS,
+        com.starforged.tempest.TempestItems.STORMLEAVES,
+        com.starforged.tempest.TempestItems.GALE_SEED,
+        com.starforged.tempest.TempestItems.AETHERIUM_ORE,
+        com.starforged.tempest.TempestItems.AETHERIUM_BLOCK,
+        com.starforged.tempest.TempestItems.CHARGED_AETHERIUM_BLOCK,
+        com.starforged.tempest.TempestItems.THUNDER_CRYSTAL_CLUSTER,
+        com.starforged.tempest.TempestItems.TEMPEST_BRICKS,
+        com.starforged.tempest.TempestItems.CHISELED_TEMPEST_BRICKS,
+        com.starforged.tempest.TempestItems.TEMPEST_BRICK_STAIRS,
+        com.starforged.tempest.TempestItems.TEMPEST_BRICK_SLAB,
+        com.starforged.tempest.TempestItems.AETHERGLASS,
+        com.starforged.tempest.TempestItems.STORM_LANTERN,
+        com.starforged.tempest.TempestItems.WIND_CHIME,
+        com.starforged.tempest.TempestItems.STORM_DYNAMO,
+        com.starforged.tempest.TempestItems.AETHERIUM_CONDUCTOR,
+        com.starforged.tempest.TempestItems.ROTATING_CONDUCTOR,
+        com.starforged.tempest.TempestItems.SPLITTER_RELAY,
+        com.starforged.tempest.TempestItems.STORM_RELAY,
+        com.starforged.tempest.TempestItems.OVERLOAD_RELAY,
+        com.starforged.tempest.TempestItems.STORM_CAPACITOR,
+        com.starforged.tempest.TempestItems.CITADEL_CORE,
+        com.starforged.tempest.TempestItems.LIGHTNING_BEACON,
+        com.starforged.tempest.TempestItems.WEATHER_ENGINE,
+        com.starforged.tempest.TempestItems.WIND_VENT,
+        com.starforged.tempest.TempestItems.GALE_VENT,
+        com.starforged.tempest.TempestItems.STORM_LIFT,
+        com.starforged.tempest.TempestItems.SHOCK_PLATE,
+        com.starforged.tempest.TempestItems.SKY_ANCHOR,
+        com.starforged.tempest.TempestItems.THUNDER_RUNE,
+        com.starforged.tempest.TempestItems.GALE_RUNE,
+        com.starforged.tempest.TempestItems.CYCLONE_EMITTER,
+        com.starforged.tempest.TempestItems.TEMPEST_SEAL,
+        com.starforged.tempest.TempestItems.TEMPEST_ALTAR,
+        com.starforged.tempest.TempestItems.STATIC_WISP_SPAWN_EGG,
+        com.starforged.tempest.TempestItems.SHARDWING_SPAWN_EGG,
+        com.starforged.tempest.TempestItems.STORMBOUND_SPAWN_EGG,
+        com.starforged.tempest.TempestItems.THUNDERJAW_SPAWN_EGG,
+        com.starforged.tempest.TempestItems.ZEPHYR_SPRITE_SPAWN_EGG,
+        com.starforged.tempest.TempestItems.STORM_ROC_SPAWN_EGG,
+        com.starforged.tempest.TempestItems.THUNDERJAW_ALPHA_SPAWN_EGG,
+        com.starforged.tempest.TempestItems.VEYR_SPAWN_EGG
+    );
+
+    public static final RegistryObject<CreativeModeTab> TEMPESTFORGED = TABS.register("tempestforged", () -> CreativeModeTab.builder()
+        .title(Component.translatable("itemGroup.starforged.tempestforged"))
+        .withTabsBefore(MOONFORGED.getId())
+        .icon(() -> new ItemStack(com.starforged.tempest.TempestItems.SKYBREAKER_HALBERD.get()))
+        .displayItems((params, output) -> {
+            for (Supplier<? extends Item> item : TEMPEST_ORDER) {
+                output.accept(item.get());
+            }
+        })
+        .build());
+
     private ModCreativeTabs() {
     }
 }

@@ -21,7 +21,9 @@ public class StarforgedArmorItem extends Item {
         MAGMA_TREADS("ability.starforged.magma_treads"),
         SOLAR_CROWN("ability.starforged.solar_crown"),
         MOONSILVER_SET("ability.starforged.moonsilver_set"),
-        TIDE_CROWN("ability.starforged.crown_of_tides");
+        TIDE_CROWN("ability.starforged.crown_of_tides"),
+        AETHERIUM_SET("ability.starforged.aetherium_set"),
+        TEMPEST_CROWN("ability.starforged.tempest_crown");
 
         private final String key;
 

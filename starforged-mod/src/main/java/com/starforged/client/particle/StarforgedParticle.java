@@ -23,7 +23,9 @@ public class StarforgedParticle extends SingleQuadParticle {
         SOLAR(0xFFF6B0, 0xFF6A10, -0.008F, 28, 0.13F, 0.94F, false),
         ASH(0x9a948e, 0x4a4542, 0.0015F, 90, 0.09F, 0.98F, false),
         DUST(0xE8ECF4, 0xB4BCCC, -0.0012F, 80, 0.045F, 0.985F, false),
-        GLIMMER(0xFFFFFF, 0x9CC8FF, -0.004F, 30, 0.075F, 0.93F, false);
+        GLIMMER(0xFFFFFF, 0x9CC8FF, -0.004F, 30, 0.075F, 0.93F, false),
+        SPARK(0xF0FAFF, 0x3A7CFF, 0.0F, 9, 0.06F, 0.8F, false),
+        WISP(0xAEB8CC, 0x5E6880, 0.0F, 60, 0.12F, 0.99F, false);
 
         final int start;
         final int end;
@@ -100,7 +102,7 @@ public class StarforgedParticle extends SingleQuadParticle {
 
     @Override
     public int getLightCoords(float partialTick) {
-        if (this.style == Style.ASH) {
+        if (this.style == Style.ASH || this.style == Style.WISP) {
             return super.getLightCoords(partialTick);
         }
         return 15728880;
@@ -122,5 +124,7 @@ public class StarforgedParticle extends SingleQuadParticle {
         event.registerSpriteSet(ModParticles.ASH_FLAKE.get(), sprites -> provider(sprites, Style.ASH));
         event.registerSpriteSet(ModParticles.MOON_DUST.get(), sprites -> provider(sprites, Style.DUST));
         event.registerSpriteSet(ModParticles.LUNAR_GLIMMER.get(), sprites -> provider(sprites, Style.GLIMMER));
+        event.registerSpriteSet(ModParticles.STATIC_SPARK.get(), sprites -> provider(sprites, Style.SPARK));
+        event.registerSpriteSet(ModParticles.STORM_WISP.get(), sprites -> provider(sprites, Style.WISP));
     }
 }

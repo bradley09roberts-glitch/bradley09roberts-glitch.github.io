@@ -30,6 +30,7 @@ public final class CommonEvents {
         TickEvent.LevelTickEvent.Pre.BUS.addListener(event -> {
             com.starforged.sun.world.SunlandsTravel.suppressWeather(event.level());
             com.starforged.moon.world.PaleReachTravel.suppressWeather(event.level());
+            com.starforged.tempest.world.StormreachTravel.forceStorm(event.level());
         });
         net.minecraftforge.event.entity.EntityJoinLevelEvent.BUS.addListener(CommonEvents::onJoinLevel);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(CommonEvents::onPlayerTick);
@@ -51,6 +52,9 @@ public final class CommonEvents {
             com.starforged.moon.boss.MatriarchSummoning.tick(level);
             com.starforged.moon.event.MoonAbilities.tickLevel(level);
             com.starforged.moon.world.MoonTides.tick(level);
+            com.starforged.tempest.world.StormreachStorms.tick(level);
+            com.starforged.tempest.event.TempestAbilities.tickLevel(level);
+            com.starforged.tempest.boss.RegentSummoning.tick(level);
             if (level.dimension() == Level.OVERWORLD) {
                 StarfallManager.tick(level);
             }
@@ -63,11 +67,15 @@ public final class CommonEvents {
             ArmorAbilities.tick(player);
             com.starforged.sun.event.SunAbilities.tick(player);
             com.starforged.moon.event.MoonAbilities.tick(player);
+            com.starforged.tempest.event.TempestAbilities.tick(player);
         }
     }
 
     private static boolean onJoinLevel(net.minecraftforge.event.entity.EntityJoinLevelEvent event) {
         com.starforged.moon.world.MoonGravity.onJoin(event.getEntity());
+        if (event.getEntity() instanceof net.minecraft.world.entity.LightningBolt bolt && event.getLevel() instanceof ServerLevel level) {
+            com.starforged.tempest.event.TempestAbilities.onBolt(level, bolt);
+        }
         return false;
     }
 
@@ -100,6 +108,11 @@ public final class CommonEvents {
         ArmorAbilities.onHurt(victim, source);
         com.starforged.sun.event.SunAbilities.onHurt(victim, source);
         event.setAmount(event.getAmount() * com.starforged.moon.event.MoonAbilities.onHurt(victim, source, event.getAmount()));
+        float storm = com.starforged.tempest.event.TempestAbilities.onHurt(victim, source, event.getAmount());
+        if (storm <= 0.0F) {
+            return true;
+        }
+        event.setAmount(event.getAmount() * storm);
         return false;
     }
 
@@ -110,6 +123,7 @@ public final class CommonEvents {
         if (event.getEntity() instanceof Player player) {
             com.starforged.sun.event.SunAbilities.clear(player);
             com.starforged.moon.event.MoonAbilities.clear(player);
+            com.starforged.tempest.event.TempestAbilities.clear(player);
             HammerSlams.clear(player);
             GravityGrips.clear(player);
         }
@@ -127,5 +141,6 @@ public final class CommonEvents {
         GravityGrips.clear(event.getEntity());
         ArmorAbilities.clear(event.getEntity());
         com.starforged.moon.event.MoonAbilities.clear(event.getEntity());
+        com.starforged.tempest.event.TempestAbilities.clear(event.getEntity());
     }
 }

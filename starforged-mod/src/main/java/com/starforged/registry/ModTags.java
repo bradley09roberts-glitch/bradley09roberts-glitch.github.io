@@ -18,7 +18,12 @@ public final class ModTags {
     public static final TagKey<Item> MOONSILVER_REPAIR = item("moonsilver_repair_materials");
     public static final TagKey<Item> TIDAL_REPAIR = item("tidal_repair_materials");
 
+    public static final TagKey<Item> AETHERIUM_REPAIR = item("aetherium_repair_materials");
+    public static final TagKey<Item> TEMPEST_REPAIR = item("tempest_repair_materials");
+
     public static final TagKey<Block> METEOR_PROOF = block("meteor_proof");
+    /** Blocks Aetherium tools cannot harvest (none - top tier). */
+    public static final TagKey<Block> INCORRECT_FOR_AETHERIUM = block("incorrect_for_aetherium_tool");
     /** Blocks Sunsteel tools cannot harvest (Moonsilver Ore). */
     public static final TagKey<Block> INCORRECT_FOR_SUNSTEEL = block("incorrect_for_sunsteel_tool");
     /** Blocks Moonsilver tools cannot harvest (none yet - top tier). */
@@ -37,6 +42,11 @@ public final class ModTags {
     public static final TagKey<EntityType<?>> MATRIARCH_ALLIES = entity("matriarch_allies");
     /** Creatures of the Pale Reach that grow stronger at high tide. */
     public static final TagKey<EntityType<?>> TIDEBOUND = entity("tidebound");
+    /** Creatures that fight for Veyr, the Tempest Regent. */
+    public static final TagKey<EntityType<?>> REGENT_ALLIES = entity("regent_allies");
+    /** Creatures of Stormreach: immune to the storm's lightning. */
+    public static final TagKey<EntityType<?>> STORMBORN = entity("stormborn");
+    public static final TagKey<Structure> TEMPEST_CITADELS = TagKey.create(Registries.STRUCTURE, Starforged.id("tempest_citadels"));
     public static final TagKey<Structure> TIDAL_ORRERIES = TagKey.create(Registries.STRUCTURE, Starforged.id("tidal_orreries"));
     public static final TagKey<Structure> SUN_TEMPLES = TagKey.create(Registries.STRUCTURE, Starforged.id("sun_temples"));
     public static final TagKey<Structure> OBSERVATORIES = TagKey.create(Registries.STRUCTURE, Starforged.id("observatories"));

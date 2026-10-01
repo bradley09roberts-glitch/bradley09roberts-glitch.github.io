@@ -34,6 +34,11 @@ public final class ModParticles {
     /** Pale blue-white lunar glimmer (Moonforged weapons and the Matriarch). */
     public static final RegistryObject<SimpleParticleType> LUNAR_GLIMMER = PARTICLES.register("lunar_glimmer", () -> new SimpleParticleType(true));
 
+    /** Crackling electric-blue spark (Tempestforged lightning, conductors and weapons). */
+    public static final RegistryObject<SimpleParticleType> STATIC_SPARK = PARTICLES.register("static_spark", () -> new SimpleParticleType(true));
+    /** Grey-blue wisp of storm cloud carried on the wind (Stormreach). */
+    public static final RegistryObject<SimpleParticleType> STORM_WISP = PARTICLES.register("storm_wisp", () -> new SimpleParticleType(false));
+
     private ModParticles() {
     }
 }

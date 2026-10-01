@@ -113,6 +113,29 @@ public final class StarforgedCommand {
                         c.getSource().sendSuccess(() -> com.starforged.moon.world.MoonTides.describe(c.getSource().getLevel()), true);
                         return 1;
                     })))
+            .then(Commands.literal("stormreach")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(c -> {
+                    com.starforged.tempest.world.StormreachTravel.sendToStormreach(c.getSource().getPlayerOrException());
+                    return 1;
+                }))
+            .then(Commands.literal("citadel")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(StarforgedCommand::citadel))
+            .then(Commands.literal("veyr")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(StarforgedCommand::veyr))
+            .then(Commands.literal("tempestkit")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(StarforgedCommand::tempestKit))
+            .then(Commands.literal("supercell")
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .executes(c -> {
+                    boolean started = com.starforged.tempest.world.StormreachStorms.startSupercell(c.getSource().getLevel(), c.getSource().getPosition());
+                    c.getSource().sendSuccess(() -> Component.translatable(started ? "commands.starforged.supercell" : "commands.starforged.supercell.busy"),
+                        true);
+                    return started ? 1 : 0;
+                }))
             .then(Commands.literal("locate")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(c -> run(c, "locate structure #starforged:observatories"))));
@@ -139,6 +162,11 @@ public final class StarforgedCommand {
             {"/starforged matriarch", "summon the Pale Matriarch (cinematic)"},
             {"/starforged tide", "how long until the tide turns"},
             {"/starforged tide turn", "turn the tide right now"},
+            {"/starforged tempestkit", "every Tempestforged weapon, gadget & armor"},
+            {"/starforged stormreach", "travel to the Stormreach right now"},
+            {"/starforged citadel", "build a Tempest Citadel here"},
+            {"/starforged veyr", "summon Veyr, the Tempest Regent (cinematic)"},
+            {"/starforged supercell", "start a Supercell storm around you"},
         };
         for (String[] line : lines) {
             source.sendSuccess(() -> Component.literal(line[0]).withStyle(ChatFormatting.AQUA)
@@ -245,6 +273,59 @@ public final class StarforgedCommand {
         }
         int topY = floorY + 1;
         c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.orrery", at.getX(), topY, at.getZ()), true);
+        return 1;
+    }
+
+    private static int citadel(CommandContext<CommandSourceStack> c) {
+        ServerLevel level = c.getSource().getLevel();
+        BlockPos at = BlockPos.containing(c.getSource().getPosition());
+        int floorY = at.getY() - 1;
+        com.starforged.tempest.world.TempestCitadelPiece piece = new com.starforged.tempest.world.TempestCitadelPiece(
+            at.getX() - com.starforged.tempest.world.TempestCitadelPiece.CENTER, floorY, at.getZ() - com.starforged.tempest.world.TempestCitadelPiece.CENTER);
+        BoundingBox box = piece.getBoundingBox();
+        RandomSource random = level.getRandom();
+        for (int cx = box.minX() >> 4; cx <= box.maxX() >> 4; cx++) {
+            for (int cz = box.minZ() >> 4; cz <= box.maxZ() >> 4; cz++) {
+                level.getChunk(cx, cz);
+                BoundingBox chunkBox = new BoundingBox(cx << 4, level.getMinY(), cz << 4, (cx << 4) + 15, level.getMaxY(), (cz << 4) + 15);
+                piece.postProcess(level, level.structureManager(), level.getChunkSource().getGenerator(), random, chunkBox, new ChunkPos(cx, cz), at);
+            }
+        }
+        int topY = floorY + com.starforged.tempest.world.TempestCitadelPiece.SUMMIT + 1;
+        c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.citadel", at.getX(), topY, at.getZ()), true);
+        return 1;
+    }
+
+    private static int veyr(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer player = c.getSource().getPlayerOrException();
+        ServerLevel level = player.level();
+        Vec3 look = player.getLookAngle().multiply(1, 0, 1).normalize();
+        BlockPos altar = BlockPos.containing(player.position().add(look.scale(10.0)));
+        level.setBlock(altar, com.starforged.tempest.TempestBlocks.TEMPEST_ALTAR.get().defaultBlockState(), Block.UPDATE_ALL);
+        com.starforged.tempest.boss.RegentSummoning.begin(level, altar);
+        c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.veyr"), true);
+        return 1;
+    }
+
+    private static int tempestKit(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer player = c.getSource().getPlayerOrException();
+        List<Supplier<? extends Item>> gear = List.of(
+            com.starforged.tempest.TempestItems.SKYBREAKER_HALBERD, com.starforged.tempest.TempestItems.TEMPEST_JAVELIN,
+            com.starforged.tempest.TempestItems.GALE_BLADES, com.starforged.tempest.TempestItems.STORMHOOK, com.starforged.tempest.TempestItems.ARC_CANNON,
+            com.starforged.tempest.TempestItems.SKYCLEAVER, com.starforged.tempest.TempestItems.SKYBREAKER_CORE,
+            com.starforged.tempest.TempestItems.TEMPEST_SIGIL, com.starforged.tempest.TempestItems.AETHERIUM_PICKAXE,
+            com.starforged.tempest.TempestItems.AETHERIUM_SWORD, com.starforged.tempest.TempestItems.TEMPEST_CROWN);
+        for (Supplier<? extends Item> item : gear) {
+            player.getInventory().add(new ItemStack(item.get()));
+        }
+        player.getInventory().add(new ItemStack(com.starforged.tempest.TempestItems.GALE_SEED.get(), 16));
+        player.getInventory().add(new ItemStack(com.starforged.tempest.TempestItems.CHARGED_AETHER_DUST.get(), 16));
+        player.getInventory().add(new ItemStack(com.starforged.tempest.TempestItems.AETHERIUM_INGOT.get(), 16));
+        player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(com.starforged.tempest.TempestItems.AETHERIUM_HELMET.get()));
+        player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(com.starforged.tempest.TempestItems.AETHERIUM_CHESTPLATE.get()));
+        player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(com.starforged.tempest.TempestItems.AETHERIUM_LEGGINGS.get()));
+        player.setItemSlot(EquipmentSlot.FEET, new ItemStack(com.starforged.tempest.TempestItems.AETHERIUM_BOOTS.get()));
+        c.getSource().sendSuccess(() -> Component.translatable("commands.starforged.tempestkit"), true);
         return 1;
     }
 

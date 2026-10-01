@@ -31,6 +31,12 @@ public final class ModStructures {
     public static final RegistryObject<StructurePieceType> TIDAL_ORRERY_PIECE = PIECE_TYPES.register("tidal_orrery_piece",
         () -> (StructurePieceType.ContextlessType) com.starforged.moon.world.TidalOrreryPiece::new);
 
+    public static final RegistryObject<StructureType<com.starforged.tempest.world.TempestCitadelStructure>> TEMPEST_CITADEL = STRUCTURE_TYPES.register(
+        "tempest_citadel", () -> () -> com.starforged.tempest.world.TempestCitadelStructure.CODEC);
+
+    public static final RegistryObject<StructurePieceType> TEMPEST_CITADEL_PIECE = PIECE_TYPES.register("tempest_citadel_piece",
+        () -> (StructurePieceType.ContextlessType) com.starforged.tempest.world.TempestCitadelPiece::new);
+
     private ModStructures() {
     }
 }

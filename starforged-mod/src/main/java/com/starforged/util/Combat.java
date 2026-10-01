@@ -53,6 +53,12 @@ public final class Combat {
         if (attacker.is(ModTags.SOVEREIGN_ALLIES) && target.is(ModTags.SOVEREIGN_ALLIES)) {
             return false;
         }
+        if (attacker.is(ModTags.STORMBORN) && target.is(ModTags.STORMBORN)) {
+            return false;
+        }
+        if (attacker.is(ModTags.REGENT_ALLIES) && target.is(ModTags.REGENT_ALLIES)) {
+            return false;
+        }
         if (attacker.is(ModTags.MATRIARCH_ALLIES) && target.is(ModTags.MATRIARCH_ALLIES)) {
             return false;
         }

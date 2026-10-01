@@ -24,6 +24,8 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> SOLAR_BEAM = key("solar_beam");
     public static final ResourceKey<DamageType> MOONLIGHT = key("moonlight");
     public static final ResourceKey<DamageType> GRAVITY = key("gravity");
+    public static final ResourceKey<DamageType> STORM = key("storm");
+    public static final ResourceKey<DamageType> GALE = key("gale");
 
     public static DamageSource source(Level level, ResourceKey<DamageType> type, @Nullable Entity direct, @Nullable Entity causing) {
         return new DamageSource(level.registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(type), direct, causing);
