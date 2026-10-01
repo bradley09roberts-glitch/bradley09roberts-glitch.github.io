@@ -2,7 +2,6 @@ package com.starforged.client.particle;
 
 import com.starforged.registry.ModParticles;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.client.particle.SpriteSet;
@@ -115,10 +114,5 @@ public class StarforgedParticle extends SingleQuadParticle {
         event.registerSpriteSet(ModParticles.METEOR_EMBER.get(), sprites -> provider(sprites, Style.EMBER));
         event.registerSpriteSet(ModParticles.ECLIPSE_FLARE.get(), sprites -> provider(sprites, Style.FLARE));
         event.registerSpriteSet(ModParticles.SHOOTING_STAR.get(), sprites -> provider(sprites, Style.SHOOTING));
-    }
-
-    @SuppressWarnings("unused")
-    private static Particle unused() {
-        return null;
     }
 }

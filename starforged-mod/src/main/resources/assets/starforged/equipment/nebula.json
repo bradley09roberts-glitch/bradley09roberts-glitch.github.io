@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "starforged:nebula"
+      }
+    ],
+    "wings": [
+      {
+        "texture": "starforged:nebula"
+      }
+    ]
+  }
+}

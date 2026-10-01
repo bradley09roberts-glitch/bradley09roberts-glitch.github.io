@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "starforged:starmetal_boots",
+    "minecraft:feather",
+    "minecraft:feather",
+    "starforged:stardust",
+    "minecraft:blaze_powder"
+  ],
+  "result": {
+    "id": "starforged:comet_boots"
+  }
+}

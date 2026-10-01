@@ -1,0 +1,155 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "starforged:starmetal_sword",
+          "weight": 3,
+          "functions": [
+            {
+              "function": "minecraft:enchant_randomly"
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:starmetal_pickaxe",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:starmetal_helmet",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:starmetal_chestplate",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:starmetal_leggings",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:starmetal_boots",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:constellation_bow",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:starcaller_staff",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:comet_boots",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:meteor_hammer",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "rolls": {
+        "type": "minecraft:uniform",
+        "min": 3,
+        "max": 6
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "starforged:starmetal_ingot",
+          "weight": 6,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 6
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:arrow",
+          "weight": 5,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 8,
+                "max": 20
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:singularity_grenade",
+          "weight": 3,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 4
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "starforged:void_essence",
+          "weight": 3,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:diamond",
+          "weight": 2,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:golden_apple",
+          "weight": 2
+        }
+      ]
+    }
+  ],
+  "random_sequence": "starforged:chests/observatory_armory"
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:paper",
+    "starforged:stardust"
+  ],
+  "result": {
+    "id": "starforged:star_chart"
+  }
+}

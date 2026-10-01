@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "R": "starforged:meteorite_rock",
+    "B": "starforged:starmetal_block",
+    "I": "starforged:starmetal_ingot"
+  },
+  "pattern": [
+    "RBR",
+    "RIR",
+    " I "
+  ],
+  "result": {
+    "id": "starforged:meteor_hammer"
+  }
+}

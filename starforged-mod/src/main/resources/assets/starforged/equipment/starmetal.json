@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "starforged:starmetal"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "starforged:starmetal"
+      }
+    ]
+  }
+}

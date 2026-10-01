@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "V": "starforged:void_essence",
+    "A": "starforged:astral_shard",
+    "C": "starforged:celestial_core"
+  },
+  "pattern": [
+    "VAV",
+    "ACA",
+    "VAV"
+  ],
+  "result": {
+    "id": "starforged:eclipse_sigil"
+  }
+}

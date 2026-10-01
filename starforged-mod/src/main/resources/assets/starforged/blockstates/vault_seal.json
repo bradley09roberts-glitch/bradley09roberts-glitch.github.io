@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "opening=false": {
+      "model": "starforged:block/vault_seal"
+    },
+    "opening=true": {
+      "model": "starforged:block/vault_seal"
+    }
+  }
+}

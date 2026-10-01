@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "D": "starforged:stardust",
+    "G": "minecraft:glowstone"
+  },
+  "pattern": [
+    " D ",
+    "DGD",
+    " D "
+  ],
+  "result": {
+    "id": "starforged:star_lantern",
+    "count": 2
+  }
+}

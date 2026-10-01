@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "starforged:block/astral_brick_slab"
+    },
+    "type=double": {
+      "model": "starforged:block/astral_bricks"
+    },
+    "type=top": {
+      "model": "starforged:block/astral_brick_slab_top"
+    }
+  }
+}

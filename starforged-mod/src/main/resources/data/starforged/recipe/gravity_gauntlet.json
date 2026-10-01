@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "starforged:starmetal_ingot",
+    "A": "starforged:astral_shard",
+    "V": "starforged:void_essence"
+  },
+  "pattern": [
+    "IAI",
+    "IVI",
+    " I "
+  ],
+  "result": {
+    "id": "starforged:gravity_gauntlet"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "experience": 0.1,
+  "ingredient": "starforged:astral_bricks",
+  "result": {
+    "id": "starforged:cracked_astral_bricks"
+  },
+  "cookingtime": 200
+}

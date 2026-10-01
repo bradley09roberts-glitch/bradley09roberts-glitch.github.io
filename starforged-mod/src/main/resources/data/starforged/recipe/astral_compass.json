@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "tools",
+  "key": {
+    "D": "starforged:stardust",
+    "C": "minecraft:compass",
+    "A": "starforged:astral_shard"
+  },
+  "pattern": [
+    " D ",
+    "DCD",
+    " A "
+  ],
+  "result": {
+    "id": "starforged:astral_compass"
+  }
+}

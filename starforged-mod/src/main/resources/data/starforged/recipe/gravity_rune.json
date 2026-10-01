@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "A": "starforged:astral_shard",
+    "S": "minecraft:slime_ball",
+    "B": "starforged:astral_bricks"
+  },
+  "pattern": [
+    " A ",
+    "SBS"
+  ],
+  "result": {
+    "id": "starforged:gravity_rune",
+    "count": 2
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "starforged:block/gravity_rune_active",
+    "bottom": "starforged:block/astral_bricks",
+    "side": "starforged:block/astral_bricks"
+  }
+}

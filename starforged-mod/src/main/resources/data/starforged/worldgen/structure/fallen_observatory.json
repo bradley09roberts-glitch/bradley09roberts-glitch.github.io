@@ -1,0 +1,31 @@
+{
+  "type": "starforged:observatory",
+  "biomes": "#starforged:has_observatory",
+  "step": "surface_structures",
+  "terrain_adaptation": "none",
+  "spawn_overrides": {
+    "monster": {
+      "bounding_box": "piece",
+      "spawns": [
+        {
+          "type": "starforged:astral_wraith",
+          "weight": 12,
+          "minCount": 1,
+          "maxCount": 2
+        },
+        {
+          "type": "starforged:void_stalker",
+          "weight": 4,
+          "minCount": 1,
+          "maxCount": 1
+        },
+        {
+          "type": "starforged:star_mite",
+          "weight": 6,
+          "minCount": 2,
+          "maxCount": 4
+        }
+      ]
+    }
+  }
+}

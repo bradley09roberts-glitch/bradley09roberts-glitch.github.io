@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "A": "starforged:astral_shard",
+    "P": "minecraft:blaze_powder",
+    "B": "starforged:astral_bricks"
+  },
+  "pattern": [
+    " A ",
+    "PBP"
+  ],
+  "result": {
+    "id": "starforged:starfire_rune",
+    "count": 2
+  }
+}

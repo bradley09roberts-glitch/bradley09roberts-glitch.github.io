@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "A": "starforged:astral_shard",
+    "V": "starforged:void_essence",
+    "E": "minecraft:ender_pearl"
+  },
+  "pattern": [
+    "AVA",
+    "VEV",
+    "AVA"
+  ],
+  "result": {
+    "id": "starforged:rift_pearl"
+  }
+}

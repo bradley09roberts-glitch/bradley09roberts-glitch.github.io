@@ -1,0 +1,46 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.stardust.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.stardust.description"
+    },
+    "icon": {
+      "id": "starforged:stardust"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "dust": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "starforged:stardust"
+          }
+        ]
+      }
+    },
+    "metal": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "starforged:raw_starmetal"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "dust",
+      "metal"
+    ]
+  ],
+  "parent": "starforged:root"
+}

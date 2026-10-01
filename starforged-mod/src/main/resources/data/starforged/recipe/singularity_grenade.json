@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "G": "minecraft:glass",
+    "V": "starforged:void_essence"
+  },
+  "pattern": [
+    " G ",
+    "GVG",
+    " G "
+  ],
+  "result": {
+    "id": "starforged:singularity_grenade",
+    "count": 2
+  }
+}

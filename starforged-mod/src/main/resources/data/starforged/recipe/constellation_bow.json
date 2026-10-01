@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "starforged:starmetal_ingot",
+    "A": "starforged:astral_shard",
+    "S": "minecraft:string"
+  },
+  "pattern": [
+    " IS",
+    "A S",
+    " IS"
+  ],
+  "result": {
+    "id": "starforged:constellation_bow"
+  }
+}

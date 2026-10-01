@@ -1,0 +1,381 @@
+{
+  "event.starfall_begin": {
+    "subtitle": "subtitles.starforged.event.starfall_begin",
+    "sounds": [
+      {
+        "name": "starforged:starfall_begin"
+      }
+    ]
+  },
+  "entity.meteor.whoosh": {
+    "subtitle": "subtitles.starforged.entity.meteor.whoosh",
+    "sounds": [
+      {
+        "name": "starforged:meteor_whoosh"
+      }
+    ]
+  },
+  "entity.meteor.impact": {
+    "subtitle": "subtitles.starforged.entity.meteor.impact",
+    "sounds": [
+      {
+        "name": "starforged:meteor_impact"
+      }
+    ]
+  },
+  "block.vault_seal.open": {
+    "subtitle": "subtitles.starforged.block.vault_seal.open",
+    "sounds": [
+      {
+        "name": "starforged:vault_open"
+      }
+    ]
+  },
+  "block.rune.trigger": {
+    "subtitle": "subtitles.starforged.block.rune.trigger",
+    "sounds": [
+      {
+        "name": "starforged:rune_trigger"
+      }
+    ]
+  },
+  "block.celestial_altar.activate": {
+    "subtitle": "subtitles.starforged.block.celestial_altar.activate",
+    "sounds": [
+      {
+        "name": "starforged:altar_activate"
+      }
+    ]
+  },
+  "block.astral_crystal.chime": {
+    "subtitle": "subtitles.starforged.block.astral_crystal.chime",
+    "sounds": [
+      {
+        "name": "starforged:crystal_chime"
+      }
+    ]
+  },
+  "item.starcaller_staff.cast": {
+    "subtitle": "subtitles.starforged.item.starcaller_staff.cast",
+    "sounds": [
+      {
+        "name": "starforged:staff_cast"
+      }
+    ]
+  },
+  "item.meteor_hammer.leap": {
+    "subtitle": "subtitles.starforged.item.meteor_hammer.leap",
+    "sounds": [
+      {
+        "name": "starforged:hammer_leap"
+      }
+    ]
+  },
+  "item.meteor_hammer.slam": {
+    "subtitle": "subtitles.starforged.item.meteor_hammer.slam",
+    "sounds": [
+      {
+        "name": "starforged:hammer_slam"
+      }
+    ]
+  },
+  "item.void_scythe.reap": {
+    "subtitle": "subtitles.starforged.item.void_scythe.reap",
+    "sounds": [
+      {
+        "name": "starforged:scythe_reap"
+      }
+    ]
+  },
+  "item.constellation_bow.shoot": {
+    "subtitle": "subtitles.starforged.item.constellation_bow.shoot",
+    "sounds": [
+      {
+        "name": "starforged:bow_starshot"
+      }
+    ]
+  },
+  "item.eclipse_blade.wave": {
+    "subtitle": "subtitles.starforged.item.eclipse_blade.wave",
+    "sounds": [
+      {
+        "name": "starforged:eclipse_blade_wave"
+      }
+    ]
+  },
+  "item.eclipse_blade.total_eclipse": {
+    "subtitle": "subtitles.starforged.item.eclipse_blade.total_eclipse",
+    "sounds": [
+      {
+        "name": "starforged:eclipse_blade_total"
+      }
+    ]
+  },
+  "entity.singularity.hum": {
+    "subtitle": "subtitles.starforged.entity.singularity.hum",
+    "sounds": [
+      {
+        "name": "starforged:singularity_hum"
+      }
+    ]
+  },
+  "entity.singularity.collapse": {
+    "subtitle": "subtitles.starforged.entity.singularity.collapse",
+    "sounds": [
+      {
+        "name": "starforged:singularity_collapse"
+      }
+    ]
+  },
+  "item.rift_pearl.teleport": {
+    "subtitle": "subtitles.starforged.item.rift_pearl.teleport",
+    "sounds": [
+      {
+        "name": "starforged:rift_teleport"
+      }
+    ]
+  },
+  "item.gravity_gauntlet.grab": {
+    "subtitle": "subtitles.starforged.item.gravity_gauntlet.grab",
+    "sounds": [
+      {
+        "name": "starforged:gauntlet_grab"
+      }
+    ]
+  },
+  "item.gravity_gauntlet.throw": {
+    "subtitle": "subtitles.starforged.item.gravity_gauntlet.throw",
+    "sounds": [
+      {
+        "name": "starforged:gauntlet_throw"
+      }
+    ]
+  },
+  "item.astral_compass.ping": {
+    "subtitle": "subtitles.starforged.item.astral_compass.ping",
+    "sounds": [
+      {
+        "name": "starforged:compass_ping"
+      }
+    ]
+  },
+  "item.comet_boots.jump": {
+    "subtitle": "subtitles.starforged.item.comet_boots.jump",
+    "sounds": [
+      {
+        "name": "starforged:comet_jump"
+      }
+    ]
+  },
+  "item.astral_egg.hatch": {
+    "subtitle": "subtitles.starforged.item.astral_egg.hatch",
+    "sounds": [
+      {
+        "name": "starforged:egg_hatch"
+      }
+    ]
+  },
+  "item.starmetal_armor.starburst": {
+    "subtitle": "subtitles.starforged.item.starmetal_armor.starburst",
+    "sounds": [
+      {
+        "name": "starforged:starburst"
+      }
+    ]
+  },
+  "entity.star_mite.ambient": {
+    "subtitle": "subtitles.starforged.entity.star_mite.ambient",
+    "sounds": [
+      {
+        "name": "starforged:mite_chitter",
+        "volume": 0.8
+      }
+    ]
+  },
+  "entity.star_mite.death": {
+    "subtitle": "subtitles.starforged.entity.star_mite.death",
+    "sounds": [
+      {
+        "name": "starforged:mite_death"
+      }
+    ]
+  },
+  "entity.void_stalker.ambient": {
+    "subtitle": "subtitles.starforged.entity.void_stalker.ambient",
+    "sounds": [
+      {
+        "name": "starforged:void_stalker_ambient"
+      }
+    ]
+  },
+  "entity.void_stalker.teleport": {
+    "subtitle": "subtitles.starforged.entity.void_stalker.teleport",
+    "sounds": [
+      {
+        "name": "starforged:void_stalker_teleport"
+      }
+    ]
+  },
+  "entity.void_stalker.hurt": {
+    "subtitle": "subtitles.starforged.entity.void_stalker.hurt",
+    "sounds": [
+      {
+        "name": "starforged:void_stalker_hurt"
+      }
+    ]
+  },
+  "entity.void_stalker.death": {
+    "subtitle": "subtitles.starforged.entity.void_stalker.death",
+    "sounds": [
+      {
+        "name": "starforged:void_stalker_death"
+      }
+    ]
+  },
+  "entity.astral_golem.slam": {
+    "subtitle": "subtitles.starforged.entity.astral_golem.slam",
+    "sounds": [
+      {
+        "name": "starforged:golem_slam"
+      }
+    ]
+  },
+  "entity.astral_golem.hurt": {
+    "subtitle": "subtitles.starforged.entity.astral_golem.hurt",
+    "sounds": [
+      {
+        "name": "starforged:golem_hurt"
+      }
+    ]
+  },
+  "entity.astral_golem.death": {
+    "subtitle": "subtitles.starforged.entity.astral_golem.death",
+    "sounds": [
+      {
+        "name": "starforged:golem_death"
+      }
+    ]
+  },
+  "entity.mimic.chomp": {
+    "subtitle": "subtitles.starforged.entity.mimic.chomp",
+    "sounds": [
+      {
+        "name": "starforged:mimic_chomp"
+      }
+    ]
+  },
+  "entity.mimic.reveal": {
+    "subtitle": "subtitles.starforged.entity.mimic.reveal",
+    "sounds": [
+      {
+        "name": "starforged:mimic_reveal"
+      }
+    ]
+  },
+  "entity.astral_wraith.ambient": {
+    "subtitle": "subtitles.starforged.entity.astral_wraith.ambient",
+    "sounds": [
+      {
+        "name": "starforged:astral_wraith_ambient",
+        "volume": 0.8
+      }
+    ]
+  },
+  "entity.astral_wraith.cast": {
+    "subtitle": "subtitles.starforged.entity.astral_wraith.cast",
+    "sounds": [
+      {
+        "name": "starforged:astral_wraith_cast"
+      }
+    ]
+  },
+  "entity.astral_wraith.death": {
+    "subtitle": "subtitles.starforged.entity.astral_wraith.death",
+    "sounds": [
+      {
+        "name": "starforged:astral_wraith_death"
+      }
+    ]
+  },
+  "entity.starling.ambient": {
+    "subtitle": "subtitles.starforged.entity.starling.ambient",
+    "sounds": [
+      {
+        "name": "starforged:starling_ambient",
+        "volume": 0.7
+      }
+    ]
+  },
+  "entity.nebula_ray.ambient": {
+    "subtitle": "subtitles.starforged.entity.nebula_ray.ambient",
+    "sounds": [
+      {
+        "name": "starforged:nebula_ray_ambient"
+      }
+    ]
+  },
+  "entity.eclipse_sovereign.roar": {
+    "subtitle": "subtitles.starforged.entity.eclipse_sovereign.roar",
+    "sounds": [
+      {
+        "name": "starforged:boss_roar"
+      }
+    ]
+  },
+  "entity.eclipse_sovereign.hurt": {
+    "subtitle": "subtitles.starforged.entity.eclipse_sovereign.hurt",
+    "sounds": [
+      {
+        "name": "starforged:boss_hurt"
+      }
+    ]
+  },
+  "entity.eclipse_sovereign.beam_charge": {
+    "subtitle": "subtitles.starforged.entity.eclipse_sovereign.beam_charge",
+    "sounds": [
+      {
+        "name": "starforged:boss_beam_charge"
+      }
+    ]
+  },
+  "entity.eclipse_sovereign.beam_fire": {
+    "subtitle": "subtitles.starforged.entity.eclipse_sovereign.beam_fire",
+    "sounds": [
+      {
+        "name": "starforged:boss_beam_fire"
+      }
+    ]
+  },
+  "entity.eclipse_sovereign.slam": {
+    "subtitle": "subtitles.starforged.entity.eclipse_sovereign.slam",
+    "sounds": [
+      {
+        "name": "starforged:boss_slam"
+      }
+    ]
+  },
+  "entity.eclipse_sovereign.death": {
+    "subtitle": "subtitles.starforged.entity.eclipse_sovereign.death",
+    "sounds": [
+      {
+        "name": "starforged:boss_death"
+      }
+    ]
+  },
+  "entity.eclipse_sovereign.summon": {
+    "subtitle": "subtitles.starforged.entity.eclipse_sovereign.summon",
+    "sounds": [
+      {
+        "name": "starforged:boss_summon"
+      }
+    ]
+  },
+  "entity.eclipse_crystal.shatter": {
+    "subtitle": "subtitles.starforged.entity.eclipse_crystal.shatter",
+    "sounds": [
+      {
+        "name": "starforged:crystal_shatter"
+      }
+    ]
+  }
+}

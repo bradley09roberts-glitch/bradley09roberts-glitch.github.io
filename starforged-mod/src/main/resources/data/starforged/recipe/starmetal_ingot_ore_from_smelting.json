@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "experience": 1.0,
+  "ingredient": "starforged:starmetal_ore",
+  "result": {
+    "id": "starforged:starmetal_ingot"
+  },
+  "cookingtime": 200
+}

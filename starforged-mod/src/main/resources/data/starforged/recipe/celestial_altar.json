@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "C": "starforged:celestial_core",
+    "Z": "starforged:chiseled_astral_bricks",
+    "B": "starforged:starmetal_block"
+  },
+  "pattern": [
+    " C ",
+    "ZBZ",
+    "BBB"
+  ],
+  "result": {
+    "id": "starforged:celestial_altar"
+  }
+}

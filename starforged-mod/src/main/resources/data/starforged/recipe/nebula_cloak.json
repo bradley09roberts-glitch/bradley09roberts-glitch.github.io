@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "V": "starforged:void_essence",
+    "P": "minecraft:phantom_membrane",
+    "S": "starforged:astral_shard",
+    "C": "starforged:starmetal_chestplate"
+  },
+  "pattern": [
+    "VPV",
+    "SCS",
+    "VPV"
+  ],
+  "result": {
+    "id": "starforged:nebula_cloak"
+  }
+}

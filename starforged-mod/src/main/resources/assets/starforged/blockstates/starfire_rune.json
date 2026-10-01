@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "powered=false": {
+      "model": "starforged:block/starfire_rune"
+    },
+    "powered=true": {
+      "model": "starforged:block/starfire_rune_active"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "starforged:meteorite_rock",
+    "starforged:starmetal_ore",
+    "starforged:astral_crystal_cluster",
+    "starforged:starmetal_block",
+    "starforged:astral_bricks",
+    "starforged:cracked_astral_bricks",
+    "starforged:chiseled_astral_bricks",
+    "starforged:astral_brick_stairs",
+    "starforged:astral_brick_slab",
+    "starforged:celestial_altar",
+    "starforged:gravity_rune",
+    "starforged:starfire_rune"
+  ]
+}

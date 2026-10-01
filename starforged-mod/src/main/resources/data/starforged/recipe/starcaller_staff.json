@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "D": "starforged:stardust",
+    "A": "starforged:astral_shard",
+    "I": "starforged:starmetal_ingot"
+  },
+  "pattern": [
+    " DA",
+    " ID",
+    "I  "
+  ],
+  "result": {
+    "id": "starforged:starcaller_staff"
+  }
+}

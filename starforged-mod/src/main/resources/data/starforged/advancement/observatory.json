@@ -1,0 +1,41 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.observatory.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.observatory.description"
+    },
+    "icon": {
+      "id": "starforged:chiseled_astral_bricks"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "enter": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "minecraft:location": {
+                "structures": "starforged:fallen_observatory"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "enter"
+    ]
+  ],
+  "parent": "starforged:root"
+}

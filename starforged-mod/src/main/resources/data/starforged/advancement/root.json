@@ -1,0 +1,28 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.root.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.root.description"
+    },
+    "icon": {
+      "id": "starforged:starcaller_staff"
+    },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false,
+    "background": "starforged:block/astral_bricks"
+  },
+  "criteria": {
+    "tick": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "requirements": [
+    [
+      "tick"
+    ]
+  ]
+}

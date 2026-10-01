@@ -1,0 +1,35 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.sigil.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.sigil.description"
+    },
+    "icon": {
+      "id": "starforged:eclipse_sigil"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "sigil": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "starforged:eclipse_sigil"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "sigil"
+    ]
+  ],
+  "parent": "starforged:golem"
+}
