@@ -21,6 +21,9 @@ public final class ModParticles {
     /** Large soft glow used for eclipse / beam effects. */
     public static final RegistryObject<SimpleParticleType> ECLIPSE_FLARE = PARTICLES.register("eclipse_flare", () -> new SimpleParticleType(true));
 
+    /** A bright streak that crosses the night sky during a Starfall (client-side ambience). */
+    public static final RegistryObject<SimpleParticleType> SHOOTING_STAR = PARTICLES.register("shooting_star", () -> new SimpleParticleType(true));
+
     private ModParticles() {
     }
 }
