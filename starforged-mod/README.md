@@ -7,6 +7,10 @@ on your world. They leave behind starmetal, living crystals and things from the 
 star-powered weapons, raid a ruined observatory full of traps and mimics, hatch a pet star, ride a sky-whale, and
 finally break the last seal to face **the Eclipse Sovereign, Devourer of Stars**.
 
+Beat it and the **Sunforged** expansion opens: forge a *Solar Key* from its heart, step through a gateway into
+**the Sunlands** (a dimension of eternal noon with four new biomes), mine sunstone for **Sunsteel** gear that outclasses
+netherite, tame ember hounds, ride a phoenix, solve the **Sun Temple**, and face **the Sun Warden, Last Light of the Sky**.
+
 ![The Eclipse Sovereign](docs/screenshots/boss_singularity.png)
 
 ---
@@ -22,7 +26,7 @@ finally break the last seal to face **the Eclipse Sovereign, Devourer of Stars**
 
 1. In the CurseForge app, go to **Minecraft → Create Custom Profile**, pick **26.2** and the **Forge 65.1.0** loader, then click **Create**.
 2. On the profile, click **⋯ → Open Folder**, then open the **`mods`** folder (create it if it isn't there).
-3. Copy **[`release/starforged-1.0.0.jar`](release/starforged-1.0.0.jar)** into that `mods` folder.
+3. Copy **[`release/starforged-1.1.0.jar`](release/starforged-1.1.0.jar)** into that `mods` folder.
 4. Click **Play**. You should see *Starforged* in the **Mods** list on the title screen.
 
 *Without CurseForge:* run the official installer
@@ -45,8 +49,12 @@ Create a **Creative** world with **cheats on**, then type:
 | `/starforged observatory` | Builds a full **Fallen Observatory** on the ground where you stand |
 | `/starforged locate` | Finds the nearest naturally generated observatory |
 | `/starforged boss` | Builds a Celestial Altar in front of you and plays the **full summoning cinematic** for the Eclipse Sovereign |
+| `/starforged sunkit` | Gives every Sunforged weapon and gadget, a Solar Key, a Phoenix Egg, and Sunforged armor |
+| `/starforged sunlands` | Sends you straight to the Sunlands |
+| `/starforged suntemple` | Builds a full **Sun Temple** where you stand |
+| `/starforged sunwarden` | Places a Sun Altar ahead of you and plays the **Sun Warden's rising cinematic** |
 
-All items are also in the **Starforged** creative tab.
+All items are also in the **Starforged** and **Sunforged** creative tabs.
 
 **Filming tips**
 - Switch to **Survival** (`/gamemode survival`) for the boss fight. Like vanilla bosses, the Sovereign doesn't attack creative players. `/effect give @s resistance 600 3` keeps you alive for B-roll.
@@ -125,13 +133,92 @@ Meteorite Rock, Starmetal Ore, Astral Crystal Cluster, Block of Starmetal, Astra
 stairs and slab), Starglass, Star Lantern (animated), Gravity Rune, Starfire Rune, Vault Seal, Celestial Altar.
 
 ### Also included
-- An advancement tree with 13 advancements.
-- 47 custom sounds with subtitles.
-- 6 custom particle types.
+- Two advancement trees with 23 advancements.
+- 83 custom sounds with subtitles.
+- 8 custom particle types.
 - Camera shake on big impacts.
 - An eclipse sky tint.
 - Custom death messages.
 - Every block and item is craftable or obtainable in survival (use JEI or the recipe book to browse recipes).
+
+---
+
+## ☀ Sunforged: the second tier
+
+### Getting there
+1. Defeat the Eclipse Sovereign and take its **Sovereign's Heart**.
+2. Craft a **Solar Key**: Sovereign's Heart in the middle, 4 Blocks of Starmetal on the sides, 4 Stardust in the corners.
+3. Use the key on the ground in the Overworld. A **Solar Gateway** of liquid sunlight rises a few blocks ahead. Step in.
+   A matching gateway is built on the other side, so you can always walk home the same way.
+
+### The Sunlands
+A dimension where it is always noon under a golden sky. Rain back home never reaches it.
+
+| Biome | What you'll find |
+|---|---|
+| **Ember Plains** | Ashen soil, sunbloom flowers, Ember Hound packs |
+| **Gilded Dunes** | Rolling golden sunsand, Magma Crawlers and the odd Ashen Knight |
+| **Basalt Spires** | Towering basalt and drifting ash, patrolled by Ashen Knights |
+| **Ember Caldera** | Lava lakes and magma, swarming with Magma Crawlers and Cinder Imps |
+
+**Sunstone Ore** (diamond pickaxe) and **Ember Crystal Clusters** generate throughout. Solar Phoenixes glide over the plains and dunes.
+
+### Sunsteel (stronger than netherite)
+Smelt *Raw Sunsteel* into **Sunsteel Ingots**. Tools use a blaze rod handle.
+
+| | Sunsteel | Netherite |
+|---|---|---|
+| Tool durability | 2600 | 2031 |
+| Mining speed | 10.5 | 9 |
+| Armor toughness | 3.5 | 3 |
+
+Full Sunsteel set (**Sunborn**): immune to fire and lava, and anything that hits you bursts into flame.
+
+### Weapons and gadgets
+| Item | Ability |
+|---|---|
+| **Solar Lance** | Right-click: dash forward as a streak of sunfire, skewering everything in your path |
+| **Phoenix Bow** | Needs no arrows. Fires homing phoenixes; a full draw looses three that hunt separate foes |
+| **Helios Scepter** | Summons a miniature sun that orbits you for 20 seconds and lances enemies with sunbeams |
+| **Cinder Chakram** | A ring of fire that leaps between up to four enemies, then flies back to your hand |
+| **Sunburst Flask** | Throwable flash that burns, blinds and slows everything nearby |
+| **Flare Greatsword** *(boss drop)* | Right-click hurls an exploding solar flare. Sneak + right-click: a ring of erupting sunfire |
+
+### Armor
+| Armor | Ability |
+|---|---|
+| **Phoenix Mantle** | Glide without rockets. Once every five minutes it **cheats death** in an explosion of fire |
+| **Magma Treads** | Lava hardens under your feet so you can walk across it (sneak to sink). Fire immune |
+| **Solar Crown** *(boss drop)* | Nearby enemies smoulder and burn. Fire immunity and Night Vision |
+
+### Creatures
+| Creature | |
+|---|---|
+| **Cinder Imp** | Winged fire-sprite that hovers out of reach and fires volleys of sparks |
+| **Magma Crawler** | Lava beast that walks on lava and pounces, setting you alight |
+| **Ember Hound** *(tameable)* | Hunts in packs. Tame one with **Solar Essence** and it fights for you; right-click with an empty hand to sit |
+| **Ashen Knight** | Shield up: frontal hits are mostly blocked and arrows bounce off. Get behind it, and dodge its **Ember Cleave** |
+| **Solar Phoenix** *(mount)* | Tame with Sunbloom or hatch a **Phoenix Egg**, then ride it: look to steer, jump to climb. Gives its rider fire resistance |
+
+### The Sun Temple
+A stepped ziggurat in the Ember Plains, Gilded Dunes and Basalt Spires. Inside:
+- A gauntlet of **Sunfire Vents** that erupt in sequence, Cinder Imp spawners and Ashen Knight guards.
+- A hidden vault under cracked tiles.
+- Four unlit **Solar Braziers**. Light them all (flint and steel, a fire charge or an Ember Shard) and the **Sun Seal** burns away, opening the stair to the summit.
+- On the summit: the **Sun Altar**.
+
+### Boss: The Sun Warden (900 HP)
+Craft a **Sunfire Sigil** (Sunsteel Block, Solar Essence and Ember Shards) and use it on the Sun Altar.
+- **Entrance.** The temple shakes, a ring of fire erupts and the Warden rises out of the stone to its title card.
+- **Attacks:** Sunfall meteors, a charged Solar Beam, rings of flame pillars, a ground slam with jumpable shockwaves, a sword sweep, a burning corona, and Cinder Imp reinforcements.
+- **Supernova.** At half health it turns invulnerable and raises four **Solar Pylons** that heal it. You have 30 seconds:
+  - shatter all four (4 hits each) and it kneels, **stunned and taking 50% more damage**, or
+  - fail and the Supernova detonates across the summit.
+
+  Either way it then fights **ENRAGED**.
+- **Rewards.** Flare Greatsword, Solar Crown, Heart of the Sun, a chance at a Phoenix Egg, and the *Eclipse of the Sun* challenge advancement.
+
+![Sun Warden](docs/screenshots/sun_warden_title.png)
 
 ---
 
@@ -145,6 +232,14 @@ stairs and slab), Starglass, Star Lantern (animated), Gravity Rune, Starfire Run
 
 Full boss fight, frame by frame: [boss_fight_sequence.png](docs/screenshots/boss_fight_sequence.png) ·
 Weapons: [weapons.png](docs/screenshots/weapons.png)
+
+**Sunforged**
+| | |
+|---|---|
+| ![Sunlands creatures](docs/screenshots/sun_creatures.png) | ![Sunforged kit](docs/screenshots/sun_kit.png) |
+| ![Sun Temple](docs/screenshots/sun_temple.png) | ![Sun Seal opening](docs/screenshots/sun_seal_open.png) |
+| ![Supernova](docs/screenshots/sun_supernova.png) | ![Riding a Solar Phoenix](docs/screenshots/sun_phoenix_ride.png) |
+| ![Solar Gateway](docs/screenshots/sun_gateway.png) | ![Sunforged weapons](docs/screenshots/sun_weapons.png) |
 
 ---
 
@@ -166,13 +261,14 @@ Weapons: [weapons.png](docs/screenshots/weapons.png)
 Requires JDK 25.
 ```
 cd starforged-mod
-./gradlew build          # → build/libs/starforged-1.0.0.jar
+./gradlew build          # → build/libs/starforged-1.1.0.jar
 ./gradlew runClient      # dev client
 ./gradlew runServer      # dev server
 ```
 Textures, models, sounds and data files are generated by the scripts in `tools/` (Python 3 with Pillow and NumPy;
 `ffmpeg` with libvorbis is needed for the sounds):
-`gen_textures.py`, `gen_models.py`, `gen_sounds.py` and `gen_data.py`. Run `gen_weapons.py --vanilla <vanilla item texture folder>` after
+`gen_textures.py`, `gen_models.py`, `gen_sounds.py` and `gen_data.py`, plus `gen_sun_textures.py`, `gen_sun_sounds.py`
+and `gen_sun_data.py` for Sunforged (run each `_sun_` script after its base script). Run `gen_weapons.py --vanilla <vanilla item texture folder>` after
 `gen_textures.py`: it redraws the weapon and tool sprites (the Starmetal tools reuse the vanilla diamond tool shapes).
 
 ## Tested
@@ -185,5 +281,8 @@ Textures, models, sounds and data files are generated by the scripts in `tools/`
   - the full summoning cinematic and boss fight, including the shield phase, death and loot
   - observatory generation (natural and by command)
   - Starfall and meteors
+  - Sunforged: all four Sunlands biomes, gateway travel both ways, every Sunforged weapon and armor ability,
+    taming the Ember Hound, hatching and riding the Solar Phoenix, the brazier puzzle, and the Sun Warden fight
+    through both Supernova outcomes, death and loot
 
 License: MIT.
