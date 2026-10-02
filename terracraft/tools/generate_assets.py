@@ -484,6 +484,7 @@ def draw_housing_query(c):
 
 
 item('housing_query', draw_housing_query)
+item('purification_powder', lambda c: draw_powder(c, '#80E0A0'))
 item('slime_crown', draw_crown)
 item('suspicious_looking_eye', draw_eye_item)
 def draw_chunk(c):
@@ -1253,6 +1254,21 @@ def crawler_frame(c, frame):
 
 
 mob_sprite('blood_crawler', 16, 12, 2, crawler_frame, frame_time=4, animate='move')
+mob_sprite('blood_zombie', 16, 24, 3, lambda c, f: humanoid_frame(c, f, '#A85A5A', '#6A2020', '#3A1A1A', (255, 240, 80, 255)),
+           frame_time=6, animate='move')
+
+
+def drippler_frame(c, frame):
+    p = palette('#C04848')
+    c.circle(7, 6, 5, p[2])
+    for ex, ey in ((5, 5), (9, 4), (8, 8)):
+        c.set(ex, ey, (240, 220, 60, 255))
+    for i, x in enumerate((4, 7, 10)):
+        c.line(x, 11, x, 12 + (frame + i) % 3, p[1])
+    c.outline()
+
+
+mob_sprite('drippler', 14, 16, 2, drippler_frame, frame_time=8)
 
 
 def worm_frame(c, frame, color, part):
@@ -1317,6 +1333,9 @@ def npc_frame(c, frame, skin, hair, shirt, pants, hat=None, beard=None, cross=Fa
     c.outline()
 
 
+mob_sprite('arms_dealer', 16, 24, 3, lambda c, f: npc_frame(c, f, '#8A5A3A', '#1A1A1A', '#7A5A3A', '#3A3A44', hat='#2A2A2A'),
+           frame_time=6, animate='move')
+mob_sprite('dryad', 16, 24, 3, lambda c, f: npc_frame(c, f, '#E8C8A0', '#4AA040', '#5A9A3A', '#3A7A2A'), frame_time=6, animate='move')
 mob_sprite('guide', 16, 24, 3, lambda c, f: npc_frame(c, f, '#E8B890', '#6A4428', '#6E8C3A', '#5A4430'), frame_time=6, animate='move')
 mob_sprite('merchant', 16, 24, 3, lambda c, f: npc_frame(c, f, '#E8B890', '#E8E8E8', '#5A6A8C', '#3A3A44', hat='#6A6A70', beard='#F0F0F0'),
            frame_time=6, animate='move')
@@ -1483,6 +1502,8 @@ def skin_texture(skin, hair, shirt, pants, shoes='#3A2A20', eyes=(30, 30, 40, 25
 
 model_texture('zombie', 64, 64, skin_texture('#7FA06A', '#3E4A2E', '#4A6FA5', '#4B3B2F', eyes=(220, 40, 40, 255), torn=True))
 model_texture('skeleton', 64, 64, skin_texture('#E8E2CF', '#E8E2CF', '#E8E2CF', '#E8E2CF', bony=True))
+model_texture('arms_dealer', 64, 64, skin_texture('#8A5A3A', '#1A1A1A', '#7A5A3A', '#3A3A44', hat='#2A2A2A', hat_band='#8A1A1A', short_sleeves=False))
+model_texture('dryad', 64, 64, skin_texture('#E8C8A0', '#4AA040', '#5A9A3A', '#3A7A2A', shoes='#2A5A1A', hat='#6AC050'))
 model_texture('guide', 64, 64, skin_texture('#E8B890', '#6A4428', '#6E8C3A', '#5A4430', short_sleeves=False))
 model_texture('merchant', 64, 64, skin_texture('#E8B890', '#E8E8E8', '#5A6A8C', '#3A3A44', beard='#F0F0F0', hat='#6A6A70', short_sleeves=False))
 model_texture('nurse', 64, 64, skin_texture('#F0C8A8', '#C84838', '#F4F4F4', '#F0F0F0', shoes='#F0F0F0', hat='#F8F8F8', cross=True))
@@ -1611,6 +1632,8 @@ model_texture('brain_of_cthulhu', 64, 64, brain_texture())
 model_texture('brain_of_cthulhu_exposed', 64, 64, brain_texture(True))
 model_texture('eater_of_souls', 64, 32, maw_texture('#6A6A4A', '#7A1A2A'))
 model_texture('crimera', 64, 32, maw_texture('#A83A3A', '#F0D060'))
+model_texture('blood_zombie', 64, 64, skin_texture('#A85A5A', '#5A1A1A', '#6A2020', '#3A1A1A', eyes=(255, 240, 80, 255), torn=True))
+model_texture('drippler', 64, 64, eye_texture('#E8D040', sclera='#C04848'))
 model_texture('face_monster', 64, 64, skin_texture('#B04848', '#6A1818', '#8A2828', '#5A1818', eyes=(250, 230, 80, 255), torn=True))
 
 

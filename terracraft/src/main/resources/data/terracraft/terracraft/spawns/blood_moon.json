@@ -1,0 +1,53 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:blood_zombie",
+      "weight": 8,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "event": "blood_moon",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
+      ]
+    },
+    {
+      "entity": "terracraft:drippler",
+      "weight": 5,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "placement": "air",
+      "event": "blood_moon",
+      "exclude_ground": [
+        "#terracraft:evil/all"
+      ]
+    },
+    {
+      "entity": "terracraft:zombie",
+      "weight": 6,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "group": [
+        1,
+        3
+      ],
+      "event": "blood_moon",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
+      ]
+    }
+  ]
+}

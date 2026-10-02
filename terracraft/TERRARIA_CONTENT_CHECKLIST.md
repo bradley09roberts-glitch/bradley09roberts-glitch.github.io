@@ -20,7 +20,7 @@ Legend: `[ ]` not started, `[-]` partial, `[x]` complete (implemented and usable
 - [x] Spawn system (biome/depth/time/sky/progression; events pending)
 - [x] Boss framework
 - [x] NPC framework, housing, shops
-- [ ] Event framework (invasions, moons)
+- [-] Event framework (Blood Moon, Slime Rain done; invasions and moons pending)
 - [ ] Biome spread (Corruption/Crimson/Hallow)
 - [ ] Hardmode world transformation
 - [ ] Modifiers / reforging
@@ -32,8 +32,8 @@ Legend: `[ ]` not started, `[-]` partial, `[x]` complete (implemented and usable
 Pre-hardmode
 - [x] King Slime
 - [x] Eye of Cthulhu
-- [ ] Eater of Worlds
-- [ ] Brain of Cthulhu
+- [x] Eater of Worlds
+- [x] Brain of Cthulhu
 - [ ] Queen Bee
 - [ ] Deerclops
 - [ ] Skeletron
@@ -60,8 +60,8 @@ Hardmode
 - [ ] Desert: Antlion, Antlion Charger/Swarmer, Vulture, Tomb Crawler
 - [ ] Snow/Ice: Ice Slime, Ice Bat, Undead Viking, Snow Flinx
 - [-] Caverns: Skeleton, Cave Bat done; Giant Worm, Granite/Marble, spiders pending
-- [ ] Corruption: Eater of Souls, Devourer, Corrupt Slime (HM), World Feeder...
-- [ ] Crimson: Crimera, Face Monster, Blood Crawler, Herpling (HM)...
+- [-] Corruption: Eater of Souls, Devourer done; Hardmode corruption enemies pending
+- [-] Crimson: Crimera, Face Monster, Blood Crawler done; Hardmode crimson enemies pending
 - [ ] Dungeon: Angry Bones, Dark Caster, Cursed Skull, Dungeon Guardian; post-Plantera dungeon enemies
 - [ ] Underworld: Imp, Fire Imp, Demon, Voodoo Demon, Bone Serpent, Lava Slime, Hellbat
 - [ ] Hardmode surface/underground/Hallow enemies (Pixie, Unicorn, Gastropod, Wraith, Possessed Armor...)
@@ -69,7 +69,7 @@ Hardmode
 
 ## NPCs
 - [x] Guide, Merchant, Nurse, Demolitionist
-- [ ] Dye Trader, Angler, Zoologist, Dryad, Arms Dealer, Painter, Golfer, Tavernkeep
+- [-] Dryad, Arms Dealer done; Dye Trader, Angler, Zoologist, Painter, Golfer, Tavernkeep pending
 - [ ] Stylist, Goblin Tinkerer, Witch Doctor, Clothier, Mechanic, Party Girl, Wizard
 - [ ] Tax Collector, Truffle, Pirate, Steampunker, Cyborg, Santa Claus, Princess
 
@@ -77,16 +77,16 @@ Hardmode
 Melee
 - [x] Wooden Sword, Copper Shortsword
 - [x] Copper/Tin/Iron/Lead/Silver/Tungsten/Gold/Platinum Broadsword
-- [ ] Other pre-hardmode melee (Muramasa, Night's Edge, Blade of Grass, Volcano, spears, flails, yoyos)
+- [-] Light's Bane, Blood Butcherer done; Muramasa, Night's Edge, Blade of Grass, Volcano, spears, flails, yoyos pending
 - [ ] Hardmode and endgame melee
 Ranged
 - [x] Wooden/Copper/Iron/Gold Bow
 - [x] Flintlock Pistol
 - [-] Thrown: Shuriken, Throwing Knife (done); others not started
-- [ ] Other bows, guns, launchers, repeaters
+- [-] Demon/Tendon Bow, Musket, The Undertaker done; other bows/guns pending
 Magic
 - [x] Wand of Sparking, Amethyst Staff, Magic Missile
-- [ ] Other gem staves, spell tomes, magic guns
+- [-] Vilethorn done; other gem staves, tomes, magic guns pending
 Summoner
 - [ ] Summon staffs, sentries, whips
 Boomerangs
@@ -100,31 +100,31 @@ Boomerangs
 ## Tools
 - [x] Copper/Tin/Iron/Lead/Silver/Tungsten/Gold/Platinum Pickaxe and Axe
 - [x] Copper Hammer, Iron Hammer
-- [ ] Other hammers, Molten Pickaxe, drills, chainsaws, Pickaxe Axe, Picksaw, Luminite tools
+- [-] Nightmare/Deathbringer Pickaxe, War Axe of the Night, Blood Lust Cluster, The Breaker, Flesh Grinder done; Molten and Hardmode tools pending
 - [ ] Grappling hooks
 
 ## Armour
 - [x] Wood, Copper, Tin, Iron, Lead, Silver, Tungsten, Gold, Platinum
-- [ ] Mining, Ninja, Fossil, Jungle, Shadow, Crimson, Meteor, Necro, Bee, Molten...
+- [-] Shadow, Crimson done; Mining, Ninja, Fossil, Jungle, Meteor, Necro, Bee, Molten pending
 - [ ] Hardmode, Chlorophyte, Turtle, Spectre, Beetle, Shroomite, Spooky, Celestial armours
 
 ## Accessories
 - [x] Hermes Boots, Cloud in a Bottle, Shiny Red Balloon, Lucky Horseshoe
 - [x] Band of Regeneration, Band of Starpower, Mana Regeneration Band, Nature's Gift
 - [x] Shackle, Aglet, Anklet of the Wind, Feral Claws, Obsidian Skull, Lava Charm, Cobalt Shield
-- [x] Flipper, Water Walking Boots, Toolbelt
+- [x] Flipper, Water Walking Boots, Toolbelt, Panic Necklace
 - [ ] Combination accessories (Tinkerer's Workshop), wings, dashes, emblems, Mana Flower...
 
 ## Ores and bars
 - [x] Copper, Iron, Gold (vanilla ores/ingots)
 - [x] Tin, Lead, Silver, Tungsten, Platinum (ore, deepslate ore, raw, bar)
 - [x] World ore-pair choice (worldgen honours it)
-- [-] Demonite/Crimtane ore + bars (boss drop); Meteorite, Hellstone pending; Obsidian gate done
+- [x] Demonite/Crimtane ore (worldgen + bosses) and bars; Meteorite, Hellstone pending; Obsidian gate done
 - [ ] Cobalt/Palladium, Mythril/Orichalcum, Adamantite/Titanium, Chlorophyte, Luminite
 
 ## Blocks
 - [x] Work Bench, Iron Anvil, Lead Anvil, Life Crystal (block)
-- [ ] Ebonstone/Crimstone/Pearlstone, Mud/Jungle grass, Ash, Dungeon bricks, Lihzahrd bricks, Sunplate...
+- [-] Ebonstone, Crimstone, evil grasses, Ebonwood, Shadewood done; Pearlstone, Mud, Ash, Dungeon/Lihzahrd bricks pending
 
 ## Biomes
 - [ ] Forest (vanilla surface used for now)
@@ -132,7 +132,7 @@ Boomerangs
 - [ ] Snow / Ice caverns
 - [ ] Jungle / Underground Jungle
 - [ ] Ocean
-- [ ] Corruption / Crimson
+- [x] Corruption / Crimson (worldgen, chasms, orbs/hearts, altars; spread pending)
 - [ ] Glowing Mushroom
 - [ ] Dungeon
 - [ ] Underworld
@@ -153,8 +153,8 @@ Boomerangs
 - [x] Villages, outposts, mansions, strongholds removed
 
 ## Events
-- [ ] Blood Moon
-- [ ] Slime Rain
+- [x] Blood Moon
+- [x] Slime Rain
 - [ ] Goblin Army
 - [ ] Pirate Invasion
 - [ ] Frost Legion
@@ -185,4 +185,4 @@ Boomerangs
 ## Consumables / items
 - [x] Life Crystal, Life Fruit, Mana Crystal
 - [x] Coins
-- [-] Slime Crown, Suspicious Looking Eye, Housing Query done; Demon Heart, keys, wormhole, recall pending
+- [-] Slime Crown, Suspicious Looking Eye, Worm Food, Bloody Spine, Housing Query, Purification Powder done; Demon Heart, keys, wormhole, recall pending

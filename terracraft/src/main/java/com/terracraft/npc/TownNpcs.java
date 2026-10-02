@@ -34,6 +34,18 @@ public final class TownNpcs {
         server -> NpcManager.isPresent(server, "merchant") && anyPlayer(server, p -> p.getInventory().contains(Items.TNT.getDefaultInstance())),
         true, () -> ProjectileKinds.SHURIKEN, 12.0F, 6, List.of(TownNpcType.Service.SHOP)));
 
+    public static final TownNpcType ARMS_DEALER = register(new TownNpcType("arms_dealer", NpcContent.ARMS_DEALER,
+        List.of("Brock", "Dalton", "Hank", "Jesse", "Keagan", "Maurice", "Ruben", "Sterling", "Tyrell", "Wade"),
+        server -> anyPlayer(server, p -> p.getInventory().contains(s -> s.getItem() instanceof com.terracraft.item.weapon.RangedWeaponItem r
+            && r.ammoType() == com.terracraft.item.weapon.AmmoType.BULLET || s.is(com.terracraft.registry.content.WeaponContent.MUSKET_BALL.get()))),
+        true, () -> ProjectileKinds.MUSKET_BALL, 14.0F, 6, List.of(TownNpcType.Service.SHOP)));
+    public static final TownNpcType DRYAD = register(new TownNpcType("dryad", NpcContent.DRYAD,
+        List.of("Alalia", "Celestine", "Elowen", "Fernanda", "Ivy", "Liliana", "Meadow", "Rosalind", "Sylvie", "Willow"),
+        server -> NpcManager.isPresent(server, "guide") && (com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.EYE_OF_CTHULHU)
+            || com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.EVIL_BOSS)
+            || com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.SKELETRON)),
+        true, null, 0.0F, 6, List.of(TownNpcType.Service.SHOP)));
+
     private TownNpcs() {}
 
     private static TownNpcType register(TownNpcType type) {

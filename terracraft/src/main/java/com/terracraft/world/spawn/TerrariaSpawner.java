@@ -77,7 +77,9 @@ public final class TerrariaSpawner {
             case UNDERGROUND -> 6;
             case CAVERN, UNDERWORLD -> 7;
         };
-        return Math.max(0, Mth.floor(base * TerraConfig.COMMON.maxSpawnsMultiplier.get()));
+        var event = com.terracraft.world.event.EventManager.active(level.getServer());
+        float eventCap = event != null && layer.ordinal() <= TerrariaLayer.SURFACE.ordinal() ? event.capMultiplier() : 1.0F;
+        return Math.max(0, Mth.floor(base * eventCap * TerraConfig.COMMON.maxSpawnsMultiplier.get()));
     }
 
     private static float spawnChance(ServerLevel level, TerrariaLayer layer) {
@@ -86,7 +88,9 @@ public final class TerrariaSpawner {
             case UNDERGROUND -> 0.25F;
             case CAVERN, UNDERWORLD -> 0.3F;
         };
-        return base * TerraConfig.COMMON.spawnRateMultiplier.get().floatValue();
+        var event = com.terracraft.world.event.EventManager.active(level.getServer());
+        float eventRate = event != null && layer.ordinal() <= TerrariaLayer.SURFACE.ordinal() ? event.spawnRate() : 1.0F;
+        return Math.min(1.0F, base * eventRate * TerraConfig.COMMON.spawnRateMultiplier.get().floatValue());
     }
 
     public static int nearbyEnemies(ServerPlayer player) {
@@ -127,7 +131,8 @@ public final class TerrariaSpawner {
             return false;
         }
         SpawnRule.SpawnContext context = new SpawnRule.SpawnContext(level.dimension(), level.getBiome(ground),
-            TerrariaLayer.ofHeight(ground.getY()), level.isBrightOutside(), level.canSeeSky(ground), level.getBlockState(ground.below()));
+            TerrariaLayer.ofHeight(ground.getY()), level.isBrightOutside(), level.canSeeSky(ground), level.getBlockState(ground.below()),
+            com.terracraft.world.event.EventState.get(level.getServer()).active());
         WorldProgression progression = WorldProgression.get(level.getServer());
         List<SpawnRule> eligible = new ArrayList<>();
         int totalWeight = 0;

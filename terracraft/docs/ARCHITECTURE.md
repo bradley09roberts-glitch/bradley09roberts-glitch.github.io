@@ -29,8 +29,8 @@ Target: Minecraft Java 26.2, Forge 65.1.0 (EventBus 7, ForgeGradle 7), Java 25. 
 | `entity.projectile` | `ProjectileKind` (data definition), `ProjectileKinds` (registry), `TerrariaProjectile` (one generic entity: gravity, drag, pierce, bounce, homing, boomerang, explosion, ignite/debuff, local immunity), `TargetRules`. |
 | `item` | `TerraItemStats` (data component `terracraft:stats`), `TerraRarity`, base classes `TerraItem`/`TerraBlockItem`. Sub-packages: `weapon` (melee/ranged/magic/thrown archetypes, ammo, `UsableWeapon`, `WeaponFiring`), `tool`, `armor` (`ArmorSet`, `TerrariaArmorItem`), `accessory`, `consumable` (potions, permanent upgrades), `coin`, plus `DevTabletItem`. |
 | `entity` | `SpriteEntity` (anything drawn by the 2D sprite renderer). |
-| `entity.mob` | `MobDefinition` (Terraria stats), `TerrariaMobs` (definitions by entity id), `TerrariaMob` (base: contact damage, defense, coins, scaling, life scale), AI families `SlimeMob`, `MotherSlimeMob`, `WalkerMob`, `FlyerMob`. |
-| `entity.boss` | `TerrariaBoss` (boss bar, synced phase, scaling, despawn, announcements, flags), `KingSlime`, `EyeOfCthulhu`, `BossSummoning`, `BossCommands`. |
+| `entity.mob` | `MobDefinition` (Terraria stats), `TerrariaMobs` (definitions by entity id), `TerrariaMob` (base: contact damage, defense, coins, scaling, life scale), AI families `SlimeMob`, `MotherSlimeMob`, `WalkerMob`, `ClimberMob`, `FlyerMob`, `WormMob` (segmented burrowers). |
+| `entity.boss` | `TerrariaBoss` (boss bar, synced phase, scaling, despawn, announcements, flags), `KingSlime`, `EyeOfCthulhu`, `EaterOfWorlds` (segment group with shared boss bar), `BrainOfCthulhu` (+ Creepers), `BossSummoning`, `BossCommands`. |
 | `npc` | `TownNpc` (entity), `TownNpcType`/`TownNpcs` (definitions + arrival rules), `HousingChecker` (3D housing rules), `NpcWorldData` (SavedData: records + house candidates), `NpcManager` (arrival/respawn/death, chat, shops, nurse, help), `NpcShops` (JSON shops), `NpcCommands`, `HousingQueryItem`. |
 | `block` | `CraftingStationBlock`. |
 | `crafting` | `TerraRecipe` (JSON model), `TerraRecipeManager` (server load, client copy, validated crafting), `CraftingStations` (tag-based stations + reach scan), `CraftingLogic`. |
@@ -40,6 +40,8 @@ Target: Minecraft Java 26.2, Forge 65.1.0 (EventBus 7, ForgeGradle 7), Java 25. 
 | `menu` | `AccessoryMenu`. |
 | `world` | `VanillaSuppression`, `TerrariaLayer` (Space/Surface/Underground/Cavern/Underworld height bands), `FallenStars`. |
 | `world.spawn` | `SpawnRule` (JSON model), `TerrariaSpawner` (per-player caps/rates, weighted rule pick), `SpawnCommands`. |
+| `world.evil` | `EvilZones` (seeded zone layout on land), `EvilBiomeFeature` (per-chunk conversion, chasms, orbs, altars), `OrbSmashing` (orb/heart treasure, counter, boss trigger). |
+| `world.event` | `TerrariaEvent`/`TerrariaEvents` (catalogue), `EventState` (SavedData), `EventManager` (natural starts/ends, Slime Rain, kill goals, sync, commands). |
 | `world.gen` | `PairedOreFeature`, `LootChestFeature`, `WorldgenVariants` (thread-safe variants for generation), `WorldgenCommands`. Features/biome modifiers are datapack JSON. |
 | `data` | `JsonDataLoader` (generic datapack directory loader), `DataEvents` (loaders + client sync), `BuiltInPacks` (pinned `vanilla_overrides` pack). |
 | `network` | `TerraNetwork` (one SimpleChannel), `packet.*` records with `STREAM_CODEC` + `handle`. |

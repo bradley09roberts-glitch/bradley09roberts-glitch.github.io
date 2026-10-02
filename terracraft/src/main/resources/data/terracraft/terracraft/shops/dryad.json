@@ -1,0 +1,31 @@
+{
+  "npc": "dryad",
+  "items": [
+    {
+      "item": "terracraft:purification_powder",
+      "price": 75
+    },
+    {
+      "item": "minecraft:oak_sapling",
+      "price": 10
+    },
+    {
+      "item": "minecraft:wheat_seeds",
+      "price": 25
+    },
+    {
+      "item": "terracraft:vile_powder",
+      "price": 100,
+      "condition": {
+        "evil": "corruption"
+      }
+    },
+    {
+      "item": "terracraft:vicious_powder",
+      "price": 100,
+      "condition": {
+        "evil": "crimson"
+      }
+    }
+  ]
+}

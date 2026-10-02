@@ -27,7 +27,7 @@ import net.minecraftforge.network.SimpleChannel;
  * Bump {@link #PROTOCOL} whenever a packet layout changes.
  */
 public final class TerraNetwork {
-    public static final int PROTOCOL = 2;
+    public static final int PROTOCOL = 3;
 
     public static final SimpleChannel CHANNEL = ChannelBuilder.named(TerraCraft.id("main"))
         .networkProtocolVersion(PROTOCOL)
@@ -40,6 +40,8 @@ public final class TerraNetwork {
                 .addMain(OpenCraftingPacket.class, OpenCraftingPacket.STREAM_CODEC, OpenCraftingPacket::handle)
                 .addMain(SyncRecipesPacket.class, SyncRecipesPacket.STREAM_CODEC, SyncRecipesPacket::handle)
                 .addMain(SyncMiningPowerPacket.class, SyncMiningPowerPacket.STREAM_CODEC, SyncMiningPowerPacket::handle)
+                .addMain(com.terracraft.network.packet.SyncEventPacket.class, com.terracraft.network.packet.SyncEventPacket.STREAM_CODEC,
+                    com.terracraft.network.packet.SyncEventPacket::handle)
                 .addMain(com.terracraft.network.packet.OpenNpcChatPacket.class, com.terracraft.network.packet.OpenNpcChatPacket.STREAM_CODEC,
                     com.terracraft.network.packet.OpenNpcChatPacket::handle)
             .serverbound()

@@ -1,0 +1,16 @@
+{
+  "npc": "arms_dealer",
+  "items": [
+    {
+      "item": "terracraft:musket_ball",
+      "price": 7
+    },
+    {
+      "item": "terracraft:flintlock_pistol"
+    },
+    {
+      "item": "terracraft:musket",
+      "condition": "boss_evil_defeated"
+    }
+  ]
+}

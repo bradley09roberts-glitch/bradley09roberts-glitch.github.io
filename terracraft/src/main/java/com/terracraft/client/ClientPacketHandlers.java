@@ -38,6 +38,12 @@ public final class ClientPacketHandlers {
         }
     }
 
+    public static void setEvent(String event) {
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            ClientState.setActiveEvent(event);
+        }
+    }
+
     public static void openNpcChat(com.terracraft.network.packet.OpenNpcChatPacket packet) {
         if (FMLEnvironment.dist == Dist.CLIENT) {
             Client.openNpcChat(packet);

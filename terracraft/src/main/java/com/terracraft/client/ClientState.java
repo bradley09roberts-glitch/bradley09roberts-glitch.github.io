@@ -46,6 +46,7 @@ public final class ClientState {
 
     /** Reset when leaving a world so stale data never leaks into the next one. */
     public static void clear() {
+        activeEvent = "";
         PROGRESSION.flags.clear();
         PROGRESSION.counters.clear();
         PROGRESSION.variants = WorldVariants.DEFAULT;
@@ -71,5 +72,15 @@ public final class ClientState {
         public WorldVariants variants() {
             return variants;
         }
+    }
+
+    private static String activeEvent = "";
+
+    public static String activeEvent() {
+        return activeEvent;
+    }
+
+    public static void setActiveEvent(String event) {
+        activeEvent = event == null ? "" : event;
     }
 }

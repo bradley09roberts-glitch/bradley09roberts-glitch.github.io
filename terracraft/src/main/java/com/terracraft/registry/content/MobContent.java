@@ -84,6 +84,13 @@ public final class MobContent {
     public static final RegistryObject<EntityType<ClimberMob>> BLOOD_CRAWLER = register("blood_crawler", ClimberMob::new, 1.1F, 0.6F,
         MobDefinition.builder().life(70).damage(24).defense(10).knockbackTaken(0.5F).coins(250).speed(0.32));
 
+    // --- Blood Moon ---------------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<WalkerMob>> BLOOD_ZOMBIE = register("blood_zombie", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(90).damage(26).defense(10).knockbackTaken(0.4F).coins(150).speed(0.26).nocturnal());
+    public static final RegistryObject<EntityType<FlyerMob>> DRIPPLER = register("drippler",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.CHASER), 0.9F, 0.9F,
+        MobDefinition.builder().life(80).damage(20).defense(4).knockbackTaken(0.2F).coins(200).speed(0.12).followRange(48).nocturnal());
+
     // --- Boss minions ------------------------------------------------------------------------------
     public static final RegistryObject<EntityType<FlyerMob>> SERVANT_OF_CTHULHU = register("servant_of_cthulhu",
         (type, level) -> new FlyerMob(type, level, FlyerMob.Style.CHASER), 0.55F, 0.55F,

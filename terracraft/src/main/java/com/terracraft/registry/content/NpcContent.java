@@ -23,10 +23,16 @@ public final class NpcContent {
     public static final RegistryObject<EntityType<TownNpc>> MERCHANT = npc("merchant");
     public static final RegistryObject<EntityType<TownNpc>> NURSE = npc("nurse");
     public static final RegistryObject<EntityType<TownNpc>> DEMOLITIONIST = npc("demolitionist");
+    public static final RegistryObject<EntityType<TownNpc>> ARMS_DEALER = npc("arms_dealer");
+    public static final RegistryObject<EntityType<TownNpc>> DRYAD = npc("dryad");
 
     /** Right-click a room to check whether it is valid Terraria housing. */
     public static final RegistryObject<HousingQueryItem> HOUSING_QUERY = ModItems.register("housing_query", TabGroup.TOOLS_ARMOR,
         HousingQueryItem::new, p -> WeaponProperties.stats(p.stacksTo(1), CoreItems.stats(TerraRarity.WHITE, 0)));
+
+    /** Dryad's Purification Powder: cleanses Corruption/Crimson blocks around where it is thrown. */
+    public static final RegistryObject<com.terracraft.npc.PurificationPowderItem> PURIFICATION_POWDER = ModItems.register("purification_powder",
+        TabGroup.CONSUMABLES, com.terracraft.npc.PurificationPowderItem::new, p -> WeaponProperties.stats(p.stacksTo(99), CoreItems.stats(TerraRarity.WHITE, 75)));
 
     private NpcContent() {}
 

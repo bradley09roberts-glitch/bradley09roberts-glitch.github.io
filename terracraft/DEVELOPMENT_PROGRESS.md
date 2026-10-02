@@ -91,20 +91,50 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - `TerraModelRenderer` scales each model to its hitbox, keeps health bars, shows name tags only for named
   NPCs. Client option `flatSprites` switches back to the 2D sprite renderer (useful with the Terraria pack).
 
-## IN PROGRESS
-- Nothing half-finished in code. Next work item is Stage 3.
+### Stage 3: Corruption/Crimson, evil bosses, events (verified in a live client)
+- **Evil biomes** (`world.evil`): three seeded zones per world placed on land (biome-source land test, no
+  oceans/mountains), generated per chunk by `EvilBiomeFeature`: Ebonstone/Crimstone, evil grass, Ebonwood/
+  Shadewood trees, Demonite/Crimtane ore clusters, winding chasms with orb rooms and side pockets, Shadow
+  Orbs/Crimson Hearts, Demon/Crimson Altars, Vile/Vicious Mushrooms. `/terraria worldgen evil` lists zones.
+- **Orbs/Hearts**: hammer only; treasure loot tables (Musket, Vilethorn, Band of Starpower / The Undertaker,
+  Panic Necklace...); world counter; every third summons Eater of Worlds / Brain of Cthulhu.
+- **Altars**: Demon Altar crafting station (Worm Food, Bloody Spine); need hammer power 80 in Hardmode to break.
+- **Spawning**: rules can require/exclude ground blocks (`ground`, `exclude_ground`) and events (`event`);
+  evil tables (Eater of Souls, Devourer / Crimera, Face Monster, Blood Crawler); normal tables avoid evil ground.
+- **Worm framework** (`WormMob`): burrowing head that steers only inside terrain, trailing segment entities,
+  shared-life (Devourer, Giant Worm) or split (Eater of Worlds) worms; `ClimberMob` wall climbers.
+- **Bosses**: Eater of Worlds (30 segments, per-segment life/defense/damage, splitting, one boss bar for all
+  segments, per-segment Demonite + Shadow Scale drops), Brain of Cthulhu (Creeper shield, teleports, dash
+  phase, Crimtane + Tissue Samples). Worm Food / Bloody Spine only work inside their biome.
+- **Gear**: Light's Bane, Blood Butcherer, Demon/Tendon Bow, Musket, The Undertaker, Vilethorn, Nightmare/
+  Deathbringer Pickaxe, War Axe of the Night, Blood Lust Cluster, The Breaker, Flesh Grinder, Shadow and
+  Crimson armor sets (speed / regeneration set bonuses), Panic Necklace.
+- **Events** (`world.event`): event framework (persisted state, natural starts at dusk/dawn, end at dawn/dusk
+  or kill goal, spawn rate/cap multipliers, client sync). Blood Moon (red sky, Blood Zombie, Drippler, more
+  zombies) and Slime Rain (slimes fall from the sky; 150 kills, or 75 after King Slime; summons King Slime).
+  `/terraria event start|stop|status`.
+- **NPCs**: Arms Dealer (moves in when someone carries a gun or bullets; sells ammo and guns) and Dryad (after
+  a boss; sells Purification Powder, which cleanses evil blocks, saplings and the world's evil powder).
+- 3D models: worm segments, flying maws, brain, Blood Crawler (vanilla spider shape), new humanoid skins.
 
-## NEXT (Stage 3: Evil biome, Underground layers, pre-hardmode bosses)
-1. Corruption/Crimson worldgen (chasms, Ebonstone/Crimstone, Shadow Orbs/Crimson Hearts, Demon/Crimson
-   Altars) and their enemies (Eater of Souls, Devourer, Crimera, Face Monster, Blood Crawler).
-2. Eater of Worlds (segmented worm boss) and Brain of Cthulhu (creepers, illusions); Worm Food / Bloody Spine.
-3. Meteorite (Shadow Orb trigger), Demonite/Crimtane gear (Shadow/Crimson armor, Nightmare/Deathbringer
-   Pickaxe, Light's Bane, Blood Butcherer), Hellforge.
-4. Events: Blood Moon (zombie/eye variants, Drippler, Blood Zombie), Slime Rain; `/terraria event start|stop`.
-5. More NPCs: Arms Dealer, Dryad, Painter, Dye Trader; NPC happiness; housing banners UI.
-6. Jungle/Snow/Desert biome mapping onto vanilla biomes with their Terraria enemies and chest loot.
+## IN PROGRESS
+- Nothing half-finished in code. Next work item is Stage 4.
+
+## NEXT (Stage 4: Dungeon, Jungle, Underworld - the road to Hardmode)
+1. Dungeon structure (brick halls, locked chests, Golden Keys, spikes, water bolts) guarded by the Old Man;
+   Skeletron (head + hands, curse lifted) and the Dungeon enemies (Angry Bones, Dark Caster, Cursed Skull).
+2. Jungle mapping (vanilla jungles + underground jungle mud/moss, Jungle Spores, Hornets, Man Eaters),
+   Queen Bee (bee hives, Abeemination), Jungle armor and gear.
+3. Underworld layer below the caverns (ash, hellstone with 65 power, lava lakes, ruined houses), Imps,
+   Demons, Voodoo Demons, Fire Imp, Bone Serpent (worm framework); Hellforge, Molten gear, Hellstone bars.
+4. Wall of Flesh (Guide Voodoo Doll, wall that spans the Underworld) and the Hardmode switch.
+5. Goblin Army invasion (Shadow Orb trigger), Goblin Tinkerer, Tinkerer's Workshop, reforging and modifiers.
+6. Meteorite (first orb/heart triggers a meteor landing), Meteor armor and Space Gun.
 
 ## KNOWN BUGS
+- Chunks generated before a zone change keep their old layout (zone placement changed during Stage 3
+  development; affects only test worlds).
+- Evil biomes do not spread yet (pre-Hardmode spread is slow in Terraria; Hardmode spread comes with Stage 5).
 - Houses built with commands (no player block placement) are only found after a `/terraria npc housing` or
   Housing Query check inside them.
 - Sprites imported from the wiki are single frames (the wiki shows one frame per enemy); facing assumes

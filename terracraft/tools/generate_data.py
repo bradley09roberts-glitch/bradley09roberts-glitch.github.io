@@ -475,6 +475,10 @@ def lang():
     })
     L.update({
         'message.terracraft.boss.awoken': '%s has awoken!',
+        'event.terracraft.blood_moon.start': 'The Blood Moon is rising...',
+        'event.terracraft.blood_moon.end': 'The Blood Moon has set.',
+        'event.terracraft.slime_rain.start': 'Slime is falling from the sky!',
+        'event.terracraft.slime_rain.end': 'Slime has stopped falling from the sky.',
         'message.terracraft.orb.first': 'A horrible chill goes down your spine...',
         'message.terracraft.orb.second': 'Screams echo around you...',
         'message.terracraft.boss.defeated': '%s has been defeated!',
@@ -522,6 +526,7 @@ def lang():
         'screen.terracraft.npc.sell': 'Sell held item',
         'screen.terracraft.npc.savings': 'Savings: ',
         'screen.terracraft.npc.price': 'Price: ',
+        'item.terracraft.purification_powder.tooltip': 'Cleanses the Corruption and the Crimson',
         'item.terracraft.housing_query.tooltip': 'Right-click inside a room to check whether an NPC can live there',
     })
     for mob, (name, _) in MOBS.items():
@@ -553,6 +558,8 @@ MOBS = {
     'devourer': ('Devourer', []),
     'giant_worm': ('Giant Worm', []),
     'eater_of_worlds': ('Eater of Worlds', []),
+    'blood_zombie': ('Blood Zombie', [('vertebra', 1, 1, 0.1)]),
+    'drippler': ('Drippler', [('lens', 1, 2, 0.5)]),
     'brain_of_cthulhu': ('Brain of Cthulhu', []),
     'creeper': ('Creeper', []),
     'eater_of_souls': ('Eater of Souls', [('rotten_chunk', 1, 1, 0.33)]),
@@ -594,6 +601,11 @@ SPAWNS = {
         dict(entity='mother_slime', weight=2, layers=['cavern'], condition=PRE_HM, **NOT_EVIL),
         dict(entity='cave_bat', weight=6, layers=['cavern'], placement='air', **NOT_EVIL),
         dict(entity='skeleton', weight=8, layers=['cavern'], **NOT_EVIL),
+    ],
+    'blood_moon': [
+        dict(entity='blood_zombie', weight=8, time='night', layers=['surface'], event='blood_moon', **OVERWORLD_LAND),
+        dict(entity='drippler', weight=5, time='night', layers=['surface'], placement='air', event='blood_moon', **NOT_EVIL),
+        dict(entity='zombie', weight=6, time='night', layers=['surface'], group=[1, 3], event='blood_moon', **OVERWORLD_LAND),
     ],
     'corruption': [
         dict(entity='eater_of_souls', weight=10, layers=['surface', 'underground', 'cavern'], placement='air', **CORRUPT),
@@ -735,7 +747,8 @@ def worldgen():
 
 
 # --- Town NPCs -------------------------------------------------------------------------------------
-NPC_NAMES = {'guide': 'Guide', 'merchant': 'Merchant', 'nurse': 'Nurse', 'demolitionist': 'Demolitionist'}
+NPC_NAMES = {'guide': 'Guide', 'merchant': 'Merchant', 'nurse': 'Nurse', 'demolitionist': 'Demolitionist',
+             'arms_dealer': 'Arms Dealer', 'dryad': 'Dryad'}
 NPC_DIALOGUE = {
     'guide': [
         "Hello, %s. If you're new here, chop some trees and build a shelter before nightfall.",
@@ -772,6 +785,22 @@ NPC_DIALOGUE = {
         "Careful with the merchandise. Very careful.",
     ],
 }
+NPC_DIALOGUE['arms_dealer'] = [
+    "Hey %s. Looking to make things go bang? You've come to the right man.",
+    "Guns don't care how strong your arms are. That's what I like about them.",
+    "Musket balls are cheap. Missing is expensive.",
+    "Keep your powder dry and your eyes open.",
+    "Every gun I sell comes with a promise: it will shoot something.",
+    "The Nurse keeps asking me to stop. I keep asking her to buy something.",
+]
+NPC_DIALOGUE['dryad'] = [
+    "Greetings, %s. The land is restless - can you feel it?",
+    "Something vile spreads beneath this world. My powder can push it back, a little at a time.",
+    "Every tree you plant is a promise to the world.",
+    "The Corruption and the Crimson are wounds. Wounds can be healed.",
+    "I have watched these forests for longer than you would believe.",
+    "Be gentle with the land, and it will be gentle with you.",
+]
 GUIDE_HELP = [
     "Press V to open the crafting menu. It shows everything you can make with the stations around you.",
     "Press R to open your equipment. Accessories go in the slots next to your armor.",
@@ -800,6 +829,18 @@ SHOPS = {
         {'item': 'minecraft:chest', 'price': 500},
         {'item': t('housing_query'), 'price': 100},
         {'item': t('mining_potion'), 'condition': 'boss_eye_defeated'},
+    ],
+    'arms_dealer': [
+        {'item': t('musket_ball'), 'price': 7},
+        {'item': t('flintlock_pistol')},
+        {'item': t('musket'), 'condition': 'boss_evil_defeated'},
+    ],
+    'dryad': [
+        {'item': t('purification_powder'), 'price': 75},
+        {'item': 'minecraft:oak_sapling', 'price': 10},
+        {'item': 'minecraft:wheat_seeds', 'price': 25},
+        {'item': t('vile_powder'), 'price': 100, 'condition': {'evil': 'corruption'}},
+        {'item': t('vicious_powder'), 'price': 100, 'condition': {'evil': 'crimson'}},
     ],
     'demolitionist': [
         {'item': 'minecraft:tnt', 'price': 1500},

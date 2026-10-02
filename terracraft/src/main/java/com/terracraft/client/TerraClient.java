@@ -36,6 +36,14 @@ public final class TerraClient {
         AddGuiOverlayLayersEvent.BUS.addListener(TerrariaHud::register);
         ItemTooltipEvent.BUS.addListener(ItemTooltips::onTooltip);
         ClientEvents.register();
+        net.minecraftforge.client.event.ViewportEvent.ComputeFogColor.BUS.addListener(event -> {
+            if ("blood_moon".equals(ClientState.activeEvent())) {
+                // Blood Moon: the night turns red
+                event.setRed(Math.min(1.0F, event.getRed() * 0.6F + 0.25F));
+                event.setGreen(event.getGreen() * 0.35F);
+                event.setBlue(event.getBlue() * 0.35F);
+            }
+        });
         com.terracraft.menu.AccessoryMenu.clientSlotCount = () -> ClientState.stats().accessorySlots();
         com.terracraft.progression.ProgressionManager.clientView = ClientState::progression;
     }

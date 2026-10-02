@@ -36,6 +36,7 @@ import java.util.Set;
  *   "placement": "ground",                // ground | air
  *   "group": [1, 2],
  *   "dimension": "minecraft:overworld",
+ *   "event": "blood_moon",                // optional: only while this world event is active
  *   "condition": "!hardmode_active"       // progression condition
  * }</pre>
  * A file may also hold {@code {"spawns": [ ... ]}}.
@@ -54,6 +55,7 @@ public record SpawnRule(
     int minGroup,
     int maxGroup,
     ResourceKey<Level> dimension,
+    String event,
     ProgressionCondition condition
 ) {
     public enum Time { DAY, NIGHT, ANY }
@@ -83,6 +85,9 @@ public record SpawnRule(
 
     public boolean matches(SpawnContext context, ProgressionView progression) {
         if (!context.dimension().equals(dimension)) {
+            return false;
+        }
+        if (!event.isEmpty() && !event.equals(context.event())) {
             return false;
         }
         if (time == Time.DAY && !context.day() || time == Time.NIGHT && context.day()) {
@@ -151,6 +156,7 @@ public record SpawnRule(
             minGroup,
             Math.max(minGroup, maxGroup),
             ResourceKey.create(Registries.DIMENSION, Identifier.parse(GsonHelper.getAsString(json, "dimension", "minecraft:overworld"))),
+            GsonHelper.getAsString(json, "event", ""),
             json.has("condition") ? ProgressionCondition.parse(json.get("condition")) : new ProgressionCondition.Constant(true));
     }
 
@@ -176,5 +182,5 @@ public record SpawnRule(
 
     /** Everything a rule can test about a candidate spawn position ({@code ground} = the block below it). */
     public record SpawnContext(ResourceKey<Level> dimension, Holder<Biome> biome, TerrariaLayer layer, boolean day, boolean sky,
-                               net.minecraft.world.level.block.state.BlockState ground) {}
+                               net.minecraft.world.level.block.state.BlockState ground, String event) {}
 }

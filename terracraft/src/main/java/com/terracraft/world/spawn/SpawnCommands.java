@@ -27,7 +27,8 @@ public final class SpawnCommands {
                     ServerLevel level = player.level();
                     TerrariaLayer layer = TerrariaLayer.ofHeight(player.getBlockY());
                     SpawnRule.SpawnContext context = new SpawnRule.SpawnContext(level.dimension(), level.getBiome(player.blockPosition()),
-                        layer, level.isBrightOutside(), level.canSeeSky(player.blockPosition()), level.getBlockState(player.blockPosition().below()));
+                        layer, level.isBrightOutside(), level.canSeeSky(player.blockPosition()), level.getBlockState(player.blockPosition().below()),
+                        com.terracraft.world.event.EventState.get(level.getServer()).active());
                     WorldProgression progression = WorldProgression.get(level.getServer());
                     List<String> matching = new ArrayList<>();
                     for (SpawnRule rule : TerrariaSpawner.rules()) {

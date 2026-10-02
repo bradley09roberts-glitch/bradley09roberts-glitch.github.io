@@ -9,8 +9,8 @@ All art shipped with the mod is original: textures are generated procedurally by
 No Terraria assets are included or redistributed. If you own Terraria and want its real sprites, build a
 **personal** resource pack (see below).
 
-> Status: **Stages 0-2 (foundation, core systems, early game: enemies, spawning, worldgen, King Slime,
-> Eye of Cthulhu, town NPCs) are complete and verified in-game.**
+> Status: **Stages 0-3 (foundation, core systems, early game, Corruption/Crimson with the Eater of Worlds and
+> Brain of Cthulhu, Blood Moon and Slime Rain) are complete and verified in-game.**
 > See [DEVELOPMENT_PROGRESS.md](DEVELOPMENT_PROGRESS.md) and
 > [TERRARIA_CONTENT_CHECKLIST.md](TERRARIA_CONTENT_CHECKLIST.md).
 
@@ -76,6 +76,11 @@ F3+T) to draw them as flat Terraria sprites instead, which is when the pack's cr
   table/work bench) and the Merchant (50 silver saved), Nurse (after a Life Crystal) and Demolitionist
   (carry TNT) move in. Right-click them to talk, shop, sell, heal or get help. The **Housing Query**
   checks rooms.
+* **Corruption / Crimson**: each world has evil patches (`/terraria worldgen evil` shows where) with chasms
+  leading to Shadow Orbs or Crimson Hearts. Smash them with a hammer for treasure; every third one awakens the
+  Eater of Worlds or the Brain of Cthulhu (or craft Worm Food / Bloody Spine at a Demon Altar).
+* **Events**: Blood Moons (red nights full of monsters) and Slime Rain happen on their own, or with
+  `/terraria event start blood_moon|slime_rain`.
 * **World**: each world uses one ore of every Terraria pair (copper or tin...), Life Crystals and loot chests
   generate in caves, and Fallen Stars drop at night.
 * **Removed bypasses** (all configurable in `config/terracraft-common.toml`): villagers, wandering
@@ -90,7 +95,8 @@ F3+T) to draw them as flat Terraria sprites instead, which is when the pack's cr
   every progression flag, change time and edit player upgrades.
 * `/terraria biome debug`, `/terraria recipecheck <id>`
 * `/terraria spawns info | spawns force [n] | killall` (enemies), `/terraria boss spawn <boss> | killall | list`
-* `/terraria npc spawn <npc> | list | killall | housing`, `/terraria worldgen scan [radius]`, `/terraria star`
+* `/terraria npc spawn <npc> | list | killall | housing`, `/terraria worldgen scan [radius] | evil`, `/terraria star`
+* `/terraria event start <event> | stop | status`
 
 Automated in-game testing (headless): see [docs/TESTING.md](docs/TESTING.md).
 

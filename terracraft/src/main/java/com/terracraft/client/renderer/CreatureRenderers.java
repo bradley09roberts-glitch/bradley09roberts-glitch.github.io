@@ -53,6 +53,9 @@ public final class CreatureRenderers {
         eye(event, MobContent.EYE_OF_CTHULHU.get(), 2.4F);
         register(event, MobContent.CAVE_BAT.get(), ctx -> new TerraModelRenderer<>(ctx,
             new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 0.8F, 0.3F, false));
+        register(event, MobContent.BLOOD_ZOMBIE.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F, 0.5F, true));
+        eye(event, MobContent.DRIPPLER.get(), 0.9F);
         worm(event, MobContent.DEVOURER.get(), 0.8F);
         worm(event, MobContent.EATER_OF_WORLDS.get(), 1.4F);
         eye(event, MobContent.BRAIN_CREEPER.get(), 0.7F);
