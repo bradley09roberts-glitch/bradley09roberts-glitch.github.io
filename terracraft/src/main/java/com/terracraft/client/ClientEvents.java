@@ -32,6 +32,8 @@ import java.lang.invoke.MethodHandles;
 public final class ClientEvents {
     private static boolean jumpWasDown;
     private static int jumpsUsed;
+    /** True once the jump key has been released while airborne; extra jumps need a fresh press after that. */
+    private static boolean jumpReleasedInAir;
     private static long lastWeaponPacketTick;
 
     private ClientEvents() {}
@@ -93,9 +95,13 @@ public final class ClientEvents {
         boolean jumpDown = mc.options.keyJump.isDown();
         if (player.onGround() || player.isInWater() || player.onClimbable()) {
             jumpsUsed = 0;
-        } else if (jumpDown && !jumpWasDown && !player.getAbilities().flying && !player.isPassenger()
+            jumpReleasedInAir = false;
+        } else if (!jumpDown) {
+            jumpReleasedInAir = true;
+        } else if (!jumpWasDown && jumpReleasedInAir && !player.getAbilities().flying && !player.isPassenger()
             && jumpsUsed < ClientState.stats().extraJumps()) {
             jumpsUsed++;
+            jumpReleasedInAir = false;
             Vec3 motion = player.getDeltaMovement();
             double power = player.getAttributeValue(Attributes.JUMP_STRENGTH) * 1.15;
             player.setDeltaMovement(motion.x, power, motion.z);
