@@ -73,6 +73,9 @@ public final class TerraConfig {
         public final ForgeConfigSpec.BooleanValue disableNetheriteGear;
 
         // ---------------- economy ----------------
+        public final ForgeConfigSpec.BooleanValue terrariaSpawning;
+        public final ForgeConfigSpec.DoubleValue spawnRateMultiplier;
+        public final ForgeConfigSpec.DoubleValue maxSpawnsMultiplier;
         public final ForgeConfigSpec.BooleanValue vanillaMobsDropCoins;
         public final ForgeConfigSpec.BooleanValue autoCompactCoins;
 
@@ -145,6 +148,15 @@ public final class TerraConfig {
                 .define("disableDiamondGear", true);
             disableNetheriteGear = b.comment("Disable netherite upgrades.")
                 .define("disableNetheriteGear", true);
+            b.pop();
+
+            b.comment("Terraria enemy spawning (rules: data/<namespace>/terracraft/spawns/*.json)").push("spawning");
+            terrariaSpawning = b.comment("Spawn Terraria enemies around players.")
+                .define("terrariaSpawning", true);
+            spawnRateMultiplier = b.comment("Multiplier on how often spawn attempts succeed.")
+                .defineInRange("spawnRateMultiplier", 1.0, 0.0, 10.0);
+            maxSpawnsMultiplier = b.comment("Multiplier on how many enemies may be near each player at once.")
+                .defineInRange("maxSpawnsMultiplier", 1.0, 0.0, 10.0);
             b.pop();
 
             b.comment("Coins and economy").push("economy");

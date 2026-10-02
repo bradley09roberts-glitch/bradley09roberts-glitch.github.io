@@ -1,0 +1,40 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:red_slime",
+      "weight": 8,
+      "layers": [
+        "underground"
+      ]
+    },
+    {
+      "entity": "terracraft:yellow_slime",
+      "weight": 3,
+      "layers": [
+        "underground"
+      ]
+    },
+    {
+      "entity": "terracraft:blue_slime",
+      "weight": 3,
+      "layers": [
+        "underground"
+      ]
+    },
+    {
+      "entity": "terracraft:cave_bat",
+      "weight": 6,
+      "layers": [
+        "underground"
+      ],
+      "placement": "air"
+    },
+    {
+      "entity": "terracraft:skeleton",
+      "weight": 5,
+      "layers": [
+        "underground"
+      ]
+    }
+  ]
+}

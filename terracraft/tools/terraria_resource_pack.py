@@ -75,6 +75,44 @@ def item_names():
     return names
 
 
+def mob_names():
+    """Enemy/NPC/boss sprites: textures/entity/mob/<id>.png with an <id>.json frame description."""
+    lang = json.loads(LANG.read_text(encoding="utf-8"))
+    names = {}
+    for meta in sorted((ASSETS / "textures/entity/mob").glob("*.json")):
+        name = lang.get(f"entity.terracraft.{meta.stem}")
+        if name:
+            names[meta.stem] = (name, json.loads(meta.read_text(encoding="utf-8")))
+    return names
+
+
+def to_sprite_sheet(data, own_meta):
+    """Turns a (possibly animated) sprite into a vertical frame strip, keeping TerraCraft's flags."""
+    image = Image.open(io.BytesIO(data))
+    frames, durations = [], []
+    for index in range(getattr(image, "n_frames", 1)):
+        image.seek(index)
+        frames.append(image.convert("RGBA"))
+        durations.append(image.info.get("duration", 100) or 100)
+    box = None
+    for frame in frames:
+        b = frame.getbbox()
+        if b:
+            box = b if box is None else (min(box[0], b[0]), min(box[1], b[1]), max(box[2], b[2]), max(box[3], b[3]))
+    if box:
+        frames = [f.crop(box) for f in frames]
+    w, h = frames[0].size
+    sheet = Image.new("RGBA", (w, h * len(frames)), (0, 0, 0, 0))
+    for i, frame in enumerate(frames):
+        sheet.paste(frame, (0, i * h))
+    out = io.BytesIO()
+    sheet.save(out, "PNG")
+    meta = dict(own_meta)
+    meta["frames"] = len(frames)
+    meta["frame_time"] = max(1, round(sum(durations) / len(durations) / 50))
+    return out.getvalue(), meta
+
+
 def fetch_wiki(name):
     url = WIKI + urllib.parse.quote(name.replace(" ", "_") + ".png")
     request = urllib.request.Request(url, headers={"User-Agent": "TerraCraft-personal-resource-pack/1.0"})
@@ -136,6 +174,22 @@ def main():
                 pack.writestr(f"assets/{namespace}/textures/item/{item}.png", to_item_texture(data))
                 done += 1
                 print(f"  {namespace}:{item} <- {name}")
+            except Exception as error:  # noqa: BLE001
+                print(f"  ! {name}: {error}")
+                missing.append(name)
+        for mob, (name, meta) in mob_names().items():
+            data = fetch_wiki(name) if args.wiki else find_local(args.folder, name)
+            if args.wiki:
+                time.sleep(0.2)
+            if not data:
+                missing.append(name)
+                continue
+            try:
+                sheet, sheet_meta = to_sprite_sheet(data, meta)
+                pack.writestr(f"assets/terracraft/textures/entity/mob/{mob}.png", sheet)
+                pack.writestr(f"assets/terracraft/textures/entity/mob/{mob}.json", json.dumps(sheet_meta))
+                done += 1
+                print(f"  enemy {mob} <- {name} ({sheet_meta['frames']} frames)")
             except Exception as error:  # noqa: BLE001
                 print(f"  ! {name}: {error}")
                 missing.append(name)

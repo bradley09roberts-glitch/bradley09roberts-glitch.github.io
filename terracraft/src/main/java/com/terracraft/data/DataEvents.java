@@ -26,6 +26,7 @@ public final class DataEvents {
     static void onAddReloadListeners(AddReloadListenerEvent event) {
         event.addListener(new JsonDataLoader("terracraft/mining_power", MiningPower::load));
         event.addListener(new JsonDataLoader("terracraft/recipe", TerraRecipeManager::load));
+        event.addListener(new JsonDataLoader("terracraft/spawns", com.terracraft.world.spawn.TerrariaSpawner::load));
     }
 
     @SubscribeEvent

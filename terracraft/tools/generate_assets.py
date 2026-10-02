@@ -747,12 +747,144 @@ def armor_assets():
             'humanoid_leggings': [{'texture': f'terracraft:{s}'}]}})
 
 
+# --- Enemy sprite sheets ---------------------------------------------------------------------------
+# Frames are stacked vertically and face LEFT (Terraria's convention); <id>.json holds the frame data.
+MOB_SPRITES = {}
+
+
+def mob_sprite(name, frame_w, frame_h, frames, drawer, **meta):
+    MOB_SPRITES[name] = (frame_w, frame_h, frames, drawer, meta)
+
+
+def slime_frame(c, color, frame, w, h, alpha=190, baby=None):
+    p = palette(color)
+    squash = 1 if frame == 1 else 0
+    top = 2 + squash * 2
+    left, right, bottom = 1 - squash, w - 2 + squash, h - 1
+    for x in range(w):
+        for y in range(h):
+            # dome: flat bottom, rounded top
+            nx = (x - (left + right) / 2) / ((right - left) / 2 + 0.5)
+            ny = (y - bottom) / (bottom - top + 0.5)
+            if nx * nx + ny * ny <= 1.0 and y <= bottom:
+                c.set(x, y, (*p[2][:3], alpha))
+    if baby:
+        bx, by = w // 2, bottom - 3
+        c.circle(bx, by, 2, (*hexc(baby)[:3], 220))
+    c.light(1.3, 0.75)
+    c.outline()
+    # shine and eyes (looking left)
+    c.set(left + 3, top + 2, (*p[4][:3], 230))
+    c.set(left + 4, top + 1 + (1 if squash else 0), (*p[4][:3], 200))
+    eye_y = top + (bottom - top) // 2
+    c.rect(left + 3, eye_y, left + 3, eye_y + 1, (20, 20, 30, 255))
+    c.rect(left + 6, eye_y, left + 6, eye_y + 1, (20, 20, 30, 255))
+
+
+SLIMES = {'green_slime': '#5DC95D', 'blue_slime': '#4F8EF2', 'red_slime': '#E04B4B', 'purple_slime': '#A355E3',
+          'yellow_slime': '#F0D23C', 'black_slime': '#3A3A48'}
+for _name, _color in SLIMES.items():
+    mob_sprite(_name, 16, 12, 2, lambda c, f, col=_color: slime_frame(c, col, f, 16, 12), frame_time=10)
+mob_sprite('baby_slime', 12, 9, 2, lambda c, f: slime_frame(c, '#7FBFF8', f, 12, 9), frame_time=8)
+mob_sprite('mother_slime', 22, 16, 2, lambda c, f: slime_frame(c, '#D46FC4', f, 22, 16, baby='#7FBFF8'), frame_time=12)
+
+
+def humanoid_frame(c, frame, skin, shirt, pants, eyes, bony=False):
+    # 16x24 frame, body facing left, arms reaching forward (Terraria zombie pose)
+    sk, sh, pa = palette(skin), palette(shirt), palette(pants)
+    c.rect(5, 1, 10, 7, sk[2])                     # head
+    c.rect(5, 1, 10, 2, sk[1] if not bony else sk[3])
+    c.set(5, 4, eyes); c.set(6, 4, eyes)           # eyes (left side)
+    c.rect(5, 6, 7, 6, sk[1])                      # jaw/mouth
+    c.rect(6, 8, 10, 15, sh[2])                    # torso
+    if not bony:
+        c.set(9, 12, sk[2]); c.set(7, 14, sk[2])   # torn shirt
+    # arms forward
+    arm_y = 9 + (frame % 2)
+    c.rect(1, arm_y, 7, arm_y + 1, sk[2] if bony else sh[1])
+    c.rect(0, arm_y, 1, arm_y + 1, sk[3])
+    # legs, 3-frame walk
+    offsets = [(0, 0), (-2, 2), (2, -2)][frame]
+    c.rect(6 + offsets[0], 16, 7 + offsets[0], 22, pa[2])
+    c.rect(9 + offsets[1], 16, 10 + offsets[1], 22, pa[1])
+    c.rect(5 + offsets[0], 23, 7 + offsets[0], 23, sk[1] if bony else pa[0])
+    c.rect(8 + offsets[1], 23, 10 + offsets[1], 23, sk[1] if bony else pa[0])
+    c.light(1.2, 0.8)
+    c.outline()
+
+
+mob_sprite('zombie', 16, 24, 3, lambda c, f: humanoid_frame(c, f, '#7FA06A', '#4A6FA5', '#4B3B2F', (230, 40, 40, 255)),
+           frame_time=6, animate='move')
+mob_sprite('skeleton', 16, 24, 3, lambda c, f: humanoid_frame(c, f, '#E8E2CF', '#BDB59C', '#CFC8B0', (20, 20, 20, 255), bony=True),
+           frame_time=6, animate='move')
+
+
+def demon_eye_frame(c, frame):
+    # eyeball facing left with a veiny tail trailing right
+    c.circle(6, 6, 5, hexc('#F2EEE8'))
+    c.circle(4, 6, 3, hexc('#C22B2B'))
+    c.circle(3, 6, 1, hexc('#1A0A0A'))
+    c.set(4, 4, hexc('#FFFFFF'))
+    wave = [0, 1, 0, -1][frame % 4]
+    for i, x in enumerate(range(11, 16)):
+        y = 6 + (wave if i % 2 else -wave)
+        c.set(x, y, hexc('#B33A3A'))
+        c.set(x, y + (1 if i < 2 else 0), hexc('#8E2A2A'))
+    c.set(8, 3, hexc('#D86A6A')); c.set(9, 8, hexc('#D86A6A'))   # veins
+    c.light(1.15, 0.85)
+    c.outline()
+
+
+mob_sprite('demon_eye', 16, 12, 4, demon_eye_frame, frame_time=4, rotate=True)
+
+
+def bat_frame(c, frame):
+    body = palette('#6B4A3A')
+    c.circle(8, 6, 2, body[2])
+    c.set(6, 3, body[1]); c.set(9, 3, body[1])      # ears
+    c.set(7, 6, (255, 220, 80, 255))                # eye (left side)
+    wing = palette('#4E3428')
+    tip = [-3, 0, 3][frame]
+    for side in (-1, 1):
+        for i in range(1, 7):
+            x = 8 + side * (2 + i)
+            y = 6 + round(tip * i / 6)
+            c.set(x, y, wing[2])
+            c.set(x, y + 1, wing[1])
+    c.light(1.2, 0.8)
+    c.outline()
+
+
+mob_sprite('cave_bat', 16, 12, 3, bat_frame, frame_time=3)
+
+
+def mob_assets():
+    for name, (fw, fh, frames, drawer, meta) in MOB_SPRITES.items():
+        sheet = Canvas(fw, fh * frames)
+        for f in range(frames):
+            frame = Canvas(fw, fh)
+            drawer(frame, f)
+            sheet.img.paste(frame.img, (0, f * fh))
+        sheet.save(os.path.join(TEX, 'entity/mob', name + '.png'))
+        data = {'frames': frames, 'frame_time': meta.get('frame_time', 8), 'faces': 'left'}
+        if meta.get('rotate'):
+            data['rotate'] = True
+        if meta.get('animate'):
+            data['animate'] = meta['animate']
+        write_json(os.path.join(TEX, 'entity/mob', name + '.json'), data)
+    white = Canvas(4, 4)
+    white.rect(0, 0, 3, 3, (255, 255, 255, 255))
+    white.save(os.path.join(TEX, 'entity/white.png'))
+
+
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
     java_root = os.path.join(ROOT, 'src/main/java/com/terracraft/registry/content')
     ids = set()
     pattern = re.compile(r'\b(?:register|sword|bow|ranged|thrown|magic|ammo|pickaxe|axe|hammer|accessory|material|coin|potion|buffPotion)\(\s*"([a-z0-9_]+)"')
     for fname in os.listdir(java_root):
+        if fname == 'MobContent.java':
+            continue
         with open(os.path.join(java_root, fname)) as f:
             ids.update(pattern.findall(f.read()))
     known = set(ITEMS) | set(BLOCKS_CUBE) | {'work_bench', 'iron_anvil', 'lead_anvil', 'life_crystal_block'}
@@ -780,6 +912,7 @@ def main():
     for name, color in EFFECTS.items():
         effect_icon(color).save(os.path.join(TEX, 'mob_effect', name + '.png'))
     armor_assets()
+    mob_assets()
     check_registered_items()
     print(f'Generated {len(ITEMS)} items, {len(BLOCK_TEXTURES)} block textures, {len(PROJECTILES)} projectiles, '
           f'{len(HUD)} HUD sprites, {len(EFFECTS)} effect icons, {len(ARMOR_SETS)} armor sets')

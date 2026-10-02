@@ -1,0 +1,40 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:green_slime",
+      "weight": 10,
+      "time": "day",
+      "layers": [
+        "surface"
+      ],
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ]
+    },
+    {
+      "entity": "terracraft:blue_slime",
+      "weight": 8,
+      "time": "day",
+      "layers": [
+        "surface"
+      ],
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ]
+    },
+    {
+      "entity": "terracraft:purple_slime",
+      "weight": 1,
+      "time": "day",
+      "layers": [
+        "surface"
+      ],
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ]
+    }
+  ]
+}

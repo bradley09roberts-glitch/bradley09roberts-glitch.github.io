@@ -1,0 +1,42 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:zombie",
+      "weight": 10,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "group": [
+        1,
+        2
+      ],
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ]
+    },
+    {
+      "entity": "terracraft:demon_eye",
+      "weight": 6,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "placement": "air",
+      "sky": true
+    },
+    {
+      "entity": "terracraft:blue_slime",
+      "weight": 2,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ]
+    }
+  ]
+}

@@ -406,12 +406,84 @@ def lang():
         'progression.terracraft.announce.celestial_events_active': 'The celestial pillars have appeared!',
         'progression.terracraft.announce.boss_skeletron_defeated': 'The curse of the Dungeon has been lifted.',
     })
+    for mob, (name, _) in MOBS.items():
+        L[f'entity.terracraft.{mob}'] = name
     path = os.path.join(RES, 'assets/terracraft/lang/en_us.json')
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as f:
         json.dump(dict(sorted(L.items())), f, indent=2, ensure_ascii=False)
         f.write('\n')
     return len(L)
+
+
+# --- Enemies -------------------------------------------------------------------------------------
+MOBS = {
+    # id: (English name, [(item, min, max, chance)])
+    'green_slime': ('Green Slime', [('gel', 1, 2, 1.0)]),
+    'blue_slime': ('Blue Slime', [('gel', 1, 2, 1.0)]),
+    'red_slime': ('Red Slime', [('gel', 1, 3, 1.0)]),
+    'purple_slime': ('Purple Slime', [('gel', 1, 3, 1.0)]),
+    'yellow_slime': ('Yellow Slime', [('gel', 2, 4, 1.0)]),
+    'black_slime': ('Black Slime', [('gel', 2, 4, 1.0)]),
+    'baby_slime': ('Baby Slime', [('gel', 1, 1, 0.5)]),
+    'mother_slime': ('Mother Slime', [('gel', 2, 5, 1.0)]),
+    'zombie': ('Zombie', [('shackle', 1, 1, 0.02)]),
+    'demon_eye': ('Demon Eye', [('lens', 1, 1, 0.33)]),
+    'skeleton': ('Skeleton', [('minecraft:bone', 1, 2, 0.5)]),
+    'cave_bat': ('Cave Bat', []),
+}
+
+OVERWORLD_LAND = {'exclude_biomes': ['#minecraft:is_ocean', '#minecraft:is_river']}
+PRE_HM = '!hardmode_active'
+SPAWNS = {
+    'surface_day': [
+        dict(entity='green_slime', weight=10, time='day', layers=['surface'], **OVERWORLD_LAND),
+        dict(entity='blue_slime', weight=8, time='day', layers=['surface'], **OVERWORLD_LAND),
+        dict(entity='purple_slime', weight=1, time='day', layers=['surface'], **OVERWORLD_LAND),
+    ],
+    'surface_night': [
+        dict(entity='zombie', weight=10, time='night', layers=['surface'], group=[1, 2], **OVERWORLD_LAND),
+        dict(entity='demon_eye', weight=6, time='night', layers=['surface'], placement='air', sky=True),
+        dict(entity='blue_slime', weight=2, time='night', layers=['surface'], **OVERWORLD_LAND),
+    ],
+    'underground': [
+        dict(entity='red_slime', weight=8, layers=['underground']),
+        dict(entity='yellow_slime', weight=3, layers=['underground']),
+        dict(entity='blue_slime', weight=3, layers=['underground']),
+        dict(entity='cave_bat', weight=6, layers=['underground'], placement='air'),
+        dict(entity='skeleton', weight=5, layers=['underground']),
+    ],
+    'cavern': [
+        dict(entity='black_slime', weight=6, layers=['cavern']),
+        dict(entity='yellow_slime', weight=5, layers=['cavern']),
+        dict(entity='red_slime', weight=3, layers=['cavern']),
+        dict(entity='mother_slime', weight=2, layers=['cavern'], condition=PRE_HM),
+        dict(entity='cave_bat', weight=6, layers=['cavern'], placement='air'),
+        dict(entity='skeleton', weight=8, layers=['cavern']),
+    ],
+}
+
+
+def mobs():
+    for mob, (_, drops) in MOBS.items():
+        pools = []
+        for item, lo, hi, chance in drops:
+            entry = {'type': 'minecraft:item', 'name': item if ':' in item else t(item)}
+            if hi > 1 or lo > 1:
+                entry['functions'] = [{'function': 'minecraft:set_count',
+                                       'count': {'type': 'minecraft:uniform', 'min': lo, 'max': hi}}]
+            pool = {'rolls': 1, 'entries': [entry]}
+            if chance < 1.0:
+                pool['conditions'] = [{'condition': 'minecraft:random_chance', 'chance': chance}]
+            pools.append(pool)
+        write(f'{NS}/loot_table/entities/{mob}.json', {'type': 'minecraft:entity', 'pools': pools})
+    for name, rules in SPAWNS.items():
+        out = []
+        for rule in rules:
+            rule = dict(rule)
+            rule['entity'] = t(rule['entity'])
+            out.append(rule)
+        write(f'{NS}/terracraft/spawns/{name}.json', {'spawns': out})
 
 
 def main():
@@ -422,6 +494,7 @@ def main():
     smelting()
     terraria_recipes()
     vanilla_overrides(jar)
+    mobs()
     n = lang()
     print(f'Generated {len(RECIPES)} Terraria recipes and {n} language entries')
 

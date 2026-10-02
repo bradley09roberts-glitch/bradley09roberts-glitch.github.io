@@ -1,0 +1,48 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:black_slime",
+      "weight": 6,
+      "layers": [
+        "cavern"
+      ]
+    },
+    {
+      "entity": "terracraft:yellow_slime",
+      "weight": 5,
+      "layers": [
+        "cavern"
+      ]
+    },
+    {
+      "entity": "terracraft:red_slime",
+      "weight": 3,
+      "layers": [
+        "cavern"
+      ]
+    },
+    {
+      "entity": "terracraft:mother_slime",
+      "weight": 2,
+      "layers": [
+        "cavern"
+      ],
+      "condition": "!hardmode_active"
+    },
+    {
+      "entity": "terracraft:cave_bat",
+      "weight": 6,
+      "layers": [
+        "cavern"
+      ],
+      "placement": "air"
+    },
+    {
+      "entity": "terracraft:skeleton",
+      "weight": 8,
+      "layers": [
+        "cavern"
+      ]
+    }
+  ]
+}
