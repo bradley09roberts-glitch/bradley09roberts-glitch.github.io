@@ -29,13 +29,9 @@ public final class TerraClient {
         RegisterKeyMappingsEvent.BUS.addListener(KeyBindings::register);
         EntityRenderersEvent.RegisterRenderers.BUS.addListener(event -> {
             event.registerEntityRenderer(ModEntities.PROJECTILE.get(), TerrariaProjectileRenderer::new);
-            for (var type : MobContent.all()) {
-                event.registerEntityRenderer(type.get(), TerrariaMobRenderer::new);
-            }
-            for (var type : com.terracraft.registry.content.NpcContent.all()) {
-                event.registerEntityRenderer(type.get(), TerrariaMobRenderer::new);
-            }
+            com.terracraft.client.renderer.CreatureRenderers.register(event);
         });
+        EntityRenderersEvent.RegisterLayerDefinitions.BUS.addListener(com.terracraft.client.model.TerraModels::registerLayers);
         RegisterClientReloadListenersEvent.BUS.addListener(event -> event.registerReloadListener(MobSprites.INSTANCE));
         AddGuiOverlayLayersEvent.BUS.addListener(TerrariaHud::register);
         ItemTooltipEvent.BUS.addListener(ItemTooltips::onTooltip);

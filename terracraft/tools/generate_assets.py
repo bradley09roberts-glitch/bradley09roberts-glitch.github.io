@@ -1016,6 +1016,203 @@ def mob_assets():
     white.save(os.path.join(TEX, 'entity/white.png'))
 
 
+# --- 3D model textures (box UV layouts matching the Java model classes) -----------------------------
+MODEL_TEXTURES = {}
+
+
+def model_texture(name, w, h, painter):
+    MODEL_TEXTURES[name] = (w, h, painter)
+
+
+def box_faces(u, v, w, h, d):
+    """Texture regions of a Minecraft model box (x, y, width, height) per face."""
+    return {
+        'top': (u + d, v, w, d), 'bottom': (u + d + w, v, w, d),
+        'right': (u, v + d, d, h), 'front': (u + d, v + d, w, h),
+        'left': (u + d + w, v + d, d, h), 'back': (u + 2 * d + w, v + d, w, h),
+    }
+
+
+def fill(c, region, color, noise=None, seed=0):
+    x0, y0, fw, fh = region
+    rnd = random.Random(seed)
+    for x in range(x0, x0 + fw):
+        for y in range(y0, y0 + fh):
+            col = color
+            if noise:
+                col = shade(color, 1.0 + (rnd.random() - 0.5) * noise)
+            c.set(x, y, col)
+
+
+def paint_box(c, u, v, w, h, d, color, noise=0.12, seed=0, top=None, front=None):
+    for face, region in box_faces(u, v, w, h, d).items():
+        base = top if face == 'top' and top else color
+        fill(c, region, base, noise, seed + sum(map(ord, face)))
+        if face == 'front' and front:
+            front(c, *region)
+
+
+def slime_texture(color, alpha=170, baby=None, king=False):
+    def paint(c):
+        col = hexc(color, alpha)
+        light = shade(col, 1.35)
+        paint_box(c, 0, 0, 14, 10, 14, col, 0.08, 1, top=light)
+        paint_box(c, 0, 24, 10, 3, 10, light, 0.08, 2, top=shade(col, 1.6))
+        core = hexc(color, 225)
+        paint_box(c, 0, 40, 6, 6, 6, shade(core, 0.6), 0.1, 3)
+        paint_box(c, 32, 40, 2, 3, 1, (15, 15, 25, 255), 0.0)
+        paint_box(c, 32, 44, 2, 3, 1, (15, 15, 25, 255), 0.0)
+        if baby:
+            paint_box(c, 40, 48, 4, 3, 4, hexc(baby, 220), 0.1, 4)
+        if king:
+            gold = hexc('#F0C030')
+            paint_box(c, 64, 0, 9, 2, 9, gold, 0.15, 5, top=shade(gold, 1.2))
+            paint_box(c, 64, 16, 1, 2, 1, gold, 0.1)
+            paint_box(c, 70, 16, 1, 3, 1, hexc('#E03040'), 0.1)
+            paint_box(c, 64, 24, 3, 4, 2, (35, 35, 55, 235), 0.1)
+            paint_box(c, 80, 24, 3, 3, 3, (35, 35, 55, 235), 0.1)
+    return paint
+
+
+for _name, _color in SLIMES.items():
+    model_texture(_name, 64, 64, slime_texture(_color, 200 if _name == 'black_slime' else 170))
+model_texture('baby_slime', 64, 64, slime_texture('#7FBFF8'))
+model_texture('mother_slime', 64, 64, slime_texture('#D46FC4', baby='#7FBFF8'))
+model_texture('king_slime', 128, 64, slime_texture('#3C78E6', 180, king=True))
+
+
+def skin_texture(skin, hair, shirt, pants, shoes='#3A2A20', eyes=(30, 30, 40, 255), beard=None, hat=None, hat_band=None,
+                 torn=False, bony=False, short_sleeves=True, cross=False, lamp=False):
+    def paint(c):
+        sk, hr, sh, pa = hexc(skin), hexc(hair), hexc(shirt), hexc(pants)
+        # head (0,0) 8x8x8
+        paint_box(c, 0, 0, 8, 8, 8, sk, 0.08, 10, top=hr)
+        for face in ('right', 'left', 'back'):
+            x, y, fw, fh = box_faces(0, 0, 8, 8, 8)[face]
+            fill(c, (x, y, fw, 3 if face != 'back' else 6), hr, 0.1, 11)
+        fx, fy = 8, 8
+        fill(c, (fx, fy, 8, 2), hr, 0.1, 12)                       # fringe
+        if bony:
+            fill(c, (fx + 1, fy + 3, 2, 2), (25, 20, 20, 255)); fill(c, (fx + 5, fy + 3, 2, 2), (25, 20, 20, 255))
+            fill(c, (fx + 3, fy + 5, 2, 1), (60, 50, 45, 255)); fill(c, (fx + 2, fy + 7, 4, 1), (200, 195, 180, 255))
+        else:
+            c.set(fx + 2, fy + 4, (245, 245, 245, 255)); c.set(fx + 1, fy + 4, eyes)
+            c.set(fx + 5, fy + 4, eyes); c.set(fx + 6, fy + 4, (245, 245, 245, 255))
+            fill(c, (fx + 3, fy + 6, 2, 1), shade(sk, 0.7))
+        if beard:
+            bd = hexc(beard)
+            fill(c, (fx, fy + 5, 8, 3), bd, 0.1, 13)
+            c.set(fx + 3, fy + 5, shade(sk, 0.7)); c.set(fx + 4, fy + 5, shade(sk, 0.7))
+            for face in ('right', 'left'):
+                x, y, fw, fh = box_faces(0, 0, 8, 8, 8)[face]
+                fill(c, (x, y + 5, fw, 3), bd, 0.1, 14)
+        if hat:
+            ht = hexc(hat)
+            # hat layer (32,0): only the top rows of the overlay are painted
+            for face, (x, y, fw, fh) in box_faces(32, 0, 8, 8, 8).items():
+                if face == 'top':
+                    fill(c, (x, y, fw, fh), ht, 0.1, 15)
+                elif face != 'bottom':
+                    fill(c, (x, y, fw, 3), ht, 0.1, 16)
+                    if hat_band:
+                        fill(c, (x, y + 2, fw, 1), hexc(hat_band))
+            if cross:
+                fill(c, (43, 8, 2, 3), hexc('#E03030')); fill(c, (42, 9, 4, 1), hexc('#E03030'))
+            if lamp:
+                fill(c, (43, 9, 2, 2), hexc('#FFF8C0'))
+        # body (16,16) 8x12x4
+        paint_box(c, 16, 16, 8, 12, 4, sh, 0.1, 20)
+        if torn:
+            rnd = random.Random(21)
+            for _ in range(10):
+                c.set(20 + rnd.randint(0, 7), 20 + rnd.randint(0, 11), sk)
+        if cross:
+            fill(c, (23, 22, 2, 5), hexc('#E03030')); fill(c, (22, 23, 4, 2), hexc('#E03030'))
+        fill(c, (20, 30, 8, 2), shade(pa, 0.8))                       # belt
+        # arms (40,16) 4x12x4
+        arm = sk if bony else sh
+        paint_box(c, 40, 16, 4, 12, 4, arm, 0.1, 30)
+        if not bony:
+            for face, (x, y, fw, fh) in box_faces(40, 16, 4, 12, 4).items():
+                if face not in ('top', 'bottom'):
+                    fill(c, (x, y + (4 if short_sleeves else 10), fw, fh - (4 if short_sleeves else 10)), sk, 0.08, 31)
+        # legs (0,16) 4x12x4
+        paint_box(c, 0, 16, 4, 12, 4, sk if bony else pa, 0.1, 40)
+        for face, (x, y, fw, fh) in box_faces(0, 16, 4, 12, 4).items():
+            if face not in ('top', 'bottom'):
+                fill(c, (x, y + fh - 2, fw, 2), shade(hexc(shoes), 1.0) if not bony else shade(sk, 0.85), 0.05, 41)
+        if bony:
+            for face, (x, y, fw, fh) in list(box_faces(0, 16, 4, 12, 4).items()) + list(box_faces(40, 16, 4, 12, 4).items()):
+                if face not in ('top', 'bottom'):
+                    fill(c, (x, y + 5, fw, 1), shade(sk, 0.65))
+            for y in (19, 22, 25):
+                fill(c, (20, y, 8, 1), shade(sk, 0.6))
+    return paint
+
+
+model_texture('zombie', 64, 64, skin_texture('#7FA06A', '#3E4A2E', '#4A6FA5', '#4B3B2F', eyes=(220, 40, 40, 255), torn=True))
+model_texture('skeleton', 64, 64, skin_texture('#E8E2CF', '#E8E2CF', '#E8E2CF', '#E8E2CF', bony=True))
+model_texture('guide', 64, 64, skin_texture('#E8B890', '#6A4428', '#6E8C3A', '#5A4430', short_sleeves=False))
+model_texture('merchant', 64, 64, skin_texture('#E8B890', '#E8E8E8', '#5A6A8C', '#3A3A44', beard='#F0F0F0', hat='#6A6A70', short_sleeves=False))
+model_texture('nurse', 64, 64, skin_texture('#F0C8A8', '#C84838', '#F4F4F4', '#F0F0F0', shoes='#F0F0F0', hat='#F8F8F8', cross=True))
+model_texture('demolitionist', 64, 64, skin_texture('#D8A880', '#C86A28', '#8A5A30', '#4A3A2A', beard='#C86A28', hat='#E8C030',
+                                                     hat_band='#7A6018', lamp=True))
+
+
+def eye_texture(iris, mouth=False, sclera='#F2EEE8'):
+    def paint(c):
+        white = hexc(sclera)
+        vein = hexc('#C03838')
+        for i, (u, v, w, h, d) in enumerate([(0, 0, 8, 8, 8), (0, 16, 10, 6, 6), (32, 0, 6, 10, 6), (0, 28, 6, 6, 10)]):
+            paint_box(c, u, v, w, h, d, white, 0.06, 50 + i)
+        rnd = random.Random(55)
+        for _ in range(60):
+            x, y = rnd.randint(0, 63), rnd.randint(0, 43)
+            if c.get(x, y)[3] > 0 and rnd.random() < 0.5:
+                c.set(x, y, vein)
+        # front of the forward slab (6x6 at 10,38) and of the core (8x8 at 8,8)
+        if mouth:
+            fill(c, (10, 38, 6, 6), hexc('#4A0810'))
+            for x in range(10, 16, 2):
+                c.set(x, 38, (245, 240, 220, 255)); c.set(x + 1, 43, (245, 240, 220, 255))
+            fill(c, (8, 8, 8, 8), hexc('#7A1A20'), 0.15, 56)
+            for x in range(8, 16, 2):
+                c.set(x, 8, (245, 240, 220, 255)); c.set(x + 1, 15, (245, 240, 220, 255))
+        else:
+            ir = hexc(iris)
+            fill(c, (10, 38, 6, 6), ir, 0.15, 57)
+            fill(c, (12, 40, 2, 2), (10, 10, 15, 255))
+            c.set(11, 39, (255, 255, 255, 255))
+            fill(c, (9, 9, 6, 6), shade(ir, 0.8))
+        for i in range(3):
+            paint_box(c, 40, 20 + i * 10, 1, 1, 8, hexc('#A83232'), 0.2, 60 + i)
+    return paint
+
+
+model_texture('demon_eye', 64, 64, eye_texture('#C22B2B'))
+model_texture('servant_of_cthulhu', 64, 64, eye_texture('#3A62C8'))
+model_texture('eye_of_cthulhu', 64, 64, eye_texture('#3A62C8'))
+model_texture('eye_of_cthulhu_mouth', 64, 64, eye_texture('#3A62C8', mouth=True))
+
+
+def bat_texture(c):
+    fur = hexc('#6B4A3A')
+    paint_box(c, 0, 0, 4, 5, 3, fur, 0.15, 70)
+    paint_box(c, 16, 0, 4, 4, 4, fur, 0.15, 71)
+    c.set(21, 6, (255, 220, 80, 255)); c.set(22, 6, (255, 220, 80, 255))
+    paint_box(c, 32, 0, 1, 2, 1, shade(fur, 0.8), 0.1)
+    wing = hexc('#4E3428')
+    for v in (16, 24):
+        fill(c, (0, v, 18, 7), wing, 0.15, 72 + v)
+        for x in (2, 5, 8, 11, 14):
+            for y in range(v, v + 7):
+                if (y - v) <= 5:
+                    c.set(x, y, shade(wing, 0.6))
+
+
+model_texture('cave_bat', 64, 32, bat_texture)
+
+
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
     java_root = os.path.join(ROOT, 'src/main/java/com/terracraft/registry/content')
@@ -1052,6 +1249,10 @@ def main():
         effect_icon(color).save(os.path.join(TEX, 'mob_effect', name + '.png'))
     armor_assets()
     mob_assets()
+    for name, (w, h, painter) in MODEL_TEXTURES.items():
+        c = Canvas(w, h)
+        painter(c)
+        c.save(os.path.join(TEX, 'entity/model', name + '.png'))
     check_registered_items()
     print(f'Generated {len(ITEMS)} items, {len(BLOCK_TEXTURES)} block textures, {len(PROJECTILES)} projectiles, '
           f'{len(HUD)} HUD sprites, {len(EFFECTS)} effect icons, {len(ARMOR_SETS)} armor sets')

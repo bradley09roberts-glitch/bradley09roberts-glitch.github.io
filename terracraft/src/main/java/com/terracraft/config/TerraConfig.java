@@ -185,6 +185,7 @@ public final class TerraConfig {
 
     public static final class Client {
         public final ForgeConfigSpec.BooleanValue terrariaHud;
+        public final ForgeConfigSpec.BooleanValue flatSprites;
         public final ForgeConfigSpec.BooleanValue showLifeText;
         public final ForgeConfigSpec.BooleanValue showManaText;
         public final ForgeConfigSpec.BooleanValue showDefense;
@@ -193,6 +194,9 @@ public final class TerraConfig {
             b.comment("Heads-up display").push("hud");
             terrariaHud = b.comment("Replace the vanilla hearts with Terraria-style life hearts and mana stars.")
                 .define("terrariaHud", true);
+            flatSprites = b.comment("Draw enemies, bosses and NPCs as flat 2D Terraria-style sprites instead of 3D models",
+                    "(use this with a Terraria sprite resource pack). Applies after a resource reload (F3+T).")
+                .define("flatSprites", false);
             showLifeText = b.comment("Show the 'Life: x/y' text above the hearts.")
                 .define("showLifeText", true);
             showManaText = b.comment("Show the mana number next to the mana stars.")

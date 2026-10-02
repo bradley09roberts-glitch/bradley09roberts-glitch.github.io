@@ -76,7 +76,14 @@ group spawn. Enemy stats live in `MobContent` (`MobDefinition` builder); difficu
 `finalizeSpawn`. Damage taken by enemies with more than 1000 life is divided by their life scale in
 `CombatEvents`.
 
-### Sprites
+### 3D models
+`CreatureRenderers` registers every creature renderer: `TerraModelRenderer` with a family model
+(`SlimeBodyModel`, `TerraHumanoidModel`, `EyeModel`, `BatModel3D`; layers in `TerraModels`) and a texture
+`textures/entity/model/<id>[_variant].png`, or the 2D sprite renderer when the client option `flatSprites` is on
+(decided whenever renderers are rebuilt). Model textures are drawn by `generate_assets.py` (`MODEL_TEXTURES`,
+box-UV helpers `box_faces`/`paint_box`).
+
+### Sprites (optional flat mode)
 `TerrariaMobRenderer` draws any `SpriteEntity` (or living entity) from `textures/entity/mob/<id>[_variant].png`
 with `<id>.json` frame data (`MobSprites`, reloaded with resources). One renderer serves enemies, bosses and NPCs.
 
@@ -105,8 +112,8 @@ replacements (config-conditioned recipe overrides, empty structure tags) win ove
 * **Projectile**: `ProjectileKinds.register(ProjectileKind.builder(...))` + projectile art.
 * **Progression gate**: use `ProgressionCondition` JSON in data, or `ProgressionManager.addListener`.
 * **Crafting station**: add a block to `#terracraft:stations/<name>`; recipes reference `terracraft:<name>`.
-* **Enemy**: one line in `MobContent` (AI family, hitbox, `MobDefinition`), a sprite in `generate_assets.py`
-  (`mob_sprite`), loot + name in `generate_data.py` (`MOBS`), spawn rules in `SPAWNS` (or any datapack).
+* **Enemy**: one line in `MobContent` (AI family, hitbox, `MobDefinition`), a renderer line in
+  `CreatureRenderers`, a model texture (`model_texture`) and a flat sprite (`mob_sprite`) in `generate_assets.py`, loot + name in `generate_data.py` (`MOBS`), spawn rules in `SPAWNS` (or any datapack).
 * **Boss**: subclass `TerrariaBoss`, register in `MobContent`, add a summon item (`BossSummonItem`) and an
   entry in `BossCommands`.
 * **Town NPC**: `NpcContent.npc(id)`, a `TownNpcType` in `TownNpcs` (names, arrival rule, attack, services),

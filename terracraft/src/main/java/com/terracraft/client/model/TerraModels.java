@@ -1,0 +1,32 @@
+package com.terracraft.client.model;
+
+import com.terracraft.TerraCraft;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraftforge.client.event.EntityRenderersEvent;
+
+/** Model layers of TerraCraft's 3D creatures. Textures live in {@code textures/entity/model/<entity>[_variant].png}. */
+public final class TerraModels {
+    public static final ModelLayerLocation SLIME = layer("slime");
+    public static final ModelLayerLocation MOTHER_SLIME = layer("mother_slime");
+    public static final ModelLayerLocation KING_SLIME = layer("king_slime");
+    public static final ModelLayerLocation HUMANOID = layer("humanoid");
+    public static final ModelLayerLocation SKELETON = layer("skeleton");
+    public static final ModelLayerLocation EYE = layer("eye");
+    public static final ModelLayerLocation BAT = layer("bat");
+
+    private TerraModels() {}
+
+    private static ModelLayerLocation layer(String name) {
+        return new ModelLayerLocation(TerraCraft.id(name), "main");
+    }
+
+    public static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(SLIME, SlimeBodyModel::createSlime);
+        event.registerLayerDefinition(MOTHER_SLIME, SlimeBodyModel::createMotherSlime);
+        event.registerLayerDefinition(KING_SLIME, SlimeBodyModel::createKingSlime);
+        event.registerLayerDefinition(HUMANOID, TerraHumanoidModel::createHumanoid);
+        event.registerLayerDefinition(SKELETON, TerraHumanoidModel::createSkeleton);
+        event.registerLayerDefinition(EYE, EyeModel::createEye);
+        event.registerLayerDefinition(BAT, BatModel3D::createBat);
+    }
+}

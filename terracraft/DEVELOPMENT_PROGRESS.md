@@ -82,6 +82,15 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - **Personal sprite pack** tool (`tools/terraria_resource_pack.py`) for items, enemies, bosses and NPCs.
 - Commands: `/terraria spawns`, `killall`, `boss`, `npc`, `worldgen scan`, `star`.
 
+### 3D creatures (after Stage 2)
+- Enemies, bosses and town NPCs are 3D models by default (`client.model`): slime (translucent jelly with core
+  and eyes, squash/stretch hops; Mother Slime with a baby inside; King Slime with crown and trapped ninja),
+  humanoid (zombie with outstretched arms, thin-limbed skeleton, NPC skins with hats/beards), eyeball (Demon
+  Eye, Servant, Eye of Cthulhu + mouth form, pitches toward its flight path, waving tendrils, spins while
+  transforming) and bat (flapping wings). Textures are generated box-UV skins (`MODEL_TEXTURES`).
+- `TerraModelRenderer` scales each model to its hitbox, keeps health bars, shows name tags only for named
+  NPCs. Client option `flatSprites` switches back to the 2D sprite renderer (useful with the Terraria pack).
+
 ## IN PROGRESS
 - Nothing half-finished in code. Next work item is Stage 3.
 

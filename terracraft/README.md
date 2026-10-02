@@ -48,8 +48,9 @@ python3 tools/terraria_resource_pack.py --folder sprites  # or use PNGs you expo
 
 This writes `TerraCraft-Terraria-Sprites.zip` (items, enemies, bosses and NPCs). Put it in
 `.minecraft/resourcepacks/` and enable it. It is for your own use only - do not share it, the sprites belong
-to Re-Logic. Enemies, bosses and NPCs are drawn as 2D sprites (`textures/entity/mob/<id>.png` + `<id>.json`
-frame data), so any resource pack can re-skin them.
+to Re-Logic. Item sprites always apply. Enemies, bosses and NPCs are **3D models** by default
+(`textures/entity/model/<id>.png`); set `flatSprites = true` in `config/terracraft-client.toml` (then press
+F3+T) to draw them as flat Terraria sprites instead, which is when the pack's creature sprites are used.
 
 ## Playing: what is different from vanilla
 

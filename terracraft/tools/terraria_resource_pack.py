@@ -12,7 +12,8 @@ redistributed). This script lets someone who owns Terraria make a resource pack 
     python tools/terraria_resource_pack.py --folder path/to/sprites
 
 The result is `TerraCraft-Terraria-Sprites.zip`. Put it in `.minecraft/resourcepacks/`, enable it above
-the default pack, and do not share it.
+the default pack, and do not share it. Item sprites always apply. Enemies, bosses and NPCs are 3D models by
+default; their Terraria sprites are used when `flatSprites = true` in `config/terracraft-client.toml`.
 
 The list of items comes from the mod's own textures and English names, so new items are picked up
 automatically. `NAME_OVERRIDES` handles items whose Terraria name differs from the TerraCraft one and
