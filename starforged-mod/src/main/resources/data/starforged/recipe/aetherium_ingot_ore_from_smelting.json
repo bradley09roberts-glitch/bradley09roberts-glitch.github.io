@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "experience": 1.6,
+  "ingredient": "starforged:aetherium_ore",
+  "result": {
+    "id": "starforged:aetherium_ingot"
+  },
+  "cookingtime": 200
+}

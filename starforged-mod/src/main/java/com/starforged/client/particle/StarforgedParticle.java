@@ -25,7 +25,7 @@ public class StarforgedParticle extends SingleQuadParticle {
         DUST(0xE8ECF4, 0xB4BCCC, -0.0012F, 80, 0.045F, 0.985F, false),
         GLIMMER(0xFFFFFF, 0x9CC8FF, -0.004F, 30, 0.075F, 0.93F, false),
         SPARK(0xF0FAFF, 0x3A7CFF, 0.0F, 9, 0.06F, 0.8F, false),
-        WISP(0xAEB8CC, 0x5E6880, 0.0F, 60, 0.12F, 0.99F, false);
+        WISP(0xAEB8CC, 0x5E6880, 0.0F, 60, 0.05F, 0.99F, false);
 
         final int start;
         final int end;

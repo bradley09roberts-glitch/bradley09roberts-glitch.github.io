@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "B": "minecraft:breeze_rod",
+    "M": "starforged:moonsilver_block",
+    "L": "minecraft:lightning_rod",
+    "H": "starforged:moon_heart"
+  },
+  "pattern": [
+    "BMB",
+    "LHL",
+    "BMB"
+  ],
+  "result": {
+    "id": "starforged:skybreaker_core"
+  }
+}

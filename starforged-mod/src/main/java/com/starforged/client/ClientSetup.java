@@ -38,6 +38,7 @@ public final class ClientSetup {
         EntityRenderersEvent.RegisterRenderers.BUS.addListener(StarforgedRenderers::register);
         EntityRenderersEvent.RegisterRenderers.BUS.addListener(com.starforged.sun.client.SunRenderers::register);
         EntityRenderersEvent.RegisterRenderers.BUS.addListener(com.starforged.moon.client.MoonRenderers::register);
+        EntityRenderersEvent.RegisterRenderers.BUS.addListener(com.starforged.tempest.client.TempestRenderers::register);
         RegisterParticleProvidersEvent.BUS.addListener(StarforgedParticle::register);
         TickEvent.ClientTickEvent.Post.BUS.addListener(e -> onClientTick());
         ViewportEvent.ComputeCameraAngles.BUS.addListener(ClientSetup::onCameraAngles);

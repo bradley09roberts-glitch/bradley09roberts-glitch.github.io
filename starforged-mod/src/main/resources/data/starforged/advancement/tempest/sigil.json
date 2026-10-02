@@ -1,0 +1,35 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.tempest.sigil.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.tempest.sigil.description"
+    },
+    "icon": {
+      "id": "starforged:tempest_sigil"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "sigil": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "starforged:tempest_sigil"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "sigil"
+    ]
+  ],
+  "parent": "starforged:tempest/citadel"
+}

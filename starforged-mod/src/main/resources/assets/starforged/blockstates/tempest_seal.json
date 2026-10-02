@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "opening=false": {
+      "model": "starforged:block/tempest_seal"
+    },
+    "opening=true": {
+      "model": "starforged:block/tempest_seal"
+    }
+  }
+}

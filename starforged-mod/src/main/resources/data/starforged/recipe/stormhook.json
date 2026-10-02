@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": "starforged:aetherium_ingot",
+    "C": "minecraft:iron_chain",
+    "M": "starforged:static_mote"
+  },
+  "pattern": [
+    "  I",
+    " CM",
+    "C  "
+  ],
+  "result": {
+    "id": "starforged:stormhook"
+  }
+}

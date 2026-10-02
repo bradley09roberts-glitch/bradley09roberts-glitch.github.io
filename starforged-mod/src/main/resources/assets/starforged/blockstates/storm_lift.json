@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "powered=false": {
+      "model": "starforged:block/storm_lift"
+    },
+    "powered=true": {
+      "model": "starforged:block/storm_lift_on"
+    }
+  }
+}

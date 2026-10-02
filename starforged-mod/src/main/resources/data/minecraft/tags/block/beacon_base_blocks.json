@@ -3,6 +3,8 @@
   "values": [
     "starforged:starmetal_block",
     "starforged:sunsteel_block",
-    "starforged:moonsilver_block"
+    "starforged:moonsilver_block",
+    "starforged:aetherium_block",
+    "starforged:charged_aetherium_block"
   ]
 }

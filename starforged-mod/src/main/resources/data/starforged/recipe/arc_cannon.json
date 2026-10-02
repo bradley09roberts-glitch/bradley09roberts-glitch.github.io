@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": "starforged:stormbound_plate",
+    "C": "starforged:charged_aetherium_ingot",
+    "L": "minecraft:lightning_rod",
+    "I": "starforged:aetherium_ingot",
+    "D": "starforged:charged_aether_dust"
+  },
+  "pattern": [
+    "PCL",
+    "IDI",
+    " I "
+  ],
+  "result": {
+    "id": "starforged:arc_cannon"
+  }
+}

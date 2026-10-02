@@ -1,0 +1,35 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.tempest.skycleaver.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.tempest.skycleaver.description"
+    },
+    "icon": {
+      "id": "starforged:skycleaver"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "blade": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "starforged:skycleaver"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "blade"
+    ]
+  ],
+  "parent": "starforged:tempest/veyr"
+}

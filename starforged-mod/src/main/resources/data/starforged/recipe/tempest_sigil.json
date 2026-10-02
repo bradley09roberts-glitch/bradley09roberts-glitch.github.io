@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "H": "starforged:thunderjaw_horn",
+    "C": "starforged:charged_aetherium_ingot",
+    "A": "starforged:alpha_conductor_horn"
+  },
+  "pattern": [
+    "HCH",
+    "CAC",
+    "HCH"
+  ],
+  "result": {
+    "id": "starforged:tempest_sigil"
+  }
+}

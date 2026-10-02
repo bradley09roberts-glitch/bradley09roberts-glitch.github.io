@@ -1,0 +1,40 @@
+{
+  "ambient_light": 0.05,
+  "attributes": {
+    "minecraft:audio/background_music": {
+      "default": {
+        "max_delay": 24000,
+        "min_delay": 12000,
+        "sound": "minecraft:music.overworld.stony_peaks"
+      }
+    },
+    "minecraft:gameplay/can_start_raid": false,
+    "minecraft:gameplay/monsters_burn": false,
+    "minecraft:gameplay/sky_light_level": 15.0,
+    "minecraft:visual/sky_color": "#3a4460",
+    "minecraft:visual/fog_color": "#5a6680",
+    "minecraft:visual/cloud_color": "#cc4a5068",
+    "minecraft:visual/sun_angle": 345.0,
+    "minecraft:visual/moon_angle": 120.0,
+    "minecraft:visual/star_brightness": 0.0,
+    "minecraft:visual/sky_light_color": "#b8c4e0",
+    "minecraft:visual/ambient_light_color": "#1a2032",
+    "minecraft:visual/water_fog_color": "#2a3a60"
+  },
+  "coordinate_scale": 1.0,
+  "has_ceiling": false,
+  "has_ender_dragon_fight": false,
+  "has_fixed_time": true,
+  "has_skylight": true,
+  "height": 256,
+  "infiniburn": "#minecraft:infiniburn_overworld",
+  "logical_height": 256,
+  "min_y": 0,
+  "monster_spawn_block_light_limit": 0,
+  "monster_spawn_light_level": {
+    "type": "minecraft:uniform",
+    "min_inclusive": 0,
+    "max_inclusive": 7
+  },
+  "timelines": "#starforged:in_stormreach"
+}

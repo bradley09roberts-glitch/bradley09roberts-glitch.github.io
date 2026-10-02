@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": "minecraft:copper_ingot",
+    "I": "starforged:aetherium_ingot"
+  },
+  "pattern": [
+    "C",
+    "I",
+    "C"
+  ],
+  "result": {
+    "id": "starforged:aetherium_conductor",
+    "count": 4
+  }
+}

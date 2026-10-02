@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "starforged:wind_vent",
+    "starforged:breeze_shard"
+  ],
+  "result": {
+    "id": "starforged:gale_vent"
+  }
+}

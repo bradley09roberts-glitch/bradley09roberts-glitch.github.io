@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "armed=true": {
+      "model": "starforged:block/gale_rune"
+    },
+    "armed=false": {
+      "model": "starforged:block/gale_rune_spent"
+    }
+  }
+}

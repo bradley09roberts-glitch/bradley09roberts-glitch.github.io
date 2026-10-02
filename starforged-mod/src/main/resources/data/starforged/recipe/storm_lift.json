@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "starforged:wind_vent",
+    "starforged:aetherium_conductor",
+    "starforged:charged_aether_dust"
+  ],
+  "result": {
+    "id": "starforged:storm_lift"
+  }
+}

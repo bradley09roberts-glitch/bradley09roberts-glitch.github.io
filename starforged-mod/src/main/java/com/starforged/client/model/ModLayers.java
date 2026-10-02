@@ -30,6 +30,15 @@ public final class ModLayers {
     public static final ModelLayerLocation MOONLEAPER = layer("moonleaper");
     public static final ModelLayerLocation PALE_MATRIARCH = layer("pale_matriarch");
     public static final ModelLayerLocation LUNAR_ANCHOR = layer("lunar_anchor");
+    public static final ModelLayerLocation STATIC_WISP = layer("static_wisp");
+    public static final ModelLayerLocation SHARDWING = layer("shardwing");
+    public static final ModelLayerLocation STORMBOUND = layer("stormbound");
+    public static final ModelLayerLocation THUNDERJAW = layer("thunderjaw");
+    public static final ModelLayerLocation THUNDERJAW_ALPHA = layer("thunderjaw_alpha");
+    public static final ModelLayerLocation ZEPHYR_SPRITE = layer("zephyr_sprite");
+    public static final ModelLayerLocation STORM_ROC = layer("storm_roc");
+    public static final ModelLayerLocation VEYR = layer("veyr");
+    public static final ModelLayerLocation STORM_CONDUCTOR = layer("storm_conductor");
 
     private ModLayers() {
     }
@@ -63,6 +72,15 @@ public final class ModLayers {
         event.registerLayerDefinition(MOONLEAPER, ModelGeometry::moonleaper);
         event.registerLayerDefinition(PALE_MATRIARCH, ModelGeometry::paleMatriarch);
         event.registerLayerDefinition(LUNAR_ANCHOR, ModelGeometry::lunarAnchor);
+        event.registerLayerDefinition(STATIC_WISP, ModelGeometry::staticWisp);
+        event.registerLayerDefinition(SHARDWING, ModelGeometry::shardwing);
+        event.registerLayerDefinition(STORMBOUND, ModelGeometry::stormbound);
+        event.registerLayerDefinition(THUNDERJAW, ModelGeometry::thunderjaw);
+        event.registerLayerDefinition(THUNDERJAW_ALPHA, ModelGeometry::thunderjawAlpha);
+        event.registerLayerDefinition(ZEPHYR_SPRITE, ModelGeometry::zephyrSprite);
+        event.registerLayerDefinition(STORM_ROC, ModelGeometry::stormRoc);
+        event.registerLayerDefinition(VEYR, ModelGeometry::veyr);
+        event.registerLayerDefinition(STORM_CONDUCTOR, ModelGeometry::stormConductor);
     }
 
     /** Looks up a nested part by slash-separated path, e.g. "body/chest/head". */

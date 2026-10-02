@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "starforged:block/thunder_crystal_cluster"
+  }
+}

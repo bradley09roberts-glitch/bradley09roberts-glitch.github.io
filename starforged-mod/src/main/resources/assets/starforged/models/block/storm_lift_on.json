@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "starforged:block/storm_lift_top_on",
+    "side": "starforged:block/wind_vent_side",
+    "bottom": "starforged:block/storm_machine_side"
+  }
+}

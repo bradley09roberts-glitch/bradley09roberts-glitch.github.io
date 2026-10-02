@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "starforged:charged_aetherium_block"
+  ],
+  "result": {
+    "id": "starforged:charged_aetherium_ingot",
+    "count": 9
+  }
+}

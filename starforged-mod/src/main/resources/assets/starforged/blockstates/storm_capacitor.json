@@ -1,0 +1,52 @@
+{
+  "variants": {
+    "charge=0": {
+      "model": "starforged:block/storm_capacitor_0"
+    },
+    "charge=1": {
+      "model": "starforged:block/storm_capacitor_1"
+    },
+    "charge=2": {
+      "model": "starforged:block/storm_capacitor_1"
+    },
+    "charge=3": {
+      "model": "starforged:block/storm_capacitor_1"
+    },
+    "charge=4": {
+      "model": "starforged:block/storm_capacitor_1"
+    },
+    "charge=5": {
+      "model": "starforged:block/storm_capacitor_1"
+    },
+    "charge=6": {
+      "model": "starforged:block/storm_capacitor_2"
+    },
+    "charge=7": {
+      "model": "starforged:block/storm_capacitor_2"
+    },
+    "charge=8": {
+      "model": "starforged:block/storm_capacitor_2"
+    },
+    "charge=9": {
+      "model": "starforged:block/storm_capacitor_2"
+    },
+    "charge=10": {
+      "model": "starforged:block/storm_capacitor_2"
+    },
+    "charge=11": {
+      "model": "starforged:block/storm_capacitor_3"
+    },
+    "charge=12": {
+      "model": "starforged:block/storm_capacitor_3"
+    },
+    "charge=13": {
+      "model": "starforged:block/storm_capacitor_3"
+    },
+    "charge=14": {
+      "model": "starforged:block/storm_capacitor_3"
+    },
+    "charge=15": {
+      "model": "starforged:block/storm_capacitor_3"
+    }
+  }
+}

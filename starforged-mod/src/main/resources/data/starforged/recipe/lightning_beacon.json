@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "L": "minecraft:lightning_rod",
+    "I": "starforged:aetherium_ingot",
+    "T": "starforged:thunder_shard"
+  },
+  "pattern": [
+    "LLL",
+    "ITI",
+    "III"
+  ],
+  "result": {
+    "id": "starforged:lightning_beacon"
+  }
+}

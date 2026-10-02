@@ -1,0 +1,42 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.tempest.root.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.tempest.root.description"
+    },
+    "icon": {
+      "id": "starforged:skybreaker_core"
+    },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false,
+    "background": "starforged:block/tempest_bricks"
+  },
+  "criteria": {
+    "core": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "starforged:skybreaker_core"
+          }
+        ]
+      }
+    },
+    "reach": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "starforged:stormreach"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "core",
+      "reach"
+    ]
+  ]
+}

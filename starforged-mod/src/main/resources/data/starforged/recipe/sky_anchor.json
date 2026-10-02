@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": "starforged:aetherium_ingot",
+    "F": "starforged:storm_feather",
+    "P": "minecraft:ender_pearl"
+  },
+  "pattern": [
+    "IFI",
+    "IPI",
+    "III"
+  ],
+  "result": {
+    "id": "starforged:sky_anchor"
+  }
+}

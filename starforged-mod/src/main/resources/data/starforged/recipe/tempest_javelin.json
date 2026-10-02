@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "S": "starforged:shardwing_crystal",
+    "C": "starforged:charged_aetherium_ingot",
+    "F": "starforged:storm_feather"
+  },
+  "pattern": [
+    "  S",
+    " C ",
+    "F  "
+  ],
+  "result": {
+    "id": "starforged:tempest_javelin"
+  }
+}

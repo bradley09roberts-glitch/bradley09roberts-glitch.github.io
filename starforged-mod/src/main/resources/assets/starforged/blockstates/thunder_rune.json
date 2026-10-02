@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "armed=true": {
+      "model": "starforged:block/thunder_rune"
+    },
+    "armed=false": {
+      "model": "starforged:block/thunder_rune_spent"
+    }
+  }
+}

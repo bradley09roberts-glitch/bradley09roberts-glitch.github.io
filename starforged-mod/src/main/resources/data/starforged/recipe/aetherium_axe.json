@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "X": "starforged:aetherium_ingot",
+    "#": "minecraft:breeze_rod"
+  },
+  "pattern": [
+    "XX",
+    "X#",
+    " #"
+  ],
+  "result": {
+    "id": "starforged:aetherium_axe"
+  }
+}

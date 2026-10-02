@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "starforged:aetherium_conductor",
+    "minecraft:iron_ingot"
+  ],
+  "result": {
+    "id": "starforged:rotating_conductor"
+  }
+}

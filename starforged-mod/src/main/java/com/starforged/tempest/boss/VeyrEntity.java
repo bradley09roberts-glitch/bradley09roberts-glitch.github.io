@@ -267,7 +267,7 @@ public class VeyrEntity extends Monster {
         if (t >= ASSEMBLE_TICKS) {
             this.setPhase(PHASE_TEMPEST);
             level.playSound(null, this.getX(), this.getY(), this.getZ(), TempestSounds.VEYR_ROAR.get(), SoundSource.HOSTILE, 6.0F, 1.0F);
-            SunFx.titleNear(level, this.position(), 128.0, Component.translatable("entity.starforged.veyr").withStyle(ChatFormatting.AQUA,
+            SunFx.titleNear(level, this.position(), 128.0, Component.translatable("entity.starforged.veyr.name_title").withStyle(ChatFormatting.AQUA,
                 ChatFormatting.BOLD), Component.translatable("entity.starforged.veyr.title").withStyle(ChatFormatting.GRAY), 10, 60, 20);
             for (Player player : this.playersInArena(level)) {
                 Combat.blast(player, this.position(), 1.2, 0.5);

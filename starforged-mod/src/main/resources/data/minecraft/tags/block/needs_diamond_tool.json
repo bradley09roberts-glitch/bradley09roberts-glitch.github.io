@@ -7,6 +7,10 @@
     "starforged:sun_altar",
     "starforged:moonsilver_ore",
     "starforged:moonsilver_block",
-    "starforged:moon_altar"
+    "starforged:moon_altar",
+    "starforged:aetherium_ore",
+    "starforged:aetherium_block",
+    "starforged:charged_aetherium_block",
+    "starforged:tempest_altar"
   ]
 }

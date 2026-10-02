@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": "starforged:aetherium_conductor",
+    "I": "starforged:aetherium_ingot"
+  },
+  "pattern": [
+    "CIC"
+  ],
+  "result": {
+    "id": "starforged:splitter_relay"
+  }
+}

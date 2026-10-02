@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "B": "starforged:breeze_shard",
+    "I": "starforged:aetherium_ingot",
+    "R": "minecraft:breeze_rod"
+  },
+  "pattern": [
+    "B B",
+    "I I",
+    "R R"
+  ],
+  "result": {
+    "id": "starforged:gale_blades"
+  }
+}

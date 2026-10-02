@@ -1033,5 +1033,413 @@
         "name": "starforged:anchor_shatter"
       }
     ]
+  },
+  "item.skybreaker_core.forge": {
+    "subtitle": "subtitles.starforged.item.skybreaker_core.forge",
+    "sounds": [
+      {
+        "name": "starforged:tempest_gate_form"
+      }
+    ]
+  },
+  "block.stormgate.travel": {
+    "subtitle": "subtitles.starforged.block.stormgate.travel",
+    "sounds": [
+      {
+        "name": "starforged:tempest_gate_travel"
+      }
+    ]
+  },
+  "ambient.stormreach.wind": {
+    "subtitle": "subtitles.starforged.ambient.stormreach.wind",
+    "sounds": [
+      {
+        "name": "starforged:stormreach_wind"
+      }
+    ]
+  },
+  "ambient.stormreach.gust": {
+    "subtitle": "subtitles.starforged.ambient.stormreach.gust",
+    "sounds": [
+      {
+        "name": "starforged:stormreach_gust"
+      }
+    ]
+  },
+  "event.supercell": {
+    "subtitle": "subtitles.starforged.event.supercell",
+    "sounds": [
+      {
+        "name": "starforged:tempest_supercell"
+      }
+    ]
+  },
+  "item.aetherium.charge": {
+    "subtitle": "subtitles.starforged.item.aetherium.charge",
+    "sounds": [
+      {
+        "name": "starforged:tempest_aetherium_charge"
+      }
+    ]
+  },
+  "block.wind_vent.blow": {
+    "subtitle": "subtitles.starforged.block.wind_vent.blow",
+    "sounds": [
+      {
+        "name": "starforged:tempest_wind_vent"
+      }
+    ]
+  },
+  "block.shock_plate.zap": {
+    "subtitle": "subtitles.starforged.block.shock_plate.zap",
+    "sounds": [
+      {
+        "name": "starforged:tempest_shock_plate"
+      }
+    ]
+  },
+  "block.wind_chime.chime": {
+    "subtitle": "subtitles.starforged.block.wind_chime.chime",
+    "sounds": [
+      {
+        "name": "starforged:tempest_wind_chime"
+      }
+    ]
+  },
+  "block.rotating_conductor.turn": {
+    "subtitle": "subtitles.starforged.block.rotating_conductor.turn",
+    "sounds": [
+      {
+        "name": "starforged:tempest_conductor_turn"
+      }
+    ]
+  },
+  "block.storm_network.pulse": {
+    "subtitle": "subtitles.starforged.block.storm_network.pulse",
+    "sounds": [
+      {
+        "name": "starforged:tempest_network_pulse"
+      }
+    ]
+  },
+  "block.citadel_core.online": {
+    "subtitle": "subtitles.starforged.block.citadel_core.online",
+    "sounds": [
+      {
+        "name": "starforged:tempest_core_online"
+      }
+    ]
+  },
+  "block.overload_relay.overload": {
+    "subtitle": "subtitles.starforged.block.overload_relay.overload",
+    "sounds": [
+      {
+        "name": "starforged:tempest_overload"
+      }
+    ]
+  },
+  "block.tempest_seal.open": {
+    "subtitle": "subtitles.starforged.block.tempest_seal.open",
+    "sounds": [
+      {
+        "name": "starforged:tempest_seal_open"
+      }
+    ]
+  },
+  "block.tempest_altar.activate": {
+    "subtitle": "subtitles.starforged.block.tempest_altar.activate",
+    "sounds": [
+      {
+        "name": "starforged:tempest_altar_activate"
+      }
+    ]
+  },
+  "item.stormstep.dash": {
+    "subtitle": "subtitles.starforged.item.stormstep.dash",
+    "sounds": [
+      {
+        "name": "starforged:tempest_stormstep_dash"
+      }
+    ]
+  },
+  "item.skybreaker_halberd.launch": {
+    "subtitle": "subtitles.starforged.item.skybreaker_halberd.launch",
+    "sounds": [
+      {
+        "name": "starforged:tempest_halberd_launch"
+      }
+    ]
+  },
+  "item.skybreaker_halberd.slam": {
+    "subtitle": "subtitles.starforged.item.skybreaker_halberd.slam",
+    "sounds": [
+      {
+        "name": "starforged:tempest_halberd_slam"
+      }
+    ]
+  },
+  "item.tempest_javelin.throw": {
+    "subtitle": "subtitles.starforged.item.tempest_javelin.throw",
+    "sounds": [
+      {
+        "name": "starforged:tempest_javelin_throw"
+      }
+    ]
+  },
+  "item.tempest_javelin.recall": {
+    "subtitle": "subtitles.starforged.item.tempest_javelin.recall",
+    "sounds": [
+      {
+        "name": "starforged:tempest_javelin_recall"
+      }
+    ]
+  },
+  "item.gale_blades.cyclone": {
+    "subtitle": "subtitles.starforged.item.gale_blades.cyclone",
+    "sounds": [
+      {
+        "name": "starforged:tempest_blades_cyclone"
+      }
+    ]
+  },
+  "item.stormhook.fire": {
+    "subtitle": "subtitles.starforged.item.stormhook.fire",
+    "sounds": [
+      {
+        "name": "starforged:tempest_hook_fire"
+      }
+    ]
+  },
+  "item.stormhook.live_wire": {
+    "subtitle": "subtitles.starforged.item.stormhook.live_wire",
+    "sounds": [
+      {
+        "name": "starforged:tempest_live_wire"
+      }
+    ]
+  },
+  "item.arc_cannon.charge": {
+    "subtitle": "subtitles.starforged.item.arc_cannon.charge",
+    "sounds": [
+      {
+        "name": "starforged:tempest_cannon_charge"
+      }
+    ]
+  },
+  "item.arc_cannon.fire": {
+    "subtitle": "subtitles.starforged.item.arc_cannon.fire",
+    "sounds": [
+      {
+        "name": "starforged:tempest_cannon_fire"
+      }
+    ]
+  },
+  "item.skycleaver.judgement": {
+    "subtitle": "subtitles.starforged.item.skycleaver.judgement",
+    "sounds": [
+      {
+        "name": "starforged:tempest_judgement"
+      }
+    ]
+  },
+  "entity.static_wisp.ambient": {
+    "subtitle": "subtitles.starforged.entity.static_wisp.ambient",
+    "sounds": [
+      {
+        "name": "starforged:tempest_wisp_ambient"
+      }
+    ]
+  },
+  "entity.static_wisp.arc": {
+    "subtitle": "subtitles.starforged.entity.static_wisp.arc",
+    "sounds": [
+      {
+        "name": "starforged:tempest_wisp_arc"
+      }
+    ]
+  },
+  "entity.static_wisp.death": {
+    "subtitle": "subtitles.starforged.entity.static_wisp.death",
+    "sounds": [
+      {
+        "name": "starforged:tempest_wisp_death"
+      }
+    ]
+  },
+  "entity.shardwing.ambient": {
+    "subtitle": "subtitles.starforged.entity.shardwing.ambient",
+    "sounds": [
+      {
+        "name": "starforged:tempest_shardwing_ambient"
+      }
+    ]
+  },
+  "entity.shardwing.dive": {
+    "subtitle": "subtitles.starforged.entity.shardwing.dive",
+    "sounds": [
+      {
+        "name": "starforged:tempest_shardwing_dive"
+      }
+    ]
+  },
+  "entity.shardwing.death": {
+    "subtitle": "subtitles.starforged.entity.shardwing.death",
+    "sounds": [
+      {
+        "name": "starforged:tempest_shardwing_death"
+      }
+    ]
+  },
+  "entity.stormbound.ambient": {
+    "subtitle": "subtitles.starforged.entity.stormbound.ambient",
+    "sounds": [
+      {
+        "name": "starforged:tempest_stormbound_ambient"
+      }
+    ]
+  },
+  "entity.stormbound.thunderstep": {
+    "subtitle": "subtitles.starforged.entity.stormbound.thunderstep",
+    "sounds": [
+      {
+        "name": "starforged:tempest_stormbound_step"
+      }
+    ]
+  },
+  "entity.stormbound.death": {
+    "subtitle": "subtitles.starforged.entity.stormbound.death",
+    "sounds": [
+      {
+        "name": "starforged:tempest_stormbound_death"
+      }
+    ]
+  },
+  "entity.thunderjaw.ambient": {
+    "subtitle": "subtitles.starforged.entity.thunderjaw.ambient",
+    "sounds": [
+      {
+        "name": "starforged:tempest_thunderjaw_ambient"
+      }
+    ]
+  },
+  "entity.thunderjaw.stamp": {
+    "subtitle": "subtitles.starforged.entity.thunderjaw.stamp",
+    "sounds": [
+      {
+        "name": "starforged:tempest_thunderjaw_stamp"
+      }
+    ]
+  },
+  "entity.thunderjaw.death": {
+    "subtitle": "subtitles.starforged.entity.thunderjaw.death",
+    "sounds": [
+      {
+        "name": "starforged:tempest_thunderjaw_death"
+      }
+    ]
+  },
+  "entity.zephyr_sprite.ambient": {
+    "subtitle": "subtitles.starforged.entity.zephyr_sprite.ambient",
+    "sounds": [
+      {
+        "name": "starforged:tempest_sprite_ambient"
+      }
+    ]
+  },
+  "entity.zephyr_sprite.windguard": {
+    "subtitle": "subtitles.starforged.entity.zephyr_sprite.windguard",
+    "sounds": [
+      {
+        "name": "starforged:tempest_sprite_guard"
+      }
+    ]
+  },
+  "entity.storm_roc.ambient": {
+    "subtitle": "subtitles.starforged.entity.storm_roc.ambient",
+    "sounds": [
+      {
+        "name": "starforged:tempest_roc_ambient"
+      }
+    ]
+  },
+  "entity.storm_roc.screech": {
+    "subtitle": "subtitles.starforged.entity.storm_roc.screech",
+    "sounds": [
+      {
+        "name": "starforged:tempest_roc_screech"
+      }
+    ]
+  },
+  "entity.thunderjaw_alpha.roar": {
+    "subtitle": "subtitles.starforged.entity.thunderjaw_alpha.roar",
+    "sounds": [
+      {
+        "name": "starforged:tempest_alpha_roar"
+      }
+    ]
+  },
+  "entity.veyr.roar": {
+    "subtitle": "subtitles.starforged.entity.veyr.roar",
+    "sounds": [
+      {
+        "name": "starforged:tempest_veyr_roar"
+      }
+    ]
+  },
+  "entity.veyr.hurt": {
+    "subtitle": "subtitles.starforged.entity.veyr.hurt",
+    "sounds": [
+      {
+        "name": "starforged:tempest_veyr_hurt"
+      }
+    ]
+  },
+  "entity.veyr.death": {
+    "subtitle": "subtitles.starforged.entity.veyr.death",
+    "sounds": [
+      {
+        "name": "starforged:tempest_veyr_death"
+      }
+    ]
+  },
+  "entity.veyr.thunderstep": {
+    "subtitle": "subtitles.starforged.entity.veyr.thunderstep",
+    "sounds": [
+      {
+        "name": "starforged:tempest_veyr_step"
+      }
+    ]
+  },
+  "entity.veyr.tornado": {
+    "subtitle": "subtitles.starforged.entity.veyr.tornado",
+    "sounds": [
+      {
+        "name": "starforged:tempest_veyr_tornado"
+      }
+    ]
+  },
+  "entity.veyr.shatter": {
+    "subtitle": "subtitles.starforged.entity.veyr.shatter",
+    "sounds": [
+      {
+        "name": "starforged:tempest_veyr_shatter"
+      }
+    ]
+  },
+  "entity.veyr.last_thunder": {
+    "subtitle": "subtitles.starforged.entity.veyr.last_thunder",
+    "sounds": [
+      {
+        "name": "starforged:tempest_veyr_last_thunder"
+      }
+    ]
+  },
+  "entity.storm_conductor.redirect": {
+    "subtitle": "subtitles.starforged.entity.storm_conductor.redirect",
+    "sounds": [
+      {
+        "name": "starforged:tempest_conductor_redirect"
+      }
+    ]
   }
 }

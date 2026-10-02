@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starforged:moonsilver_ore"
+    "starforged:moonsilver_ore",
+    "starforged:aetherium_ore"
   ]
 }

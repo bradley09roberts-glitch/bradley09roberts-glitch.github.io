@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "powered=false": {
+      "model": "starforged:block/storm_relay"
+    },
+    "powered=true": {
+      "model": "starforged:block/storm_relay_on"
+    }
+  }
+}

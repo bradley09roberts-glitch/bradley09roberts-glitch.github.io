@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": "starforged:charged_aetherium_ingot",
+    "H": "starforged:thunderjaw_horn",
+    "R": "minecraft:breeze_rod"
+  },
+  "pattern": [
+    " CH",
+    " RC",
+    "R  "
+  ],
+  "result": {
+    "id": "starforged:skybreaker_halberd"
+  }
+}

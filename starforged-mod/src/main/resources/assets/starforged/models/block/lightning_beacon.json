@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "starforged:block/lightning_beacon_top",
+    "side": "starforged:block/lightning_beacon_side",
+    "bottom": "starforged:block/storm_machine_side"
+  }
+}

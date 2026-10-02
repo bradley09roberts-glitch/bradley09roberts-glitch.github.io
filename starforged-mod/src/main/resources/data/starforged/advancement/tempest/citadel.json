@@ -1,0 +1,41 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.tempest.citadel.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.tempest.citadel.description"
+    },
+    "icon": {
+      "id": "starforged:chiseled_tempest_bricks"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "enter": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "minecraft:location": {
+                "structures": "starforged:tempest_citadel"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "enter"
+    ]
+  ],
+  "parent": "starforged:tempest/stormreach"
+}

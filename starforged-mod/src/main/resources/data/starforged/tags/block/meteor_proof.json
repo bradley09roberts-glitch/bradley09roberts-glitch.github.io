@@ -18,6 +18,13 @@
     "starforged:lunar_mural",
     "starforged:orrery_console",
     "starforged:moon_altar",
-    "starforged:lunar_gateway"
+    "starforged:lunar_gateway",
+    "starforged:tempest_seal",
+    "starforged:tempest_altar",
+    "starforged:stormgate",
+    "starforged:thunder_rune",
+    "starforged:gale_rune",
+    "starforged:cyclone_emitter",
+    "starforged:citadel_core"
   ]
 }

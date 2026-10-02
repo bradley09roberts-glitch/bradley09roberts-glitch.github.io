@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "R": "minecraft:redstone",
+    "C": "starforged:aetherium_conductor"
+  },
+  "pattern": [
+    "R",
+    "C"
+  ],
+  "result": {
+    "id": "starforged:storm_relay"
+  }
+}

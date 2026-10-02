@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "front": "starforged:block/storm_dynamo_front",
+    "side": "starforged:block/storm_machine_side",
+    "top": "starforged:block/storm_machine_top",
+    "bottom": "starforged:block/storm_machine_top"
+  }
+}

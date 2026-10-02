@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "C": "starforged:chiseled_tempest_bricks",
+    "H": "starforged:alpha_conductor_horn",
+    "A": "starforged:aetherium_block"
+  },
+  "pattern": [
+    "CHC",
+    "AAA"
+  ],
+  "result": {
+    "id": "starforged:tempest_altar"
+  }
+}

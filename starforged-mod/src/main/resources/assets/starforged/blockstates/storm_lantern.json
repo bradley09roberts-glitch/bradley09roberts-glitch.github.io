@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "hanging=false": {
+      "model": "starforged:block/storm_lantern"
+    },
+    "hanging=true": {
+      "model": "starforged:block/storm_lantern_hanging"
+    }
+  }
+}

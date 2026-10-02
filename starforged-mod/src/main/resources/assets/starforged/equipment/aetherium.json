@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "starforged:aetherium"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "starforged:aetherium"
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "M": "starforged:static_mote",
+    "P": "minecraft:heavy_weighted_pressure_plate"
+  },
+  "pattern": [
+    "M",
+    "P"
+  ],
+  "result": {
+    "id": "starforged:shock_plate",
+    "count": 2
+  }
+}

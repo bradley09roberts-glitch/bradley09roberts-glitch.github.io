@@ -1,0 +1,87 @@
+{
+  "attributes": {
+    "minecraft:audio/background_music": {
+      "default": {
+        "max_delay": 24000,
+        "min_delay": 12000,
+        "sound": "minecraft:music.overworld.old_growth_taiga"
+      }
+    },
+    "minecraft:visual/sky_color": "#30405a",
+    "minecraft:visual/fog_color": "#4a6078",
+    "minecraft:visual/ambient_particles": [
+      {
+        "particle": {
+          "type": "starforged:storm_wisp"
+        },
+        "probability": 0.0015
+      },
+      {
+        "particle": {
+          "type": "starforged:static_spark"
+        },
+        "probability": 0.0006
+      }
+    ]
+  },
+  "carvers": [],
+  "downfall": 0.9,
+  "effects": {
+    "water_color": "#5a7aa8",
+    "grass_color": "#5c8a9c",
+    "foliage_color": "#4e7a8c"
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "starforged:stormstone_blobs",
+      "starforged:ore_aetherium"
+    ],
+    [],
+    [],
+    [
+      "starforged:stormwood_trees",
+      "starforged:gale_seed_patch",
+      "starforged:thunder_crystals"
+    ],
+    []
+  ],
+  "has_precipitation": true,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [
+      {
+        "type": "starforged:zephyr_sprite",
+        "weight": 12,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ],
+    "misc": [],
+    "monster": [
+      {
+        "type": "starforged:static_wisp",
+        "weight": 50,
+        "minCount": 2,
+        "maxCount": 5
+      },
+      {
+        "type": "starforged:thunderjaw",
+        "weight": 8,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "temperature": 0.8
+}

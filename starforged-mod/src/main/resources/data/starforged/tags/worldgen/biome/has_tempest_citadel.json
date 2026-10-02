@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "starforged:thunderhead_steppe",
+    "starforged:shardwind_cliffs",
+    "starforged:static_grove",
+    "starforged:stormgrave",
+    "starforged:endless_eye"
+  ]
+}

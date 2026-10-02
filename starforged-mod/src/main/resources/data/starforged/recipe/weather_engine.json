@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "starforged:aetherium_ingot",
+    "C": "starforged:charged_aetherium_ingot",
+    "F": "starforged:storm_feather",
+    "K": "minecraft:clock"
+  },
+  "pattern": [
+    "ICI",
+    "FKF",
+    "III"
+  ],
+  "result": {
+    "id": "starforged:weather_engine"
+  }
+}

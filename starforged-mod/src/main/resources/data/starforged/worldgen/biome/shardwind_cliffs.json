@@ -1,0 +1,81 @@
+{
+  "attributes": {
+    "minecraft:audio/background_music": {
+      "default": {
+        "max_delay": 24000,
+        "min_delay": 12000,
+        "sound": "minecraft:music.overworld.jagged_peaks"
+      }
+    },
+    "minecraft:visual/sky_color": "#343c56",
+    "minecraft:visual/fog_color": "#4e5a78",
+    "minecraft:visual/ambient_particles": [
+      {
+        "particle": {
+          "type": "starforged:storm_wisp"
+        },
+        "probability": 0.0015
+      }
+    ]
+  },
+  "carvers": [],
+  "downfall": 0.9,
+  "effects": {
+    "water_color": "#5a7aa8",
+    "grass_color": "#5c8a9c",
+    "foliage_color": "#4e7a8c"
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [
+      "starforged:storm_boulders"
+    ],
+    [],
+    [
+      "starforged:stormstone_blobs",
+      "starforged:ore_aetherium"
+    ],
+    [],
+    [],
+    [
+      "starforged:thunder_crystals_dense"
+    ],
+    []
+  ],
+  "has_precipitation": true,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [
+      {
+        "type": "starforged:storm_roc",
+        "weight": 10,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "misc": [],
+    "monster": [
+      {
+        "type": "starforged:shardwing",
+        "weight": 45,
+        "minCount": 1,
+        "maxCount": 3
+      },
+      {
+        "type": "starforged:static_wisp",
+        "weight": 15,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ],
+    "underground_water_creature": [],
+    "water_ambient": [],
+    "water_creature": []
+  },
+  "temperature": 0.8
+}

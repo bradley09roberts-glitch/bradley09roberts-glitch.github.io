@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "starforged:static_wisp",
+    "starforged:shardwing",
+    "starforged:stormbound",
+    "starforged:thunderjaw",
+    "starforged:thunderjaw_alpha",
+    "starforged:veyr"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "front": "starforged:block/rotating_conductor_front_on",
+    "side": "starforged:block/rotating_conductor_side",
+    "top": "starforged:block/rotating_conductor_side",
+    "bottom": "starforged:block/rotating_conductor_side"
+  }
+}

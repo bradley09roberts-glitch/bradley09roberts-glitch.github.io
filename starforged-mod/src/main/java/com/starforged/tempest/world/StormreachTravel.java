@@ -93,6 +93,7 @@ public final class StormreachTravel {
     }
 
     private static void arrived(Entity entity, ServerLevel level, boolean toStorm) {
+        entity.setPortalCooldown();
         level.playSound(null, entity.blockPosition(), TempestSounds.GATEWAY_TRAVEL.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
         level.sendParticles(ModParticles.STATIC_SPARK.get(), entity.getX(), entity.getY() + 1.0, entity.getZ(), 60, 0.6, 1.0, 0.6, 0.15);
         if (toStorm && entity instanceof ServerPlayer player) {

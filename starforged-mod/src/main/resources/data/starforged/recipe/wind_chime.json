@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "C": "minecraft:iron_chain",
+    "S": "starforged:breeze_shard",
+    "I": "starforged:aetherium_ingot"
+  },
+  "pattern": [
+    " C ",
+    "SIS",
+    "S S"
+  ],
+  "result": {
+    "id": "starforged:wind_chime"
+  }
+}

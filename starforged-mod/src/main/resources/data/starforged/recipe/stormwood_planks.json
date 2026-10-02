@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "#": "starforged:stormwood_log"
+  },
+  "pattern": [
+    "#"
+  ],
+  "result": {
+    "id": "starforged:stormwood_planks",
+    "count": 4
+  }
+}

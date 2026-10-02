@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "starforged:block/sky_anchor_top",
+    "side": "starforged:block/sky_anchor_side",
+    "bottom": "starforged:block/storm_machine_side"
+  }
+}

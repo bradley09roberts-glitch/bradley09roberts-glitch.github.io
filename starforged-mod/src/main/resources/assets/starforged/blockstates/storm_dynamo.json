@@ -1,0 +1,50 @@
+{
+  "variants": {
+    "facing=north,powered=false": {
+      "model": "starforged:block/storm_dynamo"
+    },
+    "facing=north,powered=true": {
+      "model": "starforged:block/storm_dynamo_on"
+    },
+    "facing=east,powered=false": {
+      "model": "starforged:block/storm_dynamo",
+      "y": 90
+    },
+    "facing=east,powered=true": {
+      "model": "starforged:block/storm_dynamo_on",
+      "y": 90
+    },
+    "facing=south,powered=false": {
+      "model": "starforged:block/storm_dynamo",
+      "y": 180
+    },
+    "facing=south,powered=true": {
+      "model": "starforged:block/storm_dynamo_on",
+      "y": 180
+    },
+    "facing=west,powered=false": {
+      "model": "starforged:block/storm_dynamo",
+      "y": 270
+    },
+    "facing=west,powered=true": {
+      "model": "starforged:block/storm_dynamo_on",
+      "y": 270
+    },
+    "facing=up,powered=false": {
+      "model": "starforged:block/storm_dynamo",
+      "x": 270
+    },
+    "facing=up,powered=true": {
+      "model": "starforged:block/storm_dynamo_on",
+      "x": 270
+    },
+    "facing=down,powered=false": {
+      "model": "starforged:block/storm_dynamo",
+      "x": 90
+    },
+    "facing=down,powered=true": {
+      "model": "starforged:block/storm_dynamo_on",
+      "x": 90
+    }
+  }
+}

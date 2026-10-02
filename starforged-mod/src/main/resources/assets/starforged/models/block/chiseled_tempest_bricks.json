@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "starforged:block/chiseled_tempest_bricks"
+  }
+}

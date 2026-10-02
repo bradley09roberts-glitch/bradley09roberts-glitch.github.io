@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "#": "starforged:tempest_bricks"
+  },
+  "pattern": [
+    "###"
+  ],
+  "result": {
+    "id": "starforged:tempest_brick_slab",
+    "count": 6
+  }
+}

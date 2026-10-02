@@ -140,6 +140,40 @@ MATERIALS = {
     "matriarch_crescent": dict(base="#dff0ff", dark="#8cc0ff", light="#ffffff", pattern="edged", edge="#ffffff", glow=True),
     "anchor_stone": dict(base="#aab2c4", dark="#6a7286", light="#d4dae6", pattern="glyph", vein="#9cc8ff"),
     "anchor_crystal": dict(base="#bfe8ff", dark="#6ab0ff", light="#ffffff", pattern="crystal", glow=True),
+    # --- Tempestforged ---
+    "wisp_core": dict(base="#cfe8ff", dark="#5c9cff", light="#ffffff", pattern="star", glow=True),
+    "wisp_shell": dict(base="#5a6a8c", dark="#2c3650", light="#8a9ac0", pattern="crystal"),
+    "spark": dict(base="#f0faff", dark="#7ab8ff", light="#ffffff", pattern="flat", glow=True),
+    "shardwing_body": dict(base="#3c4660", dark="#1e2436", light="#5e6c90", pattern="feather"),
+    "shardwing_crystal": dict(base="#8fd8ff", dark="#3a7cff", light="#e8f8ff", pattern="crystal", glow=True),
+    "beak": dict(base="#d8d0a8", dark="#8e8660", light="#f4eed0", pattern="metal"),
+    "storm_plate": dict(base="#4e5870", dark="#262c3c", light="#7a86a4", pattern="plates"),
+    "storm_dark": dict(base="#1e2230", dark="#0c0e16", light="#363c52", pattern="noise"),
+    "storm_trim": dict(base="#c8d4ea", dark="#7a88a6", light="#f0f6ff", pattern="metal"),
+    "storm_glow": dict(base="#9cd8ff", dark="#3a8cff", light="#ffffff", pattern="flat", glow=True),
+    "spear_shaft": dict(base="#3a3e4c", dark="#1c1e26", light="#5a6074", pattern="metal"),
+    "spear_head": dict(base="#bfe4ff", dark="#5aa0ff", light="#ffffff", pattern="edged", edge="#ffffff", glow=True),
+    "jaw_hide": dict(base="#3a3a48", dark="#1a1a22", light="#585a6c", pattern="veins", vein="#5ab0ff"),
+    "jaw_belly": dict(base="#6c6a78", dark="#3e3c48", light="#908e9c", pattern="noise"),
+    "jaw_horn": dict(base="#d8d4c4", dark="#8a8676", light="#f4f0e2", pattern="metal"),
+    "jaw_spine": dict(base="#8fd8ff", dark="#3a7cff", light="#e8f8ff", pattern="crystal", glow=True),
+    "alpha_hide": dict(base="#24242e", dark="#0e0e14", light="#3e3e4e", pattern="veins", vein="#ffe066"),
+    "alpha_horn": dict(base="#f0e2a0", dark="#a08a3a", light="#fff8d8", pattern="metal"),
+    "alpha_spine": dict(base="#ffe680", dark="#ffb020", light="#ffffff", pattern="crystal", glow=True),
+    "sprite_body": dict(base="#d8f0f4", dark="#8cc0cc", light="#ffffff", pattern="noise"),
+    "sprite_wing": dict(base="#c8f4ec", dark="#7ad0c4", light="#f4fffc", pattern="feather", glow=True),
+    "roc_body": dict(base="#4a5468", dark="#262c3a", light="#707c96", pattern="feather"),
+    "roc_wing": dict(base="#3c465a", dark="#1c2230", light="#66728e", pattern="feather"),
+    "roc_tip": dict(base="#9cd8ff", dark="#3a8cff", light="#e8f8ff", pattern="feather", glow=True),
+    "roc_belly": dict(base="#b8c0d0", dark="#7a8296", light="#e0e6f0", pattern="feather"),
+    "veyr_armor": dict(base="#3a4258", dark="#1a1e2c", light="#64708e", pattern="plates"),
+    "veyr_gold": dict(base="#e0c070", dark="#8a6a20", light="#fff0b0", pattern="metal"),
+    "veyr_cape": dict(base="#1e2a4a", dark="#0c1226", light="#34467a", pattern="robe", trim="#9cd8ff"),
+    "veyr_core": dict(base="#ffffff", dark="#9cd8ff", light="#ffffff", pattern="star", glow=True),
+    "veyr_dark": dict(base="#0c0e16", dark="#000000", light="#1c2030", pattern="nebula"),
+    "veyr_spear": dict(base="#cfeaff", dark="#5aa0ff", light="#ffffff", pattern="edged", edge="#ffffff", glow=True),
+    "conductor_metal": dict(base="#8a92a6", dark="#4a5062", light="#c4cad8", pattern="metal"),
+    "conductor_coil": dict(base="#c87a3a", dark="#7a4418", light="#f0a868", pattern="metal"),
 }
 
 
@@ -875,6 +909,150 @@ def lunar_anchor():
     ], 64, 64
 
 
+# --- Tempestforged ------------------------------------------------------------------------------------------------
+
+def static_wisp():
+    sparks = [P(f"spark_{i}", pivot=(math.cos(i * math.pi / 2) * 5, 0, math.sin(i * math.pi / 2) * 5), rot=(45, 45, 0),
+                cubes=[C((-1, -1, -1), (2, 2, 2), "spark")]) for i in range(4)]
+    shell = [P(f"shell_{i}", pivot=(0, 0, 0), rot=(0, i * 45, 45), cubes=[C((-0.5, -5, -0.5), (1, 3, 1), "wisp_shell")]) for i in range(4)]
+    return [
+        P("core", pivot=(0, 14, 0), cubes=[C((-3, -3, -3), (6, 6, 6), "wisp_core",
+                                             decals=[("north", 1, 2, 1, 1, "#1a2a5a", False), ("north", 4, 2, 1, 1, "#1a2a5a", False)])],
+          children=[P("orbit", pivot=(0, 0, 0), children=sparks)] + shell),
+    ], 32, 32
+
+
+def shardwing():
+    eyes = [("west", 1, 1, 1, 1, "#9cd8ff", True), ("east", 2, 1, 1, 1, "#9cd8ff", True)]
+    wing = lambda side, sx: P(f"{side}_wing", pivot=(sx * 3, 16, -1), cubes=[C((min(0, sx * 9), -0.5, -3), (9, 1, 7), "shardwing_body")],
+                              children=[P(f"{side}_wing_tip", pivot=(sx * 9, 0, 0), cubes=[C((min(0, sx * 8), -0.5, -2), (8, 1, 5), "shardwing_crystal")])])
+    return [
+        P("body", pivot=(0, 16, 0), cubes=[C((-3, -2.5, -5), (6, 5, 10), "shardwing_body"),
+                                           C((-1, -4.5, -3), (2, 2, 6), "shardwing_crystal")],
+          children=[P("tail", pivot=(0, 0, 5), cubes=[C((-2.5, -0.5, 0), (5, 1, 6), "shardwing_crystal")])]),
+        P("head", pivot=(0, 15, -5), cubes=[C((-2, -2.5, -4), (4, 4, 4), "shardwing_body", decals=eyes),
+                                            C((-1, -0.5, -7), (2, 2, 3), "beak")]),
+        wing("right", -1), wing("left", 1),
+    ], 64, 64
+
+
+def stormbound():
+    visor = [("north", 1, 3, 6, 1, "#9cd8ff", True)]
+    spear = P("spear", pivot=(0, 10, -1), rot=(-90, 0, 0),
+              cubes=[C((-0.5, -14, -0.5), (1, 26, 1), "spear_shaft"), C((-1.5, -19, -0.5), (3, 5, 1), "spear_head")])
+    return [
+        P("head", pivot=(0, 0, 0), cubes=[C((-4, -8, -4), (8, 8, 8), "storm_plate", decals=visor),
+                                          C((-0.5, -12, -4.5), (1, 5, 6), "storm_glow")]),
+        P("body", pivot=(0, 0, 0), cubes=[C((-4.5, 0, -2.5), (9, 12, 5), "storm_plate"), C((-1.5, 3, -2.9), (3, 3, 1), "storm_glow"),
+                                          C((-4, 10, -2.6), (8, 3, 5.2), "storm_dark")]),
+        P("right_arm", pivot=(-6, 2, 0), cubes=[C((-2.5, -2.5, -2.5), (4, 4, 5), "storm_trim"), C((-2, 0, -2), (3, 11, 4), "storm_dark")],
+          children=[spear]),
+        P("left_arm", pivot=(6, 2, 0), cubes=[C((-1.5, -2.5, -2.5), (4, 4, 5), "storm_trim"), C((-1, 0, -2), (3, 11, 4), "storm_dark")]),
+        P("right_leg", pivot=(-2, 12, 0), cubes=[C((-2, 0, -2), (4, 12, 4), "storm_dark"), C((-2.2, 4, -2.4), (4.4, 4, 1), "storm_plate")]),
+        P("left_leg", pivot=(2, 12, 0), cubes=[C((-2, 0, -2), (4, 12, 4), "storm_dark"), C((-2.2, 4, -2.4), (4.4, 4, 1), "storm_plate")]),
+    ], 64, 64
+
+
+def thunderjaw_parts(hide, horn, spine, big):
+    eyes = [("north", 2, 3, 2, 1, "#ffffff" if big else "#9cd8ff", True), ("north", 8, 3, 2, 1, "#ffffff" if big else "#9cd8ff", True)]
+    hl = 10 if big else 7
+    hornp = lambda side, sx: P(f"{side}_horn", pivot=(sx * 5, -6, -3), rot=(-35, 0, sx * 40), cubes=[C((-1.5, -hl, -1.5), (3, hl, 3), horn)],
+                               children=[P(f"{side}_horn_tip", pivot=(0, -hl, 0), rot=(-30, 0, 0), cubes=[C((-1, -5, -1), (2, 5, 2), horn)])])
+    spines = [P(f"spine_{i}", pivot=(0, -7, -8 + i * 5), rot=(-20, 0, 0), cubes=[C((-1.5, -6 + i, -1.5), (3, 6 - i, 3), spine)]) for i in range(4)]
+    leg = lambda name, x, z, w: P(name, pivot=(x, 10, z), cubes=[C((-w / 2, 0, -w / 2), (w, 14, w), hide)])
+    return [
+        P("body", pivot=(0, 4, 2), cubes=[C((-8, -7, -12), (16, 14, 24), hide), C((-7, 7, -10), (14, 3, 20), "jaw_belly")], children=spines),
+        P("head", pivot=(0, 2, -11), cubes=[C((-6, -6, -10), (12, 10, 10), hide, decals=eyes)],
+          children=[P("jaw", pivot=(0, 4, -2), cubes=[C((-5.5, 0, -8), (11, 3, 9), hide),
+                                                    C((-5, -1, -8), (10, 1, 1), "tooth")]),
+                    hornp("right", -1), hornp("left", 1)]),
+        leg("right_front_leg", -5, -7, 6), leg("left_front_leg", 5, -7, 6),
+        leg("right_hind_leg", -5, 10, 6), leg("left_hind_leg", 5, 10, 6),
+        P("tail", pivot=(0, 0, 14), rot=(-25, 0, 0), cubes=[C((-2, -2, 0), (4, 4, 10), hide)],
+          children=[P("tail_club", pivot=(0, 0, 10), cubes=[C((-3, -3, 0), (6, 6, 4), spine)])]),
+    ]
+
+
+def thunderjaw():
+    return thunderjaw_parts("jaw_hide", "jaw_horn", "jaw_spine", False), 128, 128
+
+
+def thunderjaw_alpha():
+    return thunderjaw_parts("alpha_hide", "alpha_horn", "alpha_spine", True), 128, 128
+
+
+def zephyr_sprite():
+    face = [("north", 1, 1, 1, 1, "#3a8a9a", False), ("north", 3, 1, 1, 1, "#3a8a9a", False)]
+    wing = lambda side, sx: P(f"{side}_wing", pivot=(sx * 1.5, 16, 1.5), rot=(0, sx * -20, 0),
+                              cubes=[C((min(0, sx * 6), -4, 0), (6, 7, 0.5), "sprite_wing")])
+    return [
+        P("body", pivot=(0, 17, 0), cubes=[C((-1.5, 0, -1.5), (3, 4, 3), "sprite_body")],
+          children=[P("swirl", pivot=(0, 4, 0), cubes=[C((-1, 0, -1), (2, 3, 2), "sprite_wing")])]),
+        P("head", pivot=(0, 17, 0), cubes=[C((-2.5, -5, -2.5), (5, 5, 5), "sprite_body", decals=face),
+                                           C((-0.5, -8, -0.5), (1, 3, 1), "sprite_wing")]),
+        wing("right", -1), wing("left", 1),
+    ], 32, 32
+
+
+def storm_roc():
+    eyes = [("west", 2, 1, 1, 1, "#9cd8ff", True), ("east", 2, 1, 1, 1, "#9cd8ff", True)]
+    wing = lambda side, sx: P(f"{side}_wing", pivot=(sx * 6, 4, -4), cubes=[C((min(0, sx * 16), -1, -2), (16, 2, 13), "roc_wing")],
+                              children=[P(f"{side}_wing_tip", pivot=(sx * 16, 0, 0), cubes=[C((min(0, sx * 14), -0.5, -1), (14, 1, 11), "roc_tip")])])
+    leg = lambda side, sx: P(f"{side}_leg", pivot=(sx * 3, 12, 2), cubes=[C((-1, 0, -1), (2, 9, 2), "beak"), C((-2, 9, -3), (4, 3, 5), "beak")])
+    return [
+        P("body", pivot=(0, 6, 0), cubes=[C((-6, -4, -10), (12, 10, 20), "roc_body"), C((-5, 6, -8), (10, 2, 15), "roc_belly")],
+          children=[P("tail", pivot=(0, -1, 10), rot=(-10, 0, 0), cubes=[C((-5, -1, 0), (10, 2, 12), "roc_wing")],
+                      children=[P("tail_tip", pivot=(0, 0, 12), cubes=[C((-4, -0.5, 0), (8, 1, 5), "roc_tip")])])]),
+        P("neck", pivot=(0, 2, -9), rot=(25, 0, 0), cubes=[C((-3, -10, -3), (6, 11, 6), "roc_body")],
+          children=[P("head", pivot=(0, -10, 0), rot=(-25, 0, 0), cubes=[C((-3.5, -5, -5), (7, 6, 8), "roc_body", decals=eyes),
+                                                                         C((-0.5, -9, -1), (1, 4, 6), "roc_tip")],
+                      children=[P("beak", pivot=(0, -2, -5), cubes=[C((-1.5, -1, -5), (3, 3, 5), "beak")])])]),
+        wing("right", -1), wing("left", 1),
+        leg("right", -1), leg("left", 1),
+    ], 128, 128
+
+
+def veyr():
+    face = [("north", 1, 3, 2, 1, "#9cd8ff", True), ("north", 5, 3, 2, 1, "#9cd8ff", True), ("north", 2, 6, 4, 1, "#2a3a5a", False)]
+    spikes = [P(f"crown_{i}", pivot=(x, -9, z), rot=(rx, 0, rz), cubes=[C((-1, -h, -1), (2, h, 2), "veyr_gold")])
+              for i, (x, z, h, rx, rz) in enumerate([(0, -3, 8, -12, 0), (-3, -2, 6, -8, -20), (3, -2, 6, -8, 20), (-4, 1, 5, 0, -35), (4, 1, 5, 0, 35)])]
+    pauldron = lambda side, sx: P(f"{side}_pauldron", pivot=(sx * 9, -16, 0), rot=(0, 0, sx * 20),
+                                  cubes=[C((-3.5, -3, -4), (7, 4, 8), "veyr_armor"), C((-3, -5, -1), (6, 2, 2), "veyr_spear")])
+    arm = lambda side, sx, kids: P(f"{side}_arm", pivot=(sx * 8, -15, 0), cubes=[C((-2, -1, -2), (4, 14, 4), "veyr_armor"),
+                                                                                C((-2.4, 8, -2.4), (4.8, 5, 4.8), "veyr_gold")],
+                                   children=kids)
+    spear = P("spear", pivot=(0, 13, -1), rot=(-90, 0, 0), cubes=[C((-0.5, -22, -0.5), (1, 40, 1), "spear_shaft"),
+                                                                    C((-2, -30, -0.5), (4, 8, 1), "veyr_spear"),
+                                                                    C((-1, -24, -1), (2, 2, 2), "veyr_gold")])
+    return [
+        P("legs", pivot=(0, 6, 0), cubes=[C((-5, 0, -2.5), (4, 18, 5), "veyr_armor"), C((1, 0, -2.5), (4, 18, 5), "veyr_armor"),
+                                          C((-5.4, 6, -3), (4.8, 4, 1), "veyr_gold"), C((0.6, 6, -3), (4.8, 4, 1), "veyr_gold")],
+          children=[P("torso", pivot=(0, 0, 0), cubes=[C((-7, -18, -4), (14, 18, 8), "veyr_armor"),
+                                                         C((-2.5, -14, -4.5), (5, 5, 1), "veyr_core"),
+                                                         C((-6, -3, -4.3), (12, 3, 8.6), "veyr_gold")],
+                      children=[
+                          P("head", pivot=(0, -18, 0), cubes=[C((-4, -9, -4), (8, 9, 8), "veyr_armor", decals=face)], children=spikes),
+                          pauldron("right", -1), pauldron("left", 1),
+                          arm("right", -1, [spear]), arm("left", 1, []),
+                          P("cape", pivot=(0, -17, 4), rot=(6, 0, 0), cubes=[C((-7, 0, 0), (14, 30, 1), "veyr_cape")]),
+                          P("storm_ring", pivot=(0, -12, 7), children=[
+                              P(f"ring_{i}", pivot=(math.cos(a) * 10, math.sin(a) * 10, 0), rot=(0, 0, math.degrees(a)),
+                                cubes=[C((-0.5, -2.5, -0.5), (1, 5, 1), "veyr_spear")])
+                              for i, a in enumerate([k * math.pi / 5 for k in range(10)])]),
+                      ])]),
+    ], 256, 128
+
+
+def storm_conductor():
+    return [
+        P("base", pivot=(0, 24, 0), cubes=[C((-5, -3, -5), (10, 3, 10), "storm_plate")]),
+        P("rod", pivot=(0, 21, 0), cubes=[C((-1.5, -36, -1.5), (3, 36, 3), "conductor_metal"),
+                                          C((-2.5, -24, -2.5), (5, 2, 5), "conductor_coil"), C((-2.5, -18, -2.5), (5, 2, 5), "conductor_coil"),
+                                          C((-2.5, -12, -2.5), (5, 2, 5), "conductor_coil")],
+          children=[P("tip", pivot=(0, -36, 0), rot=(45, 0, 45), cubes=[C((-2, -2, -2), (4, 4, 4), "storm_glow")])]),
+    ], 64, 64
+
+
 MODELS = [
     ("star_mite", "starMite", star_mite, 101),
     ("void_stalker", "voidStalker", void_stalker, 202),
@@ -900,6 +1078,15 @@ MODELS = [
     ("moonleaper", "moonleaper", moonleaper, 2006),
     ("pale_matriarch", "paleMatriarch", pale_matriarch, 2007),
     ("lunar_anchor", "lunarAnchor", lunar_anchor, 2008),
+    ("static_wisp", "staticWisp", static_wisp, 3001),
+    ("shardwing", "shardwing", shardwing, 3002),
+    ("stormbound", "stormbound", stormbound, 3003),
+    ("thunderjaw", "thunderjaw", thunderjaw, 3004),
+    ("thunderjaw_alpha", "thunderjawAlpha", thunderjaw_alpha, 3005),
+    ("zephyr_sprite", "zephyrSprite", zephyr_sprite, 3006),
+    ("storm_roc", "stormRoc", storm_roc, 3007),
+    ("veyr", "veyr", veyr, 3008),
+    ("storm_conductor", "stormConductor", storm_conductor, 3009),
 ]
 
 

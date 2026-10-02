@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "starforged:block/charged_aetherium_block"
+    }
+  }
+}

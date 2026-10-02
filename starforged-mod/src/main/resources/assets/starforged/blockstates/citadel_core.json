@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "starforged:block/citadel_core"
+    },
+    "lit=true": {
+      "model": "starforged:block/citadel_core_lit"
+    }
+  }
+}

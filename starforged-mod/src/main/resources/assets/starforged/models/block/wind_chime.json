@@ -1,0 +1,51 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "starforged:block/wind_chime",
+    "chime": "starforged:block/wind_chime"
+  },
+  "elements": [
+    {
+      "from": [
+        4,
+        2,
+        8
+      ],
+      "to": [
+        12,
+        16,
+        8
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "texture": "#chime"
+        },
+        "south": {
+          "texture": "#chime"
+        }
+      }
+    },
+    {
+      "from": [
+        8,
+        2,
+        4
+      ],
+      "to": [
+        8,
+        16,
+        12
+      ],
+      "shade": false,
+      "faces": {
+        "east": {
+          "texture": "#chime"
+        },
+        "west": {
+          "texture": "#chime"
+        }
+      }
+    }
+  ]
+}

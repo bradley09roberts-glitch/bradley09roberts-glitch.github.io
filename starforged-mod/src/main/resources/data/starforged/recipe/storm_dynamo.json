@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "I": "starforged:aetherium_ingot",
+    "L": "minecraft:lightning_rod",
+    "C": "minecraft:copper_ingot",
+    "D": "starforged:charged_aether_dust"
+  },
+  "pattern": [
+    "ILI",
+    "CDC",
+    "III"
+  ],
+  "result": {
+    "id": "starforged:storm_dynamo"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "starforged:block/weather_engine_top",
+    "side": "starforged:block/weather_engine_side",
+    "bottom": "starforged:block/storm_machine_side"
+  }
+}

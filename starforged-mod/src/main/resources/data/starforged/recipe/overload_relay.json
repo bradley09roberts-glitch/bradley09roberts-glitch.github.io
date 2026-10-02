@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "S": "starforged:charged_scrap",
+    "C": "starforged:aetherium_conductor"
+  },
+  "pattern": [
+    "SCS"
+  ],
+  "result": {
+    "id": "starforged:overload_relay"
+  }
+}

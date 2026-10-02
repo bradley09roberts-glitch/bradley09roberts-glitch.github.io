@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "front": "starforged:block/aetherium_conductor_front_on",
+    "side": "starforged:block/aetherium_conductor_side",
+    "top": "starforged:block/aetherium_conductor_side",
+    "bottom": "starforged:block/aetherium_conductor_side"
+  }
+}

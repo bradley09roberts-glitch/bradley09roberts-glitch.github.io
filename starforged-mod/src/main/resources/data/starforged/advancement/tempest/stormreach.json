@@ -1,0 +1,31 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.starforged.tempest.stormreach.title"
+    },
+    "description": {
+      "translate": "advancements.starforged.tempest.stormreach.description"
+    },
+    "icon": {
+      "id": "starforged:stormgrass"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "enter": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "starforged:stormreach"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "enter"
+    ]
+  ],
+  "parent": "starforged:tempest/root"
+}

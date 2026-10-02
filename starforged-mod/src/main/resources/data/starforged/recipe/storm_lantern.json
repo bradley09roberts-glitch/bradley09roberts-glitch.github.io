@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "N": "minecraft:iron_nugget",
+    "M": "starforged:static_mote"
+  },
+  "pattern": [
+    " N ",
+    "NMN",
+    "NNN"
+  ],
+  "result": {
+    "id": "starforged:storm_lantern"
+  }
+}
