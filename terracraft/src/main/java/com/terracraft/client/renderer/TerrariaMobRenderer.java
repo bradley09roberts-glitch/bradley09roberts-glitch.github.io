@@ -30,7 +30,8 @@ public class TerrariaMobRenderer<T extends TerrariaMob> extends EntityRenderer<T
         MobSprites.Sprite sprite;
         float animTicks;
         float yaw;
-        Vec3 motion = Vec3.ZERO;
+        Vec3 look = Vec3.ZERO;
+        float spin;
         boolean hurt;
         float healthFraction = 1.0F;
         float deathProgress;
@@ -49,12 +50,15 @@ public class TerrariaMobRenderer<T extends TerrariaMob> extends EntityRenderer<T
     @Override
     public void extractRenderState(T entity, State state, float partialTicks) {
         super.extractRenderState(entity, state, partialTicks);
-        state.sprite = MobSprites.INSTANCE.get(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()));
+        Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        String variant = entity.spriteVariant();
+        state.sprite = MobSprites.INSTANCE.get(variant.isEmpty() ? id : id.withSuffix("_" + variant));
+        state.spin = entity.spriteSpin(partialTicks);
         state.animTicks = state.sprite.animateWhileMoving()
             ? entity.walkAnimation.position(partialTicks) * 4.0F
             : entity.tickCount + partialTicks;
         state.yaw = Mth.rotLerp(partialTicks, entity.yBodyRotO, entity.yBodyRot);
-        state.motion = entity.getDeltaMovement();
+        state.look = entity.getViewVector(partialTicks);
         state.hurt = entity.hurtTime > 0 || entity.deathTime > 0;
         state.healthFraction = entity.getMaxHealth() > 0 ? Mth.clamp(entity.getHealth() / entity.getMaxHealth(), 0.0F, 1.0F) : 1.0F;
         state.deathProgress = entity.deathTime > 0 ? (entity.deathTime + partialTicks) / 4.0F : 0.0F;
@@ -100,12 +104,16 @@ public class TerrariaMobRenderer<T extends TerrariaMob> extends EntityRenderer<T
         poseStack.pushPose();
         poseStack.mulPose(Axis.YP.rotation(facing));
         float w = width / 2;
-        if (sprite.rotate()) {
-            // Tilt along the flight path; the sprite is drawn mirrored so it never flies upside down.
-            double screenX = state.motion.x * rightX + state.motion.z * rightZ;
-            float tilt = (float) Mth.atan2(state.motion.y, Math.abs(screenX));
+        if (sprite.rotate() || state.spin != 0.0F) {
+            // Tilt toward where the enemy looks (flight path); mirroring keeps it from flying upside down.
+            float tilt = 0.0F;
+            if (sprite.rotate()) {
+                double screenX = state.look.x * rightX + state.look.z * rightZ;
+                tilt = (float) Mth.atan2(state.look.y, Math.abs(screenX));
+                tilt = screenX >= 0 ? tilt : -tilt;
+            }
             poseStack.translate(0.0F, height / 2, 0.0F);
-            poseStack.mulPose(Axis.ZP.rotation(screenX >= 0 ? tilt : -tilt));
+            poseStack.mulPose(Axis.ZP.rotation(tilt + state.spin * Mth.DEG_TO_RAD));
             poseStack.translate(0.0F, -height / 2, 0.0F);
         }
         float h = height;

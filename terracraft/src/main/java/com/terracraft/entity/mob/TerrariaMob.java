@@ -111,7 +111,7 @@ public abstract class TerrariaMob extends Monster implements HasTerrariaDefense,
     public void aiStep() {
         super.aiStep();
         if (level() instanceof ServerLevel serverLevel && isAlive()) {
-            if (definition.damage() > 0) {
+            if (definition.damage() > 0 && dealsContactDamage()) {
                 tickContactDamage(serverLevel);
             }
             if (definition.despawnsAtDay() && tickCount % 20 == 0 && serverLevel.isBrightOutside() && !isPersistenceRequired()
@@ -119,6 +119,21 @@ public abstract class TerrariaMob extends Monster implements HasTerrariaDefense,
                 leaveAtDawn(serverLevel);
             }
         }
+    }
+
+    /** Whether touching the enemy hurts right now (e.g. not while a boss is teleporting). */
+    protected boolean dealsContactDamage() {
+        return true;
+    }
+
+    /** Sprite sheet suffix for alternate forms ({@code textures/entity/mob/<id>_<variant>.png}); empty = base sprite. */
+    public String spriteVariant() {
+        return "";
+    }
+
+    /** Extra in-plane rotation of the sprite in degrees (spinning bosses). */
+    public float spriteSpin(float partialTicks) {
+        return 0.0F;
     }
 
     /** Nocturnal enemies quietly leave in daylight when no player is close (Terraria despawns them off-screen). */
@@ -155,6 +170,18 @@ public abstract class TerrariaMob extends Monster implements HasTerrariaDefense,
             setLastHurtMob(target);
         }
         return hurt;
+    }
+
+    @Override
+    protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        output.putFloat("TerrariaLifeScale", lifeScale);
+    }
+
+    @Override
+    protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput input) {
+        super.readAdditionalSaveData(input);
+        lifeScale = Math.max(1.0F, input.getFloatOr("TerrariaLifeScale", 1.0F));
     }
 
     /** Terraria enemies never take fall damage. */

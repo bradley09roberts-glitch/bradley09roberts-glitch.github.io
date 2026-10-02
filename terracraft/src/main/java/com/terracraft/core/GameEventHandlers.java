@@ -22,5 +22,6 @@ public final class GameEventHandlers {
         com.terracraft.world.spawn.TerrariaSpawner.register();
         com.terracraft.world.FallenStars.register();
         com.terracraft.world.gen.WorldgenCommands.register();
+        com.terracraft.entity.boss.BossCommands.register();
     }
 }

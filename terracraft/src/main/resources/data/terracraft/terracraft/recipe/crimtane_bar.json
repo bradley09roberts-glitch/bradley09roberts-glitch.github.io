@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:crimtane_bar",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:crimtane_ore",
+      "count": 3
+    }
+  ],
+  "stations": [
+    "terracraft:furnace"
+  ],
+  "category": "materials"
+}

@@ -1,6 +1,8 @@
 package com.terracraft.registry.content;
 
 import com.terracraft.TerraCraft;
+import com.terracraft.entity.boss.EyeOfCthulhu;
+import com.terracraft.entity.boss.KingSlime;
 import com.terracraft.entity.mob.FlyerMob;
 import com.terracraft.entity.mob.MobDefinition;
 import com.terracraft.entity.mob.MotherSlimeMob;
@@ -57,6 +59,17 @@ public final class MobContent {
     public static final RegistryObject<EntityType<FlyerMob>> CAVE_BAT = register("cave_bat",
         (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.6F, 0.45F,
         MobDefinition.builder().life(16).damage(13).defense(2).knockbackTaken(0.8F).coins(90).speed(0.3));
+
+    // --- Boss minions ------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<FlyerMob>> SERVANT_OF_CTHULHU = register("servant_of_cthulhu",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.CHASER), 0.55F, 0.55F,
+        MobDefinition.builder().life(8).damage(12).defense(0).coins(0).speed(0.32).followRange(64));
+
+    // --- Bosses -------------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<KingSlime>> KING_SLIME = register("king_slime", KingSlime::new, 3.0F, 2.2F,
+        MobDefinition.builder().life(2000).damage(40).defense(10).knockbackTaken(0.0F).coins(10_000).followRange(128));
+    public static final RegistryObject<EntityType<EyeOfCthulhu>> EYE_OF_CTHULHU = register("eye_of_cthulhu", EyeOfCthulhu::new, 2.4F, 2.4F,
+        MobDefinition.builder().life(2800).damage(15).defense(12).knockbackTaken(0.0F).coins(30_000).followRange(128));
 
     private MobContent() {}
 

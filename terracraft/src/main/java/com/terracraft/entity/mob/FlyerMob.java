@@ -75,6 +75,7 @@ public class FlyerMob extends TerrariaMob {
             setYRot(yaw);
             yBodyRot = yaw;
         }
+        setXRot((float) -(Mth.atan2(motion.y, motion.horizontalDistance()) * Mth.RAD_TO_DEG));
     }
 
     @Override

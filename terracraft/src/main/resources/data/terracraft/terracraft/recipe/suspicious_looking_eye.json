@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:suspicious_looking_eye",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:lens",
+      "count": 6
+    }
+  ],
+  "stations": [
+    "terracraft:work_bench"
+  ],
+  "category": "consumables"
+}

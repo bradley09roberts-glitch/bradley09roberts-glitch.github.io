@@ -127,6 +127,11 @@ TIER = {'copper': 0, 'tin': 0, 'iron': 1, 'lead': 1, 'silver': 2, 'tungsten': 2,
 
 
 def terraria_recipes():
+    recipe('slime_crown', t('slime_crown'), [(t('gel'), 20), ('minecraft:gold_ingot', 5)], [WB], category='consumables')
+    recipe('slime_crown_platinum', t('slime_crown'), [(t('gel'), 20), (t('platinum_bar'), 5)], [WB], category='consumables')
+    recipe('suspicious_looking_eye', t('suspicious_looking_eye'), [(t('lens'), 6)], [WB], category='consumables')
+    recipe('demonite_bar', t('demonite_bar'), [(t('demonite_ore'), 3)], [FURNACE], category='materials')
+    recipe('crimtane_bar', t('crimtane_bar'), [(t('crimtane_ore'), 3)], [FURNACE], category='materials')
     # ---- by hand / work bench basics
     recipe('work_bench', t('work_bench'), [(PLANKS, 10)], category='furniture')
     recipe('torch', 'minecraft:torch', [(t('gel'), 1), (PLANKS, 1)], count=3, category='furniture')
@@ -406,6 +411,16 @@ def lang():
         'progression.terracraft.announce.celestial_events_active': 'The celestial pillars have appeared!',
         'progression.terracraft.announce.boss_skeletron_defeated': 'The curse of the Dungeon has been lifted.',
     })
+    L.update({
+        'message.terracraft.boss.awoken': '%s has awoken!',
+        'message.terracraft.boss.defeated': '%s has been defeated!',
+        'message.terracraft.boss.nothing_happens': 'Nothing happens...',
+        'message.terracraft.boss.already_active': 'That boss is already here!',
+        'item.terracraft.slime_crown.tooltip': 'Summons King Slime',
+        'item.terracraft.suspicious_looking_eye.tooltip': 'Summons the Eye of Cthulhu (use at night)',
+        'item.terracraft.demonite_ore.tooltip': 'Pulsing with dark energy',
+        'item.terracraft.crimtane_ore.tooltip': 'Its veins throb',
+    })
     for mob, (name, _) in MOBS.items():
         L[f'entity.terracraft.{mob}'] = name
     path = os.path.join(RES, 'assets/terracraft/lang/en_us.json')
@@ -431,6 +446,9 @@ MOBS = {
     'demon_eye': ('Demon Eye', [('lens', 1, 1, 0.33)]),
     'skeleton': ('Skeleton', [('minecraft:bone', 1, 2, 0.5)]),
     'cave_bat': ('Cave Bat', []),
+    'servant_of_cthulhu': ('Servant of Cthulhu', []),
+    'king_slime': ('King Slime', [('gel', 40, 80, 1.0), ('slime_crown', 1, 1, 0.1)]),
+    'eye_of_cthulhu': ('Eye of Cthulhu', [('lens', 3, 6, 1.0)]),
 }
 
 OVERWORLD_LAND = {'exclude_biomes': ['#minecraft:is_ocean', '#minecraft:is_river']}

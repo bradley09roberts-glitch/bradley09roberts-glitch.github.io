@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:slime_crown",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:gel",
+      "count": 20
+    },
+    {
+      "item": "minecraft:gold_ingot",
+      "count": 5
+    }
+  ],
+  "stations": [
+    "terracraft:work_bench"
+  ],
+  "category": "consumables"
+}

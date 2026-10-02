@@ -449,6 +449,35 @@ item('fallen_star', lambda c: draw_star(c))
 item('gel', lambda c: draw_gel(c))
 item('lens', draw_lens)
 item('amethyst', lambda c: draw_gem(c, '#A050DC'))
+
+
+def draw_crown(c):
+    gold = palette('#F0C030')
+    c.polygon([(2, 12), (2, 6), (5, 9), (8, 4), (11, 9), (14, 6), (14, 12)], gold[2])
+    c.rect(2, 11, 14, 12, gold[1])
+    c.set(8, 8, hexc('#E03040'))
+    c.set(5, 11, hexc('#40A0F0')); c.set(11, 11, hexc('#40A0F0'))
+    c.circle(8, 13.5, 1.6, (90, 160, 240, 200))   # gel cushion
+    c.light()
+    c.outline()
+
+
+def draw_eye_item(c):
+    c.circle(7.5, 8, 5.5, hexc('#F2EEE8'))
+    c.circle(6, 8, 3, hexc('#C22B2B'))
+    c.circle(5.5, 8, 1.2, hexc('#1A0A0A'))
+    c.line(12, 5, 14, 3, hexc('#B33A3A')); c.line(12, 11, 14, 13, hexc('#B33A3A'))
+    c.light(1.15, 0.85)
+    c.outline()
+
+
+item('slime_crown', draw_crown)
+item('suspicious_looking_eye', draw_eye_item)
+item('demonite_ore', lambda c: draw_raw(c, palette('#6A4FA8'), 'demonite'))
+item('demonite_bar', lambda c: draw_bar(c, palette('#7A5CC0')))
+item('crimtane_ore', lambda c: draw_raw(c, palette('#B8323C'), 'crimtane'))
+item('crimtane_bar', lambda c: draw_bar(c, palette('#C8404A')))
+
 POTIONS = {
     'lesser_healing_potion': ('#E63C50', 'small'), 'healing_potion': ('#E63C50', 'normal'),
     'lesser_mana_potion': ('#3C64F0', 'small'), 'mana_potion': ('#3C64F0', 'normal'),
@@ -858,6 +887,63 @@ def bat_frame(c, frame):
 mob_sprite('cave_bat', 16, 12, 3, bat_frame, frame_time=3)
 
 
+def king_slime_frame(c, frame):
+    slime_frame(c, '#3C78E6', frame, 32, 24, alpha=200)
+    # ninja silhouette inside
+    top = 8 + frame * 2
+    c.rect(14, top + 4, 18, top + 9, (40, 40, 60, 160))
+    c.circle(16, top + 2, 2, (40, 40, 60, 160))
+    # crown
+    gold = palette('#F0C030')
+    cy = 2 + frame * 2
+    c.polygon([(10, cy + 5), (10, cy + 1), (13, cy + 3), (16, cy - 1), (19, cy + 3), (22, cy + 1), (22, cy + 5)], gold[2])
+    c.set(16, cy + 2, hexc('#E03040'))
+    c.rect(10, cy + 4, 22, cy + 5, gold[1])
+
+
+mob_sprite('king_slime', 32, 24, 2, king_slime_frame, frame_time=12)
+
+
+def big_eye_frame(c, frame, mouth=False):
+    c.circle(10, 9, 8, hexc('#F2EEE8'))
+    if mouth:
+        # open maw facing left with teeth
+        c.polygon([(1, 4), (9, 7), (9, 11), (1, 14)], hexc('#5A0A10'))
+        for y in (5, 7, 11, 13):
+            c.set(2, y, hexc('#F8F0D8')); c.set(4, y + (1 if y < 9 else -1), hexc('#F8F0D8'))
+    else:
+        c.circle(6, 9, 4, hexc('#3A62C8'))
+        c.circle(5, 9, 2, hexc('#0A0A14'))
+        c.set(4, 7, hexc('#FFFFFF'))
+    for vx, vy in ((12, 3), (14, 14), (16, 6)):
+        c.set(vx, vy, hexc('#D86A6A'))
+    wave = [0, 1, 0, -1][frame % 4]
+    for i, x in enumerate(range(17, 24)):
+        for strand, base in enumerate((6, 9, 12)):
+            y = base + (wave if (i + strand) % 2 else -wave)
+            c.set(x, y, hexc('#A83232'))
+    c.light(1.15, 0.85)
+    c.outline()
+
+
+mob_sprite('eye_of_cthulhu', 24, 18, 4, big_eye_frame, frame_time=4, rotate=True, fullbright=True)
+mob_sprite('eye_of_cthulhu_mouth', 24, 18, 4, lambda c, f: big_eye_frame(c, f, mouth=True), frame_time=3, rotate=True, fullbright=True)
+
+
+def servant_frame(c, frame):
+    c.circle(5, 5, 4, hexc('#F2EEE8'))
+    c.circle(3, 5, 2, hexc('#3A62C8'))
+    c.set(3, 5, hexc('#0A0A14'))
+    wave = [0, 1, 0, -1][frame % 4]
+    for i, x in enumerate(range(9, 13)):
+        c.set(x, 5 + (wave if i % 2 else -wave), hexc('#A83232'))
+    c.light(1.15, 0.85)
+    c.outline()
+
+
+mob_sprite('servant_of_cthulhu', 14, 10, 4, servant_frame, frame_time=3, rotate=True)
+
+
 def mob_assets():
     for name, (fw, fh, frames, drawer, meta) in MOB_SPRITES.items():
         sheet = Canvas(fw, fh * frames)
@@ -869,6 +955,8 @@ def mob_assets():
         data = {'frames': frames, 'frame_time': meta.get('frame_time', 8), 'faces': 'left'}
         if meta.get('rotate'):
             data['rotate'] = True
+        if meta.get('fullbright'):
+            data['fullbright'] = True
         if meta.get('animate'):
             data['animate'] = meta['animate']
         write_json(os.path.join(TEX, 'entity/mob', name + '.json'), data)
