@@ -16,6 +16,11 @@ of endless night with **low gravity** and **tides** that turn every five minutes
 Moonkit that sniffs out ore, ride a Moonleaper, solve the clockwork puzzle of a **Tidal Orrery**, and face
 **the Pale Matriarch, Mother of Tides**.
 
+Beat the Matriarch and **Tempestforged** opens the sky: strike her heart into a *Skybreaker Core* and tear a Stormgate
+into **the Stormreach**, an endless thunderstorm of floating islands. Charge Aetherium with real lightning, dash on the
+wind, tame a Zephyr Sprite and ride a Storm Roc, survive a **Supercell**, route lightning through the conductor
+circuits of a **Tempest Citadel**, and face **Veyr, the Tempest Regent**.
+
 ![The Eclipse Sovereign](docs/screenshots/boss_singularity.png)
 
 ---
@@ -31,7 +36,7 @@ Moonkit that sniffs out ore, ride a Moonleaper, solve the clockwork puzzle of a 
 
 1. In the CurseForge app, go to **Minecraft → Create Custom Profile**, pick **26.2** and the **Forge 65.1.0** loader, then click **Create**.
 2. On the profile, click **⋯ → Open Folder**, then open the **`mods`** folder (create it if it isn't there).
-3. Copy **[`release/starforged-1.2.0.jar`](release/starforged-1.2.0.jar)** into that `mods` folder.
+3. Copy **[`release/starforged-1.3.0.jar`](release/starforged-1.3.0.jar)** into that `mods` folder.
 4. Click **Play**. You should see *Starforged* in the **Mods** list on the title screen.
 
 *Without CurseForge:* run the official installer
@@ -63,8 +68,13 @@ Create a **Creative** world with **cheats on**, then type:
 | `/starforged orrery` | Builds a full **Tidal Orrery** where you stand |
 | `/starforged matriarch` | Places a Moon Altar ahead of you and plays the **Pale Matriarch's rising cinematic** |
 | `/starforged tide` / `tide turn` | Shows how long until the tide turns / turns it right now |
+| `/starforged tempestkit` | Gives every Tempestforged weapon, a Skybreaker Core, a Tempest Sigil, the Tempest Crown and Aetherium armor |
+| `/starforged stormreach` | Sends you straight to the Stormreach |
+| `/starforged citadel` | Builds a full **Tempest Citadel** (on its own floating island) where you stand |
+| `/starforged veyr` | Places a Tempest Altar ahead of you and plays **Veyr's summoning cinematic** |
+| `/starforged supercell` | Starts a **Supercell** around you (and calls down the Thunderjaw Alpha) |
 
-All items are also in the **Starforged**, **Sunforged** and **Moonforged** creative tabs.
+All items are also in the **Starforged**, **Sunforged**, **Moonforged** and **Tempestforged** creative tabs.
 
 **Filming tips**
 - Switch to **Survival** (`/gamemode survival`) for the boss fight. Like vanilla bosses, the Sovereign doesn't attack creative players. `/effect give @s resistance 600 3` keeps you alive for B-roll.
@@ -324,6 +334,101 @@ Craft a **Tidal Sigil** (a Block of Moonsilver, Lunar Pearls and Lunar Dust; vau
 
 ![Inversion](docs/screenshots/moon_inversion.png)
 
+## ⚡ Tempestforged: the fourth tier
+
+![The Stormreach](docs/screenshots/tempest_landscape.png)
+
+### Getting there
+1. Defeat the Pale Matriarch and take her **Heart of the Moon**.
+2. Craft a **Skybreaker Core**: Heart of the Moon in the middle, a Lightning Rod on each side, a Block of Moonsilver above
+   and below, and Breeze Rods in the corners.
+3. Use it on the ground in the Overworld (or in the Pale Reach at High Tide). A **Stormgate** tears open. Step in.
+   Over the open sky the gate builds itself a little island to stand on, and a matching gate takes you home.
+
+### The Stormreach
+An endless thunderstorm over a sea of floating islands. It never stops raining, and lightning falls on its own:
+- **Lightning strikes** land around you every so often. Stand clear of the flash.
+- **Natural lightning charges Aetherium.** Drop Aetherium Ingots (or blocks) where a bolt lands and they become
+  **Charged Aetherium**. Lightning Beacons and Storm Dynamos can call bolts for you.
+- **Supercells.** Now and then the storm gathers into a Supercell: a title card, a barrage of strikes, and the
+  **Thunderjaw Alpha** (280 HP), a mini-boss with Chain Stamp, Storm Cage and Sky Charge. It drops the *Alpha Conductor Horn*.
+  New arrivals get a few minutes' grace before the first one.
+
+| Biome | What you'll find |
+|---|---|
+| **Thunderhead Steppe** | Open stormgrass islands, Gale Seeds, Thunderjaw herds and Storm Rocs |
+| **Shardwind Cliffs** | Bare skyrock cliffs and thunder crystals. A **crosswind** rakes across them every twenty seconds. Shardwings nest here |
+| **Static Grove** | Forests of lightning-scarred Stormwood, Static Wisp swarms and Zephyr Sprites |
+| **Stormgrave** | Dark stormstone wastes where the Regent's Stormbound soldiers still patrol |
+| **The Endless Eye** | Pale islands turning slowly in a rotating wind |
+
+**Aetherium Ore** needs a Moonsilver pickaxe or better.
+
+### Aetherium (the new top tier)
+| | Aetherium | Moonsilver | Sunsteel |
+|---|---|---|---|
+| Tool durability | 3800 | 3200 | 2600 |
+| Mining speed | 12.5 | 11 | 10.5 |
+| Armor toughness | 4.5 | 4 | 3.5 |
+
+Full Aetherium set (**Stormstep**): press jump in mid-air to dash on the wind, three times before you land. You are
+immune to lightning, too.
+
+### Weapons
+| Item | Ability |
+|---|---|
+| **Skybreaker Halberd** | Long reach. Right-click: **Thunderfall**, a vault into the sky and a crash back down that calls lightning on everything around you |
+| **Tempest Javelin** | Hold and release to throw. It sticks where it lands and becomes a lightning rod that strikes nearby enemies. Right-click again to **recall** it through everything in its way |
+| **Gale Blades** | Fast twin blades. Right-click: send out a **Cyclone** that cuts and flings |
+| **Stormhook** | Grapple to blocks or drag creatures in. While hooked, **Live Wire** arcs into up to three nearby enemies |
+| **Arc Cannon** | Hold and release: a lightning beam that pierces a whole line of enemies. Hold for two seconds to **Overcharge** it, with a strike where it lands |
+| **Skycleaver** *(boss drop)* | Right-click: **Heaven's Judgement**, eight bolts called down on the enemies around you |
+
+![Tempestforged weapons](docs/screenshots/tempest_weapons.png)
+
+### Armor
+| Armor | Ability |
+|---|---|
+| **Aetherium set** | Stormstep and lightning immunity (see above) |
+| **Tempest Crown** *(boss drop)* | Lightning immunity. Every few seconds an arc leaps from you to the nearest enemy |
+
+### Creatures
+| Creature | |
+|---|---|
+| **Static Wisp** | Crackling orbs that link into a **Static Network**: a player caught between two wisps gets shocked |
+| **Shardwing** | Crystal-winged flyer that circles, fires crystal volleys, then dives |
+| **Stormbound** | Armoured spear-soldier. Three-hit combos and **Thunderstep**, a lightning teleport behind you |
+| **Thunderjaw** | Huge storm beast. Lightning that hits it **charges** it; a charged Thunderjaw's Ground Stamp calls bolts |
+| **Zephyr Sprite** *(pet)* | Tame with **Gale Seeds**. Its **Windguard** knocks projectiles aside. Sneak + right-click with an empty hand for **Tailwind** (Speed, Jump Boost, Slow Falling) |
+| **Storm Roc** *(mount)* | Tame with **Charged Aether Dust** and fly it: jump to climb, sprint for a **Wingburst**. Riders are immune to lightning |
+
+![Stormreach creatures](docs/screenshots/tempest_creatures.png)
+
+### The Tempest Citadel
+A fortress on its own floating island, high in the Stormreach sky. Inside:
+- **Shock Plates** in the doorways (sneak across them) and **Thunder and Gale Runes** outside the doors.
+- Four wings, each with a **storm circuit**: pull the lever to fire a **Storm Dynamo**, and its pulse arcs from one
+  **Rotating Conductor** to the next (right-click to turn one clockwise, sneak + right-click to turn it back).
+  Route it into the wing's **Citadel Core**. Route it wrong and it hits an **Overload Relay**, which shocks everyone nearby and knocks the core back out.
+- Light all four cores and the **Tempest Seals** around the keep's wind lift shatter. The vault chests sit inside,
+  and the lift carries you up to the summit and the **Tempest Altar**.
+
+![Tempest Citadel](docs/screenshots/tempest_citadel.png)
+
+### Boss: Veyr, the Tempest Regent (1300 HP)
+Craft a **Tempest Sigil** (Thunderjaw Horns, Charged Aetherium and the Alpha Conductor Horn; the vault often holds one)
+and use it on the Tempest Altar.
+- **Entrance.** The storm gathers at the rim of the summit and spirals in, and his empty armour is struck together piece by piece by lightning.
+- **Tempest:** Thunderstep, spear combos, storm volleys, the Arc Lance and the **Tornado Wall**.
+- **Conduction (60%).** He rises behind a storm shield and calls bolts down on you. Raise the four **Storm Conductors**
+  around the arena (right-click). Each raised rod steals a bolt and hurls it back into him. Four hits break the shield
+  and he crashes down, **stunned and taking 50% more damage**.
+- **Shattered Sky.** The summit breaks into floating fragments (it's rebuilt when the fight ends) and he hunts you across them.
+- **The Last Thunder (15%).** Lightning falls everywhere except inside three drifting **Eyes of the Storm**. Keep moving with them.
+- **Rewards.** Skycleaver, Tempest Crown, Stormheart, Charged Aetherium, a chance at the Arc Cannon, and the *The Last Thunder* challenge advancement.
+
+![Veyr, the Tempest Regent](docs/screenshots/tempest_veyr.png)
+
 ---
 
 ## Screenshots
@@ -352,6 +457,12 @@ Weapons: [weapons.png](docs/screenshots/weapons.png)
 | ![Tidal Orrery](docs/screenshots/moon_orrery.png) | ![Tidal Orrery interior](docs/screenshots/moon_orrery_interior.png) |
 | ![Orrery aligned](docs/screenshots/moon_orrery_aligned.png) | ![Pale Reach creatures](docs/screenshots/moon_creatures.png) |
 
+**Tempestforged**
+| | |
+|---|---|
+| ![The Stormreach](docs/screenshots/tempest_landscape.png) | ![Tempest Citadel](docs/screenshots/tempest_citadel.png) |
+| ![Stormreach creatures](docs/screenshots/tempest_creatures.png) | ![Veyr](docs/screenshots/tempest_veyr.png) |
+
 ---
 
 ## Configuration
@@ -372,16 +483,18 @@ Weapons: [weapons.png](docs/screenshots/weapons.png)
 Requires JDK 25.
 ```
 cd starforged-mod
-./gradlew build          # → build/libs/starforged-1.2.0.jar
+./gradlew build          # → build/libs/starforged-1.3.0.jar
 ./gradlew runClient      # dev client
 ./gradlew runServer      # dev server
 ```
 Textures, models, sounds and data files are generated by the scripts in `tools/` (Python 3 with Pillow and NumPy;
 `ffmpeg` with libvorbis is needed for the sounds):
 `gen_textures.py`, `gen_models.py`, `gen_sounds.py` and `gen_data.py`, plus `gen_sun_textures.py`, `gen_sun_sounds.py`
-and `gen_sun_data.py` for Sunforged and `gen_moon_textures.py`, `gen_moon_sounds.py` and `gen_moon_data.py` for
-Moonforged (run each `_sun_` script after its base script, and each `_moon_` script after that;
-`gen_sun_textures.py` and `gen_moon_textures.py` also take `--vanilla`). Run `gen_weapons.py --vanilla <vanilla item texture folder>` after
+and `gen_sun_data.py` for Sunforged, `gen_moon_textures.py`, `gen_moon_sounds.py` and `gen_moon_data.py` for
+Moonforged, and `gen_tempest_textures.py`, `gen_tempest_sounds.py` and `gen_tempest_data.py` for Tempestforged
+(run each `_sun_` script after its base script, each `_moon_` script after that, and each `_tempest_` script last;
+the `_sun_`, `_moon_` and `_tempest_` texture scripts also take `--vanilla`, and `gen_tempest_data.py` takes
+`--vanilla-data <vanilla data/minecraft folder>`). Run `gen_weapons.py --vanilla <vanilla item texture folder>` after
 `gen_textures.py`: it redraws the weapon and tool sprites (the Starmetal tools reuse the vanilla diamond tool shapes).
 
 ## Tested
@@ -400,5 +513,10 @@ Moonforged (run each `_sun_` script after its base script, and each `_moon_` scr
   - Moonforged: all five Pale Reach biomes, gateway travel, low gravity and both tides, every Moonforged weapon,
     taming the Moonkit (and its Lunar Scent) and the Moonleaper (including the charged leap), Tidal Clams,
     the orrery puzzle (failure and success), and the Pale Matriarch through Inversion, New Moon, Moonfall, death and loot
+  - Tempestforged: Stormreach generation and gateway travel both ways, the Tempest Citadel (by command), its storm
+    circuits (overload and success) and the Tempest Seals, every Tempestforged weapon's ability against targets,
+    Stormstep, lightning charging Aetherium, taming the Zephyr Sprite and the Storm Roc (and flying it), a Supercell
+    with the Thunderjaw Alpha, and Veyr through Conduction (raising the conductors), Shattered Sky, the Last Thunder,
+    death, loot and the summit's repair
 
 License: MIT.

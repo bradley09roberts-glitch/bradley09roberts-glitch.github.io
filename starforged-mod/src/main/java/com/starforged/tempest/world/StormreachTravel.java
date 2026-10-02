@@ -42,7 +42,8 @@ public final class StormreachTravel {
     public static void forceStorm(Level level) {
         if (level.dimension() == STORMREACH) {
             level.setRainLevel(1.0F);
-            level.setThunderLevel(1.0F);
+            // Half-strength thunder: the sky stays a brooding grey rather than black (our own strikes do not need it).
+            level.setThunderLevel(0.5F);
         }
     }
 

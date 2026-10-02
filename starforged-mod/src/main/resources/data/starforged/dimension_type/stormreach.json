@@ -1,5 +1,5 @@
 {
-  "ambient_light": 0.05,
+  "ambient_light": 0.15,
   "attributes": {
     "minecraft:audio/background_music": {
       "default": {
@@ -11,8 +11,8 @@
     "minecraft:gameplay/can_start_raid": false,
     "minecraft:gameplay/monsters_burn": false,
     "minecraft:gameplay/sky_light_level": 15.0,
-    "minecraft:visual/sky_color": "#3a4460",
-    "minecraft:visual/fog_color": "#5a6680",
+    "minecraft:visual/sky_color": "#8a9ac0",
+    "minecraft:visual/fog_color": "#9aa8c4",
     "minecraft:visual/cloud_color": "#cc4a5068",
     "minecraft:visual/sun_angle": 345.0,
     "minecraft:visual/moon_angle": 120.0,

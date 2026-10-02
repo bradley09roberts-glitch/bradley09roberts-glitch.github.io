@@ -7,8 +7,8 @@
         "sound": "minecraft:music.overworld.frozen_peaks"
       }
     },
-    "minecraft:visual/sky_color": "#4a5a7a",
-    "minecraft:visual/fog_color": "#6a7a98",
+    "minecraft:visual/sky_color": "#a0b0d0",
+    "minecraft:visual/fog_color": "#b0bed6",
     "minecraft:visual/ambient_particles": [
       {
         "particle": {

@@ -242,6 +242,7 @@ public final class TempestModels {
     public static class StormRocModel extends EntityModel<RocState> {
         private final ModelPart body;
         private final ModelPart neck;
+        private final ModelPart head;
         private final ModelPart rightWing;
         private final ModelPart leftWing;
         private final ModelPart rightTip;
@@ -253,6 +254,7 @@ public final class TempestModels {
             super(root);
             this.body = root.getChild("body");
             this.neck = root.getChild("neck");
+            this.head = this.neck.getChild("head");
             this.rightWing = root.getChild("right_wing");
             this.leftWing = root.getChild("left_wing");
             this.rightTip = this.rightWing.getChild("right_wing_tip");
@@ -287,6 +289,11 @@ public final class TempestModels {
                 this.leftLeg.xRot = -Mth.cos(pos * 0.6F) * 0.8F * speed;
             }
             this.neck.yRot = state.ridden ? 0.0F : state.yRot * DEG * 0.5F;
+            if (state.ridden) {
+                // Stretch the neck out forward and low so the head and crest stay below the rider's eye line.
+                this.neck.xRot = 1.35F;
+                this.head.xRot = -1.1F;
+            }
             this.body.xRot = state.flying ? 0.1F : 0.0F;
         }
     }

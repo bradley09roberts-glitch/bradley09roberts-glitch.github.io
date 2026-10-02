@@ -425,8 +425,8 @@ def lang():
         "ability.starforged.stormhook.text": "Hook a block to swing to it, or a creature to drag it in.",
         "ability.starforged.live_wire.title": "Live Wire",
         "ability.starforged.live_wire.text": "While hooked, the line arcs into up to three nearby enemies.",
-        "ability.starforged.arc_cannon.title": "Right-click: Arc Bolt",
-        "ability.starforged.arc_cannon.text": "Fire a beam of lightning that chains between enemies.",
+        "ability.starforged.arc_cannon.title": "Hold & release: Arc Bolt",
+        "ability.starforged.arc_cannon.text": "A short charge fires a beam of lightning that pierces every enemy in a line.",
         "ability.starforged.overcharge.title": "Hold: Overcharge",
         "ability.starforged.overcharge.text": "Hold for two seconds to fire a piercing beam that calls lightning along its path.",
         "ability.starforged.heavens_judgement.title": "Right-click: Heaven's Judgement",
@@ -727,11 +727,11 @@ def tags():
 
 BIOMES = {
     # name: (temperature, humidity, erosion, sky, fog, music)
-    "thunderhead_steppe": ((-1.0, 0.0), (-1.0, 0.0), (-1.0, 0.55), "#3a4460", "#5a6680", "minecraft:music.overworld.stony_peaks"),
-    "shardwind_cliffs": ((0.0, 1.0), (-1.0, 0.0), (-1.0, 0.55), "#343c56", "#4e5a78", "minecraft:music.overworld.jagged_peaks"),
-    "static_grove": ((-1.0, 0.0), (0.0, 1.0), (-1.0, 0.55), "#30405a", "#4a6078", "minecraft:music.overworld.old_growth_taiga"),
-    "stormgrave": ((0.0, 1.0), (0.0, 1.0), (-1.0, 0.55), "#24283a", "#3a4058", "minecraft:music.overworld.deep_dark"),
-    "endless_eye": ((-1.0, 1.0), (-1.0, 1.0), (0.55, 1.0), "#4a5a7a", "#6a7a98", "minecraft:music.overworld.frozen_peaks"),
+    "thunderhead_steppe": ((-1.0, 0.0), (-1.0, 0.0), (-1.0, 0.55), "#8a9ac0", "#9aa8c4", "minecraft:music.overworld.stony_peaks"),
+    "shardwind_cliffs": ((0.0, 1.0), (-1.0, 0.0), (-1.0, 0.55), "#7e8eb4", "#8e9cba", "minecraft:music.overworld.jagged_peaks"),
+    "static_grove": ((-1.0, 0.0), (0.0, 1.0), (-1.0, 0.55), "#7a96b8", "#8aa4c0", "minecraft:music.overworld.old_growth_taiga"),
+    "stormgrave": ((0.0, 1.0), (0.0, 1.0), (-1.0, 0.55), "#666e8c", "#767e9a", "minecraft:music.overworld.deep_dark"),
+    "endless_eye": ((-1.0, 1.0), (-1.0, 1.0), (0.55, 1.0), "#a0b0d0", "#b0bed6", "minecraft:music.overworld.frozen_peaks"),
 }
 
 
@@ -841,14 +841,14 @@ def worldgen():
 
     # Dimension type: a permanent storm under a low, bruised sky.
     write(f"{D}/dimension_type/stormreach.json", {
-        "ambient_light": 0.05,
+        "ambient_light": 0.15,
         "attributes": {
             "minecraft:audio/background_music": {"default": {"max_delay": 24000, "min_delay": 12000, "sound": "minecraft:music.overworld.stony_peaks"}},
             "minecraft:gameplay/can_start_raid": False,
             "minecraft:gameplay/monsters_burn": False,
             "minecraft:gameplay/sky_light_level": 15.0,
-            "minecraft:visual/sky_color": "#3a4460",
-            "minecraft:visual/fog_color": "#5a6680",
+            "minecraft:visual/sky_color": "#8a9ac0",
+            "minecraft:visual/fog_color": "#9aa8c4",
             "minecraft:visual/cloud_color": "#cc4a5068",
             "minecraft:visual/sun_angle": 345.0,
             "minecraft:visual/moon_angle": 120.0,

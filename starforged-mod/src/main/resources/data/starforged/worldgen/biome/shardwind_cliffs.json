@@ -7,8 +7,8 @@
         "sound": "minecraft:music.overworld.jagged_peaks"
       }
     },
-    "minecraft:visual/sky_color": "#343c56",
-    "minecraft:visual/fog_color": "#4e5a78",
+    "minecraft:visual/sky_color": "#7e8eb4",
+    "minecraft:visual/fog_color": "#8e9cba",
     "minecraft:visual/ambient_particles": [
       {
         "particle": {

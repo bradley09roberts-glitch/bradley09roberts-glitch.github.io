@@ -7,8 +7,8 @@
         "sound": "minecraft:music.overworld.old_growth_taiga"
       }
     },
-    "minecraft:visual/sky_color": "#30405a",
-    "minecraft:visual/fog_color": "#4a6078",
+    "minecraft:visual/sky_color": "#7a96b8",
+    "minecraft:visual/fog_color": "#8aa4c0",
     "minecraft:visual/ambient_particles": [
       {
         "particle": {

@@ -44,6 +44,9 @@ public final class StormreachStorms {
     private static final int SUPERCELL_LENGTH = 1200;
     private static final List<Supercell> SUPERCELLS = new ArrayList<>();
     private static long supercellCooldownUntil;
+    /** When each player arrived in the Stormreach: a Supercell never greets a traveller in their first few minutes. */
+    private static final java.util.Map<java.util.UUID, Long> ARRIVED = new java.util.HashMap<>();
+    private static final long SUPERCELL_GRACE = 6000;
 
     private StormreachStorms() {
     }
@@ -68,10 +71,14 @@ public final class StormreachStorms {
         }
         long time = level.getGameTime();
         RandomSource random = level.getRandom();
+        if (time % 200 == 0) {
+            ARRIVED.keySet().removeIf(id -> level.getPlayerByUUID(id) == null);
+        }
         for (ServerPlayer player : level.players()) {
             if (player.isSpectator()) {
                 continue;
             }
+            long arrived = ARRIVED.computeIfAbsent(player.getUUID(), id -> time);
             Holder<Biome> biome = level.getBiome(player.blockPosition());
             if (biome.is(SHARDWIND_CLIFFS)) {
                 crosswind(level, player, time);
@@ -86,7 +93,8 @@ public final class StormreachStorms {
                 level.playSound(null, player.getX(), player.getY(), player.getZ(), TempestSounds.STORM_WIND.get(), SoundSource.WEATHER, 0.6F,
                     0.9F + random.nextFloat() * 0.2F);
             }
-            if (time % 400 == 0 && time > supercellCooldownUntil && SUPERCELLS.isEmpty() && random.nextInt(60) == 0) {
+            if (time % 400 == 0 && time > supercellCooldownUntil && time - arrived > SUPERCELL_GRACE && SUPERCELLS.isEmpty()
+                && random.nextInt(60) == 0) {
                 startSupercell(level, player.position().add(random.nextInt(31) - 15, 0, random.nextInt(31) - 15));
             }
         }
@@ -160,9 +168,16 @@ public final class StormreachStorms {
                 cell.alphaSpawned = true;
                 ThunderjawAlphaEntity alpha = TempestEntities.THUNDERJAW_ALPHA.get().create(level, EntitySpawnReason.EVENT);
                 if (alpha != null) {
-                    BlockPos ground = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, BlockPos.containing(cell.center));
-                    if (ground.getY() <= level.getMinY() + 4) {
-                        ground = BlockPos.containing(cell.center);
+                    // Lands a little way off from the storm's eye, on solid ground if there is any.
+                    BlockPos ground = BlockPos.containing(cell.center);
+                    for (int attempt = 0; attempt < 8; attempt++) {
+                        double a = random.nextDouble() * Math.PI * 2;
+                        BlockPos probe = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                            BlockPos.containing(cell.center.add(Math.cos(a) * 12.0, 0, Math.sin(a) * 12.0)));
+                        if (probe.getY() > level.getMinY() + 4) {
+                            ground = probe;
+                            break;
+                        }
                     }
                     alpha.snapTo(ground.getX() + 0.5, ground.getY(), ground.getZ() + 0.5, random.nextFloat() * 360.0F, 0.0F);
                     level.addFreshEntity(alpha);
