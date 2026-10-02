@@ -18,7 +18,11 @@ public final class BossSummoning {
         /** Drops from the sky near the player (King Slime). */
         FALL,
         /** Flies in from off-screen (Eye of Cthulhu). */
-        OFFSCREEN
+        OFFSCREEN,
+        /** Bursts out of the ground below the player (Eater of Worlds). */
+        BURROW,
+        /** Appears close to the player (Brain of Cthulhu). */
+        NEARBY
     }
 
     private BossSummoning() {}
@@ -33,11 +37,11 @@ public final class BossSummoning {
     }
 
     /** @return the boss, or {@code null} if one is already alive or spawning failed */
-    public static TerrariaBoss summon(ServerLevel level, ServerPlayer player, EntityType<? extends TerrariaBoss> type, Arrival arrival) {
+    public static <T extends net.minecraft.world.entity.Mob> T summon(ServerLevel level, ServerPlayer player, EntityType<T> type, Arrival arrival) {
         if (isAlive(level, type)) {
             return null;
         }
-        TerrariaBoss boss = type.create(level, EntitySpawnReason.EVENT);
+        T boss = type.create(level, EntitySpawnReason.EVENT);
         if (boss == null) {
             return null;
         }
@@ -54,6 +58,14 @@ public final class BossSummoning {
                 // underground: appear on the player's level instead of on the surface far above
                 y = player.getY() + 3;
             }
+        } else if (arrival == Arrival.BURROW) {
+            x = player.getX() + Math.cos(angle) * 12;
+            z = player.getZ() + Math.sin(angle) * 12;
+            y = player.getY() - 18;
+        } else if (arrival == Arrival.NEARBY) {
+            x = player.getX() + Math.cos(angle) * 10;
+            z = player.getZ() + Math.sin(angle) * 10;
+            y = player.getY() + 3;
         } else {
             x = player.getX() + Math.cos(angle) * 32;
             z = player.getZ() + Math.sin(angle) * 32;

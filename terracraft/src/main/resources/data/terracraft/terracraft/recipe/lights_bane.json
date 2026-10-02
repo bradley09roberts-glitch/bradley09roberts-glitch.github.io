@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:lights_bane",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:demonite_bar",
+      "count": 10
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

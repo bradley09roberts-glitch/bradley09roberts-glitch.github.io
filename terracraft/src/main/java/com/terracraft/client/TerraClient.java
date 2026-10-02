@@ -37,6 +37,7 @@ public final class TerraClient {
         ItemTooltipEvent.BUS.addListener(ItemTooltips::onTooltip);
         ClientEvents.register();
         com.terracraft.menu.AccessoryMenu.clientSlotCount = () -> ClientState.stats().accessorySlots();
+        com.terracraft.progression.ProgressionManager.clientView = ClientState::progression;
     }
 
     private static void onClientSetup(FMLClientSetupEvent event) {

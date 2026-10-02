@@ -145,6 +145,9 @@ public final class CombatEvents {
         if (amount > 0.0F && target instanceof Player player) {
             // Taking damage restarts Terraria's natural life regeneration ramp.
             com.terracraft.player.LifeRegenManager.onHurt(TerraPlayerData.get(player));
+            if (TerraPlayerData.get(player).stats().has(com.terracraft.player.stats.Ability.PANIC)) {
+                player.addEffect(new net.minecraft.world.effect.MobEffectInstance(com.terracraft.registry.ModEffects.SWIFTNESS.getHolder().orElseThrow(), 160, 0, false, true, true));
+            }
         }
     }
 }

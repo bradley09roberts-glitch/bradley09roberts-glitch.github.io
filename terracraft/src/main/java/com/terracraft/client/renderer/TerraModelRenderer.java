@@ -29,13 +29,13 @@ import java.util.Map;
  * entity ({@code textures/entity/model/<id>.png}, alternate forms {@code <id>_<variant>.png}), a scale that
  * fits the model to the hitbox, and a Terraria-style health bar while damaged.
  */
-public class TerraModelRenderer<T extends LivingEntity> extends LivingEntityRenderer<T, TerraRenderState, EntityModel<TerraRenderState>> {
+public class TerraModelRenderer<T extends LivingEntity> extends LivingEntityRenderer<T, TerraRenderState, EntityModel<? super TerraRenderState>> {
     private static final Identifier WHITE = TerraCraft.id("textures/entity/white.png");
     private final float modelScale;
     private final boolean armsForward;
     private final Map<String, Identifier> textures = new HashMap<>();
 
-    public TerraModelRenderer(EntityRendererProvider.Context context, EntityModel<TerraRenderState> model, float modelScale, float shadow,
+    public TerraModelRenderer(EntityRendererProvider.Context context, EntityModel<? super TerraRenderState> model, float modelScale, float shadow,
                               boolean armsForward) {
         super(context, model, shadow);
         this.modelScale = modelScale;

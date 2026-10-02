@@ -1,7 +1,6 @@
 package com.terracraft.item.consumable;
 
 import com.terracraft.entity.boss.BossSummoning;
-import com.terracraft.entity.boss.TerrariaBoss;
 import com.terracraft.item.TerraItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -18,16 +17,24 @@ import java.util.function.Supplier;
 
 /** Slime Crown, Suspicious Looking Eye...: consumed to summon a boss when its conditions are met. */
 public class BossSummonItem extends TerraItem {
-    private final Supplier<? extends EntityType<? extends TerrariaBoss>> boss;
+    private final Supplier<? extends EntityType<? extends net.minecraft.world.entity.Mob>> boss;
     private final BossSummoning.Arrival arrival;
     private final boolean nightOnly;
+    private final java.util.function.Predicate<ServerPlayer> requirement;
 
-    public BossSummonItem(Properties properties, Supplier<? extends EntityType<? extends TerrariaBoss>> boss, BossSummoning.Arrival arrival,
+    public BossSummonItem(Properties properties, Supplier<? extends EntityType<? extends net.minecraft.world.entity.Mob>> boss, BossSummoning.Arrival arrival,
                           boolean nightOnly) {
+        this(properties, boss, arrival, nightOnly, player -> true);
+    }
+
+    /** @param requirement extra condition (e.g. standing in the Corruption) */
+    public BossSummonItem(Properties properties, Supplier<? extends EntityType<? extends net.minecraft.world.entity.Mob>> boss, BossSummoning.Arrival arrival,
+                          boolean nightOnly, java.util.function.Predicate<ServerPlayer> requirement) {
         super(properties);
         this.boss = boss;
         this.arrival = arrival;
         this.nightOnly = nightOnly;
+        this.requirement = requirement;
     }
 
     @Override
@@ -35,7 +42,7 @@ public class BossSummonItem extends TerraItem {
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return InteractionResult.SUCCESS;
         }
-        if (!BossSummoning.inOverworld(serverPlayer) || nightOnly && !serverPlayer.level().isDarkOutside()) {
+        if (!BossSummoning.inOverworld(serverPlayer) || nightOnly && !serverPlayer.level().isDarkOutside() || !requirement.test(serverPlayer)) {
             serverPlayer.sendOverlayMessage(Component.translatable("message.terracraft.boss.nothing_happens").withStyle(ChatFormatting.GRAY));
             return InteractionResult.FAIL;
         }

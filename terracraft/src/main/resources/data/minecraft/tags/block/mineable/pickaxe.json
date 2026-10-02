@@ -12,6 +12,10 @@
     "terracraft:deepslate_platinum_ore",
     "terracraft:iron_anvil",
     "terracraft:lead_anvil",
-    "terracraft:life_crystal_block"
+    "terracraft:life_crystal_block",
+    "terracraft:ebonstone",
+    "terracraft:crimstone",
+    "terracraft:demonite_ore",
+    "terracraft:crimtane_ore"
   ]
 }

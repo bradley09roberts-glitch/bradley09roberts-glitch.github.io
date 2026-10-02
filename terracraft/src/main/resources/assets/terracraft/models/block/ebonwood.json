@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "terracraft:block/ebonwood_top",
+    "side": "terracraft:block/ebonwood"
+  }
+}

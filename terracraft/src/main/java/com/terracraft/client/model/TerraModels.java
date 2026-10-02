@@ -13,6 +13,9 @@ public final class TerraModels {
     public static final ModelLayerLocation SKELETON = layer("skeleton");
     public static final ModelLayerLocation EYE = layer("eye");
     public static final ModelLayerLocation BAT = layer("bat");
+    public static final ModelLayerLocation WORM = layer("worm");
+    public static final ModelLayerLocation MAW = layer("maw");
+    public static final ModelLayerLocation BRAIN = layer("brain");
 
     private TerraModels() {}
 
@@ -28,5 +31,8 @@ public final class TerraModels {
         event.registerLayerDefinition(SKELETON, TerraHumanoidModel::createSkeleton);
         event.registerLayerDefinition(EYE, EyeModel::createEye);
         event.registerLayerDefinition(BAT, BatModel3D::createBat);
+        event.registerLayerDefinition(WORM, WormModel::createWorm);
+        event.registerLayerDefinition(MAW, MawModel::createMaw);
+        event.registerLayerDefinition(BRAIN, BrainModel::createBrain);
     }
 }

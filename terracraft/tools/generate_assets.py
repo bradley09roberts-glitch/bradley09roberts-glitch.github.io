@@ -22,6 +22,7 @@ TEX = os.path.join(ASSETS, 'textures')
 METAL = {
     'copper': '#C8783C', 'tin': '#B4A88C', 'iron': '#A0A0A8', 'lead': '#5A6478', 'silver': '#D2D7DC',
     'tungsten': '#8CA088', 'gold': '#E6BE3C', 'platinum': '#BED2E6', 'wood': '#8C5A32',
+    'demonite': '#7A5CC0', 'crimtane': '#C8404A', 'shadow': '#4A3A70', 'crimson': '#A8343C',
 }
 WOOD = palette('#7A4E2A')
 STONE = palette('#7C7C7C')
@@ -485,9 +486,71 @@ def draw_housing_query(c):
 item('housing_query', draw_housing_query)
 item('slime_crown', draw_crown)
 item('suspicious_looking_eye', draw_eye_item)
-item('demonite_ore', lambda c: draw_raw(c, palette('#6A4FA8'), 'demonite'))
+def draw_chunk(c):
+    p = palette('#7A8A4A')
+    c.polygon([(3, 5), (9, 3), (13, 7), (11, 12), (5, 13), (2, 9)], p[2])
+    rnd = random.Random(5)
+    for _ in range(8):
+        c.set(rnd.randint(4, 11), rnd.randint(5, 11), rnd.choice([p[1], hexc('#8A3A4A')]))
+    c.light()
+    c.outline()
+
+
+def draw_vertebra(c):
+    bone = palette('#E8D8C0')
+    c.rect(5, 5, 10, 10, bone[2])
+    c.rect(2, 7, 13, 8, bone[2])
+    c.rect(7, 2, 8, 13, bone[2])
+    c.circle(7.5, 7.5, 1, hexc('#B03030'))
+    c.light()
+    c.outline()
+
+
+def draw_scale(c, color):
+    p = palette(color)
+    c.polygon([(8, 2), (13, 7), (8, 14), (3, 7)], p[2])
+    c.line(8, 3, 8, 13, p[3])
+    c.light()
+    c.outline()
+
+
+def draw_powder(c, color):
+    p = palette(color)
+    c.polygon([(3, 12), (8, 7), (13, 12)], p[2])
+    for x, y in ((6, 10), (9, 9), (8, 11), (11, 11), (5, 12)):
+        c.set(x, y, p[4])
+    c.set(7, 5, p[3]); c.set(10, 4, p[3]); c.set(5, 6, p[3])
+    c.outline()
+
+
+def draw_worm_food(c):
+    p = palette('#8A7A5A')
+    for i in range(5):
+        c.circle(3 + i * 2.2, 9 - (i % 2), 2, p[2] if i % 2 else p[3])
+    c.set(12, 7, (20, 10, 10, 255))
+    c.light()
+    c.outline()
+
+
+def draw_spine(c):
+    bone = palette('#E0C8B0')
+    for i in range(5):
+        y = 2 + i * 2.5
+        c.rect(5, int(y), 10, int(y) + 1, bone[2])
+        c.set(4, int(y), hexc('#B03030')); c.set(11, int(y), hexc('#B03030'))
+    c.line(7, 2, 7, 14, hexc('#C04040'))
+    c.outline()
+
+
+item('shadow_scale', lambda c: draw_scale(c, '#5A4A8A'))
+item('tissue_sample', lambda c: draw_scale(c, '#C05050'))
+item('vile_powder', lambda c: draw_powder(c, '#9A7AC8'))
+item('vicious_powder', lambda c: draw_powder(c, '#D86060'))
+item('worm_food', draw_worm_food)
+item('bloody_spine', draw_spine)
+item('rotten_chunk', draw_chunk)
+item('vertebra', draw_vertebra)
 item('demonite_bar', lambda c: draw_bar(c, palette('#7A5CC0')))
-item('crimtane_ore', lambda c: draw_raw(c, palette('#B8323C'), 'crimtane'))
 item('crimtane_bar', lambda c: draw_bar(c, palette('#C8404A')))
 
 POTIONS = {
@@ -508,7 +571,28 @@ for s in ARMOR_SETS:
     item(f'{s}_helmet', lambda c, col=col: draw_helmet(c, col))
     item(f'{s}_{"breastplate" if s == "wood" else "chainmail"}', lambda c, col=col: draw_chest(c, col))
     item(f'{s}_greaves', lambda c, col=col: draw_legs(c, col))
+# Demonite / Crimtane gear
+item('lights_bane', lambda c: draw_sword(c, metal('demonite')), True)
+item('blood_butcherer', lambda c: draw_sword(c, metal('crimtane')), True)
+item('demon_bow', lambda c: draw_bow(c, metal('demonite')), True)
+item('tendon_bow', lambda c: draw_bow(c, metal('crimtane')), True)
+item('musket', lambda c: draw_gun(c, palette('#6A4A2A')), False)
+item('the_undertaker', lambda c: draw_gun(c, palette('#8A2A2A')), False)
+item('vilethorn', lambda c: draw_wand(c, '#6AA040'), True)
+item('nightmare_pickaxe', lambda c: draw_pickaxe(c, metal('demonite')), True)
+item('deathbringer_pickaxe', lambda c: draw_pickaxe(c, metal('crimtane')), True)
+item('war_axe_of_the_night', lambda c: draw_axe(c, metal('demonite')), True)
+item('blood_lust_cluster', lambda c: draw_axe(c, metal('crimtane')), True)
+item('the_breaker', lambda c: draw_hammer(c, metal('demonite')), True)
+item('flesh_grinder', lambda c: draw_hammer(c, metal('crimtane')), True)
+EVIL_ARMOR = ['shadow', 'crimson']
+for s in EVIL_ARMOR:
+    col = metal(s)
+    item(f'{s}_helmet', lambda c, col=col: draw_helmet(c, col))
+    item(f'{s}_scalemail', lambda c, col=col: draw_chest(c, col))
+    item(f'{s}_greaves', lambda c, col=col: draw_legs(c, col))
 ACCESSORIES = {
+    'panic_necklace': lambda c: draw_charm(c, '#C03040'),
     'hermes_boots': lambda c: draw_boots(c, '#C8A050', wings=True),
     'cloud_in_a_bottle': lambda c: draw_bottle(c, '#F0F0F0'),
     'shiny_red_balloon': draw_balloon,
@@ -545,7 +629,7 @@ def stone_base(seed, deep=False):
 
 
 def ore_block(name, deep):
-    c = stone_base(hash(name) & 0xFFFF, deep)
+    c = stone_base(sum(map(ord, name)) * 31, deep)
     p = metal(name)
     rnd = random.Random(name + str(deep))
     for _ in range(6):
@@ -591,6 +675,135 @@ def life_crystal_block():
 
 BLOCK_TEXTURES['life_crystal_block'] = life_crystal_block
 
+# --- Corruption / Crimson blocks ---
+EVIL = {'corruption': {'stone': '#5A4A78', 'grass': '#7E5BA8', 'ore': '#8A6AD8', 'orb': '#6A3AA8'},
+        'crimson': {'stone': '#7A3A3A', 'grass': '#C03838', 'ore': '#E04050', 'orb': '#C02838'}}
+
+
+def evil_stone(kind, seed):
+    p = palette(EVIL[kind]['stone'])
+    c = Canvas()
+    c.noise([p[2], p[2], p[2], p[1], p[3]], seed)
+    rnd = random.Random(seed + 1)
+    for _ in range(5):
+        x, y = rnd.randint(0, 14), rnd.randint(0, 14)
+        c.set(x, y, p[0]); c.set(x + 1, y, p[1])
+    return c
+
+
+def evil_ore(kind, seed):
+    c = evil_stone(kind, seed)
+    p = palette(EVIL[kind]['ore'])
+    rnd = random.Random(seed + 7)
+    for _ in range(6):
+        x, y = rnd.randint(1, 13), rnd.randint(1, 13)
+        c.set(x, y, p[3]); c.set(x + 1, y, p[4]); c.set(x, y + 1, p[2]); c.set(x + 1, y + 1, p[3])
+    return c
+
+
+def evil_grass_top(kind, seed):
+    p = palette(EVIL[kind]['grass'])
+    c = Canvas()
+    c.noise([p[2], p[2], p[1], p[3]], seed)
+    return c
+
+
+def evil_grass_side(kind, seed):
+    c = Canvas()
+    dirt = palette('#79553A')
+    c.noise([dirt[2], dirt[2], dirt[1], dirt[3]], seed)
+    p = palette(EVIL[kind]['grass'])
+    rnd = random.Random(seed)
+    for x in range(16):
+        depth = 3 + rnd.randint(0, 2)
+        for y in range(depth):
+            c.set(x, y, rnd.choice([p[2], p[1], p[3]]))
+    return c
+
+
+def orb_texture(kind, seed):
+    p = palette(EVIL[kind]['orb'])
+    c = Canvas()
+    c.noise([p[2], p[2], p[3], p[1]], seed)
+    rnd = random.Random(seed)
+    for _ in range(10):
+        c.set(rnd.randint(0, 15), rnd.randint(0, 15), p[4])
+    return c
+
+
+def altar_texture(kind, seed):
+    c = evil_stone(kind, seed)
+    p = palette(EVIL[kind]['ore'])
+    for x in range(0, 16, 3):
+        c.set(x, 2, p[3]); c.set(x + 1, 13, p[3])
+    return c
+
+
+def mushroom_texture(kind):
+    c = Canvas()
+    cap = palette(EVIL[kind]['grass'])
+    stem = palette('#D8CCB8')
+    c.rect(7, 8, 8, 15, stem[2])
+    c.circle(7.5, 6, 4, cap[2])
+    c.rect(3, 7, 12, 8, (0, 0, 0, 0))
+    c.rect(4, 7, 11, 7, cap[1])
+    c.set(6, 4, cap[4]); c.set(9, 5, cap[4])
+    c.outline()
+    return c
+
+
+def bark(color, seed):
+    p = palette(color)
+    c = Canvas()
+    c.noise([p[2], p[2], p[1]], seed)
+    for x in (2, 6, 11, 14):
+        c.line(x, 0, x, 15, p[1])
+    return c
+
+
+def log_top(color, seed):
+    p = palette(color)
+    c = Canvas()
+    c.rect(0, 0, 15, 15, p[1])
+    c.circle(7.5, 7.5, 6, p[3])
+    c.ring(7.5, 7.5, 4, p[2], 0.8)
+    c.ring(7.5, 7.5, 2, p[2], 0.8)
+    return c
+
+
+def evil_leaves(color, seed):
+    p = palette(color)
+    c = Canvas()
+    rnd = random.Random(seed)
+    for x in range(16):
+        for y in range(16):
+            if rnd.random() < 0.8:
+                c.set(x, y, rnd.choice([p[2], p[1], p[3]]))
+    return c
+
+
+BLOCK_TEXTURES['ebonwood'] = lambda: bark('#5A4A6A', 401)
+BLOCK_TEXTURES['ebonwood_top'] = lambda: log_top('#7A6A8A', 402)
+BLOCK_TEXTURES['shadewood'] = lambda: bark('#6A3A3A', 403)
+BLOCK_TEXTURES['shadewood_top'] = lambda: log_top('#8A5050', 404)
+BLOCK_TEXTURES['ebonwood_leaves'] = lambda: evil_leaves('#7A5AA0', 405)
+BLOCK_TEXTURES['shadewood_leaves'] = lambda: evil_leaves('#B03838', 406)
+
+for _k, _prefix in (('corruption', 'ebon'), ('crimson', 'crim')):
+    _stone = 'ebonstone' if _k == 'corruption' else 'crimstone'
+    _grass = 'corrupt_grass' if _k == 'corruption' else 'crimson_grass'
+    _ore = 'demonite_ore' if _k == 'corruption' else 'crimtane_ore'
+    _orb = 'shadow_orb' if _k == 'corruption' else 'crimson_heart'
+    _altar = 'demon_altar' if _k == 'corruption' else 'crimson_altar'
+    _mush = 'vile_mushroom' if _k == 'corruption' else 'vicious_mushroom'
+    BLOCK_TEXTURES[_stone] = lambda k=_k: evil_stone(k, 301)
+    BLOCK_TEXTURES[_ore] = lambda k=_k: evil_ore(k, 302)
+    BLOCK_TEXTURES[_grass + '_top'] = lambda k=_k: evil_grass_top(k, 303)
+    BLOCK_TEXTURES[_grass + '_side'] = lambda k=_k: evil_grass_side(k, 304)
+    BLOCK_TEXTURES[_orb] = lambda k=_k: orb_texture(k, 305)
+    BLOCK_TEXTURES[_altar] = lambda k=_k: altar_texture(k, 306)
+    BLOCK_TEXTURES[_mush] = lambda k=_k: mushroom_texture(k)
+
 # ----------------------------------------------------------------------------------------- projectiles (drawn pointing +x)
 PROJECTILES = {}
 
@@ -625,6 +838,17 @@ proj('wooden_boomerang', draw_boomerang)
 proj('spark', lambda c: p_orb(c, '#FF8C28', 2))
 proj('amethyst_bolt', lambda c: p_orb(c, '#B464FF', 3))
 proj('magic_missile', lambda c: p_orb(c, '#64A0FF', 4))
+
+
+def p_vilethorn(c):
+    p = palette('#6AA040')
+    c.line(1, 8, 14, 8, p[2], 2)
+    for x in range(3, 14, 3):
+        c.set(x, 6, p[3]); c.set(x + 1, 11, p[1])
+    c.outline()
+
+
+proj('vilethorn', p_vilethorn)
 
 # ----------------------------------------------------------------------------------------- HUD sprites (9x9)
 HUD = {}
@@ -740,7 +964,7 @@ def item_assets(name, handheld):
                 'textures': {'layer0': f'terracraft:item/{name}'}})
 
 
-BLOCKS_CUBE = ['tin_ore', 'deepslate_tin_ore', 'lead_ore', 'deepslate_lead_ore', 'silver_ore', 'deepslate_silver_ore',
+BLOCKS_CUBE = ['ebonstone', 'crimstone', 'demonite_ore', 'crimtane_ore', 'tin_ore', 'deepslate_tin_ore', 'lead_ore', 'deepslate_lead_ore', 'silver_ore', 'deepslate_silver_ore',
                'tungsten_ore', 'deepslate_tungsten_ore', 'platinum_ore', 'deepslate_platinum_ore']
 
 
@@ -773,13 +997,56 @@ def block_assets():
     for name in ['work_bench', 'iron_anvil', 'lead_anvil']:
         write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': {'': {'model': f'terracraft:block/{name}'}}})
         write_json(os.path.join(ASSETS, 'items', name + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{name}'}})
+    for log in ('ebonwood', 'shadewood'):
+        write_json(os.path.join(ASSETS, 'models/block', log + '.json'), {'parent': 'minecraft:block/cube_column',
+                   'textures': {'end': f'terracraft:block/{log}_top', 'side': f'terracraft:block/{log}'}})
+        write_json(os.path.join(ASSETS, 'models/block', log + '_horizontal.json'), {'parent': 'minecraft:block/cube_column_horizontal',
+                   'textures': {'end': f'terracraft:block/{log}_top', 'side': f'terracraft:block/{log}'}})
+        write_json(os.path.join(ASSETS, 'blockstates', log + '.json'), {'variants': {
+            'axis=y': {'model': f'terracraft:block/{log}'},
+            'axis=z': {'model': f'terracraft:block/{log}_horizontal', 'x': 90},
+            'axis=x': {'model': f'terracraft:block/{log}_horizontal', 'x': 90, 'y': 90}}})
+        write_json(os.path.join(ASSETS, 'items', log + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{log}'}})
+        leaves = log + '_leaves'
+        write_json(os.path.join(ASSETS, 'models/block', leaves + '.json'), {'parent': 'minecraft:block/cube_all', 'render_type': 'minecraft:cutout_mipped',
+                   'textures': {'all': f'terracraft:block/{leaves}'}})
+        write_json(os.path.join(ASSETS, 'blockstates', leaves + '.json'), {'variants': {'': {'model': f'terracraft:block/{leaves}'}}})
+        write_json(os.path.join(ASSETS, 'items', leaves + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{leaves}'}})
+    for grass in ('corrupt_grass', 'crimson_grass'):
+        write_json(os.path.join(ASSETS, 'blockstates', grass + '.json'), {'variants': {'': {'model': f'terracraft:block/{grass}'}}})
+        write_json(os.path.join(ASSETS, 'models/block', grass + '.json'), {'parent': 'minecraft:block/cube_bottom_top', 'textures': {
+            'top': f'terracraft:block/{grass}_top', 'side': f'terracraft:block/{grass}_side', 'bottom': 'minecraft:block/dirt'}})
+        write_json(os.path.join(ASSETS, 'items', grass + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{grass}'}})
+    for orb in ('shadow_orb', 'crimson_heart'):
+        write_json(os.path.join(ASSETS, 'blockstates', orb + '.json'), {'variants': {'': {'model': f'terracraft:block/{orb}'}}})
+        write_json(os.path.join(ASSETS, 'models/block', orb + '.json'), {
+            'parent': 'minecraft:block/block', 'textures': {'particle': f'terracraft:block/{orb}', 'all': f'terracraft:block/{orb}'},
+            'elements': [{'from': [3, 3, 3], 'to': [13, 13, 13], 'faces': {f: {'texture': '#all'} for f in ['north', 'south', 'east', 'west', 'up', 'down']}},
+                         {'from': [2, 5, 5], 'to': [14, 11, 11], 'faces': {f: {'texture': '#all'} for f in ['north', 'south', 'east', 'west', 'up', 'down']}},
+                         {'from': [5, 2, 5], 'to': [11, 14, 11], 'faces': {f: {'texture': '#all'} for f in ['north', 'south', 'east', 'west', 'up', 'down']}}]})
+        write_json(os.path.join(ASSETS, 'items', orb + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{orb}'}})
+    for altar in ('demon_altar', 'crimson_altar'):
+        write_json(os.path.join(ASSETS, 'blockstates', altar + '.json'), {'variants': {'': {'model': f'terracraft:block/{altar}'}}})
+        write_json(os.path.join(ASSETS, 'models/block', altar + '.json'), {
+            'parent': 'minecraft:block/block', 'textures': {'particle': f'terracraft:block/{altar}', 'all': f'terracraft:block/{altar}'},
+            'elements': [{'from': [0, 0, 2], 'to': [16, 6, 14], 'faces': {f: {'texture': '#all'} for f in ['north', 'south', 'east', 'west', 'up', 'down']}},
+                         {'from': [2, 6, 3], 'to': [14, 11, 13], 'faces': {f: {'texture': '#all'} for f in ['north', 'south', 'east', 'west', 'up']}},
+                         {'from': [1, 11, 4], 'to': [3, 15, 6], 'faces': {f: {'texture': '#all'} for f in ['north', 'south', 'east', 'west', 'up']}},
+                         {'from': [13, 11, 10], 'to': [15, 15, 12], 'faces': {f: {'texture': '#all'} for f in ['north', 'south', 'east', 'west', 'up']}}]})
+        write_json(os.path.join(ASSETS, 'items', altar + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{altar}'}})
+    for mush in ('vile_mushroom', 'vicious_mushroom'):
+        write_json(os.path.join(ASSETS, 'blockstates', mush + '.json'), {'variants': {'': {'model': f'terracraft:block/{mush}'}}})
+        write_json(os.path.join(ASSETS, 'models/block', mush + '.json'),
+                   {'parent': 'minecraft:block/cross', 'render_type': 'minecraft:cutout', 'textures': {'cross': f'terracraft:block/{mush}'}})
+        write_json(os.path.join(ASSETS, 'items', mush + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:item/{mush}'}})
+        write_json(os.path.join(ASSETS, 'models/item', mush + '.json'), {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'terracraft:block/{mush}'}})
     write_json(os.path.join(ASSETS, 'blockstates/life_crystal_block.json'), {'variants': {'': {'model': 'terracraft:block/life_crystal_block'}}})
     write_json(os.path.join(ASSETS, 'models/block/life_crystal_block.json'),
                {'parent': 'minecraft:block/cross', 'render_type': 'minecraft:cutout', 'textures': {'cross': 'terracraft:block/life_crystal_block'}})
 
 
 def armor_assets():
-    for s in ARMOR_SETS:
+    for s in ARMOR_SETS + EVIL_ARMOR:
         color = METAL[s] if s != 'wood' else '#A0703C'
         armor_layer(color, False).save(os.path.join(TEX, f'entity/equipment/humanoid/{s}.png'))
         armor_layer(color, True).save(os.path.join(TEX, f'entity/equipment/humanoid_leggings/{s}.png'))
@@ -954,6 +1221,70 @@ def servant_frame(c, frame):
 
 
 mob_sprite('servant_of_cthulhu', 14, 10, 4, servant_frame, frame_time=3, rotate=True)
+
+
+def maw_frame(c, frame, color):
+    p = palette(color)
+    c.circle(5, 6, 4, p[2])
+    open_ = 1 + frame % 2
+    c.rect(0, 6 - open_, 3, 6 + open_, (40, 10, 15, 255))
+    for i, x in enumerate(range(9, 15)):
+        c.set(x, 6 + (1 if (i + frame) % 2 else -1) * (i // 3), p[1])
+        c.set(x, 6, p[2])
+    c.light(1.2, 0.8)
+    c.outline()
+
+
+mob_sprite('eater_of_souls', 16, 12, 2, lambda c, f: maw_frame(c, f, '#6A6A4A'), frame_time=4, rotate=True)
+mob_sprite('crimera', 16, 12, 2, lambda c, f: maw_frame(c, f, '#A83A3A'), frame_time=4, rotate=True)
+mob_sprite('face_monster', 16, 24, 3, lambda c, f: humanoid_frame(c, f, '#B04848', '#8A2828', '#5A1818', (250, 230, 80, 255)),
+           frame_time=6, animate='move')
+
+
+def crawler_frame(c, frame):
+    p = palette('#8A2020')
+    c.circle(8, 6, 3, p[2])
+    c.circle(4, 6, 2, p[1])
+    c.set(3, 5, (250, 220, 60, 255))
+    for i, x in enumerate((6, 8, 10, 12)):
+        lift = (frame + i) % 2
+        c.line(x, 8, x - 1, 11 - lift, p[0])
+    c.outline()
+
+
+mob_sprite('blood_crawler', 16, 12, 2, crawler_frame, frame_time=4, animate='move')
+
+
+def worm_frame(c, frame, color, part):
+    p = palette(color)
+    c.circle(6, 6, 5 if part != 'tail' else 4, p[2])
+    if part == 'head':
+        c.rect(0, 5, 2, 7, (40, 10, 15, 255))
+    for x in (3, 6, 9):
+        c.line(x, 2, x, 10, p[1])
+    c.outline()
+
+
+mob_sprite('creeper', 14, 10, 4, servant_frame, frame_time=3, rotate=True)
+
+
+def brain_frame(c, frame, exposed=False):
+    p = palette('#E890A0' if not exposed else '#C85060')
+    c.circle(10, 8, 7, p[2])
+    c.line(10, 2, 10, 14, p[1])
+    for i in range(4):
+        c.line(5 + i * 3, 14, 5 + i * 3 + (frame % 2), 19, p[1])
+    if exposed:
+        c.circle(6, 8, 2, (250, 240, 200, 255)); c.set(5, 8, (20, 10, 10, 255))
+    c.light(1.2, 0.8)
+    c.outline()
+
+
+mob_sprite('brain_of_cthulhu', 20, 20, 2, brain_frame, frame_time=8)
+mob_sprite('brain_of_cthulhu_exposed', 20, 20, 2, lambda c, f: brain_frame(c, f, True), frame_time=6)
+for _w, _col in (('devourer', '#6A5A7A'), ('giant_worm', '#B08070'), ('eater_of_worlds', '#5A4A78')):
+    for _part in ('head', 'body', 'tail'):
+        mob_sprite(f'{_w}_{_part}', 12, 12, 1, lambda c, f, col=_col, part=_part: worm_frame(c, f, col, part), rotate=True)
 
 
 def npc_frame(c, frame, skin, hair, shirt, pants, hat=None, beard=None, cross=False):
@@ -1213,6 +1544,92 @@ def bat_texture(c):
 model_texture('cave_bat', 64, 32, bat_texture)
 
 
+def worm_texture(color, plate):
+    def paint(c):
+        body = hexc(color)
+        pl = hexc(plate)
+        paint_box(c, 0, 0, 10, 10, 12, body, 0.15, 80, top=pl)
+        x, y, w, h = box_faces(0, 0, 10, 10, 12)['front']
+        fill(c, (x + 2, y + 3, 6, 4), (40, 10, 15, 255))                  # mouth
+        for tx in range(x + 2, x + 8, 2):
+            c.set(tx, y + 3, (235, 225, 200, 255))
+        paint_box(c, 48, 0, 1, 2, 5, hexc('#E8DCC0'), 0.1)
+        paint_box(c, 0, 24, 10, 10, 10, body, 0.15, 81, top=pl)
+        for face in ('right', 'left', 'top', 'bottom'):
+            fx, fy, fw, fh = box_faces(0, 24, 10, 10, 10)[face]
+            for i in range(0, fw, 4):
+                fill(c, (fx + i, fy, 1, fh), shade(body, 0.6))
+        paint_box(c, 0, 44, 8, 8, 10, shade(body, 0.9), 0.15, 82, top=pl)
+        paint_box(c, 40, 44, 4, 4, 4, shade(body, 0.8), 0.1, 83)
+    return paint
+
+
+for _part in ('head', 'body', 'tail'):
+    model_texture(f'devourer_{_part}', 64, 64, worm_texture('#6A5A7A', '#8A7A9A'))
+    model_texture(f'giant_worm_{_part}', 64, 64, worm_texture('#B08070', '#C89888'))
+
+
+def maw_texture(color, accent):
+    def paint(c):
+        body = hexc(color)
+        paint_box(c, 0, 0, 8, 8, 8, body, 0.18, 90)
+        x, y, w, h = box_faces(0, 0, 8, 8, 8)['front']
+        fill(c, (x + 1, y + 1, 6, 6), (35, 8, 12, 255))
+        fill(c, (x + 2, y + 2, 4, 4), hexc(accent))
+        paint_box(c, 0, 16, 6, 6, 6, shade(body, 0.85), 0.18, 91)
+        paint_box(c, 24, 16, 4, 4, 5, shade(body, 0.7), 0.18, 92)
+        paint_box(c, 40, 0, 1, 1, 5, hexc('#E8DCC0'), 0.1)
+    return paint
+
+
+for _part in ('head', 'body', 'tail'):
+    model_texture(f'eater_of_worlds_{_part}', 64, 64, worm_texture('#5A4A78', '#7E5BA8'))
+model_texture('creeper', 64, 64, eye_texture('#C02838', sclera='#E8B8B0'))
+
+
+def brain_texture(exposed=False):
+    def paint(c):
+        pink = hexc('#E890A0' if not exposed else '#C85060')
+        dark = shade(pink, 0.7)
+        for u, v in ((0, 0), (0, 26)):
+            paint_box(c, u, v, 7, 10, 16, pink, 0.12, 110 + v)
+            for face, (x, y, w, h) in box_faces(u, v, 7, 10, 16).items():
+                rnd = random.Random(x * 7 + y)
+                for _ in range(w * h // 4):
+                    px, py = x + rnd.randint(0, w - 1), y + rnd.randint(0, h - 1)
+                    c.set(px, py, dark)
+        if exposed:
+            x, y, w, h = box_faces(0, 0, 7, 10, 16)['front']
+            fill(c, (x + 2, y + 3, 4, 4), (250, 240, 200, 255))
+            fill(c, (x + 3, y + 4, 2, 2), (20, 10, 10, 255))
+        paint_box(c, 46, 0, 4, 5, 4, hexc('#C86070'), 0.1, 120)
+        paint_box(c, 46, 10, 1, 9, 1, hexc('#A04050'), 0.1, 121)
+    return paint
+
+
+model_texture('brain_of_cthulhu', 64, 64, brain_texture())
+model_texture('brain_of_cthulhu_exposed', 64, 64, brain_texture(True))
+model_texture('eater_of_souls', 64, 32, maw_texture('#6A6A4A', '#7A1A2A'))
+model_texture('crimera', 64, 32, maw_texture('#A83A3A', '#F0D060'))
+model_texture('face_monster', 64, 64, skin_texture('#B04848', '#6A1818', '#8A2828', '#5A1818', eyes=(250, 230, 80, 255), torn=True))
+
+
+def spider_texture(color):
+    def paint(c):
+        body = hexc(color)
+        paint_box(c, 32, 4, 8, 8, 8, body, 0.2, 95)
+        x, y, w, h = box_faces(32, 4, 8, 8, 8)['front']
+        for ex, ey in ((1, 2), (5, 2), (2, 4), (4, 4)):
+            c.set(x + ex, y + ey, (250, 220, 60, 255))
+        paint_box(c, 0, 0, 6, 6, 6, shade(body, 0.8), 0.2, 96)
+        paint_box(c, 0, 12, 10, 8, 12, body, 0.2, 97)
+        paint_box(c, 18, 0, 16, 2, 2, shade(body, 0.7), 0.2, 98)
+    return paint
+
+
+model_texture('blood_crawler', 64, 32, spider_texture('#8A2020'))
+
+
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
     java_root = os.path.join(ROOT, 'src/main/java/com/terracraft/registry/content')
@@ -1223,7 +1640,9 @@ def check_registered_items():
             continue
         with open(os.path.join(java_root, fname)) as f:
             ids.update(pattern.findall(f.read()))
-    known = set(ITEMS) | set(BLOCKS_CUBE) | {'work_bench', 'iron_anvil', 'lead_anvil', 'life_crystal_block'}
+    known = set(ITEMS) | set(BLOCKS_CUBE) | {'work_bench', 'iron_anvil', 'lead_anvil', 'life_crystal_block', 'corrupt_grass', 'crimson_grass',
+                                             'shadow_orb', 'crimson_heart', 'demon_altar', 'crimson_altar', 'vile_mushroom', 'vicious_mushroom',
+                                             'ebonwood', 'shadewood', 'ebonwood_leaves', 'shadewood_leaves'}
     missing = sorted(i for i in ids if i not in known and not i.endswith("_"))
     if missing:
         print('ERROR: items without generated assets:', missing)

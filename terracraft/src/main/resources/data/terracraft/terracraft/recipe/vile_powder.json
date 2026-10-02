@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:vile_powder",
+    "count": 5
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:vile_mushroom",
+      "count": 1
+    }
+  ],
+  "stations": [
+    "terracraft:alchemy"
+  ],
+  "category": "materials"
+}

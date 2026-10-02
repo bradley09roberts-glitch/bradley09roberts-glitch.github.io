@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:crimson_scalemail",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:crimtane_bar",
+      "count": 25
+    },
+    {
+      "item": "terracraft:tissue_sample",
+      "count": 20
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

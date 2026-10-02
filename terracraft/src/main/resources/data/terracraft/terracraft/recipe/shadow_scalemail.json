@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:shadow_scalemail",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:demonite_bar",
+      "count": 25
+    },
+    {
+      "item": "terracraft:shadow_scale",
+      "count": 20
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

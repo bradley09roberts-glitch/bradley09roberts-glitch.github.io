@@ -10,6 +10,9 @@
       "exclude_biomes": [
         "#minecraft:is_ocean",
         "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     },
     {
@@ -22,6 +25,9 @@
       "exclude_biomes": [
         "#minecraft:is_ocean",
         "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     },
     {
@@ -34,6 +40,9 @@
       "exclude_biomes": [
         "#minecraft:is_ocean",
         "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     }
   ]

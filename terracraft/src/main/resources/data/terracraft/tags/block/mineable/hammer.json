@@ -1,3 +1,8 @@
 {
-  "values": []
+  "values": [
+    "terracraft:shadow_orb",
+    "terracraft:crimson_heart",
+    "terracraft:demon_altar",
+    "terracraft:crimson_altar"
+  ]
 }

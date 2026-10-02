@@ -14,6 +14,9 @@
       "exclude_biomes": [
         "#minecraft:is_ocean",
         "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     },
     {
@@ -24,7 +27,10 @@
         "surface"
       ],
       "placement": "air",
-      "sky": true
+      "sky": true,
+      "exclude_ground": [
+        "#terracraft:evil/all"
+      ]
     },
     {
       "entity": "terracraft:blue_slime",
@@ -36,6 +42,9 @@
       "exclude_biomes": [
         "#minecraft:is_ocean",
         "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     }
   ]

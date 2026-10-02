@@ -51,6 +51,42 @@ def self_loot(block):
             'random_sequence': f'{NS}:blocks/{block}'}
 
 
+EVIL_BLOCKS = ['ebonwood', 'shadewood', 'ebonwood_leaves', 'shadewood_leaves', 'ebonstone', 'crimstone', 'corrupt_grass', 'crimson_grass', 'demonite_ore', 'crimtane_ore', 'shadow_orb',
+               'crimson_heart', 'demon_altar', 'crimson_altar', 'vile_mushroom', 'vicious_mushroom']
+
+
+def evil_blocks():
+    for b in ['ebonstone', 'crimstone', 'demonite_ore', 'crimtane_ore', 'vile_mushroom', 'vicious_mushroom', 'ebonwood', 'shadewood']:
+        write(f'{NS}/loot_table/blocks/{b}.json', self_loot(b))
+    for g in ['corrupt_grass', 'crimson_grass']:
+        write(f'{NS}/loot_table/blocks/{g}.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [
+            {'type': 'minecraft:item', 'name': 'minecraft:dirt'}], 'conditions': [{'condition': 'minecraft:survives_explosion'}]}]})
+    write(f'{NS}/terracraft/mining_power/evil_stone.json', {'pickaxe_power': 65, 'blocks': [t('ebonstone'), t('crimstone')]})
+    write(f'{NS}/terracraft/mining_power/evil_ore.json', {'pickaxe_power': 55, 'blocks': [t('demonite_ore'), t('crimtane_ore')]})
+    corruption = [t('ebonstone'), t('corrupt_grass'), t('demonite_ore'), t('ebonwood'), t('ebonwood_leaves')]
+    crimson = [t('crimstone'), t('crimson_grass'), t('crimtane_ore'), t('shadewood'), t('shadewood_leaves')]
+    write(f'{NS}/tags/block/evil/corruption.json', {'values': corruption})
+    write(f'{NS}/tags/block/evil/crimson.json', {'values': crimson})
+    write(f'{NS}/tags/block/evil/all.json', {'values': corruption + crimson})
+    write(f'{NS}/tags/block/stations/demon_altar.json', {'values': [t('demon_altar'), t('crimson_altar')]})
+    write('minecraft/tags/block/mineable/shovel.json', {'values': [t('corrupt_grass'), t('crimson_grass')]})
+    write('minecraft/tags/block/mineable/axe.json', {'values': [t('work_bench'), t('ebonwood'), t('shadewood')]})
+    write('minecraft/tags/block/mineable/hoe.json', {'values': [t('ebonwood_leaves'), t('shadewood_leaves')]})
+    balls = {'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('musket_ball'), 'functions': [{'function': 'minecraft:set_count', 'count': 100}]}]}
+    write(f'{NS}/loot_table/gameplay/shadow_orb.json', {'type': 'minecraft:empty', 'pools': [
+        {'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('musket')}, {'type': 'minecraft:item', 'name': t('vilethorn')},
+                                 {'type': 'minecraft:item', 'name': t('band_of_starpower')}]},
+        dict(balls, conditions=[{'condition': 'minecraft:random_chance', 'chance': 0.34}])]})
+    write(f'{NS}/loot_table/gameplay/crimson_heart.json', {'type': 'minecraft:empty', 'pools': [
+        {'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('the_undertaker')}, {'type': 'minecraft:item', 'name': t('panic_necklace')},
+                                 {'type': 'minecraft:item', 'name': t('band_of_starpower')}]},
+        dict(balls, conditions=[{'condition': 'minecraft:random_chance', 'chance': 0.34}])]})
+    write(f'{NS}/worldgen/configured_feature/evil_biome.json', {'type': t('evil_biome'), 'config': {}})
+    write(f'{NS}/worldgen/placed_feature/evil_biome.json', {'feature': t('evil_biome'), 'placement': []})
+    write(f'{NS}/forge/biome_modifier/evil_biome.json', {
+        'type': 'forge:add_features', 'biomes': '#minecraft:is_overworld', 'features': t('evil_biome'), 'step': 'top_layer_modification'})
+
+
 def blocks():
     for m in METALS:
         for ore in (f'{m}_ore', f'deepslate_{m}_ore'):
@@ -60,11 +96,11 @@ def blocks():
     write(f'{NS}/loot_table/blocks/life_crystal_block.json', {
         'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('life_crystal')}]}],
         'random_sequence': f'{NS}:blocks/life_crystal_block'})
-    write('minecraft/tags/block/mineable/pickaxe.json', {'values': [t(o) for o in ORES] + [t('iron_anvil'), t('lead_anvil'), t('life_crystal_block')]})
-    write('minecraft/tags/block/mineable/axe.json', {'values': [t('work_bench')]})
+    write('minecraft/tags/block/mineable/pickaxe.json', {'values': [t(o) for o in ORES] + [t('iron_anvil'), t('lead_anvil'), t('life_crystal_block'),
+                                                                   t('ebonstone'), t('crimstone'), t('demonite_ore'), t('crimtane_ore')]})
     write('minecraft/tags/block/needs_stone_tool.json', {'values': [t(f'{p}{m}_ore') for m in STONE_TIER for p in ('', 'deepslate_')]})
     write('minecraft/tags/block/needs_iron_tool.json', {'values': [t(f'{p}{m}_ore') for m in IRON_TIER for p in ('', 'deepslate_')]})
-    write(f'{NS}/tags/block/mineable/hammer.json', {'values': []})
+    write(f'{NS}/tags/block/mineable/hammer.json', {'values': [t('shadow_orb'), t('crimson_heart'), t('demon_altar'), t('crimson_altar')]})
     # crafting station tags: any block in the tag counts as that station
     write(f'{NS}/tags/block/stations/work_bench.json', {'values': [t('work_bench')]})
     write(f'{NS}/tags/block/stations/furnace.json', {'values': ['minecraft:furnace', 'minecraft:blast_furnace']})
@@ -127,6 +163,26 @@ TIER = {'copper': 0, 'tin': 0, 'iron': 1, 'lead': 1, 'silver': 2, 'tungsten': 2,
 
 
 def terraria_recipes():
+    for evil, bar, mat in (('demonite', t('demonite_bar'), t('shadow_scale')), ('crimtane', t('crimtane_bar'), t('tissue_sample'))):
+        corrupt = evil == 'demonite'
+        recipe('lights_bane' if corrupt else 'blood_butcherer', t('lights_bane' if corrupt else 'blood_butcherer'), [(bar, 10)], [ANVIL], category='weapons')
+        recipe('demon_bow' if corrupt else 'tendon_bow', t('demon_bow' if corrupt else 'tendon_bow'), [(bar, 10)], [ANVIL], category='weapons')
+        recipe('nightmare_pickaxe' if corrupt else 'deathbringer_pickaxe', t('nightmare_pickaxe' if corrupt else 'deathbringer_pickaxe'),
+               [(bar, 12), (mat, 6)], [ANVIL], category='tools')
+        recipe('war_axe_of_the_night' if corrupt else 'blood_lust_cluster', t('war_axe_of_the_night' if corrupt else 'blood_lust_cluster'),
+               [(bar, 10), (mat, 5)], [ANVIL], category='tools')
+        recipe('the_breaker' if corrupt else 'flesh_grinder', t('the_breaker' if corrupt else 'flesh_grinder'), [(bar, 10), (mat, 5)], [ANVIL], category='tools')
+        armor = 'shadow' if corrupt else 'crimson'
+        recipe(f'{armor}_helmet', t(f'{armor}_helmet'), [(bar, 15), (mat, 10)], [ANVIL], category='armor')
+        recipe(f'{armor}_scalemail', t(f'{armor}_scalemail'), [(bar, 25), (mat, 20)], [ANVIL], category='armor')
+        recipe(f'{armor}_greaves', t(f'{armor}_greaves'), [(bar, 20), (mat, 15)], [ANVIL], category='armor')
+    recipe('ebonwood_planks', 'minecraft:dark_oak_planks', [(t('ebonwood'), 1)], [], count=4, category='materials')
+    recipe('shadewood_planks', 'minecraft:mangrove_planks', [(t('shadewood'), 1)], [], count=4, category='materials')
+    ALTAR = t('demon_altar')
+    recipe('vile_powder', t('vile_powder'), [(t('vile_mushroom'), 1)], [ALCHEMY], count=5, category='materials')
+    recipe('vicious_powder', t('vicious_powder'), [(t('vicious_mushroom'), 1)], [ALCHEMY], count=5, category='materials')
+    recipe('worm_food', t('worm_food'), [(t('vile_powder'), 30), (t('rotten_chunk'), 15)], [ALTAR], category='consumables')
+    recipe('bloody_spine', t('bloody_spine'), [(t('vicious_powder'), 30), (t('vertebra'), 15)], [ALTAR], category='consumables')
     recipe('slime_crown', t('slime_crown'), [(t('gel'), 20), ('minecraft:gold_ingot', 5)], [WB], category='consumables')
     recipe('slime_crown_platinum', t('slime_crown'), [(t('gel'), 20), (t('platinum_bar'), 5)], [WB], category='consumables')
     recipe('suspicious_looking_eye', t('suspicious_looking_eye'), [(t('lens'), 6)], [WB], category='consumables')
@@ -231,9 +287,15 @@ def lang():
     items_dir = os.path.join(RES, 'assets/terracraft/items')
     for fname in sorted(os.listdir(items_dir)):
         name = fname[:-5]
-        key = ('block.' if name in ORES or name in ('work_bench', 'iron_anvil', 'lead_anvil') else 'item.') + f'{NS}.{name}'
+        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil') else 'item.') + f'{NS}.{name}'
         L[key] = title(name)
     L['block.terracraft.life_crystal_block'] = 'Life Crystal'
+    L['item.terracraft.lights_bane'] = "Light's Bane"
+    L['item.terracraft.the_undertaker'] = 'The Undertaker'
+    L['item.terracraft.war_axe_of_the_night'] = 'War Axe of the Night'
+    L['item.terracraft.panic_necklace.tooltip'] = 'Increases movement speed after taking damage'
+    L['item.terracraft.vilethorn.tooltip'] = 'Summons a vile thorn'
+    L['ability.terracraft.panic'] = 'Speed burst after taking damage'
     L.update({
         'item.terracraft.natures_gift': "Nature's Gift",
         'item.terracraft.dev_tablet': 'Developer Tablet',
@@ -413,10 +475,14 @@ def lang():
     })
     L.update({
         'message.terracraft.boss.awoken': '%s has awoken!',
+        'message.terracraft.orb.first': 'A horrible chill goes down your spine...',
+        'message.terracraft.orb.second': 'Screams echo around you...',
         'message.terracraft.boss.defeated': '%s has been defeated!',
         'message.terracraft.boss.nothing_happens': 'Nothing happens...',
         'message.terracraft.boss.already_active': 'That boss is already here!',
         'item.terracraft.slime_crown.tooltip': 'Summons King Slime',
+        'item.terracraft.worm_food.tooltip': 'Summons the Eater of Worlds (use in the Corruption)',
+        'item.terracraft.bloody_spine.tooltip': 'Summons the Brain of Cthulhu (use in the Crimson)',
         'item.terracraft.suspicious_looking_eye.tooltip': 'Summons the Eye of Cthulhu (use at night)',
         'item.terracraft.demonite_ore.tooltip': 'Pulsing with dark energy',
         'item.terracraft.crimtane_ore.tooltip': 'Its veins throb',
@@ -484,11 +550,23 @@ MOBS = {
     'skeleton': ('Skeleton', [('minecraft:bone', 1, 2, 0.5)]),
     'cave_bat': ('Cave Bat', []),
     'servant_of_cthulhu': ('Servant of Cthulhu', []),
+    'devourer': ('Devourer', []),
+    'giant_worm': ('Giant Worm', []),
+    'eater_of_worlds': ('Eater of Worlds', []),
+    'brain_of_cthulhu': ('Brain of Cthulhu', []),
+    'creeper': ('Creeper', []),
+    'eater_of_souls': ('Eater of Souls', [('rotten_chunk', 1, 1, 0.33)]),
+    'crimera': ('Crimera', [('vertebra', 1, 1, 0.33)]),
+    'face_monster': ('Face Monster', [('vertebra', 1, 1, 0.33)]),
+    'blood_crawler': ('Blood Crawler', [('vertebra', 1, 1, 0.25)]),
     'king_slime': ('King Slime', [('gel', 40, 80, 1.0), ('slime_crown', 1, 1, 0.1)]),
     'eye_of_cthulhu': ('Eye of Cthulhu', [('lens', 3, 6, 1.0)]),
 }
 
-OVERWORLD_LAND = {'exclude_biomes': ['#minecraft:is_ocean', '#minecraft:is_river']}
+OVERWORLD_LAND = {'exclude_biomes': ['#minecraft:is_ocean', '#minecraft:is_river'], 'exclude_ground': ['#terracraft:evil/all']}
+NOT_EVIL = {'exclude_ground': ['#terracraft:evil/all']}
+CORRUPT = {'ground': ['#terracraft:evil/corruption']}
+CRIMSON = {'ground': ['#terracraft:evil/crimson']}
 PRE_HM = '!hardmode_active'
 SPAWNS = {
     'surface_day': [
@@ -498,23 +576,33 @@ SPAWNS = {
     ],
     'surface_night': [
         dict(entity='zombie', weight=10, time='night', layers=['surface'], group=[1, 2], **OVERWORLD_LAND),
-        dict(entity='demon_eye', weight=6, time='night', layers=['surface'], placement='air', sky=True),
+        dict(entity='demon_eye', weight=6, time='night', layers=['surface'], placement='air', sky=True, **NOT_EVIL),
         dict(entity='blue_slime', weight=2, time='night', layers=['surface'], **OVERWORLD_LAND),
     ],
     'underground': [
-        dict(entity='red_slime', weight=8, layers=['underground']),
-        dict(entity='yellow_slime', weight=3, layers=['underground']),
-        dict(entity='blue_slime', weight=3, layers=['underground']),
-        dict(entity='cave_bat', weight=6, layers=['underground'], placement='air'),
-        dict(entity='skeleton', weight=5, layers=['underground']),
+        dict(entity='red_slime', weight=8, layers=['underground'], **NOT_EVIL),
+        dict(entity='yellow_slime', weight=3, layers=['underground'], **NOT_EVIL),
+        dict(entity='blue_slime', weight=3, layers=['underground'], **NOT_EVIL),
+        dict(entity='cave_bat', weight=6, layers=['underground'], placement='air', **NOT_EVIL),
+        dict(entity='skeleton', weight=5, layers=['underground'], **NOT_EVIL),
+        dict(entity='giant_worm', weight=3, layers=['underground', 'cavern'], **NOT_EVIL),
     ],
     'cavern': [
-        dict(entity='black_slime', weight=6, layers=['cavern']),
-        dict(entity='yellow_slime', weight=5, layers=['cavern']),
-        dict(entity='red_slime', weight=3, layers=['cavern']),
-        dict(entity='mother_slime', weight=2, layers=['cavern'], condition=PRE_HM),
-        dict(entity='cave_bat', weight=6, layers=['cavern'], placement='air'),
-        dict(entity='skeleton', weight=8, layers=['cavern']),
+        dict(entity='black_slime', weight=6, layers=['cavern'], **NOT_EVIL),
+        dict(entity='yellow_slime', weight=5, layers=['cavern'], **NOT_EVIL),
+        dict(entity='red_slime', weight=3, layers=['cavern'], **NOT_EVIL),
+        dict(entity='mother_slime', weight=2, layers=['cavern'], condition=PRE_HM, **NOT_EVIL),
+        dict(entity='cave_bat', weight=6, layers=['cavern'], placement='air', **NOT_EVIL),
+        dict(entity='skeleton', weight=8, layers=['cavern'], **NOT_EVIL),
+    ],
+    'corruption': [
+        dict(entity='eater_of_souls', weight=10, layers=['surface', 'underground', 'cavern'], placement='air', **CORRUPT),
+        dict(entity='devourer', weight=3, layers=['surface', 'underground', 'cavern'], **CORRUPT),
+    ],
+    'crimson': [
+        dict(entity='crimera', weight=10, layers=['surface', 'underground', 'cavern'], placement='air', **CRIMSON),
+        dict(entity='face_monster', weight=4, layers=['surface', 'underground', 'cavern'], **CRIMSON),
+        dict(entity='blood_crawler', weight=4, layers=['underground', 'cavern'], **CRIMSON),
     ],
 }
 
@@ -735,6 +823,7 @@ def main():
     jar = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser(
         '~/.gradle/caches/minecraftforge/forgegradle/mavenizer/caches/minecraft_tasks/26.2/client.jar')
     blocks()
+    evil_blocks()
     damage()
     smelting()
     terraria_recipes()

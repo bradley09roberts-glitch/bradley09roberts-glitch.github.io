@@ -10,6 +10,8 @@ import com.terracraft.entity.mob.SlimeMob;
 import com.terracraft.entity.mob.TerrariaMob;
 import com.terracraft.entity.mob.TerrariaMobs;
 import com.terracraft.entity.mob.WalkerMob;
+import com.terracraft.entity.mob.WormMob;
+import com.terracraft.entity.mob.ClimberMob;
 import com.terracraft.registry.ModEntities;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -60,6 +62,28 @@ public final class MobContent {
         (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.6F, 0.45F,
         MobDefinition.builder().life(16).damage(13).defense(2).knockbackTaken(0.8F).coins(90).speed(0.3));
 
+    // --- Worms ------------------------------------------------------------------------------------------
+    public static final WormMob.Spec DEVOURER_SPEC = new WormMob.Spec(9, 0.75, 0.42, 0.07, true, false);
+    public static final WormMob.Spec GIANT_WORM_SPEC = new WormMob.Spec(6, 0.6, 0.35, 0.06, true, false);
+    public static final RegistryObject<EntityType<WormMob>> DEVOURER = register("devourer",
+        (type, level) -> new WormMob(type, level, DEVOURER_SPEC), 0.8F, 0.8F,
+        MobDefinition.builder().life(140).damage(26).defense(10).knockbackTaken(0.0F).coins(300).followRange(48));
+    public static final RegistryObject<EntityType<WormMob>> GIANT_WORM = register("giant_worm",
+        (type, level) -> new WormMob(type, level, GIANT_WORM_SPEC), 0.6F, 0.6F,
+        MobDefinition.builder().life(30).damage(8).defense(0).knockbackTaken(0.0F).coins(200).followRange(40));
+
+    // --- Corruption / Crimson ---------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<FlyerMob>> EATER_OF_SOULS = register("eater_of_souls",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.CHASER), 0.7F, 0.7F,
+        MobDefinition.builder().life(40).damage(22).defense(8).knockbackTaken(0.8F).coins(90).speed(0.3).followRange(48));
+    public static final RegistryObject<EntityType<FlyerMob>> CRIMERA = register("crimera",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.CHASER), 0.7F, 0.7F,
+        MobDefinition.builder().life(45).damage(22).defense(8).knockbackTaken(0.8F).coins(90).speed(0.3).followRange(48));
+    public static final RegistryObject<EntityType<WalkerMob>> FACE_MONSTER = register("face_monster", WalkerMob::new, 0.7F, 1.9F,
+        MobDefinition.builder().life(100).damage(25).defense(10).knockbackTaken(0.4F).coins(250).speed(0.24));
+    public static final RegistryObject<EntityType<ClimberMob>> BLOOD_CRAWLER = register("blood_crawler", ClimberMob::new, 1.1F, 0.6F,
+        MobDefinition.builder().life(70).damage(24).defense(10).knockbackTaken(0.5F).coins(250).speed(0.32));
+
     // --- Boss minions ------------------------------------------------------------------------------
     public static final RegistryObject<EntityType<FlyerMob>> SERVANT_OF_CTHULHU = register("servant_of_cthulhu",
         (type, level) -> new FlyerMob(type, level, FlyerMob.Style.CHASER), 0.55F, 0.55F,
@@ -70,6 +94,16 @@ public final class MobContent {
         MobDefinition.builder().life(2000).damage(40).defense(10).knockbackTaken(0.0F).coins(10_000).followRange(128));
     public static final RegistryObject<EntityType<EyeOfCthulhu>> EYE_OF_CTHULHU = register("eye_of_cthulhu", EyeOfCthulhu::new, 2.4F, 2.4F,
         MobDefinition.builder().life(2800).damage(15).defense(12).knockbackTaken(0.0F).coins(30_000).followRange(128));
+
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.EaterOfWorlds>> EATER_OF_WORLDS = register("eater_of_worlds",
+        com.terracraft.entity.boss.EaterOfWorlds::new, 1.4F, 1.4F,
+        MobDefinition.builder().life(150).damage(22).defense(4).knockbackTaken(0.0F).coins(300).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.BrainOfCthulhu>> BRAIN_OF_CTHULHU = register("brain_of_cthulhu",
+        com.terracraft.entity.boss.BrainOfCthulhu::new, 2.2F, 2.0F,
+        MobDefinition.builder().life(1000).damage(30).defense(14).knockbackTaken(0.0F).coins(50_000).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.BrainOfCthulhu.BrainCreeper>> BRAIN_CREEPER = register("creeper",
+        com.terracraft.entity.boss.BrainOfCthulhu.BrainCreeper::new, 0.7F, 0.7F,
+        MobDefinition.builder().life(100).damage(20).defense(10).knockbackTaken(0.0F).coins(0).followRange(64));
 
     private MobContent() {}
 

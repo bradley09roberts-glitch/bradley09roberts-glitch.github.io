@@ -5,6 +5,9 @@
       "weight": 6,
       "layers": [
         "cavern"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     },
     {
@@ -12,6 +15,9 @@
       "weight": 5,
       "layers": [
         "cavern"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     },
     {
@@ -19,6 +25,9 @@
       "weight": 3,
       "layers": [
         "cavern"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     },
     {
@@ -27,7 +36,10 @@
       "layers": [
         "cavern"
       ],
-      "condition": "!hardmode_active"
+      "condition": "!hardmode_active",
+      "exclude_ground": [
+        "#terracraft:evil/all"
+      ]
     },
     {
       "entity": "terracraft:cave_bat",
@@ -35,13 +47,19 @@
       "layers": [
         "cavern"
       ],
-      "placement": "air"
+      "placement": "air",
+      "exclude_ground": [
+        "#terracraft:evil/all"
+      ]
     },
     {
       "entity": "terracraft:skeleton",
       "weight": 8,
       "layers": [
         "cavern"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     }
   ]

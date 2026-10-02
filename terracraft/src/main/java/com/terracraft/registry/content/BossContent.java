@@ -18,13 +18,43 @@ public final class BossContent {
         p -> new BossSummonItem(p, MobContent.EYE_OF_CTHULHU, BossSummoning.Arrival.OFFSCREEN, true),
         p -> WeaponProperties.stats(p.stacksTo(20), CoreItems.stats(TerraRarity.BLUE, 0)));
 
-    // Eye of Cthulhu drops the ore of the world's evil (until Corruption/Crimson worldgen exists, this is the only source)
-    public static final RegistryObject<TerraItem> DEMONITE_ORE = CoreItems.material("demonite_ore", TerraRarity.BLUE, 1000);
+    // Demonite/Crimtane ore are blocks (EvilContent); Eye of Cthulhu also drops the ore of the world's evil.
+    public static final RegistryObject<BossSummonItem> WORM_FOOD = ModItems.register("worm_food", TabGroup.CONSUMABLES,
+        p -> new BossSummonItem(p, MobContent.EATER_OF_WORLDS, BossSummoning.Arrival.BURROW, false, BossContent::inCorruption),
+        p -> WeaponProperties.stats(p.stacksTo(20), CoreItems.stats(TerraRarity.BLUE, 0)));
+    public static final RegistryObject<BossSummonItem> BLOODY_SPINE = ModItems.register("bloody_spine", TabGroup.CONSUMABLES,
+        p -> new BossSummonItem(p, MobContent.BRAIN_OF_CTHULHU, BossSummoning.Arrival.NEARBY, false, BossContent::inCrimson),
+        p -> WeaponProperties.stats(p.stacksTo(20), CoreItems.stats(TerraRarity.BLUE, 0)));
+    public static final RegistryObject<TerraItem> SHADOW_SCALE = CoreItems.material("shadow_scale", TerraRarity.BLUE, 100);
+    public static final RegistryObject<TerraItem> TISSUE_SAMPLE = CoreItems.material("tissue_sample", TerraRarity.BLUE, 150);
+    public static final RegistryObject<TerraItem> VILE_POWDER = CoreItems.material("vile_powder", TerraRarity.WHITE, 20);
+    public static final RegistryObject<TerraItem> VICIOUS_POWDER = CoreItems.material("vicious_powder", TerraRarity.WHITE, 20);
+    public static final RegistryObject<TerraItem> ROTTEN_CHUNK = CoreItems.material("rotten_chunk", TerraRarity.WHITE, 10);
+    public static final RegistryObject<TerraItem> VERTEBRA = CoreItems.material("vertebra", TerraRarity.WHITE, 10);
     public static final RegistryObject<TerraItem> DEMONITE_BAR = CoreItems.material("demonite_bar", TerraRarity.BLUE, 3000);
-    public static final RegistryObject<TerraItem> CRIMTANE_ORE = CoreItems.material("crimtane_ore", TerraRarity.BLUE, 1300);
     public static final RegistryObject<TerraItem> CRIMTANE_BAR = CoreItems.material("crimtane_bar", TerraRarity.BLUE, 3900);
 
     private BossContent() {}
+
+    /** Evil boss summons only work inside the matching evil biome (standing on or near its blocks). */
+    private static boolean inCorruption(net.minecraft.server.level.ServerPlayer player) {
+        return nearEvil(player, net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.BLOCK, com.terracraft.TerraCraft.id("evil/corruption")));
+    }
+
+    private static boolean inCrimson(net.minecraft.server.level.ServerPlayer player) {
+        return nearEvil(player, net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.BLOCK, com.terracraft.TerraCraft.id("evil/crimson")));
+    }
+
+    private static boolean nearEvil(net.minecraft.server.level.ServerPlayer player, net.minecraft.tags.TagKey<net.minecraft.world.level.block.Block> tag) {
+        net.minecraft.core.BlockPos center = player.blockPosition();
+        int count = 0;
+        for (net.minecraft.core.BlockPos pos : net.minecraft.core.BlockPos.betweenClosed(center.offset(-6, -6, -6), center.offset(6, 6, 6))) {
+            if (player.level().getBlockState(pos).is(tag) && ++count >= 20) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static void init() {}
 }

@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:deathbringer_pickaxe",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:crimtane_bar",
+      "count": 12
+    },
+    {
+      "item": "terracraft:tissue_sample",
+      "count": 6
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "tools"
+}

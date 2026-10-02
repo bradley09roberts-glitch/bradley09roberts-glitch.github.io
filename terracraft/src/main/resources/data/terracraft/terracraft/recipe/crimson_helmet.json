@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:crimson_helmet",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:crimtane_bar",
+      "count": 15
+    },
+    {
+      "item": "terracraft:tissue_sample",
+      "count": 10
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

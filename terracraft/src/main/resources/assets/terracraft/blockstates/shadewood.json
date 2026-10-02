@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "terracraft:block/shadewood"
+    },
+    "axis=z": {
+      "model": "terracraft:block/shadewood_horizontal",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "terracraft:block/shadewood_horizontal",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

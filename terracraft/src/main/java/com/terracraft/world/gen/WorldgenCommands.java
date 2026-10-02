@@ -25,6 +25,18 @@ public final class WorldgenCommands {
 
     public static void register() {
         TerrariaCommand.addExtension(root -> root.then(Commands.literal("worldgen")
+            .then(Commands.literal("evil").executes(ctx -> {
+                long seed = ctx.getSource().getLevel().getSeed();
+                var zones = com.terracraft.world.evil.EvilZones.zones(seed,
+                    com.terracraft.world.evil.EvilBiomeFeature.landTest(ctx.getSource().getServer().overworld()));
+                String evil = WorldProgression.get(ctx.getSource().getServer()).variants().evil().getSerializedName();
+                StringBuilder text = new StringBuilder("World evil: " + evil + ". Zones:");
+                for (var zone : zones) {
+                    text.append(String.format(" [%d, %d r=%d]", (int) zone.x(), (int) zone.z(), (int) zone.radius()));
+                }
+                ctx.getSource().sendSuccess(() -> Component.literal(text.toString()).withStyle(ChatFormatting.DARK_PURPLE), false);
+                return zones.size();
+            }))
             .then(Commands.literal("scan")
                 .executes(ctx -> scan(ctx.getSource().getPlayerOrException(), 2, ctx.getSource()))
                 .then(Commands.argument("radius", IntegerArgumentType.integer(0, 6))
@@ -34,6 +46,7 @@ public final class WorldgenCommands {
     private static int scan(ServerPlayer player, int radius, net.minecraft.commands.CommandSourceStack source) {
         ServerLevel level = player.level();
         Map<String, Integer> counts = new TreeMap<>();
+        Map<String, BlockPos> firstSeen = new TreeMap<>();
         ChunkPos center = player.chunkPosition();
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         for (int cx = center.x() - radius; cx <= center.x() + radius; cx++) {
@@ -45,8 +58,13 @@ public final class WorldgenCommands {
                             Block block = chunk.getBlockState(pos.set(x, y, z)).getBlock();
                             String name = BuiltInRegistries.BLOCK.getKey(block).getPath();
                             if (name.endsWith("_ore") && !name.contains("coal") && !name.contains("redstone") && !name.contains("lapis")
-                                && !name.contains("emerald") && !name.contains("diamond") || name.equals("life_crystal_block") || block == Blocks.CHEST) {
+                                && !name.contains("emerald") && !name.contains("diamond") || name.equals("life_crystal_block") || block == Blocks.CHEST
+                                || name.equals("shadow_orb") || name.equals("crimson_heart") || name.endsWith("_altar") || name.equals("ebonstone")
+                                || name.equals("crimstone") || name.endsWith("corrupt_grass") || name.equals("crimson_grass")) {
                                 counts.merge(name.replace("deepslate_", ""), 1, Integer::sum);
+                                if (name.equals("shadow_orb") || name.equals("crimson_heart") || name.endsWith("_altar")) {
+                                    firstSeen.putIfAbsent(name, new BlockPos(chunk.getPos().getMinBlockX() + x, y, chunk.getPos().getMinBlockZ() + z));
+                                }
                             }
                         }
                     }
@@ -61,6 +79,11 @@ public final class WorldgenCommands {
         int chunks = (2 * radius + 1) * (2 * radius + 1);
         source.sendSuccess(() -> Component.literal("World ores: " + choice.toString().trim()).withStyle(ChatFormatting.GOLD), false);
         source.sendSuccess(() -> Component.literal(chunks + " chunks: " + counts), false);
+        if (!firstSeen.isEmpty()) {
+            StringBuilder where = new StringBuilder("Found:");
+            firstSeen.forEach((name, at) -> where.append(' ').append(name).append(" @ ").append(at.toShortString()).append(';'));
+            source.sendSuccess(() -> Component.literal(where.toString()).withStyle(ChatFormatting.LIGHT_PURPLE), false);
+        }
         return counts.size();
     }
 }

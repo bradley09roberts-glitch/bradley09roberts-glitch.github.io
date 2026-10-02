@@ -1,0 +1,40 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:crimera",
+      "weight": 10,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:evil/crimson"
+      ]
+    },
+    {
+      "entity": "terracraft:face_monster",
+      "weight": 4,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:evil/crimson"
+      ]
+    },
+    {
+      "entity": "terracraft:blood_crawler",
+      "weight": 4,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:evil/crimson"
+      ]
+    }
+  ]
+}

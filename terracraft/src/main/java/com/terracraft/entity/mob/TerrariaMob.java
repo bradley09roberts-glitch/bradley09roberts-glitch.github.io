@@ -121,6 +121,11 @@ public abstract class TerrariaMob extends Monster implements HasTerrariaDefense,
         }
     }
 
+    /** Whether this entity counts as an enemy for the spawn cap (worm body segments do not). */
+    public boolean countsTowardSpawnCap() {
+        return true;
+    }
+
     /** Whether touching the enemy hurts right now (e.g. not while a boss is teleporting). */
     protected boolean dealsContactDamage() {
         return true;

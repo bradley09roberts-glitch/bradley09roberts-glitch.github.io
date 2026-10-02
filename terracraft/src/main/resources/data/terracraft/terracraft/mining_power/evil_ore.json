@@ -1,0 +1,7 @@
+{
+  "pickaxe_power": 55,
+  "blocks": [
+    "terracraft:demonite_ore",
+    "terracraft:crimtane_ore"
+  ]
+}

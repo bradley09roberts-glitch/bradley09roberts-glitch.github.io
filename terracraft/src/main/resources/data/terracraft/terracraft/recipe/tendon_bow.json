@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:tendon_bow",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:crimtane_bar",
+      "count": 10
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

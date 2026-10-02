@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "terracraft:item/crimtane_ore"
+    "model": "terracraft:block/crimtane_ore"
   }
 }

@@ -1,0 +1,14 @@
+{
+  "result": {
+    "item": "minecraft:mangrove_planks",
+    "count": 4
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:shadewood",
+      "count": 1
+    }
+  ],
+  "stations": [],
+  "category": "materials"
+}

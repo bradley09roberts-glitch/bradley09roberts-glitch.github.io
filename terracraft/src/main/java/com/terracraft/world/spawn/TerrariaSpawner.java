@@ -90,7 +90,7 @@ public final class TerrariaSpawner {
     }
 
     public static int nearbyEnemies(ServerPlayer player) {
-        return player.level().getEntitiesOfClass(TerrariaMob.class, player.getBoundingBox().inflate(64, 40, 64)).size();
+        return player.level().getEntitiesOfClass(TerrariaMob.class, player.getBoundingBox().inflate(64, 40, 64), TerrariaMob::countsTowardSpawnCap).size();
     }
 
     private static void tick(ServerPlayer player) {
@@ -127,7 +127,7 @@ public final class TerrariaSpawner {
             return false;
         }
         SpawnRule.SpawnContext context = new SpawnRule.SpawnContext(level.dimension(), level.getBiome(ground),
-            TerrariaLayer.ofHeight(ground.getY()), level.isBrightOutside(), level.canSeeSky(ground));
+            TerrariaLayer.ofHeight(ground.getY()), level.isBrightOutside(), level.canSeeSky(ground), level.getBlockState(ground.below()));
         WorldProgression progression = WorldProgression.get(level.getServer());
         List<SpawnRule> eligible = new ArrayList<>();
         int totalWeight = 0;

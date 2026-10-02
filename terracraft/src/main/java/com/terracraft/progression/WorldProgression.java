@@ -34,6 +34,9 @@ public final class WorldProgression extends SavedData implements ProgressionView
         TerraCraft.id("world_progression"), WorldProgression::new, CODEC, null
     );
 
+    /** Empty progression (no flags) used before data is available. */
+    public static final WorldProgression EMPTY = new WorldProgression();
+
     private final Set<Identifier> flags = new LinkedHashSet<>();
     private final Map<Identifier, Integer> counters = new HashMap<>();
     private WorldVariants variants;

@@ -35,6 +35,10 @@ public final class WeaponContent {
     public static final RegistryObject<MeleeWeaponItem> GOLD_BROADSWORD = sword("gold_broadsword", 13, 20, 6.0F, 0, TerraRarity.WHITE, 1080);
     public static final RegistryObject<MeleeWeaponItem> PLATINUM_BROADSWORD = sword("platinum_broadsword", 15, 19, 6.0F, 0, TerraRarity.WHITE, 1620);
 
+    // evil ore swords
+    public static final RegistryObject<MeleeWeaponItem> LIGHTS_BANE = sword("lights_bane", 17, 20, 5.0F, 0, TerraRarity.BLUE, 2700);
+    public static final RegistryObject<MeleeWeaponItem> BLOOD_BUTCHERER = sword("blood_butcherer", 22, 25, 5.0F, 0, TerraRarity.BLUE, 2700);
+
     // ---------------------------------------------------------------- ranged
     public static final RegistryObject<RangedWeaponItem> WOODEN_BOW = bow("wooden_bow", 4, 28, 0.0F, 6.6F, TerraRarity.WHITE, 100);
     public static final RegistryObject<RangedWeaponItem> COPPER_BOW = bow("copper_bow", 6, 27, 0.0F, 6.6F, TerraRarity.WHITE, 150);
@@ -45,6 +49,13 @@ public final class WeaponContent {
         p -> WeaponProperties.stats(p.stacksTo(1), TerraItemStats.builder().ranged(10).useTime(13).knockback(1.5F).crit(6).velocity(6.0F)
             .rarity(TerraRarity.BLUE).value(2, 0, 0).build()));
 
+    public static final RegistryObject<RangedWeaponItem> DEMON_BOW = bow("demon_bow", 14, 25, 0.0F, 6.7F, TerraRarity.BLUE, 5400);
+    public static final RegistryObject<RangedWeaponItem> TENDON_BOW = bow("tendon_bow", 19, 25, 0.0F, 6.7F, TerraRarity.BLUE, 5400);
+    public static final RegistryObject<RangedWeaponItem> MUSKET = ranged("musket", AmmoType.BULLET, SoundEvents.FIREWORK_ROCKET_BLAST, 31, 36, 5.25F, 9.0F,
+        TerraRarity.GREEN, 20000);
+    public static final RegistryObject<RangedWeaponItem> THE_UNDERTAKER = ranged("the_undertaker", AmmoType.BULLET, SoundEvents.FIREWORK_ROCKET_BLAST, 18, 22,
+        2.0F, 9.0F, TerraRarity.GREEN, 20000);
+
     // ---------------------------------------------------------------- thrown
     public static final RegistryObject<ThrownWeaponItem> SHURIKEN = thrown("shuriken", ProjectileKinds.SHURIKEN, true, 12, 15, 2.0F, 9.0F, 15);
     public static final RegistryObject<ThrownWeaponItem> THROWING_KNIFE = thrown("throwing_knife", ProjectileKinds.THROWING_KNIFE, true, 12, 15, 2.0F, 10.0F, 15);
@@ -54,6 +65,8 @@ public final class WeaponContent {
     public static final RegistryObject<MagicWeaponItem> WAND_OF_SPARKING = magic("wand_of_sparking", ProjectileKinds.SPARK, 9, 2, 30, 0.0F, 9.0F, TerraRarity.WHITE, 1, 0, 0);
     public static final RegistryObject<MagicWeaponItem> AMETHYST_STAFF = magic("amethyst_staff", ProjectileKinds.AMETHYST_BOLT, 14, 3, 37, 3.25F, 6.0F, TerraRarity.WHITE, 0, 20, 0);
     public static final RegistryObject<MagicWeaponItem> MAGIC_MISSILE = magic("magic_missile", ProjectileKinds.MAGIC_MISSILE, 22, 10, 25, 3.0F, 6.0F, TerraRarity.GREEN, 2, 0, 0);
+
+    public static final RegistryObject<MagicWeaponItem> VILETHORN = magic("vilethorn", ProjectileKinds.VILETHORN, 10, 10, 28, 1.0F, 8.0F, TerraRarity.GREEN, 2, 0, 0);
 
     // ---------------------------------------------------------------- ammo
     public static final RegistryObject<AmmoItem> FLAMING_ARROW = ammo("flaming_arrow", AmmoType.ARROW, 7, 2.0F, 0.5F, ProjectileKinds.FLAMING_ARROW, 15);

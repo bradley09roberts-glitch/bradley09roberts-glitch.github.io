@@ -30,6 +30,8 @@ import java.util.Set;
  *   "layers": ["surface"],                // space, surface, underground, cavern, underworld
  *   "biomes": ["#minecraft:is_overworld"],// optional ids or #tags
  *   "exclude_biomes": ["#minecraft:is_ocean"],
+ *   "ground": ["#terracraft:corruption"],  // optional: block (or tag) under the spawn position
+ *   "exclude_ground": ["#terracraft:evil"],
  *   "sky": true,                          // optional: must (not) see the sky
  *   "placement": "ground",                // ground | air
  *   "group": [1, 2],
@@ -45,6 +47,8 @@ public record SpawnRule(
     Set<TerrariaLayer> layers,
     List<BiomeMatcher> biomes,
     List<BiomeMatcher> excludedBiomes,
+    List<BlockMatcher> ground,
+    List<BlockMatcher> excludedGround,
     Boolean sky,
     Placement placement,
     int minGroup,
@@ -65,6 +69,18 @@ public record SpawnRule(
         }
     }
 
+    /** Block id or #tag tested against the block the enemy would stand on. */
+    public record BlockMatcher(Identifier id, boolean tag) {
+        boolean matches(net.minecraft.world.level.block.state.BlockState state) {
+            return tag ? state.is(TagKey.create(Registries.BLOCK, id))
+                : net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(state.getBlock()).equals(id);
+        }
+
+        static BlockMatcher parse(String value) {
+            return value.startsWith("#") ? new BlockMatcher(Identifier.parse(value.substring(1)), true) : new BlockMatcher(Identifier.parse(value), false);
+        }
+    }
+
     public boolean matches(SpawnContext context, ProgressionView progression) {
         if (!context.dimension().equals(dimension)) {
             return false;
@@ -82,6 +98,12 @@ public record SpawnRule(
             return false;
         }
         if (excludedBiomes.stream().anyMatch(b -> b.matches(context.biome()))) {
+            return false;
+        }
+        if (!ground.isEmpty() && ground.stream().noneMatch(b -> b.matches(context.ground()))) {
+            return false;
+        }
+        if (excludedGround.stream().anyMatch(b -> b.matches(context.ground()))) {
             return false;
         }
         return condition.test(progression);
@@ -122,6 +144,8 @@ public record SpawnRule(
             layers,
             matchers(json, "biomes"),
             matchers(json, "exclude_biomes"),
+            blockMatchers(json, "ground"),
+            blockMatchers(json, "exclude_ground"),
             json.has("sky") ? GsonHelper.getAsBoolean(json, "sky") : null,
             Placement.valueOf(GsonHelper.getAsString(json, "placement", "ground").toUpperCase(Locale.ROOT)),
             minGroup,
@@ -140,6 +164,17 @@ public record SpawnRule(
         return list;
     }
 
-    /** Everything a rule can test about a candidate spawn position. */
-    public record SpawnContext(ResourceKey<Level> dimension, Holder<Biome> biome, TerrariaLayer layer, boolean day, boolean sky) {}
+    private static List<BlockMatcher> blockMatchers(JsonObject json, String key) {
+        List<BlockMatcher> list = new ArrayList<>();
+        if (json.has(key)) {
+            for (JsonElement e : json.getAsJsonArray(key)) {
+                list.add(BlockMatcher.parse(e.getAsString()));
+            }
+        }
+        return list;
+    }
+
+    /** Everything a rule can test about a candidate spawn position ({@code ground} = the block below it). */
+    public record SpawnContext(ResourceKey<Level> dimension, Holder<Biome> biome, TerrariaLayer layer, boolean day, boolean sky,
+                               net.minecraft.world.level.block.state.BlockState ground) {}
 }

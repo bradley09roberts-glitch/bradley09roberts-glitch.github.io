@@ -187,7 +187,7 @@ public class EyeOfCthulhu extends TerrariaBoss {
             boolean crimson = com.terracraft.progression.WorldProgression.get(level.getServer()).variants().evil()
                 == com.terracraft.progression.WorldVariants.WorldEvil.CRIMSON;
             int count = 30 + random.nextInt(58);
-            var ore = (crimson ? com.terracraft.registry.content.BossContent.CRIMTANE_ORE : com.terracraft.registry.content.BossContent.DEMONITE_ORE).get();
+            var ore = (crimson ? com.terracraft.registry.content.EvilContent.CRIMTANE_ORE : com.terracraft.registry.content.EvilContent.DEMONITE_ORE).get().asItem();
             while (count > 0) {
                 int stack = Math.min(count, 64);
                 level.addFreshEntity(new net.minecraft.world.entity.item.ItemEntity(level, getX(), getY() + 0.5, getZ(), new net.minecraft.world.item.ItemStack(ore, stack)));

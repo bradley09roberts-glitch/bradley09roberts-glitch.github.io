@@ -45,6 +45,10 @@ public final class ProjectileKinds {
         .lifetime(120).size(0.3F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD)
         .fullbright().magic().homing(0.12F, 20.0F).trail(() -> ParticleTypes.ELECTRIC_SPARK));
 
+    public static final ProjectileKind VILETHORN = register(ProjectileKind.builder("vilethorn")
+        .lifetime(24).size(0.4F, 0.8F).orientation(ProjectileKind.Orientation.VELOCITY).magic().pierce(-1).hitCooldown(10)
+        .trail(() -> ParticleTypes.SPORE_BLOSSOM_AIR));
+
     private ProjectileKinds() {}
 
     private static ProjectileKind register(ProjectileKind.Builder builder) {

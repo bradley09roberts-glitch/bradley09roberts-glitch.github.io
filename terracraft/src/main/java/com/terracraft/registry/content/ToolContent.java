@@ -30,6 +30,13 @@ public final class ToolContent {
     public static final RegistryObject<TerrariaToolItem> COPPER_HAMMER = hammer("copper_hammer", 35, 4, 4.0F, 40);
     public static final RegistryObject<TerrariaToolItem> IRON_HAMMER = hammer("iron_hammer", 45, 7, 5.0F, 160);
 
+    public static final RegistryObject<TerrariaToolItem> NIGHTMARE_PICKAXE = pickaxe("nightmare_pickaxe", 65, 9, 7.8F, 3600);
+    public static final RegistryObject<TerrariaToolItem> DEATHBRINGER_PICKAXE = pickaxe("deathbringer_pickaxe", 70, 12, 8.0F, 3600);
+    public static final RegistryObject<TerrariaToolItem> WAR_AXE_OF_THE_NIGHT = axe("war_axe_of_the_night", 100, 21, 7.8F, 2700);
+    public static final RegistryObject<TerrariaToolItem> BLOOD_LUST_CLUSTER = axe("blood_lust_cluster", 100, 24, 8.0F, 2700);
+    public static final RegistryObject<TerrariaToolItem> THE_BREAKER = hammer("the_breaker", 70, 24, 7.0F, 2700);
+    public static final RegistryObject<TerrariaToolItem> FLESH_GRINDER = hammer("flesh_grinder", 70, 26, 7.2F, 2700);
+
     private ToolContent() {}
 
     public static void init() {}

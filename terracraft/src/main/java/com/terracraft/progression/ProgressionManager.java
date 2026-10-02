@@ -60,6 +60,18 @@ public final class ProgressionManager {
         return data(server).has(flag);
     }
 
+    /** Client-side mirror of world progression (set by the client; empty on dedicated servers). */
+    public static java.util.function.Supplier<ProgressionView> clientView = () -> null;
+
+    /** Progression as seen from either side (server data on the logical server, mirror on the client). */
+    public static ProgressionView view(net.minecraft.world.level.Level level) {
+        if (level instanceof net.minecraft.server.level.ServerLevel server) {
+            return data(server.getServer());
+        }
+        ProgressionView view = clientView.get();
+        return view != null ? view : WorldProgression.EMPTY;
+    }
+
     public static boolean isHardmode(MinecraftServer server) {
         return has(server, ProgressionFlags.HARDMODE);
     }

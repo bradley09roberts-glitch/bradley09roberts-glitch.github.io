@@ -18,18 +18,30 @@ import java.util.function.Supplier;
 public final class BossCommands {
     private static final Map<String, Entry> BOSSES = Map.of(
         "king_slime", new Entry(MobContent.KING_SLIME, BossSummoning.Arrival.FALL),
-        "eye_of_cthulhu", new Entry(MobContent.EYE_OF_CTHULHU, BossSummoning.Arrival.OFFSCREEN));
+        "eye_of_cthulhu", new Entry(MobContent.EYE_OF_CTHULHU, BossSummoning.Arrival.OFFSCREEN),
+        "eater_of_worlds", new Entry(MobContent.EATER_OF_WORLDS, BossSummoning.Arrival.BURROW),
+        "brain_of_cthulhu", new Entry(MobContent.BRAIN_OF_CTHULHU, BossSummoning.Arrival.NEARBY));
 
-    private record Entry(Supplier<? extends EntityType<? extends TerrariaBoss>> type, BossSummoning.Arrival arrival) {}
+    private record Entry(Supplier<? extends EntityType<? extends net.minecraft.world.entity.Mob>> type, BossSummoning.Arrival arrival) {}
 
     private BossCommands() {}
 
     public static void register() {
+        // every third Shadow Orb / Crimson Heart awakens the evil boss
+        com.terracraft.world.evil.OrbSmashing.bossSummoner = (level, player, crimson) -> {
+            if (player instanceof ServerPlayer serverPlayer) {
+                if (crimson) {
+                    BossSummoning.summon(level, serverPlayer, MobContent.BRAIN_OF_CTHULHU.get(), BossSummoning.Arrival.NEARBY);
+                } else {
+                    BossSummoning.summon(level, serverPlayer, MobContent.EATER_OF_WORLDS.get(), BossSummoning.Arrival.BURROW);
+                }
+            }
+        };
         TerrariaCommand.addExtension(root -> {
             LiteralArgumentBuilder<CommandSourceStack> spawn = Commands.literal("spawn");
             BOSSES.forEach((name, entry) -> spawn.then(Commands.literal(name).executes(ctx -> {
                 ServerPlayer player = ctx.getSource().getPlayerOrException();
-                TerrariaBoss boss = BossSummoning.summon(player.level(), player, entry.type().get(), entry.arrival());
+                var boss = BossSummoning.summon(player.level(), player, entry.type().get(), entry.arrival());
                 if (boss == null) {
                     ctx.getSource().sendFailure(Component.literal(name + " is already alive."));
                     return 0;
@@ -42,7 +54,7 @@ public final class BossCommands {
                     int removed = 0;
                     for (ServerLevel level : ctx.getSource().getServer().getAllLevels()) {
                         for (Entity entity : level.getAllEntities()) {
-                            if (entity instanceof TerrariaBoss) {
+                            if (entity instanceof TerrariaBoss || entity instanceof EaterOfWorlds || entity instanceof BrainOfCthulhu.BrainCreeper) {
                                 entity.discard();
                                 removed++;
                             }

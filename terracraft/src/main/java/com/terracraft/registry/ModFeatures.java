@@ -15,5 +15,8 @@ public final class ModFeatures {
     public static final RegistryObject<PairedOreFeature> PAIRED_ORE = FEATURES.register("paired_ore", PairedOreFeature::new);
     public static final RegistryObject<LootChestFeature> LOOT_CHEST = FEATURES.register("loot_chest", LootChestFeature::new);
 
+    public static final RegistryObject<com.terracraft.world.evil.EvilBiomeFeature> EVIL_BIOME = FEATURES.register("evil_biome",
+        com.terracraft.world.evil.EvilBiomeFeature::new);
+
     private ModFeatures() {}
 }

@@ -53,6 +53,18 @@ public final class CreatureRenderers {
         eye(event, MobContent.EYE_OF_CTHULHU.get(), 2.4F);
         register(event, MobContent.CAVE_BAT.get(), ctx -> new TerraModelRenderer<>(ctx,
             new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 0.8F, 0.3F, false));
+        worm(event, MobContent.DEVOURER.get(), 0.8F);
+        worm(event, MobContent.EATER_OF_WORLDS.get(), 1.4F);
+        eye(event, MobContent.BRAIN_CREEPER.get(), 0.7F);
+        register(event, MobContent.BRAIN_OF_CTHULHU.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new com.terracraft.client.model.BrainModel(ctx.bakeLayer(TerraModels.BRAIN)), 2.2F / (15.0F / 16.0F), 1.0F, false));
+        worm(event, MobContent.GIANT_WORM.get(), 0.6F);
+        maw(event, MobContent.EATER_OF_SOULS.get(), 0.7F);
+        maw(event, MobContent.CRIMERA.get(), 0.7F);
+        register(event, MobContent.FACE_MONSTER.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 1.0F, 0.5F, true));
+        register(event, MobContent.BLOOD_CRAWLER.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new net.minecraft.client.model.monster.spider.SpiderModel(ctx.bakeLayer(net.minecraft.client.model.geom.ModelLayers.SPIDER)), 0.8F, 0.5F, false));
         for (var npc : NpcContent.all()) {
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,
                 new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F, 0.5F, false));
@@ -61,6 +73,17 @@ public final class CreatureRenderers {
 
     private static void slime(EntityRenderersEvent.RegisterRenderers event, EntityType<? extends LivingEntity> type, float width) {
         register(event, type, ctx -> new TerraModelRenderer<>(ctx, new SlimeBodyModel(ctx.bakeLayer(TerraModels.SLIME)), slime(width), width * 0.45F, false));
+    }
+
+    /** Worm segment model is 10 px wide. */
+    public static void worm(EntityRenderersEvent.RegisterRenderers event, EntityType<? extends LivingEntity> type, float width) {
+        register(event, type, ctx -> new TerraModelRenderer<>(ctx, new com.terracraft.client.model.WormModel(ctx.bakeLayer(TerraModels.WORM)),
+            width / (10.0F / 16.0F), width * 0.4F, false));
+    }
+
+    private static void maw(EntityRenderersEvent.RegisterRenderers event, EntityType<? extends LivingEntity> type, float width) {
+        register(event, type, ctx -> new TerraModelRenderer<>(ctx, new com.terracraft.client.model.MawModel(ctx.bakeLayer(TerraModels.MAW)),
+            width / (8.0F / 16.0F), width * 0.4F, false));
     }
 
     private static void eye(EntityRenderersEvent.RegisterRenderers event, EntityType<? extends LivingEntity> type, float width) {

@@ -28,7 +28,9 @@ public enum Ability implements StringRepresentable {
     MANA_FLOWER,
     MAGNET,
     THORNS,
-    DASH;
+    DASH,
+    /** Panic Necklace: a burst of speed after taking damage. */
+    PANIC;
 
     public static final Codec<Ability> CODEC = StringRepresentable.fromEnum(Ability::values);
 

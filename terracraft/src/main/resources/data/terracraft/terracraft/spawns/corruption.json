@@ -1,0 +1,29 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:eater_of_souls",
+      "weight": 10,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:evil/corruption"
+      ]
+    },
+    {
+      "entity": "terracraft:devourer",
+      "weight": 3,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:evil/corruption"
+      ]
+    }
+  ]
+}

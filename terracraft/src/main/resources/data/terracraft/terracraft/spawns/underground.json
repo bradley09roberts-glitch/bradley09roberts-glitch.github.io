@@ -5,6 +5,9 @@
       "weight": 8,
       "layers": [
         "underground"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     },
     {
@@ -12,6 +15,9 @@
       "weight": 3,
       "layers": [
         "underground"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     },
     {
@@ -19,6 +25,9 @@
       "weight": 3,
       "layers": [
         "underground"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     },
     {
@@ -27,13 +36,30 @@
       "layers": [
         "underground"
       ],
-      "placement": "air"
+      "placement": "air",
+      "exclude_ground": [
+        "#terracraft:evil/all"
+      ]
     },
     {
       "entity": "terracraft:skeleton",
       "weight": 5,
       "layers": [
         "underground"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
+      ]
+    },
+    {
+      "entity": "terracraft:giant_worm",
+      "weight": 3,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all"
       ]
     }
   ]

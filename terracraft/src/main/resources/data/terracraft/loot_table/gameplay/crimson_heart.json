@@ -1,0 +1,43 @@
+{
+  "type": "minecraft:empty",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "terracraft:the_undertaker"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "terracraft:panic_necklace"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "terracraft:band_of_starpower"
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "terracraft:musket_ball",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": 100
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 0.34
+        }
+      ]
+    }
+  ]
+}

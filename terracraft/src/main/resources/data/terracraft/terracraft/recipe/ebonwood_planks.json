@@ -1,0 +1,14 @@
+{
+  "result": {
+    "item": "minecraft:dark_oak_planks",
+    "count": 4
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:ebonwood",
+      "count": 1
+    }
+  ],
+  "stations": [],
+  "category": "materials"
+}

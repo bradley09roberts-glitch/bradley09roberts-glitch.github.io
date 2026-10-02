@@ -34,15 +34,26 @@ public final class ArmorContent {
     public record ArmorPieces(ArmorSet set, RegistryObject<TerrariaArmorItem> helmet, RegistryObject<TerrariaArmorItem> chest,
                               RegistryObject<TerrariaArmorItem> legs) {}
 
+    /** Shadow armor (Demonite): +15% movement speed set bonus. */
+    public static final ArmorPieces SHADOW = set("shadow", "_scalemail", 6, 7, 6,
+        StatEffects.builder().add(Stat.MOVE_SPEED, 0.15F).build(), 3750);
+    /** Crimson armor (Crimtane): greatly increased life regeneration. */
+    public static final ArmorPieces CRIMSON = set("crimson", "_scalemail", 6, 7, 6,
+        StatEffects.builder().add(Stat.LIFE_REGEN, 4).build(), 3750);
+
     private ArmorContent() {}
 
     public static void init() {}
 
     private static ArmorPieces set(String name, int helmet, int chest, int legs, StatEffects bonus, int value) {
+        return set(name, name.equals("wood") ? "_breastplate" : "_chainmail", helmet, chest, legs, bonus, value);
+    }
+
+    private static ArmorPieces set(String name, String chestSuffix, int helmet, int chest, int legs, StatEffects bonus, int value) {
         ArmorSet set = ArmorSet.of(name, bonus);
         ArmorPieces pieces = new ArmorPieces(set,
             piece(name + "_helmet", set, EquipmentSlot.HEAD, helmet, value),
-            piece(name + (name.equals("wood") ? "_breastplate" : "_chainmail"), set, EquipmentSlot.CHEST, chest, value),
+            piece(name + chestSuffix, set, EquipmentSlot.CHEST, chest, value),
             piece(name + "_greaves", set, EquipmentSlot.LEGS, legs, value));
         SETS.add(pieces);
         return pieces;

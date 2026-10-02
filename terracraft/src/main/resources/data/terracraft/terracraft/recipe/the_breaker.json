@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:the_breaker",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:demonite_bar",
+      "count": 10
+    },
+    {
+      "item": "terracraft:shadow_scale",
+      "count": 5
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "tools"
+}

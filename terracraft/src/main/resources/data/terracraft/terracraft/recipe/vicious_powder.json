@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:vicious_powder",
+    "count": 5
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:vicious_mushroom",
+      "count": 1
+    }
+  ],
+  "stations": [
+    "terracraft:alchemy"
+  ],
+  "category": "materials"
+}

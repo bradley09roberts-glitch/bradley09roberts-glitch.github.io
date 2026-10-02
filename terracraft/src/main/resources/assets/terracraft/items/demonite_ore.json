@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "terracraft:item/demonite_ore"
+    "model": "terracraft:block/demonite_ore"
   }
 }

@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "terracraft:block/ebonwood"
+    },
+    "axis=z": {
+      "model": "terracraft:block/ebonwood_horizontal",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "terracraft:block/ebonwood_horizontal",
+      "x": 90,
+      "y": 90
+    }
+  }
+}
