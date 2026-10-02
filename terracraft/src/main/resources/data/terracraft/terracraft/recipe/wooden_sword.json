@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:wooden_sword",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "tag": "minecraft:planks",
+      "count": 7
+    }
+  ],
+  "stations": [
+    "terracraft:work_bench"
+  ],
+  "category": "weapons"
+}

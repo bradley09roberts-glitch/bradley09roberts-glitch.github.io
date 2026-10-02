@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:copper_shortsword",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:copper_ingot",
+      "count": 7
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

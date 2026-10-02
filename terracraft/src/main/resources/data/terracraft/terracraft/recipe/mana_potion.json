@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:mana_potion",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:lesser_mana_potion",
+      "count": 2
+    },
+    {
+      "item": "minecraft:glow_berries",
+      "count": 1
+    }
+  ],
+  "stations": [
+    "terracraft:alchemy"
+  ],
+  "category": "consumables"
+}

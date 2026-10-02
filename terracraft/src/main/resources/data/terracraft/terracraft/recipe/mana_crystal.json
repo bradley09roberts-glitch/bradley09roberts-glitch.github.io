@@ -1,0 +1,14 @@
+{
+  "result": {
+    "item": "terracraft:mana_crystal",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:fallen_star",
+      "count": 5
+    }
+  ],
+  "stations": [],
+  "category": "consumables"
+}

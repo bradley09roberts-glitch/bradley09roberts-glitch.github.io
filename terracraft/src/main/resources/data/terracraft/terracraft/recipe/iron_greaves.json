@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:iron_greaves",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 25
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

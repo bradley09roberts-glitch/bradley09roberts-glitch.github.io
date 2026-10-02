@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:tungsten_pickaxe",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:tungsten_bar",
+      "count": 12
+    },
+    {
+      "tag": "minecraft:planks",
+      "count": 3
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "tools"
+}

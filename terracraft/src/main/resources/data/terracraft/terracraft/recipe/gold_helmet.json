@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:gold_helmet",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:gold_ingot",
+      "count": 30
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

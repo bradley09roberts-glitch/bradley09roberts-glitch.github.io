@@ -1,0 +1,9 @@
+{
+  "values": [
+    "terracraft:iron_anvil",
+    "terracraft:lead_anvil",
+    "minecraft:anvil",
+    "minecraft:chipped_anvil",
+    "minecraft:damaged_anvil"
+  ]
+}

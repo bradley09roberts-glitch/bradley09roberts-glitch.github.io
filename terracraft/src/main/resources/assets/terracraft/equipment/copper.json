@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "terracraft:copper"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "terracraft:copper"
+      }
+    ]
+  }
+}

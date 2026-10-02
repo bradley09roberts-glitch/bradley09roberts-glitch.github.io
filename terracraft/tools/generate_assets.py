@@ -1,0 +1,789 @@
+#!/usr/bin/env python3
+"""Generates TerraCraft's original pixel-art textures and the client resource JSON (models, item
+definitions, blockstates, equipment layers).
+
+Run from the project root:  python3 tools/generate_assets.py
+Everything is derived from the tables below; re-running is deterministic.
+"""
+import json
+import os
+import random
+import re
+import sys
+
+sys.path.insert(0, os.path.dirname(__file__))
+from pixelart import Canvas, hexc, palette, shade  # noqa: E402
+
+ROOT = os.path.join(os.path.dirname(__file__), '..')
+ASSETS = os.path.join(ROOT, 'src/main/resources/assets/terracraft')
+TEX = os.path.join(ASSETS, 'textures')
+
+# ----------------------------------------------------------------------------------------- palettes
+METAL = {
+    'copper': '#C8783C', 'tin': '#B4A88C', 'iron': '#A0A0A8', 'lead': '#5A6478', 'silver': '#D2D7DC',
+    'tungsten': '#8CA088', 'gold': '#E6BE3C', 'platinum': '#BED2E6', 'wood': '#8C5A32',
+}
+WOOD = palette('#7A4E2A')
+STONE = palette('#7C7C7C')
+DEEPSLATE = palette('#4A4A50')
+
+
+def metal(name):
+    return palette(METAL[name])
+
+
+# ----------------------------------------------------------------------------------------- item drawers
+def draw_sword(c, p, length=11, short=False):
+    """Diagonal blade from bottom-left handle to top-right tip."""
+    x0, y0 = (5, 10) if not short else (6, 9)
+    tip = 14 - (0 if not short else 4)
+    for i in range(tip - x0):
+        x, y = x0 + i, y0 - i
+        c.set(x, y, p[2])
+        c.set(x + 1, y, p[3])
+        c.set(x, y - 1, p[4] if i < tip - x0 - 1 else p[3])
+    c.set(tip, y0 - (tip - x0), p[4])
+    guard = palette('#6E5A3C') if p[2] != METAL['wood'] else WOOD
+    c.line(x0 - 2, y0 - 1, x0 + 1, y0 + 2, guard[2])
+    c.line(x0 - 1, y0 - 1, x0 + 1, y0 + 1, guard[3])
+    handle = WOOD
+    c.line(x0 - 3, y0 + 4, x0 - 1, y0 + 2, handle[2])
+    c.set(x0 - 4, y0 + 5, guard[1])
+    c.outline()
+
+
+def draw_pickaxe(c, p):
+    c.line(3, 13, 11, 5, WOOD[2])
+    c.line(4, 13, 12, 5, WOOD[1])
+    head = [(5, 3), (6, 2), (8, 2), (10, 3), (12, 4), (13, 6), (14, 8), (14, 10)]
+    for (x, y) in head:
+        c.set(x, y, p[2])
+    c.line(6, 3, 11, 4, p[3])
+    c.line(11, 4, 13, 8, p[3])
+    c.line(7, 2, 9, 2, p[4])
+    c.rect(10, 4, 11, 5, p[2])
+    c.set(4, 4, p[2])
+    c.set(14, 11, p[1])
+    c.outline()
+
+
+def draw_axe(c, p):
+    c.line(3, 13, 11, 5, WOOD[2])
+    c.line(4, 13, 12, 5, WOOD[1])
+    c.polygon([(9, 2), (14, 2), (15, 7), (12, 9), (10, 6)], p[2])
+    c.line(13, 2, 14, 7, p[4])
+    c.line(10, 3, 12, 3, p[3])
+    c.outline()
+
+
+def draw_hammer(c, p):
+    c.line(3, 13, 10, 6, WOOD[2])
+    c.line(4, 13, 11, 6, WOOD[1])
+    c.polygon([(7, 4), (11, 0), (15, 4), (11, 8)], p[2])
+    c.line(8, 4, 11, 1, p[3])
+    c.line(11, 1, 14, 4, p[4])
+    c.outline()
+
+
+def draw_bow(c, p):
+    pts = [(4, 1), (7, 2), (10, 4), (12, 7), (13, 10), (14, 13)]
+    for i in range(len(pts) - 1):
+        c.line(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], p[2])
+    c.line(5, 1, 8, 2, p[3])
+    c.line(4, 2, 13, 13, hexc('#E6E6E6'))
+    c.outline()
+
+
+def draw_gun(c, p):
+    c.rect(2, 5, 13, 6, p[2])
+    c.rect(2, 5, 13, 5, p[3])
+    c.rect(13, 4, 14, 6, p[1])
+    c.polygon([(3, 7), (7, 7), (6, 12), (3, 12)], WOOD[2])
+    c.line(3, 7, 6, 7, WOOD[3])
+    c.rect(8, 7, 9, 8, p[1])
+    c.outline()
+
+
+def draw_wand(c, gem):
+    c.line(3, 13, 11, 5, WOOD[2])
+    c.line(4, 13, 12, 5, WOOD[1])
+    g = palette(gem)
+    c.circle(12, 3, 2, g[2])
+    c.set(11, 2, g[4])
+    c.outline()
+
+
+def draw_staff(c, gem):
+    c.line(2, 14, 11, 5, palette('#A0A0A8')[2])
+    c.line(3, 14, 12, 5, palette('#A0A0A8')[1])
+    g = palette(gem)
+    c.polygon([(12, 1), (15, 4), (12, 7), (9, 4)], g[2])
+    c.set(11, 3, g[4])
+    c.set(12, 2, g[3])
+    c.outline()
+
+
+def draw_book(c, color):
+    p = palette(color)
+    c.rect(3, 2, 12, 13, p[2])
+    c.rect(3, 2, 4, 13, p[1])
+    c.rect(5, 3, 12, 3, p[3])
+    c.rect(11, 3, 12, 12, hexc('#E8E0C8'))
+    c.circle(8, 8, 2, hexc('#78B4FF'))
+    c.outline()
+
+
+def draw_raw(c, p, seed):
+    rnd = random.Random(seed)
+    c.polygon([(3, 6), (7, 3), (12, 4), (13, 9), (10, 13), (5, 12), (2, 9)], p[2])
+    for _ in range(9):
+        c.set(rnd.randint(4, 11), rnd.randint(5, 11), rnd.choice([p[1], p[3]]))
+    c.light()
+    c.outline()
+
+
+def draw_bar(c, p):
+    c.polygon([(2, 9), (5, 5), (14, 5), (13, 9), (11, 12), (1, 12)], p[2])
+    c.polygon([(5, 5), (14, 5), (11, 8), (3, 8)], p[3])
+    c.line(6, 6, 12, 6, p[4])
+    c.outline()
+
+
+def draw_coin(c, p):
+    c.circle(7.5, 7.5, 5.5, p[2])
+    c.ring(7.5, 7.5, 4, p[3], 0.8)
+    c.set(6, 5, p[4])
+    c.set(5, 6, p[4])
+    c.outline()
+
+
+def draw_heart(c, color='#E6283C'):
+    p = palette(color)
+    c.circle(5, 6, 3, p[2])
+    c.circle(10, 6, 3, p[2])
+    c.polygon([(2, 7), (13, 7), (7.5, 14)], p[2])
+    c.set(4, 4, p[4])
+    c.set(5, 4, p[3])
+    c.outline()
+
+
+def draw_star(c, color='#FFE650', size=7.0):
+    import math
+    p = palette(color)
+    pts = []
+    for i in range(10):
+        ang = -math.pi / 2 + i * math.pi / 5
+        r = size if i % 2 == 0 else size * 0.45
+        pts.append((7.5 + r * math.cos(ang), 8 + r * math.sin(ang)))
+    c.polygon(pts, p[2])
+    c.set(7, 5, p[4])
+    c.set(8, 6, p[3])
+    c.outline()
+
+
+def draw_crystal(c, color):
+    p = palette(color)
+    c.polygon([(8, 1), (13, 6), (10, 14), (6, 14), (3, 6)], p[2])
+    c.polygon([(8, 1), (10, 6), (8, 14), (6, 6)], p[3])
+    c.line(8, 2, 7, 6, p[4])
+    c.outline()
+
+
+def draw_potion(c, liquid, size='normal'):
+    glass = hexc('#DCE6F0', 200)
+    top = 3 if size == 'normal' else 5
+    c.rect(6, top - 2, 9, top - 1, hexc('#8C643C'))
+    c.rect(6, top, 9, top + 1, glass)
+    c.circle(7.5, 10, 4.5 if size == 'normal' else 3.5, glass)
+    lp = palette(liquid)
+    c.circle(7.5, 10.5, 3.5 if size == 'normal' else 2.5, lp[2])
+    c.set(6, 9, lp[4])
+    c.outline()
+
+
+def draw_gel(c):
+    p = palette('#3C8CFF')
+    c.polygon([(3, 12), (4, 7), (8, 4), (12, 7), (13, 12)], (p[2][0], p[2][1], p[2][2], 200))
+    c.set(6, 7, p[4])
+    c.set(7, 6, p[4])
+    c.outline()
+
+
+def draw_lens(c):
+    c.circle(7.5, 7.5, 5, hexc('#F0F0F0'))
+    c.circle(7.5, 7.5, 3, hexc('#3C8C50'))
+    c.circle(7.5, 7.5, 1.5, hexc('#101010'))
+    c.set(6, 5, hexc('#FFFFFF'))
+    c.outline()
+
+
+def draw_gem(c, color):
+    p = palette(color)
+    c.polygon([(4, 6), (7, 3), (11, 3), (13, 6), (8, 13)], p[2])
+    c.polygon([(4, 6), (13, 6), (8, 13)], p[1])
+    c.line(7, 4, 10, 4, p[4])
+    c.outline()
+
+
+def draw_helmet(c, p):
+    c.polygon([(3, 12), (3, 6), (6, 3), (10, 3), (13, 6), (13, 12), (10, 12), (10, 9), (6, 9), (6, 12)], p[2])
+    c.line(5, 4, 10, 4, p[4])
+    c.line(4, 6, 4, 11, p[3])
+    c.outline()
+
+
+def draw_chest(c, p):
+    c.polygon([(2, 3), (5, 2), (11, 2), (14, 3), (14, 7), (12, 7), (12, 14), (4, 14), (4, 7), (2, 7)], p[2])
+    c.rect(6, 4, 10, 12, p[3])
+    c.line(8, 4, 8, 12, p[1])
+    c.outline()
+
+
+def draw_legs(c, p):
+    c.polygon([(4, 2), (12, 2), (12, 14), (9, 14), (8, 7), (7, 14), (4, 14)], p[2])
+    c.line(4, 3, 12, 3, p[4])
+    c.line(5, 4, 5, 13, p[3])
+    c.outline()
+
+
+def draw_boots(c, color, wings=False):
+    p = palette(color)
+    c.polygon([(5, 3), (9, 3), (9, 10), (13, 11), (13, 13), (4, 13), (5, 9)], p[2])
+    c.line(5, 4, 8, 4, p[4])
+    c.rect(4, 12, 13, 13, p[1])
+    if wings:
+        w = palette('#F0F0F0')
+        c.polygon([(9, 5), (14, 2), (13, 6), (10, 8)], w[2])
+    c.outline()
+
+
+def draw_ring(c, color, gem=None):
+    p = palette(color)
+    c.ring(7.5, 8.5, 5, p[2], 1.6)
+    c.set(4, 5, p[4])
+    if gem:
+        g = palette(gem)
+        c.circle(7.5, 3.5, 1.6, g[2])
+        c.set(7, 3, g[4])
+    c.outline()
+
+
+def draw_balloon(c):
+    p = palette('#E62828')
+    c.circle(8, 5.5, 4.5, p[2])
+    c.set(6, 3, p[4])
+    c.set(7, 3, p[3])
+    c.line(8, 10, 7, 15, hexc('#E6E6E6'))
+    c.outline()
+
+
+def draw_bottle(c, content):
+    glass = hexc('#C8DCF0', 190)
+    c.rect(6, 1, 9, 2, hexc('#8C643C'))
+    c.rect(6, 3, 9, 4, glass)
+    c.polygon([(4, 6), (11, 6), (12, 14), (3, 14)], glass)
+    cp = palette(content)
+    c.circle(7.5, 10, 2.5, cp[3])
+    c.circle(6, 11, 1.8, cp[4])
+    c.outline()
+
+
+def draw_horseshoe(c):
+    p = palette('#E6BE3C')
+    c.ring(7.5, 7.5, 5.5, p[2], 2.2)
+    c.rect(2, 8, 13, 14, (0, 0, 0, 0))
+    c.rect(2, 8, 4, 12, p[2])
+    c.rect(11, 8, 13, 12, p[2])
+    c.set(4, 4, p[4])
+    c.outline()
+
+
+def draw_skull(c):
+    p = palette('#3C2850')
+    c.circle(7.5, 6.5, 5, p[2])
+    c.rect(5, 10, 10, 13, p[2])
+    c.circle(5.5, 6.5, 1.3, hexc('#FF6428'))
+    c.circle(9.5, 6.5, 1.3, hexc('#FF6428'))
+    c.line(6, 12, 9, 12, p[1])
+    c.outline()
+
+
+def draw_shield(c, color):
+    p = palette(color)
+    c.polygon([(3, 2), (12, 2), (12, 8), (7.5, 14), (3, 8)], p[2])
+    c.polygon([(5, 4), (10, 4), (10, 8), (7.5, 11), (5, 8)], p[3])
+    c.set(5, 3, p[4])
+    c.outline()
+
+
+def draw_claws(c):
+    p = palette('#C8B496')
+    for i in range(3):
+        c.line(4 + i * 3, 2, 6 + i * 3, 10, p[3])
+    c.rect(3, 9, 13, 13, palette('#78502D')[2])
+    c.outline()
+
+
+def draw_charm(c, color):
+    p = palette(color)
+    c.line(4, 1, 7, 6, hexc('#B4B4B4'))
+    c.line(11, 1, 8, 6, hexc('#B4B4B4'))
+    c.polygon([(7.5, 6), (12, 10), (7.5, 15), (3, 10)], p[2])
+    c.set(6, 9, p[4])
+    c.outline()
+
+
+def draw_flipper(c):
+    p = palette('#28A0C8')
+    c.polygon([(3, 2), (8, 2), (13, 12), (11, 14), (3, 14)], p[2])
+    c.line(5, 5, 11, 13, p[1])
+    c.line(4, 3, 7, 3, p[4])
+    c.outline()
+
+
+def draw_belt(c):
+    p = palette('#8C5A32')
+    c.rect(1, 6, 14, 9, p[2])
+    c.rect(1, 6, 14, 6, p[3])
+    c.rect(6, 5, 9, 10, palette('#C8C8C8')[2])
+    c.outline()
+
+
+def draw_flower(c):
+    for (x, y) in [(7, 3), (11, 7), (7, 11), (3, 7)]:
+        c.circle(x + 0.5, y + 0.5, 2, palette('#78B4FF')[2])
+    c.circle(7.5, 7.5, 1.6, hexc('#FFE650'))
+    c.line(7, 12, 6, 15, hexc('#3CA03C'))
+    c.outline()
+
+
+def draw_shuriken(c):
+    p = palette('#A0A0B4')
+    c.polygon([(7.5, 1), (9, 6.5), (14, 7.5), (9, 9), (7.5, 14), (6, 9), (1, 7.5), (6, 6.5)], p[2])
+    c.circle(7.5, 7.5, 1, p[0])
+    c.outline()
+
+
+def draw_knife(c):
+    p = palette('#C8C8D2')
+    c.line(5, 10, 13, 2, p[3], 1)
+    c.line(6, 10, 13, 3, p[2], 1)
+    c.line(2, 13, 5, 10, WOOD[2], 1)
+    c.outline()
+
+
+def draw_boomerang(c):
+    p = palette('#A06E3C')
+    c.polygon([(2, 3), (6, 2), (8, 8), (14, 10), (13, 14), (5, 11)], p[2])
+    c.line(3, 3, 6, 9, p[3])
+    c.outline()
+
+
+def draw_arrow_item(c, head_color, fletch='#E6E6E6'):
+    c.line(3, 12, 12, 3, WOOD[3])
+    c.polygon([(10, 2), (14, 2), (14, 6)], palette(head_color)[2])
+    c.line(2, 11, 4, 13, hexc(fletch))
+    c.line(2, 12, 3, 13, hexc(fletch))
+    c.outline()
+
+
+def draw_ball(c):
+    p = palette('#5A5A64')
+    c.circle(7.5, 7.5, 3, p[2])
+    c.set(6, 6, p[4])
+    c.outline()
+
+
+def draw_tablet(c):
+    c.rect(3, 2, 12, 13, hexc('#282832'))
+    c.rect(4, 3, 11, 11, hexc('#3CC8A0'))
+    c.line(5, 5, 9, 5, hexc('#E6FFF0'))
+    c.line(5, 7, 10, 7, hexc('#E6FFF0'))
+    c.line(5, 9, 8, 9, hexc('#E6FFF0'))
+    c.set(7, 12, hexc('#A0A0A0'))
+    c.outline()
+
+
+# ----------------------------------------------------------------------------------------- item table
+ITEMS = {}
+
+
+def item(name, drawer, handheld=False):
+    ITEMS[name] = (drawer, handheld)
+
+
+for m in ['copper', 'tin', 'iron', 'lead', 'silver', 'tungsten', 'gold', 'platinum']:
+    if m != 'copper':
+        item(f'{m}_broadsword', lambda c, m=m: draw_sword(c, metal(m)), True)
+    item(f'{m}_pickaxe', lambda c, m=m: draw_pickaxe(c, metal(m)), True)
+    item(f'{m}_axe', lambda c, m=m: draw_axe(c, metal(m)), True)
+    if m in ('tin', 'lead', 'silver', 'tungsten', 'platinum'):
+        item(f'raw_{m}', lambda c, m=m: draw_raw(c, metal(m), m))
+        item(f'{m}_bar', lambda c, m=m: draw_bar(c, metal(m)))
+item('copper_broadsword', lambda c: draw_sword(c, metal('copper')), True)
+item('copper_shortsword', lambda c: draw_sword(c, metal('copper'), short=True), True)
+item('wooden_sword', lambda c: draw_sword(c, palette('#A0703C')), True)
+item('copper_hammer', lambda c: draw_hammer(c, metal('copper')), True)
+item('iron_hammer', lambda c: draw_hammer(c, metal('iron')), True)
+item('wooden_bow', lambda c: draw_bow(c, palette('#A0703C')), True)
+item('copper_bow', lambda c: draw_bow(c, metal('copper')), True)
+item('iron_bow', lambda c: draw_bow(c, metal('iron')), True)
+item('gold_bow', lambda c: draw_bow(c, metal('gold')), True)
+item('flintlock_pistol', lambda c: draw_gun(c, palette('#5A5A64')), False)
+item('shuriken', draw_shuriken)
+item('throwing_knife', draw_knife, True)
+item('wooden_boomerang', draw_boomerang)
+item('wand_of_sparking', lambda c: draw_wand(c, '#FF8C28'), True)
+item('amethyst_staff', lambda c: draw_staff(c, '#A050DC'), True)
+item('magic_missile', lambda c: draw_book(c, '#2850B4'))
+item('flaming_arrow', lambda c: draw_arrow_item(c, '#FF8C28', '#FFC850'))
+item('musket_ball', draw_ball)
+item('copper_coin', lambda c: draw_coin(c, palette('#C8783C')))
+item('silver_coin', lambda c: draw_coin(c, palette('#C8CDD2')))
+item('gold_coin', lambda c: draw_coin(c, palette('#E6BE3C')))
+item('platinum_coin', lambda c: draw_coin(c, palette('#DCE6F0')))
+item('life_crystal', lambda c: draw_heart(c))
+item('life_fruit', lambda c: draw_heart(c, '#96DC28'))
+item('mana_crystal', lambda c: draw_crystal(c, '#3C64F0'))
+item('fallen_star', lambda c: draw_star(c))
+item('gel', lambda c: draw_gel(c))
+item('lens', draw_lens)
+item('amethyst', lambda c: draw_gem(c, '#A050DC'))
+POTIONS = {
+    'lesser_healing_potion': ('#E63C50', 'small'), 'healing_potion': ('#E63C50', 'normal'),
+    'lesser_mana_potion': ('#3C64F0', 'small'), 'mana_potion': ('#3C64F0', 'normal'),
+    'ironskin_potion': ('#C8C8B4', 'normal'), 'swiftness_potion': ('#5AE65A', 'normal'),
+    'regeneration_potion': ('#FF6496', 'normal'), 'mana_regeneration_potion': ('#7864FF', 'normal'),
+    'magic_power_potion': ('#C864FF', 'normal'), 'archery_potion': ('#C8A064', 'normal'),
+    'mining_potion': ('#C8C864', 'normal'), 'obsidian_skin_potion': ('#50285A', 'normal'),
+    'water_walking_potion': ('#3C8CFF', 'normal'), 'endurance_potion': ('#8C8CB4', 'normal'),
+    'wrath_potion': ('#DC3C3C', 'normal'), 'rage_potion': ('#FF7814', 'normal'),
+}
+for name, (liquid, size) in POTIONS.items():
+    item(name, lambda c, l=liquid, s=size: draw_potion(c, l, s))
+ARMOR_SETS = ['wood', 'copper', 'tin', 'iron', 'lead', 'silver', 'tungsten', 'gold', 'platinum']
+for s in ARMOR_SETS:
+    col = metal(s) if s != 'wood' else palette('#A0703C')
+    item(f'{s}_helmet', lambda c, col=col: draw_helmet(c, col))
+    item(f'{s}_{"breastplate" if s == "wood" else "chainmail"}', lambda c, col=col: draw_chest(c, col))
+    item(f'{s}_greaves', lambda c, col=col: draw_legs(c, col))
+ACCESSORIES = {
+    'hermes_boots': lambda c: draw_boots(c, '#C8A050', wings=True),
+    'cloud_in_a_bottle': lambda c: draw_bottle(c, '#F0F0F0'),
+    'shiny_red_balloon': draw_balloon,
+    'lucky_horseshoe': draw_horseshoe,
+    'band_of_regeneration': lambda c: draw_ring(c, '#C8A03C', '#E63C50'),
+    'band_of_starpower': lambda c: draw_ring(c, '#C8A03C', '#3C64F0'),
+    'mana_regeneration_band': lambda c: draw_ring(c, '#B4B4C8', '#7864FF'),
+    'natures_gift': draw_flower,
+    'shackle': lambda c: draw_ring(c, '#787882'),
+    'aglet': lambda c: draw_charm(c, '#C8A050'),
+    'anklet_of_the_wind': lambda c: draw_ring(c, '#3CC864', '#B4FFB4'),
+    'feral_claws': draw_claws,
+    'obsidian_skull': draw_skull,
+    'lava_charm': lambda c: draw_charm(c, '#FF6428'),
+    'cobalt_shield': lambda c: draw_shield(c, '#2850DC'),
+    'flipper': draw_flipper,
+    'water_walking_boots': lambda c: draw_boots(c, '#3C8CFF'),
+    'toolbelt': draw_belt,
+}
+for name, drawer in ACCESSORIES.items():
+    item(name, drawer)
+item('dev_tablet', draw_tablet)
+
+
+# ----------------------------------------------------------------------------------------- blocks
+def stone_base(seed, deep=False):
+    c = Canvas()
+    p = DEEPSLATE if deep else STONE
+    c.noise([p[2], p[2], p[2], p[1], p[3]], seed)
+    if deep:
+        for y in (3, 8, 13):
+            c.line(0, y, 15, y, p[1])
+    return c
+
+
+def ore_block(name, deep):
+    c = stone_base(hash(name) & 0xFFFF, deep)
+    p = metal(name)
+    rnd = random.Random(name + str(deep))
+    for _ in range(6):
+        x, y = rnd.randint(1, 13), rnd.randint(1, 13)
+        c.set(x, y, p[2])
+        c.set(x + 1, y, p[3])
+        c.set(x, y + 1, p[1])
+        c.set(x + 1, y + 1, p[2])
+    return c
+
+
+def wood_planks(seed):
+    c = Canvas()
+    c.noise([WOOD[2], WOOD[2], WOOD[3]], seed)
+    for y in (0, 4, 8, 12):
+        c.line(0, y, 15, y, WOOD[1])
+    return c
+
+
+def metal_block(name, seed):
+    p = metal(name)
+    c = Canvas()
+    c.noise([p[2], p[2], p[3], p[1]], seed, 1.0)
+    c.rect(0, 0, 15, 0, p[4])
+    c.rect(0, 15, 15, 15, p[0])
+    return c
+
+
+BLOCK_TEXTURES = {}
+for m in ['tin', 'lead', 'silver', 'tungsten', 'platinum']:
+    BLOCK_TEXTURES[f'{m}_ore'] = lambda m=m: ore_block(m, False)
+    BLOCK_TEXTURES[f'deepslate_{m}_ore'] = lambda m=m: ore_block(m, True)
+BLOCK_TEXTURES['work_bench'] = lambda: wood_planks(11)
+BLOCK_TEXTURES['iron_anvil'] = lambda: metal_block('iron', 21)
+BLOCK_TEXTURES['lead_anvil'] = lambda: metal_block('lead', 22)
+
+
+def life_crystal_block():
+    c = Canvas()
+    draw_heart(c)
+    return c
+
+
+BLOCK_TEXTURES['life_crystal_block'] = life_crystal_block
+
+# ----------------------------------------------------------------------------------------- projectiles (drawn pointing +x)
+PROJECTILES = {}
+
+
+def proj(name, drawer):
+    PROJECTILES[name] = drawer
+
+
+def p_arrow(c, head='#B4B4B4', fletch='#E6E6E6', glow=None):
+    c.line(1, 8, 12, 8, WOOD[3])
+    c.polygon([(12, 6), (15, 8), (12, 10)], palette(head)[2])
+    c.line(0, 6, 2, 8, hexc(fletch))
+    c.line(0, 10, 2, 8, hexc(fletch))
+    if glow:
+        c.set(14, 7, hexc(glow))
+
+
+def p_orb(c, color, r=4):
+    p = palette(color)
+    c.circle(7.5, 7.5, r + 1.5, (p[3][0], p[3][1], p[3][2], 90))
+    c.circle(7.5, 7.5, r, p[3])
+    c.circle(7.5, 7.5, r - 1.5, p[4])
+
+
+proj('wooden_arrow', lambda c: p_arrow(c))
+proj('flaming_arrow', lambda c: p_arrow(c, '#FF8C28', '#FFC850', '#FFE650'))
+proj('musket_ball', lambda c: (c.circle(7.5, 7.5, 2.5, palette('#5A5A64')[2]), c.set(6, 6, palette('#5A5A64')[4])))
+proj('shuriken', draw_shuriken)
+proj('throwing_knife', lambda c: (c.line(2, 8, 13, 8, palette('#C8C8D2')[3]), c.line(3, 9, 12, 9, palette('#C8C8D2')[2]),
+                                  c.line(0, 8, 2, 8, WOOD[2])))
+proj('wooden_boomerang', draw_boomerang)
+proj('spark', lambda c: p_orb(c, '#FF8C28', 2))
+proj('amethyst_bolt', lambda c: p_orb(c, '#B464FF', 3))
+proj('magic_missile', lambda c: p_orb(c, '#64A0FF', 4))
+
+# ----------------------------------------------------------------------------------------- HUD sprites (9x9)
+HUD = {}
+
+
+def hud_heart(color, empty=False):
+    c = Canvas(9, 9)
+    p = palette(color)
+    fill = p[1] if empty else p[2]
+    c.circle(2.5, 2.5, 2, fill)
+    c.circle(5.5, 2.5, 2, fill)
+    c.polygon([(0.5, 3), (8.5, 3), (4.5, 8)], fill)
+    if not empty:
+        c.set(2, 1, p[4])
+        c.set(1, 2, p[3])
+    c.outline(shade(p[0], 0.6))
+    return c
+
+
+def hud_star(empty=False):
+    import math
+    c = Canvas(9, 9)
+    p = palette('#4664F0' if not empty else '#2A2A50')
+    pts = []
+    for i in range(10):
+        ang = -math.pi / 2 + i * math.pi / 5
+        r = 4.3 if i % 2 == 0 else 1.9
+        pts.append((4.5 + r * math.cos(ang), 4.8 + r * math.sin(ang)))
+    c.polygon(pts, p[2])
+    if not empty:
+        c.set(4, 3, p[4])
+    c.outline(shade(p[0], 0.6))
+    return c
+
+
+def hud_shield():
+    c = Canvas(9, 9)
+    p = palette('#A0A0B4')
+    c.polygon([(1, 0.5), (8, 0.5), (8, 5), (4.5, 8.5), (1, 5)], p[2])
+    c.line(2, 1, 6, 1, p[4])
+    c.outline(p[0])
+    return c
+
+
+HUD['heart_full'] = lambda: hud_heart('#E6283C')
+HUD['heart_golden'] = lambda: hud_heart('#F0C828')
+HUD['heart_empty'] = lambda: hud_heart('#783C46', empty=True)
+HUD['star_full'] = lambda: hud_star()
+HUD['star_empty'] = lambda: hud_star(empty=True)
+HUD['defense'] = hud_shield
+
+# ----------------------------------------------------------------------------------------- mob effect icons (18x18)
+EFFECTS = {
+    'ironskin': '#B4B4B4', 'swiftness': '#5AE65A', 'regeneration': '#FF6496', 'mana_regeneration': '#6464FF',
+    'magic_power': '#C864FF', 'archery': '#C8A064', 'mining': '#C8C864', 'obsidian_skin': '#78508C',
+    'water_walking': '#3C8CFF', 'endurance': '#8C8CB4', 'wrath': '#DC3C3C', 'rage': '#FF7814',
+    'potion_sickness': '#784646', 'mana_sickness': '#463278',
+}
+
+
+def effect_icon(color):
+    c = Canvas(18, 18)
+    p = palette(color)
+    c.circle(8.5, 8.5, 7, p[1])
+    c.circle(8.5, 8.5, 5.5, p[2])
+    c.circle(7, 7, 2, p[4])
+    c.outline(p[0])
+    return c
+
+
+# ----------------------------------------------------------------------------------------- armor layers (64x32)
+def armor_layer(color, leggings):
+    c = Canvas(64, 32)
+    p = palette(color)
+    rnd = random.Random(color + str(leggings))
+
+    def region(x0, y0, x1, y1):
+        for x in range(x0, x1):
+            for y in range(y0, y1):
+                col = p[2] if rnd.random() > 0.15 else p[3]
+                c.set(x, y, col)
+        for x in range(x0, x1):
+            c.set(x, y0, p[4])
+            c.set(x, y1 - 1, p[1])
+    if not leggings:
+        # helmet: head box faces (u0 v0, 8x8x8 -> 32x16 area); leave the face front partly open
+        region(0, 0, 32, 16)
+        for x in range(9, 15):
+            for y in range(11, 15):
+                c.set(x, y, (0, 0, 0, 0))
+        region(16, 16, 40, 32)   # chest
+        region(40, 16, 56, 32)   # arms
+        region(0, 24, 16, 32)    # boots (lower legs)
+    else:
+        region(16, 24, 40, 32)   # belt / lower body
+        region(0, 16, 16, 32)    # legs
+    return c
+
+
+# ----------------------------------------------------------------------------------------- writers
+def write_json(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w') as f:
+        json.dump(data, f, indent=2)
+        f.write('\n')
+
+
+def item_assets(name, handheld):
+    write_json(os.path.join(ASSETS, 'items', name + '.json'),
+               {'model': {'type': 'minecraft:model', 'model': f'terracraft:item/{name}'}})
+    write_json(os.path.join(ASSETS, 'models/item', name + '.json'),
+               {'parent': 'minecraft:item/handheld' if handheld else 'minecraft:item/generated',
+                'textures': {'layer0': f'terracraft:item/{name}'}})
+
+
+BLOCKS_CUBE = ['tin_ore', 'deepslate_tin_ore', 'lead_ore', 'deepslate_lead_ore', 'silver_ore', 'deepslate_silver_ore',
+               'tungsten_ore', 'deepslate_tungsten_ore', 'platinum_ore', 'deepslate_platinum_ore']
+
+
+def block_assets():
+    for name in BLOCKS_CUBE:
+        write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': {'': {'model': f'terracraft:block/{name}'}}})
+        write_json(os.path.join(ASSETS, 'models/block', name + '.json'),
+                   {'parent': 'minecraft:block/cube_all', 'textures': {'all': f'terracraft:block/{name}'}})
+        write_json(os.path.join(ASSETS, 'items', name + '.json'),
+                   {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{name}'}})
+    # work bench: table model
+    write_json(os.path.join(ASSETS, 'models/block/work_bench.json'), {
+        'parent': 'minecraft:block/block',
+        'textures': {'particle': 'terracraft:block/work_bench', 'wood': 'terracraft:block/work_bench'},
+        'elements': [
+            {'from': [0, 12, 0], 'to': [16, 16, 16], 'faces': {f: {'texture': '#wood'} for f in ['north', 'south', 'east', 'west', 'up', 'down']}},
+        ] + [
+            {'from': [x, 0, z], 'to': [x + 3, 12, z + 3], 'faces': {f: {'texture': '#wood'} for f in ['north', 'south', 'east', 'west', 'down']}}
+            for x, z in [(1, 1), (12, 1), (1, 12), (12, 12)]
+        ]})
+    for anvil in ['iron_anvil', 'lead_anvil']:
+        write_json(os.path.join(ASSETS, f'models/block/{anvil}.json'), {
+            'parent': 'minecraft:block/block',
+            'textures': {'particle': f'terracraft:block/{anvil}', 'metal': f'terracraft:block/{anvil}'},
+            'elements': [
+                {'from': [2, 0, 3], 'to': [14, 4, 13], 'faces': {f: {'texture': '#metal'} for f in ['north', 'south', 'east', 'west', 'up', 'down']}},
+                {'from': [5, 4, 5], 'to': [11, 9, 11], 'faces': {f: {'texture': '#metal'} for f in ['north', 'south', 'east', 'west']}},
+                {'from': [0, 9, 2], 'to': [16, 15, 14], 'faces': {f: {'texture': '#metal'} for f in ['north', 'south', 'east', 'west', 'up', 'down']}},
+            ]})
+    for name in ['work_bench', 'iron_anvil', 'lead_anvil']:
+        write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': {'': {'model': f'terracraft:block/{name}'}}})
+        write_json(os.path.join(ASSETS, 'items', name + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{name}'}})
+    write_json(os.path.join(ASSETS, 'blockstates/life_crystal_block.json'), {'variants': {'': {'model': 'terracraft:block/life_crystal_block'}}})
+    write_json(os.path.join(ASSETS, 'models/block/life_crystal_block.json'),
+               {'parent': 'minecraft:block/cross', 'render_type': 'minecraft:cutout', 'textures': {'cross': 'terracraft:block/life_crystal_block'}})
+
+
+def armor_assets():
+    for s in ARMOR_SETS:
+        color = METAL[s] if s != 'wood' else '#A0703C'
+        armor_layer(color, False).save(os.path.join(TEX, f'entity/equipment/humanoid/{s}.png'))
+        armor_layer(color, True).save(os.path.join(TEX, f'entity/equipment/humanoid_leggings/{s}.png'))
+        write_json(os.path.join(ASSETS, f'equipment/{s}.json'), {'layers': {
+            'humanoid': [{'texture': f'terracraft:{s}'}],
+            'humanoid_leggings': [{'texture': f'terracraft:{s}'}]}})
+
+
+def check_registered_items():
+    """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
+    java_root = os.path.join(ROOT, 'src/main/java/com/terracraft/registry/content')
+    ids = set()
+    pattern = re.compile(r'\b(?:register|sword|bow|ranged|thrown|magic|ammo|pickaxe|axe|hammer|accessory|material|coin|potion|buffPotion)\(\s*"([a-z0-9_]+)"')
+    for fname in os.listdir(java_root):
+        with open(os.path.join(java_root, fname)) as f:
+            ids.update(pattern.findall(f.read()))
+    known = set(ITEMS) | set(BLOCKS_CUBE) | {'work_bench', 'iron_anvil', 'lead_anvil', 'life_crystal_block'}
+    missing = sorted(i for i in ids if i not in known and not i.endswith("_"))
+    if missing:
+        print('ERROR: items without generated assets:', missing)
+        sys.exit(1)
+
+
+def main():
+    for name, (drawer, handheld) in ITEMS.items():
+        c = Canvas()
+        drawer(c)
+        c.save(os.path.join(TEX, 'item', name + '.png'))
+        item_assets(name, handheld)
+    for name, factory in BLOCK_TEXTURES.items():
+        factory().save(os.path.join(TEX, 'block', name + '.png'))
+    block_assets()
+    for name, drawer in PROJECTILES.items():
+        c = Canvas()
+        drawer(c)
+        c.save(os.path.join(TEX, 'entity/projectile', name + '.png'))
+    for name, factory in HUD.items():
+        factory().save(os.path.join(TEX, 'gui/sprites/hud', name + '.png'))
+    for name, color in EFFECTS.items():
+        effect_icon(color).save(os.path.join(TEX, 'mob_effect', name + '.png'))
+    armor_assets()
+    check_registered_items()
+    print(f'Generated {len(ITEMS)} items, {len(BLOCK_TEXTURES)} block textures, {len(PROJECTILES)} projectiles, '
+          f'{len(HUD)} HUD sprites, {len(EFFECTS)} effect icons, {len(ARMOR_SETS)} armor sets')
+
+
+if __name__ == '__main__':
+    main()

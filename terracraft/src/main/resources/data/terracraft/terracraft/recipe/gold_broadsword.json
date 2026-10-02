@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:gold_broadsword",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:gold_ingot",
+      "count": 8
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

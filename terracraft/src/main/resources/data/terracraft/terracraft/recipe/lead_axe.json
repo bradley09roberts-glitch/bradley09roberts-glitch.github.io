@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:lead_axe",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:lead_bar",
+      "count": 9
+    },
+    {
+      "tag": "minecraft:planks",
+      "count": 3
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "tools"
+}

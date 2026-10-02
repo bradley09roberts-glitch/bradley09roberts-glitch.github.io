@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:silver_chainmail",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:silver_bar",
+      "count": 35
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

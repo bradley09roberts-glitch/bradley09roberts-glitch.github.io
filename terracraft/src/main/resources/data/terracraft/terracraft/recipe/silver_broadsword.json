@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:silver_broadsword",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:silver_bar",
+      "count": 8
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

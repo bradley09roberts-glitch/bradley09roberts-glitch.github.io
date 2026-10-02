@@ -1,0 +1,14 @@
+{
+  "result": {
+    "item": "terracraft:work_bench",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "tag": "minecraft:planks",
+      "count": 10
+    }
+  ],
+  "stations": [],
+  "category": "furniture"
+}

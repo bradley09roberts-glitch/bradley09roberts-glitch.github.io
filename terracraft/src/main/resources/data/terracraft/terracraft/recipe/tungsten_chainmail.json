@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:tungsten_chainmail",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:tungsten_bar",
+      "count": 35
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:amethyst_staff",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:amethyst",
+      "count": 8
+    },
+    {
+      "item": "minecraft:copper_ingot",
+      "count": 10
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

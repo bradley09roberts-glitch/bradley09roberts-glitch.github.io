@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:gold_bow",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:gold_ingot",
+      "count": 7
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

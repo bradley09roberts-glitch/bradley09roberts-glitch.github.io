@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:tin_broadsword",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:tin_bar",
+      "count": 8
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

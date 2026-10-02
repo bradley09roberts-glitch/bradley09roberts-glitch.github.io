@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:tin_helmet",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:tin_bar",
+      "count": 15
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

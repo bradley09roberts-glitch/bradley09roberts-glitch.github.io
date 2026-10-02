@@ -122,6 +122,16 @@ public final class TerrariaCommand {
 
         root.then(Commands.literal("biome").then(Commands.literal("debug").executes(TerrariaCommand::biomeDebug)));
 
+        root.then(Commands.literal("recipecheck").then(Commands.argument("recipe", IdentifierArgument.id()).executes(ctx -> {
+            Identifier id = IdentifierArgument.getId(ctx, "recipe");
+            boolean vanillaLoaded = ctx.getSource().getServer().getRecipeManager()
+                .byKey(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE, id)).isPresent();
+            boolean terraria = com.terracraft.crafting.TerraRecipeManager.server().stream().anyMatch(r -> r.id().equals(id));
+            ctx.getSource().sendSuccess(() -> Component.literal(id + ": vanilla recipe " + (vanillaLoaded ? "LOADED" : "absent")
+                + ", Terraria recipe " + (terraria ? "LOADED" : "absent")), false);
+            return vanillaLoaded || terraria ? 1 : 0;
+        })));
+
         for (Consumer<LiteralArgumentBuilder<CommandSourceStack>> extension : EXTENSIONS) {
             extension.accept(root);
         }

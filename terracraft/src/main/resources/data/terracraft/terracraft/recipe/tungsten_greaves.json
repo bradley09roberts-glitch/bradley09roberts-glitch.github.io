@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:tungsten_greaves",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:tungsten_bar",
+      "count": 30
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

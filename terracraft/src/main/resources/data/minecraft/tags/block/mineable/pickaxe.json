@@ -1,0 +1,17 @@
+{
+  "values": [
+    "terracraft:tin_ore",
+    "terracraft:lead_ore",
+    "terracraft:silver_ore",
+    "terracraft:tungsten_ore",
+    "terracraft:platinum_ore",
+    "terracraft:deepslate_tin_ore",
+    "terracraft:deepslate_lead_ore",
+    "terracraft:deepslate_silver_ore",
+    "terracraft:deepslate_tungsten_ore",
+    "terracraft:deepslate_platinum_ore",
+    "terracraft:iron_anvil",
+    "terracraft:lead_anvil",
+    "terracraft:life_crystal_block"
+  ]
+}

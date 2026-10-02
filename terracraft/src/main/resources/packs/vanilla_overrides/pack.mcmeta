@@ -1,0 +1,10 @@
+{
+  "pack": {
+    "description": "TerraCraft: removes vanilla progression bypasses (config controlled)",
+    "max_format": 107,
+    "min_format": [
+      107,
+      1
+    ]
+  }
+}

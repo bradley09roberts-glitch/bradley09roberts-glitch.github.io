@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "cookingtime": 100,
+  "experience": 0.7,
+  "ingredient": [
+    "terracraft:tungsten_ore",
+    "terracraft:deepslate_tungsten_ore"
+  ],
+  "result": {
+    "id": "terracraft:tungsten_bar"
+  }
+}

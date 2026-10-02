@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:gold_chainmail",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:gold_ingot",
+      "count": 40
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

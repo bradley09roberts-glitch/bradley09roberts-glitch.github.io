@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:platinum_chainmail",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:platinum_bar",
+      "count": 40
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

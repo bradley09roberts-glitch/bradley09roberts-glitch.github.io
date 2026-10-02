@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "cookingtime": 100,
+  "experience": 0.7,
+  "ingredient": "terracraft:raw_tin",
+  "result": {
+    "id": "terracraft:tin_bar"
+  }
+}

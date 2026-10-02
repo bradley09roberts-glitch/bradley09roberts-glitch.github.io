@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:wood_helmet",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "tag": "minecraft:planks",
+      "count": 20
+    }
+  ],
+  "stations": [
+    "terracraft:work_bench"
+  ],
+  "category": "armor"
+}

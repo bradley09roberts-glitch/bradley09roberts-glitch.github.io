@@ -19,6 +19,7 @@ public final class DataEvents {
 
     public static void register() {
         BusGroup.DEFAULT.register(MethodHandles.lookup(), DataEvents.class);
+        net.minecraftforge.event.AddPackFindersEvent.BUS.addListener(BuiltInPacks::onAddPackFinders);
     }
 
     @SubscribeEvent

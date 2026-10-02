@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "terracraft:item/mana_regeneration_potion"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "cookingtime": 100,
+  "experience": 0.7,
+  "ingredient": "terracraft:raw_tungsten",
+  "result": {
+    "id": "terracraft:tungsten_bar"
+  }
+}

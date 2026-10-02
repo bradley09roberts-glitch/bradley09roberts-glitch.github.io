@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:tungsten_helmet",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:tungsten_bar",
+      "count": 25
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

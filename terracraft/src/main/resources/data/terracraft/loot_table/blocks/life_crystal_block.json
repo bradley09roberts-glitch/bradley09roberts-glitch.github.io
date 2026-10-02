@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "terracraft:life_crystal"
+        }
+      ]
+    }
+  ],
+  "random_sequence": "terracraft:blocks/life_crystal_block"
+}

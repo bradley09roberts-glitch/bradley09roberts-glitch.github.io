@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:lesser_mana_potion",
+    "count": 2
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:gel",
+      "count": 2
+    },
+    {
+      "item": "terracraft:fallen_star",
+      "count": 1
+    },
+    {
+      "item": "minecraft:glass_bottle",
+      "count": 2
+    }
+  ],
+  "stations": [
+    "terracraft:alchemy"
+  ],
+  "category": "consumables"
+}

@@ -29,6 +29,12 @@ minecraft {
 
         register('client')
 
+        // Development client that joins a local dedicated server automatically (used for automated testing).
+        register('autoClient') {
+            workingDir = layout.projectDirectory.dir('run-client')
+            args '--quickPlayMultiplayer', 'localhost:25565', '--username', 'Dev'
+        }
+
         register('server') {
             args '--nogui'
         }

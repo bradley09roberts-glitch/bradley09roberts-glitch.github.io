@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:platinum_helmet",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:platinum_bar",
+      "count": 30
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

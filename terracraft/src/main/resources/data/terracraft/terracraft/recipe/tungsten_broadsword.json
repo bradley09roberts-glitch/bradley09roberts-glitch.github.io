@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:tungsten_broadsword",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:tungsten_bar",
+      "count": 8
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

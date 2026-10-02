@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:platinum_axe",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:platinum_bar",
+      "count": 9
+    },
+    {
+      "tag": "minecraft:planks",
+      "count": 3
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "tools"
+}

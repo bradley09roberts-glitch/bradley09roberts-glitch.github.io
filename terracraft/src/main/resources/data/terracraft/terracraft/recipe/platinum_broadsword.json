@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:platinum_broadsword",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:platinum_bar",
+      "count": 8
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

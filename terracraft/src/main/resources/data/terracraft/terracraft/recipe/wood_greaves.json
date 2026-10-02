@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:wood_greaves",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "tag": "minecraft:planks",
+      "count": 25
+    }
+  ],
+  "stations": [
+    "terracraft:work_bench"
+  ],
+  "category": "armor"
+}

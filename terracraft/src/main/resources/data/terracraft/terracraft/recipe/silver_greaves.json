@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:silver_greaves",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:silver_bar",
+      "count": 30
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

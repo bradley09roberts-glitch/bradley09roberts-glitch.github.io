@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "minecraft:chest",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "tag": "minecraft:planks",
+      "count": 8
+    },
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 2
+    }
+  ],
+  "stations": [
+    "terracraft:work_bench"
+  ],
+  "category": "furniture"
+}

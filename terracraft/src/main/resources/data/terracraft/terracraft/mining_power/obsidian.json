@@ -1,0 +1,7 @@
+{
+  "pickaxe_power": 55,
+  "blocks": [
+    "minecraft:obsidian",
+    "minecraft:crying_obsidian"
+  ]
+}

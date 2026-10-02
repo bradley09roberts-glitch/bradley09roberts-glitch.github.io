@@ -1,0 +1,18 @@
+{
+  "result": {
+    "item": "minecraft:torch",
+    "count": 3
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:gel",
+      "count": 1
+    },
+    {
+      "tag": "minecraft:planks",
+      "count": 1
+    }
+  ],
+  "stations": [],
+  "category": "furniture"
+}
