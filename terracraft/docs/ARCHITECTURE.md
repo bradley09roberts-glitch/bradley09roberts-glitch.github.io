@@ -28,13 +28,19 @@ Target: Minecraft Java 26.2, Forge 65.1.0 (EventBus 7, ForgeGradle 7), Java 25. 
 | `combat` | `DamageClass`, `TerraHit` + `TerraDamageSource` (hit metadata through vanilla damage), `TerraDamageTypes`, `DamageCalc` (variance, crits, defense), `TerrariaDifficulty`, `CombatEvents` (the damage pipeline), `HasTerrariaDefense`. |
 | `entity.projectile` | `ProjectileKind` (data definition), `ProjectileKinds` (registry), `TerrariaProjectile` (one generic entity: gravity, drag, pierce, bounce, homing, boomerang, explosion, ignite/debuff, local immunity), `TargetRules`. |
 | `item` | `TerraItemStats` (data component `terracraft:stats`), `TerraRarity`, base classes `TerraItem`/`TerraBlockItem`. Sub-packages: `weapon` (melee/ranged/magic/thrown archetypes, ammo, `UsableWeapon`, `WeaponFiring`), `tool`, `armor` (`ArmorSet`, `TerrariaArmorItem`), `accessory`, `consumable` (potions, permanent upgrades), `coin`, plus `DevTabletItem`. |
+| `entity` | `SpriteEntity` (anything drawn by the 2D sprite renderer). |
+| `entity.mob` | `MobDefinition` (Terraria stats), `TerrariaMobs` (definitions by entity id), `TerrariaMob` (base: contact damage, defense, coins, scaling, life scale), AI families `SlimeMob`, `MotherSlimeMob`, `WalkerMob`, `FlyerMob`. |
+| `entity.boss` | `TerrariaBoss` (boss bar, synced phase, scaling, despawn, announcements, flags), `KingSlime`, `EyeOfCthulhu`, `BossSummoning`, `BossCommands`. |
+| `npc` | `TownNpc` (entity), `TownNpcType`/`TownNpcs` (definitions + arrival rules), `HousingChecker` (3D housing rules), `NpcWorldData` (SavedData: records + house candidates), `NpcManager` (arrival/respawn/death, chat, shops, nurse, help), `NpcShops` (JSON shops), `NpcCommands`, `HousingQueryItem`. |
 | `block` | `CraftingStationBlock`. |
 | `crafting` | `TerraRecipe` (JSON model), `TerraRecipeManager` (server load, client copy, validated crafting), `CraftingStations` (tag-based stations + reach scan), `CraftingLogic`. |
 | `mining` | `MiningPower` (data-driven requirements, synced table), `ToolPowers`, `MiningEvents`, `MiningTags`. |
 | `economy` | `Coins` (denominations, conversion, formatting), `EconomyEvents` (drops, compaction, softcore death). |
 | `effect` | `TerraBuffEffect` (MobEffect carrying `StatEffects`). |
 | `menu` | `AccessoryMenu`. |
-| `world` | `VanillaSuppression`, `TerrariaLayer` (Space/Surface/Underground/Cavern/Underworld height bands). |
+| `world` | `VanillaSuppression`, `TerrariaLayer` (Space/Surface/Underground/Cavern/Underworld height bands), `FallenStars`. |
+| `world.spawn` | `SpawnRule` (JSON model), `TerrariaSpawner` (per-player caps/rates, weighted rule pick), `SpawnCommands`. |
+| `world.gen` | `PairedOreFeature`, `LootChestFeature`, `WorldgenVariants` (thread-safe variants for generation), `WorldgenCommands`. Features/biome modifiers are datapack JSON. |
 | `data` | `JsonDataLoader` (generic datapack directory loader), `DataEvents` (loaders + client sync), `BuiltInPacks` (pinned `vanilla_overrides` pack). |
 | `network` | `TerraNetwork` (one SimpleChannel), `packet.*` records with `STREAM_CODEC` + `handle`. |
 | `command` | `TerrariaCommand` (`/terraria ...`, extensible), `DevActions` (shared by dev menu and commands). |
@@ -63,6 +69,28 @@ Anything -> `ProgressionManager.set(server, flag, value)` -> SavedData -> listen
 Client screen filters `TerraRecipeManager.client()` with `CraftingStations.nearby` + inventory counts ->
 `CraftRecipePacket` -> server re-validates progression, stations and materials -> consumes and gives results.
 
+### Enemies and spawning
+`TerrariaSpawner` (player tick, once a second) -> cap check (`maxSpawns` by layer/time) -> candidate column
+24-44 blocks away -> `SpawnContext` (biome, layer, day, sky) -> matching `SpawnRule`s -> weighted pick ->
+group spawn. Enemy stats live in `MobContent` (`MobDefinition` builder); difficulty scaling is applied in
+`finalizeSpawn`. Damage taken by enemies with more than 1000 life is divided by their life scale in
+`CombatEvents`.
+
+### Sprites
+`TerrariaMobRenderer` draws any `SpriteEntity` (or living entity) from `textures/entity/mob/<id>[_variant].png`
+with `<id>.json` frame data (`MobSprites`, reloaded with resources). One renderer serves enemies, bosses and NPCs.
+
+### Bosses
+`TerrariaBoss` subclasses implement `customServerAiStep` as a small state machine (`aiState`, `aiTimer`,
+synced `phase()` for visuals). Summoning goes through `BossSummoning.summon` (items and commands).
+
+### Town NPCs
+`NpcManager` runs every 5 s: living NPCs keep/lose/find houses; absent NPCs arrive by day when their
+`TownNpcType.arrival` predicate holds and a free valid house exists (the Guide needs none). House
+candidates come from player-placed doors/lights/furniture. Chat: right-click -> `OpenNpcChatPacket`
+(dialogue key, services, filtered shop) -> `NpcChatScreen` -> `NpcActionPacket` (buy/sell/heal/help/close),
+re-validated on the server.
+
 ### Vanilla overrides
 `packs/vanilla_overrides` is registered by `BuiltInPacks` as a *required* datapack *fixed at the top*, so its
 replacements (config-conditioned recipe overrides, empty structure tags) win over vanilla and Forge in every world.
@@ -77,6 +105,12 @@ replacements (config-conditioned recipe overrides, empty structure tags) win ove
 * **Projectile**: `ProjectileKinds.register(ProjectileKind.builder(...))` + projectile art.
 * **Progression gate**: use `ProgressionCondition` JSON in data, or `ProgressionManager.addListener`.
 * **Crafting station**: add a block to `#terracraft:stations/<name>`; recipes reference `terracraft:<name>`.
+* **Enemy**: one line in `MobContent` (AI family, hitbox, `MobDefinition`), a sprite in `generate_assets.py`
+  (`mob_sprite`), loot + name in `generate_data.py` (`MOBS`), spawn rules in `SPAWNS` (or any datapack).
+* **Boss**: subclass `TerrariaBoss`, register in `MobContent`, add a summon item (`BossSummonItem`) and an
+  entry in `BossCommands`.
+* **Town NPC**: `NpcContent.npc(id)`, a `TownNpcType` in `TownNpcs` (names, arrival rule, attack, services),
+  sprite, dialogue lines in `generate_data.py` and an optional shop JSON.
 
 ## Known engine constraints (26.2)
 

@@ -27,7 +27,7 @@ import net.minecraftforge.network.SimpleChannel;
  * Bump {@link #PROTOCOL} whenever a packet layout changes.
  */
 public final class TerraNetwork {
-    public static final int PROTOCOL = 1;
+    public static final int PROTOCOL = 2;
 
     public static final SimpleChannel CHANNEL = ChannelBuilder.named(TerraCraft.id("main"))
         .networkProtocolVersion(PROTOCOL)
@@ -40,12 +40,16 @@ public final class TerraNetwork {
                 .addMain(OpenCraftingPacket.class, OpenCraftingPacket.STREAM_CODEC, OpenCraftingPacket::handle)
                 .addMain(SyncRecipesPacket.class, SyncRecipesPacket.STREAM_CODEC, SyncRecipesPacket::handle)
                 .addMain(SyncMiningPowerPacket.class, SyncMiningPowerPacket.STREAM_CODEC, SyncMiningPowerPacket::handle)
+                .addMain(com.terracraft.network.packet.OpenNpcChatPacket.class, com.terracraft.network.packet.OpenNpcChatPacket.STREAM_CODEC,
+                    com.terracraft.network.packet.OpenNpcChatPacket::handle)
             .serverbound()
                 .addMain(DevActionPacket.class, DevActionPacket.STREAM_CODEC, DevActionPacket::handle)
                 .addMain(OpenAccessoriesPacket.class, OpenAccessoriesPacket.STREAM_CODEC, OpenAccessoriesPacket::handle)
                 .addMain(CraftRecipePacket.class, CraftRecipePacket.STREAM_CODEC, CraftRecipePacket::handle)
                 .addMain(DoubleJumpPacket.class, DoubleJumpPacket.STREAM_CODEC, DoubleJumpPacket::handle)
                 .addMain(UseWeaponPacket.class, UseWeaponPacket.STREAM_CODEC, UseWeaponPacket::handle)
+                .addMain(com.terracraft.network.packet.NpcActionPacket.class, com.terracraft.network.packet.NpcActionPacket.STREAM_CODEC,
+                    com.terracraft.network.packet.NpcActionPacket::handle)
         .build();
 
     private TerraNetwork() {}

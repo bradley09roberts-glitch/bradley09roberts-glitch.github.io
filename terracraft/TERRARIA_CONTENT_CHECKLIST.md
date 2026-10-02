@@ -16,10 +16,10 @@ Legend: `[ ]` not started, `[-]` partial, `[x]` complete (implemented and usable
 - [x] Pickaxe power
 - [x] World progression flags, conditions, announcements
 - [x] Vanilla progression bypass removal (configurable)
-- [ ] Enemy framework (AI archetypes)
-- [ ] Spawn system (biome/depth/time/event/progression)
-- [ ] Boss framework
-- [ ] NPC framework, housing, shops
+- [x] Enemy framework (AI archetypes: slime, walker, flyer chaser/erratic, splitting)
+- [x] Spawn system (biome/depth/time/sky/progression; events pending)
+- [x] Boss framework
+- [x] NPC framework, housing, shops
 - [ ] Event framework (invasions, moons)
 - [ ] Biome spread (Corruption/Crimson/Hallow)
 - [ ] Hardmode world transformation
@@ -30,8 +30,8 @@ Legend: `[ ]` not started, `[-]` partial, `[x]` complete (implemented and usable
 
 ## Bosses
 Pre-hardmode
-- [ ] King Slime
-- [ ] Eye of Cthulhu
+- [x] King Slime
+- [x] Eye of Cthulhu
 - [ ] Eater of Worlds
 - [ ] Brain of Cthulhu
 - [ ] Queen Bee
@@ -53,13 +53,13 @@ Hardmode
 - [ ] Moon Lord
 
 ## Enemies
-- [ ] Slimes (Green, Blue, Red, Purple, Yellow, Black, Mother, Baby, Jungle, Ice, Sand, Lava, Spiked...)
-- [ ] Zombies (+ variants), Demon Eye (+ variants)
+- [-] Slimes (Green, Blue, Red, Purple, Yellow, Black, Mother, Baby done; Jungle, Ice, Sand, Lava, Spiked... pending)
+- [-] Zombie, Demon Eye, Servant of Cthulhu (variants pending)
 - [ ] Flying Fish, Piranha, Shark, Crab
 - [ ] Jungle: Hornet, Man Eater, Snatcher, Jungle Bat, Derpling (HM)
 - [ ] Desert: Antlion, Antlion Charger/Swarmer, Vulture, Tomb Crawler
 - [ ] Snow/Ice: Ice Slime, Ice Bat, Undead Viking, Snow Flinx
-- [ ] Caverns: Skeleton, Cave Bat, Giant Worm, Granite Elemental/Golem, Hoplite, Spider caves (Black Recluse)
+- [-] Caverns: Skeleton, Cave Bat done; Giant Worm, Granite/Marble, spiders pending
 - [ ] Corruption: Eater of Souls, Devourer, Corrupt Slime (HM), World Feeder...
 - [ ] Crimson: Crimera, Face Monster, Blood Crawler, Herpling (HM)...
 - [ ] Dungeon: Angry Bones, Dark Caster, Cursed Skull, Dungeon Guardian; post-Plantera dungeon enemies
@@ -68,7 +68,7 @@ Hardmode
 - [ ] Event enemies (Goblin Army, Pirates, Frost Legion, Martians, Pumpkin/Frost Moon, Solar Eclipse)
 
 ## NPCs
-- [ ] Guide, Merchant, Nurse, Demolitionist
+- [x] Guide, Merchant, Nurse, Demolitionist
 - [ ] Dye Trader, Angler, Zoologist, Dryad, Arms Dealer, Painter, Golfer, Tavernkeep
 - [ ] Stylist, Goblin Tinkerer, Witch Doctor, Clothier, Mechanic, Party Girl, Wizard
 - [ ] Tax Collector, Truffle, Pirate, Steampunker, Cyborg, Santa Claus, Princess
@@ -118,8 +118,8 @@ Boomerangs
 ## Ores and bars
 - [x] Copper, Iron, Gold (vanilla ores/ingots)
 - [x] Tin, Lead, Silver, Tungsten, Platinum (ore, deepslate ore, raw, bar)
-- [-] World ore-pair choice (stored per world; worldgen placement in Stage 2)
-- [ ] Meteorite, Demonite, Crimtane, Hellstone, Obsidian (vanilla, 55% gate done)
+- [x] World ore-pair choice (worldgen honours it)
+- [-] Demonite/Crimtane ore + bars (boss drop); Meteorite, Hellstone pending; Obsidian gate done
 - [ ] Cobalt/Palladium, Mythril/Orichalcum, Adamantite/Titanium, Chlorophyte, Luminite
 
 ## Blocks
@@ -145,7 +145,7 @@ Boomerangs
 - [ ] Jungle Temple
 - [ ] Floating Islands
 - [ ] Living Trees
-- [ ] Underground cabins / abandoned houses
+- [-] Underground loot chests (cabins pending)
 - [ ] Bee hives
 - [ ] Pyramids
 - [ ] Underworld ruins
@@ -178,11 +178,11 @@ Boomerangs
       Mythril/Orichalcum Anvil, Adamantite/Titanium Forge, Ancient Manipulator, Crystal Ball...
 
 ## Materials
-- [x] Gel, Lens, Fallen Star, Amethyst
+- [x] Gel, Lens, Fallen Star (falling at night), Amethyst, Life Crystals in caves
 - [x] Bars and raw metals listed above
 - [ ] Herbs, souls, fragments, boss materials, mushrooms, other gems...
 
 ## Consumables / items
 - [x] Life Crystal, Life Fruit, Mana Crystal
 - [x] Coins
-- [ ] Boss summon items, Demon Heart, keys, housing query tool, wormhole potions, recall
+- [-] Slime Crown, Suspicious Looking Eye, Housing Query done; Demon Heart, keys, wormhole, recall pending

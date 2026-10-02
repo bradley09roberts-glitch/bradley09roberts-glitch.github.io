@@ -1,0 +1,16 @@
+{
+  "npc": "demolitionist",
+  "items": [
+    {
+      "item": "minecraft:tnt",
+      "price": 1500
+    },
+    {
+      "item": "minecraft:flint_and_steel",
+      "price": 500
+    },
+    {
+      "item": "terracraft:mining_potion"
+    }
+  ]
+}

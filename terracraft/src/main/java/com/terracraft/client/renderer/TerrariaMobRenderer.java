@@ -4,7 +4,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.terracraft.TerraCraft;
-import com.terracraft.entity.mob.TerrariaMob;
+import com.terracraft.entity.SpriteEntity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -23,7 +24,7 @@ import net.minecraft.world.phys.Vec3;
  * (rotating around the vertical axis), mirrors to show which way the enemy moves, can tilt along its flight
  * path, flashes red when hurt and shows a Terraria-style health bar while damaged.
  */
-public class TerrariaMobRenderer<T extends TerrariaMob> extends EntityRenderer<T, TerrariaMobRenderer.State> {
+public class TerrariaMobRenderer<T extends LivingEntity> extends EntityRenderer<T, TerrariaMobRenderer.State> {
     private static final Identifier WHITE = TerraCraft.id("textures/entity/white.png");
 
     public static class State extends EntityRenderState {
@@ -35,6 +36,7 @@ public class TerrariaMobRenderer<T extends TerrariaMob> extends EntityRenderer<T
         boolean hurt;
         float healthFraction = 1.0F;
         float deathProgress;
+        boolean healthBar = true;
     }
 
     public TerrariaMobRenderer(EntityRendererProvider.Context context) {
@@ -51,9 +53,11 @@ public class TerrariaMobRenderer<T extends TerrariaMob> extends EntityRenderer<T
     public void extractRenderState(T entity, State state, float partialTicks) {
         super.extractRenderState(entity, state, partialTicks);
         Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
-        String variant = entity.spriteVariant();
+        SpriteEntity sprite = entity instanceof SpriteEntity s ? s : null;
+        String variant = sprite != null ? sprite.spriteVariant() : "";
         state.sprite = MobSprites.INSTANCE.get(variant.isEmpty() ? id : id.withSuffix("_" + variant));
-        state.spin = entity.spriteSpin(partialTicks);
+        state.spin = sprite != null ? sprite.spriteSpin(partialTicks) : 0.0F;
+        state.healthBar = sprite == null || sprite.showsHealthBar();
         state.animTicks = state.sprite.animateWhileMoving()
             ? entity.walkAnimation.position(partialTicks) * 4.0F
             : entity.tickCount + partialTicks;
@@ -61,7 +65,7 @@ public class TerrariaMobRenderer<T extends TerrariaMob> extends EntityRenderer<T
         state.look = entity.getViewVector(partialTicks);
         state.hurt = entity.hurtTime > 0 || entity.deathTime > 0;
         state.healthFraction = entity.getMaxHealth() > 0 ? Mth.clamp(entity.getHealth() / entity.getMaxHealth(), 0.0F, 1.0F) : 1.0F;
-        state.deathProgress = entity.deathTime > 0 ? (entity.deathTime + partialTicks) / 4.0F : 0.0F;
+        state.deathProgress = entity.deathTime > 0 ? (entity.deathTime + partialTicks) / (entity instanceof SpriteEntity ? 4.0F : 20.0F) : 0.0F;
         state.shadowRadius = entity.getBbWidth() * 0.45F;
     }
 
@@ -125,7 +129,7 @@ public class TerrariaMobRenderer<T extends TerrariaMob> extends EntityRenderer<T
         });
         poseStack.popPose();
 
-        if (state.healthFraction < 1.0F && state.deathProgress <= 0.0F && state.distanceToCameraSq < 32 * 32) {
+        if (state.healthBar && state.healthFraction < 1.0F && state.deathProgress <= 0.0F && state.distanceToCameraSq < 32 * 32) {
             submitHealthBar(state, poseStack, collector, facing);
         }
         super.submit(state, poseStack, collector, camera);

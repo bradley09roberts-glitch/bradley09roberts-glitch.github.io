@@ -421,6 +421,43 @@ def lang():
         'item.terracraft.demonite_ore.tooltip': 'Pulsing with dark energy',
         'item.terracraft.crimtane_ore.tooltip': 'Its veins throb',
     })
+    L['npc.terracraft.name_format'] = '%s the %s'
+    for npc, name in NPC_NAMES.items():
+        L[f'npc.terracraft.{npc}'] = name
+        L[f'entity.terracraft.{npc}'] = name
+        for i, line in enumerate(NPC_DIALOGUE[npc], 1):
+            L[f'npc.terracraft.{npc}.dialogue.{i}'] = line
+    for i, line in enumerate(GUIDE_HELP, 1):
+        L[f'npc.terracraft.guide.help.{i}'] = line
+    L.update({
+        'npc.terracraft.nurse.healthy': "You look perfectly healthy. Come back when something's broken.",
+        'npc.terracraft.nurse.too_poor': "Healing you would cost %s. I don't work for free, you know.",
+        'npc.terracraft.nurse.healed': "All better! That'll be %s.",
+        'message.terracraft.npc.arrived': '%s has arrived!',
+        'message.terracraft.npc.slain': '%s was slain...',
+        'message.terracraft.housing.valid': 'This housing is suitable (%s blocks of space).',
+        'message.terracraft.housing.free': 'Nobody lives here yet.',
+        'message.terracraft.housing.occupied': 'This is where %s lives.',
+        'message.terracraft.housing.not_enclosed': 'This housing is not valid: it is not enclosed (or too large).',
+        'message.terracraft.housing.too_small': 'This housing is not valid: it is too small.',
+        'message.terracraft.housing.no_door': 'This housing is not valid: it is missing a door.',
+        'message.terracraft.housing.no_light': 'This housing is not valid: it is missing a light source.',
+        'message.terracraft.housing.no_comfort': 'This housing is not valid: it is missing a comfort item (bed or chair).',
+        'message.terracraft.housing.no_table': 'This housing is not valid: it is missing a flat surface item (table or work bench).',
+        'message.terracraft.housing.not_air': 'Click inside a room to check it.',
+        'message.terracraft.shop.too_poor': "You don't have enough money.",
+        'message.terracraft.shop.cannot_sell': "Nobody wants to buy that.",
+        'message.terracraft.shop.sold': 'Sold for %s',
+        'screen.terracraft.npc.shop': 'Shop',
+        'screen.terracraft.npc.heal': 'Heal',
+        'screen.terracraft.npc.help': 'Help',
+        'screen.terracraft.npc.close': 'Close',
+        'screen.terracraft.npc.back': 'Back',
+        'screen.terracraft.npc.sell': 'Sell held item',
+        'screen.terracraft.npc.savings': 'Savings: ',
+        'screen.terracraft.npc.price': 'Price: ',
+        'item.terracraft.housing_query.tooltip': 'Right-click inside a room to check whether an NPC can live there',
+    })
     for mob, (name, _) in MOBS.items():
         L[f'entity.terracraft.{mob}'] = name
     path = os.path.join(RES, 'assets/terracraft/lang/en_us.json')
@@ -609,6 +646,91 @@ def worldgen():
         ['regeneration_potion', 'obsidian_skin_potion', 'water_walking_potion', 'magic_power_potion', 'mana_regeneration_potion']))
 
 
+# --- Town NPCs -------------------------------------------------------------------------------------
+NPC_NAMES = {'guide': 'Guide', 'merchant': 'Merchant', 'nurse': 'Nurse', 'demolitionist': 'Demolitionist'}
+NPC_DIALOGUE = {
+    'guide': [
+        "Hello, %s. If you're new here, chop some trees and build a shelter before nightfall.",
+        "Gel from slimes and a little wood make torches. You'll want plenty of light underground.",
+        "Stars fall from the sky at night. Collect them before sunrise - they're worth more than they look.",
+        "Life Crystals glow deep in the caverns. Each one makes you a little sturdier.",
+        "Build more houses and more people will come to live here. A home needs walls, a door, a light, a chair and a table.",
+        "Something watches from the dark... They say enough lenses could call it down on you.",
+        "A Work Bench is the first thing every builder needs. Press V near one to see what you can make.",
+        "I keep hearing stories about an enormous slime wearing a crown. Ridiculous, surely.",
+    ],
+    'merchant': [
+        "Welcome, %s! Coin talks, and I'm a very good listener.",
+        "Torches, potions, arrows - the essentials of a long and happy life. Mostly long.",
+        "Everything you carry is worth something to somebody. Usually me.",
+        "Prices are fair, friend. Fair to me, at least.",
+        "Out exploring after dark? Then you'll want to buy something. Trust me.",
+        "Bring me your odds and ends - I'll pay a fifth of what they're worth!",
+    ],
+    'nurse': [
+        "Hold still, %s. This might sting. A lot.",
+        "You look terrible. That's not an insult, it's a diagnosis.",
+        "I patch people up. I don't do miracles - but I'm close.",
+        "Please stop running headfirst into slimes.",
+        "My services aren't free, but your life is worth the coin. Probably.",
+        "Back again? You must enjoy my company. Or bleeding.",
+    ],
+    'demolitionist': [
+        "Ah, %s! Nothing like the smell of fresh powder in the morning.",
+        "Rock in your way? Not for long, it isn't.",
+        "Mind your step. And your eyebrows.",
+        "Every problem's a nail, and I've got the biggest hammer there is.",
+        "Underground's full of riches. You just have to ask it nicely. Loudly.",
+        "Careful with the merchandise. Very careful.",
+    ],
+}
+GUIDE_HELP = [
+    "Press V to open the crafting menu. It shows everything you can make with the stations around you.",
+    "Press R to open your equipment. Accessories go in the slots next to your armor.",
+    "Your pickaxe's power decides what you can mine. Obsidian needs something stronger than copper.",
+    "Each world has copper or tin, iron or lead, silver or tungsten, and gold or platinum. Look around!",
+    "Life Crystals raise your maximum life by 20. You can use fifteen of them.",
+    "Magic weapons use mana, which slowly refills. Mana Crystals raise your maximum.",
+    "Enemies drop coins. If you die, you'll drop half of the coins you carry.",
+    "The Merchant will move in once someone has saved 50 silver and there is an empty house.",
+    "The Nurse comes once the Merchant lives here and someone has used a Life Crystal.",
+    "Carry some explosives, and a Demolitionist may take an interest in your town.",
+    "Use a Housing Query on a room to check whether someone could live there.",
+    "Twenty gel and five gold or platinum bars make a Slime Crown. Use it if you dare.",
+]
+SHOPS = {
+    'merchant': [
+        {'item': 'minecraft:torch', 'price': 50},
+        {'item': t('lesser_healing_potion')},
+        {'item': t('lesser_mana_potion')},
+        {'item': 'minecraft:arrow', 'price': 5},
+        {'item': t('shuriken'), 'price': 15},
+        {'item': t('copper_pickaxe')},
+        {'item': t('copper_axe')},
+        {'item': t('iron_anvil'), 'price': 5000},
+        {'item': 'minecraft:glass_bottle', 'price': 20},
+        {'item': 'minecraft:chest', 'price': 500},
+        {'item': t('housing_query'), 'price': 100},
+        {'item': t('mining_potion'), 'condition': 'boss_eye_defeated'},
+    ],
+    'demolitionist': [
+        {'item': 'minecraft:tnt', 'price': 1500},
+        {'item': 'minecraft:flint_and_steel', 'price': 500},
+        {'item': t('mining_potion')},
+    ],
+}
+
+
+def npcs():
+    for npc, items in SHOPS.items():
+        write(f'{NS}/terracraft/shops/{npc}.json', {'npc': npc, 'items': items})
+    write(f'{NS}/tags/block/housing/doors.json', {'values': ['#minecraft:doors', '#minecraft:trapdoors', '#minecraft:fence_gates']})
+    write(f'{NS}/tags/block/housing/comfort.json', {'values': ['#minecraft:beds', '#minecraft:wooden_stairs']})
+    write(f'{NS}/tags/block/housing/tables.json', {'values': ['minecraft:crafting_table', t('work_bench'), 'minecraft:cartography_table',
+                                                            'minecraft:fletching_table', 'minecraft:smithing_table', 'minecraft:loom']})
+    write(f'{NS}/tags/block/housing/lights.json', {'values': []})
+
+
 def main():
     jar = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser(
         '~/.gradle/caches/minecraftforge/forgegradle/mavenizer/caches/minecraft_tasks/26.2/client.jar')
@@ -619,6 +741,7 @@ def main():
     vanilla_overrides(jar)
     mobs()
     worldgen()
+    npcs()
     n = lang()
     print(f'Generated {len(RECIPES)} Terraria recipes and {n} language entries')
 

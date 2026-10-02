@@ -471,6 +471,18 @@ def draw_eye_item(c):
     c.outline()
 
 
+def draw_housing_query(c):
+    wall = palette('#C8A070')
+    roof = palette('#B04030')
+    c.polygon([(1, 8), (8, 2), (15, 8)], roof[2])
+    c.rect(3, 8, 13, 14, wall[2])
+    c.rect(7, 10, 9, 14, palette('#6A4428')[2])
+    c.rect(4, 9, 5, 10, hexc('#FFE070')); c.rect(11, 9, 12, 10, hexc('#FFE070'))
+    c.light()
+    c.outline()
+
+
+item('housing_query', draw_housing_query)
 item('slime_crown', draw_crown)
 item('suspicious_looking_eye', draw_eye_item)
 item('demonite_ore', lambda c: draw_raw(c, palette('#6A4FA8'), 'demonite'))
@@ -942,6 +954,45 @@ def servant_frame(c, frame):
 
 
 mob_sprite('servant_of_cthulhu', 14, 10, 4, servant_frame, frame_time=3, rotate=True)
+
+
+def npc_frame(c, frame, skin, hair, shirt, pants, hat=None, beard=None, cross=False):
+    # 16x24 town NPC facing left, arms at the sides, 3-frame walk
+    sk, hr, sh, pa = palette(skin), palette(hair), palette(shirt), palette(pants)
+    c.rect(5, 2, 10, 8, sk[2])                       # head
+    c.rect(5, 1, 10, 3, hr[2]); c.rect(9, 3, 10, 6, hr[2])   # hair (back of head on the right)
+    c.set(5, 5, (30, 30, 40, 255))                   # eye
+    c.set(5, 7, sk[1])                               # mouth
+    if beard:
+        bd = palette(beard)
+        c.rect(5, 6, 9, 9, bd[2]); c.set(5, 7, bd[1])
+    if hat:
+        ht = palette(hat)
+        c.rect(4, 0, 11, 2, ht[2]); c.rect(3, 2, 6, 2, ht[1])
+        if cross:
+            c.set(7, 1, hexc('#E03030')); c.set(8, 1, hexc('#E03030')); c.set(7, 0, hexc('#E03030'))
+    c.rect(6, 9, 10, 16, sh[2])                      # torso
+    if cross:
+        c.rect(8, 11, 8, 13, hexc('#E03030')); c.rect(7, 12, 9, 12, hexc('#E03030'))
+    swing = [0, 1, -1][frame]
+    c.rect(5 + swing, 10, 5 + swing, 15, sh[1])      # front arm
+    c.set(5 + swing, 16, sk[2])
+    offsets = [(0, 0), (-2, 2), (2, -2)][frame]
+    c.rect(6 + offsets[0], 17, 7 + offsets[0], 22, pa[2])
+    c.rect(9 + offsets[1], 17, 10 + offsets[1], 22, pa[1])
+    c.rect(5 + offsets[0], 23, 7 + offsets[0], 23, pa[0])
+    c.rect(8 + offsets[1], 23, 10 + offsets[1], 23, pa[0])
+    c.light(1.2, 0.8)
+    c.outline()
+
+
+mob_sprite('guide', 16, 24, 3, lambda c, f: npc_frame(c, f, '#E8B890', '#6A4428', '#6E8C3A', '#5A4430'), frame_time=6, animate='move')
+mob_sprite('merchant', 16, 24, 3, lambda c, f: npc_frame(c, f, '#E8B890', '#E8E8E8', '#5A6A8C', '#3A3A44', hat='#6A6A70', beard='#F0F0F0'),
+           frame_time=6, animate='move')
+mob_sprite('nurse', 16, 24, 3, lambda c, f: npc_frame(c, f, '#F0C8A8', '#C84838', '#F4F4F4', '#F0F0F0', hat='#F8F8F8', cross=True),
+           frame_time=6, animate='move')
+mob_sprite('demolitionist', 16, 24, 3, lambda c, f: npc_frame(c, f, '#D8A880', '#C86A28', '#8A5A30', '#4A3A2A', hat='#E8C030', beard='#C86A28'),
+           frame_time=6, animate='move')
 
 
 def mob_assets():

@@ -38,8 +38,23 @@ public final class ClientPacketHandlers {
         }
     }
 
+    public static void openNpcChat(com.terracraft.network.packet.OpenNpcChatPacket packet) {
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            Client.openNpcChat(packet);
+        }
+    }
+
     /** Holder for code that names client-only classes. */
     private static final class Client {
+        static void openNpcChat(com.terracraft.network.packet.OpenNpcChatPacket packet) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.gui.screen() instanceof com.terracraft.client.gui.NpcChatScreen open && open.entityId() == packet.entityId()) {
+                open.update(packet);
+            } else {
+                mc.gui.setScreen(new com.terracraft.client.gui.NpcChatScreen(packet));
+            }
+        }
+
         static void openDevMenu() {
             Minecraft.getInstance().gui.setScreen(new DevMenuScreen());
         }

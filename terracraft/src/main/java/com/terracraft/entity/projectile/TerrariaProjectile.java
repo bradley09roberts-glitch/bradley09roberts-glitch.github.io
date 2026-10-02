@@ -233,8 +233,8 @@ public class TerrariaProjectile extends Projectile {
         if (entity == owner) {
             return false;
         }
-        if (owner instanceof Player) {
-            // Player shots never hit players (no PvP by default) or the player's tamed animals.
+        if (owner instanceof Player || owner instanceof LivingEntity livingOwner && TargetRules.isFriendlyToPlayers(livingOwner)) {
+            // Player (and town NPC) shots never hit players (no PvP by default) or the player's tamed animals.
             return !(entity instanceof Player) && !TargetRules.isFriendlyToPlayers(living);
         }
         // Enemy shots only hit players and friendly town NPCs.

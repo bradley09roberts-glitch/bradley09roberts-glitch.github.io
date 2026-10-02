@@ -1,0 +1,10 @@
+{
+  "values": [
+    "minecraft:crafting_table",
+    "terracraft:work_bench",
+    "minecraft:cartography_table",
+    "minecraft:fletching_table",
+    "minecraft:smithing_table",
+    "minecraft:loom"
+  ]
+}

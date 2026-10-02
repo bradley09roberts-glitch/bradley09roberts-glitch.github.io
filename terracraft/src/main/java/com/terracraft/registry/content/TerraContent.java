@@ -15,5 +15,6 @@ public final class TerraContent {
         WorldBlockContent.init();
         MobContent.init();
         BossContent.init();
+        NpcContent.init();
     }
 }

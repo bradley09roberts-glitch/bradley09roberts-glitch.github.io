@@ -5,10 +5,12 @@ for **Minecraft Java 26.2 / Forge 65.1.0** that turns Minecraft into a Minecraft
 Terraria: Terraria's progression, health/mana, combat classes, equipment, crafting stations, ores,
 coins, NPCs, bosses, events and biomes, built inside Minecraft's 3D world.
 
-All art is original: textures are generated procedurally by `tools/generate_assets.py`. No Terraria
-assets are used or redistributed.
+All art shipped with the mod is original: textures are generated procedurally by `tools/generate_assets.py`.
+No Terraria assets are included or redistributed. If you own Terraria and want its real sprites, build a
+**personal** resource pack (see below).
 
-> Status: **Stage 0 (foundation) and Stage 1 (core Terraria systems) are complete and verified in-game.**
+> Status: **Stages 0-2 (foundation, core systems, early game: enemies, spawning, worldgen, King Slime,
+> Eye of Cthulhu, town NPCs) are complete and verified in-game.**
 > See [DEVELOPMENT_PROGRESS.md](DEVELOPMENT_PROGRESS.md) and
 > [TERRARIA_CONTENT_CHECKLIST.md](TERRARIA_CONTENT_CHECKLIST.md).
 
@@ -37,6 +39,18 @@ python3 tools/generate_data.py     # datapack JSON + en_us.json (reads the cache
 
 `generate_assets.py` fails if an item registered in Java has no art recipe, keeping both in sync.
 
+## Personal Terraria sprite pack
+
+```bash
+python3 tools/terraria_resource_pack.py --wiki            # downloads sprites from terraria.wiki.gg
+python3 tools/terraria_resource_pack.py --folder sprites  # or use PNGs you exported yourself
+```
+
+This writes `TerraCraft-Terraria-Sprites.zip` (items, enemies, bosses and NPCs). Put it in
+`.minecraft/resourcepacks/` and enable it. It is for your own use only - do not share it, the sprites belong
+to Re-Logic. Enemies, bosses and NPCs are drawn as 2D sprites (`textures/entity/mob/<id>.png` + `<id>.json`
+frame data), so any resource pack can re-skin them.
+
 ## Playing: what is different from vanilla
 
 * **Life**: you start with 100 life (Terraria numbers); Life Crystals add 20 (max 15), Life Fruit 5 (max 20).
@@ -53,6 +67,16 @@ python3 tools/generate_data.py     # datapack JSON + en_us.json (reads the cache
 * **Mining**: pickaxes have Terraria pickaxe power; some blocks require more (Obsidian 55%).
 * **Coins**: copper/silver/gold/platinum, auto-converting. Enemies drop coins; dying drops half your coins
   but you keep your items (softcore).
+* **Enemies** spawn the Terraria way around each player (slimes by day, zombies and Demon Eyes at night,
+  skeletons, bats and tougher slimes underground), deal contact damage and drop coins and materials.
+* **Bosses**: craft a **Slime Crown** (20 Gel + 5 Gold/Platinum Bars) for King Slime or a **Suspicious
+  Looking Eye** (6 Lenses, use at night) for the Eye of Cthulhu.
+* **Town NPCs**: the Guide arrives at once; build houses (walls, a door, a light, a chair/bed and a
+  table/work bench) and the Merchant (50 silver saved), Nurse (after a Life Crystal) and Demolitionist
+  (carry TNT) move in. Right-click them to talk, shop, sell, heal or get help. The **Housing Query**
+  checks rooms.
+* **World**: each world uses one ore of every Terraria pair (copper or tin...), Life Crystals and loot chests
+  generate in caves, and Fallen Stars drop at night.
 * **Removed bypasses** (all configurable in `config/terracraft-common.toml`): villagers, wandering
   traders, villages/outposts/mansions/strongholds, natural vanilla hostile spawns, Nether/End travel,
   enchanting, brewing, diamond and netherite gear.
@@ -64,6 +88,8 @@ python3 tools/generate_data.py     # datapack JSON + en_us.json (reads the cache
 * `/terraria devmenu` or the **Developer Tablet** item (TerraCraft: Developer tab) opens a menu to toggle
   every progression flag, change time and edit player upgrades.
 * `/terraria biome debug`, `/terraria recipecheck <id>`
+* `/terraria spawns info | spawns force [n] | killall` (enemies), `/terraria boss spawn <boss> | killall | list`
+* `/terraria npc spawn <npc> | list | killall | housing`, `/terraria worldgen scan [radius]`, `/terraria star`
 
 Automated in-game testing (headless): see [docs/TESTING.md](docs/TESTING.md).
 

@@ -75,12 +75,18 @@ def item_names():
     return names
 
 
+# Sprites whose Terraria name is not the entity's English name (alternate forms).
+SPRITE_NAME_OVERRIDES = {
+    "eye_of_cthulhu_mouth": "Eye of Cthulhu (Phase 2)",
+}
+
+
 def mob_names():
     """Enemy/NPC/boss sprites: textures/entity/mob/<id>.png with an <id>.json frame description."""
     lang = json.loads(LANG.read_text(encoding="utf-8"))
     names = {}
     for meta in sorted((ASSETS / "textures/entity/mob").glob("*.json")):
-        name = lang.get(f"entity.terracraft.{meta.stem}")
+        name = SPRITE_NAME_OVERRIDES.get(meta.stem) or lang.get(f"entity.terracraft.{meta.stem}")
         if name:
             names[meta.stem] = (name, json.loads(meta.read_text(encoding="utf-8")))
     return names

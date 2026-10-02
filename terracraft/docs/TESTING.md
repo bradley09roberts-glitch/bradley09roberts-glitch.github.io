@@ -41,3 +41,18 @@ with variance, vanilla mob damage scaling (zombie: 3 x 5 - 9 x 0.5 = 10.5), envi
 Terraria regeneration delay, coin drops / conversion / softcore death penalty, healing potion + Potion
 Sickness, pickaxe power (Copper vs Platinum on Obsidian), double jump, villager/trader removal, Nether
 blocking, no natural vanilla hostile spawns, disabled diamond/netherite/enchanting/brewing recipes.
+
+## What was verified for Stage 2 (in the live client)
+
+Cloud in a Bottle fix (logic), all enemy sprites rendering and animating, slime hopping, zombie chasing and
+contact damage, health bars, coin/gel drops, Mother Slime splitting, natural night spawning (6 zombies in
+40 s within the cap), ore pairs in fresh chunks (`/terraria worldgen scan 3`: chosen ores dominate, others
+~25%), Life Crystals (18) and chests (9) per 49 chunks, chest loot tables, Fallen Stars falling and vanishing
+at noon, King Slime (boss bar, life scaling 2000 -> 1000 HP x2, shrinking, slime shedding, defeat message,
+progression flag, loot), Eye of Cthulhu (servants, charges, phase 2 at 50%, Crimtane drop in a Crimson world),
+Guide arriving on first join, housing validation, Merchant arriving with 60 silver into a built house, chat
+window, shop with 12 items and buying (coins deducted by the item value), Nurse arriving after a Life Crystal
+and healing for 44 copper, Guide shooting enemies, the personal Terraria sprite pack loading in the client.
+
+Tips: freeze test mobs with `{NoAI:1b}`; town NPCs walk away quickly, so teleport them and right-click in the
+same command batch (`xinput.py hold right 0.05` clicks without moving the pointer, which would turn the camera).

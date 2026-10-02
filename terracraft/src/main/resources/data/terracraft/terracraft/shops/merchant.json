@@ -1,0 +1,49 @@
+{
+  "npc": "merchant",
+  "items": [
+    {
+      "item": "minecraft:torch",
+      "price": 50
+    },
+    {
+      "item": "terracraft:lesser_healing_potion"
+    },
+    {
+      "item": "terracraft:lesser_mana_potion"
+    },
+    {
+      "item": "minecraft:arrow",
+      "price": 5
+    },
+    {
+      "item": "terracraft:shuriken",
+      "price": 15
+    },
+    {
+      "item": "terracraft:copper_pickaxe"
+    },
+    {
+      "item": "terracraft:copper_axe"
+    },
+    {
+      "item": "terracraft:iron_anvil",
+      "price": 5000
+    },
+    {
+      "item": "minecraft:glass_bottle",
+      "price": 20
+    },
+    {
+      "item": "minecraft:chest",
+      "price": 500
+    },
+    {
+      "item": "terracraft:housing_query",
+      "price": 100
+    },
+    {
+      "item": "terracraft:mining_potion",
+      "condition": "boss_eye_defeated"
+    }
+  ]
+}

@@ -36,7 +36,7 @@ import java.util.List;
  * </ul>
  * Families ({@link SlimeMob}, {@link WalkerMob}, {@link FlyerMob}) only implement movement.
  */
-public abstract class TerrariaMob extends Monster implements HasTerrariaDefense, EconomyEvents.CoinValue {
+public abstract class TerrariaMob extends Monster implements HasTerrariaDefense, EconomyEvents.CoinValue, com.terracraft.entity.SpriteEntity {
     public static final int MAX_MINECRAFT_HEALTH = 1000;
     private final MobDefinition definition;
     private float lifeScale = 1.0F;
@@ -124,16 +124,6 @@ public abstract class TerrariaMob extends Monster implements HasTerrariaDefense,
     /** Whether touching the enemy hurts right now (e.g. not while a boss is teleporting). */
     protected boolean dealsContactDamage() {
         return true;
-    }
-
-    /** Sprite sheet suffix for alternate forms ({@code textures/entity/mob/<id>_<variant>.png}); empty = base sprite. */
-    public String spriteVariant() {
-        return "";
-    }
-
-    /** Extra in-plane rotation of the sprite in degrees (spinning bosses). */
-    public float spriteSpin(float partialTicks) {
-        return 0.0F;
     }
 
     /** Nocturnal enemies quietly leave in daylight when no player is close (Terraria despawns them off-screen). */

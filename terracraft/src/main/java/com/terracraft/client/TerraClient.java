@@ -32,6 +32,9 @@ public final class TerraClient {
             for (var type : MobContent.all()) {
                 event.registerEntityRenderer(type.get(), TerrariaMobRenderer::new);
             }
+            for (var type : com.terracraft.registry.content.NpcContent.all()) {
+                event.registerEntityRenderer(type.get(), TerrariaMobRenderer::new);
+            }
         });
         RegisterClientReloadListenersEvent.BUS.addListener(event -> event.registerReloadListener(MobSprites.INSTANCE));
         AddGuiOverlayLayersEvent.BUS.addListener(TerrariaHud::register);
