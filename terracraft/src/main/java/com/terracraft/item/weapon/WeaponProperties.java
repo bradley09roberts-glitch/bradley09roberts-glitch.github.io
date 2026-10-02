@@ -10,6 +10,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.core.component.DataComponents;
 
 /** Builds item properties from {@link TerraItemStats}. */
 public final class WeaponProperties {
@@ -39,6 +41,8 @@ public final class WeaponProperties {
             attributes.add(Attributes.ATTACK_KNOCKBACK, new AttributeModifier(KNOCKBACK_ID,
                 stats.knockback() * DamageCalc.KNOCKBACK_SCALE, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
         }
-        return stats(properties, stats).attributes(attributes.build()).stacksTo(1);
+        // Terraria-style tooltip lines replace vanilla's "When in Main Hand" attribute block.
+        return stats(properties, stats).attributes(attributes.build()).stacksTo(1)
+            .component(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true));
     }
 }

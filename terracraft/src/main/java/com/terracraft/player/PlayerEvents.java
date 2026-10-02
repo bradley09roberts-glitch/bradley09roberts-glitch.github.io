@@ -9,10 +9,8 @@ import com.terracraft.progression.ProgressionManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.eventbus.api.listener.Priority;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 
 import java.lang.invoke.MethodHandles;
@@ -83,13 +81,6 @@ public final class PlayerEvents {
             TerraPlayerData data = TerraPlayerData.get(player);
             refresh(player, data);
             sync(player, data);
-        }
-    }
-
-    @SubscribeEvent(priority = Priority.MONITOR)
-    static void onPlayerDamaged(LivingDamageEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player && event.getAmount() > 0) {
-            LifeRegenManager.onHurt(TerraPlayerData.get(player));
         }
     }
 

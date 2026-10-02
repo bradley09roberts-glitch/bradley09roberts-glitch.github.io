@@ -26,3 +26,4 @@ run-gametest
 forge_README.txt
 forge*changelog.txt
 run-client
+__pycache__

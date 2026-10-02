@@ -350,6 +350,15 @@ public class TerrariaProjectile extends Projectile {
         return false;
     }
 
+    /** Like vanilla throwables: hidden for the first ticks while still inside the shooter's view. */
+    @Override
+    public boolean shouldRenderAtSqrDistance(double distance) {
+        if (tickCount < 2 && distance < 12.25) {
+            return false;
+        }
+        return distance < 128.0 * 128.0;
+    }
+
     // ------------------------------------------------------------------ persistence
 
     @Override

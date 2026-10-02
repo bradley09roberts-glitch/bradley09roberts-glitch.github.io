@@ -1,0 +1,97 @@
+# TerraCraft development progress
+
+Project: Terraria total conversion for Minecraft Java 26.2 / Forge 65.1.0 (single mod jar, modid `terracraft`).
+Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explains the headless test setup.
+
+## COMPLETED
+
+### Stage 0: Foundation (verified on a dedicated server)
+- Forge 65.1.0 / MC 26.2 project (ForgeGradle 7, Gradle 9.5, Java 25 toolchain), builds one jar.
+- Mod entry point, registry architecture (DeferredRegisters + content DSL + automatic creative tab filing).
+- Network channel `terracraft:main` (SimpleChannel, play protocol, versioned) with record packets.
+- Config: `terracraft-common.toml` (gameplay, vanilla suppression, economy, world) and `terracraft-client.toml` (HUD).
+- Player data capability (`terracraft:player_data`): crystals, fruit, mana, accessory inventory; saved, copied on death.
+- World progression SavedData (`data/terracraft/world_progression.dat`): 50+ named flags (bosses, world,
+  events, NPCs), derived flags (`mech_bosses_defeated`...), counters, world variants (evil type + ore pair
+  choices from seed), change listeners, Terraria announcements, client sync, JSON condition language.
+- Creative tabs (Blocks, Materials, Weapons, Tools & Armor, Accessories, Consumables, Developer).
+- Developer menu (Developer Tablet / `/terraria devmenu`): toggle flags, day/night, heal, max/reset stats.
+- `/terraria` commands: worldstate, progression list/set/reset, hardmode, evil, stats, set, give mana, heal,
+  devmenu, biome debug, recipecheck; extension hook for later systems.
+- Documentation: README, docs/ARCHITECTURE.md, docs/TESTING.md, this file, content checklist.
+
+### Stage 1: Core Terraria systems (verified in a live client, see docs/TESTING.md)
+- **Health**: 100 base life, Life Crystal (+20, max 15), Life Fruit (+5, max 20, needs all crystals);
+  Terraria hearts HUD with golden hearts, "Life: x/y"; Terraria natural regeneration replaces food healing
+  (5 s delay after damage, ramps up, faster when still); full food bar = Well Fed bonuses.
+- **Mana**: 20 base, Mana Crystal (+20, max 9), Terraria regen formula (delay after casting, faster when
+  still), mana stars HUD, mana potions + Mana Sickness, synced client/server.
+- **Combat classes**: melee/ranged/magic/summon/generic; class damage and crit bonuses; Terraria crits
+  (4% base, x2), +/-15% variance, defense (Classic/Expert/Master effectiveness), endurance, armor penetration,
+  knockback scale; vanilla environmental and vanilla-mob damage scaled x5 against players.
+- **Projectiles**: one generic entity + `ProjectileKind` registry (gravity, drag, pierce, bounce, homing,
+  boomerang, explosion, ignite, debuffs, per-target cooldowns, trails, fullbright); billboard/crossed-quad
+  renderer. 9 kinds (wooden/flaming arrow, musket ball, shuriken, throwing knife, wooden boomerang, spark,
+  amethyst bolt, magic missile).
+- **Weapons**: melee (attribute based), ranged with ammo (vanilla arrows = Wooden Arrows), magic (mana),
+  thrown (consumable) and boomerang archetypes; Terraria-style hold-left-click firing; tooltips.
+- **Coins**: copper/silver/gold/platinum, auto conversion at 100, enemy coin drops (75-125% of value),
+  softcore death (keep items, drop half coins; config), formatted prices in tooltips.
+- **Accessories**: 5 slots (config + per-player extra), equipment screen (R / inventory button) with armor,
+  no duplicates; 18 accessories with stat/ability effects; double jump (Cloud in a Bottle), water walking,
+  fall immunity, knockback immunity, fire/lava immunity, movement/jump/mining/reach via attributes.
+- **Armor**: 9 Terraria armor sets (wood, copper, tin, iron, lead, silver, tungsten, gold, platinum) with
+  defense, set bonuses, worn textures; vanilla armor converted to Terraria defense (x0.5).
+- **Buffs/potions**: 12 buffs + Potion/Mana Sickness as MobEffects driving the stat system; 16 potions.
+- **Crafting**: Terraria recipe JSON (73 recipes), station tags (Work Bench, Furnace, Anvil, Alchemy, Loom...),
+  crafting screen (V) with station detection and craftable filter, server-validated crafting.
+- **Ores**: Tin, Lead, Silver, Tungsten, Platinum ores (+deepslate), raw metal, bars, smelting; Copper/Iron/Gold
+  reuse vanilla. World ore-pair choice stored per world (used by Stage 2 worldgen).
+- **Pickaxe power**: Terraria powers on tools, vanilla pickaxes mapped (diamond 45), data-driven block
+  requirements (Obsidian 55, synced to clients), break + harvest enforcement with message.
+- **Vanilla removal**: villagers/zombie villagers/wandering traders/trader llamas blocked (and conversions),
+  villages/pillager outposts/mansions/strongholds/ruined portals removed, natural vanilla hostile spawns
+  denied (plus patrols/phantoms), Nether/End travel blocked, enchanting table and brewing stand disabled,
+  diamond/netherite gear + enchanting table + brewing stand recipes disabled (pinned override datapack,
+  config-conditioned).
+- **Assets**: all textures generated by `tools/generate_assets.py` (124 items, blocks, projectiles, HUD,
+  effect icons, armor layers); data by `tools/generate_data.py` (recipes, loot, tags, damage types, lang).
+
+## IN PROGRESS
+- Nothing half-finished in code. Next work item is Stage 2.
+
+## NEXT (Stage 2: Early game)
+1. Terraria enemy framework (`TerrariaMob` base + AI archetypes: slime hopper, walker, flyer/demon eye,
+   caster) with Terraria stats (life, defense, contact damage, knockback resist, coin value).
+2. Data-driven spawn system per player (biome, `TerrariaLayer` depth, time, weather, progression, events);
+   Green/Blue/Red/Purple/Yellow/Black slimes, Mother/Baby slime, Zombie variants, Demon Eye.
+3. Worldgen: Tin/Lead/Silver/Tungsten/Platinum ore placement by depth honoring world ore choice, Life Crystal
+   placement in caverns, underground chests with early loot, Fallen Stars at night.
+4. NPC framework (`TerrariaNPC`), housing detection + housing tool UI, arrival rules: Guide, Merchant,
+   Nurse, Demolitionist with dialogue and coin shops.
+5. Boss framework (state machine, phases, boss bar, arena, despawn rules, loot, flags):
+   King Slime (Slime Crown, slime rain), Eye of Cthulhu (Suspicious Looking Eye, 2 phases, servants).
+6. `/terraria boss spawn|killall`, `/terraria npc spawn`, `/terraria event start|stop` (Blood Moon first).
+
+## KNOWN BUGS
+- Tooltips: items without a `.tooltip` lang entry show no flavor line (by design); vanilla tooltip lines
+  for non-weapon TerraCraft items (e.g. potions' vanilla effect text) are not hidden yet.
+- Water walking is client-predicted; on a strict multiplayer server the vanilla "floating" check could
+  kick players who stand on water for long (not observed in testing).
+- `/tp` into the Nether is also blocked while `disableNether` is on (blocks all dimension travel there).
+- Vanilla mobs that existed before installing the mod (e.g. drowned in loaded chunks) remain until they despawn.
+
+## TECHNICAL DEBT
+- Item/art/recipe definitions are split across Java content tables and the two Python generators;
+  `generate_assets.py` checks Java ids against its art table but recipes are not cross-checked.
+- Station detection scans a 9x7x9 box each refresh while the crafting screen is open (cheap, but could
+  cache per chunk section if stations multiply).
+- `TerrariaProjectile` saves its kind as a string id; switch to registry-backed kinds if datapack kinds are added.
+- Structure removal via biome tags is not config-controlled (tags cannot use load conditions).
+- No automated GameTests yet; verification is manual through RCON + headless client scripts.
+- Armor worn textures are simple generated layers; boss/mob models still to come.
+
+## CONTENT STILL MISSING
+Everything from Stage 2 onward: enemies, bosses, NPCs, housing, shops, events, biomes and world generation
+(Corruption/Crimson, Jungle, Dungeon, Underworld, Hallow...), hardmode transformation, modifiers/reforging,
+summon weapons/minions, wings/grappling hooks/dashes, fishing. See TERRARIA_CONTENT_CHECKLIST.md.

@@ -51,7 +51,8 @@ public final class EconomyEvents {
         if (entity instanceof Player || !(entity.level() instanceof ServerLevel)) {
             return;
         }
-        if (!(event.getSource().getEntity() instanceof Player)) {
+        // Terraria pays out whenever a player damaged the enemy, even if the final blow was fire or a fall.
+        if (!(event.getSource().getEntity() instanceof Player) && !event.isRecentlyHit()) {
             return;
         }
         long value = 0;

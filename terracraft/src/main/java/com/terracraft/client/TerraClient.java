@@ -28,6 +28,7 @@ public final class TerraClient {
         AddGuiOverlayLayersEvent.BUS.addListener(TerrariaHud::register);
         ItemTooltipEvent.BUS.addListener(ItemTooltips::onTooltip);
         ClientEvents.register();
+        com.terracraft.menu.AccessoryMenu.clientSlotCount = () -> ClientState.stats().accessorySlots();
     }
 
     private static void onClientSetup(FMLClientSetupEvent event) {

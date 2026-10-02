@@ -19,12 +19,17 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.equipment.Equippable;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.IntSupplier;
+
 /**
  * Terraria's equipment page: armor, accessory slots and the player inventory.
  * Slot layout: 0-3 armor, then {@link #accessorySlots} accessory slots, then 36 inventory slots.
  */
 public class AccessoryMenu extends AbstractContainerMenu {
     public static final int ARMOR_SLOTS = 4;
+    /** Screen size matching the slot layout. */
+    public static final int WIDTH = 176;
+    public static final int HEIGHT = 184;
     private static final EquipmentSlot[] ARMOR = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
     private static final Identifier[] ARMOR_ICONS = {InventoryMenu.EMPTY_ARMOR_SLOT_HELMET, InventoryMenu.EMPTY_ARMOR_SLOT_CHESTPLATE,
         InventoryMenu.EMPTY_ARMOR_SLOT_LEGGINGS, InventoryMenu.EMPTY_ARMOR_SLOT_BOOTS};
@@ -33,9 +38,13 @@ public class AccessoryMenu extends AbstractContainerMenu {
     private final Container accessories;
     private final Player player;
 
+    /** Client side: number of usable accessory slots (set by the client from synced stats). */
+    public static IntSupplier clientSlotCount = () -> 5;
+
     /** Client constructor (from the open-screen packet). */
     public AccessoryMenu(int id, Inventory inventory, @Nullable FriendlyByteBuf data) {
-        this(id, inventory, new SimpleContainer(TerraPlayerData.MAX_ACCESSORY_SLOTS), data == null ? 5 : data.readVarInt());
+        this(id, inventory, new SimpleContainer(TerraPlayerData.MAX_ACCESSORY_SLOTS),
+            data == null ? clientSlotCount.getAsInt() : data.readVarInt());
     }
 
     /** Server constructor. */
@@ -52,9 +61,9 @@ public class AccessoryMenu extends AbstractContainerMenu {
             addSlot(new ArmorSlot(inventory, player, ARMOR[i], 39 - i, 8, 8 + i * 18, ARMOR_ICONS[i]));
         }
         for (int i = 0; i < this.accessorySlots; i++) {
-            addSlot(new AccessorySlot(i, 80 + (i % 5) * 18, 8 + (i / 5) * 18));
+            addSlot(new AccessorySlot(i, 80 + (i % 5) * 18, 18 + (i / 5) * 18));
         }
-        addStandardInventorySlots(inventory, 8, 84);
+        addStandardInventorySlots(inventory, 8, 102);
     }
 
     public int accessorySlots() {

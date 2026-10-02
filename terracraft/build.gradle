@@ -27,12 +27,12 @@ minecraft {
             systemProperty 'forge.enabledGameTestNamespaces', mod_id
         }
 
-        register('client')
-
-        // Development client that joins a local dedicated server automatically (used for automated testing).
-        register('autoClient') {
-            workingDir = layout.projectDirectory.dir('run-client')
-            args '--quickPlayMultiplayer', 'localhost:25565', '--username', 'Dev'
+        register('client') {
+            // ./gradlew runClient -Pautojoin : join a local dedicated server as "Dev" (automated testing).
+            if (providers.gradleProperty('autojoin').isPresent()) {
+                workingDir = layout.projectDirectory.dir('run-client')
+                args '--quickPlayMultiplayer', 'localhost:25565', '--username', 'Dev'
+            }
         }
 
         register('server') {

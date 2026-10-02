@@ -20,9 +20,10 @@ import java.util.List;
  * without typing commands. All actions are executed (and permission-checked) on the server.
  */
 public class DevMenuScreen extends Screen {
-    private static final int BUTTON_WIDTH = 150;
-    private static final int BUTTON_HEIGHT = 18;
+    private static final int BUTTON_WIDTH = 120;
+    private static final int BUTTON_HEIGHT = 16;
     private ProgressionFlag.Category category = ProgressionFlag.Category.BOSS;
+    private int page;
     private final List<FlagButton> flagButtons = new ArrayList<>();
 
     public DevMenuScreen() {
@@ -37,37 +38,50 @@ public class DevMenuScreen extends Screen {
             ProgressionFlag.Category.BOSS, ProgressionFlag.Category.WORLD, ProgressionFlag.Category.EVENT, ProgressionFlag.Category.NPC}) {
             addRenderableWidget(Button.builder(Component.literal(cat.name()), b -> {
                 category = cat;
+                page = 0;
                 rebuildWidgets();
-            }).bounds(x, 24, 70, BUTTON_HEIGHT).build());
-            x += 74;
+            }).bounds(x, 22, 60, BUTTON_HEIGHT).build());
+            x += 64;
         }
 
-        int columns = Math.max(1, (width - 20) / (BUTTON_WIDTH + 4));
-        int index = 0;
+        List<ProgressionFlag> flags = new ArrayList<>();
         for (ProgressionFlag flag : ProgressionFlags.all()) {
-            if (flag.category() != category) {
-                continue;
+            if (flag.category() == category) {
+                flags.add(flag);
             }
-            int col = index % columns;
-            int row = index / columns;
-            int bx = 10 + col * (BUTTON_WIDTH + 4);
-            int by = 48 + row * (BUTTON_HEIGHT + 2);
+        }
+        int columns = Math.max(1, (width - 20) / (BUTTON_WIDTH + 4));
+        int rows = Math.max(1, (height - 44 - 62) / (BUTTON_HEIGHT + 2));
+        int perPage = columns * rows;
+        int pages = Math.max(1, (flags.size() + perPage - 1) / perPage);
+        page = Math.min(page, pages - 1);
+        for (int i = page * perPage; i < Math.min(flags.size(), (page + 1) * perPage); i++) {
+            ProgressionFlag flag = flags.get(i);
+            int local = i - page * perPage;
+            int bx = 10 + (local % columns) * (BUTTON_WIDTH + 4);
+            int by = 42 + (local / columns) * (BUTTON_HEIGHT + 2);
             Button button = Button.builder(label(flag), b -> send("toggle_flag", flag.id().toString()))
                 .bounds(bx, by, BUTTON_WIDTH, BUTTON_HEIGHT).build();
             flagButtons.add(new FlagButton(flag, button));
             addRenderableWidget(button);
-            index++;
+        }
+        if (pages > 1) {
+            int px = width - 60;
+            addRenderableWidget(Button.builder(Component.literal("<"), b -> { page = (page + pages - 1) % pages; rebuildWidgets(); })
+                .bounds(px, 22, 20, BUTTON_HEIGHT).build());
+            addRenderableWidget(Button.builder(Component.literal(">"), b -> { page = (page + 1) % pages; rebuildWidgets(); })
+                .bounds(px + 24, 22, 20, BUTTON_HEIGHT).build());
         }
 
-        int bottom = height - 26;
+        int bottom = height - 22;
         String[][] actions = {
-            {"Heal", "heal"}, {"Max stats", "max_stats"}, {"Reset stats", "reset_stats"},
-            {"+Life Crystal", "add_life_crystal"}, {"+Mana Crystal", "add_mana_crystal"},
+            {"Heal", "heal"}, {"Max", "max_stats"}, {"Reset", "reset_stats"},
+            {"+Life", "add_life_crystal"}, {"+Mana", "add_mana_crystal"},
             {"Day", "time_day"}, {"Night", "time_night"}, {"Reset world", "reset_progression"}
         };
         int ax = 10;
         for (String[] action : actions) {
-            int w = font.width(action[0]) + 12;
+            int w = font.width(action[0]) + 8;
             addRenderableWidget(Button.builder(Component.literal(action[0]), b -> send(action[1], ""))
                 .bounds(ax, bottom, w, BUTTON_HEIGHT).build());
             ax += w + 4;
@@ -76,7 +90,8 @@ public class DevMenuScreen extends Screen {
 
     private static Component label(ProgressionFlag flag) {
         boolean on = ClientState.progression().has(flag);
-        return Component.literal((on ? "[x] " : "[ ] ") + flag.id().getPath())
+        String name = flag.id().getPath().replace("boss_", "").replace("_defeated", "").replace("event_", "").replace("npc_", "");
+        return Component.literal((on ? "[x] " : "[ ] ") + name)
             .withStyle(on ? ChatFormatting.GREEN : ChatFormatting.GRAY);
     }
 
@@ -96,10 +111,10 @@ public class DevMenuScreen extends Screen {
         super.extractRenderState(graphics, mouseX, mouseY, a);
         graphics.centeredText(font, title, width / 2, 8, 0xFFFFD700);
         SyncPlayerStatsPacket stats = ClientState.stats();
-        String summary = String.format("Life crystals %d  Life fruit %d  Mana crystals %d  Max life %d  Max mana %d  Defense %d  Evil %s",
+        String summary = String.format("Crystals %d  Fruit %d  Mana crystals %d  Life %d  Mana %d  Def %d  Evil: %s",
             stats.lifeCrystals(), stats.lifeFruit(), stats.manaCrystals(), stats.maxLife(), stats.maxMana(), stats.defense(),
             ClientState.progression().variants().evil().getSerializedName());
-        graphics.text(font, summary, 10, height - 44, 0xFFE0E0E0);
+        graphics.text(font, summary, 10, height - 36, 0xFFE0E0E0);
     }
 
     @Override

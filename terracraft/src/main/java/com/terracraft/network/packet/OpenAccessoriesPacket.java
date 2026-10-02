@@ -20,7 +20,10 @@ public record OpenAccessoriesPacket() {
             return;
         }
         TerraPlayerData data = TerraPlayerData.get(player);
+        // Vanilla opening (not Forge's extra-data payload): the open-screen and content packets then share the
+        // client's packet queue, so the accessory contents can never arrive before the menu exists.
+        // The client knows its slot count from the synced player stats.
         player.openMenu(new SimpleMenuProvider((id, inventory, p) -> new AccessoryMenu(id, inventory, data),
-            Component.translatable("screen.terracraft.equipment")), buf -> buf.writeVarInt(data.usableAccessorySlots()));
+            Component.translatable("screen.terracraft.equipment")));
     }
 }

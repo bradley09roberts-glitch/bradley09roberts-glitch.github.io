@@ -138,5 +138,9 @@ public final class CombatEvents {
             }
         }
         event.setAmount(Math.max(amount, 0.0F));
+        if (amount > 0.0F && target instanceof Player player) {
+            // Taking damage restarts Terraria's natural life regeneration ramp.
+            com.terracraft.player.LifeRegenManager.onHurt(TerraPlayerData.get(player));
+        }
     }
 }

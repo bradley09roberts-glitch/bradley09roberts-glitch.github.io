@@ -18,10 +18,8 @@ public class AccessoryScreen extends AbstractContainerScreen<AccessoryMenu> {
     private static final int ACCESSORY_SLOT = 0xFF182848;
 
     public AccessoryScreen(AccessoryMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title, 176, 166);
-        this.inventoryLabelY = this.imageHeight - 94;
-        this.titleLabelX = 80;
-        this.titleLabelY = -10;
+        super(menu, inventory, title, AccessoryMenu.WIDTH, AccessoryMenu.HEIGHT);
+        this.inventoryLabelY = 91;
     }
 
     @Override
@@ -38,16 +36,16 @@ public class AccessoryScreen extends AbstractContainerScreen<AccessoryMenu> {
             graphics.fill(x + 1, y + 1, x + 17, y + 17, accessory ? ACCESSORY_SLOT : SLOT);
         }
         SyncPlayerStatsPacket stats = ClientState.stats();
-        int x = leftPos + 30;
-        int y = topPos + 50;
-        graphics.text(font, Component.translatable("screen.terracraft.equipment.defense", stats.defense()), x + 50, y, 0xFFC8C8FF, false);
-        graphics.text(font, Component.translatable("screen.terracraft.equipment.life", stats.maxLife()), x + 50, y + 10, 0xFFFF9696, false);
-        graphics.text(font, Component.translatable("screen.terracraft.equipment.mana", stats.maxMana()), x + 50, y + 20, 0xFF9696FF, false);
+        int x = leftPos + 80;
+        int y = topPos + 18 + ((menu.accessorySlots() + 4) / 5) * 18 + 6;
+        graphics.text(font, Component.translatable("screen.terracraft.equipment.defense", stats.defense()), x, y, 0xFFC8C8FF, false);
+        graphics.text(font, Component.translatable("screen.terracraft.equipment.life", stats.maxLife()), x, y + 10, 0xFFFF9696, false);
+        graphics.text(font, Component.translatable("screen.terracraft.equipment.mana", stats.maxMana()), x, y + 20, 0xFF9696FF, false);
     }
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int xm, int ym) {
-        graphics.text(font, Component.translatable("screen.terracraft.equipment.accessories"), 80, -10, 0xFFFFFFFF, false);
+        graphics.text(font, Component.translatable("screen.terracraft.equipment.accessories"), 80, 7, 0xFFFFFFFF, false);
         graphics.text(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, 0xFFE0E0E0, false);
     }
 }
