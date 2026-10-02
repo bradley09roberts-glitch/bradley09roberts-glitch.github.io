@@ -27,6 +27,11 @@ public final class ServerEvents {
     }
 
     @SubscribeEvent
+    static void onServerStopped(net.minecraftforge.event.server.ServerStoppedEvent event) {
+        com.terracraft.world.gen.WorldgenVariants.clear();
+    }
+
+    @SubscribeEvent
     static void onServerStarted(ServerStartedEvent event) {
         MinecraftServer server = event.getServer();
         // Initialise progression/variants eagerly so the first chunk generation sees them.

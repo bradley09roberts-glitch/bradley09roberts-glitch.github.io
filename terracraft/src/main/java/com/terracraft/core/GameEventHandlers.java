@@ -20,5 +20,7 @@ public final class GameEventHandlers {
         com.terracraft.mining.MiningEvents.register();
         com.terracraft.world.VanillaSuppression.register();
         com.terracraft.world.spawn.TerrariaSpawner.register();
+        com.terracraft.world.FallenStars.register();
+        com.terracraft.world.gen.WorldgenCommands.register();
     }
 }

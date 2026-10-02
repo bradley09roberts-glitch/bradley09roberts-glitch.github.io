@@ -1,0 +1,15 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#minecraft:is_overworld",
+  "features": [
+    "terracraft:ore_copper",
+    "terracraft:ore_tin",
+    "terracraft:ore_iron",
+    "terracraft:ore_lead",
+    "terracraft:ore_silver",
+    "terracraft:ore_tungsten",
+    "terracraft:ore_gold",
+    "terracraft:ore_platinum"
+  ],
+  "step": "underground_ores"
+}

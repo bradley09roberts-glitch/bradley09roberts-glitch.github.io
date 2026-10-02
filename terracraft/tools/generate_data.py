@@ -486,6 +486,111 @@ def mobs():
         write(f'{NS}/terracraft/spawns/{name}.json', {'spawns': out})
 
 
+# --- World generation ------------------------------------------------------------------------------
+# Terraria ore pairs: (pair, primary, secondary, count per chunk, vein size, min y, max y)
+ORE_PAIRS = [
+    ('copper_tin', 'copper', 'tin', 16, 10, -16, 112),
+    ('iron_lead', 'iron', 'lead', 12, 9, -40, 72),
+    ('silver_tungsten', 'silver', 'tungsten', 9, 8, -56, 40),
+    ('gold_platinum', 'gold', 'platinum', 7, 8, -64, 16),
+]
+VANILLA_ORE_FEATURES = ['minecraft:ore_copper', 'minecraft:ore_copper_large', 'minecraft:ore_iron_middle',
+                        'minecraft:ore_iron_small', 'minecraft:ore_iron_upper', 'minecraft:ore_gold',
+                        'minecraft:ore_gold_lower', 'minecraft:ore_gold_extra']
+
+
+def ore_block(metal, deep):
+    if metal in ('copper', 'iron', 'gold'):
+        return f'minecraft:{"deepslate_" if deep else ""}{metal}_ore'
+    return t(f'{"deepslate_" if deep else ""}{metal}_ore')
+
+
+def floor_scan(min_y, max_y):
+    return [
+        {'type': 'minecraft:in_square'},
+        {'type': 'minecraft:height_range', 'height': {'type': 'minecraft:uniform',
+                                                      'min_inclusive': {'absolute': min_y}, 'max_inclusive': {'absolute': max_y}}},
+        {'type': 'minecraft:environment_scan', 'direction_of_search': 'down', 'max_steps': 16,
+         'target_condition': {'type': 'minecraft:solid'},
+         'allowed_search_condition': {'type': 'minecraft:matching_blocks', 'blocks': 'minecraft:air'}},
+        {'type': 'minecraft:random_offset', 'xz_spread': 0, 'y_spread': 1},
+        {'type': 'minecraft:biome'},
+    ]
+
+
+def entry(item, weight=1, lo=1, hi=1):
+    e = {'type': 'minecraft:item', 'name': item if ':' in item else t(item), 'weight': weight}
+    if hi > 1:
+        e['functions'] = [{'function': 'minecraft:set_count', 'count': {'type': 'minecraft:uniform', 'min': lo, 'max': hi}}]
+    return e
+
+
+def chest_table(primary, bars, potions):
+    return {'type': 'minecraft:chest', 'pools': [
+        {'rolls': 1, 'entries': [entry(i) for i in primary]},
+        {'rolls': {'type': 'minecraft:uniform', 'min': 1, 'max': 2}, 'entries': [entry(b, 1, 3, 10) for b in bars]},
+        {'rolls': {'type': 'minecraft:uniform', 'min': 1, 'max': 2}, 'entries': [entry(p, 1, 1, 2) for p in potions]},
+        {'rolls': 1, 'entries': [entry('lesser_healing_potion', 3, 3, 5), entry('shuriken', 2, 25, 50),
+                                 entry('throwing_knife', 2, 25, 50), entry('minecraft:arrow', 2, 25, 50),
+                                 entry('flaming_arrow', 1, 25, 50), entry('minecraft:torch', 3, 10, 20)]},
+        {'rolls': 1, 'entries': [entry('silver_coin', 1, 1, 6)]},
+    ]}
+
+
+def worldgen():
+    features = []
+    for pair, first, second, count, size, lo, hi in ORE_PAIRS:
+        for secondary, metal in ((False, first), (True, second)):
+            name = f'ore_{metal}'
+            write(f'{NS}/worldgen/configured_feature/{name}.json', {'type': t('paired_ore'), 'config': {
+                'pair': pair, 'secondary': secondary, 'ore': {
+                    'size': size, 'discard_chance_on_air_exposure': 0.0, 'targets': [
+                        {'target': {'predicate_type': 'minecraft:tag_match', 'tag': 'minecraft:stone_ore_replaceables'},
+                         'state': {'Name': ore_block(metal, False)}},
+                        {'target': {'predicate_type': 'minecraft:tag_match', 'tag': 'minecraft:deepslate_ore_replaceables'},
+                         'state': {'Name': ore_block(metal, True)}}]}}})
+            write(f'{NS}/worldgen/placed_feature/{name}.json', {'feature': t(name), 'placement': [
+                {'type': 'minecraft:count', 'count': count}, {'type': 'minecraft:in_square'},
+                {'type': 'minecraft:height_range', 'height': {'type': 'minecraft:trapezoid',
+                                                              'min_inclusive': {'absolute': lo}, 'max_inclusive': {'absolute': hi}}},
+                {'type': 'minecraft:biome'}]})
+            features.append(t(name))
+    write(f'{NS}/forge/biome_modifier/remove_vanilla_ores.json', {
+        'type': 'forge:remove_features', 'biomes': '#minecraft:is_overworld',
+        'features': VANILLA_ORE_FEATURES, 'steps': ['underground_ores']})
+    write(f'{NS}/forge/biome_modifier/terraria_ores.json', {
+        'type': 'forge:add_features', 'biomes': '#minecraft:is_overworld', 'features': features, 'step': 'underground_ores'})
+
+    # Life Crystals on cave floors below y=40
+    write(f'{NS}/worldgen/configured_feature/life_crystal.json', {'type': 'minecraft:simple_block', 'config': {
+        'to_place': {'type': 'minecraft:simple_state_provider', 'state': {'Name': t('life_crystal_block')}}}})
+    write(f'{NS}/worldgen/placed_feature/life_crystal.json', {'feature': t('life_crystal'), 'placement': [
+        {'type': 'minecraft:count', 'count': 3}] + floor_scan(-56, 40)})
+    # Chests: wooden (shallow caves) and gold-tier (deep caves)
+    chests = {
+        'wooden_chest': ('chests/surface_cave', 2, 0, 60),
+        'underground_chest': ('chests/underground', 1, -60, 0),
+    }
+    for name, (table, rarity, lo, hi) in chests.items():
+        write(f'{NS}/worldgen/configured_feature/{name}.json', {'type': t('loot_chest'), 'config': {
+            'chest': {'Name': 'minecraft:chest', 'Properties': {'facing': 'north', 'type': 'single', 'waterlogged': 'false'}},
+            'loot_table': t(table)}})
+        write(f'{NS}/worldgen/placed_feature/{name}.json', {'feature': t(name), 'placement': [
+            {'type': 'minecraft:rarity_filter', 'chance': rarity}] + floor_scan(lo, hi)})
+    write(f'{NS}/forge/biome_modifier/terraria_cave_loot.json', {
+        'type': 'forge:add_features', 'biomes': '#minecraft:is_overworld',
+        'features': [t('life_crystal'), t('wooden_chest'), t('underground_chest')], 'step': 'underground_decoration'})
+
+    write(f'{NS}/loot_table/chests/surface_cave.json', chest_table(
+        ['wooden_boomerang', 'aglet', 'wand_of_sparking', 'wooden_bow', 'copper_shortsword'],
+        ['minecraft:copper_ingot', 'tin_bar', 'minecraft:iron_ingot', 'lead_bar'],
+        ['ironskin_potion', 'swiftness_potion', 'mining_potion', 'archery_potion']))
+    write(f'{NS}/loot_table/chests/underground.json', chest_table(
+        ['band_of_regeneration', 'cloud_in_a_bottle', 'hermes_boots', 'magic_missile', 'flintlock_pistol'],
+        ['silver_bar', 'tungsten_bar', 'minecraft:gold_ingot', 'platinum_bar'],
+        ['regeneration_potion', 'obsidian_skin_potion', 'water_walking_potion', 'magic_power_potion', 'mana_regeneration_potion']))
+
+
 def main():
     jar = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser(
         '~/.gradle/caches/minecraftforge/forgegradle/mavenizer/caches/minecraft_tasks/26.2/client.jar')
@@ -495,6 +600,7 @@ def main():
     terraria_recipes()
     vanilla_overrides(jar)
     mobs()
+    worldgen()
     n = lang()
     print(f'Generated {len(RECIPES)} Terraria recipes and {n} language entries')
 

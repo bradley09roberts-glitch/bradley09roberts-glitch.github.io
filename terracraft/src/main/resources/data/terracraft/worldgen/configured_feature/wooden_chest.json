@@ -1,0 +1,14 @@
+{
+  "type": "terracraft:loot_chest",
+  "config": {
+    "chest": {
+      "Name": "minecraft:chest",
+      "Properties": {
+        "facing": "north",
+        "type": "single",
+        "waterlogged": "false"
+      }
+    },
+    "loot_table": "terracraft:chests/surface_cave"
+  }
+}

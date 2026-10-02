@@ -55,6 +55,7 @@ public final class WorldProgression extends SavedData implements ProgressionView
             data.setDirty();
             TerraCraft.LOGGER.info("Initialised Terraria world variants: evil={}, ores={}", data.variants.evil(), data.variants.secondaryOre());
         }
+        com.terracraft.world.gen.WorldgenVariants.publish(data.variants);
         return data;
     }
 
@@ -101,6 +102,7 @@ public final class WorldProgression extends SavedData implements ProgressionView
 
     void setVariants(WorldVariants variants) {
         this.variants = variants;
+        com.terracraft.world.gen.WorldgenVariants.publish(variants);
         setDirty();
     }
 
