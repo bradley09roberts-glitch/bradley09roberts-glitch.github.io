@@ -1,7 +1,14 @@
 package com.terracraft.network;
 
 import com.terracraft.TerraCraft;
+import com.terracraft.network.packet.CraftRecipePacket;
 import com.terracraft.network.packet.DevActionPacket;
+import com.terracraft.network.packet.DoubleJumpPacket;
+import com.terracraft.network.packet.OpenAccessoriesPacket;
+import com.terracraft.network.packet.OpenCraftingPacket;
+import com.terracraft.network.packet.SyncMiningPowerPacket;
+import com.terracraft.network.packet.SyncRecipesPacket;
+import com.terracraft.network.packet.UseWeaponPacket;
 import com.terracraft.network.packet.OpenDevMenuPacket;
 import com.terracraft.network.packet.SyncPlayerStatsPacket;
 import com.terracraft.network.packet.SyncProgressionPacket;
@@ -30,8 +37,15 @@ public final class TerraNetwork {
                 .addMain(SyncProgressionPacket.class, SyncProgressionPacket.STREAM_CODEC, SyncProgressionPacket::handle)
                 .addMain(SyncPlayerStatsPacket.class, SyncPlayerStatsPacket.STREAM_CODEC, SyncPlayerStatsPacket::handle)
                 .addMain(OpenDevMenuPacket.class, OpenDevMenuPacket.STREAM_CODEC, OpenDevMenuPacket::handle)
+                .addMain(OpenCraftingPacket.class, OpenCraftingPacket.STREAM_CODEC, OpenCraftingPacket::handle)
+                .addMain(SyncRecipesPacket.class, SyncRecipesPacket.STREAM_CODEC, SyncRecipesPacket::handle)
+                .addMain(SyncMiningPowerPacket.class, SyncMiningPowerPacket.STREAM_CODEC, SyncMiningPowerPacket::handle)
             .serverbound()
                 .addMain(DevActionPacket.class, DevActionPacket.STREAM_CODEC, DevActionPacket::handle)
+                .addMain(OpenAccessoriesPacket.class, OpenAccessoriesPacket.STREAM_CODEC, OpenAccessoriesPacket::handle)
+                .addMain(CraftRecipePacket.class, CraftRecipePacket.STREAM_CODEC, CraftRecipePacket::handle)
+                .addMain(DoubleJumpPacket.class, DoubleJumpPacket.STREAM_CODEC, DoubleJumpPacket::handle)
+                .addMain(UseWeaponPacket.class, UseWeaponPacket.STREAM_CODEC, UseWeaponPacket::handle)
         .build();
 
     private TerraNetwork() {}

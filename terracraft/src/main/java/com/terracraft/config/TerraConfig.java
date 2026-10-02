@@ -56,6 +56,7 @@ public final class TerraConfig {
         public final ForgeConfigSpec.DoubleValue environmentalDamageMultiplier;
         public final ForgeConfigSpec.DoubleValue vanillaMobDamageMultiplier;
         public final ForgeConfigSpec.DoubleValue vanillaArmorDefenseScale;
+        public final ForgeConfigSpec.BooleanValue softcoreDeaths;
         public final ForgeConfigSpec.EnumValue<CoinDeathPenalty> coinDeathPenalty;
         public final ForgeConfigSpec.EnumValue<TerrariaDifficulty> difficulty;
         public final ForgeConfigSpec.BooleanValue damageVariance;
@@ -113,7 +114,10 @@ public final class TerraConfig {
                 .defineInRange("vanillaMobDamageMultiplier", 5.0, 0.0, 100.0);
             vanillaArmorDefenseScale = b.comment("Terraria defense granted per vanilla armor point. Vanilla armor's own damage reduction is disabled for players.")
                 .defineInRange("vanillaArmorDefenseScale", 0.5, 0.0, 10.0);
-            coinDeathPenalty = b.comment("Coins dropped when a player dies (Terraria softcore: HALF).")
+            softcoreDeaths = b.comment("Terraria softcore deaths: players keep their items (keep_inventory is enabled) and only drop coins.",
+                    "Disable for vanilla behaviour (everything drops).")
+                .define("softcoreDeaths", true);
+            coinDeathPenalty = b.comment("Coins dropped when a player dies with softcore deaths (Terraria softcore: HALF).")
                 .defineEnum("coinDeathPenalty", CoinDeathPenalty.HALF);
             difficulty = b.comment("Terraria difficulty rules (defense effectiveness, enemy scaling). AUTO: Hard = Expert, otherwise Classic.")
                 .defineEnum("difficulty", TerrariaDifficulty.AUTO);

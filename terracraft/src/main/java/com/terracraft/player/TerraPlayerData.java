@@ -54,6 +54,8 @@ public final class TerraPlayerData {
     public int manaRegenLockout;
     /** Double jumps still available this airtime (refilled on landing). */
     public int doubleJumpsUsed;
+    /** Remaining ticks of lava immunity (Lava Charm style budget, refills outside lava). */
+    public int lavaImmunityTicks;
     private final PlayerStats stats = new PlayerStats();
     private boolean statsDirty = true;
     private boolean syncDirty = true;

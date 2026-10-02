@@ -14,6 +14,7 @@ public enum Ability implements StringRepresentable {
     NO_FALL_DAMAGE,
     KNOCKBACK_IMMUNE,
     FIRE_BLOCK_IMMUNE,
+    LAVA_IMMUNE,
     WATER_WALKING,
     LAVA_WALKING,
     SWIMMING,

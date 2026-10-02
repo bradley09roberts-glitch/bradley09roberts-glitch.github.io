@@ -1,0 +1,26 @@
+package com.terracraft.network.packet;
+
+import com.terracraft.menu.AccessoryMenu;
+import com.terracraft.player.TerraPlayerData;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraftforge.event.network.CustomPayloadEvent;
+
+/** Client -> server: open the equipment / accessory screen. */
+public record OpenAccessoriesPacket() {
+    public static final OpenAccessoriesPacket INSTANCE = new OpenAccessoriesPacket();
+    public static final StreamCodec<RegistryFriendlyByteBuf, OpenAccessoriesPacket> STREAM_CODEC = StreamCodec.unit(INSTANCE);
+
+    public static void handle(OpenAccessoriesPacket packet, CustomPayloadEvent.Context ctx) {
+        ServerPlayer player = ctx.getSender();
+        if (player == null || player.isSpectator()) {
+            return;
+        }
+        TerraPlayerData data = TerraPlayerData.get(player);
+        player.openMenu(new SimpleMenuProvider((id, inventory, p) -> new AccessoryMenu(id, inventory, data),
+            Component.translatable("screen.terracraft.equipment")), buf -> buf.writeVarInt(data.usableAccessorySlots()));
+    }
+}

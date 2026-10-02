@@ -3,6 +3,7 @@ package com.terracraft.player;
 import com.terracraft.config.TerraConfig;
 import com.terracraft.network.TerraNetwork;
 import com.terracraft.network.packet.SyncPlayerStatsPacket;
+import com.terracraft.player.stats.Stat;
 import com.terracraft.player.stats.StatCalculator;
 import com.terracraft.progression.ProgressionManager;
 import net.minecraft.server.level.ServerPlayer;
@@ -46,6 +47,7 @@ public final class PlayerEvents {
             StarterKit.give(player);
         }
         ProgressionManager.syncTo(player);
+        com.terracraft.data.DataEvents.syncTo(player);
         sync(player, data);
     }
 
@@ -100,12 +102,30 @@ public final class PlayerEvents {
         if (data.consumeStatsDirty() || player.tickCount % STAT_REFRESH_INTERVAL == 0) {
             refresh(player, data);
         }
+        if (player.onGround() || player.isInWater()) {
+            data.doubleJumpsUsed = 0;
+        }
+        tickLavaImmunity(player, data);
         ManaManager.tick(player, data);
         if (TerraConfig.COMMON.terrariaLifeRegen.get()) {
             LifeRegenManager.tick(player, data);
         }
         if (player.tickCount % SYNC_INTERVAL == 0 && data.consumeSyncDirty()) {
             sync(player, data);
+        }
+    }
+
+    private static void tickLavaImmunity(ServerPlayer player, TerraPlayerData data) {
+        int max = Math.round(data.stats().get(Stat.LAVA_IMMUNITY_SECONDS) * 20.0F);
+        if (player.isInLava()) {
+            if (data.lavaImmunityTicks > 0) {
+                data.lavaImmunityTicks--;
+                player.clearFire();
+            }
+        } else if (data.lavaImmunityTicks < max) {
+            data.lavaImmunityTicks = Math.min(max, data.lavaImmunityTicks + 2);
+        } else {
+            data.lavaImmunityTicks = max;
         }
     }
 

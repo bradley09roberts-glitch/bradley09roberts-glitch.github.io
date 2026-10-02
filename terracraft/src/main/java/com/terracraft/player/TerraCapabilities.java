@@ -12,12 +12,9 @@ import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.invoke.MethodHandles;
 
 /** Capability definitions and attachment. */
 public final class TerraCapabilities {
@@ -27,11 +24,10 @@ public final class TerraCapabilities {
     private TerraCapabilities() {}
 
     public static void register() {
-        BusGroup.DEFAULT.register(MethodHandles.lookup(), TerraCapabilities.class);
+        AttachCapabilitiesEvent.Entities.BUS.addListener(TerraCapabilities::attachEntityCapabilities);
     }
 
-    @SubscribeEvent
-    static void attachEntityCapabilities(AttachCapabilitiesEvent.Entities event) {
+    private static void attachEntityCapabilities(AttachCapabilitiesEvent.Entities event) {
         if (event.getObject() instanceof Player) {
             event.addCapability(PLAYER_DATA_ID, new PlayerDataProvider());
         }
