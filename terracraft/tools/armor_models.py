@@ -112,12 +112,12 @@ class Armor:
 # Shapes follow Terraria's armor sprites: most helmets leave the face open (only Lead, Tungsten and Molten cover
 # it), and every chest/leg piece carries plates, trims, belts and greaves rather than a plain colour.
 
-def open_helmet(a, pattern='plate', mat='main', inflate=1.0, edge='accent'):
+def open_helmet(a, pattern='plate', mat='main', inflate=1.0, edge=None):
     a.add('head', 'head', (-4, -8, -4), (8, 8, 8), mat=mat, pattern=pattern, inflate=inflate, edge=edge,
           faces={'north': 'open', 'down': 'none'})
 
 
-def closed_helmet(a, front, pattern='plate', mat='main', inflate=1.0, edge='accent'):
+def closed_helmet(a, front, pattern='plate', mat='main', inflate=1.0, edge=None):
     a.add('head', 'head', (-4, -8, -4), (8, 8, 8), mat=mat, pattern=pattern, inflate=inflate, edge=edge,
           faces={'north': front, 'down': 'none'})
 
@@ -419,9 +419,9 @@ def paint(armor, c, cube, rnd):
                         col = shade(col, 1.18)
                     elif y == fh - 1 or x == 0 or x == fw - 1:
                         col = shade(col, 0.82)
-                if cube.edge and face not in ('up', 'down') and (x == 0 or x == fw - 1 or y == 0 or y == fh - 1) and fw > 2 and fh > 2:
-                    trim = ramp(armor.mats[cube.edge])
-                    col = trim[3] if y == 0 else trim[2] if y < fh - 1 else trim[1]
+                if cube.edge and face not in ('up', 'down') and (y == 0 or y == fh - 1) and fh > 2:
+                    trim = ramp(armor.mats[cube.edge])          # trim along the top and bottom of plates
+                    col = trim[3] if y == 0 else trim[1]
                 c.set(x0 + x, y0 + y, col)
         if special:
             front_detail(c, special, x0, y0, fw, fh, p, dark, glow, armor)
