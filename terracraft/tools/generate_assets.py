@@ -1432,7 +1432,13 @@ model_texture('king_slime', 128, 64, slime_texture('#3C78E6', 180, king=True))
 
 
 def skin_texture(skin, hair, shirt, pants, shoes='#3A2A20', eyes=(30, 30, 40, 255), beard=None, hat=None, hat_band=None,
-                 torn=False, bony=False, short_sleeves=True, cross=False, lamp=False):
+                 torn=False, bony=False, short_sleeves=True, cross=False, lamp=False, **extra):
+    """Humanoid skins: people and goblins use the detailed painter in tools/skins.py; skeletons keep this one."""
+    if not bony:
+        import skins
+        return skins.skin_texture(skin, hair, shirt, pants, shoes=shoes, eyes=eyes, beard=beard, hat=hat, hat_band=hat_band, torn=torn,
+                                  short_sleeves=short_sleeves, cross=cross, lamp=lamp, **extra)
+
     def paint(c):
         sk, hr, sh, pa = hexc(skin), hexc(hair), hexc(shirt), hexc(pants)
         # head (0,0) 8x8x8
@@ -1500,15 +1506,20 @@ def skin_texture(skin, hair, shirt, pants, shoes='#3A2A20', eyes=(30, 30, 40, 25
     return paint
 
 
-model_texture('zombie', 64, 64, skin_texture('#7FA06A', '#3E4A2E', '#4A6FA5', '#4B3B2F', eyes=(220, 40, 40, 255), torn=True))
+model_texture('zombie', 64, 64, skin_texture('#7FA06A', '#2E3A22', '#4A6FA5', '#4B3B2F', eyes=(230, 40, 40, 255), torn=True, shoes='#2A2018'))
 model_texture('skeleton', 64, 64, skin_texture('#D8D0A8', '#D8D0A8', '#3A5AA0', '#D8D0A8', bony=True, torn=True))
-model_texture('arms_dealer', 64, 64, skin_texture('#8A5A3A', '#1A1A1A', '#7A5A3A', '#3A3A44', hat='#2A2A2A', hat_band='#8A1A1A', short_sleeves=False))
-model_texture('dryad', 64, 64, skin_texture('#E8C8A0', '#4AA040', '#5A9A3A', '#3A7A2A', shoes='#2A5A1A', hat='#6AC050'))
-model_texture('guide', 64, 64, skin_texture('#E8B890', '#6A4428', '#6E8C3A', '#5A4430', short_sleeves=False))
-model_texture('merchant', 64, 64, skin_texture('#E8B890', '#E8E8E8', '#5A6A8C', '#3A3A44', beard='#F0F0F0', hat='#6A6A70', short_sleeves=False))
-model_texture('nurse', 64, 64, skin_texture('#F0C8A8', '#C84838', '#F4F4F4', '#F0F0F0', shoes='#F0F0F0', hat='#F8F8F8', cross=True))
-model_texture('demolitionist', 64, 64, skin_texture('#D8A880', '#C86A28', '#8A5A30', '#4A3A2A', beard='#C86A28', hat='#E8C030',
-                                                     hat_band='#7A6018', lamp=True))
+model_texture('arms_dealer', 64, 64, skin_texture('#8A5A3A', '#1A1A1A', '#C8B890', '#3A3A44', hat='#2A2A2A', hat_band='#8A1A1A', short_sleeves=False,
+                                                   jacket='#5A3A2A', straps='#2A1A10'))
+model_texture('dryad', 64, 64, skin_texture('#E8C8A0', '#4AA040', '#5A9A3A', '#3A7A2A', shoes='#2A5A1A', hat='#6AC050', hair_style='long',
+                                             apron='#8AC060', belt='#3A6A2A', buckle='#E070A0'))
+model_texture('guide', 64, 64, skin_texture('#E8B890', '#6A4428', '#C8B080', '#5A4430', short_sleeves=False, jacket='#6E8C3A',
+                                             iris=(60, 110, 60, 255)))
+model_texture('merchant', 64, 64, skin_texture('#E8B890', '#E8E8E8', '#C8C0B0', '#3A3A44', beard='#F0F0F0', hat='#6A6A70', short_sleeves=False,
+                                                jacket='#5A6A8C'))
+model_texture('nurse', 64, 64, skin_texture('#F0C8A8', '#C84838', '#F4F4F4', '#F0F0F0', shoes='#F0F0F0', hat='#F8F8F8', cross=True,
+                                             hair_style='long', belt='#E8E8E8', buckle='#E03030'))
+model_texture('demolitionist', 64, 64, skin_texture('#D8A880', '#C86A28', '#B88A50', '#4A3A2A', beard='#C86A28', hat='#E8C030',
+                                                     hat_band='#7A6018', lamp=True, suspenders='#5A3A1A'))
 
 
 def eye_texture(iris, mouth=False, sclera='#F2EEE8'):
@@ -1612,27 +1623,9 @@ def brain_texture(exposed=False):
 
 model_texture('brain_of_cthulhu', 64, 64, brain_texture())
 model_texture('brain_of_cthulhu_exposed', 64, 64, brain_texture(True))
-model_texture('eater_of_souls', 64, 32, maw_texture('#7A6A5A', '#6AA040'))
-model_texture('crimera', 64, 32, maw_texture('#A83A3A', '#F0D060'))
-model_texture('blood_zombie', 64, 64, skin_texture('#D05050', '#6A1A1A', '#9A2A2A', '#5A2020', eyes=(255, 240, 80, 255), torn=True))
+model_texture('blood_zombie', 64, 64, skin_texture('#D05050', '#6A1A1A', '#4A2A24', '#3A2420', eyes=(255, 240, 80, 255), torn=True, blood=True))
 model_texture('drippler', 64, 64, eye_texture('#3A62C8', sclera='#C84848'))
-model_texture('face_monster', 64, 64, skin_texture('#C06A4A', '#6A2A1A', '#8A5A3A', '#6A4A2A', eyes=(250, 230, 80, 255), torn=True))
 
-
-def spider_texture(color):
-    def paint(c):
-        body = hexc(color)
-        paint_box(c, 32, 4, 8, 8, 8, body, 0.2, 95)
-        x, y, w, h = box_faces(32, 4, 8, 8, 8)['front']
-        for ex, ey in ((1, 2), (5, 2), (2, 4), (4, 4)):
-            c.set(x + ex, y + ey, (250, 220, 60, 255))
-        paint_box(c, 0, 0, 6, 6, 6, shade(body, 0.8), 0.2, 96)
-        paint_box(c, 0, 12, 10, 8, 12, body, 0.2, 97)
-        paint_box(c, 18, 0, 16, 2, 2, shade(body, 0.7), 0.2, 98)
-    return paint
-
-
-model_texture('blood_crawler', 64, 32, spider_texture('#8A2020'))
 
 # ----------------------------------------------------------------------------------------- Dungeon (Stage 4a)
 BRICKS = {'blue_brick': '#4A5AA8', 'green_brick': '#4A8A5A', 'pink_brick': '#A85A8A'}
@@ -1875,10 +1868,12 @@ model_texture('cursed_skull', 64, 32, skull_texture('#D0C49A', '#70B8FF', glow=T
 model_texture('skeletron_hand', 32, 32, bone_hand_texture('#D8CCA0'))
 model_texture('angry_bones', 64, 64, skin_texture('#D8D0A0', '#D8D0A0', '#A0303A', '#8A2A30', eyes=(200, 30, 30, 255), bony=True))
 model_texture('dark_caster', 64, 64, skin_texture('#D8D0C0', '#2A3A8A', '#2A3A8A', '#24306A', shoes='#24306A', eyes=(120, 200, 255, 255),
-                                                  hat='#2A3A8A', hat_band='#6A8AE0', short_sleeves=False))
-model_texture('old_man', 64, 64, skin_texture('#E8C8A8', '#E8E8E8', '#3A3A58', '#2A2A40', beard='#F4F4F4', short_sleeves=False))
-model_texture('clothier', 64, 64, skin_texture('#E8B890', '#2A2A2A', '#A02828', '#2A2A30', hat='#1A1A1A', hat_band='#A02828',
-                                                short_sleeves=False))
+                                                  hat='#2A3A8A', hat_band='#6A8AE0', short_sleeves=False, robe='#2A3A8A',
+                                                  hair_style='bald', belt='#6A8AE0', buckle='#C0E0FF'))
+model_texture('old_man', 64, 64, skin_texture('#E8C8A8', '#E8E8E8', '#3A3A58', '#2A2A40', beard='#F4F4F4', short_sleeves=False, robe='#3A3A58',
+                                               belt='#5A4A3A'))
+model_texture('clothier', 64, 64, skin_texture('#E8B890', '#2A2A2A', '#E8E8E8', '#2A2A30', hat='#1A1A1A', hat_band='#A02828',
+                                                short_sleeves=False, jacket='#A02828', collar='#E8E8E8'))
 model_texture('dungeon_slime', 64, 64, slime_texture('#8A86D0', 190, core='#E8C040'))
 
 
@@ -2142,8 +2137,6 @@ model_texture('queen_bee', 64, 32, bee_texture('#F0C030', '#3A2050', crown=True)
 model_texture('jungle_slime', 64, 64, slime_texture('#6AB040', 180))
 model_texture('jungle_bat', 64, 32, bat_texture_colored('#A0602A', '#6A3A1A'))
 model_texture('cave_bat', 64, 32, bat_texture_colored('#2A6AA8', '#1A4A7A'))   # Terraria's Cave Bat is blue
-model_texture('man_eater', 64, 32, maw_texture('#4A9A30', '#E070A0'))
-model_texture('snatcher', 64, 32, maw_texture('#5AAA3A', '#F0A0C0'))
 
 
 def bee_frame(c, frame, body='#F0C828', size=12):
@@ -2365,10 +2358,6 @@ model_texture('wall_of_flesh', 64, 64, mouth_texture())
 model_texture('wall_of_flesh_wall', 32, 32, lambda c: c.img.paste(wall_tile().img))
 model_texture('wall_of_flesh_eye', 64, 64, eye_texture('#4A2A6A', sclera='#E8D0C8'))
 model_texture('the_hungry', 64, 32, maw_texture('#A84050', '#F0E0C0'))
-model_texture('imp', 64, 64, skin_texture('#D85A6A', '#3A1A2A', '#B04A5A', '#7A2A3A', eyes=(255, 200, 60, 255), shoes='#2A1A2A',
-                                           hat='#5A2A6A', short_sleeves=True))
-model_texture('demon', 64, 32, bat_texture_colored('#D06A6A', '#5A4A4A'))
-model_texture('voodoo_demon', 64, 32, bat_texture_colored('#C05A5A', '#4A3A3A'))
 model_texture('lava_slime', 64, 64, slime_texture('#FF7A20', 220))
 model_texture('hellbat', 64, 32, bat_texture_colored('#E85A20', '#A83010'))
 for _part in ('head', 'body', 'tail'):
@@ -2480,17 +2469,21 @@ EVIL_ARMOR.append('meteor')
 proj('chaos_ball', lambda c: p_orb(c, '#C040FF', 3))
 
 GOBLIN_SKIN = '#6A9AA8'      # the Tinkerer's blue-grey; goblin enemies are green/olive
-model_texture('goblin_peon', 64, 64, skin_texture('#C8B848', '#3A2A2A', '#7A5A6A', '#5A4A3A', eyes=(220, 60, 40, 255)))
-model_texture('goblin_thief', 64, 64, skin_texture('#A8A040', '#2A2A2A', '#3A3A44', '#2A2A30', eyes=(220, 60, 40, 255), hat='#2A2A30'))
+model_texture('goblin_peon', 64, 64, skin_texture('#C8B848', '#3A2A2A', '#7A5A6A', '#5A4A3A', eyes=(220, 60, 40, 255), ears=True,
+                                                  suspenders='#4A3020', hair_style='bald'))
+model_texture('goblin_thief', 64, 64, skin_texture('#A8A040', '#2A2A2A', '#3A3A44', '#2A2A30', eyes=(220, 60, 40, 255), hat='#2A2A30', ears=True,
+                                                   straps='#6A4A2A'))
 model_texture('goblin_warrior', 64, 64, skin_texture('#78B050', '#5A5A60', '#8A8A90', '#5A5A60', eyes=(220, 60, 40, 255), hat='#8A8A90',
-                                                     hat_band='#5A5A60', short_sleeves=False))
+                                                     hat_band='#5A5A60', short_sleeves=False, ears=True, straps='#5A3A2A'))
 model_texture('goblin_sorcerer', 64, 64, skin_texture('#C8C050', '#7A3A8A', '#7A3A8A', '#5A2A6A', eyes=(255, 120, 255, 255), hat='#7A3A8A',
-                                                      short_sleeves=False, shoes='#5A2A6A'))
-model_texture('goblin_archer', 64, 64, skin_texture('#78B0A0', '#3A2A2A', '#3A6A8A', '#2A4A5A', eyes=(220, 60, 40, 255), hat='#3A6A8A'))
-model_texture('bound_goblin', 64, 64, skin_texture(GOBLIN_SKIN, '#C86A28', '#8A6A4A', '#5A4A3A', torn=True))
-model_texture('goblin_tinkerer', 64, 64, skin_texture(GOBLIN_SKIN, '#2A3A44', '#C8C8D4', '#3A3440', hat='#C8A040', hat_band='#6A5020',
-                                                      short_sleeves=False))
-model_texture('meteor_head', 64, 64, eye_texture('#FF6A20', sclera='#6A4030'))
+                                                      short_sleeves=False, shoes='#5A2A6A', ears=True, robe='#7A3A8A',
+                                                      belt='#C8A040', buckle='#FF80FF'))
+model_texture('goblin_archer', 64, 64, skin_texture('#78B0A0', '#3A2A2A', '#3A6A8A', '#2A4A5A', eyes=(220, 60, 40, 255), hat='#3A6A8A', ears=True,
+                                                   straps='#6A4A2A'))
+model_texture('bound_goblin', 64, 64, skin_texture(GOBLIN_SKIN, '#2A3A44', '#8A6A4A', '#5A4A3A', torn=True, ears=True, eyes=(40, 40, 60, 255)))
+model_texture('goblin_tinkerer', 64, 64, skin_texture(GOBLIN_SKIN, '#2A3A44', '#E8E8EC', '#3A3440', hat='#C8A040', hat_band='#6A5020',
+                                                      short_sleeves=False, ears=True, jacket='#3A3440', collar='#C82828',
+                                                      eyes=(230, 200, 60, 255)))
 for _g, _skin, _shirt in (('goblin_peon', '#C8B848', '#7A5A6A'), ('goblin_thief', '#A8A040', '#3A3A44'), ('goblin_warrior', '#78B050', '#8A8A90'),
                           ('goblin_sorcerer', '#C8C050', '#7A3A8A'), ('goblin_archer', '#78B0A0', '#3A6A8A'), ('bound_goblin', GOBLIN_SKIN, '#8A6A4A'),
                           ('goblin_tinkerer', GOBLIN_SKIN, '#C8C8D4')):
@@ -2639,6 +2632,8 @@ def main():
         c.save(os.path.join(TEX, 'entity/model', name + '.png'))
     for style in WING_STYLES:
         wing_texture(style).save(os.path.join(TEX, 'entity/wings', style + '.png'))
+    import creature_models          # creatures with their own models (Imp, Demons, Crimera...)
+    creature_models.write(ASSETS, TEX)
     check_registered_items()
     print(f'Generated {len(ITEMS)} items, {len(BLOCK_TEXTURES)} block textures, {len(PROJECTILES)} projectiles, '
           f'{len(HUD)} HUD sprites, {len(EFFECTS)} effect icons, {len(ARMOR_SETS)} armor sets')

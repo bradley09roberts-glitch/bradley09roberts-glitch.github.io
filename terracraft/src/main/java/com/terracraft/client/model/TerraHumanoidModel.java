@@ -23,6 +23,17 @@ public class TerraHumanoidModel extends HumanoidModel<TerraRenderState> {
         return LayerDefinition.create(HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F), 64, 64);
     }
 
+    /** Goblins: the human shape with long pointed ears (ear texture at 56,16 and 56,20 of the skin). */
+    public static LayerDefinition createGoblin() {
+        MeshDefinition mesh = HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F);
+        PartDefinition head = mesh.getRoot().getChild("head");
+        head.addOrReplaceChild("right_ear", CubeListBuilder.create().texOffs(56, 16).addBox(-3.0F, -1.0F, -0.5F, 3.0F, 2.0F, 1.0F),
+            PartPose.offsetAndRotation(-4.0F, -4.5F, 0.0F, 0.0F, 0.25F, 0.3F));
+        head.addOrReplaceChild("left_ear", CubeListBuilder.create().texOffs(56, 20).addBox(0.0F, -1.0F, -0.5F, 3.0F, 2.0F, 1.0F),
+            PartPose.offsetAndRotation(4.0F, -4.5F, 0.0F, 0.0F, -0.25F, -0.3F));
+        return LayerDefinition.create(mesh, 64, 64);
+    }
+
     /** Thin bony limbs (skeletons). */
     public static LayerDefinition createSkeleton() {
         MeshDefinition mesh = HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F);

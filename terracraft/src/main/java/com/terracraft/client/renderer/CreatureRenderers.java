@@ -62,12 +62,10 @@ public final class CreatureRenderers {
         register(event, MobContent.BRAIN_OF_CTHULHU.get(), ctx -> new TerraModelRenderer<>(ctx,
             new com.terracraft.client.model.BrainModel(ctx.bakeLayer(TerraModels.BRAIN)), 2.2F / (15.0F / 16.0F), 1.0F, false));
         worm(event, MobContent.GIANT_WORM.get(), 0.6F);
-        maw(event, MobContent.EATER_OF_SOULS.get(), 0.7F);
-        maw(event, MobContent.CRIMERA.get(), 0.7F);
-        register(event, MobContent.FACE_MONSTER.get(), ctx -> new TerraModelRenderer<>(ctx,
-            new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 1.0F, 0.5F, true));
-        register(event, MobContent.BLOOD_CRAWLER.get(), ctx -> new TerraModelRenderer<>(ctx,
-            new net.minecraft.client.model.monster.spider.SpiderModel(ctx.bakeLayer(net.minecraft.client.model.geom.ModelLayers.SPIDER)), 0.8F, 0.5F, false));
+        json(event, MobContent.EATER_OF_SOULS.get(), "eater_of_souls", 1.0F, 0.35F);
+        json(event, MobContent.CRIMERA.get(), "crimera", 1.0F, 0.35F);
+        json(event, MobContent.FACE_MONSTER.get(), "face_monster", 1.0F, 0.5F);
+        json(event, MobContent.BLOOD_CRAWLER.get(), "blood_crawler", 1.0F, 0.5F);
         // Dungeon
         register(event, MobContent.ANGRY_BONES.get(), ctx -> new TerraModelRenderer<>(ctx,
             new TerraHumanoidModel(ctx.bakeLayer(TerraModels.SKELETON)), 0.9375F, 0.5F, true));
@@ -83,18 +81,15 @@ public final class CreatureRenderers {
         slime(event, MobContent.JUNGLE_SLIME.get(), 1.0F);
         register(event, MobContent.JUNGLE_BAT.get(), ctx -> new TerraModelRenderer<>(ctx,
             new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 0.8F, 0.3F, false));
-        maw(event, MobContent.MAN_EATER.get(), 0.8F);
-        maw(event, MobContent.SNATCHER.get(), 0.7F);
+        json(event, MobContent.MAN_EATER.get(), "man_eater", 1.0F, 0.4F);
+        json(event, MobContent.SNATCHER.get(), "snatcher", 1.0F, 0.35F);
         bee(event, MobContent.HORNET.get(), 0.7F);
         bee(event, MobContent.BEE.get(), 0.35F);
         bee(event, MobContent.QUEEN_BEE.get(), 2.0F);
         // Underworld
-        register(event, MobContent.IMP.get(), ctx -> new TerraModelRenderer<>(ctx,
-            new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F * 1.5F / 1.8F, 0.4F, false));
-        register(event, MobContent.DEMON.get(), ctx -> new TerraModelRenderer<>(ctx,
-            new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 1.6F, 0.6F, false));
-        register(event, MobContent.VOODOO_DEMON.get(), ctx -> new TerraModelRenderer<>(ctx,
-            new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 1.6F, 0.6F, false));
+        json(event, MobContent.IMP.get(), "imp", 1.0F, 0.4F);
+        json(event, MobContent.DEMON.get(), "demon", 1.0F, 0.6F);
+        json(event, MobContent.VOODOO_DEMON.get(), "voodoo_demon", 1.0F, 0.6F);
         slime(event, MobContent.LAVA_SLIME.get(), 1.0F);
         register(event, MobContent.HELLBAT.get(), ctx -> new TerraModelRenderer<>(ctx,
             new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 0.8F, 0.3F, false));
@@ -105,15 +100,22 @@ public final class CreatureRenderers {
         // Goblin Army (goblins are a bit shorter than people)
         for (var goblin : java.util.List.of(MobContent.GOBLIN_PEON, MobContent.GOBLIN_THIEF, MobContent.GOBLIN_SORCERER, MobContent.GOBLIN_ARCHER)) {
             register(event, goblin.get(), ctx -> new TerraModelRenderer<>(ctx,
-                new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F * 1.5F / 1.8F, 0.4F, false));
+                new TerraHumanoidModel(ctx.bakeLayer(TerraModels.GOBLIN)), 0.9375F * 1.5F / 1.8F, 0.4F, false));
         }
         register(event, MobContent.GOBLIN_WARRIOR.get(), ctx -> new TerraModelRenderer<>(ctx,
-            new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F * 1.7F / 1.8F, 0.45F, false));
-        eye(event, MobContent.METEOR_HEAD.get(), 0.7F);
+            new TerraHumanoidModel(ctx.bakeLayer(TerraModels.GOBLIN)), 0.9375F * 1.7F / 1.8F, 0.45F, false));
+        json(event, MobContent.METEOR_HEAD.get(), "meteor_head", 1.0F, 0.0F);
         for (var npc : NpcContent.all()) {
+            var layer = npc.getId().getPath().contains("goblin") ? TerraModels.GOBLIN : TerraModels.HUMANOID;
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,
-                new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F, 0.5F, false));
+                new TerraHumanoidModel(ctx.bakeLayer(layer)), 0.9375F, 0.5F, false));
         }
+    }
+
+    /** A creature with its own JSON model (see JsonCreatureModel), drawn at 1 model unit = 1/16 block times {@code scale}. */
+    private static void json(EntityRenderersEvent.RegisterRenderers event, EntityType<? extends LivingEntity> type, String name, float scale, float shadow) {
+        register(event, type, ctx -> new TerraModelRenderer<>(ctx,
+            new com.terracraft.client.model.JsonCreatureModel(ctx.bakeLayer(TerraModels.creature(name)), name), scale, shadow, false));
     }
 
     private static void slime(EntityRenderersEvent.RegisterRenderers event, EntityType<? extends LivingEntity> type, float width) {

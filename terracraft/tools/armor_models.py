@@ -488,6 +488,16 @@ def pattern_pixel(pattern, p, x, y, w, h, rnd, armor, face):
         if (x * 5 + y * 3) % 7 == 0:
             return p[1]
         return p[2] if r > 0.2 else p[3]
+    if pattern == 'skin':
+        # soft shading: lighter towards the top, a few darker pores
+        if y < h * 0.25:
+            return p[3] if r > 0.15 else p[2]
+        if y > h * 0.8:
+            return p[1] if r > 0.4 else p[2]
+        return p[2] if r > 0.1 else p[1]
+    if pattern == 'membrane':
+        # leathery wing: veins fanning from the root
+        return p[1] if (x + y * 2) % 6 == 0 else (p[2] if r > 0.2 else p[3])
     if pattern == 'bands':
         # overlapping horizontal plates: light top lip, shadowed bottom
         return p[3] if y % 2 == 0 else (p[1] if r > 0.2 else p[2])
@@ -571,11 +581,105 @@ def front_detail(c, kind, x0, y0, w, h, p, dark, glow, armor):
         c.set(x0 + w // 2 - 1, y0 + 4, p[3]); c.set(x0 + w // 2, y0 + 4, p[3])
         for x in range(2, w - 2):
             c.set(x0 + x, y0 + 6, dark)
+    elif kind in ('face_imp', 'face_demon', 'face_fm', 'face_eos', 'face_maw', 'face_spider', 'face_meteor'):
+        creature_face(c, kind, x0, y0, w, h, p, dark, armor)
+    elif kind in ('teeth_down', 'teeth_up'):
+        teeth = armor.mats.get('teeth', p[4])
+        inner = ramp(armor.mats.get('inner', p[2]))
+        for x in range(w):
+            for y in range(h):
+                c.set(x0 + x, y0 + y, inner[1] if (x + y) % 3 else inner[2])
+        for x in range(0, w, 2):   # a ring of teeth round the edge
+            for y in (0, h - 1):
+                c.set(x0 + x, y0 + y, teeth)
+        for y in range(0, h, 2):
+            for x in (0, w - 1):
+                c.set(x0 + x, y0 + y, teeth)
+    elif kind in ('batwing_r', 'batwing_l'):
+        # cut a bat wing out of the panel: bony top edge, scalloped lower edge between the finger bones
+        for x in range(w):
+            t = x / max(1, w - 1)
+            tip = 1 - t if kind == 'batwing_r' else t        # 0 at the root, 1 at the tip
+            bottom = int(h * (0.95 - 0.35 * tip)) - (int(3 * abs(((tip * 3) % 1) - 0.5) * 2))
+            top = int(h * 0.35 * (1 - tip))
+            for y in range(h):
+                if y < top or y > bottom:
+                    c.set(x0 + x, y0 + y, clear)
+                elif y == top or y == top + 1:
+                    c.set(x0 + x, y0 + y, p[3])
+            for f in (0.35, 0.65, 0.95):
+                if abs(tip - f) < 0.5 / w * 2:
+                    for y in range(top, bottom + 1):
+                        c.set(x0 + x, y0 + y, p[3])
     elif kind == 'collar':
         for x in range(w):
             for y in range(h):
                 if 1 <= y < h - 1 and 2 <= x < w - 2:
                     c.set(x0 + x, y0 + y, clear)
+
+
+def creature_face(c, kind, x0, y0, w, h, p, dark, mats_holder):
+    """Faces for the custom creatures (front face of the head cube)."""
+    mats = mats_holder.mats
+    eye = mats.get('eye', (255, 220, 60, 255))
+    teeth = mats.get('teeth', (240, 232, 216, 255))
+    clear = (0, 0, 0, 0)
+    cx = w // 2
+    if kind in ('face_imp', 'face_demon'):
+        # glaring yellow eyes under a heavy brow, a wide fanged grin
+        eyes = (1, w - 3) if w >= 7 else (0, w - 2)
+        for ex in eyes:
+            c.set(x0 + ex, y0 + 2, p[1]); c.set(x0 + ex + 1, y0 + 2, p[1])
+            c.set(x0 + ex, y0 + 3, eye); c.set(x0 + ex + 1, y0 + 3, dark)
+        c.set(x0 + cx, y0 + 4, p[1])
+        for x in range(1, w - 1):
+            c.set(x0 + x, y0 + h - 2, dark)
+        for x in (1, w - 2):
+            c.set(x0 + x, y0 + h - 2, teeth)
+        if kind == 'face_imp':
+            c.set(x0 + 2, y0 + h - 1, teeth); c.set(x0 + w - 3, y0 + h - 1, teeth)
+    elif kind == 'face_fm':
+        # tiny eyes and a huge gaping mouth full of teeth
+        c.set(x0 + 2, y0 + 1, eye); c.set(x0 + w - 3, y0 + 1, eye)
+        for x in range(1, w - 1):
+            for y in range(3, h - 1):
+                c.set(x0 + x, y0 + y, dark)
+        for x in range(1, w - 1, 2):
+            c.set(x0 + x, y0 + 3, teeth); c.set(x0 + x + 1, y0 + h - 2, teeth)
+        c.set(x0 + cx, y0 + 2, p[1])
+    elif kind == 'face_eos':
+        # a round sucking mouth ringed with green, small eyes above
+        for x in range(1, w - 1):
+            for y in range(1, h - 1):
+                c.set(x0 + x, y0 + y, ramp(mats['accent'])[2])
+        for x in range(2, w - 2):
+            for y in range(2, h - 2):
+                c.set(x0 + x, y0 + y, dark)
+        c.set(x0 + 1, y0 + 1, eye); c.set(x0 + w - 2, y0 + 1, eye)
+    elif kind == 'face_maw':
+        # nearly all mouth: dark hole, rows of teeth top and bottom, eyes on the top of the head instead
+        for x in range(1, w - 1):
+            for y in range(2, h - 1):
+                c.set(x0 + x, y0 + y, dark)
+        for x in range(1, w - 1):
+            if x % 2:
+                c.set(x0 + x, y0 + 2, teeth)
+            else:
+                c.set(x0 + x, y0 + h - 2, teeth)
+    elif kind == 'face_spider':
+        for ex, ey in ((1, 1), (w - 2, 1), (2, 2), (w - 3, 2)):
+            c.set(x0 + ex, y0 + ey, eye)
+    elif kind == 'face_meteor':
+        # skull-like: deep glowing eye sockets, a cracked nose hole and jagged teeth
+        glow = mats.get('glow', eye)
+        for ex in (1, w - 4):
+            for dx in range(3):
+                for dy in range(2):
+                    c.set(x0 + ex + dx, y0 + 2 + dy, dark)
+            c.set(x0 + ex + 1, y0 + 2, eye); c.set(x0 + ex + 1, y0 + 3, glow)
+        c.set(x0 + cx, y0 + 5, dark); c.set(x0 + cx - 1, y0 + 5, dark)
+        for x in range(1, w - 1):
+            c.set(x0 + x, y0 + h - 2, dark if x % 2 else teeth)
 
 
 def write(assets, tex):
