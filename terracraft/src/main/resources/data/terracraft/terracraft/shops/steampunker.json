@@ -1,0 +1,33 @@
+{
+  "npc": "steampunker",
+  "items": [
+    {
+      "item": "terracraft:clentaminator",
+      "price": 150000
+    },
+    {
+      "item": "terracraft:green_solution",
+      "price": 2500
+    },
+    {
+      "item": "terracraft:blue_solution",
+      "price": 2500
+    },
+    {
+      "item": "terracraft:purple_solution",
+      "price": 2500
+    },
+    {
+      "item": "terracraft:red_solution",
+      "price": 2500
+    },
+    {
+      "item": "minecraft:piston",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:clock",
+      "price": 2000
+    }
+  ]
+}

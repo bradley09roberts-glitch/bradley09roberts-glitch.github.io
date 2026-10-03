@@ -65,6 +65,22 @@ public class PurificationPowderItem extends TerraItem {
         if (state.is(EvilContent.VILE_MUSHROOM.get()) || state.is(EvilContent.VICIOUS_MUSHROOM.get())) {
             return Blocks.AIR.defaultBlockState();
         }
+        // the Hallow is cleansed too
+        if (state.is(com.terracraft.registry.content.HardmodeContent.PEARLSTONE.get())) {
+            return Blocks.STONE.defaultBlockState();
+        }
+        if (state.is(com.terracraft.registry.content.HardmodeContent.HALLOWED_GRASS.get())) {
+            return Blocks.GRASS_BLOCK.defaultBlockState();
+        }
+        if (state.is(com.terracraft.registry.content.HardmodeContent.PEARLSAND.get())) {
+            return Blocks.SAND.defaultBlockState();
+        }
+        if (state.is(com.terracraft.registry.content.HardmodeContent.PEARLWOOD.get())) {
+            return Blocks.OAK_LOG.defaultBlockState().setValue(RotatedPillarBlock.AXIS, state.getValue(RotatedPillarBlock.AXIS));
+        }
+        if (state.is(com.terracraft.registry.content.HardmodeContent.HALLOWED_LEAVES.get())) {
+            return Blocks.OAK_LEAVES.defaultBlockState().setValue(net.minecraft.world.level.block.LeavesBlock.PERSISTENT, true);
+        }
         return null;
     }
 }

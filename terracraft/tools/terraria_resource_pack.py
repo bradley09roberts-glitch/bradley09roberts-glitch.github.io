@@ -47,6 +47,9 @@ NAME_OVERRIDES = {
     "raw_tin": "Tin Ore", "raw_lead": "Lead Ore", "raw_silver": "Silver Ore",
     "raw_tungsten": "Tungsten Ore", "raw_platinum": "Platinum Ore",
     "wood_helmet": "Wood Helmet", "wood_breastplate": "Wood Breastplate", "wood_greaves": "Wood Greaves",
+    "raw_cobalt": "Cobalt Ore", "raw_palladium": "Palladium Ore", "raw_mythril": "Mythril Ore",
+    "raw_orichalcum": "Orichalcum Ore", "raw_adamantite": "Adamantite Ore", "raw_titanium": "Titanium Ore",
+    "mythril_breastplate": "Mythril Chainmail", "mythril_leggings": "Mythril Greaves",
 }
 
 # Vanilla Minecraft textures TerraCraft uses as Terraria items.

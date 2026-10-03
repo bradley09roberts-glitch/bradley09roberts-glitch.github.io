@@ -756,6 +756,13 @@ def lang():
         'event.terracraft.goblin_army': 'Goblin Army',
         'event.terracraft.goblin_army.start': 'A goblin army is approaching!',
         'event.terracraft.goblin_army.end': 'The Goblin Army has been defeated!',
+        'npc.terracraft.wizard.rescued': "Ah, %s! The spell I was casting on myself went... sideways. Thank you. I'll see myself to your town.",
+        'item.terracraft.clentaminator.tooltip': 'Sprays the solution in your inventory to convert biomes',
+        'item.terracraft.green_solution.tooltip': 'Purifies the Corruption, Crimson and Hallow',
+        'item.terracraft.blue_solution.tooltip': 'Spreads the Hallow',
+        'item.terracraft.purple_solution.tooltip': 'Spreads the Corruption',
+        'item.terracraft.red_solution.tooltip': 'Spreads the Crimson',
+        'item.terracraft.spell_tome.tooltip': 'Can be enchanted',
         'npc.terracraft.goblin_tinkerer.rescued': "Thanks, %s! Those goblins left me tied up down here. I'll find a place in your town.",
         'npc.terracraft.goblin_tinkerer.reforged': "There you go - %s! Much better. Probably.",
         'npc.terracraft.goblin_tinkerer.cannot_reforge': "Hold a weapon, a tool or an accessory and I'll reforge it.",
@@ -1207,7 +1214,8 @@ def worldgen():
 # --- Town NPCs -------------------------------------------------------------------------------------
 NPC_NAMES = {'guide': 'Guide', 'merchant': 'Merchant', 'nurse': 'Nurse', 'demolitionist': 'Demolitionist',
              'arms_dealer': 'Arms Dealer', 'dryad': 'Dryad', 'old_man': 'Old Man', 'clothier': 'Clothier', 'bound_goblin': 'Bound Goblin',
-             'goblin_tinkerer': 'Goblin Tinkerer'}
+             'goblin_tinkerer': 'Goblin Tinkerer', 'bound_wizard': 'Bound Wizard', 'wizard': 'Wizard', 'steampunker': 'Steampunker',
+             'witch_doctor': 'Witch Doctor'}
 NPC_DIALOGUE = {
     'guide': [
         "Hello, %s. If you're new here, chop some trees and build a shelter before nightfall.",
@@ -1284,6 +1292,31 @@ NPC_DIALOGUE['goblin_tinkerer'] = [
     "My old army keeps coming back. Don't worry, I don't take it personally.",
     "Rocket science? I'm more of a rocket boots kind of goblin.",
 ]
+NPC_DIALOGUE['bound_wizard'] = ["Thank you for freeing me, %s!"]
+NPC_DIALOGUE['wizard'] = [
+    "Greetings, %s. Would you care for a lesson in the arcane? No? Then perhaps a potion.",
+    "I once turned a slime into a slightly larger slime. It was the proudest day of my life.",
+    "A Spell Tome is the beginning of every great magic weapon. The ending, too, if you're careless.",
+    "The spirits of light and dark walk the land now. Mind the Hallow - it is beautiful, and it bites.",
+    "Mana is like soup. You should always have more than you think you need.",
+    "Do you hear that ringing? No? Good. Neither do I. Probably.",
+]
+NPC_DIALOGUE['steampunker'] = [
+    "Ello, %s! Fancy a bit of gadgetry? I've got just the thing for those pesky biomes.",
+    "My Clentaminator sprays solutions far and wide. Green cleans, the others... don't.",
+    "You beat one of those mechanical monstrosities? Smashing! I'd love a look at the scrap.",
+    "Brass, steam and a bit of elbow grease. That's all a girl needs.",
+    "Mind the purple solution. It gets everywhere, and I do mean everywhere.",
+    "Tick, tock, tick, tock. Everything runs on gears if you look closely enough.",
+]
+NPC_DIALOGUE['witch_doctor'] = [
+    "The jungle speaks, %s. Today it says you look tired.",
+    "The Queen of the hive is gone. Her stingers are mine now. Perhaps yours, for a price.",
+    "When the world turns dark and strange, leaves can carry you to the sky. Come back at night.",
+    "Do not touch the masks. They remember who touched them.",
+    "Bees know many things. Mostly about flowers. Still, many things.",
+    "Your aura is... green. That is either very good or very bad.",
+]
 GUIDE_HELP = [
     "Press V to open the crafting menu. It shows everything you can make with the stations around you.",
     "Press R to open your equipment. Accessories go in the slots next to your armor.",
@@ -1337,6 +1370,30 @@ SHOPS = {
         {'item': 'minecraft:blue_dye', 'price': 200},
         {'item': 'minecraft:black_dye', 'price': 200},
         {'item': 'minecraft:carved_pumpkin', 'price': 1000, 'time': 'night'},
+    ],
+    'wizard': [
+        {'item': t('spell_tome'), 'price': 50000},
+        {'item': t('greater_mana_potion')},
+        {'item': t('mana_potion')},
+        {'item': 'minecraft:book', 'price': 1500},
+        {'item': 'minecraft:lapis_lazuli', 'price': 500},
+        {'item': 'minecraft:experience_bottle', 'price': 2000},
+    ],
+    'steampunker': [
+        {'item': t('clentaminator'), 'price': 150000},
+        {'item': t('green_solution'), 'price': 2500},
+        {'item': t('blue_solution'), 'price': 2500},
+        {'item': t('purple_solution'), 'price': 2500},
+        {'item': t('red_solution'), 'price': 2500},
+        {'item': 'minecraft:piston', 'price': 1000},
+        {'item': 'minecraft:clock', 'price': 2000},
+    ],
+    'witch_doctor': [
+        {'item': t('leaf_wings'), 'price': 200000, 'condition': 'hardmode_active', 'time': 'night'},
+        {'item': t('stinger'), 'price': 500},
+        {'item': t('jungle_spores'), 'price': 300},
+        {'item': 'minecraft:vine', 'price': 100},
+        {'item': 'minecraft:jungle_sapling', 'price': 200},
     ],
     'goblin_tinkerer': [
         {'item': t('tinkerers_workshop'), 'price': 100000},

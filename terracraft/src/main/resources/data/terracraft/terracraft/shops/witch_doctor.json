@@ -1,0 +1,27 @@
+{
+  "npc": "witch_doctor",
+  "items": [
+    {
+      "item": "terracraft:leaf_wings",
+      "price": 200000,
+      "condition": "hardmode_active",
+      "time": "night"
+    },
+    {
+      "item": "terracraft:stinger",
+      "price": 500
+    },
+    {
+      "item": "terracraft:jungle_spores",
+      "price": 300
+    },
+    {
+      "item": "minecraft:vine",
+      "price": 100
+    },
+    {
+      "item": "minecraft:jungle_sapling",
+      "price": 200
+    }
+  ]
+}

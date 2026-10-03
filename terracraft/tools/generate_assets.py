@@ -2845,6 +2845,41 @@ mob_sprite('skeletron_prime', 24, 24, 2, lambda c, f: skull_frame(c, f, '#A8A8B4
 for _arm in ('prime_cannon', 'prime_saw', 'prime_vice', 'prime_laser'):
     mob_sprite(_arm, 11, 18, 2, hand_frame, frame_time=10)
 
+
+# ----------------------------------------------------------------------------------------- Hardmode NPCs (Stage 5e)
+model_texture('wizard', 64, 64, skin_texture('#E8C8A8', '#E8E8F0', '#5A3AA8', '#4A2A90', beard='#F4F4F8', hat='#4A2A90', hat_band='#E8C040',
+                                             short_sleeves=False, robe='#5A3AA8', belt='#E8C040', eyes=(60, 60, 120, 255)))
+model_texture('bound_wizard', 64, 64, skin_texture('#E8C8A8', '#E8E8F0', '#5A3AA8', '#4A2A90', beard='#F4F4F8', short_sleeves=False,
+                                                   robe='#5A3AA8', eyes=(60, 60, 120, 255)))
+model_texture('steampunker', 64, 64, skin_texture('#F0C8A8', '#C8582A', '#E8DCC0', '#4A3020', shoes='#2A1A10', hat='#5A3A20', hat_band='#C8A040',
+                                                  hair_style='long', short_sleeves=False, jacket='#7A4A28', belt='#3A2414', buckle='#D8B040', goggles='#C8A040',
+                                                  collar='#C8A040'))
+model_texture('witch_doctor', 64, 64, skin_texture('#7A5A40', '#1A1A1A', '#7A5A40', '#4A7A2A', shoes='#5A3A20', hat='#C8A040', hat_band='#5A9A30',
+                                                   apron='#5A9A30', belt='#8A5A2A', buckle='#E8D8C0', eyes=(240, 220, 120, 255)))
+mob_sprite('wizard', 16, 24, 3, lambda c, f: npc_frame(c, f, '#E8C8A8', '#E8E8F0', '#5A3AA8', '#4A2A90', hat='#4A2A90', beard='#F4F4F8'),
+           frame_time=6, animate='move')
+mob_sprite('bound_wizard', 16, 24, 3, lambda c, f: npc_frame(c, f, '#E8C8A8', '#E8E8F0', '#5A3AA8', '#4A2A90', beard='#F4F4F8'), frame_time=6)
+mob_sprite('steampunker', 16, 24, 3, lambda c, f: npc_frame(c, f, '#F0C8A8', '#C8582A', '#7A4A28', '#4A3020', hat='#5A3A20'),
+           frame_time=6, animate='move')
+mob_sprite('witch_doctor', 16, 24, 3, lambda c, f: npc_frame(c, f, '#7A5A40', '#1A1A1A', '#5A9A30', '#4A7A2A', hat='#C8A040'),
+           frame_time=6, animate='move')
+
+
+def draw_clentaminator(c):
+    brass = palette('#C8A040')
+    c.rect(2, 7, 12, 10, brass[2]); c.rect(12, 8, 15, 9, brass[3])
+    c.rect(4, 4, 8, 7, hexc('#50E050')); c.rect(4, 4, 8, 4, hexc('#A8F0A8'))
+    c.rect(3, 10, 5, 14, palette('#5A3A20')[2])
+    c.set(7, 8, brass[4]); c.set(9, 8, brass[4])
+    c.outline()
+
+
+item('clentaminator', draw_clentaminator, True)
+for _sol, _col in (('green', '#50E050'), ('blue', '#50A0F0'), ('purple', '#A050E0'), ('red', '#E04040')):
+    item(f'{_sol}_solution', lambda c, col=_col: draw_potion(c, col))
+item('spell_tome', lambda c: draw_book(c, '#5A3AA8'))
+item('greater_mana_potion', lambda c: draw_potion(c, '#3C64F0', 'large'))
+
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
     java_root = os.path.join(ROOT, 'src/main/java/com/terracraft/registry/content')

@@ -27,6 +27,7 @@ import java.util.Locale;
  * <ul>
  *     <li>after the Goblin Army is defeated, a Bound Goblin waits tied up somewhere in the caverns near a player;
  *     talking to him frees him and the Goblin Tinkerer joins the town;</li>
+ *     <li>in Hardmode a Bound Wizard waits the same way in the caverns and becomes the Wizard;</li>
  *     <li>the Goblin Tinkerer reforges the held weapon, tool or accessory for coins (a new random prefix).</li>
  * </ul>
  */
@@ -39,19 +40,31 @@ public final class BoundNpcs {
 
     private static void onServerTick(TickEvent.ServerTickEvent.Post event) {
         MinecraftServer server = event.server();
-        if (server.getTickCount() % 200 != 51 || !ProgressionManager.has(server, ProgressionFlags.GOBLIN_ARMY)
-            || ProgressionManager.has(server, ProgressionFlags.GOBLIN_TINKERER_RESCUED) || NpcManager.isPresent(server, TownNpcs.BOUND_GOBLIN.id())) {
+        if (server.getTickCount() % 200 != 51) {
+            return;
+        }
+        // the Goblin Tinkerer after the Goblin Army; the Wizard in Hardmode (deeper, in the caverns)
+        if (ProgressionManager.has(server, ProgressionFlags.GOBLIN_ARMY)) {
+            trySpawnBound(server, TownNpcs.BOUND_GOBLIN, ProgressionFlags.GOBLIN_TINKERER_RESCUED, false);
+        }
+        if (ProgressionManager.isHardmode(server)) {
+            trySpawnBound(server, TownNpcs.BOUND_WIZARD, ProgressionFlags.WIZARD_RESCUED, true);
+        }
+    }
+
+    private static void trySpawnBound(MinecraftServer server, TownNpcType bound, com.terracraft.progression.ProgressionFlag rescued, boolean cavernOnly) {
+        if (ProgressionManager.has(server, rescued) || NpcManager.isPresent(server, bound.id())) {
             return;
         }
         ServerLevel level = server.overworld();
         for (ServerPlayer player : level.players()) {
             TerrariaLayer layer = TerrariaLayer.ofHeight(player.getBlockY());
-            if (player.isSpectator() || layer != TerrariaLayer.UNDERGROUND && layer != TerrariaLayer.CAVERN) {
+            if (player.isSpectator() || layer != TerrariaLayer.CAVERN && (cavernOnly || layer != TerrariaLayer.UNDERGROUND)) {
                 continue;
             }
             BlockPos spot = findSpot(level, player.blockPosition(), level.getRandom());
             if (spot != null) {
-                NpcManager.spawn(level, NpcWorldData.get(server), TownNpcs.BOUND_GOBLIN, spot, "", false);
+                NpcManager.spawn(level, NpcWorldData.get(server), bound, spot, "", false);
                 return;
             }
         }
@@ -78,17 +91,19 @@ public final class BoundNpcs {
         return null;
     }
 
-    /** Talking to the Bound Goblin frees him: he becomes the (homeless) Goblin Tinkerer. */
+    /** Talking to a bound NPC frees them: the Bound Goblin becomes the Goblin Tinkerer, the Bound Wizard the Wizard. */
     public static void rescue(ServerPlayer player, TownNpc bound) {
         ServerLevel level = player.level();
         MinecraftServer server = level.getServer();
-        ProgressionManager.set(server, ProgressionFlags.GOBLIN_TINKERER_RESCUED, true);
+        boolean wizard = bound.npcType() == TownNpcs.BOUND_WIZARD;
+        ProgressionManager.set(server, wizard ? ProgressionFlags.WIZARD_RESCUED : ProgressionFlags.GOBLIN_TINKERER_RESCUED, true);
         BlockPos at = bound.blockPosition();
         bound.discard();
-        NpcManager.forget(server, TownNpcs.BOUND_GOBLIN.id());
-        TownNpc tinkerer = NpcManager.spawn(level, NpcWorldData.get(server), TownNpcs.GOBLIN_TINKERER, null, "", true, at);
-        if (tinkerer != null) {
-            NpcManager.openChat(player, tinkerer, "npc.terracraft.goblin_tinkerer.rescued", player.getName().getString());
+        NpcManager.forget(server, bound.npcType().id());
+        TownNpcType freed = wizard ? TownNpcs.WIZARD : TownNpcs.GOBLIN_TINKERER;
+        TownNpc npc = NpcManager.spawn(level, NpcWorldData.get(server), freed, null, "", true, at);
+        if (npc != null) {
+            NpcManager.openChat(player, npc, "npc.terracraft." + freed.id() + ".rescued", player.getName().getString());
         }
     }
 

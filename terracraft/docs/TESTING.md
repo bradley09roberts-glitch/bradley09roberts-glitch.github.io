@@ -100,7 +100,9 @@ coins deducted; name and green tooltip lines updated); `/terraria meteor` landin
 with command-block buttons for time/weather, Hardmode, events, town NPCs, biome teleports, gear kits, a boss
 arena, an enemy zoo and chests holding every item. In the world run `/reload`, `/function showcase:build`,
 `/function showcase:build_zoo`, then `/function showcase:build_underworld` from inside the Underworld.
-`/function showcase:hub` returns to the hub. To open a singleplayer save directly:
+`/function showcase:hub` returns to the hub. To refresh an existing showcase world, kill the zoo mobs
+(`kill @e[type=!player,x=0,y=212,z=0,distance=..48]`), clear the zoo cells (`fill -31 210 -24 31 214 18 air`) and run the
+build functions again. To open a singleplayer save directly:
 `./gradlew runClient "-Pworld=<save name>"`. `xinput.py type <text>` types into chat.
 
 ## Armor, wings and food checks
@@ -119,3 +121,15 @@ arena, an enemy zoo and chests holding every item. In the world run `/reload`, `
   `blood_crawler`, `man_eater`, `snatcher`, `meteor_head` (with `{NoAI:1b}`) and look from the front and side.
 - After editing `tools/creature_models.py`, `skins.py` or `armor_models.py`, rerun
   `tools/generate_assets.py` (it calls all of them).
+
+## Hardmode checks
+
+- `/terraria hardmode true`, then fly out along the Hallow ray (seed 12345: about x=254 z=159) - pearlstone, hallowed
+  grass and pearlwood; the evil ray is at about x=-233 z=189.
+- Smash a Demon Altar with the Pwnhammer: "Your world has been blessed with Cobalt!" (then the tier-2 and tier-3 ores);
+  count veins with `fill ... minecraft:sponge replace terracraft:cobalt_ore` (and swap back).
+- `/terraria spawns info` on Hallow ground lists Pixie and Unicorn by day, Gastropod at night.
+- `/terraria boss spawn the_twins|destroyer|skeletron_prime` at night; `data modify entity <boss> Health set value 300f`
+  forces the Twins into their second form. Killing one twin must not announce the defeat; the second must.
+- Bound Wizard: stand in the caverns (y below about -20) in Hardmode for ~10 s; right-click him to free the Wizard.
+- Clentaminator: spray Purple Solution at stone (ebonstone appears), then Green Solution (it is purified again).

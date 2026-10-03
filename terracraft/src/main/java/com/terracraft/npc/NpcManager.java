@@ -247,7 +247,7 @@ public final class NpcManager {
 
     public static void openChat(ServerPlayer player, TownNpc npc, @Nullable String dialogueKey, String arg) {
         TownNpcType type = npc.npcType();
-        if (type == TownNpcs.BOUND_GOBLIN) {
+        if (type == TownNpcs.BOUND_GOBLIN || type == TownNpcs.BOUND_WIZARD) {
             BoundNpcs.rescue(player, npc);
             return;
         }

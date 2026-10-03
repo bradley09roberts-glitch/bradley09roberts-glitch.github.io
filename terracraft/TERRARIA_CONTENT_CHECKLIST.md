@@ -77,8 +77,10 @@ Hardmode
 - [-] Dryad, Arms Dealer done; Dye Trader, Angler, Zoologist, Painter, Golfer, Tavernkeep pending
 - [x] Old Man, Clothier
 - [x] Goblin Tinkerer (rescued in the caverns; reforging)
-- [ ] Stylist, Witch Doctor, Mechanic, Party Girl, Wizard
-- [ ] Tax Collector, Truffle, Pirate, Steampunker, Cyborg, Santa Claus, Princess
+- [x] Wizard (found bound in Hardmode caverns), Witch Doctor (after Queen Bee; Leaf Wings in Hardmode)
+- [ ] Stylist, Mechanic, Party Girl
+- [x] Steampunker (after a mechanical boss; Clentaminator and solutions)
+- [ ] Tax Collector, Truffle, Pirate, Cyborg, Santa Claus, Princess
 
 ## Weapons
 Melee

@@ -116,7 +116,7 @@ buttons('north', 'TIME & WORLD', [
     ('Clear Effects', 'clear_effects'),
 ])
 
-NPCS = ['guide', 'merchant', 'nurse', 'demolitionist', 'arms_dealer', 'dryad', 'clothier', 'goblin_tinkerer']
+NPCS = ['guide', 'merchant', 'nurse', 'demolitionist', 'arms_dealer', 'dryad', 'clothier', 'goblin_tinkerer', 'wizard', 'steampunker', 'witch_doctor']
 for npc in NPCS:
     fn(f'npc_{npc}', P + f'terraria npc spawn {npc}')
 fn('npc_all', *[P + f'terraria npc spawn {npc}' for npc in NPCS])
@@ -132,8 +132,8 @@ buttons('west', 'EVENTS & NPCS', [
 ] + [(LANG.get(f'npc.terracraft.{n}', n.title()), f'npc_{n}') for n in NPCS])
 
 # ------------------------------------------------------------------------------------------------ teleports (seed 12345)
-def surface(name, x, z, text):
-    fn(f'go_{name}', 'effect give @p minecraft:slow_falling 6 0 true', f'spreadplayers {x} {z} 0 1 false @p', f'say {text}')
+def surface(name, x, z, text, *extra):
+    fn(f'go_{name}', *extra, 'effect give @p minecraft:slow_falling 6 0 true', f'spreadplayers {x} {z} 0 1 false @p', f'say {text}')
 
 
 def tp(name, x, y, z, yaw, text, *extra):
@@ -153,6 +153,7 @@ tp('underworld', 40, -51, 40, 0, 'The Underworld viewing room. Throw a Guide Voo
    'effect give @p minecraft:fire_resistance infinite 0 true')
 surface('mushroom', 4000, 2272, 'Glowing Mushroom island'); surface('beach', -1120, 1536, 'Beach')
 surface('spawn_ground', 0, 0, 'Spawn (on the ground)')
+surface('hallow', 254, 159, 'The Hallow (appears once Hardmode starts: press Hardmode On first)', 'terraria hardmode true')
 tp('arena', 75, Y, 0, -90, 'Boss Arena')
 tp('town', 0, Y, 36, 0, 'Town: NPCs move into these houses')
 buttons('east', 'TELEPORTS', [
@@ -160,7 +161,7 @@ buttons('east', 'TELEPORTS', [
     ('Desert', 'go_desert'), ('Ocean', 'go_ocean'), ('Beach', 'go_beach'), ('Jungle', 'go_jungle'), ('Bee Hive', 'go_hive'),
     ('Corruption', 'go_corruption'), ('Glowing Mushroom', 'go_mushroom'), ('Dungeon Entrance', 'go_dungeon'),
     ('Inside Dungeon', 'go_dungeon_inside'), ('Underworld', 'go_underworld'), ('Spawn Ground', 'go_spawn_ground'),
-    ('Boss Arena', 'go_arena'), ('Town', 'go_town'),
+    ('Boss Arena', 'go_arena'), ('Town', 'go_town'), ('The Hallow', 'go_hallow'),
 ])
 
 # ------------------------------------------------------------------------------------------------ kits
@@ -190,18 +191,24 @@ fn('kit_molten', *give('molten_pickaxe', 'molten_hamaxe', 'fiery_greatsword', 'm
                        'musket_ball*99', 'flamelash', 'flower_of_fire', 'demon_scythe', 'hellwing_bow', 'molten_helmet', 'molten_breastplate',
                        'molten_greaves', 'obsidian_skull', 'lava_charm', 'lava_waders', 'obsidian_skin_potion*5'))
 fn('kit_meteor', *give('space_gun', 'meteor_helmet', 'meteor_suit', 'meteor_leggings', 'mana_flower', 'mana_potion*10'))
-fn('kit_hardmode', *give('pwnhammer', 'breaker_blade', 'laser_rifle', 'warrior_emblem', 'ranger_emblem', 'sorcerer_emblem', 'summoner_emblem'))
+fn('kit_hardmode', *give('pwnhammer', 'breaker_blade', 'laser_rifle', 'warrior_emblem', 'ranger_emblem', 'sorcerer_emblem', 'summoner_emblem',
+                         'titan_glove', 'clentaminator', 'green_solution*50', 'blue_solution*50', 'purple_solution*50', 'red_solution*50'))
+fn('kit_hm_ores', *give('cobalt_pickaxe', 'mythril_sword', 'orichalcum_repeater', 'minecraft:arrow*99', 'adamantite_helmet', 'adamantite_breastplate',
+                        'adamantite_leggings', 'titanium_helmet', 'titanium_breastplate', 'titanium_leggings', 'mythril_anvil', 'adamantite_forge',
+                        'raw_cobalt*30', 'raw_mythril*30', 'raw_adamantite*30'))
+fn('kit_hallowed', *give('excalibur', 'hallowed_repeater', 'pickaxe_axe', 'minecraft:arrow*99', 'hallowed_mask', 'hallowed_plate_mail',
+                         'hallowed_greaves', 'greater_healing_potion*20', 'soul_of_might*5', 'soul_of_sight*5', 'soul_of_fright*5'))
 fn('kit_accessories', *give(*[i for i in ALL_ITEMS if i in {
     'hermes_boots', 'cloud_in_a_bottle', 'shiny_red_balloon', 'lucky_horseshoe', 'band_of_regeneration', 'band_of_starpower',
     'mana_regeneration_band', 'natures_gift', 'aglet', 'anklet_of_the_wind', 'feral_claws', 'obsidian_skull', 'lava_charm', 'cobalt_shield',
     'flipper', 'water_walking_boots', 'toolbelt', 'panic_necklace', 'honey_comb', 'obsidian_horseshoe', 'cloud_in_a_balloon',
     'obsidian_shield', 'obsidian_water_walking_boots', 'lava_waders', 'mana_flower'}]))
 fn('kit_summons', *give('slime_crown*3', 'suspicious_looking_eye*3', 'worm_food*3', 'bloody_spine*3', 'abeemination*3',
-                        'guide_voodoo_doll', 'goblin_battle_standard*3'))
+                        'guide_voodoo_doll', 'goblin_battle_standard*3', 'mechanical_eye*3', 'mechanical_worm*3', 'mechanical_skull*3'))
 fn('kit_potions', *give('healing_potion*20', 'mana_potion*20', 'ironskin_potion*5', 'swiftness_potion*5', 'regeneration_potion*5',
                         'magic_power_potion*5', 'archery_potion*5', 'mining_potion*5', 'obsidian_skin_potion*5', 'endurance_potion*5',
                         'wrath_potion*5', 'rage_potion*5', 'water_walking_potion*5'))
-fn('kit_stations', *give('work_bench', 'iron_anvil', 'minecraft:furnace', 'minecraft:brewing_stand', 'hellforge', 'tinkerers_workshop',
+fn('kit_stations', *give('work_bench', 'iron_anvil', 'minecraft:furnace', 'minecraft:brewing_stand', 'hellforge', 'tinkerers_workshop', 'mythril_anvil', 'adamantite_forge',
                          'minecraft:crafting_table'))
 fn('kit_wings', *give('fledgling_wings', 'angel_wings', 'demon_wings', 'leaf_wings', 'soul_of_light*25', 'soul_of_night*25', 'soul_of_flight*20'),
    P + 'terraria equip terracraft:angel_wings',
@@ -214,6 +221,7 @@ fn('clear_inventory', 'clear @p')
 buttons('south', 'GEAR KITS', [
     ('Starter Kit', 'kit_starter'), ('Ore Kit', 'kit_ore'), ('Corruption Kit', 'kit_evil'), ('Jungle Kit', 'kit_jungle'),
     ('Dungeon Kit', 'kit_dungeon'), ('Molten Kit', 'kit_molten'), ('Meteor Kit', 'kit_meteor'), ('Hardmode Kit', 'kit_hardmode'),
+    ('Hardmode Ores Kit', 'kit_hm_ores'), ('Hallowed Kit', 'kit_hallowed'),
     ('All Accessories', 'kit_accessories'), ('Boss Summons', 'kit_summons'), ('Potions', 'kit_potions'), ('Crafting Stations', 'kit_stations'),
     ('Wings', 'kit_wings'), ('Food Buffs', 'kit_food'), ('Coins', 'kit_coins'), ('Life & Mana Crystals', 'kit_life'),
     ('Clear Inventory', 'clear_inventory'),
@@ -221,11 +229,14 @@ buttons('south', 'GEAR KITS', [
 
 # ------------------------------------------------------------------------------------------------ boss arena
 BOSSES = [('King Slime', 'king_slime'), ('Eye of Cthulhu', 'eye_of_cthulhu'), ('Eater of Worlds', 'eater_of_worlds'),
-          ('Brain of Cthulhu', 'brain_of_cthulhu'), ('Queen Bee', 'queen_bee'), ('Skeletron', 'skeletron'), ('Wall of Flesh', 'wall_of_flesh')]
+          ('Brain of Cthulhu', 'brain_of_cthulhu'), ('Queen Bee', 'queen_bee'), ('Skeletron', 'skeletron'), ('Wall of Flesh', 'wall_of_flesh'),
+          ('The Twins', 'the_twins'), ('The Destroyer', 'destroyer'), ('Skeletron Prime', 'skeletron_prime')]
 for text, boss in BOSSES:
     fn(f'boss_{boss}', 'gamemode survival @p', P + f'terraria boss spawn {boss}')
 fn('boss_skeletron', 'gamemode survival @p', 'time set night', P + 'terraria boss spawn skeletron')
 fn('boss_eye_of_cthulhu', 'gamemode survival @p', 'time set night', P + 'terraria boss spawn eye_of_cthulhu')
+for _mech in ('the_twins', 'destroyer', 'skeletron_prime'):   # Hardmode, night only
+    fn(f'boss_{_mech}', 'gamemode survival @p', 'terraria hardmode true', 'time set night', P + f'terraria boss spawn {_mech}')
 buttons('arena', 'BOSS ARENA', [(t, f'boss_{b}') for t, b in BOSSES] + [
     ('Night', 'night'), ('Day', 'day'), ('Heal Me', 'heal'), ('Kill Bosses', 'kill_bosses'), ('Creative', 'creative'), ('Back to Hub', 'hub')])
 
@@ -276,11 +287,14 @@ ENEMIES = ['green_slime', 'blue_slime', 'red_slime', 'purple_slime', 'yellow_sli
            'jungle_slime', 'dungeon_slime', 'lava_slime', 'zombie', 'blood_zombie', 'skeleton', 'angry_bones', 'demon_eye',
            'servant_of_cthulhu', 'drippler', 'cave_bat', 'jungle_bat', 'hellbat', 'eater_of_souls', 'crimera', 'face_monster', 'blood_crawler',
            'devourer', 'giant_worm', 'bone_serpent', 'dark_caster', 'cursed_skull', 'dungeon_guardian', 'hornet', 'bee', 'man_eater', 'snatcher',
-           'imp', 'demon', 'voodoo_demon', 'meteor_head', 'goblin_peon', 'goblin_thief', 'goblin_warrior', 'goblin_archer', 'goblin_sorcerer']
+           'imp', 'demon', 'voodoo_demon', 'meteor_head', 'goblin_peon', 'goblin_thief', 'goblin_warrior', 'goblin_archer', 'goblin_sorcerer',
+           # Hardmode
+           'pixie', 'unicorn', 'gastropod', 'illuminant_bat', 'illuminant_slime', 'chaos_elemental', 'corruptor', 'slimer', 'crimslime',
+           'herpling', 'floaty_gross', 'wraith', 'possessed_armor', 'werewolf', 'armored_skeleton', 'giant_bat', 'mimic', 'probe']
 ZOO = []
 for i, mob in enumerate(ENEMIES):
-    x = -24 + 6 * (i % 9)
-    z = -20 + 7 * (i // 9)
+    x = -30 + 6 * (i % 11)
+    z = -20 + 7 * (i // 11)
     S += [f'fill {x - 2} {FLOOR} {z - 2} {x + 2} {Y + 4} {z + 2} minecraft:glass hollow',
           f'fill {x - 1} {FLOOR} {z - 1} {x + 1} {FLOOR} {z + 1} minecraft:moss_block',
           f'setblock {x} {Y} {z + 3} minecraft:dark_oak_sign[rotation=0]{sign_nbt(*label(LANG.get("entity.terracraft." + mob, mob)))}']

@@ -143,7 +143,7 @@ public class TownNpc extends PathfinderMob implements TargetRules.FriendlyToPlay
                 clearHome();
             }
         }
-        if (npcType() == TownNpcs.BOUND_GOBLIN) {
+        if (npcType() == TownNpcs.BOUND_GOBLIN || npcType() == TownNpcs.BOUND_WIZARD) {
             getNavigation().stop();   // tied up
             return;
         }

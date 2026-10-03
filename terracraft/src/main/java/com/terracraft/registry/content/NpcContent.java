@@ -30,6 +30,24 @@ public final class NpcContent {
     /** Found tied up in the caverns after the Goblin Army: talking to him frees him. */
     public static final RegistryObject<EntityType<TownNpc>> BOUND_GOBLIN = npc("bound_goblin");
     public static final RegistryObject<EntityType<TownNpc>> GOBLIN_TINKERER = npc("goblin_tinkerer");
+    // Hardmode
+    public static final RegistryObject<EntityType<TownNpc>> BOUND_WIZARD = npc("bound_wizard");
+    public static final RegistryObject<EntityType<TownNpc>> WIZARD = npc("wizard");
+    public static final RegistryObject<EntityType<TownNpc>> STEAMPUNKER = npc("steampunker");
+    public static final RegistryObject<EntityType<TownNpc>> WITCH_DOCTOR = npc("witch_doctor");
+
+    public static final RegistryObject<com.terracraft.item.tool.ClentaminatorItem> CLENTAMINATOR = ModItems.register("clentaminator", TabGroup.TOOLS_ARMOR,
+        com.terracraft.item.tool.ClentaminatorItem::new,
+        p -> com.terracraft.item.weapon.WeaponProperties.stats(p.stacksTo(1), CoreItems.stats(com.terracraft.item.TerraRarity.YELLOW, 150_000)));
+    public static final RegistryObject<com.terracraft.item.tool.ClentaminatorItem.SolutionItem> GREEN_SOLUTION = solution("green_solution",
+        com.terracraft.item.tool.ClentaminatorItem.SolutionItem.Kind.GREEN, 0x50E050);
+    public static final RegistryObject<com.terracraft.item.tool.ClentaminatorItem.SolutionItem> BLUE_SOLUTION = solution("blue_solution",
+        com.terracraft.item.tool.ClentaminatorItem.SolutionItem.Kind.BLUE, 0x50A0F0);
+    public static final RegistryObject<com.terracraft.item.tool.ClentaminatorItem.SolutionItem> PURPLE_SOLUTION = solution("purple_solution",
+        com.terracraft.item.tool.ClentaminatorItem.SolutionItem.Kind.PURPLE, 0xA050E0);
+    public static final RegistryObject<com.terracraft.item.tool.ClentaminatorItem.SolutionItem> RED_SOLUTION = solution("red_solution",
+        com.terracraft.item.tool.ClentaminatorItem.SolutionItem.Kind.RED, 0xE04040);
+    public static final RegistryObject<com.terracraft.item.TerraItem> SPELL_TOME = CoreItems.material("spell_tome", com.terracraft.item.TerraRarity.LIGHT_RED, 5000);
 
     /** Right-click a room to check whether it is valid Terraria housing. */
     public static final RegistryObject<HousingQueryItem> HOUSING_QUERY = ModItems.register("housing_query", TabGroup.TOOLS_ARMOR,
@@ -51,6 +69,12 @@ public final class NpcContent {
 
     public static List<RegistryObject<EntityType<TownNpc>>> all() {
         return ALL;
+    }
+
+    private static RegistryObject<com.terracraft.item.tool.ClentaminatorItem.SolutionItem> solution(String name,
+            com.terracraft.item.tool.ClentaminatorItem.SolutionItem.Kind kind, int color) {
+        return ModItems.register(name, TabGroup.TOOLS_ARMOR, p -> new com.terracraft.item.tool.ClentaminatorItem.SolutionItem(p, kind, color),
+            p -> com.terracraft.item.weapon.WeaponProperties.stats(p, CoreItems.stats(com.terracraft.item.TerraRarity.ORANGE, 2500)));
     }
 
     private static RegistryObject<EntityType<TownNpc>> npc(String name) {

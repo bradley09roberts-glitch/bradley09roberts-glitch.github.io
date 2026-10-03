@@ -62,11 +62,28 @@ public final class TownNpcs {
         server -> com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.GOBLIN_TINKERER_RESCUED),
         true, () -> ProjectileKinds.SHURIKEN, 10.0F, 6, List.of(TownNpcType.Service.SHOP, TownNpcType.Service.REFORGE)));
 
+    // ---------------------------------------------------------------- Hardmode
+    /** Tied up in the caverns in Hardmode (spawned by {@code BoundNpcs}); never "arrives". */
+    public static final TownNpcType BOUND_WIZARD = register(new TownNpcType("bound_wizard", NpcContent.BOUND_WIZARD, List.of(),
+        server -> false, false, null, 0.0F, 1, List.of()));
+    public static final TownNpcType WIZARD = register(new TownNpcType("wizard", NpcContent.WIZARD,
+        List.of("Abraham", "Arddun", "Elric", "Gandolf", "Ibrahim", "Merlin", "Phelps", "Tim", "Vogelin", "Zedd"),
+        server -> com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.WIZARD_RESCUED),
+        true, () -> ProjectileKinds.AMETHYST_BOLT, 16.0F, 6, List.of(TownNpcType.Service.SHOP)));
+    public static final TownNpcType STEAMPUNKER = register(new TownNpcType("steampunker", NpcContent.STEAMPUNKER,
+        List.of("Agnes", "Cynthia", "Fiona", "Gizmet", "Lucy", "Ninny", "Selah", "Sophia", "Tink", "Vera"),
+        server -> com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.ANY_MECH_BOSS),
+        true, () -> ProjectileKinds.MUSKET_BALL, 20.0F, 6, List.of(TownNpcType.Service.SHOP)));
+    public static final TownNpcType WITCH_DOCTOR = register(new TownNpcType("witch_doctor", NpcContent.WITCH_DOCTOR,
+        List.of("Abibe", "Gboto", "Jamundi", "Kogi-ghi", "Mbiki", "Nonganga", "Oaxaca", "Sinbi", "Tano", "Zalo"),
+        server -> com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.QUEEN_BEE),
+        true, () -> ProjectileKinds.STINGER, 14.0F, 6, List.of(TownNpcType.Service.SHOP)));
+
     private TownNpcs() {}
 
     /** NPCs that stay where they are put instead of living in a house (Old Man, bound NPCs). */
     public static boolean isStationary(TownNpcType type) {
-        return type == OLD_MAN || type == BOUND_GOBLIN;
+        return type == OLD_MAN || type == BOUND_GOBLIN || type == BOUND_WIZARD;
     }
 
     private static TownNpcType register(TownNpcType type) {

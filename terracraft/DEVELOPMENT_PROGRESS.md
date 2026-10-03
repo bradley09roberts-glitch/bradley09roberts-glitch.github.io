@@ -297,14 +297,28 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   +15% melee and movement speed), plus Greater Healing Potions from Hardmode bosses.
 - `/terraria boss spawn the_twins|destroyer|skeletron_prime`.
 
+### Stage 5e: Hardmode NPCs, Clentaminator, showcase (verified in a live client)
+- **Wizard**: in Hardmode a Bound Wizard waits tied up in the caverns near a player (like the Bound Goblin);
+  talking to him frees him and he moves in. Sells Spell Tomes, Greater Mana Potions, Mana Potions, books.
+- **Steampunker**: arrives after any mechanical boss. Sells the **Clentaminator** and Green/Blue/Purple/Red
+  Solutions: the Clentaminator sprays the first solution in the inventory along your aim (16 blocks), purifying or
+  spreading the Hallow/Corruption/Crimson. Purification Powder and Green Solution now also cleanse the Hallow.
+- **Witch Doctor**: arrives after Queen Bee. Sells Leaf Wings (Hardmode, at night), stingers, jungle spores.
+- `BoundNpcs` handles both bound NPCs; skins in `tools/generate_assets.py` (Wizard robe and beard, Steampunker
+  goggles and coat, Witch Doctor mask and leaf apron).
+- Showcase world: Hardmode enemies in the zoo, the mechanical bosses in the arena, a Hallow teleport, Hardmode
+  Ores and Hallowed kits, the new NPCs and summons.
+- Terraria sprite pack: 387 sprites including all Hardmode items, enemies and NPCs.
+
 ## IN PROGRESS
-- Stage 5e: Hardmode NPCs (Wizard, Steampunker, Witch Doctor) and events.
+- Nothing half-finished. Stage 5 (early Hardmode up to the mechanical bosses) is complete.
 
 ## NEXT (Stage 5: Hardmode)
 1. (done) World changes, Hardmode ores, anvils/forges, gear.
 2. (done) Hardmode enemies, Wyverns, Mimics, souls.
-3. (done) Mechanical bosses. Still open: Queen Slime; Mechanic, Wizard, Steampunker.
-4. Pirate Invasion and Frost Legion.
+3. (done) Mechanical bosses, Wizard, Steampunker, Witch Doctor. Still open: Queen Slime, Mechanic.
+4. Pirate Invasion and Frost Legion (not started).
+5. Stage 6: Plantera, Golem, Chlorophyte, Lihzahrd Temple.
 
 ## DONE: Stage 4 plan (kept for reference)
 1. ~~Dungeon and Skeletron~~ (done, 4a).

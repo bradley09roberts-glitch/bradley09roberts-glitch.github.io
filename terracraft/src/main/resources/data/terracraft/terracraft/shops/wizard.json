@@ -1,0 +1,27 @@
+{
+  "npc": "wizard",
+  "items": [
+    {
+      "item": "terracraft:spell_tome",
+      "price": 50000
+    },
+    {
+      "item": "terracraft:greater_mana_potion"
+    },
+    {
+      "item": "terracraft:mana_potion"
+    },
+    {
+      "item": "minecraft:book",
+      "price": 1500
+    },
+    {
+      "item": "minecraft:lapis_lazuli",
+      "price": 500
+    },
+    {
+      "item": "minecraft:experience_bottle",
+      "price": 2000
+    }
+  ]
+}
