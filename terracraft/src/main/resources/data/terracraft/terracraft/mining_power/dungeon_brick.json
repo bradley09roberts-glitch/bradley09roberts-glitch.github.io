@@ -1,0 +1,8 @@
+{
+  "pickaxe_power": 65,
+  "blocks": [
+    "terracraft:blue_brick",
+    "terracraft:green_brick",
+    "terracraft:pink_brick"
+  ]
+}

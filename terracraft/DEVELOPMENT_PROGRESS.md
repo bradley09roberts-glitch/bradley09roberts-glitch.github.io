@@ -117,12 +117,38 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   a boss; sells Purification Powder, which cleanses evil blocks, saplings and the world's evil powder).
 - 3D models: worm segments, flying maws, brain, Blood Crawler (vanilla spider shape), new humanoid skins.
 
+### Stage 4a: Dungeon and Skeletron (verified in a live client)
+- **Dungeon** (`world.dungeon`): one per world, placed from the seed 650-950 blocks from spawn on dry land away
+  from the evil zones (`DungeonLayout`, pure function of seed + terrain height). Brick entrance tower with
+  battlements, windows, doorway and porch facing spawn; ladder shaft to 4 levels of rooms (9x6x9) linked by
+  corridors and ladder shafts (~49 halls). Built per chunk by `DungeonFeature` (2-block brick shell, then air,
+  then furniture): Locked Gold Chests, dungeon chests (Golden Key, Water Bolt, potions), Spikes, bookshelves,
+  hanging lanterns, cobwebs. Blue/Green/Pink Brick per world (65% pickaxe power, blast proof).
+  `/terraria worldgen dungeon` prints the entrance; the Guide's help can point the way.
+- **Old Man** (nameless town NPC) waits at the entrance until Skeletron is beaten (respawns if a fight is
+  lost). By day he turns visitors away; at night his chat has a **Curse** button that turns him into Skeletron.
+- **Dungeon Guardian**: entering the Dungeon (rooms/halls below the entrance) before Skeletron is defeated
+  sends a wall-phasing, unkillable skull that kills in one or two hits; it leaves when the victim leaves.
+- **Skeletron** (`entity.boss.Skeletron`): head (4400 life) hovers above the player and periodically spins and
+  chases (double defense, more damage); two separate Hands (600 life each) swipe in turns; with both hands dead
+  it spins more often and throws homing skulls. At daytime it enrages (9999 defense and damage, very fast).
+  Drops Book of Skulls (1/7). Defeat lifts the curse: Old Man removed, Dungeon enemies spawn, Clothier can
+  move in (sells cloth, leather, dyes).
+- **Dungeon enemies** (spawn on dungeon bricks after Skeletron): Angry Bones, Dark Caster (`CasterMob`:
+  teleports near the target and casts homing water spheres), Cursed Skull (`GhostFlyerMob`, passes through
+  walls), Dungeon Slime (always drops a Golden Key). Normal spawn tables ignore dungeon bricks.
+- **Items**: Golden Key (opens and is used up by one Locked Gold Chest), Shadow Key, Muramasa, Handgun,
+  Aqua Scepter, Water Bolt (bouncing), Book of Skulls; locked chests hold one of Muramasa, Cobalt Shield, Aqua
+  Scepter, Handgun, Magic Missile or Shadow Key.
+- 3D models: `SkullModel` (Skeletron, Guardian, Cursed Skull; chattering jaw, spin), `BoneHandModel`.
+- Fixes: boss bars are cleared when a boss's chunk unloads (previously a stale bar stayed); NPC chat closes
+  when the NPC disappears.
+
 ## IN PROGRESS
-- Nothing half-finished in code. Next work item is Stage 4.
+- Stage 4 continues with 4b (Jungle and Queen Bee).
 
 ## NEXT (Stage 4: Dungeon, Jungle, Underworld - the road to Hardmode)
-1. Dungeon structure (brick halls, locked chests, Golden Keys, spikes, water bolts) guarded by the Old Man;
-   Skeletron (head + hands, curse lifted) and the Dungeon enemies (Angry Bones, Dark Caster, Cursed Skull).
+1. ~~Dungeon and Skeletron~~ (done, 4a).
 2. Jungle mapping (vanilla jungles + underground jungle mud/moss, Jungle Spores, Hornets, Man Eaters),
    Queen Bee (bee hives, Abeemination), Jungle armor and gear.
 3. Underworld layer below the caverns (ash, hellstone with 65 power, lava lakes, ruined houses), Imps,
@@ -132,6 +158,11 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 6. Meteorite (first orb/heart triggers a meteor landing), Meteor armor and Space Gun.
 
 ## KNOWN BUGS
+- The Dungeon only appears in chunks generated after installing this version; in older worlds part of it may be
+  missing where chunks already existed (use a new world or unexplored location).
+- If every player leaves while Skeletron is alive, the boss stays in its unloaded chunk; the Old Man may
+  return meanwhile, and Skeletron resumes (or despawns) once the area is loaded again.
+- Locked Gold Chest loot spreads stacks over many slots (vanilla chest loot behaviour).
 - Chunks generated before a zone change keep their old layout (zone placement changed during Stage 3
   development; affects only test worlds).
 - Evil biomes do not spread yet (pre-Hardmode spread is slow in Terraria; Hardmode spread comes with Stage 5).

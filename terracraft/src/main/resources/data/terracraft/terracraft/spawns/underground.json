@@ -7,7 +7,8 @@
         "underground"
       ],
       "exclude_ground": [
-        "#terracraft:evil/all"
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks"
       ]
     },
     {
@@ -17,7 +18,8 @@
         "underground"
       ],
       "exclude_ground": [
-        "#terracraft:evil/all"
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks"
       ]
     },
     {
@@ -27,7 +29,8 @@
         "underground"
       ],
       "exclude_ground": [
-        "#terracraft:evil/all"
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks"
       ]
     },
     {
@@ -38,7 +41,8 @@
       ],
       "placement": "air",
       "exclude_ground": [
-        "#terracraft:evil/all"
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks"
       ]
     },
     {
@@ -48,7 +52,8 @@
         "underground"
       ],
       "exclude_ground": [
-        "#terracraft:evil/all"
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks"
       ]
     },
     {
@@ -59,7 +64,8 @@
         "cavern"
       ],
       "exclude_ground": [
-        "#terracraft:evil/all"
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks"
       ]
     }
   ]

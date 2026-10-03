@@ -168,6 +168,16 @@ public class NpcChatScreen extends Screen {
         return super.mouseClicked(event, doubleClick);
     }
 
+    /** Closes when the NPC is gone (e.g. the Old Man turning into Skeletron). */
+    @Override
+    public void tick() {
+        super.tick();
+        Entity entity = minecraft != null && minecraft.level != null ? minecraft.level.getEntity(data.entityId()) : null;
+        if (entity == null || entity.isRemoved()) {
+            onClose();
+        }
+    }
+
     @Override
     public void removed() {
         if (!closeSent) {

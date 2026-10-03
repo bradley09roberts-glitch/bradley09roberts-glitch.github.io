@@ -68,6 +68,17 @@ public final class WeaponContent {
 
     public static final RegistryObject<MagicWeaponItem> VILETHORN = magic("vilethorn", ProjectileKinds.VILETHORN, 10, 10, 28, 1.0F, 8.0F, TerraRarity.GREEN, 2, 0, 0);
 
+    // ---------------------------------------------------------------- dungeon
+    public static final RegistryObject<MeleeWeaponItem> MURAMASA = sword("muramasa", 19, 20, 1.0F, 0, TerraRarity.GREEN, 50000);
+    public static final RegistryObject<RangedWeaponItem> HANDGUN = ranged("handgun", AmmoType.BULLET, SoundEvents.FIREWORK_ROCKET_BLAST, 17, 12,
+        3.0F, 10.0F, TerraRarity.GREEN, 50000);
+    public static final RegistryObject<MagicWeaponItem> AQUA_SCEPTER = magic("aqua_scepter", ProjectileKinds.AQUA_STREAM, 15, 7, 16, 5.0F, 12.5F,
+        TerraRarity.GREEN, 5, 0, 0);
+    public static final RegistryObject<MagicWeaponItem> WATER_BOLT = magic("water_bolt", ProjectileKinds.WATER_BOLT, 19, 10, 17, 5.0F, 4.5F,
+        TerraRarity.GREEN, 5, 0, 0);
+    public static final RegistryObject<MagicWeaponItem> BOOK_OF_SKULLS = magic("book_of_skulls", ProjectileKinds.BOOK_SKULL, 29, 18, 26, 7.5F, 3.5F,
+        TerraRarity.GREEN, 5, 0, 0);
+
     // ---------------------------------------------------------------- ammo
     public static final RegistryObject<AmmoItem> FLAMING_ARROW = ammo("flaming_arrow", AmmoType.ARROW, 7, 2.0F, 0.5F, ProjectileKinds.FLAMING_ARROW, 15);
     public static final RegistryObject<AmmoItem> MUSKET_BALL = ammo("musket_ball", AmmoType.BULLET, 7, 2.0F, 4.0F, ProjectileKinds.MUSKET_BALL, 7);

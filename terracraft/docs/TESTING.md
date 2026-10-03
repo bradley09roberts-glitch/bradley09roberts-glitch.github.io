@@ -56,3 +56,14 @@ and healing for 44 copper, Guide shooting enemies, the personal Terraria sprite 
 
 Tips: freeze test mobs with `{NoAI:1b}`; town NPCs walk away quickly, so teleport them and right-click in the
 same command batch (`xinput.py hold right 0.05` clicks without moving the pointer, which would turn the camera).
+
+## What was verified for Stage 4a (in the live client)
+
+Dungeon generated at the seeded spot (seed 12345: 104 93 -819, pink bricks, door facing spawn) with tower,
+porch, ladder shafts, rooms, corridors, Locked Gold Chests, bookshelves, lanterns and cobwebs; Old Man at the
+door with the Curse button only at night; Dungeon Guardian killing a survival player who entered before
+Skeletron; Skeletron awakening from the curse (Old Man removed, chat closed), head + two hands rendering,
+defeat message, curse-lifted announcement and progression flag; Golden Key opening (and being used up by) a
+Locked Gold Chest with dungeon loot (Muramasa); Angry Bones and Dark Casters spawning inside after Skeletron;
+Water Bolt casting. Tip: bosses despawn without a valid survival target, so freeze them with `{NoAI:1b}` while
+a survival player stands nearby to frame screenshots.

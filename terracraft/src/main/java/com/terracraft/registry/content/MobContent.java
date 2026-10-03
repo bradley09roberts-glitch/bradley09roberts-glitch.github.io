@@ -112,6 +112,27 @@ public final class MobContent {
         com.terracraft.entity.boss.BrainOfCthulhu.BrainCreeper::new, 0.7F, 0.7F,
         MobDefinition.builder().life(100).damage(20).defense(10).knockbackTaken(0.0F).coins(0).followRange(64));
 
+    // --- Dungeon ----------------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<WalkerMob>> ANGRY_BONES = register("angry_bones", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(80).damage(26).defense(8).knockbackTaken(0.8F).coins(130).speed(0.27));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.CasterMob>> DARK_CASTER = register("dark_caster",
+        (type, level) -> new com.terracraft.entity.mob.CasterMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.WATER_SPHERE, 20.0F),
+        0.6F, 1.8F, MobDefinition.builder().life(50).damage(20).defense(2).knockbackTaken(0.6F).coins(250).speed(0.0).followRange(32));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.GhostFlyerMob>> CURSED_SKULL = register("cursed_skull",
+        (type, level) -> new com.terracraft.entity.mob.GhostFlyerMob(type, level, FlyerMob.Style.CHASER), 0.7F, 0.7F,
+        MobDefinition.builder().life(40).damage(35).defense(6).knockbackTaken(0.8F).coins(150).speed(0.16).followRange(40));
+    public static final RegistryObject<EntityType<SlimeMob>> DUNGEON_SLIME = slime("dungeon_slime", 1.0F, 0.75F,
+        MobDefinition.builder().life(150).damage(30).defense(7).knockbackTaken(0.6F).coins(2500));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.DungeonGuardian>> DUNGEON_GUARDIAN = register("dungeon_guardian",
+        com.terracraft.entity.mob.DungeonGuardian::new, 1.6F, 1.6F,
+        MobDefinition.builder().life(9999).damage(1000).defense(9999).knockbackTaken(0.0F).coins(0).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.Skeletron>> SKELETRON = register("skeletron",
+        com.terracraft.entity.boss.Skeletron::new, 2.2F, 2.2F,
+        MobDefinition.builder().life(4400).damage(32).defense(10).knockbackTaken(0.0F).coins(50_000).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.Skeletron.Hand>> SKELETRON_HAND = register("skeletron_hand",
+        com.terracraft.entity.boss.Skeletron.Hand::new, 1.2F, 1.2F,
+        MobDefinition.builder().life(600).damage(20).defense(14).knockbackTaken(0.0F).coins(0).followRange(160));
+
     private MobContent() {}
 
     public static void init() {

@@ -46,6 +46,14 @@ public final class TownNpcs {
             || com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.SKELETRON)),
         true, null, 0.0F, 6, List.of(TownNpcType.Service.SHOP)));
 
+    /** Waits at the Dungeon entrance until Skeletron is defeated; spawned by {@code DungeonManager}, never "arrives". */
+    public static final TownNpcType OLD_MAN = register(new TownNpcType("old_man", NpcContent.OLD_MAN, List.of(),
+        server -> false, false, null, 0.0F, 5, List.of(TownNpcType.Service.CURSE)));
+    public static final TownNpcType CLOTHIER = register(new TownNpcType("clothier", NpcContent.CLOTHIER,
+        List.of("Archibald", "Bartholomew", "Crispin", "Desmond", "Eustace", "Leopold", "Montgomery", "Rupert", "Sebastian", "Theodore"),
+        server -> com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.SKELETRON),
+        true, () -> ProjectileKinds.BOOK_SKULL, 12.0F, 6, List.of(TownNpcType.Service.SHOP)));
+
     private TownNpcs() {}
 
     private static TownNpcType register(TownNpcType type) {

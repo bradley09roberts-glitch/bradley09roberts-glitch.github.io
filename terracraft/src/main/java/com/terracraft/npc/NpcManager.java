@@ -55,7 +55,7 @@ public final class NpcManager {
     private static final int CHECK_INTERVAL = 100;
     private static final long RESPAWN_DELAY = 6000;
     private static final int MAX_HOUSE_CHECKS = 12;
-    private static final int HELP_TIPS = 12;
+    private static final int HELP_TIPS = 13;
 
     private NpcManager() {}
 
@@ -167,7 +167,7 @@ public final class NpcManager {
     }
 
     private static void maintainHouse(ServerLevel level, NpcWorldData data, TownNpcType type, NpcWorldData.Record record) {
-        if (!(level.getEntity(record.entity().get()) instanceof TownNpc npc)) {
+        if (type == TownNpcs.OLD_MAN || !(level.getEntity(record.entity().get()) instanceof TownNpc npc)) {
             return;
         }
         if (level.getGameTime() % 1200 >= CHECK_INTERVAL) {
@@ -205,7 +205,7 @@ public final class NpcManager {
         }
         npc.snapTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, level.getRandom().nextFloat() * 360.0F, 0.0F);
         npc.finalizeSpawn(level, level.getCurrentDifficultyAt(at), EntitySpawnReason.EVENT, null);
-        if (name.isEmpty()) {
+        if (name.isEmpty() && !type.names().isEmpty()) {
             name = type.names().get(level.getRandom().nextInt(type.names().size()));
         }
         npc.setNpcName(name);
@@ -242,11 +242,19 @@ public final class NpcManager {
         TownNpcType type = npc.npcType();
         npc.startTalking(player);
         if (dialogueKey == null) {
-            dialogueKey = type.roleKey() + ".dialogue." + (1 + player.getRandom().nextInt(type.dialogueLines()));
+            int line = 1 + player.getRandom().nextInt(type.dialogueLines());
+            if (type == TownNpcs.OLD_MAN) {
+                // lines 1-3 turn visitors away by day, 4-5 taunt them at night
+                line = player.level().isDarkOutside() ? 4 + player.getRandom().nextInt(2) : 1 + player.getRandom().nextInt(3);
+            }
+            dialogueKey = type.roleKey() + ".dialogue." + line;
             arg = player.getName().getString();
         }
         List<String> services = new ArrayList<>();
         for (TownNpcType.Service service : type.services()) {
+            if (service == TownNpcType.Service.CURSE && !player.level().isDarkOutside()) {
+                continue;   // the Old Man can only be cursed at night
+            }
             services.add(service.name().toLowerCase(java.util.Locale.ROOT));
         }
         List<OpenNpcChatPacket.Offer> offers = new ArrayList<>();
@@ -286,7 +294,14 @@ public final class NpcManager {
         switch (action) {
             case "help" -> {
                 if (type.services().contains(TownNpcType.Service.HELP)) {
-                    openChat(player, npc, type.roleKey() + ".help." + (1 + player.getRandom().nextInt(HELP_TIPS)), "");
+                    int tip = 1 + player.getRandom().nextInt(HELP_TIPS);
+                    String arg = tip == HELP_TIPS ? com.terracraft.world.dungeon.DungeonManager.directions(player.level(), player.blockPosition()) : "";
+                    openChat(player, npc, type.roleKey() + ".help." + tip, arg);
+                }
+            }
+            case "curse" -> {
+                if (type.services().contains(TownNpcType.Service.CURSE)) {
+                    com.terracraft.world.dungeon.DungeonManager.curse(player, npc);
                 }
             }
             case "heal" -> {

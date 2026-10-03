@@ -87,6 +87,39 @@ def evil_blocks():
         'type': 'forge:add_features', 'biomes': '#minecraft:is_overworld', 'features': t('evil_biome'), 'step': 'top_layer_modification'})
 
 
+DUNGEON_BLOCKS = ['blue_brick', 'green_brick', 'pink_brick', 'spikes', 'locked_gold_chest']
+
+
+def dungeon():
+    bricks = [t('blue_brick'), t('green_brick'), t('pink_brick')]
+    for b in ['blue_brick', 'green_brick', 'pink_brick', 'spikes']:
+        write(f'{NS}/loot_table/blocks/{b}.json', self_loot(b))
+    write(f'{NS}/tags/block/dungeon/bricks.json', {'values': bricks})
+    write(f'{NS}/terracraft/mining_power/dungeon_brick.json', {'pickaxe_power': 65, 'blocks': bricks})
+    write(f'{NS}/tags/item/keys/golden_key.json', {'values': [t('golden_key')]})
+    write(f'{NS}/tags/item/keys/shadow_key.json', {'values': [t('shadow_key')]})
+    write(f'{NS}/worldgen/configured_feature/dungeon.json', {'type': t('dungeon'), 'config': {}})
+    write(f'{NS}/worldgen/placed_feature/dungeon.json', {'feature': t('dungeon'), 'placement': []})
+    write(f'{NS}/forge/biome_modifier/dungeon.json', {
+        'type': 'forge:add_features', 'biomes': '#minecraft:is_overworld', 'features': t('dungeon'), 'step': 'top_layer_modification'})
+    common = [
+        {'rolls': {'type': 'minecraft:uniform', 'min': 1, 'max': 2}, 'entries': [
+            entry('healing_potion', 2, 1, 2), entry('lesser_healing_potion', 3, 2, 5), entry('ironskin_potion', 1),
+            entry('regeneration_potion', 1), entry('swiftness_potion', 1), entry('magic_power_potion', 1), entry('mana_regeneration_potion', 1)]},
+        {'rolls': 1, 'entries': [entry('minecraft:bone', 3, 5, 15), entry('minecraft:torch', 2, 10, 20), entry('minecraft:arrow', 2, 25, 50),
+                                 entry('musket_ball', 1, 30, 60), entry('minecraft:cobweb', 1, 4, 8)]},
+        {'rolls': 1, 'entries': [entry('silver_coin', 1, 5, 20)]},
+        {'rolls': {'type': 'minecraft:uniform', 'min': 0, 'max': 1}, 'entries': [entry('gold_coin', 1)]},
+    ]
+    # plain dungeon chest: keys and the Water Bolt (Terraria keeps its Water Bolts on dungeon shelves)
+    write(f'{NS}/loot_table/chests/dungeon.json', {'type': 'minecraft:chest', 'pools': [
+        {'rolls': 1, 'entries': [entry('golden_key', 5), entry('water_bolt', 3), entry('minecraft:book', 2, 1, 3)]}] + common})
+    # Locked Gold Chest: one of Terraria's dungeon treasures
+    write(f'{NS}/loot_table/chests/dungeon_gold.json', {'type': 'minecraft:chest', 'pools': [
+        {'rolls': 1, 'entries': [entry('muramasa', 2), entry('cobalt_shield', 2), entry('aqua_scepter', 2), entry('handgun', 2),
+                                 entry('magic_missile', 2), entry('shadow_key', 1)]}] + common})
+
+
 def blocks():
     for m in METALS:
         for ore in (f'{m}_ore', f'deepslate_{m}_ore'):
@@ -97,7 +130,8 @@ def blocks():
         'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('life_crystal')}]}],
         'random_sequence': f'{NS}:blocks/life_crystal_block'})
     write('minecraft/tags/block/mineable/pickaxe.json', {'values': [t(o) for o in ORES] + [t('iron_anvil'), t('lead_anvil'), t('life_crystal_block'),
-                                                                   t('ebonstone'), t('crimstone'), t('demonite_ore'), t('crimtane_ore')]})
+                                                                   t('ebonstone'), t('crimstone'), t('demonite_ore'), t('crimtane_ore'),
+                                                                   t('blue_brick'), t('green_brick'), t('pink_brick'), t('spikes')]})
     write('minecraft/tags/block/needs_stone_tool.json', {'values': [t(f'{p}{m}_ore') for m in STONE_TIER for p in ('', 'deepslate_')]})
     write('minecraft/tags/block/needs_iron_tool.json', {'values': [t(f'{p}{m}_ore') for m in IRON_TIER for p in ('', 'deepslate_')]})
     write(f'{NS}/tags/block/mineable/hammer.json', {'values': [t('shadow_orb'), t('crimson_heart'), t('demon_altar'), t('crimson_altar')]})
@@ -287,7 +321,8 @@ def lang():
     items_dir = os.path.join(RES, 'assets/terracraft/items')
     for fname in sorted(os.listdir(items_dir)):
         name = fname[:-5]
-        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil') else 'item.') + f'{NS}.{name}'
+        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
+               else 'item.') + f'{NS}.{name}'
         L[key] = title(name)
     L['block.terracraft.life_crystal_block'] = 'Life Crystal'
     L['item.terracraft.lights_bane'] = "Light's Bane"
@@ -500,6 +535,21 @@ def lang():
     for i, line in enumerate(GUIDE_HELP, 1):
         L[f'npc.terracraft.guide.help.{i}'] = line
     L.update({
+        'npc.terracraft.old_man.day': "My master cannot be summoned under the light of day.",
+        'screen.terracraft.npc.curse': 'Curse',
+        'message.terracraft.chest.locked.golden_key': 'It is locked. A Golden Key would open it.',
+        'message.terracraft.chest.locked.shadow_key': 'It is locked. It needs a Shadow Key.',
+        'item.terracraft.golden_key.tooltip': 'Opens one Locked Gold Chest',
+        'item.terracraft.shadow_key.tooltip': 'Opens all Shadow Chests and Obsidian Lock Boxes',
+        'item.terracraft.water_bolt.tooltip': 'Casts a slow moving bolt of water',
+        'item.terracraft.aqua_scepter.tooltip': 'Sprays out a shower of water',
+        'item.terracraft.book_of_skulls.tooltip': 'Shoots a skull',
+        'item.terracraft.muramasa.tooltip': 'A blade forged in the depths of the Dungeon',
+        'block.terracraft.locked_gold_chest': 'Locked Gold Chest',
+        'block.terracraft.spikes': 'Spikes',
+        'block.terracraft.blue_brick': 'Blue Brick',
+        'block.terracraft.green_brick': 'Green Brick',
+        'block.terracraft.pink_brick': 'Pink Brick',
         'npc.terracraft.nurse.healthy': "You look perfectly healthy. Come back when something's broken.",
         'npc.terracraft.nurse.too_poor': "Healing you would cost %s. I don't work for free, you know.",
         'npc.terracraft.nurse.healed': "All better! That'll be %s.",
@@ -566,12 +616,20 @@ MOBS = {
     'crimera': ('Crimera', [('vertebra', 1, 1, 0.33)]),
     'face_monster': ('Face Monster', [('vertebra', 1, 1, 0.33)]),
     'blood_crawler': ('Blood Crawler', [('vertebra', 1, 1, 0.25)]),
+    'angry_bones': ('Angry Bones', [('golden_key', 1, 1, 0.025), ('minecraft:bone', 1, 3, 0.5)]),
+    'dark_caster': ('Dark Caster', [('golden_key', 1, 1, 0.025), ('minecraft:bone', 1, 2, 0.5)]),
+    'cursed_skull': ('Cursed Skull', [('golden_key', 1, 1, 0.025), ('minecraft:bone', 1, 2, 0.5)]),
+    'dungeon_slime': ('Dungeon Slime', [('golden_key', 1, 1, 1.0), ('gel', 2, 5, 1.0)]),
+    'dungeon_guardian': ('Dungeon Guardian', []),
+    'skeletron': ('Skeletron', [('book_of_skulls', 1, 1, 0.143)]),
+    'skeletron_hand': ('Skeletron Hand', []),
     'king_slime': ('King Slime', [('gel', 40, 80, 1.0), ('slime_crown', 1, 1, 0.1)]),
     'eye_of_cthulhu': ('Eye of Cthulhu', [('lens', 3, 6, 1.0)]),
 }
 
-OVERWORLD_LAND = {'exclude_biomes': ['#minecraft:is_ocean', '#minecraft:is_river'], 'exclude_ground': ['#terracraft:evil/all']}
-NOT_EVIL = {'exclude_ground': ['#terracraft:evil/all']}
+OVERWORLD_LAND = {'exclude_biomes': ['#minecraft:is_ocean', '#minecraft:is_river'], 'exclude_ground': ['#terracraft:evil/all', '#terracraft:dungeon/bricks']}
+NOT_EVIL = {'exclude_ground': ['#terracraft:evil/all', '#terracraft:dungeon/bricks']}
+DUNGEON = {'ground': ['#terracraft:dungeon/bricks'], 'condition': 'boss_skeletron_defeated'}
 CORRUPT = {'ground': ['#terracraft:evil/corruption']}
 CRIMSON = {'ground': ['#terracraft:evil/crimson']}
 PRE_HM = '!hardmode_active'
@@ -610,6 +668,12 @@ SPAWNS = {
     'corruption': [
         dict(entity='eater_of_souls', weight=10, layers=['surface', 'underground', 'cavern'], placement='air', **CORRUPT),
         dict(entity='devourer', weight=3, layers=['surface', 'underground', 'cavern'], **CORRUPT),
+    ],
+    'dungeon': [
+        dict(entity='angry_bones', weight=10, layers=['surface', 'underground', 'cavern'], group=[1, 2], **DUNGEON),
+        dict(entity='dark_caster', weight=4, layers=['surface', 'underground', 'cavern'], **DUNGEON),
+        dict(entity='cursed_skull', weight=5, layers=['surface', 'underground', 'cavern'], placement='air', **DUNGEON),
+        dict(entity='dungeon_slime', weight=1, layers=['surface', 'underground', 'cavern'], **DUNGEON),
     ],
     'crimson': [
         dict(entity='crimera', weight=10, layers=['surface', 'underground', 'cavern'], placement='air', **CRIMSON),
@@ -748,7 +812,7 @@ def worldgen():
 
 # --- Town NPCs -------------------------------------------------------------------------------------
 NPC_NAMES = {'guide': 'Guide', 'merchant': 'Merchant', 'nurse': 'Nurse', 'demolitionist': 'Demolitionist',
-             'arms_dealer': 'Arms Dealer', 'dryad': 'Dryad'}
+             'arms_dealer': 'Arms Dealer', 'dryad': 'Dryad', 'old_man': 'Old Man', 'clothier': 'Clothier'}
 NPC_DIALOGUE = {
     'guide': [
         "Hello, %s. If you're new here, chop some trees and build a shelter before nightfall.",
@@ -801,6 +865,21 @@ NPC_DIALOGUE['dryad'] = [
     "I have watched these forests for longer than you would believe.",
     "Be gentle with the land, and it will be gentle with you.",
 ]
+NPC_DIALOGUE['old_man'] = [
+    "I cannot let you enter until you free me of my curse.",
+    "Come back at night if you wish to enter.",
+    "My master cannot be summoned under the light of day.",
+    "You are far too weak to defeat my curse. Come back when you aren't so worthless.",
+    "You pathetic fool. You cannot hope to face my master as you are now.",
+]
+NPC_DIALOGUE['clothier'] = [
+    "Thank you for releasing me, %s. I feel like a new man.",
+    "I remember nothing of the time I spent cursed... only the cold.",
+    "A man is judged by his clothes. And by whether he's a giant floating skull.",
+    "If you find any silk, bring it to me. I can work wonders with it.",
+    "The Dungeon is yours to explore now. Mind the spikes.",
+    "Sometimes I still hear the bones rattling down there.",
+]
 GUIDE_HELP = [
     "Press V to open the crafting menu. It shows everything you can make with the stations around you.",
     "Press R to open your equipment. Accessories go in the slots next to your armor.",
@@ -814,6 +893,7 @@ GUIDE_HELP = [
     "Carry some explosives, and a Demolitionist may take an interest in your town.",
     "Use a Housing Query on a room to check whether someone could live there.",
     "Twenty gel and five gold or platinum bars make a Slime Crown. Use it if you dare.",
+    "The Dungeon lies to the %s. An old man guards its door - speak to him at night, if you are strong enough.",
 ]
 SHOPS = {
     'merchant': [
@@ -842,6 +922,18 @@ SHOPS = {
         {'item': t('vile_powder'), 'price': 100, 'condition': {'evil': 'corruption'}},
         {'item': t('vicious_powder'), 'price': 100, 'condition': {'evil': 'crimson'}},
     ],
+    'clothier': [
+        {'item': 'minecraft:white_wool', 'price': 20},
+        {'item': 'minecraft:string', 'price': 25},
+        {'item': 'minecraft:leather_helmet', 'price': 1000},
+        {'item': 'minecraft:leather_chestplate', 'price': 1000},
+        {'item': 'minecraft:leather_leggings', 'price': 1000},
+        {'item': 'minecraft:leather_boots', 'price': 1000},
+        {'item': 'minecraft:red_dye', 'price': 200},
+        {'item': 'minecraft:blue_dye', 'price': 200},
+        {'item': 'minecraft:black_dye', 'price': 200},
+        {'item': 'minecraft:carved_pumpkin', 'price': 1000, 'time': 'night'},
+    ],
     'demolitionist': [
         {'item': 'minecraft:tnt', 'price': 1500},
         {'item': 'minecraft:flint_and_steel', 'price': 500},
@@ -865,6 +957,7 @@ def main():
         '~/.gradle/caches/minecraftforge/forgegradle/mavenizer/caches/minecraft_tasks/26.2/client.jar')
     blocks()
     evil_blocks()
+    dungeon()
     damage()
     smelting()
     terraria_recipes()

@@ -1,0 +1,61 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:angry_bones",
+      "weight": 10,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "group": [
+        1,
+        2
+      ],
+      "ground": [
+        "#terracraft:dungeon/bricks"
+      ],
+      "condition": "boss_skeletron_defeated"
+    },
+    {
+      "entity": "terracraft:dark_caster",
+      "weight": 4,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:dungeon/bricks"
+      ],
+      "condition": "boss_skeletron_defeated"
+    },
+    {
+      "entity": "terracraft:cursed_skull",
+      "weight": 5,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:dungeon/bricks"
+      ],
+      "condition": "boss_skeletron_defeated"
+    },
+    {
+      "entity": "terracraft:dungeon_slime",
+      "weight": 1,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:dungeon/bricks"
+      ],
+      "condition": "boss_skeletron_defeated"
+    }
+  ]
+}

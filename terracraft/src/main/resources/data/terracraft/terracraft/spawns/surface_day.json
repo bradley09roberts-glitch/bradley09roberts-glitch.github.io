@@ -12,7 +12,8 @@
         "#minecraft:is_river"
       ],
       "exclude_ground": [
-        "#terracraft:evil/all"
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks"
       ]
     },
     {
@@ -27,7 +28,8 @@
         "#minecraft:is_river"
       ],
       "exclude_ground": [
-        "#terracraft:evil/all"
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks"
       ]
     },
     {
@@ -42,7 +44,8 @@
         "#minecraft:is_river"
       ],
       "exclude_ground": [
-        "#terracraft:evil/all"
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks"
       ]
     }
   ]

@@ -16,6 +16,8 @@ public final class TerraModels {
     public static final ModelLayerLocation WORM = layer("worm");
     public static final ModelLayerLocation MAW = layer("maw");
     public static final ModelLayerLocation BRAIN = layer("brain");
+    public static final ModelLayerLocation SKULL = layer("skull");
+    public static final ModelLayerLocation BONE_HAND = layer("bone_hand");
 
     private TerraModels() {}
 
@@ -34,5 +36,7 @@ public final class TerraModels {
         event.registerLayerDefinition(WORM, WormModel::createWorm);
         event.registerLayerDefinition(MAW, MawModel::createMaw);
         event.registerLayerDefinition(BRAIN, BrainModel::createBrain);
+        event.registerLayerDefinition(SKULL, SkullModel::createSkull);
+        event.registerLayerDefinition(BONE_HAND, BoneHandModel::createHand);
     }
 }

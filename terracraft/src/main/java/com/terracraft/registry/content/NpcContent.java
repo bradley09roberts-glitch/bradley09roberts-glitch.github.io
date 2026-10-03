@@ -25,6 +25,8 @@ public final class NpcContent {
     public static final RegistryObject<EntityType<TownNpc>> DEMOLITIONIST = npc("demolitionist");
     public static final RegistryObject<EntityType<TownNpc>> ARMS_DEALER = npc("arms_dealer");
     public static final RegistryObject<EntityType<TownNpc>> DRYAD = npc("dryad");
+    public static final RegistryObject<EntityType<TownNpc>> OLD_MAN = npc("old_man");
+    public static final RegistryObject<EntityType<TownNpc>> CLOTHIER = npc("clothier");
 
     /** Right-click a room to check whether it is valid Terraria housing. */
     public static final RegistryObject<HousingQueryItem> HOUSING_QUERY = ModItems.register("housing_query", TabGroup.TOOLS_ARMOR,

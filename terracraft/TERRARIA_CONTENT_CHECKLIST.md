@@ -36,7 +36,7 @@ Pre-hardmode
 - [x] Brain of Cthulhu
 - [ ] Queen Bee
 - [ ] Deerclops
-- [ ] Skeletron
+- [x] Skeletron (Old Man curse, head + hands, day enrage)
 - [ ] Wall of Flesh
 
 Hardmode
@@ -62,7 +62,7 @@ Hardmode
 - [-] Caverns: Skeleton, Cave Bat done; Giant Worm, Granite/Marble, spiders pending
 - [-] Corruption: Eater of Souls, Devourer done; Hardmode corruption enemies pending
 - [-] Crimson: Crimera, Face Monster, Blood Crawler done; Hardmode crimson enemies pending
-- [ ] Dungeon: Angry Bones, Dark Caster, Cursed Skull, Dungeon Guardian; post-Plantera dungeon enemies
+- [-] Dungeon: Angry Bones, Dark Caster, Cursed Skull, Dungeon Slime, Dungeon Guardian done; post-Plantera dungeon enemies pending
 - [ ] Underworld: Imp, Fire Imp, Demon, Voodoo Demon, Bone Serpent, Lava Slime, Hellbat
 - [ ] Hardmode surface/underground/Hallow enemies (Pixie, Unicorn, Gastropod, Wraith, Possessed Armor...)
 - [ ] Event enemies (Goblin Army, Pirates, Frost Legion, Martians, Pumpkin/Frost Moon, Solar Eclipse)
@@ -70,23 +70,24 @@ Hardmode
 ## NPCs
 - [x] Guide, Merchant, Nurse, Demolitionist
 - [-] Dryad, Arms Dealer done; Dye Trader, Angler, Zoologist, Painter, Golfer, Tavernkeep pending
-- [ ] Stylist, Goblin Tinkerer, Witch Doctor, Clothier, Mechanic, Party Girl, Wizard
+- [x] Old Man, Clothier
+- [ ] Stylist, Goblin Tinkerer, Witch Doctor, Mechanic, Party Girl, Wizard
 - [ ] Tax Collector, Truffle, Pirate, Steampunker, Cyborg, Santa Claus, Princess
 
 ## Weapons
 Melee
 - [x] Wooden Sword, Copper Shortsword
 - [x] Copper/Tin/Iron/Lead/Silver/Tungsten/Gold/Platinum Broadsword
-- [-] Light's Bane, Blood Butcherer done; Muramasa, Night's Edge, Blade of Grass, Volcano, spears, flails, yoyos pending
+- [-] Light's Bane, Blood Butcherer, Muramasa done; Night's Edge, Blade of Grass, Volcano, spears, flails, yoyos pending
 - [ ] Hardmode and endgame melee
 Ranged
 - [x] Wooden/Copper/Iron/Gold Bow
 - [x] Flintlock Pistol
 - [-] Thrown: Shuriken, Throwing Knife (done); others not started
-- [-] Demon/Tendon Bow, Musket, The Undertaker done; other bows/guns pending
+- [-] Demon/Tendon Bow, Musket, The Undertaker, Handgun done; other bows/guns pending
 Magic
 - [x] Wand of Sparking, Amethyst Staff, Magic Missile
-- [-] Vilethorn done; other gem staves, tomes, magic guns pending
+- [-] Vilethorn, Water Bolt, Aqua Scepter, Book of Skulls done; other gem staves, tomes, magic guns pending
 Summoner
 - [ ] Summon staffs, sentries, whips
 Boomerangs
@@ -124,7 +125,7 @@ Boomerangs
 
 ## Blocks
 - [x] Work Bench, Iron Anvil, Lead Anvil, Life Crystal (block)
-- [-] Ebonstone, Crimstone, evil grasses, Ebonwood, Shadewood done; Pearlstone, Mud, Ash, Dungeon/Lihzahrd bricks pending
+- [-] Ebonstone, Crimstone, evil grasses, Ebonwood, Shadewood done; Blue/Green/Pink Dungeon Brick, Spikes, Locked Gold Chest done; Pearlstone, Mud, Ash, Lihzahrd bricks pending
 
 ## Biomes
 - [ ] Forest (vanilla surface used for now)
@@ -134,14 +135,14 @@ Boomerangs
 - [ ] Ocean
 - [x] Corruption / Crimson (worldgen, chasms, orbs/hearts, altars; spread pending)
 - [ ] Glowing Mushroom
-- [ ] Dungeon
+- [x] Dungeon (one per world, seeded location; Golden Keys, locked chests)
 - [ ] Underworld
 - [ ] Hallow
 - [ ] Space / floating islands
 - [-] Terraria depth layers (`TerrariaLayer` height bands defined)
 
 ## Structures
-- [ ] Dungeon
+- [x] Dungeon (entrance tower, 4 levels of rooms, halls and ladder shafts)
 - [ ] Jungle Temple
 - [ ] Floating Islands
 - [ ] Living Trees

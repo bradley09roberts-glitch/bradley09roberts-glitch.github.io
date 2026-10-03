@@ -16,6 +16,10 @@
     "terracraft:ebonstone",
     "terracraft:crimstone",
     "terracraft:demonite_ore",
-    "terracraft:crimtane_ore"
+    "terracraft:crimtane_ore",
+    "terracraft:blue_brick",
+    "terracraft:green_brick",
+    "terracraft:pink_brick",
+    "terracraft:spikes"
   ]
 }

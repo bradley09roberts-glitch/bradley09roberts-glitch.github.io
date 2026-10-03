@@ -1,0 +1,46 @@
+{
+  "npc": "clothier",
+  "items": [
+    {
+      "item": "minecraft:white_wool",
+      "price": 20
+    },
+    {
+      "item": "minecraft:string",
+      "price": 25
+    },
+    {
+      "item": "minecraft:leather_helmet",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:leather_chestplate",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:leather_leggings",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:leather_boots",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:red_dye",
+      "price": 200
+    },
+    {
+      "item": "minecraft:blue_dye",
+      "price": 200
+    },
+    {
+      "item": "minecraft:black_dye",
+      "price": 200
+    },
+    {
+      "item": "minecraft:carved_pumpkin",
+      "price": 1000,
+      "time": "night"
+    }
+  ]
+}

@@ -68,6 +68,17 @@ public final class CreatureRenderers {
             new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 1.0F, 0.5F, true));
         register(event, MobContent.BLOOD_CRAWLER.get(), ctx -> new TerraModelRenderer<>(ctx,
             new net.minecraft.client.model.monster.spider.SpiderModel(ctx.bakeLayer(net.minecraft.client.model.geom.ModelLayers.SPIDER)), 0.8F, 0.5F, false));
+        // Dungeon
+        register(event, MobContent.ANGRY_BONES.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new TerraHumanoidModel(ctx.bakeLayer(TerraModels.SKELETON)), 0.9375F, 0.5F, true));
+        register(event, MobContent.DARK_CASTER.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F, 0.5F, false));
+        slime(event, MobContent.DUNGEON_SLIME.get(), 1.0F);
+        skull(event, MobContent.CURSED_SKULL.get(), 0.7F);
+        skull(event, MobContent.DUNGEON_GUARDIAN.get(), 1.6F);
+        skull(event, MobContent.SKELETRON.get(), 2.2F);
+        register(event, MobContent.SKELETRON_HAND.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new com.terracraft.client.model.BoneHandModel(ctx.bakeLayer(TerraModels.BONE_HAND)), 1.2F / (10.0F / 16.0F), 0.4F, false));
         for (var npc : NpcContent.all()) {
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,
                 new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F, 0.5F, false));
@@ -87,6 +98,12 @@ public final class CreatureRenderers {
     private static void maw(EntityRenderersEvent.RegisterRenderers event, EntityType<? extends LivingEntity> type, float width) {
         register(event, type, ctx -> new TerraModelRenderer<>(ctx, new com.terracraft.client.model.MawModel(ctx.bakeLayer(TerraModels.MAW)),
             width / (8.0F / 16.0F), width * 0.4F, false));
+    }
+
+    /** Skull model is 10 px wide. */
+    private static void skull(EntityRenderersEvent.RegisterRenderers event, EntityType<? extends LivingEntity> type, float width) {
+        register(event, type, ctx -> new TerraModelRenderer<>(ctx, new com.terracraft.client.model.SkullModel(ctx.bakeLayer(TerraModels.SKULL)),
+            width / (10.0F / 16.0F), width * 0.4F, false));
     }
 
     private static void eye(EntityRenderersEvent.RegisterRenderers event, EntityType<? extends LivingEntity> type, float width) {

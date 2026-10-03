@@ -18,5 +18,8 @@ public final class ModFeatures {
     public static final RegistryObject<com.terracraft.world.evil.EvilBiomeFeature> EVIL_BIOME = FEATURES.register("evil_biome",
         com.terracraft.world.evil.EvilBiomeFeature::new);
 
+    public static final RegistryObject<com.terracraft.world.dungeon.DungeonFeature> DUNGEON = FEATURES.register("dungeon",
+        com.terracraft.world.dungeon.DungeonFeature::new);
+
     private ModFeatures() {}
 }

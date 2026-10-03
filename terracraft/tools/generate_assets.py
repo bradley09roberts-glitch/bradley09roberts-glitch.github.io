@@ -1402,14 +1402,16 @@ def paint_box(c, u, v, w, h, d, color, noise=0.12, seed=0, top=None, front=None)
             front(c, *region)
 
 
-def slime_texture(color, alpha=170, baby=None, king=False):
+def slime_texture(color, alpha=170, baby=None, king=False, core=None):
     def paint(c):
         col = hexc(color, alpha)
         light = shade(col, 1.35)
         paint_box(c, 0, 0, 14, 10, 14, col, 0.08, 1, top=light)
         paint_box(c, 0, 24, 10, 3, 10, light, 0.08, 2, top=shade(col, 1.6))
-        core = hexc(color, 225)
-        paint_box(c, 0, 40, 6, 6, 6, shade(core, 0.6), 0.1, 3)
+        if core:
+            paint_box(c, 0, 40, 6, 6, 6, hexc(core), 0.15, 3)   # something trapped inside (Dungeon Slime's key)
+        else:
+            paint_box(c, 0, 40, 6, 6, 6, shade(hexc(color, 225), 0.6), 0.1, 3)
         paint_box(c, 32, 40, 2, 3, 1, (15, 15, 25, 255), 0.0)
         paint_box(c, 32, 44, 2, 3, 1, (15, 15, 25, 255), 0.0)
         if baby:
@@ -1652,6 +1654,264 @@ def spider_texture(color):
 
 model_texture('blood_crawler', 64, 32, spider_texture('#8A2020'))
 
+# ----------------------------------------------------------------------------------------- Dungeon (Stage 4a)
+BRICKS = {'blue_brick': '#4A5AA8', 'green_brick': '#4A8A5A', 'pink_brick': '#A85A8A'}
+
+
+def brick_texture(color, seed):
+    base = hexc(color)
+    c = Canvas()
+    c.noise([base, base, base, shade(base, 1.06), shade(base, 0.94)], seed)
+    mortar = shade(base, 0.55)
+    for y in (0, 4, 8, 12):
+        c.line(0, y, 15, y, mortar)
+        offset = 0 if (y // 4) % 2 == 0 else 4
+        for x in range(offset, 16, 8):
+            c.line(x, y, x, y + 3, mortar)
+    for y in (1, 5, 9, 13):
+        for x in range(16):
+            if c.get(x, y) != mortar:
+                c.set(x, y, shade(base, 1.14))
+    for y in (3, 7, 11, 15):
+        for x in range(16):
+            if c.get(x, y) != mortar:
+                c.set(x, y, shade(base, 0.86))
+    return c
+
+
+for _name, _color in BRICKS.items():
+    BLOCK_TEXTURES[_name] = lambda col=_color, seed=len(_name) * 77: brick_texture(col, seed)
+
+
+def spikes_texture():
+    c = Canvas()
+    p = palette('#9AA0AA')
+    c.rect(0, 0, 15, 15, p[1])
+    for x in range(0, 16, 4):
+        c.polygon([(x, 15), (x + 2, 2), (x + 3, 15)], p[3])
+        c.line(x + 2, 2, x + 2, 6, p[4])
+    return c
+
+
+def gold_chest_texture():
+    c = Canvas()
+    g = palette('#D8A830')
+    c.noise([g[2], g[2], g[2], shade(g[2], 1.08)], 991)
+    c.rect(0, 0, 15, 1, g[4]); c.rect(0, 14, 15, 15, g[0])
+    c.rect(0, 7, 15, 8, palette('#6A5020')[2])
+    for x in (0, 15):
+        c.rect(x, 0, x, 15, g[1])
+    return c
+
+
+def gold_lock_texture():
+    c = Canvas()
+    c.rect(0, 0, 15, 15, palette('#7A7A82')[2])
+    c.rect(6, 6, 9, 10, (20, 20, 20, 255))
+    c.set(7, 7, (60, 60, 60, 255))
+    return c
+
+
+BLOCK_TEXTURES['spikes'] = spikes_texture
+BLOCK_TEXTURES['locked_gold_chest'] = gold_chest_texture
+BLOCK_TEXTURES['locked_gold_chest_lock'] = gold_lock_texture
+
+
+def dungeon_block_assets():
+    for name in BRICKS:
+        write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': {'': {'model': f'terracraft:block/{name}'}}})
+        write_json(os.path.join(ASSETS, 'models/block', name + '.json'),
+                   {'parent': 'minecraft:block/cube_all', 'textures': {'all': f'terracraft:block/{name}'}})
+        write_json(os.path.join(ASSETS, 'items', name + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{name}'}})
+    all_faces = ['north', 'south', 'east', 'west', 'up', 'down']
+    spikes = [{'from': [0, 0, 0], 'to': [16, 2, 16], 'faces': {f: {'texture': '#all'} for f in all_faces}}]
+    for x in (2, 7, 12):
+        for z in (2, 7, 12):
+            spikes.append({'from': [x, 2, z], 'to': [x + 2, 5, z + 2], 'faces': {f: {'texture': '#all'} for f in all_faces}})
+            spikes.append({'from': [x + 0.5, 5, z + 0.5], 'to': [x + 1.5, 8, z + 1.5], 'faces': {f: {'texture': '#all'} for f in all_faces}})
+    write_json(os.path.join(ASSETS, 'models/block/spikes.json'), {'parent': 'minecraft:block/block',
+               'textures': {'particle': 'terracraft:block/spikes', 'all': 'terracraft:block/spikes'}, 'elements': spikes})
+    write_json(os.path.join(ASSETS, 'blockstates/spikes.json'), {'variants': {'': {'model': 'terracraft:block/spikes'}}})
+    write_json(os.path.join(ASSETS, 'items/spikes.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/spikes'}})
+    chest = [
+        {'from': [1, 0, 1], 'to': [15, 10, 15], 'faces': {f: {'texture': '#body'} for f in all_faces}},
+        {'from': [1, 10, 1], 'to': [15, 14, 15], 'faces': {f: {'texture': '#body'} for f in all_faces}},
+        {'from': [7, 7, 0], 'to': [9, 11, 1], 'faces': {f: {'texture': '#lock'} for f in all_faces}},
+    ]
+    write_json(os.path.join(ASSETS, 'models/block/locked_gold_chest.json'), {'parent': 'minecraft:block/block', 'textures': {
+        'particle': 'terracraft:block/locked_gold_chest', 'body': 'terracraft:block/locked_gold_chest', 'lock': 'terracraft:block/locked_gold_chest_lock'},
+        'elements': chest})
+    write_json(os.path.join(ASSETS, 'blockstates/locked_gold_chest.json'), {'variants': {
+        'facing=north': {'model': 'terracraft:block/locked_gold_chest'},
+        'facing=east': {'model': 'terracraft:block/locked_gold_chest', 'y': 90},
+        'facing=south': {'model': 'terracraft:block/locked_gold_chest', 'y': 180},
+        'facing=west': {'model': 'terracraft:block/locked_gold_chest', 'y': 270}}})
+    write_json(os.path.join(ASSETS, 'items/locked_gold_chest.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/locked_gold_chest'}})
+
+
+def draw_key(c, color):
+    p = palette(color)
+    c.circle(5, 5, 3.5, p[2])
+    c.circle(5, 5, 1.5, (0, 0, 0, 0))
+    c.line(7, 7, 13, 13, p[2], 2)
+    c.rect(11, 12, 12, 14, p[2]); c.rect(9, 10, 10, 12, p[2])
+    c.set(4, 3, p[4])
+    c.outline()
+
+
+def draw_skull_book(c):
+    draw_book(c, '#6A4A30')
+    bone = palette('#E8E0C8')
+    c.circle(7.5, 7.5, 2.6, bone[2])
+    c.set(6, 7, (20, 20, 20, 255)); c.set(9, 7, (20, 20, 20, 255))
+    c.rect(6, 10, 9, 10, bone[1])
+
+
+def draw_water_book(c):
+    p = palette('#2860C8')
+    c.rect(3, 2, 12, 13, p[2])
+    c.rect(3, 2, 4, 13, p[1])
+    c.rect(11, 3, 12, 12, hexc('#E8E0C8'))
+    c.circle(8, 8, 2.5, hexc('#70C8FF'))
+    c.set(7, 7, hexc('#E8FFFF'))
+    c.outline()
+
+
+def draw_katana(c):
+    blade = palette('#78A8E8')
+    c.line(4, 11, 13, 2, blade[3], 1)
+    c.line(5, 11, 14, 2, blade[2], 1)
+    c.line(5, 12, 14, 3, blade[1], 1)
+    c.rect(3, 10, 6, 13, palette('#3A3A50')[2])
+    c.line(1, 15, 4, 12, palette('#2A2A3A')[2], 2)
+    c.light()
+    c.outline()
+
+
+item('golden_key', lambda c: draw_key(c, '#E8C040'))
+item('shadow_key', lambda c: draw_key(c, '#6A5A8A'))
+item('muramasa', draw_katana, True)
+item('handgun', lambda c: draw_gun(c, palette('#3A3A44')))
+item('aqua_scepter', lambda c: draw_staff(c, '#50A8F0'), True)
+item('water_bolt', draw_water_book)
+item('book_of_skulls', draw_skull_book)
+
+
+def p_skull(c, bone='#E8E0C8', eyes=(20, 20, 20, 255), glow=None):
+    p = palette(bone)
+    if glow:
+        c.circle(7.5, 7.5, 7, (*hexc(glow)[:3], 70))
+    c.circle(7.5, 7, 5, p[2])
+    c.rect(5, 10, 10, 13, p[2])
+    c.rect(5, 6, 6, 8, eyes); c.rect(9, 6, 10, 8, eyes)
+    c.set(7, 10, p[0]); c.set(8, 10, p[0])
+    for x in (5, 7, 9):
+        c.set(x, 13, p[0])
+    c.outline()
+
+
+proj('water_bolt', lambda c: p_orb(c, '#50A8FF', 3))
+proj('aqua_stream', lambda c: p_orb(c, '#70C8FF', 2))
+proj('water_sphere', lambda c: p_orb(c, '#3C78F0', 4))
+proj('book_skull', lambda c: p_skull(c, glow='#A050FF'))
+proj('skeletron_skull', lambda c: p_skull(c, eyes=(200, 40, 40, 255), glow='#FF5030'))
+
+
+def skull_texture(bone, eyes, glow=False):
+    def paint(c):
+        b = hexc(bone)
+        paint_box(c, 0, 0, 10, 8, 10, b, 0.1, 501)
+        paint_box(c, 0, 18, 8, 3, 8, shade(b, 0.92), 0.1, 502)
+        fx, fy, fw, fh = box_faces(0, 0, 10, 8, 10)['front']
+        socket = (15, 12, 12, 255)
+        fill(c, (fx + 1, fy + 3, 3, 3), socket); fill(c, (fx + 6, fy + 3, 3, 3), socket)
+        if eyes:
+            c.set(fx + 2, fy + 4, hexc(eyes)); c.set(fx + 7, fy + 4, hexc(eyes))
+            if glow:
+                c.set(fx + 1, fy + 4, hexc(eyes)); c.set(fx + 8, fy + 4, hexc(eyes))
+        fill(c, (fx + 4, fy + 6, 2, 2), socket)
+        for x in range(fx + 1, fx + fw - 1, 2):
+            c.set(x, fy + fh - 1, shade(b, 1.15)); c.set(x + 1, fy + fh - 1, socket)
+        jx, jy, jw, jh = box_faces(0, 18, 8, 3, 8)['front']
+        for x in range(jx, jx + jw, 2):
+            c.set(x, jy, shade(b, 1.15)); c.set(x + 1, jy, socket)
+        # cracks
+        tx, ty, tw, th = box_faces(0, 0, 10, 8, 10)['top']
+        c.line(tx + 3, ty + 2, tx + 5, ty + 6, shade(b, 0.6)); c.line(fx + 7, fy, fx + 8, fy + 2, shade(b, 0.6))
+    return paint
+
+
+def bone_hand_texture(bone):
+    def paint(c):
+        b = hexc(bone)
+        paint_box(c, 0, 0, 6, 5, 3, b, 0.1, 511)
+        paint_box(c, 0, 10, 1, 5, 1, b, 0.1, 512)
+        paint_box(c, 4, 10, 1, 4, 1, b, 0.1, 513)
+        paint_box(c, 8, 10, 2, 9, 2, shade(b, 0.95), 0.1, 514)
+        for face, (x, y, w, h) in box_faces(8, 10, 2, 9, 2).items():
+            if face not in ('top', 'bottom'):
+                fill(c, (x, y + 4, w, 1), shade(b, 0.7))
+        fx, fy, fw, fh = box_faces(0, 0, 6, 5, 3)['front']
+        c.line(fx + 1, fy + 1, fx + 1, fy + 4, shade(b, 0.7)); c.line(fx + 4, fy + 1, fx + 4, fy + 4, shade(b, 0.7))
+    return paint
+
+
+model_texture('skeletron', 64, 32, skull_texture('#E8E0C8', '#200A0A'))
+model_texture('dungeon_guardian', 64, 32, skull_texture('#D8D0BC', '#FF3020', glow=True))
+model_texture('cursed_skull', 64, 32, skull_texture('#B8D8C0', '#40FF80', glow=True))
+model_texture('skeletron_hand', 32, 32, bone_hand_texture('#E8E0C8'))
+model_texture('angry_bones', 64, 64, skin_texture('#C8CED6', '#C8CED6', '#C8CED6', '#C8CED6', bony=True))
+model_texture('dark_caster', 64, 64, skin_texture('#D8D0C0', '#2A3A8A', '#2A3A8A', '#24306A', shoes='#24306A', eyes=(120, 200, 255, 255),
+                                                  hat='#2A3A8A', hat_band='#6A8AE0', short_sleeves=False))
+model_texture('old_man', 64, 64, skin_texture('#E8C8A8', '#E8E8E8', '#3A3A58', '#2A2A40', beard='#F4F4F4', short_sleeves=False))
+model_texture('clothier', 64, 64, skin_texture('#E8B890', '#2A2A2A', '#A02828', '#2A2A30', hat='#1A1A1A', hat_band='#A02828',
+                                                short_sleeves=False))
+model_texture('dungeon_slime', 64, 64, slime_texture('#5A6A88', 190, core='#E8C040'))
+
+
+def skull_frame(c, frame, bone, eyes, size=16):
+    p = palette(bone)
+    r = size / 2 - 1
+    c.circle(size / 2, size / 2 - 1, r, p[2])
+    c.rect(int(size * 0.3), int(size * 0.7), int(size * 0.7), size - 2, p[2])
+    ey = int(size * 0.45)
+    c.rect(int(size * 0.22), ey, int(size * 0.38), ey + 2, (20, 15, 15, 255))
+    c.rect(int(size * 0.58), ey, int(size * 0.74), ey + 2, (20, 15, 15, 255))
+    if eyes:
+        c.set(int(size * 0.3), ey + 1, hexc(eyes)); c.set(int(size * 0.66), ey + 1, hexc(eyes))
+    jaw = size - 2 + (frame % 2)
+    for x in range(int(size * 0.3), int(size * 0.7) + 1, 2):
+        c.set(x, min(size - 1, jaw), p[0])
+    c.light(1.2, 0.8)
+    c.outline()
+
+
+def hand_frame(c, frame):
+    p = palette('#E8E0C8')
+    c.rect(3, 0, 4, 8, p[2]); c.rect(7, 0, 8, 8, p[2])
+    c.rect(2, 8, 9, 12, p[2])
+    curl = frame % 2
+    for i, x in enumerate((2, 4, 6, 8)):
+        c.rect(x, 13, x, 16 - curl, p[2])
+    c.rect(0, 9, 1, 10, p[2])
+    c.light(1.2, 0.8)
+    c.outline()
+
+
+mob_sprite('skeletron', 24, 24, 2, lambda c, f: skull_frame(c, f, '#E8E0C8', None, 24), frame_time=8)
+mob_sprite('dungeon_guardian', 20, 20, 2, lambda c, f: skull_frame(c, f, '#D8D0BC', '#FF3020', 20), frame_time=6, fullbright=True)
+mob_sprite('cursed_skull', 14, 14, 2, lambda c, f: skull_frame(c, f, '#B8D8C0', '#40FF80', 14), frame_time=6, fullbright=True)
+mob_sprite('skeletron_hand', 11, 18, 2, hand_frame, frame_time=10)
+mob_sprite('angry_bones', 16, 24, 3, lambda c, f: humanoid_frame(c, f, '#C8CED6', '#A8B0BA', '#B8C0C8', (20, 20, 20, 255), bony=True),
+           frame_time=6, animate='move')
+mob_sprite('dark_caster', 16, 24, 3, lambda c, f: npc_frame(c, f, '#D8D0C0', '#2A3A8A', '#2A3A8A', '#24306A', hat='#2A3A8A'), frame_time=8)
+mob_sprite('dungeon_slime', 16, 12, 2, lambda c, f: slime_frame(c, '#5A6A88', f, 16, 12, baby='#E8C040'), frame_time=10)
+mob_sprite('old_man', 16, 24, 3, lambda c, f: npc_frame(c, f, '#E8C8A8', '#E8E8E8', '#3A3A58', '#2A2A40', beard='#F4F4F4'),
+           frame_time=6, animate='move')
+mob_sprite('clothier', 16, 24, 3, lambda c, f: npc_frame(c, f, '#E8B890', '#2A2A2A', '#A02828', '#2A2A30', hat='#1A1A1A'),
+           frame_time=6, animate='move')
+
+
 
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
@@ -1665,7 +1925,7 @@ def check_registered_items():
             ids.update(pattern.findall(f.read()))
     known = set(ITEMS) | set(BLOCKS_CUBE) | {'work_bench', 'iron_anvil', 'lead_anvil', 'life_crystal_block', 'corrupt_grass', 'crimson_grass',
                                              'shadow_orb', 'crimson_heart', 'demon_altar', 'crimson_altar', 'vile_mushroom', 'vicious_mushroom',
-                                             'ebonwood', 'shadewood', 'ebonwood_leaves', 'shadewood_leaves'}
+                                             'ebonwood', 'shadewood', 'ebonwood_leaves', 'shadewood_leaves'} | set(BRICKS) | {'spikes', 'locked_gold_chest'}
     missing = sorted(i for i in ids if i not in known and not i.endswith("_"))
     if missing:
         print('ERROR: items without generated assets:', missing)
@@ -1681,6 +1941,7 @@ def main():
     for name, factory in BLOCK_TEXTURES.items():
         factory().save(os.path.join(TEX, 'block', name + '.png'))
     block_assets()
+    dungeon_block_assets()
     for name, drawer in PROJECTILES.items():
         c = Canvas()
         drawer(c)

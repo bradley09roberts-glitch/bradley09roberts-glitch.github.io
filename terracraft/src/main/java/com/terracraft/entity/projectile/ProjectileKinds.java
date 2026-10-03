@@ -49,6 +49,24 @@ public final class ProjectileKinds {
         .lifetime(24).size(0.4F, 0.8F).orientation(ProjectileKind.Orientation.VELOCITY).magic().pierce(-1).hitCooldown(10)
         .trail(() -> ParticleTypes.SPORE_BLOSSOM_AIR));
 
+    // ---------------------------------------------------------------- dungeon
+    public static final ProjectileKind WATER_BOLT = register(ProjectileKind.builder("water_bolt")
+        .lifetime(240).size(0.3F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).bounces(6).pierce(2)
+        .fullbright().magic().trail(() -> ParticleTypes.SPLASH));
+    public static final ProjectileKind AQUA_STREAM = register(ProjectileKind.builder("aqua_stream")
+        .gravity(0.008).lifetime(30).size(0.25F, 0.45F).orientation(ProjectileKind.Orientation.BILLBOARD).pierce(3)
+        .magic().trail(() -> ParticleTypes.FALLING_WATER));
+    public static final ProjectileKind BOOK_SKULL = register(ProjectileKind.builder("book_skull")
+        .lifetime(120).size(0.35F, 0.7F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.06F, 16.0F)
+        .magic().trail(() -> ParticleTypes.SMOKE));
+    /** Skeletron's skulls (after its hands are gone) and the Dark Caster's water sphere. */
+    public static final ProjectileKind SKELETRON_SKULL = register(ProjectileKind.builder("skeletron_skull")
+        .lifetime(160).size(0.4F, 0.8F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.035F, 48.0F).noTileCollide()
+        .enemy().trail(() -> ParticleTypes.SMOKE));
+    public static final ProjectileKind WATER_SPHERE = register(ProjectileKind.builder("water_sphere")
+        .lifetime(200).size(0.4F, 0.7F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.03F, 40.0F).noTileCollide()
+        .fullbright().enemy().trail(() -> ParticleTypes.FALLING_WATER));
+
     private ProjectileKinds() {}
 
     private static ProjectileKind register(ProjectileKind.Builder builder) {

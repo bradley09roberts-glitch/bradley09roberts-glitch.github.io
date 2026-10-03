@@ -76,7 +76,9 @@ public class TownNpc extends PathfinderMob implements TargetRules.FriendlyToPlay
 
     public void setNpcName(String name) {
         this.npcName = name;
-        setCustomName(Component.translatable("npc.terracraft.name_format", name, Component.translatable(npcType().roleKey())));
+        // nameless NPCs (the Old Man) are called by their role only
+        setCustomName(name.isEmpty() ? Component.translatable(npcType().roleKey())
+            : Component.translatable("npc.terracraft.name_format", name, Component.translatable(npcType().roleKey())));
     }
 
     public @Nullable BlockPos house() {

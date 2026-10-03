@@ -20,7 +20,8 @@ public final class BossCommands {
         "king_slime", new Entry(MobContent.KING_SLIME, BossSummoning.Arrival.FALL),
         "eye_of_cthulhu", new Entry(MobContent.EYE_OF_CTHULHU, BossSummoning.Arrival.OFFSCREEN),
         "eater_of_worlds", new Entry(MobContent.EATER_OF_WORLDS, BossSummoning.Arrival.BURROW),
-        "brain_of_cthulhu", new Entry(MobContent.BRAIN_OF_CTHULHU, BossSummoning.Arrival.NEARBY));
+        "brain_of_cthulhu", new Entry(MobContent.BRAIN_OF_CTHULHU, BossSummoning.Arrival.NEARBY),
+        "skeletron", new Entry(MobContent.SKELETRON, BossSummoning.Arrival.NEARBY));
 
     private record Entry(Supplier<? extends EntityType<? extends net.minecraft.world.entity.Mob>> type, BossSummoning.Arrival arrival) {}
 

@@ -169,9 +169,10 @@ public abstract class TerrariaBoss extends TerrariaMob {
         }
     }
 
+    /** Called for every removal, including chunk unloads (otherwise an unloaded boss leaves a stale bar). */
     @Override
-    public void remove(RemovalReason reason) {
-        super.remove(reason);
+    public void onRemoval(RemovalReason reason) {
+        super.onRemoval(reason);
         bossBar.removeAllPlayers();
     }
 

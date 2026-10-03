@@ -25,5 +25,6 @@ public final class GameEventHandlers {
         com.terracraft.entity.boss.BossCommands.register();
         com.terracraft.npc.NpcManager.register();
         com.terracraft.world.event.EventManager.register();
+        com.terracraft.world.dungeon.DungeonManager.register();
     }
 }
