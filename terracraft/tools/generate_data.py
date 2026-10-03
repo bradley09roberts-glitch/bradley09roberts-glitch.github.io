@@ -70,7 +70,7 @@ def evil_blocks():
     write(f'{NS}/tags/block/evil/all.json', {'values': corruption + crimson})
     write(f'{NS}/tags/block/stations/demon_altar.json', {'values': [t('demon_altar'), t('crimson_altar')]})
     write('minecraft/tags/block/mineable/shovel.json', {'values': [t('corrupt_grass'), t('crimson_grass'), t('jungle_grass'), t('ash')]})
-    write('minecraft/tags/block/mineable/axe.json', {'values': [t('work_bench'), t('ebonwood'), t('shadewood'), t('tinkerers_workshop')]})
+    write('minecraft/tags/block/mineable/axe.json', {'values': [t('work_bench'), t('ebonwood'), t('shadewood'), t('tinkerers_workshop'), t('dungeon_bookshelf')]})
     write('minecraft/tags/block/mineable/hoe.json', {'values': [t('ebonwood_leaves'), t('shadewood_leaves')]})
     balls = {'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('musket_ball'), 'functions': [{'function': 'minecraft:set_count', 'count': 100}]}]}
     write(f'{NS}/loot_table/gameplay/shadow_orb.json', {'type': 'minecraft:empty', 'pools': [
@@ -111,9 +111,17 @@ def dungeon():
         {'rolls': 1, 'entries': [entry('silver_coin', 1, 5, 20)]},
         {'rolls': {'type': 'minecraft:uniform', 'min': 0, 'max': 1}, 'entries': [entry('gold_coin', 1)]},
     ]
-    # plain dungeon chest: keys and the Water Bolt (Terraria keeps its Water Bolts on dungeon shelves)
+    # Dungeon bookcases: books, sometimes a Water Bolt; the shelf itself is always kept
+    full = [{'condition': 'minecraft:block_state_property', 'block': t('dungeon_bookshelf'), 'properties': {'books': 'true'}}]
+    write(f'{NS}/loot_table/blocks/dungeon_bookshelf.json', {'type': 'minecraft:block', 'pools': [
+        {'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('dungeon_bookshelf')}]},
+        {'rolls': 1, 'conditions': full, 'entries': [entry('minecraft:book', 1, 1, 3)]},
+        {'rolls': 1, 'conditions': full + [{'condition': 'minecraft:random_chance', 'chance': 0.06}],
+         'entries': [{'type': 'minecraft:item', 'name': t('water_bolt')}]}],
+        'random_sequence': f'{NS}:blocks/dungeon_bookshelf'})
+    # plain dungeon chest: keys (Water Bolts are on the bookcases)
     write(f'{NS}/loot_table/chests/dungeon.json', {'type': 'minecraft:chest', 'pools': [
-        {'rolls': 1, 'entries': [entry('golden_key', 5), entry('water_bolt', 3), entry('minecraft:book', 2, 1, 3)]}] + common})
+        {'rolls': 1, 'entries': [entry('golden_key', 5), entry('minecraft:book', 2, 1, 3)]}] + common})
     # Locked Gold Chest: one of Terraria's dungeon treasures
     write(f'{NS}/loot_table/chests/dungeon_gold.json', {'type': 'minecraft:chest', 'pools': [
         {'rolls': 1, 'entries': [entry('muramasa', 2), entry('cobalt_shield', 2), entry('aqua_scepter', 2), entry('handgun', 2),
@@ -313,6 +321,9 @@ def terraria_recipes():
     recipe('jungle_pants', t('jungle_pants'), [(t('jungle_spores'), 8), (t('stinger'), 12)], [ANVIL], category='armor')
     HELLFORGE = t('hellforge')
     HBAR = t('hellstone_bar')
+    # Hardmode wings (Terraria: at a Mythril/Orichalcum Anvil, which arrives in Stage 5)
+    recipe('angel_wings', t('angel_wings'), [('minecraft:feather', 10), (t('soul_of_light'), 25), (t('soul_of_flight'), 20)], [ANVIL], category='accessories')
+    recipe('demon_wings', t('demon_wings'), [('minecraft:feather', 10), (t('soul_of_night'), 25), (t('soul_of_flight'), 20)], [ANVIL], category='accessories')
     recipe('hellforge', t('hellforge'), [('minecraft:furnace', 1), (t('hellstone'), 10), ('minecraft:obsidian', 20)], [ANVIL], category='furniture')
     recipe('hellstone_bar', HBAR, [(t('hellstone'), 3), ('minecraft:obsidian', 1)], [HELLFORGE], category='materials')
     recipe('obsidian_brick', t('obsidian_brick'), [('minecraft:obsidian', 2)], [FURNACE], category='blocks')
@@ -597,7 +608,7 @@ def lang():
     for k, v in abilities.items():
         L[f'ability.terracraft.{k}'] = v
     effects = ['ironskin', 'swiftness', 'regeneration', 'mana_regeneration', 'magic_power', 'archery', 'mining', 'obsidian_skin',
-               'water_walking', 'endurance', 'wrath', 'rage', 'potion_sickness', 'mana_sickness']
+               'water_walking', 'endurance', 'wrath', 'rage', 'potion_sickness', 'mana_sickness', 'well_fed', 'plenty_satisfied', 'exquisitely_stuffed']
     for e in effects:
         L[f'effect.terracraft.{e}'] = title(e)
     sets = {'wood': '+1 defense', 'copper': '+2 defense', 'tin': '+2 defense', 'iron': '+2 defense', 'lead': '+3 defense',
@@ -714,6 +725,13 @@ def lang():
         'item.terracraft.goblin_battle_standard.tooltip': 'Summons a Goblin Army',
         'item.terracraft.obsidian_horseshoe.tooltip': 'Negates fall damage and grants immunity to fire blocks',
         'item.terracraft.cloud_in_a_balloon.tooltip': 'Allows the holder to double jump and increases jump height',
+        'item.terracraft.fledgling_wings.tooltip': 'Allows flight and slow fall',
+        'item.terracraft.angel_wings.tooltip': 'Allows flight and slow fall',
+        'item.terracraft.demon_wings.tooltip': 'Allows flight and slow fall',
+        'item.terracraft.leaf_wings.tooltip': 'Allows flight and slow fall',
+        'item.terracraft.soul_of_light.tooltip': "'The essence of light creatures'",
+        'item.terracraft.soul_of_night.tooltip': "'The essence of dark creatures'",
+        'item.terracraft.soul_of_flight.tooltip': "'The essence of powerful flying creatures'",
         'item.terracraft.obsidian_shield.tooltip': 'Grants immunity to knockback and fire blocks',
         'item.terracraft.obsidian_water_walking_boots.tooltip': 'Provides the ability to walk on water and immunity to fire blocks',
         'item.terracraft.lava_waders.tooltip': 'Provides the ability to walk on water and lava; 7 seconds of lava immunity',
@@ -732,6 +750,7 @@ def lang():
         'item.terracraft.muramasa.tooltip': 'A blade forged in the depths of the Dungeon',
         'block.terracraft.locked_gold_chest': 'Locked Gold Chest',
         'block.terracraft.spikes': 'Spikes',
+        'block.terracraft.dungeon_bookshelf': 'Dungeon Bookcase',
         'block.terracraft.blue_brick': 'Blue Brick',
         'block.terracraft.green_brick': 'Green Brick',
         'block.terracraft.pink_brick': 'Pink Brick',
@@ -1041,7 +1060,7 @@ def worldgen():
         ['minecraft:copper_ingot', 'tin_bar', 'minecraft:iron_ingot', 'lead_bar'],
         ['ironskin_potion', 'swiftness_potion', 'mining_potion', 'archery_potion']))
     write(f'{NS}/loot_table/chests/underground.json', chest_table(
-        ['band_of_regeneration', 'cloud_in_a_bottle', 'hermes_boots', 'magic_missile', 'flintlock_pistol'],
+        ['band_of_regeneration', 'cloud_in_a_bottle', 'hermes_boots', 'magic_missile', 'flintlock_pistol', 'fledgling_wings'],
         ['silver_bar', 'tungsten_bar', 'minecraft:gold_ingot', 'platinum_bar'],
         ['regeneration_potion', 'obsidian_skin_potion', 'water_walking_potion', 'magic_power_potion', 'mana_regeneration_potion']))
 
@@ -1203,6 +1222,38 @@ def npcs():
     write(f'{NS}/tags/block/housing/lights.json', {'values': []})
 
 
+# --- Terraria biomes only -----------------------------------------------------------------------------
+# Every Minecraft-only overworld biome is replaced by its closest Terraria biome (TerrariaBiomeSource).
+# Kept: forest (Terraria's Forest), snowy plains/taiga (Snow, with boreal trees), desert, jungle, oceans, beaches
+# and mushroom fields (Glowing Mushroom). Corruption/Crimson, Dungeon, Underworld etc. are TerraCraft worldgen.
+BIOME_REPLACEMENTS = {
+    'forest': ['plains', 'sunflower_plains', 'meadow', 'birch_forest', 'old_growth_birch_forest', 'dark_forest', 'flower_forest',
+               'cherry_grove', 'pale_garden', 'savanna', 'savanna_plateau', 'windswept_savanna', 'swamp', 'mangrove_swamp',
+               'windswept_hills', 'windswept_gravelly_hills', 'windswept_forest', 'stony_peaks', 'river',
+               'lush_caves', 'dripstone_caves', 'deep_dark', 'sulfur_caves'],
+    'snowy_taiga': ['taiga', 'old_growth_pine_taiga', 'old_growth_spruce_taiga', 'grove', 'snowy_slopes', 'jagged_peaks', 'frozen_peaks'],
+    'snowy_plains': ['ice_spikes', 'frozen_river'],
+    'desert': ['badlands', 'eroded_badlands', 'wooded_badlands'],
+    'jungle': ['sparse_jungle', 'bamboo_jungle'],
+    'ocean': ['cold_ocean', 'lukewarm_ocean', 'frozen_ocean'],
+    'deep_ocean': ['deep_cold_ocean', 'deep_lukewarm_ocean', 'deep_frozen_ocean'],
+    'beach': ['stony_shore'],
+}
+
+
+def terraria_biomes():
+    replace = {f'minecraft:{old}': f'minecraft:{new}' for new, olds in BIOME_REPLACEMENTS.items() for old in olds}
+    end = {'type': 'minecraft:the_end', 'generator': {'type': 'minecraft:noise', 'biome_source': {'type': 'minecraft:the_end'},
+                                                     'settings': 'minecraft:end'}}
+    nether = {'type': 'minecraft:the_nether', 'generator': {'type': 'minecraft:noise', 'settings': 'minecraft:nether',
+                                                           'biome_source': {'type': 'minecraft:multi_noise', 'preset': 'minecraft:nether'}}}
+    for preset, settings in (('normal', 'overworld'), ('large_biomes', 'large_biomes'), ('amplified', 'amplified')):
+        overworld = {'type': 'minecraft:overworld', 'generator': {'type': 'minecraft:noise', 'settings': f'minecraft:{settings}', 'biome_source': {
+            'type': t('terraria'), 'base': {'type': 'minecraft:multi_noise', 'preset': 'minecraft:overworld'}, 'replace': replace}}}
+        write(f'minecraft/worldgen/world_preset/{preset}.json', {'dimensions': {
+            'minecraft:overworld': overworld, 'minecraft:the_end': end, 'minecraft:the_nether': nether}})
+
+
 def main():
     jar = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser(
         '~/.gradle/caches/minecraftforge/forgegradle/mavenizer/caches/minecraft_tasks/26.2/client.jar')
@@ -1218,6 +1269,7 @@ def main():
     vanilla_overrides(jar)
     mobs()
     worldgen()
+    terraria_biomes()
     npcs()
     n = lang()
     print(f'Generated {len(RECIPES)} Terraria recipes and {n} language entries')

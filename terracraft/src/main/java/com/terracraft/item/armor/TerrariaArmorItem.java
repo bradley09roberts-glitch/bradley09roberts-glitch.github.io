@@ -17,7 +17,7 @@ import net.minecraft.world.item.equipment.Equippable;
 /**
  * A Terraria armor piece. Defense lives in the item's {@link TerraItemStats}; pieces can carry their own
  * bonuses and belong to an {@link ArmorSet}. Vanilla armor attributes and durability are not used.
- * The worn texture is the equipment asset {@code terracraft:<set>}.
+ * The worn look is a 3D model ({@code ArmorModels}) painted with the equipment asset {@code terracraft:<set>}.
  */
 public class TerrariaArmorItem extends TerraItem {
     private final ArmorSet set;
@@ -36,6 +36,19 @@ public class TerrariaArmorItem extends TerraItem {
         return properties.stacksTo(1)
             .component(ModDataComponents.STATS, stats)
             .component(DataComponents.EQUIPPABLE, Equippable.builder(slot).setEquipSound(SoundEvents.ARMOR_EQUIP_IRON).setAsset(asset).build());
+    }
+
+    @Override
+    public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientItemExtensions> consumer) {
+        consumer.accept(new net.minecraftforge.client.extensions.common.IClientItemExtensions() {
+            @Override
+            public net.minecraft.client.model.HumanoidModel<?> getHumanoidArmorModel(net.minecraft.client.renderer.entity.state.LivingEntityRenderState state,
+                                                                                  net.minecraft.world.item.ItemStack stack, EquipmentSlot equipmentSlot,
+                                                                                  net.minecraft.client.model.HumanoidModel<?> original) {
+                var model = com.terracraft.client.model.ArmorModels.get(set.asset(), slot);
+                return model != null ? model : original;
+            }
+        });
     }
 
     public ArmorSet set() {

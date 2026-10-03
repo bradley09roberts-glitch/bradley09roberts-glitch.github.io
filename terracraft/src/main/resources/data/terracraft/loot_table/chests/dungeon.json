@@ -11,11 +11,6 @@
         },
         {
           "type": "minecraft:item",
-          "name": "terracraft:water_bolt",
-          "weight": 3
-        },
-        {
-          "type": "minecraft:item",
           "name": "minecraft:book",
           "weight": 2,
           "functions": [

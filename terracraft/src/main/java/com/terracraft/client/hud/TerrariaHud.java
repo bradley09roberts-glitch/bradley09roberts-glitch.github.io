@@ -19,7 +19,8 @@ import net.minecraftforge.client.gui.overlay.ForgeLayeredDraw;
 /**
  * Terraria-style status display replacing the vanilla hearts:
  * life hearts (20 life each, turning golden with Life Fruit), "Life: x/y" text, a defense shield,
- * and a vertical column of mana stars at the right edge. Vanilla food and air bars are kept.
+ * and a vertical column of mana stars at the right edge. There is no food bar (hunger is disabled); the air
+ * bubbles take its place.
  */
 public final class TerrariaHud {
     private static final Identifier HEART_EMPTY = TerraCraft.id("hud/heart_empty");
@@ -53,8 +54,7 @@ public final class TerrariaHud {
         int yBase = graphics.guiHeight() - 39;
         SyncPlayerStatsPacket stats = ClientState.stats();
         int rows = drawHearts(graphics, mc.font, player, stats, xLeft, yBase);
-        hud.extractFood(graphics, player, yBase, xRight);
-        hud.extractAirBubbles(graphics, player, 0, yBase - 10, xRight);
+        hud.extractAirBubbles(graphics, player, 0, yBase, xRight);
         drawMana(graphics, mc.font, stats);
         if (TerraConfig.CLIENT.showDefense.get() && stats.defense() > 0) {
             int y = yBase - (rows - 1) * 10;

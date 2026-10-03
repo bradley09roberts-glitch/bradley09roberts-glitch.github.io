@@ -28,6 +28,32 @@ public final class ClientState {
         return stats;
     }
 
+    /** Wings worn by players (entity id -> flight), and their current animation (see {@link WingAnim}). */
+    private static final Map<Integer, com.terracraft.item.accessory.WingsItem.Flight> WINGS = new HashMap<>();
+    private static final Map<Integer, WingAnim> WING_ANIM = new HashMap<>();
+
+    public enum WingAnim { FOLDED, FLAP, GLIDE }
+
+    public static com.terracraft.item.accessory.WingsItem.Flight wings(int entityId) {
+        return WINGS.get(entityId);
+    }
+
+    public static WingAnim wingAnim(int entityId) {
+        return WING_ANIM.getOrDefault(entityId, WingAnim.FOLDED);
+    }
+
+    public static void setWingAnim(int entityId, WingAnim anim) {
+        WING_ANIM.put(entityId, anim);
+    }
+
+    static void setWings(com.terracraft.network.packet.PlayerWingsPacket packet) {
+        if (packet.style().isEmpty()) {
+            WINGS.remove(packet.entityId());
+        } else {
+            WINGS.put(packet.entityId(), new com.terracraft.item.accessory.WingsItem.Flight(packet.style(), packet.flightTicks(), packet.ascent()));
+        }
+    }
+
     public static boolean hasAbility(Ability ability) {
         return (stats.abilityBits() & (1 << ability.ordinal())) != 0;
     }
@@ -47,6 +73,8 @@ public final class ClientState {
     /** Reset when leaving a world so stale data never leaks into the next one. */
     public static void clear() {
         activeEvent = "";
+        WINGS.clear();
+        WING_ANIM.clear();
         PROGRESSION.flags.clear();
         PROGRESSION.counters.clear();
         PROGRESSION.variants = WorldVariants.DEFAULT;

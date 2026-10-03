@@ -20,11 +20,14 @@ public final class PlayerStats {
     public int maxMana = 20;
     /** Identifier path of the active armor set bonus, or empty. */
     public String activeSetBonus = "";
+    /** The best wings worn, or null. */
+    public com.terracraft.item.accessory.WingsItem.Flight wings;
 
     public void clear() {
         values.clear();
         abilities.clear();
         activeSetBonus = "";
+        wings = null;
     }
 
     public void add(Stat stat, float amount) {

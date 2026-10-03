@@ -44,6 +44,12 @@ public final class ClientPacketHandlers {
         }
     }
 
+    public static void setWings(com.terracraft.network.packet.PlayerWingsPacket packet) {
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            ClientState.setWings(packet);
+        }
+    }
+
     public static void openNpcChat(com.terracraft.network.packet.OpenNpcChatPacket packet) {
         if (FMLEnvironment.dist == Dist.CLIENT) {
             Client.openNpcChat(packet);

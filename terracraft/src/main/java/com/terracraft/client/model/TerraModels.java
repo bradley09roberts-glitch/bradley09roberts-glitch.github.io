@@ -20,6 +20,7 @@ public final class TerraModels {
     public static final ModelLayerLocation BONE_HAND = layer("bone_hand");
     public static final ModelLayerLocation BEE = layer("bee");
     public static final ModelLayerLocation FLESH_MOUTH = layer("flesh_mouth");
+    public static final ModelLayerLocation WINGS = layer("wings");
 
     private TerraModels() {}
 
@@ -42,5 +43,6 @@ public final class TerraModels {
         event.registerLayerDefinition(BONE_HAND, BoneHandModel::createHand);
         event.registerLayerDefinition(BEE, BeeModel3D::createBee);
         event.registerLayerDefinition(FLESH_MOUTH, FleshMouthModel::createMouth);
+        event.registerLayerDefinition(WINGS, WingsModel::createWings);
     }
 }

@@ -1,5 +1,6 @@
 package com.terracraft.registry.content;
 
+import com.terracraft.block.DungeonBookshelfBlock;
 import com.terracraft.block.LockedChestBlock;
 import com.terracraft.block.SpikeBlock;
 import com.terracraft.item.TerraItem;
@@ -29,6 +30,10 @@ public final class DungeonContent {
         p -> new LockedChestBlock(p, "golden_key", true, "chests/dungeon_gold"),
         () -> BlockBehaviour.Properties.of().mapColor(MapColor.GOLD).strength(-1.0F, 3600000.0F).sound(SoundType.METAL).noOcclusion()
             .pushReaction(PushReaction.BLOCK));
+
+    /** Bookcase full of books; some hold a Water Bolt (see {@link DungeonBookshelfBlock}). */
+    public static final RegistryObject<DungeonBookshelfBlock> DUNGEON_BOOKSHELF = ModBlocks.register("dungeon_bookshelf", TabGroup.BLOCKS,
+        DungeonBookshelfBlock::new, () -> BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).strength(1.5F).sound(SoundType.WOOD).ignitedByLava());
 
     /** Opens one Locked Gold Chest (consumed). */
     public static final RegistryObject<TerraItem> GOLDEN_KEY = CoreItems.material("golden_key", TerraRarity.WHITE, 0);

@@ -16,6 +16,7 @@ public final class ModRegistries {
         ModItems.ITEMS.register(modBus);
         ModEntities.ENTITY_TYPES.register(modBus);
         ModFeatures.FEATURES.register(modBus);
+        ModFeatures.BIOME_SOURCES.register(modBus);
         ModMenus.MENUS.register(modBus);
         ModSounds.SOUNDS.register(modBus);
         ModEffects.EFFECTS.register(modBus);

@@ -3,6 +3,8 @@ package com.terracraft.registry.content;
 import com.terracraft.item.TerraItemStats;
 import com.terracraft.item.TerraRarity;
 import com.terracraft.item.accessory.AccessoryItem;
+import com.terracraft.item.accessory.WingsItem;
+import com.terracraft.item.TerraItem;
 import com.terracraft.item.weapon.WeaponProperties;
 import com.terracraft.player.stats.Ability;
 import com.terracraft.player.stats.Stat;
@@ -84,6 +86,23 @@ public final class AccessoryContent {
             .add(Stat.LAVA_IMMUNITY_SECONDS, 7));
     public static final RegistryObject<AccessoryItem> MANA_FLOWER = accessory("mana_flower", TerraRarity.ORANGE, 30000,
         StatEffects.builder().add(Stat.MANA_COST, -0.08F).ability(Ability.MANA_FLOWER));
+
+    // Wings: flight ticks (Terraria's flight time / 3) and maximum rising speed
+    /** Pre-Hardmode wings (Terraria: Skyware chests; here: underground chests). Mostly for gliding. */
+    public static final RegistryObject<WingsItem> FLEDGLING_WINGS = wings("fledgling_wings", "fledgling", TerraRarity.GREEN, 20000, 12, 0.3F);
+    public static final RegistryObject<WingsItem> ANGEL_WINGS = wings("angel_wings", "angel", TerraRarity.PINK, 80000, 34, 0.42F);
+    public static final RegistryObject<WingsItem> DEMON_WINGS = wings("demon_wings", "demon", TerraRarity.PINK, 80000, 34, 0.42F);
+    public static final RegistryObject<WingsItem> LEAF_WINGS = wings("leaf_wings", "leaf", TerraRarity.LIME, 160000, 54, 0.45F);
+
+    public static final RegistryObject<TerraItem> SOUL_OF_LIGHT = CoreItems.material("soul_of_light", TerraRarity.ORANGE, 800);
+    public static final RegistryObject<TerraItem> SOUL_OF_NIGHT = CoreItems.material("soul_of_night", TerraRarity.ORANGE, 800);
+    public static final RegistryObject<TerraItem> SOUL_OF_FLIGHT = CoreItems.material("soul_of_flight", TerraRarity.ORANGE, 800);
+
+    private static RegistryObject<WingsItem> wings(String name, String style, TerraRarity rarity, int value, int flightTicks, float ascent) {
+        WingsItem.Flight flight = new WingsItem.Flight(style, flightTicks, ascent);
+        return ModItems.register(name, TabGroup.ACCESSORIES, p -> new WingsItem(p, StatEffects.NONE, flight),
+            p -> WeaponProperties.stats(p, TerraItemStats.builder().rarity(rarity).value(value).build()));
+    }
 
     private static RegistryObject<AccessoryItem> accessory(String name, TerraRarity rarity, int value, StatEffects.Builder effects) {
         StatEffects built = effects.build();

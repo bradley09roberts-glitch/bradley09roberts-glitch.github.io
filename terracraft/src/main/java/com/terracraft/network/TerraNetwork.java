@@ -27,7 +27,7 @@ import net.minecraftforge.network.SimpleChannel;
  * Bump {@link #PROTOCOL} whenever a packet layout changes.
  */
 public final class TerraNetwork {
-    public static final int PROTOCOL = 3;
+    public static final int PROTOCOL = 4;
 
     public static final SimpleChannel CHANNEL = ChannelBuilder.named(TerraCraft.id("main"))
         .networkProtocolVersion(PROTOCOL)
@@ -44,11 +44,15 @@ public final class TerraNetwork {
                     com.terracraft.network.packet.SyncEventPacket::handle)
                 .addMain(com.terracraft.network.packet.OpenNpcChatPacket.class, com.terracraft.network.packet.OpenNpcChatPacket.STREAM_CODEC,
                     com.terracraft.network.packet.OpenNpcChatPacket::handle)
+                .addMain(com.terracraft.network.packet.PlayerWingsPacket.class, com.terracraft.network.packet.PlayerWingsPacket.STREAM_CODEC,
+                    com.terracraft.network.packet.PlayerWingsPacket::handle)
             .serverbound()
                 .addMain(DevActionPacket.class, DevActionPacket.STREAM_CODEC, DevActionPacket::handle)
                 .addMain(OpenAccessoriesPacket.class, OpenAccessoriesPacket.STREAM_CODEC, OpenAccessoriesPacket::handle)
                 .addMain(CraftRecipePacket.class, CraftRecipePacket.STREAM_CODEC, CraftRecipePacket::handle)
                 .addMain(DoubleJumpPacket.class, DoubleJumpPacket.STREAM_CODEC, DoubleJumpPacket::handle)
+                .addMain(com.terracraft.network.packet.WingFlightPacket.class, com.terracraft.network.packet.WingFlightPacket.STREAM_CODEC,
+                    com.terracraft.network.packet.WingFlightPacket::handle)
                 .addMain(UseWeaponPacket.class, UseWeaponPacket.STREAM_CODEC, UseWeaponPacket::handle)
                 .addMain(com.terracraft.network.packet.NpcActionPacket.class, com.terracraft.network.packet.NpcActionPacket.STREAM_CODEC,
                     com.terracraft.network.packet.NpcActionPacket::handle)

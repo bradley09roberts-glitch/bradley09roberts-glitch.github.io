@@ -1,0 +1,85 @@
+{
+  "dimensions": {
+    "minecraft:overworld": {
+      "type": "minecraft:overworld",
+      "generator": {
+        "type": "minecraft:noise",
+        "settings": "minecraft:large_biomes",
+        "biome_source": {
+          "type": "terracraft:terraria",
+          "base": {
+            "type": "minecraft:multi_noise",
+            "preset": "minecraft:overworld"
+          },
+          "replace": {
+            "minecraft:plains": "minecraft:forest",
+            "minecraft:sunflower_plains": "minecraft:forest",
+            "minecraft:meadow": "minecraft:forest",
+            "minecraft:birch_forest": "minecraft:forest",
+            "minecraft:old_growth_birch_forest": "minecraft:forest",
+            "minecraft:dark_forest": "minecraft:forest",
+            "minecraft:flower_forest": "minecraft:forest",
+            "minecraft:cherry_grove": "minecraft:forest",
+            "minecraft:pale_garden": "minecraft:forest",
+            "minecraft:savanna": "minecraft:forest",
+            "minecraft:savanna_plateau": "minecraft:forest",
+            "minecraft:windswept_savanna": "minecraft:forest",
+            "minecraft:swamp": "minecraft:forest",
+            "minecraft:mangrove_swamp": "minecraft:forest",
+            "minecraft:windswept_hills": "minecraft:forest",
+            "minecraft:windswept_gravelly_hills": "minecraft:forest",
+            "minecraft:windswept_forest": "minecraft:forest",
+            "minecraft:stony_peaks": "minecraft:forest",
+            "minecraft:river": "minecraft:forest",
+            "minecraft:lush_caves": "minecraft:forest",
+            "minecraft:dripstone_caves": "minecraft:forest",
+            "minecraft:deep_dark": "minecraft:forest",
+            "minecraft:sulfur_caves": "minecraft:forest",
+            "minecraft:taiga": "minecraft:snowy_taiga",
+            "minecraft:old_growth_pine_taiga": "minecraft:snowy_taiga",
+            "minecraft:old_growth_spruce_taiga": "minecraft:snowy_taiga",
+            "minecraft:grove": "minecraft:snowy_taiga",
+            "minecraft:snowy_slopes": "minecraft:snowy_taiga",
+            "minecraft:jagged_peaks": "minecraft:snowy_taiga",
+            "minecraft:frozen_peaks": "minecraft:snowy_taiga",
+            "minecraft:ice_spikes": "minecraft:snowy_plains",
+            "minecraft:frozen_river": "minecraft:snowy_plains",
+            "minecraft:badlands": "minecraft:desert",
+            "minecraft:eroded_badlands": "minecraft:desert",
+            "minecraft:wooded_badlands": "minecraft:desert",
+            "minecraft:sparse_jungle": "minecraft:jungle",
+            "minecraft:bamboo_jungle": "minecraft:jungle",
+            "minecraft:cold_ocean": "minecraft:ocean",
+            "minecraft:lukewarm_ocean": "minecraft:ocean",
+            "minecraft:frozen_ocean": "minecraft:ocean",
+            "minecraft:deep_cold_ocean": "minecraft:deep_ocean",
+            "minecraft:deep_lukewarm_ocean": "minecraft:deep_ocean",
+            "minecraft:deep_frozen_ocean": "minecraft:deep_ocean",
+            "minecraft:stony_shore": "minecraft:beach"
+          }
+        }
+      }
+    },
+    "minecraft:the_end": {
+      "type": "minecraft:the_end",
+      "generator": {
+        "type": "minecraft:noise",
+        "biome_source": {
+          "type": "minecraft:the_end"
+        },
+        "settings": "minecraft:end"
+      }
+    },
+    "minecraft:the_nether": {
+      "type": "minecraft:the_nether",
+      "generator": {
+        "type": "minecraft:noise",
+        "settings": "minecraft:nether",
+        "biome_source": {
+          "type": "minecraft:multi_noise",
+          "preset": "minecraft:nether"
+        }
+      }
+    }
+  }
+}

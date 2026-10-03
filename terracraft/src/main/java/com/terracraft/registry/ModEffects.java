@@ -30,10 +30,27 @@ public final class ModEffects {
     public static final RegistryObject<MobEffect> WRATH = buff("wrath", 0xDC3C3C, StatEffects.builder().add(Stat.DAMAGE, 0.10F));
     public static final RegistryObject<MobEffect> RAGE = buff("rage", 0xFF7814, StatEffects.builder().add(Stat.CRIT, 10));
 
+    /** Food buffs, from eating (hunger is disabled; see {@link com.terracraft.player.FoodManager}). */
+    public static final RegistryObject<MobEffect> WELL_FED = buff("well_fed", 0xE6B450, food(1));
+    public static final RegistryObject<MobEffect> PLENTY_SATISFIED = buff("plenty_satisfied", 0xE68C3C, food(2));
+    public static final RegistryObject<MobEffect> EXQUISITELY_STUFFED = buff("exquisitely_stuffed", 0xE6643C, food(3));
+
     public static final RegistryObject<MobEffect> POTION_SICKNESS = debuff("potion_sickness", 0x784646, StatEffects.NONE);
     public static final RegistryObject<MobEffect> MANA_SICKNESS = debuff("mana_sickness", 0x463278, StatEffects.builder().add(Stat.MAGIC_DAMAGE, -0.25F).build());
 
     private ModEffects() {}
+
+    /** Terraria's food buff tiers: Well Fed, Plenty Satisfied and Exquisitely Stuffed. */
+    private static StatEffects.Builder food(int tier) {
+        return StatEffects.builder()
+            .add(Stat.DEFENSE, 1 + tier)
+            .add(Stat.CRIT, 1 + tier)
+            .add(Stat.DAMAGE, 0.025F * (1 + tier))
+            .add(Stat.MELEE_SPEED, 0.025F * (1 + tier))
+            .add(Stat.KNOCKBACK, 0.025F * (1 + tier))
+            .add(Stat.MOVE_SPEED, 0.05F * tier)
+            .add(Stat.MINING_SPEED, 0.05F * (1 + tier));
+    }
 
     private static RegistryObject<MobEffect> buff(String name, int color, StatEffects.Builder effects) {
         return EFFECTS.register(name, () -> new TerraBuffEffect(MobEffectCategory.BENEFICIAL, color, effects.build()));

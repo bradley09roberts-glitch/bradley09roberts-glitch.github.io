@@ -102,3 +102,13 @@ arena, an enemy zoo and chests holding every item. In the world run `/reload`, `
 `/function showcase:build_zoo`, then `/function showcase:build_underworld` from inside the Underworld.
 `/function showcase:hub` returns to the hub. To open a singleplayer save directly:
 `./gradlew runClient "-Pworld=<save name>"`. `xinput.py type <text>` types into chat.
+
+## Armor, wings and food checks
+
+- 3D armor: `summon armor_stand ~ ~ ~ {ShowArms:1b,equipment:{head:{id:"terracraft:molten_helmet"},chest:{id:"terracraft:molten_breastplate"},legs:{id:"terracraft:molten_greaves"}}}`;
+  after editing `tools/armor_models.py`, rerun `tools/generate_assets.py` and press F3+T in the client.
+- Wings: `/terraria equip terracraft:angel_wings`, survival mode, press F5, hold jump (`xinput.py keyhold space 3`):
+  the player rises ~16 blocks, then glides; the server log must not show "kicked for floating".
+- Food: eat any food and check `/data get entity @s active_effects` for `terracraft:well_fed` (or a higher tier);
+  the HUD shows no food bar and the inventory has no boots slot.
+- Biomes: `/locate biome minecraft:plains` must fail in a new world (only Terraria biomes exist).

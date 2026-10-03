@@ -16,6 +16,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
+import com.terracraft.item.accessory.WingsItem;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.ScreenEvent;
@@ -35,6 +36,10 @@ public final class ClientEvents {
     /** True once the jump key has been released while airborne; extra jumps need a fresh press after that. */
     private static boolean jumpReleasedInAir;
     private static long lastWeaponPacketTick;
+    /** Wings: flight ticks left, whether the current jump-hold is driving the wings, and the jump key last tick. */
+    private static int wingTime;
+    private static boolean wingsEngaged;
+    private static boolean wingJumpWasDown;
 
     private ClientEvents() {}
 
@@ -62,8 +67,10 @@ public final class ClientEvents {
         if (mc.gui.screen() == null) {
             tickWeaponUse(mc, player);
         }
+        tickWings(mc, player);
         tickDoubleJump(mc, player);
         tickWaterWalking(player);
+        tickWingAnimations(mc);
     }
 
     /** Holding attack with a ranged/magic/thrown weapon fires it continuously (Terraria auto-swing). */
@@ -89,6 +96,60 @@ public final class ClientEvents {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Terraria wings: in the air, holding jump (a fresh press once double jumps are spent, or keeping it held
+     * while falling) rises for the wings' flight time, then glides down slowly. Flight time refills on landing.
+     */
+    private static void tickWings(Minecraft mc, LocalPlayer player) {
+        WingsItem.Flight wings = ClientState.wings(player.getId());
+        boolean jumpDown = mc.options.keyJump.isDown();
+        boolean newPress = jumpDown && !wingJumpWasDown;
+        wingJumpWasDown = jumpDown;
+        if (wings == null || player.getAbilities().flying || player.isPassenger()) {
+            wingsEngaged = false;
+            return;
+        }
+        if (player.onGround() || player.isInWater() || player.onClimbable()) {
+            wingTime = wings.flightTicks();
+            wingsEngaged = false;
+            return;
+        }
+        if (!jumpDown) {
+            wingsEngaged = false;
+            return;
+        }
+        Vec3 motion = player.getDeltaMovement();
+        if (!wingsEngaged && (newPress && jumpsUsed >= ClientState.stats().extraJumps() || motion.y < 0.0)) {
+            wingsEngaged = true;
+        }
+        if (!wingsEngaged) {
+            return;
+        }
+        if (wingTime > 0) {
+            wingTime--;
+            player.setDeltaMovement(motion.x, Math.min(motion.y + 0.16, wings.ascent()), motion.z);
+        } else if (motion.y < -0.14) {
+            player.setDeltaMovement(motion.x, -0.14, motion.z);
+        }
+        player.resetFallDistance();
+        if (player.tickCount % 4 == 0) {
+            TerraNetwork.sendToServer(com.terracraft.network.packet.WingFlightPacket.INSTANCE);
+        }
+    }
+
+    /** Wing pose for every player wearing wings: folded on the ground, flapping while rising, spread while falling. */
+    private static void tickWingAnimations(Minecraft mc) {
+        for (var other : mc.level.players()) {
+            if (ClientState.wings(other.getId()) == null) {
+                continue;
+            }
+            double dy = other.getY() - other.yo;
+            ClientState.WingAnim anim = other.onGround() || other.isInWater() ? ClientState.WingAnim.FOLDED
+                : dy > -0.08 ? ClientState.WingAnim.FLAP : ClientState.WingAnim.GLIDE;
+            ClientState.setWingAnim(other.getId(), anim);
+        }
     }
 
     private static void tickDoubleJump(Minecraft mc, LocalPlayer player) {

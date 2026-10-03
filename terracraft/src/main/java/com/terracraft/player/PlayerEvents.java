@@ -45,8 +45,17 @@ public final class PlayerEvents {
             StarterKit.give(player);
         }
         ProgressionManager.syncTo(player);
+        TerraNetwork.sendToPlayer(player, com.terracraft.network.packet.PlayerWingsPacket.of(player));
         com.terracraft.data.DataEvents.syncTo(player);
         sync(player, data);
+    }
+
+    /** Tell a player which wings the players they start seeing wear. */
+    @SubscribeEvent
+    static void onStartTracking(PlayerEvent.StartTracking event) {
+        if (event.getEntity() instanceof ServerPlayer tracker && event.getTarget() instanceof ServerPlayer target) {
+            TerraNetwork.sendToPlayer(tracker, com.terracraft.network.packet.PlayerWingsPacket.of(target));
+        }
     }
 
     @SubscribeEvent
@@ -97,6 +106,8 @@ public final class PlayerEvents {
             data.doubleJumpsUsed = 0;
         }
         tickLavaImmunity(player, data);
+        FoodManager.tick(player);
+        NoBootsSlot.tick(player);
         ManaManager.tick(player, data);
         if (TerraConfig.COMMON.terrariaLifeRegen.get()) {
             LifeRegenManager.tick(player, data);
@@ -127,6 +138,7 @@ public final class PlayerEvents {
         int previousDefense = data.stats().defense();
         int previousBits = data.stats().abilityBits();
         int previousJumps = data.stats().extraJumps();
+        var previousWings = data.stats().wings;
         StatCalculator.recompute(player, data);
         HealthManager.applyMaxLife(player, data.stats().maxLife);
         AttributeEffects.apply(player, data.stats());
@@ -134,6 +146,9 @@ public final class PlayerEvents {
             || previousDefense != data.stats().defense() || previousBits != data.stats().abilityBits()
             || previousJumps != data.stats().extraJumps()) {
             data.markSyncDirty();
+        }
+        if (!java.util.Objects.equals(previousWings, data.stats().wings)) {
+            TerraNetwork.sendToTrackingAndSelf(player, com.terracraft.network.packet.PlayerWingsPacket.of(player));
         }
     }
 

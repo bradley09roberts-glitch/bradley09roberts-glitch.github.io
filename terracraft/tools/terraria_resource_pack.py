@@ -24,6 +24,7 @@ import io
 import json
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
@@ -121,14 +122,23 @@ def to_sprite_sheet(data, own_meta):
 
 
 def fetch_wiki(name):
+    """Downloads one sprite; waits and retries when the wiki rate-limits us (HTTP 429)."""
     url = WIKI + urllib.parse.quote(name.replace(" ", "_") + ".png")
     request = urllib.request.Request(url, headers={"User-Agent": "TerraCraft-personal-resource-pack/1.0"})
-    try:
-        with urllib.request.urlopen(request, timeout=20) as response:
-            return response.read()
-    except Exception as error:  # noqa: BLE001 - report and continue
-        print(f"  ! {name}: {error}")
-        return None
+    for attempt in range(5):
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                return response.read()
+        except urllib.error.HTTPError as error:
+            if error.code == 429 and attempt < 4:
+                time.sleep(5 * (attempt + 1))
+                continue
+            print(f"  ! {name}: {error}")
+            return None
+        except Exception as error:  # noqa: BLE001 - report and continue
+            print(f"  ! {name}: {error}")
+            return None
+    return None
 
 
 def find_local(folder, name):
@@ -173,7 +183,7 @@ def main():
         for (namespace, item), name in names.items():
             data = fetch_wiki(name) if args.wiki else find_local(args.folder, name)
             if args.wiki:
-                time.sleep(0.2)  # be polite to the wiki
+                time.sleep(0.5)  # be polite to the wiki
             if not data:
                 missing.append(name)
                 continue
@@ -187,7 +197,7 @@ def main():
         for mob, (name, meta) in mob_names().items():
             data = fetch_wiki(name) if args.wiki else find_local(args.folder, name)
             if args.wiki:
-                time.sleep(0.2)
+                time.sleep(0.5)
             if not data:
                 missing.append(name)
                 continue

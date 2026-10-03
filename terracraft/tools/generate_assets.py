@@ -6,6 +6,7 @@ Run from the project root:  python3 tools/generate_assets.py
 Everything is derived from the tables below; re-running is deterministic.
 """
 import json
+import math
 import os
 import random
 import re
@@ -907,6 +908,7 @@ EFFECTS = {
     'magic_power': '#C864FF', 'archery': '#C8A064', 'mining': '#C8C864', 'obsidian_skin': '#78508C',
     'water_walking': '#3C8CFF', 'endurance': '#8C8CB4', 'wrath': '#DC3C3C', 'rage': '#FF7814',
     'potion_sickness': '#784646', 'mana_sickness': '#463278',
+    'well_fed': '#E6B450', 'plenty_satisfied': '#E68C3C', 'exquisitely_stuffed': '#E6643C',
 }
 
 
@@ -1047,13 +1049,9 @@ def block_assets():
 
 
 def armor_assets():
-    for s in ARMOR_SETS + EVIL_ARMOR:
-        color = METAL[s] if s != 'wood' else '#A0703C'
-        armor_layer(color, False).save(os.path.join(TEX, f'entity/equipment/humanoid/{s}.png'))
-        armor_layer(color, True).save(os.path.join(TEX, f'entity/equipment/humanoid_leggings/{s}.png'))
-        write_json(os.path.join(ASSETS, f'equipment/{s}.json'), {'layers': {
-            'humanoid': [{'texture': f'terracraft:{s}'}],
-            'humanoid_leggings': [{'texture': f'terracraft:{s}'}]}})
+    """3D armor: geometry + textures for every set (see tools/armor_models.py)."""
+    import armor_models
+    armor_models.write(ASSETS, TEX)
 
 
 # --- Enemy sprite sheets ---------------------------------------------------------------------------
@@ -1428,8 +1426,8 @@ def slime_texture(color, alpha=170, baby=None, king=False, core=None):
 
 for _name, _color in SLIMES.items():
     model_texture(_name, 64, 64, slime_texture(_color, 200 if _name == 'black_slime' else 170))
-model_texture('baby_slime', 64, 64, slime_texture('#7FBFF8'))
-model_texture('mother_slime', 64, 64, slime_texture('#D46FC4', baby='#7FBFF8'))
+model_texture('baby_slime', 64, 64, slime_texture('#4A4A54', 200))
+model_texture('mother_slime', 64, 64, slime_texture('#3C3C44', 210, baby='#5A5A64'))
 model_texture('king_slime', 128, 64, slime_texture('#3C78E6', 180, king=True))
 
 
@@ -1503,7 +1501,7 @@ def skin_texture(skin, hair, shirt, pants, shoes='#3A2A20', eyes=(30, 30, 40, 25
 
 
 model_texture('zombie', 64, 64, skin_texture('#7FA06A', '#3E4A2E', '#4A6FA5', '#4B3B2F', eyes=(220, 40, 40, 255), torn=True))
-model_texture('skeleton', 64, 64, skin_texture('#E8E2CF', '#E8E2CF', '#E8E2CF', '#E8E2CF', bony=True))
+model_texture('skeleton', 64, 64, skin_texture('#D8D0A8', '#D8D0A8', '#3A5AA0', '#D8D0A8', bony=True, torn=True))
 model_texture('arms_dealer', 64, 64, skin_texture('#8A5A3A', '#1A1A1A', '#7A5A3A', '#3A3A44', hat='#2A2A2A', hat_band='#8A1A1A', short_sleeves=False))
 model_texture('dryad', 64, 64, skin_texture('#E8C8A0', '#4AA040', '#5A9A3A', '#3A7A2A', shoes='#2A5A1A', hat='#6AC050'))
 model_texture('guide', 64, 64, skin_texture('#E8B890', '#6A4428', '#6E8C3A', '#5A4430', short_sleeves=False))
@@ -1543,28 +1541,10 @@ def eye_texture(iris, mouth=False, sclera='#F2EEE8'):
     return paint
 
 
-model_texture('demon_eye', 64, 64, eye_texture('#C22B2B'))
+model_texture('demon_eye', 64, 64, eye_texture('#3A3AA8'))
 model_texture('servant_of_cthulhu', 64, 64, eye_texture('#3A62C8'))
 model_texture('eye_of_cthulhu', 64, 64, eye_texture('#3A62C8'))
 model_texture('eye_of_cthulhu_mouth', 64, 64, eye_texture('#3A62C8', mouth=True))
-
-
-def bat_texture(c):
-    fur = hexc('#6B4A3A')
-    paint_box(c, 0, 0, 4, 5, 3, fur, 0.15, 70)
-    paint_box(c, 16, 0, 4, 4, 4, fur, 0.15, 71)
-    c.set(21, 6, (255, 220, 80, 255)); c.set(22, 6, (255, 220, 80, 255))
-    paint_box(c, 32, 0, 1, 2, 1, shade(fur, 0.8), 0.1)
-    wing = hexc('#4E3428')
-    for v in (16, 24):
-        fill(c, (0, v, 18, 7), wing, 0.15, 72 + v)
-        for x in (2, 5, 8, 11, 14):
-            for y in range(v, v + 7):
-                if (y - v) <= 5:
-                    c.set(x, y, shade(wing, 0.6))
-
-
-model_texture('cave_bat', 64, 32, bat_texture)
 
 
 def worm_texture(color, plate):
@@ -1607,7 +1587,7 @@ def maw_texture(color, accent):
 
 for _part in ('head', 'body', 'tail'):
     model_texture(f'eater_of_worlds_{_part}', 64, 64, worm_texture('#5A4A78', '#7E5BA8'))
-model_texture('creeper', 64, 64, eye_texture('#C02838', sclera='#E8B8B0'))
+model_texture('creeper', 64, 64, eye_texture('#E07030', sclera='#F0E8E0'))
 
 
 def brain_texture(exposed=False):
@@ -1632,11 +1612,11 @@ def brain_texture(exposed=False):
 
 model_texture('brain_of_cthulhu', 64, 64, brain_texture())
 model_texture('brain_of_cthulhu_exposed', 64, 64, brain_texture(True))
-model_texture('eater_of_souls', 64, 32, maw_texture('#6A6A4A', '#7A1A2A'))
+model_texture('eater_of_souls', 64, 32, maw_texture('#7A6A5A', '#6AA040'))
 model_texture('crimera', 64, 32, maw_texture('#A83A3A', '#F0D060'))
-model_texture('blood_zombie', 64, 64, skin_texture('#A85A5A', '#5A1A1A', '#6A2020', '#3A1A1A', eyes=(255, 240, 80, 255), torn=True))
-model_texture('drippler', 64, 64, eye_texture('#E8D040', sclera='#C04848'))
-model_texture('face_monster', 64, 64, skin_texture('#B04848', '#6A1818', '#8A2828', '#5A1818', eyes=(250, 230, 80, 255), torn=True))
+model_texture('blood_zombie', 64, 64, skin_texture('#D05050', '#6A1A1A', '#9A2A2A', '#5A2020', eyes=(255, 240, 80, 255), torn=True))
+model_texture('drippler', 64, 64, eye_texture('#3A62C8', sclera='#C84848'))
+model_texture('face_monster', 64, 64, skin_texture('#C06A4A', '#6A2A1A', '#8A5A3A', '#6A4A2A', eyes=(250, 230, 80, 255), torn=True))
 
 
 def spider_texture(color):
@@ -1712,6 +1692,33 @@ def gold_lock_texture():
     return c
 
 
+def bookshelf_texture(books):
+    """Dark dungeon bookcase: two shelves of coloured book spines (or bare shelves once taken)."""
+    c = Canvas()
+    wood = palette('#5A3A28')
+    c.rect(0, 0, 15, 15, wood[1])
+    c.rect(0, 0, 15, 1, wood[3]); c.rect(0, 14, 15, 15, wood[0])
+    c.rect(0, 7, 15, 8, wood[2])
+    c.rect(0, 0, 0, 15, wood[2]); c.rect(15, 0, 15, 15, wood[0])
+    if books:
+        rnd = random.Random(4417)
+        colours = ['#3A50A0', '#A03A3A', '#3A8A50', '#8A6A30', '#6A3A8A', '#2A6A8A']
+        for top in (2, 9):
+            x = 1
+            while x < 15:
+                w = rnd.choice((1, 2, 2))
+                h = rnd.choice((4, 5, 5))
+                col = palette(rnd.choice(colours))
+                c.rect(x, top + 5 - h, min(14, x + w - 1), top + 4, col[2])
+                c.rect(x, top + 5 - h, x, top + 4, col[3])
+                c.set(x, top + 6 - h, col[4])
+                x += w
+    return c
+
+
+BLOCK_TEXTURES['dungeon_bookshelf'] = lambda: bookshelf_texture(True)
+BLOCK_TEXTURES['dungeon_bookshelf_empty'] = lambda: bookshelf_texture(False)
+BLOCK_TEXTURES['dungeon_bookshelf_top'] = lambda: (lambda c: (c.noise(palette('#5A3A28')[1:4], 3381), c)[1])(Canvas())
 BLOCK_TEXTURES['spikes'] = spikes_texture
 BLOCK_TEXTURES['locked_gold_chest'] = gold_chest_texture
 BLOCK_TEXTURES['locked_gold_chest_lock'] = gold_lock_texture
@@ -1724,6 +1731,12 @@ def dungeon_block_assets():
                    {'parent': 'minecraft:block/cube_all', 'textures': {'all': f'terracraft:block/{name}'}})
         write_json(os.path.join(ASSETS, 'items', name + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{name}'}})
     all_faces = ['north', 'south', 'east', 'west', 'up', 'down']
+    for model, side in (('dungeon_bookshelf', 'dungeon_bookshelf'), ('dungeon_bookshelf_empty', 'dungeon_bookshelf_empty')):
+        write_json(os.path.join(ASSETS, f'models/block/{model}.json'), {'parent': 'minecraft:block/cube_column',
+                   'textures': {'end': 'terracraft:block/dungeon_bookshelf_top', 'side': f'terracraft:block/{side}'}})
+    write_json(os.path.join(ASSETS, 'blockstates/dungeon_bookshelf.json'), {'variants': {
+        'books=true': {'model': 'terracraft:block/dungeon_bookshelf'}, 'books=false': {'model': 'terracraft:block/dungeon_bookshelf_empty'}}})
+    write_json(os.path.join(ASSETS, 'items/dungeon_bookshelf.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/dungeon_bookshelf_empty'}})
     spikes = [{'from': [0, 0, 0], 'to': [16, 2, 16], 'faces': {f: {'texture': '#all'} for f in all_faces}}]
     for x in (2, 7, 12):
         for z in (2, 7, 12):
@@ -1856,17 +1869,17 @@ def bone_hand_texture(bone):
     return paint
 
 
-model_texture('skeletron', 64, 32, skull_texture('#E8E0C8', '#200A0A'))
-model_texture('dungeon_guardian', 64, 32, skull_texture('#D8D0BC', '#FF3020', glow=True))
-model_texture('cursed_skull', 64, 32, skull_texture('#B8D8C0', '#40FF80', glow=True))
-model_texture('skeletron_hand', 32, 32, bone_hand_texture('#E8E0C8'))
-model_texture('angry_bones', 64, 64, skin_texture('#C8CED6', '#C8CED6', '#C8CED6', '#C8CED6', bony=True))
+model_texture('skeletron', 64, 32, skull_texture('#D8CCA0', '#200A0A'))
+model_texture('dungeon_guardian', 64, 32, skull_texture('#D8CCA0', '#1A0A0A'))
+model_texture('cursed_skull', 64, 32, skull_texture('#D0C49A', '#70B8FF', glow=True))
+model_texture('skeletron_hand', 32, 32, bone_hand_texture('#D8CCA0'))
+model_texture('angry_bones', 64, 64, skin_texture('#D8D0A0', '#D8D0A0', '#A0303A', '#8A2A30', eyes=(200, 30, 30, 255), bony=True))
 model_texture('dark_caster', 64, 64, skin_texture('#D8D0C0', '#2A3A8A', '#2A3A8A', '#24306A', shoes='#24306A', eyes=(120, 200, 255, 255),
                                                   hat='#2A3A8A', hat_band='#6A8AE0', short_sleeves=False))
 model_texture('old_man', 64, 64, skin_texture('#E8C8A8', '#E8E8E8', '#3A3A58', '#2A2A40', beard='#F4F4F4', short_sleeves=False))
 model_texture('clothier', 64, 64, skin_texture('#E8B890', '#2A2A2A', '#A02828', '#2A2A30', hat='#1A1A1A', hat_band='#A02828',
                                                 short_sleeves=False))
-model_texture('dungeon_slime', 64, 64, slime_texture('#5A6A88', 190, core='#E8C040'))
+model_texture('dungeon_slime', 64, 64, slime_texture('#8A86D0', 190, core='#E8C040'))
 
 
 def skull_frame(c, frame, bone, eyes, size=16):
@@ -2123,11 +2136,12 @@ def bat_texture_colored(fur_hex, wing_hex):
     return paint
 
 
-model_texture('hornet', 64, 32, bee_texture('#E0A020', '#3A3020'))
+model_texture('hornet', 64, 32, bee_texture('#E89040', '#C8607A'))
 model_texture('bee', 64, 32, bee_texture('#F0C828', '#2A2018'))
-model_texture('queen_bee', 64, 32, bee_texture('#F0B020', '#3A2418', crown=True))
-model_texture('jungle_slime', 64, 64, slime_texture('#40B0A0', 180))
-model_texture('jungle_bat', 64, 32, bat_texture_colored('#5A8A3A', '#3A6A2A'))
+model_texture('queen_bee', 64, 32, bee_texture('#F0C030', '#3A2050', crown=True))
+model_texture('jungle_slime', 64, 64, slime_texture('#6AB040', 180))
+model_texture('jungle_bat', 64, 32, bat_texture_colored('#A0602A', '#6A3A1A'))
+model_texture('cave_bat', 64, 32, bat_texture_colored('#2A6AA8', '#1A4A7A'))   # Terraria's Cave Bat is blue
 model_texture('man_eater', 64, 32, maw_texture('#4A9A30', '#E070A0'))
 model_texture('snatcher', 64, 32, maw_texture('#5AAA3A', '#F0A0C0'))
 
@@ -2351,12 +2365,12 @@ model_texture('wall_of_flesh', 64, 64, mouth_texture())
 model_texture('wall_of_flesh_wall', 32, 32, lambda c: c.img.paste(wall_tile().img))
 model_texture('wall_of_flesh_eye', 64, 64, eye_texture('#4A2A6A', sclera='#E8D0C8'))
 model_texture('the_hungry', 64, 32, maw_texture('#A84050', '#F0E0C0'))
-model_texture('imp', 64, 64, skin_texture('#A8384A', '#2A1A2A', '#5A2A6A', '#3A1A3A', eyes=(255, 200, 60, 255), shoes='#2A1A2A',
+model_texture('imp', 64, 64, skin_texture('#D85A6A', '#3A1A2A', '#B04A5A', '#7A2A3A', eyes=(255, 200, 60, 255), shoes='#2A1A2A',
                                            hat='#5A2A6A', short_sleeves=True))
-model_texture('demon', 64, 32, bat_texture_colored('#7A3A8A', '#4A1A5A'))
-model_texture('voodoo_demon', 64, 32, bat_texture_colored('#5A3A3A', '#3A1A1A'))
+model_texture('demon', 64, 32, bat_texture_colored('#D06A6A', '#5A4A4A'))
+model_texture('voodoo_demon', 64, 32, bat_texture_colored('#C05A5A', '#4A3A3A'))
 model_texture('lava_slime', 64, 64, slime_texture('#FF7A20', 220))
-model_texture('hellbat', 64, 32, bat_texture_colored('#C04020', '#802010'))
+model_texture('hellbat', 64, 32, bat_texture_colored('#E85A20', '#A83010'))
 for _part in ('head', 'body', 'tail'):
     model_texture(f'bone_serpent_{_part}', 64, 64, worm_texture('#D8D0B8', '#B8B098'))
     mob_sprite(f'bone_serpent_{_part}', 12, 12, 1, lambda c, f, part=_part: worm_frame(c, f, '#D8D0B8', part), rotate=True)
@@ -2465,22 +2479,113 @@ item('meteor_leggings', lambda c: draw_legs(c, _meteor))
 EVIL_ARMOR.append('meteor')
 proj('chaos_ball', lambda c: p_orb(c, '#C040FF', 3))
 
-GOBLIN_SKIN = '#7A8A9A'
-model_texture('goblin_peon', 64, 64, skin_texture(GOBLIN_SKIN, '#3A2A2A', '#6A5A3A', '#4A3A2A', eyes=(220, 60, 40, 255)))
-model_texture('goblin_thief', 64, 64, skin_texture(GOBLIN_SKIN, '#2A2A2A', '#3A3A44', '#2A2A30', eyes=(220, 60, 40, 255), hat='#2A2A30'))
-model_texture('goblin_warrior', 64, 64, skin_texture(GOBLIN_SKIN, '#5A5A60', '#8A8A90', '#5A5A60', eyes=(220, 60, 40, 255), hat='#8A8A90',
+GOBLIN_SKIN = '#6A9AA8'      # the Tinkerer's blue-grey; goblin enemies are green/olive
+model_texture('goblin_peon', 64, 64, skin_texture('#C8B848', '#3A2A2A', '#7A5A6A', '#5A4A3A', eyes=(220, 60, 40, 255)))
+model_texture('goblin_thief', 64, 64, skin_texture('#A8A040', '#2A2A2A', '#3A3A44', '#2A2A30', eyes=(220, 60, 40, 255), hat='#2A2A30'))
+model_texture('goblin_warrior', 64, 64, skin_texture('#78B050', '#5A5A60', '#8A8A90', '#5A5A60', eyes=(220, 60, 40, 255), hat='#8A8A90',
                                                      hat_band='#5A5A60', short_sleeves=False))
-model_texture('goblin_sorcerer', 64, 64, skin_texture(GOBLIN_SKIN, '#7A3A8A', '#7A3A8A', '#5A2A6A', eyes=(255, 120, 255, 255), hat='#7A3A8A',
+model_texture('goblin_sorcerer', 64, 64, skin_texture('#C8C050', '#7A3A8A', '#7A3A8A', '#5A2A6A', eyes=(255, 120, 255, 255), hat='#7A3A8A',
                                                       short_sleeves=False, shoes='#5A2A6A'))
-model_texture('goblin_archer', 64, 64, skin_texture(GOBLIN_SKIN, '#3A2A2A', '#4A6A3A', '#4A3A2A', eyes=(220, 60, 40, 255), hat='#4A6A3A'))
+model_texture('goblin_archer', 64, 64, skin_texture('#78B0A0', '#3A2A2A', '#3A6A8A', '#2A4A5A', eyes=(220, 60, 40, 255), hat='#3A6A8A'))
 model_texture('bound_goblin', 64, 64, skin_texture(GOBLIN_SKIN, '#C86A28', '#8A6A4A', '#5A4A3A', torn=True))
-model_texture('goblin_tinkerer', 64, 64, skin_texture(GOBLIN_SKIN, '#C86A28', '#5A6A8C', '#4A3A2A', hat='#C8A040', hat_band='#6A5020',
+model_texture('goblin_tinkerer', 64, 64, skin_texture(GOBLIN_SKIN, '#2A3A44', '#C8C8D4', '#3A3440', hat='#C8A040', hat_band='#6A5020',
                                                       short_sleeves=False))
 model_texture('meteor_head', 64, 64, eye_texture('#FF6A20', sclera='#6A4030'))
-for _g, _shirt in (('goblin_peon', '#6A5A3A'), ('goblin_thief', '#3A3A44'), ('goblin_warrior', '#8A8A90'), ('goblin_sorcerer', '#7A3A8A'),
-                   ('goblin_archer', '#4A6A3A'), ('bound_goblin', '#8A6A4A'), ('goblin_tinkerer', '#5A6A8C')):
-    mob_sprite(_g, 16, 24, 3, lambda c, f, sh=_shirt: npc_frame(c, f, GOBLIN_SKIN, '#3A2A2A', sh, '#4A3A2A'), frame_time=6, animate='move')
+for _g, _skin, _shirt in (('goblin_peon', '#C8B848', '#7A5A6A'), ('goblin_thief', '#A8A040', '#3A3A44'), ('goblin_warrior', '#78B050', '#8A8A90'),
+                          ('goblin_sorcerer', '#C8C050', '#7A3A8A'), ('goblin_archer', '#78B0A0', '#3A6A8A'), ('bound_goblin', GOBLIN_SKIN, '#8A6A4A'),
+                          ('goblin_tinkerer', GOBLIN_SKIN, '#C8C8D4')):
+    mob_sprite(_g, 16, 24, 3, lambda c, f, sk=_skin, sh=_shirt: npc_frame(c, f, sk, '#3A2A2A', sh, '#4A3A2A'), frame_time=6, animate='move')
 mob_sprite('meteor_head', 14, 14, 2, lambda c, f: skull_frame(c, f, '#8A5A40', '#FF8030', 14), frame_time=4, fullbright=True)
+
+# ----------------------------------------------------------------------------------------- Wings
+# Worn wings: WingsModel panels are 14x16 (box UV at 0,0 with depth 1). In the front face the left column is the
+# wing tip; the back face is the mirror image. mask(ix, iy) -> colour or None, ix 0 = root at the back, 13 = tip.
+WING_STYLES = {
+    # style: (main, shade, edge)
+    'fledgling': ('#E8DCC8', '#B89A78', '#8A6A4A'),
+    'angel': ('#F4F4FA', '#B8C8E8', '#8898C0'),
+    'demon': ('#7A2A3A', '#4A1424', '#C8B0A0'),
+    'leaf': ('#5AAA3A', '#3A7A2A', '#2A5A1A'),
+}
+
+
+def wing_mask(style, ix, iy):
+    """Wing silhouette: the leading edge rises from the shoulder to the tip, feathers/membrane hang below it."""
+    main, dark, edge = (hexc(c) for c in WING_STYLES[style])
+    if style == 'fledgling':
+        if ix > 10:
+            return None
+        top = round(6 - ix * 5 / 10)
+        bottom = round(9 + 3 * math.sin(math.pi * (ix + 2) / 14)) - (ix % 2)
+    elif style == 'demon':
+        top = round(4 - ix * 4 / 13)
+        fingers = (4, 8, 13)
+        near = min(abs(ix - f) for f in fingers)
+        bottom = round(13 - ix / 3) - min(near, 2) * 2
+    else:
+        top = round(4 - ix * 4 / 13)
+        bottom = round(9 + 6 * math.sin(math.pi * (ix + 2) / 17)) - (ix % 2)
+    if iy < top or iy > bottom:
+        return None
+    if style == 'demon':
+        if iy == top or (ix in (4, 8, 13) and iy < bottom):
+            return edge                  # bone arm and fingers
+        return main if (ix * 3 + iy) % 7 else dark
+    if style == 'leaf':
+        if ix % 3 == 1:
+            return dark                  # leaf veins
+        return edge if (iy - top) % 5 == 4 else main
+    if iy <= top:
+        return edge                      # leading edge
+    if iy > top + 4:                     # long flight feathers
+        return dark if ix % 2 == 0 and iy > top + 5 else main
+    return main if (ix + iy) % 3 else shade(main, 0.92)
+
+
+def wing_texture(style):
+    c = Canvas(64, 32)
+    edge = hexc(WING_STYLES[style][2])
+    for ix in range(14):
+        for iy in range(16):
+            col = wing_mask(style, ix, iy)
+            if col is None:
+                continue
+            c.set(1 + (13 - ix), 1 + iy, col)          # front: tip on the left
+            c.set(16 + ix, 1 + iy, shade(col, 0.9))    # back: mirrored
+    for ix in range(14):
+        c.set(1 + ix, 0, edge)
+        c.set(15 + ix, 0, edge)
+    for iy in range(16):
+        c.set(0, 1 + iy, edge)
+        c.set(15, 1 + iy, edge)
+    return c
+
+
+def draw_wings_item(c, style):
+    """Both wings spread, seen from behind, on a 16x16 icon."""
+    for px in range(8):
+        for py in range(15):
+            col = wing_mask(style, min(13, px * 13 // 7), py)
+            if col is not None:
+                c.set(8 + px, py, col)
+                c.set(7 - px, py, col)
+    c.outline()
+
+
+def draw_soul(c, color):
+    p = palette(color)
+    c.circle(7.5, 7, 4.5, p[2])
+    c.circle(7.5, 7, 3, p[3])
+    c.circle(7, 6, 1.5, p[4])
+    c.polygon([(5, 11), (7.5, 15), (10, 11)], p[2])
+    c.outline()
+
+
+for _style in WING_STYLES:
+    item(f'{_style}_wings', lambda c, st=_style: draw_wings_item(c, st))
+item('soul_of_light', lambda c: draw_soul(c, '#F0A0E0'))
+item('soul_of_night', lambda c: draw_soul(c, '#8A50C8'))
+item('soul_of_flight', lambda c: draw_soul(c, '#60D8F0'))
 
 
 def check_registered_items():
@@ -2498,7 +2603,7 @@ def check_registered_items():
                                              'ebonwood', 'shadewood', 'ebonwood_leaves', 'shadewood_leaves'} | set(BRICKS) | {'spikes', 'locked_gold_chest', 'jungle_grass',
                                                                                         'jungle_spores_plant', 'hive', 'larva', 'ash', 'hellstone',
                                                                                         'obsidian_brick', 'hellstone_brick', 'hellforge', 'locked_shadow_chest',
-                                                                                        'meteorite', 'tinkerers_workshop'}
+                                                                                        'meteorite', 'tinkerers_workshop', 'dungeon_bookshelf'}
     missing = sorted(i for i in ids if i not in known and not i.endswith("_"))
     if missing:
         print('ERROR: items without generated assets:', missing)
@@ -2532,6 +2637,8 @@ def main():
         c = Canvas(w, h)
         painter(c)
         c.save(os.path.join(TEX, 'entity/model', name + '.png'))
+    for style in WING_STYLES:
+        wing_texture(style).save(os.path.join(TEX, 'entity/wings', style + '.png'))
     check_registered_items()
     print(f'Generated {len(ITEMS)} items, {len(BLOCK_TEXTURES)} block textures, {len(PROJECTILES)} projectiles, '
           f'{len(HUD)} HUD sprites, {len(EFFECTS)} effect icons, {len(ARMOR_SETS)} armor sets')

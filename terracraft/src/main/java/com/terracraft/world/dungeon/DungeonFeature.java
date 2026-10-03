@@ -210,7 +210,7 @@ public class DungeonFeature extends Feature<NoneFeatureConfiguration> {
                     level.setBlock(pos, DungeonContent.SPIKES.get().defaultBlockState(), Block.UPDATE_CLIENTS);
                 }
             }
-            case BOOKSHELF -> level.setBlock(pos, Blocks.BOOKSHELF.defaultBlockState(), Block.UPDATE_CLIENTS);
+            case BOOKSHELF -> level.setBlock(pos, DungeonContent.DUNGEON_BOOKSHELF.get().defaultBlockState(), Block.UPDATE_CLIENTS);
             case LANTERN -> level.setBlock(pos, Blocks.LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true), Block.UPDATE_CLIENTS);
             case COBWEB -> {
                 if (level.getBlockState(pos).isAir()) {

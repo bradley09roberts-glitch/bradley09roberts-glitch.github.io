@@ -13,6 +13,9 @@ public final class GameEventHandlers {
     public static void register() {
         TerraCapabilities.register();
         PlayerEvents.register();
+        com.terracraft.player.FoodManager.register();
+        com.terracraft.player.NoBootsSlot.register();
+        com.terracraft.loot.SoulDrops.register();
         ServerEvents.register();
         com.terracraft.combat.CombatEvents.register();
         com.terracraft.economy.EconomyEvents.register();

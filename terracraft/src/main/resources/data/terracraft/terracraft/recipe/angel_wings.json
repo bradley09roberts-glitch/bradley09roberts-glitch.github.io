@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:angel_wings",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:feather",
+      "count": 10
+    },
+    {
+      "item": "terracraft:soul_of_light",
+      "count": 25
+    },
+    {
+      "item": "terracraft:soul_of_flight",
+      "count": 20
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "accessories"
+}

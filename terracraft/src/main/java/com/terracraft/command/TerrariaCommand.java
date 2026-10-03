@@ -115,6 +115,28 @@ public final class TerrariaCommand {
             return 1;
         }));
 
+        // put an accessory straight into the first free accessory slot (testing / showcase kits)
+        root.then(Commands.literal("equip").then(Commands.argument("item", IdentifierArgument.id()).executes(ctx -> {
+            ServerPlayer player = ctx.getSource().getPlayerOrException();
+            Identifier id = IdentifierArgument.getId(ctx, "item");
+            var item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(id);
+            if (!(item instanceof com.terracraft.item.accessory.AccessoryItem)) {
+                ctx.getSource().sendFailure(Component.literal(id + " is not an accessory."));
+                return 0;
+            }
+            TerraPlayerData data = TerraPlayerData.get(player);
+            for (int slot = 0; slot < data.usableAccessorySlots(); slot++) {
+                if (data.accessories().getItem(slot).isEmpty()) {
+                    data.accessories().setItem(slot, new net.minecraft.world.item.ItemStack(item));
+                    PlayerEvents.refreshAndSync(player);
+                    ctx.getSource().sendSuccess(() -> Component.literal("Equipped " + id + "."), false);
+                    return 1;
+                }
+            }
+            ctx.getSource().sendFailure(Component.literal("No free accessory slot."));
+            return 0;
+        })));
+
         root.then(Commands.literal("devmenu").executes(ctx -> {
             TerraNetwork.sendToPlayer(ctx.getSource().getPlayerOrException(), OpenDevMenuPacket.INSTANCE);
             return 1;

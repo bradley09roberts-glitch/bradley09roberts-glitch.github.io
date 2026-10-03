@@ -27,5 +27,11 @@ public final class ModFeatures {
     public static final RegistryObject<com.terracraft.world.underworld.UnderworldFeature> UNDERWORLD = FEATURES.register("underworld",
         com.terracraft.world.underworld.UnderworldFeature::new);
 
+    /** Biome source types (registered on the same mod bus as the features). */
+    public static final DeferredRegister<com.mojang.serialization.MapCodec<? extends net.minecraft.world.level.biome.BiomeSource>> BIOME_SOURCES =
+        DeferredRegister.create(net.minecraft.core.registries.Registries.BIOME_SOURCE, TerraCraft.MODID);
+    public static final RegistryObject<com.mojang.serialization.MapCodec<com.terracraft.world.biome.TerrariaBiomeSource>> TERRARIA_BIOMES =
+        BIOME_SOURCES.register("terraria", () -> com.terracraft.world.biome.TerrariaBiomeSource.CODEC);
+
     private ModFeatures() {}
 }

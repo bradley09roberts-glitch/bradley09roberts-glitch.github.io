@@ -32,9 +32,28 @@ public final class TerraClient {
             com.terracraft.client.renderer.CreatureRenderers.register(event);
         });
         EntityRenderersEvent.RegisterLayerDefinitions.BUS.addListener(com.terracraft.client.model.TerraModels::registerLayers);
+        EntityRenderersEvent.AddLayers.BUS.addListener(event -> {
+            for (var type : event.getModelTypes()) {
+                net.minecraft.client.renderer.entity.player.AvatarRenderer<net.minecraft.client.player.AbstractClientPlayer> renderer = event.getPlayerRenderer(type);
+                if (renderer != null) {
+                    renderer.addLayer(new com.terracraft.client.renderer.TerraWingsLayer(renderer,
+                        new com.terracraft.client.model.WingsModel(event.getEntityModels().bakeLayer(com.terracraft.client.model.TerraModels.WINGS))));
+                }
+            }
+        });
         RegisterClientReloadListenersEvent.BUS.addListener(event -> event.registerReloadListener(MobSprites.INSTANCE));
+        RegisterClientReloadListenersEvent.BUS.addListener(event -> event.registerReloadListener(
+            (net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager -> com.terracraft.client.model.ArmorModels.clear()));
         AddGuiOverlayLayersEvent.BUS.addListener(TerrariaHud::register);
         ItemTooltipEvent.BUS.addListener(ItemTooltips::onTooltip);
+        // no boots slot (see NoBootsSlot): paint over its empty frame in the inventory background
+        net.minecraftforge.client.event.ContainerScreenEvent.Render.Background.BUS.addListener(event -> {
+            if (event.getContainerScreen() instanceof net.minecraft.client.gui.screens.inventory.InventoryScreen screen) {
+                int x = screen.getGuiLeft() + 7;
+                int y = screen.getGuiTop() + 61;
+                event.getGuiGraphics().fill(x, y, x + 18, y + 18, 0xFFC6C6C6);
+            }
+        });
         ClientEvents.register();
         net.minecraftforge.client.event.ViewportEvent.ComputeFogColor.BUS.addListener(event -> {
             if ("blood_moon".equals(ClientState.activeEvent())) {

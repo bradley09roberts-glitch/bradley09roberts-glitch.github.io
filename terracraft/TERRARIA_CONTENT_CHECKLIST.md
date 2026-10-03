@@ -25,7 +25,8 @@ Legend: `[ ]` not started, `[-]` partial, `[x]` complete (implemented and usable
 - [ ] Hardmode world transformation
 - [ ] Modifiers / reforging
 - [ ] Minions / sentries / whips
-- [ ] Wings, grappling hooks, dashes, rocket boots
+- [-] Wings (flight, glide, 3D wings; Fledgling, Angel, Demon, Leaf) done; grappling hooks, dashes, rocket boots pending
+- [x] No hunger: food gives Well Fed / Plenty Satisfied / Exquisitely Stuffed; no boots slot
 - [ ] Fishing
 
 ## Bosses
@@ -134,13 +135,14 @@ Boomerangs
 - [-] Ebonstone, Crimstone, evil grasses, Ebonwood, Shadewood done; Blue/Green/Pink Dungeon Brick, Spikes, Locked Gold Chest, Jungle Grass, Jungle Spores, Hive, Larva, Ash, Hellstone, Obsidian/Hellstone Brick, Hellforge, Shadow Chest done (Mud is vanilla); Pearlstone, Ash, Lihzahrd bricks pending
 
 ## Biomes
-- [ ] Forest (vanilla surface used for now)
-- [ ] Desert / Underground Desert
-- [ ] Snow / Ice caverns
+- [x] Terraria biomes only: Minecraft-only biomes are mapped onto Forest/Snow/Desert/Jungle/Ocean (`TerrariaBiomeSource`)
+- [x] Forest (vanilla forest)
+- [-] Desert (vanilla desert); Underground Desert pending
+- [-] Snow (snowy plains and boreal snowy taiga); Ice caverns pending
 - [x] Jungle / Underground Jungle (mud, jungle grass, spores; on vanilla jungle biomes)
-- [ ] Ocean
+- [x] Ocean (vanilla oceans and beaches)
 - [x] Corruption / Crimson (worldgen, chasms, orbs/hearts, altars; spread pending)
-- [ ] Glowing Mushroom
+- [-] Glowing Mushroom (vanilla mushroom fields; underground glowing mushroom caves pending)
 - [x] Dungeon (one per world, seeded location; Golden Keys, locked chests)
 - [x] Underworld (ash cavern below y=-40, lava sea, hellstone, ruined houses)
 - [ ] Hallow

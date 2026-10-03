@@ -10,12 +10,10 @@ import net.minecraft.world.entity.player.Player;
  * <p>
  * Regeneration ramps up the longer the player goes without taking damage, is faster when standing still,
  * scales with maximum life and is boosted by regeneration stats (Band of Regeneration, Regeneration potion...).
- * Minecraft's food bar is kept: an empty food bar stops natural regeneration, and a full food bar counts as
- * Terraria's "Well Fed" (see {@link com.terracraft.player.stats.WellFedSource}).
+ * In Expert mode it is halved unless the player has a food buff (see {@link FoodManager}).
  */
 public final class LifeRegenManager {
     private static final int TERRARIA_TICKS_PER_TICK = 3;
-    public static final int WELL_FED_FOOD_LEVEL = 18;
 
     private LifeRegenManager() {}
 
@@ -28,15 +26,14 @@ public final class LifeRegenManager {
             return;
         }
         PlayerStats stats = data.stats();
-        boolean starving = player.getFoodData().getFoodLevel() <= 0;
-        boolean wellFed = player.getFoodData().getFoodLevel() >= WELL_FED_FOOD_LEVEL;
+        boolean wellFed = FoodManager.isWellFed(player);
         boolean still = ManaManager.isStill(player);
         boolean expert = TerrariaDifficulty.isExpert(player.level());
         int bonusRegen = stats.getInt(Stat.LIFE_REGEN);
 
         for (int step = 0; step < TERRARIA_TICKS_PER_TICK; step++) {
             float natural = 0.0F;
-            if (!starving) {
+            {
                 data.lifeRegenTime++;
                 int t = data.lifeRegenTime;
                 if (t >= 300) natural += 1.0F;

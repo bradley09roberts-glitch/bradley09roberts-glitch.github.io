@@ -140,29 +140,27 @@ def tp(name, x, y, z, yaw, text, *extra):
     fn(f'go_{name}', *extra, f'tp @p {x} {y} {z} {yaw} 0', f'say {text}')
 
 
-surface('forest', -224, 288, 'Forest'); surface('plains', -288, 352, 'Plains'); surface('birch', -256, 224, 'Birch Forest')
-surface('dark_forest', 96, -32, 'Dark Forest'); surface('taiga', 448, -512, 'Taiga'); surface('snow', 672, -608, 'Snow')
-surface('ice_spikes', 672, -704, 'Ice Spikes'); surface('mountains', -384, -160, 'Mountains'); surface('cherry', -416, 768, 'Cherry Grove')
-surface('savanna', -800, -96, 'Savanna'); surface('desert', -2208, 640, 'Desert'); surface('ocean', 128, 384, 'Ocean')
-surface('jungle', -700, -470, 'The Jungle (mud and hives underground)'); surface('bamboo', -1024, 928, 'Bamboo Jungle')
+# Only Terraria's biomes exist (TerrariaBiomeSource): no plains, birch, taiga, savanna, swamp, badlands, cherry...
+surface('forest', -224, 288, 'Forest'); surface('forest_hills', -384, -160, 'Forest hills')
+surface('snow', 672, -608, 'Snow biome'); surface('boreal', 448, -512, 'Snow biome: boreal forest')
+surface('desert', -2208, 640, 'Desert'); surface('ocean', 128, 384, 'Ocean')
+surface('jungle', -700, -470, 'The Jungle (mud and hives underground)')
 surface('corruption', 355, 223, 'The Corruption (or Crimson): chasms lead down to Shadow Orbs')
 tp('dungeon', 104, 93, -803, 180, 'The Dungeon entrance. The Old Man waits at the door; at night his chat has a Curse button.')
 tp('dungeon_inside', 104, 69, -834, 0, 'Inside the Dungeon. Before Skeletron is beaten the Dungeon Guardian will come for you!')
 tp('hive', -654, 22, -429, 90, 'A Bee Hive. Break the Larva to summon the Queen Bee.', 'effect give @p minecraft:night_vision 600 0 true')
 tp('underworld', 40, -51, 40, 0, 'The Underworld viewing room. Throw a Guide Voodoo Doll in the lava to summon the Wall of Flesh.',
    'effect give @p minecraft:fire_resistance infinite 0 true')
-surface('swamp', -1664, -1632, 'Swamp'); surface('mangrove', -1600, -1472, 'Mangrove Swamp'); surface('badlands', -2688, 1824, 'Badlands')
-surface('mushroom', 4000, 2272, 'Mushroom Island'); surface('beach', -1120, 1536, 'Beach'); surface('spawn_ground', 0, 0, 'Spawn (on the ground)')
+surface('mushroom', 4000, 2272, 'Glowing Mushroom island'); surface('beach', -1120, 1536, 'Beach')
+surface('spawn_ground', 0, 0, 'Spawn (on the ground)')
 tp('arena', 75, Y, 0, -90, 'Boss Arena')
 tp('town', 0, Y, 36, 0, 'Town: NPCs move into these houses')
 buttons('east', 'TELEPORTS', [
-    ('Forest', 'go_forest'), ('Plains', 'go_plains'), ('Birch Forest', 'go_birch'), ('Dark Forest', 'go_dark_forest'), ('Taiga', 'go_taiga'),
-    ('Snow', 'go_snow'), ('Ice Spikes', 'go_ice_spikes'), ('Mountains', 'go_mountains'), ('Cherry Grove', 'go_cherry'),
-    ('Savanna', 'go_savanna'), ('Desert', 'go_desert'), ('Ocean', 'go_ocean'), ('Jungle', 'go_jungle'), ('Bamboo Jungle', 'go_bamboo'),
-    ('Corruption', 'go_corruption'), ('Dungeon Entrance', 'go_dungeon'), ('Inside Dungeon', 'go_dungeon_inside'), ('Bee Hive', 'go_hive'),
-    ('Underworld', 'go_underworld'), ('Swamp', 'go_swamp'), ('Mangrove Swamp', 'go_mangrove'), ('Badlands', 'go_badlands'),
-    ('Mushroom Island', 'go_mushroom'), ('Beach', 'go_beach'), ('Spawn Ground', 'go_spawn_ground'), ('Boss Arena', 'go_arena'),
-    ('Town', 'go_town'),
+    ('Forest', 'go_forest'), ('Forest Hills', 'go_forest_hills'), ('Snow', 'go_snow'), ('Boreal Forest', 'go_boreal'),
+    ('Desert', 'go_desert'), ('Ocean', 'go_ocean'), ('Beach', 'go_beach'), ('Jungle', 'go_jungle'), ('Bee Hive', 'go_hive'),
+    ('Corruption', 'go_corruption'), ('Glowing Mushroom', 'go_mushroom'), ('Dungeon Entrance', 'go_dungeon'),
+    ('Inside Dungeon', 'go_dungeon_inside'), ('Underworld', 'go_underworld'), ('Spawn Ground', 'go_spawn_ground'),
+    ('Boss Arena', 'go_arena'), ('Town', 'go_town'),
 ])
 
 # ------------------------------------------------------------------------------------------------ kits
@@ -205,6 +203,11 @@ fn('kit_potions', *give('healing_potion*20', 'mana_potion*20', 'ironskin_potion*
                         'wrath_potion*5', 'rage_potion*5', 'water_walking_potion*5'))
 fn('kit_stations', *give('work_bench', 'iron_anvil', 'minecraft:furnace', 'minecraft:brewing_stand', 'hellforge', 'tinkerers_workshop',
                          'minecraft:crafting_table'))
+fn('kit_wings', *give('fledgling_wings', 'angel_wings', 'demon_wings', 'leaf_wings', 'soul_of_light*25', 'soul_of_night*25', 'soul_of_flight*20'),
+   P + 'terraria equip terracraft:angel_wings',
+   'say Angel Wings equipped. Jump, then hold jump to fly; keep holding to glide. Swap wings in the Equipment screen.')
+fn('kit_food', *give('minecraft:apple*5', 'minecraft:bread*5', 'minecraft:cooked_beef*5', 'minecraft:golden_carrot*5', 'minecraft:rabbit_stew'),
+   'say No hunger here: food gives Well Fed, Plenty Satisfied or Exquisitely Stuffed.')
 fn('kit_coins', *give('platinum_coin*5', 'gold_coin*50'))
 fn('kit_life', *give('life_crystal*15', 'life_fruit*20', 'mana_crystal*9'))
 fn('clear_inventory', 'clear @p')
@@ -212,7 +215,8 @@ buttons('south', 'GEAR KITS', [
     ('Starter Kit', 'kit_starter'), ('Ore Kit', 'kit_ore'), ('Corruption Kit', 'kit_evil'), ('Jungle Kit', 'kit_jungle'),
     ('Dungeon Kit', 'kit_dungeon'), ('Molten Kit', 'kit_molten'), ('Meteor Kit', 'kit_meteor'), ('Hardmode Kit', 'kit_hardmode'),
     ('All Accessories', 'kit_accessories'), ('Boss Summons', 'kit_summons'), ('Potions', 'kit_potions'), ('Crafting Stations', 'kit_stations'),
-    ('Coins', 'kit_coins'), ('Life & Mana Crystals', 'kit_life'), ('Clear Inventory', 'clear_inventory'),
+    ('Wings', 'kit_wings'), ('Food Buffs', 'kit_food'), ('Coins', 'kit_coins'), ('Life & Mana Crystals', 'kit_life'),
+    ('Clear Inventory', 'clear_inventory'),
 ])
 
 # ------------------------------------------------------------------------------------------------ boss arena

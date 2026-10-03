@@ -208,6 +208,30 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - Meteorite (50% power) -> Meteorite Bar; Meteor armor (+7% magic damage per piece; set: free Space Gun);
   Space Gun (laser).
 
+### Polish pass after Stage 4 (verified in a live client)
+- **3D armor**: every set (Wood, the eight ore sets, Shadow, Crimson, Jungle, Molten, Meteor) has its own 3D model:
+  domed helmets with nasal guards, visors and crests, crowns for Gold/Platinum, the Jungle Hat's leafy brim,
+  Molten horns, the Meteor bubble helmet, Shadow spikes, the Crimson bone mask, pauldrons, bracers, knee cops and
+  boots. `tools/armor_models.py` writes the cubes (`models/armor/<set>.json`) and paints the matching texture;
+  `client.model.ArmorModels` builds the models (Forge `IClientItemExtensions#getHumanoidArmorModel`).
+- **Dungeon Bookcases** replace vanilla bookshelves in the Dungeon: right-click (or break) to take 1-3 Books, with a
+  6% chance of a Water Bolt (Water Bolts are no longer in dungeon chests). The emptied shelf stays as furniture.
+- **Mob colours** checked against Terraria: Mother/Baby Slime are black, Cave Bat blue, Jungle Bat brown, Hornet
+  orange/pink, Demon/Voodoo Demon red with grey wings, Fire Imp pink-red, Jungle Slime green, Dungeon Slime lavender,
+  Skeleton (bone + blue rags) and Angry Bones (red), tan skulls, blue Demon Eye iris, green/olive goblins, etc.
+- **No hunger**: the food bar is hidden and held just below full. Eating gives Well Fed, Plenty Satisfied or
+  Exquisitely Stuffed (by how filling the food is, 7-30 minutes); Expert life regeneration still wants a food buff.
+- **No boots slot**: Terraria armor is helmet/chest/greaves; the inventory's feet slot is disabled and hidden, and
+  boots put on any other way are moved back to the inventory.
+- **Wings** (`WingsItem`): hold jump in the air to fly for the wings' flight time, then glide; refills on landing,
+  cancels fall damage, 3D wings on the back (folded, flapping, gliding) visible to all players. Fledgling Wings
+  (underground chests), Angel/Demon Wings (Feathers + Souls), Leaf Wings. Hardmode souls: Night (underground in the
+  evil biome), Light (underground elsewhere, until the Hallow exists), Flight (flying enemies above y=150).
+- **Terraria biomes only**: new worlds use `TerrariaBiomeSource`, which maps every Minecraft-only biome onto its
+  Terraria counterpart (plains/birch/cherry/swamp/savanna -> Forest, taiga/ice spikes -> Snow, badlands -> Desert,
+  bamboo -> Jungle, cold oceans -> Ocean...). Set in the `normal`, `large_biomes` and `amplified` world presets.
+- `/terraria equip <accessory>` puts an accessory in the first free slot (tests, showcase kits).
+
 ## IN PROGRESS
 - Nothing half-finished. Stage 4 (the road to Hardmode) is complete; next is Stage 5 (Hardmode).
 
@@ -237,8 +261,11 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - Only the latest meteorite crater spawns Meteor Heads.
 - The Underworld is deadly for a fresh character (as in Terraria); tests need Obsidian Skin / fire resistance.
 - Boss loot that falls into lava burns (except the Wall of Flesh, which hands its loot to the nearest player).
-- Jungle conversion follows vanilla jungle biomes, which are smaller than Terraria's Jungle; mangrove swamps (also
-  mud) can host underground jungle enemies.
+- Jungle conversion follows the (now merged) vanilla jungle biomes, which are smaller than Terraria's Jungle.
+- Worlds created before the Terraria-biomes change keep their Minecraft biomes (the biome source is stored per world).
+- Angel/Demon Wings use the normal anvil until Stage 5 adds the Mythril/Orichalcum Anvil; Leaf Wings have no source
+  yet (Witch Doctor, Stage 5); Soul of Light drops anywhere underground until the Hallow exists.
+- Armor models replace vanilla armor rendering only for TerraCraft armor; vanilla armor still looks vanilla.
 - Locked Gold Chest loot spreads stacks over many slots (vanilla chest loot behaviour).
 - Chunks generated before a zone change keep their old layout (zone placement changed during Stage 3
   development; affects only test worlds).

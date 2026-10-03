@@ -74,6 +74,10 @@ public final class EquipmentStatSources {
             ItemStack stack = data.accessories().getItem(slot);
             if (stack.getItem() instanceof AccessoryItem accessory && seen.add(accessory)) {
                 accessory.effects().applyTo(stats);
+                if (accessory instanceof com.terracraft.item.accessory.WingsItem w
+                    && (stats.wings == null || w.flight().flightTicks() > stats.wings.flightTicks())) {
+                    stats.wings = w.flight();
+                }
                 stats.add(Stat.DEFENSE, TerraItemStats.of(stack).defense());
                 com.terracraft.item.modifier.Modifier modifier = com.terracraft.item.modifier.Modifiers.of(stack);
                 if (modifier != null) {
