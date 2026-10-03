@@ -67,3 +67,11 @@ defeat message, curse-lifted announcement and progression flag; Golden Key openi
 Locked Gold Chest with dungeon loot (Muramasa); Angry Bones and Dark Casters spawning inside after Skeletron;
 Water Bolt casting. Tip: bosses despawn without a valid survival target, so freeze them with `{NoAI:1b}` while
 a survival player stands nearby to frame screenshots.
+
+## What was verified for Stage 4b (in the live client)
+
+Seed 12345 jungle near -640 -410: mud/jungle grass/spores conversion (`/terraria worldgen scan 4`: 444k mud,
+18.8k jungle grass, 353 spores, 3 larvae, 4.1k hive blocks), hive interior (honey floor, Larva), breaking the
+Larva awakening the Queen Bee (she attacked and killed the test player), Queen Bee, Hornet, bee and Man Eater
+models, Queen Bee defeat (flag, The Bee's Knees, Bee Wax, honey, potions), The Bee's Knees firing bee arrows,
+Jungle Bats spawning underground. Not observed: natural Hornet/Man Eater spawns in a 40 s window.

@@ -34,7 +34,7 @@ Pre-hardmode
 - [x] Eye of Cthulhu
 - [x] Eater of Worlds
 - [x] Brain of Cthulhu
-- [ ] Queen Bee
+- [x] Queen Bee
 - [ ] Deerclops
 - [x] Skeletron (Old Man curse, head + hands, day enrage)
 - [ ] Wall of Flesh
@@ -56,7 +56,7 @@ Hardmode
 - [-] Slimes (Green, Blue, Red, Purple, Yellow, Black, Mother, Baby done; Jungle, Ice, Sand, Lava, Spiked... pending)
 - [-] Zombie, Demon Eye, Servant of Cthulhu (variants pending)
 - [ ] Flying Fish, Piranha, Shark, Crab
-- [ ] Jungle: Hornet, Man Eater, Snatcher, Jungle Bat, Derpling (HM)
+- [-] Jungle: Hornet, Man Eater, Snatcher, Jungle Bat, Jungle Slime done; Derpling (HM), Piranha pending
 - [ ] Desert: Antlion, Antlion Charger/Swarmer, Vulture, Tomb Crawler
 - [ ] Snow/Ice: Ice Slime, Ice Bat, Undead Viking, Snow Flinx
 - [-] Caverns: Skeleton, Cave Bat done; Giant Worm, Granite/Marble, spiders pending
@@ -78,16 +78,16 @@ Hardmode
 Melee
 - [x] Wooden Sword, Copper Shortsword
 - [x] Copper/Tin/Iron/Lead/Silver/Tungsten/Gold/Platinum Broadsword
-- [-] Light's Bane, Blood Butcherer, Muramasa done; Night's Edge, Blade of Grass, Volcano, spears, flails, yoyos pending
+- [-] Light's Bane, Blood Butcherer, Muramasa done; Blade of Grass, Bee Keeper done; Night's Edge, Volcano, spears, flails, yoyos pending
 - [ ] Hardmode and endgame melee
 Ranged
 - [x] Wooden/Copper/Iron/Gold Bow
 - [x] Flintlock Pistol
 - [-] Thrown: Shuriken, Throwing Knife (done); others not started
-- [-] Demon/Tendon Bow, Musket, The Undertaker, Handgun done; other bows/guns pending
+- [-] Demon/Tendon Bow, Musket, The Undertaker, Handgun, The Bee's Knees done; other bows/guns pending
 Magic
 - [x] Wand of Sparking, Amethyst Staff, Magic Missile
-- [-] Vilethorn, Water Bolt, Aqua Scepter, Book of Skulls done; other gem staves, tomes, magic guns pending
+- [-] Vilethorn, Water Bolt, Aqua Scepter, Book of Skulls, Bee Gun done; other gem staves, tomes, magic guns pending
 Summoner
 - [ ] Summon staffs, sentries, whips
 Boomerangs
@@ -106,14 +106,14 @@ Boomerangs
 
 ## Armour
 - [x] Wood, Copper, Tin, Iron, Lead, Silver, Tungsten, Gold, Platinum
-- [-] Shadow, Crimson done; Mining, Ninja, Fossil, Jungle, Meteor, Necro, Bee, Molten pending
+- [-] Shadow, Crimson, Jungle done; Mining, Ninja, Fossil, Meteor, Necro, Bee, Molten pending
 - [ ] Hardmode, Chlorophyte, Turtle, Spectre, Beetle, Shroomite, Spooky, Celestial armours
 
 ## Accessories
 - [x] Hermes Boots, Cloud in a Bottle, Shiny Red Balloon, Lucky Horseshoe
 - [x] Band of Regeneration, Band of Starpower, Mana Regeneration Band, Nature's Gift
 - [x] Shackle, Aglet, Anklet of the Wind, Feral Claws, Obsidian Skull, Lava Charm, Cobalt Shield
-- [x] Flipper, Water Walking Boots, Toolbelt, Panic Necklace
+- [x] Flipper, Water Walking Boots, Toolbelt, Panic Necklace, Honey Comb
 - [ ] Combination accessories (Tinkerer's Workshop), wings, dashes, emblems, Mana Flower...
 
 ## Ores and bars
@@ -125,13 +125,13 @@ Boomerangs
 
 ## Blocks
 - [x] Work Bench, Iron Anvil, Lead Anvil, Life Crystal (block)
-- [-] Ebonstone, Crimstone, evil grasses, Ebonwood, Shadewood done; Blue/Green/Pink Dungeon Brick, Spikes, Locked Gold Chest done; Pearlstone, Mud, Ash, Lihzahrd bricks pending
+- [-] Ebonstone, Crimstone, evil grasses, Ebonwood, Shadewood done; Blue/Green/Pink Dungeon Brick, Spikes, Locked Gold Chest, Jungle Grass, Jungle Spores, Hive, Larva done (Mud is vanilla); Pearlstone, Ash, Lihzahrd bricks pending
 
 ## Biomes
 - [ ] Forest (vanilla surface used for now)
 - [ ] Desert / Underground Desert
 - [ ] Snow / Ice caverns
-- [ ] Jungle / Underground Jungle
+- [x] Jungle / Underground Jungle (mud, jungle grass, spores; on vanilla jungle biomes)
 - [ ] Ocean
 - [x] Corruption / Crimson (worldgen, chasms, orbs/hearts, altars; spread pending)
 - [ ] Glowing Mushroom
@@ -147,7 +147,7 @@ Boomerangs
 - [ ] Floating Islands
 - [ ] Living Trees
 - [-] Underground loot chests (cabins pending)
-- [ ] Bee hives
+- [x] Bee hives (Larva summons Queen Bee)
 - [ ] Pyramids
 - [ ] Underworld ruins
 - [ ] Granite/Marble caves, spider caves, enchanted sword shrines
