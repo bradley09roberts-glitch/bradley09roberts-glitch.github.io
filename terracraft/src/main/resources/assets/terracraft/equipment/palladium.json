@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "terracraft:palladium"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "terracraft:palladium"
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "terracraft:orichalcum"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "terracraft:orichalcum"
+      }
+    ]
+  }
+}

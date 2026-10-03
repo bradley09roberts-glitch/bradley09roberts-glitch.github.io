@@ -2589,6 +2589,141 @@ item('soul_of_light', lambda c: draw_soul(c, '#F0A0E0'))
 item('soul_of_night', lambda c: draw_soul(c, '#8A50C8'))
 item('soul_of_flight', lambda c: draw_soul(c, '#60D8F0'))
 
+# ----------------------------------------------------------------------------------------- Hardmode (Stage 5)
+HM_METALS = {'cobalt': '#2A7AD8', 'palladium': '#E8603A', 'mythril': '#4AB8A0', 'orichalcum': '#E070C8',
+             'adamantite': '#D83040', 'titanium': '#9AA4B8'}
+METAL.update(HM_METALS)
+for _m in HM_METALS:
+    BLOCK_TEXTURES[f'{_m}_ore'] = lambda m=_m: ore_block(m, False)
+    item(f'raw_{_m}', lambda c, m=_m: draw_raw(c, metal(m), len(m) * 13))
+    item(f'{_m}_bar', lambda c, m=_m: draw_bar(c, metal(m)))
+    item(f'{_m}_pickaxe', lambda c, m=_m: draw_pickaxe(c, metal(m)), True)
+    item(f'{_m}_sword', lambda c, m=_m: draw_sword(c, metal(m), 12), True)
+    item(f'{_m}_repeater', lambda c, m=_m: draw_bow(c, metal(m)), True)
+    item(f'{_m}_helmet', lambda c, m=_m: draw_helmet(c, metal(m)))
+    item(f'{_m}_breastplate', lambda c, m=_m: draw_chest(c, metal(m)))
+    item(f'{_m}_leggings', lambda c, m=_m: draw_legs(c, metal(m)))
+BLOCKS_CUBE.extend(f'{_m}_ore' for _m in HM_METALS)
+
+
+def pearlstone_texture():
+    p = palette('#D8CCE0')
+    c = Canvas()
+    c.noise([p[2], p[2], p[3], p[1]], 901)
+    rnd = random.Random(902)
+    for _ in range(7):                        # opal glints
+        x, y = rnd.randint(0, 15), rnd.randint(0, 15)
+        c.set(x, y, rnd.choice([hexc('#9AE0F0'), hexc('#F0A0D8'), hexc('#F8F0A0')]))
+    return c
+
+
+def hallowed_grass_top():
+    p = palette('#4ACAD0')
+    c = Canvas()
+    c.noise([p[2], p[2], p[1], p[3]], 903)
+    rnd = random.Random(904)
+    for _ in range(6):
+        c.set(rnd.randint(0, 15), rnd.randint(0, 15), rnd.choice([hexc('#F0A0E0'), hexc('#F8F8A0')]))
+    return c
+
+
+def hallowed_grass_side():
+    c = Canvas()
+    dirt = palette('#79553A')
+    c.noise([dirt[2], dirt[2], dirt[1], dirt[3]], 905)
+    p = palette('#4ACAD0')
+    rnd = random.Random(906)
+    for x in range(16):
+        for y in range(3 + rnd.randint(0, 2)):
+            c.set(x, y, rnd.choice([p[2], p[1], p[3]]))
+    return c
+
+
+def pearlsand_texture():
+    p = palette('#E0C8E0')
+    c = Canvas()
+    c.noise([p[2], p[2], p[3], p[1]], 907)
+    return c
+
+
+def hallowed_leaves_texture():
+    c = Canvas()
+    rnd = random.Random(908)
+    colours = [hexc('#F088C8'), hexc('#88D8F0'), hexc('#F8E088'), hexc('#B8F0A0')]
+    for x in range(16):
+        for y in range(16):
+            if rnd.random() < 0.8:
+                col = rnd.choice(colours)
+                c.set(x, y, shade(col, rnd.choice((0.8, 1.0, 1.1))))
+    return c
+
+
+def forge_texture(m):
+    c = metal_block(m, len(m) * 7)
+    fire = palette('#FF7A20')
+    c.rect(4, 7, 11, 13, (30, 10, 10, 255))
+    for x in range(5, 11):
+        for y in range(9, 13):
+            if (x + y) % 3:
+                c.set(x, y, fire[3] if y > 10 else fire[4])
+    return c
+
+
+BLOCK_TEXTURES['pearlstone'] = pearlstone_texture
+BLOCK_TEXTURES['hallowed_grass_top'] = hallowed_grass_top
+BLOCK_TEXTURES['hallowed_grass_side'] = hallowed_grass_side
+BLOCK_TEXTURES['pearlsand'] = pearlsand_texture
+BLOCK_TEXTURES['pearlwood'] = lambda: bark('#D8C8A0', 909)
+BLOCK_TEXTURES['pearlwood_top'] = lambda: log_top('#E8D8B0', 910)
+BLOCK_TEXTURES['hallowed_leaves'] = hallowed_leaves_texture
+BLOCK_TEXTURES['mythril_anvil'] = lambda: metal_block('mythril', 911)
+BLOCK_TEXTURES['orichalcum_anvil'] = lambda: metal_block('orichalcum', 912)
+BLOCK_TEXTURES['adamantite_forge'] = lambda: forge_texture('adamantite')
+BLOCK_TEXTURES['titanium_forge'] = lambda: forge_texture('titanium')
+
+
+def hardmode_block_assets():
+    for name in ('pearlstone', 'pearlsand') + tuple(f'{m}_ore' for m in HM_METALS):
+        write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': {'': {'model': f'terracraft:block/{name}'}}})
+        write_json(os.path.join(ASSETS, 'models/block', name + '.json'), {'parent': 'minecraft:block/cube_all', 'textures': {'all': f'terracraft:block/{name}'}})
+        write_json(os.path.join(ASSETS, 'items', name + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{name}'}})
+    write_json(os.path.join(ASSETS, 'blockstates/hallowed_grass.json'), {'variants': {'': {'model': 'terracraft:block/hallowed_grass'}}})
+    write_json(os.path.join(ASSETS, 'models/block/hallowed_grass.json'), {'parent': 'minecraft:block/cube_bottom_top', 'textures': {
+        'top': 'terracraft:block/hallowed_grass_top', 'side': 'terracraft:block/hallowed_grass_side', 'bottom': 'minecraft:block/dirt'}})
+    write_json(os.path.join(ASSETS, 'items/hallowed_grass.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/hallowed_grass'}})
+    write_json(os.path.join(ASSETS, 'models/block/pearlwood.json'), {'parent': 'minecraft:block/cube_column',
+               'textures': {'end': 'terracraft:block/pearlwood_top', 'side': 'terracraft:block/pearlwood'}})
+    write_json(os.path.join(ASSETS, 'models/block/pearlwood_horizontal.json'), {'parent': 'minecraft:block/cube_column_horizontal',
+               'textures': {'end': 'terracraft:block/pearlwood_top', 'side': 'terracraft:block/pearlwood'}})
+    write_json(os.path.join(ASSETS, 'blockstates/pearlwood.json'), {'variants': {
+        'axis=y': {'model': 'terracraft:block/pearlwood'},
+        'axis=z': {'model': 'terracraft:block/pearlwood_horizontal', 'x': 90},
+        'axis=x': {'model': 'terracraft:block/pearlwood_horizontal', 'x': 90, 'y': 90}}})
+    write_json(os.path.join(ASSETS, 'items/pearlwood.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/pearlwood'}})
+    write_json(os.path.join(ASSETS, 'models/block/hallowed_leaves.json'), {'parent': 'minecraft:block/cube_all', 'render_type': 'minecraft:cutout_mipped',
+               'textures': {'all': 'terracraft:block/hallowed_leaves'}})
+    write_json(os.path.join(ASSETS, 'blockstates/hallowed_leaves.json'), {'variants': {'': {'model': 'terracraft:block/hallowed_leaves'}}})
+    write_json(os.path.join(ASSETS, 'items/hallowed_leaves.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/hallowed_leaves'}})
+    faces = ['north', 'south', 'east', 'west', 'up', 'down']
+    for anvil in ('mythril_anvil', 'orichalcum_anvil'):
+        write_json(os.path.join(ASSETS, f'models/block/{anvil}.json'), {
+            'parent': 'minecraft:block/block', 'textures': {'particle': f'terracraft:block/{anvil}', 'metal': f'terracraft:block/{anvil}'},
+            'elements': [
+                {'from': [2, 0, 3], 'to': [14, 4, 13], 'faces': {f: {'texture': '#metal'} for f in faces}},
+                {'from': [5, 4, 5], 'to': [11, 9, 11], 'faces': {f: {'texture': '#metal'} for f in faces[:4]}},
+                {'from': [0, 9, 2], 'to': [16, 15, 14], 'faces': {f: {'texture': '#metal'} for f in faces}}]})
+    for forge in ('adamantite_forge', 'titanium_forge'):
+        write_json(os.path.join(ASSETS, f'models/block/{forge}.json'), {'parent': 'minecraft:block/block', 'textures': {
+            'particle': f'terracraft:block/{forge}', 'all': f'terracraft:block/{forge}'},
+            'elements': [{'from': [0, 0, 1], 'to': [16, 14, 15], 'faces': {f: {'texture': '#all'} for f in faces}}]})
+    for name in ('mythril_anvil', 'orichalcum_anvil', 'adamantite_forge', 'titanium_forge'):
+        write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': {'': {'model': f'terracraft:block/{name}'}}})
+        write_json(os.path.join(ASSETS, 'items', name + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{name}'}})
+
+
+HM_BLOCKS = ['pearlstone', 'hallowed_grass', 'pearlsand', 'pearlwood', 'hallowed_leaves', 'mythril_anvil', 'orichalcum_anvil',
+             'adamantite_forge', 'titanium_forge'] + [f'{m}_ore' for m in HM_METALS]
+
 
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
@@ -2605,7 +2740,7 @@ def check_registered_items():
                                              'ebonwood', 'shadewood', 'ebonwood_leaves', 'shadewood_leaves'} | set(BRICKS) | {'spikes', 'locked_gold_chest', 'jungle_grass',
                                                                                         'jungle_spores_plant', 'hive', 'larva', 'ash', 'hellstone',
                                                                                         'obsidian_brick', 'hellstone_brick', 'hellforge', 'locked_shadow_chest',
-                                                                                        'meteorite', 'tinkerers_workshop', 'dungeon_bookshelf'}
+                                                                                        'meteorite', 'tinkerers_workshop', 'dungeon_bookshelf'} | set(HM_BLOCKS)
     missing = sorted(i for i in ids if i not in known and not i.endswith("_"))
     if missing:
         print('ERROR: items without generated assets:', missing)
@@ -2640,6 +2775,7 @@ def main():
     jungle_block_assets()
     underworld_block_assets()
     goblin_block_assets()
+    hardmode_block_assets()
     for name, drawer in PROJECTILES.items():
         c = Canvas()
         drawer(c)

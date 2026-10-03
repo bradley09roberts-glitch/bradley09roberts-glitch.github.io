@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:mythril_breastplate",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:mythril_bar",
+      "count": 15
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "armor"
+}

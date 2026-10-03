@@ -145,6 +145,21 @@ public final class WeaponContent {
 
     public static void init() {}
 
+
+    // ---------------------------------------------------------------- Hardmode ore weapons (stage 5)
+    public static final RegistryObject<MeleeWeaponItem> COBALT_SWORD = sword("cobalt_sword", 39, 22, 5.5F, 0, TerraRarity.LIGHT_RED, 13500);
+    public static final RegistryObject<RangedWeaponItem> COBALT_REPEATER = bow("cobalt_repeater", 32, 20, 2.0F, 10.0F, TerraRarity.LIGHT_RED, 13500);
+    public static final RegistryObject<MeleeWeaponItem> PALLADIUM_SWORD = sword("palladium_sword", 43, 22, 5.5F, 0, TerraRarity.LIGHT_RED, 18400);
+    public static final RegistryObject<RangedWeaponItem> PALLADIUM_REPEATER = bow("palladium_repeater", 35, 20, 2.0F, 10.0F, TerraRarity.LIGHT_RED, 18400);
+    public static final RegistryObject<MeleeWeaponItem> MYTHRIL_SWORD = sword("mythril_sword", 47, 22, 5.5F, 0, TerraRarity.LIGHT_RED, 22000);
+    public static final RegistryObject<RangedWeaponItem> MYTHRIL_REPEATER = bow("mythril_repeater", 37, 20, 2.0F, 10.0F, TerraRarity.LIGHT_RED, 22000);
+    public static final RegistryObject<MeleeWeaponItem> ORICHALCUM_SWORD = sword("orichalcum_sword", 52, 22, 5.5F, 0, TerraRarity.LIGHT_RED, 26000);
+    public static final RegistryObject<RangedWeaponItem> ORICHALCUM_REPEATER = bow("orichalcum_repeater", 39, 20, 2.0F, 10.0F, TerraRarity.LIGHT_RED, 26000);
+    public static final RegistryObject<MeleeWeaponItem> ADAMANTITE_SWORD = sword("adamantite_sword", 56, 22, 5.5F, 0, TerraRarity.LIGHT_RED, 29000);
+    public static final RegistryObject<RangedWeaponItem> ADAMANTITE_REPEATER = bow("adamantite_repeater", 41, 20, 2.0F, 10.0F, TerraRarity.LIGHT_RED, 29000);
+    public static final RegistryObject<MeleeWeaponItem> TITANIUM_SWORD = sword("titanium_sword", 60, 22, 5.5F, 0, TerraRarity.LIGHT_RED, 32000);
+    public static final RegistryObject<RangedWeaponItem> TITANIUM_REPEATER = bow("titanium_repeater", 42, 20, 2.0F, 10.0F, TerraRarity.LIGHT_RED, 32000);
+
     private static RegistryObject<MeleeWeaponItem> sword(String name, int damage, int useTime, float knockback, int crit, TerraRarity rarity, int value) {
         TerraItemStats stats = TerraItemStats.builder().melee(damage).useTime(useTime).knockback(knockback).crit(crit).rarity(rarity).value(value).build();
         return ModItems.register(name, TabGroup.WEAPONS, MeleeWeaponItem::new, p -> WeaponProperties.melee(p, stats));

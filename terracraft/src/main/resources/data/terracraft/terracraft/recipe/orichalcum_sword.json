@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:orichalcum_sword",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:orichalcum_bar",
+      "count": 15
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "weapons"
+}

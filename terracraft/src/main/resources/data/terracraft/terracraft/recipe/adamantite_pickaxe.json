@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:adamantite_pickaxe",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:adamantite_bar",
+      "count": 15
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "tools"
+}

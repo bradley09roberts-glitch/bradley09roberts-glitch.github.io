@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:mythril_repeater",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:mythril_bar",
+      "count": 10
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "weapons"
+}

@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:titanium_bar",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:raw_titanium",
+      "count": 4
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_forge"
+  ],
+  "category": "materials"
+}

@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:titanium_sword",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:titanium_bar",
+      "count": 13
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "weapons"
+}

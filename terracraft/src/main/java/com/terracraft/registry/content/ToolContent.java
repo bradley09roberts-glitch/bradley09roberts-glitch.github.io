@@ -49,7 +49,22 @@ public final class ToolContent {
         p -> TerrariaToolItem.properties(p, TerraItemStats.builder().melee(26).useTime(27).knockback(7.5F).hammer(80)
             .rarity(TerraRarity.LIGHT_RED).value(78000).build(), 9.0F));
 
+
+    // Hardmode pickaxes (stage 5): mine the next ore tier
+    public static final RegistryObject<TerrariaToolItem> COBALT_PICKAXE = hardmodePickaxe("cobalt_pickaxe", 110, 15, TerraRarity.LIGHT_RED, 13500);
+    public static final RegistryObject<TerrariaToolItem> PALLADIUM_PICKAXE = hardmodePickaxe("palladium_pickaxe", 130, 18, TerraRarity.LIGHT_RED, 18400);
+    public static final RegistryObject<TerrariaToolItem> MYTHRIL_PICKAXE = hardmodePickaxe("mythril_pickaxe", 150, 21, TerraRarity.LIGHT_RED, 22000);
+    public static final RegistryObject<TerrariaToolItem> ORICHALCUM_PICKAXE = hardmodePickaxe("orichalcum_pickaxe", 165, 23, TerraRarity.LIGHT_RED, 26000);
+    public static final RegistryObject<TerrariaToolItem> ADAMANTITE_PICKAXE = hardmodePickaxe("adamantite_pickaxe", 180, 25, TerraRarity.LIGHT_RED, 29000);
+    public static final RegistryObject<TerrariaToolItem> TITANIUM_PICKAXE = hardmodePickaxe("titanium_pickaxe", 190, 27, TerraRarity.LIGHT_RED, 32000);
+
     private ToolContent() {}
+
+    private static RegistryObject<TerrariaToolItem> hardmodePickaxe(String name, int power, int damage, TerraRarity rarity, int value) {
+        return ModItems.register(name, TabGroup.TOOLS_ARMOR, TerrariaToolItem::new,
+            p -> TerrariaToolItem.properties(p, TerraItemStats.builder().melee(damage).useTime(16).knockback(3.0F).pickaxe(power)
+                .rarity(rarity).value(value).build(), 10.0F + power / 50.0F));
+    }
 
     public static void init() {}
 

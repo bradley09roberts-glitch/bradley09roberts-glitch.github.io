@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:adamantite_repeater",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:adamantite_bar",
+      "count": 12
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "weapons"
+}

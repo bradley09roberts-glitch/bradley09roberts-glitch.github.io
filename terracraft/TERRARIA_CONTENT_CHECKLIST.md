@@ -21,8 +21,8 @@ Legend: `[ ]` not started, `[-]` partial, `[x]` complete (implemented and usable
 - [x] Boss framework
 - [x] NPC framework, housing, shops
 - [-] Event framework (Blood Moon, Slime Rain done; invasions and moons pending)
-- [ ] Biome spread (Corruption/Crimson/Hallow)
-- [ ] Hardmode world transformation
+- [x] Biome spread (Corruption/Crimson/Hallow; Hardmode only, near players)
+- [x] Hardmode world transformation (Hallow + evil V-stripes, altar ore blessings)
 - [ ] Modifiers / reforging
 - [ ] Minions / sentries / whips
 - [-] Wings (flight, glide, 3D wings; Fledgling, Angel, Demon, Leaf) done; grappling hooks, dashes, rocket boots pending
@@ -128,7 +128,8 @@ Boomerangs
 - [x] Tin, Lead, Silver, Tungsten, Platinum (ore, deepslate ore, raw, bar)
 - [x] World ore-pair choice (worldgen honours it)
 - [x] Demonite/Crimtane ore (worldgen + bosses) and bars; Hellstone done (Hellforge); Meteorite done (craters); Obsidian gate done
-- [ ] Cobalt/Palladium, Mythril/Orichalcum, Adamantite/Titanium, Chlorophyte, Luminite
+- [x] Cobalt/Palladium, Mythril/Orichalcum, Adamantite/Titanium (ore, raw, bar, pickaxe, sword, repeater, armor)
+- [ ] Chlorophyte, Luminite
 
 ## Blocks
 - [x] Work Bench, Iron Anvil, Lead Anvil, Life Crystal (block)
@@ -145,7 +146,7 @@ Boomerangs
 - [-] Glowing Mushroom (vanilla mushroom fields; underground glowing mushroom caves pending)
 - [x] Dungeon (one per world, seeded location; Golden Keys, locked chests)
 - [x] Underworld (ash cavern below y=-40, lava sea, hellstone, ruined houses)
-- [ ] Hallow
+- [x] Hallow (pearlstone, hallowed grass, pearlsand, pearlwood, hallowed leaves; enemies pending)
 - [ ] Space / floating islands
 - [-] Terraria depth layers (`TerrariaLayer` height bands defined)
 
@@ -183,8 +184,8 @@ Boomerangs
 ## Crafting stations
 - [x] Work Bench, Furnace (vanilla furnace/blast furnace), Iron/Lead Anvil (+ vanilla anvils),
       Alchemy (brewing stand as Placed Bottle stand-in), Loom (vanilla loom)
-- [ ] Sawmill, Placed Bottle, Hellforge, Demon/Crimson Altar, Tinkerer's Workshop,
-      Mythril/Orichalcum Anvil, Adamantite/Titanium Forge, Ancient Manipulator, Crystal Ball...
+- [x] Hellforge, Demon/Crimson Altar, Tinkerer's Workshop, Mythril/Orichalcum Anvil, Adamantite/Titanium Forge
+- [ ] Sawmill, Placed Bottle, Ancient Manipulator, Crystal Ball...
 
 ## Materials
 - [x] Gel, Lens, Fallen Star (falling at night), Amethyst, Life Crystals in caves

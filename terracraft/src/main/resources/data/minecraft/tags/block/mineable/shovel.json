@@ -3,6 +3,8 @@
     "terracraft:corrupt_grass",
     "terracraft:crimson_grass",
     "terracraft:jungle_grass",
-    "terracraft:ash"
+    "terracraft:ash",
+    "terracraft:hallowed_grass",
+    "terracraft:pearlsand"
   ]
 }

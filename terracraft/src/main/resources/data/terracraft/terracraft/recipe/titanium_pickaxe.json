@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:titanium_pickaxe",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:titanium_bar",
+      "count": 16
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "tools"
+}

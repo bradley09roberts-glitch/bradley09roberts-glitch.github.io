@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:adamantite_helmet",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:adamantite_bar",
+      "count": 9
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "armor"
+}

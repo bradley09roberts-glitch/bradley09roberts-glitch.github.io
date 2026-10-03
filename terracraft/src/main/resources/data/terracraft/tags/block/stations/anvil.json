@@ -2,6 +2,8 @@
   "values": [
     "terracraft:iron_anvil",
     "terracraft:lead_anvil",
+    "terracraft:mythril_anvil",
+    "terracraft:orichalcum_anvil",
     "minecraft:anvil",
     "minecraft:chipped_anvil",
     "minecraft:damaged_anvil"

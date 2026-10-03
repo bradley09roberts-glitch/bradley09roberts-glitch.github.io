@@ -8,6 +8,7 @@ buckles, rolled sleeves, scuffed knees and laced boots. Zombies get torn clothes
 Layout is the vanilla skin layout (head 0,0; hat 32,0; body 16,16; right arm 40,16; right leg 0,16); goblin
 ears use the free area at 56,16. Original art only.
 """
+import zlib
 import random
 
 from pixelart import hexc, shade
@@ -133,7 +134,7 @@ def skin_texture(skin, hair, shirt, pants, shoes='#3A2A20', eyes=(30, 30, 40, 25
                  apron=None, collar=None):
     """Returns a painter for a 64x64 humanoid skin. Colours are hex strings; eyes is the iris RGBA."""
     def paint(c):
-        P = Painter(c, hash((skin, hair, shirt, pants)) & 0xFFFF)
+        P = Painter(c, zlib.crc32(repr((skin, hair, shirt, pants)).encode()) & 0xFFFF)
         sk, hr, sh, pa, sho = hexc(skin), hexc(hair), hexc(shirt), hexc(pants), hexc(shoes)
         rnd = P.rnd
         eye_col = iris if iris is not None else eyes

@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:palladium_bar",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:raw_palladium",
+      "count": 4
+    }
+  ],
+  "stations": [
+    "terracraft:furnace"
+  ],
+  "category": "materials"
+}

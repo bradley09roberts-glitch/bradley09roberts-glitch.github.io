@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:cobalt_sword",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:cobalt_bar",
+      "count": 15
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

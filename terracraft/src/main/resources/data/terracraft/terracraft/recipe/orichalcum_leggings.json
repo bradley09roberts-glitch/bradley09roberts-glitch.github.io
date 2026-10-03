@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:orichalcum_leggings",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:orichalcum_bar",
+      "count": 16
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "armor"
+}

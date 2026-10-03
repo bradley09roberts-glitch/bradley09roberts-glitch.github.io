@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:mythril_bar",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:raw_mythril",
+      "count": 4
+    }
+  ],
+  "stations": [
+    "terracraft:furnace"
+  ],
+  "category": "materials"
+}

@@ -1,0 +1,14 @@
+{
+  "result": {
+    "item": "minecraft:birch_planks",
+    "count": 4
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:pearlwood",
+      "count": 1
+    }
+  ],
+  "stations": [],
+  "category": "materials"
+}

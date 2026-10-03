@@ -1,0 +1,7 @@
+{
+  "pickaxe_power": 100,
+  "blocks": [
+    "terracraft:cobalt_ore",
+    "terracraft:palladium_ore"
+  ]
+}

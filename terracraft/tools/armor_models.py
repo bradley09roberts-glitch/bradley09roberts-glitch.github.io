@@ -361,9 +361,79 @@ def meteor_set():
     return a
 
 
+def cobalt_set():
+    # Cobalt: blue scale-like plates with a pointed, open-faced helm and a tall fin
+    a = ore('cobalt', '#2A6AD0', accent='#7AB0F8', trim='#1A2A50')
+    open_helmet(a, 'scale', edge='accent')
+    a.add('head', 'head', (-0.5, -12, -4), (1, 4, 8), mat='accent', pattern='plate')
+    a.add('head', 'head', (-4.5, -9, -5.4), (9, 2, 2), mat='main', pattern='scale', edge='accent')
+    torso(a, base='scale', plate='scale', pads='big')
+    greaves(a, base='scale', plate='scale')
+    return a
+
+
+def palladium_set():
+    # Palladium: orange-gold plate with a closed visored helm and broad pauldrons
+    a = ore('palladium', '#E0602A', accent='#F8C060', gem='#FFE0A0')
+    closed_helmet(a, 'visor', edge='accent')
+    a.add('head', 'head', (-4.5, -10, -4.5), (9, 2, 9), mat='accent', edge='dark_edge')
+    a.add('head', 'head', (-0.5, -9, -5.5), (1, 1, 1), mat='gem', pattern='gem')
+    torso(a, gem='gem', pads='big')
+    greaves(a)
+    return a
+
+
+def mythril_set():
+    # Mythril: teal-green knightly hood with a slit helm and a swept crest
+    a = ore('mythril', '#3AA890', accent='#9AF0D0', trim='#1E4A40', gem='#F0F0A0')
+    closed_helmet(a, 'slit', edge='accent')
+    crest(a, 'accent', n=3, tall=5)
+    torso(a, gem='gem', pads='big')
+    greaves(a)
+    return a
+
+
+def orichalcum_set():
+    # Orichalcum: pink plate with a flower-petal open helm and leaf pauldrons
+    a = ore('orichalcum', '#D860B8', accent='#F8B0E8', trim='#6A2050', gem='#80F0A0')
+    open_helmet(a, edge='accent')
+    for side in (-1, 1):
+        x = -6 if side < 0 else 5
+        a.add('head', 'head', (x, -11, -2), (1, 5, 4), mat='accent', pattern='feather', pivot=[x + 0.5, -7, 0], rot=[-0.2, 0, 0.4 * side])
+    a.add('head', 'head', (-0.5, -9.4, -5.4), (1, 2, 1), mat='gem', pattern='gem')
+    torso(a, gem='gem', pads='big')
+    greaves(a)
+    return a
+
+
+def adamantite_set():
+    # Adamantite: crimson heavy plate, fully closed horned helm
+    a = ore('adamantite', '#C82838', accent='#F06070', trim='#3A1018', horn='#E8D8C8')
+    closed_helmet(a, 'slit', inflate=1.3, edge='accent')
+    for side in (-1, 1):
+        x = -6 if side < 0 else 5
+        a.add('head', 'head', (x, -12, -1), (1, 5, 2), mat='horn', pattern='horn', pivot=[x + 0.5, -7, 0], rot=[-0.3, 0, 0.55 * side])
+    torso(a, pads='big')
+    a.pair('chest', 'right_arm', (-5, -6, -0.5), (1, 3, 1), mat='accent', pivot=[-3, -3, 0], rot=[0, 0, -0.5])
+    greaves(a)
+    return a
+
+
+def titanium_set():
+    # Titanium: dark steel-grey plate with a sleek closed visor and a glowing eye slit
+    a = ore('titanium', '#8C96A8', accent='#C8D0E0', trim='#2A2E38', glow='#80E0FF')
+    closed_helmet(a, 'visor', inflate=1.3, edge='accent')
+    a.add('head', 'head', (-0.5, -11, -4.5), (1, 3, 9), mat='accent')
+    a.add('head', 'head', (-3, -5.2, -5.6), (6, 1, 1), mat='glow', pattern='gem')
+    torso(a, gem='glow', pads='big')
+    greaves(a)
+    return a
+
+
 def all_sets():
     return [wood_set(), copper_set(), tin_set(), iron_set(), lead_set(), silver_set(), tungsten_set(), gold_set(), platinum_set(),
-            shadow_set(), crimson_set(), jungle_set(), molten_set(), meteor_set()]
+            shadow_set(), crimson_set(), jungle_set(), molten_set(), meteor_set(),
+            cobalt_set(), palladium_set(), mythril_set(), orichalcum_set(), adamantite_set(), titanium_set()]
 
 
 # ----------------------------------------------------------------------------------------- UV packing

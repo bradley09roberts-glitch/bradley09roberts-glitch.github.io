@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:palladium_leggings",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:palladium_bar",
+      "count": 16
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

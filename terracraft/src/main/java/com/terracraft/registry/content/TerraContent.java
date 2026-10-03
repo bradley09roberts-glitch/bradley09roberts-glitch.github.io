@@ -22,5 +22,6 @@ public final class TerraContent {
         UnderworldContent.init();
         GoblinContent.init();
         MeteorContent.init();
+        HardmodeContent.init();
     }
 }

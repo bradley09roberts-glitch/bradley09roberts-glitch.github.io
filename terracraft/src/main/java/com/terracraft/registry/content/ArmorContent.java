@@ -65,6 +65,21 @@ public final class ArmorContent {
             StatEffects.builder().add(Stat.MAGIC_DAMAGE, 0.07F).build()},
         StatEffects.builder().ability(com.terracraft.player.stats.Ability.FREE_SPACE_GUN).build(), TerraRarity.BLUE, 9000);
 
+
+    // Hardmode ore armor (stage 5): helmet, chest, leggings; set bonuses after Terraria's melee/ranged/magic mix
+    public static final ArmorPieces COBALT = named("cobalt", new String[]{"cobalt_helmet", "cobalt_breastplate", "cobalt_leggings"}, new int[]{11, 8, 7},
+        new StatEffects[]{StatEffects.builder().add(Stat.DAMAGE, 0.03F).build(), StatEffects.builder().add(Stat.DAMAGE, 0.03F).build(), StatEffects.builder().add(Stat.DAMAGE, 0.03F).build()}, StatEffects.builder().add(Stat.MELEE_SPEED, 0.15F).add(Stat.AMMO_CONSERVATION, 0.2F).build(), TerraRarity.LIGHT_RED, 30000);
+    public static final ArmorPieces PALLADIUM = named("palladium", new String[]{"palladium_helmet", "palladium_breastplate", "palladium_leggings"}, new int[]{14, 10, 8},
+        new StatEffects[]{StatEffects.builder().add(Stat.DAMAGE, 0.03F).build(), StatEffects.builder().add(Stat.DAMAGE, 0.03F).build(), StatEffects.builder().add(Stat.DAMAGE, 0.03F).build()}, StatEffects.builder().add(Stat.LIFE_REGEN, 6).build(), TerraRarity.LIGHT_RED, 30000);
+    public static final ArmorPieces MYTHRIL = named("mythril", new String[]{"mythril_helmet", "mythril_breastplate", "mythril_leggings"}, new int[]{16, 12, 10},
+        new StatEffects[]{StatEffects.builder().add(Stat.CRIT, 3).build(), StatEffects.builder().add(Stat.CRIT, 3).build(), StatEffects.builder().add(Stat.CRIT, 3).build()}, StatEffects.builder().add(Stat.CRIT, 10).build(), TerraRarity.LIGHT_RED, 30000);
+    public static final ArmorPieces ORICHALCUM = named("orichalcum", new String[]{"orichalcum_helmet", "orichalcum_breastplate", "orichalcum_leggings"}, new int[]{16, 14, 11},
+        new StatEffects[]{StatEffects.builder().add(Stat.CRIT, 3).build(), StatEffects.builder().add(Stat.CRIT, 3).build(), StatEffects.builder().add(Stat.CRIT, 3).build()}, StatEffects.builder().add(Stat.DAMAGE, 0.08F).add(Stat.MOVE_SPEED, 0.1F).build(), TerraRarity.LIGHT_RED, 30000);
+    public static final ArmorPieces ADAMANTITE = named("adamantite", new String[]{"adamantite_helmet", "adamantite_breastplate", "adamantite_leggings"}, new int[]{22, 14, 13},
+        new StatEffects[]{StatEffects.builder().add(Stat.DAMAGE, 0.04F).build(), StatEffects.builder().add(Stat.DAMAGE, 0.04F).build(), StatEffects.builder().add(Stat.DAMAGE, 0.04F).build()}, StatEffects.builder().add(Stat.MELEE_SPEED, 0.18F).add(Stat.MOVE_SPEED, 0.18F).build(), TerraRarity.LIGHT_RED, 30000);
+    public static final ArmorPieces TITANIUM = named("titanium", new String[]{"titanium_helmet", "titanium_breastplate", "titanium_leggings"}, new int[]{23, 16, 12},
+        new StatEffects[]{StatEffects.builder().add(Stat.DAMAGE, 0.04F).build(), StatEffects.builder().add(Stat.DAMAGE, 0.04F).build(), StatEffects.builder().add(Stat.DAMAGE, 0.04F).build()}, StatEffects.builder().add(Stat.ENDURANCE, 0.1F).add(Stat.DAMAGE, 0.05F).build(), TerraRarity.LIGHT_RED, 30000);
+
     private ArmorContent() {}
 
     /** A set whose pieces have their own Terraria names and per-piece bonuses. */

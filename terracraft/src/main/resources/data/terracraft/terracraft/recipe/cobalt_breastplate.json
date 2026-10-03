@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:cobalt_breastplate",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:cobalt_bar",
+      "count": 20
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

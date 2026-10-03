@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:orichalcum_bar",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:raw_orichalcum",
+      "count": 5
+    }
+  ],
+  "stations": [
+    "terracraft:furnace"
+  ],
+  "category": "materials"
+}

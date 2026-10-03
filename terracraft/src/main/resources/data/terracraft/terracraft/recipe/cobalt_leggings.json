@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:cobalt_leggings",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:cobalt_bar",
+      "count": 16
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

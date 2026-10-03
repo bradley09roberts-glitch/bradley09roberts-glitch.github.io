@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:orichalcum_anvil",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:orichalcum_bar",
+      "count": 12
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "furniture"
+}

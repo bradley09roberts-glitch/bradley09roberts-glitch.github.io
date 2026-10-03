@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "terracraft:block/pearlwood"
+    },
+    "axis=z": {
+      "model": "terracraft:block/pearlwood_horizontal",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "terracraft:block/pearlwood_horizontal",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

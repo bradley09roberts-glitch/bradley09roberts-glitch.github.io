@@ -1,5 +1,7 @@
 {
   "values": [
-    "terracraft:hellforge"
+    "terracraft:hellforge",
+    "terracraft:adamantite_forge",
+    "terracraft:titanium_forge"
   ]
 }

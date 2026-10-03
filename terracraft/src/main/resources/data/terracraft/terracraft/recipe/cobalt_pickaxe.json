@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:cobalt_pickaxe",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:cobalt_bar",
+      "count": 18
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "tools"
+}

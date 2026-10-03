@@ -1,6 +1,9 @@
 {
   "values": [
     "minecraft:furnace",
-    "minecraft:blast_furnace"
+    "minecraft:blast_furnace",
+    "terracraft:hellforge",
+    "terracraft:adamantite_forge",
+    "terracraft:titanium_forge"
   ]
 }

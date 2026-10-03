@@ -1,0 +1,7 @@
+{
+  "pickaxe_power": 110,
+  "blocks": [
+    "terracraft:mythril_ore",
+    "terracraft:orichalcum_ore"
+  ]
+}

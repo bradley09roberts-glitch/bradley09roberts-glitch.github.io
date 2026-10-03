@@ -26,6 +26,17 @@
     "terracraft:obsidian_brick",
     "terracraft:hellstone_brick",
     "terracraft:hellforge",
-    "terracraft:meteorite"
+    "terracraft:meteorite",
+    "terracraft:cobalt_ore",
+    "terracraft:palladium_ore",
+    "terracraft:mythril_ore",
+    "terracraft:orichalcum_ore",
+    "terracraft:adamantite_ore",
+    "terracraft:titanium_ore",
+    "terracraft:pearlstone",
+    "terracraft:mythril_anvil",
+    "terracraft:orichalcum_anvil",
+    "terracraft:adamantite_forge",
+    "terracraft:titanium_forge"
   ]
 }

@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:mythril_pickaxe",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:mythril_bar",
+      "count": 13
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "tools"
+}

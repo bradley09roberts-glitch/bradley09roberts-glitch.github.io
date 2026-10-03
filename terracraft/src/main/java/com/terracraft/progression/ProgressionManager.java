@@ -39,7 +39,6 @@ public final class ProgressionManager {
     private static final Map<ProgressionFlag, ChatFormatting> ANNOUNCEMENTS = Map.of(
         ProgressionFlags.HARDMODE, ChatFormatting.LIGHT_PURPLE,
         ProgressionFlags.ORB_SMASHED, ChatFormatting.DARK_PURPLE,
-        ProgressionFlags.ALTAR_SMASHED, ChatFormatting.DARK_PURPLE,
         ProgressionFlags.PLANTERA, ChatFormatting.GREEN,
         ProgressionFlags.GOLEM, ChatFormatting.GOLD,
         ProgressionFlags.CELESTIAL_EVENTS, ChatFormatting.AQUA,

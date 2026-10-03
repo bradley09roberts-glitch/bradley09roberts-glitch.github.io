@@ -69,8 +69,8 @@ def evil_blocks():
     write(f'{NS}/tags/block/evil/crimson.json', {'values': crimson})
     write(f'{NS}/tags/block/evil/all.json', {'values': corruption + crimson})
     write(f'{NS}/tags/block/stations/demon_altar.json', {'values': [t('demon_altar'), t('crimson_altar')]})
-    write('minecraft/tags/block/mineable/shovel.json', {'values': [t('corrupt_grass'), t('crimson_grass'), t('jungle_grass'), t('ash')]})
-    write('minecraft/tags/block/mineable/axe.json', {'values': [t('work_bench'), t('ebonwood'), t('shadewood'), t('tinkerers_workshop'), t('dungeon_bookshelf')]})
+    write('minecraft/tags/block/mineable/shovel.json', {'values': [t('corrupt_grass'), t('crimson_grass'), t('jungle_grass'), t('ash'), t('hallowed_grass'), t('pearlsand')]})
+    write('minecraft/tags/block/mineable/axe.json', {'values': [t('work_bench'), t('ebonwood'), t('shadewood'), t('tinkerers_workshop'), t('dungeon_bookshelf'), t('pearlwood')]})
     write('minecraft/tags/block/mineable/hoe.json', {'values': [t('ebonwood_leaves'), t('shadewood_leaves')]})
     balls = {'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('musket_ball'), 'functions': [{'function': 'minecraft:set_count', 'count': 100}]}]}
     write(f'{NS}/loot_table/gameplay/shadow_orb.json', {'type': 'minecraft:empty', 'pools': [
@@ -170,7 +170,7 @@ def underworld():
         write(f'{NS}/loot_table/blocks/{b}.json', self_loot(b))
     write(f'{NS}/terracraft/mining_power/hellstone.json', {'pickaxe_power': 65, 'blocks': [t('hellstone'), t('hellstone_brick')]})
     write(f'{NS}/terracraft/mining_power/obsidian_brick.json', {'pickaxe_power': 55, 'blocks': [t('obsidian_brick')]})
-    write(f'{NS}/tags/block/stations/hellforge.json', {'values': [t('hellforge')]})
+    write(f'{NS}/tags/block/stations/hellforge.json', {'values': [t('hellforge'), t('adamantite_forge'), t('titanium_forge')]})
     write(f'{NS}/worldgen/configured_feature/underworld.json', {'type': t('underworld'), 'config': {}})
     write(f'{NS}/worldgen/placed_feature/underworld.json', {'feature': t('underworld'), 'placement': []})
     write(f'{NS}/forge/biome_modifier/underworld.json', {
@@ -213,6 +213,31 @@ def goblins():
     write(f'{NS}/tags/block/meteorite.json', {'values': [t('meteorite')]})
 
 
+HM_METALS = ['cobalt', 'palladium', 'mythril', 'orichalcum', 'adamantite', 'titanium']
+HM_ORES = [f'{m}_ore' for m in HM_METALS]
+HM_BLOCKS = ['pearlstone', 'hallowed_grass', 'pearlsand', 'pearlwood', 'hallowed_leaves', 'mythril_anvil', 'orichalcum_anvil',
+             'adamantite_forge', 'titanium_forge'] + HM_ORES
+
+
+def hardmode():
+    for m in HM_METALS:
+        write(f'{NS}/loot_table/blocks/{m}_ore.json', ore_loot(f'{m}_ore', f'raw_{m}'))
+        write(f'c/tags/item/ingots/{m}.json', {'values': [t(f'{m}_bar')]})
+        write(f'c/tags/item/raw_materials/{m}.json', {'values': [t(f'raw_{m}')]})
+    for b in ['pearlstone', 'pearlsand', 'pearlwood', 'mythril_anvil', 'orichalcum_anvil', 'adamantite_forge', 'titanium_forge']:
+        write(f'{NS}/loot_table/blocks/{b}.json', self_loot(b))
+    write(f'{NS}/loot_table/blocks/hallowed_grass.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [
+        {'type': 'minecraft:item', 'name': 'minecraft:dirt'}], 'conditions': [{'condition': 'minecraft:survives_explosion'}]}]})
+    write(f'{NS}/loot_table/blocks/hallowed_leaves.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [
+        {'type': 'minecraft:item', 'name': t('hallowed_leaves'), 'conditions': [{'condition': 'minecraft:match_tool', 'predicate': {'items': 'minecraft:shears'}}]}]}]})
+    write(f'{NS}/tags/block/hallow/all.json', {'values': [t('pearlstone'), t('hallowed_grass'), t('pearlsand'), t('pearlwood'), t('hallowed_leaves')]})
+    write(f'{NS}/tags/block/stations/hardmode_anvil.json', {'values': [t('mythril_anvil'), t('orichalcum_anvil')]})
+    write(f'{NS}/tags/block/stations/hardmode_forge.json', {'values': [t('adamantite_forge'), t('titanium_forge')]})
+    for tier, power in ((('cobalt', 'palladium'), 100), (('mythril', 'orichalcum'), 110), (('adamantite', 'titanium'), 150)):
+        write(f'{NS}/terracraft/mining_power/{tier[0]}_ore.json', {'pickaxe_power': power, 'blocks': [t(f'{m}_ore') for m in tier]})
+    write(f'{NS}/terracraft/mining_power/pearlstone.json', {'pickaxe_power': 65, 'blocks': [t('pearlstone')]})
+
+
 def blocks():
     for m in METALS:
         for ore in (f'{m}_ore', f'deepslate_{m}_ore'):
@@ -225,14 +250,15 @@ def blocks():
     write('minecraft/tags/block/mineable/pickaxe.json', {'values': [t(o) for o in ORES] + [t('iron_anvil'), t('lead_anvil'), t('life_crystal_block'),
                                                                    t('ebonstone'), t('crimstone'), t('demonite_ore'), t('crimtane_ore'),
                                                                    t('blue_brick'), t('green_brick'), t('pink_brick'), t('spikes'), t('hive'), t('hellstone'),
-                                                                   t('obsidian_brick'), t('hellstone_brick'), t('hellforge'), t('meteorite')]})
+                                                                   t('obsidian_brick'), t('hellstone_brick'), t('hellforge'), t('meteorite')]
+                                                                   + [t(b) for b in HM_ORES + ['pearlstone', 'mythril_anvil', 'orichalcum_anvil', 'adamantite_forge', 'titanium_forge']]})
     write('minecraft/tags/block/needs_stone_tool.json', {'values': [t(f'{p}{m}_ore') for m in STONE_TIER for p in ('', 'deepslate_')]})
     write('minecraft/tags/block/needs_iron_tool.json', {'values': [t(f'{p}{m}_ore') for m in IRON_TIER for p in ('', 'deepslate_')]})
     write(f'{NS}/tags/block/mineable/hammer.json', {'values': [t('shadow_orb'), t('crimson_heart'), t('demon_altar'), t('crimson_altar')]})
     # crafting station tags: any block in the tag counts as that station
     write(f'{NS}/tags/block/stations/work_bench.json', {'values': [t('work_bench')]})
-    write(f'{NS}/tags/block/stations/furnace.json', {'values': ['minecraft:furnace', 'minecraft:blast_furnace']})
-    write(f'{NS}/tags/block/stations/anvil.json', {'values': [t('iron_anvil'), t('lead_anvil'), 'minecraft:anvil', 'minecraft:chipped_anvil', 'minecraft:damaged_anvil']})
+    write(f'{NS}/tags/block/stations/furnace.json', {'values': ['minecraft:furnace', 'minecraft:blast_furnace', t('hellforge'), t('adamantite_forge'), t('titanium_forge')]})
+    write(f'{NS}/tags/block/stations/anvil.json', {'values': [t('iron_anvil'), t('lead_anvil'), t('mythril_anvil'), t('orichalcum_anvil'), 'minecraft:anvil', 'minecraft:chipped_anvil', 'minecraft:damaged_anvil']})
     write(f'{NS}/tags/block/stations/alchemy.json', {'values': ['minecraft:brewing_stand']})
     write(f'{NS}/tags/block/stations/sawmill.json', {'values': []})
     write(f'{NS}/tags/block/stations/loom.json', {'values': ['minecraft:loom']})
@@ -321,9 +347,26 @@ def terraria_recipes():
     recipe('jungle_pants', t('jungle_pants'), [(t('jungle_spores'), 8), (t('stinger'), 12)], [ANVIL], category='armor')
     HELLFORGE = t('hellforge')
     HBAR = t('hellstone_bar')
-    # Hardmode wings (Terraria: at a Mythril/Orichalcum Anvil, which arrives in Stage 5)
-    recipe('angel_wings', t('angel_wings'), [('minecraft:feather', 10), (t('soul_of_light'), 25), (t('soul_of_flight'), 20)], [ANVIL], category='accessories')
-    recipe('demon_wings', t('demon_wings'), [('minecraft:feather', 10), (t('soul_of_night'), 25), (t('soul_of_flight'), 20)], [ANVIL], category='accessories')
+    # Hardmode wings at a Mythril/Orichalcum Anvil
+    HM_ANVIL, HM_FORGE = t('hardmode_anvil'), t('hardmode_forge')
+    hm_tiers = {'cobalt': (3, FURNACE, ANVIL, 15), 'palladium': (4, FURNACE, ANVIL, 15), 'mythril': (4, FURNACE, HM_ANVIL, 10),
+                'orichalcum': (5, FURNACE, HM_ANVIL, 15), 'adamantite': (4, HM_FORGE, HM_ANVIL, 12), 'titanium': (4, HM_FORGE, HM_ANVIL, 13)}
+    for m, (raws, smelt, anvil, base) in hm_tiers.items():
+        bar = t(f'{m}_bar')
+        recipe(f'{m}_bar', bar, [(t(f'raw_{m}'), raws)], [smelt], category='materials')
+        recipe(f'{m}_pickaxe', t(f'{m}_pickaxe'), [(bar, base + 3)], [anvil], category='tools')
+        recipe(f'{m}_sword', t(f'{m}_sword'), [(bar, base)], [anvil], category='weapons')
+        recipe(f'{m}_repeater', t(f'{m}_repeater'), [(bar, base)], [anvil], category='weapons')
+        recipe(f'{m}_helmet', t(f'{m}_helmet'), [(bar, base - 3)], [anvil], category='armor')
+        recipe(f'{m}_breastplate', t(f'{m}_breastplate'), [(bar, base + 5)], [anvil], category='armor')
+        recipe(f'{m}_leggings', t(f'{m}_leggings'), [(bar, base + 1)], [anvil], category='armor')
+    recipe('mythril_anvil', t('mythril_anvil'), [(t('mythril_bar'), 10)], [ANVIL], category='furniture')
+    recipe('orichalcum_anvil', t('orichalcum_anvil'), [(t('orichalcum_bar'), 12)], [ANVIL], category='furniture')
+    recipe('adamantite_forge', t('adamantite_forge'), [(t('raw_adamantite'), 30), (t('hellforge'), 1)], [HM_ANVIL], category='furniture')
+    recipe('titanium_forge', t('titanium_forge'), [(t('raw_titanium'), 30), (t('hellforge'), 1)], [HM_ANVIL], category='furniture')
+    recipe('pearlwood_planks', 'minecraft:birch_planks', [(t('pearlwood'), 1)], [], count=4, category='materials')
+    recipe('angel_wings', t('angel_wings'), [('minecraft:feather', 10), (t('soul_of_light'), 25), (t('soul_of_flight'), 20)], [HM_ANVIL], category='accessories')
+    recipe('demon_wings', t('demon_wings'), [('minecraft:feather', 10), (t('soul_of_night'), 25), (t('soul_of_flight'), 20)], [HM_ANVIL], category='accessories')
     recipe('hellforge', t('hellforge'), [('minecraft:furnace', 1), (t('hellstone'), 10), ('minecraft:obsidian', 20)], [ANVIL], category='furniture')
     recipe('hellstone_bar', HBAR, [(t('hellstone'), 3), ('minecraft:obsidian', 1)], [HELLFORGE], category='materials')
     recipe('obsidian_brick', t('obsidian_brick'), [('minecraft:obsidian', 2)], [FURNACE], category='blocks')
@@ -452,7 +495,7 @@ def lang():
     items_dir = os.path.join(RES, 'assets/terracraft/items')
     for fname in sorted(os.listdir(items_dir)):
         name = fname[:-5]
-        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in JUNGLE_BLOCKS or name in UNDERWORLD_BLOCKS or name in GOBLIN_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
+        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in JUNGLE_BLOCKS or name in UNDERWORLD_BLOCKS or name in GOBLIN_BLOCKS or name in HM_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
                else 'item.') + f'{NS}.{name}'
         L[key] = title(name)
     L['block.terracraft.life_crystal_block'] = 'Life Crystal'
@@ -633,7 +676,6 @@ def lang():
     L.update({
         'progression.terracraft.announce.hardmode_active': 'The ancient spirits of light and dark have been released.',
         'progression.terracraft.announce.shadow_orb_smashed': 'A horrible chill goes down your spine...',
-        'progression.terracraft.announce.altar_smashed': 'Your world has been blessed with new ores!',
         'progression.terracraft.announce.boss_plantera_defeated': 'The Jungle Temple trembles...',
         'progression.terracraft.announce.boss_golem_defeated': 'The ancient guardian has fallen.',
         'progression.terracraft.announce.celestial_events_active': 'The celestial pillars have appeared!',
@@ -721,6 +763,21 @@ def lang():
         'modifier.terracraft.line.move_speed': '%s movement speed',
         'modifier.terracraft.line.melee_speed': '%s melee speed',
         'ability.terracraft.free_space_gun': 'Space Gun costs no mana',
+        'message.terracraft.ore_blessing': 'Your world has been blessed with %s!',
+        'ore.terracraft.cobalt': 'Cobalt',
+        'ore.terracraft.palladium': 'Palladium',
+        'ore.terracraft.mythril': 'Mythril',
+        'ore.terracraft.orichalcum': 'Orichalcum',
+        'ore.terracraft.adamantite': 'Adamantite',
+        'ore.terracraft.titanium': 'Titanium',
+        'armor_set.terracraft.cobalt.bonus': '15% increased melee speed, 20% chance not to consume ammo',
+        'armor_set.terracraft.palladium.bonus': 'Greatly increases life regeneration after striking an enemy',
+        'armor_set.terracraft.mythril.bonus': '10% increased critical strike chance',
+        'armor_set.terracraft.orichalcum.bonus': '8% increased damage and 10% increased movement speed',
+        'armor_set.terracraft.adamantite.bonus': '18% increased melee and movement speed',
+        'armor_set.terracraft.titanium.bonus': '10% damage reduction and 5% increased damage',
+        'item.terracraft.cobalt_repeater': 'Cobalt Repeater',
+        'block.terracraft.pearlstone.tooltip': 'Shimmers with holy light',
         'armor_set.terracraft.meteor.bonus': 'Space Gun costs 0 mana',
         'item.terracraft.goblin_battle_standard.tooltip': 'Summons a Goblin Army',
         'item.terracraft.obsidian_horseshoe.tooltip': 'Negates fall damage and grants immunity to fire blocks',
@@ -1263,6 +1320,7 @@ def main():
     jungle()
     underworld()
     goblins()
+    hardmode()
     damage()
     smelting()
     terraria_recipes()

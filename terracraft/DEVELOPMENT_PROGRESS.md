@@ -250,12 +250,28 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   boot tops stand out from the body.
 - Meteorite block recoloured to Terraria's maroon-purple rock with pink highlights.
 
+### Stage 5a/5b: Hardmode world, ores and gear (verified in a live client)
+- `world/hardmode/HardmodeWorld`: when Hardmode starts, two rays leave the spawn area in a V (angle from the seed,
+  160-4000 blocks long, wavy ~34-block half-width). One becomes the **Hallow** (pearlstone, hallowed grass, pearlsand,
+  pearlwood, hallowed leaves), the other the world's evil (ebonstone/crimstone, evil grass and wood). Chunks are
+  converted from the surface down to y=-48 as they load (3 per tick, remembered in `hardmode_chunks.dat`).
+- **Spread**: every second, 40 random blocks near each player turn into their neighbouring Hallow/evil blocks.
+- **Altars**: smashing a Demon/Crimson Altar with the Pwnhammer in Hardmode blesses the world with the next ore tier
+  (one of each pair, per world): "Your world has been blessed with Cobalt!". Veins go into every chunk (loaded and
+  future ones), deeper and rarer per tier.
+- **Ores, bars, stations**: Cobalt/Palladium (pickaxe power 100), Mythril/Orichalcum (110), Adamantite/Titanium
+  (150); Mythril/Orichalcum Anvil (counts as anvil + hardmode anvil), Adamantite/Titanium Forge (furnace, Hellforge
+  and hardmode forge). Angel/Demon Wings now need the Hardmode anvil.
+- **Gear** for all six metals: pickaxe (110-190 power), sword, repeater and a 3D armor set with Terraria's set bonuses
+  (Cobalt melee speed + ammo, Palladium regen, Mythril crit, Orichalcum damage + speed, Adamantite melee/move speed,
+  Titanium damage reduction + damage).
+- Fixed: NPC/zombie skins changed on every regeneration (Python's salted `hash`); now a stable CRC.
+
 ## IN PROGRESS
-- Nothing half-finished. Stage 4 (the road to Hardmode) is complete; next is Stage 5 (Hardmode).
+- Stage 5c: Hardmode enemies.
 
 ## NEXT (Stage 5: Hardmode)
-1. World changes at Hardmode: Hallow and evil V-stripes, biome spread, hardmode ores from altars
-   (Cobalt/Palladium, Mythril/Orichalcum, Adamantite/Titanium) and their anvils/forges, gear.
+1. (done) World changes, Hardmode ores, anvils/forges, gear.
 2. Hardmode enemies (surface, underground, Hallow, evil), Wyverns, mimics, souls (Light/Night/Flight), wings.
 3. Mechanical bosses (The Twins, The Destroyer, Skeletron Prime) and Queen Slime; Mechanic, Wizard, Steampunker.
 4. Pirate Invasion and Frost Legion.

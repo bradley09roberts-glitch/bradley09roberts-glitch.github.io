@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:palladium_repeater",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:palladium_bar",
+      "count": 15
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

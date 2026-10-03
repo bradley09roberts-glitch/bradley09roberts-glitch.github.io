@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:orichalcum_breastplate",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:orichalcum_bar",
+      "count": 20
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "armor"
+}

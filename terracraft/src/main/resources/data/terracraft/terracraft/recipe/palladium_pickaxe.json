@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:palladium_pickaxe",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:palladium_bar",
+      "count": 18
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "tools"
+}

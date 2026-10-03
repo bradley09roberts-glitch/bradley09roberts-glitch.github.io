@@ -1,0 +1,7 @@
+{
+  "pickaxe_power": 150,
+  "blocks": [
+    "terracraft:adamantite_ore",
+    "terracraft:titanium_ore"
+  ]
+}
