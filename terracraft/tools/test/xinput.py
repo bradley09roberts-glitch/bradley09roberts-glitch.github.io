@@ -1,4 +1,4 @@
-"""Synthetic X input for the headless client: python3 xin.py key r | click left 640 360 | hold left 2.0 | move 640 360 | scroll up 3"""
+"""Synthetic X input for the headless client: key r | click left 640 360 | hold left 2.0 | move 640 360 | scroll up 3 | type /time"""
 import sys, time
 from Xlib import X, XK, display
 from Xlib.ext import xtest
@@ -32,4 +32,16 @@ while i < len(args):
         button('left'); time.sleep(0.05)
         xtest.fake_input(d, X.KeyRelease, sh); d.sync(); i += 3
     elif a == 'sleep': time.sleep(float(args[i+1])); i += 2
+    elif a == 'type':
+        names = {' ': 'space', '/': 'slash', ':': 'colon', '_': 'underscore', '.': 'period', '-': 'minus'}
+        shifted = {':', '_'}
+        sh = d.keysym_to_keycode(XK.string_to_keysym('Shift_L'))
+        for ch in args[i+1]:
+            if ch in shifted or ch.isupper():
+                xtest.fake_input(d, X.KeyPress, sh); d.sync()
+            key(names.get(ch, ch.lower()), 0.02)
+            if ch in shifted or ch.isupper():
+                xtest.fake_input(d, X.KeyRelease, sh); d.sync()
+            time.sleep(0.02)
+        i += 2
     else: raise SystemExit('unknown ' + a)

@@ -33,6 +33,11 @@ minecraft {
                 workingDir = layout.projectDirectory.dir('run-client')
                 args '--quickPlayMultiplayer', 'localhost:25565', '--username', 'Dev'
             }
+            // ./gradlew runClient -Pworld=<save folder> : open a singleplayer world from run-client/saves.
+            if (providers.gradleProperty('world').isPresent()) {
+                workingDir = layout.projectDirectory.dir('run-client')
+                args '--quickPlaySingleplayer', providers.gradleProperty('world').get(), '--username', 'Dev'
+            }
         }
 
         register('server') {

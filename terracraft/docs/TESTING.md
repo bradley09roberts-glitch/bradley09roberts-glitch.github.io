@@ -93,3 +93,12 @@ Goblin appearing in a cave near the underground player, talking to him freeing t
 message, Shop + Reforge buttons), reforging the held Copper Broadsword (Pointy, Ruthless, Light, Unpleasant;
 coins deducted; name and green tooltip lines updated); `/terraria meteor` landing a crater lined with Meteorite
 ("A meteorite has landed!") and Meteor Heads spawning around it.
+
+## Showcase world
+
+`tools/showcase_world.py <world folder>` writes the `showcase` datapack: a hub at y=210 above spawn (seed 12345)
+with command-block buttons for time/weather, Hardmode, events, town NPCs, biome teleports, gear kits, a boss
+arena, an enemy zoo and chests holding every item. In the world run `/reload`, `/function showcase:build`,
+`/function showcase:build_zoo`, then `/function showcase:build_underworld` from inside the Underworld.
+`/function showcase:hub` returns to the hub. To open a singleplayer save directly:
+`./gradlew runClient "-Pworld=<save name>"`. `xinput.py type <text>` types into chat.
