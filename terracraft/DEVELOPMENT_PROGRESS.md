@@ -244,10 +244,10 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - **Skins** (`tools/skins.py`) in the style of good hand-made Minecraft skins: shaded faces with eye whites, irises,
   brows, nose and lips; strand hair; layered clothes (jackets, collars, buttons, straps, suspenders, aprons, robes),
   belts with buckles, rolled sleeves, scuffed knees, laced boots; zombies torn and bloodied. Goblins have ears.
-- **3D weapons and tools** (`tools/item_models.py`): every sword, pickaxe, axe, hammer, bow, gun, staff, wand and
-  tome has a 3D model in the hand (crossguards, tool heads, gun barrels and grips, bow limbs and string), coloured
-  from its icon; the inventory keeps the icon. Swords/tools/staffs point forward, bows are held like vanilla bows,
-  guns aim their barrel forward, tomes are held in front of the hand.
+- Items stay 2D. Tool icons face like Minecraft's: handle bottom-left, working end on the left (axes, hammers and
+  hamaxes mirrored across the handle; bows turned to Minecraft's diagonal). The sprite-pack tool does the same.
+- NPCs, zombies and goblins use the player-skin layout with the second (3D) layer: hair, coats, belts, cuffs and
+  boot tops stand out from the body.
 - Meteorite block recoloured to Terraria's maroon-purple rock with pink highlights.
 
 ## IN PROGRESS
@@ -284,7 +284,6 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - Angel/Demon Wings use the normal anvil until Stage 5 adds the Mythril/Orichalcum Anvil; Leaf Wings have no source
   yet (Witch Doctor, Stage 5); Soul of Light drops anywhere underground until the Hallow exists.
 - Armor models replace vanilla armor rendering only for TerraCraft armor; vanilla armor still looks vanilla.
-- The Terraria sprite pack replaces inventory icons only; held weapons keep TerraCraft's 3D models.
 - Creature model JSON is read when the game starts (geometry changes need a restart; textures reload with F3+T).
 - Locked Gold Chest loot spreads stacks over many slots (vanilla chest loot behaviour).
 - Chunks generated before a zone change keep their old layout (zone placement changed during Stage 3

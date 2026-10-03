@@ -150,11 +150,28 @@ def find_local(folder, name):
     return None
 
 
-def to_item_texture(data):
-    """First frame, padded onto a transparent square canvas so Minecraft does not stretch it."""
+AXES = {"war_axe_of_the_night", "blood_lust_cluster", "molten_hamaxe"}
+HAMMERS = {"the_breaker", "flesh_grinder", "pwnhammer"}
+BOWS = {"bees_knees", "molten_fury", "hellwing_bow", "demon_bow", "tendon_bow"}
+
+
+def orient_like_minecraft(item, image):
+    """Minecraft tools face left with the handle bottom-left: Terraria's axes and hammers are mirrored across the
+    handle line, and its upright bows are tilted 45 degrees onto Minecraft's diagonal (arc on the upper left)."""
+    if item.endswith("_axe") or item.endswith("_hammer") or "hamaxe" in item or item in AXES or item in HAMMERS:
+        return image.transpose(Image.Transpose.TRANSVERSE)
+    if item.endswith("_bow") or item in BOWS:
+        return image.rotate(-45, resample=Image.NEAREST, expand=True)
+    return image
+
+
+def to_item_texture(data, item=""):
+    """First frame, oriented like Minecraft's tools and padded onto a transparent square canvas so Minecraft does not
+    stretch it."""
     image = Image.open(io.BytesIO(data))
     image.seek(0)
     image = image.convert("RGBA")
+    image = orient_like_minecraft(item, image)
     box = image.getbbox()
     if box:
         image = image.crop(box)
@@ -188,7 +205,7 @@ def main():
                 missing.append(name)
                 continue
             try:
-                pack.writestr(f"assets/{namespace}/textures/item/{item}.png", to_item_texture(data))
+                pack.writestr(f"assets/{namespace}/textures/item/{item}.png", to_item_texture(data, item))
                 done += 1
                 print(f"  {namespace}:{item} <- {name}")
             except Exception as error:  # noqa: BLE001

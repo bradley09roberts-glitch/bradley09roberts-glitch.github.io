@@ -1,21 +1,6 @@
 {
   "model": {
-    "type": "minecraft:select",
-    "property": "minecraft:display_context",
-    "cases": [
-      {
-        "when": [
-          "gui"
-        ],
-        "model": {
-          "type": "minecraft:model",
-          "model": "terracraft:item/war_axe_of_the_night"
-        }
-      }
-    ],
-    "fallback": {
-      "type": "minecraft:model",
-      "model": "terracraft:item/war_axe_of_the_night_3d"
-    }
+    "type": "minecraft:model",
+    "model": "terracraft:item/war_axe_of_the_night"
   }
 }

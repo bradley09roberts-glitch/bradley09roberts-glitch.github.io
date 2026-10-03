@@ -11,21 +11,22 @@ import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 
 /**
- * Humanoid model for zombies, skeletons and town NPCs (player-skin texture layout, hat layer for hats,
- * hair and beards). Zombies walk with their arms held out.
+ * Humanoid model for zombies, skeletons and town NPCs: the player-skin layout with its second layer (hat, jacket,
+ * sleeves, trousers) so hair, coats, belts and boot cuffs stand out in 3D. Zombies walk with their arms held out.
  */
 public class TerraHumanoidModel extends HumanoidModel<TerraRenderState> {
     public TerraHumanoidModel(ModelPart root) {
         super(root);
     }
 
+    /** People use the player model's layout: a second, slightly larger layer (hair, coat, belt, cuffs) over the body. */
     public static LayerDefinition createHumanoid() {
-        return LayerDefinition.create(HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F), 64, 64);
+        return LayerDefinition.create(net.minecraft.client.model.player.PlayerModel.createMesh(CubeDeformation.NONE, false), 64, 64);
     }
 
     /** Goblins: the human shape with long pointed ears (ear texture at 56,16 and 56,20 of the skin). */
     public static LayerDefinition createGoblin() {
-        MeshDefinition mesh = HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F);
+        MeshDefinition mesh = net.minecraft.client.model.player.PlayerModel.createMesh(CubeDeformation.NONE, false);
         PartDefinition head = mesh.getRoot().getChild("head");
         head.addOrReplaceChild("right_ear", CubeListBuilder.create().texOffs(56, 16).addBox(-3.0F, -1.0F, -0.5F, 3.0F, 2.0F, 1.0F),
             PartPose.offsetAndRotation(-4.0F, -4.5F, 0.0F, 0.0F, 0.25F, 0.3F));

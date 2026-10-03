@@ -2612,10 +2612,25 @@ def check_registered_items():
         sys.exit(1)
 
 
+def orient_like_minecraft(c, drawer):
+    """Minecraft draws tools with the handle bottom-left and the working end facing left (the axe blade, the bow's
+    arc). Axes, hammers and hamaxes are mirrored across the handle line; bows are turned a quarter so the limbs run
+    bottom-left to top-right with the arc on the upper left."""
+    from PIL import Image
+    used = drawer.__code__.co_names
+    if 'draw_axe' in used or 'draw_hammer' in used:
+        c.img = c.img.transpose(Image.Transpose.TRANSVERSE)
+        c.px = c.img.load()
+    elif 'draw_bow' in used:
+        c.img = c.img.transpose(Image.Transpose.ROTATE_90)
+        c.px = c.img.load()
+
+
 def main():
     for name, (drawer, handheld) in ITEMS.items():
         c = Canvas()
         drawer(c)
+        orient_like_minecraft(c, drawer)
         c.save(os.path.join(TEX, 'item', name + '.png'))
         item_assets(name, handheld)
     for name, factory in BLOCK_TEXTURES.items():
@@ -2643,8 +2658,6 @@ def main():
         wing_texture(style).save(os.path.join(TEX, 'entity/wings', style + '.png'))
     import creature_models          # creatures with their own models (Imp, Demons, Crimera...)
     creature_models.write(ASSETS, TEX)
-    import item_models              # 3D held models for weapons and tools (after the icons exist)
-    item_models.write(ASSETS, TEX)
     check_registered_items()
     print(f'Generated {len(ITEMS)} items, {len(BLOCK_TEXTURES)} block textures, {len(PROJECTILES)} projectiles, '
           f'{len(HUD)} HUD sprites, {len(EFFECTS)} effect icons, {len(ARMOR_SETS)} armor sets')

@@ -1,21 +1,6 @@
 {
   "model": {
-    "type": "minecraft:select",
-    "property": "minecraft:display_context",
-    "cases": [
-      {
-        "when": [
-          "gui"
-        ],
-        "model": {
-          "type": "minecraft:model",
-          "model": "terracraft:item/blood_lust_cluster"
-        }
-      }
-    ],
-    "fallback": {
-      "type": "minecraft:model",
-      "model": "terracraft:item/blood_lust_cluster_3d"
-    }
+    "type": "minecraft:model",
+    "model": "terracraft:item/blood_lust_cluster"
   }
 }

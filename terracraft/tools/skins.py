@@ -58,6 +58,75 @@ class Painter:
         return self.c.get(x, y)
 
 
+def copy_rect(P, src, dst, test=lambda x, y: True):
+    (sx, sy, w, h), (dx, dy) = src, dst
+    for x in range(w):
+        for y in range(h):
+            if test(x, y):
+                P.px(dx + x, dy + y, P.get(sx + x, sy + y))
+
+
+def overlay(P, hair_style, hat, jacket, robe, straps, suspenders, short_sleeves, torn, hair_px):
+    """Paints the outer layer (hat 32,0; jacket 16,32; right sleeve 40,32; right trousers 0,32) from the base layer:
+    only the parts that should stand out from the body are copied, the rest stays transparent."""
+    rnd = P.rnd
+    head = box_faces(0, 0, 8, 8, 8)
+    hat_layer = box_faces(32, 0, 8, 8, 8)
+    if hair_px and not hat:
+        for name in ('top', 'right', 'left', 'back', 'front'):
+            x0, y0, w, h = hat_layer[name]
+            bx, by = head[name][0], head[name][1]
+            for x in range(w):
+                depth = {'top': h, 'front': 1 + (x % 3 == 0), 'back': 5 + rnd.choice((0, 1)), 'right': 3, 'left': 3}[name]
+                for y in range(min(h, depth)):
+                    if name == 'top' or rnd.random() < 0.9:
+                        P.px(x0 + x, y0 + y, P.get(bx + x, by + y))
+    body = box_faces(16, 16, 8, 12, 4)
+    jack = box_faces(16, 32, 8, 12, 4)
+    for name in ('front', 'back', 'right', 'left'):
+        src, dst = body[name], jack[name]
+        w = src[2]
+        def keep(x, y, name=name, w=w):
+            if y >= 10:
+                return True                                    # belt and buckle
+            if name == 'front' and y == 0 and 2 <= x <= 5:
+                return True                                    # collar
+            if jacket:
+                return not (name == 'front' and 3 <= x <= 4)  # the coat, open at the front
+            if robe and y >= 8:
+                return True                                    # robe hem
+            if (straps or suspenders) and name in ('front', 'back'):
+                return False
+            return False
+        copy_rect(P, src, dst[:2], keep)
+    if straps or suspenders:
+        # the straps' own colour is copied wherever it was painted on the base
+        for name in ('front', 'back'):
+            src, dst = body[name], jack[name]
+            ref = None
+            for x in range(src[2]):
+                for y in range(src[3] - 2):
+                    c = P.get(src[0] + x, src[1] + y)
+                    col = hexc(straps or suspenders)
+                    if c[:3] == col[:3]:
+                        P.px(dst[0] + x, dst[1] + y, c)
+    if torn:
+        for name in ('front', 'back'):
+            src, dst = body[name], jack[name]
+            for _ in range(6):                                 # loose flaps of the torn shirt
+                x, y = rnd.randrange(src[2]), rnd.randrange(4, src[3])
+                P.px(dst[0] + x, dst[1] + y, P.get(src[0] + x, src[1] + y))
+    arm = box_faces(40, 16, 4, 12, 4)
+    sleeve = box_faces(40, 32, 4, 12, 4)
+    cut = 5 if short_sleeves else 10
+    for name in ('front', 'back', 'right', 'left'):
+        copy_rect(P, arm[name], sleeve[name][:2], lambda x, y: y == cut - 1 or (jacket and y < cut))
+    leg = box_faces(0, 16, 4, 12, 4)
+    pants = box_faces(0, 32, 4, 12, 4)
+    for name in ('front', 'back', 'right', 'left'):
+        copy_rect(P, leg[name], pants[name][:2], lambda x, y, name=name: y in (9, 10) or (name == 'front' and y in (6, 7)))
+
+
 def skin_texture(skin, hair, shirt, pants, shoes='#3A2A20', eyes=(30, 30, 40, 255), beard=None, hat=None, hat_band=None,
                  torn=False, bony=False, short_sleeves=True, cross=False, lamp=False, jacket=None, straps=None, suspenders=None,
                  goggles=None, robe=False, hair_style='short', ears=False, belt='#3A2A1E', buckle='#C8A040', iris=None, blood=False,
@@ -283,6 +352,13 @@ def skin_texture(skin, hair, shirt, pants, shoes='#3A2A20', eyes=(30, 30, 40, 25
                 for _ in range(3 if blood else 1):
                     x, y = x0 + rnd.randrange(w), y0 + rnd.randrange(2, h)
                     P.px(x, y, red); P.px(x, min(y0 + h - 1, y + 1), shade(red, 0.8))
+        # ---- the second (3D) layer, like player skins: hair volume, coat, belt, cuffs and boot tops stand off the body
+        overlay(P, hair_style, hat, jacket, robe, straps, suspenders, short_sleeves, torn, hair_px if hair_style != 'bald' else None)
+        # left arm/leg have their own texture in the player layout: copy the right ones
+        for (sx, sy), (dx, dy) in (((40, 16), (32, 48)), ((0, 16), (16, 48)), ((40, 32), (48, 48)), ((0, 32), (0, 48))):
+            for x in range(16):
+                for y in range(16):
+                    P.px(dx + x, dy + y, P.get(sx + x, sy + y))
         # ---- goblin ears (cube texture at 56,16: 3x2x1)
         if ears:
             for v in (16, 20):

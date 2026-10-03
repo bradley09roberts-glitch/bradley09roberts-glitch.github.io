@@ -113,12 +113,9 @@ arena, an enemy zoo and chests holding every item. In the world run `/reload`, `
   the HUD shows no food bar and the inventory has no boots slot.
 - Biomes: `/locate biome minecraft:plains` must fail in a new world (only Terraria biomes exist).
 
-## Creature, skin and weapon model checks
+## Creature and skin checks
 
 - Creatures with their own models: summon `imp`, `demon`, `voodoo_demon`, `eater_of_souls`, `crimera`, `face_monster`,
   `blood_crawler`, `man_eater`, `snatcher`, `meteor_head` (with `{NoAI:1b}`) and look from the front and side.
-- Held weapons: `summon armor_stand ~ ~ ~ {ShowArms:1b,equipment:{mainhand:{id:"terracraft:musket"}}}` and check the
-  barrel points forward; in first person the blade/head/barrel must point away from the camera. The inventory must
-  still show the flat icon.
-- After editing `tools/creature_models.py`, `item_models.py`, `skins.py` or `armor_models.py`, rerun
+- After editing `tools/creature_models.py`, `skins.py` or `armor_models.py`, rerun
   `tools/generate_assets.py` (it calls all of them).
