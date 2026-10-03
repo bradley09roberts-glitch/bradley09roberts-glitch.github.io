@@ -12,7 +12,7 @@ import com.terracraft.registry.ModItems;
 import com.terracraft.registry.TabGroup;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.registries.RegistryObject;
+import com.terracraft.registry.RegistryObject;
 
 /** Coins, life/mana upgrades, potions and general materials. */
 public final class CoreItems {

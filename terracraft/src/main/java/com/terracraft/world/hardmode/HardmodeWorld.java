@@ -24,9 +24,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.event.level.ChunkEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.ChunkEvent;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -57,9 +57,9 @@ public final class HardmodeWorld {
     private HardmodeWorld() {}
 
     public static void register() {
-        ChunkEvent.Load.BUS.addListener(HardmodeWorld::onChunkLoad);
-        TickEvent.ServerTickEvent.Post.BUS.addListener(HardmodeWorld::onServerTick);
-        BlockEvent.BreakEvent.BUS.addListener(HardmodeWorld::onBlockBreak);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(HardmodeWorld::onChunkLoad);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(HardmodeWorld::onServerTick);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(HardmodeWorld::onBlockBreak);
         ProgressionManager.addListener((server, flag, value) -> {
             if (flag == ProgressionFlags.HARDMODE && value) {    // the announcement itself comes from ProgressionManager
                 queueLoaded(server.overworld());
@@ -127,8 +127,8 @@ public final class HardmodeWorld {
         }
     }
 
-    private static void onServerTick(TickEvent.ServerTickEvent.Post event) {
-        MinecraftServer server = event.server();
+    private static void onServerTick(ServerTickEvent.Post event) {
+        MinecraftServer server = event.getServer();
         if (!ProgressionManager.isHardmode(server)) {
             return;
         }
@@ -273,7 +273,7 @@ public final class HardmodeWorld {
 
     // ---------------------------------------------------------------- altars and Hardmode ores
 
-    private static void onBlockBreak(BlockEvent.BreakEvent event) {
+    private static void onBlockBreak(net.neoforged.neoforge.event.level.block.BreakBlockEvent event) {
         if (!(event.getLevel() instanceof ServerLevel level) || !(event.getState().getBlock() instanceof AltarBlock)) {
             return;
         }

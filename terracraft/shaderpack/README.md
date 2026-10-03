@@ -18,7 +18,7 @@ A shader pack made for TerraCraft, in the standard Iris/OptiFine format (`shader
 
 ## Install
 
-1. A shader loader is required. TerraCraft runs on Forge, so use **Iris for Forge** for Minecraft 26.2. Official Iris supports Fabric/NeoForge only.
+1. Install the shader loader: TerraCraft runs on NeoForge, so put the NeoForge 26.2 builds of [Sodium](https://modrinth.com/mod/sodium) (0.9.2+) and [Iris](https://modrinth.com/mod/iris) (1.11.4+) in `.minecraft/mods/` next to TerraCraft.
 2. Put `TerraCraft-Radiance-Shaders.zip` (unextracted) in `.minecraft/shaderpacks/`.
 3. In game: Options → Video Settings → Shader Packs → select it.
 4. Profiles are under Shader Settings: Medium / High (default) / Ultra / Extreme. Extreme is meant for an RTX 4090/5090: 8192 shadows, 320-block shadow distance, 48 shadow samples, 64 god-ray steps.
@@ -31,3 +31,5 @@ Every effect can be tuned or switched off in Shader Settings (Lighting & Shadows
 - `tools/test/preview_sky.py out.png` renders the sky and post-processing at several times of day without Minecraft.
 
 Block ids live in `shaders/block.properties` and are named in `shaders/lib/common.glsl`.
+
+Verified with Sodium 0.9.2 and Iris 1.11.4 (NeoForge, Minecraft 26.2) together with TerraCraft.

@@ -1,16 +1,17 @@
 # TerraCraft development progress
 
-Project: Terraria total conversion for Minecraft Java 26.2 / Forge 65.1.0 (single mod jar, modid `terracraft`).
+Project: Terraria total conversion for Minecraft Java 26.2 / NeoForge 26.2 (single mod jar, modid `terracraft`).
+The mod started on Forge 65.1.0 and was ported to NeoForge so Iris + Sodium (shaders) can run with it.
 Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explains the headless test setup.
 
 ## COMPLETED
 
 ### Stage 0: Foundation (verified on a dedicated server)
-- Forge 65.1.0 / MC 26.2 project (ForgeGradle 7, Gradle 9.5, Java 25 toolchain), builds one jar.
+- MC 26.2 project, now NeoForge 26.2.0.88 (ModDevGradle 2, Gradle 9.5, Java 25 toolchain), builds one jar.
 - Mod entry point, registry architecture (DeferredRegisters + content DSL + automatic creative tab filing).
-- Network channel `terracraft:main` (SimpleChannel, play protocol, versioned) with record packets.
+- Networking: play-phase `CustomPacketPayload` records, versioned (`TerraNetwork.PROTOCOL`).
 - Config: `terracraft-common.toml` (gameplay, vanilla suppression, economy, world) and `terracraft-client.toml` (HUD).
-- Player data capability (`terracraft:player_data`): crystals, fruit, mana, accessory inventory; saved, copied on death.
+- Player data attachment (`terracraft:player_data`): crystals, fruit, mana, accessory inventory; saved, copied on death.
 - World progression SavedData (`data/terracraft/world_progression.dat`): 50+ named flags (bosses, world,
   events, NPCs), derived flags (`mech_bosses_defeated`...), counters, world variants (evil type + ore pair
   choices from seed), change listeners, Terraria announcements, client sync, JSON condition language.
@@ -68,7 +69,7 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - **Spawning**: per-player Terraria spawner (caps and rates by layer/time, configurable), JSON spawn rules
   (`terracraft/spawns`: biome, layer, time, sky, placement, group size, progression condition).
 - **Worldgen**: `terracraft:paired_ore` (world ore-pair choice; secondary ore at `secondaryOreFrequency`)
-  replacing vanilla copper/iron/gold veins via Forge biome modifiers; Life Crystals on cave floors; wooden and
+  replacing vanilla copper/iron/gold veins via NeoForge biome modifiers; Life Crystals on cave floors; wooden and
   underground loot chests with Terraria-style loot; Fallen Stars at night that vanish at dawn.
 - **Bosses** (`entity.boss`): `TerrariaBoss` (boss bar, synced phases, Expert/Master + multiplayer life scaling,
   despawn rules, announcements, progression flags, potion drops, terrain immunity). King Slime (hops, high hops,
@@ -213,7 +214,7 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   domed helmets with nasal guards, visors and crests, crowns for Gold/Platinum, the Jungle Hat's leafy brim,
   Molten horns, the Meteor bubble helmet, Shadow spikes, the Crimson bone mask, pauldrons, bracers, knee cops and
   boots. `tools/armor_models.py` writes the cubes (`models/armor/<set>.json`) and paints the matching texture;
-  `client.model.ArmorModels` builds the models (Forge `IClientItemExtensions#getHumanoidArmorModel`).
+  `client.model.ArmorModels` builds the models (NeoForge `IClientItemExtensions#getHumanoidArmorModel`).
 - **Dungeon Bookcases** replace vanilla bookshelves in the Dungeon: right-click (or break) to take 1-3 Books, with a
   6% chance of a Water Bolt (Water Bolts are no longer in dungeon chests). The emptied shelf stays as furniture.
 - **Mob colours** checked against Terraria: Mother/Baby Slime are black, Cave Bat blue, Jungle Bat brown, Hornet

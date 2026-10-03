@@ -6,13 +6,20 @@ import com.terracraft.player.TerraPlayerData;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.network.CustomPayloadEvent;
+import com.terracraft.network.PacketContext;
 
 /**
  * Server -> clients: which wings a player wears (style "" = none), sent to the player and everyone tracking
  * them so the wings render on every client and the owner knows its flight time.
  */
-public record PlayerWingsPacket(int entityId, String style, int flightTicks, float ascent) {
+public record PlayerWingsPacket(int entityId, String style, int flightTicks, float ascent) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<PlayerWingsPacket> TYPE = new Type<>(com.terracraft.TerraCraft.id("player_wings_packet"));
+
+    @Override
+    public Type<PlayerWingsPacket> type() {
+        return TYPE;
+    }
+
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerWingsPacket> STREAM_CODEC = StreamCodec.of(
         (buf, p) -> {
             buf.writeVarInt(p.entityId);
@@ -28,7 +35,7 @@ public record PlayerWingsPacket(int entityId, String style, int flightTicks, flo
             : new PlayerWingsPacket(player.getId(), wings.style(), wings.flightTicks(), wings.ascent());
     }
 
-    public static void handle(PlayerWingsPacket packet, CustomPayloadEvent.Context ctx) {
+    public static void handle(PlayerWingsPacket packet, PacketContext ctx) {
         ClientPacketHandlers.setWings(packet);
     }
 }

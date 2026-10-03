@@ -4,9 +4,6 @@ import com.terracraft.TerraCraft;
 import com.terracraft.item.DevTabletItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -21,7 +18,7 @@ import java.util.function.UnaryOperator;
  * {@link #register}, which also files every item into its creative tab.
  */
 public final class ModItems {
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, TerraCraft.MODID);
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(net.minecraft.core.registries.Registries.ITEM, TerraCraft.MODID);
     private static final Map<TabGroup, List<Supplier<? extends Item>>> TAB_CONTENTS = new EnumMap<>(TabGroup.class);
 
     public static final RegistryObject<Item> DEV_TABLET = register("dev_tablet", TabGroup.DEV, DevTabletItem::new,

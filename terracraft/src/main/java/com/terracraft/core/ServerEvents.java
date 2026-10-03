@@ -6,33 +6,32 @@ import com.terracraft.config.TerraConfig;
 import com.terracraft.progression.WorldProgression;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.gamerules.GameRules;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 
-import java.lang.invoke.MethodHandles;
 
 /** Server lifecycle: command registration and world rules required by the conversion. */
 public final class ServerEvents {
     private ServerEvents() {}
 
     static void register() {
-        BusGroup.DEFAULT.register(MethodHandles.lookup(), ServerEvents.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(ServerEvents.class);
     }
 
     @SubscribeEvent
-    static void onRegisterCommands(RegisterCommandsEvent event) {
+    public static void onRegisterCommands(RegisterCommandsEvent event) {
         TerrariaCommand.register(event.getDispatcher());
     }
 
     @SubscribeEvent
-    static void onServerStopped(net.minecraftforge.event.server.ServerStoppedEvent event) {
+    public static void onServerStopped(net.neoforged.neoforge.event.server.ServerStoppedEvent event) {
         com.terracraft.world.gen.WorldgenVariants.clear();
     }
 
     @SubscribeEvent
-    static void onServerStarted(ServerStartedEvent event) {
+    public static void onServerStarted(ServerStartedEvent event) {
         MinecraftServer server = event.getServer();
         // Initialise progression/variants eagerly so the first chunk generation sees them.
         WorldProgression progression = WorldProgression.get(server);

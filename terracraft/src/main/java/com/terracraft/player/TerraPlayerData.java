@@ -11,8 +11,6 @@ import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.capabilities.AutoRegisterCapability;
-import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -25,8 +23,7 @@ import org.jetbrains.annotations.Nullable;
  * All changes happen on the logical server; the owning client receives a
  * {@link com.terracraft.network.packet.SyncPlayerStatsPacket} mirror.
  */
-@AutoRegisterCapability
-public final class TerraPlayerData {
+public final class TerraPlayerData implements net.neoforged.neoforge.common.util.ValueIOSerializable {
     /** Hard cap on accessory slots (inventory capacity). The usable count comes from config + upgrades. */
     public static final int MAX_ACCESSORY_SLOTS = 10;
 
@@ -65,13 +62,12 @@ public final class TerraPlayerData {
 
     /** Returns the data of a player. Never null for a living player; returns a detached instance otherwise. */
     public static TerraPlayerData get(Player player) {
-        LazyOptional<TerraPlayerData> cap = player.getCapability(TerraCapabilities.PLAYER_DATA);
-        return cap.resolve().orElseGet(TerraPlayerData::new);
+        return player.getData(TerraAttachments.PLAYER_DATA);
     }
 
     @Nullable
     public static TerraPlayerData getOrNull(Player player) {
-        return player.getCapability(TerraCapabilities.PLAYER_DATA).resolve().orElse(null);
+        return player.getData(TerraAttachments.PLAYER_DATA);
     }
 
     // ------------------------------------------------------------------ permanent upgrades
@@ -196,44 +192,38 @@ public final class TerraPlayerData {
 
     // ------------------------------------------------------------------ persistence
 
-    public CompoundTag save(HolderLookup.Provider registries) {
-        CompoundTag tag = new CompoundTag();
-        tag.putInt("LifeCrystals", lifeCrystals);
-        tag.putInt("LifeFruit", lifeFruit);
-        tag.putInt("ManaCrystals", manaCrystals);
-        tag.putInt("ExtraAccessorySlots", extraAccessorySlots);
-        tag.putFloat("Mana", mana);
-        tag.putBoolean("Initialised", initialised);
-        RegistryOps<Tag> ops = registries.createSerializationContext(NbtOps.INSTANCE);
-        ListTag items = new ListTag();
+    @Override
+    public void serialize(net.minecraft.world.level.storage.ValueOutput output) {
+        output.putInt("LifeCrystals", lifeCrystals);
+        output.putInt("LifeFruit", lifeFruit);
+        output.putInt("ManaCrystals", manaCrystals);
+        output.putInt("ExtraAccessorySlots", extraAccessorySlots);
+        output.putFloat("Mana", mana);
+        output.putBoolean("Initialised", initialised);
+        net.minecraft.world.level.storage.ValueOutput.ValueOutputList items = output.childrenList("Accessories");
         for (int slot = 0; slot < accessories.getContainerSize(); slot++) {
             ItemStack stack = accessories.getItem(slot);
             if (!stack.isEmpty()) {
-                CompoundTag entry = new CompoundTag();
+                net.minecraft.world.level.storage.ValueOutput entry = items.addChild();
                 entry.putInt("Slot", slot);
-                entry.store("Item", ItemStack.CODEC, ops, stack);
-                items.add(entry);
+                entry.store("Item", ItemStack.CODEC, stack);
             }
         }
-        tag.put("Accessories", items);
-        return tag;
     }
 
-    public void load(HolderLookup.Provider registries, CompoundTag tag) {
-        lifeCrystals = tag.getIntOr("LifeCrystals", 0);
-        lifeFruit = tag.getIntOr("LifeFruit", 0);
-        manaCrystals = tag.getIntOr("ManaCrystals", 0);
-        extraAccessorySlots = tag.getIntOr("ExtraAccessorySlots", 0);
-        mana = tag.getFloatOr("Mana", -1.0F);
-        initialised = tag.getBooleanOr("Initialised", false);
+    @Override
+    public void deserialize(net.minecraft.world.level.storage.ValueInput input) {
+        lifeCrystals = input.getIntOr("LifeCrystals", 0);
+        lifeFruit = input.getIntOr("LifeFruit", 0);
+        manaCrystals = input.getIntOr("ManaCrystals", 0);
+        extraAccessorySlots = input.getIntOr("ExtraAccessorySlots", 0);
+        mana = input.getFloatOr("Mana", -1.0F);
+        initialised = input.getBooleanOr("Initialised", false);
         accessories.clearContent();
-        RegistryOps<Tag> ops = registries.createSerializationContext(NbtOps.INSTANCE);
-        ListTag items = tag.getListOrEmpty("Accessories");
-        for (int i = 0; i < items.size(); i++) {
-            CompoundTag entry = items.getCompoundOrEmpty(i);
+        for (net.minecraft.world.level.storage.ValueInput entry : input.childrenListOrEmpty("Accessories")) {
             int slot = entry.getIntOr("Slot", -1);
             if (slot >= 0 && slot < accessories.getContainerSize()) {
-                entry.read("Item", ItemStack.CODEC, ops).ifPresent(stack -> accessories.setItem(slot, stack));
+                entry.read("Item", ItemStack.CODEC).ifPresent(stack -> accessories.setItem(slot, stack));
             }
         }
         markStatsDirty();

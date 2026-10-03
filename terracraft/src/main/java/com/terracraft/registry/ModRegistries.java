@@ -1,6 +1,6 @@
 package com.terracraft.registry;
 
-import net.minecraftforge.eventbus.api.bus.BusGroup;
+import net.neoforged.bus.api.IEventBus;
 
 /**
  * Central place that attaches every DeferredRegister to the mod bus.
@@ -9,7 +9,7 @@ import net.minecraftforge.eventbus.api.bus.BusGroup;
 public final class ModRegistries {
     private ModRegistries() {}
 
-    public static void register(BusGroup modBus) {
+    public static void register(IEventBus modBus) {
         com.terracraft.registry.content.TerraContent.init();
         ModDataComponents.COMPONENTS.register(modBus);
         ModBlocks.BLOCKS.register(modBus);
@@ -22,5 +22,6 @@ public final class ModRegistries {
         ModEffects.EFFECTS.register(modBus);
         ModCreativeTabs.TABS.register(modBus);
         ModConditions.CONDITIONS.register(modBus);
+        com.terracraft.player.TerraAttachments.register(modBus);
     }
 }

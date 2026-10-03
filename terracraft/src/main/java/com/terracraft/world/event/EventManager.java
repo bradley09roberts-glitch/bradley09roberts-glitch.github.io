@@ -22,14 +22,13 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 /**
@@ -42,7 +41,7 @@ public final class EventManager {
     private EventManager() {}
 
     public static void register() {
-        BusGroup.DEFAULT.register(MethodHandles.lookup(), EventManager.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(EventManager.class);
         TerrariaCommand.addExtension(EventManager::commands);
     }
 
@@ -105,8 +104,8 @@ public final class EventManager {
     }
 
     @SubscribeEvent
-    static void onServerTick(TickEvent.ServerTickEvent.Post event) {
-        MinecraftServer server = event.server();
+    public static void onServerTick(ServerTickEvent.Post event) {
+        MinecraftServer server = event.getServer();
         if (server.getTickCount() % 20 != 0) {
             return;
         }
@@ -172,7 +171,7 @@ public final class EventManager {
     }
 
     @SubscribeEvent
-    static void onDeath(LivingDeathEvent event) {
+    public static void onDeath(LivingDeathEvent event) {
         if (!(event.getEntity().level() instanceof ServerLevel level)) {
             return;
         }
@@ -212,7 +211,7 @@ public final class EventManager {
     }
 
     @SubscribeEvent
-    static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
+    public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             TerraNetwork.sendToPlayer(player, new SyncEventPacket(EventState.get(player.level().getServer()).active()));
         }

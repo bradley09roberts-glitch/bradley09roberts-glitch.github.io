@@ -1,9 +1,11 @@
 {
-  "forge:condition": {
-    "type": "terracraft:config",
-    "option": "disableEnchanting",
-    "value": false
-  },
+  "neoforge:conditions": [
+    {
+      "type": "terracraft:config",
+      "option": "disableEnchanting",
+      "value": false
+    }
+  ],
   "type": "minecraft:crafting_shaped",
   "key": {
     "#": "minecraft:obsidian",

@@ -13,8 +13,8 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
-import net.minecraftforge.client.event.AddGuiOverlayLayersEvent;
-import net.minecraftforge.client.gui.overlay.ForgeLayeredDraw;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 /**
  * Terraria-style status display replacing the vanilla hearts:
@@ -33,9 +33,15 @@ public final class TerrariaHud {
 
     private TerrariaHud() {}
 
-    public static void register(AddGuiOverlayLayersEvent event) {
-        ForgeLayeredDraw draw = event.getLayeredDraw();
-        draw.replace(ForgeLayeredDraw.HOTBAR_AND_DECOS, ForgeLayeredDraw.HEALTH_BAR, TerrariaHud::extract);
+    public static void register(RegisterGuiLayersEvent event) {
+        event.replaceLayer(VanillaGuiLayers.PLAYER_HEALTH, TerrariaHud::extract);
+        // there is no hunger; the Terraria HUD draws the air bubbles where the food bar was
+        event.replaceLayer(VanillaGuiLayers.FOOD_LEVEL, (graphics, delta) -> {});
+        event.wrapLayer(VanillaGuiLayers.AIR_LEVEL, layer -> (graphics, delta) -> {
+            if (!TerraConfig.CLIENT.terrariaHud.get()) {
+                layer.render(graphics, delta);
+            }
+        });
     }
 
     private static void extract(GuiGraphicsExtractor graphics, DeltaTracker delta) {

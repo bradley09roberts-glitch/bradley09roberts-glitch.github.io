@@ -22,13 +22,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.invoke.MethodHandles;
 
 /**
  * Runs the Dungeon while the world is played:
@@ -46,7 +45,7 @@ public final class DungeonManager {
     private DungeonManager() {}
 
     public static void register() {
-        BusGroup.DEFAULT.register(MethodHandles.lookup(), DungeonManager.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(DungeonManager.class);
         com.terracraft.command.TerrariaCommand.addExtension(root -> root.then(Commands.literal("worldgen").then(Commands.literal("dungeon")
             .executes(ctx -> {
                 DungeonLayout layout = layout(ctx.getSource().getServer().overworld());
@@ -74,7 +73,7 @@ public final class DungeonManager {
     }
 
     @SubscribeEvent
-    static void onServerStopped(ServerStoppedEvent event) {
+    public static void onServerStopped(ServerStoppedEvent event) {
         synchronized (DungeonManager.class) {
             cached = null;
             cachedSeed = Long.MIN_VALUE;
@@ -82,8 +81,8 @@ public final class DungeonManager {
     }
 
     @SubscribeEvent
-    static void onServerTick(TickEvent.ServerTickEvent.Post event) {
-        MinecraftServer server = event.server();
+    public static void onServerTick(ServerTickEvent.Post event) {
+        MinecraftServer server = event.getServer();
         if (server.getTickCount() % 20 != 7 || server.getPlayerList().getPlayers().isEmpty()) {
             return;
         }

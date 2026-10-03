@@ -2,6 +2,9 @@ modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="All Rights Reserved"
 
+[[accessTransformers]]
+file = "META-INF/accesstransformer.cfg"
+
 [[mods]]
 modId="${mod_id}"
 version="${mod_version}"
@@ -10,16 +13,16 @@ authors="${mod_authors}"
 description='''A Terraria total conversion for Minecraft: Terraria's progression, bosses, enemies, NPCs, equipment, biomes and events rebuilt as a 3D Minecraft experience. All assets are original Minecraft-style recreations.'''
 
 [[dependencies.${mod_id}]]
-    modId="forge"
-    mandatory=true
-    versionRange="${forge_version_range}"
-    # AFTER: TerraCraft's data overrides (e.g. disabled diamond recipes) must take priority over Forge's.
+    modId="neoforge"
+    type="required"
+    versionRange="${neo_version_range}"
+    # AFTER: TerraCraft's data overrides (e.g. disabled diamond recipes) must take priority over NeoForge's.
     ordering="AFTER"
     side="BOTH"
 
 [[dependencies.${mod_id}]]
     modId="minecraft"
-    mandatory=true
+    type="required"
     versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"

@@ -18,13 +18,11 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import com.terracraft.item.accessory.WingsItem;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
+import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 
-import java.lang.invoke.MethodHandles;
 
 /**
  * Client input and movement: key bindings, Terraria-style left-click weapon use, double jumps and
@@ -44,11 +42,11 @@ public final class ClientEvents {
     private ClientEvents() {}
 
     static void register() {
-        BusGroup.DEFAULT.register(MethodHandles.lookup(), ClientEvents.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(ClientEvents.class);
     }
 
     @SubscribeEvent
-    static void onClientTick(TickEvent.ClientTickEvent.Post event) {
+    public static void onClientTick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
         if (player == null || mc.level == null) {
@@ -89,7 +87,13 @@ public final class ClientEvents {
 
     /** Suppresses vanilla attacking/mining while a usable weapon fires on left click. */
     @SubscribeEvent
-    static boolean onInteractionKey(InputEvent.InteractionKeyMappingTriggered event) {
+    public static void onInteractionKey(InputEvent.InteractionKeyMappingTriggered event) {
+        if (onInteractionKeyCancels(event)) {
+            event.setCanceled(true);
+        }
+    }
+
+    private static boolean onInteractionKeyCancels(InputEvent.InteractionKeyMappingTriggered event) {
         LocalPlayer player = Minecraft.getInstance().player;
         if (event.isAttack() && player != null && player.getMainHandItem().getItem() instanceof UsableWeapon) {
             event.setSwingHand(false);
@@ -196,7 +200,7 @@ public final class ClientEvents {
 
     /** Adds an "Equipment" button to the vanilla inventory screen. */
     @SubscribeEvent
-    static void onScreenInit(ScreenEvent.Init.Post event) {
+    public static void onScreenInit(ScreenEvent.Init.Post event) {
         if (event.getScreen() instanceof InventoryScreen screen) {
             int x = screen.getGuiLeft() + 128;
             int y = screen.getGuiTop() - 20;

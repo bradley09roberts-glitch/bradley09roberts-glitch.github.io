@@ -4,7 +4,6 @@ import com.terracraft.TerraCraft;
 import com.terracraft.item.TerraItemStats;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
-import net.minecraftforge.registries.DeferredRegister;
 
 /**
  * Data component types. Instances are created eagerly (static fields) because Forge registers items

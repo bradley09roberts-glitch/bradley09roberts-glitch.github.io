@@ -16,7 +16,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraftforge.event.TickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /**
  * Wall of Flesh summoning, Terraria style: a Guide Voodoo Doll thrown into lava in the Underworld while the
@@ -27,11 +27,11 @@ public final class UnderworldManager {
     private UnderworldManager() {}
 
     public static void register() {
-        TickEvent.ServerTickEvent.Post.BUS.addListener(UnderworldManager::onServerTick);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(UnderworldManager::onServerTick);
     }
 
-    private static void onServerTick(TickEvent.ServerTickEvent.Post event) {
-        MinecraftServer server = event.server();
+    private static void onServerTick(ServerTickEvent.Post event) {
+        MinecraftServer server = event.getServer();
         if (server.getTickCount() % 10 != 3) {
             return;
         }

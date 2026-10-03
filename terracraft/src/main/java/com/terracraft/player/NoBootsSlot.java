@@ -7,7 +7,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 
 /**
  * Terraria armor is three pieces (helmet, chest, greaves; the greaves include the boots), so the player has no
@@ -20,7 +20,7 @@ public final class NoBootsSlot {
     private NoBootsSlot() {}
 
     public static void register() {
-        EntityJoinLevelEvent.BUS.addListener(NoBootsSlot::onJoin);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(NoBootsSlot::onJoin);
     }
 
     private static void onJoin(EntityJoinLevelEvent event) {

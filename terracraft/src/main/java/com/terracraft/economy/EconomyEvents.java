@@ -11,34 +11,33 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingDropsEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.eventbus.api.listener.Priority;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.SubscribeEvent;
 
-import java.lang.invoke.MethodHandles;
 
 /** Coin conversion, enemy coin drops and Terraria's softcore coin death penalty. */
 public final class EconomyEvents {
     private EconomyEvents() {}
 
     public static void register() {
-        BusGroup.DEFAULT.register(MethodHandles.lookup(), EconomyEvents.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(EconomyEvents.class);
     }
 
     @SubscribeEvent
-    static void onPickup(PlayerEvent.ItemPickupEvent event) {
-        if (TerraConfig.COMMON.autoCompactCoins.get() && Coins.value(event.getStack()) > 0) {
-            Coins.compact(event.getEntity());
+    public static void onPickup(net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent.Post event) {
+        if (TerraConfig.COMMON.autoCompactCoins.get() && Coins.value(event.getOriginalStack()) > 0) {
+            Coins.compact(event.getPlayer());
         }
     }
 
     @SubscribeEvent
-    static void onPlayerTick(TickEvent.PlayerTickEvent.Post event) {
-        Player player = event.player();
+    public static void onPlayerTick(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
+        Player player = event.getEntity();
         if (player instanceof ServerPlayer && player.tickCount % 20 == 7 && TerraConfig.COMMON.autoCompactCoins.get()) {
             Coins.compact(player);
         }
@@ -46,7 +45,7 @@ public final class EconomyEvents {
 
     /** Enemies drop coins worth their Terraria value (vanilla hostiles: based on health). */
     @SubscribeEvent
-    static void onDrops(LivingDropsEvent event) {
+    public static void onDrops(LivingDropsEvent event) {
         LivingEntity entity = event.getEntity();
         if (entity instanceof Player || !(entity.level() instanceof ServerLevel)) {
             return;
@@ -72,8 +71,8 @@ public final class EconomyEvents {
     }
 
     /** Softcore: keep items, drop a share of coins where the player died. */
-    @SubscribeEvent(priority = Priority.LOW)
-    static void onPlayerDeath(LivingDeathEvent event) {
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public static void onPlayerDeath(LivingDeathEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player) || !TerraConfig.COMMON.softcoreDeaths.get()) {
             return;
         }

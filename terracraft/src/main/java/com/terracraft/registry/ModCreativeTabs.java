@@ -7,8 +7,6 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.RegistryObject;
 
 import java.util.EnumMap;
 import java.util.Locale;
@@ -35,7 +33,7 @@ public final class ModCreativeTabs {
                         }
                     });
                 if (before != null) {
-                    builder.withTabsBefore(before.getKey());
+                    builder.withTabsBefore(before.getId());
                 }
                 return builder.build();
             });

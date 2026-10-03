@@ -12,7 +12,7 @@ import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.event.TickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /**
  * Terraria Fallen Stars: at night stars fall from the sky near players (glowing, with a sparkle trail) and
@@ -26,7 +26,7 @@ public final class FallenStars {
     private FallenStars() {}
 
     public static void register() {
-        TickEvent.ServerTickEvent.Post.BUS.addListener(FallenStars::onServerTick);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(FallenStars::onServerTick);
         com.terracraft.command.TerrariaCommand.addExtension(root -> root.then(net.minecraft.commands.Commands.literal("star").executes(ctx -> {
             ServerPlayer player = ctx.getSource().getPlayerOrException();
             drop(player.level(), player, player.getRandom());
@@ -35,8 +35,8 @@ public final class FallenStars {
         })));
     }
 
-    private static void onServerTick(TickEvent.ServerTickEvent.Post event) {
-        MinecraftServer server = event.server();
+    private static void onServerTick(ServerTickEvent.Post event) {
+        MinecraftServer server = event.getServer();
         ServerLevel level = server.overworld();
         long tick = server.getTickCount();
         if (tick % 20 == 0 && level.isDarkOutside()) {

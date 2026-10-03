@@ -83,8 +83,8 @@ def evil_blocks():
         dict(balls, conditions=[{'condition': 'minecraft:random_chance', 'chance': 0.34}])]})
     write(f'{NS}/worldgen/configured_feature/evil_biome.json', {'type': t('evil_biome'), 'config': {}})
     write(f'{NS}/worldgen/placed_feature/evil_biome.json', {'feature': t('evil_biome'), 'placement': []})
-    write(f'{NS}/forge/biome_modifier/evil_biome.json', {
-        'type': 'forge:add_features', 'biomes': '#minecraft:is_overworld', 'features': t('evil_biome'), 'step': 'top_layer_modification'})
+    write(f'{NS}/neoforge/biome_modifier/evil_biome.json', {
+        'type': 'neoforge:add_features', 'biomes': '#minecraft:is_overworld', 'features': t('evil_biome'), 'step': 'top_layer_modification'})
 
 
 DUNGEON_BLOCKS = ['blue_brick', 'green_brick', 'pink_brick', 'spikes', 'locked_gold_chest']
@@ -100,8 +100,8 @@ def dungeon():
     write(f'{NS}/tags/item/keys/shadow_key.json', {'values': [t('shadow_key')]})
     write(f'{NS}/worldgen/configured_feature/dungeon.json', {'type': t('dungeon'), 'config': {}})
     write(f'{NS}/worldgen/placed_feature/dungeon.json', {'feature': t('dungeon'), 'placement': []})
-    write(f'{NS}/forge/biome_modifier/dungeon.json', {
-        'type': 'forge:add_features', 'biomes': '#minecraft:is_overworld', 'features': t('dungeon'), 'step': 'top_layer_modification'})
+    write(f'{NS}/neoforge/biome_modifier/dungeon.json', {
+        'type': 'neoforge:add_features', 'biomes': '#minecraft:is_overworld', 'features': t('dungeon'), 'step': 'top_layer_modification'})
     common = [
         {'rolls': {'type': 'minecraft:uniform', 'min': 1, 'max': 2}, 'entries': [
             entry('healing_potion', 2, 1, 2), entry('lesser_healing_potion', 3, 2, 5), entry('ironskin_potion', 1),
@@ -140,16 +140,16 @@ def jungle():
     write(f'{NS}/tags/block/jungle/ground.json', {'values': [t('jungle_grass'), 'minecraft:mud']})
     write(f'{NS}/worldgen/configured_feature/jungle.json', {'type': t('jungle'), 'config': {}})
     write(f'{NS}/worldgen/placed_feature/jungle.json', {'feature': t('jungle'), 'placement': []})
-    write(f'{NS}/forge/biome_modifier/jungle.json', {
-        'type': 'forge:add_features', 'biomes': '#minecraft:is_jungle', 'features': t('jungle'), 'step': 'top_layer_modification'})
+    write(f'{NS}/neoforge/biome_modifier/jungle.json', {
+        'type': 'neoforge:add_features', 'biomes': '#minecraft:is_jungle', 'features': t('jungle'), 'step': 'top_layer_modification'})
     # Ivy chests in the underground jungle
     write(f'{NS}/worldgen/configured_feature/jungle_chest.json', {'type': t('loot_chest'), 'config': {
         'chest': {'Name': 'minecraft:chest', 'Properties': {'facing': 'north', 'type': 'single', 'waterlogged': 'false'}},
         'loot_table': t('chests/jungle')}})
     write(f'{NS}/worldgen/placed_feature/jungle_chest.json', {'feature': t('jungle_chest'), 'placement': [
         {'type': 'minecraft:rarity_filter', 'chance': 2}] + floor_scan(-20, 50)})
-    write(f'{NS}/forge/biome_modifier/jungle_chest.json', {
-        'type': 'forge:add_features', 'biomes': '#minecraft:is_jungle', 'features': t('jungle_chest'), 'step': 'underground_decoration'})
+    write(f'{NS}/neoforge/biome_modifier/jungle_chest.json', {
+        'type': 'neoforge:add_features', 'biomes': '#minecraft:is_jungle', 'features': t('jungle_chest'), 'step': 'underground_decoration'})
     write(f'{NS}/loot_table/chests/jungle.json', chest_table(
         ['anklet_of_the_wind', 'feral_claws', 'natures_gift', 'honey_comb'],
         ['silver_bar', 'tungsten_bar', 'minecraft:gold_ingot', 'platinum_bar'],
@@ -173,8 +173,8 @@ def underworld():
     write(f'{NS}/tags/block/stations/hellforge.json', {'values': [t('hellforge'), t('adamantite_forge'), t('titanium_forge')]})
     write(f'{NS}/worldgen/configured_feature/underworld.json', {'type': t('underworld'), 'config': {}})
     write(f'{NS}/worldgen/placed_feature/underworld.json', {'feature': t('underworld'), 'placement': []})
-    write(f'{NS}/forge/biome_modifier/underworld.json', {
-        'type': 'forge:add_features', 'biomes': '#minecraft:is_overworld', 'features': t('underworld'), 'step': 'top_layer_modification'})
+    write(f'{NS}/neoforge/biome_modifier/underworld.json', {
+        'type': 'neoforge:add_features', 'biomes': '#minecraft:is_overworld', 'features': t('underworld'), 'step': 'top_layer_modification'})
     write(f'{NS}/loot_table/chests/shadow.json', {'type': 'minecraft:chest', 'pools': [
         {'rolls': 1, 'entries': [entry('flamelash', 2), entry('flower_of_fire', 2), entry('hellwing_bow', 2)]},
         {'rolls': {'type': 'minecraft:uniform', 'min': 1, 'max': 2}, 'entries': [entry('hellstone_bar', 1, 3, 8), entry('minecraft:obsidian', 1, 5, 10)]},
@@ -490,7 +490,7 @@ def vanilla_overrides(client_jar):
         for option, names in DISABLED.items():
             for name in names:
                 data = json.loads(jar.read(f'data/minecraft/recipe/{name}.json'))
-                data = {'forge:condition': {'type': 'terracraft:config', 'option': option, 'value': False}, **data}
+                data = {'neoforge:conditions': [{'type': 'terracraft:config', 'option': option, 'value': False}], **data}
                 write_override(f'minecraft/recipe/{name}.json', data)
     for structure in REMOVED_STRUCTURES:
         write_override(f'minecraft/tags/worldgen/biome/has_structure/{structure}.json', {'replace': True, 'values': []})
@@ -1175,11 +1175,11 @@ def worldgen():
                                                               'min_inclusive': {'absolute': lo}, 'max_inclusive': {'absolute': hi}}},
                 {'type': 'minecraft:biome'}]})
             features.append(t(name))
-    write(f'{NS}/forge/biome_modifier/remove_vanilla_ores.json', {
-        'type': 'forge:remove_features', 'biomes': '#minecraft:is_overworld',
+    write(f'{NS}/neoforge/biome_modifier/remove_vanilla_ores.json', {
+        'type': 'neoforge:remove_features', 'biomes': '#minecraft:is_overworld',
         'features': VANILLA_ORE_FEATURES, 'steps': ['underground_ores']})
-    write(f'{NS}/forge/biome_modifier/terraria_ores.json', {
-        'type': 'forge:add_features', 'biomes': '#minecraft:is_overworld', 'features': features, 'step': 'underground_ores'})
+    write(f'{NS}/neoforge/biome_modifier/terraria_ores.json', {
+        'type': 'neoforge:add_features', 'biomes': '#minecraft:is_overworld', 'features': features, 'step': 'underground_ores'})
 
     # Life Crystals on cave floors below y=40
     write(f'{NS}/worldgen/configured_feature/life_crystal.json', {'type': 'minecraft:simple_block', 'config': {
@@ -1197,8 +1197,8 @@ def worldgen():
             'loot_table': t(table)}})
         write(f'{NS}/worldgen/placed_feature/{name}.json', {'feature': t(name), 'placement': [
             {'type': 'minecraft:rarity_filter', 'chance': rarity}] + floor_scan(lo, hi)})
-    write(f'{NS}/forge/biome_modifier/terraria_cave_loot.json', {
-        'type': 'forge:add_features', 'biomes': '#minecraft:is_overworld',
+    write(f'{NS}/neoforge/biome_modifier/terraria_cave_loot.json', {
+        'type': 'neoforge:add_features', 'biomes': '#minecraft:is_overworld',
         'features': [t('life_crystal'), t('wooden_chest'), t('underground_chest')], 'step': 'underground_decoration'})
 
     write(f'{NS}/loot_table/chests/surface_cave.json', chest_table(

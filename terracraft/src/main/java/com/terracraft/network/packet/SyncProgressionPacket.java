@@ -6,13 +6,20 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.Identifier;
-import net.minecraftforge.event.network.CustomPayloadEvent;
+import com.terracraft.network.PacketContext;
 
 import java.util.List;
 import java.util.Map;
 
 /** Server -> client: full world progression state (small; sent on login and on every change). */
-public record SyncProgressionPacket(List<Identifier> flags, Map<Identifier, Integer> counters, WorldVariants variants) {
+public record SyncProgressionPacket(List<Identifier> flags, Map<Identifier, Integer> counters, WorldVariants variants) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<SyncProgressionPacket> TYPE = new Type<>(com.terracraft.TerraCraft.id("sync_progression_packet"));
+
+    @Override
+    public Type<SyncProgressionPacket> type() {
+        return TYPE;
+    }
+
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncProgressionPacket> STREAM_CODEC = StreamCodec.of(
         (buf, p) -> {
             buf.writeCollection(p.flags, FriendlyByteBuf::writeIdentifier);
@@ -26,7 +33,7 @@ public record SyncProgressionPacket(List<Identifier> flags, Map<Identifier, Inte
         )
     );
 
-    public static void handle(SyncProgressionPacket packet, CustomPayloadEvent.Context ctx) {
+    public static void handle(SyncProgressionPacket packet, PacketContext ctx) {
         ClientPacketHandlers.handleProgression(packet);
     }
 }

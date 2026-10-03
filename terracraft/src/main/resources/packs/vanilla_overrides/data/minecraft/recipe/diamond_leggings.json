@@ -1,9 +1,11 @@
 {
-  "forge:condition": {
-    "type": "terracraft:config",
-    "option": "disableDiamondGear",
-    "value": false
-  },
+  "neoforge:conditions": [
+    {
+      "type": "terracraft:config",
+      "option": "disableDiamondGear",
+      "value": false
+    }
+  ],
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {

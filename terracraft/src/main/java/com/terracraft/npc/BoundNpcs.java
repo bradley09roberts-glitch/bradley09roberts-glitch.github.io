@@ -18,7 +18,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.TickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.Locale;
 
@@ -35,11 +35,11 @@ public final class BoundNpcs {
     private BoundNpcs() {}
 
     public static void register() {
-        TickEvent.ServerTickEvent.Post.BUS.addListener(BoundNpcs::onServerTick);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(BoundNpcs::onServerTick);
     }
 
-    private static void onServerTick(TickEvent.ServerTickEvent.Post event) {
-        MinecraftServer server = event.server();
+    private static void onServerTick(ServerTickEvent.Post event) {
+        MinecraftServer server = event.getServer();
         if (server.getTickCount() % 200 != 51) {
             return;
         }

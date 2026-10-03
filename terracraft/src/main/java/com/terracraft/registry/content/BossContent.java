@@ -7,7 +7,7 @@ import com.terracraft.item.consumable.BossSummonItem;
 import com.terracraft.item.weapon.WeaponProperties;
 import com.terracraft.registry.ModItems;
 import com.terracraft.registry.TabGroup;
-import net.minecraftforge.registries.RegistryObject;
+import com.terracraft.registry.RegistryObject;
 
 /** Boss summoning items and the materials bosses drop. */
 public final class BossContent {

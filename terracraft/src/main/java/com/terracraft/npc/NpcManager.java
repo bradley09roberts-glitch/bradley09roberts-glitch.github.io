@@ -24,13 +24,12 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -60,14 +59,14 @@ public final class NpcManager {
     private NpcManager() {}
 
     public static void register() {
-        BusGroup.DEFAULT.register(MethodHandles.lookup(), NpcManager.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(NpcManager.class);
         NpcCommands.register();
         BoundNpcs.register();
     }
 
     @SubscribeEvent
-    static void onServerTick(TickEvent.ServerTickEvent.Post event) {
-        MinecraftServer server = event.server();
+    public static void onServerTick(ServerTickEvent.Post event) {
+        MinecraftServer server = event.getServer();
         if (server.getTickCount() % CHECK_INTERVAL != 0 || server.getPlayerList().getPlayers().isEmpty()) {
             return;
         }
@@ -97,7 +96,13 @@ public final class NpcManager {
 
     /** Collects possible houses: doors, light sources and furniture placed by players. */
     @SubscribeEvent
-    static boolean onBlockPlaced(BlockEvent.EntityPlaceEvent event) {
+    public static void onBlockPlaced(BlockEvent.EntityPlaceEvent event) {
+        if (onBlockPlacedCancels(event)) {
+            event.setCanceled(true);
+        }
+    }
+
+    private static boolean onBlockPlacedCancels(BlockEvent.EntityPlaceEvent event) {
         BlockState state = event.getPlacedBlock();
         if (event.getLevel() instanceof ServerLevel level && level.dimension() == net.minecraft.world.level.Level.OVERWORLD
             && (state.is(HousingChecker.DOORS) || state.is(HousingChecker.COMFORT) || state.is(HousingChecker.TABLES)

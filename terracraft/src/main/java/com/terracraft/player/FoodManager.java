@@ -6,7 +6,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
-import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 
 /**
  * Terraria has no hunger: the food bar is held just below full (so food can always be eaten and sprinting
@@ -20,7 +20,7 @@ public final class FoodManager {
     private FoodManager() {}
 
     public static void register() {
-        LivingEntityUseItemEvent.Finish.BUS.addListener(FoodManager::onEaten);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(FoodManager::onEaten);
     }
 
     public static void tick(ServerPlayer player) {

@@ -11,7 +11,7 @@ import com.terracraft.player.stats.Stat;
 import com.terracraft.player.stats.StatEffects;
 import com.terracraft.registry.ModItems;
 import com.terracraft.registry.TabGroup;
-import net.minecraftforge.registries.RegistryObject;
+import com.terracraft.registry.RegistryObject;
 
 /** Accessories: each is a name, a rarity/value and a {@link StatEffects} bundle. */
 public final class AccessoryContent {

@@ -1,7 +1,6 @@
 package com.terracraft.core;
 
 import com.terracraft.player.PlayerEvents;
-import com.terracraft.player.TerraCapabilities;
 
 /**
  * Registers every game-bus listener class. Each class owns a static {@code register()} that uses a
@@ -11,7 +10,6 @@ public final class GameEventHandlers {
     private GameEventHandlers() {}
 
     public static void register() {
-        TerraCapabilities.register();
         PlayerEvents.register();
         com.terracraft.player.FoodManager.register();
         com.terracraft.player.NoBootsSlot.register();

@@ -9,7 +9,7 @@ import com.terracraft.player.stats.StatEffects;
 import com.terracraft.registry.ModItems;
 import com.terracraft.registry.TabGroup;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraftforge.registries.RegistryObject;
+import com.terracraft.registry.RegistryObject;
 
 import java.util.ArrayList;
 import java.util.List;

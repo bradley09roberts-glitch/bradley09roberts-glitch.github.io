@@ -21,7 +21,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.event.TickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +43,7 @@ public final class TerrariaSpawner {
     private TerrariaSpawner() {}
 
     public static void register() {
-        TickEvent.PlayerTickEvent.Post.BUS.addListener(TerrariaSpawner::onPlayerTick);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(TerrariaSpawner::onPlayerTick);
         SpawnCommands.register();
     }
 
@@ -64,8 +64,8 @@ public final class TerrariaSpawner {
         return rules;
     }
 
-    private static void onPlayerTick(TickEvent.PlayerTickEvent.Post event) {
-        if (event.player() instanceof ServerPlayer player && (player.tickCount + player.getId()) % 20 == 0) {
+    private static void onPlayerTick(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
+        if (event.getEntity() instanceof ServerPlayer player && (player.tickCount + player.getId()) % 20 == 0) {
             tick(player);
         }
     }

@@ -1,6 +1,6 @@
 {
-  "type": "forge:add_features",
+  "type": "neoforge:add_features",
   "biomes": "#minecraft:is_overworld",
-  "features": "terracraft:dungeon",
+  "features": "terracraft:evil_biome",
   "step": "top_layer_modification"
 }

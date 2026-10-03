@@ -4,7 +4,7 @@ import com.terracraft.TerraCraft;
 import com.terracraft.player.stats.BuffStatSource;
 import com.terracraft.player.stats.EquipmentStatSources;
 import com.terracraft.player.stats.StatCalculator;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
 /** Common (both sides) setup after registries are populated. */
 public final class CommonSetup {

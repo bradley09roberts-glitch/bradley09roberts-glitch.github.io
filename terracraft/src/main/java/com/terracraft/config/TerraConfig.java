@@ -1,8 +1,8 @@
 package com.terracraft.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.ModContainer;
 
 /**
  * All TerraCraft configuration.
@@ -14,23 +14,23 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
  */
 public final class TerraConfig {
     public static final Common COMMON;
-    public static final ForgeConfigSpec COMMON_SPEC;
+    public static final ModConfigSpec COMMON_SPEC;
     public static final Client CLIENT;
-    public static final ForgeConfigSpec CLIENT_SPEC;
+    public static final ModConfigSpec CLIENT_SPEC;
 
     static {
-        ForgeConfigSpec.Builder common = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder common = new ModConfigSpec.Builder();
         COMMON = new Common(common);
         COMMON_SPEC = common.build();
 
-        ForgeConfigSpec.Builder client = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder client = new ModConfigSpec.Builder();
         CLIENT = new Client(client);
         CLIENT_SPEC = client.build();
     }
 
     private TerraConfig() {}
 
-    public static void register(FMLJavaModLoadingContext context) {
+    public static void register(ModContainer context) {
         context.registerConfig(ModConfig.Type.COMMON, COMMON_SPEC, "terracraft-common.toml");
         context.registerConfig(ModConfig.Type.CLIENT, CLIENT_SPEC, "terracraft-client.toml");
     }
@@ -43,51 +43,51 @@ public final class TerraConfig {
 
     public static final class Common {
         // ---------------- player ----------------
-        public final ForgeConfigSpec.IntValue baseMaxLife;
-        public final ForgeConfigSpec.IntValue lifeCrystalLife;
-        public final ForgeConfigSpec.IntValue maxLifeCrystals;
-        public final ForgeConfigSpec.IntValue lifeFruitLife;
-        public final ForgeConfigSpec.IntValue maxLifeFruit;
-        public final ForgeConfigSpec.IntValue baseMaxMana;
-        public final ForgeConfigSpec.IntValue manaCrystalMana;
-        public final ForgeConfigSpec.IntValue maxManaCrystals;
-        public final ForgeConfigSpec.IntValue accessorySlots;
-        public final ForgeConfigSpec.BooleanValue terrariaLifeRegen;
-        public final ForgeConfigSpec.DoubleValue environmentalDamageMultiplier;
-        public final ForgeConfigSpec.DoubleValue vanillaMobDamageMultiplier;
-        public final ForgeConfigSpec.DoubleValue vanillaArmorDefenseScale;
-        public final ForgeConfigSpec.BooleanValue softcoreDeaths;
-        public final ForgeConfigSpec.EnumValue<CoinDeathPenalty> coinDeathPenalty;
-        public final ForgeConfigSpec.EnumValue<TerrariaDifficulty> difficulty;
-        public final ForgeConfigSpec.BooleanValue damageVariance;
+        public final ModConfigSpec.IntValue baseMaxLife;
+        public final ModConfigSpec.IntValue lifeCrystalLife;
+        public final ModConfigSpec.IntValue maxLifeCrystals;
+        public final ModConfigSpec.IntValue lifeFruitLife;
+        public final ModConfigSpec.IntValue maxLifeFruit;
+        public final ModConfigSpec.IntValue baseMaxMana;
+        public final ModConfigSpec.IntValue manaCrystalMana;
+        public final ModConfigSpec.IntValue maxManaCrystals;
+        public final ModConfigSpec.IntValue accessorySlots;
+        public final ModConfigSpec.BooleanValue terrariaLifeRegen;
+        public final ModConfigSpec.DoubleValue environmentalDamageMultiplier;
+        public final ModConfigSpec.DoubleValue vanillaMobDamageMultiplier;
+        public final ModConfigSpec.DoubleValue vanillaArmorDefenseScale;
+        public final ModConfigSpec.BooleanValue softcoreDeaths;
+        public final ModConfigSpec.EnumValue<CoinDeathPenalty> coinDeathPenalty;
+        public final ModConfigSpec.EnumValue<TerrariaDifficulty> difficulty;
+        public final ModConfigSpec.BooleanValue damageVariance;
 
         // ---------------- vanilla suppression ----------------
-        public final ForgeConfigSpec.BooleanValue disableVillagers;
-        public final ForgeConfigSpec.BooleanValue disableWanderingTraders;
-        public final ForgeConfigSpec.BooleanValue disableVanillaHostileSpawns;
-        public final ForgeConfigSpec.BooleanValue disableNether;
-        public final ForgeConfigSpec.BooleanValue disableEnd;
-        public final ForgeConfigSpec.BooleanValue disableEnchanting;
-        public final ForgeConfigSpec.BooleanValue disableVanillaBrewing;
-        public final ForgeConfigSpec.BooleanValue disableDiamondGear;
-        public final ForgeConfigSpec.BooleanValue disableNetheriteGear;
+        public final ModConfigSpec.BooleanValue disableVillagers;
+        public final ModConfigSpec.BooleanValue disableWanderingTraders;
+        public final ModConfigSpec.BooleanValue disableVanillaHostileSpawns;
+        public final ModConfigSpec.BooleanValue disableNether;
+        public final ModConfigSpec.BooleanValue disableEnd;
+        public final ModConfigSpec.BooleanValue disableEnchanting;
+        public final ModConfigSpec.BooleanValue disableVanillaBrewing;
+        public final ModConfigSpec.BooleanValue disableDiamondGear;
+        public final ModConfigSpec.BooleanValue disableNetheriteGear;
 
         // ---------------- economy ----------------
-        public final ForgeConfigSpec.BooleanValue terrariaSpawning;
-        public final ForgeConfigSpec.DoubleValue spawnRateMultiplier;
-        public final ForgeConfigSpec.DoubleValue maxSpawnsMultiplier;
-        public final ForgeConfigSpec.BooleanValue vanillaMobsDropCoins;
-        public final ForgeConfigSpec.BooleanValue autoCompactCoins;
+        public final ModConfigSpec.BooleanValue terrariaSpawning;
+        public final ModConfigSpec.DoubleValue spawnRateMultiplier;
+        public final ModConfigSpec.DoubleValue maxSpawnsMultiplier;
+        public final ModConfigSpec.BooleanValue vanillaMobsDropCoins;
+        public final ModConfigSpec.BooleanValue autoCompactCoins;
 
         // ---------------- world ----------------
-        public final ForgeConfigSpec.DoubleValue secondaryOreFrequency;
-        public final ForgeConfigSpec.BooleanValue biomeSpread;
-        public final ForgeConfigSpec.DoubleValue biomeSpreadSpeed;
+        public final ModConfigSpec.DoubleValue secondaryOreFrequency;
+        public final ModConfigSpec.BooleanValue biomeSpread;
+        public final ModConfigSpec.DoubleValue biomeSpreadSpeed;
 
         // ---------------- debug ----------------
-        public final ForgeConfigSpec.BooleanValue verboseLogging;
+        public final ModConfigSpec.BooleanValue verboseLogging;
 
-        Common(ForgeConfigSpec.Builder b) {
+        Common(ModConfigSpec.Builder b) {
             b.comment("Terraria-style player statistics").push("player");
             baseMaxLife = b.comment("Starting maximum life (Terraria: 100).")
                 .defineInRange("baseMaxLife", 100, 20, 1000);
@@ -184,13 +184,13 @@ public final class TerraConfig {
     }
 
     public static final class Client {
-        public final ForgeConfigSpec.BooleanValue terrariaHud;
-        public final ForgeConfigSpec.BooleanValue flatSprites;
-        public final ForgeConfigSpec.BooleanValue showLifeText;
-        public final ForgeConfigSpec.BooleanValue showManaText;
-        public final ForgeConfigSpec.BooleanValue showDefense;
+        public final ModConfigSpec.BooleanValue terrariaHud;
+        public final ModConfigSpec.BooleanValue flatSprites;
+        public final ModConfigSpec.BooleanValue showLifeText;
+        public final ModConfigSpec.BooleanValue showManaText;
+        public final ModConfigSpec.BooleanValue showDefense;
 
-        Client(ForgeConfigSpec.Builder b) {
+        Client(ModConfigSpec.Builder b) {
             b.comment("Heads-up display").push("hud");
             terrariaHud = b.comment("Replace the vanilla hearts with Terraria-style life hearts and mana stars.")
                 .define("terrariaHud", true);

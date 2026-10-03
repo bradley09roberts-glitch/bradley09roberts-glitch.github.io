@@ -5,7 +5,7 @@ import com.terracraft.item.TerraRarity;
 import com.terracraft.item.tool.TerrariaToolItem;
 import com.terracraft.registry.ModItems;
 import com.terracraft.registry.TabGroup;
-import net.minecraftforge.registries.RegistryObject;
+import com.terracraft.registry.RegistryObject;
 
 /** Pickaxes, axes and hammers with Terraria powers. */
 public final class ToolContent {

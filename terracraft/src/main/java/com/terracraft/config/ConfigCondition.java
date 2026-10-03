@@ -5,17 +5,17 @@ import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.terracraft.TerraCraft;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.crafting.conditions.ICondition;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.common.conditions.ICondition;
 
 import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * Forge JSON condition {@code terracraft:config}: a data file is only loaded when a boolean config option
+ * JSON load condition {@code terracraft:config}: a data file is only loaded when a boolean config option
  * has the expected value.
  * <pre>
- * "forge:condition": { "type": "terracraft:config", "option": "disableDiamondGear", "value": false }
+ * "neoforge:conditions": [{ "type": "terracraft:config", "option": "disableDiamondGear", "value": false }]
  * </pre>
  * Used to make vanilla recipe overrides (diamond gear, enchanting table, brewing stand...) follow the config.
  */
@@ -41,12 +41,12 @@ public record ConfigCondition(String option, boolean value) implements IConditio
         );
     }
 
-    private static Map.Entry<String, Supplier<Boolean>> entry(String name, ForgeConfigSpec.BooleanValue value) {
+    private static Map.Entry<String, Supplier<Boolean>> entry(String name, ModConfigSpec.BooleanValue value) {
         return Map.entry(name, value::get);
     }
 
     @Override
-    public boolean test(IContext context, DynamicOps<?> ops) {
+    public boolean test(IContext context) {
         Supplier<Boolean> supplier = options().get(option);
         if (supplier == null) {
             TerraCraft.LOGGER.warn("Unknown TerraCraft config option '{}' used in a data condition", option);

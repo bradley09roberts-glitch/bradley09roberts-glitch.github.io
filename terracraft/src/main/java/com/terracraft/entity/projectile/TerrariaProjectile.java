@@ -146,7 +146,7 @@ public class TerrariaProjectile extends Projectile {
         setPos(next);
         updateRotation();
         super.tick();
-        if (hit.getType() != HitResult.Type.MISS && isAlive() && !net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, hit)) {
+        if (hit.getType() != HitResult.Type.MISS && isAlive() && !net.neoforged.neoforge.event.EventHooks.onProjectileImpact(this, hit)) {
             hitTargetOrDeflectSelf(hit);
         }
         if (level().isClientSide()) {

@@ -1,7 +1,7 @@
 # TerraCraft
 
-**Terraria rebuilt as a 3D Minecraft total conversion.** A single standalone Forge mod (no dependencies)
-for **Minecraft Java 26.2 / Forge 65.1.0** that turns Minecraft into a Minecraft-style recreation of
+**Terraria rebuilt as a 3D Minecraft total conversion.** A single standalone NeoForge mod (no dependencies)
+for **Minecraft Java 26.2 / NeoForge 26.2.0.88+** that turns Minecraft into a Minecraft-style recreation of
 Terraria: Terraria's progression, health/mana, combat classes, equipment, crafting stations, ores,
 coins, NPCs, bosses, events and biomes, built inside Minecraft's 3D world.
 
@@ -9,15 +9,15 @@ All art shipped with the mod is original: textures are generated procedurally by
 No Terraria assets are included or redistributed. If you own Terraria and want its real sprites, build a
 **personal** resource pack (see below).
 
-> Status: **Stages 0-3 (foundation, core systems, early game, Corruption/Crimson with the Eater of Worlds and
-> Brain of Cthulhu, Blood Moon and Slime Rain) are complete and verified in-game.**
+> Status: **Stages 0-5 (foundation through early Hardmode: the Hallow, Hardmode ores and gear, Hardmode
+> enemies, the mechanical bosses and Hardmode NPCs) are complete and verified in-game.**
 > See [DEVELOPMENT_PROGRESS.md](DEVELOPMENT_PROGRESS.md) and
 > [TERRARIA_CONTENT_CHECKLIST.md](TERRARIA_CONTENT_CHECKLIST.md).
 
 ## Building
 
 Requirements: JDK 25 (Gradle provisions it automatically through the foojay toolchain resolver), internet
-access for the first build (Minecraft, Forge and assets are downloaded).
+access for the first build (Minecraft, NeoForge and assets are downloaded).
 
 ```bash
 ./gradlew build          # produces build/libs/terracraft-<version>.jar (the one mod jar)
@@ -25,7 +25,14 @@ access for the first build (Minecraft, Forge and assets are downloaded).
 ./gradlew runServer      # development dedicated server (run/)
 ```
 
-Install: drop `build/libs/terracraft-*.jar` into the `mods` folder of a Forge 65.1.0 (MC 26.2) installation.
+Install: drop `build/libs/terracraft-*.jar` into the `mods` folder of a NeoForge 26.2 installation
+(NeoForge 26.2.0.88 or newer, from the [NeoForge installer](https://neoforged.net/)).
+
+### Shaders
+
+TerraCraft comes with its own shader pack, **TerraCraft Radiance** (see [shaderpack/README.md](shaderpack/README.md)).
+It needs [Sodium](https://modrinth.com/mod/sodium) 0.9.2+ and [Iris](https://modrinth.com/mod/iris) 1.11.4+, NeoForge
+builds for 26.2: put both jars in `mods` next to TerraCraft and the pack zip in `shaderpacks`.
 
 ## Regenerating assets and data
 

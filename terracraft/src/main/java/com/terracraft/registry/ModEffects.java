@@ -8,13 +8,10 @@ import com.terracraft.player.stats.StatEffects;
 import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
 
 /** Terraria buffs and debuffs. */
 public final class ModEffects {
-    public static final DeferredRegister<MobEffect> EFFECTS = DeferredRegister.create(ForgeRegistries.MOB_EFFECTS, TerraCraft.MODID);
+    public static final DeferredRegister<MobEffect> EFFECTS = DeferredRegister.create(net.minecraft.core.registries.Registries.MOB_EFFECT, TerraCraft.MODID);
 
     public static final RegistryObject<MobEffect> IRONSKIN = buff("ironskin", 0xB4B4B4, StatEffects.builder().add(Stat.DEFENSE, 8));
     public static final RegistryObject<MobEffect> SWIFTNESS = buff("swiftness", 0x5AE65A, StatEffects.builder().add(Stat.MOVE_SPEED, 0.25F));

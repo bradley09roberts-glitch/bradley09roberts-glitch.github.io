@@ -4,13 +4,10 @@ import com.terracraft.TerraCraft;
 import com.terracraft.entity.projectile.TerrariaProjectile;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
 
 /** Entity types. */
 public final class ModEntities {
-    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, TerraCraft.MODID);
+    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(net.minecraft.core.registries.Registries.ENTITY_TYPE, TerraCraft.MODID);
 
     /** Generic data-driven projectile (see ProjectileKinds). */
     public static final RegistryObject<EntityType<TerrariaProjectile>> PROJECTILE = ENTITY_TYPES.register("projectile",

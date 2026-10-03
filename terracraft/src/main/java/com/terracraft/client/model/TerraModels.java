@@ -2,7 +2,7 @@ package com.terracraft.client.model;
 
 import com.terracraft.TerraCraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
-import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
 /** Model layers of TerraCraft's 3D creatures. Textures live in {@code textures/entity/model/<entity>[_variant].png}. */
 public final class TerraModels {

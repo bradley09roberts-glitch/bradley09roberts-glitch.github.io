@@ -8,12 +8,11 @@ import com.terracraft.player.stats.StatCalculator;
 import com.terracraft.progression.ProgressionManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 
-import java.lang.invoke.MethodHandles;
 
 /**
  * Player lifecycle for Terraria stats: first join, login, respawn, death cloning, per-tick regeneration
@@ -28,11 +27,11 @@ public final class PlayerEvents {
     private PlayerEvents() {}
 
     public static void register() {
-        BusGroup.DEFAULT.register(MethodHandles.lookup(), PlayerEvents.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(PlayerEvents.class);
     }
 
     @SubscribeEvent
-    static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
+    public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) {
             return;
         }
@@ -52,29 +51,23 @@ public final class PlayerEvents {
 
     /** Tell a player which wings the players they start seeing wear. */
     @SubscribeEvent
-    static void onStartTracking(PlayerEvent.StartTracking event) {
+    public static void onStartTracking(PlayerEvent.StartTracking event) {
         if (event.getEntity() instanceof ServerPlayer tracker && event.getTarget() instanceof ServerPlayer target) {
             TerraNetwork.sendToPlayer(tracker, com.terracraft.network.packet.PlayerWingsPacket.of(target));
         }
     }
 
     @SubscribeEvent
-    static void onClone(PlayerEvent.Clone event) {
-        Player original = event.getOriginal();
-        original.reviveCaps();
-        try {
-            TerraPlayerData oldData = TerraPlayerData.getOrNull(original);
-            TerraPlayerData newData = TerraPlayerData.getOrNull(event.getEntity());
-            if (oldData != null && newData != null) {
-                newData.copyFrom(oldData, event.isWasDeath());
-            }
-        } finally {
-            original.invalidateCaps();
+    public static void onClone(PlayerEvent.Clone event) {
+        TerraPlayerData oldData = TerraPlayerData.getOrNull(event.getOriginal());
+        TerraPlayerData newData = TerraPlayerData.getOrNull(event.getEntity());
+        if (oldData != null && newData != null) {
+            newData.copyFrom(oldData, event.isWasDeath());
         }
     }
 
     @SubscribeEvent
-    static void onRespawn(PlayerEvent.PlayerRespawnEvent event) {
+    public static void onRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             TerraPlayerData data = TerraPlayerData.get(player);
             refresh(player, data);
@@ -85,7 +78,7 @@ public final class PlayerEvents {
     }
 
     @SubscribeEvent
-    static void onChangeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+    public static void onChangeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             TerraPlayerData data = TerraPlayerData.get(player);
             refresh(player, data);
@@ -94,8 +87,8 @@ public final class PlayerEvents {
     }
 
     @SubscribeEvent
-    static void onPlayerTick(TickEvent.PlayerTickEvent.Post event) {
-        if (!(event.player() instanceof ServerPlayer player) || !player.isAlive()) {
+    public static void onPlayerTick(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || !player.isAlive()) {
             return;
         }
         TerraPlayerData data = TerraPlayerData.get(player);

@@ -16,7 +16,7 @@ import com.terracraft.registry.ModItems;
 import com.terracraft.registry.TabGroup;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraftforge.registries.RegistryObject;
+import com.terracraft.registry.RegistryObject;
 
 /**
  * Weapons and ammunition. Each weapon is one line: name + Terraria stats (damage, use time in 1/60 s,

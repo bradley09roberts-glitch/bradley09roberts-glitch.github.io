@@ -7,12 +7,11 @@ import com.terracraft.core.GameEventHandlers;
 import com.terracraft.network.TerraNetwork;
 import com.terracraft.registry.ModRegistries;
 import net.minecraft.resources.Identifier;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLEnvironment;
 import org.slf4j.Logger;
 
 /**
@@ -23,7 +22,7 @@ import org.slf4j.Logger;
  * <ul>
  *     <li>{@link TerraConfig} - gameplay and client configuration</li>
  *     <li>{@link ModRegistries} - every DeferredRegister (blocks, items, entities, menus...)</li>
- *     <li>{@link TerraNetwork} - the single play-phase network channel</li>
+ *     <li>{@link TerraNetwork} - the play-phase network payloads</li>
  *     <li>{@link GameEventHandlers} - registration of all game-bus listener classes</li>
  *     <li>{@code com.terracraft.client.TerraClient} - client only wiring (loaded only on the client)</li>
  * </ul>
@@ -34,20 +33,27 @@ public final class TerraCraft {
     public static final String NAME = "TerraCraft";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public TerraCraft(FMLJavaModLoadingContext context) {
-        BusGroup modBus = context.getModBusGroup();
+    private static IEventBus modBus;
 
-        TerraConfig.register(context);
+    public TerraCraft(IEventBus modBus, ModContainer container) {
+        TerraCraft.modBus = modBus;
+
+        TerraConfig.register(container);
         ModRegistries.register(modBus);
-        TerraNetwork.init();
+        modBus.addListener(TerraNetwork::register);
         GameEventHandlers.register();
 
-        FMLCommonSetupEvent.getBus(modBus).addListener(CommonSetup::onCommonSetup);
+        modBus.addListener(CommonSetup::onCommonSetup);
 
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
             com.terracraft.client.TerraClient.init(modBus);
         }
         LOGGER.info("{} constructed - Terraria progression is coming to this world.", NAME);
+    }
+
+    /** The mod event bus (registration and lifecycle events). */
+    public static IEventBus modBus() {
+        return modBus;
     }
 
     /** Creates an identifier in the TerraCraft namespace. */

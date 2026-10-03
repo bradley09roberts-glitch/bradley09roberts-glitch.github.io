@@ -5,39 +5,38 @@ import com.terracraft.mining.MiningPower;
 import com.terracraft.network.TerraNetwork;
 import com.terracraft.network.packet.SyncMiningPowerPacket;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.OnDatapackSyncEvent;
-import net.minecraftforge.event.TagsUpdatedEvent;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
+import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
+import net.neoforged.neoforge.event.OnDatapackSyncEvent;
+import net.neoforged.neoforge.event.TagsUpdatedEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 
-import java.lang.invoke.MethodHandles;
 
 /** Registers TerraCraft's datapack loaders and pushes loaded data to clients. */
 public final class DataEvents {
     private DataEvents() {}
 
     public static void register() {
-        BusGroup.DEFAULT.register(MethodHandles.lookup(), DataEvents.class);
-        net.minecraftforge.event.AddPackFindersEvent.BUS.addListener(BuiltInPacks::onAddPackFinders);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(DataEvents.class);
+        com.terracraft.TerraCraft.modBus().addListener(BuiltInPacks::onAddPackFinders);
     }
 
     @SubscribeEvent
-    static void onAddReloadListeners(AddReloadListenerEvent event) {
-        event.addListener(new JsonDataLoader("terracraft/mining_power", MiningPower::load));
-        event.addListener(new JsonDataLoader("terracraft/recipe", TerraRecipeManager::load));
-        event.addListener(new JsonDataLoader("terracraft/spawns", com.terracraft.world.spawn.TerrariaSpawner::load));
-        event.addListener(new JsonDataLoader("terracraft/shops", com.terracraft.npc.NpcShops::load));
+    public static void onAddReloadListeners(AddServerReloadListenersEvent event) {
+        event.addListener(com.terracraft.TerraCraft.id("mining_power"), new JsonDataLoader("terracraft/mining_power", MiningPower::load));
+        event.addListener(com.terracraft.TerraCraft.id("recipes"), new JsonDataLoader("terracraft/recipe", TerraRecipeManager::load));
+        event.addListener(com.terracraft.TerraCraft.id("spawns"), new JsonDataLoader("terracraft/spawns", com.terracraft.world.spawn.TerrariaSpawner::load));
+        event.addListener(com.terracraft.TerraCraft.id("shops"), new JsonDataLoader("terracraft/shops", com.terracraft.npc.NpcShops::load));
     }
 
     @SubscribeEvent
-    static void onTagsUpdated(TagsUpdatedEvent event) {
+    public static void onTagsUpdated(TagsUpdatedEvent event) {
         MiningPower.invalidate();
     }
 
     @SubscribeEvent
-    static void onDatapackSync(OnDatapackSyncEvent event) {
-        event.getPlayers().forEach(DataEvents::syncTo);
+    public static void onDatapackSync(OnDatapackSyncEvent event) {
+        event.getRelevantPlayers().forEach(DataEvents::syncTo);
     }
 
     public static void syncTo(ServerPlayer player) {

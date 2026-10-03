@@ -5,11 +5,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,7 +23,7 @@ public final class MiningEvents {
     private MiningEvents() {}
 
     public static void register() {
-        BusGroup.DEFAULT.register(MethodHandles.lookup(), MiningEvents.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(MiningEvents.class);
     }
 
     private static boolean insufficient(Player player, BlockState state) {
@@ -36,7 +35,13 @@ public final class MiningEvents {
     }
 
     @SubscribeEvent
-    static boolean onBreakSpeed(PlayerEvent.BreakSpeed event) {
+    public static void onBreakSpeed(PlayerEvent.BreakSpeed event) {
+        if (onBreakSpeedCancels(event)) {
+            event.setCanceled(true);
+        }
+    }
+
+    private static boolean onBreakSpeedCancels(PlayerEvent.BreakSpeed event) {
         Player player = event.getEntity();
         BlockState state = event.getState();
         if (!insufficient(player, state)) {
@@ -55,7 +60,7 @@ public final class MiningEvents {
     }
 
     @SubscribeEvent
-    static void onHarvestCheck(PlayerEvent.HarvestCheck event) {
+    public static void onHarvestCheck(PlayerEvent.HarvestCheck event) {
         if (insufficient(event.getEntity(), event.getTargetBlock())) {
             event.setCanHarvest(false);
         }

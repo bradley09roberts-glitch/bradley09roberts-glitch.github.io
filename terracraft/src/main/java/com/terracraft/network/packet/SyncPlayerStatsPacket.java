@@ -5,7 +5,7 @@ import com.terracraft.player.TerraPlayerData;
 import com.terracraft.player.stats.PlayerStats;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraftforge.event.network.CustomPayloadEvent;
+import com.terracraft.network.PacketContext;
 
 /**
  * Server -> owning client: the player's Terraria resources and the subset of computed stats the client
@@ -23,7 +23,14 @@ public record SyncPlayerStatsPacket(
     int accessorySlots,
     int abilityBits,
     String setBonus
-) {
+) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<SyncPlayerStatsPacket> TYPE = new Type<>(com.terracraft.TerraCraft.id("sync_player_stats_packet"));
+
+    @Override
+    public Type<SyncPlayerStatsPacket> type() {
+        return TYPE;
+    }
+
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncPlayerStatsPacket> STREAM_CODEC = StreamCodec.of(
         (buf, p) -> {
             buf.writeVarInt(p.lifeCrystals);
@@ -53,7 +60,7 @@ public record SyncPlayerStatsPacket(
         );
     }
 
-    public static void handle(SyncPlayerStatsPacket packet, CustomPayloadEvent.Context ctx) {
+    public static void handle(SyncPlayerStatsPacket packet, PacketContext ctx) {
         ClientPacketHandlers.handlePlayerStats(packet);
     }
 }

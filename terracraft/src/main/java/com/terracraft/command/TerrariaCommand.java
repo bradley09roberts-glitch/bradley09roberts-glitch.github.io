@@ -119,7 +119,7 @@ public final class TerrariaCommand {
         root.then(Commands.literal("equip").then(Commands.argument("item", IdentifierArgument.id()).executes(ctx -> {
             ServerPlayer player = ctx.getSource().getPlayerOrException();
             Identifier id = IdentifierArgument.getId(ctx, "item");
-            var item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(id);
+            var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(id);
             if (!(item instanceof com.terracraft.item.accessory.AccessoryItem)) {
                 ctx.getSource().sendFailure(Component.literal(id + " is not an accessory."));
                 return 0;

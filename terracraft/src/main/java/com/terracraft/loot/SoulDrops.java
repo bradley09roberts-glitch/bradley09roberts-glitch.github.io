@@ -11,7 +11,7 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.entity.living.LivingDropsEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 
 /**
  * Hardmode souls, the wing materials:
@@ -26,7 +26,7 @@ public final class SoulDrops {
     private SoulDrops() {}
 
     public static void register() {
-        LivingDropsEvent.BUS.addListener(SoulDrops::onDrops);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(SoulDrops::onDrops);
     }
 
     private static void onDrops(LivingDropsEvent event) {

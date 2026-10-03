@@ -3,7 +3,7 @@ package com.terracraft.network.packet;
 import com.terracraft.client.ClientPacketHandlers;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraftforge.event.network.CustomPayloadEvent;
+import com.terracraft.network.PacketContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,14 @@ import java.util.List;
  * @param offers       the NPC's current shop (already filtered by progression/time on the server)
  */
 public record OpenNpcChatPacket(int entityId, String npcId, String dialogueKey, String dialogueArg, List<String> services,
-                                List<Offer> offers) {
+                                List<Offer> offers) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<OpenNpcChatPacket> TYPE = new Type<>(com.terracraft.TerraCraft.id("open_npc_chat_packet"));
+
+    @Override
+    public Type<OpenNpcChatPacket> type() {
+        return TYPE;
+    }
+
     public record Offer(String item, int count, long price) {}
 
     public static final StreamCodec<RegistryFriendlyByteBuf, OpenNpcChatPacket> STREAM_CODEC = StreamCodec.of(
@@ -52,7 +59,7 @@ public record OpenNpcChatPacket(int entityId, String npcId, String dialogueKey, 
             return new OpenNpcChatPacket(entityId, npcId, key, arg, services, offers);
         });
 
-    public static void handle(OpenNpcChatPacket packet, CustomPayloadEvent.Context ctx) {
+    public static void handle(OpenNpcChatPacket packet, PacketContext ctx) {
         ClientPacketHandlers.openNpcChat(packet);
     }
 }

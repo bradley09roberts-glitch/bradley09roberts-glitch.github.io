@@ -14,15 +14,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.util.Result;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.CriticalHitEvent;
-import net.minecraftforge.eventbus.api.bus.BusGroup;
-import net.minecraftforge.eventbus.api.listener.Priority;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.CriticalHitEvent;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.SubscribeEvent;
 
-import java.lang.invoke.MethodHandles;
 
 /**
  * TerraCraft's damage pipeline, layered onto vanilla's:
@@ -40,52 +37,48 @@ public final class CombatEvents {
     private CombatEvents() {}
 
     public static void register() {
-        BusGroup.DEFAULT.register(MethodHandles.lookup(), CombatEvents.class);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(CombatEvents.class);
     }
 
     // ------------------------------------------------------------------ immunities
 
-    @SubscribeEvent(priority = Priority.HIGH)
-    static boolean onAttack(LivingAttackEvent event) {
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onAttack(LivingIncomingDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) {
-            return false;
+            return;
         }
         DamageSource source = event.getSource();
         PlayerStats stats = TerraPlayerData.get(player).stats();
         if (stats.has(Ability.FIRE_BLOCK_IMMUNE) && (source.is(DamageTypes.IN_FIRE) || source.is(DamageTypes.ON_FIRE)
             || source.is(DamageTypes.HOT_FLOOR) || source.is(DamageTypes.CAMPFIRE))) {
             player.clearFire();
-            return true;
+            event.setCanceled(true);
+            return;
         }
         if (source.is(DamageTypes.LAVA) && (stats.has(Ability.LAVA_IMMUNE) || TerraPlayerData.get(player).lavaImmunityTicks > 0)) {
             player.clearFire();
-            return true;
+            event.setCanceled(true);
         }
-        return false;
     }
 
     // ------------------------------------------------------------------ melee crits
 
     @SubscribeEvent
-    static void onCriticalHit(CriticalHitEvent event) {
+    public static void onCriticalHit(CriticalHitEvent event) {
         Player player = event.getEntity();
         ItemStack weapon = player.getMainHandItem();
         TerraItemStats stats = TerraItemStats.of(weapon);
         DamageClass type = stats.isWeapon() ? stats.damageClass() : DamageClass.MELEE;
         int chance = DamageCalc.BASE_CRIT + stats.crit() + TerraPlayerData.get(player).stats().critBonus(type);
-        if (DamageCalc.rollCrit(chance, player.getRandom())) {
-            event.setResult(Result.ALLOW);
-            event.setDamageModifier(2.0F);
-        } else {
-            event.setResult(Result.DENY);
-            event.setDamageModifier(1.0F);
-        }
+        boolean crit = DamageCalc.rollCrit(chance, player.getRandom());
+        event.setCriticalHit(crit);
+        event.setDamageMultiplier(crit ? 2.0F : 1.0F);
     }
 
     // ------------------------------------------------------------------ main pipeline
 
-    @SubscribeEvent(priority = Priority.HIGH)
-    static void onHurt(LivingHurtEvent event) {
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public static void onHurt(LivingIncomingDamageEvent event) {
         LivingEntity target = event.getEntity();
         DamageSource source = event.getSource();
         Entity cause = source.getEntity();

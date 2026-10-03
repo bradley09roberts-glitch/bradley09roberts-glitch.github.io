@@ -1,6 +1,6 @@
 # TerraCraft architecture
 
-Target: Minecraft Java 26.2, Forge 65.1.0 (EventBus 7, ForgeGradle 7), Java 25. One mod jar, no dependencies.
+Target: Minecraft Java 26.2, NeoForge 26.2.0.88 (ModDevGradle 2), Java 25. One mod jar, no dependencies.
 
 ## Guiding rules
 
@@ -102,7 +102,7 @@ re-validated on the server.
 
 ### Vanilla overrides
 `packs/vanilla_overrides` is registered by `BuiltInPacks` as a *required* datapack *fixed at the top*, so its
-replacements (config-conditioned recipe overrides, empty structure tags) win over vanilla and Forge in every world.
+replacements (config-conditioned recipe overrides, empty structure tags) win over vanilla and NeoForge in every world.
 
 ## Adding content (cheat sheet)
 
@@ -123,10 +123,19 @@ replacements (config-conditioned recipe overrides, empty structure tags) win ove
 
 ## Known engine constraints (26.2)
 
-* EventBus 7: classes registered with `BusGroup.register(lookup, Class)` must have at least two listeners;
-  single listeners use `XEvent.BUS.addListener`. Cancellation = listener returns `true`.
-* Forge registers items before data component types: component types are created eagerly
+* Two buses: registration/lifecycle events (`IModBusEvent`) go on the mod bus (`TerraCraft.modBus()`), the rest on
+  `NeoForge.EVENT_BUS`. Classes registered with `NeoForge.EVENT_BUS.register(Class)` need public static
+  `@SubscribeEvent` methods. Cancel with `event.setCanceled(true)`; damage immunities and the damage pipeline both
+  listen to `LivingIncomingDamageEvent` (immunities at HIGHEST priority).
+* `registry.DeferredRegister`/`RegistryObject` are thin wrappers over NeoForge's `DeferredRegister`/`DeferredHolder`
+  that also hand out the entry's `ResourceKey` before registration (items, blocks and entity types need it).
+* Player data is a serializable data attachment (`TerraAttachments.PLAYER_DATA`, copied on death in `PlayerEvents`);
+  packets are `CustomPacketPayload` records registered in `TerraNetwork` (protocol version in `PROTOCOL`).
+* Registries are filled before data component types are needed: component types are created eagerly
   (`ModDataComponents`), item default components are resolved lazily.
-* Modded menus opened with Forge's extra-data `openMenu` can lose their initial contents on slow clients
+* Armor models come from `IClientItemExtensions` registered in `client.TerraArmorClient`; the Terraria HUD replaces
+  the `player_health` GUI layer and hides `food_level` (two vanilla `Hud` methods are opened by
+  `META-INF/accesstransformer.cfg`).
+* Modded menus opened with the extra-data `openMenu` can lose their initial contents on slow clients
   (different packet queues in 26.2); `AccessoryMenu` therefore opens through the vanilla path.
 * Entity type constants live in `EntityTypes`; time is clock based (use `/time` through the dispatcher).

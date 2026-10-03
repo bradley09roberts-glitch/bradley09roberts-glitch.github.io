@@ -15,8 +15,8 @@ import com.terracraft.entity.mob.ClimberMob;
 import com.terracraft.registry.ModEntities;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import com.terracraft.registry.RegistryObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -291,7 +291,7 @@ public final class MobContent {
     private MobContent() {}
 
     public static void init() {
-        EntityAttributeCreationEvent.BUS.addListener(MobContent::onAttributes);
+        com.terracraft.TerraCraft.modBus().addListener(MobContent::onAttributes);
     }
 
     public static List<RegistryObject<? extends EntityType<? extends TerrariaMob>>> all() {

@@ -139,3 +139,19 @@ To open a singleplayer save directly: `./gradlew runClient "-Pworld=<save name>"
   forces the Twins into their second form. Killing one twin must not announce the defeat; the second must.
 - Bound Wizard: stand in the caverns (y below about -20) in Hardmode for ~10 s; right-click him to free the Wizard.
 - Clentaminator: spray Purple Solution at stone (ebonstone appears), then Green Solution (it is purified again).
+
+## NeoForge port and shader checks
+
+What was verified after the move to NeoForge 26.2.0.88: the dedicated server starts with all datapack data
+(12 mining rules, 188 recipes, 66 spawn rules, 9 shops, the built-in `vanilla_overrides` pack); the client joins,
+the Terraria HUD replaces hearts/food, Life Crystals raise max life (payloads + attachment), the Water Bolt spends
+mana, the accessory screen opens with the boots slot hidden, Hallowed armor renders with its 3D model, the Blood
+Moon tints the fog, mechanical bosses spawn with boss bars, and max life survives a server restart and a death.
+
+Shaders: put the NeoForge 26.2 builds of Sodium and Iris in `run-client/mods/`, zip `shaderpack/shaders` into
+`run-client/shaderpacks/TerraCraft-Radiance.zip` and write `enableShaders=true` / `shaderPack=TerraCraft-Radiance.zip`
+to `run-client/config/iris.properties`. NeoForge shows a mod-warnings screen first (Sodium/Iris use a deprecated
+`logoFile` key): click "Proceed to main menu" at (470, 571) and the quick-play join continues.
+In a dev run Minecraft validates every render pass (`SharedConstants.IS_RUNNING_IN_IDE`), and Iris's first-person
+hand pass fails that check (`GlCommandEncoder.validateDraw`, index out of bounds). Real installs skip the check, so
+for testing drop in a throwaway mod whose constructor sets `SharedConstants.IS_RUNNING_IN_IDE = false`.

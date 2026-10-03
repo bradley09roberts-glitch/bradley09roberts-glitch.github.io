@@ -20,7 +20,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.event.TickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.List;
 
@@ -40,7 +40,7 @@ public final class MeteorManager {
     private MeteorManager() {}
 
     public static void register() {
-        TickEvent.ServerTickEvent.Post.BUS.addListener(MeteorManager::onServerTick);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(MeteorManager::onServerTick);
         com.terracraft.command.TerrariaCommand.addExtension(root -> root.then(net.minecraft.commands.Commands.literal("meteor").executes(ctx -> {
             ServerPlayer player = ctx.getSource().getPlayerOrException();
             return land(player.level(), player) ? 1 : 0;
@@ -54,8 +54,8 @@ public final class MeteorManager {
         }
     }
 
-    private static void onServerTick(TickEvent.ServerTickEvent.Post event) {
-        MinecraftServer server = event.server();
+    private static void onServerTick(ServerTickEvent.Post event) {
+        MinecraftServer server = event.getServer();
         if (server.getTickCount() % 100 == 31 && ProgressionManager.has(server, ProgressionFlags.METEOR_LANDED)) {
             spawnMeteorHeads(server.overworld());
         }

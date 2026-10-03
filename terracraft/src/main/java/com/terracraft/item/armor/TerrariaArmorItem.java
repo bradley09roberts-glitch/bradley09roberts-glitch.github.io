@@ -38,19 +38,6 @@ public class TerrariaArmorItem extends TerraItem {
             .component(DataComponents.EQUIPPABLE, Equippable.builder(slot).setEquipSound(SoundEvents.ARMOR_EQUIP_IRON).setAsset(asset).build());
     }
 
-    @Override
-    public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientItemExtensions> consumer) {
-        consumer.accept(new net.minecraftforge.client.extensions.common.IClientItemExtensions() {
-            @Override
-            public net.minecraft.client.model.HumanoidModel<?> getHumanoidArmorModel(net.minecraft.client.renderer.entity.state.LivingEntityRenderState state,
-                                                                                  net.minecraft.world.item.ItemStack stack, EquipmentSlot equipmentSlot,
-                                                                                  net.minecraft.client.model.HumanoidModel<?> original) {
-                var model = com.terracraft.client.model.ArmorModels.get(set.asset(), slot);
-                return model != null ? model : original;
-            }
-        });
-    }
-
     public ArmorSet set() {
         return set;
     }

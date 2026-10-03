@@ -83,7 +83,16 @@ def item_names():
 # Sprites whose Terraria name is not the entity's English name (alternate forms).
 SPRITE_NAME_OVERRIDES = {
     "eye_of_cthulhu_mouth": "Eye of Cthulhu (Phase 2)",
+    "brain_of_cthulhu_exposed": "Brain of Cthulhu (Phase 2)",
+    "retinazer_mouth": "Retinazer (Second Form)",
+    "spazmatism_mouth": "Spazmatism (Second Form)",
 }
+# worm segments are named "<Worm> Head/Body/Tail" on the wiki
+WORMS = {"bone_serpent": "Bone Serpent", "destroyer": "The Destroyer", "devourer": "Devourer",
+         "eater_of_worlds": "Eater of Worlds", "giant_worm": "Giant Worm", "wyvern": "Wyvern"}
+for _worm, _name in WORMS.items():
+    for _part in ("head", "body", "tail"):
+        SPRITE_NAME_OVERRIDES[f"{_worm}_{_part}"] = f"{_name} {_part.title()}"
 
 
 def mob_names():
