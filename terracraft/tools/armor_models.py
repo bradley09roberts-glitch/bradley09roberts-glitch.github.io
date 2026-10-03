@@ -7,9 +7,10 @@ texture per set, paints the texture from the cube's material and pattern, and wr
     assets/terracraft/models/armor/<set>.json                   cubes, UVs and texture size (read by ArmorModels.java)
     textures/entity/equipment/humanoid[_leggings]/<set>.png     the painted texture (same image in both folders)
 
-Shapes follow the Terraria sets: domed helmets with nasal guards and visors for the ore sets, crowns for gold and
-platinum, the Jungle Hat's wide leafy brim, Molten's horns, the Meteor bubble helmet, Shadow's spikes and the
-Crimson bone mask. All art is original and generated here.
+Shapes follow the Terraria sets: open-faced helmets for most sets (Copper/Tin crests, Iron's kettle hat, Silver and
+Gold wings, Platinum horns, the Shadow hood, Crimson horns, the flowered Jungle Hat, Meteor's flame crest), closed
+ones for Lead, Tungsten and Molten's stone mask, and plated chests (breast, belly and back plates, pauldrons,
+bracers, belts, gems) and greaves (thigh plates, knee cops, shin guards, boots, tassets). Original art only.
 """
 import json
 import math
@@ -24,12 +25,13 @@ MIRROR = {'right_arm': 'left_arm', 'right_leg': 'left_leg'}
 
 
 class Cube:
-    def __init__(self, slot, part, origin, size, mat='main', pattern='plate', inflate=0.0, faces=None, pivot=None, rot=None):
+    def __init__(self, slot, part, origin, size, mat='main', pattern='plate', inflate=0.0, faces=None, pivot=None, rot=None, edge=None):
         self.slot, self.part = slot, part
         self.origin, self.size = list(origin), [int(s) for s in size]
         self.mat, self.pattern, self.inflate = mat, pattern, inflate
         self.faces = faces or {}
         self.pivot, self.rot = pivot, rot
+        self.edge = edge
         self.uv = None
 
     def mirrored(self):
@@ -45,7 +47,7 @@ class Cube:
         if self.rot:
             rot = [self.rot[0], -self.rot[1], -self.rot[2]]
         faces = {({'east': 'west', 'west': 'east'}.get(k, k)): v for k, v in self.faces.items()}
-        return Cube(self.slot, part, [x, y, z], self.size, self.mat, self.pattern, self.inflate, faces, pivot, rot)
+        return Cube(self.slot, part, [x, y, z], self.size, self.mat, self.pattern, self.inflate, faces, pivot, rot, self.edge)
 
 
 class Armor:
@@ -107,187 +109,259 @@ class Armor:
 
 
 # ----------------------------------------------------------------------------------------- the sets
-def ore_set(name, metal, style):
+# Shapes follow Terraria's armor sprites: most helmets leave the face open (only Lead, Tungsten and Molten cover
+# it), and every chest/leg piece carries plates, trims, belts and greaves rather than a plain colour.
+
+def open_helmet(a, pattern='plate', mat='main', inflate=1.0, edge='accent'):
+    a.add('head', 'head', (-4, -8, -4), (8, 8, 8), mat=mat, pattern=pattern, inflate=inflate, edge=edge,
+          faces={'north': 'open', 'down': 'none'})
+
+
+def closed_helmet(a, front, pattern='plate', mat='main', inflate=1.0, edge='accent'):
+    a.add('head', 'head', (-4, -8, -4), (8, 8, 8), mat=mat, pattern=pattern, inflate=inflate, edge=edge,
+          faces={'north': front, 'down': 'none'})
+
+
+def brim(a, mat='main', pattern='plate', size=12, y=-5.5):
+    h = size / 2
+    a.add('head', 'head', (-h, y, -h), (size, 1, size), mat=mat, pattern=pattern, edge='dark_edge')
+
+
+def crest(a, mat='accent', pattern='plate', n=3, tall=4):
+    """A fan of spikes over the crown, swept back (Copper/Tin)."""
+    for i in range(n):
+        z = -3 + i * 3
+        a.add('head', 'head', (-0.5, -9 - tall, z - 1), (1, tall, 2), mat=mat, pattern=pattern, pivot=[0, -9, z], rot=[-0.35 - i * 0.12, 0, 0])
+
+
+def helmet_wings(a, mat='accent', big=True, lift=0.35):
+    """Feathered wings on both sides of the helmet (Gold/Silver)."""
+    w, h = (1, 6) if big else (1, 4)
+    for side in (-1, 1):
+        x = -5.6 if side < 0 else 4.6
+        a.add('head', 'head', (x, -8 - h + 2, -1), (w, h, 5), mat=mat, pattern='feather', pivot=[x + 0.5, -6, 0], rot=[-0.3, 0, lift * side])
+
+
+def torso(a, base='chain', plate='plate', mat='main', base_mat='chain', edge='accent', gem=None, sleeves=12, pads='normal',
+          abs_plates=True, bracers=True, belt='trim'):
+    a.add('chest', 'body', (-4, 0, -2), (8, 12, 4), mat=base_mat, pattern=base, inflate=1.0, faces={'up': 'collar', 'down': 'none'})
+    if sleeves:
+        a.pair('chest', 'right_arm', (-3, -2, -2), (4, sleeves, 4), mat=base_mat, pattern=base, inflate=1.0,
+               faces={'down': 'none' if sleeves < 12 else 'fill'})
+    # breastplate (front and back) with a trimmed edge
+    a.add('chest', 'body', (-4, -0.6, -3.8), (8, 6, 1), mat=mat, pattern=plate, edge=edge)
+    a.add('chest', 'body', (-4, -0.6, 2.8), (8, 7, 1), mat=mat, pattern=plate, edge=edge)
+    if abs_plates:   # segmented belly plates under the breastplate
+        a.add('chest', 'body', (-3.5, 5.4, -3.6), (7, 2, 1), mat=mat, pattern='bands', edge=edge)
+        a.add('chest', 'body', (-3, 7.4, -3.5), (6, 2, 1), mat=mat, pattern='bands', edge=edge)
+    if gem:
+        a.add('chest', 'body', (-1, 1.5, -4.4), (2, 2, 1), mat=gem, pattern='gem')
+    if pads == 'normal':
+        a.pair('chest', 'right_arm', (-4.2, -3.3, -2.9), (5, 3, 6), mat=mat, pattern=plate, edge=edge)
+    elif pads == 'big':
+        a.pair('chest', 'right_arm', (-4.6, -3.8, -3.3), (6, 4, 7), mat=mat, pattern=plate, edge=edge)
+        a.pair('chest', 'right_arm', (-4.9, -0.4, -3.1), (5, 2, 6), mat=mat, pattern='bands', edge=edge)
+    if bracers:
+        a.pair('chest', 'right_arm', (-3, 5, -2), (4, 5, 4), mat=mat, pattern=plate, inflate=1.25, edge=edge, faces={'up': 'none', 'down': 'none'})
+    if belt:
+        a.add('chest', 'body', (-4, 10, -2), (8, 2, 4), mat=belt, pattern='belt', inflate=1.25, faces={'up': 'none', 'down': 'none'})
+        a.add('chest', 'body', (-1, 9.6, -4.4), (2, 2, 1), mat='buckle', pattern='gem')
+
+
+def greaves(a, base='chain', plate='plate', mat='main', base_mat='chain', edge='accent', tassets=True, boot_mat=None, belt='trim'):
+    a.add('legs', 'body', (-4, 8, -2), (8, 4, 4), mat=belt, pattern='belt', inflate=0.55, faces={'up': 'none', 'down': 'none'})
+    a.pair('legs', 'right_leg', (-2, 0, -2), (4, 12, 4), mat=base_mat, pattern=base, inflate=0.5, faces={'up': 'none'})
+    a.pair('legs', 'right_leg', (-2.5, 0.5, -3.0), (5, 4, 1), mat=mat, pattern=plate, edge=edge)      # thigh plate
+    a.pair('legs', 'right_leg', (-2.5, 4.3, -3.4), (5, 2, 1), mat=edge, pattern='plate')               # knee cop
+    a.pair('legs', 'right_leg', (-2.5, 6.3, -3.0), (5, 3, 1), mat=mat, pattern=plate, edge=edge)       # shin guard
+    a.pair('legs', 'right_leg', (-2, 8.6, -2), (4, 3, 4), mat=boot_mat or mat, pattern=plate, inflate=0.9, edge=edge, faces={'up': 'none'})
+    a.pair('legs', 'right_leg', (-2.5, 10.4, -3.9), (5, 2, 2), mat=boot_mat or mat, pattern=plate)
+    if tassets:
+        a.add('legs', 'body', (-4, 10.4, -3.3), (8, 3, 1), mat=mat, pattern='bands', edge=edge)
+        a.add('legs', 'body', (-4, 10.4, 2.3), (8, 3, 1), mat=mat, pattern='bands', edge=edge)
+
+
+def ore(name, metal, **extra):
     m = hexc(metal)
-    a = Armor(name, {'main': m, 'chain': shade(m, 0.72), 'trim': '#5A4030', 'dark': '#16141C', 'accent': shade(m, 1.35),
-                     'gem': '#E03040' if style in ('crown',) else '#40A0F0'})
-    front = {'nasal': 'open', 'cheeks': 'open', 'slit': 'slit', 'ridge': 'slit', 'tvisor': 'tvisor', 'fins': 'tvisor', 'crown': 'tvisor',
-             'winged': 'slit'}[style]
-    a.helmet_shell('plate', front)
-    if style == 'nasal':
-        a.add('head', 'head', (-0.5, -5.5, -5.6), (1, 4, 1), mat='accent')
-        a.add('head', 'head', (-5.2, -6, -5.2), (10, 1, 10), mat='accent', inflate=0.2, faces={'up': 'none', 'down': 'none'})
-    if style == 'cheeks':
-        a.add('head', 'head', (-5.3, -4, -5.3), (2, 4, 3), mat='main')
-        a.add('head', 'head', (3.3, -4, -5.3), (2, 4, 3), mat='main')
-        a.add('head', 'head', (-0.5, -10, -4), (1, 2, 8), mat='accent')
-    if style in ('ridge', 'tvisor'):
-        a.add('head', 'head', (-0.5, -10.2, -4.5), (1, 2, 9), mat='accent')
-    if style == 'fins':
-        a.add('head', 'head', (-0.5, -11.5, -3), (1, 3, 8), mat='accent', pattern='plate')
-        a.add('head', 'head', (-5.6, -7, -1), (1, 3, 4), mat='accent')
-        a.add('head', 'head', (4.6, -7, -1), (1, 3, 4), mat='accent')
-    if style == 'crown':
-        a.add('head', 'head', (-5, -10, -5), (10, 1, 10), mat='accent', faces={'down': 'none', 'up': 'none'})
-        for x in (-4.5, -0.5, 3.5):
-            a.add('head', 'head', (x, -12, -5.3), (1, 2, 1), mat='accent')
-        a.add('head', 'head', (-0.5, -9.6, -5.6), (1, 1, 1), mat='gem', pattern='gem')
-    if style == 'winged':
-        a.add('head', 'head', (-5, -10, -5), (10, 1, 10), mat='accent', faces={'down': 'none', 'up': 'none'})
-        a.add('head', 'head', (-6, -11, -1), (1, 4, 4), mat='accent', pivot=[-5, -8, 0], rot=[0, 0, -0.35])
-        a.add('head', 'head', (5, -11, -1), (1, 4, 4), mat='accent', pivot=[5, -8, 0], rot=[0, 0, 0.35])
-        a.add('head', 'head', (-0.5, -9.6, -5.6), (1, 1, 1), mat='gem', pattern='gem')
-    # chainmail under a breastplate, pauldrons and bracers
-    a.chest_base('chain', 'chain', mat='chain', sleeve_mat='chain')
-    a.breastplate()
-    a.pauldron(big=style in ('crown', 'winged', 'fins'))
-    a.bracer()
-    a.belt()
-    # greaves: chain legs, knee cops, plated boots; tassets for the fancier sets
-    a.legs_base('chain', mat='chain')
-    a.knee()
-    a.boots()
-    if style in ('crown', 'winged', 'fins', 'tvisor'):
-        a.add('legs', 'body', (-4, 10.5, -3.3), (8, 3, 1), mat='main')
-    return a
+    mats = {'main': m, 'chain': shade(m, 0.7), 'trim': '#5A4030', 'dark': '#16141C', 'accent': shade(m, 1.3),
+            'dark_edge': shade(m, 0.55), 'buckle': '#D8B040'}
+    mats.update(extra)
+    return Armor(name, mats)
 
 
 def wood_set():
-    a = Armor('wood', {'main': '#8C5A32', 'trim': '#4E3220', 'dark': '#2A1A10', 'accent': '#A8784A'})
-    a.helmet_shell('wood', 'open')
-    a.add('head', 'head', (-5.5, -5.5, -5.5), (11, 1, 11), mat='accent', pattern='wood', faces={'up': 'none', 'down': 'none'})
-    a.chest_base('wood', sleeve_len=0)
-    a.breastplate('accent', 'wood', h=6)
-    a.pair('chest', 'right_arm', (-3, -2, -2), (4, 4, 4), mat='main', pattern='wood', inflate=1.0, faces={'down': 'none'})
-    a.belt()
-    a.legs_base('wood')
-    a.knee('accent', 'wood')
-    a.boots('trim', 'cloth', toe=False)
+    a = Armor('wood', {'main': '#8C5A32', 'chain': '#6A4426', 'trim': '#4E3220', 'dark': '#2A1A10', 'accent': '#A8784A',
+                       'dark_edge': '#5A3A20', 'buckle': '#8A8A90'})
+    open_helmet(a, 'wood', edge='trim')
+    a.add('head', 'head', (-5, -6, -5), (10, 1, 10), mat='accent', pattern='wood', edge='trim', faces={'up': 'none', 'down': 'none'})
+    torso(a, base='cloth', plate='wood', base_mat='trim', edge='trim', sleeves=6, pads='normal', bracers=False)
+    greaves(a, base='cloth', plate='wood', base_mat='trim', edge='trim', tassets=False, boot_mat='trim')
+    return a
+
+
+def copper_set():
+    a = ore('copper', '#C8783C')
+    open_helmet(a)
+    crest(a, 'accent')
+    torso(a, gem=None, pads='normal')
+    greaves(a, tassets=False)
+    return a
+
+
+def tin_set():
+    a = ore('tin', '#B4A88C')
+    open_helmet(a)
+    crest(a, 'accent', n=2, tall=3)
+    a.add('head', 'head', (-5.2, -4, -5.2), (2, 4, 3), mat='main', edge='accent')   # cheek guards
+    a.add('head', 'head', (3.2, -4, -5.2), (2, 4, 3), mat='main', edge='accent')
+    torso(a, pads='normal')
+    greaves(a, tassets=False)
+    return a
+
+
+def iron_set():
+    a = ore('iron', '#A0A0A8')
+    open_helmet(a)
+    brim(a, 'main')                 # kettle hat
+    torso(a, pads='normal')
+    greaves(a)
+    return a
+
+
+def lead_set():
+    a = ore('lead', '#5A6478')
+    closed_helmet(a, 'slit')
+    brim(a, 'main', size=11, y=-6)
+    a.add('head', 'head', (-0.5, -10, -4.5), (1, 2, 9), mat='accent')
+    torso(a, pads='big')
+    greaves(a)
+    return a
+
+
+def silver_set():
+    a = ore('silver', '#D8DCE2', accent='#E0B840', gem='#E04040')
+    open_helmet(a)
+    helmet_wings(a, 'accent', big=False)
+    a.add('head', 'head', (-0.5, -9.4, -5.4), (1, 2, 1), mat='gem', pattern='gem')
+    torso(a, gem='gem', pads='big')
+    greaves(a)
+    return a
+
+
+def tungsten_set():
+    a = ore('tungsten', '#A8C0A0', accent='#8A60C0', gem='#B080F0')
+    closed_helmet(a, 'visor')
+    a.add('head', 'head', (-0.5, -11.5, -3), (1, 3, 8), mat='main', edge='accent')
+    a.add('head', 'head', (-0.5, -8.6, -5.5), (1, 1, 1), mat='gem', pattern='gem')
+    torso(a, gem='gem', pads='big')
+    greaves(a)
+    return a
+
+
+def gold_set():
+    a = ore('gold', '#E6BE3C', accent='#FFE070', gem='#E02838')
+    open_helmet(a)
+    helmet_wings(a, 'accent', big=True, lift=0.45)
+    a.add('head', 'head', (-0.5, -9.4, -5.4), (1, 2, 1), mat='gem', pattern='gem')
+    torso(a, gem='gem', pads='big')
+    greaves(a)
+    return a
+
+
+def platinum_set():
+    a = ore('platinum', '#C4D4E8', accent='#E8F0FA', gem='#E02838', trim='#A02030')
+    open_helmet(a)
+    for side in (-1, 1):   # swept horns
+        x = -6 if side < 0 else 5
+        a.add('head', 'head', (x, -12, -1), (1, 5, 2), mat='accent', pivot=[x + 0.5, -7, 0], rot=[-0.4, 0, 0.5 * side])
+    a.add('head', 'head', (-0.5, -9.4, -5.4), (1, 2, 1), mat='gem', pattern='gem')
+    torso(a, gem='gem', pads='big', belt='trim')
+    greaves(a, belt='trim')
     return a
 
 
 def shadow_set():
-    a = Armor('shadow', {'main': '#3C2C5C', 'chain': '#2A1E40', 'trim': '#5C4488', 'dark': '#0C0814', 'accent': '#7A5CC0', 'glow': '#D070FF'})
-    a.helmet_shell('scale', 'eyes')
+    a = Armor('shadow', {'main': '#3C2C5C', 'chain': '#2A1E40', 'trim': '#5C4488', 'dark': '#0C0814', 'accent': '#9A70E0',
+                         'glow': '#D070FF', 'dark_edge': '#1A1028', 'buckle': '#C070FF'})
+    open_helmet(a, 'scale')
     for i, z in enumerate((-3, 0, 3)):
         a.add('head', 'head', (-0.5, -12 + i, z - 1), (1, 4, 2), mat='accent', pattern='scale', pivot=[0, -9, z], rot=[-0.5, 0, 0])
+    a.add('head', 'head', (-4.5, -9.2, -5.6), (9, 2, 2), mat='main', pattern='scale', edge='accent')   # hood brow
     a.add('head', 'head', (-6, -8, -2), (1, 2, 5), mat='accent', pattern='scale', pivot=[-5, -7, 0], rot=[0, 0.3, 0.3])
     a.add('head', 'head', (5, -8, -2), (1, 2, 5), mat='accent', pattern='scale', pivot=[5, -7, 0], rot=[0, -0.3, -0.3])
-    a.chest_base('scale', 'scale', mat='main', sleeve_mat='chain')
-    a.breastplate('accent', 'scale', back=False, h=6)
-    a.pauldron('accent', 'scale', big=True)
-    a.pair('chest', 'right_arm', (-5, -6, -0.5), (1, 3, 1), mat='trim', pattern='scale', pivot=[-3, -3, 0], rot=[0, 0, -0.5])
-    a.pair('chest', 'right_arm', (-3.5, -6.5, -2.5), (1, 3, 1), mat='trim', pattern='scale', pivot=[-2, -3, -2], rot=[0, 0, -0.3])
-    a.bracer('accent', 'scale')
-    a.belt('chain')
-    a.legs_base('scale', belt_mat='chain')
-    a.knee('accent', 'scale')
-    a.pair('legs', 'right_leg', (-0.5, 1.5, -4.5), (1, 3, 1), mat='trim', pattern='scale', pivot=[0, 4, -3], rot=[-0.6, 0, 0])
-    a.boots('accent', 'scale')
+    torso(a, base='scale', plate='scale', base_mat='chain', gem='glow', pads='big', belt='chain')
+    a.pair('chest', 'right_arm', (-5, -6, -0.5), (1, 3, 1), mat='accent', pattern='scale', pivot=[-3, -3, 0], rot=[0, 0, -0.5])
+    greaves(a, base='scale', plate='scale', belt='chain')
+    a.pair('legs', 'right_leg', (-0.5, 2.5, -4.6), (1, 3, 1), mat='accent', pattern='scale', pivot=[0, 4.5, -3.2], rot=[-0.6, 0, 0])
     return a
 
 
 def crimson_set():
-    a = Armor('crimson', {'main': '#8E2630', 'chain': '#5E1820', 'trim': '#E6DCC4', 'dark': '#1C0608', 'accent': '#B8404A', 'glow': '#FFD040'})
-    a.helmet_shell('flesh', 'skull')
-    a.add('head', 'head', (-4.5, -6, -5.6), (9, 6, 1), mat='trim', pattern='bone', faces={'north': 'skull'})
-    a.add('head', 'head', (-6, -10, -1), (1, 4, 1), mat='trim', pattern='bone', pivot=[-4.5, -7, 0], rot=[0, 0, -0.5])
-    a.add('head', 'head', (5, -10, -1), (1, 4, 1), mat='trim', pattern='bone', pivot=[4.5, -7, 0], rot=[0, 0, 0.5])
-    a.chest_base('flesh', 'flesh')
-    for y in (1, 3.5, 6):
-        a.add('chest', 'body', (-3.5, y, -3.6), (7, 1, 1), mat='trim', pattern='bone')
-    a.add('chest', 'body', (-0.5, 0, -3.8), (1, 8, 1), mat='trim', pattern='bone')
-    a.add('chest', 'body', (-0.5, -0.5, 2.8), (1, 11, 1), mat='trim', pattern='bone')
-    a.pauldron('trim', 'bone')
-    a.pair('chest', 'right_arm', (-4, -5, -0.5), (1, 2, 1), mat='trim', pattern='bone')
-    a.belt('chain')
-    a.legs_base('flesh', belt_mat='chain')
-    a.knee('trim', 'bone')
-    a.boots('chain', 'flesh')
+    a = Armor('crimson', {'main': '#5A1A22', 'chain': '#3A1016', 'trim': '#E6DCC4', 'dark': '#1C0608', 'accent': '#C8404A',
+                          'glow': '#FFD040', 'dark_edge': '#2A0A0E', 'buckle': '#E6DCC4', 'horn': '#D84050'})
+    open_helmet(a, 'flesh')
+    for side in (-1, 1):   # curved red horns
+        x = -5.5 if side < 0 else 4.5
+        a.add('head', 'head', (x, -11, -1), (1, 4, 2), mat='horn', pattern='horn', pivot=[x + 0.5, -7, 0], rot=[-0.2, 0, 0.45 * side])
+        a.add('head', 'head', (x + 2 * side, -14, -0.5), (1, 3, 1), mat='horn', pattern='horn', pivot=[x + 0.5, -7, 0], rot=[-0.2, 0, 0.75 * side])
+    torso(a, base='flesh', plate='flesh', base_mat='chain', edge='accent', pads='normal', belt='chain')
+    for y in (0.8, 2.6, 4.4):   # ribs over the breastplate
+        a.add('chest', 'body', (-3.5, y, -4.1), (7, 1, 1), mat='trim', pattern='bone')
+    greaves(a, base='flesh', plate='flesh', edge='accent', belt='chain')
     return a
 
 
 def jungle_set():
-    a = Armor('jungle', {'main': '#4E8C34', 'chain': '#3A6A2A', 'trim': '#7A5A30', 'dark': '#1A2A10', 'accent': '#8CC850',
-                         'flower': '#E070B0', 'gem': '#F0D040'})
-    # Jungle Hat: a leafy dome with a wide floppy brim, the tip falling back, and a flower
+    a = Armor('jungle', {'main': '#5A9A34', 'chain': '#3A6A2A', 'trim': '#7A5A30', 'dark': '#1A2A10', 'accent': '#9AD050',
+                         'flower': '#E04060', 'gem': '#F0D040', 'dark_edge': '#2A4A18', 'buckle': '#C8A050'})
+    # Jungle Hat: a leafy dome with a floppy brim and red flowers on top, face open
     a.add('head', 'head', (-4.5, -9.5, -4.5), (9, 4, 9), mat='main', pattern='leaf', faces={'down': 'none'})
-    a.add('head', 'head', (-7, -6.5, -7), (14, 1, 14), mat='accent', pattern='leaf')
-    a.add('head', 'head', (-2.5, -11.5, -1.5), (5, 2, 5), mat='main', pattern='leaf', pivot=[0, -9.5, 0], rot=[-0.5, 0, 0])
-    a.add('head', 'head', (-1.5, -12, 2.5), (3, 1, 4), mat='accent', pattern='leaf', pivot=[0, -9.5, 0], rot=[-1.0, 0, 0])
-    a.add('head', 'head', (3.5, -9, -5.2), (2, 2, 2), mat='flower', pattern='flower')
-    a.add('head', 'head', (-4.5, -6.5, -4.5), (9, 1, 9), mat='trim', pattern='belt', faces={'up': 'none', 'down': 'none'})
-    # leafy shirt with short sleeves and a vine sash
-    a.chest_base('leaf', 'leaf', sleeve_len=6, mat='main')
+    a.add('head', 'head', (-6.5, -6.5, -6.5), (13, 1, 13), mat='accent', pattern='leaf')
+    a.add('head', 'head', (-4.5, -6, 2), (9, 5, 3), mat='main', pattern='leaf')   # leaves over the back of the neck
+    for x, z in ((-2.5, -2), (1, -1), (-0.5, 1.5)):
+        a.add('head', 'head', (x, -11.5, z), (2, 2, 2), mat='flower', pattern='flower')
+    torso(a, base='leaf', plate='leaf', base_mat='main', mat='accent', edge='trim', sleeves=6, pads='none', abs_plates=False, bracers=False, belt='trim')
+    a.add('chest', 'body', (-3.6, -0.4, -3.9), (2, 11, 1), mat='trim', pattern='belt', pivot=[0, 0, -3.5], rot=[0, 0, -0.5])  # sash
     a.pair('chest', 'right_arm', (-4, -3, -3), (5, 2, 6), mat='accent', pattern='leaf')
-    a.add('chest', 'body', (-4, 9, -2), (8, 4, 4), mat='accent', pattern='leaf', inflate=1.3, faces={'up': 'none', 'down': 'none'})
-    a.add('chest', 'body', (-1, 2, -3.6), (2, 2, 1), mat='flower', pattern='flower')
-    # pants with a leaf skirt and wrapped shins
-    a.legs_base('cloth', mat='chain', belt_mat='accent', belt_pattern='leaf')
+    a.add('legs', 'body', (-4, 8, -2), (8, 4, 4), mat='trim', pattern='belt', inflate=0.55, faces={'up': 'none', 'down': 'none'})
+    a.pair('legs', 'right_leg', (-2, 0, -2), (4, 12, 4), mat='chain', pattern='cloth', inflate=0.5, faces={'up': 'none'})
     a.pair('legs', 'right_leg', (-2, 6, -2), (4, 4, 4), mat='trim', pattern='wrap', inflate=0.7, faces={'up': 'none', 'down': 'none'})
-    a.boots('trim', 'cloth', toe=False)
+    a.pair('legs', 'right_leg', (-2.5, 0.5, -3.0), (5, 4, 1), mat='accent', pattern='leaf')
+    a.pair('legs', 'right_leg', (-2, 9, -2), (4, 3, 4), mat='trim', pattern='cloth', inflate=0.8, faces={'up': 'none'})
+    a.add('legs', 'body', (-4.5, 10, -3.2), (9, 4, 1), mat='accent', pattern='leaf')
     return a
 
 
 def molten_set():
-    a = Armor('molten', {'main': '#3A1C14', 'chain': '#28120C', 'trim': '#6A2A14', 'dark': '#120604', 'accent': '#5A2618',
-                         'glow': '#FF8A20', 'horn': '#2A1A16'})
-    a.helmet_shell('lava', 'tvisor')
-    # great curved horns: out from the temples, then up
+    # Terraria's Molten armor: grey volcanic stone shot through with glowing lava cracks; the helmet is a stone mask
+    a = Armor('molten', {'main': '#7A7068', 'chain': '#4A4440', 'trim': '#5A3020', 'dark': '#1A1210', 'accent': '#9A8E84',
+                         'glow': '#FF8A20', 'horn': '#4A4440', 'dark_edge': '#3A3430', 'buckle': '#FF8A20'})
+    closed_helmet(a, 'mask', 'lava')
+    a.add('head', 'head', (-4.5, -10, -4.5), (9, 2, 9), mat='main', pattern='lava', edge='dark_edge')
     for side in (-1, 1):
-        x0 = -7 if side < 0 else 4
-        a.add('head', 'head', (x0, -8, -1.5), (3, 2, 3), mat='horn', pattern='horn')
-        a.add('head', 'head', (-9 if side < 0 else 7, -12, -1), (2, 5, 2), mat='horn', pattern='horn',
-              pivot=[-7.5 * 1 if side < 0 else 7.5, -8, 0], rot=[0, 0, 0.3 * side])
-        a.add('head', 'head', (-9.5 if side < 0 else 8.5, -14.5, -0.5), (1, 3, 1), mat='glow', pattern='glow',
-              pivot=[-7.5 if side < 0 else 7.5, -8, 0], rot=[0, 0, 0.45 * side])
-    a.add('head', 'head', (-0.5, -10.5, -4.5), (1, 3, 9), mat='accent', pattern='lava')
-    a.chest_base('lava', 'lava')
-    a.breastplate('accent', 'lava')
-    a.add('chest', 'body', (-1.5, 2, -4.4), (3, 3, 1), mat='glow', pattern='glow')
-    a.pauldron('accent', 'lava', big=True)
-    a.pair('chest', 'right_arm', (-5.5, -6.5, -0.5), (1, 3, 1), mat='horn', pattern='horn', pivot=[-3, -3.5, 0], rot=[0, 0, -0.45])
-    a.pair('chest', 'right_arm', (-4.5, -6, -2.5), (1, 3, 1), mat='horn', pattern='horn', pivot=[-3, -3.5, -2], rot=[0, 0, -0.25])
-    a.bracer('accent', 'lava')
-    a.belt('trim')
-    a.legs_base('lava', belt_mat='trim')
-    a.knee('accent', 'lava')
-    a.pair('legs', 'right_leg', (-0.5, 2.5, -4.6), (1, 2, 1), mat='horn', pattern='horn', pivot=[0, 4.5, -3.2], rot=[-0.6, 0, 0])
-    a.boots('accent', 'lava')
-    a.add('legs', 'body', (-4, 10.5, -3.3), (8, 3, 1), mat='accent', pattern='lava')
+        x = -6.5 if side < 0 else 5.5
+        a.add('head', 'head', (x, -12, -1), (1, 5, 2), mat='horn', pattern='lava', pivot=[x + 0.5, -7, 0], rot=[-0.25, 0, 0.35 * side])
+    torso(a, base='lava', plate='lava', base_mat='chain', edge='dark_edge', gem='glow', pads='big', belt='chain')
+    greaves(a, base='lava', plate='lava', base_mat='chain', edge='dark_edge', belt='chain')
     return a
 
 
 def meteor_set():
-    a = Armor('meteor', {'main': '#5A4A60', 'chain': '#3E3244', 'trim': '#7A6880', 'dark': '#16101A', 'accent': '#8A5A48',
-                         'glow': '#FF5A30', 'glass': '#3A70C0'})
-    # rounded bubble helmet with a glass visor band and a fin
-    a.helmet_shell('rock', 'glass', inflate=1.5)
-    a.add('head', 'head', (-3.5, -11, -3.5), (7, 1, 7), mat='main', pattern='rock')
-    a.add('head', 'head', (-0.5, -13, -2), (1, 3, 6), mat='glow', pattern='glow')
-    a.add('head', 'head', (-6.5, -6, -2), (1, 3, 4), mat='trim', pattern='plate')
-    a.add('head', 'head', (5.5, -6, -2), (1, 3, 4), mat='trim', pattern='plate')
-    a.chest_base('rock', 'rock')
-    a.breastplate('trim', 'rock')
-    a.add('chest', 'body', (-1.5, 1.5, -4.5), (3, 3, 1), mat='glow', pattern='glow')
-    a.pauldron('trim', 'rock', big=True)
-    a.bracer('trim', 'rock')
-    a.belt('chain')
-    a.legs_base('rock', belt_mat='chain')
-    a.knee('trim', 'rock')
-    a.boots('trim', 'rock')
+    # Meteor armor: dark purple-blue plates with fiery orange flames; the helmet leaves the face open
+    a = Armor('meteor', {'main': '#4A3A70', 'chain': '#2E2448', 'trim': '#6A5A90', 'dark': '#16101A', 'accent': '#E86A20',
+                         'glow': '#FFC040', 'fire': '#FF7A20', 'dark_edge': '#221A36', 'buckle': '#FFC040'})
+    open_helmet(a, 'rock', edge='accent')
+    for i, (z, tall) in enumerate(((-3, 4), (-0.5, 5), (2, 4))):   # flame crest
+        a.add('head', 'head', (-1, -9 - tall, z - 1), (2, tall, 2), mat='fire', pattern='fire', pivot=[0, -9, z], rot=[-0.3 - i * 0.15, 0, 0])
+    torso(a, base='rock', plate='rock', base_mat='chain', edge='accent', gem='glow', pads='big', belt='chain')
+    greaves(a, base='rock', plate='rock', base_mat='chain', edge='accent', belt='chain')
+    a.pair('legs', 'right_leg', (-2.5, 9.5, -2.5), (5, 1, 5), mat='fire', pattern='fire')
     return a
 
 
 def all_sets():
-    from_ore = {
-        'copper': ('#C8783C', 'nasal'), 'tin': ('#B4A88C', 'cheeks'), 'iron': ('#A0A0A8', 'slit'), 'lead': ('#5A6478', 'ridge'),
-        'silver': ('#D2D7DC', 'tvisor'), 'tungsten': ('#8CA088', 'fins'), 'gold': ('#E6BE3C', 'crown'), 'platinum': ('#BED2E6', 'winged'),
-    }
-    sets = [wood_set()]
-    sets += [ore_set(n, c, s) for n, (c, s) in from_ore.items()]
-    sets += [shadow_set(), crimson_set(), jungle_set(), molten_set(), meteor_set()]
-    return sets
+    return [wood_set(), copper_set(), tin_set(), iron_set(), lead_set(), silver_set(), tungsten_set(), gold_set(), platinum_set(),
+            shadow_set(), crimson_set(), jungle_set(), molten_set(), meteor_set()]
 
 
 # ----------------------------------------------------------------------------------------- UV packing
@@ -343,6 +417,9 @@ def paint(armor, c, cube, rnd):
                         col = shade(col, 1.18)
                     elif y == fh - 1 or x == 0 or x == fw - 1:
                         col = shade(col, 0.82)
+                if cube.edge and face not in ('up', 'down') and (x == 0 or x == fw - 1 or y == 0 or y == fh - 1) and fw > 2 and fh > 2:
+                    trim = ramp(armor.mats[cube.edge])
+                    col = trim[3] if y == 0 else trim[2] if y < fh - 1 else trim[1]
                 c.set(x0 + x, y0 + y, col)
         if special:
             front_detail(c, special, x0, y0, fw, fh, p, dark, glow, armor)
@@ -409,6 +486,16 @@ def pattern_pixel(pattern, p, x, y, w, h, rnd, armor, face):
         if (x * 5 + y * 3) % 7 == 0:
             return p[1]
         return p[2] if r > 0.2 else p[3]
+    if pattern == 'bands':
+        # overlapping horizontal plates: light top lip, shadowed bottom
+        return p[3] if y % 2 == 0 else (p[1] if r > 0.2 else p[2])
+    if pattern == 'feather':
+        if y % 2 == 0 and x % 2 == 0:
+            return p[1]
+        return p[3] if (x + y) % 3 == 0 else p[2]
+    if pattern == 'fire':
+        t = y / max(1, h - 1)
+        return armor.mats.get('glow', p[4]) if t > 0.6 or r < 0.2 else (p[3] if t > 0.3 else p[2])
     if pattern == 'horn':
         return p[3] if (y % 3 == 0) else p[2]
     if pattern == 'glow':
@@ -466,6 +553,22 @@ def front_detail(c, kind, x0, y0, w, h, p, dark, glow, armor):
                 c.set(x0 + x, y0 + y, g[2] if y > 2 else g[3])
         c.set(x0 + 2, y0 + 3, g[4])
         c.set(x0 + 3, y0 + 3, g[4])
+    elif kind == 'visor':
+        # closed face with a wide eye opening and breathing holes
+        for x in range(1, w - 1):
+            c.set(x0 + x, y0 + 3, dark)
+            c.set(x0 + x, y0 + 4, dark)
+        for x in range(2, w - 2, 2):
+            c.set(x0 + x, y0 + 6, dark)
+    elif kind == 'mask':
+        # Molten's stone face: dark glowing eye holes, a nose ridge and a grim mouth
+        for ex in (1, w - 4):
+            for dx in range(3):
+                c.set(x0 + ex + dx, y0 + 3, dark)
+            c.set(x0 + ex + 1, y0 + 3, glow)
+        c.set(x0 + w // 2 - 1, y0 + 4, p[3]); c.set(x0 + w // 2, y0 + 4, p[3])
+        for x in range(2, w - 2):
+            c.set(x0 + x, y0 + 6, dark)
     elif kind == 'collar':
         for x in range(w):
             for y in range(h):
