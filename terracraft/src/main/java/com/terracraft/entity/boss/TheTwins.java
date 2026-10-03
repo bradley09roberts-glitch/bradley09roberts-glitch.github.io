@@ -86,8 +86,8 @@ public class TheTwins extends TerrariaBoss {
     public @Nullable SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, EntitySpawnReason reason,
                                                   @Nullable SpawnGroupData groupData) {
         SpawnGroupData data = super.finalizeSpawn(level, difficulty, reason, groupData);
-        if (laser && reason != EntitySpawnReason.MOB_SUMMONED) {
-            // summoning Retinazer brings its twin along
+        if (laser && reason == EntitySpawnReason.EVENT) {
+            // summoning Retinazer (Mechanical Eye, boss command) brings its twin along
             TheTwins twin = MobContent.SPAZMATISM.get().create(level.getLevel(), EntitySpawnReason.MOB_SUMMONED);
             if (twin != null) {
                 twin.snapTo(getX() + 6, getY(), getZ() + 6, getYRot(), 0.0F);

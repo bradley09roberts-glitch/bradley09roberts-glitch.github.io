@@ -96,14 +96,20 @@ coins deducted; name and green tooltip lines updated); `/terraria meteor` landin
 
 ## Showcase world
 
-`tools/showcase_world.py <world folder>` writes the `showcase` datapack: a hub at y=210 above spawn (seed 12345)
-with command-block buttons for time/weather, Hardmode, events, town NPCs, biome teleports, gear kits, a boss
-arena, an enemy zoo and chests holding every item. In the world run `/reload`, `/function showcase:build`,
-`/function showcase:build_zoo`, then `/function showcase:build_underworld` from inside the Underworld.
-`/function showcase:hub` returns to the hub. To refresh an existing showcase world, kill the zoo mobs
-(`kill @e[type=!player,x=0,y=212,z=0,distance=..48]`), clear the zoo cells (`fill -31 210 -24 31 214 18 air`) and run the
-build functions again. To open a singleplayer save directly:
-`./gradlew runClient "-Pworld=<save name>"`. `xinput.py type <text>` types into chat.
+`tools/showcase_world.py <world folder>` writes the `showcase` datapack. Everything floats at y=210 above spawn
+(seed 12345):
+- **Grand Hall** (81x81, at spawn). Command-block buttons line the walls: time and world on the north wall, events and NPCs on the west, teleports on the east, gear kits on the south. It has a crystal spire and a giant TERRACRAFT title.
+- **Bestiary** (north). An avenue of ten themed biome rooms with every enemy in a glass cell.
+- **Hall of Bosses** (east). Every boss frozen on a pedestal, then the Boss Arena with summon buttons.
+- **Armory** (west). Every armor set on a stand with its weapons, all items in glow frames grouped by category, and chests holding one of each item.
+- **Town** (south). Twenty houses, then the Workshop (every crafting station) and the Block Garden (every block).
+
+To build it in a world: `/reload`, then `/function showcase:prepare`. That force-loads the area and the build runs by
+itself 10 seconds later. The first time can take a minute while the chunks generate.
+`/function showcase:build_displays` re-summons the frozen enemies, bosses, armor stands and frames (all tagged `showcase`).
+`/function showcase:build_underworld` (from inside the Underworld) adds the lava viewing room, and `/function showcase:hub` returns
+to the hall. Display bosses use NoAI: they show no boss bar and never despawn.
+To open a singleplayer save directly: `./gradlew runClient "-Pworld=<save name>"`. `xinput.py type <text>` types into chat.
 
 ## Armor, wings and food checks
 

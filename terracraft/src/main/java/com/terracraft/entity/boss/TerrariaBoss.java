@@ -102,6 +102,13 @@ public abstract class TerrariaBoss extends TerrariaMob {
     @Override
     public void aiStep() {
         super.aiStep();
+        if (isNoAi()) {
+            // a frozen display boss (showcase museum): no boss bar, never despawns
+            if (!bossBar.getPlayers().isEmpty()) {
+                bossBar.removeAllPlayers();
+            }
+            return;
+        }
         if (level() instanceof ServerLevel level) {
             bossBar.setProgress(getHealth() / getMaxHealth());
             if (tickCount % 10 == 0) {
