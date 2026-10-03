@@ -21,5 +21,8 @@ public final class ModFeatures {
     public static final RegistryObject<com.terracraft.world.dungeon.DungeonFeature> DUNGEON = FEATURES.register("dungeon",
         com.terracraft.world.dungeon.DungeonFeature::new);
 
+    public static final RegistryObject<com.terracraft.world.jungle.JungleFeature> JUNGLE = FEATURES.register("jungle",
+        com.terracraft.world.jungle.JungleFeature::new);
+
     private ModFeatures() {}
 }

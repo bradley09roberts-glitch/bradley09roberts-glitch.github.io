@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#minecraft:is_jungle",
+  "features": "terracraft:jungle",
+  "step": "top_layer_modification"
+}

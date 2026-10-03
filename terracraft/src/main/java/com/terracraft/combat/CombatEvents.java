@@ -145,6 +145,13 @@ public final class CombatEvents {
         if (amount > 0.0F && target instanceof Player player) {
             // Taking damage restarts Terraria's natural life regeneration ramp.
             com.terracraft.player.LifeRegenManager.onHurt(TerraPlayerData.get(player));
+            if (TerraPlayerData.get(player).stats().has(com.terracraft.player.stats.Ability.HONEY_COMB)) {
+                // Terraria: 1-3 bees (more for bigger hits) and the Honey buff
+                int bees = 1 + Math.min(2, (int) (amount / 20.0F));
+                com.terracraft.registry.content.WeaponContent.releaseBees(player,
+                    source.getEntity() instanceof net.minecraft.world.entity.LivingEntity attacker ? attacker : null, bees, 8.0F);
+                player.addEffect(new net.minecraft.world.effect.MobEffectInstance(com.terracraft.registry.ModEffects.REGENERATION.getHolder().orElseThrow(), 100, 0, false, true, true));
+            }
             if (TerraPlayerData.get(player).stats().has(com.terracraft.player.stats.Ability.PANIC)) {
                 player.addEffect(new net.minecraft.world.effect.MobEffectInstance(com.terracraft.registry.ModEffects.SWIFTNESS.getHolder().orElseThrow(), 160, 0, false, true, true));
             }

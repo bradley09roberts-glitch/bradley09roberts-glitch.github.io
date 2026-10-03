@@ -69,7 +69,7 @@ def evil_blocks():
     write(f'{NS}/tags/block/evil/crimson.json', {'values': crimson})
     write(f'{NS}/tags/block/evil/all.json', {'values': corruption + crimson})
     write(f'{NS}/tags/block/stations/demon_altar.json', {'values': [t('demon_altar'), t('crimson_altar')]})
-    write('minecraft/tags/block/mineable/shovel.json', {'values': [t('corrupt_grass'), t('crimson_grass')]})
+    write('minecraft/tags/block/mineable/shovel.json', {'values': [t('corrupt_grass'), t('crimson_grass'), t('jungle_grass')]})
     write('minecraft/tags/block/mineable/axe.json', {'values': [t('work_bench'), t('ebonwood'), t('shadewood')]})
     write('minecraft/tags/block/mineable/hoe.json', {'values': [t('ebonwood_leaves'), t('shadewood_leaves')]})
     balls = {'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('musket_ball'), 'functions': [{'function': 'minecraft:set_count', 'count': 100}]}]}
@@ -120,6 +120,40 @@ def dungeon():
                                  entry('magic_missile', 2), entry('shadow_key', 1)]}] + common})
 
 
+JUNGLE_BLOCKS = ['jungle_grass', 'jungle_spores_plant', 'hive', 'larva']
+
+
+def jungle():
+    write(f'{NS}/loot_table/blocks/jungle_grass.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [
+        {'type': 'minecraft:item', 'name': 'minecraft:mud'}], 'conditions': [{'condition': 'minecraft:survives_explosion'}]}]})
+    write(f'{NS}/loot_table/blocks/jungle_spores_plant.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [
+        entry('jungle_spores', 1, 1, 2)]}]})
+    write(f'{NS}/loot_table/blocks/hive.json', self_loot('hive'))
+    write(f'{NS}/tags/block/jungle/ground.json', {'values': [t('jungle_grass'), 'minecraft:mud']})
+    write(f'{NS}/worldgen/configured_feature/jungle.json', {'type': t('jungle'), 'config': {}})
+    write(f'{NS}/worldgen/placed_feature/jungle.json', {'feature': t('jungle'), 'placement': []})
+    write(f'{NS}/forge/biome_modifier/jungle.json', {
+        'type': 'forge:add_features', 'biomes': '#minecraft:is_jungle', 'features': t('jungle'), 'step': 'top_layer_modification'})
+    # Ivy chests in the underground jungle
+    write(f'{NS}/worldgen/configured_feature/jungle_chest.json', {'type': t('loot_chest'), 'config': {
+        'chest': {'Name': 'minecraft:chest', 'Properties': {'facing': 'north', 'type': 'single', 'waterlogged': 'false'}},
+        'loot_table': t('chests/jungle')}})
+    write(f'{NS}/worldgen/placed_feature/jungle_chest.json', {'feature': t('jungle_chest'), 'placement': [
+        {'type': 'minecraft:rarity_filter', 'chance': 2}] + floor_scan(-20, 50)})
+    write(f'{NS}/forge/biome_modifier/jungle_chest.json', {
+        'type': 'forge:add_features', 'biomes': '#minecraft:is_jungle', 'features': t('jungle_chest'), 'step': 'underground_decoration'})
+    write(f'{NS}/loot_table/chests/jungle.json', chest_table(
+        ['anklet_of_the_wind', 'feral_claws', 'natures_gift', 'honey_comb'],
+        ['silver_bar', 'tungsten_bar', 'minecraft:gold_ingot', 'platinum_bar'],
+        ['regeneration_potion', 'swiftness_potion', 'ironskin_potion', 'mana_regeneration_potion']))
+    # Queen Bee: one weapon, Honey Comb, Bee Wax
+    write(f'{NS}/loot_table/entities/queen_bee.json', {'type': 'minecraft:entity', 'pools': [
+        {'rolls': 1, 'entries': [entry('bee_gun'), entry('bee_keeper'), entry('bees_knees')]},
+        {'rolls': 1, 'entries': [entry('honey_comb')], 'conditions': [{'condition': 'minecraft:random_chance', 'chance': 0.33}]},
+        {'rolls': 1, 'entries': [entry('bee_wax', 1, 16, 26)]},
+        {'rolls': 1, 'entries': [entry('minecraft:honey_block', 1, 5, 10)]}]})
+
+
 def blocks():
     for m in METALS:
         for ore in (f'{m}_ore', f'deepslate_{m}_ore'):
@@ -131,7 +165,7 @@ def blocks():
         'random_sequence': f'{NS}:blocks/life_crystal_block'})
     write('minecraft/tags/block/mineable/pickaxe.json', {'values': [t(o) for o in ORES] + [t('iron_anvil'), t('lead_anvil'), t('life_crystal_block'),
                                                                    t('ebonstone'), t('crimstone'), t('demonite_ore'), t('crimtane_ore'),
-                                                                   t('blue_brick'), t('green_brick'), t('pink_brick'), t('spikes')]})
+                                                                   t('blue_brick'), t('green_brick'), t('pink_brick'), t('spikes'), t('hive')]})
     write('minecraft/tags/block/needs_stone_tool.json', {'values': [t(f'{p}{m}_ore') for m in STONE_TIER for p in ('', 'deepslate_')]})
     write('minecraft/tags/block/needs_iron_tool.json', {'values': [t(f'{p}{m}_ore') for m in IRON_TIER for p in ('', 'deepslate_')]})
     write(f'{NS}/tags/block/mineable/hammer.json', {'values': [t('shadow_orb'), t('crimson_heart'), t('demon_altar'), t('crimson_altar')]})
@@ -220,6 +254,11 @@ def terraria_recipes():
     recipe('slime_crown', t('slime_crown'), [(t('gel'), 20), ('minecraft:gold_ingot', 5)], [WB], category='consumables')
     recipe('slime_crown_platinum', t('slime_crown'), [(t('gel'), 20), (t('platinum_bar'), 5)], [WB], category='consumables')
     recipe('suspicious_looking_eye', t('suspicious_looking_eye'), [(t('lens'), 6)], [WB], category='consumables')
+    recipe('abeemination', t('abeemination'), [('minecraft:honey_block', 5), ('minecraft:honey_bottle', 1), (t('stinger'), 1)], [WB], category='consumables')
+    recipe('blade_of_grass', t('blade_of_grass'), [(t('jungle_spores'), 12), (t('stinger'), 15), ('minecraft:vine', 3)], [ANVIL], category='weapons')
+    recipe('jungle_hat', t('jungle_hat'), [(t('jungle_spores'), 8), (t('stinger'), 12)], [ANVIL], category='armor')
+    recipe('jungle_shirt', t('jungle_shirt'), [(t('jungle_spores'), 10), (t('stinger'), 15), ('minecraft:vine', 1)], [ANVIL], category='armor')
+    recipe('jungle_pants', t('jungle_pants'), [(t('jungle_spores'), 8), (t('stinger'), 12)], [ANVIL], category='armor')
     recipe('demonite_bar', t('demonite_bar'), [(t('demonite_ore'), 3)], [FURNACE], category='materials')
     recipe('crimtane_bar', t('crimtane_bar'), [(t('crimtane_ore'), 3)], [FURNACE], category='materials')
     # ---- by hand / work bench basics
@@ -321,7 +360,7 @@ def lang():
     items_dir = os.path.join(RES, 'assets/terracraft/items')
     for fname in sorted(os.listdir(items_dir)):
         name = fname[:-5]
-        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
+        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in JUNGLE_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
                else 'item.') + f'{NS}.{name}'
         L[key] = title(name)
     L['block.terracraft.life_crystal_block'] = 'Life Crystal'
@@ -535,6 +574,18 @@ def lang():
     for i, line in enumerate(GUIDE_HELP, 1):
         L[f'npc.terracraft.guide.help.{i}'] = line
     L.update({
+        'block.terracraft.jungle_spores_plant': 'Jungle Spores',
+        'block.terracraft.larva': 'Larva',
+        'item.terracraft.jungle_spores.tooltip': 'Glows faintly',
+        'item.terracraft.abeemination.tooltip': 'Summons the Queen Bee (use in the Jungle)',
+        'item.terracraft.honey_comb.tooltip': 'Releases bees and increases life regeneration when damaged',
+        'item.terracraft.bee_gun.tooltip': 'Shoots bees that will chase your enemy',
+        'item.terracraft.bee_keeper.tooltip': 'Summons killer bees after striking your foe',
+        'item.terracraft.bees_knees.tooltip': 'Arrows turn into bees',
+        'item.terracraft.blade_of_grass.tooltip': 'Has a chance to poison enemies',
+        'item.terracraft.bees_knees': "The Bee's Knees",
+        'ability.terracraft.honey_comb': 'Releases bees when damaged',
+        'armor_set.terracraft.jungle.bonus': '16% reduced mana cost',
         'npc.terracraft.old_man.day': "My master cannot be summoned under the light of day.",
         'screen.terracraft.npc.curse': 'Curse',
         'message.terracraft.chest.locked.golden_key': 'It is locked. A Golden Key would open it.',
@@ -623,20 +674,31 @@ MOBS = {
     'dungeon_guardian': ('Dungeon Guardian', []),
     'skeletron': ('Skeletron', [('book_of_skulls', 1, 1, 0.143)]),
     'skeletron_hand': ('Skeletron Hand', []),
+    'jungle_slime': ('Jungle Slime', [('gel', 2, 5, 1.0)]),
+    'jungle_bat': ('Jungle Bat', []),
+    'hornet': ('Hornet', [('stinger', 1, 1, 0.5)]),
+    'man_eater': ('Man Eater', [('minecraft:vine', 1, 2, 0.5)]),
+    'snatcher': ('Snatcher', [('minecraft:vine', 1, 1, 0.3)]),
+    'bee': ('Bee', []),
+    'queen_bee': ('Queen Bee', None),
     'king_slime': ('King Slime', [('gel', 40, 80, 1.0), ('slime_crown', 1, 1, 0.1)]),
     'eye_of_cthulhu': ('Eye of Cthulhu', [('lens', 3, 6, 1.0)]),
 }
 
 OVERWORLD_LAND = {'exclude_biomes': ['#minecraft:is_ocean', '#minecraft:is_river'], 'exclude_ground': ['#terracraft:evil/all', '#terracraft:dungeon/bricks']}
-NOT_EVIL = {'exclude_ground': ['#terracraft:evil/all', '#terracraft:dungeon/bricks']}
+NOT_EVIL = {'exclude_ground': ['#terracraft:evil/all', '#terracraft:dungeon/bricks', '#terracraft:jungle/ground']}
+JUNGLE = {'biomes': ['#minecraft:is_jungle'], 'exclude_ground': ['#terracraft:evil/all', '#terracraft:dungeon/bricks']}
+JUNGLE_DEEP = {'ground': ['#terracraft:jungle/ground']}
 DUNGEON = {'ground': ['#terracraft:dungeon/bricks'], 'condition': 'boss_skeletron_defeated'}
 CORRUPT = {'ground': ['#terracraft:evil/corruption']}
 CRIMSON = {'ground': ['#terracraft:evil/crimson']}
 PRE_HM = '!hardmode_active'
 SPAWNS = {
     'surface_day': [
-        dict(entity='green_slime', weight=10, time='day', layers=['surface'], **OVERWORLD_LAND),
-        dict(entity='blue_slime', weight=8, time='day', layers=['surface'], **OVERWORLD_LAND),
+        dict(entity='green_slime', weight=10, time='day', layers=['surface'], exclude_biomes=['#minecraft:is_ocean', '#minecraft:is_river', '#minecraft:is_jungle'],
+             exclude_ground=OVERWORLD_LAND['exclude_ground']),
+        dict(entity='blue_slime', weight=8, time='day', layers=['surface'], exclude_biomes=['#minecraft:is_ocean', '#minecraft:is_river', '#minecraft:is_jungle'],
+             exclude_ground=OVERWORLD_LAND['exclude_ground']),
         dict(entity='purple_slime', weight=1, time='day', layers=['surface'], **OVERWORLD_LAND),
     ],
     'surface_night': [
@@ -669,6 +731,14 @@ SPAWNS = {
         dict(entity='eater_of_souls', weight=10, layers=['surface', 'underground', 'cavern'], placement='air', **CORRUPT),
         dict(entity='devourer', weight=3, layers=['surface', 'underground', 'cavern'], **CORRUPT),
     ],
+    'jungle': [
+        dict(entity='jungle_slime', weight=10, time='day', layers=['surface'], **JUNGLE),
+        dict(entity='snatcher', weight=4, layers=['surface'], **JUNGLE),
+        dict(entity='jungle_slime', weight=6, layers=['underground', 'cavern'], **JUNGLE_DEEP),
+        dict(entity='hornet', weight=10, layers=['underground', 'cavern'], placement='air', **JUNGLE_DEEP),
+        dict(entity='man_eater', weight=5, layers=['underground', 'cavern'], **JUNGLE_DEEP),
+        dict(entity='jungle_bat', weight=6, layers=['underground', 'cavern'], placement='air', **JUNGLE_DEEP),
+    ],
     'dungeon': [
         dict(entity='angry_bones', weight=10, layers=['surface', 'underground', 'cavern'], group=[1, 2], **DUNGEON),
         dict(entity='dark_caster', weight=4, layers=['surface', 'underground', 'cavern'], **DUNGEON),
@@ -685,6 +755,8 @@ SPAWNS = {
 
 def mobs():
     for mob, (_, drops) in MOBS.items():
+        if drops is None:
+            continue   # hand-written loot table
         pools = []
         for item, lo, hi, chance in drops:
             entry = {'type': 'minecraft:item', 'name': item if ':' in item else t(item)}
@@ -958,6 +1030,7 @@ def main():
     blocks()
     evil_blocks()
     dungeon()
+    jungle()
     damage()
     smelting()
     terraria_recipes()

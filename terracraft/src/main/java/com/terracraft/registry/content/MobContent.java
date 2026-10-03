@@ -133,6 +133,29 @@ public final class MobContent {
         com.terracraft.entity.boss.Skeletron.Hand::new, 1.2F, 1.2F,
         MobDefinition.builder().life(600).damage(20).defense(14).knockbackTaken(0.0F).coins(0).followRange(160));
 
+    // --- Jungle -----------------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<SlimeMob>> JUNGLE_SLIME = slime("jungle_slime", 1.0F, 0.75F,
+        MobDefinition.builder().life(60).damage(18).defense(6).coins(100));
+    public static final RegistryObject<EntityType<FlyerMob>> JUNGLE_BAT = register("jungle_bat",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.6F, 0.45F,
+        MobDefinition.builder().life(34).damage(20).defense(4).knockbackTaken(0.8F).coins(100).speed(0.3));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.HornetMob>> HORNET = register("hornet",
+        (type, level) -> new com.terracraft.entity.mob.HornetMob(type, level, 22.0F), 0.7F, 0.7F,
+        MobDefinition.builder().life(34).damage(26).defense(12).knockbackTaken(0.5F).coins(200).speed(0.16).followRange(40));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.SnapperMob>> MAN_EATER = register("man_eater",
+        (type, level) -> new com.terracraft.entity.mob.SnapperMob(type, level, 5.0), 0.8F, 0.8F,
+        MobDefinition.builder().life(130).damage(42).defense(14).knockbackTaken(0.0F).coins(300).followRange(16));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.SnapperMob>> SNATCHER = register("snatcher",
+        (type, level) -> new com.terracraft.entity.mob.SnapperMob(type, level, 4.0), 0.7F, 0.7F,
+        MobDefinition.builder().life(60).damage(30).defense(10).knockbackTaken(0.0F).coins(100).followRange(14));
+    /** The Queen Bee's bees. */
+    public static final RegistryObject<EntityType<FlyerMob>> BEE = register("bee",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.35F, 0.3F,
+        MobDefinition.builder().life(5).damage(20).defense(0).knockbackTaken(1.0F).coins(0).speed(0.4).followRange(48));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.QueenBee>> QUEEN_BEE = register("queen_bee",
+        com.terracraft.entity.boss.QueenBee::new, 2.0F, 1.8F,
+        MobDefinition.builder().life(3400).damage(30).defense(8).knockbackTaken(0.0F).coins(100_000).followRange(160));
+
     private MobContent() {}
 
     public static void init() {

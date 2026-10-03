@@ -1912,6 +1912,246 @@ mob_sprite('clothier', 16, 24, 3, lambda c, f: npc_frame(c, f, '#E8B890', '#2A2A
            frame_time=6, animate='move')
 
 
+# ----------------------------------------------------------------------------------------- Jungle (Stage 4b)
+def jungle_grass_top():
+    c = Canvas()
+    p = palette('#4CB830')
+    c.noise([p[2], p[2], p[1], p[3]], 611)
+    return c
+
+
+def jungle_grass_side():
+    c = Canvas()
+    mud = palette('#4A3A3A')
+    c.noise([mud[2], mud[2], mud[1], mud[3]], 612)
+    p = palette('#4CB830')
+    rnd = random.Random(613)
+    for x in range(16):
+        for y in range(3 + rnd.randint(0, 3)):
+            c.set(x, y, rnd.choice([p[2], p[1], p[3]]))
+    return c
+
+
+def spores_texture():
+    c = Canvas()
+    stem = palette('#3A8A2A')
+    c.line(7, 15, 7, 6, stem[2]); c.line(8, 15, 9, 9, stem[1])
+    c.line(7, 10, 4, 7, stem[2]); c.line(8, 11, 12, 8, stem[2])
+    glow = palette('#B8F040')
+    for x, y in ((7, 5), (4, 6), (12, 7), (10, 9), (5, 9)):
+        c.circle(x, y, 1.2, glow[3])
+        c.set(x, y, glow[4])
+    return c
+
+
+def hive_texture():
+    c = Canvas()
+    p = palette('#E0A020')
+    c.rect(0, 0, 15, 15, p[1])
+    for row in range(4):
+        for col in range(3):
+            cx = col * 6 + (3 if row % 2 else 0)
+            cy = row * 4 + 2
+            for dx in range(-2, 3):
+                for dy in range(-1, 2):
+                    x, y = (cx + dx) % 16, cy + dy
+                    if 0 <= y < 16:
+                        c.set(x, y, p[3] if abs(dx) + abs(dy) < 3 else p[2])
+    return c
+
+
+def larva_texture():
+    c = Canvas()
+    p = palette('#F0E0A0')
+    c.rect(0, 0, 15, 15, p[2])
+    for y in range(0, 16, 3):
+        c.line(0, y, 15, y, p[1])
+    c.circle(8, 4, 2, p[3])
+    c.set(7, 3, (30, 20, 10, 255)); c.set(9, 3, (30, 20, 10, 255))
+    return c
+
+
+BLOCK_TEXTURES['jungle_grass_top'] = jungle_grass_top
+BLOCK_TEXTURES['jungle_grass_side'] = jungle_grass_side
+BLOCK_TEXTURES['jungle_spores_plant'] = spores_texture
+BLOCK_TEXTURES['hive'] = hive_texture
+BLOCK_TEXTURES['larva'] = larva_texture
+
+
+def jungle_block_assets():
+    write_json(os.path.join(ASSETS, 'blockstates/jungle_grass.json'), {'variants': {'': {'model': 'terracraft:block/jungle_grass'}}})
+    write_json(os.path.join(ASSETS, 'models/block/jungle_grass.json'), {'parent': 'minecraft:block/cube_bottom_top', 'textures': {
+        'top': 'terracraft:block/jungle_grass_top', 'side': 'terracraft:block/jungle_grass_side', 'bottom': 'minecraft:block/mud'}})
+    write_json(os.path.join(ASSETS, 'items/jungle_grass.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/jungle_grass'}})
+    write_json(os.path.join(ASSETS, 'blockstates/hive.json'), {'variants': {'': {'model': 'terracraft:block/hive'}}})
+    write_json(os.path.join(ASSETS, 'models/block/hive.json'), {'parent': 'minecraft:block/cube_all', 'textures': {'all': 'terracraft:block/hive'}})
+    write_json(os.path.join(ASSETS, 'items/hive.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/hive'}})
+    faces = ['north', 'south', 'east', 'west', 'up', 'down']
+    write_json(os.path.join(ASSETS, 'blockstates/larva.json'), {'variants': {'': {'model': 'terracraft:block/larva'}}})
+    write_json(os.path.join(ASSETS, 'models/block/larva.json'), {'parent': 'minecraft:block/block',
+        'textures': {'particle': 'terracraft:block/larva', 'all': 'terracraft:block/larva'}, 'elements': [
+            {'from': [3, 0, 3], 'to': [13, 10, 13], 'faces': {f: {'texture': '#all'} for f in faces}},
+            {'from': [4, 10, 4], 'to': [12, 14, 12], 'faces': {f: {'texture': '#all'} for f in faces}}]})
+    write_json(os.path.join(ASSETS, 'items/larva.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/larva'}})
+    name = 'jungle_spores_plant'
+    write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': {'': {'model': f'terracraft:block/{name}'}}})
+    write_json(os.path.join(ASSETS, 'models/block', name + '.json'),
+               {'parent': 'minecraft:block/cross', 'render_type': 'minecraft:cutout', 'textures': {'cross': f'terracraft:block/{name}'}})
+    write_json(os.path.join(ASSETS, 'items', name + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:item/{name}'}})
+    write_json(os.path.join(ASSETS, 'models/item', name + '.json'), {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'terracraft:block/{name}'}})
+
+
+def draw_spore_item(c):
+    glow = palette('#A8E838')
+    for x, y, r in ((6, 6, 2.5), (10, 9, 2.0), (5, 11, 1.8), (11, 4, 1.5)):
+        c.circle(x, y, r, glow[2])
+        c.set(int(x) - 1, int(y) - 1, glow[4])
+    c.outline()
+
+
+def draw_stinger(c):
+    p = palette('#3A3A30')
+    c.polygon([(3, 13), (12, 3), (13, 4), (5, 14)], p[2])
+    c.line(4, 13, 12, 4, p[3])
+    c.set(13, 2, p[1])
+    c.outline()
+
+
+def draw_wax(c):
+    p = palette('#E8C040')
+    c.polygon([(3, 6), (8, 3), (13, 6), (13, 11), (8, 14), (3, 11)], p[2])
+    c.polygon([(5, 7), (8, 5), (11, 7), (11, 10), (8, 12), (5, 10)], p[3])
+    c.outline()
+
+
+def draw_abeemination(c):
+    p = palette('#E8B030')
+    c.circle(8, 9, 5, p[2])
+    for y in (7, 10):
+        c.line(4, y, 12, y, (40, 30, 20, 255))
+    c.rect(5, 2, 6, 4, hexc('#E0E8F0')); c.rect(10, 2, 11, 4, hexc('#E0E8F0'))
+    c.set(6, 8, (20, 10, 10, 255))
+    c.light()
+    c.outline()
+
+
+def draw_honey_comb(c):
+    p = palette('#F0B020')
+    for cx, cy in ((5, 5), (11, 5), (8, 10), (4, 11), (12, 11)):
+        c.polygon([(cx - 2, cy - 1), (cx, cy - 3), (cx + 2, cy - 1), (cx + 2, cy + 1), (cx, cy + 3), (cx - 2, cy + 1)], p[2])
+        c.set(cx, cy, p[4])
+    c.outline()
+
+
+def draw_bee_gun(c):
+    p = palette('#E8B030')
+    c.rect(2, 5, 12, 8, p[2])
+    for x in (4, 7, 10):
+        c.line(x, 5, x, 8, (50, 35, 20, 255))
+    c.rect(12, 6, 14, 7, p[1])
+    c.polygon([(4, 9), (7, 9), (6, 13), (4, 13)], WOOD[2])
+    c.outline()
+
+
+item('jungle_spores', draw_spore_item)
+item('stinger', draw_stinger)
+item('bee_wax', draw_wax)
+item('abeemination', draw_abeemination)
+item('honey_comb', draw_honey_comb)
+item('bee_gun', draw_bee_gun)
+item('blade_of_grass', lambda c: draw_sword(c, palette('#4CB830')), True)
+item('bee_keeper', lambda c: draw_sword(c, palette('#E8B030')), True)
+item('bees_knees', lambda c: draw_bow(c, palette('#E8B030')), True)
+METAL['jungle'] = '#5AA040'
+_jungle = metal('jungle')
+item('jungle_hat', lambda c: draw_helmet(c, _jungle))
+item('jungle_shirt', lambda c: draw_chest(c, _jungle))
+item('jungle_pants', lambda c: draw_legs(c, _jungle))
+EVIL_ARMOR.append('jungle')
+
+
+def p_bee(c):
+    c.circle(7.5, 8, 3, hexc('#F0C020'))
+    c.line(7, 5, 7, 11, (40, 30, 20, 255))
+    c.circle(6, 5, 1.6, (230, 240, 255, 200)); c.circle(9, 5, 1.6, (230, 240, 255, 200))
+
+
+proj('stinger', lambda c: (c.line(2, 8, 13, 8, palette('#3A3A30')[2]), c.set(14, 8, palette('#3A3A30')[0])))
+proj('bee', p_bee)
+proj('bee_arrow', lambda c: (p_arrow(c, '#E8B030', '#F0E070'), c.circle(13, 8, 1.5, hexc('#F0C020'))))
+
+
+def bee_texture(stripe_a, stripe_b, wing=(220, 235, 255, 150), crown=False):
+    def paint(c):
+        a, b = hexc(stripe_a), hexc(stripe_b)
+        paint_box(c, 0, 0, 5, 5, 4, b, 0.1, 621)                    # head
+        fx, fy, fw, fh = box_faces(0, 0, 5, 5, 4)['front']
+        c.set(fx, fy + 1, (200, 30, 30, 255)); c.set(fx + 4, fy + 1, (200, 30, 30, 255))
+        c.set(fx + 1, fy + 1, (30, 10, 10, 255)); c.set(fx + 3, fy + 1, (30, 10, 10, 255))
+        paint_box(c, 20, 0, 6, 6, 5, shade(a, 0.9), 0.15, 622)       # thorax (fuzzy)
+        paint_box(c, 0, 12, 7, 7, 9, a, 0.08, 623)                   # abdomen with stripes
+        for face, (x, y, w, h) in box_faces(0, 12, 7, 7, 9).items():
+            if face in ('left', 'right', 'top', 'bottom'):
+                horizontal = face in ('top', 'bottom')
+                for i in range(1, 9, 3):
+                    if horizontal:
+                        fill(c, (x, y + i, w, 1), b)
+                    else:
+                        fill(c, (x + i, y, 1, h), b)
+        paint_box(c, 34, 12, 1, 1, 3, (30, 25, 20, 255), 0.0)
+        for face, region in box_faces(32, 20, 8, 0, 5).items():
+            fill(c, region, wing)
+        if crown:
+            tx, ty, tw, th = box_faces(0, 0, 5, 5, 4)['top']
+            fill(c, (tx, ty, tw, th), hexc('#F0D030'))
+    return paint
+
+
+def bat_texture_colored(fur_hex, wing_hex):
+    def paint(c):
+        fur = hexc(fur_hex)
+        paint_box(c, 0, 0, 4, 5, 3, fur, 0.15, 70)
+        paint_box(c, 16, 0, 4, 4, 4, fur, 0.15, 71)
+        c.set(21, 6, (255, 220, 80, 255)); c.set(22, 6, (255, 220, 80, 255))
+        paint_box(c, 32, 0, 1, 2, 1, shade(fur, 0.8), 0.1)
+        wing = hexc(wing_hex)
+        for v in (16, 24):
+            fill(c, (0, v, 18, 7), wing, 0.15, 72 + v)
+            for x in (2, 5, 8, 11, 14):
+                for y in range(v, v + 6):
+                    c.set(x, y, shade(wing, 0.6))
+    return paint
+
+
+model_texture('hornet', 64, 32, bee_texture('#E0A020', '#3A3020'))
+model_texture('bee', 64, 32, bee_texture('#F0C828', '#2A2018'))
+model_texture('queen_bee', 64, 32, bee_texture('#F0B020', '#3A2418', crown=True))
+model_texture('jungle_slime', 64, 64, slime_texture('#40B0A0', 180))
+model_texture('jungle_bat', 64, 32, bat_texture_colored('#5A8A3A', '#3A6A2A'))
+model_texture('man_eater', 64, 32, maw_texture('#4A9A30', '#E070A0'))
+model_texture('snatcher', 64, 32, maw_texture('#5AAA3A', '#F0A0C0'))
+
+
+def bee_frame(c, frame, body='#F0C828', size=12):
+    p = palette(body)
+    c.circle(size * 0.55, size * 0.55, size * 0.3, p[2])
+    c.circle(size * 0.25, size * 0.5, size * 0.17, (40, 30, 20, 255))
+    for x in range(int(size * 0.45), int(size * 0.85), 2):
+        c.line(x, int(size * 0.35), x, int(size * 0.75), (40, 30, 20, 255))
+    wing = (220, 235, 255, 180)
+    c.circle(size * 0.5, size * (0.2 if frame % 2 else 0.3), size * 0.18, wing)
+    c.light(1.2, 0.8)
+    c.outline()
+
+
+mob_sprite('hornet', 16, 16, 2, lambda c, f: bee_frame(c, f, '#E0A020', 16), frame_time=2)
+mob_sprite('bee', 10, 10, 2, lambda c, f: bee_frame(c, f, '#F0C828', 10), frame_time=2)
+mob_sprite('queen_bee', 32, 28, 2, lambda c, f: bee_frame(c, f, '#F0B020', 28), frame_time=3)
+mob_sprite('jungle_slime', 16, 12, 2, lambda c, f: slime_frame(c, '#40B0A0', f, 16, 12), frame_time=10)
+mob_sprite('jungle_bat', 16, 12, 3, bat_frame, frame_time=3)
+mob_sprite('man_eater', 16, 12, 2, lambda c, f: maw_frame(c, f, '#4A9A30'), frame_time=4, rotate=True)
+mob_sprite('snatcher', 16, 12, 2, lambda c, f: maw_frame(c, f, '#5AAA3A'), frame_time=4, rotate=True)
+
 
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
@@ -1925,7 +2165,8 @@ def check_registered_items():
             ids.update(pattern.findall(f.read()))
     known = set(ITEMS) | set(BLOCKS_CUBE) | {'work_bench', 'iron_anvil', 'lead_anvil', 'life_crystal_block', 'corrupt_grass', 'crimson_grass',
                                              'shadow_orb', 'crimson_heart', 'demon_altar', 'crimson_altar', 'vile_mushroom', 'vicious_mushroom',
-                                             'ebonwood', 'shadewood', 'ebonwood_leaves', 'shadewood_leaves'} | set(BRICKS) | {'spikes', 'locked_gold_chest'}
+                                             'ebonwood', 'shadewood', 'ebonwood_leaves', 'shadewood_leaves'} | set(BRICKS) | {'spikes', 'locked_gold_chest', 'jungle_grass',
+                                                                                        'jungle_spores_plant', 'hive', 'larva'}
     missing = sorted(i for i in ids if i not in known and not i.endswith("_"))
     if missing:
         print('ERROR: items without generated assets:', missing)
@@ -1942,6 +2183,7 @@ def main():
         factory().save(os.path.join(TEX, 'block', name + '.png'))
     block_assets()
     dungeon_block_assets()
+    jungle_block_assets()
     for name, drawer in PROJECTILES.items():
         c = Canvas()
         drawer(c)

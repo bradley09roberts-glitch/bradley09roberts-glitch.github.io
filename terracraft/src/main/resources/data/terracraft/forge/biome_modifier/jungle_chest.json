@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#minecraft:is_jungle",
+  "features": "terracraft:jungle_chest",
+  "step": "underground_decoration"
+}

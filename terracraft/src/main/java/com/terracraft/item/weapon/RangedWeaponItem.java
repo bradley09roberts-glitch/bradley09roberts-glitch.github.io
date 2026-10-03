@@ -24,6 +24,8 @@ public class RangedWeaponItem extends TerraItem implements UsableWeapon {
     private final float inaccuracy;
     private final int projectiles;
     private final float spread;
+    /** Turns every ammo projectile into this one (Bee's Knees shoots bee arrows); null = use the ammo's. */
+    private com.terracraft.entity.projectile.ProjectileKind converted;
 
     public RangedWeaponItem(Properties properties, AmmoType ammoType, SoundEvent sound, float inaccuracy, int projectiles, float spread) {
         super(properties);
@@ -32,6 +34,11 @@ public class RangedWeaponItem extends TerraItem implements UsableWeapon {
         this.inaccuracy = inaccuracy;
         this.projectiles = projectiles;
         this.spread = spread;
+    }
+
+    public RangedWeaponItem convertsTo(com.terracraft.entity.projectile.ProjectileKind kind) {
+        this.converted = kind;
+        return this;
     }
 
     public AmmoType ammoType() {
@@ -53,7 +60,7 @@ public class RangedWeaponItem extends TerraItem implements UsableWeapon {
             return false;
         }
         TerraItemStats stats = TerraItemStats.of(stack);
-        WeaponFiring.fire(player.level(), player, ammo.projectile(), stats.velocity() + ammo.velocityBonus(), projectiles, spread,
+        WeaponFiring.fire(player.level(), player, converted != null ? converted : ammo.projectile(), stats.velocity() + ammo.velocityBonus(), projectiles, spread,
             inaccuracy, stats.damage() + ammo.damage(), stats.damageClass(), stats.crit(), stats.knockback() + ammo.knockback());
         WeaponFiring.sound(player, sound, 1.0F);
         float conservation = TerraPlayerData.get(player).stats().get(Stat.AMMO_CONSERVATION);

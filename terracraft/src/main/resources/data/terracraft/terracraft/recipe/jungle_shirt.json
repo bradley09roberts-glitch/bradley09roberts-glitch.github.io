@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:jungle_shirt",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:jungle_spores",
+      "count": 10
+    },
+    {
+      "item": "terracraft:stinger",
+      "count": 15
+    },
+    {
+      "item": "minecraft:vine",
+      "count": 1
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

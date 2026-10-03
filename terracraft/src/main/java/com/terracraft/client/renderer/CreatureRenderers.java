@@ -79,6 +79,15 @@ public final class CreatureRenderers {
         skull(event, MobContent.SKELETRON.get(), 2.2F);
         register(event, MobContent.SKELETRON_HAND.get(), ctx -> new TerraModelRenderer<>(ctx,
             new com.terracraft.client.model.BoneHandModel(ctx.bakeLayer(TerraModels.BONE_HAND)), 1.2F / (10.0F / 16.0F), 0.4F, false));
+        // Jungle
+        slime(event, MobContent.JUNGLE_SLIME.get(), 1.0F);
+        register(event, MobContent.JUNGLE_BAT.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 0.8F, 0.3F, false));
+        maw(event, MobContent.MAN_EATER.get(), 0.8F);
+        maw(event, MobContent.SNATCHER.get(), 0.7F);
+        bee(event, MobContent.HORNET.get(), 0.7F);
+        bee(event, MobContent.BEE.get(), 0.35F);
+        bee(event, MobContent.QUEEN_BEE.get(), 2.0F);
         for (var npc : NpcContent.all()) {
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,
                 new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F, 0.5F, false));
@@ -98,6 +107,12 @@ public final class CreatureRenderers {
     private static void maw(EntityRenderersEvent.RegisterRenderers event, EntityType<? extends LivingEntity> type, float width) {
         register(event, type, ctx -> new TerraModelRenderer<>(ctx, new com.terracraft.client.model.MawModel(ctx.bakeLayer(TerraModels.MAW)),
             width / (8.0F / 16.0F), width * 0.4F, false));
+    }
+
+    /** Bee model: scaled so 10 px fill the hitbox width (the body is longer than wide). */
+    private static void bee(EntityRenderersEvent.RegisterRenderers event, EntityType<? extends LivingEntity> type, float width) {
+        register(event, type, ctx -> new TerraModelRenderer<>(ctx, new com.terracraft.client.model.BeeModel3D(ctx.bakeLayer(TerraModels.BEE)),
+            width / (10.0F / 16.0F), width * 0.4F, false));
     }
 
     /** Skull model is 10 px wide. */

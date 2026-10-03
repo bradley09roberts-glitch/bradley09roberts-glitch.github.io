@@ -41,7 +41,33 @@ public final class ArmorContent {
     public static final ArmorPieces CRIMSON = set("crimson", "_scalemail", 6, 7, 6,
         StatEffects.builder().add(Stat.LIFE_REGEN, 4).build(), 3750);
 
+    /** Jungle armor (Jungle Spores + Stingers): mage set, +max mana and magic crit per piece, -16% mana cost bonus. */
+    public static final ArmorPieces JUNGLE = named("jungle", new String[]{"jungle_hat", "jungle_shirt", "jungle_pants"}, new int[]{4, 5, 4},
+        new StatEffects[]{
+            StatEffects.builder().add(Stat.MAX_MANA, 40).add(Stat.MAGIC_CRIT, 4).build(),
+            StatEffects.builder().add(Stat.MAX_MANA, 20).add(Stat.MAGIC_CRIT, 4).build(),
+            StatEffects.builder().add(Stat.MAX_MANA, 20).add(Stat.MAGIC_CRIT, 4).build()},
+        StatEffects.builder().add(Stat.MANA_COST, -0.16F).build(), TerraRarity.GREEN, 6000);
+
     private ArmorContent() {}
+
+    /** A set whose pieces have their own Terraria names and per-piece bonuses. */
+    private static ArmorPieces named(String set, String[] names, int[] defense, StatEffects[] pieceEffects, StatEffects bonus, TerraRarity rarity,
+                                     int value) {
+        ArmorSet armorSet = ArmorSet.of(set, bonus);
+        EquipmentSlot[] slots = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS};
+        List<RegistryObject<TerrariaArmorItem>> pieces = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            TerraItemStats stats = TerraItemStats.builder().defense(defense[i]).rarity(rarity).value(value).build();
+            EquipmentSlot slot = slots[i];
+            StatEffects effects = pieceEffects[i];
+            pieces.add(ModItems.register(names[i], TabGroup.TOOLS_ARMOR, p -> new TerrariaArmorItem(p, armorSet, slot, effects),
+                p -> TerrariaArmorItem.properties(p, armorSet, slot, stats)));
+        }
+        ArmorPieces result = new ArmorPieces(armorSet, pieces.get(0), pieces.get(1), pieces.get(2));
+        SETS.add(result);
+        return result;
+    }
 
     public static void init() {}
 

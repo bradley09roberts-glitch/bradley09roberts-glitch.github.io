@@ -144,12 +144,29 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - Fixes: boss bars are cleared when a boss's chunk unloads (previously a stale bar stayed); NPC chat closes
   when the NPC disappears.
 
+### Stage 4b: Jungle and Queen Bee (verified in a live client)
+- **Jungle** (`world.jungle.JungleFeature`, added to `#minecraft:is_jungle`): under jungle columns (decided from
+  the biome source, chunk independent) dirt and most stone down to y=-24 become mud; mud facing air grows
+  Jungle Grass and cave grass sprouts glowing Jungle Spores; Bee Hives (hive shell, honey pool, Larva) are
+  buried in the underground jungle. Ivy chests (Anklet of the Wind, Feral Claws, Nature's Gift, Honey Comb).
+- **Enemies**: Jungle Slime, Snatcher (surface) and Hornet (`HornetMob`: keeps its distance, poison stingers),
+  Man Eater (`SnapperMob`: rooted plant lunging from its anchor), Jungle Bat (underground). Normal underground
+  tables skip jungle ground; surface day slimes skip jungle biomes.
+- **Queen Bee** (`entity.boss.QueenBee`, 3400 life): breaking a Larva or using an Abeemination in the Jungle.
+  Cycles three dashes through the player, hatching bees, and stinger volleys; faster below half life; enraged
+  (double damage) outside the Jungle. Drops Bee Gun / Bee Keeper / The Bee's Knees, Honey Comb (1/3), Bee Wax,
+  honey blocks.
+- **Gear**: Blade of Grass (poison on hit), Bee Keeper (bees on hit), The Bee's Knees (arrows become bee
+  arrows), Bee Gun (homing bees), Honey Comb (bees + regeneration when hurt), Jungle armor (+mana, magic crit,
+  -16% mana cost). Melee weapons can now carry on-hit effects; ranged weapons can convert their ammo.
+- 3D bee model (Hornet, bee, Queen Bee); man eaters use the maw model.
+
 ## IN PROGRESS
-- Stage 4 continues with 4b (Jungle and Queen Bee).
+- Stage 4 continues with 4c (Underworld, Wall of Flesh, Hardmode).
 
 ## NEXT (Stage 4: Dungeon, Jungle, Underworld - the road to Hardmode)
 1. ~~Dungeon and Skeletron~~ (done, 4a).
-2. Jungle mapping (vanilla jungles + underground jungle mud/moss, Jungle Spores, Hornets, Man Eaters),
+2. ~~Jungle and Queen Bee~~ (done, 4b). Original plan: Jungle mapping (vanilla jungles + underground jungle mud/moss, Jungle Spores, Hornets, Man Eaters),
    Queen Bee (bee hives, Abeemination), Jungle armor and gear.
 3. Underworld layer below the caverns (ash, hellstone with 65 power, lava lakes, ruined houses), Imps,
    Demons, Voodoo Demons, Fire Imp, Bone Serpent (worm framework); Hellforge, Molten gear, Hellstone bars.
@@ -162,6 +179,8 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   missing where chunks already existed (use a new world or unexplored location).
 - If every player leaves while Skeletron is alive, the boss stays in its unloaded chunk; the Old Man may
   return meanwhile, and Skeletron resumes (or despawns) once the area is loaded again.
+- Jungle conversion follows vanilla jungle biomes, which are smaller than Terraria's Jungle; mangrove swamps (also
+  mud) can host underground jungle enemies.
 - Locked Gold Chest loot spreads stacks over many slots (vanilla chest loot behaviour).
 - Chunks generated before a zone change keep their old layout (zone placement changed during Stage 3
   development; affects only test worlds).

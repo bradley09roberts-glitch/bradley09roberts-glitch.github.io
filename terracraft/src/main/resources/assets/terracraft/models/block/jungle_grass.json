@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "terracraft:block/jungle_grass_top",
+    "side": "terracraft:block/jungle_grass_side",
+    "bottom": "minecraft:block/mud"
+  }
+}

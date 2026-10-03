@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:abeemination",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:honey_block",
+      "count": 5
+    },
+    {
+      "item": "minecraft:honey_bottle",
+      "count": 1
+    },
+    {
+      "item": "terracraft:stinger",
+      "count": 1
+    }
+  ],
+  "stations": [
+    "terracraft:work_bench"
+  ],
+  "category": "consumables"
+}

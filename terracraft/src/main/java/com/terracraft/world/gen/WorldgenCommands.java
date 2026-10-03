@@ -60,9 +60,11 @@ public final class WorldgenCommands {
                             if (name.endsWith("_ore") && !name.contains("coal") && !name.contains("redstone") && !name.contains("lapis")
                                 && !name.contains("emerald") && !name.contains("diamond") || name.equals("life_crystal_block") || block == Blocks.CHEST
                                 || name.equals("shadow_orb") || name.equals("crimson_heart") || name.endsWith("_altar") || name.equals("ebonstone")
-                                || name.equals("crimstone") || name.endsWith("corrupt_grass") || name.equals("crimson_grass")) {
+                                || name.equals("crimstone") || name.endsWith("corrupt_grass") || name.equals("crimson_grass")
+                                || name.equals("jungle_grass") || name.equals("mud") || name.equals("hive") || name.equals("larva")
+                                || name.equals("jungle_spores_plant") || name.endsWith("_brick")) {
                                 counts.merge(name.replace("deepslate_", ""), 1, Integer::sum);
-                                if (name.equals("shadow_orb") || name.equals("crimson_heart") || name.endsWith("_altar")) {
+                                if (name.equals("shadow_orb") || name.equals("crimson_heart") || name.endsWith("_altar") || name.equals("larva")) {
                                     firstSeen.putIfAbsent(name, new BlockPos(chunk.getPos().getMinBlockX() + x, y, chunk.getPos().getMinBlockZ() + z));
                                 }
                             }

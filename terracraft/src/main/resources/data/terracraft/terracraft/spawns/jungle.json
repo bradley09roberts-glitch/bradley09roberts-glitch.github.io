@@ -1,0 +1,79 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:jungle_slime",
+      "weight": 10,
+      "time": "day",
+      "layers": [
+        "surface"
+      ],
+      "biomes": [
+        "#minecraft:is_jungle"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks"
+      ]
+    },
+    {
+      "entity": "terracraft:snatcher",
+      "weight": 4,
+      "layers": [
+        "surface"
+      ],
+      "biomes": [
+        "#minecraft:is_jungle"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks"
+      ]
+    },
+    {
+      "entity": "terracraft:jungle_slime",
+      "weight": 6,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:jungle/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:hornet",
+      "weight": 10,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:jungle/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:man_eater",
+      "weight": 5,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:jungle/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:jungle_bat",
+      "weight": 6,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:jungle/ground"
+      ]
+    }
+  ]
+}

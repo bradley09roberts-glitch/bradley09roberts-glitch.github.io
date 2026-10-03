@@ -18,5 +18,6 @@ public final class TerraContent {
         EvilContent.init();
         NpcContent.init();
         DungeonContent.init();
+        JungleContent.init();
     }
 }

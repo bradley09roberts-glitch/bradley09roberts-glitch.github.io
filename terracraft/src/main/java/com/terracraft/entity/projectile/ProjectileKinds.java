@@ -67,6 +67,16 @@ public final class ProjectileKinds {
         .lifetime(200).size(0.4F, 0.7F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.03F, 40.0F).noTileCollide()
         .fullbright().enemy().trail(() -> ParticleTypes.FALLING_WATER));
 
+    // ---------------------------------------------------------------- jungle
+    public static final ProjectileKind STINGER = register(ProjectileKind.builder("stinger")
+        .lifetime(80).size(0.2F, 0.45F).enemy().debuff(() -> net.minecraft.world.effect.MobEffects.POISON, 140, 0.5F));
+    /** Friendly bees (Bee Gun, Bee Keeper, Honey Comb): short-lived and homing. */
+    public static final ProjectileKind BEE = register(ProjectileKind.builder("bee")
+        .lifetime(90).size(0.25F, 0.45F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.2F, 12.0F).bounces(3)
+        .hitCooldown(10));
+    public static final ProjectileKind BEE_ARROW = register(ProjectileKind.builder("bee_arrow")
+        .gravity(0.02).drag(0.995F).lifetime(160).size(0.25F, 0.6F).homing(0.05F, 10.0F).pierce(1));
+
     private ProjectileKinds() {}
 
     private static ProjectileKind register(ProjectileKind.Builder builder) {

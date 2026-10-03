@@ -31,7 +31,8 @@
       "sky": true,
       "exclude_ground": [
         "#terracraft:evil/all",
-        "#terracraft:dungeon/bricks"
+        "#terracraft:dungeon/bricks",
+        "#terracraft:jungle/ground"
       ]
     },
     {

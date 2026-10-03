@@ -30,7 +30,9 @@ public enum Ability implements StringRepresentable {
     THORNS,
     DASH,
     /** Panic Necklace: a burst of speed after taking damage. */
-    PANIC;
+    PANIC,
+    /** Honey Comb: releases bees and gives a short regeneration boost after taking damage. */
+    HONEY_COMB;
 
     public static final Codec<Ability> CODEC = StringRepresentable.fromEnum(Ability::values);
 

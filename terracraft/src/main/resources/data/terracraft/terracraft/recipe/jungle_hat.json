@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:jungle_hat",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:jungle_spores",
+      "count": 8
+    },
+    {
+      "item": "terracraft:stinger",
+      "count": 12
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

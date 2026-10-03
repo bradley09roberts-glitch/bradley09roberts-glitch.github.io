@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:blade_of_grass",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:jungle_spores",
+      "count": 12
+    },
+    {
+      "item": "terracraft:stinger",
+      "count": 15
+    },
+    {
+      "item": "minecraft:vine",
+      "count": 3
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

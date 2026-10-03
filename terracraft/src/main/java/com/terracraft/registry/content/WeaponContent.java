@@ -79,11 +79,44 @@ public final class WeaponContent {
     public static final RegistryObject<MagicWeaponItem> BOOK_OF_SKULLS = magic("book_of_skulls", ProjectileKinds.BOOK_SKULL, 29, 18, 26, 7.5F, 3.5F,
         TerraRarity.GREEN, 5, 0, 0);
 
+    // ---------------------------------------------------------------- jungle
+    public static final RegistryObject<MeleeWeaponItem> BLADE_OF_GRASS = ModItems.register("blade_of_grass", TabGroup.WEAPONS,
+        p -> new MeleeWeaponItem(p, (stack, target, attacker) -> {
+            if (attacker.getRandom().nextFloat() < 0.5F) {
+                target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.POISON, 140, 0));
+            }
+        }), p -> WeaponProperties.melee(p, TerraItemStats.builder().melee(28).useTime(33).knockback(6.0F).rarity(TerraRarity.ORANGE).value(5400).build()));
+    public static final RegistryObject<MeleeWeaponItem> BEE_KEEPER = ModItems.register("bee_keeper", TabGroup.WEAPONS,
+        p -> new MeleeWeaponItem(p, (stack, target, attacker) -> releaseBees(attacker, target, 1 + attacker.getRandom().nextInt(2), 8.0F)),
+        p -> WeaponProperties.melee(p, TerraItemStats.builder().melee(30).useTime(20).knockback(5.25F).rarity(TerraRarity.ORANGE).value(40000).build()));
+    public static final RegistryObject<RangedWeaponItem> BEES_KNEES = ModItems.register("bees_knees", TabGroup.WEAPONS,
+        p -> new RangedWeaponItem(p, AmmoType.ARROW, SoundEvents.ARROW_SHOOT, 1.0F, 1, 0.0F).convertsTo(ProjectileKinds.BEE_ARROW),
+        p -> WeaponProperties.stats(p.stacksTo(1), TerraItemStats.builder().ranged(23).useTime(23).knockback(1.0F).velocity(7.0F)
+            .rarity(TerraRarity.ORANGE).value(40000).build()));
+    public static final RegistryObject<MagicWeaponItem> BEE_GUN = ModItems.register("bee_gun", TabGroup.WEAPONS,
+        p -> new MagicWeaponItem(p, ProjectileKinds.BEE, 2, 10.0F),
+        p -> WeaponProperties.stats(p.stacksTo(1), TerraItemStats.builder().magic(9).mana(4).useTime(12).knockback(0.0F).velocity(6.0F)
+            .rarity(TerraRarity.ORANGE).value(40000).build()));
+
     // ---------------------------------------------------------------- ammo
     public static final RegistryObject<AmmoItem> FLAMING_ARROW = ammo("flaming_arrow", AmmoType.ARROW, 7, 2.0F, 0.5F, ProjectileKinds.FLAMING_ARROW, 15);
     public static final RegistryObject<AmmoItem> MUSKET_BALL = ammo("musket_ball", AmmoType.BULLET, 7, 2.0F, 4.0F, ProjectileKinds.MUSKET_BALL, 7);
 
     private WeaponContent() {}
+
+    /** Bees fly out of the attacker toward the target (Bee Keeper, Honey Comb). */
+    public static void releaseBees(net.minecraft.world.entity.LivingEntity owner, @org.jetbrains.annotations.Nullable net.minecraft.world.entity.LivingEntity target,
+                                   int count, float damage) {
+        if (!(owner.level() instanceof net.minecraft.server.level.ServerLevel level)) {
+            return;
+        }
+        for (int i = 0; i < count; i++) {
+            net.minecraft.world.phys.Vec3 dir = target != null ? target.getBoundingBox().getCenter().subtract(owner.getEyePosition()).normalize()
+                : new net.minecraft.world.phys.Vec3(owner.getRandom().nextGaussian(), 0.4, owner.getRandom().nextGaussian()).normalize();
+            com.terracraft.entity.projectile.TerrariaProjectile.shoot(level, owner, ProjectileKinds.BEE, owner.getEyePosition(), dir, 5.0F, 25.0F,
+                damage, com.terracraft.combat.DamageClass.GENERIC, 0, 0.5F);
+        }
+    }
 
     public static void init() {}
 

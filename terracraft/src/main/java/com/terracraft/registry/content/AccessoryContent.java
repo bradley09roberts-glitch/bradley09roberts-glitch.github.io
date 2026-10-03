@@ -57,6 +57,9 @@ public final class AccessoryContent {
     public static final RegistryObject<AccessoryItem> PANIC_NECKLACE = accessory("panic_necklace", TerraRarity.GREEN, 10000,
         StatEffects.builder().ability(Ability.PANIC));
 
+    public static final RegistryObject<AccessoryItem> HONEY_COMB = accessory("honey_comb", TerraRarity.GREEN, 20000,
+        StatEffects.builder().ability(Ability.HONEY_COMB));
+
     private static RegistryObject<AccessoryItem> accessory(String name, TerraRarity rarity, int value, StatEffects.Builder effects) {
         StatEffects built = effects.build();
         return ModItems.register(name, TabGroup.ACCESSORIES, p -> new AccessoryItem(p, built),
