@@ -1,0 +1,49 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:imp",
+      "weight": 8,
+      "layers": [
+        "underworld"
+      ]
+    },
+    {
+      "entity": "terracraft:lava_slime",
+      "weight": 8,
+      "layers": [
+        "underworld"
+      ]
+    },
+    {
+      "entity": "terracraft:demon",
+      "weight": 6,
+      "layers": [
+        "underworld"
+      ],
+      "placement": "air"
+    },
+    {
+      "entity": "terracraft:voodoo_demon",
+      "weight": 2,
+      "layers": [
+        "underworld"
+      ],
+      "placement": "air"
+    },
+    {
+      "entity": "terracraft:hellbat",
+      "weight": 6,
+      "layers": [
+        "underworld"
+      ],
+      "placement": "air"
+    },
+    {
+      "entity": "terracraft:bone_serpent",
+      "weight": 2,
+      "layers": [
+        "underworld"
+      ]
+    }
+  ]
+}

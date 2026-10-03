@@ -2152,6 +2152,236 @@ mob_sprite('jungle_bat', 16, 12, 3, bat_frame, frame_time=3)
 mob_sprite('man_eater', 16, 12, 2, lambda c, f: maw_frame(c, f, '#4A9A30'), frame_time=4, rotate=True)
 mob_sprite('snatcher', 16, 12, 2, lambda c, f: maw_frame(c, f, '#5AAA3A'), frame_time=4, rotate=True)
 
+# ----------------------------------------------------------------------------------------- Underworld (Stage 4c)
+def ash_texture():
+    c = Canvas()
+    p = palette('#4A4448')
+    c.noise([p[2], p[2], p[1], p[3]], 701)
+    return c
+
+
+def hellstone_texture():
+    c = Canvas()
+    p = palette('#5A2A24')
+    c.noise([p[2], p[2], p[1]], 702)
+    glow = palette('#FF6A20')
+    rnd = random.Random(703)
+    for _ in range(9):
+        x, y = rnd.randint(1, 13), rnd.randint(1, 13)
+        c.set(x, y, glow[3]); c.set(x + 1, y, glow[2]); c.set(x, y + 1, glow[2]); c.set(x + 1, y + 1, glow[4])
+    return c
+
+
+def obsidian_brick_texture():
+    c = Canvas()
+    base = hexc('#2A2038')
+    c.noise([base, base, shade(base, 1.1), shade(base, 0.9)], 704)
+    mortar = shade(base, 0.5)
+    for y in (0, 8):
+        c.line(0, y, 15, y, mortar)
+        for x in ((0, 8) if y == 0 else (4, 12)):
+            c.line(x, y, x, y + 7, mortar)
+    return c
+
+
+def hellstone_brick_texture():
+    c = Canvas()
+    base = hexc('#A8402A')
+    c.noise([base, base, shade(base, 1.12), shade(base, 0.88)], 705)
+    mortar = hexc('#3A1A14')
+    for y in (0, 8):
+        c.line(0, y, 15, y, mortar)
+        for x in ((0, 8) if y == 0 else (4, 12)):
+            c.line(x, y, x, y + 7, mortar)
+    return c
+
+
+def hellforge_texture():
+    c = obsidian_brick_texture()
+    fire = palette('#FF7A20')
+    c.rect(4, 7, 11, 13, (30, 10, 10, 255))
+    for x in range(5, 11):
+        for y in range(9, 13):
+            if (x + y) % 3:
+                c.set(x, y, fire[3] if y > 10 else fire[4])
+    return c
+
+
+def shadow_chest_texture():
+    c = Canvas()
+    p = palette('#3A2A4A')
+    c.noise([p[2], p[2], p[2], shade(p[2], 1.1)], 706)
+    c.rect(0, 0, 15, 1, p[4]); c.rect(0, 14, 15, 15, p[0])
+    c.rect(0, 7, 15, 8, palette('#8A2A3A')[2])
+    return c
+
+
+BLOCK_TEXTURES['ash'] = ash_texture
+BLOCK_TEXTURES['hellstone'] = hellstone_texture
+BLOCK_TEXTURES['obsidian_brick'] = obsidian_brick_texture
+BLOCK_TEXTURES['hellstone_brick'] = hellstone_brick_texture
+BLOCK_TEXTURES['hellforge'] = hellforge_texture
+BLOCK_TEXTURES['locked_shadow_chest'] = shadow_chest_texture
+
+
+def underworld_block_assets():
+    for name in ('ash', 'hellstone', 'obsidian_brick', 'hellstone_brick'):
+        write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': {'': {'model': f'terracraft:block/{name}'}}})
+        write_json(os.path.join(ASSETS, 'models/block', name + '.json'),
+                   {'parent': 'minecraft:block/cube_all', 'textures': {'all': f'terracraft:block/{name}'}})
+        write_json(os.path.join(ASSETS, 'items', name + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{name}'}})
+    faces = ['north', 'south', 'east', 'west', 'up', 'down']
+    write_json(os.path.join(ASSETS, 'blockstates/hellforge.json'), {'variants': {'': {'model': 'terracraft:block/hellforge'}}})
+    write_json(os.path.join(ASSETS, 'models/block/hellforge.json'), {'parent': 'minecraft:block/block', 'textures': {
+        'particle': 'terracraft:block/hellforge', 'all': 'terracraft:block/hellforge'},
+        'elements': [{'from': [0, 0, 1], 'to': [16, 14, 15], 'faces': {f: {'texture': '#all'} for f in faces}}]})
+    write_json(os.path.join(ASSETS, 'items/hellforge.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/hellforge'}})
+    chest = [
+        {'from': [1, 0, 1], 'to': [15, 10, 15], 'faces': {f: {'texture': '#body'} for f in faces}},
+        {'from': [1, 10, 1], 'to': [15, 14, 15], 'faces': {f: {'texture': '#body'} for f in faces}},
+        {'from': [7, 7, 0], 'to': [9, 11, 1], 'faces': {f: {'texture': '#lock'} for f in faces}},
+    ]
+    write_json(os.path.join(ASSETS, 'models/block/locked_shadow_chest.json'), {'parent': 'minecraft:block/block', 'textures': {
+        'particle': 'terracraft:block/locked_shadow_chest', 'body': 'terracraft:block/locked_shadow_chest',
+        'lock': 'terracraft:block/locked_gold_chest_lock'}, 'elements': chest})
+    write_json(os.path.join(ASSETS, 'blockstates/locked_shadow_chest.json'), {'variants': {
+        'facing=north': {'model': 'terracraft:block/locked_shadow_chest'},
+        'facing=east': {'model': 'terracraft:block/locked_shadow_chest', 'y': 90},
+        'facing=south': {'model': 'terracraft:block/locked_shadow_chest', 'y': 180},
+        'facing=west': {'model': 'terracraft:block/locked_shadow_chest', 'y': 270}}})
+    write_json(os.path.join(ASSETS, 'items/locked_shadow_chest.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/locked_shadow_chest'}})
+
+
+def draw_voodoo_doll(c):
+    cloth = palette('#C8A070')
+    c.circle(8, 4, 3, cloth[2])
+    c.rect(6, 7, 10, 12, cloth[2])
+    c.line(3, 8, 6, 9, cloth[2]); c.line(10, 9, 13, 8, cloth[2])
+    c.rect(6, 13, 7, 15, cloth[1]); c.rect(9, 13, 10, 15, cloth[1])
+    c.set(7, 4, (30, 20, 20, 255)); c.set(9, 4, (30, 20, 20, 255))
+    c.line(5, 2, 11, 8, hexc('#B0B0B8'))   # pin
+    c.set(5, 2, hexc('#E03030'))
+    c.outline()
+
+
+def draw_emblem(c, color):
+    p = palette(color)
+    c.circle(8, 8, 6, palette('#C8A040')[2])
+    c.circle(8, 8, 4.5, p[2])
+    c.circle(8, 8, 2, p[4])
+    c.light()
+    c.outline()
+
+
+def draw_scythe_book(c):
+    draw_book(c, '#5A2A6A')
+    c.line(6, 6, 10, 10, hexc('#C060FF'))
+    c.line(6, 10, 10, 6, hexc('#C060FF'))
+
+
+_molten = palette('#E05A20')
+METAL['molten'] = '#E05A20'
+item('hellstone_bar', lambda c: draw_bar(c, palette('#E05A20')))
+item('guide_voodoo_doll', draw_voodoo_doll)
+item('molten_pickaxe', lambda c: draw_pickaxe(c, _molten), True)
+item('molten_hamaxe', lambda c: draw_axe(c, _molten), True)
+item('fiery_greatsword', lambda c: draw_sword(c, _molten), True)
+item('molten_fury', lambda c: draw_bow(c, _molten), True)
+item('phoenix_blaster', lambda c: draw_gun(c, _molten))
+item('hellwing_bow', lambda c: draw_bow(c, palette('#8A2A2A')), True)
+item('flamelash', lambda c: draw_staff(c, '#FF6A20'), True)
+item('flower_of_fire', lambda c: draw_wand(c, '#FF4020'), True)
+item('demon_scythe', draw_scythe_book)
+item('breaker_blade', lambda c: draw_sword(c, palette('#8A8AA0'), length=13), True)
+item('laser_rifle', lambda c: draw_gun(c, palette('#6A4A8A')))
+item('pwnhammer', lambda c: draw_hammer(c, palette('#C8A040')), True)
+item('molten_helmet', lambda c: draw_helmet(c, _molten))
+item('molten_breastplate', lambda c: draw_chest(c, _molten))
+item('molten_greaves', lambda c: draw_legs(c, _molten))
+EVIL_ARMOR.append('molten')
+for _e, _col in (('warrior', '#D04030'), ('ranger', '#40A040'), ('sorcerer', '#4060E0'), ('summoner', '#A040C0')):
+    item(f'{_e}_emblem', lambda c, col=_col: draw_emblem(c, col))
+
+proj('imp_fireball', lambda c: p_orb(c, '#FF6A20', 3))
+proj('demon_scythe', lambda c: (c.ring(7.5, 7.5, 6, palette('#A040E0')[3], 1.6), c.ring(7.5, 7.5, 3.5, palette('#E080FF')[3], 1.0)))
+proj('wof_laser', lambda c: (c.line(0, 8, 15, 8, hexc('#FF60A0'), 2), c.line(2, 8, 13, 8, hexc('#FFE0F0'))))
+proj('flamelash', lambda c: p_orb(c, '#FF8A30', 4))
+proj('flower_of_fire', lambda c: p_orb(c, '#FF5020', 3))
+proj('hellwing', lambda c: (c.circle(7.5, 8, 2.5, hexc('#FF7020')), c.line(1, 6, 6, 8, hexc('#C03010'), 2), c.line(9, 8, 14, 6, hexc('#C03010'), 2)))
+proj('laser', lambda c: (c.line(0, 8, 15, 8, hexc('#80FF60'), 2), c.line(2, 8, 13, 8, hexc('#E8FFE0'))))
+
+
+def mouth_texture():
+    def paint(c):
+        flesh = hexc('#B04858')
+        paint_box(c, 0, 0, 18, 8, 8, flesh, 0.15, 711, top=shade(flesh, 0.85))
+        paint_box(c, 0, 18, 18, 8, 8, flesh, 0.15, 712, top=shade(flesh, 0.85))
+        paint_box(c, 0, 40, 16, 8, 6, (40, 8, 14, 255), 0.1, 713)
+        teeth = hexc('#E8E0C8')
+        for v in (54, 58):
+            paint_box(c, 0, v, 16, 2, 1, teeth, 0.05, 714 + v)
+            x, y, w, h = box_faces(0, v, 16, 2, 1)['front']
+            for tx in range(x, x + w, 2):
+                c.set(tx, y + (1 if v == 54 else 0), (60, 20, 20, 255))
+        for face in ('front',):
+            for v0 in (0, 18):
+                x, y, w, h = box_faces(0, v0, 18, 8, 8)[face]
+                for vx in range(x, x + w, 3):
+                    fill(c, (vx, y, 1, h), shade(flesh, 0.7))
+    return paint
+
+
+def wall_tile():
+    c = Canvas(32, 32)
+    flesh = hexc('#A84050')
+    c.noise([flesh, flesh, shade(flesh, 1.1), shade(flesh, 0.85)], 721)
+    rnd = random.Random(722)
+    for _ in range(9):
+        x, y = rnd.randint(0, 31), rnd.randint(0, 31)
+        length = rnd.randint(5, 12)
+        for i in range(length):
+            c.set((x + i) % 32, (y + (i // 3)) % 32, shade(flesh, 0.6))
+    for _ in range(6):
+        x, y = rnd.randint(2, 29), rnd.randint(2, 29)
+        c.circle(x, y, 1.8, shade(flesh, 1.25))
+    return c
+
+
+model_texture('wall_of_flesh', 64, 64, mouth_texture())
+model_texture('wall_of_flesh_wall', 32, 32, lambda c: c.img.paste(wall_tile().img))
+model_texture('wall_of_flesh_eye', 64, 64, eye_texture('#4A2A6A', sclera='#E8D0C8'))
+model_texture('the_hungry', 64, 32, maw_texture('#A84050', '#F0E0C0'))
+model_texture('imp', 64, 64, skin_texture('#A8384A', '#2A1A2A', '#5A2A6A', '#3A1A3A', eyes=(255, 200, 60, 255), shoes='#2A1A2A',
+                                           hat='#5A2A6A', short_sleeves=True))
+model_texture('demon', 64, 32, bat_texture_colored('#7A3A8A', '#4A1A5A'))
+model_texture('voodoo_demon', 64, 32, bat_texture_colored('#5A3A3A', '#3A1A1A'))
+model_texture('lava_slime', 64, 64, slime_texture('#FF7A20', 220))
+model_texture('hellbat', 64, 32, bat_texture_colored('#C04020', '#802010'))
+for _part in ('head', 'body', 'tail'):
+    model_texture(f'bone_serpent_{_part}', 64, 64, worm_texture('#D8D0B8', '#B8B098'))
+    mob_sprite(f'bone_serpent_{_part}', 12, 12, 1, lambda c, f, part=_part: worm_frame(c, f, '#D8D0B8', part), rotate=True)
+
+
+def wall_frame(c, frame):
+    p = palette('#A84050')
+    c.rect(0, 0, 23, 39, p[2])
+    for y in range(0, 40, 5):
+        c.line(0, y, 23, y + 2, p[1])
+    c.circle(12, 20, 5, (40, 8, 14, 255))
+    for x in range(8, 17, 2):
+        c.set(x, 16 + frame, hexc('#E8E0C8')); c.set(x, 24 - frame, hexc('#E8E0C8'))
+    c.outline()
+
+
+mob_sprite('wall_of_flesh', 24, 40, 2, wall_frame, frame_time=8)
+mob_sprite('wall_of_flesh_eye', 24, 18, 4, big_eye_frame, frame_time=4, rotate=True)
+mob_sprite('the_hungry', 16, 12, 2, lambda c, f: maw_frame(c, f, '#A84050'), frame_time=4, rotate=True)
+mob_sprite('imp', 16, 24, 3, lambda c, f: npc_frame(c, f, '#A8384A', '#2A1A2A', '#5A2A6A', '#3A1A3A'), frame_time=8)
+mob_sprite('demon', 16, 12, 3, bat_frame, frame_time=4)
+mob_sprite('voodoo_demon', 16, 12, 3, bat_frame, frame_time=4)
+mob_sprite('lava_slime', 16, 12, 2, lambda c, f: slime_frame(c, '#FF7A20', f, 16, 12), frame_time=10, fullbright=True)
+mob_sprite('hellbat', 16, 12, 3, bat_frame, frame_time=3)
+
 
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
@@ -2166,7 +2396,8 @@ def check_registered_items():
     known = set(ITEMS) | set(BLOCKS_CUBE) | {'work_bench', 'iron_anvil', 'lead_anvil', 'life_crystal_block', 'corrupt_grass', 'crimson_grass',
                                              'shadow_orb', 'crimson_heart', 'demon_altar', 'crimson_altar', 'vile_mushroom', 'vicious_mushroom',
                                              'ebonwood', 'shadewood', 'ebonwood_leaves', 'shadewood_leaves'} | set(BRICKS) | {'spikes', 'locked_gold_chest', 'jungle_grass',
-                                                                                        'jungle_spores_plant', 'hive', 'larva'}
+                                                                                        'jungle_spores_plant', 'hive', 'larva', 'ash', 'hellstone',
+                                                                                        'obsidian_brick', 'hellstone_brick', 'hellforge', 'locked_shadow_chest'}
     missing = sorted(i for i in ids if i not in known and not i.endswith("_"))
     if missing:
         print('ERROR: items without generated assets:', missing)
@@ -2184,6 +2415,7 @@ def main():
     block_assets()
     dungeon_block_assets()
     jungle_block_assets()
+    underworld_block_assets()
     for name, drawer in PROJECTILES.items():
         c = Canvas()
         drawer(c)

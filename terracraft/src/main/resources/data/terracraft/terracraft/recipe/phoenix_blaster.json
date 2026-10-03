@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:phoenix_blaster",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:handgun",
+      "count": 1
+    },
+    {
+      "item": "terracraft:hellstone_bar",
+      "count": 10
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

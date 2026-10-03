@@ -22,7 +22,8 @@ public final class BossCommands {
         "eater_of_worlds", new Entry(MobContent.EATER_OF_WORLDS, BossSummoning.Arrival.BURROW),
         "brain_of_cthulhu", new Entry(MobContent.BRAIN_OF_CTHULHU, BossSummoning.Arrival.NEARBY),
         "skeletron", new Entry(MobContent.SKELETRON, BossSummoning.Arrival.NEARBY),
-        "queen_bee", new Entry(MobContent.QUEEN_BEE, BossSummoning.Arrival.OFFSCREEN));
+        "queen_bee", new Entry(MobContent.QUEEN_BEE, BossSummoning.Arrival.OFFSCREEN),
+        "wall_of_flesh", new Entry(MobContent.WALL_OF_FLESH, BossSummoning.Arrival.OFFSCREEN));
 
     private record Entry(Supplier<? extends EntityType<? extends net.minecraft.world.entity.Mob>> type, BossSummoning.Arrival arrival) {}
 

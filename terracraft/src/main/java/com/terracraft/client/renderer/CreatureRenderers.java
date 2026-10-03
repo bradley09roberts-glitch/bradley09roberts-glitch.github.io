@@ -88,6 +88,20 @@ public final class CreatureRenderers {
         bee(event, MobContent.HORNET.get(), 0.7F);
         bee(event, MobContent.BEE.get(), 0.35F);
         bee(event, MobContent.QUEEN_BEE.get(), 2.0F);
+        // Underworld
+        register(event, MobContent.IMP.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F * 1.5F / 1.8F, 0.4F, false));
+        register(event, MobContent.DEMON.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 1.6F, 0.6F, false));
+        register(event, MobContent.VOODOO_DEMON.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 1.6F, 0.6F, false));
+        slime(event, MobContent.LAVA_SLIME.get(), 1.0F);
+        register(event, MobContent.HELLBAT.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 0.8F, 0.3F, false));
+        worm(event, MobContent.BONE_SERPENT.get(), 0.8F);
+        register(event, MobContent.WALL_OF_FLESH.get(), WallOfFleshRenderer::new);
+        eye(event, MobContent.WALL_OF_FLESH_EYE.get(), 3.2F);
+        maw(event, MobContent.THE_HUNGRY.get(), 1.0F);
         for (var npc : NpcContent.all()) {
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,
                 new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F, 0.5F, false));

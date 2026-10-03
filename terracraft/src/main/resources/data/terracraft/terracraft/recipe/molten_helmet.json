@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:molten_helmet",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:hellstone_bar",
+      "count": 10
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

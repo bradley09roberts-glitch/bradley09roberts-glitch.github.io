@@ -77,6 +77,30 @@ public final class ProjectileKinds {
     public static final ProjectileKind BEE_ARROW = register(ProjectileKind.builder("bee_arrow")
         .gravity(0.02).drag(0.995F).lifetime(160).size(0.25F, 0.6F).homing(0.05F, 10.0F).pierce(1));
 
+    // ---------------------------------------------------------------- underworld
+    public static final ProjectileKind IMP_FIREBALL = register(ProjectileKind.builder("imp_fireball")
+        .lifetime(160).size(0.35F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.03F, 40.0F).noTileCollide()
+        .fullbright().enemy().trail(() -> ParticleTypes.FLAME).ignites(80, 1.0F));
+    public static final ProjectileKind DEMON_SCYTHE = register(ProjectileKind.builder("demon_scythe")
+        .lifetime(120).size(0.6F, 1.0F).orientation(ProjectileKind.Orientation.SPIN).noTileCollide()
+        .fullbright().enemy().trail(() -> ParticleTypes.WITCH));
+    public static final ProjectileKind WOF_LASER = register(ProjectileKind.builder("wof_laser")
+        .lifetime(60).size(0.2F, 0.6F).noTileCollide().fullbright().enemy());
+    public static final ProjectileKind FLAMELASH = register(ProjectileKind.builder("flamelash")
+        .lifetime(140).size(0.35F, 0.7F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.18F, 24.0F)
+        .fullbright().magic().trail(() -> ParticleTypes.FLAME).ignites(120, 0.5F));
+    public static final ProjectileKind FLOWER_OF_FIRE = register(ProjectileKind.builder("flower_of_fire")
+        .gravity(0.02).lifetime(120).size(0.35F, 0.6F).orientation(ProjectileKind.Orientation.SPIN).bounces(6)
+        .fullbright().magic().trail(() -> ParticleTypes.FLAME).ignites(120, 0.5F));
+    public static final ProjectileKind HELLWING = register(ProjectileKind.builder("hellwing")
+        .lifetime(100).size(0.35F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.12F, 20.0F).noTileCollide()
+        .fullbright().trail(() -> ParticleTypes.FLAME).ignites(80, 0.5F));
+    public static final ProjectileKind PLAYER_DEMON_SCYTHE = register(ProjectileKind.builder("player_demon_scythe")
+        .texture("demon_scythe").drag(1.04F).lifetime(60).size(0.6F, 1.0F).orientation(ProjectileKind.Orientation.SPIN).pierce(-1)
+        .noTileCollide().fullbright().magic().trail(() -> ParticleTypes.WITCH));
+    public static final ProjectileKind LASER = register(ProjectileKind.builder("laser")
+        .lifetime(40).size(0.15F, 0.6F).pierce(2).fullbright().magic());
+
     private ProjectileKinds() {}
 
     private static ProjectileKind register(ProjectileKind.Builder builder) {

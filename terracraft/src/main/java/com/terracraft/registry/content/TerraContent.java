@@ -19,5 +19,6 @@ public final class TerraContent {
         NpcContent.init();
         DungeonContent.init();
         JungleContent.init();
+        UnderworldContent.init();
     }
 }

@@ -161,14 +161,36 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   -16% mana cost). Melee weapons can now carry on-hit effects; ranged weapons can convert their ammo.
 - 3D bee model (Hornet, bee, Queen Bee); man eaters use the maw model.
 
+### Stage 4c: Underworld, Wall of Flesh, Hardmode switch (verified in a live client)
+- **Underworld** (`world.underworld.UnderworldFeature`, last generation step): below y=-40 the overworld becomes
+  one huge cavern between an ash floor (y -62..-53) and an ash ceiling (-48..-40), from smooth seeded noise; a
+  lava sea fills the low spots (y <= -57); Hellstone veins in the ash; lavafalls; ruined obsidian/hellstone
+  brick houses with Hellforges and Shadow Chests (Shadow Key; Flamelash, Flower of Fire, Hellwing Bow).
+  Ancient cities are removed (the deep dark sat in this space).
+- **Enemies** (fire immune): Fire Imp (caster, homing fireballs through walls), Demon and Voodoo Demon
+  (`ShooterFlyerMob`, demon scythes; Voodoo Demons always drop the Guide Voodoo Doll), Lava Slime, Hellbat,
+  Bone Serpent (worm).
+- **Wall of Flesh** (`entity.boss.WallOfFlesh`, 8000 life): a Guide Voodoo Doll (fire proof) dropped into
+  Underworld lava while the Guide lives kills the Guide and summons it 32 blocks away. A 36x20 block wall of
+  flesh crawls along one axis toward the player through terrain, faster as it weakens; its mouth tracks the
+  player; touching it hurts and players behind it are dragged back. Two Eyes (sharing its life) fire lasers;
+  The Hungry spawn on tethers. Loot is delivered to the nearest player (not into the lava): Pwnhammer, one
+  emblem, Breaker Blade or Laser Rifle. Its death sets `hardmode_active` ("The ancient spirits of light and
+  dark have been released."); the Pwnhammer's 80% hammer power then breaks altars.
+- **Gear**: Hellstone (65% power) -> Hellstone Bar at the Hellforge; Molten Pickaxe (100%), Molten Hamaxe,
+  Fiery Greatsword (ignites), Molten Fury (flaming arrows), Phoenix Blaster, Molten armor (+17% melee damage
+  set), Demon Scythe, Flamelash, Flower of Fire, Hellwing Bow, Warrior/Ranger/Sorcerer/Summoner Emblems.
+- Wall of Flesh renderer (tiled flesh sheet + mouth model, enlarged culling box); `ShooterFlyerMob` replaces
+  the Hornet-only class; fire-immune enemy registration.
+
 ## IN PROGRESS
-- Stage 4 continues with 4c (Underworld, Wall of Flesh, Hardmode).
+- Stage 4 continues with 4d (Goblin Army, Goblin Tinkerer, reforging) and 4e (Meteorite).
 
 ## NEXT (Stage 4: Dungeon, Jungle, Underworld - the road to Hardmode)
 1. ~~Dungeon and Skeletron~~ (done, 4a).
 2. ~~Jungle and Queen Bee~~ (done, 4b). Original plan: Jungle mapping (vanilla jungles + underground jungle mud/moss, Jungle Spores, Hornets, Man Eaters),
    Queen Bee (bee hives, Abeemination), Jungle armor and gear.
-3. Underworld layer below the caverns (ash, hellstone with 65 power, lava lakes, ruined houses), Imps,
+3. ~~Underworld and Wall of Flesh~~ (done, 4c). Original plan: Underworld layer below the caverns (ash, hellstone with 65 power, lava lakes, ruined houses), Imps,
    Demons, Voodoo Demons, Fire Imp, Bone Serpent (worm framework); Hellforge, Molten gear, Hellstone bars.
 4. Wall of Flesh (Guide Voodoo Doll, wall that spans the Underworld) and the Hardmode switch.
 5. Goblin Army invasion (Shadow Orb trigger), Goblin Tinkerer, Tinkerer's Workshop, reforging and modifiers.
@@ -179,6 +201,8 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   missing where chunks already existed (use a new world or unexplored location).
 - If every player leaves while Skeletron is alive, the boss stays in its unloaded chunk; the Old Man may
   return meanwhile, and Skeletron resumes (or despawns) once the area is loaded again.
+- The Underworld is deadly for a fresh character (as in Terraria); tests need Obsidian Skin / fire resistance.
+- Boss loot that falls into lava burns (except the Wall of Flesh, which hands its loot to the nearest player).
 - Jungle conversion follows vanilla jungle biomes, which are smaller than Terraria's Jungle; mangrove swamps (also
   mud) can host underground jungle enemies.
 - Locked Gold Chest loot spreads stacks over many slots (vanilla chest loot behaviour).

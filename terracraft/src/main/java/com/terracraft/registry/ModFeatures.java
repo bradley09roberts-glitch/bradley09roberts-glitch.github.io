@@ -24,5 +24,8 @@ public final class ModFeatures {
     public static final RegistryObject<com.terracraft.world.jungle.JungleFeature> JUNGLE = FEATURES.register("jungle",
         com.terracraft.world.jungle.JungleFeature::new);
 
+    public static final RegistryObject<com.terracraft.world.underworld.UnderworldFeature> UNDERWORLD = FEATURES.register("underworld",
+        com.terracraft.world.underworld.UnderworldFeature::new);
+
     private ModFeatures() {}
 }

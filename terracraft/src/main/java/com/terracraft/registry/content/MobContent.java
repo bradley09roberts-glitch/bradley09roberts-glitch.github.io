@@ -139,8 +139,9 @@ public final class MobContent {
     public static final RegistryObject<EntityType<FlyerMob>> JUNGLE_BAT = register("jungle_bat",
         (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.6F, 0.45F,
         MobDefinition.builder().life(34).damage(20).defense(4).knockbackTaken(0.8F).coins(100).speed(0.3));
-    public static final RegistryObject<EntityType<com.terracraft.entity.mob.HornetMob>> HORNET = register("hornet",
-        (type, level) -> new com.terracraft.entity.mob.HornetMob(type, level, 22.0F), 0.7F, 0.7F,
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ShooterFlyerMob>> HORNET = register("hornet",
+        (type, level) -> new com.terracraft.entity.mob.ShooterFlyerMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.STINGER, 22.0F, 8.0F,
+            net.minecraft.sounds.SoundEvents.BEE_STING), 0.7F, 0.7F,
         MobDefinition.builder().life(34).damage(26).defense(12).knockbackTaken(0.5F).coins(200).speed(0.16).followRange(40));
     public static final RegistryObject<EntityType<com.terracraft.entity.mob.SnapperMob>> MAN_EATER = register("man_eater",
         (type, level) -> new com.terracraft.entity.mob.SnapperMob(type, level, 5.0), 0.8F, 0.8F,
@@ -155,6 +156,37 @@ public final class MobContent {
     public static final RegistryObject<EntityType<com.terracraft.entity.boss.QueenBee>> QUEEN_BEE = register("queen_bee",
         com.terracraft.entity.boss.QueenBee::new, 2.0F, 1.8F,
         MobDefinition.builder().life(3400).damage(30).defense(8).knockbackTaken(0.0F).coins(100_000).followRange(160));
+
+    // --- Underworld (all fire immune) ---------------------------------------------------------------------
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.CasterMob>> IMP = registerFireproof("imp",
+        (type, level) -> new com.terracraft.entity.mob.CasterMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.IMP_FIREBALL, 21.0F),
+        0.6F, 1.5F, MobDefinition.builder().life(70).damage(34).defense(16).knockbackTaken(0.5F).coins(300).speed(0.0).followRange(32));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ShooterFlyerMob>> DEMON = registerFireproof("demon",
+        (type, level) -> new com.terracraft.entity.mob.ShooterFlyerMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.DEMON_SCYTHE,
+            26.0F, 2.5F, net.minecraft.sounds.SoundEvents.EVOKER_CAST_SPELL), 1.2F, 1.2F,
+        MobDefinition.builder().life(120).damage(32).defense(8).knockbackTaken(0.2F).coins(300).speed(0.16).followRange(40));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ShooterFlyerMob>> VOODOO_DEMON = registerFireproof("voodoo_demon",
+        (type, level) -> new com.terracraft.entity.mob.ShooterFlyerMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.DEMON_SCYTHE,
+            26.0F, 2.5F, net.minecraft.sounds.SoundEvents.EVOKER_CAST_SPELL), 1.2F, 1.2F,
+        MobDefinition.builder().life(140).damage(32).defense(8).knockbackTaken(0.2F).coins(400).speed(0.16).followRange(40));
+    public static final RegistryObject<EntityType<SlimeMob>> LAVA_SLIME = registerFireproof("lava_slime", SlimeMob::new, 1.0F, 0.75F,
+        MobDefinition.builder().life(50).damage(15).defense(10).coins(250));
+    public static final RegistryObject<EntityType<FlyerMob>> HELLBAT = registerFireproof("hellbat",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.6F, 0.45F,
+        MobDefinition.builder().life(35).damage(21).defense(8).knockbackTaken(0.8F).coins(90).speed(0.32));
+    public static final WormMob.Spec BONE_SERPENT_SPEC = new WormMob.Spec(12, 0.8, 0.45, 0.07, true, false);
+    public static final RegistryObject<EntityType<WormMob>> BONE_SERPENT = registerFireproof("bone_serpent",
+        (type, level) -> new WormMob(type, level, BONE_SERPENT_SPEC), 0.8F, 0.8F,
+        MobDefinition.builder().life(150).damage(30).defense(10).knockbackTaken(0.0F).coins(400).followRange(48));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.WallOfFlesh>> WALL_OF_FLESH = registerFireproof("wall_of_flesh",
+        com.terracraft.entity.boss.WallOfFlesh::new, 3.0F, 4.0F,
+        MobDefinition.builder().life(8000).damage(50).defense(12).knockbackTaken(0.0F).coins(80_000).followRange(200));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.WallOfFlesh.Eye>> WALL_OF_FLESH_EYE = registerFireproof("wall_of_flesh_eye",
+        com.terracraft.entity.boss.WallOfFlesh.Eye::new, 2.0F, 2.0F,
+        MobDefinition.builder().life(8000).damage(30).defense(12).knockbackTaken(0.0F).coins(0).followRange(200));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.WallOfFlesh.Hungry>> THE_HUNGRY = registerFireproof("the_hungry",
+        com.terracraft.entity.boss.WallOfFlesh.Hungry::new, 1.0F, 1.0F,
+        MobDefinition.builder().life(240).damage(30).defense(0).knockbackTaken(0.5F).coins(0).followRange(64));
 
     private MobContent() {}
 
@@ -172,12 +204,26 @@ public final class MobContent {
 
     private static <T extends TerrariaMob> RegistryObject<EntityType<T>> register(String name, EntityType.EntityFactory<T> factory,
                                                                                  float width, float height, MobDefinition.Builder stats) {
+        return register(name, factory, width, height, stats, false);
+    }
+
+    /** Underworld creatures: immune to fire and lava. */
+    private static <T extends TerrariaMob> RegistryObject<EntityType<T>> registerFireproof(String name, EntityType.EntityFactory<T> factory,
+                                                                                          float width, float height, MobDefinition.Builder stats) {
+        return register(name, factory, width, height, stats, true);
+    }
+
+    private static <T extends TerrariaMob> RegistryObject<EntityType<T>> register(String name, EntityType.EntityFactory<T> factory,
+                                                                                 float width, float height, MobDefinition.Builder stats,
+                                                                                 boolean fireImmune) {
         TerrariaMobs.define(TerraCraft.id(name), stats.build());
-        RegistryObject<EntityType<T>> type = ModEntities.ENTITY_TYPES.register(name,
-            () -> EntityType.Builder.of(factory, MobCategory.MONSTER)
-                .sized(width, height)
-                .clientTrackingRange(10)
-                .build(ModEntities.ENTITY_TYPES.key(name)));
+        RegistryObject<EntityType<T>> type = ModEntities.ENTITY_TYPES.register(name, () -> {
+            EntityType.Builder<T> builder = EntityType.Builder.of(factory, MobCategory.MONSTER).sized(width, height).clientTrackingRange(10);
+            if (fireImmune) {
+                builder.fireImmune();
+            }
+            return builder.build(ModEntities.ENTITY_TYPES.key(name));
+        });
         ALL.add(type);
         return type;
     }

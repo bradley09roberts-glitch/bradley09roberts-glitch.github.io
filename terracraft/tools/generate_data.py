@@ -69,7 +69,7 @@ def evil_blocks():
     write(f'{NS}/tags/block/evil/crimson.json', {'values': crimson})
     write(f'{NS}/tags/block/evil/all.json', {'values': corruption + crimson})
     write(f'{NS}/tags/block/stations/demon_altar.json', {'values': [t('demon_altar'), t('crimson_altar')]})
-    write('minecraft/tags/block/mineable/shovel.json', {'values': [t('corrupt_grass'), t('crimson_grass'), t('jungle_grass')]})
+    write('minecraft/tags/block/mineable/shovel.json', {'values': [t('corrupt_grass'), t('crimson_grass'), t('jungle_grass'), t('ash')]})
     write('minecraft/tags/block/mineable/axe.json', {'values': [t('work_bench'), t('ebonwood'), t('shadewood')]})
     write('minecraft/tags/block/mineable/hoe.json', {'values': [t('ebonwood_leaves'), t('shadewood_leaves')]})
     balls = {'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('musket_ball'), 'functions': [{'function': 'minecraft:set_count', 'count': 100}]}]}
@@ -154,6 +154,31 @@ def jungle():
         {'rolls': 1, 'entries': [entry('minecraft:honey_block', 1, 5, 10)]}]})
 
 
+UNDERWORLD_BLOCKS = ['ash', 'hellstone', 'obsidian_brick', 'hellstone_brick', 'hellforge', 'locked_shadow_chest']
+
+
+def underworld():
+    for b in ['ash', 'hellstone', 'obsidian_brick', 'hellstone_brick', 'hellforge']:
+        write(f'{NS}/loot_table/blocks/{b}.json', self_loot(b))
+    write(f'{NS}/terracraft/mining_power/hellstone.json', {'pickaxe_power': 65, 'blocks': [t('hellstone'), t('hellstone_brick')]})
+    write(f'{NS}/terracraft/mining_power/obsidian_brick.json', {'pickaxe_power': 55, 'blocks': [t('obsidian_brick')]})
+    write(f'{NS}/tags/block/stations/hellforge.json', {'values': [t('hellforge')]})
+    write(f'{NS}/worldgen/configured_feature/underworld.json', {'type': t('underworld'), 'config': {}})
+    write(f'{NS}/worldgen/placed_feature/underworld.json', {'feature': t('underworld'), 'placement': []})
+    write(f'{NS}/forge/biome_modifier/underworld.json', {
+        'type': 'forge:add_features', 'biomes': '#minecraft:is_overworld', 'features': t('underworld'), 'step': 'top_layer_modification'})
+    write(f'{NS}/loot_table/chests/shadow.json', {'type': 'minecraft:chest', 'pools': [
+        {'rolls': 1, 'entries': [entry('flamelash', 2), entry('flower_of_fire', 2), entry('hellwing_bow', 2)]},
+        {'rolls': {'type': 'minecraft:uniform', 'min': 1, 'max': 2}, 'entries': [entry('hellstone_bar', 1, 3, 8), entry('minecraft:obsidian', 1, 5, 10)]},
+        {'rolls': {'type': 'minecraft:uniform', 'min': 1, 'max': 2}, 'entries': [entry('healing_potion', 1, 2, 4), entry('obsidian_skin_potion', 1),
+                                                                              entry('regeneration_potion', 1), entry('wrath_potion', 1)]},
+        {'rolls': 1, 'entries': [entry('gold_coin', 1, 1, 2)]}]})
+    write(f'{NS}/loot_table/entities/wall_of_flesh.json', {'type': 'minecraft:entity', 'pools': [
+        {'rolls': 1, 'entries': [entry('pwnhammer')]},
+        {'rolls': 1, 'entries': [entry('warrior_emblem'), entry('ranger_emblem'), entry('sorcerer_emblem'), entry('summoner_emblem')]},
+        {'rolls': 1, 'entries': [entry('breaker_blade'), entry('laser_rifle')]}]})
+
+
 def blocks():
     for m in METALS:
         for ore in (f'{m}_ore', f'deepslate_{m}_ore'):
@@ -165,7 +190,8 @@ def blocks():
         'random_sequence': f'{NS}:blocks/life_crystal_block'})
     write('minecraft/tags/block/mineable/pickaxe.json', {'values': [t(o) for o in ORES] + [t('iron_anvil'), t('lead_anvil'), t('life_crystal_block'),
                                                                    t('ebonstone'), t('crimstone'), t('demonite_ore'), t('crimtane_ore'),
-                                                                   t('blue_brick'), t('green_brick'), t('pink_brick'), t('spikes'), t('hive')]})
+                                                                   t('blue_brick'), t('green_brick'), t('pink_brick'), t('spikes'), t('hive'), t('hellstone'),
+                                                                   t('obsidian_brick'), t('hellstone_brick'), t('hellforge')]})
     write('minecraft/tags/block/needs_stone_tool.json', {'values': [t(f'{p}{m}_ore') for m in STONE_TIER for p in ('', 'deepslate_')]})
     write('minecraft/tags/block/needs_iron_tool.json', {'values': [t(f'{p}{m}_ore') for m in IRON_TIER for p in ('', 'deepslate_')]})
     write(f'{NS}/tags/block/mineable/hammer.json', {'values': [t('shadow_orb'), t('crimson_heart'), t('demon_altar'), t('crimson_altar')]})
@@ -259,6 +285,20 @@ def terraria_recipes():
     recipe('jungle_hat', t('jungle_hat'), [(t('jungle_spores'), 8), (t('stinger'), 12)], [ANVIL], category='armor')
     recipe('jungle_shirt', t('jungle_shirt'), [(t('jungle_spores'), 10), (t('stinger'), 15), ('minecraft:vine', 1)], [ANVIL], category='armor')
     recipe('jungle_pants', t('jungle_pants'), [(t('jungle_spores'), 8), (t('stinger'), 12)], [ANVIL], category='armor')
+    HELLFORGE = t('hellforge')
+    HBAR = t('hellstone_bar')
+    recipe('hellforge', t('hellforge'), [('minecraft:furnace', 1), (t('hellstone'), 10), ('minecraft:obsidian', 20)], [ANVIL], category='furniture')
+    recipe('hellstone_bar', HBAR, [(t('hellstone'), 3), ('minecraft:obsidian', 1)], [HELLFORGE], category='materials')
+    recipe('obsidian_brick', t('obsidian_brick'), [('minecraft:obsidian', 2)], [FURNACE], category='blocks')
+    recipe('hellstone_brick', t('hellstone_brick'), [(t('hellstone'), 1), ('#minecraft:stone_crafting_materials', 1)], [FURNACE], category='blocks')
+    recipe('molten_pickaxe', t('molten_pickaxe'), [(HBAR, 20)], [ANVIL], category='tools')
+    recipe('molten_hamaxe', t('molten_hamaxe'), [(HBAR, 15)], [ANVIL], category='tools')
+    recipe('fiery_greatsword', t('fiery_greatsword'), [(HBAR, 20)], [ANVIL], category='weapons')
+    recipe('molten_fury', t('molten_fury'), [(HBAR, 15)], [ANVIL], category='weapons')
+    recipe('phoenix_blaster', t('phoenix_blaster'), [(t('handgun'), 1), (HBAR, 10)], [ANVIL], category='weapons')
+    recipe('molten_helmet', t('molten_helmet'), [(HBAR, 10)], [ANVIL], category='armor')
+    recipe('molten_breastplate', t('molten_breastplate'), [(HBAR, 20)], [ANVIL], category='armor')
+    recipe('molten_greaves', t('molten_greaves'), [(HBAR, 15)], [ANVIL], category='armor')
     recipe('demonite_bar', t('demonite_bar'), [(t('demonite_ore'), 3)], [FURNACE], category='materials')
     recipe('crimtane_bar', t('crimtane_bar'), [(t('crimtane_ore'), 3)], [FURNACE], category='materials')
     # ---- by hand / work bench basics
@@ -318,7 +358,8 @@ DISABLED = {
 
 REMOVED_STRUCTURES = ['village_plains', 'village_desert', 'village_savanna', 'village_snowy', 'village_taiga',
                       'pillager_outpost', 'woodland_mansion', 'stronghold', 'ruined_portal_desert', 'ruined_portal_jungle',
-                      'ruined_portal_mountain', 'ruined_portal_ocean', 'ruined_portal_standard', 'ruined_portal_swamp']
+                      'ruined_portal_mountain', 'ruined_portal_ocean', 'ruined_portal_standard', 'ruined_portal_swamp',
+                      'ancient_city']   # the deep dark would sit inside the Underworld
 
 
 OVERRIDES = os.path.join(RES, 'packs/vanilla_overrides')
@@ -360,7 +401,7 @@ def lang():
     items_dir = os.path.join(RES, 'assets/terracraft/items')
     for fname in sorted(os.listdir(items_dir)):
         name = fname[:-5]
-        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in JUNGLE_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
+        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in JUNGLE_BLOCKS or name in UNDERWORLD_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
                else 'item.') + f'{NS}.{name}'
         L[key] = title(name)
     L['block.terracraft.life_crystal_block'] = 'Life Crystal'
@@ -586,6 +627,24 @@ def lang():
         'item.terracraft.bees_knees': "The Bee's Knees",
         'ability.terracraft.honey_comb': 'Releases bees when damaged',
         'armor_set.terracraft.jungle.bonus': '16% reduced mana cost',
+        'entity.terracraft.imp': 'Fire Imp',
+        'item.terracraft.guide_voodoo_doll.tooltip': 'You are a terrible person. (Throw it into Underworld lava)',
+        'item.terracraft.pwnhammer.tooltip': 'Strong enough to destroy Demon Altars',
+        'item.terracraft.hellstone.tooltip': 'Hot to the touch',
+        'block.terracraft.hellstone.tooltip': 'Hot to the touch',
+        'item.terracraft.fiery_greatsword.tooltip': "It's made out of fire!",
+        'item.terracraft.flamelash.tooltip': 'Summons a homing ball of fire',
+        'item.terracraft.flower_of_fire.tooltip': 'Throws balls of fire',
+        'item.terracraft.demon_scythe.tooltip': 'Casts a demon scythe',
+        'item.terracraft.molten_fury.tooltip': 'Lights arrows ablaze',
+        'item.terracraft.hellwing_bow.tooltip': 'Arrows turn into flaming bats',
+        'item.terracraft.molten_hamaxe.tooltip': 'Axe and hammer in one',
+        'item.terracraft.warrior_emblem.tooltip': '15% increased melee damage',
+        'item.terracraft.ranger_emblem.tooltip': '15% increased ranged damage',
+        'item.terracraft.sorcerer_emblem.tooltip': '15% increased magic damage',
+        'item.terracraft.summoner_emblem.tooltip': '15% increased summon damage',
+        'armor_set.terracraft.molten.bonus': '17% increased melee damage',
+        'block.terracraft.locked_shadow_chest': 'Shadow Chest',
         'npc.terracraft.old_man.day': "My master cannot be summoned under the light of day.",
         'screen.terracraft.npc.curse': 'Curse',
         'message.terracraft.chest.locked.golden_key': 'It is locked. A Golden Key would open it.',
@@ -681,6 +740,15 @@ MOBS = {
     'snatcher': ('Snatcher', [('minecraft:vine', 1, 1, 0.3)]),
     'bee': ('Bee', []),
     'queen_bee': ('Queen Bee', None),
+    'imp': ('Fire Imp', []),
+    'demon': ('Demon', [('demon_scythe', 1, 1, 0.033)]),
+    'voodoo_demon': ('Voodoo Demon', [('guide_voodoo_doll', 1, 1, 1.0), ('demon_scythe', 1, 1, 0.033)]),
+    'lava_slime': ('Lava Slime', [('gel', 2, 4, 1.0)]),
+    'hellbat': ('Hellbat', []),
+    'bone_serpent': ('Bone Serpent', []),
+    'wall_of_flesh': ('Wall of Flesh', None),
+    'wall_of_flesh_eye': ('Wall of Flesh', []),
+    'the_hungry': ('The Hungry', []),
     'king_slime': ('King Slime', [('gel', 40, 80, 1.0), ('slime_crown', 1, 1, 0.1)]),
     'eye_of_cthulhu': ('Eye of Cthulhu', [('lens', 3, 6, 1.0)]),
 }
@@ -738,6 +806,14 @@ SPAWNS = {
         dict(entity='hornet', weight=10, layers=['underground', 'cavern'], placement='air', **JUNGLE_DEEP),
         dict(entity='man_eater', weight=5, layers=['underground', 'cavern'], **JUNGLE_DEEP),
         dict(entity='jungle_bat', weight=6, layers=['underground', 'cavern'], placement='air', **JUNGLE_DEEP),
+    ],
+    'underworld': [
+        dict(entity='imp', weight=8, layers=['underworld']),
+        dict(entity='lava_slime', weight=8, layers=['underworld']),
+        dict(entity='demon', weight=6, layers=['underworld'], placement='air'),
+        dict(entity='voodoo_demon', weight=2, layers=['underworld'], placement='air'),
+        dict(entity='hellbat', weight=6, layers=['underworld'], placement='air'),
+        dict(entity='bone_serpent', weight=2, layers=['underworld']),
     ],
     'dungeon': [
         dict(entity='angry_bones', weight=10, layers=['surface', 'underground', 'cavern'], group=[1, 2], **DUNGEON),
@@ -1031,6 +1107,7 @@ def main():
     evil_blocks()
     dungeon()
     jungle()
+    underworld()
     damage()
     smelting()
     terraria_recipes()

@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:fiery_greatsword",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:hellstone_bar",
+      "count": 20
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

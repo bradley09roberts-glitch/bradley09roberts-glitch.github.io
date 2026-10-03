@@ -60,6 +60,16 @@ public final class AccessoryContent {
     public static final RegistryObject<AccessoryItem> HONEY_COMB = accessory("honey_comb", TerraRarity.GREEN, 20000,
         StatEffects.builder().ability(Ability.HONEY_COMB));
 
+    // Wall of Flesh emblems
+    public static final RegistryObject<AccessoryItem> WARRIOR_EMBLEM = accessory("warrior_emblem", TerraRarity.LIGHT_RED, 100000,
+        StatEffects.builder().add(Stat.MELEE_DAMAGE, 0.15F));
+    public static final RegistryObject<AccessoryItem> RANGER_EMBLEM = accessory("ranger_emblem", TerraRarity.LIGHT_RED, 100000,
+        StatEffects.builder().add(Stat.RANGED_DAMAGE, 0.15F));
+    public static final RegistryObject<AccessoryItem> SORCERER_EMBLEM = accessory("sorcerer_emblem", TerraRarity.LIGHT_RED, 100000,
+        StatEffects.builder().add(Stat.MAGIC_DAMAGE, 0.15F));
+    public static final RegistryObject<AccessoryItem> SUMMONER_EMBLEM = accessory("summoner_emblem", TerraRarity.LIGHT_RED, 100000,
+        StatEffects.builder().add(Stat.SUMMON_DAMAGE, 0.15F));
+
     private static RegistryObject<AccessoryItem> accessory(String name, TerraRarity rarity, int value, StatEffects.Builder effects) {
         StatEffects built = effects.build();
         return ModItems.register(name, TabGroup.ACCESSORIES, p -> new AccessoryItem(p, built),

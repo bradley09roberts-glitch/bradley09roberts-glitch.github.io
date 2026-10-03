@@ -62,9 +62,11 @@ public final class WorldgenCommands {
                                 || name.equals("shadow_orb") || name.equals("crimson_heart") || name.endsWith("_altar") || name.equals("ebonstone")
                                 || name.equals("crimstone") || name.endsWith("corrupt_grass") || name.equals("crimson_grass")
                                 || name.equals("jungle_grass") || name.equals("mud") || name.equals("hive") || name.equals("larva")
-                                || name.equals("jungle_spores_plant") || name.endsWith("_brick")) {
+                                || name.equals("jungle_spores_plant") || name.endsWith("_brick") || name.equals("hellforge") || name.equals("locked_shadow_chest")
+                                || name.equals("ash") || name.equals("hellstone")) {
                                 counts.merge(name.replace("deepslate_", ""), 1, Integer::sum);
-                                if (name.equals("shadow_orb") || name.equals("crimson_heart") || name.endsWith("_altar") || name.equals("larva")) {
+                                if (name.equals("shadow_orb") || name.equals("crimson_heart") || name.endsWith("_altar") || name.equals("larva")
+                                    || name.equals("hellforge") || name.equals("locked_shadow_chest")) {
                                     firstSeen.putIfAbsent(name, new BlockPos(chunk.getPos().getMinBlockX() + x, y, chunk.getPos().getMinBlockZ() + z));
                                 }
                             }

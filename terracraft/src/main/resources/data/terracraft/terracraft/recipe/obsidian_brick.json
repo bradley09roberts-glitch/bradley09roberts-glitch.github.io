@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:obsidian_brick",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:obsidian",
+      "count": 2
+    }
+  ],
+  "stations": [
+    "terracraft:furnace"
+  ],
+  "category": "blocks"
+}

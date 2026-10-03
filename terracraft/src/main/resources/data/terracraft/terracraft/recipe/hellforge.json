@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:hellforge",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:furnace",
+      "count": 1
+    },
+    {
+      "item": "terracraft:hellstone",
+      "count": 10
+    },
+    {
+      "item": "minecraft:obsidian",
+      "count": 20
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "furniture"
+}

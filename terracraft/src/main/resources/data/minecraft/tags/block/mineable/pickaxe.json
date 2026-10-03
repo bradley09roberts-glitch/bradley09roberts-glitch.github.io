@@ -21,6 +21,10 @@
     "terracraft:green_brick",
     "terracraft:pink_brick",
     "terracraft:spikes",
-    "terracraft:hive"
+    "terracraft:hive",
+    "terracraft:hellstone",
+    "terracraft:obsidian_brick",
+    "terracraft:hellstone_brick",
+    "terracraft:hellforge"
   ]
 }

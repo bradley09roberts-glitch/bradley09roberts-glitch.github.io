@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:molten_fury",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:hellstone_bar",
+      "count": 15
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

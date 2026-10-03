@@ -75,3 +75,12 @@ Seed 12345 jungle near -640 -410: mud/jungle grass/spores conversion (`/terraria
 Larva awakening the Queen Bee (she attacked and killed the test player), Queen Bee, Hornet, bee and Man Eater
 models, Queen Bee defeat (flag, The Bee's Knees, Bee Wax, honey, potions), The Bee's Knees firing bee arrows,
 Jungle Bats spawning underground. Not observed: natural Hornet/Man Eater spawns in a 40 s window.
+
+## What was verified for Stage 4c (in the live client)
+
+Underworld below y=-40 in fresh chunks (ash floor/ceiling, lava sea, `/terraria worldgen scan 4` near 40 -50 40:
+262k ash, 2.4k hellstone, 1.1k obsidian brick, 1 Hellforge, 3 Shadow Chests), no cave vegetation inside it,
+ruined houses, a Guide Voodoo Doll in lava killing the Guide and awakening the Wall of Flesh, the wall sheet with
+eyes, mouth and The Hungry rendering, defeat setting `boss_wall_of_flesh_defeated` and `hardmode_active` with the
+Terraria announcement, loot (Pwnhammer, emblem, Breaker Blade) delivered to the player. Underworld enemies spawn
+fast enough to kill an unequipped test character within seconds.

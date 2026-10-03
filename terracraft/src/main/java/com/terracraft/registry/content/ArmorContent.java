@@ -49,6 +49,14 @@ public final class ArmorContent {
             StatEffects.builder().add(Stat.MAX_MANA, 20).add(Stat.MAGIC_CRIT, 4).build()},
         StatEffects.builder().add(Stat.MANA_COST, -0.16F).build(), TerraRarity.GREEN, 6000);
 
+    /** Molten armor (Hellstone Bars): melee set, 7% melee crit per piece, +17% melee damage set bonus. */
+    public static final ArmorPieces MOLTEN = named("molten", new String[]{"molten_helmet", "molten_breastplate", "molten_greaves"}, new int[]{8, 9, 8},
+        new StatEffects[]{
+            StatEffects.builder().add(Stat.MELEE_CRIT, 7).build(),
+            StatEffects.builder().add(Stat.MELEE_CRIT, 7).build(),
+            StatEffects.builder().add(Stat.MELEE_CRIT, 7).build()},
+        StatEffects.builder().add(Stat.MELEE_DAMAGE, 0.17F).build(), TerraRarity.ORANGE, 30000);
+
     private ArmorContent() {}
 
     /** A set whose pieces have their own Terraria names and per-piece bonuses. */

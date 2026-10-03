@@ -37,7 +37,7 @@ Pre-hardmode
 - [x] Queen Bee
 - [ ] Deerclops
 - [x] Skeletron (Old Man curse, head + hands, day enrage)
-- [ ] Wall of Flesh
+- [x] Wall of Flesh (Guide Voodoo Doll in Underworld lava; starts Hardmode)
 
 Hardmode
 - [ ] Queen Slime
@@ -63,7 +63,7 @@ Hardmode
 - [-] Corruption: Eater of Souls, Devourer done; Hardmode corruption enemies pending
 - [-] Crimson: Crimera, Face Monster, Blood Crawler done; Hardmode crimson enemies pending
 - [-] Dungeon: Angry Bones, Dark Caster, Cursed Skull, Dungeon Slime, Dungeon Guardian done; post-Plantera dungeon enemies pending
-- [ ] Underworld: Imp, Fire Imp, Demon, Voodoo Demon, Bone Serpent, Lava Slime, Hellbat
+- [x] Underworld: Fire Imp, Demon, Voodoo Demon, Bone Serpent, Lava Slime, Hellbat
 - [ ] Hardmode surface/underground/Hallow enemies (Pixie, Unicorn, Gastropod, Wraith, Possessed Armor...)
 - [ ] Event enemies (Goblin Army, Pirates, Frost Legion, Martians, Pumpkin/Frost Moon, Solar Eclipse)
 
@@ -78,16 +78,16 @@ Hardmode
 Melee
 - [x] Wooden Sword, Copper Shortsword
 - [x] Copper/Tin/Iron/Lead/Silver/Tungsten/Gold/Platinum Broadsword
-- [-] Light's Bane, Blood Butcherer, Muramasa done; Blade of Grass, Bee Keeper done; Night's Edge, Volcano, spears, flails, yoyos pending
+- [-] Light's Bane, Blood Butcherer, Muramasa done; Blade of Grass, Bee Keeper, Fiery Greatsword, Breaker Blade done; Night's Edge, Volcano, spears, flails, yoyos pending
 - [ ] Hardmode and endgame melee
 Ranged
 - [x] Wooden/Copper/Iron/Gold Bow
 - [x] Flintlock Pistol
 - [-] Thrown: Shuriken, Throwing Knife (done); others not started
-- [-] Demon/Tendon Bow, Musket, The Undertaker, Handgun, The Bee's Knees done; other bows/guns pending
+- [-] Demon/Tendon Bow, Musket, The Undertaker, Handgun, The Bee's Knees, Molten Fury, Phoenix Blaster, Hellwing Bow done; other bows/guns pending
 Magic
 - [x] Wand of Sparking, Amethyst Staff, Magic Missile
-- [-] Vilethorn, Water Bolt, Aqua Scepter, Book of Skulls, Bee Gun done; other gem staves, tomes, magic guns pending
+- [-] Vilethorn, Water Bolt, Aqua Scepter, Book of Skulls, Bee Gun, Flamelash, Flower of Fire, Demon Scythe, Laser Rifle done; other gem staves, tomes, magic guns pending
 Summoner
 - [ ] Summon staffs, sentries, whips
 Boomerangs
@@ -101,31 +101,31 @@ Boomerangs
 ## Tools
 - [x] Copper/Tin/Iron/Lead/Silver/Tungsten/Gold/Platinum Pickaxe and Axe
 - [x] Copper Hammer, Iron Hammer
-- [-] Nightmare/Deathbringer Pickaxe, War Axe of the Night, Blood Lust Cluster, The Breaker, Flesh Grinder done; Molten and Hardmode tools pending
+- [-] Nightmare/Deathbringer Pickaxe, War Axe of the Night, Blood Lust Cluster, The Breaker, Flesh Grinder done; Molten Pickaxe, Molten Hamaxe, Pwnhammer done; other Hardmode tools pending
 - [ ] Grappling hooks
 
 ## Armour
 - [x] Wood, Copper, Tin, Iron, Lead, Silver, Tungsten, Gold, Platinum
-- [-] Shadow, Crimson, Jungle done; Mining, Ninja, Fossil, Meteor, Necro, Bee, Molten pending
+- [-] Shadow, Crimson, Jungle, Molten done; Mining, Ninja, Fossil, Meteor, Necro, Bee pending
 - [ ] Hardmode, Chlorophyte, Turtle, Spectre, Beetle, Shroomite, Spooky, Celestial armours
 
 ## Accessories
 - [x] Hermes Boots, Cloud in a Bottle, Shiny Red Balloon, Lucky Horseshoe
 - [x] Band of Regeneration, Band of Starpower, Mana Regeneration Band, Nature's Gift
 - [x] Shackle, Aglet, Anklet of the Wind, Feral Claws, Obsidian Skull, Lava Charm, Cobalt Shield
-- [x] Flipper, Water Walking Boots, Toolbelt, Panic Necklace, Honey Comb
+- [x] Flipper, Water Walking Boots, Toolbelt, Panic Necklace, Honey Comb, Warrior/Ranger/Sorcerer/Summoner Emblem
 - [ ] Combination accessories (Tinkerer's Workshop), wings, dashes, emblems, Mana Flower...
 
 ## Ores and bars
 - [x] Copper, Iron, Gold (vanilla ores/ingots)
 - [x] Tin, Lead, Silver, Tungsten, Platinum (ore, deepslate ore, raw, bar)
 - [x] World ore-pair choice (worldgen honours it)
-- [x] Demonite/Crimtane ore (worldgen + bosses) and bars; Meteorite, Hellstone pending; Obsidian gate done
+- [x] Demonite/Crimtane ore (worldgen + bosses) and bars; Hellstone done (Hellforge); Meteorite pending; Obsidian gate done
 - [ ] Cobalt/Palladium, Mythril/Orichalcum, Adamantite/Titanium, Chlorophyte, Luminite
 
 ## Blocks
 - [x] Work Bench, Iron Anvil, Lead Anvil, Life Crystal (block)
-- [-] Ebonstone, Crimstone, evil grasses, Ebonwood, Shadewood done; Blue/Green/Pink Dungeon Brick, Spikes, Locked Gold Chest, Jungle Grass, Jungle Spores, Hive, Larva done (Mud is vanilla); Pearlstone, Ash, Lihzahrd bricks pending
+- [-] Ebonstone, Crimstone, evil grasses, Ebonwood, Shadewood done; Blue/Green/Pink Dungeon Brick, Spikes, Locked Gold Chest, Jungle Grass, Jungle Spores, Hive, Larva, Ash, Hellstone, Obsidian/Hellstone Brick, Hellforge, Shadow Chest done (Mud is vanilla); Pearlstone, Ash, Lihzahrd bricks pending
 
 ## Biomes
 - [ ] Forest (vanilla surface used for now)
@@ -136,7 +136,7 @@ Boomerangs
 - [x] Corruption / Crimson (worldgen, chasms, orbs/hearts, altars; spread pending)
 - [ ] Glowing Mushroom
 - [x] Dungeon (one per world, seeded location; Golden Keys, locked chests)
-- [ ] Underworld
+- [x] Underworld (ash cavern below y=-40, lava sea, hellstone, ruined houses)
 - [ ] Hallow
 - [ ] Space / floating islands
 - [-] Terraria depth layers (`TerrariaLayer` height bands defined)
@@ -149,7 +149,7 @@ Boomerangs
 - [-] Underground loot chests (cabins pending)
 - [x] Bee hives (Larva summons Queen Bee)
 - [ ] Pyramids
-- [ ] Underworld ruins
+- [x] Underworld ruins (Hellforges, Shadow Chests)
 - [ ] Granite/Marble caves, spider caves, enchanted sword shrines
 - [x] Villages, outposts, mansions, strongholds removed
 

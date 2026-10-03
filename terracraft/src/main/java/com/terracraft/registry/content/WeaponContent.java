@@ -98,6 +98,31 @@ public final class WeaponContent {
         p -> WeaponProperties.stats(p.stacksTo(1), TerraItemStats.builder().magic(9).mana(4).useTime(12).knockback(0.0F).velocity(6.0F)
             .rarity(TerraRarity.ORANGE).value(40000).build()));
 
+    // ---------------------------------------------------------------- underworld
+    public static final RegistryObject<MeleeWeaponItem> FIERY_GREATSWORD = ModItems.register("fiery_greatsword", TabGroup.WEAPONS,
+        p -> new MeleeWeaponItem(p, (stack, target, attacker) -> target.igniteForSeconds(4.0F)),
+        p -> WeaponProperties.melee(p, TerraItemStats.builder().melee(36).useTime(34).knockback(6.5F).rarity(TerraRarity.ORANGE).value(54000).build()));
+    public static final RegistryObject<RangedWeaponItem> MOLTEN_FURY = ModItems.register("molten_fury", TabGroup.WEAPONS,
+        p -> new RangedWeaponItem(p, AmmoType.ARROW, SoundEvents.ARROW_SHOOT, 1.0F, 1, 0.0F).convertsTo(ProjectileKinds.FLAMING_ARROW),
+        p -> WeaponProperties.stats(p.stacksTo(1), TerraItemStats.builder().ranged(29).useTime(29).knockback(2.0F).velocity(8.0F)
+            .rarity(TerraRarity.ORANGE).value(54000).build()));
+    public static final RegistryObject<RangedWeaponItem> PHOENIX_BLASTER = ranged("phoenix_blaster", AmmoType.BULLET, SoundEvents.FIREWORK_ROCKET_BLAST,
+        24, 11, 2.0F, 8.0F, TerraRarity.ORANGE, 54000);
+    public static final RegistryObject<RangedWeaponItem> HELLWING_BOW = ModItems.register("hellwing_bow", TabGroup.WEAPONS,
+        p -> new RangedWeaponItem(p, AmmoType.ARROW, SoundEvents.ARROW_SHOOT, 1.0F, 1, 0.0F).convertsTo(ProjectileKinds.HELLWING),
+        p -> WeaponProperties.stats(p.stacksTo(1), TerraItemStats.builder().ranged(20).useTime(18).knockback(1.5F).velocity(7.0F)
+            .rarity(TerraRarity.ORANGE).value(50000).build()));
+    public static final RegistryObject<MagicWeaponItem> FLAMELASH = magic("flamelash", ProjectileKinds.FLAMELASH, 32, 21, 22, 6.5F, 6.0F,
+        TerraRarity.ORANGE, 5, 0, 0);
+    public static final RegistryObject<MagicWeaponItem> FLOWER_OF_FIRE = magic("flower_of_fire", ProjectileKinds.FLOWER_OF_FIRE, 48, 12, 20, 5.5F, 8.0F,
+        TerraRarity.ORANGE, 5, 0, 0);
+    public static final RegistryObject<MagicWeaponItem> DEMON_SCYTHE = magic("demon_scythe", ProjectileKinds.PLAYER_DEMON_SCYTHE, 30, 14, 20, 5.0F, 2.0F,
+        TerraRarity.ORANGE, 2, 70, 0);
+    // Wall of Flesh
+    public static final RegistryObject<MeleeWeaponItem> BREAKER_BLADE = sword("breaker_blade", 70, 30, 8.0F, 0, TerraRarity.LIGHT_RED, 120000);
+    public static final RegistryObject<MagicWeaponItem> LASER_RIFLE = magic("laser_rifle", ProjectileKinds.LASER, 29, 8, 10, 0.0F, 15.0F,
+        TerraRarity.LIGHT_RED, 10, 0, 0);
+
     // ---------------------------------------------------------------- ammo
     public static final RegistryObject<AmmoItem> FLAMING_ARROW = ammo("flaming_arrow", AmmoType.ARROW, 7, 2.0F, 0.5F, ProjectileKinds.FLAMING_ARROW, 15);
     public static final RegistryObject<AmmoItem> MUSKET_BALL = ammo("musket_ball", AmmoType.BULLET, 7, 2.0F, 4.0F, ProjectileKinds.MUSKET_BALL, 7);

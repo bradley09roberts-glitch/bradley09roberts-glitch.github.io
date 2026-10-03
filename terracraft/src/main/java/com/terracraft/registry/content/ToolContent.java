@@ -37,6 +37,18 @@ public final class ToolContent {
     public static final RegistryObject<TerrariaToolItem> THE_BREAKER = hammer("the_breaker", 70, 24, 7.0F, 2700);
     public static final RegistryObject<TerrariaToolItem> FLESH_GRINDER = hammer("flesh_grinder", 70, 26, 7.2F, 2700);
 
+    public static final RegistryObject<TerrariaToolItem> MOLTEN_PICKAXE = ModItems.register("molten_pickaxe", TabGroup.TOOLS_ARMOR, TerrariaToolItem::new,
+        p -> TerrariaToolItem.properties(p, TerraItemStats.builder().melee(12).useTime(18).knockback(2.0F).pickaxe(100)
+            .rarity(TerraRarity.ORANGE).value(54000).build(), 9.5F));
+    /** Molten Hamaxe: 150% axe and 70% hammer (still short of the Pwnhammer's 80% needed for altars). */
+    public static final RegistryObject<TerrariaToolItem> MOLTEN_HAMAXE = ModItems.register("molten_hamaxe", TabGroup.TOOLS_ARMOR, TerrariaToolItem::new,
+        p -> TerrariaToolItem.properties(p, TerraItemStats.builder().melee(20).useTime(25).knockback(7.0F).axe(150).hammer(70)
+            .rarity(TerraRarity.ORANGE).value(54000).build(), 9.5F));
+    /** Pwnhammer (Wall of Flesh): 80% hammer power breaks Demon and Crimson Altars in Hardmode. */
+    public static final RegistryObject<TerrariaToolItem> PWNHAMMER = ModItems.register("pwnhammer", TabGroup.TOOLS_ARMOR, TerrariaToolItem::new,
+        p -> TerrariaToolItem.properties(p, TerraItemStats.builder().melee(26).useTime(27).knockback(7.5F).hammer(80)
+            .rarity(TerraRarity.LIGHT_RED).value(78000).build(), 9.0F));
+
     private ToolContent() {}
 
     public static void init() {}
