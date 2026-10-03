@@ -8,8 +8,8 @@ texture per set, paints the texture from the cube's material and pattern, and wr
     textures/entity/equipment/humanoid[_leggings]/<set>.png     the painted texture (same image in both folders)
 
 Shapes follow the Terraria sets: open-faced helmets for most sets (Copper/Tin crests, Iron's kettle hat, Silver and
-Gold wings, Platinum horns, the Shadow hood, Crimson horns, the flowered Jungle Hat, Meteor's flame crest), closed
-ones for Lead, Tungsten and Molten's stone mask, and plated chests (breast, belly and back plates, pauldrons,
+Gold wings, Platinum horns, the Shadow hood, Crimson horns, the flowered Jungle Hat), closed ones for Lead, Tungsten,
+the Meteor visor helmet and Molten's stone mask, and plated chests (breast, belly and back plates, pauldrons,
 bracers, belts, gems) and greaves (thigh plates, knee cops, shin guards, boots, tassets). Original art only.
 """
 import json
@@ -347,12 +347,14 @@ def molten_set():
 
 
 def meteor_set():
-    # Meteor armor: dark purple-blue plates with fiery orange flames; the helmet leaves the face open
+    # Meteor armor: dark purple-blue plates with fiery orange flames; the helmet is closed, with a glass visor
     a = Armor('meteor', {'main': '#4A3A70', 'chain': '#2E2448', 'trim': '#6A5A90', 'dark': '#16101A', 'accent': '#E86A20',
-                         'glow': '#FFC040', 'fire': '#FF7A20', 'dark_edge': '#221A36', 'buckle': '#FFC040'})
-    open_helmet(a, 'rock', edge='accent')
-    for i, (z, tall) in enumerate(((-3, 4), (-0.5, 5), (2, 4))):   # flame crest
-        a.add('head', 'head', (-1, -9 - tall, z - 1), (2, tall, 2), mat='fire', pattern='fire', pivot=[0, -9, z], rot=[-0.3 - i * 0.15, 0, 0])
+                         'glow': '#FFC040', 'fire': '#FF7A20', 'glass': '#3A70C0', 'dark_edge': '#221A36', 'buckle': '#FFC040'})
+    closed_helmet(a, 'glass', 'rock', inflate=1.5, edge='accent')
+    a.add('head', 'head', (-3.5, -11, -3.5), (7, 1, 7), mat='main', pattern='rock')
+    a.add('head', 'head', (-0.5, -13, -2), (1, 3, 6), mat='fire', pattern='fire')
+    a.add('head', 'head', (-6.5, -6, -2), (1, 3, 4), mat='trim', pattern='plate')
+    a.add('head', 'head', (5.5, -6, -2), (1, 3, 4), mat='trim', pattern='plate')
     torso(a, base='rock', plate='rock', base_mat='chain', edge='accent', gem='glow', pads='big', belt='chain')
     greaves(a, base='rock', plate='rock', base_mat='chain', edge='accent', belt='chain')
     a.pair('legs', 'right_leg', (-2.5, 9.5, -2.5), (5, 1, 5), mat='fire', pattern='fire')
