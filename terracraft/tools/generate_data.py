@@ -906,19 +906,68 @@ MOBS = {
     'goblin_sorcerer': ('Goblin Sorcerer', [('tattered_cloth', 1, 1, 0.25)]),
     'goblin_archer': ('Goblin Archer', [('tattered_cloth', 1, 1, 0.25)]),
     'meteor_head': ('Meteor Head', []),
+    'pixie': ('Pixie', [('pixie_dust', 1, 3, 1.0)]),
+    'unicorn': ('Unicorn', [('unicorn_horn', 1, 2, 1.0)]),
+    'gastropod': ('Gastropod', [('gel', 1, 3, 1.0)]),
+    'illuminant_bat': ('Illuminant Bat', []),
+    'illuminant_slime': ('Illuminant Slime', [('gel', 2, 5, 1.0)]),
+    'chaos_elemental': ('Chaos Elemental', []),
+    'corruptor': ('Corruptor', [('rotten_chunk', 1, 2, 0.5)]),
+    'slimer': ('Slimer', [('gel', 2, 4, 1.0)]),
+    'crimslime': ('Crimslime', [('gel', 2, 5, 1.0)]),
+    'herpling': ('Herpling', [('vertebra', 1, 2, 0.5)]),
+    'floaty_gross': ('Floaty Gross', [('vertebra', 1, 2, 0.5)]),
+    'wraith': ('Wraith', []),
+    'possessed_armor': ('Possessed Armor', []),
+    'werewolf': ('Werewolf', []),
+    'wyvern': ('Wyvern', [('soul_of_flight', 4, 6, 1.0)]),
+    'armored_skeleton': ('Armored Skeleton', [('minecraft:bone', 1, 3, 0.5)]),
+    'giant_bat': ('Giant Bat', []),
+    'mimic': ('Mimic', [('titan_glove', 1, 1, 0.33)]),
     'king_slime': ('King Slime', [('gel', 40, 80, 1.0), ('slime_crown', 1, 1, 0.1)]),
     'eye_of_cthulhu': ('Eye of Cthulhu', [('lens', 3, 6, 1.0)]),
 }
 
-OVERWORLD_LAND = {'exclude_biomes': ['#minecraft:is_ocean', '#minecraft:is_river'], 'exclude_ground': ['#terracraft:evil/all', '#terracraft:dungeon/bricks']}
-NOT_EVIL = {'exclude_ground': ['#terracraft:evil/all', '#terracraft:dungeon/bricks', '#terracraft:jungle/ground']}
+OVERWORLD_LAND = {'exclude_biomes': ['#minecraft:is_ocean', '#minecraft:is_river'], 'exclude_ground': ['#terracraft:evil/all', '#terracraft:dungeon/bricks', '#terracraft:hallow/all']}
+NOT_EVIL = {'exclude_ground': ['#terracraft:evil/all', '#terracraft:dungeon/bricks', '#terracraft:jungle/ground', '#terracraft:hallow/all']}
 JUNGLE = {'biomes': ['#minecraft:is_jungle'], 'exclude_ground': ['#terracraft:evil/all', '#terracraft:dungeon/bricks']}
 JUNGLE_DEEP = {'ground': ['#terracraft:jungle/ground']}
 DUNGEON = {'ground': ['#terracraft:dungeon/bricks'], 'condition': 'boss_skeletron_defeated'}
 CORRUPT = {'ground': ['#terracraft:evil/corruption']}
 CRIMSON = {'ground': ['#terracraft:evil/crimson']}
 PRE_HM = '!hardmode_active'
+HM = 'hardmode_active'
+HALLOW = {'ground': ['#terracraft:hallow/all'], 'condition': HM}
+CORRUPT_HM = {'ground': ['#terracraft:evil/corruption'], 'condition': HM}
+CRIMSON_HM = {'ground': ['#terracraft:evil/crimson'], 'condition': HM}
 SPAWNS = {
+    'hallow': [
+        dict(entity='pixie', weight=10, time='day', layers=['surface'], placement='air', **HALLOW),
+        dict(entity='unicorn', weight=5, time='day', layers=['surface'], **HALLOW),
+        dict(entity='gastropod', weight=8, time='night', layers=['surface'], placement='air', **HALLOW),
+        dict(entity='pixie', weight=3, time='night', layers=['surface'], placement='air', **HALLOW),
+        dict(entity='illuminant_slime', weight=8, layers=['underground', 'cavern'], **HALLOW),
+        dict(entity='illuminant_bat', weight=8, layers=['underground', 'cavern'], placement='air', **HALLOW),
+        dict(entity='chaos_elemental', weight=4, layers=['underground', 'cavern'], **HALLOW),
+    ],
+    'corruption_hardmode': [
+        dict(entity='corruptor', weight=6, layers=['surface', 'underground', 'cavern'], placement='air', **CORRUPT_HM),
+        dict(entity='slimer', weight=6, layers=['underground', 'cavern'], placement='air', **CORRUPT_HM),
+    ],
+    'crimson_hardmode': [
+        dict(entity='herpling', weight=6, layers=['surface', 'underground', 'cavern'], **CRIMSON_HM),
+        dict(entity='crimslime', weight=6, layers=['surface', 'underground', 'cavern'], **CRIMSON_HM),
+        dict(entity='floaty_gross', weight=4, time='night', layers=['surface'], placement='air', **CRIMSON_HM),
+    ],
+    'hardmode': [
+        dict(entity='wraith', weight=4, time='night', layers=['surface'], placement='air', condition=HM, **NOT_EVIL),
+        dict(entity='possessed_armor', weight=5, time='night', layers=['surface'], condition=HM, **OVERWORLD_LAND),
+        dict(entity='werewolf', weight=3, time='night', layers=['surface'], condition=HM, **OVERWORLD_LAND),
+        dict(entity='wyvern', weight=2, layers=['space'], placement='air', condition=HM),
+        dict(entity='armored_skeleton', weight=6, layers=['cavern'], condition=HM, **NOT_EVIL),
+        dict(entity='giant_bat', weight=6, layers=['cavern'], placement='air', condition=HM, **NOT_EVIL),
+        dict(entity='mimic', weight=1, layers=['cavern'], condition=HM),
+    ],
     'surface_day': [
         dict(entity='green_slime', weight=10, time='day', layers=['surface'], exclude_biomes=['#minecraft:is_ocean', '#minecraft:is_river', '#minecraft:is_jungle'],
              exclude_ground=OVERWORLD_LAND['exclude_ground']),

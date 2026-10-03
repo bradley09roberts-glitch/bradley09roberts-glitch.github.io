@@ -38,9 +38,14 @@ public final class SoulDrops {
             return;
         }
         var random = entity.getRandom();
-        if (entity.getY() < 0 && random.nextInt(5) == 0) {
-            boolean evil = EvilZones.isEvil(level.getSeed(), entity.getX(), entity.getZ());
-            drop(event, entity, evil ? AccessoryContent.SOUL_OF_NIGHT.get() : AccessoryContent.SOUL_OF_LIGHT.get(), 1);
+        if (entity.getY() < 40 && random.nextInt(5) == 0) {
+            // Terraria: Souls of Light from the underground Hallow, Souls of Night from the underground Corruption/Crimson
+            var stripe = com.terracraft.world.hardmode.HardmodeWorld.stripe(level.getSeed(), entity.getX(), entity.getZ());
+            if (stripe == com.terracraft.world.hardmode.HardmodeWorld.Infection.HALLOW) {
+                drop(event, entity, AccessoryContent.SOUL_OF_LIGHT.get(), 1);
+            } else if (stripe == com.terracraft.world.hardmode.HardmodeWorld.Infection.EVIL || EvilZones.isEvil(level.getSeed(), entity.getX(), entity.getZ())) {
+                drop(event, entity, AccessoryContent.SOUL_OF_NIGHT.get(), 1);
+            }
         }
         if (entity instanceof FlyerMob && entity.getY() > 150 && random.nextInt(3) == 0) {
             drop(event, entity, AccessoryContent.SOUL_OF_FLIGHT.get(), 1 + random.nextInt(2));

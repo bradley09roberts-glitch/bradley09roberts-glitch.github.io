@@ -1,0 +1,92 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:pixie",
+      "weight": 10,
+      "time": "day",
+      "layers": [
+        "surface"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:hallow/all"
+      ],
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:unicorn",
+      "weight": 5,
+      "time": "day",
+      "layers": [
+        "surface"
+      ],
+      "ground": [
+        "#terracraft:hallow/all"
+      ],
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:gastropod",
+      "weight": 8,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:hallow/all"
+      ],
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:pixie",
+      "weight": 3,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:hallow/all"
+      ],
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:illuminant_slime",
+      "weight": 8,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:hallow/all"
+      ],
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:illuminant_bat",
+      "weight": 8,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:hallow/all"
+      ],
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:chaos_elemental",
+      "weight": 4,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:hallow/all"
+      ],
+      "condition": "hardmode_active"
+    }
+  ]
+}

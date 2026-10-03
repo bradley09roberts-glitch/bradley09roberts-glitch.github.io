@@ -94,6 +94,10 @@ public final class AccessoryContent {
     public static final RegistryObject<WingsItem> DEMON_WINGS = wings("demon_wings", "demon", TerraRarity.PINK, 80000, 34, 0.42F);
     public static final RegistryObject<WingsItem> LEAF_WINGS = wings("leaf_wings", "leaf", TerraRarity.LIME, 160000, 54, 0.45F);
 
+    public static final RegistryObject<TerraItem> PIXIE_DUST = CoreItems.material("pixie_dust", TerraRarity.ORANGE, 100);
+    public static final RegistryObject<TerraItem> UNICORN_HORN = CoreItems.material("unicorn_horn", TerraRarity.ORANGE, 300);
+    public static final RegistryObject<AccessoryItem> TITAN_GLOVE = accessory("titan_glove", TerraRarity.LIGHT_RED, 100000,
+        StatEffects.builder().add(Stat.KNOCKBACK, 1.0F).ability(Ability.AUTO_REUSE));
     public static final RegistryObject<TerraItem> SOUL_OF_LIGHT = CoreItems.material("soul_of_light", TerraRarity.ORANGE, 800);
     public static final RegistryObject<TerraItem> SOUL_OF_NIGHT = CoreItems.material("soul_of_night", TerraRarity.ORANGE, 800);
     public static final RegistryObject<TerraItem> SOUL_OF_FLIGHT = CoreItems.material("soul_of_flight", TerraRarity.ORANGE, 800);

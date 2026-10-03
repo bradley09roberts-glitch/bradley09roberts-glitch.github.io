@@ -1,0 +1,31 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:corruptor",
+      "weight": 6,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:evil/corruption"
+      ],
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:slimer",
+      "weight": 6,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:evil/corruption"
+      ],
+      "condition": "hardmode_active"
+    }
+  ]
+}

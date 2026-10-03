@@ -207,6 +207,61 @@ public final class MobContent {
         (type, level) -> new com.terracraft.entity.mob.GhostFlyerMob(type, level, FlyerMob.Style.CHASER), 0.7F, 0.7F,
         MobDefinition.builder().life(26).damage(40).defense(6).knockbackTaken(0.8F).coins(80).speed(0.2).followRange(40));
 
+    // --- Hardmode: the Hallow ---------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<FlyerMob>> PIXIE = register("pixie",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.6F, 0.6F,
+        MobDefinition.builder().life(150).damage(45).defense(20).knockbackTaken(0.8F).coins(300).speed(0.3).followRange(40));
+    public static final RegistryObject<EntityType<WalkerMob>> UNICORN = register("unicorn", WalkerMob::new, 0.9F, 1.6F,
+        MobDefinition.builder().life(400).damage(65).defense(30).knockbackTaken(0.3F).coins(500).speed(0.38).followRange(40));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ShooterFlyerMob>> GASTROPOD = register("gastropod",
+        (type, level) -> new com.terracraft.entity.mob.ShooterFlyerMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.PINK_LASER,
+            30.0F, 2.5F, net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME), 0.9F, 0.9F,
+        MobDefinition.builder().life(220).damage(60).defense(20).knockbackTaken(0.5F).coins(400).speed(0.12).followRange(40).nocturnal());
+    public static final RegistryObject<EntityType<FlyerMob>> ILLUMINANT_BAT = register("illuminant_bat",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.6F, 0.45F,
+        MobDefinition.builder().life(200).damage(60).defense(20).knockbackTaken(0.7F).coins(400).speed(0.34));
+    public static final RegistryObject<EntityType<SlimeMob>> ILLUMINANT_SLIME = slime("illuminant_slime", 1.0F, 0.75F,
+        MobDefinition.builder().life(180).damage(70).defense(30).coins(300));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.TeleporterMob>> CHAOS_ELEMENTAL = register("chaos_elemental",
+        com.terracraft.entity.mob.TeleporterMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(300).damage(65).defense(30).knockbackTaken(0.6F).coins(500).speed(0.28).followRange(32));
+
+    // --- Hardmode: Corruption / Crimson ----------------------------------------------------------------
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ShooterFlyerMob>> CORRUPTOR = register("corruptor",
+        (type, level) -> new com.terracraft.entity.mob.ShooterFlyerMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.VILE_SPIT,
+            32.0F, 2.0F, net.minecraft.sounds.SoundEvents.LLAMA_SPIT), 1.0F, 0.9F,
+        MobDefinition.builder().life(230).damage(55).defense(32).knockbackTaken(0.5F).coins(400).speed(0.16).followRange(40));
+    public static final RegistryObject<EntityType<FlyerMob>> SLIMER = register("slimer",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.CHASER), 0.9F, 0.8F,
+        MobDefinition.builder().life(60).damage(45).defense(30).knockbackTaken(0.6F).coins(300).speed(0.24).followRange(40));
+    public static final RegistryObject<EntityType<SlimeMob>> CRIMSLIME = slime("crimslime", 1.0F, 0.75F,
+        MobDefinition.builder().life(145).damage(50).defense(30).coins(300));
+    public static final RegistryObject<EntityType<SlimeMob>> HERPLING = register("herpling", SlimeMob::new, 1.0F, 1.0F,
+        MobDefinition.builder().life(350).damage(70).defense(20).knockbackTaken(0.4F).coins(400));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.GhostFlyerMob>> FLOATY_GROSS = register("floaty_gross",
+        (type, level) -> new com.terracraft.entity.mob.GhostFlyerMob(type, level, FlyerMob.Style.CHASER), 0.9F, 1.4F,
+        MobDefinition.builder().life(270).damage(60).defense(30).knockbackTaken(0.4F).coins(400).speed(0.16).followRange(40).nocturnal());
+
+    // --- Hardmode: surface night, sky, underground --------------------------------------------------------
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.GhostFlyerMob>> WRAITH = register("wraith",
+        (type, level) -> new com.terracraft.entity.mob.GhostFlyerMob(type, level, FlyerMob.Style.CHASER), 0.7F, 1.8F,
+        MobDefinition.builder().life(200).damage(75).defense(18).knockbackTaken(0.3F).coins(300).speed(0.2).followRange(40).nocturnal());
+    public static final RegistryObject<EntityType<WalkerMob>> POSSESSED_ARMOR = register("possessed_armor", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(260).damage(50).defense(20).knockbackTaken(0.4F).coins(400).speed(0.22).nocturnal());
+    public static final RegistryObject<EntityType<WalkerMob>> WEREWOLF = register("werewolf", WalkerMob::new, 0.7F, 2.0F,
+        MobDefinition.builder().life(400).damage(70).defense(40).knockbackTaken(0.4F).coins(500).speed(0.32).nocturnal());
+    public static final WormMob.Spec WYVERN_SPEC = new WormMob.Spec(14, 0.9, 0.55, 0.09, true, true);
+    public static final RegistryObject<EntityType<WormMob>> WYVERN = register("wyvern",
+        (type, level) -> new WormMob(type, level, WYVERN_SPEC), 1.0F, 1.0F,
+        MobDefinition.builder().life(4000).damage(80).defense(10).knockbackTaken(0.0F).coins(1000).followRange(64));
+    public static final RegistryObject<EntityType<WalkerMob>> ARMORED_SKELETON = register("armored_skeleton", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(340).damage(60).defense(36).knockbackTaken(0.4F).coins(400).speed(0.26));
+    public static final RegistryObject<EntityType<FlyerMob>> GIANT_BAT = register("giant_bat",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.9F, 0.6F,
+        MobDefinition.builder().life(160).damage(53).defense(18).knockbackTaken(0.7F).coins(300).speed(0.32));
+    public static final RegistryObject<EntityType<SlimeMob>> MIMIC = register("mimic", SlimeMob::new, 1.0F, 1.0F,
+        MobDefinition.builder().life(500).damage(80).defense(30).knockbackTaken(0.1F).coins(10_000));
+
     private MobContent() {}
 
     public static void init() {

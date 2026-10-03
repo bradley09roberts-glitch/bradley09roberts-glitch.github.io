@@ -84,6 +84,12 @@ public final class ProjectileKinds {
     public static final ProjectileKind DEMON_SCYTHE = register(ProjectileKind.builder("demon_scythe")
         .lifetime(120).size(0.6F, 1.0F).orientation(ProjectileKind.Orientation.SPIN).noTileCollide()
         .fullbright().enemy().trail(() -> ParticleTypes.WITCH));
+    // ---------------------------------------------------------------- Hardmode enemies
+    public static final ProjectileKind VILE_SPIT = register(ProjectileKind.builder("vile_spit")
+        .lifetime(120).size(0.35F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).noTileCollide()
+        .fullbright().enemy().trail(() -> ParticleTypes.SQUID_INK).debuff(() -> net.minecraft.world.effect.MobEffects.WEAKNESS, 140, 1.0F));
+    public static final ProjectileKind PINK_LASER = register(ProjectileKind.builder("pink_laser")
+        .lifetime(60).size(0.2F, 0.6F).fullbright().enemy());
     public static final ProjectileKind WOF_LASER = register(ProjectileKind.builder("wof_laser")
         .lifetime(60).size(0.2F, 0.6F).noTileCollide().fullbright().enemy());
     public static final ProjectileKind FLAMELASH = register(ProjectileKind.builder("flamelash")

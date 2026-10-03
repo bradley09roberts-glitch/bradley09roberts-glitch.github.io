@@ -267,12 +267,26 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   Titanium damage reduction + damage).
 - Fixed: NPC/zombie skins changed on every regeneration (Python's salted `hash`); now a stable CRC.
 
+### Stage 5c: Hardmode enemies (verified in a live client)
+- **Hallow** (spawn on Hallow ground): Pixie (day), Unicorn (day, charges), Gastropod (night, pink lasers), Illuminant
+  Bat and Illuminant Slime (underground), Chaos Elemental (underground, teleports next to you every few seconds).
+- **Hardmode Corruption/Crimson**: Corruptor (spits vile spit, causes Weakness), Slimer; Herpling, Crimslime,
+  Floaty Gross (drifts through walls at night).
+- **Everywhere in Hardmode**: Wraith, Possessed Armor and Werewolf at night; Wyverns in space (drop 4-6 Souls of
+  Flight); Armored Skeleton, Giant Bat and the rare Mimic (Titan Glove) in caverns.
+- New JSON models (`tools/creature_models.py`): pixie, unicorn, gastropod, chaos elemental, corruptor, slimer,
+  herpling, floaty gross, wraith, possessed armor, werewolf, mimic (its lid snaps). Bats, slimes, the Wyvern and the
+  Armored Skeleton reuse the shared bat/slime/worm/skeleton models with their own textures.
+- New items: Pixie Dust, Unicorn Horn, Titan Glove (+100% knockback, auto-swing).
+- Souls of Light now come from the underground Hallow and Souls of Night from the underground evil stripe or
+  Corruption/Crimson (Terraria's rule); ordinary enemies no longer spawn on Hallow ground.
+
 ## IN PROGRESS
-- Stage 5c: Hardmode enemies.
+- Stage 5d: mechanical bosses and Hallowed gear.
 
 ## NEXT (Stage 5: Hardmode)
 1. (done) World changes, Hardmode ores, anvils/forges, gear.
-2. Hardmode enemies (surface, underground, Hallow, evil), Wyverns, mimics, souls (Light/Night/Flight), wings.
+2. (done) Hardmode enemies, Wyverns, Mimics, souls.
 3. Mechanical bosses (The Twins, The Destroyer, Skeletron Prime) and Queen Slime; Mechanic, Wizard, Steampunker.
 4. Pirate Invasion and Frost Legion.
 

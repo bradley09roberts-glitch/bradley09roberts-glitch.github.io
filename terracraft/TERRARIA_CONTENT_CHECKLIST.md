@@ -65,7 +65,9 @@ Hardmode
 - [-] Crimson: Crimera, Face Monster, Blood Crawler done; Hardmode crimson enemies pending
 - [-] Dungeon: Angry Bones, Dark Caster, Cursed Skull, Dungeon Slime, Dungeon Guardian done; post-Plantera dungeon enemies pending
 - [x] Underworld: Fire Imp, Demon, Voodoo Demon, Bone Serpent, Lava Slime, Hellbat
-- [ ] Hardmode surface/underground/Hallow enemies (Pixie, Unicorn, Gastropod, Wraith, Possessed Armor...)
+- [x] Hardmode surface/underground/Hallow/evil enemies (Pixie, Unicorn, Gastropod, Illuminant Bat/Slime, Chaos Elemental,
+      Corruptor, Slimer, Herpling, Crimslime, Floaty Gross, Wraith, Possessed Armor, Werewolf, Wyvern, Armored Skeleton,
+      Giant Bat, Mimic)
 - [x] Goblin Army: Peon, Thief, Warrior, Archer, Sorcerer
 - [x] Meteor Head
 - [ ] Event enemies (Pirates, Frost Legion, Martians, Pumpkin/Frost Moon, Solar Eclipse)
@@ -146,7 +148,7 @@ Boomerangs
 - [-] Glowing Mushroom (vanilla mushroom fields; underground glowing mushroom caves pending)
 - [x] Dungeon (one per world, seeded location; Golden Keys, locked chests)
 - [x] Underworld (ash cavern below y=-40, lava sea, hellstone, ruined houses)
-- [x] Hallow (pearlstone, hallowed grass, pearlsand, pearlwood, hallowed leaves; enemies pending)
+- [x] Hallow (pearlstone, hallowed grass, pearlsand, pearlwood, hallowed leaves, enemies)
 - [ ] Space / floating islands
 - [-] Terraria depth layers (`TerrariaLayer` height bands defined)
 

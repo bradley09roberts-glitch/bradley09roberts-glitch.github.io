@@ -14,7 +14,8 @@
       ],
       "exclude_ground": [
         "#terracraft:evil/all",
-        "#terracraft:dungeon/bricks"
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
       ]
     },
     {
@@ -29,7 +30,8 @@
       "exclude_ground": [
         "#terracraft:evil/all",
         "#terracraft:dungeon/bricks",
-        "#terracraft:jungle/ground"
+        "#terracraft:jungle/ground",
+        "#terracraft:hallow/all"
       ]
     },
     {
@@ -50,7 +52,8 @@
       ],
       "exclude_ground": [
         "#terracraft:evil/all",
-        "#terracraft:dungeon/bricks"
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
       ]
     }
   ]

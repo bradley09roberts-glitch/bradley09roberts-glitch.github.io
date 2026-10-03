@@ -1,0 +1,43 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:herpling",
+      "weight": 6,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:evil/crimson"
+      ],
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:crimslime",
+      "weight": 6,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:evil/crimson"
+      ],
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:floaty_gross",
+      "weight": 4,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:evil/crimson"
+      ],
+      "condition": "hardmode_active"
+    }
+  ]
+}

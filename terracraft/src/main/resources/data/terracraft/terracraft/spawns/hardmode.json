@@ -1,0 +1,102 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:wraith",
+      "weight": 4,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "placement": "air",
+      "condition": "hardmode_active",
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:jungle/ground",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:possessed_armor",
+      "weight": 5,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "condition": "hardmode_active",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:werewolf",
+      "weight": 3,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "condition": "hardmode_active",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:wyvern",
+      "weight": 2,
+      "layers": [
+        "space"
+      ],
+      "placement": "air",
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:armored_skeleton",
+      "weight": 6,
+      "layers": [
+        "cavern"
+      ],
+      "condition": "hardmode_active",
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:jungle/ground",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:giant_bat",
+      "weight": 6,
+      "layers": [
+        "cavern"
+      ],
+      "placement": "air",
+      "condition": "hardmode_active",
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:jungle/ground",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:mimic",
+      "weight": 1,
+      "layers": [
+        "cavern"
+      ],
+      "condition": "hardmode_active"
+    }
+  ]
+}

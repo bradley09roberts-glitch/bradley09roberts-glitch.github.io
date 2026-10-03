@@ -2725,6 +2725,67 @@ HM_BLOCKS = ['pearlstone', 'hallowed_grass', 'pearlsand', 'pearlwood', 'hallowed
              'adamantite_forge', 'titanium_forge'] + [f'{m}_ore' for m in HM_METALS]
 
 
+
+# ----------------------------------------------------------------------------------------- Hardmode enemies (Stage 5c)
+def draw_pixie_dust(c):
+    rnd = random.Random(77)
+    for _ in range(14):
+        x, y = rnd.randint(3, 12), rnd.randint(4, 13)
+        c.set(x, y, rnd.choice([hexc('#FFF0A0'), hexc('#F0C0F0'), hexc('#C0F0FF'), hexc('#FFFFFF')]))
+    c.circle(7.5, 9, 3, hexc('#F8E8B0', 140))
+
+
+def draw_unicorn_horn(c):
+    p = palette('#F0D070')
+    c.polygon([(3, 14), (6, 13), (13, 2), (12, 2)], p[2])
+    for i in range(4):
+        c.line(5 + i * 2, 12 - i * 3, 7 + i * 2, 12 - i * 3, p[4])
+    c.outline()
+
+
+def draw_titan_glove(c):
+    p = palette('#9A9AA8')
+    c.rect(4, 5, 11, 12, p[2])
+    for i in range(4):
+        c.rect(4 + i * 2, 2, 5 + i * 2, 5, p[3])
+    c.rect(11, 7, 13, 9, p[3])
+    c.rect(4, 12, 11, 14, palette('#C8A040')[2])
+    c.set(7, 8, hexc('#E04040')); c.set(8, 8, hexc('#E04040'))
+    c.outline()
+
+
+item('pixie_dust', draw_pixie_dust)
+item('unicorn_horn', draw_unicorn_horn)
+item('titan_glove', draw_titan_glove)
+proj('vile_spit', lambda c: p_orb(c, '#8A60B0', 3))
+proj('pink_laser', lambda c: (c.line(0, 8, 15, 8, hexc('#FF60C0'), 2), c.line(2, 8, 13, 8, hexc('#FFE0F8'))))
+
+model_texture('illuminant_bat', 64, 32, bat_texture_colored('#D050E0', '#8A30B0'))
+model_texture('giant_bat', 64, 32, bat_texture_colored('#7A4A3A', '#4A2A20'))
+model_texture('illuminant_slime', 64, 64, slime_texture('#E060F0', 170))
+model_texture('crimslime', 64, 64, slime_texture('#C83838', 200))
+model_texture('armored_skeleton', 64, 64, skin_texture('#D8D0A8', '#D8D0A8', '#6A7080', '#5A6070', eyes=(220, 60, 40, 255), bony=True))
+for _part in ('head', 'body', 'tail'):
+    model_texture(f'wyvern_{_part}', 64, 64, worm_texture('#E8E8F0', '#7AA8E0'))
+    mob_sprite(f'wyvern_{_part}', 12, 12, 1, lambda c, f, part=_part: worm_frame(c, f, '#E8E8F0', part), rotate=True)
+mob_sprite('illuminant_bat', 16, 12, 3, bat_frame, frame_time=3, fullbright=True)
+mob_sprite('giant_bat', 16, 12, 3, bat_frame, frame_time=3)
+mob_sprite('pixie', 16, 12, 3, bat_frame, frame_time=2, fullbright=True)
+mob_sprite('slimer', 16, 12, 3, bat_frame, frame_time=3)
+mob_sprite('corruptor', 16, 12, 3, bat_frame, frame_time=4)
+mob_sprite('gastropod', 16, 12, 2, lambda c, f: slime_frame(c, '#F8B0D8', f, 16, 12), frame_time=10)
+mob_sprite('illuminant_slime', 16, 12, 2, lambda c, f: slime_frame(c, '#E060F0', f, 16, 12), frame_time=10, fullbright=True)
+mob_sprite('crimslime', 16, 12, 2, lambda c, f: slime_frame(c, '#C83838', f, 16, 12), frame_time=10)
+mob_sprite('herpling', 16, 12, 2, lambda c, f: slime_frame(c, '#B83A44', f, 16, 12, alpha=255), frame_time=8)
+mob_sprite('mimic', 16, 12, 2, lambda c, f: slime_frame(c, '#8A5A2A', f, 16, 12, alpha=255), frame_time=8)
+mob_sprite('unicorn', 16, 24, 3, lambda c, f: npc_frame(c, f, '#F4F2FA', '#E890D8', '#F4F2FA', '#F4F2FA'), frame_time=4)
+mob_sprite('chaos_elemental', 16, 24, 3, lambda c, f: npc_frame(c, f, '#120820', '#7A3AC8', '#7A3AC8', '#7A3AC8'), frame_time=8)
+mob_sprite('wraith', 16, 24, 3, lambda c, f: npc_frame(c, f, '#040408', '#2E2E3A', '#2E2E3A', '#2E2E3A'), frame_time=8)
+mob_sprite('floaty_gross', 16, 24, 3, lambda c, f: npc_frame(c, f, '#D8B0A8', '#A84048', '#D8B0A8', '#A84048'), frame_time=8)
+mob_sprite('possessed_armor', 16, 24, 3, lambda c, f: humanoid_frame(c, f, '#5A5A6A', '#5A5A6A', '#3A3A46', (255, 48, 48, 255)), frame_time=8)
+mob_sprite('werewolf', 16, 24, 3, lambda c, f: npc_frame(c, f, '#6A5848', '#6A5848', '#6A5848', '#4A3A5A'), frame_time=6)
+mob_sprite('armored_skeleton', 16, 24, 3, lambda c, f: humanoid_frame(c, f, '#D8D0A8', '#6A7080', '#5A6070', (20, 20, 20, 255), bony=True), frame_time=8)
+
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
     java_root = os.path.join(ROOT, 'src/main/java/com/terracraft/registry/content')

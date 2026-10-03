@@ -662,7 +662,7 @@ def front_detail(c, kind, x0, y0, w, h, p, dark, glow, armor):
         c.set(x0 + w // 2 - 1, y0 + 4, p[3]); c.set(x0 + w // 2, y0 + 4, p[3])
         for x in range(2, w - 2):
             c.set(x0 + x, y0 + 6, dark)
-    elif kind in ('face_imp', 'face_demon', 'face_fm', 'face_eos', 'face_maw', 'face_spider', 'face_meteor'):
+    elif kind in ('face_imp', 'face_demon', 'face_fm', 'face_eos', 'face_maw', 'face_spider', 'face_meteor', 'face_cute', 'face_horse'):
         creature_face(c, kind, x0, y0, w, h, p, dark, armor)
     elif kind in ('teeth_down', 'teeth_up'):
         teeth = armor.mats.get('teeth', p[4])
@@ -761,6 +761,20 @@ def creature_face(c, kind, x0, y0, w, h, p, dark, mats_holder):
         c.set(x0 + cx, y0 + 5, dark); c.set(x0 + cx - 1, y0 + 5, dark)
         for x in range(1, w - 1):
             c.set(x0 + x, y0 + h - 2, dark if x % 2 else teeth)
+    elif kind == 'face_cute':
+        # big round eyes with a highlight and a little smile (Pixie, Slimer, Gastropod)
+        for ex in (1, w - 3):
+            for dx in range(2):
+                for dy in range(2):
+                    c.set(x0 + ex + dx, y0 + 2 + dy, dark)
+            c.set(x0 + ex, y0 + 2, eye)
+        c.set(x0 + cx - 1, y0 + 5, dark); c.set(x0 + cx, y0 + 5, dark)
+    elif kind == 'face_horse':
+        # a long muzzle seen from the front: nostrils low down, a pale blaze up the middle
+        blaze = mats.get('blaze', p[4])
+        for y in range(0, h - 2):
+            c.set(x0 + cx - 1, y0 + y, blaze); c.set(x0 + cx, y0 + y, blaze)
+        c.set(x0 + 1, y0 + h - 2, dark); c.set(x0 + w - 2, y0 + h - 2, dark)
 
 
 def write(assets, tex):

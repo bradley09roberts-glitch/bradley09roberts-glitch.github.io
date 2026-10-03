@@ -105,6 +105,28 @@ public final class CreatureRenderers {
         register(event, MobContent.GOBLIN_WARRIOR.get(), ctx -> new TerraModelRenderer<>(ctx,
             new TerraHumanoidModel(ctx.bakeLayer(TerraModels.GOBLIN)), 0.9375F * 1.7F / 1.8F, 0.45F, false));
         json(event, MobContent.METEOR_HEAD.get(), "meteor_head", 1.0F, 0.0F);
+        // Hardmode
+        json(event, MobContent.PIXIE.get(), "pixie", 1.0F, 0.2F);
+        json(event, MobContent.UNICORN.get(), "unicorn", 1.0F, 0.7F);
+        json(event, MobContent.GASTROPOD.get(), "gastropod", 1.0F, 0.4F);
+        register(event, MobContent.ILLUMINANT_BAT.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 0.8F, 0.3F, false));
+        slime(event, MobContent.ILLUMINANT_SLIME.get(), 1.0F);
+        json(event, MobContent.CHAOS_ELEMENTAL.get(), "chaos_elemental", 0.9375F, 0.5F);
+        json(event, MobContent.CORRUPTOR.get(), "corruptor", 1.0F, 0.5F);
+        json(event, MobContent.SLIMER.get(), "slimer", 1.0F, 0.5F);
+        slime(event, MobContent.CRIMSLIME.get(), 1.0F);
+        json(event, MobContent.HERPLING.get(), "herpling", 1.0F, 0.5F);
+        json(event, MobContent.FLOATY_GROSS.get(), "floaty_gross", 1.0F, 0.0F);
+        json(event, MobContent.WRAITH.get(), "wraith", 0.9375F, 0.0F);
+        json(event, MobContent.POSSESSED_ARMOR.get(), "possessed_armor", 0.9375F, 0.5F);
+        json(event, MobContent.WEREWOLF.get(), "werewolf", 1.0F, 0.5F);
+        worm(event, MobContent.WYVERN.get(), 1.0F);
+        register(event, MobContent.ARMORED_SKELETON.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new TerraHumanoidModel(ctx.bakeLayer(TerraModels.SKELETON)), 0.9375F, 0.5F, true));
+        register(event, MobContent.GIANT_BAT.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 1.2F, 0.4F, false));
+        json(event, MobContent.MIMIC.get(), "mimic", 1.0F, 0.6F);
         for (var npc : NpcContent.all()) {
             var layer = npc.getId().getPath().contains("goblin") ? TerraModels.GOBLIN : TerraModels.HUMANOID;
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,
