@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:meteorite_bar",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:meteorite",
+      "count": 3
+    }
+  ],
+  "stations": [
+    "terracraft:furnace"
+  ],
+  "category": "materials"
+}

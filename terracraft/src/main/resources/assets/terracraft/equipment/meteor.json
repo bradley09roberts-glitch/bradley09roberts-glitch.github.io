@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "terracraft:meteor"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "terracraft:meteor"
+      }
+    ]
+  }
+}

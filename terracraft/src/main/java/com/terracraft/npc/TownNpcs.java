@@ -54,7 +54,20 @@ public final class TownNpcs {
         server -> com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.SKELETRON),
         true, () -> ProjectileKinds.BOOK_SKULL, 12.0F, 6, List.of(TownNpcType.Service.SHOP)));
 
+    /** Tied up in the caverns once the Goblin Army is beaten (spawned by {@code BoundNpcs}); never "arrives". */
+    public static final TownNpcType BOUND_GOBLIN = register(new TownNpcType("bound_goblin", NpcContent.BOUND_GOBLIN, List.of(),
+        server -> false, false, null, 0.0F, 1, List.of()));
+    public static final TownNpcType GOBLIN_TINKERER = register(new TownNpcType("goblin_tinkerer", NpcContent.GOBLIN_TINKERER,
+        List.of("Durnan", "Fjell", "Grodax", "Jasper", "Kogsey", "Nobbik", "Ragnar", "Sarx", "Tickit", "Zorlog"),
+        server -> com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.GOBLIN_TINKERER_RESCUED),
+        true, () -> ProjectileKinds.SHURIKEN, 10.0F, 6, List.of(TownNpcType.Service.SHOP, TownNpcType.Service.REFORGE)));
+
     private TownNpcs() {}
+
+    /** NPCs that stay where they are put instead of living in a house (Old Man, bound NPCs). */
+    public static boolean isStationary(TownNpcType type) {
+        return type == OLD_MAN || type == BOUND_GOBLIN;
+    }
 
     private static TownNpcType register(TownNpcType type) {
         TYPES.put(type.id(), type);

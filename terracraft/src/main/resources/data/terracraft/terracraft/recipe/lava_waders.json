@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:lava_waders",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:obsidian_water_walking_boots",
+      "count": 1
+    },
+    {
+      "item": "terracraft:lava_charm",
+      "count": 1
+    }
+  ],
+  "stations": [
+    "terracraft:tinkerers_workshop"
+  ],
+  "category": "accessories"
+}

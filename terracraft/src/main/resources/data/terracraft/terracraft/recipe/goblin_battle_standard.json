@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:goblin_battle_standard",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:tattered_cloth",
+      "count": 10
+    },
+    {
+      "tag": "minecraft:planks",
+      "count": 5
+    }
+  ],
+  "stations": [
+    "terracraft:work_bench"
+  ],
+  "category": "consumables"
+}

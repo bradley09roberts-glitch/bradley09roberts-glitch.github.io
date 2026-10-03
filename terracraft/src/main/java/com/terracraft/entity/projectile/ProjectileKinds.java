@@ -101,6 +101,17 @@ public final class ProjectileKinds {
     public static final ProjectileKind LASER = register(ProjectileKind.builder("laser")
         .lifetime(40).size(0.15F, 0.6F).pierce(2).fullbright().magic());
 
+    // ---------------------------------------------------------------- goblin army
+    public static final ProjectileKind CHAOS_BALL = register(ProjectileKind.builder("chaos_ball")
+        .lifetime(140).size(0.35F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.02F, 30.0F).noTileCollide()
+        .fullbright().enemy().trail(() -> ParticleTypes.WITCH));
+    public static final ProjectileKind ENEMY_ARROW = register(ProjectileKind.builder("enemy_arrow").texture("wooden_arrow")
+        .gravity(0.03).drag(0.995F).lifetime(160).size(0.25F, 0.6F).enemy());
+
+    // ---------------------------------------------------------------- meteorite
+    public static final ProjectileKind SPACE_LASER = register(ProjectileKind.builder("space_laser").texture("laser")
+        .lifetime(40).size(0.15F, 0.6F).pierce(1).fullbright().magic());
+
     private ProjectileKinds() {}
 
     private static ProjectileKind register(ProjectileKind.Builder builder) {

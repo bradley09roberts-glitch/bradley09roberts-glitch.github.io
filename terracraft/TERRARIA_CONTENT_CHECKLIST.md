@@ -65,13 +65,16 @@ Hardmode
 - [-] Dungeon: Angry Bones, Dark Caster, Cursed Skull, Dungeon Slime, Dungeon Guardian done; post-Plantera dungeon enemies pending
 - [x] Underworld: Fire Imp, Demon, Voodoo Demon, Bone Serpent, Lava Slime, Hellbat
 - [ ] Hardmode surface/underground/Hallow enemies (Pixie, Unicorn, Gastropod, Wraith, Possessed Armor...)
-- [ ] Event enemies (Goblin Army, Pirates, Frost Legion, Martians, Pumpkin/Frost Moon, Solar Eclipse)
+- [x] Goblin Army: Peon, Thief, Warrior, Archer, Sorcerer
+- [x] Meteor Head
+- [ ] Event enemies (Pirates, Frost Legion, Martians, Pumpkin/Frost Moon, Solar Eclipse)
 
 ## NPCs
 - [x] Guide, Merchant, Nurse, Demolitionist
 - [-] Dryad, Arms Dealer done; Dye Trader, Angler, Zoologist, Painter, Golfer, Tavernkeep pending
 - [x] Old Man, Clothier
-- [ ] Stylist, Goblin Tinkerer, Witch Doctor, Mechanic, Party Girl, Wizard
+- [x] Goblin Tinkerer (rescued in the caverns; reforging)
+- [ ] Stylist, Witch Doctor, Mechanic, Party Girl, Wizard
 - [ ] Tax Collector, Truffle, Pirate, Steampunker, Cyborg, Santa Claus, Princess
 
 ## Weapons
@@ -87,7 +90,7 @@ Ranged
 - [-] Demon/Tendon Bow, Musket, The Undertaker, Handgun, The Bee's Knees, Molten Fury, Phoenix Blaster, Hellwing Bow done; other bows/guns pending
 Magic
 - [x] Wand of Sparking, Amethyst Staff, Magic Missile
-- [-] Vilethorn, Water Bolt, Aqua Scepter, Book of Skulls, Bee Gun, Flamelash, Flower of Fire, Demon Scythe, Laser Rifle done; other gem staves, tomes, magic guns pending
+- [-] Vilethorn, Water Bolt, Aqua Scepter, Book of Skulls, Bee Gun, Space Gun, Flamelash, Flower of Fire, Demon Scythe, Laser Rifle done; other gem staves, tomes, magic guns pending
 Summoner
 - [ ] Summon staffs, sentries, whips
 Boomerangs
@@ -106,7 +109,7 @@ Boomerangs
 
 ## Armour
 - [x] Wood, Copper, Tin, Iron, Lead, Silver, Tungsten, Gold, Platinum
-- [-] Shadow, Crimson, Jungle, Molten done; Mining, Ninja, Fossil, Meteor, Necro, Bee pending
+- [-] Shadow, Crimson, Jungle, Molten, Meteor done; Mining, Ninja, Fossil, Necro, Bee pending
 - [ ] Hardmode, Chlorophyte, Turtle, Spectre, Beetle, Shroomite, Spooky, Celestial armours
 
 ## Accessories
@@ -114,13 +117,16 @@ Boomerangs
 - [x] Band of Regeneration, Band of Starpower, Mana Regeneration Band, Nature's Gift
 - [x] Shackle, Aglet, Anklet of the Wind, Feral Claws, Obsidian Skull, Lava Charm, Cobalt Shield
 - [x] Flipper, Water Walking Boots, Toolbelt, Panic Necklace, Honey Comb, Warrior/Ranger/Sorcerer/Summoner Emblem
-- [ ] Combination accessories (Tinkerer's Workshop), wings, dashes, emblems, Mana Flower...
+- [-] Tinkerer's Workshop combinations: Obsidian Horseshoe, Cloud in a Balloon, Obsidian Shield, Obsidian Water Walking Boots, Lava Waders, Mana Flower done; wings, dashes and the rest pending
+
+## Prefixes
+- [x] Reforging at the Goblin Tinkerer, 72 prefixes (universal, melee, ranged, magic, accessory), random prefix on craft
 
 ## Ores and bars
 - [x] Copper, Iron, Gold (vanilla ores/ingots)
 - [x] Tin, Lead, Silver, Tungsten, Platinum (ore, deepslate ore, raw, bar)
 - [x] World ore-pair choice (worldgen honours it)
-- [x] Demonite/Crimtane ore (worldgen + bosses) and bars; Hellstone done (Hellforge); Meteorite pending; Obsidian gate done
+- [x] Demonite/Crimtane ore (worldgen + bosses) and bars; Hellstone done (Hellforge); Meteorite done (craters); Obsidian gate done
 - [ ] Cobalt/Palladium, Mythril/Orichalcum, Adamantite/Titanium, Chlorophyte, Luminite
 
 ## Blocks
@@ -156,7 +162,7 @@ Boomerangs
 ## Events
 - [x] Blood Moon
 - [x] Slime Rain
-- [ ] Goblin Army
+- [x] Goblin Army (invasion with progress bar; Goblin Battle Standard)
 - [ ] Pirate Invasion
 - [ ] Frost Legion
 - [ ] Solar Eclipse

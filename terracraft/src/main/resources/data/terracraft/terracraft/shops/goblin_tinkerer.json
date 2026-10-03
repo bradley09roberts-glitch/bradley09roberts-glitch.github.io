@@ -1,0 +1,17 @@
+{
+  "npc": "goblin_tinkerer",
+  "items": [
+    {
+      "item": "terracraft:tinkerers_workshop",
+      "price": 100000
+    },
+    {
+      "item": "terracraft:toolbelt",
+      "price": 50000
+    },
+    {
+      "item": "terracraft:goblin_battle_standard",
+      "price": 20000
+    }
+  ]
+}

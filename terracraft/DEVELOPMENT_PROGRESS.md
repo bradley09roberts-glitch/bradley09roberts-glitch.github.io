@@ -183,24 +183,58 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - Wall of Flesh renderer (tiled flesh sheet + mouth model, enlarged culling box); `ShooterFlyerMob` replaces
   the Hornet-only class; fire-immune enemy registration.
 
-## IN PROGRESS
-- Stage 4 continues with 4d (Goblin Army, Goblin Tinkerer, reforging) and 4e (Meteorite).
+### Stage 4d: Goblin Army, Goblin Tinkerer, reforging (verified in a live client)
+- **Invasions** in the event framework (`TerrariaEvent.invasion`): ignore the time of day, end at a kill goal of
+  their own members, replace the normal surface spawns and show a progress boss bar. **Goblin Army**: starts
+  at dawn (1 in 3; 1 in 30 once beaten) after a Shadow Orb/Crimson Heart was smashed and someone has 200+ max
+  life, or with a Goblin Battle Standard (Tattered Cloth); 80 goblins: Peon, Thief, Warrior, Archer
+  (`ArcherMob`), Sorcerer (chaos balls). Defeat sets `event_goblin_army_defeated`.
+- **Goblin Tinkerer**: a Bound Goblin then waits tied up in a cave near an underground player
+  (`npc.BoundNpcs`); talking to him frees him (`npc_goblin_tinkerer_rescued`) and he becomes a town NPC who sells
+  the Tinkerer's Workshop, Toolbelt and Battle Standards and **reforges** the held item for coins.
+- **Prefixes** (`item.modifier`): 72 Terraria prefixes (universal, melee, ranged, magic, accessory) stored on
+  the stack; applying one rescales the stack's stats (damage, speed, crit, knockback, velocity, mana, value)
+  and melee attack attributes, adds the prefix to the name ("Unpleasant Copper Broadsword") and green/red
+  tooltip lines; accessory prefixes add defense, mana, crit, damage, movement or melee speed. Crafted weapons,
+  tools and accessories get a random prefix (3 in 4).
+- **Tinkerer's Workshop** combinations: Obsidian Horseshoe, Cloud in a Balloon, Obsidian Shield, Obsidian Water
+  Walking Boots, Lava Waders, Mana Flower.
 
-## NEXT (Stage 4: Dungeon, Jungle, Underworld - the road to Hardmode)
+### Stage 4e: Meteorite (verified in a live client)
+- `world.MeteorManager`: smashing an orb/heart has a 1 in 2 chance to send a meteor that night; afterwards
+  meteors land on about 1 in 50 nights. It lands 60-110 blocks from a player (not in water), carving a crater
+  lined with Meteorite ("A meteorite has landed!"); `/terraria meteor` drops one. Meteor Heads (wall-phasing
+  flaming skulls) haunt the latest crater while a player is near.
+- Meteorite (50% power) -> Meteorite Bar; Meteor armor (+7% magic damage per piece; set: free Space Gun);
+  Space Gun (laser).
+
+## IN PROGRESS
+- Nothing half-finished. Stage 4 (the road to Hardmode) is complete; next is Stage 5 (Hardmode).
+
+## NEXT (Stage 5: Hardmode)
+1. World changes at Hardmode: Hallow and evil V-stripes, biome spread, hardmode ores from altars
+   (Cobalt/Palladium, Mythril/Orichalcum, Adamantite/Titanium) and their anvils/forges, gear.
+2. Hardmode enemies (surface, underground, Hallow, evil), Wyverns, mimics, souls (Light/Night/Flight), wings.
+3. Mechanical bosses (The Twins, The Destroyer, Skeletron Prime) and Queen Slime; Mechanic, Wizard, Steampunker.
+4. Pirate Invasion and Frost Legion.
+
+## DONE: Stage 4 plan (kept for reference)
 1. ~~Dungeon and Skeletron~~ (done, 4a).
 2. ~~Jungle and Queen Bee~~ (done, 4b). Original plan: Jungle mapping (vanilla jungles + underground jungle mud/moss, Jungle Spores, Hornets, Man Eaters),
    Queen Bee (bee hives, Abeemination), Jungle armor and gear.
 3. ~~Underworld and Wall of Flesh~~ (done, 4c). Original plan: Underworld layer below the caverns (ash, hellstone with 65 power, lava lakes, ruined houses), Imps,
    Demons, Voodoo Demons, Fire Imp, Bone Serpent (worm framework); Hellforge, Molten gear, Hellstone bars.
 4. Wall of Flesh (Guide Voodoo Doll, wall that spans the Underworld) and the Hardmode switch.
-5. Goblin Army invasion (Shadow Orb trigger), Goblin Tinkerer, Tinkerer's Workshop, reforging and modifiers.
-6. Meteorite (first orb/heart triggers a meteor landing), Meteor armor and Space Gun.
+5. ~~Goblin Army, Goblin Tinkerer, Tinkerer's Workshop, reforging and modifiers~~ (done, 4d).
+6. ~~Meteorite, Meteor armor and Space Gun~~ (done, 4e).
 
 ## KNOWN BUGS
 - The Dungeon only appears in chunks generated after installing this version; in older worlds part of it may be
   missing where chunks already existed (use a new world or unexplored location).
 - If every player leaves while Skeletron is alive, the boss stays in its unloaded chunk; the Old Man may
   return meanwhile, and Skeletron resumes (or despawns) once the area is loaded again.
+- Prefixes change stats but not projectile size or melee reach ("size" prefixes are cosmetic for now).
+- Only the latest meteorite crater spawns Meteor Heads.
 - The Underworld is deadly for a fresh character (as in Terraria); tests need Obsidian Skin / fire resistance.
 - Boss loot that falls into lava burns (except the Wall of Flesh, which hands its loot to the nearest player).
 - Jungle conversion follows vanilla jungle biomes, which are smaller than Terraria's Jungle; mangrove swamps (also

@@ -62,6 +62,7 @@ public final class NpcManager {
     public static void register() {
         BusGroup.DEFAULT.register(MethodHandles.lookup(), NpcManager.class);
         NpcCommands.register();
+        BoundNpcs.register();
     }
 
     @SubscribeEvent
@@ -167,7 +168,7 @@ public final class NpcManager {
     }
 
     private static void maintainHouse(ServerLevel level, NpcWorldData data, TownNpcType type, NpcWorldData.Record record) {
-        if (type == TownNpcs.OLD_MAN || !(level.getEntity(record.entity().get()) instanceof TownNpc npc)) {
+        if (TownNpcs.isStationary(type) || !(level.getEntity(record.entity().get()) instanceof TownNpc npc)) {
             return;
         }
         if (level.getGameTime() % 1200 >= CHECK_INTERVAL) {
@@ -191,11 +192,17 @@ public final class NpcManager {
     /** Spawns (or respawns) a town NPC in its house, or near a player when it has none. */
     public static @Nullable TownNpc spawn(ServerLevel level, NpcWorldData data, TownNpcType type, @Nullable BlockPos house, String name,
                                           boolean announce) {
+        return spawn(level, data, type, house, name, announce, null);
+    }
+
+    /** @param where position to appear at when homeless (null = in the house, or near the first player) */
+    public static @Nullable TownNpc spawn(ServerLevel level, NpcWorldData data, TownNpcType type, @Nullable BlockPos house, String name,
+                                          boolean announce, @Nullable BlockPos where) {
         TownNpc npc = type.entity().get().create(level, EntitySpawnReason.EVENT);
         if (npc == null) {
             return null;
         }
-        BlockPos at = house;
+        BlockPos at = house != null ? house : where;
         if (at == null) {
             ServerPlayer player = level.getServer().getPlayerList().getPlayers().get(0);
             int x = Mth.floor(player.getX()) + level.getRandom().nextInt(9) - 4;
@@ -240,6 +247,10 @@ public final class NpcManager {
 
     public static void openChat(ServerPlayer player, TownNpc npc, @Nullable String dialogueKey, String arg) {
         TownNpcType type = npc.npcType();
+        if (type == TownNpcs.BOUND_GOBLIN) {
+            BoundNpcs.rescue(player, npc);
+            return;
+        }
         npc.startTalking(player);
         if (dialogueKey == null) {
             int line = 1 + player.getRandom().nextInt(type.dialogueLines());
@@ -297,6 +308,11 @@ public final class NpcManager {
                     int tip = 1 + player.getRandom().nextInt(HELP_TIPS);
                     String arg = tip == HELP_TIPS ? com.terracraft.world.dungeon.DungeonManager.directions(player.level(), player.blockPosition()) : "";
                     openChat(player, npc, type.roleKey() + ".help." + tip, arg);
+                }
+            }
+            case "reforge" -> {
+                if (type.services().contains(TownNpcType.Service.REFORGE)) {
+                    BoundNpcs.reforge(player, npc);
                 }
             }
             case "curse" -> {

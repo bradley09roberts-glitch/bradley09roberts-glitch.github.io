@@ -85,6 +85,10 @@ public final class ItemTooltips {
             }
             accessory.effects().appendTooltip(lines::add);
         }
+        com.terracraft.item.modifier.Modifier modifier = com.terracraft.item.modifier.Modifiers.of(stack);
+        if (modifier != null) {
+            modifier.describe(lines::add);
+        }
         Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         String descriptionKey = "item." + id.getNamespace() + "." + id.getPath() + ".tooltip";
         if (net.minecraft.locale.Language.getInstance().has(descriptionKey)) {

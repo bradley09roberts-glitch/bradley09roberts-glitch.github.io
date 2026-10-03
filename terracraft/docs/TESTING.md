@@ -84,3 +84,12 @@ ruined houses, a Guide Voodoo Doll in lava killing the Guide and awakening the W
 eyes, mouth and The Hungry rendering, defeat setting `boss_wall_of_flesh_defeated` and `hardmode_active` with the
 Terraria announcement, loot (Pwnhammer, emblem, Breaker Blade) delivered to the player. Underworld enemies spawn
 fast enough to kill an unequipped test character within seconds.
+
+## What was verified for Stages 4d and 4e (in the live client)
+
+`/terraria event start goblin_army`: progress bar, only goblins spawning on the surface (14 within 25 s), goblin
+models, kills counted toward the goal, "The Goblin Army has been defeated!" and the progression flag; the Bound
+Goblin appearing in a cave near the underground player, talking to him freeing the Goblin Tinkerer (arrival
+message, Shop + Reforge buttons), reforging the held Copper Broadsword (Pointy, Ruthless, Light, Unpleasant;
+coins deducted; name and green tooltip lines updated); `/terraria meteor` landing a crater lined with Meteorite
+("A meteorite has landed!") and Meteor Heads spawning around it.

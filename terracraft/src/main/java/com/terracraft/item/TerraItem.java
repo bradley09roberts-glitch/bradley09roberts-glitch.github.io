@@ -13,7 +13,13 @@ public class TerraItem extends Item {
 
     @Override
     public Component getName(ItemStack stack) {
-        return colored(super.getName(stack), stack);
+        return colored(prefixed(super.getName(stack), stack), stack);
+    }
+
+    /** "Legendary Copper Broadsword": the Terraria prefix in front of the name. */
+    public static Component prefixed(Component name, ItemStack stack) {
+        com.terracraft.item.modifier.Modifier modifier = com.terracraft.item.modifier.Modifiers.of(stack);
+        return modifier == null ? name : Component.translatable("modifier.terracraft.name_format", modifier.displayName(), name);
     }
 
     /** Applies the rarity colour from the stack's stats (shared by every TerraCraft item class). */

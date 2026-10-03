@@ -45,6 +45,7 @@ public final class OrbSmashing {
         level.playSound(null, pos, crimson ? SoundEvents.SLIME_DEATH : SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.BLOCKS, 2.0F, 0.5F);
         boolean firstEver = ProgressionManager.set(level.getServer(), ProgressionFlags.ORB_SMASHED, true);
         int count = ProgressionManager.incrementCounter(level.getServer(), COUNTER, 1);
+        com.terracraft.world.MeteorManager.onOrbSmashed(level.getServer(), level.getRandom());
         if (count % 3 == 0) {
             bossSummoner.summon(level, player, crimson);
         } else if (!firstEver) {

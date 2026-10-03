@@ -70,7 +70,7 @@ def evil_blocks():
     write(f'{NS}/tags/block/evil/all.json', {'values': corruption + crimson})
     write(f'{NS}/tags/block/stations/demon_altar.json', {'values': [t('demon_altar'), t('crimson_altar')]})
     write('minecraft/tags/block/mineable/shovel.json', {'values': [t('corrupt_grass'), t('crimson_grass'), t('jungle_grass'), t('ash')]})
-    write('minecraft/tags/block/mineable/axe.json', {'values': [t('work_bench'), t('ebonwood'), t('shadewood')]})
+    write('minecraft/tags/block/mineable/axe.json', {'values': [t('work_bench'), t('ebonwood'), t('shadewood'), t('tinkerers_workshop')]})
     write('minecraft/tags/block/mineable/hoe.json', {'values': [t('ebonwood_leaves'), t('shadewood_leaves')]})
     balls = {'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('musket_ball'), 'functions': [{'function': 'minecraft:set_count', 'count': 100}]}]}
     write(f'{NS}/loot_table/gameplay/shadow_orb.json', {'type': 'minecraft:empty', 'pools': [
@@ -179,6 +179,32 @@ def underworld():
         {'rolls': 1, 'entries': [entry('breaker_blade'), entry('laser_rifle')]}]})
 
 
+GOBLIN_BLOCKS = ['tinkerers_workshop', 'meteorite']
+MODIFIER_NAMES = {
+    'keen': 'Keen', 'superior': 'Superior', 'forceful': 'Forceful', 'broken': 'Broken', 'damaged': 'Damaged', 'shoddy': 'Shoddy',
+    'hurtful': 'Hurtful', 'strong': 'Strong', 'unpleasant': 'Unpleasant', 'weak': 'Weak', 'ruthless': 'Ruthless', 'godly': 'Godly',
+    'demonic': 'Demonic', 'zealous': 'Zealous', 'large': 'Large', 'massive': 'Massive', 'dangerous': 'Dangerous', 'savage': 'Savage',
+    'sharp': 'Sharp', 'pointy': 'Pointy', 'tiny': 'Tiny', 'terrible': 'Terrible', 'small': 'Small', 'dull': 'Dull', 'unhappy': 'Unhappy',
+    'bulky': 'Bulky', 'shameful': 'Shameful', 'heavy': 'Heavy', 'light': 'Light', 'legendary': 'Legendary', 'sighted': 'Sighted',
+    'rapid': 'Rapid', 'hasty': 'Hasty', 'intimidating': 'Intimidating', 'deadly': 'Deadly', 'staunch': 'Staunch', 'awful': 'Awful',
+    'lethargic': 'Lethargic', 'awkward': 'Awkward', 'powerful': 'Powerful', 'frenzying': 'Frenzying', 'unreal': 'Unreal',
+    'mystic': 'Mystic', 'adept': 'Adept', 'masterful': 'Masterful', 'inept': 'Inept', 'ignorant': 'Ignorant', 'deranged': 'Deranged',
+    'intense': 'Intense', 'taboo': 'Taboo', 'celestial': 'Celestial', 'furious': 'Furious', 'manic': 'Manic', 'mythical': 'Mythical',
+    'hard': 'Hard', 'guarding': 'Guarding', 'armored': 'Armored', 'warding': 'Warding', 'arcane': 'Arcane', 'precise': 'Precise',
+    'lucky': 'Lucky', 'jagged': 'Jagged', 'spiked': 'Spiked', 'angry': 'Angry', 'menacing': 'Menacing', 'brisk': 'Brisk',
+    'fleeting': 'Fleeting', 'hasty_accessory': 'Hasty', 'quick': 'Quick', 'wild': 'Wild', 'rash': 'Rash', 'intrepid': 'Intrepid',
+    'violent': 'Violent',
+}
+
+
+def goblins():
+    for b in GOBLIN_BLOCKS:
+        write(f'{NS}/loot_table/blocks/{b}.json', self_loot(b))
+    write(f'{NS}/tags/block/stations/tinkerers_workshop.json', {'values': [t('tinkerers_workshop')]})
+    write(f'{NS}/terracraft/mining_power/meteorite.json', {'pickaxe_power': 50, 'blocks': [t('meteorite')]})
+    write(f'{NS}/tags/block/meteorite.json', {'values': [t('meteorite')]})
+
+
 def blocks():
     for m in METALS:
         for ore in (f'{m}_ore', f'deepslate_{m}_ore'):
@@ -191,7 +217,7 @@ def blocks():
     write('minecraft/tags/block/mineable/pickaxe.json', {'values': [t(o) for o in ORES] + [t('iron_anvil'), t('lead_anvil'), t('life_crystal_block'),
                                                                    t('ebonstone'), t('crimstone'), t('demonite_ore'), t('crimtane_ore'),
                                                                    t('blue_brick'), t('green_brick'), t('pink_brick'), t('spikes'), t('hive'), t('hellstone'),
-                                                                   t('obsidian_brick'), t('hellstone_brick'), t('hellforge')]})
+                                                                   t('obsidian_brick'), t('hellstone_brick'), t('hellforge'), t('meteorite')]})
     write('minecraft/tags/block/needs_stone_tool.json', {'values': [t(f'{p}{m}_ore') for m in STONE_TIER for p in ('', 'deepslate_')]})
     write('minecraft/tags/block/needs_iron_tool.json', {'values': [t(f'{p}{m}_ore') for m in IRON_TIER for p in ('', 'deepslate_')]})
     write(f'{NS}/tags/block/mineable/hammer.json', {'values': [t('shadow_orb'), t('crimson_heart'), t('demon_altar'), t('crimson_altar')]})
@@ -299,6 +325,20 @@ def terraria_recipes():
     recipe('molten_helmet', t('molten_helmet'), [(HBAR, 10)], [ANVIL], category='armor')
     recipe('molten_breastplate', t('molten_breastplate'), [(HBAR, 20)], [ANVIL], category='armor')
     recipe('molten_greaves', t('molten_greaves'), [(HBAR, 15)], [ANVIL], category='armor')
+    TINKER = t('tinkerers_workshop')
+    recipe('goblin_battle_standard', t('goblin_battle_standard'), [(t('tattered_cloth'), 10), (PLANKS, 5)], [WB], category='consumables')
+    recipe('obsidian_horseshoe', t('obsidian_horseshoe'), [(t('lucky_horseshoe'), 1), (t('obsidian_skull'), 1)], [TINKER], category='accessories')
+    recipe('cloud_in_a_balloon', t('cloud_in_a_balloon'), [(t('cloud_in_a_bottle'), 1), (t('shiny_red_balloon'), 1)], [TINKER], category='accessories')
+    recipe('obsidian_shield', t('obsidian_shield'), [(t('cobalt_shield'), 1), (t('obsidian_skull'), 1)], [TINKER], category='accessories')
+    recipe('obsidian_water_walking_boots', t('obsidian_water_walking_boots'), [(t('water_walking_boots'), 1), (t('obsidian_skull'), 1)], [TINKER],
+           category='accessories')
+    recipe('lava_waders', t('lava_waders'), [(t('obsidian_water_walking_boots'), 1), (t('lava_charm'), 1)], [TINKER], category='accessories')
+    recipe('mana_flower', t('mana_flower'), [(t('natures_gift'), 1), (t('lesser_mana_potion'), 1)], [TINKER], category='accessories')
+    recipe('meteorite_bar', t('meteorite_bar'), [(t('meteorite'), 3)], [FURNACE], category='materials')
+    recipe('space_gun', t('space_gun'), [(t('meteorite_bar'), 20)], [ANVIL], category='weapons')
+    recipe('meteor_helmet', t('meteor_helmet'), [(t('meteorite_bar'), 20)], [ANVIL], category='armor')
+    recipe('meteor_suit', t('meteor_suit'), [(t('meteorite_bar'), 30)], [ANVIL], category='armor')
+    recipe('meteor_leggings', t('meteor_leggings'), [(t('meteorite_bar'), 25)], [ANVIL], category='armor')
     recipe('demonite_bar', t('demonite_bar'), [(t('demonite_ore'), 3)], [FURNACE], category='materials')
     recipe('crimtane_bar', t('crimtane_bar'), [(t('crimtane_ore'), 3)], [FURNACE], category='materials')
     # ---- by hand / work bench basics
@@ -401,7 +441,7 @@ def lang():
     items_dir = os.path.join(RES, 'assets/terracraft/items')
     for fname in sorted(os.listdir(items_dir)):
         name = fname[:-5]
-        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in JUNGLE_BLOCKS or name in UNDERWORLD_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
+        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in JUNGLE_BLOCKS or name in UNDERWORLD_BLOCKS or name in GOBLIN_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
                else 'item.') + f'{NS}.{name}'
         L[key] = title(name)
     L['block.terracraft.life_crystal_block'] = 'Life Crystal'
@@ -612,6 +652,8 @@ def lang():
         L[f'entity.terracraft.{npc}'] = name
         for i, line in enumerate(NPC_DIALOGUE[npc], 1):
             L[f'npc.terracraft.{npc}.dialogue.{i}'] = line
+    for mid, name in MODIFIER_NAMES.items():
+        L[f'modifier.terracraft.{mid}'] = name
     for i, line in enumerate(GUIDE_HELP, 1):
         L[f'npc.terracraft.guide.help.{i}'] = line
     L.update({
@@ -645,6 +687,39 @@ def lang():
         'item.terracraft.summoner_emblem.tooltip': '15% increased summon damage',
         'armor_set.terracraft.molten.bonus': '17% increased melee damage',
         'block.terracraft.locked_shadow_chest': 'Shadow Chest',
+        'event.terracraft.goblin_army': 'Goblin Army',
+        'event.terracraft.goblin_army.start': 'A goblin army is approaching!',
+        'event.terracraft.goblin_army.end': 'The Goblin Army has been defeated!',
+        'npc.terracraft.goblin_tinkerer.rescued': "Thanks, %s! Those goblins left me tied up down here. I'll find a place in your town.",
+        'npc.terracraft.goblin_tinkerer.reforged': "There you go - %s! Much better. Probably.",
+        'npc.terracraft.goblin_tinkerer.cannot_reforge': "Hold a weapon, a tool or an accessory and I'll reforge it.",
+        'npc.terracraft.goblin_tinkerer.too_poor': "That'll cost %s. Come back when your purse is heavier.",
+        'screen.terracraft.npc.reforge': 'Reforge',
+        'message.terracraft.reforged': 'Reforged: %s',
+        'message.terracraft.meteor.landed': 'A meteorite has landed!',
+        'modifier.terracraft.name_format': '%s %s',
+        'modifier.terracraft.line.damage': '%s damage',
+        'modifier.terracraft.line.speed': '%s speed',
+        'modifier.terracraft.line.crit': '%s critical strike chance',
+        'modifier.terracraft.line.mana_cost_reduction': '%s mana cost reduction',
+        'modifier.terracraft.line.size': '%s size',
+        'modifier.terracraft.line.velocity': '%s velocity',
+        'modifier.terracraft.line.knockback': '%s knockback',
+        'modifier.terracraft.line.defense': '%s defense',
+        'modifier.terracraft.line.max_mana': '%s mana',
+        'modifier.terracraft.line.move_speed': '%s movement speed',
+        'modifier.terracraft.line.melee_speed': '%s melee speed',
+        'ability.terracraft.free_space_gun': 'Space Gun costs no mana',
+        'armor_set.terracraft.meteor.bonus': 'Space Gun costs 0 mana',
+        'item.terracraft.goblin_battle_standard.tooltip': 'Summons a Goblin Army',
+        'item.terracraft.obsidian_horseshoe.tooltip': 'Negates fall damage and grants immunity to fire blocks',
+        'item.terracraft.cloud_in_a_balloon.tooltip': 'Allows the holder to double jump and increases jump height',
+        'item.terracraft.obsidian_shield.tooltip': 'Grants immunity to knockback and fire blocks',
+        'item.terracraft.obsidian_water_walking_boots.tooltip': 'Provides the ability to walk on water and immunity to fire blocks',
+        'item.terracraft.lava_waders.tooltip': 'Provides the ability to walk on water and lava; 7 seconds of lava immunity',
+        'item.terracraft.mana_flower.tooltip': '8% reduced mana usage; automatically use mana potions when needed',
+        'item.terracraft.space_gun.tooltip': 'Free to fire in full Meteor armor',
+        'item.terracraft.meteorite.tooltip': 'Warm to the touch',
         'npc.terracraft.old_man.day': "My master cannot be summoned under the light of day.",
         'screen.terracraft.npc.curse': 'Curse',
         'message.terracraft.chest.locked.golden_key': 'It is locked. A Golden Key would open it.',
@@ -749,6 +824,12 @@ MOBS = {
     'wall_of_flesh': ('Wall of Flesh', None),
     'wall_of_flesh_eye': ('Wall of Flesh', []),
     'the_hungry': ('The Hungry', []),
+    'goblin_peon': ('Goblin Peon', [('tattered_cloth', 1, 1, 0.25)]),
+    'goblin_thief': ('Goblin Thief', [('tattered_cloth', 1, 1, 0.25)]),
+    'goblin_warrior': ('Goblin Warrior', [('tattered_cloth', 1, 1, 0.25)]),
+    'goblin_sorcerer': ('Goblin Sorcerer', [('tattered_cloth', 1, 1, 0.25)]),
+    'goblin_archer': ('Goblin Archer', [('tattered_cloth', 1, 1, 0.25)]),
+    'meteor_head': ('Meteor Head', []),
     'king_slime': ('King Slime', [('gel', 40, 80, 1.0), ('slime_crown', 1, 1, 0.1)]),
     'eye_of_cthulhu': ('Eye of Cthulhu', [('lens', 3, 6, 1.0)]),
 }
@@ -814,6 +895,13 @@ SPAWNS = {
         dict(entity='voodoo_demon', weight=2, layers=['underworld'], placement='air'),
         dict(entity='hellbat', weight=6, layers=['underworld'], placement='air'),
         dict(entity='bone_serpent', weight=2, layers=['underworld']),
+    ],
+    'goblin_army': [
+        dict(entity='goblin_peon', weight=10, layers=['surface'], group=[1, 3], event='goblin_army'),
+        dict(entity='goblin_thief', weight=7, layers=['surface'], group=[1, 2], event='goblin_army'),
+        dict(entity='goblin_warrior', weight=6, layers=['surface'], event='goblin_army'),
+        dict(entity='goblin_archer', weight=4, layers=['surface'], event='goblin_army'),
+        dict(entity='goblin_sorcerer', weight=3, layers=['surface'], event='goblin_army'),
     ],
     'dungeon': [
         dict(entity='angry_bones', weight=10, layers=['surface', 'underground', 'cavern'], group=[1, 2], **DUNGEON),
@@ -960,7 +1048,8 @@ def worldgen():
 
 # --- Town NPCs -------------------------------------------------------------------------------------
 NPC_NAMES = {'guide': 'Guide', 'merchant': 'Merchant', 'nurse': 'Nurse', 'demolitionist': 'Demolitionist',
-             'arms_dealer': 'Arms Dealer', 'dryad': 'Dryad', 'old_man': 'Old Man', 'clothier': 'Clothier'}
+             'arms_dealer': 'Arms Dealer', 'dryad': 'Dryad', 'old_man': 'Old Man', 'clothier': 'Clothier', 'bound_goblin': 'Bound Goblin',
+             'goblin_tinkerer': 'Goblin Tinkerer'}
 NPC_DIALOGUE = {
     'guide': [
         "Hello, %s. If you're new here, chop some trees and build a shelter before nightfall.",
@@ -1028,6 +1117,15 @@ NPC_DIALOGUE['clothier'] = [
     "The Dungeon is yours to explore now. Mind the spikes.",
     "Sometimes I still hear the bones rattling down there.",
 ]
+NPC_DIALOGUE['bound_goblin'] = ["Thank you for freeing me, %s!"]
+NPC_DIALOGUE['goblin_tinkerer'] = [
+    "Hey, %s. Need something fixed? Or improved? I do both. For a price.",
+    "Goblins are great at two things: tinkering and making a mess. I specialise in the first one.",
+    "Bring me your gear and some coin and I'll give it a new edge. No promises it's a better one.",
+    "A Tinkerer's Workshop lets you combine accessories. Two for the price of one slot!",
+    "My old army keeps coming back. Don't worry, I don't take it personally.",
+    "Rocket science? I'm more of a rocket boots kind of goblin.",
+]
 GUIDE_HELP = [
     "Press V to open the crafting menu. It shows everything you can make with the stations around you.",
     "Press R to open your equipment. Accessories go in the slots next to your armor.",
@@ -1082,6 +1180,11 @@ SHOPS = {
         {'item': 'minecraft:black_dye', 'price': 200},
         {'item': 'minecraft:carved_pumpkin', 'price': 1000, 'time': 'night'},
     ],
+    'goblin_tinkerer': [
+        {'item': t('tinkerers_workshop'), 'price': 100000},
+        {'item': t('toolbelt'), 'price': 50000},
+        {'item': t('goblin_battle_standard'), 'price': 20000},
+    ],
     'demolitionist': [
         {'item': 'minecraft:tnt', 'price': 1500},
         {'item': 'minecraft:flint_and_steel', 'price': 500},
@@ -1108,6 +1211,7 @@ def main():
     dungeon()
     jungle()
     underworld()
+    goblins()
     damage()
     smelting()
     terraria_recipes()

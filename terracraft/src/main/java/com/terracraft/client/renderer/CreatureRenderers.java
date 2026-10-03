@@ -102,6 +102,14 @@ public final class CreatureRenderers {
         register(event, MobContent.WALL_OF_FLESH.get(), WallOfFleshRenderer::new);
         eye(event, MobContent.WALL_OF_FLESH_EYE.get(), 3.2F);
         maw(event, MobContent.THE_HUNGRY.get(), 1.0F);
+        // Goblin Army (goblins are a bit shorter than people)
+        for (var goblin : java.util.List.of(MobContent.GOBLIN_PEON, MobContent.GOBLIN_THIEF, MobContent.GOBLIN_SORCERER, MobContent.GOBLIN_ARCHER)) {
+            register(event, goblin.get(), ctx -> new TerraModelRenderer<>(ctx,
+                new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F * 1.5F / 1.8F, 0.4F, false));
+        }
+        register(event, MobContent.GOBLIN_WARRIOR.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F * 1.7F / 1.8F, 0.45F, false));
+        eye(event, MobContent.METEOR_HEAD.get(), 0.7F);
         for (var npc : NpcContent.all()) {
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,
                 new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F, 0.5F, false));

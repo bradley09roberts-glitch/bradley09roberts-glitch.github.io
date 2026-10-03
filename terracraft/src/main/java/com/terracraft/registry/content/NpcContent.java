@@ -27,6 +27,9 @@ public final class NpcContent {
     public static final RegistryObject<EntityType<TownNpc>> DRYAD = npc("dryad");
     public static final RegistryObject<EntityType<TownNpc>> OLD_MAN = npc("old_man");
     public static final RegistryObject<EntityType<TownNpc>> CLOTHIER = npc("clothier");
+    /** Found tied up in the caverns after the Goblin Army: talking to him frees him. */
+    public static final RegistryObject<EntityType<TownNpc>> BOUND_GOBLIN = npc("bound_goblin");
+    public static final RegistryObject<EntityType<TownNpc>> GOBLIN_TINKERER = npc("goblin_tinkerer");
 
     /** Right-click a room to check whether it is valid Terraria housing. */
     public static final RegistryObject<HousingQueryItem> HOUSING_QUERY = ModItems.register("housing_query", TabGroup.TOOLS_ARMOR,

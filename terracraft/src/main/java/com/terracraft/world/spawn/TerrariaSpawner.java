@@ -136,7 +136,12 @@ public final class TerrariaSpawner {
         WorldProgression progression = WorldProgression.get(level.getServer());
         List<SpawnRule> eligible = new ArrayList<>();
         int totalWeight = 0;
+        var running = com.terracraft.world.event.EventManager.active(level.getServer());
+        boolean invasion = running != null && running.invasion() && context.layer().ordinal() <= TerrariaLayer.SURFACE.ordinal();
         for (SpawnRule rule : rules) {
+            if (invasion && !rule.event().equals(running.id())) {
+                continue;   // invasions replace the normal surface enemies
+            }
             if (rule.weight() > 0 && rule.matches(context, progression)) {
                 eligible.add(rule);
                 totalWeight += rule.weight();

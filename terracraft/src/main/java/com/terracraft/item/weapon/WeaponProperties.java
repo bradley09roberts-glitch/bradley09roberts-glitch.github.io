@@ -32,6 +32,13 @@ public final class WeaponProperties {
      * knockback become vanilla main-hand attribute modifiers so vanilla melee combat uses Terraria numbers.
      */
     public static Item.Properties melee(Item.Properties properties, TerraItemStats stats) {
+        // Terraria-style tooltip lines replace vanilla's "When in Main Hand" attribute block.
+        return stats(properties, stats).attributes(meleeAttributes(stats)).stacksTo(1)
+            .component(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true));
+    }
+
+    /** Main-hand attack damage, speed and knockback for melee stats (also rebuilt when a prefix changes them). */
+    public static ItemAttributeModifiers meleeAttributes(TerraItemStats stats) {
         ItemAttributeModifiers.Builder attributes = ItemAttributeModifiers.builder()
             .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID,
                 Math.max(0, stats.damage() - PLAYER_BASE_DAMAGE), AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
@@ -41,8 +48,6 @@ public final class WeaponProperties {
             attributes.add(Attributes.ATTACK_KNOCKBACK, new AttributeModifier(KNOCKBACK_ID,
                 stats.knockback() * DamageCalc.KNOCKBACK_SCALE, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
         }
-        // Terraria-style tooltip lines replace vanilla's "When in Main Hand" attribute block.
-        return stats(properties, stats).attributes(attributes.build()).stacksTo(1)
-            .component(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true));
+        return attributes.build();
     }
 }

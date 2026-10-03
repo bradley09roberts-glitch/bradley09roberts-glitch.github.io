@@ -55,6 +55,11 @@ public final class EventManager {
         return event.id().equals(EventState.get(server).active());
     }
 
+    /** Progress bar of the running invasion ("Goblin Army": kills toward its goal). */
+    private static final net.minecraft.server.level.ServerBossEvent INVASION_BAR = new net.minecraft.server.level.ServerBossEvent(
+        java.util.UUID.fromString("6f0d1c33-4a5e-4d3e-9b6a-2c1f0b7d9e11"), Component.empty(),
+        net.minecraft.world.BossEvent.BossBarColor.RED, net.minecraft.world.BossEvent.BossBarOverlay.NOTCHED_10);
+
     public static void start(MinecraftServer server, TerrariaEvent event) {
         EventState state = EventState.get(server);
         state.active = event.id();
@@ -64,8 +69,9 @@ public final class EventManager {
             ProgressionManager.set(server, ProgressionFlags.BLOOD_MOON, true);
         }
         server.getPlayerList().broadcastSystemMessage(Component.translatable(event.startKey())
-            .withStyle(event == TerrariaEvents.BLOOD_MOON ? ChatFormatting.DARK_RED : ChatFormatting.AQUA), false);
+            .withStyle(event == TerrariaEvents.BLOOD_MOON ? ChatFormatting.DARK_RED : event.invasion() ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.AQUA), false);
         TerraNetwork.sendToAll(new SyncEventPacket(event.id()));
+        updateInvasionBar(server);
     }
 
     public static void stop(MinecraftServer server) {
@@ -78,6 +84,24 @@ public final class EventManager {
             server.getPlayerList().broadcastSystemMessage(Component.translatable(event.endKey()).withStyle(ChatFormatting.GRAY), false);
         }
         TerraNetwork.sendToAll(new SyncEventPacket(""));
+        updateInvasionBar(server);
+    }
+
+    private static void updateInvasionBar(MinecraftServer server) {
+        TerrariaEvent event = active(server);
+        if (event == null || !event.invasion()) {
+            INVASION_BAR.removeAllPlayers();
+            return;
+        }
+        INVASION_BAR.setName(Component.translatable("event.terracraft." + event.id()));
+        INVASION_BAR.setProgress(Math.max(0.0F, 1.0F - EventState.get(server).kills() / (float) event.killGoal()));
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (player.level().dimension() == net.minecraft.world.level.Level.OVERWORLD) {
+                INVASION_BAR.addPlayer(player);
+            } else {
+                INVASION_BAR.removePlayer(player);
+            }
+        }
     }
 
     @SubscribeEvent
@@ -94,12 +118,17 @@ public final class EventManager {
         if (day != state.wasDay) {
             state.wasDay = day;
             state.setDirty();
-            if (active != null && active.night() != !day) {
+            if (active != null && !active.invasion() && active.night() != !day) {
                 stop(server);
                 active = null;
             }
             if (active == null && !server.getPlayerList().getPlayers().isEmpty()) {
-                if (!day && random.nextInt(9) == 0 && server.getPlayerList().getPlayers().stream().anyMatch(p -> p.getMaxHealth() >= 120)) {
+                boolean goblinsReady = ProgressionManager.has(server, ProgressionFlags.ORB_SMASHED)
+                    && server.getPlayerList().getPlayers().stream().anyMatch(p -> p.getMaxHealth() >= 200);
+                int goblinChance = ProgressionManager.has(server, ProgressionFlags.GOBLIN_ARMY) ? 30 : 3;
+                if (day && goblinsReady && random.nextInt(goblinChance) == 0) {
+                    start(server, TerrariaEvents.GOBLIN_ARMY);
+                } else if (!day && random.nextInt(9) == 0 && server.getPlayerList().getPlayers().stream().anyMatch(p -> p.getMaxHealth() >= 120)) {
                     start(server, TerrariaEvents.BLOOD_MOON);
                 } else if (day && random.nextInt(15) == 0) {
                     start(server, TerrariaEvents.SLIME_RAIN);
@@ -108,6 +137,9 @@ public final class EventManager {
         }
         if (active == TerrariaEvents.SLIME_RAIN) {
             rainSlimes(level, random);
+        }
+        if (active != null && active.invasion()) {
+            updateInvasionBar(server);
         }
     }
 
@@ -141,7 +173,25 @@ public final class EventManager {
 
     @SubscribeEvent
     static void onDeath(LivingDeathEvent event) {
-        if (!(event.getEntity() instanceof SlimeMob) || !(event.getEntity().level() instanceof ServerLevel level)) {
+        if (!(event.getEntity().level() instanceof ServerLevel level)) {
+            return;
+        }
+        TerrariaEvent running = active(level.getServer());
+        if (running != null && running.invasion() && event.getSource().getEntity() instanceof ServerPlayer
+            && net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).getPath().startsWith(running.memberPrefix())) {
+            EventState state = EventState.get(level.getServer());
+            state.kills++;
+            state.setDirty();
+            updateInvasionBar(level.getServer());
+            if (state.kills >= running.killGoal()) {
+                stop(level.getServer());
+                if (running == TerrariaEvents.GOBLIN_ARMY) {
+                    ProgressionManager.markDefeated(level.getServer(), ProgressionFlags.GOBLIN_ARMY);
+                }
+            }
+            return;
+        }
+        if (!(event.getEntity() instanceof SlimeMob)) {
             return;
         }
         MinecraftServer server = level.getServer();

@@ -18,6 +18,11 @@ public final class ModDataComponents {
     public static final DataComponentType<TerraItemStats> STATS = register("stats",
         DataComponentType.<TerraItemStats>builder().persistent(TerraItemStats.CODEC).networkSynchronized(TerraItemStats.STREAM_CODEC).cacheEncoding().build());
 
+    /** Terraria prefix of a weapon, tool or accessory ("legendary", "warding"...), see {@code item.modifier.Modifiers}. */
+    public static final DataComponentType<String> MODIFIER = register("modifier",
+        DataComponentType.<String>builder().persistent(com.mojang.serialization.Codec.STRING)
+            .networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.STRING_UTF8).build());
+
     private ModDataComponents() {}
 
     static <T> DataComponentType<T> register(String name, DataComponentType<T> type) {

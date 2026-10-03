@@ -29,7 +29,7 @@ public record TownNpcType(
     int dialogueLines,
     List<Service> services
 ) {
-    public enum Service { SHOP, HEAL, HELP, CURSE }
+    public enum Service { SHOP, HEAL, HELP, CURSE, REFORGE }
 
     public String roleKey() {
         return "npc.terracraft." + id;

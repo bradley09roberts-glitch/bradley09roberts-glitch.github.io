@@ -1,0 +1,52 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:goblin_peon",
+      "weight": 10,
+      "layers": [
+        "surface"
+      ],
+      "group": [
+        1,
+        3
+      ],
+      "event": "goblin_army"
+    },
+    {
+      "entity": "terracraft:goblin_thief",
+      "weight": 7,
+      "layers": [
+        "surface"
+      ],
+      "group": [
+        1,
+        2
+      ],
+      "event": "goblin_army"
+    },
+    {
+      "entity": "terracraft:goblin_warrior",
+      "weight": 6,
+      "layers": [
+        "surface"
+      ],
+      "event": "goblin_army"
+    },
+    {
+      "entity": "terracraft:goblin_archer",
+      "weight": 4,
+      "layers": [
+        "surface"
+      ],
+      "event": "goblin_army"
+    },
+    {
+      "entity": "terracraft:goblin_sorcerer",
+      "weight": 3,
+      "layers": [
+        "surface"
+      ],
+      "event": "goblin_army"
+    }
+  ]
+}

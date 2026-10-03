@@ -20,5 +20,7 @@ public final class TerraContent {
         DungeonContent.init();
         JungleContent.init();
         UnderworldContent.init();
+        GoblinContent.init();
+        MeteorContent.init();
     }
 }

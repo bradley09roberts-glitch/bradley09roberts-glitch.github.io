@@ -32,7 +32,9 @@ public enum Ability implements StringRepresentable {
     /** Panic Necklace: a burst of speed after taking damage. */
     PANIC,
     /** Honey Comb: releases bees and gives a short regeneration boost after taking damage. */
-    HONEY_COMB;
+    HONEY_COMB,
+    /** Meteor armor set: the Space Gun costs no mana. */
+    FREE_SPACE_GUN;
 
     public static final Codec<Ability> CODEC = StringRepresentable.fromEnum(Ability::values);
 

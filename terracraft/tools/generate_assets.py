@@ -2382,6 +2382,106 @@ mob_sprite('voodoo_demon', 16, 12, 3, bat_frame, frame_time=4)
 mob_sprite('lava_slime', 16, 12, 2, lambda c, f: slime_frame(c, '#FF7A20', f, 16, 12), frame_time=10, fullbright=True)
 mob_sprite('hellbat', 16, 12, 3, bat_frame, frame_time=3)
 
+# ----------------------------------------------------------------------------------------- Goblin Army & Meteorite (Stage 4d/4e)
+def meteorite_texture():
+    c = Canvas()
+    p = palette('#5A3A3A')
+    c.noise([p[2], p[2], p[1], p[3]], 801)
+    hot = palette('#FF6A30')
+    rnd = random.Random(802)
+    for _ in range(12):
+        x, y = rnd.randint(0, 15), rnd.randint(0, 15)
+        c.set(x, y, hot[2] if rnd.random() < 0.6 else hot[4])
+    return c
+
+
+def workshop_texture():
+    c = wood_planks(811)
+    for x, y in ((3, 3), (12, 4), (6, 11)):
+        c.circle(x, y, 1.5, palette('#A0A0A8')[3])
+    c.line(8, 2, 13, 7, palette('#C8A040')[2])
+    return c
+
+
+BLOCK_TEXTURES['meteorite'] = meteorite_texture
+BLOCK_TEXTURES['tinkerers_workshop'] = workshop_texture
+
+
+def goblin_block_assets():
+    write_json(os.path.join(ASSETS, 'blockstates/meteorite.json'), {'variants': {'': {'model': 'terracraft:block/meteorite'}}})
+    write_json(os.path.join(ASSETS, 'models/block/meteorite.json'), {'parent': 'minecraft:block/cube_all', 'textures': {'all': 'terracraft:block/meteorite'}})
+    write_json(os.path.join(ASSETS, 'items/meteorite.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/meteorite'}})
+    faces = ['north', 'south', 'east', 'west', 'up', 'down']
+    write_json(os.path.join(ASSETS, 'models/block/tinkerers_workshop.json'), {
+        'parent': 'minecraft:block/block', 'textures': {'particle': 'terracraft:block/tinkerers_workshop', 'wood': 'terracraft:block/tinkerers_workshop'},
+        'elements': [{'from': [0, 10, 0], 'to': [16, 13, 16], 'faces': {f: {'texture': '#wood'} for f in faces}}] + [
+            {'from': [x, 0, z], 'to': [x + 3, 10, z + 3], 'faces': {f: {'texture': '#wood'} for f in ['north', 'south', 'east', 'west', 'down']}}
+            for x, z in [(1, 1), (12, 1), (1, 12), (12, 12)]] + [
+            {'from': [3, 13, 3], 'to': [7, 16, 6], 'faces': {f: {'texture': '#wood'} for f in faces}}]})
+    write_json(os.path.join(ASSETS, 'blockstates/tinkerers_workshop.json'), {'variants': {'': {'model': 'terracraft:block/tinkerers_workshop'}}})
+    write_json(os.path.join(ASSETS, 'items/tinkerers_workshop.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/tinkerers_workshop'}})
+
+
+def draw_cloth(c):
+    p = palette('#8A7A5A')
+    c.polygon([(2, 3), (13, 2), (14, 12), (9, 14), (3, 12)], p[2])
+    for x in range(3, 13, 3):
+        c.line(x, 4, x + 1, 12, p[1])
+    c.set(14, 12, (0, 0, 0, 0)); c.set(2, 3, (0, 0, 0, 0))
+    c.outline()
+
+
+def draw_standard(c):
+    c.line(4, 15, 4, 1, WOOD[1], 1)
+    p = palette('#7A3A8A')
+    c.polygon([(5, 2), (14, 3), (12, 7), (14, 11), (5, 10)], p[2])
+    c.circle(9, 6, 1.5, hexc('#E8C040'))
+    c.outline()
+
+
+def draw_meteor_gun(c):
+    p = palette('#C04030')
+    c.rect(3, 5, 12, 8, p[2]); c.rect(12, 6, 14, 7, hexc('#80FF60'))
+    c.polygon([(4, 9), (7, 9), (6, 13), (4, 13)], p[1])
+    c.light()
+    c.outline()
+
+
+item('tattered_cloth', draw_cloth)
+item('goblin_battle_standard', draw_standard)
+item('obsidian_horseshoe', lambda c: (draw_horseshoe(c), c.set(8, 8, hexc('#3A2A4A'))))
+item('cloud_in_a_balloon', lambda c: draw_balloon(c))
+item('obsidian_shield', lambda c: draw_shield(c, '#3A2A4A'))
+item('obsidian_water_walking_boots', lambda c: draw_boots(c, '#3A2A4A'))
+item('lava_waders', lambda c: draw_boots(c, '#E05A20', wings=True))
+item('mana_flower', lambda c: (draw_flower(c), c.circle(8, 6, 1.5, hexc('#3C64F0'))))
+item('meteorite_bar', lambda c: draw_bar(c, palette('#C04030')))
+item('space_gun', draw_meteor_gun)
+METAL['meteor'] = '#B04030'
+_meteor = metal('meteor')
+item('meteor_helmet', lambda c: draw_helmet(c, _meteor))
+item('meteor_suit', lambda c: draw_chest(c, _meteor))
+item('meteor_leggings', lambda c: draw_legs(c, _meteor))
+EVIL_ARMOR.append('meteor')
+proj('chaos_ball', lambda c: p_orb(c, '#C040FF', 3))
+
+GOBLIN_SKIN = '#7A8A9A'
+model_texture('goblin_peon', 64, 64, skin_texture(GOBLIN_SKIN, '#3A2A2A', '#6A5A3A', '#4A3A2A', eyes=(220, 60, 40, 255)))
+model_texture('goblin_thief', 64, 64, skin_texture(GOBLIN_SKIN, '#2A2A2A', '#3A3A44', '#2A2A30', eyes=(220, 60, 40, 255), hat='#2A2A30'))
+model_texture('goblin_warrior', 64, 64, skin_texture(GOBLIN_SKIN, '#5A5A60', '#8A8A90', '#5A5A60', eyes=(220, 60, 40, 255), hat='#8A8A90',
+                                                     hat_band='#5A5A60', short_sleeves=False))
+model_texture('goblin_sorcerer', 64, 64, skin_texture(GOBLIN_SKIN, '#7A3A8A', '#7A3A8A', '#5A2A6A', eyes=(255, 120, 255, 255), hat='#7A3A8A',
+                                                      short_sleeves=False, shoes='#5A2A6A'))
+model_texture('goblin_archer', 64, 64, skin_texture(GOBLIN_SKIN, '#3A2A2A', '#4A6A3A', '#4A3A2A', eyes=(220, 60, 40, 255), hat='#4A6A3A'))
+model_texture('bound_goblin', 64, 64, skin_texture(GOBLIN_SKIN, '#C86A28', '#8A6A4A', '#5A4A3A', torn=True))
+model_texture('goblin_tinkerer', 64, 64, skin_texture(GOBLIN_SKIN, '#C86A28', '#5A6A8C', '#4A3A2A', hat='#C8A040', hat_band='#6A5020',
+                                                      short_sleeves=False))
+model_texture('meteor_head', 64, 64, eye_texture('#FF6A20', sclera='#6A4030'))
+for _g, _shirt in (('goblin_peon', '#6A5A3A'), ('goblin_thief', '#3A3A44'), ('goblin_warrior', '#8A8A90'), ('goblin_sorcerer', '#7A3A8A'),
+                   ('goblin_archer', '#4A6A3A'), ('bound_goblin', '#8A6A4A'), ('goblin_tinkerer', '#5A6A8C')):
+    mob_sprite(_g, 16, 24, 3, lambda c, f, sh=_shirt: npc_frame(c, f, GOBLIN_SKIN, '#3A2A2A', sh, '#4A3A2A'), frame_time=6, animate='move')
+mob_sprite('meteor_head', 14, 14, 2, lambda c, f: skull_frame(c, f, '#8A5A40', '#FF8030', 14), frame_time=4, fullbright=True)
+
 
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
@@ -2397,7 +2497,8 @@ def check_registered_items():
                                              'shadow_orb', 'crimson_heart', 'demon_altar', 'crimson_altar', 'vile_mushroom', 'vicious_mushroom',
                                              'ebonwood', 'shadewood', 'ebonwood_leaves', 'shadewood_leaves'} | set(BRICKS) | {'spikes', 'locked_gold_chest', 'jungle_grass',
                                                                                         'jungle_spores_plant', 'hive', 'larva', 'ash', 'hellstone',
-                                                                                        'obsidian_brick', 'hellstone_brick', 'hellforge', 'locked_shadow_chest'}
+                                                                                        'obsidian_brick', 'hellstone_brick', 'hellforge', 'locked_shadow_chest',
+                                                                                        'meteorite', 'tinkerers_workshop'}
     missing = sorted(i for i in ids if i not in known and not i.endswith("_"))
     if missing:
         print('ERROR: items without generated assets:', missing)
@@ -2416,6 +2517,7 @@ def main():
     dungeon_block_assets()
     jungle_block_assets()
     underworld_block_assets()
+    goblin_block_assets()
     for name, drawer in PROJECTILES.items():
         c = Canvas()
         drawer(c)

@@ -27,5 +27,6 @@ public final class GameEventHandlers {
         com.terracraft.world.event.EventManager.register();
         com.terracraft.world.dungeon.DungeonManager.register();
         com.terracraft.world.underworld.UnderworldManager.register();
+        com.terracraft.world.MeteorManager.register();
     }
 }

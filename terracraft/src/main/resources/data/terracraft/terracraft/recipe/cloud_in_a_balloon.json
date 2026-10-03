@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:cloud_in_a_balloon",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:cloud_in_a_bottle",
+      "count": 1
+    },
+    {
+      "item": "terracraft:shiny_red_balloon",
+      "count": 1
+    }
+  ],
+  "stations": [
+    "terracraft:tinkerers_workshop"
+  ],
+  "category": "accessories"
+}

@@ -38,11 +38,16 @@ public class MagicWeaponItem extends TerraItem implements UsableWeapon {
         return UsableWeapon.use(this, level, player, hand);
     }
 
+    /** Mana per use (the Space Gun is free in Meteor armor). */
+    protected int manaCost(ServerPlayer player, TerraPlayerData data, TerraItemStats stats) {
+        return stats.mana();
+    }
+
     @Override
     public boolean fire(ServerPlayer player, ItemStack stack) {
         TerraItemStats stats = TerraItemStats.of(stack);
         TerraPlayerData data = TerraPlayerData.get(player);
-        if (!ManaManager.consume(player, data, stats.mana())) {
+        if (!ManaManager.consume(player, data, manaCost(player, data, stats))) {
             return false;
         }
         WeaponFiring.fire(player.level(), player, projectile, stats.velocity(), projectiles, spread, 1.0F,

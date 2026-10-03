@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:mana_flower",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:natures_gift",
+      "count": 1
+    },
+    {
+      "item": "terracraft:lesser_mana_potion",
+      "count": 1
+    }
+  ],
+  "stations": [
+    "terracraft:tinkerers_workshop"
+  ],
+  "category": "accessories"
+}

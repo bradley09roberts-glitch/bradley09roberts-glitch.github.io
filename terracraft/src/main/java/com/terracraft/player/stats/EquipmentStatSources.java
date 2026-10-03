@@ -75,6 +75,10 @@ public final class EquipmentStatSources {
             if (stack.getItem() instanceof AccessoryItem accessory && seen.add(accessory)) {
                 accessory.effects().applyTo(stats);
                 stats.add(Stat.DEFENSE, TerraItemStats.of(stack).defense());
+                com.terracraft.item.modifier.Modifier modifier = com.terracraft.item.modifier.Modifiers.of(stack);
+                if (modifier != null) {
+                    modifier.applyAccessory(stats);
+                }
             }
         }
     }

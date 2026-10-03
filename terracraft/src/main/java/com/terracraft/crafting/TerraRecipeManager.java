@@ -94,6 +94,7 @@ public final class TerraRecipeManager {
             int amount = Math.min(total, result.getMaxStackSize());
             result.setCount(amount);
             total -= amount;
+            com.terracraft.item.modifier.Modifiers.rollOnCreate(result, player.getRandom());
             result.onCraftedBy(player, amount);
             if (!player.getInventory().add(result)) {
                 player.drop(result, false);

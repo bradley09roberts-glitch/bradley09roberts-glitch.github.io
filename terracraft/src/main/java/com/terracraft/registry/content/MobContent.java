@@ -188,6 +188,25 @@ public final class MobContent {
         com.terracraft.entity.boss.WallOfFlesh.Hungry::new, 1.0F, 1.0F,
         MobDefinition.builder().life(240).damage(30).defense(0).knockbackTaken(0.5F).coins(0).followRange(64));
 
+    // --- Goblin Army ------------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<WalkerMob>> GOBLIN_PEON = register("goblin_peon", WalkerMob::new, 0.6F, 1.5F,
+        MobDefinition.builder().life(60).damage(12).defense(4).knockbackTaken(0.8F).coins(100).speed(0.3));
+    public static final RegistryObject<EntityType<WalkerMob>> GOBLIN_THIEF = register("goblin_thief", WalkerMob::new, 0.6F, 1.5F,
+        MobDefinition.builder().life(80).damage(20).defense(6).knockbackTaken(0.6F).coins(150).speed(0.34));
+    public static final RegistryObject<EntityType<WalkerMob>> GOBLIN_WARRIOR = register("goblin_warrior", WalkerMob::new, 0.7F, 1.7F,
+        MobDefinition.builder().life(110).damage(27).defense(16).knockbackTaken(0.4F).coins(200).speed(0.22));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.CasterMob>> GOBLIN_SORCERER = register("goblin_sorcerer",
+        (type, level) -> new com.terracraft.entity.mob.CasterMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.CHAOS_BALL, 18.0F),
+        0.6F, 1.5F, MobDefinition.builder().life(40).damage(20).defense(0).knockbackTaken(0.7F).coins(200).speed(0.0).followRange(32));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> GOBLIN_ARCHER = register("goblin_archer",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.ENEMY_ARROW, 15.0F),
+        0.6F, 1.5F, MobDefinition.builder().life(60).damage(20).defense(6).knockbackTaken(0.6F).coins(150).speed(0.26));
+
+    // --- Meteorite ---------------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.GhostFlyerMob>> METEOR_HEAD = registerFireproof("meteor_head",
+        (type, level) -> new com.terracraft.entity.mob.GhostFlyerMob(type, level, FlyerMob.Style.CHASER), 0.7F, 0.7F,
+        MobDefinition.builder().life(26).damage(40).defense(6).knockbackTaken(0.8F).coins(80).speed(0.2).followRange(40));
+
     private MobContent() {}
 
     public static void init() {

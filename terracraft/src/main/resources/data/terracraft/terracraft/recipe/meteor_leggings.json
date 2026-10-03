@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:meteor_leggings",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:meteorite_bar",
+      "count": 25
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:obsidian_shield",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:cobalt_shield",
+      "count": 1
+    },
+    {
+      "item": "terracraft:obsidian_skull",
+      "count": 1
+    }
+  ],
+  "stations": [
+    "terracraft:tinkerers_workshop"
+  ],
+  "category": "accessories"
+}

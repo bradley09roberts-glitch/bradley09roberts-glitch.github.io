@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:space_gun",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:meteorite_bar",
+      "count": 20
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

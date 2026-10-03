@@ -70,6 +70,21 @@ public final class AccessoryContent {
     public static final RegistryObject<AccessoryItem> SUMMONER_EMBLEM = accessory("summoner_emblem", TerraRarity.LIGHT_RED, 100000,
         StatEffects.builder().add(Stat.SUMMON_DAMAGE, 0.15F));
 
+    // Tinkerer's Workshop combinations
+    public static final RegistryObject<AccessoryItem> OBSIDIAN_HORSESHOE = accessory("obsidian_horseshoe", TerraRarity.ORANGE, 30000,
+        StatEffects.builder().ability(Ability.NO_FALL_DAMAGE).ability(Ability.FIRE_BLOCK_IMMUNE));
+    public static final RegistryObject<AccessoryItem> CLOUD_IN_A_BALLOON = accessory("cloud_in_a_balloon", TerraRarity.GREEN, 30000,
+        StatEffects.builder().add(Stat.EXTRA_JUMPS, 1).add(Stat.JUMP_HEIGHT, 0.33F));
+    public static final RegistryObject<AccessoryItem> OBSIDIAN_SHIELD = accessory("obsidian_shield", TerraRarity.ORANGE, 35000,
+        StatEffects.builder().add(Stat.DEFENSE, 2).ability(Ability.KNOCKBACK_IMMUNE).ability(Ability.FIRE_BLOCK_IMMUNE));
+    public static final RegistryObject<AccessoryItem> OBSIDIAN_WATER_WALKING_BOOTS = accessory("obsidian_water_walking_boots", TerraRarity.ORANGE, 30000,
+        StatEffects.builder().ability(Ability.WATER_WALKING).ability(Ability.FIRE_BLOCK_IMMUNE));
+    public static final RegistryObject<AccessoryItem> LAVA_WADERS = accessory("lava_waders", TerraRarity.LIGHT_RED, 50000,
+        StatEffects.builder().ability(Ability.WATER_WALKING).ability(Ability.LAVA_WALKING).ability(Ability.FIRE_BLOCK_IMMUNE)
+            .add(Stat.LAVA_IMMUNITY_SECONDS, 7));
+    public static final RegistryObject<AccessoryItem> MANA_FLOWER = accessory("mana_flower", TerraRarity.ORANGE, 30000,
+        StatEffects.builder().add(Stat.MANA_COST, -0.08F).ability(Ability.MANA_FLOWER));
+
     private static RegistryObject<AccessoryItem> accessory(String name, TerraRarity rarity, int value, StatEffects.Builder effects) {
         StatEffects built = effects.build();
         return ModItems.register(name, TabGroup.ACCESSORIES, p -> new AccessoryItem(p, built),

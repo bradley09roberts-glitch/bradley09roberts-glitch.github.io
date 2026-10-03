@@ -57,6 +57,14 @@ public final class ArmorContent {
             StatEffects.builder().add(Stat.MELEE_CRIT, 7).build()},
         StatEffects.builder().add(Stat.MELEE_DAMAGE, 0.17F).build(), TerraRarity.ORANGE, 30000);
 
+    /** Meteor armor (Meteorite Bars): +7% magic damage per piece; set bonus makes the Space Gun free. */
+    public static final ArmorPieces METEOR = named("meteor", new String[]{"meteor_helmet", "meteor_suit", "meteor_leggings"}, new int[]{3, 3, 3},
+        new StatEffects[]{
+            StatEffects.builder().add(Stat.MAGIC_DAMAGE, 0.07F).build(),
+            StatEffects.builder().add(Stat.MAGIC_DAMAGE, 0.07F).build(),
+            StatEffects.builder().add(Stat.MAGIC_DAMAGE, 0.07F).build()},
+        StatEffects.builder().ability(com.terracraft.player.stats.Ability.FREE_SPACE_GUN).build(), TerraRarity.BLUE, 9000);
+
     private ArmorContent() {}
 
     /** A set whose pieces have their own Terraria names and per-piece bonuses. */
