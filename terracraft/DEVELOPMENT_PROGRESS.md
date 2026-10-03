@@ -232,6 +232,24 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   bamboo -> Jungle, cold oceans -> Ocean...). Set in the `normal`, `large_biomes` and `amplified` world presets.
 - `/terraria equip <accessory>` puts an accessory in the first free slot (tests, showcase kits).
 
+### Visual pass 2 (verified in a live client)
+- **Armor redone from Terraria's sprites**: most helmets open-faced (Lead, Tungsten, Meteor visor and Molten's stone
+  mask stay closed); Molten is grey stone with lava cracks; every chest has breast/belly/back plates, pauldrons,
+  bracers, a belt with buckle and gems; every leg piece has thigh plates, knee cops, shin guards, boots and tassets.
+- **Own models instead of reskins** (`tools/creature_models.py` -> `models/creature/*.json` -> `JsonCreatureModel`):
+  Imp (hunched devil, ears, horns, tail, fireball), Demon and Voodoo Demon (winged, horned; the Voodoo Demon carries
+  the Guide doll), Eater of Souls (segmented flyer with mandibles), Crimera (toothy flesh lump with tendrils), Face
+  Monster (hunched ghoul with a huge mouth), Blood Crawler (eight-legged spider), Man Eater and Snatcher (snapping
+  plant heads on vines), Meteor Head (rock skull trailing flames). Animated: walking, flapping, chomping, scuttling.
+- **Skins** (`tools/skins.py`) in the style of good hand-made Minecraft skins: shaded faces with eye whites, irises,
+  brows, nose and lips; strand hair; layered clothes (jackets, collars, buttons, straps, suspenders, aprons, robes),
+  belts with buckles, rolled sleeves, scuffed knees, laced boots; zombies torn and bloodied. Goblins have ears.
+- **3D weapons and tools** (`tools/item_models.py`): every sword, pickaxe, axe, hammer, bow, gun, staff, wand and
+  tome has a 3D model in the hand (crossguards, tool heads, gun barrels and grips, bow limbs and string), coloured
+  from its icon; the inventory keeps the icon. Swords/tools/staffs point forward, bows are held like vanilla bows,
+  guns aim their barrel forward, tomes are held in front of the hand.
+- Meteorite block recoloured to Terraria's maroon-purple rock with pink highlights.
+
 ## IN PROGRESS
 - Nothing half-finished. Stage 4 (the road to Hardmode) is complete; next is Stage 5 (Hardmode).
 
@@ -266,6 +284,8 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - Angel/Demon Wings use the normal anvil until Stage 5 adds the Mythril/Orichalcum Anvil; Leaf Wings have no source
   yet (Witch Doctor, Stage 5); Soul of Light drops anywhere underground until the Hallow exists.
 - Armor models replace vanilla armor rendering only for TerraCraft armor; vanilla armor still looks vanilla.
+- The Terraria sprite pack replaces inventory icons only; held weapons keep TerraCraft's 3D models.
+- Creature model JSON is read when the game starts (geometry changes need a restart; textures reload with F3+T).
 - Locked Gold Chest loot spreads stacks over many slots (vanilla chest loot behaviour).
 - Chunks generated before a zone change keep their old layout (zone placement changed during Stage 3
   development; affects only test worlds).

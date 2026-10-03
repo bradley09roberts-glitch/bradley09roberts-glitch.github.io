@@ -1,6 +1,21 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "terracraft:item/phoenix_blaster"
+    "type": "minecraft:select",
+    "property": "minecraft:display_context",
+    "cases": [
+      {
+        "when": [
+          "gui"
+        ],
+        "model": {
+          "type": "minecraft:model",
+          "model": "terracraft:item/phoenix_blaster"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "terracraft:item/phoenix_blaster_3d"
+    }
   }
 }

@@ -414,7 +414,7 @@ def paint(armor, c, cube, rnd):
             for y in range(fh):
                 col = pattern_pixel(cube.pattern, p, x, y, fw, fh, rnd, armor, face)
                 # bevel: light top edge, dark bottom/side edges
-                if cube.pattern not in ('glow', 'gem', 'flower'):
+                if cube.pattern not in ('glow', 'gem', 'flower', 'blade', 'string'):
                     if y == 0 and face not in ('up', 'down'):
                         col = shade(col, 1.18)
                     elif y == fh - 1 or x == 0 or x == fw - 1:
@@ -488,6 +488,17 @@ def pattern_pixel(pattern, p, x, y, w, h, rnd, armor, face):
         if (x * 5 + y * 3) % 7 == 0:
             return p[1]
         return p[2] if r > 0.2 else p[3]
+    if pattern == 'blade':
+        # polished edges, a darker fuller down the middle
+        if x == 0 or x == w - 1:
+            return p[4] if face in ('north', 'south') else p[3]
+        if w >= 3 and x == w // 2:
+            return p[1]
+        return p[3] if r > 0.7 else p[2]
+    if pattern == 'string':
+        return p[4]
+    if pattern == 'page':
+        return p[3] if y % 2 else p[4]
     if pattern == 'skin':
         # soft shading: lighter towards the top, a few darker pores
         if y < h * 0.25:

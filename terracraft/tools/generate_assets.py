@@ -2387,14 +2387,23 @@ mob_sprite('hellbat', 16, 12, 3, bat_frame, frame_time=3)
 
 # ----------------------------------------------------------------------------------------- Goblin Army & Meteorite (Stage 4d/4e)
 def meteorite_texture():
+    """Terraria's meteorite: dark maroon-purple rock in lumpy clusters with pink highlights and a few hot cracks."""
     c = Canvas()
-    p = palette('#5A3A3A')
-    c.noise([p[2], p[2], p[1], p[3]], 801)
-    hot = palette('#FF6A30')
-    rnd = random.Random(802)
-    for _ in range(12):
+    p = palette('#5A2A40')
+    rnd = random.Random(801)
+    c.noise([p[1], p[2], p[2], shade(p[1], 0.85)], 801)
+    for _ in range(9):                      # rounded lumps: dark rim, pink top-left highlight
+        cx, cy, r = rnd.randint(0, 15), rnd.randint(0, 15), rnd.choice((1.5, 2, 2.5))
+        for x in range(16):
+            for y in range(16):
+                d = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5
+                if d <= r:
+                    col = hexc('#C88AA0') if (x - cx) + (y - cy) < -r * 0.6 else p[3] if d < r - 0.8 else p[0]
+                    c.set(x, y, col)
+    hot = palette('#FF7A40')
+    for _ in range(4):
         x, y = rnd.randint(0, 15), rnd.randint(0, 15)
-        c.set(x, y, hot[2] if rnd.random() < 0.6 else hot[4])
+        c.set(x, y, hot[3])
     return c
 
 
@@ -2458,7 +2467,7 @@ item('obsidian_shield', lambda c: draw_shield(c, '#3A2A4A'))
 item('obsidian_water_walking_boots', lambda c: draw_boots(c, '#3A2A4A'))
 item('lava_waders', lambda c: draw_boots(c, '#E05A20', wings=True))
 item('mana_flower', lambda c: (draw_flower(c), c.circle(8, 6, 1.5, hexc('#3C64F0'))))
-item('meteorite_bar', lambda c: draw_bar(c, palette('#C04030')))
+item('meteorite_bar', lambda c: draw_bar(c, palette('#8A3A5A')))
 item('space_gun', draw_meteor_gun)
 METAL['meteor'] = '#B04030'
 _meteor = metal('meteor')
@@ -2634,6 +2643,8 @@ def main():
         wing_texture(style).save(os.path.join(TEX, 'entity/wings', style + '.png'))
     import creature_models          # creatures with their own models (Imp, Demons, Crimera...)
     creature_models.write(ASSETS, TEX)
+    import item_models              # 3D held models for weapons and tools (after the icons exist)
+    item_models.write(ASSETS, TEX)
     check_registered_items()
     print(f'Generated {len(ITEMS)} items, {len(BLOCK_TEXTURES)} block textures, {len(PROJECTILES)} projectiles, '
           f'{len(HUD)} HUD sprites, {len(EFFECTS)} effect icons, {len(ARMOR_SETS)} armor sets')
