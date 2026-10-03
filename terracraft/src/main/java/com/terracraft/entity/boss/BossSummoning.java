@@ -76,7 +76,7 @@ public final class BossSummoning {
         boss.setTarget(player);
         level.addFreshEntity(boss);
         level.getServer().getPlayerList().broadcastSystemMessage(
-            Component.translatable("message.terracraft.boss.awoken", boss.getDisplayName()).withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD), false);
+            Component.translatable("message.terracraft.boss.awoken", boss instanceof TerrariaBoss terrariaBoss ? terrariaBoss.announceName() : boss.getDisplayName()).withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD), false);
         return boss;
     }
 

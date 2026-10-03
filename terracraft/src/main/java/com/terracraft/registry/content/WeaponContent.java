@@ -147,6 +147,9 @@ public final class WeaponContent {
 
 
     // ---------------------------------------------------------------- Hardmode ore weapons (stage 5)
+    // Hallowed (mechanical bosses)
+    public static final RegistryObject<MeleeWeaponItem> EXCALIBUR = sword("excalibur", 57, 20, 4.5F, 4, TerraRarity.PINK, 230000);
+    public static final RegistryObject<RangedWeaponItem> HALLOWED_REPEATER = bow("hallowed_repeater", 50, 19, 2.5F, 11.5F, TerraRarity.PINK, 230000);
     public static final RegistryObject<MeleeWeaponItem> COBALT_SWORD = sword("cobalt_sword", 39, 22, 5.5F, 0, TerraRarity.LIGHT_RED, 13500);
     public static final RegistryObject<RangedWeaponItem> COBALT_REPEATER = bow("cobalt_repeater", 32, 20, 2.0F, 10.0F, TerraRarity.LIGHT_RED, 13500);
     public static final RegistryObject<MeleeWeaponItem> PALLADIUM_SWORD = sword("palladium_sword", 43, 22, 5.5F, 0, TerraRarity.LIGHT_RED, 18400);

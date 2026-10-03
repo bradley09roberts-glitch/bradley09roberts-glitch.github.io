@@ -90,6 +90,19 @@ public final class ProjectileKinds {
         .fullbright().enemy().trail(() -> ParticleTypes.SQUID_INK).debuff(() -> net.minecraft.world.effect.MobEffects.WEAKNESS, 140, 1.0F));
     public static final ProjectileKind PINK_LASER = register(ProjectileKind.builder("pink_laser")
         .lifetime(60).size(0.2F, 0.6F).fullbright().enemy());
+    // ---------------------------------------------------------------- mechanical bosses
+    public static final ProjectileKind MECH_LASER = register(ProjectileKind.builder("mech_laser")
+        .lifetime(80).size(0.2F, 0.6F).noTileCollide().fullbright().enemy());
+    public static final ProjectileKind CURSED_FLAME = register(ProjectileKind.builder("cursed_flame")
+        .lifetime(100).size(0.4F, 0.7F).orientation(ProjectileKind.Orientation.BILLBOARD).noTileCollide().homing(0.02F, 30.0F)
+        .fullbright().enemy().trail(() -> ParticleTypes.SOUL_FIRE_FLAME).ignites(100, 1.0F));
+    /** Spazmatism's second form: a short-lived stream of cursed fire. */
+    public static final ProjectileKind CURSED_SPRAY = register(ProjectileKind.builder("cursed_spray").texture("cursed_flame")
+        .lifetime(18).drag(0.95F).size(0.5F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).noTileCollide().pierce(-1)
+        .fullbright().enemy().trail(() -> ParticleTypes.SOUL_FIRE_FLAME).ignites(80, 0.5F));
+    public static final ProjectileKind PRIME_BOMB = register(ProjectileKind.builder("prime_bomb")
+        .gravity(0.04).lifetime(120).size(0.4F, 0.7F).orientation(ProjectileKind.Orientation.SPIN).explosion(2.5F)
+        .enemy().trail(() -> ParticleTypes.SMOKE));
     public static final ProjectileKind WOF_LASER = register(ProjectileKind.builder("wof_laser")
         .lifetime(60).size(0.2F, 0.6F).noTileCollide().fullbright().enemy());
     public static final ProjectileKind FLAMELASH = register(ProjectileKind.builder("flamelash")

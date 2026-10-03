@@ -127,6 +127,16 @@ public final class CreatureRenderers {
         register(event, MobContent.GIANT_BAT.get(), ctx -> new TerraModelRenderer<>(ctx,
             new BatModel3D(ctx.bakeLayer(TerraModels.BAT)), 1.2F, 0.4F, false));
         json(event, MobContent.MIMIC.get(), "mimic", 1.0F, 0.6F);
+        // Mechanical bosses
+        eye(event, MobContent.RETINAZER.get(), 2.0F);
+        eye(event, MobContent.SPAZMATISM.get(), 2.0F);
+        eye(event, MobContent.PROBE.get(), 0.6F);
+        worm(event, MobContent.DESTROYER.get(), 1.4F);
+        skull(event, MobContent.SKELETRON_PRIME.get(), 2.2F);
+        json(event, MobContent.PRIME_CANNON.get(), "prime_cannon", 1.0F, 0.4F);
+        json(event, MobContent.PRIME_SAW.get(), "prime_saw", 1.0F, 0.4F);
+        json(event, MobContent.PRIME_VICE.get(), "prime_vice", 1.0F, 0.4F);
+        json(event, MobContent.PRIME_LASER.get(), "prime_laser", 1.0F, 0.4F);
         for (var npc : NpcContent.all()) {
             var layer = npc.getId().getPath().contains("goblin") ? TerraModels.GOBLIN : TerraModels.HUMANOID;
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,

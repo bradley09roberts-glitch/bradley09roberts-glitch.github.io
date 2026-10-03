@@ -23,7 +23,10 @@ public final class BossCommands {
         "brain_of_cthulhu", new Entry(MobContent.BRAIN_OF_CTHULHU, BossSummoning.Arrival.NEARBY),
         "skeletron", new Entry(MobContent.SKELETRON, BossSummoning.Arrival.NEARBY),
         "queen_bee", new Entry(MobContent.QUEEN_BEE, BossSummoning.Arrival.OFFSCREEN),
-        "wall_of_flesh", new Entry(MobContent.WALL_OF_FLESH, BossSummoning.Arrival.OFFSCREEN));
+        "wall_of_flesh", new Entry(MobContent.WALL_OF_FLESH, BossSummoning.Arrival.OFFSCREEN),
+        "the_twins", new Entry(MobContent.RETINAZER, BossSummoning.Arrival.OFFSCREEN),
+        "destroyer", new Entry(MobContent.DESTROYER, BossSummoning.Arrival.BURROW),
+        "skeletron_prime", new Entry(MobContent.SKELETRON_PRIME, BossSummoning.Arrival.OFFSCREEN));
 
     private record Entry(Supplier<? extends EntityType<? extends net.minecraft.world.entity.Mob>> type, BossSummoning.Arrival arrival) {}
 
@@ -57,7 +60,8 @@ public final class BossCommands {
                     int removed = 0;
                     for (ServerLevel level : ctx.getSource().getServer().getAllLevels()) {
                         for (Entity entity : level.getAllEntities()) {
-                            if (entity instanceof TerrariaBoss || entity instanceof EaterOfWorlds || entity instanceof BrainOfCthulhu.BrainCreeper) {
+                            if (entity instanceof TerrariaBoss || entity instanceof EaterOfWorlds || entity instanceof Destroyer
+                                || entity instanceof SkeletronPrime.Arm || entity instanceof BrainOfCthulhu.BrainCreeper) {
                                 entity.discard();
                                 removed++;
                             }

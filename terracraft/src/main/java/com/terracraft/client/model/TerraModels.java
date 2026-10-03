@@ -26,7 +26,8 @@ public final class TerraModels {
     /** Creatures with JSON-described models (tools/creature_models.py), one layer each. */
     public static final java.util.List<String> JSON_CREATURES = java.util.List.of("imp", "demon", "voodoo_demon", "eater_of_souls", "crimera",
         "face_monster", "blood_crawler", "man_eater", "snatcher", "meteor_head", "pixie", "unicorn", "gastropod", "chaos_elemental",
-        "corruptor", "slimer", "herpling", "floaty_gross", "wraith", "possessed_armor", "werewolf", "mimic");
+        "corruptor", "slimer", "herpling", "floaty_gross", "wraith", "possessed_armor", "werewolf", "mimic",
+        "prime_cannon", "prime_saw", "prime_vice", "prime_laser");
 
     private TerraModels() {}
 

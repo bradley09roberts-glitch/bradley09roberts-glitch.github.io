@@ -79,6 +79,10 @@ public final class ArmorContent {
         new StatEffects[]{StatEffects.builder().add(Stat.DAMAGE, 0.04F).build(), StatEffects.builder().add(Stat.DAMAGE, 0.04F).build(), StatEffects.builder().add(Stat.DAMAGE, 0.04F).build()}, StatEffects.builder().add(Stat.MELEE_SPEED, 0.18F).add(Stat.MOVE_SPEED, 0.18F).build(), TerraRarity.LIGHT_RED, 30000);
     public static final ArmorPieces TITANIUM = named("titanium", new String[]{"titanium_helmet", "titanium_breastplate", "titanium_leggings"}, new int[]{23, 16, 12},
         new StatEffects[]{StatEffects.builder().add(Stat.DAMAGE, 0.04F).build(), StatEffects.builder().add(Stat.DAMAGE, 0.04F).build(), StatEffects.builder().add(Stat.DAMAGE, 0.04F).build()}, StatEffects.builder().add(Stat.ENDURANCE, 0.1F).add(Stat.DAMAGE, 0.05F).build(), TerraRarity.LIGHT_RED, 30000);
+    public static final ArmorPieces HALLOWED = named("hallowed", new String[]{"hallowed_mask", "hallowed_plate_mail", "hallowed_greaves"}, new int[]{24, 15, 11},
+        new StatEffects[]{StatEffects.builder().add(Stat.MELEE_DAMAGE, 0.1F).add(Stat.MELEE_CRIT, 10).build(), StatEffects.builder().add(Stat.CRIT, 7).build(),
+            StatEffects.builder().add(Stat.DAMAGE, 0.07F).add(Stat.MOVE_SPEED, 0.08F).build()},
+        StatEffects.builder().add(Stat.MELEE_SPEED, 0.15F).add(Stat.MOVE_SPEED, 0.15F).build(), TerraRarity.PINK, 50000);
 
     private ArmorContent() {}
 

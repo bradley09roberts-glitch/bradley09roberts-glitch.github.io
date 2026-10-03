@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:hallowed_greaves",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:hallowed_bar",
+      "count": 18
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "armor"
+}

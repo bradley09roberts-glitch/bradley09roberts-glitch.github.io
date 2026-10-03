@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:hallowed_plate_mail",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:hallowed_bar",
+      "count": 24
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "armor"
+}

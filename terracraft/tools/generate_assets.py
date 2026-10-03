@@ -1522,10 +1522,10 @@ model_texture('demolitionist', 64, 64, skin_texture('#D8A880', '#C86A28', '#B88A
                                                      hat_band='#7A6018', lamp=True, suspenders='#5A3A1A'))
 
 
-def eye_texture(iris, mouth=False, sclera='#F2EEE8'):
+def eye_texture(iris, mouth=False, sclera='#F2EEE8', vein_color='#C03838'):
     def paint(c):
         white = hexc(sclera)
-        vein = hexc('#C03838')
+        vein = hexc(vein_color)
         for i, (u, v, w, h, d) in enumerate([(0, 0, 8, 8, 8), (0, 16, 10, 6, 6), (32, 0, 6, 10, 6), (0, 28, 6, 6, 10)]):
             paint_box(c, u, v, w, h, d, white, 0.06, 50 + i)
         rnd = random.Random(55)
@@ -2785,6 +2785,65 @@ mob_sprite('floaty_gross', 16, 24, 3, lambda c, f: npc_frame(c, f, '#D8B0A8', '#
 mob_sprite('possessed_armor', 16, 24, 3, lambda c, f: humanoid_frame(c, f, '#5A5A6A', '#5A5A6A', '#3A3A46', (255, 48, 48, 255)), frame_time=8)
 mob_sprite('werewolf', 16, 24, 3, lambda c, f: npc_frame(c, f, '#6A5848', '#6A5848', '#6A5848', '#4A3A5A'), frame_time=6)
 mob_sprite('armored_skeleton', 16, 24, 3, lambda c, f: humanoid_frame(c, f, '#D8D0A8', '#6A7080', '#5A6070', (20, 20, 20, 255), bony=True), frame_time=8)
+
+
+# ----------------------------------------------------------------------------------------- Mechanical bosses (Stage 5d)
+def draw_mech_summon(c, kind):
+    metal_p = palette('#9A9AA8')
+    if kind == 'eye':
+        c.circle(7.5, 7.5, 6, metal_p[2]); c.circle(7.5, 7.5, 3.5, hexc('#C02030')); c.circle(7.5, 7.5, 1.5, hexc('#200808'))
+        for x in (1, 14):
+            c.line(x, 7, x, 8, metal_p[4])
+    elif kind == 'skull':
+        c.rect(3, 2, 12, 10, metal_p[2]); c.rect(4, 11, 11, 13, metal_p[1])
+        c.rect(4, 5, 6, 7, hexc('#200808')); c.rect(9, 5, 11, 7, hexc('#200808'))
+        c.set(5, 6, hexc('#FF3030')); c.set(10, 6, hexc('#FF3030'))
+        for x in range(5, 11, 2):
+            c.set(x, 12, metal_p[4])
+    else:
+        for i in range(5):
+            c.circle(3 + i * 2.4, 11 - i * 1.6, 2.2, metal_p[2 if i % 2 else 3])
+        c.set(13, 4, hexc('#FF3030'))
+    c.outline()
+
+
+item('mechanical_worm', lambda c: draw_mech_summon(c, 'worm'))
+item('mechanical_eye', lambda c: draw_mech_summon(c, 'eye'))
+item('mechanical_skull', lambda c: draw_mech_summon(c, 'skull'))
+item('soul_of_might', lambda c: draw_soul(c, '#5080F0'))
+item('soul_of_sight', lambda c: draw_soul(c, '#50E070'))
+item('soul_of_fright', lambda c: draw_soul(c, '#F07030'))
+item('hallowed_bar', lambda c: draw_bar(c, palette('#E8D060')))
+METAL['hallowed'] = '#E8D060'
+item('excalibur', lambda c: draw_sword(c, metal('hallowed'), 13), True)
+item('hallowed_repeater', lambda c: draw_bow(c, metal('hallowed')), True)
+item('pickaxe_axe', lambda c: draw_pickaxe(c, metal('hallowed')), True)
+item('hallowed_mask', lambda c: draw_helmet(c, metal('hallowed')))
+item('hallowed_plate_mail', lambda c: draw_chest(c, metal('hallowed')))
+item('hallowed_greaves', lambda c: draw_legs(c, metal('hallowed')))
+item('greater_healing_potion', lambda c: draw_potion(c, '#FF4070'))
+proj('mech_laser', lambda c: (c.line(0, 8, 15, 8, hexc('#FF3030'), 2), c.line(2, 8, 13, 8, hexc('#FFD0D0'))))
+proj('cursed_flame', lambda c: p_orb(c, '#70F040', 3))
+proj('prime_bomb', lambda c: (c.circle(7.5, 8.5, 3.5, hexc('#3A3A44')), c.set(7, 4, hexc('#FF8030')), c.set(8, 3, hexc('#FFD040'))))
+
+MECH = dict(sclera='#A8A8B4', vein_color='#5A5A66')
+model_texture('retinazer', 64, 64, eye_texture('#C02030', **MECH))
+model_texture('retinazer_mouth', 64, 64, eye_texture('#C02030', mouth=True, **MECH))
+model_texture('spazmatism', 64, 64, eye_texture('#30A040', **MECH))
+model_texture('spazmatism_mouth', 64, 64, eye_texture('#30A040', mouth=True, **MECH))
+model_texture('probe', 64, 64, eye_texture('#FF3030', sclera='#6A6A78', vein_color='#3A3A44'))
+for _part in ('head', 'body', 'tail'):
+    model_texture(f'destroyer_{_part}', 64, 64, worm_texture('#7A7A88', '#C03030'))
+    mob_sprite(f'destroyer_{_part}', 12, 12, 1, lambda c, f, part=_part: worm_frame(c, f, '#7A7A88', part), rotate=True)
+model_texture('skeletron_prime', 64, 32, skull_texture('#A8A8B4', '#FF3030', glow=True))
+mob_sprite('retinazer', 24, 18, 4, big_eye_frame, frame_time=4, rotate=True, fullbright=True)
+mob_sprite('retinazer_mouth', 24, 18, 4, lambda c, f: big_eye_frame(c, f, mouth=True), frame_time=3, rotate=True, fullbright=True)
+mob_sprite('spazmatism', 24, 18, 4, big_eye_frame, frame_time=4, rotate=True, fullbright=True)
+mob_sprite('spazmatism_mouth', 24, 18, 4, lambda c, f: big_eye_frame(c, f, mouth=True), frame_time=3, rotate=True, fullbright=True)
+mob_sprite('probe', 14, 10, 4, servant_frame, frame_time=3, rotate=True)
+mob_sprite('skeletron_prime', 24, 24, 2, lambda c, f: skull_frame(c, f, '#A8A8B4', None, 24), frame_time=8)
+for _arm in ('prime_cannon', 'prime_saw', 'prime_vice', 'prime_laser'):
+    mob_sprite(_arm, 11, 18, 2, hand_frame, frame_time=10)
 
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""

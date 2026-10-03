@@ -179,13 +179,39 @@ public abstract class TerrariaBoss extends TerrariaMob {
     @Override
     public void die(DamageSource source) {
         super.die(source);
-        if (level() instanceof ServerLevel level) {
+        if (level() instanceof ServerLevel level && completesFight(level)) {
             level.getServer().getPlayerList().broadcastSystemMessage(
-                Component.translatable("message.terracraft.boss.defeated", getDisplayName()).withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD), false);
+                Component.translatable("message.terracraft.boss.defeated", announceName()).withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD), false);
             ProgressionManager.markDefeated(level.getServer(), defeatFlag());
-            // Terraria: bosses drop healing potions (Lesser Healing early on).
+            // Terraria: bosses drop healing potions (Lesser Healing early on, Greater in Hardmode).
             int potions = 5 + random.nextInt(11);
-            level.addFreshEntity(new ItemEntity(level, getX(), getY() + 0.5, getZ(), new ItemStack(CoreItems.LESSER_HEALING_POTION.get(), potions)));
+            level.addFreshEntity(new ItemEntity(level, getX(), getY() + 0.5, getZ(), new ItemStack(healingPotion(), potions)));
+            dropFightLoot(level);
+        }
+    }
+
+    /** False while other parts of a multi-boss fight are still alive (The Twins): no message, flag or loot yet. */
+    protected boolean completesFight(ServerLevel level) {
+        return true;
+    }
+
+    public Component announceName() {
+        return getDisplayName();
+    }
+
+    protected net.minecraft.world.item.Item healingPotion() {
+        return CoreItems.LESSER_HEALING_POTION.get();
+    }
+
+    /** Loot dropped once when the whole fight is won. */
+    protected void dropFightLoot(ServerLevel level) {
+    }
+
+    protected void dropStack(ServerLevel level, net.minecraft.world.item.Item item, int count) {
+        while (count > 0) {
+            int stack = Math.min(count, item.getDefaultMaxStackSize());
+            level.addFreshEntity(new ItemEntity(level, getX(), getY() + 0.5, getZ(), new ItemStack(item, stack)));
+            count -= stack;
         }
     }
 

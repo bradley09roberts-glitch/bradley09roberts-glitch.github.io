@@ -364,6 +364,19 @@ def terraria_recipes():
     recipe('orichalcum_anvil', t('orichalcum_anvil'), [(t('orichalcum_bar'), 12)], [ANVIL], category='furniture')
     recipe('adamantite_forge', t('adamantite_forge'), [(t('raw_adamantite'), 30), (t('hellforge'), 1)], [HM_ANVIL], category='furniture')
     recipe('titanium_forge', t('titanium_forge'), [(t('raw_titanium'), 30), (t('hellforge'), 1)], [HM_ANVIL], category='furniture')
+    # Mechanical boss summons and Hallowed gear
+    recipe('mechanical_worm', t('mechanical_worm'), [(t('rotten_chunk'), 6), ('minecraft:iron_ingot', 5), (t('soul_of_night'), 6)], [HM_ANVIL], category='consumables')
+    recipe('mechanical_worm_vertebra', t('mechanical_worm'), [(t('vertebra'), 6), ('minecraft:iron_ingot', 5), (t('soul_of_night'), 6)], [HM_ANVIL], category='consumables')
+    recipe('mechanical_eye', t('mechanical_eye'), [(t('lens'), 3), ('minecraft:iron_ingot', 5), (t('soul_of_light'), 6)], [HM_ANVIL], category='consumables')
+    recipe('mechanical_skull', t('mechanical_skull'), [('minecraft:bone', 30), ('minecraft:iron_ingot', 5), (t('soul_of_light'), 3), (t('soul_of_night'), 3)],
+           [HM_ANVIL], category='consumables')
+    HB = t('hallowed_bar')
+    recipe('excalibur', t('excalibur'), [(HB, 12)], [HM_ANVIL], category='weapons')
+    recipe('hallowed_repeater', t('hallowed_repeater'), [(HB, 12)], [HM_ANVIL], category='weapons')
+    recipe('pickaxe_axe', t('pickaxe_axe'), [(HB, 18), (t('soul_of_might'), 1), (t('soul_of_sight'), 1), (t('soul_of_fright'), 1)], [HM_ANVIL], category='tools')
+    recipe('hallowed_mask', t('hallowed_mask'), [(HB, 12)], [HM_ANVIL], category='armor')
+    recipe('hallowed_plate_mail', t('hallowed_plate_mail'), [(HB, 24)], [HM_ANVIL], category='armor')
+    recipe('hallowed_greaves', t('hallowed_greaves'), [(HB, 18)], [HM_ANVIL], category='armor')
     recipe('pearlwood_planks', 'minecraft:birch_planks', [(t('pearlwood'), 1)], [], count=4, category='materials')
     recipe('angel_wings', t('angel_wings'), [('minecraft:feather', 10), (t('soul_of_light'), 25), (t('soul_of_flight'), 20)], [HM_ANVIL], category='accessories')
     recipe('demon_wings', t('demon_wings'), [('minecraft:feather', 10), (t('soul_of_night'), 25), (t('soul_of_flight'), 20)], [HM_ANVIL], category='accessories')
@@ -778,6 +791,17 @@ def lang():
         'armor_set.terracraft.titanium.bonus': '10% damage reduction and 5% increased damage',
         'item.terracraft.cobalt_repeater': 'Cobalt Repeater',
         'block.terracraft.pearlstone.tooltip': 'Shimmers with holy light',
+        'entity.terracraft.the_twins': 'The Twins',
+        'armor_set.terracraft.hallowed.bonus': '15% increased melee and movement speed',
+        'item.terracraft.mechanical_worm.tooltip': 'Summons the Destroyer',
+        'item.terracraft.mechanical_eye.tooltip': 'Summons the Twins',
+        'item.terracraft.mechanical_skull.tooltip': 'Summons Skeletron Prime',
+        'item.terracraft.soul_of_might.tooltip': "'The essence of the destroyer'",
+        'item.terracraft.soul_of_sight.tooltip': "'The essence of omniscient watchers'",
+        'item.terracraft.soul_of_fright.tooltip': "'The essence of pure terror'",
+        'item.terracraft.pickaxe_axe': 'Pickaxe Axe',
+        'item.terracraft.titan_glove.tooltip': 'Increases melee knockback, enables autoswing for melee weapons',
+        'item.terracraft.pixie_dust.tooltip': "'A shimmering dust'",
         'armor_set.terracraft.meteor.bonus': 'Space Gun costs 0 mana',
         'item.terracraft.goblin_battle_standard.tooltip': 'Summons a Goblin Army',
         'item.terracraft.obsidian_horseshoe.tooltip': 'Negates fall damage and grants immunity to fire blocks',
@@ -924,6 +948,15 @@ MOBS = {
     'armored_skeleton': ('Armored Skeleton', [('minecraft:bone', 1, 3, 0.5)]),
     'giant_bat': ('Giant Bat', []),
     'mimic': ('Mimic', [('titan_glove', 1, 1, 0.33)]),
+    'retinazer': ('Retinazer', []),
+    'spazmatism': ('Spazmatism', []),
+    'destroyer': ('The Destroyer', []),
+    'probe': ('Probe', []),
+    'skeletron_prime': ('Skeletron Prime', []),
+    'prime_cannon': ('Prime Cannon', []),
+    'prime_saw': ('Prime Saw', []),
+    'prime_vice': ('Prime Vice', []),
+    'prime_laser': ('Prime Laser', []),
     'king_slime': ('King Slime', [('gel', 40, 80, 1.0), ('slime_crown', 1, 1, 0.1)]),
     'eye_of_cthulhu': ('Eye of Cthulhu', [('lens', 3, 6, 1.0)]),
 }

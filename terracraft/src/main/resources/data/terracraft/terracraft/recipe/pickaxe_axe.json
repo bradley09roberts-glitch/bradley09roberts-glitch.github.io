@@ -1,0 +1,28 @@
+{
+  "result": {
+    "item": "terracraft:pickaxe_axe",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:hallowed_bar",
+      "count": 18
+    },
+    {
+      "item": "terracraft:soul_of_might",
+      "count": 1
+    },
+    {
+      "item": "terracraft:soul_of_sight",
+      "count": 1
+    },
+    {
+      "item": "terracraft:soul_of_fright",
+      "count": 1
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "tools"
+}

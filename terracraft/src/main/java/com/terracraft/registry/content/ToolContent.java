@@ -57,6 +57,7 @@ public final class ToolContent {
     public static final RegistryObject<TerrariaToolItem> ORICHALCUM_PICKAXE = hardmodePickaxe("orichalcum_pickaxe", 165, 23, TerraRarity.LIGHT_RED, 26000);
     public static final RegistryObject<TerrariaToolItem> ADAMANTITE_PICKAXE = hardmodePickaxe("adamantite_pickaxe", 180, 25, TerraRarity.LIGHT_RED, 29000);
     public static final RegistryObject<TerrariaToolItem> TITANIUM_PICKAXE = hardmodePickaxe("titanium_pickaxe", 190, 27, TerraRarity.LIGHT_RED, 32000);
+    public static final RegistryObject<TerrariaToolItem> PICKAXE_AXE = hardmodePickaxe("pickaxe_axe", 200, 35, TerraRarity.PINK, 220000);
 
     private ToolContent() {}
 

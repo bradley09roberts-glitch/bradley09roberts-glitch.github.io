@@ -523,9 +523,48 @@ def hm_creatures():
             possessed_armor(), werewolf(), mimic()]
 
 
+# ----------------------------------------------------------------------------------------- Skeletron Prime's arms
+def prime_arm(name, tool):
+    """An arm of Skeletron Prime: a jointed steel limb ending in its weapon."""
+    c = Creature(name, {'main': '#9A9AA8', 'dark': '#16161C', 'accent': '#6A6A78', 'glow': '#FF3030', 'blade': '#D8D8E0',
+                        'teeth': '#E8E8F0', 'inner': '#3A3A44', 'fire': '#FF7030'})
+    c.part('arm', pivot=(0, 14, 0))
+    c.box('arm', (-1.5, -8, -1.5), (3, 8, 3), pattern='plate')
+    c.box('arm', (-2, -1, -2), (4, 2, 4), mat='accent', pattern='bands')          # elbow joint
+    c.part('tool', 'arm', pivot=(0, 0, 0))
+    if tool == 'cannon':
+        c.box('tool', (-2.5, 0, -2.5), (5, 8, 5), pattern='plate')
+        c.box('tool', (-1.5, 7, -1.5), (3, 2, 3), mat='dark', pattern='skin')
+        c.box('tool', (-3, 2, -3), (6, 1, 6), mat='accent', pattern='bands')
+    elif tool == 'laser':
+        c.box('tool', (-2, 0, -2), (4, 7, 4), pattern='plate')
+        c.box('tool', (-1, 7, -1), (2, 3, 2), mat='glow', pattern='glow')
+        c.box('tool', (-2.5, 4, -2.5), (5, 1, 5), mat='accent', pattern='bands')
+    elif tool == 'saw':
+        c.box('tool', (-1, 0, -1), (2, 4, 2), pattern='plate')
+        c.part('blade', 'tool', pivot=(0, 8, 0))
+        c.box('blade', (-0.5, -4.5, -4.5), (1, 9, 9), mat='blade', pattern='blade')
+        c.box('blade', (-1, -1, -1), (2, 2, 2), mat='dark', pattern='skin')
+        c.anim('blade', 'flicker', 0.05, 2.0)
+        c.anim('tool', 'wiggle', 0.3, 1.5)
+    else:   # vice: two clamping jaws
+        c.box('tool', (-2.5, 0, -1.5), (5, 3, 3), pattern='plate')
+        for side, nm in ((-1, 'jaw_r'), (1, 'jaw_l')):
+            c.part(nm, 'tool', pivot=(1.5 * side, 3, 0))
+            c.box(nm, (-0.75, 0, -1.5), (1.5, 6, 3), mat='accent', pattern='plate')
+            c.box(nm, ((0 if side < 0 else -1), 5, -1.5), (1, 1, 3), mat='teeth', pattern='horn')
+            c.anim(nm, 'jaw', 0.4 * side, 0.3)
+    c.anim('arm', 'bob', 0.5, 0.15)
+    return c
+
+
+def mech_creatures():
+    return [prime_arm('prime_cannon', 'cannon'), prime_arm('prime_saw', 'saw'), prime_arm('prime_vice', 'vice'), prime_arm('prime_laser', 'laser')]
+
+
 def all_creatures():
     return [imp(), demon(), demon('voodoo_demon', voodoo=True), eater_of_souls(), crimera(), face_monster(), blood_crawler(),
-            snapper('man_eater', '#4A9A30', '#E070A0', 9), snapper('snatcher', '#5AAA3A', '#F0A0C0', 7), meteor_head()] + hm_creatures()
+            snapper('man_eater', '#4A9A30', '#E070A0', 9), snapper('snatcher', '#5AAA3A', '#F0A0C0', 7), meteor_head()] + hm_creatures() + mech_creatures()
 
 
 def write(assets, tex):

@@ -1,0 +1,28 @@
+{
+  "result": {
+    "item": "terracraft:mechanical_skull",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:bone",
+      "count": 30
+    },
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 5
+    },
+    {
+      "item": "terracraft:soul_of_light",
+      "count": 3
+    },
+    {
+      "item": "terracraft:soul_of_night",
+      "count": 3
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "consumables"
+}

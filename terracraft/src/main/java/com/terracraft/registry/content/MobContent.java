@@ -262,6 +262,32 @@ public final class MobContent {
     public static final RegistryObject<EntityType<SlimeMob>> MIMIC = register("mimic", SlimeMob::new, 1.0F, 1.0F,
         MobDefinition.builder().life(500).damage(80).defense(30).knockbackTaken(0.1F).coins(10_000));
 
+    // --- Mechanical bosses ----------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.TheTwins>> RETINAZER = register("retinazer",
+        com.terracraft.entity.boss.TheTwins::retinazer, 2.0F, 2.0F,
+        MobDefinition.builder().life(20000).damage(45).defense(10).knockbackTaken(0.0F).coins(60_000).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.TheTwins>> SPAZMATISM = register("spazmatism",
+        com.terracraft.entity.boss.TheTwins::spazmatism, 2.0F, 2.0F,
+        MobDefinition.builder().life(23000).damage(50).defense(10).knockbackTaken(0.0F).coins(60_000).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.Destroyer>> DESTROYER = registerFireproof("destroyer",
+        com.terracraft.entity.boss.Destroyer::new, 1.4F, 1.4F,
+        MobDefinition.builder().life(80000).damage(70).defense(0).knockbackTaken(0.0F).coins(0).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ShooterFlyerMob>> PROBE = register("probe",
+        (type, level) -> new com.terracraft.entity.mob.ShooterFlyerMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.MECH_LASER,
+            25.0F, 2.5F, net.minecraft.sounds.SoundEvents.BEACON_ACTIVATE), 0.6F, 0.6F,
+        MobDefinition.builder().life(200).damage(50).defense(20).knockbackTaken(0.5F).coins(0).speed(0.3).followRange(60));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.SkeletronPrime>> SKELETRON_PRIME = register("skeletron_prime",
+        com.terracraft.entity.boss.SkeletronPrime::new, 2.2F, 2.2F,
+        MobDefinition.builder().life(28000).damage(47).defense(24).knockbackTaken(0.0F).coins(120_000).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.SkeletronPrime.Arm>> PRIME_CANNON = primeArm("prime_cannon",
+        com.terracraft.entity.boss.SkeletronPrime.Arm.Kind.CANNON, MobDefinition.builder().life(7000).damage(30).defense(23));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.SkeletronPrime.Arm>> PRIME_SAW = primeArm("prime_saw",
+        com.terracraft.entity.boss.SkeletronPrime.Arm.Kind.SAW, MobDefinition.builder().life(9000).damage(56).defense(38));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.SkeletronPrime.Arm>> PRIME_VICE = primeArm("prime_vice",
+        com.terracraft.entity.boss.SkeletronPrime.Arm.Kind.VICE, MobDefinition.builder().life(9000).damage(52).defense(34));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.SkeletronPrime.Arm>> PRIME_LASER = primeArm("prime_laser",
+        com.terracraft.entity.boss.SkeletronPrime.Arm.Kind.LASER, MobDefinition.builder().life(6000).damage(29).defense(20));
+
     private MobContent() {}
 
     public static void init() {
@@ -270,6 +296,12 @@ public final class MobContent {
 
     public static List<RegistryObject<? extends EntityType<? extends TerrariaMob>>> all() {
         return ALL;
+    }
+
+    private static RegistryObject<EntityType<com.terracraft.entity.boss.SkeletronPrime.Arm>> primeArm(String name,
+            com.terracraft.entity.boss.SkeletronPrime.Arm.Kind kind, MobDefinition.Builder stats) {
+        return register(name, (type, level) -> new com.terracraft.entity.boss.SkeletronPrime.Arm(type, level, kind), 1.2F, 1.2F,
+            stats.knockbackTaken(0.0F).coins(0).followRange(160));
     }
 
     private static RegistryObject<EntityType<SlimeMob>> slime(String name, float width, float height, MobDefinition.Builder stats) {

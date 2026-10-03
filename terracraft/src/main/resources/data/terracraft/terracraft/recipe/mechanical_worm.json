@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:mechanical_worm",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:rotten_chunk",
+      "count": 6
+    },
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 5
+    },
+    {
+      "item": "terracraft:soul_of_night",
+      "count": 6
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "consumables"
+}

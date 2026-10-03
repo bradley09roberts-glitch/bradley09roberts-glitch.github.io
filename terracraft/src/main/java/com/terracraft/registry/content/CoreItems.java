@@ -42,6 +42,7 @@ public final class CoreItems {
     // ---------------------------------------------------------------- potions
     public static final RegistryObject<TerraPotionItem> LESSER_HEALING_POTION = potion("lesser_healing_potion", 50, 0, null, 0, TerraRarity.BLUE, 300);
     public static final RegistryObject<TerraPotionItem> HEALING_POTION = potion("healing_potion", 100, 0, null, 0, TerraRarity.ORANGE, 2000);
+    public static final RegistryObject<TerraPotionItem> GREATER_HEALING_POTION = potion("greater_healing_potion", 150, 0, null, 0, TerraRarity.ORANGE, 5000);
     public static final RegistryObject<TerraPotionItem> LESSER_MANA_POTION = potion("lesser_mana_potion", 0, 50, null, 0, TerraRarity.BLUE, 250);
     public static final RegistryObject<TerraPotionItem> MANA_POTION = potion("mana_potion", 0, 100, null, 0, TerraRarity.ORANGE, 500);
     public static final RegistryObject<TerraPotionItem> IRONSKIN_POTION = buffPotion("ironskin_potion", ModEffects.IRONSKIN, 8);

@@ -34,6 +34,21 @@ public final class BossContent {
     public static final RegistryObject<TerraItem> DEMONITE_BAR = CoreItems.material("demonite_bar", TerraRarity.BLUE, 3000);
     public static final RegistryObject<TerraItem> CRIMTANE_BAR = CoreItems.material("crimtane_bar", TerraRarity.BLUE, 3900);
 
+    // Mechanical bosses (Hardmode, night only)
+    public static final RegistryObject<BossSummonItem> MECHANICAL_WORM = ModItems.register("mechanical_worm", TabGroup.CONSUMABLES,
+        p -> new BossSummonItem(p, MobContent.DESTROYER, BossSummoning.Arrival.BURROW, true),
+        p -> WeaponProperties.stats(p.stacksTo(20), CoreItems.stats(TerraRarity.LIGHT_RED, 0)));
+    public static final RegistryObject<BossSummonItem> MECHANICAL_EYE = ModItems.register("mechanical_eye", TabGroup.CONSUMABLES,
+        p -> new BossSummonItem(p, MobContent.RETINAZER, BossSummoning.Arrival.OFFSCREEN, true),
+        p -> WeaponProperties.stats(p.stacksTo(20), CoreItems.stats(TerraRarity.LIGHT_RED, 0)));
+    public static final RegistryObject<BossSummonItem> MECHANICAL_SKULL = ModItems.register("mechanical_skull", TabGroup.CONSUMABLES,
+        p -> new BossSummonItem(p, MobContent.SKELETRON_PRIME, BossSummoning.Arrival.OFFSCREEN, true),
+        p -> WeaponProperties.stats(p.stacksTo(20), CoreItems.stats(TerraRarity.LIGHT_RED, 0)));
+    public static final RegistryObject<TerraItem> SOUL_OF_MIGHT = CoreItems.material("soul_of_might", TerraRarity.PINK, 4000);
+    public static final RegistryObject<TerraItem> SOUL_OF_SIGHT = CoreItems.material("soul_of_sight", TerraRarity.PINK, 4000);
+    public static final RegistryObject<TerraItem> SOUL_OF_FRIGHT = CoreItems.material("soul_of_fright", TerraRarity.PINK, 4000);
+    public static final RegistryObject<TerraItem> HALLOWED_BAR = CoreItems.material("hallowed_bar", TerraRarity.PINK, 8000);
+
     private BossContent() {}
 
     /** Evil boss summons only work inside the matching evil biome (standing on or near its blocks). */

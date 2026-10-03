@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:mechanical_eye",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:lens",
+      "count": 3
+    },
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 5
+    },
+    {
+      "item": "terracraft:soul_of_light",
+      "count": 6
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "consumables"
+}

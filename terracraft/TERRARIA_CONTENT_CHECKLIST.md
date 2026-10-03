@@ -42,9 +42,9 @@ Pre-hardmode
 
 Hardmode
 - [ ] Queen Slime
-- [ ] The Destroyer
-- [ ] The Twins
-- [ ] Skeletron Prime
+- [x] The Destroyer (Mechanical Worm; shared life, lasers, Probes)
+- [x] The Twins (Mechanical Eye; Retinazer lasers, Spazmatism cursed flames, mechanical second forms)
+- [x] Skeletron Prime (Mechanical Skull; Cannon, Saw, Vice, Laser arms)
 - [ ] Plantera
 - [ ] Golem
 - [ ] Duke Fishron
@@ -131,6 +131,7 @@ Boomerangs
 - [x] World ore-pair choice (worldgen honours it)
 - [x] Demonite/Crimtane ore (worldgen + bosses) and bars; Hellstone done (Hellforge); Meteorite done (craters); Obsidian gate done
 - [x] Cobalt/Palladium, Mythril/Orichalcum, Adamantite/Titanium (ore, raw, bar, pickaxe, sword, repeater, armor)
+- [x] Hallowed Bar (mechanical bosses): Excalibur, Hallowed Repeater, Pickaxe Axe, Hallowed armor; Souls of Might/Sight/Fright
 - [ ] Chlorophyte, Luminite
 
 ## Blocks

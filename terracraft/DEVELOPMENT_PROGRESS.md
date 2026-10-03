@@ -281,13 +281,29 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - Souls of Light now come from the underground Hallow and Souls of Night from the underground evil stripe or
   Corruption/Crimson (Terraria's rule); ordinary enemies no longer spawn on Hallow ground.
 
+### Stage 5d: Mechanical bosses and Hallowed gear (verified in a live client)
+- Summoned at night with items made at a Mythril/Orichalcum Anvil from Souls of Light/Night: Mechanical Worm,
+  Mechanical Eye, Mechanical Skull. All three leave at daybreak.
+- **The Twins** (`TheTwins`): Retinazer circles to one side firing lasers and charging; Spazmatism charges and
+  spits cursed flames. At 40% life each transforms into its mechanical form (rapid laser volleys / a cursed-fire
+  flamethrower and fast charges). The fight, "The Twins has been defeated!", Souls of Sight and Hallowed Bars come
+  with the second death.
+- **The Destroyer** (`Destroyer`): a 40-segment metal worm that tunnels through terrain. All damage goes to the
+  shared life (one boss bar); body segments fire lasers and release Probes when hit. Drops Souls of Might.
+- **Skeletron Prime** (`SkeletronPrime`): a steel skull with four separate arms (Cannon lobs bombs, Laser shoots,
+  Saw and Vice lunge); the head spins after you, more often without arms, and is enraged by daylight. Drops Souls of
+  Fright.
+- Hallowed gear: Excalibur, Hallowed Repeater, Pickaxe Axe (power 200), Hallowed Mask/Plate Mail/Greaves (3D set,
+  +15% melee and movement speed), plus Greater Healing Potions from Hardmode bosses.
+- `/terraria boss spawn the_twins|destroyer|skeletron_prime`.
+
 ## IN PROGRESS
-- Stage 5d: mechanical bosses and Hallowed gear.
+- Stage 5e: Hardmode NPCs (Wizard, Steampunker, Witch Doctor) and events.
 
 ## NEXT (Stage 5: Hardmode)
 1. (done) World changes, Hardmode ores, anvils/forges, gear.
 2. (done) Hardmode enemies, Wyverns, Mimics, souls.
-3. Mechanical bosses (The Twins, The Destroyer, Skeletron Prime) and Queen Slime; Mechanic, Wizard, Steampunker.
+3. (done) Mechanical bosses. Still open: Queen Slime; Mechanic, Wizard, Steampunker.
 4. Pirate Invasion and Frost Legion.
 
 ## DONE: Stage 4 plan (kept for reference)

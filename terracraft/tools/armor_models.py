@@ -430,10 +430,22 @@ def titanium_set():
     return a
 
 
+def hallowed_set():
+    # Hallowed: polished gold plate with white trim; a closed mask with a T-visor and swept wing crests
+    a = ore('hallowed', '#E8C850', accent='#FFF4D0', trim='#B08A30', gem='#70C8FF')
+    closed_helmet(a, 'tvisor', inflate=1.3, edge='accent')
+    helmet_wings(a, 'accent', big=True, lift=0.5)
+    a.add('head', 'head', (-0.5, -11, -4.5), (1, 3, 9), mat='accent', edge='trim')
+    a.add('head', 'head', (-0.5, -9.4, -5.6), (1, 2, 1), mat='gem', pattern='gem')
+    torso(a, gem='gem', pads='big')
+    greaves(a)
+    return a
+
+
 def all_sets():
     return [wood_set(), copper_set(), tin_set(), iron_set(), lead_set(), silver_set(), tungsten_set(), gold_set(), platinum_set(),
             shadow_set(), crimson_set(), jungle_set(), molten_set(), meteor_set(),
-            cobalt_set(), palladium_set(), mythril_set(), orichalcum_set(), adamantite_set(), titanium_set()]
+            cobalt_set(), palladium_set(), mythril_set(), orichalcum_set(), adamantite_set(), titanium_set(), hallowed_set()]
 
 
 # ----------------------------------------------------------------------------------------- UV packing
