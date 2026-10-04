@@ -49,6 +49,7 @@ public final class TerraClient {
                 (net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager -> com.terracraft.client.model.ArmorModels.clear());
         });
         modBus.addListener(TerrariaHud::register);
+        com.terracraft.client.hud.HealthBars.register(modBus);
         modBus.addListener(TerraArmorClient::register);
         game.addListener(ItemTooltips::onTooltip);
         // no boots slot (see NoBootsSlot): paint over its empty frame in the inventory background

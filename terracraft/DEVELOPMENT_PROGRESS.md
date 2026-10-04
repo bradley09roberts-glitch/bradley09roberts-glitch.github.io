@@ -345,6 +345,16 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   the Flying Dutchman in the Hall of Bosses (now two rows of six), event buttons, Queen Slime and Pirate kits, the
   Mechanic and the Pirate in the town NPC buttons. `/terraria worldgen dungeon rooms` lists Dungeon rooms.
 
+### Real boss life and new health bars
+- Enemies and bosses now have their real Terraria life as Minecraft health (Queen Slime 18,000, the Destroyer
+  80,000...): the max health attribute's 1024 limit is raised to 10,000,000 at startup. Before, health stayed under
+  1000 and damage was divided by a scale (the same fight length, but every number you saw was wrong). Old saves convert.
+- **Boss bars**: framed bars in the boss's colour with gold end caps, the boss name above, real life inside
+  ("15,272 / 18,000"), notches every 10% and a pale trail that shows the last hits before draining away.
+- **Focus bar**: look at any creature within 48 blocks for a panel at the top with its name (red for enemies, green for
+  others), its life and a green-yellow-red bar that flashes on hits; it fades out a couple of seconds after you look
+  away. Options `enemyHealthBar` and `customBossBars` in `terracraft-client.toml`.
+
 ## IN PROGRESS
 - Nothing half-finished. Stage 5 (early Hardmode up to the mechanical bosses) is complete.
 

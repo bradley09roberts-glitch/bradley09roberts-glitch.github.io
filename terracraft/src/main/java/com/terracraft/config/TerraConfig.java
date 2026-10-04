@@ -189,6 +189,8 @@ public final class TerraConfig {
         public final ModConfigSpec.BooleanValue showLifeText;
         public final ModConfigSpec.BooleanValue showManaText;
         public final ModConfigSpec.BooleanValue showDefense;
+        public final ModConfigSpec.BooleanValue enemyHealthBar;
+        public final ModConfigSpec.BooleanValue customBossBars;
 
         Client(ModConfigSpec.Builder b) {
             b.comment("Heads-up display").push("hud");
@@ -203,6 +205,10 @@ public final class TerraConfig {
                 .define("showManaText", true);
             showDefense = b.comment("Show the defense shield next to the hearts.")
                 .define("showDefense", true);
+            enemyHealthBar = b.comment("Show a health bar with name and life for the enemy or creature you are looking at.")
+                .define("enemyHealthBar", true);
+            customBossBars = b.comment("Draw boss and invasion bars in TerraCraft's framed style with life numbers.")
+                .define("customBossBars", true);
             b.pop();
         }
     }

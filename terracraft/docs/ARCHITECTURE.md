@@ -136,6 +136,12 @@ replacements (config-conditioned recipe overrides, empty structure tags) win ove
 * Armor models come from `IClientItemExtensions` registered in `client.TerraArmorClient`; the Terraria HUD replaces
   the `player_health` GUI layer and hides `food_level` (two vanilla `Hud` methods are opened by
   `META-INF/accesstransformer.cfg`).
+* Health is real Terraria life: `TerrariaMob.raiseHealthCap()` lifts the max health attribute's 1024 limit (the
+  `RangedAttribute.maxValue` field is opened by the access transformer) at mod construction on both sides. Saves from
+  before kept health under 1000 with a `TerrariaLifeScale` tag and are converted on load.
+* `client.hud.HealthBars`: boss/invasion bars are redrawn through `CustomizeGuiOverlayEvent.BossEventProgress` (life
+  numbers come from the client entity whose health matches the bar); the focus bar picks the creature under the
+  crosshair within 48 blocks each client tick. Both can be turned off in `terracraft-client.toml`.
 * Modded menus opened with the extra-data `openMenu` can lose their initial contents on slow clients
   (different packet queues in 26.2); `AccessoryMenu` therefore opens through the vanilla path.
 * Entity type constants live in `EntityTypes`; time is clock based (use `/time` through the dispatcher).

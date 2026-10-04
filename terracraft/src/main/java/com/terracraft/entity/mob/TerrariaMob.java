@@ -30,16 +30,16 @@ import java.util.List;
  *     <li>Terraria stats come from its {@link MobDefinition} (see {@link TerrariaMobs}).</li>
  *     <li>Contact damage: touching the enemy hurts players (Expert/Master scaled, player defense applies).</li>
  *     <li>Terraria defense and coin value feed the damage pipeline and the economy.</li>
- *     <li>Life above Minecraft's health cap is supported through {@link #lifeScale()}: Minecraft health stays
- *     at most {@value #MAX_MINECRAFT_HEALTH} and incoming damage is divided by the scale.</li>
+ *     <li>Health is the real Terraria life (bosses have tens of thousands): {@link #raiseHealthCap()} lifts
+ *     Minecraft's 1024 limit on the max health attribute at startup.</li>
  *     <li>Dies the Terraria way: vanishes in a puff instead of falling over.</li>
  * </ul>
  * Families ({@link SlimeMob}, {@link WalkerMob}, {@link FlyerMob}) only implement movement.
  */
 public abstract class TerrariaMob extends Monster implements HasTerrariaDefense, EconomyEvents.CoinValue, com.terracraft.entity.SpriteEntity {
-    public static final int MAX_MINECRAFT_HEALTH = 1000;
+    /** Highest max health an entity may have (Minecraft's own limit is 1024). */
+    public static final double HEALTH_CAP = 10_000_000.0;
     private final MobDefinition definition;
-    private float lifeScale = 1.0F;
 
     protected TerrariaMob(EntityType<? extends TerrariaMob> type, Level level) {
         super(type, level);
@@ -49,7 +49,7 @@ public abstract class TerrariaMob extends Monster implements HasTerrariaDefense,
 
     public static AttributeSupplier.Builder attributes(MobDefinition definition) {
         return Monster.createMonsterAttributes()
-            .add(Attributes.MAX_HEALTH, Math.min(MAX_MINECRAFT_HEALTH, definition.life()))
+            .add(Attributes.MAX_HEALTH, definition.life())
             .add(Attributes.ATTACK_DAMAGE, definition.damage())
             .add(Attributes.MOVEMENT_SPEED, definition.moveSpeed())
             .add(Attributes.FOLLOW_RANGE, definition.followRange())
@@ -61,25 +61,26 @@ public abstract class TerrariaMob extends Monster implements HasTerrariaDefense,
         return definition;
     }
 
-    /** Terraria life per point of Minecraft health (1 for anything with at most 1000 life). */
-    public float lifeScale() {
-        return lifeScale;
+    /** Lifts Minecraft's 1024 cap on max health (called once at mod construction, on both sides). */
+    public static void raiseHealthCap() {
+        if (Attributes.MAX_HEALTH.value() instanceof net.minecraft.world.entity.ai.attributes.RangedAttribute ranged) {
+            ranged.maxValue = HEALTH_CAP;
+        }
     }
 
     public float terrariaLife() {
-        return getHealth() * lifeScale;
+        return getHealth();
     }
 
     public float terrariaMaxLife() {
-        return getMaxHealth() * lifeScale;
+        return getMaxHealth();
     }
 
-    /** Sets maximum life in Terraria units and refills it. */
+    /** Sets maximum life (Terraria units = Minecraft health) and refills it. */
     public void applyLife(float life) {
-        lifeScale = life > MAX_MINECRAFT_HEALTH ? life / MAX_MINECRAFT_HEALTH : 1.0F;
         AttributeInstance maxHealth = getAttribute(Attributes.MAX_HEALTH);
         if (maxHealth != null) {
-            maxHealth.setBaseValue(Math.min(MAX_MINECRAFT_HEALTH, life));
+            maxHealth.setBaseValue(life);
         }
         setHealth(getMaxHealth());
     }
@@ -167,16 +168,22 @@ public abstract class TerrariaMob extends Monster implements HasTerrariaDefense,
         return hurt;
     }
 
-    @Override
-    protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput output) {
-        super.addAdditionalSaveData(output);
-        output.putFloat("TerrariaLifeScale", lifeScale);
-    }
-
+    /**
+     * Older saves kept health under 1000 with a "TerrariaLifeScale"; convert them to real life (the attributes and
+     * health are already loaded at this point).
+     */
     @Override
     protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput input) {
         super.readAdditionalSaveData(input);
-        lifeScale = Math.max(1.0F, input.getFloatOr("TerrariaLifeScale", 1.0F));
+        float oldScale = input.getFloatOr("TerrariaLifeScale", 1.0F);
+        if (oldScale > 1.0F) {
+            float fraction = getMaxHealth() > 0 ? getHealth() / getMaxHealth() : 1.0F;
+            AttributeInstance maxHealth = getAttribute(Attributes.MAX_HEALTH);
+            if (maxHealth != null) {
+                maxHealth.setBaseValue(maxHealth.getBaseValue() * oldScale);
+            }
+            setHealth(getMaxHealth() * fraction);
+        }
     }
 
     /** Terraria enemies never take fall damage. */

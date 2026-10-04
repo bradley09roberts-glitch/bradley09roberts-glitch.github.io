@@ -37,6 +37,7 @@ public final class TerraCraft {
 
     public TerraCraft(IEventBus modBus, ModContainer container) {
         TerraCraft.modBus = modBus;
+        com.terracraft.entity.mob.TerrariaMob.raiseHealthCap();
 
         TerraConfig.register(container);
         ModRegistries.register(modBus);

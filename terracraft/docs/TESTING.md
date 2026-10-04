@@ -160,9 +160,11 @@ for testing drop in a throwaway mod whose constructor sets `SharedConstants.IS_R
 
 - Underground Hallow crystals: count with `fill <box> minecraft:sponge replace terracraft:crystal_shard` in 40x20x40
   slices (then swap back); Gelatin Crystals the same with `terracraft:gelatin_crystal_block`.
-- `execute as Dev at @s run terraria boss spawn queen_slime`; `data modify entity <boss> Health set value 420f` forces
-  her second phase (Minecraft health is capped at 1000 and scaled, so 1000 means full life). Bosses leave when the
-  player is in spectator mode: use survival with Resistance V for camera tests.
+- `execute as Dev at @s run terraria boss spawn queen_slime`; `data modify entity <boss> Health set value 8000f` forces
+  her second phase (health is the real Terraria life). Bosses leave when the player is in spectator mode, and a boss
+  with `NoAI` stops updating its bar's players: use survival with Resistance V for camera tests.
+- Aiming the test camera: `tp Dev <x> <y> <z> <yaw> <pitch>` with an explicit pitch; `execute ... facing entity` from
+  `at @s` aims from the feet, so the crosshair ends up above the target.
 - `/terraria worldgen dungeon rooms` lists Dungeon room floors; with `boss_skeletron_defeated` set, stand in one and
   wait ~20 s for the Bound Mechanic. Bound NPCs snap back to their spot, so move the player to them
   (`execute as @e[type=terracraft:bound_mechanic,limit=1] at @s run tp Dev ~ ~ ~-2.2 0 15`), then `xinput.py hold right 0.1`

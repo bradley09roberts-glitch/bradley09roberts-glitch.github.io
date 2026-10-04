@@ -130,10 +130,6 @@ public final class CombatEvents {
                 amount = DamageCalc.applyDefense(amount, defended.terrariaDefense(), armorPenetration, 0.5F);
             }
         }
-        if (target instanceof com.terracraft.entity.mob.TerrariaMob mob && mob.lifeScale() > 1.0F) {
-            // Enemies with more than 1000 life keep Minecraft health <= 1000; damage is scaled to match.
-            amount /= mob.lifeScale();
-        }
         event.setAmount(Math.max(amount, 0.0F));
         if (amount > 0.0F && target instanceof Player player) {
             // Taking damage restarts Terraria's natural life regeneration ramp.
