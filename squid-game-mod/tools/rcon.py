@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Minimal RCON client used by the verification scripts.
 
-Usage: rcon.py [--port 25598] [--password squidtest] <command...>
+Usage: rcon.py [--port $SQUID_RCON_PORT or 25598] [--password squidtest] <command...>
 Prints the server response. Exit code 2 on connection failure.
 """
 import argparse
+import os
 import socket
 import struct
 import sys
@@ -47,7 +48,7 @@ def rcon(command: str, host="127.0.0.1", port=25598, password="squidtest", timeo
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--host", default="127.0.0.1")
-    ap.add_argument("--port", type=int, default=25598)
+    ap.add_argument("--port", type=int, default=int(os.environ.get("SQUID_RCON_PORT", "25598")))
     ap.add_argument("--password", default="squidtest")
     ap.add_argument("command", nargs="+")
     a = ap.parse_args()

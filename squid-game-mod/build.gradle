@@ -38,7 +38,8 @@ loom {
             client()
             name = 'Squid Game Test Client'
             runDir 'run-testclient'
-            programArgs '--username', 'Contestant', '--quickPlayMultiplayer', 'localhost:25599',
+            programArgs '--username', System.getenv('SQUID_USER') ?: 'Contestant',
+                    '--quickPlayMultiplayer', 'localhost:' + (System.getenv('SQUID_PORT') ?: '25599'),
                     '--width', '1280', '--height', '720'
             vmArgs '-Xmx2G'
         }

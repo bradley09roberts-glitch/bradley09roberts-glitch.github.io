@@ -47,6 +47,23 @@ public final class Tournament {
     public boolean restartRequested;
     /** Tick when the tournament started (for stats). */
     public long startedAtTick;
+    /** Debug: play exactly this game first (null = normal planning). */
+    @Nullable
+    public GameKind forcedGame;
+    /** Debug: end the tournament after one game. */
+    public boolean singleGame;
+
+    /** The game to play after {@code last} (null = nothing left), honouring the debug single-game mode. */
+    @Nullable
+    public GameKind nextGame(@Nullable GameKind last) {
+        if (forcedGame != null && played.isEmpty()) {
+            return forcedGame;
+        }
+        if (singleGame && !played.isEmpty()) {
+            return null;
+        }
+        return Planner.next(last, roster.aliveCount());
+    }
 
     public int remainingPhaseTicks() {
         return Math.max(0, phaseLength - phaseTicks);
@@ -72,6 +89,10 @@ public final class Tournament {
         t.putInt("elimCounter", eliminationCounter);
         t.putBoolean("npcOnly", npcOnly);
         t.putLong("startedAt", startedAtTick);
+        if (forcedGame != null) {
+            t.putString("forcedGame", forcedGame.id);
+        }
+        t.putBoolean("singleGame", singleGame);
         if (game != null) {
             CompoundTag gs = new CompoundTag();
             game.saveState(gs);
@@ -102,6 +123,8 @@ public final class Tournament {
         tr.eliminationCounter = t.getInt("elimCounter");
         tr.npcOnly = t.getBoolean("npcOnly");
         tr.startedAtTick = t.getLong("startedAt");
+        tr.forcedGame = t.contains("forcedGame") ? GameKind.byId(t.getString("forcedGame")) : null;
+        tr.singleGame = t.getBoolean("singleGame");
         tr.savedGameState = t.getCompound("gameState");
         return tr;
     }

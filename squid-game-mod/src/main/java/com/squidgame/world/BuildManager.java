@@ -95,7 +95,8 @@ public final class BuildManager {
         if (whenIdle != null) {
             onIdle.add(whenIdle);
         }
-        totalArenas = Math.max(totalArenas, queue.size() + (isBusy() ? 1 : 0));
+        int inFlight = generating != null || clear != null || job != null ? 1 : 0;
+        totalArenas = Math.max(totalArenas, doneArenas + queue.size() + inFlight);
         if (!isBusy()) {
             finishIdle();
         }

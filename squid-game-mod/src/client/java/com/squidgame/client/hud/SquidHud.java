@@ -288,7 +288,7 @@ public final class SquidHud {
         ResourceLocation rl = ResourceLocation.fromNamespaceAndPath("squidgame", "textures/gui/hud/" + name + ".png");
         boolean exists = ICON_EXISTS.computeIfAbsent(name, k -> Minecraft.getInstance().getResourceManager().getResource(rl).isPresent());
         if (exists) {
-            g.blit(rl, x, y, 0, 0, size, size, size, size);
+            g.blit(rl, x, y, size, size, 0f, 0f, 16, 16, 16, 16);
         }
     }
 }

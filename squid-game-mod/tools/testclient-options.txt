@@ -1,0 +1,17 @@
+version:3955
+onboardAccessibility:false
+narrator:0
+lang:en_us
+renderDistance:8
+simulationDistance:6
+maxFps:30
+guiScale:3
+fov:70.0
+pauseOnLostFocus:false
+tutorialStep:none
+skipMultiplayerWarning:true
+joinedFirstServer:true
+soundCategory_master:0.0
+enableVsync:false
+fullscreen:false
+gamma:0.5

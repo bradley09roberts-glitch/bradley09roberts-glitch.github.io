@@ -27,7 +27,9 @@ import com.squidgame.registry.ModSounds;
 import com.squidgame.world.ArenaData;
 import com.squidgame.world.ArenaWorld;
 import com.squidgame.world.BuildManager;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -39,7 +41,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.FireworkExplosion;
+import net.minecraft.world.item.component.Fireworks;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -78,6 +84,12 @@ public final class TournamentManager {
     private TournamentData data;
     private long tickCounter;
     private boolean awaitingBuild;
+    private record Delayed(long due, Runnable action) {
+    }
+
+    private final List<Delayed> delayed = new ArrayList<>();
+    @Nullable
+    private GameKind pendingForcedGame;
     private int lastNumbersHash;
 
     private record PendingSpectate(UUID player, long dueTick, boolean waitForGround) {
@@ -325,6 +337,7 @@ public final class TournamentManager {
                 SquidGameMod.LOGGER.error("Tournament tick failed in phase {}", t.phase, e);
             }
         }
+        tickDelayed();
         tickPendingSpectate();
         tickBodyRemovals();
         tickPlayers();
@@ -435,12 +448,27 @@ public final class TournamentManager {
         return null;
     }
 
+    /** Debug: starts a tournament that plays exactly one game (registration is closed immediately). */
+    public String startSingleGame(@Nullable ServerPlayer starter, GameKind game, @Nullable Difficulty difficulty, int npcOverride, boolean npcOnly) {
+        pendingForcedGame = game;
+        String err = start(starter, difficulty, npcOverride, npcOnly);
+        if (err != null) {
+            pendingForcedGame = null;
+        }
+        return err;
+    }
+
     private void beginRegistration(@Nullable ServerPlayer starter, Difficulty d, int npcOverride, boolean npcOnly) {
         if (t != null) {
             return;
         }
         ServerLevel level = arenaLevel();
         t = new Tournament();
+        if (pendingForcedGame != null) {
+            t.forcedGame = pendingForcedGame;
+            t.singleGame = true;
+            pendingForcedGame = null;
+        }
         t.seed = server.overworld().getRandom().nextLong();
         t.difficulty = d;
         t.npcOnly = npcOnly;
@@ -466,6 +494,9 @@ public final class TournamentManager {
         npcCount = Math.max(0, Math.min(npcCount, cfg.maxContestants - humans));
         spawnNpcs(level, rng, npcCount);
         enter(Phase.REGISTRATION);
+        if (t.forcedGame != null) {
+            closeRegistration();
+        }
         Announcer.chat(server, Component.translatable("squidgame.msg.registration_open", d.id));
         Announcer.title(server, Component.translatable("squidgame.title.registration"),
                 Component.translatable("squidgame.subtitle.registration", t.roster.size()), 10, 60, 20);
@@ -744,7 +775,7 @@ public final class TournamentManager {
         tr.phase = Phase.INSTRUCTIONS;
         tr.phaseTicks = 0;
         GameKind last = tr.played.isEmpty() ? null : tr.played.get(tr.played.size() - 1);
-        GameKind next = Planner.next(last, tr.roster.aliveCount());
+        GameKind next = tr.nextGame(last);
         if (next == null) {
             enter(Phase.FINAL_WINNER);
             return;
@@ -956,7 +987,7 @@ public final class TournamentManager {
             chunks.release(arena);
         }
         GameKind last = t.played.isEmpty() ? null : t.played.get(t.played.size() - 1);
-        GameKind next = Planner.next(last, t.roster.aliveCount());
+        GameKind next = t.nextGame(last);
         if (next == null) {
             enter(Phase.FINAL_WINNER);
             return;
@@ -1110,14 +1141,42 @@ public final class TournamentManager {
         if (c == null) {
             return;
         }
-        for (int i = 0; i < 12; i++) {
+        int[][] palettes = {{0xED1B76, 0xFFFFFF}, {0x0FA89C, 0xFFFFFF}, {0xFFD23F, 0xED1B76}};
+        for (int i = 0; i < 16; i++) {
             final int k = i;
-            t.ctx = t.ctx; // keep ctx null-safe; use direct scheduling via server tasks
-            server.execute(() -> {
-                level.sendParticles(ParticleTypes.FIREWORK, c.x + (k % 4 - 1.5) * 2, c.y + 3 + k % 3, c.z + (k / 4 - 1) * 2, 25, 0.6, 0.6, 0.6, 0.05);
+            later(10 + i * 8, () -> {
+                double ang = k * 2.4;
+                double rad = 3 + k % 4;
+                int[] pal = palettes[k % palettes.length];
+                ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
+                FireworkExplosion ex = new FireworkExplosion(k % 3 == 0 ? FireworkExplosion.Shape.STAR : FireworkExplosion.Shape.LARGE_BALL,
+                        IntList.of(pal), IntList.of(0xFFFFFF), true, k % 2 == 0);
+                rocket.set(DataComponents.FIREWORKS, new Fireworks(1, List.of(ex)));
+                level.addFreshEntity(new FireworkRocketEntity(level, c.x + Math.cos(ang) * rad, c.y + 1, c.z + Math.sin(ang) * rad, rocket));
             });
         }
-        level.playSound(null, c.x, c.y, c.z, net.minecraft.sounds.SoundEvents.FIREWORK_ROCKET_LARGE_BLAST, SoundSource.PLAYERS, 3f, 1f);
+    }
+
+    /** Runs {@code action} after {@code ticks} manager ticks (independent of any game context). */
+    private void later(int ticks, Runnable action) {
+        delayed.add(new Delayed(tickCounter + ticks, action));
+    }
+
+    private void tickDelayed() {
+        if (delayed.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < delayed.size(); i++) {
+            Delayed d = delayed.get(i);
+            if (d.due() <= tickCounter) {
+                delayed.remove(i--);
+                try {
+                    d.action().run();
+                } catch (RuntimeException e) {
+                    SquidGameMod.LOGGER.error("delayed task failed", e);
+                }
+            }
+        }
     }
 
     // ---------------------------------------------------------------- restart

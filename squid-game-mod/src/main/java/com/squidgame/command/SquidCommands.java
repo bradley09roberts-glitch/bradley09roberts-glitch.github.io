@@ -140,6 +140,16 @@ public final class SquidCommands {
                         .then(Commands.argument("difficulty", StringArgumentType.word())
                                 .executes(c -> start(c, Difficulty.byId(StringArgumentType.getString(c, "difficulty"), Difficulty.NORMAL),
                                         IntegerArgumentType.getInteger(c, "npcs"), true)))));
+        // /squid debug play <game> [npcs] [difficulty] : the executing player takes part (if any); registration is
+        // closed at once and the tournament ends after this single game. Use /squid debug simulate for NPC-only runs.
+        debug.then(Commands.literal("play").then(Commands.argument("game", StringArgumentType.word())
+                .suggests((c, b) -> SharedSuggestionProvider.suggest(java.util.Arrays.stream(com.squidgame.core.GameKind.values()).map(g -> g.id).toList(), b))
+                .executes(c -> playSingle(c, -1, null))
+                .then(Commands.argument("npcs", IntegerArgumentType.integer(0, 456))
+                        .executes(c -> playSingle(c, IntegerArgumentType.getInteger(c, "npcs"), null))
+                        .then(Commands.argument("difficulty", StringArgumentType.word())
+                                .executes(c -> playSingle(c, IntegerArgumentType.getInteger(c, "npcs"),
+                                        Difficulty.byId(StringArgumentType.getString(c, "difficulty"), Difficulty.NORMAL)))))));
         debug.then(Commands.literal("timescale").then(Commands.argument("x", DoubleArgumentType.doubleArg(0.02, 10)).executes(c -> {
             SquidConfig.get().setValue("timeScale", Double.toString(DoubleArgumentType.getDouble(c, "x")));
             c.getSource().sendSuccess(() -> Component.literal("timeScale = " + SquidConfig.get().timeScale), true);
@@ -219,6 +229,22 @@ public final class SquidCommands {
         if (npcOnly && p != null) {
             // watch the simulation
             m.enterOrBuild(p);
+        }
+        return 1;
+    }
+
+    private static int playSingle(CommandContext<CommandSourceStack> c, int npcs, Difficulty d) {
+        com.squidgame.core.GameKind kind = com.squidgame.core.GameKind.byId(StringArgumentType.getString(c, "game"));
+        if (kind == null) {
+            c.getSource().sendFailure(Component.literal("Unknown game. One of: red_light, dalgona, tug_of_war, marbles, glass_bridge, final"));
+            return 0;
+        }
+        TournamentManager m = mgr(c);
+        ServerPlayer p = c.getSource().getEntity() instanceof ServerPlayer sp ? sp : null;
+        String err = m.startSingleGame(p, kind, d, npcs, p == null);
+        if (err != null) {
+            c.getSource().sendFailure(Component.literal(err));
+            return 0;
         }
         return 1;
     }

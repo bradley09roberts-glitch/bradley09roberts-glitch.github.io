@@ -1,14 +1,13 @@
-.gradle/
-build/
-run/
-run-testclient/
-run-server/
+/.gradle/
+/build/
+/run/
+/run-*/
+/out/
 .idea/
 *.iml
-out/
 *.log
 __pycache__/
-tools/out/
+/tools/out/
 
 # regenerable previews
-tools/assets/models/doll/preview/
+/tools/assets/models/doll/preview/
