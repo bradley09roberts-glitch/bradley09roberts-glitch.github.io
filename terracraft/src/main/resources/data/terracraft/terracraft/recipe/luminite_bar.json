@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:luminite_bar",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:luminite",
+      "count": 4
+    }
+  ],
+  "stations": [
+    "terracraft:ancient_manipulator"
+  ],
+  "category": "materials"
+}

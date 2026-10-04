@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:nebula_blaze",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:nebula_fragment",
+      "count": 18
+    }
+  ],
+  "stations": [
+    "terracraft:ancient_manipulator"
+  ],
+  "category": "weapons"
+}

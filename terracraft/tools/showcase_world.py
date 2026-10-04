@@ -28,7 +28,7 @@ LANG = json.load(open(os.path.join(ROOT, 'src/main/resources/assets/terracraft/l
 FLOOR = 209          # floor blocks; players stand at FLOOR + 1
 Y = FLOOR + 1
 FUNCS = {}
-AREA = (-172, -310, 252, 172)   # x0, z0, x1, z1 of everything the showcase builds
+AREA = (-172, -346, 252, 172)   # x0, z0, x1, z1 of everything the showcase builds
 
 
 def fn(name, *lines):
@@ -144,12 +144,14 @@ fn('pumpkin_moon', 'time set night', 'terraria hardmode true', 'terraria event s
 fn('frost_moon', 'time set night', 'terraria hardmode true', 'terraria event start frost_moon', 'say The Frost Moon rises! Go down to the surface.')
 fn('martian_madness', 'time set day', 'terraria hardmode true', 'terraria event start martian_madness',
    'say Martians are invading the surface! The Martian Saucer comes once a third are beaten.')
+fn('celestial', 'terraria hardmode true', 'terraria celestial start', P + 'terraria celestial status',
+   'say The four Celestial Pillars stand far out from spawn. Use /terraria celestial tp <solar|vortex|nebula|stardust> to visit one.')
 fn('stop_event', 'terraria event stop')
 fn('meteor', 'time set night', P + 'terraria meteor', 'say A meteor landed near you. Look for the smoke!')
 buttons('west', 'EVENTS & NPCS', [
     ('Blood Moon', 'blood_moon'), ('Slime Rain', 'slime_rain'), ('Goblin Army', 'goblin_army'), ('Pirate Invasion', 'pirate_invasion'),
     ('Frost Legion', 'frost_legion'), ('Pumpkin Moon', 'pumpkin_moon'), ('Frost Moon', 'frost_moon'), ('Martian Madness', 'martian_madness'),
-    ('Stop Event', 'stop_event'),
+    ('Celestial Pillars', 'celestial'), ('Stop Event', 'stop_event'),
     ('Drop Meteor', 'meteor'), ('All Town NPCs', 'npc_all'), ('Remove NPCs', 'npc_remove'),
 ] + [(LANG.get(f'npc.terracraft.{n}', n.title()), f'npc_{n}') for n in NPCS])
 
@@ -223,7 +225,7 @@ fn('kit_meteor', *give('space_gun', 'meteor_helmet', 'meteor_suit', 'meteor_legg
 fn('kit_hardmode', *give('pwnhammer', 'breaker_blade', 'laser_rifle', 'warrior_emblem', 'ranger_emblem', 'sorcerer_emblem', 'summoner_emblem',
                          'titan_glove', 'clentaminator', 'green_solution*50', 'blue_solution*50', 'purple_solution*50', 'red_solution*50'))
 fn('kit_hm_ores', *give('cobalt_pickaxe', 'mythril_sword', 'orichalcum_repeater', 'minecraft:arrow*99', 'adamantite_helmet', 'adamantite_breastplate',
-                        'adamantite_leggings', 'titanium_helmet', 'titanium_breastplate', 'titanium_leggings', 'mythril_anvil', 'adamantite_forge',
+                        'adamantite_leggings', 'titanium_helmet', 'titanium_breastplate', 'titanium_leggings', 'mythril_anvil', 'adamantite_forge', 'ancient_manipulator',
                         'raw_cobalt*30', 'raw_mythril*30', 'raw_adamantite*30'))
 fn('kit_hallowed', *give('excalibur', 'hallowed_repeater', 'pickaxe_axe', 'minecraft:arrow*99', 'hallowed_mask', 'hallowed_plate_mail',
                          'hallowed_greaves', 'greater_healing_potion*20', 'soul_of_might*5', 'soul_of_sight*5', 'soul_of_fright*5'))
@@ -246,6 +248,11 @@ fn('kit_moons', *give('pumpkin_moon_medallion*3', 'naughty_present*3', 'the_hors
                       'christmas_tree_sword', 'razorpine', 'chain_gun', 'elf_melter', 'north_pole', 'blizzard_staff', 'musket_ball*99',
                       'minecraft:arrow*99'))
 fn('kit_empress_martian', *give('nightglow', 'starlight', 'empress_wings', 'influx_waver', 'laser_machinegun', 'xenopopper', 'musket_ball*99'))
+fn('kit_lunar', *give('meowmere', 'star_wrath', 'sdmg', 'last_prism', 'lunar_flare', 'solar_eruption', 'daybreak', 'vortex_beater', 'phantasm',
+                      'nebula_blaze', 'nebula_arcanum', 'stardust_dragon_staff', 'stardust_cell_staff', 'solar_flare_pickaxe', 'solar_wings',
+                      'vortex_wings', 'nebula_wings', 'stardust_wings', 'celestial_sigil*3', 'ancient_manipulator', 'luminite_bar*30',
+                      'solar_fragment*30', 'vortex_fragment*30', 'nebula_fragment*30', 'stardust_fragment*30', 'musket_ball*99', 'minecraft:arrow*99'),
+   'say Place the Ancient Manipulator to craft the fragment armors, wings and weapons.')
 fn('kit_accessories', *give(*[i for i in ALL_ITEMS if i in {
     'hermes_boots', 'cloud_in_a_bottle', 'shiny_red_balloon', 'lucky_horseshoe', 'band_of_regeneration', 'band_of_starpower',
     'mana_regeneration_band', 'natures_gift', 'aglet', 'anklet_of_the_wind', 'feral_claws', 'obsidian_skull', 'lava_charm', 'cobalt_shield',
@@ -254,7 +261,7 @@ fn('kit_accessories', *give(*[i for i in ALL_ITEMS if i in {
 fn('kit_summons', *give('slime_crown*3', 'suspicious_looking_eye*3', 'worm_food*3', 'bloody_spine*3', 'abeemination*3',
                         'guide_voodoo_doll', 'goblin_battle_standard*3', 'gelatin_crystal*3', 'mechanical_eye*3', 'mechanical_worm*3',
                         'mechanical_skull*3', 'pirate_map*3', 'snow_globe*3', 'lihzahrd_power_cell*3',
-                        'truffle_worm*3', 'pumpkin_moon_medallion*3', 'naughty_present*3'))
+                        'truffle_worm*3', 'pumpkin_moon_medallion*3', 'naughty_present*3', 'celestial_sigil*3'))
 fn('kit_potions', *give('healing_potion*20', 'mana_potion*20', 'ironskin_potion*5', 'swiftness_potion*5', 'regeneration_potion*5',
                         'magic_power_potion*5', 'archery_potion*5', 'mining_potion*5', 'obsidian_skin_potion*5', 'endurance_potion*5',
                         'wrath_potion*5', 'rage_potion*5', 'water_walking_potion*5'))
@@ -274,7 +281,7 @@ buttons('south', 'GEAR KITS', [
     ('Hardmode Ores Kit', 'kit_hm_ores'), ('Hallowed Kit', 'kit_hallowed'), ('Queen Slime Kit', 'kit_queen_slime'), ('Pirate Kit', 'kit_pirates'),
     ('Chlorophyte Kit', 'kit_chlorophyte'), ('Plantera Kit', 'kit_plantera'), ('Golem Kit', 'kit_golem'),
     ('Duke Fishron Kit', 'kit_fishron'), ('Spectre & Dungeon Kit', 'kit_dungeon_hm'), ('Moon Events Kit', 'kit_moons'),
-    ('Empress & Martian Kit', 'kit_empress_martian'),
+    ('Empress & Martian Kit', 'kit_empress_martian'), ('Lunar Kit', 'kit_lunar'),
     ('All Accessories', 'kit_accessories'), ('Boss Summons', 'kit_summons'), ('Potions', 'kit_potions'), ('Crafting Stations', 'kit_stations'),
     ('Wings', 'kit_wings'), ('Food Buffs', 'kit_food'), ('Coins', 'kit_coins'), ('Life & Mana Crystals', 'kit_life'),
     ('Clear Inventory', 'clear_inventory'),
@@ -284,7 +291,8 @@ buttons('south', 'GEAR KITS', [
 BOSSES = [('King Slime', 'king_slime'), ('Eye of Cthulhu', 'eye_of_cthulhu'), ('Eater of Worlds', 'eater_of_worlds'),
           ('Brain of Cthulhu', 'brain_of_cthulhu'), ('Queen Bee', 'queen_bee'), ('Skeletron', 'skeletron'), ('Wall of Flesh', 'wall_of_flesh'),
           ('Queen Slime', 'queen_slime'), ('The Twins', 'the_twins'), ('The Destroyer', 'destroyer'), ('Skeletron Prime', 'skeletron_prime'),
-          ('Plantera', 'plantera'), ('Golem', 'golem'), ('Duke Fishron', 'duke_fishron'), ('Empress of Light', 'empress_of_light')]
+          ('Plantera', 'plantera'), ('Golem', 'golem'), ('Duke Fishron', 'duke_fishron'), ('Empress of Light', 'empress_of_light'),
+          ('Lunatic Cultist', 'lunatic_cultist'), ('Moon Lord', 'moon_lord')]
 for text, boss in BOSSES:
     fn(f'boss_{boss}', 'gamemode survival @p', P + f'terraria boss spawn {boss}')
 fn('boss_skeletron', 'gamemode survival @p', 'time set night', P + 'terraria boss spawn skeletron')
@@ -294,6 +302,8 @@ for _mech in ('the_twins', 'destroyer', 'skeletron_prime'):   # Hardmode, night 
 fn('boss_queen_slime', 'gamemode survival @p', 'terraria hardmode true', P + 'terraria boss spawn queen_slime')
 fn('boss_duke_fishron', 'gamemode survival @p', 'terraria hardmode true', P + 'terraria boss spawn duke_fishron',
    'say Away from the ocean the Duke fights enraged!')
+for _end in ('lunatic_cultist', 'moon_lord'):
+    fn(f'boss_{_end}', 'gamemode survival @p', 'terraria hardmode true', P + f'terraria boss spawn {_end}')
 fn('boss_empress_of_light', 'gamemode survival @p', 'terraria hardmode true', 'time set midnight', P + 'terraria boss spawn empress_of_light')
 for _late in ('plantera', 'golem'):   # outside the jungle / temple they fight enraged
     fn(f'boss_{_late}', 'gamemode survival @p', 'terraria hardmode true', P + f'terraria boss spawn {_late}',
@@ -479,22 +489,26 @@ ROOMS = [   # name, floor, wall, light, (log, leaves) or None, enemies
     ('Martians, Sea & Critters', 'minecraft:smooth_stone', 'minecraft:light_gray_concrete', 'minecraft:sea_lantern', None,
      ['gray_grunt', 'ray_gunner', 'brain_scrambler', 'gigazapper', 'martian_officer', 'scutlix', 'martian_drone', 'martian_probe', 'sharkron',
       'truffle_worm', 'prismatic_lacewing']),
+    ('Celestial Pillars', 'minecraft:end_stone_bricks', 'minecraft:purpur_block', 'minecraft:end_rod', None,
+     ['cultist_devotee', 'selenian', 'sroller', 'corite', 'storm_diver', 'alien_hornet', 'vortexian', 'nebula_floater', 'brain_suckler',
+      'predictor', 'star_cell', 'flow_invader', 'twinkle_popper']),
 ]
 FLYERS = {'demon_eye', 'cave_bat', 'giant_bat', 'eater_of_souls', 'corruptor', 'slimer', 'crimera', 'floaty_gross', 'jungle_bat', 'hornet', 'bee',
           'cursed_skull', 'demon', 'voodoo_demon', 'hellbat', 'pixie', 'gastropod', 'illuminant_bat', 'drippler', 'meteor_head', 'wyvern', 'probe',
           'wraith', 'servant_of_cthulhu', 'parrot', 'heavenly_slime', 'flying_snake', 'dungeon_spirit', 'poltergeist', 'flocko',
-          'martian_drone', 'martian_probe', 'sharkron', 'prismatic_lacewing'}
-fill(-4, FLOOR, -41, 4, FLOOR, -301, 'minecraft:polished_andesite')            # the avenue
-fill(-5, FLOOR, -41, -5, FLOOR, -301, 'minecraft:polished_blackstone_bricks')
-fill(5, FLOOR, -41, 5, FLOOR, -301, 'minecraft:polished_blackstone_bricks')
-for z in range(-44, -301, -4):
+          'martian_drone', 'martian_probe', 'sharkron', 'prismatic_lacewing', 'corite', 'alien_hornet', 'nebula_floater', 'brain_suckler',
+          'star_cell', 'flow_invader'}
+fill(-4, FLOOR, -41, 4, FLOOR, -337, 'minecraft:polished_andesite')            # the avenue
+fill(-5, FLOOR, -41, -5, FLOOR, -337, 'minecraft:polished_blackstone_bricks')
+fill(5, FLOOR, -41, 5, FLOOR, -337, 'minecraft:polished_blackstone_bricks')
+for z in range(-44, -337, -4):
     put(0, FLOOR, z, 'minecraft:sea_lantern')
-for z in range(-44, -301, -12):
+for z in range(-44, -337, -12):
     for x in (-4, 4):
         put(x, Y, z, 'minecraft:polished_blackstone_wall')
         put(x, Y + 1, z, 'minecraft:lantern')
-fill(-6, Y, -302, 6, Y + 8, -302, 'minecraft:polished_blackstone_bricks')
-wall_sign(0, Y + 3, -301, 'south', '', 'THE BESTIARY', 'every enemy', '', color='yellow')
+fill(-6, Y, -338, 6, Y + 8, -338, 'minecraft:polished_blackstone_bricks')
+wall_sign(0, Y + 3, -337, 'south', '', 'THE BESTIARY', 'every enemy', '', color='yellow')
 ZOO_COUNT = 0
 for k, (room, floor, wall, light, tree_kind, enemies) in enumerate(ROOMS):
     side = 1 if k % 2 else -1
@@ -612,16 +626,24 @@ BOSS_HALL = [   # (boss entities with offsets, name, summoned with, flying heigh
     ([('santa_nk1', 0, 0)], 'Santa-NK1', 'Frost Moon', 0),
     ([('ice_queen', 0, 0)], 'Ice Queen', 'Frost Moon', 2),
     ([('martian_saucer', 0, 0)], 'Martian Saucer', 'Martian Madness', 5),
+    ([('lunatic_cultist', 0, 0), ('cultist_clone', -2.2, 1.5), ('cultist_clone', 2.2, 1.5)], 'Lunatic Cultist', 'Devotees at the Dungeon', 2),
+    ([('solar_pillar', 0, 0)], 'Solar Pillar', 'after the Cultist', 0),
+    ([('vortex_pillar', 0, 0)], 'Vortex Pillar', 'after the Cultist', 0),
+    ([('nebula_pillar', 0, 0)], 'Nebula Pillar', 'after the Cultist', 0),
+    ([('stardust_pillar', 0, 0)], 'Stardust Pillar', 'after the Cultist', 0),
+    ([('moon_lord', 0, 0), ('moon_lord_head', 0, 0.5), ('moon_lord_hand', -3, -1), ('moon_lord_hand', 3, -1)], 'Moon Lord',
+     'Celestial Sigil / pillars', 0),
 ]
+ROW = (len(BOSS_HALL) + 1) // 2      # two rows of pedestals, 7 blocks apart
 GOLEM_HEAD_LIFT = 3.1   # the head sits on the body's shoulders
 for i, (parts, name, summon, lift) in enumerate(BOSS_HALL):
-    north = i < 11
-    x = 58 + 9 * (i % 11)
+    north = i < ROW
+    x = 56 + 7 * (i % ROW)
     z = -20 if north else 20
-    fill(x - 4, Y, z - 5, x + 4, Y, z + 5, 'minecraft:polished_blackstone_bricks')
-    fill(x - 3, Y + 1, z - 4, x + 3, Y + 1, z + 4, 'minecraft:smooth_quartz')
-    fill(x - 4, Y + 1, z - 5 if north else z + 5, x + 4, Y + 1, z - 5 if north else z + 5, 'minecraft:gold_block')
-    for cx in (x - 4, x + 4):
+    fill(x - 3, Y, z - 5, x + 3, Y, z + 5, 'minecraft:polished_blackstone_bricks')
+    fill(x - 2, Y + 1, z - 4, x + 2, Y + 1, z + 4, 'minecraft:smooth_quartz')
+    fill(x - 3, Y + 1, z - 5 if north else z + 5, x + 3, Y + 1, z - 5 if north else z + 5, 'minecraft:gold_block')
+    for cx in (x - 3, x + 3):
         for cz in (z - 5, z + 5):
             fill(cx, Y + 1, cz, cx, Y + 3, cz, 'minecraft:quartz_pillar')
             put(cx, Y + 4, cz, 'minecraft:sea_lantern')
@@ -631,7 +653,8 @@ for i, (parts, name, summon, lift) in enumerate(BOSS_HALL):
         sign(x + 1, Y, front, 0 if north else 8, *label(summon))
     for entity, dx, dz in parts:
         dz = dz if north else -dz
-        up = GOLEM_HEAD_LIFT if entity == 'golem_head' else 1.4 if entity == 'golem_fist' else 0
+        up = GOLEM_HEAD_LIFT if entity == 'golem_head' else 1.4 if entity == 'golem_fist' else 8.2 if entity == 'moon_lord_head' \
+            else 4.5 if entity == 'moon_lord_hand' else 0
         mob(entity, x + 0.5 + dx, Y + 2 + lift + up, z + 0.5 + dz, 0 if north else 180)
 # the arena
 bridge(155, -3, 159, 3)
@@ -669,9 +692,11 @@ def first(*names):
 
 
 SET_NAMES = ['wood', 'copper', 'tin', 'iron', 'lead', 'silver', 'tungsten', 'gold', 'platinum', 'jungle', 'meteor', 'shadow', 'crimson', 'molten',
-             'cobalt', 'palladium', 'mythril', 'orichalcum', 'adamantite', 'titanium', 'hallowed', 'chlorophyte', 'spectre']
+             'cobalt', 'palladium', 'mythril', 'orichalcum', 'adamantite', 'titanium', 'hallowed', 'chlorophyte', 'spectre',
+             'solar_flare', 'vortex', 'nebula', 'stardust']
 WEAPON = {'wood': 'wooden_sword', 'shadow': 'lights_bane', 'crimson': 'blood_butcherer', 'jungle': 'blade_of_grass', 'molten': 'fiery_greatsword',
-          'meteor': 'space_gun', 'hallowed': 'excalibur', 'chlorophyte': 'chlorophyte_claymore', 'spectre': 'shadowbeam_staff'}
+          'meteor': 'space_gun', 'hallowed': 'excalibur', 'chlorophyte': 'chlorophyte_claymore', 'spectre': 'shadowbeam_staff',
+          'solar_flare': 'solar_eruption', 'vortex': 'vortex_beater', 'nebula': 'nebula_blaze', 'stardust': 'stardust_dragon_staff'}
 TOOL = {'shadow': 'nightmare_pickaxe', 'crimson': 'deathbringer_pickaxe', 'molten': 'molten_pickaxe', 'hallowed': 'pickaxe_axe', 'jungle': 'bee_keeper'}
 for i, s in enumerate(SET_NAMES):
     head = first(f'{s}_helmet', f'{s}_hat', f'{s}_mask', f'{s}_hood')
@@ -680,7 +705,7 @@ for i, s in enumerate(SET_NAMES):
     weapon = first(WEAPON.get(s, ''), f'{s}_broadsword', f'{s}_sword', f'{s}_shortsword')
     tool = first(TOOL.get(s, ''), f'{s}_pickaxe', f'{s}_bow', f'{s}_repeater')
     north = i % 2 == 0
-    x = -56 - 9 * (i // 2)
+    x = -56 - 7 * (i // 2)
     z = -10 if north else 10
     fill(x - 1, Y, z - 1, x + 1, Y, z + 1, 'minecraft:polished_andesite')
     put(x, Y, z, 'minecraft:gold_block' if s in ('gold', 'hallowed') else 'minecraft:polished_diorite')
@@ -690,7 +715,7 @@ for i, s in enumerate(SET_NAMES):
             equip.append(f'{slot}:{{id:"terracraft:{item}"}}')
     E.append(f'summon armor_stand {x + 0.5} {Y + 1} {z + 0.5} {{{TAG}ShowArms:1b,NoBasePlate:1b,Invulnerable:1b,Rotation:[{0 if north else 180}f,0f],'
              f'Pose:{{RightArm:[-20f,0f,10f],LeftArm:[-20f,0f,-10f]}},equipment:{{{",".join(equip)}}}}}')
-    title_text = {'shadow': 'Shadow', 'crimson': 'Crimson', 'hallowed': 'Hallowed'}.get(s, s.title())
+    title_text = {'shadow': 'Shadow', 'crimson': 'Crimson', 'hallowed': 'Hallowed', 'solar_flare': 'Solar Flare'}.get(s, s.title())
     sign(x, Y, z + 2 if north else z - 2, 0 if north else 8, '', title_text, 'armor', '')
 
 

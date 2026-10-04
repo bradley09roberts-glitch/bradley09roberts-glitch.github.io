@@ -240,6 +240,59 @@ public final class ProjectileKinds {
     public static final ProjectileKind INFLUX_WAVE = register(ProjectileKind.builder("influx_wave")
         .lifetime(40).size(0.5F, 0.9F).orientation(ProjectileKind.Orientation.SPIN).homing(0.1F, 16.0F).pierce(2).noTileCollide().fullbright()
         .trail(() -> ParticleTypes.ELECTRIC_SPARK));
+    // ---------------------------------------------------------------- Lunatic Cultist, Celestial Pillars, Moon Lord
+    public static final ProjectileKind CULTIST_FIREBALL = register(ProjectileKind.builder("cultist_fireball")
+        .lifetime(160).size(0.5F, 0.8F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.04F, 40.0F).noTileCollide().fullbright().enemy()
+        .trail(() -> ParticleTypes.FLAME).ignites(80, 0.5F));
+    public static final ProjectileKind CULTIST_LIGHTNING = register(ProjectileKind.builder("cultist_lightning")
+        .lifetime(50).size(0.3F, 0.8F).noTileCollide().fullbright().enemy().trail(() -> ParticleTypes.ELECTRIC_SPARK));
+    public static final ProjectileKind ICE_MIST = register(ProjectileKind.builder("ice_mist")
+        .lifetime(200).size(1.2F, 2.0F).orientation(ProjectileKind.Orientation.SPIN).pierce(-1).hitCooldown(15).noTileCollide().fullbright()
+        .enemy().trail(() -> ParticleTypes.SNOWFLAKE).debuff(() -> net.minecraft.world.effect.MobEffects.SLOWNESS, 100, 1.0F));
+    public static final ProjectileKind ANCIENT_LIGHT = register(ProjectileKind.builder("ancient_light")
+        .lifetime(140).size(0.4F, 0.7F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.06F, 40.0F).noTileCollide().fullbright()
+        .enemy().trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind CELESTIAL_SHOT = register(ProjectileKind.builder("celestial_shot")
+        .lifetime(80).size(0.3F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).fullbright().enemy().trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind PHANTASMAL_EYE = register(ProjectileKind.builder("phantasmal_eye")
+        .lifetime(160).size(0.5F, 0.8F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.05F, 48.0F).noTileCollide().fullbright()
+        .enemy().trail(() -> ParticleTypes.SOUL_FIRE_FLAME));
+    public static final ProjectileKind PHANTASMAL_SPHERE = register(ProjectileKind.builder("phantasmal_sphere")
+        .lifetime(200).size(0.9F, 1.4F).orientation(ProjectileKind.Orientation.BILLBOARD).noTileCollide().fullbright().enemy()
+        .trail(() -> ParticleTypes.SOUL_FIRE_FLAME));
+    public static final ProjectileKind PHANTASMAL_BOLT = register(ProjectileKind.builder("phantasmal_bolt")
+        .lifetime(60).size(0.3F, 0.8F).noTileCollide().fullbright().enemy().trail(() -> ParticleTypes.SOUL_FIRE_FLAME));
+    public static final ProjectileKind DEATHRAY = register(ProjectileKind.builder("deathray")
+        .lifetime(30).size(0.9F, 1.6F).pierce(-1).hitCooldown(10).noTileCollide().fullbright().enemy().trail(() -> ParticleTypes.END_ROD));
+    // player weapons
+    public static final ProjectileKind SOLAR_ERUPTION = register(ProjectileKind.builder("solar_eruption")
+        .lifetime(20).size(0.6F, 1.0F).orientation(ProjectileKind.Orientation.BILLBOARD).pierce(-1).hitCooldown(8).noTileCollide().fullbright()
+        .trail(() -> ParticleTypes.FLAME).ignites(100, 1.0F));
+    public static final ProjectileKind DAYBREAK = register(ProjectileKind.builder("daybreak")
+        .gravity(0.02).lifetime(80).size(0.4F, 1.2F).pierce(2).fullbright().trail(() -> ParticleTypes.FLAME).ignites(160, 1.0F));
+    public static final ProjectileKind NEBULA_BLAZE = register(ProjectileKind.builder("nebula_blaze")
+        .lifetime(100).size(0.4F, 0.8F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.14F, 30.0F).noTileCollide().fullbright().magic()
+        .trail(() -> ParticleTypes.REVERSE_PORTAL));
+    public static final ProjectileKind NEBULA_ARCANUM = register(ProjectileKind.builder("nebula_arcanum")
+        .lifetime(160).size(0.8F, 1.3F).orientation(ProjectileKind.Orientation.SPIN).homing(0.08F, 30.0F).pierce(4).noTileCollide().fullbright()
+        .magic().trail(() -> ParticleTypes.REVERSE_PORTAL));
+    public static final ProjectileKind STARDUST_DRAGON = register(ProjectileKind.builder("stardust_dragon")
+        .lifetime(200).size(0.6F, 1.0F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.18F, 32.0F).pierce(-1).hitCooldown(10)
+        .noTileCollide().fullbright().magic().trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind STARDUST_CELL = register(ProjectileKind.builder("stardust_cell")
+        .lifetime(120).size(0.5F, 0.8F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.1F, 24.0F).pierce(2).noTileCollide().fullbright()
+        .magic().trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind MEOWMERE = register(ProjectileKind.builder("meowmere")
+        .gravity(0.03).lifetime(100).size(0.5F, 0.9F).orientation(ProjectileKind.Orientation.SPIN).bounces(4).pierce(3).fullbright()
+        .trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind STAR_WRATH = register(ProjectileKind.builder("star_wrath")
+        .lifetime(60).size(0.5F, 0.9F).orientation(ProjectileKind.Orientation.SPIN).pierce(2).noTileCollide().fullbright()
+        .trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind LAST_PRISM = register(ProjectileKind.builder("last_prism")
+        .lifetime(30).size(0.4F, 0.8F).pierce(-1).hitCooldown(6).noTileCollide().fullbright().magic().trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind LUNAR_FLARE = register(ProjectileKind.builder("lunar_flare")
+        .lifetime(80).size(0.5F, 0.9F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.12F, 24.0F).explosion(2.0F).noTileCollide()
+        .fullbright().magic().trail(() -> ParticleTypes.SOUL_FIRE_FLAME));
     // ---------------------------------------------------------------- mechanical bosses
     public static final ProjectileKind MECH_LASER = register(ProjectileKind.builder("mech_laser")
         .lifetime(80).size(0.2F, 0.6F).noTileCollide().fullbright().enemy());

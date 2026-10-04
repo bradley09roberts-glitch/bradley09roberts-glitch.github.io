@@ -505,11 +505,60 @@ def spectre_set():
     return a
 
 
+def solar_flare_set():
+    # Solar Flare: blazing orange-gold plate with flame crests on the helmet and shoulders and a burning sun gem
+    a = ore('solar_flare', '#E87A20', accent='#FFD040', trim='#6A2A10', gem='#FFF0A0', glow='#FFB020', fire='#FF5A10')
+    closed_helmet(a, 'visor', inflate=1.3, edge='accent')
+    for x, h, r in ((-3, 4, -0.4), (-1, 6, -0.1), (1, 6, 0.1), (3, 4, 0.4)):
+        a.add('head', 'head', (x - 0.5, -9 - h, -2), (1, h, 3), mat='fire', pattern='fire', pivot=[x, -9, 0], rot=[-0.3, 0, r])
+    torso(a, gem='gem', pads='big')
+    a.pair('chest', 'right_arm', (-5, -6.5, -1), (2, 4, 2), mat='fire', pattern='fire', pivot=[-4, -3, 0], rot=[0, 0, -0.3])
+    greaves(a)
+    return a
+
+
+def vortex_set():
+    # Vortex: dark teal stealth plate with a sleek visor glowing green, and swirled green trims
+    a = ore('vortex', '#2A6A60', accent='#60F0B0', trim='#14302C', gem='#B0FFE0', glow='#60F0B0')
+    closed_helmet(a, 'visor', inflate=1.3, edge='accent')
+    a.add('head', 'head', (-3, -5.2, -5.6), (6, 1, 1), mat='glow', pattern='gem')
+    a.add('head', 'head', (-0.5, -11, -4.5), (1, 3, 9), mat='accent', pattern='plate')
+    torso(a, gem='glow', pads='big')
+    greaves(a)
+    return a
+
+
+def nebula_set():
+    # Nebula: a violet hood with a glowing pink brow, a starry robe and wrapped legs
+    a = Armor('nebula', {'main': '#7A3AA8', 'chain': '#4A2070', 'trim': '#F080E0', 'dark': '#180C28', 'accent': '#F080E0',
+                         'gem': '#FFD0FF', 'dark_edge': '#2A1440', 'buckle': '#F080E0', 'glow': '#FF80F0'})
+    a.add('head', 'head', (-4, -8, -4), (8, 8, 8), mat='main', pattern='cloth', inflate=1.0, faces={'down': 'none', 'north': 'none'})
+    a.add('head', 'head', (-4, -8.6, -4.6), (8, 3, 1), mat='main', pattern='cloth', edge='trim')
+    a.add('head', 'head', (-2, -9.8, -4.8), (4, 2, 1), mat='glow', pattern='gem')
+    a.add('head', 'head', (-1.5, -12, -1), (3, 4, 5), mat='main', pattern='cloth', pivot=[0, -8, 2], rot=[0.6, 0, 0])
+    torso(a, base='cloth', plate='cloth', base_mat='chain', mat='main', edge='trim', gem='glow', pads='none', abs_plates=False, belt='accent')
+    a.add('chest', 'body', (-4, 8, -2), (8, 8, 4), mat='main', pattern='cloth', inflate=1.2, faces={'up': 'none'})
+    a.pair('legs', 'right_leg', (-2, 0, -2), (4, 12, 4), mat='chain', pattern='wrap', inflate=0.5, faces={'up': 'none'})
+    return a
+
+
+def stardust_set():
+    # Stardust: white-blue celestial plate with a star crest on the helmet and glowing blue gems
+    a = ore('stardust', '#A8C8F8', accent='#F8FCFF', trim='#2A4A88', gem='#60C0FF', glow='#60C0FF')
+    open_helmet(a, inflate=1.2, edge='accent')
+    for i, r in enumerate((-0.6, 0.0, 0.6)):
+        a.add('head', 'head', (-0.5, -14, -1), (1, 5, 2), mat='accent', pattern='gem', pivot=[0, -9, 0], rot=[0, 0, r])
+    a.add('head', 'head', (-1, -9.6, -4.9), (2, 2, 1), mat='gem', pattern='gem')
+    torso(a, gem='gem', pads='big')
+    greaves(a)
+    return a
+
+
 def all_sets():
     return [wood_set(), copper_set(), tin_set(), iron_set(), lead_set(), silver_set(), tungsten_set(), gold_set(), platinum_set(),
             shadow_set(), crimson_set(), jungle_set(), molten_set(), meteor_set(),
             cobalt_set(), palladium_set(), mythril_set(), orichalcum_set(), adamantite_set(), titanium_set(), hallowed_set(), crystal_assassin_set(), pirate_set(),
-            chlorophyte_set(), spectre_set()]
+            chlorophyte_set(), spectre_set(), solar_flare_set(), vortex_set(), nebula_set(), stardust_set()]
 
 
 # ----------------------------------------------------------------------------------------- UV packing

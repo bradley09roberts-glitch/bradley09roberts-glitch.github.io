@@ -3608,6 +3608,128 @@ proj('martian_laser', lambda c: (c.line(0, 8, 15, 8, hexc('#40FF90'), 2), c.line
 proj('influx_wave', lambda c: (c.circle(7.5, 7.5, 5, (96, 224, 200, 170)), c.circle(7.5, 7.5, 2.5, hexc('#E0FFF8'))))
 
 
+# --- Stage 8: Lunatic Cultist, Celestial Pillars, Moon Lord --------------------------------------------------
+S8_HUMANOIDS = {   # name: (skin, hair, shirt, pants, extras)
+    'lunatic_cultist': ('#C8B8A0', '#1A2A5A', '#2A4AA8', '#1A2A6A', dict(shoes='#101830', eyes=(120, 220, 255, 255), robe=True, hat='#2A4AA8', hat_band='#E8C040')),
+    'cultist_clone': ('#C8B8A0', '#1A2A5A', '#2A4AA8', '#1A2A6A', dict(shoes='#101830', eyes=(120, 220, 255, 255), robe=True, hat='#2A4AA8', hat_band='#E8C040')),
+    'cultist_devotee': ('#C8B8A0', '#1A2A5A', '#3A5A9A', '#22305A', dict(shoes='#101830', eyes=(40, 40, 60, 255), robe=True, hat='#3A5A9A')),
+    'selenian': ('#E8C080', '#E8781A', '#C85A10', '#8A3A10', dict(shoes='#4A1A08', eyes=(255, 220, 80, 255), hat='#E8781A', hat_band='#FFD040')),
+    'storm_diver': ('#80B8A8', '#1A3A34', '#2A6A60', '#14302C', dict(shoes='#0E2420', eyes=(20, 20, 20, 255), goggles='#60F0B0')),
+    'vortexian': ('#60A090', '#2A6A60', '#1A4A44', '#0E2A24', dict(shoes='#0E2420', eyes=(96, 240, 176, 255), hat='#2A6A60', hat_band='#60F0B0')),
+    'predictor': ('#D8A0E0', '#7A3AA8', '#7A3AA8', '#4A2070', dict(shoes='#2A1040', eyes=(255, 128, 240, 255), robe=True, hat='#7A3AA8')),
+    'twinkle_popper': ('#C8E0F8', '#60A8F8', '#3A6AC8', '#2A4A88', dict(shoes='#14306A', eyes=(96, 192, 255, 255), hat='#60A8F8', hat_band='#E0F4FF')),
+}
+for _n, (_skin, _hair, _shirt, _pants, _extra) in S8_HUMANOIDS.items():
+    model_texture(_n, 64, 64, skin_texture(_skin, _hair, _shirt, _pants, **_extra))
+    mob_sprite(_n, 16, 24, 3, lambda c, f, sk=_skin, hr=_hair, sh=_shirt, pa=_pants: npc_frame(c, f, sk, hr, sh, pa), frame_time=8)
+
+S8_BLOBS = {   # name: (w, h, color, glow)
+    'solar_pillar': (24, 64, '#E8781A', '#FFF0A0'), 'solar_pillar_shielded': (24, 64, '#FFD040', '#FFFFFF'),
+    'vortex_pillar': (24, 64, '#2A8A78', '#B0FFE0'), 'vortex_pillar_shielded': (24, 64, '#60F0B0', '#FFFFFF'),
+    'nebula_pillar': (24, 64, '#9A4AC8', '#FFD0FF'), 'nebula_pillar_shielded': (24, 64, '#FF80F0', '#FFFFFF'),
+    'stardust_pillar': (24, 64, '#60A8F8', '#E0F4FF'), 'stardust_pillar_shielded': (24, 64, '#A8E8FF', '#FFFFFF'),
+    'sroller': (16, 16, '#E8781A', '#FFD040'), 'corite': (16, 16, '#8A3A1A', '#FF8A20'), 'alien_hornet': (16, 12, '#2A6A60', '#60F0B0'),
+    'nebula_floater': (18, 22, '#9A4AC8', '#FF80F0'), 'brain_suckler': (12, 12, '#E080D8', '#FFC0F8'), 'star_cell': (14, 14, '#60A8F8', '#E0F4FF'),
+    'flow_invader': (14, 20, '#A8D0F8', '#60C0FF'), 'moon_lord': (56, 64, '#8AA898', '#60F0D0'), 'moon_lord_exposed': (56, 64, '#8AA898', '#80FFE8'),
+    'moon_lord_hand': (24, 32, '#8AA898', '#40C8A8'), 'moon_lord_head': (28, 36, '#8AA898', '#40C8A8'),
+}
+for _n, (_w, _h, _col, _glow) in S8_BLOBS.items():
+    mob_sprite(_n, _w, _h, 2, lambda c, f, w=_w, h=_h, col=_col, g=_glow: blob_frame(c, f, w, h, col, glow=g), frame_time=8)
+
+WING_STYLES.update({'solar': ('#FF8A20', '#C84A10', '#FFE070'), 'vortex': ('#2A8A78', '#14403A', '#60F0B0'),
+                    'nebula': ('#9A4AC8', '#5A2A80', '#FF80F0'), 'stardust': ('#A8D0F8', '#5A8AD8', '#F8FCFF')})
+for _style in ('solar', 'vortex', 'nebula', 'stardust'):
+    item(f'{_style}_wings', lambda c, st=_style: draw_wings_item(c, st))
+
+FRAGMENTS = {'solar': '#FF8A20', 'vortex': '#40D8A0', 'nebula': '#E070F0', 'stardust': '#70B8FF'}
+METAL.update({'solar_flare': '#E8781A', 'vortex': '#2A8A78', 'nebula': '#9A4AC8', 'stardust': '#A8C8F8', 'luminite': '#60E0C8'})
+
+
+def draw_fragment(c, color):
+    p = palette(color)
+    c.polygon([(8, 1), (13, 6), (11, 14), (5, 14), (3, 6)], p[2])
+    c.polygon([(8, 1), (13, 6), (8, 8)], p[3])
+    c.polygon([(3, 6), (8, 8), (5, 14)], p[1])
+    c.set(7, 4, p[4])
+    c.outline()
+
+
+for _k, _col in FRAGMENTS.items():
+    item(f'{_k}_fragment', lambda c, col=_col: draw_fragment(c, col))
+item('luminite', lambda c: draw_raw(c, metal('luminite'), 1401))
+item('luminite_bar', lambda c: draw_bar(c, metal('luminite')))
+item('celestial_sigil', lambda c: (c.circle(7.5, 7.5, 6, palette('#3A5A6A')[2]), [c.circle(7.5 + 3.5 * math.cos(a), 7.5 + 3.5 * math.sin(a), 1.4, hexc(col))
+                                                                                     for a, col in zip((0.8, 2.4, 3.9, 5.5), FRAGMENTS.values())],
+                                   c.circle(7.5, 7.5, 1.5, hexc('#80FFE8')), c.outline()))
+for _set in ('solar_flare', 'vortex', 'nebula', 'stardust'):
+    item(f'{_set}_helmet', lambda c, m=_set: draw_helmet(c, metal(m)))
+    item(f'{_set}_breastplate', lambda c, m=_set: draw_chest(c, metal(m)))
+    item(f'{_set}_leggings', lambda c, m=_set: draw_legs(c, metal(m)))
+item('solar_flare_pickaxe', lambda c: (draw_pickaxe(c, metal('solar_flare')), c.set(12, 3, hexc('#FFF0A0'))), True)
+item('vortex_pickaxe', lambda c: (draw_pickaxe(c, metal('vortex')), c.set(12, 3, hexc('#B0FFE0'))), True)
+item('nebula_pickaxe', lambda c: (draw_pickaxe(c, metal('nebula')), c.set(12, 3, hexc('#FFD0FF'))), True)
+item('stardust_pickaxe', lambda c: (draw_pickaxe(c, metal('stardust')), c.set(12, 3, hexc('#E0F4FF'))), True)
+item('solar_eruption', lambda c: (c.line(2, 13, 9, 6, WOOD[2]), c.line(9, 6, 14, 1, palette('#FF8A20')[3], 2), c.set(14, 1, hexc('#FFF0A0')), c.outline()), True)
+item('daybreak', lambda c: (c.line(2, 13, 13, 2, palette('#E8C060')[2]), c.polygon([(11, 1), (15, 0), (14, 4)], hexc('#FFD040')), c.outline()), True)
+item('vortex_beater', lambda c: (draw_gun(c, palette('#2A8A78')), c.rect(11, 5, 14, 6, hexc('#60F0B0'))), True)
+item('phantasm', lambda c: draw_bow(c, palette('#40D8A0')), True)
+item('nebula_blaze', lambda c: draw_staff(c, '#FF80F0'), True)
+item('nebula_arcanum', lambda c: draw_book(c, '#9A4AC8'))
+item('stardust_dragon_staff', lambda c: draw_staff(c, '#70B8FF'), True)
+item('stardust_cell_staff', lambda c: draw_staff(c, '#A8E8FF'), True)
+item('meowmere', lambda c: (draw_sword(c, palette('#F080C0'), 13), c.set(12, 3, hexc('#80E0FF')), c.set(10, 5, hexc('#F8E070'))), True)
+item('star_wrath', lambda c: (draw_sword(c, palette('#C83A6A'), 13), c.set(12, 3, hexc('#FFE070'))), True)
+item('sdmg', lambda c: (draw_gun(c, palette('#3A4A6A')), c.rect(4, 6, 6, 7, hexc('#60C0FF')), c.set(13, 5, hexc('#FFE070'))), True)
+item('last_prism', lambda c: (c.polygon([(8, 2), (14, 13), (2, 13)], (200, 240, 255, 220)), c.line(8, 4, 8, 12, hexc('#FF80F0')),
+                              c.line(6, 12, 10, 12, hexc('#80FFE8')), c.outline()))
+item('lunar_flare', lambda c: (draw_book(c, '#2A4A6A'), c.circle(8, 8, 2, hexc('#80FFE8'))))
+
+proj('cultist_fireball', lambda c: (p_orb(c, '#FF7A20', 3), c.circle(7.5, 7.5, 1.2, hexc('#FFF0A0'))))
+proj('cultist_lightning', lambda c: (c.line(1, 6, 6, 9, hexc('#A8E8FF'), 2), c.line(6, 9, 10, 6, hexc('#A8E8FF'), 2), c.line(10, 6, 15, 9, hexc('#FFFFFF'))))
+proj('ice_mist', lambda c: (c.circle(7.5, 7.5, 6, (180, 230, 255, 140)), c.circle(7.5, 7.5, 3, (230, 248, 255, 220))))
+proj('ancient_light', lambda c: (p_orb(c, '#F8F0A0', 2), c.set(7, 7, hexc('#FFFFFF'))))
+proj('celestial_shot', lambda c: (p_orb(c, '#C8A8FF', 2)))
+proj('phantasmal_eye', lambda c: (c.circle(7.5, 7.5, 4, hexc('#E8F8F0')), c.circle(7.5, 7.5, 2, hexc('#40C8A8')), c.set(7, 7, hexc('#102018'))))
+proj('phantasmal_sphere', lambda c: (p_orb(c, '#60F0D0', 5), c.circle(7.5, 7.5, 2, hexc('#E8FFF8'))))
+proj('phantasmal_bolt', lambda c: (c.line(1, 8, 14, 8, hexc('#60F0D0'), 2), c.line(3, 8, 12, 8, hexc('#E8FFF8'))))
+proj('deathray', lambda c: (c.line(0, 8, 15, 8, hexc('#60F0D0'), 4), c.line(0, 8, 15, 8, hexc('#F0FFFC'), 2)))
+proj('solar_eruption', lambda c: (p_orb(c, '#FF8A20', 4), c.circle(7.5, 7.5, 2, hexc('#FFF0A0'))))
+proj('daybreak', lambda c: (c.line(1, 8, 12, 8, palette('#E8C060')[3], 2), c.polygon([(12, 6), (15, 8), (12, 10)], hexc('#FFD040'))))
+proj('nebula_blaze', lambda c: (p_orb(c, '#FF80F0', 3), c.set(6, 6, hexc('#FFFFFF'))))
+proj('nebula_arcanum', lambda c: (p_orb(c, '#9A4AC8', 5), c.circle(7.5, 7.5, 2, hexc('#FFD0FF'))))
+proj('stardust_dragon', lambda c: (p_orb(c, '#70B8FF', 4), c.set(5, 6, hexc('#FFFFFF')), c.set(10, 6, hexc('#FFFFFF'))))
+proj('stardust_cell', lambda c: (p_orb(c, '#A8E8FF', 3)))
+proj('meowmere', lambda c: (c.rect(4, 5, 11, 10, hexc('#C8C8C8')), c.line(4, 7, 0, 7, hexc('#FF4040')), c.line(4, 8, 0, 8, hexc('#FFE040')),
+                            c.line(4, 9, 0, 9, hexc('#40C0FF')), c.set(9, 7, hexc('#101010'))))
+proj('star_wrath', lambda c: (c.polygon([(7.5, 1), (9, 6), (14, 7.5), (9, 9), (7.5, 14), (6, 9), (1, 7.5), (6, 6)], hexc('#FF70A0')), c.set(7, 7, hexc('#FFF0A0'))))
+proj('last_prism', lambda c: (c.line(0, 8, 15, 8, hexc('#FF80F0'), 3), c.line(0, 8, 15, 8, hexc('#80FFE8'))))
+proj('lunar_flare', lambda c: (p_orb(c, '#80FFE8', 3), c.circle(7.5, 7.5, 1.2, hexc('#FFFFFF'))))
+
+
+def flesh_tether():
+    c = Canvas()
+    p = palette('#8AA898')
+    for y in range(16):
+        for x in range(4, 12):
+            c.set(x, y, p[2] if 5 <= x <= 10 else p[1])
+        c.set(6 + (y // 3) % 3, y, p[3])
+    return c
+
+
+def ancient_manipulator_texture():
+    c = metal_block('luminite', 1402)
+    c.circle(7.5, 7.5, 4, hexc('#2A3A4A'))
+    for a, col in zip((0.8, 2.4, 3.9, 5.5), FRAGMENTS.values()):
+        c.set(round(7.5 + 3 * math.cos(a)), round(7.5 + 3 * math.sin(a)), hexc(col))
+    c.circle(7.5, 7.5, 1.5, hexc('#80FFE8'))
+    return c
+
+
+TETHERS['flesh'] = flesh_tether
+BLOCK_TEXTURES['ancient_manipulator'] = ancient_manipulator_texture
+BLOCKS_CUBE.append('ancient_manipulator')
+
+
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
     java_root = os.path.join(ROOT, 'src/main/java/com/terracraft/registry/content')
@@ -3659,7 +3781,7 @@ def main():
     underworld_block_assets()
     goblin_block_assets()
     hardmode_block_assets()
-    cube_block_assets(['chlorophyte_ore'])
+    cube_block_assets(['chlorophyte_ore', 'ancient_manipulator'])
     temple_block_assets()
     plantera_block_assets()
     queen_slime_block_assets()

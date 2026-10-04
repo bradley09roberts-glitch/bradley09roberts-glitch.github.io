@@ -210,6 +210,29 @@ public final class CreatureRenderers {
         json(event, MobContent.GOLEM.get(), "golem", 1.0F, 1.6F);
         json(event, MobContent.GOLEM_HEAD.get(), "golem_head", 1.0F, 0.0F);
         json(event, MobContent.GOLEM_FIST.get(), "golem_fist", 1.0F, 0.0F);
+        // Stage 8: Lunatic Cultist, Celestial Pillars, Moon Lord
+        humanoid(event, MobContent.LUNATIC_CULTIST.get(), TerraModels.HUMANOID, 2.2F, false);
+        humanoid(event, MobContent.CULTIST_CLONE.get(), TerraModels.HUMANOID, 2.2F, false);
+        humanoid(event, MobContent.CULTIST_DEVOTEE.get(), TerraModels.HUMANOID, 2.0F, false);
+        humanoid(event, MobContent.SELENIAN.get(), TerraModels.HUMANOID, 1.8F, true);
+        humanoid(event, MobContent.STORM_DIVER.get(), TerraModels.HUMANOID, 1.8F, false);
+        humanoid(event, MobContent.VORTEXIAN.get(), TerraModels.HUMANOID, 1.8F, true);
+        humanoid(event, MobContent.PREDICTOR.get(), TerraModels.HUMANOID, 1.9F, false);
+        humanoid(event, MobContent.TWINKLE_POPPER.get(), TerraModels.HUMANOID, 1.6F, false);
+        json(event, MobContent.SOLAR_PILLAR.get(), "solar_pillar", 1.6F, 2.0F);
+        json(event, MobContent.VORTEX_PILLAR.get(), "vortex_pillar", 1.6F, 2.0F);
+        json(event, MobContent.NEBULA_PILLAR.get(), "nebula_pillar", 1.6F, 2.0F);
+        json(event, MobContent.STARDUST_PILLAR.get(), "stardust_pillar", 1.6F, 2.0F);
+        json(event, MobContent.SROLLER.get(), "sroller", 1.0F, 0.5F);
+        json(event, MobContent.CORITE.get(), "corite", 1.0F, 0.0F);
+        json(event, MobContent.ALIEN_HORNET.get(), "alien_hornet", 1.0F, 0.0F);
+        json(event, MobContent.NEBULA_FLOATER.get(), "nebula_floater", 1.0F, 0.0F);
+        json(event, MobContent.BRAIN_SUCKLER.get(), "brain_suckler", 1.0F, 0.0F);
+        json(event, MobContent.STAR_CELL.get(), "star_cell", 1.0F, 0.0F);
+        json(event, MobContent.FLOW_INVADER.get(), "flow_invader", 1.0F, 0.0F);
+        json(event, MobContent.MOON_LORD.get(), "moon_lord", 1.5F, 0.0F);
+        json(event, MobContent.MOON_LORD_HAND.get(), "moon_lord_hand", 2.0F, 0.0F);
+        json(event, MobContent.MOON_LORD_HEAD.get(), "moon_lord_head", 2.0F, 0.0F);
         for (var npc : NpcContent.all()) {
             var layer = npc.getId().getPath().contains("goblin") ? TerraModels.GOBLIN : TerraModels.HUMANOID;
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,

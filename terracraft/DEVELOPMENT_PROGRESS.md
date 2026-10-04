@@ -432,14 +432,60 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - Showcase: three new Bestiary rooms, eight more bosses in the Hall of Bosses (now two rows of eleven), moon and
   martian event buttons, Duke Fishron and Empress buttons in the arena, four new kits, Spectre in the Armory.
 
+### Stage 8: Lunatic Cultist, the Celestial Pillars, Moon Lord (verified in a live client)
+- **Lunatic Cultist** (`entity.boss.LunaticCultist`, 32000 life): after Golem, four **Cultist Devotees** pray in a
+  circle outside the Dungeon door whenever no celestial event is running. Hitting one makes them all vanish, and the
+  Cultist rises. He circles overhead throwing fireball fans, crackling lightning, a slow Ice Mist and swarms of
+  homing Ancient Light. In the **Ritual** he vanishes and reappears with three copies around you; hit the real one to
+  break it, or the copies wake up as Ancient Cultists. He drops the **Ancient Manipulator** (the endgame crafting
+  station), and his defeat brings the **Celestial Pillars** (`world.event.CelestialEvents`).
+- **Celestial Pillars** (`entity.boss.CelestialPillar`, 20000 life each): Solar, Vortex, Nebula and Stardust land
+  300-600 blocks out from spawn in four directions (`/terraria celestial status` lists them and
+  `/terraria celestial tp <kind>` takes you to one). Each stands behind a shield of 100. Its own creatures keep coming
+  near it, and every one a player kills there wears the shield down by one. Once the shield is gone, break the pillar
+  for 20-30 of its **fragment**. Guards:
+  - Solar: Selenian, Sroller, Corite
+  - Vortex: Storm Diver, Alien Hornet, Vortexian
+  - Nebula: Nebula Floater, Brain Suckler, Predictor
+  - Stardust: Star Cell, Flow Invader, Twinkle Popper
+  Each pillar has its own boss bar showing the shield, then its life.
+- **Moon Lord** (`entity.boss.MoonLord`, 145000 life):
+  - A minute after the fourth pillar falls ("Impending doom approaches..."), or with a **Celestial Sigil** (12 of
+    each fragment), he comes.
+  - His two **hand eyes** (25000) fire homing Phantasmal Eyes and fans of slow Phantasmal Spheres.
+  - The **head eye** (45000) fires bolts and charges the sweeping **Phantasmal Deathray**.
+  - While any eye lives his body cannot be hurt. Once all three are gone, his heart is exposed and fires bursts of
+    bolts.
+  - He keeps about 16 blocks off.
+  - Drops 70-90 **Luminite** and one of Meowmere, Star Wrath, S.D.M.G., Last Prism or Lunar Flare.
+- **At the Ancient Manipulator** (`LunarContent`):
+  - Luminite Bars (4 Luminite).
+  - The four fragment armors: **Solar Flare** (melee; 30% less damage taken), **Vortex** (ranged crit), **Nebula**
+    (mana) and **Stardust** (damage and speed).
+  - Four pickaxes (225 power).
+  - Four fragment wings.
+  - Weapons: Solar Eruption, Daybreak, Vortex Beater, Phantasm, Nebula Blaze, Nebula Arcanum, and the Stardust
+    Dragon and Cell Staffs (homing magic stand-ins until summoner minions exist).
+- New 3D models:
+  - the four pillars, each with a glowing shielded look
+  - Moon Lord's body (exposed-heart look), hand and head eyes on flesh tethers
+  - Sroller, Corite, Alien Hornet, Nebula Floater, Brain Suckler, Star Cell, Flow Invader
+  - the four fragment armors
+  - skins for the Cultist, Devotees, clones, Selenian, Storm Diver, Vortexian, Predictor, Twinkle Popper
+  - flat sprites for all.
+- Showcase: a Celestial Bestiary room, the Cultist, the four pillars and Moon Lord in the Hall of Bosses, a lunar kit
+  and the four fragment armors in the Armory.
+
 ## IN PROGRESS
-- Nothing half-finished. Stage 7 is complete.
+- Nothing half-finished. Stage 8 is complete: the Terraria boss progression runs from King Slime to Moon Lord.
 
 ## NEXT
 1. (done) Stage 5: Hardmode up to the mechanical bosses, Queen Slime, invasions.
 2. (done) Stage 6: Chlorophyte, Plantera, Lihzahrd Temple, Golem.
 3. (done) Stage 7: Duke Fishron, post-Plantera Dungeon, Pumpkin/Frost Moon, Empress of Light, Martian Madness.
-4. Stage 8: Lunatic Cultist, the Celestial Pillars and Moon Lord (Luminite, endgame gear).
+4. (done) Stage 8: Lunatic Cultist, the Celestial Pillars and Moon Lord (Luminite, endgame gear).
+5. Next candidates: summoner minions and whips, Solar Eclipse, Old One's Army, remaining biomes (Underground Desert,
+   Ice caverns, floating islands), more NPCs, and the 3D model upgrades in docs/VISUAL_BACKLOG.md.
 
 ## DONE: Stage 4 plan (kept for reference)
 1. ~~Dungeon and Skeletron~~ (done, 4a).

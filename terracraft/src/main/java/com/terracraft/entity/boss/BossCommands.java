@@ -31,6 +31,8 @@ public final class BossCommands {
         BOSSES.put("golem", new Entry(MobContent.GOLEM, BossSummoning.Arrival.FALL));
         BOSSES.put("duke_fishron", new Entry(MobContent.DUKE_FISHRON, BossSummoning.Arrival.NEARBY));
         BOSSES.put("empress_of_light", new Entry(MobContent.EMPRESS_OF_LIGHT, BossSummoning.Arrival.NEARBY));
+        BOSSES.put("lunatic_cultist", new Entry(MobContent.LUNATIC_CULTIST, BossSummoning.Arrival.NEARBY));
+        BOSSES.put("moon_lord", new Entry(MobContent.MOON_LORD, BossSummoning.Arrival.NEARBY));
         BOSSES.put("the_twins", new Entry(MobContent.RETINAZER, BossSummoning.Arrival.OFFSCREEN));
         BOSSES.put("destroyer", new Entry(MobContent.DESTROYER, BossSummoning.Arrival.BURROW));
         BOSSES.put("skeletron_prime", new Entry(MobContent.SKELETRON_PRIME, BossSummoning.Arrival.OFFSCREEN));

@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "terracraft:vortex"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "terracraft:vortex"
+      }
+    ]
+  }
+}

@@ -202,3 +202,22 @@ for testing drop in a throwaway mod whose constructor sets `SharedConstants.IS_R
 - `terraria event start martian_madness` by day; `terraria boss spawn duke_fishron|empress_of_light` (Empress at night).
 - Display lineups on a sky platform: keep the player on the platform - monsters more than 32 blocks from every player
   despawn at random (use `PersistenceRequired:1b` for long waits).
+
+## Stage 8 checks
+
+- Devotees: `terraria progression set terracraft:boss_golem_defeated true`, `terraria worldgen dungeon`, stand within
+  128 blocks of the entrance; four Cultist Devotees appear by the door within 5 s. `damage @e[type=terracraft:cultist_devotee,limit=1] 5 minecraft:player_attack by Dev`
+  removes them and wakes the Lunatic Cultist (the Ritual and clones follow within ~20 s).
+- Pillars: `terraria celestial start` (or beat the Cultist), `terraria celestial status`, `execute as Dev run terraria celestial tp stardust`.
+  The pillar appears once you are near, with guards. To test the shield quickly:
+  `data merge entity @e[type=terracraft:vortex_pillar,limit=1] {Shield:2}`, then kill two Vortex guards credited to
+  Dev (`damage ... minecraft:player_attack by Dev`).
+- Moon Lord countdown: break the last standing pillar of an event, wait 60 s (`terraria celestial status` shows the
+  countdown). Bosses leave when no player can be targeted: fight in survival with
+  `effect give Dev minecraft:resistance infinite 255 true`, not in spectator.
+- `terraria boss spawn lunatic_cultist|moon_lord`; Moon Lord's body is invulnerable until `kill @e[type=terracraft:moon_lord_hand]`
+  and `kill @e[type=terracraft:moon_lord_head]`.
+- `/kill` on a boss counts as a defeat (the Cultist then starts the pillars, a pillar marks its flag).
+- Crafting: place `terracraft:ancient_manipulator` within 4 blocks, open the inventory and the Craft tab.
+- RCON commands run at world spawn: `distance=` selectors are measured from there, not from the player.
+

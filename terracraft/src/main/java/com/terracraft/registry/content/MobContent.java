@@ -1,5 +1,6 @@
 package com.terracraft.registry.content;
 
+import com.terracraft.entity.boss.CelestialPillar;
 import com.terracraft.TerraCraft;
 import com.terracraft.entity.boss.EyeOfCthulhu;
 import com.terracraft.entity.boss.KingSlime;
@@ -475,6 +476,75 @@ public final class MobContent {
     public static final RegistryObject<EntityType<com.terracraft.entity.mob.MartianSaucer>> MARTIAN_SAUCER = register("martian_saucer",
         com.terracraft.entity.mob.MartianSaucer::new, 5.0F, 2.0F,
         MobDefinition.builder().life(12000).damage(80).defense(40).knockbackTaken(0.0F).coins(50_000).followRange(100));
+
+    // --- Lunatic Cultist ------------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.LunaticCultist>> LUNATIC_CULTIST = register("lunatic_cultist",
+        com.terracraft.entity.boss.LunaticCultist::new, 1.0F, 2.2F,
+        MobDefinition.builder().life(32000).damage(50).defense(42).knockbackTaken(0.0F).coins(100_000).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.LunaticCultist.Devotee>> CULTIST_DEVOTEE = register("cultist_devotee",
+        com.terracraft.entity.boss.LunaticCultist.Devotee::new, 0.8F, 2.0F,
+        MobDefinition.builder().life(1000).damage(0).defense(0).knockbackTaken(0.0F).coins(0));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.LunaticCultist.CultistClone>> CULTIST_CLONE = register("cultist_clone",
+        com.terracraft.entity.boss.LunaticCultist.CultistClone::new, 1.0F, 2.2F,
+        MobDefinition.builder().life(1500).damage(50).defense(42).knockbackTaken(0.0F).coins(0).followRange(160));
+
+    // --- Celestial Pillars ----------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<CelestialPillar>> SOLAR_PILLAR = register("solar_pillar",
+        (type, level) -> new CelestialPillar(type, level, CelestialPillar.Kind.SOLAR), 4.0F, 10.0F,
+        MobDefinition.builder().life(20000).damage(0).defense(20).knockbackTaken(0.0F).coins(0).followRange(120));
+    public static final RegistryObject<EntityType<CelestialPillar>> VORTEX_PILLAR = register("vortex_pillar",
+        (type, level) -> new CelestialPillar(type, level, CelestialPillar.Kind.VORTEX), 4.0F, 10.0F,
+        MobDefinition.builder().life(20000).damage(0).defense(20).knockbackTaken(0.0F).coins(0).followRange(120));
+    public static final RegistryObject<EntityType<CelestialPillar>> NEBULA_PILLAR = register("nebula_pillar",
+        (type, level) -> new CelestialPillar(type, level, CelestialPillar.Kind.NEBULA), 4.0F, 10.0F,
+        MobDefinition.builder().life(20000).damage(0).defense(20).knockbackTaken(0.0F).coins(0).followRange(120));
+    public static final RegistryObject<EntityType<CelestialPillar>> STARDUST_PILLAR = register("stardust_pillar",
+        (type, level) -> new CelestialPillar(type, level, CelestialPillar.Kind.STARDUST), 4.0F, 10.0F,
+        MobDefinition.builder().life(20000).damage(0).defense(20).knockbackTaken(0.0F).coins(0).followRange(120));
+    public static final RegistryObject<EntityType<WalkerMob>> SELENIAN = register("selenian", WalkerMob::new, 0.7F, 1.8F,
+        MobDefinition.builder().life(1000).damage(80).defense(40).knockbackTaken(0.3F).coins(0).speed(0.4));
+    public static final RegistryObject<EntityType<WalkerMob>> SROLLER = register("sroller", WalkerMob::new, 1.0F, 1.0F,
+        MobDefinition.builder().life(900).damage(90).defense(40).knockbackTaken(0.2F).coins(0).speed(0.5));
+    public static final RegistryObject<EntityType<FlyerMob>> CORITE = register("corite",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.CHASER), 1.0F, 1.0F,
+        MobDefinition.builder().life(800).damage(90).defense(30).knockbackTaken(0.4F).coins(0).speed(0.45).followRange(64));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> STORM_DIVER = register("storm_diver",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.CELESTIAL_SHOT, 60F), 0.7F, 1.8F,
+        MobDefinition.builder().life(800).damage(50).defense(30).knockbackTaken(0.4F).coins(0).speed(0.3));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ShooterFlyerMob>> ALIEN_HORNET = register("alien_hornet",
+        (type, level) -> new com.terracraft.entity.mob.ShooterFlyerMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.CELESTIAL_SHOT, 60F, 2.5F, net.minecraft.sounds.SoundEvents.BEE_LOOP_AGGRESSIVE), 0.9F, 0.8F,
+        MobDefinition.builder().life(700).damage(70).defense(25).knockbackTaken(0.4F).coins(0).speed(0.4).followRange(64));
+    public static final RegistryObject<EntityType<WalkerMob>> VORTEXIAN = register("vortexian", WalkerMob::new, 0.7F, 1.8F,
+        MobDefinition.builder().life(900).damage(70).defense(30).knockbackTaken(0.3F).coins(0).speed(0.36));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ShooterFlyerMob>> NEBULA_FLOATER = register("nebula_floater",
+        (type, level) -> new com.terracraft.entity.mob.ShooterFlyerMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.CELESTIAL_SHOT, 60F, 2.0F, net.minecraft.sounds.SoundEvents.EVOKER_CAST_SPELL), 1.0F, 1.6F,
+        MobDefinition.builder().life(1000).damage(60).defense(30).knockbackTaken(0.3F).coins(0).speed(0.25).followRange(64));
+    public static final RegistryObject<EntityType<FlyerMob>> BRAIN_SUCKLER = register("brain_suckler",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.8F, 0.8F,
+        MobDefinition.builder().life(500).damage(80).defense(20).knockbackTaken(0.6F).coins(0).speed(0.42).followRange(64));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.CasterMob>> PREDICTOR = register("predictor",
+        (type, level) -> new com.terracraft.entity.mob.CasterMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.CELESTIAL_SHOT, 70F), 0.7F, 1.9F,
+        MobDefinition.builder().life(900).damage(60).defense(30).knockbackTaken(0.3F).coins(0).speed(0.3));
+    public static final RegistryObject<EntityType<FlyerMob>> STAR_CELL = register("star_cell",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.9F, 0.9F,
+        MobDefinition.builder().life(600).damage(70).defense(20).knockbackTaken(0.6F).coins(0).speed(0.32).followRange(64));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ShooterFlyerMob>> FLOW_INVADER = register("flow_invader",
+        (type, level) -> new com.terracraft.entity.mob.ShooterFlyerMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.CELESTIAL_SHOT, 60F, 2.5F, net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME), 1.0F, 1.0F,
+        MobDefinition.builder().life(900).damage(70).defense(30).knockbackTaken(0.4F).coins(0).speed(0.35).followRange(64));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> TWINKLE_POPPER = register("twinkle_popper",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.CELESTIAL_SHOT, 60F), 0.8F, 1.6F,
+        MobDefinition.builder().life(800).damage(50).defense(30).knockbackTaken(0.4F).coins(0).speed(0.3));
+
+    // --- Moon Lord ------------------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.MoonLord>> MOON_LORD = register("moon_lord",
+        com.terracraft.entity.boss.MoonLord::new, 5.0F, 8.0F,
+        MobDefinition.builder().life(145000).damage(70).defense(70).knockbackTaken(0.0F).coins(1_000_000).followRange(200));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.MoonLord.Eye>> MOON_LORD_HAND = register("moon_lord_hand",
+        com.terracraft.entity.boss.MoonLord.Eye::new, 2.4F, 3.6F,
+        MobDefinition.builder().life(25000).damage(80).defense(70).knockbackTaken(0.0F).coins(0).followRange(200));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.MoonLord.Eye>> MOON_LORD_HEAD = register("moon_lord_head",
+        com.terracraft.entity.boss.MoonLord.Eye::new, 3.4F, 3.6F,
+        MobDefinition.builder().life(45000).damage(80).defense(70).knockbackTaken(0.0F).coins(0).followRange(200));
 
     private MobContent() {}
 

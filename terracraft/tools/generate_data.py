@@ -402,6 +402,87 @@ def stage7_lang(L):
     })
 
 
+# ============================================================================== Stage 8: Cultist, pillars, Moon Lord
+S6_BLOCKS.append('ancient_manipulator')
+S6_PICKAXE.append('ancient_manipulator')
+FRAGMENTS = ['solar', 'vortex', 'nebula', 'stardust']
+
+
+def stage8():
+    write(f'{NS}/loot_table/blocks/ancient_manipulator.json', self_loot('ancient_manipulator'))
+    write(f'{NS}/tags/block/stations/ancient_manipulator.json', {'values': [t('ancient_manipulator')]})
+    MOBS.update({
+        'lunatic_cultist': ('Lunatic Cultist', []), 'cultist_devotee': ('Cultist Devotee', []), 'cultist_clone': ('Ancient Cultist', []),
+        'solar_pillar': ('Solar Pillar', []), 'vortex_pillar': ('Vortex Pillar', []), 'nebula_pillar': ('Nebula Pillar', []),
+        'stardust_pillar': ('Stardust Pillar', []),
+        'selenian': ('Selenian', []), 'sroller': ('Sroller', []), 'corite': ('Corite', []),
+        'storm_diver': ('Storm Diver', []), 'alien_hornet': ('Alien Hornet', []), 'vortexian': ('Vortexian', []),
+        'nebula_floater': ('Nebula Floater', []), 'brain_suckler': ('Brain Suckler', []), 'predictor': ('Predictor', []),
+        'star_cell': ('Star Cell', []), 'flow_invader': ('Flow Invader', []), 'twinkle_popper': ('Twinkle Popper', []),
+        'moon_lord': ('Moon Lord', []), 'moon_lord_hand': ("Moon Lord's Hand", []), 'moon_lord_head': ("Moon Lord's Head", []),
+    })
+
+
+def stage8_recipes():
+    AM = t('ancient_manipulator')
+    LB = t('luminite_bar')
+    recipe('luminite_bar', LB, [(t('luminite'), 4)], [AM], category='materials')
+    recipe('celestial_sigil', t('celestial_sigil'), [(t(f'{f}_fragment'), 12) for f in FRAGMENTS], [AM], category='consumables')
+    for armor_set, frag in (('solar_flare', 'solar'), ('vortex', 'vortex'), ('nebula', 'nebula'), ('stardust', 'stardust')):
+        F = t(f'{frag}_fragment')
+        recipe(f'{armor_set}_helmet', t(f'{armor_set}_helmet'), [(F, 10), (LB, 8)], [AM], category='armor')
+        recipe(f'{armor_set}_breastplate', t(f'{armor_set}_breastplate'), [(F, 20), (LB, 16)], [AM], category='armor')
+        recipe(f'{armor_set}_leggings', t(f'{armor_set}_leggings'), [(F, 15), (LB, 12)], [AM], category='armor')
+        recipe(f'{armor_set}_pickaxe', t(f'{armor_set}_pickaxe'), [(F, 12), (LB, 10)], [AM], category='tools')
+        recipe(f'{frag}_wings', t(f'{frag}_wings'), [(F, 14), (LB, 10)], [AM], category='accessories')
+    for weapon, frag in (('solar_eruption', 'solar'), ('daybreak', 'solar'), ('vortex_beater', 'vortex'), ('phantasm', 'vortex'),
+                         ('nebula_blaze', 'nebula'), ('nebula_arcanum', 'nebula'), ('stardust_dragon_staff', 'stardust'),
+                         ('stardust_cell_staff', 'stardust')):
+        recipe(weapon, t(weapon), [(t(f'{frag}_fragment'), 18)], [AM], category='weapons')
+
+
+def stage8_lang(L):
+    L.update({
+        'event.terracraft.pillars.start': 'The celestial pillars have descended! Find them far out from spawn.',
+        'event.terracraft.pillar.bar': '%s %s',
+        'event.terracraft.pillar.shield': '(Shield: %s)',
+        'event.terracraft.pillar.shield_down': "The %s's shield is down!",
+        'event.terracraft.moon_lord.doom': 'Impending doom approaches...',
+        'progression.terracraft.pillar_solar_defeated': 'Solar Pillar destroyed',
+        'progression.terracraft.pillar_vortex_defeated': 'Vortex Pillar destroyed',
+        'progression.terracraft.pillar_nebula_defeated': 'Nebula Pillar destroyed',
+        'progression.terracraft.pillar_stardust_defeated': 'Stardust Pillar destroyed',
+        'progression.terracraft.celestial_pillars_defeated': 'All celestial pillars destroyed',
+        'block.terracraft.ancient_manipulator': 'Ancient Manipulator', 'station.terracraft.ancient_manipulator': 'Ancient Manipulator',
+        'item.terracraft.sdmg': 'S.D.M.G.',
+        'item.terracraft.solar_fragment.tooltip': "'The power of the sun's fury'",
+        'item.terracraft.vortex_fragment.tooltip': "'Swirling energies of the galaxy'",
+        'item.terracraft.nebula_fragment.tooltip': "'Waves of mystical energy'",
+        'item.terracraft.stardust_fragment.tooltip': "'Glittering particles of the cosmos'",
+        'item.terracraft.luminite.tooltip': "'Glows with the light of the moon'",
+        'item.terracraft.luminite_bar.tooltip': "'It is very light'",
+        'item.terracraft.celestial_sigil.tooltip': 'Summons the Moon Lord',
+        'armor_set.terracraft.solar_flare.bonus': 'Damage taken reduced by 30% and faster melee swings',
+        'armor_set.terracraft.vortex.bonus': '20% increased ranged damage and critical strike chance',
+        'armor_set.terracraft.nebula.bonus': 'Greatly increased mana and mana regeneration',
+        'armor_set.terracraft.stardust.bonus': '15% increased damage and movement speed',
+        'item.terracraft.solar_eruption.tooltip': "'Strike with the fury of the sun'",
+        'item.terracraft.daybreak.tooltip': "'Rend your foes asunder with a spear of light!'",
+        'item.terracraft.vortex_beater.tooltip': "Fires a rapid stream of bullets\n'The catastrophic mixture of pew pew and boom boom'",
+        'item.terracraft.phantasm.tooltip': 'Fires a volley of arrows',
+        'item.terracraft.nebula_blaze.tooltip': "'From Orion's belt to the palm of your hand'",
+        'item.terracraft.nebula_arcanum.tooltip': "'Conjure masses of astral energy to chase down your foes'",
+        'item.terracraft.stardust_dragon_staff.tooltip': 'Summons a stardust dragon that seeks out enemies',
+        'item.terracraft.stardust_cell_staff.tooltip': 'Summons stardust cells to fight for you',
+        'item.terracraft.meowmere.tooltip': 'Shoots bouncing rainbow cats',
+        'item.terracraft.star_wrath.tooltip': 'Rains stars from the sky',
+        'item.terracraft.sdmg.tooltip': "'It came from the edge of space'",
+        'item.terracraft.last_prism.tooltip': "Fires a rainbow beam of light\n'A modern day light show'",
+        'item.terracraft.lunar_flare.tooltip': 'Calls down bolts of lunar light',
+        'item.terracraft.solar_flare_pickaxe.tooltip': 'Can mine anything',
+    })
+
+
 def stage6_recipes():
     HM_ANVIL, HM_FORGE = t('hardmode_anvil'), t('hardmode_forge')
     CB = t('chlorophyte_bar')
@@ -656,6 +737,7 @@ def terraria_recipes():
         recipe(f'{m}_bow', t(f'{m}_bow'), [(BAR[m], 7)], [ANVIL], category='weapons')
     stage6_recipes()
     stage7_recipes()
+    stage8_recipes()
     for name, data in RECIPES.items():
         write(f'{NS}/terracraft/recipe/{name}.json', data)
 
@@ -1111,6 +1193,7 @@ def lang():
     })
     stage6_lang(L)
     stage7_lang(L)
+    stage8_lang(L)
     for mob, (name, _) in MOBS.items():
         L[f'entity.terracraft.{mob}'] = name
     path = os.path.join(RES, 'assets/terracraft/lang/en_us.json')
@@ -1779,6 +1862,7 @@ def main():
     queen_slime()
     stage6()
     stage7()
+    stage8()
     damage()
     smelting()
     terraria_recipes()

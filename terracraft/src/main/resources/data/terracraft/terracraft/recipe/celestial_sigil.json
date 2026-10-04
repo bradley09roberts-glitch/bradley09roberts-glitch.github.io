@@ -1,0 +1,28 @@
+{
+  "result": {
+    "item": "terracraft:celestial_sigil",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:solar_fragment",
+      "count": 12
+    },
+    {
+      "item": "terracraft:vortex_fragment",
+      "count": 12
+    },
+    {
+      "item": "terracraft:nebula_fragment",
+      "count": 12
+    },
+    {
+      "item": "terracraft:stardust_fragment",
+      "count": 12
+    }
+  ],
+  "stations": [
+    "terracraft:ancient_manipulator"
+  ],
+  "category": "consumables"
+}

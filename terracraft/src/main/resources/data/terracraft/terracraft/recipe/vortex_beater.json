@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:vortex_beater",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:vortex_fragment",
+      "count": 18
+    }
+  ],
+  "stations": [
+    "terracraft:ancient_manipulator"
+  ],
+  "category": "weapons"
+}

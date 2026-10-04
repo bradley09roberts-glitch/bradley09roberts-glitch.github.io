@@ -35,5 +35,6 @@ public final class TerraContent {
         MoonContent.init();
         EmpressContent.init();
         MartianContent.init();
+        LunarContent.init();
     }
 }

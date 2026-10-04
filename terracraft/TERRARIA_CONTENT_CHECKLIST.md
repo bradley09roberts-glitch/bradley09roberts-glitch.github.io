@@ -49,9 +49,9 @@ Hardmode
 - [x] Golem (Lihzahrd Altar + Power Cell; body, head that breaks free, chained fists; Picksaw, Heat Ray, Possessed Hatchet, Sun Stone, Eye of the Golem)
 - [x] Duke Fishron (Truffle Worm bait in the ocean; dashes, bubbles, Sharknados, furious phase; Tsunami, Razorblade Typhoon, Bubble Gun, Fishron Wings)
 - [x] Empress of Light (Prismatic Lacewing; bolts, lances, Sun Dance, Everlasting Rainbow, daylight fury; Nightglow, Starlight, Empress Wings)
-- [ ] Lunatic Cultist
-- [ ] Celestial Pillars (Solar, Vortex, Nebula, Stardust)
-- [ ] Moon Lord
+- [x] Lunatic Cultist (Cultist Devotees at the Dungeon after Golem; fireballs, lightning, Ice Mist, Ancient Light, the Ritual with clones; drops the Ancient Manipulator)
+- [x] Celestial Pillars (Solar, Vortex, Nebula, Stardust; shields worn down by killing their guards; fragments)
+- [x] Moon Lord (Celestial Sigil or after the four pillars; two hand eyes and the head eye with the Phantasmal Deathray, then the exposed heart; Luminite, Meowmere, Star Wrath, S.D.M.G., Last Prism, Lunar Flare)
 
 ## Enemies
 - [-] Slimes (Green, Blue, Red, Purple, Yellow, Black, Mother, Baby done; Jungle, Ice, Sand, Lava, Spiked... pending)
@@ -62,6 +62,7 @@ Hardmode
 - [x] Pumpkin Moon (Scarecrow, Splinterling, Hellhound, Poltergeist, Headless Horseman, Mourning Wood, Pumpking) and Frost Moon (Zombie Elf, Gingerbread Man, Elf Archer, Nutcracker, Yeti, Flocko, Everscream, Santa-NK1, Ice Queen) with waves
 - [x] Martian Madness (Martian Probe, Gray Grunt, Ray Gunner, Brain Scrambler, Gigazapper, Martian Officer, Drone, Scutlix, Martian Saucer)
 - [x] Critters: Truffle Worm, Prismatic Lacewing
+- [x] Celestial pillar guards: Selenian, Sroller, Corite (Solar); Storm Diver, Alien Hornet, Vortexian (Vortex); Nebula Floater, Brain Suckler, Predictor (Nebula); Star Cell, Flow Invader, Twinkle Popper (Stardust)
 - [ ] Desert: Antlion, Antlion Charger/Swarmer, Vulture, Tomb Crawler
 - [ ] Snow/Ice: Ice Slime, Ice Bat, Undead Viking, Snow Flinx
 - [-] Caverns: Skeleton, Cave Bat done; Giant Worm, Granite/Marble, spiders pending
@@ -74,7 +75,7 @@ Hardmode
       Giant Bat, Mimic)
 - [x] Goblin Army: Peon, Thief, Warrior, Archer, Sorcerer
 - [x] Meteor Head
-- [-] Event enemies: Pirates (+ Flying Dutchman) and Frost Legion done; Martians, Pumpkin/Frost Moon, Solar Eclipse open
+- [-] Event enemies: Pirates (+ Flying Dutchman) and Frost Legion done; Martians, Pumpkin/Frost Moon done; Solar Eclipse open
 
 ## NPCs
 - [x] Guide, Merchant, Nurse, Demolitionist
@@ -91,7 +92,7 @@ Melee
 - [x] Wooden Sword, Copper Shortsword
 - [x] Copper/Tin/Iron/Lead/Silver/Tungsten/Gold/Platinum Broadsword
 - [-] Light's Bane, Blood Butcherer, Muramasa done; Blade of Grass, Bee Keeper, Fiery Greatsword, Breaker Blade done; Night's Edge, Volcano, spears, flails, yoyos pending
-- [ ] Hardmode and endgame melee
+- [-] Hardmode and endgame melee: ore swords, Excalibur, Chlorophyte Claymore, event and boss swords done; Solar Eruption, Daybreak, Meowmere, Star Wrath done; others pending
 Ranged
 - [x] Wooden/Copper/Iron/Gold Bow
 - [x] Flintlock Pistol
@@ -101,7 +102,7 @@ Magic
 - [x] Wand of Sparking, Amethyst Staff, Magic Missile
 - [-] Vilethorn, Water Bolt, Aqua Scepter, Book of Skulls, Bee Gun, Space Gun, Flamelash, Flower of Fire, Demon Scythe, Laser Rifle done; other gem staves, tomes, magic guns pending
 Summoner
-- [ ] Summon staffs, sentries, whips
+- [ ] Summon staffs, sentries, whips (Stardust Dragon/Cell Staff exist as homing magic stand-ins until minions are built)
 Boomerangs
 - [x] Wooden Boomerang
 - [ ] Enchanted Boomerang, Flamarang...
@@ -119,7 +120,7 @@ Boomerangs
 ## Armour
 - [x] Wood, Copper, Tin, Iron, Lead, Silver, Tungsten, Gold, Platinum
 - [-] Shadow, Crimson, Jungle, Molten, Meteor done; Mining, Ninja, Fossil, Necro, Bee pending
-- [-] Cobalt to Titanium, Hallowed, Crystal Assassin, Chlorophyte, Spectre done; Turtle, Beetle, Shroomite, Spooky, Celestial armours pending
+- [-] Cobalt to Titanium, Hallowed, Crystal Assassin, Chlorophyte, Spectre, Solar Flare, Vortex, Nebula, Stardust done; Turtle, Beetle, Shroomite, Spooky pending
 
 ## Accessories
 - [x] Hermes Boots, Cloud in a Bottle, Shiny Red Balloon, Lucky Horseshoe
@@ -139,7 +140,7 @@ Boomerangs
 - [x] Cobalt/Palladium, Mythril/Orichalcum, Adamantite/Titanium (ore, raw, bar, pickaxe, sword, repeater, armor)
 - [x] Hallowed Bar (mechanical bosses): Excalibur, Hallowed Repeater, Pickaxe Axe, Hallowed armor; Souls of Might/Sight/Fright
 - [x] Chlorophyte (underground jungle mud in Hardmode; Claymore, Shotbow, Pickaxe, armor)
-- [ ] Luminite
+- [x] Luminite (from Moon Lord; Luminite Bar at the Ancient Manipulator; fragment armors, picks, wings, weapons)
 
 ## Blocks
 - [x] Work Bench, Iron Anvil, Lead Anvil, Life Crystal (block)
@@ -179,9 +180,10 @@ Boomerangs
 - [x] Pirate Invasion (Pirate Map; Flying Dutchman; Cutlass, Gold Ring, Lucky Coin, Discount Card, Coin Gun)
 - [x] Frost Legion (Snow Globe from Presents)
 - [ ] Solar Eclipse
-- [ ] Martian Madness
-- [ ] Pumpkin Moon
-- [ ] Frost Moon
+- [x] Martian Madness
+- [x] Pumpkin Moon
+- [x] Frost Moon
+- [x] Celestial Events (four pillars, then Moon Lord)
 - [ ] Old One's Army (crossover, low priority)
 
 ## Potions
@@ -195,12 +197,13 @@ Boomerangs
 - [x] Work Bench, Furnace (vanilla furnace/blast furnace), Iron/Lead Anvil (+ vanilla anvils),
       Alchemy (brewing stand as Placed Bottle stand-in), Loom (vanilla loom)
 - [x] Hellforge, Demon/Crimson Altar, Tinkerer's Workshop, Mythril/Orichalcum Anvil, Adamantite/Titanium Forge
-- [ ] Sawmill, Placed Bottle, Ancient Manipulator, Crystal Ball...
+- [x] Ancient Manipulator
+- [ ] Sawmill, Placed Bottle, Crystal Ball...
 
 ## Materials
 - [x] Gel, Lens, Fallen Star (falling at night), Amethyst, Life Crystals in caves
 - [x] Bars and raw metals listed above
-- [ ] Herbs, souls, fragments, boss materials, mushrooms, other gems...
+- [-] Souls, Ectoplasm, Celestial Fragments, Luminite done; herbs, mushrooms, other gems pending
 
 ## Consumables / items
 - [x] Life Crystal, Life Fruit, Mana Crystal

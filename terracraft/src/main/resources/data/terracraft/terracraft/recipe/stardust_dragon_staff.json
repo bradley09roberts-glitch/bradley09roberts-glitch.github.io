@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:stardust_dragon_staff",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:stardust_fragment",
+      "count": 18
+    }
+  ],
+  "stations": [
+    "terracraft:ancient_manipulator"
+  ],
+  "category": "weapons"
+}

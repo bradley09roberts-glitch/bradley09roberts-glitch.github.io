@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:daybreak",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:solar_fragment",
+      "count": 18
+    }
+  ],
+  "stations": [
+    "terracraft:ancient_manipulator"
+  ],
+  "category": "weapons"
+}

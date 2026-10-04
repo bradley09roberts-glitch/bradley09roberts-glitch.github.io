@@ -115,10 +115,23 @@ Priority: **A** = very visible / looks clearly wrong today, **B** = noticeable, 
 | C | Sharkron, Truffle Worm, Lacewing, Flocko, Spirits | simple models | smoother shapes, glows and wing motion |
 | C | Spectre armor | hooded cloth model | translucent ghostly material with a glow |
 
+## Stage 8 (built; first versions)
+
+| Pri | What | Today | Improvement |
+|---|---|---|---|
+| A | Moon Lord | box torso with ribs, box hands and head with a flat eye, thin flesh tethers | towering (3x larger) Cthulhu-like body with a tentacled face, real arms reaching to the hands, eyes that track the player and blink, glowing exposed heart that pulses, true beam model for the Deathray |
+| A | Celestial Pillars | stacked boxes with bands; shield is a colour swap | tall faceted crystal monoliths per element (solar flames, vortex swirl, nebula clouds, stardust stars), a translucent shimmering shield bubble that cracks as it weakens |
+| A | Lunatic Cultist | robed humanoid skin | hooded robe with a gold-trimmed mask, floating pose with arms raised, ritual circle of light on the ground, clones that flicker |
+| B | Pillar guards | humanoid skins and simple models | Selenian with spinning blade pose, Sroller rolling, Corite with a flaming trail, Storm Diver with a jetpack, Alien Hornet with a stinger glow, Vortexian, Nebula Floater brain with eyes, Predictor and Brain Suckler with tendrils, Star Cell splitting, Flow Invader squid, Twinkle Popper |
+| B | Cultist Devotees | robed humanoid skin standing | kneeling praying pose with chanting particles and a glowing tablet between them |
+| B | Fragment armors | plate/cloth models with crests | Solar Flare flaming shoulders and glowing visor, Vortex sleek stealth visor, Nebula hood with a floating glowing crown, Stardust star-crested helmet with trailing particles |
+| B | Fragment wings | flat two-colour wing panels | Solar flame wings, Vortex energy wings, Nebula mantle, Stardust star-studded wings, all with glow and particles |
+| C | Ancient Manipulator | cube block with a fragment circle | moon-shaped altar with a floating orb and the four fragment colours |
+| C | Endgame weapons | flat sprites (2D, by design) | particle trails for Meowmere cats, Star Wrath stars, Last Prism rainbow beam rendered as a real beam |
+
 ## Future (planned stages) - will need models when they are built
 
 - **Santa Claus** (Frost Legion follow-up), Stylist, Party Girl, Tax Collector.
 - **Plantera**: bulb block, flower head with petals and hooks + tentacles, Planter's Tentacles; Jungle Hardmode enemies (Man Eater hardmode, Angry Trapper, Derpling, Moth).
 - **Lihzahrd Temple**: Lihzahrd, Flying Snake, traps (dart, spiky ball, spear), altar; **Golem** (stone head, fists on chains, body with sun core).
-- **Lunatic Cultist**, **Celestial Pillars** (Solar/Vortex/Nebula/Stardust), **Moon Lord** (hands with eyes, core, head).
 - Mounts and pets if added later; minions for summon weapons (Imp, Spider, Twins, Pirate, Sanguine Bat...).

@@ -1198,10 +1198,188 @@ def stage7_creatures():
             empress_of_light(), martian_probe(), martian_drone(), scutlix(), martian_saucer()]
 
 
+# ----------------------------------------------------------------------------------------- Stage 8
+def celestial_pillar(kind, main, dark, glow, shield):
+    """A Celestial Pillar (drawn at scale 2): a towering crystal monolith - a tall faceted shaft on a heavy base,
+    bands of its element around it and a glowing core near the top. 'shielded': the shell glows with its shield."""
+    c = Creature(f'{kind}_pillar', {'main': main, 'dark': dark, 'glow': glow, 'band': shade_hex(main, 1.3), 'shell': dark})
+    c.variants['shielded'] = {'shell': shield, 'glow': '#FFFFFF'}
+    c.part('body', pivot=(0, 24, 0))
+    c.box('body', (-16, -10, -16), (32, 10, 32), mat='dark', pattern='rock')                       # base
+    c.box('body', (-12, -70, -12), (24, 60, 24), pattern='gem', edge='dark')                        # shaft
+    for y in (-26, -44, -62):
+        c.box('body', (-14, y, -14), (28, 3, 28), mat='band', pattern='plate', edge='dark')
+    c.box('body', (-8, -80, -8), (16, 10, 16), pattern='gem', edge='dark')                           # cap
+    c.box('body', (-5, -58, -12.6), (10, 10, 1), mat='glow', pattern='glow')                          # core
+    c.box('body', (-5, -58, 11.6), (10, 10, 1), mat='glow', pattern='glow')
+    c.box('body', (-15, -78, -15), (30, 1, 30), mat='shell', pattern='gem')                           # shield ring
+    c.box('body', (-15, -16, -15), (30, 1, 30), mat='shell', pattern='gem')
+    return c
+
+
+def shade_hex(color, f):
+    r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+    return '#%02X%02X%02X' % tuple(max(0, min(255, int(v * f))) for v in (r, g, b))
+
+
+def sroller():
+    """Sroller: a solar beast curled into a spiked rolling ball of flame."""
+    c = Creature('sroller', {'main': '#E8781A', 'dark': '#6A2A10', 'glow': '#FFD040', 'spike': '#FFB030'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-7, -7, -7), (14, 14, 14), pattern='scale', edge='dark')
+    for x, y, z in ((0, -9, 0), (0, 7, 0), (-9, 0, 0), (7, 0, 0), (0, 0, -9), (0, 0, 7)):
+        c.box('body', (x - 1, y, z - 1) if y else (x, -1, z - 1) if x else (-1, -1, z), (2, 2, 2), mat='spike', pattern='horn')
+    c.box('body', (-3, -3, -7.4), (2, 2, 0.5), mat='glow', pattern='glow')
+    c.box('body', (1, -3, -7.4), (2, 2, 0.5), mat='glow', pattern='glow')
+    c.anim('body', 'wiggle', 0.4, 1.2)
+    return c
+
+
+def corite():
+    """Corite: a flying ball of solar rock wreathed in flame, with a glaring eye."""
+    c = Creature('corite', {'main': '#8A3A1A', 'dark': '#3A1408', 'glow': '#FF8A20', 'eye': '#FFF0A0'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-6, -6, -6), (12, 12, 12), pattern='rock', edge='dark')
+    c.box('body', (-3, -3, -6.5), (6, 4, 1), mat='eye', pattern='glow')
+    c.part('flame', 'body', pivot=(0, 0, 6))
+    c.box('flame', (-4, -4, 0), (8, 8, 8), mat='glow', pattern='fire')
+    c.anim('flame', 'flicker', 0.3, 1.0)
+    c.anim('body', 'bob', 0.6, 0.3)
+    return c
+
+
+def alien_hornet():
+    """Alien Hornet: a vortex wasp - a teal armored abdomen with a glowing sting and buzzing wings."""
+    c = Creature('alien_hornet', {'main': '#2A6A60', 'dark': '#0E2420', 'glow': '#60F0B0', 'wing': '#B0FFE0'})
+    c.part('body', pivot=(0, 14, 0))
+    c.box('body', (-3, -3, -6), (6, 6, 6), pattern='scale', edge='dark')
+    c.box('body', (-3.5, -3, 0), (7, 7, 9), pattern='bands', edge='dark')
+    c.box('body', (-1, 1, 9), (2, 2, 3), mat='glow', pattern='glow')
+    c.box('body', (-2, -2, -6.4), (1.5, 1.5, 0.5), mat='glow', pattern='glow')
+    c.box('body', (0.5, -2, -6.4), (1.5, 1.5, 0.5), mat='glow', pattern='glow')
+    for side, nm in ((-1, 'wing_r'), (1, 'wing_l')):
+        c.part(nm, 'body', pivot=(side * 3, -3, -2))
+        c.box(nm, ((-9 if side < 0 else 0), 0, -3), (9, 0, 7), mat='wing', pattern='membrane')
+        c.anim(nm, nm, 0.7, 2.0)
+    c.anim('body', 'bob', 0.5, 0.3)
+    return c
+
+
+def nebula_floater():
+    """Nebula Floater: a hovering violet brain-squid with a single great eye and dangling tendrils."""
+    c = Creature('nebula_floater', {'main': '#9A4AC8', 'dark': '#2A1040', 'glow': '#FF80F0', 'eye': '#FFE0FF'})
+    c.part('body', pivot=(0, 8, 0))
+    c.box('body', (-7, -8, -7), (14, 10, 14), pattern='flesh', edge='dark')
+    c.box('body', (-3, -5, -7.5), (6, 5, 1), mat='eye', pattern='glow')
+    for i, (x, z) in enumerate(((-4, -4), (4, -4), (-4, 4), (4, 4))):
+        nm = f'tendril_{i}'
+        c.part(nm, 'body', pivot=(x, 2, z))
+        c.box(nm, (-1, 0, -1), (2, 12, 2), mat='glow', pattern='skin')
+        c.anim(nm, 'wiggle', 0.3, 0.5, i)
+    c.anim('body', 'bob', 1.0, 0.15)
+    return c
+
+
+def brain_suckler():
+    """Brain Suckler: a small pink nebula jellyfish that latches onto heads."""
+    c = Creature('brain_suckler', {'main': '#E080D8', 'dark': '#4A1A48', 'glow': '#FFC0F8'})
+    c.part('body', pivot=(0, 14, 0))
+    c.box('body', (-5, -6, -5), (10, 6, 10), pattern='flesh', edge='dark')
+    c.box('body', (-2, -4, -5.4), (4, 2, 0.5), mat='glow', pattern='glow')
+    for i, x in enumerate((-3, 0, 3)):
+        nm = f'leg_{i}'
+        c.part(nm, 'body', pivot=(x, 0, 0))
+        c.box(nm, (-0.5, 0, -0.5), (1, 7, 1), mat='glow', pattern='skin')
+        c.anim(nm, 'wiggle', 0.3, 0.8, i)
+    return c
+
+
+def star_cell():
+    """Star Cell: a glowing blue star-shaped cell that splits when hurt."""
+    c = Creature('star_cell', {'main': '#60A8F8', 'dark': '#1A3A78', 'glow': '#E0F4FF'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-5, -5, -5), (10, 10, 10), pattern='gem', edge='dark')
+    for x, y, z in ((0, -9, 0), (0, 5, 0), (-9, 0, 0), (5, 0, 0)):
+        c.box('body', (x - 2 if not x else x, y if y else -2, -2), (4, 4, 4), mat='main', pattern='gem')
+    c.box('body', (-2, -2, -5.5), (4, 4, 0.5), mat='glow', pattern='glow')
+    c.anim('body', 'wiggle', 0.25, 0.6)
+    return c
+
+
+def flow_invader():
+    """Flow Invader: a stardust squid - a pale blue mantle with drifting fins and a ring of tentacles."""
+    c = Creature('flow_invader', {'main': '#A8D0F8', 'dark': '#2A4A88', 'glow': '#60C0FF'})
+    c.part('body', pivot=(0, 10, 0))
+    c.box('body', (-5, -12, -5), (10, 12, 10), pattern='skin', edge='dark')
+    c.box('body', (-3, -6, -5.4), (2, 2, 0.5), mat='glow', pattern='glow')
+    c.box('body', (1, -6, -5.4), (2, 2, 0.5), mat='glow', pattern='glow')
+    for i, (x, z) in enumerate(((-3, -3), (3, -3), (-3, 3), (3, 3))):
+        nm = f'tendril_{i}'
+        c.part(nm, 'body', pivot=(x, 0, z))
+        c.box(nm, (-1, 0, -1), (2, 9, 2), mat='glow', pattern='skin')
+        c.anim(nm, 'wiggle', 0.35, 0.5, i)
+    c.anim('body', 'bob', 1.0, 0.2)
+    return c
+
+
+def moon_lord():
+    """Moon Lord's body (drawn at scale 2): a towering pale-green eldritch torso with a ribcage over the heart,
+    tentacled jaw and stumpy legs. The head and hands are their own creatures. 'exposed': the heart glows bare."""
+    c = Creature('moon_lord', {'main': '#8AA898', 'dark': '#2A3A34', 'flesh': '#6A8878', 'rib': '#D8E0C8', 'heart': '#3A6A58',
+                               'glow': '#60F0D0'})
+    c.variants['exposed'] = {'heart': '#80FFE8', 'rib': '#A8B8A0'}
+    c.part('body', pivot=(0, 24, 0))
+    c.box('body', (-14, -64, -8), (28, 28, 16), pattern='flesh', edge='dark')                       # chest
+    c.box('body', (-10, -36, -6), (20, 12, 12), mat='flesh', pattern='flesh', edge='dark')          # waist
+    c.box('body', (-5, -58, -8.6), (10, 12, 1), mat='heart', pattern='glow')                          # heart
+    for y in (-60, -55, -50, -45):
+        c.box('body', (-12, y, -9), (24, 2, 1), mat='rib', pattern='bone')
+    for side, nm in ((-1, 'leg_r'), (1, 'leg_l')):
+        c.part(nm, 'body', pivot=(side * 6, -24, 0))
+        c.box(nm, (-4, 0, -4), (8, 24, 8), mat='flesh', pattern='flesh', edge='dark')
+        c.anim(nm, nm, 0.15)
+    for side in (-1, 1):                                                                               # shoulders/arms to the hands
+        c.box('body', ((-24 if side < 0 else 14), -62, -4), (10, 8, 8), pattern='flesh', edge='dark')
+    c.part('jaw', 'body', pivot=(0, -64, -4))
+    for x in (-6, -2, 2, 6):
+        c.box('jaw', (x - 1, -4, -2), (2, 6, 2), mat='flesh', pattern='skin')
+    c.anim('body', 'bob', 0.6, 0.06)
+    return c
+
+
+def moon_lord_eye(name, w, h):
+    """Moon Lord's hand or head: a pale-green mass with a huge glaring eye in it."""
+    c = Creature(name, {'main': '#8AA898', 'dark': '#2A3A34', 'eye': '#E8F8F0', 'iris': '#40C8A8', 'glow': '#60F0D0'})
+    c.part('body', pivot=(0, 24, 0))
+    c.box('body', (-w / 2, -h, -w / 2 + 2), (w, h, w - 4), pattern='flesh', edge='dark')
+    c.box('body', (-w / 2 + 4, -h + 6, -w / 2 + 1.4), (w - 8, h - 12, 1), mat='eye', pattern='skin')
+    c.box('body', (-3, -h / 2 - 3, -w / 2 + 1), (6, 6, 1), mat='iris', pattern='glow')
+    if name.endswith('hand'):
+        for i, x in enumerate((-w / 2 + 2, -2, w / 2 - 6)):
+            nm = f'finger_{i}'
+            c.part(nm, 'body', pivot=(x + 2, -h, 0))
+            c.box(nm, (-2, -12, -2), (4, 12, 4), pattern='flesh', edge='dark')
+            c.anim(nm, 'wiggle', 0.15, 0.4, i)
+    else:
+        for x in (-w / 2 - 2, w / 2 - 2):                                                            # head tendrils
+            c.box('body', (x, -h - 8, -2), (4, 10, 4), pattern='flesh', edge='dark')
+    c.anim('body', 'bob', 0.5, 0.15)
+    return c
+
+
+def stage8_creatures():
+    return [celestial_pillar('solar', '#E8781A', '#5A1A08', '#FFF0A0', '#FFD040'),
+            celestial_pillar('vortex', '#2A8A78', '#0E2A24', '#B0FFE0', '#60F0B0'),
+            celestial_pillar('nebula', '#9A4AC8', '#2A1040', '#FFD0FF', '#FF80F0'),
+            celestial_pillar('stardust', '#60A8F8', '#14306A', '#E0F4FF', '#A8E8FF'),
+            sroller(), corite(), alien_hornet(), nebula_floater(), brain_suckler(), star_cell(), flow_invader(),
+            moon_lord(), moon_lord_eye('moon_lord_hand', 16, 22), moon_lord_eye('moon_lord_head', 22, 26)]
+
+
 def all_creatures():
     return [imp(), demon(), demon('voodoo_demon', voodoo=True), eater_of_souls(), crimera(), face_monster(), blood_crawler(),
             snapper('man_eater', '#4A9A30', '#E070A0', 9), snapper('snatcher', '#5AAA3A', '#F0A0C0', 7), meteor_head()] + hm_creatures() + mech_creatures() + pirate_creatures() + frost_creatures() \
-        + jungle_hm_creatures() + temple_creatures() + stage7_creatures()
+        + jungle_hm_creatures() + temple_creatures() + stage7_creatures() + stage8_creatures()
 
 
 def write(assets, tex):

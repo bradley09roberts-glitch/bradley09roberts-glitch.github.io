@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:solar_flare_breastplate",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:solar_fragment",
+      "count": 20
+    },
+    {
+      "item": "terracraft:luminite_bar",
+      "count": 16
+    }
+  ],
+  "stations": [
+    "terracraft:ancient_manipulator"
+  ],
+  "category": "armor"
+}

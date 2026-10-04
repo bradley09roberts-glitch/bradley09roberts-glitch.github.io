@@ -32,7 +32,9 @@ public final class TerraModels {
         "prime_cannon", "prime_saw", "prime_vice", "prime_laser", "parrot", "flying_dutchman", "mister_stabby", "snowman_gangsta", "snow_balla",
         "angry_trapper", "derpling", "plantera", "plantera_hook", "plantera_tentacle",
         "lihzahrd", "flying_snake", "golem", "golem_head", "golem_fist",
-        "truffle_worm", "duke_fishron", "sharkron", "dungeon_spirit", "splinterling", "hellhound", "poltergeist", "mourning_wood", "pumpking", "flocko", "everscream", "ice_queen", "prismatic_lacewing", "empress_of_light", "martian_probe", "martian_drone", "scutlix", "martian_saucer");
+        "truffle_worm", "duke_fishron", "sharkron", "dungeon_spirit", "splinterling", "hellhound", "poltergeist", "mourning_wood", "pumpking", "flocko", "everscream", "ice_queen", "prismatic_lacewing", "empress_of_light", "martian_probe", "martian_drone", "scutlix", "martian_saucer",
+        "solar_pillar", "vortex_pillar", "nebula_pillar", "stardust_pillar", "sroller", "corite", "alien_hornet", "nebula_floater", "brain_suckler",
+        "star_cell", "flow_invader", "moon_lord", "moon_lord_hand", "moon_lord_head");
 
     private TerraModels() {}
 

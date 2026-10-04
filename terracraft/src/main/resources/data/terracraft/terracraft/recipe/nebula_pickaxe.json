@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:nebula_pickaxe",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:nebula_fragment",
+      "count": 12
+    },
+    {
+      "item": "terracraft:luminite_bar",
+      "count": 10
+    }
+  ],
+  "stations": [
+    "terracraft:ancient_manipulator"
+  ],
+  "category": "tools"
+}
