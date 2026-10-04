@@ -15,4 +15,8 @@ public class TerraRenderState extends UndeadRenderState {
     public boolean aggressive;
     public float healthFraction = 1.0F;
     public boolean healthBar;
+    /** Tether end relative to the entity's feet (null = not chained), and its segment texture. */
+    public @org.jetbrains.annotations.Nullable net.minecraft.world.phys.Vec3 tether;
+    public float tetherStart;
+    public @org.jetbrains.annotations.Nullable net.minecraft.resources.Identifier tetherTexture;
 }

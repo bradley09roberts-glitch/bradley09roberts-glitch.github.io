@@ -25,6 +25,7 @@ class Creature:
         self.parts = []      # (name, parent, pivot, rotation)
         self.cubes = []      # am.Cube with .part
         self.anims = []
+        self.variants = {}   # texture suffix -> material overrides (same model, e.g. Plantera's open mouth)
 
     def part(self, name, parent=None, pivot=(0, 0, 0), rot=(0, 0, 0)):
         self.parts.append((name, parent, list(pivot), list(rot)))
@@ -209,7 +210,7 @@ def blood_crawler():
     return c
 
 
-def snapper(name, outer, inner, size):
+def snapper(name, outer, inner, size, vines=4):
     """Man Eater / Snatcher: a carnivorous plant head on a vine, its jaws snapping open and shut."""
     c = Creature(name, {'main': outer, 'inner': inner, 'dark': '#1A0A10', 'teeth': '#F0F0E0', 'vine': '#3A6A28', 'leaf': '#5AA03A'})
     h = size
@@ -223,7 +224,7 @@ def snapper(name, outer, inner, size):
     for side in (-1, 1):   # leaves around the back of the head
         c.box('head', ((-h / 2 - 2) if side < 0 else h / 2, -2, h / 2 - 2), (2, 4, 3), mat='leaf', pattern='leaf')
     prev, z = 'head', h / 2
-    for i in range(4):
+    for i in range(vines):
         nm = f'vine_{i}'
         c.part(nm, prev, pivot=(0, 0, z), rot=(-0.3, 0, 0))
         c.box(nm, (-1, -1, 0), (2, 2, 5), mat='vine', pattern='leaf')
@@ -678,9 +679,202 @@ def pirate_creatures():
     return [parrot(), flying_dutchman()]
 
 
+# ----------------------------------------------------------------------------------------- Plantera (Stage 6)
+def plantera():
+    """Plantera: a huge pink flower bud with yellow-green spots, a ring of jungle leaves around its back and a thick
+    vine stem. The front is a closed bud of four petals; the 'mouth' texture (second phase) shows the petals parted
+    over a dark maw full of teeth."""
+    c = Creature('plantera', {'main': '#E0508A', 'dark': '#7A1A40', 'spot': '#C8E050', 'leaf': '#3A9A30', 'vine': '#2E6A22',
+                              'petal': '#F070A8', 'inner': '#E0508A', 'teeth': '#F0E8C8'})
+    c.variants['mouth'] = {'inner': '#2A0610', 'petal': '#D84080'}
+    c.part('head', pivot=(0, 12, 0))
+    c.box('head', (-8, -8, -6), (16, 16, 14), pattern='skin', edge='dark')
+    c.box('head', (-6, -6, -7), (12, 12, 1), mat='inner', pattern='flesh', faces={'north': 'teeth_down'})   # the mouth
+    for (x, y) in ((-8.6, -3), (8, 2), (-4, -8.6), (3, 7.6), (-8.6, 4), (8, -5)):
+        w = (1, 3, 3) if abs(x) > 8 else (3, 1, 3)
+        c.box('head', (x, y, -1), w, mat='spot', pattern='gem')
+    for nm, piv, size, origin, rot in (
+            ('petal_top', (0, -7, -6), (14, 2, 6), (-7, 0, -6), (0.15, 0, 0)),
+            ('petal_bottom', (0, 7, -6), (14, 2, 6), (-7, -2, -6), (-0.15, 0, 0)),
+            ('petal_left', (-7, 0, -6), (2, 12, 6), (0, -6, -6), (0, -0.15, 0)),
+            ('petal_right', (7, 0, -6), (2, 12, 6), (-2, -6, -6), (0, 0.15, 0))):
+        c.part(nm, 'head', pivot=piv, rot=rot)
+        c.box(nm, origin, size, mat='petal', pattern='skin', edge='dark')
+    c.anim('petal_top', 'jaw', -0.25, 0.3)
+    c.anim('petal_bottom', 'jaw', 0.25, 0.3)
+    c.anim('petal_left', 'wiggle', 0.15, 0.3)
+    c.anim('petal_right', 'wiggle', -0.15, 0.3, 3.14)
+    for i, (x, y, rz) in enumerate(((-10, -4, 0.5), (10, -4, -0.5), (-9, 6, -0.4), (9, 6, 0.4), (0, -11, 0.0), (0, 11, 0.0))):
+        nm = f'leaf_{i}'
+        c.part(nm, 'head', pivot=(x * 0.6, y * 0.6, 6), rot=(0.5 if y < 0 else -0.5, 0, rz))
+        c.box(nm, (-3, -1 if abs(x) < 1 else -3, 0), (6 if abs(x) < 1 else 6, 2 if abs(x) < 1 else 6, 7), mat='leaf', pattern='leaf')
+        c.anim(nm, 'dangle', 0.08, 0.2, i)
+    c.box('head', (-2.5, -2.5, 8), (5, 5, 6), mat='vine', pattern='leaf')
+    c.anim('head', 'head')
+    return c
+
+
+def plantera_hook():
+    """Plantera's Hook: a green thorny grabbing claw at the end of its vine."""
+    c = Creature('plantera_hook', {'main': '#3A8A2A', 'dark': '#1A3A12', 'claw': '#C8D888', 'vine': '#2E6A22'})
+    c.part('body', pivot=(0, 17, 0))
+    c.box('body', (-3.5, -3.5, -2), (7, 7, 7), pattern='leaf', edge='dark')
+    for i, (x, y) in enumerate(((-2.5, -2.5), (2.5, -2.5), (0, 3))):
+        nm = f'claw_{i}'
+        c.part(nm, 'body', pivot=(x, y, -2), rot=(0.25 * (1 if y < 0 else -1), 0.25 * (-1 if x < 0 else 1 if x > 0 else 0), 0))
+        c.box(nm, (-1, -1, -6), (2, 2, 6), mat='claw', pattern='horn')
+    c.box('body', (-1.5, -1.5, 5), (3, 3, 3), mat='vine', pattern='leaf')
+    return c
+
+
+def derpling():
+    """Derpling: a fat blue jungle bug that bounces about, with huge goofy eyes and stubby legs."""
+    c = Creature('derpling', {'main': '#3A70D8', 'dark': '#16285A', 'shell': '#5A90F0', 'eye': '#F8F8F0', 'pupil': '#101018', 'leg': '#24448A'})
+    c.part('body', pivot=(0, 24, 0))
+    c.box('body', (-7, -10, -6), (14, 8, 13), mat='shell', pattern='plate', edge='dark')
+    c.box('body', (-6, -4, -5), (12, 2, 11), mat='main', pattern='skin')
+    c.part('head', 'body', pivot=(0, -6, -6))
+    c.box('head', (-4.5, -3, -4), (9, 6, 4), pattern='skin', edge='dark')
+    for x in (-4, 1):
+        c.box('head', (x, -5.5, -4.5), (3, 3, 3), mat='eye', pattern='skin')
+        c.box('head', (x + (0.5 if x < 0 else 1.5), -4.5, -4.8), (1, 1, 0.5), mat='pupil', pattern='skin')
+    c.anim('head', 'head')
+    for i, z in enumerate((-3, 1, 5)):
+        for side, nm in ((-1, 'leg_r'), (1, 'leg_l')):
+            part = f'{nm}_{i}'
+            c.part(part, 'body', pivot=(side * 6, -3, z), rot=(0, 0, side * 0.5))
+            c.box(part, ((-1 if side > 0 else -1), 0, -0.5), (2, 5, 1), mat='leg', pattern='skin')
+            c.anim(part, nm, 0.6)
+    c.anim('body', 'bob', 0.4, 0.3)
+    return c
+
+
+def jungle_hm_creatures():
+    return [plantera(), plantera_hook(), snapper('plantera_tentacle', '#E0508A', '#2A0610', 8, vines=0),
+            snapper('angry_trapper', '#2E7A22', '#D04060', 12), derpling()]
+
+
+# ----------------------------------------------------------------------------------------- Lihzahrd Temple (Stage 6)
+def lihzahrd():
+    """Lihzahrd: an upright temple lizard, rust-brown scales with a sandy belly, a long snout, frills, a heavy tail."""
+    c = Creature('lihzahrd', {'main': '#9A5A26', 'belly': '#D8A860', 'dark': '#4A2810', 'eye': '#F8D830', 'glow': '#F8D830', 'claw': '#E8E0C8', 'frill': '#C83A20'})
+    c.part('body', pivot=(0, 11, 0))
+    c.box('body', (-4, -11, -2.5), (8, 11, 5), pattern='scale', edge='dark')
+    c.box('body', (-3, -10, -3), (6, 9, 1), mat='belly', pattern='skin')
+    c.part('head', 'body', pivot=(0, -11, 0))
+    c.box('head', (-3.5, -6, -4), (7, 6, 6), pattern='scale', edge='dark')
+    c.box('head', (-2.5, -4, -9), (5, 3.5, 5), pattern='scale')                      # snout
+    c.box('head', (-2.5, -0.5, -8.5), (5, 1, 4.5), mat='belly', pattern='skin')         # jaw
+    for x in (-3.6, 2.6):
+        c.box('head', (x, -5, -3.5), (1, 1, 1), mat='eye', pattern='glow')
+    c.box('head', (-0.5, -9, -2), (1, 3, 6), mat='frill', pattern='scale')             # crest
+    c.anim('head', 'head')
+    for side, nm in ((-1, 'arm_r'), (1, 'arm_l')):
+        c.part(nm, 'body', pivot=(side * 5, -10, 0))
+        c.box(nm, ((-2 if side < 0 else 0), -1, -1.5), (2, 9, 3), pattern='scale')
+        c.box(nm, ((-2 if side < 0 else 0), 8, -2.5), (2, 1, 2), mat='claw', pattern='horn')
+        c.anim(nm, nm, 0.8)
+    for side, nm in ((-1, 'leg_r'), (1, 'leg_l')):
+        c.part(nm, 'body', pivot=(side * 2, 0, 0))
+        c.box(nm, (-1.5, 0, -1.5), (3, 13, 3), pattern='scale')
+        c.box(nm, (-1.5, 11, -4), (3, 2, 3), mat='claw', pattern='horn')
+        c.anim(nm, nm, 1.0)
+    c.part('tail', 'body', pivot=(0, -2, 2.5), rot=(0.6, 0, 0))
+    c.box('tail', (-1.5, -1.5, 0), (3, 3, 8), pattern='scale')
+    c.part('tail_tip', 'tail', pivot=(0, 0, 8), rot=(0.3, 0, 0))
+    c.box('tail_tip', (-1, -1, 0), (2, 2, 6), pattern='scale')
+    c.anim('tail', 'tail', 0.3, 0.3)
+    c.anim('tail_tip', 'tail', 0.3, 0.3, 1.0)
+    return c
+
+
+def flying_snake():
+    """Flying Snake: a long coiling temple serpent with a frilled head and four little feathered wings."""
+    c = Creature('flying_snake', {'main': '#C88A2E', 'dark': '#5A3410', 'belly': '#F0D080', 'eye': '#E83A10', 'glow': '#E83A10', 'wing': '#E8C060', 'frill': '#3AA060'})
+    c.part('head', pivot=(0, 17, -10))
+    c.box('head', (-3, -3, -5), (6, 5, 6), pattern='scale', edge='dark')
+    c.box('head', (-2, -1, -8), (4, 3, 3), pattern='scale')
+    for x in (-3.4, 2.4):
+        c.box('head', (x, -2, -4), (1, 1, 1), mat='eye', pattern='glow')
+    c.box('head', (-4, -5, -1), (8, 3, 1), mat='frill', pattern='feather')
+    prev, z = 'head', 1
+    for i in range(5):
+        nm = f'seg_{i}'
+        w = 4.5 - i * 0.6
+        c.part(nm, prev, pivot=(0, 0, z))
+        c.box(nm, (-w / 2, -w / 2, 0), (w, w, 5), pattern='scale')
+        c.box(nm, (-w / 2 + 0.5, w / 2 - 0.5, 0.5), (w - 1, 0.6, 4), mat='belly', pattern='skin')
+        c.anim(nm, 'wiggle', 0.3, 0.35, i * 0.9)
+        if i in (0, 2):
+            for side, wn in ((-1, 'wing_r'), (1, 'wing_l')):
+                part = f'{wn}_{i}'
+                c.part(part, nm, pivot=(side * w / 2, -w / 2, 2.5))
+                c.box(part, ((-7 if side < 0 else 0), 0, -2), (7, 0, 4), mat='wing', pattern='feather')
+                c.anim(part, wn, 0.6, 0.8, i)
+        prev, z = nm, 5
+    c.anim('head', 'bob', 0.6, 0.25)
+    return c
+
+
+def golem():
+    """Golem's body: a squat idol of temple stone with a golden sun set in its chest, stubby legs and shoulder
+    sockets for the chained fists. The head and fists are their own creatures."""
+    c = Creature('golem', {'main': '#C8884A', 'dark': '#6A3A18', 'trim': '#E8C080', 'sun': '#F8C838', 'glow': '#D8A868', 'core': '#FFF4B0', 'socket': '#3A2010'})
+    c.part('body', pivot=(0, 24, 0))
+    c.box('body', (-24, -50, -14), (48, 38, 28), pattern='rock', edge='dark')
+    c.box('body', (-26, -52, -15), (52, 6, 30), mat='trim', pattern='plate', edge='dark')      # shoulders
+    c.box('body', (-9, -40, -15.5), (18, 18, 2), mat='sun', pattern='gem')                    # sun disc
+    c.box('body', (-5, -36, -16), (10, 10, 1), mat='core', pattern='gem')
+    for i in range(8):                                                                            # sun rays
+        a = i * 3.14159 / 4
+        import math as _m
+        x, y = _m.cos(a) * 12, _m.sin(a) * 12
+        c.box('body', (x - 1.5, -31 + y - 1.5, -15), (3, 3, 1), mat='sun', pattern='gem')
+    for side in (-1, 1):
+        c.box('body', (side * 26 - (4 if side > 0 else 0) + (0 if side > 0 else 0), -46, -4), (4, 8, 8), mat='socket', pattern='rock')
+    for side, nm in ((-1, 'leg_r'), (1, 'leg_l')):
+        c.part(nm, 'body', pivot=(side * 13, -12, 0))
+        c.box(nm, (-7, 0, -8), (14, 12, 16), pattern='rock', edge='dark')
+        c.anim(nm, nm, 0.3)
+    return c
+
+
+def golem_head():
+    """Golem's head: a blocky stone idol face with a heavy brow, two glowing eyes and a slot mouth. When it breaks
+    free (texture 'free') the eyes burn red-hot."""
+    c = Creature('golem_head', {'main': '#C8884A', 'dark': '#6A3A18', 'trim': '#E8C080', 'eye': '#F8E870', 'glow': '#D8A868', 'mouth': '#3A2010'})
+    c.variants['free'] = {'eye': '#FF3A10', 'mouth': '#FF8A20'}
+    c.part('head', pivot=(0, 24, 0))
+    c.box('head', (-16, -30, -14), (32, 30, 28), pattern='rock', edge='dark')
+    c.box('head', (-17, -24, -15), (34, 4, 4), mat='trim', pattern='plate', edge='dark')     # brow
+    for x in (-12, 4):
+        c.box('head', (x, -19, -14.6), (8, 6, 1), mat='eye', pattern='gem')
+    c.box('head', (-9, -9, -14.6), (18, 3, 1), mat='mouth', pattern='gem')
+    c.box('head', (-6, -36, -6), (12, 6, 12), mat='trim', pattern='plate', edge='dark')       # crown block
+    c.anim('head', 'head')
+    return c
+
+
+def golem_fist():
+    """Golem's Fist: a great stone fist with knuckle ridges."""
+    c = Creature('golem_fist', {'main': '#C8884A', 'dark': '#6A3A18', 'trim': '#E8C080', 'glow': '#D8A868'})
+    c.part('fist', pivot=(0, 16, 0))
+    c.box('fist', (-8, -8, -7), (16, 16, 14), pattern='rock', edge='dark')
+    for y in (-7, -3, 1, 5):
+        c.box('fist', (-8.5, y, -8), (17, 3, 2), mat='trim', pattern='plate')                 # knuckles
+    c.box('fist', (-10, -6, -2), (3, 8, 6), pattern='rock')                                      # thumb
+    c.box('fist', (-5, -5, 7), (10, 10, 4), mat='dark', pattern='rock')                          # wrist
+    return c
+
+
+def temple_creatures():
+    return [lihzahrd(), flying_snake(), golem(), golem_head(), golem_fist()]
+
+
 def all_creatures():
     return [imp(), demon(), demon('voodoo_demon', voodoo=True), eater_of_souls(), crimera(), face_monster(), blood_crawler(),
-            snapper('man_eater', '#4A9A30', '#E070A0', 9), snapper('snatcher', '#5AAA3A', '#F0A0C0', 7), meteor_head()] + hm_creatures() + mech_creatures() + pirate_creatures() + frost_creatures()
+            snapper('man_eater', '#4A9A30', '#E070A0', 9), snapper('snatcher', '#5AAA3A', '#F0A0C0', 7), meteor_head()] + hm_creatures() + mech_creatures() + pirate_creatures() + frost_creatures() \
+        + jungle_hm_creatures() + temple_creatures()
 
 
 def write(assets, tex):
@@ -691,6 +885,15 @@ def write(assets, tex):
         for cube in creature.cubes:
             am.paint(creature, c, cube, rnd)
         c.save(os.path.join(tex, 'entity/model', creature.name + '.png'))
+        base_mats = dict(creature.mats)
+        for suffix, overrides in creature.variants.items():
+            creature.mats = dict(base_mats, **{k: hexc(v) if isinstance(v, str) else v for k, v in overrides.items()})
+            v = Canvas(width, height)
+            rnd = random.Random(creature.name)
+            for cube in creature.cubes:
+                am.paint(creature, v, cube, rnd)
+            v.save(os.path.join(tex, 'entity/model', f'{creature.name}_{suffix}.png'))
+        creature.mats = base_mats
         parts = []
         for name, parent, pivot, rot in creature.parts:
             cubes = []

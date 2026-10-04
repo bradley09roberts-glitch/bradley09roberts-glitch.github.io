@@ -109,16 +109,26 @@ public final class PlayerEvents {
             sync(player, data);
         }
         if (player.tickCount % 40 == 0 && data.stats().has(com.terracraft.player.stats.Ability.VOLATILE_GELATIN)) {
-            flingVolatileGel(player);
+            autoShoot(player, com.terracraft.entity.projectile.ProjectileKinds.VOLATILE_GEL, 12, 9.0F, 0.25, 40.0F,
+                net.minecraft.sounds.SoundEvents.SLIME_SQUISH_SMALL);
+        }
+        if (player.tickCount % 24 == 0 && data.stats().has(com.terracraft.player.stats.Ability.LEAF_CRYSTAL)) {
+            // the Chlorophyte set's crystal floats above the player's head and fires leaves at nearby enemies
+            autoShoot(player, com.terracraft.entity.projectile.ProjectileKinds.CRYSTAL_LEAF, 16, 12.0F, 0.0, 50.0F,
+                net.minecraft.sounds.SoundEvents.AZALEA_LEAVES_BREAK);
         }
     }
 
-    /** Volatile Gelatin: a bouncing gel ball at the nearest enemy within 12 blocks. */
-    private static void flingVolatileGel(ServerPlayer player) {
+    /**
+     * Accessories and set bonuses that fire on their own (Volatile Gelatin, Chlorophyte's Leaf Crystal): a projectile at
+     * the nearest visible enemy within {@code range} blocks, aimed a little upward by {@code lift} for arcing shots.
+     */
+    private static void autoShoot(ServerPlayer player, com.terracraft.entity.projectile.ProjectileKind kind, double range, float speed,
+                                  double lift, float damage, net.minecraft.sounds.SoundEvent sound) {
         net.minecraft.world.entity.LivingEntity target = null;
         double best = Double.MAX_VALUE;
         for (net.minecraft.world.entity.Mob mob : player.level().getEntitiesOfClass(net.minecraft.world.entity.Mob.class,
-                player.getBoundingBox().inflate(12), m -> m.isAlive() && m instanceof net.minecraft.world.entity.monster.Enemy && player.hasLineOfSight(m))) {
+                player.getBoundingBox().inflate(range), m -> m.isAlive() && m instanceof net.minecraft.world.entity.monster.Enemy && player.hasLineOfSight(m))) {
             double distance = mob.distanceToSqr(player);
             if (distance < best) {
                 best = distance;
@@ -128,11 +138,11 @@ public final class PlayerEvents {
         if (target == null) {
             return;
         }
-        net.minecraft.world.phys.Vec3 from = player.getEyePosition().add(0, 0.3, 0);
-        net.minecraft.world.phys.Vec3 aim = target.getBoundingBox().getCenter().subtract(from).normalize().add(0, 0.25, 0).normalize();
-        com.terracraft.entity.projectile.TerrariaProjectile.shoot(player.level(), player, com.terracraft.entity.projectile.ProjectileKinds.VOLATILE_GEL,
-            from, aim, 9.0F, 1.0F, 40.0F, com.terracraft.combat.DamageClass.GENERIC, 4, 1.0F);
-        player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.SLIME_SQUISH_SMALL, net.minecraft.sounds.SoundSource.PLAYERS, 0.6F, 1.4F);
+        net.minecraft.world.phys.Vec3 from = player.getEyePosition().add(0, 0.6, 0);
+        net.minecraft.world.phys.Vec3 aim = target.getBoundingBox().getCenter().subtract(from).normalize().add(0, lift, 0).normalize();
+        com.terracraft.entity.projectile.TerrariaProjectile.shoot(player.level(), player, kind,
+            from, aim, speed, 1.0F, damage, com.terracraft.combat.DamageClass.GENERIC, 4, 1.0F);
+        player.level().playSound(null, player.blockPosition(), sound, net.minecraft.sounds.SoundSource.PLAYERS, 0.6F, 1.4F);
     }
 
     private static void tickLavaImmunity(ServerPlayer player, TerraPlayerData data) {

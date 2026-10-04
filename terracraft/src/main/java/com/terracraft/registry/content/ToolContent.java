@@ -61,7 +61,7 @@ public final class ToolContent {
 
     private ToolContent() {}
 
-    private static RegistryObject<TerrariaToolItem> hardmodePickaxe(String name, int power, int damage, TerraRarity rarity, int value) {
+    static RegistryObject<TerrariaToolItem> hardmodePickaxe(String name, int power, int damage, TerraRarity rarity, int value) {
         return ModItems.register(name, TabGroup.TOOLS_ARMOR, TerrariaToolItem::new,
             p -> TerrariaToolItem.properties(p, TerraItemStats.builder().melee(damage).useTime(16).knockback(3.0F).pickaxe(power)
                 .rarity(rarity).value(value).build(), 10.0F + power / 50.0F));
@@ -74,7 +74,7 @@ public final class ToolContent {
         return ModItems.register(name, TabGroup.TOOLS_ARMOR, TerrariaToolItem::new, p -> TerrariaToolItem.properties(p, stats, speed));
     }
 
-    private static RegistryObject<TerrariaToolItem> axe(String name, int power, int damage, float speed, int value) {
+    static RegistryObject<TerrariaToolItem> axe(String name, int power, int damage, float speed, int value) {
         TerraItemStats stats = TerraItemStats.builder().melee(damage).useTime(25).knockback(4.5F).axe(power).rarity(TerraRarity.WHITE).value(value).build();
         return ModItems.register(name, TabGroup.TOOLS_ARMOR, TerrariaToolItem::new, p -> TerrariaToolItem.properties(p, stats, speed));
     }

@@ -84,6 +84,22 @@ Priority: **A** = very visible / looks clearly wrong today, **B** = noticeable, 
 | C | Crystal Shard / Gelatin Crystal blocks | crossed-plane clusters | real 3D crystal prisms with a pulse of light |
 | C | Mechanic / Pirate NPCs | humanoid + skin | Mechanic's wrench and goggles, Pirate's parrot on the shoulder and eye patch |
 
+## Stage 6 (built; first versions)
+
+| Pri | What | Today | Improvement |
+|---|---|---|---|
+| A | Plantera | a pink cube bud with four petal slabs, a ring of leaves and a stem; mouth texture in phase 2 | round, layered bulb; petals that really open in phase 2 to show rows of teeth; spots that pulse; drooping stamen |
+| A | Golem | stacked stone boxes, sun disc on the chest, separate head and fists | carved idol shapes (rounded shoulders, stepped crown, tribal glyphs), glowing sun core that brightens as it is hurt, head-socket on the body when the head breaks free |
+| A | Lihzahrd Temple | plain brick rooms and corridors | carved Lihzahrd brick variants (patterned, glyph tiles), Lihzahrd furniture (statues, lamps, tables), wall pillars, traps that show a hole and a dart sprite |
+| B | Plantera's Hooks / Tentacles | small claw / snapper head on a straight vine | curving vines with leaves (several bent segments), clawed hooks that grip the wall when latched |
+| B | Golem's chain | flat crossed-quad chain segments | real 3D chain links that sag between fist and body |
+| B | Lihzahrd / Flying Snake | blocky lizard; snake of five segments with feather wings | Lihzahrd crawling pose when hurt (as in Terraria), scaled patterns; Flying Snake with a longer, smoother body and spread wings |
+| B | Plantera's Bulb | three stacked boxes | rounded pink bud with leaves around its base and a gentle sway |
+| C | Angry Trapper / Derpling | snapper model, beetle model | Angry Trapper with a thicker vine and more leaves; Derpling with a shinier shell and jumping legs |
+| C | Life Fruit | flat cross plant | small bush with a 3D golden fruit and glow |
+| C | Chlorophyte armor | leafy crest and fronds on a plate model | living-plant look: leaves growing out of the plates, and the Leaf Crystal itself floating above the head |
+| C | Leaf Crystal set bonus | no visual (leaves just appear) | a floating green crystal above the player that the leaves come from |
+
 ## Future (planned stages) - will need models when they are built
 
 - **Santa Claus** (Frost Legion follow-up), Stylist, Party Girl, Tax Collector.

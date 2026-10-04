@@ -331,6 +331,38 @@ public final class MobContent {
         (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.ENEMY_SNOWBALL, 30.0F),
         0.7F, 1.8F, MobDefinition.builder().life(200).damage(20).defense(10).knockbackTaken(0.5F).coins(400).speed(0.26));
 
+    // --- Hardmode jungle and Plantera --------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.SnapperMob>> ANGRY_TRAPPER = register("angry_trapper",
+        (type, level) -> new com.terracraft.entity.mob.SnapperMob(type, level, 8.0), 1.0F, 1.0F,
+        MobDefinition.builder().life(1000).damage(80).defense(30).knockbackTaken(0.0F).coins(1500).followRange(20));
+    public static final RegistryObject<EntityType<SlimeMob>> DERPLING = register("derpling", (type, level) -> new SlimeMob(type, level, 1.8F),
+        1.1F, 0.8F, MobDefinition.builder().life(240).damage(60).defense(28).knockbackTaken(0.6F).coins(700));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.Plantera>> PLANTERA = register("plantera",
+        com.terracraft.entity.boss.Plantera::new, 2.4F, 2.4F,
+        MobDefinition.builder().life(30000).damage(50).defense(14).knockbackTaken(0.0F).coins(150_000).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.Plantera.Hook>> PLANTERA_HOOK = register("plantera_hook",
+        com.terracraft.entity.boss.Plantera.Hook::new, 0.9F, 0.9F,
+        MobDefinition.builder().life(30000).damage(0).defense(30).knockbackTaken(0.0F).coins(0).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.Plantera.Tentacle>> PLANTERA_TENTACLE = register("plantera_tentacle",
+        com.terracraft.entity.boss.Plantera.Tentacle::new, 0.8F, 0.8F,
+        MobDefinition.builder().life(1000).damage(60).defense(20).knockbackTaken(0.0F).coins(0).followRange(160));
+
+    // --- Lihzahrd Temple and Golem ---------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<WalkerMob>> LIHZAHRD = register("lihzahrd", WalkerMob::new, 0.7F, 1.6F,
+        MobDefinition.builder().life(330).damage(60).defense(24).knockbackTaken(0.5F).coins(1500).speed(0.3));
+    public static final RegistryObject<EntityType<FlyerMob>> FLYING_SNAKE = register("flying_snake",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.CHASER), 1.2F, 0.6F,
+        MobDefinition.builder().life(200).damage(70).defense(20).knockbackTaken(0.4F).coins(1000).speed(0.33).followRange(48));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.Golem>> GOLEM = register("golem",
+        com.terracraft.entity.boss.Golem::new, 3.6F, 3.4F,
+        MobDefinition.builder().life(39000).damage(72).defense(26).knockbackTaken(0.0F).coins(150_000).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.Golem.Head>> GOLEM_HEAD = register("golem_head",
+        com.terracraft.entity.boss.Golem.Head::new, 2.2F, 2.0F,
+        MobDefinition.builder().life(16000).damage(64).defense(20).knockbackTaken(0.0F).coins(0).followRange(160));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.Golem.Fist>> GOLEM_FIST = register("golem_fist",
+        com.terracraft.entity.boss.Golem.Fist::new, 1.2F, 1.2F,
+        MobDefinition.builder().life(9000).damage(59).defense(26).knockbackTaken(0.0F).coins(0).followRange(160));
+
     private MobContent() {}
 
     public static void init() {

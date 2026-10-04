@@ -50,6 +50,7 @@ NAME_OVERRIDES = {
     "raw_cobalt": "Cobalt Ore", "raw_palladium": "Palladium Ore", "raw_mythril": "Mythril Ore",
     "raw_orichalcum": "Orichalcum Ore", "raw_adamantite": "Adamantite Ore", "raw_titanium": "Titanium Ore",
     "mythril_breastplate": "Mythril Chainmail", "mythril_leggings": "Mythril Greaves",
+    "raw_chlorophyte": "Chlorophyte Ore",
 }
 
 # Vanilla Minecraft textures TerraCraft uses as Terraria items.
@@ -86,6 +87,8 @@ SPRITE_NAME_OVERRIDES = {
     "brain_of_cthulhu_exposed": "Brain of Cthulhu (Phase 2)",
     "retinazer_mouth": "Retinazer (Second Form)",
     "spazmatism_mouth": "Spazmatism (Second Form)",
+    "plantera_mouth": "Plantera (Second Form)",
+    "golem_head_free": "Golem Head (Free)",
 }
 # worm segments are named "<Worm> Head/Body/Tail" on the wiki
 WORMS = {"bone_serpent": "Bone Serpent", "destroyer": "The Destroyer", "devourer": "Devourer",

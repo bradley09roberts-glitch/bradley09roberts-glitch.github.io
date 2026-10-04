@@ -18,6 +18,8 @@ public final class HardmodeChunks extends SavedData {
     public static final int STRIPES = 1;
     /** Crystal Shards and Gelatin Crystals grown in the underground Hallow (bit 4; bits 1-3 are ore tiers). */
     public static final int CRYSTALS = 1 << 4;
+    /** Chlorophyte veins in the jungle mud (bit 5). */
+    public static final int CHLOROPHYTE = 1 << 5;
 
     private static final Codec<HardmodeChunks> CODEC = RecordCodecBuilder.create(i -> i.group(
         Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("chunks", Map.of()).forGetter(HardmodeChunks::encoded)

@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:chlorophyte_plate_mail",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:chlorophyte_bar",
+      "count": 24
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "armor"
+}

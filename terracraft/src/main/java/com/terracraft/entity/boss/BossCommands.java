@@ -27,6 +27,8 @@ public final class BossCommands {
         BOSSES.put("queen_bee", new Entry(MobContent.QUEEN_BEE, BossSummoning.Arrival.OFFSCREEN));
         BOSSES.put("wall_of_flesh", new Entry(MobContent.WALL_OF_FLESH, BossSummoning.Arrival.OFFSCREEN));
         BOSSES.put("queen_slime", new Entry(MobContent.QUEEN_SLIME, BossSummoning.Arrival.FALL));
+        BOSSES.put("plantera", new Entry(MobContent.PLANTERA, BossSummoning.Arrival.NEARBY));
+        BOSSES.put("golem", new Entry(MobContent.GOLEM, BossSummoning.Arrival.FALL));
         BOSSES.put("the_twins", new Entry(MobContent.RETINAZER, BossSummoning.Arrival.OFFSCREEN));
         BOSSES.put("destroyer", new Entry(MobContent.DESTROYER, BossSummoning.Arrival.BURROW));
         BOSSES.put("skeletron_prime", new Entry(MobContent.SKELETRON_PRIME, BossSummoning.Arrival.OFFSCREEN));

@@ -1,0 +1,40 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:derpling",
+      "weight": 8,
+      "time": "day",
+      "layers": [
+        "surface"
+      ],
+      "biomes": [
+        "#minecraft:is_jungle"
+      ],
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:angry_trapper",
+      "weight": 6,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:jungle/ground"
+      ],
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:derpling",
+      "weight": 4,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:jungle/ground"
+      ],
+      "condition": "hardmode_active"
+    }
+  ]
+}

@@ -167,6 +167,10 @@ public final class HardmodeWorld {
             growCrystals(level, cx, cz);
             now |= HardmodeChunks.CRYSTALS;
         }
+        if ((done & HardmodeChunks.CHLOROPHYTE) == 0) {
+            placeChlorophyte(level, cx, cz);
+            now |= HardmodeChunks.CHLOROPHYTE;
+        }
         for (int tier = 1; tier <= Math.min(3, altars); tier++) {
             int bit = HardmodeChunks.tierBit(tier);
             if ((done & bit) == 0) {
@@ -384,6 +388,41 @@ public final class HardmodeWorld {
                 BlockState state = level.getBlockState(pos);
                 if (state.is(BlockTags.BASE_STONE_OVERWORLD) || state.is(HardmodeContent.PEARLSTONE.get()) || state.is(EvilContent.EBONSTONE.get())
                     || state.is(EvilContent.CRIMSTONE.get())) {
+                    level.setBlock(pos, ore, Block.UPDATE_CLIENTS);
+                }
+                x = pos.getX();
+                y = pos.getY();
+                z = pos.getZ();
+            }
+        }
+    }
+
+    /** Chlorophyte grows in small veins in the underground jungle's mud (several per jungle chunk). */
+    private static void placeChlorophyte(ServerLevel level, int cx, int cz) {
+        if (!com.terracraft.world.jungle.JungleFeature.isJungle(level, cx * 16 + 8, cz * 16 + 8)) {
+            return;
+        }
+        BlockState ore = com.terracraft.registry.content.ChlorophyteContent.CHLOROPHYTE_ORE.get().defaultBlockState();
+        Block mud = net.minecraft.world.level.block.Blocks.MUD;
+        RandomSource random = RandomSource.create(ChunkPos.pack(cx, cz) * 0x5DEECE66DL + level.getSeed() + 6007L);
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+        for (int v = 0; v < 4; v++) {
+            int x = cx * 16 + random.nextInt(16);
+            int z = cz * 16 + random.nextInt(16);
+            int surface = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
+            int top = surface - 14;
+            int bottom = Math.max(level.getMinY() + 4, -24);
+            if (top <= bottom) {
+                continue;
+            }
+            int y = bottom + random.nextInt(top - bottom);
+            int size = 3 + random.nextInt(5);
+            for (int b = 0; b < size; b++) {
+                pos.set(x + random.nextInt(3) - 1, y + random.nextInt(3) - 1, z + random.nextInt(3) - 1);
+                if (pos.getX() >> 4 != cx || pos.getZ() >> 4 != cz) {
+                    continue;
+                }
+                if (level.getBlockState(pos).is(mud)) {
                     level.setBlock(pos, ore, Block.UPDATE_CLIENTS);
                 }
                 x = pos.getX();

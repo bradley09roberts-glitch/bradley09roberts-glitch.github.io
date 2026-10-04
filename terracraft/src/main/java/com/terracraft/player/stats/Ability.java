@@ -37,6 +37,10 @@ public enum Ability implements StringRepresentable {
     FREE_SPACE_GUN,
     /** Volatile Gelatin: flings a bouncing gel ball at a nearby enemy every couple of seconds. */
     VOLATILE_GELATIN,
+    /** Chlorophyte armor set: a leaf crystal above the player shoots leaves at nearby enemies. */
+    LEAF_CRYSTAL,
+    /** Sun Stone: all stats up during the day. */
+    SUN_STONE,
     /** Gold Ring: coins fly to the player from much further away. */
     COIN_MAGNET,
     /** Lucky Coin: hitting enemies shakes coins out of them. */

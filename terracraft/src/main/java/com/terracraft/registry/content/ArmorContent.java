@@ -100,7 +100,7 @@ public final class ArmorContent {
     }
 
     /** A set whose pieces have their own Terraria names and per-piece bonuses. */
-    private static ArmorPieces named(String set, String[] names, int[] defense, StatEffects[] pieceEffects, StatEffects bonus, TerraRarity rarity,
+    static ArmorPieces named(String set, String[] names, int[] defense, StatEffects[] pieceEffects, StatEffects bonus, TerraRarity rarity,
                                      int value) {
         ArmorSet armorSet = ArmorSet.of(set, bonus);
         EquipmentSlot[] slots = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS};

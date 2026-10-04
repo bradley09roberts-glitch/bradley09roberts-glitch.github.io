@@ -15,6 +15,7 @@ public final class CommonSetup {
             StatCalculator.addSource(EquipmentStatSources::armor);
             StatCalculator.addSource(EquipmentStatSources::accessories);
             StatCalculator.addSource(new BuffStatSource());
+            StatCalculator.addSource(com.terracraft.registry.content.GolemContent::sunStone);
             TerraCraft.LOGGER.info("TerraCraft common setup complete");
         });
     }

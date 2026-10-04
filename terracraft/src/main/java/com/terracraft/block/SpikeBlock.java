@@ -26,10 +26,16 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class SpikeBlock extends Block {
     public static final MapCodec<SpikeBlock> CODEC = simpleCodec(SpikeBlock::new);
     private static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 8, 16);
-    private static final float DAMAGE = 20.0F;
+    private final float damage;
 
     public SpikeBlock(Properties properties) {
+        this(properties, 20.0F);
+    }
+
+    /** Wooden Spikes in the Lihzahrd Temple hit much harder. */
+    public SpikeBlock(Properties properties, float damage) {
         super(properties);
+        this.damage = damage;
     }
 
     @Override
@@ -53,7 +59,7 @@ public class SpikeBlock extends Block {
             && !(entity instanceof Player player && (player.isCreative() || player.isSpectator()))) {
             entity.makeStuckInBlock(state, new net.minecraft.world.phys.Vec3(0.6, 1.0, 0.6));
             living.hurtServer(server, TerraDamageTypes.source(level, TerraDamageTypes.ENEMY, null, null, TerraHit.enemy(0.0F)),
-                DAMAGE * TerrariaDifficulty.enemyDamageMultiplier(level));
+                damage * TerrariaDifficulty.enemyDamageMultiplier(level));
         }
     }
 }

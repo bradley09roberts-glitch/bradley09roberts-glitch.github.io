@@ -71,6 +71,19 @@ public final class BossSummoning {
             z = player.getZ() + Math.sin(angle) * 32;
             y = player.getY() + 14;
         }
+        return spawn(level, player, boss, x, y, z);
+    }
+
+    /** Wakes a boss at a fixed spot (Plantera from her bulb, Golem at the Lihzahrd Altar). */
+    public static <T extends net.minecraft.world.entity.Mob> T summonAt(ServerLevel level, ServerPlayer player, EntityType<T> type, double x, double y, double z) {
+        if (isAlive(level, type)) {
+            return null;
+        }
+        T boss = type.create(level, EntitySpawnReason.EVENT);
+        return boss == null ? null : spawn(level, player, boss, x, y, z);
+    }
+
+    private static <T extends net.minecraft.world.entity.Mob> T spawn(ServerLevel level, ServerPlayer player, T boss, double x, double y, double z) {
         boss.snapTo(x, y, z, player.getRandom().nextFloat() * 360.0F, 0.0F);
         boss.finalizeSpawn(level, level.getCurrentDifficultyAt(BlockPos.containing(x, y, z)), EntitySpawnReason.EVENT, null);
         boss.setTarget(player);

@@ -28,7 +28,7 @@ LANG = json.load(open(os.path.join(ROOT, 'src/main/resources/assets/terracraft/l
 FLOOR = 209          # floor blocks; players stand at FLOOR + 1
 Y = FLOOR + 1
 FUNCS = {}
-AREA = (-172, -246, 252, 172)   # x0, z0, x1, z1 of everything the showcase builds
+AREA = (-172, -278, 252, 172)   # x0, z0, x1, z1 of everything the showcase builds
 
 
 def fn(name, *lines):
@@ -170,6 +170,8 @@ tp('underworld', 40, -51, 40, 0, 'The Underworld viewing room. Throw a Guide Voo
 surface('mushroom', 4000, 2272, 'Glowing Mushroom island'); surface('beach', -1120, 1536, 'Beach')
 surface('spawn_ground', 0, 0, 'Spawn (on the ground)')
 surface('hallow', 254, 159, 'The Hallow (appears once Hardmode starts: press Hardmode On first)', 'terraria hardmode true')
+fn('go_temple', 'terraria hardmode true', 'effect give @p minecraft:night_vision 600 0 true', P + 'terraria worldgen temple tp',
+   'say The Lihzahrd Temple door is down the ladder shaft. A Temple Key (from Plantera) opens it.')
 tp('arena', 168, Y, 0, -90, 'Boss Arena: press a button on the wall behind you to summon a boss')
 tp('bestiary', 0, Y, -50, 180, 'The Bestiary: every enemy, room by room, biome by biome')
 tp('boss_hall', 52, Y, 0, -90, 'The Hall of Bosses')
@@ -182,7 +184,7 @@ buttons('east', 'TELEPORTS', [
     ('Corruption', 'go_corruption'), ('Glowing Mushroom', 'go_mushroom'), ('Dungeon Entrance', 'go_dungeon'),
     ('Inside Dungeon', 'go_dungeon_inside'), ('Underworld', 'go_underworld'), ('Spawn Ground', 'go_spawn_ground'),
     ('The Hallow', 'go_hallow'), ('Bestiary', 'go_bestiary'), ('Hall of Bosses', 'go_boss_hall'), ('Boss Arena', 'go_arena'),
-    ('Armory', 'go_armory'), ('Town', 'go_town'), ('Workshop', 'go_workshop'),
+    ('Armory', 'go_armory'), ('Town', 'go_town'), ('Workshop', 'go_workshop'), ('Lihzahrd Temple', 'go_temple'),
 ])
 
 # ------------------------------------------------------------------------------------------------ kits
@@ -224,6 +226,12 @@ fn('kit_queen_slime', *give('crystal_assassin_hood', 'crystal_assassin_shirt', '
 fn('kit_pirates', *give('cutlass', 'coin_gun', 'gold_coin*50', 'cannonball*30', 'gold_ring', 'lucky_coin', 'discount_card', 'pirate_hat',
                         'pirate_shirt', 'pirate_pants', 'pirate_map*3', 'present*5', 'snow_globe*3'),
    'say Coin Gun: coins are its ammo (copper 25, silver 50, gold 100, platinum 200 damage).')
+fn('kit_chlorophyte', *give('chlorophyte_claymore', 'chlorophyte_shotbow', 'chlorophyte_pickaxe', 'minecraft:arrow*99', 'chlorophyte_helmet',
+                            'chlorophyte_plate_mail', 'chlorophyte_greaves', 'chlorophyte_bar*20', 'raw_chlorophyte*20'),
+   'say Wear all three Chlorophyte pieces: the Leaf Crystal shoots leaves at nearby enemies.')
+fn('kit_plantera', *give('seedler', 'venus_magnum', 'musket_ball*99', 'leaf_blower', 'temple_key*2', 'life_fruit*5', 'greater_healing_potion*20'))
+fn('kit_golem', *give('picksaw', 'heat_ray', 'possessed_hatchet', 'sun_stone', 'eye_of_the_golem', 'beetle_husk*8', 'lihzahrd_power_cell*3',
+                      'lihzahrd_brick*20', 'dart_trap*4', 'wooden_spikes*8'))
 fn('kit_accessories', *give(*[i for i in ALL_ITEMS if i in {
     'hermes_boots', 'cloud_in_a_bottle', 'shiny_red_balloon', 'lucky_horseshoe', 'band_of_regeneration', 'band_of_starpower',
     'mana_regeneration_band', 'natures_gift', 'aglet', 'anklet_of_the_wind', 'feral_claws', 'obsidian_skull', 'lava_charm', 'cobalt_shield',
@@ -231,7 +239,7 @@ fn('kit_accessories', *give(*[i for i in ALL_ITEMS if i in {
     'obsidian_shield', 'obsidian_water_walking_boots', 'lava_waders', 'mana_flower'}]))
 fn('kit_summons', *give('slime_crown*3', 'suspicious_looking_eye*3', 'worm_food*3', 'bloody_spine*3', 'abeemination*3',
                         'guide_voodoo_doll', 'goblin_battle_standard*3', 'gelatin_crystal*3', 'mechanical_eye*3', 'mechanical_worm*3',
-                        'mechanical_skull*3', 'pirate_map*3', 'snow_globe*3'))
+                        'mechanical_skull*3', 'pirate_map*3', 'snow_globe*3', 'lihzahrd_power_cell*3'))
 fn('kit_potions', *give('healing_potion*20', 'mana_potion*20', 'ironskin_potion*5', 'swiftness_potion*5', 'regeneration_potion*5',
                         'magic_power_potion*5', 'archery_potion*5', 'mining_potion*5', 'obsidian_skin_potion*5', 'endurance_potion*5',
                         'wrath_potion*5', 'rage_potion*5', 'water_walking_potion*5'))
@@ -249,6 +257,7 @@ buttons('south', 'GEAR KITS', [
     ('Starter Kit', 'kit_starter'), ('Ore Kit', 'kit_ore'), ('Corruption Kit', 'kit_evil'), ('Jungle Kit', 'kit_jungle'),
     ('Dungeon Kit', 'kit_dungeon'), ('Molten Kit', 'kit_molten'), ('Meteor Kit', 'kit_meteor'), ('Hardmode Kit', 'kit_hardmode'),
     ('Hardmode Ores Kit', 'kit_hm_ores'), ('Hallowed Kit', 'kit_hallowed'), ('Queen Slime Kit', 'kit_queen_slime'), ('Pirate Kit', 'kit_pirates'),
+    ('Chlorophyte Kit', 'kit_chlorophyte'), ('Plantera Kit', 'kit_plantera'), ('Golem Kit', 'kit_golem'),
     ('All Accessories', 'kit_accessories'), ('Boss Summons', 'kit_summons'), ('Potions', 'kit_potions'), ('Crafting Stations', 'kit_stations'),
     ('Wings', 'kit_wings'), ('Food Buffs', 'kit_food'), ('Coins', 'kit_coins'), ('Life & Mana Crystals', 'kit_life'),
     ('Clear Inventory', 'clear_inventory'),
@@ -257,7 +266,8 @@ buttons('south', 'GEAR KITS', [
 # ------------------------------------------------------------------------------------------------ boss arena
 BOSSES = [('King Slime', 'king_slime'), ('Eye of Cthulhu', 'eye_of_cthulhu'), ('Eater of Worlds', 'eater_of_worlds'),
           ('Brain of Cthulhu', 'brain_of_cthulhu'), ('Queen Bee', 'queen_bee'), ('Skeletron', 'skeletron'), ('Wall of Flesh', 'wall_of_flesh'),
-          ('Queen Slime', 'queen_slime'), ('The Twins', 'the_twins'), ('The Destroyer', 'destroyer'), ('Skeletron Prime', 'skeletron_prime')]
+          ('Queen Slime', 'queen_slime'), ('The Twins', 'the_twins'), ('The Destroyer', 'destroyer'), ('Skeletron Prime', 'skeletron_prime'),
+          ('Plantera', 'plantera'), ('Golem', 'golem')]
 for text, boss in BOSSES:
     fn(f'boss_{boss}', 'gamemode survival @p', P + f'terraria boss spawn {boss}')
 fn('boss_skeletron', 'gamemode survival @p', 'time set night', P + 'terraria boss spawn skeletron')
@@ -265,6 +275,9 @@ fn('boss_eye_of_cthulhu', 'gamemode survival @p', 'time set night', P + 'terrari
 for _mech in ('the_twins', 'destroyer', 'skeletron_prime'):   # Hardmode, night only
     fn(f'boss_{_mech}', 'gamemode survival @p', 'terraria hardmode true', 'time set night', P + f'terraria boss spawn {_mech}')
 fn('boss_queen_slime', 'gamemode survival @p', 'terraria hardmode true', P + 'terraria boss spawn queen_slime')
+for _late in ('plantera', 'golem'):   # outside the jungle / temple they fight enraged
+    fn(f'boss_{_late}', 'gamemode survival @p', 'terraria hardmode true', P + f'terraria boss spawn {_late}',
+       'say Away from the jungle (or the temple) it fights enraged - try the real one!')
 buttons('arena', 'BOSS ARENA', [(t, f'boss_{b}') for t, b in BOSSES] + [
     ('Night', 'night'), ('Day', 'day'), ('Heal Me', 'heal'), ('Kill Bosses', 'kill_bosses'), ('Creative', 'creative'), ('Back to Hub', 'hub')])
 
@@ -435,21 +448,23 @@ ROOMS = [   # name, floor, wall, light, (log, leaves) or None, enemies
      ['pirate_deckhand', 'pirate_corsair', 'pirate_crossbower', 'pirate_deadeye', 'pirate_captain', 'parrot']),
     ('Frost Legion', 'minecraft:snow_block', 'minecraft:packed_ice', 'minecraft:sea_lantern', ('minecraft:spruce_log', 'minecraft:spruce_leaves[persistent=true]'),
      ['mister_stabby', 'snowman_gangsta', 'snow_balla']),
+    ('Lihzahrd Temple & Hardmode Jungle', 'terracraft:lihzahrd_brick', 'terracraft:lihzahrd_brick', 'minecraft:ochre_froglight',
+     ('minecraft:jungle_log', 'minecraft:jungle_leaves[persistent=true]'), ['lihzahrd', 'flying_snake', 'angry_trapper', 'derpling']),
 ]
 FLYERS = {'demon_eye', 'cave_bat', 'giant_bat', 'eater_of_souls', 'corruptor', 'slimer', 'crimera', 'floaty_gross', 'jungle_bat', 'hornet', 'bee',
           'cursed_skull', 'demon', 'voodoo_demon', 'hellbat', 'pixie', 'gastropod', 'illuminant_bat', 'drippler', 'meteor_head', 'wyvern', 'probe',
-          'wraith', 'servant_of_cthulhu', 'parrot', 'heavenly_slime'}
-fill(-4, FLOOR, -41, 4, FLOOR, -237, 'minecraft:polished_andesite')            # the avenue
-fill(-5, FLOOR, -41, -5, FLOOR, -237, 'minecraft:polished_blackstone_bricks')
-fill(5, FLOOR, -41, 5, FLOOR, -237, 'minecraft:polished_blackstone_bricks')
-for z in range(-44, -237, -4):
+          'wraith', 'servant_of_cthulhu', 'parrot', 'heavenly_slime', 'flying_snake'}
+fill(-4, FLOOR, -41, 4, FLOOR, -269, 'minecraft:polished_andesite')            # the avenue
+fill(-5, FLOOR, -41, -5, FLOOR, -269, 'minecraft:polished_blackstone_bricks')
+fill(5, FLOOR, -41, 5, FLOOR, -269, 'minecraft:polished_blackstone_bricks')
+for z in range(-44, -269, -4):
     put(0, FLOOR, z, 'minecraft:sea_lantern')
-for z in range(-44, -237, -12):
+for z in range(-44, -269, -12):
     for x in (-4, 4):
         put(x, Y, z, 'minecraft:polished_blackstone_wall')
         put(x, Y + 1, z, 'minecraft:lantern')
-fill(-6, Y, -238, 6, Y + 8, -238, 'minecraft:polished_blackstone_bricks')
-wall_sign(0, Y + 3, -237, 'south', '', 'THE BESTIARY', 'every enemy', '', color='yellow')
+fill(-6, Y, -270, 6, Y + 8, -270, 'minecraft:polished_blackstone_bricks')
+wall_sign(0, Y + 3, -269, 'south', '', 'THE BESTIARY', 'every enemy', '', color='yellow')
 ZOO_COUNT = 0
 for k, (room, floor, wall, light, tree_kind, enemies) in enumerate(ROOMS):
     side = 1 if k % 2 else -1
@@ -556,10 +571,14 @@ BOSS_HALL = [   # (boss entities with offsets, name, summoned with, flying heigh
     ([('skeletron_prime', 0, 0), ('prime_cannon', -3.5, 0), ('prime_laser', 3.5, 0), ('prime_saw', -3, -3), ('prime_vice', 3, -3)],
      'Skeletron Prime', 'Mechanical Skull (Hardmode)', 5),
     ([('flying_dutchman', 0, 0)], 'Flying Dutchman', 'Pirate Invasion', 6),
+    ([('plantera', 0, 0), ('plantera_hook', -3.5, 1), ('plantera_hook', 3.5, 1), ('plantera_tentacle', 0, -3)], 'Plantera',
+     "Plantera's Bulb (jungle)", 2),
+    ([('golem', 0, 0), ('golem_head', 0, 0), ('golem_fist', -3, -0.5), ('golem_fist', 3, -0.5)], 'Golem', 'Power Cell at the altar', 0),
 ]
+GOLEM_HEAD_LIFT = 3.1   # the head sits on the body's shoulders
 for i, (parts, name, summon, lift) in enumerate(BOSS_HALL):
-    north = i < 6
-    x = 58 + 17 * (i % 6)
+    north = i < 7
+    x = 58 + 14 * (i % 7)
     z = -20 if north else 20
     fill(x - 5, Y, z - 5, x + 5, Y, z + 5, 'minecraft:polished_blackstone_bricks')
     fill(x - 4, Y + 1, z - 4, x + 4, Y + 1, z + 4, 'minecraft:smooth_quartz')
@@ -574,7 +593,8 @@ for i, (parts, name, summon, lift) in enumerate(BOSS_HALL):
         sign(x + 1, Y, front, 0 if north else 8, *label(summon))
     for entity, dx, dz in parts:
         dz = dz if north else -dz
-        mob(entity, x + 0.5 + dx, Y + 2 + lift, z + 0.5 + dz, 0 if north else 180)
+        up = GOLEM_HEAD_LIFT if entity == 'golem_head' else 1.4 if entity == 'golem_fist' else 0
+        mob(entity, x + 0.5 + dx, Y + 2 + lift + up, z + 0.5 + dz, 0 if north else 180)
 # the arena
 bridge(155, -3, 159, 3)
 fill(160, FLOOR, -44, 244, Y + 20, 44, 'minecraft:glass', 'hollow')
@@ -611,9 +631,9 @@ def first(*names):
 
 
 SET_NAMES = ['wood', 'copper', 'tin', 'iron', 'lead', 'silver', 'tungsten', 'gold', 'platinum', 'jungle', 'meteor', 'shadow', 'crimson', 'molten',
-             'cobalt', 'palladium', 'mythril', 'orichalcum', 'adamantite', 'titanium', 'hallowed']
+             'cobalt', 'palladium', 'mythril', 'orichalcum', 'adamantite', 'titanium', 'hallowed', 'chlorophyte']
 WEAPON = {'wood': 'wooden_sword', 'shadow': 'lights_bane', 'crimson': 'blood_butcherer', 'jungle': 'blade_of_grass', 'molten': 'fiery_greatsword',
-          'meteor': 'space_gun', 'hallowed': 'excalibur'}
+          'meteor': 'space_gun', 'hallowed': 'excalibur', 'chlorophyte': 'chlorophyte_claymore'}
 TOOL = {'shadow': 'nightmare_pickaxe', 'crimson': 'deathbringer_pickaxe', 'molten': 'molten_pickaxe', 'hallowed': 'pickaxe_axe', 'jungle': 'bee_keeper'}
 for i, s in enumerate(SET_NAMES):
     head = first(f'{s}_helmet', f'{s}_hat', f'{s}_mask')

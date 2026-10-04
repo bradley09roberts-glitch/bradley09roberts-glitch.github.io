@@ -39,6 +39,10 @@
     "terracraft:adamantite_forge",
     "terracraft:titanium_forge",
     "terracraft:crystal_shard",
-    "terracraft:gelatin_crystal_block"
+    "terracraft:gelatin_crystal_block",
+    "terracraft:chlorophyte_ore",
+    "terracraft:lihzahrd_brick",
+    "terracraft:dart_trap",
+    "terracraft:wooden_spikes"
   ]
 }

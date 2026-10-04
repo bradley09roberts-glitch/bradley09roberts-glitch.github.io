@@ -45,8 +45,8 @@ Hardmode
 - [x] The Destroyer (Mechanical Worm; shared life, lasers, Probes)
 - [x] The Twins (Mechanical Eye; Retinazer lasers, Spazmatism cursed flames, mechanical second forms)
 - [x] Skeletron Prime (Mechanical Skull; Cannon, Saw, Vice, Laser arms)
-- [ ] Plantera
-- [ ] Golem
+- [x] Plantera (bulb in the underground jungle; hooks on vines, mouth phase with tentacles, seeds/thorn balls/spores, Temple Key)
+- [x] Golem (Lihzahrd Altar + Power Cell; body, head that breaks free, chained fists; Picksaw, Heat Ray, Possessed Hatchet, Sun Stone, Eye of the Golem)
 - [ ] Duke Fishron
 - [ ] Empress of Light
 - [ ] Lunatic Cultist
@@ -57,7 +57,8 @@ Hardmode
 - [-] Slimes (Green, Blue, Red, Purple, Yellow, Black, Mother, Baby done; Jungle, Ice, Sand, Lava, Spiked... pending)
 - [-] Zombie, Demon Eye, Servant of Cthulhu (variants pending)
 - [ ] Flying Fish, Piranha, Shark, Crab
-- [-] Jungle: Hornet, Man Eater, Snatcher, Jungle Bat, Jungle Slime done; Derpling (HM), Piranha pending
+- [-] Jungle: Hornet, Man Eater, Snatcher, Jungle Bat, Jungle Slime, Angry Trapper, Derpling done; Piranha, Giant Tortoise, Moth pending
+- [x] Lihzahrd Temple: Lihzahrd, Flying Snake
 - [ ] Desert: Antlion, Antlion Charger/Swarmer, Vulture, Tomb Crawler
 - [ ] Snow/Ice: Ice Slime, Ice Bat, Undead Viking, Snow Flinx
 - [-] Caverns: Skeleton, Cave Bat done; Giant Worm, Granite/Marble, spiders pending
@@ -115,7 +116,7 @@ Boomerangs
 ## Armour
 - [x] Wood, Copper, Tin, Iron, Lead, Silver, Tungsten, Gold, Platinum
 - [-] Shadow, Crimson, Jungle, Molten, Meteor done; Mining, Ninja, Fossil, Necro, Bee pending
-- [ ] Hardmode, Chlorophyte, Turtle, Spectre, Beetle, Shroomite, Spooky, Celestial armours
+- [-] Cobalt to Titanium, Hallowed, Crystal Assassin, Chlorophyte done; Turtle, Spectre, Beetle, Shroomite, Spooky, Celestial armours pending
 
 ## Accessories
 - [x] Hermes Boots, Cloud in a Bottle, Shiny Red Balloon, Lucky Horseshoe
@@ -134,11 +135,12 @@ Boomerangs
 - [x] Demonite/Crimtane ore (worldgen + bosses) and bars; Hellstone done (Hellforge); Meteorite done (craters); Obsidian gate done
 - [x] Cobalt/Palladium, Mythril/Orichalcum, Adamantite/Titanium (ore, raw, bar, pickaxe, sword, repeater, armor)
 - [x] Hallowed Bar (mechanical bosses): Excalibur, Hallowed Repeater, Pickaxe Axe, Hallowed armor; Souls of Might/Sight/Fright
-- [ ] Chlorophyte, Luminite
+- [x] Chlorophyte (underground jungle mud in Hardmode; Claymore, Shotbow, Pickaxe, armor)
+- [ ] Luminite
 
 ## Blocks
 - [x] Work Bench, Iron Anvil, Lead Anvil, Life Crystal (block)
-- [-] Ebonstone, Crimstone, evil grasses, Ebonwood, Shadewood done; Blue/Green/Pink Dungeon Brick, Spikes, Locked Gold Chest, Jungle Grass, Jungle Spores, Hive, Larva, Ash, Hellstone, Obsidian/Hellstone Brick, Hellforge, Shadow Chest done (Mud is vanilla); Pearlstone, Ash, Lihzahrd bricks pending
+- [-] Ebonstone, Crimstone, evil grasses, Ebonwood, Shadewood done; Blue/Green/Pink Dungeon Brick, Spikes, Locked Gold Chest, Jungle Grass, Jungle Spores, Hive, Larva, Ash, Hellstone, Obsidian/Hellstone Brick, Hellforge, Shadow Chest done (Mud is vanilla); Pearlstone, Crystal Shards, Lihzahrd Brick, Super Dart Trap, Wooden Spikes, Lihzahrd Door/Altar, Plantera's Bulb, Life Fruit done
 
 ## Biomes
 - [x] Terraria biomes only: Minecraft-only biomes are mapped onto Forest/Snow/Desert/Jungle/Ocean (`TerrariaBiomeSource`)
@@ -157,7 +159,7 @@ Boomerangs
 
 ## Structures
 - [x] Dungeon (entrance tower, 4 levels of rooms, halls and ladder shafts)
-- [ ] Jungle Temple
+- [x] Jungle Temple (Lihzahrd Temple: maze of rooms, traps, locked door, altar chamber; built in old worlds too)
 - [ ] Floating Islands
 - [ ] Living Trees
 - [-] Underground loot chests (cabins pending)

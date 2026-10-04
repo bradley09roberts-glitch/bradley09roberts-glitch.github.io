@@ -26,5 +26,9 @@ public final class TerraContent {
         QueenSlimeContent.init();
         PirateContent.init();
         FrostLegionContent.init();
+        ChlorophyteContent.init();
+        PlanteraContent.init();
+        TempleContent.init();
+        GolemContent.init();
     }
 }

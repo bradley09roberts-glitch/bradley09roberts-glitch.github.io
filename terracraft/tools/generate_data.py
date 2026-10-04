@@ -248,6 +248,99 @@ def queen_slime():
         'random_sequence': f'{NS}:blocks/gelatin_crystal_block'})
 
 
+# ============================================================================== Stage 6: jungle Hardmode, temple, Golem
+S6_BLOCKS = ['chlorophyte_ore', 'planteras_bulb', 'life_fruit_plant', 'lihzahrd_brick', 'dart_trap', 'wooden_spikes',
+             'locked_lihzahrd_door', 'lihzahrd_altar']
+S6_PICKAXE = ['chlorophyte_ore', 'lihzahrd_brick', 'dart_trap', 'wooden_spikes']
+
+
+def stage6():
+    write(f'{NS}/loot_table/blocks/chlorophyte_ore.json', ore_loot('chlorophyte_ore', 'raw_chlorophyte'))
+    write(f'{NS}/terracraft/mining_power/chlorophyte_ore.json', {'pickaxe_power': 200, 'blocks': [t('chlorophyte_ore')]})
+    write(f'c/tags/item/ingots/chlorophyte.json', {'values': [t('chlorophyte_bar')]})
+    # Plantera
+    write(f'{NS}/loot_table/blocks/life_fruit_plant.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [
+        {'type': 'minecraft:item', 'name': t('life_fruit')}]}], 'random_sequence': f'{NS}:blocks/life_fruit_plant'})
+    write(f'{NS}/loot_table/blocks/planteras_bulb.json', {'type': 'minecraft:block', 'pools': []})
+    write(f'{NS}/tags/item/keys/temple.json', {'values': [t('temple_key')]})
+    MOBS.update({
+        'plantera': ('Plantera', []),
+        'plantera_hook': ("Plantera's Hook", []),
+        'plantera_tentacle': ("Plantera's Tentacle", []),
+        'angry_trapper': ('Angry Trapper', [('minecraft:vine', 1, 2, 0.5), ('jungle_spores', 1, 3, 0.5)]),
+        'derpling': ('Derpling', [('jungle_spores', 1, 2, 0.3)]),
+    })
+    # Lihzahrd Temple
+    for b in ('lihzahrd_brick', 'dart_trap', 'wooden_spikes'):
+        write(f'{NS}/loot_table/blocks/{b}.json', self_loot(b))
+    write(f'{NS}/terracraft/mining_power/lihzahrd_brick.json', {'pickaxe_power': 210,
+                                                               'blocks': [t('lihzahrd_brick'), t('dart_trap'), t('wooden_spikes')]})
+    write(f'{NS}/tags/block/temple/bricks.json', {'values': [t('lihzahrd_brick'), t('dart_trap')]})
+    write(f'{NS}/loot_table/chests/temple.json', {'type': 'minecraft:chest', 'pools': [
+        {'rolls': 1, 'entries': [entry('lihzahrd_power_cell', 1)], 'conditions': [{'condition': 'minecraft:random_chance', 'chance': 0.6}]},
+        {'rolls': 1, 'entries': [entry('greater_healing_potion', 3, 2, 5), entry('gold_coin', 2, 2, 6), entry('lihzahrd_brick', 1, 10, 30)]},
+        {'rolls': 1, 'entries': [entry('beetle_husk', 1), entry('chlorophyte_bar', 2, 2, 6), entry('soul_of_light', 1, 2, 5),
+                                 entry('soul_of_night', 1, 2, 5)]},
+    ]})
+    MOBS.update({
+        'lihzahrd': ('Lihzahrd', [('lihzahrd_power_cell', 1, 1, 0.02)]),
+        'flying_snake': ('Flying Snake', [('lihzahrd_power_cell', 1, 1, 0.02)]),
+        'golem': ('Golem', []),
+        'golem_head': ('Golem Head', []),
+        'golem_fist': ('Golem Fist', []),
+    })
+    SPAWNS['temple'] = [
+        dict(entity='lihzahrd', weight=10, layers=['underground', 'cavern'], ground=['#terracraft:temple/bricks']),
+        dict(entity='flying_snake', weight=6, layers=['underground', 'cavern'], placement='air', ground=['#terracraft:temple/bricks']),
+    ]
+    SPAWNS['jungle_hardmode'] = [
+        dict(entity='derpling', weight=8, time='day', layers=['surface'], biomes=['#minecraft:is_jungle'], condition='hardmode_active'),
+        dict(entity='angry_trapper', weight=6, layers=['underground', 'cavern'], ground=['#terracraft:jungle/ground'], condition='hardmode_active'),
+        dict(entity='derpling', weight=4, layers=['underground', 'cavern'], ground=['#terracraft:jungle/ground'], condition='hardmode_active'),
+    ]
+
+
+def stage6_recipes():
+    HM_ANVIL, HM_FORGE = t('hardmode_anvil'), t('hardmode_forge')
+    CB = t('chlorophyte_bar')
+    recipe('chlorophyte_bar', CB, [(t('raw_chlorophyte'), 5)], [HM_FORGE], category='materials')
+    recipe('chlorophyte_claymore', t('chlorophyte_claymore'), [(CB, 12)], [HM_ANVIL], category='weapons')
+    recipe('chlorophyte_shotbow', t('chlorophyte_shotbow'), [(CB, 18)], [HM_ANVIL], category='weapons')
+    recipe('chlorophyte_pickaxe', t('chlorophyte_pickaxe'), [(CB, 18)], [HM_ANVIL], category='tools')
+    recipe('chlorophyte_helmet', t('chlorophyte_helmet'), [(CB, 12)], [HM_ANVIL], category='armor')
+    recipe('chlorophyte_plate_mail', t('chlorophyte_plate_mail'), [(CB, 24)], [HM_ANVIL], category='armor')
+    recipe('chlorophyte_greaves', t('chlorophyte_greaves'), [(CB, 18)], [HM_ANVIL], category='armor')
+
+
+def stage6_lang(L):
+    L.update({
+        'ability.terracraft.leaf_crystal': 'Summons a leaf crystal that shoots at nearby enemies',
+        'armor_set.terracraft.chlorophyte.bonus': 'Summons a powerful leaf crystal to shoot at nearby enemies',
+        'item.terracraft.chlorophyte_claymore.tooltip': 'Shoots a powerful orb',
+        'item.terracraft.chlorophyte_shotbow.tooltip': 'Fires a spread of arrows',
+        'item.terracraft.raw_chlorophyte.tooltip': "'Reacts to the light'",
+        'block.terracraft.planteras_bulb': "Plantera's Bulb",
+        'block.terracraft.life_fruit_plant': 'Life Fruit',
+        'item.terracraft.temple_key.tooltip': 'Opens the jungle temple door',
+        'item.terracraft.seedler.tooltip': 'Throws seeds with every swing',
+        'item.terracraft.venus_magnum.tooltip': "'A flower that fires bullets'",
+        'item.terracraft.leaf_blower.tooltip': 'Rapidly shoots razor-sharp leaves',
+        'block.terracraft.locked_lihzahrd_door': 'Lihzahrd Door',
+        'block.terracraft.lihzahrd_altar': 'Lihzahrd Altar',
+        'block.terracraft.dart_trap': 'Super Dart Trap',
+        'message.terracraft.temple.locked': 'It is locked. A Temple Key might open it...',
+        'message.terracraft.temple.altar': 'It has a slot shaped like a Lihzahrd Power Cell',
+        'item.terracraft.lihzahrd_power_cell.tooltip': 'Used at the Lihzahrd Altar',
+        'item.terracraft.picksaw.tooltip': 'Capable of mining Lihzahrd Bricks',
+        'item.terracraft.heat_ray.tooltip': "Shoots a piercing heat ray\n'Oolaa!!'",
+        'item.terracraft.possessed_hatchet.tooltip': 'Chases after your enemy',
+        'item.terracraft.sun_stone.tooltip': 'Increases all stats if worn during the day',
+        'item.terracraft.eye_of_the_golem.tooltip': '10% increased critical strike chance',
+        'item.terracraft.beetle_husk.tooltip': "'Beetles drop these sometimes'",
+        'ability.terracraft.sun_stone': 'All stats up during the day',
+    })
+
+
 def blocks():
     for m in METALS:
         for ore in (f'{m}_ore', f'deepslate_{m}_ore'):
@@ -261,7 +354,7 @@ def blocks():
                                                                    t('ebonstone'), t('crimstone'), t('demonite_ore'), t('crimtane_ore'),
                                                                    t('blue_brick'), t('green_brick'), t('pink_brick'), t('spikes'), t('hive'), t('hellstone'),
                                                                    t('obsidian_brick'), t('hellstone_brick'), t('hellforge'), t('meteorite')]
-                                                                   + [t(b) for b in HM_ORES + ['pearlstone', 'mythril_anvil', 'orichalcum_anvil', 'adamantite_forge', 'titanium_forge', 'crystal_shard', 'gelatin_crystal_block']]})
+                                                                   + [t(b) for b in HM_ORES + ['pearlstone', 'mythril_anvil', 'orichalcum_anvil', 'adamantite_forge', 'titanium_forge', 'crystal_shard', 'gelatin_crystal_block'] + S6_PICKAXE]})
     write('minecraft/tags/block/needs_stone_tool.json', {'values': [t(f'{p}{m}_ore') for m in STONE_TIER for p in ('', 'deepslate_')]})
     write('minecraft/tags/block/needs_iron_tool.json', {'values': [t(f'{p}{m}_ore') for m in IRON_TIER for p in ('', 'deepslate_')]})
     write(f'{NS}/tags/block/mineable/hammer.json', {'values': [t('shadow_orb'), t('crimson_heart'), t('demon_altar'), t('crimson_altar')]})
@@ -459,6 +552,7 @@ def terraria_recipes():
     recipe('iron_hammer', t('iron_hammer'), [('minecraft:iron_ingot', 10), (PLANKS, 3)], [ANVIL], category='tools')
     for m in ['copper', 'iron', 'gold']:
         recipe(f'{m}_bow', t(f'{m}_bow'), [(BAR[m], 7)], [ANVIL], category='weapons')
+    stage6_recipes()
     for name, data in RECIPES.items():
         write(f'{NS}/terracraft/recipe/{name}.json', data)
 
@@ -520,7 +614,7 @@ def lang():
     items_dir = os.path.join(RES, 'assets/terracraft/items')
     for fname in sorted(os.listdir(items_dir)):
         name = fname[:-5]
-        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in JUNGLE_BLOCKS or name in UNDERWORLD_BLOCKS or name in GOBLIN_BLOCKS or name in HM_BLOCKS or name in QS_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
+        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in JUNGLE_BLOCKS or name in UNDERWORLD_BLOCKS or name in GOBLIN_BLOCKS or name in HM_BLOCKS or name in QS_BLOCKS or name in S6_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
                else 'item.') + f'{NS}.{name}'
         L[key] = title(name)
     L['block.terracraft.life_crystal_block'] = 'Life Crystal'
@@ -912,6 +1006,7 @@ def lang():
         'item.terracraft.purification_powder.tooltip': 'Cleanses the Corruption and the Crimson',
         'item.terracraft.housing_query.tooltip': 'Right-click inside a room to check whether an NPC can live there',
     })
+    stage6_lang(L)
     for mob, (name, _) in MOBS.items():
         L[f'entity.terracraft.{mob}'] = name
     path = os.path.join(RES, 'assets/terracraft/lang/en_us.json')
@@ -1578,6 +1673,7 @@ def main():
     goblins()
     hardmode()
     queen_slime()
+    stage6()
     damage()
     smelting()
     terraria_recipes()

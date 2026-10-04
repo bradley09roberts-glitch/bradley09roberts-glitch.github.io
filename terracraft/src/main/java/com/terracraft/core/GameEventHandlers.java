@@ -30,5 +30,7 @@ public final class GameEventHandlers {
         com.terracraft.world.underworld.UnderworldManager.register();
         com.terracraft.world.MeteorManager.register();
         com.terracraft.world.hardmode.HardmodeWorld.register();
+        com.terracraft.world.jungle.JungleGrowth.register();
+        com.terracraft.world.temple.TempleWorld.register();
     }
 }

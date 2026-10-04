@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:chlorophyte_bar",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:raw_chlorophyte",
+      "count": 5
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_forge"
+  ],
+  "category": "materials"
+}

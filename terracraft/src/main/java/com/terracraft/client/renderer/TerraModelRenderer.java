@@ -34,6 +34,10 @@ public class TerraModelRenderer<T extends LivingEntity> extends LivingEntityRend
     private final float modelScale;
     private final boolean armsForward;
     private final Map<String, Identifier> textures = new HashMap<>();
+    private static final Map<String, Identifier> tetherTextures = new HashMap<>();
+    /** Length of one vine/chain segment and its width, in blocks. */
+    private static final float SEGMENT = 0.5F;
+    private static final float TETHER_WIDTH = 0.4F;
 
     public TerraModelRenderer(EntityRendererProvider.Context context, EntityModel<? super TerraRenderState> model, float modelScale, float shadow,
                               boolean armsForward) {
@@ -63,6 +67,25 @@ public class TerraModelRenderer<T extends LivingEntity> extends LivingEntityRend
         state.aggressive = entity instanceof Mob mob && mob.isAggressive();
         state.healthFraction = entity.getMaxHealth() > 0 ? Mth.clamp(entity.getHealth() / entity.getMaxHealth(), 0.0F, 1.0F) : 1.0F;
         state.healthBar = !(entity instanceof SpriteEntity sprite) || sprite.showsHealthBar();
+        state.tether = null;
+        if (entity instanceof com.terracraft.entity.mob.TerrariaMob mob && mob.tetherId() >= 0
+            && entity.level().getEntity(mob.tetherId()) instanceof net.minecraft.world.entity.Entity anchor) {
+            net.minecraft.world.phys.Vec3 feet = entity.getPosition(partialTicks);
+            state.tether = anchor.getPosition(partialTicks).add(0, anchor.getBbHeight() * 0.5, 0).subtract(feet);
+            state.tetherStart = entity.getBbHeight() * 0.5F;
+            state.tetherTexture = tetherTextures.computeIfAbsent(mob.tetherStyle(), k -> TerraCraft.id("textures/entity/tether/" + k + ".png"));
+        }
+    }
+
+    /** A chained creature stays visible while any part of its tether is on screen. */
+    @Override
+    protected net.minecraft.world.phys.AABB getBoundingBoxForCulling(T entity) {
+        net.minecraft.world.phys.AABB box = super.getBoundingBoxForCulling(entity);
+        if (entity instanceof com.terracraft.entity.mob.TerrariaMob mob && mob.tetherId() >= 0
+            && entity.level().getEntity(mob.tetherId()) instanceof net.minecraft.world.entity.Entity anchor) {
+            box = box.minmax(anchor.getBoundingBox());
+        }
+        return box;
     }
 
     @Override
@@ -84,9 +107,54 @@ public class TerraModelRenderer<T extends LivingEntity> extends LivingEntityRend
     @Override
     public void submit(TerraRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {
         super.submit(state, poseStack, collector, camera);
+        if (state.tether != null && state.tetherTexture != null) {
+            submitTether(state, poseStack, collector);
+        }
         if (state.healthBar && state.healthFraction < 1.0F && state.deathTime <= 0.0F && state.distanceToCameraSq < 32 * 32) {
             submitHealthBar(state, poseStack, collector, camera);
         }
+    }
+
+    /**
+     * The tether: a row of segments from the creature's middle to its anchor, each drawn as two crossed quads along
+     * the line so it looks solid from every side (Plantera's vines, Golem's chains).
+     */
+    private static void submitTether(TerraRenderState state, PoseStack poseStack, SubmitNodeCollector collector) {
+        org.joml.Vector3f start = new org.joml.Vector3f(0, state.tetherStart, 0);
+        org.joml.Vector3f end = new org.joml.Vector3f((float) state.tether.x, (float) state.tether.y, (float) state.tether.z);
+        org.joml.Vector3f dir = new org.joml.Vector3f(end).sub(start);
+        float length = dir.length();
+        if (length < 0.05F) {
+            return;
+        }
+        dir.div(length);
+        org.joml.Vector3f side = new org.joml.Vector3f(dir).cross(0, 1, 0);
+        if (side.lengthSquared() < 1.0E-4F) {
+            side.set(1, 0, 0);
+        }
+        side.normalize(TETHER_WIDTH / 2);
+        org.joml.Vector3f up = new org.joml.Vector3f(dir).cross(side).normalize(TETHER_WIDTH / 2);
+        int light = state.lightCoords;
+        int segments = Math.max(1, (int) Math.ceil(length / SEGMENT));
+        collector.submitCustomGeometry(poseStack, RenderTypes.entityCutout(state.tetherTexture), (pose, buffer) -> {
+            for (int i = 0; i < segments; i++) {
+                float t0 = i * SEGMENT;
+                float t1 = Math.min(length, t0 + SEGMENT);
+                float v1 = (t1 - t0) / SEGMENT;
+                org.joml.Vector3f a = new org.joml.Vector3f(dir).mul(t0).add(start);
+                org.joml.Vector3f b = new org.joml.Vector3f(dir).mul(t1).add(start);
+                for (org.joml.Vector3f w : new org.joml.Vector3f[]{side, up}) {
+                    tetherVertex(buffer, pose, a.x - w.x, a.y - w.y, a.z - w.z, 0, 0, light);
+                    tetherVertex(buffer, pose, a.x + w.x, a.y + w.y, a.z + w.z, 1, 0, light);
+                    tetherVertex(buffer, pose, b.x + w.x, b.y + w.y, b.z + w.z, 1, v1, light);
+                    tetherVertex(buffer, pose, b.x - w.x, b.y - w.y, b.z - w.z, 0, v1, light);
+                }
+            }
+        });
+    }
+
+    private static void tetherVertex(VertexConsumer buffer, PoseStack.Pose pose, float x, float y, float z, float u, float v, int light) {
+        buffer.addVertex(pose, x, y, z).setColor(0xFFFFFFFF).setUv(u, v).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, 0, 1, 0);
     }
 
     private static void submitHealthBar(TerraRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {

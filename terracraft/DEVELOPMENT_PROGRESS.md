@@ -355,15 +355,56 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   others), its life and a green-yellow-red bar that flashes on hits; it fades out a couple of seconds after you look
   away. Options `enemyHealthBar` and `customBossBars` in `terracraft-client.toml`.
 
-## IN PROGRESS
-- Nothing half-finished. Stage 5 (early Hardmode up to the mechanical bosses) is complete.
+### Stage 6: Chlorophyte, Plantera, the Lihzahrd Temple and Golem (verified in a live client)
+- **Chlorophyte** (`ChlorophyteContent`): in Hardmode, small veins grow in the underground jungle's mud
+  (`HardmodeWorld.placeChlorophyte`, chunk flag `CHLOROPHYTE`); pickaxe power 200 (Pickaxe Axe or better). Bars at
+  a Hardmode forge (5 ore). Chlorophyte Claymore (each swing also launches a slow piercing orb -
+  `ProjectileSwordItem`), Chlorophyte Shotbow (three arrows at once), Chlorophyte Pickaxe (200) and armor (helmet,
+  plate mail, greaves; set bonus **Leaf Crystal**: a crystal over your head shoots leaves at nearby enemies; 3D model).
+  Volatile Gelatin and the Leaf Crystal now share one "auto-shoot" helper in `PlayerEvents`.
+- **Plantera** (`entity.boss.Plantera`, 30000 life): **Plantera's Bulb** grows on jungle grass in the underground
+  jungle near players once all three mechanical bosses are dead (one at a time within 120 blocks, remembered in
+  `jungle_growth.dat`); **Life Fruit** plants grow there after the first mechanical boss (`JungleGrowth`).
+  Breaking the bulb wakes Plantera right there. Three hooks shoot out on vines and grab the cave walls around the
+  player; Plantera can only move as far as its vines reach from where they hold, and the hooks let go one at a time.
+  First half: seeds, poison seeds and bouncing thorn balls. Second half: the petals open into a toothed mouth
+  (alternate texture), eight tentacles grow around it on vines, it moves faster and fires drifting spores. Leaving
+  the jungle enrages it (double speed and damage). Drops the **Temple Key** and one of Seedler (a vine sword that
+  throws seeds), Venus Magnum (fast bullets) or Leaf Blower (razor leaves).
+- **Tethers**: any creature can now be chained to another (`TerrariaMob.setTether`, synced); the renderer draws vine
+  or chain segments between them (Plantera's hooks and tentacles, Golem's fists). `BossPart` is the shared base of
+  boss pieces that follow their boss and vanish with it.
+- **Hardmode jungle enemies**: Angry Trapper (a bigger Man Eater with a longer reach) and Derpling (a bouncing blue bug).
+- **Lihzahrd Temple** (`world.temple`): found once per world (the nearest stretch of jungle 300+ blocks from spawn
+  that covers the whole temple) and saved in `temple.dat`; built chunk by chunk as those chunks load, so it also
+  appears in old worlds. A 64 x 64 block of Lihzahrd Brick at y -17 to -1: twelve rooms joined by narrow corridors in
+  a maze around the central altar chamber, Super Dart Traps in the walls (they watch 12 blocks ahead and shoot poison
+  darts at you), Wooden Spikes (60 damage), lamps, chests (60% hold a Lihzahrd Power Cell) and the **Lihzahrd
+  Altar**. The way in is a locked **Lihzahrd Door** (Temple Key, used up), reached by a tunnel and a ladder shaft
+  from the jungle above. Lihzahrd Brick needs pickaxe power 210 (only the Picksaw). Lihzahrds and Flying Snakes
+  spawn on the bricks. `/terraria worldgen temple` says where it is.
+- **Golem** (`entity.boss.Golem`, Power Cell in the altar; 39000 life): the stone body hops after the player; its
+  head shoots fireballs, and eye lasers once the body is under 3/4 life; when the head's life runs out it breaks free
+  (red-hot eyes), can no longer be hurt and flies over the player firing faster; two fists punch out on chains in
+  turn. Out of the temple it gets angry. Drops one of Heat Ray (piercing beam), Possessed Hatchet (a homing
+  boomerang axe), Sun Stone (by day: +4 defense, +10% damage and melee speed, +2% crit, +1 life regen) or Eye of the
+  Golem (+10% crit), a one-in-three **Picksaw** (pickaxe 210, axe 125) and Beetle Husks.
+- New 3D models: Plantera (both phases), her hooks and tentacles, Angry Trapper, Derpling, Lihzahrd, Flying Snake,
+  Golem's body, head (both looks) and fists, Chlorophyte armor; blocks: Plantera's Bulb, Life Fruit, Lihzahrd Brick,
+  Super Dart Trap, Wooden Spikes, Lihzahrd Door and Altar. `/terraria boss spawn plantera|golem`,
+  `/terraria worldgen bulb` grows a bulb nearby.
+- Fixes: the focus health bar no longer shows on parts that cannot be hurt; boss summons can now wake a boss at a
+  fixed spot (`BossSummoning.summonAt`).
 
-## NEXT (Stage 5: Hardmode)
-1. (done) World changes, Hardmode ores, anvils/forges, gear.
-2. (done) Hardmode enemies, Wyverns, Mimics, souls.
-3. (done) Mechanical bosses, Wizard, Steampunker, Witch Doctor, Queen Slime, Mechanic.
-4. (done) Pirate Invasion and Frost Legion.
-5. Stage 6: Plantera, Golem, Chlorophyte, Lihzahrd Temple.
+## IN PROGRESS
+- Nothing half-finished. Stage 6 (Plantera, the temple and Golem) is complete.
+
+## NEXT
+1. (done) Stage 5: Hardmode up to the mechanical bosses, Queen Slime, invasions.
+2. (done) Stage 6: Chlorophyte, Plantera, Lihzahrd Temple, Golem.
+3. Stage 7: Duke Fishron (Truffle Worm, Mushroom biome), Pumpkin Moon and Frost Moon, post-Plantera Dungeon,
+   Martian Madness, Empress of Light.
+4. Stage 8: Lunatic Cultist, the Celestial Pillars and Moon Lord.
 
 ## DONE: Stage 4 plan (kept for reference)
 1. ~~Dungeon and Skeletron~~ (done, 4a).

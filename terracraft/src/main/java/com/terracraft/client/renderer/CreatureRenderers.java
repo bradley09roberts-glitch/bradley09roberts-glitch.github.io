@@ -158,6 +158,18 @@ public final class CreatureRenderers {
         json(event, MobContent.MISTER_STABBY.get(), "mister_stabby", 1.0F, 0.5F);
         json(event, MobContent.SNOWMAN_GANGSTA.get(), "snowman_gangsta", 1.0F, 0.5F);
         json(event, MobContent.SNOW_BALLA.get(), "snow_balla", 1.0F, 0.5F);
+        // Hardmode jungle and Plantera
+        json(event, MobContent.ANGRY_TRAPPER.get(), "angry_trapper", 1.0F, 0.0F);
+        json(event, MobContent.DERPLING.get(), "derpling", 1.0F, 0.5F);
+        json(event, MobContent.PLANTERA.get(), "plantera", 1.6F, 0.0F);
+        json(event, MobContent.PLANTERA_HOOK.get(), "plantera_hook", 1.0F, 0.0F);
+        json(event, MobContent.PLANTERA_TENTACLE.get(), "plantera_tentacle", 1.0F, 0.0F);
+        // Lihzahrd Temple and Golem
+        json(event, MobContent.LIHZAHRD.get(), "lihzahrd", 1.0F, 0.5F);
+        json(event, MobContent.FLYING_SNAKE.get(), "flying_snake", 1.0F, 0.3F);
+        json(event, MobContent.GOLEM.get(), "golem", 1.0F, 1.6F);
+        json(event, MobContent.GOLEM_HEAD.get(), "golem_head", 1.0F, 0.0F);
+        json(event, MobContent.GOLEM_FIST.get(), "golem_fist", 1.0F, 0.0F);
         for (var npc : NpcContent.all()) {
             var layer = npc.getId().getPath().contains("goblin") ? TerraModels.GOBLIN : TerraModels.HUMANOID;
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,

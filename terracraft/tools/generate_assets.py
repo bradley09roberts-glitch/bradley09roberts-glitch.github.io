@@ -2682,6 +2682,13 @@ BLOCK_TEXTURES['adamantite_forge'] = lambda: forge_texture('adamantite')
 BLOCK_TEXTURES['titanium_forge'] = lambda: forge_texture('titanium')
 
 
+def cube_block_assets(names):
+    for name in names:
+        write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': {'': {'model': f'terracraft:block/{name}'}}})
+        write_json(os.path.join(ASSETS, 'models/block', name + '.json'), {'parent': 'minecraft:block/cube_all', 'textures': {'all': f'terracraft:block/{name}'}})
+        write_json(os.path.join(ASSETS, 'items', name + '.json'), {'model': {'type': 'minecraft:model', 'model': f'terracraft:block/{name}'}})
+
+
 def hardmode_block_assets():
     for name in ('pearlstone', 'pearlsand') + tuple(f'{m}_ore' for m in HM_METALS):
         write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': {'': {'model': f'terracraft:block/{name}'}}})
@@ -3103,6 +3110,391 @@ item('snow_globe', lambda c: (c.circle(7.5, 7, 5.5, (200, 230, 255, 170)), c.rec
 proj('enemy_snowball', lambda c: (c.circle(7.5, 7.5, 3.5, hexc('#F4F8FF')), c.circle(6.5, 6.5, 1, hexc('#FFFFFF'))))
 
 
+# --- Chlorophyte (Stage 6) ---------------------------------------------------------------------------------
+METAL['chlorophyte'] = '#58D040'
+BLOCK_TEXTURES['chlorophyte_ore'] = lambda: ore_block('chlorophyte', False)
+BLOCKS_CUBE.append('chlorophyte_ore')
+HM_BLOCKS.append('chlorophyte_ore')
+item('raw_chlorophyte', lambda c: draw_raw(c, metal('chlorophyte'), 137))
+item('chlorophyte_bar', lambda c: draw_bar(c, metal('chlorophyte')))
+item('chlorophyte_claymore', lambda c: (draw_sword(c, metal('chlorophyte'), 14), c.circle(3.5, 12.5, 1.5, hexc('#B8F870'))), True)
+item('chlorophyte_shotbow', lambda c: draw_bow(c, metal('chlorophyte')), True)
+item('chlorophyte_pickaxe', lambda c: draw_pickaxe(c, metal('chlorophyte')), True)
+item('chlorophyte_helmet', lambda c: draw_helmet(c, metal('chlorophyte')))
+item('chlorophyte_plate_mail', lambda c: draw_chest(c, metal('chlorophyte')))
+item('chlorophyte_greaves', lambda c: draw_legs(c, metal('chlorophyte')))
+proj('chlorophyte_orb', lambda c: (p_orb(c, '#70E040', 4), c.circle(6.5, 6.5, 1.2, hexc('#E0FFC0'))))
+proj('crystal_leaf', lambda c: (c.polygon([(3, 12), (6, 5), (12, 3), (10, 9)], palette('#58C838')[2]), c.line(3, 12, 11, 4, palette('#58C838')[0])))
+
+
+# --- Plantera (Stage 6) ------------------------------------------------------------------------------------
+def draw_seedler(c):
+    vine, leaf = palette('#3A8A2A'), palette('#6AC040')
+    c.polygon([(3, 12), (12, 3), (14, 2), (13, 4), (4, 13)], vine[2])
+    c.line(4, 12, 12, 4, vine[3])
+    for x, y in ((6, 8), (9, 5), (11, 7)):
+        c.polygon([(x, y), (x + 2, y - 2), (x + 3, y)], leaf[3])
+    c.rect(2, 11, 4, 13, palette('#E070A0')[2])          # flower guard
+    c.line(1, 14, 3, 12, WOOD[2])
+    c.outline()
+
+
+def draw_venus_magnum(c):
+    p = palette('#4A9A3A')
+    c.rect(3, 5, 13, 7, p[2])
+    c.rect(3, 5, 13, 5, p[3])
+    c.polygon([(12, 3), (15, 6), (12, 9)], palette('#E0508A')[2])       # flower muzzle
+    c.set(13, 6, palette('#F8E060')[3])
+    c.polygon([(4, 8), (7, 8), (6, 13), (3, 13)], palette('#2E6A22')[2])
+    c.outline()
+
+
+def draw_leaf_blower(c):
+    p = palette('#3A8A2A')
+    c.rect(2, 6, 11, 9, p[2])
+    c.rect(2, 6, 11, 6, p[3])
+    c.polygon([(11, 4), (15, 3), (15, 12), (11, 11)], palette('#6AC040')[2])
+    c.polygon([(4, 10), (7, 10), (6, 14), (3, 14)], WOOD[2])
+    for y in (5, 8, 11):
+        c.set(14, y, palette('#B8F070')[4])
+    c.outline()
+
+
+def planteras_bulb_texture():
+    c = Canvas()
+    pink, green = palette('#E0508A'), palette('#3A9A30')
+    c.noise([pink[2], pink[2], pink[3], pink[1]], 6101)
+    for x in range(16):
+        for y in range(12, 16):
+            c.set(x, y, green[2] if (x + y) % 3 else green[1])
+    rnd = random.Random(6102)
+    for _ in range(8):
+        c.set(rnd.randint(0, 15), rnd.randint(0, 11), hexc('#C8E050'))
+    for x in range(0, 16, 4):
+        c.line(x, 0, x, 11, pink[1])
+    return c
+
+
+def life_fruit_texture():
+    c = Canvas()
+    stem, leaf, fruit = palette('#3A8A2A'), palette('#5AB040'), palette('#E8C030')
+    c.line(8, 15, 8, 6, stem[2])
+    c.polygon([(8, 11), (3, 9), (5, 12)], leaf[2])
+    c.polygon([(8, 13), (13, 11), (11, 14)], leaf[2])
+    c.circle(8, 5, 3.5, fruit[2])
+    c.circle(7, 4, 1.2, fruit[4])
+    c.set(8, 1, stem[2]); c.set(9, 1, leaf[3])
+    c.outline()
+    return c
+
+
+def vine_tether():
+    c = Canvas()
+    vine, leaf = palette('#2E6A22'), palette('#5AAA3A')
+    for y in range(16):
+        for x in range(5, 11):
+            c.set(x, y, vine[2] if x not in (5, 10) else vine[1])
+        c.set(7 + (y // 4) % 2, y, vine[3])
+    c.polygon([(10, 3), (15, 1), (13, 6)], leaf[2])
+    c.polygon([(5, 11), (0, 9), (2, 14)], leaf[2])
+    return c
+
+
+BLOCK_TEXTURES['planteras_bulb'] = planteras_bulb_texture
+BLOCK_TEXTURES['life_fruit_plant'] = life_fruit_texture
+item('temple_key', lambda c: draw_key(c, '#C89A30'))
+item('seedler', draw_seedler, True)
+item('venus_magnum', draw_venus_magnum, True)
+item('leaf_blower', draw_leaf_blower, True)
+proj('plantera_seed', lambda c: (c.circle(7.5, 7.5, 2.5, palette('#5AAA3A')[2]), c.set(6, 6, palette('#5AAA3A')[4])))
+proj('poison_seed', lambda c: (c.circle(7.5, 7.5, 2.5, palette('#9A40C8')[2]), c.set(6, 6, palette('#C080F0')[4])))
+proj('thorn_ball', lambda c: (c.circle(7.5, 7.5, 4.5, palette('#3A8A2A')[2]), c.circle(6, 6, 1.5, palette('#3A8A2A')[4]),
+                              [c.set(x, y, hexc('#E8E0C0')) for x, y in ((7, 1), (14, 7), (7, 14), (1, 7), (3, 3), (12, 3), (12, 12), (3, 12))]))
+proj('plantera_spore', lambda c: p_orb(c, '#F080C0', 3))
+proj('seedler_seed', lambda c: (c.circle(7.5, 7.5, 2, palette('#8AD040')[3]), c.set(7, 6, palette('#8AD040')[4])))
+TETHERS = {'vine': vine_tether}
+HM_BLOCKS.extend(['planteras_bulb', 'life_fruit_plant'])
+
+
+def plantera_block_assets():
+    faces = ['north', 'south', 'east', 'west', 'up', 'down']
+    write_json(os.path.join(ASSETS, 'blockstates/planteras_bulb.json'), {'variants': {'': {'model': 'terracraft:block/planteras_bulb'}}})
+    write_json(os.path.join(ASSETS, 'models/block/planteras_bulb.json'), {'parent': 'minecraft:block/block',
+        'textures': {'particle': 'terracraft:block/planteras_bulb', 'all': 'terracraft:block/planteras_bulb'}, 'elements': [
+            {'from': [1, 0, 1], 'to': [15, 11, 15], 'faces': {f: {'texture': '#all'} for f in faces}},
+            {'from': [3, 11, 3], 'to': [13, 14, 13], 'faces': {f: {'texture': '#all'} for f in faces}},
+            {'from': [6, 14, 6], 'to': [10, 16, 10], 'faces': {f: {'texture': '#all'} for f in faces}}]})
+    name = 'life_fruit_plant'
+    write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': {'': {'model': f'terracraft:block/{name}'}}})
+    write_json(os.path.join(ASSETS, 'models/block', name + '.json'),
+               {'parent': 'minecraft:block/cross', 'render_type': 'minecraft:cutout', 'textures': {'cross': f'terracraft:block/{name}'}})
+    os.makedirs(os.path.join(TEX, 'entity/tether'), exist_ok=True)
+    for name, factory in TETHERS.items():
+        factory().save(os.path.join(TEX, 'entity/tether', name + '.png'))
+
+
+# --- Lihzahrd Temple and Golem (Stage 6) -------------------------------------------------------------------
+LIHZAHRD = '#9A5A26'
+
+
+def lihzahrd_brick():
+    return brick_texture(LIHZAHRD, 6201)
+
+
+def dart_trap_front():
+    c = brick_texture(LIHZAHRD, 6201)
+    dark = palette('#3A2010')
+    c.rect(5, 4, 10, 11, palette(LIHZAHRD)[0])
+    c.rect(6, 6, 9, 9, dark[0])
+    c.set(5, 4, hexc('#E8B040')); c.set(10, 4, hexc('#E8B040'))
+    return c
+
+
+def locked_door_texture():
+    c = Canvas()
+    p = palette('#B8782E')
+    c.noise([p[2], p[2], p[1], p[3]], 6202)
+    for x in (0, 15):
+        c.line(x, 0, x, 15, p[0])
+    gold = palette('#F0C030')
+    c.circle(7.5, 7.5, 3.5, gold[2])
+    c.circle(7.5, 7.5, 1.5, gold[4])
+    for x, y in ((7, 1), (7, 13), (1, 7), (13, 7)):
+        c.rect(x, y, x + 1, y + 1, gold[3])
+    c.rect(11, 9, 12, 10, palette('#3A2010')[0])        # keyhole
+    return c
+
+
+def lihzahrd_altar_texture():
+    c = brick_texture('#B8782E', 6203)
+    gold = palette('#F0C030')
+    c.circle(7.5, 7.5, 4, gold[2])
+    c.circle(7.5, 7.5, 2, hexc('#FFF0A0'))
+    return c
+
+
+def wooden_spikes_texture():
+    c = Canvas()
+    p = palette('#8A5A30')
+    c.rect(0, 0, 15, 15, p[1])
+    for x in range(0, 16, 4):
+        c.polygon([(x, 15), (x + 2, 2), (x + 3, 15)], p[3])
+        c.line(x + 2, 2, x + 2, 6, palette('#E8D8B0')[3])
+    return c
+
+
+def chain_tether():
+    c = Canvas()
+    metal = palette('#7A6A58')
+    for y0 in (0, 8):
+        c.rect(5, y0, 10, y0 + 5, metal[2])
+        c.rect(7, y0 + 1, 8, y0 + 4, (0, 0, 0, 0))
+        c.line(5, y0, 10, y0, metal[3])
+    c.rect(7, 5, 8, 8, metal[1])
+    c.rect(7, 13, 8, 15, metal[1])
+    return c
+
+
+def draw_power_cell(c):
+    p = palette('#C8882E')
+    c.rect(4, 3, 11, 13, p[2])
+    c.rect(4, 3, 11, 4, p[3])
+    c.rect(6, 6, 9, 11, palette('#F0C030')[3])
+    c.rect(7, 7, 8, 10, hexc('#FFF8C0'))
+    c.rect(6, 1, 9, 2, p[1])
+    c.outline()
+
+
+def draw_picksaw(c):
+    draw_pickaxe(c, palette('#C88A3A'))
+    gold = palette('#F0C030')
+    for x, y in ((11, 2), (13, 4), (12, 3)):
+        c.set(x, y, gold[4])
+    c.outline()
+
+
+def draw_heat_ray(c):
+    p = palette('#B8782E')
+    c.rect(2, 6, 12, 9, p[2])
+    c.rect(2, 6, 12, 6, p[3])
+    c.circle(13, 7.5, 2, palette('#F0C030')[3])
+    c.set(14, 7, hexc('#FFF8C0'))
+    c.polygon([(4, 10), (7, 10), (6, 14), (3, 14)], p[1])
+    c.outline()
+
+
+def draw_hatchet(c):
+    draw_axe(c, palette('#C88A3A'))
+    c.set(4, 4, hexc('#70F050')); c.set(5, 4, hexc('#70F050'))
+    c.outline()
+
+
+def draw_sun_stone(c):
+    gold = palette('#F0B020')
+    for i in range(8):
+        a = i * math.pi / 4
+        c.line(8, 8, round(7.5 + math.cos(a) * 7), round(7.5 + math.sin(a) * 7), gold[2])
+    c.circle(7.5, 7.5, 4.5, gold[3])
+    c.circle(7.5, 7.5, 2.5, hexc('#FFF0A0'))
+    c.outline()
+
+
+def draw_golem_eye(c):
+    stone = palette('#B06A30')
+    c.circle(7.5, 8, 6, stone[2])
+    c.circle(7.5, 8, 3.5, hexc('#F8E870'))
+    c.circle(7.5, 8, 1.5, hexc('#E83A10'))
+    c.outline()
+
+
+def draw_beetle_husk(c):
+    p = palette('#6A3A9A')
+    c.polygon([(3, 12), (4, 5), (8, 2), (12, 5), (13, 12), (8, 14)], p[2])
+    c.line(8, 3, 8, 13, p[0])
+    c.set(6, 6, p[4]); c.set(10, 6, p[4])
+    c.outline()
+
+
+BLOCK_TEXTURES['lihzahrd_brick'] = lihzahrd_brick
+BLOCK_TEXTURES['dart_trap_front'] = dart_trap_front
+BLOCK_TEXTURES['locked_lihzahrd_door'] = locked_door_texture
+BLOCK_TEXTURES['lihzahrd_altar'] = lihzahrd_altar_texture
+BLOCK_TEXTURES['wooden_spikes'] = wooden_spikes_texture
+TETHERS['chain'] = chain_tether
+BLOCKS_CUBE.append('lihzahrd_brick')
+HM_BLOCKS.extend(['lihzahrd_brick', 'dart_trap', 'wooden_spikes', 'locked_lihzahrd_door', 'lihzahrd_altar'])
+item('lihzahrd_power_cell', draw_power_cell)
+item('picksaw', draw_picksaw, True)
+item('heat_ray', draw_heat_ray, True)
+item('possessed_hatchet', draw_hatchet, True)
+item('sun_stone', draw_sun_stone)
+item('eye_of_the_golem', draw_golem_eye)
+item('beetle_husk', draw_beetle_husk)
+proj('poison_dart', lambda c: (c.line(2, 8, 12, 8, palette('#8A6A40')[2]), c.line(12, 8, 14, 8, palette('#9A40C8')[3]),
+                               c.line(1, 7, 3, 9, palette('#E8E0C0')[2])))
+proj('golem_fireball', lambda c: (p_orb(c, '#FF7A20', 4), c.circle(7.5, 7.5, 1.5, hexc('#FFF0A0'))))
+proj('heat_ray', lambda c: (c.line(0, 8, 15, 8, hexc('#FFB020'), 2), c.line(2, 8, 13, 8, hexc('#FFF8C0'))))
+proj('possessed_hatchet', draw_hatchet)
+
+
+def temple_block_assets():
+    cube_block_assets(['lihzahrd_brick'])
+    faces = ['north', 'south', 'east', 'west', 'up', 'down']
+    write_json(os.path.join(ASSETS, 'models/block/dart_trap.json'), {'parent': 'minecraft:block/orientable', 'textures': {
+        'front': 'terracraft:block/dart_trap_front', 'side': 'terracraft:block/lihzahrd_brick', 'top': 'terracraft:block/lihzahrd_brick'}})
+    write_json(os.path.join(ASSETS, 'blockstates/dart_trap.json'), {'variants': {
+        f'facing={d}': {'model': 'terracraft:block/dart_trap', **({'y': r} if r else {})}
+        for d, r in (('north', 0), ('east', 90), ('south', 180), ('west', 270))}})
+    write_json(os.path.join(ASSETS, 'items/dart_trap.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/dart_trap'}})
+    for name in ('locked_lihzahrd_door',):
+        write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': {'': {'model': f'terracraft:block/{name}'}}})
+        write_json(os.path.join(ASSETS, 'models/block', name + '.json'), {'parent': 'minecraft:block/cube_all', 'textures': {'all': f'terracraft:block/{name}'}})
+    write_json(os.path.join(ASSETS, 'models/block/lihzahrd_altar.json'), {'parent': 'minecraft:block/block', 'textures': {
+        'particle': 'terracraft:block/lihzahrd_altar', 'all': 'terracraft:block/lihzahrd_altar', 'brick': 'terracraft:block/lihzahrd_brick'},
+        'elements': [
+            {'from': [0, 0, 0], 'to': [16, 4, 16], 'faces': {f: {'texture': '#brick'} for f in faces}},
+            {'from': [3, 4, 3], 'to': [13, 8, 13], 'faces': {f: {'texture': '#brick'} for f in faces}},
+            {'from': [1, 8, 1], 'to': [15, 12, 15], 'faces': {f: {'texture': '#all'} for f in faces}}]})
+    write_json(os.path.join(ASSETS, 'blockstates/lihzahrd_altar.json'), {'variants': {'': {'model': 'terracraft:block/lihzahrd_altar'}}})
+    spikes = [{'from': [0, 0, 0], 'to': [16, 2, 16], 'faces': {f: {'texture': '#all'} for f in faces}}]
+    for x in (1, 6, 11):
+        for z in (1, 6, 11):
+            spikes.append({'from': [x, 2, z], 'to': [x + 3, 6, z + 3], 'faces': {f: {'texture': '#all'} for f in faces}})
+            spikes.append({'from': [x + 1, 6, z + 1], 'to': [x + 2, 11, z + 2], 'faces': {f: {'texture': '#all'} for f in faces}})
+    write_json(os.path.join(ASSETS, 'models/block/wooden_spikes.json'), {'parent': 'minecraft:block/block',
+               'textures': {'particle': 'terracraft:block/wooden_spikes', 'all': 'terracraft:block/wooden_spikes'}, 'elements': spikes})
+    write_json(os.path.join(ASSETS, 'blockstates/wooden_spikes.json'), {'variants': {'': {'model': 'terracraft:block/wooden_spikes'}}})
+    write_json(os.path.join(ASSETS, 'items/wooden_spikes.json'), {'model': {'type': 'minecraft:model', 'model': 'terracraft:block/wooden_spikes'}})
+
+
+# --- Stage 6 flat sprites (used with flatSprites = true) ------------------------------------------------------
+def plantera_frame(c, frame, mouth=False):
+    pink, leaf = palette('#E0508A'), palette('#3A9A30')
+    for i, (x, y) in enumerate(((3, 6), (25, 6), (3, 22), (25, 22), (14, 1), (14, 27))):
+        c.circle(x + 1.5, y + 1.5, 3.5, leaf[2 + (i + frame) % 2])
+    c.circle(15.5, 15.5, 11, pink[2])
+    c.circle(13, 12, 4, pink[3])
+    for x, y in ((8, 9), (22, 11), (10, 22), (21, 21)):
+        c.circle(x, y, 1.5, hexc('#C8E050'))
+    if mouth:
+        c.circle(15.5, 15.5, 6 + frame, hexc('#2A0610'))
+        for a in range(0, 360, 45):
+            import math as _m
+            c.set(int(15.5 + _m.cos(_m.radians(a)) * (5 + frame)), int(15.5 + _m.sin(_m.radians(a)) * (5 + frame)), hexc('#F0E8C8'))
+    else:
+        c.line(10, 15, 21, 15, pink[0])
+        c.line(15, 10, 15, 21, pink[0])
+    c.outline()
+
+
+def golem_frame(c, frame):
+    stone, trim, sun = palette('#C8884A'), palette('#E8C080'), palette('#F8C838')
+    c.rect(4, 6 + frame, 27, 26, stone[2])
+    c.rect(3, 5 + frame, 28, 7 + frame, trim[2])
+    c.circle(15.5, 15.5 + frame, 5, sun[2])
+    c.circle(15.5, 15.5 + frame, 2.5, hexc('#FFF4B0'))
+    c.rect(7, 27, 12, 31, stone[1]); c.rect(19, 27, 24, 31, stone[1])
+    c.light(1.2, 0.8)
+    c.outline()
+
+
+def golem_head_frame(c, frame, free=False):
+    stone, trim = palette('#C8884A'), palette('#E8C080')
+    eye = hexc('#FF3A10') if free else hexc('#F8E870')
+    c.rect(2, 4, 21, 21, stone[2])
+    c.rect(1, 7, 22, 9, trim[2])
+    c.rect(4, 11, 9, 14, eye); c.rect(14, 11, 19, 14, eye)
+    c.rect(7, 17, 16, 18, hexc('#FF8A20') if free else hexc('#3A2010'))
+    c.rect(8, 1, 15, 3, trim[2])
+    c.outline()
+
+
+def lizard_frame(c, frame):
+    p, belly = palette('#9A5A26'), palette('#D8A860')
+    c.rect(6, 6, 11, 17, p[2])
+    c.rect(7, 8, 9, 15, belly[2])
+    c.rect(2, 2, 10, 6, p[2])
+    c.set(3, 3, hexc('#F8D830'))
+    c.line(11, 15, 15, 19, p[1])
+    c.rect(6 + frame, 18, 7 + frame, 23, p[1]); c.rect(10 - frame, 18, 11 - frame, 23, p[1])
+    c.outline()
+
+
+def flying_snake_frame(c, frame):
+    p = palette('#C88A2E')
+    for i in range(6):
+        c.circle(4 + i * 4, 8 + (frame if i % 2 else -frame), 2.5 - i * 0.2, p[2])
+    c.set(2, 7, hexc('#E83A10'))
+    c.polygon([(8, 7), (12, 1 + frame * 2), (14, 7)], palette('#E8C060')[2])
+    c.outline()
+
+
+def derpling_frame(c, frame):
+    p = palette('#3A70D8')
+    c.circle(10, 10 - frame, 7, p[2])
+    c.circle(6, 7 - frame, 2.5, hexc('#F8F8F0')); c.circle(13, 7 - frame, 2.5, hexc('#F8F8F0'))
+    c.set(6, 7 - frame, hexc('#101018')); c.set(13, 7 - frame, hexc('#101018'))
+    for x in (4, 9, 14):
+        c.line(x, 15, x - 1 + frame, 19, p[0])
+    c.outline()
+
+
+mob_sprite('plantera', 32, 32, 2, plantera_frame, frame_time=8, rotate=True)
+mob_sprite('plantera_mouth', 32, 32, 2, lambda c, f: plantera_frame(c, f, mouth=True), frame_time=5, rotate=True)
+mob_sprite('plantera_hook', 12, 12, 1, lambda c, f: (c.circle(6, 6, 4, palette('#3A8A2A')[2]), c.polygon([(1, 1), (5, 4), (3, 6)], hexc('#C8D888')),
+                                                     c.polygon([(11, 1), (7, 4), (9, 6)], hexc('#C8D888')), c.outline()), rotate=True)
+mob_sprite('plantera_tentacle', 16, 12, 2, lambda c, f: maw_frame(c, f, '#E0508A'), frame_time=4, rotate=True)
+mob_sprite('angry_trapper', 16, 12, 2, lambda c, f: maw_frame(c, f, '#2E7A22'), frame_time=4, rotate=True)
+mob_sprite('derpling', 20, 20, 2, derpling_frame, frame_time=8)
+mob_sprite('lihzahrd', 16, 24, 2, lizard_frame, frame_time=6)
+mob_sprite('flying_snake', 28, 16, 2, flying_snake_frame, frame_time=4)
+mob_sprite('golem', 32, 32, 2, golem_frame, frame_time=10)
+mob_sprite('golem_head', 24, 24, 1, golem_head_frame)
+mob_sprite('golem_head_free', 24, 24, 1, lambda c, f: golem_head_frame(c, f, free=True), fullbright=True)
+mob_sprite('golem_fist', 16, 16, 1, lambda c, f: (c.rect(2, 2, 13, 13, palette('#C8884A')[2]),
+                                                  [c.line(2, y, 13, y, palette('#E8C080')[2]) for y in (4, 7, 10)], c.outline()))
+
+
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
     java_root = os.path.join(ROOT, 'src/main/java/com/terracraft/registry/content')
@@ -3154,6 +3546,9 @@ def main():
     underworld_block_assets()
     goblin_block_assets()
     hardmode_block_assets()
+    cube_block_assets(['chlorophyte_ore'])
+    temple_block_assets()
+    plantera_block_assets()
     queen_slime_block_assets()
     for name, drawer in PROJECTILES.items():
         c = Canvas()

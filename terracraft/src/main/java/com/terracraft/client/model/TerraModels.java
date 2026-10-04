@@ -29,7 +29,9 @@ public final class TerraModels {
     public static final java.util.List<String> JSON_CREATURES = java.util.List.of("imp", "demon", "voodoo_demon", "eater_of_souls", "crimera",
         "face_monster", "blood_crawler", "man_eater", "snatcher", "meteor_head", "pixie", "unicorn", "gastropod", "chaos_elemental",
         "corruptor", "slimer", "herpling", "floaty_gross", "wraith", "possessed_armor", "werewolf", "mimic",
-        "prime_cannon", "prime_saw", "prime_vice", "prime_laser", "parrot", "flying_dutchman", "mister_stabby", "snowman_gangsta", "snow_balla");
+        "prime_cannon", "prime_saw", "prime_vice", "prime_laser", "parrot", "flying_dutchman", "mister_stabby", "snowman_gangsta", "snow_balla",
+        "angry_trapper", "derpling", "plantera", "plantera_hook", "plantera_tentacle",
+        "lihzahrd", "flying_snake", "golem", "golem_head", "golem_fist");
 
     private TerraModels() {}
 

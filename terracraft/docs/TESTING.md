@@ -173,3 +173,20 @@ for testing drop in a throwaway mod whose constructor sets `SharedConstants.IS_R
   NoGravity each tick because `/summon` reloads it from NBT). Coin Gun: hold it with coins in the inventory and hold
   left click; ten Gold Coins take a Pirate Captain from 1000 to 128 life.
 - Creature lineups: build a platform in the sky, summon with `{NoAI:1b,Rotation:[0f,0f]}` once the chunks are loaded.
+
+## Stage 6 checks
+
+- `/terraria worldgen temple` gives the door, shaft and altar positions and how many temple chunks are built (the
+  site is chosen on the first server tick with a player online). Fly to the shaft and wait for the count to stop
+  rising; `execute if block <door> terracraft:locked_lihzahrd_door`, `... <altar> terracraft:lihzahrd_altar`.
+- Door: put a Temple Key in hotbar slot 1, stand in the tunnel facing the door and `xinput.py key 1 hold right 0.1`;
+  both door blocks turn to air and the key is used up.
+- Dart traps fire at a survival player standing in the 12 blocks in front of them (`setblock ... terracraft:dart_trap[facing=south]`);
+  in Expert two darts kill a 140-life player, so test with Resistance V or real armor.
+- Plantera: in the temple's altar chamber (or any jungle cave) `execute as Dev at Dev run terraria boss spawn plantera`;
+  `data modify entity @e[type=terracraft:plantera,limit=1] Health set value 14000f` for the second phase. She moves at
+  the camera, so for model shots use `{NoAI:1b,BossPhase:1}` copies. `/terraria worldgen bulb` grows a bulb nearby.
+- Golem: hold a Lihzahrd Power Cell and right-click the altar from 2-3 blocks away (`tp ... 0 22` aims at it). The
+  head breaks free with `execute at @e[type=terracraft:golem,limit=1] run damage @e[type=terracraft:golem_head,limit=1,sort=nearest] 20000 minecraft:generic`.
+- Chlorophyte: in a Hardmode world `fill <32^3 box near the temple> minecraft:diamond_block replace terracraft:chlorophyte_ore`
+  counts the ore (then swap back).

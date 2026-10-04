@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:chlorophyte_helmet",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:chlorophyte_bar",
+      "count": 12
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "armor"
+}

@@ -39,6 +39,9 @@ import java.util.List;
 public abstract class TerrariaMob extends Monster implements HasTerrariaDefense, EconomyEvents.CoinValue, com.terracraft.entity.SpriteEntity {
     /** Highest max health an entity may have (Minecraft's own limit is 1024). */
     public static final double HEALTH_CAP = 10_000_000.0;
+    /** Entity id this one is chained to (Plantera's hooks and tentacles, Golem's fists), or -1; drawn as a vine/chain. */
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> DATA_TETHER =
+        net.minecraft.network.syncher.SynchedEntityData.defineId(TerrariaMob.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
     private final MobDefinition definition;
 
     protected TerrariaMob(EntityType<? extends TerrariaMob> type, Level level) {
@@ -59,6 +62,26 @@ public abstract class TerrariaMob extends Monster implements HasTerrariaDefense,
 
     public MobDefinition definition() {
         return definition;
+    }
+
+    @Override
+    protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_TETHER, -1);
+    }
+
+    /** Chains this creature to another (the renderer draws {@link #tetherStyle()} segments between them). */
+    public void setTether(@Nullable Entity anchor) {
+        entityData.set(DATA_TETHER, anchor == null ? -1 : anchor.getId());
+    }
+
+    public int tetherId() {
+        return entityData.get(DATA_TETHER);
+    }
+
+    /** Texture of the tether segments ({@code textures/entity/tether/<style>.png}). */
+    public String tetherStyle() {
+        return "vine";
     }
 
     /** Lifts Minecraft's 1024 cap on max health (called once at mod construction, on both sides). */

@@ -168,7 +168,7 @@ public final class WeaponContent {
         return ModItems.register(name, TabGroup.WEAPONS, MeleeWeaponItem::new, p -> WeaponProperties.melee(p, stats));
     }
 
-    private static RegistryObject<RangedWeaponItem> bow(String name, int damage, int useTime, float knockback, float velocity, TerraRarity rarity, int value) {
+    static RegistryObject<RangedWeaponItem> bow(String name, int damage, int useTime, float knockback, float velocity, TerraRarity rarity, int value) {
         return ranged(name, AmmoType.ARROW, SoundEvents.ARROW_SHOOT, damage, useTime, knockback, velocity, rarity, value);
     }
 
@@ -186,7 +186,7 @@ public final class WeaponContent {
             p -> WeaponProperties.stats(p.stacksTo(consumable ? 99 : 1), stats));
     }
 
-    private static RegistryObject<MagicWeaponItem> magic(String name, ProjectileKind kind, int damage, int mana, int useTime, float knockback,
+    static RegistryObject<MagicWeaponItem> magic(String name, ProjectileKind kind, int damage, int mana, int useTime, float knockback,
                                                         float velocity, TerraRarity rarity, int gold, int silver, int copper) {
         TerraItemStats stats = TerraItemStats.builder().magic(damage).mana(mana).useTime(useTime).knockback(knockback).velocity(velocity)
             .rarity(rarity).value(gold, silver, copper).build();

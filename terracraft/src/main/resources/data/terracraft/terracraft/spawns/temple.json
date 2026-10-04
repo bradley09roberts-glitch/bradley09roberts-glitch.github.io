@@ -1,0 +1,27 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:lihzahrd",
+      "weight": 10,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:temple/bricks"
+      ]
+    },
+    {
+      "entity": "terracraft:flying_snake",
+      "weight": 6,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:temple/bricks"
+      ]
+    }
+  ]
+}

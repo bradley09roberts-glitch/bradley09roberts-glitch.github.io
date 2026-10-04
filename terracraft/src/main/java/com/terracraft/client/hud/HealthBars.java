@@ -113,7 +113,8 @@ public final class HealthBars {
         Vec3 to = from.add(look.scale(FOCUS_RANGE));
         AABB area = camera.getBoundingBox().expandTowards(look.scale(FOCUS_RANGE)).inflate(1.0);
         EntityHitResult hit = ProjectileUtil.getEntityHitResult(camera, from, to, area,
-            e -> e instanceof LivingEntity living && living.isAlive() && !(e instanceof Player) && !(e instanceof ArmorStand) && !e.isInvisible(),
+            e -> e instanceof LivingEntity living && living.isAlive() && !(e instanceof Player) && !(e instanceof ArmorStand) && !e.isInvisible()
+                && !(e instanceof com.terracraft.entity.SpriteEntity sprite && !sprite.showsHealthBar()),
             FOCUS_RANGE * FOCUS_RANGE);
         if (hit == null) {
             return null;

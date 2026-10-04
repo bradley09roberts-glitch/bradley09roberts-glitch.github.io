@@ -121,6 +121,47 @@ public final class ProjectileKinds {
     public static final ProjectileKind ENEMY_SNOWBALL = register(ProjectileKind.builder("enemy_snowball")
         .gravity(0.035).lifetime(100).size(0.35F, 0.5F).orientation(ProjectileKind.Orientation.BILLBOARD).enemy()
         .trail(() -> ParticleTypes.SNOWFLAKE).debuff(() -> net.minecraft.world.effect.MobEffects.SLOWNESS, 60, 0.5F));
+    // ---------------------------------------------------------------- Chlorophyte and the Hardmode jungle
+    /** Chlorophyte Claymore's swing: a slow green orb. */
+    public static final ProjectileKind CHLOROPHYTE_ORB = register(ProjectileKind.builder("chlorophyte_orb")
+        .lifetime(50).size(0.4F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).pierce(2).noTileCollide()
+        .fullbright().trail(() -> ParticleTypes.COMPOSTER));
+    /** Chlorophyte armor's Leaf Crystal (and the Leaf Blower): a fast spinning leaf. */
+    public static final ProjectileKind CRYSTAL_LEAF = register(ProjectileKind.builder("crystal_leaf")
+        .lifetime(60).size(0.3F, 0.5F).orientation(ProjectileKind.Orientation.SPIN).fullbright().trail(() -> ParticleTypes.COMPOSTER));
+    // ---------------------------------------------------------------- Plantera
+    public static final ProjectileKind PLANTERA_SEED = register(ProjectileKind.builder("plantera_seed")
+        .lifetime(100).size(0.25F, 0.5F).enemy());
+    public static final ProjectileKind POISON_SEED = register(ProjectileKind.builder("poison_seed")
+        .lifetime(100).size(0.25F, 0.5F).enemy().trail(() -> ParticleTypes.ITEM_SLIME)
+        .debuff(() -> net.minecraft.world.effect.MobEffects.POISON, 200, 1.0F));
+    /** Bounces around the arena for a long time. */
+    public static final ProjectileKind THORN_BALL = register(ProjectileKind.builder("thorn_ball")
+        .lifetime(400).size(0.6F, 1.0F).orientation(ProjectileKind.Orientation.SPIN).bounces(12).enemy());
+    /** Phase two: slow pink spores that drift after the player. */
+    public static final ProjectileKind PLANTERA_SPORE = register(ProjectileKind.builder("plantera_spore")
+        .lifetime(240).size(0.4F, 0.7F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.04F, 30.0F).noTileCollide()
+        .fullbright().enemy().trail(() -> ParticleTypes.SPORE_BLOSSOM_AIR));
+    /** Seedler's swing: seeds that burst on hitting something. */
+    public static final ProjectileKind SEEDLER_SEED = register(ProjectileKind.builder("seedler_seed")
+        .lifetime(40).size(0.25F, 0.5F).pierce(1).trail(() -> ParticleTypes.COMPOSTER));
+    // ---------------------------------------------------------------- Lihzahrd Temple
+    /** Super Dart Trap: a fast poison dart. */
+    public static final ProjectileKind POISON_DART = register(ProjectileKind.builder("poison_dart")
+        .lifetime(40).size(0.2F, 0.5F).enemy().debuff(() -> net.minecraft.world.effect.MobEffects.POISON, 200, 1.0F));
+    /** Lihzahrd and Golem fireballs. */
+    public static final ProjectileKind GOLEM_FIREBALL = register(ProjectileKind.builder("golem_fireball")
+        .lifetime(120).size(0.4F, 0.7F).orientation(ProjectileKind.Orientation.BILLBOARD).fullbright().enemy()
+        .trail(() -> ParticleTypes.FLAME).ignites(80, 0.5F));
+    public static final ProjectileKind GOLEM_LASER = register(ProjectileKind.builder("golem_laser").texture("mech_laser")
+        .lifetime(60).size(0.2F, 0.6F).fullbright().enemy());
+    /** Heat Ray: a piercing golden beam. */
+    public static final ProjectileKind HEAT_RAY = register(ProjectileKind.builder("heat_ray")
+        .lifetime(40).size(0.2F, 0.6F).pierce(3).fullbright().magic().trail(() -> ParticleTypes.SMALL_FLAME));
+    /** Possessed Hatchet: a homing boomerang axe. */
+    public static final ProjectileKind POSSESSED_HATCHET = register(ProjectileKind.builder("possessed_hatchet")
+        .lifetime(200).size(0.5F, 0.9F).orientation(ProjectileKind.Orientation.SPIN).homing(0.12F, 20.0F).pierce(4)
+        .behavior(ProjectileKind.Behavior.BOOMERANG).noTileCollide());
     // ---------------------------------------------------------------- mechanical bosses
     public static final ProjectileKind MECH_LASER = register(ProjectileKind.builder("mech_laser")
         .lifetime(80).size(0.2F, 0.6F).noTileCollide().fullbright().enemy());

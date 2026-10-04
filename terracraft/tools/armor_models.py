@@ -479,10 +479,23 @@ def pirate_set():
     return a
 
 
+def chlorophyte_set():
+    # Chlorophyte: living green plate grown over dark wood, a leaf crest on the helmet and leafy shoulder fronds
+    a = ore('chlorophyte', '#58C838', accent='#A8F070', trim='#3A2A18', gem='#E8FF90')
+    closed_helmet(a, 'visor', inflate=1.3, edge='trim')
+    for x, h, r in ((-2.5, 3, -0.35), (-0.5, 4, 0.0), (1.5, 3, 0.35)):
+        a.add('head', 'head', (x, -9 - h, -1), (1, h, 3), mat='accent', pattern='gem', pivot=[x + 0.5, -9, 0], rot=[0, 0, r])
+    torso(a, gem='gem', pads='big')
+    a.pair('chest', 'right_arm', (-4.5, -3.8, -2.5), (3, 1, 5), mat='accent', pattern='gem', pivot=[-3, -3, 0], rot=[0, 0, 0.4])
+    greaves(a)
+    return a
+
+
 def all_sets():
     return [wood_set(), copper_set(), tin_set(), iron_set(), lead_set(), silver_set(), tungsten_set(), gold_set(), platinum_set(),
             shadow_set(), crimson_set(), jungle_set(), molten_set(), meteor_set(),
-            cobalt_set(), palladium_set(), mythril_set(), orichalcum_set(), adamantite_set(), titanium_set(), hallowed_set(), crystal_assassin_set(), pirate_set()]
+            cobalt_set(), palladium_set(), mythril_set(), orichalcum_set(), adamantite_set(), titanium_set(), hallowed_set(), crystal_assassin_set(), pirate_set(),
+            chlorophyte_set()]
 
 
 # ----------------------------------------------------------------------------------------- UV packing
