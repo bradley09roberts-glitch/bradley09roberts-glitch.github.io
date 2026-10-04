@@ -57,10 +57,6 @@ final class Gate {
             c.set(x, d, 62, STEP_SLAB);
             c.set(x, 1, 61, STEP);
             c.set(x, 1, 60, STEP_SLAB);
-            // a dark guide stripe along both sides of the ramp
-            if (Math.abs(x) == RAMP_HALF) {
-                c.set(x, 1, 61, "minecraft:polished_blackstone");
-            }
         }
         c.fill(-RAMP_HALF, 0, 60, RAMP_HALF, 0, 62, EDGE);
         // piers at the ramp mouth
@@ -82,14 +78,53 @@ final class Gate {
         c.fill(-9, d + 7, 65, 9, d + 9, 65, "minecraft:black_concrete");
         c.fill(-9, d + 7, 65, 9, d + 7, 65, "minecraft:pink_concrete");
         c.fill(-9, d + 9, 65, 9, d + 9, 65, "minecraft:pink_concrete");
-        c.set(-4, d + 8, 65, "squidgame:symbol_circle");
+        // seen from the yard (looking south) +x is on the left: circle, triangle, square read left to right
+        c.set(4, d + 8, 65, "squidgame:symbol_circle");
         c.set(0, d + 8, 65, "squidgame:symbol_triangle");
-        c.set(4, d + 8, 65, "squidgame:symbol_square");
-        c.text(0.5, d + 10.4, 64.55, "THE FINAL", "#FFD84A", 3.0f, 180f, false);
+        c.set(-4, d + 8, 65, "squidgame:symbol_square");
+
+        billboard(c);
 
         // circle-rank workers at the gate (stand on the landing)
         for (double x : new double[]{-7.5, -4.5, 5.5, 8.5}) {
             c.marker("guard.post", x, d + 1.0, 64.5, 180f, "rank=circle");
+        }
+    }
+
+    /** A black board on the roof edge of the waiting room carrying the three symbols in big pink outlines. */
+    private static void billboard(BuildContext c) {
+        final String pink = "minecraft:pink_concrete";
+        final int y0 = ROOM_DY + 12, h = 9, cy = y0 + 4, z = GATE_Z;
+        c.fill(-15, y0, z, 15, y0 + h - 1, z + 1, "minecraft:black_concrete");
+        c.fill(-15, y0, z, 15, y0, z, pink);
+        c.fill(-15, y0 + h - 1, z, 15, y0 + h - 1, z, pink);
+        c.fill(-15, y0, z, -15, y0 + h - 1, z, pink);
+        c.fill(15, y0, z, 15, y0 + h - 1, z, pink);
+        // circle
+        for (int dx = -4; dx <= 4; dx++) {
+            for (int dy = -4; dy <= 4; dy++) {
+                double d = Math.sqrt(dx * dx + dy * dy);
+                if (d <= 3.6 && d > 2.5) {
+                    c.set(9 + dx, cy + dy, z, pink);
+                }
+            }
+        }
+        // triangle
+        for (int dx = -4; dx <= 4; dx++) {
+            c.set(dx, cy - 3, z, pink);
+        }
+        c.line(0, cy + 3, z, -4, cy - 3, z, pink);
+        c.line(0, cy + 3, z, 4, cy - 3, z, pink);
+        // square
+        for (int i = -3; i <= 3; i++) {
+            c.set(-9 + i, cy + 3, z, pink);
+            c.set(-9 + i, cy - 3, z, pink);
+            c.set(-9 - 3, cy + i, z, pink);
+            c.set(-9 + 3, cy + i, z, pink);
+        }
+        // spotlights along the top edge
+        for (int x = -12; x <= 12; x += 6) {
+            c.set(x, y0 + h, z, "minecraft:shroomlight");
         }
     }
 }

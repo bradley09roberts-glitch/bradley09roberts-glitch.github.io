@@ -49,13 +49,8 @@ final class Pal {
 
     static final String AIR = "minecraft:air";
 
-    static String hazardRow() {
-        return YELLOW;
-    }
 
-    static String hazardIron() {
-        return YELLOW;
-    }
+
 
     static String log(String wood, char axis) {
         return "minecraft:" + wood + "[axis=" + axis + "]";

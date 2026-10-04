@@ -5,6 +5,13 @@ final class Houses {
     private Houses() {
     }
 
+    /** Plots whose house carries a flat roof terrace with an armed guard post. */
+    private static boolean isGuardHouse(Layout.Slot s) {
+        return s.kind == Layout.Kind.COURT && ((s.zone.equals("CW1") && s.oz == -44) || (s.zone.equals("CE1") && s.oz == 42)
+                || (s.zone.equals("CW2") && s.oz == 34) || (s.zone.equals("CE2") && s.oz == -28)
+                || (s.zone.equals("N") && s.ox == -16) || (s.zone.equals("SB") && s.ox == 16));
+    }
+
     static House.Spec specFor(Layout.Slot s) {
         U.Rnd r = new U.Rnd(500 + s.ox * 31L + s.oz * 17L + s.rot);
         House.Spec h = new House.Spec();
@@ -38,6 +45,15 @@ final class Houses {
         if (h.kind == House.Kind.HANOK) {
             h.tall = r.chance(0.35);
             h.laundry = r.chance(0.2);
+        }
+        if (isGuardHouse(s)) {
+            h.kind = House.Kind.FLAT;
+            h.wall = Mat.CEMENT;
+            h.tall = true;
+            h.tank = false;
+            h.chimney = false;
+            h.laundry = false;
+            h.guard = true;
         }
         return h;
     }

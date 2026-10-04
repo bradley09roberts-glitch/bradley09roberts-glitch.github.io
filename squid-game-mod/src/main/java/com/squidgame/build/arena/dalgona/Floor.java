@@ -37,6 +37,10 @@ public final class Floor {
                 return Pal.DARK_OAK;
             }
         }
+        String rug = rug(x, z);
+        if (rug != null) {
+            return rug;
+        }
         // basket weave parquet: 4x4 tiles of two 2 wide boards, boards alternate spruce / oak
         int tx = Math.floorDiv(x + 36, 4);
         int tz = Math.floorDiv(z + 92, 4);
@@ -44,19 +48,37 @@ public final class Floor {
         int board = alongX ? Math.floorDiv(z + 92, 2) & 1 : Math.floorDiv(x + 36, 2) & 1;
         String wood = ((board + ((tx + tz) >> 1)) & 1) == 0 ? Pal.SPRUCE : Pal.OAK;
         double r = Noise.hash(tx, tz * 2 + board, 9);
-        if (r < 0.07) {
+        if (r < 0.035) {
             wood = Pal.DARK_OAK;
-        } else if (r < 0.13) {
+        } else if (r < 0.08) {
             wood = wood.equals(Pal.OAK) ? Pal.BIRCH : Pal.OAK;
         }
-        // worn lighter patches and a few dark stains
-        double wear = Noise.fbm2(x, z, 13, 31) + Math.max(0, 1 - ax / 10.0) * 0.12;
-        if (wear > 0.7) {
+        // worn lighter patches (rare, one step lighter)
+        double wear = Noise.fbm2(x, z, 13, 31) + Math.max(0, 1 - ax / 10.0) * 0.1;
+        if (wear > 0.74) {
             wood = lighter(wood);
-        } else if (wear < 0.2) {
-            wood = darker(wood);
         }
         return wood;
+    }
+
+    /** Flat oak rug with a dark oak edge under each block of benches; null outside. */
+    private static String rug(int x, int z) {
+        for (int row = 0; row < Geo.ROWS; row++) {
+            int z0 = Geo.rowZ(row);
+            if (z < z0 - 1 || z > z0 + 4) {
+                continue;
+            }
+            for (int[] b : Geo.BLOCKS) {
+                if (x >= b[0] - 1 && x <= b[1] + 1) {
+                    boolean edge = x == b[0] - 1 || x == b[1] + 1 || z == z0 - 1 || z == z0 + 4;
+                    if (edge) {
+                        return Pal.DARK_OAK;
+                    }
+                    return Noise.hash(x, z, 21) < 0.05 ? Pal.BIRCH : Pal.OAK;
+                }
+            }
+        }
+        return null;
     }
 
     private static String lighter(String w) {

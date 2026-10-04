@@ -73,8 +73,8 @@ public final class Walls {
             // base row (below the painted grass) so the mural meets the ground cleanly
             c.set(f[0], 0, f[1], "minecraft:green_concrete");
         }
-        // corner columns (not visible from the field, but keep them in the picture)
-        int[][] corners = {{FACE_X, NEAR_FACE_Z, PERIMETER / 4}, {FACE_X, FAR_FACE_Z, PERIMETER / 2}, {-FACE_X, FAR_FACE_Z, 0}, {-FACE_X, NEAR_FACE_Z, 0}};
+        // corner columns (hidden diagonally from the field, but keep the ring closed and in the picture)
+        int[][] corners = {{FACE_X, NEAR_FACE_Z}, {FACE_X, FAR_FACE_Z}, {-FACE_X, FAR_FACE_Z}, {-FACE_X, NEAR_FACE_Z}};
         for (int[] k : corners) {
             for (int y = MURAL_Y0; y <= MURAL_Y1; y++) {
                 c.set(k[0], y, k[1], "minecraft:light_blue_concrete");

@@ -191,15 +191,14 @@ public final class Front {
                 String s;
                 if (sign < 0) {
                     double land = Noise.fbm2(dx * 1.1 + 50, y * 1.4, 3.6, 41);
-                    s = land > 0.6 ? (land > 0.7 ? "minecraft:brown_terracotta" : "minecraft:green_terracotta")
-                            : land > 0.54 ? "minecraft:yellow_terracotta" : "minecraft:light_blue_terracotta";
+                    s = land > 0.6 ? (land > 0.7 ? "squidgame:pastel_peach" : "squidgame:pastel_mint")
+                            : land > 0.54 ? "squidgame:pastel_yellow" : "squidgame:pastel_sky";
                 } else {
                     // periodic-table style chart of coloured cells with gaps
                     boolean gap = ((dx + 6) & 1) == 1 || (y & 1) == 0;
-                    String[] cols = {"minecraft:orange_terracotta", "minecraft:yellow_terracotta",
-                            "minecraft:green_terracotta", "minecraft:light_blue_terracotta", "minecraft:pink_terracotta",
-                            "minecraft:white_terracotta"};
-                    s = gap ? Pal.CREAM_WORN : cols[Noise.hashInt(dx, y, 0, 5) >>> 1 & 3];
+                    String[] cols = {"squidgame:pastel_peach", "squidgame:pastel_yellow", "squidgame:pastel_mint",
+                            "squidgame:pastel_sky", "squidgame:pastel_pink", "squidgame:pastel_lilac"};
+                    s = gap ? Pal.CREAM_WORN : cols[(Noise.hashInt(dx, y, 0, 5) >>> 1) % cols.length];
                 }
                 c.set(mid + dx, y, 0, s);
             }

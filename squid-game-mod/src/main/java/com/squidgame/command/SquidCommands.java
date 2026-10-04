@@ -150,6 +150,17 @@ public final class SquidCommands {
                         .then(Commands.argument("difficulty", StringArgumentType.word())
                                 .executes(c -> playSingle(c, IntegerArgumentType.getInteger(c, "npcs"),
                                         Difficulty.byId(StringArgumentType.getString(c, "difficulty"), Difficulty.NORMAL)))))));
+        debug.then(Commands.literal("perf").executes(c -> {
+            TournamentManager m = mgr(c);
+            Tournament t = m.tournament();
+            int npcs = t == null ? 0 : (int) t.roster.all().stream().filter(Contestant::isAiControlled).count();
+            for (String line : com.squidgame.tournament.Profiler.report(npcs).split("\n")) {
+                c.getSource().sendSuccess(() -> Component.literal(line), false);
+            }
+            double mspt = c.getSource().getServer().getAverageTickTimeNanos() / 1_000_000.0;
+            c.getSource().sendSuccess(() -> Component.literal(String.format("  server average tick (vanilla): %.2f ms", mspt)), false);
+            return 1;
+        }));
         debug.then(Commands.literal("timescale").then(Commands.argument("x", DoubleArgumentType.doubleArg(0.02, 10)).executes(c -> {
             SquidConfig.get().setValue("timeScale", Double.toString(DoubleArgumentType.getDouble(c, "x")));
             c.getSource().sendSuccess(() -> Component.literal("timeScale = " + SquidConfig.get().timeScale), true);

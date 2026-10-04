@@ -329,6 +329,7 @@ public final class TournamentManager {
 
     public void tick() {
         tickCounter++;
+        long profStart = Profiler.start();
         builds.tick();
         if (t != null) {
             try {
@@ -341,13 +342,17 @@ public final class TournamentManager {
         tickPendingSpectate();
         tickBodyRemovals();
         tickPlayers();
+        long hudStart = Profiler.start();
         hud.tick();
+        Profiler.end(Profiler.Section.HUD, hudStart);
         if (tickCounter % 100 == 0) {
             syncNumbers(false);
         }
         if (tickCounter % 1200 == 0 && data != null) {
             saveNow();
         }
+        Profiler.end(Profiler.Section.MANAGER, profStart);
+        Profiler.tick();
     }
 
     private void tickPlayers() {
@@ -884,7 +889,9 @@ public final class TournamentManager {
 
     private void tickGame() {
         t.gameTicks++;
+        long gameStart = Profiler.start();
         t.game.tick(t.ctx);
+        Profiler.end(Profiler.Section.GAME, gameStart);
         if (t.roster.aliveCount() == 0 || t.game.isFinished(t.ctx)) {
             enter(Phase.ELIMINATIONS);
             return;

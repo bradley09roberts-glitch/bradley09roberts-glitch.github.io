@@ -74,6 +74,14 @@ final class Hall {
         c.at(Geo.X0 - 1, 0, Geo.Z1, 3, () -> run(c, 87, WallArt.WEST));
         // east wall (x = 45 face), local u runs towards +z
         c.at(Geo.X1 + 1, 0, Geo.Z0, 1, () -> run(c, 87, WallArt.EAST));
+        // the corner squares of the catwalks get their own light (the runs overwrite each other's dashes there)
+        for (int y : new int[]{Geo.RING, PIT_CAT_A, PIT_CAT_B}) {
+            for (int x : new int[]{Geo.X0 + 1, Geo.X1 - 1}) {
+                for (int z : new int[]{Geo.Z0 + 1, Geo.Z1 - 1}) {
+                    c.set(x, y, z, y == Geo.RING ? Pal.WHITE_LIGHT : Pal.PINK_LIGHT);
+                }
+            }
+        }
     }
 
     private static void run(BuildContext c, int len, int wall) {
@@ -110,9 +118,9 @@ final class Hall {
     /** Base/cornice bands (one block proud of the face) and catwalk support beams. */
     private static void belt(BuildContext c, int len, boolean end) {
         for (int u = 0; u < len; u++) {
-            // plinth cap of the pit floor
+            // plinth courses of the pit floor with an open groove at PIT + 2 that shows the pink glow strip
             c.set(u, Geo.PIT + 1, 1, Pal.BLK);
-            c.set(u, Geo.PIT + 2, 1, Pal.DSB);
+            c.set(u, Geo.PIT + 3, 1, Pal.DSB);
             // girder under the deck level
             c.set(u, Geo.DECK - 2, 1, Pal.PBSB);
             c.set(u, Geo.DECK - 1, 1, Pal.BLK);
@@ -208,6 +216,17 @@ final class Hall {
     }
 
     // ------------------------------------------------------------------ face pattern
+
+    /** A plate of the hall wall at world column x / height y (used to re-skin the waiting room gate wall). */
+    static String plate(int x, int y) {
+        int u = x + 45;
+        int yy = y - Geo.DECK - 4;
+        if (Math.floorMod(u, 5) == 0 || Math.floorMod(yy, 10) == 0) {
+            return Pal.BLK;
+        }
+        int tone = Pal.hash(Math.floorDiv(u, 5), Math.floorDiv(yy, 10), 91) % 100;
+        return tone < 50 ? Pal.GRY : (tone < 72 ? Pal.DST : (tone < 88 ? Pal.DSP : Pal.BLK));
+    }
 
     /** The wall block at (u, y) of the canonical wall face. */
     static String face(int u, int y) {

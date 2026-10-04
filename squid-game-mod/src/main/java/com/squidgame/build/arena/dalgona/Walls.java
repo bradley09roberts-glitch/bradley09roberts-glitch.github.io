@@ -43,6 +43,10 @@ public final class Walls {
         }
         // wall sconces on the inner pilasters
         for (int p = 1; p <= 8; p++) {
+            boolean stairSide = (west ? p : 9 - p) == 1;     // the balcony stairs stand against this pilaster
+            if (stairSide) {
+                continue;
+            }
             c.set(10 * p, 9, 1, Pal.log("stripped_dark_oak_wood", 'z'));
             c.set(10 * p, 8, 1, Pal.lantern(true));
         }
@@ -58,6 +62,13 @@ public final class Walls {
         // wainscot (y 1..4) in the pilaster plane, recess + plaster above
         for (int lx = lo; lx <= hi; lx++) {
             wainscot(c, lx);
+            if (type == Bay.PLAIN) {
+                // flush plaster (the balcony stairs run along these two bays)
+                for (int y = 5; y <= 16; y++) {
+                    c.set(lx, y, 0, plaster(lx, y, tag));
+                }
+                continue;
+            }
             for (int y = 5; y <= 16; y++) {
                 c.air(lx, y, 0);
                 c.set(lx, y, -1, plaster(lx, y, tag));
@@ -169,11 +180,11 @@ public final class Walls {
                 double land = Noise.fbm2(mid + dx + tag * 40, y * 1.3, 4.2, 61);
                 String s;
                 if (land > 0.58) {
-                    s = land > 0.7 ? "minecraft:brown_terracotta" : "minecraft:green_terracotta";
+                    s = land > 0.7 ? "squidgame:pastel_peach" : "squidgame:pastel_mint";
                 } else if (land > 0.52) {
-                    s = "minecraft:yellow_terracotta";
+                    s = "squidgame:pastel_yellow";
                 } else {
-                    s = "minecraft:light_blue_terracotta";
+                    s = "squidgame:pastel_sky";
                 }
                 c.set(mid + dx, y, -1, s);
             }

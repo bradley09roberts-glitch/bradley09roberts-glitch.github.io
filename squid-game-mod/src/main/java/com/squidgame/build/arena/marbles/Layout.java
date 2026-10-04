@@ -27,7 +27,7 @@ final class Layout {
 
     // hall (waiting room): gate wall plane z = HALL_ZG, room extends towards -Z
     static final int HALL_ZG = -10;
-    static final int HALL_W = 37, HALL_D = 21, HALL_H = 9;
+    static final int HALL_W = 37, HALL_D = 22, HALL_H = 9;
 
     // pairing square
     static final int SQ_X0 = -15, SQ_X1 = 15, SQ_Z0 = -9, SQ_Z1 = 15;

@@ -24,6 +24,7 @@ public final class HallBuilder {
         DeckBuilder.build(c);
         PlateauBuilder.build(c);
         GalleryBuilder.build(c);
+        RingProps.build(c);
         RoofBuilder.build(c);
         RoomBuilder.build(c);
         Markers.build(c);

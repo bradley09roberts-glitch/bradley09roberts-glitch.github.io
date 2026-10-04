@@ -19,18 +19,14 @@ final class Guards {
         c.marker("guard.post", -50.5, 4.0, -0.5, -90f, "rank=triangle");
         c.marker("guard.post", 51.5, 4.0, -43.5, 90f, "rank=triangle");
         c.marker("guard.post", 51.5, 4.0, 44.5, 90f, "rank=triangle");
-        c.marker("guard.post", -20.5, 4.0, 61.5, 180f, "rank=triangle");
-        c.marker("guard.post", 20.5, 4.0, 61.5, 180f, "rank=triangle");
         // triangles on the school roof (stand 13.0)
         c.marker("guard.post", -35.5, 13.0, -54.5, 0f, "rank=triangle");
         c.marker("guard.post", 35.5, 13.0, -54.5, 0f, "rank=triangle");
-        c.marker("guard.post", -22.5, 13.0, -54.5, 0f, "rank=triangle");
         // squares (managers) on the grandstand terrace and at the school porch
-        for (int z : new int[]{-30, -20, 20, 30}) {
+        for (int z : new int[]{-24, 24}) {
             c.marker("guard.post", 84.5, Gallery.TOP_FLOOR + 1.0, z + 0.5, 90f, "rank=square");
         }
-        c.marker("guard.post", -6.5, 2.0, -49.5, 0f, "rank=square");
-        c.marker("guard.post", 6.5, 2.0, -49.5, 0f, "rank=square");
+        c.marker("guard.post", 0.5, 2.0, -49.5, 0f, "rank=square");
         // circles (workers) beside the podium
         c.marker("guard.post", -9.5, 1.0, -44.5, 0f, "rank=circle");
         c.marker("guard.post", 9.5, 1.0, -44.5, 0f, "rank=circle");

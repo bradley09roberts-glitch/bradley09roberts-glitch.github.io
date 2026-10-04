@@ -15,6 +15,12 @@
    "gait_cycle_s": 0.6,
    "planted_px_s": 98.46,
    "planted_blocks_s": 5.77
+  },
+  "ground_lift_px": {
+   "run": 0.37,
+   "turn_left": 0.51,
+   "turn_right": 0.51,
+   "inspect": 0.43
   }
  }
 }

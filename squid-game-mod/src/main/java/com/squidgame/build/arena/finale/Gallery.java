@@ -55,7 +55,50 @@ final class Gallery {
         }
 
         terrace(c);
+        booth(c);
         markers(c);
+    }
+
+    /** The broadcast booth at the back of the terrace: dark timber cabin with a long window, a console and a monitor wall. */
+    private static void booth(BuildContext c) {
+        final int y = TOP_FLOOR;
+        final int x0 = 84, x1 = 88, z0 = -6, z1 = 6;
+        final String wood = "minecraft:dark_oak_planks";
+        c.walls(x0, y + 1, z0, x1, y + 4, z1, wood);
+        c.fill(x0, y + 1, z0, x1, y + 1, z1, "minecraft:black_concrete");
+        c.clear(x0 + 1, y + 1, z0 + 1, x1 - 1, y + 4, z1 - 1);
+        c.fill(x0 + 1, y, z0 + 1, x1 - 1, y, z1 - 1, wood);
+        // ceiling and an overhanging roof with a dark edge
+        c.fill(x0, y + 5, z0, x1, y + 5, z1, wood);
+        c.fill(x0 - 1, y + 6, z0 - 1, x1 + 1, y + 6, z1 + 1, "minecraft:black_concrete");
+        c.fill(x0 - 1, y + 7, z0 - 1, x1 + 1, y + 7, z1 + 1, "minecraft:deepslate_tile_slab[type=bottom]");
+        // long window on the court side with timber mullions
+        for (int z = z0 + 1; z <= z1 - 1; z++) {
+            boolean mullion = (z - z0) % 4 == 0;
+            for (int yy = y + 3; yy <= y + 4; yy++) {
+                c.set(x0, yy, z, mullion ? wood : "minecraft:light_blue_stained_glass_pane");
+            }
+        }
+        // door at the south end (2 wide, 2 high) and a step lamp
+        c.clear(x0 + 1, y + 1, z1, x0 + 2, y + 2, z1);
+        c.set(x0 + 1, y + 3, z1 + 1, "minecraft:lantern[hanging=false]");
+        // console along the window, chairs, monitor wall on the back
+        for (int z = z0 + 1; z <= z1 - 1; z++) {
+            c.set(x0 + 1, y + 1, z, "minecraft:dark_oak_slab[type=bottom]");
+            if (((z - z0) & 1) == 0) {
+                c.set(x0 + 2, y + 1, z, "minecraft:spruce_stairs[facing=east,half=bottom,shape=straight]");
+            }
+        }
+        for (int z = z0 + 2; z <= z1 - 2; z += 2) {
+            c.set(x1 - 1, y + 3, z, "squidgame:monitor[facing=west]");
+            c.set(x1 - 1, y + 4, z, "squidgame:monitor[facing=west]");
+            c.set(x1 - 1, y + 1, z, "minecraft:black_concrete");
+            c.set(x1 - 1, y + 2, z, "minecraft:black_concrete");
+        }
+        for (int z : new int[]{z0 + 2, 0, z1 - 2}) {
+            c.set(x0 + 2, y + 5, z, "minecraft:sea_lantern");
+        }
+        c.text(x0 - 0.05, y + 5.6, 0.5, "GAME BROADCAST", "#FFD84A", 1.4f, 90f, false);
     }
 
     private static void terrace(BuildContext c) {

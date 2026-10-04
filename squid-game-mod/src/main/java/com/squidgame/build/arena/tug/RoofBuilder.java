@@ -20,6 +20,24 @@ final class RoofBuilder {
                 pendant(c, 10 * k - 1);
             }
         }
+        dangling(c);
+    }
+
+    /** Loose chains with hooks and weights dangling from the truss bottom chords over the pit (pure atmosphere). */
+    private static void dangling(BuildContext c) {
+        java.util.Random r = new java.util.Random(404);
+        for (int i = 0; i < 46; i++) {
+            int k = r.nextInt(15) - 7;
+            int x = 10 * k - 1 + r.nextInt(2);
+            int az = 7 + r.nextInt(12);
+            int z = r.nextBoolean() ? az : -az;
+            if (Math.abs(x) <= 9) {
+                continue;                                 // keep the centre (booth, gantry) clear
+            }
+            int len = 4 + r.nextInt(10);
+            c.fill(x, 65 - len, z, x, 65, z, Pal.chain());
+            c.set(x, 65 - len - 1, z, r.nextBoolean() ? Pal.IRON : "minecraft:lantern[hanging=true]");
+        }
     }
 
     private static void ceiling(BuildContext c) {
@@ -70,23 +88,30 @@ final class RoofBuilder {
         c.fill(x, 66, Geo.HZ, x2, 74, Geo.HZ, Pal.IRON);
     }
 
-    /** Heavy pendant lamp over the deck lane at z = -1..2, hanging from the truss pair at x, x+1. */
+    /** Heavy pendant lamp over the deck lane (z 0..1), hanging from the truss pair x, x+1: chains, cap, disc shade, caged core. */
     private static void pendant(BuildContext c, int x) {
         int x2 = x + 1;
-        for (int z : new int[]{0, 1}) {
-            c.fill(x, 56, z, x, 65, z, Pal.chain());
-            c.fill(x2, 56, z, x2, 65, z, Pal.chain());
+        for (int xx : new int[]{x, x2}) {
+            c.fill(xx, 57, 0, xx, 64, 0, Pal.chain());
+            c.fill(xx, 57, 1, xx, 65, 1, Pal.chain());
         }
-        c.fill(x - 1, 55, -1, x2 + 1, 55, 2, Pal.STEEL);
-        c.fill(x - 1, 54, -1, x2 + 1, 54, 2, Pal.BLACK);
-        c.fill(x, 54, 0, x2, 54, 1, Pal.SHROOM);
-        c.fill(x, 53, 0, x2, 53, 1, Pal.SHROOM);
-        // bowl skirt (iron bars) around the core
-        for (int xx = x - 1; xx <= x2 + 1; xx++) {
+        c.fill(x, 56, 0, x2, 56, 1, Pal.IRON);
+        for (int xx = x - 2; xx <= x2 + 2; xx++) {                          // octagonal disc shade, 6 x 6 without corners
+            for (int zz = -2; zz <= 3; zz++) {
+                boolean corner = (xx == x - 2 || xx == x2 + 2) && (zz == -2 || zz == 3);
+                if (!corner) {
+                    c.set(xx, 55, zz, Pal.BLACK);
+                }
+            }
+        }
+        c.fill(x - 1, 54, -1, x2 + 1, 54, 2, Pal.STEEL);
+        c.fill(x, 52, 0, x2, 54, 1, Pal.SHROOM);                            // glowing core, 3 high
+        for (int xx = x - 1; xx <= x2 + 1; xx++) {                          // bars cage around the lower core
             for (int zz = -1; zz <= 2; zz++) {
                 boolean edge = xx == x - 1 || xx == x2 + 1 || zz == -1 || zz == 2;
                 if (edge) {
                     c.set(xx, 53, zz, Pal.BARS);
+                    c.set(xx, 52, zz, Pal.BARS);
                 }
             }
         }

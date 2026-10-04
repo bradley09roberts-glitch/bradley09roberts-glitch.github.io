@@ -57,7 +57,7 @@
    "shove": 2.29,
    "dodge_left": 1.99,
    "dodge_right": 1.99,
-   "knocked_back": 1.65,
+   "knocked_back": 1.6,
    "sprint_attack": 0.22
   }
  }

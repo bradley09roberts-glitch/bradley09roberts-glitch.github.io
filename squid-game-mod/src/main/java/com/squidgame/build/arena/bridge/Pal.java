@@ -45,6 +45,8 @@ final class Pal {
     static final String WHITE_LIGHT = "squidgame:panel_light_white";
     static final String SEA = "minecraft:sea_lantern";
     static final String GREEN_LIGHT = "minecraft:verdant_froglight";
+    /** Soft pink-white glowing froglight used for floor lines (a full block, safe under standing markers). */
+    static final String PEARL = "minecraft:pearlescent_froglight";
     static final String SOUL_LANTERN = "minecraft:soul_lantern";
 
     static final String GLASS = "squidgame:bridge_glass";

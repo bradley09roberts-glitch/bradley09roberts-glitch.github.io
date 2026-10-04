@@ -80,6 +80,14 @@ final class Tree {
                 }
             }
         }
+        // lamp posts under the canopy: leaves swallow the sky light, so the ground below needs visible fixtures
+        for (int k = 0; k < 10; k++) {
+            double a = Math.toRadians(k * 36 + 11);
+            double rad = k % 2 == 0 ? 6.5 : 9.5;
+            int lx = x + (int) Math.round(rad * Math.cos(a)), lz = z + (int) Math.round(rad * Math.sin(a));
+            c.fill(lx, 1, lz, lx, 3, lz, "minecraft:stone_brick_wall");
+            c.set(lx, 4, lz, "minecraft:lantern[hanging=false]");
+        }
         // fallen leaves / worn ground around the roots
         for (int dx = -9; dx <= 9; dx++) {
             for (int dz = -9; dz <= 9; dz++) {

@@ -145,7 +145,8 @@ final class WallArt {
             c.set(u, y - 1, 4, Pal.DSB);
         }
         for (int u = u0 + 2; u <= u1 - 2; u += 4) {
-            c.set(u, y, 3, Pal.WHITE_LIGHT);
+            c.set(u, y, 2, Pal.PEARL);
+            c.set(u + 2, y, 5, Pal.PEARL);
         }
         // glass balustrade along the front edge and the sides
         for (int u = u0; u <= u1; u++) {

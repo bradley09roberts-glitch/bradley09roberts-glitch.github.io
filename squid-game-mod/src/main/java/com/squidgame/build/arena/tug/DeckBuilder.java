@@ -68,7 +68,7 @@ final class DeckBuilder {
         int last = Geo.DECK_LEN - 1;                // d = 52 at the pier
         // --- walking surface (y = 40): lanes along the deck, cross joints, team stripes
         for (int d = 0; d <= last; d++) {
-            boolean joint = d % 6 == 5;
+            boolean joint = d % 4 == 1;
             for (int z = -2; z <= 2; z++) {
                 String st;
                 int az = Math.abs(z);
@@ -80,6 +80,8 @@ final class DeckBuilder {
                     st = sd.team;
                 } else if (az == 2) {
                     st = Pal.PLANK_D;
+                } else if (d % 4 == 3) {
+                    st = Pal.WHITE;                                        // ruler tick in the team lane every 4 blocks
                 } else {
                     st = Pal.hash(d, 0, 9) < 0.15 ? "minecraft:stripped_spruce_log[axis=z]" : Pal.PLANK_S;
                 }

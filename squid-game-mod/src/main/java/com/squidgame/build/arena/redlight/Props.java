@@ -19,9 +19,31 @@ public final class Props {
 
     public static void build(BuildContext c) {
         sideProps(c);
+        flags(c);
         loungeAndCones(c);
         chalk(c);
-        c.text(0.5, 4.0, START_LINE_Z + 0.4, "START", "white", 5f, 0f, false);
+    }
+
+    // ------------------------------------------------------------------ line-end flags
+
+    /** Green flags mark the start line, red flags the finish line; poles stand in the margins and the flags fly high. */
+    private static void flags(BuildContext c) {
+        for (int side = -1; side <= 1; side += 2) {
+            int x = side > 0 ? 55 : -55;
+            int rot = side > 0 ? 1 : 3;
+            c.at(x, 0, START_LINE_Z + 1, rot, () -> flag(c, "minecraft:lime_wool"));
+            c.at(x, 0, FINISH_LINE_Z, rot, () -> flag(c, "minecraft:red_wool"));
+        }
+    }
+
+    /** Local frame: origin = base block, +Z faces the field. */
+    private static void flag(BuildContext c, String wool) {
+        c.set(0, 1, 0, GRAY);
+        c.fill(0, 2, 0, 0, 11, 0, LGRAY);
+        c.set(0, 12, 0, "minecraft:gold_block");
+        // 5 x 3 pennant flying towards the field with a darker hem
+        c.fill(0, 8, 1, 0, 10, 5, wool);
+        c.fill(0, 8, 1, 0, 8, 5, "minecraft:white_wool");
     }
 
     // ------------------------------------------------------------------ side margins
@@ -136,12 +158,12 @@ public final class Props {
         for (int side = -1; side <= 1; side += 2) {
             int x0 = side > 0 ? 54 : -56;       // 3 wide strip x0..x0+2
             // ladder: side lines and rungs every 3
-            for (int i = 0; i < 6; i++) {
+            for (int i = 0; i < 5; i++) {
                 int z0 = -4 + i * 3;
                 c.fill(x0, 0, z0, x0 + 2, 0, z0, w);
             }
-            c.fill(x0, 0, -4, x0, 0, 14, w);
-            c.fill(x0 + 2, 0, -4, x0 + 2, 0, 14, w);
+            c.fill(x0, 0, -4, x0, 0, 8, w);
+            c.fill(x0 + 2, 0, -4, x0 + 2, 0, 8, w);
         }
     }
 }

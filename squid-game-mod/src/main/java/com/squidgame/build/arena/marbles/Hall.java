@@ -24,6 +24,48 @@ final class Hall {
         back(c, xl, xr);
         front(c, xl, xr);
         terrace(c, xl, xr);
+        floorLights(c, xl, xr);
+    }
+
+    /**
+     * The prefab only lights the room from its 9 high ceiling (about level 5 on the floor), so glowing pink floor tiles are
+     * inlaid in a diamond lattice (every cell within 4 blocks of a panel -> level >= 10 everywhere in the room).
+     */
+    private static void floorLights(BuildContext c, int xl, int xr) {
+        int x0 = xl + 1, x1 = xr - 1, z0 = ZB + 1, z1 = ZG - 1;
+        java.util.List<int[]> best = null;
+        for (int ox = 0; ox < 41; ox++) {
+            java.util.List<int[]> pts = new java.util.ArrayList<>();
+            for (int i = -12; i <= 12; i++) {
+                for (int j = -12; j <= 12; j++) {
+                    int x = (ox % 5) + 4 * i + 5 * j + x0 - 2, z = (ox / 5) + 5 * i - 4 * j + z0 - 2;
+                    if (x >= x0 && x <= x1 && z >= z0 && z <= z1) {
+                        pts.add(new int[]{x, z});
+                    }
+                }
+            }
+            // greedy patch for uncovered cells
+            for (int x = x0; x <= x1; x++) {
+                for (int z = z0; z <= z1; z++) {
+                    boolean cov = false;
+                    for (int[] p : pts) {
+                        if (Math.abs(p[0] - x) + Math.abs(p[1] - z) <= 4) {
+                            cov = true;
+                            break;
+                        }
+                    }
+                    if (!cov) {
+                        pts.add(new int[]{Math.max(x0, Math.min(x1, x + (x < 0 ? 2 : -2))), Math.max(z0, Math.min(z1, z + 2))});
+                    }
+                }
+            }
+            if (best == null || pts.size() < best.size()) {
+                best = pts;
+            }
+        }
+        for (int[] p : best) {
+            c.set(p[0], 0, p[1], "minecraft:pearlescent_froglight[axis=y]");
+        }
     }
 
     // ------------------------------------------------------------------ cladding
@@ -204,8 +246,7 @@ final class Hall {
         int xl = -HW - 1, xr = HW + 1;
         return new int[][]{
                 {xl + 3, ZB + 3, 180}, {xr - 3, ZB + 3, 180},
-                {xl + 3, ZG - 3, 0}, {xr - 3, ZG - 3, 0},
-                {-8, ZG - 1, 0}, {8, ZG - 1, 0}
+                {xl + 3, ZG - 3, 0}, {xr - 3, ZG - 3, 0}
         };
     }
 }

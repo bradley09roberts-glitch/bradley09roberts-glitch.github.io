@@ -77,6 +77,9 @@ final class Platforms {
         }
         // 3. rails
         rails(c, end);
+        if (end) {
+            benches(c);
+        }
         // 4. pylons
         pylon(c, end, -7);
         pylon(c, end, 3);
@@ -85,16 +88,29 @@ final class Platforms {
         brace(c, end, -4, 22);
     }
 
+    /** The viewing area of the end platform: three rows of dark oak benches either side, facing the bridge. */
+    private static void benches(BuildContext c) {
+        for (int z : new int[]{68, 72, 76}) {
+            for (int x = -11; x <= -8; x++) {
+                c.set(x, Geo.STAND, z, Pal.stairs("dark_oak", "south", false));
+                c.set(Geo.mx(x), Geo.STAND, z, Pal.stairs("dark_oak", "south", false));
+            }
+        }
+    }
+
     private static String surface(int x, int zl, boolean end) {
         if (x == Geo.PX0 || x == Geo.PX1) {
             return Pal.PBS;
         }
         if (x == -1 || x == 0) { // aisle along the bridge axis
+            if (!end && zl == 8) {
+                return Pal.TILE_P; // plain tile under the gate door plane (the gate marker stands here)
+            }
             return end ? Pal.GREEN_LIGHT : Pal.PINK_LIGHT;
         }
         for (int l : LANE_LINES) {
             if (x == l) {
-                return Pal.WHITE_LIGHT;
+                return Pal.PEARL;
             }
         }
         if (zl == 8) { // bridge-facing edge

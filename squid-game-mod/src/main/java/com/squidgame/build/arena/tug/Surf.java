@@ -51,6 +51,9 @@ final class Surf {
 
     /** Hall floor around the pit: 10x10 slabs with dark joints, scuffed. */
     static String ring(int x, int z) {
+        if (x >= Geo.PX0 && x <= Geo.PX1 && (Math.abs(z) == Geo.PZ + 1 || Math.abs(z) == Geo.PZ + 2)) {
+            return Pal.hazard(x + Math.abs(z));                    // hazard stripe along the pit rim
+        }
         int fx = Math.floorMod(x, 10), fz = Math.floorMod(z, 10);
         if (fx == 0 || fz == 0) {
             return Pal.CONC_D;

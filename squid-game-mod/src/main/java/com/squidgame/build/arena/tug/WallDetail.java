@@ -35,11 +35,10 @@ final class WallDetail {
     private static void longWall(BuildContext c, int sgn) {
         final int zf = sgn * (Geo.HZ + 1);             // wall face layer
         final int zi = sgn * Geo.HZ;                    // first free cell in front of it
-        final int zi2 = sgn * (Geo.HZ - 1), zi3 = sgn * (Geo.HZ - 2);
+        final int zi3 = sgn * (Geo.HZ - 2);
 
         // --- title plate: black backing with the big painted title (14 tall, 102 wide)
         c.fill(-53, 43, zf, 52, 58, zf, Pal.BLACK);
-        c.fill(-53, 43, zf, 52, 43, zf, Pal.hazardRow());
         for (int x = -53; x <= 52; x++) {
             c.set(x, 43, zf, Pal.hazard(x));
             c.set(x, 58, zf, Pal.hazard(x + 2));
@@ -57,7 +56,7 @@ final class WallDetail {
             c.set(x, 36, zf, Pal.hazard(x));
             c.set(x, 37, zf, Pal.hazard(x + 2));
         }
-        for (int x = Geo.CAT_X0(); x <= -Geo.CAT_X0() - 1; x++) {
+        for (int x = GalleryBuilder.CAT_X0; x <= -GalleryBuilder.CAT_X0 - 1; x++) {
             c.set(x, 56, zf, Pal.hazard(x));
             c.set(x, 57, zf, Pal.hazard(x + 2));
         }
@@ -65,7 +64,7 @@ final class WallDetail {
         // --- air duct above the upper catwalk (3x3, y 62..64), flanges every 8 blocks, grilles on the room side
         Sym.fill(c, Geo.HX0, 62, Math.min(zi3, zi), -1, 64, Math.max(zi3, zi), Pal.SMOOTH);
         for (int x = -73; x <= -1; x += 8) {
-            Sym.fill(c, x, 61, Math.min(zi3, zi) , x + 1, 65, Math.max(zi3, zi), Pal.IRON);
+            Sym.fill(c, x, 61, Math.min(zi3, zi), x + 1, 65, Math.max(zi3, zi), Pal.IRON);
         }
         for (int x = -69; x <= -3; x += 8) {
             Sym.fill(c, x, 63, zi3, x + 2, 63, zi3, Pal.BARS);
@@ -87,7 +86,7 @@ final class WallDetail {
         // vertical riser pipes beside every second joint
         for (int x = -60; x <= -10; x += 20) {
             Sym.fill(c, x, 1, zi, x, 23, zi, "minecraft:oxidized_copper");
-            Sym.fill(c, x, 1, zi, x, 3, zi, Pal.hazardIron());
+            Sym.fill(c, x, 1, zi, x, 3, zi, Pal.YELLOW);
         }
 
         // --- freight doors at hall-floor level: 12 wide x 12 high, recessed, hazard frame, double steel leaves
@@ -96,11 +95,8 @@ final class WallDetail {
 
     /** A 3x3x1 cage light: lantern core inside iron bars, mounted on the wall face. */
     private static void cage(BuildContext c, int x, int y, int zi) {
-        Sym.fill(c, x, y, zi, x + 1, y + 1, zi, Pal.SEA);
-        int sgn = Integer.signum(zi);
         Sym.fill(c, x - 1, y - 1, zi, x + 2, y + 2, zi, Pal.BARS);
         Sym.fill(c, x, y, zi, x + 1, y + 1, zi, Pal.SEA);
-        Sym.fill(c, x, y, zi + sgn * 0, x + 1, y + 1, zi + sgn * 0, Pal.SEA);
     }
 
     private static void door(BuildContext c, int sgn, int xw) {
@@ -157,9 +153,9 @@ final class WallDetail {
             Sym.set(c, Geo.PIER_X1, 36, z, Pal.hazard(z + 2));
         }
         // letters: A on the west wall / pier (x runs toward the viewer), B mirrored on the east
-        glyphWest(c, 'A', Geo.HX0 - 1, 54, 3, Pal.RED);
+        glyphWest(c, 'A', Geo.HX0 - 1, 53, 3, Pal.RED);
         glyphWest(c, 'A', Geo.PIER_X1, 12, 3, Pal.RED);
-        glyphEast(c, 'B', Sym.mx(Geo.HX0 - 1), 54, 3, Pal.BLUE);
+        glyphEast(c, 'B', Sym.mx(Geo.HX0 - 1), 53, 3, Pal.BLUE);
         glyphEast(c, 'B', Sym.mx(Geo.PIER_X1), 12, 3, Pal.BLUE);
     }
 

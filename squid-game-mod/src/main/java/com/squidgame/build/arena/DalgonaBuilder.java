@@ -4,9 +4,14 @@ import com.squidgame.build.ArenaBuilder;
 import com.squidgame.build.ArenaId;
 import com.squidgame.build.BuildContext;
 import com.squidgame.build.CommonMarkers;
+import com.squidgame.build.arena.dalgona.Exterior;
 import com.squidgame.build.arena.dalgona.Floor;
 import com.squidgame.build.arena.dalgona.Front;
 import com.squidgame.build.arena.dalgona.Geo;
+import com.squidgame.build.arena.dalgona.Guards;
+import com.squidgame.build.arena.dalgona.LightPass;
+import com.squidgame.build.arena.dalgona.Props;
+import com.squidgame.build.arena.dalgona.Rear;
 import com.squidgame.build.arena.dalgona.Roof;
 import com.squidgame.build.arena.dalgona.Seating;
 import com.squidgame.build.arena.dalgona.Shell;
@@ -71,10 +76,20 @@ public final class DalgonaBuilder implements ArenaBuilder {
         Front.build(c);
         Stage.build(c);
         Seating.build(c);
+        Rear.build(c);
+        Rear.markers(c);
+        Props.build(c);
+        Guards.build(c);
+        Exterior.build(c);
         c.marker("dalgona.front", 0.5, 2.0, -84.5, 0f);
         c.marker("dalgona.board", 0.5, Front.BOARD_CENTER_Y, -90.95, 0f);
         c.marker(CommonMarkers.EXIT, 0.5, 1.0, -81.5, 180f);
         c.at(0, 0, 0, 2, () -> WaitingRoomPrefab.build(c, WaitingRoomPrefab.Spec.of("DALGONA")));
+        // the prefab's two wall-worker guard posts land on its own bench slabs when it is turned half a turn
+        // (their z has no +0.5); free the two cells so those posts stand on open floor
+        c.air(-19, 1, 12);
+        c.air(19, 1, 12);
+        LightPass.run(c);
         c.region(CommonMarkers.REGION_BOUNDS, -Geo.HALF_W, 0, Geo.Z_FRONT, Geo.HALF_W, 23, Geo.Z_REAR);
     }
 }

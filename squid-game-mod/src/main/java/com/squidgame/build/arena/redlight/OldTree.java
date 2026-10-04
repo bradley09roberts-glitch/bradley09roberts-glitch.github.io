@@ -63,7 +63,7 @@ public final class OldTree {
     private static void trunk(BuildContext c) {
         for (int y = 1; y <= TRUNK_TOP; y++) {
             // slightly fluted, gently tapering trunk; buttresses (lobes) fade out within the first 6 blocks
-            double rBase = 2.6 + 0.22 * Math.sin(y * 0.7) - (y > 11 ? 0.28 * (y - 11) : 0);
+            double rBase = 2.3 + 0.2 * Math.sin(y * 0.7) - (y > 11 ? 0.25 * (y - 11) : 0);
             double buttress = 2.9 * Math.exp(-(y - 1) / 1.7);
             int ext = 8;
             for (int dx = -ext; dx <= ext; dx++) {

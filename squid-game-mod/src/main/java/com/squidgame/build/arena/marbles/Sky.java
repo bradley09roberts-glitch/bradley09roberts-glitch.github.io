@@ -50,96 +50,113 @@ final class Sky {
 
     /** One block of the panorama. wall 0..3 = W,E,N,S; u = coordinate along the wall; y = height. */
     static String mural(int wall, int u, int y) {
-        // panorama coordinate: offset per wall so the skylines differ
         int t = u + wall * 211;
         double r = U.rand(u, y, 40 + wall);
-        // ---- sky colour by height (night: navy, with a warm city glow low on the horizon)
-        String sky = skyColor(y, r, t);
-        // ---- far hills (blue-purple silhouettes)
-        double farH = 11 + 4.5 * Math.sin(t * 0.045 + 1.0) + 3.0 * Math.sin(t * 0.13 + 2.0) + 2.0 * Math.sin(t * 0.31);
+        // ---- dusk glow: orange -> red -> magenta -> purple -> blue -> black, dithered across the band borders
+        String sky = gradient(y, r, t);
+        // ---- far hills: blue-purple silhouettes
+        double farH = 13 + 4.5 * Math.sin(t * 0.045 + 1.0) + 3.0 * Math.sin(t * 0.13 + 2.0) + 2.0 * Math.sin(t * 0.31);
         if (y <= farH) {
-            sky = r < 0.5 ? cc("purple") : cc("blue");
-            if (y > farH - 4 && r < 0.3) {
-                sky = cc("blue");
-            }
+            sky = y > farH - 2 || r < 0.15 ? cc("purple") : cc("blue");
         }
-        // ---- far skyline (dark blue, no lights)
+        // ---- far skyline: dark blue towers without lights, a few antenna tips
         double fs = skyline(t * 0.8 + 77, 3.0, 5, 15, 31);
         if (y <= fs && y > 5) {
-            sky = r < 0.65 ? cc("blue") : "minecraft:blue_terracotta";
-            if (r > 0.97) {
+            sky = r < 0.7 ? cc("blue") : "minecraft:blue_terracotta";
+            if (y == (int) fs && r < 0.2) {
                 sky = cc("light_blue");
             }
         }
         // ---- near skyline: black towers with lit windows
-        double ns = skyline(t, 5.0, 4, 11, 27);
+        double ns = skyline(t, 5.0, 4, 12, 27);
         if (y <= ns && y > 3) {
             boolean windowCol = Math.floorMod(t, 2) == 0;
             boolean windowRow = y % 3 == 1;
             double on = U.rand(t / 2, y / 3, 52);
-            if (windowCol && windowRow && on < 0.55 && y < ns - 1) {
-                sky = on < 0.22 ? cc("yellow") : on < 0.38 ? cc("orange") : cc("white");
-                if (on < 0.03) {
+            if (windowCol && windowRow && on < 0.5 && y < ns - 1) {
+                sky = on < 0.2 ? cc("yellow") : on < 0.36 ? cc("orange") : cc("white");
+                if (on < 0.02) {
                     sky = "minecraft:glowstone";
                 }
             } else {
-                sky = r < 0.8 ? cc("black") : cc("gray");
+                sky = r < 0.82 ? cc("black") : cc("gray");
             }
         }
         // ---- near hills: black with tiny house lights
-        double nh = 8 + 3.5 * Math.sin(t * 0.06 + 4.0) + 2.5 * Math.sin(t * 0.17 + 0.4) + 1.5 * Math.sin(t * 0.43);
+        double nh = 9 + 3.5 * Math.sin(t * 0.06 + 4.0) + 2.5 * Math.sin(t * 0.17 + 0.4) + 1.5 * Math.sin(t * 0.43);
         if (y <= nh) {
             sky = cc("black");
             if (y >= nh - 3 && r < 0.05) {
                 sky = cc("orange");
             }
         }
+        // ---- the tower on the hill (north wall), drawn last
+        if (wall == 2) {
+            String tw = tower(u, y);
+            if (tw != null) {
+                sky = tw;
+            }
+        }
         return sky;
+    }
+
+    /** Needle tower with an observation bulb and a red tip light, standing on the hill at x = 27. */
+    private static String tower(int u, int y) {
+        int d = u - 27;
+        if (y >= 8 && y <= 12 && Math.abs(d) <= 3 - (y - 8) / 2) {
+            return cc("black");
+        }
+        if (y >= 12 && y <= 40 && d == 0) {
+            return y == 40 ? cc("red") : cc("black");
+        }
+        if (y >= 24 && y <= 29) {
+            int w = y == 24 || y == 29 ? 2 : y == 25 || y == 28 ? 3 : 4;
+            if (Math.abs(d) <= w) {
+                return (y == 26 || y == 27) && Math.abs(d) < w && (u & 1) == 0 ? cc("yellow") : cc("black");
+            }
+        }
+        if (y >= 33 && y <= 34 && Math.abs(d) <= 1) {
+            return cc("black");
+        }
+        return null;
+    }
+
+    private static final String[] BANDS = {"orange", "red", "magenta", "purple", "blue", "black"};
+    private static final int[] BAND_Y = {7, 12, 17, 23, 31};
+
+    private static String gradient(int y, double r, int t) {
+        // soft clouds: shift the sample height a bit with smooth noise so the bands undulate
+        double wob = (U.fbm(t * 0.05, y * 0.12, 61, 3) - 0.5) * 7.0;
+        double yy = y + wob;
+        int band = 0;
+        for (int i = 0; i < BAND_Y.length; i++) {
+            if (yy >= BAND_Y[i] + (r - 0.5) * 3.0) {
+                band = i + 1;
+            }
+        }
+        String col = BANDS[band];
+        if (band == 5) {
+            // night sky proper: black with blue/purple wisps and stars
+            double star = U.rand(t, y, 66);
+            if (star < 0.012) {
+                return star < 0.002 ? "minecraft:sea_lantern" : star < 0.007 ? cc("white") : cc("yellow");
+            }
+            double n = U.fbm(t * 0.06, y * 0.1, 63, 3);
+            return n + 0.15 * (r - 0.5) > 0.56 ? cc("blue") : n + 0.15 * (r - 0.5) > 0.5 ? cc("purple") : cc("black");
+        }
+        return cc(col);
     }
 
     /** Height of a column-block skyline at coordinate t: buildings of random width and height. */
     private static double skyline(double t, double w, int minH, int lo, int hi) {
         int bi = (int) Math.floor(t / w);
         double h = lo + (hi - lo) * Math.pow(U.rand(bi, 5, minH), 1.7);
-        // some districts are low
         double district = U.vnoise(t * 0.03, 0.5, 91);
         h = lo + (h - lo) * (0.35 + 0.9 * district);
-        // gaps between buildings
         if (U.rand(bi, 9, minH) < 0.12) {
             h = 0;
         }
         return h;
-    }
-
-    private static String skyColor(int y, double r, int t) {
-        // horizon glow 6..22, then deepening navy
-        if (y < 7) {
-            return r < 0.6 ? cc("orange") : cc("red");
-        }
-        if (y < 12) {
-            return r < 0.35 ? cc("orange") : r < 0.6 ? cc("magenta") : r < 0.8 ? cc("red") : cc("pink");
-        }
-        if (y < 17) {
-            return r < 0.45 ? cc("magenta") : r < 0.8 ? cc("purple") : cc("red");
-        }
-        if (y < 23) {
-            return r < 0.5 ? cc("purple") : r < 0.85 ? cc("blue") : cc("magenta");
-        }
-        if (y < 30) {
-            return r < 0.55 ? cc("blue") : r < 0.9 ? cc("purple") : cc("black");
-        }
-        if (y < 38) {
-            double star = U.rand(t, y, 66);
-            if (star < 0.012) {
-                return cc("white");
-            }
-            return r < 0.55 ? cc("blue") : r < 0.9 ? cc("black") : cc("purple");
-        }
-        double star = U.rand(t, y, 67);
-        if (star < 0.015) {
-            return star < 0.003 ? "minecraft:sea_lantern" : cc("white");
-        }
-        return r < 0.45 ? cc("black") : r < 0.85 ? cc("blue") : cc("purple");
     }
 
     // ------------------------------------------------------------------ roof
@@ -162,7 +179,7 @@ final class Sky {
         }
         double r = U.rand(x, z, 71);
         double n = U.fbm(x * 0.045, z * 0.045, 17, 4);
-        double score = n + 0.35 * (r - 0.5);
+        double score = n + 0.14 * (r - 0.5);
         // milky way: a diagonal band that is richer in blue and stars
         double bd = Math.abs((x * 0.8 + z * 0.6) - 18 + 9 * Math.sin(x * 0.05));
         double band = bd < 13 ? 1 - bd / 13 : 0;

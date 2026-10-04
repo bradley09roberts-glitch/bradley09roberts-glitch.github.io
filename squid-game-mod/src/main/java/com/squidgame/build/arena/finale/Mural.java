@@ -170,7 +170,7 @@ final class Mural {
     // ------------------------------------------------------------------ clouds / birds
 
     private double[][] makeClouds(Random r) {
-        int n = perimeter / 20;
+        int n = perimeter / 15;
         double[][] c = new double[n][5];
         for (int i = 0; i < n; i++) {
             c[i][0] = r.nextDouble() * perimeter;
@@ -259,7 +259,7 @@ final class Mural {
             double nz = Noise.value(ss * 0.18, y * 0.5, (int) c[4]) - 0.5;
             double m = 1.0 - Math.sqrt((ds / c[2]) * (ds / c[2]) + (ddy / c[3]) * (ddy / c[3])) + 0.55 * nz;
             if (m > 0.0) {
-                double shift = ddy > 0.5 ? 0.9 : (ddy < -0.6 ? -1.9 : -0.6);
+                double shift = ddy > 0.5 ? 1.2 : (ddy < -0.6 ? -2.4 : -0.9);
                 if (m < 0.18) {
                     shift *= 0.5;
                 }

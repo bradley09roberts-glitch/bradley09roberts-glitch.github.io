@@ -103,9 +103,9 @@ public class DollEntity extends Mob implements GeoEntity {
             return;
         }
         entityData.set(DATA_STATE, s.ordinal());
+        // the turns are state driven (mainState plays them once and holds the pose): triggering them as well would
+        // restart the animation when the trigger ends
         switch (s) {
-            case TURNING_TO_PLAYERS -> triggerAnim("main", "turn_to_players");
-            case TURNING_TO_TREE -> triggerAnim("main", "turn_to_tree");
             case FACING_TREE -> {
                 if (old == State.DORMANT) {
                     triggerAnim("main", "wake");
@@ -165,8 +165,6 @@ public class DollEntity extends Mob implements GeoEntity {
             }
             return 1.0;
         });
-        main.triggerableAnim("turn_to_players", RawAnimation.begin().thenPlay(Anims.D_TURN_TO_PLAYERS));
-        main.triggerableAnim("turn_to_tree", RawAnimation.begin().thenPlay(Anims.D_TURN_TO_TREE));
         main.triggerableAnim("wake", RawAnimation.begin().thenPlay(Anims.D_WAKE));
         main.triggerableAnim("lock_on", RawAnimation.begin().thenPlay(Anims.D_LOCK_ON));
         controllers.add(main);

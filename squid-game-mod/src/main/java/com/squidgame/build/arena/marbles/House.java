@@ -32,6 +32,7 @@ final class House {
         boolean plaque = true;
         boolean lanterns = true;
         boolean tall = false;        // HANOK/GABLE: steeper, taller roof by raising the walls one block
+        boolean guard = false;       // FLAT: roof terrace hosts an armed guard post
 
         Spec kind(Kind k) {
             this.kind = k;
@@ -62,23 +63,32 @@ final class House {
             pal = new String[]{Mat.CREAM, "minecraft:sandstone", Mat.CALCITE};
             w = new double[]{66, 24, 10};
         }
-        c.noise(-hw, y1, 0, hw, y2, d - 1, pal, w);
+        c.noise(-hw, y1, 1, hw, y2, d - 1, pal, w);
     }
 
     /** plinth (stone) under the whole footprint and the wooden porch deck in front. */
     private static void plinth(BuildContext c, Spec s) {
         int hw = s.hw, d = s.depth;
         c.noise(-hw, 1, 0, hw, 1, d - 1, new String[]{Mat.SB, Mat.SB_MOSS, Mat.COBBLE, Mat.SB_CRACK}, new double[]{60, 14, 16, 10});
-        c.fill(-hw + 1, 1, 0, hw - 1, 1, 0, Mat.slabB("minecraft:spruce_slab"));
+        c.fill(-hw + 1, 1, 0, hw - 1, 1, 0, Mat.SPRUCE);
+        // flower pots along the porch edge
+        U.Rnd r = new U.Rnd(s.seed ^ 0x51);
+        for (int x = -hw + 1; x <= hw - 1; x++) {
+            if (Math.abs(x) >= 2 && r.chance(0.6) && x != 0) {
+                Props.pot(c, x, 2, 0, r);
+            }
+        }
     }
 
     /** Facade door at x=0 on the facade plane (recessed one block when the house is deep enough) with a plaque. */
     private static void door(BuildContext c, Spec s, int y, boolean doubleHeightLintel) {
         int dz = s.depth >= 4 ? 2 : 1;
-        String base = s.kind == Kind.FLAT ? "minecraft:iron_door" : "minecraft:spruce_door";
-        if (s.kind == Kind.FLAT) {
-            base = "minecraft:dark_oak_door";
-        }
+        String[] trad = {"minecraft:spruce_door", "minecraft:dark_oak_door", "minecraft:crimson_door", "minecraft:mangrove_door",
+                "minecraft:jungle_door", "minecraft:spruce_door"};
+        String[] bright = {"minecraft:warped_door", "minecraft:acacia_door", "minecraft:cherry_door", "minecraft:crimson_door",
+                "minecraft:birch_door", "minecraft:bamboo_door"};
+        U.Rnd dr = new U.Rnd(s.seed ^ 0xD00);
+        String base = (s.kind == Kind.FLAT ? bright : trad)[dr.i(6)];
         c.set(0, y, dz, Mat.door(base, "south", false, "left", false));
         c.set(0, y + 1, dz, Mat.door(base, "south", true, "left", false));
         if (dz == 2) {
@@ -159,6 +169,45 @@ final class House {
         c.set(cx, topY, cz, "minecraft:bricks");
     }
 
+    /** Back of the house (visible from the alley behind): door with a step and lamp, lit windows, drain pipe. */
+    private static void backFeatures(BuildContext c, Spec s, int top) {
+        if (!s.backEave || s.depth < 4) {
+            return;
+        }
+        int hw = s.hw, d = s.depth, zb = d - 1;
+        U.Rnd r = new U.Rnd(s.seed ^ 0xBAC);
+        String base = r.chance(0.5) ? "minecraft:dark_oak_door" : "minecraft:spruce_door";
+        c.set(0, 2, zb, Mat.door(base, "north", false, "right", false));
+        c.set(0, 3, zb, Mat.door(base, "north", true, "right", false));
+        c.set(0, 4, zb, Mat.PLANKS);
+        c.set(0, 1, d, Mat.slabB(Mat.SB_SL));
+        Props.stoneLamp(c, 2, 1, d);
+        for (int x : new int[]{-2, 2}) {
+            if (r.chance(0.8)) {
+                c.set(x, 3, zb, Mat.PANE_WARM);
+                c.set(x, 4, zb, Mat.PANE_WARM);
+                c.set(x, 3, zb - 1, Mat.GLOW);
+                c.set(x, 4, zb - 1, Mat.GLOW);
+            }
+        }
+        if (r.chance(0.6)) {
+            c.fill(-hw + 1, 2, d, -hw + 1, top + 1, d, Mat.BARS);
+        }
+        if (r.chance(0.35)) {
+            Props.barrel(c, -2, 1, d);
+        } else if (r.chance(0.35)) {
+            Props.crate(c, 3, 1, d, 1 + r.i(2));
+        }
+    }
+
+    /** TV antenna on a roof: pole with two cross bars. */
+    static void antenna(BuildContext c, int x, int y, int z) {
+        c.fill(x, y, z, x, y + 3, z, Mat.BARS);
+        c.fill(x - 1, y + 3, z, x + 1, y + 3, z, Mat.BARS);
+        c.fill(x - 1, y + 2, z, x + 1, y + 2, z, Mat.BARS);
+        c.set(x, y + 4, z, "minecraft:lightning_rod[facing=up]");
+    }
+
     // ------------------------------------------------------------------ HANOK: single storey, gable roof along x
 
     private static void hanok(BuildContext c, Spec s) {
@@ -194,6 +243,7 @@ final class House {
         if (s.laundry) {
             Props.laundryX(c, -hw + 1, hw - 1, beam - 1, 0, new U.Rnd(s.seed));
         }
+        backFeatures(c, s, top);
     }
 
     /** Lifted eave corners (upturned tips) at the four roof corners. */
@@ -261,6 +311,7 @@ final class House {
         if (s.laundry) {
             Props.laundryX(c, -hw + 2, hw - 2, 8, -1, new U.Rnd(s.seed));
         }
+        backFeatures(c, s, 8);
     }
 
     // ------------------------------------------------------------------ FLAT: concrete house, flat roof terrace, tank
@@ -307,6 +358,12 @@ final class House {
             c.fill(hw - 1, roofY + 1, d - 2, hw - 1, roofY + 3, d - 2, Mat.BRICK);
             c.set(hw - 1, roofY + 4, d - 2, Mat.slabB(Mat.SB_SL));
         }
+        if (s.guard) {
+            c.marker("guard.post", 0.5, roofY + 1.0, Math.max(1, d / 2) + 0.5, 180f, "rank=triangle");
+        } else if (new U.Rnd(s.seed ^ 0xA77).chance(0.6)) {
+            antenna(c, hw - 1, roofY + 1, Math.max(1, d / 2));
+        }
+        backFeatures(c, s, top);
     }
 
     /** Rooftop water tank: blue barrel 2x2 with a dark lid on iron-bar legs. */
@@ -348,5 +405,6 @@ final class House {
         if (s.chimney) {
             chimney(c, s, 10);
         }
+        backFeatures(c, s, top);
     }
 }

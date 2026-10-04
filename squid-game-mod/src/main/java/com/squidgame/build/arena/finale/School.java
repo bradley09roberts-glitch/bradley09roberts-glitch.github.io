@@ -145,7 +145,7 @@ final class School {
         c.fill(-9, 7, zFront, 9, 7, zFront, "minecraft:black_concrete");
         c.fill(-9, 7, zFront, -9, 7, zFront, "minecraft:polished_blackstone");
         c.fill(9, 7, zFront, 9, 7, zFront, "minecraft:polished_blackstone");
-        c.text(0.5, 7.15, zFront + 0.55, "ELEMENTARY SCHOOL", "#F2E6B0", 1.6f, 0f, false);
+        c.text(0.5, 7.3, zFront + 1.06, "ELEMENTARY SCHOOL", "#F2E6B0", 1.6f, 0f, false);
         // lanterns under the portico roof
         c.set(-6, 5, zFront, "minecraft:lantern[hanging=true]");
         c.set(6, 5, zFront, "minecraft:lantern[hanging=true]");

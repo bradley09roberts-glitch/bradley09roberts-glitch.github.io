@@ -225,6 +225,7 @@ class Animation:
         self.length = float(length)
         self.loop = loop
         self.bones: Dict[str, BoneTracks] = {}
+        self.marks: List[Tuple[float, str]] = []      # (t, ease) of empty-pose keys, see key()/settle()
 
     # -- authoring ---------------------------------------------------------------
     def _bt(self, bone: str) -> BoneTracks:
@@ -235,11 +236,16 @@ class Animation:
     def key(self, t: float, pose: Pose, ease: str = "linear") -> "Animation":
         """Add keyframes for the bones in ``pose`` at time ``t``.
 
-        ``ease`` is the easing of the segment arriving at this key."""
+        ``ease`` is the easing of the segment arriving at this key.  An EMPTY pose means "be at the idle pose at
+        ``t``": it is recorded and resolved by :meth:`settle` once every channel of the animation is known."""
         if ease not in EASINGS:
             raise ValueError(f"unknown easing {ease!r}")
         if t < -1e-9 or t > self.length + 1e-6:
             raise ValueError(f"{self.name}: key time {t} outside 0..{self.length}")
+        if not pose:
+            if t > 1e-9:
+                self.marks.append((float(t), ease))
+            return self
         for bone, b in pose.items():
             bt = self._bt(bone)
             if b.rot is not None:
@@ -276,6 +282,25 @@ class Animation:
                     tr.add(self.length, first[1], "linear")
                 else:
                     tr.keys[-1] = (last[0], first[1], last[2])
+        return self
+
+    def settle(self, idle: Pose, tol: float = 1e-6) -> "Animation":
+        """Resolve the empty-pose keys: at each marked time every animated channel gets the value it has in ``idle``
+        (0 for bones ``idle`` does not mention).  Channels that already hold that value everywhere, or that have a
+        key at that time, are left alone."""
+        for t, ease in sorted(self.marks):
+            for bone, bt in self.bones.items():
+                b = idle.get(bone, B())
+                for tr, val in ((bt.rot, b.rot), (bt.pos, b.pos)):
+                    if not tr.keys:
+                        continue
+                    v = tuple(float(x) for x in val) if val is not None else (0.0, 0.0, 0.0)
+                    if any(abs(k[0] - t) < 1e-6 for k in tr.keys):
+                        continue
+                    if all(max(abs(a - c) for a, c in zip(k[1], v)) < tol for k in tr.keys):
+                        continue
+                    tr.add(t, v, ease)
+        self.marks = []
         return self
 
     def start_from(self, pose: Pose, ease: str = "linear") -> "Animation":

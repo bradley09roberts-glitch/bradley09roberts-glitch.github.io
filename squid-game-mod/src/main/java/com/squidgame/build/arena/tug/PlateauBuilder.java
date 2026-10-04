@@ -72,5 +72,32 @@ final class PlateauBuilder {
         c.fill(x0, 47, -4, x1, 47, 4, Pal.IRON);
         // clear the lane under the lintel (7 high)
         c.clear(x0, 41, -2, x1, 47, 2);
+        gate(c, w);
+    }
+
+    /** Canopy and signage over the room door that opens onto this plateau (gate wall plane x = -76 west / 75 east). */
+    private static void gate(BuildContext c, boolean w) {
+        int xa = X(w, -75), xb = X(w, -72);
+        c.fill(Math.min(xa, xb), 47, -5, Math.max(xa, xb), 47, 5, Pal.STEEL);
+        c.fill(Math.min(xa, xb), 48, -5, Math.max(xa, xb), 48, 5, Pal.YELLOW);
+        for (int z = -5; z <= 5; z++) {
+            c.set(X(w, -72), 48, z, Pal.hazard(z));
+            c.set(X(w, -73), 48, z, Pal.hazard(z + 2));
+            c.set(X(w, -74), 48, z, Pal.hazard(z));
+            c.set(X(w, -75), 48, z, Pal.hazard(z + 2));
+        }
+        for (int side : new int[]{-5, 5}) {
+            c.line(X(w, -75), 42, side, X(w, -73), 46, side, Pal.IRON);
+            c.line(X(w, -75), 43, side, X(w, -73), 46, side, Pal.IRON);
+        }
+        // lamps under the canopy
+        for (int z : new int[]{-4, 0, 4}) {
+            c.set(X(w, -73), 46, z, Pal.SEA);
+        }
+        if (w) {
+            c.text(-74.55, 50.3, 0.5, "TUG OF WAR", "#FFD84A", 5f, -90f, false);
+        } else {
+            c.text(74.55, 50.3, 0.5, "EXIT", "#6CFF8A", 8f, 90f, false);
+        }
     }
 }

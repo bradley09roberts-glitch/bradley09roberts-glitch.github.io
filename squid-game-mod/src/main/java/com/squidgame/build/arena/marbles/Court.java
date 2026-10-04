@@ -71,15 +71,13 @@ final class Court {
             int z1 = -1, z2 = Layout.COURT_LEN - 1;
             c.fill(x, 1, z1, x, 1, z2, Mat.SB);
             c.noise(x, 2, z1, x, 3, z2, new String[]{Mat.PLASTER, Mat.CALCITE, Mat.DIORITE}, new double[]{62, 30, 8});
-            c.fill(x, 4, z1, x, 4, z2, Mat.TILE);
             // timber beam along the top of the plaster and posts every four blocks
             c.fill(x, 3, z1, x, 3, z2, Mat.log(Mat.LOG_S, "z"));
             for (int z = z1; z <= z2; z += 4) {
                 c.fill(x, 2, z, x, 2, z, Mat.log(Mat.LOG_S, "y"));
             }
-            // tile coping
-            c.fill(x - side, 4, 0, x - side, 4, z2, Mat.stair(Mat.TILE_ST, side < 0 ? "west" : "east"));
-            c.fill(x + side, 4, 0, x + side, 4, z2, Mat.stair(Mat.TILE_ST, side < 0 ? "east" : "west"));
+            // tile coping (one slab wide)
+            c.fill(x, 4, 0, x, 4, z2, Mat.slabB(Mat.TILE_SL));
         }
     }
 
@@ -87,17 +85,15 @@ final class Court {
         for (int side = -1; side <= 1; side += 2) {
             int x = 3 * side;
             c.fill(x, 1, -1, x, 2, -1, Mat.SB);
-            c.fill(x, 3, -1, x, 4, -1, Mat.log(Mat.LOG_S, "y"));
-            c.set(x, 5, -1, Mat.log(Mat.LOG_S, "y"));
-            c.set(4 * side, 5, -1, Mat.log(Mat.LOG_S, "y"));
+            c.fill(x, 3, -1, x, 5, -1, Mat.log(Mat.LOG_S, "y"));
         }
         // lintel beam
         c.fill(-3, 5, -1, 3, 5, -1, Mat.log(Mat.LOG_S, "x"));
-        // mini gable roof over the gate: ridge along x
-        c.fill(-4, 6, -2, 4, 6, -2, Mat.stair(Mat.TILE_ST, "south"));
-        c.fill(-4, 6, -1, 4, 6, -1, Mat.TILE);
-        c.fill(-4, 7, -1, 4, 7, -1, Mat.slabB(Mat.TILE_SL));
-        c.fill(-4, 6, 0, 4, 6, 0, Mat.stair(Mat.TILE_ST, "north"));
+        // small gable roof over the gate: ridge along x
+        c.fill(-3, 6, -2, 3, 6, -2, Mat.stair(Mat.TILE_ST, "south"));
+        c.fill(-3, 6, -1, 3, 6, -1, Mat.TILE);
+        c.fill(-3, 7, -1, 3, 7, -1, Mat.slabB(Mat.TILE_SL));
+        c.fill(-3, 6, 0, 3, 6, 0, Mat.stair(Mat.TILE_ST, "north"));
         // hanging lanterns
         c.set(-2, 4, -1, Mat.lantern(true));
         c.set(2, 4, -1, Mat.lantern(true));

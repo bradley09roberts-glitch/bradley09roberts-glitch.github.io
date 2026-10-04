@@ -117,22 +117,32 @@ Proportions are vanilla-player (32 px: legs 12, torso 12, head 8; arms/legs 4x12
 * Contestant: 62 (`animation.contestant.<name>`), guard: 18 (`animation.guard.<name>`) - every name, loop type and
   length of docs/ASSET_CONTRACT.md section 1.1/1.2 exists (checked by `validate_models.py`).
 * Overlay clips (`wave point nod shake_head think`) only touch the right arm chain and/or the head.
-* One-shots start from the `idle` pose (relaxed arms: swing 2, out 5, elbow 9; all other bones neutral). Documented
-  exceptions (the start pose of these is the state they continue): `pull_heave/pull_slip` start at `pull_idle`,
-  `dalgona_lick/crack/success/fail` at `dalgona_sit`, `marble_throw_release` at the end of `marble_throw_windup`,
-  guard `fire/lower` at `aim` (`*_anim_meta.json` -> `refs`; the validator uses them).
+* One-shots start from the `idle` pose (relaxed arms: swing 2, out 5, elbow 9; all other bones neutral) **and end at it**
+  (empty-pose keys in the authoring scripts mean "back to idle here", resolved by `Animation.settle`; the validator warns
+  about any plain `once` clip that ends elsewhere). Documented exceptions: `pull_heave/pull_slip` start and end at
+  `pull_idle`, `dalgona_lick/crack/success` at `dalgona_sit`, `marble_throw_release` starts at the end of
+  `marble_throw_windup`, `marble_reveal` ends on the open hand, guard `fire` starts and ends at `aim`, `lower` starts at
+  `aim` (`*_anim_meta.json` -> `refs`; the validator uses them). `hold_on_last_frame` clips keep their final pose.
 * Hand contacts (hands on hips, on the tin, on the rope, on the rifle) are solved with IK against the ported GeckoLib
-  FK, feet of every standing pose are planted with IK, lying poses are ground-snapped, and a ground-lock pass lifts the
-  root where an FK pose would sink into the floor (`qa_anims.py` reports what is left).
+  FK, feet of every standing pose are planted with IK, lying poses are ground-snapped, and a final ground-lock pass
+  (`lib/postproc.ground_lock`) lifts the root wherever any pose would sink more than 0.1 px into the floor: the root
+  position track is then re-written densely (0.02 s, linear) from the exact GeckoLib-sampled authored root motion plus the
+  lift (`qa_anims.py` reports what is left; floating during run/jump flight phases is intended).
 * One-shots have a 0.03-0.04 s follow-through lag on head / forearms / hands.
 
 ### Foot planting (`gait_info.json`)
 
-With 12 px legs a stance foot can only sweep ~12-14 px (walk) / ~15 px (run). The strides are as long as the model
-allows without a cartoon-bounce, so the feet are **planted at the speed stored in `gait_info.json`** (walk ~1.2 blocks/s,
-run ~3.2 blocks/s, sneak ~0.6) when the cycle plays at 1.0x. The contract's reference speeds (2.4 / 6.0 blocks/s) cannot
-be planted with a 12 px leg at the contract cycle lengths; to keep the feet from skating, play the cycles at
-`animationSpeed = actualSpeed / planted_blocks_s` (clamp to ~0.6-2.0) - the cadence then follows the ground speed.
+With 12 px legs a stance foot sweeps only ~12-15 px, so the cycles are built to plant the feet at the contract's
+reference speeds when played at **1.0x**:
+
+| clip | loop | content | feet planted at | contract reference |
+|------|------|---------|-----------------|--------------------|
+| `walk` (contestant, guard) | 1.0 s | **two** gait cycles (0.5 s each, 4 steps/s, left/right half a cycle apart) | 2.46 / 2.44 blocks/s | 2.4 |
+| `run` (contestant, guard) | 0.6 s | one cycle, short ground contact (24%), flight phases | 5.78 / 5.77 blocks/s | 6.0 |
+| `sneak_walk` | 1.2 s | one cycle | 0.62 blocks/s | - |
+
+For other ground speeds play the clip at `animationSpeed = actualSpeed / planted_blocks_s` (clamp to ~0.5-1.5) so the
+feet keep sticking to the floor; `gait_info.json` holds the exact numbers (`speed_multiplier_at_reference` ~ 1).
 
 ## Preview / QA tools
 
@@ -142,8 +152,8 @@ be planted with a 12 px leg at the contract cycle lengths; to keep the feet from
   no culling, Minecraft light). Props (bench, table, rope, glass panel) are drawn for the matching clips.
 * `qa_anims.py`: lowest point over time (floor penetration / floating) and hand/elbow inside torso/head tests.
 * `validate_models.py`: see the docstring - bones / animations / loop types / lengths from the contract, UV bounds and
-  overlap, greyscale tint regions, clean decal alpha, easing names, finite numbers, loop closure, one-shot start poses,
-  overlay bone sets, no scale channels, `contestant_bones.json` consistency.
+  overlap, greyscale tint regions, clean decal alpha, easing names, finite numbers, loop closure, one-shot start and end
+  poses, overlay bone sets, no scale channels, `contestant_bones.json` consistency.
 
 ## What could not be verified without an in-game render
 

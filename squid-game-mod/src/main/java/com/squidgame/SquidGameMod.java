@@ -46,6 +46,7 @@ public class SquidGameMod implements ModInitializer {
 
         ServerLifecycleEvents.SERVER_STARTED.register(TournamentManager::onServerStarted);
         ServerLifecycleEvents.SERVER_STOPPING.register(TournamentManager::onServerStopping);
+        ServerTickEvents.START_SERVER_TICK.register(server -> com.squidgame.tournament.Profiler.beginTick());
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             TournamentManager m = TournamentManager.get();
             if (m != null) {

@@ -123,6 +123,7 @@ def build_all(mb) -> Ctx:
                "eliminated_forward", "eliminated_backward", "knocked_down"}
     for a in ctx.A.anims.values():
         short = a.name.split(".")[-1]
+        a.settle(IDLE0)                  # empty-pose keys = "back to the idle pose" (end of the one-shots)
         if short in lag_set:
             lag_tracks(a, {"head": 0.04, "left_forearm": 0.03, "right_forearm": 0.03,
                            "left_hand_skin": 0.04, "right_hand_skin": 0.04})

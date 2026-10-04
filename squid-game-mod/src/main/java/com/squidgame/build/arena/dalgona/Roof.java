@@ -33,7 +33,7 @@ public final class Roof {
 
     public static void build(BuildContext c) {
         for (int p = 1; p <= 8; p++) {
-            rib(c, ribZ(p));
+            rib(c, ribZ(p), p != 1);       // the first rib stands over the balcony stairs: no corbels in their headroom
         }
         for (int x : PURLIN_X) {
             int y = (int) Math.floor(Geo.roofUnder(x) - 0.001) - 1;
@@ -44,13 +44,13 @@ public final class Roof {
         lamps(c);
     }
 
-    private static void rib(BuildContext c, int z) {
+    private static void rib(BuildContext c, int z, boolean corbels) {
         for (int x = -35; x <= 35; x++) {
             int top = ribTop(x);
             c.fill(x, top - 1, z, x, top, z, RIB);
         }
         // corbels where the ribs spring from the pilasters
-        for (int side = -1; side <= 1; side += 2) {
+        for (int side = -1; side <= 1 && corbels; side += 2) {
             int x = side * 35;
             int top = ribTop(x);
             c.fill(x, top - 3, z, x, top - 2, z, Pal.DARK_OAK);
@@ -64,7 +64,7 @@ public final class Roof {
     }
 
     private static void lamps(BuildContext c) {
-        for (int k = 1; k <= 8; k++) {
+        for (int k = 1; k <= 7; k++) {            // none over the stage: they would hide the chalkboard
             int z = -7 - 10 * k;             // mid-bay between two ribs
             for (int x : PURLIN_X) {
                 lamp(c, x, z);

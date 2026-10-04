@@ -17,6 +17,7 @@ from lib import jsonfmt
 from lib.anim import HOLD, LOOP, ONCE, Animation, AnimationSet, B, Pose
 from lib.gait import Gait, ankle_height_for_pitch, gait_legs, planted_speed
 from lib.humanoid import ARM, ARMS, BODY, HEAD, LEG, LEGS, ROOT, WAIST, Humanoid
+from lib.postproc import ground_lock
 from lib.posing import LimbCfg, pose_to_state
 from lib.rig import Rig
 from guard_model import RIFLE_G
@@ -345,9 +346,15 @@ def build_all(mb) -> Ctx:
     a.key(1.0, idle0, "easeInOutSine")
 
     for a_ in ctx.A.anims.values():
+        if a_.loop == ONCE and not a_.name.endswith(".fire"):      # every channel (wrist, ...) is back at idle at the end
+            a_.marks.append((a_.length, "easeInOutSine"))
+            a_.settle(idle0)
         a_.start_from(idle0 if a_.loop != LOOP else Pose())
         if a_.loop == LOOP:
             a_.close_loop()
+        lift = ground_lock(ctx.rig, a_, HIDDEN)           # keep every pose on top of the floor
+        if lift > 0:
+            ctx.info.setdefault("ground_lift_px", {})[a_.name.split(".")[-1]] = round(lift, 2)
     return ctx
 
 
