@@ -3806,6 +3806,113 @@ proj('terra_beam', lambda c: (c.polygon([(3, 12), (7, 3), (13, 2), (9, 7), (5, 1
 proj('true_excalibur_beam', lambda c: (c.polygon([(3, 12), (7, 3), (13, 2), (9, 7), (5, 12)], (240, 216, 96, 220)), c.line(3, 12, 7, 4, hexc('#FFF8E0'))))
 
 
+# --- Stage 10: Desert, Snow, Floating Islands ------------------------------------------------------------------
+S10_HUMANOIDS = {   # name: (skin, hair, shirt, pants, extras, bony)
+    'mummy': ('#D8CCA8', '#C8BC98', '#C8BC98', '#B8AC88', dict(shoes='#A89C78', eyes=(40, 20, 10, 255), torn=True), False),
+    'ghoul': ('#8A9A70', '#4A5A3A', '#6A5A40', '#4A4030', dict(shoes='#2A2018', eyes=(255, 220, 60, 255), torn=True), False),
+    'zombie_eskimo': ('#8AB08A', '#3A2A20', '#4A6AA8', '#3A4A78', dict(shoes='#2A2018', eyes=(200, 40, 40, 255), hat='#E8E0D0', torn=True), False),
+    'icy_merman': ('#80C8E8', '#3A7AA8', '#3A8AB8', '#2A6A98', dict(shoes='#1A4A78', eyes=(255, 240, 120, 255)), False),
+    'undead_viking': ('#D8D0B8', '#D8D0B8', '#7A5A3A', '#5A4028', dict(eyes=(120, 200, 255, 255), hat='#8A8A98'), True),
+    'armored_viking': ('#D8D0B8', '#D8D0B8', '#8A8A98', '#5A5A68', dict(eyes=(255, 120, 40, 255), hat='#A8A8B8'), True),
+}
+for _n, (_skin, _hair, _shirt, _pants, _extra, _bony) in S10_HUMANOIDS.items():
+    model_texture(_n, 64, 64, skin_texture(_skin, _hair, _shirt, _pants, bony=_bony, **_extra))
+    if _bony:
+        mob_sprite(_n, 16, 24, 3, lambda c, f, sh=_shirt, pa=_pants: humanoid_frame(c, f, '#D8D0B8', sh, pa, (20, 20, 20, 255), bony=True), frame_time=8)
+    else:
+        mob_sprite(_n, 16, 24, 3, lambda c, f, sk=_skin, hr=_hair, sh=_shirt, pa=_pants: npc_frame(c, f, sk, hr, sh, pa), frame_time=8)
+for _worm, (_col, _plate) in {'tomb_crawler': ('#C89A58', '#8A6A38'), 'dune_splicer': ('#D8B070', '#A07840')}.items():
+    for _part in ('head', 'body', 'tail'):
+        model_texture(f'{_worm}_{_part}', 64, 64, worm_texture(_col, _plate))
+        mob_sprite(f'{_worm}_{_part}', 12, 12, 1, lambda c, f, part=_part, col=_col: worm_frame(c, f, col, part), rotate=True)
+for _slime, _col in {'ice_slime': '#A8D8F8', 'spiked_ice_slime': '#7AB8E8'}.items():
+    model_texture(_slime, 64, 64, slime_texture(_col, 180))
+    mob_sprite(_slime, 16, 12, 2, lambda c, f, col=_col: slime_frame(c, col, f, 16, 12), frame_time=10)
+S10_BLOBS = {
+    'antlion': (16, 12, '#C8A060', None), 'vulture': (18, 12, '#5A4030', None), 'antlion_charger': (18, 12, '#C89A58', None),
+    'antlion_swarmer': (16, 12, '#C8A060', '#FF4020'), 'desert_spirit': (14, 18, '#C8A060', '#FFE070'), 'ice_bat': (12, 10, '#A8D8F8', None),
+    'snow_flinx': (14, 12, '#F0F4FF', None), 'wolf': (20, 14, '#8A8A98', '#FF3030'), 'ice_golem': (28, 36, '#A8D8F8', '#60D0FF'),
+    'ice_elemental': (14, 20, '#C8E8FF', '#80E0FF'), 'ice_tortoise': (20, 14, '#6A9AB8', None), 'harpy': (18, 18, '#5A8AE8', None),
+}
+for _n, (_w, _h, _col, _glow) in S10_BLOBS.items():
+    mob_sprite(_n, _w, _h, 2, lambda c, f, w=_w, h=_h, col=_col, g=_glow: blob_frame(c, f, w, h, col, glow=g), frame_time=8)
+
+
+def sandy_block(color, seed, speckle=None):
+    p = palette(color)
+    c = Canvas()
+    c.noise([p[2], p[2], p[3], p[1]], seed)
+    if speckle:
+        rnd = random.Random(seed)
+        for _ in range(8):
+            c.set(rnd.randint(0, 15), rnd.randint(0, 15), hexc(speckle))
+    return c
+
+
+def fossil_block():
+    c = sandy_block('#C8A868', 1501)
+    bone = palette('#F0E8D0')
+    c.line(3, 4, 12, 4, bone[2]); c.line(3, 4, 3, 7, bone[2]); c.line(12, 4, 12, 7, bone[2])
+    c.line(5, 9, 10, 12, bone[3]); c.circle(4.5, 11, 1.5, bone[2])
+    return c
+
+
+def cloud_block():
+    c = Canvas()
+    c.noise([hexc('#F4F6FF'), hexc('#FFFFFF'), hexc('#E0E6F4')], 1502)
+    return c
+
+
+def sunplate_block():
+    c = metal_block('sunplate', 1503)
+    c.circle(7.5, 7.5, 3, hexc('#FFF0A0'))
+    return c
+
+
+METAL.update({'sunplate': '#E8C040', 'fossil': '#D8C8A0', 'frost': '#A8D8F8'})
+BLOCK_TEXTURES['hardened_sand'] = lambda: sandy_block('#D8BC80', 1500, '#B89858')
+BLOCK_TEXTURES['desert_fossil'] = fossil_block
+BLOCK_TEXTURES['cloud'] = cloud_block
+BLOCK_TEXTURES['sunplate_block'] = sunplate_block
+BLOCKS_CUBE.extend(['hardened_sand', 'desert_fossil', 'cloud', 'sunplate_block'])
+
+item('antlion_mandible', lambda c: (c.polygon([(3, 13), (6, 3), (12, 2), (8, 6), (6, 13)], palette('#7A5028')[2]), c.outline()))
+item('sturdy_fossil', lambda c: (draw_raw(c, palette('#D8C8A0'), 1504), c.line(5, 7, 10, 7, hexc('#F8F0E0'))))
+item('forbidden_fragment', lambda c: (c.polygon([(8, 1), (13, 6), (11, 14), (5, 14), (3, 6)], palette('#E8B840')[2]), c.circle(8, 8, 1.5, hexc('#FFF0A0')), c.outline()))
+item('mandible_blade', lambda c: (draw_sword(c, palette('#C89A58'), 12), c.set(11, 4, hexc('#7A5028'))), True)
+for _p in ('fossil_helm', 'fossil_plate', 'fossil_greaves'):
+    pass
+item('fossil_helm', lambda c: draw_helmet(c, metal('fossil')))
+item('fossil_plate', lambda c: draw_chest(c, metal('fossil')))
+item('fossil_greaves', lambda c: draw_legs(c, metal('fossil')))
+item('sandstorm_in_a_bottle', lambda c: draw_bottle(c, '#D8BC80'))
+item('blizzard_in_a_bottle', lambda c: draw_bottle(c, '#C8E8FF'))
+item('ancient_chisel', lambda c: (c.line(3, 12, 10, 5, WOOD[2], 2), c.polygon([(10, 3), (14, 2), (13, 6)], palette('#C8A050')[3]), c.outline()), True)
+item('spirit_flame', lambda c: (draw_book(c, '#C8A060'), c.circle(8, 7, 2, hexc('#80E0FF'))))
+item('frost_core', lambda c: (c.polygon([(8, 1), (14, 8), (8, 15), (2, 8)], palette('#60C8FF')[2]), c.circle(8, 8, 2, hexc('#E8FFFF')), c.outline()))
+item('ice_skates', lambda c: (draw_boots(c, '#7AA8D8'), c.line(2, 15, 13, 15, hexc('#E8F4FF'))))
+item('flurry_boots', lambda c: draw_boots(c, '#E8F0FF'))
+item('ice_blade', lambda c: (draw_sword(c, palette('#A8D8F8'), 12), c.set(11, 4, hexc('#FFFFFF'))), True)
+item('ice_boomerang', lambda c: (c.polygon([(2, 3), (6, 2), (8, 8), (14, 10), (13, 14), (5, 11)], palette('#A8D8F8')[2]), c.line(3, 3, 6, 9, palette('#A8D8F8')[4]), c.outline()), True)
+item('frostbrand', lambda c: (draw_sword(c, palette('#60C8FF'), 14), c.set(12, 3, hexc('#E8FFFF'))), True)
+item('frost_staff', lambda c: draw_staff(c, '#80E0FF'), True)
+item('frost_helmet', lambda c: draw_helmet(c, metal('frost')))
+item('frost_breastplate', lambda c: draw_chest(c, metal('frost')))
+item('frost_leggings', lambda c: draw_legs(c, metal('frost')))
+item('feather', lambda c: (c.line(4, 13, 11, 2, hexc('#C8C8D0')), c.polygon([(6, 10), (11, 2), (13, 4), (8, 11)], palette('#E8E8F0')[2]), c.outline()))
+item('giant_harpy_feather', lambda c: (c.line(4, 13, 11, 2, hexc('#C8C8D0')), c.polygon([(5, 11), (11, 1), (14, 4), (8, 12)], palette('#5A8AE8')[2]), c.outline()))
+item('starfury', lambda c: (draw_sword(c, palette('#F0C838'), 12), c.set(12, 3, hexc('#FF80C0')), c.set(11, 2, hexc('#FFF0A0'))), True)
+WING_STYLES['harpy'] = ('#5A8AE8', '#3A5AA8', '#C8D8F8')
+item('harpy_wings', lambda c: draw_wings_item(c, 'harpy'))
+proj('sand_ball', lambda c: (c.circle(7.5, 7.5, 3, palette('#D8BC80')[2]), c.set(6, 6, hexc('#F0E0B0'))))
+proj('harpy_feather', lambda c: (c.line(2, 8, 13, 8, hexc('#5A8AE8')), c.line(3, 7, 11, 7, hexc('#8AB0F8'))))
+proj('spirit_flame', lambda c: (p_orb(c, '#80E0FF', 3), c.set(6, 6, hexc('#FFFFFF'))))
+proj('ice_bolt', lambda c: (p_orb(c, '#A8E8FF', 3), c.set(6, 6, hexc('#FFFFFF'))))
+proj('frost_bolt', lambda c: (p_orb(c, '#60C8FF', 3), c.set(6, 6, hexc('#FFFFFF'))))
+proj('ice_boomerang', lambda c: (c.polygon([(2, 3), (6, 2), (8, 8), (14, 10), (13, 14), (5, 11)], palette('#A8D8F8')[2])))
+proj('starfury_star', lambda c: (c.polygon([(7.5, 1), (9, 6), (14, 7.5), (9, 9), (7.5, 14), (6, 9), (1, 7.5), (6, 6)], hexc('#FFE070')), c.set(7, 7, hexc('#FFFFFF'))))
+
+
 def flesh_tether():
     c = Canvas()
     p = palette('#8AA898')
@@ -3881,7 +3988,7 @@ def main():
     underworld_block_assets()
     goblin_block_assets()
     hardmode_block_assets()
-    cube_block_assets(['chlorophyte_ore', 'ancient_manipulator'])
+    cube_block_assets(['chlorophyte_ore', 'ancient_manipulator', 'hardened_sand', 'desert_fossil', 'cloud', 'sunplate_block'])
     temple_block_assets()
     plantera_block_assets()
     queen_slime_block_assets()

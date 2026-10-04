@@ -64,8 +64,9 @@ Hardmode
 - [x] Critters: Truffle Worm, Prismatic Lacewing
 - [x] Solar Eclipse: Eyezor, Frankenstein, Swamp Thing, Vampire, Creature from the Deep, Fritz, Reaper; after Plantera Mothron, Butcher, Deadly Sphere, Nailhead, Dr. Man Fly
 - [x] Celestial pillar guards: Selenian, Sroller, Corite (Solar); Storm Diver, Alien Hornet, Vortexian (Vortex); Nebula Floater, Brain Suckler, Predictor (Nebula); Star Cell, Flow Invader, Twinkle Popper (Stardust)
-- [ ] Desert: Antlion, Antlion Charger/Swarmer, Vulture, Tomb Crawler
-- [ ] Snow/Ice: Ice Slime, Ice Bat, Undead Viking, Snow Flinx
+- [x] Desert: Antlion, Antlion Charger/Swarmer, Vulture, Tomb Crawler; Hardmode Mummy, Ghoul, Desert Spirit, Dune Splicer
+- [x] Snow/Ice: Ice Slime, Spiked Ice Slime, Zombie Eskimo, Ice Bat, Undead Viking, Snow Flinx; Hardmode Wolf, Ice Golem, Ice Elemental, Ice Tortoise, Icy Merman, Armored Viking
+- [x] Sky: Harpy (Wyvern in Hardmode)
 - [-] Caverns: Skeleton, Cave Bat done; Giant Worm, Granite/Marble, spiders pending
 - [-] Corruption: Eater of Souls, Devourer done; Hardmode corruption enemies pending
 - [-] Crimson: Crimera, Face Monster, Blood Crawler done; Hardmode crimson enemies pending
@@ -123,8 +124,8 @@ Boomerangs
 
 ## Armour
 - [x] Wood, Copper, Tin, Iron, Lead, Silver, Tungsten, Gold, Platinum
-- [-] Shadow, Crimson, Jungle, Molten, Meteor, Bee done; Mining, Ninja, Fossil, Necro pending
-- [-] Cobalt to Titanium, Hallowed, Crystal Assassin, Chlorophyte, Spectre, Solar Flare, Vortex, Nebula, Stardust, Spooky done; Turtle, Beetle, Shroomite pending
+- [-] Shadow, Crimson, Jungle, Molten, Meteor, Bee, Fossil done; Mining, Ninja, Necro pending
+- [-] Cobalt to Titanium, Hallowed, Crystal Assassin, Chlorophyte, Spectre, Solar Flare, Vortex, Nebula, Stardust, Spooky, Frost done; Turtle, Beetle, Shroomite pending
 
 ## Accessories
 - [x] Hermes Boots, Cloud in a Bottle, Shiny Red Balloon, Lucky Horseshoe
@@ -153,8 +154,8 @@ Boomerangs
 ## Biomes
 - [x] Terraria biomes only: Minecraft-only biomes are mapped onto Forest/Snow/Desert/Jungle/Ocean (`TerrariaBiomeSource`)
 - [x] Forest (vanilla forest)
-- [-] Desert (vanilla desert); Underground Desert pending
-- [-] Snow (snowy plains and boreal snowy taiga); Ice caverns pending
+- [x] Desert (vanilla desert) and Underground Desert (sandstone, hardened sand, caverns, Desert Fossil)
+- [x] Snow (snowy plains and boreal snowy taiga) and Ice caverns (packed ice, ice, snow)
 - [x] Jungle / Underground Jungle (mud, jungle grass, spores; on vanilla jungle biomes)
 - [x] Ocean (vanilla oceans and beaches)
 - [x] Corruption / Crimson (worldgen, chasms, orbs/hearts, altars; spread pending)
@@ -162,7 +163,7 @@ Boomerangs
 - [x] Dungeon (one per world, seeded location; Golden Keys, locked chests)
 - [x] Underworld (ash cavern below y=-40, lava sea, hellstone, ruined houses)
 - [x] Hallow (pearlstone, hallowed grass, pearlsand, pearlwood, hallowed leaves, enemies)
-- [ ] Space / floating islands
+- [x] Space / Floating Islands (cloud islands with Sunplate houses and Skyware chests)
 - [-] Terraria depth layers (`TerrariaLayer` height bands defined)
 
 ## Structures

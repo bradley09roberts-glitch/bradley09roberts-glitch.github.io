@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "terracraft:block/sunplate_block"
+    }
+  }
+}

@@ -525,8 +525,37 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   - New command: `/terraria celestial stop`.
   - Day events (Slime Rain, Solar Eclipse) can't be summoned at night.
 
+### Stage 10: Desert, Snow and Floating Islands (verified in a live client)
+- **Underground Desert** (`world.biome.UndergroundBiomeFeature`): under every desert the rock down to y=-16 becomes
+  sandstone, smooth sandstone and **Hardened Sand**, with wide winding caverns and veins of **Desert Fossil** (mined
+  for Sturdy Fossils).
+  - Desert chests: Sandstorm in a Bottle (improved double jump), Ancient Chisel (+25% mining speed), fossils.
+  - Enemies on the surface: Antlions (spit sand), Vultures, and in Hardmode Mummies.
+  - Enemies below: Antlion Chargers, Antlion Swarmers and Tomb Crawlers (worms), and in Hardmode Ghouls, Desert
+    Spirits (homing spirit flames) and Dune Splicers (giant worms).
+  - Loot: Antlion Mandibles (Mandible Blade), Forbidden Fragments, Spirit Flame.
+  - Sturdy Fossils craft **Fossil armor** (ranged; 20% chance not to use ammo).
+- **Ice caverns:** under the Snow biome the rock becomes packed ice, blue ice and snow, with caverns.
+  - Ice chests: Ice Skates, Blizzard in a Bottle, Flurry Boots, Ice Blade (icy bolts), Ice Boomerang.
+  - Enemies on the surface: Ice Slimes, Zombie Eskimos at night, and in Hardmode Wolves and the rare Ice Golem.
+  - Enemies in the caverns: Ice Bats, Snow Flinxes, Undead Vikings, Spiked Ice Slimes, and in Hardmode Ice Elementals,
+    Ice Tortoises, Icy Mermen and Armored Vikings.
+  - Loot: Frostbrand, Frost Staff, and the Frost Core, which crafts **Frost armor** (melee/ranged) with Adamantite or
+    Titanium.
+- **Floating Islands** (`world.biome.SkyIslandFeature`): high in the sky, in most 320-block cells, sits an island.
+  - It is a lens of **Cloud** (falling onto clouds never hurts) capped with grass and dirt, with a Sunplate hut
+    holding a **Skyware chest**: Starfury (calls stars from the sky), Shiny Red Balloon, Lucky Horseshoe, Fledgling
+    Wings.
+  - **Harpies** fly there and drop Feathers, and rarely a Giant Harpy Feather that crafts **Harpy Wings**.
+  - Space now spawns flying enemies in open air (it has no ground to stand on).
+- 3D models: Antlion, Vulture, Antlion Charger and Swarmer, Desert Spirit, Ice Bat, Snow Flinx, Wolf, Ice Golem,
+  Ice Elemental, Ice Tortoise, Harpy, Fossil and Frost armor. Also skins for six humanoids and skeletons, worm and
+  slime textures, and flat sprites for all.
+- Showcase: Desert & Sky and Snow & Ice Caverns rooms in the Bestiary, a Biomes kit, and Fossil and Frost armor in the
+  Armory.
+
 ## IN PROGRESS
-- Nothing half-finished. Stage 9 is complete: all four classes (melee, ranged, magic, summon) are playable.
+- Nothing half-finished. Stage 10 is complete: the Desert, Snow and Sky layers have their Terraria biomes.
 
 ## NEXT
 1. (done) Stage 5: Hardmode up to the mechanical bosses, Queen Slime, invasions.
@@ -534,8 +563,9 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 3. (done) Stage 7: Duke Fishron, post-Plantera Dungeon, Pumpkin/Frost Moon, Empress of Light, Martian Madness.
 4. (done) Stage 8: Lunatic Cultist, the Celestial Pillars and Moon Lord (Luminite, endgame gear).
 5. (done) Stage 9: summoner class (minions, sentries, whips) and the Solar Eclipse.
-6. Next candidates: remaining biomes (Underground Desert, Ice caverns, floating islands, Granite/Marble), their enemies,
-   more NPCs (Stylist, Party Girl, Tax Collector, Santa), Old One's Army, and the 3D model upgrades in docs/VISUAL_BACKLOG.md.
+6. (done) Stage 10: Underground Desert, Ice caverns, Floating Islands and their enemies and loot.
+7. Next candidates: Granite/Marble caves, Pyramids, glowing mushroom caves, Ocean enemies and fishing, more NPCs
+   (Stylist, Party Girl, Tax Collector, Santa, Angler), Old One's Army, and the 3D model upgrades in docs/VISUAL_BACKLOG.md.
 
 ## DONE: Stage 4 plan (kept for reference)
 1. ~~Dungeon and Skeletron~~ (done, 4a).

@@ -44,6 +44,8 @@
     "terracraft:lihzahrd_brick",
     "terracraft:dart_trap",
     "terracraft:wooden_spikes",
-    "terracraft:ancient_manipulator"
+    "terracraft:ancient_manipulator",
+    "terracraft:desert_fossil",
+    "terracraft:sunplate_block"
   ]
 }

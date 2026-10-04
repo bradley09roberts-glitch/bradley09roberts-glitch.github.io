@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:frost_leggings",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:frost_core",
+      "count": 1
+    },
+    {
+      "item": "terracraft:adamantite_bar",
+      "count": 15
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "armor"
+}

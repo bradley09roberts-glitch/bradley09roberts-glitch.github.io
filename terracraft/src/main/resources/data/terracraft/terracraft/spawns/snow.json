@@ -1,0 +1,143 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:ice_slime",
+      "weight": 10,
+      "time": "day",
+      "biomes": [
+        "#c:is_snowy"
+      ],
+      "layers": [
+        "surface"
+      ]
+    },
+    {
+      "entity": "terracraft:zombie_eskimo",
+      "weight": 10,
+      "time": "night",
+      "biomes": [
+        "#c:is_snowy"
+      ],
+      "layers": [
+        "surface"
+      ]
+    },
+    {
+      "entity": "terracraft:wolf",
+      "weight": 5,
+      "time": "night",
+      "condition": "hardmode_active",
+      "biomes": [
+        "#c:is_snowy"
+      ],
+      "layers": [
+        "surface"
+      ]
+    },
+    {
+      "entity": "terracraft:ice_golem",
+      "weight": 1,
+      "condition": "hardmode_active",
+      "biomes": [
+        "#c:is_snowy"
+      ],
+      "layers": [
+        "surface"
+      ]
+    },
+    {
+      "entity": "terracraft:ice_bat",
+      "weight": 8,
+      "placement": "air",
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:ice/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:snow_flinx",
+      "weight": 6,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:ice/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:undead_viking",
+      "weight": 6,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:ice/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:spiked_ice_slime",
+      "weight": 5,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:ice/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:ice_elemental",
+      "weight": 4,
+      "placement": "air",
+      "condition": "hardmode_active",
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:ice/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:ice_tortoise",
+      "weight": 4,
+      "condition": "hardmode_active",
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:ice/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:icy_merman",
+      "weight": 3,
+      "condition": "hardmode_active",
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:ice/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:armored_viking",
+      "weight": 4,
+      "condition": "hardmode_active",
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:ice/ground"
+      ]
+    }
+  ]
+}

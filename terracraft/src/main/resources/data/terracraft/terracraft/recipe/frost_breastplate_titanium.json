@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:frost_breastplate",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:frost_core",
+      "count": 1
+    },
+    {
+      "item": "terracraft:titanium_bar",
+      "count": 20
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "armor"
+}

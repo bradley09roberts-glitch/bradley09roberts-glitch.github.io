@@ -1,0 +1,12 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:harpy",
+      "weight": 10,
+      "layers": [
+        "space"
+      ],
+      "placement": "air"
+    }
+  ]
+}

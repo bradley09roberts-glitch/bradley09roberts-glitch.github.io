@@ -247,6 +247,22 @@ public final class CreatureRenderers {
         json(event, MobContent.REAPER.get(), "reaper", 1.0F, 0.0F);
         json(event, MobContent.MOTHRON.get(), "mothron", 1.0F, 0.0F);
         json(event, MobContent.DEADLY_SPHERE.get(), "deadly_sphere", 1.0F, 0.0F);
+        // Stage 10: desert, snow and sky
+        for (var mob : java.util.List.of(MobContent.ANTLION, MobContent.VULTURE, MobContent.ANTLION_CHARGER, MobContent.ANTLION_SWARMER,
+            MobContent.DESERT_SPIRIT, MobContent.ICE_BAT, MobContent.SNOW_FLINX, MobContent.WOLF, MobContent.ICE_GOLEM, MobContent.ICE_ELEMENTAL,
+            MobContent.ICE_TORTOISE, MobContent.HARPY)) {
+            json(event, mob.get(), mob.getId().getPath(), 1.0F, 0.4F);
+        }
+        humanoid(event, MobContent.MUMMY.get(), TerraModels.HUMANOID, 1.8F, true);
+        humanoid(event, MobContent.GHOUL.get(), TerraModels.HUMANOID, 1.8F, true);
+        humanoid(event, MobContent.ZOMBIE_ESKIMO.get(), TerraModels.HUMANOID, 1.8F, true);
+        humanoid(event, MobContent.ICY_MERMAN.get(), TerraModels.HUMANOID, 1.8F, false);
+        humanoid(event, MobContent.UNDEAD_VIKING.get(), TerraModels.SKELETON, 1.8F, true);
+        humanoid(event, MobContent.ARMORED_VIKING.get(), TerraModels.SKELETON, 1.9F, true);
+        worm(event, MobContent.TOMB_CRAWLER.get(), 0.7F);
+        worm(event, MobContent.DUNE_SPLICER.get(), 0.9F);
+        slime(event, MobContent.ICE_SLIME.get(), 0.9F);
+        slime(event, MobContent.SPIKED_ICE_SLIME.get(), 1.0F);
         for (var npc : NpcContent.all()) {
             var layer = npc.getId().getPath().contains("goblin") ? TerraModels.GOBLIN : TerraModels.HUMANOID;
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,

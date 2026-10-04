@@ -580,11 +580,33 @@ def spooky_set():
     return a
 
 
+def fossil_set():
+    # Fossil armor: sun-bleached bone plates over sand-coloured cloth, a skull helm with an empty eye slit
+    a = ore('fossil', '#D8C8A0', accent='#F0E8D0', trim='#7A5A38', gem='#2A1A10', bone='#F0E8D0')
+    closed_helmet(a, 'visor', pattern='bone', inflate=1.2, edge='trim')
+    torso(a, base='cloth', plate='bone', base_mat='trim', pads='big')
+    greaves(a, base='cloth', plate='bone', base_mat='trim')
+    return a
+
+
+def frost_set():
+    # Frost armor: icy blue plate with a horned frost helm and crystal shoulder spikes
+    a = ore('frost', '#A8D8F8', accent='#E8F8FF', trim='#2A5A88', gem='#60D0FF', glow='#60D0FF')
+    closed_helmet(a, 'visor', inflate=1.3, edge='accent')
+    a.add('head', 'head', (-3, -5.2, -5.6), (6, 1, 1), mat='glow', pattern='gem')
+    for side in (-1, 1):
+        a.add('head', 'head', ((-5.5 if side < 0 else 4.5), -11, -1), (1, 5, 1), mat='accent', pattern='gem', pivot=[side * 5, -8, 0], rot=[0, 0, 0.4 * side])
+    torso(a, gem='gem', pads='big')
+    a.pair('chest', 'right_arm', (-5, -6.5, -1), (2, 4, 2), mat='accent', pattern='gem', pivot=[-4, -3, 0], rot=[0, 0, -0.3])
+    greaves(a)
+    return a
+
+
 def all_sets():
     return [wood_set(), copper_set(), tin_set(), iron_set(), lead_set(), silver_set(), tungsten_set(), gold_set(), platinum_set(),
             shadow_set(), crimson_set(), jungle_set(), molten_set(), meteor_set(),
             cobalt_set(), palladium_set(), mythril_set(), orichalcum_set(), adamantite_set(), titanium_set(), hallowed_set(), crystal_assassin_set(), pirate_set(),
-            chlorophyte_set(), spectre_set(), solar_flare_set(), vortex_set(), nebula_set(), stardust_set(), bee_set(), spooky_set()]
+            chlorophyte_set(), spectre_set(), solar_flare_set(), vortex_set(), nebula_set(), stardust_set(), bee_set(), spooky_set(), fossil_set(), frost_set()]
 
 
 # ----------------------------------------------------------------------------------------- UV packing

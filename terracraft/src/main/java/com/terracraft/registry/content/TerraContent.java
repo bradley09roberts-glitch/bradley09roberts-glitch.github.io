@@ -38,5 +38,6 @@ public final class TerraContent {
         LunarContent.init();
         SummonContent.init();
         EclipseContent.init();
+        BiomeContent.init();
     }
 }

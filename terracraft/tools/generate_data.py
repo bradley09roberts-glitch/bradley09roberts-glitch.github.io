@@ -69,7 +69,7 @@ def evil_blocks():
     write(f'{NS}/tags/block/evil/crimson.json', {'values': crimson})
     write(f'{NS}/tags/block/evil/all.json', {'values': corruption + crimson})
     write(f'{NS}/tags/block/stations/demon_altar.json', {'values': [t('demon_altar'), t('crimson_altar')]})
-    write('minecraft/tags/block/mineable/shovel.json', {'values': [t('corrupt_grass'), t('crimson_grass'), t('jungle_grass'), t('ash'), t('hallowed_grass'), t('pearlsand')]})
+    write('minecraft/tags/block/mineable/shovel.json', {'values': [t('corrupt_grass'), t('crimson_grass'), t('jungle_grass'), t('ash'), t('hallowed_grass'), t('pearlsand'), t('hardened_sand'), t('cloud')]})
     write('minecraft/tags/block/mineable/axe.json', {'values': [t('work_bench'), t('ebonwood'), t('shadewood'), t('tinkerers_workshop'), t('dungeon_bookshelf'), t('pearlwood')]})
     write('minecraft/tags/block/mineable/hoe.json', {'values': [t('ebonwood_leaves'), t('shadewood_leaves')]})
     balls = {'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('musket_ball'), 'functions': [{'function': 'minecraft:set_count', 'count': 100}]}]}
@@ -580,6 +580,130 @@ def stage9_lang(L):
     })
 
 
+# ============================================================================== Stage 10: Desert, Snow, Floating Islands
+S6_BLOCKS.extend(['hardened_sand', 'desert_fossil', 'cloud', 'sunplate_block'])
+S6_PICKAXE.extend(['desert_fossil', 'sunplate_block'])
+
+
+def stage10():
+    for b in ('hardened_sand', 'cloud', 'sunplate_block'):
+        write(f'{NS}/loot_table/blocks/{b}.json', self_loot(b))
+    write(f'{NS}/loot_table/blocks/desert_fossil.json', ore_loot('desert_fossil', 'sturdy_fossil'))
+    write(f'{NS}/tags/block/desert/ground.json', {'values': ['minecraft:sandstone', 'minecraft:smooth_sandstone', t('hardened_sand'), 'minecraft:sand']})
+    write(f'{NS}/tags/block/ice/ground.json', {'values': ['minecraft:packed_ice', 'minecraft:blue_ice', 'minecraft:snow_block', 'minecraft:ice']})
+    for name, biomes in (('underground_desert', '#c:is_desert'), ('ice_caverns', '#c:is_snowy'), ('sky_island', '#minecraft:is_overworld')):
+        write(f'{NS}/worldgen/configured_feature/{name}.json', {'type': t(name), 'config': {}})
+        write(f'{NS}/worldgen/placed_feature/{name}.json', {'feature': t(name), 'placement': []})
+        write(f'{NS}/neoforge/biome_modifier/{name}.json', {
+            'type': 'neoforge:add_features', 'biomes': biomes, 'features': t(name), 'step': 'top_layer_modification'})
+    for name, biomes in (('desert', '#c:is_desert'), ('ice', '#c:is_snowy')):
+        write(f'{NS}/worldgen/configured_feature/{name}_chest.json', {'type': t('loot_chest'), 'config': {
+            'chest': {'Name': 'minecraft:chest', 'Properties': {'facing': 'north', 'type': 'single', 'waterlogged': 'false'}},
+            'loot_table': t(f'chests/{name}')}})
+        write(f'{NS}/worldgen/placed_feature/{name}_chest.json', {'feature': t(f'{name}_chest'), 'placement': [
+            {'type': 'minecraft:rarity_filter', 'chance': 2}] + floor_scan(-16, 50)})
+        write(f'{NS}/neoforge/biome_modifier/{name}_chest.json', {
+            'type': 'neoforge:add_features', 'biomes': biomes, 'features': t(f'{name}_chest'), 'step': 'underground_decoration'})
+    write(f'{NS}/loot_table/chests/desert.json', chest_table(
+        ['sandstorm_in_a_bottle', 'ancient_chisel', 'sturdy_fossil'],
+        ['silver_bar', 'tungsten_bar', 'minecraft:gold_ingot', 'platinum_bar'],
+        ['swiftness_potion', 'ironskin_potion', 'regeneration_potion', 'mining_potion']))
+    write(f'{NS}/loot_table/chests/ice.json', chest_table(
+        ['ice_skates', 'blizzard_in_a_bottle', 'flurry_boots', 'ice_blade', 'ice_boomerang'],
+        ['silver_bar', 'tungsten_bar', 'minecraft:gold_ingot', 'platinum_bar'],
+        ['swiftness_potion', 'ironskin_potion', 'regeneration_potion', 'mining_potion']))
+    write(f'{NS}/loot_table/chests/skyware.json', chest_table(
+        ['starfury', 'shiny_red_balloon', 'lucky_horseshoe', 'fledgling_wings'],
+        ['silver_bar', 'tungsten_bar', 'minecraft:gold_ingot', 'platinum_bar'],
+        ['swiftness_potion', 'ironskin_potion', 'regeneration_potion', 'mana_regeneration_potion']))
+    MOBS.update({
+        'antlion': ('Antlion', [('antlion_mandible', 1, 1, 0.5)]),
+        'vulture': ('Vulture', [('feather', 1, 2, 0.5)]),
+        'antlion_charger': ('Antlion Charger', [('antlion_mandible', 1, 1, 0.5)]),
+        'antlion_swarmer': ('Antlion Swarmer', [('antlion_mandible', 1, 1, 0.5)]),
+        'tomb_crawler': ('Tomb Crawler', []),
+        'mummy': ('Mummy', [('forbidden_fragment', 1, 1, 0.1)]),
+        'ghoul': ('Ghoul', [('forbidden_fragment', 1, 2, 0.25)]),
+        'desert_spirit': ('Desert Spirit', [('spirit_flame', 1, 1, 0.02), ('forbidden_fragment', 1, 2, 0.25)]),
+        'dune_splicer': ('Dune Splicer', [('forbidden_fragment', 1, 3, 0.5)]),
+        'ice_slime': ('Ice Slime', [('gel', 1, 2, 1.0)]),
+        'spiked_ice_slime': ('Spiked Ice Slime', [('gel', 1, 3, 1.0)]),
+        'zombie_eskimo': ('Zombie Eskimo', []),
+        'ice_bat': ('Ice Bat', []),
+        'snow_flinx': ('Snow Flinx', []),
+        'undead_viking': ('Undead Viking', []),
+        'wolf': ('Wolf', []),
+        'ice_golem': ('Ice Golem', [('frost_core', 1, 1, 1.0)]),
+        'ice_elemental': ('Ice Elemental', [('frost_staff', 1, 1, 0.02), ('frostbrand', 1, 1, 0.01)]),
+        'ice_tortoise': ('Ice Tortoise', [('frostbrand', 1, 1, 0.02)]),
+        'icy_merman': ('Icy Merman', [('frostbrand', 1, 1, 0.02), ('frost_staff', 1, 1, 0.01)]),
+        'armored_viking': ('Armored Viking', []),
+        'harpy': ('Harpy', [('feather', 1, 1, 0.5), ('giant_harpy_feather', 1, 1, 0.005)]),
+    })
+    HM = 'hardmode_active'
+    DESERT = {'biomes': ['#c:is_desert'], 'layers': ['surface']}
+    UG_DESERT = {'layers': ['underground', 'cavern'], 'ground': ['#terracraft:desert/ground']}
+    SNOW = {'biomes': ['#c:is_snowy'], 'layers': ['surface']}
+    ICE = {'layers': ['underground', 'cavern'], 'ground': ['#terracraft:ice/ground']}
+    SPAWNS['desert'] = [
+        dict(entity='antlion', weight=8, **DESERT), dict(entity='vulture', weight=6, time='day', placement='air', **DESERT),
+        dict(entity='mummy', weight=6, condition=HM, **DESERT),
+        dict(entity='antlion_charger', weight=8, **UG_DESERT), dict(entity='antlion_swarmer', weight=6, placement='air', **UG_DESERT),
+        dict(entity='tomb_crawler', weight=4, **UG_DESERT),
+        dict(entity='ghoul', weight=6, condition=HM, **UG_DESERT), dict(entity='desert_spirit', weight=3, condition=HM, **UG_DESERT),
+        dict(entity='dune_splicer', weight=2, condition=HM, **UG_DESERT),
+    ]
+    SPAWNS['snow'] = [
+        dict(entity='ice_slime', weight=10, time='day', **SNOW), dict(entity='zombie_eskimo', weight=10, time='night', **SNOW),
+        dict(entity='wolf', weight=5, time='night', condition=HM, **SNOW), dict(entity='ice_golem', weight=1, condition=HM, **SNOW),
+        dict(entity='ice_bat', weight=8, placement='air', **ICE), dict(entity='snow_flinx', weight=6, **ICE),
+        dict(entity='undead_viking', weight=6, **ICE), dict(entity='spiked_ice_slime', weight=5, **ICE),
+        dict(entity='ice_elemental', weight=4, placement='air', condition=HM, **ICE), dict(entity='ice_tortoise', weight=4, condition=HM, **ICE),
+        dict(entity='icy_merman', weight=3, condition=HM, **ICE), dict(entity='armored_viking', weight=4, condition=HM, **ICE),
+    ]
+    SPAWNS['sky'] = [dict(entity='harpy', weight=10, layers=['space'], placement='air')]
+
+
+def stage10_recipes():
+    HM_ANVIL = t('hardmode_anvil')
+    recipe('mandible_blade', t('mandible_blade'), [(t('antlion_mandible'), 3)], [WB], category='weapons')
+    recipe('fossil_helm', t('fossil_helm'), [(t('sturdy_fossil'), 10)], [WB], category='armor')
+    recipe('fossil_plate', t('fossil_plate'), [(t('sturdy_fossil'), 20)], [WB], category='armor')
+    recipe('fossil_greaves', t('fossil_greaves'), [(t('sturdy_fossil'), 15)], [WB], category='armor')
+    for metal in ('adamantite', 'titanium'):
+        B = t(f'{metal}_bar')
+        recipe(f'frost_helmet_{metal}', t('frost_helmet'), [(t('frost_core'), 1), (B, 10)], [HM_ANVIL], category='armor')
+        recipe(f'frost_breastplate_{metal}', t('frost_breastplate'), [(t('frost_core'), 1), (B, 20)], [HM_ANVIL], category='armor')
+        recipe(f'frost_leggings_{metal}', t('frost_leggings'), [(t('frost_core'), 1), (B, 15)], [HM_ANVIL], category='armor')
+    recipe('harpy_wings', t('harpy_wings'), [(t('giant_harpy_feather'), 1), (t('feather'), 10), (t('soul_of_flight'), 20)], [HM_ANVIL],
+           category='accessories')
+    recipe('sunplate_block', t('sunplate_block'), [('minecraft:gold_ingot', 1), ('minecraft:stone', 4)], [t('furnace')], count=4, category='blocks')
+
+
+def stage10_lang(L):
+    L.update({
+        'block.terracraft.desert_fossil': 'Desert Fossil', 'block.terracraft.sunplate_block': 'Sunplate Block',
+        'item.terracraft.antlion_mandible.tooltip': "'Antlions use these to dig'",
+        'item.terracraft.sturdy_fossil.tooltip': "'Crafts sturdy fossil armor'",
+        'item.terracraft.forbidden_fragment.tooltip': "'The power of the desert's winds'",
+        'armor_set.terracraft.fossil.bonus': '20% chance not to consume ammo, 5% increased ranged damage',
+        'armor_set.terracraft.frost.bonus': '10% increased melee and ranged damage',
+        'item.terracraft.sandstorm_in_a_bottle.tooltip': 'Allows the holder to do an improved double jump',
+        'item.terracraft.blizzard_in_a_bottle.tooltip': 'Allows the holder to double jump',
+        'item.terracraft.ancient_chisel.tooltip': 'Increases mining speed by 25%',
+        'item.terracraft.ice_skates.tooltip': 'Increases movement speed',
+        'item.terracraft.flurry_boots.tooltip': 'The wearer can run super fast',
+        'item.terracraft.ice_blade.tooltip': 'Shoots an icy bolt',
+        'item.terracraft.frostbrand.tooltip': 'Shoots an icy bolt',
+        'item.terracraft.frost_staff.tooltip': 'Shoots a stream of frost',
+        'item.terracraft.spirit_flame.tooltip': 'Shoots homing spirit flames',
+        'item.terracraft.frost_core.tooltip': "'It's cold to the touch'",
+        'item.terracraft.starfury.tooltip': "Causes stars to rain from the sky\n'Forged with the fury of heaven'",
+        'item.terracraft.giant_harpy_feather.tooltip': "'Crafts the Harpy Wings'",
+        'block.terracraft.cloud.tooltip': 'Falling onto clouds never hurts',
+    })
+
+
 def stage6_recipes():
     HM_ANVIL, HM_FORGE = t('hardmode_anvil'), t('hardmode_forge')
     CB = t('chlorophyte_bar')
@@ -836,6 +960,7 @@ def terraria_recipes():
     stage7_recipes()
     stage8_recipes()
     stage9_recipes()
+    stage10_recipes()
     for name, data in RECIPES.items():
         write(f'{NS}/terracraft/recipe/{name}.json', data)
 
@@ -1293,6 +1418,7 @@ def lang():
     stage7_lang(L)
     stage8_lang(L)
     stage9_lang(L)
+    stage10_lang(L)
     for mob, (name, _) in MOBS.items():
         L[f'entity.terracraft.{mob}'] = name
     path = os.path.join(RES, 'assets/terracraft/lang/en_us.json')
@@ -1964,6 +2090,7 @@ def main():
     stage7()
     stage8()
     stage9()
+    stage10()
     damage()
     smelting()
     terraria_recipes()

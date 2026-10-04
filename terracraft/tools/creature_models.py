@@ -1552,10 +1552,169 @@ def stage9_creatures():
             ghost('reaper', '#2A2A34', '#E8E0C0', 9), mothron(), deadly_sphere('deadly_sphere')]
 
 
+# ----------------------------------------------------------------------------------------- Stage 10: desert, snow, sky
+def quadruped(name, mats, body, head, legs=4, leg_len=6, tail=True, ears=False, shell=None):
+    """A four-legged creature: body (w, h, l), head size, legs; optional ears and a shell on the back."""
+    c = Creature(name, mats)
+    w, h, l = body
+    c.part('body', pivot=(0, 24 - leg_len - h / 2, 0))
+    c.box('body', (-w / 2, -h / 2, -l / 2), (w, h, l), pattern='skin', edge='dark')
+    if shell:
+        c.box('body', (-w / 2 - 1, -h / 2 - 3, -l / 2 - 1), (w + 2, 4, l + 2), mat='shell', pattern=shell, edge='dark')
+    c.part('head', 'body', pivot=(0, -h / 4, -l / 2))
+    hw, hh, hl = head
+    c.box('head', (-hw / 2, -hh / 2, -hl), (hw, hh, hl), pattern='skin', edge='dark')
+    c.box('head', (-hw / 2 + 0.5, -hh / 2 + 1, -hl - 0.4), (1, 1, 0.5), mat='eye', pattern='glow')
+    c.box('head', (hw / 2 - 1.5, -hh / 2 + 1, -hl - 0.4), (1, 1, 0.5), mat='eye', pattern='glow')
+    if ears:
+        for x in (-hw / 2, hw / 2 - 1.5):
+            c.box('head', (x, -hh / 2 - 2, -hl / 2), (1.5, 2, 1), pattern='skin')
+    c.anim('head', 'head')
+    for i, (x, z) in enumerate(((-w / 2 + 1, -l / 2 + 2), (w / 2 - 1, -l / 2 + 2), (-w / 2 + 1, l / 2 - 2), (w / 2 - 1, l / 2 - 2))[:legs]):
+        nm = ('leg_r', 'leg_l')[i % 2] + str(i)
+        c.part(nm, 'body', pivot=(x, h / 2, z))
+        c.box(nm, (-1, 0, -1), (2, leg_len, 2), pattern='skin')
+        c.anim(nm, ('leg_r', 'leg_l')[(i + i // 2) % 2], 1.0)
+    if tail:
+        c.part('tail', 'body', pivot=(0, -h / 4, l / 2), rot=(-0.5, 0, 0))
+        c.box('tail', (-0.5, -0.5, 0), (1, 1, 5), pattern='skin')
+        c.anim('tail', 'tail', 0.4, 0.5)
+    return c
+
+
+def antlion():
+    """Antlion: a buried sand-coloured head with huge pincers, spitting sand."""
+    c = Creature('antlion', {'main': '#C8A060', 'dark': '#5A3A18', 'eye': '#2A1A08', 'glow': '#2A1A08', 'pincer': '#7A5028'})
+    c.part('body', pivot=(0, 24, 0))
+    c.box('body', (-6, -6, -6), (12, 6, 12), mat='dark', pattern='rock')
+    c.part('head', 'body', pivot=(0, -6, 0))
+    c.box('head', (-4, -6, -4), (8, 6, 8), pattern='scale', edge='dark')
+    c.box('head', (-3, -5, -4.4), (1.5, 1.5, 0.5), mat='eye', pattern='skin')
+    c.box('head', (1.5, -5, -4.4), (1.5, 1.5, 0.5), mat='eye', pattern='skin')
+    for side, nm in ((-1, 'jaw_r'), (1, 'jaw_l')):
+        c.part(nm, 'head', pivot=(side * 2.5, -2, -4))
+        c.box(nm, (-0.75, -1, -6), (1.5, 1.5, 6), mat='pincer', pattern='horn')
+        c.anim(nm, 'jaw', 0.3 * side, 0.4)
+    c.anim('head', 'head')
+    return c
+
+
+def vulture():
+    """Vulture: a brown bird with a bald pink head and wide wings."""
+    c = Creature('vulture', {'main': '#5A4030', 'dark': '#2A1A10', 'head': '#D88A80', 'beak': '#E8D0A0', 'eye': '#101010', 'glow': '#101010', 'wing': '#4A3020'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-3, -3, -4), (6, 6, 9), pattern='feather', edge='dark')
+    c.part('head', 'body', pivot=(0, -3, -4))
+    c.box('head', (-1.5, -4, -3), (3, 4, 3), mat='head', pattern='skin')
+    c.box('head', (-0.5, -2, -5), (1, 1.5, 2), mat='beak', pattern='horn')
+    c.anim('head', 'head')
+    wings(c, 'body', -2, (12, 7), mat='wing', pattern='feather', amp=0.6, speed=0.5)
+    c.anim('body', 'bob', 0.6, 0.15)
+    return c
+
+
+def antlion_charger():
+    return quadruped('antlion_charger', {'main': '#C89A58', 'dark': '#5A3A18', 'eye': '#2A1A08', 'glow': '#2A1A08'}, (8, 5, 12), (6, 5, 5), tail=False)
+
+
+def antlion_swarmer():
+    """Antlion Swarmer: a flying sand-coloured insect with four clear wings."""
+    c = Creature('antlion_swarmer', {'main': '#C8A060', 'dark': '#5A3A18', 'eye': '#FF4020', 'glow': '#FF4020', 'wing': '#F0E8D0'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-2.5, -2.5, -5), (5, 5, 10), pattern='bands', edge='dark')
+    c.box('body', (-2, -2, -7), (4, 4, 2), pattern='scale')
+    c.box('body', (-1.8, -1.5, -7.4), (1, 1, 0.5), mat='eye', pattern='glow')
+    c.box('body', (0.8, -1.5, -7.4), (1, 1, 0.5), mat='eye', pattern='glow')
+    wings(c, 'body', -2, (8, 4), amp=0.7, speed=2.0)
+    c.anim('body', 'bob', 0.5, 0.4)
+    return c
+
+
+def ice_bat():
+    """Ice Bat: a pale blue bat with icy wings."""
+    c = Creature('ice_bat', {'main': '#A8D8F8', 'dark': '#3A6A98', 'eye': '#101828', 'glow': '#101828', 'wing': '#C8E8FF'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-2, -2, -2), (4, 4, 4), pattern='skin', edge='dark')
+    c.box('body', (-1.5, -1, -2.4), (1, 1, 0.5), mat='eye', pattern='glow')
+    c.box('body', (0.5, -1, -2.4), (1, 1, 0.5), mat='eye', pattern='glow')
+    for x in (-2, 1):
+        c.box('body', (x, -4, -1), (1, 2, 1), pattern='skin')
+    wings(c, 'body', -1, (7, 5), amp=0.8, speed=1.4)
+    return c
+
+
+def ice_elemental():
+    """Ice Elemental: a floating crystal spirit wrapped in a cloak of snow."""
+    c = Creature('ice_elemental', {'main': '#C8E8FF', 'dark': '#3A6A98', 'glow': '#80E0FF', 'eye': '#FFFFFF', 'cloak': '#E8F4FF'})
+    c.part('body', pivot=(0, 12, 0))
+    c.box('body', (-4, -10, -3), (8, 10, 6), mat='cloak', pattern='cloth', edge='dark')
+    c.box('body', (-3, -16, -3), (6, 6, 6), pattern='gem', edge='dark')
+    c.box('body', (-2, -14, -3.4), (1, 1, 0.5), mat='eye', pattern='glow')
+    c.box('body', (1, -14, -3.4), (1, 1, 0.5), mat='eye', pattern='glow')
+    for i, x in enumerate((-2, 0, 2)):
+        c.box('body', (x - 0.5, -20 + abs(x), -0.5), (1, 4 - abs(x), 1), mat='glow', pattern='gem')
+    c.anim('body', 'bob', 1.0, 0.15)
+    return c
+
+
+def ice_golem():
+    """Ice Golem: a hulking golem of ice blocks with a glowing blue core."""
+    c = Creature('ice_golem', {'main': '#A8D8F8', 'dark': '#2A5A88', 'glow': '#60D0FF', 'eye': '#E0FFFF'})
+    c.part('body', pivot=(0, 24, 0))
+    c.box('body', (-9, -32, -6), (18, 18, 12), pattern='gem', edge='dark')
+    c.box('body', (-3, -28, -6.5), (6, 6, 1), mat='glow', pattern='glow')
+    c.part('head', 'body', pivot=(0, -32, 0))
+    c.box('head', (-5, -8, -5), (10, 8, 10), pattern='gem', edge='dark')
+    c.box('head', (-3, -5, -5.4), (2, 2, 0.5), mat='eye', pattern='glow')
+    c.box('head', (1, -5, -5.4), (2, 2, 0.5), mat='eye', pattern='glow')
+    c.anim('head', 'head')
+    for side, nm in ((-1, 'arm_r'), (1, 'arm_l')):
+        c.part(nm, 'body', pivot=(side * 10, -30, 0))
+        c.box(nm, (-3, 0, -3), (6, 16, 6), pattern='gem', edge='dark')
+        c.anim(nm, nm, 0.5)
+    for side, nm in ((-1, 'leg_r'), (1, 'leg_l')):
+        c.part(nm, 'body', pivot=(side * 5, -14, 0))
+        c.box(nm, (-3, 0, -3), (6, 14, 6), pattern='gem', edge='dark')
+        c.anim(nm, nm, 0.5)
+    return c
+
+
+def harpy():
+    """Harpy: a winged woman with blue feather wings, bird legs and long hair."""
+    c = Creature('harpy', {'main': '#E8C8A8', 'dark': '#5A3A2A', 'hair': '#3A6AC8', 'wing': '#5A8AE8', 'eye': '#3A2A4A', 'glow': '#3A2A4A',
+                           'talon': '#E8C040'})
+    c.part('body', pivot=(0, 14, 0))
+    c.box('body', (-3, -9, -2), (6, 9, 4), mat='wing', pattern='feather', edge='dark')
+    c.part('head', 'body', pivot=(0, -9, 0))
+    c.box('head', (-3, -6, -3), (6, 6, 6), pattern='skin', edge='dark')
+    c.box('head', (-3.5, -7, -1), (7, 9, 5), mat='hair', pattern='cloth')
+    c.box('head', (-2, -4, -3.4), (1, 1, 0.5), mat='eye', pattern='glow')
+    c.box('head', (1, -4, -3.4), (1, 1, 0.5), mat='eye', pattern='glow')
+    c.anim('head', 'head')
+    wings(c, 'body', -7, (11, 9), mat='wing', pattern='feather', amp=0.7, speed=0.8)
+    for side, nm in ((-1, 'leg_r'), (1, 'leg_l')):
+        c.part(nm, 'body', pivot=(side * 1.5, 0, 0))
+        c.box(nm, (-0.75, 0, -0.75), (1.5, 6, 1.5), mat='talon', pattern='horn')
+        c.anim(nm, nm, 0.3)
+    c.anim('body', 'bob', 0.8, 0.2)
+    return c
+
+
+def stage10_creatures():
+    return [antlion(), vulture(), antlion_charger(), antlion_swarmer(), ghost('desert_spirit', '#C8A060', '#FFE070', 8),
+            ice_bat(), quadruped('snow_flinx', {'main': '#F0F4FF', 'dark': '#8AA0C0', 'eye': '#101828', 'glow': '#101828'}, (8, 7, 8), (6, 5, 4),
+                                 legs=2, leg_len=3, tail=False),
+            quadruped('wolf', {'main': '#8A8A98', 'dark': '#3A3A44', 'eye': '#FF3030', 'glow': '#FF3030'}, (7, 6, 14), (5, 5, 6), ears=True),
+            ice_golem(), ice_elemental(),
+            quadruped('ice_tortoise', {'main': '#6A9AB8', 'dark': '#2A4A68', 'eye': '#101828', 'glow': '#101828', 'shell': '#C8E8FF'},
+                      (12, 6, 14), (5, 5, 5), leg_len=4, tail=False, shell='gem'),
+            harpy()]
+
+
 def all_creatures():
     return [imp(), demon(), demon('voodoo_demon', voodoo=True), eater_of_souls(), crimera(), face_monster(), blood_crawler(),
             snapper('man_eater', '#4A9A30', '#E070A0', 9), snapper('snatcher', '#5AAA3A', '#F0A0C0', 7), meteor_head()] + hm_creatures() + mech_creatures() + pirate_creatures() + frost_creatures() \
-        + jungle_hm_creatures() + temple_creatures() + stage7_creatures() + stage8_creatures() + stage9_creatures()
+        + jungle_hm_creatures() + temple_creatures() + stage7_creatures() + stage8_creatures() + stage9_creatures() + stage10_creatures()
 
 
 def write(assets, tex):

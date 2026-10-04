@@ -28,7 +28,7 @@ LANG = json.load(open(os.path.join(ROOT, 'src/main/resources/assets/terracraft/l
 FLOOR = 209          # floor blocks; players stand at FLOOR + 1
 Y = FLOOR + 1
 FUNCS = {}
-AREA = (-172, -346, 252, 172)   # x0, z0, x1, z1 of everything the showcase builds
+AREA = (-172, -378, 252, 172)   # x0, z0, x1, z1 of everything the showcase builds
 
 
 def fn(name, *lines):
@@ -262,6 +262,10 @@ fn('kit_summoner', *give('slime_staff', 'hornet_staff', 'imp_staff', 'optic_staf
    'say Staffs call minions (more with Spooky armor and the necklaces); whips tag enemies for your minions.')
 fn('kit_eclipse', *give('solar_tablet*3', 'death_sickle', 'butchers_chainsaw', 'nail_gun', 'toxic_flask', 'broken_hero_sword', 'true_excalibur',
                         'terra_blade', 'deadly_sphere_staff'))
+fn('kit_biomes', *give('sandstorm_in_a_bottle', 'ancient_chisel', 'mandible_blade', 'spirit_flame', 'ice_blade', 'ice_boomerang', 'frostbrand',
+                        'frost_staff', 'ice_skates', 'blizzard_in_a_bottle', 'flurry_boots', 'starfury', 'harpy_wings', 'fossil_helm', 'fossil_plate',
+                        'fossil_greaves', 'frost_helmet', 'frost_breastplate', 'frost_leggings', 'cloud*64', 'sunplate_block*64', 'hardened_sand*64'),
+   'say Desert, Snow and Floating Island gear. Clouds are soft: falling onto them never hurts.')
 fn('kit_accessories', *give(*[i for i in ALL_ITEMS if i in {
     'hermes_boots', 'cloud_in_a_bottle', 'shiny_red_balloon', 'lucky_horseshoe', 'band_of_regeneration', 'band_of_starpower',
     'mana_regeneration_band', 'natures_gift', 'aglet', 'anklet_of_the_wind', 'feral_claws', 'obsidian_skull', 'lava_charm', 'cobalt_shield',
@@ -290,7 +294,7 @@ buttons('south', 'GEAR KITS', [
     ('Hardmode Ores Kit', 'kit_hm_ores'), ('Hallowed Kit', 'kit_hallowed'), ('Queen Slime Kit', 'kit_queen_slime'), ('Pirate Kit', 'kit_pirates'),
     ('Chlorophyte Kit', 'kit_chlorophyte'), ('Plantera Kit', 'kit_plantera'), ('Golem Kit', 'kit_golem'),
     ('Duke Fishron Kit', 'kit_fishron'), ('Spectre & Dungeon Kit', 'kit_dungeon_hm'), ('Moon Events Kit', 'kit_moons'),
-    ('Empress & Martian Kit', 'kit_empress_martian'), ('Lunar Kit', 'kit_lunar'), ('Summoner Kit', 'kit_summoner'), ('Eclipse Kit', 'kit_eclipse'),
+    ('Empress & Martian Kit', 'kit_empress_martian'), ('Lunar Kit', 'kit_lunar'), ('Summoner Kit', 'kit_summoner'), ('Eclipse Kit', 'kit_eclipse'), ('Biomes Kit', 'kit_biomes'),
     ('All Accessories', 'kit_accessories'), ('Boss Summons', 'kit_summons'), ('Potions', 'kit_potions'), ('Crafting Stations', 'kit_stations'),
     ('Wings', 'kit_wings'), ('Food Buffs', 'kit_food'), ('Coins', 'kit_coins'), ('Life & Mana Crystals', 'kit_life'),
     ('Clear Inventory', 'clear_inventory'),
@@ -504,23 +508,29 @@ ROOMS = [   # name, floor, wall, light, (log, leaves) or None, enemies
     ('Solar Eclipse', 'minecraft:black_concrete_powder', 'minecraft:blackstone', 'minecraft:shroomlight', None,
      ['eyezor', 'frankenstein', 'swamp_thing', 'vampire', 'creature_from_the_deep', 'fritz', 'reaper', 'mothron', 'butcher', 'deadly_sphere',
       'nailhead', 'dr_man_fly']),
+    ('Desert & Sky', 'minecraft:sand', 'minecraft:cut_sandstone', 'minecraft:shroomlight', None,
+     ['antlion', 'vulture', 'antlion_charger', 'antlion_swarmer', 'tomb_crawler', 'mummy', 'ghoul', 'desert_spirit', 'dune_splicer', 'harpy']),
+    ('Snow & Ice Caverns', 'minecraft:snow_block', 'minecraft:packed_ice', 'minecraft:sea_lantern', ('minecraft:spruce_log', 'minecraft:spruce_leaves[persistent=true]'),
+     ['ice_slime', 'spiked_ice_slime', 'zombie_eskimo', 'ice_bat', 'snow_flinx', 'undead_viking', 'wolf', 'ice_golem', 'ice_elemental',
+      'ice_tortoise', 'icy_merman', 'armored_viking']),
 ]
 FLYERS = {'demon_eye', 'cave_bat', 'giant_bat', 'eater_of_souls', 'corruptor', 'slimer', 'crimera', 'floaty_gross', 'jungle_bat', 'hornet', 'bee',
           'cursed_skull', 'demon', 'voodoo_demon', 'hellbat', 'pixie', 'gastropod', 'illuminant_bat', 'drippler', 'meteor_head', 'wyvern', 'probe',
           'wraith', 'servant_of_cthulhu', 'parrot', 'heavenly_slime', 'flying_snake', 'dungeon_spirit', 'poltergeist', 'flocko',
           'martian_drone', 'martian_probe', 'sharkron', 'prismatic_lacewing', 'corite', 'alien_hornet', 'nebula_floater', 'brain_suckler',
-          'star_cell', 'flow_invader', 'reaper', 'mothron', 'deadly_sphere'}
-fill(-4, FLOOR, -41, 4, FLOOR, -337, 'minecraft:polished_andesite')            # the avenue
-fill(-5, FLOOR, -41, -5, FLOOR, -337, 'minecraft:polished_blackstone_bricks')
-fill(5, FLOOR, -41, 5, FLOOR, -337, 'minecraft:polished_blackstone_bricks')
-for z in range(-44, -337, -4):
+          'star_cell', 'flow_invader', 'reaper', 'mothron', 'deadly_sphere', 'vulture', 'antlion_swarmer', 'desert_spirit', 'ice_bat',
+          'ice_elemental', 'harpy'}
+fill(-4, FLOOR, -41, 4, FLOOR, -369, 'minecraft:polished_andesite')            # the avenue
+fill(-5, FLOOR, -41, -5, FLOOR, -369, 'minecraft:polished_blackstone_bricks')
+fill(5, FLOOR, -41, 5, FLOOR, -369, 'minecraft:polished_blackstone_bricks')
+for z in range(-44, -369, -4):
     put(0, FLOOR, z, 'minecraft:sea_lantern')
-for z in range(-44, -337, -12):
+for z in range(-44, -369, -12):
     for x in (-4, 4):
         put(x, Y, z, 'minecraft:polished_blackstone_wall')
         put(x, Y + 1, z, 'minecraft:lantern')
-fill(-6, Y, -338, 6, Y + 8, -338, 'minecraft:polished_blackstone_bricks')
-wall_sign(0, Y + 3, -337, 'south', '', 'THE BESTIARY', 'every enemy', '', color='yellow')
+fill(-6, Y, -370, 6, Y + 8, -370, 'minecraft:polished_blackstone_bricks')
+wall_sign(0, Y + 3, -369, 'south', '', 'THE BESTIARY', 'every enemy', '', color='yellow')
 ZOO_COUNT = 0
 for k, (room, floor, wall, light, tree_kind, enemies) in enumerate(ROOMS):
     side = 1 if k % 2 else -1
@@ -705,20 +715,20 @@ def first(*names):
 
 SET_NAMES = ['wood', 'copper', 'tin', 'iron', 'lead', 'silver', 'tungsten', 'gold', 'platinum', 'jungle', 'meteor', 'shadow', 'crimson', 'molten',
              'cobalt', 'palladium', 'mythril', 'orichalcum', 'adamantite', 'titanium', 'hallowed', 'chlorophyte', 'spectre',
-             'solar_flare', 'vortex', 'nebula', 'stardust', 'bee', 'spooky']
+             'solar_flare', 'vortex', 'nebula', 'stardust', 'bee', 'spooky', 'fossil', 'frost']
 WEAPON = {'wood': 'wooden_sword', 'shadow': 'lights_bane', 'crimson': 'blood_butcherer', 'jungle': 'blade_of_grass', 'molten': 'fiery_greatsword',
           'meteor': 'space_gun', 'hallowed': 'excalibur', 'chlorophyte': 'chlorophyte_claymore', 'spectre': 'shadowbeam_staff',
           'solar_flare': 'solar_eruption', 'vortex': 'vortex_beater', 'nebula': 'nebula_blaze', 'stardust': 'stardust_dragon_staff',
-          'bee': 'hornet_staff', 'spooky': 'dark_harvest'}
+          'bee': 'hornet_staff', 'spooky': 'dark_harvest', 'fossil': 'mandible_blade', 'frost': 'frostbrand'}
 TOOL = {'shadow': 'nightmare_pickaxe', 'crimson': 'deathbringer_pickaxe', 'molten': 'molten_pickaxe', 'hallowed': 'pickaxe_axe', 'jungle': 'bee_keeper'}
 for i, s in enumerate(SET_NAMES):
-    head = first(f'{s}_helmet', f'{s}_hat', f'{s}_mask', f'{s}_hood', f'{s}_headgear')
+    head = first(f'{s}_helmet', f'{s}_hat', f'{s}_mask', f'{s}_hood', f'{s}_headgear', f'{s}_helm')
     chest = first(f'{s}_chainmail', f'{s}_breastplate', f'{s}_scalemail', f'{s}_shirt', f'{s}_suit', f'{s}_plate_mail', f'{s}_robe')
     legs = first(f'{s}_greaves', f'{s}_leggings', f'{s}_pants')
     weapon = first(WEAPON.get(s, ''), f'{s}_broadsword', f'{s}_sword', f'{s}_shortsword')
     tool = first(TOOL.get(s, ''), f'{s}_pickaxe', f'{s}_bow', f'{s}_repeater')
     north = i % 2 == 0
-    x = -56 - 7 * (i // 2)
+    x = -56 - 6 * (i // 2)
     z = -10 if north else 10
     fill(x - 1, Y, z - 1, x + 1, Y, z + 1, 'minecraft:polished_andesite')
     put(x, Y, z, 'minecraft:gold_block' if s in ('gold', 'hallowed') else 'minecraft:polished_diorite')

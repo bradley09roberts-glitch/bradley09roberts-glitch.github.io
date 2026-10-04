@@ -578,6 +578,69 @@ public final class MobContent {
         (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.TOXIC_FLASK, 55.0F), 0.6F, 1.8F,
         MobDefinition.builder().life(800).damage(60).defense(28).knockbackTaken(0.4F).coins(1500).speed(0.28));
 
+    // --- Desert and Underground Desert -----------------------------------------------------------------------
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> ANTLION = register("antlion",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.SAND_BALL, 13.0F), 0.9F, 0.7F,
+        MobDefinition.builder().life(45).damage(10).defense(10).knockbackTaken(0.0F).coins(130).speed(0.0));
+    public static final RegistryObject<EntityType<FlyerMob>> VULTURE = register("vulture",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.CHASER), 0.9F, 0.7F,
+        MobDefinition.builder().life(40).damage(15).defense(4).knockbackTaken(0.7F).coins(60).speed(0.32).followRange(40));
+    public static final RegistryObject<EntityType<WalkerMob>> ANTLION_CHARGER = register("antlion_charger", WalkerMob::new, 0.9F, 0.8F,
+        MobDefinition.builder().life(50).damage(20).defense(8).knockbackTaken(0.5F).coins(130).speed(0.45));
+    public static final RegistryObject<EntityType<FlyerMob>> ANTLION_SWARMER = register("antlion_swarmer",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.8F, 0.6F,
+        MobDefinition.builder().life(45).damage(16).defense(6).knockbackTaken(0.6F).coins(130).speed(0.34));
+    public static final WormMob.Spec TOMB_CRAWLER_SPEC = new WormMob.Spec(8, 0.7, 0.4, 0.07, true, false);
+    public static final RegistryObject<EntityType<WormMob>> TOMB_CRAWLER = register("tomb_crawler",
+        (type, level) -> new WormMob(type, level, TOMB_CRAWLER_SPEC), 0.7F, 0.7F,
+        MobDefinition.builder().life(70).damage(20).defense(8).knockbackTaken(0.0F).coins(250).followRange(48));
+    public static final RegistryObject<EntityType<WalkerMob>> MUMMY = register("mummy", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(130).damage(50).defense(18).knockbackTaken(0.45F).coins(500).speed(0.24));
+    public static final RegistryObject<EntityType<WalkerMob>> GHOUL = register("ghoul", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(220).damage(55).defense(22).knockbackTaken(0.4F).coins(600).speed(0.3));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.CasterMob>> DESERT_SPIRIT = register("desert_spirit",
+        (type, level) -> new com.terracraft.entity.mob.CasterMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.ENEMY_SPIRIT_FLAME, 50.0F), 0.7F, 1.7F,
+        MobDefinition.builder().life(240).damage(60).defense(18).knockbackTaken(0.6F).coins(800));
+    public static final WormMob.Spec DUNE_SPLICER_SPEC = new WormMob.Spec(12, 0.85, 0.5, 0.08, true, false);
+    public static final RegistryObject<EntityType<WormMob>> DUNE_SPLICER = register("dune_splicer",
+        (type, level) -> new WormMob(type, level, DUNE_SPLICER_SPEC), 0.9F, 0.9F,
+        MobDefinition.builder().life(400).damage(60).defense(20).knockbackTaken(0.0F).coins(1000).followRange(56));
+
+    // --- Snow and Ice caverns ---------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<SlimeMob>> ICE_SLIME = slime("ice_slime", 0.9F, 0.65F,
+        MobDefinition.builder().life(40).damage(16).defense(4).coins(50));
+    public static final RegistryObject<EntityType<SlimeMob>> SPIKED_ICE_SLIME = slime("spiked_ice_slime", 1.0F, 0.75F,
+        MobDefinition.builder().life(60).damage(22).defense(8).coins(100));
+    public static final RegistryObject<EntityType<WalkerMob>> ZOMBIE_ESKIMO = register("zombie_eskimo", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(45).damage(16).defense(8).knockbackTaken(0.5F).coins(70).speed(0.23).nocturnal());
+    public static final RegistryObject<EntityType<FlyerMob>> ICE_BAT = register("ice_bat",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.6F, 0.45F,
+        MobDefinition.builder().life(16).damage(15).defense(4).knockbackTaken(0.8F).coins(90).speed(0.3));
+    public static final RegistryObject<EntityType<WalkerMob>> SNOW_FLINX = register("snow_flinx", WalkerMob::new, 0.7F, 0.7F,
+        MobDefinition.builder().life(70).damage(20).defense(6).knockbackTaken(0.5F).coins(100).speed(0.32));
+    public static final RegistryObject<EntityType<WalkerMob>> UNDEAD_VIKING = register("undead_viking", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(70).damage(28).defense(14).knockbackTaken(0.5F).coins(150).speed(0.26));
+    public static final RegistryObject<EntityType<WalkerMob>> WOLF = register("wolf", WalkerMob::new, 0.9F, 0.85F,
+        MobDefinition.builder().life(230).damage(60).defense(18).knockbackTaken(0.5F).coins(800).speed(0.42).nocturnal());
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> ICE_GOLEM = register("ice_golem",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.ENEMY_ICE_SHARD, 60.0F), 1.6F, 2.6F,
+        MobDefinition.builder().life(2000).damage(70).defense(30).knockbackTaken(0.1F).coins(3000).speed(0.22));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ShooterFlyerMob>> ICE_ELEMENTAL = register("ice_elemental",
+        (type, level) -> new com.terracraft.entity.mob.ShooterFlyerMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.ENEMY_ICE_SHARD, 45F, 2.5F, net.minecraft.sounds.SoundEvents.GLASS_BREAK), 0.8F, 1.6F,
+        MobDefinition.builder().life(220).damage(55).defense(20).knockbackTaken(0.5F).coins(500).speed(0.25).followRange(40));
+    public static final RegistryObject<EntityType<WalkerMob>> ICE_TORTOISE = register("ice_tortoise", WalkerMob::new, 1.1F, 0.9F,
+        MobDefinition.builder().life(400).damage(60).defense(40).knockbackTaken(0.2F).coins(800).speed(0.25));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.CasterMob>> ICY_MERMAN = register("icy_merman",
+        (type, level) -> new com.terracraft.entity.mob.CasterMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.ENEMY_ICE_SHARD, 45.0F), 0.6F, 1.8F,
+        MobDefinition.builder().life(240).damage(50).defense(20).knockbackTaken(0.5F).coins(600));
+    public static final RegistryObject<EntityType<WalkerMob>> ARMORED_VIKING = register("armored_viking", WalkerMob::new, 0.6F, 1.9F,
+        MobDefinition.builder().life(400).damage(60).defense(34).knockbackTaken(0.3F).coins(800).speed(0.3));
+
+    // --- Floating Islands -----------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ShooterFlyerMob>> HARPY = register("harpy",
+        (type, level) -> new com.terracraft.entity.mob.ShooterFlyerMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.HARPY_FEATHER, 12F, 3.0F, net.minecraft.sounds.SoundEvents.PARROT_AMBIENT), 0.8F, 1.4F,
+        MobDefinition.builder().life(40).damage(25).defense(8).knockbackTaken(0.6F).coins(250).speed(0.3).followRange(40));
+
     private MobContent() {}
 
     public static void init() {

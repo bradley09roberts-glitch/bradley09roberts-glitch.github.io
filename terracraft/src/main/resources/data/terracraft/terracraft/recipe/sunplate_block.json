@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:sunplate_block",
+    "count": 4
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:gold_ingot",
+      "count": 1
+    },
+    {
+      "item": "minecraft:stone",
+      "count": 4
+    }
+  ],
+  "stations": [
+    "terracraft:furnace"
+  ],
+  "category": "blocks"
+}

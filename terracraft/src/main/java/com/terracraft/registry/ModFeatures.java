@@ -24,6 +24,13 @@ public final class ModFeatures {
     public static final RegistryObject<com.terracraft.world.underworld.UnderworldFeature> UNDERWORLD = FEATURES.register("underworld",
         com.terracraft.world.underworld.UnderworldFeature::new);
 
+    public static final RegistryObject<com.terracraft.world.biome.UndergroundBiomeFeature> UNDERGROUND_DESERT = FEATURES.register("underground_desert",
+        () -> new com.terracraft.world.biome.UndergroundBiomeFeature(com.terracraft.world.biome.UndergroundBiomeFeature.Kind.DESERT));
+    public static final RegistryObject<com.terracraft.world.biome.UndergroundBiomeFeature> ICE_CAVERNS = FEATURES.register("ice_caverns",
+        () -> new com.terracraft.world.biome.UndergroundBiomeFeature(com.terracraft.world.biome.UndergroundBiomeFeature.Kind.SNOW));
+    public static final RegistryObject<com.terracraft.world.biome.SkyIslandFeature> SKY_ISLAND = FEATURES.register("sky_island",
+        com.terracraft.world.biome.SkyIslandFeature::new);
+
     /** Biome source types (registered on the same mod bus as the features). */
     public static final DeferredRegister<com.mojang.serialization.MapCodec<? extends net.minecraft.world.level.biome.BiomeSource>> BIOME_SOURCES =
         DeferredRegister.create(net.minecraft.core.registries.Registries.BIOME_SOURCE, TerraCraft.MODID);

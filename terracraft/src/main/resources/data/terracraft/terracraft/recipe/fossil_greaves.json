@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:fossil_greaves",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:sturdy_fossil",
+      "count": 15
+    }
+  ],
+  "stations": [
+    "terracraft:work_bench"
+  ],
+  "category": "armor"
+}

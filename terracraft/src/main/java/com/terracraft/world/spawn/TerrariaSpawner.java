@@ -211,6 +211,12 @@ public final class TerrariaSpawner {
                 candidates.add(feet);
             }
         }
+        if (candidates.isEmpty() && nearY >= com.terracraft.world.TerrariaLayer.SPACE_START) {
+            // Space has no ground to stand on: harpies and wyverns appear in the open sky
+            BlockPos air = new BlockPos(x, nearY - 4 + random.nextInt(9), z);
+            AABB space = new AABB(air.getX(), air.getY(), air.getZ(), air.getX() + 1, air.getY() + 2, air.getZ() + 1);
+            return level.noCollision(space) ? air : null;
+        }
         return candidates.isEmpty() ? null : candidates.get(random.nextInt(candidates.size()));
     }
 }

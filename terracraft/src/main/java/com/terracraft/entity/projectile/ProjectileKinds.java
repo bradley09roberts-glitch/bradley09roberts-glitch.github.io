@@ -378,6 +378,30 @@ public final class ProjectileKinds {
         .lifetime(30).size(0.5F, 1.0F).orientation(ProjectileKind.Orientation.SPIN).pierce(2).noTileCollide().fullbright()
         .trail(() -> ParticleTypes.END_ROD));
 
+    // ---------------------------------------------------------------- Desert, Snow, Sky (Stage 10)
+    public static final ProjectileKind SAND_BALL = register(ProjectileKind.builder("sand_ball")
+        .gravity(0.03).lifetime(80).size(0.3F, 0.5F).orientation(ProjectileKind.Orientation.BILLBOARD).enemy());
+    public static final ProjectileKind HARPY_FEATHER = register(ProjectileKind.builder("harpy_feather")
+        .lifetime(80).size(0.25F, 0.55F).enemy());
+    public static final ProjectileKind ENEMY_SPIRIT_FLAME = register(ProjectileKind.builder("enemy_spirit_flame").texture("spirit_flame")
+        .lifetime(120).size(0.3F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.04F, 30.0F).noTileCollide()
+        .fullbright().enemy().trail(() -> ParticleTypes.SOUL_FIRE_FLAME));
+    public static final ProjectileKind SPIRIT_FLAME = register(ProjectileKind.builder("spirit_flame")
+        .lifetime(90).size(0.3F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.12F, 20.0F).noTileCollide()
+        .fullbright().magic().trail(() -> ParticleTypes.SOUL_FIRE_FLAME));
+    public static final ProjectileKind ICE_BOLT = register(ProjectileKind.builder("ice_bolt")
+        .lifetime(30).size(0.3F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).fullbright()
+        .trail(() -> ParticleTypes.SNOWFLAKE).debuff(() -> net.minecraft.world.effect.MobEffects.SLOWNESS, 60, 0.5F));
+    public static final ProjectileKind FROST_BOLT = register(ProjectileKind.builder("frost_bolt")
+        .lifetime(60).size(0.3F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).fullbright().magic()
+        .trail(() -> ParticleTypes.SNOWFLAKE).debuff(() -> net.minecraft.world.effect.MobEffects.SLOWNESS, 100, 1.0F));
+    public static final ProjectileKind ICE_BOOMERANG = register(ProjectileKind.builder("ice_boomerang")
+        .lifetime(200).size(0.5F, 0.8F).orientation(ProjectileKind.Orientation.SPIN)
+        .behavior(ProjectileKind.Behavior.BOOMERANG).pierce(-1).hitCooldown(8).trail(() -> ParticleTypes.SNOWFLAKE));
+    public static final ProjectileKind STARFURY_STAR = register(ProjectileKind.builder("starfury_star")
+        .lifetime(60).size(0.4F, 0.8F).orientation(ProjectileKind.Orientation.SPIN).pierce(2).noTileCollide().fullbright()
+        .trail(() -> ParticleTypes.END_ROD));
+
     private ProjectileKinds() {}
 
     private static ProjectileKind register(ProjectileKind.Builder builder) {

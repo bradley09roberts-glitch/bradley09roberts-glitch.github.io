@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#c:is_desert",
+  "features": "terracraft:underground_desert",
+  "step": "top_layer_modification"
+}

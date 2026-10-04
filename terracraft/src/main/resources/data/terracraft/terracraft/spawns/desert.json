@@ -1,0 +1,107 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:antlion",
+      "weight": 8,
+      "biomes": [
+        "#c:is_desert"
+      ],
+      "layers": [
+        "surface"
+      ]
+    },
+    {
+      "entity": "terracraft:vulture",
+      "weight": 6,
+      "time": "day",
+      "placement": "air",
+      "biomes": [
+        "#c:is_desert"
+      ],
+      "layers": [
+        "surface"
+      ]
+    },
+    {
+      "entity": "terracraft:mummy",
+      "weight": 6,
+      "condition": "hardmode_active",
+      "biomes": [
+        "#c:is_desert"
+      ],
+      "layers": [
+        "surface"
+      ]
+    },
+    {
+      "entity": "terracraft:antlion_charger",
+      "weight": 8,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:desert/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:antlion_swarmer",
+      "weight": 6,
+      "placement": "air",
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:desert/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:tomb_crawler",
+      "weight": 4,
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:desert/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:ghoul",
+      "weight": 6,
+      "condition": "hardmode_active",
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:desert/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:desert_spirit",
+      "weight": 3,
+      "condition": "hardmode_active",
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:desert/ground"
+      ]
+    },
+    {
+      "entity": "terracraft:dune_splicer",
+      "weight": 2,
+      "condition": "hardmode_active",
+      "layers": [
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:desert/ground"
+      ]
+    }
+  ]
+}

@@ -36,7 +36,9 @@ public final class TerraModels {
         "solar_pillar", "vortex_pillar", "nebula_pillar", "stardust_pillar", "sroller", "corite", "alien_hornet", "nebula_floater", "brain_suckler",
         "star_cell", "flow_invader", "moon_lord", "moon_lord_hand", "moon_lord_head",
         "slime_minion", "hornet_minion", "imp_minion", "optic_minion", "pygmy_minion", "tempest_minion", "ufo_minion", "deadly_sphere_minion",
-        "terraprisma_minion", "stardust_cell_minion", "stardust_dragon_minion", "rainbow_crystal", "lunar_portal", "reaper", "mothron", "deadly_sphere");
+        "terraprisma_minion", "stardust_cell_minion", "stardust_dragon_minion", "rainbow_crystal", "lunar_portal", "reaper", "mothron", "deadly_sphere",
+        "antlion", "vulture", "antlion_charger", "antlion_swarmer", "desert_spirit", "ice_bat", "snow_flinx", "wolf", "ice_golem", "ice_elemental",
+        "ice_tortoise", "harpy");
 
     private TerraModels() {}
 

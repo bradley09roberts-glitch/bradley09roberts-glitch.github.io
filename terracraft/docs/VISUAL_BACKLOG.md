@@ -142,6 +142,18 @@ Priority: **A** = very visible / looks clearly wrong today, **B** = noticeable, 
 | C | Mothron | flat four-wing moth | furry body, patterned wings, Mothron eggs and Baby Mothrons |
 | C | Bee / Spooky armor | banded hood with antennae; wood plate | Bee wings that buzz, Spooky glowing jack-o'-lantern visor and branch crown |
 
+## Stage 10 (built; first versions)
+
+| Pri | What | Today | Improvement |
+|---|---|---|---|
+| A | Floating Islands | round cloud lens with a grass cap and a box hut | irregular shapes with waterfalls and lakes, trees and grass, a proper Skyware house with a disc roof, clouds that drift |
+| A | Underground Desert edges | sharp vertical wall where the desert ends | blended edges, sand falls, hanging sandstone, an entrance pit like Terraria's |
+| B | Ice caverns | packed ice / blue ice / snow mix | icicles, thin ice floors over water, frozen-in creatures, glowing ice |
+| B | Desert creatures | simple models (Antlion head in a sand pit, Charger, Swarmer, Vulture) | Antlion burrow animation, Charger running pose, Tomb Crawler/Dune Splicer with mandibles, Mummies with trailing bandages |
+| B | Snow creatures | Wolf, Snow Flinx, Ice Golem, Ice Elemental, Ice Tortoise models; viking skeleton skins | furry Wolf, Snow Flinx rolling into a snowball, Ice Golem with shards and a blizzard, Ice Tortoise spinning in its shell, Vikings with horned helmets and axes |
+| C | Harpy | blue-feathered figure | proper bird-woman with talons, wing animation, feather trails |
+| C | Fossil / Frost armor | bone and ice plate models | Fossil skull helm with jaw, Frost armor with frost particles |
+
 ## Future (planned stages) - will need models when they are built
 
 - **Santa Claus** (Frost Legion follow-up), Stylist, Party Girl, Tax Collector.

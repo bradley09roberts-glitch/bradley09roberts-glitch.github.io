@@ -233,3 +233,15 @@ for testing drop in a throwaway mod whose constructor sets `SharedConstants.IS_R
 - Solar Eclipse: by day `terraria event start solar_eclipse` on land (`spreadplayers <x> <z> 0 40 false Dev`);
   creatures arrive within ~30 s. The post-Plantera ones need `boss_plantera_defeated`.
 
+## Stage 10 checks
+
+- Worldgen only changes chunks generated after this version: `locate biome minecraft:desert` / `minecraft:snowy_plains`
+  from a far point (`execute positioned 3000 70 -3000 run locate biome ...`), go there and below y~40.
+  Count conversions: `execute at Dev run fill ~-10 ~-10 ~-10 ~10 ~10 ~10 minecraft:diamond_block replace terracraft:hardened_sand`
+  (then swap back).
+- Floating islands: their cells are 320 blocks; the island of cell (cx, cz) is computed by `SkyIslandFeature.island`
+  (seed 12345: one at -2297 231 -2397). The chest sits at island y+3 in the hut.
+- Spawns: `execute as Dev at Dev run terraria spawns info` lists the matching rules where you stand;
+  `terraria spawns force 12` spawns groups at once. Harpies spawn in open air above y=200.
+- Grep RCON output for "Test" - piping through `tail -1` returns a blank line.
+
