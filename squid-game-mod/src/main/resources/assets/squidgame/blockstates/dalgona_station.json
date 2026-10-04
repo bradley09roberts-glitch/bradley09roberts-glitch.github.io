@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "squidgame:block/dalgona_station",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "squidgame:block/dalgona_station"
+    },
+    "facing=south": {
+      "model": "squidgame:block/dalgona_station",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "squidgame:block/dalgona_station",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,3442 @@
+{
+"minecraft:acacia_button": {
+"a": 1.0,
+"c": "#A85A32"
+},
+"minecraft:acacia_door": {
+"a": 0.72,
+"c": "#A85F3D"
+},
+"minecraft:acacia_fence": {
+"a": 1.0,
+"c": "#A85A32"
+},
+"minecraft:acacia_fence_gate": {
+"a": 1.0,
+"c": "#A85A32"
+},
+"minecraft:acacia_hanging_sign": {
+"a": 1.0,
+"c": "#A85A32"
+},
+"minecraft:acacia_leaves": {
+"a": 0.58,
+"c": "#2A6A0E"
+},
+"minecraft:acacia_log": {
+"a": 1.0,
+"c": "#676157"
+},
+"minecraft:acacia_planks": {
+"a": 1.0,
+"c": "#A85A32"
+},
+"minecraft:acacia_pressure_plate": {
+"a": 1.0,
+"c": "#A85A32"
+},
+"minecraft:acacia_sapling": {
+"a": 0.43,
+"c": "#777618"
+},
+"minecraft:acacia_sign": {
+"a": 1.0,
+"c": "#A85A32"
+},
+"minecraft:acacia_slab": {
+"a": 1.0,
+"c": "#A85A32"
+},
+"minecraft:acacia_stairs": {
+"a": 1.0,
+"c": "#A85A32"
+},
+"minecraft:acacia_trapdoor": {
+"a": 0.77,
+"c": "#9D5733"
+},
+"minecraft:acacia_wall_hanging_sign": {
+"a": 1.0,
+"c": "#A85A32"
+},
+"minecraft:acacia_wall_sign": {
+"a": 1.0,
+"c": "#A85A32"
+},
+"minecraft:activator_rail": {
+"a": 0.61,
+"c": "#73574A"
+},
+"minecraft:allium": {
+"a": 0.15,
+"c": "#9F89B8"
+},
+"minecraft:amethyst_block": {
+"a": 1.0,
+"c": "#8662BF"
+},
+"minecraft:amethyst_cluster": {
+"a": 0.55,
+"c": "#A47FCF"
+},
+"minecraft:ancient_debris": {
+"a": 1.0,
+"c": "#5F423A"
+},
+"minecraft:andesite": {
+"a": 1.0,
+"c": "#888889"
+},
+"minecraft:andesite_slab": {
+"a": 1.0,
+"c": "#888889"
+},
+"minecraft:andesite_stairs": {
+"a": 1.0,
+"c": "#888889"
+},
+"minecraft:andesite_wall": {
+"a": 1.0,
+"c": "#888889"
+},
+"minecraft:anvil": {
+"a": 1.0,
+"c": "#454545"
+},
+"minecraft:attached_melon_stem": {
+"a": 0.13,
+"c": "#8E8E8E"
+},
+"minecraft:attached_pumpkin_stem": {
+"a": 0.13,
+"c": "#8B8B8B"
+},
+"minecraft:azalea": {
+"a": 1.0,
+"c": "#667D30"
+},
+"minecraft:azalea_leaves": {
+"a": 0.77,
+"c": "#5A732C"
+},
+"minecraft:azure_bluet": {
+"a": 0.17,
+"c": "#A9CD7F"
+},
+"minecraft:bamboo": {
+"a": 1.0,
+"c": "#C1AD50"
+},
+"minecraft:bamboo_block": {
+"a": 1.0,
+"c": "#7F903A"
+},
+"minecraft:bamboo_button": {
+"a": 1.0,
+"c": "#C1AD50"
+},
+"minecraft:bamboo_door": {
+"a": 0.81,
+"c": "#BFAB51"
+},
+"minecraft:bamboo_fence": {
+"a": 0.67,
+"c": "#CFBA59"
+},
+"minecraft:bamboo_fence_gate": {
+"a": 0.75,
+"c": "#CEBA57"
+},
+"minecraft:bamboo_hanging_sign": {
+"a": 1.0,
+"c": "#C1AD50"
+},
+"minecraft:bamboo_mosaic": {
+"a": 1.0,
+"c": "#BEAA4E"
+},
+"minecraft:bamboo_mosaic_slab": {
+"a": 1.0,
+"c": "#BEAA4E"
+},
+"minecraft:bamboo_mosaic_stairs": {
+"a": 1.0,
+"c": "#BEAA4E"
+},
+"minecraft:bamboo_planks": {
+"a": 1.0,
+"c": "#C1AD50"
+},
+"minecraft:bamboo_pressure_plate": {
+"a": 1.0,
+"c": "#C1AD50"
+},
+"minecraft:bamboo_sign": {
+"a": 1.0,
+"c": "#C1AD50"
+},
+"minecraft:bamboo_slab": {
+"a": 1.0,
+"c": "#C1AD50"
+},
+"minecraft:bamboo_stairs": {
+"a": 1.0,
+"c": "#C1AD50"
+},
+"minecraft:bamboo_trapdoor": {
+"a": 0.83,
+"c": "#C7B355"
+},
+"minecraft:bamboo_wall_hanging_sign": {
+"a": 1.0,
+"c": "#C1AD50"
+},
+"minecraft:bamboo_wall_sign": {
+"a": 1.0,
+"c": "#C1AD50"
+},
+"minecraft:barrel": {
+"a": 1.0,
+"c": "#87653A"
+},
+"minecraft:barrier": {
+"a": 1.0,
+"c": "#FF00FF"
+},
+"minecraft:basalt": {
+"a": 1.0,
+"c": "#515156"
+},
+"minecraft:beacon": {
+"a": 1.0,
+"c": "#76DDD7"
+},
+"minecraft:bedrock": {
+"a": 1.0,
+"c": "#555555"
+},
+"minecraft:bee_nest": {
+"a": 1.0,
+"c": "#CAA04B"
+},
+"minecraft:beehive": {
+"a": 1.0,
+"c": "#9D7E4C"
+},
+"minecraft:bell": {
+"a": 0.25,
+"c": "#FDEB6F"
+},
+"minecraft:big_dripleaf": {
+"a": 0.91,
+"c": "#708E34"
+},
+"minecraft:big_dripleaf_stem": {
+"a": 0.33,
+"c": "#5B732E"
+},
+"minecraft:birch_button": {
+"a": 1.0,
+"c": "#C0AF79"
+},
+"minecraft:birch_door": {
+"a": 1.0,
+"c": "#DCD2B0"
+},
+"minecraft:birch_fence": {
+"a": 1.0,
+"c": "#C0AF79"
+},
+"minecraft:birch_fence_gate": {
+"a": 1.0,
+"c": "#C0AF79"
+},
+"minecraft:birch_hanging_sign": {
+"a": 1.0,
+"c": "#C0AF79"
+},
+"minecraft:birch_leaves": {
+"a": 0.56,
+"c": "#42552B"
+},
+"minecraft:birch_log": {
+"a": 1.0,
+"c": "#D9D7D2"
+},
+"minecraft:birch_planks": {
+"a": 1.0,
+"c": "#C0AF79"
+},
+"minecraft:birch_pressure_plate": {
+"a": 1.0,
+"c": "#C0AF79"
+},
+"minecraft:birch_sapling": {
+"a": 0.38,
+"c": "#80A150"
+},
+"minecraft:birch_sign": {
+"a": 1.0,
+"c": "#C0AF79"
+},
+"minecraft:birch_slab": {
+"a": 1.0,
+"c": "#C0AF79"
+},
+"minecraft:birch_stairs": {
+"a": 1.0,
+"c": "#C0AF79"
+},
+"minecraft:birch_trapdoor": {
+"a": 1.0,
+"c": "#CFC29D"
+},
+"minecraft:birch_wall_hanging_sign": {
+"a": 1.0,
+"c": "#C0AF79"
+},
+"minecraft:birch_wall_sign": {
+"a": 1.0,
+"c": "#C0AF79"
+},
+"minecraft:black_candle": {
+"a": 0.08,
+"c": "#26253A"
+},
+"minecraft:black_carpet": {
+"a": 1.0,
+"c": "#15151A"
+},
+"minecraft:black_concrete": {
+"a": 1.0,
+"c": "#080A0F"
+},
+"minecraft:black_concrete_powder": {
+"a": 1.0,
+"c": "#191B20"
+},
+"minecraft:black_glazed_terracotta": {
+"a": 1.0,
+"c": "#441E20"
+},
+"minecraft:black_shulker_box": {
+"a": 1.0,
+"c": "#19191E"
+},
+"minecraft:black_stained_glass": {
+"a": 0.46,
+"c": "#191919"
+},
+"minecraft:black_stained_glass_pane": {
+"a": 0.11,
+"c": "#181818"
+},
+"minecraft:black_terracotta": {
+"a": 1.0,
+"c": "#251710"
+},
+"minecraft:black_wool": {
+"a": 1.0,
+"c": "#15151A"
+},
+"minecraft:blackstone": {
+"a": 1.0,
+"c": "#2A2429"
+},
+"minecraft:blackstone_slab": {
+"a": 1.0,
+"c": "#2A2429"
+},
+"minecraft:blackstone_stairs": {
+"a": 1.0,
+"c": "#2A2429"
+},
+"minecraft:blackstone_wall": {
+"a": 1.0,
+"c": "#2A2429"
+},
+"minecraft:blast_furnace": {
+"a": 1.0,
+"c": "#515051"
+},
+"minecraft:blue_candle": {
+"a": 0.08,
+"c": "#394CA1"
+},
+"minecraft:blue_carpet": {
+"a": 1.0,
+"c": "#35399D"
+},
+"minecraft:blue_concrete": {
+"a": 1.0,
+"c": "#2D2F8F"
+},
+"minecraft:blue_concrete_powder": {
+"a": 1.0,
+"c": "#4649A7"
+},
+"minecraft:blue_glazed_terracotta": {
+"a": 1.0,
+"c": "#2F418B"
+},
+"minecraft:blue_ice": {
+"a": 1.0,
+"c": "#74A8FD"
+},
+"minecraft:blue_orchid": {
+"a": 0.17,
+"c": "#2FA2A8"
+},
+"minecraft:blue_shulker_box": {
+"a": 1.0,
+"c": "#2C2E8C"
+},
+"minecraft:blue_stained_glass": {
+"a": 0.46,
+"c": "#334CB2"
+},
+"minecraft:blue_stained_glass_pane": {
+"a": 0.11,
+"c": "#314AAB"
+},
+"minecraft:blue_terracotta": {
+"a": 1.0,
+"c": "#4A3C5B"
+},
+"minecraft:blue_wool": {
+"a": 1.0,
+"c": "#35399D"
+},
+"minecraft:bone_block": {
+"a": 1.0,
+"c": "#D2CEB3"
+},
+"minecraft:bookshelf": {
+"a": 1.0,
+"c": "#755F3C"
+},
+"minecraft:brain_coral": {
+"a": 0.44,
+"c": "#C65598"
+},
+"minecraft:brain_coral_block": {
+"a": 1.0,
+"c": "#CF5B9F"
+},
+"minecraft:brain_coral_fan": {
+"a": 0.37,
+"c": "#CB549A"
+},
+"minecraft:brewing_stand": {
+"a": 0.51,
+"c": "#7A6551"
+},
+"minecraft:brick_slab": {
+"a": 1.0,
+"c": "#976253"
+},
+"minecraft:brick_stairs": {
+"a": 1.0,
+"c": "#976253"
+},
+"minecraft:brick_wall": {
+"a": 1.0,
+"c": "#976253"
+},
+"minecraft:bricks": {
+"a": 1.0,
+"c": "#976253"
+},
+"minecraft:brown_candle": {
+"a": 0.08,
+"c": "#704629"
+},
+"minecraft:brown_carpet": {
+"a": 1.0,
+"c": "#724829"
+},
+"minecraft:brown_concrete": {
+"a": 1.0,
+"c": "#603C20"
+},
+"minecraft:brown_concrete_powder": {
+"a": 1.0,
+"c": "#7E5536"
+},
+"minecraft:brown_glazed_terracotta": {
+"a": 1.0,
+"c": "#786A56"
+},
+"minecraft:brown_mushroom": {
+"a": 0.13,
+"c": "#9A755C"
+},
+"minecraft:brown_mushroom_block": {
+"a": 1.0,
+"c": "#957051"
+},
+"minecraft:brown_shulker_box": {
+"a": 1.0,
+"c": "#6A4224"
+},
+"minecraft:brown_stained_glass": {
+"a": 0.46,
+"c": "#664C33"
+},
+"minecraft:brown_stained_glass_pane": {
+"a": 0.11,
+"c": "#624A31"
+},
+"minecraft:brown_terracotta": {
+"a": 1.0,
+"c": "#4D3324"
+},
+"minecraft:brown_wool": {
+"a": 1.0,
+"c": "#724829"
+},
+"minecraft:bubble_coral": {
+"a": 0.52,
+"c": "#A118A0"
+},
+"minecraft:bubble_coral_block": {
+"a": 1.0,
+"c": "#A51AA2"
+},
+"minecraft:bubble_coral_fan": {
+"a": 0.44,
+"c": "#A0219F"
+},
+"minecraft:budding_amethyst": {
+"a": 1.0,
+"c": "#8460BB"
+},
+"minecraft:cactus": {
+"a": 0.77,
+"c": "#567F2B"
+},
+"minecraft:cake": {
+"a": 0.77,
+"c": "#F8DFD6"
+},
+"minecraft:calcite": {
+"a": 1.0,
+"c": "#DFE0DD"
+},
+"minecraft:calibrated_sculk_sensor": {
+"a": 1.0,
+"c": "#1C4F65"
+},
+"minecraft:candle": {
+"a": 0.08,
+"c": "#E8C999"
+},
+"minecraft:cartography_table": {
+"a": 1.0,
+"c": "#675743"
+},
+"minecraft:carved_pumpkin": {
+"a": 1.0,
+"c": "#965411"
+},
+"minecraft:cauldron": {
+"a": 0.61,
+"c": "#4A494A"
+},
+"minecraft:cave_vines": {
+"a": 0.56,
+"c": "#5A6D29"
+},
+"minecraft:cave_vines_plant": {
+"a": 0.56,
+"c": "#586626"
+},
+"minecraft:chain": {
+"a": 1.0,
+"c": "#3A3A44"
+},
+"minecraft:chain_command_block": {
+"a": 1.0,
+"c": "#83A194"
+},
+"minecraft:cherry_button": {
+"a": 1.0,
+"c": "#E3B3AD"
+},
+"minecraft:cherry_door": {
+"a": 0.86,
+"c": "#DFABA5"
+},
+"minecraft:cherry_fence": {
+"a": 1.0,
+"c": "#E3B3AD"
+},
+"minecraft:cherry_fence_gate": {
+"a": 1.0,
+"c": "#E3B3AD"
+},
+"minecraft:cherry_hanging_sign": {
+"a": 1.0,
+"c": "#E3B3AD"
+},
+"minecraft:cherry_leaves": {
+"a": 0.84,
+"c": "#E5ADC2"
+},
+"minecraft:cherry_log": {
+"a": 1.0,
+"c": "#37212C"
+},
+"minecraft:cherry_planks": {
+"a": 1.0,
+"c": "#E3B3AD"
+},
+"minecraft:cherry_pressure_plate": {
+"a": 1.0,
+"c": "#E3B3AD"
+},
+"minecraft:cherry_sapling": {
+"a": 0.48,
+"c": "#A4768F"
+},
+"minecraft:cherry_sign": {
+"a": 1.0,
+"c": "#E3B3AD"
+},
+"minecraft:cherry_slab": {
+"a": 1.0,
+"c": "#E3B3AD"
+},
+"minecraft:cherry_stairs": {
+"a": 1.0,
+"c": "#E3B3AD"
+},
+"minecraft:cherry_trapdoor": {
+"a": 0.86,
+"c": "#E2B3AC"
+},
+"minecraft:cherry_wall_hanging_sign": {
+"a": 1.0,
+"c": "#E3B3AD"
+},
+"minecraft:cherry_wall_sign": {
+"a": 1.0,
+"c": "#E3B3AD"
+},
+"minecraft:chipped_anvil": {
+"a": 0.62,
+"c": "#494949"
+},
+"minecraft:chiseled_bookshelf": {
+"a": 1.0,
+"c": "#B29159"
+},
+"minecraft:chiseled_copper": {
+"a": 1.0,
+"c": "#B8654A"
+},
+"minecraft:chiseled_deepslate": {
+"a": 1.0,
+"c": "#363637"
+},
+"minecraft:chiseled_nether_bricks": {
+"a": 1.0,
+"c": "#2F181C"
+},
+"minecraft:chiseled_polished_blackstone": {
+"a": 1.0,
+"c": "#363139"
+},
+"minecraft:chiseled_quartz_block": {
+"a": 1.0,
+"c": "#E8E3DA"
+},
+"minecraft:chiseled_red_sandstone": {
+"a": 1.0,
+"c": "#B7611C"
+},
+"minecraft:chiseled_sandstone": {
+"a": 1.0,
+"c": "#D8CB9B"
+},
+"minecraft:chiseled_stone_bricks": {
+"a": 1.0,
+"c": "#787778"
+},
+"minecraft:chiseled_tuff": {
+"a": 1.0,
+"c": "#595E57"
+},
+"minecraft:chiseled_tuff_bricks": {
+"a": 1.0,
+"c": "#636760"
+},
+"minecraft:chorus_flower": {
+"a": 1.0,
+"c": "#977998"
+},
+"minecraft:chorus_plant": {
+"a": 1.0,
+"c": "#5E395E"
+},
+"minecraft:clay": {
+"a": 1.0,
+"c": "#A1A6B3"
+},
+"minecraft:coal_block": {
+"a": 1.0,
+"c": "#101010"
+},
+"minecraft:coal_ore": {
+"a": 1.0,
+"c": "#6A6A69"
+},
+"minecraft:coarse_dirt": {
+"a": 1.0,
+"c": "#77563B"
+},
+"minecraft:cobbled_deepslate": {
+"a": 1.0,
+"c": "#4D4D51"
+},
+"minecraft:cobbled_deepslate_slab": {
+"a": 1.0,
+"c": "#4D4D51"
+},
+"minecraft:cobbled_deepslate_stairs": {
+"a": 1.0,
+"c": "#4D4D51"
+},
+"minecraft:cobbled_deepslate_wall": {
+"a": 1.0,
+"c": "#4D4D51"
+},
+"minecraft:cobblestone": {
+"a": 1.0,
+"c": "#807F80"
+},
+"minecraft:cobblestone_slab": {
+"a": 1.0,
+"c": "#807F80"
+},
+"minecraft:cobblestone_stairs": {
+"a": 1.0,
+"c": "#807F80"
+},
+"minecraft:cobblestone_wall": {
+"a": 1.0,
+"c": "#807F80"
+},
+"minecraft:cobweb": {
+"a": 0.41,
+"c": "#E5E9EA"
+},
+"minecraft:command_block": {
+"a": 1.0,
+"c": "#B1866C"
+},
+"minecraft:comparator": {
+"a": 1.0,
+"c": "#A6A2A0"
+},
+"minecraft:composter": {
+"a": 0.44,
+"c": "#996334"
+},
+"minecraft:conduit": {
+"a": 0.56,
+"c": "#A08C71"
+},
+"minecraft:copper_block": {
+"a": 1.0,
+"c": "#C06C50"
+},
+"minecraft:copper_bulb": {
+"a": 1.0,
+"c": "#9C5739"
+},
+"minecraft:copper_door": {
+"a": 0.81,
+"c": "#C16D53"
+},
+"minecraft:copper_grate": {
+"a": 0.7,
+"c": "#C06C4F"
+},
+"minecraft:copper_ore": {
+"a": 1.0,
+"c": "#7D7E78"
+},
+"minecraft:copper_trapdoor": {
+"a": 0.8,
+"c": "#BF6A50"
+},
+"minecraft:cornflower": {
+"a": 0.14,
+"c": "#507993"
+},
+"minecraft:cracked_deepslate_bricks": {
+"a": 1.0,
+"c": "#414141"
+},
+"minecraft:cracked_deepslate_tiles": {
+"a": 1.0,
+"c": "#353535"
+},
+"minecraft:cracked_nether_bricks": {
+"a": 1.0,
+"c": "#281418"
+},
+"minecraft:cracked_polished_blackstone_bricks": {
+"a": 1.0,
+"c": "#2C262C"
+},
+"minecraft:cracked_stone_bricks": {
+"a": 1.0,
+"c": "#767676"
+},
+"minecraft:crafter": {
+"a": 1.0,
+"c": "#706364"
+},
+"minecraft:crafting_table": {
+"a": 1.0,
+"c": "#78492A"
+},
+"minecraft:crimson_button": {
+"a": 1.0,
+"c": "#653147"
+},
+"minecraft:crimson_door": {
+"a": 1.0,
+"c": "#72374F"
+},
+"minecraft:crimson_fence": {
+"a": 1.0,
+"c": "#653147"
+},
+"minecraft:crimson_fence_gate": {
+"a": 1.0,
+"c": "#653147"
+},
+"minecraft:crimson_fungus": {
+"a": 0.23,
+"c": "#8D2C1E"
+},
+"minecraft:crimson_hanging_sign": {
+"a": 1.0,
+"c": "#653147"
+},
+"minecraft:crimson_nylium": {
+"a": 1.0,
+"c": "#831F1F"
+},
+"minecraft:crimson_planks": {
+"a": 1.0,
+"c": "#653147"
+},
+"minecraft:crimson_pressure_plate": {
+"a": 1.0,
+"c": "#653147"
+},
+"minecraft:crimson_roots": {
+"a": 0.36,
+"c": "#7E082A"
+},
+"minecraft:crimson_sign": {
+"a": 1.0,
+"c": "#653147"
+},
+"minecraft:crimson_slab": {
+"a": 1.0,
+"c": "#653147"
+},
+"minecraft:crimson_stairs": {
+"a": 1.0,
+"c": "#653147"
+},
+"minecraft:crimson_stem": {
+"a": 1.0,
+"c": "#5D1A1E"
+},
+"minecraft:crimson_trapdoor": {
+"a": 0.84,
+"c": "#683348"
+},
+"minecraft:crimson_wall_hanging_sign": {
+"a": 1.0,
+"c": "#653147"
+},
+"minecraft:crimson_wall_sign": {
+"a": 1.0,
+"c": "#653147"
+},
+"minecraft:crying_obsidian": {
+"a": 1.0,
+"c": "#210A3C"
+},
+"minecraft:cut_copper": {
+"a": 1.0,
+"c": "#BF6B51"
+},
+"minecraft:cut_copper_slab": {
+"a": 1.0,
+"c": "#BF6B51"
+},
+"minecraft:cut_copper_stairs": {
+"a": 1.0,
+"c": "#BF6B51"
+},
+"minecraft:cut_red_sandstone": {
+"a": 1.0,
+"c": "#BD6620"
+},
+"minecraft:cut_red_sandstone_slab": {
+"a": 1.0,
+"c": "#BD6620"
+},
+"minecraft:cut_sandstone": {
+"a": 1.0,
+"c": "#DACEA0"
+},
+"minecraft:cut_sandstone_slab": {
+"a": 1.0,
+"c": "#DACEA0"
+},
+"minecraft:cyan_candle": {
+"a": 0.08,
+"c": "#117C7C"
+},
+"minecraft:cyan_carpet": {
+"a": 1.0,
+"c": "#158A91"
+},
+"minecraft:cyan_concrete": {
+"a": 1.0,
+"c": "#157788"
+},
+"minecraft:cyan_concrete_powder": {
+"a": 1.0,
+"c": "#25949D"
+},
+"minecraft:cyan_glazed_terracotta": {
+"a": 1.0,
+"c": "#34777D"
+},
+"minecraft:cyan_shulker_box": {
+"a": 1.0,
+"c": "#147987"
+},
+"minecraft:cyan_stained_glass": {
+"a": 0.46,
+"c": "#4C7F99"
+},
+"minecraft:cyan_stained_glass_pane": {
+"a": 0.11,
+"c": "#4A7B93"
+},
+"minecraft:cyan_terracotta": {
+"a": 1.0,
+"c": "#575B5B"
+},
+"minecraft:cyan_wool": {
+"a": 1.0,
+"c": "#158A91"
+},
+"minecraft:damaged_anvil": {
+"a": 0.62,
+"c": "#484848"
+},
+"minecraft:dandelion": {
+"a": 0.12,
+"c": "#94AC2B"
+},
+"minecraft:dark_oak_button": {
+"a": 1.0,
+"c": "#432B14"
+},
+"minecraft:dark_oak_door": {
+"a": 1.0,
+"c": "#4D3419"
+},
+"minecraft:dark_oak_fence": {
+"a": 1.0,
+"c": "#432B14"
+},
+"minecraft:dark_oak_fence_gate": {
+"a": 1.0,
+"c": "#432B14"
+},
+"minecraft:dark_oak_hanging_sign": {
+"a": 1.0,
+"c": "#432B14"
+},
+"minecraft:dark_oak_leaves": {
+"a": 0.7,
+"c": "#2B6B0E"
+},
+"minecraft:dark_oak_log": {
+"a": 1.0,
+"c": "#3C2F1A"
+},
+"minecraft:dark_oak_planks": {
+"a": 1.0,
+"c": "#432B14"
+},
+"minecraft:dark_oak_pressure_plate": {
+"a": 1.0,
+"c": "#432B14"
+},
+"minecraft:dark_oak_sapling": {
+"a": 0.43,
+"c": "#3D5B1F"
+},
+"minecraft:dark_oak_sign": {
+"a": 1.0,
+"c": "#432B14"
+},
+"minecraft:dark_oak_slab": {
+"a": 1.0,
+"c": "#432B14"
+},
+"minecraft:dark_oak_stairs": {
+"a": 1.0,
+"c": "#432B14"
+},
+"minecraft:dark_oak_trapdoor": {
+"a": 1.0,
+"c": "#4B3217"
+},
+"minecraft:dark_oak_wall_hanging_sign": {
+"a": 1.0,
+"c": "#432B14"
+},
+"minecraft:dark_oak_wall_sign": {
+"a": 1.0,
+"c": "#432B14"
+},
+"minecraft:dark_prismarine": {
+"a": 1.0,
+"c": "#345C4C"
+},
+"minecraft:dark_prismarine_slab": {
+"a": 1.0,
+"c": "#345C4C"
+},
+"minecraft:dark_prismarine_stairs": {
+"a": 1.0,
+"c": "#345C4C"
+},
+"minecraft:daylight_detector": {
+"a": 1.0,
+"c": "#83745F"
+},
+"minecraft:dead_brain_coral": {
+"a": 0.44,
+"c": "#867D79"
+},
+"minecraft:dead_brain_coral_block": {
+"a": 1.0,
+"c": "#7C7672"
+},
+"minecraft:dead_brain_coral_fan": {
+"a": 0.37,
+"c": "#857D79"
+},
+"minecraft:dead_bubble_coral": {
+"a": 0.52,
+"c": "#857D79"
+},
+"minecraft:dead_bubble_coral_block": {
+"a": 1.0,
+"c": "#847C77"
+},
+"minecraft:dead_bubble_coral_fan": {
+"a": 0.44,
+"c": "#8D8782"
+},
+"minecraft:dead_bush": {
+"a": 0.3,
+"c": "#6B4F29"
+},
+"minecraft:dead_fire_coral": {
+"a": 0.43,
+"c": "#89807C"
+},
+"minecraft:dead_fire_coral_block": {
+"a": 1.0,
+"c": "#847C78"
+},
+"minecraft:dead_fire_coral_fan": {
+"a": 0.41,
+"c": "#7D7673"
+},
+"minecraft:dead_horn_coral": {
+"a": 0.39,
+"c": "#8F8782"
+},
+"minecraft:dead_horn_coral_block": {
+"a": 1.0,
+"c": "#867E7A"
+},
+"minecraft:dead_horn_coral_fan": {
+"a": 0.37,
+"c": "#867E79"
+},
+"minecraft:dead_tube_coral": {
+"a": 0.6,
+"c": "#766F6C"
+},
+"minecraft:dead_tube_coral_block": {
+"a": 1.0,
+"c": "#827B78"
+},
+"minecraft:dead_tube_coral_fan": {
+"a": 0.31,
+"c": "#807A76"
+},
+"minecraft:deepslate": {
+"a": 1.0,
+"c": "#505053"
+},
+"minecraft:deepslate_brick_slab": {
+"a": 1.0,
+"c": "#474747"
+},
+"minecraft:deepslate_brick_stairs": {
+"a": 1.0,
+"c": "#474747"
+},
+"minecraft:deepslate_brick_wall": {
+"a": 1.0,
+"c": "#474747"
+},
+"minecraft:deepslate_bricks": {
+"a": 1.0,
+"c": "#474747"
+},
+"minecraft:deepslate_coal_ore": {
+"a": 1.0,
+"c": "#4A4A4C"
+},
+"minecraft:deepslate_copper_ore": {
+"a": 1.0,
+"c": "#5C5D59"
+},
+"minecraft:deepslate_diamond_ore": {
+"a": 1.0,
+"c": "#536A6B"
+},
+"minecraft:deepslate_emerald_ore": {
+"a": 1.0,
+"c": "#4E6858"
+},
+"minecraft:deepslate_gold_ore": {
+"a": 1.0,
+"c": "#73674E"
+},
+"minecraft:deepslate_iron_ore": {
+"a": 1.0,
+"c": "#6B645F"
+},
+"minecraft:deepslate_lapis_ore": {
+"a": 1.0,
+"c": "#505B73"
+},
+"minecraft:deepslate_redstone_ore": {
+"a": 1.0,
+"c": "#69494B"
+},
+"minecraft:deepslate_tile_slab": {
+"a": 1.0,
+"c": "#373737"
+},
+"minecraft:deepslate_tile_stairs": {
+"a": 1.0,
+"c": "#373737"
+},
+"minecraft:deepslate_tile_wall": {
+"a": 1.0,
+"c": "#373737"
+},
+"minecraft:deepslate_tiles": {
+"a": 1.0,
+"c": "#373737"
+},
+"minecraft:detector_rail": {
+"a": 0.61,
+"c": "#7B695A"
+},
+"minecraft:diamond_block": {
+"a": 1.0,
+"c": "#62EDE4"
+},
+"minecraft:diamond_ore": {
+"a": 1.0,
+"c": "#798D8D"
+},
+"minecraft:diorite": {
+"a": 1.0,
+"c": "#BDBCBD"
+},
+"minecraft:diorite_slab": {
+"a": 1.0,
+"c": "#BDBCBD"
+},
+"minecraft:diorite_stairs": {
+"a": 1.0,
+"c": "#BDBCBD"
+},
+"minecraft:diorite_wall": {
+"a": 1.0,
+"c": "#BDBCBD"
+},
+"minecraft:dirt": {
+"a": 1.0,
+"c": "#866043"
+},
+"minecraft:dirt_path": {
+"a": 1.0,
+"c": "#947A41"
+},
+"minecraft:dispenser": {
+"a": 1.0,
+"c": "#7A7A7A"
+},
+"minecraft:dragon_egg": {
+"a": 1.0,
+"c": "#0D0910"
+},
+"minecraft:dripstone_block": {
+"a": 1.0,
+"c": "#866C5D"
+},
+"minecraft:dropper": {
+"a": 1.0,
+"c": "#7A7A7A"
+},
+"minecraft:emerald_block": {
+"a": 1.0,
+"c": "#2ACB58"
+},
+"minecraft:emerald_ore": {
+"a": 1.0,
+"c": "#6C8874"
+},
+"minecraft:enchanting_table": {
+"a": 1.0,
+"c": "#814B55"
+},
+"minecraft:end_portal_frame": {
+"a": 1.0,
+"c": "#5B7961"
+},
+"minecraft:end_rod": {
+"a": 1.0,
+"c": "#F0F0F0"
+},
+"minecraft:end_stone": {
+"a": 1.0,
+"c": "#DCDF9E"
+},
+"minecraft:end_stone_brick_slab": {
+"a": 1.0,
+"c": "#DAE0A2"
+},
+"minecraft:end_stone_brick_stairs": {
+"a": 1.0,
+"c": "#DAE0A2"
+},
+"minecraft:end_stone_brick_wall": {
+"a": 1.0,
+"c": "#DAE0A2"
+},
+"minecraft:end_stone_bricks": {
+"a": 1.0,
+"c": "#DAE0A2"
+},
+"minecraft:exposed_chiseled_copper": {
+"a": 1.0,
+"c": "#9B7765"
+},
+"minecraft:exposed_copper": {
+"a": 1.0,
+"c": "#A17E68"
+},
+"minecraft:exposed_copper_bulb": {
+"a": 1.0,
+"c": "#876C5A"
+},
+"minecraft:exposed_copper_door": {
+"a": 0.81,
+"c": "#A47B6A"
+},
+"minecraft:exposed_copper_grate": {
+"a": 0.7,
+"c": "#A27E69"
+},
+"minecraft:exposed_copper_trapdoor": {
+"a": 0.8,
+"c": "#A17D69"
+},
+"minecraft:exposed_cut_copper": {
+"a": 1.0,
+"c": "#9B7A65"
+},
+"minecraft:exposed_cut_copper_slab": {
+"a": 1.0,
+"c": "#9B7A65"
+},
+"minecraft:exposed_cut_copper_stairs": {
+"a": 1.0,
+"c": "#9B7A65"
+},
+"minecraft:farmland": {
+"a": 1.0,
+"c": "#8F6747"
+},
+"minecraft:fern": {
+"a": 0.35,
+"c": "#3B5E2C"
+},
+"minecraft:fire": {
+"a": 0.57,
+"c": "#D58E35"
+},
+"minecraft:fire_coral": {
+"a": 0.43,
+"c": "#A7262F"
+},
+"minecraft:fire_coral_block": {
+"a": 1.0,
+"c": "#A4232F"
+},
+"minecraft:fire_coral_fan": {
+"a": 0.41,
+"c": "#9F232E"
+},
+"minecraft:fletching_table": {
+"a": 1.0,
+"c": "#C5B485"
+},
+"minecraft:flower_pot": {
+"a": 0.2,
+"c": "#7C4535"
+},
+"minecraft:flowering_azalea": {
+"a": 1.0,
+"c": "#707A40"
+},
+"minecraft:flowering_azalea_leaves": {
+"a": 0.8,
+"c": "#646F3D"
+},
+"minecraft:frogspawn": {
+"a": 0.22,
+"c": "#6E5F57"
+},
+"minecraft:frosted_ice": {
+"a": 0.75,
+"c": "#8CB5FD"
+},
+"minecraft:furnace": {
+"a": 1.0,
+"c": "#6E6E6E"
+},
+"minecraft:gilded_blackstone": {
+"a": 1.0,
+"c": "#382B26"
+},
+"minecraft:glass": {
+"a": 0.35,
+"c": "#C8E6F0"
+},
+"minecraft:glass_pane": {
+"a": 0.12,
+"c": "#AAD2D9"
+},
+"minecraft:glow_item_frame": {
+"a": 1.0,
+"c": "#946740"
+},
+"minecraft:glow_lichen": {
+"a": 0.41,
+"c": "#70837A"
+},
+"minecraft:glowstone": {
+"a": 1.0,
+"c": "#E8C070"
+},
+"minecraft:gold_block": {
+"a": 1.0,
+"c": "#F6D03E"
+},
+"minecraft:gold_ore": {
+"a": 1.0,
+"c": "#91866B"
+},
+"minecraft:granite": {
+"a": 1.0,
+"c": "#956756"
+},
+"minecraft:granite_slab": {
+"a": 1.0,
+"c": "#956756"
+},
+"minecraft:granite_stairs": {
+"a": 1.0,
+"c": "#956756"
+},
+"minecraft:granite_wall": {
+"a": 1.0,
+"c": "#956756"
+},
+"minecraft:grass_block": {
+"a": 1.0,
+"c": "#466F34"
+},
+"minecraft:gravel": {
+"a": 1.0,
+"c": "#847F7F"
+},
+"minecraft:gray_candle": {
+"a": 0.08,
+"c": "#505E61"
+},
+"minecraft:gray_carpet": {
+"a": 1.0,
+"c": "#3F4448"
+},
+"minecraft:gray_concrete": {
+"a": 1.0,
+"c": "#373A3E"
+},
+"minecraft:gray_concrete_powder": {
+"a": 1.0,
+"c": "#4D5155"
+},
+"minecraft:gray_glazed_terracotta": {
+"a": 1.0,
+"c": "#535A5E"
+},
+"minecraft:gray_shulker_box": {
+"a": 1.0,
+"c": "#373B3E"
+},
+"minecraft:gray_stained_glass": {
+"a": 0.46,
+"c": "#4C4C4C"
+},
+"minecraft:gray_stained_glass_pane": {
+"a": 0.11,
+"c": "#4A4A4A"
+},
+"minecraft:gray_terracotta": {
+"a": 1.0,
+"c": "#3A2A24"
+},
+"minecraft:gray_wool": {
+"a": 1.0,
+"c": "#3F4448"
+},
+"minecraft:green_candle": {
+"a": 0.08,
+"c": "#496015"
+},
+"minecraft:green_carpet": {
+"a": 1.0,
+"c": "#556E1C"
+},
+"minecraft:green_concrete": {
+"a": 1.0,
+"c": "#495B24"
+},
+"minecraft:green_concrete_powder": {
+"a": 1.0,
+"c": "#61772D"
+},
+"minecraft:green_glazed_terracotta": {
+"a": 1.0,
+"c": "#758E43"
+},
+"minecraft:green_shulker_box": {
+"a": 1.0,
+"c": "#4F6520"
+},
+"minecraft:green_stained_glass": {
+"a": 0.46,
+"c": "#667F33"
+},
+"minecraft:green_stained_glass_pane": {
+"a": 0.11,
+"c": "#627B31"
+},
+"minecraft:green_terracotta": {
+"a": 1.0,
+"c": "#4C532A"
+},
+"minecraft:green_wool": {
+"a": 1.0,
+"c": "#556E1C"
+},
+"minecraft:grindstone": {
+"a": 0.56,
+"c": "#8C8C8C"
+},
+"minecraft:hanging_roots": {
+"a": 0.29,
+"c": "#A1735C"
+},
+"minecraft:hay_block": {
+"a": 1.0,
+"c": "#A68B0C"
+},
+"minecraft:heavy_core": {
+"a": 0.75,
+"c": "#52565E"
+},
+"minecraft:honey_block": {
+"a": 0.75,
+"c": "#FBB935"
+},
+"minecraft:honeycomb_block": {
+"a": 1.0,
+"c": "#E5941E"
+},
+"minecraft:hopper": {
+"a": 0.61,
+"c": "#4C4A4C"
+},
+"minecraft:horn_coral": {
+"a": 0.39,
+"c": "#D1BA3F"
+},
+"minecraft:horn_coral_block": {
+"a": 1.0,
+"c": "#D8C842"
+},
+"minecraft:horn_coral_fan": {
+"a": 0.37,
+"c": "#CEB73D"
+},
+"minecraft:ice": {
+"a": 0.75,
+"c": "#92B8FE"
+},
+"minecraft:iron_bars": {
+"a": 1.0,
+"c": "#7A7A7A"
+},
+"minecraft:iron_block": {
+"a": 1.0,
+"c": "#DCDCDC"
+},
+"minecraft:iron_door": {
+"a": 0.81,
+"c": "#C2C1C1"
+},
+"minecraft:iron_ore": {
+"a": 1.0,
+"c": "#88817B"
+},
+"minecraft:iron_trapdoor": {
+"a": 0.86,
+"c": "#CBCACA"
+},
+"minecraft:item_frame": {
+"a": 1.0,
+"c": "#75432B"
+},
+"minecraft:jack_o_lantern": {
+"a": 1.0,
+"c": "#D79835"
+},
+"minecraft:jigsaw": {
+"a": 1.0,
+"c": "#504651"
+},
+"minecraft:jukebox": {
+"a": 1.0,
+"c": "#5E402F"
+},
+"minecraft:jungle_button": {
+"a": 1.0,
+"c": "#A07351"
+},
+"minecraft:jungle_door": {
+"a": 0.88,
+"c": "#A47855"
+},
+"minecraft:jungle_fence": {
+"a": 1.0,
+"c": "#A07351"
+},
+"minecraft:jungle_fence_gate": {
+"a": 1.0,
+"c": "#A07351"
+},
+"minecraft:jungle_hanging_sign": {
+"a": 1.0,
+"c": "#A07351"
+},
+"minecraft:jungle_leaves": {
+"a": 0.7,
+"c": "#2C6D0E"
+},
+"minecraft:jungle_log": {
+"a": 1.0,
+"c": "#554419"
+},
+"minecraft:jungle_planks": {
+"a": 1.0,
+"c": "#A07351"
+},
+"minecraft:jungle_pressure_plate": {
+"a": 1.0,
+"c": "#A07351"
+},
+"minecraft:jungle_sapling": {
+"a": 0.34,
+"c": "#305111"
+},
+"minecraft:jungle_sign": {
+"a": 1.0,
+"c": "#A07351"
+},
+"minecraft:jungle_slab": {
+"a": 1.0,
+"c": "#A07351"
+},
+"minecraft:jungle_stairs": {
+"a": 1.0,
+"c": "#A07351"
+},
+"minecraft:jungle_trapdoor": {
+"a": 0.84,
+"c": "#996E4D"
+},
+"minecraft:jungle_wall_hanging_sign": {
+"a": 1.0,
+"c": "#A07351"
+},
+"minecraft:jungle_wall_sign": {
+"a": 1.0,
+"c": "#A07351"
+},
+"minecraft:kelp": {
+"a": 0.2,
+"c": "#588E2D"
+},
+"minecraft:kelp_plant": {
+"a": 0.39,
+"c": "#57832B"
+},
+"minecraft:ladder": {
+"a": 1.0,
+"c": "#8B6B3D"
+},
+"minecraft:lantern": {
+"a": 1.0,
+"c": "#F2B14A"
+},
+"minecraft:lapis_block": {
+"a": 1.0,
+"c": "#1F438C"
+},
+"minecraft:lapis_ore": {
+"a": 1.0,
+"c": "#6B768D"
+},
+"minecraft:large_amethyst_bud": {
+"a": 0.3,
+"c": "#A17ECB"
+},
+"minecraft:large_fern": {
+"a": 0.41,
+"c": "#7D7E7D"
+},
+"minecraft:lava": {
+"a": 1.0,
+"c": "#E8641B"
+},
+"minecraft:lectern": {
+"a": 1.0,
+"c": "#AE8A53"
+},
+"minecraft:lever": {
+"a": 0.08,
+"c": "#6F5D43"
+},
+"minecraft:light_blue_candle": {
+"a": 0.08,
+"c": "#238AC5"
+},
+"minecraft:light_blue_carpet": {
+"a": 1.0,
+"c": "#3AAFD9"
+},
+"minecraft:light_blue_concrete": {
+"a": 1.0,
+"c": "#2489C7"
+},
+"minecraft:light_blue_concrete_powder": {
+"a": 1.0,
+"c": "#4AB5D5"
+},
+"minecraft:light_blue_glazed_terracotta": {
+"a": 1.0,
+"c": "#5FA5D1"
+},
+"minecraft:light_blue_shulker_box": {
+"a": 1.0,
+"c": "#31A4D4"
+},
+"minecraft:light_blue_stained_glass": {
+"a": 0.46,
+"c": "#6699D8"
+},
+"minecraft:light_blue_stained_glass_pane": {
+"a": 0.11,
+"c": "#6293D1"
+},
+"minecraft:light_blue_terracotta": {
+"a": 1.0,
+"c": "#716D8A"
+},
+"minecraft:light_blue_wool": {
+"a": 1.0,
+"c": "#3AAFD9"
+},
+"minecraft:light_gray_candle": {
+"a": 0.08,
+"c": "#767970"
+},
+"minecraft:light_gray_carpet": {
+"a": 1.0,
+"c": "#8E8E87"
+},
+"minecraft:light_gray_concrete": {
+"a": 1.0,
+"c": "#7D7D73"
+},
+"minecraft:light_gray_concrete_powder": {
+"a": 1.0,
+"c": "#9B9B94"
+},
+"minecraft:light_gray_glazed_terracotta": {
+"a": 1.0,
+"c": "#90A6A8"
+},
+"minecraft:light_gray_shulker_box": {
+"a": 1.0,
+"c": "#7C7C73"
+},
+"minecraft:light_gray_stained_glass": {
+"a": 0.46,
+"c": "#999999"
+},
+"minecraft:light_gray_stained_glass_pane": {
+"a": 0.11,
+"c": "#939393"
+},
+"minecraft:light_gray_terracotta": {
+"a": 1.0,
+"c": "#876B62"
+},
+"minecraft:light_gray_wool": {
+"a": 1.0,
+"c": "#8E8E87"
+},
+"minecraft:lightning_rod": {
+"a": 0.16,
+"c": "#C56F53"
+},
+"minecraft:lilac": {
+"a": 0.29,
+"c": "#9B7D93"
+},
+"minecraft:lily_of_the_valley": {
+"a": 0.2,
+"c": "#7BAF5F"
+},
+"minecraft:lily_pad": {
+"a": 0.59,
+"c": "#114319"
+},
+"minecraft:lime_candle": {
+"a": 0.08,
+"c": "#62AC17"
+},
+"minecraft:lime_carpet": {
+"a": 1.0,
+"c": "#70B91A"
+},
+"minecraft:lime_concrete": {
+"a": 1.0,
+"c": "#5EA918"
+},
+"minecraft:lime_concrete_powder": {
+"a": 1.0,
+"c": "#7DBD2A"
+},
+"minecraft:lime_glazed_terracotta": {
+"a": 1.0,
+"c": "#A3C637"
+},
+"minecraft:lime_shulker_box": {
+"a": 1.0,
+"c": "#64AD17"
+},
+"minecraft:lime_stained_glass": {
+"a": 0.46,
+"c": "#7FCC19"
+},
+"minecraft:lime_stained_glass_pane": {
+"a": 0.11,
+"c": "#7BC518"
+},
+"minecraft:lime_terracotta": {
+"a": 1.0,
+"c": "#687635"
+},
+"minecraft:lime_wool": {
+"a": 1.0,
+"c": "#70B91A"
+},
+"minecraft:lodestone": {
+"a": 1.0,
+"c": "#939599"
+},
+"minecraft:loom": {
+"a": 1.0,
+"c": "#8E775C"
+},
+"minecraft:magenta_candle": {
+"a": 0.08,
+"c": "#A12E99"
+},
+"minecraft:magenta_carpet": {
+"a": 1.0,
+"c": "#BE45B4"
+},
+"minecraft:magenta_concrete": {
+"a": 1.0,
+"c": "#A9309F"
+},
+"minecraft:magenta_concrete_powder": {
+"a": 1.0,
+"c": "#C154B9"
+},
+"minecraft:magenta_glazed_terracotta": {
+"a": 1.0,
+"c": "#D064C0"
+},
+"minecraft:magenta_shulker_box": {
+"a": 1.0,
+"c": "#AE36A4"
+},
+"minecraft:magenta_stained_glass": {
+"a": 0.46,
+"c": "#B24CD8"
+},
+"minecraft:magenta_stained_glass_pane": {
+"a": 0.11,
+"c": "#AB4AD1"
+},
+"minecraft:magenta_terracotta": {
+"a": 1.0,
+"c": "#96586D"
+},
+"minecraft:magenta_wool": {
+"a": 1.0,
+"c": "#BE45B4"
+},
+"minecraft:mangrove_button": {
+"a": 1.0,
+"c": "#763631"
+},
+"minecraft:mangrove_door": {
+"a": 1.0,
+"c": "#71312F"
+},
+"minecraft:mangrove_fence": {
+"a": 1.0,
+"c": "#763631"
+},
+"minecraft:mangrove_fence_gate": {
+"a": 1.0,
+"c": "#763631"
+},
+"minecraft:mangrove_hanging_sign": {
+"a": 1.0,
+"c": "#763631"
+},
+"minecraft:mangrove_leaves": {
+"a": 0.83,
+"c": "#828181"
+},
+"minecraft:mangrove_log": {
+"a": 1.0,
+"c": "#544329"
+},
+"minecraft:mangrove_planks": {
+"a": 1.0,
+"c": "#763631"
+},
+"minecraft:mangrove_pressure_plate": {
+"a": 1.0,
+"c": "#763631"
+},
+"minecraft:mangrove_propagule": {
+"a": 0.13,
+"c": "#60AF54"
+},
+"minecraft:mangrove_roots": {
+"a": 0.69,
+"c": "#4B3C27"
+},
+"minecraft:mangrove_sign": {
+"a": 1.0,
+"c": "#763631"
+},
+"minecraft:mangrove_slab": {
+"a": 1.0,
+"c": "#763631"
+},
+"minecraft:mangrove_stairs": {
+"a": 1.0,
+"c": "#763631"
+},
+"minecraft:mangrove_trapdoor": {
+"a": 0.88,
+"c": "#6F2F2A"
+},
+"minecraft:mangrove_wall_hanging_sign": {
+"a": 1.0,
+"c": "#763631"
+},
+"minecraft:mangrove_wall_sign": {
+"a": 1.0,
+"c": "#763631"
+},
+"minecraft:medium_amethyst_bud": {
+"a": 0.2,
+"c": "#9E78CA"
+},
+"minecraft:melon": {
+"a": 1.0,
+"c": "#6F911F"
+},
+"minecraft:melon_stem": {
+"a": 0.14,
+"c": "#9A9A9A"
+},
+"minecraft:moss_block": {
+"a": 1.0,
+"c": "#596E2D"
+},
+"minecraft:moss_carpet": {
+"a": 1.0,
+"c": "#596E2D"
+},
+"minecraft:mossy_cobblestone": {
+"a": 1.0,
+"c": "#6E765F"
+},
+"minecraft:mossy_cobblestone_slab": {
+"a": 1.0,
+"c": "#6E765F"
+},
+"minecraft:mossy_cobblestone_stairs": {
+"a": 1.0,
+"c": "#6E765F"
+},
+"minecraft:mossy_cobblestone_wall": {
+"a": 1.0,
+"c": "#6E765F"
+},
+"minecraft:mossy_stone_brick_slab": {
+"a": 1.0,
+"c": "#737969"
+},
+"minecraft:mossy_stone_brick_stairs": {
+"a": 1.0,
+"c": "#737969"
+},
+"minecraft:mossy_stone_brick_wall": {
+"a": 1.0,
+"c": "#737969"
+},
+"minecraft:mossy_stone_bricks": {
+"a": 1.0,
+"c": "#737969"
+},
+"minecraft:mud": {
+"a": 1.0,
+"c": "#3C393D"
+},
+"minecraft:mud_brick_slab": {
+"a": 1.0,
+"c": "#89684F"
+},
+"minecraft:mud_brick_stairs": {
+"a": 1.0,
+"c": "#89684F"
+},
+"minecraft:mud_brick_wall": {
+"a": 1.0,
+"c": "#89684F"
+},
+"minecraft:mud_bricks": {
+"a": 1.0,
+"c": "#89684F"
+},
+"minecraft:muddy_mangrove_roots": {
+"a": 1.0,
+"c": "#463B2D"
+},
+"minecraft:mushroom_stem": {
+"a": 1.0,
+"c": "#CBC5BA"
+},
+"minecraft:mycelium": {
+"a": 1.0,
+"c": "#6F6365"
+},
+"minecraft:nether_brick_fence": {
+"a": 1.0,
+"c": "#2C161A"
+},
+"minecraft:nether_brick_slab": {
+"a": 1.0,
+"c": "#2C161A"
+},
+"minecraft:nether_brick_stairs": {
+"a": 1.0,
+"c": "#2C161A"
+},
+"minecraft:nether_brick_wall": {
+"a": 1.0,
+"c": "#2C161A"
+},
+"minecraft:nether_bricks": {
+"a": 1.0,
+"c": "#2C161A"
+},
+"minecraft:nether_gold_ore": {
+"a": 1.0,
+"c": "#73372A"
+},
+"minecraft:nether_portal": {
+"a": 0.75,
+"c": "#590CC0"
+},
+"minecraft:nether_quartz_ore": {
+"a": 1.0,
+"c": "#76423E"
+},
+"minecraft:nether_sprouts": {
+"a": 0.12,
+"c": "#149785"
+},
+"minecraft:nether_wart": {
+"a": 1.0,
+"c": "#730302"
+},
+"minecraft:nether_wart_block": {
+"a": 1.0,
+"c": "#730302"
+},
+"minecraft:netherite_block": {
+"a": 1.0,
+"c": "#433D40"
+},
+"minecraft:netherrack": {
+"a": 1.0,
+"c": "#622626"
+},
+"minecraft:note_block": {
+"a": 1.0,
+"c": "#593B29"
+},
+"minecraft:oak_button": {
+"a": 1.0,
+"c": "#A2834F"
+},
+"minecraft:oak_door": {
+"a": 0.81,
+"c": "#8D6F42"
+},
+"minecraft:oak_fence": {
+"a": 1.0,
+"c": "#A2834F"
+},
+"minecraft:oak_fence_gate": {
+"a": 1.0,
+"c": "#A2834F"
+},
+"minecraft:oak_hanging_sign": {
+"a": 1.0,
+"c": "#A2834F"
+},
+"minecraft:oak_leaves": {
+"a": 0.67,
+"c": "#29660E"
+},
+"minecraft:oak_log": {
+"a": 1.0,
+"c": "#6D5533"
+},
+"minecraft:oak_planks": {
+"a": 1.0,
+"c": "#A2834F"
+},
+"minecraft:oak_pressure_plate": {
+"a": 1.0,
+"c": "#A2834F"
+},
+"minecraft:oak_sapling": {
+"a": 0.43,
+"c": "#4E6B29"
+},
+"minecraft:oak_sign": {
+"a": 1.0,
+"c": "#A2834F"
+},
+"minecraft:oak_slab": {
+"a": 1.0,
+"c": "#A2834F"
+},
+"minecraft:oak_stairs": {
+"a": 1.0,
+"c": "#A2834F"
+},
+"minecraft:oak_trapdoor": {
+"a": 0.86,
+"c": "#7D6339"
+},
+"minecraft:oak_wall_hanging_sign": {
+"a": 1.0,
+"c": "#A2834F"
+},
+"minecraft:oak_wall_sign": {
+"a": 1.0,
+"c": "#A2834F"
+},
+"minecraft:observer": {
+"a": 1.0,
+"c": "#626262"
+},
+"minecraft:obsidian": {
+"a": 1.0,
+"c": "#0F0B19"
+},
+"minecraft:ochre_froglight": {
+"a": 1.0,
+"c": "#FBF5CE"
+},
+"minecraft:orange_candle": {
+"a": 0.08,
+"c": "#DB6409"
+},
+"minecraft:orange_carpet": {
+"a": 1.0,
+"c": "#F17614"
+},
+"minecraft:orange_concrete": {
+"a": 1.0,
+"c": "#E06101"
+},
+"minecraft:orange_concrete_powder": {
+"a": 1.0,
+"c": "#E38420"
+},
+"minecraft:orange_glazed_terracotta": {
+"a": 1.0,
+"c": "#9B935C"
+},
+"minecraft:orange_shulker_box": {
+"a": 1.0,
+"c": "#EA6A09"
+},
+"minecraft:orange_stained_glass": {
+"a": 0.46,
+"c": "#D87F33"
+},
+"minecraft:orange_stained_glass_pane": {
+"a": 0.11,
+"c": "#D17B31"
+},
+"minecraft:orange_terracotta": {
+"a": 1.0,
+"c": "#A25426"
+},
+"minecraft:orange_tulip": {
+"a": 0.16,
+"c": "#5D8E1F"
+},
+"minecraft:orange_wool": {
+"a": 1.0,
+"c": "#F17614"
+},
+"minecraft:oxeye_daisy": {
+"a": 0.2,
+"c": "#B3CA8F"
+},
+"minecraft:oxidized_chiseled_copper": {
+"a": 1.0,
+"c": "#54A284"
+},
+"minecraft:oxidized_copper": {
+"a": 1.0,
+"c": "#52A385"
+},
+"minecraft:oxidized_copper_bulb": {
+"a": 1.0,
+"c": "#46846D"
+},
+"minecraft:oxidized_copper_door": {
+"a": 0.81,
+"c": "#52A085"
+},
+"minecraft:oxidized_copper_grate": {
+"a": 0.7,
+"c": "#52A183"
+},
+"minecraft:oxidized_copper_trapdoor": {
+"a": 0.8,
+"c": "#54A184"
+},
+"minecraft:oxidized_cut_copper": {
+"a": 1.0,
+"c": "#509A7E"
+},
+"minecraft:oxidized_cut_copper_slab": {
+"a": 1.0,
+"c": "#509A7E"
+},
+"minecraft:oxidized_cut_copper_stairs": {
+"a": 1.0,
+"c": "#509A7E"
+},
+"minecraft:packed_ice": {
+"a": 1.0,
+"c": "#8EB4FA"
+},
+"minecraft:packed_mud": {
+"a": 1.0,
+"c": "#8E6B50"
+},
+"minecraft:pearlescent_froglight": {
+"a": 1.0,
+"c": "#F6F0F0"
+},
+"minecraft:peony": {
+"a": 0.43,
+"c": "#827F8B"
+},
+"minecraft:pink_candle": {
+"a": 0.08,
+"c": "#D0668E"
+},
+"minecraft:pink_carpet": {
+"a": 1.0,
+"c": "#EE8DAC"
+},
+"minecraft:pink_concrete": {
+"a": 1.0,
+"c": "#D6658F"
+},
+"minecraft:pink_concrete_powder": {
+"a": 1.0,
+"c": "#E599B5"
+},
+"minecraft:pink_glazed_terracotta": {
+"a": 1.0,
+"c": "#EB9BB6"
+},
+"minecraft:pink_petals": {
+"a": 0.4,
+"c": "#F7B5DB"
+},
+"minecraft:pink_shulker_box": {
+"a": 1.0,
+"c": "#E67A9E"
+},
+"minecraft:pink_stained_glass": {
+"a": 0.46,
+"c": "#F27FA5"
+},
+"minecraft:pink_stained_glass_pane": {
+"a": 0.11,
+"c": "#E97BA0"
+},
+"minecraft:pink_terracotta": {
+"a": 1.0,
+"c": "#A24E4F"
+},
+"minecraft:pink_tulip": {
+"a": 0.16,
+"c": "#639D4E"
+},
+"minecraft:pink_wool": {
+"a": 1.0,
+"c": "#EE8DAC"
+},
+"minecraft:piston": {
+"a": 1.0,
+"c": "#998055"
+},
+"minecraft:pitcher_crop": {
+"a": 0.39,
+"c": "#C2A667"
+},
+"minecraft:podzol": {
+"a": 1.0,
+"c": "#5C3F18"
+},
+"minecraft:polished_andesite": {
+"a": 1.0,
+"c": "#848786"
+},
+"minecraft:polished_andesite_slab": {
+"a": 1.0,
+"c": "#848786"
+},
+"minecraft:polished_andesite_stairs": {
+"a": 1.0,
+"c": "#848786"
+},
+"minecraft:polished_basalt": {
+"a": 1.0,
+"c": "#636365"
+},
+"minecraft:polished_blackstone": {
+"a": 1.0,
+"c": "#353139"
+},
+"minecraft:polished_blackstone_brick_slab": {
+"a": 1.0,
+"c": "#302B32"
+},
+"minecraft:polished_blackstone_brick_stairs": {
+"a": 1.0,
+"c": "#302B32"
+},
+"minecraft:polished_blackstone_brick_wall": {
+"a": 1.0,
+"c": "#302B32"
+},
+"minecraft:polished_blackstone_bricks": {
+"a": 1.0,
+"c": "#302B32"
+},
+"minecraft:polished_blackstone_button": {
+"a": 1.0,
+"c": "#353139"
+},
+"minecraft:polished_blackstone_pressure_plate": {
+"a": 1.0,
+"c": "#353139"
+},
+"minecraft:polished_blackstone_slab": {
+"a": 1.0,
+"c": "#353139"
+},
+"minecraft:polished_blackstone_stairs": {
+"a": 1.0,
+"c": "#353139"
+},
+"minecraft:polished_blackstone_wall": {
+"a": 1.0,
+"c": "#353139"
+},
+"minecraft:polished_deepslate": {
+"a": 1.0,
+"c": "#484949"
+},
+"minecraft:polished_deepslate_slab": {
+"a": 1.0,
+"c": "#484949"
+},
+"minecraft:polished_deepslate_stairs": {
+"a": 1.0,
+"c": "#484949"
+},
+"minecraft:polished_deepslate_wall": {
+"a": 1.0,
+"c": "#484949"
+},
+"minecraft:polished_diorite": {
+"a": 1.0,
+"c": "#C1C1C3"
+},
+"minecraft:polished_diorite_slab": {
+"a": 1.0,
+"c": "#C1C1C3"
+},
+"minecraft:polished_diorite_stairs": {
+"a": 1.0,
+"c": "#C1C1C3"
+},
+"minecraft:polished_granite": {
+"a": 1.0,
+"c": "#9A6B59"
+},
+"minecraft:polished_granite_slab": {
+"a": 1.0,
+"c": "#9A6B59"
+},
+"minecraft:polished_granite_stairs": {
+"a": 1.0,
+"c": "#9A6B59"
+},
+"minecraft:polished_tuff": {
+"a": 1.0,
+"c": "#626864"
+},
+"minecraft:polished_tuff_slab": {
+"a": 1.0,
+"c": "#626864"
+},
+"minecraft:polished_tuff_stairs": {
+"a": 1.0,
+"c": "#626864"
+},
+"minecraft:polished_tuff_wall": {
+"a": 1.0,
+"c": "#626864"
+},
+"minecraft:poppy": {
+"a": 0.14,
+"c": "#814126"
+},
+"minecraft:potted_acacia_sapling": {
+"a": 0.43,
+"c": "#777618"
+},
+"minecraft:potted_allium": {
+"a": 0.15,
+"c": "#9F89B8"
+},
+"minecraft:potted_azalea_bush": {
+"a": 0.25,
+"c": "#657B30"
+},
+"minecraft:potted_azure_bluet": {
+"a": 0.17,
+"c": "#A9CD7F"
+},
+"minecraft:potted_bamboo": {
+"a": 1.0,
+"c": "#C1AD50"
+},
+"minecraft:potted_birch_sapling": {
+"a": 0.38,
+"c": "#80A150"
+},
+"minecraft:potted_blue_orchid": {
+"a": 0.17,
+"c": "#2FA2A8"
+},
+"minecraft:potted_brown_mushroom": {
+"a": 0.13,
+"c": "#9A755C"
+},
+"minecraft:potted_cactus": {
+"a": 0.77,
+"c": "#567F2B"
+},
+"minecraft:potted_cherry_sapling": {
+"a": 0.48,
+"c": "#A4768F"
+},
+"minecraft:potted_cornflower": {
+"a": 0.14,
+"c": "#507993"
+},
+"minecraft:potted_crimson_fungus": {
+"a": 0.23,
+"c": "#8D2C1E"
+},
+"minecraft:potted_crimson_roots": {
+"a": 0.36,
+"c": "#7E082A"
+},
+"minecraft:potted_dandelion": {
+"a": 0.12,
+"c": "#94AC2B"
+},
+"minecraft:potted_dark_oak_sapling": {
+"a": 0.43,
+"c": "#3D5B1F"
+},
+"minecraft:potted_dead_bush": {
+"a": 0.3,
+"c": "#6B4F29"
+},
+"minecraft:potted_fern": {
+"a": 0.35,
+"c": "#3B5E2C"
+},
+"minecraft:potted_flowering_azalea_bush": {
+"a": 0.25,
+"c": "#737846"
+},
+"minecraft:potted_jungle_sapling": {
+"a": 0.34,
+"c": "#305111"
+},
+"minecraft:potted_lily_of_the_valley": {
+"a": 0.2,
+"c": "#7BAF5F"
+},
+"minecraft:potted_mangrove_propagule": {
+"a": 0.13,
+"c": "#60AF54"
+},
+"minecraft:potted_oak_sapling": {
+"a": 0.43,
+"c": "#4E6B29"
+},
+"minecraft:potted_orange_tulip": {
+"a": 0.16,
+"c": "#5D8E1F"
+},
+"minecraft:potted_oxeye_daisy": {
+"a": 0.2,
+"c": "#B3CA8F"
+},
+"minecraft:potted_pink_tulip": {
+"a": 0.16,
+"c": "#639D4E"
+},
+"minecraft:potted_poppy": {
+"a": 0.14,
+"c": "#814126"
+},
+"minecraft:potted_red_mushroom": {
+"a": 0.12,
+"c": "#D94B44"
+},
+"minecraft:potted_red_tulip": {
+"a": 0.19,
+"c": "#5A8121"
+},
+"minecraft:potted_spruce_sapling": {
+"a": 0.32,
+"c": "#2D3C25"
+},
+"minecraft:potted_torchflower": {
+"a": 0.38,
+"c": "#65654D"
+},
+"minecraft:potted_warped_fungus": {
+"a": 0.2,
+"c": "#4A6D58"
+},
+"minecraft:potted_warped_roots": {
+"a": 0.36,
+"c": "#148A7C"
+},
+"minecraft:potted_white_tulip": {
+"a": 0.18,
+"c": "#5EA547"
+},
+"minecraft:potted_wither_rose": {
+"a": 0.14,
+"c": "#292D17"
+},
+"minecraft:powder_snow": {
+"a": 1.0,
+"c": "#F5F8FA"
+},
+"minecraft:powered_rail": {
+"a": 0.67,
+"c": "#8A6E4A"
+},
+"minecraft:prismarine": {
+"a": 1.0,
+"c": "#62A292"
+},
+"minecraft:prismarine_brick_slab": {
+"a": 1.0,
+"c": "#63AC9E"
+},
+"minecraft:prismarine_brick_stairs": {
+"a": 1.0,
+"c": "#63AC9E"
+},
+"minecraft:prismarine_bricks": {
+"a": 1.0,
+"c": "#63AC9E"
+},
+"minecraft:prismarine_slab": {
+"a": 1.0,
+"c": "#62A292"
+},
+"minecraft:prismarine_stairs": {
+"a": 1.0,
+"c": "#62A292"
+},
+"minecraft:prismarine_wall": {
+"a": 1.0,
+"c": "#62A292"
+},
+"minecraft:pumpkin": {
+"a": 1.0,
+"c": "#C67718"
+},
+"minecraft:pumpkin_stem": {
+"a": 0.14,
+"c": "#9A9A9A"
+},
+"minecraft:purple_candle": {
+"a": 0.08,
+"c": "#69229F"
+},
+"minecraft:purple_carpet": {
+"a": 1.0,
+"c": "#7A2AAD"
+},
+"minecraft:purple_concrete": {
+"a": 1.0,
+"c": "#64209C"
+},
+"minecraft:purple_concrete_powder": {
+"a": 1.0,
+"c": "#8438B2"
+},
+"minecraft:purple_glazed_terracotta": {
+"a": 1.0,
+"c": "#6E3098"
+},
+"minecraft:purple_shulker_box": {
+"a": 1.0,
+"c": "#67209C"
+},
+"minecraft:purple_stained_glass": {
+"a": 0.46,
+"c": "#7F3FB2"
+},
+"minecraft:purple_stained_glass_pane": {
+"a": 0.11,
+"c": "#7B3DAB"
+},
+"minecraft:purple_terracotta": {
+"a": 1.0,
+"c": "#764656"
+},
+"minecraft:purple_wool": {
+"a": 1.0,
+"c": "#7A2AAD"
+},
+"minecraft:purpur_block": {
+"a": 1.0,
+"c": "#AA7EAA"
+},
+"minecraft:purpur_pillar": {
+"a": 1.0,
+"c": "#AC82AC"
+},
+"minecraft:purpur_slab": {
+"a": 1.0,
+"c": "#AA7EAA"
+},
+"minecraft:purpur_stairs": {
+"a": 1.0,
+"c": "#AA7EAA"
+},
+"minecraft:quartz_block": {
+"a": 1.0,
+"c": "#ECE6DF"
+},
+"minecraft:quartz_bricks": {
+"a": 1.0,
+"c": "#EBE5DE"
+},
+"minecraft:quartz_pillar": {
+"a": 1.0,
+"c": "#ECE7E0"
+},
+"minecraft:quartz_slab": {
+"a": 1.0,
+"c": "#ECE6DF"
+},
+"minecraft:quartz_stairs": {
+"a": 1.0,
+"c": "#ECE6DF"
+},
+"minecraft:rail": {
+"a": 0.56,
+"c": "#7E7059"
+},
+"minecraft:raw_copper_block": {
+"a": 1.0,
+"c": "#9A6A4F"
+},
+"minecraft:raw_gold_block": {
+"a": 1.0,
+"c": "#DEA92F"
+},
+"minecraft:raw_iron_block": {
+"a": 1.0,
+"c": "#A6886B"
+},
+"minecraft:red_candle": {
+"a": 0.08,
+"c": "#992724"
+},
+"minecraft:red_carpet": {
+"a": 1.0,
+"c": "#A12723"
+},
+"minecraft:red_concrete": {
+"a": 1.0,
+"c": "#8E2121"
+},
+"minecraft:red_concrete_powder": {
+"a": 1.0,
+"c": "#A83633"
+},
+"minecraft:red_glazed_terracotta": {
+"a": 1.0,
+"c": "#B63C35"
+},
+"minecraft:red_mushroom": {
+"a": 0.12,
+"c": "#D94B44"
+},
+"minecraft:red_mushroom_block": {
+"a": 1.0,
+"c": "#C82F2D"
+},
+"minecraft:red_nether_brick_slab": {
+"a": 1.0,
+"c": "#460709"
+},
+"minecraft:red_nether_brick_stairs": {
+"a": 1.0,
+"c": "#460709"
+},
+"minecraft:red_nether_brick_wall": {
+"a": 1.0,
+"c": "#460709"
+},
+"minecraft:red_nether_bricks": {
+"a": 1.0,
+"c": "#460709"
+},
+"minecraft:red_sand": {
+"a": 1.0,
+"c": "#BF6721"
+},
+"minecraft:red_sandstone": {
+"a": 1.0,
+"c": "#BB631D"
+},
+"minecraft:red_sandstone_slab": {
+"a": 1.0,
+"c": "#BB631D"
+},
+"minecraft:red_sandstone_stairs": {
+"a": 1.0,
+"c": "#BB631D"
+},
+"minecraft:red_sandstone_wall": {
+"a": 1.0,
+"c": "#BB631D"
+},
+"minecraft:red_shulker_box": {
+"a": 1.0,
+"c": "#8C1F1E"
+},
+"minecraft:red_stained_glass": {
+"a": 0.46,
+"c": "#993333"
+},
+"minecraft:red_stained_glass_pane": {
+"a": 0.11,
+"c": "#933131"
+},
+"minecraft:red_terracotta": {
+"a": 1.0,
+"c": "#8F3D2F"
+},
+"minecraft:red_tulip": {
+"a": 0.19,
+"c": "#5A8121"
+},
+"minecraft:red_wool": {
+"a": 1.0,
+"c": "#A12723"
+},
+"minecraft:redstone_block": {
+"a": 1.0,
+"c": "#B01905"
+},
+"minecraft:redstone_lamp": {
+"a": 1.0,
+"c": "#8B5A2B"
+},
+"minecraft:redstone_ore": {
+"a": 1.0,
+"c": "#8C6E6E"
+},
+"minecraft:redstone_torch": {
+"a": 0.1,
+"c": "#AB4F2C"
+},
+"minecraft:reinforced_deepslate": {
+"a": 1.0,
+"c": "#50534F"
+},
+"minecraft:repeater": {
+"a": 1.0,
+"c": "#A09D9C"
+},
+"minecraft:repeating_command_block": {
+"a": 1.0,
+"c": "#816EAB"
+},
+"minecraft:respawn_anchor": {
+"a": 0.86,
+"c": "#4D1996"
+},
+"minecraft:rooted_dirt": {
+"a": 1.0,
+"c": "#90684D"
+},
+"minecraft:rose_bush": {
+"a": 0.36,
+"c": "#834225"
+},
+"minecraft:sand": {
+"a": 1.0,
+"c": "#DBCFA3"
+},
+"minecraft:sandstone": {
+"a": 1.0,
+"c": "#D8CB9C"
+},
+"minecraft:sandstone_slab": {
+"a": 1.0,
+"c": "#D8CB9C"
+},
+"minecraft:sandstone_stairs": {
+"a": 1.0,
+"c": "#D8CB9C"
+},
+"minecraft:sandstone_wall": {
+"a": 1.0,
+"c": "#D8CB9C"
+},
+"minecraft:scaffolding": {
+"a": 0.91,
+"c": "#AA8449"
+},
+"minecraft:sculk": {
+"a": 1.0,
+"c": "#0D1C22"
+},
+"minecraft:sculk_catalyst": {
+"a": 1.0,
+"c": "#0F2026"
+},
+"minecraft:sculk_sensor": {
+"a": 1.0,
+"c": "#074654"
+},
+"minecraft:sculk_shrieker": {
+"a": 0.2,
+"c": "#C7CDAA"
+},
+"minecraft:sculk_vein": {
+"a": 0.69,
+"c": "#08313B"
+},
+"minecraft:sea_lantern": {
+"a": 1.0,
+"c": "#BFE6E0"
+},
+"minecraft:sea_pickle": {
+"a": 0.84,
+"c": "#5A6128"
+},
+"minecraft:seagrass": {
+"a": 0.3,
+"c": "#337E09"
+},
+"minecraft:short_grass": {
+"a": 0.55,
+"c": "#456D33"
+},
+"minecraft:shroomlight": {
+"a": 1.0,
+"c": "#F59A3A"
+},
+"minecraft:shulker_box": {
+"a": 1.0,
+"c": "#8B618B"
+},
+"minecraft:slime_block": {
+"a": 0.71,
+"c": "#70C05C"
+},
+"minecraft:small_amethyst_bud": {
+"a": 0.12,
+"c": "#8463C0"
+},
+"minecraft:small_dripleaf": {
+"a": 0.25,
+"c": "#5F782E"
+},
+"minecraft:smithing_table": {
+"a": 1.0,
+"c": "#393B47"
+},
+"minecraft:smoker": {
+"a": 1.0,
+"c": "#555451"
+},
+"minecraft:smooth_basalt": {
+"a": 1.0,
+"c": "#49484E"
+},
+"minecraft:smooth_stone": {
+"a": 1.0,
+"c": "#9F9F9F"
+},
+"minecraft:smooth_stone_slab": {
+"a": 1.0,
+"c": "#A8A8A8"
+},
+"minecraft:snow": {
+"a": 1.0,
+"c": "#F5F8FA"
+},
+"minecraft:soul_fire": {
+"a": 0.61,
+"c": "#38CCD1"
+},
+"minecraft:soul_lantern": {
+"a": 0.41,
+"c": "#476372"
+},
+"minecraft:soul_sand": {
+"a": 1.0,
+"c": "#513E33"
+},
+"minecraft:soul_soil": {
+"a": 1.0,
+"c": "#4C3A2F"
+},
+"minecraft:soul_torch": {
+"a": 0.08,
+"c": "#6D735A"
+},
+"minecraft:spawner": {
+"a": 0.69,
+"c": "#242E3F"
+},
+"minecraft:sponge": {
+"a": 1.0,
+"c": "#C4C04B"
+},
+"minecraft:spore_blossom": {
+"a": 0.48,
+"c": "#CF619F"
+},
+"minecraft:spruce_button": {
+"a": 1.0,
+"c": "#735531"
+},
+"minecraft:spruce_door": {
+"a": 1.0,
+"c": "#6A5031"
+},
+"minecraft:spruce_fence": {
+"a": 1.0,
+"c": "#735531"
+},
+"minecraft:spruce_fence_gate": {
+"a": 1.0,
+"c": "#735531"
+},
+"minecraft:spruce_hanging_sign": {
+"a": 1.0,
+"c": "#735531"
+},
+"minecraft:spruce_leaves": {
+"a": 0.62,
+"c": "#304C30"
+},
+"minecraft:spruce_log": {
+"a": 1.0,
+"c": "#3B2611"
+},
+"minecraft:spruce_planks": {
+"a": 1.0,
+"c": "#735531"
+},
+"minecraft:spruce_pressure_plate": {
+"a": 1.0,
+"c": "#735531"
+},
+"minecraft:spruce_sapling": {
+"a": 0.32,
+"c": "#2D3C25"
+},
+"minecraft:spruce_sign": {
+"a": 1.0,
+"c": "#735531"
+},
+"minecraft:spruce_slab": {
+"a": 1.0,
+"c": "#735531"
+},
+"minecraft:spruce_stairs": {
+"a": 1.0,
+"c": "#735531"
+},
+"minecraft:spruce_trapdoor": {
+"a": 1.0,
+"c": "#684F30"
+},
+"minecraft:spruce_wall_hanging_sign": {
+"a": 1.0,
+"c": "#735531"
+},
+"minecraft:spruce_wall_sign": {
+"a": 1.0,
+"c": "#735531"
+},
+"minecraft:stone": {
+"a": 1.0,
+"c": "#7E7E7E"
+},
+"minecraft:stone_brick_slab": {
+"a": 1.0,
+"c": "#7A7A7A"
+},
+"minecraft:stone_brick_stairs": {
+"a": 1.0,
+"c": "#7A7A7A"
+},
+"minecraft:stone_brick_wall": {
+"a": 1.0,
+"c": "#7A7A7A"
+},
+"minecraft:stone_bricks": {
+"a": 1.0,
+"c": "#7A7A7A"
+},
+"minecraft:stone_button": {
+"a": 1.0,
+"c": "#7E7E7E"
+},
+"minecraft:stone_pressure_plate": {
+"a": 1.0,
+"c": "#7E7E7E"
+},
+"minecraft:stone_slab": {
+"a": 1.0,
+"c": "#7E7E7E"
+},
+"minecraft:stone_stairs": {
+"a": 1.0,
+"c": "#7E7E7E"
+},
+"minecraft:stonecutter": {
+"a": 1.0,
+"c": "#7B776F"
+},
+"minecraft:stripped_acacia_log": {
+"a": 1.0,
+"c": "#AF5D3C"
+},
+"minecraft:stripped_bamboo_block": {
+"a": 1.0,
+"c": "#C1AD50"
+},
+"minecraft:stripped_birch_log": {
+"a": 1.0,
+"c": "#C5B076"
+},
+"minecraft:stripped_cherry_log": {
+"a": 1.0,
+"c": "#D79195"
+},
+"minecraft:stripped_crimson_stem": {
+"a": 1.0,
+"c": "#89395A"
+},
+"minecraft:stripped_dark_oak_log": {
+"a": 1.0,
+"c": "#493924"
+},
+"minecraft:stripped_jungle_log": {
+"a": 1.0,
+"c": "#AB8555"
+},
+"minecraft:stripped_mangrove_log": {
+"a": 1.0,
+"c": "#783630"
+},
+"minecraft:stripped_oak_log": {
+"a": 1.0,
+"c": "#B19056"
+},
+"minecraft:stripped_spruce_log": {
+"a": 1.0,
+"c": "#745A34"
+},
+"minecraft:stripped_warped_stem": {
+"a": 1.0,
+"c": "#3A9794"
+},
+"minecraft:structure_block": {
+"a": 1.0,
+"c": "#594A5A"
+},
+"minecraft:sugar_cane": {
+"a": 0.55,
+"c": "#479124"
+},
+"minecraft:sunflower": {
+"a": 0.12,
+"c": "#32811B"
+},
+"minecraft:suspicious_gravel": {
+"a": 1.0,
+"c": "#827D7C"
+},
+"minecraft:suspicious_sand": {
+"a": 1.0,
+"c": "#DACC9F"
+},
+"minecraft:tall_grass": {
+"a": 0.35,
+"c": "#487135"
+},
+"minecraft:tall_seagrass": {
+"a": 0.29,
+"c": "#3A8A0E"
+},
+"minecraft:target": {
+"a": 1.0,
+"c": "#E2AA9E"
+},
+"minecraft:terracotta": {
+"a": 1.0,
+"c": "#985E44"
+},
+"minecraft:tinted_glass": {
+"a": 0.51,
+"c": "#2C272E"
+},
+"minecraft:tnt": {
+"a": 1.0,
+"c": "#8F3E36"
+},
+"minecraft:torch": {
+"a": 1.0,
+"c": "#FFD060"
+},
+"minecraft:torchflower": {
+"a": 0.38,
+"c": "#65654D"
+},
+"minecraft:trial_spawner": {
+"a": 0.75,
+"c": "#2A3B4C"
+},
+"minecraft:tripwire": {
+"a": 0.11,
+"c": "#818181"
+},
+"minecraft:tripwire_hook": {
+"a": 0.18,
+"c": "#8F8576"
+},
+"minecraft:tube_coral": {
+"a": 0.6,
+"c": "#3053C5"
+},
+"minecraft:tube_coral_block": {
+"a": 1.0,
+"c": "#3157CF"
+},
+"minecraft:tube_coral_fan": {
+"a": 0.31,
+"c": "#335CD1"
+},
+"minecraft:tuff": {
+"a": 1.0,
+"c": "#6C6D67"
+},
+"minecraft:tuff_brick_slab": {
+"a": 1.0,
+"c": "#62675F"
+},
+"minecraft:tuff_brick_stairs": {
+"a": 1.0,
+"c": "#62675F"
+},
+"minecraft:tuff_brick_wall": {
+"a": 1.0,
+"c": "#62675F"
+},
+"minecraft:tuff_bricks": {
+"a": 1.0,
+"c": "#62675F"
+},
+"minecraft:tuff_slab": {
+"a": 1.0,
+"c": "#6C6D67"
+},
+"minecraft:tuff_stairs": {
+"a": 1.0,
+"c": "#6C6D67"
+},
+"minecraft:tuff_wall": {
+"a": 1.0,
+"c": "#6C6D67"
+},
+"minecraft:turtle_egg": {
+"a": 0.52,
+"c": "#E4E3C0"
+},
+"minecraft:twisting_vines": {
+"a": 0.28,
+"c": "#148F7C"
+},
+"minecraft:twisting_vines_plant": {
+"a": 0.35,
+"c": "#14887A"
+},
+"minecraft:vault": {
+"a": 1.0,
+"c": "#37464F"
+},
+"minecraft:verdant_froglight": {
+"a": 1.0,
+"c": "#E5F4E4"
+},
+"minecraft:vine": {
+"a": 0.57,
+"c": "#21520B"
+},
+"minecraft:warped_button": {
+"a": 1.0,
+"c": "#2B6963"
+},
+"minecraft:warped_door": {
+"a": 1.0,
+"c": "#2D7F79"
+},
+"minecraft:warped_fence": {
+"a": 1.0,
+"c": "#2B6963"
+},
+"minecraft:warped_fence_gate": {
+"a": 1.0,
+"c": "#2B6963"
+},
+"minecraft:warped_fungus": {
+"a": 0.2,
+"c": "#4A6D58"
+},
+"minecraft:warped_hanging_sign": {
+"a": 1.0,
+"c": "#2B6963"
+},
+"minecraft:warped_nylium": {
+"a": 1.0,
+"c": "#2B7265"
+},
+"minecraft:warped_planks": {
+"a": 1.0,
+"c": "#2B6963"
+},
+"minecraft:warped_pressure_plate": {
+"a": 1.0,
+"c": "#2B6963"
+},
+"minecraft:warped_roots": {
+"a": 0.36,
+"c": "#148A7C"
+},
+"minecraft:warped_sign": {
+"a": 1.0,
+"c": "#2B6963"
+},
+"minecraft:warped_slab": {
+"a": 1.0,
+"c": "#2B6963"
+},
+"minecraft:warped_stairs": {
+"a": 1.0,
+"c": "#2B6963"
+},
+"minecraft:warped_stem": {
+"a": 1.0,
+"c": "#3A3B4E"
+},
+"minecraft:warped_trapdoor": {
+"a": 0.79,
+"c": "#2F7870"
+},
+"minecraft:warped_wall_hanging_sign": {
+"a": 1.0,
+"c": "#2B6963"
+},
+"minecraft:warped_wall_sign": {
+"a": 1.0,
+"c": "#2B6963"
+},
+"minecraft:warped_wart_block": {
+"a": 1.0,
+"c": "#177879"
+},
+"minecraft:water": {
+"a": 0.35,
+"c": "#3F76E4"
+},
+"minecraft:weathered_chiseled_copper": {
+"a": 1.0,
+"c": "#69976F"
+},
+"minecraft:weathered_copper": {
+"a": 1.0,
+"c": "#6C996E"
+},
+"minecraft:weathered_copper_bulb": {
+"a": 1.0,
+"c": "#5C7F63"
+},
+"minecraft:weathered_copper_door": {
+"a": 0.81,
+"c": "#6E976E"
+},
+"minecraft:weathered_copper_grate": {
+"a": 0.7,
+"c": "#6A996F"
+},
+"minecraft:weathered_copper_trapdoor": {
+"a": 0.8,
+"c": "#6D996E"
+},
+"minecraft:weathered_cut_copper": {
+"a": 1.0,
+"c": "#6D916C"
+},
+"minecraft:weathered_cut_copper_slab": {
+"a": 1.0,
+"c": "#6D916C"
+},
+"minecraft:weathered_cut_copper_stairs": {
+"a": 1.0,
+"c": "#6D916C"
+},
+"minecraft:weeping_vines": {
+"a": 0.11,
+"c": "#690100"
+},
+"minecraft:weeping_vines_plant": {
+"a": 0.45,
+"c": "#85100C"
+},
+"minecraft:wet_sponge": {
+"a": 1.0,
+"c": "#ABB546"
+},
+"minecraft:white_candle": {
+"a": 0.08,
+"c": "#D2D9DA"
+},
+"minecraft:white_carpet": {
+"a": 1.0,
+"c": "#EAECED"
+},
+"minecraft:white_concrete": {
+"a": 1.0,
+"c": "#CFD5D6"
+},
+"minecraft:white_concrete_powder": {
+"a": 1.0,
+"c": "#E2E3E4"
+},
+"minecraft:white_glazed_terracotta": {
+"a": 1.0,
+"c": "#BCD4CB"
+},
+"minecraft:white_shulker_box": {
+"a": 1.0,
+"c": "#D8DDDD"
+},
+"minecraft:white_stained_glass": {
+"a": 0.46,
+"c": "#FFFFFF"
+},
+"minecraft:white_stained_glass_pane": {
+"a": 0.11,
+"c": "#F6F6F6"
+},
+"minecraft:white_terracotta": {
+"a": 1.0,
+"c": "#D2B2A1"
+},
+"minecraft:white_tulip": {
+"a": 0.18,
+"c": "#5EA547"
+},
+"minecraft:white_wool": {
+"a": 1.0,
+"c": "#EAECED"
+},
+"minecraft:wither_rose": {
+"a": 0.14,
+"c": "#292D17"
+},
+"minecraft:yellow_candle": {
+"a": 0.08,
+"c": "#D1A532"
+},
+"minecraft:yellow_carpet": {
+"a": 1.0,
+"c": "#F9C628"
+},
+"minecraft:yellow_concrete": {
+"a": 1.0,
+"c": "#F1AF15"
+},
+"minecraft:yellow_concrete_powder": {
+"a": 1.0,
+"c": "#E9C737"
+},
+"minecraft:yellow_glazed_terracotta": {
+"a": 1.0,
+"c": "#EAC059"
+},
+"minecraft:yellow_shulker_box": {
+"a": 1.0,
+"c": "#F8BD1D"
+},
+"minecraft:yellow_stained_glass": {
+"a": 0.46,
+"c": "#E5E533"
+},
+"minecraft:yellow_stained_glass_pane": {
+"a": 0.11,
+"c": "#DDDD31"
+},
+"minecraft:yellow_terracotta": {
+"a": 1.0,
+"c": "#BA8523"
+},
+"minecraft:yellow_wool": {
+"a": 1.0,
+"c": "#F9C628"
+}
+}

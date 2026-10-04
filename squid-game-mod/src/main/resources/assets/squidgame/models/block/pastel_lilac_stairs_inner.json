@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "bottom": "squidgame:block/pastel_lilac",
+    "side": "squidgame:block/pastel_lilac",
+    "top": "squidgame:block/pastel_lilac"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "squidgame",
+  "version": "${version}",
+  "name": "Squid Game Tournament",
+  "description": "A complete Squid Game tournament with animated NPC contestants, six playable games and detailed arenas.",
+  "authors": ["Squid Game Mod Team"],
+  "license": "MIT",
+  "environment": "*",
+  "accessWidener": "squidgame.accesswidener",
+  "entrypoints": {
+    "main": ["com.squidgame.SquidGameMod"],
+    "client": ["com.squidgame.client.SquidGameClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*",
+    "geckolib": ">=4.8"
+  }
+}

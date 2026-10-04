@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "side": "squidgame:block/symbol_square",
+    "top": "squidgame:block/symbol_plain",
+    "bottom": "squidgame:block/symbol_plain"
+  }
+}

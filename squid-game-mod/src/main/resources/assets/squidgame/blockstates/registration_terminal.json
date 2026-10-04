@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "squidgame:block/registration_terminal",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "squidgame:block/registration_terminal"
+    },
+    "facing=south": {
+      "model": "squidgame:block/registration_terminal",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "squidgame:block/registration_terminal",
+      "y": 270
+    }
+  }
+}

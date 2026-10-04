@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "squidgame:block/cash_block_top",
+    "side": "squidgame:block/cash_block_side"
+  }
+}

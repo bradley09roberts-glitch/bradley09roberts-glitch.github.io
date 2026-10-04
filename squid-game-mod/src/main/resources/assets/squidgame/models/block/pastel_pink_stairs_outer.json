@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "squidgame:block/pastel_pink",
+    "side": "squidgame:block/pastel_pink",
+    "top": "squidgame:block/pastel_pink"
+  }
+}

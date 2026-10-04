@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "squidgame:block/pastel_peach_slab"
+    },
+    "type=double": {
+      "model": "squidgame:block/pastel_peach"
+    },
+    "type=top": {
+      "model": "squidgame:block/pastel_peach_slab_top"
+    }
+  }
+}

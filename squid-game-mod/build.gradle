@@ -1,0 +1,94 @@
+plugins {
+    id 'fabric-loom' version '1.17.21'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+    }
+}
+
+loom {
+    accessWidenerPath = file('src/main/resources/squidgame.accesswidener')
+
+    // Client rendering code lives in src/client and can never leak into the
+    // dedicated-server classpath: the compiler enforces the separation.
+    splitEnvironmentSourceSets()
+
+    mods {
+        "squidgame" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+
+    runs {
+        // Development client that auto-joins a local dedicated server (used by the
+        // headless Xvfb verification scripts in tools/).
+        testClient {
+            client()
+            name = 'Squid Game Test Client'
+            runDir 'run-testclient'
+            programArgs '--username', 'Contestant', '--quickPlayMultiplayer', 'localhost:25599',
+                    '--width', '1280', '--height', '720'
+            vmArgs '-Xmx2G'
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    modImplementation "software.bernie.geckolib:geckolib-fabric-1.21.1:${project.geckolib_version}"
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'failed', 'skipped'
+        exceptionFormat 'full'
+    }
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = 'UTF-8'
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+// Developer tool: build an arena into a virtual buffer (no Minecraft) and dump it for tools/preview.py
+//   ./gradlew dumpArena -Parena=red_light     (or -Parena=all)  [-Pseed=1]
+tasks.register('dumpArena', JavaExec) {
+    group = 'squidgame'
+    description = 'Runs arena builders headlessly and writes tools/out/*.sqbuf'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.squidgame.build.tools.DumpArena'
+    args = [project.findProperty('arena') ?: 'all', 'tools/out', project.findProperty('seed') ?: '1']
+}

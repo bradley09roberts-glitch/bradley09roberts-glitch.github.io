@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "squidgame:block/pastel_mint",
+    "side": "squidgame:block/pastel_mint",
+    "top": "squidgame:block/pastel_mint"
+  }
+}

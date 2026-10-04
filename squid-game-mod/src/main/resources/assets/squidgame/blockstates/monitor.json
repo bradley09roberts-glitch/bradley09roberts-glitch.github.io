@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "squidgame:block/monitor",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "squidgame:block/monitor"
+    },
+    "facing=south": {
+      "model": "squidgame:block/monitor",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "squidgame:block/monitor",
+      "y": 270
+    }
+  }
+}
