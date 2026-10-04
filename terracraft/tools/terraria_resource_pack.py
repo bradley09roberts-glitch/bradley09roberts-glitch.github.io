@@ -44,6 +44,7 @@ RESOURCE_PACK_FORMAT = 88
 # TerraCraft item id -> Terraria name (None = no Terraria equivalent, keep TerraCraft art).
 NAME_OVERRIDES = {
     "dev_tablet": None,
+    "nebula_wings": "Nebula Mantle", "vortex_wings": "Vortex Booster", "stardust_breastplate": "Stardust Plate",
     "raw_tin": "Tin Ore", "raw_lead": "Lead Ore", "raw_silver": "Silver Ore",
     "raw_tungsten": "Tungsten Ore", "raw_platinum": "Platinum Ore",
     "wood_helmet": "Wood Helmet", "wood_breastplate": "Wood Breastplate", "wood_greaves": "Wood Greaves",
@@ -90,6 +91,7 @@ SPRITE_NAME_OVERRIDES = {
     "plantera_mouth": "Plantera (Phase 2)",
     "golem_head_free": "Golem Head",
     "duke_fishron_rage": "Duke Fishron",
+    "cultist_devotee": "Lunatic Devotee",
 }
 # worm segments are named "<Worm> Head/Body/Tail" on the wiki
 WORMS = {"bone_serpent": "Bone Serpent", "destroyer": "The Destroyer", "devourer": "Devourer",
