@@ -334,12 +334,61 @@ public final class ProjectileKinds {
     public static final ProjectileKind SPACE_LASER = register(ProjectileKind.builder("space_laser").texture("laser")
         .lifetime(40).size(0.15F, 0.6F).pierce(1).fullbright().magic());
 
+    // ---------------------------------------------------------------- summoner (minion and sentry shots, whips)
+    public static final ProjectileKind MINION_FIREBALL = register(ProjectileKind.builder("minion_fireball").texture("imp_fireball")
+        .lifetime(60).size(0.3F, 0.5F).orientation(ProjectileKind.Orientation.BILLBOARD).noTileCollide().fullbright()
+        .trail(() -> ParticleTypes.FLAME).ignites(60, 0.5F));
+    public static final ProjectileKind MINION_STINGER = register(ProjectileKind.builder("minion_stinger").texture("stinger")
+        .lifetime(50).size(0.2F, 0.45F).debuff(() -> net.minecraft.world.effect.MobEffects.POISON, 100, 0.5F));
+    public static final ProjectileKind MINION_LASER = register(ProjectileKind.builder("minion_laser").texture("mech_laser")
+        .lifetime(40).size(0.2F, 0.6F).fullbright());
+    public static final ProjectileKind PYGMY_SPEAR = register(ProjectileKind.builder("pygmy_spear")
+        .gravity(0.02).lifetime(60).size(0.25F, 0.7F).pierce(1));
+    public static final ProjectileKind MINI_SHARK = register(ProjectileKind.builder("mini_shark")
+        .lifetime(60).size(0.35F, 0.7F).homing(0.1F, 16.0F).noTileCollide());
+    public static final ProjectileKind UFO_LASER = register(ProjectileKind.builder("ufo_laser").texture("martian_laser")
+        .lifetime(30).size(0.2F, 0.6F).pierce(1).fullbright());
+    public static final ProjectileKind STARDUST_SHOT = register(ProjectileKind.builder("stardust_shot")
+        .lifetime(50).size(0.25F, 0.45F).orientation(ProjectileKind.Orientation.BILLBOARD).noTileCollide().fullbright()
+        .trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind RAINBOW_BOLT = register(ProjectileKind.builder("rainbow_bolt")
+        .lifetime(60).size(0.3F, 0.5F).orientation(ProjectileKind.Orientation.BILLBOARD).noTileCollide().fullbright().pierce(1)
+        .trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind PORTAL_LASER = register(ProjectileKind.builder("portal_laser")
+        .lifetime(20).size(0.3F, 0.8F).pierce(-1).hitCooldown(10).noTileCollide().fullbright());
+
+    // ---------------------------------------------------------------- Solar Eclipse
+    public static final ProjectileKind NAIL = register(ProjectileKind.builder("nail")
+        .gravity(0.01).lifetime(80).size(0.2F, 0.45F).enemy().explosion(1.5F));
+    public static final ProjectileKind TOXIC_FLASK = register(ProjectileKind.builder("toxic_flask")
+        .gravity(0.04).lifetime(100).size(0.3F, 0.5F).orientation(ProjectileKind.Orientation.SPIN).enemy()
+        .debuff(() -> net.minecraft.world.effect.MobEffects.POISON, 160, 1.0F).explosion(1.5F));
+    public static final ProjectileKind PLAYER_NAIL = register(ProjectileKind.builder("player_nail").texture("nail")
+        .gravity(0.01).lifetime(80).size(0.2F, 0.45F).explosion(2.0F));
+    public static final ProjectileKind PLAYER_TOXIC_FLASK = register(ProjectileKind.builder("player_toxic_flask").texture("toxic_flask")
+        .gravity(0.04).lifetime(100).size(0.3F, 0.5F).orientation(ProjectileKind.Orientation.SPIN).magic()
+        .debuff(() -> net.minecraft.world.effect.MobEffects.POISON, 160, 1.0F).explosion(2.0F));
+    public static final ProjectileKind DEATH_SICKLE = register(ProjectileKind.builder("death_sickle")
+        .drag(0.97F).lifetime(50).size(0.7F, 1.1F).orientation(ProjectileKind.Orientation.SPIN).pierce(-1).noTileCollide().fullbright()
+        .trail(() -> ParticleTypes.SOUL));
+    public static final ProjectileKind TERRA_BEAM = register(ProjectileKind.builder("terra_beam")
+        .lifetime(40).size(0.6F, 1.2F).orientation(ProjectileKind.Orientation.SPIN).pierce(3).noTileCollide().fullbright()
+        .trail(() -> ParticleTypes.HAPPY_VILLAGER));
+    public static final ProjectileKind TRUE_EXCALIBUR_BEAM = register(ProjectileKind.builder("true_excalibur_beam")
+        .lifetime(30).size(0.5F, 1.0F).orientation(ProjectileKind.Orientation.SPIN).pierce(2).noTileCollide().fullbright()
+        .trail(() -> ParticleTypes.END_ROD));
+
     private ProjectileKinds() {}
 
     private static ProjectileKind register(ProjectileKind.Builder builder) {
         ProjectileKind kind = builder.build();
         KINDS.put(kind.id(), kind);
         return kind;
+    }
+
+    /** Registers a kind defined outside this class (e.g. whip lashes in SummonContent). */
+    public static ProjectileKind registerExternal(ProjectileKind.Builder builder) {
+        return register(builder);
     }
 
     public static ProjectileKind get(Identifier id) {

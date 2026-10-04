@@ -129,6 +129,19 @@ Priority: **A** = very visible / looks clearly wrong today, **B** = noticeable, 
 | C | Ancient Manipulator | cube block with a fragment circle | moon-shaped altar with a floating orb and the four fragment colours |
 | C | Endgame weapons | flat sprites (2D, by design) | particle trails for Meowmere cats, Star Wrath stars, Last Prism rainbow beam rendered as a real beam |
 
+## Stage 9 (built; first versions)
+
+| Pri | What | Today | Improvement |
+|---|---|---|---|
+| A | Solar Eclipse sky | no visual change | darkened sky, a black sun with a fiery corona, dimmed light level, red-tinted fog |
+| A | Whips | the lash is only a small dot at the tip | a full rope/chain drawn from the hand to the tip that bends through the swing, with a crack effect at full reach |
+| A | Stardust Dragon | head with three short trailing segments | a long dragon that grows a segment per summon and snakes through the air like Terraria's |
+| B | Minions | simple models (Slime, Hornet, Imp, Optic Twin, Pygmy, Sharknado, UFO, Deadly Sphere, Terraprisma, Stardust Cell) | Optic Staff summoning both Twins, a spinning sharknado funnel, Terraprisma swords that orbit in a fan with rainbow trails, the Pygmy on foot throwing spears |
+| B | Sentries | Rainbow Crystal gems, Lunar Portal ring | a slowly spinning prism with refracted rainbow beams, a swirling portal with a real laser beam |
+| B | Eclipse monsters | humanoid skins | Eyezor with a big single eye, Frankenstein with bolts and a flat head, Swamp Thing with moss and dripping weeds, Vampire who turns into a bat, Creature from the Deep with fins, Butcher with a chainsaw in hand, Nailhead with nails in his head |
+| C | Mothron | flat four-wing moth | furry body, patterned wings, Mothron eggs and Baby Mothrons |
+| C | Bee / Spooky armor | banded hood with antennae; wood plate | Bee wings that buzz, Spooky glowing jack-o'-lantern visor and branch crown |
+
 ## Future (planned stages) - will need models when they are built
 
 - **Santa Claus** (Frost Legion follow-up), Stylist, Party Girl, Tax Collector.

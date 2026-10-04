@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:true_excalibur",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:excalibur",
+      "count": 1
+    },
+    {
+      "item": "terracraft:chlorophyte_bar",
+      "count": 24
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "weapons"
+}

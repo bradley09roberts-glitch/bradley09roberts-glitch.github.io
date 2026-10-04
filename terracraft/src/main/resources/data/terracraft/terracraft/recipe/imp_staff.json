@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:imp_staff",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:hellstone_bar",
+      "count": 17
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

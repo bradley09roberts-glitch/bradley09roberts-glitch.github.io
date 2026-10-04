@@ -191,6 +191,12 @@ public class Destroyer extends WormMob {
         if (bar != null) {
             bar.removeAllPlayers();
         }
+        if (isNoAi()) {
+            return;   // a display, not a fight
+        }
+        if (bar != null) {
+            bar.removeAllPlayers();
+        }
         level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable("message.terracraft.boss.defeated", getDisplayName())
             .withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD), false);
         ProgressionManager.markDefeated(level.getServer(), ProgressionFlags.DESTROYER);

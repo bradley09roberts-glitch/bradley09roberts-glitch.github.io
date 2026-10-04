@@ -35,7 +35,8 @@ public class EventSummonItem extends TerraItem {
         if (player instanceof ServerPlayer serverPlayer) {
             if (EventManager.active(serverPlayer.level().getServer()) != null || serverPlayer.level().dimension() != Level.OVERWORLD
                 || hardmodeOnly && !com.terracraft.progression.ProgressionManager.isHardmode(serverPlayer.level().getServer())
-                || event.get().night() && serverPlayer.level().isBrightOutside()) {
+                || event.get().night() && serverPlayer.level().isBrightOutside()
+                || !event.get().night() && !event.get().invasion() && !serverPlayer.level().isBrightOutside()) {
                 serverPlayer.sendOverlayMessage(Component.translatable("message.terracraft.boss.nothing_happens").withStyle(ChatFormatting.GRAY));
                 return InteractionResult.FAIL;
             }

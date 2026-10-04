@@ -33,6 +33,9 @@ public final class TerrariaEvents {
     public static final TerrariaEvent MARTIAN_MADNESS = register(new TerrariaEvent("martian_madness", false, 5.0F, 3.0F, 150, true,
         "gray_grunt|ray_gunner|brain_scrambler|gigazapper|martian_officer|martian_drone|scutlix|martian_saucer"));
 
+    /** Solar Eclipse (after a mechanical boss, or a Solar Tablet): the sun goes dark and movie monsters walk all day. */
+    public static final TerrariaEvent SOLAR_ECLIPSE = register(new TerrariaEvent("solar_eclipse", false, 4.0F, 2.0F, 0));
+
     private TerrariaEvents() {}
 
     private static TerrariaEvent register(TerrariaEvent event) {

@@ -3706,6 +3706,106 @@ proj('last_prism', lambda c: (c.line(0, 8, 15, 8, hexc('#FF80F0'), 3), c.line(0,
 proj('lunar_flare', lambda c: (p_orb(c, '#80FFE8', 3), c.circle(7.5, 7.5, 1.2, hexc('#FFFFFF'))))
 
 
+# --- Stage 9: summoners and the Solar Eclipse ------------------------------------------------------------------
+S9_HUMANOIDS = {   # name: (skin, hair, shirt, pants, extras)
+    'eyezor': ('#7A9A6A', '#3A4A2A', '#5A4A3A', '#3A3020', dict(shoes='#2A2010', eyes=(255, 60, 60, 255), torn=True)),
+    'frankenstein': ('#8AB080', '#1A1A1A', '#3A3A44', '#2A2A30', dict(shoes='#1A1A1A', eyes=(240, 240, 120, 255), torn=True)),
+    'swamp_thing': ('#4A7A3A', '#2A5A2A', '#3A6A2A', '#2A4A1A', dict(shoes='#1A3A10', eyes=(255, 220, 60, 255), beard='#3A6A2A')),
+    'vampire': ('#E0D8E0', '#1A1A20', '#1A1A20', '#1A1A20', dict(shoes='#101014', eyes=(220, 30, 30, 255), jacket='#6A1020', collar='#B01830')),
+    'creature_from_the_deep': ('#4A8A7A', '#2A5A50', '#3A7A6A', '#2A5A50', dict(shoes='#1A3A30', eyes=(255, 240, 80, 255))),
+    'fritz': ('#C8B8A0', '#5A4A3A', '#6A5A4A', '#3A3028', dict(shoes='#2A2018', eyes=(30, 30, 30, 255), torn=True)),
+    'butcher': ('#E0B8A0', '#3A2A20', '#E8E8E0', '#4A4A50', dict(shoes='#2A2A30', eyes=(200, 40, 40, 255), apron='#C83030', hat='#E8E8E0')),
+    'nailhead': ('#B8B0A8', '#8A8A90', '#2A2A30', '#1A1A20', dict(shoes='#101014', eyes=(30, 30, 30, 255), hat='#8A8A90')),
+    'dr_man_fly': ('#3A3A30', '#2A2A20', '#E8E8E0', '#4A4A50', dict(shoes='#2A2A30', eyes=(220, 60, 60, 255), goggles='#C8E0A0')),
+}
+for _n, (_skin, _hair, _shirt, _pants, _extra) in S9_HUMANOIDS.items():
+    model_texture(_n, 64, 64, skin_texture(_skin, _hair, _shirt, _pants, **_extra))
+    mob_sprite(_n, 16, 24, 3, lambda c, f, sk=_skin, hr=_hair, sh=_shirt, pa=_pants: npc_frame(c, f, sk, hr, sh, pa), frame_time=8)
+
+S9_BLOBS = {   # name: (w, h, color, glow)
+    'slime_minion': (12, 10, '#5A9AF0', None), 'hornet_minion': (12, 10, '#F0C030', None), 'imp_minion': (12, 14, '#D8505A', '#FFD040'),
+    'optic_minion': (12, 12, '#E8E8F0', '#D83030'), 'pygmy_minion': (10, 14, '#8A5A3A', '#D83030'), 'tempest_minion': (12, 16, '#7AB8D8', None),
+    'ufo_minion': (14, 8, '#A8B0B8', '#60FF90'), 'deadly_sphere_minion': (12, 12, '#7A7A88', '#E83030'),
+    'terraprisma_minion': (8, 16, '#F0A8F8', '#A8F0FF'), 'stardust_cell_minion': (12, 12, '#60A8F8', '#E0F4FF'),
+    'stardust_dragon_minion': (16, 10, '#A8D0F8', '#FFE070'), 'rainbow_crystal': (12, 16, '#F0A8F8', '#FFFFFF'),
+    'lunar_portal': (16, 24, '#2AA898', '#80FFE8'), 'reaper': (14, 18, '#2A2A34', '#E8E0C0'), 'mothron': (40, 24, '#8A6A4A', '#FFE070'),
+    'deadly_sphere': (12, 12, '#7A7A88', '#E83030'),
+}
+for _n, (_w, _h, _col, _glow) in S9_BLOBS.items():
+    mob_sprite(_n, _w, _h, 2, lambda c, f, w=_w, h=_h, col=_col, g=_glow: blob_frame(c, f, w, h, col, glow=g), frame_time=8)
+
+
+def draw_summon_staff(c, wood, gem, gem2=None):
+    """A summoning staff: a long shaft with a creature-coloured orb in a claw at the top."""
+    w = palette(wood)
+    c.line(2, 13, 11, 4, w[2], 2)
+    c.line(3, 13, 11, 5, w[1])
+    c.circle(12.5, 3.5, 2.6, palette(gem)[3])
+    c.circle(12, 3, 1.0, hexc(gem2 or '#FFFFFF'))
+    c.set(10, 2, w[3]); c.set(14, 6, w[3])
+    c.outline()
+
+
+def draw_whip(c, color, tip=None):
+    """A whip: a short handle in the bottom-left and a lash curling up and around."""
+    p = palette(color)
+    c.rect(2, 11, 4, 14, WOOD[2])
+    pts = [(4, 11), (6, 8), (9, 6), (12, 5), (14, 3), (13, 1), (10, 2)]
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        c.line(x0, y0, x1, y1, p[2])
+    if tip:
+        c.set(10, 2, hexc(tip)); c.set(9, 2, hexc(tip))
+    c.outline()
+
+
+STAFFS = {'slime_staff': ('#7A4E2A', '#5A9AF0'), 'hornet_staff': ('#6A5A2A', '#F0C030'), 'imp_staff': ('#3A1A1A', '#FF7A20'),
+          'optic_staff': ('#5A5A68', '#D83030', '#E8E8F0'), 'pygmy_staff': ('#5A3A1A', '#C8A050', '#4A9A30'),
+          'tempest_staff': ('#2A5A7A', '#7AB8D8'), 'xeno_staff': ('#5A6070', '#60FF90'), 'deadly_sphere_staff': ('#2A2A30', '#E83030', '#C8C8D0'),
+          'rainbow_crystal_staff': ('#5A2A88', '#F0A8F8', '#A8F0FF'), 'lunar_portal_staff': ('#1A2A2A', '#2AA898', '#80FFE8')}
+for _n, _cols in STAFFS.items():
+    item(_n, lambda c, cols=_cols: draw_summon_staff(c, *cols), True)
+item('terraprisma', lambda c: (draw_sword(c, palette('#F0A8F8'), 13), c.set(12, 3, hexc('#A8F0FF')), c.set(10, 5, hexc('#FFF0A0'))), True)
+WHIPS = {'leather_whip': ('#8A5A30', None), 'snapthorn': ('#4A9A30', '#E070A0'), 'firecracker': ('#C83030', '#FFD040'),
+         'durendal': ('#E8C850', '#FFFFFF'), 'dark_harvest': ('#3A2A3A', '#E83030'), 'kaleidoscope': ('#F0A8F8', '#A8F0FF')}
+for _n, (_col, _tip) in WHIPS.items():
+    item(_n, lambda c, col=_col, tip=_tip: draw_whip(c, col, tip), True)
+    proj(_n, lambda c, col=_col, tip=_tip: (c.circle(7.5, 7.5, 2.5, palette(col)[3]), c.circle(7.5, 7.5, 1.0, hexc(tip or '#F0E0C0'))))
+item('pygmy_necklace', lambda c: (c.line(3, 3, 8, 10, hexc('#C8A050')), c.line(12, 3, 8, 10, hexc('#C8A050')),
+                                  c.rect(6, 9, 9, 13, palette('#C8A050')[2]), c.set(7, 11, hexc('#D83030')), c.outline()))
+item('papyrus_scarab', lambda c: (c.circle(7.5, 8, 4.5, palette('#3A8A9A')[2]), c.line(7, 4, 7, 12, palette('#3A8A9A')[1]),
+                                  c.rect(4, 2, 11, 4, palette('#E8D8A0')[2]), c.outline()))
+METAL.update({'bee': '#F0C030'})
+for _set, _pieces in (('bee', ('bee_headgear', 'bee_breastplate', 'bee_greaves')), ('spooky', ('spooky_helmet', 'spooky_breastplate', 'spooky_leggings'))):
+    item(_pieces[0], lambda c, m=_set: draw_helmet(c, metal(m)))
+    item(_pieces[1], lambda c, m=_set: draw_chest(c, metal(m)))
+    item(_pieces[2], lambda c, m=_set: draw_legs(c, metal(m)))
+# Solar Eclipse loot
+item('solar_tablet_fragment', lambda c: (c.polygon([(3, 4), (12, 2), (13, 12), (5, 13)], palette('#C8A050')[2]),
+                                         c.circle(8, 7.5, 2.5, hexc('#2A2A30')), c.outline()))
+item('solar_tablet', lambda c: (c.rect(2, 2, 13, 13, palette('#C8A050')[2]), c.circle(7.5, 7.5, 4, hexc('#2A2A30')),
+                                c.circle(7.5, 7.5, 5, hexc('#FFD040')), c.circle(7.5, 7.5, 3.5, hexc('#1A1A20')), c.outline()))
+item('broken_hero_sword', lambda c: (c.line(4, 11, 9, 6, palette('#5AC85A')[3], 2), c.rect(2, 11, 4, 13, palette('#C8A050')[2]),
+                                     c.set(10, 5, hexc('#E8FFE8')), c.outline()), True)
+item('death_sickle', lambda c: (c.line(3, 13, 9, 4, WOOD[1], 1), c.polygon([(8, 2), (14, 3), (13, 8), (11, 4)], palette('#8A88A0')[3]), c.outline()), True)
+item('butchers_chainsaw', lambda c: (c.rect(2, 9, 6, 13, palette('#C83030')[2]), c.rect(6, 6, 14, 9, palette('#B8B8C0')[2]),
+                                     [c.set(x, 5, hexc('#E8E8F0')) for x in range(7, 14, 2)], c.outline()), True)
+item('nail_gun', lambda c: (draw_gun(c, palette('#5A5A68')), c.rect(12, 5, 14, 6, hexc('#C8C8D0'))), True)
+item('toxic_flask', lambda c: draw_potion(c, '#80E040'))
+item('true_excalibur', lambda c: (draw_sword(c, palette('#F0D860'), 14), c.set(12, 3, hexc('#FF80C0'))), True)
+item('terra_blade', lambda c: (draw_sword(c, palette('#4AD84A'), 14), c.set(12, 3, hexc('#E8FFE8')), c.set(9, 6, hexc('#A8F0A8'))), True)
+proj('pygmy_spear', lambda c: (c.line(1, 8, 13, 8, WOOD[2]), c.polygon([(12, 6), (15, 8), (12, 10)], hexc('#C8C8D0'))))
+proj('mini_shark', lambda c: (c.polygon([(2, 8), (8, 5), (14, 8), (8, 11)], palette('#6A8AA8')[2]), c.set(11, 7, hexc('#101010')),
+                              c.polygon([(2, 8), (0, 5), (0, 11)], palette('#6A8AA8')[1])))
+proj('stardust_shot', lambda c: (p_orb(c, '#70B8FF', 2), c.set(7, 7, hexc('#FFFFFF'))))
+proj('rainbow_bolt', lambda c: (p_orb(c, '#F0A8F8', 3), c.set(6, 6, hexc('#A8F0FF')), c.set(9, 9, hexc('#FFF0A0'))))
+proj('portal_laser', lambda c: (c.line(0, 8, 15, 8, hexc('#2AA898'), 3), c.line(0, 8, 15, 8, hexc('#E0FFF8'))))
+proj('nail', lambda c: (c.line(2, 8, 12, 8, palette('#A8A8B0')[2]), c.line(12, 7, 12, 9, palette('#A8A8B0')[3])))
+proj('toxic_flask', lambda c: (c.circle(7.5, 8.5, 3.5, palette('#80E040')[2]), c.rect(7, 3, 8, 5, hexc('#C8C8D0'))))
+proj('death_sickle', lambda c: (c.polygon([(2, 12), (6, 3), (13, 2), (8, 6), (5, 12)], palette('#8A88A0')[3]), c.line(2, 12, 6, 4, hexc('#E0E0F0'))))
+proj('terra_beam', lambda c: (c.polygon([(3, 12), (7, 3), (13, 2), (9, 7), (5, 12)], (90, 220, 90, 220)), c.line(3, 12, 7, 4, hexc('#E8FFE8'))))
+proj('true_excalibur_beam', lambda c: (c.polygon([(3, 12), (7, 3), (13, 2), (9, 7), (5, 12)], (240, 216, 96, 220)), c.line(3, 12, 7, 4, hexc('#FFF8E0'))))
+
+
 def flesh_tether():
     c = Canvas()
     p = palette('#8AA898')

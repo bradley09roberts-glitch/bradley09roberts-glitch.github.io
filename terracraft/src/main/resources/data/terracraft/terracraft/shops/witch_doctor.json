@@ -8,6 +8,11 @@
       "time": "night"
     },
     {
+      "item": "terracraft:pygmy_necklace",
+      "price": 100000,
+      "condition": "hardmode_active"
+    },
+    {
       "item": "terracraft:stinger",
       "price": 500
     },

@@ -221,3 +221,15 @@ for testing drop in a throwaway mod whose constructor sets `SharedConstants.IS_R
 - Crafting: place `terracraft:ancient_manipulator` within 4 blocks, open the inventory and the Craft tab.
 - RCON commands run at world spawn: `distance=` selectors are measured from there, not from the player.
 
+## Stage 9 checks
+
+- Minions: give staffs (`give Dev terracraft:imp_staff` ...), select and right-click; minions float behind you and
+  attack. Max minions shows in `execute as Dev run terraria stats` (Stardust armor = 3 slots); summoning past it
+  dismisses the oldest. Summon a few zombies nearby to watch them fight.
+- Whips: left- or right-click with a whip facing an enemy within 4 blocks; the enemy loses life and is tagged for 4 s
+  (minions switch to it). Zombies regenerate quickly - read Health right after the swing.
+- Sentries: right-click with the Rainbow Crystal / Lunar Portal Staff; it appears where you look (one sentry slot).
+- Minion lineups for screenshots need `NoAI:1b` (a minion without an owner disappears at once).
+- Solar Eclipse: by day `terraria event start solar_eclipse` on land (`spreadplayers <x> <z> 0 40 false Dev`);
+  creatures arrive within ~30 s. The post-Plantera ones need `boss_plantera_defeated`.
+

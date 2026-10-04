@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:snapthorn",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:jungle_spores",
+      "count": 15
+    },
+    {
+      "item": "terracraft:stinger",
+      "count": 12
+    },
+    {
+      "item": "minecraft:vine",
+      "count": 6
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

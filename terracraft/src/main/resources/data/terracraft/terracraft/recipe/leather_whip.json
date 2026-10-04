@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:leather_whip",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:leather",
+      "count": 8
+    },
+    {
+      "item": "minecraft:string",
+      "count": 4
+    }
+  ],
+  "stations": [
+    "terracraft:work_bench"
+  ],
+  "category": "weapons"
+}

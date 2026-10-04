@@ -127,6 +127,8 @@ public class TerrariaProjectile extends Projectile {
         }
         if (kind.behavior() == ProjectileKind.Behavior.BOOMERANG) {
             tickBoomerang();
+        } else if (kind.behavior() == ProjectileKind.Behavior.WHIP) {
+            tickWhip(kind);
         } else {
             Vec3 motion = getDeltaMovement();
             setDeltaMovement(motion.x * kind.drag(), (motion.y - kind.gravity()) * kind.drag(), motion.z * kind.drag());
@@ -178,6 +180,36 @@ public class TerrariaProjectile extends Projectile {
         }
     }
 
+    /** The whip's tip: out to full reach and back along the owner's look, sweeping a little sideways. */
+    private void tickWhip(ProjectileKind kind) {
+        if (!(getOwner() instanceof Player owner)) {
+            if (!level().isClientSide()) {
+                discard();
+            }
+            return;
+        }
+        float t = Math.min(1.0F, (age + 1) / (float) kind.lifetime());
+        double reach = 0.6 + kind.whipRange() * Mth.sin(t * Mth.PI);
+        Vec3 look = owner.getLookAngle().yRot((0.5F - t) * 0.9F);
+        Vec3 tip = owner.getEyePosition().subtract(0, 0.25, 0).add(look.scale(reach));
+        setDeltaMovement(tip.subtract(position()));
+        if (!level().isClientSide()) {
+            // the whole lash strikes, from the hand out to the tip (each enemy once per swing)
+            Vec3 hand = owner.getEyePosition().subtract(0, 0.25, 0);
+            for (double d = 0.5; d <= reach + 0.01; d += 0.5) {
+                Vec3 point = hand.add(look.scale(d));
+                for (LivingEntity victim : level().getEntitiesOfClass(LivingEntity.class, new AABB(point, point).inflate(0.45), this::canHitEntity)) {
+                    if (isAlive()) {
+                        onHitEntity(new EntityHitResult(victim, point));
+                    }
+                }
+            }
+        }
+        if (level().isClientSide() && age > 1) {
+            level().addParticle(net.minecraft.core.particles.ParticleTypes.CRIT, getX(), getY(), getZ(), 0, 0, 0);
+        }
+    }
+
     private void steerTowardsTarget(ProjectileKind kind) {
         if (homingTarget == null || !homingTarget.isAlive() || age % 10 == 0) {
             homingTarget = findHomingTarget(kind.homingRange());
@@ -220,7 +252,8 @@ public class TerrariaProjectile extends Projectile {
 
     @Override
     protected boolean canHitEntity(Entity entity) {
-        if (!(entity instanceof LivingEntity living) || !living.isAlive() || !super.canHitEntity(entity)) {
+        if (!(entity instanceof LivingEntity living) || !living.isAlive() || !super.canHitEntity(entity)
+            || entity instanceof com.terracraft.entity.summon.MinionEntity) {
             return false;
         }
         if (hitCooldowns.containsKey(entity.getId())) {
@@ -254,7 +287,11 @@ public class TerrariaProjectile extends Projectile {
             // Terraria uses per-projectile immunity instead of global invulnerability frames.
             target.invulnerableTime = 0;
         }
-        boolean hurt = target.hurtServer(serverLevel, source, damage);
+        float amount = damage;
+        if (damageClass == DamageClass.SUMMON && owner instanceof Player player && kind.behavior() != ProjectileKind.Behavior.WHIP) {
+            amount += com.terracraft.combat.WhipTags.bonus(target, player.getUUID());
+        }
+        boolean hurt = target.hurtServer(serverLevel, source, amount);
         hitCooldowns.put(target.getId(), age + kind.hitCooldown());
         if (hurt) {
             applyKnockback(target, source);
@@ -274,6 +311,12 @@ public class TerrariaProjectile extends Projectile {
         }
         if (kind.behavior() == ProjectileKind.Behavior.BOOMERANG) {
             returning = true;
+            return;
+        }
+        if (kind.behavior() == ProjectileKind.Behavior.WHIP) {
+            if (hurt && owner instanceof Player player) {
+                com.terracraft.combat.WhipTags.tag(target, player, kind.tagDamage());
+            }
             return;
         }
         if (pierceLeft == 0) {

@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:durendal",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:hallowed_bar",
+      "count": 12
+    },
+    {
+      "item": "terracraft:soul_of_light",
+      "count": 5
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "weapons"
+}

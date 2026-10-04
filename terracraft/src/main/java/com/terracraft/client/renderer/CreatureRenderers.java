@@ -233,6 +233,20 @@ public final class CreatureRenderers {
         json(event, MobContent.MOON_LORD.get(), "moon_lord", 1.5F, 0.0F);
         json(event, MobContent.MOON_LORD_HAND.get(), "moon_lord_hand", 2.0F, 0.0F);
         json(event, MobContent.MOON_LORD_HEAD.get(), "moon_lord_head", 2.0F, 0.0F);
+        // Stage 9: minions and sentries, the Solar Eclipse
+        for (var minion : com.terracraft.registry.content.SummonContent.minions()) {
+            json(event, minion.get(), minion.getId().getPath(), 1.0F, 0.0F);
+        }
+        for (var mob : java.util.List.of(MobContent.EYEZOR, MobContent.FRANKENSTEIN, MobContent.SWAMP_THING, MobContent.VAMPIRE,
+            MobContent.CREATURE_FROM_THE_DEEP, MobContent.BUTCHER)) {
+            humanoid(event, mob.get(), TerraModels.HUMANOID, mob == MobContent.FRANKENSTEIN || mob == MobContent.BUTCHER ? 2.1F : 1.8F, true);
+        }
+        humanoid(event, MobContent.FRITZ.get(), TerraModels.HUMANOID, 1.3F, true);
+        humanoid(event, MobContent.NAILHEAD.get(), TerraModels.HUMANOID, 1.9F, false);
+        humanoid(event, MobContent.DR_MAN_FLY.get(), TerraModels.HUMANOID, 1.8F, false);
+        json(event, MobContent.REAPER.get(), "reaper", 1.0F, 0.0F);
+        json(event, MobContent.MOTHRON.get(), "mothron", 1.0F, 0.0F);
+        json(event, MobContent.DEADLY_SPHERE.get(), "deadly_sphere", 1.0F, 0.0F);
         for (var npc : NpcContent.all()) {
             var layer = npc.getId().getPath().contains("goblin") ? TerraModels.GOBLIN : TerraModels.HUMANOID;
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,

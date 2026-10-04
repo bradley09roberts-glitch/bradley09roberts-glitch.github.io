@@ -144,6 +144,8 @@ public final class EventManager {
                     start(server, TerrariaEvents.PIRATE_INVASION);
                 } else if (!day && random.nextInt(9) == 0 && server.getPlayerList().getPlayers().stream().anyMatch(p -> p.getMaxHealth() >= 120)) {
                     start(server, TerrariaEvents.BLOOD_MOON);
+                } else if (day && ProgressionManager.has(server, ProgressionFlags.ANY_MECH_BOSS) && random.nextInt(20) == 0) {
+                    start(server, TerrariaEvents.SOLAR_ECLIPSE);
                 } else if (day && random.nextInt(15) == 0) {
                     start(server, TerrariaEvents.SLIME_RAIN);
                 }

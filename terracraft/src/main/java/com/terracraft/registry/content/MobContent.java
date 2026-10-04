@@ -546,6 +546,38 @@ public final class MobContent {
         com.terracraft.entity.boss.MoonLord.Eye::new, 3.4F, 3.6F,
         MobDefinition.builder().life(45000).damage(80).defense(70).knockbackTaken(0.0F).coins(0).followRange(200));
 
+    // --- Solar Eclipse ---------------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> EYEZOR = register("eyezor",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.PINK_LASER, 50.0F), 0.6F, 1.8F,
+        MobDefinition.builder().life(1000).damage(60).defense(24).knockbackTaken(0.4F).coins(1500).speed(0.25));
+    public static final RegistryObject<EntityType<WalkerMob>> FRANKENSTEIN = register("frankenstein", WalkerMob::new, 0.7F, 2.1F,
+        MobDefinition.builder().life(430).damage(70).defense(28).knockbackTaken(0.3F).coins(1000).speed(0.3));
+    public static final RegistryObject<EntityType<WalkerMob>> SWAMP_THING = register("swamp_thing", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(400).damage(60).defense(20).knockbackTaken(0.4F).coins(1000).speed(0.3));
+    public static final RegistryObject<EntityType<WalkerMob>> VAMPIRE = register("vampire", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(500).damage(60).defense(24).knockbackTaken(0.4F).coins(1200).speed(0.34));
+    public static final RegistryObject<EntityType<WalkerMob>> CREATURE_FROM_THE_DEEP = register("creature_from_the_deep", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(500).damage(64).defense(24).knockbackTaken(0.4F).coins(1200).speed(0.3));
+    public static final RegistryObject<EntityType<WalkerMob>> FRITZ = register("fritz", WalkerMob::new, 0.5F, 1.3F,
+        MobDefinition.builder().life(300).damage(50).defense(16).knockbackTaken(0.6F).coins(800).speed(0.4));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.GhostFlyerMob>> REAPER = register("reaper",
+        (type, level) -> new com.terracraft.entity.mob.GhostFlyerMob(type, level, FlyerMob.Style.CHASER), 0.8F, 1.6F,
+        MobDefinition.builder().life(500).damage(70).defense(20).knockbackTaken(0.5F).coins(1500).speed(0.3).followRange(48));
+    public static final RegistryObject<EntityType<FlyerMob>> MOTHRON = register("mothron",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.CHASER), 2.6F, 1.6F,
+        MobDefinition.builder().life(5000).damage(100).defense(30).knockbackTaken(0.1F).coins(5000).speed(0.32).followRange(64));
+    public static final RegistryObject<EntityType<WalkerMob>> BUTCHER = register("butcher", WalkerMob::new, 0.7F, 2.0F,
+        MobDefinition.builder().life(1500).damage(110).defense(36).knockbackTaken(0.2F).coins(2500).speed(0.34));
+    public static final RegistryObject<EntityType<FlyerMob>> DEADLY_SPHERE = register("deadly_sphere",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.7F, 0.7F,
+        MobDefinition.builder().life(500).damage(60).defense(30).knockbackTaken(0.5F).coins(2000).speed(0.45).followRange(48));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> NAILHEAD = register("nailhead",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.NAIL, 60.0F), 0.6F, 1.9F,
+        MobDefinition.builder().life(1800).damage(80).defense(36).knockbackTaken(0.3F).coins(2500).speed(0.26));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> DR_MAN_FLY = register("dr_man_fly",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.TOXIC_FLASK, 55.0F), 0.6F, 1.8F,
+        MobDefinition.builder().life(800).damage(60).defense(28).knockbackTaken(0.4F).coins(1500).speed(0.28));
+
     private MobContent() {}
 
     public static void init() {

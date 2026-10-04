@@ -34,7 +34,9 @@ public final class TerraModels {
         "lihzahrd", "flying_snake", "golem", "golem_head", "golem_fist",
         "truffle_worm", "duke_fishron", "sharkron", "dungeon_spirit", "splinterling", "hellhound", "poltergeist", "mourning_wood", "pumpking", "flocko", "everscream", "ice_queen", "prismatic_lacewing", "empress_of_light", "martian_probe", "martian_drone", "scutlix", "martian_saucer",
         "solar_pillar", "vortex_pillar", "nebula_pillar", "stardust_pillar", "sroller", "corite", "alien_hornet", "nebula_floater", "brain_suckler",
-        "star_cell", "flow_invader", "moon_lord", "moon_lord_hand", "moon_lord_head");
+        "star_cell", "flow_invader", "moon_lord", "moon_lord_hand", "moon_lord_head",
+        "slime_minion", "hornet_minion", "imp_minion", "optic_minion", "pygmy_minion", "tempest_minion", "ufo_minion", "deadly_sphere_minion",
+        "terraprisma_minion", "stardust_cell_minion", "stardust_dragon_minion", "rainbow_crystal", "lunar_portal", "reaper", "mothron", "deadly_sphere");
 
     private TerraModels() {}
 

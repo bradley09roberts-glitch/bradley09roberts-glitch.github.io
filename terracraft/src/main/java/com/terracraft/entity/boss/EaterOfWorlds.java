@@ -189,7 +189,7 @@ public class EaterOfWorlds extends WormMob {
                 break;
             }
         }
-        if (last) {
+        if (last && !isNoAi()) {
             Group group = GROUPS.remove(groupId);
             if (group != null) {
                 group.bar.removeAllPlayers();

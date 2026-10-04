@@ -240,7 +240,8 @@ public class DukeFishron extends TerrariaBoss {
 
     @Override
     protected void dropFightLoot(ServerLevel level) {
-        List<Item> loot = List.of(FishronContent.TSUNAMI.get(), FishronContent.RAZORBLADE_TYPHOON.get(), FishronContent.BUBBLE_GUN.get());
+        List<Item> loot = List.of(FishronContent.TSUNAMI.get(), FishronContent.RAZORBLADE_TYPHOON.get(), FishronContent.BUBBLE_GUN.get(),
+            com.terracraft.registry.content.SummonContent.TEMPEST_STAFF.get());
         dropStack(level, loot.get(random.nextInt(loot.size())), 1);
         if (random.nextInt(3) == 0) {
             dropStack(level, FishronContent.FISHRON_WINGS.get(), 1);

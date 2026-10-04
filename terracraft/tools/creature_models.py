@@ -1376,10 +1376,186 @@ def stage8_creatures():
             moon_lord(), moon_lord_eye('moon_lord_hand', 16, 22), moon_lord_eye('moon_lord_head', 22, 26)]
 
 
+# ----------------------------------------------------------------------------------------- Stage 9: minions, sentries, Solar Eclipse
+def renamed(creature, name):
+    creature.name = name
+    return creature
+
+
+def slime_minion():
+    """Slime Staff minion: a little blue slime with a gold crown."""
+    c = Creature('slime_minion', {'main': '#5A9AF0', 'dark': '#1A3A80', 'eye': '#101828', 'crown': '#F0C838', 'glow': '#A8D0FF'})
+    c.part('body', pivot=(0, 24, 0))
+    c.box('body', (-4, -7, -4), (8, 7, 8), pattern='gem', edge='dark')
+    c.box('body', (-2.5, -5, -4.4), (1.5, 2, 0.5), mat='eye', pattern='skin')
+    c.box('body', (1, -5, -4.4), (1.5, 2, 0.5), mat='eye', pattern='skin')
+    c.box('body', (-2.5, -9, -2.5), (5, 2, 5), mat='crown', pattern='gem')
+    c.anim('body', 'bob', 0.8, 0.3)
+    return c
+
+
+def hornet_minion():
+    """Hornet Staff minion: a striped little hornet with a stinger and buzzing wings."""
+    c = Creature('hornet_minion', {'main': '#F0C030', 'dark': '#2A2010', 'glow': '#FFE070', 'wing': '#E0F0FF'})
+    c.part('body', pivot=(0, 18, 0))
+    c.box('body', (-2, -2, -4), (4, 4, 4), pattern='scale', edge='dark')
+    c.box('body', (-2.5, -2, 0), (5, 5, 6), pattern='bands', edge='dark')
+    c.box('body', (-0.5, 1, 6), (1, 1, 2), mat='dark', pattern='horn')
+    for side, nm in ((-1, 'wing_r'), (1, 'wing_l')):
+        c.part(nm, 'body', pivot=(side * 2, -2, -1))
+        c.box(nm, ((-6 if side < 0 else 0), 0, -2), (6, 0, 5), mat='wing', pattern='membrane')
+        c.anim(nm, nm, 0.7, 2.2)
+    c.anim('body', 'bob', 0.5, 0.4)
+    return c
+
+
+def optic_minion():
+    """Optic Staff minion: a small mechanical eye with plating and a red iris."""
+    c = Creature('optic_minion', {'main': '#E8E8F0', 'dark': '#3A3A48', 'plate': '#8A8A98', 'iris': '#D83030', 'glow': '#FF6060'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-4, -4, -4), (8, 8, 8), pattern='skin', edge='dark')
+    c.box('body', (-2, -2, -4.5), (4, 4, 1), mat='iris', pattern='glow')
+    c.box('body', (-4.5, -4.5, 0), (9, 9, 4.5), mat='plate', pattern='plate', edge='dark')
+    c.anim('body', 'bob', 0.6, 0.25)
+    return c
+
+
+def pygmy_minion():
+    """Pygmy Staff minion: a little jungle warrior in a tribal mask with a spear."""
+    c = Creature('pygmy_minion', {'main': '#8A5A3A', 'dark': '#2A1A10', 'mask': '#C8A050', 'paint': '#D83030', 'leaf': '#4A9A30',
+                                  'spear': '#C8C8D0', 'glow': '#FFE070'})
+    c.part('body', pivot=(0, 18, 0))
+    c.box('body', (-2, -6, -1.5), (4, 6, 3), pattern='skin', edge='dark')
+    c.box('body', (-2.5, -1, -2), (5, 2, 4), mat='leaf', pattern='leaf')
+    c.part('head', 'body', pivot=(0, -6, 0))
+    c.box('head', (-3, -6, -3), (6, 6, 6), mat='mask', pattern='wood', edge='dark')
+    c.box('head', (-2, -4, -3.4), (1, 1, 0.5), mat='paint', pattern='gem')
+    c.box('head', (1, -4, -3.4), (1, 1, 0.5), mat='paint', pattern='gem')
+    c.box('head', (-1, -9, -1), (2, 3, 2), mat='leaf', pattern='leaf')
+    c.part('arm_r', 'body', pivot=(-2.5, -5, 0))
+    c.box('arm_r', (-1, 0, -1), (2, 5, 2), pattern='skin')
+    c.box('arm_r', (-0.5, -6, -0.5), (1, 14, 1), mat='spear', pattern='plate')
+    c.anim('arm_r', 'cast', 0.4, 0.3)
+    c.anim('body', 'bob', 0.5, 0.25)
+    return c
+
+
+def tempest_minion():
+    """Tempest Staff minion: a little sharknado - a spinning funnel of water with a shark in it."""
+    c = Creature('tempest_minion', {'main': '#7AB8D8', 'dark': '#2A5A7A', 'glow': '#C8F0FF', 'shark': '#6A8AA8'})
+    c.part('body', pivot=(0, 24, 0))
+    for i, w in enumerate((3, 5, 7, 9, 11)):
+        nm = f'ring_{i}'
+        c.part(nm, 'body', pivot=(0, -i * 3, 0))
+        c.box(nm, (-w / 2, -3, -w / 2), (w, 3, w), mat='main' if i % 2 else 'glow', pattern='gem')
+        c.anim(nm, 'wiggle', 0.3, 1.5, i * 0.6)
+    c.box('body', (-1.5, -10, -4), (3, 3, 6), mat='shark', pattern='scale')
+    return c
+
+
+def deadly_sphere(name):
+    """Deadly Sphere: a hovering steel ball with spikes and a single red eye."""
+    c = Creature(name, {'main': '#7A7A88', 'dark': '#22222A', 'spike': '#C8C8D0', 'iris': '#E83030', 'glow': '#FF5050'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-4, -4, -4), (8, 8, 8), pattern='plate', edge='dark')
+    c.box('body', (-1.5, -1.5, -4.5), (3, 3, 1), mat='iris', pattern='glow')
+    for x, y, z in ((0, -6, 0), (0, 4, 0), (-6, 0, 0), (4, 0, 0), (0, 0, 4)):
+        c.box('body', (x - 1 if not x else x, y if y else -1, z - 1 if not z else z), (2, 2, 2), mat='spike', pattern='horn')
+    c.anim('body', 'wiggle', 0.3, 1.0)
+    return c
+
+
+def terraprisma_minion():
+    """Terraprisma: a floating sword of rainbow light."""
+    c = Creature('terraprisma_minion', {'main': '#F0A8F8', 'dark': '#7A48A8', 'glow': '#A8F0FF', 'hilt': '#FFF0A8'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-1, -12, -0.5), (2, 12, 1), pattern='gem', edge='dark')
+    c.box('body', (-0.5, -14, -0.5), (1, 2, 1), mat='glow', pattern='glow')
+    c.box('body', (-3, 0, -1), (6, 1, 2), mat='hilt', pattern='gem')
+    c.box('body', (-0.5, 1, -0.5), (1, 3, 1), mat='glow', pattern='glow')
+    c.anim('body', 'bob', 0.6, 0.3)
+    return c
+
+
+def stardust_dragon_minion():
+    """Stardust Dragon: a glowing star-blue dragon head with a trail of body segments."""
+    c = Creature('stardust_dragon_minion', {'main': '#A8D0F8', 'dark': '#2A4A88', 'glow': '#E0F4FF', 'eye': '#FFE070'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-3, -3, -5), (6, 5, 7), pattern='scale', edge='dark')
+    c.box('body', (-2, -1, -8), (4, 3, 3), pattern='scale')
+    c.box('body', (-2.5, -2.5, -5.5), (1, 1, 0.5), mat='eye', pattern='glow')
+    c.box('body', (1.5, -2.5, -5.5), (1, 1, 0.5), mat='eye', pattern='glow')
+    for side in (-1, 1):
+        c.box('body', ((-3 if side < 0 else 2), -6, -2), (1, 3, 3), mat='glow', pattern='horn')
+    prev = 'body'
+    for i in range(3):
+        nm = f'segment_{i}'
+        c.part(nm, prev, pivot=(0, 0, 2 if i == 0 else 4))
+        c.box(nm, (-2.5 + i * 0.4, -2, 0), (5 - i * 0.8, 4 - i * 0.6, 4), mat='main' if i % 2 else 'glow', pattern='scale')
+        c.anim(nm, 'wiggle', 0.35, 0.5, i)
+        prev = nm
+    c.anim('body', 'bob', 0.5, 0.2)
+    return c
+
+
+def rainbow_crystal():
+    """Rainbow Crystal (sentry): a floating rainbow gem on a glowing core."""
+    c = Creature('rainbow_crystal', {'main': '#F0A8F8', 'dark': '#5A2A88', 'glow': '#FFFFFF', 'c2': '#A8F0FF', 'c3': '#FFF0A0'})
+    c.part('body', pivot=(0, 18, 0))
+    c.box('body', (-3, -6, -3), (6, 6, 6), pattern='gem', edge='dark')
+    c.box('body', (-2, -10, -2), (4, 4, 4), mat='c2', pattern='gem')
+    c.box('body', (-2, 0, -2), (4, 4, 4), mat='c3', pattern='gem')
+    c.box('body', (-1, -12, -1), (2, 2, 2), mat='glow', pattern='glow')
+    c.anim('body', 'wiggle', 0.3, 0.6)
+    return c
+
+
+def lunar_portal():
+    """Lunar Portal (sentry): a ring of moonstone around a swirling green-blue portal."""
+    c = Creature('lunar_portal', {'main': '#5A7A78', 'dark': '#1A2A2A', 'glow': '#80FFE8', 'core': '#2AA898'})
+    c.part('body', pivot=(0, 24, 0))
+    c.box('body', (-8, -26, -1), (16, 2, 2), pattern='rock', edge='dark')
+    c.box('body', (-8, -10, -1), (16, 2, 2), pattern='rock', edge='dark')
+    c.box('body', (-8, -24, -1), (2, 14, 2), pattern='rock', edge='dark')
+    c.box('body', (6, -24, -1), (2, 14, 2), pattern='rock', edge='dark')
+    c.part('core', 'body', pivot=(0, -17, 0))
+    c.box('core', (-6, -7, -0.5), (12, 14, 1), mat='core', pattern='glow')
+    c.box('core', (-3, -3, -0.7), (6, 6, 1.4), mat='glow', pattern='glow')
+    c.anim('core', 'wiggle', 0.2, 1.0)
+    c.anim('body', 'bob', 0.5, 0.1)
+    return c
+
+
+def mothron():
+    """Mothron: a huge brown moth with four patterned wings and glowing eyes."""
+    c = Creature('mothron', {'main': '#8A6A4A', 'dark': '#2A1A10', 'wing': '#B88A50', 'wing2': '#E0C080', 'glow': '#FFE070'})
+    c.part('body', pivot=(0, 12, 0))
+    c.box('body', (-4, -4, -10), (8, 8, 20), pattern='scale', edge='dark')
+    c.box('body', (-3, -3, -15), (6, 6, 5), pattern='skin', edge='dark')
+    c.box('body', (-2.5, -2, -15.5), (1.5, 1.5, 0.5), mat='glow', pattern='glow')
+    c.box('body', (1, -2, -15.5), (1.5, 1.5, 0.5), mat='glow', pattern='glow')
+    for side in (-1, 1):
+        c.box('body', ((-3 if side < 0 else 2), -9, -15), (1, 6, 1), mat='dark', pattern='horn')
+    for side, nm in ((-1, 'wing_r'), (1, 'wing_l')):
+        c.part(nm, 'body', pivot=(side * 4, -3, -4))
+        c.box(nm, ((-22 if side < 0 else 0), 0, -6), (22, 0, 12), mat='wing', pattern='membrane')
+        c.box(nm, ((-16 if side < 0 else 0), 0.1, 6), (16, 0, 9), mat='wing2', pattern='membrane')
+        c.anim(nm, nm, 0.5, 0.5)
+    c.anim('body', 'bob', 0.8, 0.15)
+    return c
+
+
+def stage9_creatures():
+    return [slime_minion(), hornet_minion(), renamed(imp(), 'imp_minion'), optic_minion(), pygmy_minion(), tempest_minion(),
+            renamed(martian_probe(), 'ufo_minion'), deadly_sphere('deadly_sphere_minion'), terraprisma_minion(),
+            renamed(star_cell(), 'stardust_cell_minion'), stardust_dragon_minion(), rainbow_crystal(), lunar_portal(),
+            ghost('reaper', '#2A2A34', '#E8E0C0', 9), mothron(), deadly_sphere('deadly_sphere')]
+
+
 def all_creatures():
     return [imp(), demon(), demon('voodoo_demon', voodoo=True), eater_of_souls(), crimera(), face_monster(), blood_crawler(),
             snapper('man_eater', '#4A9A30', '#E070A0', 9), snapper('snatcher', '#5AAA3A', '#F0A0C0', 7), meteor_head()] + hm_creatures() + mech_creatures() + pirate_creatures() + frost_creatures() \
-        + jungle_hm_creatures() + temple_creatures() + stage7_creatures() + stage8_creatures()
+        + jungle_hm_creatures() + temple_creatures() + stage7_creatures() + stage8_creatures() + stage9_creatures()
 
 
 def write(assets, tex):

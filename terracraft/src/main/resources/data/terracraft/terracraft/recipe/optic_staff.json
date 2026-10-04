@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:optic_staff",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:lens",
+      "count": 1
+    },
+    {
+      "item": "terracraft:soul_of_sight",
+      "count": 20
+    },
+    {
+      "item": "terracraft:hallowed_bar",
+      "count": 10
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "weapons"
+}

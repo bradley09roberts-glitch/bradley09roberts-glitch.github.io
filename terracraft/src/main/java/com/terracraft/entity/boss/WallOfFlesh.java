@@ -188,7 +188,7 @@ public class WallOfFlesh extends TerrariaBoss {
             }
         }
         super.die(source);
-        if (level() instanceof ServerLevel level) {
+        if (level() instanceof ServerLevel level && !isNoAi()) {
             ProgressionManager.markDefeated(level.getServer(), ProgressionFlags.HARDMODE);
             removeParts(level);
         }

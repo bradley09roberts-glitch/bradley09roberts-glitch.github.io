@@ -476,16 +476,66 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - Showcase: a Celestial Bestiary room, the Cultist, the four pillars and Moon Lord in the Hall of Bosses, a lunar kit
   and the four fragment armors in the Armory.
 
+### Stage 9: Summoners and the Solar Eclipse (verified in a live client)
+- **Minions** (`entity.summon.MinionEntity`, `SummonContent`): summon staffs spend mana to call a minion. It follows
+  you, floating behind your shoulder, and attacks enemies within about 30 blocks, by ramming them or by shooting.
+  - Minion slots are 1 plus the Max Minions stat. Summoning past the limit dismisses the oldest minion.
+  - Minions can't be hurt, aren't saved with the world, and vanish when you die or leave.
+  - Staffs and where they come from:
+    - Slime Staff: slimes, rare.
+    - Hornet Staff: Queen Bee.
+    - Imp Staff: 17 Hellstone Bars.
+    - Optic Staff: crafted with Souls of Sight.
+    - Pygmy Staff: Plantera.
+    - Tempest Staff: Duke Fishron.
+    - Xeno Staff: Martian Saucer.
+    - Deadly Sphere Staff: Solar Eclipse.
+    - Terraprisma: Empress of Light.
+    - Stardust Cell and Stardust Dragon Staffs: now real summons.
+- **Sentries:** the Rainbow Crystal Staff and Lunar Portal Staff, both from Moon Lord. A sentry is placed where you
+  look, stays there for ten minutes and shoots enemies in sight. Sentry slots are 1 plus Max Sentries.
+- **Whips** (`ProjectileKind.Behavior.WHIP`, `WhipItem`): each swing lashes out and back. The whole length of the
+  lash strikes, dealing summon damage. A struck enemy is **tagged** for 4 s (`combat.WhipTags`): your minions go
+  after it first and add the whip's tag damage to every hit.
+  - Leather Whip (leather): tag 4.
+  - Snapthorn (jungle): tag 6, poisons.
+  - Firecracker (Hellstone): tag 10, burns.
+  - Durendal (Hallowed): tag 9.
+  - Dark Harvest: tag 12.
+  - Kaleidoscope (Empress of Light): tag 30.
+- **Summoner gear:**
+  - Bee armor (Bee Wax) and Spooky armor (Spooky Wood): extra minions and summon damage.
+  - Stardust armor's set bonus is now summoner-focused: +2 minions and +22% summon damage.
+  - Pygmy Necklace: +1 minion, sold by the Witch Doctor in Hardmode.
+  - Papyrus Scarab: Pygmy Necklace plus Summoner Emblem at the Tinkerer's Workshop.
+- **Solar Eclipse:** a day event. It can start at dawn after any mechanical boss, or with a Solar Tablet.
+  - Creatures: Eyezor (eye lasers), Frankenstein, Swamp Thing, Vampire, Creature from the Deep, Fritz and Reapers.
+  - After Plantera, also Mothron, Butcher, Deadly Sphere, Nailhead (explosive nails) and Dr. Man Fly (toxic flasks).
+  - Loot: Death Sickle, Butcher's Chainsaw, Nail Gun, Toxic Flask, Deadly Sphere Staff, Broken Hero Sword and Solar
+    Tablet Fragments.
+  - The Broken Hero Sword makes the **Terra Blade** (Excalibur + 24 Chlorophyte Bars = True Excalibur, then
+    True Excalibur + Broken Hero Sword = Terra Blade).
+- New 3D models: 13 minion and sentry models, Reaper, Mothron and Deadly Sphere, plus Bee and Spooky armor. Nine
+  Eclipse monster skins, and flat sprites for all.
+- Showcase: a Solar Eclipse room in the Bestiary, a Summoner kit, the Bee, Spooky and Stardust armors in the Armory,
+  and a Solar Eclipse button.
+- Fixes:
+  - Display bosses (NoAI) no longer count as defeated when removed. Rebuilding the showcase used to mark every
+    boss defeated and even start the pillar event.
+  - New command: `/terraria celestial stop`.
+  - Day events (Slime Rain, Solar Eclipse) can't be summoned at night.
+
 ## IN PROGRESS
-- Nothing half-finished. Stage 8 is complete: the Terraria boss progression runs from King Slime to Moon Lord.
+- Nothing half-finished. Stage 9 is complete: all four classes (melee, ranged, magic, summon) are playable.
 
 ## NEXT
 1. (done) Stage 5: Hardmode up to the mechanical bosses, Queen Slime, invasions.
 2. (done) Stage 6: Chlorophyte, Plantera, Lihzahrd Temple, Golem.
 3. (done) Stage 7: Duke Fishron, post-Plantera Dungeon, Pumpkin/Frost Moon, Empress of Light, Martian Madness.
 4. (done) Stage 8: Lunatic Cultist, the Celestial Pillars and Moon Lord (Luminite, endgame gear).
-5. Next candidates: summoner minions and whips, Solar Eclipse, Old One's Army, remaining biomes (Underground Desert,
-   Ice caverns, floating islands), more NPCs, and the 3D model upgrades in docs/VISUAL_BACKLOG.md.
+5. (done) Stage 9: summoner class (minions, sentries, whips) and the Solar Eclipse.
+6. Next candidates: remaining biomes (Underground Desert, Ice caverns, floating islands, Granite/Marble), their enemies,
+   more NPCs (Stylist, Party Girl, Tax Collector, Santa), Old One's Army, and the 3D model upgrades in docs/VISUAL_BACKLOG.md.
 
 ## DONE: Stage 4 plan (kept for reference)
 1. ~~Dungeon and Skeletron~~ (done, 4a).

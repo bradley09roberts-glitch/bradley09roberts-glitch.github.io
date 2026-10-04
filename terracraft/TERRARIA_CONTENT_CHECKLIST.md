@@ -62,6 +62,7 @@ Hardmode
 - [x] Pumpkin Moon (Scarecrow, Splinterling, Hellhound, Poltergeist, Headless Horseman, Mourning Wood, Pumpking) and Frost Moon (Zombie Elf, Gingerbread Man, Elf Archer, Nutcracker, Yeti, Flocko, Everscream, Santa-NK1, Ice Queen) with waves
 - [x] Martian Madness (Martian Probe, Gray Grunt, Ray Gunner, Brain Scrambler, Gigazapper, Martian Officer, Drone, Scutlix, Martian Saucer)
 - [x] Critters: Truffle Worm, Prismatic Lacewing
+- [x] Solar Eclipse: Eyezor, Frankenstein, Swamp Thing, Vampire, Creature from the Deep, Fritz, Reaper; after Plantera Mothron, Butcher, Deadly Sphere, Nailhead, Dr. Man Fly
 - [x] Celestial pillar guards: Selenian, Sroller, Corite (Solar); Storm Diver, Alien Hornet, Vortexian (Vortex); Nebula Floater, Brain Suckler, Predictor (Nebula); Star Cell, Flow Invader, Twinkle Popper (Stardust)
 - [ ] Desert: Antlion, Antlion Charger/Swarmer, Vulture, Tomb Crawler
 - [ ] Snow/Ice: Ice Slime, Ice Bat, Undead Viking, Snow Flinx
@@ -92,7 +93,7 @@ Melee
 - [x] Wooden Sword, Copper Shortsword
 - [x] Copper/Tin/Iron/Lead/Silver/Tungsten/Gold/Platinum Broadsword
 - [-] Light's Bane, Blood Butcherer, Muramasa done; Blade of Grass, Bee Keeper, Fiery Greatsword, Breaker Blade done; Night's Edge, Volcano, spears, flails, yoyos pending
-- [-] Hardmode and endgame melee: ore swords, Excalibur, Chlorophyte Claymore, event and boss swords done; Solar Eruption, Daybreak, Meowmere, Star Wrath done; others pending
+- [-] Hardmode and endgame melee: ore swords, Excalibur, Chlorophyte Claymore, event and boss swords done; Solar Eruption, Daybreak, Meowmere, Star Wrath, Death Sickle, True Excalibur, Terra Blade done; others pending
 Ranged
 - [x] Wooden/Copper/Iron/Gold Bow
 - [x] Flintlock Pistol
@@ -102,7 +103,10 @@ Magic
 - [x] Wand of Sparking, Amethyst Staff, Magic Missile
 - [-] Vilethorn, Water Bolt, Aqua Scepter, Book of Skulls, Bee Gun, Space Gun, Flamelash, Flower of Fire, Demon Scythe, Laser Rifle done; other gem staves, tomes, magic guns pending
 Summoner
-- [ ] Summon staffs, sentries, whips (Stardust Dragon/Cell Staff exist as homing magic stand-ins until minions are built)
+- [x] Minions with slots (Slime, Hornet, Imp, Optic, Pygmy, Tempest, Xeno, Deadly Sphere, Terraprisma, Stardust Cell/Dragon staffs)
+- [x] Sentries (Rainbow Crystal Staff, Lunar Portal Staff)
+- [x] Whips with summon tags (Leather Whip, Snapthorn, Firecracker, Durendal, Dark Harvest, Kaleidoscope)
+- [ ] More minions/sentries (Finch, Vampire Frog, Spider, Pirate, Sanguine Bat, Raven, Desert Tiger...), whips (Spinal Tap, Cool Whip, Morning Star...)
 Boomerangs
 - [x] Wooden Boomerang
 - [ ] Enchanted Boomerang, Flamarang...
@@ -119,8 +123,8 @@ Boomerangs
 
 ## Armour
 - [x] Wood, Copper, Tin, Iron, Lead, Silver, Tungsten, Gold, Platinum
-- [-] Shadow, Crimson, Jungle, Molten, Meteor done; Mining, Ninja, Fossil, Necro, Bee pending
-- [-] Cobalt to Titanium, Hallowed, Crystal Assassin, Chlorophyte, Spectre, Solar Flare, Vortex, Nebula, Stardust done; Turtle, Beetle, Shroomite, Spooky pending
+- [-] Shadow, Crimson, Jungle, Molten, Meteor, Bee done; Mining, Ninja, Fossil, Necro pending
+- [-] Cobalt to Titanium, Hallowed, Crystal Assassin, Chlorophyte, Spectre, Solar Flare, Vortex, Nebula, Stardust, Spooky done; Turtle, Beetle, Shroomite pending
 
 ## Accessories
 - [x] Hermes Boots, Cloud in a Bottle, Shiny Red Balloon, Lucky Horseshoe
@@ -179,7 +183,7 @@ Boomerangs
 - [x] Goblin Army (invasion with progress bar; Goblin Battle Standard)
 - [x] Pirate Invasion (Pirate Map; Flying Dutchman; Cutlass, Gold Ring, Lucky Coin, Discount Card, Coin Gun)
 - [x] Frost Legion (Snow Globe from Presents)
-- [ ] Solar Eclipse
+- [x] Solar Eclipse (after a mechanical boss, or a Solar Tablet)
 - [x] Martian Madness
 - [x] Pumpkin Moon
 - [x] Frost Moon

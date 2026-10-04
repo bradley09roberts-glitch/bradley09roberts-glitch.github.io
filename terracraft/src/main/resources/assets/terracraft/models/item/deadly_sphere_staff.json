@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "terracraft:item/deadly_sphere_staff"
+  }
+}

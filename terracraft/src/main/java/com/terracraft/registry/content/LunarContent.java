@@ -55,8 +55,8 @@ public final class LunarContent {
         StatEffects.builder().add(Stat.RANGED_CRIT, 20).add(Stat.RANGED_DAMAGE, 0.20F).build());
     public static final ArmorContent.ArmorPieces NEBULA = armor("nebula", new int[]{14, 18, 14}, Stat.MAGIC_DAMAGE,
         StatEffects.builder().add(Stat.MAX_MANA, 100).add(Stat.MANA_REGEN, 10).add(Stat.MAGIC_DAMAGE, 0.15F).build());
-    public static final ArmorContent.ArmorPieces STARDUST = armor("stardust", new int[]{12, 18, 14}, Stat.DAMAGE,
-        StatEffects.builder().add(Stat.DAMAGE, 0.15F).add(Stat.MOVE_SPEED, 0.15F).build());
+    public static final ArmorContent.ArmorPieces STARDUST = armor("stardust", new int[]{12, 18, 14}, Stat.SUMMON_DAMAGE,
+        StatEffects.builder().add(Stat.MAX_MINIONS, 2).add(Stat.SUMMON_DAMAGE, 0.22F).build());
 
     // fragment weapons
     public static final RegistryObject<ProjectileSwordItem> SOLAR_ERUPTION = sword("solar_eruption", () -> ProjectileKinds.SOLAR_ERUPTION, 105, 16, 1.0F, 1);
@@ -68,8 +68,7 @@ public final class LunarContent {
     public static final RegistryObject<RangedWeaponItem> PHANTASM = gun("phantasm", AmmoType.ARROW, 50, 12, 4, 0.08F);
     public static final RegistryObject<MagicWeaponItem> NEBULA_BLAZE = staff("nebula_blaze", ProjectileKinds.NEBULA_BLAZE, 1, 0.0F, 110, 14, 30);
     public static final RegistryObject<MagicWeaponItem> NEBULA_ARCANUM = staff("nebula_arcanum", ProjectileKinds.NEBULA_ARCANUM, 1, 0.0F, 98, 20, 30);
-    public static final RegistryObject<MagicWeaponItem> STARDUST_DRAGON_STAFF = staff("stardust_dragon_staff", ProjectileKinds.STARDUST_DRAGON, 1, 0.0F, 80, 15, 24);
-    public static final RegistryObject<MagicWeaponItem> STARDUST_CELL_STAFF = staff("stardust_cell_staff", ProjectileKinds.STARDUST_CELL, 2, 0.3F, 60, 10, 20);
+    // the Stardust Dragon and Stardust Cell staffs are summon staffs (SummonContent)
     // tools
     public static final RegistryObject<TerrariaToolItem> SOLAR_FLARE_PICKAXE = ToolContent.hardmodePickaxe("solar_flare_pickaxe", 225, 80, TerraRarity.RED, 500000);
     public static final RegistryObject<TerrariaToolItem> VORTEX_PICKAXE = ToolContent.hardmodePickaxe("vortex_pickaxe", 225, 80, TerraRarity.RED, 500000);

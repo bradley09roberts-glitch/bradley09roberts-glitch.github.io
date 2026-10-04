@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "terracraft:spooky"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "terracraft:spooky"
+      }
+    ]
+  }
+}

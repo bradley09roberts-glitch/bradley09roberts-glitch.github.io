@@ -169,7 +169,7 @@ public class CelestialPillar extends TerrariaMob {
     @Override
     public void die(DamageSource source) {
         super.die(source);
-        if (level() instanceof ServerLevel level) {
+        if (level() instanceof ServerLevel level && !isNoAi()) {
             int count = 20 + random.nextInt(11);
             for (int i = 0; i < count; i += 5) {
                 ItemEntity drop = new ItemEntity(level, getX(), getY() + getBbHeight() * 0.5, getZ(), new ItemStack(kind.fragment().get(), Math.min(5, count - i)));

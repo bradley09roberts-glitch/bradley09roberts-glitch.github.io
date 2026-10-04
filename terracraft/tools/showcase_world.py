@@ -146,12 +146,14 @@ fn('martian_madness', 'time set day', 'terraria hardmode true', 'terraria event 
    'say Martians are invading the surface! The Martian Saucer comes once a third are beaten.')
 fn('celestial', 'terraria hardmode true', 'terraria celestial start', P + 'terraria celestial status',
    'say The four Celestial Pillars stand far out from spawn. Use /terraria celestial tp <solar|vortex|nebula|stardust> to visit one.')
+fn('solar_eclipse', 'time set day', 'terraria hardmode true', 'terraria event start solar_eclipse',
+   'say The sun goes dark! Go down to the surface - movie monsters walk all day.')
 fn('stop_event', 'terraria event stop')
 fn('meteor', 'time set night', P + 'terraria meteor', 'say A meteor landed near you. Look for the smoke!')
 buttons('west', 'EVENTS & NPCS', [
     ('Blood Moon', 'blood_moon'), ('Slime Rain', 'slime_rain'), ('Goblin Army', 'goblin_army'), ('Pirate Invasion', 'pirate_invasion'),
     ('Frost Legion', 'frost_legion'), ('Pumpkin Moon', 'pumpkin_moon'), ('Frost Moon', 'frost_moon'), ('Martian Madness', 'martian_madness'),
-    ('Celestial Pillars', 'celestial'), ('Stop Event', 'stop_event'),
+    ('Solar Eclipse', 'solar_eclipse'), ('Celestial Pillars', 'celestial'), ('Stop Event', 'stop_event'),
     ('Drop Meteor', 'meteor'), ('All Town NPCs', 'npc_all'), ('Remove NPCs', 'npc_remove'),
 ] + [(LANG.get(f'npc.terracraft.{n}', n.title()), f'npc_{n}') for n in NPCS])
 
@@ -253,6 +255,13 @@ fn('kit_lunar', *give('meowmere', 'star_wrath', 'sdmg', 'last_prism', 'lunar_fla
                       'vortex_wings', 'nebula_wings', 'stardust_wings', 'celestial_sigil*3', 'ancient_manipulator', 'luminite_bar*30',
                       'solar_fragment*30', 'vortex_fragment*30', 'nebula_fragment*30', 'stardust_fragment*30', 'musket_ball*99', 'minecraft:arrow*99'),
    'say Place the Ancient Manipulator to craft the fragment armors, wings and weapons.')
+fn('kit_summoner', *give('slime_staff', 'hornet_staff', 'imp_staff', 'optic_staff', 'pygmy_staff', 'tempest_staff', 'xeno_staff',
+                         'deadly_sphere_staff', 'terraprisma', 'rainbow_crystal_staff', 'lunar_portal_staff', 'leather_whip', 'snapthorn',
+                         'firecracker', 'durendal', 'dark_harvest', 'kaleidoscope', 'pygmy_necklace', 'papyrus_scarab', 'summoner_emblem',
+                         'spooky_helmet', 'spooky_breastplate', 'spooky_leggings', 'mana_crystal*9'),
+   'say Staffs call minions (more with Spooky armor and the necklaces); whips tag enemies for your minions.')
+fn('kit_eclipse', *give('solar_tablet*3', 'death_sickle', 'butchers_chainsaw', 'nail_gun', 'toxic_flask', 'broken_hero_sword', 'true_excalibur',
+                        'terra_blade', 'deadly_sphere_staff'))
 fn('kit_accessories', *give(*[i for i in ALL_ITEMS if i in {
     'hermes_boots', 'cloud_in_a_bottle', 'shiny_red_balloon', 'lucky_horseshoe', 'band_of_regeneration', 'band_of_starpower',
     'mana_regeneration_band', 'natures_gift', 'aglet', 'anklet_of_the_wind', 'feral_claws', 'obsidian_skull', 'lava_charm', 'cobalt_shield',
@@ -261,7 +270,7 @@ fn('kit_accessories', *give(*[i for i in ALL_ITEMS if i in {
 fn('kit_summons', *give('slime_crown*3', 'suspicious_looking_eye*3', 'worm_food*3', 'bloody_spine*3', 'abeemination*3',
                         'guide_voodoo_doll', 'goblin_battle_standard*3', 'gelatin_crystal*3', 'mechanical_eye*3', 'mechanical_worm*3',
                         'mechanical_skull*3', 'pirate_map*3', 'snow_globe*3', 'lihzahrd_power_cell*3',
-                        'truffle_worm*3', 'pumpkin_moon_medallion*3', 'naughty_present*3', 'celestial_sigil*3'))
+                        'truffle_worm*3', 'pumpkin_moon_medallion*3', 'naughty_present*3', 'celestial_sigil*3', 'solar_tablet*3'))
 fn('kit_potions', *give('healing_potion*20', 'mana_potion*20', 'ironskin_potion*5', 'swiftness_potion*5', 'regeneration_potion*5',
                         'magic_power_potion*5', 'archery_potion*5', 'mining_potion*5', 'obsidian_skin_potion*5', 'endurance_potion*5',
                         'wrath_potion*5', 'rage_potion*5', 'water_walking_potion*5'))
@@ -281,7 +290,7 @@ buttons('south', 'GEAR KITS', [
     ('Hardmode Ores Kit', 'kit_hm_ores'), ('Hallowed Kit', 'kit_hallowed'), ('Queen Slime Kit', 'kit_queen_slime'), ('Pirate Kit', 'kit_pirates'),
     ('Chlorophyte Kit', 'kit_chlorophyte'), ('Plantera Kit', 'kit_plantera'), ('Golem Kit', 'kit_golem'),
     ('Duke Fishron Kit', 'kit_fishron'), ('Spectre & Dungeon Kit', 'kit_dungeon_hm'), ('Moon Events Kit', 'kit_moons'),
-    ('Empress & Martian Kit', 'kit_empress_martian'), ('Lunar Kit', 'kit_lunar'),
+    ('Empress & Martian Kit', 'kit_empress_martian'), ('Lunar Kit', 'kit_lunar'), ('Summoner Kit', 'kit_summoner'), ('Eclipse Kit', 'kit_eclipse'),
     ('All Accessories', 'kit_accessories'), ('Boss Summons', 'kit_summons'), ('Potions', 'kit_potions'), ('Crafting Stations', 'kit_stations'),
     ('Wings', 'kit_wings'), ('Food Buffs', 'kit_food'), ('Coins', 'kit_coins'), ('Life & Mana Crystals', 'kit_life'),
     ('Clear Inventory', 'clear_inventory'),
@@ -492,12 +501,15 @@ ROOMS = [   # name, floor, wall, light, (log, leaves) or None, enemies
     ('Celestial Pillars', 'minecraft:end_stone_bricks', 'minecraft:purpur_block', 'minecraft:end_rod', None,
      ['cultist_devotee', 'selenian', 'sroller', 'corite', 'storm_diver', 'alien_hornet', 'vortexian', 'nebula_floater', 'brain_suckler',
       'predictor', 'star_cell', 'flow_invader', 'twinkle_popper']),
+    ('Solar Eclipse', 'minecraft:black_concrete_powder', 'minecraft:blackstone', 'minecraft:shroomlight', None,
+     ['eyezor', 'frankenstein', 'swamp_thing', 'vampire', 'creature_from_the_deep', 'fritz', 'reaper', 'mothron', 'butcher', 'deadly_sphere',
+      'nailhead', 'dr_man_fly']),
 ]
 FLYERS = {'demon_eye', 'cave_bat', 'giant_bat', 'eater_of_souls', 'corruptor', 'slimer', 'crimera', 'floaty_gross', 'jungle_bat', 'hornet', 'bee',
           'cursed_skull', 'demon', 'voodoo_demon', 'hellbat', 'pixie', 'gastropod', 'illuminant_bat', 'drippler', 'meteor_head', 'wyvern', 'probe',
           'wraith', 'servant_of_cthulhu', 'parrot', 'heavenly_slime', 'flying_snake', 'dungeon_spirit', 'poltergeist', 'flocko',
           'martian_drone', 'martian_probe', 'sharkron', 'prismatic_lacewing', 'corite', 'alien_hornet', 'nebula_floater', 'brain_suckler',
-          'star_cell', 'flow_invader'}
+          'star_cell', 'flow_invader', 'reaper', 'mothron', 'deadly_sphere'}
 fill(-4, FLOOR, -41, 4, FLOOR, -337, 'minecraft:polished_andesite')            # the avenue
 fill(-5, FLOOR, -41, -5, FLOOR, -337, 'minecraft:polished_blackstone_bricks')
 fill(5, FLOOR, -41, 5, FLOOR, -337, 'minecraft:polished_blackstone_bricks')
@@ -693,13 +705,14 @@ def first(*names):
 
 SET_NAMES = ['wood', 'copper', 'tin', 'iron', 'lead', 'silver', 'tungsten', 'gold', 'platinum', 'jungle', 'meteor', 'shadow', 'crimson', 'molten',
              'cobalt', 'palladium', 'mythril', 'orichalcum', 'adamantite', 'titanium', 'hallowed', 'chlorophyte', 'spectre',
-             'solar_flare', 'vortex', 'nebula', 'stardust']
+             'solar_flare', 'vortex', 'nebula', 'stardust', 'bee', 'spooky']
 WEAPON = {'wood': 'wooden_sword', 'shadow': 'lights_bane', 'crimson': 'blood_butcherer', 'jungle': 'blade_of_grass', 'molten': 'fiery_greatsword',
           'meteor': 'space_gun', 'hallowed': 'excalibur', 'chlorophyte': 'chlorophyte_claymore', 'spectre': 'shadowbeam_staff',
-          'solar_flare': 'solar_eruption', 'vortex': 'vortex_beater', 'nebula': 'nebula_blaze', 'stardust': 'stardust_dragon_staff'}
+          'solar_flare': 'solar_eruption', 'vortex': 'vortex_beater', 'nebula': 'nebula_blaze', 'stardust': 'stardust_dragon_staff',
+          'bee': 'hornet_staff', 'spooky': 'dark_harvest'}
 TOOL = {'shadow': 'nightmare_pickaxe', 'crimson': 'deathbringer_pickaxe', 'molten': 'molten_pickaxe', 'hallowed': 'pickaxe_axe', 'jungle': 'bee_keeper'}
 for i, s in enumerate(SET_NAMES):
-    head = first(f'{s}_helmet', f'{s}_hat', f'{s}_mask', f'{s}_hood')
+    head = first(f'{s}_helmet', f'{s}_hat', f'{s}_mask', f'{s}_hood', f'{s}_headgear')
     chest = first(f'{s}_chainmail', f'{s}_breastplate', f'{s}_scalemail', f'{s}_shirt', f'{s}_suit', f'{s}_plate_mail', f'{s}_robe')
     legs = first(f'{s}_greaves', f'{s}_leggings', f'{s}_pants')
     weapon = first(WEAPON.get(s, ''), f'{s}_broadsword', f'{s}_sword', f'{s}_shortsword')
@@ -869,7 +882,7 @@ S = CLEAR
 fill(x0, FLOOR - 3, z0, x1, Y + 30, z1, 'minecraft:air')
 S = _saved
 fn('prepare', 'say Loading the showcase area... the build starts in 10 seconds.', *forceload_tiles(), 'schedule function showcase:build 200t')
-fn('build', 'terraria spawns safezone clear', f'terraria spawns safezone add {AREA[0]} {AREA[1]} {AREA[2]} {AREA[3]} {FLOOR - 30}', 'kill @e[tag=showcase]', f'kill @e[type=!player,x={x0},y={FLOOR - 3},z={z0},dx={x1 - x0},dy=40,dz={z1 - z0}]', *CLEAR, *S, *BUILD,
+fn('build', 'terraria celestial stop', 'terraria event stop', 'terraria spawns safezone clear', f'terraria spawns safezone add {AREA[0]} {AREA[1]} {AREA[2]} {AREA[3]} {FLOOR - 30}', 'kill @e[tag=showcase]', f'kill @e[type=!player,x={x0},y={FLOOR - 3},z={z0},dx={x1 - x0},dy=40,dz={z1 - z0}]', *CLEAR, *S, *BUILD,
    *VAULT, 'function showcase:build_displays', f'setworldspawn 0 {Y} 16', 'forceload remove all', 'time set noon', 'function showcase:hub',
    'say Showcase built! Walk through the four doors of the Grand Hall.')
 fn('build_displays', 'kill @e[tag=showcase]', *E)

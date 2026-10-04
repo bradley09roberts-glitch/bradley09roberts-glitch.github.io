@@ -1,0 +1,216 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:eyezor",
+      "weight": 8,
+      "layers": [
+        "surface"
+      ],
+      "event": "solar_eclipse",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:frankenstein",
+      "weight": 8,
+      "layers": [
+        "surface"
+      ],
+      "event": "solar_eclipse",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:swamp_thing",
+      "weight": 8,
+      "layers": [
+        "surface"
+      ],
+      "event": "solar_eclipse",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:vampire",
+      "weight": 6,
+      "layers": [
+        "surface"
+      ],
+      "event": "solar_eclipse",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:creature_from_the_deep",
+      "weight": 6,
+      "layers": [
+        "surface"
+      ],
+      "event": "solar_eclipse",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:fritz",
+      "weight": 8,
+      "layers": [
+        "surface"
+      ],
+      "event": "solar_eclipse",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:reaper",
+      "weight": 6,
+      "placement": "air",
+      "layers": [
+        "surface"
+      ],
+      "event": "solar_eclipse",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:mothron",
+      "weight": 1,
+      "placement": "air",
+      "condition": "boss_plantera_defeated",
+      "layers": [
+        "surface"
+      ],
+      "event": "solar_eclipse",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:butcher",
+      "weight": 4,
+      "condition": "boss_plantera_defeated",
+      "layers": [
+        "surface"
+      ],
+      "event": "solar_eclipse",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:deadly_sphere",
+      "weight": 4,
+      "placement": "air",
+      "condition": "boss_plantera_defeated",
+      "layers": [
+        "surface"
+      ],
+      "event": "solar_eclipse",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:nailhead",
+      "weight": 3,
+      "condition": "boss_plantera_defeated",
+      "layers": [
+        "surface"
+      ],
+      "event": "solar_eclipse",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    },
+    {
+      "entity": "terracraft:dr_man_fly",
+      "weight": 4,
+      "condition": "boss_plantera_defeated",
+      "layers": [
+        "surface"
+      ],
+      "event": "solar_eclipse",
+      "exclude_biomes": [
+        "#minecraft:is_ocean",
+        "#minecraft:is_river"
+      ],
+      "exclude_ground": [
+        "#terracraft:evil/all",
+        "#terracraft:dungeon/bricks",
+        "#terracraft:hallow/all"
+      ]
+    }
+  ]
+}

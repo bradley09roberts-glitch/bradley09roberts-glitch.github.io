@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:bee_greaves",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:bee_wax",
+      "count": 10
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

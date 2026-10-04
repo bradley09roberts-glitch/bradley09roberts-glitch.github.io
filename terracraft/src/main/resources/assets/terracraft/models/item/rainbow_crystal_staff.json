@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "terracraft:item/rainbow_crystal_staff"
+  }
+}

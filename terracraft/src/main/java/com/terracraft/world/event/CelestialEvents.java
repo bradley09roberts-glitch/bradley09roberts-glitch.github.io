@@ -42,7 +42,7 @@ import java.util.List;
  *     <li>His defeat brings down the four Celestial Pillars, far out in four directions from spawn. Each is guarded by
  *     its own creatures, and killing those near it wears its shield down.</li>
  *     <li>When the last pillar falls, Moon Lord comes after a minute ("Impending doom approaches...").</li>
- *     <li>{@code /terraria celestial start|status|tp <kind>}</li>
+ *     <li>{@code /terraria celestial start|stop|status|tp <kind>}</li>
  * </ul>
  */
 public final class CelestialEvents {
@@ -100,6 +100,15 @@ public final class CelestialEvents {
         com.terracraft.command.TerrariaCommand.addExtension(root -> root.then(Commands.literal("celestial").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
             .then(Commands.literal("start").executes(ctx -> {
                 startPillars(ctx.getSource().getServer().overworld());
+                return 1;
+            }))
+            .then(Commands.literal("stop").executes(ctx -> {
+                State state = State.get(ctx.getSource().getServer());
+                state.sites.clear();
+                state.doom = 0;
+                state.down = 0;
+                state.setDirty();
+                ctx.getSource().sendSuccess(() -> Component.literal("Celestial event stopped."), true);
                 return 1;
             }))
             .then(Commands.literal("status").executes(ctx -> {

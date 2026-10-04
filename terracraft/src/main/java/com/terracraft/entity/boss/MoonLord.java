@@ -152,7 +152,8 @@ public class MoonLord extends TerrariaBoss {
     protected void dropFightLoot(ServerLevel level) {
         dropStack(level, LunarContent.LUMINITE.get(), 70 + random.nextInt(21));
         List<Item> loot = List.of(LunarContent.MEOWMERE.get(), LunarContent.STAR_WRATH.get(), LunarContent.SDMG.get(), LunarContent.LAST_PRISM.get(),
-            LunarContent.LUNAR_FLARE.get());
+            LunarContent.LUNAR_FLARE.get(),
+            com.terracraft.registry.content.SummonContent.RAINBOW_CRYSTAL_STAFF.get(), com.terracraft.registry.content.SummonContent.LUNAR_PORTAL_STAFF.get());
         dropStack(level, loot.get(random.nextInt(loot.size())), 1);
     }
 

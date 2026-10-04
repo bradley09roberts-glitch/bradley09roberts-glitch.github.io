@@ -25,6 +25,8 @@ import java.util.function.Supplier;
  * @param tileCollide    false = passes through blocks (spectral / magic)
  * @param behavior       special movement program
  * @param hitCooldown    ticks before the same enemy can be hit again (Terraria local immunity)
+ * @param whipRange      how far a whip lashes out (blocks)
+ * @param tagDamage      a whip's tag: extra damage its owner's minions deal to the enemy it struck
  */
 public record ProjectileKind(
     Identifier id,
@@ -50,7 +52,9 @@ public record ProjectileKind(
     float debuffChance,
     int igniteTicks,
     float igniteChance,
-    float explosionRadius
+    float explosionRadius,
+    float whipRange,
+    int tagDamage
 ) {
     public enum Orientation {
         /** Long axis follows the velocity (arrows, bullets, knives). */
@@ -64,7 +68,9 @@ public record ProjectileKind(
     public enum Behavior {
         STANDARD,
         /** Flies out, then returns to the thrower (boomerangs). */
-        BOOMERANG
+        BOOMERANG,
+        /** Lashes out from the owner's hand and back along the look direction (whips). */
+        WHIP
     }
 
     public static Builder builder(String name) {
@@ -96,6 +102,8 @@ public record ProjectileKind(
         private float explosionRadius;
         private int igniteTicks;
         private float igniteChance;
+        private float whipRange;
+        private int tagDamage;
 
         private Builder(Identifier id) {
             this.id = id;
@@ -123,6 +131,11 @@ public record ProjectileKind(
         /** Terraria's "On Fire!" debuff: sets the target burning. */
         public Builder ignites(int ticks, float chance) { this.igniteTicks = ticks; this.igniteChance = chance; return this; }
         public Builder explosion(float radius) { this.explosionRadius = radius; return this; }
+        /** A whip: lashes out {@code range} blocks over the projectile's lifetime and tags what it hits. */
+        public Builder whip(float range, int tag) {
+            this.behavior = Behavior.WHIP; this.whipRange = range; this.tagDamage = tag; this.tileCollide = false; this.pierce = -1;
+            this.hitCooldown = 1000; return this;
+        }
         public Builder texture(String name) {
             this.texture = Identifier.fromNamespaceAndPath(id.getNamespace(), "textures/entity/projectile/" + name + ".png");
             return this;
@@ -131,7 +144,7 @@ public record ProjectileKind(
         public ProjectileKind build() {
             return new ProjectileKind(id, texture, size, renderScale, orientation, fullbright, gravity, drag, lifetime, pierce,
                 bounces, homing, homingRange, tileCollide, behavior, hitCooldown, damageType, trail, debuff, debuffTicks,
-                debuffChance, igniteTicks, igniteChance, explosionRadius);
+                debuffChance, igniteTicks, igniteChance, explosionRadius, whipRange, tagDamage);
         }
     }
 }

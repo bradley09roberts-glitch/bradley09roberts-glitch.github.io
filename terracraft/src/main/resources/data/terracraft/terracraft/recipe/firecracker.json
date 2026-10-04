@@ -1,0 +1,20 @@
+{
+  "result": {
+    "item": "terracraft:firecracker",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:hellstone_bar",
+      "count": 12
+    },
+    {
+      "item": "minecraft:gunpowder",
+      "count": 10
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "weapons"
+}

@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:bee_breastplate",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:bee_wax",
+      "count": 12
+    }
+  ],
+  "stations": [
+    "terracraft:anvil"
+  ],
+  "category": "armor"
+}

@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:spooky_helmet",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:spooky_wood",
+      "count": 75
+    }
+  ],
+  "stations": [
+    "terracraft:work_bench"
+  ],
+  "category": "armor"
+}

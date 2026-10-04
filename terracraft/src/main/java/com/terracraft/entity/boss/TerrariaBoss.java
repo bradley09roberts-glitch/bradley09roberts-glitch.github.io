@@ -186,7 +186,8 @@ public abstract class TerrariaBoss extends TerrariaMob {
     @Override
     public void die(DamageSource source) {
         super.die(source);
-        if (level() instanceof ServerLevel level && completesFight(level)) {
+        // display bosses (NoAI, e.g. the showcase's Hall of Bosses) are not real fights: no flag, message or loot
+        if (level() instanceof ServerLevel level && !isNoAi() && completesFight(level)) {
             level.getServer().getPlayerList().broadcastSystemMessage(
                 Component.translatable("message.terracraft.boss.defeated", announceName()).withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD), false);
             ProgressionManager.markDefeated(level.getServer(), defeatFlag());

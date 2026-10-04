@@ -227,10 +227,14 @@ public class EmpressOfLight extends TerrariaBoss {
 
     @Override
     protected void dropFightLoot(ServerLevel level) {
-        List<Item> loot = List.of(EmpressContent.NIGHTGLOW.get(), EmpressContent.STARLIGHT.get());
+        List<Item> loot = List.of(EmpressContent.NIGHTGLOW.get(), EmpressContent.STARLIGHT.get(),
+            com.terracraft.registry.content.SummonContent.KALEIDOSCOPE.get());
         dropStack(level, loot.get(random.nextInt(loot.size())), 1);
         if (random.nextInt(4) == 0) {
             dropStack(level, EmpressContent.EMPRESS_WINGS.get(), 1);
+        }
+        if (random.nextInt(4) == 0) {
+            dropStack(level, com.terracraft.registry.content.SummonContent.TERRAPRISMA.get(), 1);
         }
     }
 }

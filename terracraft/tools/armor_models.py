@@ -554,11 +554,37 @@ def stardust_set():
     return a
 
 
+def bee_set():
+    # Bee armor: a yellow-and-black striped bee hood with antennae and little wings on the back
+    a = Armor('bee', {'main': '#F0C030', 'chain': '#2A2010', 'trim': '#2A2010', 'dark': '#1A1408', 'accent': '#FFE070',
+                      'wing': '#E0F0FF', 'dark_edge': '#7A5A10', 'buckle': '#FFE070'})
+    a.add('head', 'head', (-4, -8, -4), (8, 8, 8), mat='main', pattern='bands', inflate=1.0, faces={'down': 'none', 'north': 'open'})
+    for x in (-2.5, 1.5):
+        a.add('head', 'head', (x, -12, -2), (1, 4, 1), mat='trim', pattern='horn', pivot=[x + 0.5, -9, -1.5], rot=[-0.4, 0, 0])
+    torso(a, base='bands', plate='bands', base_mat='main', mat='main', edge='trim', pads='none', abs_plates=False, belt='trim')
+    for side in (-1, 1):
+        a.add('chest', 'body', ((-5 if side < 0 else 1), 0, 2.4), (4, 5, 0.2), mat='wing', pattern='membrane', pivot=[side, 1, 2.4], rot=[0, -0.4 * side, 0])
+    a.pair('legs', 'right_leg', (-2, 0, -2), (4, 12, 4), mat='main', pattern='bands', inflate=0.5, faces={'up': 'none'})
+    return a
+
+
+def spooky_set():
+    # Spooky armor: dark purple spooky-wood plate with a hollow-eyed helm and jagged branch spikes
+    a = ore('spooky', '#5A4A6A', accent='#FF8A20', trim='#2A1A2A', gem='#FF8A20', glow='#FF8A20')
+    closed_helmet(a, 'visor', pattern='wood', inflate=1.3, edge='trim')
+    a.add('head', 'head', (-3, -5.2, -5.6), (6, 1, 1), mat='glow', pattern='gem')
+    for x, h, r in ((-3, 4, -0.5), (2, 4, 0.5)):
+        a.add('head', 'head', (x, -9 - h, -1), (1, h, 1), mat='trim', pattern='wood', pivot=[x + 0.5, -9, 0], rot=[0, 0, r])
+    torso(a, base='wood', plate='wood', gem='gem', pads='big')
+    greaves(a, base='wood', plate='wood')
+    return a
+
+
 def all_sets():
     return [wood_set(), copper_set(), tin_set(), iron_set(), lead_set(), silver_set(), tungsten_set(), gold_set(), platinum_set(),
             shadow_set(), crimson_set(), jungle_set(), molten_set(), meteor_set(),
             cobalt_set(), palladium_set(), mythril_set(), orichalcum_set(), adamantite_set(), titanium_set(), hallowed_set(), crystal_assassin_set(), pirate_set(),
-            chlorophyte_set(), spectre_set(), solar_flare_set(), vortex_set(), nebula_set(), stardust_set()]
+            chlorophyte_set(), spectre_set(), solar_flare_set(), vortex_set(), nebula_set(), stardust_set(), bee_set(), spooky_set()]
 
 
 # ----------------------------------------------------------------------------------------- UV packing

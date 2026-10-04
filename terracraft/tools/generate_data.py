@@ -156,7 +156,7 @@ def jungle():
         ['regeneration_potion', 'swiftness_potion', 'ironskin_potion', 'mana_regeneration_potion']))
     # Queen Bee: one weapon, Honey Comb, Bee Wax
     write(f'{NS}/loot_table/entities/queen_bee.json', {'type': 'minecraft:entity', 'pools': [
-        {'rolls': 1, 'entries': [entry('bee_gun'), entry('bee_keeper'), entry('bees_knees')]},
+        {'rolls': 1, 'entries': [entry('bee_gun'), entry('bee_keeper'), entry('bees_knees'), entry('hornet_staff')]},
         {'rolls': 1, 'entries': [entry('honey_comb')], 'conditions': [{'condition': 'minecraft:random_chance', 'chance': 0.33}]},
         {'rolls': 1, 'entries': [entry('bee_wax', 1, 16, 26)]},
         {'rolls': 1, 'entries': [entry('minecraft:honey_block', 1, 5, 10)]}]})
@@ -483,6 +483,103 @@ def stage8_lang(L):
     })
 
 
+# ============================================================================== Stage 9: summoners, Solar Eclipse
+def stage9():
+    for slime in ('green_slime', 'blue_slime', 'purple_slime', 'yellow_slime', 'red_slime'):
+        if slime in MOBS and MOBS[slime][1] is not None:
+            MOBS[slime] = (MOBS[slime][0], MOBS[slime][1] + [('slime_staff', 1, 1, 0.005)])
+    MOBS.update({
+        'eyezor': ('Eyezor', []), 'frankenstein': ('Frankenstein', []), 'swamp_thing': ('Swamp Thing', []), 'vampire': ('Vampire', []),
+        'creature_from_the_deep': ('Creature from the Deep', []), 'fritz': ('Fritz', []),
+        'reaper': ('Reaper', [('death_sickle', 1, 1, 0.025)]),
+        'mothron': ('Mothron', [('broken_hero_sword', 1, 1, 0.25), ('solar_tablet_fragment', 1, 3, 0.5)]),
+        'butcher': ('Butcher', [('butchers_chainsaw', 1, 1, 0.04)]),
+        'deadly_sphere': ('Deadly Sphere', [('deadly_sphere_staff', 1, 1, 0.04)]),
+        'nailhead': ('Nailhead', [('nail_gun', 1, 1, 0.25)]),
+        'dr_man_fly': ('Dr. Man Fly', [('toxic_flask', 1, 1, 0.04)]),
+    })
+    ECL = dict(layers=['surface'], event='solar_eclipse', **OVERWORLD_LAND)
+    PLANTERA = 'boss_plantera_defeated'
+    SPAWNS['solar_eclipse'] = [
+        dict(entity='eyezor', weight=8, **ECL), dict(entity='frankenstein', weight=8, **ECL), dict(entity='swamp_thing', weight=8, **ECL),
+        dict(entity='vampire', weight=6, **ECL), dict(entity='creature_from_the_deep', weight=6, **ECL), dict(entity='fritz', weight=8, **ECL),
+        dict(entity='reaper', weight=6, placement='air', **ECL),
+        dict(entity='mothron', weight=1, placement='air', condition=PLANTERA, **ECL),
+        dict(entity='butcher', weight=4, condition=PLANTERA, **ECL),
+        dict(entity='deadly_sphere', weight=4, placement='air', condition=PLANTERA, **ECL),
+        dict(entity='nailhead', weight=3, condition=PLANTERA, **ECL),
+        dict(entity='dr_man_fly', weight=4, condition=PLANTERA, **ECL),
+    ]
+
+
+def stage9_recipes():
+    HM_ANVIL = t('hardmode_anvil')
+    TW = t('tinkerers_workshop')
+    recipe('imp_staff', t('imp_staff'), [(t('hellstone_bar'), 17)], [ANVIL], category='weapons')
+    recipe('optic_staff', t('optic_staff'), [(t('lens'), 1), (t('soul_of_sight'), 20), (t('hallowed_bar'), 10)], [HM_ANVIL], category='weapons')
+    recipe('leather_whip', t('leather_whip'), [('minecraft:leather', 8), ('minecraft:string', 4)], [WB], category='weapons')
+    recipe('snapthorn', t('snapthorn'), [(t('jungle_spores'), 15), (t('stinger'), 12), ('minecraft:vine', 6)], [ANVIL], category='weapons')
+    recipe('firecracker', t('firecracker'), [(t('hellstone_bar'), 12), ('minecraft:gunpowder', 10)], [ANVIL], category='weapons')
+    recipe('durendal', t('durendal'), [(t('hallowed_bar'), 12), (t('soul_of_light'), 5)], [HM_ANVIL], category='weapons')
+    recipe('bee_headgear', t('bee_headgear'), [(t('bee_wax'), 8)], [ANVIL], category='armor')
+    recipe('bee_breastplate', t('bee_breastplate'), [(t('bee_wax'), 12)], [ANVIL], category='armor')
+    recipe('bee_greaves', t('bee_greaves'), [(t('bee_wax'), 10)], [ANVIL], category='armor')
+    recipe('spooky_helmet', t('spooky_helmet'), [(t('spooky_wood'), 75)], [WB], category='armor')
+    recipe('spooky_breastplate', t('spooky_breastplate'), [(t('spooky_wood'), 100)], [WB], category='armor')
+    recipe('spooky_leggings', t('spooky_leggings'), [(t('spooky_wood'), 75)], [WB], category='armor')
+    recipe('papyrus_scarab', t('papyrus_scarab'), [(t('pygmy_necklace'), 1), (t('summoner_emblem'), 1)], [TW], category='accessories')
+    recipe('solar_tablet', t('solar_tablet'), [(t('solar_tablet_fragment'), 15)], [HM_ANVIL], category='consumables')
+    recipe('true_excalibur', t('true_excalibur'), [(t('excalibur'), 1), (t('chlorophyte_bar'), 24)], [HM_ANVIL], category='weapons')
+    recipe('terra_blade', t('terra_blade'), [(t('true_excalibur'), 1), (t('broken_hero_sword'), 1)], [HM_ANVIL], category='weapons')
+
+
+def stage9_lang(L):
+    minions = {'slime_minion': 'Baby Slime', 'hornet_minion': 'Hornet', 'imp_minion': 'Imp', 'optic_minion': 'Optic Twin',
+               'pygmy_minion': 'Pygmy', 'tempest_minion': 'Sharknado', 'ufo_minion': 'UFO', 'deadly_sphere_minion': 'Deadly Sphere',
+               'terraprisma_minion': 'Terraprisma', 'stardust_cell_minion': 'Stardust Cell', 'stardust_dragon_minion': 'Stardust Dragon',
+               'rainbow_crystal': 'Rainbow Crystal', 'lunar_portal': 'Lunar Portal'}
+    for k, v in minions.items():
+        L[f'entity.terracraft.{k}'] = v
+    L.update({
+        'event.terracraft.solar_eclipse': 'Solar Eclipse',
+        'event.terracraft.solar_eclipse.start': 'A solar eclipse is happening!',
+        'event.terracraft.solar_eclipse.end': 'The solar eclipse has ended.',
+        'item.terracraft.butchers_chainsaw': "Butcher's Chainsaw",
+        'item.terracraft.slime_staff.tooltip': 'Summons a baby slime to fight for you',
+        'item.terracraft.hornet_staff.tooltip': 'Summons a hornet to fight for you',
+        'item.terracraft.imp_staff.tooltip': 'Summons an imp to fight for you',
+        'item.terracraft.optic_staff.tooltip': 'Summons a mechanical eye to fight for you',
+        'item.terracraft.pygmy_staff.tooltip': 'Summons a pygmy to fight for you',
+        'item.terracraft.tempest_staff.tooltip': 'Summons a sharknado to fight for you',
+        'item.terracraft.xeno_staff.tooltip': 'Summons a UFO to fight for you',
+        'item.terracraft.deadly_sphere_staff.tooltip': 'Summons a deadly sphere to fight for you',
+        'item.terracraft.terraprisma.tooltip': 'Summons an enchanted sword of light to fight for you',
+        'item.terracraft.stardust_cell_staff.tooltip': 'Summons a stardust cell to fight for you',
+        'item.terracraft.stardust_dragon_staff.tooltip': 'Summons a stardust dragon to fight for you',
+        'item.terracraft.rainbow_crystal_staff.tooltip': 'Summons a radiant crystal that banishes your enemies (sentry)',
+        'item.terracraft.lunar_portal_staff.tooltip': 'Summons a lunar portal to shoot lasers at your enemies (sentry)',
+        'item.terracraft.leather_whip.tooltip': "4 summon tag damage\nYour summons will focus struck enemies\n'Whip it good!'",
+        'item.terracraft.snapthorn.tooltip': '6 summon tag damage\nStrikes poison enemies\nYour summons will focus struck enemies',
+        'item.terracraft.firecracker.tooltip': '10 summon tag damage\nStrikes set enemies on fire\nYour summons will focus struck enemies',
+        'item.terracraft.durendal.tooltip': '9 summon tag damage\nYour summons will focus struck enemies',
+        'item.terracraft.dark_harvest.tooltip': '12 summon tag damage\nYour summons will focus struck enemies',
+        'item.terracraft.kaleidoscope.tooltip': '30 summon tag damage\nYour summons will focus struck enemies',
+        'item.terracraft.pygmy_necklace.tooltip': 'Increases your max number of minions',
+        'item.terracraft.papyrus_scarab.tooltip': 'Increases your max number of minions\nIncreases summon damage by 15%',
+        'armor_set.terracraft.bee.bonus': 'Increases summon damage by 10%',
+        'armor_set.terracraft.spooky.bonus': 'Increases summon damage by 25%',
+        'armor_set.terracraft.stardust.bonus': '2 extra minions and 22% increased summon damage',
+        'item.terracraft.solar_tablet.tooltip': 'Summons the Solar Eclipse (by day, Hardmode)',
+        'item.terracraft.solar_tablet_fragment.tooltip': "'The sun's light is fading...'",
+        'item.terracraft.broken_hero_sword.tooltip': "'Its former glory remains intact'",
+        'item.terracraft.death_sickle.tooltip': 'Shoots a deathly sickle',
+        'item.terracraft.nail_gun.tooltip': 'Fires explosive nails',
+        'item.terracraft.toxic_flask.tooltip': 'Throws toxic flasks that burst into poison',
+        'item.terracraft.true_excalibur.tooltip': 'Fires a beam of light',
+        'item.terracraft.terra_blade.tooltip': "Fires a green beam\n'The might of a hero'",
+    })
+
+
 def stage6_recipes():
     HM_ANVIL, HM_FORGE = t('hardmode_anvil'), t('hardmode_forge')
     CB = t('chlorophyte_bar')
@@ -738,6 +835,7 @@ def terraria_recipes():
     stage6_recipes()
     stage7_recipes()
     stage8_recipes()
+    stage9_recipes()
     for name, data in RECIPES.items():
         write(f'{NS}/terracraft/recipe/{name}.json', data)
 
@@ -1194,6 +1292,7 @@ def lang():
     stage6_lang(L)
     stage7_lang(L)
     stage8_lang(L)
+    stage9_lang(L)
     for mob, (name, _) in MOBS.items():
         L[f'entity.terracraft.{mob}'] = name
     path = os.path.join(RES, 'assets/terracraft/lang/en_us.json')
@@ -1789,6 +1888,7 @@ SHOPS = {
     ],
     'witch_doctor': [
         {'item': t('leaf_wings'), 'price': 200000, 'condition': 'hardmode_active', 'time': 'night'},
+        {'item': t('pygmy_necklace'), 'price': 100000, 'condition': 'hardmode_active'},
         {'item': t('stinger'), 'price': 500},
         {'item': t('jungle_spores'), 'price': 300},
         {'item': 'minecraft:vine', 'price': 100},
@@ -1863,6 +1963,7 @@ def main():
     stage6()
     stage7()
     stage8()
+    stage9()
     damage()
     smelting()
     terraria_recipes()

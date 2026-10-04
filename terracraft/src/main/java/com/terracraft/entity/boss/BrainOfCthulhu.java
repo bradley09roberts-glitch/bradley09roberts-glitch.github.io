@@ -145,7 +145,7 @@ public class BrainOfCthulhu extends TerrariaBoss {
     @Override
     public void die(DamageSource source) {
         super.die(source);
-        if (level() instanceof ServerLevel level) {
+        if (level() instanceof ServerLevel level && !isNoAi()) {
             ProgressionManager.markDefeated(level.getServer(), ProgressionFlags.EVIL_BOSS);
             level.addFreshEntity(new ItemEntity(level, getX(), getY(), getZ(), new ItemStack(EvilContent.CRIMTANE_ORE.get(), 40 + random.nextInt(51))));
             level.addFreshEntity(new ItemEntity(level, getX(), getY(), getZ(), new ItemStack(BossContent.TISSUE_SAMPLE.get(), 10 + random.nextInt(11))));

@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:solar_tablet",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:solar_tablet_fragment",
+      "count": 15
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "consumables"
+}

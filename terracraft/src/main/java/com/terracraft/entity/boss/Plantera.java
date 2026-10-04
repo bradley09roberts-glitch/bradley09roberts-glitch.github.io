@@ -226,7 +226,8 @@ public class Plantera extends TerrariaBoss {
     @Override
     protected void dropFightLoot(ServerLevel level) {
         dropStack(level, PlanteraContent.TEMPLE_KEY.get(), 1);
-        List<Item> weapons = List.of(PlanteraContent.SEEDLER.get(), PlanteraContent.VENUS_MAGNUM.get(), PlanteraContent.LEAF_BLOWER.get());
+        List<Item> weapons = List.of(PlanteraContent.SEEDLER.get(), PlanteraContent.VENUS_MAGNUM.get(), PlanteraContent.LEAF_BLOWER.get(),
+            com.terracraft.registry.content.SummonContent.PYGMY_STAFF.get());
         dropStack(level, weapons.get(random.nextInt(weapons.size())), 1);
     }
 

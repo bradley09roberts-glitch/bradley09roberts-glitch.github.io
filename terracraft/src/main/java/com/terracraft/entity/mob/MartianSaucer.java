@@ -80,7 +80,8 @@ public class MartianSaucer extends TerrariaMob {
     public void die(DamageSource source) {
         super.die(source);
         if (level() instanceof ServerLevel level && source.getEntity() instanceof Player) {
-            List<Item> loot = List.of(MartianContent.INFLUX_WAVER.get(), MartianContent.LASER_MACHINEGUN.get(), MartianContent.XENOPOPPER.get());
+            List<Item> loot = List.of(MartianContent.INFLUX_WAVER.get(), MartianContent.LASER_MACHINEGUN.get(), MartianContent.XENOPOPPER.get(),
+                com.terracraft.registry.content.SummonContent.XENO_STAFF.get());
             level.addFreshEntity(new ItemEntity(level, getX(), getY(), getZ(), new ItemStack(loot.get(random.nextInt(loot.size())))));
         }
     }
