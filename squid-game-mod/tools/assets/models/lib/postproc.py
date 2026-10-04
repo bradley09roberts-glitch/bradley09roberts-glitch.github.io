@@ -1,6 +1,7 @@
 """Post-processing passes applied to finished animations (operate on the in-memory Animation objects)."""
 from __future__ import annotations
 
+import math
 from typing import Iterable, Optional, Sequence
 
 import numpy as np
@@ -26,42 +27,33 @@ def lowest_y(rig: Rig, state: dict, hidden: Sequence[str]) -> float:
     return y
 
 
-def ground_lock(rig: Rig, a: Animation, hidden: Sequence[str], threshold: float = 0.3, step: float = 0.04) -> float:
-    """Lift the root wherever the lowest model point would sink more than ``threshold`` px into the floor.
+def ground_lock(rig: Rig, a: Animation, hidden: Sequence[str], slack: float = 0.1, step: float = 0.02) -> float:
+    """Keep the model on top of the floor: wherever the lowest model point would sink more than ``slack`` px
+    below y=0, the root is lifted by the excess.
 
-    The animation is sampled densely (every ``step`` s) so the lift also covers motion between keys.
-    Returns the largest lift applied."""
+    The root position track is re-written as a dense (``step`` s) linear track holding the *exact* GeckoLib-sampled
+    original root position plus the lift, so the authored root motion is preserved.  Does nothing (returns 0.0)
+    when the animation never sinks.  Returns the largest lift applied."""
     clip = Clip(a.name, a.to_json())
-    base_times = key_times(a)
-    times = set(base_times)
-    for t0, t1 in zip(base_times, base_times[1:]):
-        n = int((t1 - t0) / step)
-        for k in range(1, n + 1):
-            times.add(round(t0 + (t1 - t0) * k / (n + 1), 5))
-    times = sorted(times)
-    lifts = []
-    for t in times:
-        low = lowest_y(rig, clip.sample(t, loop=False), hidden)
-        lifts.append(-low if low < -threshold else 0.0)
-    if not any(l > 0 for l in lifts):
+    times = sorted(set(key_times(a)) | {0.0, round(a.length, 5)})
+    dense = set(times)
+    for t0, t1 in zip(times, times[1:]):
+        n = max(1, int(math.ceil((t1 - t0) / step - 1e-9)))
+        for k in range(1, n):
+            dense.add(round(t0 + (t1 - t0) * k / n, 5))
+    dense = sorted(dense)
+    lifts, roots = [], []
+    for t in dense:
+        st = clip.sample(t, loop=False)
+        low = lowest_y(rig, st, hidden)
+        lifts.append(max(0.0, -low - slack))
+        roots.append(st.get("root", {}).get("pos", (0.0, 0.0, 0.0)))
+    top = max(lifts)
+    if top < 0.12:                                    # negligible sink: leave the authored animation untouched
         return 0.0
     bt = a._bt("root")
-    sel = set()
-    for i, l in enumerate(lifts):
-        if l > 0:
-            sel.update({max(i - 1, 0), i, min(i + 1, len(times) - 1)})
-    plan = []
-    for i in sorted(sel):
-        t = times[i]
-        cur = bt.pos.value_at(t) if bt.pos.keys else (0.0, 0.0, 0.0)        # ORIGINAL root position at t
-        ease = "linear"
-        for (tt, _, e) in bt.pos.keys:
-            if abs(tt - t) < 1e-6:
-                ease = e
-        plan.append((t, cur, ease, lifts[i]))
-    for t, cur, ease, lift in plan:
-        bt.pos.add(t, (cur[0], cur[1] + lift, cur[2]), ease)
-    return max(lifts)
+    bt.pos.keys = [(t, (r[0], r[1] + l, r[2]), "linear") for t, r, l in zip(dense, roots, lifts)]
+    return top
 
 
 def lag_tracks(a: Animation, lags: dict, min_gap_frac: float = 0.45) -> None:

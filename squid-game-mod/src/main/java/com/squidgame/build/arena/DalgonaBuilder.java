@@ -5,8 +5,12 @@ import com.squidgame.build.ArenaId;
 import com.squidgame.build.BuildContext;
 import com.squidgame.build.CommonMarkers;
 import com.squidgame.build.arena.dalgona.Floor;
+import com.squidgame.build.arena.dalgona.Front;
 import com.squidgame.build.arena.dalgona.Geo;
+import com.squidgame.build.arena.dalgona.Roof;
+import com.squidgame.build.arena.dalgona.Seating;
 import com.squidgame.build.arena.dalgona.Shell;
+import com.squidgame.build.arena.dalgona.Stage;
 import com.squidgame.build.arena.dalgona.Walls;
 import com.squidgame.build.arena.prefab.WaitingRoomPrefab;
 
@@ -63,6 +67,13 @@ public final class DalgonaBuilder implements ArenaBuilder {
         Shell.build(c);
         Floor.build(c);
         Walls.build(c);
+        Roof.build(c);
+        Front.build(c);
+        Stage.build(c);
+        Seating.build(c);
+        c.marker("dalgona.front", 0.5, 2.0, -84.5, 0f);
+        c.marker("dalgona.board", 0.5, Front.BOARD_CENTER_Y, -90.95, 0f);
+        c.marker(CommonMarkers.EXIT, 0.5, 1.0, -81.5, 180f);
         c.at(0, 0, 0, 2, () -> WaitingRoomPrefab.build(c, WaitingRoomPrefab.Spec.of("DALGONA")));
         c.region(CommonMarkers.REGION_BOUNDS, -Geo.HALF_W, 0, Geo.Z_FRONT, Geo.HALF_W, 23, Geo.Z_REAR);
     }

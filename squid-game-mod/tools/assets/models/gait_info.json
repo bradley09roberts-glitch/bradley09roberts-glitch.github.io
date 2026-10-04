@@ -1,0 +1,45 @@
+{
+ "_comment": "Ground speed (blocks/s, at renderer scale 0.9375) at which the stance feet of each locomotion cycle stay planted when played at 1.0x. Suggested controller speed = actual_blocks_s / planted_blocks_s.",
+ "contestant": {
+  "walk": {
+   "cycle_s": 1.0,
+   "gait_cycle_s": 0.5,
+   "planted_px_s": 41.98,
+   "planted_blocks_s": 2.46,
+   "contract_reference_blocks_s": 2.4,
+   "speed_multiplier_at_reference": 0.98
+  },
+  "run": {
+   "cycle_s": 0.6,
+   "gait_cycle_s": 0.6,
+   "planted_px_s": 98.67,
+   "planted_blocks_s": 5.78,
+   "contract_reference_blocks_s": 6.0,
+   "speed_multiplier_at_reference": 1.04
+  },
+  "sneak_walk": {
+   "cycle_s": 1.2,
+   "gait_cycle_s": 1.2,
+   "planted_px_s": 10.59,
+   "planted_blocks_s": 0.62
+  }
+ },
+ "guard": {
+  "walk": {
+   "cycle_s": 1.0,
+   "gait_cycle_s": 0.5,
+   "planted_px_s": 41.7,
+   "planted_blocks_s": 2.44,
+   "contract_reference_blocks_s": 2.4,
+   "speed_multiplier_at_reference": 0.98
+  },
+  "run": {
+   "cycle_s": 0.6,
+   "gait_cycle_s": 0.6,
+   "planted_px_s": 98.46,
+   "planted_blocks_s": 5.77,
+   "contract_reference_blocks_s": 6.0,
+   "speed_multiplier_at_reference": 1.04
+  }
+ }
+}

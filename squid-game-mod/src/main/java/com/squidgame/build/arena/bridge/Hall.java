@@ -4,8 +4,9 @@ import com.squidgame.build.BuildContext;
 
 /**
  * The hall shell: solid foundation, pit floor, 3 thick walls and roof, then the interior wall faces (plinth with
- * glowing pink strip, ribbed pit walls, hall walls with ribs and corner pilasters) drawn in a canonical wall frame
- * (u along the wall, local z = depth into the hall) and placed four times with rotations.
+ * glowing pink strip, plated pit walls, hall walls with ribs and corner pilasters, catwalks, ladders) drawn in a
+ * canonical wall frame (u along the wall, local z = depth into the hall, y absolute) and placed four times with
+ * rotations. Reading direction of anything drawn along +u is left to right for a viewer facing the wall.
  */
 final class Hall {
     private Hall() {
@@ -14,6 +15,10 @@ final class Hall {
     /** Catwalk levels in the pit (floor layer y); ribs are interrupted around them. */
     static final int PIT_CAT_A = -10;
     static final int PIT_CAT_B = 14;
+
+    /** rib centres (canonical u) for the end walls (90 long) and side walls (87 long). */
+    static final int[] RIBS_END = {9, 23, 37, 52, 66, 80};
+    static final int[] RIBS_SIDE = {15, 29, 43, 57, 71};
 
     static void build(BuildContext c) {
         shell(c);
@@ -62,20 +67,17 @@ final class Hall {
 
     private static void walls(BuildContext c) {
         // back wall (z = -8 face), interior to +z
-        c.at(Geo.X0, 0, Geo.Z0 - 1, 0, () -> run(c, 90, true));
+        c.at(Geo.X0, 0, Geo.Z0 - 1, 0, () -> run(c, 90, WallArt.BACK));
         // front wall (z = 80 face), local u runs towards -x
-        c.at(Geo.X1, 0, Geo.Z1 + 1, 2, () -> run(c, 90, true));
+        c.at(Geo.X1, 0, Geo.Z1 + 1, 2, () -> run(c, 90, WallArt.FRONT));
         // west wall (x = -46 face), local u runs towards -z
-        c.at(Geo.X0 - 1, 0, Geo.Z1, 3, () -> run(c, 87, false));
+        c.at(Geo.X0 - 1, 0, Geo.Z1, 3, () -> run(c, 87, WallArt.WEST));
         // east wall (x = 45 face), local u runs towards +z
-        c.at(Geo.X1 + 1, 0, Geo.Z0, 1, () -> run(c, 87, false));
+        c.at(Geo.X1 + 1, 0, Geo.Z0, 1, () -> run(c, 87, WallArt.EAST));
     }
 
-    /** rib centres (canonical u) for the end walls (90 long) and side walls (87 long). */
-    private static final int[] RIBS_END = {9, 23, 37, 52, 66, 80};
-    private static final int[] RIBS_SIDE = {15, 29, 43, 57, 71};
-
-    private static void run(BuildContext c, int len, boolean end) {
+    private static void run(BuildContext c, int len, int wall) {
+        boolean end = wall == WallArt.BACK || wall == WallArt.FRONT;
         // 1. wall face pattern (one layer, local z = 0)
         for (int u = 0; u < len; u++) {
             for (int y = Geo.PIT; y < Geo.ROOF; y++) {
@@ -83,7 +85,7 @@ final class Hall {
             }
         }
         // 2. belt courses that stand proud of the wall
-        belt(c, len);
+        belt(c, len, end);
         // 3. ribs and corner pilasters
         int[] ribs = end ? RIBS_END : RIBS_SIDE;
         for (int u : ribs) {
@@ -93,10 +95,20 @@ final class Hall {
         }
         pilaster(c, 1);
         pilaster(c, len - 2);
+        // 4. catwalks: the guard ring and the two pit levels
+        catwalk(c, len, Geo.RING, false, ribs);
+        catwalk(c, len, PIT_CAT_A, true, ribs);
+        catwalk(c, len, PIT_CAT_B, true, ribs);
+        // 5. ladders in the pit (floor -> level A -> level B), not reaching the platforms
+        int u1 = end ? 16 : 22, u2 = end ? 73 : 64;
+        ladder(c, u1, Geo.PIT + 3, PIT_CAT_A + 1);
+        ladder(c, u2, PIT_CAT_A + 1, PIT_CAT_B + 1);
+        // 6. banners, balcony, exit
+        WallArt.decorate(c, len, wall);
     }
 
-    /** Base/cornice bands (one block proud of the face) and the pink horizon strip at deck level. */
-    private static void belt(BuildContext c, int len) {
+    /** Base/cornice bands (one block proud of the face) and catwalk support beams. */
+    private static void belt(BuildContext c, int len, boolean end) {
         for (int u = 0; u < len; u++) {
             // plinth cap of the pit floor
             c.set(u, Geo.PIT + 1, 1, Pal.BLK);
@@ -104,36 +116,33 @@ final class Hall {
             // girder under the deck level
             c.set(u, Geo.DECK - 2, 1, Pal.PBSB);
             c.set(u, Geo.DECK - 1, 1, Pal.BLK);
-            // hall base band
-            c.set(u, Geo.DECK + 1, 1, Pal.BLK);
-            c.set(u, Geo.DECK + 2, 1, Pal.PBS);
-            // beam carrying the guard ring
-            c.set(u, Geo.RING - 1, 1, Pal.BLK);
-            c.set(u, Geo.RING - 1, 2, Pal.BLK);
+            // hall base band (not where a platform stands against the wall: u 33..56 on the end walls)
+            if (!(end && u >= 33 && u <= 56)) {
+                c.set(u, Geo.DECK + 1, 1, Pal.BLK);
+                c.set(u, Geo.DECK + 2, 1, Pal.PBS);
+            }
+            // beams carrying the catwalks
+            for (int y : new int[]{Geo.RING - 1, PIT_CAT_A - 1, PIT_CAT_B - 1}) {
+                c.set(u, y, 1, Pal.BLK);
+                c.set(u, y, 2, Pal.BLK);
+            }
             // top cornice
             c.set(u, Geo.ROOF - 1, 1, Pal.BLK);
             c.set(u, Geo.ROOF - 2, 1, Pal.PBS);
         }
-        // pit catwalk support beams
-        for (int u = 0; u < len; u++) {
-            c.set(u, PIT_CAT_A - 1, 1, Pal.BLK);
-            c.set(u, PIT_CAT_A - 1, 2, Pal.BLK);
-            c.set(u, PIT_CAT_B - 1, 1, Pal.BLK);
-            c.set(u, PIT_CAT_B - 1, 2, Pal.BLK);
-        }
     }
+
+    private static final int[][] SEGS = {
+            {Geo.PIT + 3, PIT_CAT_A - 3},
+            {PIT_CAT_A + 4, PIT_CAT_B - 3},
+            {PIT_CAT_B + 4, Geo.DECK - 3},
+            {Geo.DECK + 3, Geo.RING - 3},
+            {Geo.RING + 4, Geo.ROOF - 3}
+    };
 
     private static void rib(BuildContext c, int u, boolean pitOnly) {
         int top = pitOnly ? Geo.DECK - 3 : Geo.ROOF - 3;
-        // continuous except where the catwalks pass: ribs stop 2 below a catwalk beam and resume above its headroom
-        int[][] segs = {
-                {Geo.PIT + 3, PIT_CAT_A - 3},
-                {PIT_CAT_A + 4, PIT_CAT_B - 3},
-                {PIT_CAT_B + 4, Geo.DECK - 3},
-                {Geo.DECK + 3, Geo.RING - 3},
-                {Geo.RING + 4, Geo.ROOF - 3}
-        };
-        for (int[] s : segs) {
+        for (int[] s : SEGS) {
             int y0 = s[0], y1 = Math.min(s[1], top);
             if (y1 < y0) {
                 continue;
@@ -151,16 +160,50 @@ final class Hall {
     }
 
     private static void pilaster(BuildContext c, int u) {
-        int[][] segs = {
-                {Geo.PIT + 3, PIT_CAT_A - 3},
-                {PIT_CAT_A + 4, PIT_CAT_B - 3},
-                {PIT_CAT_B + 4, Geo.DECK - 3},
-                {Geo.DECK + 3, Geo.RING - 3},
-                {Geo.RING + 4, Geo.ROOF - 3}
-        };
-        for (int[] s : segs) {
+        for (int[] s : SEGS) {
             c.fill(u - 1, s[0], 1, u + 1, s[1], 3, Pal.BLK);
             c.fill(u - 1, s[0], 1, u - 1, s[1], 1, Pal.GRY);
+        }
+    }
+
+    // ------------------------------------------------------------------ catwalks and ladders
+
+    /**
+     * A 4 wide catwalk along the wall (local z = 1..4) at floor layer y: plated floor with a dashed glow line, a
+     * rail on the open edge (z = 4) that stops 4 blocks before each corner (the corner squares stay open) with a
+     * corner post, support braces under the floor at the ribs.
+     */
+    private static void catwalk(BuildContext c, int len, int y, boolean pit, int[] ribs) {
+        for (int u = 0; u < len; u++) {
+            c.set(u, y, 1, Pal.DST);
+            c.set(u, y, 2, Pal.DSP);
+            c.set(u, y, 3, Pal.DSP);
+            c.set(u, y, 4, Pal.DST);
+            if (u >= 4 && u <= len - 5) {
+                c.set(u, y + 1, 4, Pal.BARS);
+                c.set(u, y + 2, 4, Pal.BARS);
+            }
+        }
+        for (int u = 2; u < len - 2; u += 4) {
+            c.set(u, y, 2, pit ? Pal.PINK_LIGHT : Pal.WHITE_LIGHT);
+        }
+        for (int u = 4; u <= len - 5; u += 7) {
+            c.fill(u, y + 1, 4, u, y + 3, 4, Pal.BLK);
+        }
+        for (int u : new int[]{3, len - 4}) {
+            c.fill(u, y + 1, 4, u, y + 3, 4, Pal.BLK);
+            c.set(u, y + 3, 4, Pal.PBS);
+        }
+        for (int u : ribs) {
+            c.line(u, y - 6, 1, u, y - 1, 4, Pal.BLK);
+        }
+        c.line(1, y - 6, 1, 1, y - 1, 4, Pal.BLK);
+        c.line(len - 2, y - 6, 1, len - 2, y - 1, 4, Pal.BLK);
+    }
+
+    private static void ladder(BuildContext c, int u, int y0, int y1) {
+        for (int y = y0; y <= y1; y++) {
+            c.set(u, y, 1, Pal.ladder("south"));
         }
     }
 
@@ -178,29 +221,23 @@ final class Hall {
                 default -> Pal.BLK;
             };
         }
-        if (y < Geo.DECK) { // pit wall: ribbed, weathered, darker with depth
-            boolean seamV = Math.floorMod(u, 8) == 0;
-            boolean seamH = Math.floorMod(y + 25, 13) == 0;
-            if (seamV || seamH) {
+        if (y < Geo.DECK) { // pit wall: plated, weathered, darker with depth
+            int pu = Math.floorDiv(u, 7), py = Math.floorDiv(y + 25, 13);
+            if (Math.floorMod(u, 7) == 0 || Math.floorMod(y + 25, 13) == 0) {
                 return Pal.BLK;
             }
             int deep = Math.max(0, Math.min(100, (y - Geo.PIT) * 100 / 70));
-            if (r < 34 - deep / 3) {
-                return Pal.BLK;
+            int tone = Pal.hash(pu, py, 71) % 100;
+            if (tone < 30 - deep / 4) {
+                return r < 85 ? Pal.BLK : Pal.DSBC;
             }
-            if (r < 52) {
-                return Pal.DSB;
+            if (tone < 55) {
+                return r < 82 ? Pal.DSB : (r < 92 ? Pal.DSBC : Pal.BLK);
             }
-            if (r < 62) {
-                return Pal.DSBC;
+            if (tone < 78) {
+                return r < 85 ? Pal.DS : Pal.DSB;
             }
-            if (r < 74) {
-                return Pal.DS;
-            }
-            if (r < 88) {
-                return Pal.DST;
-            }
-            return Pal.BS;
+            return r < 85 ? Pal.DST : Pal.DSC;
         }
         if (y == Geo.DECK) {
             return Pal.PINK_LIGHT; // horizon strip at deck level
@@ -211,23 +248,16 @@ final class Hall {
         if (y >= Geo.ROOF - 3) { // cornice with a pink lip
             return y == Geo.ROOF - 3 ? Pal.PINK_LIGHT : Pal.BLK;
         }
-        // hall wall: gray concrete panels, vertical seams every 5, weathering
-        boolean seam = Math.floorMod(u, 5) == 0;
-        if (seam) {
+        // hall wall: plates of 5 x 10 with black seams, four tones
+        int yy = y - Geo.DECK - 4;
+        if (Math.floorMod(u, 5) == 0 || Math.floorMod(yy, 10) == 0) {
             return Pal.BLK;
         }
-        if (y >= Geo.RING - 2 && y <= Geo.RING + 3) {
-            return r < 55 ? Pal.DST : Pal.DSP;
+        int tone = Pal.hash(Math.floorDiv(u, 5), Math.floorDiv(yy, 10), 91) % 100;
+        String base = tone < 50 ? Pal.GRY : (tone < 72 ? Pal.DST : (tone < 88 ? Pal.DSP : Pal.BLK));
+        if (r < 5) {
+            return base.equals(Pal.GRY) ? Pal.DST : Pal.GRY;
         }
-        if (r < 12) {
-            return Pal.BLK;
-        }
-        if (r < 24) {
-            return Pal.DST;
-        }
-        if (r < 30) {
-            return Pal.DSP;
-        }
-        return Pal.GRY;
+        return base;
     }
 }

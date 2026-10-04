@@ -99,47 +99,59 @@ public final class Walls {
     // ---------------------------------------------------------------------------------------------
     // windows
 
-    private static boolean inOpening(int dx, int y) {
+    /** Opening mask of an arched window {@code h} rows tall, 5 wide; dy counted from the bottom row. */
+    private static boolean inOpening(int dx, int dy, int h) {
         int ax = Math.abs(dx);
-        if (y >= 6 && y <= 13) {
+        if (dy < 0 || dy >= h) {
+            return false;
+        }
+        if (dy <= h - 3) {
             return ax <= 2;
         }
-        if (y == 14) {
+        if (dy == h - 2) {
             return ax <= 1;
         }
-        return y == 15 && ax == 0;
+        return ax == 0;
     }
 
-    /** Tall arched window: warm glowing backing, glass panes, white frame, quartz sill. */
     private static void window(BuildContext c, int mid) {
+        window(c, mid, 6, 10, 0);
+    }
+
+    /**
+     * Tall arched window: warm glowing backing, glass panes, white frame, quartz sill. {@code base} is the y of the
+     * bottom opening row, {@code h} the opening height, {@code plane} shifts the planes (0 = long wall layout:
+     * opening plane z = -1, glass -2, backing -3; 1 = the rear wall whose plaster plane is z = 0).
+     */
+    public static void window(BuildContext c, int mid, int base, int h, int plane) {
+        int zo = -1 + plane;           // opening / frame plane
         for (int dx = -4; dx <= 4; dx++) {
-            for (int y = 5; y <= 17; y++) {
-                boolean open = inOpening(dx, y);
-                if (open) {
-                    c.air(mid + dx, y, -1);
-                    boolean mullion = dx == 0 || y == 9 || y == 12;
-                    c.set(mid + dx, y, -2, mullion ? Pal.WHITE_PANE : Pal.GLASS_PANE);
-                    c.set(mid + dx, y, -3, Pal.WARM_PANEL);
+            for (int dy = -1; dy <= h + 1; dy++) {
+                int y = base + dy;
+                if (inOpening(dx, dy, h)) {
+                    c.air(mid + dx, y, zo);
+                    boolean mullion = dx == 0 || dy == 3 || dy == 6;
+                    c.set(mid + dx, y, zo - 1, mullion ? Pal.WHITE_PANE : Pal.GLASS_PANE);
+                    c.set(mid + dx, y, zo - 2, Pal.WARM_PANEL);
                     continue;
                 }
-                // white frame ring (8-neighbourhood of the opening)
                 boolean ring = false;
                 for (int ox = -1; ox <= 1 && !ring; ox++) {
                     for (int oy = -1; oy <= 1; oy++) {
-                        if (inOpening(dx + ox, y + oy)) {
+                        if (inOpening(dx + ox, dy + oy, h)) {
                             ring = true;
                             break;
                         }
                     }
                 }
                 if (ring) {
-                    boolean key = dx == 0 && y == 16;
-                    c.set(mid + dx, y, -1, key ? Pal.OCHRE : Pal.QUARTZ);
+                    boolean key = dx == 0 && dy == h;
+                    c.set(mid + dx, y, zo, key ? Pal.OCHRE : Pal.QUARTZ);
                 }
             }
         }
         for (int dx = -3; dx <= 3; dx++) {
-            c.set(mid + dx, 5, 0, Pal.slab("quartz", false));
+            c.set(mid + dx, base - 1, zo + 1, Pal.slab("quartz", false));
         }
     }
 

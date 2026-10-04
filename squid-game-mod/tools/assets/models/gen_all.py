@@ -12,13 +12,38 @@ plus tools/assets/models/contestant_bones.json (+ *_anim_meta.json used by the v
 Everything is deterministic (fixed hash-based noise, no RNG state)."""
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import time
 
 from common import *  # noqa: F401,F403
+from lib import jsonfmt
 import gen_contestant
 import gen_guard
+
+REFERENCE_SPEEDS = {"walk": 2.4, "run": 6.0}     # blocks/s, docs/ASSET_CONTRACT.md
+
+
+def write_gait_info() -> None:
+    out = {
+        "_comment": "Ground speed (blocks/s, at renderer scale 0.9375) at which the stance feet of each locomotion "
+                    "cycle stay planted when played at 1.0x. Suggested controller speed = actual_blocks_s / planted_blocks_s.",
+    }
+    for model in ("contestant", "guard"):
+        try:
+            meta = json.load(open(HERE / f"{model}_anim_meta.json"))
+        except OSError:
+            continue
+        g = {}
+        for name, d in meta.get("info", {}).items():
+            if isinstance(d, dict) and "planted_blocks_s" in d:
+                g[name] = dict(d)
+                if name in REFERENCE_SPEEDS:
+                    g[name]["contract_reference_blocks_s"] = REFERENCE_SPEEDS[name]
+                    g[name]["speed_multiplier_at_reference"] = round(REFERENCE_SPEEDS[name] / d["planted_blocks_s"], 2)
+        out[model] = g
+    jsonfmt.write(str(HERE / "gait_info.json"), out)
 
 
 def main() -> int:
@@ -26,6 +51,7 @@ def main() -> int:
     ensure_dirs()
     gen_contestant.main()
     gen_guard.main()
+    write_gait_info()
     import validate_models
     rc = validate_models.main()
     if "--preview" in sys.argv:

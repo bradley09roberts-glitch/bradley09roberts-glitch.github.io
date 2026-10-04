@@ -2,7 +2,13 @@
 """Software previews of the doll (reads the generated resource files, so it previews exactly what ships).
 
     python3 preview.py                         # regenerate every sheet in ./preview
-    python3 preview.py pose --anim idle_tree --t 1.3 --view 3/4 --out /tmp/x.png
+    python3 preview.py pose --anim idle_tree --t 1.3 --view "field 3/4" --out /tmp/x.png
+
+Orientation (verified in game): at entity yaw 0 the model's front (-Z) looks at the TREE (world +Z), the players / field
+are at world -Z.  So every preview is rendered the way the players see her by default: the camera stands on the FIELD
+side (view "field", azimuth 180 in the model's own space = behind the model) and the doll in her rest pose / idle_tree
+shows her back (back of the head, back of the dress).  Her face (head yaw 180) shows up in turn_to_players /
+idle_players / scan_players / lock_on.  View "tree" is the opposite camera (looking at the doll's front).
 """
 from __future__ import annotations
 
@@ -28,9 +34,19 @@ PRE = "animation.doll."
 EYES_ON = {"idle_players", "scan_players", "lock_on"}   # animations previewed with the glowing eyes
 SIZE_F = (232, 330)
 
+# name: (azimuth in the model's space, elevation).  Azimuth 0 = camera in front of the model's face side (= the tree
+# side in game), 180 = behind the model = the FIELD side where the players stand, +90 = the doll's right side.
 VIEWS = {
-    "front": (0, 4), "3/4": (35, 10), "right": (90, 4), "back": (180, 4), "left": (-90, 4), "top": (0, 89),
+    "field": (180, 4),            # what the players see (default)
+    "field 3/4": (145, 10),       # players' view from a bit to the doll's right
+    "field 3/4 l": (215, 10),     # ... and from a bit to the doll's left
+    "tree": (0, 4),               # the doll's front, seen from the tree wall
+    "right": (90, 4), "left": (-90, 4),
+    "top": (0, 89),               # tree side up, field side down
+    # aliases of the model-space names
+    "front": (0, 4), "back": (180, 4), "3/4": (145, 10),
 }
+DEFAULT_VIEW = "field"
 
 
 def load():
@@ -48,9 +64,9 @@ def make_pose(model, anims, name, t, eyes_on):
     return pose
 
 
-def render_view(model, tex, glow, pose, view="front", size=SIZE_F, scale=2.0, night=False, center=(0, 72, 0), ssaa=2,
+def render_view(model, tex, glow, pose, view=DEFAULT_VIEW, size=SIZE_F, scale=2.0, night=False, center=(0, 72, 0), ssaa=2,
                 elevation=None, azimuth=None, mode="ortho", distance=900.0):
-    az, el = VIEWS.get(view, (0, 4))
+    az, el = VIEWS.get(view, VIEWS[DEFAULT_VIEW])
     if azimuth is not None:
         az = azimuth
     if elevation is not None:
@@ -85,7 +101,12 @@ def _plot(ts, series, title, size=(1400, 240), ylim=None):
     return img
 
 
-def sheet_for(model, anims, tex, glow, name, n=None, times=None, top_row=True):
+SIDE_ROW = {"dormant", "wake", "idle_tree", "lock_on"}      # animations whose head pitch / nod needs a side view too
+
+
+def sheet_for(model, anims, tex, glow, name, n=None, times=None, top_row=True, side_row=None):
+    if side_row is None:
+        side_row = name in SIDE_ROW
     a = anims[PRE + name]
     L = a.length_ticks / 20.0
     eyes = name in EYES_ON
@@ -99,15 +120,21 @@ def sheet_for(model, anims, tex, glow, name, n=None, times=None, top_row=True):
     frames, labels = [], []
     for t in times:
         p = make_pose(model, anims, name, min(t, L - 1e-4) if a.loop is not True else t, eyes)
-        frames.append(render_view(model, tex, glow, p, "front", night=eyes))
-        labels.append("%s  t=%.2fs" % (name, t))
+        frames.append(render_view(model, tex, glow, p, "field", night=eyes))
+        labels.append("t=%.2fs" % t)
     if top_row:
         for t in times:
             p = make_pose(model, anims, name, min(t, L - 1e-4) if a.loop is not True else t, eyes)
             frames.append(render_view(model, tex, glow, p, "top", size=SIZE_F, scale=3.4, center=(0, 100, 0), night=eyes))
-            labels.append("top")
+            labels.append("top (tree up, field down)")
+    if side_row:
+        for t in times:
+            p = make_pose(model, anims, name, min(t, L - 1e-4) if a.loop is not True else t, eyes)
+            frames.append(render_view(model, tex, glow, p, "right", night=eyes))
+            labels.append("right side (tree on the right)")
     cols = len(times)
-    sheet = rd.contact_sheet(frames, labels, cols=cols, title="%s  (length %.2fs, loop=%s)" % (PRE + name, L, a.loop))
+    sheet = rd.contact_sheet(frames, labels, cols=cols, title="%s  (length %.2fs, loop=%s)  -  rows: players' view (camera on the field side)%s%s" % (
+        PRE + name, L, a.loop, ", top view (tree up)" if top_row else "", ", right side (tree on the right)" if side_row else ""))
     return sheet
 
 
@@ -148,29 +175,46 @@ def atlas_preview(tex, glow):
 def make_all(only=None):
     OUT.mkdir(exist_ok=True)
     model, anims, tex, glow = load()
-    # 1. turnaround, eyes off (day) and eyes on (night)
-    pose = make_pose(model, anims, None, 0, False)
+    # 1. turnaround.  Rest pose = idle_tree(0): the whole doll looks at the tree, the players see her back.
+    #    Then the same doll with the head turned to the field (idle_players): her face, eyes off (day) and eyes on (night).
+    rest = make_pose(model, anims, None, 0, False)
+    pl_off = make_pose(model, anims, "idle_players", 0, False)
+    pl_on = make_pose(model, anims, "idle_players", 0, True)
+    mid = make_pose(model, anims, "turn_to_players", 0.5, False)
     fr, lb = [], []
-    for v in ("front", "3/4", "right", "back", "left", "top"):
-        fr.append(render_view(model, tex, glow, pose, v, scale=2.0 if v != "top" else 3.0, center=(0, 72, 0) if v != "top" else (0, 100, 0)))
-        lb.append(v + " (eyes off, day)")
-    pose_on = make_pose(model, anims, None, 0, True)
-    for v in ("front", "3/4"):
-        fr.append(render_view(model, tex, glow, pose_on, v, night=True))
-        lb.append(v + " (eyes on, night)")
-    rd.contact_sheet(fr, lb, cols=4, title="doll - turnaround (rest pose, no animation)").save(OUT / "00_turnaround.png")
-    # 2. face close-ups
+
+    def add(pose, view, label, night=False, **kw):
+        kw.setdefault("scale", 2.0)
+        fr.append(render_view(model, tex, glow, pose, view, night=night, **kw))
+        lb.append(label)
+
+    add(rest, "field", "back (rest = idle_tree)")
+    add(rest, "field 3/4", "back 3/4 (from her right)")
+    add(rest, "right", "right side (tree on the right)")
+    add(rest, "tree", "front (seen from the tree)")
+    add(rest, "left", "left side")
+    add(rest, "top", "top, rest (tree up)", scale=3.0, center=(0, 100, 0))
+    add(pl_off, "top", "top, head to the field", scale=3.0, center=(0, 100, 0))
+    add(mid, "field", "mid-turn (turn_to_players .5s)")
+    add(pl_off, "field", "face: idle_players, day")
+    add(pl_off, "field 3/4", "face 3/4, day")
+    add(pl_on, "field", "face, eyes on, night", night=True)
+    add(pl_on, "field 3/4 l", "face 3/4 (her left), eyes on", night=True)
+    rd.contact_sheet(fr, lb, cols=4, title="doll - turnaround as the PLAYERS see it (camera on the field side, world -Z looking at +Z)").save(OUT / "00_turnaround.png")
+    # 2. head close-ups: face (head turned to the field) and the back of the head (rest pose), from the field side
     fr, lb = [], []
-    for nm, p, night, v, az in (("eyes off", pose, False, "front", 0), ("eyes on (night)", pose_on, True, "front", 0), ("eyes on 3/4 (night)", pose_on, True, "front", 28),
-                                ("eyes off side", pose, False, "right", 90)):
-        fr.append(render_view(model, tex, glow, p, v, size=(420, 420), scale=9.0, center=(0, 114, 0), night=night, azimuth=az, elevation=3))
+    for nm, p, night, v in (("face, eyes off (day)", pl_off, False, "field"), ("face, eyes on (night)", pl_on, True, "field"),
+                            ("face 3/4, eyes on (night)", pl_on, True, "field 3/4"), ("face, right profile", pl_off, False, "right"),
+                            ("back of the head (rest / idle_tree)", rest, False, "field"), ("back of the head 3/4", rest, False, "field 3/4"),
+                            ("rest: face seen from the tree side", rest, False, "tree"), ("rest: right profile", rest, False, "right")):
+        fr.append(render_view(model, tex, glow, p, v, size=(420, 420), scale=9.0, center=(0, 114, 0), night=night, elevation=3))
         lb.append(nm)
-    rd.contact_sheet(fr, lb, cols=4, title="doll - head close-ups").save(OUT / "01_face_closeup.png")
+    rd.contact_sheet(fr, lb, cols=4, title="doll - head close-ups (camera on the field side unless noted)").save(OUT / "01_face_closeup.png")
     # 3. far view simulation (what a player sees from 100 / 50 / 25 blocks; nearest sampling, no AA)
     fr, lb = [], []
     for dist, scale in ((100, 0.55), (50, 1.1), (25, 2.2)):
-        for nm, p, night in (("eyes off", pose, False), ("eyes on", pose_on, True)):
-            im = render_view(model, tex, glow, p, "front", size=(int(120 * max(scale, 0.55)) // 1, int(160 * max(scale, 0.55)) // 1), scale=scale,
+        for nm, p, night in (("back (idle_tree)", rest, False), ("face, eyes on", pl_on, True)):
+            im = render_view(model, tex, glow, p, "field", size=(int(120 * max(scale, 0.55)) // 1, int(160 * max(scale, 0.55)) // 1), scale=scale,
                              center=(0, 72, 0), night=night, ssaa=1, elevation=0)
             # upscale for viewing only
             k = max(1, int(round(4.0 / max(scale, 0.5))))
@@ -179,7 +223,7 @@ def make_all(only=None):
     w = max(i.size[0] for i in fr)
     h = max(i.size[1] for i in fr)
     fr = [i if i.size == (w, h) else _pad(i, (w, h)) for i in fr]
-    rd.contact_sheet(fr, lb, cols=len(fr), title="doll - simulated distance views (1 texel = 1/16 block, no mip-maps, no AA)").save(OUT / "02_far_view.png")
+    rd.contact_sheet(fr, lb, cols=len(fr), title="doll - simulated distance views from the field (1 texel = 1/16 block, no mip-maps, no AA)").save(OUT / "02_far_view.png")
     atlas_preview(tex, glow).save(OUT / "03_texture_atlas.png")
     # 4. animations
     names = [k[len(PRE):] for k in anims]
@@ -217,7 +261,7 @@ def main(argv=None):
     p = sub.add_parser("pose")
     p.add_argument("--anim", default=None)
     p.add_argument("--t", type=float, default=0.0)
-    p.add_argument("--view", default="front")
+    p.add_argument("--view", default=DEFAULT_VIEW, help="one of %s" % ", ".join(VIEWS))
     p.add_argument("--eyes-on", action="store_true")
     p.add_argument("--night", action="store_true")
     p.add_argument("--scale", type=float, default=2.0)

@@ -20,7 +20,7 @@ final class Court {
         int style = (k * 7 + (k >> 2)) % 3;
         floor(c, s, style);
         walls(c);
-        gate(c, k);
+        gate(c, String.valueOf(k + 1));
         lamps(c);
         paint(c);
         table(c, k);
@@ -65,7 +65,7 @@ final class Court {
 
     // ------------------------------------------------------------------ walls and gate
 
-    private static void walls(BuildContext c) {
+    static void walls(BuildContext c) {
         for (int side = -1; side <= 1; side += 2) {
             int x = 4 * side;
             int z1 = -1, z2 = Layout.COURT_LEN - 1;
@@ -83,7 +83,7 @@ final class Court {
         }
     }
 
-    private static void gate(BuildContext c, int k) {
+    static void gate(BuildContext c, String label) {
         for (int side = -1; side <= 1; side += 2) {
             int x = 3 * side;
             c.fill(x, 1, -1, x, 2, -1, Mat.SB);
@@ -102,7 +102,7 @@ final class Court {
         c.set(-2, 4, -1, Mat.lantern(true));
         c.set(2, 4, -1, Mat.lantern(true));
         // number plaque on the lintel (faces the alley)
-        c.text(0.5, 5.5, -1.03, String.valueOf(k + 1), "#FFE8A0", 2.4f, 180f, false);
+        c.text(0.5, 5.5, -1.03, label, "#FFE8A0", label.length() > 3 ? 1.4f : 2.4f, 180f, false);
     }
 
     private static void lamps(BuildContext c) {

@@ -17,7 +17,10 @@ public final class FinalPlan {
         Gallery.build(c);
         Gate.build(c);
         School.build(c);
+        Playground.build(c);
+        Towers.build(c);
         Court.paint(c);
         Court.markers(c);
+        Guards.markers(c);
     }
 }

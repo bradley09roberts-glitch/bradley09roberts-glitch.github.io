@@ -180,8 +180,11 @@ def build():
 
     # ------------------------------------------------------------------ head, cheeks, nose
     hw = HEAD_W / 2.0
-    mb.box("head", (-hw, HEAD_Y0, -HEAD_D / 2), (HEAD_W, HEAD_H, HEAD_D), front="face", bottom="skin_dark",
-           back=False, left=False, right=False, top=False)
+    # The players stand on the ground and see her from BEHIND and BELOW most of the time (the model front looks at the
+    # tree), so the head's underside / back / side strips below the hair (y 100..101) must not show bare skin or the
+    # inside of the face: they are dark like the hair above (the part under the chin reads as the chin's shadow).
+    mb.box("head", (-hw, HEAD_Y0, -HEAD_D / 2), (HEAD_W, HEAD_H, HEAD_D), front="face", bottom="hair_dark",
+           back="hair_dark", left="hair_dark", right="hair_dark", top=False)
     cheek = ((-13.0, 102.5, -16.9), (5, 4, 0.9))
     mb.box("head", cheek[0], cheek[1], front="cheek", left="skin_dark", right=False, top=False, bottom="skin_dark", back=False)
     mb.box("head", mx(*cheek), cheek[1], front="cheek", left=False, right="skin_dark", top=False, bottom="skin_dark", back=False)

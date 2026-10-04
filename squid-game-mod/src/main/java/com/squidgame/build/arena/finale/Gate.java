@@ -1,7 +1,11 @@
 package com.squidgame.build.arena.finale;
 
+import com.squidgame.build.BlockBuffer;
 import com.squidgame.build.BuildContext;
+import com.squidgame.build.Marker;
 import com.squidgame.build.arena.prefab.WaitingRoomPrefab;
+
+import java.util.ArrayList;
 
 import static com.squidgame.build.arena.finale.Layout.*;
 
@@ -21,6 +25,18 @@ final class Gate {
         // the room: gate wall at z = GATE_Z, room extends towards +Z, floor block at y = ROOM_DY
         c.at(0, ROOM_DY, GATE_Z, 2, () -> WaitingRoomPrefab.build(c,
                 new WaitingRoomPrefab.Spec(41, 22, 9, "THE FINAL", "ATTACKERS REACH THE HEAD CIRCLE - DEFENDERS HOLD THE LINE", 144)));
+
+        // the prefab puts its two worker posts on the block edge between two bench cells; rotated by half a turn they land on
+        // a bench slab, so free the cells of any guard post inside the room
+        for (Marker m : new ArrayList<>(c.buffer().markers("guard.post"))) {
+            if (m.z() > c.originZ() + GATE_Z) {
+                for (int dy = 0; dy < 2; dy++) {
+                    if (c.buffer().isSolidSet(m.bx(), m.by() + dy, m.bz())) {
+                        c.buffer().set(m.bx(), m.by() + dy, m.bz(), BlockBuffer.AIR);
+                    }
+                }
+            }
+        }
 
         final int d = ROOM_DY;
         // open the rim wall for the ramp

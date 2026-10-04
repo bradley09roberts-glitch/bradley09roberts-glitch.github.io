@@ -23,6 +23,7 @@ final class House {
         String timber = Mat.LOG_S;
         Roofs.Family roof = Roofs.TILE;
         int number = 1;
+        String label = null;         // plaque text instead of the number
         long seed = 1;
         boolean backEave = true;     // roof overhangs the back wall (false against the perimeter wall)
         boolean chimney = false;
@@ -88,7 +89,8 @@ final class House {
         }
         c.set(0, y + 2, 1, Mat.PLANKS);
         if (s.plaque) {
-            c.text(0.5, y + 2.5, 0.97, String.valueOf(s.number), "#F6E7B0", 1.6f, 180f, false);
+            String txt = s.label != null ? s.label : String.valueOf(s.number);
+            c.text(0.5, y + 2.5, 0.97, txt, "#F6E7B0", txt.length() > 3 ? 0.9f : 1.6f, 180f, false);
         }
     }
 

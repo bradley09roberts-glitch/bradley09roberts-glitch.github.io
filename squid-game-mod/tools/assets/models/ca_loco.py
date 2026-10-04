@@ -65,24 +65,26 @@ def build(ctx: Ctx) -> None:
     a.close_loop()
 
     # ============================== walk ===========================================
-    g = Gait(cycle=1.0, d_front=6.2, d_back=5.2, stance=0.58, lift=2.2, strike_pitch=10.0, toeoff_pitch=-26.0)
+    # The loop is 1.0 s and contains TWO gait cycles (0.5 s each): with 12 px legs a stance foot can only sweep
+    # ~12 px, which plants it at the contract's reference speed of 2.4 blocks/s only at this cadence (4 steps/s).
+    g = Gait(cycle=0.5, d_front=5.4, d_back=6.9, stance=0.60, lift=1.9, strike_pitch=11.0, toeoff_pitch=-28.0)
     a = ctx.new("walk", 1.0, LOOP)
     st = {}
-    a.cycle(lambda ph: gait_pose(ctx, g, ph, st, lean=3.0, arm_amp=20, elbow=13, twist=4, shoulder_counter=8,
-                                 sway=0.55, reach=9.2), 16)
+    a.cycle(lambda ph: gait_pose(ctx, g, (2 * ph) % 1.0, st, lean=3.0, arm_amp=15, elbow=12, twist=3.5,
+                                 shoulder_counter=7, sway=0.5, reach=9.2, roll=1.0), 16)
     a.close_loop()
-    ctx.info["walk"] = _ps(ctx, st, g)
+    ctx.info["walk"] = _ps(ctx, st, g, span=1.0)
 
     # ============================== run ============================================
-    g = Gait(cycle=0.6, d_front=4.8, d_back=8.0, stance=0.40, lift=5.5, strike_pitch=14.0, toeoff_pitch=-38.0,
-             swing_pitch_mid=-25.0, pelvis_mode="bounce", bounce_strike=-1.2, bounce_mid_stance=-3.0,
-             bounce_off=-1.0, bounce_flight=0.8)
+    g = Gait(cycle=0.6, d_front=5.2, d_back=8.8, stance=0.24, lift=5.8, strike_pitch=14.0, toeoff_pitch=-38.0,
+             swing_pitch_mid=-26.0, pelvis_mode="bounce", bounce_strike=-1.2, bounce_mid_stance=-3.2,
+             bounce_off=-1.0, bounce_flight=1.0)
     a = ctx.new("run", 0.6, LOOP)
     st = {}
     a.cycle(lambda ph: gait_pose(ctx, g, ph, st, lean=12.0, arm_amp=42, elbow=85, twist=7, shoulder_counter=12,
-                                 sway=0.5, arm_out=7, arm_bias=6, roll=1.0, elbow_gain=0.25), 12)
+                                 sway=0.5, arm_out=7, arm_bias=6, roll=1.0, elbow_gain=0.25), 24)
     a.close_loop()
-    ctx.info["run"] = _ps(ctx, st, g)
+    ctx.info["run"] = _ps(ctx, st, g, span=0.6)
 
     # ============================== sneak_walk =====================================
     g = Gait(cycle=1.2, d_front=4.4, d_back=3.8, stance=0.66, lift=1.8, strike_pitch=8.0, toeoff_pitch=-22.0,
@@ -93,7 +95,7 @@ def build(ctx: Ctx) -> None:
                                  sway=0.5, reach=8.2, hip_cap=9.7, head_nod=5.0, arm_out=14, arm_bias=22,
                                  roll=1.6, elbow_gain=0.3), 16)
     a.close_loop()
-    ctx.info["sneak_walk"] = _ps(ctx, st, g)
+    ctx.info["sneak_walk"] = _ps(ctx, st, g, span=1.2)
 
 
     # ============================== idle_nervous ===================================

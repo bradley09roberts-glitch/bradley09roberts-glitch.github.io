@@ -309,8 +309,13 @@ def count_pauses(ts, ys, lo, hi, thresh_deg_per_s=25.0, min_len=0.05):
     return pauses
 
 
+TREE_YAW, PLAYERS_YAW = 0.0, 180.0     # head yaw (deg) facing the tree / the field; the body ALWAYS faces the tree
+
+
 def check_turns(model, parsed):
-    for name, start, end in (("turn_to_players", 180.0, 0.0), ("turn_to_tree", 0.0, 180.0)):
+    """In the model's rest pose the whole doll faces the tree (GeckoLib maps the model front, -Z, to world +Z at entity
+    yaw 0) and shows her back to the players: the head faces the tree at yaw 0 and the field at yaw 180."""
+    for name, start, end in (("turn_to_players", TREE_YAW, PLAYERS_YAW), ("turn_to_tree", PLAYERS_YAW, TREE_YAW)):
         a = parsed.get(PRE + name)
         if a is None:
             continue
@@ -329,24 +334,51 @@ def check_turns(model, parsed):
         ring_travel = float(ring.max() - ring.min())
         if ring_travel < 60:
             err("%s: cog ring must visibly rotate (travel %.0f deg)" % (name, ring_travel))
+        if abs(ring[0] - 0.5 * start) > 0.1 or abs(ring[-1] - 0.5 * end) > 0.1:
+            err("%s: cog ring should go from %.0f to %.0f (half the head angle), is %.1f -> %.1f" % (name, 0.5 * start, 0.5 * end, ring[0], ring[-1]))
         # monotonic apart from wind-up / overshoot settle: no more than 8 deg of backwards motion before the end
         info.append("%s: pauses at %s, overshoot %.1f deg, ring travel %.0f deg" % (
             name, [(round(p[0], 2), round(p[2])) for p in pauses], over, ring_travel))
     a = parsed.get(PRE + "scan_players")
     if a is not None:
         ts, ys, _ = head_yaw_series(model, a)
-        if not (24.0 <= ys.max() <= 27.5 and -27.5 <= ys.min() <= -24.0):
-            err("scan_players: head sweep should reach about +-25 deg, got %.1f..%.1f" % (ys.min(), ys.max()))
+        if not (24.0 <= ys.max() - PLAYERS_YAW <= 27.5 and -27.5 <= ys.min() - PLAYERS_YAW <= -24.0):
+            err("scan_players: head sweep should reach about +-25 deg around %.0f, got %.1f..%.1f" % (PLAYERS_YAW, ys.min(), ys.max()))
     a = parsed.get(PRE + "idle_tree")
     if a is not None:
         ts, ys, _ = head_yaw_series(model, a)
-        if not (170 <= ys.min() and ys.max() <= 190 and abs(np.mean(ys) - 180) < 3):
-            err("idle_tree: head should stay rotated ~180 deg (range %.1f..%.1f)" % (ys.min(), ys.max()))
+        if not (-10 <= ys.min() and ys.max() <= 10 and abs(np.mean(ys) - TREE_YAW) < 3):
+            err("idle_tree: head must face the tree (yaw ~0, back of the head to the field), range %.1f..%.1f" % (ys.min(), ys.max()))
     a = parsed.get(PRE + "idle_players")
     if a is not None:
+        ts, ys, ring = head_yaw_series(model, a)
+        if abs(ys - PLAYERS_YAW).max() > 3.0:
+            err("idle_players: head must face the field rigidly (yaw %.1f..%.1f, expected 180 +- 3)" % (ys.min(), ys.max()))
+        if abs(ring - 0.5 * PLAYERS_YAW).max() > 4.0:
+            err("idle_players: cog ring should sit at ~90 deg (is %.1f..%.1f)" % (ring.min(), ring.max()))
+    a = parsed.get(PRE + "lock_on")
+    if a is not None:
         ts, ys, _ = head_yaw_series(model, a)
-        if abs(ys).max() > 3.0:
-            err("idle_players: head must face the field rigidly (max |yaw| %.1f)" % abs(ys).max())
+        if abs(ys - PLAYERS_YAW).max() > 25.0 or abs(ys[0] - PLAYERS_YAW) > 0.5:
+            err("lock_on: head must snap around the players-facing yaw 180 (yaw %.1f..%.1f)" % (ys.min(), ys.max()))
+    for name in ("dormant", "wake"):
+        a = parsed.get(PRE + name)
+        if a is not None:
+            ts, ys, _ = head_yaw_series(model, a)
+            if abs(ys - TREE_YAW).max() > 25.0:
+                err("%s: head must keep facing the tree (yaw %.1f..%.1f, expected 0 +- 25)" % (name, ys.min(), ys.max()))
+    # the body never turns: nothing but the head and the cog ring (which follows it at half angle) may yaw noticeably
+    for name, a in sorted(parsed.items()):
+        for bone in model.bones:
+            if bone in ("head", "neck_joint", "neck_ring"):
+                continue
+            ba = a.bones.get(bone)
+            if ba is None:
+                continue
+            L = a.length_ticks / 20.0
+            worst = max(abs(sample_bone(model, a, bone, t)[0][1]) for t in np.linspace(0, L, 161))
+            if worst > 12.0:
+                err("%s: bone %s yaws %.1f deg (only the head, neck_joint and neck_ring may turn about Y; the body always faces the tree)" % (name, bone, worst))
 
 
 # ---------------------------------------------------------------------------------------------

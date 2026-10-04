@@ -22,7 +22,7 @@ OPTIONAL = {"contestant": ["hair_buzz", "hair_short", "hair_parted", "hair_curly
                            "hair_bun", "face_0", "face_1", "face_2", "face_3", "face_4", "face_5", "glasses"],
             "guard": ["mask_circle", "mask_triangle", "collar_black"]}
 HAND = {"contestant": ("item_left", "item_right"), "guard": ("item_left", "item_right")}
-AIRBORNE = {"jump_leap", "fall_loop", "celebrate", "celebrate_fist", "knocked_back", "land"}
+AIRBORNE = {"jump_leap", "fall_loop", "celebrate", "celebrate_fist", "knocked_back", "land", "run", "sprint_attack"}
 LYING = {"eliminated_forward", "eliminated_backward", "knocked_down"}
 
 

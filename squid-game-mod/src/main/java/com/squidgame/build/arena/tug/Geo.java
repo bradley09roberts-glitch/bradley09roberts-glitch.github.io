@@ -43,6 +43,11 @@ final class Geo {
     static final int REAR_A = -60;
     static final int DECK_LEN = 53;
 
+    /** First block x of the upper catwalks in the west frame (after the 18 steps of the stairs). */
+    static int CAT_X0() {
+        return -54;
+    }
+
     /** Block x of the d-th block from the gap on the west deck (d=0 is the tip block x=-8). */
     static int xa(int d) {
         return -8 - d;

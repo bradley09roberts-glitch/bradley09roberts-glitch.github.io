@@ -6,13 +6,15 @@
  "info": {
   "walk": {
    "cycle_s": 1.0,
-   "planted_px_s": 19.32,
-   "planted_blocks_s": 1.13
+   "gait_cycle_s": 0.5,
+   "planted_px_s": 41.7,
+   "planted_blocks_s": 2.44
   },
   "run": {
    "cycle_s": 0.6,
-   "planted_px_s": 54.9,
-   "planted_blocks_s": 3.22
+   "gait_cycle_s": 0.6,
+   "planted_px_s": 98.46,
+   "planted_blocks_s": 5.77
   }
  }
 }

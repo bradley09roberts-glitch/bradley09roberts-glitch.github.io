@@ -1,15 +1,24 @@
 """The doll's animations (contract section 1.3).
 
+ORIENTATION (verified in game): at entity yaw 0 GeckoLib maps the model's front (-Z, the face side) to world +Z =
+the TREE, and the players / field are at world -Z.  So in the REST pose (all rotations 0) the whole doll - body, dress,
+face - looks at the tree and shows her BACK to the players, exactly like the show.  Only the HEAD ever swivels:
+
+    TREE    pose : head yaw   0   (face to the tree, back of the head to the field)   dormant, wake, idle_tree
+    PLAYERS pose : head yaw 180   (face to the field)                                  idle_players, scan_players, lock_on
+
+Body / dress / arms / pigtails / ribbon never rotate 180 about Y (the pigtails and the ribbon are children of the head
+and turn with it).  The cog ring (neck_joint) follows the head at half the angle (0 -> 90), the flange (neck_ring) is
+the head's yaw minus the ring's.
+
 Authoring convention (JSON degrees): head rotation = [pitch (+ nod forward), yaw (+ turn to the doll's right),
 roll (+ tilt towards the doll's left)].  All rotation values are OFFSETS from the bind pose stored in the geo
 (only the arms have a bind rotation: 8 deg outward).  Position is in model px (x = doll's left, y up, z back).
 
 Pose anchors - the animations are built so that transitions never pop (validate_doll.py checks all of them):
-  PLAYERS rest = idle_players(0) = turn_to_players(end) = turn_to_tree(start) = lock_on(0) = scan_players(0/end)
   TREE    rest = idle_tree(0)    = turn_to_players(0) = turn_to_tree(end) = wake(end)
+  PLAYERS rest = idle_players(0) = turn_to_players(end) = turn_to_tree(0) = lock_on(0) = scan_players(0 = end)
   DORMANT rest = dormant(0)      = wake(0)
-(the game plays DORMANT -> wake -> idle_tree, so wake ends facing the tree: head lifts, stares at the field for a
-beat, then ratchets round to the tree)
 
 The head is authored by hand (stepped servo moves).  Secondary motion (cog ring that follows the head with a
 mechanical lag, pigtail inertia, tiny body reaction torque) is SIMULATED from the head track with springs and
@@ -24,6 +33,8 @@ import numpy as np
 import anim as an
 from anim import Anim, Track
 
+TREE_YAW = 0.0
+PLAYERS_YAW = 180.0
 PI = math.pi
 TAU = 2 * PI
 
@@ -206,9 +217,9 @@ def head_track(A, yaw_pts, pitch_pts, roll_pts):
 
 
 # ================================================================================================
-# 1. dormant  (loop 6 s): eyes off, head bowed, slumped, tiny sway
+# 1. dormant  (loop 6 s): eyes off, faces the tree like the rest of the show, head bowed, slumped, tiny sway
 # ================================================================================================
-DORM_HEAD = v3(13.0, 0.0, -3.5)
+DORM_HEAD = v3(13.0, 0.0, -7.0)       # bowed (side view) and slumped to one side (what the players see from behind)
 DORM_BODY_X = 1.8
 
 
@@ -230,9 +241,9 @@ def build_dormant(ctx):
 
 
 # ================================================================================================
-# 3. idle_tree (loop 4 s): head turned 180 deg towards the tree, gentle "singing" bob (one nod per syllable)
+# 3. idle_tree (loop 4 s): head (and body) towards the tree = rest pose, back of the head to the field, gentle
+#    "singing" bob (one nod per syllable)
 # ================================================================================================
-TREE_YAW = 180.0
 
 
 def build_idle_tree(ctx):
@@ -255,7 +266,9 @@ def build_idle_tree(ctx):
 
 
 # ================================================================================================
-# 5. idle_players (loop 3 s): rigid, facing the field, tiny sudden micro-movements; eyes pulse
+# 5. idle_players (loop 3 s): head turned 180 deg to the field, rigid, tiny sudden micro-movements; eyes pulse
+#    (a head roll about the body's Z axis is mirrored once the face looks backwards, so the sign is flipped here
+#    and in lock_on / scan_players: the tilt keeps reading the same way from the players' side)
 # ================================================================================================
 def build_idle_players(ctx):
     L = 3.0
@@ -268,7 +281,7 @@ def build_idle_players(ctx):
                  (2.68, v3(0), "easeInOutSine"), (3.0, v3(0), None)]).sampler()
     rol = Track([(0.0, v3(0), None), (1.30, v3(0), None), (1.33, v3(0, 0, 0.6), "easeOutQuad"), (1.50, v3(0, 0, 0.6), None),
                  (1.56, v3(0), "easeInOutSine"), (3.0, v3(0), None)]).sampler()
-    head = lambda t: v3(pit(t)[0], yaw(t)[1], rol(t)[2])
+    head = lambda t: v3(pit(t)[0], PLAYERS_YAW + yaw(t)[1], -rol(t)[2])
     emit(A, "head", "rotation", head, 0, L, 1 / 60.0, 0.01, loop=True)
     add_followers(A, head, True, dt=1 / 60.0, body=False, pig_gain=0.5, ring_zeta=0.5)
     eye_scale(A, lambda t: 1.0 + 0.055 * bob(t, 1.5), 1 / 40.0, True)
@@ -277,8 +290,10 @@ def build_idle_players(ctx):
 
 
 # ================================================================================================
-# 2. wake (once 2.0 s): power-up shudder, head lifts in servo steps, a stare, then the head ratchets round to the
-#    tree.  The game plays DORMANT -> wake -> idle_tree, so wake ENDS on idle_tree's first frame (no pop / whip).
+# 2. wake (once 2.0 s): power-up shudder, head lifts in servo steps, a stare, then a short mechanical "neck
+#    calibration" (three small ratcheting yaw nudges that settle on the tree).  She faces the tree all the time (the
+#    players only see her back): no turn.  The game plays DORMANT -> wake -> idle_tree, so wake ENDS on idle_tree's
+#    first frame (no pop).
 # ================================================================================================
 def build_wake(ctx):
     L = 2.0
@@ -289,26 +304,28 @@ def build_wake(ctx):
     nz = {k: rng.uniform(-1, 1, size=n_t) for k in ("hx", "hy", "hz", "bx", "bz", "ax", "ay", "px", "pz", "rg")}
     nn = lambda key, t: nz[key][int(min(max(round(t / 0.04), 0), n_t - 1))]
     d = DORM_HEAD
-    tree = ctx["idle_tree"].sampler("head", "rotation")(0.0)          # (2, 180, 0)
+    tree = ctx["idle_tree"].sampler("head", "rotation")(0.0)          # (2, 0, 0)
 
     yaw = Track(keys_from([
-        (0.0, 0, None), (1.28, 0, None), (1.33, -3.0, "easeInOutSine"),
-        (1.38, 45.0, "easeOutQuad"), (1.40, 43.6, "easeOutQuad"), (1.49, 43.6, None),
-        (1.54, 88.5, "easeOutQuad"), (1.56, 87.4, "easeOutQuad"), (1.65, 87.4, None),
-        (1.70, 132.5, "easeOutQuad"), (1.72, 131.4, "easeOutQuad"), (1.80, 131.4, None),
-        (1.86, 186.0, "easeOutQuad"), (1.91, 178.5, "easeInOutSine"), (1.955, 181.0, "easeInOutSine"), (2.0, tree[1], "easeInOutSine")])).sampler()
+        (0.0, TREE_YAW, None), (1.28, TREE_YAW, None), (1.33, -2.2, "easeInOutSine"),
+        (1.385, 17.0, "easeOutQuad"), (1.41, 15.6, "easeOutQuad"), (1.50, 15.6, None),
+        (1.555, -12.5, "easeOutQuad"), (1.58, -11.2, "easeOutQuad"), (1.665, -11.2, None),
+        (1.715, 7.5, "easeOutQuad"), (1.74, 6.6, "easeOutQuad"), (1.81, 6.6, None),
+        (1.86, -3.4, "easeOutQuad"), (1.915, 1.4, "easeInOutSine"), (1.96, -0.5, "easeInOutSine"), (2.0, tree[1], "easeInOutSine")])).sampler()
     pitch = Track(keys_from([
         (0.0, d[0], None), (0.20, d[0], None), (0.62, d[0] - 0.5, "easeInOutSine"),
         (0.68, 9.0, "easeOutQuad"), (0.73, 9.0, None), (0.79, 5.0, "easeOutQuad"), (0.84, 5.0, None),
         (0.91, -4.5, "easeOutQuad"), (0.97, -4.5, None), (1.12, tree[0], "easeInOutSine"), (1.28, tree[0], None),
-        (1.33, 1.0, "easeInOutSine"), (1.38, 3.8, "easeOutQuad"), (1.49, 2.0, "easeInOutSine"), (1.54, 3.6, "easeOutQuad"),
-        (1.65, 1.8, "easeInOutSine"), (1.70, 3.8, "easeOutQuad"), (1.80, 1.6, "easeInOutSine"), (1.86, 6.4, "easeOutQuad"),
-        (1.91, -1.0, "easeInOutSine"), (1.955, 2.8, "easeInOutSine"), (2.0, tree[0], "easeInOutSine")])).sampler()
+        (1.33, tree[0] - 0.6, "easeInOutSine"), (1.385, 3.4, "easeOutQuad"), (1.50, 2.0, "easeInOutSine"), (1.555, 3.2, "easeOutQuad"),
+        (1.665, 1.8, "easeInOutSine"), (1.715, 3.2, "easeOutQuad"), (1.81, 1.8, "easeInOutSine"), (1.86, 3.6, "easeOutQuad"),
+        (1.915, 1.2, "easeInOutSine"), (1.96, 2.4, "easeInOutSine"), (2.0, tree[0], "easeInOutSine")])).sampler()
     roll = Track(keys_from([
-        (0.0, d[2], None), (0.62, d[2], None), (0.97, 0.0, "easeInOutSine"), (1.28, 0.0, None), (1.33, -0.6, "easeInOutSine"),
-        (1.38, 2.5, "easeOutQuad"), (1.49, 0.9, "easeInOutSine"), (1.54, -2.2, "easeOutQuad"), (1.65, -0.7, "easeInOutSine"),
-        (1.70, 2.0, "easeOutQuad"), (1.80, 0.5, "easeInOutSine"), (1.86, -3.0, "easeOutQuad"), (1.91, 1.2, "easeInOutSine"),
-        (1.955, -0.5, "easeInOutSine"), (2.0, tree[2], "easeInOutSine")])).sampler()
+        (0.0, d[2], None), (0.62, d[2], None), (0.68, 0.62 * d[2], "easeOutQuad"), (0.73, 0.62 * d[2], None),
+        (0.79, 0.30 * d[2], "easeOutQuad"), (0.84, 0.30 * d[2], None), (0.91, 1.6, "easeOutQuad"), (0.97, 1.6, None),
+        (1.12, 0.0, "easeInOutSine"), (1.28, 0.0, None), (1.33, 0.4, "easeInOutSine"),
+        (1.385, -2.0, "easeOutQuad"), (1.50, -0.7, "easeInOutSine"), (1.555, 1.8, "easeOutQuad"), (1.665, 0.6, "easeInOutSine"),
+        (1.715, -1.4, "easeOutQuad"), (1.81, -0.4, "easeInOutSine"), (1.86, 1.6, "easeOutQuad"), (1.915, -0.7, "easeInOutSine"),
+        (1.96, 0.3, "easeInOutSine"), (2.0, tree[2], "easeInOutSine")])).sampler()
     head = lambda t: v3(pitch(t)[0] + 2.0 * env(t) * nn("hx", t), yaw(t)[1] + 2.2 * env(t) * nn("hy", t),
                         roll(t)[2] + 1.7 * env(t) * nn("hz", t))
     emit(A, "head", "rotation", head, 0, L, 1 / 100.0, 0.03)
@@ -317,7 +334,7 @@ def build_wake(ctx):
     emit(A, "body", "rotation", lambda t: v3(lean(t)[0] + 0.7 * env(t) * nn("bx", t), 0.0,
                                               1.35 * env(t) * ((-1) ** int(t / 0.04)) * (0.7 + 0.3 * abs(nn("bz", t)))), 0, L, 1 / 50.0, 0.03)
     emit(A, "body", "position", lambda t: v3(0.5 * env(t) * nn("px", t), 0.35 * env(t) * abs(nn("bx", t)), 0), 0, L, 1 / 50.0, 0.02)
-    # cog ring + pigtails follow the head (turning 0 -> 180 at the end)
+    # cog ring + pigtails follow the head (shudder, then the small calibration nudges)
     add_followers(A, head, False, dt=1 / 60.0, ring_zeta=0.3, body=False, pig_gain=0.07)
     add_to_track(A, "neck_joint", "rotation", lambda t: v3(0, 3.0 * env(t) * nn("rg", t), 0), 1 / 50.0, 0.04)
 
@@ -338,13 +355,14 @@ def build_wake(ctx):
 
 # ================================================================================================
 # 4./8. turns: head yaw in four servo moves (3 pauses), a wind-up twitch, over-shoot and settle
+#    turn_to_players: head yaw 0 (tree) -> 180 (field);  turn_to_tree: 180 -> 0.  The body never turns.
 # ================================================================================================
 TURN_TO_PLAYERS = dict(
-    yaw=[(0.0, 180.0, None), (0.06, 183.5, "easeInOutSine"),
-         (0.13, 135.0, "easeOutQuad"), (0.165, 133.2, "easeOutQuad"), (0.285, 133.2, None),
-         (0.355, 90.0, "easeOutQuad"), (0.385, 88.6, "easeOutQuad"), (0.50, 88.6, None),
-         (0.57, 45.5, "easeOutQuad"), (0.60, 44.0, "easeOutQuad"), (0.715, 44.0, None),
-         (0.785, -7.2, "easeOutQuad"), (0.855, 2.6, "easeInOutSine"), (0.925, -0.9, "easeInOutSine"), (1.0, 0.0, "easeInOutSine")],
+    yaw=[(0.0, 0.0, None), (0.06, -3.5, "easeInOutSine"),
+         (0.13, 45.0, "easeOutQuad"), (0.165, 46.8, "easeOutQuad"), (0.285, 46.8, None),
+         (0.355, 90.0, "easeOutQuad"), (0.385, 91.4, "easeOutQuad"), (0.50, 91.4, None),
+         (0.57, 134.5, "easeOutQuad"), (0.60, 136.0, "easeOutQuad"), (0.715, 136.0, None),
+         (0.785, 187.2, "easeOutQuad"), (0.855, 177.4, "easeInOutSine"), (0.925, 180.9, "easeInOutSine"), (1.0, 180.0, "easeInOutSine")],
     pitch=[(0.0, 2.0, None), (0.06, 0.8, "easeInOutSine"), (0.13, 4.2, "easeOutQuad"), (0.285, 2.4, "easeInOutSine"),
            (0.355, 4.0, "easeOutQuad"), (0.50, 2.2, "easeInOutSine"), (0.57, 4.2, "easeOutQuad"), (0.715, 2.0, "easeInOutSine"),
            (0.785, 7.0, "easeOutQuad"), (0.855, -1.8, "easeInOutSine"), (0.925, 0.8, "easeInOutSine"), (1.0, 0.0, "easeInOutSine")],
@@ -353,11 +371,11 @@ TURN_TO_PLAYERS = dict(
           (0.785, 3.2, "easeOutQuad"), (0.855, -1.3, "easeInOutSine"), (0.925, 0.5, "easeInOutSine"), (1.0, 0.0, "easeInOutSine")],
 )
 TURN_TO_TREE = dict(
-    yaw=[(0.0, 0.0, None), (0.05, -3.2, "easeInOutSine"),
-         (0.12, 45.0, "easeOutQuad"), (0.145, 43.4, "easeOutQuad"), (0.27, 43.4, None),
-         (0.335, 89.0, "easeOutQuad"), (0.365, 87.6, "easeOutQuad"), (0.485, 87.6, None),
-         (0.55, 133.2, "easeOutQuad"), (0.58, 131.7, "easeOutQuad"), (0.70, 131.7, None),
-         (0.775, 187.2, "easeOutQuad"), (0.845, 177.4, "easeInOutSine"), (0.92, 181.2, "easeInOutSine"), (1.0, 180.0, "easeInOutSine")],
+    yaw=[(0.0, 180.0, None), (0.05, 183.2, "easeInOutSine"),
+         (0.12, 135.0, "easeOutQuad"), (0.145, 136.6, "easeOutQuad"), (0.27, 136.6, None),
+         (0.335, 91.0, "easeOutQuad"), (0.365, 92.4, "easeOutQuad"), (0.485, 92.4, None),
+         (0.55, 46.8, "easeOutQuad"), (0.58, 48.3, "easeOutQuad"), (0.70, 48.3, None),
+         (0.775, -7.2, "easeOutQuad"), (0.845, 2.6, "easeInOutSine"), (0.92, -1.2, "easeInOutSine"), (1.0, 0.0, "easeInOutSine")],
     pitch=[(0.0, 0.0, None), (0.05, 1.0, "easeInOutSine"), (0.12, 3.8, "easeOutQuad"), (0.27, 2.0, "easeInOutSine"), (0.335, 3.6, "easeOutQuad"),
            (0.485, 1.8, "easeInOutSine"), (0.55, 3.8, "easeOutQuad"), (0.70, 1.6, "easeInOutSine"), (0.775, 6.4, "easeOutQuad"),
            (0.845, -1.0, "easeInOutSine"), (0.92, 2.8, "easeInOutSine"), (1.0, 2.0, "easeInOutSine")],
@@ -372,7 +390,8 @@ TTT_HITS = (0.12, 0.335, 0.55, 0.775)
 
 
 def _reactions(A, hits, sgn_dir):
-    """Body lean, arm flicks, dress swing and ribbon flap on each servo stop (sgn_dir flips sway for the return turn)."""
+    """Body lean, arm flicks, dress swing and ribbon flap on each servo stop (sgn_dir = -1 for the turn to the players
+    (head yaw increasing), +1 for the turn back: it flips the sway of the reactions)."""
     t1, t2, t3, t4 = hits
     A.set_track("body", "position", keys_from([(0.0, 0, None), (t1 + 0.02, (0, 0, 0.3), "easeOutQuad"), (t1 + 0.27, 0, "easeInOutSine"),
                                                (t4 + 0.0, (0, 0, 0.5), "easeOutQuad"), (1.0, 0, "easeInOutSine")]))
@@ -406,15 +425,15 @@ def _build_turn(name, spec, hits, sgn_dir, ctx, start, end):
 
 
 def build_turn_to_players(ctx):
-    return _build_turn("turn_to_players", TURN_TO_PLAYERS, TTP_HITS, 1.0, ctx, "idle_tree", "idle_players")
+    return _build_turn("turn_to_players", TURN_TO_PLAYERS, TTP_HITS, -1.0, ctx, "idle_tree", "idle_players")
 
 
 def build_turn_to_tree(ctx):
-    return _build_turn("turn_to_tree", TURN_TO_TREE, TTT_HITS, -1.0, ctx, "idle_players", "idle_tree")
+    return _build_turn("turn_to_tree", TURN_TO_TREE, TTT_HITS, 1.0, ctx, "idle_players", "idle_tree")
 
 
 # ================================================================================================
-# 6. scan_players (loop 2 s): +-25 deg sweeps with jittery servo steps
+# 6. scan_players (loop 2 s): +-25 deg sweeps (around the players-facing yaw 180) with jittery servo steps
 # ================================================================================================
 def _scan_keys():
     """Right half: 0 -> +25 in 3 servo steps, dwell, back in 3 steps; the left half mirrors it."""
@@ -462,8 +481,8 @@ def build_scan_players(ctx):
         i = int(t * 25)
         # gaze dips as the head swings away from centre, servo hunting adds tiny pitch / roll twitches
         p = 2.4 * min(1.0, abs(y) / 16.0) + 0.35 * jit[i, 0] * min(1.0, abs(y) / 6.0)
-        r = -0.05 * y + 0.4 * jit[(i + 7) % len(jit), 1] * min(1.0, abs(y) / 6.0)
-        return v3(p, y, r)
+        r = 0.05 * y + 0.4 * jit[(i + 7) % len(jit), 1] * min(1.0, abs(y) / 6.0)      # banks into the turn (mirrored: she faces the field)
+        return v3(p, PLAYERS_YAW + y, r)
 
     emit(A, "head", "rotation", head, 0, L, 1 / 60.0, 0.02, loop=True)
     add_followers(A, head, True, dt=1 / 60.0, pig_gain=0.07, ring_zeta=0.32)
@@ -485,17 +504,18 @@ def build_scan_players(ctx):
 
 
 # ================================================================================================
-# 7. lock_on (once 0.4 s): sharp snap of the head, eyes flare, body recoils
+# 7. lock_on (once 0.4 s): sharp snap of the head (from yaw 180: +15.5, settles at +11 = to the viewer's left, her
+#    right when she looks at the field), eyes flare, body recoils
 # ================================================================================================
 def build_lock_on(ctx):
     L = 0.4
     A = Anim("lock_on", L, False)
     head = head_track(
         A,
-        [(0.0, 0.0, None), (0.055, 15.5, "easeOutQuad"), (0.09, 10.2, "easeInOutSine"), (0.14, 12.4, "easeInOutSine"),
-         (0.22, 11.4, "easeInOutSine"), (0.4, 11.0, "easeInOutSine")],
+        [(0.0, PLAYERS_YAW, None), (0.055, PLAYERS_YAW + 15.5, "easeOutQuad"), (0.09, PLAYERS_YAW + 10.2, "easeInOutSine"),
+         (0.14, PLAYERS_YAW + 12.4, "easeInOutSine"), (0.22, PLAYERS_YAW + 11.4, "easeInOutSine"), (0.4, PLAYERS_YAW + 11.0, "easeInOutSine")],
         [(0.0, 0.0, None), (0.055, 8.5, "easeOutQuad"), (0.10, 5.0, "easeInOutSine"), (0.16, 6.0, "easeInOutSine"), (0.4, 5.6, "easeInOutSine")],
-        [(0.0, 0.0, None), (0.055, -3.6, "easeOutQuad"), (0.12, -1.6, "easeInOutSine"), (0.4, -2.0, "easeInOutSine")])
+        [(0.0, 0.0, None), (0.055, 3.6, "easeOutQuad"), (0.12, 1.6, "easeInOutSine"), (0.4, 2.0, "easeInOutSine")])
     add_followers(A, head, False, dt=1 / 80.0, ring_zeta=0.3, pig_gain=0.1)
     A.set_track("body", "position", keys_from([(0.0, 0, None), (0.06, (0, 0, 0.9), "easeOutQuad"), (0.2, (0, 0, 0.35), "easeInOutSine"),
                                                (0.4, (0, 0, 0.3), "easeInOutSine")]))
