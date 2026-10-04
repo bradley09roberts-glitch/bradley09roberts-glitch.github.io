@@ -92,3 +92,16 @@ tasks.register('dumpArena', JavaExec) {
     mainClass = 'com.squidgame.build.tools.DumpArena'
     args = [project.findProperty('arena') ?: 'all', 'tools/out', project.findProperty('seed') ?: '1']
 }
+
+// While arena builders are being written concurrently, `-PskipArenas` compiles the mod without them (placeholders are used).
+if (project.hasProperty('skipArenas')) {
+    sourceSets.main.java.exclude(
+            'com/squidgame/build/arena/RedLightBuilder.java', 'com/squidgame/build/arena/DalgonaBuilder.java',
+            'com/squidgame/build/arena/TugOfWarBuilder.java', 'com/squidgame/build/arena/MarblesBuilder.java',
+            'com/squidgame/build/arena/GlassBridgeBuilder.java', 'com/squidgame/build/arena/FinalBuilder.java',
+            'com/squidgame/build/arena/redlight/**', 'com/squidgame/build/arena/dalgona/**',
+            'com/squidgame/build/arena/tug/**', 'com/squidgame/build/arena/marbles/**',
+            'com/squidgame/build/arena/bridge/**', 'com/squidgame/build/arena/finale/**',
+            'com/squidgame/build/arena/hub/DormitoryPart.java', 'com/squidgame/build/arena/hub/CorridorPart.java',
+            'com/squidgame/build/arena/hub/StairwayPart.java', 'com/squidgame/build/arena/hub/ControlRoomPart.java')
+}

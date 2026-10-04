@@ -1,9 +1,11 @@
 """sgsynth.voice - formant (vowel-filter) singing-voice model.
 
-The voiced source is a glottal-pulse-like harmonic series (every harmonic of a time-varying
-f0, so vibrato / glides are exact) whose harmonic amplitudes *and phases* follow the complex
-transfer function of a cascade of five formant resonators (time-varying F1..F5 + bandwidths,
-optional nasal anti-formant).  Aspiration / frication noise is shaped by the same formant
+The voiced source is a glottal-pulse / sawtooth-like harmonic series (amplitude ~ 1/k with a
+brightness corner, every harmonic of a time-varying f0, so vibrato / glides are exact).  This is
+the spectrum of a band-limited sawtooth pulse train; instead of running it through resonator
+filters sample by sample, each harmonic's amplitude *and phase* are taken from the complex transfer
+function of a cascade of five formant resonators (time-varying F1..F5 + bandwidths, optional nasal
+anti-formant), which is the same filtering done in the frequency domain.  Aspiration / frication noise is shaped by the same formant
 magnitudes with the spectral-shaping engine.  Everything is computed at control rate and
 interpolated, which keeps rendering fast.
 """
@@ -78,9 +80,14 @@ def build_tracks(segments, n: int, child: float = 1.10, nf: int = 5):
     def ev(vals, kind="cos"):
         return curve(list(zip(ts, vals)), n, kind)
 
+    def lin(db):  # <= -59 dB means "off"; amplitudes cross-fade linearly (no level dip at hand-offs)
+        return 0.0 if db <= -59.0 else 10.0 ** (db / 20.0)
+
     tracks = {
         "v_db": ev(per["v"]),
         "a_db": ev(per["a"]),
+        "v_lin": ev([lin(x) for x in per["v"]]),
+        "a_lin": ev([lin(x) for x in per["a"]]),
         "nas": ev(per["nas"]),
         "zf": ev(per["zf"]),
         "zd": ev(per["zd"]),
@@ -121,11 +128,13 @@ def formant_cascade(fk, F, BW):
 
 def harmonic_voice(f0, tracks, n: int, *, brightness_hz=2100.0, tilt=1.0, formant_scale=1.0,
                    hop: int = 32, phase0: float = 0.0, hp_shelf_db=2.0, rand_phase=None,
-                   bw_scale=1.25, tune_f1=0.5):
+                   bw_scale=1.25, tune_f1=0.5, flutter=0.0, flutter_rng=None):
     """Unit-RMS voiced signal with formant-shaped harmonics (additive synthesis).
 
     ``rand_phase``: optional RNG - gives every harmonic a random constant phase offset (except
     the fundamental) so a doubled voice does not interleave glottal pulses with the first one.
+    ``flutter``/``flutter_rng``: slow random wobble of all formant frequencies (fraction, ~9 Hz),
+    micro-prosody that keeps held vowels alive.
     """
     idx = np.arange(0, n + hop, hop)
     idx = np.minimum(idx, n - 1)
@@ -135,6 +144,8 @@ def harmonic_voice(f0, tracks, n: int, *, brightness_hz=2100.0, tilt=1.0, forman
     k = np.arange(1, K + 1)[:, None]
     fk = k * f0c[None, :]
     F = tracks["F"][:, idx] * formant_scale
+    if flutter > 0 and flutter_rng is not None:
+        F = F * (1.0 + flutter * smooth_noise(n, flutter_rng, 9.0)[idx])[None, :]
     BW = tracks["BW"][:, idx].copy()
     BW[1:] *= bw_scale  # slightly broader upper formants: sweeter, less piercing
     if tune_f1 > 0:  # soprano-style vowel tuning: F1 climbs towards high fundamentals

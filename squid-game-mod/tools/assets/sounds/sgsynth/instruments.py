@@ -8,9 +8,9 @@ import math
 
 import numpy as np
 
-from .core import (SR, TAU, add_at, adsr, cents, colored, curve, db2lin, exp_decay, fade, mtof, ns,
-                   phase_cycles, pulse, saw, sine, smooth_noise, stack, supersaw, tail_fade, time_axis, white, zeros)
-from .dsp import (apply_biquads, band, bandpass, biquad_coefs, highpass, lowpass, resonator, tv_biquad)
+from .core import (SR, TAU, add_at, adsr, cents, curve, exp_decay, ns, phase_cycles, saw, sine,
+                   smooth_noise, stack, supersaw, tail_fade, time_axis)
+from .dsp import apply_biquads, band, bandpass, biquad_coefs, lowpass, tv_biquad
 
 
 # ---------------------------------------------------------------------------- modal
@@ -30,7 +30,8 @@ def modal(freqs, amps, taus, dur: float, phases=None, detune_beat: float = 0.0) 
         env = np.exp(-t / tau)
         out += a * env * np.sin(TAU * f * t + ph)
         if detune_beat:
-            out += 0.7 * a * env * np.sin(TAU * (f + detune_beat) * t + ph + 1.3)
+            out += 0.7 * a * env * np.sin(TAU * (f + detune_beat) * t + ph)
+    out *= np.minimum(1.0, t / 0.0002)          # 0.2 ms anti-click ramp
     return tail_fade(out, 0.015)
 
 
@@ -105,6 +106,18 @@ def sparks(rng, dur: float, rate, lo: float = 1500.0, hi: float = 7000.0, tau: f
     y = np.convolve(x, kern)[:n]
     y = apply_biquads(y, [biquad_coefs("hp", lo, 0.7071), biquad_coefs("lp", hi, 0.7071)])
     return y
+
+
+def poisson_times(rng, rate_fn, t_max: float, rate_max: float) -> list:
+    """Event times of an inhomogeneous Poisson process (thinning), ``rate_fn(t)`` in events/s."""
+    out = []
+    t = 0.0
+    while True:
+        t += rng.exponential(1.0 / rate_max)
+        if t >= t_max:
+            return out
+        if rng.random() < rate_fn(t) / rate_max:
+            out.append(t)
 
 
 def friction(rng, dur: float, f_pulse, resonances, q: float = 12.0, rough: float = 0.5,
@@ -216,7 +229,6 @@ def bandpass_mix(x, f0, q, mix):
 
 def music_box_note(freq: float, dur: float, rng, vel: float = 1.0, detune_cents: float = 0.0):
     """Struck steel comb tine: bright partials, slow shimmer, short pin click, box body resonance."""
-    n = ns(dur)
     f = freq * float(cents(detune_cents))
     # decays shorten with pitch
     base = float(np.clip(2.2 - 0.0012 * f, 0.5, 2.0))

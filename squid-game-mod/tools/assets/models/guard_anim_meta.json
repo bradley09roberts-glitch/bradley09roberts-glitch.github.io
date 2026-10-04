@@ -1,0 +1,18 @@
+{
+ "refs": {
+  "fire": "aim",
+  "lower": "aim"
+ },
+ "info": {
+  "walk": {
+   "cycle_s": 1.0,
+   "planted_px_s": 19.32,
+   "planted_blocks_s": 1.13
+  },
+  "run": {
+   "cycle_s": 0.6,
+   "planted_px_s": 54.9,
+   "planted_blocks_s": 3.22
+  }
+ }
+}

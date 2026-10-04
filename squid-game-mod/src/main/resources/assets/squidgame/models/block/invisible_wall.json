@@ -1,5 +1,3 @@
 {
-  "textures": {
-    "particle": "squidgame:block/invisible_wall"
-  }
+  "textures": { "particle": "squidgame:block/invisible_wall" }
 }

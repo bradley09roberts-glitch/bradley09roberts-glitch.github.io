@@ -325,9 +325,14 @@ def remove_dc(x: np.ndarray) -> np.ndarray:
 
 
 def finish(x: np.ndarray, peak_dbfs: float = -3.0, rms_cap_dbfs: float | None = -12.0,
-           fin: float = 0.002, fout: float = 0.012) -> np.ndarray:
-    """Standard one-shot finish: de-click fades, DC removal, peak (+loudness cap) normalisation."""
+           fin: float = 0.002, fout: float = 0.012, squash_db: float = 0.0) -> np.ndarray:
+    """Standard one-shot finish: de-click fades, DC removal, optional look-ahead limiting of the
+    loudest transients (``squash_db`` = how far below the peak the ceiling is placed, which raises
+    the average level of sparse crackle / click sounds), peak (+loudness cap) normalisation."""
     y = fade(remove_dc(np.asarray(x, dtype=np.float64)), fin, fout)
+    if squash_db > 0:
+        from .dsp import limit  # local import: dsp imports core
+        y = limit(y, peak(y) * 10.0 ** (-squash_db / 20.0), lookahead=0.002, release=0.03, block=32)
     return normalize(y, peak_dbfs, rms_cap_dbfs)
 
 

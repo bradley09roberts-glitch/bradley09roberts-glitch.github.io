@@ -1,0 +1,21 @@
+{
+ "squidgame.game.red_light.instruction.1": "Cross the playground and reach the finish line before time runs out.",
+ "squidgame.game.red_light.instruction.2": "While the giant doll chants with her back turned (GREEN LIGHT) you may run.",
+ "squidgame.game.red_light.instruction.3": "When the chant ends she turns around. You have a stopping allowance of %s s to stop.",
+ "squidgame.game.red_light.instruction.4": "When her eyes light up (RED LIGHT) any movement you cause - walking, running, jumping - eliminates you. Turning the camera is fine.",
+ "squidgame.game.red_light.instruction.5": "If you are pushed or knocked back you are safe, as long as you are not pressing a movement key.",
+ "squidgame.game.red_light.instruction.6": "Anyone who has not crossed the line when time runs out is eliminated. Difficulty: %s.",
+ "squidgame.game.red_light.objective": "Reach the finish line - freeze when her eyes glow!",
+ "squidgame.game.red_light.objective.safe": "You crossed the line. Wait for the others.",
+ "squidgame.game.red_light.light.green": "GREEN LIGHT",
+ "squidgame.game.red_light.light.turning": "STOP NOW",
+ "squidgame.game.red_light.light.red": "RED LIGHT",
+ "squidgame.game.red_light.banner.freeze": "DON'T MOVE!",
+ "squidgame.game.red_light.banner.stop": "STOP!",
+ "squidgame.game.red_light.hud.distance": "To the line (m)",
+ "squidgame.game.red_light.hud.finished": "Across the line: %s",
+ "squidgame.game.red_light.crossed": "You crossed the finish line (#%s)",
+ "squidgame.game.red_light.time_up": "TIME'S UP",
+ "squidgame.game.red_light.headline": "%s contestants crossed the line",
+ "squidgame.game.red_light.detail": "Everyone who did not make it was eliminated."
+}

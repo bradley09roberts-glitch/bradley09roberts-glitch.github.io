@@ -1,7 +1,5 @@
 {
   "variants": {
-    "": {
-      "model": "squidgame:block/symbol_triangle"
-    }
+    "": { "model": "squidgame:block/symbol_triangle" }
   }
 }

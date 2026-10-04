@@ -11,12 +11,12 @@ import math
 
 import numpy as np
 
-from .core import (SR, TAU, add_at, colored, curve, exp_decay, normalize, ns, periodic_smooth_noise,
-                   phase_cycles, remove_dc, sine, smooth_noise, stack, time_axis, white)
-from .dsp import band, bandpass, echo, highpass, lowpass, peaking, reverb, tv_biquad
+from .core import (SR, TAU, add_at, colored, curve, normalize, ns, periodic_smooth_noise, phase_cycles,
+                   remove_dc, sine, smooth_noise, stack, white)
+from .dsp import band, bandpass, echo, highpass, lowpass, reverb, tv_biquad
 from .instruments import chirp, footstep, metal_hit, modal, noise_burst, sparks, thump
 from .registry import sound
-from .voice import aspiration, build_tracks, harmonic_voice, phone, pitch_track
+from .voice import aspiration, build_tracks, harmonic_voice, phone
 
 LOOP = 20.0
 N = ns(LOOP)          # 882000 samples
@@ -24,6 +24,12 @@ N = ns(LOOP)          # 882000 samples
 
 def _unit(x):
     return x / (np.sqrt(np.mean(x * x)) + 1e-12)
+
+
+def _calm_at_seam(mod, n):
+    """Pull a 0..1 modulator to its mean around the loop point (flat slope), so head and tail match."""
+    w = np.sin(np.pi * np.arange(n) / n) ** 2
+    return 0.5 + (mod - 0.5) * w
 
 
 def _finish_loop(x, peak_dbfs=-6.0):
@@ -35,7 +41,6 @@ def _finish_loop(x, peak_dbfs=-6.0):
 @sound("ambient.dorm", "Dormitory ambience", stream=True)
 def ambient_dorm(v, rng):
     n = N
-    t = time_axis(n)
     # --- low room tone: brown rumble + soft air-handling band, slowly "breathing"
     room = _unit(lowpass(colored(n, rng, 2.0), 170.0, order=2, circular=True))
     air = _unit(band(colored(n, rng, 1.0), 180.0, 900.0, order=2, circular=True))
@@ -104,9 +109,9 @@ def _bird(rng, kind: str) -> np.ndarray:
 @sound("ambient.playground", "Playground ambience", stream=True)
 def ambient_playground(v, rng):
     n = N
-    gust = 0.5 + 0.5 * periodic_smooth_noise(n, rng, 3, 5)
-    gust = np.clip(gust, 0.0, 1.0)
-    fc = 480.0 + 320.0 * periodic_smooth_noise(n, rng, 2, 4)
+    gust = np.clip(0.5 + 0.5 * periodic_smooth_noise(n, rng, 3, 5), 0.0, 1.0)
+    gust = _calm_at_seam(gust, n)
+    fc = 480.0 + 320.0 * (2.0 * _calm_at_seam(0.5 + 0.5 * periodic_smooth_noise(n, rng, 2, 4), n) - 1.0)
     wind = _unit(tv_biquad(colored(n, rng, 1.0), "bp", fc, 0.6, circular=True))
     wind *= 0.30 + 0.70 * gust ** 1.4
     low = _unit(lowpass(colored(n, rng, 2.0), 140.0, order=2, circular=True)) * 0.30 * (0.5 + 0.5 * gust)
@@ -130,7 +135,6 @@ def ambient_playground(v, rng):
 @sound("ambient.industrial", "Machinery hums", stream=True)
 def ambient_industrial(v, rng):
     n = N
-    t = time_axis(n)
     # --- two slightly detuned motors (50.00 / 49.95 Hz: whole cycles per loop) beating once per loop
     def motor(f, g, ph):
         return g * sum(a * sine(f * k, n, ph * k) for k, a in ((1, 1.0), (2, 0.72), (3, 0.36), (4, 0.26), (6, 0.12)))
@@ -196,7 +200,7 @@ def ambient_alley(v, rng):
     crickets = lowpass(crickets, 7200.0, order=2, circular=True)
     crickets *= 1.0 + 0.25 * periodic_smooth_noise(n, rng, 2, 3)
     # --- faint wind in the alley + far-off city rumble
-    gust = np.clip(0.5 + 0.5 * periodic_smooth_noise(n, rng, 2, 4), 0.0, 1.0)
+    gust = _calm_at_seam(np.clip(0.5 + 0.5 * periodic_smooth_noise(n, rng, 2, 4), 0.0, 1.0), n)
     wind = _unit(band(colored(n, rng, 1.0), 110.0, 800.0, order=2, circular=True)) * (0.10 + 0.22 * gust ** 1.5)
     city = _unit(lowpass(colored(n, rng, 2.0), 110.0, order=2, circular=True)) * 0.20
     # --- distant dog (two barks, a long pause, one bark) carried by the alley walls

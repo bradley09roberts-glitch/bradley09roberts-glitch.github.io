@@ -139,13 +139,39 @@ def draw_ground(fr: Frame, cam: Camera, extent: float = 40.0) -> None:
             fr.img[yy, :6, :] = (0.45, 0.45, 0.5)
 
 
+_SOLID = np.ones((1, 1, 4), dtype=np.float32)
+_BOX_FACES = [(0, 1, 2, 3), (4, 5, 6, 7), (0, 1, 5, 4), (3, 2, 6, 7), (0, 3, 7, 4), (1, 2, 6, 5)]
+
+
+def draw_props(fr: Frame, cam: Camera, props) -> None:
+    """props: list of (lo, hi, colour) axis-aligned boxes in baked model space (flat colour, same lighting)."""
+    for lo, hi, col in props:
+        x0, y0, z0 = lo
+        x1, y1, z1 = hi
+        v = np.array([[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0],
+                      [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]], dtype=float)
+        sv = cam.project(v)
+        tex = _SOLID * np.array([col[0], col[1], col[2], 1.0], dtype=np.float32)
+        uv = np.full((4, 2), 0.5)
+        for f in _BOX_FACES:
+            quad = sv[list(f)]
+            q3 = v[list(f)]
+            n = np.cross(q3[1] - q3[0], q3[3] - q3[0])
+            ln = np.linalg.norm(n)
+            if ln < 1e-9:
+                continue
+            raster_quad(fr, quad, uv, tex, _mc_shade(n / ln, cam))
+
+
 def _render(rig: Rig, tex: np.ndarray, state: Optional[dict], cam: Camera,
             tint: Optional[Dict[str, Sequence[float]]], hidden: Iterable[str],
-            bg, ground: bool) -> np.ndarray:
+            bg, ground: bool, props=None) -> np.ndarray:
     W, H = cam.size
     fr = Frame(W, H, bg)
     if ground:
         draw_ground(fr, cam)
+    if props:
+        draw_props(fr, cam, props)
     mats = rig.world_matrices(state)
     tint = tint or {}
     for bone, cube, verts in rig.vertices_world(mats, hidden=hidden):
@@ -168,9 +194,9 @@ def _render(rig: Rig, tex: np.ndarray, state: Optional[dict], cam: Camera,
 def render(rig: Rig, tex: np.ndarray, state: Optional[dict], azimuth: float = 0.0, elevation: float = 0.0,
            scale: float = 5.0, center: Sequence[float] = (0.0, 17.0, 0.0), size: Tuple[int, int] = (200, 200),
            tint: Optional[Dict[str, Sequence[float]]] = None, hidden: Iterable[str] = (),
-           ss: int = 1, bg=(0.93, 0.93, 0.94), ground: bool = True) -> Image.Image:
+           ss: int = 1, bg=(0.93, 0.93, 0.94), ground: bool = True, props=None) -> Image.Image:
     cam = Camera(azimuth, elevation, scale * ss, center, (size[0] * ss, size[1] * ss))
-    arr = _render(rig, tex, state, cam, tint, hidden, bg, ground)
+    arr = _render(rig, tex, state, cam, tint, hidden, bg, ground, props)
     im = Image.fromarray((np.clip(arr, 0, 1) * 255 + 0.5).astype(np.uint8), "RGB")
     if ss > 1:
         im = im.resize(size, Image.LANCZOS)
@@ -216,7 +242,7 @@ def frame_times(clip: Clip, n: int = 8) -> List[float]:
 def sheet(rig: Rig, tex: np.ndarray, clip: Optional[Clip], times: Sequence[float],
           views: Sequence[dict] = tuple(DEFAULT_VIEWS), cell: Tuple[int, int] = (176, 190),
           scale: float = 4.4, center=(0.0, 17.5, 0.0), tint=None, hidden=(), ss: int = 1,
-          title: str = "") -> Image.Image:
+          title: str = "", props=None) -> Image.Image:
     cols = len(views)
     rows = len(times)
     head = 16 if title else 0
@@ -228,7 +254,7 @@ def sheet(rig: Rig, tex: np.ndarray, clip: Optional[Clip], times: Sequence[float
         for c, v in enumerate(views):
             im = render(rig, tex, state, azimuth=v.get("azimuth", 0), elevation=v.get("elevation", 0),
                         scale=v.get("scale", scale), center=v.get("center", center), size=cell,
-                        tint=tint, hidden=hidden, ss=ss)
+                        tint=tint, hidden=hidden, ss=ss, props=props)
             label(im, f"{v.get('name', '')} t={t:.2f}")
             out.paste(im, (c * cell[0], head + r * cell[1]))
     return out
@@ -236,12 +262,12 @@ def sheet(rig: Rig, tex: np.ndarray, clip: Optional[Clip], times: Sequence[float
 
 def filmstrip(rig: Rig, tex: np.ndarray, clip: Clip, n: int = 10, azimuth: float = 90,
               cell=(120, 150), scale: float = 3.4, center=(0.0, 17.0, 0.0), tint=None, hidden=(),
-              ss: int = 1) -> Image.Image:
+              ss: int = 1, props=None) -> Image.Image:
     times = frame_times(clip, n)
     out = Image.new("RGB", (cell[0] * n, cell[1]), (255, 255, 255))
     for i, t in enumerate(times):
         im = render(rig, tex, clip.sample(t), azimuth=azimuth, scale=scale, center=center, size=cell,
-                    tint=tint, hidden=hidden, ss=ss)
+                    tint=tint, hidden=hidden, ss=ss, props=props)
         out.paste(im, (i * cell[0], 0))
     return out
 

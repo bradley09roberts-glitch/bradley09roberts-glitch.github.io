@@ -23,24 +23,35 @@ def _rows(rows, legend=None) -> Canvas:
 
 
 # ------------------------------------------------------------------------------ people
+def _sprite(c: Canvas, x0: int, y0: int, rows, col) -> np.ndarray:
+    """Paint an 'X' sprite and return its mask."""
+    m = np.zeros((c.h, c.w), dtype=bool)
+    for dy, row in enumerate(rows):
+        for dx, ch in enumerate(row):
+            if ch == "X":
+                m[y0 + dy, x0 + dx] = True
+    c.mask(m, col)
+    return m
+
+
 def icon_survivors() -> Canvas:
-    """Three people: one in front, two partly hidden behind."""
+    """Three people: a bold one in front, two shadow figures partly hidden behind."""
     c = Canvas(16)
-    xs, ys = c.grid()
-
-    def bust(cx, head_cy, head_r, half, top, bottom):
-        head = (xs - cx) ** 2 + (ys - head_cy) ** 2 <= head_r ** 2
-        arc = ((xs - cx) / half) ** 2 + ((ys - (top + 2.6)) / 2.6) ** 2 <= 1.0
-        rect = (np.abs(xs - cx) <= half) & (ys >= top + 2.6) & (ys <= bottom)
-        return head | arc | rect
-
-    left = bust(2.4, 6.4, 1.8, 2.5, 9.0, 16.0)
-    right = bust(13.6, 6.4, 1.8, 2.5, 9.0, 16.0)
-    mid = bust(8.0, 4.3, 2.4, 3.6, 8.2, 16.0)
-    gap = dilate(mid, 1, diag=False)
-    c.mask(left & ~gap, M)
-    c.mask(right & ~gap, M)
-    c.mask(mid, W)
+    head_s = [".XX.", "XXXX", "XXXX", ".XX."]
+    c_head = [".XXXX.", "XXXXXX", "XXXXXX", "XXXXXX", "XXXXXX", ".XXXX."]
+    c_body = [".XXXXXX.", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX", "XXXXXXXX"]
+    body_l = [".XXX", "XXXX", "XXXX", "XXXX", "XXXX"]
+    body_r = ["XXX.", "XXXX", "XXXX", "XXXX", "XXXX"]
+    probe = Canvas(16)
+    front = _sprite(probe, 4, 7, c_body, W)               # front body, used to cut a 1px gap into the back figures
+    gap = dilate(front, 1, diag=False)
+    back = Canvas(16)
+    mask_back = _sprite(back, 0, 10, body_l, M) | _sprite(back, 12, 10, body_r, M)
+    c.mask(mask_back & ~gap, M)
+    _sprite(c, 0, 5, head_s, M)
+    _sprite(c, 12, 5, head_s, M)
+    _sprite(c, 5, 0, c_head, W)
+    _sprite(c, 4, 7, c_body, W)
     return c
 
 
@@ -49,7 +60,7 @@ def icon_timer() -> Canvas:
     c = Canvas(16)
     xs, ys = c.grid()
     d2 = (xs - 8) ** 2 + (ys - 9) ** 2
-    c.mask((d2 <= 6.6 ** 2) & (d2 > 5.1 ** 2), W)              # case
+    c.mask((d2 <= 6.5 ** 2) & (d2 > 5.5 ** 2), W)              # case
     c.rect(6, 0, 10, 1, W)                                      # crown
     c.rect(7, 1, 9, 3, W)
     for (x, y) in [(12, 3), (13, 2), (13, 3), (12, 2)]:
@@ -73,7 +84,7 @@ def icon_marble() -> Canvas:
     c = Canvas(16)
     xs, ys = c.grid()
     d2 = (xs - 8) ** 2 + (ys - 8) ** 2
-    c.mask((d2 <= 6.7 ** 2) & (d2 > 5.2 ** 2), W)
+    c.mask((d2 <= 6.5 ** 2) & (d2 > 5.5 ** 2), W)
     pts = [(5.0, 9.6), (6.0, 11.0), (8.0, 11.4), (10.2, 10.4), (10.8, 8.2), (9.4, 6.4), (7.2, 6.4), (6.4, 8.0), (7.6, 8.8)]
     for a, b in zip(pts, pts[1:]):
         c.line(a[0], a[1], b[0], b[1], M, 1.0)
@@ -84,24 +95,25 @@ def icon_marble() -> Canvas:
 
 # ------------------------------------------------------------------------------ lollipop (lick)
 def icon_lick() -> Canvas:
-    """Lollipop with a spiral (the dalgona 'lick' action)."""
+    """Swirl lollipop (the dalgona 'lick' action): ring + inner spiral + stick."""
     c = Canvas(16)
     xs, ys = c.grid()
-    cx, cy = 6.2, 6.2
-    head = (xs - cx) ** 2 + (ys - cy) ** 2 <= 5.6 ** 2
-    c.mask(head, W)
-    spiral = np.zeros((16, 16), dtype=bool)
+    cx = cy = 6.0
+    d = np.hypot(xs - cx, ys - cy)
+    c.mask((d <= 5.6) & (d > 4.6), W)
     pts = []
-    for i in range(0, 70):
-        th = i * 0.27
-        rr = 0.5 + 0.29 * th
-        if rr > 5.4:
+    th = 0.0
+    while True:
+        rr = 0.5 + 2.0 * th / (2 * math.pi)
+        if rr > 4.1:
             break
-        pts.append((cx + rr * math.cos(th + 2.5), cy + rr * math.sin(th + 2.5)))
+        pts.append((cx + rr * math.cos(th + 1.0), cy + rr * math.sin(th + 1.0)))
+        th += 0.12
+    spiral = np.zeros((16, 16), dtype=bool)
     for a, b in zip(pts, pts[1:]):
-        spiral |= c.line_mask(a[0], a[1], b[0], b[1], 0.9)
-    c.mask(spiral & head, CLEAR)
-    c.line(10.4, 10.4, 14.8, 14.8, W, 1.7)
+        spiral |= c.line_mask(a[0], a[1], b[0], b[1], 1.0)
+    c.mask(spiral, W)
+    c.line(10.2, 10.2, 14.6, 14.6, W, 2.0)
     return c
 
 
@@ -156,8 +168,8 @@ def _lens(c: Canvas, cx, cy, half_w, half_h):
 def icon_eye_red() -> Canvas:
     """Open, staring eye with alert rays (hint of red so it also reads untinted)."""
     c = Canvas(16)
-    line = (255, 214, 214)
-    iris = (255, 150, 150)
+    line = (255, 200, 200)
+    iris = (255, 112, 112)
     xs, ys = c.grid()
     lens = _lens(c, 8.0, 9.0, 7.2, 3.9)
     c.mask(lens & ~erode(lens, 1), line)
@@ -173,8 +185,8 @@ def icon_eye_red() -> Canvas:
 def icon_eye_green() -> Canvas:
     """Calm open eye under a relaxed brow (hint of green so it also reads untinted)."""
     c = Canvas(16)
-    line = (214, 255, 228)
-    iris = (150, 255, 190)
+    line = (200, 255, 220)
+    iris = (112, 255, 164)
     xs, ys = c.grid()
     lens = _lens(c, 8.0, 9.0, 7.2, 3.9)
     c.mask(lens & ~erode(lens, 1), line)
@@ -297,7 +309,11 @@ def number_plate() -> Canvas:
 
 
 def vignette_red(size: int = 256) -> Canvas:
-    """Radial vignette: transparent centre, opaque-ish red edges. Smooth, lightly dithered."""
+    """Radial vignette: transparent centre, opaque-ish red edges. Smooth, lightly dithered.
+
+    The RGB is a pale red (not pure red) so Java can multiply it with any danger colour (``RenderSystem.setShaderColor``)
+    and still get that colour at full strength, while an untinted blit still reads as a red/pink danger flash.
+    """
     c = Canvas(size)
     ys, xs = np.mgrid[0:size, 0:size]
     cx = cy = (size - 1) / 2.0
@@ -308,25 +324,25 @@ def vignette_red(size: int = 256) -> Canvas:
     a = (t ** 1.9) * 0.94
     noise = ((xs * 73856093) ^ (ys * 19349663)) % 256 / 256.0 - 0.5
     alpha = np.clip(np.round(a * 255 + noise * 1.2), 0, 255).astype(np.uint8)
-    c.a[..., 0] = 238
-    c.a[..., 1] = 34
-    c.a[..., 2] = 44
+    c.a[..., 0] = 255
+    c.a[..., 1] = 150
+    c.a[..., 2] = 150
     c.a[..., 3] = alpha
     return c
 
 
 def panel() -> Canvas:
-    """48x48 nine-slice (4px slices): translucent dark body, thin pink border, soft inner glow."""
+    """48x48 nine-slice (4px slices): translucent dark body, thin pink border (same colours as SquidHud's panels)."""
     n = 48
-    c = Canvas(n, fill=(12, 14, 22, 200))
-    pink = (255, 105, 168, 240)
-    c.outline(0, 0, n, n, pink)
-    c.outline(1, 1, n - 1, n - 1, (22, 20, 34, 214))
-    c.outline(2, 2, n - 2, n - 2, (255, 105, 168, 70))
+    pink = (224, 69, 123)                      # SquidHud.PINK
+    c = Canvas(n, fill=(16, 16, 24, 176))      # SquidHud.PANEL
+    c.outline(0, 0, n, n, pink + (255,))
+    c.outline(1, 1, n - 1, n - 1, (24, 20, 34, 214))
+    c.outline(2, 2, n - 2, n - 2, pink + (64,))
     for (x, y) in [(0, 0), (n - 1, 0), (0, n - 1), (n - 1, n - 1)]:
         c.px(x, y, CLEAR)
     for (x, y) in [(1, 0), (0, 1), (n - 2, 0), (n - 1, 1), (1, n - 1), (0, n - 2), (n - 2, n - 1), (n - 1, n - 2)]:
-        c.px(x, y, (255, 105, 168, 170))
+        c.px(x, y, pink + (170,))
     return c
 
 

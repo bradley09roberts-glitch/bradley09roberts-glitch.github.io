@@ -1,15 +1,12 @@
 """Game flow sounds: start horn, end buzzer, win fanfare, results sting."""
 from __future__ import annotations
 
-import math
-
 import numpy as np
 
-from .core import (SR, TAU, add_at, adsr, cents, curve, exp_decay, finish, ns, pulse, saw, sine, soft_clip,
-                   stack, time_axis, zeros)
-from .dsp import band, highpass, lowpass, peaking, reverb, shelf
+from .core import add_at, curve, finish, ns, pulse, saw, sine, soft_clip
+from .dsp import band, highpass, lowpass, peaking, reverb
 from .instruments import (brass, chime_tone, metal_hit, noise_burst, noise_swell, string_swell, thump,
-                          timpani, wood_tock)
+                          timpani)
 from .registry import sound
 
 
@@ -39,7 +36,7 @@ def game_end_buzzer(v, rng):
          + 0.25 * pulse(f * 3.02, n, 0.5))
     y *= (1.0 + 0.45 * sine(98.0, n)) / 1.45          # rough arena-buzzer amplitude flutter
     y = soft_clip(y * 1.8, 1.0)
-    y = band(y, 130.0, 4500.0, order=2)
+    y = band(y, 130.0, 4000.0, order=4)
     y *= curve([(0.0, 0.0), (0.006, 1.0), (1.10, 1.0), (1.2, 0.0)], n, "cos")
     return finish(y, -3.0, -11.0, 0.0, 0.0)
 

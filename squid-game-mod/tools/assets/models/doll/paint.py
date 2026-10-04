@@ -135,8 +135,7 @@ def vgrad(a, ramp, y0=0, y1=None, mask=None, x0=0, x1=None):
     yy, xx = np.mgrid[0:h, 0:w]
     t = np.clip((yy + 0.5 - y0) / max(y1 - y0, 1e-6), 0, 1) * (n - 1)
     th = BAYER4[yy % 4, xx % 4]
-    idx = np.clip(np.floor(t + th - 0.5 + 0.5).astype(int), 0, n - 1)
-    # idx = floor(t + threshold) with threshold in (0,1): ordered dithering between neighbouring ramp entries
+    # idx = floor(t + threshold), threshold in (0,1): ordered dithering between neighbouring ramp entries
     idx = np.clip(np.floor(t + th).astype(int), 0, n - 1)
     sel = np.zeros((h, w), dtype=bool)
     sel[y0:y1, x0:x1] = True

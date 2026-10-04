@@ -1,6 +1,4 @@
 {
   "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "squidgame:item/recruiter_card"
-  }
+  "textures": { "layer0": "squidgame:item/recruiter_card" }
 }

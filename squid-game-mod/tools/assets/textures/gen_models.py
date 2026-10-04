@@ -1,4 +1,4 @@
-"""Blockstates, block models and item models (plus the language fragment) for every squidgame block.
+"""Blockstates, block models and item models for every squidgame block (and the spawn-egg item models).
 
 Multi-cube models (monitor, registration terminal, dalgona station) come from ``gen_machines``.
 Stairs / slabs use the vanilla parent models with the pastel textures; their blockstates carry the
@@ -7,7 +7,7 @@ are straight / inner / outer, where inner and outer each come in a left and a ri
 """
 from __future__ import annotations
 
-from common import BLOCK_IDS, ITEM_IDS, PANEL_LIGHTS, PASTELS, SYMBOLS, TILES, Out
+from common import BLOCK_IDS, ITEM_IDS, PANEL_LIGHTS, PASTELS, SPAWN_EGGS, SYMBOLS, TILES, Out
 import gen_machines
 
 NS = "squidgame"
@@ -126,6 +126,10 @@ def generate(out: Out) -> None:
     # marble / recruiter card flat items
     for name in ITEM_IDS:
         items[name] = {"parent": "minecraft:item/generated", "textures": {"layer0": f"{NS}:item/{name}"}}
+
+    # spawn eggs (not in the contract, registered by ModItems): vanilla template, tinted by the egg colours
+    for name in SPAWN_EGGS:
+        items[name] = {"parent": "minecraft:item/template_spawn_egg"}
 
     # sanity: every id in the contract list is covered
     missing = [b for b in BLOCK_IDS if b not in states or b not in items]

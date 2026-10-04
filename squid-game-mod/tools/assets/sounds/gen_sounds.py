@@ -15,6 +15,9 @@ usage:
   python3 gen_sounds.py --preview DIR        # also write waveform+spectrogram PNGs
   python3 gen_sounds.py --jobs 1 --list
 Requires: python3.11, numpy, Pillow (only for --preview), ffmpeg with libvorbis.
+
+Companions:  validate_sounds.py (contract check + table), selftest.py (toolkit unit checks),
+             analyze_voice.py (vowel formant verification of the doll voice, optional PNGs).
 """
 from __future__ import annotations
 
@@ -34,8 +37,8 @@ sys.path.insert(0, HERE)
 import numpy as np  # noqa: E402
 
 from sgsynth import registry  # noqa: E402
-from sgsynth.contract import CONTRACT, ORDER  # noqa: E402
-from sgsynth.core import SR, encode_ogg, make_rng, peak_db, write_wav  # noqa: E402
+from sgsynth.contract import ORDER  # noqa: E402
+from sgsynth.core import SR, decode_ogg, encode_ogg, make_rng, peak_db, write_wav  # noqa: E402
 
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 RES = os.path.join(REPO, "src", "main", "resources", "assets", "squidgame")
@@ -44,6 +47,11 @@ OUT_JSON = os.path.join(RES, "sounds.json")
 OUT_LANG = os.path.join(REPO, "tools", "assets", "lang", "sounds.json")
 
 MODULES = ["ev_doll", "ev_ui", "ev_game", "ev_world", "ev_ambient", "ev_music"]
+
+# Vorbis overshoots sharp transients by up to ~2 dB.  After encoding every file is decoded again;
+# if its peak is above CEILING_DB it is scaled to TARGET_DB and re-encoded (closed loop, still deterministic).
+CEILING_DB = -2.5
+TARGET_DB = -3.2
 
 
 def load_modules():
@@ -83,6 +91,13 @@ def render_unit(name: str, tmpdir: str, preview: str | None):
         ogg = os.path.join(OUT_SOUNDS, f + ".ogg")
         write_wav(wav, x)
         encode_ogg(wav, ogg, 4)
+        for _ in range(2):
+            dec_peak = peak_db(decode_ogg(ogg))
+            if dec_peak <= CEILING_DB:
+                break
+            x = x * 10.0 ** ((TARGET_DB - dec_peak) / 20.0)
+            write_wav(wav, x)
+            encode_ogg(wav, ogg, 4)
         os.remove(wav)
         if preview:
             from sgsynth import viz
@@ -90,7 +105,7 @@ def render_unit(name: str, tmpdir: str, preview: str | None):
             viz.render(x, os.path.join(preview, f.replace("/", "__") + ".png"), title=f,
                        fmax=16000 if len(x) / SR < 3 else 12000, width=1000 if len(x) / SR < 3 else 1400,
                        nfft=1024 if len(x) / SR < 3 else 2048, hop=128 if len(x) / SR < 3 else 1024)
-        report.append((f, len(x) / SR, peak_db(x), os.path.getsize(ogg)))
+        report.append((f, len(x) / SR, peak_db(decode_ogg(ogg)), os.path.getsize(ogg)))
     return name, time.time() - t0, report
 
 
@@ -116,6 +131,22 @@ def build_sounds_json(units):
         out[eid] = {"subtitle": key, "sounds": entries}
         lang[key] = ev.subtitle
     return out, lang
+
+
+def prune_stale(units):
+    """Delete .ogg files under sounds/ that no registered event produces (left over from renamed /
+    re-varianted events).  Only done after a complete run."""
+    keep = {os.path.normpath(os.path.join(OUT_SOUNDS, f + ".ogg")) for u in units for _, f in unit_files(u)}
+    removed = []
+    for root, _, files in os.walk(OUT_SOUNDS, topdown=False):
+        for name in files:
+            p = os.path.normpath(os.path.join(root, name))
+            if name.endswith(".ogg") and p not in keep:
+                os.remove(p)
+                removed.append(os.path.relpath(p, OUT_SOUNDS))
+        if root != OUT_SOUNDS and not os.listdir(root):
+            os.rmdir(root)
+    return removed
 
 
 def dump_json(path, obj):
@@ -158,11 +189,15 @@ def main():
             with cf.ProcessPoolExecutor(max_workers=args.jobs) as ex:
                 futs = [ex.submit(render_unit, n, tmp, args.preview) for n in names]
                 results = [f.result() for f in futs]
-    for name, secs, report in results:
+    for _, _, report in results:
         for f, dur, pk, size in report:
             total += size
             print(f"  {f:34s} {dur:7.3f}s  peak {pk:6.1f} dBFS  {size / 1024:7.1f} KiB")
     print(f"rendered in {time.time() - t0:.1f}s; encoded {total / 1048576:.2f} MiB")
+
+    if not args.only:
+        for r in prune_stale(units):
+            print(f"  pruned stale file {r}")
 
     sounds, lang = build_sounds_json(units)
     dump_json(OUT_JSON, sounds)

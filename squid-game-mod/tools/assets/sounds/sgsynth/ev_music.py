@@ -16,8 +16,8 @@ import math
 
 import numpy as np
 
-from .core import (SR, TAU, add_at, adsr, cents, curve, exp_decay, mtof, normalize, ns, remove_dc,
-                   sine, saw, soft_clip, stack, supersaw, time_axis, white, zeros)
+from .core import (SR, TAU, add_at, cents, curve, exp_decay, mtof, normalize, ns, remove_dc, sine, saw,
+                   soft_clip, stack, supersaw, time_axis, white)
 from .dsp import band, bandpass, compress, highpass, lowpass, reverb, tv_biquad
 from .instruments import (brass, chime_tone, metal_hit, modal, music_box_note, noise_burst, noise_swell,
                           pad_note, string_swell, thump, timpani, wood_tock)
@@ -28,7 +28,7 @@ def _master(x, peak_dbfs=-4.0, comp=(-24.0, 2.2), drive=1.0, hp=28.0):
     """Gentle bus compression + saturation, DC/sub clean-up, peak normalise.  No fades (loops!)."""
     x = highpass(x, hp, order=2, circular=True)
     if comp:
-        x = compress(x, thresh_db=comp[0], ratio=comp[1], attack=0.03, release=0.35)
+        x = compress(x, thresh_db=comp[0], ratio=comp[1], attack=0.03, release=0.35, circular=True)
     if drive > 0:
         x = soft_clip(x, drive)
     return normalize(remove_dc(x), peak_dbfs, None)
@@ -112,7 +112,7 @@ def music_lobby(v, rng):
             vel = (0.46 if s == 0 else 0.34) * rng.uniform(0.9, 1.1)
             tt = T(b * 6 + s) + rng.uniform(-0.004, 0.004)
             add_at(box, music_box_note(float(mtof(m)), 2.2, rng, vel), tt, wrap=True)
-        for (st, m, ln) in _L_MEL[b]:
+        for (st, m, _ln) in _L_MEL[b]:
             det = 0.0
             if 8 <= b < 16 and m == 88:
                 det = -32.0                                    # one tine slowly going out of tune
@@ -269,10 +269,10 @@ def music_final(v, rng):
     # --- drone (D1 + D2) with a slowly opening filter, and a heartbeat that gains weight
     drone = 0.55 * saw(36.71, n) + 0.55 * saw(73.42 * cents(4.0), n) + 0.4 * sine(36.71, n)
     cut = 180.0 + 220.0 * (0.5 + 0.5 * np.sin(TAU * t / L - 1.57)) + 380.0 * build
-    drone = tv_biquad(drone, "lp", cut, 0.8, circular=True) * 0.55
+    drone = tv_biquad(drone, "lp", cut, 0.8, circular=True) * 0.30
     heart = np.zeros(n)
     for k in range(int(L / BEAT)):
-        lvl = 0.20 + 0.32 * float(build[min(int(k * BEAT * SR), n - 1)])
+        lvl = 0.10 + 0.42 * float(build[min(int(k * BEAT * SR), n - 1)])
         add_at(heart, lvl * thump(62.0, 36.0, 0.5, 0.04, 0.16, click=0.2, rng=rng), k * BEAT, wrap=True)
         if k % 2 == 1:
             add_at(heart, 0.45 * lvl * thump(70.0, 40.0, 0.4, 0.035, 0.12), k * BEAT + EIGHTH, wrap=True)
@@ -286,7 +286,7 @@ def music_final(v, rng):
         lift = 12 if b >= 10 else 0
         for k in range(8):
             m = ladder[pat[k]] + lift
-            vel = (0.28 + 0.55 * float(build[min(int((b * BAR + k * EIGHTH) * SR), n - 1)])) * (1.0 if k % 4 == 0 else 0.78)
+            vel = (0.14 + 0.80 * float(build[min(int((b * BAR + k * EIGHTH) * SR), n - 1)])) * (1.0 if k % 4 == 0 else 0.78)
             f = float(mtof(m))
             y = modal([f, 2 * f, 3 * f, 4.01 * f, 5.02 * f], [1.0, 0.5, 0.3, 0.16, 0.09],
                       [0.55, 0.32, 0.22, 0.14, 0.10], 1.1)
@@ -296,7 +296,7 @@ def music_final(v, rng):
     strings = np.zeros(n)
     for b in range(2, 16):
         ch = _F_CH[b]
-        g = 0.16 + 0.34 * float(build[min(int((b + 0.5) * BAR * SR), n - 1)])
+        g = 0.07 + 0.60 * float(build[min(int((b + 0.5) * BAR * SR), n - 1)])
         for m in _F_STR[ch]:
             add_at(strings, g * 0.5 * string_swell(float(mtof(m)), BAR + 2.4, rng, attack=1.5, release=1.8,
                                                     cutoff=1100.0 + 1800.0 * float(build[min(int(b * BAR * SR), n - 1)])),
@@ -331,13 +331,13 @@ def music_final(v, rng):
     # --- tolling low bell (twice) and the endlessly rising Shepard glide
     bell = np.zeros(n)
     for tb in (1 * BAR, 9 * BAR):
-        add_at(bell, 0.30 * metal_hit(rng, 146.83, 5.0, 2.0, 0.5), tb, wrap=True)
-    shep = _shepard(n, 20.0, rng) * (0.05 + 0.20 * build)
+        add_at(bell, 0.16 * metal_hit(rng, 146.83, 5.0, 2.0, 0.5), tb, wrap=True)
+    shep = _shepard(n, 20.0, rng) * (0.03 + 0.22 * build)
     ost = reverb(ost, rt60=2.6, wet=0.45, dry=0.8, predelay=0.02, damp=0.5, seed=81, circular=True)
     strings = reverb(strings, rt60=3.4, wet=0.40, dry=0.8, predelay=0.03, damp=0.5, seed=82, circular=True)
     line = reverb(line, rt60=3.0, wet=0.5, dry=0.7, seed=83, circular=True)
     brs = reverb(brs, rt60=2.8, wet=0.35, dry=0.85, seed=84, circular=True)
     perc = reverb(perc, rt60=3.2, wet=0.45, dry=0.85, predelay=0.02, seed=85, circular=True)
     bell = reverb(bell, rt60=3.5, wet=0.6, dry=0.7, seed=86, circular=True)
-    y = drone * 1.0 + heart * 1.0 + ost * 1.0 + strings * 1.0 + line * 0.9 + brs * 0.9 + perc * 1.0 + bell + shep * 0.9
-    return _master(y, -4.0, comp=(-22.0, 2.6), drive=1.0)
+    y = drone * 1.0 + heart * 1.0 + ost * 1.0 + strings * 1.0 + line * 1.1 + brs * 1.2 + perc * 1.1 + bell + shep * 0.9
+    return _master(y, -4.0, comp=(-16.0, 1.6), drive=1.0)

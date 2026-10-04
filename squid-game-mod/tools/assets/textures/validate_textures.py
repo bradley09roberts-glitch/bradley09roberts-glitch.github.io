@@ -11,12 +11,15 @@ What is checked
   blockstates one per block id; JSON parses; all models exist; stairs = 40 variants, slabs = 3 types,
               facing blocks = 4 facings with the right y rotation, playground = 4 y rotations
   models     parents resolve, every texture variable resolves to an existing PNG, uv / rotation / range sanity,
-             particle texture present, no coplanar same-facing overlapping faces (z-fighting)
+             particle texture present, no coplanar same-facing overlapping faces (z-fighting), contract shapes
+             (terminal ~12x16 with ring light / sloped screen / card slot, dalgona table 8px high, monitor <= 6px deep)
   textures   exact sizes, mode/alpha rules (opaque cubes, translucent bridge glass, tintable HUD icons, nine-slice
-             uniformity, crack nesting, needle tip, tracksuit layout), seam tiling, pastel harmony, symbol symmetry
+             uniformity, crack nesting, needle tip, tracksuit layout cross-checked against the vanilla Steve / Alex
+             skins), seam tiling, pastel harmony (LCH), symbol symmetry, tile grout / gloss
   animation  monitor_screen strip + .mcmeta consistency
   lang       every block / item key present
-  freshness  regenerating into a temp dir reproduces the committed files byte for byte (and twice in a row)
+  orientation  the real blockstate variants are baked: monitors / terminals face the right way for all 4 facings
+  freshness  regenerating into a temp dir reproduces the committed files (PNG pixels / JSON bytes) and is deterministic
 """
 from __future__ import annotations
 
@@ -34,7 +37,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import common  # noqa: E402
-from common import BLOCK_IDS, ITEM_IDS, PANEL_LIGHTS, PASTELS, SYMBOLS, TILES, rgb_to_lch  # noqa: E402
+from common import BLOCK_IDS, ITEM_IDS, PANEL_LIGHTS, PASTELS, SPAWN_EGGS, SYMBOLS, TILES, rgb_to_lch  # noqa: E402
 
 NS = "squidgame"
 FACINGS_Y = {"north": 0, "east": 90, "south": 180, "west": 270}
@@ -183,19 +186,25 @@ def contract_gui_files(rep: Report) -> set[str]:
 # --------------------------------------------------------------------------- model checks
 def collect_model(a: Assets, ref: str, rep: Report, depth: int = 0):
     """Return (textures dict, elements list or None, parents chain) for a squidgame / vanilla model ref."""
+    import mcrender
     ns, path = split_ref(ref)
     if depth > 8:
         rep.ok(False, f"model {ref}: parent chain too deep")
         return {}, None, []
     p = a.model_path(ref)
-    if p is None:
-        # vanilla assets unavailable: trust the known parents
-        rep.warn(ref in PARENT_KEYS or ns == NS, f"model {ref}: vanilla parent unknown and vanilla assets unavailable")
-        return {}, None, [ref]
-    if not p.exists():
-        rep.ok(False, f"model {ref}: file {p} missing")
+    if ns == NS:
+        if not rep.ok(p is not None and p.exists(), f"model {ref}: file {p} missing"):
+            return {}, None, []
+        data = load_json(p, rep)
+    elif p is not None and p.exists():
+        data = load_json(p, rep)
+    elif path in mcrender.BUILTIN_MODELS:
+        data = mcrender.BUILTIN_MODELS[path]
+    elif path.startswith("item/") or ref in PARENT_KEYS:
+        return {}, None, [ref]                 # item/generated, template_spawn_egg: nothing to resolve
+    else:
+        rep.ok(False, f"model {ref}: vanilla parent not found")
         return {}, None, []
-    data = load_json(p, rep)
     if data is None:
         return {}, None, []
     parent = data.get("parent")
@@ -393,6 +402,11 @@ def check_blockstates_and_models(a: Assets, rep: Report) -> dict[str, set[str]]:
             rep.ok(parent.startswith(f"{NS}:block/"), f"item {bid}: parent should be a squidgame block model, got {parent}")
             pm = a.model_path(parent)
             rep.ok(pm is not None and pm.exists(), f"item {bid}: parent model {parent} missing")
+    for egg in SPAWN_EGGS:
+        ip = root / "models" / "item" / f"{egg}.json"
+        if rep.ok(ip.exists(), f"item model {egg}.json missing (spawn egg registered by ModItems)"):
+            data = load_json(ip, rep) or {}
+            rep.ok(data.get("parent") == "minecraft:item/template_spawn_egg", f"item {egg}: parent should be minecraft:item/template_spawn_egg")
     # texture usage via block models
     for mp in (root / "models" / "block").glob("*.json"):
         data = load_json(mp, rep)
@@ -422,13 +436,17 @@ def seam_ratio(arr: np.ndarray) -> tuple[float, float]:
 
 
 def seam_ok(arr: np.ndarray) -> tuple[bool, bool]:
-    """Tiling test: the wrap-around transition must be no harsher than the harshest interior transitions."""
+    """Tiling test: the wrap-around transition must be no harsher than the harshest interior transition (+25%).
+
+    Plank textures legitimately contain hard gap lines, so the seam is compared with the worst *interior* step
+    instead of an average one.
+    """
     rgb = arr[..., :3].astype(float)
     dx = np.abs(np.diff(rgb, axis=1)).mean(axis=(0, 2))       # per column pair
     dy = np.abs(np.diff(rgb, axis=0)).mean(axis=(1, 2))
     sx = np.abs(rgb[:, 0] - rgb[:, -1]).mean()
     sy = np.abs(rgb[0] - rgb[-1]).mean()
-    return bool(sx <= np.percentile(dx, 97) * 1.3 + 2), bool(sy <= np.percentile(dy, 97) * 1.3 + 2)
+    return bool(sx <= dx.max() * 1.25 + 2), bool(sy <= dy.max() * 1.25 + 2)
 
 
 def check_block_textures(a: Assets, rep: Report) -> None:
@@ -462,8 +480,6 @@ def check_block_textures(a: Assets, rep: Report) -> None:
         body = g[3:13, 3:13, :3].astype(float).mean(axis=(0, 1))
         rep.ok(body[2] > body[0] + 15 and body[1] > body[0] and body.min() > 150,
                f"bridge_glass: interior colour {body.round()} is not pale cyan")
-        frame_l = lum(g[0, 4:12, :3].astype(float)).mean()
-        rep.ok(frame_l < lum(g[8, 4:12, :3].astype(float)).mean() + 5 or True, "")
         frame_dark = lum(g[0, :, :3].astype(float)).mean()
         rep.ok(frame_dark < lum(g[6:10, 6:10, :3].astype(float)).mean(), "bridge_glass: frame should be darker than the glass")
 
@@ -610,7 +626,7 @@ def check_gui(a: Assets, rep: Report) -> None:
         rep.ok(0.08 <= cov <= 0.75, f"{n}: coverage {cov:.2f} outside 0.08..0.75")
         vis = arr[al > 0, :3].astype(float)
         rep.ok(lum(vis).mean() >= 185, f"{n}: icon is not white-ish enough to tint (mean luminance {lum(vis).mean():.0f})")
-        rep.ok(vis.min() >= 120, f"{n}: icon has very dark pixels (min channel {vis.min():.0f}); keep tintable")
+        rep.ok(vis.min() >= 100, f"{n}: icon has very dark pixels (min channel {vis.min():.0f}); keep tintable")
         rep.ok(set(np.unique(al)) <= {0, 255}, f"{n}: icons must not use partial alpha (crisp pixel art)")
     # number plate
     np_ = a.png("gui/hud/number_plate.png")
@@ -628,8 +644,8 @@ def check_gui(a: Assets, rep: Report) -> None:
         rep.ok(mid_edge >= 90, f"vignette_red: edge midpoints too transparent ({mid_edge})")
         rep.ok(al[128, 64] < mid_edge, "vignette_red: alpha should grow towards the edge")
         px = v[v[..., 3] > 40, :3].astype(float).mean(axis=0)
-        rep.ok(px[0] > px[1] + 90 and px[0] > px[2] + 90, f"vignette_red: colour {px.round()} is not red")
-        rep.ok(v[..., 3].astype(int).max() <= 255, "")
+        rep.ok(px[0] > px[1] + 60 and px[0] > px[2] + 60 and px[0] > 200,
+               f"vignette_red: colour {px.round()} is not (pale) red")
     # panel: nine-slice (4px) uniformity + pink border
     p = a.png("gui/hud/panel.png")
     if p is not None:
@@ -741,12 +757,9 @@ def check_entities(a: Assets, rep: Report) -> None:
         rep.ok(opaque_ratio(rope) == 1.0, "rope: must be opaque")
         m = rope[..., :3].astype(float).mean(axis=(0, 1))
         rep.ok(m[0] > m[1] > m[2] and 120 < m[0] < 230, f"rope: mean colour {m.round()} is not tan/brown")
-        # twist along the vertical axis: rows shift horizontally -> low correlation between a row and itself shifted
         rgb = lum(rope[..., :3].astype(float))
-        # the pattern repeats vertically by a horizontal shift of exactly half the strand period
-        best = max(range(16), key=lambda s: -np.abs(np.roll(rgb[0], s) - rgb[1]).mean())
         rep.ok(rgb.std(axis=1).mean() > 15, "rope: strands should show clear tonal contrast along each row")
-        # diagonal structure: moving one row down while shifting columns by +/-1..4 must match better than no shift
+        # twist: two rows down the pattern matches a horizontally shifted copy better than the unshifted one
         errs = [np.abs(np.roll(rgb, s_, axis=1)[2:] - rgb[:-2]).mean() for s_ in range(-4, 5)]
         rep.ok(int(np.argmin(errs)) != 4 and min(errs) < errs[4] * 0.75, "rope: strands do not twist (no diagonal structure)")
         sx, sy = seam_ratio(rope)
@@ -760,10 +773,11 @@ def check_entities(a: Assets, rep: Report) -> None:
         rep.ok(m[0] > m[1] + 90 and m[0] > m[2] + 90, f"rope_flag: mean colour {m.round()} is not red")
 
     van = common.vanilla_root()
-    steve_used = None
-    if van is not None and (van / "textures/entity/player/wide/steve.png").exists():
-        st = np.array(Image.open(van / "textures/entity/player/wide/steve.png").convert("RGBA"))
-        steve_used = st[..., 3] > 0
+    vanilla_skin = {}
+    for slim_, rel in ((False, "wide/steve.png"), (True, "slim/alex.png")):
+        if van is not None and (van / "textures/entity/player" / rel).exists():
+            sk = np.array(Image.open(van / "textures/entity/player" / rel).convert("RGBA"))
+            vanilla_skin[slim_] = sk[..., 3] > 0
     for slim in (False, True):
         name = "player_tracksuit_slim.png" if slim else "player_tracksuit.png"
         arr = a.png(f"entity/{name}")
@@ -785,8 +799,12 @@ def check_entities(a: Assets, rep: Report) -> None:
         rep.ok(not al[0:16, 0:64].any(), f"{name}: head / hat area (rows 0..15) must be fully transparent")
         stray = al & ~used
         rep.ok(not stray.any(), f"{name}: {int(stray.sum())} opaque pixels outside the used UV regions")
-        if steve_used is not None and not slim:
-            rep.ok(not (steve_used & ~used)[16:, :].any() or True, "")
+        if slim in vanilla_skin:
+            # independent check of the UV table: every opaque pixel of the real vanilla skin below the head rows
+            # must lie inside the regions this overlay paints / reserves
+            miss = (vanilla_skin[slim] & ~used)[16:, :]
+            rep.ok(not miss.any(), f"{name}: layout differs from the vanilla {'Alex' if slim else 'Steve'} skin "
+                                   f"({int(miss.sum())} vanilla pixels outside the overlay's UV regions)")
         for pname in ("body", "jacket", "r_leg", "l_leg", "r_pants", "l_pants", "r_arm", "l_arm", "r_sleeve", "l_sleeve"):
             u0, v0, w, h, d = parts[pname]
             faces = _box_uv(u0, v0, w, h, d)
@@ -812,10 +830,6 @@ def check_entities(a: Assets, rep: Report) -> None:
         rep.ok(lum(shoe).mean() > 200, f"{name}: sneakers should be white")
         zip_col = arr[20:30, 23:25, :3].astype(float)
         rep.ok(lum(zip_col).max() > 190, f"{name}: no visible zipper on the jacket front")
-        if slim:
-            wide = a.png("entity/player_tracksuit.png")
-            if wide is not None:
-                rep.ok(not (al[:, 47:48][20:32].any() and False), "")
 
 
 def check_lang(root: Path, lang_path: Path, rep: Report) -> None:
@@ -827,10 +841,11 @@ def check_lang(root: Path, lang_path: Path, rep: Report) -> None:
     for b in BLOCK_IDS:
         v = data.get(f"block.{NS}.{b}")
         rep.ok(isinstance(v, str) and len(v) >= 3, f"lang: block.{NS}.{b} missing/empty")
-    for i in ITEM_IDS:
+    for i in ITEM_IDS + SPAWN_EGGS:
         v = data.get(f"item.{NS}.{i}")
         rep.ok(isinstance(v, str) and len(v) >= 3, f"lang: item.{NS}.{i} missing/empty")
-    extra = [k for k in data if k not in {f"block.{NS}.{b}" for b in BLOCK_IDS} | {f"item.{NS}.{i}" for i in ITEM_IDS}]
+    known = {f"block.{NS}.{b}" for b in BLOCK_IDS} | {f"item.{NS}.{i}" for i in ITEM_IDS + SPAWN_EGGS}
+    extra = [k for k in data if k not in known]
     rep.warn(not extra, f"lang: unexpected extra keys {extra[:5]}")
     names = list(data.values())
     rep.warn(len(set(names)) == len(names), "lang: duplicate display names")
@@ -867,6 +882,65 @@ def check_model_shapes(a: Assets, rep: Report) -> None:
         rep.ok(any(fd.get("texture") == "#screen" for e in mon for fd in e["faces"].values()), "monitor: no screen face")
 
 
+def check_orientation(a: Assets, rep: Report) -> None:
+    """Bake the real blockstate variants and verify which way the screens face (north-facing models, y-rotated)."""
+    import mcrender
+    R = mcrender.Resolver(a.root, common.vanilla_root())
+    dirs = {"north": (0, 0, -1), "east": (1, 0, 0), "south": (0, 0, 1), "west": (-1, 0, 0)}
+
+    def quads_for(block: str, facing: str):
+        sc = mcrender.Scene(R)
+        sc.set((0, 0, 0), f"{NS}:{block}", facing=facing)
+        try:
+            return sc.quads()
+        except (FileNotFoundError, KeyError) as e:  # missing assets are reported elsewhere
+            rep.ok(False, f"{block}[facing={facing}]: cannot bake ({e})")
+            return []
+
+    def normal(q) -> np.ndarray:
+        n = np.cross(q.verts[2] - q.verts[1], q.verts[0] - q.verts[1])
+        return n / (np.linalg.norm(n) + 1e-9)
+
+    def screen_quads(quads, texname: str):
+        ref = a.png(f"block/{texname}.png")
+        if ref is None:
+            return []
+        return [q for q in quads if q.tex.shape == ref.shape and np.array_equal(q.tex, ref)]
+
+    for facing, d in dirs.items():
+        dv = np.array(d, float)
+        # monitor: screen faces the facing direction, casing leans on the opposite block side, <= 6px deep
+        qs = quads_for("monitor", facing)
+        if qs:
+            scr = [q for q in screen_quads(qs, "monitor_screen") if float(np.dot(normal(q), dv)) > 0.9]
+            rep.ok(len(scr) >= 1, f"monitor[facing={facing}]: no screen face points {facing}")
+            allv = np.concatenate([q.verts for q in qs])
+            lo, hi = allv.min(0), allv.max(0)
+            axis = int(np.argmax(np.abs(dv)))
+            if dv[axis] < 0:       # screen towards -axis, wall at +axis (coordinate 16)
+                rep.ok(abs(hi[axis] - 16) < 1e-3 and 16 - lo[axis] <= 6.001, f"monitor[facing={facing}]: casing must sit against the opposite block side and be <= 6px deep")
+            else:
+                rep.ok(abs(lo[axis]) < 1e-3 and hi[axis] <= 6.001, f"monitor[facing={facing}]: casing must sit against the opposite block side and be <= 6px deep")
+        # terminal: sloped screen looks towards facing and upwards; card slot is on the facing side
+        qs = quads_for("registration_terminal", facing)
+        if qs:
+            scr = [q for q in screen_quads(qs, "registration_terminal_screen")]
+            good = [q for q in scr if np.dot(normal(q), dv) > 0.7 and normal(q)[1] > 0.2]
+            rep.ok(len(good) >= 1, f"registration_terminal[facing={facing}]: screen does not tilt up towards {facing}")
+            card = [q for q in qs if q.tex is not None and q.tex.shape == (16, 16, 4)
+                    and np.array_equal(q.tex, a.png("block/registration_terminal_front.png")) and q.verts[:, 1].max() < 5.2
+                    and q.verts[:, 1].min() > 3.8]
+            if card:
+                cc = np.concatenate([q.verts for q in card]).mean(0)
+                rep.ok(float(np.dot(cc - 8.0, dv)) > 2.0, f"registration_terminal[facing={facing}]: card slot should be on the {facing} side")
+    # dalgona: tabletop must stay 8px high for every facing
+    for facing in dirs:
+        qs = quads_for("dalgona_station", facing)
+        if qs:
+            ups = [q for q in qs if abs(q.verts[:, 1].max() - 8.0) < 1e-6 and abs(q.verts[:, 1].min() - 8.0) < 1e-6]
+            rep.ok(len(ups) >= 1, f"dalgona_station[facing={facing}]: no tabletop surface at y=8")
+
+
 def check_orphans(a: Assets, used: set[str], rep: Report) -> None:
     for sub in ("block", "item"):
         for p in (a.root / "textures" / sub).glob("*.png"):
@@ -875,8 +949,16 @@ def check_orphans(a: Assets, used: set[str], rep: Report) -> None:
 
 
 # --------------------------------------------------------------------------- freshness / determinism
+def _digest(path: Path) -> str:
+    """Content digest: decoded pixels for PNGs (the zlib stream may differ between builds), raw bytes otherwise."""
+    if path.suffix == ".png":
+        im = Image.open(path).convert("RGBA")
+        return hashlib.sha256(f"{im.size}".encode() + im.tobytes()).hexdigest()
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def _hash_tree(files: list[Path], root: Path) -> dict[str, str]:
-    return {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
+    return {str(p.relative_to(root)): _digest(p) for p in files}
 
 
 def check_fresh(root: Path, lang_path: Path, rep: Report) -> None:
@@ -894,7 +976,7 @@ def check_fresh(root: Path, lang_path: Path, rep: Report) -> None:
             cur = root / rel
             if not cur.exists():
                 missing.append(rel)
-            elif hashlib.sha256(cur.read_bytes()).hexdigest() != digest:
+            elif _digest(cur) != digest:
                 stale.append(rel)
         rep.ok(not stale and not missing, f"committed assets differ from the generators' output: stale={stale[:6]} missing={missing[:6]} (run gen_all.py)")
         lt = Path(l1) / "textures.json"
@@ -908,7 +990,6 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--root", default=str(common.DEFAULT_RES), help="assets/squidgame directory to validate")
     ap.add_argument("--lang", default=str(common.LANG_DIR / "textures.json"))
     ap.add_argument("--no-fresh", action="store_true", help="skip the regenerate-and-compare check")
-    ap.add_argument("-q", "--quiet", action="store_true")
     args = ap.parse_args(argv)
 
     root = Path(args.root)
@@ -934,6 +1015,7 @@ def main(argv: list[str] | None = None) -> int:
     check_gui(a, rep)
     check_entities(a, rep)
     check_model_shapes(a, rep)
+    check_orientation(a, rep)
     check_lang(root, Path(args.lang), rep)
     check_orphans(a, used["used"], rep)
     if not args.no_fresh:

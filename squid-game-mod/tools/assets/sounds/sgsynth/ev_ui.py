@@ -1,14 +1,11 @@
 """UI blips, countdown beeps / ticks and the PA announcement chimes."""
 from __future__ import annotations
 
-import math
-
 import numpy as np
 
-from .core import (SR, TAU, add_at, adsr, curve, exp_decay, finish, ns, saw, pulse, sine, soft_clip,
-                   stack, time_axis)
-from .dsp import band, bandpass, highpass, lowpass, reverb
-from .instruments import bell_fm, chime_tone, modal, noise_burst, wood_tock, chirp
+from .core import add_at, curve, exp_decay, finish, ns, saw, pulse, sine, soft_clip, stack
+from .dsp import band, lowpass, reverb
+from .instruments import bell_fm, chime_tone, modal, noise_burst, wood_tock
 from .registry import sound
 
 
@@ -35,11 +32,11 @@ def ui_confirm(v, rng):
     return finish(out, -3.0, -13.0, 0.002, 0.07)
 
 
-@sound("ui.deny", "Denied buzz")
+@sound("ui.deny", "Denied buzz", variants=2)
 def ui_deny(v, rng):
     n = ns(0.3)
     out = np.zeros(n)
-    for t0, f in ((0.0, 168.0), (0.15, 132.0)):
+    for t0, f in (((0.0, 168.0), (0.15, 132.0)), ((0.0, 154.0), (0.15, 122.0)))[v]:
         m = ns(0.115)
         y = 0.7 * pulse(f, m, 0.4) + 0.5 * saw(f * 1.01, m)
         y = lowpass(y, 1700, order=4) * (1.0 + 0.4 * sine(70.0, m))
@@ -48,15 +45,15 @@ def ui_deny(v, rng):
     return finish(out, -3.0, -13.0, 0.002, 0.03)
 
 
-@sound("ui.number_call", "Number called")
+@sound("ui.number_call", "Number called", variants=2)
 def ui_number_call(v, rng):
     dur = 0.6
-    f = 1568.0
+    f = (1568.0, 1318.5)[v]                                  # G6 / E6: a pleasant minor third apart
     y = modal([f, f * 2.0, f * 3.01, f * 4.2], [1.0, 0.33, 0.14, 0.06], [0.42, 0.22, 0.12, 0.06], dur,
               detune_beat=1.7)
     add_at(y, 0.12 * noise_burst(rng, 0.02, 4000, 12000, tau=0.002), 0.0)
     y += 0.5 * sine(f * 0.5, ns(dur)) * exp_decay(ns(dur), 0.22, 0.002)
-    y = reverb(y, rt60=0.6, wet=0.18, predelay=0.008, damp=0.4, seed=22)
+    y = reverb(y, rt60=0.6, wet=0.18, predelay=0.008, damp=0.4, seed=22 + v)
     return finish(y, -3.0, -14.0, 0.001, 0.09)
 
 

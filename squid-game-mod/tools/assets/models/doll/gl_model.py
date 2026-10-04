@@ -333,6 +333,8 @@ class BCube:
     rot: np.ndarray     # rad, baked (x, y, z)
     quads: list
     size: tuple
+    lo: np.ndarray = None    # local (baked, blocks) bounds incl. inflate
+    hi: np.ndarray = None
 
 
 @dataclass
@@ -465,7 +467,7 @@ def _bake_cube(c, tw, th, bone_inflate):
             data = ((ux + fz + fx, uy + fz), (fx, -fz))
         verts = _quad_vertices(vs, d, True, mirror or c.get("mirror") is True)
         quads.append(_build_quad(verts, data[0][0], data[0][1], data[1][0], data[1][1], 0, tw, th, mirror, d))
-    return BCube(pivot, rot, quads, tuple(size))
+    return BCube(pivot, rot, quads, tuple(size), borigin - inflate, borigin + vsize + inflate)
 
 
 def bake(doc) -> BakedModel:
@@ -627,3 +629,32 @@ def bone_world_matrices(model: BakedModel, pose: Pose) -> dict:
 def load_json(path):
     with open(path, "r", encoding="utf-8") as fh:
         return json.load(fh)
+
+
+def world_quads_ex(model: BakedModel, pose: Pose):
+    """Like world_quads but also returns the owning cube: list of dicts with keys
+    bone, cube (BCube), cid (global cube index), m (cube world matrix), quads [(verts, uv, normal, BQuad)]."""
+    cubes = []
+
+    def rec(bone: BBone, parent_m):
+        m = parent_m @ bone_matrix(bone, pose)
+        if bone.name in pose.hidden:
+            return
+        for cube in bone.cubes:
+            cm = m @ cube_matrix(cube)
+            nm = np.linalg.inv(cm[:3, :3]).T
+            qs = []
+            for q in cube.quads:
+                if q is None:
+                    continue
+                v = np.c_[q.verts, np.ones(4)] @ cm.T
+                n = nm @ q.normal
+                ln = np.linalg.norm(n)
+                qs.append((v[:, :3], q.uv, n / ln if ln else n, q))
+            cubes.append({"bone": bone.name, "cube": cube, "cid": len(cubes), "m": cm, "quads": qs})
+        for ch in bone.children:
+            rec(ch, m)
+
+    for r in model.roots:
+        rec(r, np.eye(4))
+    return cubes

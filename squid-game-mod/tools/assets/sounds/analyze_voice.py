@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from sgsynth import voice as V                      # noqa: E402
-from sgsynth.core import SR, make_rng, ns, decode_ogg   # noqa: E402
+from sgsynth.core import SR, ns, decode_ogg   # noqa: E402
 from sgsynth import ev_doll                         # noqa: E402
 
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))

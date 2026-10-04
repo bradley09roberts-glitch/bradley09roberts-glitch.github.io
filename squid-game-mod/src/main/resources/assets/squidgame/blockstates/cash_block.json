@@ -1,7 +1,5 @@
 {
   "variants": {
-    "": {
-      "model": "squidgame:block/cash_block"
-    }
+    "": { "model": "squidgame:block/cash_block" }
   }
 }

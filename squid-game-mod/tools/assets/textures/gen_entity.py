@@ -5,40 +5,36 @@ import math
 
 import numpy as np
 
-from common import Canvas, Out, darken, lighten, mix, ramp, rng, shade, value_noise
+from common import Canvas, Out, mix, ramp, rng, shade
 
 # =========================================================================== rope
 ROPE_PAL = [(88, 62, 36), (122, 90, 54), (156, 118, 72), (188, 150, 98), (216, 184, 130), (232, 206, 156)]
 
 
 def rope() -> Canvas:
-    """16x16 tileable three-strand natural rope; strands twist along the vertical axis of the image."""
+    """16x16 tileable three-strand natural rope; strands twist along the vertical axis of the image.
+
+    The strand phase is ``u = (x + y/2) mod 8``: two strand repeats across the rope, and after 16 rows the
+    pattern has shifted by exactly one period, so it tiles seamlessly along the rope.  Fibre streaks follow the
+    strand direction (down-left) and use a hash that is periodic in both axes.
+    """
     r = rng("rope")
+    lane_noise = r.random((8, 4))
+    per = 8.0
     c = Canvas(16)
-    per = 8.0                                 # two strand repeats across the rope
     tone = np.zeros((16, 16))
-    for y in range(16):
-        for x in range(16):
-            u = ((x + 0.5) + (y + 0.5) * 0.5) % per          # diagonal phase, tiles in both axes
-            t = u / per
-            bump = math.sin(math.pi * t)                       # 0 in the groove, 1 on the strand crest
-            cyl = 1.0 - 0.40 * ((x - 7.5) / 7.5) ** 2          # rope is round: edges fall off
-            tone[y, x] = (0.12 + 0.88 * bump ** 0.8) * cyl
-    # fibre noise runs along the strand direction (down-left)
-    for y in range(16):
-        for x in range(16):
-            along = (2 * y - x) % 16
-            tone[y, x] += (value_noise(16, 16, 8, r)[y, x] - 0.5) * 0.0
-    fib = r.random((16, 16))
-    tone += (fib - 0.5) * 0.16
-    tone = np.clip(tone, 0, 0.999)
-    c.fill_rgb(ramp(tone, ROPE_PAL))
-    # darken the groove line explicitly so the twist reads at a glance
+    groove = np.zeros((16, 16), dtype=bool)
     for y in range(16):
         for x in range(16):
             u = ((x + 0.5) + (y + 0.5) * 0.5) % per
-            if u < 0.9 or u > per - 0.4:
-                c.px(x, y, shade(c.get(x, y)[:3], 0.74))
+            bump = math.sin(math.pi * u / per) ** 0.8             # 0 in the groove, 1 on the strand crest
+            cyl = 1.0 - 0.40 * ((x - 7.5) / 7.5) ** 2             # the rope is round: edges fall off
+            fibre = lane_noise[int(u) % 8, ((2 * y - x) // 4) % 4] - 0.5
+            tone[y, x] = (0.14 + 0.86 * bump) * cyl + fibre * 0.16
+            groove[y, x] = u < 0.9 or u > per - 0.4
+    c.fill_rgb(ramp(np.clip(tone, 0, 0.999), ROPE_PAL))
+    for y, x in zip(*np.nonzero(groove)):                          # darken the groove so the twist reads at a glance
+        c.px(int(x), int(y), shade(c.get(int(x), int(y))[:3], 0.74))
     return c
 
 
@@ -74,7 +70,7 @@ GL = (64, 148, 124)
 GD = (36, 102, 86)
 GDD = (27, 78, 67)
 WHITE = (238, 240, 238)
-WHITE_D = (196, 202, 202)
+WHITE_D = (214, 220, 220)
 SILVER = (206, 212, 216)
 TEETH = (84, 108, 100)
 SHOE = (244, 245, 247)
@@ -119,12 +115,14 @@ class _Face:
 
 
 def _knit(f: _Face, base=G0, light=GL, dark=GD, edge_dark: bool = True):
-    """Soft knit fabric: faint checker texture, dark edges."""
+    """Soft ribbed track-suit fabric: faint vertical ribs, darker edges."""
     f.fill(base)
     for fy in range(f.h):
         for fx in range(f.w):
-            if (fx + fy) % 2 == 0 and (fx * 7 + fy * 3) % 5 == 0:
-                f.px(fx, fy, light)
+            if fx % 2 == 1:
+                f.px(fx, fy, mix(base, light, 0.38))
+            elif (fx * 5 + fy * 3) % 7 == 0:
+                f.px(fx, fy, mix(base, dark, 0.35))
     if edge_dark:
         f.col(0, mix(base, dark, 0.55))
         f.col(f.w - 1, mix(base, dark, 0.8))

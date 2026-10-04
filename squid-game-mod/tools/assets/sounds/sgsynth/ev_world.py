@@ -9,34 +9,35 @@ import math
 
 import numpy as np
 
-from .core import (SR, TAU, add_at, adsr, cents, colored, curve, db2lin, exp_decay, finish, make_rng, ns,
-                   phase_cycles, pulse, saw, sine, smooth_noise, soft_clip, stack, tail_fade, time_axis,
-                   white, zeros)
-from .dsp import band, bandpass, highpass, lowpass, peaking, reverb, tv_biquad
-from .instruments import (chirp, friction, metal_hit, modal, noise_burst, sparks, thump, whoosh,
-                          wood_tock)
+from .core import (SR, TAU, add_at, cents, colored, curve, exp_decay, finish, ns, phase_cycles, pulse,
+                   saw, sine, smooth_noise, soft_clip, stack, time_axis)
+from .dsp import band, bandpass, highpass, lowpass, reverb, tv_biquad
+from .instruments import friction, metal_hit, modal, noise_burst, poisson_times, sparks, thump, whoosh
 from .registry import sound
 
 
 # ============================================================================ elimination
-@sound("elimination.crack", "Elimination crack")
+@sound("elimination.crack", "Elimination crack", variants=3)
 def elimination_crack(v, rng):
     n = ns(0.5)
     out = np.zeros(n)
+    f_thump, f_zap, f_lo, f_sq, f_ring = ((190.0, 5200.0, 1400.0, 900.0, 880.0),
+                                          (172.0, 4600.0, 1250.0, 820.0, 830.0),
+                                          (208.0, 5700.0, 1600.0, 980.0, 940.0))[v]
     # bright snap (noise burst) + a fast pitched "zap" so it is clearly stylised, not a gunshot
-    add_at(out, 1.6 * noise_burst(rng, 0.06, 1400, 9500, tau=0.010, attack=0.0003), 0.0)
+    add_at(out, 1.6 * noise_burst(rng, 0.06, f_lo, 9500, tau=0.010, attack=0.0003), 0.0)
     m = ns(0.05)
-    f = np.exp(np.linspace(math.log(5200.0), math.log(700.0), m))
+    f = np.exp(np.linspace(math.log(f_zap), math.log(700.0), m))
     add_at(out, 0.8 * sine(f, m) * np.exp(-np.arange(m) / SR / 0.012), 0.0)
     # retro "hit" square drop
     m = ns(0.16)
     tt = np.linspace(0.0, 1.0, m)
-    fs = 900.0 * (170.0 / 900.0) ** (tt ** 0.5)
+    fs = f_sq * (170.0 / f_sq) ** (tt ** 0.5)
     add_at(out, 0.32 * pulse(fs, m, 0.5) * exp_decay(m, 0.055, 0.001), 0.003)
     # punchy low thump + mid body slap
-    add_at(out, 0.85 * thump(190.0, 50.0, 0.3, 0.030, 0.085, click=0.3, rng=rng), 0.0)
+    add_at(out, 0.85 * thump(f_thump, 50.0, 0.3, 0.030, 0.085, click=0.3, rng=rng), 0.0)
     add_at(out, 0.6 * noise_burst(rng, 0.12, 250, 1400, tau=0.030, attack=0.001), 0.0)
-    add_at(out, 0.09 * metal_hit(rng, 880.0, 0.3, 0.10, 0.6), 0.005)
+    add_at(out, 0.09 * metal_hit(rng, f_ring, 0.3, 0.10, 0.6), 0.005)
     out = soft_clip(out * 0.9, 1.4)
     out = lowpass(out, 11000.0, order=2)
     return finish(out, -3.0, -13.0, 0.0003, 0.14)
@@ -99,23 +100,22 @@ def _door(rng, opening: bool):
     dur = 1.2
     n = ns(dur)
     out = np.zeros(n)
-    t = time_axis(n)
     if opening:
         f_curve = curve([(0.0, 260), (0.05, 260), (0.40, 720), (0.95, 690), (1.12, 240), (1.2, 240)], n, "cos")
         env = curve([(0, 0), (0.05, 0), (0.14, 1), (0.98, 1), (1.12, 0), (1.2, 0)], n, "cos")
     else:
         f_curve = curve([(0.0, 250), (0.04, 250), (0.30, 640), (0.85, 560), (1.02, 300), (1.2, 300)], n, "cos")
         env = curve([(0, 0), (0.04, 0), (0.12, 1), (0.88, 1), (1.02, 0), (1.2, 0)], n, "cos")
-    out += lowpass(_servo(n, f_curve, 0.34, rough=0.5, rng=rng), 3200.0, order=4) * env
+    out += lowpass(_servo(n, f_curve, 0.75, rough=0.5, rng=rng), 3200.0, order=4) * env
     # sliding carriage: rumble + rolling ticks
     rumble = lowpass(colored(n, rng, 2.0), 520.0, order=2)
     renv = curve([(0, 0), (0.06, 0.0), (0.16, 1.0), (1.00, 0.9), (1.08, 0.0), (1.2, 0)], n, "cos")
-    out += 0.55 * rumble * renv
+    out += 0.8 * rumble * renv
     out += 0.20 * sparks(rng, dur, 85.0, lo=700, hi=3200, tau=0.002) * renv
     if opening:
         add_at(out, stack(modal([1800, 3600], [0.6, 0.3], [0.007, 0.004], 0.04),
                           0.7 * thump(160.0, 90.0, 0.06, 0.012, 0.02)), 0.0)          # latch release
-        add_at(out, _hiss(rng, 0.45, 1.05, 0.10), 0.01)                                # pneumatic "psssht"
+        add_at(out, _hiss(rng, 0.45, 0.85, 0.10), 0.01)                                # pneumatic "psssht"
         add_at(out, _hiss(rng, 0.22, 0.30, 0.45, 1800.0, 7000.0), 0.97)               # air bleed at the stop
         add_at(out, stack(0.9 * thump(105.0, 52.0, 0.16, 0.025, 0.055),
                           0.35 * noise_burst(rng, 0.05, 300, 1600, tau=0.012)), 1.02)  # end stop
@@ -140,18 +140,20 @@ def door_slide_close(v, rng):
     return _door(rng, False)
 
 
-@sound("door.lock", "Door locks")
+@sound("door.lock", "Door locks", variants=2)
 def door_lock(v, rng):
     n = ns(0.4)
     out = np.zeros(n)
-    add_at(out, stack(modal([2100, 4300], [0.7, 0.4], [0.006, 0.004], 0.04),
+    k = (1.0, 0.93)[v]                                                                       # variant: a slightly lower bolt
+    add_at(out, stack(modal([2100 * k, 4300 * k], [0.7, 0.4], [0.006, 0.004], 0.04),
                       0.5 * noise_burst(rng, 0.02, 3000, 10000, tau=0.0015)), 0.0)          # "ka"
-    add_at(out, stack(1.25 * thump(135.0, 42.0, 0.24, 0.02, 0.07, click=0.3, rng=rng),
-                      modal([470, 1180, 2350, 3900], [0.8, 0.6, 0.35, 0.2], [0.14, 0.09, 0.05, 0.03], 0.3),
-                      0.5 * noise_burst(rng, 0.06, 400, 5000, tau=0.012)), 0.07)            # heavy "CHUNK"
+    add_at(out, stack(1.25 * thump(135.0 * k, 42.0, 0.24, 0.02, 0.07, click=0.3, rng=rng),
+                      modal([470 * k, 1180 * k, 2350 * k, 3900 * k], [0.8, 0.6, 0.35, 0.2],
+                            [0.14, 0.09, 0.05, 0.03], 0.3),
+                      0.5 * noise_burst(rng, 0.06, 400, 5000, tau=0.012)), 0.07 + 0.006 * v)  # heavy "CHUNK"
     add_at(out, 0.22 * modal([1800, 3100], [0.6, 0.4], [0.01, 0.006], 0.05), 0.22)           # settling rattle
     add_at(out, 0.13 * modal([1500, 2700], [0.6, 0.4], [0.01, 0.006], 0.05), 0.27)
-    out = reverb(out, rt60=0.4, wet=0.14, predelay=0.004, damp=0.6, seed=45)
+    out = reverb(out, rt60=0.4, wet=0.14, predelay=0.004, damp=0.6, seed=45 + v)
     return finish(out, -3.0, -14.0, 0.0004, 0.08)
 
 
@@ -172,14 +174,10 @@ def glass_crack(v, rng):
     n = ns(dur)
     out = np.zeros(n)
     # accelerating crackle of hairline fractures (inhomogeneous Poisson process)
-    t = 0.0
-    rate0, rate1 = (11.0, 9.0, 8.0)[v], (90.0, 75.0, 105.0)[v]
-    while t < dur - 0.08:
-        u = t / dur
-        rate = rate0 + (rate1 - rate0) * u ** 2
-        t += rng.exponential(1.0 / rate)
-        if t < dur - 0.08:
-            add_at(out, _glass_tick(rng, a=rng.uniform(0.15, 0.55) * (0.5 + u)), t)
+    rate0, rate1 = (14.0, 12.0, 10.0)[v], (95.0, 80.0, 110.0)[v]
+    add_at(out, _glass_tick(rng, a=0.35), 0.004 + 0.002 * v)          # the first hairline fracture is immediate
+    for t in poisson_times(rng, lambda tt: rate0 + (rate1 - rate0) * (tt / dur) ** 2, dur - 0.08, rate1):
+        add_at(out, _glass_tick(rng, a=rng.uniform(0.15, 0.55) * (0.5 + t / dur)), t)
     # a bigger crack as the pane gives
     tc = (0.50, 0.44, 0.55)[v]
     add_at(out, _glass_tick(rng, a=1.1, bright=1.2), tc)
@@ -190,7 +188,7 @@ def glass_crack(v, rng):
     out += 0.10 * squeal
     out = highpass(out, 350.0, order=2)
     out = reverb(out, rt60=0.3, wet=0.10, predelay=0.003, damp=0.3, seed=46 + v)
-    return finish(out, -3.0, -14.0, 0.002, 0.08)
+    return finish(out, -3.0, -14.0, 0.002, 0.08, squash_db=9.0)
 
 
 @sound("glass.shatter", "Glass shatters")
@@ -226,11 +224,16 @@ def glass_shatter(v, rng):
 def rope_creak(v, rng):
     dur = 0.8
     n = ns(dur)
-    fp = curve([(0, 52 + 8 * v), (0.28, 82 + 6 * v), (0.6, 70), (dur, 48)], n, "cos")
-    r1 = curve([(0, 820), (0.35, 1280 + 120 * v), (dur, 980)], n, "cos")
-    r2 = curve([(0, 1900), (0.4, 2300), (dur, 1800)], n, "cos")
-    y = friction(rng, dur, fp, [(r1, 1.0), (r2, 0.45), (3300.0, 0.18)], q=9.0, rough=0.6, jitter=0.28)
-    y += 0.25 * band(rng.standard_normal(n), 600, 3200, order=2) * (0.3 + 0.7 * np.abs(sine(11.0 + 3 * v, n)))
+    if v == 0:
+        fp = curve([(0, 80), (0.28, 125), (0.6, 105), (dur, 70)], n, "cos")
+        r1 = curve([(0, 760), (0.35, 1250), (dur, 880)], n, "cos")
+    else:
+        fp = curve([(0, 60), (0.28, 105), (0.6, 88), (dur, 55)], n, "cos")
+        r1 = curve([(0, 640), (0.35, 1100), (dur, 800)], n, "cos")
+    # stick-slip pulses ringing high-Q body resonances that glide with the tension: a squeaky creak
+    y = friction(rng, dur, fp, [(r1, 1.0), (r1 * 2.05, 0.5), (r1 * 3.3, 0.18)], q=22.0, rough=0.12, jitter=0.25)
+    y += 0.03 * band(rng.standard_normal(n), 500, 3200, order=2) * (0.3 + 0.7 * np.abs(sine(11.0 + 3 * v, n)))
+    y *= 0.72 + 0.28 * np.abs(sine(7.5 + 2.0 * v, n, 0.2 * v))          # irregular "eh-eh-eh" bursts
     y *= curve([(0, 0), (0.07, 1.0), (0.55, 0.85), (dur, 0)], n, "cos")
     y = lowpass(y, 5200.0, order=2)
     y = reverb(y, rt60=0.25, wet=0.07, predelay=0.003, damp=0.6, seed=48 + v)
@@ -241,9 +244,10 @@ def rope_creak(v, rng):
 def rope_strain(v, rng):
     dur = 1.2
     n = ns(dur)
-    fp = curve([(0, 21), (0.5, 38), (dur, 25)], n, "cos")
-    r1 = curve([(0, 240), (0.6, 330), (dur, 250)], n, "cos")
-    y = friction(rng, dur, fp, [(r1, 1.0), (540.0, 0.8), (1080.0, 0.5), (2100.0, 0.2)], q=6.0, rough=0.8, jitter=0.35)
+    fp = curve([(0, 34), (0.5, 60), (dur, 38)], n, "cos")
+    r1 = curve([(0, 260), (0.6, 380), (dur, 280)], n, "cos")
+    y = friction(rng, dur, fp, [(r1, 1.0), (r1 * 2.2, 0.8), (r1 * 4.4, 0.4), (r1 * 8.0, 0.15)],
+                 q=12.0, rough=0.2, jitter=0.30)
     # deep groan of the fibres under load + crackling strands
     grn = 62.0 + 9.0 * smooth_noise(n, rng, 3.0)
     y += 0.35 * (sine(grn, n) + 0.5 * sine(grn * 2.0, n)) * (0.6 + 0.4 * sine(5.0, n))
@@ -267,7 +271,7 @@ def marble_click(v, rng):
         y = stack(y, 0.5 * noise_burst(rng, 0.01, 4500, 14000, tau=0.0008))
         add_at(out, g * y, t0)
     out = reverb(out, rt60=0.2, wet=0.06, predelay=0.002, damp=0.2, seed=51 + v)
-    return finish(out, -3.0, -15.0, 0.0003, 0.05)
+    return finish(out, -3.0, -15.0, 0.0003, 0.05, squash_db=4.0)
 
 
 @sound("marble.drop", "Marble drops", variants=2)
@@ -284,7 +288,7 @@ def marble_drop(v, rng):
         y = stack(y, 0.7 * noise_burst(rng, 0.01, 2500, 11000, tau=0.0012))
         add_at(out, a * y, t0)
     out = reverb(out, rt60=0.22, wet=0.07, predelay=0.002, damp=0.5, seed=53 + v)
-    return finish(out, -3.0, -15.0, 0.0003, 0.06)
+    return finish(out, -3.0, -15.0, 0.0003, 0.06, squash_db=5.0)
 
 
 @sound("marble.roll", "Marble rolls", variants=2)
@@ -316,18 +320,20 @@ def needle_scratch(v, rng):
                [(0.005, 0.15), (0.17, 0.27)]][v]
     for a, b in strokes:
         m = ns(b - a)
-        x = band(rng.standard_normal(m), 3300, 10500, order=2)
+        x = band(rng.standard_normal(m), 2600, 8200, order=2)
         x /= (np.sqrt(np.mean(x * x)) + 1e-9)
-        gr_rate = np.linspace(90.0, 135.0, m) * rng.uniform(0.9, 1.1)
+        gr_rate = np.linspace(90.0, 135.0, m) * rng.uniform(0.9, 1.1) * (1.0 + 0.4 * smooth_noise(m, rng, 35.0))
         grain = (0.5 + 0.5 * np.sin(TAU * phase_cycles(gr_rate, m) + rng.random() * 6.0)) ** 2
+        grain *= 0.55 + 0.45 * np.abs(smooth_noise(m, rng, 70.0))              # irregular stick-slip grains
         env = np.sin(np.pi * np.linspace(0, 1, m)) ** 0.8
         add_at(out, 0.8 * x * grain * env, a)
-        add_at(out, 0.18 * bandpass(x * env, 5200.0, 14.0) * 3.0, a)   # thin sugar-sheet resonance
+        add_at(out, 0.14 * bandpass(x * env, 4300.0, 12.0) * 3.0, a)   # thin sugar-sheet resonance
         for _ in range(rng.integers(2, 5)):                              # brittle crumbs
             add_at(out, rng.uniform(0.3, 0.8) * noise_burst(rng, 0.01, 2500, 12000, tau=0.0012),
                    rng.uniform(a, b - 0.01))
-    out = highpass(out, 1800.0, order=2)
-    return finish(out, -3.0, -17.0, 0.004, 0.03)
+    out = highpass(out, 1500.0, order=2)
+    out = lowpass(out, 9000.0, order=2)
+    return finish(out, -3.0, -17.0, 0.004, 0.03, squash_db=3.0)
 
 
 @sound("dalgona.crack", "Candy cracks", variants=2)
@@ -335,17 +341,18 @@ def dalgona_crack(v, rng):
     n = ns(0.4)
     out = np.zeros(n)
     f = (3300.0, 3700.0)[v]
-    snap = stack(1.0 * noise_burst(rng, 0.05, 1800, 13000, tau=0.006, attack=0.0002),
+    snap = stack(1.0 * noise_burst(rng, 0.05, 1500, 9500, tau=0.006, attack=0.0002),
                  modal([f, f * 1.55, f * 2.3], [0.7, 0.5, 0.3], [0.025, 0.018, 0.01], 0.12))
     add_at(out, snap, 0.0)
     ts = np.sort(rng.uniform(0.012, 0.16, 7))
     for i, tt in enumerate(ts):                                          # micro-fractures running through the sugar
-        add_at(out, (0.6 - 0.05 * i) * noise_burst(rng, 0.012, 3000, 13000, tau=0.0012), tt)
+        add_at(out, (0.6 - 0.05 * i) * noise_burst(rng, 0.012, 2500, 9500, tau=0.0012), tt)
     add_at(out, 0.14 * modal([4500.0 + 300 * v, 6100.0], [1.0, 0.5], [0.09, 0.05], 0.3), 0.0)   # sugar-glass ring
     add_at(out, 0.35 * thump(420.0, 190.0, 0.04, 0.008, 0.015), 0.0)
     out = highpass(out, 600.0, order=2)
+    out = lowpass(out, 9500.0, order=2)
     out = reverb(out, rt60=0.22, wet=0.07, predelay=0.002, damp=0.4, seed=55 + v)
-    return finish(out, -3.0, -16.0, 0.0003, 0.08)
+    return finish(out, -3.0, -16.0, 0.0003, 0.08, squash_db=7.0)
 
 
 @sound("dalgona.snap", "Cookie snaps", variants=2)
@@ -366,11 +373,11 @@ def dalgona_snap(v, rng):
                               0.8 * thump(330.0, 150.0, 0.05, 0.01, 0.02)), tt)
     out = lowpass(out, 9000.0, order=2)
     out = reverb(out, rt60=0.25, wet=0.07, predelay=0.003, damp=0.55, seed=57 + v)
-    return finish(out, -3.0, -15.0, 0.0004, 0.09)
+    return finish(out, -3.0, -15.0, 0.0004, 0.09, squash_db=7.0)
 
 
 # ==================================================================================== danger
-@sound("danger.heartbeat", "Heart beats")
+@sound("danger.heartbeat", "Heartbeat thumps")
 def danger_heartbeat(v, rng):
     n = ns(1.0)
     out = np.zeros(n)
@@ -393,8 +400,7 @@ def danger_sting(v, rng):
     n = ns(dur)
     out = np.zeros(n)
     cluster = [130.81, 138.59, 185.0, 196.0, 261.63, 277.18, 370.0]   # C3 C#3 F#3 G3 C4 C#4 F#4 : minor-2nd / tritone stack
-    t = time_axis(n)
-    for i, f in enumerate(cluster):
+    for f in cluster:
         y = 0.45 * saw(f * cents(rng.uniform(-6, 6)), n) + 0.45 * saw(f * cents(rng.uniform(-6, 6)), n)
         cut = curve([(0, 6000), (0.05, 3800), (0.25, 1400), (dur, 600)], n, "exp")
         y = tv_biquad(y, "lp", cut, 1.0)

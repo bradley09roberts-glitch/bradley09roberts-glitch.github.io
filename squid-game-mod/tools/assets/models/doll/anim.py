@@ -7,8 +7,6 @@ see is exactly what the game will play.
 """
 from __future__ import annotations
 
-import math
-
 import numpy as np
 
 import gl_model as gl

@@ -68,6 +68,79 @@ def _rot_axis(v, axis, deg):
     return np.stack([x * c - y * s, x * s + y * c, z], axis=-1)
 
 
+
+# ------------------------------------------------------------------------------ built-in vanilla parents
+# Minimal stand-ins for the vanilla parent models this mod's models depend on, so previews and the validator work
+# without a vanilla asset dump.  Geometry / UVs follow the vanilla files (cube, slabs, stairs).
+def _cube_faces():
+    return {d: {"texture": f"#{d}", "cullface": d} for d in DIRS}
+
+
+def _stair_el(frm, to, faces):
+    return {"from": frm, "to": to, "faces": faces}
+
+
+_SLAB_BOTTOM = _stair_el([0, 0, 0], [16, 8, 16], {
+    "down": {"uv": [0, 0, 16, 16], "texture": "#bottom", "cullface": "down"},
+    "up": {"uv": [0, 0, 16, 16], "texture": "#top"},
+    "north": {"uv": [0, 8, 16, 16], "texture": "#side", "cullface": "north"},
+    "south": {"uv": [0, 8, 16, 16], "texture": "#side", "cullface": "south"},
+    "west": {"uv": [0, 8, 16, 16], "texture": "#side", "cullface": "west"},
+    "east": {"uv": [0, 8, 16, 16], "texture": "#side", "cullface": "east"}})
+
+BUILTIN_MODELS: dict[str, dict] = {
+    "block/block": {"display": {}},
+    "block/cube": {"parent": "minecraft:block/block", "elements": [
+        {"from": [0, 0, 0], "to": [16, 16, 16], "faces": _cube_faces()}]},
+    "block/cube_all": {"parent": "minecraft:block/cube", "textures": {
+        "particle": "#all", **{d: "#all" for d in DIRS}}},
+    "block/cube_column": {"parent": "minecraft:block/cube", "textures": {
+        "particle": "#side", "down": "#end", "up": "#end", "north": "#side", "east": "#side", "south": "#side",
+        "west": "#side"}},
+    "block/cube_bottom_top": {"parent": "minecraft:block/cube", "textures": {
+        "particle": "#side", "down": "#bottom", "up": "#top", "north": "#side", "east": "#side", "south": "#side",
+        "west": "#side"}},
+    "block/slab": {"parent": "minecraft:block/block", "textures": {"particle": "#side"}, "elements": [_SLAB_BOTTOM]},
+    "block/slab_top": {"parent": "minecraft:block/block", "textures": {"particle": "#side"}, "elements": [
+        _stair_el([0, 8, 0], [16, 16, 16], {
+            "down": {"uv": [0, 0, 16, 16], "texture": "#bottom"},
+            "up": {"uv": [0, 0, 16, 16], "texture": "#top", "cullface": "up"},
+            "north": {"uv": [0, 0, 16, 8], "texture": "#side", "cullface": "north"},
+            "south": {"uv": [0, 0, 16, 8], "texture": "#side", "cullface": "south"},
+            "west": {"uv": [0, 0, 16, 8], "texture": "#side", "cullface": "west"},
+            "east": {"uv": [0, 0, 16, 8], "texture": "#side", "cullface": "east"}})]},
+    "block/stairs": {"parent": "minecraft:block/block", "textures": {"particle": "#side"}, "elements": [
+        _SLAB_BOTTOM,
+        _stair_el([8, 8, 0], [16, 16, 16], {
+            "up": {"uv": [8, 0, 16, 16], "texture": "#top", "cullface": "up"},
+            "north": {"uv": [0, 0, 8, 8], "texture": "#side", "cullface": "north"},
+            "south": {"uv": [8, 0, 16, 8], "texture": "#side", "cullface": "south"},
+            "west": {"uv": [0, 0, 16, 8], "texture": "#side"},
+            "east": {"uv": [0, 0, 16, 8], "texture": "#side", "cullface": "east"}})]},
+    "block/inner_stairs": {"parent": "minecraft:block/block", "textures": {"particle": "#side"}, "elements": [
+        _SLAB_BOTTOM,
+        _stair_el([8, 8, 0], [16, 16, 16], {
+            "up": {"uv": [8, 0, 16, 16], "texture": "#top", "cullface": "up"},
+            "north": {"uv": [0, 0, 8, 8], "texture": "#side", "cullface": "north"},
+            "south": {"uv": [8, 0, 16, 8], "texture": "#side", "cullface": "south"},
+            "west": {"uv": [0, 0, 16, 8], "texture": "#side"},
+            "east": {"uv": [0, 0, 16, 8], "texture": "#side", "cullface": "east"}}),
+        _stair_el([0, 8, 8], [8, 16, 16], {
+            "up": {"uv": [0, 8, 8, 16], "texture": "#top", "cullface": "up"},
+            "north": {"uv": [8, 0, 16, 8], "texture": "#side"},
+            "south": {"uv": [0, 0, 8, 8], "texture": "#side", "cullface": "south"},
+            "west": {"uv": [8, 0, 16, 8], "texture": "#side", "cullface": "west"}})]},
+    "block/outer_stairs": {"parent": "minecraft:block/block", "textures": {"particle": "#side"}, "elements": [
+        _SLAB_BOTTOM,
+        _stair_el([8, 8, 8], [16, 16, 16], {
+            "up": {"uv": [8, 8, 16, 16], "texture": "#top", "cullface": "up"},
+            "north": {"uv": [0, 0, 8, 8], "texture": "#side"},
+            "south": {"uv": [8, 0, 16, 8], "texture": "#side", "cullface": "south"},
+            "west": {"uv": [8, 0, 16, 8], "texture": "#side"},
+            "east": {"uv": [0, 0, 8, 8], "texture": "#side", "cullface": "east"}})]},
+}
+
+
 # ------------------------------------------------------------------------------ resolver
 class Resolver:
     def __init__(self, squid_root: Path, vanilla_root: Path | None):
@@ -94,9 +167,13 @@ class Resolver:
         if ref in self._models:
             return self._models[ref]
         f = self._file(ref, "models", ".json")
-        if f is None:
+        ns, path = self.split(ref)
+        if f is not None:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        elif ns == "minecraft" and path in BUILTIN_MODELS:
+            data = BUILTIN_MODELS[path]
+        else:
             raise FileNotFoundError(f"model {ref}")
-        data = json.loads(f.read_text(encoding="utf-8"))
         parent = data.get("parent")
         if parent and not parent.startswith("builtin/"):
             base = self.model(parent)

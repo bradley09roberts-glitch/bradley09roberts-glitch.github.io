@@ -37,5 +37,8 @@
   "block.squidgame.symbol_triangle": "Triangle Symbol Block",
   "block.squidgame.symbol_square": "Square Symbol Block",
   "item.squidgame.marble": "Marble",
-  "item.squidgame.recruiter_card": "Recruiter's Card"
+  "item.squidgame.recruiter_card": "Recruiter's Card",
+  "item.squidgame.contestant_spawn_egg": "Contestant Spawn Egg",
+  "item.squidgame.guard_spawn_egg": "Masked Guard Spawn Egg",
+  "item.squidgame.doll_spawn_egg": "Giant Doll Spawn Egg"
 }

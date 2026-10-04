@@ -1,7 +1,5 @@
 {
   "variants": {
-    "": {
-      "model": "squidgame:block/panel_light_warm"
-    }
+    "": { "model": "squidgame:block/panel_light_warm" }
   }
 }

@@ -1,0 +1,51 @@
+{
+ "refs": {
+  "pull_heave": "pull_idle",
+  "pull_slip": "pull_idle",
+  "dalgona_lick": "dalgona_sit",
+  "dalgona_crack": "dalgona_sit",
+  "dalgona_success": "dalgona_sit",
+  "dalgona_fail": "dalgona_sit",
+  "marble_throw_release": "marble_throw_windup@end"
+ },
+ "info": {
+  "walk": {
+   "cycle_s": 1.0,
+   "planted_px_s": 20.13,
+   "planted_blocks_s": 1.18
+  },
+  "run": {
+   "cycle_s": 0.6,
+   "planted_px_s": 55.16,
+   "planted_blocks_s": 3.23
+  },
+  "sneak_walk": {
+   "cycle_s": 1.2,
+   "planted_px_s": 10.59,
+   "planted_blocks_s": 0.62
+  },
+  "ground_lift_px": {
+   "idle_nervous": 0.54,
+   "turn_left": 0.61,
+   "turn_right": 0.61,
+   "stop_skid": 1.8,
+   "land": 0.87,
+   "stumble": 2.22,
+   "lose_balance": 1.38,
+   "shocked": 0.77,
+   "relieved": 0.48,
+   "interact": 0.91,
+   "pull_strain": 0.95,
+   "pull_slip": 1.54,
+   "marble_throw_windup": 1.32,
+   "marble_throw_release": 1.04,
+   "bridge_step": 1.47,
+   "punch_right": 1.61,
+   "punch_left": 1.61,
+   "shove": 2.26,
+   "dodge_left": 2.09,
+   "dodge_right": 2.09,
+   "knocked_back": 1.75
+  }
+ }
+}

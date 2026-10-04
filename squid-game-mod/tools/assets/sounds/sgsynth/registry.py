@@ -6,7 +6,7 @@ events at once (the ten doll syllables are loudness-matched together).
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, List
 
 from .contract import CONTRACT

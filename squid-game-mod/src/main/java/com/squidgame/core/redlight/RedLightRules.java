@@ -17,7 +17,7 @@ import com.squidgame.core.Difficulty;
  *       Turning the camera never counts (only position is judged).</li>
  *   <li><b>Externally caused movement</b> (knock-back, being shoved by a neighbour, platform or water
  *       current) does not count as long as you are not pressing a movement key and the displacement
- *       stays below {@link Params#externalMoveThreshold}. Anything bigger that you did not cause
+ *       stays below {@link Params#externalMoveThreshold} (this also covers the momentum slide after you release the keys). Anything bigger that you did not cause
  *       (a teleport, a speed hack) is flagged as {@link Verdict#ILLEGAL}.</li>
  *   <li>If you are already in mid-air when the eyes light you may land; leaving the ground again
  *       by pressing jump is a violation.</li>
@@ -65,7 +65,7 @@ public final class RedLightRules {
             case HARD -> 0.025;
             case EXTREME -> 0.018;
         };
-        return new Params(allowance, turn, moveThreshold, 0.16, 0.9);
+        return new Params(allowance, turn, moveThreshold, 0.32, 0.9);
     }
 
     /**

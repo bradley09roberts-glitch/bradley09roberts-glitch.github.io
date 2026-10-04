@@ -51,7 +51,7 @@ def render(x, path: str, title: str = "", nfft: int = 1024, hop: int = 128, fmax
     """Write a PNG: waveform (top) + spectrogram (bottom) with time / frequency axes."""
     x = np.asarray(x, dtype=np.float64)
     dur = len(x) / SR
-    S, dt = stft_db(x, nfft, hop)
+    S, _ = stft_db(x, nfft, hop)
     ref = max(S.max(), -20.0)
     S = np.clip((S - (ref - db_range)) / db_range, 0, 1)
     freqs = np.arange(nfft // 2 + 1) * SR / nfft

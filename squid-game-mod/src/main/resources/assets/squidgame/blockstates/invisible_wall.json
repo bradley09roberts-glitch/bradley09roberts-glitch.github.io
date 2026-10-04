@@ -1,7 +1,5 @@
 {
   "variants": {
-    "": {
-      "model": "squidgame:block/invisible_wall"
-    }
+    "": { "model": "squidgame:block/invisible_wall" }
   }
 }

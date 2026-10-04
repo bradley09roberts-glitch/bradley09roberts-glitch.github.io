@@ -124,7 +124,7 @@ def _tri(buf, p, uv, zinv, persp, sample, shade, rect):
 
 
 def render(model, tex, glow, pose, cam: Camera, size=(300, 480), ssaa=2, night=False, bg=None,
-           ground=True, bloom=True, ambient=None):
+           bloom=True, ambient=None):
     """Render one pose.  tex/glow are uint8 RGBA arrays (H, W, 4); glow may be None."""
     W, H = size[0] * ssaa, size[1] * ssaa
     th, tw = tex.shape[0], tex.shape[1]
@@ -174,9 +174,6 @@ def render(model, tex, glow, pose, cam: Camera, size=(300, 480), ssaa=2, night=F
     if bg is None:
         bg = _default_bg(W, H, night)
     out = np.where(covered[..., None], img, bg)
-    if ground and cam.mode == "ortho":
-        # a flat floor line + soft contact shadow so the plinth reads
-        pass
     if bloom and night:
         em = np.where((buf["e"] & covered)[..., None], img, 0.0)
         pil = Image.fromarray((np.clip(em, 0, 1) * 255).astype(np.uint8))

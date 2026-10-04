@@ -53,8 +53,10 @@ class Gait:
     swing_pitch_mid: float = -6.0
     leg_len_factor: float = 0.975  # pelvis keeps the leg this fraction of fully straight
     pelvis_mode: str = "reach"    # "reach" (walk) | "bounce" (run)
-    bounce_mid_stance: float = -3.0   # run: pelvis dy at mid-stance
-    bounce_flight: float = 0.4        # run: pelvis dy at mid-flight
+    bounce_strike: float = -1.0       # run: pelvis dy at foot strike
+    bounce_mid_stance: float = -2.8   # run: pelvis dy at mid-stance
+    bounce_off: float = -0.8          # run: pelvis dy at toe-off
+    bounce_flight: float = 0.6        # run: pelvis dy at mid-flight
     swing_forward_ease: float = 1.0
     foot_x: float = 0.0           # extra lateral foot spread (px, per side, positive = wider)
     lead: float = 0.0             # leg phase offset of the left foot (cycle fraction)
@@ -94,8 +96,20 @@ def leg_reach(L1: float, L2: float, factor: float) -> float:
     return (L1 + L2) * factor
 
 
+def _bounce(g: Gait, q: float) -> float:
+    """Pelvis dy over one half cycle q in [0,1) (stance of one foot then a short flight)."""
+    st = min(g.stance * 2.0, 0.98)                     # stance as a fraction of the half cycle
+    pts = [(0.0, g.bounce_strike), (st / 2, g.bounce_mid_stance), (st, g.bounce_off),
+           ((st + 1.0) / 2, g.bounce_flight), (1.0, g.bounce_strike)]
+    for (q0, v0), (q1, v1) in zip(pts, pts[1:]):
+        if q <= q1:
+            k = 0.0 if q1 == q0 else (q - q0) / (q1 - q0)
+            return v0 + (v1 - v0) * (0.5 - 0.5 * math.cos(math.pi * k))
+    return pts[-1][1]
+
+
 def gait_legs(H: Humanoid, g: Gait, phase: float, base: Pose, reach: float = 9.25,
-              hip_y: float = 12.0, last: Optional[Dict[str, Tuple[float, float]]] = None
+              hip_cap: float = 12.0, last: Optional[Dict[str, Tuple[float, float]]] = None
               ) -> Tuple[Pose, Dict[str, dict]]:
     """Return (pose with waist/leg/shin/shoe set, info) for cycle phase in [0,1)."""
     info: Dict[str, dict] = {}
@@ -111,21 +125,10 @@ def gait_legs(H: Humanoid, g: Gait, phase: float, base: Pose, reach: float = 9.2
         for side in ("left", "right"):
             f, y, _ = st[side]
             hs.append(y + math.sqrt(max(reach ** 2 - f ** 2, 1.0)))
-        py = min(min(hs), hip_y)
-        dy = py - hip_y
+        py = min(min(hs), hip_cap)
+        dy = py - 12.0
     else:
-        # two bounces per cycle: lowest at the middle of each stance
-        s = g.stance
-        mid_l = s / 2
-        mid_r = 0.5 + s / 2
-        # distance (in cycle fraction) to the nearest stance middle
-        def near(ph):
-            a = abs(((ph - mid_l + 0.5) % 1.0) - 0.5)
-            b = abs(((ph - mid_r + 0.5) % 1.0) - 0.5)
-            return min(a, b)
-        dmax = 0.25
-        k = min(near((phase + g.lead) % 1.0) / dmax, 1.0)
-        dy = g.bounce_mid_stance + (g.bounce_flight - g.bounce_mid_stance) * (0.5 - 0.5 * math.cos(math.pi * k))
+        dy = _bounce(g, ((phase + g.lead) % 0.5) / 0.5)
     pose = Pose(base)
     wp = pose.get("waist", B())
     pos = wp.pos or (0.0, 0.0, 0.0)
@@ -137,10 +140,34 @@ def gait_legs(H: Humanoid, g: Gait, phase: float, base: Pose, reach: float = 9.2
         xs = 1.0 if side == "right" else -1.0
         target = (hip[0] + xs * g.foot_x, y, hip[2] - f)
         lp, err = H.foot(pose, side, target, pitch=pitch,
-                         x0=(last or {}).get(side, (f * 4.0, 25.0)))
+                         x0=(last or {}).get(side, (-f * 4.0, 25.0)))
         out = out + lp
         info[side]["err"] = err
         info[side]["knee"] = lp[H.leg_names[1].format(s=side)].rot[0]
         info[side]["hipx"] = lp[H.leg_names[0].format(s=side)].rot[0]
+        info[side]["ankle_world"] = target
     info["dy"] = dy
     return out, info
+
+
+PX_TO_BLOCKS = 0.9375 / 16.0     # model px -> blocks (renderer scale 0.9375)
+
+
+def planted_speed(ctx, st: dict, g: Gait) -> dict:
+    """Mean backward speed of the stance ankles relative to the body = ground speed at which they stay planted."""
+    infos = st["info"]
+    n = len(infos) - 1
+    dt = g.cycle / n
+    sp = []
+    for side in ("left", "right"):
+        zs = []
+        for i in range(n):
+            ph, inf = infos[i]
+            ph2, inf2 = infos[i + 1]
+            if inf[side]["stance"] and inf2[side]["stance"]:
+                dz = inf2[side]["ankle_world"][2] - inf[side]["ankle_world"][2]
+                zs.append(dz / dt)
+        if zs:
+            sp.append(sum(zs) / len(zs))
+    px_s = sum(sp) / len(sp) if sp else 0.0
+    return dict(cycle_s=g.cycle, planted_px_s=round(px_s, 2), planted_blocks_s=round(px_s * PX_TO_BLOCKS, 2))

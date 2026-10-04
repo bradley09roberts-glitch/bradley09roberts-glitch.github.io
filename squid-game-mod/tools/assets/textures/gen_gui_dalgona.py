@@ -5,7 +5,7 @@ import math
 
 import numpy as np
 
-from common import Canvas, Out, dilate, erode, fbm, lighten, mix, ramp, rng, shade
+from common import Canvas, Out, dilate, fbm, ramp, rng
 import paint
 
 CLEAR = (0, 0, 0, 0)

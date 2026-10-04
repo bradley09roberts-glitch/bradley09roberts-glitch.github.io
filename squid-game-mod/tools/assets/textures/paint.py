@@ -5,11 +5,11 @@ import math
 
 import numpy as np
 
-from common import Canvas, bayer, dilate, fbm, ramp, rng, shade, mix, lighten, darken, rgb
+from common import Canvas, dilate, fbm, ramp, rng, shade, mix, lighten, darken
 
 
 # --------------------------------------------------------------------------- noise
-def aniso_noise(w: int, h: int, cx: int, cy: int, r: np.random.Generator) -> np.ndarray:
+def aniso_noise(w: int, h: int, cx: int, cy: int, r) -> np.ndarray:
     """Tileable value noise with different feature sizes per axis (cx wide, cy tall)."""
     gw, gh = max(1, w // cx), max(1, h // cy)
     grid = r.random((gh + 1, gw + 1))
@@ -146,7 +146,6 @@ def polygon_outline_mask(c: Canvas, pts, thick: float = 1.0) -> np.ndarray:
 def glass_marble(size: int, cx: float, cy: float, radius: float, body_pal, swirl_pal, seed: str,
                  outline=None, swirl_turns: float = 1.6, bands: int = 5) -> Canvas:
     """Shaded pixel-art glass marble with a colour swirl inside. Hard bands, no anti-aliasing."""
-    r = rng(seed)
     c = Canvas(size)
     xs, ys = c.grid()
     dx, dy = (xs - cx) / radius, (ys - cy) / radius

@@ -1,0 +1,362 @@
+{
+  "doll.syllable_1": {
+    "subtitle": "subtitles.squidgame.doll.syllable_1",
+    "sounds": [
+      "squidgame:doll/syllable_01"
+    ]
+  },
+  "doll.syllable_2": {
+    "subtitle": "subtitles.squidgame.doll.syllable_2",
+    "sounds": [
+      "squidgame:doll/syllable_02"
+    ]
+  },
+  "doll.syllable_3": {
+    "subtitle": "subtitles.squidgame.doll.syllable_3",
+    "sounds": [
+      "squidgame:doll/syllable_03"
+    ]
+  },
+  "doll.syllable_4": {
+    "subtitle": "subtitles.squidgame.doll.syllable_4",
+    "sounds": [
+      "squidgame:doll/syllable_04"
+    ]
+  },
+  "doll.syllable_5": {
+    "subtitle": "subtitles.squidgame.doll.syllable_5",
+    "sounds": [
+      "squidgame:doll/syllable_05"
+    ]
+  },
+  "doll.syllable_6": {
+    "subtitle": "subtitles.squidgame.doll.syllable_6",
+    "sounds": [
+      "squidgame:doll/syllable_06"
+    ]
+  },
+  "doll.syllable_7": {
+    "subtitle": "subtitles.squidgame.doll.syllable_7",
+    "sounds": [
+      "squidgame:doll/syllable_07"
+    ]
+  },
+  "doll.syllable_8": {
+    "subtitle": "subtitles.squidgame.doll.syllable_8",
+    "sounds": [
+      "squidgame:doll/syllable_08"
+    ]
+  },
+  "doll.syllable_9": {
+    "subtitle": "subtitles.squidgame.doll.syllable_9",
+    "sounds": [
+      "squidgame:doll/syllable_09"
+    ]
+  },
+  "doll.syllable_10": {
+    "subtitle": "subtitles.squidgame.doll.syllable_10",
+    "sounds": [
+      "squidgame:doll/syllable_10"
+    ]
+  },
+  "doll.turn_servo": {
+    "subtitle": "subtitles.squidgame.doll.turn_servo",
+    "sounds": [
+      "squidgame:doll/turn_servo"
+    ]
+  },
+  "doll.lock_on": {
+    "subtitle": "subtitles.squidgame.doll.lock_on",
+    "sounds": [
+      "squidgame:doll/lock_on"
+    ]
+  },
+  "doll.eyes_on": {
+    "subtitle": "subtitles.squidgame.doll.eyes_on",
+    "sounds": [
+      "squidgame:doll/eyes_on"
+    ]
+  },
+  "doll.eyes_off": {
+    "subtitle": "subtitles.squidgame.doll.eyes_off",
+    "sounds": [
+      "squidgame:doll/eyes_off"
+    ]
+  },
+  "doll.scan_beep": {
+    "subtitle": "subtitles.squidgame.doll.scan_beep",
+    "sounds": [
+      "squidgame:doll/scan_beep_1",
+      "squidgame:doll/scan_beep_2"
+    ]
+  },
+  "announce.chime": {
+    "subtitle": "subtitles.squidgame.announce.chime",
+    "sounds": [
+      "squidgame:announce/chime"
+    ]
+  },
+  "announce.chime_alert": {
+    "subtitle": "subtitles.squidgame.announce.chime_alert",
+    "sounds": [
+      "squidgame:announce/chime_alert"
+    ]
+  },
+  "game.start_horn": {
+    "subtitle": "subtitles.squidgame.game.start_horn",
+    "sounds": [
+      "squidgame:game/start_horn"
+    ]
+  },
+  "game.end_buzzer": {
+    "subtitle": "subtitles.squidgame.game.end_buzzer",
+    "sounds": [
+      "squidgame:game/end_buzzer"
+    ]
+  },
+  "game.win_fanfare": {
+    "subtitle": "subtitles.squidgame.game.win_fanfare",
+    "sounds": [
+      "squidgame:game/win_fanfare"
+    ]
+  },
+  "game.results_sting": {
+    "subtitle": "subtitles.squidgame.game.results_sting",
+    "sounds": [
+      "squidgame:game/results_sting"
+    ]
+  },
+  "countdown.tick": {
+    "subtitle": "subtitles.squidgame.countdown.tick",
+    "sounds": [
+      "squidgame:countdown/tick_1",
+      "squidgame:countdown/tick_2",
+      "squidgame:countdown/tick_3"
+    ]
+  },
+  "countdown.beep": {
+    "subtitle": "subtitles.squidgame.countdown.beep",
+    "sounds": [
+      "squidgame:countdown/beep"
+    ]
+  },
+  "countdown.final": {
+    "subtitle": "subtitles.squidgame.countdown.final",
+    "sounds": [
+      "squidgame:countdown/final"
+    ]
+  },
+  "elimination.crack": {
+    "subtitle": "subtitles.squidgame.elimination.crack",
+    "sounds": [
+      "squidgame:elimination/crack_1",
+      "squidgame:elimination/crack_2",
+      "squidgame:elimination/crack_3"
+    ]
+  },
+  "elimination.buzzer": {
+    "subtitle": "subtitles.squidgame.elimination.buzzer",
+    "sounds": [
+      "squidgame:elimination/buzzer"
+    ]
+  },
+  "elimination.body_fall": {
+    "subtitle": "subtitles.squidgame.elimination.body_fall",
+    "sounds": [
+      "squidgame:elimination/body_fall_1",
+      "squidgame:elimination/body_fall_2"
+    ]
+  },
+  "door.slide_open": {
+    "subtitle": "subtitles.squidgame.door.slide_open",
+    "sounds": [
+      "squidgame:door/slide_open"
+    ]
+  },
+  "door.slide_close": {
+    "subtitle": "subtitles.squidgame.door.slide_close",
+    "sounds": [
+      "squidgame:door/slide_close"
+    ]
+  },
+  "door.lock": {
+    "subtitle": "subtitles.squidgame.door.lock",
+    "sounds": [
+      "squidgame:door/lock_1",
+      "squidgame:door/lock_2"
+    ]
+  },
+  "glass.crack": {
+    "subtitle": "subtitles.squidgame.glass.crack",
+    "sounds": [
+      "squidgame:glass/crack_1",
+      "squidgame:glass/crack_2",
+      "squidgame:glass/crack_3"
+    ]
+  },
+  "glass.shatter": {
+    "subtitle": "subtitles.squidgame.glass.shatter",
+    "sounds": [
+      "squidgame:glass/shatter"
+    ]
+  },
+  "rope.creak": {
+    "subtitle": "subtitles.squidgame.rope.creak",
+    "sounds": [
+      "squidgame:rope/creak_1",
+      "squidgame:rope/creak_2"
+    ]
+  },
+  "rope.strain": {
+    "subtitle": "subtitles.squidgame.rope.strain",
+    "sounds": [
+      "squidgame:rope/strain"
+    ]
+  },
+  "marble.click": {
+    "subtitle": "subtitles.squidgame.marble.click",
+    "sounds": [
+      "squidgame:marble/click_1",
+      "squidgame:marble/click_2",
+      "squidgame:marble/click_3"
+    ]
+  },
+  "marble.drop": {
+    "subtitle": "subtitles.squidgame.marble.drop",
+    "sounds": [
+      "squidgame:marble/drop_1",
+      "squidgame:marble/drop_2"
+    ]
+  },
+  "marble.roll": {
+    "subtitle": "subtitles.squidgame.marble.roll",
+    "sounds": [
+      "squidgame:marble/roll_1",
+      "squidgame:marble/roll_2"
+    ]
+  },
+  "needle.scratch": {
+    "subtitle": "subtitles.squidgame.needle.scratch",
+    "sounds": [
+      "squidgame:needle/scratch_1",
+      "squidgame:needle/scratch_2",
+      "squidgame:needle/scratch_3"
+    ]
+  },
+  "dalgona.crack": {
+    "subtitle": "subtitles.squidgame.dalgona.crack",
+    "sounds": [
+      "squidgame:dalgona/crack_1",
+      "squidgame:dalgona/crack_2"
+    ]
+  },
+  "dalgona.snap": {
+    "subtitle": "subtitles.squidgame.dalgona.snap",
+    "sounds": [
+      "squidgame:dalgona/snap_1",
+      "squidgame:dalgona/snap_2"
+    ]
+  },
+  "danger.heartbeat": {
+    "subtitle": "subtitles.squidgame.danger.heartbeat",
+    "sounds": [
+      "squidgame:danger/heartbeat"
+    ]
+  },
+  "danger.sting": {
+    "subtitle": "subtitles.squidgame.danger.sting",
+    "sounds": [
+      "squidgame:danger/sting"
+    ]
+  },
+  "ui.select": {
+    "subtitle": "subtitles.squidgame.ui.select",
+    "sounds": [
+      "squidgame:ui/select_1",
+      "squidgame:ui/select_2"
+    ]
+  },
+  "ui.confirm": {
+    "subtitle": "subtitles.squidgame.ui.confirm",
+    "sounds": [
+      "squidgame:ui/confirm"
+    ]
+  },
+  "ui.deny": {
+    "subtitle": "subtitles.squidgame.ui.deny",
+    "sounds": [
+      "squidgame:ui/deny_1",
+      "squidgame:ui/deny_2"
+    ]
+  },
+  "ui.number_call": {
+    "subtitle": "subtitles.squidgame.ui.number_call",
+    "sounds": [
+      "squidgame:ui/number_call_1",
+      "squidgame:ui/number_call_2"
+    ]
+  },
+  "ambient.dorm": {
+    "subtitle": "subtitles.squidgame.ambient.dorm",
+    "sounds": [
+      {
+        "name": "squidgame:ambient/dorm",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.playground": {
+    "subtitle": "subtitles.squidgame.ambient.playground",
+    "sounds": [
+      {
+        "name": "squidgame:ambient/playground",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.industrial": {
+    "subtitle": "subtitles.squidgame.ambient.industrial",
+    "sounds": [
+      {
+        "name": "squidgame:ambient/industrial",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.alley": {
+    "subtitle": "subtitles.squidgame.ambient.alley",
+    "sounds": [
+      {
+        "name": "squidgame:ambient/alley",
+        "stream": true
+      }
+    ]
+  },
+  "music.lobby": {
+    "subtitle": "subtitles.squidgame.music.lobby",
+    "sounds": [
+      {
+        "name": "squidgame:music/lobby",
+        "stream": true
+      }
+    ]
+  },
+  "music.tension": {
+    "subtitle": "subtitles.squidgame.music.tension",
+    "sounds": [
+      {
+        "name": "squidgame:music/tension",
+        "stream": true
+      }
+    ]
+  },
+  "music.final": {
+    "subtitle": "subtitles.squidgame.music.final",
+    "sounds": [
+      {
+        "name": "squidgame:music/final",
+        "stream": true
+      }
+    ]
+  }
+}

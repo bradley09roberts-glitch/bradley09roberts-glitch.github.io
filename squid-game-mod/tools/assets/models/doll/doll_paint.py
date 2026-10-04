@@ -19,7 +19,7 @@ from paint import hx, mix, shade
 REGIONS = {
     # solids (2x2) - hidden / uniform faces
     "solid_dark": (2, 2), "solid_white": (2, 2), "skin_dark": (2, 2), "hair_dark": (2, 2), "solid_yellow": (2, 2),
-    "solid_yellow_d": (2, 2), "solid_lip_d": (2, 2), "solid_eye_d": (2, 2), "solid_glow": (2, 2),
+    "solid_yellow_d": (2, 2), "solid_lip_d": (2, 2),
     # base
     "plinth_top": (54, 54), "plinth_side": (54, 3), "step_top": (42, 42), "step_side": (42, 1),
     "shoe_front": (9, 4), "shoe_side_r": (15, 4), "shoe_side_l": (15, 4),
@@ -38,7 +38,7 @@ REGIONS = {
     # hair
     "hair_top": (37, 36), "hair_front": (37, 10), "hair_back": (37, 33), "hair_side_r": (36, 33), "hair_side_l": (36, 33),
     "fringe": (37, 11), "strand": (4, 3), "lock_front": (4, 19), "pigtail": (7, 17), "pigtail_tip": (6, 4), "tie": (6, 3),
-    "ribbon_knot": (5, 5), "ribbon_wing": (11, 7), "ribbon_wing_b": (11, 7),
+    "ribbon_knot": (5, 5), "ribbon_seg": (4, 9), "ribbon_seg_b": (4, 9),
 }
 
 # --------------------------------------------------------------------------- palette (muted, slightly desaturated)
@@ -59,7 +59,7 @@ GL_RIM = hx("#3A0C06"); GL_D = hx("#B3180B"); GL_M = hx("#E8331B"); GL_O = hx("#
 
 _SOLIDS = {
     "solid_dark": ME_DD, "solid_white": WH, "skin_dark": SK_D, "hair_dark": HA_D, "solid_yellow": YE,
-    "solid_yellow_d": YE_D, "solid_lip_d": LIP_D, "solid_eye_d": EY_RIM, "solid_glow": GL_O,
+    "solid_yellow_d": YE_D, "solid_lip_d": LIP_D,
 }
 
 PAINTERS = {}
@@ -232,14 +232,13 @@ def p_shoe_top(a, rng, name=None):
 
 @painter("sock")
 def p_sock(a, rng, name=None):
-    P.fill(a, WH)
-    for y in range(1, 12, 2):
-        band(a, y, y + 1, WH_L)
-    band(a, 0, 1, WH_D)
-    band(a, 11, 12, WH_D)
-    P.rect(a, 0, 0, 1, 12, WH_D)
+    P.fill(a, WH_L)
+    for y in range(1, 12, 3):                 # fine ribbed knit
+        band(a, y, y + 1, WH)
+    band(a, 0, 1, WH)
+    band(a, 11, 12, WH)
+    P.rect(a, 0, 0, 1, 12, WH)
     P.rect(a, 6, 0, 1, 12, WH_D)
-    P.noise_tint(a, rng, 0.015)
 
 
 @painter("petticoat")
@@ -256,37 +255,36 @@ def p_petticoat(a, rng, name=None):
 @painter("skirt_wall")
 def p_skirt_wall(a, rng, name=None):
     h, w = a.shape[:2]            # 42 rows (waist -> hem) x 44 cols
-    fab = [OR, OR, OR_L, OR]       # subtle knife pleats (period 4), low contrast
+    # clean knife pleats (period 4 columns: light, base, base, shade) - low contrast so it never shimmers
+    cols = [mix(OR, OR_L, 0.55), OR, OR, mix(OR, OR_D, 0.55)]
     for x in range(w):
-        c = fab[x % 4]
-        a[:, x, :3] = c
+        a[:, x, :3] = cols[x % 4]
         a[:, x, 3] = 1
-    # slow vertical shading: slightly brighter near the waist, darker towards the hem (dithered)
-    P.vgrad(a, [OR_L, OR, OR, OR_D], 0, h)
-    for x in range(w):
-        if x % 4 == 2:
-            for y in range(h):
-                if (x + y) % 2 == 0:
-                    a[y, x, :3] = shade(a[y, x, :3], 1.06)
-        if x % 4 == 3:
-            for y in range(h):
-                if (x + y) % 2 == 1:
-                    a[y, x, :3] = shade(a[y, x, :3], 0.94)
-    P.noise_tint(a, rng, 0.012)
-    # hem trim (bottom tier = bottom 6 rows): shadow line, darker band, thin yellow rick-rack
-    band(a, 35, 36, OR_D)
+    # slow vertical shading in three flat bands (brighter near the waist, darker towards the hem)
+    shade_rows = [(0, 14, 1.045), (14, 28, 1.0), (28, 42, 0.965)]
+    for (y0, y1, f) in shade_rows:
+        a[y0:y1, :, :3] = np.clip(a[y0:y1, :, :3] * f, 0, 1)
+    # sparse fabric flecks
+    P.speckle(a, rng, OR_D, 0.02)
+    P.speckle(a, rng, OR_L, 0.02)
+    # tier seam: 1 px darker line under every tier (rows 5, 11, ... counted from the waist)
+    for y in range(5, 36, 6):
+        band(a, y, y + 1, mix(OR, OR_D, 0.5))
+    # hem trim (bottom tier = rows 36..41): shadow line, darker band, thin yellow rick-rack
     band(a, 38, 39, YE)
     for x in range(0, w, 2):
         P.put(a, x, 39, YE_D)
-    band(a, 41, 42, OR_DD)
     band(a, 40, 41, OR_D)
-    # waist gather (top rows)
+    band(a, 41, 42, OR_DD)
+    # waist gather (top row)
     band(a, 0, 1, OR_D)
 
 
 @painter("skirt_top")
 def p_skirt_top(a, rng, name=None):
-    P.fill(a, OR_L)     # FLAT on purpose: coplanar A/B tier tops must look identical (no z-fight flicker)
+    # FLAT on purpose: coplanar A/B tier tops must look identical (no z-fight flicker).  Slightly deeper than the
+    # wall colour because top faces are lit at 100 % while front faces are lit at ~74 %.
+    P.fill(a, hx("#D97A28"))
 
 
 @painter("waistband")
@@ -596,9 +594,6 @@ def p_eye_on(a, rng, name=None):
 def p_mouth(a, rng, name=None):
     # 7x3 closed doll mouth with a cupid's bow
     P.clear(a)
-    rows = ["rrdrr..".replace(".", "."),
-            "RRRdRRR",
-            ".rrlrr."]
     rows = [".RRdRR.", "RRRdRRR", ".rrlrr."]
     pal = {"R": LIP, "r": LIP_L, "d": LIP_D, "l": hx("#EF8A83")}
     P.stamp(a, 0, 0, rows, pal)
@@ -754,23 +749,19 @@ def p_ribbon_knot(a, rng, name=None):
     P.darken_edge(a, 0.15, ("b", "r"))
 
 
-@painter("ribbon_wing")
-def p_ribbon_wing(a, rng, name=None):
-    h, w = a.shape[:2]       # 11 x 7
+@painter("ribbon_seg")
+def p_ribbon_seg(a, rng, name=None):
+    h, w = a.shape[:2]       # 9 x 4 : one stepped segment of a bow wing (front face); sub-rects take the middle rows
     P.fill(a, YE)
-    P.vgrad(a, [YE_L, YE, YE_D], 0, h)
-    P.line(a, 2, 1, 8, 1, YE_HL)
-    P.line(a, 1, 3, 9, 3, YE_D)           # fold
-    P.darken_edge(a, 0.12, ("b",))
-    # swallow-tail notch at the outer end (left edge of the picture)
-    for y, x in ((2, 0), (3, 0), (4, 0), (3, 1)):
-        a[y, x] = 0
+    P.vgrad(a, [YE_L, YE, YE, YE_D], 0, h)
+    band(a, 4, 5, mix(YE, YE_D, 0.4))           # soft fold across the wing (centre line)
+    P.rect(a, 0, 0, 1, h, YE_L)                 # lit edge towards the outer end
 
 
-@painter("ribbon_wing_b")
-def p_ribbon_wing_b(a, rng, name=None):
-    p_ribbon_wing(a, rng)
-    a[..., :3] = np.where(a[..., 3:4] > 0, shade(a[..., :3], 0.8), 0)
+@painter("ribbon_seg_b")
+def p_ribbon_seg_b(a, rng, name=None):
+    p_ribbon_seg(a, rng)
+    a[..., :3] = shade(a[..., :3], 0.82)
 
 
 # =========================================================================== driver
@@ -780,14 +771,9 @@ def paint_all(atlas):
         fn = PAINTERS.get(name)
         if fn is None:
             raise KeyError("no painter for region " + name)
-        rng = rng_for(name)
-        if name in _SOLIDS:
-            fn(a, rng, name)
-        else:
-            fn(a, rng, name)
+        fn(a, rng_for(name), name)
     # emissive texels: eyes only
     r = atlas.regions["eye_on"]
     yy, xx = np.mgrid[0:r.h, 0:r.w]
     d = np.sqrt((xx + 0.5 - 6.0) ** 2 + (yy + 0.5 - 6.0) ** 2)
     atlas.mark_glow("eye_on", d <= 5.1)
-    atlas.mark_glow("solid_glow")

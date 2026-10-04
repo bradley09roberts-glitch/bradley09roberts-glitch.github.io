@@ -40,10 +40,12 @@ FLANGE_Y0, FLANGE_Y1 = 97.0, 99.9
 HEAD_Y0, HEAD_H = 100.0, 32.0
 HEAD_W, HEAD_D = 34.0, 32.0
 HEAD_Y1 = HEAD_Y0 + HEAD_H                  # 132
+HAIR_Y0 = 101.0                             # bob hair ends 1 px above the chin plane
 EYE_Y0, EYE_H, EYE_W = 106.5, 11.0, 11.0
 EYE_CX = 8.0                                # |x| of each eye centre
-EYE_Z = -17.0                               # front plane of the eye_off cubes
+EYE_Z = -16.6                               # front plane of the eye_off cards (0.6 px proud of the face: no z-fight)
 PIVOT_HEAD = (0, 97.0, 0)
+ARM_OUT = 8.0                               # bind pose: arms hang 8 deg away from the body (clears the skirt)
 
 
 def mx(origin, size):
@@ -69,21 +71,21 @@ def build():
     mb.bone("base", "root", (0, 0, 0))
     mb.bone("body", "base", (0, 6, 0))
     mb.bone("dress", "body", (0, 64, 0))
-    mb.bone("left_arm", "body", (14.5, SHOULDER_Y, 0), rotation=(0, 0, -6.0))
-    mb.bone("right_arm", "body", (-14.5, SHOULDER_Y, 0), rotation=(0, 0, 6.0))
+    mb.bone("left_arm", "body", (14.5, SHOULDER_Y, 0), rotation=(0, 0, -ARM_OUT))
+    mb.bone("right_arm", "body", (-14.5, SHOULDER_Y, 0), rotation=(0, 0, ARM_OUT))
     mb.bone("neck_joint", "body", (0, 95.5, 0))
     mb.bone("neck_ring", "neck_joint", (0, 98.5, 0))
     mb.bone("head", "body", PIVOT_HEAD)
     mb.bone("hair", "head", (0, 118, 0))
     mb.bone("pigtail_l", "hair", (22.5, 112.5, 0))
     mb.bone("pigtail_r", "hair", (-22.5, 112.5, 0))
-    mb.bone("ribbon", "hair", (0, 136, -9))
+    mb.bone("ribbon", "hair", (0, 139.6, -9))
     mb.bone("eyes_off", "head", (0, eye_cy, EYE_Z))
     mb.bone("eye_off_l", "eyes_off", (EYE_CX, eye_cy, EYE_Z))
     mb.bone("eye_off_r", "eyes_off", (-EYE_CX, eye_cy, EYE_Z))
-    mb.bone("eyes_on", "head", (0, eye_cy, EYE_Z - 0.5))
-    mb.bone("eye_on_l", "eyes_on", (EYE_CX, eye_cy, EYE_Z - 0.5))
-    mb.bone("eye_on_r", "eyes_on", (-EYE_CX, eye_cy, EYE_Z - 0.5))
+    mb.bone("eyes_on", "head", (0, eye_cy, EYE_Z - 0.9))
+    mb.bone("eye_on_l", "eyes_on", (EYE_CX, eye_cy, EYE_Z - 0.9))
+    mb.bone("eye_on_r", "eyes_on", (-EYE_CX, eye_cy, EYE_Z - 0.9))
     mb.bone("mouth", "head", (0, 103.5, -17))
 
     # ------------------------------------------------------------------ base: plinth (2 steps), shoes, socks
@@ -119,7 +121,7 @@ def build():
         def wall(w, _row0=row0):
             return F("skirt_wall", w, int(h), (44 - w) // 2, _row0)
 
-        bottom = "solid_dark" if i == 0 else False
+        bottom = False                                  # covered by the petticoat lip / the tier below
         # box A: full width in x, shallower in z      | box B: narrower in x, full depth in z
         wa, da = W, W - 2 * c
         mb.box("dress", (-wa / 2, y, -da / 2), (wa, h, da), front=wall(wa), back=wall(wa), left=wall(da), right=wall(da),
@@ -173,17 +175,18 @@ def build():
         hand = ((-19.3, 51.5, -3.8), (7, 7, 7))
         mb.box(bone, O(*hand), hand[1], sides=F("hand", 7, 7), top=False, bottom="skin_dark")
         thumb = ((-12.6, 53.5, -4.6), (2, 4, 2))
-        mb.box(bone, O(*thumb), thumb[1], sides="thumb", top="skin_dark", bottom="skin_dark")
+        mb.box(bone, O(*thumb), thumb[1], front="thumb", back="thumb", left="thumb" if side == "r" else False,
+               right=False if side == "r" else "thumb", top="skin_dark", bottom="skin_dark")
 
     # ------------------------------------------------------------------ head, cheeks, nose
     hw = HEAD_W / 2.0
     mb.box("head", (-hw, HEAD_Y0, -HEAD_D / 2), (HEAD_W, HEAD_H, HEAD_D), front="face", bottom="skin_dark",
            back=False, left=False, right=False, top=False)
-    cheek = ((-13.0, 102.5, -17.2), (5, 4, 1.2))
-    for o in (cheek[0], mx(*cheek)):
-        mb.box("head", o, cheek[1], front="cheek", left="skin_dark", right="skin_dark", top="skin_dark", bottom="skin_dark", back=False)
+    cheek = ((-13.0, 102.5, -16.9), (5, 4, 0.9))
+    mb.box("head", cheek[0], cheek[1], front="cheek", left="skin_dark", right=False, top=False, bottom="skin_dark", back=False)
+    mb.box("head", mx(*cheek), cheek[1], front="cheek", left=False, right="skin_dark", top=False, bottom="skin_dark", back=False)
     mb.box("head", (-1.5, 105.0, -17.7), (3, 3, 1.7), front="nose", left="skin_dark", right="skin_dark", top="skin_dark",
-           bottom="skin_dark", back=False)
+           bottom=False, back=False)
 
     # ------------------------------------------------------------------ hair: cap, dome, back, sides, locks, fringe
     cw = HEAD_W + 3.0                                  # cap width (37)
@@ -193,21 +196,28 @@ def build():
            right="hair_dark", top=F("hair_top", 35, 32, 1, 2), bottom=False)
     mb.box("hair", (-14.5, 134.6, -13.0), (29, 1.4, 26), front="hair_dark", back="hair_dark", left="hair_dark",
            right="hair_dark", top=F("hair_top", 29, 26, 4, 5), bottom=False)
-    mb.box("hair", (-cw / 2, HEAD_Y0, 12.0), (cw, 23, 6.0), back=F("hair_back", 37, 23, 0, 10), left="hair_dark",
+    mb.box("hair", (-cw / 2, HAIR_Y0, 12.0), (cw, 123.0 - HAIR_Y0, 6.0), back=F("hair_back", 37, 22, 0, 10), left="hair_dark",
            right="hair_dark", front=False, top=False, bottom="hair_dark")
     for sgn in (-1, 1):
-        panel = ((-cw / 2 - 3.0, HEAD_Y0, -16.0), (3.0, 23, 34))
+        # side panel of the bob, its lowest 2 px inset by 1 px on the outside (rounded bob ends)
+        panel = ((-cw / 2 - 3.0, HAIR_Y0 + 2.0, -16.0), (3.0, 123.0 - HAIR_Y0 - 2.0, 34))
         mb.box("hair", panel[0] if sgn < 0 else mx(*panel), panel[1],
-               right=F("hair_side_r", 34, 23, 0, 10) if sgn < 0 else False,
-               left=F("hair_side_l", 34, 23, 2, 10) if sgn > 0 else False,
+               right=F("hair_side_r", 34, 20, 0, 10) if sgn < 0 else False,
+               left=F("hair_side_l", 34, 20, 2, 10) if sgn > 0 else False,
                front="hair_dark", back="hair_dark", top="hair_dark", bottom="hair_dark")
+        low = ((-cw / 2 - 2.0, HAIR_Y0, -15.0), (2.0, 2.0, 32))
+        mb.box("hair", low[0] if sgn < 0 else mx(*low), low[1],
+               right=F("hair_side_r", 32, 2, 1, 30) if sgn < 0 else False,
+               left=F("hair_side_l", 32, 2, 3, 30) if sgn > 0 else False,
+               front="hair_dark", back="hair_dark", top=False, bottom="hair_dark")
         lock = ((-hw + 0.0 - 0.5, 104.0, -17.6), (4.0, 19, 1.7))
-        mb.box("hair", lock[0] if sgn < 0 else mx(*lock), lock[1], front="lock_front", back="hair_dark", left="hair_dark",
+        mb.box("hair", lock[0] if sgn < 0 else mx(*lock), lock[1], front="lock_front", back=False, left="hair_dark",
                right="hair_dark", top="hair_dark", bottom="hair_dark")
-    mb.box("hair", (-cw / 2, 121.5, -18.4), (cw, 11.1, 2.4), front="fringe", back="hair_dark", left="hair_dark", right="hair_dark",
-           top="hair_dark", bottom="hair_dark")
+    # fringe: narrower than the cap, 0.8 px in front of it, top 0.5 px under the cap top (nothing coplanar)
+    mb.box("hair", (-17.5, 121.5, -18.8), (35, 11.0, 2.8), front=F("fringe", 35, 11, 1, 0), back=False, left="hair_dark",
+           right="hair_dark", top="hair_dark", bottom="hair_dark")
     for (x0, w, hgt) in ((-12.5, 4, 2.0), (-5.5, 3, 1.5), (-1.5, 3, 2.5), (5.0, 3, 1.5), (9.5, 4, 2.0)):
-        mb.box("hair", (x0, 121.5 - hgt, -18.4), (w, hgt + 0.1, 2.4), front="strand", back="hair_dark", left="hair_dark",
+        mb.box("hair", (x0, 121.5 - hgt, -18.8), (w, hgt, 2.8), front="strand", back=False, left="hair_dark",
                right="hair_dark", top=False, bottom="hair_dark")
 
     # pigtails (the two bob tails) with yellow ties
@@ -223,12 +233,18 @@ def build():
         mb.box(bone, O2(*tip), tip[1], front=F("pigtail_tip", 5, 4), back=F("pigtail_tip", 5, 4), left="pigtail_tip",
                right="pigtail_tip", top=False, bottom="hair_dark")
 
-    # ribbon / bow on the crown
-    mb.box("ribbon", (-2.5, 134.8, -10.8), (5, 5, 4), sides="ribbon_knot", top="ribbon_knot", bottom="ribbon_knot")
-    mb.box("ribbon", (-13.5, 135.2, -9.9), (11, 7, 2.6), front="ribbon_wing", back="ribbon_wing_b", left="solid_yellow_d",
-           right="solid_yellow_d", top="solid_yellow_d", bottom="solid_yellow_d", rotation=(0, 0, 14), pivot=(-2.5, 138.7, -8.6))
-    mb.box("ribbon", (2.5, 135.2, -9.9), (11, 7, 2.6), front="ribbon_wing", back="ribbon_wing_b", left="solid_yellow_d",
-           right="solid_yellow_d", top="solid_yellow_d", bottom="solid_yellow_d", rotation=(0, 0, -14), pivot=(2.5, 138.7, -8.6))
+    # ribbon / bow on the crown: knot + two wings, each wing = 4 stepped boxes (bow-tie silhouette with real thickness)
+    bow_y = 139.6
+    mb.box("ribbon", (-2.5, bow_y - 2.5, -10.8), (5, 5, 4), sides="ribbon_knot", top="ribbon_knot", bottom="ribbon_knot")
+    segs = ((-2.5, 3, 3), (-5.5, 3, 5), (-8.5, 3, 7), (-11.5, 2, 8))        # (inner edge x, width, height) going outwards
+    for sgn, tilt in ((1, 8), (-1, -8)):                                    # sgn 1 = right wing (JSON -x)
+        for (xin, w, hgt) in segs:
+            x_lo, x_hi = xin - w, xin
+            ox = x_lo if sgn > 0 else -x_hi
+            row = (9 - hgt) // 2
+            mb.box("ribbon", (ox, bow_y - hgt / 2.0, -9.9), (w, hgt, 2.6), front=F("ribbon_seg", w, hgt, 0, row),
+                   back=F("ribbon_seg_b", w, hgt, 0, row), left="solid_yellow_d", right="solid_yellow_d", top="solid_yellow",
+                   bottom="solid_yellow_d", rotation=(0, 0, tilt), pivot=(-2.5 * sgn, bow_y, -8.6))
 
     # mouth
     mb.box("mouth", (-3.5, 102.0, -17.5), (7, 3, 1.5), front="mouth", back=False, left="solid_lip_d", right="solid_lip_d",
@@ -237,10 +253,12 @@ def build():
     # eyes: off = dull dark, on = glowing (glow mask covers every texel of the eye_on regions)
     for sgn, nm in ((-1, "r"), (1, "l")):
         ox = -EYE_CX - EYE_W / 2 if sgn < 0 else EYE_CX - EYE_W / 2
-        mb.box("eye_off_" + nm, (ox, EYE_Y0, EYE_Z - 0.2), (EYE_W, EYE_H, 1.3), front="eye_off", back=False,
-               left="solid_eye_d", right="solid_eye_d", top="solid_eye_d", bottom="solid_eye_d")
-        mb.box("eye_on_" + nm, (ox - 0.4, EYE_Y0 - 0.4, EYE_Z - 0.8), (EYE_W + 0.8, EYE_H + 0.8, 1.6), front="eye_on", back=False,
-               left="solid_glow", right="solid_glow", top="solid_glow", bottom="solid_glow")
+        # only the front faces: the round eye shape comes from the texture alpha (transparent corners); flat side
+        # faces would show up as straight rectangular strips around a round eye (and, for eye_on, as glowing lines)
+        mb.box("eye_off_" + nm, (ox, EYE_Y0, EYE_Z), (EYE_W, EYE_H, 0.6), front="eye_off", back=False,
+               left=False, right=False, top=False, bottom=False)
+        mb.box("eye_on_" + nm, (ox - 0.4, EYE_Y0 - 0.4, EYE_Z - 0.9), (EYE_W + 0.8, EYE_H + 0.8, 1.5), front="eye_on", back=False,
+               left=False, right=False, top=False, bottom=False)
 
     dp.paint_all(atlas)
     return mb, atlas

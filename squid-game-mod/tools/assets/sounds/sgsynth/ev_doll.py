@@ -18,9 +18,10 @@ import math
 import numpy as np
 
 from .core import (SR, TAU, add_at, cents, curve, db2lin, fade, finish, make_rng, mtof, ns, peak,
-                   phase_cycles, pulse, sine, stack, time_axis)
+                   phase_cycles, pulse, sine, stack)
 from .dsp import band, highpass, lowpass, reverb
 from .instruments import chirp, fm, modal, noise_burst, sparks, thump
+from .loudness import perceptual_level_db
 from .registry import sound, sound_group
 from .voice import aspiration, build_tracks, harmonic_voice, noise_band, phone, pitch_track
 
@@ -32,7 +33,8 @@ VOICES = [
     (+3.0, 5.5, 0.0, 1.000, 1.00),
     (-3.0, 5.9, 2.2, 1.040, 0.60),
 ]
-BREATH_FLOOR_DB = -27.0   # constant airiness under the voiced signal
+BREATH_FLOOR_DB = -24.0   # constant airiness under the voiced signal
+FORMANT_FLUTTER = 0.012   # slow random formant wobble (fraction)
 GLASS_DB = -23.0          # soft sine an octave up ("celesta" sparkle on the doll voice)
 
 # ------------------------------------------------------------------ syllable scores
@@ -149,7 +151,6 @@ def render_syllable(spec, idx: int) -> np.ndarray:
     D = spec["dur"]
     n = ns(D)
     tracks = build_tracks(spec["segs"], n, child=CHILD)
-    t = time_axis(n)
 
     # ---- global amplitude: onset ramp, optional contour, release window
     att = spec.get("attack", 0.004)
@@ -178,18 +179,19 @@ def render_syllable(spec, idx: int) -> np.ndarray:
         # fundamentals of the two voices are in phase in the middle of the syllable (no null)
         ph0 = 0.0 if vi == 0 else float(-(note * (cents(det) - cents(VOICES[0][0]))) * D / 2.0) % 1.0
         voiced += lvl * harmonic_voice(f0, tracks, n, formant_scale=fsc, phase0=ph0,
-                                       rand_phase=None if vi == 0 else drng)
+                                       rand_phase=None if vi == 0 else drng,
+                                       flutter=FORMANT_FLUTTER, flutter_rng=rng)
     voiced /= np.sqrt(sum(v[4] ** 2 for v in VOICES))  # keep the doubled sum near unit RMS
-    v_amp = db2lin(tracks["v_db"])
+    v_amp = tracks["v_lin"]
     y = voiced * v_amp * env
 
     # ---- octave-up glass sine (fades in with the voiced level)
-    glass_mask = np.clip((tracks["v_db"] + 30.0) / 20.0, 0.0, 1.0)
+    glass_mask = np.clip(tracks["v_lin"] / 0.35, 0.0, 1.0)
     y += sine(2.0 * f0_main, n) * db2lin(GLASS_DB) * v_amp * env * glass_mask
 
     # ---- aspiration: breath floor + phone-specific h / aspirated release
     asp = aspiration(n, rng, tracks, formant_scale=1.0)
-    a_amp = db2lin(tracks["a_db"]) + db2lin(BREATH_FLOOR_DB) * v_amp
+    a_amp = tracks["a_lin"] + db2lin(BREATH_FLOOR_DB) * v_amp
     y += asp * a_amp * env
 
     # ---- consonant noise
@@ -201,27 +203,18 @@ def render_syllable(spec, idx: int) -> np.ndarray:
     return fade(y, 0.0015, 0.004)
 
 
-def active_rms(x: np.ndarray, floor_db: float = -35.0) -> float:
-    """RMS over the part of the signal that is within ``floor_db`` of the peak (loudness proxy)."""
-    pk = np.max(np.abs(x))
-    # smoothed envelope at 5 ms
-    k = ns(0.005)
-    env = np.sqrt(np.convolve(x * x, np.ones(k) / k, mode="same"))
-    m = env > pk * 10 ** (floor_db / 20.0)
-    return float(np.sqrt(np.mean(x[m] ** 2)))
-
-
 @sound_group("doll.syllables", [
     (f"doll.syllable_{i}", "Doll sings", f"doll/syllable_{i:02d}") for i in range(1, 11)
 ])
 def doll_syllables():
     specs = _syllables()
     raw = [render_syllable(s, i + 1) for i, s in enumerate(specs)]
-    # loudness-match on active RMS, then a gentle common soft-limit and peak normalisation
-    target = 0.10
+    # loudness-match on the perceptual level (70/30 K-/A-weighted active level, see loudness.py),
+    # then a gentle common soft-limit and peak normalisation
+    target_db = -16.0
     out = []
     for x in raw:
-        y = x * (target / active_rms(x))
+        y = x * 10.0 ** ((target_db - perceptual_level_db(x)) / 20.0)
         out.append(y)
     # tame the loudest consonant bursts (keeps vowels untouched, bursts rounded)
     lim = 0.60
@@ -306,7 +299,6 @@ def _hum(n, f_curve, rng, buzz=0.7, whine=None):
 def doll_eyes_on(v, rng):
     dur = 0.7
     n = ns(dur)
-    t = time_axis(n)
     fcur = np.exp(np.linspace(math.log(52), math.log(190), n))
     whine = np.exp(np.linspace(math.log(500), math.log(2600), n))
     y = _hum(n, fcur, rng, 0.85, whine)
@@ -341,13 +333,14 @@ def doll_eyes_off(v, rng):
     return finish(y, -3.0, -13.0, 0.002, 0.04)
 
 
-@sound("doll.scan_beep", "Scanner beeps")
+@sound("doll.scan_beep", "Scanner beeps", variants=2)
 def doll_scan_beep(v, rng):
     n = ns(0.3)
     out = np.zeros(n)
     m = ns(0.115)
     t = np.linspace(0, 1, m)
-    f = 820 * (2650 / 820) ** (t ** 0.8)
+    lo, hi = ((820.0, 2650.0), (900.0, 2900.0))[v]
+    f = lo * (hi / lo) ** (t ** 0.8)
     blip = fm(f, 2.0, 0.8 * (1 - t) + 0.15, m)
     blip += 0.3 * sine(f * 3, m)
     blip *= curve([(0, 0), (0.006, 1.0), (0.07, 0.7), (0.115, 0.0)], m, "cos") * (1.0 + 0.25 * sine(38.0, m))

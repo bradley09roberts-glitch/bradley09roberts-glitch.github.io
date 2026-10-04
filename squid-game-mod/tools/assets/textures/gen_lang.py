@@ -1,12 +1,12 @@
 """Language fragment: display names for every squidgame block and item.
 
 Written to ``tools/assets/lang/textures.json`` (merged into ``lang/en_us.json`` by the integrator's script).
-Block items use the block's translation key (``block.squidgame.<id>``); the two standalone items use
-``item.squidgame.<id>``.
+Block items use the block's translation key (``block.squidgame.<id>``); the standalone items (marble, recruiter
+card and the three spawn eggs registered by ModItems) use ``item.squidgame.<id>``.
 """
 from __future__ import annotations
 
-from common import BLOCK_IDS, ITEM_IDS, PANEL_LIGHTS, PASTELS, SYMBOLS, TILES, Out
+from common import BLOCK_IDS, ITEM_IDS, PANEL_LIGHTS, PASTELS, SPAWN_EGGS, SYMBOLS, TILES, Out
 
 NAMES: dict[str, str] = {
     "bridge_glass": "Glass Bridge Panel",
@@ -28,6 +28,9 @@ NAMES.update({f"symbol_{k}": f"{k.title()} Symbol Block" for k in SYMBOLS})
 ITEM_NAMES = {
     "marble": "Marble",
     "recruiter_card": "Recruiter's Card",
+    "contestant_spawn_egg": "Contestant Spawn Egg",
+    "guard_spawn_egg": "Masked Guard Spawn Egg",
+    "doll_spawn_egg": "Giant Doll Spawn Egg",
 }
 
 
@@ -38,7 +41,7 @@ def lang() -> dict[str, str]:
     out: dict[str, str] = {}
     for b in BLOCK_IDS:
         out[f"block.squidgame.{b}"] = NAMES[b]
-    for i in ITEM_IDS:
+    for i in ITEM_IDS + SPAWN_EGGS:
         out[f"item.squidgame.{i}"] = ITEM_NAMES[i]
     return out
 

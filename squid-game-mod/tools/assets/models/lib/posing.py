@@ -155,7 +155,7 @@ class LimbCfg:
 
 
 def ik_arm(skel: Skel, cfg: LimbCfg, pose: Pose, side: str, target_world: Sequence[float],
-           pref: Sequence[float] = (10.0, 8.0, 0.0, 40.0), weight: float = 0.0004,
+           pref: Sequence[float] = (10.0, 8.0, 0.0, 40.0), weight=(0.0004, 0.0012, 0.0004, 0.0004),
            x0: Optional[Sequence[float]] = None,
            lims=((-80, 200), (-80, 80), (-110, 110), (0, 150))) -> Tuple[Pose, float]:
     """Solve shoulder (swing, out, twist) + elbow flexion so the palm anchor reaches ``target_world``.
@@ -185,7 +185,7 @@ def ik_arm(skel: Skel, cfg: LimbCfg, pose: Pose, side: str, target_world: Sequen
         ov = {arm: B(rot=(-x[0], sg * x[2], sg * x[1])), fore: B(rot=(-x[3], 0, 0))}
         hand = chain.point(ov, apt)
         e = hand - target
-        reg = np.sqrt(weight) * (x - pref_a)
+        reg = np.sqrt(np.asarray(weight, dtype=float)) * (x - pref_a)
         return np.concatenate([e, reg])
 
     x0 = np.array(x0 if x0 is not None else pref, dtype=float)

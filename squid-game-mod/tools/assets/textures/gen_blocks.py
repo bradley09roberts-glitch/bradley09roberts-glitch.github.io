@@ -7,19 +7,19 @@ from __future__ import annotations
 
 import numpy as np
 
-from common import (Canvas, Out, PANEL_LIGHTS, PASTELS, SYMBOLS, TILES, art, bayer, darken, fbm, lch_to_rgb,
-                    lighten, mix, ramp, rgb, rng, shade, value_noise)
+from common import (Canvas, Out, PANEL_LIGHTS, PASTELS, SYMBOLS, TILES, art, fbm, lch_to_rgb,
+                    lighten, mix, ramp, rng, shade, value_noise)
 
 # --------------------------------------------------------------------------- pastel palette
 # Hand tuned in LCH so that the seven candy colours carry the same visual weight.
 # (L, C, h) -> sRGB; yellow and cream sit a little lighter because yellow reads darker at equal L.
 PASTEL_LCH = {
-    "pink":   (80.0, 30.0, 5.0),
+    "pink":   (81.0, 30.0, 5.0),
     "mint":   (85.0, 29.0, 160.0),
-    "yellow": (91.0, 40.0, 95.0),
-    "sky":    (81.0, 24.0, 247.0),
-    "lilac":  (77.0, 28.0, 305.0),
-    "peach":  (83.0, 33.0, 52.0),
+    "yellow": (90.0, 40.0, 95.0),
+    "sky":    (82.0, 25.0, 247.0),
+    "lilac":  (79.0, 28.0, 305.0),
+    "peach":  (84.0, 33.0, 52.0),
     "cream":  (93.0, 12.0, 88.0),
 }
 
@@ -32,34 +32,31 @@ def pastel_rgb(name: str):
 def bridge_glass() -> Canvas:
     """Pale cyan tempered-glass pane in a thin darker frame.  Same texture for safe/fragile panels."""
     c = Canvas(16)
-    frame = (84, 150, 168, 244)
-    inner_edge = (172, 222, 232, 168)
-    body = (206, 240, 246, 104)
+    frame = (78, 148, 168, 246)
+    inner_edge = (160, 226, 238, 176)
     c.rect(0, 0, 16, 16, frame)
     c.rect(1, 1, 15, 15, inner_edge)
-    c.rect(2, 2, 14, 14, body)
-    # very soft vertical sheen: slightly denser glass towards the lower right
+    # glass body: pale cyan, a touch denser towards the lower right (reads as thicker glass)
     for y in range(2, 14):
         for x in range(2, 14):
             t = (x + y - 4) / 20.0
-            a = int(round(98 + 20 * t))
-            c.px(x, y, (206, 240, 246, a))
-    # corner bolts / rubber seats
+            c.px(x, y, (170, 238, 250, int(round(112 + 24 * t))))
+    # corner seats
     for (x, y) in [(2, 2), (13, 2), (2, 13), (13, 13)]:
-        c.px(x, y, (118, 178, 194, 205))
-    # diagonal glints (top-left long, bottom-right short) like vanilla glass but softer
-    glint = (244, 253, 255, 232)
+        c.px(x, y, (110, 176, 194, 214))
+    # diagonal glints (long one top-left, short one bottom-right) + a fainter echo
+    glint = (246, 254, 255, 236)
     for (x, y) in [(4, 8), (5, 7), (6, 6), (7, 5), (8, 4)]:
         c.px(x, y, glint)
     for (x, y) in [(4, 6), (5, 5), (6, 4)]:
-        c.px(x, y, (232, 250, 255, 170))
+        c.px(x, y, (236, 252, 255, 176))
     for (x, y) in [(10, 12), (11, 11), (12, 10)]:
-        c.px(x, y, (238, 252, 255, 200))
+        c.px(x, y, (240, 253, 255, 206))
     return c
 
 
 # --------------------------------------------------------------------------- cash block
-def _note_edge_rows(r: np.random.Generator) -> list:
+def _note_edge_rows(r) -> list:
     pal = [(206, 218, 126), (190, 206, 108), (176, 194, 94), (160, 182, 84), (222, 228, 150)]
     rows = []
     last = -1
@@ -111,34 +108,42 @@ def cash_block_side() -> Canvas:
 
 
 def cash_block_top() -> Canvas:
-    """Top of the bundle: a stylised yellow-green banknote (generic ornament, no real design) + band."""
-    r = rng("cash_top")
-    base = (190, 206, 106)
-    c = Canvas(16, fill=base + (255,))
-    # guilloche-ish background hatch
+    """Top of the bundle: a stylised yellow-green banknote (generic ornament, no real design) + paper band.
+
+    Left of the band: a medallion portrait; right of the band: a vertical "50" value mark.
+    """
+    legend = {
+        "B": (98, 126, 54),       # dark green ink
+        "b": (228, 234, 164),     # light frame
+        "g": (190, 206, 106),     # note body
+        "d": (176, 196, 96),      # fine pattern
+        "m": (150, 176, 78),      # medallion fill
+    }
+    grid = [["g"] * 16 for _ in range(16)]
     for y in range(16):
         for x in range(16):
             if (x + y) % 4 == 0:
-                c.px(x, y, (180, 198, 98))
-            elif r.random() < 0.08:
-                c.px(x, y, (200, 214, 118))
-    # border
-    c.outline(0, 0, 16, 16, (104, 132, 56))
-    c.outline(1, 1, 15, 15, (222, 228, 150))
-    # corner ornaments
-    for (x, y) in [(2, 2), (13, 2), (2, 13), (13, 13)]:
-        c.px(x, y, (104, 132, 56))
-    # left: oval portrait medallion
-    c.mask(c.ellipse_mask(3.5, 8.0, 2.0, 3.0), (150, 178, 78))
-    c.mask(c.ring_mask(3.5, 8.0, 2.1, 3.1) & c.ellipse_mask(3.5, 8.0, 2.4, 3.6), (104, 132, 56))
-    c.px(3, 7, (112, 140, 62))
-    c.px(3, 8, (112, 140, 62))
-    c.px(4, 8, (112, 140, 62))
-    # right: value mark and text lines
-    c.rect(11, 5, 14, 6, (104, 132, 56))
-    c.rect(11, 7, 14, 8, (104, 132, 56))
-    c.rect(11, 9, 13, 10, (104, 132, 56))
-    c.rect(11, 11, 14, 12, (150, 178, 78))
+                grid[y][x] = "d"
+    for i in range(16):
+        for (x, y) in [(i, 0), (i, 15), (0, i), (15, i)]:
+            grid[y][x] = "B"
+        for (x, y) in [(i, 1), (i, 14), (1, i), (14, i)]:
+            if grid[y][x] != "B":
+                grid[y][x] = "b"
+
+    def paste(x0, y0, rows):
+        for dy, row in enumerate(rows):
+            for dx, ch in enumerate(row):
+                if ch != ".":
+                    grid[y0 + dy][x0 + dx] = ch
+
+    paste(2, 5, [".m.", "mBm", "mBm", "mBB", ".m."])                    # solid medallion (portrait silhouette)
+    paste(11, 3, ["BBB", "B..", "BBB", "..B", "BBB"])                   # "5"
+    paste(11, 9, ["BBB", "B.B", "B.B", "B.B", "BBB"])                   # "0"
+    for (x, y) in [(2, 2), (13, 2), (2, 13)]:
+        grid[y][x] = "B"
+    # the "." cells of the digits keep the note body colour
+    c = art(["".join(r) for r in grid], legend)
     _band(c, 6, 9, 0, 16)
     return c
 
@@ -200,12 +205,11 @@ def monitor_screen() -> Canvas:
                 g = 1.0 - 0.28 * ((x - 7.5) ** 2 / 64.0 + (y - 7.5) ** 2 / 64.0)
                 col = (int(20 * g + 6), int(58 * g + 10), int(66 * g + 10))
                 c.px(x, y, col)
-        # scanlines: every second row a touch darker, the pattern rolls 2px per frame (loops in 8 frames)
-        for y in range(16):
-            if (y + 2 * f) % 4 < 2:
-                for x in range(16):
-                    cr = c.get(x, y)
-                    c.px(x, y, (max(0, cr[0] - 5), max(0, cr[1] - 12), max(0, cr[2] - 12)))
+        # scanlines: every second row a touch darker (static, so the screen does not strobe)
+        for y in range(0, 16, 2):
+            for x in range(16):
+                cr = c.get(x, y)
+                c.px(x, y, (max(0, cr[0] - 5), max(0, cr[1] - 12), max(0, cr[2] - 12)))
         # refresh bar: 3 rows drifting down 2px per frame
         by = (2 * f) % 16
         for k in range(3):
@@ -258,8 +262,8 @@ def panel_light(kind: str) -> Canvas:
                       mid=(255, 255, 255), edge=(206, 216, 226)),
         "warm": dict(frame=(184, 150, 98), line=(244, 224, 170), cell=(255, 243, 206),
                      mid=(255, 250, 228), edge=(226, 196, 138)),
-        "pink": dict(frame=(184, 108, 144), line=(244, 182, 208), cell=(255, 216, 232),
-                     mid=(255, 234, 244), edge=(226, 150, 184)),
+        "pink": dict(frame=(196, 126, 158), line=(246, 194, 216), cell=(255, 224, 238),
+                     mid=(255, 240, 248), edge=(232, 164, 194)),
     }[kind]
     c = Canvas(16, fill=pal["cell"] + (255,))
     # 3x3 diffuser cells of 4px separated by 1px lines, 1px frame + 1px inner bevel handled by lines
@@ -290,40 +294,33 @@ def panel_light(kind: str) -> Canvas:
 def playground_ground() -> Canvas:
     """Sun-baked packed school-yard sand with pebbles and hairline cracks. Tiles seamlessly."""
     r = rng("playground_ground")
-    n = fbm(16, 16, r, [(8, 0.5), (4, 0.35), (2, 0.15)])
+    n = fbm(16, 16, r, [(4, 0.5), (2, 0.3), (8, 0.2)])
     n = (n - n.min()) / (n.max() - n.min() + 1e-9)
-    pal = [(176, 146, 104), (189, 158, 114), (201, 171, 126), (212, 184, 139), (222, 197, 152)]
+    pal = [(180, 149, 106), (192, 161, 117), (203, 173, 128), (213, 186, 141), (223, 198, 154)]
     c = Canvas(16, fill=(0, 0, 0, 255))
-    c.fill_rgb(ramp(n, pal, dither=0.5))
-    # fine speckle
-    for _ in range(34):
+    c.fill_rgb(ramp(n, pal, dither=0.6))
+    # fine speckle: dry grit
+    for _ in range(40):
         x, y = int(r.integers(0, 16)), int(r.integers(0, 16))
         base = c.get(x, y)[:3]
-        c.px(x, y, shade(base, 0.92) if r.random() < 0.5 else lighten(base, 0.10))
-    # hairline sun-baked cracks (drawn with wrap-around)
+        c.px(x, y, shade(base, 0.93) if r.random() < 0.55 else lighten(base, 0.10))
+
     def wrap_px(x, y, col):
         c.px(x % 16, y % 16, col)
-    crack = (160, 128, 90)
-    for (x, y, steps) in [(2, 3, [(1, 0), (1, 1), (1, 0), (0, 1)]), (10, 11, [(1, 0), (1, -1), (1, 0)]),
-                          (6, 14, [(0, 1), (1, 1), (1, 0), (1, 0)])]:
-        for dx, dy in steps:
-            wrap_px(x, y, crack)
-            x, y = x + dx, y + dy
-    # pebbles: (x, y, w, h)
-    pebble = [(5, 5, 2, 2), (12, 3, 2, 1), (1, 10, 2, 2), (9, 9, 1, 1), (14, 13, 2, 2), (4, 13, 1, 1), (11, 7, 1, 1)]
-    for (px_, py_, w, h) in pebble:
-        # cast shadow first (down-right)
+
+    # a few small pebbles: (x, y, w, h); kept sparse so the four random rotations do not read as a pattern
+    for (px_, py_, w, h) in [(5, 4, 2, 1), (12, 10, 1, 1), (2, 12, 2, 2)]:
         for yy in range(h):
             for xx in range(w):
-                wrap_px(px_ + xx + 1, py_ + yy + 1, (150, 120, 86))
+                wrap_px(px_ + xx + 1, py_ + yy + 1, (156, 126, 92))           # cast shadow
         for yy in range(h):
             for xx in range(w):
                 t = (xx + yy) / max(1, (w + h - 2))
-                col = (156, 146, 132) if t < 0.5 else (126, 114, 102)
+                col = (166, 156, 142) if t < 0.5 else (136, 124, 110)
                 if w == 1 and h == 1:
-                    col = (146, 134, 120)
+                    col = (152, 140, 126)
                 wrap_px(px_ + xx, py_ + yy, col)
-        wrap_px(px_, py_, (190, 182, 168))
+        wrap_px(px_, py_, (196, 188, 174))
     return c
 
 
@@ -333,8 +330,8 @@ TILE_STYLE = {
                   grout=(172, 96, 126)),
     "white": dict(base=(228, 233, 238), hi=(246, 249, 252), hi2=(255, 255, 255), lo=(204, 211, 219),
                   grout=(160, 170, 182)),
-    "black": dict(base=(30, 32, 38), hi=(64, 68, 78), hi2=(96, 102, 114), lo=(19, 20, 24),
-                  grout=(8, 9, 11)),
+    "black": dict(base=(28, 30, 36), hi=(46, 50, 60), hi2=(88, 94, 108), lo=(18, 19, 23),
+                  grout=(54, 57, 66)),
 }
 
 
@@ -424,23 +421,15 @@ def symbol(kind: str) -> Canvas:
     xs, ys = c.grid()
     if kind == "circle":
         d2 = (xs - 8) ** 2 + (ys - 8) ** 2
-        m = (d2 <= 6.6 ** 2) & (d2 > 4.4 ** 2)
+        m = (d2 <= 6.0 ** 2) & (d2 > 4.0 ** 2)
     elif kind == "square":
         outer = (np.abs(xs - 8) <= 5.0) & (np.abs(ys - 8) <= 5.0)
         inner = (np.abs(xs - 8) <= 3.0) & (np.abs(ys - 8) <= 3.0)
         m = outer & ~inner
-    else:  # triangle pointing up: apex (8, 2.2), base y = 13.2
-        def tri(offset):
-            top, bot, half = 2.0 + offset * 1.7, 13.4 - offset, 6.4
-            # inside if y between top and bot and |x-8| <= half*(y-top)/(bot-top)
-            t = (ys - top) / (bot - top)
-            return (ys >= top) & (ys <= bot) & (np.abs(xs - 8) <= (half - offset * 2.0) * t + 0.0)
-        outer = tri(0.0)
-        # inner triangle: offset edges inwards by 2px
-        top_i, bot_i = 2.0 + 5.3, 13.4 - 2.0
-        t_i = (ys - 4.9) / (bot_i - 4.9)
-        inner = (ys >= 4.9) & (ys <= bot_i) & (np.abs(xs - 8) <= 3.5 * t_i - 0.0)
-        m = outer & ~inner
+    else:  # triangle pointing up, outline roughly 2px thick
+        def tri(top, bot, half):
+            return (ys >= top) & (ys <= bot) & (np.abs(xs - 8) <= half * (ys - top) / (bot - top))
+        m = tri(2.0, 13.4, 6.4) & ~tri(4.9, 11.4, 3.5)
     c.mask(m, SYM_FG)
     return c
 

@@ -1,11 +1,9 @@
 """Marble minigame GUI textures: closed / open hand (48x48), big glass marble (16x16), ring target (128x128)."""
 from __future__ import annotations
 
-import math
-
 import numpy as np
 
-from common import Canvas, Out, dilate, mix, rng, seg_dist, shade
+from common import Canvas, Out, dilate, seg_dist
 import paint
 from gen_items import MARBLE_BODY, MARBLE_SWIRL
 
@@ -47,7 +45,6 @@ def _part(c: Canvas, m: np.ndarray, base, light, dark, outline=OUTLINE, light_di
     c.mask(m & (t > 0.45), light)
     c.mask(m & (t < -0.40), dark)
     # rim shading hugging the outline on the dark side
-    edge_in = m & ~dilate(~m, 1, diag=False) == False
     inner_edge = m & dilate(~m, 1, diag=False)
     c.mask(inner_edge & (t < -0.05), dark)
     if spec is not None:
@@ -56,7 +53,6 @@ def _part(c: Canvas, m: np.ndarray, base, light, dark, outline=OUTLINE, light_di
 
 def _sleeve(c: Canvas, x0, x1, y0, y1) -> None:
     m = _rrect(c, x0, y0, x1, y1 + 6, 3)
-    m &= (np.mgrid[0:c.h, 0:c.w][0] < c.h)
     c.mask(dilate(m, 1, diag=False) & ~m, OUTLINE)
     c.mask(m, SLEEVE)
     xs, ys = c.grid()

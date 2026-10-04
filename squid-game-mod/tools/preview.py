@@ -10,10 +10,12 @@ Views:  top    - top-down map, height shaded, regions/markers overlaid
 
 Examples:
   python3 tools/preview.py tools/out/red_light.sqbuf --views top,iso --out tools/out/preview
-  python3 tools/preview.py tools/out/hub.sqbuf --views iso --clip -40,40,0,40,-35,35 --scale 3
-  python3 tools/preview.py tools/out/hub.sqbuf --views slice --slice-y 70 --clip -40,40,0,0,-35,35
+  python3 tools/preview.py tools/out/hub.sqbuf --views iso --clip=-40,40,0,40,-35,35 --scale 3
+  python3 tools/preview.py tools/out/hub.sqbuf --views slice --slice-y 70 --clip=-40,40,0,0,-35,35
 
---clip x0,x1,y0,y1,z0,z1 uses WORLD coordinates (the same numbers as markers); y0=y1=0 means "all y".
+--clip=x0,x1,y0,y1,z0,z1 (use the = form: values may be negative) is in the arena's LOCAL coordinates (the
+same numbers you pass to BuildContext) when the file is named after an arena (red_light.sqbuf ...); add --world to
+use world coordinates. y0=y1=0 means "all y".
 Marker names are printed in a legend; unknown block ids are listed on stderr.
 """
 import argparse
@@ -364,6 +366,7 @@ def main():
     ap.add_argument("--scale", type=int, default=0)
     ap.add_argument("--clip", default=None)
     ap.add_argument("--slice-y", type=int, default=None, help="world Y for the slice view")
+    ap.add_argument("--world", action="store_true", help="interpret --clip / --slice-y in world coordinates")
     ap.add_argument("--no-markers", dest="markers", action="store_false")
     ap.add_argument("--regions", action="store_true", help="outline regions in the top view")
     args = ap.parse_args()
@@ -371,6 +374,17 @@ def main():
     palette, secs, meta = load(args.file)
     markers, regions, ents = parse_meta(meta)
     clip = tuple(int(v) for v in args.clip.split(",")) if args.clip else None
+    origins = {"hub": (0, 64, 0), "red_light": (1000, 64, 0), "dalgona": (2000, 64, 0), "tug_of_war": (3000, 64, 0),
+               "marbles": (4000, 64, 0), "glass_bridge": (5000, 64, 0), "final": (6000, 64, 0)}
+    stem = os.path.splitext(os.path.basename(args.file))[0]
+    org = None if args.world else origins.get(stem)
+    if org and clip:
+        ox, oy, oz = org
+        y0, y1 = clip[2], clip[3]
+        clip = (clip[0] + ox, clip[1] + ox, (y0 + oy) if not (y0 == 0 and y1 == 0) else 0,
+                (y1 + oy) if not (y0 == 0 and y1 == 0) else 0, clip[4] + oz, clip[5] + oz)
+    if org and args.slice_y is not None:
+        args.slice_y += org[1]
     cols, flags = block_colors(palette)
     grid, origin, _ = build_grid(secs, palette, clip)
     X, Y, Z = grid.shape

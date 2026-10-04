@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 import math
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Sequence
 
 import numpy as np
 from PIL import Image
@@ -60,6 +60,8 @@ BLOCK_IDS: list[str] = (
     + [f"symbol_{s}" for s in SYMBOLS]
 )
 ITEM_IDS: list[str] = ["marble", "recruiter_card"]
+# registered by ModItems but not part of the contract: they only need a vanilla-parent item model + a display name
+SPAWN_EGGS: list[str] = ["contestant_spawn_egg", "guard_spawn_egg", "doll_spawn_egg"]
 
 
 # --------------------------------------------------------------------------- colours
@@ -144,13 +146,33 @@ def lch_to_rgb(L: float, C: float, h: float) -> tuple[int, int, int]:
 
 
 # --------------------------------------------------------------------------- randomness
-def rng(seed: int | str) -> np.random.Generator:
+class Rng:
+    """Seeded random source with the small API the generators use.
+
+    Backed by NumPy's legacy ``RandomState`` whose stream is *frozen* across NumPy releases (NEP 19), so the generated
+    textures stay byte-identical on any machine / NumPy version (``Generator`` makes no such promise).
+    """
+
+    def __init__(self, seed: int):
+        self._rs = np.random.RandomState(seed)
+
+    def random(self, size=None):
+        return self._rs.random_sample(size)
+
+    def integers(self, low, high=None, size=None):
+        return self._rs.randint(low, high, size)
+
+    def choice(self, a, size=None, p=None):
+        return self._rs.choice(a, size=size, p=p)
+
+
+def rng(seed: int | str) -> Rng:
     if isinstance(seed, str):
         seed = sum((i + 1) * ord(ch) for i, ch in enumerate(seed)) & 0xFFFFFFFF
-    return np.random.default_rng(seed)
+    return Rng(seed)
 
 
-def value_noise(w: int, h: int, cell: int, r: np.random.Generator, wrap: bool = True) -> np.ndarray:
+def value_noise(w: int, h: int, cell: int, r: Rng, wrap: bool = True) -> np.ndarray:
     """Smooth value noise in [0,1], shape (h, w). With ``wrap`` it tiles seamlessly.
 
     ``cell`` is the grid spacing in pixels (must divide w and h when wrap=True).
@@ -179,7 +201,7 @@ def value_noise(w: int, h: int, cell: int, r: np.random.Generator, wrap: bool = 
     return top * (1 - fy)[:, None] + bot * fy[:, None]
 
 
-def fbm(w: int, h: int, r: np.random.Generator, octaves: Sequence[tuple[int, float]], wrap: bool = True) -> np.ndarray:
+def fbm(w: int, h: int, r: Rng, octaves: Sequence[tuple[int, float]], wrap: bool = True) -> np.ndarray:
     """Sum of value-noise octaves ``[(cell, weight), ...]`` normalised to [0,1]."""
     acc = np.zeros((h, w))
     tot = 0.0
@@ -283,9 +305,6 @@ class Canvas:
                     else:
                         self.a[Y, X] = over_px(self.a[Y, X], px)
 
-    def to_image(self) -> Image.Image:
-        return Image.fromarray(self.a, "RGBA")
-
     # -- shape masks (pixel-centre sampling) ------------------------------------------------
     def grid(self):
         ys, xs = np.mgrid[0:self.h, 0:self.w]
@@ -294,11 +313,6 @@ class Canvas:
     def disc_mask(self, cx: float, cy: float, r: float) -> np.ndarray:
         xs, ys = self.grid()
         return (xs - cx) ** 2 + (ys - cy) ** 2 <= r * r
-
-    def ring_mask(self, cx: float, cy: float, r0: float, r1: float) -> np.ndarray:
-        xs, ys = self.grid()
-        d2 = (xs - cx) ** 2 + (ys - cy) ** 2
-        return (d2 <= r1 * r1) & (d2 > r0 * r0)
 
     def ellipse_mask(self, cx: float, cy: float, rx: float, ry: float) -> np.ndarray:
         xs, ys = self.grid()
@@ -311,9 +325,6 @@ class Canvas:
     def line_mask(self, x0: float, y0: float, x1: float, y1: float, thick: float = 1.0) -> np.ndarray:
         xs, ys = self.grid()
         return seg_dist(xs, ys, x0, y0, x1, y1) <= thick / 2.0
-
-    def disc(self, cx, cy, r, c):
-        self.mask(self.disc_mask(cx, cy, r), c)
 
     def line(self, x0, y0, x1, y1, c, thick: float = 1.0):
         self.mask(self.line_mask(x0, y0, x1, y1, thick), c)
@@ -394,6 +405,41 @@ def art(rows: Sequence[str], legend: dict, w: int | None = None) -> Canvas:
     return c
 
 
+# --------------------------------------------------------------------------- json
+def _inline(obj) -> str | None:
+    """One-line JSON for scalars, flat lists and flat dicts of scalars / flat lists; else None."""
+    if isinstance(obj, (str, int, float, bool)) or obj is None:
+        return json.dumps(obj, ensure_ascii=False)
+    if isinstance(obj, list) and all(not isinstance(x, (dict, list)) for x in obj):
+        return "[" + ", ".join(json.dumps(x, ensure_ascii=False) for x in obj) + "]"
+    if isinstance(obj, dict):
+        parts = []
+        for k, v in obj.items():
+            iv = _inline(v) if not isinstance(v, dict) else None
+            if iv is None:
+                return None
+            parts.append(f"{json.dumps(k, ensure_ascii=False)}: {iv}")
+        return "{ " + ", ".join(parts) + " }"
+    return None
+
+
+def format_json(obj, level: int = 0, width: int = 118) -> str:
+    """Readable JSON: nested structure indented by 2, flat lists / small flat dicts kept on one line."""
+    ind = "  " * level
+    inl = _inline(obj)
+    if inl is not None and len(inl) + len(ind) <= width:
+        return inl
+    if isinstance(obj, dict):
+        if not obj:
+            return "{}"
+        items = [f"{ind}  {json.dumps(k, ensure_ascii=False)}: {format_json(v, level + 1, width)}" for k, v in obj.items()]
+        return "{\n" + ",\n".join(items) + f"\n{ind}}}"
+    if isinstance(obj, list):
+        items = [f"{ind}  {format_json(x, level + 1, width)}" for x in obj]
+        return "[\n" + ",\n".join(items) + f"\n{ind}]"
+    return json.dumps(obj, ensure_ascii=False)
+
+
 # --------------------------------------------------------------------------- output
 class Out:
     """Output root + bookkeeping of written files."""
@@ -419,27 +465,17 @@ class Out:
                 arr = np.concatenate([arr, np.full(arr.shape[:2] + (1,), 255, np.uint8)], axis=2)
         arr = np.ascontiguousarray(arr.astype(np.uint8))
         p = self.path(rel)
-        Image.fromarray(arr, "RGBA").save(p, format="PNG", compress_level=9)
+        Image.fromarray(arr).save(p, format="PNG", compress_level=9)
         self.written.append(p)
         return p
 
     def json(self, rel: str, data, *, root: Path | None = None) -> Path:
         p = (root or self.root) / rel
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        self.written.append(p)
-        return p
-
-    def text(self, rel: str, text: str) -> Path:
-        p = self.path(rel)
-        p.write_text(text, encoding="utf-8")
+        p.write_text(format_json(data) + "\n", encoding="utf-8")
         self.written.append(p)
         return p
 
 
 def load_png(path: Path | str) -> np.ndarray:
     return np.array(Image.open(path).convert("RGBA"))
-
-
-def upscale(arr: np.ndarray, k: int) -> np.ndarray:
-    return np.repeat(np.repeat(arr, k, axis=0), k, axis=1)

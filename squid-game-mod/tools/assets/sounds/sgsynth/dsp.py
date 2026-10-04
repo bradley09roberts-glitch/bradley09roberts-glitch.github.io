@@ -11,7 +11,7 @@ import math
 
 import numpy as np
 
-from .core import SR, TAU, ns, cents  # noqa: F401  (cents re-exported for convenience)
+from .core import SR, TAU, ns
 
 # ------------------------------------------------------------------ fft size helper
 _SMOOTH = None
@@ -335,7 +335,7 @@ def make_ir(rt60: float = 1.5, predelay: float = 0.012, damp: float = 0.5, early
     er = np.zeros(n)
     k = 14
     times = np.sort(r.uniform(0.004, 0.075, k))
-    for i, tt in enumerate(times):
+    for tt in times:
         j = int(tt * SR)
         if j < n:
             er[j] += r.choice([-1, 1]) * r.uniform(0.5, 1.0) * (1.0 - tt / 0.1)
@@ -395,23 +395,36 @@ def follow(x, block: int = 256):
 
 
 def compress(x, thresh_db: float = -18.0, ratio: float = 3.0, attack: float = 0.01,
-             release: float = 0.15, makeup_db: float = 0.0, block: int = 128):
-    """Simple block-based feed-forward compressor (good enough for music buses)."""
+             release: float = 0.15, makeup_db: float = 0.0, block: int = 128, circular: bool = False):
+    """Simple block-based feed-forward compressor (good enough for music buses).
+
+    ``circular=True`` warms the gain smoother up over a wrapped pass and wraps the gain curve, so a
+    looped signal has no gain step at the loop point.
+    """
     x = np.asarray(x, dtype=np.float64)
+    n = len(x)
     env, centers = follow(x, block)
     lev = 20 * np.log10(env + 1e-9)
     over = np.maximum(lev - thresh_db, 0.0)
     gr = -over * (1.0 - 1.0 / ratio)  # desired gain reduction in dB
     ab = math.exp(-block / SR / max(attack, 1e-4))
     rb = math.exp(-block / SR / max(release, 1e-3))
-    g = np.zeros_like(gr)
+    seq = np.concatenate([gr, gr]) if circular else gr
+    g = np.zeros_like(seq)
     cur = 0.0
-    for i in range(len(gr)):
-        tgt = gr[i]
+    for i in range(len(seq)):
+        tgt = seq[i]
         cur = tgt + (cur - tgt) * (ab if tgt < cur else rb)
         g[i] = cur
+    if circular:
+        g = g[len(gr):]
     gain = 10 ** ((g + makeup_db) / 20.0)
-    full = np.interp(np.arange(len(x)), centers, gain)
+    if circular:
+        cx = np.concatenate([[centers[-1] - n], centers, [centers[0] + n]])
+        gx = np.concatenate([[gain[-1]], gain, [gain[0]]])
+        full = np.interp(np.arange(n), cx, gx)
+    else:
+        full = np.interp(np.arange(n), centers, gain)
     return x * full
 
 

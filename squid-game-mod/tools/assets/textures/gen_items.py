@@ -1,9 +1,7 @@
 """Flat 16x16 item textures: marble, recruiter card, invisible-wall icon."""
 from __future__ import annotations
 
-import numpy as np
-
-from common import Canvas, Out, art, dilate, mix, rng
+from common import Canvas, Out
 import paint
 
 # --------------------------------------------------------------------------- marble

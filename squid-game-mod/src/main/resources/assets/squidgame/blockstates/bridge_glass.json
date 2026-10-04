@@ -1,7 +1,5 @@
 {
   "variants": {
-    "": {
-      "model": "squidgame:block/bridge_glass"
-    }
+    "": { "model": "squidgame:block/bridge_glass" }
   }
 }

@@ -4,6 +4,8 @@
     contact.png            every block texture (8x) incl. the 8 monitor frames; glass shown on a dark void
     contact_items_gui.png  item textures, HUD icons, GUI sprites
     contact_entity.png     rope, flag ribbon, tracksuit overlays
+    gallery.png            every block as its inventory item (GUI angle), plus the flat items
+    gui_mockups.png        dalgona table + cookie + cracks + needle, marbles hands / target, HUD panel with icons
     iso_machines.png       monitor / registration terminal / dalgona station from several angles
     iso_blocks.png         cube blocks (cash, glass over a void, tiles, panels, playground, symbols)
     iso_pastels.png        blocks / stairs / slabs in the seven candy colours
@@ -16,6 +18,7 @@ These are rendered by mcrender.py (a small software model renderer) -- close to,
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -26,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import common  # noqa: E402
 import mcrender  # noqa: E402
 import sheet  # noqa: E402
-from common import BLOCK_IDS, PANEL_LIGHTS, PASTELS, SYMBOLS, TILES  # noqa: E402
+from common import BLOCK_IDS, ITEM_IDS, PANEL_LIGHTS, PASTELS, SYMBOLS, TILES  # noqa: E402
 
 BG = (58, 64, 78, 255)
 
@@ -34,9 +37,13 @@ BG = (58, 64, 78, 255)
 def _save(img, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if isinstance(img, np.ndarray):
-        img = Image.fromarray(img, "RGBA")
+        img = Image.fromarray(img)
     img.save(path)
-    print(f"  wrote {path.relative_to(common.REPO_ROOT)}  {img.size[0]}x{img.size[1]}")
+    try:
+        shown = path.relative_to(common.REPO_ROOT)
+    except ValueError:
+        shown = path
+    print(f"  wrote {shown}  {img.size[0]}x{img.size[1]}")
 
 
 def _grid(tiles: list[np.ndarray], cols: int, bg=BG, pad: int = 0) -> np.ndarray:
@@ -66,7 +73,7 @@ def _vstack(rows: list[np.ndarray], bg=BG) -> np.ndarray:
 
 
 def _label(img: np.ndarray, text: str) -> np.ndarray:
-    im = Image.fromarray(img, "RGBA")
+    im = Image.fromarray(img)
     d = ImageDraw.Draw(im)
     d.text((6, 4), text, fill=(235, 238, 245, 255), font=sheet._font(12))
     return np.array(im)
@@ -126,7 +133,7 @@ def contact_items_gui(root: Path) -> Image.Image:
         for tint, nm in (((255, 90, 90), "red"), ((110, 255, 150), "green")):
             t = arr.copy()
             t[..., :3] = t[..., :3] * np.array(tint) / 255.0
-            tint_items.append((f"{p.stem[5:]} {nm}", Image.fromarray(t.astype(np.uint8), "RGBA")))
+            tint_items.append((f"{p.stem[5:]} {nm}", Image.fromarray(t.astype(np.uint8))))
     b = sheet.sheet(tint_items, scale=6, cols=12, backdrop="void")
     rest = []
     gui = root / "textures" / "gui"
@@ -169,6 +176,102 @@ def _one(R, block: str, yaw: float, pitch: float, scale: float, props=None, size
     return mcrender.render(sc.quads(), yaw=yaw, pitch=pitch, scale=scale, center=(8, 8, 8), bg=BG, ssaa=ssaa, min_size=size)
 
 
+def gallery(R, root: Path) -> np.ndarray:
+    """Inventory-style icons: item model -> parent block model, vanilla GUI rotation [30, 225, 0]."""
+    tiles = []
+    for bid in BLOCK_IDS:
+        item = json.loads((root / "models" / "item" / f"{bid}.json").read_text(encoding="utf-8"))
+        parent = item.get("parent", "")
+        if parent.startswith("minecraft:item/generated"):
+            tex = common.load_png(root / "textures" / "item" / f"{bid}.png")
+            icon = np.repeat(np.repeat(tex, 8, axis=0), 8, axis=1)
+            canvas = np.zeros((150, 150, 4), np.uint8)
+            canvas[:] = BG
+            y0 = (150 - icon.shape[0]) // 2
+            x0 = (150 - icon.shape[1]) // 2
+            a = icon[..., 3:4] / 255.0
+            canvas[y0:y0 + icon.shape[0], x0:x0 + icon.shape[1], :3] = (
+                icon[..., :3] * a + canvas[y0:y0 + icon.shape[0], x0:x0 + icon.shape[1], :3] * (1 - a)).astype(np.uint8)
+            tiles.append(_label(canvas, f"{bid} (flat item)"))
+            continue
+        q = mcrender.bake(R, parent)
+        img = mcrender.render(q, yaw=225, pitch=30, scale=6.5, center=(8, 8, 8), bg=BG, ssaa=2, min_size=(150, 150))
+        tiles.append(_label(img, bid))
+    for it in ITEM_IDS:
+        tex = common.load_png(root / "textures" / "item" / f"{it}.png")
+        icon = np.repeat(np.repeat(tex, 8, axis=0), 8, axis=1)
+        canvas = np.zeros((150, 150, 4), np.uint8)
+        canvas[:] = BG
+        y0 = (150 - icon.shape[0]) // 2
+        x0 = (150 - icon.shape[1]) // 2
+        a = icon[..., 3:4] / 255.0
+        canvas[y0:y0 + icon.shape[0], x0:x0 + icon.shape[1], :3] = (
+            icon[..., :3] * a + canvas[y0:y0 + icon.shape[0], x0:x0 + icon.shape[1], :3] * (1 - a)).astype(np.uint8)
+        tiles.append(_label(canvas, f"{it} (item)"))
+    return _grid(tiles, 8)
+
+
+def gui_mockups(root: Path) -> Image.Image:
+    """Rough compositions of the minigame GUIs (not the real screens) to judge how the textures work together."""
+    g = root / "textures" / "gui"
+
+    def rgba(rel):
+        return Image.open(g / rel).convert("RGBA")
+
+    # dalgona: tiled table, cookie (x2), crack overlay (x4 -> same size as the 2x cookie), needle at the cursor
+    panels = []
+    table = rgba("dalgona/table.png")
+    cookie = rgba("dalgona/cookie.png")
+    needle = rgba("dalgona/needle.png")
+    for stage in (None, 0, 1, 2, 3):
+        base = Image.new("RGBA", (320, 320))
+        for ty in range(0, 320, 64):
+            for tx in range(0, 320, 64):
+                base.paste(table, (tx, ty))
+        base.alpha_composite(cookie.resize((256, 256), Image.NEAREST), (32, 32))
+        if stage is not None:
+            base.alpha_composite(rgba(f"dalgona/crack_{stage}.png").resize((256, 256), Image.NEAREST), (32, 32))
+        base.alpha_composite(needle.resize((32, 64), Image.NEAREST), (150, 140))
+        panels.append(np.array(base))
+    row1 = _grid(panels, 5, bg=(0, 0, 0, 255))
+    # marbles: hands, marble, target
+    m = Image.new("RGBA", (1600, 330), (58, 64, 78, 255))
+    m.alpha_composite(rgba("marbles/hand_closed.png").resize((288, 288), Image.NEAREST), (10, 20))
+    m.alpha_composite(rgba("marbles/hand_open.png").resize((288, 288), Image.NEAREST), (320, 20))
+    m.alpha_composite(rgba("marbles/marble_big.png").resize((160, 160), Image.NEAREST), (640, 90))
+    m.alpha_composite(rgba("marbles/ring_target.png").resize((256, 256), Image.NEAREST), (860, 35))
+    # HUD strip: nine-sliced panel with every icon at 2x
+    hud = Image.new("RGBA", (1600, 120), (58, 64, 78, 255))
+    pan = rgba("hud/panel.png")
+
+    def nine(img, w, h, s=4):
+        out = Image.new("RGBA", (w, h))
+        iw, ih = img.size
+        out.paste(img.crop((0, 0, s, s)), (0, 0))
+        out.paste(img.crop((iw - s, 0, iw, s)), (w - s, 0))
+        out.paste(img.crop((0, ih - s, s, ih)), (0, h - s))
+        out.paste(img.crop((iw - s, ih - s, iw, ih)), (w - s, h - s))
+        out.paste(img.crop((s, 0, iw - s, s)).resize((w - 2 * s, s), Image.NEAREST), (s, 0))
+        out.paste(img.crop((s, ih - s, iw - s, ih)).resize((w - 2 * s, s), Image.NEAREST), (s, h - s))
+        out.paste(img.crop((0, s, s, ih - s)).resize((s, h - 2 * s), Image.NEAREST), (0, s))
+        out.paste(img.crop((iw - s, s, iw, ih - s)).resize((s, h - 2 * s), Image.NEAREST), (w - s, s))
+        out.paste(img.crop((s, s, iw - s, ih - s)).resize((w - 2 * s, h - 2 * s), Image.NEAREST), (s, s))
+        return out
+
+    hud.alpha_composite(nine(pan, 1580, 100), (10, 10))
+    icons = sorted((g / "hud").glob("icon_*.png"))
+    for i, p in enumerate(icons):
+        hud.alpha_composite(Image.open(p).convert("RGBA").resize((64, 64), Image.NEAREST), (24 + i * 100, 28))
+    plate = rgba("hud/number_plate.png").resize((128, 64), Image.NEAREST)
+    hud.alpha_composite(plate, (24 + len(icons) * 100, 28))
+    width = max(row1.shape[1], m.width, hud.width)
+    out = Image.new("RGBA", (width, row1.shape[0] + m.height + hud.height), (0, 0, 0, 255))
+    out.paste(Image.fromarray(row1), (0, 0))
+    out.paste(m, (0, row1.shape[0]))
+    out.paste(hud, (0, row1.shape[0] + m.height))
+    return out
+
+
 def iso_machines(R) -> np.ndarray:
     rows = []
     for b in ("monitor", "registration_terminal", "dalgona_station"):
@@ -178,12 +281,12 @@ def iso_machines(R) -> np.ndarray:
 
 
 def iso_blocks(R) -> np.ndarray:
-    """Cube blocks on a dark base plate so the translucent glass can be judged."""
+    """Cube blocks, then the translucent glass over a dark floor."""
     tiles = []
     for b in ["cash_block", "tile_pink", "tile_white", "tile_black", "panel_light_white", "panel_light_warm",
               "panel_light_pink", "playground_ground", "symbol_circle", "symbol_triangle", "symbol_square"]:
         tiles.append(_label(_one(R, b, 225, 30, 7, size=(150, 160)), b))
-    # glass: 3x3 void with a floor underneath -> shows translucency
+    cubes = _grid(tiles, 4)
     sc = mcrender.Scene(R)
     for x in range(3):
         for z in range(3):
@@ -191,9 +294,9 @@ def iso_blocks(R) -> np.ndarray:
     for x in range(-1, 4):
         for z in range(-1, 4):
             sc.set((x, -2, z), "squidgame:tile_black")
-    tiles.append(_label(mcrender.render(sc.quads(), yaw=225, pitch=32, scale=4, center=(24, 0, 24), bg=BG, ssaa=2, min_size=(220, 220)),
-                        "bridge_glass 3x3 over a dark floor"))
-    return _grid(tiles, 4)
+    glass = _label(mcrender.render(sc.quads(), yaw=225, pitch=32, scale=6, center=(24, 0, 24), bg=BG, ssaa=2,
+                                   min_size=(300, 300)), "bridge_glass 3x3 over a dark floor")
+    return _vstack([cubes, glass])
 
 
 def iso_pastels(R) -> np.ndarray:
@@ -295,10 +398,10 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--root", default=str(common.DEFAULT_RES))
     ap.add_argument("--out", default=str(common.PREVIEW_DIR))
-    ap.add_argument("--only", nargs="*", help="subset of: contact items entity machines blocks pastels stairway room player")
+    ap.add_argument("--only", nargs="*", help="subset of: contact items entity gallery gui machines blocks pastels stairway room player")
     args = ap.parse_args(argv)
     root, out = Path(args.root), Path(args.out)
-    want = set(args.only or ["contact", "items", "entity", "machines", "blocks", "pastels", "stairway", "room", "player"])
+    want = set(args.only or ["contact", "items", "entity", "gallery", "gui", "machines", "blocks", "pastels", "stairway", "room", "player"])
     R = resolver(root)
     print("building previews ...")
     if "contact" in want:
@@ -307,6 +410,10 @@ def main(argv: list[str] | None = None) -> int:
         _save(contact_items_gui(root), out / "contact_items_gui.png")
     if "entity" in want:
         _save(contact_entity(root), out / "contact_entity.png")
+    if "gallery" in want:
+        _save(gallery(R, root), out / "gallery.png")
+    if "gui" in want:
+        _save(gui_mockups(root), out / "gui_mockups.png")
     if "machines" in want:
         _save(iso_machines(R), out / "iso_machines.png")
     if "blocks" in want:
@@ -318,7 +425,10 @@ def main(argv: list[str] | None = None) -> int:
     if "room" in want:
         _save(iso_controlroom(R), out / "iso_controlroom.png")
     if "player" in want:
-        _save(player_views(root), out / "player_tracksuit.png")
+        if common.vanilla_root() is None:
+            print("  (skipping player_tracksuit.png: vanilla player skins not available)")
+        else:
+            _save(player_views(root), out / "player_tracksuit.png")
     return 0
 
 

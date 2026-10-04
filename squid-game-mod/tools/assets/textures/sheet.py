@@ -20,7 +20,7 @@ def checker(w: int, h: int, a=(46, 50, 60), b=(58, 63, 75), cell: int = 8) -> Im
     arr = np.zeros((h, w, 3), np.uint8)
     arr[:] = a
     arr[m] = b
-    return Image.fromarray(arr, "RGB").convert("RGBA")
+    return Image.fromarray(arr).convert("RGBA")
 
 
 def sheet(items, scale: int = 8, cols: int = 6, pad: int = 10, label_h: int = 16,
@@ -31,7 +31,7 @@ def sheet(items, scale: int = 8, cols: int = 6, pad: int = 10, label_h: int = 16
         if isinstance(src, (str, Path)):
             im = Image.open(src).convert("RGBA")
         elif isinstance(src, np.ndarray):
-            im = Image.fromarray(src, "RGBA")
+            im = Image.fromarray(src)
         else:
             im = src.convert("RGBA")
         imgs.append((label, im))

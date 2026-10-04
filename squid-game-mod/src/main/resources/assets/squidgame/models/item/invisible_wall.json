@@ -1,6 +1,4 @@
 {
   "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "squidgame:item/invisible_wall"
-  }
+  "textures": { "layer0": "squidgame:item/invisible_wall" }
 }

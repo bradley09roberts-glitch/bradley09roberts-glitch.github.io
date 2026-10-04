@@ -55,6 +55,27 @@ def appearance(model: str, hair="short", face=0, skin="tan", haircol="brown", gl
     return tint, hidden
 
 
+WOOD = (0.55, 0.40, 0.27)
+PROPS = {
+    "bench": ((-7.0, 0.0, -3.5), (7.0, 4.0, 6.5), WOOD),
+    "table": ((-11.0, 0.0, -17.0), (11.0, 8.0, -7.0), (0.66, 0.54, 0.38)),
+    "rope": ((-1.0, 16.4, -48.0), (0.2, 17.6, -0.5), (0.78, 0.66, 0.40)),
+    "glass": ((-14.0, -1.2, -18.0), (14.0, -0.2, 18.0), (0.66, 0.84, 0.90)),
+}
+
+
+def props_for(name: str):
+    if name.startswith("dalgona_"):
+        return [PROPS["bench"], PROPS["table"]]
+    if name == "sit_idle":
+        return [PROPS["bench"]]
+    if name.startswith("pull_"):
+        return [PROPS["rope"]]
+    if name.startswith("bridge_"):
+        return [PROPS["glass"]]
+    return None
+
+
 def load(model: str):
     g, a, t = model_paths(model)
     rig = Rig.load(str(g))
@@ -117,12 +138,13 @@ def anim_sheet(args):
         times = [clip.length * i / (nframes - 1) for i in range(nframes)]
     views = [dict(name="front", azimuth=0), dict(name="side", azimuth=90), dict(name="3/4", azimuth=-38, elevation=12)]
     # fit the window: lying poses need a lower centre
+    pr = props_for(name)
     im = render.sheet(rig, tex, clip, times, views=views, cell=(170, 176), scale=4.0, center=(0, 17.0, 0),
-                      tint=tint, hidden=hidden, ss=ss, title=f"{full}  [{clip.loop}, {clip.length:.2f}s]")
+                      tint=tint, hidden=hidden, ss=ss, title=f"{full}  [{clip.loop}, {clip.length:.2f}s]", props=pr)
     path = os.path.join(outdir, f"{name}.png")
     im.save(path)
     # also a side filmstrip
-    fs = render.filmstrip(rig, tex, clip, n=10, azimuth=90, tint=tint, hidden=hidden, ss=ss)
+    fs = render.filmstrip(rig, tex, clip, n=10, azimuth=90, tint=tint, hidden=hidden, ss=ss, props=pr)
     fs.save(os.path.join(outdir, f"{name}_strip.png"))
     return path
 

@@ -1,7 +1,5 @@
 {
   "variants": {
-    "": {
-      "model": "squidgame:block/symbol_circle"
-    }
+    "": { "model": "squidgame:block/symbol_circle" }
   }
 }

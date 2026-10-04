@@ -1,13 +1,7 @@
 {
   "variants": {
-    "type=bottom": {
-      "model": "squidgame:block/pastel_pink_slab"
-    },
-    "type=double": {
-      "model": "squidgame:block/pastel_pink"
-    },
-    "type=top": {
-      "model": "squidgame:block/pastel_pink_slab_top"
-    }
+    "type=bottom": { "model": "squidgame:block/pastel_pink_slab" },
+    "type=double": { "model": "squidgame:block/pastel_pink" },
+    "type=top": { "model": "squidgame:block/pastel_pink_slab_top" }
   }
 }

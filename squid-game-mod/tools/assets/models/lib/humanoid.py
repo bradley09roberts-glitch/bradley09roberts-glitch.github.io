@@ -92,7 +92,7 @@ class Humanoid:
         return [n.format(s=side) for n in self.arm_names[:2]]
 
     def hand(self, base: Pose, side: str, file_pt: Sequence[float], frame: str = "body",
-             pref: Sequence[float] = (10.0, 8.0, 0.0, 40.0), weight: float = 0.0004,
+             pref: Sequence[float] = (10.0, 8.0, 0.0, 40.0), weight=(0.0004, 0.0012, 0.0004, 0.0004),
              lims=((-80, 200), (-90, 90), (-120, 120), (0, 150)), warm=True) -> Tuple[Pose, float]:
         """IK: palm anchor of ``side`` to a point given in FILE coordinates riding bone ``frame``
         (bind pose of that bone).  ``base`` supplies root/waist/body/head etc. at this instant."""
@@ -103,6 +103,33 @@ class Humanoid:
         a, f = self.arm_bones(side)
         self._warm[side] = arm_vars(pose, side, self.cfg)
         return Pose({a: pose[a], f: pose[f]}), err
+
+    def hand_w(self, base: Pose, side: str, world_pt: Sequence[float],
+               pref: Sequence[float] = (10.0, 8.0, 0.0, 40.0), weight=(0.0004, 0.0012, 0.0004, 0.0004),
+               lims=((-80, 200), (-90, 90), (-120, 120), (0, 150)), warm=True) -> Tuple[Pose, float]:
+        """IK to a WORLD (model-space, baked: +x right, +z back) target."""
+        x0 = self._warm.get(side) if warm and side in self._warm else pref
+        pose, err = ik_arm(self.skel, self.cfg, base, side, world_pt, pref=pref, weight=weight, x0=x0, lims=lims)
+        a, f = self.arm_bones(side)
+        self._warm[side] = arm_vars(pose, side, self.cfg)
+        return Pose({a: pose[a], f: pose[f]}), err
+
+    def on_thigh(self, base: Pose, side: str, along: float = 0.0, front: float = 2.4, out: float = 0.0) -> np.ndarray:
+        """World point on the front of the thigh: ``along`` 0 = knee .. 1 = hip, ``front`` px off the leg axis
+        (toward the leg's forward face), ``out`` px away from the body centre line."""
+        leg = self.leg_names[0].format(s=side)
+        shin = self.leg_names[1].format(s=side)
+        sx = 1 if side == "left" else -1
+        mats = self.skel.mats(base)
+        hip = self.rig.point(leg, (2 * sx, 12, 0), mats)
+        knee = self.rig.point(shin, (2 * sx, 6, 0), mats)
+        axis = (hip - knee) / np.linalg.norm(hip - knee)
+        fwd = mats[leg][:3, :3] @ np.array([0.0, 0.0, -1.0])
+        n = fwd - axis * float(fwd @ axis)
+        n = n / np.linalg.norm(n)
+        p = knee + (hip - knee) * along + n * front
+        p[0] += (-1.0 if side == "left" else 1.0) * out
+        return p
 
     def reset_warm(self):
         self._warm.clear()

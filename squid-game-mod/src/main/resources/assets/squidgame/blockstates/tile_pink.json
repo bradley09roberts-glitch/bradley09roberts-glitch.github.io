@@ -1,7 +1,5 @@
 {
   "variants": {
-    "": {
-      "model": "squidgame:block/tile_pink"
-    }
+    "": { "model": "squidgame:block/tile_pink" }
   }
 }

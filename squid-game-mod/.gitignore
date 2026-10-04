@@ -9,3 +9,6 @@ out/
 *.log
 __pycache__/
 tools/out/
+
+# regenerable previews
+tools/assets/models/doll/preview/
