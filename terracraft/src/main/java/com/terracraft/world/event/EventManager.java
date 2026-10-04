@@ -125,8 +125,12 @@ public final class EventManager {
                 boolean goblinsReady = ProgressionManager.has(server, ProgressionFlags.ORB_SMASHED)
                     && server.getPlayerList().getPlayers().stream().anyMatch(p -> p.getMaxHealth() >= 200);
                 int goblinChance = ProgressionManager.has(server, ProgressionFlags.GOBLIN_ARMY) ? 30 : 3;
+                // pirates may sail in on their own once an altar has been smashed in Hardmode
+                boolean piratesReady = ProgressionManager.isHardmode(server) && ProgressionManager.has(server, ProgressionFlags.ALTAR_SMASHED);
                 if (day && goblinsReady && random.nextInt(goblinChance) == 0) {
                     start(server, TerrariaEvents.GOBLIN_ARMY);
+                } else if (day && piratesReady && random.nextInt(ProgressionManager.has(server, ProgressionFlags.PIRATES) ? 60 : 20) == 0) {
+                    start(server, TerrariaEvents.PIRATE_INVASION);
                 } else if (!day && random.nextInt(9) == 0 && server.getPlayerList().getPlayers().stream().anyMatch(p -> p.getMaxHealth() >= 120)) {
                     start(server, TerrariaEvents.BLOOD_MOON);
                 } else if (day && random.nextInt(15) == 0) {
@@ -139,6 +143,35 @@ public final class EventManager {
         }
         if (active != null && active.invasion()) {
             updateInvasionBar(server);
+        }
+        if (active == TerrariaEvents.PIRATE_INVASION) {
+            maybeSendDutchman(level, random);
+        }
+    }
+
+    /**
+     * Once a third of the pirates are beaten, the Flying Dutchman may appear high above a player on the surface
+     * (one at a time).
+     */
+    private static void maybeSendDutchman(ServerLevel level, RandomSource random) {
+        if (EventState.get(level.getServer()).kills() < TerrariaEvents.PIRATE_INVASION.killGoal() / 3 || random.nextInt(30) != 0) {
+            return;
+        }
+        for (ServerPlayer player : level.players()) {
+            if (player.isSpectator() || !level.canSeeSky(player.blockPosition())
+                || !level.getEntitiesOfClass(com.terracraft.entity.mob.FlyingDutchman.class, player.getBoundingBox().inflate(160)).isEmpty()) {
+                continue;
+            }
+            TerrariaMob ship = MobContent.FLYING_DUTCHMAN.get().create(level, EntitySpawnReason.EVENT);
+            if (ship != null) {
+                double side = random.nextBoolean() ? 1 : -1;
+                ship.snapTo(player.getX() + side * 40, player.getY() + 18, player.getZ() + random.nextInt(11) - 5, side > 0 ? 90.0F : -90.0F, 0.0F);
+                ship.finalizeSpawn(level, level.getCurrentDifficultyAt(player.blockPosition()), EntitySpawnReason.EVENT, null);
+                level.addFreshEntity(ship);
+                level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable("event.terracraft.pirate_invasion.dutchman")
+                    .withStyle(ChatFormatting.LIGHT_PURPLE), false);
+            }
+            return;
         }
     }
 
@@ -177,15 +210,21 @@ public final class EventManager {
         }
         TerrariaEvent running = active(level.getServer());
         if (running != null && running.invasion() && event.getSource().getEntity() instanceof ServerPlayer
-            && net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).getPath().startsWith(running.memberPrefix())) {
+            && running.isMember(net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).getPath())) {
             EventState state = EventState.get(level.getServer());
-            state.kills++;
+            // the big ones count for more (the Flying Dutchman 10, the Pirate Captain 5)
+            state.kills += event.getEntity() instanceof com.terracraft.entity.mob.FlyingDutchman ? 10
+                : event.getEntity().getType() == MobContent.PIRATE_CAPTAIN.get() ? 5 : 1;
             state.setDirty();
             updateInvasionBar(level.getServer());
             if (state.kills >= running.killGoal()) {
                 stop(level.getServer());
                 if (running == TerrariaEvents.GOBLIN_ARMY) {
                     ProgressionManager.markDefeated(level.getServer(), ProgressionFlags.GOBLIN_ARMY);
+                } else if (running == TerrariaEvents.PIRATE_INVASION) {
+                    ProgressionManager.markDefeated(level.getServer(), ProgressionFlags.PIRATES);
+                } else if (running == TerrariaEvents.FROST_LEGION) {
+                    ProgressionManager.markDefeated(level.getServer(), ProgressionFlags.FROST_LEGION);
                 }
             }
             return;
@@ -207,6 +246,44 @@ public final class EventManager {
             if (!kingDefeated) {
                 BossSummoning.summon(level, player, MobContent.KING_SLIME.get(), BossSummoning.Arrival.FALL);
             }
+        }
+    }
+
+    /**
+     * Presents: enemies killed by a player now and then drop a Present - 1 in 13 between December 15 and January 1
+     * (Terraria's Christmas), 1 in 40 in snowy biomes in Hardmode, otherwise 1 in 150 in Hardmode.
+     */
+    @SubscribeEvent
+    public static void onPresentDrops(net.neoforged.neoforge.event.entity.living.LivingDropsEvent event) {
+        if (!(event.getEntity().level() instanceof ServerLevel level) || !(event.getSource().getEntity() instanceof ServerPlayer)
+            || !(event.getEntity() instanceof net.minecraft.world.entity.monster.Enemy)) {
+            return;
+        }
+        java.time.LocalDate today = java.time.LocalDate.now();
+        boolean christmas = today.getMonthValue() == 12 && today.getDayOfMonth() >= 15 || today.getMonthValue() == 1 && today.getDayOfMonth() == 1;
+        boolean hardmode = ProgressionManager.isHardmode(level.getServer());
+        boolean snowy = level.getBiome(event.getEntity().blockPosition()).value().coldEnoughToSnow(event.getEntity().blockPosition(), level.getSeaLevel());
+        int chance = christmas ? 13 : !hardmode ? 0 : snowy ? 40 : 150;
+        if (chance > 0 && level.getRandom().nextInt(chance) == 0) {
+            var entity = event.getEntity();
+            event.getDrops().add(new net.minecraft.world.entity.item.ItemEntity(level, entity.getX(), entity.getY() + 0.5, entity.getZ(),
+                new net.minecraft.world.item.ItemStack(com.terracraft.registry.content.FrostLegionContent.PRESENT.get())));
+        }
+    }
+
+    /** Hardmode enemies killed by a player at the ocean or a beach sometimes drop a Pirate Map (1 in 17, like Terraria). */
+    @SubscribeEvent
+    public static void onDrops(net.neoforged.neoforge.event.entity.living.LivingDropsEvent event) {
+        if (!(event.getEntity().level() instanceof ServerLevel level) || !(event.getSource().getEntity() instanceof ServerPlayer)
+            || !(event.getEntity() instanceof net.minecraft.world.entity.monster.Enemy) || !ProgressionManager.isHardmode(level.getServer())
+            || isActive(level.getServer(), TerrariaEvents.PIRATE_INVASION)) {
+            return;
+        }
+        var biome = level.getBiome(event.getEntity().blockPosition());
+        if ((biome.is(net.minecraft.tags.BiomeTags.IS_OCEAN) || biome.is(net.minecraft.tags.BiomeTags.IS_BEACH)) && level.getRandom().nextInt(17) == 0) {
+            var entity = event.getEntity();
+            event.getDrops().add(new net.minecraft.world.entity.item.ItemEntity(level, entity.getX(), entity.getY() + 0.5, entity.getZ(),
+                new net.minecraft.world.item.ItemStack(com.terracraft.registry.content.PirateContent.PIRATE_MAP.get())));
         }
     }
 

@@ -37,6 +37,8 @@
     "terracraft:mythril_anvil",
     "terracraft:orichalcum_anvil",
     "terracraft:adamantite_forge",
-    "terracraft:titanium_forge"
+    "terracraft:titanium_forge",
+    "terracraft:crystal_shard",
+    "terracraft:gelatin_crystal_block"
   ]
 }

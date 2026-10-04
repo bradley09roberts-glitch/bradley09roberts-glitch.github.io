@@ -2863,6 +2863,12 @@ mob_sprite('steampunker', 16, 24, 3, lambda c, f: npc_frame(c, f, '#F0C8A8', '#C
            frame_time=6, animate='move')
 mob_sprite('witch_doctor', 16, 24, 3, lambda c, f: npc_frame(c, f, '#7A5A40', '#1A1A1A', '#5A9A30', '#4A7A2A', hat='#C8A040'),
            frame_time=6, animate='move')
+model_texture('mechanic', 64, 64, skin_texture('#F0C8A8', '#C83A28', '#E8E0D0', '#3A5A9A', shoes='#3A2A1E', hair_style='long', short_sleeves=True,
+                                               suspenders='#3A5A9A', belt='#5A4A3A', buckle='#C8C8D0', eyes=(60, 120, 60, 255)))
+model_texture('bound_mechanic', 64, 64, skin_texture('#F0C8A8', '#C83A28', '#E8E0D0', '#3A5A9A', shoes='#3A2A1E', hair_style='long', torn=True,
+                                                     suspenders='#3A5A9A', eyes=(60, 120, 60, 255)))
+mob_sprite('mechanic', 16, 24, 3, lambda c, f: npc_frame(c, f, '#F0C8A8', '#C83A28', '#E8E0D0', '#3A5A9A'), frame_time=6, animate='move')
+mob_sprite('bound_mechanic', 16, 24, 3, lambda c, f: npc_frame(c, f, '#F0C8A8', '#C83A28', '#E8E0D0', '#3A5A9A'), frame_time=6)
 
 
 def draw_clentaminator(c):
@@ -2880,6 +2886,223 @@ for _sol, _col in (('green', '#50E050'), ('blue', '#50A0F0'), ('purple', '#A050E
 item('spell_tome', lambda c: draw_book(c, '#5A3AA8'))
 item('greater_mana_potion', lambda c: draw_potion(c, '#3C64F0', 'large'))
 
+
+# --- Queen Slime (Stage 5f) -------------------------------------------------------------------------------
+QUEEN_PINK = '#E070D0'
+
+
+def queen_slime_texture(color, alpha=175, wings=True, halo=False):
+    """Slime texture plus the Queen Slime extras: tiara (64,0), crystal points (64,16), jewel (70,16), crystal spikes
+    inside (80,16) and the two wings (96,24 / 96,40)."""
+    base = slime_texture(color, alpha)
+
+    def paint(c):
+        base(c)
+        silver = hexc('#E8E8F8') if not halo else hexc('#FFE890')
+        if halo:
+            paint_box(c, 64, 0, 8, 1, 8, silver, 0.05, 5, top=shade(silver, 1.15))
+        else:
+            paint_box(c, 64, 0, 9, 1, 9, silver, 0.12, 5, top=shade(silver, 1.15))
+            paint_box(c, 64, 16, 1, 4, 1, hexc('#B8E8FF', 230), 0.1)
+            paint_box(c, 70, 16, 2, 2, 1, hexc('#FF4AA8'), 0.1)
+            paint_box(c, 80, 16, 2, 5, 2, hexc('#A8E0FF', 210), 0.12, 6, top=hexc('#F0FAFF', 230))
+        if wings:
+            for v in (24, 40):
+                for x in range(96, 96 + 32):
+                    for y in range(v, v + 16):
+                        t = (x - 96) / 32
+                        # translucent crystal membrane with lighter veins
+                        a = 150 if (x + y) % 5 else 200
+                        col = (int(200 + 40 * t), int(170 + 50 * t), 255, a) if not halo else (255, 250, 240, 220)
+                        c.set(x, y, col)
+    return paint
+
+
+model_texture('crystal_slime', 64, 64, slime_texture('#9AD8F8', 160, core='#E0F6FF'))
+model_texture('bouncy_slime', 64, 64, slime_texture('#F088D8', 175))
+model_texture('heavenly_slime', 128, 64, queen_slime_texture('#B8D8F8', 165, wings=True, halo=True))
+model_texture('queen_slime', 128, 64, queen_slime_texture(QUEEN_PINK, 175))
+model_texture('queen_slime_winged', 128, 64, queen_slime_texture(QUEEN_PINK, 175))
+
+
+def queen_slime_frame(c, frame, winged=False):
+    slime_frame(c, QUEEN_PINK, frame, 32, 24, alpha=200)
+    if winged:
+        for side in (-1, 1):
+            x0 = 16 + side * 9
+            c.polygon([(x0, 12), (x0 + side * 8, 5 + frame), (x0 + side * 7, 13)], (210, 200, 255, 170))
+    cy = 3 + frame * 2
+    silver = palette('#E8E8F8')
+    c.polygon([(11, cy + 4), (12, cy + 1), (14, cy + 3), (16, cy - 2), (18, cy + 3), (20, cy + 1), (21, cy + 4)], silver[3])
+    c.set(16, cy + 1, hexc('#FF4AA8'))
+    c.rect(15, 12 + frame, 16, 16 + frame, (170, 225, 255, 220))
+
+
+mob_sprite('queen_slime', 32, 24, 2, queen_slime_frame, frame_time=12)
+mob_sprite('crystal_slime', 16, 12, 2, lambda c, f: slime_frame(c, '#9AD8F8', f, 16, 12), frame_time=10)
+mob_sprite('bouncy_slime', 16, 12, 2, lambda c, f: slime_frame(c, '#F088D8', f, 16, 12), frame_time=8)
+mob_sprite('heavenly_slime', 16, 14, 2, lambda c, f: (slime_frame(c, '#B8D8F8', f, 16, 14),
+                                                       c.rect(5, 0, 10, 0, hexc('#FFE890'))), frame_time=8)
+
+item('gelatin_crystal', lambda c: draw_crystal(c, QUEEN_PINK))
+item('crystal_shard', lambda c: (draw_crystal(c, '#78C8F0'), c.polygon([(4, 9), (6, 14), (2, 14)], palette('#E070D0')[3])))
+item('volatile_gelatin', lambda c: (c.circle(7.5, 8.5, 5.5, palette(QUEEN_PINK)[2]), c.circle(6, 7, 2, palette(QUEEN_PINK)[4]),
+                                    c.rect(7, 1, 8, 3, hexc('#B8E8FF')), c.outline()))
+METAL['crystal_assassin'] = '#B070D8'
+item('crystal_assassin_hood', lambda c: draw_helmet(c, metal('crystal_assassin')))
+item('crystal_assassin_shirt', lambda c: draw_chest(c, metal('crystal_assassin')))
+item('crystal_assassin_pants', lambda c: draw_legs(c, metal('crystal_assassin')))
+proj('regal_gel', lambda c: p_orb(c, QUEEN_PINK, 4))
+proj('volatile_gel', lambda c: p_orb(c, '#F0A0E8', 3))
+
+
+def crystal_cluster_texture(color, seed):
+    """A cluster of pointed crystals for a cross model (like amethyst buds)."""
+    def paint():
+        c = Canvas()
+        rnd = random.Random(seed)
+        p = palette(color)
+        for x0, h in ((3, 9), (7, 14), (11, 10), (5, 6), (10, 6)):
+            x0 += rnd.randint(-1, 1)
+            c.polygon([(x0, 15), (x0 + 1.5, 15 - h), (x0 + 3, 15)], p[2])
+            c.line(x0 + 1, 14, x0 + 1.5, 16 - h, p[4])
+        c.outline()
+        return c
+    return paint
+
+
+BLOCK_TEXTURES['crystal_shard'] = crystal_cluster_texture('#78C8F0', 51)
+BLOCK_TEXTURES['gelatin_crystal_block'] = crystal_cluster_texture(QUEEN_PINK, 52)
+
+
+def queen_slime_block_assets():
+    for name in ('crystal_shard', 'gelatin_crystal_block'):
+        write_json(os.path.join(ASSETS, 'models/block', name + '.json'),
+                   {'parent': 'minecraft:block/cross', 'render_type': 'minecraft:cutout', 'textures': {'cross': f'terracraft:block/{name}'}})
+        variants = {}
+        rotations = {'up': (0, 0), 'down': (180, 0), 'north': (90, 0), 'south': (90, 180), 'west': (90, 270), 'east': (90, 90)}
+        for facing, (x, y) in rotations.items():
+            for water in ('false', 'true'):
+                v = {'model': f'terracraft:block/{name}'}
+                if x:
+                    v['x'] = x
+                if y:
+                    v['y'] = y
+                variants[f'facing={facing},waterlogged={water}'] = v
+        write_json(os.path.join(ASSETS, 'blockstates', name + '.json'), {'variants': variants})
+
+
+
+# --- Pirate Invasion (Stage 5f) ---------------------------------------------------------------------------
+model_texture('pirate_deckhand', 64, 64, skin_texture('#D8A070', '#2A1A10', '#E8E0D0', '#3A4A6A', shoes='#2A1A10', hat='#C83030',
+                                                      short_sleeves=True, belt='#5A3A20', buckle='#C8A040', eyes=(40, 30, 20, 255)))
+model_texture('pirate_corsair', 64, 64, skin_texture('#C89060', '#1A1A1A', '#E8E0D0', '#2A2A30', shoes='#1A1A1A', hat='#2A2A3A',
+                                                     jacket='#2A4A8A', belt='#C83030', buckle='#C8A040', short_sleeves=False))
+model_texture('pirate_crossbower', 64, 64, skin_texture('#D8A878', '#5A3A1A', '#C8B890', '#4A3A2A', shoes='#2A1A10', hat='#3A7A3A',
+                                                        jacket='#6A4A2A', straps='#3A2A1A', belt='#3A2A1A', buckle='#A0A0A8'))
+model_texture('pirate_deadeye', 64, 64, skin_texture('#C89868', '#2A2A2A', '#3A3A44', '#2A2A30', shoes='#1A1A1A', hat='#1A1A1A',
+                                                     hat_band='#C8A040', jacket='#5A2A2A', belt='#3A2A1A', buckle='#C8A040',
+                                                     beard='#2A2A2A', short_sleeves=False))
+model_texture('pirate_captain', 64, 64, skin_texture('#D8A070', '#1A1A1A', '#E8E0D0', '#2A2A30', shoes='#1A1A1A', hat='#1A1A1A',
+                                                     hat_band='#C8A040', jacket='#A02828', collar='#C8A040', belt='#3A2A1A',
+                                                     buckle='#E8C040', beard='#1A1A1A', short_sleeves=False))
+model_texture('pirate', 64, 64, skin_texture('#D8A070', '#3A2A1A', '#E8E0D0', '#3A3A44', shoes='#2A1A10', hat='#1A1A1A', hat_band='#E8D8B0',
+                                             jacket='#3A5A3A', belt='#5A3A20', buckle='#C8A040', beard='#5A3A1A', short_sleeves=False))
+for _name, _shirt, _pants, _hat in (('pirate_deckhand', '#E8E0D0', '#3A4A6A', '#C83030'), ('pirate_corsair', '#2A4A8A', '#2A2A30', '#2A2A3A'),
+                                     ('pirate_crossbower', '#6A4A2A', '#4A3A2A', '#3A7A3A'), ('pirate_deadeye', '#5A2A2A', '#2A2A30', '#1A1A1A')):
+    mob_sprite(_name, 16, 24, 3, lambda c, f, sh=_shirt, pa=_pants, ha=_hat: npc_frame(c, f, '#D8A070', '#2A1A10', sh, pa, hat=ha),
+               frame_time=6, animate='move')
+mob_sprite('pirate_captain', 16, 24, 3, lambda c, f: npc_frame(c, f, '#D8A070', '#1A1A1A', '#A02828', '#2A2A30', hat='#1A1A1A', beard='#1A1A1A'),
+           frame_time=6, animate='move')
+mob_sprite('pirate', 16, 24, 3, lambda c, f: npc_frame(c, f, '#D8A070', '#3A2A1A', '#3A5A3A', '#3A3A44', hat='#1A1A1A', beard='#5A3A1A'),
+           frame_time=6, animate='move')
+
+
+def parrot_frame(c, frame):
+    red, blue, yellow = palette('#D8302A'), palette('#2A6AD8'), palette('#F0C830')
+    c.circle(7, 7, 3, red[2])
+    c.circle(4.5, 4.5, 2, red[2])
+    c.polygon([(2, 4), (0, 6), (2, 6)], hexc('#E8E0C8'))
+    wing_y = 4 if frame == 0 else 9
+    c.polygon([(7, 7), (13, wing_y), (11, 9)], blue[2])
+    c.line(9, 8, 12, wing_y + 1, yellow[2])
+    c.polygon([(9, 9), (13, 14), (10, 14)], blue[3])
+    c.set(4, 4, (20, 20, 20, 255))
+    c.outline()
+
+
+def dutchman_frame(c, frame):
+    wood, sail, glow = palette('#2E3E38'), (168, 216, 184, 200), hexc('#70FFC0')
+    bob = frame
+    c.polygon([(2, 20 + bob), (46, 20 + bob), (40, 28 + bob), (6, 28 + bob)], wood[2])
+    c.rect(36, 14 + bob, 46, 20 + bob, wood[3])
+    for x in (14, 30):
+        c.rect(x, 2 + bob, x, 20 + bob, wood[1])
+        c.polygon([(x - 7, 4 + bob), (x + 7, 4 + bob), (x + 6, 16 + bob), (x - 6, 16 + bob)], sail)
+    for x in (10, 20, 30):
+        c.rect(x, 23 + bob, x + 1, 24 + bob, glow)
+    c.outline()
+
+
+mob_sprite('parrot', 14, 14, 2, parrot_frame, frame_time=4)
+mob_sprite('flying_dutchman', 48, 32, 2, dutchman_frame, frame_time=16)
+
+item('pirate_map', lambda c: (c.rect(2, 3, 13, 12, hexc('#E8D8A8')), c.rect(2, 3, 13, 3, hexc('#C8B080')), c.line(4, 10, 8, 6, hexc('#8A5A30')),
+                              c.line(8, 6, 11, 8, hexc('#8A5A30')), c.line(10, 7, 12, 9, hexc('#C02020')), c.line(10, 9, 12, 7, hexc('#C02020')),
+                              c.outline()))
+METAL['cutlass'] = '#C8C8D0'
+item('cutlass', lambda c: (draw_sword(c, metal('cutlass'), 11), c.rect(2, 12, 4, 13, palette('#C8A040')[2])), True)
+item('coin_gun', lambda c: (draw_gun(c, palette('#C8A040')), c.circle(11.5, 9.5, 1.5, palette('#E8C840')[3])), True)
+item('cannonball', lambda c: (c.circle(7.5, 8.5, 5, palette('#3A3A40')[2]), c.circle(6, 7, 1.5, palette('#3A3A40')[4]),
+                              c.rect(7, 2, 8, 3, hexc('#8A6A40')), c.outline()))
+item('gold_ring', lambda c: draw_ring(c, '#E8C040'))
+item('lucky_coin', lambda c: (draw_coin(c, palette('#E8C040')), c.polygon([(6, 6), (9, 6), (7.5, 9)], hexc('#3AA040')), c.outline()))
+item('discount_card', lambda c: (c.rect(1, 4, 14, 11, hexc('#E8E8F0')), c.rect(1, 5, 14, 6, hexc('#2A2A3A')), c.rect(3, 8, 6, 9, hexc('#E8C040')),
+                                 c.rect(9, 8, 12, 8, hexc('#A0A0B0')), c.outline()))
+METAL['pirate'] = '#3A3A44'
+item('pirate_hat', lambda c: (c.polygon([(1, 10), (8, 4), (15, 10), (8, 12)], palette('#1A1A1A')[2]), c.rect(6, 7, 9, 8, hexc('#E8D8B0')), c.outline()))
+item('pirate_shirt', lambda c: draw_chest(c, palette('#3A5A3A')))
+item('pirate_pants', lambda c: draw_legs(c, palette('#3A3A44')))
+proj('copper_coin_shot', lambda c: p_orb(c, '#D87A3A', 2))
+proj('silver_coin_shot', lambda c: p_orb(c, '#C8C8D8', 2))
+proj('gold_coin_shot', lambda c: p_orb(c, '#F0C830', 2))
+proj('platinum_coin_shot', lambda c: p_orb(c, '#E8F0FF', 3))
+proj('cannonball', lambda c: (c.circle(7.5, 7.5, 4, palette('#2A2A30')[2]), c.circle(6, 6, 1.2, palette('#2A2A30')[4])))
+
+
+
+# --- Frost Legion (Stage 5f) ------------------------------------------------------------------------------
+def snowman_frame(c, frame, hat, accent):
+    white, shade = hexc('#F4F8FF'), hexc('#C8D8F0')
+    bob = frame
+    c.circle(8, 19 + bob, 5, white)
+    c.circle(8, 12 + bob, 4, white)
+    c.circle(8, 6 + bob, 3.5, white)
+    c.line(4, 22 + bob, 12, 22 + bob, shade)
+    c.set(6, 5 + bob, hexc('#1A1A20'))
+    c.set(4, 6 + bob, hexc('#F08A2A'))
+    c.set(3, 6 + bob, hexc('#F08A2A'))
+    c.rect(5, 9 + bob, 11, 9 + bob, hexc(accent))
+    c.rect(4, 1 + bob, 11, 2 + bob, hexc(hat))
+    c.line(2, 12 + bob, 5, 11 + bob, hexc('#6A4A2A'))
+    c.outline()
+
+
+mob_sprite('mister_stabby', 16, 24, 2, lambda c, f: (snowman_frame(c, f, '#3A3A44', '#C83030'), c.line(0, 11 + f, 2, 11 + f, hexc('#D8D8E0'))),
+           frame_time=6)
+mob_sprite('snowman_gangsta', 16, 24, 2, lambda c, f: (snowman_frame(c, f, '#2A2A30', '#C83030'), c.rect(0, 11 + f, 3, 12 + f, hexc('#3A3A44'))),
+           frame_time=6)
+mob_sprite('snow_balla', 16, 24, 2, lambda c, f: (snowman_frame(c, f, '#3070C8', '#3070C8'), c.circle(2, 11 + f, 1.5, hexc('#F4F8FF'))),
+           frame_time=6)
+item('present', lambda c: (c.rect(2, 5, 13, 14, palette('#C83030')[2]), c.rect(7, 5, 8, 14, palette('#F0C830')[2]),
+                           c.rect(2, 8, 13, 9, palette('#F0C830')[2]), c.polygon([(7, 5), (4, 2), (5, 5)], palette('#F0C830')[3]),
+                           c.polygon([(8, 5), (11, 2), (10, 5)], palette('#F0C830')[3]), c.outline()))
+item('snow_globe', lambda c: (c.circle(7.5, 7, 5.5, (200, 230, 255, 170)), c.rect(3, 12, 12, 14, palette('#7A5A3A')[2]),
+                              c.circle(7.5, 9, 2, hexc('#F4F8FF')), c.circle(7.5, 6.5, 1.3, hexc('#F4F8FF')), c.set(5, 4, hexc('#FFFFFF')),
+                              c.set(10, 6, hexc('#FFFFFF')), c.outline()))
+proj('enemy_snowball', lambda c: (c.circle(7.5, 7.5, 3.5, hexc('#F4F8FF')), c.circle(6.5, 6.5, 1, hexc('#FFFFFF'))))
+
+
 def check_registered_items():
     """Fails if a Java-registered item id has no texture recipe here (keeps assets in sync)."""
     java_root = os.path.join(ROOT, 'src/main/java/com/terracraft/registry/content')
@@ -2895,7 +3118,7 @@ def check_registered_items():
                                              'ebonwood', 'shadewood', 'ebonwood_leaves', 'shadewood_leaves'} | set(BRICKS) | {'spikes', 'locked_gold_chest', 'jungle_grass',
                                                                                         'jungle_spores_plant', 'hive', 'larva', 'ash', 'hellstone',
                                                                                         'obsidian_brick', 'hellstone_brick', 'hellforge', 'locked_shadow_chest',
-                                                                                        'meteorite', 'tinkerers_workshop', 'dungeon_bookshelf'} | set(HM_BLOCKS)
+                                                                                        'meteorite', 'tinkerers_workshop', 'dungeon_bookshelf', 'gelatin_crystal_block'} | set(HM_BLOCKS)
     missing = sorted(i for i in ids if i not in known and not i.endswith("_"))
     if missing:
         print('ERROR: items without generated assets:', missing)
@@ -2931,6 +3154,7 @@ def main():
     underworld_block_assets()
     goblin_block_assets()
     hardmode_block_assets()
+    queen_slime_block_assets()
     for name, drawer in PROJECTILES.items():
         c = Canvas()
         drawer(c)

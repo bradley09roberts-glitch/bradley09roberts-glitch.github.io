@@ -34,7 +34,15 @@ public enum Ability implements StringRepresentable {
     /** Honey Comb: releases bees and gives a short regeneration boost after taking damage. */
     HONEY_COMB,
     /** Meteor armor set: the Space Gun costs no mana. */
-    FREE_SPACE_GUN;
+    FREE_SPACE_GUN,
+    /** Volatile Gelatin: flings a bouncing gel ball at a nearby enemy every couple of seconds. */
+    VOLATILE_GELATIN,
+    /** Gold Ring: coins fly to the player from much further away. */
+    COIN_MAGNET,
+    /** Lucky Coin: hitting enemies shakes coins out of them. */
+    LUCKY_COIN,
+    /** Discount Card: shop prices are 20% lower. */
+    DISCOUNT;
 
     public static final Codec<Ability> CODEC = StringRepresentable.fromEnum(Ability::values);
 

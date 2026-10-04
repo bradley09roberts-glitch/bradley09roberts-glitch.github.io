@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "terracraft:gelatin_crystal"
+        }
+      ]
+    }
+  ],
+  "random_sequence": "terracraft:blocks/gelatin_crystal_block"
+}

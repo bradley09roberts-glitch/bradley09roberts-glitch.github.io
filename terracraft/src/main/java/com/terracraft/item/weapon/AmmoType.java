@@ -7,5 +7,7 @@ public enum AmmoType {
     ROCKET,
     DART,
     GEL,
-    FALLEN_STAR
+    FALLEN_STAR,
+    /** Coins, fired by the Coin Gun (copper 25, silver 50, gold 100, platinum 200 damage). */
+    COIN
 }

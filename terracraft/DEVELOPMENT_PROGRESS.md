@@ -312,14 +312,47 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
   Ores and Hallowed kits, the new NPCs and summons.
 - Terraria sprite pack: 387 sprites including all Hardmode items, enemies and NPCs.
 
+### Stage 5f: Queen Slime, Mechanic, Pirate Invasion, Frost Legion (verified in a live client)
+- **Underground Hallow crystals** (`HardmodeWorld.growCrystals`, chunk flag `CRYSTALS`): Crystal Shards grow on the
+  Hallow's cave walls, floors and ceilings (a glowing cluster block that is also the material), and about one chunk in
+  eight gets a pink **Gelatin Crystal** on a cavern floor. Greater Healing Potion: 3 bottles + 3 Pixie Dust + Crystal Shard.
+- **Queen Slime** (Gelatin Crystal, in the Hallow; 18000 life): hops at the player with a high leap and slam every
+  fourth hop (Regal Gel bursts out in a ring); at half life she grows crystal wings, flies above the player firing gel
+  volleys and dives in slams. Crystal, Bouncy (high-jumping) and Heavenly (flying, haloed) Slimes keep joining.
+  Drops a **Crystal Assassin** armor piece (hood/shirt/pants: +10% damage, +5% crit each; set: +20% movement speed,
+  +10% damage, higher jumps; 3D ninja model) and sometimes **Volatile Gelatin** (flings bouncing gel at a nearby
+  enemy every two seconds).
+- **Mechanic**: after Skeletron a Bound Mechanic waits in a Dungeon room 16-60 blocks from a player inside the
+  Dungeon; freeing her makes her move in. She sells wiring - Minecraft's redstone parts (redstone, torches, levers,
+  buttons, pressure plates, repeaters, comparators, observers, pistons, dispensers, lamps, rails...).
+  Bound NPCs now really stay put (their navigation already moved them a little every tick).
+- **Pirate Invasion** (Hardmode; a Pirate Map dropped 1 in 17 by enemies killed at the ocean or a beach, or on its
+  own some mornings once an altar is smashed): Pirate Deckhands, Corsairs, Crossbowers, Deadeyes, Captains (they
+  fire exploding cannonballs) and Parrots until 120 kills; once a third are beaten the **Flying Dutchman** (a ghost
+  galleon, 10000 life) sails high above the player firing its four cannons in turn and counts for ten kills.
+  Loot: Cutlass, Gold Ring (pulls coins in from 12 blocks), Lucky Coin (hits shake coins out of enemies), Discount
+  Card (shops 20% cheaper), and the rare **Coin Gun** (coins are its ammo: copper 25, silver 50, gold 100, platinum
+  200 damage). The **Pirate** NPC moves in afterwards: Cannonballs (thrown bombs), his costume (vanity, 3D model),
+  spyglass, compass, maps, boats.
+- **Frost Legion** (Hardmode; a Snow Globe from Presents): Presents drop from enemies (1 in 13 from Dec 15 to Jan 1,
+  1 in 40 in snowy biomes in Hardmode, 1 in 150 elsewhere in Hardmode) and open into coins, treats, snow or potions,
+  with a one-in-ten Snow Globe in Hardmode. Mister Stabby (knife), Snowman Gangsta (tommy gun) and Snow Balla
+  (slowing snowballs) until 80 kills. Santa Claus is not in yet.
+- Events can now list several entity prefixes for their kill count (`TerrariaEvent.isMember`).
+- New 3D models: Queen Slime (tiara, crystal spikes, wings in phase 2), Heavenly Slime (halo, wings), Parrot,
+  Flying Dutchman, three snowmen; skins for the five pirates, the Pirate and the Mechanic.
+- Showcase world: Pirate Invasion and Frost Legion rooms, Queen Slime's minions in the Hallow room, Queen Slime and
+  the Flying Dutchman in the Hall of Bosses (now two rows of six), event buttons, Queen Slime and Pirate kits, the
+  Mechanic and the Pirate in the town NPC buttons. `/terraria worldgen dungeon rooms` lists Dungeon rooms.
+
 ## IN PROGRESS
 - Nothing half-finished. Stage 5 (early Hardmode up to the mechanical bosses) is complete.
 
 ## NEXT (Stage 5: Hardmode)
 1. (done) World changes, Hardmode ores, anvils/forges, gear.
 2. (done) Hardmode enemies, Wyverns, Mimics, souls.
-3. (done) Mechanical bosses, Wizard, Steampunker, Witch Doctor. Still open: Queen Slime, Mechanic.
-4. Pirate Invasion and Frost Legion (not started).
+3. (done) Mechanical bosses, Wizard, Steampunker, Witch Doctor, Queen Slime, Mechanic.
+4. (done) Pirate Invasion and Frost Legion.
 5. Stage 6: Plantera, Golem, Chlorophyte, Lihzahrd Temple.
 
 ## DONE: Stage 4 plan (kept for reference)

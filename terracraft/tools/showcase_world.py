@@ -28,7 +28,7 @@ LANG = json.load(open(os.path.join(ROOT, 'src/main/resources/assets/terracraft/l
 FLOOR = 209          # floor blocks; players stand at FLOOR + 1
 Y = FLOOR + 1
 FUNCS = {}
-AREA = (-172, -214, 252, 172)   # x0, z0, x1, z1 of everything the showcase builds
+AREA = (-172, -246, 252, 172)   # x0, z0, x1, z1 of everything the showcase builds
 
 
 def fn(name, *lines):
@@ -127,7 +127,8 @@ buttons('north', 'TIME & WORLD', [
     ('Clear Effects', 'clear_effects'),
 ])
 
-NPCS = ['guide', 'merchant', 'nurse', 'demolitionist', 'arms_dealer', 'dryad', 'clothier', 'goblin_tinkerer', 'wizard', 'steampunker', 'witch_doctor']
+NPCS = ['guide', 'merchant', 'nurse', 'demolitionist', 'arms_dealer', 'dryad', 'clothier', 'goblin_tinkerer', 'wizard', 'steampunker', 'witch_doctor',
+        'mechanic', 'pirate']
 for npc in NPCS:
     fn(f'npc_{npc}', P + f'terraria npc spawn {npc}')
 fn('npc_all', *[P + f'terraria npc spawn {npc}' for npc in NPCS])
@@ -135,10 +136,14 @@ fn('npc_remove', 'terraria npc killall')
 fn('blood_moon', 'time set night', 'terraria event start blood_moon', 'say Go down to the surface to see it!')
 fn('slime_rain', 'time set day', 'terraria event start slime_rain')
 fn('goblin_army', 'time set day', 'terraria event start goblin_army', 'say Go down to the surface to fight them!')
+fn('pirate_invasion', 'time set day', 'terraria hardmode true', 'terraria event start pirate_invasion',
+   'say Pirates! Go down to the surface to fight them - the Flying Dutchman comes once a third of them are beaten.')
+fn('frost_legion', 'time set day', 'terraria hardmode true', 'terraria event start frost_legion', 'say The Frost Legion is on the surface!')
 fn('stop_event', 'terraria event stop')
 fn('meteor', 'time set night', P + 'terraria meteor', 'say A meteor landed near you. Look for the smoke!')
 buttons('west', 'EVENTS & NPCS', [
-    ('Blood Moon', 'blood_moon'), ('Slime Rain', 'slime_rain'), ('Goblin Army', 'goblin_army'), ('Stop Event', 'stop_event'),
+    ('Blood Moon', 'blood_moon'), ('Slime Rain', 'slime_rain'), ('Goblin Army', 'goblin_army'), ('Pirate Invasion', 'pirate_invasion'),
+    ('Frost Legion', 'frost_legion'), ('Stop Event', 'stop_event'),
     ('Drop Meteor', 'meteor'), ('All Town NPCs', 'npc_all'), ('Remove NPCs', 'npc_remove'),
 ] + [(LANG.get(f'npc.terracraft.{n}', n.title()), f'npc_{n}') for n in NPCS])
 
@@ -214,13 +219,19 @@ fn('kit_hm_ores', *give('cobalt_pickaxe', 'mythril_sword', 'orichalcum_repeater'
                         'raw_cobalt*30', 'raw_mythril*30', 'raw_adamantite*30'))
 fn('kit_hallowed', *give('excalibur', 'hallowed_repeater', 'pickaxe_axe', 'minecraft:arrow*99', 'hallowed_mask', 'hallowed_plate_mail',
                          'hallowed_greaves', 'greater_healing_potion*20', 'soul_of_might*5', 'soul_of_sight*5', 'soul_of_fright*5'))
+fn('kit_queen_slime', *give('crystal_assassin_hood', 'crystal_assassin_shirt', 'crystal_assassin_pants', 'volatile_gelatin',
+                            'gelatin_crystal*3', 'crystal_shard*20', 'greater_healing_potion*20'))
+fn('kit_pirates', *give('cutlass', 'coin_gun', 'gold_coin*50', 'cannonball*30', 'gold_ring', 'lucky_coin', 'discount_card', 'pirate_hat',
+                        'pirate_shirt', 'pirate_pants', 'pirate_map*3', 'present*5', 'snow_globe*3'),
+   'say Coin Gun: coins are its ammo (copper 25, silver 50, gold 100, platinum 200 damage).')
 fn('kit_accessories', *give(*[i for i in ALL_ITEMS if i in {
     'hermes_boots', 'cloud_in_a_bottle', 'shiny_red_balloon', 'lucky_horseshoe', 'band_of_regeneration', 'band_of_starpower',
     'mana_regeneration_band', 'natures_gift', 'aglet', 'anklet_of_the_wind', 'feral_claws', 'obsidian_skull', 'lava_charm', 'cobalt_shield',
     'flipper', 'water_walking_boots', 'toolbelt', 'panic_necklace', 'honey_comb', 'obsidian_horseshoe', 'cloud_in_a_balloon',
     'obsidian_shield', 'obsidian_water_walking_boots', 'lava_waders', 'mana_flower'}]))
 fn('kit_summons', *give('slime_crown*3', 'suspicious_looking_eye*3', 'worm_food*3', 'bloody_spine*3', 'abeemination*3',
-                        'guide_voodoo_doll', 'goblin_battle_standard*3', 'mechanical_eye*3', 'mechanical_worm*3', 'mechanical_skull*3'))
+                        'guide_voodoo_doll', 'goblin_battle_standard*3', 'gelatin_crystal*3', 'mechanical_eye*3', 'mechanical_worm*3',
+                        'mechanical_skull*3', 'pirate_map*3', 'snow_globe*3'))
 fn('kit_potions', *give('healing_potion*20', 'mana_potion*20', 'ironskin_potion*5', 'swiftness_potion*5', 'regeneration_potion*5',
                         'magic_power_potion*5', 'archery_potion*5', 'mining_potion*5', 'obsidian_skin_potion*5', 'endurance_potion*5',
                         'wrath_potion*5', 'rage_potion*5', 'water_walking_potion*5'))
@@ -237,7 +248,7 @@ fn('clear_inventory', 'clear @p')
 buttons('south', 'GEAR KITS', [
     ('Starter Kit', 'kit_starter'), ('Ore Kit', 'kit_ore'), ('Corruption Kit', 'kit_evil'), ('Jungle Kit', 'kit_jungle'),
     ('Dungeon Kit', 'kit_dungeon'), ('Molten Kit', 'kit_molten'), ('Meteor Kit', 'kit_meteor'), ('Hardmode Kit', 'kit_hardmode'),
-    ('Hardmode Ores Kit', 'kit_hm_ores'), ('Hallowed Kit', 'kit_hallowed'),
+    ('Hardmode Ores Kit', 'kit_hm_ores'), ('Hallowed Kit', 'kit_hallowed'), ('Queen Slime Kit', 'kit_queen_slime'), ('Pirate Kit', 'kit_pirates'),
     ('All Accessories', 'kit_accessories'), ('Boss Summons', 'kit_summons'), ('Potions', 'kit_potions'), ('Crafting Stations', 'kit_stations'),
     ('Wings', 'kit_wings'), ('Food Buffs', 'kit_food'), ('Coins', 'kit_coins'), ('Life & Mana Crystals', 'kit_life'),
     ('Clear Inventory', 'clear_inventory'),
@@ -246,13 +257,14 @@ buttons('south', 'GEAR KITS', [
 # ------------------------------------------------------------------------------------------------ boss arena
 BOSSES = [('King Slime', 'king_slime'), ('Eye of Cthulhu', 'eye_of_cthulhu'), ('Eater of Worlds', 'eater_of_worlds'),
           ('Brain of Cthulhu', 'brain_of_cthulhu'), ('Queen Bee', 'queen_bee'), ('Skeletron', 'skeletron'), ('Wall of Flesh', 'wall_of_flesh'),
-          ('The Twins', 'the_twins'), ('The Destroyer', 'destroyer'), ('Skeletron Prime', 'skeletron_prime')]
+          ('Queen Slime', 'queen_slime'), ('The Twins', 'the_twins'), ('The Destroyer', 'destroyer'), ('Skeletron Prime', 'skeletron_prime')]
 for text, boss in BOSSES:
     fn(f'boss_{boss}', 'gamemode survival @p', P + f'terraria boss spawn {boss}')
 fn('boss_skeletron', 'gamemode survival @p', 'time set night', P + 'terraria boss spawn skeletron')
 fn('boss_eye_of_cthulhu', 'gamemode survival @p', 'time set night', P + 'terraria boss spawn eye_of_cthulhu')
 for _mech in ('the_twins', 'destroyer', 'skeletron_prime'):   # Hardmode, night only
     fn(f'boss_{_mech}', 'gamemode survival @p', 'terraria hardmode true', 'time set night', P + f'terraria boss spawn {_mech}')
+fn('boss_queen_slime', 'gamemode survival @p', 'terraria hardmode true', P + 'terraria boss spawn queen_slime')
 buttons('arena', 'BOSS ARENA', [(t, f'boss_{b}') for t, b in BOSSES] + [
     ('Night', 'night'), ('Day', 'day'), ('Heal Me', 'heal'), ('Kill Bosses', 'kill_bosses'), ('Creative', 'creative'), ('Back to Hub', 'hub')])
 
@@ -413,26 +425,31 @@ ROOMS = [   # name, floor, wall, light, (log, leaves) or None, enemies
     ('Underworld', 'terracraft:ash', 'terracraft:hellstone_brick', 'minecraft:shroomlight', None,
      ['imp', 'demon', 'voodoo_demon', 'lava_slime', 'hellbat', 'bone_serpent']),
     ('The Hallow', 'terracraft:hallowed_grass', 'terracraft:pearlstone', 'minecraft:sea_lantern',
-     ('terracraft:pearlwood', 'terracraft:hallowed_leaves'), ['pixie', 'unicorn', 'gastropod', 'illuminant_bat', 'illuminant_slime', 'chaos_elemental']),
+     ('terracraft:pearlwood', 'terracraft:hallowed_leaves'), ['pixie', 'unicorn', 'gastropod', 'illuminant_bat', 'illuminant_slime', 'chaos_elemental',
+                                                              'crystal_slime', 'bouncy_slime', 'heavenly_slime']),
     ('Blood Moon & Goblin Army', 'minecraft:coarse_dirt', 'minecraft:red_nether_bricks', 'minecraft:shroomlight', None,
      ['blood_zombie', 'drippler', 'goblin_peon', 'goblin_thief', 'goblin_warrior', 'goblin_archer', 'goblin_sorcerer']),
     ('Sky & Meteorite', 'terracraft:meteorite', 'minecraft:polished_blackstone_bricks', 'minecraft:sea_lantern', None,
      ['meteor_head', 'wyvern', 'probe']),
+    ('Pirate Invasion', 'minecraft:spruce_planks', 'minecraft:dark_oak_planks', 'minecraft:lantern', None,
+     ['pirate_deckhand', 'pirate_corsair', 'pirate_crossbower', 'pirate_deadeye', 'pirate_captain', 'parrot']),
+    ('Frost Legion', 'minecraft:snow_block', 'minecraft:packed_ice', 'minecraft:sea_lantern', ('minecraft:spruce_log', 'minecraft:spruce_leaves[persistent=true]'),
+     ['mister_stabby', 'snowman_gangsta', 'snow_balla']),
 ]
 FLYERS = {'demon_eye', 'cave_bat', 'giant_bat', 'eater_of_souls', 'corruptor', 'slimer', 'crimera', 'floaty_gross', 'jungle_bat', 'hornet', 'bee',
           'cursed_skull', 'demon', 'voodoo_demon', 'hellbat', 'pixie', 'gastropod', 'illuminant_bat', 'drippler', 'meteor_head', 'wyvern', 'probe',
-          'wraith', 'servant_of_cthulhu'}
-fill(-4, FLOOR, -41, 4, FLOOR, -205, 'minecraft:polished_andesite')            # the avenue
-fill(-5, FLOOR, -41, -5, FLOOR, -205, 'minecraft:polished_blackstone_bricks')
-fill(5, FLOOR, -41, 5, FLOOR, -205, 'minecraft:polished_blackstone_bricks')
-for z in range(-44, -205, -4):
+          'wraith', 'servant_of_cthulhu', 'parrot', 'heavenly_slime'}
+fill(-4, FLOOR, -41, 4, FLOOR, -237, 'minecraft:polished_andesite')            # the avenue
+fill(-5, FLOOR, -41, -5, FLOOR, -237, 'minecraft:polished_blackstone_bricks')
+fill(5, FLOOR, -41, 5, FLOOR, -237, 'minecraft:polished_blackstone_bricks')
+for z in range(-44, -237, -4):
     put(0, FLOOR, z, 'minecraft:sea_lantern')
-for z in range(-44, -205, -12):
+for z in range(-44, -237, -12):
     for x in (-4, 4):
         put(x, Y, z, 'minecraft:polished_blackstone_wall')
         put(x, Y + 1, z, 'minecraft:lantern')
-fill(-6, Y, -206, 6, Y + 8, -206, 'minecraft:polished_blackstone_bricks')
-wall_sign(0, Y + 3, -205, 'south', '', 'THE BESTIARY', 'every enemy', '', color='yellow')
+fill(-6, Y, -238, 6, Y + 8, -238, 'minecraft:polished_blackstone_bricks')
+wall_sign(0, Y + 3, -237, 'south', '', 'THE BESTIARY', 'every enemy', '', color='yellow')
 ZOO_COUNT = 0
 for k, (room, floor, wall, light, tree_kind, enemies) in enumerate(ROOMS):
     side = 1 if k % 2 else -1
@@ -449,8 +466,9 @@ for k, (room, floor, wall, light, tree_kind, enemies) in enumerate(ROOMS):
     aisle = z0 - 14
     fill(xi, Y, aisle - 2, xi, Y + 4, aisle + 2, 'minecraft:air')           # entrance
     wall_sign(xi - side, Y + 6, aisle, 'east' if side < 0 else 'west', '', room.upper(), f'{len(enemies)} enemies', '', color='yellow')
-    if 'Hallow' in room or room in ('Sky & Meteorite',) or 'goblin_peon' in enemies:
-        wall_sign(xi - side, Y + 5, aisle, 'east' if side < 0 else 'west', '', '', '(Hardmode)' if 'Hallow' in room else '', '')
+    if 'Hallow' in room or room in ('Sky & Meteorite', 'Pirate Invasion', 'Frost Legion') or 'goblin_peon' in enemies:
+        wall_sign(xi - side, Y + 5, aisle, 'east' if side < 0 else 'west', '', '',
+                  '(Hardmode)' if 'Hallow' in room or room in ('Pirate Invasion', 'Frost Legion') else '', '')
     for i, enemy in enumerate(enemies):
         row, col = divmod(i, 7)
         cx = (10 + 7 * col) * side
@@ -532,14 +550,16 @@ BOSS_HALL = [   # (boss entities with offsets, name, summoned with, flying heigh
     ([('queen_bee', 0, 0)], 'Queen Bee', 'Abeemination / Larva', 2),
     ([('skeletron', 0, 0), ('skeletron_hand', -3, -1), ('skeletron_hand', 3, -1)], 'Skeletron', 'curse the Old Man', 4),
     ([('wall_of_flesh_eye', -2.5, 0), ('wall_of_flesh_eye', 2.5, 0), ('the_hungry', 0, 2)], 'Wall of Flesh', 'Guide Voodoo Doll in lava', 2),
+    ([('queen_slime', 0, 0), ('heavenly_slime', -3, 2)], 'Queen Slime', 'Gelatin Crystal (Hallow)', 0),
     ([('retinazer', -2.5, 0), ('spazmatism', 2.5, 0)], 'The Twins', 'Mechanical Eye (Hardmode)', 3),
     ([('destroyer', 0, 0), ('probe', -3, 1), ('probe', 3, 1)], 'The Destroyer', 'Mechanical Worm (Hardmode)', 3),
     ([('skeletron_prime', 0, 0), ('prime_cannon', -3.5, 0), ('prime_laser', 3.5, 0), ('prime_saw', -3, -3), ('prime_vice', 3, -3)],
      'Skeletron Prime', 'Mechanical Skull (Hardmode)', 5),
+    ([('flying_dutchman', 0, 0)], 'Flying Dutchman', 'Pirate Invasion', 6),
 ]
 for i, (parts, name, summon, lift) in enumerate(BOSS_HALL):
-    north = i < 5
-    x = 60 + 20 * (i % 5)
+    north = i < 6
+    x = 58 + 17 * (i % 6)
     z = -20 if north else 20
     fill(x - 5, Y, z - 5, x + 5, Y, z + 5, 'minecraft:polished_blackstone_bricks')
     fill(x - 4, Y + 1, z - 4, x + 4, Y + 1, z + 4, 'minecraft:smooth_quartz')

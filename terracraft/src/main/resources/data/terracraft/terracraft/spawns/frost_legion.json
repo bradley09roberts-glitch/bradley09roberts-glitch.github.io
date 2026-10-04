@@ -1,0 +1,40 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:mister_stabby",
+      "weight": 10,
+      "layers": [
+        "surface"
+      ],
+      "group": [
+        1,
+        3
+      ],
+      "event": "frost_legion"
+    },
+    {
+      "entity": "terracraft:snowman_gangsta",
+      "weight": 7,
+      "layers": [
+        "surface"
+      ],
+      "group": [
+        1,
+        2
+      ],
+      "event": "frost_legion"
+    },
+    {
+      "entity": "terracraft:snow_balla",
+      "weight": 7,
+      "layers": [
+        "surface"
+      ],
+      "group": [
+        1,
+        2
+      ],
+      "event": "frost_legion"
+    }
+  ]
+}

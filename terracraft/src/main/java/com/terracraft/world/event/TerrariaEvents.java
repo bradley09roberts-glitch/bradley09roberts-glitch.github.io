@@ -15,6 +15,13 @@ public final class TerrariaEvents {
     /** Goblin Army: an invasion of goblins on the surface until 80 of them are killed. */
     public static final TerrariaEvent GOBLIN_ARMY = register(new TerrariaEvent("goblin_army", false, 5.0F, 3.0F, 80, true, "goblin_"));
 
+    /** Pirate Invasion (Hardmode): pirates, parrots and the Flying Dutchman until 120 kills (the Dutchman counts for ten). */
+    public static final TerrariaEvent PIRATE_INVASION = register(new TerrariaEvent("pirate_invasion", false, 5.0F, 3.0F, 120, true,
+        "pirate_|parrot|flying_dutchman"));
+    /** Frost Legion (Hardmode, from a Snow Globe): snowmen with knives, guns and snowballs until 80 are killed. */
+    public static final TerrariaEvent FROST_LEGION = register(new TerrariaEvent("frost_legion", false, 5.0F, 3.0F, 80, true,
+        "mister_stabby|snowman_gangsta|snow_balla"));
+
     private TerrariaEvents() {}
 
     private static TerrariaEvent register(TerrariaEvent event) {

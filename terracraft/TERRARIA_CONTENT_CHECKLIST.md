@@ -41,7 +41,7 @@ Pre-hardmode
 - [x] Wall of Flesh (Guide Voodoo Doll in Underworld lava; starts Hardmode)
 
 Hardmode
-- [ ] Queen Slime
+- [x] Queen Slime (Gelatin Crystal in the Hallow; flying second phase, Crystal/Bouncy/Heavenly Slimes, Crystal Assassin armor, Volatile Gelatin)
 - [x] The Destroyer (Mechanical Worm; shared life, lasers, Probes)
 - [x] The Twins (Mechanical Eye; Retinazer lasers, Spazmatism cursed flames, mechanical second forms)
 - [x] Skeletron Prime (Mechanical Skull; Cannon, Saw, Vice, Laser arms)
@@ -70,7 +70,7 @@ Hardmode
       Giant Bat, Mimic)
 - [x] Goblin Army: Peon, Thief, Warrior, Archer, Sorcerer
 - [x] Meteor Head
-- [ ] Event enemies (Pirates, Frost Legion, Martians, Pumpkin/Frost Moon, Solar Eclipse)
+- [-] Event enemies: Pirates (+ Flying Dutchman) and Frost Legion done; Martians, Pumpkin/Frost Moon, Solar Eclipse open
 
 ## NPCs
 - [x] Guide, Merchant, Nurse, Demolitionist
@@ -78,9 +78,9 @@ Hardmode
 - [x] Old Man, Clothier
 - [x] Goblin Tinkerer (rescued in the caverns; reforging)
 - [x] Wizard (found bound in Hardmode caverns), Witch Doctor (after Queen Bee; Leaf Wings in Hardmode)
-- [ ] Stylist, Mechanic, Party Girl
+- [-] Mechanic done (bound in the Dungeon after Skeletron, sells redstone wiring); Stylist, Party Girl open
 - [x] Steampunker (after a mechanical boss; Clentaminator and solutions)
-- [ ] Tax Collector, Truffle, Pirate, Cyborg, Santa Claus, Princess
+- [-] Pirate done (after the Pirate Invasion); Tax Collector, Truffle, Cyborg, Santa Claus, Princess open
 
 ## Weapons
 Melee
@@ -171,8 +171,8 @@ Boomerangs
 - [x] Blood Moon
 - [x] Slime Rain
 - [x] Goblin Army (invasion with progress bar; Goblin Battle Standard)
-- [ ] Pirate Invasion
-- [ ] Frost Legion
+- [x] Pirate Invasion (Pirate Map; Flying Dutchman; Cutlass, Gold Ring, Lucky Coin, Discount Card, Coin Gun)
+- [x] Frost Legion (Snow Globe from Presents)
 - [ ] Solar Eclipse
 - [ ] Martian Madness
 - [ ] Pumpkin Moon

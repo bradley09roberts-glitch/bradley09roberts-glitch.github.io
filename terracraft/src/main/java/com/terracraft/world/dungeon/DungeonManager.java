@@ -54,7 +54,15 @@ public final class DungeonManager {
                     entrance.getX(), entrance.getY(), entrance.getZ(), layout.brick().name().toLowerCase(java.util.Locale.ROOT),
                     layout.boxes().size(), layout.doorFacing().getSerializedName())).withStyle(ChatFormatting.AQUA), false);
                 return 1;
-            }))));
+            })
+            .then(Commands.literal("rooms").executes(ctx -> {
+                DungeonLayout layout = layout(ctx.getSource().getServer().overworld());
+                StringBuilder rooms = new StringBuilder("Dungeon rooms (floor centres):");
+                layout.boxes().stream().filter(box -> box.kind() == DungeonLayout.Kind.ROOM).limit(12).forEach(box -> rooms.append(
+                    String.format(" [%d %d %d]", (box.x0() + box.x1()) / 2, box.y0(), (box.z0() + box.z1()) / 2)));
+                ctx.getSource().sendSuccess(() -> Component.literal(rooms.toString()), false);
+                return 1;
+            })))));
     }
 
     /** The world's Dungeon (computed once per seed; safe to call from world generation threads). */

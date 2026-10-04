@@ -9,6 +9,8 @@ public final class TerraModels {
     public static final ModelLayerLocation SLIME = layer("slime");
     public static final ModelLayerLocation MOTHER_SLIME = layer("mother_slime");
     public static final ModelLayerLocation KING_SLIME = layer("king_slime");
+    public static final ModelLayerLocation QUEEN_SLIME = layer("queen_slime");
+    public static final ModelLayerLocation HEAVENLY_SLIME = layer("heavenly_slime");
     public static final ModelLayerLocation HUMANOID = layer("humanoid");
     public static final ModelLayerLocation SKELETON = layer("skeleton");
     public static final ModelLayerLocation GOBLIN = layer("goblin");
@@ -27,7 +29,7 @@ public final class TerraModels {
     public static final java.util.List<String> JSON_CREATURES = java.util.List.of("imp", "demon", "voodoo_demon", "eater_of_souls", "crimera",
         "face_monster", "blood_crawler", "man_eater", "snatcher", "meteor_head", "pixie", "unicorn", "gastropod", "chaos_elemental",
         "corruptor", "slimer", "herpling", "floaty_gross", "wraith", "possessed_armor", "werewolf", "mimic",
-        "prime_cannon", "prime_saw", "prime_vice", "prime_laser");
+        "prime_cannon", "prime_saw", "prime_vice", "prime_laser", "parrot", "flying_dutchman", "mister_stabby", "snowman_gangsta", "snow_balla");
 
     private TerraModels() {}
 
@@ -43,6 +45,8 @@ public final class TerraModels {
         event.registerLayerDefinition(SLIME, SlimeBodyModel::createSlime);
         event.registerLayerDefinition(MOTHER_SLIME, SlimeBodyModel::createMotherSlime);
         event.registerLayerDefinition(KING_SLIME, SlimeBodyModel::createKingSlime);
+        event.registerLayerDefinition(QUEEN_SLIME, SlimeBodyModel::createQueenSlime);
+        event.registerLayerDefinition(HEAVENLY_SLIME, SlimeBodyModel::createHeavenlySlime);
         event.registerLayerDefinition(HUMANOID, TerraHumanoidModel::createHumanoid);
         event.registerLayerDefinition(SKELETON, TerraHumanoidModel::createSkeleton);
         event.registerLayerDefinition(GOBLIN, TerraHumanoidModel::createGoblin);

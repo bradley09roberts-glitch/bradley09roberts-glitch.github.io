@@ -79,11 +79,32 @@ public final class TownNpcs {
         server -> com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.QUEEN_BEE),
         true, () -> ProjectileKinds.STINGER, 14.0F, 6, List.of(TownNpcType.Service.SHOP)));
 
+    /** Tied up in the Dungeon once Skeletron is defeated (spawned by {@code BoundNpcs}); never "arrives". */
+    public static final TownNpcType BOUND_MECHANIC = register(new TownNpcType("bound_mechanic", NpcContent.BOUND_MECHANIC, List.of(),
+        server -> false, false, null, 0.0F, 1, List.of()));
+    /** The Mechanic: rescued from the Dungeon; sells wiring (Minecraft's redstone components). */
+    public static final TownNpcType MECHANIC = register(new TownNpcType("mechanic", NpcContent.MECHANIC,
+        List.of("Amy", "Brooke", "Dawn", "Kelly", "Kristy", "Mia", "Nikki", "Selah", "Shayna", "Virginia"),
+        server -> com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.MECHANIC_RESCUED),
+        true, () -> ProjectileKinds.THROWING_KNIFE, 12.0F, 6, List.of(TownNpcType.Service.SHOP)));
+
+    /** The Pirate: moves in after the Pirate Invasion is defeated; throws cannonballs, sells his costume and gear. */
+    public static final TownNpcType PIRATE = register(new TownNpcType("pirate", NpcContent.PIRATE,
+        List.of("Black Spot", "Captain Bullywort", "Captain Stoneheart", "Captain Morgan", "Jack Sparrow", "Long John", "One Eyed Pete",
+            "Red Beard", "Salty Ralph", "Squidbeard"),
+        server -> com.terracraft.progression.ProgressionManager.has(server, com.terracraft.progression.ProgressionFlags.PIRATES),
+        true, () -> ProjectileKinds.CANNONBALL, 20.0F, 6, List.of(TownNpcType.Service.SHOP)));
+
     private TownNpcs() {}
 
     /** NPCs that stay where they are put instead of living in a house (Old Man, bound NPCs). */
     public static boolean isStationary(TownNpcType type) {
-        return type == OLD_MAN || type == BOUND_GOBLIN || type == BOUND_WIZARD;
+        return type == OLD_MAN || isBound(type);
+    }
+
+    /** Tied-up NPCs waiting to be rescued. */
+    public static boolean isBound(TownNpcType type) {
+        return type == BOUND_GOBLIN || type == BOUND_WIZARD || type == BOUND_MECHANIC;
     }
 
     private static TownNpcType register(TownNpcType type) {

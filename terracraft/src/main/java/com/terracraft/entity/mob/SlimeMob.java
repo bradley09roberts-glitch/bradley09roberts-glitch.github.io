@@ -18,10 +18,17 @@ import net.minecraft.world.phys.Vec3;
 public class SlimeMob extends TerrariaMob {
     private int jumpDelay = 20;
     private float hopDirection;
+    private final float jumpBoost;
 
     public SlimeMob(EntityType<? extends SlimeMob> type, Level level) {
+        this(type, level, 1.0F);
+    }
+
+    /** @param jumpBoost multiplier on hop height (Bouncy Slime) */
+    public SlimeMob(EntityType<? extends SlimeMob> type, Level level, float jumpBoost) {
         super(type, level);
         this.hopDirection = random.nextFloat() * 360.0F;
+        this.jumpBoost = jumpBoost;
     }
 
     @Override
@@ -51,7 +58,7 @@ public class SlimeMob extends TerrariaMob {
         }
         boolean bigHop = random.nextInt(3) == 0;
         double forward = (bigHop ? 0.2 : 0.3) * (chasing ? 1.0 : 0.6) * getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED) / 0.25;
-        double up = bigHop ? 0.62 : 0.45;
+        double up = (bigHop ? 0.62 : 0.45) * jumpBoost;
         float rad = hopDirection * Mth.DEG_TO_RAD;
         setDeltaMovement(-Mth.sin(rad) * forward, up, Mth.cos(rad) * forward);
         needsSync = true;

@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "terracraft:crystal_assassin"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "terracraft:crystal_assassin"
+      }
+    ]
+  }
+}

@@ -562,9 +562,125 @@ def mech_creatures():
     return [prime_arm('prime_cannon', 'cannon'), prime_arm('prime_saw', 'saw'), prime_arm('prime_vice', 'vice'), prime_arm('prime_laser', 'laser')]
 
 
+# ----------------------------------------------------------------------------------------- Pirate Invasion
+def parrot():
+    """Parrot: a bright red macaw with blue and yellow wings, a hooked beak and a long tail; it swoops at the player."""
+    c = Creature('parrot', {'main': '#D8302A', 'wing': '#2A6AD8', 'yellow': '#F0C830', 'beak': '#E8E0C8', 'dark': '#1A1A1A',
+                            'tail': '#2A5AC0', 'green': '#3AA040'})
+    c.part('body', pivot=(0, 16, 0), rot=(0.4, 0, 0))
+    c.box('body', (-2, -3, -2.5), (4, 5, 5), pattern='feather')
+    c.part('head', 'body', pivot=(0, -3, -1), rot=(-0.4, 0, 0))
+    c.box('head', (-1.5, -3, -2), (3, 3, 3), pattern='feather')
+    c.box('head', (-0.5, -2, -3.5), (1, 2, 2), mat='beak', pattern='horn')
+    for side in (-1, 1):
+        c.box('head', ((-1.6 if side < 0 else 1.1), -2.2, -1.4), (0.5, 0.8, 0.8), mat='dark', pattern='skin')
+    wings(c, 'body', -2, (6, 4), mat='wing', pattern='feather', z=0.5, amp=0.9, speed=1.4)
+    c.box('wing_r', (-6, -1.4, 0), (3, 2, 0), mat='yellow', pattern='feather')
+    c.box('wing_l', (3, -1.4, 0), (3, 2, 0), mat='yellow', pattern='feather')
+    c.part('tail', 'body', pivot=(0, 2, 2), rot=(0.7, 0, 0))
+    c.box('tail', (-1, 0, -0.5), (2, 7, 1), mat='tail', pattern='feather')
+    c.anim('tail', 'tail', 0.2, 0.4)
+    c.anim('body', 'bob', 0.6, 0.3)
+    c.anim('head', 'head')
+    return c
+
+
+def flying_dutchman():
+    """The Flying Dutchman: a ghostly galleon of rotten green-black wood with tattered glowing sails, a raised stern
+    castle, two masts with a skull flag and four cannons poking out of its sides. Long axis along z (it sails forward)."""
+    c = Creature('flying_dutchman', {'main': '#2E3E38', 'dark': '#121A18', 'deck': '#4A5A48', 'sail': '#A8D8B8', 'glow': '#70FFC0',
+                                     'metal': '#3A3A40', 'trim': '#8A7A40', 'flag': '#1A1A1A', 'bone': '#E8E0C8'})
+    c.part('hull', pivot=(0, 24, 0))
+    for z in (-33, -11, 11):
+        c.box('hull', (-10, -14, z), (20, 14, 22), pattern='wood', edge='trim')
+    c.box('hull', (-7, -12, -41), (14, 11, 8), pattern='wood', edge='trim')        # bow
+    c.box('hull', (-3, -10, -47), (6, 7, 6), pattern='wood')                       # prow
+    c.box('hull', (-1, -14, -52), (2, 2, 9), mat='trim', pattern='wood')           # bowsprit
+    c.box('hull', (-10, -24, 22), (20, 10, 11), pattern='wood', edge='trim')       # stern castle
+    for x in (-10, 9):
+        c.box('hull', (x, -16, -33), (1, 2, 55), mat='deck', pattern='wood')       # side rails
+    for z, x in ((-18, -14), (-18, 10), (14, -14), (14, 10)):
+        c.box('hull', (x, -9, z), (4, 3, 3), mat='metal', pattern='plate')        # cannons
+    for z in (-24, -6, 6):
+        c.box('hull', (-10.5, -8, z), (21, 2, 2), mat='glow', pattern='glow')     # ghostly portholes
+    c.box('hull', (-3, -22, 32.5), (6, 4, 1), mat='glow', pattern='glow')          # stern lanterns
+    for name, z, height, sail_w, sail_h in (('mast_front', -14, 44, 30, 24), ('mast_back', 10, 38, 26, 20)):
+        c.part(name, 'hull', pivot=(0, -14, z))
+        c.box(name, (-1, -height, -1), (2, height, 2), mat='main', pattern='wood')
+        c.box(name, (-sail_w / 2 - 1, -height + 6, -0.5), (sail_w + 2, 1, 1), mat='main', pattern='wood')   # yard
+        sail = name + '_sail'
+        c.part(sail, name, pivot=(0, -height + 7, 0.5))
+        c.box(sail, (-sail_w / 2, 0, 0), (sail_w, sail_h, 0), mat='sail', pattern='membrane')
+        c.anim(sail, 'wiggle', 0.06, 0.5)
+    c.part('flag', 'mast_front', pivot=(0, -44, 0))
+    c.box('flag', (0, -6, 0), (9, 6, 0), mat='flag', pattern='cloth')
+    c.box('flag', (3, -4.5, -0.1), (2, 2, 0.2), mat='bone', pattern='bone')
+    c.anim('flag', 'wiggle', 0.25, 1.2)
+    c.anim('hull', 'bob', 0.6, 0.1)
+    return c
+
+
+# ----------------------------------------------------------------------------------------- Frost Legion
+def snowman(name, hat, prop):
+    """Frost Legion snowman: three stacked snowballs with coal eyes, a carrot nose, a scarf and stick arms, plus a hat
+    and a weapon: Mister Stabby holds a knife, Snowman Gangsta wears a fedora and shades and carries a tommy gun,
+    Snow Balla wears a beanie and holds a snowball."""
+    c = Creature(name, {'main': '#F4F8FF', 'shade': '#C8D8F0', 'dark': '#1A1A20', 'carrot': '#F08A2A', 'stick': '#6A4A2A',
+                        'scarf': '#C83030' if name != 'snow_balla' else '#3070C8', 'hat': '#2A2A30' if hat != 'beanie' else '#3070C8',
+                        'band': '#C8A040', 'blade': '#D8D8E0', 'metal': '#3A3A44', 'wood': '#7A5A3A'})
+    c.part('body', pivot=(0, 24, 0))
+    c.box('body', (-5, -9, -5), (10, 9, 10), pattern='skin')                     # base ball
+    c.part('torso', 'body', pivot=(0, -9, 0))
+    c.box('torso', (-4, -8, -4), (8, 8, 8), pattern='skin')
+    for y in (-6, -3):
+        c.box('torso', (-0.5, y, -4.4), (1, 1, 0.5), mat='dark', pattern='skin')   # coal buttons
+    c.box('torso', (-4.3, -1.5, -4.3), (8.6, 2, 8.6), mat='scarf', pattern='cloth')
+    c.box('torso', (2, -0.5, -4.6), (2, 5, 1), mat='scarf', pattern='cloth')       # scarf tail
+    c.part('head', 'torso', pivot=(0, -8, 0))
+    c.box('head', (-3.5, -7, -3.5), (7, 7, 7), pattern='skin')
+    for side in (-1, 1):
+        c.box('head', ((-2.5 if side < 0 else 1.5), -5, -3.8), (1, 1, 0.5), mat='dark', pattern='skin')
+    c.box('head', (-0.5, -4, -6), (1, 1, 3), mat='carrot', pattern='skin')
+    for x in (-1.5, -0.5, 0.5):
+        c.box('head', (x, -2, -3.7), (0.8, 0.8, 0.3), mat='dark', pattern='skin')
+    if hat == 'fedora':
+        c.box('head', (-5, -7.5, -5), (10, 1, 10), mat='hat', pattern='cloth')
+        c.box('head', (-3.5, -10.5, -3.5), (7, 3, 7), mat='hat', pattern='cloth')
+        c.box('head', (-3.6, -8.5, -3.6), (7.2, 1, 7.2), mat='band', pattern='cloth')
+        c.box('head', (-3, -5.5, -4), (6, 1.5, 0.6), mat='dark', pattern='gem')    # sunglasses
+    elif hat == 'beanie':
+        c.box('head', (-3.8, -9, -3.8), (7.6, 3, 7.6), mat='hat', pattern='cloth')
+        c.box('head', (-1, -10.5, -1), (2, 2, 2), mat='main', pattern='cloth')     # pompom
+    else:   # Mister Stabby: a battered bucket
+        c.box('head', (-3, -10, -3), (6, 4, 6), mat='metal', pattern='plate')
+    for side, nm in ((-1, 'arm_r'), (1, 'arm_l')):
+        c.part(nm, 'torso', pivot=(4 * side, -5, 0), rot=(0, 0, 0.6 * side))
+        c.box(nm, ((-6 if side < 0 else 0), -0.5, -0.5), (6, 1, 1), mat='stick', pattern='wood')
+        c.anim(nm, nm, 0.6)
+    if prop == 'knife':
+        c.box('arm_r', (-7, -0.5, -4), (1, 1, 4), mat='blade', pattern='blade')
+    elif prop == 'gun':
+        c.box('arm_r', (-8, -1, -6), (2, 2, 9), mat='metal', pattern='plate')
+        c.box('arm_r', (-8, 1, -3), (2, 3, 2), mat='wood', pattern='wood')
+        c.box('arm_r', (-8.2, 0.5, -1), (2.4, 2.4, 2.4), mat='metal', pattern='bands')     # drum magazine
+    else:
+        c.box('arm_r', (-8, -1.5, -1.5), (3, 3, 3), pattern='skin')                    # snowball
+    c.anim('body', 'bob', 0.6, 0.35)
+    c.anim('head', 'head')
+    return c
+
+
+def frost_creatures():
+    return [snowman('mister_stabby', 'bucket', 'knife'), snowman('snowman_gangsta', 'fedora', 'gun'), snowman('snow_balla', 'beanie', 'snowball')]
+
+
+def pirate_creatures():
+    return [parrot(), flying_dutchman()]
+
+
 def all_creatures():
     return [imp(), demon(), demon('voodoo_demon', voodoo=True), eater_of_souls(), crimera(), face_monster(), blood_crawler(),
-            snapper('man_eater', '#4A9A30', '#E070A0', 9), snapper('snatcher', '#5AAA3A', '#F0A0C0', 7), meteor_head()] + hm_creatures() + mech_creatures()
+            snapper('man_eater', '#4A9A30', '#E070A0', 9), snapper('snatcher', '#5AAA3A', '#F0A0C0', 7), meteor_head()] + hm_creatures() + mech_creatures() + pirate_creatures() + frost_creatures()
 
 
 def write(assets, tex):

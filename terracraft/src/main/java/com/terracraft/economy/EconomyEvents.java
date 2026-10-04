@@ -36,6 +36,20 @@ public final class EconomyEvents {
     }
 
     @SubscribeEvent
+    public static void onPlayerTickMagnet(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
+        if (event.getEntity() instanceof ServerPlayer player && player.tickCount % 2 == 0
+            && com.terracraft.player.TerraPlayerData.get(player).stats().has(com.terracraft.player.stats.Ability.COIN_MAGNET)) {
+            // Gold Ring: coins within 12 blocks fly to the player
+            for (net.minecraft.world.entity.item.ItemEntity item : player.level().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                    player.getBoundingBox().inflate(12), i -> Coins.value(i.getItem()) > 0)) {
+                net.minecraft.world.phys.Vec3 pull = player.position().add(0, 0.8, 0).subtract(item.position());
+                item.setDeltaMovement(pull.normalize().scale(Math.min(0.6, 0.15 + pull.length() * 0.03)));
+                item.setNoPickUpDelay();
+            }
+        }
+    }
+
+    @SubscribeEvent
     public static void onPlayerTick(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
         Player player = event.getEntity();
         if (player instanceof ServerPlayer && player.tickCount % 20 == 7 && TerraConfig.COMMON.autoCompactCoins.get()) {
@@ -44,6 +58,24 @@ public final class EconomyEvents {
     }
 
     /** Enemies drop coins worth their Terraria value (vanilla hostiles: based on health). */
+    /** Lucky Coin: hitting an enemy has a 1 in 5 chance to knock a few coins out of it. */
+    @SubscribeEvent
+    public static void onDamage(net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Post event) {
+        LivingEntity victim = event.getEntity();
+        if (!(victim.level() instanceof ServerLevel level) || !(victim instanceof net.minecraft.world.entity.monster.Enemy)
+            || !(event.getSource().getEntity() instanceof ServerPlayer player) || level.getRandom().nextInt(5) != 0
+            || !com.terracraft.player.TerraPlayerData.get(player).stats().has(com.terracraft.player.stats.Ability.LUCKY_COIN)) {
+            return;
+        }
+        long value = level.getRandom().nextInt(10) == 0 ? Coins.SILVER * (1 + level.getRandom().nextInt(3)) : 10 + level.getRandom().nextInt(41);
+        for (net.minecraft.world.item.ItemStack stack : Coins.toStacks(value)) {
+            net.minecraft.world.entity.item.ItemEntity coin = new net.minecraft.world.entity.item.ItemEntity(level, victim.getX(), victim.getY() + victim.getBbHeight() * 0.6,
+                victim.getZ(), stack);
+            coin.setDeltaMovement((level.getRandom().nextDouble() - 0.5) * 0.2, 0.25, (level.getRandom().nextDouble() - 0.5) * 0.2);
+            level.addFreshEntity(coin);
+        }
+    }
+
     @SubscribeEvent
     public static void onDrops(LivingDropsEvent event) {
         LivingEntity entity = event.getEntity();

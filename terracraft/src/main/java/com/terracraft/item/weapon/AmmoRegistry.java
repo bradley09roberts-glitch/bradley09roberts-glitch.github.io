@@ -31,7 +31,23 @@ public final class AmmoRegistry {
         if (stack.getItem() instanceof AmmoItem ammo) {
             return ammo.ammo();
         }
+        if (stack.getItem() instanceof com.terracraft.item.coin.CoinItem coin) {
+            return coinAmmo(coin.value());
+        }
         return VANILLA.get(stack.getItem());
+    }
+
+    private static AmmoInfo coinAmmo(long value) {
+        if (value >= 1_000_000) {
+            return new AmmoInfo(AmmoType.COIN, 200, 4.0F, 1.0F, ProjectileKinds.PLATINUM_COIN_SHOT);
+        }
+        if (value >= 10_000) {
+            return new AmmoInfo(AmmoType.COIN, 100, 3.0F, 0.5F, ProjectileKinds.GOLD_COIN_SHOT);
+        }
+        if (value >= 100) {
+            return new AmmoInfo(AmmoType.COIN, 50, 2.0F, 0.0F, ProjectileKinds.SILVER_COIN_SHOT);
+        }
+        return new AmmoInfo(AmmoType.COIN, 25, 1.0F, 0.0F, ProjectileKinds.COPPER_COIN_SHOT);
     }
 
     /** Finds the first matching ammo stack: offhand, hotbar, then inventory (Terraria uses ammo slots first). */

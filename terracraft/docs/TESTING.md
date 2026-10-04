@@ -155,3 +155,19 @@ to `run-client/config/iris.properties`. NeoForge shows a mod-warnings screen fir
 In a dev run Minecraft validates every render pass (`SharedConstants.IS_RUNNING_IN_IDE`), and Iris's first-person
 hand pass fails that check (`GlCommandEncoder.validateDraw`, index out of bounds). Real installs skip the check, so
 for testing drop in a throwaway mod whose constructor sets `SharedConstants.IS_RUNNING_IN_IDE = false`.
+
+## Stage 5f checks
+
+- Underground Hallow crystals: count with `fill <box> minecraft:sponge replace terracraft:crystal_shard` in 40x20x40
+  slices (then swap back); Gelatin Crystals the same with `terracraft:gelatin_crystal_block`.
+- `execute as Dev at @s run terraria boss spawn queen_slime`; `data modify entity <boss> Health set value 420f` forces
+  her second phase (Minecraft health is capped at 1000 and scaled, so 1000 means full life). Bosses leave when the
+  player is in spectator mode: use survival with Resistance V for camera tests.
+- `/terraria worldgen dungeon rooms` lists Dungeon room floors; with `boss_skeletron_defeated` set, stand in one and
+  wait ~20 s for the Bound Mechanic. Bound NPCs snap back to their spot, so move the player to them
+  (`execute as @e[type=terracraft:bound_mechanic,limit=1] at @s run tp Dev ~ ~ ~-2.2 0 15`), then `xinput.py hold right 0.1`
+  (a `click` moves the mouse first, which turns the camera).
+- `terraria event start pirate_invasion` / `frost_legion`; `summon terracraft:flying_dutchman` (flyers re-assert
+  NoGravity each tick because `/summon` reloads it from NBT). Coin Gun: hold it with coins in the inventory and hold
+  left click; ten Gold Coins take a Pirate Captain from 1000 to 128 life.
+- Creature lineups: build a platform in the sky, summon with `{NoAI:1b,Rotation:[0f,0f]}` once the chunks are loaded.

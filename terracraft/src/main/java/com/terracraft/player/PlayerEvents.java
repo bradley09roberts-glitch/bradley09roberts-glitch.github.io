@@ -108,6 +108,31 @@ public final class PlayerEvents {
         if (player.tickCount % SYNC_INTERVAL == 0 && data.consumeSyncDirty()) {
             sync(player, data);
         }
+        if (player.tickCount % 40 == 0 && data.stats().has(com.terracraft.player.stats.Ability.VOLATILE_GELATIN)) {
+            flingVolatileGel(player);
+        }
+    }
+
+    /** Volatile Gelatin: a bouncing gel ball at the nearest enemy within 12 blocks. */
+    private static void flingVolatileGel(ServerPlayer player) {
+        net.minecraft.world.entity.LivingEntity target = null;
+        double best = Double.MAX_VALUE;
+        for (net.minecraft.world.entity.Mob mob : player.level().getEntitiesOfClass(net.minecraft.world.entity.Mob.class,
+                player.getBoundingBox().inflate(12), m -> m.isAlive() && m instanceof net.minecraft.world.entity.monster.Enemy && player.hasLineOfSight(m))) {
+            double distance = mob.distanceToSqr(player);
+            if (distance < best) {
+                best = distance;
+                target = mob;
+            }
+        }
+        if (target == null) {
+            return;
+        }
+        net.minecraft.world.phys.Vec3 from = player.getEyePosition().add(0, 0.3, 0);
+        net.minecraft.world.phys.Vec3 aim = target.getBoundingBox().getCenter().subtract(from).normalize().add(0, 0.25, 0).normalize();
+        com.terracraft.entity.projectile.TerrariaProjectile.shoot(player.level(), player, com.terracraft.entity.projectile.ProjectileKinds.VOLATILE_GEL,
+            from, aim, 9.0F, 1.0F, 40.0F, com.terracraft.combat.DamageClass.GENERIC, 4, 1.0F);
+        player.level().playSound(null, player.blockPosition(), net.minecraft.sounds.SoundEvents.SLIME_SQUISH_SMALL, net.minecraft.sounds.SoundSource.PLAYERS, 0.6F, 1.4F);
     }
 
     private static void tickLavaImmunity(ServerPlayer player, TerraPlayerData data) {

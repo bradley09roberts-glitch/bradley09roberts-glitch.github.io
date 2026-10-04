@@ -71,12 +71,22 @@ Priority: **A** = very visible / looks clearly wrong today, **B** = noticeable, 
 | C | Boss arrival | chat message | screen shake, Terraria-style boss name banner and boss HUD |
 | C | Hallow / Corruption / Crimson | biome colours | ambient particles (pixie dust, vile spit, blood drops) |
 
+## Stage 5f (built; first versions)
+
+| Pri | What | Today | Improvement |
+|---|---|---|---|
+| A | Queen Slime | slime body + tiara + crystal spikes, flat wings in phase 2 | bigger and rounder gel body, faceted crystal wings that catch the light, a visible crystal heart, transformation flash |
+| A | Flying Dutchman | JSON galleon (hull, castle, two masts, sails, flag, four cannons) | more hull curve and planking, tattered see-through sails, ghostly glow trail, cannons that recoil, a ghost crew on deck |
+| B | Pirates | humanoid + skins | tricorn/bandana as 3D hat layers, peg leg and hook for the Captain, crossbow/musket/cutlass held in hand |
+| B | Frost Legion snowmen | three stacked boxes | rounder snowballs (stepped boxes), coal-lump detail, fedora brim and tommy gun drum, hopping animation |
+| B | Parrot | small JSON bird | longer tail feathers, colour gradient on wings, perched pose for the Pirate NPC's shoulder |
+| C | Heavenly / Crystal / Bouncy Slimes | slime body | Heavenly feathered wings, Crystal Slime shards inside, Bouncy Slime springy squash |
+| C | Crystal Shard / Gelatin Crystal blocks | crossed-plane clusters | real 3D crystal prisms with a pulse of light |
+| C | Mechanic / Pirate NPCs | humanoid + skin | Mechanic's wrench and goggles, Pirate's parrot on the shoulder and eye patch |
+
 ## Future (planned stages) - will need models when they are built
 
-- **Queen Slime** (gelatinous crown, crystal shards, wings in phase 2), Crystal Slime, Bouncy Slime, Heavenly Slime.
-- **Mechanic** NPC (wrench, red hair), Pirate NPC.
-- **Pirate Invasion**: Pirate Deckhand/Corsair/Crossbower/Deadeye, Parrot, **Flying Dutchman** ship with cannons, Pirate Captain.
-- **Frost Legion**: Mister Stabby, Snowman Gangsta, Snow Balla.
+- **Santa Claus** (Frost Legion follow-up), Stylist, Party Girl, Tax Collector.
 - **Plantera**: bulb block, flower head with petals and hooks + tentacles, Planter's Tentacles; Jungle Hardmode enemies (Man Eater hardmode, Angry Trapper, Derpling, Moth).
 - **Lihzahrd Temple**: Lihzahrd, Flying Snake, traps (dart, spiky ball, spear), altar; **Golem** (stone head, fists on chains, body with sun core).
 - **Duke Fishron** (pig-shark dragon), Sharkron; Truffle Worm.

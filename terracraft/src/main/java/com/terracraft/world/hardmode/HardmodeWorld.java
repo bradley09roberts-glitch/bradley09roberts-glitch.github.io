@@ -9,6 +9,9 @@ import com.terracraft.registry.content.EvilContent;
 import com.terracraft.registry.content.HardmodeContent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import com.terracraft.registry.content.QueenSlimeContent;
+import net.minecraft.world.level.block.AmethystClusterBlock;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
@@ -160,6 +163,10 @@ public final class HardmodeWorld {
             convertStripes(level, cx, cz);
             now |= HardmodeChunks.STRIPES;
         }
+        if ((done & HardmodeChunks.CRYSTALS) == 0) {
+            growCrystals(level, cx, cz);
+            now |= HardmodeChunks.CRYSTALS;
+        }
         for (int tier = 1; tier <= Math.min(3, altars); tier++) {
             int bit = HardmodeChunks.tierBit(tier);
             if ((done & bit) == 0) {
@@ -196,6 +203,53 @@ public final class HardmodeWorld {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * The underground Hallow grows Crystal Shards on its cave walls, floors and ceilings, and now and then a Gelatin
+     * Crystal on a cavern floor (Queen Slime's summon).
+     */
+    private static void growCrystals(ServerLevel level, int cx, int cz) {
+        long seed = level.getSeed();
+        RandomSource random = RandomSource.create(seed ^ ChunkPos.pack(cx, cz) * 0x9E3779B97F4A7C15L);
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+        BlockPos gelatinSpot = null;
+        int gelatinCandidates = 0;
+        for (int dx = 0; dx < 16; dx++) {
+            for (int dz = 0; dz < 16; dz++) {
+                int x = cx * 16 + dx;
+                int z = cz * 16 + dz;
+                if (stripe(seed, x, z) != Infection.HALLOW) {
+                    continue;
+                }
+                int top = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 12;
+                for (int y = Math.min(top, 40); y >= Math.max(level.getMinY() + 5, -48); y--) {
+                    pos.set(x, y, z);
+                    if (!level.getBlockState(pos).isAir()) {
+                        continue;
+                    }
+                    for (Direction side : Direction.values()) {
+                        BlockPos support = pos.relative(side);
+                        if (!level.getBlockState(support).is(HardmodeContent.PEARLSTONE.get())) {
+                            continue;
+                        }
+                        if (side == Direction.DOWN && y < 20 && level.getBlockState(pos.above()).isAir()
+                            && random.nextInt(++gelatinCandidates) == 0) {
+                            gelatinSpot = pos.immutable();
+                        }
+                        if (random.nextInt(70) == 0) {
+                            level.setBlock(pos, QueenSlimeContent.CRYSTAL_SHARD.get().defaultBlockState()
+                                .setValue(AmethystClusterBlock.FACING, side.getOpposite()), Block.UPDATE_CLIENTS);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        if (gelatinSpot != null && random.nextInt(8) == 0 && level.getBlockState(gelatinSpot).isAir()) {
+            level.setBlock(gelatinSpot, QueenSlimeContent.GELATIN_CRYSTAL_BLOCK.get().defaultBlockState()
+                .setValue(AmethystClusterBlock.FACING, Direction.UP), Block.UPDATE_CLIENTS);
         }
     }
 

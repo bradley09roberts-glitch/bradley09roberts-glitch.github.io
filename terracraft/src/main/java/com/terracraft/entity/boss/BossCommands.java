@@ -16,17 +16,21 @@ import java.util.function.Supplier;
 
 /** {@code /terraria boss spawn <boss>}, {@code /terraria boss killall}, {@code /terraria boss list}. */
 public final class BossCommands {
-    private static final Map<String, Entry> BOSSES = Map.of(
-        "king_slime", new Entry(MobContent.KING_SLIME, BossSummoning.Arrival.FALL),
-        "eye_of_cthulhu", new Entry(MobContent.EYE_OF_CTHULHU, BossSummoning.Arrival.OFFSCREEN),
-        "eater_of_worlds", new Entry(MobContent.EATER_OF_WORLDS, BossSummoning.Arrival.BURROW),
-        "brain_of_cthulhu", new Entry(MobContent.BRAIN_OF_CTHULHU, BossSummoning.Arrival.NEARBY),
-        "skeletron", new Entry(MobContent.SKELETRON, BossSummoning.Arrival.NEARBY),
-        "queen_bee", new Entry(MobContent.QUEEN_BEE, BossSummoning.Arrival.OFFSCREEN),
-        "wall_of_flesh", new Entry(MobContent.WALL_OF_FLESH, BossSummoning.Arrival.OFFSCREEN),
-        "the_twins", new Entry(MobContent.RETINAZER, BossSummoning.Arrival.OFFSCREEN),
-        "destroyer", new Entry(MobContent.DESTROYER, BossSummoning.Arrival.BURROW),
-        "skeletron_prime", new Entry(MobContent.SKELETRON_PRIME, BossSummoning.Arrival.OFFSCREEN));
+    private static final Map<String, Entry> BOSSES = new java.util.LinkedHashMap<>();
+
+    static {
+        BOSSES.put("king_slime", new Entry(MobContent.KING_SLIME, BossSummoning.Arrival.FALL));
+        BOSSES.put("eye_of_cthulhu", new Entry(MobContent.EYE_OF_CTHULHU, BossSummoning.Arrival.OFFSCREEN));
+        BOSSES.put("eater_of_worlds", new Entry(MobContent.EATER_OF_WORLDS, BossSummoning.Arrival.BURROW));
+        BOSSES.put("brain_of_cthulhu", new Entry(MobContent.BRAIN_OF_CTHULHU, BossSummoning.Arrival.NEARBY));
+        BOSSES.put("skeletron", new Entry(MobContent.SKELETRON, BossSummoning.Arrival.NEARBY));
+        BOSSES.put("queen_bee", new Entry(MobContent.QUEEN_BEE, BossSummoning.Arrival.OFFSCREEN));
+        BOSSES.put("wall_of_flesh", new Entry(MobContent.WALL_OF_FLESH, BossSummoning.Arrival.OFFSCREEN));
+        BOSSES.put("queen_slime", new Entry(MobContent.QUEEN_SLIME, BossSummoning.Arrival.FALL));
+        BOSSES.put("the_twins", new Entry(MobContent.RETINAZER, BossSummoning.Arrival.OFFSCREEN));
+        BOSSES.put("destroyer", new Entry(MobContent.DESTROYER, BossSummoning.Arrival.BURROW));
+        BOSSES.put("skeletron_prime", new Entry(MobContent.SKELETRON_PRIME, BossSummoning.Arrival.OFFSCREEN));
+    }
 
     private record Entry(Supplier<? extends EntityType<? extends net.minecraft.world.entity.Mob>> type, BossSummoning.Arrival arrival) {}
 

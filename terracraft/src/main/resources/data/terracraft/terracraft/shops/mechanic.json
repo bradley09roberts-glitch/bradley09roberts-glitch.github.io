@@ -1,0 +1,85 @@
+{
+  "npc": "mechanic",
+  "items": [
+    {
+      "item": "minecraft:redstone",
+      "price": 50
+    },
+    {
+      "item": "minecraft:redstone_torch",
+      "price": 200
+    },
+    {
+      "item": "minecraft:lever",
+      "price": 200
+    },
+    {
+      "item": "minecraft:stone_button",
+      "price": 200
+    },
+    {
+      "item": "minecraft:stone_pressure_plate",
+      "price": 500
+    },
+    {
+      "item": "minecraft:heavy_weighted_pressure_plate",
+      "price": 500
+    },
+    {
+      "item": "minecraft:repeater",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:comparator",
+      "price": 1500
+    },
+    {
+      "item": "minecraft:observer",
+      "price": 1500
+    },
+    {
+      "item": "minecraft:piston",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:sticky_piston",
+      "price": 1500
+    },
+    {
+      "item": "minecraft:dispenser",
+      "price": 2000
+    },
+    {
+      "item": "minecraft:redstone_lamp",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:daylight_detector",
+      "price": 2000
+    },
+    {
+      "item": "minecraft:target",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:tripwire_hook",
+      "price": 500
+    },
+    {
+      "item": "minecraft:powered_rail",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:detector_rail",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:activator_rail",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:rail",
+      "price": 50
+    }
+  ]
+}

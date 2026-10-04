@@ -442,10 +442,47 @@ def hallowed_set():
     return a
 
 
+def crystal_assassin_set():
+    # Crystal Assassin (Queen Slime): a violet ninja hood with a cloth mask over the mouth, pink gel-crystal points
+    # on the brow and shoulders, a wrapped shirt with a sash, and wrapped trousers
+    a = Armor('crystal_assassin', {'main': '#7A4AA8', 'chain': '#4A2A6A', 'trim': '#C8A8E8', 'dark': '#1A1028', 'accent': '#F070D0',
+                                   'gem': '#A8E8FF', 'dark_edge': '#2A1A40', 'buckle': '#A8E8FF'})
+    a.add('head', 'head', (-4, -8, -4), (8, 8, 8), mat='main', pattern='cloth', inflate=1.0, faces={'down': 'none', 'north': 'none'})
+    a.add('head', 'head', (-4, -3.5, -4.6), (8, 3, 1), mat='chain', pattern='cloth', edge='trim')     # mask over mouth and nose
+    a.add('head', 'head', (-4, -8.6, -4.6), (8, 2, 1), mat='main', pattern='cloth', edge='trim')     # hood rim over the brow
+    for x, h in ((-2.5, 2), (-0.5, 3), (1.5, 2)):
+        a.add('head', 'head', (x, -9.6 - h, -4.4), (1, h, 1), mat='gem', pattern='gem')
+    a.add('head', 'head', (-1, -11, 3), (2, 4, 3), mat='main', pattern='cloth', pivot=[0, -8, 4], rot=[0.6, 0, 0])   # hood tail
+    torso(a, base='cloth', plate='cloth', base_mat='chain', mat='main', edge='trim', pads='none', abs_plates=False, belt='accent')
+    a.add('chest', 'body', (-3.6, -0.4, -3.9), (2, 11, 1), mat='accent', pattern='belt', pivot=[0, 0, -3.5], rot=[0, 0, -0.5])   # sash
+    a.pair('chest', 'right_arm', (-4, -3.5, -1), (3, 2, 2), mat='accent', pattern='gem')   # gel-crystal shoulder points
+    a.pair('legs', 'right_leg', (-2, 0, -2), (4, 12, 4), mat='chain', pattern='cloth', inflate=0.5, faces={'up': 'none'})
+    a.pair('legs', 'right_leg', (-2, 5, -2), (4, 4, 4), mat='main', pattern='wrap', inflate=0.7, faces={'up': 'none', 'down': 'none'})
+    a.pair('legs', 'right_leg', (-2, 9, -2), (4, 3, 4), mat='dark', pattern='cloth', inflate=0.8, faces={'up': 'none'})
+    a.add('legs', 'body', (-4, 8, -2), (8, 4, 4), mat='accent', pattern='belt', inflate=0.55, faces={'up': 'none', 'down': 'none'})
+    return a
+
+
+def pirate_set():
+    # The Pirate's costume (vanity): a black tricorn with a white trim and skull, a long green coat over a white
+    # shirt with a red sash, and striped trousers tucked into boots
+    a = Armor('pirate', {'main': '#3A5A3A', 'chain': '#E8E0D0', 'trim': '#E8D8B0', 'dark': '#1A1A1A', 'accent': '#B02828',
+                         'hat': '#1A1A1A', 'bone': '#E8E0C8', 'dark_edge': '#122012', 'buckle': '#C8A040', 'stripe': '#3A3A44'})
+    a.add('head', 'head', (-4.5, -9.5, -4.5), (9, 2, 9), mat='hat', pattern='cloth', edge='trim', faces={'down': 'none'})
+    a.add('head', 'head', (-7, -8, -3), (14, 1, 6), mat='hat', pattern='cloth', edge='trim')            # wide brim (side points)
+    a.add('head', 'head', (-3, -8, -6.5), (6, 1, 3), mat='hat', pattern='cloth', edge='trim')            # front point
+    a.add('head', 'head', (-1, -9, -4.8), (2, 2, 0.5), mat='bone', pattern='bone')                       # skull badge
+    torso(a, base='cloth', plate='cloth', base_mat='chain', mat='main', edge='trim', pads='none', abs_plates=False, belt='accent')
+    a.add('chest', 'body', (-4, 8, -2), (8, 6, 4), mat='main', pattern='cloth', inflate=1.2, faces={'up': 'none'})   # coat tails
+    a.pair('legs', 'right_leg', (-2, 0, -2), (4, 8, 4), mat='stripe', pattern='bands', inflate=0.5, faces={'up': 'none'})
+    a.pair('legs', 'right_leg', (-2, 7, -2), (4, 5, 4), mat='dark', pattern='cloth', inflate=0.8, faces={'up': 'none'})
+    return a
+
+
 def all_sets():
     return [wood_set(), copper_set(), tin_set(), iron_set(), lead_set(), silver_set(), tungsten_set(), gold_set(), platinum_set(),
             shadow_set(), crimson_set(), jungle_set(), molten_set(), meteor_set(),
-            cobalt_set(), palladium_set(), mythril_set(), orichalcum_set(), adamantite_set(), titanium_set(), hallowed_set()]
+            cobalt_set(), palladium_set(), mythril_set(), orichalcum_set(), adamantite_set(), titanium_set(), hallowed_set(), crystal_assassin_set(), pirate_set()]
 
 
 # ----------------------------------------------------------------------------------------- UV packing

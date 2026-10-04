@@ -1,0 +1,37 @@
+{
+  "npc": "pirate",
+  "items": [
+    {
+      "item": "terracraft:cannonball",
+      "price": 1500
+    },
+    {
+      "item": "terracraft:pirate_hat",
+      "price": 20000
+    },
+    {
+      "item": "terracraft:pirate_shirt",
+      "price": 20000
+    },
+    {
+      "item": "terracraft:pirate_pants",
+      "price": 20000
+    },
+    {
+      "item": "minecraft:spyglass",
+      "price": 5000
+    },
+    {
+      "item": "minecraft:compass",
+      "price": 2500
+    },
+    {
+      "item": "minecraft:map",
+      "price": 1000
+    },
+    {
+      "item": "minecraft:oak_boat",
+      "price": 1000
+    }
+  ]
+}

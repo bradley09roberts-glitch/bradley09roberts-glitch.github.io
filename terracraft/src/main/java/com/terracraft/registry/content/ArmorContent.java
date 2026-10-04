@@ -84,7 +84,20 @@ public final class ArmorContent {
             StatEffects.builder().add(Stat.DAMAGE, 0.07F).add(Stat.MOVE_SPEED, 0.08F).build()},
         StatEffects.builder().add(Stat.MELEE_SPEED, 0.15F).add(Stat.MOVE_SPEED, 0.15F).build(), TerraRarity.PINK, 50000);
 
+    /** Crystal Assassin armor (Queen Slime): damage and crit; the set bonus adds speed and damage (Terraria's dash set). */
+    public static final ArmorPieces CRYSTAL_ASSASSIN = named("crystal_assassin", new String[]{"crystal_assassin_hood", "crystal_assassin_shirt",
+            "crystal_assassin_pants"}, new int[]{7, 10, 8},
+        new StatEffects[]{StatEffects.builder().add(Stat.DAMAGE, 0.1F).add(Stat.CRIT, 5).build(), StatEffects.builder().add(Stat.DAMAGE, 0.1F).add(Stat.CRIT, 5).build(),
+            StatEffects.builder().add(Stat.DAMAGE, 0.1F).add(Stat.CRIT, 5).build()},
+        StatEffects.builder().add(Stat.MOVE_SPEED, 0.2F).add(Stat.DAMAGE, 0.1F).add(Stat.JUMP_HEIGHT, 0.15F).build(), TerraRarity.PINK, 40000);
+
     private ArmorContent() {}
+
+    /** A vanity costume: three pieces with no defense and no set bonus (the Pirate's clothes). */
+    static ArmorPieces vanity(String set, String helmet, String chest, String legs) {
+        return named(set, new String[]{helmet, chest, legs}, new int[]{0, 0, 0},
+            new StatEffects[]{StatEffects.NONE, StatEffects.NONE, StatEffects.NONE}, StatEffects.NONE, TerraRarity.WHITE, 20000);
+    }
 
     /** A set whose pieces have their own Terraria names and per-piece bonuses. */
     private static ArmorPieces named(String set, String[] names, int[] defense, StatEffects[] pieceEffects, StatEffects bonus, TerraRarity rarity,

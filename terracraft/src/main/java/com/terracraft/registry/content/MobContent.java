@@ -288,6 +288,49 @@ public final class MobContent {
     public static final RegistryObject<EntityType<com.terracraft.entity.boss.SkeletronPrime.Arm>> PRIME_LASER = primeArm("prime_laser",
         com.terracraft.entity.boss.SkeletronPrime.Arm.Kind.LASER, MobDefinition.builder().life(6000).damage(29).defense(20));
 
+    // --- Queen Slime (Hardmode, the Hallow) ------------------------------------------------------------------
+    public static final RegistryObject<EntityType<SlimeMob>> CRYSTAL_SLIME = slime("crystal_slime", 0.8F, 0.6F,
+        MobDefinition.builder().life(300).damage(50).defense(25).coins(0));
+    public static final RegistryObject<EntityType<SlimeMob>> BOUNCY_SLIME = register("bouncy_slime", (type, level) -> new SlimeMob(type, level, 1.6F),
+        0.9F, 0.7F, MobDefinition.builder().life(300).damage(55).defense(25).coins(0));
+    public static final RegistryObject<EntityType<FlyerMob>> HEAVENLY_SLIME = register("heavenly_slime",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.CHASER), 0.8F, 0.6F,
+        MobDefinition.builder().life(250).damage(55).defense(20).knockbackTaken(0.6F).coins(0).speed(0.28).followRange(48));
+    public static final RegistryObject<EntityType<com.terracraft.entity.boss.QueenSlime>> QUEEN_SLIME = register("queen_slime",
+        com.terracraft.entity.boss.QueenSlime::new, 2.6F, 2.2F,
+        MobDefinition.builder().life(18000).damage(60).defense(26).knockbackTaken(0.0F).coins(100_000).followRange(160));
+
+    // --- Pirate Invasion -------------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<WalkerMob>> PIRATE_DECKHAND = register("pirate_deckhand", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(200).damage(40).defense(14).knockbackTaken(0.5F).coins(600).speed(0.3));
+    public static final RegistryObject<EntityType<WalkerMob>> PIRATE_CORSAIR = register("pirate_corsair", WalkerMob::new, 0.6F, 1.8F,
+        MobDefinition.builder().life(300).damage(50).defense(18).knockbackTaken(0.4F).coins(800).speed(0.36));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> PIRATE_CROSSBOWER = register("pirate_crossbower",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.ENEMY_ARROW, 40.0F),
+        0.6F, 1.8F, MobDefinition.builder().life(250).damage(30).defense(16).knockbackTaken(0.5F).coins(800).speed(0.26));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> PIRATE_DEADEYE = register("pirate_deadeye",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.ENEMY_BULLET, 40.0F),
+        0.6F, 1.8F, MobDefinition.builder().life(250).damage(30).defense(16).knockbackTaken(0.5F).coins(800).speed(0.26));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> PIRATE_CAPTAIN = register("pirate_captain",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.ENEMY_CANNONBALL, 60.0F),
+        0.7F, 2.0F, MobDefinition.builder().life(2000).damage(60).defense(25).knockbackTaken(0.2F).coins(5000).speed(0.22));
+    public static final RegistryObject<EntityType<FlyerMob>> PARROT = register("parrot",
+        (type, level) -> new FlyerMob(type, level, FlyerMob.Style.ERRATIC), 0.5F, 0.6F,
+        MobDefinition.builder().life(100).damage(45).defense(10).knockbackTaken(0.8F).coins(300).speed(0.34).followRange(40));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.FlyingDutchman>> FLYING_DUTCHMAN = register("flying_dutchman",
+        com.terracraft.entity.mob.FlyingDutchman::new, 7.0F, 5.0F,
+        MobDefinition.builder().life(10000).damage(70).defense(30).knockbackTaken(0.0F).coins(50_000).followRange(80));
+
+    // --- Frost Legion -----------------------------------------------------------------------------------------
+    public static final RegistryObject<EntityType<WalkerMob>> MISTER_STABBY = register("mister_stabby", WalkerMob::new, 0.7F, 1.8F,
+        MobDefinition.builder().life(200).damage(50).defense(10).knockbackTaken(0.5F).coins(400).speed(0.36));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> SNOWMAN_GANGSTA = register("snowman_gangsta",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.ENEMY_BULLET, 25.0F),
+        0.7F, 1.8F, MobDefinition.builder().life(200).damage(20).defense(10).knockbackTaken(0.5F).coins(400).speed(0.26));
+    public static final RegistryObject<EntityType<com.terracraft.entity.mob.ArcherMob>> SNOW_BALLA = register("snow_balla",
+        (type, level) -> new com.terracraft.entity.mob.ArcherMob(type, level, () -> com.terracraft.entity.projectile.ProjectileKinds.ENEMY_SNOWBALL, 30.0F),
+        0.7F, 1.8F, MobDefinition.builder().life(200).damage(20).defense(10).knockbackTaken(0.5F).coins(400).speed(0.26));
+
     private MobContent() {}
 
     public static void init() {

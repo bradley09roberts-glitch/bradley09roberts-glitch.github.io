@@ -35,6 +35,9 @@ public final class NpcContent {
     public static final RegistryObject<EntityType<TownNpc>> WIZARD = npc("wizard");
     public static final RegistryObject<EntityType<TownNpc>> STEAMPUNKER = npc("steampunker");
     public static final RegistryObject<EntityType<TownNpc>> WITCH_DOCTOR = npc("witch_doctor");
+    public static final RegistryObject<EntityType<TownNpc>> BOUND_MECHANIC = npc("bound_mechanic");
+    public static final RegistryObject<EntityType<TownNpc>> MECHANIC = npc("mechanic");
+    public static final RegistryObject<EntityType<TownNpc>> PIRATE = npc("pirate");
 
     public static final RegistryObject<com.terracraft.item.tool.ClentaminatorItem> CLENTAMINATOR = ModItems.register("clentaminator", TabGroup.TOOLS_ARMOR,
         com.terracraft.item.tool.ClentaminatorItem::new,

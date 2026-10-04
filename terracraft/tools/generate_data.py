@@ -238,6 +238,16 @@ def hardmode():
     write(f'{NS}/terracraft/mining_power/pearlstone.json', {'pickaxe_power': 65, 'blocks': [t('pearlstone')]})
 
 
+QS_BLOCKS = ['crystal_shard']
+
+
+def queen_slime():
+    write(f'{NS}/loot_table/blocks/crystal_shard.json', self_loot('crystal_shard'))
+    write(f'{NS}/loot_table/blocks/gelatin_crystal_block.json', {
+        'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': t('gelatin_crystal')}]}],
+        'random_sequence': f'{NS}:blocks/gelatin_crystal_block'})
+
+
 def blocks():
     for m in METALS:
         for ore in (f'{m}_ore', f'deepslate_{m}_ore'):
@@ -251,7 +261,7 @@ def blocks():
                                                                    t('ebonstone'), t('crimstone'), t('demonite_ore'), t('crimtane_ore'),
                                                                    t('blue_brick'), t('green_brick'), t('pink_brick'), t('spikes'), t('hive'), t('hellstone'),
                                                                    t('obsidian_brick'), t('hellstone_brick'), t('hellforge'), t('meteorite')]
-                                                                   + [t(b) for b in HM_ORES + ['pearlstone', 'mythril_anvil', 'orichalcum_anvil', 'adamantite_forge', 'titanium_forge']]})
+                                                                   + [t(b) for b in HM_ORES + ['pearlstone', 'mythril_anvil', 'orichalcum_anvil', 'adamantite_forge', 'titanium_forge', 'crystal_shard', 'gelatin_crystal_block']]})
     write('minecraft/tags/block/needs_stone_tool.json', {'values': [t(f'{p}{m}_ore') for m in STONE_TIER for p in ('', 'deepslate_')]})
     write('minecraft/tags/block/needs_iron_tool.json', {'values': [t(f'{p}{m}_ore') for m in IRON_TIER for p in ('', 'deepslate_')]})
     write(f'{NS}/tags/block/mineable/hammer.json', {'values': [t('shadow_orb'), t('crimson_heart'), t('demon_altar'), t('crimson_altar')]})
@@ -427,6 +437,8 @@ def terraria_recipes():
     recipe('lesser_healing_potion', t('lesser_healing_potion'), [(t('gel'), 2), ('minecraft:red_mushroom', 1), ('minecraft:glass_bottle', 2)], [ALCHEMY], count=2, category='consumables')
     recipe('lesser_mana_potion', t('lesser_mana_potion'), [(t('gel'), 2), (t('fallen_star'), 1), ('minecraft:glass_bottle', 2)], [ALCHEMY], count=2, category='consumables')
     recipe('healing_potion', t('healing_potion'), [(t('lesser_healing_potion'), 2), ('minecraft:glow_berries', 1)], [ALCHEMY], category='consumables')
+    recipe('greater_healing_potion', t('greater_healing_potion'), [('minecraft:glass_bottle', 3), (t('pixie_dust'), 3), (t('crystal_shard'), 1)],
+           [ALCHEMY], count=3, category='consumables')
     recipe('mana_potion', t('mana_potion'), [(t('lesser_mana_potion'), 2), ('minecraft:glow_berries', 1)], [ALCHEMY], category='consumables')
     # ---- ore equipment at an anvil (Terraria bar counts)
     armor_cost = [(15, 25, 20), (20, 30, 25), (25, 35, 30), (30, 40, 35)]
@@ -508,7 +520,7 @@ def lang():
     items_dir = os.path.join(RES, 'assets/terracraft/items')
     for fname in sorted(os.listdir(items_dir)):
         name = fname[:-5]
-        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in JUNGLE_BLOCKS or name in UNDERWORLD_BLOCKS or name in GOBLIN_BLOCKS or name in HM_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
+        key = ('block.' if name in ORES or name in EVIL_BLOCKS or name in DUNGEON_BLOCKS or name in JUNGLE_BLOCKS or name in UNDERWORLD_BLOCKS or name in GOBLIN_BLOCKS or name in HM_BLOCKS or name in QS_BLOCKS or name in ('work_bench', 'iron_anvil', 'lead_anvil')
                else 'item.') + f'{NS}.{name}'
         L[key] = title(name)
     L['block.terracraft.life_crystal_block'] = 'Life Crystal'
@@ -756,6 +768,7 @@ def lang():
         'event.terracraft.goblin_army': 'Goblin Army',
         'event.terracraft.goblin_army.start': 'A goblin army is approaching!',
         'event.terracraft.goblin_army.end': 'The Goblin Army has been defeated!',
+        'npc.terracraft.mechanic.rescued': "Thank you, %s! I'd have been stuck in that dungeon forever. I'll set up shop in your town.",
         'npc.terracraft.wizard.rescued': "Ah, %s! The spell I was casting on myself went... sideways. Thank you. I'll see myself to your town.",
         'item.terracraft.clentaminator.tooltip': 'Sprays the solution in your inventory to convert biomes',
         'item.terracraft.green_solution.tooltip': 'Purifies the Corruption, Crimson and Hallow',
@@ -783,6 +796,33 @@ def lang():
         'modifier.terracraft.line.move_speed': '%s movement speed',
         'modifier.terracraft.line.melee_speed': '%s melee speed',
         'ability.terracraft.free_space_gun': 'Space Gun costs no mana',
+        'ability.terracraft.volatile_gelatin': 'Flings bouncing gel at nearby enemies',
+        'ability.terracraft.coin_magnet': 'Increases coin pickup range',
+        'ability.terracraft.lucky_coin': 'Hitting enemies will sometimes drop extra coins',
+        'ability.terracraft.discount': 'Shops have lower prices',
+        'item.terracraft.pirate_map.tooltip': 'Summons a Pirate Invasion',
+        'item.terracraft.coin_gun.tooltip': "Uses coins for ammo\n'Higher valued coins do more damage'",
+        'item.terracraft.cannonball.tooltip': 'Explodes on impact',
+        'item.terracraft.lucky_coin.tooltip': 'Hitting enemies will sometimes drop extra coins',
+        'item.terracraft.gold_ring.tooltip': 'Increases coin pickup range',
+        'item.terracraft.discount_card.tooltip': 'Shops have lower prices',
+        'item.terracraft.pirate_hat.tooltip': "Vanity",
+        'item.terracraft.pirate_shirt.tooltip': "Vanity",
+        'item.terracraft.pirate_pants.tooltip': "Vanity",
+        'ammo.terracraft.coin': 'coins',
+        'event.terracraft.frost_legion': 'Frost Legion',
+        'event.terracraft.frost_legion.start': 'The Frost Legion is coming!',
+        'event.terracraft.frost_legion.end': 'The Frost Legion has been defeated!',
+        'item.terracraft.present.tooltip': 'Right click to open',
+        'item.terracraft.snow_globe.tooltip': 'Summons the Frost Legion',
+        'event.terracraft.pirate_invasion': 'Pirate Invasion',
+        'event.terracraft.pirate_invasion.start': 'Pirates are approaching!',
+        'event.terracraft.pirate_invasion.end': 'The pirates have been defeated!',
+        'event.terracraft.pirate_invasion.dutchman': 'The Flying Dutchman has appeared!',
+        'item.terracraft.gelatin_crystal.tooltip': 'Summons Queen Slime in the Hallow',
+        'item.terracraft.volatile_gelatin.tooltip': 'Releases volatile gelatin that bounces off enemies',
+        'item.terracraft.crystal_shard.tooltip': "'Grows in the underground Hallow'",
+        'block.terracraft.gelatin_crystal_block': 'Gelatin Crystal',
         'message.terracraft.ore_blessing': 'Your world has been blessed with %s!',
         'ore.terracraft.cobalt': 'Cobalt',
         'ore.terracraft.palladium': 'Palladium',
@@ -800,6 +840,7 @@ def lang():
         'block.terracraft.pearlstone.tooltip': 'Shimmers with holy light',
         'entity.terracraft.the_twins': 'The Twins',
         'armor_set.terracraft.hallowed.bonus': '15% increased melee and movement speed',
+        'armor_set.terracraft.crystal_assassin.bonus': '20% increased movement speed, 10% increased damage and higher jumps',
         'item.terracraft.mechanical_worm.tooltip': 'Summons the Destroyer',
         'item.terracraft.mechanical_eye.tooltip': 'Summons the Twins',
         'item.terracraft.mechanical_skull.tooltip': 'Summons Skeletron Prime',
@@ -964,6 +1005,20 @@ MOBS = {
     'prime_saw': ('Prime Saw', []),
     'prime_vice': ('Prime Vice', []),
     'prime_laser': ('Prime Laser', []),
+    'queen_slime': ('Queen Slime', []),
+    'mister_stabby': ('Mister Stabby', [('minecraft:snowball', 2, 5, 0.5)]),
+    'snowman_gangsta': ('Snowman Gangsta', [('minecraft:snowball', 2, 5, 0.5)]),
+    'snow_balla': ('Snow Balla', [('minecraft:snowball', 2, 5, 0.5)]),
+    'pirate_deckhand': ('Pirate Deckhand', [('cutlass', 1, 1, 0.005), ('gold_ring', 1, 1, 0.004), ('lucky_coin', 1, 1, 0.004), ('discount_card', 1, 1, 0.004), ('coin_gun', 1, 1, 0.0005)]),
+    'pirate_corsair': ('Pirate Corsair', [('cutlass', 1, 1, 0.005), ('gold_ring', 1, 1, 0.004), ('lucky_coin', 1, 1, 0.004), ('discount_card', 1, 1, 0.004), ('coin_gun', 1, 1, 0.0005)]),
+    'pirate_crossbower': ('Pirate Crossbower', [('cutlass', 1, 1, 0.005), ('gold_ring', 1, 1, 0.004), ('lucky_coin', 1, 1, 0.004), ('discount_card', 1, 1, 0.004), ('coin_gun', 1, 1, 0.0005)]),
+    'pirate_deadeye': ('Pirate Deadeye', [('cutlass', 1, 1, 0.005), ('gold_ring', 1, 1, 0.004), ('lucky_coin', 1, 1, 0.004), ('discount_card', 1, 1, 0.004), ('coin_gun', 1, 1, 0.0005)]),
+    'pirate_captain': ('Pirate Captain', [('cutlass', 1, 1, 0.02), ('gold_ring', 1, 1, 0.016), ('lucky_coin', 1, 1, 0.016), ('discount_card', 1, 1, 0.016), ('coin_gun', 1, 1, 0.002)]),
+    'parrot': ('Parrot', [('cutlass', 1, 1, 0.005), ('gold_ring', 1, 1, 0.004), ('lucky_coin', 1, 1, 0.004), ('discount_card', 1, 1, 0.004), ('coin_gun', 1, 1, 0.0005)]),
+    'flying_dutchman': ('Flying Dutchman', [('cutlass', 1, 1, 0.25), ('gold_ring', 1, 1, 0.25), ('lucky_coin', 1, 1, 0.25), ('discount_card', 1, 1, 0.25), ('coin_gun', 1, 1, 0.05), ('gold_coin', 3, 8, 1.0)]),
+    'crystal_slime': ('Crystal Slime', [('gel', 1, 3, 1.0)]),
+    'bouncy_slime': ('Bouncy Slime', [('gel', 1, 3, 1.0)]),
+    'heavenly_slime': ('Heavenly Slime', [('gel', 1, 3, 1.0)]),
     'king_slime': ('King Slime', [('gel', 40, 80, 1.0), ('slime_crown', 1, 1, 0.1)]),
     'eye_of_cthulhu': ('Eye of Cthulhu', [('lens', 3, 6, 1.0)]),
 }
@@ -1060,6 +1115,19 @@ SPAWNS = {
         dict(entity='voodoo_demon', weight=2, layers=['underworld'], placement='air'),
         dict(entity='hellbat', weight=6, layers=['underworld'], placement='air'),
         dict(entity='bone_serpent', weight=2, layers=['underworld']),
+    ],
+    'frost_legion': [
+        dict(entity='mister_stabby', weight=10, layers=['surface'], group=[1, 3], event='frost_legion'),
+        dict(entity='snowman_gangsta', weight=7, layers=['surface'], group=[1, 2], event='frost_legion'),
+        dict(entity='snow_balla', weight=7, layers=['surface'], group=[1, 2], event='frost_legion'),
+    ],
+    'pirate_invasion': [
+        dict(entity='pirate_deckhand', weight=10, layers=['surface'], group=[1, 3], event='pirate_invasion'),
+        dict(entity='pirate_corsair', weight=7, layers=['surface'], group=[1, 2], event='pirate_invasion'),
+        dict(entity='pirate_crossbower', weight=5, layers=['surface'], event='pirate_invasion'),
+        dict(entity='pirate_deadeye', weight=5, layers=['surface'], event='pirate_invasion'),
+        dict(entity='parrot', weight=6, layers=['surface'], placement='air', event='pirate_invasion'),
+        dict(entity='pirate_captain', weight=1, layers=['surface'], event='pirate_invasion'),
     ],
     'goblin_army': [
         dict(entity='goblin_peon', weight=10, layers=['surface'], group=[1, 3], event='goblin_army'),
@@ -1215,7 +1283,7 @@ def worldgen():
 NPC_NAMES = {'guide': 'Guide', 'merchant': 'Merchant', 'nurse': 'Nurse', 'demolitionist': 'Demolitionist',
              'arms_dealer': 'Arms Dealer', 'dryad': 'Dryad', 'old_man': 'Old Man', 'clothier': 'Clothier', 'bound_goblin': 'Bound Goblin',
              'goblin_tinkerer': 'Goblin Tinkerer', 'bound_wizard': 'Bound Wizard', 'wizard': 'Wizard', 'steampunker': 'Steampunker',
-             'witch_doctor': 'Witch Doctor'}
+             'witch_doctor': 'Witch Doctor', 'bound_mechanic': 'Bound Mechanic', 'mechanic': 'Mechanic', 'pirate': 'Pirate'}
 NPC_DIALOGUE = {
     'guide': [
         "Hello, %s. If you're new here, chop some trees and build a shelter before nightfall.",
@@ -1309,6 +1377,23 @@ NPC_DIALOGUE['steampunker'] = [
     "Mind the purple solution. It gets everywhere, and I do mean everywhere.",
     "Tick, tock, tick, tock. Everything runs on gears if you look closely enough.",
 ]
+NPC_DIALOGUE['bound_mechanic'] = ["Thank you for freeing me, %s!"]
+NPC_DIALOGUE['mechanic'] = [
+    "Wire is cheaper than you'd think, %s. Want to build something that goes click?",
+    "That old man had me locked up down there for ages. I spent the time rewiring his traps.",
+    "Levers, pressure plates, repeaters... give me a pile of redstone and an afternoon.",
+    "If it moves and shouldn't, that's a job for the wrench. If it doesn't and should, that's a job for wire.",
+    "My brother tinkers with goblin gadgets. I prefer things that actually stay in one piece.",
+    "A good trap starts with a good pressure plate. Trust me, I've stepped on enough of them.",
+]
+NPC_DIALOGUE['pirate'] = [
+    "Arrr, %s! Ye look like a landlubber who could use a cannonball or two.",
+    "Me ship? Sunk, matey. Ye scallywags sent it to Davy Jones' locker. No hard feelings.",
+    "That ghost ship still haunts me dreams. The Dutchman never pays its crew, ye know.",
+    "Treasure be not always gold. Sometimes it be a fine hat. Want one?",
+    "Keep yer coins close and yer Lucky Coin closer, I always say.",
+    "Yo ho! What be the difference between a pirate and a merchant? About three cannons.",
+]
 NPC_DIALOGUE['witch_doctor'] = [
     "The jungle speaks, %s. Today it says you look tired.",
     "The Queen of the hive is gone. Her stingers are mine now. Perhaps yours, for a price.",
@@ -1388,6 +1473,38 @@ SHOPS = {
         {'item': 'minecraft:piston', 'price': 1000},
         {'item': 'minecraft:clock', 'price': 2000},
     ],
+    'mechanic': [
+        {'item': 'minecraft:redstone', 'price': 50},
+        {'item': 'minecraft:redstone_torch', 'price': 200},
+        {'item': 'minecraft:lever', 'price': 200},
+        {'item': 'minecraft:stone_button', 'price': 200},
+        {'item': 'minecraft:stone_pressure_plate', 'price': 500},
+        {'item': 'minecraft:heavy_weighted_pressure_plate', 'price': 500},
+        {'item': 'minecraft:repeater', 'price': 1000},
+        {'item': 'minecraft:comparator', 'price': 1500},
+        {'item': 'minecraft:observer', 'price': 1500},
+        {'item': 'minecraft:piston', 'price': 1000},
+        {'item': 'minecraft:sticky_piston', 'price': 1500},
+        {'item': 'minecraft:dispenser', 'price': 2000},
+        {'item': 'minecraft:redstone_lamp', 'price': 1000},
+        {'item': 'minecraft:daylight_detector', 'price': 2000},
+        {'item': 'minecraft:target', 'price': 1000},
+        {'item': 'minecraft:tripwire_hook', 'price': 500},
+        {'item': 'minecraft:powered_rail', 'price': 1000},
+        {'item': 'minecraft:detector_rail', 'price': 1000},
+        {'item': 'minecraft:activator_rail', 'price': 1000},
+        {'item': 'minecraft:rail', 'price': 50},
+    ],
+    'pirate': [
+        {'item': t('cannonball'), 'price': 1500},
+        {'item': t('pirate_hat'), 'price': 20000},
+        {'item': t('pirate_shirt'), 'price': 20000},
+        {'item': t('pirate_pants'), 'price': 20000},
+        {'item': 'minecraft:spyglass', 'price': 5000},
+        {'item': 'minecraft:compass', 'price': 2500},
+        {'item': 'minecraft:map', 'price': 1000},
+        {'item': 'minecraft:oak_boat', 'price': 1000},
+    ],
     'witch_doctor': [
         {'item': t('leaf_wings'), 'price': 200000, 'condition': 'hardmode_active', 'time': 'night'},
         {'item': t('stinger'), 'price': 500},
@@ -1460,6 +1577,7 @@ def main():
     underworld()
     goblins()
     hardmode()
+    queen_slime()
     damage()
     smelting()
     terraria_recipes()

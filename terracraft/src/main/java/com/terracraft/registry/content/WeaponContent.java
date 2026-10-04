@@ -163,7 +163,7 @@ public final class WeaponContent {
     public static final RegistryObject<MeleeWeaponItem> TITANIUM_SWORD = sword("titanium_sword", 60, 22, 5.5F, 0, TerraRarity.LIGHT_RED, 32000);
     public static final RegistryObject<RangedWeaponItem> TITANIUM_REPEATER = bow("titanium_repeater", 42, 20, 2.0F, 10.0F, TerraRarity.LIGHT_RED, 32000);
 
-    private static RegistryObject<MeleeWeaponItem> sword(String name, int damage, int useTime, float knockback, int crit, TerraRarity rarity, int value) {
+    static RegistryObject<MeleeWeaponItem> sword(String name, int damage, int useTime, float knockback, int crit, TerraRarity rarity, int value) {
         TerraItemStats stats = TerraItemStats.builder().melee(damage).useTime(useTime).knockback(knockback).crit(crit).rarity(rarity).value(value).build();
         return ModItems.register(name, TabGroup.WEAPONS, MeleeWeaponItem::new, p -> WeaponProperties.melee(p, stats));
     }
@@ -172,14 +172,14 @@ public final class WeaponContent {
         return ranged(name, AmmoType.ARROW, SoundEvents.ARROW_SHOOT, damage, useTime, knockback, velocity, rarity, value);
     }
 
-    private static RegistryObject<RangedWeaponItem> ranged(String name, AmmoType ammo, SoundEvent sound, int damage, int useTime, float knockback,
+    static RegistryObject<RangedWeaponItem> ranged(String name, AmmoType ammo, SoundEvent sound, int damage, int useTime, float knockback,
                                                           float velocity, TerraRarity rarity, int value) {
         TerraItemStats stats = TerraItemStats.builder().ranged(damage).useTime(useTime).knockback(knockback).velocity(velocity).rarity(rarity).value(value).build();
         return ModItems.register(name, TabGroup.WEAPONS, p -> new RangedWeaponItem(p, ammo, sound, 1.0F, 1, 0.0F),
             p -> WeaponProperties.stats(p.stacksTo(1), stats));
     }
 
-    private static RegistryObject<ThrownWeaponItem> thrown(String name, ProjectileKind kind, boolean consumable, int damage, int useTime,
+    static RegistryObject<ThrownWeaponItem> thrown(String name, ProjectileKind kind, boolean consumable, int damage, int useTime,
                                                           float knockback, float velocity, int value) {
         TerraItemStats stats = TerraItemStats.builder().ranged(damage).useTime(useTime).knockback(knockback).velocity(velocity).value(value).build();
         return ModItems.register(name, TabGroup.WEAPONS, p -> new ThrownWeaponItem(p, kind, consumable),

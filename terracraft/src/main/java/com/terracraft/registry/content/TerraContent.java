@@ -23,5 +23,8 @@ public final class TerraContent {
         GoblinContent.init();
         MeteorContent.init();
         HardmodeContent.init();
+        QueenSlimeContent.init();
+        PirateContent.init();
+        FrostLegionContent.init();
     }
 }

@@ -137,6 +137,27 @@ public final class CreatureRenderers {
         json(event, MobContent.PRIME_SAW.get(), "prime_saw", 1.0F, 0.4F);
         json(event, MobContent.PRIME_VICE.get(), "prime_vice", 1.0F, 0.4F);
         json(event, MobContent.PRIME_LASER.get(), "prime_laser", 1.0F, 0.4F);
+        // Queen Slime and her minions
+        slime(event, MobContent.CRYSTAL_SLIME.get(), 0.8F);
+        slime(event, MobContent.BOUNCY_SLIME.get(), 0.9F);
+        register(event, MobContent.HEAVENLY_SLIME.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new SlimeBodyModel(ctx.bakeLayer(TerraModels.HEAVENLY_SLIME)), slime(0.8F), 0.3F, false));
+        register(event, MobContent.QUEEN_SLIME.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new SlimeBodyModel(ctx.bakeLayer(TerraModels.QUEEN_SLIME)), slime(2.6F), 1.2F, false));
+        // Pirate Invasion
+        for (var pirate : java.util.List.of(MobContent.PIRATE_DECKHAND, MobContent.PIRATE_CORSAIR, MobContent.PIRATE_CROSSBOWER,
+                MobContent.PIRATE_DEADEYE)) {
+            register(event, pirate.get(), ctx -> new TerraModelRenderer<>(ctx,
+                new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F, 0.5F, false));
+        }
+        register(event, MobContent.PIRATE_CAPTAIN.get(), ctx -> new TerraModelRenderer<>(ctx,
+            new TerraHumanoidModel(ctx.bakeLayer(TerraModels.HUMANOID)), 0.9375F * 2.0F / 1.8F, 0.6F, false));
+        json(event, MobContent.PARROT.get(), "parrot", 1.0F, 0.2F);
+        json(event, MobContent.FLYING_DUTCHMAN.get(), "flying_dutchman", 1.5F, 0.0F);
+        // Frost Legion
+        json(event, MobContent.MISTER_STABBY.get(), "mister_stabby", 1.0F, 0.5F);
+        json(event, MobContent.SNOWMAN_GANGSTA.get(), "snowman_gangsta", 1.0F, 0.5F);
+        json(event, MobContent.SNOW_BALLA.get(), "snow_balla", 1.0F, 0.5F);
         for (var npc : NpcContent.all()) {
             var layer = npc.getId().getPath().contains("goblin") ? TerraModels.GOBLIN : TerraModels.HUMANOID;
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,

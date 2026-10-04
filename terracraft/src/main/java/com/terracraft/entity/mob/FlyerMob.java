@@ -46,6 +46,7 @@ public class FlyerMob extends TerrariaMob {
     @Override
     protected void customServerAiStep(ServerLevel level) {
         super.customServerAiStep(level);
+        setNoGravity(true);     // (a /summon reloads the flag from its NBT)
         Vec3 motion = getDeltaMovement();
         LivingEntity target = getTarget();
         boolean fleeing = definition().despawnsAtDay() && level.isBrightOutside();

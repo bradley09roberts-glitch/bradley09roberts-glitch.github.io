@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:greater_healing_potion",
+    "count": 3
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:glass_bottle",
+      "count": 3
+    },
+    {
+      "item": "terracraft:pixie_dust",
+      "count": 3
+    },
+    {
+      "item": "terracraft:crystal_shard",
+      "count": 1
+    }
+  ],
+  "stations": [
+    "terracraft:alchemy"
+  ],
+  "category": "consumables"
+}

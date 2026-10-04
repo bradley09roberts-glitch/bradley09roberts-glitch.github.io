@@ -252,7 +252,7 @@ public final class NpcManager {
 
     public static void openChat(ServerPlayer player, TownNpc npc, @Nullable String dialogueKey, String arg) {
         TownNpcType type = npc.npcType();
-        if (type == TownNpcs.BOUND_GOBLIN || type == TownNpcs.BOUND_WIZARD) {
+        if (TownNpcs.isBound(type)) {
             BoundNpcs.rescue(player, npc);
             return;
         }
@@ -275,7 +275,7 @@ public final class NpcManager {
         }
         List<OpenNpcChatPacket.Offer> offers = new ArrayList<>();
         for (NpcShops.Entry entry : availableOffers(player.level(), type)) {
-            offers.add(new OpenNpcChatPacket.Offer(BuiltInRegistries.ITEM.getKey(entry.item()).toString(), entry.count(), entry.price()));
+            offers.add(new OpenNpcChatPacket.Offer(BuiltInRegistries.ITEM.getKey(entry.item()).toString(), entry.count(), priceFor(player, entry)));
         }
         TerraNetwork.sendToPlayer(player, new OpenNpcChatPacket(npc.getId(), type.id(), dialogueKey, arg, services, offers));
     }
@@ -337,17 +337,27 @@ public final class NpcManager {
         }
     }
 
+    /** Shop price for this player: the Discount Card takes 20% off. */
+    private static long priceFor(ServerPlayer player, NpcShops.Entry entry) {
+        long price = entry.price();
+        if (com.terracraft.player.TerraPlayerData.get(player).stats().has(com.terracraft.player.stats.Ability.DISCOUNT)) {
+            price = Math.max(1, price * 4 / 5);
+        }
+        return price;
+    }
+
     private static void buy(ServerPlayer player, TownNpcType type, int index) {
         List<NpcShops.Entry> offers = availableOffers(player.level(), type);
         if (index < 0 || index >= offers.size()) {
             return;
         }
         NpcShops.Entry entry = offers.get(index);
-        if (Coins.total(player) < entry.price()) {
+        long price = priceFor(player, entry);
+        if (Coins.total(player) < price) {
             player.sendOverlayMessage(Component.translatable("message.terracraft.shop.too_poor").withStyle(ChatFormatting.RED));
             return;
         }
-        Coins.remove(player, entry.price());
+        Coins.remove(player, price);
         ItemStack bought = new ItemStack(entry.item(), entry.count());
         if (!player.getInventory().add(bought)) {
             player.drop(bought, false);

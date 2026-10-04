@@ -1,0 +1,61 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:pirate_deckhand",
+      "weight": 10,
+      "layers": [
+        "surface"
+      ],
+      "group": [
+        1,
+        3
+      ],
+      "event": "pirate_invasion"
+    },
+    {
+      "entity": "terracraft:pirate_corsair",
+      "weight": 7,
+      "layers": [
+        "surface"
+      ],
+      "group": [
+        1,
+        2
+      ],
+      "event": "pirate_invasion"
+    },
+    {
+      "entity": "terracraft:pirate_crossbower",
+      "weight": 5,
+      "layers": [
+        "surface"
+      ],
+      "event": "pirate_invasion"
+    },
+    {
+      "entity": "terracraft:pirate_deadeye",
+      "weight": 5,
+      "layers": [
+        "surface"
+      ],
+      "event": "pirate_invasion"
+    },
+    {
+      "entity": "terracraft:parrot",
+      "weight": 6,
+      "layers": [
+        "surface"
+      ],
+      "placement": "air",
+      "event": "pirate_invasion"
+    },
+    {
+      "entity": "terracraft:pirate_captain",
+      "weight": 1,
+      "layers": [
+        "surface"
+      ],
+      "event": "pirate_invasion"
+    }
+  ]
+}

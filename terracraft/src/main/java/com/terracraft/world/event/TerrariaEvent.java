@@ -16,6 +16,16 @@ public record TerrariaEvent(String id, boolean night, float spawnRate, float cap
         this(id, night, spawnRate, capMultiplier, killGoal, false, "");
     }
 
+    /** Whether a creature (by entity id path) belongs to this invasion; {@code memberPrefix} may list several prefixes with '|'. */
+    public boolean isMember(String path) {
+        for (String prefix : memberPrefix.split("\\|")) {
+            if (!prefix.isEmpty() && path.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public String startKey() {
         return "event.terracraft." + id + ".start";
     }

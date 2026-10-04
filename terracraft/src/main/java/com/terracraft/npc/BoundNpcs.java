@@ -20,6 +20,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -28,6 +29,7 @@ import java.util.Locale;
  *     <li>after the Goblin Army is defeated, a Bound Goblin waits tied up somewhere in the caverns near a player;
  *     talking to him frees him and the Goblin Tinkerer joins the town;</li>
  *     <li>in Hardmode a Bound Wizard waits the same way in the caverns and becomes the Wizard;</li>
+ *     <li>after Skeletron a Bound Mechanic waits in a Dungeon room and becomes the Mechanic;</li>
  *     <li>the Goblin Tinkerer reforges the held weapon, tool or accessory for coins (a new random prefix).</li>
  * </ul>
  */
@@ -49,6 +51,41 @@ public final class BoundNpcs {
         }
         if (ProgressionManager.isHardmode(server)) {
             trySpawnBound(server, TownNpcs.BOUND_WIZARD, ProgressionFlags.WIZARD_RESCUED, true);
+        }
+        // the Mechanic waits in a Dungeon room once Skeletron has fallen
+        if (ProgressionManager.has(server, ProgressionFlags.SKELETRON)) {
+            trySpawnInDungeon(server);
+        }
+    }
+
+    private static void trySpawnInDungeon(MinecraftServer server) {
+        if (ProgressionManager.has(server, ProgressionFlags.MECHANIC_RESCUED) || NpcManager.isPresent(server, TownNpcs.BOUND_MECHANIC.id())) {
+            return;
+        }
+        ServerLevel level = server.overworld();
+        com.terracraft.world.dungeon.DungeonLayout layout = com.terracraft.world.dungeon.DungeonManager.layout(level);
+        for (ServerPlayer player : level.players()) {
+            if (player.isSpectator() || !layout.isInside(player.blockPosition())) {
+                continue;
+            }
+            // a Dungeon room out of sight: 16-60 blocks from the player, on its floor
+            List<com.terracraft.world.dungeon.DungeonLayout.Box> rooms = new java.util.ArrayList<>(layout.boxes().stream()
+                .filter(b -> b.kind() == com.terracraft.world.dungeon.DungeonLayout.Kind.ROOM).toList());
+            java.util.Collections.shuffle(rooms, new java.util.Random(level.getRandom().nextLong()));
+            for (var room : rooms) {
+                BlockPos feet = new BlockPos((room.x0() + room.x1()) / 2, room.y0(), (room.z0() + room.z1()) / 2);
+                double distance = Math.sqrt(feet.distSqr(player.blockPosition()));
+                if (distance < 16 || distance > 60 || !level.isLoaded(feet)) {
+                    continue;
+                }
+                for (int dy = 0; dy < 4; dy++, feet = feet.above()) {
+                    if (level.getBlockState(feet.below()).isFaceSturdy(level, feet.below(), Direction.UP) && level.getBlockState(feet).isAir()
+                        && level.getBlockState(feet.above()).isAir()) {
+                        NpcManager.spawn(level, NpcWorldData.get(server), TownNpcs.BOUND_MECHANIC, feet, "", false);
+                        return;
+                    }
+                }
+            }
         }
     }
 
@@ -95,12 +132,14 @@ public final class BoundNpcs {
     public static void rescue(ServerPlayer player, TownNpc bound) {
         ServerLevel level = player.level();
         MinecraftServer server = level.getServer();
-        boolean wizard = bound.npcType() == TownNpcs.BOUND_WIZARD;
-        ProgressionManager.set(server, wizard ? ProgressionFlags.WIZARD_RESCUED : ProgressionFlags.GOBLIN_TINKERER_RESCUED, true);
+        TownNpcType boundType = bound.npcType();
+        TownNpcType freed = boundType == TownNpcs.BOUND_WIZARD ? TownNpcs.WIZARD
+            : boundType == TownNpcs.BOUND_MECHANIC ? TownNpcs.MECHANIC : TownNpcs.GOBLIN_TINKERER;
+        ProgressionManager.set(server, boundType == TownNpcs.BOUND_WIZARD ? ProgressionFlags.WIZARD_RESCUED
+            : boundType == TownNpcs.BOUND_MECHANIC ? ProgressionFlags.MECHANIC_RESCUED : ProgressionFlags.GOBLIN_TINKERER_RESCUED, true);
         BlockPos at = bound.blockPosition();
         bound.discard();
         NpcManager.forget(server, bound.npcType().id());
-        TownNpcType freed = wizard ? TownNpcs.WIZARD : TownNpcs.GOBLIN_TINKERER;
         TownNpc npc = NpcManager.spawn(level, NpcWorldData.get(server), freed, null, "", true, at);
         if (npc != null) {
             NpcManager.openChat(player, npc, "npc.terracraft." + freed.id() + ".rescued", player.getName().getString());

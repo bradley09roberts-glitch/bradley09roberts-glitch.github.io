@@ -90,6 +90,37 @@ public final class ProjectileKinds {
         .fullbright().enemy().trail(() -> ParticleTypes.SQUID_INK).debuff(() -> net.minecraft.world.effect.MobEffects.WEAKNESS, 140, 1.0F));
     public static final ProjectileKind PINK_LASER = register(ProjectileKind.builder("pink_laser")
         .lifetime(60).size(0.2F, 0.6F).fullbright().enemy());
+    // ---------------------------------------------------------------- Queen Slime
+    public static final ProjectileKind REGAL_GEL = register(ProjectileKind.builder("regal_gel")
+        .gravity(0.035).lifetime(120).size(0.4F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).bounces(2)
+        .fullbright().enemy().trail(() -> ParticleTypes.ITEM_SLIME));
+    public static final ProjectileKind VOLATILE_GEL = register(ProjectileKind.builder("volatile_gel")
+        .gravity(0.03).lifetime(90).size(0.35F, 0.5F).orientation(ProjectileKind.Orientation.BILLBOARD).bounces(3).pierce(2)
+        .fullbright().trail(() -> ParticleTypes.ITEM_SLIME));
+    // ---------------------------------------------------------------- Pirate Invasion
+    public static final ProjectileKind COPPER_COIN_SHOT = register(ProjectileKind.builder("copper_coin_shot")
+        .lifetime(60).size(0.2F, 0.4F).orientation(ProjectileKind.Orientation.BILLBOARD).fullbright().hitCooldown(4));
+    public static final ProjectileKind SILVER_COIN_SHOT = register(ProjectileKind.builder("silver_coin_shot")
+        .lifetime(60).size(0.2F, 0.4F).orientation(ProjectileKind.Orientation.BILLBOARD).fullbright().hitCooldown(4));
+    public static final ProjectileKind GOLD_COIN_SHOT = register(ProjectileKind.builder("gold_coin_shot")
+        .lifetime(60).size(0.2F, 0.4F).orientation(ProjectileKind.Orientation.BILLBOARD).fullbright().pierce(1).hitCooldown(4));
+    public static final ProjectileKind PLATINUM_COIN_SHOT = register(ProjectileKind.builder("platinum_coin_shot")
+        .lifetime(60).size(0.2F, 0.4F).orientation(ProjectileKind.Orientation.BILLBOARD).fullbright().pierce(2).hitCooldown(4)
+        .trail(() -> ParticleTypes.END_ROD));
+    /** Thrown by players (Pirate's Cannonball) - explodes on impact without breaking blocks. */
+    public static final ProjectileKind CANNONBALL = register(ProjectileKind.builder("cannonball")
+        .gravity(0.05).lifetime(120).size(0.4F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).explosion(2.5F)
+        .trail(() -> ParticleTypes.SMOKE));
+    /** Fired by the Pirate Captain and the Flying Dutchman's cannons. */
+    public static final ProjectileKind ENEMY_CANNONBALL = register(ProjectileKind.builder("enemy_cannonball").texture("cannonball")
+        .gravity(0.04).lifetime(160).size(0.45F, 0.7F).orientation(ProjectileKind.Orientation.BILLBOARD).explosion(2.0F).enemy()
+        .trail(() -> ParticleTypes.SMOKE));
+    public static final ProjectileKind ENEMY_BULLET = register(ProjectileKind.builder("enemy_bullet").texture("musket_ball")
+        .lifetime(60).size(0.15F, 0.3F).enemy());
+    /** Thrown by the Frost Legion's Snow Balla: a heavy, arcing snowball that slows. */
+    public static final ProjectileKind ENEMY_SNOWBALL = register(ProjectileKind.builder("enemy_snowball")
+        .gravity(0.035).lifetime(100).size(0.35F, 0.5F).orientation(ProjectileKind.Orientation.BILLBOARD).enemy()
+        .trail(() -> ParticleTypes.SNOWFLAKE).debuff(() -> net.minecraft.world.effect.MobEffects.SLOWNESS, 60, 0.5F));
     // ---------------------------------------------------------------- mechanical bosses
     public static final ProjectileKind MECH_LASER = register(ProjectileKind.builder("mech_laser")
         .lifetime(80).size(0.2F, 0.6F).noTileCollide().fullbright().enemy());

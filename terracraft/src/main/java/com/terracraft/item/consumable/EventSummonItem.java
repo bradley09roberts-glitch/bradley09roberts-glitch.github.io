@@ -17,16 +17,24 @@ import java.util.function.Supplier;
 /** Starts a world event when used (Goblin Battle Standard), if no other event is running. */
 public class EventSummonItem extends TerraItem {
     private final Supplier<TerrariaEvent> event;
+    private final boolean hardmodeOnly;
 
     public EventSummonItem(Properties properties, Supplier<TerrariaEvent> event) {
+        this(properties, event, false);
+    }
+
+    /** @param hardmodeOnly the Pirate Map and the Snow Globe do nothing before Hardmode */
+    public EventSummonItem(Properties properties, Supplier<TerrariaEvent> event, boolean hardmodeOnly) {
         super(properties);
         this.event = event;
+        this.hardmodeOnly = hardmodeOnly;
     }
 
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
         if (player instanceof ServerPlayer serverPlayer) {
-            if (EventManager.active(serverPlayer.level().getServer()) != null || serverPlayer.level().dimension() != Level.OVERWORLD) {
+            if (EventManager.active(serverPlayer.level().getServer()) != null || serverPlayer.level().dimension() != Level.OVERWORLD
+                || hardmodeOnly && !com.terracraft.progression.ProgressionManager.isHardmode(serverPlayer.level().getServer())) {
                 serverPlayer.sendOverlayMessage(Component.translatable("message.terracraft.boss.nothing_happens").withStyle(ChatFormatting.GRAY));
                 return InteractionResult.FAIL;
             }
