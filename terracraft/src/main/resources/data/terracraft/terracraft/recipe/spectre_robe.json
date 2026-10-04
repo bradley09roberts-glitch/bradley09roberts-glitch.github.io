@@ -1,0 +1,16 @@
+{
+  "result": {
+    "item": "terracraft:spectre_robe",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "terracraft:spectre_bar",
+      "count": 24
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "armor"
+}

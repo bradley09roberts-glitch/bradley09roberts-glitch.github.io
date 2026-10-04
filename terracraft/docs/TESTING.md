@@ -190,3 +190,15 @@ for testing drop in a throwaway mod whose constructor sets `SharedConstants.IS_R
   head breaks free with `execute at @e[type=terracraft:golem,limit=1] run damage @e[type=terracraft:golem_head,limit=1,sort=nearest] 20000 minecraft:generic`.
 - Chlorophyte: in a Hardmode world `fill <32^3 box near the temple> minecraft:diamond_block replace terracraft:chlorophyte_ore`
   counts the ore (then swap back).
+
+## Stage 7 checks
+
+- Moons: in Hardmode at night, on the surface (`spreadplayers <land x> <z> 0 40 false Dev` to stand on land),
+  `terraria event start pumpkin_moon`; creatures arrive within ~10 s. Kills only count when credited to a player:
+  `execute as @e[type=terracraft:scarecrow] run damage @s 100000 minecraft:player_attack by Dev`; `terraria event status`
+  shows points and wave (ten Scarecrows = 50 points: wave 2 with 25 toward wave 3).
+- Duke Fishron by fishing: stand on a block over ocean water with a fishing rod in slot 1 and a Truffle Worm anywhere in
+  the inventory, `xinput.py key 1 hold right 0.1`; after ~3 s the Duke bursts out and one worm is used.
+- `terraria event start martian_madness` by day; `terraria boss spawn duke_fishron|empress_of_light` (Empress at night).
+- Display lineups on a sky platform: keep the player on the platform - monsters more than 32 blocks from every player
+  despawn at random (use `PersistenceRequired:1b` for long waits).

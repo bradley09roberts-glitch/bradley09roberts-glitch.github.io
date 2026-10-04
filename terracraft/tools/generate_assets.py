@@ -2508,6 +2508,8 @@ WING_STYLES = {
     'angel': ('#F4F4FA', '#B8C8E8', '#8898C0'),
     'demon': ('#7A2A3A', '#4A1424', '#C8B0A0'),
     'leaf': ('#5AAA3A', '#3A7A2A', '#2A5A1A'),
+    'fishron': ('#5AA08A', '#3A7A68', '#C8D8B0'),
+    'empress': ('#F0A8F0', '#A8E8FF', '#FFF8C8'),
 }
 
 
@@ -3493,6 +3495,117 @@ mob_sprite('golem_head', 24, 24, 1, golem_head_frame)
 mob_sprite('golem_head_free', 24, 24, 1, lambda c, f: golem_head_frame(c, f, free=True), fullbright=True)
 mob_sprite('golem_fist', 16, 16, 1, lambda c, f: (c.rect(2, 2, 13, 13, palette('#C8884A')[2]),
                                                   [c.line(2, y, 13, y, palette('#E8C080')[2]) for y in (4, 7, 10)], c.outline()))
+
+
+# --- Stage 7: Duke Fishron, post-Plantera Dungeon, moons, Empress of Light, Martians -------------------------
+def blob_frame(c, frame, w, h, color, eye='#F8F8F0', glow=None):
+    """Flat sprite for creatures with their own 3D model: a shaded body with eyes (used with flatSprites)."""
+    p = palette(color)
+    c.circle(w / 2 - 0.5, h / 2 - 0.5 + (frame % 2), min(w, h) / 2 - 1, p[2])
+    c.light(1.25, 0.75)
+    ex = w / 2 - 0.5 - w / 6
+    c.rect(int(ex), int(h / 2 - 2), int(ex) + 1, int(h / 2 - 1), hexc(glow or eye))
+    c.rect(int(ex + w / 3), int(h / 2 - 2), int(ex + w / 3) + 1, int(h / 2 - 1), hexc(glow or eye))
+    c.outline()
+
+
+S7_HUMANOIDS = {   # name: (skin, hair, shirt, pants, extras, bony)
+    'blue_armored_bones': ('#D8D0A8', '#D8D0A8', '#3A5AA8', '#2A4088', dict(eyes=(120, 200, 255, 255)), True),
+    'hell_armored_bones': ('#D8D0A8', '#D8D0A8', '#A83A2A', '#7A2A1A', dict(eyes=(255, 140, 40, 255)), True),
+    'paladin': ('#D8D0A8', '#D8D0A8', '#C8A040', '#8A7030', dict(eyes=(255, 230, 120, 255)), True),
+    'skeleton_sniper': ('#D8D0A8', '#D8D0A8', '#5A6A3A', '#3A4A2A', dict(eyes=(255, 60, 40, 255)), True),
+    'tactical_skeleton': ('#D8D0A8', '#D8D0A8', '#2A2A30', '#1A1A20', dict(eyes=(255, 60, 40, 255)), True),
+    'skeleton_commando': ('#D8D0A8', '#D8D0A8', '#4A5A3A', '#3A4A2A', dict(eyes=(255, 60, 40, 255)), True),
+    'ragged_caster': ('#D8D0C0', '#3A2A4A', '#4A2A5A', '#3A2048', dict(shoes='#2A1A30', eyes=(200, 120, 255, 255), robe=True, hat='#3A2048'), False),
+    'necromancer': ('#B8C0A8', '#1A1A20', '#2A2A30', '#1A1A20', dict(shoes='#101014', eyes=(120, 255, 120, 255), robe=True, hat='#1A1A20'), False),
+    'scarecrow': ('#E8C870', '#C8A040', '#7A5A3A', '#3A4A6A', dict(shoes='#3A2A20', hat='#6A4A2A', eyes=(255, 140, 20, 255)), False),
+    'headless_horseman': ('#2A1A1A', '#1A1A1A', '#3A2A3A', '#1A1A1A', dict(shoes='#1A1A1A', jacket='#4A1A2A', eyes=(255, 120, 20, 255)), False),
+    'zombie_elf': ('#A8C890', '#3A6A2A', '#3A8A3A', '#C83030', dict(shoes='#2A1A10', hat='#3A8A3A', ears=True), False),
+    'elf_archer': ('#E8C8A0', '#C8A040', '#3A8A3A', '#C83030', dict(shoes='#2A1A10', hat='#C83030', ears=True), False),
+    'gingerbread_man': ('#B87A3A', '#B87A3A', '#B87A3A', '#B87A3A', dict(shoes='#B87A3A', eyes=(240, 240, 240, 255), buckle='#F8F8F8'), False),
+    'nutcracker': ('#E8C8A0', '#1A1A1A', '#C83030', '#2A2A6A', dict(shoes='#1A1A1A', hat='#1A1A1A', hat_band='#E8C040', beard='#F0F0F0'), False),
+    'yeti': ('#E8F0F8', '#E8F0F8', '#E8F0F8', '#D0D8E8', dict(shoes='#C0C8D8', eyes=(80, 160, 255, 255), beard='#E8F0F8'), False),
+    'santa_nk1': ('#A8B0B8', '#C83030', '#C83030', '#6A7078', dict(shoes='#3A3A40', eyes=(255, 60, 40, 255), beard='#F0F0F0', hat='#C83030'), False),
+    'gray_grunt': ('#A0A8A8', '#7A8080', '#3A6A5A', '#2A4A40', dict(shoes='#2A2A30', eyes=(20, 20, 20, 255)), False),
+    'ray_gunner': ('#80C880', '#4A8A4A', '#C8C8D0', '#6A7080', dict(shoes='#2A2A30', eyes=(20, 20, 20, 255), goggles='#3AE0FF'), False),
+    'brain_scrambler': ('#80C880', '#E0A0C0', '#C8C8D0', '#6A7080', dict(shoes='#2A2A30', eyes=(20, 20, 20, 255)), False),
+    'gigazapper': ('#80C880', '#4A8A4A', '#3A6AA8', '#2A4A80', dict(shoes='#2A2A30', eyes=(20, 20, 20, 255), goggles='#FFE040'), False),
+    'martian_officer': ('#80C880', '#4A8A4A', '#E0E0E8', '#8A90A0', dict(shoes='#2A2A30', eyes=(20, 20, 20, 255), hat='#E0E0E8', hat_band='#3AE0FF'), False),
+}
+for _n, (_skin, _hair, _shirt, _pants, _extra, _bony) in S7_HUMANOIDS.items():
+    model_texture(_n, 64, 64, skin_texture(_skin, _hair, _shirt, _pants, bony=_bony, **_extra))
+    if _bony:
+        mob_sprite(_n, 16, 24, 3, lambda c, f, sh=_shirt, pa=_pants: humanoid_frame(c, f, '#D8D0A8', sh, pa, (20, 20, 20, 255), bony=True), frame_time=8)
+    else:
+        mob_sprite(_n, 16, 24, 3, lambda c, f, sk=_skin, hr=_hair, sh=_shirt, pa=_pants: npc_frame(c, f, sk, hr, sh, pa), frame_time=8)
+
+S7_BLOBS = {   # name: (w, h, color, glow)
+    'truffle_worm': (12, 8, '#7AA8E8', None), 'duke_fishron': (40, 28, '#5AA08A', '#F8E070'), 'duke_fishron_rage': (40, 28, '#4A8A74', '#FF3020'),
+    'sharkron': (20, 12, '#6A8AA8', None), 'dungeon_spirit': (14, 16, '#5A90E8', '#A8E0FF'), 'poltergeist': (14, 16, '#C8C8D8', '#FF8A20'),
+    'splinterling': (14, 18, '#6A4A2A', '#FF8A20'), 'hellhound': (20, 14, '#2A2020', '#FF5A10'), 'mourning_wood': (28, 48, '#4A3020', '#FF6A10'),
+    'pumpking': (36, 32, '#E8781A', '#FFD040'), 'flocko': (14, 14, '#C8E8FF', None), 'everscream': (32, 56, '#1E4A2A', '#FF3A20'),
+    'ice_queen': (28, 32, '#A8D8F8', '#60E0FF'), 'prismatic_lacewing': (12, 10, '#F0A0E0', None), 'empress_of_light': (36, 40, '#F8F0FF', '#FFF8C8'),
+    'martian_probe': (14, 8, '#A8B0B8', '#60FF90'), 'martian_drone': (14, 12, '#8A9098', '#FF4020'), 'scutlix': (24, 16, '#5A8A4A', '#60FF90'),
+    'martian_saucer': (64, 24, '#A8B0B8', '#60FF90'),
+}
+for _n, (_w, _h, _col, _glow) in S7_BLOBS.items():
+    mob_sprite(_n, _w, _h, 2, lambda c, f, w=_w, h=_h, col=_col, g=_glow: blob_frame(c, f, w, h, col, glow=g), frame_time=8)
+
+METAL['spectre'] = '#B8D8F8'
+METAL['spooky'] = '#5A4A6A'
+item('truffle_worm', lambda c: ([c.circle(4 + i * 2.5, 9 + (i % 2), 2, palette('#7AA8E8')[2 + i % 2]) for i in range(4)], c.circle(5, 6, 2.5, hexc('#3A70D0')), c.outline()))
+item('tsunami', lambda c: draw_bow(c, palette('#3A8AC8')), True)
+item('razorblade_typhoon', lambda c: draw_book(c, '#3A8AC8'))
+item('bubble_gun', lambda c: (draw_gun(c, palette('#5AA8D8')), c.circle(13, 4, 1.5, hexc('#C8F0FF'))), True)
+item('ectoplasm', lambda c: (c.polygon([(8, 2), (13, 8), (10, 14), (5, 14), (3, 8)], (120, 200, 255, 200)), c.circle(7, 7, 1.5, hexc('#E8F8FF')), c.outline()))
+item('spectre_bar', lambda c: draw_bar(c, metal('spectre')))
+item('spectre_hood', lambda c: draw_helmet(c, metal('spectre')))
+item('spectre_robe', lambda c: draw_chest(c, metal('spectre')))
+item('spectre_pants', lambda c: draw_legs(c, metal('spectre')))
+item('paladins_shield', lambda c: draw_shield(c, '#C8A040'))
+item('paladins_hammer', lambda c: draw_hammer(c, palette('#E8C860')), True)
+item('sniper_rifle', lambda c: (draw_gun(c, palette('#4A5A3A')), c.rect(6, 3, 10, 4, hexc('#2A2A30'))), True)
+item('shadowbeam_staff', lambda c: draw_staff(c, '#9A40E8'), True)
+item('pumpkin_moon_medallion', lambda c: (draw_coin(c, palette('#E8781A')), c.rect(6, 6, 7, 7, hexc('#FFD040')), c.rect(9, 6, 10, 7, hexc('#FFD040')), c.outline()))
+item('naughty_present', lambda c: (c.rect(2, 5, 13, 14, palette('#2A2A30')[2]), c.rect(7, 5, 8, 14, palette('#C83030')[2]), c.rect(2, 8, 13, 9, palette('#C83030')[2]), c.outline()))
+item('spooky_wood', lambda c: (c.rect(2, 4, 13, 11, palette('#5A4A6A')[2]), c.line(2, 6, 13, 6, palette('#5A4A6A')[1]), c.line(2, 9, 13, 9, palette('#5A4A6A')[3]), c.outline()))
+item('stake_launcher', lambda c: (draw_gun(c, palette('#6A4A2A')), c.line(12, 5, 15, 5, hexc('#C8A070'))), True)
+item('the_horsemans_blade', lambda c: (draw_sword(c, palette('#C8C8D0'), 13), c.circle(3.5, 12.5, 1.8, hexc('#E8781A'))), True)
+item('bat_scepter', lambda c: draw_staff(c, '#3A2A3A'), True)
+item('candy_corn_rifle', lambda c: (draw_gun(c, palette('#E8781A')), c.rect(4, 5, 6, 6, hexc('#F8F0A0'))), True)
+item('christmas_tree_sword', lambda c: (draw_sword(c, palette('#2A8A3A'), 13), c.set(9, 6, hexc('#E83030')), c.set(11, 4, hexc('#F0C030'))), True)
+item('razorpine', lambda c: draw_staff(c, '#2A8A3A'), True)
+item('chain_gun', lambda c: (draw_gun(c, palette('#6A7078')), c.rect(11, 4, 14, 7, hexc('#3A3A40'))), True)
+item('elf_melter', lambda c: (draw_gun(c, palette('#C83030')), c.circle(13, 5.5, 1.5, hexc('#FF8A20'))), True)
+item('north_pole', lambda c: (draw_sword(c, palette('#C8E8FF'), 14), c.set(12, 3, hexc('#F8F8FF'))), True)
+item('blizzard_staff', lambda c: draw_staff(c, '#60C8FF'), True)
+item('nightglow', lambda c: draw_staff(c, '#F0D8FF'), True)
+item('starlight', lambda c: (draw_sword(c, palette('#F8E0FF'), 13), c.set(12, 3, hexc('#FFFFFF'))), True)
+item('influx_waver', lambda c: (draw_sword(c, palette('#60E0C8'), 13), c.line(5, 10, 11, 4, hexc('#C8FFF0'))), True)
+item('laser_machinegun', lambda c: (draw_gun(c, palette('#8A9098')), c.rect(12, 5, 14, 6, hexc('#60FF90'))), True)
+item('xenopopper', lambda c: (draw_gun(c, palette('#60C890')), c.circle(13, 5, 1.5, hexc('#C8F0FF'))), True)
+proj('detonating_bubble', lambda c: (c.circle(7.5, 7.5, 5, (160, 220, 255, 150)), c.circle(5.5, 5.5, 1.2, hexc('#FFFFFF'))))
+proj('razorblade', lambda c: (c.polygon([(7, 1), (9, 6), (14, 7), (9, 9), (8, 14), (6, 9), (1, 8), (6, 6)], palette('#80C8F0')[3]), c.circle(7.5, 7.5, 1.5, hexc('#E8F8FF'))))
+proj('bubble', lambda c: (c.circle(7.5, 7.5, 3, (180, 230, 255, 160)), c.set(6, 6, hexc('#FFFFFF'))))
+proj('shadowbeam', lambda c: (c.line(0, 8, 15, 8, hexc('#9A40E8'), 2), c.line(2, 8, 13, 8, hexc('#E8C8FF'))))
+proj('lost_soul', lambda c: (p_orb(c, '#80C8FF', 3), c.set(6, 7, hexc('#101820')), c.set(9, 7, hexc('#101820'))))
+proj('paladins_hammer', lambda c: (c.rect(5, 3, 11, 7, palette('#E8C860')[2]), c.line(8, 7, 8, 14, WOOD[2])))
+proj('enemy_rocket', lambda c: (c.rect(3, 7, 12, 8, palette('#6A7078')[2]), c.polygon([(12, 6), (15, 7.5), (12, 9)], hexc('#C83030')), c.set(2, 7, hexc('#FF8A20'))))
+proj('flaming_wood', lambda c: (c.rect(4, 6, 11, 9, palette('#6A4A2A')[2]), c.set(11, 6, hexc('#FF8A20')), c.set(12, 7, hexc('#FFD040'))))
+proj('flaming_scythe', lambda c: (c.polygon([(2, 12), (6, 3), (13, 2), (8, 6), (5, 12)], palette('#FF8A20')[3]), c.line(2, 12, 6, 4, hexc('#FFD040'))))
+proj('pine_needle', lambda c: (c.line(2, 8, 13, 8, palette('#2A8A3A')[3]), c.set(13, 8, hexc('#C8F0C8'))))
+proj('ice_shard', lambda c: (c.polygon([(2, 8), (8, 6), (14, 8), (8, 10)], (180, 230, 255, 230)), c.line(4, 8, 12, 8, hexc('#FFFFFF'))))
+proj('pumpkin_head', lambda c: (c.circle(7.5, 8, 5, palette('#E8781A')[2]), c.rect(5, 6, 6, 7, hexc('#FFD040')), c.rect(9, 6, 10, 7, hexc('#FFD040')), c.rect(5, 10, 10, 10, hexc('#FFD040'))))
+proj('bat', lambda c: (c.polygon([(1, 6), (7, 8), (14, 6), (10, 10), (5, 10)], palette('#3A2A3A')[2]), c.set(6, 8, hexc('#FF3030')), c.set(9, 8, hexc('#FF3030'))))
+proj('ornament', lambda c: (c.circle(7.5, 8, 3, palette('#E83030')[3]), c.rect(7, 4, 8, 5, hexc('#F0C030')), c.set(6, 7, hexc('#FFFFFF'))))
+proj('snowflake', lambda c: [c.line(8, 8, round(7.5 + math.cos(a * math.pi / 3) * 6), round(7.5 + math.sin(a * math.pi / 3) * 6), hexc('#E8F8FF')) for a in range(6)])
+proj('prismatic_bolt', lambda c: (p_orb(c, '#F0A0F0', 3), c.set(6, 6, hexc('#A0F0FF'))))
+proj('ethereal_lance', lambda c: (c.line(0, 8, 15, 8, hexc('#F0C8FF'), 2), c.line(1, 8, 14, 8, hexc('#FFFFFF'))))
+proj('sun_ray', lambda c: (c.line(0, 8, 15, 8, hexc('#FFF0A0'), 3), c.line(1, 8, 14, 8, hexc('#FFFFFF'))))
+proj('nightglow', lambda c: p_orb(c, '#E8D0FF', 3))
+proj('starlight', lambda c: (c.polygon([(7.5, 1), (9, 6), (14, 7.5), (9, 9), (7.5, 14), (6, 9), (1, 7.5), (6, 6)], hexc('#FFF0FF'))))
+proj('martian_laser', lambda c: (c.line(0, 8, 15, 8, hexc('#40FF90'), 2), c.line(2, 8, 13, 8, hexc('#E0FFE8'))))
+proj('influx_wave', lambda c: (c.circle(7.5, 7.5, 5, (96, 224, 200, 170)), c.circle(7.5, 7.5, 2.5, hexc('#E0FFF8'))))
 
 
 def check_registered_items():

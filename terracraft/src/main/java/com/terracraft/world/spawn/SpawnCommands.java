@@ -42,6 +42,23 @@ public final class SpawnCommands {
                     ctx.getSource().sendSuccess(() -> Component.literal("Rules here: " + (matching.isEmpty() ? "none" : String.join(", ", matching))), false);
                     return matching.size();
                 }))
+                .then(Commands.literal("safezone")
+                    .then(Commands.literal("clear").executes(ctx -> {
+                        SafeZones.get(ctx.getSource().getServer()).clear();
+                        ctx.getSource().sendSuccess(() -> Component.literal("Safe zones cleared."), true);
+                        return 1;
+                    }))
+                    .then(Commands.literal("add")
+                        .then(Commands.argument("x0", IntegerArgumentType.integer()).then(Commands.argument("z0", IntegerArgumentType.integer())
+                            .then(Commands.argument("x1", IntegerArgumentType.integer()).then(Commands.argument("z1", IntegerArgumentType.integer())
+                                .then(Commands.argument("min_y", IntegerArgumentType.integer()).executes(ctx -> {
+                                    SafeZones zones = SafeZones.get(ctx.getSource().getServer());
+                                    zones.add(IntegerArgumentType.getInteger(ctx, "x0"), IntegerArgumentType.getInteger(ctx, "z0"),
+                                        IntegerArgumentType.getInteger(ctx, "x1"), IntegerArgumentType.getInteger(ctx, "z1"),
+                                        IntegerArgumentType.getInteger(ctx, "min_y"));
+                                    ctx.getSource().sendSuccess(() -> Component.literal("Safe zone added (" + zones.count() + " in total)."), true);
+                                    return 1;
+                                }))))))))
                 .then(Commands.literal("force")
                     .executes(ctx -> force(ctx.getSource().getPlayerOrException(), 1, ctx.getSource()))
                     .then(Commands.argument("groups", IntegerArgumentType.integer(1, 50))

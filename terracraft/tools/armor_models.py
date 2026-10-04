@@ -491,11 +491,25 @@ def chlorophyte_set():
     return a
 
 
+def spectre_set():
+    # Spectre: a pale blue ghostly hood with a glowing mask slit, a long robe and wrapped trousers
+    a = Armor('spectre', {'main': '#B8D8F8', 'chain': '#7A9AC8', 'trim': '#E8F4FF', 'dark': '#1A2A40', 'accent': '#60C8FF',
+                          'gem': '#E0F8FF', 'dark_edge': '#4A6A98', 'buckle': '#60C8FF'})
+    a.add('head', 'head', (-4, -8, -4), (8, 8, 8), mat='main', pattern='cloth', inflate=1.0, faces={'down': 'none', 'north': 'none'})
+    a.add('head', 'head', (-4, -8.6, -4.6), (8, 3, 1), mat='main', pattern='cloth', edge='trim')
+    a.add('head', 'head', (-3, -5.2, -4.7), (6, 1, 0.5), mat='gem', pattern='gem')
+    a.add('head', 'head', (-1.5, -11, -1), (3, 3, 5), mat='main', pattern='cloth', pivot=[0, -8, 2], rot=[0.5, 0, 0])
+    torso(a, base='cloth', plate='cloth', base_mat='chain', mat='main', edge='trim', pads='none', abs_plates=False, belt='accent')
+    a.add('chest', 'body', (-4, 8, -2), (8, 8, 4), mat='main', pattern='cloth', inflate=1.2, faces={'up': 'none'})
+    a.pair('legs', 'right_leg', (-2, 0, -2), (4, 12, 4), mat='chain', pattern='wrap', inflate=0.5, faces={'up': 'none'})
+    return a
+
+
 def all_sets():
     return [wood_set(), copper_set(), tin_set(), iron_set(), lead_set(), silver_set(), tungsten_set(), gold_set(), platinum_set(),
             shadow_set(), crimson_set(), jungle_set(), molten_set(), meteor_set(),
             cobalt_set(), palladium_set(), mythril_set(), orichalcum_set(), adamantite_set(), titanium_set(), hallowed_set(), crystal_assassin_set(), pirate_set(),
-            chlorophyte_set()]
+            chlorophyte_set(), spectre_set()]
 
 
 # ----------------------------------------------------------------------------------------- UV packing

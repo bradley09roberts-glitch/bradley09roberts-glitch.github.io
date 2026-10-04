@@ -162,6 +162,84 @@ public final class ProjectileKinds {
     public static final ProjectileKind POSSESSED_HATCHET = register(ProjectileKind.builder("possessed_hatchet")
         .lifetime(200).size(0.5F, 0.9F).orientation(ProjectileKind.Orientation.SPIN).homing(0.12F, 20.0F).pierce(4)
         .behavior(ProjectileKind.Behavior.BOOMERANG).noTileCollide());
+    // ---------------------------------------------------------------- Duke Fishron
+    /** Duke Fishron's bubbles: slow, homing, pop on contact. */
+    public static final ProjectileKind DETONATING_BUBBLE = register(ProjectileKind.builder("detonating_bubble")
+        .lifetime(200).size(0.6F, 0.9F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.04F, 24.0F).noTileCollide()
+        .enemy().trail(() -> ParticleTypes.BUBBLE));
+    /** Razorblade Typhoon: a spinning blade that seeks enemies. */
+    public static final ProjectileKind RAZORBLADE = register(ProjectileKind.builder("razorblade")
+        .lifetime(120).size(0.5F, 0.9F).orientation(ProjectileKind.Orientation.SPIN).homing(0.15F, 20.0F).pierce(3).noTileCollide()
+        .magic().trail(() -> ParticleTypes.BUBBLE));
+    /** Bubble Gun. */
+    public static final ProjectileKind BUBBLE = register(ProjectileKind.builder("bubble")
+        .lifetime(40).size(0.3F, 0.5F).orientation(ProjectileKind.Orientation.BILLBOARD).magic().trail(() -> ParticleTypes.BUBBLE));
+    // ---------------------------------------------------------------- the Dungeon after Plantera
+    public static final ProjectileKind SHADOWBEAM = register(ProjectileKind.builder("shadowbeam").texture("shadowbeam")
+        .lifetime(50).size(0.2F, 0.6F).pierce(4).bounces(4).fullbright().magic().trail(() -> ParticleTypes.WITCH));
+    public static final ProjectileKind ENEMY_SHADOWBEAM = register(ProjectileKind.builder("enemy_shadowbeam").texture("shadowbeam")
+        .lifetime(50).size(0.2F, 0.6F).bounces(3).fullbright().enemy().trail(() -> ParticleTypes.WITCH));
+    /** Ragged Caster: slow homing lost souls. */
+    public static final ProjectileKind LOST_SOUL = register(ProjectileKind.builder("lost_soul")
+        .lifetime(160).size(0.4F, 0.7F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.05F, 30.0F).noTileCollide()
+        .fullbright().enemy().trail(() -> ParticleTypes.SOUL));
+    public static final ProjectileKind PALADINS_HAMMER = register(ProjectileKind.builder("paladins_hammer")
+        .lifetime(200).size(0.6F, 1.0F).orientation(ProjectileKind.Orientation.SPIN).behavior(ProjectileKind.Behavior.BOOMERANG).pierce(-1)
+        .hitCooldown(8).noTileCollide());
+    public static final ProjectileKind ENEMY_HAMMER = register(ProjectileKind.builder("enemy_hammer").texture("paladins_hammer")
+        .lifetime(80).size(0.6F, 1.0F).orientation(ProjectileKind.Orientation.SPIN).noTileCollide().enemy());
+    public static final ProjectileKind ENEMY_ROCKET = register(ProjectileKind.builder("enemy_rocket")
+        .lifetime(100).size(0.3F, 0.6F).explosion(2.5F).enemy().trail(() -> ParticleTypes.SMOKE));
+    // ---------------------------------------------------------------- Pumpkin Moon and Frost Moon
+    public static final ProjectileKind FLAMING_WOOD = register(ProjectileKind.builder("flaming_wood")
+        .gravity(0.03).lifetime(120).size(0.4F, 0.7F).orientation(ProjectileKind.Orientation.SPIN).fullbright().enemy()
+        .trail(() -> ParticleTypes.FLAME).ignites(80, 1.0F));
+    public static final ProjectileKind FLAMING_SCYTHE = register(ProjectileKind.builder("flaming_scythe")
+        .lifetime(120).size(0.6F, 1.0F).orientation(ProjectileKind.Orientation.SPIN).homing(0.02F, 30.0F).noTileCollide().fullbright().enemy()
+        .trail(() -> ParticleTypes.FLAME).ignites(80, 0.5F));
+    public static final ProjectileKind ENEMY_PINE_NEEDLE = register(ProjectileKind.builder("enemy_pine_needle").texture("pine_needle")
+        .lifetime(60).size(0.2F, 0.5F).enemy());
+    public static final ProjectileKind ENEMY_ICE_SHARD = register(ProjectileKind.builder("enemy_ice_shard").texture("ice_shard")
+        .lifetime(80).size(0.3F, 0.6F).fullbright().enemy().trail(() -> ParticleTypes.SNOWFLAKE)
+        .debuff(() -> net.minecraft.world.effect.MobEffects.SLOWNESS, 80, 0.5F));
+    public static final ProjectileKind PUMPKIN_HEAD = register(ProjectileKind.builder("pumpkin_head")
+        .lifetime(60).size(0.5F, 0.8F).orientation(ProjectileKind.Orientation.SPIN).homing(0.1F, 16.0F).pierce(1).noTileCollide()
+        .fullbright().trail(() -> ParticleTypes.FLAME));
+    public static final ProjectileKind BAT = register(ProjectileKind.builder("bat")
+        .lifetime(90).size(0.4F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.12F, 24.0F).noTileCollide().magic());
+    public static final ProjectileKind ORNAMENT = register(ProjectileKind.builder("ornament")
+        .gravity(0.02).lifetime(60).size(0.3F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).explosion(1.5F).fullbright());
+    public static final ProjectileKind PINE_NEEDLE = register(ProjectileKind.builder("pine_needle")
+        .lifetime(50).size(0.2F, 0.5F).pierce(1).magic());
+    public static final ProjectileKind ELF_FLAME = register(ProjectileKind.builder("elf_flame").texture("cursed_flame")
+        .lifetime(16).size(0.5F, 0.8F).orientation(ProjectileKind.Orientation.BILLBOARD).pierce(-1).hitCooldown(6).noTileCollide().fullbright()
+        .magic().trail(() -> ParticleTypes.FLAME).ignites(60, 0.5F));
+    public static final ProjectileKind SNOWFLAKE = register(ProjectileKind.builder("snowflake")
+        .lifetime(60).size(0.5F, 0.8F).orientation(ProjectileKind.Orientation.SPIN).pierce(2).noTileCollide().fullbright()
+        .trail(() -> ParticleTypes.SNOWFLAKE));
+    public static final ProjectileKind ICE_SHARD = register(ProjectileKind.builder("ice_shard")
+        .gravity(0.02).lifetime(80).size(0.3F, 0.6F).pierce(1).fullbright().magic().trail(() -> ParticleTypes.SNOWFLAKE));
+    // ---------------------------------------------------------------- Empress of Light
+    public static final ProjectileKind PRISMATIC_BOLT = register(ProjectileKind.builder("prismatic_bolt")
+        .lifetime(180).size(0.4F, 0.7F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.03F, 40.0F).noTileCollide().fullbright().enemy()
+        .trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind ETHEREAL_LANCE = register(ProjectileKind.builder("ethereal_lance")
+        .lifetime(70).size(0.3F, 1.2F).noTileCollide().fullbright().enemy().trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind SUN_RAY = register(ProjectileKind.builder("sun_ray")
+        .lifetime(50).size(0.4F, 1.0F).noTileCollide().fullbright().enemy().trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind NIGHTGLOW = register(ProjectileKind.builder("nightglow")
+        .lifetime(120).size(0.3F, 0.6F).orientation(ProjectileKind.Orientation.BILLBOARD).homing(0.12F, 24.0F).noTileCollide().fullbright().magic()
+        .trail(() -> ParticleTypes.END_ROD));
+    public static final ProjectileKind STARLIGHT = register(ProjectileKind.builder("starlight")
+        .lifetime(16).size(0.3F, 0.7F).pierce(2).noTileCollide().fullbright().trail(() -> ParticleTypes.END_ROD));
+    // ---------------------------------------------------------------- Martian Madness
+    public static final ProjectileKind MARTIAN_LASER = register(ProjectileKind.builder("martian_laser")
+        .lifetime(60).size(0.2F, 0.6F).fullbright().enemy());
+    public static final ProjectileKind LASER_BEAM = register(ProjectileKind.builder("laser_beam").texture("martian_laser")
+        .lifetime(40).size(0.2F, 0.6F).pierce(2).fullbright().magic());
+    public static final ProjectileKind INFLUX_WAVE = register(ProjectileKind.builder("influx_wave")
+        .lifetime(40).size(0.5F, 0.9F).orientation(ProjectileKind.Orientation.SPIN).homing(0.1F, 16.0F).pierce(2).noTileCollide().fullbright()
+        .trail(() -> ParticleTypes.ELECTRIC_SPARK));
     // ---------------------------------------------------------------- mechanical bosses
     public static final ProjectileKind MECH_LASER = register(ProjectileKind.builder("mech_laser")
         .lifetime(80).size(0.2F, 0.6F).noTileCollide().fullbright().enemy());

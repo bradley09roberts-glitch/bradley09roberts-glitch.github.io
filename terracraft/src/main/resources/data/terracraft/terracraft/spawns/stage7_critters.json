@@ -1,0 +1,29 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:truffle_worm",
+      "weight": 4,
+      "layers": [
+        "surface",
+        "underground"
+      ],
+      "biomes": [
+        "minecraft:mushroom_fields"
+      ],
+      "condition": "hardmode_active"
+    },
+    {
+      "entity": "terracraft:prismatic_lacewing",
+      "weight": 3,
+      "time": "night",
+      "layers": [
+        "surface"
+      ],
+      "placement": "air",
+      "ground": [
+        "#terracraft:hallow/all"
+      ],
+      "condition": "boss_plantera_defeated"
+    }
+  ]
+}

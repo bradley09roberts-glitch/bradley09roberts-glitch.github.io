@@ -396,15 +396,50 @@ Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explai
 - Fixes: the focus health bar no longer shows on parts that cannot be hurt; boss summons can now wake a boss at a
   fixed spot (`BossSummoning.summonAt`).
 
+### Stage 7: Duke Fishron, the Dungeon after Plantera, the moons, Empress of Light, Martian Madness (verified in a live client)
+- **Duke Fishron** (`entity.boss.DukeFishron`, 50000 life): a **Truffle Worm** (a critter in Hardmode mushroom
+  biomes - right-click to catch it, `CritterMob`) in your pack while your fishing line sits in ocean water for a couple
+  of seconds pulls the Duke out of the sea (`FishronContent`). He hovers beside you and charges in runs of dashes, blows
+  rings of homing bubbles, and spits Sharknados - waterspouts that keep throwing Sharkrons at you. Below half life he
+  turns furious (red eyes, longer and faster dash runs). Away from the ocean he is enraged (faster, double damage).
+  Drops Tsunami (five arrows a shot), Razorblade Typhoon (homing blades), Bubble Gun, and sometimes Fishron Wings.
+- **The Dungeon after Plantera** (`DungeonHardmodeContent`): Blue and Hell Armored Bones, Paladins (thrown hammers),
+  Skeleton Snipers, Tactical Skeletons, Skeleton Commandos (rockets), Ragged Casters (homing lost souls) and
+  Necromancers (bouncing shadowbeams) spawn on Dungeon bricks. Enemies killed in the Dungeon sometimes release a
+  **Dungeon Spirit**, which drops **Ectoplasm**. Spectre Bars (Chlorophyte + Ectoplasm) make **Spectre** armor
+  (magic; set bonus: magic hits heal you for 8% of the damage). Loot: Paladin's Shield and Hammer, Sniper Rifle,
+  Shadowbeam Staff.
+- **Pumpkin Moon and Frost Moon** (`world.event.MoonEvents`): wave events, called at night in Hardmode with the
+  Pumpkin Moon Medallion or the Naughty Present (both crafted with Ectoplasm). Every kill is worth points (a Scarecrow 5,
+  a Pumpking 100); enough points start the next wave, announced in chat with its new creatures, and the event bar
+  shows "Pumpkin Moon: Wave 3". Tougher creatures and more bosses join each wave; the moon sets at dawn; reaching the
+  last wave (15 / 20) marks it cleared. Pumpkin Moon: Scarecrow, Splinterling, Hellhound, Poltergeist, Headless
+  Horseman, **Mourning Wood**, **Pumpking**. Frost Moon: Zombie Elf, Gingerbread Man, Elf Archer, Nutcracker, Yeti,
+  Flocko, **Everscream**, **Santa-NK1**, **Ice Queen**. Loot: Stake Launcher, The Horseman's Blade, Bat Scepter,
+  Candy Corn Rifle, Christmas Tree Sword, Razorpine, Chain Gun, Elf Melter, North Pole, Blizzard Staff, Spooky Wood.
+- **Empress of Light** (`entity.boss.EmpressOfLight`, 70000 life): killing a **Prismatic Lacewing** (rainbow moths in
+  the Hallow at night after Plantera) calls her. Prismatic Bolts, Ethereal Lances closing in from a ring around you,
+  the turning Sun Dance, dashes, and in her second half the Everlasting Rainbow spiral. In daylight her attacks are
+  lethal. Drops Nightglow, Starlight and sometimes the Empress Wings.
+- **Martian Madness**: after Golem a **Martian Probe** may drift over a player on the surface by day; if it finishes
+  its scan and flies away, martians invade (Gray Grunts, Ray Gunners, Brain Scramblers, Gigazappers, Officers, Drones,
+  Scutlix) until 150 kills; once a third are down the **Martian Saucer** comes (lasers, rockets; counts for ten) and
+  drops the Influx Waver, Laser Machinegun or Xenopopper.
+- Events can now be wave events (`TerrariaEvent.waves`), and event summon items for night events only work at night.
+- New 3D models: Duke Fishron (both looks), Sharkron, Truffle Worm, Dungeon Spirit, Poltergeist, Splinterling,
+  Hellhound, Mourning Wood, Pumpking, Flocko, Everscream, Ice Queen, Prismatic Lacewing, Empress of Light, Martian
+  Probe, Drone, Scutlix, Martian Saucer, Spectre armor; skins for 21 humanoids and skeletons; flat sprites for all.
+- Showcase: three new Bestiary rooms, eight more bosses in the Hall of Bosses (now two rows of eleven), moon and
+  martian event buttons, Duke Fishron and Empress buttons in the arena, four new kits, Spectre in the Armory.
+
 ## IN PROGRESS
-- Nothing half-finished. Stage 6 (Plantera, the temple and Golem) is complete.
+- Nothing half-finished. Stage 7 is complete.
 
 ## NEXT
 1. (done) Stage 5: Hardmode up to the mechanical bosses, Queen Slime, invasions.
 2. (done) Stage 6: Chlorophyte, Plantera, Lihzahrd Temple, Golem.
-3. Stage 7: Duke Fishron (Truffle Worm, Mushroom biome), Pumpkin Moon and Frost Moon, post-Plantera Dungeon,
-   Martian Madness, Empress of Light.
-4. Stage 8: Lunatic Cultist, the Celestial Pillars and Moon Lord.
+3. (done) Stage 7: Duke Fishron, post-Plantera Dungeon, Pumpkin/Frost Moon, Empress of Light, Martian Madness.
+4. Stage 8: Lunatic Cultist, the Celestial Pillars and Moon Lord (Luminite, endgame gear).
 
 ## DONE: Stage 4 plan (kept for reference)
 1. ~~Dungeon and Skeletron~~ (done, 4a).

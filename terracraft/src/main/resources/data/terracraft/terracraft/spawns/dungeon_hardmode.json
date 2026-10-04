@@ -1,0 +1,108 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:blue_armored_bones",
+      "weight": 8,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:dungeon/bricks"
+      ],
+      "condition": "boss_plantera_defeated"
+    },
+    {
+      "entity": "terracraft:hell_armored_bones",
+      "weight": 6,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:dungeon/bricks"
+      ],
+      "condition": "boss_plantera_defeated"
+    },
+    {
+      "entity": "terracraft:skeleton_sniper",
+      "weight": 4,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:dungeon/bricks"
+      ],
+      "condition": "boss_plantera_defeated"
+    },
+    {
+      "entity": "terracraft:tactical_skeleton",
+      "weight": 4,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:dungeon/bricks"
+      ],
+      "condition": "boss_plantera_defeated"
+    },
+    {
+      "entity": "terracraft:skeleton_commando",
+      "weight": 4,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:dungeon/bricks"
+      ],
+      "condition": "boss_plantera_defeated"
+    },
+    {
+      "entity": "terracraft:ragged_caster",
+      "weight": 4,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:dungeon/bricks"
+      ],
+      "condition": "boss_plantera_defeated"
+    },
+    {
+      "entity": "terracraft:necromancer",
+      "weight": 4,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:dungeon/bricks"
+      ],
+      "condition": "boss_plantera_defeated"
+    },
+    {
+      "entity": "terracraft:paladin",
+      "weight": 2,
+      "layers": [
+        "surface",
+        "underground",
+        "cavern"
+      ],
+      "ground": [
+        "#terracraft:dungeon/bricks"
+      ],
+      "condition": "boss_plantera_defeated"
+    }
+  ]
+}

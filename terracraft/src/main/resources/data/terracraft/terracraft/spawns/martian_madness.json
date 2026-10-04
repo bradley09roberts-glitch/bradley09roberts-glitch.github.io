@@ -1,0 +1,61 @@
+{
+  "spawns": [
+    {
+      "entity": "terracraft:gray_grunt",
+      "weight": 10,
+      "layers": [
+        "surface"
+      ],
+      "event": "martian_madness"
+    },
+    {
+      "entity": "terracraft:ray_gunner",
+      "weight": 8,
+      "layers": [
+        "surface"
+      ],
+      "event": "martian_madness"
+    },
+    {
+      "entity": "terracraft:brain_scrambler",
+      "weight": 6,
+      "layers": [
+        "surface"
+      ],
+      "event": "martian_madness"
+    },
+    {
+      "entity": "terracraft:gigazapper",
+      "weight": 6,
+      "layers": [
+        "surface"
+      ],
+      "event": "martian_madness"
+    },
+    {
+      "entity": "terracraft:martian_officer",
+      "weight": 4,
+      "layers": [
+        "surface"
+      ],
+      "event": "martian_madness"
+    },
+    {
+      "entity": "terracraft:martian_drone",
+      "weight": 5,
+      "placement": "air",
+      "layers": [
+        "surface"
+      ],
+      "event": "martian_madness"
+    },
+    {
+      "entity": "terracraft:scutlix",
+      "weight": 4,
+      "layers": [
+        "surface"
+      ],
+      "event": "martian_madness"
+    }
+  ]
+}

@@ -47,8 +47,8 @@ Hardmode
 - [x] Skeletron Prime (Mechanical Skull; Cannon, Saw, Vice, Laser arms)
 - [x] Plantera (bulb in the underground jungle; hooks on vines, mouth phase with tentacles, seeds/thorn balls/spores, Temple Key)
 - [x] Golem (Lihzahrd Altar + Power Cell; body, head that breaks free, chained fists; Picksaw, Heat Ray, Possessed Hatchet, Sun Stone, Eye of the Golem)
-- [ ] Duke Fishron
-- [ ] Empress of Light
+- [x] Duke Fishron (Truffle Worm bait in the ocean; dashes, bubbles, Sharknados, furious phase; Tsunami, Razorblade Typhoon, Bubble Gun, Fishron Wings)
+- [x] Empress of Light (Prismatic Lacewing; bolts, lances, Sun Dance, Everlasting Rainbow, daylight fury; Nightglow, Starlight, Empress Wings)
 - [ ] Lunatic Cultist
 - [ ] Celestial Pillars (Solar, Vortex, Nebula, Stardust)
 - [ ] Moon Lord
@@ -59,12 +59,15 @@ Hardmode
 - [ ] Flying Fish, Piranha, Shark, Crab
 - [-] Jungle: Hornet, Man Eater, Snatcher, Jungle Bat, Jungle Slime, Angry Trapper, Derpling done; Piranha, Giant Tortoise, Moth pending
 - [x] Lihzahrd Temple: Lihzahrd, Flying Snake
+- [x] Pumpkin Moon (Scarecrow, Splinterling, Hellhound, Poltergeist, Headless Horseman, Mourning Wood, Pumpking) and Frost Moon (Zombie Elf, Gingerbread Man, Elf Archer, Nutcracker, Yeti, Flocko, Everscream, Santa-NK1, Ice Queen) with waves
+- [x] Martian Madness (Martian Probe, Gray Grunt, Ray Gunner, Brain Scrambler, Gigazapper, Martian Officer, Drone, Scutlix, Martian Saucer)
+- [x] Critters: Truffle Worm, Prismatic Lacewing
 - [ ] Desert: Antlion, Antlion Charger/Swarmer, Vulture, Tomb Crawler
 - [ ] Snow/Ice: Ice Slime, Ice Bat, Undead Viking, Snow Flinx
 - [-] Caverns: Skeleton, Cave Bat done; Giant Worm, Granite/Marble, spiders pending
 - [-] Corruption: Eater of Souls, Devourer done; Hardmode corruption enemies pending
 - [-] Crimson: Crimera, Face Monster, Blood Crawler done; Hardmode crimson enemies pending
-- [-] Dungeon: Angry Bones, Dark Caster, Cursed Skull, Dungeon Slime, Dungeon Guardian done; post-Plantera dungeon enemies pending
+- [-] Dungeon: Angry Bones, Dark Caster, Cursed Skull, Dungeon Slime, Dungeon Guardian done; post-Plantera Armored Bones, Paladin, Skeleton Sniper/Tactical/Commando, Ragged Caster, Necromancer, Dungeon Spirit done
 - [x] Underworld: Fire Imp, Demon, Voodoo Demon, Bone Serpent, Lava Slime, Hellbat
 - [x] Hardmode surface/underground/Hallow/evil enemies (Pixie, Unicorn, Gastropod, Illuminant Bat/Slime, Chaos Elemental,
       Corruptor, Slimer, Herpling, Crimslime, Floaty Gross, Wraith, Possessed Armor, Werewolf, Wyvern, Armored Skeleton,
@@ -116,7 +119,7 @@ Boomerangs
 ## Armour
 - [x] Wood, Copper, Tin, Iron, Lead, Silver, Tungsten, Gold, Platinum
 - [-] Shadow, Crimson, Jungle, Molten, Meteor done; Mining, Ninja, Fossil, Necro, Bee pending
-- [-] Cobalt to Titanium, Hallowed, Crystal Assassin, Chlorophyte done; Turtle, Spectre, Beetle, Shroomite, Spooky, Celestial armours pending
+- [-] Cobalt to Titanium, Hallowed, Crystal Assassin, Chlorophyte, Spectre done; Turtle, Beetle, Shroomite, Spooky, Celestial armours pending
 
 ## Accessories
 - [x] Hermes Boots, Cloud in a Bottle, Shiny Red Balloon, Lucky Horseshoe

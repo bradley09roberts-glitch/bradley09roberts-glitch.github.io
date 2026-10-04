@@ -34,7 +34,8 @@ public class EventSummonItem extends TerraItem {
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
         if (player instanceof ServerPlayer serverPlayer) {
             if (EventManager.active(serverPlayer.level().getServer()) != null || serverPlayer.level().dimension() != Level.OVERWORLD
-                || hardmodeOnly && !com.terracraft.progression.ProgressionManager.isHardmode(serverPlayer.level().getServer())) {
+                || hardmodeOnly && !com.terracraft.progression.ProgressionManager.isHardmode(serverPlayer.level().getServer())
+                || event.get().night() && serverPlayer.level().isBrightOutside()) {
                 serverPlayer.sendOverlayMessage(Component.translatable("message.terracraft.boss.nothing_happens").withStyle(ChatFormatting.GRAY));
                 return InteractionResult.FAIL;
             }

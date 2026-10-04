@@ -41,6 +41,8 @@ public enum Ability implements StringRepresentable {
     LEAF_CRYSTAL,
     /** Sun Stone: all stats up during the day. */
     SUN_STONE,
+    /** Spectre armor set: magic hits heal you for part of the damage. */
+    SPECTRE_HEAL,
     /** Gold Ring: coins fly to the player from much further away. */
     COIN_MAGNET,
     /** Lucky Coin: hitting enemies shakes coins out of them. */

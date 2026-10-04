@@ -63,9 +63,13 @@ public final class EventManager {
         EventState state = EventState.get(server);
         state.active = event.id();
         state.kills = 0;
+        state.wave = event.waves() > 0 ? 1 : 0;
         state.setDirty();
         if (event == TerrariaEvents.BLOOD_MOON) {
             ProgressionManager.set(server, ProgressionFlags.BLOOD_MOON, true);
+        }
+        if (event.waves() > 0) {
+            MoonEvents.announceWave(server, event, 1);
         }
         server.getPlayerList().broadcastSystemMessage(Component.translatable(event.startKey())
             .withStyle(event == TerrariaEvents.BLOOD_MOON ? ChatFormatting.DARK_RED : event.invasion() ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.AQUA), false);
@@ -78,6 +82,7 @@ public final class EventManager {
         TerrariaEvent event = active(server);
         state.active = "";
         state.kills = 0;
+        state.wave = 0;
         state.setDirty();
         if (event != null) {
             server.getPlayerList().broadcastSystemMessage(Component.translatable(event.endKey()).withStyle(ChatFormatting.GRAY), false);
@@ -92,8 +97,14 @@ public final class EventManager {
             INVASION_BAR.removeAllPlayers();
             return;
         }
-        INVASION_BAR.setName(Component.translatable("event.terracraft." + event.id()));
-        INVASION_BAR.setProgress(Math.max(0.0F, 1.0F - EventState.get(server).kills() / (float) event.killGoal()));
+        EventState state = EventState.get(server);
+        if (event.waves() > 0) {
+            INVASION_BAR.setName(Component.translatable("event.terracraft.wave", Component.translatable("event.terracraft." + event.id()), state.wave()));
+            INVASION_BAR.setProgress(MoonEvents.waveProgress(event, state));
+        } else {
+            INVASION_BAR.setName(Component.translatable("event.terracraft." + event.id()));
+            INVASION_BAR.setProgress(Math.max(0.0F, 1.0F - state.kills() / (float) event.killGoal()));
+        }
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (player.level().dimension() == net.minecraft.world.level.Level.OVERWORLD) {
                 INVASION_BAR.addPlayer(player);
@@ -117,7 +128,7 @@ public final class EventManager {
         if (day != state.wasDay) {
             state.wasDay = day;
             state.setDirty();
-            if (active != null && !active.invasion() && active.night() != !day) {
+            if (active != null && (!active.invasion() || active.waves() > 0) && active.night() != !day) {
                 stop(server);
                 active = null;
             }
@@ -147,6 +158,12 @@ public final class EventManager {
         if (active == TerrariaEvents.PIRATE_INVASION) {
             maybeSendDutchman(level, random);
         }
+        if (active == TerrariaEvents.MARTIAN_MADNESS) {
+            maybeSendSaucer(level, random);
+        }
+        if (active != null && active.waves() > 0) {
+            MoonEvents.spawn(level, active, state, random);
+        }
     }
 
     /**
@@ -170,6 +187,28 @@ public final class EventManager {
                 level.addFreshEntity(ship);
                 level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable("event.terracraft.pirate_invasion.dutchman")
                     .withStyle(ChatFormatting.LIGHT_PURPLE), false);
+            }
+            return;
+        }
+    }
+
+    /** Once a third of the martians are down, the Martian Saucer may come over a player on the surface (one at a time). */
+    private static void maybeSendSaucer(ServerLevel level, RandomSource random) {
+        if (EventState.get(level.getServer()).kills() < TerrariaEvents.MARTIAN_MADNESS.killGoal() / 3 || random.nextInt(30) != 0) {
+            return;
+        }
+        for (ServerPlayer player : level.players()) {
+            if (player.isSpectator() || !level.canSeeSky(player.blockPosition())
+                || !level.getEntitiesOfClass(com.terracraft.entity.mob.MartianSaucer.class, player.getBoundingBox().inflate(160)).isEmpty()) {
+                continue;
+            }
+            TerrariaMob saucer = MobContent.MARTIAN_SAUCER.get().create(level, EntitySpawnReason.EVENT);
+            if (saucer != null) {
+                saucer.snapTo(player.getX() + 30, player.getY() + 20, player.getZ(), 0.0F, 0.0F);
+                saucer.finalizeSpawn(level, level.getCurrentDifficultyAt(player.blockPosition()), EntitySpawnReason.EVENT, null);
+                level.addFreshEntity(saucer);
+                level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable("event.terracraft.martian_madness.saucer")
+                    .withStyle(ChatFormatting.AQUA), false);
             }
             return;
         }
@@ -212,8 +251,14 @@ public final class EventManager {
         if (running != null && running.invasion() && event.getSource().getEntity() instanceof ServerPlayer
             && running.isMember(net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).getPath())) {
             EventState state = EventState.get(level.getServer());
+            if (running.waves() > 0) {
+                MoonEvents.onKill(level.getServer(), running, state, event.getEntity());
+                updateInvasionBar(level.getServer());
+                return;
+            }
             // the big ones count for more (the Flying Dutchman 10, the Pirate Captain 5)
-            state.kills += event.getEntity() instanceof com.terracraft.entity.mob.FlyingDutchman ? 10
+            state.kills += event.getEntity() instanceof com.terracraft.entity.mob.FlyingDutchman
+                || event.getEntity() instanceof com.terracraft.entity.mob.MartianSaucer ? 10
                 : event.getEntity().getType() == MobContent.PIRATE_CAPTAIN.get() ? 5 : 1;
             state.setDirty();
             updateInvasionBar(level.getServer());
@@ -225,6 +270,8 @@ public final class EventManager {
                     ProgressionManager.markDefeated(level.getServer(), ProgressionFlags.PIRATES);
                 } else if (running == TerrariaEvents.FROST_LEGION) {
                     ProgressionManager.markDefeated(level.getServer(), ProgressionFlags.FROST_LEGION);
+                } else if (running == TerrariaEvents.MARTIAN_MADNESS) {
+                    ProgressionManager.markDefeated(level.getServer(), ProgressionFlags.MARTIANS);
                 }
             }
             return;
@@ -309,7 +356,7 @@ public final class EventManager {
             .then(Commands.literal("status").executes(ctx -> {
                 EventState state = EventState.get(ctx.getSource().getServer());
                 ctx.getSource().sendSuccess(() -> Component.literal(state.active().isEmpty() ? "No event is running."
-                    : "Active event: " + state.active() + " (kills " + state.kills() + ")"), false);
+                    : "Active event: " + state.active() + " (kills " + state.kills() + ", wave " + state.wave() + ")"), false);
                 return state.active().isEmpty() ? 0 : 1;
             })));
     }

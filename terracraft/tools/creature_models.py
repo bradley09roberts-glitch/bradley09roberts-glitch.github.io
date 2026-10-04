@@ -871,10 +871,337 @@ def temple_creatures():
     return [lihzahrd(), flying_snake(), golem(), golem_head(), golem_fist()]
 
 
+# ----------------------------------------------------------------------------------------- Stage 7
+def truffle_worm():
+    """Truffle Worm: a plump glowing-blue mushroom worm with a little cap."""
+    c = Creature('truffle_worm', {'main': '#7AA8E8', 'dark': '#2A4A8A', 'cap': '#3A70D0', 'glow': '#A8E0FF'})
+    c.part('body', pivot=(0, 24, 0))
+    for i in range(4):
+        c.box('body', (-1.5, -3, -4 + i * 2.2), (3, 3, 2.4), pattern='skin', edge='dark')
+    c.box('body', (-2.5, -5, -5), (5, 2, 3), mat='cap', pattern='glow')
+    c.anim('body', 'wiggle', 0.2, 0.6)
+    return c
+
+
+def duke_fishron():
+    """Duke Fishron: a green pig-shark dragon - a fat finned body, a snout with tusks, a dorsal fin, small bat wings
+    and a forked tail. 'rage' texture: red eyes and a darker hide."""
+    c = Creature('duke_fishron', {'main': '#5AA08A', 'dark': '#2A5A4A', 'belly': '#C8D8B0', 'fin': '#3A7A68', 'eye': '#F8E070', 'glow': '#F8E070',
+                                  'tusk': '#F0E8D0', 'wing': '#4A8A78'})
+    c.variants['rage'] = {'eye': '#FF3020', 'glow': '#FF3020', 'main': '#4A8A74'}
+    c.part('body', pivot=(0, 12, 0))
+    c.box('body', (-10, -9, -14), (20, 17, 28), pattern='scale', edge='dark')
+    c.box('body', (-9, 4, -13), (18, 4, 26), mat='belly', pattern='skin')
+    c.box('body', (-1, -16, -6), (2, 8, 12), mat='fin', pattern='membrane')                      # dorsal fin
+    c.part('head', 'body', pivot=(0, -2, -14))
+    c.box('head', (-8, -7, -12), (16, 13, 12), pattern='scale', edge='dark')
+    c.box('head', (-5, -3, -17), (10, 7, 5), pattern='skin')                                       # pig snout
+    c.box('head', (-3, -1, -17.6), (2, 2, 1), mat='dark', pattern='skin')
+    c.box('head', (1, -1, -17.6), (2, 2, 1), mat='dark', pattern='skin')
+    for x in (-6, 5):
+        c.box('head', (x, 3, -16), (1, 4, 1), mat='tusk', pattern='horn')
+        c.box('head', (x - (1 if x < 0 else -1) + (0 if x < 0 else 0), -5, -12.4), (2, 2, 1), mat='eye', pattern='glow')
+    c.anim('head', 'head')
+    for side, nm in ((-1, 'wing_r'), (1, 'wing_l')):
+        c.part(nm, 'body', pivot=(side * 10, -6, -4))
+        c.box(nm, ((-14 if side < 0 else 0), 0, -6), (14, 0, 12), mat='wing', pattern='membrane')
+        c.anim(nm, nm, 0.5, 0.5)
+    for side in (-1, 1):
+        c.box('body', ((-14 if side < 0 else 10), 2, -8), (4, 1, 8), mat='fin', pattern='membrane')    # side fins
+    c.part('tail', 'body', pivot=(0, -1, 14))
+    c.box('tail', (-5, -5, 0), (10, 9, 10), pattern='scale', edge='dark')
+    c.box('tail', (-1, -12, 9), (2, 10, 6), mat='fin', pattern='membrane')
+    c.box('tail', (-1, 3, 9), (2, 8, 6), mat='fin', pattern='membrane')
+    c.anim('tail', 'tail', 0.3, 0.3)
+    c.anim('body', 'bob', 0.8, 0.12)
+    return c
+
+
+def sharkron():
+    """Sharkron: a little flying shark with stubby wings."""
+    c = Creature('sharkron', {'main': '#6A8AA8', 'dark': '#2A3A4A', 'belly': '#E0E8F0', 'teeth': '#F8F8F0', 'wing': '#5A7A98'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-4, -4, -9), (8, 7, 16), pattern='scale', edge='dark')
+    c.box('body', (-3.5, 2, -8), (7, 1.5, 14), mat='belly', pattern='skin')
+    c.box('body', (-3, -1, -10), (6, 3, 1), mat='belly', pattern='skin', faces={'north': 'teeth_down'})
+    c.box('body', (-0.5, -9, -2), (1, 5, 5), mat='dark', pattern='membrane')
+    c.box('body', (-0.5, -5, 7), (1, 9, 4), mat='dark', pattern='membrane')
+    for side, nm in ((-1, 'wing_r'), (1, 'wing_l')):
+        c.part(nm, 'body', pivot=(side * 4, -1, -2))
+        c.box(nm, ((-7 if side < 0 else 0), 0, -3), (7, 0, 6), mat='wing', pattern='membrane')
+        c.anim(nm, nm, 0.6, 0.9)
+    c.anim('body', 'wiggle', 0.15, 0.5)
+    return c
+
+
+def ghost(name, robe, glow, size=8):
+    """Dungeon Spirit / Poltergeist: a wispy hooded ghost with a trailing tail."""
+    c = Creature(name, {'main': robe, 'dark': '#101820', 'glow': glow})
+    c.part('body', pivot=(0, 12, 0))
+    c.box('body', (-size / 2, -size, -size / 2), (size, size, size), pattern='cloth', edge='dark')
+    c.box('body', (-size / 2 + 1, -size + 2, -size / 2 - 0.4), (size - 2, 2, 0.5), mat='glow', pattern='glow')
+    prev = 'body'
+    for i in range(3):
+        nm = f'wisp_{i}'
+        w = size - 2 - i * 2
+        c.part(nm, prev, pivot=(0, 0 if i == 0 else 3, 0))
+        c.box(nm, (-w / 2, 0, -w / 2), (w, 3, w), pattern='cloth')
+        c.anim(nm, 'wiggle', 0.25, 0.4, i)
+        prev = nm
+    c.anim('body', 'bob', 0.8, 0.2)
+    return c
+
+
+def splinterling():
+    """Splinterling: a little walking tree stump with glowing eyes and twig arms."""
+    c = Creature('splinterling', {'main': '#6A4A2A', 'dark': '#2A1A0A', 'glow': '#FF8A20', 'leaf': '#C86A20'})
+    c.part('body', pivot=(0, 14, 0))
+    c.box('body', (-4, -6, -3), (8, 12, 6), pattern='wood', edge='dark')
+    c.box('body', (-3, -3, -3.4), (2, 1, 0.5), mat='glow', pattern='glow')
+    c.box('body', (1, -3, -3.4), (2, 1, 0.5), mat='glow', pattern='glow')
+    c.box('body', (-5, -9, -4), (10, 3, 8), mat='leaf', pattern='leaf')
+    for side, nm in ((-1, 'arm_r'), (1, 'arm_l')):
+        c.part(nm, 'body', pivot=(side * 4, -3, 0))
+        c.box(nm, ((-1 if side < 0 else 0), 0, -1), (1, 7, 1), pattern='wood')
+        c.anim(nm, nm, 0.8)
+    for side, nm in ((-1, 'leg_r'), (1, 'leg_l')):
+        c.part(nm, 'body', pivot=(side * 2, 6, 0))
+        c.box(nm, (-1, 0, -1), (2, 4, 2), pattern='wood')
+        c.anim(nm, nm, 1.0)
+    return c
+
+
+def hellhound():
+    """Hellhound: a lean black hound with burning eyes and a smoking back."""
+    c = Creature('hellhound', {'main': '#2A2020', 'dark': '#100808', 'glow': '#FF5A10', 'fire': '#FF8A20'})
+    c.part('body', pivot=(0, 13, 0))
+    c.box('body', (-3, -3, -7), (6, 6, 14), pattern='skin', edge='dark')
+    c.box('body', (-2, -5, -5), (4, 2, 10), mat='fire', pattern='fire')
+    c.part('head', 'body', pivot=(0, -2, -7))
+    c.box('head', (-3, -3, -5), (6, 5, 5), pattern='skin', edge='dark')
+    c.box('head', (-2, -1, -8), (4, 3, 3), pattern='skin')
+    c.box('head', (-2.5, -2, -5.4), (1, 1, 0.5), mat='glow', pattern='glow')
+    c.box('head', (1.5, -2, -5.4), (1, 1, 0.5), mat='glow', pattern='glow')
+    for x in (-2.5, 1.5):
+        c.box('head', (x, -5, -3), (1, 2, 1), pattern='horn')
+    c.anim('head', 'head')
+    for i, (x, z) in enumerate(((-2, -5), (2, -5), (-2, 5), (2, 5))):
+        nm = ('leg_r', 'leg_l')[i % 2] + str(i)
+        c.part(nm, 'body', pivot=(x, 3, z))
+        c.box(nm, (-1, 0, -1), (2, 8, 2), pattern='skin')
+        c.anim(nm, ('leg_r', 'leg_l')[(i + i // 2) % 2], 1.0)
+    c.part('tail', 'body', pivot=(0, -2, 7), rot=(-0.6, 0, 0))
+    c.box('tail', (-0.5, -0.5, 0), (1, 1, 6), mat='fire', pattern='fire')
+    c.anim('tail', 'tail', 0.4, 0.5)
+    return c
+
+
+def mourning_wood():
+    """Mourning Wood: a huge haunted dead tree with a carved, burning face and grasping branch arms."""
+    c = Creature('mourning_wood', {'main': '#4A3020', 'dark': '#1A0E06', 'glow': '#FF6A10', 'root': '#3A2416'})
+    c.part('trunk', pivot=(0, 24, 0))
+    c.box('trunk', (-10, -48, -9), (20, 48, 18), pattern='wood', edge='dark')
+    c.box('trunk', (-7, -38, -9.6), (5, 4, 1), mat='glow', pattern='glow')
+    c.box('trunk', (2, -38, -9.6), (5, 4, 1), mat='glow', pattern='glow')
+    c.box('trunk', (-6, -28, -9.6), (12, 4, 1), mat='glow', pattern='glow')
+    for i, (x, y, rz) in enumerate(((-10, -46, 0.8), (10, -46, -0.8), (-6, -54, 0.3), (6, -54, -0.3))):
+        nm = f'branch_{i}'
+        c.part(nm, 'trunk', pivot=(x, y, 0), rot=(0, 0, rz))
+        c.box(nm, (-2, -14, -2), (4, 14, 4), pattern='wood')
+        c.anim(nm, 'dangle', 0.08, 0.2, i)
+    for x in (-12, 8):
+        c.box('trunk', (x, -4, -4), (4, 4, 8), mat='root', pattern='wood')
+    for side, nm in ((-1, 'arm_r'), (1, 'arm_l')):
+        c.part(nm, 'trunk', pivot=(side * 10, -30, 0))
+        c.box(nm, ((-12 if side < 0 else 0), -2, -2), (12, 4, 4), pattern='wood')
+        c.anim(nm, 'cast', 0.2, 0.15)
+    return c
+
+
+def pumpking():
+    """Pumpking: a giant floating jack-o'-lantern with a crown of leaves, burning face and two scythe hands."""
+    c = Creature('pumpking', {'main': '#E8781A', 'dark': '#7A3A08', 'glow': '#FFD040', 'stem': '#3A6A20', 'blade': '#C8C8D0', 'cloak': '#2A1A2A'})
+    c.part('head', pivot=(0, 14, 0))
+    c.box('head', (-14, -14, -12), (28, 22, 24), pattern='skin', edge='dark')
+    for x in (-10, -4, 2, 8):
+        c.box('head', (x, -14.4, -12), (2, 22, 24.2), mat='dark', pattern='skin', inflate=0.1)
+    c.box('head', (-10, -8, -12.6), (6, 5, 1), mat='glow', pattern='glow')
+    c.box('head', (4, -8, -12.6), (6, 5, 1), mat='glow', pattern='glow')
+    c.box('head', (-9, 0, -12.6), (18, 4, 1), mat='glow', pattern='glow')
+    c.box('head', (-2, -20, -2), (4, 6, 4), mat='stem', pattern='leaf')
+    c.box('head', (-8, 8, -8), (16, 8, 16), mat='cloak', pattern='cloth')
+    for side, nm in ((-1, 'arm_r'), (1, 'arm_l')):
+        c.part(nm, 'head', pivot=(side * 18, 0, -2))
+        c.box(nm, (-2, -2, -2), (4, 4, 4), mat='cloak', pattern='cloth')
+        c.box(nm, ((-12 if side < 0 else 0), -10, -1), (12, 3, 1), mat='blade', pattern='blade')
+        c.anim(nm, 'cast', 0.4, 0.2)
+    c.anim('head', 'bob', 1.0, 0.1)
+    return c
+
+
+def flocko():
+    """Flocko: a living snowflake."""
+    c = Creature('flocko', {'main': '#C8E8FF', 'dark': '#6A9AC8', 'glow': '#E8F8FF'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-2, -2, -2), (4, 4, 4), mat='glow', pattern='glow')
+    for i in range(6):
+        nm = f'spoke_{i}'
+        c.part(nm, 'body', pivot=(0, 0, 0), rot=(0, 0, i * 1.0472))
+        c.box(nm, (-0.5, -9, -0.5), (1, 7, 1), pattern='gem')
+        c.box(nm, (-2, -7, -0.5), (4, 1, 1), pattern='gem')
+    c.anim('body', 'wiggle', 3.0, 0.1)
+    return c
+
+
+def everscream():
+    """Everscream: an evil giant pine tree with a screaming face and baubles."""
+    c = Creature('everscream', {'main': '#1E4A2A', 'dark': '#0A2010', 'trunk': '#4A3020', 'glow': '#FF3A20', 'bauble': '#E8C030'})
+    c.part('tree', pivot=(0, 24, 0))
+    c.box('tree', (-4, -12, -4), (8, 12, 8), mat='trunk', pattern='wood')
+    for i, (w, y) in enumerate(((36, -28), (28, -44), (20, -60), (12, -74))):
+        c.box('tree', (-w / 2, y, -w / 2), (w, 16 if i < 3 else 12, w), pattern='leaf', edge='dark')
+    c.box('tree', (-8, -40, -14.6), (5, 3, 1), mat='glow', pattern='glow')
+    c.box('tree', (3, -40, -14.6), (5, 3, 1), mat='glow', pattern='glow')
+    c.box('tree', (-5, -34, -14.6), (10, 4, 1), mat='dark', pattern='skin')
+    for x, y in ((-12, -22), (10, -26), (-6, -48), (7, -52), (0, -66)):
+        c.box('tree', (x, y, -18 if y > -30 else -14 if y > -55 else -10), (2, 2, 1), mat='bauble', pattern='gem')
+    c.box('tree', (-2, -80, -2), (4, 4, 4), mat='bauble', pattern='gem')
+    return c
+
+
+def ice_queen():
+    """Ice Queen: a floating frozen queen - a pale face under a tall ice crown, with a flowing gown of icicles."""
+    c = Creature('ice_queen', {'main': '#A8D8F8', 'dark': '#4A7AA8', 'skin': '#E0F0FF', 'glow': '#60E0FF', 'crown': '#E8F8FF'})
+    c.part('body', pivot=(0, 12, 0))
+    c.box('body', (-6, -12, -5), (12, 12, 10), pattern='gem', edge='dark')
+    for i, x in enumerate((-6, -2, 2)):
+        c.box('body', (x, 0, -4), (4, 6 + (i % 2) * 3, 8), pattern='gem')
+    c.part('head', 'body', pivot=(0, -12, 0))
+    c.box('head', (-5, -9, -5), (10, 9, 10), mat='skin', pattern='skin', edge='dark')
+    c.box('head', (-3, -6, -5.4), (2, 1, 0.5), mat='glow', pattern='glow')
+    c.box('head', (1, -6, -5.4), (2, 1, 0.5), mat='glow', pattern='glow')
+    for x, h in ((-5, 6), (-2, 9), (1, 9), (4, 6)):
+        c.box('head', (x, -9 - h, -1), (1.5, h, 1.5), mat='crown', pattern='gem')
+    c.anim('head', 'head')
+    for side, nm in ((-1, 'wing_r'), (1, 'wing_l')):
+        c.part(nm, 'body', pivot=(side * 6, -10, 3))
+        c.box(nm, ((-10 if side < 0 else 0), -6, 0), (10, 14, 0), pattern='gem')
+        c.anim(nm, nm, 0.2, 0.3)
+    c.anim('body', 'bob', 1.0, 0.15)
+    return c
+
+
+def prismatic_lacewing():
+    """Prismatic Lacewing: a moth with rainbow wings."""
+    c = Creature('prismatic_lacewing', {'main': '#E8E0F8', 'dark': '#6A5A8A', 'wing': '#F0A0E0', 'glow': '#A0F0FF'})
+    c.part('body', pivot=(0, 18, 0))
+    c.box('body', (-1, -1, -3), (2, 2, 6), pattern='skin', edge='dark')
+    for side, nm, mat in ((-1, 'wing_r', 'wing'), (1, 'wing_l', 'glow')):
+        c.part(nm, 'body', pivot=(side, -1, 0))
+        c.box(nm, ((-6 if side < 0 else 0), 0, -3), (6, 0, 6), mat=mat, pattern='membrane')
+        c.anim(nm, nm, 0.9, 1.2)
+    return c
+
+
+def empress_of_light():
+    """Empress of Light: a radiant fairy queen - a slender glowing figure with a pale face, flowing hair and four
+    great prismatic butterfly wings."""
+    c = Creature('empress_of_light', {'main': '#F8F0FF', 'dark': '#A898C8', 'hair': '#F8D8F0', 'glow': '#FFF8C8', 'wing': '#F0A8F0', 'wing2': '#A8E8FF'})
+    c.part('body', pivot=(0, 22, 0))
+    c.box('body', (-4, -24, -2.5), (8, 14, 5), pattern='cloth', edge='dark')
+    c.box('body', (-6, -10, -4), (12, 10, 8), pattern='cloth')                                    # gown
+    c.box('body', (-3, -20, -3), (6, 4, 0.5), mat='glow', pattern='glow')
+    c.part('head', 'body', pivot=(0, -24, 0))
+    c.box('head', (-3.5, -7, -3.5), (7, 7, 7), pattern='skin', edge='dark')
+    c.box('head', (-4, -8, 0), (8, 10, 5), mat='hair', pattern='cloth')
+    c.box('head', (-2, -4, -3.8), (1, 1, 0.3), mat='glow', pattern='glow')
+    c.box('head', (1, -4, -3.8), (1, 1, 0.3), mat='glow', pattern='glow')
+    c.box('head', (-3, -10, -1), (6, 2, 2), mat='glow', pattern='gem')                             # tiara
+    c.anim('head', 'head')
+    for side, nm in ((-1, 'wing_r'), (1, 'wing_l')):
+        c.part(nm, 'body', pivot=(side * 3, -20, 2.5))
+        c.box(nm, ((-22 if side < 0 else 0), -18, 0), (22, 18, 0), mat='wing', pattern='membrane')
+        c.box(nm, ((-16 if side < 0 else 0), 0, 0.2), (16, 14, 0), mat='wing2', pattern='membrane')
+        c.anim(nm, nm, 0.35, 0.35)
+    for side, nm in ((-1, 'arm_r'), (1, 'arm_l')):
+        c.part(nm, 'body', pivot=(side * 5, -23, 0))
+        c.box(nm, (-1, 0, -1), (2, 11, 2), pattern='skin')
+        c.anim(nm, 'cast', 0.3, 0.2)
+    c.anim('body', 'bob', 1.2, 0.12)
+    return c
+
+
+def martian_probe():
+    """Martian Probe: a small saucer-shaped scanner with a green eye."""
+    c = Creature('martian_probe', {'main': '#A8B0B8', 'dark': '#4A5058', 'glow': '#60FF90'})
+    c.part('body', pivot=(0, 18, 0))
+    c.box('body', (-6, -2, -6), (12, 3, 12), pattern='plate', edge='dark')
+    c.box('body', (-3, -5, -3), (6, 3, 6), mat='glow', pattern='glow')
+    c.box('body', (-1, 1, -1), (2, 2, 2), mat='glow', pattern='glow')
+    c.anim('body', 'bob', 0.8, 0.2)
+    return c
+
+
+def martian_drone():
+    """Martian Drone: a round bomb drone with a blinking red light."""
+    c = Creature('martian_drone', {'main': '#8A9098', 'dark': '#3A4048', 'glow': '#FF4020'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-5, -5, -5), (10, 9, 10), pattern='plate', edge='dark')
+    c.box('body', (-1, -7, -1), (2, 2, 2), mat='glow', pattern='glow')
+    for side in (-1, 1):
+        c.box('body', ((-9 if side < 0 else 5), -2, -1), (4, 1, 2), mat='dark', pattern='plate')
+    c.anim('body', 'bob', 0.6, 0.3)
+    return c
+
+
+def scutlix():
+    """Scutlix: a martian's four-legged insectoid mount with a laser snout."""
+    c = Creature('scutlix', {'main': '#5A8A4A', 'dark': '#1A3A1A', 'glow': '#60FF90', 'plate': '#8AA0A8'})
+    c.part('body', pivot=(0, 12, 0))
+    c.box('body', (-6, -4, -9), (12, 8, 18), pattern='scale', edge='dark')
+    c.box('body', (-5, -6, -6), (10, 2, 12), mat='plate', pattern='plate')
+    c.part('head', 'body', pivot=(0, -1, -9))
+    c.box('head', (-4, -3, -7), (8, 6, 7), pattern='scale', edge='dark')
+    c.box('head', (-1, -1, -11), (2, 2, 4), mat='plate', pattern='plate')
+    c.box('head', (-3, -2, -7.4), (2, 1, 0.5), mat='glow', pattern='glow')
+    c.box('head', (1, -2, -7.4), (2, 1, 0.5), mat='glow', pattern='glow')
+    c.anim('head', 'head')
+    for i, (x, z) in enumerate(((-6, -6), (6, -6), (-6, 6), (6, 6))):
+        nm = f'leg_{i}'
+        c.part(nm, 'body', pivot=(x, 2, z), rot=(0, 0, 0.5 if x > 0 else -0.5))
+        c.box(nm, (-1, 0, -1), (2, 11, 2), pattern='scale')
+        c.anim(nm, 'spider', 0.4, 0.5, i)
+    return c
+
+
+def martian_saucer():
+    """The Martian Saucer: a wide flying saucer with a glass dome, running lights and laser turrets underneath."""
+    c = Creature('martian_saucer', {'main': '#A8B0B8', 'dark': '#3A4048', 'glow': '#60FF90', 'dome': '#80D8C8', 'light': '#FFD040'})
+    c.part('body', pivot=(0, 16, 0))
+    c.box('body', (-40, -4, -40), (80, 6, 80), pattern='plate', edge='dark')
+    c.box('body', (-30, -8, -30), (60, 4, 60), pattern='plate', edge='dark')
+    c.box('body', (-14, -20, -14), (28, 12, 28), mat='dome', pattern='gem')
+    c.box('body', (-20, 2, -20), (40, 4, 40), mat='dark', pattern='plate')
+    for i in range(8):
+        a = i * 3.14159 / 4
+        import math as _m
+        c.box('body', (_m.cos(a) * 36 - 1.5, -2, _m.sin(a) * 36 - 1.5), (3, 2, 3), mat='light', pattern='gem')
+    for x, z in ((-12, -12), (12, -12), (-12, 12), (12, 12)):
+        c.box('body', (x - 2, 6, z - 2), (4, 4, 4), mat='glow', pattern='glow')
+    c.anim('body', 'bob', 1.0, 0.1)
+    return c
+
+
+def stage7_creatures():
+    return [truffle_worm(), duke_fishron(), sharkron(), ghost('dungeon_spirit', '#5A90E8', '#A8E0FF'), ghost('poltergeist', '#C8C8D8', '#FF8A20', 7),
+            splinterling(), hellhound(), mourning_wood(), pumpking(), flocko(), everscream(), ice_queen(), prismatic_lacewing(),
+            empress_of_light(), martian_probe(), martian_drone(), scutlix(), martian_saucer()]
+
+
 def all_creatures():
     return [imp(), demon(), demon('voodoo_demon', voodoo=True), eater_of_souls(), crimera(), face_monster(), blood_crawler(),
             snapper('man_eater', '#4A9A30', '#E070A0', 9), snapper('snatcher', '#5AAA3A', '#F0A0C0', 7), meteor_head()] + hm_creatures() + mech_creatures() + pirate_creatures() + frost_creatures() \
-        + jungle_hm_creatures() + temple_creatures()
+        + jungle_hm_creatures() + temple_creatures() + stage7_creatures()
 
 
 def write(assets, tex):

@@ -100,12 +100,25 @@ Priority: **A** = very visible / looks clearly wrong today, **B** = noticeable, 
 | C | Chlorophyte armor | leafy crest and fronds on a plate model | living-plant look: leaves growing out of the plates, and the Leaf Crystal itself floating above the head |
 | C | Leaf Crystal set bonus | no visual (leaves just appear) | a floating green crystal above the player that the leaves come from |
 
+## Stage 7 (built; first versions)
+
+| Pri | What | Today | Improvement |
+|---|---|---|---|
+| A | Empress of Light | boxy figure with flat two-colour wings | slender figure, four layered translucent prismatic wings that shimmer through the rainbow, glowing halo, light trails |
+| A | Duke Fishron | box body with flat bat wings, pig snout | rounder pig-shark body, finned wings, open jaw with teeth for dashes, foamy water trail, Sharknado as a real spinning funnel model |
+| A | Martian Saucer | stacked flat discs | rounded hull, rotating ring of lights, tractor beam cone, visible pilot in the dome, turret barrels |
+| B | Pumpking / Mourning Wood / Everscream | box jack-o'-lantern, box tree, stacked-box pine | carved rounded pumpkin with flickering inner light, gnarled branching trunk, layered pine branches with garland |
+| B | Ice Queen / Santa-NK1 | gem-pattern figure; Santa uses a humanoid skin | crystalline gown and crown that refract light; Santa-NK1 as a proper tank-robot with treads and a gatling arm |
+| B | Moon creatures | humanoid skins (Scarecrow, Headless Horseman, elves, Nutcracker, Yeti) | Scarecrow with straw tufts and a pumpkin head, Horseman on a horse, Yeti with fur bulk, Gingerbread Man with icing |
+| B | Post-Plantera Dungeon | recoloured skeleton skins | armour plates on Armored Bones, Paladin with a giant hammer and shield, Snipers with rifles, Necromancer robes and skull staff |
+| B | Martians | humanoid skins | big-headed grey aliens with antennae, ray guns in hand, Scutlix rider |
+| C | Sharkron, Truffle Worm, Lacewing, Flocko, Spirits | simple models | smoother shapes, glows and wing motion |
+| C | Spectre armor | hooded cloth model | translucent ghostly material with a glow |
+
 ## Future (planned stages) - will need models when they are built
 
 - **Santa Claus** (Frost Legion follow-up), Stylist, Party Girl, Tax Collector.
 - **Plantera**: bulb block, flower head with petals and hooks + tentacles, Planter's Tentacles; Jungle Hardmode enemies (Man Eater hardmode, Angry Trapper, Derpling, Moth).
 - **Lihzahrd Temple**: Lihzahrd, Flying Snake, traps (dart, spiky ball, spear), altar; **Golem** (stone head, fists on chains, body with sun core).
-- **Duke Fishron** (pig-shark dragon), Sharkron; Truffle Worm.
-- **Pumpkin Moon / Frost Moon**: Pumpking, Mourning Wood, Headless Horseman, Ice Queen, Santa-NK1, Everscream.
-- **Empress of Light** (butterfly wings, prismatic glow), **Lunatic Cultist**, **Celestial Pillars** (Solar/Vortex/Nebula/Stardust), **Moon Lord** (hands with eyes, core, head).
+- **Lunatic Cultist**, **Celestial Pillars** (Solar/Vortex/Nebula/Stardust), **Moon Lord** (hands with eyes, core, head).
 - Mounts and pets if added later; minions for summon weapons (Imp, Spider, Twins, Pirate, Sanguine Bat...).

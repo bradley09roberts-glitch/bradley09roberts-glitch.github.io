@@ -164,6 +164,46 @@ public final class CreatureRenderers {
         json(event, MobContent.PLANTERA.get(), "plantera", 1.6F, 0.0F);
         json(event, MobContent.PLANTERA_HOOK.get(), "plantera_hook", 1.0F, 0.0F);
         json(event, MobContent.PLANTERA_TENTACLE.get(), "plantera_tentacle", 1.0F, 0.0F);
+        // Stage 7: Duke Fishron, the Dungeon after Plantera, the moons, Empress of Light, Martian Madness
+        humanoid(event, MobContent.RAGGED_CASTER.get(), TerraModels.HUMANOID, 1.8F, false);
+        humanoid(event, MobContent.NECROMANCER.get(), TerraModels.HUMANOID, 1.8F, false);
+        humanoid(event, MobContent.SCARECROW.get(), TerraModels.HUMANOID, 1.9F, true);
+        humanoid(event, MobContent.HEADLESS_HORSEMAN.get(), TerraModels.HUMANOID, 2.6F, true);
+        humanoid(event, MobContent.ZOMBIE_ELF.get(), TerraModels.HUMANOID, 1.3F, true);
+        humanoid(event, MobContent.ELF_ARCHER.get(), TerraModels.HUMANOID, 1.3F, false);
+        humanoid(event, MobContent.GINGERBREAD_MAN.get(), TerraModels.HUMANOID, 1.4F, true);
+        humanoid(event, MobContent.NUTCRACKER.get(), TerraModels.HUMANOID, 2.0F, true);
+        humanoid(event, MobContent.YETI.get(), TerraModels.HUMANOID, 2.6F, true);
+        humanoid(event, MobContent.SANTA_NK1.get(), TerraModels.HUMANOID, 2.6F, false);
+        humanoid(event, MobContent.GRAY_GRUNT.get(), TerraModels.HUMANOID, 1.8F, true);
+        humanoid(event, MobContent.RAY_GUNNER.get(), TerraModels.HUMANOID, 1.8F, false);
+        humanoid(event, MobContent.BRAIN_SCRAMBLER.get(), TerraModels.HUMANOID, 1.8F, false);
+        humanoid(event, MobContent.GIGAZAPPER.get(), TerraModels.HUMANOID, 1.8F, true);
+        humanoid(event, MobContent.MARTIAN_OFFICER.get(), TerraModels.HUMANOID, 1.9F, false);
+        humanoid(event, MobContent.BLUE_ARMORED_BONES.get(), TerraModels.SKELETON, 1.8F, true);
+        humanoid(event, MobContent.HELL_ARMORED_BONES.get(), TerraModels.SKELETON, 1.8F, true);
+        humanoid(event, MobContent.PALADIN.get(), TerraModels.SKELETON, 2.6F, true);
+        humanoid(event, MobContent.SKELETON_SNIPER.get(), TerraModels.SKELETON, 1.8F, false);
+        humanoid(event, MobContent.TACTICAL_SKELETON.get(), TerraModels.SKELETON, 1.8F, false);
+        humanoid(event, MobContent.SKELETON_COMMANDO.get(), TerraModels.SKELETON, 1.8F, false);
+        json(event, MobContent.TRUFFLE_WORM.get(), "truffle_worm", 1.0F, 0.2F);
+        json(event, MobContent.DUKE_FISHRON.get(), "duke_fishron", 1.0F, 0.0F);
+        json(event, MobContent.SHARKRON.get(), "sharkron", 1.0F, 0.0F);
+        json(event, MobContent.DUNGEON_SPIRIT.get(), "dungeon_spirit", 1.0F, 0.0F);
+        json(event, MobContent.SPLINTERLING.get(), "splinterling", 1.0F, 0.4F);
+        json(event, MobContent.HELLHOUND.get(), "hellhound", 1.0F, 0.5F);
+        json(event, MobContent.POLTERGEIST.get(), "poltergeist", 1.0F, 0.0F);
+        json(event, MobContent.MOURNING_WOOD.get(), "mourning_wood", 1.0F, 1.0F);
+        json(event, MobContent.PUMPKING.get(), "pumpking", 1.0F, 0.0F);
+        json(event, MobContent.FLOCKO.get(), "flocko", 1.0F, 0.0F);
+        json(event, MobContent.EVERSCREAM.get(), "everscream", 1.0F, 1.2F);
+        json(event, MobContent.ICE_QUEEN.get(), "ice_queen", 1.0F, 0.0F);
+        json(event, MobContent.PRISMATIC_LACEWING.get(), "prismatic_lacewing", 1.0F, 0.0F);
+        json(event, MobContent.EMPRESS_OF_LIGHT.get(), "empress_of_light", 1.0F, 0.0F);
+        json(event, MobContent.MARTIAN_PROBE.get(), "martian_probe", 1.0F, 0.0F);
+        json(event, MobContent.MARTIAN_DRONE.get(), "martian_drone", 1.0F, 0.0F);
+        json(event, MobContent.SCUTLIX.get(), "scutlix", 1.0F, 0.6F);
+        json(event, MobContent.MARTIAN_SAUCER.get(), "martian_saucer", 1.0F, 0.0F);
         // Lihzahrd Temple and Golem
         json(event, MobContent.LIHZAHRD.get(), "lihzahrd", 1.0F, 0.5F);
         json(event, MobContent.FLYING_SNAKE.get(), "flying_snake", 1.0F, 0.3F);
@@ -175,6 +215,13 @@ public final class CreatureRenderers {
             register(event, npc.get(), ctx -> new TerraModelRenderer<>(ctx,
                 new TerraHumanoidModel(ctx.bakeLayer(layer)), 0.9375F, 0.5F, false));
         }
+    }
+
+    /** A humanoid (or skeleton) scaled to a hitbox {@code height} blocks tall (the model is 2 blocks at scale 0.9375). */
+    private static void humanoid(EntityRenderersEvent.RegisterRenderers event, EntityType<? extends LivingEntity> type,
+                                 net.minecraft.client.model.geom.ModelLayerLocation layer, float height, boolean armsForward) {
+        register(event, type, ctx -> new TerraModelRenderer<>(ctx, new TerraHumanoidModel(ctx.bakeLayer(layer)), 0.9375F * height / 1.8F,
+            Math.min(1.0F, height * 0.28F), armsForward));
     }
 
     /** A creature with its own JSON model (see JsonCreatureModel), drawn at 1 model unit = 1/16 block times {@code scale}. */

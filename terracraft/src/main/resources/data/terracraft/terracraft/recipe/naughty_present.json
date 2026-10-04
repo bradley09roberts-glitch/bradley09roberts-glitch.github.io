@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:naughty_present",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:white_wool",
+      "count": 20
+    },
+    {
+      "item": "terracraft:ectoplasm",
+      "count": 5
+    },
+    {
+      "item": "terracraft:soul_of_fright",
+      "count": 5
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "consumables"
+}

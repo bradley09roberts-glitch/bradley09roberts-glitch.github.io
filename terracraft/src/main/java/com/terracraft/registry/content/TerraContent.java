@@ -30,5 +30,10 @@ public final class TerraContent {
         PlanteraContent.init();
         TempleContent.init();
         GolemContent.init();
+        FishronContent.init();
+        DungeonHardmodeContent.init();
+        MoonContent.init();
+        EmpressContent.init();
+        MartianContent.init();
     }
 }

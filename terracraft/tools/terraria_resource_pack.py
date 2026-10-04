@@ -89,6 +89,7 @@ SPRITE_NAME_OVERRIDES = {
     "spazmatism_mouth": "Spazmatism (Second Form)",
     "plantera_mouth": "Plantera (Phase 2)",
     "golem_head_free": "Golem Head",
+    "duke_fishron_rage": "Duke Fishron",
 }
 # worm segments are named "<Worm> Head/Body/Tail" on the wiki
 WORMS = {"bone_serpent": "Bone Serpent", "destroyer": "The Destroyer", "devourer": "Devourer",

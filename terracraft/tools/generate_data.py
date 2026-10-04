@@ -300,6 +300,108 @@ def stage6():
     ]
 
 
+def stage7():
+    MOBS.update({
+        'truffle_worm': ('Truffle Worm', []), 'duke_fishron': ('Duke Fishron', []), 'sharkron': ('Sharkron', []),
+        'blue_armored_bones': ('Blue Armored Bones', [('ectoplasm', 1, 1, 0.1), ('paladins_shield', 1, 1, 0.003)]),
+        'hell_armored_bones': ('Hell Armored Bones', [('ectoplasm', 1, 1, 0.1)]),
+        'paladin': ('Paladin', [('paladins_hammer', 1, 1, 0.07), ('paladins_shield', 1, 1, 0.06), ('ectoplasm', 2, 4, 1.0)]),
+        'skeleton_sniper': ('Skeleton Sniper', [('sniper_rifle', 1, 1, 0.08), ('ectoplasm', 1, 1, 0.1)]),
+        'tactical_skeleton': ('Tactical Skeleton', [('ectoplasm', 1, 1, 0.1)]),
+        'skeleton_commando': ('Skeleton Commando', [('ectoplasm', 1, 1, 0.1)]),
+        'ragged_caster': ('Ragged Caster', [('ectoplasm', 1, 1, 0.1)]),
+        'necromancer': ('Necromancer', [('shadowbeam_staff', 1, 1, 0.08), ('ectoplasm', 1, 1, 0.1)]),
+        'dungeon_spirit': ('Dungeon Spirit', [('ectoplasm', 1, 3, 1.0)]),
+        'scarecrow': ('Scarecrow', [('spooky_wood', 1, 5, 1.0)]), 'splinterling': ('Splinterling', [('spooky_wood', 2, 6, 1.0)]),
+        'hellhound': ('Hellhound', [('spooky_wood', 1, 5, 1.0)]), 'poltergeist': ('Poltergeist', [('spooky_wood', 1, 5, 1.0)]),
+        'headless_horseman': ('Headless Horseman', [('spooky_wood', 5, 10, 1.0)]),
+        'mourning_wood': ('Mourning Wood', [('spooky_wood', 10, 30, 1.0), ('stake_launcher', 1, 1, 0.3)]),
+        'pumpking': ('Pumpking', [('the_horsemans_blade', 1, 1, 0.25), ('bat_scepter', 1, 1, 0.25), ('candy_corn_rifle', 1, 1, 0.25)]),
+        'zombie_elf': ('Zombie Elf', []), 'gingerbread_man': ('Gingerbread Man', []), 'elf_archer': ('Elf Archer', []),
+        'nutcracker': ('Nutcracker', []), 'yeti': ('Yeti', []), 'flocko': ('Flocko', []),
+        'everscream': ('Everscream', [('christmas_tree_sword', 1, 1, 0.25), ('razorpine', 1, 1, 0.25)]),
+        'santa_nk1': ('Santa-NK1', [('chain_gun', 1, 1, 0.25), ('elf_melter', 1, 1, 0.25)]),
+        'ice_queen': ('Ice Queen', [('north_pole', 1, 1, 0.25), ('blizzard_staff', 1, 1, 0.25)]),
+        'prismatic_lacewing': ('Prismatic Lacewing', []), 'empress_of_light': ('Empress of Light', []),
+        'martian_probe': ('Martian Probe', []), 'gray_grunt': ('Gray Grunt', []), 'ray_gunner': ('Ray Gunner', []),
+        'brain_scrambler': ('Brain Scrambler', []), 'gigazapper': ('Gigazapper', []), 'martian_officer': ('Martian Officer', []),
+        'martian_drone': ('Martian Drone', []), 'scutlix': ('Scutlix', []), 'martian_saucer': ('Martian Saucer', []),
+    })
+    PLANTERA = 'boss_plantera_defeated'
+    DUNGEON_HM = {'ground': ['#terracraft:dungeon/bricks'], 'condition': PLANTERA}
+    SPAWNS['dungeon_hardmode'] = [
+        dict(entity=e, weight=w, layers=['surface', 'underground', 'cavern'], **DUNGEON_HM) for e, w in (
+            ('blue_armored_bones', 8), ('hell_armored_bones', 6), ('skeleton_sniper', 4), ('tactical_skeleton', 4), ('skeleton_commando', 4),
+            ('ragged_caster', 4), ('necromancer', 4), ('paladin', 2))]
+    SPAWNS['stage7_critters'] = [
+        dict(entity='truffle_worm', weight=4, layers=['surface', 'underground'], biomes=['minecraft:mushroom_fields'], condition='hardmode_active'),
+        dict(entity='prismatic_lacewing', weight=3, time='night', layers=['surface'], placement='air',
+             ground=['#terracraft:hallow/all'], condition=PLANTERA),
+    ]
+    MARTIAN = dict(layers=['surface'], event='martian_madness')
+    SPAWNS['martian_madness'] = [
+        dict(entity='gray_grunt', weight=10, **MARTIAN), dict(entity='ray_gunner', weight=8, **MARTIAN),
+        dict(entity='brain_scrambler', weight=6, **MARTIAN), dict(entity='gigazapper', weight=6, **MARTIAN),
+        dict(entity='martian_officer', weight=4, **MARTIAN), dict(entity='martian_drone', weight=5, placement='air', **MARTIAN),
+        dict(entity='scutlix', weight=4, **MARTIAN)]
+
+
+def stage7_recipes():
+    HM_ANVIL, HM_FORGE = t('hardmode_anvil'), t('hardmode_forge')
+    SB = t('spectre_bar')
+    recipe('spectre_bar', SB, [(t('chlorophyte_bar'), 1), (t('ectoplasm'), 1)], [HM_FORGE], category='materials')
+    recipe('spectre_hood', t('spectre_hood'), [(SB, 12)], [HM_ANVIL], category='armor')
+    recipe('spectre_robe', t('spectre_robe'), [(SB, 24)], [HM_ANVIL], category='armor')
+    recipe('spectre_pants', t('spectre_pants'), [(SB, 18)], [HM_ANVIL], category='armor')
+    recipe('pumpkin_moon_medallion', t('pumpkin_moon_medallion'), [('minecraft:pumpkin', 30), (t('ectoplasm'), 5), (t('hallowed_bar'), 10)],
+           [HM_ANVIL], category='consumables')
+    recipe('naughty_present', t('naughty_present'), [('minecraft:white_wool', 20), (t('ectoplasm'), 5), (t('soul_of_fright'), 5)],
+           [HM_ANVIL], category='consumables')
+
+
+def stage7_lang(L):
+    L.update({
+        'event.terracraft.wave': '%s: Wave %s',
+        'event.terracraft.pumpkin_moon': 'Pumpkin Moon', 'event.terracraft.pumpkin_moon.start': 'The Pumpkin Moon is rising...',
+        'event.terracraft.pumpkin_moon.end': 'The Pumpkin Moon has set.',
+        'event.terracraft.frost_moon': 'Frost Moon', 'event.terracraft.frost_moon.start': 'The Frost Moon is rising...',
+        'event.terracraft.frost_moon.end': 'The Frost Moon has set.',
+        'event.terracraft.martian_madness': 'Martian Madness', 'event.terracraft.martian_madness.start': 'Martians are invading!',
+        'event.terracraft.martian_madness.end': 'The martians have been defeated!',
+        'event.terracraft.martian_madness.probe': 'The probe has finished its scan and is getting away...',
+        'event.terracraft.martian_madness.saucer': 'A Martian Saucer is approaching!',
+        'item.terracraft.truffle_worm.tooltip': "Bait for something big. Cast a line into the ocean with one in your pack\n'Caught in the Hardmode mushroom biome'",
+        'item.terracraft.tsunami.tooltip': 'Shoots five arrows at once',
+        'item.terracraft.razorblade_typhoon.tooltip': 'Casts fast moving razorwheels',
+        'item.terracraft.bubble_gun.tooltip': 'Rapidly shoots forceful bubbles',
+        'item.terracraft.ectoplasm.tooltip': "'The building blocks of the afterlife'",
+        'armor_set.terracraft.spectre.bonus': 'Magic damage done to enemies heals you',
+        'ability.terracraft.spectre_heal': 'Magic damage heals you',
+        'item.terracraft.paladins_shield.tooltip': 'Grants immunity to knockback and reduces damage taken',
+        'item.terracraft.paladins_hammer.tooltip': 'A powerful returning hammer',
+        'item.terracraft.sniper_rifle.tooltip': "Shoots a powerful, high velocity bullet",
+        'item.terracraft.shadowbeam_staff.tooltip': 'Creates a shadow beam that bounces off walls',
+        'item.terracraft.pumpkin_moon_medallion.tooltip': 'Summons the Pumpkin Moon (at night)',
+        'item.terracraft.naughty_present.tooltip': 'Summons the Frost Moon (at night)',
+        'item.terracraft.the_horsemans_blade.tooltip': 'Swings throw flaming pumpkin heads',
+        'item.terracraft.bat_scepter.tooltip': 'Summons bats to attack your enemies',
+        'item.terracraft.christmas_tree_sword.tooltip': 'Shoots Christmas ornaments',
+        'item.terracraft.razorpine.tooltip': 'Shoots razor sharp pine needles',
+        'item.terracraft.chain_gun.tooltip': "'Half shark, half gun, completely awesome.'",
+        'item.terracraft.elf_melter.tooltip': 'Sprays fire',
+        'item.terracraft.north_pole.tooltip': 'Shoots an icy spear that rains snowflakes',
+        'item.terracraft.blizzard_staff.tooltip': 'Showers an area with icicles',
+        'item.terracraft.nightglow.tooltip': 'Releases homing lights',
+        'item.terracraft.starlight.tooltip': "'Rapid thrusts of light'",
+        'item.terracraft.influx_waver.tooltip': 'Releases homing waves',
+        'item.terracraft.laser_machinegun.tooltip': 'Fires a stream of lasers',
+        'item.terracraft.xenopopper.tooltip': 'Fires a spread of bullets',
+        'entity.terracraft.santa_nk1': 'Santa-NK1',
+        'item.terracraft.paladins_hammer': "Paladin's Hammer", 'item.terracraft.paladins_shield': "Paladin's Shield",
+        'item.terracraft.the_horsemans_blade': "The Horseman's Blade",
+    })
+
+
 def stage6_recipes():
     HM_ANVIL, HM_FORGE = t('hardmode_anvil'), t('hardmode_forge')
     CB = t('chlorophyte_bar')
@@ -553,6 +655,7 @@ def terraria_recipes():
     for m in ['copper', 'iron', 'gold']:
         recipe(f'{m}_bow', t(f'{m}_bow'), [(BAR[m], 7)], [ANVIL], category='weapons')
     stage6_recipes()
+    stage7_recipes()
     for name, data in RECIPES.items():
         write(f'{NS}/terracraft/recipe/{name}.json', data)
 
@@ -1007,6 +1110,7 @@ def lang():
         'item.terracraft.housing_query.tooltip': 'Right-click inside a room to check whether an NPC can live there',
     })
     stage6_lang(L)
+    stage7_lang(L)
     for mob, (name, _) in MOBS.items():
         L[f'entity.terracraft.{mob}'] = name
     path = os.path.join(RES, 'assets/terracraft/lang/en_us.json')
@@ -1674,6 +1778,7 @@ def main():
     hardmode()
     queen_slime()
     stage6()
+    stage7()
     damage()
     smelting()
     terraria_recipes()

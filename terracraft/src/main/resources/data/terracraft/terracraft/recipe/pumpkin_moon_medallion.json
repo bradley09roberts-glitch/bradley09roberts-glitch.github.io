@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "terracraft:pumpkin_moon_medallion",
+    "count": 1
+  },
+  "ingredients": [
+    {
+      "item": "minecraft:pumpkin",
+      "count": 30
+    },
+    {
+      "item": "terracraft:ectoplasm",
+      "count": 5
+    },
+    {
+      "item": "terracraft:hallowed_bar",
+      "count": 10
+    }
+  ],
+  "stations": [
+    "terracraft:hardmode_anvil"
+  ],
+  "category": "consumables"
+}

@@ -31,7 +31,8 @@ public final class TerraModels {
         "corruptor", "slimer", "herpling", "floaty_gross", "wraith", "possessed_armor", "werewolf", "mimic",
         "prime_cannon", "prime_saw", "prime_vice", "prime_laser", "parrot", "flying_dutchman", "mister_stabby", "snowman_gangsta", "snow_balla",
         "angry_trapper", "derpling", "plantera", "plantera_hook", "plantera_tentacle",
-        "lihzahrd", "flying_snake", "golem", "golem_head", "golem_fist");
+        "lihzahrd", "flying_snake", "golem", "golem_head", "golem_fist",
+        "truffle_worm", "duke_fishron", "sharkron", "dungeon_spirit", "splinterling", "hellhound", "poltergeist", "mourning_wood", "pumpking", "flocko", "everscream", "ice_queen", "prismatic_lacewing", "empress_of_light", "martian_probe", "martian_drone", "scutlix", "martian_saucer");
 
     private TerraModels() {}
 

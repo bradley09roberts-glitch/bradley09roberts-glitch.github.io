@@ -127,6 +127,9 @@ public final class TerrariaSpawner {
         int x = Mth.floor(player.getX() + Math.cos(angle) * distance);
         int z = Mth.floor(player.getZ() + Math.sin(angle) * distance);
         BlockPos ground = findGround(level, x, player.getBlockY(), z, random);
+        if (ground != null && SafeZones.isSafe(level.getServer(), ground.getX(), ground.getY(), ground.getZ())) {
+            return false;
+        }
         if (ground == null || level.getNearestPlayer(ground.getX() + 0.5, ground.getY(), ground.getZ() + 0.5, MIN_DISTANCE - 4, false) != null) {
             return false;
         }
