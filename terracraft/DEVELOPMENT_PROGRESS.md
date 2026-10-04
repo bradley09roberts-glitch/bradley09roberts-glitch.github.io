@@ -3,6 +3,7 @@
 Project: Terraria total conversion for Minecraft Java 26.2 / NeoForge 26.2 (single mod jar, modid `terracraft`).
 The mod started on Forge 65.1.0 and was ported to NeoForge so Iris + Sodium (shaders) can run with it.
 Read `docs/ARCHITECTURE.md` first when continuing work; `docs/TESTING.md` explains the headless test setup.
+`docs/VISUAL_BACKLOG.md` lists model/visual upgrades saved for the end; add new entries as stages land.
 
 ## COMPLETED
 
