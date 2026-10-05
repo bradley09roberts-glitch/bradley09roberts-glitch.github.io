@@ -32,8 +32,7 @@ All times are server ticks (20 per second), distances are blocks.
 * **Health 0**: knocked out (`KNOCKED_OUT`). Both in the same tick: the one with more health wins, then the one deeper inside
   the court, then luck.
 * **The line**: a fighter whose centre is within 0.2 blocks of the outer edge of the painted line, or beyond it, loses
-  (`OUT_OF_BOUNDS`). Knock-back and shoves are the way to do that to somebody; a dodge never carries you over it (it stops
-  short), neither does your own walking in a fight you could still lose by it - the line is dangerous, so watch it.
+  (`OUT_OF_BOUNDS`). Knock-back and shoves are the way to do that to somebody; a dodge never carries you over it (the server cuts a dash short before the line, counting the slide after it); your own walking can, so watch the line (the screen turns red and "THE LINE!" shows within 3 blocks).
 * **The circle** (attacker only): stand within 3 blocks (the painted golden ring, 60 % of the circle's radius) of the head's
   centre for **40 ticks (2 s)** in a row. Leaving the ring resets the count. The loser of a lost capture race is eliminated
   with `LOST_MATCH`.
@@ -150,8 +149,8 @@ The planner may send any number N >= 2 of survivors (after the glass bridge: all
 Controls screen under "Squid Game"; the instructions in chat show the current ones.
 
 * While a client is one of the two fighters of a live duel, Fabric's `ClientPreAttackCallback` cancels the vanilla attack (it
-  fires every tick the button is down, with or without a target, so **strikes in the air work**) and `UseEntityCallback`
-  stops entity interaction; the button states are sent instead. Held buttons send a heartbeat every 8 ticks and the server
+  fires every tick the button is down, with or without a target, so **strikes in the air work**) and `UseEntityCallback`, `UseItemCallback` and `UseBlockCallback`
+  stop the right mouse button (the guard) from also using the item in hand, a block or an entity; the button states are sent instead. Held buttons send a heartbeat every 8 ticks and the server
   releases a button that has been quiet for 26 ticks, so a lost "up" message cannot leave a guard or a charge on.
 * The server validates every message (`InputGate`): only the four ids, legal values (a dodge sector is 0..7), a token bucket of
   30 messages per second (burst 40), only while the sender is a living fighter of the duel in progress and a human is driving
@@ -214,17 +213,28 @@ pathfinding is used on the open court). Far-away NPCs' reduced entity tick rate 
   the input validation and rate limit, the difficulty table, the replay time warp, and NPC sanity (attacker win rate band on every
   difficulty, every ending occurs, no timeouts, duel length, the whole toolbox is used, nobody walks over the line alone,
   skill and personality show, the same results at x = 6000 as at 0).
-* `FinaleArenaTest` builds the real arena builder and the fixture, reads them exactly like the game, checks the markers, the
+* `FinaleArenaTest` (and `FightStatePayloadTest` for the wire format of the overlay state) builds the real arena builder and the fixture, reads them exactly like the game, checks the markers, the
   flatness and emptiness of the court and the painted lines and plays duels on it.
-* In-world (dev server with the real arena): 2 NPCs and ladders of 3, 6, 9, 12 on all difficulties, `/squid skip` during a duel,
-  a ceremony and a live duel (the game timeout path), admin elimination of a waiting and of a fighting contestant, and a
-  headless client as a human (see the report of the implementation for what was and was not exercised).
+* In-world on a dev server with the real arena (`/squid debug play final N`, `tick rate 100` for NPC-only runs): two finalists on
+  Normal, Hard and Extreme (every ending seen: knockout, capture, over the line, timeout), ladders of 3, 6, 8, 9 and 12 finalists
+  (N - 1 duels, ceremonies until four are left, exactly one survivor each time), `/squid skip` during a ceremony, during a live
+  duel and during a two-finalist duel, an administrator eliminating a fighter and a waiting contestant; no error or warning in the
+  log. The profiler reports 0.22 ms per tick for the game with six NPCs.
+* The human path through the headless client (Xvfb, software rendering, synthetic mouse and keyboard through XTest, 3 fps on a
+  loaded machine): the overlay in every stage (coin toss, ready, fight with bars, flags, role banner, duel clock, capture bar,
+  BLOCK / PARRIED words, the red vignette and "THE LINE!"), and one duel in which every control reached the rules (server counters
+  of the human fighter: 2 light strikes, 1 heavy strike, 1 shove, 2 dodges - the Dash key and a double tap - and a block). A human who waits for a
+  duel stands on the belt for the whole ladder and is not eliminated by the bounds check; a player kicked in the middle of a duel
+  is replaced by the stand-in, the grace period runs out and the duel is forfeited. Not verified: the feel of the combat with human
+  latency and skill, two humans against each other, a kicked player coming back in the middle of a duel, sound (the test client has
+  none), other GUI scales than 3.
 
 ## 9. Known limitations
 * A duel between two NPCs that a human watches live is not paced for television: it plays at the speed of the rules.
 * The ceremony replay moves NPC bodies by teleporting them along the recorded poses (clients interpolate); on a server with
   a very low tick rate it will look jerky.
 * Controller input is mouse and keyboard only; touch or unusual keyboards may lack the double-tap dodge, the Dash key remains.
+* An exhausted human can still sprint (the server slows an exhausted fighter by a quarter but does not stop the sprint flag).
 * Players with latency above ~150 ms will find parries and dodges (windows of 2-6 ticks) hard on Hard / Extreme; the windows
   are centred on the server's view of the press and are not lag compensated.
 

@@ -127,5 +127,6 @@ class FinaleRulesTest {
         assertTrue(FinaleRules.DODGE_COOLDOWN > FinaleRules.DODGE_LENGTH, "a dodge cannot be chained at once");
         assertTrue(FinaleRules.CAPTURE_FRACTION > 0 && FinaleRules.CAPTURE_FRACTION < 1);
         assertTrue(FinaleRules.DASH_EDGE > FinaleRules.OUT_MARGIN, "a dash stops before the line");
+        assertEquals(FinaleRules.DASH_SPEED * 1.2, FinaleRules.DASH_SLIDE, 0.05, "a player slides about 0.6 blocks after the last tick of a dash");
     }
 }

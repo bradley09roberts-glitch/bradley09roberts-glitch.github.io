@@ -27,7 +27,8 @@ public final class Replay {
     /**
      * @param result    the simulated duel
      * @param showTicks the length of the show in server ticks; a duel with little in it is shown in less, a duel with
-     *                  so much in it that the blows would have to be shown faster than {@link #MAX_SPEED} in more
+     *                  so much in it that the blows would have to be shown faster than {@link #MAX_SPEED} in more (at
+     *                  most twice as long)
      */
     public Replay(DuelSimulator.Result result, int showTicks) {
         this.ticks = Math.max(1, result.ticks());
@@ -50,8 +51,13 @@ public final class Replay {
         for (int t = 0; t < ticks; t++) {
             weight[t + 1] = weight[t] + (hot[t] ? 1.0 : IDLE);
         }
-        // never slower than real time (a short duel is over before the show is) and never faster than MAX_SPEED
-        this.speed = Math.max(1.0, Math.min(MAX_SPEED, weight[ticks] / this.showTicks));
+        // never slower than real time (a short duel is over before the show is) and normally never faster than MAX_SPEED;
+        // a duel so full of blows that this would take longer than twice the planned length is shown faster after all
+        double s = Math.max(1.0, Math.min(MAX_SPEED, weight[ticks] / this.showTicks));
+        if (weight[ticks] / s > 2.0 * this.showTicks) {
+            s = weight[ticks] / (2.0 * this.showTicks);
+        }
+        this.speed = s;
     }
 
     private static boolean isBlow(CombatEvent.Type type) {

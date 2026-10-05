@@ -126,6 +126,8 @@ public final class FinaleRules {
     public static final double DASH_SPEED = 0.48;
     /** A dash stops when its next step would end closer than this to the edge: dodging never loses the duel by itself. */
     public static final double DASH_EDGE = OUT_MARGIN + 0.45;
+    /** How far a player keeps sliding after the last tick of a dash (vanilla ground friction): speed x friction / (1 - friction). */
+    public static final double DASH_SLIDE = DASH_SPEED * FRICTION / (1.0 - FRICTION);
 
     /** How far (blocks) a full knock-back impulse carries a fighter: impulse / (1 - friction). */
     public static double travel(double impulse) {
@@ -157,10 +159,10 @@ public final class FinaleRules {
     public static final int INTRO_TICKS = 150, OUTRO_TICKS = 70;
     /**
      * A duel that is settled by the simulator is shown as a ceremony: the coin toss, a replay of the simulated duel
-     * (about {@code CEREMONY_SHOW_TICKS}; a short duel takes less, a very busy one a little more) and the aftermath.
+     * (about {@code CEREMONY_SHOW_TICKS}; a short duel takes less, a very busy one up to twice as long) and the aftermath.
      * {@code CEREMONY_TICKS} is the most one ceremony may take, used for the time budget of the whole game.
      */
-    public static final int CEREMONY_COIN_TICKS = 70, CEREMONY_SHOW_TICKS = 100, CEREMONY_AFTER_TICKS = 30, CEREMONY_TICKS = 260;
+    public static final int CEREMONY_COIN_TICKS = 70, CEREMONY_SHOW_TICKS = 100, CEREMONY_AFTER_TICKS = 60, CEREMONY_TICKS = 70 + 2 * 100 + 60;
 
     // ---------------------------------------------------------------- helpers shared by the simulation and the NPC brain
 

@@ -72,8 +72,12 @@ final class PlayerBody extends FightBody {
         if (dashLeft <= 0) {
             return;
         }
-        if (court.edgeDistance(player.getX() + dashX, player.getZ() + dashZ) < FinaleRules.DASH_EDGE) {
-            dashLeft = 0;      // a dodge never carries a player over the line
+        // a dodge never carries a player over the line: look as far ahead as the step of this tick plus the slide after the
+        // last tick (a player is not stopped by the server the way an NPC body is), and stop dashing a little before it
+        double len = Math.max(1e-6, Math.hypot(dashX, dashZ));
+        double reachX = dashX + dashX / len * FinaleRules.DASH_SLIDE, reachZ = dashZ + dashZ / len * FinaleRules.DASH_SLIDE;
+        if (court.edgeDistance(player.getX() + reachX, player.getZ() + reachZ) < FinaleRules.OUT_MARGIN + 0.35) {
+            dashLeft = 0;
             return;
         }
         dashLeft--;
