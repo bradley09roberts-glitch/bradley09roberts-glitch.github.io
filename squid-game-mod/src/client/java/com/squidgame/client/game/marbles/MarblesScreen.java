@@ -338,7 +338,7 @@ final class MarblesScreen extends Screen implements ScreenRegistry.ClosableBySer
     // ------------------------------------------------------------------ rendering
     //
     // Layout (panel coordinates): header 6, stacks 22-98 (left: yours, right: the opponent's), centre column 20-134 (role, hand,
-    // selector, odd / even, lock in), status line 137-150, history 157-184, time bar 184.
+    // selector, odd / even, lock in), status line 137-150, history 156-183, time bar 185.
 
     @Override
     public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
@@ -510,7 +510,7 @@ final class MarblesScreen extends Screen implements ScreenRegistry.ClosableBySer
     }
 
     private void renderHistory(GuiGraphics g, int px, int py) {
-        int y = py + 157;
+        int y = py + 156;
         g.drawString(font, Component.translatable("squidgame.game.marbles.ui.history"), px + 8, y, 0xFF9A9AA4, false);
         Component hint = Component.translatable("squidgame.game.marbles.ui.hide", MarblesClient.panelKeyName());
         g.drawString(font, hint, px + PW - 8 - font.width(hint), y, 0xFF70707A, false);
@@ -537,7 +537,7 @@ final class MarblesScreen extends Screen implements ScreenRegistry.ClosableBySer
         if (s.phase.equals("decide")) {
             long left = Math.max(0, s.remaining - (System.nanoTime() - s.receivedAt) / 50_000_000L);
             float frac = Mth.clamp(left / (float) s.total, 0f, 1f);
-            int bx = px + 8, bw = PW - 16, by = py + PH - 6;
+            int bx = px + 8, bw = PW - 16, by = py + PH - 5;
             g.fill(bx, by, bx + bw, by + 3, 0x66000000);
             int col = frac < 0.2f ? 0xFFFF4040 : frac < 0.45f ? 0xFFFFC040 : 0xFF50D890;
             g.fill(bx, by, bx + (int) (bw * frac), by + 3, col);
