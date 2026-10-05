@@ -1,7 +1,7 @@
 # Architecture guide
 
-Squid Game tournament mod for **Minecraft 1.21.1 / Fabric** (Loader 0.19.3, Fabric API 0.116.17+1.21.1, GeckoLib 4.9.3,
-Java 21, Mojang mappings). This document is the map for anyone adding or changing a game, an arena, an NPC behaviour or a
+Squid Game tournament mod for **Minecraft 1.21.1 / Fabric** (Loader >= 0.16.10, compiled against 0.19.3; Fabric API 0.116.17+1.21.1,
+GeckoLib 4.9.3, Java 21, Mojang mappings). This document is the map for anyone adding or changing a game, an arena, an NPC behaviour or a
 screen. Read it together with `docs/ARENA_MARKERS.md` (arena contract), `docs/ASSET_CONTRACT.md` (models / animations /
 sounds / blocks) and `docs/BUILDING_GUIDE.md` (structure DSL), and use `game/redlight/` as the reference implementation of a
 complete game.
@@ -26,7 +26,8 @@ src/main/java/com/squidgame/         COMMON code (runs on dedicated servers, nev
   command/     /squid ... commands
 src/client/java/com/squidgame/client/  CLIENT-ONLY code (split source set: referencing it from common code does not compile)
   hud/ (SquidHud), screen/ (ScreenRegistry + game screens), render/ (GeckoLib renderers, tracksuit/bib layers,
-  rope renderer), net/ClientNetworking, state/ClientState
+  rope renderer), net/ClientNetworking, state/ClientState, game/<pkg>/ (per-game screens, overlays, key bindings),
+  mixin/WorldOpenFlowsMixin + ExperimentalWorldWarning (see section 11)
 src/main/resources/                  assets (geo, animations, textures, sounds, lang), data (dimension, tags)
 ```
 
@@ -55,8 +56,8 @@ without validating it against server state (position, cooldown, phase, whose tur
   (`timeLimitTicks`, scaled by difficulty and `timeScale`); on timeout `onTimeout(ctx)`.
 * `ELIMINATIONS`: `MiniGame.conclude(ctx)` eliminates everyone who failed and returns a `GameResult`.
 * `RESULTS` shows the results screen (`ResultsPayload`); `TRANSITION` moves survivors back to the dormitory;
-  `Planner.next(...)` picks the next game (games whose minimum participant count is not met are skipped; two survivors jump to
-  the final; one survivor wins). `FINAL_WINNER` celebrates; `RESTART` cleans up and optionally starts a new registration.
+  `Planner.next(...)` picks the next game (games whose minimum participant count is not met - `GameKind.minParticipants`: Tug of
+  War 4, Glass Bridge 12 - are skipped and announced via `Planner.skipped`; two survivors jump to the final; one survivor wins). `FINAL_WINNER` celebrates; `RESTART` cleans up and optionally starts a new registration.
 * Persistence: `TournamentData` (SavedData) stores the tournament + roster + player snapshots; after a server restart the
   tournament resumes (`resumeOnRestart`) at the start of the interrupted game's round or resets cleanly (players restored from
   snapshots). Games persist hidden state through `saveState/loadState` (NBT).
@@ -108,8 +109,12 @@ Conventions:
   player's marble count, the dalgona's exact crack threshold) is never read by a behaviour.
 * Personality should change *observable decisions*: when to start, how much to risk, who to follow, how long to hesitate, whether
   to cooperate, how likely mistakes are (`Personality.effectiveSkill(difficulty)`, `reactionDelayTicks`, `riskAppetite`).
-* Performance: far-away NPCs tick at a reduced rate (`npcFarDistance`, `npcFarTickInterval`); keep per-tick behaviour work O(1)
-  per NPC (cache path results, throttle searches).
+* Performance: far-away NPCs *decide* at a reduced rate (`npcFarDistance`, `npcFarTickInterval`); keep per-tick behaviour work
+  O(1) per NPC (cache path results, throttle searches). Movement itself must stay continuous: vanilla's move control consumes the
+  wanted position every tick (`zza` falls back to 0 on the next one), so `ContestantEntity` re-applies the last `moveDirect` target
+  on every tick whatever the behaviour's rate (a regression here made far NPCs run at a third of their speed).
+* `ContestantEntity.setSpeed` is overridden: vanilla also feeds the speed into `zza`, which makes the pace quadratic in the movement
+  attribute. Modifier 1.0 = 4.3 blocks/s (a player's walk), 1.3 ~ sprint.
 
 ## 6. Animation
 
@@ -129,7 +134,12 @@ widgets), `OpenScreenPayload` (open/update/close a named screen with an NBT body
 ## 8. Rules enforcement (`Restrictions`)
 
 While a player is a contestant in the arena dimension: build/break/place/use items, fly, enderpearl/chorus/teleport commands,
-equipment changes, container access, damage and leaving the bounds are blocked or reverted; the player's gamemode, inventory,
+equipment changes, container access (any block with a menu provider), damage and leaving the bounds are blocked or reverted
+(`Restrictions.tickPlayer` runs every tick for every player in the arena dimension: gamemode, abilities, forbidden items every 10
+ticks, and any jump of more than 12 blocks that the mod did not announce with `noteTeleport` is undone with a position packet;
+`TournamentManager.enforceBounds` handles humans outside `arena.bounds` during a game). `/squid debug rules <player>` prints why a
+player is or is not restricted. Note for tests: a vanilla `/tp` run from RCON uses the *overworld* as its level, so use
+`/execute in squidgame:arena run tp ...` to test inside the complex; the player's gamemode, inventory,
 position, health and effects are snapshotted on entry and restored on exit (`PlayerStore`). Operators bypass when
 `allowOpsToBypassRules`. Game-specific exceptions (e.g. holding the marble item) go through the game, not through Restrictions.
 
@@ -149,4 +159,24 @@ position, health and effects are snapshotted on entry and restored on exit (`Pla
   skipped, the tournament ends after the game), `/squid debug simulate [npcs] [difficulty]` runs a whole NPC-only tournament,
   `/squid debug timescale <x>` shortens all timers, `/squid debug eliminate <number>`, `/squid debug roster`,
   `/squid debug markers <arena>`, `/squid skip` skips the current phase.
-* Headless client with screenshots: `tools/xvfb-client.sh` (Xvfb + llvmpipe) and `DISPLAY=:98 import -window root shot.png`.
+* Headless client with screenshots: `tools/xvfb-client.sh [display]` (Xvfb + llvmpipe; env `SQUID_USER`, `SQUID_RUNDIR` allow several
+  clients, e.g. a second one on display 99) and `DISPLAY=:98 import -window root shot.png`; `tools/xinput.py` scripts mouse and keys
+  (clicks move the pointer, which turns the camera while the cursor is captured: use `down 3` / `up 3` to click in place and
+  `tp @s ~ ~ ~ facing entity <name> eyes` with `execute anchored eyes` to aim).
+* Single-player: `tools/spclient.sh` creates a fresh world with a throwaway server (needs `SQUID_ACCEPT_EULA=1`) and opens it in the
+  integrated server of a headless client.
+* Reconnect without restarting a client: set `accepts-transfers=true` in `server.properties` and run `transfer localhost <port> <name>`.
+* Smoke test: `tools/smoke.sh [npcs] [difficulty]` runs a complete NPC-only tournament at 100 ticks/s and fails on server errors.
+* `/squid debug playopen <game> [npcs] [difficulty]` is `play` with the registration left open for more players (two humans in one game).
+* Packaging: `tools/package.sh` builds and assembles `dist/` (mod jar, Fabric API, GeckoLib, SHA256SUMS, INSTALL.txt).
+
+## 11. The experimental-settings prompt (client mixin)
+
+Minecraft flags every world with more than the three vanilla dimensions as experimental (`WorldDimensions#bake`) and asks for a
+confirmation each time it is opened (`WorldOpenFlows#openWorldCheckWorldStemCompatibility` -> "Worlds using Experimental Settings are
+not supported"). The complex lives in the fourth dimension `squidgame:arena`, so `client/mixin/WorldOpenFlowsMixin` skips that prompt
+when `ExperimentalWorldWarning.onlyBecauseOfArenaDimension` says the arena dimension is the only reason (no experimental feature
+flags enabled, not an old customised world). The mixin is registered for the client only (`squidgame.client.mixins.json`,
+`required: false`, `defaultRequire: 0`): if it ever fails to apply the vanilla prompt simply returns. With Loom 1.17 the production
+remapping of the mixin annotations is done by tiny-remapper at `remapJar` time (no refmap, no annotation processor): the built jar's
+`WorldOpenFlowsMixin.class` carries the intermediary names (`class_7196`, `method_57775` ...).

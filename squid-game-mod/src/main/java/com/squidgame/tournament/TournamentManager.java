@@ -91,6 +91,7 @@ public final class TournamentManager {
     private final List<Delayed> delayed = new ArrayList<>();
     @Nullable
     private GameKind pendingForcedGame;
+    private boolean pendingKeepRegistrationOpen;
     private int lastNumbersHash;
 
     private record PendingSpectate(UUID player, long dueTick, boolean waitForGround) {
@@ -512,8 +513,10 @@ public final class TournamentManager {
     }
 
     /** Debug: starts a tournament that plays exactly one game (registration is closed immediately). */
-    public String startSingleGame(@Nullable ServerPlayer starter, GameKind game, @Nullable Difficulty difficulty, int npcOverride, boolean npcOnly) {
+    public String startSingleGame(@Nullable ServerPlayer starter, GameKind game, @Nullable Difficulty difficulty, int npcOverride, boolean npcOnly,
+                                  boolean keepRegistrationOpen) {
         pendingForcedGame = game;
+        pendingKeepRegistrationOpen = keepRegistrationOpen;
         String err = start(starter, difficulty, npcOverride, npcOnly);
         if (err != null) {
             pendingForcedGame = null;
@@ -557,9 +560,10 @@ public final class TournamentManager {
         npcCount = Math.max(0, Math.min(npcCount, cfg.maxContestants - humans));
         spawnNpcs(level, rng, npcCount);
         enter(Phase.REGISTRATION);
-        if (t.forcedGame != null) {
+        if (t.forcedGame != null && !pendingKeepRegistrationOpen) {
             closeRegistration();
         }
+        pendingKeepRegistrationOpen = false;
         Announcer.chat(server, Component.translatable("squidgame.msg.registration_open", d.id));
         Announcer.title(server, Component.translatable("squidgame.title.registration"),
                 Component.translatable("squidgame.subtitle.registration", t.roster.size()), 10, 60, 20);
@@ -764,6 +768,17 @@ public final class TournamentManager {
                     enterArena(again);
                 }
             });
+            return;
+        }
+        if (t != null && t.phase != Phase.REGISTRATION && t.phase != Phase.LOBBY && t.roster.ofPlayer(p.getUUID()) == null) {
+            // a tournament is already under way: the newcomer watches it (the same rule as for a player who logs in mid-tournament)
+            if (!SquidConfig.get().lateJoinSpectate) {
+                p.sendSystemMessage(Component.translatable("squidgame.msg.enter_denied"));
+                return;
+            }
+            enterArena(p);
+            makeSpectator(p);
+            p.sendSystemMessage(Component.translatable("squidgame.msg.late_join"));
             return;
         }
         enterArena(p);
@@ -1482,12 +1497,39 @@ public final class TournamentManager {
         }
         MutableComponent msg = Component.translatable("squidgame.msg.eliminated", c.displayNumber(), Component.translatable(cause.translationKey()))
                 .withStyle(net.minecraft.ChatFormatting.RED);
-        Announcer.chat(server, msg);
+        announceElimination(msg);
         syncNumbers(false);
         saveNow();
         if (t.roster.aliveHumanCount() == 0 && t.roster.humanCount() > 0 && !t.npcOnly && !SquidConfig.get().spectateAfterElimination) {
             // all humans are out and spectating is disabled: wrap up quickly
             t.phaseTicks = Math.max(t.phaseTicks, t.phaseLength - 40);
+        }
+    }
+
+    // a timeout can eliminate dozens at once: after a few chat lines the rest are summed up in one line (the results board
+    // sits where a flooded chat would cover it)
+    private long elimWindowStart = -1000;
+    private int elimWindowCount;
+    private int elimSuppressed;
+
+    private void announceElimination(MutableComponent msg) {
+        if (tickCounter - elimWindowStart > 40) {
+            flushSuppressedEliminations();
+            elimWindowStart = tickCounter;
+            elimWindowCount = 0;
+        }
+        if (elimWindowCount++ < 5) {
+            Announcer.chat(server, msg);
+        } else if (elimSuppressed++ == 0) {
+            later(45, this::flushSuppressedEliminations);
+        }
+    }
+
+    private void flushSuppressedEliminations() {
+        if (elimSuppressed > 0) {
+            Announcer.chat(server, Component.translatable("squidgame.msg.more_eliminated", elimSuppressed)
+                    .withStyle(net.minecraft.ChatFormatting.RED));
+            elimSuppressed = 0;
         }
     }
 

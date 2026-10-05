@@ -1,0 +1,15 @@
+Squid Game: The Tournament 1.0.0 - installation (Minecraft Java Edition 1.21.1, Fabric)
+
+1. Install Java 21 and Fabric Loader 0.16.10 or newer for Minecraft 1.21.1 (https://fabricmc.net/use/).
+2. Copy the three files of mods/ into the "mods" folder of your game (single-player / client) AND of your server.
+   Every player on a server needs the same three files.
+     squidgame-1.0.0.jar                  this mod
+     fabric-api-0.116.17+1.21.1.jar    Fabric API (Apache-2.0)
+     geckolib-fabric-1.21.1-4.9.3.jar        GeckoLib (MIT)
+3. Start the game or the server. A dedicated server needs eula=true in eula.txt - you have to accept the Minecraft EULA
+   (https://aka.ms/MinecraftEULA) yourself; nothing in this bundle does that for you.
+4. In any world run  /squid enter  (no permissions needed) or craft a Recruiter's Card (paper + pink dye + black dye).
+   The complex is generated the first time (about a minute, with progress messages).
+
+Check the files with:  sha256sum -c SHA256SUMS
+Full documentation (commands, controls, configuration, game rules): README.md and docs/ in the source repository.
