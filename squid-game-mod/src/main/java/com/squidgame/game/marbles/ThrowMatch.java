@@ -172,8 +172,8 @@ final class ThrowMatch extends Match {
             case FLIGHT -> {
                 if (pendingLanding != null) {
                     land(now);
-                } else if (now - flightStart > ticks(params.flightSeconds() + 3)) {
-                    // the marble vanished (never landed): count it where the thrower stands
+                } else if (now - flightStart > (long) (params.flightSeconds() * 20) + 60) {
+                    // the marble vanished (never landed; a flight is physical time, not scaled): count it where the thrower stands
                     pendingLanding = plot.padPos(turnSide);
                     land(now);
                 }

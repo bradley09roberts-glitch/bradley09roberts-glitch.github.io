@@ -160,6 +160,9 @@ final class PairingManager {
             game.tell(from, Component.translatable("squidgame.game.marbles.pair.asked", to.displayNumber()));
         }
         ServerPlayer human = to.isHumanControlled() ? to.player(ctx.server()) : null;
+        if (ctx.config().debug) {
+            SquidGameMod.LOGGER.info("Marbles: No. {} asks No. {}{}", from.displayNumber(), to.displayNumber(), human != null ? " (human, modal)" : "");
+        }
         if (human != null) {
             CompoundTag n = new CompoundTag();
             n.putInt("from", from.number);
