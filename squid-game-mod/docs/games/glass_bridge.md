@@ -330,6 +330,11 @@ All of it on the real arena (`GlassBridgeBuilder`), a dedicated test server and 
   contestants)" and shows the same 9 rows again; rows 10, 11 and 13 were found fragile in the same lane 0 again (the knowledge
   itself is not persisted, see above) and one more fragile panel (row 12, lane 1) turned up, no row had two different weak
   lanes; the one death on a shown row (row 9) was logged as a slip.
+* **Whole tournaments** (`tools/smoke.sh` flow with the debug log on, 100 NPCs, 100 ticks/s, one run per difficulty; this
+  is the case that used to skip the bridge on Hard and Extreme): Hard 63 / 40 / 20 / 10 survivors after games 1-4, the
+  bridge got the 10 (5 rows shown, 13 to find), 2 crossed, the Final duel left one winner; Extreme 46 / 27 / 13 / 7, the
+  bridge got the 7 (11 rows shown, 7 to find), 3 crossed, the Final's duel ladder left one winner. No errors, exceptions or
+  warnings in either log (apart from the server's "Can't keep up" while the accelerated clock started).
 * **Overlay with shown rows** (headless client, 6 NPCs + the human = 7 contestants, Normal, 10 rows shown): the "Bridge"
   map has the first ten rows green / dim red from the start, the top eight rows grey; the shown safe panels shimmer in the
   world and the human's row counter reads "Row 1 / 18" (`docs/games/img/glass_bridge_shown_rows.png`; the Rcon lines in the
