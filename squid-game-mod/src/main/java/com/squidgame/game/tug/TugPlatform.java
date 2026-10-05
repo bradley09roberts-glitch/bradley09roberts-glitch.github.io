@@ -30,11 +30,12 @@ import java.util.Map;
  *   <li>be fenced at its tip with invisible walls, so nobody walks (or is pushed) over the edge before the match is decided;</li>
  *   <li>collapse, column by column from the tip towards the rear: the deck, the plate and the ribs under the strip disappear
  *       with dust and the sound of the material, which drops everybody standing there into the pit;</li>
- *   <li>be repaired from the snapshot taken while it collapsed (between heats and in {@code cleanup}).</li>
+ *   <li>be repaired from the blocks that were taken while it collapsed (between heats and in {@code cleanup}).</li>
  * </ul>
  * The geometry comes from the arena markers (slot 0 of the team, the rope centre), never from coordinates; the strip is 5 blocks
- * wide around the slot line and three layers deep below the standing level. What was changed is recorded here and can be saved
- * ({@link #save}) so that a server restart in the middle of a collapse repairs the deck on the next start.
+ * wide around the slot line and three layers deep below the standing level. The intact strip is remembered when the game is
+ * prepared ({@link #snapshot}) and written to the game state ({@link #save}): whenever the server stops in the middle of a collapse,
+ * the next start puts the deck back, however much of it was gone when the state was last saved.
  */
 final class TugPlatform {
     private static final int FLAGS = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
@@ -52,6 +53,8 @@ final class TugPlatform {
     /** Standing level of the team (world y). */
     final double standY;
     private final Map<BlockPos, BlockState> removed = new LinkedHashMap<>();
+    /** The intact strip, taken before anything changed: what a repair after a restart puts back. */
+    private final Map<BlockPos, BlockState> intact = new LinkedHashMap<>();
     private final List<BlockPos> fence = new ArrayList<>();
     private int columns;
 
@@ -96,6 +99,27 @@ final class TugPlatform {
 
     boolean hasChanges() {
         return !removed.isEmpty() || !fence.isEmpty();
+    }
+
+    /** Remembers the intact walkway of the first {@code columnCount} columns (call it while the deck is whole). */
+    void snapshot(int columnCount) {
+        intact.clear();
+        for (int i = 0; i < columnCount; i++) {
+            int x = columnX(i);
+            for (int z = zMin; z <= zMax; z++) {
+                for (int y = deckY; y >= deckY - (LAYERS - 1); y--) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    BlockState st = level.getBlockState(pos);
+                    if (!st.isAir() && !st.is(ModBlocks.INVISIBLE_WALL)) {
+                        intact.put(pos, st);
+                    }
+                }
+            }
+        }
+    }
+
+    boolean hasSnapshot() {
+        return !intact.isEmpty();
     }
 
     // ------------------------------------------------------------------ fence
@@ -185,15 +209,15 @@ final class TugPlatform {
 
     // ------------------------------------------------------------------ persistence
 
-    /** Writes what must be put back after a restart: the removed blocks (with their states) and the fence cells. */
+    /** Writes what must be put back after a restart: the intact walkway (with the states of its blocks) and the fence cells. */
     void save(CompoundTag out, String key) {
         CompoundTag t = new CompoundTag();
         ListTag palette = new ListTag();
         Map<BlockState, Integer> ids = new HashMap<>();
-        long[] positions = new long[removed.size()];
-        int[] indices = new int[removed.size()];
+        long[] positions = new long[intact.size()];
+        int[] indices = new int[intact.size()];
         int k = 0;
-        for (Map.Entry<BlockPos, BlockState> e : removed.entrySet()) {
+        for (Map.Entry<BlockPos, BlockState> e : intact.entrySet()) {
             Integer id = ids.get(e.getValue());
             if (id == null) {
                 id = palette.size();

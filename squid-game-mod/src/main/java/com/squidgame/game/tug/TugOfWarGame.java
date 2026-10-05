@@ -200,6 +200,9 @@ public final class TugOfWarGame implements MiniGame {
         }
         for (int t = 0; t < 2; t++) {
             platforms[t] = createPlatform(ctx, t);
+            if (platforms[t] != null) {
+                platforms[t].snapshot(TugRules.MAX_PER_TEAM + 4);
+            }
         }
         spawnRope(ctx);
         ctx.spawnGuards();
@@ -1049,9 +1052,10 @@ public final class TugOfWarGame implements MiniGame {
 
     @Override
     public void cleanup(GameContext ctx) {
-        for (TugPlatform p : platforms) {
-            if (p != null) {
-                p.restore();
+        for (int i = 0; i < platforms.length; i++) {
+            if (platforms[i] != null) {
+                platforms[i].restore();
+                platforms[i] = null;
             }
         }
         discardRope();
@@ -1105,7 +1109,7 @@ public final class TugOfWarGame implements MiniGame {
         boolean any = false;
         CompoundTag t = new CompoundTag();
         for (int i = 0; i < 2; i++) {
-            if (platforms[i] != null && platforms[i].hasChanges()) {
+            if (platforms[i] != null && platforms[i].hasSnapshot()) {
                 platforms[i].save(t, i == 0 ? "a" : "b");
                 any = true;
             }
