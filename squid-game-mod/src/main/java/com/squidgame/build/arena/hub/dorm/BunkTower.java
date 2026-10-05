@@ -164,7 +164,7 @@ final class BunkTower {
                 if (cam) {
                     c.set(x, top + 4, z, Pal.BLACK);
                     c.set(x, top + 4, z + Integer.signum(z), "minecraft:black_stained_glass");
-                    c.set(x, top + 5, z, "minecraft:red_concrete");
+                    c.set(x, top + 5, z, Pal.LED);
                 } else {
                     c.set(x, top + 4, z, Pal.SEA);
                 }

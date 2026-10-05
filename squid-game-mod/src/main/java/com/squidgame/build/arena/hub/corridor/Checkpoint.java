@@ -43,15 +43,13 @@ final class Checkpoint {
     private static void northWall(BuildContext c) {
         for (int side = -1; side <= 1; side += 2) {
             int x0 = side < 0 ? -9 : 5, x1 = side < 0 ? -5 : 9;
-            // black field with pink frame
+            // pink frame rows, black field, white symbol (5 wide, r = 2)
             for (int x = x0; x <= x1; x++) {
-                for (int y = 1; y <= 7; y++) {
-                    boolean edge = x == x0 || x == x1 || y == 1 || y == 7;
-                    c.set(x, y, -44, edge ? Pal.PINK : Pal.BLACK);
-                }
+                c.set(x, 1, -44, Pal.PINK);
+                c.set(x, 7, -44, Pal.PINK);
             }
             double cxm = (x0 + x1) / 2.0 + 0.5;
-            Murals.paint(c, side < 0 ? 0 : 2, true, -44, x0 + 1, x1 - 1, 2, 6, cxm, 4.5, 1.9, Pal.WHITE, Pal.BLACK);
+            Murals.paint(c, side < 0 ? 0 : 2, true, -44, x0, x1, 2, 6, cxm, 4.5, 2.0, Pal.WHITE, Pal.BLACK);
         }
         // lintel above the gate: black band, three symbol cubes on pink, black cornice (J1 does the same on its side)
         for (int x = -4; x <= 4; x++) {
@@ -87,15 +85,6 @@ final class Checkpoint {
         // labels above the canteen / infirmary doors
         c.text(-9.96, 6.6, -39.5, "CANTEEN", "white", 1.7f, -90f, false);
         c.text(10.96, 6.6, -39.5, "INFIRMARY", "white", 1.7f, 90f, false);
-        for (int z = -43; z <= -36; z++) {
-            for (int side = -1; side <= 1; side += 2) {
-                int x = side * 11;
-                if (z >= -41 && z <= -38) {
-                    c.set(x, 6, z, Pal.BLACK);
-                    continue;
-                }
-            }
-        }
         // symbol cubes above the side doors
         c.set(-11, 7, -40, Pal.SYM_CIRCLE);
         c.set(-11, 7, -39, Pal.SYM_CIRCLE);

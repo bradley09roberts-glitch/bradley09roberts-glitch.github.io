@@ -14,8 +14,8 @@ final class Floor {
     private static final int SEED = 3187;
     static final int Y = -1;
 
-    private static final String[] BASE = {Pal.LGRAY, Pal.STONE, Pal.ANDESITE, Pal.SMOOTH, Pal.PANDESITE, Pal.GRAY};
-    private static final int[] BASE_W = {38, 20, 16, 10, 10, 6};
+    private static final String[] BASE = {Pal.LGRAY, Pal.STONE, Pal.ANDESITE, Pal.SMOOTH, Pal.PANDESITE};
+    private static final int[] BASE_W = {46, 22, 12, 9, 11};
     private static final String[] AVENUE = {Pal.PANDESITE, Pal.SMOOTH, Pal.PANDESITE, Pal.CALCITE};
     private static final int[] AVENUE_W = {40, 30, 20, 10};
 
@@ -46,8 +46,8 @@ final class Floor {
             s = Pal.ANDESITE;
         }
         // expansion joints on an 8-block grid
-        if ((Math.floorMod(x, 8) == 0 || Math.floorMod(z, 8) == 0) && Noise.rand(SEED + 4, x, 0, z) < 0.75) {
-            s = Pal.GRAY;
+        if ((Math.floorMod(x, 8) == 0 || Math.floorMod(z, 8) == 0) && Noise.rand(SEED + 4, x, 0, z) < 0.6) {
+            s = Pal.ANDESITE;
         }
         return s;
     }

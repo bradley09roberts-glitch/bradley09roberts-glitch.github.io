@@ -361,7 +361,11 @@ public final class TournamentManager {
         if (level == null) {
             return;
         }
+        boolean portals = t == null && tickCounter % 5 == 0;
         for (ServerPlayer p : new ArrayList<>(level.players())) {
+            if (portals) {
+                tickGatePortal(p);
+            }
             boolean flight = spectators.contains(p.getUUID());
             restrictions.tickPlayer(p, flight);
             // spectators/eliminated stay inside the complex
@@ -372,6 +376,59 @@ public final class TournamentManager {
                 }
             }
         }
+    }
+
+    /**
+     * Free exploration: walking into one of the six gates at the top of the stairway hall (regions {@code gate.<arena>}, widened
+     * by a few blocks in front of the doorway) takes a visitor to that arena's entrance while no tournament is running.
+     */
+    private void tickGatePortal(ServerPlayer p) {
+        if (ArenaId.HUB != arenaIdAt(p) || p.isSpectator()) {
+            return;
+        }
+        for (ArenaId id : ArenaId.values()) {
+            if (id.game == null) {
+                continue;
+            }
+            Region r = arenaData().region(ArenaId.HUB, "gate." + id.id);
+            if (r != null && p.getX() >= r.minX() && p.getX() < r.maxX() + 1 && p.getY() >= r.minY() - 1 && p.getY() < r.maxY() + 1
+                    && p.getZ() >= r.minZ() && p.getZ() < r.maxZ() + 4) {
+                String err = tourArena(p, id);
+                if (err != null) {
+                    p.displayClientMessage(Component.literal(err), true);
+                }
+                return;
+            }
+        }
+    }
+
+    private static ArenaId arenaIdAt(ServerPlayer p) {
+        int index = Math.round((float) (p.getX() / 1000.0));
+        for (ArenaId id : ArenaId.values()) {
+            if (id.originX == index * 1000 && ArenaWorld.isArena(p.level())) {
+                return id;
+            }
+        }
+        return null;
+    }
+
+    /** Sends a visitor to an arena's entrance (no tournament may be running). Returns an error message, or null on success. */
+    public String tourArena(ServerPlayer p, ArenaId id) {
+        if (t != null) {
+            return "A tournament is running; arenas are in use.";
+        }
+        if (!ArenaWorld.isArena(p.level())) {
+            enterOrBuild(p);
+        }
+        ServerLevel level = arenaLevel();
+        Marker spot = id == ArenaId.HUB ? arenaData().marker(id, "dorm.player_spawn") : arenaData().marker(id, "waiting.player_entry");
+        if (spot == null || level == null) {
+            return "Arena not built yet. Run /squid build.";
+        }
+        level.getChunk(BlockPos.containing(spot.x(), spot.y(), spot.z()));
+        p.teleportTo(level, spot.x(), spot.y(), spot.z(), spot.yaw(), 0f);
+        Restrictions.noteTeleport(p);
+        return null;
     }
 
     private void tickTournament() {
@@ -982,6 +1039,12 @@ public final class TournamentManager {
         Announcer.sound(server, ModSounds.GAME_END_BUZZER, 1f, 1f);
         Announcer.title(server, Component.translatable("squidgame.title.game_over"), Component.empty(), 0, 30, 10);
         lastResult = t.game.conclude(t.ctx);
+        // eliminations ordered by conclude() may be staggered over the next seconds: the survivors are final once RESULTS starts
+    }
+
+    private void enterResults() {
+        SquidConfig cfg = SquidConfig.get();
+        t.phaseLength = cfg.ticks(cfg.resultsSeconds);
         t.lastEliminated.clear();
         for (Contestant c : t.roster.all()) {
             if (c.isEliminated() && c.eliminatedInGame() == t.gameNumber) {
@@ -993,11 +1056,6 @@ public final class TournamentManager {
         }
         SquidGameMod.LOGGER.info("Game {} ({}) concluded: {} survivors, {} eliminated in this game, {} eliminated overall", t.gameNumber,
                 t.gameType, t.roster.aliveCount(), t.lastEliminated.size(), t.roster.eliminatedInOrder().size());
-    }
-
-    private void enterResults() {
-        SquidConfig cfg = SquidConfig.get();
-        t.phaseLength = cfg.ticks(cfg.resultsSeconds);
         Announcer.sound(server, ModSounds.GAME_RESULTS_STING, 1f, 1f);
         List<Integer> survivors = new ArrayList<>();
         for (Contestant c : t.roster.alive()) {
@@ -1110,7 +1168,7 @@ public final class TournamentManager {
 
     private void endGameObjects() {
         ServerLevel level = arenaLevel();
-        if (t.game != null && t.ctx != null) {
+        if (t != null && t.game != null && t.ctx != null) {
             try {
                 t.game.cleanup(t.ctx);
             } catch (RuntimeException e) {
