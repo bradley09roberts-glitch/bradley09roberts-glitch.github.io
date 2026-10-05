@@ -92,6 +92,9 @@ public final class TournamentManager {
     @Nullable
     private GameKind pendingForcedGame;
     private boolean pendingKeepRegistrationOpen;
+    /** Where each human contestant last stood on the ground inside the arena bounds (for putting them back), per game. */
+    private final java.util.Map<Integer, Vec3> lastInside = new java.util.HashMap<>();
+    private int lastInsideGame = -1;
     private int lastNumbersHash;
 
     private record PendingSpectate(UUID player, long dueTick, boolean waitForGround) {
@@ -1018,27 +1021,37 @@ public final class TournamentManager {
         if (bounds == null) {
             return;
         }
-        final double margin = 3.0;
-        boolean outside = body.getX() < bounds.minX() - margin || body.getX() > bounds.maxX() + 1 + margin
-                || body.getZ() < bounds.minZ() - margin || body.getZ() > bounds.maxZ() + 1 + margin;
-        if (!outside) {
+        boolean outside = com.squidgame.core.BoundsRule.outside(body.getX(), body.getZ(), bounds.minX(), bounds.maxX(), bounds.minZ(), bounds.maxZ());
+        if (lastInsideGame != t.gameNumber) {
+            lastInsideGame = t.gameNumber;
+            lastInside.clear();
+        }
+        com.squidgame.core.BoundsRule.Step step = com.squidgame.core.BoundsRule.step(outside, (int) c.stat("boundsStrikes", 0));
+        if (step.action() == com.squidgame.core.BoundsRule.Action.NONE) {
             c.stats.remove("boundsStrikes");
+            if (body.onGround()) {
+                lastInside.put(c.number, body.position());
+            }
             return;
         }
-        int strikes = (int) c.stat("boundsStrikes", 0) + 1;
-        c.stats.put("boundsStrikes", (double) strikes);
-        ServerPlayer p = c.player(server);
-        if (strikes >= 4) {
+        c.stats.put("boundsStrikes", (double) step.strikes());
+        if (step.action() == com.squidgame.core.BoundsRule.Action.ELIMINATE) {
             eliminate(t.ctx, c, EliminationCause.OUT_OF_BOUNDS);
             return;
         }
+        ServerPlayer p = c.player(server);
         if (p != null) {
             Announcer.chat(p, Component.translatable("squidgame.rule.out_of_bounds"));
             Announcer.sound(p, ModSounds.UI_DENY, 1f, 1f);
-            if (strikes >= 2) {
-                double x = Math.max(bounds.minX() + 1.5, Math.min(bounds.maxX() - 0.5, body.getX()));
-                double z = Math.max(bounds.minZ() + 1.5, Math.min(bounds.maxZ() - 0.5, body.getZ()));
-                p.teleportTo(arenaLevel(), x, body.getY(), z, p.getYRot(), p.getXRot());
+            if (step.action() == com.squidgame.core.BoundsRule.Action.WARN_AND_PUT_BACK) {
+                // back to where the contestant last stood inside the arena (clamping the position would drop them into a wall)
+                Vec3 back = lastInside.get(c.number);
+                double x = back != null ? back.x : Math.max(bounds.minX() + 1.5, Math.min(bounds.maxX() - 0.5, body.getX()));
+                double y = back != null ? back.y : body.getY();
+                double z = back != null ? back.z : Math.max(bounds.minZ() + 1.5, Math.min(bounds.maxZ() - 0.5, body.getZ()));
+                p.teleportTo(arenaLevel(), x, y, z, p.getYRot(), p.getXRot());
+                p.setDeltaMovement(Vec3.ZERO);
+                p.fallDistance = 0;
                 Restrictions.noteTeleport(p);
             }
         }
