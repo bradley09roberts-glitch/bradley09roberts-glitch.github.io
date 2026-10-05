@@ -16,8 +16,9 @@ import java.util.List;
  *   team force    = (sum pull + bursts * (1 + SYNC_BONUS * share of the team currently in a burst)) * handicap
  *   raw           = (force B - force A) / unit - SPRING * offset
  *   the team being dragged resists with its anchors: only the part of |raw| above ANCHOR_STRENGTH * anchor moves the rope
- *   offset' = offset + velocity,  velocity' = velocity + (net - drag * velocity) / MASS   (drag from the difficulty)
+ *   offset' = offset + velocity,  velocity' = velocity + (net / weight - drag * velocity) / MASS   (drag from the difficulty)
  * </pre>
+ * {@code weight} is 1 for teams of 8 and more and grows for smaller teams (see {@link TugRules#ropeWeight}).
  * Offset -1 = team A's edge (B wins when it reaches +1, A wins at -1). Forces are in units of "one average team pulling with
  * full effort" so the same numbers work for 2 v 2 and 32 v 32.
  */
@@ -108,6 +109,7 @@ public final class TugSim {
     private final BeatClock beat;
     private final List<Member> members = new ArrayList<>();
     private final double unit;
+    private final double weight;
     private final double[] handicap = {1.0, 1.0};
     private final List<List<Pulse>> pulses = List.of(new ArrayList<>(), new ArrayList<>());
     private final List<Event> events = new ArrayList<>();
@@ -138,6 +140,7 @@ public final class TugSim {
             }
         }
         this.unit = Math.max(1.0, (a + b) / 2.0);
+        this.weight = TugRules.ropeWeight(unit);
         this.handicap[0] = handicapA;
         this.handicap[1] = handicapB;
         this.now = startTick;
@@ -269,7 +272,7 @@ public final class TugSim {
         } else {
             net = Math.min(0.0, raw + TugRules.ANCHOR_STRENGTH * anchor[TugRules.TEAM_B] / unit);
         }
-        velocity += (net - params.drag() * velocity) / TugRules.MASS;
+        velocity += (net / weight - params.drag() * velocity) / TugRules.MASS;
         offset += velocity;
         updateStrain();
         if (offset >= 1.0) {

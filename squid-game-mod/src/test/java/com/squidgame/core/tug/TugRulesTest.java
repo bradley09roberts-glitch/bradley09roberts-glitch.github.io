@@ -101,6 +101,21 @@ class TugRulesTest {
     }
 
     @Test
+    void smallTeamsPullAHeavierRope() {
+        assertEquals(1.0, TugRules.ropeWeight(8), 0.01);
+        assertEquals(1.0, TugRules.ropeWeight(16), 0.0);
+        assertEquals(1.0, TugRules.ropeWeight(32), 0.0);
+        double previous = Double.MAX_VALUE;
+        for (int n = 1; n <= 12; n++) {
+            double w = TugRules.ropeWeight(n);
+            assertTrue(w >= 1.0 && w <= previous + 1e-12, "the weight never grows with the team size: n=" + n);
+            previous = w;
+        }
+        assertTrue(TugRules.ropeWeight(2) > 2.0 && TugRules.ropeWeight(2) < 3.0, "2 v 2: " + TugRules.ropeWeight(2));
+        assertTrue(TugRules.ropeWeight(4) > 1.2 && TugRules.ropeWeight(4) < 1.6, "4 v 4: " + TugRules.ropeWeight(4));
+    }
+
+    @Test
     void beatPeriodsAreBetweenOnePointTwoAndOnePointSixSeconds() {
         Rng rng = new Rng(11);
         Set<Integer> seen = new HashSet<>();

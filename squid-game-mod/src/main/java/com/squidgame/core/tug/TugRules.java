@@ -160,8 +160,21 @@ public final class TugRules {
     /** How strongly the drag follows the resource scale of the difficulty. */
     public static final double DRAG_EXPONENT = 1.2;
     public static final double MASS = 3000.0;
+    /**
+     * A handful of members decide the rope with single heaves (one clean heave against one miss would move a 2 v 2 rope across
+     * the whole pit), so small teams pull a rope that is heavier by {@link #ropeWeight}: it responds as if each team had at
+     * least {@code INERTIA_BASE + INERTIA_SLOPE * n} members, and a 2 v 2 still lasts about half a minute.
+     */
+    public static final double INERTIA_BASE = 3.8;
+    public static final double INERTIA_SLOPE = 0.53;
     /** Rope offset closer to zero than this counts as a tie at the timeout. */
     public static final double TIE_EPSILON = 0.02;
+
+    /** How much heavier the rope feels than its team size suggests: 1.0 from 8 members per team up, about 2.4 for 2 v 2. */
+    public static double ropeWeight(double meanTeamSize) {
+        double n = Math.max(1.0, meanTeamSize);
+        return Math.max(n, INERTIA_BASE + INERTIA_SLOPE * n) / n;
+    }
 
     /** Ticks a heave burst lasts: a short rise and an exponential decay. */
     public static final int PULSE_TICKS = 18;
