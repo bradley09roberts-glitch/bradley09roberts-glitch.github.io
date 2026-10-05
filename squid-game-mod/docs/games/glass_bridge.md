@@ -20,7 +20,9 @@ a long game pass 5x faster; `squid config debug true` prints the `[bridge]` log 
 Eighteen rows of two glass panels span a pit. In every row one panel is **tempered** (holds you) and one is **fragile**
 (shatters, you fall = eliminated). Nobody knows which is which. The contestants cross **one after another in a random
 order drawn at the start**; the first ones gamble, the later ones learn from what they *saw* happen. Everybody who
-reaches the far platform survives. Whoever is not across when the time runs out is eliminated.
+reaches the far platform survives. Whoever is not across when the time runs out is eliminated. A **small field** (fewer
+than 12 contestants) cannot find the way across by trial and error, so the guards show it the first rows of the bridge
+up front (see "Small fields" below); the Planner sends the bridge to every field of four or more.
 
 ## Arena contract as used
 
@@ -81,10 +83,10 @@ Left / right: the HUD and the overlay name lanes **as the contestant sees them w
      the body falls down the pit and the tournament removes it later. Safety net: a condemned contestant who is
      somehow still above the pit 26 ticks after the glass went is eliminated anyway, so nobody survives by clinging to
      an edge.
-5. **Public knowledge.** Every *held* / *broken* event goes into the `BridgeKnowledge` log; a row is known when one
-   panel has been seen holding or shattering (the other one is then the opposite). The log feeds the NPCs (through the
-   public view), the HUD ("Row 7, left panel: shattered") and the client overlay. Nothing else about the route is ever
-   published.
+5. **Public knowledge.** Every *held* / *broken* / *shown* event goes into the `BridgeKnowledge` log; a row is known
+   when one panel has been seen holding or shattering, or the guards showed it (the other lane is then the opposite). The
+   log feeds the NPCs (through the public view), the HUD ("Row 7, left panel: shattered") and the client overlay. Nothing
+   else about the route is ever published.
 6. **Stall rule.** The stall clock of a contestant starts at the moment they land on a new row and runs while they stay
    on that row. It is **held while somebody stands on a panel of the next row** (waiting behind a slower contestant never
    counts). When it expires the glass under them cracks (8 ticks) and the contestant falls (`FELL`; "too long on one
@@ -143,6 +145,62 @@ of 16 is decided almost entirely by the gamble (the show's 16 also lost most of 
 differ by the shorter stall limit, the faster shatter, the slower and more careful gate and the nerve of the NPCs rather
 than by the clock.
 
+### Small fields: the guards show the first rows
+
+The bare bridge needs about ten fallers to reveal itself (every row has a fragile panel somebody must find), so a field of
+fewer than about twelve would mostly end with nobody across. A field of **11 or fewer** is therefore shown the first
+`18 - U` rows before the first call, where the number of rows still to find `U` comes from a pure, tested table of the field
+size and the difficulty (`BridgeRules.unknownRows` / `revealedRows`); a field of 12 or more plays the bare bridge (nothing
+changes). The table was calibrated with the whole-game simulation so that on every difficulty somebody gets across in
+about 75-90 % of the games and roughly a fifth to two fifths of the field cross (Extreme a little lower):
+
+| contestants | rows still unknown, Normal / Hard / Extreme |
+|---|---|
+| 3 | 3 / 3 / 2 |
+| 4 | 4 / 4 / 3 |
+| 5 | 5 / 5 / 4 |
+| 6 | 7 / 7 / 5 |
+| 7 | 8 / 8 / 7 |
+| 8 | 9 / 9 / 9 |
+| 9 | 11 / 11 / 10 |
+| 10 | 13 / 13 / 12 |
+| 11 | 16 / 15 / 15 |
+| 12 or more | 18 (the whole bridge) |
+
+(The harder difficulties lose a little chance to the faster shatter, the shorter stall limit and the edgier NPCs, so for
+the same chance of getting somebody across they are shown a row or two more.) How it is done:
+
+* **Public channel only.** At the start of the game the game publishes one `SHOWN` event per shown row (the safe lane of that
+  row, taken from the retained route) into the same `BridgeKnowledge` log that held / shattered panels go to. NPCs read it
+  like everything else (a shown row is never missed, unlike a panel that merely held), the client overlay draws the shown
+  rows as known (green safe lane, dim red fragile lane), nothing else changes. The rows behind the shown ones are never
+  published: the hidden route still only lives in `GlassBridgeGame`.
+* **In the world.** The tempered panels of the shown rows chime and shimmer one after the other along the bridge when the
+  game starts (a sweep from the near end), and keep a faint shimmer every 1.5 s, so a human can also see where to step. An
+  action bar line says how many rows are shown and how many are left; the instructions get one more line (below).
+* **Instructions line** (`squidgame.game.glass_bridge.instruction.7`, only when rows are shown): "Only 6 of you are left,
+  too few to find the way across by trial and error: the guards have already tested the first 11 rows for you. The glass that
+  holds there is marked on your map and shimmers; the last 7 rows are yours to find."
+* **Retained and persisted.** The shown rows are the first rows of the retained route, so the route is the same with or
+  without the reveal. `saveState` stores the number of shown rows next to the route and the crossing order; a game resumed
+  after a server restart shows exactly the same rows (it does not recompute them from the then smaller field) and
+  publishes them again at its start.
+* **Falling on a shown row** is only possible by a slip of nerve (the NPC slip chance, x1 / x3 / x7 by difficulty) or for a
+  human by stepping on the wrong lane; the stall rule, the timeout and everything else are unchanged.
+
+Whole-game simulation of an NPC-only field as played (400 games per cell): rows shown, contestants across (share of the
+field) and the chance that somebody gets across.
+
+| contestants | Normal | Hard | Extreme |
+|---|---|---|---|
+| 3 | 15 rows, 1.4 (46 %), 81 % | 15 rows, 1.2 (40 %), 73 % | 16 rows, 1.3 (45 %), 81 % |
+| 4 | 14 rows, 1.8 (45 %), 89 % | 14 rows, 1.5 (38 %), 81 % | 15 rows, 1.7 (41 %), 84 % |
+| 6 | 11 rows, 2.0 (34 %), 85 % | 11 rows, 1.7 (28 %), 76 % | 13 rows, 2.0 (34 %), 88 % |
+| 8 | 9 rows, 3.0 (37 %), 96 % | 9 rows, 2.3 (29 %), 85 % | 9 rows, 1.9 (23 %), 75 % |
+| 11 | 2 rows, 2.3 (21 %), 82 % | 3 rows, 2.5 (22 %), 82 % | 3 rows, 1.8 (16 %), 72 % |
+| 12 (bare bridge) | 0 rows, 2.5 (21 %), 85 % | 0 rows, 2.0 (17 %), 77 % | 0 rows, 1.8 (15 %), 69 % |
+| 16 (bare bridge) | 0 rows, 5.9 (37 %) | 0 rows, 5.3 (33 %) | 0 rows, 4.7 (30 %) |
+
 ## Controls and UI for humans
 
 No special controls: walk, sprint and jump. Crossing a row means jumping the 1 block gap; changing lane means a sprint
@@ -157,8 +215,8 @@ widgets (`hudWidgets`):
   waiting); chat/action-bar lines for calls, falls, finishes and stalls.
 
 Client overlay (`BridgeOverlay`, top right, only while this game is in its GAME phase): one cell per panel, near end at
-the bottom, lanes as seen walking forward: grey = nobody knows, green = seen holding, dim red = known weak, black with a
-red frame = shattered; your row is framed. It is built from the server's public-knowledge packet only (states of
+the bottom, lanes as seen walking forward: grey = nobody knows, green = seen holding (or shown by the guards at the start of
+a small-field game), dim red = known weak, black with a red frame = shattered; your row is framed. It is built from the server's public-knowledge packet only (states of
 `BridgeKnowledge.snapshot()`), so it can never show more than a spectator saw. The packet is sent to everyone in the
 audience whenever the knowledge changes (and every 5 s as a keep-alive) and cleared in `cleanup`.
 
@@ -167,8 +225,8 @@ audience whenever the knowledge changes (and every 5 s as a keep-alive) and clea
 Per NPC `BridgeNpcBehavior` (brain, throttled with the other NPC thinking) and `BridgeMotor` (body, stepped every
 server tick). The NPC sees only `BridgePublicView`: the layout, who stands where, which glass is gone, the queue and the
 gate, the public event log and its own stall clock. **What it knows it learned**: new public events are copied into the
-NPC's own `NpcMemory` (`bridge.safe.<row>` = safe lane) with a small chance of missing one (attention 98.5-100 % by skill),
-and the decision uses only that memory. A glaring hole in the glass is also "seen": an NPC that wants a panel that has
+NPC's own `NpcMemory` (`bridge.safe.<row>` = safe lane) with a small chance of missing one (attention 98.5-100 % by skill;
+the rows the guards showed at the start of a small-field game are never missed), and the decision uses only that memory. A glaring hole in the glass is also "seen": an NPC that wants a panel that has
 shattered concludes the other one holds, even if it missed the crash.
 
 * **Queue**: stands on its slot, glances at the bridge, nervous ones shake their heads; the next in line steps up to the
@@ -195,14 +253,16 @@ shattered concludes the other one holds, even if it missed the crash.
 
 ## Persistence and restart
 
-`saveState` stores the route (as bits) and the crossing order; `loadState` (called by the tournament before `prepare`)
-puts them back. After a server restart the tournament replays the interrupted game from its instructions with the same
+`saveState` stores the route (as bits), the crossing order and the number of rows shown up front; `loadState` (called by the
+tournament before `prepare`) puts them back. After a server restart the tournament replays the interrupted game from its instructions with the same
 game number and seed. The bridge is rebuilt intact in `prepare` (a half-broken bridge from before the restart does not
 survive), the **hidden route is the saved one, and the crossing order is the saved one restricted to the contestants who
 are still alive**: those eliminated before the restart stay eliminated, everybody else keeps their relative place in the
-queue (a roster that no longer fits the saved order gets a fresh random order). What is **not** persisted is the public
-knowledge: after a restart everybody starts again without having seen anything (the NPCs and the overlay start blank)
-and the contestants who are still alive have to cross the same bridge again. Humans are treated as absent after a
+queue (a roster that no longer fits the saved order gets a fresh random order). The **rows shown up front are the saved
+number, not recomputed from the then smaller field**, and they are published again when the game starts, so a resumed game
+begins with the same public knowledge. What is **not** persisted is the rest of the public knowledge: after a restart
+nothing has been seen holding or shattering yet (the NPCs and the overlay show only the shown rows) and the contestants who
+are still alive have to cross the same bridge again. Humans are treated as absent after a
 restart and are taken over by stand-ins until they return (tournament behaviour).
 
 ## Edge cases (all handled, see the verification below)
@@ -221,7 +281,14 @@ All of it on the real arena (`GlassBridgeBuilder`), a dedicated test server and 
   (and against the real builder's blocks and markers: 0 mismatches, longest hop 3.88 blocks, nothing within 5 blocks above
   the deck), NPC rules, and `BridgeSim`: a tick-level simulation of a whole NPC-only game on the pure rules (random order,
   gate flow, hesitation, slips, freezers, stall timer, panel judging, clock) that asserts pass rates, learning, the
-  ladder, deadlock freedom and "a hole is plain to see". `./gradlew build --offline` is green.
+  ladder, deadlock freedom and "a hole is plain to see". The small-field reveal has its own tests: the table and its
+  monotony (`BridgeRulesTest`); the `SHOWN` event (`BridgeKnowledgeTest`: a shown row is known, its safe lane and the
+  fragile other lane, the rows behind it stay unknown, it cannot be contradicted, and the overlay snapshot shows it as
+  known); the **small-field ladder of the whole-game simulation** (`BridgeSimTest`: crowds of 4, 6, 8 and 11 on every
+  difficulty get somebody across in at least 70 % of the games with 14-50 % of the field across, 3 contestants in at
+  least 65 %; the same crowds on the bare bridge mostly end with nobody across; the share follows the difficulty; shown
+  rows are never gambled on); and `PlannerTest` (the bridge is played by every field from 4 up to 100, skipped and
+  announced below 4). `./gradlew build --offline` is green.
 * **NPC-only games, `squid debug play glass_bridge <n> <difficulty>` with `/tick rate 100`** (5x faster; the server was
   badly overloaded by other jobs on the machine, so wall-clock times mean little): 16 / 40 / 100 contestants on all three
   difficulties, plus 2 contestants (both fall, the game ends, the tournament carries on).
@@ -237,6 +304,38 @@ All of it on the real arena (`GlassBridgeBuilder`), a dedicated test server and 
   condemned (the game logs a `WARN` if one does: none), nobody passed through anything, no exceptions. Deaths always
   equal the fragile contacts plus the stall breaks. `/squid debug perf` with 100 NPCs on the bridge at 20 tps: the
   whole game logic costs about 0.2 ms per tick, the NPC entities about 1.4-2 ms.
+* **Small fields on the real arena** (NPC only, `/tick rate 100`, one game per cell, so each cell is one draw from the
+  simulation table above rather than an average): 4 / 6 / 8 / 11 NPCs on all three difficulties.
+
+  | NPCs | rows shown (Normal / Hard / Extreme) | across, Normal | across, Hard | across, Extreme |
+  |---|---|---|---|---|
+  | 4 | 14 / 14 / 15 | 2 | 2 | 2 |
+  | 6 | 11 / 11 / 13 | 4 | 0 | 3 |
+  | 8 | 9 / 9 / 9 | 4 | 2 | 0 |
+  | 11 | 2 / 3 / 3 | 1 | 7 | 4 |
+
+  Somebody got across in 10 of the 12 games (the simulation says 72-96 % per cell, so two empty games in twelve is what
+  the table predicts). 1,272 hops, the largest distance between the planned and the real touch-down point 0.030 blocks, no
+  call timeouts, no warnings, errors or exceptions in the game logs. A human at the headless client got the instructions
+  line quoted above in the chat ("Only 7 of you are left, ... the first 10 rows ... the last 8 rows are yours to find.").
+* **Audit that the reveal does not leak and is not gambled on** (the same trace of every NPC decision, the 12 games above):
+  on the shown rows 664 decisions were `known`, 4 were slips (all four fell: the only deaths on a shown row) and none was
+  a `GUESS`; the 100 first visits to a row *behind* the shown ones survived in 53 % of the cases (a fair coin is 50 %,
+  z = +0.6), so the unrevealed rows are still a pure coin flip for everybody.
+* **Server restart in the middle of a small game** (8 NPCs, Normal; three fragile panels found: rows 10, 11 and 13, all in
+  lane 0): before the restart the log says "9 rows will be shown up front for a field of 8 (from the size of the field)" and
+  "the guards show the first 9 rows of the bridge (9 left to find)". After the restart the log says "9 rows will be shown up front
+  for a field of 5 (restored from the saved game state)" (recomputed from the five survivors it would have been 13),
+  "the hidden route was restored from the saved game state", "the crossing order was restored from the saved game state (5
+  contestants)" and shows the same 9 rows again; rows 10, 11 and 13 were found fragile in the same lane 0 again (the knowledge
+  itself is not persisted, see above) and one more fragile panel (row 12, lane 1) turned up, no row had two different weak
+  lanes; the one death on a shown row (row 9) was logged as a slip.
+* **Overlay with shown rows** (headless client, 6 NPCs + the human = 7 contestants, Normal, 10 rows shown): the "Bridge"
+  map has the first ten rows green / dim red from the start, the top eight rows grey; the shown safe panels shimmer in the
+  world and the human's row counter reads "Row 1 / 18" (`docs/games/img/glass_bridge_shown_rows.png`; the Rcon lines in the
+  chat are from the test teleport onto the first safe panel).
+
+  ![The overlay with ten shown rows and the first row under the player's feet](img/glass_bridge_shown_rows.png)
 * **Human path with the real client** (the headless Minecraft client under Xvfb joined to the test server, 10 NPCs + the
   player): screenshots show the **queue HUD** (title, "You are next! Stand by the gate", the status line "On the bridge: 1 |
   Across: 0 | Waiting: 10", the timer bar, survivors 11 / 11, the queue counter), the **overlay map** "Bridge" (18 rows x 2
@@ -277,12 +376,21 @@ All of it on the real arena (`GlassBridgeBuilder`), a dedicated test server and 
 
 ## Known limitations and suggestions
 
-* **Small crowds cannot cross.** The bridge is only passable for a contestant who has seen the glass of their
-  predecessors; with fewer than about 10 contestants nearly everybody falls (simulation, all NPC, Normal: 2-6 contestants
-  0 % cross, 8 contestants 0.4 on average / 16 % chance that anybody crosses, 10: about 1 / 50 %, 12: 2.3 / 78 %, 16: 5.8,
-  24: 13.6, 40: 28, 100: 85). `GameKind.GLASS_BRIDGE.minParticipants` is 2, so the planner will send three
-  survivors onto the bridge. Suggestion for the integrator: raise it to about 10 (or let the planner skip the bridge when the
-  survivor count is below that).
+* **Small fields rely on the reveal.** The bare bridge is only passable for a contestant who has seen the glass of their
+  predecessors (about ten fallers reveal it): without the shown rows 2-6 contestants never get across, 8 contestants in
+  16 % of the games and 10 in about half of them (simulation, all NPC, Normal). With the reveal (field of 4 to 11, see
+  above) somebody crosses in 72-96 % of the games and 16-45 % of the field, but not in every game: nobody gets across in
+  4-28 % of them (worst cells: 11 contestants on Extreme 28 %, 8 on Extreme 25 %, 6 on Hard 24 %); the game then simply
+  ends, the results say "none survived" and the tournament ends with "no winner" (its normal handling of an empty roster,
+  the same as when everybody falls on a bare bridge). Showing more rows (a smaller `UNKNOWN_ROWS` entry in `BridgeRules`)
+  is the one knob that trades suspense for a lower chance of that ending.
+  `GameKind.GLASS_BRIDGE.minParticipants` is 4; a field of 3 (73-81 % in the simulation) is never planned, but
+  `squid debug play glass_bridge 3` (the debug command does not look at the minimum) still plays it. The reveal takes some
+  of the suspense out of the first rows but keeps the part that matters: the unknown rows behind them, where each
+  contestant is a coin flip away from the pit.
+* **The reveal table is calibrated for NPCs.** A human field of the same size crosses the shown rows with certainty
+  (no slip of nerve), so a human-heavy small field does a little better than the table; an absent human is taken over by
+  an NPC stand-in and counts as an NPC.
 * The route is a uniform coin flip per row (as in the show), so the *first* contestants are gambling by design; the order
   is the only luck-management there is.
 * Lane naming left / right is relative to the direction of travel (see above), not the map view of the arena document.

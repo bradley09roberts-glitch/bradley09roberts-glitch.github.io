@@ -195,6 +195,8 @@ public final class GlassBridgeGame implements MiniGame {
         route = routeRestored ? restoredRoute : BridgeRoute.forGame(ctx.tournament.seed, ctx.tournament.gameNumber, rows);
         restoredRoute = null;
         revealedRows = plannedReveal(difficulty, ctx.alive().size(), rows);
+        debug("{} rows will be shown up front for a field of {} ({})", revealedRows, ctx.alive().size(),
+                restoredRevealed >= 0 ? "restored from the saved game state" : "from the size of the field");
         restoredRevealed = -1;
         debug(routeRestored ? "the hidden route was restored from the saved game state" : "a new hidden route was generated ({} rows)", rows);
         knowledge = new BridgeKnowledge(rows);
