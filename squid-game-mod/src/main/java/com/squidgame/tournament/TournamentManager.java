@@ -723,6 +723,11 @@ public final class TournamentManager {
         c.setBodyEntity(null);
     }
 
+    /** /squid join: the same as right-clicking the registration terminal, so it opens a tournament first when none is running. */
+    public void joinOrStart(ServerPlayer p) {
+        terminalUse(p);
+    }
+
     /** A player right-clicked the registration terminal. */
     private void terminalUse(ServerPlayer p) {
         if (t == null) {

@@ -43,6 +43,7 @@ public class SquidGameClient implements ClientModInitializer {
         HudRenderCallback.EVENT.register(SquidHud::render);
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(com.squidgame.client.audio.Ambience::tick);
         ClientNetworking.init();
+        ClientDiagnostics.register();
         ScreenRegistry.discoverGameClients();
     }
 }

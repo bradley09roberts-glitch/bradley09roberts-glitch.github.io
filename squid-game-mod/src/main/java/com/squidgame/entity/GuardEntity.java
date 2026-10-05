@@ -284,6 +284,13 @@ public class GuardEntity extends PathfinderMob implements GeoEntity {
         setZza(speed > 0.0f ? 1.0f : 0.0f);
     }
 
+    /** Guards are drawn as far away as contestants (see {@link ContestantEntity#shouldRenderAtSqrDistance}). */
+    @Override
+    public boolean shouldRenderAtSqrDistance(double distSqr) {
+        double r = ContestantEntity.RENDER_DISTANCE * net.minecraft.world.entity.Entity.getViewScale();
+        return distSqr < r * r;
+    }
+
     @Override
     public boolean hurt(DamageSource source, float amount) {
         if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {

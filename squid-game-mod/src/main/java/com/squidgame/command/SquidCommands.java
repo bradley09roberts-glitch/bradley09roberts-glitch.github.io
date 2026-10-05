@@ -62,12 +62,7 @@ public final class SquidCommands {
                                 .executes(c -> start(c, Difficulty.byId(StringArgumentType.getString(c, "difficulty"), Difficulty.NORMAL),
                                         IntegerArgumentType.getInteger(c, "npcs"), false)))));
         root.then(Commands.literal("join").executes(c -> {
-            ServerPlayer p = c.getSource().getPlayerOrException();
-            String err = mgr(c).registerPlayer(p);
-            if (err != null) {
-                c.getSource().sendFailure(Component.literal(err));
-                return 0;
-            }
+            mgr(c).joinOrStart(c.getSource().getPlayerOrException());
             return 1;
         }));
         root.then(Commands.literal("spectate").executes(c -> {

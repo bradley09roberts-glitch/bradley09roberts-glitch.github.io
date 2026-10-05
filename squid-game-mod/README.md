@@ -114,7 +114,7 @@ All under `/squid`. Commands without a permission note work for every player (al
 |---------|-----|--------|
 | `enter` / `leave` | anyone | go to the complex (generated on first use) / return home |
 | `start [normal\|hard\|extreme] [npcs]` | anyone (when none runs) | open registration (you are registered), optional difficulty and number of NPCs |
-| `join` / `spectate` / `status` | anyone | register (registration phase) / watch / show the state |
+| `join` / `spectate` / `status` | anyone | register (like the terminal: opens a tournament first when none runs) / watch / show the state |
 | `arena <name>` | anyone (no tournament running) | free tour of an arena: `red_light dalgona tug_of_war marbles glass_bridge final hub` |
 | `skip` | op | skip the current phase (registration, countdown, game ...) |
 | `reset [home]` | op | abort and clean up (optionally send everyone home) |
@@ -126,6 +126,7 @@ All under `/squid`. Commands without a permission note work for every player (al
 | `debug perf` | op | the built-in profiler (manager, game logic, HUD, NPC entities, NPC behaviours, whole tick) |
 | `debug rules <player>` | op | why a player is (not) restricted by the arena rules |
 | `debug timescale <x>`, `debug eliminate <n>`, `debug roster`, `debug markers <arena>`, `debug builders` | op | test helpers |
+| `/squidclient npcs` (client side) | anyone | what your game knows about the contestants: how many, how far away, how many are drawn; also written to the log (useful for bug reports) |
 
 ## Configuration
 

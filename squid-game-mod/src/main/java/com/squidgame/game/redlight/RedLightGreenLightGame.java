@@ -5,6 +5,7 @@ import com.squidgame.build.Region;
 import com.squidgame.core.GameKind;
 import com.squidgame.core.redlight.DollCycle;
 import com.squidgame.core.redlight.RedLightRules;
+import com.squidgame.core.redlight.StartOrder;
 import com.squidgame.core.util.Rng;
 import com.squidgame.entity.Activity;
 import com.squidgame.entity.ContestantEntity;
@@ -237,7 +238,12 @@ public final class RedLightGreenLightGame implements MiniGame {
     @Override
     public void placeContestants(GameContext ctx) {
         List<Marker> slots = ctx.markers("redlight.start_spawn");
-        Teleporter.spread(ctx.level, ctx.alive(), slots);
+        double[] sx = new double[slots.size()], sz = new double[slots.size()];
+        for (int i = 0; i < slots.size(); i++) {
+            sx[i] = slots.get(i).x();
+            sz[i] = slots.get(i).z();
+        }
+        Teleporter.spread(ctx.level, StartOrder.humansIntoCrowd(ctx.alive(), Contestant::isHumanControlled, sx, sz), slots);
         for (Contestant c : ctx.alive()) {
             ContestantEntity e = ctx.npc(c);
             if (e != null) {

@@ -499,6 +499,19 @@ public class ContestantEntity extends PathfinderMob implements GeoEntity {
         return false; // contestants are eliminated by game rules, never by vanilla damage
     }
 
+    /** How far away (blocks, at the default "Entity Distance" of 100 %) a contestant is still drawn. */
+    public static final double RENDER_DISTANCE = 176.0;
+
+    /**
+     * The crowd is the game: vanilla stops drawing a person-sized mob 64 blocks away, which on a 130 m field made every
+     * runner vanish once it was a little ahead of the player. The player's "Entity Distance" video setting still scales this.
+     */
+    @Override
+    public boolean shouldRenderAtSqrDistance(double distSqr) {
+        double r = RENDER_DISTANCE * net.minecraft.world.entity.Entity.getViewScale();
+        return distSqr < r * r;
+    }
+
     @Override
     public boolean isInvulnerableTo(DamageSource source) {
         return !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY);

@@ -17,11 +17,11 @@ import net.minecraft.world.entity.MobCategory;
 public final class ModEntities {
     public static final EntityType<ContestantEntity> CONTESTANT = register("contestant",
             EntityType.Builder.<ContestantEntity>of(ContestantEntity::new, MobCategory.MISC)
-                    .sized(0.6f, 1.8f).clientTrackingRange(9).updateInterval(2).eyeHeight(1.62f));
+                    .sized(0.6f, 1.8f).clientTrackingRange(11).updateInterval(2).eyeHeight(1.62f));
 
     public static final EntityType<GuardEntity> GUARD = register("guard",
             EntityType.Builder.<GuardEntity>of(GuardEntity::new, MobCategory.MISC)
-                    .sized(0.6f, 1.9f).clientTrackingRange(10).updateInterval(2).eyeHeight(1.7f));
+                    .sized(0.6f, 1.9f).clientTrackingRange(11).updateInterval(2).eyeHeight(1.7f));
 
     public static final EntityType<DollEntity> DOLL = register("doll",
             EntityType.Builder.<DollEntity>of(DollEntity::new, MobCategory.MISC)
