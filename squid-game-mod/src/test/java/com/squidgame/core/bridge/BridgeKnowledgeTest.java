@@ -151,4 +151,48 @@ class BridgeKnowledgeTest {
             }
         }
     }
+
+    @Test
+    void rowsTheGuardsShowAreKnownLikeRowsThatHeld() {
+        BridgeKnowledge k = new BridgeKnowledge(18);
+        for (int r = 0; r < 13; r++) {
+            assertTrue(k.record(r, r % 2, Outcome.SHOWN, 0));
+        }
+        assertEquals(13, k.knownRows());
+        assertEquals(13, k.frontier(), "the shown rows are a prefix: the gamble starts right behind them");
+        assertEquals(13, k.eventCount(), "one public event per shown row: the same channel NPCs and overlays read");
+        assertEquals(LaneState.SAFE, k.laneState(0, 0));
+        assertEquals(LaneState.WEAK, k.laneState(0, 1), "the other lane of a shown row is known to be fragile");
+        assertEquals(LaneState.SAFE, k.laneState(1, 1));
+        assertEquals(LaneState.UNKNOWN, k.laneState(13, 0), "the rows behind stay unknown");
+        assertEquals(LaneState.UNKNOWN, k.laneState(17, 1));
+        for (int r = 0; r < 13; r++) {
+            assertEquals(r % 2, k.safeLane(r));
+            assertEquals(Outcome.SHOWN, k.event(r).outcome());
+        }
+    }
+
+    @Test
+    void aShownRowCannotBeContradictedAndDoesNotBlockLaterNews() {
+        BridgeKnowledge k = new BridgeKnowledge(18);
+        k.record(2, 1, Outcome.SHOWN, 0);
+        assertFalse(k.record(2, 1, Outcome.HELD, 50), "somebody standing on the shown lane teaches nothing new");
+        assertFalse(k.record(2, 0, Outcome.HELD, 60), "a report that contradicts the guards is ignored");
+        assertTrue(k.record(2, 0, Outcome.BROKE, 70), "...but a panel that is seen breaking is still news (the hole)");
+        assertEquals(LaneState.BROKEN, k.laneState(2, 0));
+        assertEquals(1, k.safeLane(2));
+    }
+
+    @Test
+    void theOverlaySnapshotShowsShownRowsAsKnown() {
+        BridgeKnowledge k = new BridgeKnowledge(18);
+        k.record(0, 0, Outcome.SHOWN, 0);
+        k.record(1, 1, Outcome.SHOWN, 0);
+        byte[] snap = k.snapshot();
+        assertEquals(LaneState.SAFE.ordinal(), snap[0]);
+        assertEquals(LaneState.WEAK.ordinal(), snap[1]);
+        assertEquals(LaneState.WEAK.ordinal(), snap[2]);
+        assertEquals(LaneState.SAFE.ordinal(), snap[3]);
+        assertEquals(LaneState.UNKNOWN.ordinal(), snap[4]);
+    }
 }

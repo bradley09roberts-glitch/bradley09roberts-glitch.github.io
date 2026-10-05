@@ -5,6 +5,8 @@
  "squidgame.game.glass_bridge.instruction.4": "What you see is all you know: when a panel shatters or holds, everyone behind learns which one was safe. A fragile panel cracks the instant you touch it.",
  "squidgame.game.glass_bridge.instruction.5": "Take longer than %s s to reach the next row and the glass gives way beneath you.",
  "squidgame.game.glass_bridge.instruction.6": "Time limit %s. Whoever has not crossed when it runs out is eliminated. Difficulty: %s.",
+ "squidgame.game.glass_bridge.instruction.7": "Only %s of you are left, too few to find the way across by trial and error: the guards have already tested the first %s rows for you. The glass that holds there is marked on your map and shimmers; the last %s rows are yours to find.",
+ "squidgame.game.glass_bridge.revealed": "The guards have tested the first %s rows (on your map): %s rows are still unknown",
  "squidgame.game.glass_bridge.objective.watch": "Watch the crossing",
  "squidgame.game.glass_bridge.objective.queue": "Wait for your turn: %s ahead of you",
  "squidgame.game.glass_bridge.objective.next": "You are next! Stand by the gate",

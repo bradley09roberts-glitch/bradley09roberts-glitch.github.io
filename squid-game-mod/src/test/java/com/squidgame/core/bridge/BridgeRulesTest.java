@@ -154,4 +154,47 @@ class BridgeRulesTest {
         assertEquals(1.0, BridgeRules.stallPressure(q, 0), 1e-9);
         assertEquals(0.5, BridgeRules.stallPressure(q, q.stallLimitTicks() / 2), 1e-9);
     }
+
+    @Test
+    void aFieldOfTwelveOrMorePlaysTheBareBridge() {
+        for (Difficulty d : Difficulty.values()) {
+            for (int n : new int[]{12, 13, 16, 40, 100, 128}) {
+                assertEquals(0, BridgeRules.revealedRows(d, n, 18), d + " n=" + n);
+                assertEquals(18, BridgeRules.unknownRows(d, n, 18));
+            }
+        }
+        assertEquals(11, BridgeRules.MAX_FIELD_WITH_REVEAL);
+    }
+
+    @Test
+    void aSmallFieldIsShownTheFirstRowsAndAlwaysKeepsSomethingToGambleOn() {
+        for (Difficulty d : Difficulty.values()) {
+            int prevUnknown = 0;
+            for (int n = 1; n <= 11; n++) {
+                int unknown = BridgeRules.unknownRows(d, n, 18);
+                int shown = BridgeRules.revealedRows(d, n, 18);
+                assertEquals(18, shown + unknown, d + " n=" + n);
+                assertTrue(unknown >= 2, d + " n=" + n + ": at least two rows stay a gamble");
+                assertTrue(unknown >= prevUnknown, d + ": a bigger field is shown fewer rows (n=" + n + ")");
+                assertTrue(unknown <= 16 && shown >= 2, d + " n=" + n + ": a field of 11 is shown at least a little");
+                prevUnknown = unknown;
+            }
+        }
+    }
+
+    @Test
+    void harderDifficultiesAreShownAtLeastAsManyRowsForTheSameChanceOfCrossing() {
+        // they lose a little chance to the faster shatter, the shorter stall limit and the edgier NPCs
+        for (int n = 1; n <= 11; n++) {
+            assertTrue(BridgeRules.revealedRows(Difficulty.HARD, n, 18) >= BridgeRules.revealedRows(Difficulty.NORMAL, n, 18), "n=" + n);
+            assertTrue(BridgeRules.revealedRows(Difficulty.EXTREME, n, 18) >= BridgeRules.revealedRows(Difficulty.HARD, n, 18), "n=" + n);
+        }
+    }
+
+    @Test
+    void theRevealNeverExceedsAShorterBridge() {
+        assertEquals(0, BridgeRules.revealedRows(Difficulty.NORMAL, 4, 4));
+        assertEquals(1, BridgeRules.revealedRows(Difficulty.NORMAL, 4, 5));
+        assertEquals(10, BridgeRules.revealedRows(Difficulty.EXTREME, 4, 13));
+    }
 }

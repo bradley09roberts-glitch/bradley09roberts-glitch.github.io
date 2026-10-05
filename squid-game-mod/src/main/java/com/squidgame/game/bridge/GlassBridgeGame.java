@@ -79,6 +79,8 @@ public final class GlassBridgeGame implements MiniGame {
     private BridgeRoute route;
     private BridgeRoute restoredRoute;
     private int[] restoredOrder;
+    /** Rows shown up front in the interrupted game (-1 = none saved): a resumed game keeps exactly the same reveal. */
+    private int restoredRevealed = -1;
 
     // ---- public state
     private Difficulty difficulty = Difficulty.NORMAL;
@@ -96,6 +98,8 @@ public final class GlassBridgeGame implements MiniGame {
     private long lastEntryTick;
     private int finishCounter;
     private int sentEvents = -1;
+    /** Rows from the near end that the guards show to everybody before the first call (a small field, see {@link BridgeRules#revealedRows}). */
+    private int revealedRows;
     private long lastEventTick = Long.MIN_VALUE / 2;
     private BridgeKnowledge.Event lastEvent;
     private Marker gateMarker;
@@ -123,13 +127,28 @@ public final class GlassBridgeGame implements MiniGame {
     public List<Component> instructions(GameContext ctx) {
         BridgeRules.Params p = BridgeRules.params(ctx.difficulty());
         String time = formatTime(BridgeRules.timeLimitTicks(ctx.difficulty(), Math.max(1, ctx.alive().size())));
-        return List.of(
+        List<Component> lines = new ArrayList<>(List.of(
                 Component.translatable("squidgame.game.glass_bridge.instruction.1"),
                 Component.translatable("squidgame.game.glass_bridge.instruction.2"),
                 Component.translatable("squidgame.game.glass_bridge.instruction.3"),
                 Component.translatable("squidgame.game.glass_bridge.instruction.4"),
                 Component.translatable("squidgame.game.glass_bridge.instruction.5", p.stallLimitTicks() / 20),
-                Component.translatable("squidgame.game.glass_bridge.instruction.6", time, ctx.difficulty().id));
+                Component.translatable("squidgame.game.glass_bridge.instruction.6", time, ctx.difficulty().id)));
+        int fieldSize = Math.max(1, ctx.alive().size());
+        int shown = plannedReveal(ctx.difficulty(), fieldSize, BridgeRoute.DEFAULT_ROWS);
+        if (shown > 0) {
+            // a small field cannot find the way across by trial and error: the guards have tested the first rows for it
+            lines.add(Component.translatable("squidgame.game.glass_bridge.instruction.7", fieldSize, shown, BridgeRoute.DEFAULT_ROWS - shown));
+        }
+        return lines;
+    }
+
+    /** Rows the guards show up front: the saved number of a resumed game, otherwise what the field size calls for. */
+    private int plannedReveal(Difficulty d, int fieldSize, int rows) {
+        if (restoredRevealed >= 0) {
+            return Math.min(restoredRevealed, Math.max(0, rows - 1));
+        }
+        return BridgeRules.revealedRows(d, fieldSize, rows);
     }
 
     @Override
@@ -175,6 +194,8 @@ public final class GlassBridgeGame implements MiniGame {
         boolean routeRestored = restoredRoute != null && restoredRoute.rows() == rows;
         route = routeRestored ? restoredRoute : BridgeRoute.forGame(ctx.tournament.seed, ctx.tournament.gameNumber, rows);
         restoredRoute = null;
+        revealedRows = plannedReveal(difficulty, ctx.alive().size(), rows);
+        restoredRevealed = -1;
         debug(routeRestored ? "the hidden route was restored from the saved game state" : "a new hidden route was generated ({} rows)", rows);
         knowledge = new BridgeKnowledge(rows);
         // the bridge is always intact when a game starts (also after a server restart in the middle of a game)
@@ -199,6 +220,7 @@ public final class GlassBridgeGame implements MiniGame {
     }
 
     private void resetRound() {
+        revealedRows = 0;
         started = false;
         noArena = false;
         timedOut = false;
@@ -298,9 +320,40 @@ public final class GlassBridgeGame implements MiniGame {
         if (noArena) {
             return;
         }
+        showFirstRows(ctx);
         ctx.assignBehaviors(c -> makeBehavior(c));
         sentEvents = -1;
         syncMap(ctx, true);
+    }
+
+    /**
+     * A small field is shown the first rows of the bridge: for each of them the safe lane is published through the same
+     * public-knowledge channel everything else uses (so NPCs, the HUD and the client overlay know it and nothing else), the
+     * glass that holds chimes and shimmers one row after the other, and the rows behind stay the secret of the route.
+     */
+    private void showFirstRows(GameContext ctx) {
+        if (revealedRows <= 0) {
+            return;
+        }
+        for (int r = 0; r < revealedRows; r++) {
+            knowledge.record(r, route.safeLane(r), BridgeKnowledge.Outcome.SHOWN, 0);
+        }
+        debug("the guards show the first {} rows of the bridge ({} left to find)", revealedRows, field.rows() - revealedRows);
+        for (int r = 0; r < revealedRows; r++) {
+            final PanelField.Cell cell = field.cell(r, route.safeLane(r));
+            later(8 + 3 * r, () -> field.holdFx(cell, new Vec3(cell.centerX(), field.topY, cell.centerZ())));
+        }
+        ctx.actionBar(Component.translatable("squidgame.game.glass_bridge.revealed", revealedRows, field.rows() - revealedRows));
+    }
+
+    /** A soft shimmer on the shown glass that holds, so a contestant can also see in the world where to step. */
+    private void shimmerShownRows() {
+        for (int r = 0; r < revealedRows; r++) {
+            PanelField.Cell cell = field.cell(r, route.safeLane(r));
+            if (cell.hasGlass()) {
+                field.shimmer(cell);
+            }
+        }
     }
 
     private BridgeNpcBehavior makeBehavior(Contestant c) {
@@ -339,6 +392,9 @@ public final class GlassBridgeGame implements MiniGame {
         }
         clock++;
         runTasks();
+        if (revealedRows > 0 && clock % 30 == 0) {
+            shimmerShownRows();
+        }
         tickPanels(ctx);
         tickGate(ctx);
         for (Integer n : new ArrayList<>(active)) {
@@ -1001,6 +1057,9 @@ public final class GlassBridgeGame implements MiniGame {
             tag.putLong("route", route.toBits());
             tag.putInt("rows", route.rows());
         }
+        if (route != null) {
+            tag.putInt("revealed", revealedRows);
+        }
         if (queue != null) {
             tag.putIntArray("order", queue.order().stream().mapToInt(Integer::intValue).toArray());
         }
@@ -1016,6 +1075,9 @@ public final class GlassBridgeGame implements MiniGame {
         }
         if (tag.contains("order")) {
             restoredOrder = tag.getIntArray("order");
+        }
+        if (tag.contains("revealed")) {
+            restoredRevealed = tag.getInt("revealed");
         }
     }
 

@@ -70,7 +70,7 @@ final class BridgeSim {
         Fate fate;
     }
 
-    private BridgeSim(long seed, Difficulty d, int n) {
+    private BridgeSim(long seed, Difficulty d, int n, int revealed) {
         Rng master = new Rng(seed);
         this.difficulty = d;
         this.params = BridgeRules.params(d);
@@ -82,6 +82,9 @@ final class BridgeSim {
         }
         master.fork(2).shuffle(order);
         this.queue = new BridgeQueue(order);
+        for (int r = 0; r < Math.min(revealed, ROWS); r++) {
+            know.record(r, route.safeLane(r), BridgeKnowledge.Outcome.SHOWN, 0); // the guards show the first rows up front
+        }
         this.cs = new C[n + 1];
         for (int i = 0; i < order.size(); i++) {
             C c = new C();
@@ -94,13 +97,24 @@ final class BridgeSim {
         }
     }
 
+    /** The bare bridge: nothing is shown up front (the show-like baseline, used for crowds of 12 and more). */
     static Result run(long seed, Difficulty d, int n) {
-        return new BridgeSim(seed, d, n).simulate(-1);
+        return new BridgeSim(seed, d, n, 0).simulate(-1);
+    }
+
+    /** The first {@code revealed} rows are shown to everybody before the first contestant is called. */
+    static Result run(long seed, Difficulty d, int n, int revealed) {
+        return new BridgeSim(seed, d, n, revealed).simulate(-1);
+    }
+
+    /** The game as played: the guards show as many rows as {@link BridgeRules#revealedRows} gives for this field. */
+    static Result runAsPlayed(long seed, Difficulty d, int n) {
+        return run(seed, d, n, BridgeRules.revealedRows(d, n, ROWS));
     }
 
     /** Variant where the contestant at queue position {@code frozenPosition} freezes on its first unrevealed row. */
     static Result runWithFreezer(long seed, Difficulty d, int n, int frozenPosition) {
-        return new BridgeSim(seed, d, n).simulate(frozenPosition);
+        return new BridgeSim(seed, d, n, 0).simulate(frozenPosition);
     }
 
     private Result simulate(int freezer) {
@@ -178,8 +192,8 @@ final class BridgeSim {
             if (e.outcome() == BridgeKnowledge.Outcome.BROKE) {
                 c.fear = Math.min(1.0, c.fear + 0.25);
             }
-            if (!blind && c.rng.chance(attention)) {
-                c.known[e.row()] = know.safeLane(e.row());
+            if (e.outcome() == BridgeKnowledge.Outcome.SHOWN || (!blind && c.rng.chance(attention))) {
+                c.known[e.row()] = know.safeLane(e.row()); // what the guards show cannot be missed
             }
         }
         c.fear *= 0.9995;
