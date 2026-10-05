@@ -23,7 +23,7 @@
  "squidgame.game.glass_bridge.fell": "No. %s fell at row %s",
  "squidgame.game.glass_bridge.fell_start": "No. %s fell off the bridge",
  "squidgame.game.glass_bridge.crossed": "No. %s crossed the bridge (#%s)",
- "squidgame.game.glass_bridge.hud.ahead": "Players ahead of you",
+ "squidgame.game.glass_bridge.hud.ahead": "Ahead",
  "squidgame.game.glass_bridge.hud.row": "Row",
  "squidgame.game.glass_bridge.hud.call": "Step onto the bridge",
  "squidgame.game.glass_bridge.hud.stall": "Reach the next row",

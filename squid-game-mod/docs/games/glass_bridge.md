@@ -149,7 +149,7 @@ No special controls: walk, sprint and jump. Crossing a row means jumping the 1 b
 jump over the 2 block lane gap (a diagonal hop is 3.9 blocks and needs a run up from the edge of the panel). Server HUD
 widgets (`hudWidgets`):
 
-* waiting: "Players ahead of you" counter; "You are next! Stand by the gate" when on deck;
+* waiting: "Ahead" counter (players in front of you); "You are next! Stand by the gate" when on deck;
 * called: YOUR TURN banner and the "step onto the bridge" countdown (`callLimit`);
 * on the bridge: row counter `7/18`, the stall bar ("Reach the next row", blue "Waiting for the contestant ahead" while
   the clock is held), a MOVE! banner and red edge pulses when it runs low;
@@ -237,6 +237,17 @@ All of it on the real arena (`GlassBridgeBuilder`), a dedicated test server and 
   condemned (the game logs a `WARN` if one does: none), nobody passed through anything, no exceptions. Deaths always
   equal the fragile contacts plus the stall breaks. `/squid debug perf` with 100 NPCs on the bridge at 20 tps: the
   whole game logic costs about 0.2 ms per tick, the NPC entities about 1.4-2 ms.
+* **Human path with the real client** (the headless Minecraft client under Xvfb joined to the test server, 10 NPCs + the
+  player): screenshots show the **queue HUD** (title, "You are next! Stand by the gate", the status line "On the bridge: 1 |
+  Across: 0 | Waiting: 10", the timer bar, survivors 11 / 11, the queue counter), the **overlay map** "Bridge" (18 rows x 2
+  cells, grey until somebody has seen a panel hold or shatter, then green / dim red, the player's row framed) together with
+  the HUD event line ("Row 1, right panel: held"), the **on-bridge HUD** ("Row 1 / 18" with the glass icon, the stall bar
+  "Reach the next row"), the **stall warning** (red "MOVE!" banner, the red stall bar) and the **crack and fall** after the
+  25 s stall limit ("The glass is giving way under No. 105: too long on one panel", the view from the falling body). The
+  player was put on the first safe panel with a teleport for this check (the route was read from the saved state, test
+  only): real keyboard hops of a real client over the gaps were not driven (injected key presses cannot be timed
+  precisely enough; the protocol client above covered the hop arcs). The queue counter label was shortened from "Players
+  ahead of you" to "Ahead" after the screenshots showed it overlapping the central HUD panel (not re-checked on screen).
 * **Audit that nothing but public events decides** (the hidden route must never leak, not even statistically): every NPC lane
   decision is traced in the debug log (`[bridge] No. 079 decides row 8 lane 1 (GUESS)` / `(known)` / `(SLIP)`). In 8 games
   with 16 NPCs (traced, 1,644 hops): the 144 hops onto a row nobody had seen yet survived in 46 % of the cases (a fair coin
@@ -268,8 +279,8 @@ All of it on the real arena (`GlassBridgeBuilder`), a dedicated test server and 
 
 * **Small crowds cannot cross.** The bridge is only passable for a contestant who has seen the glass of their
   predecessors; with fewer than about 10 contestants nearly everybody falls (simulation, all NPC, Normal: 2-6 contestants
-  0 % cross, 8 contestants 0.3 on average / 15 % chance that anybody crosses, 10: 1.1 / 52 %, 12: 2.3 / 81 %, 16: 6.0,
-  24: 13.5, 40: 28, 100: 85). `GameKind.GLASS_BRIDGE.minParticipants` is 2, so the planner will send three
+  0 % cross, 8 contestants 0.4 on average / 16 % chance that anybody crosses, 10: about 1 / 50 %, 12: 2.3 / 78 %, 16: 5.8,
+  24: 13.6, 40: 28, 100: 85). `GameKind.GLASS_BRIDGE.minParticipants` is 2, so the planner will send three
   survivors onto the bridge. Suggestion for the integrator: raise it to about 10 (or let the planner skip the bridge when the
   survivor count is below that).
 * The route is a uniform coin flip per row (as in the show), so the *first* contestants are gambling by design; the order
@@ -278,4 +289,5 @@ All of it on the real arena (`GlassBridgeBuilder`), a dedicated test server and 
 * The panel judgement needs the contestant to be `onGround`; a hop that lands and takes off in the same tick is still
   judged (landing is detected before the next take-off), but a client that lies about `onGround` could in theory
   skip a panel: the fall check below the deck is the safety net.
-* The overlay and the HUD are built carefully but were only checked on a headless client (see the verification notes).
+* The overlay and the HUD were checked on the headless client only (screenshots of the states listed above; the sound and
+  the screen shake / fade effects were not judged).

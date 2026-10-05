@@ -143,7 +143,7 @@
   "squidgame.game.glass_bridge.fell_start": "No. %s fell off the bridge",
   "squidgame.game.glass_bridge.frozen_at_gate": "No. %s froze at the gate and ran out of time",
   "squidgame.game.glass_bridge.headline": "%s contestants crossed the bridge",
-  "squidgame.game.glass_bridge.hud.ahead": "Players ahead of you",
+  "squidgame.game.glass_bridge.hud.ahead": "Ahead",
   "squidgame.game.glass_bridge.hud.banner.hurry": "MOVE!",
   "squidgame.game.glass_bridge.hud.banner.turn": "YOUR TURN",
   "squidgame.game.glass_bridge.hud.call": "Step onto the bridge",
