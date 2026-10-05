@@ -40,3 +40,21 @@ The doll stands on her plinth at the far end (`redlight.doll`, yaw 0: she faces 
 head (not her body), her eyes glow while they are lit, the chant is sung from her position (audible across the whole field),
 servos and lock-on sounds accompany the turn. Guards on towers and along the walls (`guard.post`, triangle rank = armed). HUD:
 big traffic light (green / amber / red), banner, counter "Across the line", timer.
+
+## Balance and verification (integration)
+NPC-only games with 100 contestants (`/squid debug play red_light 100 <difficulty>` at `/tick rate 100`, final build), share of the field
+that crosses the line in time:
+
+| | Normal | Hard | Extreme |
+|--|--------|------|---------|
+| survivors (runs) | 77, 83 (and 75 - 91 in full tournaments) | 61, 65 (and 63 - 66) | 41, 42 (and 34 - 50) |
+| typical share | about 80 % | about 63 % | about 42 % |
+
+Deaths are mostly misjudged stops: on Extreme the 0.3 s allowance is shorter than most reaction times, so only runners who anticipate the
+end of the chant (and guess its tempo right) stop in time; on Hard and Normal attention lapses (a turn noticed late, 8 - 26 ticks, more
+frequent for unskilled and timid contestants, scaled 1.3 / 2.4 / 1.5 by difficulty) and involuntary wobbles do most of the damage; a
+few contestants run out of time only when they hesitate a lot after witnessing shots. Runs with 456 NPCs, a reset in the middle of the
+game, a server restart and two human contestants (one moved on red and was shot, the other stayed alive) behaved as described above.
+Two tuning notes from the verification: far NPCs used to move at a third of their speed (their movement is now renewed every tick,
+whatever the behaviour's decision rate), and vanilla's `Mob.setSpeed` made the pace quadratic in the attribute (overridden).
+

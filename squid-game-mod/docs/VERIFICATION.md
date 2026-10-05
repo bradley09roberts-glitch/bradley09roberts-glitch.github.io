@@ -24,7 +24,7 @@ https://aka.ms/MinecraftEULA themselves.
 ## 2. Build and unit tests
 
 * `./gradlew clean build --offline`: BUILD SUCCESSFUL (about 35 s with the Gradle build cache).
-* `./gradlew cleanTest test --no-build-cache`: **468 unit tests in 43 classes, 0 failures** (`core/` is pure Java: difficulty tables,
+* `./gradlew cleanTest test --no-build-cache`: **483 unit tests in 44 classes, 0 failures** (the clean-build run was repeated after every merge) (`core/` is pure Java: difficulty tables,
   personalities, the Red Light judge, the Dalgona cookie simulation, Tug of War simulation and team planner, marbles rules,
   glass-bridge route/knowledge/queue and a whole-game simulator, the final's duel engine and knockout ladder, the planner ...).
 * The jar contains the three expected layers (common, client, assets); the client mixin's production names were checked in the
@@ -37,11 +37,11 @@ below ended with exactly one winner (or the documented outcome) and no exception
 
 | Run | Survivors after game 1 / 2 / 3 / 4 / 5 / 6 |
 |-----|--------------------------------------------|
-| 100 NPCs, Normal | 91 / 75 / 37 / 19 / 10 / **1** |
-| 100 NPCs, Normal (second run) | 75 / 62 / 31 / 16 / 9 / (final stub at that time) |
-| 100 NPCs, Hard | 65 / 42 / 21 / 11 / (bridge skipped: < 12) / **1** |
-| 100 NPCs, Extreme | 34 / 21 / 11 / 6 / (bridge skipped) / **1** |
+| 100 NPCs, Normal (three runs) | 91 / 75 / 37 / 19 / 10 / **1**;  81 / 70 / 34 / 17 / 7 / **1** (real time);  75 / 62 / 31 / 16 / 9 / (final not yet merged) |
+| 100 NPCs, Hard | 66 / 48 / 24 / 12 / 3 / **1** (the bridge with exactly 12 played bare); earlier build: 65 / 42 / 21 / 11 / (bridge skipped) / **1** |
+| 100 NPCs, Extreme | 50 / 21 / 10 / 5 / **1** after the bridge (a field of 5 is shown the first rows; the lone crosser is the winner, no final needed) |
 | 100 NPCs, Normal, server restarted in the middle of Tug of War | resumed at "phase GAME game 3 with 55 alive", replayed the game, then 27 / 14 / 6 / **1** |
+| implementer's whole-tournament runs after the bridge small-field change | Hard 63 / 40 / 20 / 10 / 2 / **1**; Extreme 46 / 27 / 13 / 7 / 3 / **1** |
 
 A real-time run (tick rate 20, 100 NPCs, Normal) is summarised in section 7 together with the memory and tick-time samples.
 
@@ -83,8 +83,11 @@ tested the stand-in and the reconnect separately).
 After `/squid enter` as a non-operator: switching the gamemode by command is reverted within a tick; forbidden items (a diamond sword, ender
 pearls) vanish within 10 ticks; a 77-block teleport inside the complex is undone at once (`undid an unauthorised teleport`); containers
 cannot be opened (code path covered by the same event hook, not exercised in-world); damage and `kill` respawn the player in the
-dormitory. Bounds enforcement during games (warning, put back, eliminated after about 8 s) was exercised by the Final's belt design
-and the marbles/tug fences of the implementers. Flying cannot be tested without a creative player (the rule resets abilities every tick).
+dormitory. Bounds enforcement during games (warning, put back to the last safe spot, eliminated after about 8 s outside) is a pure rule
+(`BoundsRule`, unit tested); in-world, the Red Light gate is closed behind the field (a human walking backwards stops at the door,
+still inside the bounds) and the other arenas police the positions themselves (seats, plots, slots, the final's belt), so the
+put-back path could not be provoked by a legal walk - a scripted teleport out of the field was judged `ILLEGAL` by the Red Light rules
+first. Flying cannot be tested without a creative player (the rule resets abilities every tick).
 
 A test artefact worth knowing: `tp` from RCON moves a player to the *overworld* (the source's level), which looked like "rules
 not enforced"; inside the complex use `execute in squidgame:arena run tp ...`.
@@ -96,7 +99,11 @@ whole tick; 128 NPCs 3.2 ms / 6.3 ms (worst 13.7 ms); 456 NPCs 11.4 ms / 15.4 ms
 behaviours stay below 1 ms; implementers measured 128-NPC games of Dalgona (2.0 - 2.4 ms total), Tug of War (4.9 ms whole tick),
 Glass Bridge (entities 1.4 - 2 ms) and a 100-NPC Marbles game (logic 0.8 - 2.2 ms).
 
-REAL_TIME_SOAK
+**Real-time soak** (tick rate 20, 100 NPCs, Normal, `squid debug simulate`, sampled every two minutes): registration to the
+winner took **23 min 1 s** (81 / 70 / 34 / 17 / 7 / 1 survivors); the server's resident memory went from 804 MB to 830 MB over the
+whole run (no leak), the average whole-server tick stayed between 1.9 and 4.4 ms (worst sample 23.8 ms at the start of the Red
+Light game when the arena's chunks are forced), and the log contained **0** "Can't keep up" warnings and **0** errors. After the
+winner the tournament cleaned up (RESTART phase, 0.3 ms ticks).
 
 ## 8. The games (what the implementers verified)
 
@@ -124,8 +131,11 @@ the integrator):
   over the timer bar, results board covered by a flood of elimination chat lines (now summarised after five lines).
 * The anti-teleport undo used a teleport variant that does not send a position packet to the client (now the level variant).
 * Marbles panel key and Tug of War pull key were both `R` (Minecraft keeps one binding per key): the panel is now `M`.
-* Planner: the Glass Bridge cannot be crossed by a handful of contestants, so with fewer than 12 survivors it is skipped and the skip
-  is announced (a follow-up lets the bridge adapt to small fields instead, see `docs/games/glass_bridge.md`).
+* Planner/bridge: with a handful of survivors the Glass Bridge could not be crossed at all (8 contestants cross 0.4 on average, so
+  the default Hard and Extreme tournaments would have ended with nobody alive). First the planner skipped it below 12 survivors (and
+  announces skipped games); then the bridge was changed so that a field of 11 or fewer is shown the first rows up front (public
+  `SHOWN` events), which makes it playable from 4 contestants (somebody crosses in 72 - 96 % of simulated games). In small fields
+  nobody crosses in 4 - 28 % of games; the tournament then ends without a winner, which is the specified all-fail outcome.
 * Minecraft's "experimental settings" prompt on every load of a world with the mod (a fourth dimension): skipped by an optional
   client mixin.
 * Test-tool pitfalls fixed along the way: `devserver.sh` kept the caller's pipe open, the single-player client skipped the arena

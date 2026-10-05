@@ -177,7 +177,7 @@ with the world: after a server restart the interrupted game replays from its sta
 | Final: duel time | 180 s | 150 s | 120 s |
 
 Each game's document has the complete table. The NPC populations scale with the difficulty too (measured with 100 NPCs: Red
-Light survivors about 80 % / 60 % / 45 %, Dalgona 85 % / 68 % / 44 %, Glass Bridge crowd crossing 85 % / 48 % / 22 %).
+Light survivors about 80 % / 63 % / 42 %, Dalgona 85 % / 68 % / 44 %, Glass Bridge crowd crossing 85 % / 48 % / 22 %).
 
 ## Performance
 
