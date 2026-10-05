@@ -144,6 +144,38 @@ public final class NpcCarver {
         return prof;
     }
 
+    /** A fright (a neighbour's cookie shattered, a shot rang out): the hand freezes for a moment, then carves more carefully. */
+    public void startle(int pauseTicks, int cautiousTicks) {
+        pause = Math.max(pause, pauseTicks);
+        cautious = Math.max(cautious, cautiousTicks);
+    }
+
+    /**
+     * Takes over a cookie somebody else has been carving (a disconnected player's stand-in): continues at the uncarved
+     * sample closest to the needle and goes back over whatever is still missing.
+     */
+    public void resumeNear(double x, double y) {
+        int n = shape.sampleCount();
+        int best = -1;
+        double bestD = Double.MAX_VALUE;
+        for (int i = 0; i < n; i++) {
+            if (!sim.isCarved(i)) {
+                double d = Math.hypot(shape.sampleX(i) - x, shape.sampleY(i) - y);
+                if (d < bestD) {
+                    bestD = d;
+                    best = i;
+                }
+            }
+        }
+        if (best >= 0) {
+            cursor = best;
+            dir = rng.nextBoolean() ? 1 : -1;
+        }
+        covered = n;
+        fresh = true;
+        pause = prof.reaction;
+    }
+
     public boolean needleDown() {
         return down;
     }
