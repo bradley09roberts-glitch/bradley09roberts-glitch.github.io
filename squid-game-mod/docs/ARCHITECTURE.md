@@ -57,7 +57,7 @@ without validating it against server state (position, cooldown, phase, whose tur
 * `ELIMINATIONS`: `MiniGame.conclude(ctx)` eliminates everyone who failed and returns a `GameResult`.
 * `RESULTS` shows the results screen (`ResultsPayload`); `TRANSITION` moves survivors back to the dormitory;
   `Planner.next(...)` picks the next game (games whose minimum participant count is not met - `GameKind.minParticipants`: Tug of
-  War 4, Glass Bridge 12 - are skipped and announced via `Planner.skipped`; two survivors jump to the final; one survivor wins). `FINAL_WINNER` celebrates; `RESTART` cleans up and optionally starts a new registration.
+  War 4, Glass Bridge 4 - are skipped and announced via `Planner.skipped`; two survivors jump to the final; one survivor wins). `FINAL_WINNER` celebrates; `RESTART` cleans up and optionally starts a new registration.
 * Persistence: `TournamentData` (SavedData) stores the tournament + roster + player snapshots; after a server restart the
   tournament resumes (`resumeOnRestart`) at the start of the interrupted game's round or resets cleanly (players restored from
   snapshots). Games persist hidden state through `saveState/loadState` (NBT).

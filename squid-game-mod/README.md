@@ -81,12 +81,13 @@ night in the dormitory -> next game -> ... -> final winner -> restart`.
   spectators and can follow the rest, e.g. from the control room); the prize pool in the giant piggy bank grows with every
   elimination (100,000,000 W per elimination).
 * The games are played in the canonical order. A game the remaining field is too small for is skipped and announced (Tug of War
-  needs 4 contestants, the Glass Bridge 12 - with fewer, nobody could cross); with two contestants left the tournament goes straight
-  to the Final, which always leaves exactly one winner (a knockout ladder of duels when more than two reach it).
+  and the Glass Bridge need 4 contestants; a bridge field of 11 or fewer is shown the first rows of the bridge up front, so
+  that somebody can still get across); with two contestants left the tournament goes straight to the Final, which always leaves
+  exactly one winner (a knockout ladder of duels when more than two reach it).
 * If nobody survives a game the tournament ends without a winner; ties and timeouts have defined rules per game
   (`docs/games/*.md`).
-* A typical default tournament (100 contestants, Normal) narrows 100 -> ~80 -> ~70 -> ~35 -> ~18 -> ~10 -> 1 and takes
-  roughly 35 minutes of play.
+* A typical default tournament (100 contestants, Normal) narrows 100 -> ~80 -> ~70 -> ~35 -> ~17 -> ~8 -> 1 and takes about
+  25 minutes (23 minutes measured in a real-time NPC-only run, registration to the winner).
 
 ## The six games and their controls
 
@@ -99,7 +100,7 @@ Full rules, difficulty tables, NPC behaviour and controls of every game are in `
 | 2 | [Dalgona](docs/games/dalgona.md) (old school hall, 160 seats) | pick a blind honeycomb tin (circle, triangle, star or the dreaded umbrella) and carve the shape out without cracking it; licks relieve stress | click or `1`-`4` to pick the tin; hold **left mouse** and trace the groove; **right mouse** or `L` licks; `Esc` steps away, right-click the desk to come back |
 | 3 | [Tug of War](docs/games/tug_of_war.md) (steel hall, two platforms over a pit) | balanced teams, stamina, a shared rhythm to heave on, bracing; the team that is pulled over its edge falls | hold `R` pull, tap `F` on the beat (heave), hold `Left Shift` brace |
 | 4 | [Marbles](docs/games/marbles.md) (night-time village) | pick a partner, then win their marbles: odd-or-even wagering, or the target throw (`marblesVariant`) | right-click a contestant to partner up; panel: `-`/`+`, `Odd`/`Even`, Lock in (`M` reopens it); throw: aim, hold **right mouse** to charge, release |
-| 5 | [Glass Bridge](docs/games/glass_bridge.md) (vast dark hall, 18 rows of glass) | contestants are called one by one in a random order; one panel per row holds, the other shatters; the route is hidden and retained, NPCs learn only from what they see | walk / sprint / jump across the gaps; a row map overlay shows only what everybody has seen |
+| 5 | [Glass Bridge](docs/games/glass_bridge.md) (vast dark hall, 18 rows of glass) | contestants are called one by one in a random order; one panel per row holds, the other shatters; the route is hidden and retained, NPCs learn only from what they see; small fields are shown the first rows | walk / sprint / jump across the gaps; a row map overlay shows only what everybody has seen |
 | 6 | [Final Squid Game](docs/games/final.md) (sunset playground, the white squid) | attacker vs defender on the squid court: stamina based combat, win by taking the circle, a knockout or the clock; more than two finalists play a knockout ladder | **left mouse** light strike, hold + release heavy strike, hold **right mouse** guard (parry window), `V` or double-tap `A`/`D`/`S` dodge, `G` shove |
 
 Difficulty (`Normal / Hard / Extreme`) tightens timings, shrinks tolerances and allowances, scarcifies resources and makes the NPCs

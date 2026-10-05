@@ -3,7 +3,7 @@
 #   dist/mods/squidgame-<version>.jar            the mod (client and server)
 #   dist/mods/fabric-api-<version>.jar           required dependency (Apache-2.0, https://modrinth.com/mod/fabric-api)
 #   dist/mods/geckolib-fabric-1.21.1-<v>.jar     required dependency (MIT, https://modrinth.com/mod/geckolib)
-#   dist/SHA256SUMS, dist/INSTALL.txt
+#   dist/SHA256SUMS, dist/INSTALL.txt, dist/README.md, dist/LICENSE
 # Usage: tools/package.sh            (runs the full build with the unit tests first; SKIP_BUILD=1 reuses build/libs)
 # The dependency jars are taken from the Gradle cache that the build already filled (they are the exact files the mod was
 # compiled and tested against); if the cache is empty they are downloaded from the official Maven repositories.
@@ -39,6 +39,7 @@ fetch "fabric-api-$FAPI.jar" "fabric-api-$FAPI.jar" \
 fetch "geckolib-fabric-$MC-$GECKO.jar" "geckolib-fabric-$MC-$GECKO.jar" \
   "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/software/bernie/geckolib/geckolib-fabric-$MC/$GECKO/geckolib-fabric-$MC-$GECKO.jar"
 
+cp README.md LICENSE dist/
 ( cd dist && sha256sum mods/*.jar > SHA256SUMS )
 
 cat > dist/INSTALL.txt <<EOF

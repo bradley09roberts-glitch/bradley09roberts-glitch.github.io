@@ -12,8 +12,8 @@ public enum GameKind {
     public final String id;
     /**
      * Minimum number of survivors needed to be able to play this game; the planner skips a game the remaining field is too
-     * small for. The glass bridge needs about a dozen contestants: the first ones gamble, the route is revealed by their falls, and
-     * with fewer (simulation: 8 contestants cross 0.4 on average) nobody would reach the far side.
+     * small for. The glass bridge works from 4 contestants: a field of 11 or fewer is shown the first rows of the bridge up front
+     * (the first contestants gamble and their falls reveal the route, so a small field would otherwise never reach the far side).
      */
     public final int minParticipants;
 
