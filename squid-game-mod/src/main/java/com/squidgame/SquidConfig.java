@@ -68,7 +68,7 @@ public final class SquidConfig {
     public boolean allowOpsToBypassRules = true;
 
     // ---- games
-    /** mixed | odd_even | target_throw */
+    /** mixed | odd_even | throw (target_throw is accepted too); anything else means mixed */
     public String marblesVariant = "mixed";
 
     // ---- performance
