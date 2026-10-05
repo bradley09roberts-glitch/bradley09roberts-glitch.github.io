@@ -25,7 +25,10 @@ Game id `tug_of_war` (`GameKind.TUG_OF_WAR`, min 4 participants). Test it alone 
   over the heats); whoever is not in the current heat waits in the gallery and sees the rope bar and a dim beat ring.
 
 The key names in the instructions are the player's real bindings (`Component.keybind`); the bindings live in the vanilla
-controls screen under "Squid Game".
+controls screen under "Squid Game". The defaults share keys with vanilla (`F` is "swap hands", `Left Shift` is "sneak"), and
+Minecraft hands a key to only one of the bindings on it. `TugInput` therefore treats a binding as held when any binding on the same
+key is held, and during a match counts a tap that went to another binding on the heave key as a heave (the swap of the hands does not
+happen), so the defaults work as they are; rebind them in the controls screen if you prefer.
 
 ## Flow of a game (`TugOfWarGame`, one `TugHeat` at a time)
 `prepare` (repairs a deck left broken by a restart, reads the markers, creates the two `TugPlatform`s and the `RopeEntity`,
@@ -100,8 +103,9 @@ fence is removed. The losers (NPCs and humans alike) get a velocity towards the 
 tick 16 on the walkway strip under them (5 wide, the three layers under the standing level) collapses column by column from the
 tip back to the last member with block particles and the sound of the material; whoever is more than 5 blocks below the deck is
 eliminated (`LOST_TEAM`, with a poof), at the latest after 9 s. The deck is repaired in the aftermath, between heats and in
-`cleanup`; the blocks of an unfinished collapse are written to the game state (`saveState`), so a server restart in the middle of
-it repairs the deck on the next `prepare`.
+`cleanup`. The intact strip (the first 36 columns of both decks, about 840 blocks) is remembered in `prepare` and written to the
+game state (`saveState`), so a server stop at any moment of a collapse is repaired by the next `prepare` (the resumed game),
+however much of the deck had been taken when the state was last saved.
 
 ## Networking and validation (`TugNet`, `TugInput`)
 * S2C `tug_state` (`StatePayload`): every 2 ticks to the humans in the heat, every 4 ticks to everybody else: stage, role, server

@@ -502,6 +502,12 @@ public final class TugOfWarGame implements MiniGame {
         }
         // the heat is simulated with every member listed (team A first, in slot order): the member index is the order in the list
         h.startSim(params, clock, TugMatch.specs(entrants, params));
+        for (Contestant c : h.everyone()) {
+            if (!c.isAlive() && h.indexOf(c) >= 0) {
+                // eliminated by the tournament while the teams were still walking in: they do not take part
+                h.sim.remove(h.indexOf(c));
+            }
+        }
         h.limitSpan = scaled(ctx, params.heatLimitTicks());
         h.limitTick = go + h.limitSpan;
         h.suddenDeath = false;
