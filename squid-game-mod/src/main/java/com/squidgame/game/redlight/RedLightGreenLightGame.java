@@ -572,9 +572,12 @@ public final class RedLightGreenLightGame implements MiniGame {
         };
         if (!safe) {
             out.add(HudPayload.Widget.light("light", label, state));
-            if (light == DollCycle.Light.RED) {
+            // the big "freeze / stop" banners are instructions for those still playing (an eliminated viewer sees the
+            // elimination caption in the same spot, spectators only get the light)
+            boolean playing = viewer != null && viewer.isAlive();
+            if (playing && light == DollCycle.Light.RED) {
                 out.add(HudPayload.Widget.banner("freeze", Component.translatable("squidgame.game.red_light.banner.freeze"), 0xFF3030));
-            } else if (light == DollCycle.Light.TURNING) {
+            } else if (playing && light == DollCycle.Light.TURNING) {
                 out.add(HudPayload.Widget.banner("stop", Component.translatable("squidgame.game.red_light.banner.stop"), 0xFFC030));
             }
         }

@@ -26,5 +26,6 @@ if [ ! -f "$SAVE/level.dat" ]; then
   rm -rf "$SEED"
   unset SQUID_SERVER_DIR SQUID_PORT SQUID_RCON_PORT SQUID_TEMPLATE_DIR
 fi
-export SQUID_TASK=runSpClient SQUID_RUNDIR="$RUNDIR" SQUID_WORLD="$WORLD"
+# the integrated server builds the complex itself, so the client needs the complete mod (no -PskipArenas)
+export SQUID_TASK=runSpClient SQUID_RUNDIR="$RUNDIR" SQUID_WORLD="$WORLD" GRADLE_ARGS=""
 exec tools/xvfb-client.sh "${1:-98}"
