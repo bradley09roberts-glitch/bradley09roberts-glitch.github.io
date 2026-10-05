@@ -146,7 +146,8 @@ public final class TugOfWarGame implements MiniGame {
             return Component.translatable("squidgame.game.tug_of_war.objective.wait");
         }
         if (viewer != null && stage == Stage.AFTERMATH && heat != null && viewer.isAlive()) {
-            return Component.translatable("squidgame.game.tug_of_war.objective.won");
+            boolean more = plan != null && heatIndex + 1 < plan.heats().size();
+            return Component.translatable(more ? "squidgame.game.tug_of_war.objective.won.more" : "squidgame.game.tug_of_war.objective.won");
         }
         return Component.translatable("squidgame.game.tug_of_war.objective");
     }
@@ -648,8 +649,8 @@ public final class TugOfWarGame implements MiniGame {
             }
             ServerPlayer p = c.isHumanControlled() ? c.player(ctx.server()) : null;
             if (p != null) {
+                // the overlay flashes EXHAUSTED on the stamina bar; the action bar would cover the team stamina widget
                 Announcer.sound(p, ModSounds.UI_DENY, 0.8f, 0.7f);
-                p.displayClientMessage(Component.translatable("squidgame.game.tug_of_war.exhausted").withStyle(ChatFormatting.RED), true);
             }
         }
     }
