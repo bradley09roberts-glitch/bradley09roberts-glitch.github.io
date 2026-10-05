@@ -76,6 +76,9 @@ final class Kit {
         Dir r = d.right();
         for (int v = -half; v <= half; v++) {
             int px = x + r.dx * v, pz = z + r.dz * v;
+            if (!Ctx.inHall(px, yFeet, pz) || k.solid(px, yFeet, pz)) {
+                continue;                       // already closed by a wall or another structure
+            }
             k.set(px, yFeet, pz, Pal.PANE, Occ.SOLID | Occ.RAIL);
             if (v == -half || v == half || v == 0) {
                 k.set(px, yFeet + 1, pz, Pal.ROD, Occ.SOLID | Occ.RAIL);
@@ -191,11 +194,16 @@ final class Kit {
 
     // ------------------------------------------------------------------ rails
 
+    /** A block that can carry a walker: solid and not a purely decorative piece (arch rings, posts). */
+    private static boolean floorLike(Ctx k, int x, int y, int z) {
+        return k.solid(x, y, z) && !(k.occ.has(x, y, z, Occ.DECOR) && !k.occ.has(x, y, z, Occ.SOLID));
+    }
+
     private static boolean openSide(Ctx k, int x, int y, int z) {
         if (k.solid(x, y, z)) {
             return false;
         }
-        return !(k.solid(x, y - 1, z) || k.solid(x, y - 2, z));
+        return !(floorLike(k, x, y - 1, z) || floorLike(k, x, y - 2, z));
     }
 
     /**

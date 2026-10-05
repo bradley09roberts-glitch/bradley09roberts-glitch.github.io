@@ -38,13 +38,8 @@ final class Layout {
     // central plaza + podium
     static final int PLAZA_R = 11;
 
-    // registration plinth (south wall)
-    static final int REG_Z0 = 27, REG_Z1 = 31;
-
-    // east gallery (catwalk)
-    static final int GALLERY_Y = 12;          // standing level of the catwalk
-    static final int GALLERY_X0 = 36, GALLERY_X1 = 40;
-    static final int GALLERY_Z0 = -17, GALLERY_Z1 = 17;
+    // the catwalks (east and west): standing level
+    static final int GALLERY_Y = 12;
 
     record Tower(int id, int cx, int cz) {
         String label() {

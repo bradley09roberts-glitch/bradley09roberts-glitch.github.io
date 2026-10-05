@@ -126,8 +126,11 @@ public final class Restrictions {
             grace.put(id, g - 1);
         } else if (last != null && want != GameType.SPECTATOR && now.distanceToSqr(last) > TELEPORT_SNAP_DISTANCE * TELEPORT_SNAP_DISTANCE
                 && p.level().dimension().equals(ArenaWorld.DIMENSION)) {
-            p.teleportTo(last.x, last.y, last.z);
+            // the level variant sends the position packet to the client; Entity#teleportTo alone would leave the client in place
+            p.teleportTo(p.serverLevel(), last.x, last.y, last.z, p.getYRot(), p.getXRot());
             p.setDeltaMovement(Vec3.ZERO);
+            SquidGameMod.debug("Restrictions: undid an unauthorised teleport of {} ({} blocks)", p.getGameProfile().getName(),
+                    (int) Math.sqrt(now.distanceToSqr(last)));
             p.sendSystemMessage(net.minecraft.network.chat.Component.translatable("squidgame.rule.no_teleport"));
             Announcer.sound(p, com.squidgame.registry.ModSounds.UI_DENY, 1f, 1f);
             return;

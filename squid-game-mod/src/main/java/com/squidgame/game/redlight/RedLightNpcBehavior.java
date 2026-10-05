@@ -43,6 +43,8 @@ final class RedLightNpcBehavior implements NpcBehavior {
     private Vec3 safeTarget;
     private int safeTimer;
     private boolean decidedThisGreen;
+    /** This chant's misjudgement of the end, in ticks (drawn once per chant: a persistent bias, not per-tick noise). */
+    private double estimateBias = Double.NaN;
     private int stumbleCooldown;
     private DollCycle.Light lastLight = DollCycle.Light.GREEN;
     private long greenSince;
@@ -61,7 +63,7 @@ final class RedLightNpcBehavior implements NpcBehavior {
         reactionTicks = p.reactionDelayTicks(r, diff);
         // safety margin the NPC wants between its own stop and the end of the allowance
         double caution = p.caution();
-        safetyTicks = (int) Math.round(Mth.lerp(caution, 0.0, 14.0) + r.gaussian(0, 1.5));
+        safetyTicks = (int) Math.round(Mth.lerp(caution, 0.0, 9.0) + r.gaussian(0, 1.5));
         if (p.riskTolerance() > 0.75) {
             safetyTicks = Math.min(safetyTicks, 2);
         }
@@ -71,7 +73,7 @@ final class RedLightNpcBehavior implements NpcBehavior {
         double minX = field == null ? -50 : field.minX() + 3;
         double maxX = field == null ? 50 : field.maxX() - 3;
         laneX = Mth.clamp(npc.getX() + r.gaussian(0, 2.0), minX, maxX);
-        resumeDelay = reactionTicks + (int) (p.patience() * 12);
+        resumeDelay = reactionTicks + (int) (p.patience() * 6);
         mode = Mode.WAIT;
         decidedThisGreen = false;
         greenSince = game.view().now();
@@ -121,6 +123,7 @@ final class RedLightNpcBehavior implements NpcBehavior {
                 greenSince = now;
                 decidedThisGreen = false;
                 brakeAtTick = -1;
+                estimateBias = Double.NaN;
             }
             lastLight = light;
         }
@@ -135,8 +138,15 @@ final class RedLightNpcBehavior implements NpcBehavior {
 
     private void tickGreen(ContestantEntity npc, RedLightGreenLightGame.PublicView view, long now) {
         if (mode == Mode.FROZEN || mode == Mode.BRAKING || mode == Mode.WAIT) {
+            if (decidedThisGreen) {
+                // braked on purpose because the chant is about to end: stay put until the next chant begins
+                if (mode == Mode.BRAKING && npc.horizontalSpeed() < 0.02) {
+                    mode = Mode.FROZEN;
+                }
+                return;
+            }
             // wait for the chant to be clearly underway before moving again (patient / frightened contestants wait longer)
-            int need = resumeDelay + (fearTicks > 0 ? fearTicks / 4 : 0);
+            int need = resumeDelay / 2 + (fearTicks > 0 ? fearTicks / 4 : 0);
             if (view.syllablesHeard() >= 1 && now - greenSince >= need) {
                 mode = Mode.RUN;
                 npc.setActivity(Activity.NONE);
@@ -175,7 +185,10 @@ final class RedLightNpcBehavior implements NpcBehavior {
         // syllable weights: nine regular ones, a long final "da" (1.7x)
         double remainingSyllables = (DollCycle.SYLLABLES - heard) + 1.7 - Math.min(1.0, (now - last) / Math.max(1.0, interval));
         // humans cannot time a chant to the tick: the estimate is off by a few ticks (sharper with skill)
-        double estRemaining = remainingSyllables * interval + npc.rng().gaussian(0, estimateSigma);
+        if (Double.isNaN(estimateBias)) {
+            estimateBias = npc.rng().gaussian(0, estimateSigma);
+        }
+        double estRemaining = remainingSyllables * interval + estimateBias;
         int allowance = view.allowanceTicks();
         double lead = reactionTicks + safetyTicks + (fearTicks > 0 ? 6 : 0) - allowance;
         if (estRemaining <= lead) {
@@ -205,8 +218,16 @@ final class RedLightNpcBehavior implements NpcBehavior {
 
     private void tickRed(ContestantEntity npc, RedLightGreenLightGame.PublicView view) {
         if (mode == Mode.RUN) {
-            // too late to think: slam the brakes (the rules will judge it)
-            brake(npc);
+            // the eyes are lit: a runner who has not reacted yet (slow reflexes, an attention lapse) brakes when their own
+            // reaction time is over - possibly too late for the rules, which judge them exactly like a human
+            if (brakeAtTick < 0) {
+                brakeAtTick = view.lightChangedTick() + reactionTicks + rollLapse(npc);
+            }
+            if (view.now() >= brakeAtTick) {
+                brake(npc);
+            } else {
+                npc.moveDirect(new Vec3(laneX, npc.getY(), view.finishZ() + 6.0), speedMul);
+            }
         }
         if (mode == Mode.WAIT) {
             mode = Mode.FROZEN;
@@ -225,7 +246,7 @@ final class RedLightNpcBehavior implements NpcBehavior {
                 npc.moveDirect(npc.position().add(wobbleDir), 0.6);
             } else {
                 Personality p = npc.personality();
-                double chance = 0.00045 * (1.5 - p.skill()) * (1.0 + (1.0 - p.courage())) * (fearTicks > 0 ? 1.8 : 1.0);
+                double chance = 0.00008 * (1.5 - p.skill()) * (1.0 + (1.0 - p.courage())) * (fearTicks > 0 ? 1.8 : 1.0);
                 if (npc.rng().chance(chance)) {
                     wobbleTicks = 3;
                     wobbleDir = new Vec3(npc.rng().gaussian(0, 0.7), 0, npc.rng().gaussian(0, 0.7));
@@ -244,11 +265,21 @@ final class RedLightNpcBehavior implements NpcBehavior {
     private int rollLapse(ContestantEntity npc) {
         Personality p = npc.personality();
         double skill = p.effectiveSkill(game.difficultyForNpc());
-        double chance = 0.015 + 0.06 * (1.0 - skill) + 0.03 * (1.0 - p.courage());
+        double chance = 0.012 + 0.04 * (1.0 - skill) + 0.02 * (1.0 - p.courage());
+        // the stopping allowance already decides most deaths on Extreme (6 ticks); on Hard (13) a lapse is what kills
+        chance *= switch (game.difficultyForNpc()) {
+            case NORMAL -> 1.3;
+            case HARD -> 2.4;
+            case EXTREME -> 1.5;
+        };
         if (fearTicks > 0) {
             chance *= 2.0;
         }
-        return npc.rng().chance(chance) ? npc.rng().rangeInt(8, 26) : 0;
+        int lapse = npc.rng().chance(chance) ? npc.rng().rangeInt(8, 26) : 0;
+        if (lapse > 0) {
+            com.squidgame.SquidGameMod.debug("RLGL: {} lapses for {} ticks (reaction {})", contestant.label(), lapse, reactionTicks);
+        }
+        return lapse;
     }
 
     private void brake(ContestantEntity npc) {

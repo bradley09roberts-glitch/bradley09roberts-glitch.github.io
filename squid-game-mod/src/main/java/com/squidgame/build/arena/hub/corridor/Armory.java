@@ -30,18 +30,17 @@ final class Armory {
         for (int y = 2; y <= 5; y++) {
             c.set(-15, y, -63, "minecraft:polished_blackstone_wall");
         }
-        // mask board on the east wall (x=-7 plane): black panel with the three symbols
-        for (int z = -70; z <= -64; z++) {
+        // mask board on the east wall (interior column x=-8): black panel with the three guard masks
+        for (int z = -68; z <= -64; z++) {
             for (int y = 1; y <= 4; y++) {
-                c.set(-8, y, z, (y == 1 || y == 4 || z == -70 || z == -64) ? Pal.PINK : Pal.BLACK);
+                c.set(-8, y, z, (y == 1 || y == 4 || z == -68 || z == -64) ? Pal.PINK : Pal.BLACK);
             }
         }
-        c.set(-8, 3, -68, Pal.SYM_CIRCLE);
         c.set(-8, 3, -67, Pal.SYM_CIRCLE);
         c.set(-8, 3, -66, Pal.SYM_TRIANGLE);
         c.set(-8, 3, -65, Pal.SYM_SQUARE);
-        c.set(-8, 2, -67, Pal.LIGHT_WHITE);
-        c.text(-7.55 - 0.45 + 0.0, 4.8, -67.0, "MASKS", "#FFD84A", 1.0f, 90f, false);
+        c.set(-8, 2, -66, Pal.LIGHT_WHITE);
+        c.text(-7.45, 4.6, -66.0, "MASKS", "#FFD84A", 0.9f, 90f, false);
         // cleaning table in the middle
         for (int x = -16; x <= -12; x++) {
             c.set(x, 0, -67, Pal.BLACK);
@@ -54,19 +53,20 @@ final class Armory {
             Props.chairBlack(c, x, 0, -65, "north");
         }
         c.set(-14, 2, -66, Pal.lantern(false));
-        // ammunition cage in the north-east corner (open to the south-west)
-        for (int x = -11; x <= -8; x++) {
+        // ammunition cage in the north-east corner (x -11..-9, z -71..-69), open gate in the middle of its south side
+        for (int x = -11; x <= -9; x++) {
             c.fill(x, 0, -71, x, 3, -71, "minecraft:iron_bars");
         }
-        for (int z = -71; z <= -69; z++) {
+        for (int z = -70; z <= -69; z++) {
             c.fill(-11, 0, z, -11, 3, z, "minecraft:iron_bars");
+            c.fill(-9, 0, z, -9, 3, z, "minecraft:iron_bars");
         }
-        c.fill(-11, 0, -69, -10, 3, -69, "minecraft:iron_bars");
+        c.fill(-11, 0, -69, -11, 3, -69, "minecraft:iron_bars");
+        c.fill(-9, 0, -69, -9, 3, -69, "minecraft:iron_bars");
+        c.fill(-11, 4, -71, -9, 4, -69, "minecraft:iron_bars");
         c.set(-10, 0, -70, "minecraft:barrel[facing=up,open=false]");
-        c.set(-9, 0, -70, "minecraft:barrel[facing=up,open=false]");
-        c.set(-9, 1, -70, "minecraft:barrel[facing=up,open=false]");
-        c.set(-8, 0, -70, "minecraft:barrel[facing=up,open=false]");
-        c.set(-10, 0, -71 + 0, "minecraft:barrel[facing=up,open=false]");
+        c.set(-10, 1, -70, "minecraft:barrel[facing=up,open=false]");
+        c.set(-10, 0, -71 + 0, "minecraft:air");
         // west side: lockers for gear
         for (int z : new int[]{-71, -70, -64, -63}) {
             final int zz = z;

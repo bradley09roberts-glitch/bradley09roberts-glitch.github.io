@@ -46,6 +46,14 @@ final class Corridors {
                     c.set(px, 5, pz, Pal.stairs("minecraft:smooth_quartz_stairs", v < 0 ? faceNeg : facePos, true));
                 }
             }
+            // cable run: a slab tray with a chain bundle running the length of the corridor on the +v side
+            {
+                int px = ew ? u : vc + 2, pz = ew ? vc + 2 : u;
+                if (!beam) {
+                    c.set(px, 5, pz, "minecraft:polished_blackstone_slab[type=top]");
+                }
+                c.set(px, 4, pz, Pal.chain(ew ? "x" : "z"));
+            }
             // vent grilles on the white band, centred in every pink panel
             if (Math.floorMod(u, 4) == 2) {
                 int nx = ew ? u : vc - 3, nz = ew ? vc - 3 : u;
@@ -92,18 +100,19 @@ final class Corridors {
 
     private static void slidingDoors(BuildContext c) {
         int n = 20;
-        // E1 north wall (z=-52, viewer south) and south wall (z=-44, viewer north)
-        for (int u0 : new int[]{-27, -19, 5, 17}) {
+        // E1 north wall (z=-52, viewer south) and south wall (z=-44, viewer north); positions avoid the room doors,
+        // the arms' openings and the checkpoint murals
+        for (int u0 : new int[]{-19, 17}) {
             slidingDoor(c, true, -52, u0, "south", n++);
         }
-        for (int u0 : new int[]{-11, 9}) {
+        for (int u0 : new int[]{-27, 25}) {
             slidingDoor(c, true, -44, u0, "north", n++);
         }
-        // E2 north wall (z=-80, viewer south) outside the vestibule; south wall (z=-72, viewer north)
-        for (int u0 : new int[]{-27, -23, -19, -15, -11, 9, 13, 17, 21, 25}) {
+        // E2 north wall (z=-80, viewer south) outside the vestibule and the corner murals; south wall (z=-72, viewer north)
+        for (int u0 : new int[]{-19, -15, -11, 9, 13, 17}) {
             slidingDoor(c, true, -80, u0, "south", n++);
         }
-        for (int u0 : new int[]{-27, -23, 19, 23}) {
+        for (int u0 : new int[]{-21, -11, 19}) {
             slidingDoor(c, true, -72, u0, "north", n++);
         }
         // N2 (security wing): outer wall x=-30 (viewer east) and inner wall x=-22 (viewer west)

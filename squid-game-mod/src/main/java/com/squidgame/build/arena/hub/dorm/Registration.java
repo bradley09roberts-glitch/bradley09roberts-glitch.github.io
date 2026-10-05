@@ -45,8 +45,23 @@ final class Registration {
         c.fill(-8, 4, 32, -8, 5, 32, Pal.STEEL_TILES);
         c.fill(8, 4, 32, 8, 5, 32, Pal.STEEL_TILES);
         board(c);
+        c.text(0.5, 7.0, 32.96, "REGISTRATION", "#FF8FB3", 3.2f, 180f, false);
+        queueLane(c);
         // arrival point: on the pad, facing the hall
         c.marker("dorm.player_spawn", 0.5, 0.0, 23.5, 180f);
+    }
+
+    /** Two rows of rope stanchions marking the lane (x[-2,2]) from the arrival point to the steps. */
+    private static void queueLane(BuildContext c) {
+        for (int side = -1; side <= 1; side += 2) {
+            int x = side * 3;
+            for (int z : new int[]{21, 24}) {
+                c.fill(x, 0, z, x, 1, z, Pal.STEEL_WALL);
+                c.set(x, 2, z, Pal.PANEL_PINK);
+            }
+            c.set(x, 1, 22, "minecraft:chain[axis=z]");
+            c.set(x, 1, 23, "minecraft:chain[axis=z]");
+        }
     }
 
     /** The rules board on the south wall (text faces north, towards the hall). */
@@ -56,10 +71,10 @@ final class Registration {
         c.fill(-15, 19, 33, 15, 19, 33, Pal.PINK);
         c.fill(-15, 9, 33, -15, 19, 33, Pal.PINK);
         c.fill(15, 9, 33, 15, 19, 33, Pal.PINK);
-        c.text(0.5, 17.4, 32.9, "WELCOME, CONTESTANT", "#FFD84A", 4.4f, 180f, false);
-        c.text(0.5, 14.9, 32.9, "RULE 1   YOU MAY NOT STOP PLAYING THE GAMES", "white", 2.2f, 180f, false);
-        c.text(0.5, 13.2, 32.9, "RULE 2   REFUSING TO PLAY MEANS ELIMINATION", "white", 2.2f, 180f, false);
-        c.text(0.5, 11.5, 32.9, "RULE 3   A MAJORITY VOTE CAN END THE GAMES", "white", 2.2f, 180f, false);
-        c.text(0.5, 9.9, 32.9, "REGISTER AT THE TERMINAL", "#FF8FB3", 2.6f, 180f, false);
+        c.text(0.5, 17.4, 32.96, "WELCOME, CONTESTANT", "#FFD84A", 4.4f, 180f, false);
+        c.text(0.5, 14.9, 32.96, "RULE 1   YOU MAY NOT STOP PLAYING THE GAMES", "white", 2.2f, 180f, false);
+        c.text(0.5, 13.2, 32.96, "RULE 2   REFUSING TO PLAY MEANS ELIMINATION", "white", 2.2f, 180f, false);
+        c.text(0.5, 11.5, 32.96, "RULE 3   A MAJORITY VOTE CAN END THE GAMES", "white", 2.2f, 180f, false);
+        c.text(0.5, 9.9, 32.96, "REGISTER AT THE TERMINAL", "#FF8FB3", 2.6f, 180f, false);
     }
 }
