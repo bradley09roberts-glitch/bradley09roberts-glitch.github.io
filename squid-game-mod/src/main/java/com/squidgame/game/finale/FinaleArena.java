@@ -26,8 +26,10 @@ final class FinaleArena {
     final List<Marker> audience;
     @Nullable
     final Marker podium;
+    /** Places beside the court for humans who wait for a duel (see {@link #beltSpot}), nearest to the middle first. */
+    private final List<double[]> belt = new ArrayList<>();
 
-    private FinaleArena(CourtGeometry court, Marker attacker, Marker defender, Vec3 center, List<Marker> audience, @Nullable Marker podium) {
+    FinaleArena(CourtGeometry court, Marker attacker, Marker defender, Vec3 center, List<Marker> audience, @Nullable Marker podium) {
         this.court = court;
         this.attackerSpawn = new Vec3(attacker.x(), attacker.y(), attacker.z());
         this.defenderSpawn = new Vec3(defender.x(), defender.y(), defender.z());
@@ -37,6 +39,49 @@ final class FinaleArena {
         this.floorY = attacker.y();
         this.audience = audience;
         this.podium = podium;
+        computeBelt();
+    }
+
+    /**
+     * Humans must stay inside {@code arena.bounds} while a game runs (the tournament puts them back and finally eliminates
+     * them), and the gallery of the real arena lies outside of it. So a human who waits for their duel watches from the
+     * clear belt around the court instead: two columns on either side, at least 2.4 blocks outside the painted line (nothing
+     * a fighter can be thrown into: the line decides the duel first), looking at the middle of the court. NPCs sit on the
+     * gallery as the contract wants.
+     */
+    private void computeBelt() {
+        Pt axis = court.axis();
+        double lx = -axis.z(), lz = axis.x();
+        double half = court.axisLength() / 2 + 3;
+        for (int step = 0; step * 3.0 <= half + 3; step++) {
+            for (int sign = step == 0 ? 1 : -1; sign <= 1; sign += 2) {
+                double along = step * 3.0 * sign;
+                for (int col = 0; col < 2; col++) {
+                    for (int side = 1; side >= -1; side -= 2) {
+                        double lat = side * (10.5 + col * 1.5);
+                        double x = center.x + axis.x() * along + lx * lat;
+                        double z = center.z + axis.z() * along + lz * lat;
+                        if (court.edgeDistance(x, z) < -2.4) {
+                            double yaw = com.squidgame.core.finale.FinaleRules.yawOf(center.x - x, center.z - z);
+                            belt.add(new double[]{x, z, yaw});
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** The i-th place for a waiting human (wraps when there are more waiting humans than places). */
+    Vec3 beltSpot(int i) {
+        if (belt.isEmpty()) {
+            return center;
+        }
+        double[] b = belt.get(i % belt.size());
+        return new Vec3(b[0], floorY, b[1]);
+    }
+
+    float beltYaw(int i) {
+        return belt.isEmpty() ? 0f : (float) belt.get(i % belt.size())[2];
     }
 
     /** Reads the arena through the context. Returns null when the markers needed for a duel are missing. */

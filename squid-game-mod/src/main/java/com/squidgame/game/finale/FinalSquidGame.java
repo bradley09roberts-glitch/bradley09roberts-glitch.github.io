@@ -89,7 +89,7 @@ public final class FinalSquidGame implements MiniGame {
     private boolean started;
     private boolean revealed;
     private final Set<Integer> seated = new HashSet<>();
-    private int nextSeat;
+    private int nextSeat, nextBelt;
 
     // the headless duel of the ceremony
     @Nullable
@@ -186,6 +186,7 @@ public final class FinalSquidGame implements MiniGame {
         lastLoser = null;
         seated.clear();
         nextSeat = 0;
+        nextBelt = 0;
         ctx.spawnGuards();
     }
 
@@ -249,6 +250,9 @@ public final class FinalSquidGame implements MiniGame {
                 b.watch(arena.center);
             }
             e.setBehavior(b);
+        }
+        if (c.isAlive() && c.isHumanControlled() && seated.contains(c.number) && arena != null) {
+            seat(ctx, c);      // a player who comes back to the gallery of the NPCs is moved to the belt: the gallery is out of bounds
         }
         if (session != null) {
             session.bind();
@@ -378,13 +382,26 @@ public final class FinalSquidGame implements MiniGame {
             if (c == a || c == b || seated.contains(c.number)) {
                 continue;
             }
-            int i = nextSeat++;
-            ctx.teleport(c, arena.audienceSpot(i), arena.audienceYaw(i));
+            seat(ctx, c);
             ContestantEntity e = ctx.npc(c);
             if (e != null) {
                 e.setActivity(Activity.NONE);
             }
             seated.add(c.number);
+        }
+    }
+
+    /** A human watches from the belt around the court (inside the bounds the tournament enforces), an NPC from the gallery. */
+    private void seat(GameContext ctx, Contestant c) {
+        if (arena == null) {
+            return;
+        }
+        if (c.isHumanControlled()) {
+            int i = nextBelt++;
+            ctx.teleport(c, arena.beltSpot(i), arena.beltYaw(i));
+        } else {
+            int i = nextSeat++;
+            ctx.teleport(c, arena.audienceSpot(i), arena.audienceYaw(i));
         }
     }
 

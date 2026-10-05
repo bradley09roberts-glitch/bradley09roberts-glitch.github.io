@@ -90,7 +90,7 @@ vanilla ground friction, so they feel like vanilla knock-back; the court is flat
 ## 3. The court and the arena contract
 The court is read from the markers of `docs/ARENA_MARKERS.md`: `final.boundary` (>= 16 vertices, clockwise, `i=` index) is the
 polygon of the outer outline of the painted squid, `final.circle` (`r=`) the head, `final.neck` (`w=`), `final.attacker_spawn`,
-`final.defender_spawn`, `final.audience` (>= 40 `slot=` spots for everybody who is not fighting), optional `final.podium`; regions
+`final.defender_spawn`, `final.audience` (>= 40 `slot=` spots for the NPCs that are not fighting), optional `final.podium`; regions
 `final.court`, `final.attack_zone`, `final.defence_zone`. Nothing about the shape is hard-coded in the game. Without a usable
 polygon the box of `final.court` is used; without the three required markers every duel is settled off the court.
 `SquidShape` is the reference outline (the one of the real arena builder) for the tests and the fixture arena.
@@ -102,7 +102,7 @@ prepare -> placeContestants -> (countdown) -> begin -> tick* -> isFinished -> co
 ```
 * **Draw**: a `Ladder` of the survivors is drawn at random in `prepare`.
 * **First duel**: its pairing is made when the tournament places the contestants (start of its countdown). The two fighters are put
-  on their spawns, everybody else on the gallery. The tournament's countdown does not tick the game, so the coin toss (an
+  on their spawns, everybody else on the gallery (NPCs) or on the belt beside the court (humans, see below). The tournament's countdown does not tick the game, so the coin toss (an
   animated coin between the two numbers that lands on the attacker's, with a title for the fighters) is driven from scheduled
   callbacks until "GO".
 * **Next duels**: a fade to black, the fighters are placed, 7.5 s of intro (coin, "READY", "FIGHT!"), the fight, a result title
@@ -126,7 +126,11 @@ The planner may send any number N >= 2 of survivors (after the glass bridge: all
   `DuelSimulator`** (the same rules, the same NPC minds) and shown as a **ceremony**: coin toss, then a replay of the simulated duel
   in about 5 s - both bodies take the poses the simulation recorded, with a time warp (`Replay`) that skips the walking and
   circling and shows every blow, block and dodge at about natural speed - the result, a short aftermath.
-* Contestants who wait for their turn watch from the gallery (`final.audience`); a contestant who is eliminated or disconnects
+* Contestants who wait for their turn watch the duel. **NPCs** sit on the gallery (`final.audience`). **Humans** stand on the clear
+  belt beside the court (two columns on either side, at least 2.4 blocks outside the painted line, looking at the middle of the
+  court): the tournament eliminates a human who stays more than 3 blocks outside `arena.bounds` for about eight seconds, and the
+  gallery of the real arena lies outside those bounds. A player who comes back from a disconnect while waiting is moved to the
+  belt too. A contestant who is eliminated or disconnects
   while waiting simply leaves the ladder, one who leaves during a duel forfeits it (the opponent wins, cause `DISCONNECTED`
   for the leaver).
 * The time budget of the game is `Ladder.budgetTicks`: every duel that is probably live gets intro + time limit + outro, the
@@ -223,3 +227,23 @@ pathfinding is used on the open court). Far-away NPCs' reduced entity tick rate 
 * Controller input is mouse and keyboard only; touch or unusual keyboards may lack the double-tap dodge, the Dash key remains.
 * Players with latency above ~150 ms will find parries and dodges (windows of 2-6 ticks) hard on Hard / Extreme; the windows
   are centred on the server's view of the press and are not lag compensated.
+
+## 10. Proposed changes to shared code (not applied: the final needs none of them)
+* **`Planner`**: no change is required. `FINAL` after the glass bridge with any number N >= 2 of survivors is already planned
+  (`PlannerTest.finalIsPlayedWithSeveralSurvivorsAfterTheBridge`), `GameKind.FINAL.minParticipants` stays 2, and
+  `FinalSquidGame` always ends with exactly one survivor (the ladder, and `settleAll` for a game that runs out of time), so
+  `Planner.next(FINAL, ...)` returning `null` always ends the tournament with one winner. One optional tweak, a design choice for
+  the integrator: let three survivors go straight to the final instead of playing an odd-sized round of the remaining games -
+  `if (survivors == 2 && lastPlayed != null)` becomes `if (survivors <= 3 && lastPlayed != null)` (three finalists are two
+  live duels: a bye, a duel, the final).
+* **`TournamentManager` / `MiniGame`**: nothing is required. Two optional conveniences found while building this game:
+  1. `tickCountdown` ticks no game code, so the coin toss of the first duel runs from `GameContext.schedule` callbacks. A default
+     hook `default void tickCountdown(GameContext ctx) {}` in `MiniGame`, called from `TournamentManager.tickCountdown()` every
+     tick, would make that a plain method.
+  2. `TournamentManager.enforceBounds` eliminates a human who stays more than 3 blocks outside `arena.bounds`, and the real final
+     arena's gallery (`final.audience`, `arena.exit`) lies outside its `arena.bounds` (x up to 90 against 50). The game works
+     around it by seating humans on the clear belt beside the court; if the arena's bounds region were enlarged to cover the
+     grandstand (`Guards.java` in `build/arena/finale`), humans could use the gallery like the NPCs.
+* **Pitfall for every game**: `GameContext.eliminate(c, cause, delayTicks)` with a delay defers the elimination through the
+  scheduler; the tournament reads the survivors right after `conclude()` returns, so a game must eliminate immediately from
+  `conclude()`/`onTimeout()` (the final does).

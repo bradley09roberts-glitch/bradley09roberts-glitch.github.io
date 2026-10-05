@@ -171,6 +171,38 @@ class FinaleArenaTest {
         return state == null || state.equals("minecraft:air");
     }
 
+    // ------------------------------------------------------------------ where the waiting humans stand
+
+    private static FinaleArena arenaOf(Built b) {
+        Marker atk = b.buffer().marker("final.attacker_spawn"), circle = b.buffer().marker("final.circle");
+        net.minecraft.world.phys.Vec3 center = new net.minecraft.world.phys.Vec3((atk.x() + circle.x()) / 2, atk.y(), (atk.z() + circle.z()) / 2);
+        return new FinaleArena(b.court(), atk, b.buffer().marker("final.defender_spawn"), center,
+                new ArrayList<>(b.buffer().markers("final.audience")), b.buffer().marker("final.podium"));
+    }
+
+    @Test
+    void waitingHumansStandBesideTheCourtInsideTheBoundsTheTournamentEnforces() {
+        for (Built b : List.of(REAL, FIXTURE)) {
+            FinaleArena arena = arenaOf(b);
+            com.squidgame.build.Region bounds = b.buffer().region("arena.bounds");
+            Set<String> distinct = new HashSet<>();
+            for (int i = 0; i < 40; i++) {
+                net.minecraft.world.phys.Vec3 p = arena.beltSpot(i);
+                String name = b.builder().getClass().getSimpleName() + " belt spot " + i;
+                assertTrue(b.court().edgeDistance(p.x, p.z) < -2.3, name + " is clear of the line");
+                assertTrue(b.court().edgeDistance(p.x, p.z) > -14, name + " is close to the fight");
+                assertTrue(bounds.containsXZ(p.x, p.z), name + " lies inside arena.bounds: humans outside it are eliminated");
+                assertEquals(arena.floorY, p.y, 1e-9);
+                distinct.add(Math.round(p.x * 10) + "," + Math.round(p.z * 10));
+                // looking at the middle of the court
+                double toCentre = com.squidgame.core.finale.FinaleRules.yawOf(arena.center.x - p.x, arena.center.z - p.z);
+                assertEquals(0.0, com.squidgame.core.finale.FinaleRules.angleDiff(toCentre, arena.beltYaw(i)), 1e-3, name);
+            }
+            assertEquals(40, distinct.size(), "forty different places");
+            assertNotNull(arena.beltSpot(100_000), "the places wrap around when many humans wait");
+        }
+    }
+
     // ------------------------------------------------------------------ duels on the arena itself
 
     @Test
