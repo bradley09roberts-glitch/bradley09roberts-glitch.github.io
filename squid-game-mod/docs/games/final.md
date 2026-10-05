@@ -145,7 +145,7 @@ The planner may send any number N >= 2 of survivors (after the glass bridge: all
 | **V** (`key.squidgame.dash`) or a double tap of A / D / S | dodge in the direction of the movement keys held (backwards without) |
 | **G** (`key.squidgame.shove`) | shove |
 
-(Why G: Minecraft keeps one binding per key in its lookup, so a default must be a key nobody else uses - F is the swap-hands key and R is the marbles panel.) The keys can be changed in the
+(Why G: Minecraft keeps one binding per key in its lookup, so a default must be a key nobody else uses - F is the swap-hands key, R pulls in Tug of War and M opens the marbles panel.) The keys can be changed in the
 Controls screen under "Squid Game"; the instructions in chat show the current ones.
 
 * While a client is one of the two fighters of a live duel, Fabric's `ClientPreAttackCallback` cancels the vanilla attack (it

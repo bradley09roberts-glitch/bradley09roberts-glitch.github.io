@@ -58,7 +58,7 @@ public final class MarblesClient {
         HudRenderCallback.EVENT.register(ThrowOverlay::render);
         EntityRendererRegistry.register(ModEntities.MARBLE, ctx -> new ThrownItemRenderer<>(ctx, 0.75f, true));
 
-        panelKey = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.squidgame.marbles_panel", GLFW.GLFW_KEY_R, "key.categories.squidgame"));
+        panelKey = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.squidgame.marbles_panel", GLFW.GLFW_KEY_M, "key.categories.squidgame"));
         ClientTickEvents.END_CLIENT_TICK.register(mc -> {
             while (panelKey.consumeClick()) {
                 dismissed = null;
@@ -75,6 +75,6 @@ public final class MarblesClient {
 
     /** The key that brings the panel back, for the hint in the panel. */
     static Component panelKeyName() {
-        return panelKey == null ? Component.literal("R") : panelKey.getTranslatedKeyMessage();
+        return panelKey == null ? Component.literal("M") : panelKey.getTranslatedKeyMessage();
     }
 }
