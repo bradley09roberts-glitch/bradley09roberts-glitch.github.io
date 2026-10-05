@@ -25,6 +25,13 @@ public class SquidGameMod implements ModInitializer {
     public static final String MOD_ID = "squidgame";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
+    /** Verbose diagnostics, printed at INFO level only while the {@code debug} config option is on. */
+    public static void debug(String format, Object... args) {
+        if (SquidConfig.get().debug) {
+            LOGGER.info("[debug] " + format, args);
+        }
+    }
+
     public static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
