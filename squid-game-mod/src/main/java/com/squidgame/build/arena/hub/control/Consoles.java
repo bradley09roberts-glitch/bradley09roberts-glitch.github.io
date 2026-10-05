@@ -16,6 +16,20 @@ final class Consoles {
     static void build(BuildContext c) {
         arc(c, 14.0, 36);
         arc(c, 19.0, 33);
+        // light rig over the dais: a half ring of iron bars with spot lamps, hung on chains
+        for (double a = -90; a <= 90; a += 1.5) {
+            double rad = Math.toRadians(a);
+            int x = (int) Math.round(84 - 13 * Math.cos(rad));
+            int z = (int) Math.round(13 * Math.sin(rad));
+            c.set(x, 28, z, "minecraft:iron_bars");
+        }
+        for (int a = -75; a <= 75; a += 15) {
+            double rad = Math.toRadians(a);
+            int x = (int) Math.round(84 - 13 * Math.cos(rad));
+            int z = (int) Math.round(13 * Math.sin(rad));
+            c.set(x, 27, z, Pal.SEA);
+            c.fill(x, 29, z, x, 32, z, Pal.chain("y"));
+        }
         // cable looms hanging from the ceiling to the desks' backs
         for (double[] p : new double[][]{{70, -9}, {70, 9}, {65, -13}, {65, 13}}) {
             int x = (int) p[0], z = (int) p[1];

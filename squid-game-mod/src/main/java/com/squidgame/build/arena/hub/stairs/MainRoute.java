@@ -31,5 +31,9 @@ final class MainRoute {
         r.landing(19, 11, Exit.LEFT, d.withDepth(3), Kit.PAT_FRAME);          // y=48, turn north
         r.bridge(14, 7, e.withDepth(3));                                       // north at y=48
         r.flight(12, 1, f);                                                    // north to y=60
+        // across the terrace to the middle of the gate gallery (the last waypoint stands there)
+        for (int z = -160; z >= -166; z--) {
+            k.line.add(new int[]{0, 60, z});
+        }
     }
 }

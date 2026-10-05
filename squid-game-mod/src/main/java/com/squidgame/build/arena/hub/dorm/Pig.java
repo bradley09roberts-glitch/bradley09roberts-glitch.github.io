@@ -27,16 +27,20 @@ final class Pig {
     private static final int X_MIN = -12, X_MAX = 12, Y_MAX = 14, Z_MIN = -8, Z_MAX = 8;
     private static final int NX = X_MAX - X_MIN + 1, NY = Y_MAX + 1, NZ = Z_MAX - Z_MIN + 1;
 
-    private static boolean[][][] body;
-    private static boolean[][][] inner;
+    private boolean[][][] body;
+    private boolean[][][] inner;
 
     static void build(BuildContext c) {
+        new Pig().run(c);
+    }
+
+    private void run(BuildContext c) {
         computeSets();
         c.at(Layout.PIG_X, Layout.PIG_BOTTOM, Layout.PIG_Z, 0, () -> pig(c));
         rig(c);
         board(c);
         c.marker("prize.pig", Layout.PIG_X + CX, Layout.PIG_BOTTOM + CY, Layout.PIG_Z + CZ, 0f);
-        c.marker("prize.counter", Layout.PIG_X + 0.5, Layout.PIG_BOTTOM - 2.4, Layout.PIG_Z + 5.3, 0f);
+        c.marker("prize.counter", Layout.PIG_X + 0.5, Layout.PIG_BOTTOM - 2.6, Layout.PIG_Z + 5.3, 0f);
     }
 
     // ------------------------------------------------------------------------------------------ geometry
@@ -46,12 +50,12 @@ final class Pig {
         return Math.pow(dx, EXP) + Math.pow(dy, EXP) + Math.pow(dz, EXP) <= 1.0;
     }
 
-    private static boolean b(int x, int y, int z) {
+    private boolean b(int x, int y, int z) {
         int i = x - X_MIN, j = y, k = z - Z_MIN;
         return i >= 0 && i < NX && j >= 0 && j < NY && k >= 0 && k < NZ && body[i][j][k];
     }
 
-    private static void computeSets() {
+    private void computeSets() {
         body = new boolean[NX][NY][NZ];
         inner = new boolean[NX][NY][NZ];
         for (int x = X_MIN; x <= X_MAX; x++) {
@@ -71,13 +75,13 @@ final class Pig {
         }
     }
 
-    private static boolean in(int x, int y, int z) {
+    private boolean in(int x, int y, int z) {
         int i = x - X_MIN, j = y, k = z - Z_MIN;
         return i >= 0 && i < NX && j >= 0 && j < NY && k >= 0 && k < NZ && inner[i][j][k];
     }
 
     /** Highest body cell at (x, z), or -1. */
-    private static int topY(int x, int z) {
+    private int topY(int x, int z) {
         for (int y = Y_MAX; y >= 0; y--) {
             if (b(x, y, z)) {
                 return y;
@@ -86,7 +90,7 @@ final class Pig {
         return -1;
     }
 
-    private static void pig(BuildContext c) {
+    private void pig(BuildContext c) {
         // shell + hollow interior
         for (int x = X_MIN; x <= X_MAX; x++) {
             for (int y = 0; y <= Y_MAX; y++) {
@@ -100,6 +104,7 @@ final class Pig {
             }
         }
         seam(c);
+        studs(c);
         legs(c);
         snout(c);
         ears(c);
@@ -110,7 +115,7 @@ final class Pig {
     }
 
     /** Opaque pink seam ring round the belly, like the join of a ceramic piggy bank. */
-    private static void seam(BuildContext c) {
+    private void seam(BuildContext c) {
         for (int x = X_MIN; x <= X_MAX; x++) {
             for (int z = Z_MIN; z <= Z_MAX; z++) {
                 int y = 6;
@@ -123,7 +128,27 @@ final class Pig {
         }
     }
 
-    private static void legs(BuildContext c) {
+    /** Glowing froglight studs in the belly and the back so the cash inside is lit from every side. */
+    private void studs(BuildContext c) {
+        int[][] belly = {{-3, 0}, {3, 0}, {0, -2}, {0, 2}, {-1, 0}, {2, 0}};
+        for (int[] p : belly) {
+            for (int y = 0; y <= Y_MAX; y++) {
+                if (b(p[0], y, p[1])) {
+                    c.set(p[0], y, p[1], Pal.FROG);
+                    break;
+                }
+            }
+        }
+        int[][] back = {{-3, -2}, {-3, 2}, {1, -2}, {1, 2}, {4, -2}, {4, 2}};
+        for (int[] p : back) {
+            int y = topY(p[0], p[1]);
+            if (y >= 0) {
+                c.set(p[0], y, p[1], Pal.FROG);
+            }
+        }
+    }
+
+    private void legs(BuildContext c) {
         int[][] feet = {{3, -3}, {3, 2}, {-5, -3}, {-5, 2}};
         for (int[] f : feet) {
             for (int dx = 0; dx < 2; dx++) {
@@ -141,7 +166,7 @@ final class Pig {
         }
     }
 
-    private static void snout(BuildContext c) {
+    private void snout(BuildContext c) {
         // short cylinder on the front of the head, radius about 2.2, centre (y 6, z 0)
         for (int x = 6; x <= 7; x++) {
             for (int y = 3; y <= 9; y++) {
@@ -160,7 +185,7 @@ final class Pig {
         c.set(7, 7, 1, Pal.BLACK);
     }
 
-    private static void ears(BuildContext c) {
+    private void ears(BuildContext c) {
         for (int side = -1; side <= 1; side += 2) {
             int z = side < 0 ? -3 : 3;
             int base = Math.max(topY(2, z), topY(3, z)) + 1;
@@ -177,7 +202,7 @@ final class Pig {
         }
     }
 
-    private static void eyes(BuildContext c) {
+    private void eyes(BuildContext c) {
         for (int side = -1; side <= 1; side += 2) {
             int x = 4, y = 7;
             int z = -99;
@@ -197,7 +222,7 @@ final class Pig {
         }
     }
 
-    private static void tail(BuildContext c) {
+    private void tail(BuildContext c) {
         int[][] cells = {{-7, 6, 0}, {-8, 6, 0}, {-8, 7, 0}, {-8, 8, 0}, {-7, 8, 0}, {-7, 9, 0}, {-6, 9, 0}};
         for (int[] p : cells) {
             if (!b(p[0], p[1], p[2])) {
@@ -206,7 +231,7 @@ final class Pig {
         }
     }
 
-    private static void coinSlot(BuildContext c) {
+    private void coinSlot(BuildContext c) {
         for (int x = -3; x <= 1; x++) {
             int y = topY(x, 0);
             if (y >= 0) {
@@ -228,7 +253,7 @@ final class Pig {
     // ------------------------------------------------------------------------------------------ prize regions
 
     /** One box per layer of the hollow interior: the largest axis-aligned rectangle lying completely inside it. */
-    private static void fillRegions(BuildContext c) {
+    private void fillRegions(BuildContext c) {
         List<int[]> boxes = new ArrayList<>();
         for (int y = 0; y <= Y_MAX; y++) {
             int[] best = null;
@@ -268,18 +293,18 @@ final class Pig {
     // ------------------------------------------------------------------------------------------ prize board
 
     /** A black board hanging under the pig's chin from two chains; the server's prize text floats in front of it. */
-    private static void board(BuildContext c) {
-        int y0 = Layout.PIG_BOTTOM - 4, y1 = Layout.PIG_BOTTOM - 1;
-        c.fill(-6, y0, 4, 6, y1, 4, Pal.BLACK);
-        c.fill(-6, y0, 4, 6, y0, 4, Pal.PINK);
-        c.fill(-6, y1, 4, 6, y1, 4, Pal.PINK);
-        c.fill(-6, y0, 4, -6, y1, 4, Pal.PINK);
-        c.fill(6, y0, 4, 6, y1, 4, Pal.PINK);
-        for (int x : new int[]{-5, 5}) {
+    private void board(BuildContext c) {
+        int y0 = Layout.PIG_BOTTOM - 3, y1 = Layout.PIG_BOTTOM - 1;
+        c.fill(-5, y0, 4, 5, y1, 4, Pal.BLACK);
+        c.fill(-5, y0, 4, 5, y0, 4, Pal.PINK);
+        c.fill(-5, y1, 4, 5, y1, 4, Pal.PINK);
+        c.fill(-5, y0, 4, -5, y1, 4, Pal.PINK);
+        c.fill(5, y0, 4, 5, y1, 4, Pal.PINK);
+        for (int x : new int[]{-4, 4}) {
             c.fill(x, y1 + 1, 4, x, Layout.TRUSS_BOTTOM - 1, 4, Pal.CHAIN);
         }
         // lamps on the top edge so the numbers are well lit
-        for (int x : new int[]{-4, 0, 4}) {
+        for (int x : new int[]{-3, 0, 3}) {
             c.set(x, y1 + 1, 4, Pal.SEA);
         }
     }
@@ -287,7 +312,7 @@ final class Pig {
     // ------------------------------------------------------------------------------------------ rig
 
     /** Hanger beams under the truss chords and four chains down to the pig's back (hub frame; pig x/z = hub x/z). */
-    private static void rig(BuildContext c) {
+    private void rig(BuildContext c) {
         int bottom = Layout.TRUSS_BOTTOM;
         int[][] attach = {{-4, -3}, {-4, 3}, {4, -3}, {4, 3}};
         for (int x : new int[]{-4, 4}) {

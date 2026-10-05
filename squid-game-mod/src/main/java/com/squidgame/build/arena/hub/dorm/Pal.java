@@ -62,6 +62,9 @@ final class Pal {
     static final String SHEET_GRAY = "minecraft:gray_carpet";
     static final String PILLOW = "minecraft:white_carpet";
 
+    /** Tiny red recording LED of the cameras. */
+    static final String LED = "minecraft:red_candle[candles=1,lit=false]";
+
     // prize pig
     static final String PIG_GLASS = "minecraft:pink_stained_glass";
     static final String PIG_SOLID = "minecraft:pink_concrete";

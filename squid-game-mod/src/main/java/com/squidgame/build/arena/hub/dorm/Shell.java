@@ -149,9 +149,9 @@ final class Shell {
             for (int x = -40; x <= 40; x += 10) {
                 c.fill(x, b + 1, z, x, t - 1, z, Pal.STEEL_WALL);
             }
-            // gusset blocks at the bottom joints
+            // work lamps at the bottom joints: they light the trusses, the ducts and the roof space
             for (int x = -40; x <= 40; x += 10) {
-                c.set(x, b, z, Pal.STEEL_BRICKS);
+                c.set(x, b, z, Pal.SEA);
             }
         }
         // purlins tying the trusses together just under the deck

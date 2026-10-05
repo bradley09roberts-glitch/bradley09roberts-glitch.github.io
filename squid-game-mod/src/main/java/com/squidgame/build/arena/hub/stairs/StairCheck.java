@@ -218,6 +218,49 @@ public final class StairCheck {
                 dropsAll);
         ok &= dropsNear == 0;
 
+        // enclosure: flood the free (non-colliding) cells from inside; with the entrance opening sealed nothing may reach the
+        // outside of the shell (walls x +-46..48, north wall z -171.., south wall z -81, roof y 73..)
+        {
+            boolean[] seen = new boolean[g.info.length];
+            java.util.ArrayDeque<int[]> q = new java.util.ArrayDeque<>();
+            q.add(new int[]{0, 0, -83});
+            seen[Grid.idx(0, 0, -83)] = true;
+            int[][] dirs = {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}};
+            long cellsInside = 0;
+            boolean leak = false;
+            int[] leakAt = null;
+            while (!q.isEmpty()) {
+                int[] c = q.poll();
+                cellsInside++;
+                for (int[] d : dirs) {
+                    int nx = c[0] + d[0], ny = c[1] + d[1], nz = c[2] + d[2];
+                    if (!Grid.in(nx, ny, nz)) {
+                        leak = true;
+                        leakAt = new int[]{nx, ny, nz};
+                        continue;
+                    }
+                    if (nz >= -81 && nx >= -3 && nx <= 3 && ny >= 0 && ny <= 5) {
+                        continue;                       // the entrance opening itself: sealed for this test
+                    }
+                    int idn = Grid.idx(nx, ny, nz);
+                    if (seen[idn] || Blocks.kind(g.info[idn]) == Blocks.FULL || Blocks.kind(g.info[idn]) == Blocks.SLAB
+                            || Blocks.kind(g.info[idn]) == Blocks.STAIR) {
+                        continue;
+                    }
+                    if (nx < -48 || nx > 48 || nz < -176 || nz > -81 || ny < -1 || ny > 76) {
+                        leak = true;
+                        leakAt = new int[]{nx, ny, nz};
+                        continue;
+                    }
+                    seen[idn] = true;
+                    q.add(new int[]{nx, ny, nz});
+                }
+            }
+            System.out.printf("enclosure: %,d free cells inside, %s%n", cellsInside,
+                    leak ? "LEAK at " + leakAt[0] + "," + leakAt[1] + "," + leakAt[2] : "sealed (only the entrance opening leads out)");
+            ok &= !leak;
+        }
+
         // light
         int[] hist = new int[16];
         int dark = 0;

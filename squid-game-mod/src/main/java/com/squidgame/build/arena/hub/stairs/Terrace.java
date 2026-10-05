@@ -123,6 +123,9 @@ final class Terrace {
     private static void floor(Ctx k) {
         Look lk = Look.of(7, 3);
         Kit.landing(k, -45, -170, 45, FACE, LEVEL, lk, Kit.PAT_PLAIN, true);
+        // the terrace stands on the arcaded facade: it must not get a pavilion or count as an ordinary landing
+        k.landings.remove(k.landings.size() - 1);
+        k.allLandings.remove(k.allLandings.size() - 1);
         BuildContext c = k.c;
         // white tile with a quartz grid every 5 blocks
         for (int x = -45; x <= 45; x++) {
@@ -180,8 +183,7 @@ final class Terrace {
         for (int side = -1; side <= 1; side += 2) {
             int jx = cx + side * 3;
             c.fill(jx, LEVEL, WALL + 1, jx, LEVEL + 4, WALL + 1, SYM_BLOCK[sym]);
-            c.set(jx, LEVEL + 5, WALL + 1, cream);
-            c.set(jx, LEVEL + 6, WALL + 1, Kit.LANTERN);
+            c.set(jx, LEVEL + 5, WALL + 1, Kit.LANTERN);              // a lamp on each jamb, clear of the sign row above
             // lamp on the wall beyond the jamb
             c.set(cx + side * 5, LEVEL + 2, WALL, Pal.SEA);
             c.set(cx + side * 5, LEVEL + 3, WALL, Pal.SEA);
@@ -194,7 +196,7 @@ final class Terrace {
         c.fill(cx + 5, LEVEL + 5, WALL, cx + 6, LEVEL + 5, WALL, "squidgame:tile_black");
         double chars = TITLE[g].length();
         float scale = (float) Math.min(4.2, 11.0 / (0.15 * chars));
-        c.text(cx + 0.5, LEVEL + 6.15, WALL + 1 - 0.04, TITLE[g], "#FFFFFF", scale, 0f, false);
+        c.text(cx + 0.5, LEVEL + 6.5, WALL + 1 + 0.04, TITLE[g], "#FFFFFF", scale, 0f, false);   // just in front of the board
         // symbol board: rows LEVEL+7 .. LEVEL+12 (y 67..72), 13 wide
         board(k, g);
         c.region("gate." + GATE[g], cx - 2, LEVEL, WALL, cx + 2, LEVEL + 4, WALL);

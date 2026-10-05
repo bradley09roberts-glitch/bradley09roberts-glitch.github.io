@@ -23,25 +23,38 @@ final class ExitDoor {
             c.fill(4, 0, z, 5, 7, z, Pal.BLACK);
             c.fill(-5, 6, z, 5, 7, z, Pal.BLACK);
         }
-        // hazard stripes on the jambs and the lintel
-        for (int y = 0; y <= 5; y++) {
-            String s = (y & 1) == 0 ? HAZ : Pal.BLACK;
-            c.set(-4, y, -32, s);
-            c.set(4, y, -32, s);
-        }
-        for (int x = -4; x <= 4; x++) {
-            c.set(x, 6, -32, (x & 1) == 0 ? HAZ : Pal.BLACK);
+        // diagonal hazard stripes on the proud face of the jambs and the lintel
+        for (int y = 0; y <= 7; y++) {
+            for (int x = -5; x <= 5; x++) {
+                boolean frame = Math.abs(x) >= 4 || y >= 6;
+                if (frame) {
+                    c.set(x, y, -32, Math.floorMod(x + y, 4) < 2 ? HAZ : Pal.BLACK);
+                }
+            }
         }
         // sign plate above
         c.fill(-6, 8, -33, 6, 10, -33, Pal.BLACK);
         c.fill(-6, 8, -33, 6, 8, -33, Pal.PINK);
         c.fill(-6, 10, -33, 6, 10, -33, Pal.PINK);
-        c.text(0.5, 9.0, -32.9, "EXIT", "#FF4D6A", 3.6f, 0f, false);
+        // the sign plate sits in the wall layer z = -33 (it spans -33..-32); the text floats just in front of its face
+        c.text(0.5, 9.0, -31.96, "EXIT", "#FF4D6A", 3.6f, 0f, false);
         // flanking lamps
         c.set(-6, 3, -32, Pal.PANEL_WHITE);
         c.set(6, 3, -32, Pal.PANEL_WHITE);
         c.set(-6, 5, -32, Pal.PANEL_WHITE);
         c.set(6, 5, -32, Pal.PANEL_WHITE);
+        booth(c, -10);
+        booth(c, 8);
         c.marker("dorm.exit_door", 0.5, 0.0, -32.5, 180f, "w=7,h=6");
+    }
+
+    /** A black guard desk (3 wide, 2 deep) with two monitors facing the hall, against the north wall. */
+    private static void booth(BuildContext c, int x0) {
+        c.fill(x0, 0, -32, x0 + 2, 0, -31, Pal.BLACK);
+        c.fill(x0, 1, -32, x0 + 2, 1, -32, Pal.STEEL_TILES);
+        c.fill(x0, 1, -31, x0 + 2, 1, -31, Pal.STEEL_SLAB_B);
+        c.set(x0, 2, -32, "squidgame:monitor[facing=south]");
+        c.set(x0 + 2, 2, -32, "squidgame:monitor[facing=south]");
+        c.set(x0 + 1, 2, -32, "squidgame:monitor[facing=south]");
     }
 }

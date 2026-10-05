@@ -19,11 +19,27 @@ final class Lights {
         podium(c);
         gallery(c);
         extras(c);
+        roofSpace(c);
+    }
+
+    /**
+     * Invisible light blocks in the bays of the roof space between the trusses (nobody walks there; this only keeps the
+     * pockets of the trusses, the ducts and the pipes from being pitch black).
+     */
+    private static void roofSpace(BuildContext c) {
+        for (int z : new int[]{-24, -16, -8, 0, 8, 16, 24}) {
+            for (int x = -35; x <= 35; x += 10) {
+                if (free(c, x, 33, z)) {
+                    c.set(x, 33, z, "minecraft:light[level=13]");
+                }
+            }
+        }
     }
 
     /** Flush floor tiles on the multiples of 5; a blocked lattice point moves to the nearest free neighbour. */
     private static void floorLattice(BuildContext c) {
-        int[][] around = {{0, 0}, {1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
+        int[][] around = {{0, 0}, {1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}, {2, 0}, {-2, 0}, {0, 2}, {0, -2}};
+        java.util.Set<Long> spots = Bunks.candidateCells();
         for (int z = -30; z <= 30; z += 5) {
             for (int x = -40; x <= 40; x += 5) {
                 for (int[] d : around) {
@@ -31,7 +47,7 @@ final class Lights {
                     if (px < Layout.X0 || px > Layout.X1 || pz < Layout.Z0 || pz > Layout.Z1) {
                         continue;
                     }
-                    if (!free(c, px, 0, pz) || !free(c, px, 1, pz)) {
+                    if (!free(c, px, 0, pz) || !free(c, px, 1, pz) || spots.contains(Bunks.key(px, pz))) {
                         continue;
                     }
                     String f = c.get(px, -1, pz);
@@ -80,7 +96,12 @@ final class Lights {
     /** Odd corners the lattice misses. */
     private static void extras(BuildContext c) {
         c.set(37, -1, 31, Pal.PANEL_WHITE);
-        c.set(-37, -1, -32, Pal.PANEL_WHITE);
+        c.set(-38, -1, -31, Pal.PANEL_WHITE);
+        // glowing thresholds in the two door openings (exit door: both wall layers; control-room door)
+        c.set(-2, -1, -33, Pal.PANEL_WHITE);
+        c.set(2, -1, -33, Pal.PANEL_WHITE);
+        c.set(0, -1, -34, Pal.PANEL_WHITE);
+        c.set(42, 11, 0, Pal.PANEL_WARM);
     }
 
     private static boolean solidFloor(String s) {

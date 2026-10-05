@@ -3,7 +3,7 @@ package com.squidgame.build.arena.hub.dorm;
 import com.squidgame.build.BuildContext;
 
 /**
- * Surveillance and service props: black security cameras on the walls and on the roofs of the towers, loudspeakers,
+ * Surveillance and service props: black security cameras on the walls (the towers carry their own, see BunkTower), loudspeakers,
  * louvred vents, conduit runs along the walls and caged pendant lamps over the avenue. All are small block models that
  * keep clear of the walkable space.
  */
@@ -16,12 +16,12 @@ final class Props {
 
     static void build(BuildContext c) {
         wallCameras(c);
-        towerCameras(c);
         domeCameras(c);
         speakers(c);
         vents(c);
         conduits(c);
         pendants(c);
+        ducts(c);
     }
 
     // ------------------------------------------------------------------------------------------ cameras
@@ -35,7 +35,7 @@ final class Props {
         c.set(x, y, z, BLACK);
         c.set(x + dx, y, z + dz, BLACK);
         c.set(x + 2 * dx, y, z + 2 * dz, GLASS);
-        c.set(x + dx, y + 1, z + dz, "minecraft:red_concrete");
+        c.set(x + dx, y + 1, z + dz, Pal.LED);
     }
 
     private static void wallCameras(BuildContext c) {
@@ -52,23 +52,6 @@ final class Props {
         }
         for (int z : new int[]{-26, 26}) {
             camera(c, 40, 31, z, -1, 0);
-        }
-        // over the control-room door and above the catwalk, watching the stair
-        camera(c, 40, 22, -8, -1, 0);
-    }
-
-    /** One camera on every tower roof, looking along the long aisle. */
-    private static void towerCameras(BuildContext c) {
-        for (Layout.Tower t : Layout.towers()) {
-            int dir = t.cz() <= 0 ? 1 : -1;
-            // on the north / south end post tops
-            c.at(t.cx(), 0, t.cz(), 0, () -> {
-                int y = Layout.TOWER_TOP + 3;
-                c.set(3, y - 1, dir * 4, BLACK);
-                c.set(3, y, dir * 4, BLACK);
-                c.set(3, y, dir * 4 + dir, GLASS);
-                c.set(3, y + 1, dir * 4, "minecraft:red_concrete");
-            });
         }
     }
 
@@ -164,6 +147,21 @@ final class Props {
                 c.set(x, y - 1, z, Pal.BARS);
                 c.set(x, y + 1, z, BLACK);
             }
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------ ducts
+
+    /** Two big rectangular ventilation ducts (3 x 2) running north-south under the trusses over the side aisles. */
+    private static void ducts(BuildContext c) {
+        for (int x : new int[]{-22, 22}) {
+            c.fill(x - 1, 29, -30, x + 1, 30, 30, Pal.LGRAY);
+            // darker collars every six blocks and a seam line along the sides
+            for (int z = -30; z <= 30; z += 6) {
+                c.fill(x - 1, 29, z, x + 1, 30, z, Pal.STEEL_TILES);
+            }
+            c.fill(x - 2, 29, -30, x - 2, 29, 30, Pal.STEEL_SLAB_T);
+            c.fill(x + 2, 29, -30, x + 2, 29, 30, Pal.STEEL_SLAB_T);
         }
     }
 }

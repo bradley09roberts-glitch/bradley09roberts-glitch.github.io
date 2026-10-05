@@ -50,6 +50,7 @@ final class Lobby {
             for (int y = 12; y <= 14; y++) {
                 c.set(49, y, side * 5, y == 14 ? Pal.symbol(side + 1) : Pal.PBS);
             }
+            c.set(49, 15, side * 5, Pal.SEA);
         }
     }
 }

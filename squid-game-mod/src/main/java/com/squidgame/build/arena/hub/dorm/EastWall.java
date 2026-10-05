@@ -34,23 +34,29 @@ final class EastWall {
         c.fill(41, 12, z0 - 1, 41, 12, z1 + 1, Pal.PINK);
     }
 
+    /**
+     * The door (z[-2,2], y[12,15]) touches the two windows (which start at z = +-3 and y = 14), so its frame is only a pair
+     * of hazard-striped sills below the glass and a lintel in the 5-wide pier between the windows; above the lintel the pier
+     * carries the sign.
+     */
     private static void door(BuildContext c) {
         c.clear(41, 12, -2, 43, 15, 2);
-        // frame: jambs at z = +-3 and lintel at y = 16, hazard striped
-        for (int y = 12; y <= 16; y++) {
-            for (int z = -3; z <= 3; z++) {
-                boolean frame = y == 16 || z == -3 || z == 3;
-                if (frame) {
-                    c.set(41, y, z, ((y + Math.abs(z)) & 1) == 0 ? HAZ_Y : Pal.BLACK);
-                }
+        // jambs below the windows (y 12..13) and the lintel in the pier
+        for (int y = 12; y <= 13; y++) {
+            for (int z : new int[]{-3, 3}) {
+                c.set(41, y, z, ((y + Math.abs(z)) & 1) == 0 ? HAZ_Y : Pal.BLACK);
             }
         }
-        c.fill(41, 17, -4, 41, 17, 4, Pal.STEEL);
-        // sign plate above the door
-        c.fill(41, 18, -6, 41, 20, 6, Pal.BLACK);
-        c.fill(41, 18, -6, 41, 18, 6, Pal.PINK);
-        c.fill(41, 20, -6, 41, 20, 6, Pal.PINK);
-        c.text(40.9, 19.4, 0.5, "CONTROL ROOM", "#FFD84A", 2.6f, 90f, false);
-        c.text(40.9, 18.5, 0.5, "STAFF ONLY", "white", 1.4f, 90f, false);
+        for (int z = -2; z <= 2; z++) {
+            c.set(41, 16, z, (z & 1) == 0 ? HAZ_Y : Pal.BLACK);
+        }
+        c.fill(41, 17, -2, 41, 17, 2, Pal.STEEL);
+        // sign plate on the pier above the lintel
+        c.fill(41, 18, -2, 41, 22, 2, Pal.BLACK);
+        c.fill(41, 18, -2, 41, 18, 2, Pal.PINK);
+        c.fill(41, 22, -2, 41, 22, 2, Pal.PINK);
+        c.text(40.9, 20.0, 0.5, "CONTROL", "#FFD84A", 1.7f, 90f, false);
+        c.text(40.9, 19.2, 0.5, "ROOM", "#FFD84A", 1.7f, 90f, false);
+        c.text(40.9, 18.5, 0.5, "STAFF ONLY", "white", 0.9f, 90f, false);
     }
 }
