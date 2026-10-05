@@ -17,16 +17,16 @@ Anything else means `mixed`. Set it with `/squid config marblesVariant <value>`;
 instruction pages only list the rules of the variants in play) and saved with the tournament so a restarted game keeps it.
 
 ## Rules (as implemented)
-**Phase 1, pairing (Normal 45 s, Hard 40 s, Extreme 35 s).** Everybody alive stands in the village square. The partner you pick is
-the opponent you will have to beat: right-click another contestant (an NPC body or another player) to offer a partnership. An NPC answers after a think time of 1 to 5 s (reaction speed
-and patience), a human gets the modal "No. X asks you to be their partner" (Accept / Decline, 12 s, ignoring it counts as no).
-Agreements are final. Anti-spam: one outstanding offer per proposer, one pending offer per target, 1.5 s between offers, a refused
-offer cannot be repeated to the same person for 12 s (25 s when a human refused), and two contestants who ask each other at the
-same time are partners. The
-phase ends when the clock runs out or 3 s after everybody who can be paired has a partner (not before 6 s). Everybody without a
-partner is paired at random; with an odd number one of them gets a **bye** (announced to all, safe, shown on their HUD - never a
-contestant who found a partner). Pairs fade out and are moved to their plot (court); the plot order is fixed by the marker
-numbers, the variant of a pair is fixed by the setting.
+**Phase 1, pairing (Normal 45 s, Hard 40 s, Extreme 35 s).** Everybody alive stands in the village square. The partner you pick
+is the opponent you will have to beat: right-click another contestant (an NPC body or another player) to offer a partnership. An
+NPC answers after a think time of 1 to 5 s (reaction speed and patience), a human gets the modal "No. X asks you to be their
+partner" (Accept / Decline, 12 s, ignoring it counts as no). Agreements are final. Anti-spam: one outstanding offer per proposer,
+one pending offer per target, 1.5 s between offers, a refused offer cannot be repeated to the same person for 12 s (25 s when a
+human refused), and two contestants who ask each other at the same time are partners. The phase ends when the clock runs out or
+3 s after everybody who can be paired has a partner (not before 6 s). Everybody without a partner is paired at random; with an odd
+number one of them gets a **bye** (announced to all, safe, shown on their HUD - never a contestant who found a partner). Pairs
+fade out and are moved to their plot (court); the plot order is fixed by the marker numbers, the variant of a pair is fixed by the
+setting.
 
 **The match.** Both partners start with the same stack (Normal 10, Hard 8, Extreme 5 marbles). The stack is public: HUD counters, the
 marbles in hotbar slot 1 (humans; the tournament restores the real inventory afterwards) and a text hologram over the table
@@ -39,8 +39,8 @@ marbles in hotbar slot 1 (humans; the tournament restores the real inventory aft
   flip announced to both (`COIN_FLIP`);
 * a partner leaves the tournament (admin removal, disconnect elimination): the other one wins (`FORFEIT`).
 The winner is safe. The loser is announced, then shot by a guard after a short end sequence (3.5 s, `LOST_MATCH`), without
-waiting for the other pairs (when the game's time limit cuts an end sequence short the loser is eliminated at once). The game is over when every match is closed; the contestants who are not eliminated survive
-(winners, the bye).
+waiting for the other pairs (when the game's time limit cuts an end sequence short the loser is eliminated at once). The game is
+over when every match is closed; the contestants who are not eliminated survive (winners, the bye).
 
 **Variant A: odd or even.** The partners play at the same time and neither sees the other's choice before the reveal. The roles
 alternate every round (the first holder is random).
@@ -156,10 +156,20 @@ the rooftops (`guard.post`). When a match ends the winner cheers, the loser sobs
 and a guard shoots the loser. Sounds and particles: a select tick when a decision starts, marble clicks at lock-in and reveal,
 rolling marbles and a confirm / deny sound at the verdict, an alert chime at the time call, a danger sting when a match is lost, a
 red vignette when you are down to two marbles, in overtime and after a big loss. HUD: pairing countdown, pairs formed and partner
-while pairing; own / opponent marbles, the round line with the role or whose throw it is, the decision timer (odd or even; the throw timer is
-part of the throw panel), a "last marble" warning (a banner in odd or even, a red line in throw matches) and the number of matches
-still running. Fixture arena: 64 courts in the real geometry (pads at x = -1 / +2, line z = 2.5, bullseye 7 blocks beyond, 5x5
-target) and a plain square, so the game runs unchanged on either arena.
+while pairing; own / opponent marbles, the round line with the role or whose throw it is, the decision timer (odd or even; the
+throw timer is part of the throw panel), a "last marble" warning (a banner in odd or even, a red line in throw matches) and the
+number of matches still running. Fixture arena: 64 courts in the real geometry (pads at x = -1 / +2, line z = 2.5, bullseye 7
+blocks beyond, 5x5 target) and a plain square, so the game runs unchanged on either arena.
+
+## Testing
+* Pure rules: `tools/gradle.sh test` (`core/marbles`: ledger, odd/even rounds and duels, throw scoring, physics and controls, throw
+  duels, pairing planner, difficulty table, NPC strategies).
+* NPC-only games: `/squid config marblesVariant <value>`, `/squid debug timescale 0.3`, `/squid debug play marbles <npcs> [difficulty]`
+  from the console (no player = NPC-only), `/tick rate 100` runs a whole game at real timing in a fifth of the time,
+  `/squid debug perf` prints the profiler. With `/squid config debug true` the log lists every pair, offer, odd/even reveal and
+  throw (planned and landed position).
+* Human path: a headless client (`tools/xvfb-client.sh`) joined as the only human, `execute as <name> run squid debug play marbles
+  <npcs>` starts a game with it.
 
 ## Limitations
 * The village has 64 plots: with more than 128 contestants the surplus pairs cannot play and are counted as byes (logged).
@@ -170,5 +180,7 @@ target) and a plain square, so the game runs unchanged on either arena.
   shorter than a human could play them; most matches then end by count at the time call.
 * A partnership only decides who plays whom (agreements are final and nobody can break one); an offer to a human who does not react
   expires after 12 s.
+* Right-clicking another *player* (two humans pairing up) goes through a Fabric `UseEntityCallback` in `MarblesNet`; the tournament
+  only routes clicks on NPC bodies to the games. That path shares all the code of the NPC path but was not run with two real clients.
 * After a server restart the interrupted game is replayed from the start (only the variant setting is kept); marbles are not
   carried over.
