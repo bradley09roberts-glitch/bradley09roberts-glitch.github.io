@@ -176,7 +176,8 @@ and its fragile spots, what is carved, its stress, licks, the clock).
   cooldown / lock, flags cracked / done / timeout, events spike / lick / penalty, time left / total, the carved bits).
   The state has its own payload because the generic UPDATE would reopen a screen the player closed with `Esc`.
 * Client to server: `ClientActionPayload` ids `dalgona.pick` (`tin`), `dalgona.stroke` (`p` packed points `x << 10 | y`, `t` claimed
-  milliseconds, `f` flags 1 = needle down, 2 = needle up), `dalgona.lick`, `dalgona.sync` (asks for the current screen and state).
+  milliseconds, `f` flags 1 = needle down, 2 = needle up), `dalgona.lick`. Everything else the client shows comes from the server's
+  state pushes (at most every 3 ticks when something changed, otherwise every 10 ticks, so a missed push is healed by the next one).
 
 ## Sounds and assets (all existing)
 
@@ -195,12 +196,16 @@ gauges, cracks, furrow, shards) is drawn procedurally.
   NPC entity ticks, 0.02 ms the behaviours); smaller games with 16, 24 and 40 NPCs; a game in which everybody fails (the tournament
   carries on with nobody left); a game that runs out of time; a server restart in the middle of a game (the game is replayed from its
   start); several time scales (`squid debug timescale 0.05 .. 1`).
-* In the world with a real client (headless, software rendering, scripted mouse and keys) as the human: the tin screen (hover, lid,
-  automatic pick), carving a triangle, a star and the umbrella, stress and cracks growing, the lick (relief, sheen, cooldown), the
-  cookie cracking and shattering, the shape coming free, the clock running out with the screen open, `Esc` and re-opening by
-  right-clicking the desk, disconnecting mid-carve (an NPC took the seat and freed the star), the seated humans and NPCs seen from
-  the bench, from the end of a row and in third person (leaning over the desks with the needle in hand), window sizes from 960 x 540
-  to 1280 x 720 at GUI scale 3.
+* In the world with a real client (headless, software rendering, scripted mouse and keys via `tools/xinput.py`) as the human, on
+  the final build: the tin screen (hover, lid, click, keys `1`-`4`, automatic pick when the time runs out), carving a triangle all
+  the way to "FREE!" (a path generated at 0.72 of the safe speed, the pop animation, the results screen "you survived"), a star and
+  the umbrella, stress and cracks growing, the lick (relief, sheen, cooldown), the cookie cracking and shattering followed by the
+  guard's shot, the clock running out with the screen open (elimination after "TIME'S UP"), `Esc` and re-opening by right-clicking
+  the desk, and a disconnect and reconnect with the same account mid-carve and mid-selection (`/transfer`: the AI stand-in carried
+  on, the human got the carving screen back with the cookie as it was), the seated humans and NPCs seen from the bench, from the
+  end of a row and in third person (leaning over the desks with the needle in hand), window sizes from 960 x 540 to 1280 x 720 at
+  GUI scale 3. By accident a scripted triangle path that ran about 20 canvas units beside the groove (the tolerance on Normal is 22)
+  at 0.72 of the safe speed cracked the cookie, while the same path on the groove freed it: staying on the line matters.
 
 ## Known limitations and notes
 
@@ -214,5 +219,7 @@ gauges, cracks, furrow, shards) is drawn procedurally.
 * The real hall has 160 seats and the default contestant cap is 128; with more contestants (`maxContestants`) they share seats and
   sit side by side on the bench.
 * Not checked: sound (the headless client has no audio device; volumes were set by reasoning, not by ear), GUI scales 2 and 4
-  on large screens, the carving feel with a physical mouse, a human returning after a disconnect (the code path reopens the screen
-  with the cookie as it is).
+  on large screens (the layout is computed from the GUI size and was checked at 320 x 180 to 427 x 240 GUI pixels), the carving
+  feel with a physical mouse, the hidden system cursor (a screenshot does not show the cursor), the last small client change (no
+  impact mark or shake for the stress that is already on the cookie when the screen opens), which was compiled and built but not
+  run in a client again.

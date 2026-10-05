@@ -712,13 +712,6 @@ public final class DalgonaGame implements MiniGame {
             case "dalgona.pick" -> onPick(s, data);
             case "dalgona.stroke" -> onStroke(s, player, data);
             case "dalgona.lick" -> onLick(s, player);
-            case "dalgona.sync" -> {
-                if (s.stage == Stage.SELECTING) {
-                    openTins(s);
-                } else if (s.sim != null) {
-                    pushState(s);
-                }
-            }
             default -> {
             }
         }
