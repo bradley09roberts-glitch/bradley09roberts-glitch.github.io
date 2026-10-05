@@ -889,8 +889,14 @@ public final class DalgonaGame implements MiniGame {
         Entity seat = spawnSeat(ctx.level, s.anchor.humanSeat());
         if (seat != null && p.startRiding(seat, true)) {
             s.seatEntity = seat;
-            // the client answers boarding with "Press Shift to dismount": replace that hint with an empty message
-            p.displayClientMessage(Component.empty(), true);
+            // The client answers boarding with "Press Shift to dismount" (it covers the HUD labels and is misleading:
+            // a contestant who gets off is put back). The passenger packet goes out at the end of the tick, so the empty
+            // action bar message that replaces the hint has to follow a little later.
+            ctx.schedule(3, () -> {
+                if (p.isPassenger()) {
+                    p.displayClientMessage(Component.empty(), true);
+                }
+            });
         } else if (seat != null) {
             seat.discard();
         }

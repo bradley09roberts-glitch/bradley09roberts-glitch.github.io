@@ -190,17 +190,28 @@ gauges, cracks, furrow, shards) is drawn procedurally.
 * Unit tests (`core/dalgona`, 56): shape geometry and fragility, cookie physics (speed / wobble / cutting / licks / rest / micro
   fractures, determinism), stroke validation (rate, bounds, time, speed, teleports, strikes), difficulty table and shape draw, crack
   pattern, NPC pass rates per difficulty and shape (umbrella hardest, never 0 / 100 %, faster NPCs fail more).
-* In the world: games with 16 and 128 NPCs (no exceptions, about 3 ms per tick on average with 128), and with a real client (headless,
-  software rendering) as the human: tin screen, carving a triangle, a star and the umbrella with a scripted mouse, lick, stress and
-  cracks growing, the cookie cracking, the shape coming free, the timer running out with the screen open, closing with `Esc`,
-  disconnecting mid-carve (the stand-in finished the star).
+* In the world, NPC only: games with 16, 24, 40 and 128 NPCs on the real hall in all difficulties (no exceptions, about 3 ms per tick
+  on average with 128; 128 NPCs on Normal: 83 % freed, umbrella 60 %, circle 97 %; 40 on Extreme: 45 %), a game in which everybody
+  fails (the tournament carries on with nobody left), a game that runs out of time, a server restart in the middle of a game (the
+  game is replayed from its start), several time scales (`squid debug timescale 0.05 .. 1`).
+* In the world with a real client (headless, software rendering, scripted mouse and keys) as the human: the tin screen (hover, lid,
+  automatic pick), carving a triangle, a star and the umbrella, stress and cracks growing, the lick (relief, sheen, cooldown), the
+  cookie cracking and shattering, the shape coming free, the clock running out with the screen open, `Esc` and re-opening by
+  right-clicking the desk, disconnecting mid-carve (an NPC took the seat and freed the star), the seated humans and NPCs seen from
+  the bench, from the end of a row and in third person (leaning over the desks with the needle in hand), window sizes from 960 x 540
+  to 1280 x 720 at GUI scale 3.
 
 ## Known limitations and notes
 
 * Carving needs a mouse (or any pointing device); there is no keyboard alternative.
 * The client draws the groove from the same shared polygon as the server, so both always agree; a client of a different mod
   version is not detected.
-* The seated look of a human (invisible armor stand ride) is a vanilla riding pose: knees forward, no custom pose.
+* The seated look of a human (invisible armor stand ride) is a vanilla riding pose; a contestant who gets off the seat (sneaking)
+  is put back after a few ticks.
 * NPC bodies hover on the bench with gravity off and are given gravity back when the game ends; a server crash in the middle
   of a game leaves them to the generic cleanup of the tournament.
-* Sound could not be heard in the headless test client (no audio device); volumes were set by reasoning, not by ear.
+* The real hall has 160 seats and the default contestant cap is 128; with more contestants (`maxContestants`) they share seats and
+  sit side by side on the bench.
+* Not checked: sound (the headless client has no audio device; volumes were set by reasoning, not by ear), GUI scales 2 and 4
+  on large screens, the carving feel with a physical mouse, a human returning after a disconnect (the code path reopens the screen
+  with the cookie as it is).
