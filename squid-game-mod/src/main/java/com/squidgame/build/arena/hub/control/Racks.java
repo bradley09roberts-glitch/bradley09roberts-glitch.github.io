@@ -36,7 +36,11 @@ final class Racks {
                 // LED row behind the bars
                 String led = (y % 2 == 0) ? Pal.BLACK : (((x0 / 4 + y) & 1) == 0 ? Pal.SEA : Pal.LIGHT_PINK);
                 c.set(x, y, wallZ, frame ? Pal.BLACK : led);
-                c.set(x, y, fz, frame ? Pal.PBS : "minecraft:iron_bars");
+                String front = frame ? Pal.PBS : "minecraft:iron_bars";
+                if (y == top && dx == 1) {
+                    front = Pal.LIGHT_PINK;
+                }
+                c.set(x, y, fz, front);
             }
         }
     }

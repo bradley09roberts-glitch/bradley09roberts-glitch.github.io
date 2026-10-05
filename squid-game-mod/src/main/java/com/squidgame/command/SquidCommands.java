@@ -279,27 +279,16 @@ public final class SquidCommands {
             c.getSource().sendFailure(Component.literal("Players only."));
             return 0;
         }
-        TournamentManager m = mgr(c);
-        if (m.tournament() != null) {
-            c.getSource().sendFailure(Component.literal("A tournament is running; arenas are in use."));
-            return 0;
-        }
         ArenaId id = ArenaId.byId(name);
         if (id == null) {
             c.getSource().sendFailure(Component.literal("Unknown arena."));
             return 0;
         }
-        if (!ArenaWorld.isArena(p.level())) {
-            m.enterOrBuild(p);
-        }
-        ServerLevel level = m.arenaLevel();
-        Marker spot = id == ArenaId.HUB ? m.arenaData().marker(id, "dorm.player_spawn") : m.arenaData().marker(id, "waiting.player_entry");
-        if (spot == null) {
-            c.getSource().sendFailure(Component.literal("Arena not built yet. Run /squid build."));
+        String err = mgr(c).tourArena(p, id);
+        if (err != null) {
+            c.getSource().sendFailure(Component.literal(err));
             return 0;
         }
-        p.teleportTo(level, spot.x(), spot.y(), spot.z(), spot.yaw(), 0f);
-        com.squidgame.tournament.Restrictions.noteTeleport(p);
         return 1;
     }
 }

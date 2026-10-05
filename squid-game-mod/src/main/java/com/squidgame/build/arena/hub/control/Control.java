@@ -25,6 +25,7 @@ public final class Control {
         Racks.build(c);
         Mezzanine.build(c);
         Galleries.build(c);
+        Exterior.build(c);
         Marks.build(c);
     }
 }

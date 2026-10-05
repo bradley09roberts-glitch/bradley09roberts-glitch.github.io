@@ -31,9 +31,20 @@ final class Mezzanine {
                 c.fill(x, 12, z, x, y - 1, z, Pal.PBS_BRICKS);
                 c.set(x, y, z, Pal.stairs("minecraft:polished_blackstone_brick_stairs", "west", false));
             }
-            c.set(x, y + 1, -15, "minecraft:iron_bars");
-            c.set(x, y + 0, -15, Pal.PBS);
+            if (i >= 1) {
+                c.set(x, y + 1, -15, "minecraft:iron_bars");
+                c.set(x, y + 0, -15, (i & 1) == 0 ? Pal.LIGHT_PINK : Pal.PBS);
+            }
         }
+        // glowing floor panels under the deck and on the open west end of the deck
+        for (int x : new int[]{54, 60, 66, 72}) {
+            c.set(x, 11, -15, Pal.LIGHT_PINK);
+            c.set(x, 11, -13, Pal.LIGHT_PINK);
+        }
+        c.set(83, 11, -15, Pal.LIGHT_PINK);
+        c.set(54, 19, -16, Pal.LIGHT_WARM);
+        c.set(54, 19, -13, Pal.LIGHT_WARM);
+        c.set(74, 19, -16, Pal.LIGHT_WARM);
         // landing at the top: stairs end at x=76; deck from x=75
         // balcony railing: glass panes on a low black wall with a glowing cap
         for (int x = 52; x <= 75; x++) {
