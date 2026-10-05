@@ -22,19 +22,21 @@ import org.joml.Vector3f;
 import java.util.function.Consumer;
 
 /**
- * A thrown marble (target-throw variant of the marbles game). It flies with the vanilla projectile motion (the same
- * integration {@code core/marbles/ThrowModel} uses to plan throws), ignores entities, rebounds off walls and roofs
- * and comes to rest on the first upward-facing surface it hits. The game learns about the landing through the
- * listener; scoring and results are handled there. The same code runs on the client so the marble never sinks into
- * the floor while the server's rest position is on its way.
+ * A thrown marble (target-throw variant of the marbles game). It flies with the vanilla projectile motion - the same
+ * integration {@code core/marbles/ThrowModel} uses to plan throws - and comes to rest on the first upward-facing
+ * surface at floor level that it touches. Everything else is ignored on purpose: entities, hanging laundry, wall tops,
+ * props at the side of a court. A throw is a lob across a yard full of scenery, and a stray cloth must never decide a
+ * match, so the flight is exactly the predicted arc. The game learns about the landing through the listener; scoring
+ * and results are handled there. The same code runs on the client (the floor level is synchronised) so the marble
+ * never sinks into the floor while the server's rest position is on its way.
  */
 public class MarbleProjectile extends ThrowableItemProjectile {
     private static final EntityDataAccessor<Integer> DATA_TINT =
             SynchedEntityData.defineId(MarbleProjectile.class, EntityDataSerializers.INT);
-    /** Share of the speed along a wall's normal that survives a rebound (the marble is dull on stone, not a rubber ball). */
-    private static final double WALL_RESTITUTION = 0.45;
-    private static final double WALL_FRICTION = 0.8;
-    private static final int MAX_WALL_BOUNCES = 3;
+    private static final EntityDataAccessor<Float> DATA_FLOOR =
+            SynchedEntityData.defineId(MarbleProjectile.class, EntityDataSerializers.FLOAT);
+    /** A surface within this distance of the floor level counts as the floor (a table slab, a painted line). */
+    private static final double FLOOR_TOLERANCE = 0.6;
     /** Ticks in the air after which a marble is given up as lost. */
     private static final int MAX_FLIGHT_TICKS = 240;
     /** A resting marble removes itself after this long if the game forgot it. */
@@ -44,7 +46,6 @@ public class MarbleProjectile extends ThrowableItemProjectile {
 
     private boolean landed;
     private Vec3 landing = Vec3.ZERO;
-    private int bounces;
     private int flightTicks;
     private int restTicks;
     @Nullable
@@ -72,6 +73,7 @@ public class MarbleProjectile extends ThrowableItemProjectile {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DATA_TINT, 0xFFFFFF);
+        builder.define(DATA_FLOOR, Float.NaN);
     }
 
     /** Sets the colour of the flight trail (the thrower's pad colour) as 0xRRGGBB. */
@@ -83,9 +85,13 @@ public class MarbleProjectile extends ThrowableItemProjectile {
         return this.entityData.get(DATA_TINT);
     }
 
-    /** Throws the marble: the listener runs once on the server when it comes to rest (or is given up as lost). */
-    public void launch(Vec3 velocity, Consumer<MarbleProjectile> listener) {
+    /**
+     * Throws the marble: it lands on the floor at {@code floorY}; the listener runs once on the server when it comes to
+     * rest (or is given up as lost).
+     */
+    public void launch(Vec3 velocity, double floorY, Consumer<MarbleProjectile> listener) {
         this.landListener = listener;
+        this.entityData.set(DATA_FLOOR, (float) floorY);
         setDeltaMovement(velocity);
         this.hasImpulse = true;
     }
@@ -94,7 +100,7 @@ public class MarbleProjectile extends ThrowableItemProjectile {
         return landed;
     }
 
-    /** Where the marble came to rest (the point it first touched an upward-facing surface). */
+    /** Where the marble came to rest (the point it first touched the floor). */
     public Vec3 landingPos() {
         return landing;
     }
@@ -111,22 +117,14 @@ public class MarbleProjectile extends ThrowableItemProjectile {
 
     @Override
     protected void onHitBlock(BlockHitResult hit) {
-        if (landed) {
+        if (landed || hit.getDirection() != Direction.UP) {
             return;
         }
+        float floor = this.entityData.get(DATA_FLOOR);
         Vec3 loc = hit.getLocation();
-        Direction face = hit.getDirection();
-        if (face == Direction.UP || bounces >= MAX_WALL_BOUNCES) {
+        if (Float.isNaN(floor) || Math.abs(loc.y - floor) <= FLOOR_TOLERANCE) {
             land(loc);
-            return;
         }
-        bounces++;
-        Vec3 v = getDeltaMovement();
-        Vec3 n = new Vec3(face.getStepX(), face.getStepY(), face.getStepZ());
-        double vn = v.dot(n);
-        Vec3 along = v.subtract(n.scale(vn));
-        setPos(loc.add(n.scale(0.06)));
-        setDeltaMovement(along.scale(WALL_FRICTION).add(n.scale(-vn * WALL_RESTITUTION)));
     }
 
     private void land(Vec3 at) {

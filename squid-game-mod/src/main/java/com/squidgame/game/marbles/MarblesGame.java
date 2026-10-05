@@ -374,6 +374,7 @@ public final class MarblesGame implements MiniGame {
             // everybody found a partner: no reason to wait for the clock
             pairingSped = true;
             pairingEnd = Math.min(pairingEnd, clock + ticks(3));
+            SquidGameMod.LOGGER.info("Marbles: everybody has a partner after {} ticks", clock);
         }
         if (clock >= pairingEnd) {
             startMatches(false);
@@ -494,6 +495,11 @@ public final class MarblesGame implements MiniGame {
         }
         if (byeNumber >= 0) {
             safe.add(byeNumber);
+            Contestant bye = ctx.byNumber(byeNumber);
+            ContestantEntity body = bye == null ? null : ctx.npc(bye);
+            if (body != null && bye.isAiControlled()) {
+                body.setBehavior(new WaitingBehavior());
+            }
         }
         SquidGameMod.LOGGER.info("Marbles: pairing closed: {} agreed pair(s), {} match(es) ({} odd-even, {} throw), bye {}", agreed,
                 matches.size(), oddEven, throwing, byeNumber >= 0 ? "No. " + String.format("%03d", byeNumber) : "none");
@@ -587,6 +593,12 @@ public final class MarblesGame implements MiniGame {
             ContestantEntity e = ctx.npc(w);
             if (e != null && w.isAiControlled()) {
                 e.setBehavior(new WaitingBehavior());
+                // the cheering stops after a few seconds
+                ctx.schedule(ticks(5), () -> {
+                    if (e.isAlive() && e.getActivity() == Activity.CELEBRATE_FIST) {
+                        e.setActivity(Activity.NONE);
+                    }
+                });
             }
         }
         if (l.isAlive() && losers.add(l.number)) {

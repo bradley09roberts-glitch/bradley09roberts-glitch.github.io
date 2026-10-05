@@ -389,30 +389,48 @@ class ThrowTest {
         }
     }
 
+    /** Plays one throw match between two NPC personalities (A starts on the left pad) and returns the winner. */
+    private static Side playNpcMatch(Personality a, Personality b, Difficulty diff, long seed) {
+        MarblesRules.Params mp = MarblesRules.params(diff);
+        Rng rng = new Rng(seed);
+        ThrowDuel d = new ThrowDuel(mp.startMarbles(), rng.nextBoolean() ? Side.A : Side.B, mp.throwRounds(), mp.stakeCap());
+        int guard = 0;
+        while (!d.over()) {
+            assertTrue(++guard < 40, "duel must end");
+            while (d.turn() != null) {
+                Side s = d.turn();
+                Vec pad = s == Side.A ? PAD_A : PAD_B;
+                ThrowStrategy.Plan plan = ThrowStrategy.plan(s == Side.A ? a : b, diff, mp.throwModel(), pad, BULLSEYE, 0.3, rng);
+                Landing l = ThrowModel.landing(pad, ThrowModel.launch(mp.throwModel(), pad, plan.aim(), plan.chargeTicks(), rng), 1.0);
+                d.recordThrow(s, ThrowScoring.score(l.x() - BULLSEYE.x(), l.z() - BULLSEYE.z()));
+            }
+            d.resolveRound();
+            d.advance(false);
+        }
+        return d.outcome().winner();
+    }
+
     @Test
     void theBetterThrowerWinsMostMatches() {
-        MarblesRules.Params mp = MarblesRules.params(Difficulty.NORMAL);
         Personality strong = skilled(0.9f), weak = skilled(0.1f);
         int strongWins = 0, n = 300;
         for (int seed = 0; seed < n; seed++) {
-            Rng rng = new Rng(seed);
-            ThrowDuel d = new ThrowDuel(mp.startMarbles(), Side.A, mp.throwRounds(), mp.stakeCap());
-            while (!d.over()) {
-                while (d.turn() != null) {
-                    Side s = d.turn();
-                    Vec pad = s == Side.A ? PAD_A : PAD_B;
-                    ThrowStrategy.Plan plan = ThrowStrategy.plan(s == Side.A ? strong : weak, Difficulty.NORMAL, mp.throwModel(), pad, BULLSEYE, 0.3, rng);
-                    Landing l = ThrowModel.landing(pad, ThrowModel.launch(mp.throwModel(), pad, plan.aim(), plan.chargeTicks(), rng), 1.0);
-                    d.recordThrow(s, ThrowScoring.score(l.x() - BULLSEYE.x(), l.z() - BULLSEYE.z()));
-                }
-                d.resolveRound();
-                d.advance(false);
-            }
-            if (d.outcome().winner() == Side.A) {
+            if (playNpcMatch(strong, weak, Difficulty.NORMAL, seed) == Side.A) {
                 strongWins++;
             }
         }
         assertTrue(strongWins > 0.75 * n, "skill must matter: " + strongWins + "/" + n);
-        assertTrue(strongWins < n, "but luck still plays a part");
+    }
+
+    @Test
+    void equallySkilledThrowersAreDecidedByLuck() {
+        Personality p = skilled(0.5f);
+        int aWins = 0, n = 400;
+        for (int seed = 0; seed < n; seed++) {
+            if (playNpcMatch(p, p, Difficulty.NORMAL, 1000 + seed) == Side.A) {
+                aWins++;
+            }
+        }
+        assertTrue(aWins > 0.35 * n && aWins < 0.65 * n, "equal throwers split the matches: " + aWins + "/" + n);
     }
 }

@@ -1,5 +1,6 @@
 package com.squidgame.game.marbles;
 
+import com.squidgame.SquidGameMod;
 import com.squidgame.core.marbles.MarbleLedger;
 import com.squidgame.core.marbles.MarblesRules;
 import com.squidgame.core.marbles.MatchOutcome;
@@ -60,6 +61,11 @@ final class ThrowMatch extends Match {
     private boolean suddenDeathAnnounced;
     private final List<MarbleProjectile> onFloor = new ArrayList<>();
     private ThrowDuel.RoundResult lastRound;
+    private Vec3 predictedLanding;
+
+    private static String f(double v) {
+        return String.format(Locale.ROOT, "%.2f", v);
+    }
 
     ThrowMatch(MarblesGame game, Plot plot, Contestant a, Contestant b, Rng rng) {
         super(game, plot, a, b, MarblesRules.Variant.THROW, rng);
@@ -198,7 +204,9 @@ final class ThrowMatch extends Match {
         }
         state = State.TURN;
         turnStart = now;
-        turnTotal = ticks(duel.isSuddenDeath() ? params.overtimeThrowSeconds() : params.throwSeconds());
+        // the charge is physical time (the use key has to be held), so even a fast game gives every throw enough of it
+        turnTotal = Math.max(ticks(duel.isSuddenDeath() ? params.overtimeThrowSeconds() : params.throwSeconds()),
+                tm.maxChargeTicks() + 40);
         turnEnds = now + turnTotal;
         Contestant thrower = of(turnSide);
         Contestant waiting = of(turnSide.other());
@@ -324,10 +332,17 @@ final class ThrowMatch extends Match {
 
     private void launch(Side side, Vec3 origin, Vec3 aim, int charge) {
         ThrowModel.Vec v = ThrowModel.launch(tm, vec(origin), vec(aim), charge, rng);
+        if (ctx.config().debug) {
+            ThrowModel.Landing predicted = ThrowModel.landing(vec(origin), v, plot.floorY());
+            predictedLanding = new Vec3(predicted.x(), predicted.y(), predicted.z());
+            SquidGameMod.LOGGER.info("Marbles throw k={} No.{} charge={} aim=({}, {}) predicted=({}, {}) speed={}", plot.k(),
+                    of(side).displayNumber(), charge, f(aim.x), f(aim.z), f(predicted.x()), f(predicted.z()),
+                    f(Math.sqrt(v.x() * v.x() + v.y() * v.y() + v.z() * v.z())));
+        }
         MarbleProjectile m = new MarbleProjectile(ctx.level, origin.x, origin.y, origin.z);
         m.addTag("squidgame_temp");
         m.setTint(side == Side.A ? TINT_A : TINT_B);
-        m.launch(new Vec3(v.x(), v.y(), v.z()), landed -> pendingLanding = landed.landingPos());
+        m.launch(new Vec3(v.x(), v.y(), v.z()), plot.floorY(), landed -> pendingLanding = landed.landingPos());
         ctx.level.addFreshEntity(m);
         onFloor.add(m);
         pendingLanding = null;
@@ -345,6 +360,11 @@ final class ThrowMatch extends Match {
         pendingLanding = null;
         Vec3 b = plot.bullseye();
         ThrowScoring.Result r = ThrowScoring.score(at.x - b.x, at.z - b.z);
+        if (ctx.config().debug && predictedLanding != null) {
+            SquidGameMod.LOGGER.info("Marbles landing k={} No.{} landed=({}, {}) off-prediction={} ring={} distance={}", plot.k(),
+                    of(turnSide).displayNumber(), f(at.x), f(at.z), f(Math.hypot(at.x - predictedLanding.x, at.z - predictedLanding.z)),
+                    r.ring(), f(r.distance()));
+        }
         duel.recordThrow(turnSide, r);
         state = State.LANDED;
         stateEnd = now + ticks(params.landingHoldSeconds());

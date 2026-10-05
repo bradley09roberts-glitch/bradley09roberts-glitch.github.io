@@ -47,11 +47,11 @@ public final class MarblesRules {
     public static Params params(Difficulty d) {
         int marbles = Math.max(3, (int) Math.round(10 * d.resourceScale));
         return switch (d) {
-            case NORMAL -> new Params(marbles, 12, 8, 4, 210, 45, 4, 25, 12, 20, 10, 3.5, 2.5, 4, 1.5, 40,
+            case NORMAL -> new Params(marbles, 12, 8, 4, 210, 45, 4, 25, 12, 20, 10, 3.0, 2.0, 4, 1.5, 40,
                     new ThrowModel.Params(36, 4, 0.25, 0.62, 40, 1.0, 0.020));
-            case HARD -> new Params(marbles, 10, 7, 3, 180, 40, 4, 20, 10, 16, 8, 3.5, 2.5, 4, 1.5, 34,
+            case HARD -> new Params(marbles, 10, 7, 3, 180, 40, 4, 20, 10, 16, 8, 3.0, 2.0, 4, 1.5, 34,
                     new ThrowModel.Params(30, 4, 0.25, 0.62, 40, 1.6, 0.032));
-            case EXTREME -> new Params(marbles, 8, 6, 2, 150, 35, 4, 15, 8, 12, 6, 3.5, 2.5, 4, 1.5, 28,
+            case EXTREME -> new Params(marbles, 8, 6, 2, 150, 35, 4, 15, 8, 12, 6, 3.0, 2.0, 4, 1.5, 28,
                     new ThrowModel.Params(24, 4, 0.25, 0.62, 40, 2.4, 0.045));
         };
     }
