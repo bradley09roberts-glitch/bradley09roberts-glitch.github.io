@@ -1,5 +1,6 @@
 package com.squidgame.game.marbles;
 
+import com.squidgame.SquidGameMod;
 import com.squidgame.core.marbles.MarbleLedger;
 import com.squidgame.core.marbles.MarblesRules;
 import com.squidgame.core.marbles.MatchOutcome;
@@ -210,6 +211,11 @@ final class OddEvenMatch extends Match {
 
     private void enterReveal(long now) {
         reveal = duel.resolveRound();
+        if (ctx.config().debug) {
+            SquidGameMod.LOGGER.info("Marbles reveal k={} round {}: holder No.{} hid {}, guesser No.{} called {} x{} -> {} ({} moved), marbles {}",
+                    plot.k(), reveal.round(), of(reveal.holder()).displayNumber(), reveal.hidden(), of(reveal.guesser()).displayNumber(),
+                    reveal.guess(), reveal.wager(), reveal.correct() ? "right" : "wrong", reveal.moved(), duel.ledger());
+        }
         state = State.REVEAL;
         verdictShown = false;
         verdictAt = now + ticks(params.revealSeconds() * 0.62);
@@ -423,8 +429,15 @@ final class OddEvenMatch extends Match {
         t.putInt("me", viewer.number);
         t.putInt("opp", opp.number);
         t.putString("oppName", opp.name);
-        t.putInt("myMarbles", shown(me));
-        t.putInt("oppMarbles", shown(me.other()));
+        int mine = shown(me), theirs = shown(me.other());
+        if (state == State.REVEAL && verdictShown && reveal != null) {
+            // the screen applies the verdict itself when its timeline reaches it: send the stacks as they were before it
+            int moved = reveal.winner() == me ? reveal.moved() : -reveal.moved();
+            mine -= moved;
+            theirs += moved;
+        }
+        t.putInt("myMarbles", mine);
+        t.putInt("oppMarbles", theirs);
         boolean holder = r.holder() == me;
         t.putString("role", holder ? "hold" : "guess");
         t.putInt("maxHold", r.maxHold());

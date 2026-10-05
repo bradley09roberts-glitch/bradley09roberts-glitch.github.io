@@ -160,6 +160,9 @@ final class PairingManager {
             game.tell(from, Component.translatable("squidgame.game.marbles.pair.asked", to.displayNumber()));
         }
         ServerPlayer human = to.isHumanControlled() ? to.player(ctx.server()) : null;
+        if (ctx.config().debug) {
+            SquidGameMod.LOGGER.info("Marbles: No. {} asks No. {}{}", from.displayNumber(), to.displayNumber(), human != null ? " (human, modal)" : "");
+        }
         if (human != null) {
             CompoundTag n = new CompoundTag();
             n.putInt("from", from.number);
@@ -219,7 +222,8 @@ final class PairingManager {
 
     private void decline(Proposal p, Contestant from, Contestant to) {
         cancel(p);
-        blockedUntil.put(key(p.from, p.to), game.clock() + game.ticks(12));
+        // a refusal is respected for a while (longer by a human: nobody should be badgered with the same offer)
+        blockedUntil.put(key(p.from, p.to), game.clock() + game.ticks(to.isHumanControlled() ? 25 : 12));
         ContestantEntity body = ctx.npc(to);
         if (body != null && to.isAiControlled()) {
             body.setActivity(Activity.NONE);
@@ -288,7 +292,6 @@ final class PairingManager {
             }
             if (c.isHumanControlled()) {
                 ServerPlayer p = c.player(ctx.server());
-                game.tell(c, Component.translatable("squidgame.game.marbles.pair.locked", other.displayNumber(), other.name));
                 if (p != null) {
                     p.playNotifySound(ModSounds.UI_CONFIRM, SoundSource.MASTER, 1.0f, 1.0f);
                     p.sendSystemMessage(Component.translatable("squidgame.game.marbles.pair.locked", other.displayNumber(), other.name));

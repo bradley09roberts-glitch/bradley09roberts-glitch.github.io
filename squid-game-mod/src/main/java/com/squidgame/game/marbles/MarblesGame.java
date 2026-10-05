@@ -487,6 +487,9 @@ public final class MarblesGame implements MiniGame {
             matches.add(m);
             matchByNumber.put(x.number, m);
             matchByNumber.put(y.number, m);
+            if (ctx.config().debug) {
+                SquidGameMod.LOGGER.info("Marbles: pair k={} {} No.{} vs No.{}", plot.k(), v.id(), x.displayNumber(), y.displayNumber());
+            }
             if (v == Variant.ODD_EVEN) {
                 oddEven++;
             } else {
@@ -586,6 +589,7 @@ public final class MarblesGame implements MiniGame {
         concludeMatch(m, ticks(1.2) + rng.nextInt(12));
     }
 
+    /** {@code aimTicks} &lt; 0 eliminates at once (no guard): the game is being concluded and the tournament counts the result now. */
     void concludeMatch(Match m, int aimTicks) {
         Contestant w = m.winner(), l = m.loser();
         safe.add(w.number);
@@ -603,7 +607,7 @@ public final class MarblesGame implements MiniGame {
         }
         if (l.isAlive() && losers.add(l.number)) {
             LivingEntity body = l.body(ctx.level);
-            if (body == null || ctx.guards().list().isEmpty()) {
+            if (aimTicks < 0 || body == null || ctx.guards().list().isEmpty()) {
                 ctx.eliminate(l, EliminationCause.LOST_MATCH);
             } else {
                 ctx.guards().fireAt(body, aimTicks, () -> ctx.eliminate(l, EliminationCause.LOST_MATCH));
@@ -744,13 +748,19 @@ public final class MarblesGame implements MiniGame {
             }
             startMatches(true);
         }
-        int i = 0;
         for (Match m : matches) {
             if (!m.decided()) {
                 m.forceResolve(clock);
             }
             if (!m.closed()) {
-                m.closeNow(2 + 2 * i++);
+                m.closeNow(-1);
+            }
+        }
+        // a guard that is still taking aim must not leave the tournament's result one elimination short
+        for (int n : losers) {
+            Contestant c = ctx.byNumber(n);
+            if (c != null && c.isAlive()) {
+                ctx.eliminate(c, EliminationCause.LOST_MATCH);
             }
         }
         List<Contestant> survivors = new ArrayList<>();
