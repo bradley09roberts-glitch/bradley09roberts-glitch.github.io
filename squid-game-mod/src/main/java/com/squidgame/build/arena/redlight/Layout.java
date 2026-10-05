@@ -63,7 +63,7 @@ public final class Layout {
         return -x;
     }
 
-    /** Continuous mirror: the centre of block x is x + 0.5, mirrored it is 0.5 - x - 0.5 + ... = 1 - (x + 0.5). */
+    /** Continuous mirror about the centre column: a position x (block centre = block + 0.5) maps to 1 - x. */
     public static double mxd(double x) {
         return 1.0 - x;
     }

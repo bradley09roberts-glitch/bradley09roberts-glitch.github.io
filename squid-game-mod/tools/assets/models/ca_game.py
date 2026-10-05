@@ -136,7 +136,7 @@ def build(ctx: Ctx) -> None:
     a.key(0.55, dal_pose(lean=8, nod=10, tin=(1.6, 16.5, -7.0), needle=(NEEDLE[0], NEEDLE[1] + 0.8, NEEDLE[2] + 0.8)), "easeInOutSine")  # lifts the cookie
     a.key(1.1, dal_pose(lean=-2, nod=-6, tin=(1.8, 15.0, -6.0), needle=(NEEDLE[0] - 0.3, NEEDLE[1] - 0.6, NEEDLE[2] + 1.8)), "easeInOutSine")  # sigh
     a.key(1.55, dal_pose(lean=6, nod=6, tin=(1.9, 13.6, -7.0), needle=(NEEDLE[0] - 0.2, NEEDLE[1] - 0.8, NEEDLE[2] + 1.0)), "easeInOutSine")
-    a.key(2.0, dal_pose(lean=8, nod=8, tin=(2.0, 12.6, -7.4), needle=(NEEDLE[0], NEEDLE[1] - 1.0, NEEDLE[2] + 0.2)), "easeOutSine")
+    a.key(2.0, dal_pose(), "easeInOutSine")                                                                   # settles back into the sit
 
     # fail: slump
     a = ctx.new("dalgona_fail", 2.0, HOLD)

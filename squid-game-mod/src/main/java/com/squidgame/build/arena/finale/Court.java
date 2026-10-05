@@ -29,6 +29,24 @@ final class Court {
             }
         }
         c.fill(-1, 0, ZC - 1, 1, 0, ZC + 1, GOLD_PAD);
+        floodlightGrid(c);
+    }
+
+    /**
+     * Invisible safety lighting: level-15 light blocks (no collision, like the waiting room prefab uses) on the
+     * lattice (3,4) / (-4,3) shifted to z+12, which puts every cell of the court's bounding box within taxicab
+     * distance 3 of a source, i.e. block light >= 12 on the whole court even where the sky light would be missing.
+     * The open sky already gives 15 under the dimension's noon sun; the towers and lamps add the visible fixtures.
+     */
+    static void floodlightGrid(BuildContext c) {
+        for (int i = -20; i <= 20; i++) {
+            for (int j = -20; j <= 20; j++) {
+                int x = 3 * i - 4 * j, z = 4 * i + 3 * j + 12;
+                if (x >= -HW - 4 && x <= HW + 4 && z >= COURT_TOP - 4 && z <= ZQ + 4) {
+                    c.set(x, 1, z, "minecraft:light[level=15]");
+                }
+            }
+        }
     }
 
     static void markers(BuildContext c) {

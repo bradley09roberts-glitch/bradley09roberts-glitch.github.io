@@ -157,14 +157,14 @@ final class Props {
         for (int x = 2; x <= len - 2; x += 2) {
             c.set(x, 5, 0, "minecraft:chain[axis=z]");
         }
-        // entry platform and ladder at the start
+        // entry deck (stand 4.0) and a ladder on its west face; the ladder is carried by a solid column
         c.fill(-2, 3, -1, -1, 3, 1, WOOD);
-        c.set(-3, 1, 0, "minecraft:ladder[facing=west]");
-        c.set(-3, 2, 0, "minecraft:ladder[facing=west]");
-        c.set(-3, 3, 0, "minecraft:ladder[facing=west]");
+        c.fill(-2, 1, 0, -2, 2, 0, colour);
         c.fill(-2, 1, -1, -2, 2, -1, colour);
         c.fill(-2, 1, 1, -2, 2, 1, colour);
-        c.fill(-3, 1, -1, -3, 2, -1, colour);
+        for (int y = 1; y <= 3; y++) {
+            c.set(-3, y, 0, "minecraft:ladder[facing=west]");
+        }
     }
 
     /** Cubic jungle gym: 5x5x5, lattice of chain rods on steel nodes, a roof platform. */
@@ -331,5 +331,29 @@ final class Props {
         c.fill(0, 3, 0, 6, 3, 0, "minecraft:white_concrete");
         c.fill(1, 1, 1, 5, 2, 1, "minecraft:white_stained_glass_pane");
         c.fill(1, 2, 0, 5, 2, 0, "minecraft:air");
+    }
+
+    /** Merry-go-round: a round plank deck (red / timber wedges) with a centre pole, spokes and hand rails; radius 3. */
+    static void merryGoRound(BuildContext c) {
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                double d = Math.sqrt(dx * dx + dz * dz);
+                if (d <= 3.4) {
+                    boolean red = (dx >= 0) == (dz >= 0);
+                    c.set(dx, 1, dz, red ? "minecraft:red_terracotta" : WOOD);
+                }
+            }
+        }
+        c.fill(0, 2, 0, 0, 4, 0, "minecraft:iron_bars");
+        c.set(0, 5, 0, "minecraft:gold_block");
+        for (int i = 1; i <= 2; i++) {
+            c.set(i, 3, 0, "minecraft:iron_bars");
+            c.set(-i, 3, 0, "minecraft:iron_bars");
+            c.set(0, 3, i, "minecraft:iron_bars");
+            c.set(0, 3, -i, "minecraft:iron_bars");
+        }
+        for (int[] p : new int[][]{{3, 0}, {-3, 0}, {0, 3}, {0, -3}, {2, 2}, {-2, 2}, {2, -2}, {-2, -2}}) {
+            c.set(p[0], 2, p[1], "minecraft:iron_bars");
+        }
     }
 }

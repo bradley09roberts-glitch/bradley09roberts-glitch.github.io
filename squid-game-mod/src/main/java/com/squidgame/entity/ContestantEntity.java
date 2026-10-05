@@ -63,8 +63,9 @@ public class ContestantEntity extends PathfinderMob implements GeoEntity {
     private static final EntityDataAccessor<Float> DATA_ANIM_SPEED =
             SynchedEntityData.defineId(ContestantEntity.class, EntityDataSerializers.FLOAT);
 
-    public static final double WALK_REF_SPEED = 0.12;   // blocks/tick the walk animation is authored for
-    public static final double RUN_REF_SPEED = 0.30;
+    // blocks/tick at which the authored walk / run loops plant their feet exactly (2.46 and 5.8 blocks/s, tools/assets/models/gait_info.json)
+    public static final double WALK_REF_SPEED = 0.123;
+    public static final double RUN_REF_SPEED = 0.29;
     private static final double RUN_THRESHOLD = 0.19;
     private static final double MOVE_THRESHOLD = 0.02;
 
@@ -132,6 +133,18 @@ public class ContestantEntity extends PathfinderMob implements GeoEntity {
         nav.setCanOpenDoors(false);
         nav.setCanPassDoors(false);
         return nav;
+    }
+
+    /**
+     * Vanilla {@code Mob.setSpeed} also feeds the speed into the forward input (zza = speed), so a mob's ground speed grows with
+     * the square of its movement attribute (attribute 0.1 would crawl at 0.4 blocks/s). Contestants and guards use the player
+     * convention instead: full forward input, so blocks/s = 43 x attribute x speed modifier (0.1 x 1.0 = 4.3 blocks/s, the
+     * walking pace of a player) and modifiers scale the pace linearly.
+     */
+    @Override
+    public void setSpeed(float speed) {
+        super.setSpeed(speed);
+        setZza(speed > 0.0f ? 1.0f : 0.0f);
     }
 
     @Override
@@ -341,10 +354,12 @@ public class ContestantEntity extends PathfinderMob implements GeoEntity {
 
     @Override
     public void tick() {
+        long profStart = com.squidgame.tournament.Profiler.start();
         super.tick();
         if (level().isClientSide) {
             return;
         }
+        com.squidgame.tournament.Profiler.end(com.squidgame.tournament.Profiler.Section.NPC_ENTITY, profStart);
         // orphan cleanup: an NPC that the tournament does not know about must not linger (e.g. after a crash)
         if (++orphanTicks == 60 || (orphanTicks > 60 && orphanTicks % 400 == 0)) {
             if (!TournamentManager.isManaged(this)) {
@@ -366,7 +381,9 @@ public class ContestantEntity extends PathfinderMob implements GeoEntity {
         }
         boolean decide = nearHuman || (tickCount + getId()) % SquidConfig.get().npcFarTickInterval == 0;
         if (behavior != null && decide) {
+            long profStart = com.squidgame.tournament.Profiler.start();
             behavior.tick(this);
+            com.squidgame.tournament.Profiler.end(com.squidgame.tournament.Profiler.Section.NPC_BEHAVIOR, profStart);
         }
         trackBreadcrumbs();
         detectStuck();

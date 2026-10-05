@@ -182,15 +182,15 @@ that animates when the head turns). `eyes_on` = glowing red/orange eye cubes (us
 `_glowmask` texture so they glow in the dark); `eyes_off` = dark dull eyes. Java toggles
 `eyes_on` / `eyes_off` visibility.
 
-Animations `animation.doll.<name>`: `dormant` [loop: still, eyes off, tiny sway],
-`wake` [once 2.0s: small shudder, head lifts, arms settle], `idle_tree` [loop 4s: **faces
-the tree - head rotated 180 deg (back of the head toward the field)**, gentle bobbing as
-she "sings"], `turn_to_players` [once 1.0s: head rotates 180 deg around Y with 3-4
-ratchet-like pauses and a slight overshoot, finishing facing the field - Java stretches
-the playback to match the difficulty's turn time], `idle_players` [loop 3s: facing the
-field, rigid, tiny micro-movements], `scan_players` [loop 2s: slow sweeps left-right of
-the head, +-25 deg, jittery servo steps], `lock_on` [once 0.4s: sharp snap of the head toward a
-point, quick], `turn_to_tree` [once 1.0s: reverse of turn_to_players].
+Animations `animation.doll.<name>` (orientation convention, verified in-game: at entity yaw 0 GeckoLib's renderer maps the
+model's north/-Z face to world +Z, so the **rest pose faces the tree** and shows her back to the players; only the head,
+`neck_joint` and `neck_ring` ever yaw): `dormant` [loop: still, eyes off, tiny sway, head yaw 0], `wake` [once 2.0s: small
+shudder, head lifts, arms settle, no turn], `idle_tree` [loop 4s: **faces the tree - head yaw 0 relative to the body, back of
+the head toward the field**, gentle bobbing as she "sings"], `turn_to_players` [once 1.0s: head yaw 0 -> 180 with 3-4
+ratchet-like pauses and a slight overshoot, finishing facing the field; the neck joint turns at half the angle; Java stretches
+the playback to match the difficulty's turn time], `idle_players` [loop 3s: head yaw about 180, rigid, tiny micro-movements],
+`scan_players` [loop 2s: slow sweeps left-right of the head, 180 +-25 deg, jittery servo steps], `lock_on` [once 0.4s: sharp
+snap of the head toward a point, quick], `turn_to_tree` [once 1.0s: reverse of turn_to_players, yaw 180 -> 0].
 
 ---------------------------------------------------------------------------
 ## 2. Block / item / GUI textures and block models

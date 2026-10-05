@@ -7,8 +7,14 @@ import static com.squidgame.build.arena.redlight.Layout.*;
 
 /**
  * The masked guards' formation: armed triangles in two long rows along both side walls (just outside the painted
- * boundary lines) and in a line behind the start, square-masked managers on small raised podiums beside the field,
- * circle workers near the start line and the safe zone. 24 posts here (+5 from the waiting room prefab).
+ * boundary lines) and in a line behind the start, square-masked managers on small raised podiums (3x3, 3 high) at
+ * x = +-30, z = 100, circle workers near the start line and the safe zone. 24 posts here (+5 from the waiting room
+ * prefab).
+ *
+ * <p>The podiums are the only solid things inside the field. NPC lanes start at the spawn slot's x (plus a small
+ * random offset) and the slots are numbered centre-out, so with the default roster (128) every lane stays within
+ * |x| &lt;= 26 and never meets them; with very large rosters an NPC may sidestep around one (the NPC "stuck" logic
+ * handles that).
  */
 public final class Guards {
     private Guards() {
@@ -17,14 +23,15 @@ public final class Guards {
     private static final String BLOCK = "minecraft:polished_blackstone_bricks";
     private static final String TRIM = "minecraft:orange_concrete";
 
-    /** Z of the podium centres. */
+    /** Z and |x| of the podium centres. */
     private static final int PODIUM_Z = 100;
+    private static final int PODIUM_X = 30;
 
     // ------------------------------------------------------------------ podiums (blocks)
 
     public static void build(BuildContext c) {
         for (int side = -1; side <= 1; side += 2) {
-            int x = side > 0 ? 55 : -55;
+            int x = side > 0 ? PODIUM_X : -PODIUM_X;
             c.at(x, 0, PODIUM_Z, 0, () -> podium(c));
         }
     }
@@ -75,8 +82,8 @@ public final class Guards {
             post(c, mxd(x), 1.0, -4.5, 0f, "triangle");
         }
         // managers on the podiums
-        post(c, 55.5, 4.0, PODIUM_Z + 0.5, 90f, "square");
-        post(c, mxd(55.5), 4.0, PODIUM_Z + 0.5, -90f, "square");
+        post(c, PODIUM_X + 0.5, 4.0, PODIUM_Z + 0.5, 90f, "square");
+        post(c, mxd(PODIUM_X + 0.5), 4.0, PODIUM_Z + 0.5, -90f, "square");
         // workers near the start line and the safe zone
         post(c, 54.5, 1.0, 17.5, 90f, "circle");
         post(c, mxd(54.5), 1.0, 17.5, -90f, "circle");

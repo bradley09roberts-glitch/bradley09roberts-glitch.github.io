@@ -32,9 +32,10 @@ import static com.squidgame.build.arena.redlight.Layout.NEAR_FACE_Z;
  * workers) plus the waiting room prefab's own markers. Regions: arena.bounds, redlight.start_zone, start_line,
  * finish_line, safe_zone and the prefab's waiting.bounds.
  *
- * <p>Geometry notes for the game code: the whole field is one flat floor at y=0 (stand height 1.0) with no obstacle
- * inside |x| &lt;= 53; NPCs run in straight lanes, so everything tall stands in the side margins (|x| &gt;= 54), behind the
- * lines, or in the safe zone. Doll clearance: 14 blocks above and 5.7 around her feet.
+ * <p>Geometry notes for the game code: the whole field is one flat floor at y=0 (stand height 1.0). NPCs run in straight
+ * lanes (see RedLightNpcBehavior), so everything tall stands in the side margins (|x| &gt;= 54), behind the lines or in
+ * the safe zone, with one exception: the two 3x3x3 manager podiums at x=+-30, z=100 (see Guards for why that is safe at
+ * the default roster). Doll clearance: 14 blocks above and 5.7 around her feet.
  */
 public final class RedLightBuilder implements ArenaBuilder {
     @Override
@@ -68,10 +69,21 @@ public final class RedLightBuilder implements ArenaBuilder {
     private static void lightWaitingRoom(BuildContext c) {
         int hw = 20;
         int z0 = NEAR_FACE_Z - 22, z1 = NEAR_FACE_Z - 1;
+        // keep the tiles out from under every marker (entities stand on plain floor, and the checker wants that too)
+        java.util.Set<Long> reserved = new java.util.HashSet<>();
+        for (java.util.List<com.squidgame.build.Marker> ms : c.buffer().markers().values()) {
+            for (com.squidgame.build.Marker m : ms) {
+                reserved.add(cell(m.bx() - c.originX(), m.bz() - c.originZ()));
+            }
+        }
         Lighting.floorGrid(c, -hw, z0, hw, z1, 3, "squidgame:panel_light_white", (x, z) -> true, (x, z) -> {
             String f = c.get(x, 0, z);
-            return f != null && f.startsWith("squidgame:tile") && !c.isSolid(x, 1, z);
+            return f != null && f.startsWith("squidgame:tile") && !c.isSolid(x, 1, z) && !reserved.contains(cell(x, z));
         }, "squidgame:panel_light_white");
+    }
+
+    private static long cell(int x, int z) {
+        return ((long) x << 32) ^ (z & 0xFFFFFFFFL);
     }
 
     @Override

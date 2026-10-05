@@ -180,18 +180,6 @@ final class CourtGeometry {
         return v;
     }
 
-    /** Even-odd point in polygon test. */
-    static boolean contains(List<double[]> poly, double x, double z) {
-        boolean in = false;
-        for (int i = 0, j = poly.size() - 1; i < poly.size(); j = i++) {
-            double xi = poly.get(i)[0], zi = poly.get(i)[1], xj = poly.get(j)[0], zj = poly.get(j)[1];
-            if ((zi > z) != (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) {
-                in = !in;
-            }
-        }
-        return in;
-    }
-
     /** Scanline polygon rasteriser: every cell whose centre lies inside the polygon. */
     static boolean[][] rasterise(List<double[]> poly, int x0, int z0, int x1, int z1) {
         boolean[][] g = new boolean[x1 - x0 + 1][z1 - z0 + 1];
@@ -217,25 +205,16 @@ final class CourtGeometry {
         return g;
     }
 
-    // ------------------------------------------------------------------ zones (by cell)
+    // ------------------------------------------------------------------ squid mask (polygon rasteriser)
 
-    static boolean inSquare(int x, int z) {
-        return x >= -HW && x <= HW && z >= ZS && z <= ZQ;
-    }
-
-    static boolean inNeck(int x, int z) {
-        return Math.abs(x) < STEM && z > ZB && z < ZS;
-    }
-
-    /** Interior of the head circle (cells with centre inside radius R). */
-    static boolean inHead(int x, int z) {
-        return Math.hypot(x, z - ZC) < R && z - ZC < STEM_ROW;
-    }
-
-    /** Whole squid including the lines. */
-    static boolean inCourt(int x, int z) {
-        return contains(OUTLINE, x + 0.5, z + 0.5);
-    }
-
+    /** The outline polygon, built once. */
     static final List<double[]> OUTLINE = outline();
+
+    private static final int MASK_X0 = -HW - 1, MASK_Z0 = COURT_TOP - 1, MASK_X1 = HW + 2, MASK_Z1 = ZQ + 2;
+    private static final boolean[][] MASK = rasterise(OUTLINE, MASK_X0, MASK_Z0, MASK_X1, MASK_Z1);
+
+    /** True for every cell whose centre lies inside the outer outline of the painted squid (lines included). */
+    static boolean insideSquid(int x, int z) {
+        return x >= MASK_X0 && x <= MASK_X1 && z >= MASK_Z0 && z <= MASK_Z1 && MASK[x - MASK_X0][z - MASK_Z0];
+    }
 }

@@ -9,7 +9,9 @@ Checks
   * every animation: valid easing names, strictly increasing key times <= animation_length, finite numbers,
     only bones that exist, no scale channel, loop type / length as in the contract
   * loop animations: first and last keyframe of every channel match
-  * one-shots (once / hold) start from the idle pose (or their documented reference animation)
+  * one-shots (once / hold) start from the idle pose (or their documented reference animation); plain "once" clips
+    also END at the idle pose (or the pose they continue into: pull_* -> pull_idle, dalgona_* -> dalgona_sit,
+    fire -> aim; marble_reveal ends on the open hand) - warning otherwise
   * overlay animations only touch their allowed bones
   * contestant_bones.json agrees with the geo and the Java-facing role lists
 
@@ -121,6 +123,14 @@ DEFAULT_REFS: Dict[str, Dict[str, str]] = {"contestant": {}, "guard": {}}
 
 ROT_TOL = 1.0      # degrees
 POS_TOL = 0.12     # pixels
+END_ROT_TOL = 2.0  # degrees: "once" clips end at the idle pose (or the pose they continue into)
+END_POS_TOL = 0.3  # pixels
+# one-shots that deliberately end somewhere else than the idle pose
+END_REFS = {"contestant": {"pull_heave": "pull_idle", "pull_slip": "pull_idle", "dalgona_lick": "dalgona_sit",
+                           "dalgona_crack": "dalgona_sit", "dalgona_success": "dalgona_sit"},
+            "guard": {"fire": "aim"}}
+END_EXCEPT = {"contestant": {"marble_reveal"},          # ends on the open hand (the point of the clip)
+              "guard": set()}
 LOOP_ROT_TOL = 0.05
 LOOP_POS_TOL = 0.01
 
@@ -416,6 +426,31 @@ def check_animations(model: str, anim_json: dict, rig: Rig, contract: Dict[str, 
                 st = pose_at(ref, ref_t, bone, "rot")
                 if st is not None and max(abs(x) for x in st) > ROT_TOL:
                     warn(f"{full}: does not touch {bone} which {ref_name} holds at {tuple(round(x,1) for x in st)}")
+    # one-shots (plain "once") end at the idle pose, or at the pose they continue into; hold clips keep their pose
+    for full, clip in lib.clips.items():
+        name = full[len(prefix):]
+        aj = anims[full]
+        if aj.get("loop") is not False or name in END_EXCEPT.get(model, ()):
+            continue
+        ref_name = END_REFS.get(model, {}).get(name, "idle")
+        ref = lib.clips.get(prefix + ref_name)
+        if ref is None:
+            err(f"{full}: end reference animation {ref_name} not found")
+            continue
+        worst = None
+        for bone, bj in aj.get("bones", {}).items():
+            for ch, key, tol in (("rotation", "rot", END_ROT_TOL), ("position", "pos", END_POS_TOL)):
+                if ch not in bj:
+                    continue
+                mine = pose_at(clip, clip.length, bone, key)
+                theirs = pose_at(ref, 0.0, bone, key) or (0.0, 0.0, 0.0)
+                if mine is None:
+                    continue
+                d = max(abs(a - b) for a, b in zip(mine, theirs))
+                if d > tol and (worst is None or d > worst[0]):
+                    worst = (d, bone, ch)
+        if worst:
+            warn(f"{full}: ends {worst[0]:.1f} off {ref_name}@0 in {worst[1]}.{worst[2]} (one-shots should end at the idle pose)")
     ok(f"{model}: {n_checked} animations checked ({len(contract)} required)")
 
 

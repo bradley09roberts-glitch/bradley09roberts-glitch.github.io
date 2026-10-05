@@ -224,7 +224,7 @@ public class GuardEntity extends PathfinderMob implements GeoEntity {
     private void tickPost() {
         Vec3 post = postPos;
         if (post.distanceToSqr(position()) > 1.5 * 1.5) {
-            getNavigation().moveTo(post.x, post.y, post.z, 1.0);
+            getNavigation().moveTo(post.x, post.y, post.z, 0.7);
             return;
         }
         getNavigation().stop();
@@ -268,8 +268,20 @@ public class GuardEntity extends PathfinderMob implements GeoEntity {
             return;
         }
         if (!getNavigation().isInProgress()) {
-            getNavigation().moveTo(target.x, target.y, target.z, 0.9);
+            getNavigation().moveTo(target.x, target.y, target.z, 0.5);
         }
+    }
+
+    /**
+     * Vanilla {@code Mob.setSpeed} also feeds the speed into the forward input (zza = speed), so a mob's ground speed grows with
+     * the square of its movement attribute (attribute 0.1 would crawl at 0.4 blocks/s). Contestants and guards use the player
+     * convention instead: full forward input, so blocks/s = 43 x attribute x speed modifier (0.1 x 1.0 = 4.3 blocks/s, the
+     * walking pace of a player) and modifiers scale the pace linearly.
+     */
+    @Override
+    public void setSpeed(float speed) {
+        super.setSpeed(speed);
+        setZza(speed > 0.0f ? 1.0f : 0.0f);
     }
 
     @Override

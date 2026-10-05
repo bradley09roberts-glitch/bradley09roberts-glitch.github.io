@@ -129,6 +129,7 @@ public final class Restrictions {
             p.teleportTo(last.x, last.y, last.z);
             p.setDeltaMovement(Vec3.ZERO);
             p.sendSystemMessage(net.minecraft.network.chat.Component.translatable("squidgame.rule.no_teleport"));
+            Announcer.sound(p, com.squidgame.registry.ModSounds.UI_DENY, 1f, 1f);
             return;
         }
         lastPos.put(id, now);

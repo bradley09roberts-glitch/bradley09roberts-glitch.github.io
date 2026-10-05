@@ -11,41 +11,54 @@
  "info": {
   "walk": {
    "cycle_s": 1.0,
-   "planted_px_s": 20.13,
-   "planted_blocks_s": 1.18
+   "gait_cycle_s": 0.5,
+   "planted_px_s": 41.98,
+   "planted_blocks_s": 2.46
   },
   "run": {
    "cycle_s": 0.6,
-   "planted_px_s": 55.16,
-   "planted_blocks_s": 3.23
+   "gait_cycle_s": 0.6,
+   "planted_px_s": 98.67,
+   "planted_blocks_s": 5.78
   },
   "sneak_walk": {
    "cycle_s": 1.2,
+   "gait_cycle_s": 1.2,
    "planted_px_s": 10.59,
    "planted_blocks_s": 0.62
   },
   "ground_lift_px": {
-   "idle_nervous": 0.54,
-   "turn_left": 0.61,
-   "turn_right": 0.61,
-   "stop_skid": 1.8,
-   "land": 0.87,
-   "stumble": 2.22,
-   "lose_balance": 1.38,
-   "shocked": 0.77,
-   "relieved": 0.48,
-   "interact": 0.91,
-   "pull_strain": 0.95,
-   "pull_slip": 1.54,
-   "marble_throw_windup": 1.32,
-   "marble_throw_release": 1.04,
-   "bridge_step": 1.47,
-   "punch_right": 1.61,
-   "punch_left": 1.61,
-   "shove": 2.26,
-   "dodge_left": 2.09,
-   "dodge_right": 2.09,
-   "knocked_back": 1.75
+   "run": 0.27,
+   "sneak_walk": 0.2,
+   "idle_nervous": 0.44,
+   "turn_left": 0.51,
+   "turn_right": 0.51,
+   "stop_skid": 1.7,
+   "jump_leap": 0.21,
+   "fall_loop": 1.73,
+   "land": 1.01,
+   "stumble": 2.12,
+   "lose_balance": 1.28,
+   "shocked": 0.67,
+   "relieved": 0.38,
+   "celebrate": 1.0,
+   "celebrate_fist": 0.34,
+   "interact": 0.81,
+   "eliminated_forward": 1.81,
+   "eliminated_backward": 1.1,
+   "knocked_down": 1.6,
+   "pull_strain": 0.85,
+   "pull_slip": 1.44,
+   "marble_throw_windup": 1.26,
+   "marble_throw_release": 0.94,
+   "bridge_step": 1.37,
+   "punch_right": 1.51,
+   "punch_left": 1.51,
+   "shove": 2.29,
+   "dodge_left": 1.99,
+   "dodge_right": 1.99,
+   "knocked_back": 1.6,
+   "sprint_attack": 0.22
   }
  }
 }

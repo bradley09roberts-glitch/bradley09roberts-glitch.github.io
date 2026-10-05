@@ -49,7 +49,12 @@ final class Yard {
         double big = Noise.fbm(x * 0.06 + 11, z * 0.06 + 7, 5, 3);
         double mid = Noise.fbm(x * 0.21, z * 0.21 + 40, 9, 2);
         double h = Noise.hash01(x, z, 3);
-        boolean nearCourt = x >= -HW - 4 && x <= HW + 4 && z >= COURT_TOP - 4 && z <= ZQ + 4;
+        if (CourtGeometry.insideSquid(x, z)) {
+            // inside the painted squid the sand is plain, so the zones and the lines read clearly
+            return big > 0.62 && mid > 0.55 && h < 0.5 ? SMOOTH : SAND;
+        }
+        int m = BELT + 2;                                   // calm sand over the court and its clear belt
+        boolean nearCourt = x >= -HW - m && x <= HW + m && z >= COURT_TOP - m && z <= ZQ + m;
         if (nearCourt) {
             // the court: calm warm sand so the white lines read clearly; hardpan patches kept subtle
             if (big > 0.58 && mid > 0.5 && h < 0.8) {
@@ -116,13 +121,21 @@ final class Yard {
         wallBox(c, WX0, WZ1 - 1, WX1, WZ1);           // south
         wallBox(c, WX0, WZ0, WX0 + 1, WZ1);           // west
         wallBox(c, WX1 - 1, WZ0, WX1, WZ1);           // east
-        // corner piers, a little taller, with a lantern each
+        // corner bastions: 3x3 piers with a guard platform (stand 5.0), a low wall around it and two lanterns
         int[][] corners = {{WX0, WZ0}, {WX1 - 2, WZ0}, {WX0, WZ1 - 2}, {WX1 - 2, WZ1 - 2}};
         for (int[] k : corners) {
             c.fill(k[0], 1, k[1], k[0] + 2, 4, k[1] + 2, "minecraft:stone_bricks");
-            c.fill(k[0], 5, k[1], k[0] + 2, 5, k[1] + 2, "minecraft:deepslate_tile_slab[type=bottom]");
-            c.set(k[0] + 1, 5, k[1] + 1, "minecraft:deepslate_tiles");
-            c.set(k[0] + 1, 6, k[1] + 1, "minecraft:lantern[hanging=false]");
+            c.fill(k[0], 4, k[1], k[0] + 2, 4, k[1] + 2, "minecraft:polished_blackstone");
+            for (int i = 0; i <= 2; i++) {
+                c.set(k[0] + i, 5, k[1], "minecraft:stone_brick_wall");
+                c.set(k[0] + i, 5, k[1] + 2, "minecraft:stone_brick_wall");
+                c.set(k[0], 5, k[1] + i, "minecraft:stone_brick_wall");
+                c.set(k[0] + 2, 5, k[1] + i, "minecraft:stone_brick_wall");
+            }
+            boolean west = k[0] < 0, north = k[1] < 0;
+            c.set(west ? k[0] : k[0] + 2, 6, north ? k[1] : k[1] + 2, "minecraft:lantern[hanging=false]");
+            c.set(west ? k[0] + 2 : k[0], 6, north ? k[1] + 2 : k[1], "minecraft:lantern[hanging=false]");
+            c.marker("guard.post", k[0] + 1.5, 5.0, k[1] + 1.5, north ? 0f : 180f, "rank=triangle");
         }
         // lanterns on the wall cap every 8 blocks (inner face side)
         for (int x = -48; x <= 48; x += 8) {

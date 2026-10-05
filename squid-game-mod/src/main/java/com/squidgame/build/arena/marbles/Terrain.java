@@ -46,7 +46,10 @@ final class Terrain {
             return Mat.SB;
         }
         String[] pal = {Mat.COBBLE, Mat.GRAVEL, Mat.MOSSY_COBBLE, Mat.ANDESITE, Mat.PATH, Mat.COARSE, Mat.STONE, Mat.TUFF};
-        double[] w = {46, 16, 10, 8, 8, 5, 4, 3};
+        // districts: west damp and mossy, east dry and gravelly, centre mixed earth
+        double[] w = x < -22 ? new double[]{54, 8, 14, 6, 5, 4, 5, 4}
+                : x > 22 ? new double[]{36, 26, 3, 12, 9, 7, 5, 2}
+                : new double[]{44, 14, 8, 8, 12, 8, 3, 3};
         return U.pick(r, pal, w);
     }
 }

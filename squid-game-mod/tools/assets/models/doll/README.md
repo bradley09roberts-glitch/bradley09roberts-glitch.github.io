@@ -8,7 +8,7 @@ python3 tools/assets/models/doll/gen_doll.py --preview   # ... and regenerate pr
 python3 tools/assets/models/doll/gen_doll.py --check     # ... and run validate_doll.py + verify_geckolib.py
 python3 tools/assets/models/doll/validate_doll.py        # contract + loader rules (exit 0 = pass)
 python3 tools/assets/models/doll/verify_geckolib.py      # optional: compare with the REAL GeckoLib classes (needs a JDK)
-python3 tools/assets/models/doll/preview.py pose --anim idle_tree --t 1.3 --view 3/4 --out /tmp/x.png
+python3 tools/assets/models/doll/preview.py pose --anim idle_tree --t 1.3 --view "field 3/4" --out /tmp/x.png
 ```
 
 Outputs (`src/main/resources/assets/squidgame/`): `geo/entity/doll.geo.json`, `animations/entity/doll.animation.json`,
@@ -25,6 +25,26 @@ Outputs (`src/main/resources/assets/squidgame/`): `geo/entity/doll.geo.json`, `a
 | `render.py`, `preview.py` | software rasteriser + contact sheets (`preview/*.png`) |
 | `validate_doll.py` | validator |
 | `verify_geckolib.py`, `verify_geckolib/GeckoCheck.java` | runs the real GeckoLib loader / RenderUtil on the output and diffs it against `gl_model.py` |
+
+## ORIENTATION (verified in game) - read this first
+
+At entity yaw 0 GeckoLib's renderer maps the model's front (-Z, the face side) to **world +Z = the TREE**; the players /
+field are at world -Z. So **in the rest pose (all bone rotations 0) the whole doll - body, dress, face - looks at the
+tree and shows her BACK to the players**, like in the show. Only the **head** ever swivels:
+
+| pose | head yaw | cog ring (`neck_joint`) | animations |
+|------|----------|-------------------------|------------|
+| TREE (face to the tree, back of the head to the field) | **0** | 0 | `dormant`, `wake`, `idle_tree`, end of `turn_to_tree` |
+| PLAYERS (face to the field) | **180** | ~90 | `idle_players`, `scan_players` (180 +- 25), `lock_on` (180 +15.5 -> +11), end of `turn_to_players` |
+
+`turn_to_players` = head yaw 0 -> 180, `turn_to_tree` = 180 -> 0; `neck_joint`/`neck_ring` move at half the head angle (0 <-> 90).
+`body`, `dress`, arms, `ribbon` and the pigtails never rotate about Y by more than the ~1 deg reaction torque (validated:
+no bone except `head` / `neck_joint` / `neck_ring` yaws > 12 deg in any animation); the pigtails and the ribbon are
+children of the head and simply turn with it; `eyes_on` / `eyes_off` are children of `head` too.
+Because the players see her from behind and (standing on the ground) from below most of the time, the back of the head,
+the hair, the dress back (zipper) and the head's underside (dark, like the hair; the chin keeps its shadow) are painted
+to be read, not just the face. (`docs/ASSET_CONTRACT.md` 1.3 still says "idle_tree: head rotated 180" - that was written
+for the opposite assumption; the head values above are the ones that match the game.)
 
 ## GeckoLib 4.9.3 conventions (read from the sources, and confirmed by `verify_geckolib.py`)
 
@@ -57,12 +77,16 @@ Sources: `BakedModelFactory`, `GeoQuad`, `GeoBone`, `RenderUtil`, `GeoRenderer`,
   blocks, so any two exposed faces closer than ~0.55 px that overlap would flicker. The geometry avoids all of them and
   `validate_doll.py` scans for exposed near-coplanar overlaps with differing texels (tops of the A/B skirt boxes are flat
   colour on purpose, so their harmless coincidence is allowed).
+* Roll (`rotation z`) is applied last, about the BODY's Z axis; once the face looks backwards (yaw 180) the sense of a roll is
+  mirrored, so the roll values of the players-facing animations (`idle_players`, `scan_players`, `lock_on`) have the opposite
+  sign of what the same tilt would be at yaw 0. Pitch (`rotation x`) is applied first, in the head's own frame (nod forward = x+).
 * Lighting: entity diffuse (front faces ~74 %, sides ~50 %, tops 100 %) is baked into the way colours were chosen.
   There are no mip-maps on entity textures, so big surfaces (dress, hair, sleeves) have only low-contrast texture.
 
 ## Model
 
-9.05 blocks tall (144.8 px), plinth 54 x 46 px, 76 cubes, 20 bones, 1:1 texel density (108 of 256 atlas rows used).
+9.07 blocks tall (145.1 px), plinth 54 x 46 px, 82 cubes, 20 bones, 1:1 texel density (108 of 256 atlas rows used).
+Front = -Z (face, fringe, nose, mouth, eyes, buttons); the back (+Z) has the hair, the zipper and the pigtails.
 
 ```
 root > base            plinth (2 steps), shoes, socks - static
@@ -83,26 +107,28 @@ Eyes are single front-face "cards" (round via texture alpha): flat side faces wo
 
 ## Animations (`animation.doll.<name>`)
 
+Head yaw is `rotation y` of `head`: **0 = face to the tree, 180 = face to the field** (see ORIENTATION).
+
 | name | loop | length | notes |
 |------|------|--------|-------|
-| `dormant` | loop | 6 s | head bowed, slumped, arms limp, tiny sway, **faces the field** (dull eyes) |
-| `wake` | once | 2.0 s | power-up shudder -> head lifts in 3 ratchet steps (+ over-lift) -> stares at the field -> head ratchets round to the tree. **Ends exactly on `idle_tree`'s first frame**: the game plays DORMANT -> wake -> idle_tree |
-| `idle_tree` | loop | 4 s | head yaw 180 (back of the head to the field), singing: nod + hop + bow flap every 0.5 s, slow tilt/sway every 2 s |
-| `turn_to_players` | once | 1.0 s | yaw 180 -> 0 in 4 servo moves, **3 pauses**, wind-up twitch, overshoot -7 deg then settle; cog ring follows with mechanical lag; pigtails whip; body/arms/dress react |
-| `idle_players` | loop | 3 s | rigid, +-0.9 deg micro-twitches, eye pulse |
-| `scan_players` | loop | 2 s | head sweeps 0 -> +25 -> 0 -> -25 -> 0 in jittery 8 deg servo steps (3 per leg), dwell at the ends, gaze dips with the angle |
-| `lock_on` | once | 0.4 s | snap +15 deg (settles +11), pitch down, eyes flare x1.34, body recoil; ends in the locked pose |
-| `turn_to_tree` | once | 1.0 s | yaw 0 -> 180, same 3 pauses + overshoot (not a mirror image of the other turn) |
+| `dormant` | loop | 6 s | faces the tree (head yaw 0), head bowed 13 deg and slumped 7 deg to one side, arms limp, tiny sway (dull eyes) |
+| `wake` | once | 2.0 s | stays facing the tree: power-up shudder -> head lifts in 3 ratchet steps (+ over-lift) -> stare -> a short "neck calibration" (three small yaw nudges +17 / -12 / +7 deg that settle on 0). **Ends exactly on `idle_tree`'s first frame**: the game plays DORMANT -> wake -> idle_tree |
+| `idle_tree` | loop | 4 s | head yaw 0 (rest pose, back of the head to the field), singing: nod + hop + bow flap every 0.5 s, slow tilt/sway every 2 s |
+| `turn_to_players` | once | 1.0 s | yaw 0 -> 180 in 4 servo moves, **3 pauses** (at ~47 / 91 / 136 deg), wind-up twitch, overshoot to 187 then settle; cog ring 0 -> 90 follows with mechanical lag; pigtails whip; body/arms/dress react |
+| `idle_players` | loop | 3 s | head yaw 180, rigid, +-0.9 deg micro-twitches, eye pulse |
+| `scan_players` | loop | 2 s | head sweeps 180 -> 205 -> 180 -> 155 -> 180 in jittery 8 deg servo steps (3 per leg), dwell at the ends, gaze dips with the angle |
+| `lock_on` | once | 0.4 s | snap to 195.5 (settles 191), pitch down, eyes flare x1.34, body recoil; ends in the locked pose |
+| `turn_to_tree` | once | 1.0 s | yaw 180 -> 0, same 3 pauses (at ~137 / 92 / 48) + overshoot to -7 (not a mirror image of the other turn) |
 
 Servo stops of the 1.0 s turns (nominal time, for the sound author): `turn_to_players` moves end at
 0.13 / 0.355 / 0.57 / 0.785 s (clicks at 0.165 / 0.385 / 0.60, final stop 0.785, settle done 1.0);
-`turn_to_tree`: 0.12 / 0.335 / 0.55 / 0.775 s.
+`turn_to_tree`: 0.12 / 0.335 / 0.55 / 0.775 s. `wake` calibration clicks: 1.385 / 1.555 / 1.715 / 1.86 s.
 
-**Pose anchors** (validated, so controller transitions never pop): `idle_tree(0) = turn_to_players(0) = turn_to_tree(end) =
-wake(end)`; `idle_players(0) = turn_to_players(end) = turn_to_tree(0) = lock_on(0) = scan_players(0 = end)`;
-`dormant(0) = wake(0)`.
+**Pose anchors** (validated, so controller transitions never pop): TREE rest `idle_tree(0) = turn_to_players(0) =
+turn_to_tree(end) = wake(end)`; PLAYERS rest `idle_players(0) = turn_to_players(end) = turn_to_tree(0) = lock_on(0) =
+scan_players(0 = end)`; `dormant(0) = wake(0)`.
 
-Secondary motion is **simulated and baked**: the cog ring follows the head yaw at 0.5x through an under-damped spring
+Secondary motion is **simulated and baked**: the cog ring follows the head yaw at 0.5x (0 -> 90) through an under-damped spring
 (it steps/ rings after each head stop), the flange is the head's yaw minus the ring's, pigtails are pendulums hanging
 from the moving head (inertia + centripetal fling, soft-clipped to 26 deg), the body gets a <1.2 deg reaction torque.
 Everything is in keyframes, so it stays in sync with any playback speed Java picks.
@@ -114,14 +140,25 @@ entity lighting, emissive glow layer + bloom for the night shots). `verify_gecko
 real library (max difference ~1e-3 px over 17 052 quads in 49 poses). What it cannot show: real light levels / fog /
 shadows, the AutoGlowingGeoLayer blend, GeckoLib's controller blending, true on-screen aliasing.
 
-`preview/` - `00_turnaround`, `01_face_closeup`, `02_far_view` (100/50/25 blocks), `03_texture_atlas` (cyan = glow
-mask), `anim_<name>.png` (front frames + top-view row showing the head yaw; yaw plots for the turns).
+**All previews are rendered the way the players see her: camera on the FIELD side (world -Z looking at +Z; in the model's own
+space that is azimuth 180 = behind the model)**, so the rest pose / `idle_tree` shows the back of her head and dress, and
+`turn_to_players` / `idle_players` end on her face. View names (`preview.py pose --view ...`): `field` (default), `field 3/4`,
+`field 3/4 l`, `tree` (the doll's front, as seen from the tree wall), `right` (tree on the right), `left`, `top` (tree up, field
+down); `front` / `back` are aliases of `tree` / `field`.
+
+`preview/` - `00_turnaround` (rest pose from 6 views + the face-to-players pose day/night), `01_face_closeup`, `02_far_view`
+(100/50/25 blocks), `03_texture_atlas` (cyan = glow mask), `anim_<name>.png` (players' view + top view (tree up) rows, an extra
+side row for the nodding animations, yaw plots for the head / ring).
 
 ## Integration notes (Java side, observed while reading `DollEntity` / `RedLightGreenLightGame`)
 
-* `DollRenderer` already adds `AutoGlowingGeoLayer` and toggles `eyes_on` / `eyes_off`: matches these bones.
+* Nothing in the model needs the renderer to rotate the doll: she always faces the tree with her body (place the entity so
+  that its yaw-0 front, world +Z, looks at the tree wall). `DollRenderer` already adds `AutoGlowingGeoLayer` and toggles
+  `eyes_on` / `eyes_off`: matches these bones.
+* A `turn_to_*` that is both triggered (`setState`) and returned by the main state's `thenPlayAndHold` plays twice: GeckoLib
+  restarts the animation once the triggered one ends (`needsAnimationReload`). Use one mechanism only.
 * After `turn_to_tree` the game keeps state `TURNING_TO_TREE` (the `idx == 0` guard never fires in later cycles), so she
   holds the last frame instead of looping `idle_tree` (no singing bob) - consider returning to `FACING_TREE`.
-* `FACING_PLAYERS -> FACING_TREE` at game end triggers no turn: the controller blends yaw 0 -> 180 in 4 ticks.
-* `lock_on` snaps +11 deg to the doll's right (and 5.6 deg down); if Java wants the head on the real target it can add a
-  yaw offset to the `head` bone afterwards (bone rotY is in radians, sign: `-degrees`).
+* `FACING_PLAYERS -> FACING_TREE` at game end triggers no turn: the controller blends yaw 180 -> 0 in 4 ticks.
+* `lock_on` snaps +11 deg (to the viewer's left when she looks at the field, from the head's own yaw 180); if Java wants the
+  head on the real target it can add a yaw offset to the `head` bone afterwards (bone rotY is in radians, sign: `-degrees`).

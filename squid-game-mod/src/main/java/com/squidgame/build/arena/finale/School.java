@@ -145,7 +145,7 @@ final class School {
         c.fill(-9, 7, zFront, 9, 7, zFront, "minecraft:black_concrete");
         c.fill(-9, 7, zFront, -9, 7, zFront, "minecraft:polished_blackstone");
         c.fill(9, 7, zFront, 9, 7, zFront, "minecraft:polished_blackstone");
-        c.text(0.5, 7.15, zFront + 0.55, "ELEMENTARY SCHOOL", "#F2E6B0", 1.6f, 0f, false);
+        c.text(0.5, 7.3, zFront + 1.06, "ELEMENTARY SCHOOL", "#F2E6B0", 1.6f, 0f, false);
         // lanterns under the portico roof
         c.set(-6, 5, zFront, "minecraft:lantern[hanging=true]");
         c.set(6, 5, zFront, "minecraft:lantern[hanging=true]");
@@ -207,8 +207,8 @@ final class School {
 
     /** The assembly podium: a low stone dais with steps, a lectern and the winner's marker. */
     private static void podium(BuildContext c) {
-        int z0 = -47, z1 = -43;
-        c.fill(-6, -1, z0, 6, 0, z1 + 5, "minecraft:stone_bricks");
+        int z0 = -42, z1 = -38;
+        c.fill(-6, -1, z0, 6, 0, z1 + 2, "minecraft:stone_bricks");
         c.fill(-6, 1, z0, 6, 1, z1, "minecraft:stone_bricks");
         c.fill(-6, 2, z0, 6, 2, z1, "minecraft:smooth_stone");
         c.fill(-6, 2, z0, 6, 2, z0, "minecraft:polished_blackstone");

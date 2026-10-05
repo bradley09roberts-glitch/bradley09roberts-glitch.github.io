@@ -1,5 +1,7 @@
 package com.squidgame.build.arena.marbles;
 
+import com.squidgame.build.BuildContext;
+
 /** Deterministic hashing / value-noise helpers (no shared RNG state, so results do not depend on build order). */
 final class U {
     private U() {
@@ -62,6 +64,20 @@ final class U {
             }
         }
         return items[items.length - 1];
+    }
+
+    /**
+     * Local yaw that makes the marker's stored world yaw land in (-180, 180] for the current rotated frame
+     * (BuildContext adds rot * 90 to the local yaw).
+     */
+    static float yaw(BuildContext c, float desiredLocalYaw) {
+        float rotYaw = c.worldYaw(0f);
+        float w = c.worldYaw(desiredLocalYaw);
+        w = ((w % 360f) + 360f) % 360f;
+        if (w > 180f) {
+            w -= 360f;
+        }
+        return w - rotYaw;
     }
 
     static int clamp(int v, int lo, int hi) {

@@ -64,6 +64,13 @@ public final class WaitingRoomPrefab {
                 c.fill(x, h, z, x + 1, h, z + 1, "squidgame:panel_light_white");
             }
         }
+        // invisible light grid: the ceiling panels alone leave the floor at block light ~6 (9 blocks of falloff); with a
+        // level-15 light every 3 blocks at y=3 every standing cell is within taxicab distance 5 of one (light >= 10)
+        for (int x = -hw + 1; x <= hw; x += 3) {
+            for (int z = -d + 1; z <= -2; z += 3) {
+                c.setIfFree(x, 3, z, "minecraft:light[level=15]");
+            }
+        }
         // gate wall: central doorway 7 x 5, windows either side, black lintel
         c.clear(-3, 1, 0, 3, 5, 0);
         c.fill(-4, 1, 0, -4, 5, 0, TRIM);
@@ -82,8 +89,8 @@ public final class WaitingRoomPrefab {
         c.set(-4, h, -d, "squidgame:symbol_circle");
         c.set(0, h, -d, "squidgame:symbol_triangle");
         c.set(4, h, -d, "squidgame:symbol_square");
-        c.text(0.5, 6.0, -d + 0.45, s.title(), "#FFD84A", 2.6f, 0f, false);
-        c.text(0.5, 4.6, -d + 0.45, s.subtitle(), "white", 1.4f, 0f, false);
+        c.text(0.5, 6.0, -d + 1.04, s.title(), "#FFD84A", 2.6f, 0f, false);
+        c.text(0.5, 4.6, -d + 1.04, s.subtitle(), "white", 1.4f, 0f, false);
         // benches along the side walls
         for (int z = -d + 3; z <= -6; z += 3) {
             for (int side = -1; side <= 1; side += 2) {

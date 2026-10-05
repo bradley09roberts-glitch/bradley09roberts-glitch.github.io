@@ -153,11 +153,13 @@ def gait_legs(H: Humanoid, g: Gait, phase: float, base: Pose, reach: float = 9.2
 PX_TO_BLOCKS = 0.9375 / 16.0     # model px -> blocks (renderer scale 0.9375)
 
 
-def planted_speed(ctx, st: dict, g: Gait) -> dict:
-    """Mean backward speed of the stance ankles relative to the body = ground speed at which they stay planted."""
+def planted_speed(ctx, st: dict, g: Gait, span: float = None) -> dict:
+    """Mean backward speed of the stance ankles relative to the body = ground speed at which they stay planted.
+
+    ``span`` = seconds covered by the sampled infos (default one gait cycle)."""
     infos = st["info"]
     n = len(infos) - 1
-    dt = g.cycle / n
+    dt = (span if span is not None else g.cycle) / n
     sp = []
     for side in ("left", "right"):
         zs = []
@@ -170,4 +172,5 @@ def planted_speed(ctx, st: dict, g: Gait) -> dict:
         if zs:
             sp.append(sum(zs) / len(zs))
     px_s = sum(sp) / len(sp) if sp else 0.0
-    return dict(cycle_s=g.cycle, planted_px_s=round(px_s, 2), planted_blocks_s=round(px_s * PX_TO_BLOCKS, 2))
+    return dict(cycle_s=(span if span is not None else g.cycle), gait_cycle_s=g.cycle,
+                planted_px_s=round(px_s, 2), planted_blocks_s=round(px_s * PX_TO_BLOCKS, 2))

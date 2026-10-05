@@ -30,13 +30,6 @@ final class Props {
         c.set(x, y, z, "minecraft:cauldron");
     }
 
-    static void firewood(BuildContext c, int x, int y, int z, String axis) {
-        c.set(x, y, z, Mat.log("minecraft:oak_log", axis));
-        c.set(x, y + 1, z, Mat.log("minecraft:oak_log", axis));
-        int dx = axis.equals("x") ? 0 : 1, dz = axis.equals("x") ? 1 : 0;
-        c.set(x + dx, y, z + dz, Mat.log("minecraft:spruce_log", axis));
-    }
-
     /** Leafy planter box 1x1 (bush on a wooden box). */
     static void planter(BuildContext c, int x, int y, int z, boolean flowering) {
         c.set(x, y, z, Mat.PLANKS);
@@ -77,7 +70,7 @@ final class Props {
                 String col = r.pick(COLORS);
                 c.set(x, y - 1, z, Mat.wool(col));
                 if (r.chance(0.35)) {
-                    c.set(x, y - 2, z, Mat.carpet(col));
+                    c.set(x, y - 2, z, Mat.wool(col));
                 }
             }
         }
@@ -90,7 +83,7 @@ final class Props {
                 String col = r.pick(COLORS);
                 c.set(x, y - 1, z, Mat.wool(col));
                 if (r.chance(0.35)) {
-                    c.set(x, y - 2, z, Mat.carpet(col));
+                    c.set(x, y - 2, z, Mat.wool(col));
                 }
             }
         }

@@ -78,6 +78,11 @@ final class RoomBuilder {
                 c.set(x, 40, z, Pal.PANEL);
             }
         }
+        // lights between the benches along the side walls
+        for (int x = gx + 6; x <= bx - 2; x += 3) {
+            c.set(x, 40, -hz + 1, Pal.PANEL);
+            c.set(x, 40, hz - 1, Pal.PANEL);
+        }
         // ceiling lights
         for (int x = gx + 4; x <= bx - 4; x += 6) {
             for (int z = -hz + 4; z <= hz - 4; z += 6) {
@@ -106,8 +111,7 @@ final class RoomBuilder {
         c.fill(bx - 1, 46, -5, bx - 1, 46, 5, trim);
         c.fill(bx - 1, 43, -5, bx - 1, 45, -5, trim);
         c.fill(bx - 1, 43, 5, bx - 1, 45, 5, trim);
-        c.text(bx - 1.45, 47.6, 0.5, "SURVIVORS", "#FFD84A", 3.2f, 90f, false);
-        c.text(bx - 1.45, 41.6 + 4.0, 0.5, "", "white", 1f, 90f, false);
+        c.text(bx - 1.45, 47.7, 0.5, "SURVIVORS", "#FFD84A", 6f, 90f, false);
         // benches along the side walls
         for (int x = gx + 4; x <= bx - 6; x += 3) {
             for (int side = -1; side <= 1; side += 2) {

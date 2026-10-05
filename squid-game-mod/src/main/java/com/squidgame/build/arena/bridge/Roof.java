@@ -61,8 +61,10 @@ final class Roof {
             }
         }
         // node plates (gusset blocks) on the chords at the bottom nodes
-        for (int k = -7; k <= 7; k++) {
-            c.fill(6 * k - 1, Geo.TRUSS_BOT - 1, z0, 6 * k, Geo.TRUSS_BOT - 1, z1, Pal.DSP);
+        if (zc != Geo.ZC) { // the centre truss carries the cross gantry: keep its headroom free
+            for (int k = -7; k <= 7; k++) {
+                c.fill(6 * k - 1, Geo.TRUSS_BOT - 1, z0, 6 * k, Geo.TRUSS_BOT - 1, z1, Pal.DSP);
+            }
         }
     }
 

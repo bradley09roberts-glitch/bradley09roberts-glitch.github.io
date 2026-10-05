@@ -57,26 +57,44 @@ final class Tree {
         }
         blob(c, x + 4, 17, z - 3, 5.5, 3.5, 5.5, 5);
         blob(c, x - 4, 18, z + 4, 5.5, 3.5, 5.5, 6);
-        // tyre swing under the strongest branch
-        int bx = ends[1][0] * 2 / 3 + x / 3 + 0, bz = ends[1][2] * 2 / 3 + z / 3 + 0;
-        bx = x + (int) Math.round((ends[1][0] - x) * 0.62);
-        bz = z + (int) Math.round((ends[1][2] - z) * 0.62);
-        int by = 10 + (int) Math.round((ends[1][1] - 10) * 0.62);
+        // tyre swing hanging from the strongest branch (60% of the way out)
+        int[] bp = branchPoint(x, 10, z, ends[1][0], ends[1][1], ends[1][2], 0.6);
+        int bx = bp[0], by = bp[1], bz = bp[2];
         c.fill(bx, 5, bz, bx, by - 1, bz, "minecraft:chain[axis=y]");
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = 0; dy <= 2; dy++) {
                 if (dx != 0 || dy != 1) {
-                    c.set(bx + dx, 2 + dy, bz, "minecraft:black_concrete");
+                    c.set(bx + dx, 1 + dy, bz, "minecraft:black_concrete");
                 }
             }
         }
-        c.set(bx, 4, bz, "minecraft:black_concrete");
+        for (int dx = -1; dx <= 1; dx += 2) {
+            c.set(bx + dx, 4, bz, "minecraft:air");
+        }
         // ring bench around the trunk
         for (int dx = -5; dx <= 5; dx++) {
             for (int dz = -5; dz <= 5; dz++) {
                 double d = Math.sqrt(dx * dx + dz * dz);
                 if (d > 3.6 && d < 4.6 && ((dx + dz * 3 + 40) % 5) != 0) {
                     c.set(x + dx, 1, z + dz, "minecraft:spruce_slab[type=bottom]");
+                }
+            }
+        }
+        // lamp posts under the canopy: leaves swallow the sky light, so the ground below needs visible fixtures
+        for (int k = 0; k < 10; k++) {
+            double a = Math.toRadians(k * 36 + 11);
+            double rad = k % 2 == 0 ? 6.5 : 9.5;
+            int lx = x + (int) Math.round(rad * Math.cos(a)), lz = z + (int) Math.round(rad * Math.sin(a));
+            c.fill(lx, 1, lz, lx, 3, lz, "minecraft:stone_brick_wall");
+            c.set(lx, 4, lz, "minecraft:lantern[hanging=false]");
+        }
+        // hidden light grid under the crown (taxicab distance <= 3 horizontally, one block above the walking level): the
+        // leaves swallow the sky light, so this keeps the ground below at block light >= 11
+        for (int i = -7; i <= 7; i++) {
+            for (int j = -7; j <= 7; j++) {
+                int lx = x + 3 * i - 4 * j, lz = z + 4 * i + 3 * j;
+                if (Math.hypot(lx - x, lz - z) <= 11.5 && !c.isSolid(lx, 2, lz)) {
+                    c.set(lx, 2, lz, "minecraft:light[level=15]");
                 }
             }
         }
@@ -91,14 +109,20 @@ final class Tree {
         }
     }
 
+    /** The block of the branch line at parameter t (0..1), including the upward arch used by {@link #branch}. */
+    static int[] branchPoint(int x0, int y0, int z0, int x1, int y1, int z1, double t) {
+        return new int[]{(int) Math.round(x0 + (x1 - x0) * t),
+                (int) Math.round(y0 + (y1 - y0) * t + 1.2 * Math.sin(Math.PI * t)),
+                (int) Math.round(z0 + (z1 - z0) * t)};
+    }
+
     /** One-block-thick log branch from (x0,y0,z0) to (x1,y1,z1) with the log axis following the dominant direction. */
     static void branch(BuildContext c, int x0, int y0, int z0, int x1, int y1, int z1) {
         int steps = Math.max(Math.abs(x1 - x0), Math.max(Math.abs(y1 - y0), Math.abs(z1 - z0)));
         for (int i = 0; i <= steps; i++) {
             double t = steps == 0 ? 0 : i / (double) steps;
-            int px = (int) Math.round(x0 + (x1 - x0) * t);
-            int py = (int) Math.round(y0 + (y1 - y0) * t + 1.2 * Math.sin(Math.PI * t));
-            int pz = (int) Math.round(z0 + (z1 - z0) * t);
+            int[] pp = branchPoint(x0, y0, z0, x1, y1, z1, t);
+            int px = pp[0], py = pp[1], pz = pp[2];
             int dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0), dz = Math.abs(z1 - z0);
             char axis = dx >= dz && dx >= dy ? 'x' : (dz >= dy ? 'z' : 'y');
             c.set(px, py, pz, log("oak_log", axis));
@@ -157,8 +181,8 @@ final class Tree {
         if (cherry) {
             for (int dx = -3; dx <= 3; dx++) {
                 for (int dz = -3; dz <= 3; dz++) {
-                    if (Noise.hash01(x + dx, z + dz, 33) < 0.18 && !c.isSolid(x + dx, 1, z + dz)) {
-                        c.set(x + dx, 1, z + dz, "minecraft:pink_petals[facing=north,flower_amount=2]");
+                    if (Noise.hash01(x + dx, z + dz, 33) < 0.16 && !c.isSolid(x + dx, 1, z + dz)) {
+                        c.set(x + dx, 1, z + dz, "minecraft:pink_carpet");
                     }
                 }
             }

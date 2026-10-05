@@ -8,6 +8,7 @@ import com.squidgame.net.HudPayload;
 import com.squidgame.net.NumbersPayload;
 import com.squidgame.net.OpenScreenPayload;
 import com.squidgame.net.ResultsPayload;
+import com.squidgame.registry.ModSounds;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
@@ -25,8 +26,17 @@ public final class ClientNetworking {
         }));
         ClientPlayNetworking.registerGlobalReceiver(FadePayload.TYPE, (payload, ctx) -> ctx.client().execute(() ->
                 ClientState.startFade(payload.fadeIn(), payload.hold(), payload.fadeOut(), payload.argb())));
-        ClientPlayNetworking.registerGlobalReceiver(DangerPayload.TYPE, (payload, ctx) -> ctx.client().execute(() ->
-                ClientState.startDanger(payload.intensity(), payload.ticks(), payload.pulses(), payload.argb())));
+        ClientPlayNetworking.registerGlobalReceiver(DangerPayload.TYPE, (payload, ctx) -> ctx.client().execute(() -> {
+            ClientState.startDanger(payload.intensity(), payload.ticks(), payload.pulses(), payload.argb());
+            // the vignette is accompanied by a sting for strong cues and a heartbeat for sustained ones
+            var sounds = ctx.client().getSoundManager();
+            if (payload.intensity() >= 0.5f) {
+                sounds.play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(ModSounds.DANGER_STING, 1.0f, 0.5f));
+            }
+            if (payload.pulses() > 0 && payload.ticks() >= 20) {
+                sounds.play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(ModSounds.DANGER_HEARTBEAT, 1.0f, 0.6f + 0.5f * payload.intensity()));
+            }
+        }));
         ClientPlayNetworking.registerGlobalReceiver(ResultsPayload.TYPE, (payload, ctx) -> ctx.client().execute(() -> {
             ClientState.results = payload;
             ClientState.resultsEndsAt = System.nanoTime() + payload.showTicks() * 50_000_000L;

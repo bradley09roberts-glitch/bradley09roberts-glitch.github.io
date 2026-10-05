@@ -33,13 +33,7 @@ final class PitBuilder {
 
     // ------------------------------------------------------------------ floor
 
-    /** Distance from the pit centre (0.5, 0.5) in blocks. */
-    private static double rad(int x, int z) {
-        return Math.hypot(x + 0.5 - 0.0, z - 0.0 + 0.5 - 0.5 + 0.0 - 0.0) ;
-    }
-
     static boolean grateCell(int x, int z) {
-        int ax = Math.abs(x + 0.5 > 0 ? x : x), az = Math.abs(z);
         // channels along x at z = +-9..10 (2 wide), with lantern pits every 6 blocks
         boolean channel = (z == 9 || z == 10 || z == -9 || z == -10) && x >= -56 && x <= 55;
         // channels across the pit at x = -30.5.. and 29.5..
@@ -88,7 +82,6 @@ final class PitBuilder {
     }
 
     private static String floorTile(int x, int z) {
-        int ax = x < 0 ? -x - 1 + 1 : x;     // distance in west-half coordinates is handled by the mirror, keep simple
         if (x <= Geo.PX0 + 1 || Math.abs(z) >= Geo.PZ - 1) {
             return Pal.hazard(x + z + 200);                 // hazard border along the walls
         }

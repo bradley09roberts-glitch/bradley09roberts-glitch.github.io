@@ -6,7 +6,7 @@ import static com.squidgame.build.arena.finale.Layout.*;
 
 /**
  * The high painted sunset wall that encloses the whole stage ("all around"): a 3 thick flat of dark concrete whose
- * inner plane carries the {@link Mural}; a dark cornice caps it and the back carries timber battens like the back of a
+ * inner plane carries the {@link Mural}; a dark coping caps it and the back carries timber battens like the back of a
  * film-set flat. The wall is the outer limit of the arena (nobody can leave or fall out of the world).
  */
 final class Backdrop {
@@ -48,11 +48,16 @@ final class Backdrop {
             c.set(BX0, 0, z, "minecraft:black_concrete");
             c.set(BX1, 0, z, "minecraft:black_concrete");
         }
-        // cornice: a dark coping that overhangs the painted plane by one block
-        c.fill(BX0 - 2, h + 2, BZ0 - 2, BX1 + 2, h + 2, BZ0 + 1, "minecraft:polished_blackstone");
-        c.fill(BX0 - 2, h + 2, BZ1 - 1, BX1 + 2, h + 2, BZ1 + 2, "minecraft:polished_blackstone");
-        c.fill(BX0 - 2, h + 2, BZ0 - 2, BX0 + 1, h + 2, BZ1 + 2, "minecraft:polished_blackstone");
-        c.fill(BX1 - 1, h + 2, BZ0 - 2, BX1 + 2, h + 2, BZ1 + 2, "minecraft:polished_blackstone");
+        // a dark frieze row on top of the painted plane and a coping over the whole thickness; the coping does NOT
+        // overhang the yard (an overhang would shade a strip of ground from the sky light)
+        c.fill(BX0, h + 1, BZ0, BX1, h + 1, BZ0, "minecraft:black_concrete");
+        c.fill(BX0, h + 1, BZ1, BX1, h + 1, BZ1, "minecraft:black_concrete");
+        c.fill(BX0, h + 1, BZ0 + 1, BX0, h + 1, BZ1 - 1, "minecraft:black_concrete");
+        c.fill(BX1, h + 1, BZ0 + 1, BX1, h + 1, BZ1 - 1, "minecraft:black_concrete");
+        c.fill(BX0 - 2, h + 2, BZ0 - 2, BX1 + 2, h + 2, BZ0, "minecraft:polished_blackstone");
+        c.fill(BX0 - 2, h + 2, BZ1, BX1 + 2, h + 2, BZ1 + 2, "minecraft:polished_blackstone");
+        c.fill(BX0 - 2, h + 2, BZ0 - 2, BX0, h + 2, BZ1 + 2, "minecraft:polished_blackstone");
+        c.fill(BX1, h + 2, BZ0 - 2, BX1 + 2, h + 2, BZ1 + 2, "minecraft:polished_blackstone");
         // back of the flats: vertical timber battens every 10 blocks (visible only from outside)
         for (int x = BX0 - 2; x <= BX1 + 2; x += 10) {
             c.fill(x, 1, BZ0 - 3, x, h + 1, BZ0 - 3, "minecraft:dark_oak_log[axis=y]");

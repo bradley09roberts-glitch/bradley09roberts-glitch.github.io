@@ -37,7 +37,7 @@ loom {
         testClient {
             client()
             name = 'Squid Game Test Client'
-            runDir 'run-testclient'
+            runDir System.getenv('SQUID_RUNDIR') ?: 'run-testclient'
             programArgs '--username', System.getenv('SQUID_USER') ?: 'Contestant',
                     '--quickPlayMultiplayer', 'localhost:' + (System.getenv('SQUID_PORT') ?: '25599'),
                     '--width', '1280', '--height', '720'
@@ -94,15 +94,24 @@ tasks.register('dumpArena', JavaExec) {
     args = [project.findProperty('arena') ?: 'all', 'tools/out', project.findProperty('seed') ?: '1']
 }
 
-// While arena builders are being written concurrently, `-PskipArenas` compiles the mod without them (placeholders are used).
+// While arena builders are being written concurrently, `-PskipArenas` compiles the mod without them (placeholders are used);
+// `-PskipArenas=dalgona,marbles` skips only the named ones (redlight, dalgona, tug, marbles, bridge, finale, hub).
 if (project.hasProperty('skipArenas')) {
-    sourceSets.main.java.exclude(
-            'com/squidgame/build/arena/RedLightBuilder.java', 'com/squidgame/build/arena/DalgonaBuilder.java',
-            'com/squidgame/build/arena/TugOfWarBuilder.java', 'com/squidgame/build/arena/MarblesBuilder.java',
-            'com/squidgame/build/arena/GlassBridgeBuilder.java', 'com/squidgame/build/arena/FinalBuilder.java',
-            'com/squidgame/build/arena/redlight/**', 'com/squidgame/build/arena/dalgona/**',
-            'com/squidgame/build/arena/tug/**', 'com/squidgame/build/arena/marbles/**',
-            'com/squidgame/build/arena/bridge/**', 'com/squidgame/build/arena/finale/**',
-            'com/squidgame/build/arena/hub/DormitoryPart.java', 'com/squidgame/build/arena/hub/CorridorPart.java',
-            'com/squidgame/build/arena/hub/StairwayPart.java', 'com/squidgame/build/arena/hub/ControlRoomPart.java')
+    def requested = project.property('skipArenas').toString()
+    def names = (requested.isEmpty() || requested == 'true') ?
+            ['redlight', 'dalgona', 'tug', 'marbles', 'bridge', 'finale', 'hub'] : requested.split(',').collect { it.trim() }
+    def builders = [redlight: 'RedLightBuilder', dalgona: 'DalgonaBuilder', tug: 'TugOfWarBuilder', marbles: 'MarblesBuilder',
+                    bridge: 'GlassBridgeBuilder', finale: 'FinalBuilder']
+    def packages = [redlight: 'redlight', dalgona: 'dalgona', tug: 'tug', marbles: 'marbles', bridge: 'bridge', finale: 'finale']
+    names.each { n ->
+        if (builders.containsKey(n)) {
+            sourceSets.main.java.exclude("com/squidgame/build/arena/${builders[n]}.java", "com/squidgame/build/arena/${packages[n]}/**")
+        } else if (n == 'hub') {
+            sourceSets.main.java.exclude('com/squidgame/build/arena/hub/DormitoryPart.java', 'com/squidgame/build/arena/hub/CorridorPart.java',
+                    'com/squidgame/build/arena/hub/StairwayPart.java', 'com/squidgame/build/arena/hub/ControlRoomPart.java',
+                    'com/squidgame/build/arena/hub/dorm/**', 'com/squidgame/build/arena/hub/corridor/**',
+                    'com/squidgame/build/arena/hub/stairs/**', 'com/squidgame/build/arena/hub/control/**')
+        }
+    }
 }
+

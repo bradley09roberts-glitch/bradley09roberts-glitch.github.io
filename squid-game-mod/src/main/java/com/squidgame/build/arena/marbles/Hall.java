@@ -57,7 +57,9 @@ final class Hall {
             c.fill(x + 2 * out, 9, ZB - 3, x + 2 * out, 9, ZG + 3, Mat.stair(Mat.TILE_ST, faceIn));
             c.fill(x + out, 10, ZB - 2, x + out, 10, ZG + 2, Mat.stair(Mat.TILE_ST, faceIn));
             c.fill(x, 11, ZB - 1, x, 11, ZG + 1, Mat.stair(Mat.TILE_ST, faceIn));
-            c.fill(x + 2 * out, 8, ZB - 3, x + 2 * out, 8, ZB - 3, Mat.log(Mat.LOG_S, "y"));
+            for (int z = ZB - 3; z <= ZG + 3; z += 8) {
+                c.fill(x + 2 * out, 1, z, x + 2 * out, 7, z, Mat.log(Mat.LOG, "y"));
+            }
             // underside rafters
             c.fill(x + 2 * out, 8, ZB - 3, x + 2 * out, 8, ZG + 3, Mat.slabT("minecraft:dark_oak_slab"));
             c.fill(x + out, 9, ZB - 2, x + out, 9, ZG + 2, Mat.slabT("minecraft:dark_oak_slab"));
@@ -140,8 +142,16 @@ final class Hall {
             c.set(x, 7, pz, Mat.lantern(true));
             c.set(x, 7, zw + 1, Mat.lantern(true));
         }
-        // wooden steps are not needed: the arcade floor is level with the square. Hall title over the gate
-        c.text(0.5, 8.3, zc + 0.02 - 1.0 + 0.9, "MARBLES", "#FFD84A", 3.2f, 0f, false);
+        // timber gate frame in front of the black doorway frame, with a signboard above
+        for (int sd = -1; sd <= 1; sd += 2) {
+            c.fill(4 * sd, 1, zc, 4 * sd, 9, zc, Mat.log(Mat.LOG, "y"));
+            c.set(5 * sd, 1, zc, Mat.SB);
+        }
+        c.fill(-3, 7, zc, 3, 7, zc, Mat.log(Mat.LOG_S, "x"));
+        c.fill(-3, 8, zc, 3, 8, zc, Mat.concrete("black"));
+        c.fill(-3, 9, zc, 3, 9, zc, Mat.log(Mat.LOG_S, "x"));
+        c.fill(-4, 8, zw + 2, 4, 8, zw + 2, Mat.AIR);            // keep the sign clear of the rafter boards
+        c.text(0.5, 8.5, zc + 1.02, "MARBLES", "#FFD84A", 3.0f, 0f, false);
         // paved arcade floor
         c.pattern(xl - 1, 0, zw + 1, xr + 1, 0, zw + 3, (x, y, z) -> U.rand(x, z, 9) < 0.35 ? Mat.P_ANDESITE : Mat.SB);
     }
@@ -195,8 +205,6 @@ final class Hall {
         c.fill(x0, 16, z0, x0 + 4, 16, z0 + 4, Mat.PLANKS);
         Roofs.hip(c, x0 - 1, z0 - 1, x0 + 5, z0 + 5, 17, Roofs.TILE, 16, Roofs.TILE.block());
         c.set(x0 + 2, 15, z0 + 2, Mat.lantern(true));
-        c.set(x0 + 2, 16, z0 + 2, Mat.PLANKS);
-        c.set(x0 + 2, 16, z0 + 2, Mat.CHAIN_Y);
     }
 
     /** Standing spots (floor y = 12.0) of the terrace for armed guards, as {x, z, yaw}. */
@@ -204,8 +212,7 @@ final class Hall {
         int xl = -HW - 1, xr = HW + 1;
         return new int[][]{
                 {xl + 3, ZB + 3, 180}, {xr - 3, ZB + 3, 180},
-                {xl + 3, ZG - 3, 0}, {xr - 3, ZG - 3, 0},
-                {-8, ZG - 1, 0}, {8, ZG - 1, 0}
+                {xl + 3, ZG - 3, 0}, {xr - 3, ZG - 3, 0}
         };
     }
 }

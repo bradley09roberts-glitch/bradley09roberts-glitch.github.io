@@ -379,6 +379,10 @@ public final class RedLightGreenLightGame implements MiniGame {
         if (cycle == null) {
             newCycle(ctx, 0.0);
         }
+        // the doll finishes turning back to the tree during the first moments of the next chant
+        if (doll.state() == DollEntity.State.TURNING_TO_TREE && cycleTick >= params.dollTurnTicks()) {
+            doll.setState(DollEntity.State.FACING_TREE);
+        }
         // syllables
         int idx = cycle.syllableAt(cycleTick);
         if (idx >= 0 && idx == syllablesSung && cycleTick >= cycle.syllableStart[idx]) {
@@ -499,7 +503,13 @@ public final class RedLightGreenLightGame implements MiniGame {
         }
         if (doll != null) {
             doll.setEyes(false);
-            doll.setState(DollEntity.State.FACING_TREE);
+            doll.setScanning(false);
+            if (doll.state() == DollEntity.State.FACING_PLAYERS) {
+                doll.setTurnTicks(20);
+                doll.setState(DollEntity.State.TURNING_TO_TREE);
+            } else if (doll.state() != DollEntity.State.TURNING_TO_TREE) {
+                doll.setState(DollEntity.State.FACING_TREE);
+            }
         }
         return new GameResult(survivors, out, Component.translatable("squidgame.game.red_light.headline", survivors.size()),
                 Component.translatable("squidgame.game.red_light.detail", finishCounter));

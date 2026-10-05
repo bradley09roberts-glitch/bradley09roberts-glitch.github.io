@@ -29,16 +29,54 @@ public final class Mural {
         paintSky();
         makeClouds();
         paintClouds();
+        paintBirds();
         paintBuildings();
         paintHills();
         paintTrees(new Random(7001), 0.80, true);
         paintTrees(new Random(7002), 1.00, false);
         paintGrass();
+        compensateSideWalls();
+    }
+
+    /**
+     * Minecraft shades the faces of east/west walls at 0.6 and north/south walls at 0.8, so the same painting would look
+     * a third darker on the two long walls. Their palette is shifted one step lighter so the sky, clouds and trees look
+     * continuous around the corners once the face shading is applied.
+     */
+    private static final java.util.Map<String, String> SIDE = java.util.Map.ofEntries(
+            java.util.Map.entry("minecraft:white_concrete", "minecraft:white_wool"),
+            java.util.Map.entry("minecraft:calcite", "minecraft:white_wool"),
+            java.util.Map.entry("minecraft:quartz_block", "minecraft:white_wool"),
+            java.util.Map.entry("minecraft:clay", "minecraft:white_concrete"),
+            java.util.Map.entry("minecraft:light_blue_concrete", "minecraft:light_blue_wool"),
+            java.util.Map.entry("minecraft:cyan_concrete", "minecraft:cyan_wool"),
+            java.util.Map.entry("minecraft:blue_concrete", "minecraft:blue_wool"),
+            java.util.Map.entry("minecraft:light_blue_terracotta", "minecraft:clay"),
+            java.util.Map.entry("minecraft:light_gray_concrete", "minecraft:smooth_stone"),
+            java.util.Map.entry("minecraft:green_concrete", "minecraft:moss_block"),
+            java.util.Map.entry("minecraft:moss_block", "minecraft:lime_terracotta"),
+            java.util.Map.entry("minecraft:lime_concrete", "minecraft:lime_wool"));
+
+    private void compensateSideWalls() {
+        int w = 2 * Layout.HALF_W + 1;
+        int d = Layout.FIELD_Z1 - Layout.FIELD_Z0 + 1;
+        for (int p = 0; p < P; p++) {
+            boolean east = p >= w && p < w + d;
+            boolean west = p >= 2 * w + d;
+            if (!east && !west) {
+                continue;
+            }
+            for (int y = Layout.MURAL_Y0; y <= Layout.MURAL_Y1; y++) {
+                String b = px[p][y];
+                px[p][y] = SIDE.getOrDefault(b, b);
+            }
+        }
     }
 
     /** Block at loop position p and height y (y in [MURAL_Y0, MURAL_Y1]). */
     public String at(int p, int y) {
-        return px[Math.floorMod(p, P)][y];
+        String b = px[Math.floorMod(p, P)][y];
+        return b == null ? "minecraft:light_blue_concrete" : b;
     }
 
     private static double clamp01(double v) {
@@ -176,6 +214,29 @@ public final class Mural {
                     b = rr < 0.45 ? "minecraft:calcite" : (rr < 0.80 ? WHITE : (rr < 0.92 ? "minecraft:quartz_block" : "minecraft:white_wool"));
                 }
                 px[p][y] = b;
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------ gulls
+
+    /** A few tiny "M" gulls in loose flocks, high in the sky. */
+    private void paintBirds() {
+        Random r = new Random(5555);
+        int[][] shape = {{-2, 0}, {-1, 1}, {0, 0}, {1, 1}, {2, 0}};
+        for (int f = 0; f < 15; f++) {
+            int p = r.nextInt(P);
+            int y = 20 + r.nextInt(15);
+            int n = 1 + r.nextInt(3);
+            for (int b = 0; b < n; b++) {
+                int bp = p + b * (5 + r.nextInt(4));
+                int by = y + r.nextInt(5) - 2;
+                for (int[] d : shape) {
+                    int yy = by + d[1];
+                    if (yy >= 2 && yy <= Layout.MURAL_Y1 - 1) {
+                        px[wrap(bp + d[0])][yy] = "minecraft:gray_concrete";
+                    }
+                }
             }
         }
     }

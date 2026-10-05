@@ -80,7 +80,7 @@ final class Markers {
         // triangles (armed): upper catwalks overlooking both decks, facing the pit (6 per catwalk)
         for (int x : new int[]{-46, -30, -14, 13, 29, 45}) {
             c.marker(G, x + 0.5, Geo.CAT + 1, -33.5, 0f, "rank=triangle");
-            c.marker(G, x + 0.5, Geo.CAT + 1, 33.5, 180f, "rank=triangle");
+            c.marker(G, x + 0.5, Geo.CAT + 1, 34.5, 180f, "rank=triangle");
         }
         // triangles on the plateaus beside the deck portals
         for (int sgn : new int[]{-1, 1}) {

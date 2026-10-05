@@ -121,21 +121,20 @@ def build_all(mb) -> Ctx:
                "relieved", "interact", "knocked_back", "punch_left", "punch_right", "shove", "dodge_left", "dodge_right",
                "pull_heave", "pull_slip", "bridge_step", "marble_throw_release", "marble_guess", "dalgona_crack",
                "eliminated_forward", "eliminated_backward", "knocked_down"}
-    no_lock = {"jump_leap", "fall_loop", "celebrate", "celebrate_fist", "eliminated_forward", "eliminated_backward",
-               "knocked_down", "run", "sprint_attack"}
     for a in ctx.A.anims.values():
         short = a.name.split(".")[-1]
+        a.settle(IDLE0)                  # empty-pose keys = "back to the idle pose" (end of the one-shots)
         if short in lag_set:
             lag_tracks(a, {"head": 0.04, "left_forearm": 0.03, "right_forearm": 0.03,
                            "left_hand_skin": 0.04, "right_hand_skin": 0.04})
-        if short not in no_lock:
-            lift = ground_lock(ctx.rig, a, OPTIONAL, threshold=0.3)
-            if lift > 0:
-                ctx.info.setdefault("ground_lift_px", {})[short] = round(lift, 2)
         # every channel that starts after t=0 starts from the neutral pose; loops end where they started
         a.start_from(Pose())
         if a.loop == LOOP:
             a.close_loop()
+        # last: keep every pose on top of the floor (root lift, authored root motion preserved)
+        lift = ground_lock(ctx.rig, a, OPTIONAL)
+        if lift > 0:
+            ctx.info.setdefault("ground_lift_px", {})[short] = round(lift, 2)
     return ctx
 
 

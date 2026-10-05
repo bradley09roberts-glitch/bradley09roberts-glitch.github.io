@@ -18,10 +18,16 @@ public final class HubBuilder implements ArenaBuilder {
     /** In build order. Later parts may carve into earlier ones. */
     private static final String[] PARTS = {"DormitoryPart", "CorridorPart", "StairwayPart", "ControlRoomPart"};
 
+    /** Developer tooling only: {@code -Dsquid.hub.parts=DormitoryPart,...} builds just those parts (tools/dump.sh). */
+    private static final String FILTER = System.getProperty("squid.hub.parts");
+
     private final List<HubPart> parts = new ArrayList<>();
 
     public HubBuilder() {
         for (String name : PARTS) {
+            if (FILTER != null && !List.of(FILTER.split(",")).contains(name)) {
+                continue;
+            }
             try {
                 parts.add((HubPart) Class.forName("com.squidgame.build.arena.hub." + name).getDeclaredConstructor().newInstance());
             } catch (ClassNotFoundException e) {
@@ -53,8 +59,11 @@ public final class HubBuilder implements ArenaBuilder {
         if (parts.isEmpty()) {
             return List.of("dorm.player_spawn", "dorm.npc_spawn", "hub.spectator", "hub.podium");
         }
-        List<String> out = new ArrayList<>(List.of("dorm.player_spawn", "dorm.npc_spawn", "dorm.exit_door", "hub.spectator",
-                "hub.podium", "dorm.registration_terminal", "prize.pig", "prize.counter"));
+        List<String> out = new ArrayList<>();
+        if (FILTER == null) {
+            out.addAll(List.of("dorm.player_spawn", "dorm.npc_spawn", "dorm.exit_door", "hub.spectator",
+                    "hub.podium", "dorm.registration_terminal", "prize.pig", "prize.counter"));
+        }
         parts.forEach(p -> out.addAll(p.markers()));
         return out;
     }
@@ -64,8 +73,11 @@ public final class HubBuilder implements ArenaBuilder {
         if (parts.isEmpty()) {
             return List.of();
         }
-        List<String> out = new ArrayList<>(List.of("prize.fill", "gate.red_light", "gate.dalgona", "gate.tug_of_war",
-                "gate.marbles", "gate.glass_bridge", "gate.final"));
+        List<String> out = new ArrayList<>();
+        if (FILTER == null) {
+            out.addAll(List.of("prize.fill", "gate.red_light", "gate.dalgona", "gate.tug_of_war",
+                    "gate.marbles", "gate.glass_bridge", "gate.final"));
+        }
         parts.forEach(p -> out.addAll(p.regions()));
         return out;
     }

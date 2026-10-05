@@ -26,8 +26,6 @@ public final class Geo {
     public static final int FRONT_WALL_Z = -92;   // inner layer of the front wall
     public static final int REAR_WALL_Z = -1;     // inner layer (skin) of the rear wall
     public static final int EAVES = 17;           // top wall cell of the long walls
-    public static final int PILASTER_STEP = 10;
-    public static final int BAYS = 9;
 
     /** Underside of the roof deck at column x, in half blocks (46 = ridge at y 23). */
     public static int roofUnder2(int x) {

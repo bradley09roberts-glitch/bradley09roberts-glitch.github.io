@@ -16,13 +16,17 @@ final class Spots {
 
     // ------------------------------------------------------------------ deck
 
+    /**
+     * One marker per 2x2 panel at the documented position: x = -2.5 (lane 0) / 1.5 (lane 1) i.e. the centre of the
+     * panel's first (west) block column, z = 10.5 + 3r the centre of its first (north) block row, y = standing height.
+     * The panel itself covers blocks x..x+1 and z..z+1 from the block containing the marker.
+     */
     static void panels(BuildContext c) {
         for (int r = 0; r < Geo.ROWS; r++) {
             for (int lane = 0; lane < 2; lane++) {
                 int x0 = Deck.laneX(lane);
                 int z0 = Deck.rowZ(r);
-                // top-centre of the 2x2 panel
-                c.marker("bridge.panel", x0 + 1.0, Geo.STAND, z0 + 1.0, 0f, "row=" + r + ",lane=" + lane);
+                c.marker("bridge.panel", x0 + 0.5, Geo.STAND, z0 + 0.5, 0f, "row=" + r + ",lane=" + lane);
             }
         }
     }
@@ -33,7 +37,7 @@ final class Spots {
     static List<Cell> queueCells() {
         List<Cell> out = new ArrayList<>();
         for (int x = -11; x <= 10; x++) {
-            for (int z = Geo.START_Z0; z <= Geo.GATE_Z - 1; z++) {
+            for (int z = Geo.START_Z0; z <= Geo.GATE_Z - 2; z++) { // z = 7 is the gate wall
                 if (Platforms.isSlot(x, z)) {
                     out.add(new Cell(x, z));
                 }
@@ -55,15 +59,15 @@ final class Spots {
     // ------------------------------------------------------------------ finish (end platform + lounge)
 
     static boolean benchCell(int x, int z) {
-        // benches along the exit wall either side of the door (viewing area): z 78..79, |x| >= 6
-        return z >= 78 && (x <= -6 || x >= 5);
+        // viewing area: three bench rows either side facing the bridge (see Platforms.benches)
+        return (z == 68 || z == 72 || z == 76) && ((x >= -11 && x <= -8) || (x >= 7 && x <= 10));
     }
 
     /** Finish cells on the end platform sorted by distance to the exit door (nearest first). */
     static List<Cell> finishPlatformCells() {
         List<Cell> out = new ArrayList<>();
         for (int x = -11; x <= 10; x++) {
-            for (int z = Geo.END_Z0 + 1; z <= Geo.END_Z1; z++) {
+            for (int z = Geo.END_Z0 + 1; z <= Geo.END_Z1 - 1; z++) { // z = 79 is the row against the exit wall frame
                 if (benchCell(x, z)) {
                     continue;
                 }
@@ -83,6 +87,9 @@ final class Spots {
         List<Cell> out = new ArrayList<>();
         for (int x = -15; x <= 15; x++) {
             for (int z = Geo.LZ0 + 4; z <= Geo.LZ1 - 6; z++) {
+                if (x == -1 || x == 0) {
+                    continue; // central aisle from the door to the monitor wall
+                }
                 int xm = x >= 0 ? x : Geo.mx(x);
                 if (((xm + z) & 1) == 0 && !Lounge.furniture(x, z)) {
                     out.add(new Cell(x, z));

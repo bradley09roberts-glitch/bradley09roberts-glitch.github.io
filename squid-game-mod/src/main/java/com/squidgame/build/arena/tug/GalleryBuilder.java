@@ -1,7 +1,6 @@
 package com.squidgame.build.arena.tug;
 
 import com.squidgame.build.BuildContext;
-import com.squidgame.build.StateString;
 
 /**
  * Guard / spectator galleries: the lower galleries along both long walls at deck level (y = 40), the upper catwalks at
@@ -37,18 +36,19 @@ final class GalleryBuilder {
     private static void lowerGalleries(BuildContext c) {
         for (int sgn = -1; sgn <= 1; sgn += 2) {
             final int sg = sgn;
-            // floor, west half mirrored
-            Sym.pattern(c, -60, Geo.DECK, Z(sg, 30) < Z(sg, 35) ? Z(sg, 30) : Z(sg, 35), -1, Geo.DECK,
-                    Z(sg, 30) < Z(sg, 35) ? Z(sg, 35) : Z(sg, 30), (x, y, z) -> {
+            int zLo = Math.min(Z(sg, 30), Z(sg, 35)), zHi = Math.max(Z(sg, 30), Z(sg, 35));   // floor incl. the edge-beam row
+            int pLo = Math.min(Z(sg, 31), Z(sg, 35)), pHi = Math.max(Z(sg, 31), Z(sg, 35));   // walking part
+            // floor, west half mirrored: edge beam, hazard stripe along the rail, flush lights, 5x5 panel joints
+            Sym.pattern(c, -60, Geo.DECK, zLo, -1, Geo.DECK, zHi, (x, y, z) -> {
                 int zz = Math.abs(z);
                 if (zz == 30) {
-                    return Pal.STEEL;                                            // edge beam top
+                    return Pal.STEEL;
                 }
                 if (zz == 33 && galleryLight(x)) {
                     return Pal.PANEL;
                 }
                 if (zz == 31) {
-                    return Pal.hazard(x + 2 * sg * 0 + 100 + zz) ;               // hazard stripe along the rail
+                    return Pal.hazard(x + 100);
                 }
                 if (Math.floorMod(x, 5) == 0 || zz == 35) {
                     return Pal.CONC_D;
@@ -56,30 +56,26 @@ final class GalleryBuilder {
                 double h = Pal.hash(x, z, 31);
                 return h < 0.10 ? Pal.STONE : h < 0.16 ? Pal.ANDESITE : Pal.CONC_L;
             });
-            // rail row
-            Sym.fill(c, -60, 41, Z(sg, 30), -1, 42, Z(sg, 30), Pal.BARS);
-            // underside plate and edge beam
-            Sym.fill(c, -60, 39, Math.min(Z(sg, 31), Z(sg, 35)), -1, 39, Math.max(Z(sg, 31), Z(sg, 35)), Pal.BLACK);
-            Sym.fill(c, -60, 37, Z(sg, 30), -1, 39, Z(sg, 30), Pal.STEEL);
-            Sym.fill(c, -60, 36, Z(sg, 30), -1, 36, Z(sg, 30), Pal.IRON);
+            Sym.fill(c, -60, 41, Z(sg, 30), -1, 42, Z(sg, 30), Pal.BARS);                    // rail row
+            Sym.fill(c, -60, 39, pLo, -1, 39, pHi, Pal.BLACK);                              // underside plate
+            Sym.fill(c, -60, 37, Z(sg, 30), -1, 39, Z(sg, 30), Pal.STEEL);                  // edge beam
+            Sym.fill(c, -60, 36, Z(sg, 30), -1, 36, Z(sg, 30), Pal.IRON);                   // bottom flange
             // brackets at every joint: diagonal knee braces from the wall up to the edge beam
             for (int xj : JOINTS) {
                 for (int dx = 0; dx < 2; dx++) {
-                    for (int zzz = 0; zzz <= 1; zzz++) {
-                        Sym.line(c, xj + dx, 27, Z(sg, 35), xj + dx, 36, Z(sg, 31) - sg * 0, Pal.STEEL);
-                    }
+                    Sym.line(c, xj + dx, 27, Z(sg, 35), xj + dx, 36, Z(sg, 31), Pal.STEEL);
                 }
-                Sym.fill(c, xj, 38, Math.min(Z(sg, 31), Z(sg, 35)), xj + 1, 38, Math.max(Z(sg, 31), Z(sg, 35)), Pal.STEEL);
+                Sym.fill(c, xj, 38, pLo, xj + 1, 38, pHi, Pal.STEEL);
             }
-            // columns every 20 blocks down to the hall floor
+            // columns every 20 blocks down to the hall floor, collared and hazard-footed
             for (int xc : new int[]{-55, -35, -15}) {
-                int za = Z(sg, 29), zb = Z(sg, 30);
-                Sym.fill(c, xc, 1, Math.min(za, zb), xc + 1, 38, Math.max(za, zb), Pal.STEEL);
+                int cLo = Math.min(Z(sg, 29), Z(sg, 30)), cHi = Math.max(Z(sg, 29), Z(sg, 30));
+                Sym.fill(c, xc, 1, cLo, xc + 1, 38, cHi, Pal.STEEL);
                 for (int y : new int[]{37, 24, 12, 4}) {
-                    Sym.fill(c, xc, y, Math.min(za, zb), xc + 1, y, Math.max(za, zb), Pal.IRON);
+                    Sym.fill(c, xc, y, cLo, xc + 1, y, cHi, Pal.IRON);
                 }
                 for (int y = 1; y <= 3; y++) {
-                    Sym.pattern(c, xc, y, Math.min(za, zb), xc + 1, y, Math.max(za, zb), (x, yy, z) -> Pal.hazard(x + yy + Math.abs(z)));
+                    Sym.pattern(c, xc, y, cLo, xc + 1, y, cHi, (x, yy, z) -> Pal.hazard(x + yy + Math.abs(z)));
                 }
             }
         }
@@ -113,7 +109,7 @@ final class GalleryBuilder {
     static final int CAT_X0 = ST_X0 + ST_STEPS;      // -54: first catwalk block in the west frame
 
     static boolean catLight(int x) {
-        return x >= -52 && x <= -2 && Math.floorMod(x + 52, 4) == 0;
+        return x >= -54 && x <= -2 && Math.floorMod(x + 54, 4) == 0;
     }
 
     private static void upperCatwalks(BuildContext c) {
@@ -229,7 +225,7 @@ final class GalleryBuilder {
             }
         }
         // flush floor lights keep the booth above level 10
-        for (int x : new int[]{-4, 0, 4}) {
+        for (int x : new int[]{-5, 0, 4}) {
             for (int z : new int[]{-4, 0, 4}) {
                 c.set(x, fy, z, Pal.SEA);
             }
@@ -264,9 +260,5 @@ final class GalleryBuilder {
             return Pal.STEEL;                                // header
         }
         return post ? Pal.STEEL : "minecraft:light_gray_stained_glass";
-    }
-
-    static String mirror(String s) {
-        return StateString.mirrorX(s);
     }
 }

@@ -5,6 +5,13 @@ final class Houses {
     private Houses() {
     }
 
+    /** Plots whose house carries a flat roof terrace with an armed guard post. */
+    private static boolean isGuardHouse(Layout.Slot s) {
+        return s.kind == Layout.Kind.COURT && ((s.zone.equals("CW1") && s.oz == -44) || (s.zone.equals("CE1") && s.oz == 42)
+                || (s.zone.equals("CW2") && s.oz == 34) || (s.zone.equals("CE2") && s.oz == -28)
+                || (s.zone.equals("N") && s.ox == -16) || (s.zone.equals("SB") && s.ox == 16));
+    }
+
     static House.Spec specFor(Layout.Slot s) {
         U.Rnd r = new U.Rnd(500 + s.ox * 31L + s.oz * 17L + s.rot);
         House.Spec h = new House.Spec();
@@ -31,13 +38,31 @@ final class Houses {
             h.wall = w < 0.62 ? Mat.PLASTER : w < 0.82 ? Mat.CREAM : Mat.CEMENT;
         }
         h.wall2 = Mat.CALCITE;
-        h.timber = r.chance(0.7) ? Mat.LOG_S : Mat.SPRUCE_LOG;
+        // districts: dark tiles and dark timber in the west, paler roofs and spruce timber in the east
+        boolean east = s.zone.startsWith("CE");
+        boolean west = s.zone.startsWith("CW");
+        h.timber = r.chance(east ? 0.35 : 0.8) ? Mat.LOG_S : Mat.SPRUCE_LOG;
         double rf = r.d();
-        h.roof = rf < 0.55 ? Roofs.TILE : rf < 0.75 ? Roofs.COBDS : rf < 0.85 ? Roofs.BLACK : rf < 0.95 ? Roofs.MUD : Roofs.STONE;
+        if (west) {
+            h.roof = rf < 0.70 ? Roofs.TILE : rf < 0.85 ? Roofs.BLACK : rf < 0.95 ? Roofs.COBDS : Roofs.MUD;
+        } else if (east) {
+            h.roof = rf < 0.40 ? Roofs.COBDS : rf < 0.70 ? Roofs.TILE : rf < 0.90 ? Roofs.MUD : Roofs.STONE;
+        } else {
+            h.roof = rf < 0.55 ? Roofs.TILE : rf < 0.75 ? Roofs.COBDS : rf < 0.85 ? Roofs.BLACK : rf < 0.95 ? Roofs.MUD : Roofs.STONE;
+        }
         h.chimney = r.chance(0.25);
         if (h.kind == House.Kind.HANOK) {
             h.tall = r.chance(0.35);
             h.laundry = r.chance(0.2);
+        }
+        if (isGuardHouse(s)) {
+            h.kind = House.Kind.FLAT;
+            h.wall = Mat.CEMENT;
+            h.tall = true;
+            h.tank = false;
+            h.chimney = false;
+            h.laundry = false;
+            h.guard = true;
         }
         return h;
     }

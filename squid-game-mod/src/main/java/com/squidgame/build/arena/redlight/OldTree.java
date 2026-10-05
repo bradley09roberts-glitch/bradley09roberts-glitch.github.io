@@ -62,25 +62,26 @@ public final class OldTree {
 
     private static void trunk(BuildContext c) {
         for (int y = 1; y <= TRUNK_TOP; y++) {
-            double flare = 3.3 * Math.exp(-(y - 1) / 1.9);
-            double rBase = 2.55 + 0.25 * Math.sin(y * 0.7) + (y > 12 ? -0.25 * (y - 12) / 5.0 : 0);
-            int ext = 9;
+            // slightly fluted, gently tapering trunk; buttresses (lobes) fade out within the first 6 blocks
+            double rBase = 2.3 + 0.2 * Math.sin(y * 0.7) - (y > 11 ? 0.25 * (y - 11) : 0);
+            double buttress = 2.9 * Math.exp(-(y - 1) / 1.7);
+            int ext = 8;
             for (int dx = -ext; dx <= ext; dx++) {
                 for (int dz = -ext; dz <= ext; dz++) {
                     double d = Math.hypot(dx, dz);
-                    if (d > 9) {
+                    if (d > 8) {
                         continue;
                     }
                     double ang = Math.atan2(dz, dx);
                     double lobes = 0;
                     for (double a : ROOT_ANGLES) {
                         double da = Math.atan2(Math.sin(ang - a), Math.cos(ang - a));
-                        lobes += Math.exp(-da * da / 0.16);
+                        lobes += Math.exp(-da * da / 0.11);
                     }
-                    // the flare is smaller towards the doll (front, -z)
-                    double front = 0.55 + 0.45 * Math.min(1.0, (Math.sin(ang) + 1.0) / 1.0);
-                    double lump = 0.88 + 0.26 * Noise.value3(321, Math.cos(ang) * 1.6 + y * 0.05, Math.sin(ang) * 1.6, y * 0.17);
-                    double r = (rBase + flare * (0.55 + 1.15 * lobes) * front) * lump;
+                    // buttresses are shorter on the side facing the doll (-z)
+                    double front = Math.sin(ang) < 0 ? 0.45 + 0.55 * (1 + Math.sin(ang)) : 1.0;
+                    double lump = 0.90 + 0.22 * Noise.value3(321, Math.cos(ang) * 1.6 + y * 0.05, Math.sin(ang) * 1.6, y * 0.17);
+                    double r = (rBase + buttress * Math.min(lobes, 1.15) * front) * lump;
                     if (d <= r) {
                         c.set(CX + dx, y, CZ + dz, bark(CX + dx, y, CZ + dz, "y"));
                     }
@@ -125,10 +126,13 @@ public final class OldTree {
         }
     }
 
-    /** Glowing knots (shroomlight) set into the bark around the base: they light the buttress ledges and look organic. */
+    /**
+     * Glowing knots (shroomlight) set into the bark and on top of the buttress roots: organic-looking orange nodules
+     * that also light the ledges of the base, which floor lights cannot reach.
+     */
     private static void glowKnots(BuildContext c) {
-        double[] azim = {0.35, 1.25, 2.15, 3.05, 3.95, 4.85, 5.75, 0.8, 2.6, 4.4};
-        int[] ys = {2, 4, 3, 5, 2, 4, 6, 7, 6, 3};
+        double[] azim = {0.35, 1.25, 2.15, 3.05, 3.95, 4.85, 5.55, 5.9, 0.8, 2.6, 4.4};
+        int[] ys = {2, 4, 3, 5, 2, 4, 3, 6, 7, 6, 3};
         for (int i = 0; i < azim.length; i++) {
             for (double rr = 8; rr >= 1; rr -= 0.5) {
                 int x = CX + (int) Math.round(Math.cos(azim[i]) * rr);
@@ -137,6 +141,21 @@ public final class OldTree {
                 if (s != null && s.contains("_log")) {
                     c.set(x, ys[i], z, "minecraft:shroomlight");
                     break;
+                }
+            }
+        }
+        // nodules on top of the buttress roots, one per lobe and a second further out on the long ones
+        for (double a : ROOT_ANGLES) {
+            for (double rr : new double[]{4.2, 6.4}) {
+                int x = CX + (int) Math.round(Math.cos(a) * rr);
+                int z = CZ + (int) Math.round(Math.sin(a) * rr);
+                for (int y = 6; y >= 1; y--) {
+                    if (c.isSolid(x, y, z)) {
+                        if (y <= 4 && c.get(x, y, z).contains("_log")) {
+                            c.set(x, y, z, "minecraft:shroomlight");
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -215,7 +234,7 @@ public final class OldTree {
         int ix = (int) Math.ceil(rx * 1.4), iy = (int) Math.ceil(ry * 1.4), iz = (int) Math.ceil(rz * 1.4);
         int bx0 = (int) Math.round(cx), by0 = (int) Math.round(cy), bz0 = (int) Math.round(cz);
         double minR = Math.min(rx, Math.min(ry, rz));
-        double shell = 3.2 / minR;
+        double shell = 2.6 / minR;
         for (int dx = -ix; dx <= ix; dx++) {
             for (int dy = -iy; dy <= iy; dy++) {
                 for (int dz = -iz; dz <= iz; dz++) {
@@ -237,20 +256,26 @@ public final class OldTree {
     private static void crown(BuildContext c) {
         double x = CX + 0.5, z = CZ + 0.5;
         double[][] puffs = {
-                // cx, cy, cz, rx, ry, rz
-                {x, 30, z + 2, 9, 6.5, 9},          // big central dome
-                {x, 35, z + 2, 6, 3.8, 6},          // top cap
-                {x - 9.5, 27, z - 1, 7, 5.2, 7},
-                {x + 9.5, 27, z - 1, 7, 5.2, 7},
-                {x - 3, 28, z + 8.5, 7, 5.2, 6.5},
-                {x + 5, 29, z + 8, 7, 5.2, 6.5},
-                {x - 7, 27, z - 5, 5.2, 4.6, 4.8},
-                {x + 7, 27, z - 5, 5.2, 4.6, 4.8},
-                {x - 11, 19.5, z, 5, 3.8, 5},
-                {x + 11, 21, z + 2, 5, 3.8, 5},
-                {x - 6, 17.5, z + 12, 4.6, 3.4, 4.6},
-                {x + 6, 22.5, z - 5, 4, 3.4, 4},
-                {x - 6, 22.5, z - 5, 4, 3.4, 4},
+                // cx, cy, cz, rx, ry, rz     (layered umbrella of pads, about 30 wide and 25 high)
+                // top layer
+                {x, 34.5, z + 2, 6.5, 3.4, 6.5},
+                {x - 4, 32, z + 5, 5, 3, 5},
+                // upper-middle layer
+                {x - 6.5, 29, z - 1, 6.2, 3.6, 6},
+                {x + 6.5, 29.5, z - 1, 6.2, 3.6, 6},
+                {x, 29, z + 7, 7, 3.8, 6.5},
+                {x, 30, z - 2, 5.5, 3.4, 5},
+                // lower-middle layer
+                {x - 9.5, 24, z + 1, 5.5, 3.2, 5.5},
+                {x + 9.5, 25, z + 2, 5.5, 3.2, 5.5},
+                {x - 5, 24.5, z + 10, 5.5, 3.2, 5},
+                {x + 6, 25, z + 10, 5.5, 3.2, 5},
+                {x - 5, 25, z - 6, 4.6, 3, 4.2},
+                {x + 5, 25.5, z - 6, 4.6, 3, 4.2},
+                // low skirts at the ends of the thick side branches
+                {x - 11, 19, z, 4.2, 2.8, 4.2},
+                {x + 11, 20, z + 2, 4.2, 2.8, 4.2},
+                {x - 6.5, 17.5, z + 12, 3.8, 2.6, 3.8},
         };
         int seed = 400;
         for (double[] p : puffs) {
@@ -285,16 +310,14 @@ public final class OldTree {
         }
     }
 
-    /** Number of leaf blocks above a floor cell (crown shade): sky light there is about 15 minus this. */
-    private static int leavesAbove(BuildContext c, int x, int z) {
-        int n = 0;
-        for (int y = 2; y <= 46; y++) {
-            String s = c.get(x, y, z);
-            if (s != null && s.contains("leaves")) {
-                n++;
+    /** True when something solid (leaves, branches) hangs above this floor cell. */
+    private static boolean shaded(BuildContext c, int x, int z) {
+        for (int y = 3; y <= 46; y++) {
+            if (c.isSolid(x, y, z)) {
+                return true;
             }
         }
-        return n;
+        return false;
     }
 
     private static boolean floorFree(BuildContext c, int x, int z) {
@@ -302,12 +325,42 @@ public final class OldTree {
     }
 
     /**
-     * Floor uplights (flush sea lanterns) on a covering lattice wherever the crown shades the ground (four or more
-     * leaves overhead), so the plaza under the tree stays at light level 11 or more. Call after the props are placed.
+     * Floor uplights (flush sea lanterns) on a covering lattice under the crown. Sky light only reaches the ground under
+     * a canopy by creeping in sideways from the open columns (one level per block), so every cell five or more blocks
+     * (in plan) from open sky gets a light within three blocks (standing level 11 or more). Call after the props.
      */
     public static int floorLights(BuildContext c) {
-        return Lighting.floorGrid(c, CX - 22, SAFE_Z0, CX + 22, FIELD_Z1, 3, "minecraft:sea_lantern",
-                (x, z) -> floorFree(c, x, z) && leavesAbove(c, x, z) >= 4,
+        final int x0 = CX - 30, x1 = CX + 30, z0 = SAFE_Z0 - 8, z1 = FIELD_Z1;
+        final int w = x1 - x0 + 1, d = z1 - z0 + 1;
+        final int[][] dist = new int[w][d];
+        java.util.ArrayDeque<int[]> queue = new java.util.ArrayDeque<>();
+        for (int x = x0; x <= x1; x++) {
+            for (int z = z0; z <= z1; z++) {
+                if (!shaded(c, x, z)) {
+                    dist[x - x0][z - z0] = 0;
+                    queue.add(new int[]{x, z});
+                } else {
+                    dist[x - x0][z - z0] = Integer.MAX_VALUE;
+                }
+            }
+        }
+        int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        while (!queue.isEmpty()) {
+            int[] q = queue.poll();
+            int dq = dist[q[0] - x0][q[1] - z0];
+            for (int[] dd : dirs) {
+                int nx = q[0] + dd[0], nz = q[1] + dd[1];
+                if (nx < x0 || nx > x1 || nz < z0 || nz > z1) {
+                    continue;
+                }
+                if (dist[nx - x0][nz - z0] > dq + 1) {
+                    dist[nx - x0][nz - z0] = dq + 1;
+                    queue.add(new int[]{nx, nz});
+                }
+            }
+        }
+        return Lighting.floorGrid(c, x0, z0, x1, z1, 3, "minecraft:sea_lantern",
+                (x, z) -> x >= x0 && x <= x1 && z >= z0 && z <= z1 && floorFree(c, x, z) && dist[x - x0][z - z0] >= 5,
                 (x, z) -> floorFree(c, x, z), "minecraft:sea_lantern");
     }
 }
