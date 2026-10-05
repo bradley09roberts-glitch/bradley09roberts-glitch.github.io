@@ -229,7 +229,8 @@ The complete, honest list is at the end of `docs/VERIFICATION.md`; the important
   Windows and macOS were not tried; Fabric Loader 0.16.10 (the declared minimum) was not tested.
 * More than two humans at once in one game, and a ladder in the Final with several humans, were not exercised.
 * A tournament can end **without a winner** (everyone eliminated in a game - for example on the Glass Bridge, which is a gamble for
-  the first contestants; simulated: somebody crosses in 72 - 96 % of small fields and about 90 % of the default Normal ones).
+  the first contestants; simulated: somebody crosses in 72 - 96 % of the small fields (4 - 11 contestants) and in 69 - 85 % of
+  12-contestant bridges, and larger fields almost always have a crosser).
   The rules say so in the instructions; `UNKNOWN_ROWS` in `BridgeRules` is the knob that makes the bridge kinder.
 * The arenas are sized for 128 contestants (`maxContestants`); up to 456 are accepted, extra contestants share seats or get byes.
 * Dalgona needs a pointing device. Several default key bindings share keys with vanilla (Tug of War uses `F` and `Left Shift`);
