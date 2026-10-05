@@ -89,8 +89,8 @@ public final class WaitingRoomPrefab {
         c.set(-4, h, -d, "squidgame:symbol_circle");
         c.set(0, h, -d, "squidgame:symbol_triangle");
         c.set(4, h, -d, "squidgame:symbol_square");
-        c.text(0.5, 6.0, -d + 0.45, s.title(), "#FFD84A", 2.6f, 0f, false);
-        c.text(0.5, 4.6, -d + 0.45, s.subtitle(), "white", 1.4f, 0f, false);
+        c.text(0.5, 6.0, -d + 1.04, s.title(), "#FFD84A", 2.6f, 0f, false);
+        c.text(0.5, 4.6, -d + 1.04, s.subtitle(), "white", 1.4f, 0f, false);
         // benches along the side walls
         for (int z = -d + 3; z <= -6; z += 3) {
             for (int side = -1; side <= 1; side += 2) {

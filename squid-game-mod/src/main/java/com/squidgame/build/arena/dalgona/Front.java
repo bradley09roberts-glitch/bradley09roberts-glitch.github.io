@@ -44,11 +44,9 @@ public final class Front {
         }
         // posts either side of the board area
         for (int sx = -1; sx <= 1; sx += 2) {
-            for (int dx = 0; dx <= 0; dx++) {
-                int x = sx * 19;
-                c.fill(x, 1, 0, x, 2, 0, Pal.DARK_OAK);
-                c.fill(x, 3, 0, x, Geo.EAVES - 2, 0, Pal.log("stripped_dark_oak_wood", 'y'));
-            }
+            int x = sx * 19;
+            c.fill(x, 1, 0, x, 2, 0, Pal.DARK_OAK);
+            c.fill(x, 3, 0, x, Geo.EAVES - 2, 0, Pal.log("stripped_dark_oak_wood", 'y'));
         }
         board(c);
         clock(c, 0, 19);

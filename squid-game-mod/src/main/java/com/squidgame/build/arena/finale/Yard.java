@@ -49,7 +49,12 @@ final class Yard {
         double big = Noise.fbm(x * 0.06 + 11, z * 0.06 + 7, 5, 3);
         double mid = Noise.fbm(x * 0.21, z * 0.21 + 40, 9, 2);
         double h = Noise.hash01(x, z, 3);
-        boolean nearCourt = x >= -HW - 4 && x <= HW + 4 && z >= COURT_TOP - 4 && z <= ZQ + 4;
+        if (CourtGeometry.insideSquid(x, z)) {
+            // inside the painted squid the sand is plain, so the zones and the lines read clearly
+            return big > 0.62 && mid > 0.55 && h < 0.5 ? SMOOTH : SAND;
+        }
+        int m = BELT + 2;                                   // calm sand over the court and its clear belt
+        boolean nearCourt = x >= -HW - m && x <= HW + m && z >= COURT_TOP - m && z <= ZQ + m;
         if (nearCourt) {
             // the court: calm warm sand so the white lines read clearly; hardpan patches kept subtle
             if (big > 0.58 && mid > 0.5 && h < 0.8) {

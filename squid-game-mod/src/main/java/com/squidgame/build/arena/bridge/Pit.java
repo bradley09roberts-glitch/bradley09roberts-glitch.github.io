@@ -59,6 +59,6 @@ final class Pit {
 
     private static void cable(BuildContext c, int x, int z, int yBottom) {
         c.fill(x, yBottom + 1, z, x, Geo.TRUSS_BOT - 1, z, Pal.chain());
-        c.set(x, yBottom, z, "minecraft:soul_lantern[hanging=true]");
+        c.set(x, yBottom, z, Pal.SOUL_LANTERN_HANGING);
     }
 }

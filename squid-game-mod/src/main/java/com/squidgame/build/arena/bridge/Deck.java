@@ -37,6 +37,13 @@ final class Deck {
         }
         lightRail(c, RAIL_W);
         lightRail(c, RAIL_E);
+        // row numbers (1..18) on the lit rail segments, facing the deck
+        for (int r = 0; r < Geo.ROWS; r++) {
+            String n = Integer.toString(r + 1);
+            double z = rowZ(r) + 1.0;
+            c.text(RAIL_W + 1.03, RAIL_Y + 0.5, z, n, "#1B1B24", 2.0f, -90f, false);
+            c.text(RAIL_E - 0.03, RAIL_Y + 0.5, z, n, "#1B1B24", 2.0f, 90f, false);
+        }
     }
 
     private static void lightRail(BuildContext c, int x) {

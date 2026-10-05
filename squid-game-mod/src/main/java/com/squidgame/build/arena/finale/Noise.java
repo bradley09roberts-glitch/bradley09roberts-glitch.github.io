@@ -56,8 +56,4 @@ final class Noise {
         final int[] m = {0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5};
         return (m[((y & 3) << 2) | (x & 3)] + 0.5) / 16.0;
     }
-
-    static double clamp01(double v) {
-        return v < 0 ? 0 : (v > 1 ? 1 : v);
-    }
 }

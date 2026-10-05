@@ -12,6 +12,7 @@ final class Lounge {
     }
 
     private static final String MINT = "squidgame:pastel_mint";
+    private static final String SAFE_GREEN = "#7DFF9A";
     private static final String MINT_STAIRS = "squidgame:pastel_mint_stairs";
 
     /** True for cells covered by lounge furniture (no spawn spots there). */
@@ -90,10 +91,10 @@ final class Lounge {
         c.fill(-5, 48, z1 + 1, 4, 48, z1 + 1, Pal.BLK);
         c.fill(-5, 46, z1 + 1, -5, 47, z1 + 1, Pal.BLK);
         c.fill(4, 46, z1 + 1, 4, 47, z1 + 1, Pal.BLK);
-        c.text(0.0, 50.2, z1 + 0.45, "SAFE", Hex.GREEN, 9f, 180f, false);
+        c.text(0.0, 50.2, z1 + 0.45, "SAFE", SAFE_GREEN, 9f, 180f, false);
         c.text(0.0, 43.6, z1 + 0.45, "YOU CROSSED THE GLASS BRIDGE", "white", 2.4f, 180f, false);
         // sign over the tunnel mouth, seen from inside
-        c.text(0.0, 49.5, Geo.FZ - 0.55, "THIS WAY BACK TO THE BRIDGE", "#9AA0A6", 1.6f, 0f, false);
+        c.text(0.0, 49.6, Geo.FZ + 1.45, "THIS WAY BACK TO THE BRIDGE", "#7A8A80", 1.6f, 0f, false);
     }
 
     private static void wall(BuildContext c, int x1, int y1, int z1, int x2, int y2, int z2) {
@@ -104,13 +105,5 @@ final class Lounge {
             }
             return ((Pal.hash(a / 6, y / 4, 5) & 3) == 0) ? Pal.TILE_W : MINT;
         });
-    }
-
-    /** Colour constants for text. */
-    static final class Hex {
-        static final String GREEN = "#7DFF9A";
-
-        private Hex() {
-        }
     }
 }

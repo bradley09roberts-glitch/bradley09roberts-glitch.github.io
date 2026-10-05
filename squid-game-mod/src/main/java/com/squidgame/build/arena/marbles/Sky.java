@@ -22,7 +22,7 @@ final class Sky {
     // ------------------------------------------------------------------ perimeter wall
 
     private static void walls(BuildContext c) {
-        String core = "minecraft:blue_concrete";
+        String core = "minecraft:blue_terracotta";
         // solid cores (outer two layers), then the inner mural layer per wall
         c.fill(RX0, -1, RZ0, RX0 + 1, WALL_TOP, RZ1, core);
         c.fill(RX1 - 1, -1, RZ0, RX1, WALL_TOP, RZ1, core);
@@ -97,6 +97,28 @@ final class Sky {
                 sky = tw;
             }
         }
+        return glow(sky, t, y);
+    }
+
+    /**
+     * The painted sky must be visible at night, so a sparse lattice (one per 4x4 cell, light 10-15) of emissive blocks sits
+     * inside the coloured bands: shroomlight in the orange glow, pearlescent froglight in the pink, crying obsidian in
+     * purple and blue. Black silhouettes keep their colour (lit black is still black).
+     */
+    private static String glow(String sky, int t, int y) {
+        int ct = Math.floorDiv(t, 4), cy = Math.floorDiv(y, 4);
+        if (y < 4 || Math.floorMod(t, 4) != Math.floorMod(U.hash(ct, cy, 301), 4) || Math.floorMod(y, 4) != Math.floorMod(U.hash(ct, cy, 302), 4)) {
+            return sky;
+        }
+        if (sky.equals(cc("orange")) || sky.equals(cc("red"))) {
+            return "minecraft:shroomlight";
+        }
+        if (sky.equals(cc("magenta")) || sky.equals(cc("pink"))) {
+            return "minecraft:pearlescent_froglight[axis=y]";
+        }
+        if (sky.equals(cc("purple")) || sky.equals(cc("blue"))) {
+            return "minecraft:crying_obsidian";
+        }
         return sky;
     }
 
@@ -142,7 +164,8 @@ final class Sky {
                 return star < 0.002 ? "minecraft:sea_lantern" : star < 0.007 ? cc("white") : cc("yellow");
             }
             double n = U.fbm(t * 0.06, y * 0.1, 63, 3);
-            return n + 0.15 * (r - 0.5) > 0.56 ? cc("blue") : n + 0.15 * (r - 0.5) > 0.5 ? cc("purple") : cc("black");
+            double v = n + 0.12 * (r - 0.5) - 0.5 * Math.max(0, y - 40) / 8.0 * 0.1;
+            return v > 0.46 ? cc("blue") : v > 0.41 ? cc("purple") : cc("black");
         }
         return cc(col);
     }
@@ -176,6 +199,11 @@ final class Sky {
         double dm = Math.hypot(x - MOON_X, z - MOON_Z);
         if (dm <= MOON_R + 5) {
             return moon(x, z, dm);
+        }
+        // faint glow lattice so the painted navy / purple sky is visible from below (stars add their own light)
+        int gx = Math.floorDiv(x, 6), gz = Math.floorDiv(z, 6);
+        if (Math.floorMod(x, 6) == Math.floorMod(U.hash(gx, gz, 91), 6) && Math.floorMod(z, 6) == Math.floorMod(U.hash(gx, gz, 92), 6)) {
+            return "minecraft:crying_obsidian";
         }
         double r = U.rand(x, z, 71);
         double n = U.fbm(x * 0.045, z * 0.045, 17, 4);

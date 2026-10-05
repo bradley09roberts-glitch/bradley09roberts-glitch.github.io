@@ -152,7 +152,7 @@
   "squidgame.results.you_won": "You win W %s!",
   "squidgame.rule.no_teleport": "Teleporting is not allowed during the tournament.",
   "squidgame.subtitle.game_number": "Game %s",
-  "squidgame.subtitle.registration": "%s contestants registered - use the terminal to join",
+  "squidgame.subtitle.registration": "%s contestants registered",
   "squidgame.subtitle.transition": "%s contestants remain",
   "squidgame.subtitle.your_number": "Your contestant number",
   "squidgame.title.eliminated": "ELIMINATED",

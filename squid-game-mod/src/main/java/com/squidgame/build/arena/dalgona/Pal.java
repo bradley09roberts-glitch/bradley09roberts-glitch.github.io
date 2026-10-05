@@ -20,7 +20,6 @@ public final class Pal {
     public static final String OCHRE = "minecraft:yellow_terracotta";
     public static final String WHITE = "minecraft:white_concrete";
     public static final String QUARTZ = "minecraft:quartz_block";
-    public static final String QUARTZ_SMOOTH = "minecraft:smooth_quartz";
     public static final String STONE_BRICKS = "minecraft:stone_bricks";
     public static final String DEEPSLATE_TILES = "minecraft:deepslate_tiles";
     public static final String BLACK = "minecraft:black_concrete";
@@ -32,7 +31,9 @@ public final class Pal {
     public static final String WARM_PANEL = "squidgame:panel_light_warm";
     public static final String GLASS_PANE = "minecraft:glass_pane";
     public static final String WHITE_PANE = "minecraft:white_stained_glass_pane";
-    public static final String MILK_GLASS = "minecraft:white_stained_glass";
+    /** Translucent amber: the lamp globes (light passes through it). */
+    public static final String HONEY = "minecraft:honey_block";
+    public static final String HONEYCOMB = "minecraft:honeycomb_block";
 
     public static final String STATION = "squidgame:dalgona_station";
 

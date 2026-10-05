@@ -19,6 +19,8 @@ final class Roofs {
     static final Family BLACK = new Family(Mat.BLK_ST, Mat.BLK_SL, Mat.BLACKSTONE);
     static final Family STONE = new Family(Mat.SB_ST, Mat.SB_SL, Mat.SB);
     static final Family MUD = new Family(Mat.MUDB_ST, Mat.MUDB_SL, Mat.MUDB);
+    /** verdigris copper, for landmark roofs (lookout tower, well). */
+    static final Family COPPER = new Family("minecraft:oxidized_cut_copper_stairs", "minecraft:oxidized_cut_copper_slab", "minecraft:oxidized_cut_copper");
 
     /**
      * Gable roof whose ridge runs along x. Columns z = zf..zb rise one block per column from y0 towards the centre.

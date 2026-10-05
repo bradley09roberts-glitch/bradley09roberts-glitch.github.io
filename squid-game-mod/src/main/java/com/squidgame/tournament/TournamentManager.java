@@ -5,6 +5,7 @@ import com.squidgame.SquidGameMod;
 import com.squidgame.build.ArenaBuilders;
 import com.squidgame.build.ArenaId;
 import com.squidgame.build.Marker;
+import com.squidgame.build.Region;
 import com.squidgame.core.ContestantStatus;
 import com.squidgame.core.Difficulty;
 import com.squidgame.core.GameKind;
@@ -556,9 +557,16 @@ public final class TournamentManager {
         level.getChunk(BlockPos.containing(pos));
         p.teleportTo(level, pos.x, pos.y, pos.z, m == null ? 0f : m.yaw(), 0f);
         Restrictions.noteTeleport(p);
-        p.setRespawnPosition(ArenaWorld.DIMENSION, BlockPos.containing(pos), 0f, true, false);
+        setArenaRespawn(p);
         saveNow();
         syncNumbers(true);
+    }
+
+    /** Whoever dies inside the complex (e.g. by leaving the world's bottom) comes back in the dormitory, not the overworld. */
+    private void setArenaRespawn(ServerPlayer p) {
+        Marker m = arenaData().marker(ArenaId.HUB, "dorm.player_spawn");
+        Vec3 pos = m == null ? new Vec3(0.5, ArenaId.ORIGIN_Y + 1, 0.5) : new Vec3(m.x(), m.y(), m.z());
+        p.setRespawnPosition(ArenaWorld.DIMENSION, BlockPos.containing(pos), 0f, true, false);
     }
 
     /** Sends a player home (restores their snapshot). Contestants forfeit. */
@@ -724,7 +732,7 @@ public final class TournamentManager {
         t.phase = p;
         t.phaseTicks = 0;
         SquidConfig cfg = SquidConfig.get();
-        SquidGameMod.LOGGER.info("Tournament phase -> {} (game {} {})", p, t.gameNumber, t.gameType);
+        SquidGameMod.LOGGER.info("Tournament phase -> {} (game {} {}, {} alive of {})", p, t.gameNumber, t.gameType, t.roster.aliveCount(), t.roster.size());
         switch (p) {
             case REGISTRATION -> t.phaseLength = cfg.ticks(cfg.registrationSeconds);
             case INSTRUCTIONS -> enterInstructions();
@@ -788,6 +796,7 @@ public final class TournamentManager {
         tr.gameNumber++;
         tr.gameType = next;
         tr.played.add(next);
+        SquidGameMod.LOGGER.info("Tournament phase -> INSTRUCTIONS (game {} {}, {} alive of {})", tr.gameNumber, next, tr.roster.aliveCount(), tr.roster.size());
         ArenaId arena = ArenaId.forGame(next);
         chunks.force(arena);
         Rng grng = new Rng(tr.seed * 31 + tr.gameNumber * 977L);
@@ -922,6 +931,43 @@ public final class TournamentManager {
                 eliminate(t.ctx, c, EliminationCause.OUT_OF_BOUNDS);
             } else if (b.getY() < ArenaId.ORIGIN_Y - 130) {
                 eliminate(t.ctx, c, EliminationCause.FELL);
+            } else if (c.isHumanControlled()) {
+                enforceBounds(c, b);
+            }
+        }
+    }
+
+    /**
+     * Humans must stay inside the arena while a game runs (walking back through the gate or out of the play area is not an
+     * escape): a warning first, then they are put back, and after about eight seconds outside they are eliminated.
+     */
+    private void enforceBounds(Contestant c, LivingEntity body) {
+        Region bounds = t.ctx.region("arena.bounds");
+        if (bounds == null) {
+            return;
+        }
+        final double margin = 3.0;
+        boolean outside = body.getX() < bounds.minX() - margin || body.getX() > bounds.maxX() + 1 + margin
+                || body.getZ() < bounds.minZ() - margin || body.getZ() > bounds.maxZ() + 1 + margin;
+        if (!outside) {
+            c.stats.remove("boundsStrikes");
+            return;
+        }
+        int strikes = (int) c.stat("boundsStrikes", 0) + 1;
+        c.stats.put("boundsStrikes", (double) strikes);
+        ServerPlayer p = c.player(server);
+        if (strikes >= 4) {
+            eliminate(t.ctx, c, EliminationCause.OUT_OF_BOUNDS);
+            return;
+        }
+        if (p != null) {
+            Announcer.chat(p, Component.translatable("squidgame.rule.out_of_bounds"));
+            Announcer.sound(p, ModSounds.UI_DENY, 1f, 1f);
+            if (strikes >= 2) {
+                double x = Math.max(bounds.minX() + 1.5, Math.min(bounds.maxX() - 0.5, body.getX()));
+                double z = Math.max(bounds.minZ() + 1.5, Math.min(bounds.maxZ() - 0.5, body.getZ()));
+                p.teleportTo(arenaLevel(), x, body.getY(), z, p.getYRot(), p.getXRot());
+                Restrictions.noteTeleport(p);
             }
         }
     }
@@ -945,6 +991,8 @@ public final class TournamentManager {
         for (Contestant c : t.roster.alive()) {
             c.incrementGamesSurvived();
         }
+        SquidGameMod.LOGGER.info("Game {} ({}) concluded: {} survivors, {} eliminated in this game, {} eliminated overall", t.gameNumber,
+                t.gameType, t.roster.aliveCount(), t.lastEliminated.size(), t.roster.eliminatedInOrder().size());
     }
 
     private void enterResults() {
@@ -1504,6 +1552,7 @@ public final class TournamentManager {
                     store.restore(p);
                 } else if (inArena) {
                     restrictions.setDesiredMode(p, GameType.ADVENTURE);
+                    setArenaRespawn(p);
                 }
             }
         }

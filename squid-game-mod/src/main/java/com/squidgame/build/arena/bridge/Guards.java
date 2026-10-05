@@ -37,15 +37,16 @@ final class Guards {
         }
         // a square in the gallery
         post(c, -13.5, BALCONY_STAND, -4.5, 0f, "square");
-        // circles on the platforms (black tile cells, not queue/gathering slots) and in the lounge
-        post(c, -7.5, Geo.STAND, 6.5, 0f, "circle");
-        post(c, 7.5, Geo.STAND, 6.5, 0f, "circle");
-        post(c, -5.5, Geo.STAND, -5.5, 0f, "circle");
-        post(c, -7.5, Geo.STAND, 70.5, 180f, "circle");
-        post(c, 7.5, Geo.STAND, 70.5, 180f, "circle");
-        post(c, -5.5, Geo.STAND, 76.5, 180f, "circle");
-        post(c, 8.5, Geo.STAND, 87.5, 180f, "circle");
-        post(c, -8.5, Geo.STAND, 87.5, 180f, "circle");
+        // circles in the aisles of the platforms and of the lounge (never in the queue / gathering slot cells),
+        // staggered so each aisle stays passable
+        for (int[] g : Platforms.START_GUARD_CELLS) {
+            post(c, g[0] + 0.5, Geo.STAND, g[1] + 0.5, 0f, "circle");
+        }
+        post(c, -0.5, Geo.STAND, 66.5, 180f, "circle");
+        post(c, 0.5, Geo.STAND, 71.5, 180f, "circle");
+        post(c, -0.5, Geo.STAND, 76.5, 180f, "circle");
+        post(c, -0.5, Geo.STAND, 88.5, 180f, "circle");
+        post(c, 0.5, Geo.STAND, 94.5, 180f, "circle");
         patrol(c);
     }
 

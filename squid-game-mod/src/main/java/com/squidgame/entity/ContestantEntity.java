@@ -135,6 +135,18 @@ public class ContestantEntity extends PathfinderMob implements GeoEntity {
         return nav;
     }
 
+    /**
+     * Vanilla {@code Mob.setSpeed} also feeds the speed into the forward input (zza = speed), so a mob's ground speed grows with
+     * the square of its movement attribute (attribute 0.1 would crawl at 0.4 blocks/s). Contestants and guards use the player
+     * convention instead: full forward input, so blocks/s = 43 x attribute x speed modifier (0.1 x 1.0 = 4.3 blocks/s, the
+     * walking pace of a player) and modifiers scale the pace linearly.
+     */
+    @Override
+    public void setSpeed(float speed) {
+        super.setSpeed(speed);
+        setZza(speed > 0.0f ? 1.0f : 0.0f);
+    }
+
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));

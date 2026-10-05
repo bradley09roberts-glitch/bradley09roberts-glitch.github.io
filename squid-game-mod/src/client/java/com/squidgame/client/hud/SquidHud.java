@@ -164,7 +164,7 @@ public final class SquidHud {
                     int a = (int) (255 * pulse);
                     int col = (a << 24) | (wd.color() & 0xFFFFFF);
                     g.pose().pushPose();
-                    g.pose().translate(cx, h * 0.33f, 0);
+                    g.pose().translate(cx, h * 0.42f, 0);
                     g.pose().scale(2.4f, 2.4f, 1f);
                     g.drawCenteredString(font, wd.label(), 0, 0, col);
                     g.pose().popPose();

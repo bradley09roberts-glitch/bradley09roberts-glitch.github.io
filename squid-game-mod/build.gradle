@@ -37,7 +37,7 @@ loom {
         testClient {
             client()
             name = 'Squid Game Test Client'
-            runDir 'run-testclient'
+            runDir System.getenv('SQUID_RUNDIR') ?: 'run-testclient'
             programArgs '--username', System.getenv('SQUID_USER') ?: 'Contestant',
                     '--quickPlayMultiplayer', 'localhost:' + (System.getenv('SQUID_PORT') ?: '25599'),
                     '--width', '1280', '--height', '720'

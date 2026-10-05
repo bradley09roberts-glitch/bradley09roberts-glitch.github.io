@@ -19,8 +19,8 @@ final class Court {
         U.Rnd r = new U.Rnd(7000 + k * 13L);
         int style = (k * 7 + (k >> 2)) % 3;
         floor(c, s, style);
-        walls(c);
-        gate(c, String.valueOf(k + 1));
+        walls(c, wallVariant(k));
+        gate(c, String.valueOf(k + 1), gateStyle(k));
         lamps(c);
         paint(c);
         table(c, k);
@@ -65,40 +65,107 @@ final class Court {
 
     // ------------------------------------------------------------------ walls and gate
 
+    /** Wall style by plot index: 0 plaster + timber, 1 stone, 2 plank fence wall, 3 whitewash. */
+    static int wallVariant(int k) {
+        int h = Math.floorMod(U.hash(k, 33, 9), 12);
+        return h < 6 ? 0 : h < 8 ? 1 : h < 10 ? 2 : 3;
+    }
+
     static void walls(BuildContext c) {
+        walls(c, 0);
+    }
+
+    static void walls(BuildContext c, int variant) {
         for (int side = -1; side <= 1; side += 2) {
             int x = 4 * side;
             int z1 = -1, z2 = Layout.COURT_LEN - 1;
             c.fill(x, 1, z1, x, 1, z2, Mat.SB);
-            c.noise(x, 2, z1, x, 3, z2, new String[]{Mat.PLASTER, Mat.CALCITE, Mat.DIORITE}, new double[]{62, 30, 8});
-            // timber beam along the top of the plaster and posts every four blocks
-            c.fill(x, 3, z1, x, 3, z2, Mat.log(Mat.LOG_S, "z"));
-            for (int z = z1; z <= z2; z += 4) {
-                c.fill(x, 2, z, x, 2, z, Mat.log(Mat.LOG_S, "y"));
+            switch (variant) {
+                case 1 -> {
+                    c.noise(x, 2, z1, x, 3, z2, new String[]{Mat.SB, Mat.SB_MOSS, Mat.COBBLE, Mat.SB_CRACK}, new double[]{50, 20, 20, 10});
+                    for (int z = z1; z <= z2; z += 4) {
+                        c.fill(x, 2, z, x, 3, z, Mat.log(Mat.LOG_S, "y"));
+                    }
+                }
+                case 2 -> {
+                    c.noise(x, 2, z1, x, 3, z2, new String[]{Mat.PLANKS, Mat.SPRUCE, "minecraft:oak_planks"}, new double[]{50, 35, 15});
+                    for (int z = z1; z <= z2; z += 3) {
+                        c.fill(x, 2, z, x, 3, z, Mat.log(Mat.LOG, "y"));
+                    }
+                }
+                case 3 -> {
+                    c.noise(x, 2, z1, x, 3, z2, new String[]{Mat.CALCITE, Mat.DIORITE, Mat.PLASTER}, new double[]{70, 20, 10});
+                    c.fill(x, 3, z1, x, 3, z2, Mat.log(Mat.LOG_S, "z"));
+                }
+                default -> {
+                    c.noise(x, 2, z1, x, 3, z2, new String[]{Mat.PLASTER, Mat.CALCITE, Mat.DIORITE}, new double[]{62, 30, 8});
+                    // timber beam along the top of the plaster and posts every four blocks
+                    c.fill(x, 3, z1, x, 3, z2, Mat.log(Mat.LOG_S, "z"));
+                    for (int z = z1; z <= z2; z += 4) {
+                        c.fill(x, 2, z, x, 2, z, Mat.log(Mat.LOG_S, "y"));
+                    }
+                }
+            }
+            // a lit paper window set into the plaster walls (visible from both neighbouring courts)
+            if ((variant == 0 || variant == 3) && U.rand(c.worldX(x, 5), c.worldZ(x, 5), 8200) < 0.55) {
+                int wz = U.rand(c.worldX(x, 9), c.worldZ(x, 9), 8201) < 0.5 ? 5 : 9;
+                c.set(x, 2, wz, Mat.GLOW);
             }
             // tile coping (one slab wide)
             c.fill(x, 4, 0, x, 4, z2, Mat.slabB(Mat.TILE_SL));
+            // creepers hanging on the court side of the wall (props and lamps are placed later and overwrite them)
+            for (int z = 2; z <= z2 - 1; z++) {
+                if (U.rand(c.worldX(x, z), c.worldZ(x, z), 8123) < 0.16) {
+                    int len = 1 + (int) (U.rand(z, 5, c.worldX(x, z)) * 3);
+                    String vine = "minecraft:vine[" + (side < 0 ? "west" : "east") + "=true]";
+                    c.fill(x - side, 3 - len + 1, z, x - side, 3, z, vine);
+                }
+            }
         }
     }
 
+    /** Gate style by plot index: 0 = tiled gate house, 1 = lamp posts, 2 = timber arch. */
+    static int gateStyle(int k) {
+        int h = Math.floorMod(U.hash(k, 77, 5), 10);
+        return h < 4 ? 0 : h < 7 ? 1 : 2;
+    }
+
     static void gate(BuildContext c, String label) {
+        gate(c, label, 0);
+    }
+
+    static void gate(BuildContext c, String label, int style) {
         for (int side = -1; side <= 1; side += 2) {
             int x = 3 * side;
             c.fill(x, 1, -1, x, 2, -1, Mat.SB);
-            c.fill(x, 3, -1, x, 5, -1, Mat.log(Mat.LOG_S, "y"));
+            c.fill(x, 3, -1, x, 4, -1, Mat.log(Mat.LOG_S, "y"));
+            c.set(x, 5, -1, style == 1 ? Mat.slabB(Mat.TILE_SL) : Mat.log(Mat.LOG_S, "y"));
+        }
+        if (style == 1) {
+            // lamp posts: a lantern on each pillar, plaque on the right pillar
+            c.set(-3, 6, -1, Mat.lantern(false));
+            c.set(3, 6, -1, Mat.lantern(false));
+            c.text(3.5, 3.6, -1.03, label, "#FFE8A0", label.length() > 3 ? 0.9f : 1.5f, 180f, false);
+            return;
         }
         // lintel beam
         c.fill(-3, 5, -1, 3, 5, -1, Mat.log(Mat.LOG_S, "x"));
-        // small gable roof over the gate: ridge along x
-        c.fill(-3, 6, -2, 3, 6, -2, Mat.stair(Mat.TILE_ST, "south"));
-        c.fill(-3, 6, -1, 3, 6, -1, Mat.TILE);
-        c.fill(-3, 7, -1, 3, 7, -1, Mat.slabB(Mat.TILE_SL));
-        c.fill(-3, 6, 0, 3, 6, 0, Mat.stair(Mat.TILE_ST, "north"));
+        if (style == 0) {
+            // small gable roof over the gate: ridge along x
+            c.fill(-3, 6, -2, 3, 6, -2, Mat.stair(Mat.TILE_ST, "south"));
+            c.fill(-3, 6, -1, 3, 6, -1, Mat.TILE);
+            c.fill(-3, 7, -1, 3, 7, -1, Mat.slabB(Mat.TILE_SL));
+            c.fill(-3, 6, 0, 3, 6, 0, Mat.stair(Mat.TILE_ST, "north"));
+        } else {
+            // timber arch: a second beam and a tile cap on top
+            c.fill(-3, 6, -1, 3, 6, -1, Mat.log(Mat.LOG_S, "x"));
+            c.fill(-2, 7, -1, 2, 7, -1, Mat.slabB(Mat.TILE_SL));
+        }
         // hanging lanterns
         c.set(-2, 4, -1, Mat.lantern(true));
         c.set(2, 4, -1, Mat.lantern(true));
         // number plaque on the lintel (faces the alley)
-        c.text(0.5, 5.5, -1.03, label, "#FFE8A0", label.length() > 3 ? 1.4f : 2.4f, 180f, false);
+        c.text(0.5, style == 0 ? 5.5 : 5.5, -1.03, label, "#FFE8A0", label.length() > 3 ? 1.4f : 2.4f, 180f, false);
     }
 
     private static void lamps(BuildContext c) {
@@ -106,6 +173,7 @@ final class Court {
         Props.stoneLamp(c, 3, 1, 6);
         Props.stoneLamp(c, -3, 1, 8);
         Props.stoneLamp(c, 3, 1, 10);
+        Props.stoneLamp(c, -3, 1, 11);
     }
 
     // ------------------------------------------------------------------ painting: throw line, pads, bullseye
@@ -139,20 +207,31 @@ final class Court {
     }
 
     private static void props(BuildContext c, U.Rnd r, int k) {
-        // small props along the two wall columns (x = +-3) away from the lamps
-        int[] zs = {1, 2, 4, 5, 7, 9, 11};
+        // small props along the two wall columns (x = +-3), kept clear of the partners' pads (rows 1-2) and the lamps
+        int[] zs = {4, 5, 7, 9};
+        boolean bikeLeft = r.chance(0.10), bikeRight = r.chance(0.10);
+        if (bikeLeft) {
+            Props.bicycle(c, -3, 1, 4, "z");
+        }
+        if (bikeRight) {
+            Props.bicycle(c, 3, 1, 7, "z");
+        }
         for (int side = -1; side <= 1; side += 2) {
             for (int z : zs) {
-                if (!r.chance(0.18)) {
+                if ((side < 0 && bikeLeft && z >= 4 && z <= 6) || (side > 0 && bikeRight && z >= 7 && z <= 9)) {
+                    continue;
+                }
+                if (!r.chance(0.2)) {
                     continue;
                 }
                 int x = 3 * side;
-                switch (r.i(6)) {
+                switch (r.i(7)) {
                     case 0 -> Props.barrel(c, x, 1, z);
                     case 1 -> Props.crate(c, x, 1, z, 1 + r.i(2));
                     case 2 -> Props.pot(c, x, 1, z, r);
                     case 3 -> Props.jar(c, x, 1, z);
                     case 4 -> Props.planter(c, x, 1, z, r.chance(0.5));
+                    case 5 -> c.set(x, 1, z, Mat.stair("minecraft:spruce_stairs", side < 0 ? "east" : "west"));
                     default -> Props.pot(c, x, 1, z, r);
                 }
             }
@@ -166,11 +245,11 @@ final class Court {
 
     private static void markers(BuildContext c, int k) {
         String data = "k=" + k;
-        c.marker("marbles.pair_a", -1.0, 1.0, Layout.AB_ROW + 0.5, -90f, data);
-        c.marker("marbles.pair_b", 2.0, 1.0, Layout.AB_ROW + 0.5, 90f, data);
-        c.marker("marbles.pair_line", 0.5, 1.0, Layout.LINE_ROW + 0.5, 0f, data);
-        c.marker("marbles.pair_target", 0.5, 1.0, Layout.TARGET_ROW + 0.5, 0f, data);
-        c.marker("marbles.table", 0.5, 1.5, Layout.AB_ROW + 0.5, 0f, data);
+        c.marker("marbles.pair_a", -1.0, 1.0, Layout.AB_ROW + 0.5, U.yaw(c, -90f), data);
+        c.marker("marbles.pair_b", 2.0, 1.0, Layout.AB_ROW + 0.5, U.yaw(c, 90f), data);
+        c.marker("marbles.pair_line", 0.5, 1.0, Layout.LINE_ROW + 0.5, U.yaw(c, 0f), data);
+        c.marker("marbles.pair_target", 0.5, 1.0, Layout.TARGET_ROW + 0.5, U.yaw(c, 0f), data);
+        c.marker("marbles.table", 0.5, 1.5, Layout.AB_ROW + 0.5, U.yaw(c, 0f), data);
         c.region("marbles.plot", -3, 0, 0, 3, 8, Layout.COURT_LEN - 1);
     }
 }

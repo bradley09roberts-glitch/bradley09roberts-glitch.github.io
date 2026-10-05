@@ -74,6 +74,11 @@ final class Hall {
         c.at(Geo.X0 - 1, 0, Geo.Z1, 3, () -> run(c, 87, WallArt.WEST));
         // east wall (x = 45 face), local u runs towards +z
         c.at(Geo.X1 + 1, 0, Geo.Z0, 1, () -> run(c, 87, WallArt.EAST));
+        // security cameras on the four corner posts of the guard ring: a black housing and an end rod lens
+        for (int[] k : new int[][]{{Geo.X0 + 3, Geo.Z0 + 3, 1}, {Geo.X1 - 3, Geo.Z0 + 3, -1}, {Geo.X0 + 3, Geo.Z1 - 3, 1}, {Geo.X1 - 3, Geo.Z1 - 3, -1}}) {
+            c.set(k[0], Geo.RING + 4, k[1], Pal.BLK);
+            c.set(k[0] + k[2], Geo.RING + 4, k[1], "minecraft:end_rod[facing=" + (k[2] > 0 ? "east" : "west") + "]");
+        }
         // the corner squares of the catwalks get their own light (the runs overwrite each other's dashes there)
         for (int y : new int[]{Geo.RING, PIT_CAT_A, PIT_CAT_B}) {
             for (int x : new int[]{Geo.X0 + 1, Geo.X1 - 1}) {
@@ -109,7 +114,7 @@ final class Hall {
         catwalk(c, len, PIT_CAT_B, true, ribs);
         // 5. ladders in the pit (floor -> level A -> level B), not reaching the platforms
         int u1 = end ? 16 : 22, u2 = end ? 73 : 64;
-        ladder(c, u1, Geo.PIT + 3, PIT_CAT_A + 1);
+        ladder(c, u1, Geo.PIT + 2, PIT_CAT_A + 1);
         ladder(c, u2, PIT_CAT_A + 1, PIT_CAT_B + 1);
         // 6. banners, balcony, exit
         WallArt.decorate(c, len, wall);

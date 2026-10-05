@@ -26,7 +26,7 @@ import java.util.List;
  *
  * <p>Markers beyond the common/required ones (documented here as the contract asks):
  * <ul>
- *   <li>{@code final.podium} - winner's spot on the assembly podium in front of the school (x=0.5, y=3.0, z=-43.5);</li>
+ *   <li>{@code final.podium} - winner's spot on the assembly podium in front of the school (x=0.5, y=3.0, z=-38.5);</li>
  *   <li>{@code guard.patrol} - route {@code a} (12 points) looping around the court inside the clear belt;</li>
  *   <li>{@code final.boundary} - 34 clockwise vertices of the OUTER outline of the painted squid (22 on the head circle,
  *       r=5.5 about (0.5,-19.5)), {@code data="i=N,stand=0"}; the head is joined to the triangle by a 3 wide gap, so the

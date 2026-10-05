@@ -21,6 +21,7 @@ final class Alleys {
         junctions(c);
         poles(c);
         deadEnds(c);
+        trees(c);
     }
 
     /** Ground lanterns flanking every gate, on the alley side (local z = -2). */
@@ -34,8 +35,8 @@ final class Alleys {
     }
 
     /**
-     * Lantern strings and clothes lines across W1 / E1 between the gate roofs of facing courts (chain at y = 7 from ridge to
-     * ridge, lanterns or cloths hanging below).
+     * Lantern strings and clothes lines across W1 / E1 between the gate pillars of facing courts (chain at y = 5 from pillar
+     * top to pillar top, lanterns or cloths hanging below).
      */
     private static void strings(BuildContext c, List<Layout.Slot> slots) {
         U.Rnd r = new U.Rnd(4242);
@@ -43,23 +44,21 @@ final class Alleys {
             if (!s.zone.equals("CW1") && !s.zone.equals("CE2")) {
                 continue;
             }
-            for (int lx : new int[]{-2, 2}) {
+            for (int lx : new int[]{-3, 3}) {
                 if (!r.chance(0.5)) {
                     continue;
                 }
                 int[] a = s.block(lx, -1);
                 int x1 = a[0] + 1, x2 = a[0] + 3;
-                c.fill(x1, 7, a[1], x2, 7, a[1], Mat.CHAIN_X);
+                c.fill(x1, 5, a[1], x2, 5, a[1], Mat.CHAIN_X);
                 boolean lanterns = r.chance(0.6);
                 for (int x = x1; x <= x2; x++) {
                     if (lanterns) {
-                        c.set(x, 6, a[1], Mat.lantern(true));
-                    } else if (r.chance(0.75)) {
-                        String col = Props.randomColor(r);
-                        c.set(x, 6, a[1], Mat.wool(col));
-                        if (r.chance(0.5)) {
-                            c.set(x, 5, a[1], Mat.carpet(col));
+                        if (x == x1 + 1 || r.chance(0.3)) {
+                            c.set(x, 4, a[1], Mat.lantern(true));
                         }
+                    } else if (r.chance(0.8)) {
+                        c.set(x, 4, a[1], Mat.wool(Props.randomColor(r)));
                     }
                 }
             }
@@ -103,6 +102,8 @@ final class Alleys {
                 for (int dx : new int[]{-2, 2}) {
                     if ((dx > 0) == (z == 1)) {
                         Props.stoneLamp(c, cx + dx, 1, z);
+                    } else if (((cx + dx + z) & 3) == 0) {
+                        Civic.smallTree(c, cx + dx, z);
                     } else {
                         Props.planter(c, cx + dx, 1, z, ((cx + dx + z) & 1) == 0);
                     }
@@ -152,6 +153,18 @@ final class Alleys {
             c.set(x + 3 * d, 12, z, "minecraft:end_rod[facing=up]");
         }
         c.set(x, 12, z, Mat.slabB(Mat.TILE_SL));
+    }
+
+    /** A few small flowering trees on the inner edge of the civic alleys and at the ends of N1 / S1 / S2 (breaks up the grid). */
+    private static void trees(BuildContext c) {
+        for (int side = -1; side <= 1; side += 2) {
+            for (int z : new int[]{-44, -28, -12, 20, 36, 52}) {
+                Civic.smallTree(c, side * 23, z + (side > 0 ? 2 : 0));
+            }
+            // corners of N1 / S2 next to the civic column, on the alleys' outer edge rows (keeps them 4 wide)
+            Civic.smallTree(c, side * 22, -36);
+            Civic.smallTree(c, side * 22, 36);
+        }
     }
 
     /** Lamp pairs at the dead ends of the long alleys and of the cross street. */

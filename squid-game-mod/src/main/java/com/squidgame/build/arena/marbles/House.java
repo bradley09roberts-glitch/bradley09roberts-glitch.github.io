@@ -359,7 +359,7 @@ final class House {
             c.set(hw - 1, roofY + 4, d - 2, Mat.slabB(Mat.SB_SL));
         }
         if (s.guard) {
-            c.marker("guard.post", 0.5, roofY + 1.0, Math.max(1, d / 2) + 0.5, 180f, "rank=triangle");
+            c.marker("guard.post", 0.5, roofY + 1.0, Math.max(1, d / 2) + 0.5, U.yaw(c, 180f), "rank=triangle");
         } else if (new U.Rnd(s.seed ^ 0xA77).chance(0.6)) {
             antenna(c, hw - 1, roofY + 1, Math.max(1, d / 2));
         }

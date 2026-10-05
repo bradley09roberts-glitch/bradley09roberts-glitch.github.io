@@ -47,7 +47,7 @@ final class Towers {
                 c.set(2, y, i, "minecraft:iron_bars");
             }
         }
-        // deck 7x7 with a railing; a ladder stub that starts out of reach on the outer face
+        // deck 7x7 with a railing (no ladder: the guard decks cannot be climbed from the yard)
         c.fill(-3, DECK_Y, -3, 3, DECK_Y, 3, "minecraft:smooth_stone");
         c.fill(-3, DECK_Y, -3, 3, DECK_Y, -3, "minecraft:polished_blackstone");
         c.fill(-3, DECK_Y, 3, 3, DECK_Y, 3, "minecraft:polished_blackstone");

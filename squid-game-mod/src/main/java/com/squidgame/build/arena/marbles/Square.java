@@ -16,8 +16,8 @@ final class Square {
     }
 
     static final int CX = 0, CZ = 3;
-    static final int WELL_X = -11, WELL_Z = 3;
-    static final int TREE_X = 10, TREE_Z = 3;
+    static final int WELL_X = -10, WELL_Z = -2;
+    static final int TREE_X = 10, TREE_Z = -2;
     static final int STAGE_X0 = -8, STAGE_X1 = 8, STAGE_Z0 = 12, STAGE_Z1 = 15;
 
     static void build(BuildContext c) {
@@ -149,6 +149,10 @@ final class Square {
             c.fill(lx, 8, lz, lx, 10, lz, Mat.CHAIN_Y);
             c.set(lx, 7, lz, Mat.lantern(true));
         }
+        // lanterns on the planter ring around the trunk
+        for (int[] l : new int[][]{{-2, 0}, {3, 1}, {0, -2}, {1, 3}}) {
+            c.set(cx + l[0], 2, cz + l[1], Mat.lantern(false));
+        }
         c.marker("marbles.tree", cx + 1.0, 1.0, cz + 1.0, 0f, "stand=0");
     }
 
@@ -169,15 +173,18 @@ final class Square {
         c.fill(x0, 8, z1, x1, 8, z1, Mat.TILE_SL + "[type=bottom]");
         // posts and eaves with lanterns
         for (int x = x0; x <= x1; x += 4) {
+            if (x == 0) {
+                continue;            // keep the title board unobstructed
+            }
             c.fill(x, 2, z1 - 1, x, 6, z1 - 1, Mat.log(Mat.LOG, "y"));
-            c.set(x, 6, z0 + 1, Mat.lantern(true));
+            c.set(x, 7, z1 - 2, Mat.lantern(true));   // hangs from the tile slab at y = 8
         }
         c.fill(x0, 7, z1 - 1, x1, 7, z1 - 1, Mat.log(Mat.LOG_S, "x"));
         c.fill(x0, 8, z1 - 1, x1, 8, z1 - 1, Mat.stair(Mat.TILE_ST, "south"));
         c.fill(x0, 8, z1 - 2, x1, 8, z1 - 2, Mat.slabB(Mat.TILE_SL));
         c.fill(x0, 9, z1, x1, 9, z1, Mat.stair(Mat.TILE_ST, "south"));
         c.text(0.5, 5.2, z1 - 0.03, "MARBLES", "#FFD84A", 6.0f, 180f, false);
-        c.text(0.5, 3.8, z1 - 0.03, "FIND A PARTNER - ODD OR EVEN", "white", 1.8f, 180f, false);
+        c.text(0.5, 3.8, z1 - 0.03, "FIND A PARTNER - ODD OR EVEN", "white", 1.5f, 180f, false);
         c.marker("marbles.stage", 0.5, 2.0, (z0 + z1) / 2.0 + 0.5, 180f, "stand=0");
         for (int x = x0 + 1; x < x1; x += 4) {
             c.set(x, 2, z0, Mat.lantern(false));
@@ -197,14 +204,17 @@ final class Square {
         for (int s = -1; s <= 1; s += 2) {
             Props.benchX(c, s * 7 - 1, 1, -6, 3, "north");   // north row, backs towards the hall
         }
-        // benches around the tree and the well
+        // benches on the south half facing the medallion, backs towards the stage
+        Props.benchX(c, -13, 1, 7, 3, "south");
+        Props.benchX(c, 11, 1, 7, 3, "south");
+        // seats around the tree base and the well (on the sides facing the hall gate axis)
         for (int i = -1; i <= 1; i++) {
-            c.set(TREE_X + 5, 1, TREE_Z + i, Mat.stair("minecraft:spruce_stairs", "east"));
-            c.set(TREE_X - 3, 1, TREE_Z + i, Mat.stair("minecraft:spruce_stairs", "west"));
-            c.set(WELL_X + 3 + 1, 1, WELL_Z + i, Mat.stair("minecraft:spruce_stairs", "east"));
+            c.set(TREE_X - 4, 1, TREE_Z + i, Mat.stair("minecraft:spruce_stairs", "west"));
+            c.set(WELL_X + 5, 1, WELL_Z + i, Mat.stair("minecraft:spruce_stairs", "east"));
         }
-        Props.benchX(c, TREE_X - 1, 1, TREE_Z + 5, 4, "south");
-        Props.benchX(c, WELL_X - 1, 1, WELL_Z - 5, 4, "north");
+        // lamps beside the stage steps
+        Props.stoneLamp(c, -10, 1, 11);
+        Props.stoneLamp(c, 10, 1, 11);
         // planters in the corners
         for (int[] p : new int[][]{{-14, -3}, {14, -3}, {-14, 12}, {14, 12}}) {
             Props.planter(c, p[0], 1, p[1], p[0] < 0);

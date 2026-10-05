@@ -207,8 +207,8 @@ final class School {
 
     /** The assembly podium: a low stone dais with steps, a lectern and the winner's marker. */
     private static void podium(BuildContext c) {
-        int z0 = -47, z1 = -43;
-        c.fill(-6, -1, z0, 6, 0, z1 + 5, "minecraft:stone_bricks");
+        int z0 = -42, z1 = -38;
+        c.fill(-6, -1, z0, 6, 0, z1 + 2, "minecraft:stone_bricks");
         c.fill(-6, 1, z0, 6, 1, z1, "minecraft:stone_bricks");
         c.fill(-6, 2, z0, 6, 2, z1, "minecraft:smooth_stone");
         c.fill(-6, 2, z0, 6, 2, z0, "minecraft:polished_blackstone");

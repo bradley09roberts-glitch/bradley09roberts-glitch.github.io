@@ -94,11 +94,9 @@ public final class SquidCommands {
             return 1;
         }));
         root.then(Commands.literal("reset").requires(s -> s.hasPermission(2)).executes(c -> {
-            mgr(c).reset(false);
-            return 1;
+            return logged("reset", () -> mgr(c).reset(false));
         }).then(Commands.literal("home").executes(c -> {
-            mgr(c).reset(true);
-            return 1;
+            return logged("reset home", () -> mgr(c).reset(true));
         })));
         root.then(Commands.literal("config").requires(s -> s.hasPermission(2))
                 .executes(c -> {
@@ -204,6 +202,8 @@ public final class SquidCommands {
                 return 0;
             }
             rec.markers.forEach((k, v) -> c.getSource().sendSuccess(() -> Component.literal(k + " x" + v.size()), false));
+            rec.regions.forEach((k, v) -> v.forEach(r -> c.getSource().sendSuccess(() -> Component.literal("region " + k + " ["
+                    + r.minX() + "," + r.minY() + "," + r.minZ() + " .. " + r.maxX() + "," + r.maxY() + "," + r.maxZ() + "]"), false)));
             return 1;
         })));
         debug.then(Commands.literal("builders").executes(c -> {
@@ -215,6 +215,17 @@ public final class SquidCommands {
         }));
         root.then(debug);
         d.register(root);
+    }
+
+    /** Runs a command body and logs the stack trace of any failure (vanilla only prints a generic message). */
+    private static int logged(String what, Runnable body) {
+        try {
+            body.run();
+            return 1;
+        } catch (RuntimeException e) {
+            com.squidgame.SquidGameMod.LOGGER.error("/squid {} failed", what, e);
+            throw e;
+        }
     }
 
     private static TournamentManager mgr(CommandContext<CommandSourceStack> c) {

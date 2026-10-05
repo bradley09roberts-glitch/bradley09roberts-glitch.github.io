@@ -87,6 +87,9 @@ final class Spots {
         List<Cell> out = new ArrayList<>();
         for (int x = -15; x <= 15; x++) {
             for (int z = Geo.LZ0 + 4; z <= Geo.LZ1 - 6; z++) {
+                if (x == -1 || x == 0) {
+                    continue; // central aisle from the door to the monitor wall
+                }
                 int xm = x >= 0 ? x : Geo.mx(x);
                 if (((xm + z) & 1) == 0 && !Lounge.furniture(x, z)) {
                     out.add(new Cell(x, z));

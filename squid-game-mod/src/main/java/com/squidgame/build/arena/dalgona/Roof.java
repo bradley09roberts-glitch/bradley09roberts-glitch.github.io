@@ -5,7 +5,7 @@ import com.squidgame.build.BuildContext;
 /**
  * Exposed timber roof structure under the deck: eight curved stripped-wood ribs (one above every inner
  * pilaster pair) springing from the pilasters, five purlins along the hall, and rows of hanging
- * round milk-glass lamps (shroomlight core) on chains.
+ * round honey-glass lamps (shroomlight core) on chains.
  */
 public final class Roof {
     private Roof() {
@@ -72,14 +72,14 @@ public final class Roof {
         }
     }
 
-    /** One pendant: chain from the purlin, round milk-glass globe with a shroomlight core. */
+    /** One pendant: chain from the purlin, round honey-glass globe with a shroomlight core. */
     static void lamp(BuildContext c, int x, int z) {
         int purlinY = (int) Math.floor(Geo.roofUnder(x) - 0.001) - 1;
         int cy = LAMP_Y + 1;
         c.fill(x, cy + 4, z, x, purlinY - 1, z, Pal.chain());
         c.set(x, cy + 2, z, "minecraft:dark_oak_slab[type=bottom]");
         c.set(x, cy + 3, z, "minecraft:dark_oak_slab[type=top]");
-        c.sphere(x, cy, z, 1.3, Pal.MILK_GLASS, true);
+        c.sphere(x, cy, z, 1.3, Pal.HONEY, true);
         c.set(x, cy, z, Pal.SHROOMLIGHT);
         c.set(x, cy - 2, z, "minecraft:dark_oak_slab[type=top]");
     }

@@ -55,10 +55,6 @@ final class Layout {
     /** Building body x[-40,40] z[-60,-52]; facade plane z = SCH_FACE; pilasters / sills stand one block proud. */
     static final int SCH_X0 = -40, SCH_X1 = 40, SCH_Z0 = -60, SCH_FACE = -52;
 
-    static boolean inYard(int x, int z) {
-        return x >= YX0 && x <= YX1 && z >= YZ0 && z <= YZ1;
-    }
-
     /** True inside the clear belt around the squid court (court bounding box grown by BELT). */
     static boolean inBelt(int x, int z) {
         return x >= -HW - BELT && x <= HW + BELT && z >= COURT_TOP - BELT && z <= ZQ + BELT;

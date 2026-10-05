@@ -86,13 +86,16 @@ public final class Walls {
         }
     }
 
-    /** Cream plaster with stained patches and the odd speck. */
+    /** Cream plaster with a few stained patches, the odd speck and a honeycomb frieze under the cornice. */
     public static String plaster(int lx, int y, int tag) {
-        double n = Noise.value3(lx, y, tag * 17, 4.5, 23);
-        if (n > 0.73) {
+        if (y == 16) {
+            return Pal.HONEYCOMB;        // the frieze: a band of honeycomb blocks, the candy of the game
+        }
+        double n = Noise.value3(lx, y, tag * 17, 3.2, 23);
+        if (n > 0.8) {
             return Pal.CREAM_WORN;
         }
-        if (Noise.hash(lx, y, tag, 7) < 0.018) {
+        if (Noise.hash(lx, y, tag, 7) < 0.015) {
             return Pal.CREAM_SPECK;
         }
         return Pal.CREAM;
@@ -189,7 +192,8 @@ public final class Walls {
                 c.set(mid + dx, y, -1, s);
             }
         }
-        c.text(mid + 0.5, 16.15, 0.02, "WORLD MAP", "#5a3a1e", 1.6f, 0f, false);
+        // in front of the cornice stairs of the top row (a text inside that block would be hidden)
+        c.text(mid + 0.5, 16.1, 1.05, tag == 1 ? "WORLD MAP" : "SCHOOL MAP", "#5a3a1e", 1.6f, 0f, false);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -203,29 +207,31 @@ public final class Walls {
             }
         }
         for (int dx = -3; dx <= 3; dx++) {
+            int ax = Math.abs(dx);
             for (int y = 1; y <= 14; y++) {
-                boolean post = Math.abs(dx) == 3;
-                boolean lintel = y >= 13;
-                boolean door = Math.abs(dx) <= 2 && y <= 11;
-                if (post || lintel) {
-                    c.set(mid + dx, y, 0, post ? Pal.log("stripped_dark_oak_wood", 'y') : Pal.DARK_OAK);
-                } else if (door) {
-                    boolean rail = y == 1 || y == 6 || y == 11 || dx == 0 || Math.abs(dx) == 2;
+                if (ax == 3) {
+                    c.set(mid + dx, y, 0, y <= 12 ? Pal.log("stripped_dark_oak_wood", 'y') : Pal.DARK_OAK);
+                } else if (y >= 13) {
+                    c.set(mid + dx, y, 0, Pal.DARK_OAK);                       // lintel
+                } else if (y <= 10) {
+                    // two door leaves, panelled: rails at y 1, 5, 10 and stiles at the edges and the centre line
+                    boolean rail = y == 1 || y == 5 || y == 10 || dx == 0 || ax == 2;
                     c.set(mid + dx, y, -1, rail ? Pal.DARK_OAK : Pal.SPRUCE);
                     c.air(mid + dx, y, 0);
-                } else if (y == 12) {
-                    // transom glass with warm light behind
+                } else if (y == 11) {
+                    c.set(mid + dx, y, -1, Pal.QUARTZ);                        // transom bar
+                    c.air(mid + dx, y, 0);
+                } else {
+                    // transom window with warm light behind it
+                    c.air(mid + dx, y, 0);
+                    c.air(mid + dx, y, -1);
                     c.set(mid + dx, y, -2, Pal.GLASS_PANE);
                     c.set(mid + dx, y, -3, Pal.WARM_PANEL);
-                    c.air(mid + dx, y, -1);
-                    c.air(mid + dx, y, 0);
                 }
             }
         }
-        for (int dx = -2; dx <= 2; dx++) {
-            c.set(mid + dx, 12, -1, Pal.QUARTZ);
-        }
         c.set(mid - 1, 6, 0, "minecraft:tripwire_hook[attached=false,facing=south,powered=false]");
         c.set(mid + 1, 6, 0, "minecraft:tripwire_hook[attached=false,facing=south,powered=false]");
+        c.text(mid + 0.5, 15.0, 0.05, "STAFF ONLY", "#8a4b1f", 1.3f, 0f, false);
     }
 }

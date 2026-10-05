@@ -67,8 +67,11 @@ public final class Shell {
                     mat = Pal.DARK_OAK;
                     slabMat = "dark_oak";
                 } else {
-                    mat = Pal.DEEPSLATE_TILES;
-                    slabMat = "deepslate_tile";
+                    double r = Noise.hash(x, y, 0, 29);
+                    boolean brick = r < 0.2;
+                    boolean ridge = Math.abs(x) <= 1 && depth >= 4;
+                    mat = ridge ? Pal.STONE_BRICKS : brick ? "minecraft:deepslate_bricks" : Pal.DEEPSLATE_TILES;
+                    slabMat = ridge ? "stone_brick" : brick ? "deepslate_brick" : "deepslate_tile";
                 }
                 String state;
                 if (hi - lo >= 2) {

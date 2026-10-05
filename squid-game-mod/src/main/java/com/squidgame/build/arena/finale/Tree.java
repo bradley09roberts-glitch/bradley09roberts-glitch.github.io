@@ -88,6 +88,16 @@ final class Tree {
             c.fill(lx, 1, lz, lx, 3, lz, "minecraft:stone_brick_wall");
             c.set(lx, 4, lz, "minecraft:lantern[hanging=false]");
         }
+        // hidden light grid under the crown (taxicab distance <= 3 horizontally, one block above the walking level): the
+        // leaves swallow the sky light, so this keeps the ground below at block light >= 11
+        for (int i = -7; i <= 7; i++) {
+            for (int j = -7; j <= 7; j++) {
+                int lx = x + 3 * i - 4 * j, lz = z + 4 * i + 3 * j;
+                if (Math.hypot(lx - x, lz - z) <= 11.5 && !c.isSolid(lx, 2, lz)) {
+                    c.set(lx, 2, lz, "minecraft:light[level=15]");
+                }
+            }
+        }
         // fallen leaves / worn ground around the roots
         for (int dx = -9; dx <= 9; dx++) {
             for (int dz = -9; dz <= 9; dz++) {

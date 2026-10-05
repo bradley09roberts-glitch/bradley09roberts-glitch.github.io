@@ -38,9 +38,18 @@ final class Houses {
             h.wall = w < 0.62 ? Mat.PLASTER : w < 0.82 ? Mat.CREAM : Mat.CEMENT;
         }
         h.wall2 = Mat.CALCITE;
-        h.timber = r.chance(0.7) ? Mat.LOG_S : Mat.SPRUCE_LOG;
+        // districts: dark tiles and dark timber in the west, paler roofs and spruce timber in the east
+        boolean east = s.zone.startsWith("CE");
+        boolean west = s.zone.startsWith("CW");
+        h.timber = r.chance(east ? 0.35 : 0.8) ? Mat.LOG_S : Mat.SPRUCE_LOG;
         double rf = r.d();
-        h.roof = rf < 0.55 ? Roofs.TILE : rf < 0.75 ? Roofs.COBDS : rf < 0.85 ? Roofs.BLACK : rf < 0.95 ? Roofs.MUD : Roofs.STONE;
+        if (west) {
+            h.roof = rf < 0.70 ? Roofs.TILE : rf < 0.85 ? Roofs.BLACK : rf < 0.95 ? Roofs.COBDS : Roofs.MUD;
+        } else if (east) {
+            h.roof = rf < 0.40 ? Roofs.COBDS : rf < 0.70 ? Roofs.TILE : rf < 0.90 ? Roofs.MUD : Roofs.STONE;
+        } else {
+            h.roof = rf < 0.55 ? Roofs.TILE : rf < 0.75 ? Roofs.COBDS : rf < 0.85 ? Roofs.BLACK : rf < 0.95 ? Roofs.MUD : Roofs.STONE;
+        }
         h.chimney = r.chance(0.25);
         if (h.kind == House.Kind.HANOK) {
             h.tall = r.chance(0.35);

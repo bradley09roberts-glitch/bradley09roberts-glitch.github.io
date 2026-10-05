@@ -206,6 +206,8 @@ public final class Rear {
                         c.fill(x, 1, z, x, y - 1, z, Pal.SPRUCE);
                     }
                 }
+                // stringer wall under the hand rail so the posts stand on something
+                c.fill(side * (STAIR_X0 - 1), 1, z, side * (STAIR_X0 - 1), y, z, Pal.DARK_OAK);
                 c.set(side * (STAIR_X0 - 1), y + 1, z, "minecraft:dark_oak_fence");
             }
             c.set(side * (STAIR_X0 - 1), 12, STAIR_Z0 + STAIR_STEPS - 1, Pal.slab("dark_oak", false));

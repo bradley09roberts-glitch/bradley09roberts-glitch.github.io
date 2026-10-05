@@ -8,8 +8,8 @@ import com.squidgame.build.BuildContext;
  * seat cell (the contestant's marker, floor level) and the 0.5 high bench directly behind it. 160 seats.
  *
  * <pre>
- *   z0     desk (spruce slab)                  |  contestants face north (yaw 180)
- *   z0+1   station per seat / desk slab        |
+ *   z0     far desk (dark oak slab)            |  contestants face north (yaw 180)
+ *   z0+1   station per seat / spruce slab      |
  *   z0+2   SEAT marker cell (free, floor)      v
  *   z0+3   bench (dark oak slab) behind it
  * </pre>
@@ -18,9 +18,8 @@ public final class Seating {
     private Seating() {
     }
 
-    public static int seatCount() {
-        return Geo.ROWS * Geo.BLOCKS.length * Geo.SEATS_PER_BLOCK;
-    }
+    /** Offset of the seat marker inside its cell towards the bench behind it (cell is z0+2, bench face at +1.0). */
+    public static final double SEAT_Z = 0.7;
 
     public static void build(BuildContext c) {
         int slot = 0;
@@ -29,11 +28,11 @@ public final class Seating {
             for (int b = 0; b < Geo.BLOCKS.length; b++) {
                 int xa = Geo.BLOCKS[b][0];
                 int xb = Geo.BLOCKS[b][1];
-                furniture(c, xa, xb, z0, row, b);
+                furniture(c, xa, xb, z0);
                 for (int j = 0; j < Geo.SEATS_PER_BLOCK; j++) {
                     int x = Geo.seatX(b, j);
-                    c.set(x, 1, z0 + 1, Pal.STATION + "[facing=south]");
-                    c.marker("dalgona.seat", x + 0.5, 1.0, z0 + 2 + 0.5, 180f, "slot=" + slot);
+                    c.set(x, 1, z0 + 1, Pal.STATION + "[facing=north]");
+                    c.marker("dalgona.seat", x + 0.5, 1.0, z0 + 2 + SEAT_Z, 180f, "slot=" + slot);
                     c.marker("dalgona.station", x + 0.5, 2.0, z0 + 1 + 0.5, 180f, "slot=" + slot);
                     slot++;
                 }
@@ -43,21 +42,14 @@ public final class Seating {
                 Geo.BLOCKS[Geo.BLOCKS.length - 1][1] + 1, 4, Geo.rowZ(Geo.ROWS - 1) + 4);
     }
 
-    private static void furniture(BuildContext c, int xa, int xb, int z0, int row, int block) {
+    private static void furniture(BuildContext c, int xa, int xb, int z0) {
         for (int x = xa; x <= xb; x++) {
             boolean end = x == xa || x == xb;
-            String desk = end ? Pal.slab("dark_oak", false) : Pal.slab("spruce", false);
-            c.set(x, 1, z0, desk);
-            c.set(x, 1, z0 + 1, desk);
-            c.set(x, 1, z0 + 3, Pal.slab("dark_oak", false));
-        }
-        // a sheet of paper or a pot here and there on the far desk
-        for (int j = 0; j < Geo.SEATS_PER_BLOCK; j++) {
-            int x = xa + 1 + 2 * j;
-            double r = Noise.hash(x, z0, 41);
-            if (r < 0.3) {
-                c.set(x, 2, z0, "minecraft:white_carpet");
-            }
+            String face = x == xa ? "west" : "east";
+            // far desk (dark edge), station row (spruce) and bench behind the seat cell; stair caps close the ends
+            c.set(x, 1, z0, end ? Pal.stairs("dark_oak", face, false) : Pal.slab("dark_oak", false));
+            c.set(x, 1, z0 + 1, end ? Pal.stairs("spruce", face, false) : Pal.slab("spruce", false));
+            c.set(x, 1, z0 + 3, end ? Pal.stairs("dark_oak", face, false) : Pal.slab("dark_oak", false));
         }
     }
 }

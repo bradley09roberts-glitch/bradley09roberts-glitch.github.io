@@ -57,10 +57,10 @@ public final class Exterior {
 
     private static String outer(int x, int y, int z) {
         double n = Noise.value3(x, y, z, 5.0, 91);
-        if (n > 0.7) {
+        if (n > 0.82) {
             return Pal.CREAM_WORN;
         }
-        if (n < 0.18) {
+        if (n < 0.12) {
             return Pal.CREAM_SPECK;
         }
         return Pal.CREAM;

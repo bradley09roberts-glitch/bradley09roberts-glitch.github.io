@@ -46,12 +46,16 @@ final class WallArt {
                     banner(c, b[0], b[1]);
                 }
                 balcony(c);
+                speaker(c, 27, 53);
+                speaker(c, 62, 53);
             }
             default -> {
                 for (int[] b : new int[][]{{16, 1}, {30, 2}, {59, 0}, {73, 1}}) {
                     banner(c, b[0], b[1]);
                 }
                 exitWall(c);
+                speaker(c, 27, 53);
+                speaker(c, 62, 53);
             }
         }
     }
@@ -74,7 +78,13 @@ final class WallArt {
             symbol(c, uc - 2, y, SYM[(i + rot) % 3], 1, Pal.WHITE);
             y -= 7;
         }
-        // pink glow trim along the bottom edge
+        // the three symbol blocks as a header and a footer row of the black field
+        for (int ys : new int[]{yTop - 1, yBot + 1}) {
+            c.set(uc - 1, ys, 1, Pal.SYM_CIRCLE);
+            c.set(uc, ys, 1, Pal.SYM_TRIANGLE);
+            c.set(uc + 1, ys, 1, Pal.SYM_SQUARE);
+        }
+        // pink lip along the bottom edge
         c.fill(u0, yBot, 2, u1, yBot, 2, Pal.PINK_PANEL);
     }
 
@@ -87,6 +97,18 @@ final class WallArt {
                 }
             }
         }
+    }
+
+    /** A 3 x 3 loudspeaker (black cabinet, iron grille over a coal cone) standing 1 proud of the wall. */
+    static void speaker(BuildContext c, int uc, int yBot) {
+        c.fill(uc - 1, yBot, 1, uc + 1, yBot + 2, 1, Pal.BLK);
+        c.set(uc, yBot + 1, 1, Pal.COAL);
+        c.fill(uc - 1, yBot + 2, 2, uc + 1, yBot + 2, 2, Pal.PBS);
+        c.set(uc, yBot + 1, 2, Pal.BARS);
+        c.set(uc, yBot, 2, Pal.BARS);
+        c.set(uc - 1, yBot + 1, 2, Pal.BARS);
+        c.set(uc + 1, yBot + 1, 2, Pal.BARS);
+        c.set(uc, yBot + 3, 1, Pal.PBS);
     }
 
     // ------------------------------------------------------------------ giant glowing symbols
@@ -168,9 +190,9 @@ final class WallArt {
         for (int u : new int[]{u0, u1}) {
             c.fill(u, y + 3, 6, u, y + 5, 6, Pal.BLK);
         }
-        // braces under the floor
+        // braces under the floor, starting above the head room of the guard ring that passes underneath (y 61, 62)
         for (int u : new int[]{u0, 36, 44, 45, 53, u1}) {
-            c.line(u, y - 6, 1, u, y - 1, 6, Pal.BLK);
+            c.line(u, Geo.RING + 3, 1, u, y - 1, 6, Pal.BLK);
         }
         // monitor wall: 14 x 2 screens facing the balcony
         for (int u = 38; u <= 51; u++) {
@@ -198,7 +220,8 @@ final class WallArt {
         c.fill(50, y0, 0, 51, y0 + 9, 1, Pal.BLK);
         c.fill(37, y0 + 8, 0, 51, y0 + 9, 1, Pal.BLK);
         c.fill(36, y0 + 10, 0, 52, y0 + 10, 1, Pal.PBS);
-        // green strips in the tunnel floor
+        // tunnel floor: white tiles with green strips along both sides
+        c.fill(41, Geo.DECK, -2, 47, Geo.DECK, 0, Pal.TILE_W);
         for (int z = -2; z <= 0; z++) {
             c.set(40, Geo.DECK, z, Pal.GREEN_LIGHT);
             c.set(48, Geo.DECK, z, Pal.GREEN_LIGHT);

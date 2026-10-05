@@ -70,8 +70,8 @@ final class Gallery {
         c.fill(x0 + 1, y, z0 + 1, x1 - 1, y, z1 - 1, wood);
         // ceiling and an overhanging roof with a dark edge
         c.fill(x0, y + 5, z0, x1, y + 5, z1, wood);
-        c.fill(x0 - 1, y + 6, z0 - 1, x1 + 1, y + 6, z1 + 1, "minecraft:black_concrete");
-        c.fill(x0 - 1, y + 7, z0 - 1, x1 + 1, y + 7, z1 + 1, "minecraft:deepslate_tile_slab[type=bottom]");
+        c.fill(x0 - 1, y + 6, z0 - 1, x1, y + 6, z1 + 1, "minecraft:black_concrete");
+        c.fill(x0 - 1, y + 7, z0 - 1, x1, y + 7, z1 + 1, "minecraft:deepslate_tile_slab[type=bottom]");
         // long window on the court side with timber mullions
         for (int z = z0 + 1; z <= z1 - 1; z++) {
             boolean mullion = (z - z0) % 4 == 0;
@@ -95,8 +95,8 @@ final class Gallery {
             c.set(x1 - 1, y + 1, z, "minecraft:black_concrete");
             c.set(x1 - 1, y + 2, z, "minecraft:black_concrete");
         }
-        for (int z : new int[]{z0 + 2, 0, z1 - 2}) {
-            c.set(x0 + 2, y + 5, z, "minecraft:sea_lantern");
+        for (int z = z0 + 1; z <= z1 - 1; z++) {
+            c.set(x0 + 2, y + 5, z, "minecraft:sea_lantern");     // a studio light strip along the whole ceiling
         }
         c.text(x0 - 0.05, y + 5.6, 0.5, "GAME BROADCAST", "#FFD84A", 1.4f, 90f, false);
     }

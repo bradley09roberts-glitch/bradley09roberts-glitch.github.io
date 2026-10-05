@@ -24,48 +24,6 @@ final class Hall {
         back(c, xl, xr);
         front(c, xl, xr);
         terrace(c, xl, xr);
-        floorLights(c, xl, xr);
-    }
-
-    /**
-     * The prefab only lights the room from its 9 high ceiling (about level 5 on the floor), so glowing pink floor tiles are
-     * inlaid in a diamond lattice (every cell within 4 blocks of a panel -> level >= 10 everywhere in the room).
-     */
-    private static void floorLights(BuildContext c, int xl, int xr) {
-        int x0 = xl + 1, x1 = xr - 1, z0 = ZB + 1, z1 = ZG - 1;
-        java.util.List<int[]> best = null;
-        for (int ox = 0; ox < 41; ox++) {
-            java.util.List<int[]> pts = new java.util.ArrayList<>();
-            for (int i = -12; i <= 12; i++) {
-                for (int j = -12; j <= 12; j++) {
-                    int x = (ox % 5) + 4 * i + 5 * j + x0 - 2, z = (ox / 5) + 5 * i - 4 * j + z0 - 2;
-                    if (x >= x0 && x <= x1 && z >= z0 && z <= z1) {
-                        pts.add(new int[]{x, z});
-                    }
-                }
-            }
-            // greedy patch for uncovered cells
-            for (int x = x0; x <= x1; x++) {
-                for (int z = z0; z <= z1; z++) {
-                    boolean cov = false;
-                    for (int[] p : pts) {
-                        if (Math.abs(p[0] - x) + Math.abs(p[1] - z) <= 4) {
-                            cov = true;
-                            break;
-                        }
-                    }
-                    if (!cov) {
-                        pts.add(new int[]{Math.max(x0, Math.min(x1, x + (x < 0 ? 2 : -2))), Math.max(z0, Math.min(z1, z + 2))});
-                    }
-                }
-            }
-            if (best == null || pts.size() < best.size()) {
-                best = pts;
-            }
-        }
-        for (int[] p : best) {
-            c.set(p[0], 0, p[1], "minecraft:pearlescent_froglight[axis=y]");
-        }
     }
 
     // ------------------------------------------------------------------ cladding
@@ -184,8 +142,16 @@ final class Hall {
             c.set(x, 7, pz, Mat.lantern(true));
             c.set(x, 7, zw + 1, Mat.lantern(true));
         }
-        // wooden steps are not needed: the arcade floor is level with the square. Hall title over the gate
-        c.text(0.5, 8.6, zc + 1.02, "MARBLES", "#FFD84A", 3.2f, 0f, false);
+        // timber gate frame in front of the black doorway frame, with a signboard above
+        for (int sd = -1; sd <= 1; sd += 2) {
+            c.fill(4 * sd, 1, zc, 4 * sd, 9, zc, Mat.log(Mat.LOG, "y"));
+            c.set(5 * sd, 1, zc, Mat.SB);
+        }
+        c.fill(-3, 7, zc, 3, 7, zc, Mat.log(Mat.LOG_S, "x"));
+        c.fill(-3, 8, zc, 3, 8, zc, Mat.concrete("black"));
+        c.fill(-3, 9, zc, 3, 9, zc, Mat.log(Mat.LOG_S, "x"));
+        c.fill(-4, 8, zw + 2, 4, 8, zw + 2, Mat.AIR);            // keep the sign clear of the rafter boards
+        c.text(0.5, 8.5, zc + 1.02, "MARBLES", "#FFD84A", 3.0f, 0f, false);
         // paved arcade floor
         c.pattern(xl - 1, 0, zw + 1, xr + 1, 0, zw + 3, (x, y, z) -> U.rand(x, z, 9) < 0.35 ? Mat.P_ANDESITE : Mat.SB);
     }

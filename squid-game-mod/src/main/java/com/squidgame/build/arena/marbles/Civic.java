@@ -46,8 +46,8 @@ final class Civic {
         house.plaque = true;
         house.label = "EXIT";
         c.at(0, 0, Layout.COURT_LEN, 0, () -> House.build(c, house));
-        c.marker("arena.exit", 0.5, 1.0, 5.5, 0f);
-        c.marker("marbles.exit_gather", 1.5, 1.0, 6.5, 0f, "slot=0");
+        c.marker("arena.exit", 0.5, 1.0, 5.5, U.yaw(c, 0f));
+        c.marker("marbles.exit_gather", 1.5, 1.0, 6.5, U.yaw(c, 0f), "slot=0");
     }
 
     static void smallTree(BuildContext c, int x, int z) {
@@ -97,7 +97,7 @@ final class Civic {
         c.fill(-4, 16, 3, -4, 16, 11, Mat.FENCE);
         c.fill(4, 16, 3, 4, 16, 11, Mat.FENCE);
         // ladder through the hatch on the west pillar side
-        c.fill(-2, 1, 10, -2, 16, 10, "minecraft:ladder[facing=east]");
+        c.fill(-2, 1, 10, -2, 15, 10, "minecraft:ladder[facing=east]");
         // roof posts and roof
         for (int[] p : new int[][]{{-4, 3}, {4, 3}, {-4, 11}, {4, 11}}) {
             c.fill(p[0], 17, p[1], p[0], 19, p[1], Mat.log(Mat.LOG, "y"));
@@ -106,7 +106,7 @@ final class Civic {
         c.fill(-4, 19, 11, 4, 19, 11, Mat.log(Mat.LOG_S, "x"));
         c.fill(-4, 19, 3, -4, 19, 11, Mat.log(Mat.LOG_S, "z"));
         c.fill(4, 19, 3, 4, 19, 11, Mat.log(Mat.LOG_S, "z"));
-        Roofs.hip(c, -6, 1, 6, 13, 20, Roofs.TILE, 19, Roofs.TILE.block());
+        Roofs.hip(c, -6, 1, 6, 13, 20, Roofs.COPPER, 19, Roofs.COPPER.block());
         c.set(0, 27, 7, "minecraft:lightning_rod[facing=up]");
         // lanterns under the roof: ring and a big paper lantern in the middle
         c.set(-4, 18, 7, Mat.lantern(true));
@@ -125,7 +125,7 @@ final class Civic {
         house.plaque = true;
         house.label = "LOOKOUT";
         c.at(0, 0, Layout.COURT_LEN, 0, () -> House.build(c, house));
-        c.marker("arena.spectator", 0.5, TOWER_DECK_Y, 7.5, 0f);
+        c.marker("arena.spectator", 0.5, TOWER_DECK_Y, 7.5, U.yaw(c, 180f));
         c.marker("marbles.tower", 0.5, 1.0, 7.5, 0f, "stand=0");
     }
 
@@ -208,6 +208,8 @@ final class Civic {
                 c.at(ox, 0, oz, rot, () -> {
                     House.build(c, h);
                     shopFront(c, h, sign);
+                    // two steps up to the raised porch, on the square's edge column
+                    c.set(0, 1, -1, Mat.stair("minecraft:spruce_stairs", "south"));
                 });
             }
         }

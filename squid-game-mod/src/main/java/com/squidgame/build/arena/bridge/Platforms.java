@@ -14,8 +14,14 @@ final class Platforms {
     private Platforms() {
     }
 
-    /** Lane line columns that glow white (mirror symmetric about the bridge axis). */
+    /** Lane line columns that glow (mirror symmetric about the bridge axis). */
     static final int[] LANE_LINES = {-10, -5, 4, 9};
+
+    /**
+     * Aisle cells {x, z} of the start platform where a circle guard stands (staggered so the aisle stays passable);
+     * the glow strip is replaced by a plain pink tile there.
+     */
+    static final int[][] START_GUARD_CELLS = {{-1, 5}, {0, -1}, {-1, -6}};
 
     static void build(BuildContext c) {
         platform(c, false);
@@ -105,6 +111,13 @@ final class Platforms {
         if (x == -1 || x == 0) { // aisle along the bridge axis
             if (!end && zl == 8) {
                 return Pal.TILE_P; // plain tile under the gate door plane (the gate marker stands here)
+            }
+            if (!end) {
+                for (int[] g : START_GUARD_CELLS) {
+                    if (g[0] == x && g[1] == zl) {
+                        return Pal.TILE_P;
+                    }
+                }
             }
             return end ? Pal.GREEN_LIGHT : Pal.PINK_LIGHT;
         }
@@ -236,6 +249,6 @@ final class Platforms {
         }
         // sign on the queue side
         c.text(0.5, 52.0, zA - 0.05, "GLASS BRIDGE", "#FFFFFF", 9f, 180f, false);
-        c.text(0.5, 49.6, zA - 0.05, "ONE PANEL IN TWO HOLDS", "#FF7AA8", 3f, 180f, false);
+        c.text(0.5, 48.4, zA - 0.05, "ONE PANEL IN TWO HOLDS", "#FF7AA8", 2.6f, 180f, false);
     }
 }

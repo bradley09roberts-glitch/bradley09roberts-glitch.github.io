@@ -18,8 +18,8 @@ public final class BridgeHall {
         c.at(0, Geo.DECK, Geo.ROOM_Z, 0, () -> WaitingRoomPrefab.build(c,
                 new WaitingRoomPrefab.Spec(41, 22, 9, "GLASS BRIDGE", "ONLY ONE PANEL IN TWO WILL HOLD YOU", 144)));
         skinRoomWall(c);
-        lightRoomFloor(c);
         Platforms.build(c);
+        Floor.build(c);
         Deck.build(c);
         Pit.build(c);
         Gantries.build(c);
@@ -32,16 +32,6 @@ public final class BridgeHall {
     private static void skinRoomWall(BuildContext c) {
         c.pattern(-22, Geo.DECK + 1, Geo.ROOM_Z, 22, Geo.DECK + 11, Geo.ROOM_Z,
                 (x, y, z) -> "minecraft:white_concrete".equals(c.get(x, y, z)) ? Hall.plate(x, y) : null);
-    }
-
-    /**
-     * The prefab only lights its ceiling, 9 blocks above the floor (level 4..7 down there): glowing floor lines every
-     * 4 blocks bring the whole waiting room to level >= 12.
-     */
-    private static void lightRoomFloor(BuildContext c) {
-        for (int x = -20; x <= 20; x += 4) {
-            c.fill(x, Geo.DECK, Geo.ROOM_Z - 22, x, Geo.DECK, Geo.ROOM_Z - 1, Pal.PEARL);
-        }
     }
 
     private static void markers(BuildContext c) {

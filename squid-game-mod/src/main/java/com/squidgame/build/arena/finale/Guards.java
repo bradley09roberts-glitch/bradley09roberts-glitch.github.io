@@ -28,8 +28,8 @@ final class Guards {
         }
         c.marker("guard.post", 0.5, 2.0, -49.5, 0f, "rank=square");
         // circles (workers) beside the podium
-        c.marker("guard.post", -9.5, 1.0, -44.5, 0f, "rank=circle");
-        c.marker("guard.post", 9.5, 1.0, -44.5, 0f, "rank=circle");
+        c.marker("guard.post", -9.5, 1.0, -39.5, 0f, "rank=circle");
+        c.marker("guard.post", 9.5, 1.0, -39.5, 0f, "rank=circle");
 
         // patrol: a loop around the court inside the clear belt
         double[][] loop = {{-10.5, -29.5}, {0.5, -30.5}, {10.5, -29.5}, {10.5, -14.5}, {10.5, 0.5}, {10.5, 14.5},

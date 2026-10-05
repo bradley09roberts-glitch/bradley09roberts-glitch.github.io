@@ -17,7 +17,9 @@ import java.util.Set;
  * {@code minecraft:light[level=15]} blocks (no collision, ignored by pathfinding) on free cells so that every walkable
  * standing cell reaches {@link #FEET_TARGET} at the feet and {@link #HEAD_TARGET} at head height.
  *
- * <p>Walkable cells considered: the floor (y 1), the stage (y 2), the gallery (y 11) and the stair run to it.
+ * <p>Walkable cells considered: the floor (y 1), the gate doorway row, the stage (y 2), the gallery (y 11) and the stair
+ * run to it. Slabs, stairs, fences and the like are conservatively treated as light blockers (vanilla lets light pass
+ * through them), so the result holds under either model.
  */
 public final class LightPass {
     public static final int FEET_TARGET = 12;
@@ -106,10 +108,12 @@ public final class LightPass {
     }
 
     private static boolean isPartial(String n) {
-        String[] parts = {"glass", "pane", "bars", "chain", "ladder", "trapdoor", "fence", "slab", "stairs", "lantern",
+        // Deliberately pessimistic: slabs, stairs, trapdoors, fences and walls are treated as light blockers (vanilla
+        // lets light pass), so the result holds under either model.
+        String[] parts = {"glass", "pane", "bars", "chain", "ladder", "lantern",
                 "carpet", "button", "pressure_plate", "torch", "sign", "banner", "candle", "flower_pot", "potted_",
-                "rail", "lever", "string", "tripwire", "snow", "end_rod", "lectern", "bell", "dalgona_station", "hook",
-                "door", "vine", "azalea_leaves", "_wall"};
+                "rail", "lever", "string", "tripwire", "snow", "end_rod", "lectern", "bell", "hook",
+                "vine", "azalea_leaves", "honey_block"};
         for (String p : parts) {
             if (n.contains(p)) {
                 return true;
@@ -145,7 +149,7 @@ public final class LightPass {
                 }
             }
         });
-        for (int z = Geo.Z_FRONT; z <= Geo.Z_REAR; z++) {
+        for (int z = Geo.Z_FRONT; z <= Geo.REAR_WALL_Z; z++) {      // up to and including the gate doorway row
             for (int x = -Geo.HALF_W; x <= Geo.HALF_W; x++) {
                 for (int y = 1; y <= 11; y++) {
                     if (!wanted(x, y, z)) {
@@ -187,13 +191,13 @@ public final class LightPass {
     // light propagation
 
     private void propagateAll() {
-        List<int[]>[] buckets = newBuckets();
+        List<List<int[]>> buckets = newBuckets();
         for (int y = Y0; y <= Y1; y++) {
             for (int z = Z0; z <= Z1; z++) {
                 for (int x = X0; x <= X1; x++) {
                     int l = light[idx(x, y, z)];
                     if (l > 1) {
-                        buckets[l].add(new int[]{x, y, z});
+                        buckets.get(l).add(new int[]{x, y, z});
                     }
                 }
             }
@@ -201,18 +205,17 @@ public final class LightPass {
         flood(buckets);
     }
 
-    @SuppressWarnings("unchecked")
-    private static List<int[]>[] newBuckets() {
-        List<int[]>[] b = new List[16];
+    private static List<List<int[]>> newBuckets() {
+        List<List<int[]>> b = new ArrayList<>(16);
         for (int i = 0; i < 16; i++) {
-            b[i] = new ArrayList<>();
+            b.add(new ArrayList<>());
         }
         return b;
     }
 
-    private void flood(List<int[]>[] buckets) {
+    private void flood(List<List<int[]>> buckets) {
         for (int l = 15; l >= 2; l--) {
-            List<int[]> cur = buckets[l];
+            List<int[]> cur = buckets.get(l);
             for (int k = 0; k < cur.size(); k++) {
                 int[] p = cur.get(k);
                 if (light[idx(p[0], p[1], p[2])] != l) {
@@ -226,7 +229,7 @@ public final class LightPass {
                     int ni = idx(nx, ny, nz);
                     if (kind[ni] != 2 && light[ni] < l - 1) {
                         light[ni] = (byte) (l - 1);
-                        buckets[l - 1].add(new int[]{nx, ny, nz});
+                        buckets.get(l - 1).add(new int[]{nx, ny, nz});
                     }
                 }
             }
@@ -270,7 +273,7 @@ public final class LightPass {
                         if (!inside(qx, qy, qz) || kind[idx(qx, qy, qz)] != 0 || avoid.contains(idx(qx, qy, qz))) {
                             continue;
                         }
-                        if (Math.abs(qx) > Geo.HALF_W || qz < Geo.Z_FRONT || qz > Geo.Z_REAR) {
+                        if (Math.abs(qx) > Geo.HALF_W || qz < Geo.Z_FRONT || qz > Geo.REAR_WALL_Z) {
                             continue;
                         }
                         int score = score(qx, qy, qz, ti);
@@ -348,8 +351,8 @@ public final class LightPass {
         int i = idx(x, y, z);
         kind[i] = 0;
         light[i] = 15;
-        List<int[]>[] buckets = newBuckets();
-        buckets[15].add(new int[]{x, y, z});
+        List<List<int[]>> buckets = newBuckets();
+        buckets.get(15).add(new int[]{x, y, z});
         flood(buckets);
         placed++;
     }

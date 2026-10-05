@@ -174,7 +174,8 @@ final class RedLightNpcBehavior implements NpcBehavior {
         double interval = (last - first) / (double) (heard - 1);
         // syllable weights: nine regular ones, a long final "da" (1.7x)
         double remainingSyllables = (DollCycle.SYLLABLES - heard) + 1.7 - Math.min(1.0, (now - last) / Math.max(1.0, interval));
-        double estRemaining = remainingSyllables * interval + npc.rng().gaussian(0, estimateSigma * 0.15);
+        // humans cannot time a chant to the tick: the estimate is off by a few ticks (sharper with skill)
+        double estRemaining = remainingSyllables * interval + npc.rng().gaussian(0, estimateSigma);
         int allowance = view.allowanceTicks();
         double lead = reactionTicks + safetyTicks + (fearTicks > 0 ? 6 : 0) - allowance;
         if (estRemaining <= lead) {
@@ -189,7 +190,7 @@ final class RedLightNpcBehavior implements NpcBehavior {
         if (mode == Mode.RUN) {
             // the doll is visibly turning: react after the personal delay
             if (brakeAtTick < 0) {
-                brakeAtTick = view.lightChangedTick() + reactionTicks;
+                brakeAtTick = view.lightChangedTick() + reactionTicks + rollLapse(npc);
             }
             if (now >= brakeAtTick) {
                 brake(npc);
@@ -233,6 +234,21 @@ final class RedLightNpcBehavior implements NpcBehavior {
                 }
             }
         }
+    }
+
+    /**
+     * Attention lapses: now and then a contestant notices the turn late (looking at their feet, jostled by a neighbour,
+     * rattled by the last shot). Rare for skilled and brave runners, more common when frightened. A lapse longer than the
+     * rest of the stopping allowance is what gets a runner shot on Normal; on harder presets the shorter allowance does the rest.
+     */
+    private int rollLapse(ContestantEntity npc) {
+        Personality p = npc.personality();
+        double skill = p.effectiveSkill(game.difficultyForNpc());
+        double chance = 0.015 + 0.06 * (1.0 - skill) + 0.03 * (1.0 - p.courage());
+        if (fearTicks > 0) {
+            chance *= 2.0;
+        }
+        return npc.rng().chance(chance) ? npc.rng().rangeInt(8, 26) : 0;
     }
 
     private void brake(ContestantEntity npc) {
