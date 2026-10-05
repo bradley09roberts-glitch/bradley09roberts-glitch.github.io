@@ -400,6 +400,7 @@
   "squidgame.msg.building": "Preparing the tournament complex... this takes a minute the first time.",
   "squidgame.msg.eliminated": "No. %s eliminated (%s)",
   "squidgame.msg.game_header": "=== GAME %s: %s ===",
+  "squidgame.msg.game_skipped": "%s is skipped: it needs at least %s contestants and only %s are left.",
   "squidgame.msg.late_join": "A tournament is in progress. You are watching as a spectator.",
   "squidgame.msg.lights_out": "Lights out in the dormitory...",
   "squidgame.msg.not_enough": "At least two contestants are needed. Registration stays open.",

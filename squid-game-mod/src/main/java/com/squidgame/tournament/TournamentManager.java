@@ -1106,6 +1106,12 @@ public final class TournamentManager {
             return;
         }
         t.phaseLength = cfg.ticks(cfg.transitionSeconds);
+        if (t.forcedGame == null) {
+            for (GameKind skipped : Planner.skipped(last, t.roster.aliveCount())) {
+                Announcer.chat(server, Component.translatable("squidgame.msg.game_skipped", Component.translatable(skipped.titleKey()),
+                        skipped.minParticipants, t.roster.aliveCount()));
+            }
+        }
         // survivors go back to the dormitory to rest; eliminated humans keep spectating there
         fadeHumans(14, 20, 18, 0xFF000000);
         List<Marker> bunks = arenaData().markers(ArenaId.HUB, "dorm.npc_spawn");
