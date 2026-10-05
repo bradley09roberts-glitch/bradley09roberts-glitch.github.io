@@ -77,6 +77,47 @@ public final class BridgeRules {
     }
 
     /**
+     * Rows still to gamble on ("unknown rows" U) for a field of 1..11 contestants, per difficulty (Normal, Hard,
+     * Extreme). The bridge only gets across a field that can learn it: every row costs about half a contestant, so the
+     * bare 18 rows need about 10 fallers and a field of 12 or fewer would mostly end with nobody across. A small field is
+     * therefore shown the first rows up front (18 - U of them); a field of 12 or more plays the bare bridge.
+     *
+     * <p>Calibrated with the whole-game simulation of the unit tests (all NPC, 150 games per cell): the largest U for which
+     * at least about 85 % (Normal), 78 % (Hard) and 74 % (Extreme) of the games get somebody across, which gives a share of
+     * the field across of roughly 20-45 %. The harder difficulties lose a little chance to the faster shatter, the
+     * shorter stall limit and the edgier NPCs, so they are shown a row or two more for the same chance.
+     */
+    private static final int[][] UNKNOWN_ROWS = {
+            // contestants:  1  2  3  4  5  6  7  8   9  10  11
+            /* NORMAL  */ {2, 2, 3, 4, 5, 7, 8, 9, 11, 13, 16},
+            /* HARD    */ {2, 2, 3, 4, 5, 7, 8, 9, 11, 13, 15},
+            /* EXTREME */ {2, 2, 2, 3, 4, 5, 7, 9, 10, 12, 15}};
+
+    /** The largest field that is given part of the route up front; bigger fields play the bare bridge. */
+    public static final int MAX_FIELD_WITH_REVEAL = UNKNOWN_ROWS[0].length;
+
+    /** Number of rows (from the near end) a field of {@code contestants} still has to gamble on; the whole bridge for a big field. */
+    public static int unknownRows(Difficulty d, int contestants, int rows) {
+        if (contestants > MAX_FIELD_WITH_REVEAL) {
+            return rows;
+        }
+        int row = switch (d) {
+            case NORMAL -> 0;
+            case HARD -> 1;
+            case EXTREME -> 2;
+        };
+        return Math.min(rows, UNKNOWN_ROWS[row][Math.max(1, contestants) - 1]);
+    }
+
+    /**
+     * Number of rows from the near end that the guards show to everybody before the game (as if they had been seen
+     * holding): {@code rows - unknownRows}, 0 for a field of 12 or more. Always at least two rows stay unknown.
+     */
+    public static int revealedRows(Difficulty d, int contestants, int rows) {
+        return Math.max(0, rows - unknownRows(d, contestants, rows));
+    }
+
+    /**
      * True when landing on {@code landedRow} means a whole row was jumped over (a 4 block sprint jump from the edge of
      * one row reaches the next but one): the contestant has to step on every row, so such a landing is not accepted.
      *

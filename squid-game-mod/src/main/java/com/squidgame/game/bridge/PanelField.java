@@ -277,6 +277,11 @@ final class PanelField {
         level.sendParticles(ParticleTypes.END_ROD, at.x, topY + 0.2, at.z, 5, 0.3, 0.1, 0.3, 0.01);
     }
 
+    /** A faint recurring shimmer on a panel the guards have shown to hold. */
+    void shimmer(Cell c) {
+        level.sendParticles(ParticleTypes.END_ROD, c.centerX(), topY + 0.12, c.centerZ(), 2, 0.55, 0.02, 0.55, 0.0);
+    }
+
     /** Removes crack overlays everywhere (cleanup). */
     void clearCracks() {
         for (Cell c : all) {

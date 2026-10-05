@@ -7,7 +7,8 @@ import java.util.List;
 /**
  * What everybody on the bridge can know: only things that publicly happened. A panel is seen shattering
  * ({@link Outcome#BROKE}: the other lane of that row is the safe one) or a contestant is seen standing on a panel
- * that did not give way ({@link Outcome#HELD}: this lane is the safe one). NPC behaviours learn exclusively from this
+ * that did not give way ({@link Outcome#HELD}: this lane is the safe one), or the guards show a lane before the game
+ * ({@link Outcome#SHOWN}, the same for a small field). NPC behaviours learn exclusively from this
  * log and the optional human overlay shows exactly this; the hidden {@link BridgeRoute} is never consulted.
  *
  * <p>The event log is append-only so late observers (an AI stand-in taking over for a disconnected human) can
@@ -21,7 +22,13 @@ public final class BridgeKnowledge {
         /** Somebody stood on this panel and it held: the lane is safe. */
         HELD,
         /** This panel shattered under somebody: the lane is fragile, the other lane is safe. */
-        BROKE
+        BROKE,
+        /**
+         * The guards showed everybody that this lane holds before the game (a small field is given the first rows of the
+         * bridge up front, see {@link BridgeRules#revealedRows}). Like {@link #HELD} the lane is safe; everybody saw it, so
+         * nobody can have missed it.
+         */
+        SHOWN
     }
 
     /** What is publicly known about one panel. */
@@ -57,7 +64,7 @@ public final class BridgeKnowledge {
         if (row < 0 || row >= rows || lane < 0 || lane >= BridgeRoute.LANES) {
             return false;
         }
-        int impliedSafe = outcome == Outcome.HELD ? lane : 1 - lane;
+        int impliedSafe = outcome == Outcome.BROKE ? 1 - lane : lane;
         if (safeLane[row] != UNKNOWN && safeLane[row] != impliedSafe) {
             return false; // contradicts what is already known
         }

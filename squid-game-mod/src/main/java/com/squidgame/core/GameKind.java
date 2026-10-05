@@ -6,7 +6,7 @@ public enum GameKind {
     DALGONA("dalgona", 1),
     TUG_OF_WAR("tug_of_war", 4),
     MARBLES("marbles", 2),
-    GLASS_BRIDGE("glass_bridge", 12),
+    GLASS_BRIDGE("glass_bridge", 4),
     FINAL("final", 2);
 
     public final String id;

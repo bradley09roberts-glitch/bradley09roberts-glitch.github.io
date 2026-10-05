@@ -186,7 +186,8 @@ final class BridgeNpcBehavior implements NpcBehavior {
         double attention = BridgeNpcRules.attention(p, view.difficulty());
         while (cursor < k.eventCount()) {
             BridgeKnowledge.Event e = k.event(cursor++);
-            if (rng.chance(attention)) {
+            // what the guards showed up front cannot be missed; a panel seen shattering or holding is noticed almost always
+            if (e.outcome() == BridgeKnowledge.Outcome.SHOWN || rng.chance(attention)) {
                 npc.memory().remember(MEM_KEY + e.row(), k.safeLane(e.row()));
             }
         }

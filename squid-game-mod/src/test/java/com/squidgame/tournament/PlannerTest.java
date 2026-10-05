@@ -54,10 +54,19 @@ class PlannerTest {
 
     @Test
     void theBridgeIsSkippedWhenTheFieldIsTooSmallForIt() {
+        assertEquals(4, GameKind.GLASS_BRIDGE.minParticipants, "small fields are shown part of the route, so four are enough");
         assertEquals(GameKind.GLASS_BRIDGE, Planner.next(GameKind.MARBLES, GameKind.GLASS_BRIDGE.minParticipants));
         assertEquals(GameKind.FINAL, Planner.next(GameKind.MARBLES, GameKind.GLASS_BRIDGE.minParticipants - 1));
-        assertEquals(java.util.List.of(GameKind.GLASS_BRIDGE), Planner.skipped(GameKind.MARBLES, 7));
+        assertEquals(java.util.List.of(GameKind.GLASS_BRIDGE), Planner.skipped(GameKind.MARBLES, 3));
+        assertEquals(java.util.List.of(), Planner.skipped(GameKind.MARBLES, 4));
         assertEquals(java.util.List.of(), Planner.skipped(GameKind.MARBLES, 16));
+    }
+
+    @Test
+    void theBridgeIsPlayedByEveryFieldFromFourToTheLargestCrowd() {
+        for (int survivors : new int[]{4, 5, 6, 8, 11, 12, 16, 40, 100}) {
+            assertEquals(GameKind.GLASS_BRIDGE, Planner.next(GameKind.MARBLES, survivors), "survivors " + survivors);
+        }
     }
 
     @Test
