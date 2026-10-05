@@ -76,7 +76,7 @@ class BridgeNpcRulesTest {
         double afraid = BridgeNpcRules.slipChance(p, Difficulty.NORMAL, 0, 1);
         assertTrue(pressed > calm * 2);
         assertTrue(afraid > calm);
-        assertTrue(calm > 0 && pressed < 0.3 + 1e-9);
+        assertTrue(calm > 0 && pressed < 0.35 + 1e-9);
     }
 
     @Test
@@ -88,7 +88,8 @@ class BridgeNpcRulesTest {
         double normal = BridgeNpcRules.slipChance(p, Difficulty.NORMAL, 0.5, 0.2);
         double hard = BridgeNpcRules.slipChance(p, Difficulty.HARD, 0.5, 0.2);
         double extreme = BridgeNpcRules.slipChance(p, Difficulty.EXTREME, 0.5, 0.2);
-        assertTrue(normal > hard && hard > extreme, "the difficulty's NPC skill bonus reduces slips");
+        assertTrue(normal < hard && hard < extreme, "the harder difficulties' nerve scale outweighs their NPC skill bonus");
+        assertTrue(extreme > normal * 4, "Extreme contestants lose their nerve far more often: " + extreme + " vs " + normal);
     }
 
     @Test

@@ -23,8 +23,10 @@ public final class BridgeNpcRules {
 
     /**
      * Probability of stepping onto the wrong panel although the safe lane of the row is known (a slip of nerve or of
-     * memory). Grows with the pressure of the stall timer and with fear after seeing others fall; sharper
-     * contestants (and harder difficulties, which add NPC skill) slip less.
+     * memory). Grows with the pressure of the stall timer and with fear after seeing others fall; sharper contestants
+     * (which includes the difficulty's NPC skill bonus) slip less, but the harder difficulties multiply the chance by
+     * their {@link BridgeRules.Params#npcSlipScale() nerve scale}: on Hard and Extreme the glass gives way sooner and the
+     * stall clock is shorter, so even a contestant who knows the way loses its nerve more often.
      *
      * @param pressure fraction of the stall limit already used (0..1)
      * @param fear     0..1, how shaken the contestant is by recent falls
@@ -33,7 +35,8 @@ public final class BridgeNpcRules {
         double skill = p.effectiveSkill(d);
         double base = 0.001 + 0.012 * (1.0 - skill);
         double stress = 0.5 + 1.5 * pressure + 0.6 * fear;
-        return Rng.clamp(base * stress + (1.0 - p.courage()) * 0.03 * pressure * pressure, 0.0, 0.20);
+        double scale = BridgeRules.params(d).npcSlipScale();
+        return Rng.clamp((base * stress + (1.0 - p.courage()) * 0.03 * pressure * pressure) * scale, 0.0, 0.35);
     }
 
     /**

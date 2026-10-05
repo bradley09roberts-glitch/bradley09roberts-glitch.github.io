@@ -48,34 +48,63 @@ class BridgeRulesTest {
     }
 
     @Test
-    void timeGrowsWithTheNumberOfContestantsOnlyAboveTheFreeCount() {
+    void smallCrowdsGetTheDesignTimeAndBigCrowdsMoreOfIt() {
         for (Difficulty d : Difficulty.values()) {
             int base = p(d).baseTimeTicks();
-            assertEquals(base, BridgeRules.timeLimitTicks(d, 2));
-            assertEquals(base, BridgeRules.timeLimitTicks(d, 16));
+            for (int n = 1; n <= 16; n++) {
+                assertEquals(base, BridgeRules.timeLimitTicks(d, n), d + " n=" + n + ": the base time covers the 16 of the show");
+            }
             int prev = base;
             for (int n = 17; n <= 128; n++) {
                 int t = BridgeRules.timeLimitTicks(d, n);
-                assertTrue(t > prev, "one more contestant needs more time");
+                assertTrue(t >= prev, "more contestants never get less time");
                 prev = t;
             }
+        }
+        assertTrue(BridgeRules.timeLimitTicks(Difficulty.NORMAL, 128) > p(Difficulty.NORMAL).baseTimeTicks(), "a big crowd needs more than the base time");
+    }
+
+    /** Ticks the gate needs per additional contestant at this difficulty (slope of {@link BridgeRules#neededTicks}). */
+    private static int needPerContestant(Difficulty d) {
+        return BridgeRules.neededTicks(d, 101) - BridgeRules.neededTicks(d, 100);
+    }
+
+    @Test
+    void theClockAllowanceIsTheDifficultyLadderForCrowds() {
+        // Normal grants clearly more time per queued contestant than the gate needs, Hard clearly less (the tail of a big
+        // queue is cut off) and Extreme a fraction of it
+        double normal = p(Difficulty.NORMAL).clockPerContestantTicks() / (double) needPerContestant(Difficulty.NORMAL);
+        double hard = p(Difficulty.HARD).clockPerContestantTicks() / (double) needPerContestant(Difficulty.HARD);
+        double extreme = p(Difficulty.EXTREME).clockPerContestantTicks() / (double) needPerContestant(Difficulty.EXTREME);
+        assertTrue(normal > 1.4, "Normal: generous slack " + normal);
+        assertTrue(hard > 0.4 && hard < 0.65, "Hard: about half of what the gate needs " + hard);
+        assertTrue(extreme > 0.2 && extreme < 0.35, "Extreme: about a quarter of what the gate needs " + extreme);
+        for (int n : new int[]{16, 24, 40, 64, 100, 128}) {
+            assertTrue(BridgeRules.timeLimitTicks(Difficulty.NORMAL, n) >= BridgeRules.neededTicks(Difficulty.NORMAL, n),
+                    "a well-playing Normal field of " + n + " always has the time it needs");
+            assertTrue(BridgeRules.timeLimitTicks(Difficulty.NORMAL, n) >= BridgeRules.timeLimitTicks(Difficulty.HARD, n)
+                    && BridgeRules.timeLimitTicks(Difficulty.HARD, n) >= BridgeRules.timeLimitTicks(Difficulty.EXTREME, n),
+                    "harder never means more time (n=" + n + ")");
+        }
+        // a big crowd on Hard / Extreme really has less than it needs, a crowd of 16 has plenty
+        assertTrue(BridgeRules.timeLimitTicks(Difficulty.HARD, 100) < BridgeRules.neededTicks(Difficulty.HARD, 100) * 0.8);
+        assertTrue(BridgeRules.timeLimitTicks(Difficulty.EXTREME, 100) < BridgeRules.neededTicks(Difficulty.EXTREME, 100) * 0.5);
+        for (Difficulty d : Difficulty.values()) {
+            assertTrue(BridgeRules.timeLimitTicks(d, 16) > BridgeRules.neededTicks(d, 16), d + ": the 16 of the show have the time they need");
         }
     }
 
     @Test
-    void theAllowancePerExtraContestantCoversWhatTheGateNeedsAtThatDifficulty() {
-        // a crossing takes 35-45 s and only maxCrossers contestants are on the bridge at once, so the gate needs
-        // crossing / maxCrossers per contestant: fewer simultaneous crossers (harder) means more time per head
-        BridgeRules.Params n = p(Difficulty.NORMAL), h = p(Difficulty.HARD), e = p(Difficulty.EXTREME);
-        assertTrue(n.extraTicksPerContestant() < h.extraTicksPerContestant() && h.extraTicksPerContestant() < e.extraTicksPerContestant());
+    void theNeededTimeFollowsTheGateThroughput() {
+        // fewer simultaneous crossers and longer call spacing (harder) mean a longer queue time per contestant
+        assertTrue(needPerContestant(Difficulty.NORMAL) < needPerContestant(Difficulty.HARD)
+                && needPerContestant(Difficulty.HARD) < needPerContestant(Difficulty.EXTREME));
         for (Difficulty d : Difficulty.values()) {
             BridgeRules.Params q = p(d);
-            assertTrue((long) q.extraTicksPerContestant() * q.maxCrossers() >= 35 * 20,
-                    d + ": the allowance must cover a crossing shared between the simultaneous crossers");
+            // a crossing takes at least ~30 s and only maxCrossers contestants are on the bridge at once
+            assertTrue((long) needPerContestant(d) * q.maxCrossers() >= 30 * 20, d + ": the gate cannot be faster than its crossers allow");
+            assertTrue(needPerContestant(d) >= q.minReleaseSpacingTicks(), d + ": never faster than the call spacing");
         }
-        // ... and the base time is what makes the harder difficulties tighter
-        assertTrue(BridgeRules.timeLimitTicks(Difficulty.NORMAL, 16) > BridgeRules.timeLimitTicks(Difficulty.HARD, 16));
-        assertTrue(BridgeRules.timeLimitTicks(Difficulty.HARD, 16) > BridgeRules.timeLimitTicks(Difficulty.EXTREME, 16));
     }
 
     @Test

@@ -77,16 +77,26 @@ class BridgeSimTest {
     }
 
     @Test
-    void aLongQueueIsNotCutOffByItsScaledTimeLimitOnAnyDifficulty() {
-        // the tail of a long queue must not lose to the clock merely for being long (the gate's throughput is
-        // covered by the per-contestant allowance), on every difficulty
+    void theClockMakesTheDifficultyLadderForBigCrowds() {
+        // a well-playing NPC crowd: on Normal most get across and the clock never cuts anybody off, on Hard about half
+        // get across (the tail of the queue is cut off), on Extreme few do
+        for (int n : new int[]{40, 100}) {
+            double normal = mean(Difficulty.NORMAL, n, 8, r -> r.finished()) / n;
+            double hard = mean(Difficulty.HARD, n, 8, r -> r.finished()) / n;
+            double extreme = mean(Difficulty.EXTREME, n, 8, r -> r.finished()) / n;
+            assertTrue(normal > 0.6, n + " on Normal: " + normal);
+            assertTrue(hard > 0.3 && hard < 0.6, n + " on Hard: " + hard);
+            assertTrue(extreme < 0.35, n + " on Extreme: " + extreme);
+            assertTrue(normal > hard + 0.1 && hard > extreme + 0.1, n + ": a clear ladder " + normal + " > " + hard + " > " + extreme);
+            assertEquals(0.0, mean(Difficulty.NORMAL, n, 8, r -> r.timedOut()), 1e-9, "the Normal clock never cuts anybody off");
+        }
+    }
+
+    @Test
+    void theSixteenOfTheShowHaveEnoughTimeOnEveryDifficulty() {
         for (Difficulty d : Difficulty.values()) {
-            for (int n : new int[]{24, 40, 100}) {
-                double finished = mean(d, n, 6, r -> r.finished());
-                double timedOut = mean(d, n, 6, r -> r.timedOut());
-                assertTrue(finished > n * 0.4, d + " " + n + " contestants: only " + finished + " crossed");
-                assertTrue(timedOut < n * 0.05, d + " " + n + " contestants: " + timedOut + " ran out of time");
-            }
+            double timedOut = mean(d, 16, 40, r -> r.timedOut());
+            assertTrue(timedOut < 0.5, d + ": the clock hardly ever cuts off a crowd of 16 (" + timedOut + " on average)");
         }
     }
 
