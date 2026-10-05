@@ -97,6 +97,13 @@ public final class Restrictions {
         grace.remove(id);
     }
 
+    /** One line for {@code /squid debug rules}: why a player is, or is not, being restricted. */
+    public String describe(ServerPlayer p) {
+        return String.format("%s: enforceRules=%s participant=%s opLevel2=%s creative=%s bypass=%s restricted=%s desiredMode=%s grace=%s lastPos=%s",
+                p.getGameProfile().getName(), SquidConfig.get().enforceRules, isParticipant(p), p.hasPermissions(2), p.isCreative(),
+                bypasses(p), isRestricted(p), desired.get(p.getUUID()), grace.get(p.getUUID()), lastPos.get(p.getUUID()));
+    }
+
     /** Per-tick enforcement for one participant. */
     public void tickPlayer(ServerPlayer p, boolean allowFlight) {
         if (!isRestricted(p)) {
@@ -194,6 +201,11 @@ public final class Restrictions {
             Item held = player.getItemInHand(hand).getItem();
             if (held instanceof BlockItem || held instanceof BucketItem || held instanceof FlintAndSteelItem
                     || held instanceof SpawnEggItem || held == Items.BONE_MEAL || held == Items.ARMOR_STAND) {
+                return InteractionResult.FAIL;
+            }
+            // chests, barrels, furnaces, crafting tables, anvils ...: no container of the complex can be opened
+            BlockPos clicked = hit.getBlockPos();
+            if (level.getBlockState(clicked).getMenuProvider(level, clicked) != null) {
                 return InteractionResult.FAIL;
             }
             return InteractionResult.PASS;
