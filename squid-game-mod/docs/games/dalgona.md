@@ -190,10 +190,11 @@ gauges, cracks, furrow, shards) is drawn procedurally.
 * Unit tests (`core/dalgona`, 56): shape geometry and fragility, cookie physics (speed / wobble / cutting / licks / rest / micro
   fractures, determinism), stroke validation (rate, bounds, time, speed, teleports, strikes), difficulty table and shape draw, crack
   pattern, NPC pass rates per difficulty and shape (umbrella hardest, never 0 / 100 %, faster NPCs fail more).
-* In the world, NPC only: games with 16, 24, 40 and 128 NPCs on the real hall in all difficulties (no exceptions, about 3 ms per tick
-  on average with 128; 128 NPCs on Normal: 83 % freed, umbrella 60 %, circle 97 %; 40 on Extreme: 45 %), a game in which everybody
-  fails (the tournament carries on with nobody left), a game that runs out of time, a server restart in the middle of a game (the
-  game is replayed from its start), several time scales (`squid debug timescale 0.05 .. 1`).
+* In the world, NPC only (`/tick rate 100`, then `squid debug play dalgona 128 <difficulty>`) on the real hall with 128 NPCs: Normal
+  109 freed (85 %), Hard 87 (68 %), Extreme 56 (44 %), no exceptions, 2.0 to 2.4 ms per server tick on average (0.7 to 1.0 ms of it
+  NPC entity ticks, 0.02 ms the behaviours); smaller games with 16, 24 and 40 NPCs; a game in which everybody fails (the tournament
+  carries on with nobody left); a game that runs out of time; a server restart in the middle of a game (the game is replayed from its
+  start); several time scales (`squid debug timescale 0.05 .. 1`).
 * In the world with a real client (headless, software rendering, scripted mouse and keys) as the human: the tin screen (hover, lid,
   automatic pick), carving a triangle, a star and the umbrella, stress and cracks growing, the lick (relief, sheen, cooldown), the
   cookie cracking and shattering, the shape coming free, the clock running out with the screen open, `Esc` and re-opening by
