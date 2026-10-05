@@ -121,6 +121,7 @@ All under `/squid`. Commands without a permission note work for every player (al
 | `config [key [value]]` | op | read / change options live |
 | `debug simulate [npcs] [difficulty]` | op | NPC-only tournament |
 | `debug play <game> [npcs] [difficulty]` | op | exactly one game, with you as a contestant (`red_light dalgona tug_of_war marbles glass_bridge final`) |
+| `debug playopen <game> [npcs] [difficulty]` | op | like `play`, but registration stays open so other players can `/squid join` (`/squid skip` ends it) |
 | `debug perf` | op | the built-in profiler (manager, game logic, HUD, NPC entities, NPC behaviours, whole tick) |
 | `debug rules <player>` | op | why a player is (not) restricted by the arena rules |
 | `debug timescale <x>`, `debug eliminate <n>`, `debug roster`, `debug markers <arena>`, `debug builders` | op | test helpers |
