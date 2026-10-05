@@ -25,7 +25,7 @@ public final class SquidConfig {
 
     // ---- population
     /** Total contestants (humans + NPCs). NPC count = total - humans unless {@link #npcCount} >= 0. */
-    public int totalContestants = 40;
+    public int totalContestants = 100;
     /** If >= 0, the exact number of NPC contestants regardless of the player count. */
     public int npcCount = -1;
     /** Hard cap on contestants (arenas are sized for 128). */

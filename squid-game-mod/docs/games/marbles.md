@@ -86,7 +86,7 @@ The marble that rests closer to the exact centre wins marbles from the other; an
   Enter (or Y) to accept and Esc (or N) to decline. The chat and the action bar tell you who accepted, refused or took somebody else.
 * **Odd or even** (panel opens by itself at every decision): `-` / `+` (or the arrow keys) set the number of marbles in the fist or
   the wager, `Odd` / `Even` (or `O` / `E`) call, `Lock in` (or Enter / Space) confirms. The panel shows both stacks, the hand, the
-  countdown bar and the last revealed rounds. Esc hides the panel for the rest of the decision, `R` (key binding "Marbles panel")
+  countdown bar and the last revealed rounds. Esc hides the panel for the rest of the decision, `M` (key binding "Marbles panel")
   brings it back. A locked-in choice cannot be changed; the panel shows whether the opponent has locked in too.
 * **Target throw:** the marbles are in hotbar slot 1. On your turn the throw panel appears at the bottom of the screen: "YOUR
   THROW", the seconds left, the distance of the spot you look at, the power bar and the turn timer. Look at the spot where the

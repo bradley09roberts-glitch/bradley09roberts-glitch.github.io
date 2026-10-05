@@ -206,6 +206,12 @@ public final class SquidCommands {
                     + r.minX() + "," + r.minY() + "," + r.minZ() + " .. " + r.maxX() + "," + r.maxY() + "," + r.maxZ() + "]"), false)));
             return 1;
         })));
+        debug.then(Commands.literal("rules").then(Commands.argument("player", net.minecraft.commands.arguments.EntityArgument.player()).executes(c -> {
+            ServerPlayer target = net.minecraft.commands.arguments.EntityArgument.getPlayer(c, "player");
+            String line = mgr(c).restrictions().describe(target);
+            c.getSource().sendSuccess(() -> Component.literal(line), false);
+            return 1;
+        })));
         debug.then(Commands.literal("builders").executes(c -> {
             for (ArenaId id : ArenaId.values()) {
                 String s = id + ": " + (ArenaBuilders.isPlaceholder(id) ? "placeholder" : "real");

@@ -18,7 +18,7 @@ class PlannerTest {
         assertEquals(GameKind.DALGONA, Planner.next(GameKind.RED_LIGHT, 30));
         assertEquals(GameKind.TUG_OF_WAR, Planner.next(GameKind.DALGONA, 20));
         assertEquals(GameKind.MARBLES, Planner.next(GameKind.TUG_OF_WAR, 10));
-        assertEquals(GameKind.GLASS_BRIDGE, Planner.next(GameKind.MARBLES, 6));
+        assertEquals(GameKind.GLASS_BRIDGE, Planner.next(GameKind.MARBLES, 16));
         assertEquals(GameKind.FINAL, Planner.next(GameKind.GLASS_BRIDGE, 3));
     }
 
@@ -50,5 +50,19 @@ class PlannerTest {
     @Test
     void finalIsPlayedWithSeveralSurvivorsAfterTheBridge() {
         assertEquals(GameKind.FINAL, Planner.next(GameKind.GLASS_BRIDGE, 7));
+    }
+
+    @Test
+    void theBridgeIsSkippedWhenTheFieldIsTooSmallForIt() {
+        assertEquals(GameKind.GLASS_BRIDGE, Planner.next(GameKind.MARBLES, GameKind.GLASS_BRIDGE.minParticipants));
+        assertEquals(GameKind.FINAL, Planner.next(GameKind.MARBLES, GameKind.GLASS_BRIDGE.minParticipants - 1));
+        assertEquals(java.util.List.of(GameKind.GLASS_BRIDGE), Planner.skipped(GameKind.MARBLES, 7));
+        assertEquals(java.util.List.of(), Planner.skipped(GameKind.MARBLES, 16));
+    }
+
+    @Test
+    void aJumpToTheFinalWithTwoSurvivorsIsNotReportedAsASkip() {
+        assertEquals(java.util.List.of(), Planner.skipped(GameKind.DALGONA, 2));
+        assertEquals(java.util.List.of(GameKind.TUG_OF_WAR), Planner.skipped(GameKind.DALGONA, 3));
     }
 }

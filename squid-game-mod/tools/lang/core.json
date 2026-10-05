@@ -72,6 +72,7 @@
   "squidgame.msg.registration_closed": "Registration closed with %s contestants.",
   "squidgame.msg.registration_countdown": "Registration closes in %s s - %s registered",
   "squidgame.msg.not_enough": "At least two contestants are needed. Registration stays open.",
+  "squidgame.msg.game_skipped": "%s is skipped: it needs at least %s contestants and only %s are left.",
   "squidgame.msg.registered": "You are contestant No. %s. Good luck.",
   "squidgame.msg.game_header": "=== GAME %s: %s ===",
   "squidgame.msg.eliminated": "No. %s eliminated (%s)",
