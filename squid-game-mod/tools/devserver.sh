@@ -59,7 +59,8 @@ deploy() {
 start_server() {
   bootstrap
   [ -f "$DIR/eula.txt" ] || { echo "eula.txt missing: read https://aka.ms/MinecraftEULA and re-run with SQUID_ACCEPT_EULA=1"; exit 3; }
-  ( cd "$DIR" && setsid nohup java -Xmx"${SQUID_HEAP:-3G}" -Dsquid.server.dir="$DIR" -jar fabric-server-launch.jar nogui < /dev/null > server.log 2>&1 & )
+  # the launching subshell must not hold the caller's stdout/stderr (a pipe such as `| tail` would never see EOF)
+  ( cd "$DIR" && exec setsid nohup java -Xmx"${SQUID_HEAP:-3G}" -Dsquid.server.dir="$DIR" -jar fabric-server-launch.jar nogui < /dev/null > server.log 2>&1 ) > /dev/null 2>&1 < /dev/null &
   for i in $(seq 1 120); do
     if grep -q "Done (" "$DIR/server.log" 2>/dev/null; then echo "server up ($(grep -o 'Done ([0-9.]*s)' "$DIR/server.log" | tail -1))"; return 0; fi
     if ! running; then echo "server died:"; tail -30 "$DIR/server.log"; return 1; fi
