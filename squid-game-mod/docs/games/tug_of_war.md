@@ -127,8 +127,8 @@ however much of the deck had been taken when the state was last saved.
 * `TugOverlay`: the rope bar under the objective panel (team colours, the flag, chevrons for the rope's velocity, a thin strip of
   each team's stamina, "YOU" on your side), the beat ring around the crosshair (a ring that closes onto the target, the hit window as
   a band, a flash on the beat, the count-in number, popups PERFECT / GOOD / OK / TOO EARLY / TOO LATE / NO STAMINA), and a panel with
-  your stamina (flashing when exhausted), the team's sync and the three keys as bound, lit while held. Spectators and waiting
-  contestants get the rope bar and a dim ring.
+  your stamina (flashing when exhausted), the team's sync and the three keys as bound, lit while held (shown from the count-in to
+  the end of the match). Spectators and waiting contestants get the rope bar and a dim ring.
 * Beat alignment: the client estimates the server tick from the snapshots (minimum offset); the server subtracts the round trip, so
   the ring and the judgement agree on any connection.
 
@@ -152,6 +152,21 @@ sudden death, forfeit, determinism), rules (difficulty monotonicity, envelopes, 
 (pacing, panic, timing, O(1)), and Monte Carlo heats (`TugMatchTest`: fairness, decisiveness, pacing, value of a human, small and
 huge teams, difficulty).
 
+## Verification (dev server, headless client, merged branch)
+* `./gradlew build` with all tests is green (planner, sim, rules, beat clock and gate, NPC policy, Monte Carlo balance, fixture arena).
+* NPC-only runs with `tick rate 100`: 2 v 2 (Normal, Hard), 8 v 8 (Normal, Hard, Extreme), 70 contestants in two heats (Normal and
+  Hard, 17 v 18 and 18 v 17), 128 contestants in two 32 v 32 heats at the normal tick rate: no exceptions, every heat decided over
+  the edge, deck repaired between heats; `/squid debug perf` with 128 NPCs: game logic 0.18 ms, behaviours 0.17 ms, NPC entity
+  ticks 2.6 ms, whole server tick 4.9 ms (budget 50 ms).
+* Edge cases in the world: contestants eliminated by the operator during the walk-in, the count-in and the match (the heat is
+  decided without them); the server stopped in the middle of a 32 v 32 collapse and started again (the resumed game repaired 840
+  blocks); a human kicked in the middle of a match (the AI stand-in keeps heaving: 3 of 3 hits) and joined again.
+* Human path with the headless client (7 frames per second under software rendering): instructions with the real key names, count-in
+  ring, pulling (R: stamina drains, the key lights), tapping F on the beat (the log counts the human's heaves: 4 of 4 and 11 of 16
+  judged as hits; the swap of the hands that F is bound to in vanilla is suppressed), bracing on Left Shift (lit, the sneak
+  binding does not hide it), exhaustion (EXHAUSTED, NO STAMINA), the danger banner, the title and the winners' and losers' views
+  of the fall, and a spectator camera (NPC lines leaning into the rope, strain and flag, the collapse of the losing deck).
+
 ## Limitations / ideas
 * The slot count limits a team to 32 (heats beyond 64 contestants); a deck is a 5 wide strip, so a human cannot be pulled around
   other humans.
@@ -160,3 +175,7 @@ huge teams, difficulty).
 * The scoring rewards the team, not the individual: a human on a bad team has little to do but pace and time well.
 * Heaves are polled per rendered frame: at very low frame rates the timing is quantized by the frame time (the window is +-3 ticks
   on Normal, +1 tick forgiveness).
+* A 2 v 2 with a human who hits every beat is decided in seconds (each heave is half of the team); the rope inertia for small teams
+  keeps NPC-only 2 v 2 heats at about half a minute but cannot hide a skill gap that large.
+* Not observed in the world: a human who rejoins while his heat is still running (the stand-in and the reconnect each work; the
+  heat ended before the client was back), and more than one human in one heat.

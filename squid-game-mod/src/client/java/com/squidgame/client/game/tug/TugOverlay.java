@@ -46,7 +46,7 @@ final class TugOverlay {
         if (rhythm) {
             drawBeatRing(g, font, s, w, h, pulling);
         }
-        if (pulling && s.stage() != TugNet.STAGE_WALK) {
+        if (pulling && rhythm) {
             drawPersonal(g, font, s, w, h);
         }
     }
