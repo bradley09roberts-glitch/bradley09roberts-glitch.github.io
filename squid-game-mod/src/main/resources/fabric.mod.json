@@ -20,10 +20,10 @@
   },
   "depends": {
     "fabricloader": ">=0.16.10",
-    "minecraft": "~1.21.1",
+    "minecraft": "1.21.1",
     "java": ">=21",
-    "fabric-api": "*",
-    "geckolib": ">=4.8"
+    "fabric-api": ">=0.116.17",
+    "geckolib": ">=4.9"
   },
   "mixins": [
     {
