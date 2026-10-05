@@ -54,6 +54,44 @@ class CookieSimTest {
     }
 
     @Test
+    void messagesBunchedByAServerHiccupAreJudgedLikeSpreadOnes() {
+        // the same needle path (5.4 units per tick, one message per tick) delivered tick by tick, and delivered in one
+        // bunch because the server stalled: the cookie must not be punished for the bunching
+        for (Difficulty d : Difficulty.values()) {
+            CookieSim spread = sim(DalgonaShape.TRIANGLE, d, 3);
+            CookieSim bunched = sim(DalgonaShape.TRIANGLE, d, 3);
+            double[] p = new double[2];
+            double[] x = new double[1];
+            double[] y = new double[1];
+            double cursor = 0;
+            // both carve calmly for a while first, so that the carve budget is full
+            for (int t = 0; t < 30; t++) {
+                cursor += 5.4 / spread.shape().sampleStep();
+                positionAt(spread.shape(), cursor, 0, p);
+                x[0] = p[0];
+                y[0] = p[1];
+                spread.tick();
+                bunched.tick();
+                spread.stroke(x, y, 1, 1.0, t == 0);
+                bunched.stroke(x, y, 1, 1.0, t == 0);
+            }
+            double before = bunched.stress();
+            for (int t = 0; t < 40; t++) {
+                cursor += 5.4 / spread.shape().sampleStep();
+                positionAt(spread.shape(), cursor, 0, p);
+                x[0] = p[0];
+                y[0] = p[1];
+                spread.tick();
+                spread.stroke(x, y, 1, 1.0, false);
+                bunched.stroke(x, y, 1, 1.0, false);   // no tick() in between: the server was stalled
+            }
+            assertFalse(bunched.isCracked());
+            assertTrue(bunched.stress() - before < 3.0, d + ": stress added by the bunch " + (bunched.stress() - before));
+            assertEquals(spread.carvedCount(), bunched.carvedCount(), 2, d + ": the same groove is carved");
+        }
+    }
+
+    @Test
     void aSteadyHandFreesEveryShapeOnEveryDifficulty() {
         for (Difficulty d : Difficulty.values()) {
             for (DalgonaShape s : DalgonaShape.values()) {

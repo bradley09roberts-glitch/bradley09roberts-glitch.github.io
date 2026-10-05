@@ -4,11 +4,12 @@ package com.squidgame.core.dalgona;
  * Server-side gatekeeper for the needle strokes a client sends (one instance per human contestant). Nothing the client
  * claims is trusted; a message is checked for
  * <ul>
- *   <li><b>rate</b>: a token bucket (about 1.5 messages per tick on average, bursts of 8);</li>
+ *   <li><b>rate</b>: a token bucket (about 1.5 messages per tick on average, bursts of {@value #BUCKET_CAP});</li>
  *   <li><b>size and bounds</b>: 1..{@value #MAX_POINTS} points, every coordinate inside the canvas;</li>
  *   <li><b>time</b>: the client states how long the message's motion took, but the server only credits what its own
- *       clock allows (credit accrues with elapsed server ticks), so a client can neither slow time down to hide a
- *       fast stroke nor bank time;</li>
+ *       clock allows (credit accrues with the time that really passed on the server, which the caller passes in
+ *       ticks of 50 ms; real time, not game ticks, so a lagging server does not punish an honest client), so a client
+ *       can neither slow time down to hide a fast stroke nor bank more than {@value #CREDIT_CAP} ticks;</li>
  *   <li><b>speed</b>: a needle that is down may not move faster than {@value #MAX_PATH_SPEED} units per tick (the path
  *       is cut off at the allowed length and the cookie takes a penalty), a lifted needle not faster than
  *       {@value #MAX_LIFT_SPEED} units per tick between two strokes (a "teleport": penalty).</li>
@@ -21,9 +22,11 @@ public final class StrokeValidator {
     public static final int MAX_POINTS = 40;
     public static final double MAX_PATH_SPEED = 260.0;
     public static final double MAX_LIFT_SPEED = 700.0;
-    public static final double BUCKET_CAP = 8.0;
+    /** Burst allowance (messages): a server hiccup makes seconds of an honest client's messages arrive at once. */
+    public static final double BUCKET_CAP = 100.0;
     public static final double BUCKET_REFILL = 1.5;
-    public static final double CREDIT_CAP = 10.0;
+    /** Most time (ticks) that can be banked; it lets the messages of a server hiccup be credited what they claim. */
+    public static final double CREDIT_CAP = 100.0;
     /** Credit a fresh stroke starts with at most (ticks). */
     public static final double START_CREDIT = 4.0;
     public static final double MAX_CLAIM_TICKS = 12.0;

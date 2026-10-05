@@ -20,7 +20,7 @@ cookie physics through a simulated needle hand.
 | Client | `client/game/dalgona/`: `DalgonaClient` (registration), `TinSelectScreen`, `DalgonaScreen` (the carving table), `CookieModel` (what the client knows of the cookie), `CookiePainter` + `Gfx` (all drawing, textures from `textures/gui/dalgona/`) |
 | Fixture arena | `build/placeholder/DalgonaPlaceholder` (version 0 test hall; superseded by the real `DalgonaBuilder`, kept as a fallback fixture) |
 | Translations | `tools/lang/dalgona.json` (merged into `en_us.json` by `tools/merge_lang.py`) |
-| Tests | `src/test/java/com/squidgame/core/dalgona/*Test.java` (54 tests) |
+| Tests | `src/test/java/com/squidgame/core/dalgona/*Test.java` (56 tests) |
 
 Nothing outside these packages was modified: networking, screens and the client class are found by name
 (`ModNetwork`, `ScreenRegistry.discoverGameClients`), sounds are existing events of `ModSounds`.
@@ -94,7 +94,7 @@ unit of progress. Speeds are canvas units per server tick (20 per second).
 | Shape weights circle / triangle / star / umbrella | .30 / .30 / .22 / .18 | .20 / .27 / .28 / .25 | .10 / .22 / .31 / .37 |
 | NPC skill bonus (global difficulty) | +0 | +0.12 | +0.25 |
 
-Brittleness scales every stress of a shape: circle 1.0, triangle 1.0, star 1.1, umbrella 1.5. The fragility of a spot
+Brittleness scales the speed, wobble and cutting stress of a shape: circle 1.0, triangle 1.0, star 1.1, umbrella 1.5. The fragility of a spot
 (1 = robust, at most 2.8) grows with the sharpness of the turns around it and with thin features (the star tips, the umbrella
 handle and canopy points); the safe speed there is `safe / fragility^0.7`.
 
@@ -117,10 +117,12 @@ The groove must be carved within the tolerance; carving far off the groove (but 
 The client sends `dalgona.stroke` messages (about one per tick while the needle moves) with the points of that tick, the time they
 took and start / end flags. `StrokeValidator` (one per human) does not trust any of it:
 
-* a **token bucket** of 1.5 messages per tick (burst 8) stops floods; messages with no points, more than 40 points or a coordinate
-  outside the canvas are dropped;
-* the **time claim** is only credited as far as the server's own clock allows (credit accrues per server tick, at most 12 ticks per
-  claim, 4 ticks to start a stroke), so neither slow motion nor banked time can hide a fast stroke;
+* a **token bucket** of 1.5 messages per tick (bursts of up to 100, so a server hiccup that delivers seconds of messages at once does
+  not drop an honest client's strokes) stops floods; messages with no points, more than 40 points or a coordinate outside the canvas
+  are dropped;
+* the **time claim** is only credited as far as the server's own clock allows: credit accrues with the *real* time that passed on the
+  server (not with game ticks, so a lagging server does not punish an honest client; at most 100 ticks can be banked), a claim is
+  worth at most 12 ticks and a stroke starts with at most 4, so neither slow motion nor banked time can hide a fast stroke;
 * a needle that is down may not move faster than **260 units / tick** (the path is cut off and the cookie takes a penalty), a lifted
   needle not faster than **700 units / tick** between two strokes (a teleport costs 25 stress);
 * repeated violations (strikes decay over 100 ticks, six is the limit) are treated as tampering: the cookie cracks;
@@ -146,7 +148,8 @@ and its fragile spots, what is carved, its stress, licks, the clock).
   `DALGONA_CARVE` with a needle in hand while the needle moves, back to sitting while it rests, the one-shot actions
   `dalgona_lick` and `dalgona_crack` (also for a hard jolt), `dalgona_success` when free, `DALGONA_FAIL` when the cookie breaks;
   scratching sounds at the desk (only sent when a player is within 14 blocks) and a crack sound for a spike.
-* **Calibration** (Monte Carlo over 400 contestants per cell, random personalities, fixed seeds; the same numbers `NpcCarverTest` asserts):
+* **Calibration** (Monte Carlo, 400 simulated contestants with random personalities per cell, fixed seeds; `NpcCarverTest`
+  asserts the bands 72-92 % Normal, 52-76 % Hard, 32-58 % Extreme and the ordering of the shapes):
 
   | NPC success | circle | triangle | star | umbrella | overall |
   | --- | --- | --- | --- | --- | --- |
@@ -178,12 +181,13 @@ and its fragile spots, what is carved, its stress, licks, the clock).
 ## Sounds and assets (all existing)
 
 `needle.scratch`, `dalgona.crack`, `dalgona.snap`, `danger.heartbeat`, `ui.select`, `ui.confirm`, `ui.deny`, `ui.number_call`,
-`game.end_buzzer`; textures `gui/dalgona/{cookie,needle,table,crack_0..3}.png`, `gui/hud/icon_lick.png`. Everything else (tins,
+`game.end_buzzer`, `countdown.tick` / `countdown.beep` (a ticking clock for humans still carving in the last ten seconds, beeping
+in the last three); textures `gui/dalgona/{cookie,needle,table,crack_0..3}.png`, `gui/hud/icon_lick.png`. Everything else (tins,
 gauges, cracks, furrow, shards) is drawn procedurally.
 
 ## Tests and how it was verified
 
-* Unit tests (`core/dalgona`, 54): shape geometry and fragility, cookie physics (speed / wobble / cutting / licks / rest / micro
+* Unit tests (`core/dalgona`, 56): shape geometry and fragility, cookie physics (speed / wobble / cutting / licks / rest / micro
   fractures, determinism), stroke validation (rate, bounds, time, speed, teleports, strikes), difficulty table and shape draw, crack
   pattern, NPC pass rates per difficulty and shape (umbrella hardest, never 0 / 100 %, faster NPCs fail more).
 * In the world: games with 16 and 128 NPCs (no exceptions, about 3 ms per tick on average with 128), and with a real client (headless,

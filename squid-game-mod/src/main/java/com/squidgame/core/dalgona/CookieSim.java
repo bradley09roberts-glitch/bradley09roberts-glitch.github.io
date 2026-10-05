@@ -168,6 +168,9 @@ public final class CookieSim {
             return r;
         }
         dt = Math.max(MIN_DT, Math.min(MAX_DT, dt));
+        // Time this message covers that no tick() has refilled the carve budget for yet: messages that a laggy server
+        // delivers in a bunch (the ticks in between never ran) must not be judged as if they were all carved at once.
+        carveBudget = Math.min(CARVE_BURST, carveBudget + p.safeSpeed() * Math.max(0.0, dt - ticksSinceStroke));
         ticksSinceStroke = 0;
         boolean have = hasNeedle && !newStroke;
         double px = needleX;

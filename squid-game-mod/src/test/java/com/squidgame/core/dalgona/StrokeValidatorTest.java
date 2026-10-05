@@ -82,7 +82,7 @@ class StrokeValidatorTest {
     void rateLimitDropsFloodsButNotNormalTraffic() {
         StrokeValidator v = new StrokeValidator();
         int accepted = 0;
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < (int) StrokeValidator.BUCKET_CAP + 50; i++) {
             if (check(v, 50, pts(200, 200), 50, i == 0, false, i > 0, 200, 200).accepted) {
                 accepted++;
             }
@@ -114,6 +114,36 @@ class StrokeValidatorTest {
         // claiming nothing is clamped to the minimum (speed then looks high, which only hurts the cheater)
         StrokeValidator.Verdict zero = check(v, 5002, pts(301, 300), 0, false, false, true, 300, 300);
         assertEquals(CookieSim.MIN_DT, zero.dt, 1e-9);
+    }
+
+    @Test
+    void aServerHiccupDoesNotPunishAnHonestClient() {
+        // the client carves at 5 units per tick and sends one message per tick; the server stalls for 20 ticks and then
+        // receives all 20 messages at once (the validator is fed real elapsed time, so credit has accrued meanwhile)
+        StrokeValidator v = new StrokeValidator();
+        CookieSim sim = new CookieSim(DalgonaShape.CIRCLE, DalgonaRules.params(com.squidgame.core.Difficulty.NORMAL), 1L);
+        double x = DalgonaShape.CIRCLE.sampleX(0);
+        double y = DalgonaShape.CIRCLE.sampleY(0);
+        StrokeValidator.Verdict first = check(v, 1000, pts((int) x, (int) y), 50, true, false, false, 0, 0);
+        assertTrue(first.accepted);
+        sim.stroke(first.xs, first.ys, first.n, first.dt, true);
+        double creditedTicks = 0;
+        int accepted = 0;
+        for (int i = 1; i <= 20; i++) {
+            int n = Math.min(DalgonaShape.CIRCLE.sampleCount() - 1, i);
+            // walk along the groove: samples are 8 units apart, so every second message moves one sample (4 units / tick)
+            double tx = DalgonaShape.CIRCLE.sampleX(n / 2), ty = DalgonaShape.CIRCLE.sampleY(n / 2);
+            StrokeValidator.Verdict r = check(v, 1020, pts((int) tx, (int) ty), 50, false, false, true, sim.needleX(), sim.needleY());
+            if (r.accepted) {
+                accepted++;
+                creditedTicks += r.dt;
+                sim.stroke(r.xs, r.ys, r.n, r.dt, r.newStroke);
+            }
+        }
+        assertEquals(20, accepted, "a one second burst of messages is not dropped");
+        assertTrue(creditedTicks > 16, "the burst is credited what it claimed: " + creditedTicks);
+        assertTrue(sim.stress() < 3, "stress after the hiccup " + sim.stress());
+        assertFalse(sim.isCracked());
     }
 
     @Test

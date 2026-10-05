@@ -132,6 +132,7 @@ public final class DalgonaGame implements MiniGame {
     private long clock;
     private long selectionEnd;
     private long lastShotAt;
+    private long realOrigin = System.nanoTime();
     private int doneCount;
     private int crackedCount;
     private int timedOutCount;
@@ -308,6 +309,7 @@ public final class DalgonaGame implements MiniGame {
         started = true;
         clock = 0;
         lastShotAt = 0;
+        realOrigin = System.nanoTime();
         int selection = DalgonaRules.selectionTicks(ctx.config().timeScale);
         selectionEnd = selection;
         DalgonaShape[] shapes = DalgonaRules.assignShapes(rng.fork(5), difficulty, slots.size());
@@ -353,6 +355,22 @@ public final class DalgonaGame implements MiniGame {
         }
         if (clock % 10 == 0) {
             updateBoard();
+        }
+        int left = ticksLeft();
+        if (left > 0 && left <= 200 && left % 20 == 0) {
+            clockCue(left <= 60);
+        }
+    }
+
+    /** A ticking clock for everybody who is still carving during the last ten seconds, beeping in the last three. */
+    private void clockCue(boolean beep) {
+        for (Slot s : slots.values()) {
+            if (s.stage == Stage.CARVING && s.c.isHumanControlled() && s.c.isAlive()) {
+                ServerPlayer p = s.c.player(ctx.server());
+                if (p != null) {
+                    Announcer.sound(p, beep ? ModSounds.COUNTDOWN_BEEP : ModSounds.COUNTDOWN_TICK, 0.7f, beep ? 1.25f : 1.0f);
+                }
+            }
         }
     }
 
@@ -520,21 +538,24 @@ public final class DalgonaGame implements MiniGame {
         // The guards deal with everyone who did not make it, one after another, all within the eliminations phase.
         // Cookies that cracked earlier already have their shot queued (a human gets time to watch the cookie break);
         // the rest are lined up behind those shots.
+        // The volley has to fit into the eliminations phase (six seconds at time scale 1) minus the time a shot takes.
+        int window = Math.max(8, ctx.config().ticks(6) - 16);
+        int gap = Math.max(1, Math.min(SHOT_SPACING, window / 12));
         List<Contestant> fresh = new ArrayList<>();
         long now = ctx.now();
-        long queuedUntil = now - SHOT_SPACING;
+        long queuedUntil = now - gap;
         for (Contestant c : out) {
             Slot s = slots.get(c.number);
-            if (s != null && s.condemned && s.shotAt <= now + 90) {
+            if (s != null && s.condemned && s.shotAt <= now + window) {
                 queuedUntil = Math.max(queuedUntil, s.shotAt);
             } else {
                 // not condemned yet, or queued so far behind that it would miss the eliminations phase
                 fresh.add(c);
             }
         }
-        long free = Math.max(now, queuedUntil + SHOT_SPACING);
-        int room = (int) Math.max(1, 90 - (free - now));
-        int spacing = Math.max(1, Math.min(SHOT_SPACING, room / Math.max(1, fresh.size())));
+        long free = Math.max(now, queuedUntil + gap);
+        int room = (int) Math.max(1, window - (free - now));
+        int spacing = Math.max(1, Math.min(gap, room / Math.max(1, fresh.size())));
         for (int i = 0; i < fresh.size(); i++) {
             Contestant c = fresh.get(i);
             Slot s = slots.get(c.number);
@@ -545,12 +566,13 @@ public final class DalgonaGame implements MiniGame {
             long at = free + (long) i * spacing;
             if (c.isHumanControlled()) {
                 // a human gets a moment to read "time is up" before the guard fires
-                at = Math.max(at, now + HUMAN_TIMEOUT_DELAY);
+                at = Math.max(at, now + Math.min(HUMAN_TIMEOUT_DELAY, window / 2));
             }
+            at = Math.min(at, now + window);
             if (s != null) {
-                s.shotAt = Math.min(now + 90, at);
+                s.shotAt = at;
             }
-            ctx.schedule((int) Math.min(90, Math.max(0, at - now)), () -> fire(c, cause));
+            ctx.schedule((int) Math.max(0, at - now), () -> fire(c, cause));
         }
         if (!fresh.isEmpty()) {
             lastShotAt = Math.max(lastShotAt, free + (long) (fresh.size() - 1) * spacing);
@@ -702,6 +724,15 @@ public final class DalgonaGame implements MiniGame {
         }
     }
 
+    /**
+     * Real time in ticks of 50 ms since the game began (offset so that it never reads as zero or negative). The stroke
+     * validator credits what an honest client can have done in the time that really passed: counting game ticks would
+     * punish a client whenever the server lags and its messages arrive in a bunch.
+     */
+    private long realTicks() {
+        return (System.nanoTime() - realOrigin) / 50_000_000L + 1000L;
+    }
+
     private void onPick(Slot s, CompoundTag data) {
         if (s.stage != Stage.SELECTING) {
             return;
@@ -720,7 +751,7 @@ public final class DalgonaGame implements MiniGame {
         }
         int[] pts = data.getIntArray("p");
         int flags = data.getByte("f");
-        StrokeValidator.Verdict v = s.validator.check(ctx.now(), pts, pts.length, data.getInt("t"), (flags & 1) != 0, (flags & 2) != 0,
+        StrokeValidator.Verdict v = s.validator.check(realTicks(), pts, pts.length, data.getInt("t"), (flags & 1) != 0, (flags & 2) != 0,
                 s.sim.hasNeedle(), s.sim.needleX(), s.sim.needleY());
         if (v.tamper) {
             SquidGameMod.LOGGER.warn("Dalgona: {} keeps sending invalid strokes; the cookie breaks", s.c.label());

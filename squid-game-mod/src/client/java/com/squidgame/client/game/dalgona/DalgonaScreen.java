@@ -38,10 +38,22 @@ final class DalgonaScreen extends Screen implements ScreenRegistry.ClosableBySer
     private static final int GREEN = 0xFF50D890;
     private static final int RED = 0xFFFF4040;
     private static final int CREAM = 0xFFF4E4C1;
-    private static final int PANEL = 0xB0120A05;
     private static final int PINK = 0xFFE0457B;
 
+    /** A crumb flying off the needle (GUI pixels, seconds). */
+    private static final class Chip {
+        float x;
+        float y;
+        float vx;
+        float vy;
+        float age;
+        float life;
+        float size;
+        int color;
+    }
+
     private final CookieModel model;
+    private final List<Chip> chips = new ArrayList<>();
     private final boolean intro;
     private final long openedAt = System.currentTimeMillis();
     private final Random rnd = new Random();
@@ -312,6 +324,8 @@ final class DalgonaScreen extends Screen implements ScreenRegistry.ClosableBySer
             return;
         }
         long nowMs = System.currentTimeMillis();
+        int carvedBefore = model.carvedCount;
+        double moved = lastX >= 0 ? Math.hypot(cx - lastX, cy - lastY) : 0;
         // local prediction: carve along the segment from the previous point
         if (lastX >= 0) {
             double len = Math.hypot(cx - lastX, cy - lastY);
@@ -325,10 +339,56 @@ final class DalgonaScreen extends Screen implements ScreenRegistry.ClosableBySer
         lastX = cx;
         lastY = cy;
         recordMove(cx, cy);
+        spawnChips(cx, cy, moved, model.carvedCount > carvedBefore);
         if (pendN >= pend.length) {
             pendN = resample(pend, pendN, pend.length / 2);
         }
         pend[pendN++] = StrokeValidator.pack(cx, cy);
+    }
+
+    /** Crumbs jump off the needle while it carves; a needle that is too fast throws more (and hotter) ones. */
+    private void spawnChips(int cx, int cy, double moved, boolean carved) {
+        if (moved < 1.5 || chips.size() > 80) {
+            return;
+        }
+        double ratio = ratioShown;
+        int n = (carved ? 1 : 0) + (ratio > 1.0 ? 2 : 0) + (rnd.nextInt(3) == 0 ? 1 : 0);
+        float sx = ox + cx * size / 1024f;
+        float sy = oy + cy * size / 1024f;
+        float unit = Math.max(1f, size / 150f);
+        for (int i = 0; i < n; i++) {
+            Chip c = new Chip();
+            double a = Math.PI * 2 * rnd.nextDouble();
+            float sp = (14f + rnd.nextFloat() * 40f) * unit * (0.7f + (float) Math.min(2.0, ratio));
+            c.x = sx;
+            c.y = sy;
+            c.vx = (float) Math.cos(a) * sp;
+            c.vy = (float) Math.sin(a) * sp - 22f * unit;
+            c.life = 0.28f + rnd.nextFloat() * 0.35f;
+            c.size = (1f + rnd.nextInt(2)) * Math.min(2f, unit);
+            c.color = ratio > 1.0 ? 0xFFFFB45A : 0xFFE2B060;
+            chips.add(c);
+        }
+    }
+
+    private void drawChips(GuiGraphics g, float dt) {
+        if (chips.isEmpty()) {
+            return;
+        }
+        float gravity = 150f * Math.max(1f, size / 150f);
+        for (java.util.Iterator<Chip> it = chips.iterator(); it.hasNext(); ) {
+            Chip c = it.next();
+            c.age += dt;
+            if (c.age >= c.life) {
+                it.remove();
+                continue;
+            }
+            c.vy += gravity * dt;
+            c.x += c.vx * dt;
+            c.y += c.vy * dt;
+            Gfx.rect(g, c.x, c.y, c.x + c.size, c.y + c.size, Gfx.fade(c.color, 1f - c.age / c.life));
+        }
+        Gfx.end(g);
     }
 
     private void recordMove(float x, float y) {
@@ -536,6 +596,7 @@ final class DalgonaScreen extends Screen implements ScreenRegistry.ClosableBySer
             CookiePainter.shards(g, shards, v, Math.max(0f, 1f - Math.max(0f, t - 0.55f) / 0.45f));
         } else {
             CookiePainter.paint(g, model, v);
+            drawChips(g, dt);
         }
         g.pose().popPose();
 
