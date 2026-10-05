@@ -43,6 +43,17 @@ loom {
                     '--width', '1280', '--height', '720'
             vmArgs '-Xmx2G'
         }
+        // Development client that opens a single-player world from run-spclient/saves (integrated server): `SQUID_WORLD=SquidSP`
+        // (see tools/spclient.sh for a reproducible way to create the world).
+        spClient {
+            client()
+            name = 'Squid Game Single-player Client'
+            runDir System.getenv('SQUID_RUNDIR') ?: 'run-spclient'
+            programArgs '--username', System.getenv('SQUID_USER') ?: 'Contestant',
+                    '--quickPlaySingleplayer', System.getenv('SQUID_WORLD') ?: 'SquidSP',
+                    '--width', '1280', '--height', '720'
+            vmArgs '-Xmx3G'
+        }
     }
 }
 

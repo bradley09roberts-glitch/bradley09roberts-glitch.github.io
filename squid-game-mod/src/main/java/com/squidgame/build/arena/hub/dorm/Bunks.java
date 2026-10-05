@@ -50,6 +50,21 @@ final class Bunks {
         }
     }
 
+    /** All candidate standing cells (the lighting keeps its floor tiles off them). */
+    static java.util.Set<Long> candidateCells() {
+        java.util.Set<Long> out = new java.util.HashSet<>();
+        for (Layout.Tower t : Layout.towers()) {
+            for (Spot s : spots(t)) {
+                out.add(key(s.x(), s.z()));
+            }
+        }
+        return out;
+    }
+
+    static long key(int x, int z) {
+        return ((long) x << 32) ^ (z & 0xFFFFFFFFL);
+    }
+
     private static boolean standable(BuildContext c, int x, int z) {
         String floor = c.get(x, -1, z);
         String feet = c.get(x, 0, z);

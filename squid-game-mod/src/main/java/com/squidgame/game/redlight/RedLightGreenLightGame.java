@@ -100,8 +100,9 @@ public final class RedLightGreenLightGame implements MiniGame {
             return RedLightRules.params(difficulty).allowanceTicks();
         }
 
+        /** The server game time: the time base of every tick value this view exposes (cycle start, syllables, light changes, shots). */
         public long now() {
-            return gameClock;
+            return levelNow;
         }
     }
 
@@ -121,6 +122,8 @@ public final class RedLightGreenLightGame implements MiniGame {
     private long cycleStartTick;
     private long lightChangedTick;
     private long gameClock;
+    /** Server game time of the current tick (same base as {@code cycleStartTick}, {@code lightChangedTick}...). */
+    private long levelNow;
     private double startZ, finishZ;
     private Region fieldRegion, safeRegion;
     private Vec3 dollPos = Vec3.ZERO;
@@ -184,9 +187,9 @@ public final class RedLightGreenLightGame implements MiniGame {
     @Override
     public int timeLimitTicks(GameContext ctx) {
         double seconds = switch (ctx.difficulty()) {
-            case NORMAL -> 190;
-            case HARD -> 165;
-            case EXTREME -> 145;
+            case NORMAL -> 200;
+            case HARD -> 185;
+            case EXTREME -> 165;
         };
         return (int) (seconds * 20);
     }
@@ -247,6 +250,7 @@ public final class RedLightGreenLightGame implements MiniGame {
     public void begin(GameContext ctx) {
         started = true;
         gameClock = 0;
+        levelNow = ctx.now();
         for (Contestant c : ctx.alive()) {
             Track t = new Track();
             LivingEntity b = c.body(ctx.level);
@@ -283,6 +287,7 @@ public final class RedLightGreenLightGame implements MiniGame {
     @Override
     public void tick(GameContext ctx) {
         gameClock++;
+        levelNow = ctx.now();
         tickDoll(ctx);
         long now = ctx.now();
         boolean watched = light == DollCycle.Light.RED;
@@ -363,7 +368,8 @@ public final class RedLightGreenLightGame implements MiniGame {
         int aim = 8 + ctx.rng().nextInt(8);
         ctx.eliminateByGuard(c, aim);
         ctx.config();
-        com.squidgame.SquidGameMod.LOGGER.debug("RLGL: {} eliminated ({})", c.label(), v);
+        com.squidgame.SquidGameMod.debug("RLGL: {} eliminated ({}), {} ticks into red, speed {}/tick, cycle {}", c.label(), v,
+                ctx.now() - lightChangedTick, String.format("%.3f", body.getDeltaMovement().horizontalDistance()), cycleIndex);
     }
 
     // ------------------------------------------------------------------ doll driving
@@ -433,7 +439,28 @@ public final class RedLightGreenLightGame implements MiniGame {
         }
     }
 
+    private void logProgress(GameContext ctx) {
+        if (!com.squidgame.SquidConfig.get().debug) {
+            return;
+        }
+        double sum = 0;
+        int n = 0;
+        double best = -1e9;
+        for (Contestant c : ctx.alive()) {
+            LivingEntity b = c.body(ctx.level);
+            Track t = tracks.get(c.number);
+            if (b != null && t != null && !t.finished) {
+                sum += b.getZ();
+                best = Math.max(best, b.getZ());
+                n++;
+            }
+        }
+        com.squidgame.SquidGameMod.debug("RLGL cycle {}: {} on the field, average z {}, front z {}, finished {}", cycleIndex, n,
+                n == 0 ? "-" : String.format("%.1f", sum / n), String.format("%.1f", best), finishCounter);
+    }
+
     private void newCycle(GameContext ctx, double progress) {
+        logProgress(ctx);
         cycle = DollCycle.generate(cycleRng, difficulty, progress);
         cycleTick = 0;
         cycleIndex++;
@@ -501,6 +528,7 @@ public final class RedLightGreenLightGame implements MiniGame {
                 survivors.add(c);
             }
         }
+        com.squidgame.SquidGameMod.debug("RLGL concluded: {} crossed the line, {} did not cross in time ({} cycles)", survivors.size(), out.size(), cycleIndex);
         if (doll != null) {
             doll.setEyes(false);
             doll.setScanning(false);

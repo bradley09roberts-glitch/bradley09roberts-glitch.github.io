@@ -5,7 +5,7 @@ Package names: `core/redlight/` (`RedLightRules`, `DollCycle`), `game/redlight/`
 Test it alone with `/squid debug play red_light 40`.
 
 ## Rules (as shown to the players in the instructions phase)
-* Cross the field (130 blocks) to the finish line before the time runs out (Normal 190 s, Hard 165 s, Extreme 145 s).
+* Cross the field (130 blocks) to the finish line before the time runs out (Normal 200 s, Hard 185 s, Extreme 165 s).
 * The giant doll chants "mu-gung-hwa kko-chi pi-eot-seum-ni-da" (ten syllables, a different tempo every cycle) with her back to
   the field: **green light, move freely**.
 * When the last syllable ends she turns. You have a **stopping allowance** to come to a halt:
