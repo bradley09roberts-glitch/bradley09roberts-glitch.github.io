@@ -1,5 +1,7 @@
 package com.squidgame.game.bridge;
 
+import com.squidgame.SquidConfig;
+import com.squidgame.SquidGameMod;
 import com.squidgame.core.Personality;
 import com.squidgame.core.bridge.BridgeKnowledge;
 import com.squidgame.core.bridge.BridgeLayout;
@@ -305,11 +307,13 @@ final class BridgeNpcBehavior implements NpcBehavior {
             decidedKnown = true;
             targetLane = known;
             int other = 1 - known;
-            if (view.panelIntact(targetRow, other)
-                    && rng.chance(BridgeNpcRules.slipChance(p, view.difficulty(), pressure, fear))) {
+            boolean slip = view.panelIntact(targetRow, other)
+                    && rng.chance(BridgeNpcRules.slipChance(p, view.difficulty(), pressure, fear));
+            if (slip) {
                 targetLane = other; // a slip of nerve or memory
             }
             thinkUntil = now;
+            traceDecision(slip ? "SLIP" : "known");
             return;
         }
         decidedKnown = false;
@@ -320,6 +324,14 @@ final class BridgeNpcBehavior implements NpcBehavior {
         }
         targetLane = BridgeNpcRules.guessLane(p, lastLane, rng);
         thinkUntil = now + BridgeNpcRules.hesitationTicks(p, params, fear, rng);
+        traceDecision("GUESS");
+    }
+
+    /** Debug log of one lane decision (what this NPC believed at that moment), for auditing that nothing but public events decides. */
+    private void traceDecision(String kind) {
+        if (SquidConfig.get().debug) {
+            SquidGameMod.LOGGER.info("[bridge] No. {} decides row {} lane {} ({})", String.format("%03d", number), targetRow + 1, targetLane, kind);
+        }
     }
 
     private void tickWalk(ContestantEntity npc) {

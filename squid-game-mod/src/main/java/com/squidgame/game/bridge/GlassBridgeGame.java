@@ -460,7 +460,7 @@ public final class GlassBridgeGame implements MiniGame {
         }
         int waiting = queue.count(BridgeQueue.State.QUEUED);
         ctx.actionBar(Component.translatable("squidgame.game.glass_bridge.called", c.displayNumber(), waiting));
-        debug("called No. {} ({} still waiting)", c.displayNumber(), waiting);
+        debug("called No. {} ({} still waiting){}", c.displayNumber(), waiting, p != null ? " [human]" : "");
     }
 
     /** Humans cannot slip through the gate out of turn, and finishers cannot wander back onto the deck. */

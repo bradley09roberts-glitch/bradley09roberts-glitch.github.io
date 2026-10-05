@@ -62,6 +62,9 @@ Left / right: the HUD and the overlay name lanes **as the contestant sees them w
 3. **One contestant per panel.** A panel is occupied from take-off to landing and can be reserved by an NPC about to
    hop onto it; nobody lands on an occupied or reserved panel. Two humans may be on the bridge at the same time (different
    rows or lanes).
+   **Every row has to be stepped on.** A sprint jump that lands two rows ahead (or on the far platform from the last
+   but one row) would dodge a row's gamble: such a landing is not accepted, nothing is judged and the contestant is put back
+   on the last panel they stood on (or the platform) with a message ("You have to step on every row").
 4. **Judging a panel (humans and NPCs alike, `GlassBridgeGame.arrive`).** A contestant "is on a panel" when their body is
    `onGround` on the glass surface and the 0.6 wide hit box overlaps the panel's 2x2 footprint. The first touch decides:
    * *tempered*: nothing happens; after `confirmTicks` (just longer than the shatter window) the row is publicly
@@ -88,10 +91,13 @@ Left / right: the HUD and the overlay name lanes **as the contestant sees them w
    panel"). That panel was tempered, so the bridge must stay passable: it **re-forms 5 s after it
    shattered** (as soon as nothing is inside it). Humans see the stall bar and, in the last `stallWarn` seconds, a red
    pulsing screen edge with the heartbeat and a MOVE! banner.
-7. **Timeout.** `timeLimit = base + extra * (contestants - 16)` (extra only above 16 contestants), scaled by the global
+7. **Timeout.** `timeLimit = max(base, fixed + perContestant * contestants)` (see the table), scaled by the global
    `timeScale`. When it runs out ("TIME'S UP") everybody not across is eliminated (`TIMEOUT`); the panel under anybody who
-   is still on the bridge shatters. A contestant who went back to the start platform after having entered the bridge and
-   stands there for 6 s is eliminated the same way (so nobody can block the gate by standing off the glass).
+   is still on the bridge shatters. So the clock only matters for a big crowd: the gate needs about 7 / 8.5 / 11 s per
+   contestant (Normal / Hard / Extreme: fewer simultaneous crossers and longer call spacing as it gets harder), and the
+   allowance per contestant is 11.4 / 4.5 / 2.9 s, which is the difficulty ladder for crowds (below). A contestant who
+   went back to the start platform after having entered the bridge and stands there for 6 s is eliminated the same way
+   (so nobody can block the gate by standing off the glass).
 8. **Finishing.** A contestant on the far platform (on the ground, inside `bridge.finish`) is safe: title "YOU MADE IT
    - across the bridge as number N", the finish rank is stored in the contestant's stats and the contestant is taken to
    its `bridge.finish_spawn` slot (NPCs walk there, celebrate or cry). The game ends as soon as everybody still alive is
@@ -104,8 +110,9 @@ Left / right: the HUD and the overlay name lanes **as the contestant sees them w
 
 | | Normal | Hard | Extreme |
 |---|---|---|---|
-| time limit for up to 16 contestants | 330 s | 270 s | 210 s |
-| time added per contestant above 16 | 9 s | 10 s | 12 s |
+| time limit, shortest (small crowds, the 16 of the show; it applies up to 20 / 33 / 34 contestants) | 330 s | 270 s | 210 s |
+| time limit of a big crowd: fixed part + per contestant | 98 s + 11.4 s | 120 s + 4.5 s | 110 s + 2.9 s |
+| (what a well-playing NPC field needs: fixed + per contestant, measured) | 62 s + 7.1 s | 34 s + 8.5 s | 11 s |
 | stall limit (stay on one row) | 25 s | 18 s | 12 s |
 | stall warning (HUD turns red) | last 8 s | last 6 s | last 5 s |
 | shatter delay after the first touch | 8-10 ticks | 7-9 ticks | 6-8 ticks |
@@ -114,13 +121,27 @@ Left / right: the HUD and the overlay name lanes **as the contestant sees them w
 | contestants on the bridge at once | 5 | 4 | 3 |
 | minimum time between calls | 2.0 s | 2.5 s | 3.0 s |
 | time to step onto the first panel after being called | 33 s | 26 s | 20 s |
-| NPC hesitation scale (shorter = more decisive) | 1.0 | 0.85 | 0.70 |
-| NPC skill (global `Difficulty.npcSkillBonus`) | +0 | +0.12 | +0.25 |
+| NPC hesitation scale (smaller = more decisive) | 1.0 | 0.85 | 0.70 |
+| NPC nerve: slip scale (chance to misstep on a row they know) | x1 | x3 | x7 |
+| NPC skill (global `Difficulty.npcSkillBonus`, attention and slips) | +0 | +0.12 | +0.25 |
 
-The allowance per contestant above 16 is the time the gate needs per head at that difficulty (a crossing takes 35-45 s
-and only `maxCrossers` contestants are on the bridge at once), so a long queue does not lose its tail to the clock merely
-for being long; the harder difficulties show in the tighter base time and the thinner slack (a crowd of 100 uses about
-70 % of its time on Normal and 90 % on Extreme).
+**The ladder** (whole-game simulation of an NPC-only crowd with the exact rules, 80 games per cell, share of the crowd that
+gets across; `BridgeSimTest` asserts it): the survivors of the bridge are decided by the gamble of the first contestants
+(about 10 fall whatever the difficulty: every row has a fragile panel somebody must find) and, for a big crowd, by the
+clock.
+
+| crowd | Normal | Hard | Extreme |
+|---|---|---|---|
+| 16 | 36 % | 33 % | 30 % |
+| 24 | 57 % | 51 % | 28 % |
+| 40 | 70 % | 45 % | 20 % |
+| 64 | 79 % | 46 % | 21 % |
+| 100 | 85 % | 48 % | 22 % |
+
+So on Normal most of the crowd gets across (the clock never cuts anybody off), on Hard about half, on Extreme few. A crowd
+of 16 is decided almost entirely by the gamble (the show's 16 also lost most of its players): the three difficulties then
+differ by the shorter stall limit, the faster shatter, the slower and more careful gate and the nerve of the NPCs rather
+than by the clock.
 
 ## Controls and UI for humans
 
