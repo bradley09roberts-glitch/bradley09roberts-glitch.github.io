@@ -13,6 +13,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
@@ -28,7 +29,7 @@ import java.util.List;
  */
 @Environment(EnvType.CLIENT)
 final class MarblesScreen extends Screen implements ScreenRegistry.ClosableByServer {
-    static final int PW = 300, PH = 184;
+    static final int PW = 300, PH = 190;
     private static final int PINK = FlatButton.PINK;
     private static final int GOLD = 0xFFFFD84A, GREEN = 0xFF55FF88, RED = 0xFFFF5555, GREY = 0xFFCFCFCF;
     private static final ResourceLocation MARBLE = tex("marble_big");
@@ -227,14 +228,12 @@ final class MarblesScreen extends Screen implements ScreenRegistry.ClosableBySer
             return;
         }
         int px = px(), py = py(), cx = px + PW / 2;
-        minus = addRenderableWidget(new FlatButton(cx - 52, py + 86, 20, 16, Component.literal("-"), b -> adjust(-1)));
-        plus = addRenderableWidget(new FlatButton(cx + 32, py + 86, 20, 16, Component.literal("+"), b -> adjust(1)));
-        if (s.hold) {
-            lock = addRenderableWidget(new FlatButton(cx - 46, py + 126, 92, 18, Component.translatable("squidgame.game.marbles.ui.lock"), b -> lockIn()));
-        } else {
-            odd = addRenderableWidget(new FlatButton(cx - 52, py + 106, 50, 18, Component.translatable("squidgame.game.marbles.ui.odd"), b -> choose(1)));
-            even = addRenderableWidget(new FlatButton(cx + 2, py + 106, 50, 18, Component.translatable("squidgame.game.marbles.ui.even"), b -> choose(0)));
-            lock = addRenderableWidget(new FlatButton(cx - 46, py + 128, 92, 18, Component.translatable("squidgame.game.marbles.ui.lock"), b -> lockIn()));
+        minus = addRenderableWidget(new FlatButton(cx - 62, py + 82, 18, 14, Component.literal("-"), b -> adjust(-1)));
+        plus = addRenderableWidget(new FlatButton(cx + 44, py + 82, 18, 14, Component.literal("+"), b -> adjust(1)));
+        lock = addRenderableWidget(new FlatButton(cx - 46, py + 118, 92, 16, Component.translatable("squidgame.game.marbles.ui.lock"), b -> lockIn()));
+        if (!s.hold) {
+            odd = addRenderableWidget(new FlatButton(cx - 54, py + 98, 50, 16, Component.translatable("squidgame.game.marbles.ui.odd"), b -> choose(1)));
+            even = addRenderableWidget(new FlatButton(cx + 4, py + 98, 50, 16, Component.translatable("squidgame.game.marbles.ui.even"), b -> choose(0)));
             if (s.forced) {
                 minus.active = false;
                 plus.active = false;
@@ -337,6 +336,9 @@ final class MarblesScreen extends Screen implements ScreenRegistry.ClosableBySer
     }
 
     // ------------------------------------------------------------------ rendering
+    //
+    // Layout (panel coordinates): header 6, stacks 22-98 (left: yours, right: the opponent's), centre column 20-134 (role, hand,
+    // selector, odd / even, lock in), status line 137-150, history 157-184, time bar 184.
 
     @Override
     public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
@@ -347,100 +349,109 @@ final class MarblesScreen extends Screen implements ScreenRegistry.ClosableBySer
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         g.fill(0, 0, width, height, 0x38000000);
         int px = px(), py = py(), cx = px + PW / 2;
-        g.fill(px, py, px + PW, py + PH, 0xE8101018);
+        g.fill(px, py, px + PW, py + PH, 0xFF101018);
         g.renderOutline(px, py, PW, PH, PINK);
         long elapsed = (System.nanoTime() - s.receivedAt) / 1_000_000L;
         Reveal rv = s.phase.equals("reveal") ? s.rev : null;
         boolean verdict = rv != null && elapsed >= rv.verdictIn * 50L;
         int delta = verdict ? rv.delta : 0;
 
-        // header
+        // header: title, time left of the decision, round
         g.drawString(font, Component.translatable("squidgame.game.marbles.ui.title"), px + 8, py + 6, GOLD, true);
         Component round = s.overtime ? Component.translatable("squidgame.game.marbles.ui.overtime")
                 : Component.translatable("squidgame.game.marbles.ui.round", s.round, s.maxRounds);
         g.drawString(font, round, px + PW - 8 - font.width(round), py + 6, s.overtime ? RED : GREY, true);
+        if (s.phase.equals("decide")) {
+            long left = Math.max(0, s.remaining - (System.nanoTime() - s.receivedAt) / 50_000_000L);
+            float frac = Mth.clamp(left / (float) s.total, 0f, 1f);
+            Component secs = Component.literal((left + 19) / 20 + " s");
+            g.drawString(font, secs, cx - font.width(secs) / 2, py + 6, frac < 0.2f ? RED : frac < 0.45f ? 0xFFFFC040 : 0xFFFFFFFF, true);
+        }
         g.fill(px + 6, py + 17, px + PW - 6, py + 18, 0x66E0457B);
 
-        // stacks
-        renderStack(g, px + 52, py + 22, Component.translatable("squidgame.game.marbles.ui.you"), s.myMarbles + delta, delta, GREEN);
-        Component oppName = Component.translatable("squidgame.game.marbles.ui.opponent", String.format("%03d", s.opp), s.oppName);
-        renderStack(g, px + PW - 52, py + 22, Component.literal(font.plainSubstrByWidth(oppName.getString(), 86)), s.oppMarbles - delta, -delta, GOLD);
+        // the two stacks (public information)
+        renderStack(g, px + 46, py + 22, Component.translatable("squidgame.game.marbles.ui.you"), s.myMarbles + delta, delta, GREEN, null);
+        renderStack(g, px + PW - 46, py + 22, Component.literal(String.format("No. %03d", s.opp)), s.oppMarbles - delta, -delta, GOLD, s.oppName);
 
         renderCentre(g, cx, py, elapsed, rv, verdict);
+        renderStatus(g, cx, py);
         renderHistory(g, px, py);
-        renderFooter(g, px, py, cx);
+        renderFooter(g, px, py);
         super.render(g, mouseX, mouseY, partialTick);
     }
 
-    /** A marble pile with the count, centred on {@code cx}. */
-    private void renderStack(GuiGraphics g, int cx, int y, Component label, int count, int change, int color) {
+    /** A marble pile with the count (and the change a reveal is applying), centred on {@code cx}. */
+    private void renderStack(GuiGraphics g, int cx, int y, Component label, int count, int change, int color, String name) {
         g.drawCenteredString(font, label, cx, y, color);
         g.pose().pushPose();
-        g.pose().translate(cx, y + 12, 0);
+        g.pose().translate(cx, y + 10, 0);
         g.pose().scale(2.4f, 2.4f, 1f);
         g.drawCenteredString(font, Integer.toString(Math.max(0, count)), 0, 0, 0xFFFFFFFF);
         g.pose().popPose();
         if (change != 0) {
-            Component c = Component.literal((change > 0 ? "+" : "") + change);
             g.pose().pushPose();
-            g.pose().translate(cx + 32, y + 14, 0);
-            g.pose().scale(1.6f, 1.6f, 1f);
-            g.drawCenteredString(font, c, 0, 0, change > 0 ? GREEN : RED);
+            g.pose().translate(cx, y + 32, 0);
+            g.pose().scale(1.4f, 1.4f, 1f);
+            g.drawCenteredString(font, Component.literal((change > 0 ? "+" : "") + change), 0, 0, change > 0 ? GREEN : RED);
             g.pose().popPose();
         }
         int cols = 8, size = 9, step = 7;
         int n = Math.min(Math.max(0, count), 32);
-        int baseY = y + 94;
+        int baseY = y + 64;
         for (int i = 0; i < n; i++) {
             int row = i / cols, col = i % cols;
             int rowCount = Math.min(cols, n - row * cols);
             int x = cx - rowCount * size / 2 + col * size;
             g.blit(MARBLE, x, baseY - row * step, size, size, 0, 0, 16, 16, 16, 16);
         }
+        if (name != null && !name.isEmpty()) {
+            g.drawCenteredString(font, font.plainSubstrByWidth(name, 90), cx, y + 76, 0xFF9A9AA4);
+        }
+    }
+
+    private void drawHand(GuiGraphics g, ResourceLocation hand, int cx, int py, int dx, int dy) {
+        g.blit(hand, cx - 20 + dx, py + 38 + dy, 40, 40, 0, 0, 48, 48, 48, 48);
     }
 
     private void renderCentre(GuiGraphics g, int cx, int py, long elapsed, Reveal rv, boolean verdict) {
         String phase = s.phase;
         if (phase.equals("over")) {
-            Component t = Component.translatable(s.won ? "squidgame.game.marbles.ui.over.won" : "squidgame.game.marbles.ui.over.lost");
             g.pose().pushPose();
-            g.pose().translate(cx, py + 56, 0);
+            g.pose().translate(cx, py + 52, 0);
             g.pose().scale(1.5f, 1.5f, 1f);
-            g.drawCenteredString(font, t, 0, 0, s.won ? GREEN : RED);
+            g.drawCenteredString(font, Component.translatable(s.won ? "squidgame.game.marbles.ui.over.won" : "squidgame.game.marbles.ui.over.lost"),
+                    0, 0, s.won ? GREEN : RED);
             g.pose().popPose();
-            g.drawCenteredString(font, Component.translatable("squidgame.game.marbles.end.reason." + s.reason, s.myMarbles, s.oppMarbles, s.opp),
-                    cx, py + 84, GREY);
             return;
         }
-        int hx = cx - 24, hy = py + 38;
         if (phase.equals("intro")) {
-            g.blit(HAND_CLOSED, hx, hy, 48, 48, 0, 0, 48, 48, 48, 48);
-            g.drawCenteredString(font, Component.translatable("squidgame.game.marbles.ui.intro"), cx, py + 92, GREY);
+            drawHand(g, HAND_CLOSED, cx, py, 0, 0);
             return;
         }
         ResourceLocation hand = HAND_CLOSED;
+        int dx = 0, dy = 0;
         if (rv != null) {
             double verdictMs = rv.verdictIn * 50.0;
             if (elapsed < 0.55 * verdictMs) {
                 double a = elapsed / 38.0;
-                hx += (int) Math.round(Math.sin(a) * 3.0);
-                hy += (int) Math.round(Math.cos(a * 1.3) * 2.0);
-                g.drawCenteredString(font, Component.translatable("squidgame.game.marbles.ui.reveal.shake"), cx, py + 22, GREY);
+                dx = (int) Math.round(Math.sin(a) * 3.0);
+                dy = (int) Math.round(Math.cos(a * 1.3) * 2.0);
+                g.drawCenteredString(font, Component.translatable("squidgame.game.marbles.ui.reveal.shake"), cx, py + 24, GREY);
             } else {
                 hand = HAND_OPEN;
                 int n = Math.min(rv.hidden, 12);
                 for (int i = 0; i < n; i++) {
-                    g.blit(MARBLE, cx - n * 8 / 2 + i * 8, py + 20, 8, 8, 0, 0, 16, 16, 16, 16);
+                    g.blit(MARBLE, cx - n * 8 / 2 + i * 8, py + 21, 8, 8, 0, 0, 16, 16, 16, 16);
                 }
                 g.drawCenteredString(font, Component.translatable("squidgame.game.marbles.ui.reveal.open", rv.hidden,
                         Component.translatable(rv.hidden % 2 == 1 ? "squidgame.game.marbles.ui.odd" : "squidgame.game.marbles.ui.even")),
-                        cx, py + 29, 0xFFFFFFFF);
+                        cx, py + 30, 0xFFFFFFFF);
             }
         } else {
             g.drawCenteredString(font, Component.translatable(s.hold ? "squidgame.game.marbles.ui.role.hold" : "squidgame.game.marbles.ui.role.guess"),
                     cx, py + 24, s.hold ? GOLD : 0xFF8FD8FF);
         }
-        g.blit(hand, hx, hy, 48, 48, 0, 0, 48, 48, 48, 48);
+        drawHand(g, hand, cx, py, dx, dy);
 
         if (rv != null) {
             if (verdict) {
@@ -448,40 +459,62 @@ final class MarblesScreen extends Screen implements ScreenRegistry.ClosableBySer
                 String key = rv.iHeld ? (rv.correct ? "squidgame.game.marbles.ui.reveal.they_right" : "squidgame.game.marbles.ui.reveal.they_wrong")
                         : (rv.correct ? "squidgame.game.marbles.ui.reveal.correct" : "squidgame.game.marbles.ui.reveal.wrong");
                 float pop = Mth.clamp((elapsed - rv.verdictIn * 50f) / 180f, 0f, 1f);
-                float sc = 1.5f + 0.7f * (1f - pop);
+                float sc = 1.25f + 0.6f * (1f - pop);
                 g.pose().pushPose();
-                g.pose().translate(cx, py + 92, 0);
+                g.pose().translate(cx, py + 86, 0);
                 g.pose().scale(sc, sc, 1f);
                 g.drawCenteredString(font, Component.translatable(key), 0, 0, good ? GREEN : RED);
                 g.pose().popPose();
                 g.drawCenteredString(font, Component.translatable(good ? "squidgame.game.marbles.ui.reveal.won" : "squidgame.game.marbles.ui.reveal.lost",
-                        Math.abs(rv.delta)), cx, py + 114, good ? GREEN : RED);
+                        Math.abs(rv.delta)), cx, py + 104, good ? GREEN : RED);
             }
             return;
         }
-        if (s.myLocked) {
+        if (decidingNow()) {
+            Component value = s.hold ? Component.translatable("squidgame.game.marbles.ui.hold", selCount)
+                    : s.forced ? Component.translatable("squidgame.game.marbles.ui.wager.forced")
+                    : Component.translatable("squidgame.game.marbles.ui.wager", selWager);
+            g.drawCenteredString(font, value, cx, py + 85, 0xFFFFFFFF);
+            if (s.hold) {
+                g.drawCenteredString(font, Component.translatable("squidgame.game.marbles.ui.hold.prompt", s.maxHold), cx, py + 103, GREY);
+            }
+        } else if (s.myLocked) {
+            // the choice is made: a small summary of it under the hand
             Component locked = s.hold ? Component.translatable("squidgame.game.marbles.ui.locked.hold", s.myHold)
                     : Component.translatable("squidgame.game.marbles.ui.locked.guess", s.myWager,
                     Component.translatable(s.myGuessOdd ? "squidgame.game.marbles.ui.odd" : "squidgame.game.marbles.ui.even"));
-            g.drawCenteredString(font, locked, cx, py + 92, GREEN);
+            g.drawCenteredString(font, locked, cx, py + 85, GREEN);
+        }
+    }
+
+    /** The line between the controls and the history: the opponent's state, the intro text, why the match ended. */
+    private void renderStatus(GuiGraphics g, int cx, int py) {
+        String phase = s.phase;
+        if (phase.equals("over")) {
+            wrapped(g, Component.translatable("squidgame.game.marbles.end.reason." + s.reason, s.myMarbles, s.oppMarbles, s.opp), cx, py + 137, GREY);
+        } else if (phase.equals("intro")) {
+            wrapped(g, Component.translatable("squidgame.game.marbles.ui.intro"), cx, py + 137, GREY);
+        } else if (phase.equals("decide") || phase.equals("locked")) {
             g.drawCenteredString(font, Component.translatable(s.oppLocked ? "squidgame.game.marbles.ui.opp.ready" : "squidgame.game.marbles.ui.opp.thinking"),
-                    cx, py + 108, s.oppLocked ? GOLD : GREY);
-            return;
+                    cx, py + 140, s.oppLocked ? GOLD : 0xFF9A9AA4);
         }
-        if (s.hold) {
-            g.drawCenteredString(font, Component.translatable("squidgame.game.marbles.ui.hold", selCount), cx, py + 91, 0xFFFFFFFF);
-            g.drawCenteredString(font, Component.translatable("squidgame.game.marbles.ui.hold.prompt", s.maxHold), cx, py + 108, GREY);
-        } else {
-            g.drawCenteredString(font, s.forced ? Component.translatable("squidgame.game.marbles.ui.wager.forced")
-                    : Component.translatable("squidgame.game.marbles.ui.wager", selWager), cx, py + 91, 0xFFFFFFFF);
+    }
+
+    /** Draws a text centred on {@code cx}, wrapped to the panel width; returns the number of lines. */
+    private int wrapped(GuiGraphics g, Component text, int cx, int y, int color) {
+        List<FormattedCharSequence> lines = font.split(text, PW - 24);
+        for (int i = 0; i < lines.size(); i++) {
+            g.drawCenteredString(font, lines.get(i), cx, y + i * 9, color);
         }
-        g.drawCenteredString(font, Component.translatable(s.oppLocked ? "squidgame.game.marbles.ui.opp.ready" : "squidgame.game.marbles.ui.opp.thinking"),
-                cx, py + 150, s.oppLocked ? GOLD : 0xFF9A9AA4);
+        return lines.size();
     }
 
     private void renderHistory(GuiGraphics g, int px, int py) {
-        int y = py + 158;
-        g.drawString(font, Component.translatable("squidgame.game.marbles.ui.history"), px + 8, y - 11, 0xFF9A9AA4, false);
+        int y = py + 157;
+        g.drawString(font, Component.translatable("squidgame.game.marbles.ui.history"), px + 8, y, 0xFF9A9AA4, false);
+        Component hint = Component.translatable("squidgame.game.marbles.ui.hide", MarblesClient.panelKeyName());
+        g.drawString(font, hint, px + PW - 8 - font.width(hint), y, 0xFF70707A, false);
+        y += 10;
         if (s.hist.isEmpty()) {
             g.drawString(font, Component.translatable("squidgame.game.marbles.ui.history.empty"), px + 8, y, 0xFF70707A, false);
             return;
@@ -500,18 +533,14 @@ final class MarblesScreen extends Screen implements ScreenRegistry.ClosableBySer
         }
     }
 
-    private void renderFooter(GuiGraphics g, int px, int py, int cx) {
+    private void renderFooter(GuiGraphics g, int px, int py) {
         if (s.phase.equals("decide")) {
             long left = Math.max(0, s.remaining - (System.nanoTime() - s.receivedAt) / 50_000_000L);
             float frac = Mth.clamp(left / (float) s.total, 0f, 1f);
-            int bx = px + 8, bw = PW - 16, by = py + PH - 7;
-            g.fill(bx, by, bx + bw, by + 4, 0x66000000);
+            int bx = px + 8, bw = PW - 16, by = py + PH - 6;
+            g.fill(bx, by, bx + bw, by + 3, 0x66000000);
             int col = frac < 0.2f ? 0xFFFF4040 : frac < 0.45f ? 0xFFFFC040 : 0xFF50D890;
-            g.fill(bx, by, bx + (int) (bw * frac), by + 4, col);
-            Component secs = Component.literal((left + 19) / 20 + " s");
-            g.drawString(font, secs, px + PW - 8 - font.width(secs), by - 10, 0xFFFFFFFF, true);
+            g.fill(bx, by, bx + (int) (bw * frac), by + 3, col);
         }
-        Component hint = Component.translatable("squidgame.game.marbles.ui.hide", MarblesClient.panelKeyName());
-        g.drawString(font, hint, px + PW - 8 - font.width(hint), py + PH + 3, 0xFF9A9AA4, true);
     }
 }

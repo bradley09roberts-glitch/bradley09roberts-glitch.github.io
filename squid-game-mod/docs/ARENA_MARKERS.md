@@ -98,14 +98,14 @@ shapes (circle, triangle, star, umbrella).
 
 Tall industrial hall. Two high platforms (floor y = 40) face each other over a deep pit (pit floor y = -30)
 along the **X axis**: platform A at x <= -7, platform B at x >= 7, gap x in (-7, 7). The rope runs along X at
-y = 41.2, z = 0. Each platform is a long narrow walkway (width 5) so a team stands single file along the rope.
+y = 42.2, z = 0. Each platform is a long narrow walkway (width 5) so a team stands single file along the rope.
 
 | Name | Meaning |
 |------|---------|
 | `tug.slot_a` | **>= 32 required**, `data="slot=N"`: team A standing spots in single file, N=0 nearest the gap (x = -8.5, -9.5, ...), z = 0.5, yaw -90 (facing east, toward the gap) |
 | `tug.slot_b` | **>= 32 required**: team B spots, N=0 nearest the gap (x = 8.5, 9.5, ...), yaw 90 |
-| `tug.rope_a`, `tug.rope_b` | **required**: the two rope anchor points at the platform edges (x = -7, x = 7), y = 41.2, z = 0.5 |
-| `tug.rope_center` | rope middle (0.5, 41.2, 0.5) |
+| `tug.rope_a`, `tug.rope_b` | **required**: the two rope anchor points at the platform edges (x = -7, x = 7), y = 42.2, z = 0.5 |
+| `tug.rope_center` | rope middle (0.0, 42.2, 0.5) |
 | region `tug.edge_a`, `tug.edge_b` | the last 2 blocks of each platform before the drop |
 | region `tug.pit` | the whole pit volume below the platforms |
 | `tug.pit_floor` | a point on the pit floor (x=0.5, z=0.5) |

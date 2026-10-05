@@ -155,6 +155,27 @@ class TugMatchTest {
     }
 
     @Test
+    void smallTeamsAreNotDecidedByASingleHeave() {
+        for (int n : new int[]{2, 3}) {
+            int runs = 60, byRope = 0;
+            List<Integer> durations = new ArrayList<>();
+            for (int r = 0; r < runs; r++) {
+                Rng rng = new Rng(1500 + r * 6151L + n);
+                TugMatch.Result res = TugMatch.run(Difficulty.NORMAL, heat(rng, n, false).entrants(), rng.fork(9));
+                if (!res.timedOut()) {
+                    byRope++;
+                }
+                durations.add(res.ticks());
+            }
+            durations.sort(Integer::compare);
+            int median = durations.get(runs / 2) / 20;
+            assertTrue(median >= 20 && median <= 65, n + " v " + n + ": median heat length " + median + " s");
+            assertTrue(durations.get(runs / 10) >= 4 * 20, n + " v " + n + " is not over in a flash: " + durations.get(runs / 10) / 20.0 + " s");
+            assertTrue(byRope >= 0.75 * runs, n + " v " + n + " decided by the rope: " + byRope + " of " + runs);
+        }
+    }
+
+    @Test
     void largeTeamsAreAlsoDecidedMostOfTheTime() {
         int runs = 25, byRope = 0;
         for (int r = 0; r < runs; r++) {

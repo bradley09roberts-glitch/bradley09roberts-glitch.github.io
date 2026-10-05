@@ -19,6 +19,7 @@ import com.squidgame.tournament.Announcer;
 import com.squidgame.tournament.Contestant;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
@@ -172,8 +173,8 @@ final class ThrowMatch extends Match {
             case FLIGHT -> {
                 if (pendingLanding != null) {
                     land(now);
-                } else if (now - flightStart > ticks(params.flightSeconds() + 3)) {
-                    // the marble vanished (never landed): count it where the thrower stands
+                } else if (now - flightStart > (long) (params.flightSeconds() * 20) + 60) {
+                    // the marble vanished (never landed; a flight is physical time, not scaled): count it where the thrower stands
                     pendingLanding = plot.padPos(turnSide);
                     land(now);
                 }
@@ -221,12 +222,15 @@ final class ThrowMatch extends Match {
         }
         sendThrowState(thrower, true);
         sendThrowState(waiting, false);
+        if (ctx.config().debug) {
+            SquidGameMod.LOGGER.info("Marbles turn k={} round {}: No.{} throws ({}), timer {} ticks", plot.k(), duel.roundNo(),
+                    thrower.displayNumber(), thrower.isHumanControlled() ? "human" : "npc", turnTotal);
+        }
         if (thrower.isHumanControlled()) {
             ServerPlayer p = thrower.player(ctx.server());
             if (p != null) {
                 game.giveMarbles(thrower, shown(turnSide));
                 p.playNotifySound(ModSounds.UI_SELECT, SoundSource.MASTER, 0.8f, 1.4f);
-                p.displayClientMessage(Component.translatable("squidgame.game.marbles.throw.your_turn"), true);
             }
         }
         if (waiting.isHumanControlled()) {
@@ -550,10 +554,11 @@ final class ThrowMatch extends Match {
         }
         out.add(HudPayload.Widget.line("round", Component.translatable(duel.isSuddenDeath() ? "squidgame.game.marbles.hud.round.sudden"
                 : "squidgame.game.marbles.hud.round", duel.roundNo(), duel.maxRounds(), who)));
-        if (state == State.TURN && turnSide == me) {
-            out.add(HudPayload.Widget.banner("throw", Component.translatable("squidgame.game.marbles.banner.your_throw"), 0xFFD84A));
-            long left = Math.max(0, turnEnds - game.clock());
-            out.add(HudPayload.Widget.bar("turn", Component.translatable("squidgame.game.marbles.hud.throw_timer"), left, turnTotal, 0xE0457B));
-        }
+        // no banner or bar here: the aim needs a clear view and the throw panel (client) carries the turn timer
+    }
+
+    @Override
+    void lastMarbleWarning(List<HudPayload.Widget> out) {
+        out.add(HudPayload.Widget.line("last", Component.translatable("squidgame.game.marbles.banner.last_marble").withStyle(ChatFormatting.RED)));
     }
 }

@@ -150,21 +150,26 @@ public final class SquidHud {
             g.drawString(font, Component.translatable("squidgame.hud.status.spectator"), 8, h - 20, 0xFFFFAA55, true);
         }
 
-        drawWidgets(g, font, hud.widgets(), w, h, cx);
+        drawWidgets(g, font, hud.widgets(), w, h, cx, cx - boxW / 2, y + boxH);
     }
 
-    private static void drawWidgets(GuiGraphics g, Font font, List<HudPayload.Widget> widgets, int w, int h, int cx) {
+    /**
+     * @param panelLeft   left edge of the objective panel; counters that would run into it start below it instead
+     * @param panelBottom bottom edge of the objective panel; the traffic light hangs from it
+     */
+    private static void drawWidgets(GuiGraphics g, Font font, List<HudPayload.Widget> widgets, int w, int h, int cx,
+                                    int panelLeft, int panelBottom) {
         int barY = h - 62;
         int counterY = 40;
         for (HudPayload.Widget wd : widgets) {
             switch (wd.kind()) {
-                case HudPayload.LIGHT -> drawLight(g, font, wd, cx, 64);
+                case HudPayload.LIGHT -> drawLight(g, font, wd, cx, panelBottom + 17);
                 case HudPayload.BANNER -> {
                     float pulse = 0.75f + 0.25f * (float) Math.sin(System.nanoTime() / 120_000_000.0);
                     int a = (int) (255 * pulse);
                     int col = (a << 24) | (wd.color() & 0xFFFFFF);
                     g.pose().pushPose();
-                    g.pose().translate(cx, h * 0.42f, 0);
+                    g.pose().translate(cx, h * 0.46f, 0);
                     g.pose().scale(2.4f, 2.4f, 1f);
                     g.drawCenteredString(font, wd.label(), 0, 0, col);
                     g.pose().popPose();
@@ -181,6 +186,9 @@ public final class SquidHud {
                 case HudPayload.COUNTER -> {
                     String txt = wd.max() < 0 ? Integer.toString((int) wd.value()) : (int) wd.value() + " / " + (int) wd.max();
                     int tw = font.width(txt) + font.width(wd.label()) + 28;
+                    if (6 + tw > panelLeft - 4 && counterY < panelBottom + 6) {
+                        counterY = panelBottom + 6; // narrow screens / large GUI scale: do not draw over the objective panel
+                    }
                     panel(g, 6, counterY, tw, 16);
                     icon(g, wd.icon(), 9, counterY + 1, 14);
                     g.drawString(font, wd.label(), 26, counterY + 4, 0xFFCFCFCF, true);

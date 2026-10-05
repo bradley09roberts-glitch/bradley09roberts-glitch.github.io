@@ -124,15 +124,19 @@ class TugSimTest {
     }
 
     @Test
-    void teamSizeDoesNotChangeTheScaleOfTheForces() {
-        // one team pulling flat out against nobody: the same rope speed for 2 v 2 as for 32 v 32
-        TugSim small = sim(2, 2);
+    void teamSizeDoesNotChangeTheScaleOfTheForcesButSmallTeamsPullAHeavierRope() {
+        // one team pulling flat out against nobody: the same rope speed from 8 v 8 up to 32 v 32 ...
+        TugSim eight = sim(8, 8);
         TugSim large = sim(32, 32);
-        setAll(small, TugRules.TEAM_B, 1.0, false);
-        setAll(large, TugRules.TEAM_B, 1.0, false);
-        run(small, 0, 60);
-        run(large, 0, 60);
-        assertEquals(small.offset(), large.offset(), 1e-9);
+        TugSim small = sim(2, 2);
+        for (TugSim s : new TugSim[]{eight, large, small}) {
+            setAll(s, TugRules.TEAM_B, 1.0, false);
+            run(s, 0, 60);
+        }
+        assertEquals(large.offset(), eight.offset(), 0.02 * large.offset());
+        // ... and a rope that responds 1 / ropeWeight times as fast to a 2 v 2
+        assertEquals(large.offset() / TugRules.ropeWeight(2), small.offset(), 0.03 * large.offset());
+        assertEquals(large.force(TugRules.TEAM_B), small.force(TugRules.TEAM_B), 1e-9, "the displayed force keeps its scale");
     }
 
     @Test

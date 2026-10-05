@@ -172,16 +172,20 @@ final class DalgonaScreen extends Screen implements ScreenRegistry.ClosableBySer
     private void apply(DalgonaNet.StatePayload p) {
         long now = System.currentTimeMillis();
         boolean settled = !down && !strokeOpen && now - lastSendMs > 350;
+        // The first state after the screen opened (also after a reconnect) only tells where the cookie stands: the
+        // stress and the events in it happened before, so they cause no impact mark, shake or sound.
+        boolean first = !model.gotState;
         double before = model.apply(p, now, settled);
-        double delta = p.stress() - before;
-        if ((p.events() & DalgonaNet.E_SPIKE) != 0 || delta > 7) {
+        double delta = first ? 0 : p.stress() - before;
+        int events = first ? 0 : p.events();
+        if ((events & DalgonaNet.E_SPIKE) != 0 || delta > 7) {
             hit(delta);
         }
-        if ((p.events() & DalgonaNet.E_PENALTY) != 0) {
+        if ((events & DalgonaNet.E_PENALTY) != 0) {
             flashUntil = now + 500;
             play(ModSounds.UI_DENY, 1f, 0.7f);
         }
-        if ((p.events() & DalgonaNet.E_LICK) != 0 && lickAnimStart < 0) {
+        if ((events & DalgonaNet.E_LICK) != 0 && lickAnimStart < 0) {
             startLickAnim(now);
         }
         if (p.cracked() && breakStart < 0) {
