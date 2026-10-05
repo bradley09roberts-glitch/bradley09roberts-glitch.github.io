@@ -35,7 +35,6 @@ final class CookiePainter {
     private static final int FURROW = 0xFF2B170A;
     private static final int FURROW_EDGE = 0xFF4A2A12;
     private static final int CHIP = 0xFFE2B060;
-    private static final int GLINT = 0xFFFFF0B0;
     private static final int CAUTION = 0xFFFFB030;
     private static final int CRACK_DARK = 0xE0160B04;
     private static final int CRACK_LIGHT = 0x60FFF0C8;
