@@ -19,9 +19,10 @@ instruction pages only list the rules of the variants in play) and saved with th
 ## Rules (as implemented)
 **Phase 1, pairing (Normal 45 s, Hard 40 s, Extreme 35 s).** Everybody alive stands in the village square. The partner you pick is
 the opponent you will have to beat: right-click another contestant (an NPC body or another player) to offer a partnership. An NPC answers after a think time of 1 to 5 s (reaction speed
-and patience), a human gets the modal "Contestant X wants to be your partner" (Accept / Decline, 12 s, Esc counts as no).
+and patience), a human gets the modal "No. X asks you to be their partner" (Accept / Decline, 12 s, ignoring it counts as no).
 Agreements are final. Anti-spam: one outstanding offer per proposer, one pending offer per target, 1.5 s between offers, a refused
-offer cannot be repeated to the same person for 12 s, and two contestants who ask each other at the same time are partners. The
+offer cannot be repeated to the same person for 12 s (25 s when a human refused), and two contestants who ask each other at the
+same time are partners. The
 phase ends when the clock runs out or 3 s after everybody who can be paired has a partner (not before 6 s). Everybody without a
 partner is paired at random; with an odd number one of them gets a **bye** (announced to all, safe, shown on their HUD - never a
 contestant who found a partner). Pairs fade out and are moved to their plot (court); the plot order is fixed by the marker
@@ -81,17 +82,19 @@ The marble that rests closer to the exact centre wins marbles from the other; an
   predicted point; a marble that has not landed after about 7 s of real time counts as a miss at the thrower's feet.
 
 ## Controls
-* **Pairing:** right-click the contestant you want as a partner. Answer an offer in the modal (click, or Esc to decline); the
-  action bar tells you who accepted, refused or took somebody else.
+* **Pairing:** right-click the contestant you want as a partner. Answer an offer in the modal: click Accept / Decline, or press
+  Enter (or Y) to accept and Esc (or N) to decline. The chat and the action bar tell you who accepted, refused or took somebody else.
 * **Odd or even** (panel opens by itself at every decision): `-` / `+` (or the arrow keys) set the number of marbles in the fist or
   the wager, `Odd` / `Even` (or `O` / `E`) call, `Lock in` (or Enter / Space) confirms. The panel shows both stacks, the hand, the
   countdown bar and the last revealed rounds. Esc hides the panel for the rest of the decision, `R` (key binding "Marbles panel")
   brings it back. A locked-in choice cannot be changed; the panel shows whether the opponent has locked in too.
-* **Target throw:** the marbles are in hotbar slot 1. Look at the spot where the marble should come down (a ring of dust shows it
-  while you charge), hold the use key (right mouse button) to charge, release to throw. The bar at the bottom of the screen shows the
-  charge; the gold notch is the release point that lands exactly on the spot you look at, the green zone is a good release
-  (within 1.5 ticks). A release before 4 ticks is cancelled, not a weak throw. Even a perfect release is disturbed by a small
-  tremor (see the table). You must stand on your pad: behind the throw line and within 4.5 blocks of it.
+* **Target throw:** the marbles are in hotbar slot 1. On your turn the throw panel appears at the bottom of the screen: "YOUR
+  THROW", the seconds left, the distance of the spot you look at, the power bar and the turn timer. Look at the spot where the
+  marble should come down (a ring of dust shows it while you charge), hold the use key (right mouse button) to charge, release to
+  throw. The gold notch on the bar is the release point that lands exactly on the spot you look at, the green zone is a good
+  release (within 1.5 ticks). A release before 4 ticks is cancelled, not a weak throw. Even a perfect release is disturbed by a
+  small tremor (see the table). You must stand on your pad: behind the throw line and within 4.5 blocks of it. The centre of the
+  screen stays clear during a throw match (no banners), the last-marble warning is a red line in the top panel.
 * Stay at your plot: whoever walks more than 3 blocks away from it is put back on the pad after about 4 s.
 
 ## Difficulty table
@@ -153,9 +156,10 @@ the rooftops (`guard.post`). When a match ends the winner cheers, the loser sobs
 and a guard shoots the loser. Sounds and particles: a select tick when a decision starts, marble clicks at lock-in and reveal,
 rolling marbles and a confirm / deny sound at the verdict, an alert chime at the time call, a danger sting when a match is lost, a
 red vignette when you are down to two marbles, in overtime and after a big loss. HUD: pairing countdown, pairs formed and partner
-while pairing; own / opponent marbles, the round line with the role or whose throw it is, the decision or throw timer, a "last
-marble" banner, and the number of matches still running. Fixture arena: 64 courts in the real geometry (pads at x = -1 / +2, line z = 2.5, bullseye 7 blocks beyond, 5x5 target)
-and a plain square, so the game runs unchanged on either arena.
+while pairing; own / opponent marbles, the round line with the role or whose throw it is, the decision timer (odd or even; the throw timer is
+part of the throw panel), a "last marble" warning (a banner in odd or even, a red line in throw matches) and the number of matches
+still running. Fixture arena: 64 courts in the real geometry (pads at x = -1 / +2, line z = 2.5, bullseye 7 blocks beyond, 5x5
+target) and a plain square, so the game runs unchanged on either arena.
 
 ## Limitations
 * The village has 64 plots: with more than 128 contestants the surplus pairs cannot play and are counted as byes (logged).

@@ -239,9 +239,14 @@ abstract class Match {
         out.add(HudPayload.Widget.counter("theirs", "icon_marble",
                 Component.translatable("squidgame.game.marbles.hud.theirs", opp.displayNumber()), shown(me.other()), -1));
         if (!decided() && shown(me) == 1) {
-            out.add(HudPayload.Widget.banner("last", Component.translatable("squidgame.game.marbles.banner.last_marble"), 0xFF4040));
+            lastMarbleWarning(out);
         }
         hudExtra(viewer, me, out);
+    }
+
+    /** The warning for a partner who is down to the last marble (a banner in the middle of the screen unless the variant needs a clear view). */
+    void lastMarbleWarning(List<HudPayload.Widget> out) {
+        out.add(HudPayload.Widget.banner("last", Component.translatable("squidgame.game.marbles.banner.last_marble"), 0xFF4040));
     }
 
     // ------------------------------------------------------------------ end of the match
