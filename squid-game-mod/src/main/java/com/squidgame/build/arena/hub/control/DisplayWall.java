@@ -48,6 +48,19 @@ final class DisplayWall {
             c.set(x0 + 3, 22, Z1, Pal.LIGHT_PINK);
             c.set(x0 + 4, 22, Z1, Pal.LIGHT_PINK);
         }
+        // north wall clusters above the mezzanine office, facing south
+        for (int g = 0; g < 2; g++) {
+            int x0 = 58 + g * 9;
+            for (int x = x0; x <= x0 + 7; x++) {
+                for (int y = 27; y <= 31; y++) {
+                    boolean edge = x == x0 || x == x0 + 7 || y == 27 || y == 31;
+                    c.set(x, y, Z0, edge ? Pal.PBS : Pal.monitor("south"));
+                }
+            }
+            c.set(x0 + 3, 27, Z0, Pal.LIGHT_PINK);
+            c.set(x0 + 4, 27, Z0, Pal.LIGHT_PINK);
+            c.marker("control.monitor", 61.5 + g * 9, 29.0, -17.5, 0f, "cluster=north" + g);
+        }
         // markers: one per cluster, placed in front of the wall (not standing positions)
         c.marker("control.monitor", 83.5, 21.5, 0.5, 90f, "cluster=halo");
         c.marker("control.monitor", 83.5, 20.0, -13.0, 90f, "cluster=north");

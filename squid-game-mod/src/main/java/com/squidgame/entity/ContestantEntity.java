@@ -261,8 +261,13 @@ public class ContestantEntity extends PathfinderMob implements GeoEntity {
         return Math.sqrt(dx * dx + dz * dz);
     }
 
+    /**
+     * True while this NPC is commanded to move: the "movement key is held" of an AI contestant, judged by the games exactly
+     * like a player's input. Direct moves count for as long as the target is set (the vanilla move control consumes its wanted
+     * position every tick, so {@code hasWanted()} alone is false by the time a game looks).
+     */
     public boolean isTryingToMove() {
-        return getNavigation().isInProgress() || getMoveControl().hasWanted() && moveTarget != null;
+        return moveTarget != null && (directMove || getNavigation().isInProgress() || getMoveControl().hasWanted());
     }
 
     /**
@@ -296,6 +301,7 @@ public class ContestantEntity extends PathfinderMob implements GeoEntity {
     /** Stops walking (friction brings the body to rest within a few ticks). */
     public void stopMoving() {
         this.moveTarget = null;
+        this.directMove = false;
         getNavigation().stop();
         getMoveControl().setWantedPosition(getX(), getY(), getZ(), 0.0);
         setZza(0f);
@@ -380,6 +386,11 @@ public class ContestantEntity extends PathfinderMob implements GeoEntity {
             nearHuman = isNearHuman();
         }
         boolean decide = nearHuman || (tickCount + getId()) % SquidConfig.get().npcFarTickInterval == 0;
+        if (directMove && moveTarget != null) {
+            // the vanilla move control consumes its wanted position every tick (zza falls back to 0 on the next one), so a
+            // direct move that is only renewed by the throttled behaviour would run at a third of its speed far from humans
+            getMoveControl().setWantedPosition(moveTarget.x, moveTarget.y, moveTarget.z, moveSpeed);
+        }
         if (behavior != null && decide) {
             long profStart = com.squidgame.tournament.Profiler.start();
             behavior.tick(this);

@@ -19,7 +19,7 @@ from preview import load, parse_meta  # noqa: E402
 
 NON_STANDING = re.compile(r"^(prize\.|.*\.tree$|.*rope.*|.*\.board$|.*\.target$|.*\.table$|control\.|guard\.patrol|camera\.|.*\.station$|.*hanging.*)")
 AIR = ("minecraft:air", "minecraft:cave_air", "minecraft:void_air", "minecraft:light", "minecraft:barrier", "squidgame:invisible_wall")
-THIN = ("carpet", "pressure_plate", "button", "torch", "lantern", "sign", "banner", "rail", "string", "tripwire", "snow", "pane", "bars", "chain", "ladder", "vine", "flower", "grass", "fern")
+THIN = ("carpet", "pressure_plate", "button", "torch", "lantern", "sign", "banner", "rail", "string", "tripwire", "snow", "_pane", "bars", "chain", "ladder", "vine", "flower", "grass", "fern")
 
 
 def main():

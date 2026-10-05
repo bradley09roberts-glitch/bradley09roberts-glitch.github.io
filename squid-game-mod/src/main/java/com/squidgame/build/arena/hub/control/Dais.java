@@ -48,39 +48,43 @@ final class Dais {
                 c.set(x, 11 + t, z, top);
             }
         }
+        // flush rim lights on the middle tier beside the stair flight
+        for (int z : new int[]{-4, -2, 2, 4}) {
+            c.set(78, 13, z, Pal.LIGHT_PINK);
+        }
         throne(c);
         commanderDesk(c);
     }
 
     private static void throne(BuildContext c) {
-        // seat: pink stair, high back to the east (occupant faces west)
+        // seat: pink stair, high back to the east (the occupant faces west); the cells above the seat stay free
         c.set(83, 15, 0, Pal.stairs("squidgame:pastel_pink_stairs", "east", false));
-        // armrests
+        // armrests with glowing front caps
         for (int z = -1; z <= 1; z += 2) {
             c.set(83, 15, z, Pal.PBS);
             c.set(83, 16, z, "minecraft:polished_blackstone_slab[type=bottom]");
             c.set(82, 15, z, Pal.stairs("minecraft:polished_blackstone_brick_stairs", "west", false));
+            c.set(82, 16, z, Pal.LIGHT_PINK);
         }
-        // tall back with a broader headrest, pink glowing edges
-        for (int y = 15; y <= 21; y++) {
+        // tall back against the wall: spine and broad shoulders, glowing pink edges and crown
+        for (int y = 15; y <= 22; y++) {
             for (int z = -1; z <= 1; z++) {
                 c.set(84, y, z, Pal.PBS);
             }
         }
-        for (int y = 19; y <= 24; y++) {
-            for (int z = -2; z <= 2; z++) {
-                c.set(84, y, z, y == 24 ? Pal.LIGHT_PINK : Pal.PBS);
+        for (int y = 18; y <= 25; y++) {
+            for (int z = -3; z <= 3; z++) {
+                c.set(84, y, z, y == 25 ? Pal.LIGHT_PINK : Pal.PBS);
             }
-            c.set(83, y, -2, Pal.PBS);
-            c.set(83, y, 2, Pal.PBS);
         }
-        for (int y = 16; y <= 18; y++) {
-            c.set(83, y, 0, y == 16 ? Pal.PINK : Pal.BLACK);
-            c.set(83, y, -1, Pal.PBS);
-            c.set(83, y, 1, Pal.PBS);
+        for (int y = 15; y <= 24; y++) {
+            c.set(84, y, -4, Pal.LIGHT_PINK);
+            c.set(84, y, 4, Pal.LIGHT_PINK);
         }
-        c.set(83, 17, 0, Pal.PBS);
-        c.set(83, 18, 0, Pal.PBS);
+        // the three symbols on the spine (the Front Man's colours)
+        c.set(84, 17, 0, Pal.SYM_SQUARE);
+        c.set(84, 20, 0, Pal.SYM_TRIANGLE);
+        c.set(84, 23, 0, Pal.SYM_CIRCLE);
         // footrest
         c.set(81, 15, 0, Pal.slab("minecraft:polished_blackstone_slab", false));
         c.marker("control.commander", 82.5, 15.0, 0.5, 90f);

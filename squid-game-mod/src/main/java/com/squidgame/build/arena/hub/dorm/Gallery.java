@@ -31,8 +31,19 @@ final class Gallery {
         platform(c);
         landing(c);
         stair(c);
+        undercroft(c);
         rails(c);
         lights(c);
+    }
+
+    /**
+     * Fills the dark pockets under the platform and its landing with steel masonry (nothing can spawn or hide in them);
+     * the iron-bar skirt in front of it reads as a grille over a plant room.
+     */
+    private static void undercroft(BuildContext c) {
+        java.util.function.Predicate<String> empty = s -> s == null || s.equals(Pal.AIR);
+        c.fillWhere(X0, 0, Z_N, X1, DECK - 2, Z_S, empty, Pal.STEEL_TILES);
+        c.fillWhere(34, 0, -6, 35, DECK - 2, 6, empty, Pal.STEEL_TILES);
     }
 
     /** Lit deck tiles on the catwalk, sea lanterns in the stair stringer and wall lamps beside the steps. */
@@ -57,7 +68,7 @@ final class Gallery {
 
     private static void platform(BuildContext c) {
         c.pattern(X0, DECK, Z_N, X1, DECK, Z_S, (x, y, z) -> deckBlock(x, z));
-        // pink edge stripe along the open side and a mint stripe against the wall
+        // steel edge beam and a pink guide stripe along the open side
         c.fill(X0, DECK, Z_N, X0, DECK, Z_S, Pal.STEEL_TILES);
         c.fill(X0 + 1, DECK, Z_N, X0 + 1, DECK, Z_S, Pal.PINK);
         // underside: beams and a sturdy cage of columns and bars
@@ -105,13 +116,9 @@ final class Gallery {
         c.fill(34, 0, -6, 34, DECK - 2, -6, Pal.STEEL);
         c.fill(34, 0, 6, 34, DECK - 2, 6, Pal.STEEL);
         // the front edge of the platform between the bulge and the main deck is open
-        c.fill(X0, DECK, -5, X0, DECK, 5, deckBlockStatic());
-        c.fill(X0 + 1, DECK, -5, X0 + 1, DECK, 5, deckBlockStatic());
+        c.fill(X0, DECK, -5, X0, DECK, 5, Pal.PANDESITE);
+        c.fill(X0 + 1, DECK, -5, X0 + 1, DECK, 5, Pal.PANDESITE);
         c.fill(X0, 1, -5, X0, DECK - 2, 5, Pal.AIR);
-    }
-
-    private static String deckBlockStatic() {
-        return Pal.PANDESITE;
     }
 
     // ------------------------------------------------------------------------------------------ stair
@@ -129,6 +136,7 @@ final class Gallery {
                 }
                 if (z != 30) {
                     c.fill(37, 0, z, 37, y, z, Pal.STEEL_TILES);
+                    c.set(37, y, z, Pal.PINK);          // pink line climbing the stringer
                 }
             }
         }
@@ -137,6 +145,7 @@ final class Gallery {
             c.fill(38, y, z, 40, y, z, Pal.PANDESITE);
             c.fill(38, 0, z, 40, y - 1, z, mass(z));
             c.fill(37, 0, z, 37, y, z, Pal.STEEL_TILES);
+            c.set(37, y, z, Pal.PINK);
         }
         // close the cavity under the platform at its south end
         c.fill(X0, 0, Z_S + 1, 37, DECK - 1, Z_S + 1, Pal.STEEL_TILES);
