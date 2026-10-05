@@ -212,6 +212,58 @@ NPC stalls (the panel breaks, the queue moves on, the panel re-forms); two conte
 contestant is eliminated by an admin (`squid debug eliminate`) or knocked off the deck (any body below the deck minus
 6 blocks has fallen); a resumed game after a restart (same route, bridge rebuilt, queue restored); 2..128 contestants.
 
+## Verification
+
+All of it on the real arena (`GlassBridgeBuilder`), a dedicated test server and the final rules.
+
+* **Unit tests** (`core/bridge`, plus a codec test of `BridgeMapPayload`): route generation and retention, public knowledge,
+  difficulty table and ladder, queue / release rules, stall timers, hop planning, layout against the documented geometry
+  (and against the real builder's blocks and markers: 0 mismatches, longest hop 3.88 blocks, nothing within 5 blocks above
+  the deck), NPC rules, and `BridgeSim`: a tick-level simulation of a whole NPC-only game on the pure rules (random order,
+  gate flow, hesitation, slips, freezers, stall timer, panel judging, clock) that asserts pass rates, learning, the
+  ladder, deadlock freedom and "a hole is plain to see". `./gradlew build --offline` is green.
+* **NPC-only games, `squid debug play glass_bridge <n> <difficulty>` with `/tick rate 100`** (5x faster; the server was
+  badly overloaded by other jobs on the machine, so wall-clock times mean little): 16 / 40 / 100 contestants on all three
+  difficulties, plus 2 contestants (both fall, the game ends, the tournament carries on).
+
+  | crowd | difficulty | fell (fragile contacts + stall breaks) | crossed | note |
+  |---|---|---|---|---|
+  | 16 | Normal / Hard / Extreme | 6 / 4 / 6 | 10 / 12 / 9 | |
+  | 40 | Normal / Hard / Extreme | 14 / 11 / 5 | 26 / 19 / 10 | Extreme: 25 cut off by the clock |
+  | 100 | Normal / Hard / Extreme | 12 / 14 / 17 | 88 / 45 / 17 | Hard 41, Extreme 66 cut off by the clock |
+
+  Every landing of every NPC hop was measured: 5,500 hops (2.2 block straight hops, 3.9 block diagonal lane changes), the
+  largest distance between the planned and the real touch-down point was 0.043 blocks, no NPC ever fell without being
+  condemned (the game logs a `WARN` if one does: none), nobody passed through anything, no exceptions. Deaths always
+  equal the fragile contacts plus the stall breaks. `/squid debug perf` with 100 NPCs on the bridge at 20 tps: the
+  whole game logic costs about 0.2 ms per tick, the NPC entities about 1.4-2 ms.
+* **Audit that nothing but public events decides** (the hidden route must never leak, not even statistically): every NPC lane
+  decision is traced in the debug log (`[bridge] No. 079 decides row 8 lane 1 (GUESS)` / `(known)` / `(SLIP)`). In 8 games
+  with 16 NPCs (traced, 1,644 hops): the 144 hops onto a row nobody had seen yet survived in 46 % of the cases (a fair coin
+  is 50 %, z = -1.0), the 1,489 hops onto a row the NPC knew from public events all survived, the 3 slips all fell. The
+  derivation of the NPC random streams and of the route from the tournament seed was also tested for any relation (11.5
+  million guesses: 50.00 %). NPC behaviours have no reference to the route (`BridgePublicView` does not offer one).
+* **Server restart in the middle of a game** (24 NPCs, 5 cracked panels): after the restart the tournament replays the game
+  from its instructions; the log shows "the hidden route was restored from the saved game state" and "the crossing order
+  was restored from the saved game state (17 contestants)" (the 7 who fell before the restart stay eliminated, the others
+  keep their relative places), the bridge was rebuilt intact, and the 14 fragile panels found after the restart were
+  consistent with the ones found before it (no row had two different weak lanes).
+* **Timeout** (`squid debug timescale 0.12`: 16 NPCs, clock of 40 s): everybody not across was eliminated with `TIMEOUT`,
+  the game concluded cleanly. **Admin elimination** (`squid debug eliminate` on a contestant who had just been called and on
+  one still in the queue): the game finished normally, nothing was left blocking the gate, no exception.
+* **Human path with a scripted protocol client** (mineflayer speaking the vanilla protocol; the custom blocks are not in
+  the vanilla registry, so it moves kinematically and claims `onGround` itself, exactly what the server then judges):
+  joining, queueing, the call (YOUR TURN title, door), walking through the gate and hopping row after row (a 12 tick
+  jump per row, diagonal hops across the lane gap), the crack on a fragile panel (frozen: Slowness 10 and the jump strength
+  attribute at 0), falling when the glass is gone, a full crossing with the far-platform title and finish rank, the stall
+  rule (25 s on one panel: the panel cracks, the human falls, the panel re-formed 5 s later), the no-skip rule
+  (an over-jump is put back on the platform / last panel, with the "step on every row" message), the gate guard (a queued
+  human who walks through the open door and hops onto the bridge out of turn is put back on their slot with "wait for your
+  turn") and a **disconnect on the bridge** (the AI stand-in carries on from the row the human was on, deciding from the
+  public events like any NPC, and went on across the bridge).
+  The scripted client read the saved route only in its explicit `--cheat` test mode to prove the finishing path and to
+  cross-check every public `held` / `shattered` line against the saved route (0 mismatches).
+
 ## Known limitations and suggestions
 
 * **Small crowds cannot cross.** The bridge is only passable for a contestant who has seen the glass of their
