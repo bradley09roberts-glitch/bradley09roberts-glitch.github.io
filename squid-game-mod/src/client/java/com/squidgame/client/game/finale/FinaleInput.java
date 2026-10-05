@@ -18,7 +18,7 @@ import org.lwjgl.glfw.GLFW;
  *   <li>left mouse button: a tap is a light strike, holding charges a heavy strike (released with the button);</li>
  *   <li>right mouse button, held: guard;</li>
  *   <li>the Dash key (V) or a double tap of A, D or S: dodge in the direction of the keys held (backwards when none);</li>
- *   <li>the Shove key (R): shove.</li>
+ *   <li>the Shove key (G): shove.</li>
  * </ul>
  * The vanilla attack is cancelled for the duration (see {@code FinaleClient}), so strikes also work in the air:
  * the server decides what they hit. Held buttons send a heartbeat so a lost message cannot leave a guard up. Clicks are
@@ -28,7 +28,8 @@ import org.lwjgl.glfw.GLFW;
 @Environment(EnvType.CLIENT)
 final class FinaleInput {
     static final KeyMapping DASH = new KeyMapping("key.squidgame.dash", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, "key.categories.squidgame");
-    static final KeyMapping SHOVE = new KeyMapping("key.squidgame.shove", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.squidgame");
+    /** G: Minecraft keeps one binding per key in its lookup, so the default must be a key nobody else uses (R is the marbles panel, F swaps hands). */
+    static final KeyMapping SHOVE = new KeyMapping("key.squidgame.shove", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.squidgame");
 
     /** Ticks between the heartbeats of a held button, and the window in which a second tap makes a double tap. */
     private static final int HEARTBEAT = 8, DOUBLE_TAP = 7;

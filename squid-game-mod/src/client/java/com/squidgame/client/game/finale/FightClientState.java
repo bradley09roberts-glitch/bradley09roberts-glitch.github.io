@@ -16,7 +16,8 @@ final class FightClientState {
     record Popup(String text, int color, long bornNanos, boolean mine, boolean big) {
     }
 
-    private static final long FRESH_NANOS = 800_000_000L;
+    /** The overlay disappears when the server has been silent this long; a fighter's controls stay live much longer (a slow frame must not drop a guard). */
+    private static final long FRESH_NANOS = 800_000_000L, LIVE_NANOS = 3_000_000_000L;
     private static final long POPUP_NANOS = 1_100_000_000L;
 
     private static FightStatePayload state;
@@ -118,8 +119,8 @@ final class FightClientState {
 
     /** True while this client is one of the two fighters of a duel that is being fought. */
     static boolean isLiveFighter() {
-        FightStatePayload s = fresh();
-        return s != null && s.stage() == FightStatePayload.FIGHT && s.myRole() != 0;
+        FightStatePayload s = state;
+        return s != null && System.nanoTime() - receivedAt < LIVE_NANOS && s.stage() == FightStatePayload.FIGHT && s.myRole() != 0;
     }
 
     static List<Popup> popups() {

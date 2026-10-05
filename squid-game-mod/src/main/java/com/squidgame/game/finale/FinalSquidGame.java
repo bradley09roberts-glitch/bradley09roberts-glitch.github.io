@@ -915,10 +915,6 @@ public final class FinalSquidGame implements MiniGame {
             int atk = session.duel.slotOf(Role.ATTACKER);
             out.add(HudPayload.Widget.line("duel", Component.translatable("squidgame.game.final.hud.duel", duelNo, duelTotal(),
                     session.slots[atk].contestant.displayNumber(), session.slots[1 - atk].contestant.displayNumber())));
-            if (stage == Stage.FIGHT) {
-                out.add(HudPayload.Widget.bar("time", Component.translatable("squidgame.game.final.hud.time"),
-                        session.duel.ticksLeft(), params.duelTicks(), 0xFFD84A));
-            }
         } else {
             out.add(HudPayload.Widget.line("duel", Component.translatable("squidgame.game.final.hud.ceremony", duelNo, duelTotal())));
         }

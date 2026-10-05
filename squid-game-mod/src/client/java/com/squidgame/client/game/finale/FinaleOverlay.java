@@ -20,6 +20,8 @@ import net.minecraft.util.Mth;
 final class FinaleOverlay {
     private static final int ATTACKER_COLOR = 0xFFE0457B, DEFENDER_COLOR = 0xFF4AA3FF;
     private static final int BLOCK_W = 124;
+    /** First free row below the tournament's title and objective panel (6 + up to 64 high): everything of the fight starts here. */
+    private static final int TOP = 76;
     private static final ResourceLocation HEART = icon("icon_heart"), STAMINA = icon("icon_stamina");
 
     private FinaleOverlay() {
@@ -48,9 +50,10 @@ final class FinaleOverlay {
         }
         // own fighter on the left (a spectator sees the attacker there)
         int mine = s.myRole() == 2 ? 1 : 0;
-        drawFighter(g, font, s, mine, 8, 58, s.myRole() != 0, false);
-        drawFighter(g, font, s, 1 - mine, w - 8 - BLOCK_W, 58, false, true);
+        drawFighter(g, font, s, mine, 8, TOP, s.myRole() != 0, false);
+        drawFighter(g, font, s, 1 - mine, w - 8 - BLOCK_W, TOP, false, true);
         drawBanner(g, font, s, w);
+        drawClock(g, font, s, w);
         drawCapture(g, font, s, w, h);
         drawLineWarning(g, font, s, w, h);
         drawThreat(g, font, s, w, h, mine);
@@ -114,10 +117,20 @@ final class FinaleOverlay {
         boolean attacker = s.myRole() == 1;
         Component text = Component.translatable(attacker ? "squidgame.game.final.overlay.banner.attacker" : "squidgame.game.final.overlay.banner.defender");
         int tw = font.width(text) + 12;
-        int x = (w - tw) / 2, y = 60;
+        int x = (w - tw) / 2, y = TOP;
         g.fill(x, y, x + tw, y + 13, 0x90101018);
         g.renderOutline(x, y, tw, 13, attacker ? ATTACKER_COLOR : DEFENDER_COLOR);
         g.drawCenteredString(font, text, w / 2, y + 3, 0xFFFFFFFF);
+    }
+
+    /** Time left of this duel (the tournament's own timer above counts down the whole game). */
+    private static void drawClock(GuiGraphics g, Font font, FightStatePayload s, int w) {
+        if (s.stage() != FightStatePayload.FIGHT) {
+            return;
+        }
+        int seconds = Math.max(0, s.ticksLeft() / 20);
+        int color = seconds < 15 ? 0xFFFF5050 : seconds < 40 ? 0xFFFFC040 : 0xFFE0E0E0;
+        g.drawCenteredString(font, String.format("%d:%02d", seconds / 60, seconds % 60), w / 2, TOP + 17, color);
     }
 
     // ------------------------------------------------------------------ circle, line, threats
@@ -156,7 +169,7 @@ final class FinaleOverlay {
         }
         if ((s.flags()[1 - mine] & FightStatePayload.FLAG_CHARGING) != 0) {
             float pulse = 0.6f + 0.4f * (float) Math.sin(System.nanoTime() / 70_000_000.0);
-            g.drawCenteredString(font, Component.translatable("squidgame.game.final.overlay.heavy_warning"), w / 2, (int) (h * 0.30f),
+            g.drawCenteredString(font, Component.translatable("squidgame.game.final.overlay.heavy_warning"), w / 2, Math.max(TOP + 30, (int) (h * 0.40f)),
                     ((int) (255 * pulse) << 24) | 0xFFB040);
         }
     }
@@ -222,7 +235,7 @@ final class FinaleOverlay {
         boolean landed = progress >= 1f || t >= total - 4;
         double flip = landed ? 1.0 : Math.abs(Math.cos(angle));
         boolean faceA = landed || ((int) (angle / Math.PI)) % 2 == 0;
-        int cx = w / 2, cy = (int) (h * 0.30f), r = 24;
+        int cx = w / 2, cy = (int) (h * 0.45f), r = 24;
         float bounce = landed ? 0f : (float) Math.sin(progress * Math.PI) * 26f;
         int top = (int) (cy - bounce);
         g.drawCenteredString(font, Component.translatable("squidgame.game.final.coin.title"), cx, top - r - 22, 0xFFFFD84A);
@@ -247,6 +260,6 @@ final class FinaleOverlay {
 
     private static void drawCeremony(GuiGraphics g, Font font, FightStatePayload s, int w) {
         g.drawCenteredString(font, Component.translatable("squidgame.game.final.overlay.ceremony",
-                String.format("%03d", s.number()[0]), String.format("%03d", s.number()[1])), w / 2, 60, 0xFFFFD84A);
+                String.format("%03d", s.number()[0]), String.format("%03d", s.number()[1])), w / 2, TOP, 0xFFFFD84A);
     }
 }

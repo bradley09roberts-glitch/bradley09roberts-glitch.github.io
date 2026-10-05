@@ -60,7 +60,7 @@ nothing else can be started) and a stamina cost.
 | **Heavy strike** | hold left button >= 10 ticks (sparks show the charge from tick 6), release; full charge at 20, released by itself at 26 | 5 / 14 | 20 (+0.2 per tick held) | 20-28 | 1.4-2.2 | 2.8 / 100 deg |
 | **Guard** | hold right button | 3 ticks to raise, front +-75 deg | none, drains stamina per absorbed hit | -70 % damage, knock-back x 0.45 | | |
 | **Dodge** | Dash key (default **V**) or double-tap A / D / S | i-frames 6 / 5 / 4 ticks, dash 6 ticks, cooldown 24 | 16 (6 back on a successful dodge) | | about 2.9 blocks in the pressed direction (backwards without keys) | |
-| **Shove** | Shove key (default **R**) | 6 / 12 | 12 | 2 | 2.3 (65 % through a guard) | 2.1 / 84 deg |
+| **Shove** | Shove key (default **G**) | 6 / 12 | 12 | 2 | 2.3 (65 % through a guard) | 2.1 / 84 deg |
 
 How they interact (the whole combat triangle):
 * A **guard** beats light strikes: 70 % of the damage is absorbed, the blocker pays stamina (9 per light strike, 30+ per heavy
@@ -144,9 +144,9 @@ The planner may send any number N >= 2 of survivors (after the glass bridge: all
 | left mouse button, hold, release | heavy strike (the longer the hold, up to 20 ticks, the harder) |
 | right mouse button, hold | guard |
 | **V** (`key.squidgame.dash`) or a double tap of A / D / S | dodge in the direction of the movement keys held (backwards without) |
-| **R** (`key.squidgame.shove`) | shove |
+| **G** (`key.squidgame.shove`) | shove |
 
-(Why R and not F: Minecraft allows one binding per key in its lookup and F is the swap-hands key.) The keys can be changed in the
+(Why G: Minecraft keeps one binding per key in its lookup, so a default must be a key nobody else uses - F is the swap-hands key and R is the marbles panel.) The keys can be changed in the
 Controls screen under "Squid Game"; the instructions in chat show the current ones.
 
 * While a client is one of the two fighters of a live duel, Fabric's `ClientPreAttackCallback` cancels the vanilla attack (it
@@ -208,7 +208,7 @@ pathfinding is used on the open court). Far-away NPCs' reduced entity tick rate 
 * `saveState` keeps the number of duels played so that a resumed tournament continues the numbering.
 
 ## 8. Tests and verification
-* Pure unit tests (`src/test/java/com/squidgame/core/finale`, ~110 tests): every outcome of an exchange (timings, guard, parry,
+* Pure unit tests (`src/test/java/com/squidgame/core/finale`, 108 tests): every outcome of an exchange (timings, guard, parry,
   guard break, dodge window, shove, counter hit, simultaneous hits, stamina and exhaustion, stagger grace), the end conditions,
   determinism, geometry (signed edge distance, ray exit, capture ring), the shape, the ladder (N - 1 duels, byes, withdrawals),
   the input validation and rate limit, the difficulty table, the replay time warp, and NPC sanity (attacker win rate band on every
