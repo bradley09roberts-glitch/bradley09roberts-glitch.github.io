@@ -221,7 +221,21 @@ See `docs/VERIFICATION.md` for the full report (what was run, how, what was foun
 
 ## Known limitations
 
-See the end of `docs/VERIFICATION.md`.
+The complete, honest list is at the end of `docs/VERIFICATION.md`; the important ones:
+
+* Nobody on the team could **hear** the mod (no audio device in the build environment) and the client was only run under software
+  rendering (3 - 7 fps), so sound design, input feel with a real mouse, latency-sensitive timings and the GPU cost of ~100 animated
+  NPCs are unreviewed. The client was verified in the Loom development environment, the dedicated server with the production jar;
+  Windows and macOS were not tried; Fabric Loader 0.16.10 (the declared minimum) was not tested.
+* More than two humans at once in one game, and a ladder in the Final with several humans, were not exercised.
+* A tournament can end **without a winner** (everyone eliminated in a game - for example on the Glass Bridge, which is a gamble for
+  the first contestants; simulated: somebody crosses in 72 - 96 % of small fields and about 90 % of the default Normal ones).
+  The rules say so in the instructions; `UNKNOWN_ROWS` in `BridgeRules` is the knob that makes the bridge kinder.
+* The arenas are sized for 128 contestants (`maxContestants`); up to 456 are accepted, extra contestants share seats or get byes.
+* Dalgona needs a pointing device. Several default key bindings share keys with vanilla (Tug of War uses `F` and `Left Shift`);
+  the mod handles the clash, rebind them if you like.
+* Single-player runs the integrated server next to the client: weak PCs may want fewer NPCs than the default 100
+  (`/squid start normal 40`, or `totalContestants` in `config/squidgame.json`).
 
 ## License
 
