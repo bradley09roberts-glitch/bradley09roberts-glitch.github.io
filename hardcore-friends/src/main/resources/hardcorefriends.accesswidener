@@ -1,0 +1,4 @@
+accessWidener v2 official
+
+# Lets the mod add a "hunt companions" goal to zombies, skeletons, spiders, illagers and witches.
+accessible field net/minecraft/world/entity/Mob targetSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;

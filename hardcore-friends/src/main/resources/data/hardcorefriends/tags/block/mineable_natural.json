@@ -1,0 +1,9 @@
+{
+  "values": [
+    "minecraft:stone", "minecraft:granite", "minecraft:diorite", "minecraft:andesite", "minecraft:deepslate",
+    "minecraft:tuff", "minecraft:calcite", "minecraft:dripstone_block", "minecraft:dirt", "minecraft:gravel",
+    "minecraft:clay", "minecraft:smooth_basalt",
+    "#minecraft:coal_ores", "#minecraft:iron_ores", "#minecraft:copper_ores", "#minecraft:gold_ores",
+    "#minecraft:redstone_ores", "#minecraft:lapis_ores", "#minecraft:diamond_ores", "#minecraft:emerald_ores"
+  ]
+}

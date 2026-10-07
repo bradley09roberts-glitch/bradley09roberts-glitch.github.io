@@ -1,0 +1,31 @@
+{
+	"schemaVersion": 1,
+	"id": "hardcorefriends",
+	"version": "${version}",
+	"name": "Hardcore Friends",
+	"description": "Nine human companions for Hardcore survival: farmer, builder, miner, explorer, redstone inventor, warrior, strategist, landscaper and forager. They work, cooperate, build a shared camp with real materials and grow a Unity bond. Player Hardcore rules are untouched.",
+	"authors": [
+		"bradley09roberts"
+	],
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"io.github.bradley09roberts.hardcorefriends.HardcoreFriends"
+		],
+		"client": [
+			"io.github.bradley09roberts.hardcorefriends.client.HardcoreFriendsClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	},
+	"accessWidener": "hardcorefriends.accesswidener",
+	"icon": "assets/hardcorefriends/icon.png",
+	"contact": {
+		"homepage": "https://bradley09roberts-glitch.github.io/"
+	}
+}
