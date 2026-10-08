@@ -22,13 +22,16 @@ import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
- * Finds a flat 9×9 patch of grass or dirt inside the camp for Fern's farm plot: level ground, nothing player-built
- * nearby, clear of other reserved sites and the supply chest, and at least five blocks from the camp centre.
+ * Finds a spot inside the camp for Fern's farm plot: a level, sealed hole for the water with at least 20 level,
+ * tillable tiles within 4 blocks of it, nothing player-built nearby, clear of other reserved sites and the supply
+ * chest, and at least five blocks from the camp centre. Real ground is rarely perfectly flat, so bumps are fine.
  */
 public final class FarmPlotFinder {
 	public static final int HALF = 4;
 	private static final int STEP = 2;
-	private static final int MAX_CANDIDATES = 100;
+	private static final int MAX_CANDIDATES = 160;
+	/** Level, tillable tiles needed within the plot (the stage completes at 16 farmland). */
+	private static final int MIN_TILES = 20;
 	private static final int SITE_SPACING = 12;
 
 	private FarmPlotFinder() {
@@ -90,37 +93,50 @@ public final class FarmPlotFinder {
 			return false;
 		}
 		int y = centre.getY();
-		for (int dx = -HALF; dx <= HALF; dx++) {
-			for (int dz = -HALF; dz <= HALF; dz++) {
-				int x = centre.getX() + dx;
-				int z = centre.getZ() + dz;
-				BlockPos ground = new BlockPos(x, y, z);
-				if (!level.hasChunkAt(x, z) || !WorldEditGuard.inCamp(c, ground)
-					|| Ground.surfaceY(level, x, z, y + 1) != y) {
-					return false;
-				}
-				if (!Crops.isTillable(level.getBlockState(ground))) {
-					return false;
-				}
-				BlockState above = level.getBlockState(ground.above());
-				if (!above.isAir() && !(WorldEditGuard.isClearablePlant(above) && !above.is(Blocks.SNOW))) {
-					return false;
-				}
+		// The water hole and its four walls must be level, tillable ground, so the water stays put.
+		for (int[] o : new int[][] {{0, 0}, {1, 0}, {-1, 0}, {0, 1}, {0, -1}}) {
+			if (!usableTile(c, level, centre.getX() + o[0], y, centre.getZ() + o[1])) {
+				return false;
 			}
 		}
 		BlockState below = level.getBlockState(centre.below());
 		if (!below.isFaceSturdy(level, centre.below(), Direction.UP) || !below.getFluidState().isEmpty()) {
 			return false; // the water must sit in a sealed hole
 		}
-		for (BlockPos p : BlockPos.betweenClosed(centre.offset(-HALF - 2, -1, -HALF - 2), centre.offset(HALF + 2, 3, HALF + 2))) {
+		// Real ground is rarely perfectly flat: enough level tiles within reach of the water is what a farm needs.
+		int usable = 0;
+		for (int dx = -HALF; dx <= HALF; dx++) {
+			for (int dz = -HALF; dz <= HALF; dz++) {
+				if (usableTile(c, level, centre.getX() + dx, y, centre.getZ() + dz)) {
+					usable++;
+				}
+			}
+		}
+		if (usable < MIN_TILES) {
+			return false;
+		}
+		for (BlockPos p : BlockPos.betweenClosed(centre.offset(-HALF - 1, -1, -HALF - 1), centre.offset(HALF + 1, 2, HALF + 1))) {
+			if (!level.isLoaded(p)) {
+				return false;
+			}
 			BlockState s = level.getBlockState(p);
 			if ((s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(level, p)) {
 				return false;
 			}
-			if (!s.getFluidState().isEmpty()) {
-				return false;
-			}
 		}
 		return true;
+	}
+
+	/** Level, tillable ground with open air above, inside the camp. */
+	private static boolean usableTile(CompanionEntity c, ServerLevel level, int x, int y, int z) {
+		BlockPos ground = new BlockPos(x, y, z);
+		if (!level.hasChunkAt(x, z) || !WorldEditGuard.inCamp(c, ground) || Ground.surfaceY(level, x, z, y + 1) != y) {
+			return false;
+		}
+		if (!Crops.isTillable(level.getBlockState(ground))) {
+			return false;
+		}
+		BlockState above = level.getBlockState(ground.above());
+		return above.isAir() || (WorldEditGuard.isClearablePlant(above) && !above.is(Blocks.SNOW));
 	}
 }

@@ -59,6 +59,8 @@ public class FarmingGameTest {
 			helper.setBlock(soil.above(), ripeWheat());
 			crops.add(soil.above());
 		}
+		// Watered like a real field: dry, bare farmland can turn back to dirt between harvesting and replanting.
+		helper.setBlock(new BlockPos(23, 1, 16), Blocks.WATER);
 		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, TestSupport.centre());
 		TestSupport.give(fern, new ItemStack(Items.WHEAT_SEEDS, 2));
 		helper.succeedWhen(() -> {
@@ -293,6 +295,38 @@ public class FarmingGameTest {
 			helper.assertTrue(SupplyChest.count(chest, s -> s.is(Items.WATER_BUCKET)) == 0, "the water bucket left the chest");
 			int farmland = 0;
 			for (BlockPos p : BlockPos.betweenClosed(centre.offset(-4, 0, -4), centre.offset(4, 0, 4))) {
+				if (helper.getLevel().getBlockState(p).is(Blocks.FARMLAND)) {
+					farmland++;
+				}
+			}
+			helper.assertTrue(farmland >= 16, "16 farmland tilled around the water, found " + farmland);
+			helper.assertTrue(data.isCompleted(Structures.FARM_PLOT), "the farm plot counts as built");
+		});
+	}
+
+	/** Real ground is bumpy: with a hump every three blocks and some dips, no 9×9 patch is flat, yet the farm gets laid out. */
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_55", maxTicks = 3600)
+	public void fernLaysOutFarmPlotOnBumpyGround(GameTestHelper helper) {
+		for (int x = 0; x < 32; x++) {
+			for (int z = 0; z < 32; z++) {
+				if (x % 3 == 0 && z % 3 == 0) {
+					helper.setBlock(new BlockPos(x, TestSupport.STAND_Y, z), Blocks.GRASS_BLOCK);
+				} else if (x % 5 == 2 && z % 3 == 1) {
+					helper.setBlock(new BlockPos(x, TestSupport.GROUND_Y, z), Blocks.AIR);
+				}
+			}
+		}
+		CampData data = TestSupport.resetCamp(helper, true);
+		data.setStage(1);
+		TestSupport.placeChest(helper, new BlockPos(16, 2, 12), new ItemStack(Items.WATER_BUCKET));
+		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, TestSupport.centre());
+		TestSupport.give(fern, new ItemStack(Items.WOODEN_HOE), new ItemStack(Items.WHEAT_SEEDS, 24));
+		helper.succeedWhen(() -> {
+			helper.assertTrue(data.site(Structures.FARM_PLOT).isPresent(), "the farm plot site is reserved on uneven ground");
+			BlockPos centre = data.site(Structures.FARM_PLOT).get().origin;
+			helper.assertTrue(helper.getLevel().getBlockState(centre).is(Blocks.WATER), "water poured at the plot centre");
+			int farmland = 0;
+			for (BlockPos p : BlockPos.betweenClosed(centre.offset(-4, -1, -4), centre.offset(4, 1, 4))) {
 				if (helper.getLevel().getBlockState(p).is(Blocks.FARMLAND)) {
 					farmland++;
 				}

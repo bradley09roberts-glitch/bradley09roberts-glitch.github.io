@@ -3,6 +3,7 @@ package io.github.bradley09roberts.hardcorefriends.test;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.WeatherData;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.item.ItemStack;
@@ -52,7 +53,21 @@ public final class TestSupport {
 			data.setCamp(helper.absolutePos(centre()), Camp.dimensionId(level));
 		}
 		setTime(helper, 1000);
+		clearWeather(helper);
 		return data;
+	}
+
+	/** A thunderstorm darkens the sky and sends friends home, so tests pin clear weather. */
+	public static void clearWeather(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		WeatherData weather = level.getWeatherData();
+		weather.setClearWeatherTime(1_000_000);
+		weather.setRaining(false);
+		weather.setRainTime(0);
+		weather.setThundering(false);
+		weather.setThunderTime(0);
+		level.setRainLevel(0.0F);
+		level.setThunderLevel(0.0F);
 	}
 
 	public static void setTime(GameTestHelper helper, long dayTime) {

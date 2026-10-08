@@ -1,5 +1,6 @@
 package io.github.bradley09roberts.hardcorefriends.test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -307,6 +308,40 @@ public class CoreGameTest {
 			helper.assertTrue(fern.distanceTo(skeleton) > 15, "Fern moved out of the skeleton's range, distance "
 				+ String.format(java.util.Locale.ROOT, "%.1f", fern.distanceTo(skeleton)) + " (" + fern.activity() + ")");
 			helper.assertTrue(fern.getTarget() == null, "Fern dropped the target she cannot fight");
+		});
+	}
+
+	/** Retreating home must not lead back into bow range: camp here is 14 blocks from the skeleton. */
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_56", maxTicks = 400)
+	public void hurtFriendRetreatsOutOfBowRange(GameTestHelper helper) {
+		TestSupport.resetCamp(helper, true);
+		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, new BlockPos(21, 2, 16));
+		fern.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_CHESTPLATE)); // so the test is about moving, not dying
+		fern.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.DIAMOND_LEGGINGS));
+		fern.setHealth(8.0F);
+		Skeleton skeleton = helper.spawn(EntityTypes.SKELETON, new BlockPos(30, 2, 16));
+		skeleton.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
+		skeleton.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
+		// It stands its ground near camp (rooted, so the test area's edge cannot corner Fern) and picks its own target,
+		// so it loses interest beyond its 16-block follow range as it would in a world.
+		skeleton.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.0);
+		boolean[] escaped = {false};
+		List<String> backInRange = new ArrayList<>();
+		helper.onEachTick(() -> {
+			if (!fern.isRetreating()) {
+				return;
+			}
+			float d = fern.distanceTo(skeleton);
+			escaped[0] |= d > 16;
+			if (escaped[0] && d < 15 && backInRange.isEmpty()) {
+				backInRange.add(String.format(java.util.Locale.ROOT, "%.1f at tick %d", d, helper.getTick()));
+			}
+		});
+		helper.runAfterDelay(300, () -> {
+			helper.assertTrue(fern.isAlive(), "Fern survived");
+			helper.assertTrue(escaped[0], "the hurt friend got out of bow range");
+			helper.assertTrue(backInRange.isEmpty(), "while still recovering she stayed out of range, came back to " + backInRange);
+			helper.succeed();
 		});
 	}
 

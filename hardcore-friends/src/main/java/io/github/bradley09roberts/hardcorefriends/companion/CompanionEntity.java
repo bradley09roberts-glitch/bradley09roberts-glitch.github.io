@@ -454,7 +454,9 @@ public class CompanionEntity extends PathfinderMob {
 			return true;
 		}
 		double healthyEnough = Math.max(0.5, friendId().retreatFraction() + 0.1);
-		return hasMeleeTool() && getHealth() > getMaxHealth() * healthyEnough && distanceToSqr(threat) <= 8 * 8;
+		// Chasing an archer with a hoe only gets a non-fighter shot: they stand up to one only when it is in arm's reach.
+		double reach = Threats.isRanged(threat) ? 3 : 8;
+		return hasMeleeTool() && getHealth() > getMaxHealth() * healthyEnough && distanceToSqr(threat) <= reach * reach;
 	}
 
 	/** Where to spend the night: inside the cabin once it is built, otherwise the camp centre. */

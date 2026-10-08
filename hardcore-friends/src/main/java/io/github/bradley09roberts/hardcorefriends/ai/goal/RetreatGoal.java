@@ -5,6 +5,7 @@ import java.util.EnumSet;
 import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.util.DefaultRandomPos;
@@ -17,10 +18,12 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 
 /**
  * When badly hurt, a friend breaks off whatever they were doing, moves away from danger towards camp or a
- * protector, and eats from their backpack once safe. Cautious friends (Flint) retreat earlier; Aegis much later.
+ * protector (out of bow range when something is shooting at them), and eats from their backpack once safe. Cautious friends (Flint) retreat earlier; Aegis much later.
  */
 public class RetreatGoal extends Goal {
 	private static final double SAFE_DISTANCE = 12;
+	/** An archer in sight must be left further behind: skeletons shoot from about 15 blocks. */
+	private static final double SHOOTER_SAFE_DISTANCE = 20;
 	private final CompanionEntity companion;
 	private @Nullable Vec3 fleeTo;
 	private int recalc;
@@ -79,8 +82,13 @@ public class RetreatGoal extends Goal {
 
 	@Override
 	public void tick() {
-		LivingEntity threat = Threats.nearest(companion, 16);
-		if (threat != null && threat.distanceTo(companion) < SAFE_DISTANCE) {
+		LivingEntity threat = Threats.nearestArcher(companion, SHOOTER_SAFE_DISTANCE);
+		double safeDistance = SHOOTER_SAFE_DISTANCE;
+		if (threat == null) {
+			threat = Threats.nearest(companion, 16);
+			safeDistance = SAFE_DISTANCE;
+		}
+		if (threat != null && threat.distanceTo(companion) < safeDistance) {
 			calmTicks = 0;
 			if (!announced) {
 				Speech.say(companion, Line.RETREAT);
@@ -105,9 +113,10 @@ public class RetreatGoal extends Goal {
 		if (calmTicks % 40 == 20) {
 			companion.eatFromBackpack();
 		}
-		// Drift home while recovering.
+		// Drift home while recovering, unless an archer stands near camp and would shoot at them there.
 		BlockPos home = companion.homePos();
-		if (companion.getNavigation().isDone() && companion.blockPosition().distSqr(home) > 64) {
+		if (companion.getNavigation().isDone() && companion.blockPosition().distSqr(home) > 64
+			&& !Threats.archerNear((ServerLevel) companion.level(), home, SHOOTER_SAFE_DISTANCE - 2)) {
 			companion.getNavigation().moveTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5, 1.0);
 		}
 	}

@@ -67,7 +67,7 @@ public class AvoidDangerGoal extends Goal {
 			}
 			double d = threat.distanceTo(companion);
 			if (d < 5 || Threats.isTargeting(threat, companion)) {
-				safeDistance = SAFE_DISTANCE;
+				safeDistance = Threats.isRanged(threat) ? SHOOTER_SAFE_DISTANCE : SAFE_DISTANCE;
 				return threat;
 			}
 		}

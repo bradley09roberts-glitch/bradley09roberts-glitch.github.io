@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.jspecify.annotations.Nullable;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -16,6 +17,7 @@ import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.monster.Shulker;
 import net.minecraft.world.entity.monster.breeze.Breeze;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 
@@ -85,6 +87,28 @@ public final class Threats {
 			}
 		}
 		return best;
+	}
+
+	/** The nearest ranged attacker within {@code radius} in plain sight of {@code centre}, aiming at them or not. */
+	public static @Nullable LivingEntity nearestArcher(LivingEntity centre, double radius) {
+		LivingEntity best = null;
+		double bestDist = radius * radius;
+		for (LivingEntity e : around(centre, radius)) {
+			double d = e.distanceToSqr(centre);
+			if (d < bestDist && isRanged(e) && centre.hasLineOfSight(e)) {
+				best = e;
+				bestDist = d;
+			}
+		}
+		return best;
+	}
+
+	/** True if a ranged attacker stands within {@code radius} of {@code pos}. */
+	public static boolean archerNear(ServerLevel level, BlockPos pos, double radius) {
+		AABB box = new AABB(pos).inflate(radius, radius / 2, radius);
+		double r2 = radius * radius;
+		return !level.getEntitiesOfClass(LivingEntity.class, box,
+			e -> isThreat(e) && isRanged(e) && e.distanceToSqr(Vec3.atBottomCenterOf(pos)) < r2).isEmpty();
 	}
 
 	/** True if the mob is currently trying to hurt this entity. */

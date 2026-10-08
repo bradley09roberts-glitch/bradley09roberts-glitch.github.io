@@ -15,6 +15,7 @@ import net.minecraft.world.item.Items;
 
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
+import io.github.bradley09roberts.hardcorefriends.ai.task.common.ReturnHomeTask;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
@@ -34,6 +35,7 @@ public final class DeliverToBuilderTask implements CompanionTask {
 	private static final int MIN_LOAD = 16;
 	private static final double OAK_RANGE = 48;
 	private static final int TIMEOUT = 20 * 60;
+	private static final double DELIVERY_SCORE = 90;
 
 	private @Nullable CompanionEntity oak;
 	private Predicate<ItemStack> load = s -> false;
@@ -77,13 +79,15 @@ public final class DeliverToBuilderTask implements CompanionTask {
 		if (shortage.isEmpty() || c.backpack().count(wanted(c.backpack(), shortage)) < MIN_LOAD) {
 			return 0;
 		}
-		return findOak(c) != null || SupplyChest.of((ServerLevel) c.level()).isPresent() ? 68 : 0;
+		// The builder is stuck without this load, so handing it over beats any gathering (at most 40 x 2.2 = 88).
+		return findOak(c) != null || SupplyChest.of((ServerLevel) c.level()).isPresent() ? DELIVERY_SCORE : 0;
 	}
 
 	private static @Nullable CompanionEntity findOak(CompanionEntity c) {
 		Optional<CompanionEntity> found = Companions.find(FriendId.OAK);
-		if (found.isEmpty() || found.get().level() != c.level() || found.get().distanceTo(c) > OAK_RANGE) {
-			return null;
+		if (found.isEmpty() || found.get().level() != c.level() || found.get().distanceTo(c) > OAK_RANGE
+			|| ReturnHomeTask.sendsHome(c, found.get().blockPosition())) {
+			return null; // after dark, an Oak away from camp is skipped and the load goes to the supply chest
 		}
 		return found.get();
 	}

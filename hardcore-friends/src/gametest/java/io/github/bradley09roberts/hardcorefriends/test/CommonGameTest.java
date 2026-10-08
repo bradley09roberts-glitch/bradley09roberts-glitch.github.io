@@ -98,6 +98,8 @@ public class CommonGameTest {
 		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, new BlockPos(22, 2, 16));
 		TestSupport.give(rowan, new ItemStack(Items.OAK_LOG, 32), new ItemStack(Items.STONE_AXE));
 		CampNeeds.reportBuildShortage(helper.getLevel(), Map.of(CampNeeds.Need.WOOD, 32), "32 logs");
+		// The camp has no stone at all, so quarrying is as urgent as gathering gets; Oak's missing wood still comes first.
+		CampNeeds.recompute(helper.getLevel().getServer());
 		helper.succeedWhen(() -> {
 			helper.assertTrue(rowan.backpack().count(Items.OAK_LOG) < 32, "Rowan handed over logs: rowan " + rowan.activity() + " at " + helper.relativePos(rowan.blockPosition()) + " oak " + oak.activity() + " at " + helper.relativePos(oak.blockPosition()) + " shortage " + CampNeeds.buildShortage());
 			int oakWood = oak.backpack().count(Items.OAK_LOG) * 4 + oak.backpack().count(Items.OAK_PLANKS);
