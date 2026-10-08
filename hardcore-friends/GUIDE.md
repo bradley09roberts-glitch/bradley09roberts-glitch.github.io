@@ -89,7 +89,7 @@ The bond grows when you spend time near your friends, when they deliver resource
 | Strangers | 0 | none |
 | Acquaintances | 100 | backpacks hold 18 stacks; friends share food with hungry players |
 | Companions | 250 | **work rhythm**: +15% work speed beside another friend; **careful hands**: 20% less tool wear |
-| Close Friends | 500 | backpacks hold 27 stacks; slow healing at camp; Scout's warnings make threats glow |
+| Close Friends | 500 | backpacks hold 27 stacks; faster healing at camp; Scout's warnings make threats glow |
 | Family | 800 | **rally**: below 3 hearts with 2+ friends nearby, you get 5 s of Regeneration I and they target your attacker (10-minute cooldown) |
 
 None of these bonuses can stop you dying.
@@ -101,14 +101,14 @@ None of these bonuses can stop you dying.
 ## 8. Hardcore rules
 
 - Your own Hardcore death is unchanged: one life, then spectator. There are no extra lives.
-- Friends are mortal. They retreat when badly hurt, eat from their backpacks, and run from creepers. If they die, they drop a **backpack item** holding everything they carried and wore. It never despawns, and its coordinates go to chat. Use it (right-click) to unpack.
+- Friends are mortal. They retreat when badly hurt, eat from their backpacks, and run from creepers. Healthy friends holding a tool stand together and fight off zombies and other close attackers, so nobody is picked off alone. Out of combat (no damage for 10 s, no target, not burning) they recover 1 health every 4 s. If they die, they drop a **backpack item** holding everything they carried and wore. It never despawns, and its coordinates go to chat. Use it (right-click) to unpack.
 - A fallen friend's name returns as a newcomer after 3 in-game days. Set `deadFriendsReturnAfterDays` to `-1` in `config/hardcorefriends.json` for permanent loss.
 - Zombies, skeletons, spiders, illagers and witches hunt friends just as they hunt villagers.
 
 ## 9. How friends treat your world
 
 - **Building and landscaping** happen only inside the camp radius: 24 blocks, growing to 40.
-- **Gathering and mining** happen only in a ring up to 48 blocks beyond the camp.
+- **Tree felling, quarrying and the staircase mine** happen only in a ring up to 48 blocks beyond the camp. Flint also mines ores that are already exposed, inside the camp or in that ring.
 - Friends never break chests, furnaces, signs, beds or any other block entity, or anything crafted-looking: planks, doors, glass, torches, slabs, stairs, fences and so on. They also stay clear of blocks next to such things.
 - Trees are felled only if they grew naturally (natural leaves), never log walls or trees inside camp. Quarry pits are 5×5 and at most 2 blocks deep. Mines stay inside one 24×24 area.
 - Every change is logged (`/friends log`). Turn editing off entirely with `allowWorldEditing: false`, or individually with `allowTreeFelling`, `allowQuarrying` and `allowMining`.

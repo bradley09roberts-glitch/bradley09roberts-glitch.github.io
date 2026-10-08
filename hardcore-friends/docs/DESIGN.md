@@ -34,9 +34,9 @@ Skins are the user's supplied 64×64 Classic/Steve PNGs. They are copied byte-fo
 
 Personality parameters (`companion/FriendId`):
 
-- `chattiness`: 0–1, the minimum gap between casual lines (≈ 25 s at 1.0, up to 90 s at 0.2).
+- `chattiness`: 0–1, the minimum gap between casual lines (25 s at 1.0, up to 90 s at 0).
 - `retreatFraction`: run to safety below this fraction of max health. Flint 0.6 (cautious), Aegis 0.25, others 0.4–0.5.
-- `bravery`: whether they fight back when cornered, and how close they let hostiles come.
+- `bravery`: reserved for future tuning; currently unused (see `canStandAndFight`).
 - `generosity`: how readily they hand spare items to friends and players. Rowan 1.0, Fern 0.9.
 - `roam`: maximum work distance beyond the camp radius. Scout 96, Flint 48 (mine), others 0–48.
 - `speedBonus`: Scout +10%.
@@ -64,14 +64,17 @@ Goals, in priority order (lower number = higher priority):
 |---|---|---|
 | 0 | `FloatGoal` | swim |
 | 1 | `RetreatGoal` | health ≤ retreatFraction, or on fire, or drowning. Moves away from threats toward camp, Aegis or a player; eats from the backpack once safe; announces once. |
-| 1 | `AvoidCreeperGoal` | any creeper within 7 blocks, or a swelling one within 10 |
-| 2 | `AvoidHostileGoal` | non-warriors: a hostile within `fleeDistance` that is targeting them or near them. Flees toward protectors. |
+| 1 | `AvoidDangerGoal` | creepers within 7 blocks (10 if hissing), except a healthy Aegis facing a quiet one. Non-fighters also back away from hostiles within 8 blocks unless healthy and holding a tool (`canStandAndFight`). Flees toward protectors. |
 | 3 | `CompanionMeleeGoal` | uses the best weapon from the backpack; only when there is a target |
 | 4 | `FollowLeaderGoal` / `StayGoal` | mode-dependent |
 | 5 | `WorkGoal` | runs `TaskScheduler` (MOVE + LOOK flags) |
-| 6 | `LookAtPlayerGoal`, `RandomLookAroundGoal` | idle polish |
+| 3 | `OpenDoorGoal` | friends open and close wooden doors |
+| 6 | `LookAtPlayerGoal` | idle polish |
+| 7 | `RandomLookAroundGoal` | idle polish |
 
-Target goals: `HurtByTargetGoal` (fight back) and, for Aegis, `DefendFriendsTargetGoal` (hostiles within 16 blocks of any player, companion or the camp). In FOLLOW mode every armed friend also defends the leader.
+Target goals: `HurtByTargetGoal` (fight back) and, for Aegis, `DefendFriendsTargetGoal` (hostiles within 16 blocks of any player, companion or the camp). In FOLLOW mode every armed friend also defends the leader. `MutualDefenceTargetGoal`: friends not in STAY join fights against hostiles that are going for them, a friend or a player within 8 blocks, when `canStandAndFight` (healthy above max(50%, retreat fraction + 10%) and holding a tool).
+
+Out of combat (no damage for 10 s, no target, not burning) friends recover 1 health every 4 s.
 
 **Monsters fight back too.** On entity load, zombies, skeletons, spiders, illagers and witches gain a target goal for companions (config `monstersTargetCompanions`). Without this the companions would be untouchable, which contradicts Hardcore.
 
@@ -132,7 +135,7 @@ These rules apply to every reason:
 | LANDSCAPE | camp radius | replaceable plants, snow layers | grass/dirt to dirt path; saplings and flowers; torches; dirt into 1-deep holes |
 | MINE | mine box (24×24 around the mine entrance, outside the camp core) plus exposed ores within camp radius + `resourceRadius` | `#hardcorefriends:mineable_natural` only | torches in tunnels |
 | GATHER_WOOD | camp radius + `resourceRadius` | logs of natural trees only, with ≥ 3 non-persistent leaves touching the crown and all logs within reach | saplings at the stump |
-| GATHER_EARTH | quarry boxes (5×5, max 3 deep) in the resource ring | dirt, grass, sand, gravel, natural stone | — |
+| GATHER_EARTH | quarry boxes (5×5, max 2 deep) in the resource ring | dirt, grass, sand, gravel, natural stone | — |
 
 The camp radius starts at `campRadius` (24) and grows by 4 per stage, up to 40.
 
@@ -183,7 +186,7 @@ Score 0–1000, saved in `CampData`.
 **Gains** (with daily caps):
 
 - **Time together:** +1 per minute per friend within 24 blocks of a player (cap 120/day).
-- **Teamwork:** a deposit or delivery +1 (cap 60/day); a direct hand-off +2; a hostile killed near a friend or player +3; a stage built +30; a contraption built +15; a player feeding or gifting a friend +2 (cap 20/day).
+- **Teamwork:** a deposit or delivery +1 (cap 60/day); a direct hand-off +2 (cap 40/day); a friend landing the killing blow on a hostile +3 (cap 60/day); each finished camp improvement +30; each finished contraption +15; a player feeding or gifting a friend +2 (cap 20/day).
 
 **Losses:** a friend's death −80; a dismissal −20.
 
@@ -193,13 +196,13 @@ Score 0–1000, saved in `CampData`.
 |---|---|
 | 100 | 18-slot backpacks; friends feed hungry players |
 | 250 | *Work rhythm*: +15% work speed when another friend is within 12 blocks; *Careful hands*: 20% chance a use costs no durability |
-| 500 | 27-slot backpacks; friends regenerate 1 HP every 4 s at camp; Scout's warnings make the warned mob glow for 8 s |
+| 500 | 27-slot backpacks; an extra 1 HP every 4 s while at camp with no target (on top of normal out-of-combat healing); Scout's warnings make the warned mob glow for 8 s |
 | 800 | *Rally*: when a player drops below 6 HP with ≥ 2 friends within 16 blocks, the player gets Regeneration I for 5 s and the friends target the attacker (10-minute cooldown). This does not prevent death. |
 
 ## 9. Role routines (summary)
 
 - **Fern:** harvests mature crops and replants immediately from the drops; replants empty farmland; tills more farmland next to water (capped per stage); bakes bread; uses bone meal; feeds hungry players.
-- **Oak:** builds the next blueprint for the stage; crafts planks, sticks, doors, slabs and torches from stock; repairs missing blocks of finished structures; upgrades torches to lanterns.
+- **Oak:** builds the next blueprint for the stage; crafts planks, sticks, doors, slabs and torches from stock; repairs missing blocks of finished structures; builds lantern posts.
 - **Flint:**
   - mines exposed ores (pickaxe tier checked);
   - digs a bounded staircase mine with branch tunnels, placing torches;
@@ -211,7 +214,7 @@ Score 0–1000, saved in `CampData`.
   - records ore, tree and hazard points of interest for Flint and Rowan;
   - warns nearby players about creepers, approaching hostiles, nightfall, storms and lava;
   - comes back at dusk.
-- **Spark:** builds working redstone contraptions (automatic door, drop-off hopper, auto-smelter, night lamps); keeps the torch supply up; smelts.
+- **Spark:** builds working redstone contraptions (automatic door, drop-off hopper, auto-smelter, night lamps); keeps the torch supply up.
 - **Aegis:** guards players and the camp; patrols at night (on the watchtower once built); equips the best weapon, armour and shield from the chest.
 - **Sage:** recomputes camp needs and announces the team focus; gives contextual Hardcore survival advice (health, food, darkness, phantoms, night, armour, tool durability, mining depth); `/friends advice` and `/friends plan` show the report.
 - **Terra:**
