@@ -12,7 +12,8 @@
 			"io.github.bradley09roberts.hardcorefriends.test.MiningExploringGameTest",
 			"io.github.bradley09roberts.hardcorefriends.test.BuildingGameTest",
 			"io.github.bradley09roberts.hardcorefriends.test.GuardianGameTest",
-			"io.github.bradley09roberts.hardcorefriends.test.GeneralistGameTest"
+			"io.github.bradley09roberts.hardcorefriends.test.GeneralistGameTest",
+			"io.github.bradley09roberts.hardcorefriends.test.NeedsGameTest"
 		],
 		"fabric-client-gametest": [
 			"io.github.bradley09roberts.hardcorefriends.test.HardcoreSkinsClientTest",

@@ -14,6 +14,7 @@ import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
+import io.github.bradley09roberts.hardcorefriends.companion.Needs;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 
 /**
@@ -24,11 +25,16 @@ public class RetreatGoal extends Goal {
 	private static final double SAFE_DISTANCE = 12;
 	/** An archer in sight must be left further behind: skeletons shoot from about 15 blocks. */
 	private static final double SHOOTER_SAFE_DISTANCE = 20;
+	/** Hunger at or below which a friend no longer heals on their own (see {@code CompanionEntity}). */
+	private static final double TOO_HUNGRY_TO_HEAL = 10;
+	/** How long a calm, starving friend with nothing in the backpack is left to fetch food before retreating again. */
+	private static final int FOOD_BREAK = 20 * 30;
 	private final CompanionEntity companion;
 	private @Nullable Vec3 fleeTo;
 	private int recalc;
 	private int calmTicks;
 	private boolean announced;
+	private long foodBreakUntil;
 
 	public RetreatGoal(CompanionEntity companion) {
 		this.companion = companion;
@@ -44,7 +50,12 @@ public class RetreatGoal extends Goal {
 		if (companion.isOnFire() && companion.getTarget() == null) {
 			return true;
 		}
-		return lowHealth();
+		if (!lowHealth()) {
+			return false;
+		}
+		// A starving friend cannot heal by resting, so after a calm retreat with nothing to eat their own jobs get a
+		// turn (fetching food from the chest), unless danger turns up.
+		return companion.level().getGameTime() >= foodBreakUntil || Threats.nearest(companion, 16) != null;
 	}
 
 	@Override
@@ -67,6 +78,10 @@ public class RetreatGoal extends Goal {
 
 	@Override
 	public void stop() {
+		if (calmTicks > 200 && !companion.hasFood() && !companion.isOnFire()
+			&& companion.needs().get(Needs.Need.HUNGER) <= TOO_HUNGRY_TO_HEAL) {
+			foodBreakUntil = companion.level().getGameTime() + FOOD_BREAK;
+		}
 		companion.setRetreating(false);
 		companion.getNavigation().stop();
 		if (announced && companion.getHealth() >= companion.getMaxHealth() * 0.7F) {
