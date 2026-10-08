@@ -47,7 +47,8 @@ public final class RestockTask implements CompanionTask {
 			return 0;
 		}
 		if (needsTool(c) && Upkeep.chestCount(level, toolFilter(c)) > 0) {
-			return 70;
+			// A tool for a speciality they only cover waits until their own work allows.
+			return KeepList.isCoverTool(c, KeepList.missingTool(c)) ? 30 : 70;
 		}
 		if (needsFood(c) && Upkeep.chestCount(level, KeepList::isFood) > 0) {
 			return 55;
@@ -64,7 +65,7 @@ public final class RestockTask implements CompanionTask {
 	}
 
 	private static Predicate<ItemStack> toolFilter(CompanionEntity c) {
-		TagKey<Item> tool = KeepList.roleTool(c.friendId().role());
+		TagKey<Item> tool = KeepList.missingTool(c);
 		return s -> tool != null && s.is(tool);
 	}
 

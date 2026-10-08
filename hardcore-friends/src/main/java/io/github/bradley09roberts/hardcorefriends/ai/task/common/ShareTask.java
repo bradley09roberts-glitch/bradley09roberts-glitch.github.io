@@ -106,7 +106,7 @@ public final class ShareTask implements CompanionTask {
 	}
 
 	private static @Nullable Plan findPlan(CompanionEntity c) {
-		int[] surplus = KeepList.surplusBySlot(c.backpack(), c.friendId().role());
+		int[] surplus = KeepList.surplusBySlot(c);
 		boolean anySurplus = false;
 		for (int n : surplus) {
 			anySurplus |= n > 0;
@@ -179,7 +179,7 @@ public final class ShareTask implements CompanionTask {
 
 	/** Surplus of exactly this item (same item and components). */
 	private static int spareOf(CompanionEntity giver, ItemStack sample) {
-		int[] surplus = KeepList.surplusBySlot(giver.backpack(), giver.friendId().role());
+		int[] surplus = KeepList.surplusBySlot(giver);
 		int total = 0;
 		for (int slot = 0; slot < surplus.length; slot++) {
 			if (surplus[slot] > 0 && ItemStack.isSameItemSameComponents(giver.backpack().get(slot), sample)) {

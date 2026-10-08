@@ -356,6 +356,15 @@ public class CompanionEntity extends PathfinderMob {
 			boolean working = mode() == CompanionMode.FOLLOW || job != null && !job.id().startsWith("needs.") && !job.id().equals("common.idle");
 			needs.tickSecond(this, working, asleep);
 		}
+		// Following a player or holding a spot, a friend runs no jobs, so they snack from their backpack when hungry.
+		if (this.tickCount % 100 == 0 && mode() != CompanionMode.WORK && needs.get(Needs.Need.HUNGER) < 25) {
+			ItemStack snack = backpack.take(CompanionEntity::isEdible, 1);
+			if (!snack.isEmpty()) {
+				String name = snack.getHoverName().getString();
+				eat(snack);
+				Speech.say(this, Line.ATE, name);
+			}
+		}
 		// Starving hurts, as on Normal difficulty: down to one heart, never to death on its own.
 		if (this.tickCount % 80 == 0 && needs.get(Needs.Need.HUNGER) <= 0 && getHealth() > 2.0F) {
 			hurtServer(level, level.damageSources().starve(), 1.0F);

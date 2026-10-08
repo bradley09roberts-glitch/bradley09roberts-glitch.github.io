@@ -50,6 +50,8 @@ public final class CraftToolTask implements CompanionTask {
 	private long tableCheckedAt = -100_000;
 	private Phase phase = Phase.FETCH;
 	private @Nullable BlockPos tablePos;
+	/** The tool this run makes: for their speciality, or for one they cover. */
+	private @Nullable TagKey<Item> tool;
 	private @Nullable BlockPos chestPos;
 
 	@Override
@@ -64,8 +66,8 @@ public final class CraftToolTask implements CompanionTask {
 
 	@Override
 	public double score(CompanionEntity c) {
-		TagKey<Item> tool = KeepList.roleTool(c.friendId().role());
-		if (tool == null || c.actions().hasTool(tool)) {
+		TagKey<Item> tool = KeepList.missingTool(c);
+		if (tool == null) {
 			return 0;
 		}
 		ServerLevel level = (ServerLevel) c.level();
@@ -73,11 +75,15 @@ public final class CraftToolTask implements CompanionTask {
 		if (chest.isPresent() && SupplyChest.count(chest.get(), s -> s.is(tool)) > 0) {
 			return 0; // restocking will fetch it
 		}
+		boolean cover = KeepList.isCoverTool(c, tool);
 		if (findTable(c) == null || affordable(c.backpack(), chest.orElse(null), tool).isEmpty()) {
-			Speech.say(c, Line.NEED_TOOL, KeepList.toolName(tool));
+			if (!cover) {
+				Speech.say(c, Line.NEED_TOOL, KeepList.toolName(tool));
+			}
 			return 0;
 		}
-		return 65;
+		// A tool for a speciality they only cover is made in spare time, after their own work.
+		return cover ? 25 : 65;
 	}
 
 	@Override
@@ -85,12 +91,13 @@ public final class CraftToolTask implements CompanionTask {
 		tablePos = findTable(c);
 		chestPos = Upkeep.chestPos((ServerLevel) c.level()).orElse(null);
 		phase = chestPos != null ? Phase.FETCH : Phase.TO_TABLE;
-		return tablePos != null && KeepList.roleTool(c.friendId().role()) != null;
+		tool = KeepList.missingTool(c);
+		return tablePos != null && tool != null;
 	}
 
 	@Override
 	public TaskStatus tick(CompanionEntity c) {
-		TagKey<Item> tool = KeepList.roleTool(c.friendId().role());
+		TagKey<Item> tool = this.tool;
 		if (tool == null || tablePos == null) {
 			return TaskStatus.FAILURE;
 		}

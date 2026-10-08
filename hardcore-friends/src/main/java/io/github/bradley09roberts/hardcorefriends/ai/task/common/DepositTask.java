@@ -105,7 +105,7 @@ public final class DepositTask implements CompanionTask {
 	/** Moves every surplus item into the container. Returns how many items were moved. */
 	public static int depositSurplus(CompanionEntity c, Container container) {
 		Backpack bp = c.backpack();
-		int[] surplus = KeepList.surplusBySlot(bp, c.friendId().role());
+		int[] surplus = KeepList.surplusBySlot(c);
 		int moved = 0;
 		for (int slot = 0; slot < surplus.length; slot++) {
 			if (surplus[slot] <= 0) {

@@ -22,6 +22,7 @@ import net.minecraft.world.item.Items;
 import io.github.bradley09roberts.hardcorefriends.companion.Backpack;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Role;
+import io.github.bradley09roberts.hardcorefriends.companion.Speciality;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 
 /**
@@ -92,10 +93,39 @@ public final class KeepList {
 		return "tool";
 	}
 
-	/** True when the friend holds or carries their role tool (or needs none). */
+	/** True when the friend holds or carries every tool their work needs (or needs none). */
 	public static boolean hasRoleTool(CompanionEntity c) {
-		TagKey<Item> tool = roleTool(c.friendId().role());
-		return tool == null || c.actions().hasTool(tool);
+		return missingTool(c) == null;
+	}
+
+	/** The tools this friend's work needs: their speciality's, and that of a speciality they cover. */
+	public static List<TagKey<Item>> toolsFor(CompanionEntity c) {
+		List<TagKey<Item>> tools = new ArrayList<>(2);
+		TagKey<Item> own = roleTool(c.friendId().role());
+		if (own != null) {
+			tools.add(own);
+		}
+		Role covered = Speciality.covering(c);
+		TagKey<Item> extra = covered == null ? null : roleTool(covered);
+		if (extra != null && !tools.contains(extra)) {
+			tools.add(extra);
+		}
+		return tools;
+	}
+
+	/** True when this tool is for a speciality the friend only covers (so fetching or making it can wait). */
+	public static boolean isCoverTool(CompanionEntity c, @Nullable TagKey<Item> tool) {
+		return tool != null && tool != roleTool(c.friendId().role());
+	}
+
+	/** The first tool this friend's work needs that they do not have, or null. */
+	public static @Nullable TagKey<Item> missingTool(CompanionEntity c) {
+		for (TagKey<Item> tool : toolsFor(c)) {
+			if (!c.actions().hasTool(tool)) {
+				return tool;
+			}
+		}
+		return null;
 	}
 
 	// ------------------------------------------------------------------- food
@@ -164,7 +194,22 @@ public final class KeepList {
 	 * tools (most durability left) and better food are kept first.
 	 */
 	public static int[] surplusBySlot(Backpack backpack, Role role) {
-		List<Rule> rules = rules(role);
+		return surplusBySlot(backpack, rules(role));
+	}
+
+	/** Surplus per slot for this friend: their speciality's keep rules, plus the tool of a speciality they cover. */
+	public static int[] surplusBySlot(CompanionEntity c) {
+		List<Rule> rules = rules(c.friendId().role());
+		Role covered = Speciality.covering(c);
+		TagKey<Item> extra = covered == null ? null : roleTool(covered);
+		if (extra != null && extra != roleTool(c.friendId().role())) {
+			rules = new ArrayList<>(rules);
+			rules.addFirst(new Rule(toolName(extra), s -> s.is(extra), TOOLS_KEPT));
+		}
+		return surplusBySlot(c.backpack(), rules);
+	}
+
+	private static int[] surplusBySlot(Backpack backpack, List<Rule> rules) {
 		int[] budget = new int[rules.size()];
 		for (int i = 0; i < budget.length; i++) {
 			budget[i] = rules.get(i).amount();
@@ -195,7 +240,7 @@ public final class KeepList {
 	/** Total number of surplus items in a friend's backpack. */
 	public static int surplusTotal(CompanionEntity c) {
 		int total = 0;
-		for (int n : surplusBySlot(c.backpack(), c.friendId().role())) {
+		for (int n : surplusBySlot(c)) {
 			total += n;
 		}
 		return total;
@@ -203,7 +248,7 @@ public final class KeepList {
 
 	/** Surplus items matching a filter in a friend's backpack. */
 	public static int surplusOf(CompanionEntity c, Predicate<ItemStack> filter) {
-		int[] surplus = surplusBySlot(c.backpack(), c.friendId().role());
+		int[] surplus = surplusBySlot(c);
 		int total = 0;
 		for (int slot = 0; slot < surplus.length; slot++) {
 			ItemStack stack = c.backpack().get(slot);

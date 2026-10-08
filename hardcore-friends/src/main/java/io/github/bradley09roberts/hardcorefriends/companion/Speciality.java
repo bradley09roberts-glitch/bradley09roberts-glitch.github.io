@@ -1,5 +1,14 @@
 package io.github.bradley09roberts.hardcorefriends.companion;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import org.jspecify.annotations.Nullable;
 
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
@@ -14,6 +23,10 @@ public final class Speciality {
 	public static final double OWN = 1.0;
 	public static final double INTEREST = 0.8;
 	public static final double OTHER = 0.6;
+
+	/** Which speciality each working friend covers, worked out once per game tick. */
+	private static final Map<UUID, Role> COVER = new HashMap<>();
+	private static long coverAt = Long.MIN_VALUE;
 
 	private Speciality() {
 	}
@@ -59,6 +72,55 @@ public final class Speciality {
 			case MINE -> Role.MINER;
 			case GATHER_WOOD, GATHER_EARTH -> Role.FORAGER;
 		};
+	}
+
+	/**
+	 * The speciality this friend covers because nobody of it is working (its specialist is dead, not recruited,
+	 * following a player or told to stay), or null. Exactly one working friend covers each such speciality, the one
+	 * whose interest it is if possible: they keep, fetch and craft its tool, so a farm still gets tilled after the
+	 * farmer is gone. Guarding and planning are never covered. Worked out once per game tick.
+	 */
+	public static @Nullable Role covering(CompanionEntity c) {
+		long now = c.level().getGameTime();
+		if (now != coverAt) {
+			coverAt = now;
+			assignCover();
+		}
+		return COVER.get(c.getUUID());
+	}
+
+	private static void assignCover() {
+		COVER.clear();
+		List<CompanionEntity> working = new ArrayList<>();
+		Set<Role> staffed = EnumSet.noneOf(Role.class);
+		for (CompanionEntity f : Companions.all()) {
+			if (f.isAlive() && f.mode() == CompanionMode.WORK) {
+				working.add(f);
+				staffed.add(f.friendId().role());
+			}
+		}
+		working.sort(Comparator.comparingInt(f -> f.friendId().ordinal()));
+		for (Role role : Role.values()) {
+			if (staffed.contains(role) || role == Role.WARRIOR || role == Role.STRATEGIST) {
+				continue;
+			}
+			CompanionEntity best = null;
+			for (CompanionEntity f : working) {
+				if (COVER.containsKey(f.getUUID())) {
+					continue;
+				}
+				if (interest(f.friendId()) == role) {
+					best = f;
+					break;
+				}
+				if (best == null) {
+					best = f;
+				}
+			}
+			if (best != null) {
+				COVER.put(best.getUUID(), role);
+			}
+		}
 	}
 
 	/** "farming", "building" and so on, for status lines. */
