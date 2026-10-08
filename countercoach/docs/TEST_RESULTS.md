@@ -27,6 +27,7 @@ simulations, not live-match demonstrations.
 | Screen reader: end to end in the Electron app (Linux/Xvfb, real `desktopCapturer` capture of a stand-in window showing a synthetic Tab view) | pass: calibrated with mouse drags, **53/53 items in 12/12 player columns**, 96 item slots learned; after assigning players once, the hotkey read applied automatically |
 | Read on Tab, end to end (same setup; the "game" switched to a board with different builds, Tab held for 1 s with `xdotool`) | pass: the listener saw the key, captured once and **applied automatically, 40/40 items**, 12/12 players, in 0.21–0.24 s; a 0.1 s tap did not capture |
 | Screen capture on Windows | **pass** on the Windows CI runner (run [37781103812](https://github.com/bradley09roberts-glitch/bradley09roberts-glitch.github.io/actions/runs/37781103812)): 1024×768 desktop captured in 145 ms, overlay opacity restored |
+| Read-on-Tab listener on Windows (packaged app, native `uiohook-napi`) | **pass** on the Windows CI runner (run [37791995782](https://github.com/bradley09roberts-glitch/bradley09roberts-glitch.github.io/actions/runs/37791995782)): listener started from the packaged app and saw the Tab key sent by the script (`keyHook: running, tabPresses 1`) |
 | Screen reader in a **real full match** (12 players, enemy items) | **untested**: the only real capture so far was a sandbox with bots that had no items |
 | Live game-state adapter | not available (no permitted interface) |
 
