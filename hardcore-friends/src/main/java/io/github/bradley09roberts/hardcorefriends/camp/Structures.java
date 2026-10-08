@@ -80,6 +80,10 @@ public final class Structures {
 	public static List<Entry> missing(CampData data, int stage, Predicate<Role> roleAvailable) {
 		List<Entry> list = new ArrayList<>();
 		for (Entry e : forStage(stage)) {
+			// A fence needs a farm to enclose; without one it cannot hold the camp back.
+			if (e.id().equals(FARM_FENCE) && !data.isCompleted(FARM_PLOT)) {
+				continue;
+			}
 			if (!data.isCompleted(e.id()) && !e.optional() && roleAvailable.test(e.owner())) {
 				list.add(e);
 			}
