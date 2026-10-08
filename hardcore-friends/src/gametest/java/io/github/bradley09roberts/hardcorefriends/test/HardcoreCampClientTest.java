@@ -52,6 +52,10 @@ public class HardcoreCampClientTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
+		if (Boolean.getBoolean("hardcorefriends.skipCamp")) {
+			return; // lets the quick skin test run on its own
+		}
+		context.getInput().resizeWindow(1600, 900);
 		try (TestSingleplayerContext world = context.worldBuilder()
 			.setUseConsistentSettings(false)
 			.adjustSettings(s -> {

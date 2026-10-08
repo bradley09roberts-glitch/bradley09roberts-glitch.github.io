@@ -40,6 +40,7 @@ public class HardcoreSkinsClientTest implements FabricClientGameTest {
 		try (TestSingleplayerContext world = context.worldBuilder()
 			.adjustSettings(s -> s.setGameMode(WorldCreationUiState.SelectedGameMode.HARDCORE))
 			.create()) {
+			context.getInput().resizeWindow(1600, 900);
 			context.waitTicks(40);
 			Report report = new Report("client-hardcore-skins");
 
@@ -97,6 +98,7 @@ public class HardcoreSkinsClientTest implements FabricClientGameTest {
 			});
 			context.waitTicks(10);
 			faceAll(world, 180.0F);
+			context.runOnClient(mc -> mc.gui.hud.getChat().clearMessages(false));
 			context.waitTicks(40);
 			context.takeScreenshot(TestScreenshotOptions.of("friends-front-names").withSize(1600, 900).disableCounterPrefix());
 			context.runOnClient(mc -> {

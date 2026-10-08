@@ -1,0 +1,35 @@
+Production install check: official Fabric server launcher (loader 0.19.5, installer 1.1.2), Minecraft 26.3
+mods/: fabric-api-0.162.0+26.3.jar (CurseForge file 9078180, sha256 8626c189...) and hardcore-friends-1.0.0.jar (release)
+server.properties: hardcore=true, fresh world
+
+[10:18:46] [main/INFO]: Loading 43 mods:
+	- fabric-api 0.162.0+26.3
+	- hardcorefriends 1.0.0
+[10:18:57] [main/INFO]: Hardcore Friends ready: nine friends, one life each.
+[10:19:00] [Server thread/INFO]: Starting minecraft server version 26.3
+[10:19:05] [Server thread/INFO]: Done (4.240s)! For help, type "help"
+[10:19:05] [Server thread/INFO]: System chat: There are 0 of a max of 20 players online: 
+[10:19:07] [Server thread/INFO]: System chat: Hardcore Friends - nine companions, one life each.
+[10:19:07] [Server thread/INFO]: System chat: /friends recruit <name>  - costs 2 common food (bread, apples, carrots, potatoes, meat...)
+[10:19:07] [Server thread/INFO]: System chat: /friends list | where <name> | backpack <name>
+[10:19:07] [Server thread/INFO]: System chat: /friends follow|stay|work <name|all>
+[10:19:07] [Server thread/INFO]: System chat: /friends camp | camp set | chest (look at a chest or barrel)
+[10:19:07] [Server thread/INFO]: System chat: /friends unity | plan | advice | log | chatter <quiet|normal|chatty>
+[10:19:07] [Server thread/INFO]: System chat: /friends dismiss <name>  - they leave and drop their backpack
+[10:19:07] [Server thread/INFO]: System chat: Right-click a friend: status. Sneak + right-click: open backpack. Give food to heal them.
+[10:19:07] [Server thread/INFO]: System chat: Friends: Fern (farmer), Oak (builder), Flint (miner), Scout (explorer), Spark (inventor),
+[10:19:07] [Server thread/INFO]: System chat: Aegis (warrior), Sage (strategist), Terra (landscaper), Rowan (forager).
+[10:19:09] [Server thread/INFO]: System chat: Your friends (Unity: Strangers)
+[10:19:09] [Server thread/INFO]: System chat: [Fern] Farmer: not recruited yet
+[10:19:09] [Server thread/INFO]: System chat: [Oak] Builder: not recruited yet
+[10:19:09] [Server thread/INFO]: System chat: [Flint] Miner: not recruited yet
+[10:19:09] [Server thread/INFO]: System chat: [Scout] Explorer: not recruited yet
+[10:19:09] [Server thread/INFO]: System chat: [Spark] Redstone inventor: not recruited yet
+[10:19:09] [Server thread/INFO]: System chat: [Aegis] Warrior: not recruited yet
+[10:19:09] [Server thread/INFO]: System chat: [Sage] Strategist: not recruited yet
+[10:19:09] [Server thread/INFO]: System chat: [Terra] Landscaper: not recruited yet
+[10:19:09] [Server thread/INFO]: System chat: [Rowan] Forager: not recruited yet
+[10:19:11] [Server thread/INFO]: System chat: No camp yet. Stand where you want to live and run /friends camp set.
+[10:19:13] [Server thread/INFO]: System chat: Unity bond: Strangers (0/1000, 100 to Acquaintances)
+[10:19:13] [Server thread/INFO]: System chat: Grows with time together, deliveries, sharing, defending each other and finishing camp buildings. Losing a friend costs 80.
+[10:19:15] [Server thread/INFO]: System chat: Stopping the server

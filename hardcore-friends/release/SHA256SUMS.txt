@@ -1,0 +1,2 @@
+bbf70b58facdde0c5f67f0f2db469d7175637f64fe3f4a151239a6a587694f81  hardcore-friends-1.0.0.jar
+8f1671129360fafb4ce3d152dfe2216f0d1d14e2d7c589cdb69f9d45ad4fb48d  Hardcore-Friends-1.0.0-CurseForge.zip
