@@ -111,6 +111,9 @@ public final class TreeFinder {
 		List<BlockPos> sorted = new ArrayList<>(logs);
 		sorted.sort(Comparator.comparingInt(BlockPos::getY));
 		BlockPos base = sorted.getFirst();
+		if (!naturalTrunk(level, sorted)) {
+			return Optional.empty();
+		}
 		BlockState below = level.getBlockState(base.below());
 		if (!below.is(BlockTags.DIRT) && !below.is(BlockTags.GRASS_BLOCKS) && !below.is(BlockTags.SUPPORTS_VEGETATION)
 			&& !below.is(BlockTags.SAND)) {
@@ -181,4 +184,41 @@ public final class TreeFinder {
 		list.sort(Comparator.comparingInt(o -> o[2])); // stable: equal distances keep the west-to-east order
 		return list.toArray(new int[0][]);
 	}
+	/**
+	 * Natural trees rise from one trunk, or a 2×2 trunk (dark oak), of upright logs. A row of logs standing side by
+	 * side on the ground (a log wall or fence), or logs lying on their side at ground level, is something a player
+	 * built, even if a neighbouring tree's leaves touch it.
+	 */
+	private static boolean naturalTrunk(ServerLevel level, List<BlockPos> sortedLogs) {
+		int minY = sortedLogs.getFirst().getY();
+		List<BlockPos> bottom = new ArrayList<>();
+		for (BlockPos p : sortedLogs) {
+			if (p.getY() > minY + 1) {
+				break;
+			}
+			BlockState s = level.getBlockState(p);
+			if (s.hasProperty(net.minecraft.world.level.block.RotatedPillarBlock.AXIS)
+				&& s.getValue(net.minecraft.world.level.block.RotatedPillarBlock.AXIS) != net.minecraft.core.Direction.Axis.Y) {
+				return false;
+			}
+			if (p.getY() == minY) {
+				bottom.add(p);
+			}
+		}
+		if (bottom.size() == 1) {
+			return true;
+		}
+		if (bottom.size() != 4) {
+			return false;
+		}
+		int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, minZ = Integer.MAX_VALUE, maxZ = Integer.MIN_VALUE;
+		for (BlockPos p : bottom) {
+			minX = Math.min(minX, p.getX());
+			maxX = Math.max(maxX, p.getX());
+			minZ = Math.min(minZ, p.getZ());
+			maxZ = Math.max(maxZ, p.getZ());
+		}
+		return maxX - minX == 1 && maxZ - minZ == 1;
+	}
+
 }

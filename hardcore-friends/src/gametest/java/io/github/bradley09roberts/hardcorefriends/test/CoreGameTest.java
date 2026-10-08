@@ -389,4 +389,20 @@ public class CoreGameTest {
 		helper.assertTrue(Math.abs(scout.getAttributeBaseValue(Attributes.MOVEMENT_SPEED) - 0.33) < 1e-6, "Scout's base speed carries the +10%");
 		helper.succeed();
 	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_66", maxTicks = 100)
+	public void logWallTouchingATreeIsNotATree(GameTestHelper helper) {
+		TestSupport.resetCamp(helper, true);
+		TestSupport.growOak(helper, new BlockPos(8, 2, 8));
+		// A player's two-column log wall right beside the oak's canopy (the first live test found Rowan felling one).
+		for (int y = 2; y < 6; y++) {
+			helper.setBlock(new BlockPos(11, y, 8), Blocks.OAK_LOG);
+			helper.setBlock(new BlockPos(11, y, 9), Blocks.OAK_LOG);
+		}
+		helper.runAfterDelay(5, () -> {
+			helper.assertTrue(TreeFinder.isNaturalTreeLog(helper.getLevel(), helper.absolutePos(new BlockPos(8, 2, 8))), "the oak is natural");
+			helper.assertFalse(TreeFinder.isNaturalTreeLog(helper.getLevel(), helper.absolutePos(new BlockPos(11, 3, 8))), "the log wall is not a tree");
+			helper.succeed();
+		});
+	}
 }
