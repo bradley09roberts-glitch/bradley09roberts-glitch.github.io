@@ -50,6 +50,13 @@ public final class WorldEditGuard {
 		}
 	}
 
+	/** One completed block change, reported to {@link #listener} (used by automated tests to audit every edit). */
+	public record EditEvent(CompanionEntity companion, String verb, BlockPos pos, BlockState state, Reason reason) {
+	}
+
+	/** Optional observer of every completed edit. Null in normal play. */
+	public static volatile java.util.function.@org.jspecify.annotations.Nullable Consumer<EditEvent> listener;
+
 	private static final int MIN_TICKS_BETWEEN_EDITS = 4;
 
 	private WorldEditGuard() {
@@ -349,6 +356,10 @@ public final class WorldEditGuard {
 
 	private static void record(CompanionEntity c, CampData data, String verb, BlockState state, BlockPos pos, Reason reason) {
 		ServerLevel level = (ServerLevel) c.level();
+		var observer = listener;
+		if (observer != null) {
+			observer.accept(new EditEvent(c, verb, pos.immutable(), state, reason));
+		}
 		c.setLastEditTick(level.getGameTime());
 		data.logEdit(String.format("day %d: %s %s %s at %d %d %d (%s)", Camp.day(level), c.friendId().displayName(), verb,
 			BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath(), pos.getX(), pos.getY(), pos.getZ(),

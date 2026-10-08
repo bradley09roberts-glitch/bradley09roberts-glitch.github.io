@@ -82,55 +82,47 @@ public class HardcoreSkinsClientTest implements FabricClientGameTest {
 			context.waitTicks(5);
 			report.check("Duplicate recruit refused", world.getServer().computeOnServer(server -> Companions.all().size()) == 9);
 
-			// Line them up facing the camera for skin screenshots.
+			// Line them up facing the camera for skin screenshots: Fern on the left through Rowan on the right.
+			BlockPos base = world.getServer().computeOnServer(server -> server.getPlayerList().getPlayers().getFirst().blockPosition());
 			world.getServer().runOnServer(server -> {
-				ServerPlayer p = server.getPlayerList().getPlayers().getFirst();
-				BlockPos base = p.blockPosition();
-				p.snapTo(base.getX() + 0.5, base.getY(), base.getZ() - 7.5, 0.0F, 8.0F);
 				List<CompanionEntity> all = sorted();
 				for (int i = 0; i < all.size(); i++) {
 					CompanionEntity c = all.get(i);
 					c.setMode(CompanionMode.STAY, null);
-					c.snapTo(base.getX() + 0.5 + (i - 4) * 1.6, base.getY(), base.getZ() + 0.5, 180.0F, 0.0F);
-					c.setYHeadRot(180.0F);
-					c.setYBodyRot(180.0F);
 					c.setNoAi(true);
+					c.snapTo(base.getX() + 0.5 + (4 - i) * 1.6, base.getY(), base.getZ() + 0.5, 180.0F, 0.0F);
 				}
+				ServerPlayer p = server.getPlayerList().getPlayers().getFirst();
+				p.connection.teleport(base.getX() + 0.5, base.getY(), base.getZ() - 7.5, 0.0F, 8.0F);
 			});
+			context.waitTicks(10);
+			faceAll(world, 180.0F);
+			context.waitTicks(40);
+			context.takeScreenshot(TestScreenshotOptions.of("friends-front-names").withSize(1600, 900).disableCounterPrefix());
 			context.runOnClient(mc -> {
 				if (!mc.gui.hud.isHidden()) {
 					mc.gui.hud.toggle();
 				}
 			});
-			context.waitTicks(60);
+			context.waitTicks(10);
 			context.takeScreenshot(TestScreenshotOptions.of("friends-front").withSize(1600, 900).disableCounterPrefix());
-
-			world.getServer().runOnServer(server -> {
-				for (CompanionEntity c : sorted()) {
-					c.setYRot(0.0F);
-					c.setYHeadRot(0.0F);
-					c.setYBodyRot(0.0F);
-				}
-			});
-			context.waitTicks(20);
+			faceAll(world, 0.0F);
+			context.waitTicks(30);
 			context.takeScreenshot(TestScreenshotOptions.of("friends-back").withSize(1600, 900).disableCounterPrefix());
 
-			// Close-ups in three groups of three, front view.
+			// Close-ups in three groups of three, front then back.
 			for (int group = 0; group < 3; group++) {
 				int g = group;
+				faceAll(world, 180.0F);
 				world.getServer().runOnServer(server -> {
-					List<CompanionEntity> all = sorted();
-					ServerPlayer p = server.getPlayerList().getPlayers().getFirst();
-					CompanionEntity middle = all.get(g * 3 + 1);
-					for (CompanionEntity c : all) {
-						c.setYRot(180.0F);
-						c.setYHeadRot(180.0F);
-						c.setYBodyRot(180.0F);
-					}
-					p.snapTo(middle.getX(), middle.getY(), middle.getZ() - 3.2, 0.0F, 12.0F);
+					CompanionEntity middle = sorted().get(g * 3 + 1);
+					server.getPlayerList().getPlayers().getFirst().connection.teleport(middle.getX(), middle.getY(), middle.getZ() - 3.4, 0.0F, 14.0F);
 				});
-				context.waitTicks(20);
-				context.takeScreenshot(TestScreenshotOptions.of("friends-closeup-" + (group + 1)).withSize(1200, 900).disableCounterPrefix());
+				context.waitTicks(30);
+				context.takeScreenshot(TestScreenshotOptions.of("friends-closeup-" + (group + 1) + "-front").withSize(1600, 900).disableCounterPrefix());
+				faceAll(world, 0.0F);
+				context.waitTicks(30);
+				context.takeScreenshot(TestScreenshotOptions.of("friends-closeup-" + (group + 1) + "-back").withSize(1600, 900).disableCounterPrefix());
 			}
 			context.runOnClient(mc -> {
 				if (mc.gui.hud.isHidden()) {
@@ -169,7 +161,7 @@ public class HardcoreSkinsClientTest implements FabricClientGameTest {
 			context.waitTicks(30);
 			String title = context.computeOnClient(mc -> mc.gui.screen().getTitle().getString());
 			report.check("Death screen title is 'Game Over!' (Hardcore)", "Game Over!".equals(title));
-			context.takeScreenshot(TestScreenshotOptions.of("hardcore-game-over").withSize(1280, 720).disableCounterPrefix());
+			context.takeScreenshot(TestScreenshotOptions.of("hardcore-game-over").withSize(1600, 900).disableCounterPrefix());
 			context.clickScreenButton("deathScreen.spectate");
 			context.waitTicks(40);
 			GameType mode = world.getServer().computeOnServer(server -> server.getPlayerList().getPlayers().getFirst().gameMode());
@@ -177,6 +169,17 @@ public class HardcoreSkinsClientTest implements FabricClientGameTest {
 			report.write();
 			report.assertAllPassed();
 		}
+	}
+
+	private static void faceAll(TestSingleplayerContext world, float yaw) {
+		world.getServer().runOnServer(server -> {
+			for (CompanionEntity c : sorted()) {
+				c.setYRot(yaw);
+				c.setYHeadRot(yaw);
+				c.setYBodyRot(yaw);
+				c.setXRot(0.0F);
+			}
+		});
 	}
 
 	private static List<CompanionEntity> sorted() {
