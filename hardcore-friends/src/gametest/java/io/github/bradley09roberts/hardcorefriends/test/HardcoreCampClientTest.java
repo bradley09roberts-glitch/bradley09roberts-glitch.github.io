@@ -96,8 +96,17 @@ public class HardcoreCampClientTest implements FabricClientGameTest {
 			int chunks = DAYS * 24000 / CHUNK;
 			long realStart = System.currentTimeMillis();
 			for (int i = 1; i <= chunks; i++) {
+				// The test harness steps the server in lockstep with this software-rendered client, so draw fewer
+				// frames while sprinting. View and simulation distance stay at 7 chunks so the whole gathering ring
+				// (about 88 blocks) keeps ticking.
+				context.runOnClient(mc -> {
+					mc.options.framerateLimit().set(10);
+					mc.options.renderDistance().set(7);
+					mc.options.simulationDistance().set(7);
+				});
 				world.getServer().runOnServer(server -> server.tickRateManager().requestGameToSprint(CHUNK));
 				world.getServer().waitFor(server -> !server.tickRateManager().isSprinting(), ClientGameTestContext.NO_TIMEOUT);
+				context.runOnClient(mc -> mc.options.framerateLimit().set(60));
 				context.waitTicks(40);
 				String line = world.getServer().computeOnServer(server -> status(server));
 				timeline.add(String.format("%.2f days: %s", i * CHUNK / 24000.0, line));
