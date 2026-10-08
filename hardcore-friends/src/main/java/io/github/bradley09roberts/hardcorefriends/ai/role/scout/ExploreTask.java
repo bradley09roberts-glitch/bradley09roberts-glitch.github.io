@@ -17,7 +17,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 /**
  * By day Scout walks to the next waypoint on growing rings around home (radius 24, 40, 56 and so on up to
  * 24 + Scout's roam distance, {@value #POINTS_PER_RING} points per ring) while surveying the area with
- * {@link AreaSurvey}. Each run visits one waypoint; progress is kept in {@link ScoutLog}. Scout stops at dusk.
+ * {@link AreaSurvey}. Each run visits one waypoint; progress is kept in {@link ScoutLog}. Scout stops at dusk. A friend
+ * exploring while Scout is away walks the same points, but no further out than their own roam.
  */
 public final class ExploreTask implements CompanionTask {
 	public static final int FIRST_RING = 24;
@@ -50,7 +51,9 @@ public final class ExploreTask implements CompanionTask {
 	public boolean start(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
 		ScoutLog log = ScoutLog.of(Camp.data(level.getServer()));
-		waypoint = waypoint(level, c.homePos(), log.ring(), log.point(), c.getBlockY());
+		// Someone exploring in Scout's place keeps to their own roam: the log moves on, but their rings stay closer in.
+		int ring = Math.min(log.ring(), rings(c.friendId()) - 1);
+		waypoint = waypoint(level, c.homePos(), ring, log.point(), c.getBlockY());
 		survey.reset();
 		Speech.say(c, Line.WORK_START, describe());
 		return true;
@@ -95,9 +98,14 @@ public final class ExploreTask implements CompanionTask {
 		return 60;
 	}
 
-	/** Number of rings: radius 24, 40, 56, ... up to 24 + Scout's roam distance. */
+	/** Number of rings in the scout log: radius 24, 40, 56, ... up to 24 + Scout's roam distance. */
 	public static int rings() {
-		return FriendId.SCOUT.roam() / RING_STEP + 1;
+		return rings(FriendId.SCOUT);
+	}
+
+	/** Rings this friend explores: out to 24 + their roam distance (just the camp's edge for a homebody). */
+	public static int rings(FriendId explorer) {
+		return explorer.roam() / RING_STEP + 1;
 	}
 
 	public static int ringRadius(int ring) {

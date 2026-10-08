@@ -23,7 +23,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * Aegis's watch. With a player within 48 blocks, Aegis stays beside whoever is most at risk (lowest health, then
  * furthest from camp). Otherwise Aegis walks a ring of eight posts around the camp, and at night keeps watch from the
  * top of the watchtower once one stands. Fighting is left to the combat reflexes, which take over when a threat
- * comes close.
+ * comes close. Walking the posts of an empty camp by day is a quiet duty: Aegis would rather lend a hand where the
+ * camp is short of someone, so it scores below such work.
  */
 public final class GuardTask implements CompanionTask {
 	private static final double PLAYER_RANGE = 48;
@@ -34,6 +35,9 @@ public final class GuardTask implements CompanionTask {
 	private static final int LEGS_PER_RUN = 2;
 	private static final int TOWER_RECHECK = 20 * 60;
 	private static final int CLIMB_LIMIT = 20 * 10;
+	private static final double NIGHT_WATCH = 70;
+	private static final double GUARD_PLAYER = 50;
+	private static final double DAY_PATROL = 15;
 
 	private int ticks;
 	private int post = -1;
@@ -60,7 +64,11 @@ public final class GuardTask implements CompanionTask {
 
 	@Override
 	public double score(CompanionEntity c) {
-		return Camp.isNight((ServerLevel) c.level()) ? 70 : 50;
+		ServerLevel level = (ServerLevel) c.level();
+		if (Camp.isNight(level)) {
+			return NIGHT_WATCH;
+		}
+		return mostAtRisk(c, level) != null ? GUARD_PLAYER : DAY_PATROL;
 	}
 
 	@Override

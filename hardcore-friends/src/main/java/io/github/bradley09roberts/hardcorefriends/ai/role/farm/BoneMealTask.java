@@ -74,7 +74,7 @@ public final class BoneMealTask implements CompanionTask {
 			current = targets.poll();
 			currentTicks = 0;
 			if (current == null || !c.backpack().has(s -> s.is(Items.BONE_MEAL))) {
-				farm.invalidate();
+				farm.invalidate(c);
 				return used > 0 ? TaskStatus.SUCCESS : TaskStatus.FAILURE;
 			}
 		}

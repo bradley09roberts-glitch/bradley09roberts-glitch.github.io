@@ -21,9 +21,12 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 /**
  * After exploring, Scout walks over to a player who is in camp and sums up what was found since the last report
  * (ore spots, trees, villages, lava). The summary uses the DISCOVERY line, or is told directly if Scout spoke
- * about a discovery very recently.
+ * about a discovery very recently. Nobody else can tell what Scout saw, so once there is news and someone to tell,
+ * the report comes before any other work Scout might be helping with.
  */
 public final class ReportTask implements CompanionTask {
+	/** Main work: above anything Scout would do outside exploring (see {@code SpecialityTask}). */
+	private static final double SCORE = 60;
 	private static final double TALK_DISTANCE = 3.5;
 
 	private @Nullable UUID listener;
@@ -48,7 +51,7 @@ public final class ReportTask implements CompanionTask {
 		if (!log.exploredSinceReport() || log.unreportedTotal() == 0) {
 			return 0;
 		}
-		return nearestPlayerInCamp(c, level) != null ? 30 : 0;
+		return nearestPlayerInCamp(c, level) != null ? SCORE : 0;
 	}
 
 	@Override

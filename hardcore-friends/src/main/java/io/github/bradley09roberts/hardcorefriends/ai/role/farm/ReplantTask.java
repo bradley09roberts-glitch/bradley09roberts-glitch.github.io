@@ -86,13 +86,13 @@ public final class ReplantTask implements CompanionTask {
 			current = targets.poll();
 			currentTicks = 0;
 			if (current == null) {
-				farm.invalidate();
+				farm.invalidate(c);
 				return planted > 0 ? TaskStatus.SUCCESS : TaskStatus.FAILURE;
 			}
 		}
 		Item seed = Crops.bestSeed(c.backpack());
 		if (seed == null) {
-			farm.invalidate();
+			farm.invalidate(c);
 			return planted > 0 ? TaskStatus.SUCCESS : TaskStatus.FAILURE;
 		}
 		BlockPos cropPos = current.above();

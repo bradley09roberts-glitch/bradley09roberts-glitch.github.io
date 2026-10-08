@@ -37,9 +37,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 /**
  * By day, Rowan fells the nearest natural tree outside the camp but inside the gathering ring (never the camp's own
  * trees, and never log walls or other built logs), cutting its logs bottom-up with her axe, and replants a sapling
- * on the stump's soil if she carries one, preferably of the same kind. Once she has cut into a tree, the logs still
- * standing are kept in camp memory; called away part-way through (danger, a full backpack, dusk, a restart), she
- * finishes that tree first next time, so no trunk is left hanging in the air.
+ * on the stump's soil if she carries one, preferably of the same kind. Once a tree has been cut into, the logs still
+ * standing are kept in camp memory; called away part-way through (danger, a full backpack, dusk, a restart), whoever
+ * fells next (Rowan, or a friend standing in for her: one feller at a time) finishes that tree first, so no trunk is
+ * left hanging in the air.
  */
 public final class ChopTreeTask implements CompanionTask {
 	private static final int WALK_TIMEOUT = 600;
@@ -101,7 +102,7 @@ public final class ChopTreeTask implements CompanionTask {
 			return false;
 		}
 		Tree chosen;
-		if (forage.isUnfinished(known)) {
+		if (forage.isUnfinished(level, known)) {
 			// The rest of a tree she already cut into: checked when she started it, so no new analysis (it would
 			// fail, the base log being gone).
 			chosen = known;

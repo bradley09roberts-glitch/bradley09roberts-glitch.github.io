@@ -35,6 +35,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.Backpack;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
+import io.github.bradley09roberts.hardcorefriends.companion.Role;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
@@ -117,7 +118,9 @@ public final class FenceTask implements CompanionTask {
 			return 0;
 		}
 		if (!materialsAvailable(c)) {
-			Speech.say(c, Line.NEED_MATERIALS, "fences or planks and sticks");
+			if (c.friendId().role() == Role.LANDSCAPER) {
+				Speech.say(c, Line.NEED_MATERIALS, "fences or planks and sticks");
+			}
 			return 0;
 		}
 		return 45;

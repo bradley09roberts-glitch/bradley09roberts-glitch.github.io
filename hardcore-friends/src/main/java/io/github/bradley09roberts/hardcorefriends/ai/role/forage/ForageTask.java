@@ -105,7 +105,7 @@ public final class ForageTask implements CompanionTask {
 			}
 			targetTicks = 0;
 			if (bush == null && item == null) {
-				forage.invalidateBerries();
+				forage.invalidateBerries(c);
 				return gathered > 0 ? TaskStatus.SUCCESS : TaskStatus.FAILURE;
 			}
 		}

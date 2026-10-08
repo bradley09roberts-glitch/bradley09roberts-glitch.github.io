@@ -21,7 +21,9 @@ import io.github.bradley09roberts.hardcorefriends.companion.Role;
 /**
  * Builds the job list for each friend: shared upkeep jobs, the jobs that look after their own needs, and every
  * role's work, wrapped so that anyone can do it but specialists come first ({@link SpecialityTask}). Their own
- * speciality's jobs are listed first. Guarding, planning and reporting stay with the specialist.
+ * speciality's jobs are listed first (the scheduler scores in this order, so a friend's own work sets the bar that
+ * lets it skip scoring other people's work that could not win). Guarding, planning and reporting stay with the
+ * specialist.
  */
 public final class TaskRegistry {
 	/** Jobs only the specialist does: these are what the specialist is, not chores anyone could pick up. */

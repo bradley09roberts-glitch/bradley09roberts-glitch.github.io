@@ -6,9 +6,11 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
@@ -25,20 +27,27 @@ import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.TeamCache;
 import io.github.bradley09roberts.hardcorefriends.ai.role.farm.Ground;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.companion.Role;
 import io.github.bradley09roberts.hardcorefriends.world.TreeFinder;
 import io.github.bradley09roberts.hardcorefriends.world.TreeFinder.Tree;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
- * What Rowan knows about the land around the camp, shared by her routines. Searches are cached and spread out:
- * every 5 seconds one tree search (24 blocks around Rowan, a remembered tree, or one of eight points on the
- * gathering ring, in turn) and one berry search around Rowan. A tree she was called away from part-way through is
- * remembered (in camp memory under {@value #FELLING}, so it survives a restart) and finished first: once its base
- * log is cut, nothing else would recognise the rest of the trunk as a tree.
+ * What a forager knows about the land around the camp, shared by the foraging routines of one friend. Searches are
+ * cached and spread out: every 5 seconds one tree search (24 blocks around the friend, a remembered tree, or one of
+ * eight points on the gathering ring, in turn) and one berry search around the friend. A tree someone was called
+ * away from part-way through is remembered in camp memory under {@value #FELLING} (so it survives a restart and
+ * whoever fells next, Rowan or a friend standing in for her, finishes it first): once its base log is cut, nothing
+ * else would recognise the rest of the trunk as a tree. Only one friend fells at a time, so one record is enough.
+ *
+ * <p>Rowan searches on her own schedule, exactly as when she foraged alone. Everyone else shares one search of each
+ * kind every 5 seconds for the whole team, and all searches pool what they find, so nine friends cost little more
+ * than one.
  */
 public final class ForageContext {
 	/** Camp memory key for a part-felled tree: its stump, the logs still standing and the dimension. */
@@ -52,6 +61,8 @@ public final class ForageContext {
 	private static final int BERRY_DY = 4;
 	private static final long FELLED_MEMORY = 20L * 60 * 6;
 	private static final long SKIP_TIME = 20L * 60 * 5;
+	private static final int MAX_SHARED_TREES = 16;
+	private static final int MAX_SHARED_BUSHES = 256;
 
 	private long treeScanAt = Long.MIN_VALUE / 2;
 	private int scanTurn;
@@ -63,12 +74,25 @@ public final class ForageContext {
 
 	private final Deque<Felled> felled = new ArrayDeque<>();
 
-	private @Nullable Tree unfinished;
-	private String unfinishedDim = "";
-	private boolean unfinishedLoaded;
-
 	/** A tree Rowan cut down, remembered so she can collect saplings, apples and sticks as its leaves fall. */
 	public record Felled(BlockPos pos, long at) {
+	}
+
+	/** What every friend's searches found, and when the friends who are not foragers last searched. */
+	private static final class Finds {
+		private long treeScanAt = Long.MIN_VALUE / 2;
+		private final List<Tree> trees = new ArrayList<>();
+		private long berryScanAt = Long.MIN_VALUE / 2;
+		private final Set<BlockPos> bushes = new LinkedHashSet<>();
+	}
+
+	private static Finds finds(ServerLevel level) {
+		return TeamCache.get(level, "forage.finds", Finds::new);
+	}
+
+	/** The forager keeps her own search schedule; everyone else shares the team's. */
+	private static boolean forager(CompanionEntity c) {
+		return c.friendId().role() == Role.FORAGER;
 	}
 
 	// ------------------------------------------------------------------ trees
@@ -98,14 +122,34 @@ public final class ForageContext {
 			|| isSkipped(tree.base(), now))) {
 			tree = null;
 		}
-		if (now - treeScanAt >= SCAN_INTERVAL) {
+		Finds finds = finds(level);
+		boolean own = forager(c);
+		if (now - (own ? treeScanAt : finds.treeScanAt) >= SCAN_INTERVAL) {
 			treeScanAt = now;
-			scanTrees(c, level, now);
+			if (!own) {
+				finds.treeScanAt = now;
+			}
+			scanTrees(c, level, now, finds);
+		}
+		if (!own) {
+			adoptSharedTree(c, level, now, finds);
 		}
 		return tree;
 	}
 
-	private void scanTrees(CompanionEntity c, ServerLevel level, long now) {
+	/** Takes the nearest tree anyone found, if it is nearer than the one in mind. */
+	private void adoptSharedTree(CompanionEntity c, ServerLevel level, long now, Finds finds) {
+		finds.trees.removeIf(t -> !level.isLoaded(t.base()) || !level.getBlockState(t.base()).is(BlockTags.LOGS));
+		BlockPos here = c.blockPosition();
+		for (Tree t : finds.trees) {
+			if (mayFell(c, t.base()) && !isSkipped(t.base(), now)
+				&& (tree == null || t.base().distSqr(here) < tree.base().distSqr(here))) {
+				tree = t;
+			}
+		}
+	}
+
+	private void scanTrees(CompanionEntity c, ServerLevel level, long now, Finds finds) {
 		skipped.values().removeIf(until -> until < now);
 		CampData data = Camp.data(level.getServer());
 		BlockPos centre = scanCentre(c, level, data);
@@ -117,6 +161,12 @@ public final class ForageContext {
 		BlockPos here = c.blockPosition();
 		if (found.isPresent() && (tree == null || found.get().base().distSqr(here) < tree.base().distSqr(here))) {
 			tree = found.get();
+		}
+		if (found.isPresent() && finds.trees.stream().noneMatch(t -> t.base().equals(found.get().base()))) {
+			finds.trees.add(found.get());
+			if (finds.trees.size() > MAX_SHARED_TREES) {
+				finds.trees.removeFirst();
+			}
 		}
 		// Forget remembered trees that are gone.
 		for (CampData.Poi poi : List.copyOf(data.pois())) {
@@ -185,7 +235,8 @@ public final class ForageContext {
 		}
 		tree = null;
 		treeScanAt = Long.MIN_VALUE / 2;
-		if (unfinished != null && unfinished.base().equals(base)) {
+		Tree u = loadUnfinished(level);
+		if (u != null && u.base().equals(base)) {
 			clearUnfinished(level);
 		}
 	}
@@ -193,34 +244,29 @@ public final class ForageContext {
 	// ------------------------------------------------------------ part-felled tree
 
 	/** True when this tree is the remembered part-felled one: its base is the stump, its logs what still stands. */
-	public boolean isUnfinished(Tree t) {
-		return unfinished != null && unfinished.base().equals(t.base());
+	public boolean isUnfinished(ServerLevel level, Tree t) {
+		Tree u = loadUnfinished(level);
+		return u != null && u.base().equals(t.base());
 	}
 
 	/**
-	 * Remembers a tree Rowan was called away from after cutting into it: the stump and the logs still standing,
+	 * Remembers a tree the feller was called away from after cutting into it: the stump and the logs still standing,
 	 * bottom-up. Its logs are no longer a tree to {@link TreeFinder}, so only this record gets them cut.
 	 */
 	public void noteUnfinished(ServerLevel level, BlockPos stump, List<BlockPos> remaining) {
 		List<BlockPos> logs = List.copyOf(remaining);
-		unfinished = new Tree(stump.immutable(), logs, logs.getLast().getY() - stump.getY() + 1);
-		unfinishedDim = Camp.dimensionId(level);
-		unfinishedLoaded = true;
 		CampData data = Camp.data(level.getServer());
 		CompoundTag mem = data.memory(FELLING);
 		mem.putLong("stump", stump.asLong());
 		mem.putLongArray("logs", logs.stream().mapToLong(BlockPos::asLong).toArray());
-		mem.putString("dim", unfinishedDim);
+		mem.putString("dim", Camp.dimensionId(level));
 		data.setDirty();
 		if (tree != null && tree.base().equals(stump)) {
 			tree = null;
 		}
 	}
 
-	private void clearUnfinished(ServerLevel level) {
-		unfinished = null;
-		unfinishedDim = "";
-		unfinishedLoaded = true;
+	private static void clearUnfinished(ServerLevel level) {
 		CampData data = Camp.data(level.getServer());
 		CompoundTag mem = data.memory(FELLING);
 		for (String key : List.copyOf(mem.keySet())) {
@@ -235,11 +281,8 @@ public final class ForageContext {
 	 * gone or the tree may no longer be felled.
 	 */
 	private @Nullable Tree unfinished(CompanionEntity c, ServerLevel level, long now) {
-		if (!unfinishedLoaded) {
-			loadUnfinished(level);
-		}
-		Tree u = unfinished;
-		if (u == null || !unfinishedDim.equals(Camp.dimensionId(level)) || isSkipped(u.base(), now)) {
+		Tree u = loadUnfinished(level);
+		if (u == null || isSkipped(u.base(), now)) {
 			return null;
 		}
 		List<BlockPos> standing = new ArrayList<>();
@@ -258,11 +301,11 @@ public final class ForageContext {
 		return new Tree(u.base(), standing, standing.getLast().getY() - u.base().getY() + 1);
 	}
 
-	private void loadUnfinished(ServerLevel level) {
-		unfinishedLoaded = true;
+	/** The part-felled tree recorded in camp memory for this level's dimension, or null. Read fresh each time. */
+	private static @Nullable Tree loadUnfinished(ServerLevel level) {
 		CompoundTag mem = Camp.data(level.getServer()).memory(FELLING);
-		if (!mem.contains("stump")) {
-			return;
+		if (!mem.contains("stump") || !mem.getStringOr("dim", "").equals(Camp.dimensionId(level))) {
+			return null;
 		}
 		List<BlockPos> logs = new ArrayList<>();
 		mem.getLongArray("logs").ifPresent(a -> {
@@ -271,11 +314,10 @@ public final class ForageContext {
 			}
 		});
 		if (logs.isEmpty()) {
-			return;
+			return null;
 		}
 		BlockPos stump = BlockPos.of(mem.getLongOr("stump", 0L));
-		unfinished = new Tree(stump, List.copyOf(logs), logs.getLast().getY() - stump.getY() + 1);
-		unfinishedDim = mem.getStringOr("dim", "");
+		return new Tree(stump, List.copyOf(logs), logs.getLast().getY() - stump.getY() + 1);
 	}
 
 	// ---------------------------------------------------------------- berries
@@ -284,23 +326,44 @@ public final class ForageContext {
 	public List<BlockPos> berries(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
 		long now = level.getGameTime();
-		if (now - berryScanAt >= SCAN_INTERVAL) {
-			berryScanAt = now;
-			scanBerries(c, level);
+		Finds finds = finds(level);
+		if (forager(c)) {
+			if (now - berryScanAt >= SCAN_INTERVAL) {
+				berryScanAt = now;
+				scanBerries(c, level, finds);
+			}
+			berries.removeIf(p -> !isRipeBush(level.getBlockState(p)));
+			return berries;
 		}
-		berries.removeIf(p -> !isRipeBush(level.getBlockState(p)));
+		if (now - finds.berryScanAt >= SCAN_INTERVAL) {
+			finds.berryScanAt = now;
+			scanBerries(c, level, finds);
+		}
+		// Everyone's finds still ripe and within reach of this friend.
+		finds.bushes.removeIf(p -> !level.isLoaded(p) || !isRipeBush(level.getBlockState(p)));
+		BlockPos here = c.blockPosition();
+		berries.clear();
+		for (BlockPos p : finds.bushes) {
+			if (Camp.horizontalDistSqr(p, here) <= BERRY_RADIUS * BERRY_RADIUS && Math.abs(p.getY() - here.getY()) <= BERRY_DY
+				&& WorldEditGuard.inResourceZone(c, p)) {
+				berries.add(p);
+			}
+		}
+		berries.sort(Comparator.comparingDouble(p -> p.distSqr(here)));
 		return berries;
 	}
 
-	public void invalidateBerries() {
+	/** Looks for berries again on the next call (the bushes changed). */
+	public void invalidateBerries(CompanionEntity c) {
 		berryScanAt = Long.MIN_VALUE / 2;
+		finds((ServerLevel) c.level()).berryScanAt = Long.MIN_VALUE / 2;
 	}
 
 	public static boolean isRipeBush(BlockState state) {
 		return state.getBlock() instanceof SweetBerryBushBlock && state.getValue(SweetBerryBushBlock.AGE) >= 2;
 	}
 
-	private void scanBerries(CompanionEntity c, ServerLevel level) {
+	private void scanBerries(CompanionEntity c, ServerLevel level, Finds finds) {
 		berries.clear();
 		BlockPos here = c.blockPosition();
 		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
@@ -318,6 +381,11 @@ public final class ForageContext {
 			}
 		}
 		berries.sort(Comparator.comparingDouble(p -> p.distSqr(here)));
+		for (BlockPos p : berries) {
+			if (finds.bushes.size() < MAX_SHARED_BUSHES) {
+				finds.bushes.add(p);
+			}
+		}
 	}
 
 	// ------------------------------------------------------------ dropped items

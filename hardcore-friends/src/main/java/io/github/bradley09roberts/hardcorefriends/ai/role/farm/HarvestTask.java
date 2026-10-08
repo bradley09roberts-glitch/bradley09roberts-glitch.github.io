@@ -113,7 +113,7 @@ public final class HarvestTask implements CompanionTask {
 			current = targets.poll();
 			currentTicks = 0;
 			if (current == null) {
-				farm.invalidate();
+				farm.invalidate(c);
 				return harvested > 0 ? TaskStatus.SUCCESS : TaskStatus.FAILURE;
 			}
 		}

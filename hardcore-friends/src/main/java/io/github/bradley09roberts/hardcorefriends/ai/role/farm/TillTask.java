@@ -78,11 +78,11 @@ public final class TillTask implements CompanionTask {
 
 	/** How much more farmland the camp may have at this stage, or 0 while the camp survey is still running. */
 	private int room(CompanionEntity c) {
-		if (!farm.campSurveyed()) {
+		if (!farm.campSurveyed(c)) {
 			return 0;
 		}
 		CampData data = Camp.data(c.level().getServer());
-		return Crops.farmlandCap(data.stage()) - farm.campFarmland();
+		return Crops.farmlandCap(data.stage()) - farm.campFarmland(c);
 	}
 
 	@Override
@@ -166,14 +166,14 @@ public final class TillTask implements CompanionTask {
 	/** Sows the freshly tilled farmland, one block per edit. */
 	private TaskStatus plantStep(CompanionEntity c, ServerLevel level) {
 		if (plantIndex >= tilled.size()) {
-			return finish();
+			return finish(c);
 		}
 		BlockPos soil = tilled.get(plantIndex);
 		BlockPos cropPos = soil.above();
 		Item seed = Crops.bestSeed(c.backpack());
 		BlockState crop = seed != null ? Crops.cropFor(seed) : null;
 		if (crop == null) {
-			return finish();
+			return finish(c);
 		}
 		if (!level.getBlockState(soil).is(Blocks.FARMLAND) || !level.getBlockState(cropPos).isAir() || ++currentTicks > TARGET_TIMEOUT) {
 			nextPlant();
@@ -197,23 +197,23 @@ public final class TillTask implements CompanionTask {
 		currentTicks = 0;
 	}
 
-	private TaskStatus finish() {
-		report();
+	private TaskStatus finish(CompanionEntity c) {
+		report(c);
 		return tilled.isEmpty() ? TaskStatus.FAILURE : TaskStatus.SUCCESS;
 	}
 
 	/** Tells the farm survey about the new farmland once, however the run ends. */
-	private void report() {
+	private void report(CompanionEntity c) {
 		if (!reported && !tilled.isEmpty()) {
 			reported = true;
-			farm.noteTilled(tilled.size());
-			farm.invalidate();
+			farm.noteTilled(c, tilled.size());
+			farm.invalidate(c);
 		}
 	}
 
 	@Override
 	public void stop(CompanionEntity c) {
-		report();
+		report(c);
 		targets.clear();
 		tilled.clear();
 		current = null;

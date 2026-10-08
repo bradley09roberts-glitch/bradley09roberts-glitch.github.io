@@ -12,11 +12,16 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 /**
  * Chooses which job a friend does next by scoring every task and running the most useful one. Re-scores every
  * second, switches when a clearly better job appears (by {@link #PREEMPT_MARGIN}), and fails tasks that run past
- * their time limit so a friend never stays stuck.
+ * their time limit so a friend never stays stuck. Other people's work ({@link SpecialityTask}) has a known ceiling,
+ * so it is not even scored when it could not win: with every friend able to do every job, that keeps choosing cheap.
  */
 public final class TaskScheduler {
 	public static final double PREEMPT_MARGIN = 25.0;
 	private static final int EVALUATE_INTERVAL = 20;
+
+	/** Time spent choosing jobs, all friends together, for performance checks. */
+	private static long evaluateNanos;
+	private static long evaluations;
 
 	private final CompanionEntity companion;
 	private final List<CompanionTask> tasks;
@@ -69,8 +74,20 @@ public final class TaskScheduler {
 	}
 
 	private void evaluate(long gameTime) {
+		long began = System.nanoTime();
+		try {
+			choose(gameTime);
+		} finally {
+			evaluateNanos += System.nanoTime() - began;
+			evaluations++;
+		}
+	}
+
+	private void choose(long gameTime) {
 		CompanionTask best = null;
 		double bestScore = 0;
+		// Anything that cannot beat the running job by the margin could never take over, so it need not be scored.
+		double mustBeat = current != null ? currentScore + PREEMPT_MARGIN : 0;
 		for (CompanionTask task : tasks) {
 			if (task == current) {
 				continue;
@@ -78,6 +95,13 @@ public final class TaskScheduler {
 			Long until = cooldownUntil.get(task.id());
 			if (until != null && gameTime < until) {
 				continue;
+			}
+			// Other people's work has a known ceiling: skip scoring it (and its scans) when it could not win anyway.
+			if (task instanceof SpecialityTask shared) {
+				double ceiling = shared.ceiling(companion);
+				if (ceiling <= bestScore || ceiling < mustBeat) {
+					continue;
+				}
 			}
 			double score;
 			try {
@@ -154,6 +178,21 @@ public final class TaskScheduler {
 	public void interrupt() {
 		stopCurrent();
 		evaluateTimer = 0;
+	}
+
+	/** Nanoseconds all friends have spent choosing jobs since the last {@link #resetTiming}. */
+	public static long evaluateNanos() {
+		return evaluateNanos;
+	}
+
+	/** How many times a friend chose a job since the last {@link #resetTiming}. */
+	public static long evaluations() {
+		return evaluations;
+	}
+
+	public static void resetTiming() {
+		evaluateNanos = 0;
+		evaluations = 0;
 	}
 
 	/** Puts a task on cooldown, e.g. after another routine handled what it wanted to do. */

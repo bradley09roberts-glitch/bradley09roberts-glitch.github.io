@@ -76,7 +76,7 @@ public final class SmeltTask implements CompanionTask {
 		c.actions().stopWalking();
 		AbstractFurnaceBlockEntity f = CampFurnace.furnaceAt(level, target);
 		if (f == null) {
-			furnace.forget();
+			furnace.forget(c);
 			return TaskStatus.FAILURE;
 		}
 		c.getLookControl().setLookAt(target.getX() + 0.5, target.getY() + 0.5, target.getZ() + 0.5);
