@@ -79,6 +79,10 @@ public final class FriendsConfig {
 	public boolean requireTrust = true;
 	/** Opt-in group event: every few nights a bigger wave of monsters tests the camp. */
 	public boolean siegeNights = false;
+	/** Most friends who may follow one player at once, so nobody takes the whole team away from the camp. */
+	public int maxFollowersPerPlayer = 4;
+	/** How far from the camp a player's mailbox may be for friends to take deliveries there, in blocks (0 = no deliveries). */
+	public int maxDeliveryDistance = 400;
 
 	public static FriendsConfig get() {
 		return instance;
@@ -129,5 +133,7 @@ public final class FriendsConfig {
 		villageSettlerChance = Math.clamp(villageSettlerChance, 0.0, 1.0);
 		maxSettlers = Math.clamp(maxSettlers, 0, 64);
 		maxSettlersPerPlayer = Math.clamp(maxSettlersPerPlayer, 0, maxSettlers);
+		maxFollowersPerPlayer = Math.clamp(maxFollowersPerPlayer, 1, 64);
+		maxDeliveryDistance = Math.clamp(maxDeliveryDistance, 0, 1000);
 	}
 }

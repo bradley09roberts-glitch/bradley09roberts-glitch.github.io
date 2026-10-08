@@ -9,6 +9,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.mojang.brigadier.CommandDispatcher;
@@ -25,6 +26,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -53,6 +55,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.registry.ModEntities;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
+import io.github.bradley09roberts.hardcorefriends.town.Bonds;
+import io.github.bradley09roberts.hardcorefriends.town.TownPermissions;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 
 /**
@@ -76,6 +80,8 @@ public final class FriendsCommand {
 	public static final List<Consumer<LiteralArgumentBuilder<CommandSourceStack>>> EXTENSIONS = new CopyOnWriteArrayList<>();
 	/** Extra names offered when typing a friend's name (such as recruited newcomers'). */
 	public static final List<Supplier<Collection<String>>> EXTRA_NAMES = new CopyOnWriteArrayList<>();
+	/** Extra lines for {@code /friends camp} from the feature packages (such as the town's memorial). */
+	public static final List<Function<MinecraftServer, List<Component>>> CAMP_STATUS = new CopyOnWriteArrayList<>();
 
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("friends");
@@ -139,6 +145,7 @@ public final class FriendsCommand {
 			"/friends unity | plan | advice | log | chatter <quiet|normal|chatty>",
 			"/friends dismiss <name>  - they leave and drop their backpack",
 			"/friends newcomers  - people met in villages, survivor camps and on the road (right-click to talk)",
+			"/friends jobs | deliver | bond | note <text> | notes | mailbox | send <item> <count> | trusted | trust <player>",
 			"Right-click a friend: status. Sneak + right-click: open backpack. Give food to feed or heal them.",
 			"Friends: Fern (farmer), Oak (builder), Flint (miner), Scout (explorer), Spark (inventor),",
 			"Aegis (warrior), Sage (strategist), Terra (landscaper), Rowan (forager).",
@@ -288,6 +295,9 @@ public final class FriendsCommand {
 	private static int recruit(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
 		CommandSourceStack source = ctx.getSource();
 		ServerPlayer player = source.getPlayerOrException();
+		if (!TownPermissions.require(source)) {
+			return 0;
+		}
 		Optional<FriendId> parsed = FriendId.byKey(StringArgumentType.getString(ctx, "name"));
 		if (parsed.isEmpty()) {
 			source.sendFailure(Component.literal("Unknown friend. Try: " + names()));
@@ -440,6 +450,9 @@ public final class FriendsCommand {
 
 	private static int dismiss(CommandContext<CommandSourceStack> ctx) {
 		CommandSourceStack source = ctx.getSource();
+		if (!TownPermissions.require(source)) {
+			return 0;
+		}
 		Optional<CompanionEntity> found = findLoaded(ctx);
 		if (found.isEmpty()) {
 			return 0;
@@ -452,6 +465,7 @@ public final class FriendsCommand {
 			return 0;
 		}
 		Speech.say(c, Line.DISMISSED);
+		Bonds.dismissedBy(source, c);
 		c.dropBackpack(level);
 		if (!c.isSettler()) {
 			CampData data = Camp.data(source.getServer());
@@ -475,6 +489,9 @@ public final class FriendsCommand {
 	private static int order(CommandContext<CommandSourceStack> ctx, CompanionMode mode) throws CommandSyntaxException {
 		CommandSourceStack source = ctx.getSource();
 		ServerPlayer player = source.getPlayerOrException();
+		if (!TownPermissions.require(source)) {
+			return 0;
+		}
 		String name = StringArgumentType.getString(ctx, "name");
 		List<CompanionEntity> targets = new ArrayList<>();
 		if ("all".equalsIgnoreCase(name)) {
@@ -490,6 +507,11 @@ public final class FriendsCommand {
 			if ("all".equalsIgnoreCase(name)) {
 				source.sendFailure(Component.literal("No friends within 64 blocks."));
 			}
+			return 0;
+		}
+		// Friends who distrust this player will not follow them, and nobody may lead away more than their share.
+		targets = TownPermissions.acceptOrder(player, targets, mode);
+		if (targets.isEmpty()) {
 			return 0;
 		}
 		if (mode == CompanionMode.WORK && Camp.center(player.level()).isEmpty()) {
@@ -569,7 +591,8 @@ public final class FriendsCommand {
 			return 0;
 		}
 		CompanionEntity c = found.get();
-		if (c.distanceToSqr(player) <= 36) {
+		boolean mayOpen = TownPermissions.isAllowed(player);
+		if (c.distanceToSqr(player) <= 36 && mayOpen && TownPermissions.mayCommand(player)) {
 			c.openBackpack(player);
 			return 1;
 		}
@@ -585,7 +608,8 @@ public final class FriendsCommand {
 			+ (hand.isDamageableItem() ? String.format(Locale.ROOT, " (%d/%d)", hand.getMaxDamage() - hand.getDamageValue(), hand.getMaxDamage()) : "");
 		String contents = sb.isEmpty() ? "empty" : sb.toString();
 		source.sendSuccess(() -> Component.literal(c.displayName() + " holds " + holding + ". Backpack ("
-			+ c.backpack().usedSlots() + "/" + c.backpack().capacity() + "): " + contents + ". Come within 6 blocks to open it."), false);
+			+ c.backpack().usedSlots() + "/" + c.backpack().capacity() + "): " + contents + "."
+			+ (mayOpen ? " Come within 6 blocks to open it." : " Only the camp's owner and trusted players may open it.")), false);
 		return 1;
 	}
 
@@ -595,6 +619,7 @@ public final class FriendsCommand {
 		if (data.campPos().isEmpty()) {
 			source.sendSuccess(() -> Component.literal("No camp yet. Stand where you want to live and run /friends camp set.")
 				.withStyle(ChatFormatting.YELLOW), false);
+			campStatusExtras(source);
 			return 1;
 		}
 		BlockPos camp = data.campPos().get();
@@ -618,12 +643,25 @@ public final class FriendsCommand {
 		for (String line : lines) {
 			source.sendSuccess(() -> Component.literal(line).withStyle(ChatFormatting.GRAY), false);
 		}
+		campStatusExtras(source);
 		return 1;
+	}
+
+	/** The feature packages' lines for {@code /friends camp}. */
+	private static void campStatusExtras(CommandSourceStack source) {
+		for (Function<MinecraftServer, List<Component>> extra : CAMP_STATUS) {
+			for (Component line : extra.apply(source.getServer())) {
+				source.sendSuccess(() -> line, false);
+			}
+		}
 	}
 
 	private static int campSet(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
 		CommandSourceStack source = ctx.getSource();
 		ServerPlayer player = source.getPlayerOrException();
+		if (!TownPermissions.require(source)) {
+			return 0;
+		}
 		ServerLevel level = player.level();
 		CampData data = Camp.data(source.getServer());
 		BlockPos pos = player.blockPosition();
@@ -658,6 +696,9 @@ public final class FriendsCommand {
 	private static int chest(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
 		CommandSourceStack source = ctx.getSource();
 		ServerPlayer player = source.getPlayerOrException();
+		if (!TownPermissions.require(source)) {
+			return 0;
+		}
 		HitResult hit = player.pick(5.0, 1.0F, false);
 		if (!(hit instanceof BlockHitResult blockHit) || hit.getType() != HitResult.Type.BLOCK
 			|| !SupplyChest.isValidStorage(player.level(), blockHit.getBlockPos())) {
@@ -735,6 +776,9 @@ public final class FriendsCommand {
 	}
 
 	private static int chatter(CommandContext<CommandSourceStack> ctx) {
+		if (!TownPermissions.require(ctx.getSource())) {
+			return 0;
+		}
 		String level = StringArgumentType.getString(ctx, "level").toLowerCase(Locale.ROOT);
 		if (!level.equals("quiet") && !level.equals("normal") && !level.equals("chatty")) {
 			ctx.getSource().sendFailure(Component.literal("Use quiet, normal or chatty."));

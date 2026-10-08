@@ -591,6 +591,10 @@ public class CompanionEntity extends PathfinderMob {
 		FoodProperties food = held.get(DataComponents.FOOD);
 		// A hurt or hungry friend eats food handed to them at once; anyone else puts it in their backpack for later.
 		if (food != null && (getHealth() < getMaxHealth() || needs.get(Needs.Need.HUNGER) < EATS_HANDED_FOOD_BELOW)) {
+			ItemStack meal = held.copyWithCount(1);
+			for (CompanionEvents.Gift hook : CompanionEvents.GIFT) {
+				hook.gift(this, serverPlayer, meal, true);
+			}
 			heal(Math.max(1, food.nutrition()));
 			needs.add(Needs.Need.HUNGER, hungerValue(held));
 			UseRemainder remainder = held.get(DataComponents.USE_REMAINDER);
@@ -616,6 +620,9 @@ public class CompanionEntity extends PathfinderMob {
 			held.shrink(given);
 			Speech.say(this, Line.THANKS_GIFT, gift.getHoverName().getString());
 			Unity.add(level, Unity.GIFT, 2, 20);
+			for (CompanionEvents.Gift hook : CompanionEvents.GIFT) {
+				hook.gift(this, serverPlayer, gift.copyWithCount(given), false);
+			}
 		} else {
 			serverPlayer.sendSystemMessage(Component.literal(displayName() + "'s backpack is full.")
 				.withStyle(ChatFormatting.GRAY));
