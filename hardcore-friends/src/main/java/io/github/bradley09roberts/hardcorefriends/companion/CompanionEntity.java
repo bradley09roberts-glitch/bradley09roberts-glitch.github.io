@@ -298,7 +298,8 @@ public class CompanionEntity extends PathfinderMob {
 		LivingEntity target = getTarget();
 		if (target != null && (!target.isAlive() || target.isRemoved() || target.distanceToSqr(this) > 32 * 32
 			|| target instanceof Player || target instanceof CompanionEntity
-			|| (!Threats.isThreat(target) && getLastHurtByMob() != target))) {
+			|| (!Threats.isThreat(target) && getLastHurtByMob() != target)
+			|| (!isFighter() && mode() != CompanionMode.FOLLOW && target.distanceToSqr(this) > 10 * 10))) {
 			setTarget(null);
 		}
 		if (this.tickCount % 100 == 0) {
