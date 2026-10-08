@@ -95,6 +95,19 @@ public final class Lines {
 		generic(Line.UNITY_UP, "We're %1$s now.", "%1$s! That feels good.", "We've become %1$s.");
 		generic(Line.CAMP_UP, "Our camp is a %1$s now.", "We're a %1$s now!", "A %1$s! Well done, everyone.");
 		generic(Line.IDLE, "All quiet.", "Nice day for it.", "Keep your torches handy.");
+		generic(Line.HUNGRY, "I'm getting hungry.", "Time for a bite to eat.", "My stomach's rumbling.");
+		generic(Line.ATE, "That %1$s hit the spot.", "Mm, %1$s.", "Much better.");
+		generic(Line.NO_FOOD, "There's nothing to eat. Could someone bring food to the chest?", "We're out of food.");
+		generic(Line.STARVING, "I'm starving!", "I need food, now.");
+		generic(Line.SLEEPY, "I'm worn out. Time for bed.", "Off to sleep.", "Goodnight, everyone.");
+		generic(Line.RESTED, "Slept like a log.", "I feel rested.", "Ready for a new day.");
+		generic(Line.CHAT, "Hey %1$s, how's it going?", "%1$s! Got a minute?", "How are you, %1$s?");
+		generic(Line.CHAT_REPLY, "Not bad, thanks for asking.", "Good to see you too.", "Can't complain.");
+		generic(Line.LEISURE, "Time for %1$s.", "A little %1$s, I think.", "I've earned some %1$s.");
+		generic(Line.COSY, "Nothing like a warm fire.", "Ah, that's cosy.", "Warming up a bit.");
+		generic(Line.MOOD_LOW, "I'm not feeling my best. It's the %1$s.", "Could be better, honestly.");
+		generic(Line.MOOD_GREAT, "What a lovely day!", "I feel great.", "Life's good at this camp.");
+		generic(Line.HELPING_OUT, "I'll help with %1$s.", "Nobody's on %1$s, so I'll do it.", "Lending a hand: %1$s.");
 	}
 
 	/** Fern, the farmer: patient, caring and warm; crops, and making sure everyone has eaten. */

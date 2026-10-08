@@ -76,7 +76,7 @@ public final class DeliverToBuilderTask implements CompanionTask {
 	@Override
 	public double score(CompanionEntity c) {
 		Map<CampNeeds.Need, Integer> shortage = CampNeeds.buildShortage();
-		if (shortage.isEmpty() || c.backpack().count(wanted(c.backpack(), shortage)) < MIN_LOAD) {
+		if (c.friendId() == FriendId.OAK || shortage.isEmpty() || c.backpack().count(wanted(c.backpack(), shortage)) < MIN_LOAD) {
 			return 0;
 		}
 		// The builder is stuck without this load, so handing it over beats any gathering (felling scores at most

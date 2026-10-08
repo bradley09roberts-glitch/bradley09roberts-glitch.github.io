@@ -71,7 +71,35 @@ public enum Line {
 	/** The camp reached a new stage. %1$s = stage name. */
 	CAMP_UP(Priority.IMPORTANT, 0),
 	/** Idle small talk with no arguments. */
-	IDLE(Priority.CASUAL, 3600);
+	IDLE(Priority.CASUAL, 3600),
+
+	// Everyday needs (Sims-style)
+	/** Getting hungry; going to find food. */
+	HUNGRY(Priority.CASUAL, 2400),
+	/** Just ate. %1$s = food name. */
+	ATE(Priority.CASUAL, 1200),
+	/** Hungry and there is no food in the backpack or the supply chest. */
+	NO_FOOD(Priority.IMPORTANT, 4800),
+	/** Very hungry: starving hurts. */
+	STARVING(Priority.DANGER, 1200),
+	/** Tired; going to bed. */
+	SLEEPY(Priority.CASUAL, 6000),
+	/** Woke up rested. */
+	RESTED(Priority.CASUAL, 6000),
+	/** Opening a chat with another friend. %1$s = the other friend's name. */
+	CHAT(Priority.CASUAL, 600),
+	/** Answering a friend who started a chat. %1$s = the other friend's name. */
+	CHAT_REPLY(Priority.CASUAL, 600),
+	/** Starting some fun. %1$s = what they are doing, e.g. "skipping stones". */
+	LEISURE(Priority.CASUAL, 1200),
+	/** Warming up by the fire or under a roof. */
+	COSY(Priority.CASUAL, 2400),
+	/** Mood has dropped low. %1$s = the need that is worst, e.g. "hunger". */
+	MOOD_LOW(Priority.CASUAL, 6000),
+	/** Mood is great. */
+	MOOD_GREAT(Priority.CASUAL, 9600),
+	/** Picking up work outside their speciality. %1$s = the job, e.g. "harvesting crops". */
+	HELPING_OUT(Priority.CASUAL, 2400);
 
 	/** How a line is rate-limited and who hears it. */
 	public enum Priority {

@@ -63,6 +63,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.goal.StayGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.WorkGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.role.RolePassives;
+import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskRegistry;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
@@ -70,6 +71,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.item.BackpackItem;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
+import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
  * A human companion. One entity type serves all nine friends; the synced {@link FriendId} selects the skin, name,
@@ -82,6 +84,8 @@ public class CompanionEntity extends PathfinderMob {
 	private final Backpack backpack = new Backpack();
 	private final Actions actions = new Actions(this);
 	private @Nullable TaskScheduler scheduler;
+	private final Needs needs = new Needs();
+	private boolean asleep;
 	private @Nullable FriendId schedulerFor;
 	private @Nullable BlockPos homePos;
 	private @Nullable BlockPos stayPos;
@@ -210,6 +214,29 @@ public class CompanionEntity extends PathfinderMob {
 		return actions;
 	}
 
+	/** Hunger, energy, social, fun and comfort, and the mood they make. */
+	public Needs needs() {
+		return needs;
+	}
+
+	/** Set by the sleep job while this friend is sleeping (energy then refills instead of draining). */
+	public void setAsleep(boolean asleep) {
+		this.asleep = asleep;
+	}
+
+	public boolean isAsleep() {
+		return asleep;
+	}
+
+	/**
+	 * How fast this friend works at a kind of job: their skill at it (specialists are quicker) times their mood,
+	 * times the team's work rhythm.
+	 */
+	public double workSpeed(WorldEditGuard.@Nullable Reason reason) {
+		Role work = reason == null ? null : Speciality.roleFor(reason);
+		return Speciality.skill(friendId(), work) * needs.workSpeed() * Unity.workSpeed(this);
+	}
+
 	/** The job scheduler, built for this friend's role on first use. */
 	public TaskScheduler scheduler() {
 		FriendId id = friendId();
@@ -321,9 +348,18 @@ public class CompanionEntity extends PathfinderMob {
 				backpack.setCapacity(slots);
 			}
 		}
-		// Out of combat, friends recover like a well-fed player (1 health every 4 seconds).
+		if (this.tickCount % 20 == 0) {
+			CompanionTask job = mode() == CompanionMode.WORK ? scheduler().current() : null;
+			boolean working = mode() == CompanionMode.FOLLOW || job != null && !job.id().startsWith("needs.") && !job.id().equals("common.idle");
+			needs.tickSecond(this, working, asleep);
+		}
+		// Starving hurts, as on Normal difficulty: down to one heart, never to death on its own.
+		if (this.tickCount % 80 == 0 && needs.get(Needs.Need.HUNGER) <= 0 && getHealth() > 2.0F) {
+			hurtServer(level, level.damageSources().starve(), 1.0F);
+		}
+		// Out of combat and not starving, friends recover like a well-fed player (1 health every 4 seconds).
 		if (this.tickCount % 80 == 0 && getHealth() < getMaxHealth() && this.tickCount - lastDamagedTick > 200
-			&& getTarget() == null && !isOnFire()) {
+			&& getTarget() == null && !isOnFire() && needs.get(Needs.Need.HUNGER) > 10) {
 			heal(1.0F);
 		}
 		RolePassives.tick(this);
@@ -404,7 +440,8 @@ public class CompanionEntity extends PathfinderMob {
 	public Component statusLine() {
 		String health = String.format("%.0f/%.0f", getHealth(), getMaxHealth());
 		return Component.literal(friendId().displayName() + " (" + friendId().role().title() + ") - " + activity()
-			+ " - health " + health + " - backpack " + backpack.usedSlots() + "/" + backpack.capacity())
+			+ " - health " + health + " - mood " + needs.mood().word() + " - backpack " + backpack.usedSlots() + "/"
+			+ backpack.capacity())
 			.withStyle(ChatFormatting.GRAY);
 	}
 
@@ -597,8 +634,24 @@ public class CompanionEntity extends PathfinderMob {
 		if (food.isEmpty()) {
 			return false;
 		}
+		eat(food);
+		return true;
+	}
+
+	/** How much hunger a food satisfies: six points per point of nutrition (bread 30, cooked beef 48). */
+	public static double hungerValue(ItemStack food) {
+		FoodProperties props = food.get(DataComponents.FOOD);
+		return props != null ? Math.max(1, props.nutrition()) * 6.0 : 6.0;
+	}
+
+	/**
+	 * Eats one food item that has already been taken out of the backpack or chest: it fills hunger, heals a little,
+	 * and leaves any bowl or bottle behind in the backpack.
+	 */
+	public void eat(ItemStack food) {
 		FoodProperties props = food.get(DataComponents.FOOD);
 		heal(props != null ? Math.max(1, props.nutrition()) : 2);
+		needs.add(Needs.Need.HUNGER, hungerValue(food));
 		UseRemainder remainder = food.get(DataComponents.USE_REMAINDER);
 		if (remainder != null) {
 			ItemStack left = backpack.insert(remainder.convertInto().create());
@@ -608,7 +661,6 @@ public class CompanionEntity extends PathfinderMob {
 		}
 		this.playSound(SoundEvents.GENERIC_EAT.value(), 0.8F, 1.0F);
 		this.swingArm();
-		return true;
 	}
 
 	// ------------------------------------------------------------------- death
@@ -692,6 +744,7 @@ public class CompanionEntity extends PathfinderMob {
 			output.putString("Leader", leaderId.toString());
 		}
 		backpack.save(output);
+		needs.save(output);
 	}
 
 	@Override
@@ -711,5 +764,6 @@ public class CompanionEntity extends PathfinderMob {
 			}
 		});
 		backpack.load(input);
+		needs.load(input);
 	}
 }

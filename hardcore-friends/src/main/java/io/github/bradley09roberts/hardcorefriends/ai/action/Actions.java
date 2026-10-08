@@ -190,7 +190,7 @@ public final class Actions {
 		ItemStack tool = c.getMainHandItem();
 		float toolSpeed = tool.isEmpty() ? 1.0F : tool.getDestroySpeed(state);
 		boolean correct = !state.requiresCorrectToolForDrops() || (!tool.isEmpty() && tool.isCorrectToolForDrops(state));
-		float perTick = hardness == 0 ? 1.0F : (float) (toolSpeed / hardness / (correct ? 30.0F : 100.0F) * Unity.workSpeed(c));
+		float perTick = hardness == 0 ? 1.0F : (float) (toolSpeed / hardness / (correct ? 30.0F : 100.0F) * c.workSpeed(reason));
 		miningProgress += perTick;
 		if (--swingTimer <= 0) {
 			c.swingArm();

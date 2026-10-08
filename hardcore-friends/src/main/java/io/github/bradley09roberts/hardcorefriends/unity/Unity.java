@@ -101,6 +101,11 @@ public final class Unity {
 		return data.unity() - before;
 	}
 
+	/** Two friends had a chat: +1, at most 30 a day. */
+	public static void chat(ServerLevel level) {
+		add(level, "chat", 1, 30);
+	}
+
 	public static void lose(MinecraftServer server, int amount) {
 		CampData data = Camp.data(server);
 		data.setUnity(data.unity() - amount);
