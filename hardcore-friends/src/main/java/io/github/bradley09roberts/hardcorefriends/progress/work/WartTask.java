@@ -281,7 +281,7 @@ public final class WartTask implements CompanionTask {
 	}
 
 	private static boolean bedSpot(CompanionEntity c, ServerLevel level, CampData data, BlockPos spot) {
-		if (!level.isLoaded(spot) || !level.getBlockState(spot).isAir() || !level.getBlockState(spot.above()).isAir()) {
+		if (!Trips.loaded(level, spot, 5) || !level.getBlockState(spot).isAir() || !level.getBlockState(spot.above()).isAir()) {
 			return false;
 		}
 		BlockState ground = level.getBlockState(spot.below());

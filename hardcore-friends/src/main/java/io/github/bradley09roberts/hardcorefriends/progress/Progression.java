@@ -5,9 +5,12 @@ import java.util.Set;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 
 import io.github.bradley09roberts.hardcorefriends.ai.task.SpecialityTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskRegistry;
@@ -52,6 +55,12 @@ public final class Progression {
 		jobs();
 		FriendsCommand.EXTENSIONS.add(GoalsCommand::register);
 		ServerTickEvents.END_SERVER_TICK.register(ProgressPlan::tick);
+		// Obsidian a player breaks is no longer the friends' cast obsidian, whatever is put there later.
+		PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, blockEntity) -> {
+			if (level instanceof ServerLevel serverLevel && state.is(Blocks.OBSIDIAN)) {
+				ProgressData.get(serverLevel.getServer()).forgetCast(serverLevel, pos);
+			}
+		});
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			CampStock.clear();
 			ProgressPlan.clear();

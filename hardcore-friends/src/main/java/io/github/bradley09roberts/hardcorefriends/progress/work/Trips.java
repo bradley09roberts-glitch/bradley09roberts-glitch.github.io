@@ -66,6 +66,12 @@ final class Trips {
 		return null;
 	}
 
+	/** True when every chunk within {@code r} blocks (sideways) of the block is loaded, so looking round it loads none. */
+	static boolean loaded(ServerLevel level, BlockPos pos, int r) {
+		return level.hasChunkAt(pos.getX() - r, pos.getZ() - r) && level.hasChunkAt(pos.getX() + r, pos.getZ() - r)
+			&& level.hasChunkAt(pos.getX() - r, pos.getZ() + r) && level.hasChunkAt(pos.getX() + r, pos.getZ() + r);
+	}
+
 	static int take(Container chest, CompanionEntity c, Predicate<ItemStack> filter, int max) {
 		return max <= 0 ? 0 : SupplyChest.withdraw(chest, c.backpack(), filter, max);
 	}

@@ -29,6 +29,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.camp.Crafting;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
@@ -148,7 +149,11 @@ public final class DeepMineTask implements CompanionTask {
 				}
 			}
 		}
-		return 50 * Math.max(ProgressPlan.weight(server, Items.DIAMOND), ProgressPlan.weight(server, Items.LAPIS_LAZULI));
+		// At least what the staircase mine near camp scores for stone and ore (this mine yields both too), so while
+		// diamonds are wanted the miner works down here rather than up there.
+		double wanted = Math.max(ProgressPlan.weight(server, Items.DIAMOND), ProgressPlan.weight(server, Items.LAPIS_LAZULI));
+		double camp = Math.max(CampNeeds.weight(CampNeeds.Need.STONE), CampNeeds.weight(CampNeeds.Need.ORE));
+		return 50 * Math.max(wanted, camp);
 	}
 
 	/** The plan wants what only deep mining finds: diamonds, or lapis for enchanting. */

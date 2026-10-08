@@ -414,7 +414,7 @@ public final class CaneTask implements CompanionTask {
 		candidates.sort(Comparator.comparingDouble(p -> p.distSqr(anchor)));
 		int checked = 0;
 		for (BlockPos t : candidates) {
-			if (!level.isLoaded(t) || !Crops.isTillable(level.getBlockState(t)) || !level.getBlockState(t.above()).isAir()) {
+			if (!Trips.loaded(level, t, 5) || !Crops.isTillable(level.getBlockState(t)) || !level.getBlockState(t.above()).isAir()) {
 				continue;
 			}
 			if (++checked > 200) {

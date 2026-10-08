@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.mine.MinePlan;
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprint;
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
@@ -209,8 +210,9 @@ public final class WorldEditGuard {
 				if (!inResourceZone(c, pos)) {
 					return Verdict.deny("outside the mining area");
 				}
-				// A miner may take back the cobblestone seals the friends put in their own tunnels.
-				boolean ownSeal = ownBlock && (state.is(Blocks.COBBLESTONE) || state.is(Blocks.COBBLED_DEEPSLATE));
+				// A miner may take back the cobblestone seals the friends put in their own tunnels (deep in a mine's box).
+				boolean ownSeal = ownBlock && (state.is(Blocks.COBBLESTONE) || state.is(Blocks.COBBLED_DEEPSLATE))
+					&& inMineTunnels(level, data, pos);
 				if (!state.is(ModTags.MINEABLE_NATURAL) && !ownSeal) {
 					return Verdict.deny("not natural stone or ore");
 				}
@@ -547,6 +549,24 @@ public final class WorldEditGuard {
 				if (!p.isFoundation() && p.pos().equals(pos)) {
 					return true;
 				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Inside the box of one of the friends' mines (the staircase mine or the deep one) and well below the camp: where
+	 * the miners' own seals are, and never a building's cobblestone.
+	 */
+	private static boolean inMineTunnels(ServerLevel level, CampData data, BlockPos pos) {
+		Optional<BlockPos> centre = data.campPos();
+		if (centre.isPresent() && pos.getY() >= centre.get().getY() - 4) {
+			return false;
+		}
+		for (String key : new String[] {MinePlan.KEY, MinePlan.DEEP_KEY}) {
+			MinePlan plan = MinePlan.of(data, key);
+			if (plan.isIn(level) && plan.inBox(pos)) {
+				return true;
 			}
 		}
 		return false;

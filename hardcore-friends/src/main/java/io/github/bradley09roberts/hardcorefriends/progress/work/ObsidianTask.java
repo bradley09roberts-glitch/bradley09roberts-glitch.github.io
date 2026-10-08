@@ -2,8 +2,10 @@ package io.github.bradley09roberts.hardcorefriends.progress.work;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -62,6 +64,7 @@ public final class ObsidianTask implements CompanionTask {
 	private static final int WORK_BOX = 4;
 	private static final double REACH = 4.4;
 	private static final String POI_LAVA = "lava";
+	private static final int SKIP_TICKS = 24000;
 
 	private enum Phase {
 		FETCH,
@@ -76,6 +79,10 @@ public final class ObsidianTask implements CompanionTask {
 	private @Nullable BlockPos mining;
 	/** Blocks the guard refused this run. */
 	private final Set<BlockPos> skip = new HashSet<>();
+	/** The lava or obsidian this run went for. */
+	private @Nullable BlockPos target;
+	/** Places with no way to them, left alone for a day. */
+	private final Map<BlockPos, Long> skipUntil = new HashMap<>();
 	private @Nullable BlockPos water;
 	private int casts;
 	private int mined;
@@ -138,6 +145,7 @@ public final class ObsidianTask implements CompanionTask {
 		stand = null;
 		water = null;
 		mining = null;
+		target = null;
 		skip.clear();
 		casts = 0;
 		mined = 0;
@@ -256,7 +264,14 @@ public final class ObsidianTask implements CompanionTask {
 			return TaskStatus.FAILURE;
 		}
 		if (!c.actions().walkTo(spot, 0.6)) {
-			return c.actions().isStuck() ? finish() : TaskStatus.RUNNING;
+			if (c.actions().isStuck()) {
+				BlockPos t = target;
+				if (t != null) {
+					skipUntil.put(t, level.getGameTime() + SKIP_TICKS); // no way there (lava in a cave out of reach): leave it a day
+				}
+				return finish();
+			}
+			return TaskStatus.RUNNING;
 		}
 		if (!lavaSafe(level, c.blockPosition())) {
 			return finish(); // not where it looked safe from: leave it
@@ -409,7 +424,8 @@ public final class ObsidianTask implements CompanionTask {
 	/** Some face of the block is open to the air, so water can be poured on it. */
 	private static boolean exposed(ServerLevel level, BlockPos pos) {
 		for (Direction d : Direction.values()) {
-			if (level.getBlockState(pos.relative(d)).isAir()) {
+			BlockPos n = pos.relative(d);
+			if (level.isLoaded(n) && level.getBlockState(n).isAir()) {
 				return true;
 			}
 		}
@@ -436,12 +452,20 @@ public final class ObsidianTask implements CompanionTask {
 	 * A dry, lava-safe standing spot within reach of work: first cast obsidian left from before, then still lava at the
 	 * remembered lava spots in the gathering ring. Bounded: a handful of spots, each looked at in a small box.
 	 */
-	private static @Nullable BlockPos findStand(CompanionEntity c, ServerLevel level) {
+	private @Nullable BlockPos findStand(CompanionEntity c, ServerLevel level) {
 		CampData data = Camp.data(level.getServer());
+		ProgressData progress = ProgressData.get(level.getServer());
+		long now = level.getGameTime();
+		skipUntil.values().removeIf(until -> until <= now);
 		List<BlockPos> targets = new ArrayList<>();
-		for (BlockPos p : ProgressData.get(level.getServer()).castPositions(level, 8)) {
-			if (level.isLoaded(p) && level.getBlockState(p).is(Blocks.OBSIDIAN)) {
+		for (BlockPos p : progress.castPositions(level, 8)) {
+			if (!level.isLoaded(p)) {
+				continue;
+			}
+			if (level.getBlockState(p).is(Blocks.OBSIDIAN)) {
 				targets.add(p);
+			} else {
+				progress.forgetCast(level, p); // mined or gone: no longer ours to mine
 			}
 		}
 		List<CampData.Poi> lava = new ArrayList<>();
@@ -460,8 +484,12 @@ public final class ObsidianTask implements CompanionTask {
 			}
 		}
 		for (BlockPos target : targets) {
+			if (skipUntil.containsKey(target)) {
+				continue;
+			}
 			BlockPos spot = standFor(level, target, c.blockPosition());
 			if (spot != null) {
+				this.target = target;
 				return spot;
 			}
 		}

@@ -190,10 +190,17 @@ public final class MinePlan {
 
 	/**
 	 * Starts this plan as the continuation of another mine's staircase: the same entrance and box (reaching down to
-	 * {@code bottomY}), carrying on down from that mine's last step in the way it was heading.
+	 * {@code bottomY}), carrying on down from that mine's last step.
 	 */
 	public void beginBelow(MinePlan above, int bottomY) {
-		begin(above.entrance(), above.stairDir(), bottomY, above.dimension());
+		// Down at right angles to the corridor above (and never back under the stairs above), so the new steps cut
+		// through none of that mine's corridor or branches on their way below them.
+		Direction corridor = Direction.from2DDataValue(above.tag.getIntOr("cdir", above.stairDir().get2DDataValue()));
+		Direction dir = corridor.getClockWise();
+		if (dir == above.stairDir().getOpposite()) {
+			dir = corridor.getCounterClockWise();
+		}
+		begin(above.entrance(), dir, bottomY, above.dimension());
 		tag.putLong("stair", above.stairEnd().asLong());
 		tag.putInt("steps", above.stepsDug());
 		data.setDirty();

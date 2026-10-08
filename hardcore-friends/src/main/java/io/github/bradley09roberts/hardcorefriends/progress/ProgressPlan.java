@@ -35,8 +35,8 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  * {@value #INTERVAL} ticks the step in hand is checked against what the camp owns ({@link CampStock}); when it is met
  * Sage (or whoever plans in her place) announces it, the bond grows, and the next step becomes the goal. The plan also
  * says what the camp wants for the step in hand and the ones just after ({@link #wanted}): the plan's jobs score from
- * that, and the camp's ore need rises while iron or diamonds are wanted, so Flint mines deeper when diamonds are
- * wanted and the farm grows sugar cane when books are.
+ * that, and the camp's ore need rises while iron is wanted, so Flint mines deeper when diamonds are wanted, mines more
+ * iron in the iron age and the farm grows sugar cane when books are.
  *
  * <p>Other packages use this as the plan's public face: {@link #current}, {@link #complete} (the expedition work
  * finishes the stronghold, End portal and dragon steps), {@link #wants}/{@link #wanted}, {@link #stockTargets} and
@@ -267,7 +267,8 @@ public final class ProgressPlan {
 		int step = now == null ? Milestone.values().length : now.ordinal();
 		CampData camp = Camp.data(server);
 		boolean libraryDone = camp.isCompleted(Structures.LIBRARY) || enchantingPower(server) >= Stations.MAX_SHELVES;
-		boolean tableMade = libraryDone || s.total(Items.ENCHANTING_TABLE) > 0;
+		ServerLevel level = campLevel(server);
+		boolean tableMade = libraryDone || s.total(Items.ENCHANTING_TABLE) > 0 || level != null && Stations.enchantingTable(level) != null;
 		if (now == Milestone.IRON_AGE) {
 			target.put(Items.IRON_INGOT, IRON_STOCK + 3 * ironPickaxesNeeded(s) + 2 * ironSwordsNeeded(s));
 		}
@@ -336,14 +337,14 @@ public final class ProgressPlan {
 		return enchantingPower(server);
 	}
 
-	/** For the camp's needs: the ore need rises while the plan wants iron or diamonds. */
+	/** For the camp's needs: the ore need rises while the plan wants iron (the iron age). */
 	public static Map<CampNeeds.Need, Double> extraNeeds(MinecraftServer server) {
 		if (!enabled()) {
 			return Map.of();
 		}
 		Map<CampNeeds.Need, Double> map = new EnumMap<>(CampNeeds.Need.class);
-		if (wants(server, Items.IRON_INGOT) || wants(server, Items.DIAMOND)) {
-			map.put(CampNeeds.Need.ORE, 0.8);
+		if (wants(server, Items.IRON_INGOT)) {
+			map.put(CampNeeds.Need.ORE, 0.8); // diamonds are the deep mine's work, which the plan steers itself
 		}
 		return map;
 	}
