@@ -11,7 +11,7 @@ simulations, not live-match demonstrations.
 | Check | Result |
 |---|---|
 | `pnpm typecheck` (engine, ingest, tests/scripts, desktop) | pass |
-| `pnpm test` (Vitest, 9 files) | **113 / 113 pass** |
+| `pnpm test` (Vitest, 9 files) | **116 / 116 pass** |
 | Electron app launch on Linux (Xvfb), dev build | pass: main window visible; overlay always-on-top, non-focusable, positioned in the work area |
 | Electron app launch, **packaged** (asar, Linux `dir` build of the same app) | pass |
 | Settings persistence across relaunch | pass (expanded overlay and position restored) |
@@ -24,7 +24,8 @@ simulations, not live-match demonstrations.
 | Overlay over Deadlock (borderless or fullscreen) | **untested** (no game available) |
 | Screen reader on **a real Deadlock capture** (one user screenshot: sandbox, Tab view, 3 players) | first version **failed** (hundreds of false hits, wrong layout); after the fixes below: both real items read correctly and confidently, nothing else, with a sensible calibration; one stray icon with an oversized one |
 | Screen reader: synthetic benchmark (917 icons from the real item art with tier badges, 10 layouts) | 96.9% found; 99.6% of those identified correctly; **0 wrong among confident reads**; 0 false detections (details below) |
-| Screen reader: end to end in the Electron app (Linux/Xvfb, real `desktopCapturer` capture of a stand-in window showing a synthetic Tab view) | pass: calibrated with mouse drags, **53/53 items in 12/12 player columns**; after assigning players once, the hotkey read applied automatically |
+| Screen reader: end to end in the Electron app (Linux/Xvfb, real `desktopCapturer` capture of a stand-in window showing a synthetic Tab view) | pass: calibrated with mouse drags, **53/53 items in 12/12 player columns**, 96 item slots learned; after assigning players once, the hotkey read applied automatically |
+| Read on Tab, end to end (same setup; the "game" switched to a board with different builds, Tab held for 1 s with `xdotool`) | pass: the listener saw the key, captured once and **applied automatically, 40/40 items**, 12/12 players, in 0.21–0.24 s; a 0.1 s tap did not capture |
 | Screen capture on Windows | **pass** on the Windows CI runner (run [37781103812](https://github.com/bradley09roberts-glitch/bradley09roberts-glitch.github.io/actions/runs/37781103812)): 1024×768 desktop captured in 145 ms, overlay opacity restored |
 | Screen reader in a **real full match** (12 players, enemy items) | **untested**: the only real capture so far was a sandbox with bots that had no items |
 | Live game-state adapter | not available (no permitted interface) |
@@ -70,9 +71,10 @@ Windows runner smoke report (run 37773343166):
 
 The sub-100 ms local update target is met on this machine. Windows numbers were not measured.
 Nothing runs continuously for the screen reader: it captures and reads only when you press the
-hotkey (or a button). One read of a calibrated 1920×1080 Tab-view capture took 2.1–2.9 s in the
-Electron renderer here (≈1.2 s mean in the Node benchmark); the capture itself took 134 ms on
-Linux and 145 ms on the Windows CI runner.
+hotkey, a button or (if you turned it on) hold Tab. The opt-in Tab listener only waits for key
+events. Reading a 1920×1080 Tab view with the learned item slots took 0.2–0.26 s in the Electron
+renderer here. A scan without slots (the first read during calibration, or the old behaviour)
+takes 2.1–2.9 s. The capture itself took 134 ms on Linux and 145 ms on the Windows CI runner.
 
 ## Screen reader (experimental)
 
@@ -130,12 +132,22 @@ Regression tests keep two small crops of that capture (item icons only, `fixture
    full screen; the app captures it for real; the script calibrates with three drags; **53/53
    items in 12/12 columns**; portraits named 11 of 12 players; the script assigns all 12 once and
    applies; a second read through the global hotkey then **applied automatically** and the overlay
-   showed "Read 12 players · 53 items". Reads took 2.1–2.9 s here.
+   showed "Read 12 players · 53 items".
+6. *Read on Tab* (same script): the read-on-Tab option is ticked in the Screen tab, the stand-in
+   game switches to `screenshots/synthetic-scoreboard-next.png` (13 items fewer, some swapped,
+   different scenery) and gets focus, and `xdotool` holds Tab for 1 s. The listener reported 1
+   press; the app captured once and **applied automatically: 12 players, 40/40 items, 0 wrong**,
+   in 212–241 ms, using the 96 slots learned at calibration. A second, 0.1 s tap was counted but
+   did not capture. The engine test "calibrate once" covers the same idea without Electron: a
+   later board with different builds and empty cards, and a screen without a scoreboard, which
+   gives no rows and changes nothing.
 
 ### Not verified
 
 - A real full match: 12 players, enemy items under enemy cards (the sandbox bots had none).
 - Weapon and spirit badge colours (assumed orange and purple until you confirm such an icon).
+- The Tab listener on a real Windows PC with Deadlock focused (the CI runner only checks that it
+  starts and sees a Tab key sent by a script).
 - Capture over exclusive fullscreen (expected to come back black; the app reports that), HDR,
   multi-monitor setups other than "capture the display under the mouse", and Windows speed.
 
@@ -186,6 +198,9 @@ file limit). Rebuild with `pnpm dist:win`.
 | `screenshots/11-screen-review.png` | Review: who each player is and every icon, before applying (first read of a match) |
 | `screenshots/12-overlay-screen-note.png` | Overlay after a hotkey read ("Read 12 players · 53 items") |
 | `screenshots/13-match-after-screen-read.png` | Match tab afterwards: items marked "seen on screen" |
+| `screenshots/14-screen-read-on-tab.png` | After holding Tab: a different board read through the learned slots (dashed) and applied automatically |
+| `screenshots/15-screen-tab-setting.png` | Screen reader settings: slots learned, "Read automatically every time I hold Tab", listener status |
+| `screenshots/synthetic-scoreboard-next.png` | The second **synthetic** board (different builds) used for the Tab read |
 | `screenshots/synthetic-scoreboard.png` | The **synthetic** Tab-view mock (not a Deadlock screenshot) |
 
 Under Xvfb (no compositor), the transparent overlay background renders black.
@@ -193,24 +208,6 @@ Under Xvfb (no compositor), the transparent overlay background renders black.
 ## All tests
 
 ```
- ✓ apps/desktop/test/desktop.test.ts > overlay placement > anchors inside the work area of the chosen display, scaled
- ✓ apps/desktop/test/desktop.test.ts > overlay placement > supports monitors with negative origins and falls back to primary when a display is gone
- ✓ apps/desktop/test/desktop.test.ts > overlay placement > keeps custom positions resolution-independent (ultrawide)
- ✓ apps/desktop/test/desktop.test.ts > overlay placement > clamps an off-screen custom offset and sizes to content when known
- ✓ apps/desktop/test/desktop.test.ts > settings > falls back field by field for invalid values
- ✓ apps/desktop/test/desktop.test.ts > settings > patches nested sections without dropping siblings and ignores unknown keys
- ✓ apps/desktop/test/desktop.test.ts > settings > keeps older settings files working when new sections and hotkeys are added
- ✓ apps/desktop/test/desktop.test.ts > settings > accepts bare F-keys and modifier chords as hotkeys, nothing else
- ✓ apps/desktop/test/desktop.test.ts > settings > accepts a valid screen calibration and rejects a malformed one
- ✓ apps/desktop/test/desktop.test.ts > settings > persists atomically and reloads
- ✓ apps/desktop/test/desktop.test.ts > decision log store > appends validated entries and deletes everything on request
- ✓ apps/desktop/test/desktop.test.ts > overlay model > is schema-valid for every fixture
- ✓ packages/ingest/test/ingest.test.ts > ingest > falls back to the last cached response when the API fails (outage)
- ✓ packages/ingest/test/ingest.test.ts > ingest > derives tier costs from build currency deltas and cross-checks the level schedule
- ✓ packages/ingest/test/ingest.test.ts > ingest > skips malformed items with warnings instead of inventing values
- ✓ packages/ingest/test/ingest.test.ts > quality gate > accepts an equivalent snapshot
- ✓ packages/ingest/test/ingest.test.ts > quality gate > rejects a valid but degraded snapshot (statistics missing) and keeps last-known-good
- ✓ packages/ingest/test/ingest.test.ts > quality gate > rejects an older client build
  ✓ packages/engine/test/data.test.ts > versioned snapshot > validates and carries provenance
  ✓ packages/engine/test/data.test.ts > versioned snapshot > content hash matches an independent SHA-256 and the stored value
  ✓ packages/engine/test/data.test.ts > versioned snapshot > counts come from data, not a remembered roster size
@@ -221,70 +218,12 @@ Under Xvfb (no compositor), the transparent overlay background renders black.
  ✓ packages/engine/test/data.test.ts > 9. patch changes invalidate affected interactions > a curated profile referencing a removed item falls back to the data-derived profile
  ✓ packages/engine/test/data.test.ts > 9. patch changes invalidate affected interactions > an outdated client build lowers confidence to low and explains why
  ✓ packages/engine/test/data.test.ts > 9. patch changes invalidate affected interactions > offline use is labelled unknown, not current
- ✓ packages/engine/test/features.test.ts > coach features > threat panel shows at most three threats and prefers observed evidence
- ✓ packages/engine/test/features.test.ts > coach features > lane threats come from lane opponents during laning
- ✓ packages/engine/test/features.test.ts > coach features > power spike shows souls/points remaining and no invented ETA
- ✓ packages/engine/test/features.test.ts > coach features > build repair keeps off-route purchases and drops overlapping route items but never fundamentals
- ✓ packages/engine/test/features.test.ts > coach features > team utility explains coverage and who should buy
- ✓ packages/engine/test/features.test.ts > coach features > active hints quote item behaviour and never claim enemy cooldowns
- ✓ packages/engine/test/features.test.ts > coach features > what-if: adding an enemy healing item changes the advice and explains why
- ✓ packages/engine/test/features.test.ts > coach features > what-if: changing souls or archetype is reflected
- ✓ packages/engine/test/features.test.ts > coach features > post-match review: at most three lessons, decision-time only, with a caveat
- ✓ packages/engine/test/features.test.ts > coach features > unsupported modes produce no purchase advice
- ✓ packages/engine/test/features.test.ts > coach features > pinned, rejected and deferred items are respected with reasons
- ✓ packages/engine/test/features.test.ts > performance (local scoring cost) > full evaluate() stays well under 100 ms after warm-up
- ✓ packages/engine/test/planner.test.ts > 7. ability planner > uses tier costs derived from data (unlock is a separate currency)
- ✓ packages/engine/test/planner.test.ts > 7. ability planner > spends an available unlock before points, in plan order
- ✓ packages/engine/test/planner.test.ts > 7. ability planner > recommends the next legal tier with exact cost and data text
- ✓ packages/engine/test/planner.test.ts > 7. ability planner > never proposes a tier before its prerequisite or on a locked ability
- ✓ packages/engine/test/planner.test.ts > 7. ability planner > holds points for a key breakpoint instead of spending them elsewhere
- ✓ packages/engine/test/planner.test.ts > 7. ability planner > starts from the real state even if it diverges from the plan (no refunds assumed)
- ✓ packages/engine/test/planner.test.ts > 7. ability planner > flags inconsistent state instead of guessing
- ✓ packages/engine/test/planner.test.ts > 7. ability planner > asks for unspent points instead of assuming one point per level
- ✓ packages/engine/test/planner.test.ts > 7. ability planner > reports nothing to do when everything is maxed
- ✓ packages/engine/test/planner.test.ts > 7. ability planner > level schedule from data grants 4 unlocks and 32 points at max
- ✓ packages/engine/test/planner.test.ts > 7. ability planner > every playable hero gets a legal plan that can reach max with the granted points
- ✓ packages/engine/test/profiles.test.ts > hero profiles > every curated profile resolves against current data with no errors
- ✓ packages/engine/test/profiles.test.ts > hero profiles > covers every currently playable hero, distinguishing curated from data-derived
- ✓ packages/engine/test/profiles.test.ts > hero profiles > curated breakpoints quote text that exists in the current tier data
- ✓ packages/engine/test/profiles.test.ts > hero profiles > data-derived profiles never invent items: every fundamental exists and is purchasable
- ✓ packages/engine/test/scenarios.test.ts > 1. same hero, different defensive advice for observed weapon vs spirit builds > answers weapon damage with weapon-defence mechanics
- ✓ packages/engine/test/scenarios.test.ts > 1. same hero, different defensive advice for observed weapon vs spirit builds > answers spirit damage with spirit-defence mechanics
- ✓ packages/engine/test/scenarios.test.ts > 1. same hero, different defensive advice for observed weapon vs spirit builds > produces different purchases for the two builds
- ✓ packages/engine/test/scenarios.test.ts > 2. healing reduction: prioritised when relevant and applicable, not redundant > weapon Haze gets bullet-applied anti-heal against observed + reported healing
- ✓ packages/engine/test/scenarios.test.ts > 2. healing reduction: prioritised when relevant and applicable, not redundant > spirit Seven gets spirit-applied anti-heal for the same threat
- ✓ packages/engine/test/scenarios.test.ts > 2. healing reduction: prioritised when relevant and applicable, not redundant > does not recommend a second anti-heal when one is already owned
- ✓ packages/engine/test/scenarios.test.ts > 2. healing reduction: prioritised when relevant and applicable, not redundant > an ally's relevant anti-heal reduces (but does not zero) its priority in teamfights
- ✓ packages/engine/test/scenarios.test.ts > 3. urgency: urgent threat may delay core, uncertain minor threat does not > roster-only threats keep the core route
- ✓ packages/engine/test/scenarios.test.ts > 3. urgency: urgent threat may delay core, uncertain minor threat does not > an urgent reported spirit burst promotes a spirit answer over core
- ✓ packages/engine/test/scenarios.test.ts > 4. unaffordable target becomes SAVE FOR > returns SAVE with souls remaining and no BUY NOW
- ✓ packages/engine/test/scenarios.test.ts > 4. unaffordable target becomes SAVE FOR > never offers an unaffordable BUY NOW across all fixtures
- ✓ packages/engine/test/scenarios.test.ts > 5. owned components reduce the remaining cost; upgrades are legal > every multi-component item deducts each owned component's cost and reuses its slot
- ✓ packages/engine/test/scenarios.test.ts > 5. owned components reduce the remaining cost; upgrades are legal > recommendation shows the reduced price when you own a component
- ✓ packages/engine/test/scenarios.test.ts > 5. owned components reduce the remaining cost; upgrades are legal > never recommends a component you already upgraded
- ✓ packages/engine/test/scenarios.test.ts > 5. owned components reduce the remaining cost; upgrades are legal > flags an impossible inventory (component together with its upgrade)
- ✓ packages/engine/test/scenarios.test.ts > 6. full inventory > proposes a valid replacement (sell the weakest item) late game
- ✓ packages/engine/test/scenarios.test.ts > 6. full inventory > explains no-purchase when every slot is locked core and nothing upgrades in place
- ✓ packages/engine/test/scenarios.test.ts > 8. weak or stale observations lower certainty instead of inventing state > souls entered long ago lower confidence and are labelled
- ✓ packages/engine/test/scenarios.test.ts > 8. weak or stale observations lower certainty instead of inventing state > missing souls is not treated as zero
- ✓ packages/engine/test/scenarios.test.ts > 8. weak or stale observations lower certainty instead of inventing state > unobserved enemy items do not count as evidence
- ✓ packages/engine/test/scenarios.test.ts > 8. weak or stale observations lower certainty instead of inventing state > stale enemy-item observations contribute less than fresh ones
- ✓ packages/engine/test/scenarios.test.ts > 11. recommendation stability > keeps the previous BUY NOW when the new top is within the stability margin
- ✓ packages/engine/test/scenarios.test.ts > 11. recommendation stability > allows an urgent, well-supported change
- ✓ packages/engine/test/scenarios.test.ts > 12. a new match cannot inherit the previous match > clears roster, items and threats on a new match id
- ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > drops out-of-order observations by game time
- ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > preserves a user correction against a lower-authority or not-clearly-newer observation
- ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > allows a clearly newer, high-confidence verified observation to supersede a correction
- ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > a deliberate new user correction replaces the old one
- ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > rejects replay/spectator data in a live store and live data in a replay store
- ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > reconnecting to the same match keeps state; a hero change clears hero-scoped fields
- ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > pausing stops the match clock extrapolation
- ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > marks values aging/stale with field-specific policies
- ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > changing the enemy roster removes item observations for heroes no longer present
- ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > ignores observations after the match ended
- ✓ packages/engine/test/state.test.ts > 10. ambiguous (OCR-style) observations require explicit user resolution > does not apply any candidate until the user chooses
- ✓ packages/engine/test/state.test.ts > 10. ambiguous (OCR-style) observations require explicit user resolution > applies exactly the chosen candidate (not the first) as a user correction
- ✓ packages/engine/test/state.test.ts > 10. ambiguous (OCR-style) observations require explicit user resolution > rejecting all candidates leaves state unchanged
+ ✓ packages/ingest/test/ingest.test.ts > ingest > falls back to the last cached response when the API fails (outage)
+ ✓ packages/ingest/test/ingest.test.ts > ingest > derives tier costs from build currency deltas and cross-checks the level schedule
+ ✓ packages/ingest/test/ingest.test.ts > ingest > skips malformed items with warnings instead of inventing values
+ ✓ packages/ingest/test/ingest.test.ts > quality gate > accepts an equivalent snapshot
+ ✓ packages/ingest/test/ingest.test.ts > quality gate > rejects a valid but degraded snapshot (statistics missing) and keeps last-known-good
+ ✓ packages/ingest/test/ingest.test.ts > quality gate > rejects an older client build
  ✓ packages/engine/test/vision.test.ts > vision: primitives > base64 round-trips arbitrary bytes
  ✓ packages/engine/test/vision.test.ts > vision: primitives > thumbnail averages by area and marks off-image cells transparent
  ✓ packages/engine/test/vision.test.ts > vision: templates > template file is valid and covers every snapshot item and playable hero
@@ -299,11 +238,90 @@ Under Xvfb (no compositor), the transparent overlay background renders black.
  ✓ packages/engine/test/vision.test.ts > vision: refusing bad input > warns when the capture's aspect ratio differs from the calibration
  ✓ packages/engine/test/vision.test.ts > vision: refusing bad input > calibration rectangles round-trip through fractions
  ✓ packages/engine/test/vision.test.ts > vision: a real Deadlock HUD (crops of a user capture) > reads the two scoreboard items under a player card (17 px, tier badges)
+ ✓ packages/engine/test/scenarios.test.ts > 1. same hero, different defensive advice for observed weapon vs spirit builds > answers weapon damage with weapon-defence mechanics
+ ✓ packages/engine/test/scenarios.test.ts > 1. same hero, different defensive advice for observed weapon vs spirit builds > answers spirit damage with spirit-defence mechanics
+ ✓ packages/engine/test/scenarios.test.ts > 1. same hero, different defensive advice for observed weapon vs spirit builds > produces different purchases for the two builds
+ ✓ packages/engine/test/scenarios.test.ts > 2. healing reduction: prioritised when relevant and applicable, not redundant > weapon Haze gets bullet-applied anti-heal against observed + reported healing
+ ✓ packages/engine/test/scenarios.test.ts > 2. healing reduction: prioritised when relevant and applicable, not redundant > spirit Seven gets spirit-applied anti-heal for the same threat
+ ✓ packages/engine/test/scenarios.test.ts > 2. healing reduction: prioritised when relevant and applicable, not redundant > does not recommend a second anti-heal when one is already owned
+ ✓ packages/engine/test/scenarios.test.ts > 2. healing reduction: prioritised when relevant and applicable, not redundant > an ally's relevant anti-heal reduces (but does not zero) its priority in teamfights
+ ✓ packages/engine/test/scenarios.test.ts > 3. urgency: urgent threat may delay core, uncertain minor threat does not > roster-only threats keep the core route
+ ✓ packages/engine/test/scenarios.test.ts > 3. urgency: urgent threat may delay core, uncertain minor threat does not > an urgent reported spirit burst promotes a spirit answer over core
+ ✓ packages/engine/test/scenarios.test.ts > 4. unaffordable target becomes SAVE FOR > returns SAVE with souls remaining and no BUY NOW
  ✓ packages/engine/test/vision.test.ts > vision: a real Deadlock HUD (crops of a user capture) > reads the player's own inventory icons (35 px)
  ✓ packages/engine/test/vision.test.ts > vision: a real Deadlock HUD (crops of a user capture) > learns the badge hue from a confirmed icon (vitality ≈ 76°)
  ✓ packages/engine/test/vision.test.ts > vision: Tab-view columns over busy scenery > calibration notices the tier badges and learns the marked icon's badge hue
  ✓ packages/engine/test/vision.test.ts > vision: Tab-view columns over busy scenery > groups items under each card and names players from portraits
+ ✓ packages/engine/test/scenarios.test.ts > 4. unaffordable target becomes SAVE FOR > never offers an unaffordable BUY NOW across all fixtures
+ ✓ packages/engine/test/features.test.ts > coach features > threat panel shows at most three threats and prefers observed evidence
+ ✓ packages/engine/test/features.test.ts > coach features > lane threats come from lane opponents during laning
+ ✓ packages/engine/test/scenarios.test.ts > 5. owned components reduce the remaining cost; upgrades are legal > every multi-component item deducts each owned component's cost and reuses its slot
+ ✓ packages/engine/test/scenarios.test.ts > 5. owned components reduce the remaining cost; upgrades are legal > recommendation shows the reduced price when you own a component
+ ✓ packages/engine/test/scenarios.test.ts > 5. owned components reduce the remaining cost; upgrades are legal > never recommends a component you already upgraded
+ ✓ packages/engine/test/scenarios.test.ts > 5. owned components reduce the remaining cost; upgrades are legal > flags an impossible inventory (component together with its upgrade)
+ ✓ packages/engine/test/scenarios.test.ts > 6. full inventory > proposes a valid replacement (sell the weakest item) late game
+ ✓ packages/engine/test/scenarios.test.ts > 6. full inventory > explains no-purchase when every slot is locked core and nothing upgrades in place
+ ✓ packages/engine/test/scenarios.test.ts > 8. weak or stale observations lower certainty instead of inventing state > souls entered long ago lower confidence and are labelled
+ ✓ packages/engine/test/features.test.ts > coach features > power spike shows souls/points remaining and no invented ETA
+ ✓ packages/engine/test/features.test.ts > coach features > build repair keeps off-route purchases and drops overlapping route items but never fundamentals
+ ✓ packages/engine/test/features.test.ts > coach features > team utility explains coverage and who should buy
+ ✓ packages/engine/test/features.test.ts > coach features > active hints quote item behaviour and never claim enemy cooldowns
+ ✓ packages/engine/test/features.test.ts > coach features > what-if: adding an enemy healing item changes the advice and explains why
+ ✓ packages/engine/test/scenarios.test.ts > 8. weak or stale observations lower certainty instead of inventing state > missing souls is not treated as zero
+ ✓ packages/engine/test/scenarios.test.ts > 8. weak or stale observations lower certainty instead of inventing state > unobserved enemy items do not count as evidence
+ ✓ packages/engine/test/scenarios.test.ts > 8. weak or stale observations lower certainty instead of inventing state > stale enemy-item observations contribute less than fresh ones
+ ✓ packages/engine/test/features.test.ts > coach features > what-if: changing souls or archetype is reflected
+ ✓ packages/engine/test/features.test.ts > coach features > post-match review: at most three lessons, decision-time only, with a caveat
+ ✓ packages/engine/test/scenarios.test.ts > 11. recommendation stability > keeps the previous BUY NOW when the new top is within the stability margin
+ ✓ packages/engine/test/scenarios.test.ts > 11. recommendation stability > allows an urgent, well-supported change
+ ✓ packages/engine/test/scenarios.test.ts > 12. a new match cannot inherit the previous match > clears roster, items and threats on a new match id
+ ✓ packages/engine/test/features.test.ts > coach features > unsupported modes produce no purchase advice
+ ✓ packages/engine/test/features.test.ts > coach features > pinned, rejected and deferred items are respected with reasons
+ ✓ packages/engine/test/features.test.ts > performance (local scoring cost) > full evaluate() stays well under 100 ms after warm-up
+ ✓ apps/desktop/test/desktop.test.ts > overlay placement > anchors inside the work area of the chosen display, scaled
+ ✓ apps/desktop/test/desktop.test.ts > overlay placement > supports monitors with negative origins and falls back to primary when a display is gone
+ ✓ apps/desktop/test/desktop.test.ts > overlay placement > keeps custom positions resolution-independent (ultrawide)
+ ✓ apps/desktop/test/desktop.test.ts > overlay placement > clamps an off-screen custom offset and sizes to content when known
+ ✓ apps/desktop/test/desktop.test.ts > settings > falls back field by field for invalid values
+ ✓ apps/desktop/test/desktop.test.ts > settings > patches nested sections without dropping siblings and ignores unknown keys
+ ✓ apps/desktop/test/desktop.test.ts > settings > keeps older settings files working when new sections and hotkeys are added
+ ✓ apps/desktop/test/desktop.test.ts > settings > accepts bare F-keys and modifier chords as hotkeys, nothing else
+ ✓ apps/desktop/test/desktop.test.ts > settings > accepts a valid screen calibration and rejects a malformed one
+ ✓ apps/desktop/test/desktop.test.ts > settings > persists atomically and reloads
+ ✓ apps/desktop/test/desktop.test.ts > decision log store > appends validated entries and deletes everything on request
+ ✓ apps/desktop/test/desktop.test.ts > overlay model > is schema-valid for every fixture
+ ✓ packages/engine/test/planner.test.ts > 7. ability planner > uses tier costs derived from data (unlock is a separate currency)
+ ✓ packages/engine/test/planner.test.ts > 7. ability planner > spends an available unlock before points, in plan order
+ ✓ packages/engine/test/planner.test.ts > 7. ability planner > recommends the next legal tier with exact cost and data text
+ ✓ packages/engine/test/planner.test.ts > 7. ability planner > never proposes a tier before its prerequisite or on a locked ability
+ ✓ packages/engine/test/planner.test.ts > 7. ability planner > holds points for a key breakpoint instead of spending them elsewhere
+ ✓ packages/engine/test/planner.test.ts > 7. ability planner > starts from the real state even if it diverges from the plan (no refunds assumed)
+ ✓ packages/engine/test/planner.test.ts > 7. ability planner > flags inconsistent state instead of guessing
+ ✓ packages/engine/test/planner.test.ts > 7. ability planner > asks for unspent points instead of assuming one point per level
+ ✓ packages/engine/test/planner.test.ts > 7. ability planner > reports nothing to do when everything is maxed
+ ✓ packages/engine/test/planner.test.ts > 7. ability planner > level schedule from data grants 4 unlocks and 32 points at max
+ ✓ packages/engine/test/planner.test.ts > 7. ability planner > every playable hero gets a legal plan that can reach max with the granted points
+ ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > drops out-of-order observations by game time
+ ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > preserves a user correction against a lower-authority or not-clearly-newer observation
+ ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > allows a clearly newer, high-confidence verified observation to supersede a correction
+ ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > a deliberate new user correction replaces the old one
+ ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > rejects replay/spectator data in a live store and live data in a replay store
+ ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > reconnecting to the same match keeps state; a hero change clears hero-scoped fields
+ ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > pausing stops the match clock extrapolation
+ ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > marks values aging/stale with field-specific policies
+ ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > changing the enemy roster removes item observations for heroes no longer present
+ ✓ packages/engine/test/state.test.ts > observation conflict and freshness rules > ignores observations after the match ended
+ ✓ packages/engine/test/state.test.ts > 10. ambiguous (OCR-style) observations require explicit user resolution > does not apply any candidate until the user chooses
+ ✓ packages/engine/test/state.test.ts > 10. ambiguous (OCR-style) observations require explicit user resolution > applies exactly the chosen candidate (not the first) as a user correction
+ ✓ packages/engine/test/state.test.ts > 10. ambiguous (OCR-style) observations require explicit user resolution > rejecting all candidates leaves state unchanged
+ ✓ packages/engine/test/profiles.test.ts > hero profiles > every curated profile resolves against current data with no errors
+ ✓ packages/engine/test/profiles.test.ts > hero profiles > covers every currently playable hero, distinguishing curated from data-derived
+ ✓ packages/engine/test/profiles.test.ts > hero profiles > curated breakpoints quote text that exists in the current tier data
+ ✓ packages/engine/test/profiles.test.ts > hero profiles > data-derived profiles never invent items: every fundamental exists and is purchasable
  ✓ packages/engine/test/vision.test.ts > vision: Tab-view columns over busy scenery > an oversized item area over the cards and scenery adds no confident junk
  ✓ packages/engine/test/vision.test.ts > vision: false-match guards > a washed-out (low-contrast) copy of an icon is rejected
  ✓ packages/engine/test/vision.test.ts > vision: false-match guards > a badge must stand out from the icon; a uniformly coloured patch is not a badge
+ ✓ packages/engine/test/vision.test.ts > vision: calibrate once on a full scoreboard, then read the same slots > learns one card per player and every slot (plus a spare line for later items)
+ ✓ packages/engine/test/vision.test.ts > vision: calibrate once on a full scoreboard, then read the same slots > reads a later, emptier scoreboard from the same slots, keeping card order
+ ✓ packages/engine/test/vision.test.ts > vision: calibrate once on a full scoreboard, then read the same slots > a capture without the scoreboard reads nothing (and so changes nothing)
 ```

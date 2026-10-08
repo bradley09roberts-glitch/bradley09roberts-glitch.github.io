@@ -5,11 +5,11 @@
   {
    "name": "capture-button",
    "ok": true,
-   "message": "Calibrate once: mark where the item icons are on this capture."
+   "message": "Calibrate once: mark where the item icons are on this capture. Best done when players have lots of items."
   },
   {
    "name": "calibrate-and-read",
-   "message": "Found 12 players (2844 ms). Check who each player is, then apply. After that, reads in this match apply on their own.",
+   "message": "Found 12 players (232 ms). Check who each player is, then apply. After that, reads in this match apply on their own.",
    "templates": "Icon templates ready (173 items, 40 heroes), built on this PC from the item art."
   },
   {
@@ -30,11 +30,36 @@
    "name": "hotkey",
    "via": "xdotool",
    "overlayNote": "◉ Read 12 players · 53 items",
-   "message": "Applied automatically: 12 players, 53 items (2170 ms)."
+   "message": "Applied automatically: 12 players, 53 items (294 ms)."
   },
   {
    "name": "match-tab",
    "seenOnScreenBadges": 1
+  },
+  {
+   "name": "hold-tab",
+   "via": "xdotool",
+   "listener": "listening for Tab",
+   "message": "Applied automatically: 12 players, 40 items (241 ms).",
+   "appliedAutomatically": true,
+   "players": 12,
+   "itemsCorrect": 40,
+   "itemsExpected": 40,
+   "wrong": [],
+   "tabStatus": {
+    "running": true,
+    "error": null,
+    "tabPresses": 1
+   }
+  },
+  {
+   "name": "tap-tab",
+   "captured": false,
+   "tabStatus": {
+    "running": true,
+    "error": null,
+    "tabPresses": 2
+   }
   }
  ],
  "consoleErrors": []

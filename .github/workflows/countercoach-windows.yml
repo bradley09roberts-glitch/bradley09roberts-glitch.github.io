@@ -50,7 +50,11 @@ jobs:
           $ud = Join-Path $env:RUNNER_TEMP "cc-smoke"
           $env:COUNTERCOACH_SMOKE = "1"
           $env:COUNTERCOACH_USER_DATA = $ud
+          $env:COUNTERCOACH_SMOKE_MS = "7000"
           $p = Start-Process -FilePath "apps/desktop/release/win-unpacked/CounterCoach.exe" -PassThru
+          # Press Tab once so the report shows whether the passive Tab listener sees real key input.
+          Start-Sleep -Seconds 4
+          (New-Object -ComObject WScript.Shell).SendKeys("{TAB}")
           if (-not $p.WaitForExit(90000)) { $p.Kill(); throw "app did not exit" }
           $raw = Get-Content (Join-Path $ud "smoke-report.json") -Raw
           $raw
@@ -58,6 +62,9 @@ jobs:
           $r = $raw | ConvertFrom-Json
           if (-not $r.capture.ok) { throw "screen capture failed: $($r.capture.error)" }
           if ($r.overlayOpacityAfterCapture -lt 0.3) { throw "overlay opacity not restored after capture" }
+          # The opt-in Tab listener (native uiohook-napi) must load from the packaged app.
+          if (-not $r.keyHook.running) { throw "Tab listener failed to start: $($r.keyHook.error)" }
+          if ($r.keyHook.tabPresses -lt 1) { Write-Warning "Tab listener started but did not see the simulated Tab press" }
       - name: Silent install and uninstall
         shell: pwsh
         run: |

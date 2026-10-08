@@ -74,28 +74,44 @@ Useful keys in the main window: `/` focuses item search, `Ctrl+K` focuses hero s
 
 ### Reading the scoreboard automatically (experimental)
 
-Instead of typing items, let CounterCoach read them off your screen:
+Instead of typing items, let CounterCoach read them off your screen. You set it up once, then
+every time you hold Tab in a match it reads the scoreboard again and the advice updates.
 
-1. In a match, press **Ctrl+Alt+R** and then hold **Tab** so the scoreboard shows. The app
-   captures the monitor your mouse is on one second after the hotkey (the delay is adjustable
-   in the Screen tab, and the hotkey can be changed in *Settings → Hotkeys*, including to a
-   plain F-key such as F8).
-2. **First time only:** open CounterCoach's **Screen** tab. It shows the capture and asks you to
-   drag three boxes:
+1. **Set up once, late in a match when everyone has lots of items.** Press **Ctrl+Alt+R** and
+   then hold **Tab** so the scoreboard shows. The app captures the monitor your mouse is on one
+   second after the hotkey (the delay is adjustable in the Screen tab, and the hotkey can be
+   changed in *Settings → Hotkeys*, including to a plain F-key such as F8).
+2. Open CounterCoach's **Screen** tab. It shows the capture and asks you to drag three boxes:
    - around the **strip of small item icons under the player cards** at the top. Only that
      strip: no portraits, names, stats, ability circles or game world.
    - tightly around **one item icon**, edge to edge, including the little tier badge in its
      corner.
    - around the **portrait of that same player** (optional).
 
-   That's the calibration. It's kept for every later match at the same aspect ratio.
-3. **First read of each match:** the Screen tab lists each player column with the items it
-   read. Pick who each column is (Me, an enemy or an ally) and press **Apply**. Portraits
-   pre-fill the ones they're sure about.
-4. From then on in that match, Ctrl+Alt+R reads and applies on its own: your items, enemy items
-   and ally items update and the overlay shows "Read 12 players · 53 items".
-5. If an icon is uncertain or a column is new, nothing is applied until you check it in the
+   Press **Save calibration**. CounterCoach learns where every player's item slots are (dashed
+   boxes on the capture) and says how many it found, for example "learned 12 players and 96 item
+   slots". The fuller the scoreboard, the more slots it learns. If players later fill slots it
+   hasn't seen, capture again and press **Learn more slots from this capture**. The calibration
+   is kept for every later match at the same aspect ratio.
+3. Under *Screen reader settings*, tick **Read automatically every time I hold Tab in the game**.
+   The status turns to "listening for Tab".
+4. **First read of each match:** hold Tab once. The Screen tab lists each player with the items
+   it read. Pick who each one is (Me, an enemy or an ally; the list also lets you add a hero who
+   isn't in your roster yet) and press **Apply**. Portraits pre-fill the ones they're sure about.
+5. **From then on in that match, just play.** Each time you hold Tab for about half a second the
+   scoreboard is read and applied on its own: your items, enemy items and ally items update, the
+   counter and buy advice recalculate, and the overlay shows "Read 12 players · 40 items".
+   A quick tap of Tab is ignored, and a read that finds no scoreboard changes nothing. There are
+   at least 1.5 s between reads.
+6. If an icon is uncertain or a player is new, nothing is applied until you check it in the
    Screen tab (a banner points there).
+
+About the Tab option: it's off until you turn it on. It uses a passive keyboard listener (the
+same kind push-to-talk apps use) that only reacts to Tab. It never blocks or sends keys, Tab
+still reaches the game normally, no keys are logged or stored, and it ignores Tab while
+CounterCoach itself is focused and when Alt, Ctrl or the Windows key is held. Turn the option
+off and the listener stops. If you'd rather not use it, the Ctrl+Alt+R hotkey does the same
+read.
 
 Good to know:
 
@@ -106,9 +122,11 @@ Good to know:
   the shop's purchase log, and untick "full inventories".
 - Use **Borderless/Windowed** mode. Exclusive fullscreen captures come back black, and the app
   tells you so.
-- **Status:** tested on synthetic scoreboards built from the real item art (99.7% correct, no
-  wrong answers among confident reads) and end to end in the app on Linux. It has **not yet been
-  tried on a real Deadlock scoreboard**. If it misreads your screen, turn on *Keep copies of
+- **Status:** item recognition was checked on crops of one real Deadlock screenshot and on
+  synthetic scoreboards built from the real item art (no wrong answers among confident reads).
+  "Calibrate once, then read on Tab" was tested end to end in the app on Linux, with a simulated
+  Tab key. It has **not yet been tried in a full Deadlock match**, and the Tab listener has not
+  been tried with the game running. If it misreads your screen, turn on *Keep copies of
   captures* in the Screen tab, reproduce it, and share one capture so the reader can be tuned.
 
 ### Scenarios, what-if and review

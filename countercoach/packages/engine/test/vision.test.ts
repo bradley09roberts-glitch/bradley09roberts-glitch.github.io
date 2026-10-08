@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   ICON_THUMB,
   applyEvents,
+  buildSlotGrid,
   calibrationBadges,
   hasContrast,
   hasTierBadge,
@@ -416,5 +417,73 @@ describe("vision: false-match guards", () => {
     // Wrong slot hue, and screens calibrated as badge-free, never count a badge.
     expect(hasTierBadge(icon, { x: 0, y: 0, w: 40, h: 40 }, "spirit")).toBe(false);
     expect(hasTierBadge(icon, { x: 0, y: 0, w: 40, h: 40 }, "vitality", { present: false, hues: {} })).toBe(false);
+  });
+});
+
+describe("vision: calibrate once on a full scoreboard, then read the same slots", () => {
+  const W = 1280;
+  const H = 720;
+  const s = 24;
+  const cardW = 70;
+  const heroes = [heroId("Abrams"), heroId("Haze"), heroId("Seven"), heroId("Dynamo")];
+  const pool = ["upgrade_close_range", "upgrade_endurance", "upgrade_melee_charge", "upgrade_headshot_booster", "upgrade_rapid_rounds", "upgrade_toxic_bullets", "upgrade_improved_stamina", "upgrade_improved_spirit", "upgrade_magic_burst", "upgrade_magic_reach", "upgrade_health", "upgrade_sprint_booster"];
+  /** A Tab-view mock: cards across the top, each player's items in a 2-wide grid under the card. */
+  function tabView(builds: string[][], seedNo: number, showBoard = true) {
+    const img = blank(W, H, seedNo);
+    let seed = seedNo * 7 + 3;
+    const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+    for (let k = 0; k < 300; k++) {
+      const x = Math.floor(rnd() * W);
+      const y = Math.floor(rnd() * H);
+      const c = [rnd() * 255, rnd() * 200, rnd() * 160];
+      for (let j = y; j < Math.min(H, y + 40); j++) for (let i = x; i < Math.min(W, x + 40); i++) {
+        const p = (j * W + i) * 4;
+        for (let q = 0; q < 3; q++) img.data[p + q] = 0.6 * img.data[p + q]! + 0.4 * c[q]!;
+      }
+    }
+    if (showBoard) {
+      builds.forEach((items, k) => {
+        const x0 = 400 + k * (cardW + 12);
+        for (let j = 20; j < 200; j++) for (let i = x0; i < x0 + cardW; i++) img.data.set([180, 140, 50], (j * W + i) * 4);
+        draw(img, templatePixels("heroes", (t) => t.id === heroes[k] && t.variant === "small"), x0 + 7, 24, 56);
+        items.forEach((cls, i) => {
+          const x = x0 + 8 + (i % 2) * (s + 6);
+          const y = 210 + Math.floor(i / 2) * (s + 6);
+          draw(img, templatePixels("items", (t) => t.className === cls), x, y, s);
+          badge(img, x, y, s, slotOf(cls));
+        });
+      });
+    }
+    return img;
+  }
+  const full = [pool.slice(0, 8), pool.slice(2, 10), pool.slice(4, 12), pool.slice(0, 7)];
+  const calImg = tabView(full, 21);
+  const sample = { x: 408, y: 210, w: s, h: s };
+  const base = layoutFromCalibration(calImg, { x: 395, y: 200, w: 360, h: 140 }, sample, { box: { x: 407, y: 24, w: 56, h: 56 } }, "t", calibrationBadges(calImg, sample, templates));
+  const calRead = readScreen(calImg, base, templates);
+  const grid = buildSlotGrid(calRead, base)!;
+  const layout = { ...base, slots: grid };
+
+  it("learns one card per player and every slot (plus a spare line for later items)", () => {
+    expect(calRead.rows).toHaveLength(4);
+    expect(grid.cards).toHaveLength(4);
+    // 2 columns × (4 lines seen + 1 spare) per card.
+    for (const c of grid.cards) expect(c.slots).toHaveLength(10);
+  });
+
+  it("reads a later, emptier scoreboard from the same slots, keeping card order", () => {
+    const later = [["upgrade_toxic_bullets", "upgrade_health"], [], pool.slice(5, 10), ["upgrade_magic_reach"]];
+    const r = readScreen(tabView(later, 33), layout, templates);
+    expect(r.rows.map((g) => g.index)).toEqual([0, 2, 3]);
+    expect(r.rows.map((g) => g.items.map((i) => i.candidates[0]!.className))).toEqual([later[0], later[2], later[3]]);
+    for (const g of r.rows) for (const it of g.items) expect(it.status).toBe("confident");
+    // Same card, same place: remembered assignments line up with the calibration read.
+    expect(r.rows[0]!.posFrac).toBeCloseTo(calRead.rows[0]!.posFrac, 2);
+  });
+
+  it("a capture without the scoreboard reads nothing (and so changes nothing)", () => {
+    const r = readScreen(tabView(full, 44, false), layout, templates);
+    expect(r.rows).toEqual([]);
+    expect(r.warnings.join(" ")).toMatch(/No items were found/);
   });
 });

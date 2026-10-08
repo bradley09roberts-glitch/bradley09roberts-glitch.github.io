@@ -213,6 +213,7 @@ body.overlay-body { background: transparent; overflow: hidden; }
 .shot-box.box-icon { border-color: var(--good); }
 .shot-box.box-portrait { border-color: var(--spirit); }
 .shot-box.box-good { border-color: var(--good); border-width: 1px; }
+.shot-box.box-slot { border: 1px dashed rgba(255, 255, 255, 0.28); background: none; }
 .shot-box.box-warn { border-color: var(--warn); border-style: dashed; }
 .shot-box.box-live { border-style: dashed; border-color: #fff; }
 .shot-label { position: absolute; left: 0; top: -1.5em; font-size: 11px; background: rgba(0, 0, 0, 0.75); padding: 0 4px; border-radius: 3px; white-space: nowrap; color: var(--text); }

@@ -7,10 +7,12 @@ while keeping your chosen build's identity.
 
 > **Status (build 0.1.0, 2026-10-08):**
 > - Working companion with manual, scenario and replay inputs, real game data (client build
->   6763), and 113 passing tests.
-> - **New, experimental:** a screen reader. Press Ctrl+Alt+R, hold Tab, and it reads your items
->   and the enemies' items from the Tab view, locally. Tuned on one real capture (a sandbox
->   match) and synthetic scoreboards; **not yet tested in a full match**.
+>   6763), and 116 passing tests.
+> - **New, experimental:** a screen reader. Calibrate it once on a full scoreboard, turn on
+>   "Read automatically every time I hold Tab", and from then on each time you hold Tab it reads
+>   your items and the enemies' items from the Tab view, locally, and updates the advice
+>   (Ctrl+Alt+R does the same on demand). Tuned on one real capture (a sandbox match) and
+>   synthetic scoreboards; **not yet tested in a full match**.
 > - The Windows installer and zip are built (unsigned) on a GitHub Windows runner, where the app
 >   launch, silent install/uninstall and all tests pass.
 > - **Not yet tested alongside a running Deadlock match.**
@@ -36,7 +38,7 @@ Requires Node ≥ 22.12 and pnpm 10 (`corepack enable`).
 ```bash
 cd countercoach
 pnpm install --frozen-lockfile
-pnpm test                      # 113 tests
+pnpm test                      # 116 tests
 pnpm typecheck
 pnpm build && pnpm --filter @countercoach/desktop start   # run the Electron app
 ```

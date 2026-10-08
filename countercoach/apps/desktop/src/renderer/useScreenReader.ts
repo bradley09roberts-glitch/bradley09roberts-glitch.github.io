@@ -209,8 +209,12 @@ export function useScreenReader(c: Coach, iconsRaw: unknown) {
   const read = useCallback(
     (cap: CapturePayload, templates: TemplateSet | null, layoutOverride?: ScreenLayout) => {
       const c = latest.current;
-      const preview = previewUrl(cap);
+      // Reads started by holding Tab are quiet: if no scoreboard items are seen (Tab released
+      // early, another screen), nothing changes and nothing pops up.
+      const quiet = cap.trigger === "tab";
       const layout = layoutOverride ?? c.settings.screen.layout;
+      if (quiet && !templates) return;
+      const preview = previewUrl(cap);
       if (!templates) {
         setSession({ capture: cap, preview, read: null, rows: [], appliedAt: null });
         setStatus("error");
@@ -220,7 +224,7 @@ export function useScreenReader(c: Coach, iconsRaw: unknown) {
       if (!layout) {
         setSession({ capture: cap, preview, read: null, rows: [], appliedAt: null });
         setStatus("calibrate");
-        setMessage("Calibrate once: mark where the item icons are on this capture.");
+        setMessage("Calibrate once: mark where the item icons are on this capture. Best done when players have lots of items.");
         note("Screen captured — calibrate it in CounterCoach (Screen tab)");
         return;
       }
@@ -232,6 +236,11 @@ export function useScreenReader(c: Coach, iconsRaw: unknown) {
         allowItem: (cn) => allowed.has(cn),
         allowHero: (id) => !!c.deps.data.hero(id)?.playable,
       });
+      if (quiet && result.rows.length === 0) {
+        setStatus((s) => (s === "reading" ? "idle" : s));
+        setMessage("Last Tab read saw no scoreboard items, so nothing changed.");
+        return;
+      }
       const props = proposeTargets(result, ctx, loadRemembered(c.state.matchId));
       const rows: RowEdit[] = result.rows.map((r, i) => ({
         index: r.index,

@@ -10,6 +10,9 @@ files:
   - package.json
   - "!**/*.map"
 asar: true
+# Native keyboard listener binaries must live outside the asar archive to be loadable.
+asarUnpack:
+  - "dist-electron/vendor/**/*.node"
 npmRebuild: false
 win:
   target:

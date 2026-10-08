@@ -33,6 +33,8 @@ contextBridge.exposeInMainWorld("countercoach", {
   onScreenCaptured: (fn: (m: unknown) => void) => on(IPC.screenCaptured, fn),
   iconTemplates: () => ipcRenderer.invoke(IPC.screenTemplates),
   onTemplatesProgress: (fn: (m: unknown) => void) => on(IPC.screenTemplatesProgress, fn),
+  tabStatus: () => ipcRenderer.invoke(IPC.screenTabStatus),
+  onTabStatus: (fn: (m: unknown) => void) => on(IPC.screenTabStatus, fn),
   onOverlayModel: (fn: (m: unknown) => void) => on(IPC.overlayModel, fn),
   onOverlayState: (fn: (m: unknown) => void) => on(IPC.overlayState, fn),
   onDataEvent: (fn: (m: unknown) => void) => on(IPC.dataEvent, fn),

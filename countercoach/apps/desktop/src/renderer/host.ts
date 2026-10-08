@@ -1,5 +1,5 @@
 import { decisionLogSchema, type DecisionLog, type ReviewStamps, type ScenarioFixture, type Snapshot } from "@countercoach/engine";
-import type { CaptureResult, SavedCaptures } from "../shared/capture";
+import type { CaptureResult, SavedCaptures, TabWatcherStatus } from "../shared/capture";
 import type { DataStatusEvent, OverlayModel } from "../shared/ipc";
 import { DEFAULT_SETTINGS, patchSettings, sanitizeSettings, type Settings } from "../shared/settings";
 
@@ -49,6 +49,9 @@ export interface Host {
   /** Icon templates for the screen reader, built locally on first use (downloads item art once). */
   iconTemplates(): Promise<unknown>;
   onTemplatesProgress(fn: (p: { done: number; total: number }) => void): () => void;
+  /** State of the opt-in "read when I hold Tab" listener (desktop app only). */
+  tabStatus(): Promise<TabWatcherStatus>;
+  onTabStatus(fn: (s: TabWatcherStatus) => void): () => void;
   onOverlayModel(fn: (m: OverlayModel) => void): () => void;
   onOverlayState(fn: (m: OverlayStateMsg) => void): () => void;
   onDataEvent(fn: (e: DataStatusEvent) => void): () => void;
@@ -204,6 +207,12 @@ class WebHost implements Host {
     return r && r.ok ? r.json() : { error: "Icon templates are not available in this preview." };
   }
   onTemplatesProgress() {
+    return () => {};
+  }
+  async tabStatus(): Promise<TabWatcherStatus> {
+    return { running: false, error: "Only available in the desktop app.", tabPresses: 0 };
+  }
+  onTabStatus() {
     return () => {};
   }
   onOverlayModel(fn: (m: OverlayModel) => void) {

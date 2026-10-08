@@ -2,8 +2,8 @@ import { z } from "zod";
 import type { Confidence, SlotType } from "../types.js";
 import type { EnemyItemsValue, MatchEvent } from "../state/types.js";
 import { thumbnail, toPixels, type FracRect, type Rect, type RgbaImage } from "./image.js";
-import { groupRows, readBox, scanIcons, type IconDetection } from "./scan.js";
-import type { Candidate, TemplateSet } from "./templates.js";
+import { groupRows, hasContrast, readBox, scanIcons, type IconDetection } from "./scan.js";
+import { ICON_THUMB, rankTemplates, scoreThumb, type Candidate, type PreparedTemplate, type TemplateSet } from "./templates.js";
 
 /**
  * Reads item icons (and optionally hero portraits) from a user-triggered capture of a screen the
@@ -51,9 +51,27 @@ export const screenLayoutSchema = z.object({
       hues: z.object({ weapon: z.number().min(0).max(360).optional(), vitality: z.number().min(0).max(360).optional(), spirit: z.number().min(0).max(360).optional() }),
     })
     .optional(),
+  /**
+   * Item slot grid learned from a calibration capture where players had many items: every place an
+   * item can appear, grouped by player card. When present, reads check only these slots.
+   */
+  slots: z
+    .object({
+      cards: z
+        .array(
+          z.object({
+            /** Card centre along the player axis (fraction of width for columns, height for rows). */
+            centre: z.number().min(0).max(1),
+            slots: z.array(fracRect).max(48),
+          }),
+        )
+        .max(24),
+    })
+    .optional(),
   calibratedAt: z.string(),
 });
 export type ScreenLayout = z.infer<typeof screenLayoutSchema>;
+export type SlotGrid = NonNullable<ScreenLayout["slots"]>;
 
 /**
  * Thresholds (normalised cross-correlation). On a real Deadlock capture, true item icons scored
@@ -262,6 +280,7 @@ export function readScreen(img: RgbaImage, layout: ScreenLayout, templates: Temp
       `This capture is ${img.width}×${img.height} (aspect ${aspect.toFixed(2)}) but the layout was calibrated at aspect ${layout.aspect.toFixed(2)}. Recalibrate for this resolution.`,
     );
   }
+  if (layout.slots?.cards.length) return readSlots(img, layout, templates, opts, warnings, t0);
   const T = VISION_THRESHOLDS;
   const itemTemplates = templates.items.filter((t) => !opts.allowItem || opts.allowItem(t.className));
   const slotOf = new Map(itemTemplates.map((t) => [t.className, t.slot]));
@@ -300,6 +319,173 @@ export function readScreen(img: RgbaImage, layout: ScreenLayout, templates: Temp
   });
   if (raw.length === 0) warnings.push("No item icons were found in the calibrated area. Was the scoreboard open when the capture was taken?");
   return { width: img.width, height: img.height, orientation, rows: out, warnings, ms: Date.now() - t0 };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Calibrate once, then read fixed slots
+// ---------------------------------------------------------------------------------------------
+
+function bboxOf(boxes: Rect[]): Rect {
+  const x0 = Math.min(...boxes.map((b) => b.x));
+  const y0 = Math.min(...boxes.map((b) => b.y));
+  const x1 = Math.max(...boxes.map((b) => b.x + b.w));
+  const y1 = Math.max(...boxes.map((b) => b.y + b.h));
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
+/**
+ * Read one known slot: the best of a few one-pixel shifts and a small inset, then a full ranking.
+ * Returns null for an empty slot (flat, low-contrast).
+ */
+function readSlot(img: RgbaImage, box: Rect, templates: PreparedTemplate[], byKey: Map<string, PreparedTemplate>): { box: Rect; candidates: Candidate[] } | null {
+  const short = rankTemplates(thumbnail(img, box, ICON_THUMB), templates, 8)
+    .map((c) => byKey.get(c.key))
+    .filter((t): t is PreparedTemplate => !!t);
+  if (!short.length) return null;
+  let best: { box: Rect; score: number } | null = null;
+  for (const inset of [0, 0.06]) {
+    for (const [dx, dy] of [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]] as const) {
+      const m = box.w * inset;
+      const b = { x: box.x + dx + m, y: box.y + dy + m, w: box.w - 2 * m, h: box.h - 2 * m };
+      const th = thumbnail(img, b, ICON_THUMB);
+      for (const t of short) {
+        const sc = scoreThumb(th, t);
+        if (!best || sc > best.score) best = { box: b, score: sc };
+      }
+    }
+  }
+  const th = thumbnail(img, best!.box, ICON_THUMB);
+  const candidates = rankTemplates(th, templates, 3);
+  const top = candidates[0] ? byKey.get(candidates[0].key) : undefined;
+  if (!top || !hasContrast(th, top)) return null;
+  return { box: best!.box, candidates };
+}
+
+/** Read every calibrated slot; cards with no readable item are left out (never cleared). */
+function readSlots(img: RgbaImage, layout: ScreenLayout, templates: TemplateSet, opts: ReadOptions, warnings: string[], t0: number): ScreenRead {
+  const T = VISION_THRESHOLDS;
+  const orientation = layout.orientation ?? "rows";
+  const itemTemplates = templates.items.filter((t) => !opts.allowItem || opts.allowItem(t.className));
+  const byKey = new Map(itemTemplates.map((t) => [t.key, t]));
+  const slotOf = new Map(itemTemplates.map((t) => [t.className, t.slot]));
+  const badgeScreen = layout.badges?.present === true;
+  const heroTemplates = templates.heroes.filter((t) => t.heroId != null && (!opts.allowHero || opts.allowHero(t.heroId)));
+  const out: ScreenRowRead[] = [];
+  layout.slots!.cards.forEach((card, index) => {
+    const items: ScreenItemRead[] = [];
+    for (const fr of card.slots) {
+      const r = readSlot(img, toPixels(fr, img), itemTemplates, byKey);
+      if (!r || r.candidates[0]!.score < T.itemMin) continue;
+      const badge = hasTierBadge(img, r.box, slotOf.get(r.candidates[0]!.className) ?? null, layout.badges);
+      // On a badge screen every real item shows its badge; a badge-less slot is empty or covered.
+      if (badgeScreen && !badge) continue;
+      // A known slot holding something item-like but unclear is asked about, not dropped.
+      const status = classifyItem(r.candidates, badge, badgeScreen);
+      items.push({ box: r.box, candidates: r.candidates, status, badge });
+    }
+    if (!items.length) return;
+    const box = bboxOf(items.map((i) => i.box));
+    const centre = card.centre * (orientation === "columns" ? img.width : img.height);
+    const hero = layout.portrait && heroTemplates.length ? readPortrait(img, layout, orientation, { members: [], box, centre }, heroTemplates) : null;
+    out.push({ index, box, posFrac: card.centre, hero, items });
+  });
+  if (!out.length) warnings.push("No items were found in the calibrated slots. Was the scoreboard open when the capture was taken?");
+  return { width: img.width, height: img.height, orientation, rows: out, warnings, ms: Date.now() - t0 };
+}
+
+/** Cluster 1-D values (sorted) with a tolerance; returns cluster means. */
+function cluster(values: number[], tol: number): number[] {
+  const v = [...values].sort((a, b) => a - b);
+  const out: number[][] = [];
+  for (const x of v) {
+    const last = out[out.length - 1];
+    if (last && x - last[last.length - 1]! <= tol) last.push(x);
+    else out.push([x]);
+  }
+  return out.map((c) => c.reduce((s, x) => s + x, 0) / c.length);
+}
+
+/** Fill evenly spaced gaps in sorted positions (a missing row or card); optionally extend by one step. */
+function fillGaps(pos: number[], tolFrac: number, extend: boolean): number[] {
+  if (pos.length < 2) return pos;
+  const diffs = pos.slice(1).map((p, i) => p - pos[i]!);
+  const pitch = Math.min(...diffs);
+  const out = [pos[0]!];
+  for (let i = 1; i < pos.length; i++) {
+    const d = pos[i]! - pos[i - 1]!;
+    const k = Math.round(d / pitch);
+    if (k >= 2 && Math.abs(d - k * pitch) <= tolFrac * pitch) for (let j = 1; j < k; j++) out.push(pos[i - 1]! + j * pitch);
+    out.push(pos[i]!);
+  }
+  if (extend) out.push(pos[pos.length - 1]! + pitch);
+  return out;
+}
+
+/**
+ * Learn the slot grid from a read of a well-filled scoreboard (calibrate when players have many
+ * items). Slots are the same for every card: positions within a card (across the player axis)
+ * and positions along it are pooled over all cards, gaps are filled, and one extra slot line is
+ * added for items bought later.
+ */
+export function buildSlotGrid(read: ScreenRead, layout: ScreenLayout): SlotGrid | null {
+  if (!read.rows.length) return null;
+  const W = read.width;
+  const H = read.height;
+  const s = layout.iconSize * H;
+  const cols = (layout.orientation ?? "rows") === "columns";
+  // "u" runs along the player axis (where cards are), "v" across it (where a card's items stack).
+  const u = (b: Rect) => (cols ? b.x + b.w / 2 : b.y + b.h / 2);
+  const v = (b: Rect) => (cols ? b.y + b.h / 2 : b.x + b.w / 2);
+  const centres = read.rows.map((r) => r.posFrac * (cols ? W : H));
+  const offsets = cluster(read.rows.flatMap((r, i) => r.items.map((it) => u(it.box) - centres[i]!)), s * 0.35);
+  // Re-centre each card on the offset pattern (a card whose items sat in one column only).
+  const fitted = read.rows.map((r, i) => {
+    const us = r.items.map((it) => u(it.box));
+    let best = centres[i]!;
+    let bestErr = Infinity;
+    for (const x of us) {
+      for (const o of offsets) {
+        const c = x - o;
+        const err = us.reduce((e, y) => e + Math.min(...offsets.map((k) => Math.abs(y - (c + k)))), 0);
+        if (err < bestErr) {
+          bestErr = err;
+          best = c;
+        }
+      }
+    }
+    return best;
+  });
+  const lines = fillGaps(cluster(read.rows.flatMap((r) => r.items.map((it) => v(it.box))), s * 0.35), 0.15, true);
+  const cards = fillGaps(cluster(fitted, s * 0.35), 0.1, false);
+  return {
+    cards: cards.map((c) => ({
+      centre: c / (cols ? W : H),
+      slots: lines.flatMap((line) =>
+        offsets.map((o) => {
+          const cu = c + o;
+          const cx = cols ? cu : line;
+          const cy = cols ? line : cu;
+          return { x: (cx - s / 2) / W, y: (cy - s / 2) / H, w: s / W, h: s / H };
+        }),
+      ).filter((r) => r.x >= 0 && r.y >= 0 && r.x + r.w <= 1 && r.y + r.h <= 1),
+    })),
+  };
+}
+
+/** Merge a newly learned grid into an existing one (cards and slots matched by position). */
+export function mergeSlotGrids(a: SlotGrid, b: SlotGrid, tol = 0.004): SlotGrid {
+  const cards = a.cards.map((c) => ({ centre: c.centre, slots: [...c.slots] }));
+  for (const nb of b.cards) {
+    const hit = cards.find((c) => Math.abs(c.centre - nb.centre) <= tol * 3);
+    if (!hit) {
+      cards.push({ centre: nb.centre, slots: [...nb.slots] });
+      continue;
+    }
+    for (const sl of nb.slots) {
+      if (!hit.slots.some((x) => Math.abs(x.x - sl.x) <= tol && Math.abs(x.y - sl.y) <= tol * 2)) hit.slots.push(sl);
+    }
+  }
+  return { cards: cards.sort((x, y) => x.centre - y.centre).slice(0, 24).map((c) => ({ centre: c.centre, slots: c.slots.slice(0, 48) })) };
 }
 
 /** Find the portrait for a player group: small search around where the calibration says it is. */

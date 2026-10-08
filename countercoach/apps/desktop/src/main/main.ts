@@ -7,6 +7,7 @@ import { patchSettings, type Settings } from "../shared/settings.js";
 import { CaptureStore, captureDisplay, loadImageFile, type CapturePayload } from "./capture.js";
 import { DataStore } from "./dataStore.js";
 import { IconTemplateStore } from "./iconTemplates.js";
+import { TabWatcher } from "./tabWatcher.js";
 import { computeOverlayBounds, offsetFromBounds, type DisplayInfo } from "./overlayPlacement.js";
 import { LogStore, SettingsStore } from "./stores.js";
 
@@ -30,6 +31,18 @@ const settingsStore = new SettingsStore(path.join(app.getPath("userData"), "sett
 const logStore = new LogStore(path.join(app.getPath("userData"), "logs"));
 const captureStore = new CaptureStore(path.join(app.getPath("userData"), "captures"));
 const templateStore = new IconTemplateStore(path.join(app.getPath("userData"), "vision"));
+const tabWatcher = new TabWatcher(
+  () => void captureForReader("tab").then((r) => mainWin?.webContents.send(IPC.screenCaptured, r)),
+  () => settingsStore.get().screen.tabDelayMs,
+  () => !!mainWin && BrowserWindow.getFocusedWindow() === mainWin,
+);
+
+/** Start or stop the opt-in Tab listener to match the settings, and tell the window. */
+function syncTabWatcher(s: Settings): void {
+  if (s.screen.captureOnTab || isSmokeTest) tabWatcher.start();
+  else tabWatcher.stop();
+  mainWin?.webContents.send(IPC.screenTabStatus, tabWatcher.getStatus());
+}
 const dataStore = new DataStore(dataDir, path.join(app.getPath("userData"), "data"), (e: DataStatusEvent) => {
   mainWin?.webContents.send(IPC.dataEvent, e);
 });
@@ -151,15 +164,16 @@ function registerHotkeys(s: Settings): string[] {
   reg(s.hotkeys.toggleEditMode, () => setEditMode(!editMode));
   reg(s.hotkeys.readScreen, () => {
     // A short delay lets the player press the hotkey first and then hold Tab for the scoreboard.
-    setTimeout(() => void captureForReader().then((r) => mainWin?.webContents.send(IPC.screenCaptured, r)), settingsStore.get().screen.captureDelayMs);
+    setTimeout(() => void captureForReader("hotkey").then((r) => mainWin?.webContents.send(IPC.screenCaptured, r)), settingsStore.get().screen.captureDelayMs);
   });
   return failed;
 }
 
 /** Capture the screen for the reader; optionally keep a copy on disk (opt-in). */
-async function captureForReader(): Promise<CapturePayload | { error: string }> {
+async function captureForReader(trigger: NonNullable<CapturePayload["trigger"]>): Promise<CapturePayload | { error: string }> {
   const r = await captureDisplay(overlayWin);
   if ("error" in r) return r;
+  r.payload.trigger = trigger;
   if (settingsStore.get().screen.saveCaptures) {
     try {
       await captureStore.save(r.image);
@@ -179,6 +193,7 @@ async function updateSettings(patch: unknown): Promise<Settings> {
   const before = settingsStore.get();
   const next = await settingsStore.save(patchSettings(before, patch));
   if (JSON.stringify(before.hotkeys) !== JSON.stringify(next.hotkeys)) registerHotkeys(next);
+  if (before.screen.captureOnTab !== next.screen.captureOnTab) syncTabWatcher(next);
   broadcastSettings(next);
   return next;
 }
@@ -267,7 +282,7 @@ function registerIpc(): void {
     if (!trusted(e)) throw new Error("untrusted sender");
     const d = typeof delayMs === "number" && Number.isFinite(delayMs) ? Math.max(0, Math.min(10_000, delayMs)) : 0;
     if (d > 0) await new Promise((r) => setTimeout(r, d));
-    return captureForReader();
+    return captureForReader("button");
   });
   ipcMain.handle(IPC.screenTemplates, async (e) => {
     if (!trusted(e)) throw new Error("untrusted sender");
@@ -280,7 +295,12 @@ function registerIpc(): void {
     if (!trusted(e) || !mainWin) throw new Error("untrusted sender");
     const r = await dialog.showOpenDialog(mainWin, { title: "Open a screenshot", filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg"] }], properties: ["openFile"] });
     if (r.canceled || !r.filePaths[0]) return null;
-    return loadImageFile(r.filePaths[0]);
+    const img = loadImageFile(r.filePaths[0]);
+    return "error" in img ? img : { ...img, trigger: "file" };
+  });
+  ipcMain.handle(IPC.screenTabStatus, (e) => {
+    if (!trusted(e)) throw new Error("untrusted sender");
+    return tabWatcher.getStatus();
   });
   ipcMain.handle(IPC.screenSaved, (e) => {
     if (!trusted(e)) throw new Error("untrusted sender");
@@ -327,6 +347,7 @@ async function main(): Promise<void> {
   createMainWindow();
   createOverlayWindow();
   registerHotkeys(settings);
+  syncTabWatcher(settings);
   screen.on("display-removed", () => applyOverlaySettings(settingsStore.get()));
   screen.on("display-added", () => applyOverlaySettings(settingsStore.get()));
   screen.on("display-metrics-changed", () => applyOverlaySettings(settingsStore.get()));
@@ -351,6 +372,7 @@ async function main(): Promise<void> {
         settingsFile: path.join(app.getPath("userData"), "settings.json"),
         capture,
         overlayOpacityAfterCapture: ov?.getOpacity(),
+        keyHook: tabWatcher.getStatus(),
       });
       console.log(report);
       // GUI-subsystem executables on Windows have no attached console; also write a file.
@@ -359,6 +381,9 @@ async function main(): Promise<void> {
   }
 }
 
-app.on("will-quit", () => globalShortcut.unregisterAll());
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
+  tabWatcher.stop();
+});
 app.on("window-all-closed", () => app.quit());
 void main();

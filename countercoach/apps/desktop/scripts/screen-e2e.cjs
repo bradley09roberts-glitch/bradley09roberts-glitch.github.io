@@ -4,6 +4,7 @@
 // mouse drags, and the read is applied to the match. This is not a test against Deadlock.
 //
 // Usage (Linux): xvfb-run -a -s "-screen 0 1920x1080x24" node scripts/screen-e2e.cjs <outDir> <synthetic-scoreboard.png>
+// The "<name>-next.png" board next to it (different builds) is used for the hold-Tab step.
 const { _electron: electron } = require("/opt/node-tools/node_modules/playwright");
 const { execFileSync } = require("node:child_process");
 const path = require("node:path");
@@ -13,6 +14,8 @@ const os = require("node:os");
 const out = path.resolve(process.argv[2] || "../../docs/screenshots");
 const png = path.resolve(process.argv[3] || path.join(out, "synthetic-scoreboard.png"));
 const truth = JSON.parse(fs.readFileSync(png.replace(/\.png$/, ".json"), "utf8"));
+const nextPng = png.replace(/\.png$/, "-next.png");
+const nextTruth = JSON.parse(fs.readFileSync(nextPng.replace(/\.png$/, ".json"), "utf8"));
 const root = path.resolve(__dirname, "..");
 const electronBin = path.resolve(root, "../../node_modules/electron/dist/electron");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -37,8 +40,11 @@ async function drag(page, shot, rect) {
 
 (async () => {
   fs.mkdirSync(out, { recursive: true });
+  const page = (file) => `<!doctype html><html><body style="margin:0;overflow:hidden;background:#000"><img src="file://${file}" style="display:block"></body></html>`;
   const html = path.join(os.tmpdir(), "cc-fake-game.html");
-  fs.writeFileSync(html, `<!doctype html><html><body style="margin:0;overflow:hidden;background:#000"><img src="file://${png}" style="display:block"></body></html>`);
+  fs.writeFileSync(html, page(png));
+  const html2 = path.join(os.tmpdir(), "cc-fake-game-next.html");
+  fs.writeFileSync(html2, page(nextPng));
   const ud = fs.mkdtempSync(path.join(os.tmpdir(), "cc-e2e-"));
   const app = await electron.launch({ executablePath: electronBin, args: ["--no-sandbox", root], env: { ...process.env, COUNTERCOACH_USER_DATA: ud } });
   const errors = [];
@@ -90,7 +96,7 @@ async function drag(page, shot, rect) {
   await showGame(true);
   await main.waitForSelector("text=Calibrate (once per resolution)", { timeout: 20000 });
   await showGame(false);
-  step("capture-button", { ok: true, message: await main.locator(".screen-page .section-body p.small").first().textContent() });
+  step("capture-button", { ok: true, message: await main.locator(".screen-msg").first().textContent() });
 
   // 2) Calibrate with three drags: the item strip, one icon, and that player's card portrait.
   const shot = main.locator(".shot").first();
@@ -103,7 +109,7 @@ async function drag(page, shot, rect) {
   await main.screenshot({ path: path.join(out, "09-screen-calibrate.png") });
   await main.getByRole("button", { name: "Save calibration" }).click();
   await main.waitForSelector("text=/Applied|Found/", { timeout: 30000 });
-  const msg1 = await main.locator(".screen-page .section-body p.small").first().textContent();
+  const msg1 = await main.locator(".screen-msg").first().textContent();
   step("calibrate-and-read", { message: msg1, templates: await main.locator("text=/Icon templates/").first().textContent() });
 
   // Score the read against ground truth (players left to right = cards left to right).
@@ -111,17 +117,21 @@ async function drag(page, shot, rect) {
   const itemName = new Map(snap.items.map((i) => [i.className, i.name]));
   const heroName = new Map(snap.heroes.map((h) => [h.id, h.name]));
   const rowEls = main.locator(".screen-row");
-  const rows = await rowEls.count();
-  let correct = 0;
-  let total = 0;
-  const wrong = [];
-  for (let i = 0; i < Math.min(rows, truth.rows.length); i++) {
-    const got = (await rowEls.nth(i).locator(".screen-item-name").allTextContents()).sort();
-    const want = truth.rows[i].items.map((x) => itemName.get(x.className)).sort();
-    total += want.length;
-    want.forEach((w) => (got.includes(w) ? correct++ : wrong.push(`player ${i + 1}: missing ${w}`)));
-    got.filter((g) => !want.includes(g)).forEach((g) => wrong.push(`player ${i + 1}: extra ${g}`));
-  }
+  const score = async (t) => {
+    const n = await rowEls.count();
+    let correct = 0;
+    let total = 0;
+    const wrong = [];
+    for (let i = 0; i < Math.min(n, t.rows.length); i++) {
+      const got = (await rowEls.nth(i).locator(".screen-item-name").allTextContents()).sort();
+      const want = t.rows[i].items.map((x) => itemName.get(x.className)).sort();
+      total += want.length;
+      want.forEach((w) => (got.includes(w) ? correct++ : wrong.push(`player ${i + 1}: missing ${w}`)));
+      got.filter((g) => !want.includes(g)).forEach((g) => wrong.push(`player ${i + 1}: extra ${g}`));
+    }
+    return { players: n, correct, total, wrong };
+  };
+  const { players: rows, correct, total, wrong } = await score(truth);
   const auto = /Applied automatically/.test(msg1 || "");
   const proposed = [];
   for (let i = 0; i < rows; i++) proposed.push(await rowEls.nth(i).locator("select option:checked").textContent());
@@ -146,7 +156,7 @@ async function drag(page, shot, rect) {
     await main.screenshot({ path: path.join(out, "11-screen-review.png") });
     await main.locator(".screen-actions").getByRole("button", { name: /^Apply/ }).click();
     await sleep(500);
-    step("review-apply", { message: await main.locator(".screen-page .section-body p.small").first().textContent() });
+    step("review-apply", { message: await main.locator(".screen-msg").first().textContent() });
   }
 
   // 4) Hotkey path: the global shortcut while the "game" is in front.
@@ -162,7 +172,7 @@ async function drag(page, shot, rect) {
   const note = overlay ? await overlay.locator(".ov-screen").textContent().catch(() => null) : null;
   if (overlay) await overlay.screenshot({ path: path.join(out, "12-overlay-screen-note.png") }).catch(() => {});
   await showGame(false);
-  step("hotkey", { via: hotkey, overlayNote: note, message: await main.locator(".screen-page .section-body p.small").first().textContent().catch(() => null) });
+  step("hotkey", { via: hotkey, overlayNote: note, message: await main.locator(".screen-msg").first().textContent().catch(() => null) });
 
   // 5) Match tab shows the screen-read items.
   await main.getByRole("tab", { name: "Match" }).click();
@@ -170,6 +180,71 @@ async function drag(page, shot, rect) {
   const seen = await main.locator("text=/seen on screen/").count();
   step("match-tab", { seenOnScreenBadges: seen });
   await main.screenshot({ path: path.join(out, "13-match-after-screen-read.png") });
+
+  // 6) Read on Tab: turn the option on, put a board with different builds in the "game", give the
+  // game focus and hold Tab for a second. No hotkey, no clicks: the calibrated slots are read.
+  await main.getByRole("tab", { name: "Screen" }).click();
+  await main.getByText("Read automatically every time I hold Tab in the game").click();
+  await main.waitForSelector("text=listening for Tab", { timeout: 10000 }).catch(() => {});
+  const listener = await main.locator("text=/listening for Tab|Tab listener could not start/").first().textContent().catch(() => null);
+  const before = await main.locator(".screen-msg").first().textContent().catch(() => null);
+  await app.evaluate(async (_e, file) => {
+    const w = globalThis.fakeGame;
+    await w.loadFile(file);
+    w.setAlwaysOnTop(true, "screen-saver");
+    w.show();
+    w.focus();
+  }, html2);
+  await sleep(800);
+  let tabVia = "xdotool";
+  try {
+    execFileSync("xdotool", ["keydown", "Tab"]);
+    await sleep(1000);
+    execFileSync("xdotool", ["keyup", "Tab"]);
+  } catch (e) {
+    tabVia = `xdotool failed: ${e.message}`;
+  }
+  // Wait for the read to finish (the message passes through "Reading…").
+  const settled = (m) => m !== before && !/^(Reading|Preparing|Capturing)/.test(m || "");
+  let after = before;
+  for (let i = 0; i < 60 && !settled(after); i++) {
+    await sleep(250);
+    after = await main.locator(".screen-msg").first().textContent().catch(() => null);
+  }
+  await sleep(500);
+  await showGame(false);
+  const tabStatus = await main.evaluate(() => window.countercoach.tabStatus()).catch((e) => String(e));
+  const nextScore = await score(nextTruth);
+  step("hold-tab", {
+    via: tabVia,
+    listener,
+    message: after,
+    appliedAutomatically: /Applied automatically/.test(after || ""),
+    players: nextScore.players,
+    itemsCorrect: nextScore.correct,
+    itemsExpected: nextScore.total,
+    wrong: nextScore.wrong,
+    tabStatus,
+  });
+  await main.evaluate(() => window.scrollTo(0, 0));
+  await main.screenshot({ path: path.join(out, "14-screen-read-on-tab.png") });
+
+  // 7) A quick tap (shorter than the hold delay) must not capture.
+  await app.evaluate(() => {
+    const w = globalThis.fakeGame;
+    w.show();
+    w.focus();
+  });
+  await sleep(500);
+  execFileSync("xdotool", ["keydown", "Tab"]);
+  await sleep(100);
+  execFileSync("xdotool", ["keyup", "Tab"]);
+  await sleep(2500);
+  await showGame(false);
+  const afterTap = await main.locator(".screen-msg").first().textContent().catch(() => null);
+  step("tap-tab", { captured: afterTap !== after, tabStatus: await main.evaluate(() => window.countercoach.tabStatus()).catch((e) => String(e)) });
+  await main.getByText("Read automatically every time I hold Tab in the game").scrollIntoViewIfNeeded();
+  await main.screenshot({ path: path.join(out, "15-screen-tab-setting.png") });
 
   result.consoleErrors = errors;
   fs.writeFileSync(path.join(out, "screen-e2e.json"), JSON.stringify(result, null, 1) + "\n");

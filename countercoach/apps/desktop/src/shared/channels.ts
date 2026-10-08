@@ -24,6 +24,7 @@ export const IPC = {
   screenOpenSaved: "cc:screen-open-saved",
   screenTemplates: "cc:screen-templates",
   screenTemplatesProgress: "cc:screen-templates-progress",
+  screenTabStatus: "cc:screen-tab-status",
   dataEvent: "cc:data-event",
   settingsEvent: "cc:settings-event",
 } as const;

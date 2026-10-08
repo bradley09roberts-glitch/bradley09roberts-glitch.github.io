@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { calibrationBadges, layoutFromCalibration, readField, toPixels, type Rect, type RowTarget, type ScreenLayout } from "@countercoach/engine";
-import type { SavedCaptures } from "../../shared/capture";
+import {
+  buildSlotGrid,
+  calibrationBadges,
+  layoutFromCalibration,
+  mergeSlotGrids,
+  readField,
+  readScreen,
+  toPixels,
+  type Rect,
+  type RowTarget,
+  type ScreenLayout,
+} from "@countercoach/engine";
+import type { SavedCaptures, TabWatcherStatus } from "../../shared/capture";
 import type { Coach } from "../useCoach";
 import { toImage, type ReaderSession, type ScreenReader } from "../useScreenReader";
 import { Badge, Icon, Section } from "./common";
@@ -12,7 +23,12 @@ import { Badge, Icon, Section } from "./common";
 
 const SLOT_TONE = { weapon: "weapon", vitality: "vitality", spirit: "spirit" } as const;
 
-type DrawnBox = { rect: Rect; label: string; tone: "area" | "icon" | "portrait" | "good" | "warn" };
+type DrawnBox = { rect: Rect; label: string; tone: "area" | "icon" | "portrait" | "good" | "warn" | "slot" };
+
+/** Calibrated slots drawn faintly over a capture, so you can see what the reader checks. */
+function slotBoxes(layout: ScreenLayout | null, img: { width: number; height: number }): DrawnBox[] {
+  return (layout?.slots?.cards ?? []).flatMap((c) => c.slots.map((s) => ({ rect: toPixels(s, img), label: "", tone: "slot" as const })));
+}
 
 /** An image with rectangles; optionally lets the user drag out a new one (image pixels). */
 function ImageBoxes({ src, width, height, boxes, onDraw }: { src: string; width: number; height: number; boxes: DrawnBox[]; onDraw?: (r: Rect) => void }) {
@@ -90,14 +106,20 @@ function Calibrate({ c, r, session, onDone }: { c: Coach; r: ScreenReader; sessi
     if (!area || !icon) return;
     // Learn from the marked icon whether this screen draws tier badges, and their colour.
     const templates = await r.ensureTemplates();
-    const layout = layoutFromCalibration(
+    const img = toImage(session.capture);
+    let layout = layoutFromCalibration(
       { width, height },
       area,
       icon,
       withPortrait && portrait ? { box: portrait } : null,
       new Date().toISOString(),
-      templates ? calibrationBadges(toImage(session.capture), icon, templates) : undefined,
+      templates ? calibrationBadges(img, icon, templates) : undefined,
     );
+    // Learn every item slot from this capture; later reads check only those slots.
+    if (templates) {
+      const grid = buildSlotGrid(readScreen(img, layout, templates), layout);
+      if (grid) layout = { ...layout, slots: grid };
+    }
     await c.updateSettings({ screen: { layout } });
     onDone(layout);
   };
@@ -169,11 +191,31 @@ function Review({ c, r }: { c: Coach; r: ScreenReader }) {
   const enemies = (readField(c.state, "roster.enemies", now)?.value as number[] | undefined) ?? [];
   const allies = (readField(c.state, "roster.allies", now)?.value as number[] | undefined) ?? [];
   const name = (id: number) => data.hero(id)?.name ?? `#${id}`;
-  const boxes: DrawnBox[] = read.rows.flatMap((row) => [
+  const boxes: DrawnBox[] = [
+    ...slotBoxes(c.settings.screen.layout, s.capture),
+    ...read.rows.flatMap((row) => [
     ...row.items.map((it) => ({ rect: it.box, label: "", tone: it.status === "confident" ? ("good" as const) : ("warn" as const) })),
     ...(row.hero?.status === "confident" ? [{ rect: row.hero.box, label: name(row.hero.candidates[0]!.heroId!), tone: "portrait" as const }] : []),
-  ]);
+    ]),
+  ];
   const applied = s.appliedAt != null;
+  const inRoster = new Set([...(me != null ? [me] : []), ...enemies, ...allies]);
+  const others = data
+    .playableHeroes()
+    .filter((h) => !inRoster.has(h.id))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  /** Assign a row; picking a hero that is not in the roster yet adds them to it. */
+  const choose = (row: number, value: string) => {
+    const add = /^add-(enemy|ally):(\d+)$/.exec(value);
+    if (add) {
+      const id = Number(add[2]);
+      if (add[1] === "enemy") c.send(c.input.enemies([...enemies, id]));
+      else c.send(c.input.allies([...allies, id]));
+      r.setRowTarget(row, { kind: add[1] as "enemy" | "ally", heroId: id });
+      return;
+    }
+    r.setRowTarget(row, parseTarget(value));
+  };
   const unit = read.orientation === "columns" ? "Player" : "Row";
   const unassigned = s.rows.filter((x) => !x.target).length;
   return (
@@ -204,7 +246,7 @@ function Review({ c, r }: { c: Coach; r: ScreenReader }) {
                     value={targetValue(row.target)}
                     disabled={applied}
                     aria-label={`${unit} ${row.index + 1} belongs to`}
-                    onChange={(e) => r.setRowTarget(row.index, parseTarget(e.target.value))}
+                    onChange={(e) => choose(row.index, e.target.value)}
                   >
                     <option value="">
                       {unit} {row.index + 1}: choose…
@@ -220,6 +262,24 @@ function Review({ c, r }: { c: Coach; r: ScreenReader }) {
                         Ally: {name(id)}
                       </option>
                     ))}
+                    {others.length > 0 && enemies.length < 6 && (
+                      <optgroup label="Add an enemy">
+                        {others.map((h) => (
+                          <option key={`ae${h.id}`} value={`add-enemy:${h.id}`}>
+                            Enemy: {h.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {others.length > 0 && allies.length < 5 && (
+                      <optgroup label="Add an ally">
+                        {others.map((h) => (
+                          <option key={`aa${h.id}`} value={`add-ally:${h.id}`}>
+                            Ally: {h.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                     <option value="ignore">Ignore (not a player)</option>
                   </select>
                   {row.unknownHeroId != null && !applied && (
@@ -349,13 +409,38 @@ export function ScreenPanel({ c, r }: { c: Coach; r: ScreenReader }) {
   useEffect(() => {
     if (r.templates.status === "idle") void r.ensureTemplates();
   }, [r.templates.status, r.ensureTemplates]);
+  const [tab, setTab] = useState<TabWatcherStatus | null>(null);
+  useEffect(() => {
+    if (!isElectron) return;
+    void c.host.tabStatus().then(setTab);
+    return c.host.onTabStatus(setTab);
+  }, [c.host, isElectron]);
+  const [slotNote, setSlotNote] = useState("");
   const s = r.session;
   const busy = r.status === "capturing" || r.status === "reading";
   const layoutBoxes = useMemo(() => {
     if (!layout || !s) return [];
     const img = { width: s.capture.width, height: s.capture.height };
-    return [{ rect: toPixels(layout.itemArea, img), label: "items", tone: "area" as const }];
+    return [{ rect: toPixels(layout.itemArea, img), label: "items", tone: "area" as const }, ...slotBoxes(layout, img)];
   }, [layout, s]);
+  const slotCount = layout?.slots ? layout.slots.cards.reduce((n, card) => n + card.slots.length, 0) : 0;
+  /** Add the slots visible on this capture to the calibrated grid (e.g. after players bought more items). */
+  const learnSlots = async () => {
+    if (!layout || !s) return;
+    const templates = await r.ensureTemplates();
+    if (!templates) return;
+    const fresh = readScreen(toImage(s.capture), { ...layout, slots: undefined }, templates);
+    const grid = buildSlotGrid(fresh, layout);
+    if (!grid) {
+      setSlotNote("No items were found on this capture, so the slots were not changed.");
+      return;
+    }
+    const slots = layout.slots ? mergeSlotGrids(layout.slots, grid) : grid;
+    const next = { ...layout, slots };
+    await c.updateSettings({ screen: { layout: next } });
+    setSlotNote(`Slots: ${slots.cards.length} players, ${slots.cards.reduce((n, card) => n + card.slots.length, 0)} item slots.`);
+    r.reread(next);
+  };
 
   return (
     <div className="grid2 screen-page">
@@ -365,6 +450,10 @@ export function ScreenPanel({ c, r }: { c: Coach; r: ScreenReader }) {
           {c.settings.screen.captureDelayMs > 0 ? ` (the capture happens ${(c.settings.screen.captureDelayMs / 1000).toFixed(1)} s after the hotkey)` : ""}. CounterCoach
           captures the screen under your mouse, reads the item icons and portraits locally, and fills in your items and the enemies' items. Nothing is uploaded, and the
           game is not touched: this only looks at pixels you can already see.
+        </p>
+        <p className="small">
+          Easiest way: calibrate once on a capture where everyone has lots of items, then turn on <b>Read automatically every time I hold Tab</b> below. After that, each
+          time you hold Tab in a match the scoreboard is read again and the advice updates.
         </p>
         <div className="row gap">
           {isElectron && (
@@ -385,12 +474,19 @@ export function ScreenPanel({ c, r }: { c: Coach; r: ScreenReader }) {
               {layout ? "Recalibrate on this capture" : "Calibrate on this capture"}
             </button>
           )}
+          {s && layout && (
+            <button type="button" className="btn ghost" disabled={busy} onClick={() => void learnSlots()}>
+              Learn more slots from this capture
+            </button>
+          )}
         </div>
-        {r.message && <p className={`small ${r.status === "error" ? "flag" : r.status === "applied" ? "good" : "muted"}`}>{r.message}</p>}
+        {slotNote && <p className="small muted">{slotNote}</p>}
+        {r.message && <p className={`small screen-msg ${r.status === "error" ? "flag" : r.status === "applied" ? "good" : "muted"}`}>{r.message}</p>}
         <TemplateStatus r={r} />
         <p className="muted small">
-          Status: <b>experimental</b>. Recognition was tested on synthetic scoreboards built from the game's item art (see docs/TEST_RESULTS.md), not on a real Deadlock
-          scoreboard yet. Uncertain icons are always shown for you to confirm. Enemy items appear only if the game shows them on that screen.
+          Status: <b>experimental</b>. Item recognition was checked on crops of a real Deadlock screenshot and on synthetic scoreboards built from the game's item art
+          (see docs/TEST_RESULTS.md); a full 12-player match scoreboard has not been tested yet. Uncertain icons are always shown for you to confirm. Enemy items appear
+          only if the game shows them on that screen.
         </p>
       </Section>
 
@@ -401,7 +497,15 @@ export function ScreenPanel({ c, r }: { c: Coach; r: ScreenReader }) {
           session={s}
           onDone={(newLayout) => {
             setCalibrating(false);
-            if (newLayout) r.reread(newLayout);
+            if (newLayout) {
+              const g = newLayout.slots;
+              setSlotNote(
+                g
+                  ? `Calibrated: learned ${g.cards.length} players and ${g.cards.reduce((n, card) => n + card.slots.length, 0)} item slots. Later reads check only these slots.`
+                  : "Calibrated, but no item slots were found on this capture; reads will scan the whole area.",
+              );
+              r.reread(newLayout);
+            }
           }}
         />
       )}
@@ -417,7 +521,11 @@ export function ScreenPanel({ c, r }: { c: Coach; r: ScreenReader }) {
           Calibration:{" "}
           {layout ? (
             <>
-              <Badge tone="good">set</Badge> <span className="muted">aspect {layout.aspect.toFixed(2)}, icon {(layout.iconSize * 100).toFixed(1)}% of screen height, portraits {layout.portrait ? "on" : "off"}</span>{" "}
+              <Badge tone="good">set</Badge>{" "}
+              <span className="muted">
+                aspect {layout.aspect.toFixed(2)}, icon {(layout.iconSize * 100).toFixed(1)}% of screen height, portraits {layout.portrait ? "on" : "off"}
+                {layout.slots ? `, ${layout.slots.cards.length} players, ${slotCount} item slots learned` : ", no item slots learned yet"}
+              </span>{" "}
               <button type="button" className="btn tiny ghost" onClick={() => void c.updateSettings({ screen: { layout: null } })}>
                 clear
               </button>
@@ -443,9 +551,56 @@ export function ScreenPanel({ c, r }: { c: Coach; r: ScreenReader }) {
           </select>
         </label>
         <p className="muted small">Hotkey: {c.settings.hotkeys.readScreen} (change it in Settings → Hotkeys; a plain F-key such as F8 also works).</p>
+        {isElectron && (
+          <>
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={c.settings.screen.captureOnTab}
+                onChange={(e) => void c.updateSettings({ screen: { captureOnTab: e.target.checked } })}
+              />{" "}
+              Read automatically every time I hold Tab in the game
+            </label>
+            <label className="field inline">
+              <span>Hold Tab for</span>
+              <select
+                className="input"
+                value={c.settings.screen.tabDelayMs}
+                disabled={!c.settings.screen.captureOnTab}
+                onChange={(e) => void c.updateSettings({ screen: { tabDelayMs: Number(e.target.value) } })}
+              >
+                {[250, 450, 700, 1000, 1500].map((ms) => (
+                  <option key={ms} value={ms}>
+                    {ms / 1000} s before capturing
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="small">
+              {c.settings.screen.captureOnTab ? (
+                tab?.running ? (
+                  <>
+                    <Badge tone="good">listening for Tab</Badge>{" "}
+                    <span className="muted">
+                      {layout ? "" : "Calibrate first. "}A tap is ignored; holding Tab captures once. Reads that find no scoreboard change nothing.
+                    </span>
+                  </>
+                ) : (
+                  <Badge tone="warn">{tab?.error ? `Tab listener could not start: ${tab.error}` : "starting…"}</Badge>
+                )
+              ) : (
+                <span className="muted">Off. When on, CounterCoach watches only the Tab key (it never blocks or sends keys) while this app is running.</span>
+              )}
+            </p>
+          </>
+        )}
       </Section>
       <Section title="Privacy">
         <p className="small">Captures are processed in memory and discarded. Nothing leaves your computer.</p>
+        <p className="muted small">
+          Read on Tab is off unless you turn it on. It uses a passive keyboard listener that reacts only to Tab: it never blocks or sends keys, and no keys are logged or
+          stored.
+        </p>
         {isElectron && (
           <>
             <label className="check">

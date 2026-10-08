@@ -54,6 +54,10 @@ export const settingsSchema = z.object({
     saveCaptures: z.boolean(),
     /** Wait after the hotkey before capturing, so you can press it and then hold Tab. */
     captureDelayMs: z.number().int().min(0).max(3000),
+    /** Read automatically whenever Tab is held in game (passive key listener; off by default). */
+    captureOnTab: z.boolean(),
+    /** How long Tab must be held before the capture (the scoreboard needs a moment to appear). */
+    tabDelayMs: z.number().int().min(150).max(2000),
   }),
   coach: z.object({
     difficulty: z.enum(["simple", "standard", "complex"]),
@@ -86,7 +90,7 @@ export const DEFAULT_SETTINGS: Settings = {
   logging: { enabled: false },
   data: { autoCheck: true },
   rules: { totalSlots: null, sellFraction: null },
-  screen: { layout: null, autoApply: true, fullInventories: true, saveCaptures: false, captureDelayMs: 1000 },
+  screen: { layout: null, autoApply: true, fullInventories: true, saveCaptures: false, captureDelayMs: 1000, captureOnTab: false, tabDelayMs: 450 },
   coach: { difficulty: "standard", route: "auto", archetypeByHero: {}, lockedCoreByHero: {} },
 };
 
