@@ -17,3 +17,7 @@ export * from "./abilities/planner.js";
 export * from "./state/adapters.js";
 export * from "./features/features.js";
 export * from "./engine/coach.js";
+export * from "./vision/image.js";
+export * from "./vision/templates.js";
+export * from "./vision/scan.js";
+export * from "./vision/read.js";

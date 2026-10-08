@@ -1,4 +1,5 @@
 import { decisionLogSchema, type DecisionLog, type ReviewStamps, type ScenarioFixture, type Snapshot } from "@countercoach/engine";
+import type { CaptureResult, SavedCaptures } from "../shared/capture";
 import type { DataStatusEvent, OverlayModel } from "../shared/ipc";
 import { DEFAULT_SETTINGS, patchSettings, sanitizeSettings, type Settings } from "../shared/settings";
 
@@ -9,6 +10,8 @@ export interface Bootstrap {
   latest: { clientVersion: number | null; checkedAt: string } | null;
   settings: Settings;
   fixtures: unknown[];
+  /** Screen-reader icon templates if already built on this machine, else null (built on first use). */
+  icons: unknown;
   platform: string;
   version: string;
 }
@@ -34,6 +37,18 @@ export interface Host {
   logRead(id: string): Promise<DecisionLog | null>;
   logDeleteAll(): Promise<boolean>;
   importReplay(): Promise<{ log?: DecisionLog; error?: string } | null>;
+  /** Capture the screen under the cursor after `delayMs` (desktop app only). */
+  captureScreen(delayMs: number): Promise<CaptureResult>;
+  /** Pick a screenshot file to read. */
+  loadImage(): Promise<CaptureResult | null>;
+  savedCaptures(): Promise<SavedCaptures>;
+  deleteSavedCaptures(): Promise<SavedCaptures>;
+  openSavedCaptures(): Promise<boolean>;
+  /** Captures triggered by the global hotkey. */
+  onScreenCaptured(fn: (r: CaptureResult) => void): () => void;
+  /** Icon templates for the screen reader, built locally on first use (downloads item art once). */
+  iconTemplates(): Promise<unknown>;
+  onTemplatesProgress(fn: (p: { done: number; total: number }) => void): () => void;
   onOverlayModel(fn: (m: OverlayModel) => void): () => void;
   onOverlayState(fn: (m: OverlayStateMsg) => void): () => void;
   onDataEvent(fn: (e: DataStatusEvent) => void): () => void;
@@ -73,13 +88,14 @@ class WebHost implements Host {
   private listeners = { overlay: new Set<(m: OverlayModel) => void>(), settings: new Set<(s: Settings) => void>() };
 
   async getBootstrap(): Promise<Bootstrap> {
-    const [snapshot, stamps, index] = await Promise.all([
+    const [snapshot, stamps, index, icons] = await Promise.all([
       fetch("./data/snapshot.json").then((r) => r.json() as Promise<Snapshot>),
       fetch("./data/review-stamps.json").then((r) => (r.ok ? (r.json() as Promise<ReviewStamps>) : null)).catch(() => null),
       fetch("./data/fixtures/index.json").then((r) => (r.ok ? (r.json() as Promise<string[]>) : [])).catch(() => [] as string[]),
+      Promise.resolve(null),
     ]);
     const fixtures = await Promise.all(index.map((f) => fetch(`./data/fixtures/${f}`).then((r) => r.json() as Promise<ScenarioFixture>).catch(() => null)));
-    return { snapshot, stamps, source: "bundled (web preview)", latest: null, settings: this.settings, fixtures: fixtures.filter(Boolean), platform: "web", version: "web" };
+    return { snapshot, stamps, source: "bundled (web preview)", latest: null, settings: this.settings, fixtures: fixtures.filter(Boolean), icons, platform: "web", version: "web" };
   }
   async setSettings(patch: unknown): Promise<Settings> {
     this.settings = patchSettings(this.settings, patch);
@@ -141,6 +157,54 @@ class WebHost implements Host {
       };
       input.click();
     });
+  }
+  async captureScreen(): Promise<CaptureResult> {
+    return { error: "Screen capture runs in the desktop app. In this preview, use Load screenshot." };
+  }
+  loadImage(): Promise<CaptureResult | null> {
+    return new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/png,image/jpeg";
+      input.onchange = async () => {
+        const f = input.files?.[0];
+        if (!f) return resolve(null);
+        try {
+          const bmp = await createImageBitmap(f);
+          const canvas = document.createElement("canvas");
+          canvas.width = bmp.width;
+          canvas.height = bmp.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return resolve({ error: "Canvas unavailable" });
+          ctx.drawImage(bmp, 0, 0);
+          const d = ctx.getImageData(0, 0, bmp.width, bmp.height);
+          resolve({ width: d.width, height: d.height, data: new Uint8Array(d.data.buffer), order: "rgba", source: f.name, at: Date.now() });
+        } catch {
+          resolve({ error: "Could not read that image" });
+        }
+      };
+      input.click();
+    });
+  }
+  async savedCaptures() {
+    return { count: 0, bytes: 0, dir: "" };
+  }
+  async deleteSavedCaptures() {
+    return { count: 0, bytes: 0, dir: "" };
+  }
+  async openSavedCaptures() {
+    return false;
+  }
+  onScreenCaptured() {
+    return () => {};
+  }
+  async iconTemplates(): Promise<unknown> {
+    // Web preview only: a development fixture copied in by `build:web`.
+    const r = await fetch("./data/icons.json").catch(() => null);
+    return r && r.ok ? r.json() : { error: "Icon templates are not available in this preview." };
+  }
+  onTemplatesProgress() {
+    return () => {};
   }
   onOverlayModel(fn: (m: OverlayModel) => void) {
     this.listeners.overlay.add(fn);

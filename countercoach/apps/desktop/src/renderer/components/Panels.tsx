@@ -340,7 +340,7 @@ export function SettingsPanel({ c }: { c: Coach }) {
           className="btn small"
           onClick={() => {
             const bad = Object.values(hk).find((v) => !acceleratorSchema.safeParse(v).success);
-            if (bad) return setHkError(`"${bad}" is not a valid shortcut (e.g. Ctrl+Alt+O)`);
+            if (bad) return setHkError(`"${bad}" is not a valid shortcut (e.g. Ctrl+Alt+O or F8)`);
             setHkError(null);
             void c.updateSettings({ hotkeys: hk });
           }}

@@ -41,6 +41,7 @@ export function OverlayCard({ m, expanded, editMode = false, scale = 1 }: { m: O
       )}
       {m.ability && <div className="ov-ability">⬆ {m.ability}</div>}
       <div className="ov-reason">{m.reason}</div>
+      {m.screenNote && <div className="ov-screen">◉ {m.screenNote}</div>}
       {expanded && (
         <div className="ov-more">
           {m.saveFor && (

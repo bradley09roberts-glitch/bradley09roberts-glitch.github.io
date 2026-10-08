@@ -1,0 +1,39 @@
+{
+ "note": "SYNTHETIC test image built from community-API art in a made-up layout; not a Deadlock screenshot.",
+ "display": "Xvfb 1920x1080 (Linux)",
+ "steps": [
+  {
+   "name": "capture-button",
+   "ok": true,
+   "message": "Calibrate once: mark where the item icons are on this capture."
+  },
+  {
+   "name": "calibrate-and-read",
+   "message": "Applied automatically: 12 players, 53 items (1636 ms).",
+   "templates": "Icon templates ready (173 items, 40 heroes), built on this PC from the item art."
+  },
+  {
+   "name": "accuracy",
+   "rows": 12,
+   "expectedRows": 12,
+   "itemsCorrect": 53,
+   "itemsExpected": 53,
+   "wrong": [],
+   "rowsAssignedCorrectly": 12
+  },
+  {
+   "name": "review-apply",
+   "message": "Applied: 12 players, 53 items."
+  },
+  {
+   "name": "hotkey",
+   "via": "xdotool",
+   "overlayNote": "◉ Read 12 players · 53 items"
+  },
+  {
+   "name": "match-tab",
+   "seenOnScreenBadges": 1
+  }
+ ],
+ "consoleErrors": []
+}

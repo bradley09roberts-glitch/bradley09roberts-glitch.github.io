@@ -6,7 +6,7 @@ import { evaluate } from "@countercoach/engine";
 import { computeOverlayBounds, offsetFromBounds, type DisplayInfo } from "../src/main/overlayPlacement";
 import { LogStore, SettingsStore } from "../src/main/stores";
 import { overlayModelSchema } from "../src/shared/ipc";
-import { DEFAULT_SETTINGS, patchSettings, sanitizeSettings } from "../src/shared/settings";
+import { DEFAULT_SETTINGS, acceleratorSchema, patchSettings, sanitizeSettings } from "../src/shared/settings";
 import { toOverlayModel } from "../src/renderer/useCoach";
 import { deps, playFixture, prefs } from "../../../packages/engine/test/helpers";
 
@@ -61,6 +61,31 @@ describe("settings", () => {
     expect(s.overlay.scale).toBe(DEFAULT_SETTINGS.overlay.scale);
     expect((s as unknown as Record<string, unknown>).evil).toBeUndefined();
     expect(s.version).toBe(1);
+  });
+  it("keeps older settings files working when new sections and hotkeys are added", () => {
+    const old = JSON.parse(JSON.stringify(DEFAULT_SETTINGS)) as Record<string, unknown>;
+    delete old.screen;
+    (old.hotkeys as Record<string, unknown>).toggleOverlay = "Ctrl+Alt+P";
+    delete (old.hotkeys as Record<string, unknown>).readScreen;
+    const s = sanitizeSettings(old);
+    expect(s.hotkeys.toggleOverlay).toBe("Ctrl+Alt+P");
+    expect(s.hotkeys.readScreen).toBe(DEFAULT_SETTINGS.hotkeys.readScreen);
+    expect(s.screen).toEqual(DEFAULT_SETTINGS.screen);
+    // Screen captures are never kept on disk unless the user opts in.
+    expect(DEFAULT_SETTINGS.screen.saveCaptures).toBe(false);
+  });
+  it("accepts bare F-keys and modifier chords as hotkeys, nothing else", () => {
+    expect(acceleratorSchema.safeParse("F8").success).toBe(true);
+    expect(acceleratorSchema.safeParse("Ctrl+Alt+R").success).toBe(true);
+    for (const bad of ["R", "F25", "Tab", "Ctrl+Alt+", "rm -rf /"]) expect(acceleratorSchema.safeParse(bad).success, bad).toBe(false);
+    expect(patchSettings(DEFAULT_SETTINGS, { screen: { captureDelayMs: 99999 } }).screen.captureDelayMs).toBe(DEFAULT_SETTINGS.screen.captureDelayMs);
+  });
+  it("accepts a valid screen calibration and rejects a malformed one", () => {
+    const layout = { version: 1, aspect: 16 / 9, itemArea: { x: 0.2, y: 0.1, w: 0.4, h: 0.8 }, iconSize: 0.035, portrait: null, calibratedAt: "2026-10-08T00:00:00Z" };
+    expect(patchSettings(DEFAULT_SETTINGS, { screen: { layout } }).screen.layout).toEqual(layout);
+    const bad = patchSettings(DEFAULT_SETTINGS, { screen: { layout: { ...layout, itemArea: { x: 5, y: 0, w: 1, h: 1 } } } });
+    expect(bad.screen.layout).toBeNull();
+    expect(bad.screen.autoApply).toBe(DEFAULT_SETTINGS.screen.autoApply);
   });
   it("persists atomically and reloads", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "cc-set-"));

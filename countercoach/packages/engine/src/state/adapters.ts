@@ -5,8 +5,9 @@ import type { AbilityState, DeathRecap, FieldKey, MatchEvent, MatchState, Phase,
 
 /**
  * State adapters translate an input channel into MatchEvents. Every adapter declares whether it
- * is verified; only the manual, scenario and replay adapters exist today. No live or
- * screen-capture adapter ships because none could be verified (see docs/CAPABILITIES.md).
+ * is verified against the real game. Manual, scenario and replay are verified; the screen reader
+ * ships as experimental (verified on synthetic scoreboards only); no live game-state interface
+ * exists (see docs/CAPABILITIES.md).
  */
 export interface AdapterInfo {
   id: SourceKind;
@@ -20,7 +21,12 @@ export const ADAPTERS: AdapterInfo[] = [
   { id: "scenario", label: "Scenario playback", verified: true, note: "Timestamped fixtures for demos and testing." },
   { id: "replay", label: "Post-match replay", verified: true, note: "Imported decision logs or replay files. Kept separate from live state." },
   { id: "live", label: "Live game interface", verified: false, note: "Not available: no documented Deadlock game-state interface was found." },
-  { id: "screen", label: "Screen capture", verified: false, note: "Not shipped: could not be validated against the real game in this build." },
+  {
+    id: "screen",
+    label: "Screen reader (experimental)",
+    verified: false,
+    note: "User-triggered capture of a screen you can see (e.g. the Tab scoreboard), read locally after a one-time calibration. Tested on synthetic scoreboards only; uncertain icons always need your confirmation.",
+  },
 ];
 
 // ---------------------------------------------------------------------------------------------

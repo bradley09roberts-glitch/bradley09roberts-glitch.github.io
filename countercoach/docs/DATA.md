@@ -80,6 +80,15 @@ At runtime:
 
 Hero and item icons are loaded at runtime from `assets-bucket.deadlock-api.com`. They are
 **not bundled**, because Valve's game art isn't ours to redistribute. If an image is
-unavailable, initials are shown instead. Community HUD repositories were read for evidence
+unavailable, initials are shown instead.
+
+The screen reader needs 16×16 thumbnails of every item's art and four hero-portrait styles.
+The app builds them **on the user's PC** the first time the screen reader is used (one download
+of about 330 images from the same CDN; only that host is fetched), caches them under
+`%APPDATA%\CounterCoach\vision\` per data snapshot, and rebuilds them after a data update. The
+repository keeps one such file at `fixtures/vision/icons.json` for automated tests, the
+benchmark and the browser preview; it is not part of the installer. `docs/screenshots/synthetic-scoreboard.png`
+is a made-up test image composed from the same art, used like the other screenshots for
+documentation and testing. Community HUD repositories were read for evidence
 only; no code or assets were copied. One of them (Predi-i/Deadlock-UI-Mods) is Apache-2.0; the
 other has no licence file.

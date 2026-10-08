@@ -2,7 +2,8 @@
 
 CounterCoach is an **external companion app** for Windows. It is not a game mod. It never
 touches Deadlock's files, memory, network traffic or input, and it never buys items or spends
-ability points for you. It is not affiliated with or endorsed by Valve. No claim is made that
+ability points for you. The only thing it ever looks at is your screen, and only when you press
+the screen-reader hotkey. It is not affiliated with or endorsed by Valve. No claim is made that
 third-party overlays are approved by Valve or safe from enforcement.
 
 > **Testing status:** the app launch and silent install/uninstall passed on a GitHub-hosted
@@ -38,7 +39,7 @@ That's enough for the first recommendation. Each card says which extra input wou
 death recap, ability tiers and unspent points).
 
 Useful keys in the main window: `/` focuses item search, `Ctrl+K` focuses hero search,
-`Alt+1…5` switches tabs, and `↑/↓/Enter` work in every search list.
+`Alt+1…6` switches tabs, and `↑/↓/Enter` work in every search list.
 
 ### Reading the advice
 
@@ -61,7 +62,7 @@ Useful keys in the main window: `/` focuses item search, `Ctrl+K` focuses hero s
 
 - Collapsed: next purchase, souls to go, next ability action, one reason. Expanded adds SAVE
   FOR, ALTERNATIVE and the top threats.
-- Default hotkeys: **Ctrl+Alt+O** show/hide, **Ctrl+Alt+E** expand/collapse, **Ctrl+Alt+M**
+- Default hotkeys: **Ctrl+Alt+R** read the screen, **Ctrl+Alt+O** show/hide, **Ctrl+Alt+E** expand/collapse, **Ctrl+Alt+M**
   edit mode (drag to move; press again to lock). Change them in **Settings → Hotkeys**.
 - While locked, the overlay is **click-through** and **cannot take keyboard focus**.
 - Scale, opacity, corner or custom position, and monitor choice are saved. Custom positions are
@@ -70,6 +71,40 @@ Useful keys in the main window: `/` focuses item search, `Ctrl+K` focuses hero s
   fullscreen. This has not been tested with the real game.
 - If you don't want the overlay, turn it off in Settings and use the main window on a second
   monitor (separate-window mode).
+
+### Reading the scoreboard automatically (experimental)
+
+Instead of typing items, let CounterCoach read them off your screen:
+
+1. In a match, press **Ctrl+Alt+R** and then hold **Tab** so the scoreboard shows. The app
+   captures the monitor your mouse is on one second after the hotkey (the delay is adjustable
+   in the Screen tab, and the hotkey can be changed in *Settings → Hotkeys*, including to a
+   plain F-key such as F8).
+2. **First time only:** open CounterCoach's **Screen** tab. It shows the capture and asks you to
+   drag three boxes: around all the item icons, tightly around one item icon, and (optional but
+   recommended) around the hero portrait in that icon's row. That's the calibration; it is
+   kept for every later match at the same aspect ratio.
+3. From then on, each Ctrl+Alt+R reads every row: which hero it is (from the portrait) and the
+   items in it. Your row fills **your items**, enemy rows fill **enemy items**, ally rows
+   fill **ally items**, and the advice updates. The overlay shows "Read 12 players · 53 items".
+4. If anything is uncertain (an icon that could be two items, a row it can't place, a hero
+   missing from your roster), nothing is applied. A banner points to the Screen tab, where you
+   pick from the top three candidates, choose who a row belongs to, or add a hero to the
+   roster, then press **Apply**.
+
+Good to know:
+
+- The first read downloads the item art once (about 330 images from the same CDN as the in-app
+  icons) and builds the templates on your PC.
+- It only sees what the game shows. If the Tab scoreboard doesn't show enemy items in your
+  build of the game, it can't read them. You can calibrate on another screen instead, such as
+  the shop's purchase log, and untick "full inventories".
+- Use **Borderless/Windowed** mode. Exclusive fullscreen captures come back black, and the app
+  tells you so.
+- **Status:** tested on synthetic scoreboards built from the real item art (99.7% correct, no
+  wrong answers among confident reads) and end to end in the app on Linux. It has **not yet been
+  tried on a real Deadlock scoreboard**. If it misreads your screen, turn on *Keep copies of
+  captures* in the Screen tab, reproduce it, and share one capture so the reader can be tuned.
 
 ### Scenarios, what-if and review
 
@@ -103,9 +138,12 @@ The app works offline with the bundled or last downloaded snapshot.
 | Downloaded data snapshots | `%APPDATA%\CounterCoach\data\` (`manifest.json` lists the active and previous snapshot) |
 | Decision logs (opt-in) | `%APPDATA%\CounterCoach\logs\` |
 | Current match and UI history | Browser storage inside `%APPDATA%\CounterCoach` |
+| Screen-reader icon templates | `%APPDATA%\CounterCoach\vision\` (rebuilt after a data update) |
+| Screen captures | Not stored. Only if you turn on *Keep copies of captures*: `%APPDATA%\CounterCoach\captures\` (last 20; *Delete saved captures* removes them) |
 
-Nothing is uploaded. The only network requests go to `api.deadlock-api.com` (data checks and
-refresh) and `assets-bucket.deadlock-api.com` (item and hero icons).
+Nothing is uploaded. Screen captures are read in memory and thrown away. The only network
+requests go to `api.deadlock-api.com` (data checks and refresh) and
+`assets-bucket.deadlock-api.com` (item and hero icons, and the one-time template download).
 
 ## Back up and roll back
 
@@ -121,6 +159,9 @@ CounterCoach makes no game-file changes, so there's nothing in Deadlock to back 
 ## Disable
 
 - Hide the overlay: **Ctrl+Alt+O** or *Settings → Overlay → Show overlay*.
+- Screen reader: nothing runs in the background; it only captures when you press its hotkey or
+  a button. Untick *Apply automatically* in the Screen tab to review every read before it is
+  used.
 - Stop network checks: *Settings → Game data* (automatic checks only run at startup; untick
   `data.autoCheck` in `settings.json` to stop them).
 - Stop logging: *Review → Turn logging off*. *Delete all logs* removes the files.

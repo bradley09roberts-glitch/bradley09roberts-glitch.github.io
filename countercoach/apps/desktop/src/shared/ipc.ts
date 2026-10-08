@@ -23,6 +23,8 @@ export const overlayModelSchema = z.object({
   threats: z.array(z.object({ label: z.string().max(60), evidence: z.string().max(40), urgent: z.boolean() })).max(3),
   confidence: z.enum(["high", "medium", "low"]),
   dataNote: z.string().max(200).nullable(),
+  /** Short status of the last screen read (e.g. "Read 5 players · 22 items"). */
+  screenNote: z.string().max(120).nullable(),
   updatedAt: z.number(),
 });
 export type OverlayModel = z.infer<typeof overlayModelSchema>;

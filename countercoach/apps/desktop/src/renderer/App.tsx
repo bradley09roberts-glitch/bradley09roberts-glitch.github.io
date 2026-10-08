@@ -4,16 +4,19 @@ import { useCoach } from "./useCoach";
 import { AbilityPanel, ExtrasPanel, PurchasePanel, ThreatPanel } from "./components/Coach";
 import { OverlayCard } from "./components/Overlay";
 import { ReviewPanel, ScenarioPanel, SettingsPanel, WhatIfPanel } from "./components/Panels";
+import { ScreenPanel } from "./components/Screen";
 import { AbilitySection, HeroSection, ItemsSection, MatchBar, RosterSection, SoulsSection, ThreatSection } from "./components/Setup";
 import { fmtTime } from "./format";
+import { useScreenReader } from "./useScreenReader";
 
-const TABS = ["Match", "What-if", "Review", "Scenarios", "Settings"] as const;
+const TABS = ["Match", "Screen", "What-if", "Review", "Scenarios", "Settings"] as const;
 type Tab = (typeof TABS)[number];
 
 export function App({ boot }: { boot: Bootstrap }) {
   const c = useCoach(boot);
+  const reader = useScreenReader(c, boot.icons);
   const [tab, setTab] = useState<Tab>(() => (new URLSearchParams(location.search).get("tab") as Tab) ?? "Match");
-  // Keyboard: "/" focuses item search, Ctrl+K hero search, Alt+1..5 switches tabs.
+  // Keyboard: "/" focuses item search, Ctrl+K hero search, Alt+1..6 switches tabs.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -26,7 +29,7 @@ export function App({ boot }: { boot: Bootstrap }) {
         e.preventDefault();
         setTab("Match");
         setTimeout(() => document.getElementById("hero-search")?.focus(), 0);
-      } else if (e.altKey && /^[1-5]$/.test(e.key)) {
+      } else if (e.altKey && /^[1-6]$/.test(e.key)) {
         setTab(TABS[Number(e.key) - 1]!);
       }
     };
@@ -57,6 +60,14 @@ export function App({ boot }: { boot: Bootstrap }) {
         </div>
       </header>
       {c.deps.compat.status === "outdated" && <div className="banner bad">{c.deps.compat.message}</div>}
+      {tab !== "Screen" && (reader.status === "review" || reader.status === "calibrate") && (
+        <div className="banner">
+          {reader.status === "calibrate" ? "A screen capture is waiting to be calibrated." : "A screen read is waiting for a quick check."}{" "}
+          <button type="button" className="btn tiny" onClick={() => setTab("Screen")}>
+            Open Screen tab
+          </button>
+        </div>
+      )}
       {tab === "Match" && (
         <main className="match">
           <div className="col setup">
@@ -88,6 +99,11 @@ export function App({ boot }: { boot: Bootstrap }) {
           </div>
         </main>
       )}
+      {tab === "Screen" && (
+        <main className="page">
+          <ScreenPanel c={c} r={reader} />
+        </main>
+      )}
       {tab === "What-if" && (
         <main className="page">
           <WhatIfPanel c={c} />
@@ -109,7 +125,7 @@ export function App({ boot }: { boot: Bootstrap }) {
         </main>
       )}
       <footer className="footer tiny muted">
-        Not affiliated with or endorsed by Valve. Uses only your own inputs; it does not read game memory, inject, or automate purchases. Game data: deadlock-api.com (community).
+        Not affiliated with or endorsed by Valve. Uses only your inputs and screens you capture yourself; it does not read game memory, inject, or automate purchases. Game data: deadlock-api.com (community).
       </footer>
     </div>
   );

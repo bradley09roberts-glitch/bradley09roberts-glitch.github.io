@@ -5,7 +5,7 @@ import type { Confidence } from "../types.js";
  * Where an observation came from.
  * - manual: typed/clicked by the user
  * - live: a verified live interface (none verified yet; reserved)
- * - screen: user-triggered local screen capture recognition (not shipped; reserved)
+ * - screen: user-triggered local screen capture recognition (experimental screen reader)
  * - scenario: development/demo fixture playback
  * - replay: post-match / spectator data. Never accepted by a live store.
  */

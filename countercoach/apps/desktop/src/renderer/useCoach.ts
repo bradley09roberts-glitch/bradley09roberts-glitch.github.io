@@ -66,6 +66,8 @@ export function useCoach(boot: Bootstrap) {
     }
   });
   const previous = useRef<CoachOutput["rec"] | null>(null);
+  /** Status line from the screen reader, shown on the overlay. */
+  const [screenNote, setScreenNote] = useState<string | null>(null);
   const lastLogged = useRef<string>("");
 
   useEffect(() => host.onSettings((s) => setSettingsState(s)), [host]);
@@ -116,7 +118,7 @@ export function useCoach(boot: Bootstrap) {
   }, [output]);
 
   // Overlay model (compact) pushed to the overlay window.
-  const overlayModel: OverlayModel = useMemo(() => toOverlayModel(output, deps), [output, deps]);
+  const overlayModel: OverlayModel = useMemo(() => ({ ...toOverlayModel(output, deps), screenNote }), [output, deps, screenNote]);
   useEffect(() => host.overlayUpdate(overlayModel), [host, overlayModel]);
 
   // Opt-in decision logging on meaningful advice changes only.
@@ -186,6 +188,7 @@ export function useCoach(boot: Bootstrap) {
     decisions,
     newMatch,
     overlayModel,
+    setScreenNote,
   };
 }
 
@@ -216,6 +219,7 @@ export function toOverlayModel(out: CoachOutput, deps: EngineDeps): OverlayModel
     threats: out.threatPanel.slice(0, 3).map((t) => ({ label: THREAT_SHORT[t.kind] ?? t.label, evidence: t.evidence, urgent: t.urgent })),
     confidence: r.confidence,
     dataNote: r.dataStatus.compat.status === "outdated" ? r.dataStatus.compat.message.slice(0, 200) : null,
+    screenNote: null,
     updatedAt: r.generatedAt,
   };
 }

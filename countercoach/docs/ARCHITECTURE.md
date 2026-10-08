@@ -9,17 +9,21 @@ countercoach/
 │   ├─ state/             observation model, match-state reducer, adapters, decision-log schema
 │   ├─ engine/            threat assessment, candidate generation/legality/scoring, selection, stability, coach facade
 │   ├─ abilities/         stateful ability planner
+│   ├─ vision/            screen reader: raster helpers, icon templates, sliding-window search,
+│   │                     scoreboard read, row → player proposals, observation events
 │   └─ features/          threat panel, power spike, build repair, team utility, replacement,
 │                         active hints, lane plan, what-if, post-match review
 ├─ packages/ingest        Node CLI + library: fetch → validate → normalise → quality-gate → snapshot
 ├─ apps/desktop           Electron shell + React renderer (one frontend; also runs in a browser for previews)
-│   ├─ src/main           windows, overlay placement, IPC (validated), settings/log/data stores, hotkeys
+│   ├─ src/main           windows, overlay placement, IPC (validated), settings/log/data stores, hotkeys,
+│   │                     screen capture (desktopCapturer) and local icon-template building
 │   ├─ src/preload        minimal contextBridge API (2 KB)
 │   ├─ src/renderer       React UI; runs the engine locally
 │   └─ src/shared         settings schema, IPC channels + schemas
 ├─ data/snapshots         versioned, validated game-data snapshots + manifest (last-known-good)
 ├─ data/knowledge         review stamps (fingerprints of reviewed items/abilities)
 ├─ fixtures/scenarios     timestamped scenario fixtures (tests, demos, playback)
+├─ fixtures/vision        icon-template fixture for tests and the browser preview (not shipped)
 └─ docs/                  capability report, usage, scoring, state, data, coverage, counter rules, tests
 ```
 
@@ -30,6 +34,7 @@ deadlock-api.com ──► ingest (zod raw validation ► normalise ► derive t
                                                      ► quality gate vs last-known-good) ──► snapshot.json
                                                                                               │
 manual input / scenario playback ──► MatchEvents ──► match-state reducer ──► MatchState       │
+hotkey ► desktopCapturer ► screen reader ─┘ (source "screen")                                 │
                                                                                  │            ▼
                                                      engine.evaluate(deps(snapshot, rules, profiles, review stamps), state, prefs)
                                                                                  │
@@ -67,6 +72,7 @@ manual input / scenario playback ──► MatchEvents ──► match-state red
 
 `packages/engine` has no DOM or Node dependencies (`types: []` in its tsconfig). A future native
 frontend, if a permitted interface ever exists, could feed `MatchEvent`s into the same reducer
-and call `evaluate()`. A future verified live or screen adapter only needs to emit
-`observe` / `observe.ambiguous` events with `source: "live" | "screen"`. Freshness, authority
-and correction rules then apply automatically.
+and call `evaluate()`. The screen reader already works this way: it emits ordinary `observe`
+events with `source: "screen"` (see `screenReadEvents`), so freshness, authority and
+correction rules apply to it automatically. A future verified live adapter would do the same
+with `source: "live"`.

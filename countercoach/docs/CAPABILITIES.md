@@ -15,8 +15,9 @@
 
 **Primary route: B — external Windows companion application** (Electron + React), with a
 compact overlay window and a separate-window mode. It is an *external companion*, not a
-native mod. It reads only explicit manual input, user-loaded scenario files and
-post-match replay files.
+native mod. It reads only explicit manual input, user-loaded scenario files, post-match replay
+files and, when the player presses a hotkey, a local capture of their own screen (the
+experimental screen reader, §2c).
 
 Route A (native Panorama HUD addon packaged as a VPK) was evaluated and **not built**:
 
@@ -80,7 +81,18 @@ evidence that the channel does not provide it, or use is excluded by policy.
 
 | Capability | Status | Notes |
 |---|---|---|
-| User-triggered capture of the game window | Untested / not shipped | No Windows or game in this environment and no real screenshots to validate against. The ambiguity-resolution flow it would use (candidates plus mandatory user confirmation) is implemented and tested in the engine. |
+| User-triggered capture of the screen the game is on | **Implemented** (experimental) | Hotkey (default Ctrl+Alt+R) or button. Electron's documented `desktopCapturer` (OS screen capture) grabs the display under the mouse; the overlay is made transparent for that moment. Verified on Linux/Xvfb; the Windows CI smoke step checks it on `windows-latest`. Exclusive fullscreen is expected to capture black (detected and reported). |
+| Reading item icons and hero portraits from a capture | **Implemented** (experimental); verified on **synthetic** scoreboards only | Pure-TypeScript template matching (`packages/engine/src/vision`). Templates come from each item's unique art and four hero-portrait styles. Synthetic benchmark: 98% of icons found, 99.7% identified, 0 wrong among confident reads. End to end in the app: 53/53 items, 12/12 players. See TEST_RESULTS.md. |
+| Knowing *where* the scoreboard draws items | **Calibrated by the user, once** | The real layout is unverified, so the user drags three boxes on their own capture (item area, one icon, optionally one portrait). Stored as screen fractions; a different aspect ratio asks for recalibration. |
+| Uncertain identifications | **Implemented** | Never auto-applied: the review screen shows the top three candidates for each uncertain icon and asks who each row belongs to. Machine-only reads are medium confidence and never override your own corrections. |
+| Whether the real Tab scoreboard shows **enemy** items | **Unverified** | A Nov 2024 forum bug report says holding Tab stopped showing other players' items "by default" ([thread](https://forums.playdeadlock.com/threads/cannot-view-enemy-items.47536/)); a same-month patch made the shop's Recent Purchases log colour enemy vs ally purchases. The reader can only see what the game shows. |
+| Privacy | **Implemented** | Captures are processed in memory and discarded. Saving copies is opt-in (last 20 kept) with a delete button. Nothing is uploaded. Templates are built on the user's PC from the item art (a one-time download from the same CDN as the in-app icons); no game art ships in the installer. |
+
+How this differs from an in-game HUD mod (the approach of the earlier "Deadlock live adaptive
+build assistant" project and of the community Item Assistant mod): those run JavaScript inside
+the game's Panorama UI and read the HUD's own panels, which needs a mod installed through
+`citadel/addons` and `gameinfo.gi`. CounterCoach stays outside the game and reads only pixels
+already on the player's screen, when the player asks.
 
 ### 2d. Manual input and scenario/replay
 
@@ -141,14 +153,14 @@ working in this environment, with how. **Limited** = works with stated restricti
 |---|---|---|
 | Delivery route | External Windows companion (Electron 44.4.5 + React 19.3) | Not a native mod. No game files touched. |
 | Native Panorama HUD addon | **Unavailable** | No permitted interface (§1). Not built; nothing was compiled or claimed. |
-| Data ingest (heroes, items, costs, components, abilities, level schedule, tier costs) | Implemented, verified | Build 6763 snapshot validated; 89 tests; quality gate rejected a real degraded rebuild. |
+| Data ingest (heroes, items, costs, components, abilities, level schedule, tier costs) | Implemented, verified | Build 6763 snapshot validated; 105 tests; quality gate rejected a real degraded rebuild. |
 | Versioning, content hash, last-known-good, diff, compatibility | Implemented, verified | `data.test.ts`, `ingest.test.ts`. |
 | Patch invalidation (review stamps) | Implemented, verified | Changed items halved and flagged; curated-stale profiles; removed references fall back to auto. |
 | Manual adapter (all fields, quick search, recent picks, keyboard) | Implemented, verified | Screenshots 01–07. |
 | Scenario playback (10 fixtures) | Implemented, verified | Scenarios tab; tests. |
 | Replay/post-match (decision logs, review ≤3 lessons) | Implemented, verified (unit) | Logs are opt-in and local; replay stores never mix with live state. |
 | Live game-state adapter | **Unavailable** | No documented Deadlock interface. Spectator feeds are excluded from live use. |
-| Screen-capture adapter | **Unavailable** (not shipped) | Could not be validated against the real game. The ambiguity/correction flow is implemented and tested. |
+| Screen reader (scoreboard capture → your items and enemy items) | **Implemented, experimental**; verified on synthetic images only | Hotkey capture, one-time calibration, portrait-based row assignment, auto-apply only when everything is confident, review otherwise. Synthetic benchmark 99.7% correct with 0 confident errors; app end to end 53/53 items. **Not yet tested on a real Deadlock scoreboard**, and the game may not show enemy items there. |
 | Recommender: BUY NOW / SAVE FOR / ALTERNATIVE with explanations | Implemented, verified | `scenarios.test.ts` (12 behaviours), screenshots. |
 | Counter rules (17, threat → mechanic → responses → conditions → exceptions) | Implemented | Weights are heuristic; item mechanics come from data. See COUNTER_RULES.md. |
 | Stability, pin / reject / defer | Implemented, verified | Tests §11 and features tests. |

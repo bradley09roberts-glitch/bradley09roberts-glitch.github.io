@@ -1,10 +1,12 @@
 import { app, BrowserWindow, dialog, globalShortcut, ipcMain, screen, session, shell, type IpcMainInvokeEvent } from "electron";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { decisionLogSchema } from "@countercoach/engine";
 import { IPC, logEntrySchema, logIdSchema, overlayModelSchema, type DataStatusEvent, type OverlayModel } from "../shared/ipc.js";
 import { patchSettings, type Settings } from "../shared/settings.js";
+import { CaptureStore, captureDisplay, loadImageFile, type CapturePayload } from "./capture.js";
 import { DataStore } from "./dataStore.js";
+import { IconTemplateStore } from "./iconTemplates.js";
 import { computeOverlayBounds, offsetFromBounds, type DisplayInfo } from "./overlayPlacement.js";
 import { LogStore, SettingsStore } from "./stores.js";
 
@@ -26,6 +28,8 @@ let lastOverlayModel: OverlayModel | null = null;
 let overlayContentHeight: number | null = null;
 const settingsStore = new SettingsStore(path.join(app.getPath("userData"), "settings.json"));
 const logStore = new LogStore(path.join(app.getPath("userData"), "logs"));
+const captureStore = new CaptureStore(path.join(app.getPath("userData"), "captures"));
+const templateStore = new IconTemplateStore(path.join(app.getPath("userData"), "vision"));
 const dataStore = new DataStore(dataDir, path.join(app.getPath("userData"), "data"), (e: DataStatusEvent) => {
   mainWin?.webContents.send(IPC.dataEvent, e);
 });
@@ -145,7 +149,25 @@ function registerHotkeys(s: Settings): string[] {
   reg(s.hotkeys.toggleOverlay, () => void updateSettings({ overlay: { enabled: !settingsStore.get().overlay.enabled } }));
   reg(s.hotkeys.toggleExpanded, () => void updateSettings({ overlay: { expanded: !settingsStore.get().overlay.expanded } }));
   reg(s.hotkeys.toggleEditMode, () => setEditMode(!editMode));
+  reg(s.hotkeys.readScreen, () => {
+    // A short delay lets the player press the hotkey first and then hold Tab for the scoreboard.
+    setTimeout(() => void captureForReader().then((r) => mainWin?.webContents.send(IPC.screenCaptured, r)), settingsStore.get().screen.captureDelayMs);
+  });
   return failed;
+}
+
+/** Capture the screen for the reader; optionally keep a copy on disk (opt-in). */
+async function captureForReader(): Promise<CapturePayload | { error: string }> {
+  const r = await captureDisplay(overlayWin);
+  if ("error" in r) return r;
+  if (settingsStore.get().screen.saveCaptures) {
+    try {
+      await captureStore.save(r.image);
+    } catch {
+      /* saving is best-effort; the read still proceeds */
+    }
+  }
+  return r.payload;
 }
 
 function setEditMode(on: boolean): void {
@@ -177,7 +199,9 @@ function registerIpc(): void {
     } catch {
       /* fixtures optional */
     }
-    return { ...dataStore.bootstrap(), settings: settingsStore.get(), fixtures, platform: process.platform, version: app.getVersion() };
+    // Screen-reader templates only if already built locally; otherwise built on first use.
+    const icons = await templateStore.cached(dataStore.bootstrap().snapshot);
+    return { ...dataStore.bootstrap(), settings: settingsStore.get(), fixtures, icons, platform: process.platform, version: app.getVersion() };
   });
   ipcMain.handle(IPC.getSettings, (e) => {
     if (!trusted(e)) throw new Error("untrusted sender");
@@ -239,6 +263,39 @@ function registerIpc(): void {
     await logStore.deleteAll();
     return true;
   });
+  ipcMain.handle(IPC.screenCapture, async (e, delayMs: unknown) => {
+    if (!trusted(e)) throw new Error("untrusted sender");
+    const d = typeof delayMs === "number" && Number.isFinite(delayMs) ? Math.max(0, Math.min(10_000, delayMs)) : 0;
+    if (d > 0) await new Promise((r) => setTimeout(r, d));
+    return captureForReader();
+  });
+  ipcMain.handle(IPC.screenTemplates, async (e) => {
+    if (!trusted(e)) throw new Error("untrusted sender");
+    const sender = e.sender;
+    return templateStore.get(dataStore.bootstrap().snapshot, (p) => {
+      if (!sender.isDestroyed()) sender.send(IPC.screenTemplatesProgress, p);
+    });
+  });
+  ipcMain.handle(IPC.screenLoadImage, async (e) => {
+    if (!trusted(e) || !mainWin) throw new Error("untrusted sender");
+    const r = await dialog.showOpenDialog(mainWin, { title: "Open a screenshot", filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg"] }], properties: ["openFile"] });
+    if (r.canceled || !r.filePaths[0]) return null;
+    return loadImageFile(r.filePaths[0]);
+  });
+  ipcMain.handle(IPC.screenSaved, (e) => {
+    if (!trusted(e)) throw new Error("untrusted sender");
+    return captureStore.summary();
+  });
+  ipcMain.handle(IPC.screenDeleteSaved, async (e) => {
+    if (!trusted(e)) throw new Error("untrusted sender");
+    await captureStore.deleteAll();
+    return captureStore.summary();
+  });
+  ipcMain.handle(IPC.screenOpenSaved, async (e) => {
+    if (!trusted(e)) throw new Error("untrusted sender");
+    await mkdir(captureStore.dir, { recursive: true });
+    return (await shell.openPath(captureStore.dir)) === "";
+  });
   ipcMain.handle(IPC.importReplay, async (e) => {
     if (!trusted(e) || !mainWin) throw new Error("untrusted sender");
     const r = await dialog.showOpenDialog(mainWin, { title: "Import decision log", filters: [{ name: "CounterCoach log", extensions: ["json"] }], properties: ["openFile"] });
@@ -276,8 +333,11 @@ async function main(): Promise<void> {
   if (settings.data.autoCheck && !isSmokeTest) setTimeout(() => void dataStore.check(), 3000);
   if (isSmokeTest) {
     // Used by automated launch checks: report window state then quit.
-    setTimeout(() => {
+    setTimeout(async () => {
       const ov = overlayWin;
+      const t0 = Date.now();
+      const cap = await captureDisplay(overlayWin);
+      const capture = "error" in cap ? { ok: false, error: cap.error } : { ok: true, width: cap.payload.width, height: cap.payload.height, ms: Date.now() - t0 };
       const report = JSON.stringify({
         smoke: true,
         platform: process.platform,
@@ -289,6 +349,8 @@ async function main(): Promise<void> {
         overlayBounds: ov?.getBounds(),
         snapshotBuild: dataStore.bootstrap().snapshot.meta.clientVersion,
         settingsFile: path.join(app.getPath("userData"), "settings.json"),
+        capture,
+        overlayOpacityAfterCapture: ov?.getOpacity(),
       });
       console.log(report);
       // GUI-subsystem executables on Windows have no attached console; also write a file.

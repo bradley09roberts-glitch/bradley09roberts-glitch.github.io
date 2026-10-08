@@ -52,7 +52,12 @@ jobs:
           $env:COUNTERCOACH_USER_DATA = $ud
           $p = Start-Process -FilePath "apps/desktop/release/win-unpacked/CounterCoach.exe" -PassThru
           if (-not $p.WaitForExit(90000)) { $p.Kill(); throw "app did not exit" }
-          Get-Content (Join-Path $ud "smoke-report.json")
+          $raw = Get-Content (Join-Path $ud "smoke-report.json") -Raw
+          $raw
+          # The screen reader's capture path (Electron desktopCapturer) must work on Windows.
+          $r = $raw | ConvertFrom-Json
+          if (-not $r.capture.ok) { throw "screen capture failed: $($r.capture.error)" }
+          if ($r.overlayOpacityAfterCapture -lt 0.3) { throw "overlay opacity not restored after capture" }
       - name: Silent install and uninstall
         shell: pwsh
         run: |

@@ -7,7 +7,10 @@ while keeping your chosen build's identity.
 
 > **Status (build 0.1.0, 2026-10-08):**
 > - Working companion with manual, scenario and replay inputs, real game data (client build
->   6763), and 89 passing tests.
+>   6763), and 105 passing tests.
+> - **New, experimental:** a screen reader. Press Ctrl+Alt+R, hold Tab, and it reads your items
+>   and (if the game shows them) the enemies' items from the scoreboard, locally. Verified on
+>   synthetic scoreboards built from the real item art; **not yet on a real Deadlock screen**.
 > - The Windows installer and zip are built (unsigned) on a GitHub Windows runner, where the app
 >   launch, silent install/uninstall and all tests pass.
 > - **Not yet tested alongside a running Deadlock match.**
@@ -19,9 +22,9 @@ while keeping your chosen build's identity.
 ## What it is, and what it isn't
 
 - It **is** a normal desktop app. You enter what you can see (hero, souls, items, enemies, what
-  is hurting you). A local, deterministic engine explains its advice: which threat each item
-  answers, how that threat is known, what the purchase delays, and how confident the advice
-  is.
+  is hurting you), or press a hotkey to have it read the scoreboard from your screen. A local,
+  deterministic engine explains its advice: which threat each item answers, how that threat is
+  known, what the purchase delays, and how confident the advice is.
 - It **is not** a game mod or a cheat. No game-file edits, memory reading, injection, packet
   capture, hidden information, or automated purchases or skill points. It is not affiliated
   with or endorsed by Valve, and it makes no claim to be approved or ban-proof.
@@ -33,7 +36,7 @@ Requires Node ≥ 22.12 and pnpm 10 (`corepack enable`).
 ```bash
 cd countercoach
 pnpm install --frozen-lockfile
-pnpm test                      # 89 tests
+pnpm test                      # 105 tests
 pnpm typecheck
 pnpm build && pnpm --filter @countercoach/desktop start   # run the Electron app
 ```
@@ -48,6 +51,9 @@ Other commands:
 | `pnpm dist:win` | Build the Windows NSIS installer and portable zip (on Linux this needs Wine 32+64-bit) |
 | `pnpm screenshots` | Drive the real Electron app under Xvfb and capture `docs/screenshots` |
 | `pnpm --filter @countercoach/desktop build:web` | Build the same UI as a static browser preview (`dist-web/`) |
+| `pnpm icons` | Rebuild the icon-template test fixture (`fixtures/vision/icons.json`) |
+| `pnpm vision:bench` | Synthetic accuracy benchmark for the screen reader |
+| `npx tsx scripts/make-test-scoreboard.ts` | Render the synthetic test scoreboard used by the end-to-end check |
 
 **Download:** open the latest successful
 [CounterCoach Windows build](https://github.com/bradley09roberts-glitch/bradley09roberts-glitch.github.io/actions/workflows/countercoach-windows.yml)
@@ -76,9 +82,10 @@ packages/engine    UI-independent engine (rules, mechanics, counters, profiles, 
 packages/ingest    data ingest CLI/library (validation, quality gate)
 apps/desktop       Electron main/preload + React renderer (overlay + separate window)
 data/              versioned snapshots, manifest, review stamps
-fixtures/          scenario fixtures
+fixtures/          scenario fixtures, icon-template test fixture
 docs/              documentation and screenshots
 ```
 
 Game data comes from the community [Deadlock API](https://api.deadlock-api.com/docs) (not
-Valve). Icons are loaded at runtime from its asset CDN and are not bundled.
+Valve). Icons are loaded at runtime from its asset CDN and are not bundled; the screen reader
+builds its small icon templates from the same images on your PC on first use.

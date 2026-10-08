@@ -207,7 +207,8 @@ export function SoulsSection({ c }: { c: Coach }) {
 
 export function ItemsSection({ c }: { c: Coach }) {
   const { deps, state, now, input, send } = c;
-  const owned = (readField(state, "me.items", now)?.value as string[] | undefined) ?? [];
+  const ownedRead = readField(state, "me.items", now);
+  const owned = (ownedRead?.value as string[] | undefined) ?? [];
   const [recent, pushRecent] = useRecent("cc.recentItems");
   const [slot, setSlot] = useState<"all" | "weapon" | "vitality" | "spirit">("all");
   const options = useMemo(() => itemOptions(deps.data.items()).filter((o) => slot === "all" || o.tone === slot), [deps, slot]);
@@ -222,7 +223,7 @@ export function ItemsSection({ c }: { c: Coach }) {
     pushRecent(cn);
   };
   return (
-    <Section title={`Your items (${owned.length}/${total})`} right={<span className="muted small">/ to search</span>}>
+    <Section title={`Your items (${owned.length}/${total})`} right={<span className="muted small">{ownedRead && <ScreenSeen source={ownedRead.obs.source} ageS={ownedRead.ageS} />} / to search</span>}>
       <div className="chips">
         {owned.map((cn) => {
           const it = deps.data.item(cn);
@@ -371,13 +372,25 @@ export function RosterSection({ c }: { c: Coach }) {
   );
 }
 
+/** Marks item lists that came from the screen reader, with their age. */
+function ScreenSeen({ source, ageS }: { source: string; ageS: number }) {
+  if (source !== "screen") return null;
+  return (
+    <Badge tone="accent" title="Read from your screen capture; edit if wrong">
+      seen on screen {ageS < 60 ? "just now" : `${Math.round(ageS / 60)} min ago`}
+    </Badge>
+  );
+}
+
 function EnemyItems({ c, heroId }: { c: Coach; heroId: number }) {
   const { deps, state, now, input, send } = c;
-  const v = (readField(state, `enemyItems:${heroId}`, now)?.value as EnemyItemsValue | undefined) ?? { items: [], complete: false };
+  const read = readField(state, `enemyItems:${heroId}`, now);
+  const v = (read?.value as EnemyItemsValue | undefined) ?? { items: [], complete: false };
   const options = useMemo(() => itemOptions(deps.data.items()), [deps]);
   const set = (items: string[], complete = v.complete) => send(input.enemyItems(heroId, items, complete));
   return (
     <div className="enemy-items">
+      {read && <ScreenSeen source={read.obs.source} ageS={read.ageS} />}
       <div className="chips">
         {v.items.map((cn) => {
           const it = deps.data.item(cn);

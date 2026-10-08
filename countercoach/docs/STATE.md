@@ -13,7 +13,7 @@ when known), `confidence`, `userCorrection` and a sequence number.
 | `manual` | your input | yes |
 | `scenario` | fixture playback | yes |
 | `replay` | post-match / spectator data | yes, in **replay-only stores**; a live store rejects it |
-| `screen` | user-triggered local screen recognition | no (could not be validated) — the ambiguity flow is implemented |
+| `screen` | user-triggered local screen reader (scoreboard capture) | yes, **experimental** (verified on synthetic scoreboards only). Reads applied automatically are `medium` confidence; reads you reviewed are `high`. A scoreboard read marks enemy inventories *complete* (setting); a partial screen does not |
 | `live` | verified live interface | no (none exists; see CAPABILITIES.md) |
 
 Missing is not zero:

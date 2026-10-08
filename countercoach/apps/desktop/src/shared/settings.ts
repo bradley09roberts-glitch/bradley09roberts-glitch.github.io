@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { screenLayoutSchema } from "@countercoach/engine";
 
 /**
  * Persisted user settings. Validated in the main process on every read and write; unknown or
@@ -8,11 +9,14 @@ import { z } from "zod";
 export const ANCHORS = ["top-left", "top-right", "bottom-left", "bottom-right", "custom"] as const;
 export type Anchor = (typeof ANCHORS)[number];
 
-/** Accelerator strings are validated loosely: modifiers + one key, letters/digits/F-keys only. */
+/**
+ * Accelerator strings are validated loosely: modifiers + one key (letters/digits/F-keys), or a
+ * bare F-key (F1–F24), which is easier to press while holding Tab in game.
+ */
 export const acceleratorSchema = z
   .string()
   .max(40)
-  .regex(/^((Ctrl|Control|Alt|Shift|Super|CommandOrControl)\+){1,3}([A-Z0-9]|F([1-9]|1[0-9]|2[0-4]))$/);
+  .regex(/^(((Ctrl|Control|Alt|Shift|Super|CommandOrControl)\+){1,3}([A-Z0-9]|F([1-9]|1[0-9]|2[0-4]))|F([1-9]|1[0-9]|2[0-4]))$/);
 
 export const settingsSchema = z.object({
   version: z.literal(1),
@@ -31,12 +35,25 @@ export const settingsSchema = z.object({
     toggleOverlay: acceleratorSchema,
     toggleExpanded: acceleratorSchema,
     toggleEditMode: acceleratorSchema,
+    readScreen: acceleratorSchema,
   }),
   logging: z.object({ enabled: z.boolean() }),
   data: z.object({ autoCheck: z.boolean() }),
   rules: z.object({
     totalSlots: z.number().int().min(4).max(24).nullable(),
     sellFraction: z.number().min(0).max(1).nullable(),
+  }),
+  screen: z.object({
+    /** One-time calibration of where item icons are on the user's own scoreboard capture. */
+    layout: screenLayoutSchema.nullable(),
+    /** Apply reads without review when every row and icon is confident. */
+    autoApply: z.boolean(),
+    /** The calibrated screen shows complete inventories (scoreboard), not partial ones. */
+    fullInventories: z.boolean(),
+    /** Keep capture images on disk (off by default; for troubleshooting). */
+    saveCaptures: z.boolean(),
+    /** Wait after the hotkey before capturing, so you can press it and then hold Tab. */
+    captureDelayMs: z.number().int().min(0).max(3000),
   }),
   coach: z.object({
     difficulty: z.enum(["simple", "standard", "complex"]),
@@ -64,10 +81,12 @@ export const DEFAULT_SETTINGS: Settings = {
     toggleOverlay: "Ctrl+Alt+O",
     toggleExpanded: "Ctrl+Alt+E",
     toggleEditMode: "Ctrl+Alt+M",
+    readScreen: "Ctrl+Alt+R",
   },
   logging: { enabled: false },
   data: { autoCheck: true },
   rules: { totalSlots: null, sellFraction: null },
+  screen: { layout: null, autoApply: true, fullInventories: true, saveCaptures: false, captureDelayMs: 1000 },
   coach: { difficulty: "standard", route: "auto", archetypeByHero: {}, lockedCoreByHero: {} },
 };
 

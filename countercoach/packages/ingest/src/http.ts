@@ -111,3 +111,41 @@ export async function fetchJson<T = unknown>(url: string, opts: FetchOptions): P
   }
   throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
 }
+
+/**
+ * Fetch a binary asset (icon image) with the same cache/backoff policy as fetchJson. Cached
+ * files never expire: asset URLs are content-specific enough for icons, and `--refresh` callers
+ * can delete the cache directory.
+ */
+export async function fetchBinary(url: string, opts: FetchOptions): Promise<{ url: string; data: Uint8Array; fromCache: boolean }> {
+  await mkdir(opts.cacheDir, { recursive: true });
+  const file = path.join(opts.cacheDir, `${cacheKey(url)}.bin`);
+  try {
+    return { url, data: new Uint8Array(await readFile(file)), fromCache: true };
+  } catch {
+    /* not cached */
+  }
+  if (opts.offline) throw new Error(`offline and no cached asset for ${url}`);
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt <= opts.retries; attempt++) {
+    if (attempt > 0) await sleep(Math.min(16_000, 1000 * 2 ** (attempt - 1)));
+    try {
+      await rateLimit();
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs);
+      const res = await fetch(url, { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (!res.ok) {
+        lastErr = new Error(`HTTP ${res.status} for ${url}`);
+        if (res.status >= 400 && res.status < 500 && res.status !== 429) break;
+        continue;
+      }
+      const data = new Uint8Array(await res.arrayBuffer());
+      await writeFile(file, data);
+      return { url, data, fromCache: false };
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+}

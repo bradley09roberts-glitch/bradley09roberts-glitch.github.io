@@ -12,7 +12,9 @@
     "build": "pnpm --filter @countercoach/desktop build",
     "dist:win": "pnpm --filter @countercoach/desktop dist:win",
     "docs": "tsx scripts/generate-docs.ts",
-    "screenshots": "cd apps/desktop && xvfb-run -a -s \"-screen 0 2560x1440x24\" node scripts/screenshots.cjs ../../docs/screenshots"
+    "screenshots": "cd apps/desktop && xvfb-run -a -s \"-screen 0 2560x1440x24\" node scripts/screenshots.cjs ../../docs/screenshots",
+    "icons": "tsx packages/ingest/src/icons-cli.ts",
+    "vision:bench": "tsx scripts/vision-bench.ts"
   },
   "engines": {
     "node": ">=22.12.0"
