@@ -51,6 +51,8 @@ public final class PillarGoal extends Goal {
 	private final CompanionEntity c;
 	private final Climber climber = new Climber();
 	private Stage stage = Stage.DONE;
+	/** After a pillar that could not even begin, the other reflexes get a while before it is tried again. */
+	private int retryAfter;
 	private int placed;
 	private int waited;
 	private int clearFor;
@@ -77,7 +79,7 @@ public final class PillarGoal extends Goal {
 
 	@Override
 	public boolean canUse() {
-		if (c.tickCount % 5 != 0 || !(c.level() instanceof ServerLevel level) || !c.isTeamMember()) {
+		if (c.tickCount % 5 != 0 || c.tickCount < retryAfter || !(c.level() instanceof ServerLevel level) || !c.isTeamMember()) {
 			return false;
 		}
 		if (!c.badlyHurt() || !c.onGround() || c.isInWater() || c.isPassenger() || Shelters.blocksCarried(c) < PILLAR) {
@@ -146,7 +148,12 @@ public final class PillarGoal extends Goal {
 							stage = Stage.WAIT;
 						}
 					}
-					case NO_BLOCKS, BLOCKED -> stage = placed > 0 ? Stage.WAIT : Stage.DONE;
+					case NO_BLOCKS, BLOCKED -> {
+						if (placed == 0) {
+							retryAfter = c.tickCount + 200; // could not even begin: falling back gets its turn
+						}
+						stage = placed > 0 ? Stage.WAIT : Stage.DONE;
+					}
 					case CLIMBING -> {
 					}
 				}

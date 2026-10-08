@@ -19,6 +19,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
@@ -125,6 +126,25 @@ public final class Trips {
 			return "late";
 		}
 		return null;
+	}
+
+	/** Below this hunger a friend on the road eats something from their backpack as they walk. */
+	private static final double SNACK_BELOW = 40;
+
+	/**
+	 * A bite to eat on the road: a trip keeps the everyday meal job waiting, so a hungry traveller eats from their
+	 * backpack as they go (one item every few seconds at most; call it now and then).
+	 */
+	public static void snack(CompanionEntity c) {
+		if (c.needs().get(Need.HUNGER) >= SNACK_BELOW) {
+			return;
+		}
+		ItemStack food = c.backpack().take(CompanionEntity::isEdible, 1);
+		if (!food.isEmpty()) {
+			String name = food.getHoverName().getString();
+			c.eat(food);
+			Speech.say(c, Line.ATE, name);
+		}
 	}
 
 	/** True when this friend is back inside the camp (a few blocks in from its edge). */

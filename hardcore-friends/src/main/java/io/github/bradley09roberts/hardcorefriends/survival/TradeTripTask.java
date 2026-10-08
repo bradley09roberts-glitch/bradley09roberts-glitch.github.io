@@ -245,6 +245,9 @@ public final class TradeTripTask implements CompanionTask {
 			return TaskStatus.FAILURE;
 		}
 		phaseTicks++;
+		if (phaseTicks % 100 == 0) {
+			Trips.snack(c);
+		}
 		return switch (t.phase) {
 			case PACK -> pack(c, t);
 			case OUT -> out(c, t);

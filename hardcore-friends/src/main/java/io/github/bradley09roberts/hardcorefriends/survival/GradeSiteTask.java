@@ -317,7 +317,7 @@ public final class GradeSiteTask implements CompanionTask {
 		if (worked > 0) {
 			Camp.data(level.getServer()).addStat("site_blocks_levelled", worked);
 		}
-		return worked > 0 || givenUp.isEmpty() ? TaskStatus.SUCCESS : TaskStatus.FAILURE;
+		return worked > 0 ? TaskStatus.SUCCESS : TaskStatus.FAILURE; // nothing done: wait a while before looking again
 	}
 
 	/** The next position: the highest (to dig) or lowest (to fill) layer first, nearest first within it. */

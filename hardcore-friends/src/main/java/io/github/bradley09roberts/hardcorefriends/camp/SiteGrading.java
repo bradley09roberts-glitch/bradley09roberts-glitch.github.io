@@ -158,12 +158,21 @@ public final class SiteGrading {
 		activeJob = null;
 	}
 
-	/** True while a recorded block still stands to be dug or a recorded space still waits to be filled. */
+	/**
+	 * True while a recorded block still stands to be dug or a recorded space still waits to be filled. A position in
+	 * a chunk that is not loaded counts as still to do (and is not loaded to look).
+	 */
 	public static boolean pending(ServerLevel level, Job job) {
-		return !cutsLeft(level, job).isEmpty() || !fillsLeft(level, job).isEmpty();
+		for (long l : job.cut()) {
+			BlockPos p = BlockPos.of(l);
+			if (!job.skipped().contains(l) && (!level.isLoaded(p) || !level.getBlockState(p).isAir())) {
+				return true;
+			}
+		}
+		return !fillsLeft(level, job).isEmpty();
 	}
 
-	/** The recorded blocks still standing, top-down (so nothing is left hanging). Unloaded ones count as standing. */
+	/** The recorded blocks still standing, top-down (so nothing is left hanging); only those in loaded chunks. */
 	public static List<BlockPos> cutsLeft(ServerLevel level, Job job) {
 		List<BlockPos> list = new ArrayList<>();
 		for (long l : job.cut()) {
@@ -171,7 +180,7 @@ public final class SiteGrading {
 				continue;
 			}
 			BlockPos p = BlockPos.of(l);
-			if (!level.isLoaded(p) || !level.getBlockState(p).isAir()) {
+			if (level.isLoaded(p) && !level.getBlockState(p).isAir()) {
 				list.add(p);
 			}
 		}

@@ -190,6 +190,9 @@ public final class FarTripTask implements CompanionTask {
 		if (ticks % SENSE_INTERVAL == 0) {
 			sense(c, level, t);
 		}
+		if (ticks % 100 == 0) {
+			Trips.snack(c);
+		}
 		if (OUT.equals(t.phase)) {
 			String why = Trips.turnBackReason(c);
 			if (why != null) {
