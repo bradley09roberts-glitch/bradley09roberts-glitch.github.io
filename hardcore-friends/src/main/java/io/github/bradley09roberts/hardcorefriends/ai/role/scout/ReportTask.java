@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import io.github.bradley09roberts.hardcorefriends.ai.role.ScoutSenses;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
+import io.github.bradley09roberts.hardcorefriends.ai.task.common.EntityApproach;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
@@ -26,6 +27,7 @@ public final class ReportTask implements CompanionTask {
 	private static final double TALK_DISTANCE = 3.5;
 
 	private @Nullable UUID listener;
+	private final EntityApproach approach = new EntityApproach();
 
 	@Override
 	public String id() {
@@ -53,6 +55,7 @@ public final class ReportTask implements CompanionTask {
 	public boolean start(CompanionEntity c) {
 		ServerPlayer player = nearestPlayerInCamp(c, (ServerLevel) c.level());
 		listener = player == null ? null : player.getUUID();
+		approach.reset();
 		return listener != null;
 	}
 
@@ -63,8 +66,8 @@ public final class ReportTask implements CompanionTask {
 		if (player == null || player.level() != level || player.isSpectator() || !ScoutSenses.isNearCamp(level, player)) {
 			return TaskStatus.FAILURE;
 		}
-		if (!c.actions().walkToEntity(player, TALK_DISTANCE)) {
-			return c.actions().isStuck() ? TaskStatus.FAILURE : TaskStatus.RUNNING;
+		if (!approach.walk(c, player, TALK_DISTANCE)) {
+			return approach.isStuck() ? TaskStatus.FAILURE : TaskStatus.RUNNING;
 		}
 		c.getLookControl().setLookAt(player);
 		ScoutLog log = ScoutLog.of(Camp.data(level.getServer()));

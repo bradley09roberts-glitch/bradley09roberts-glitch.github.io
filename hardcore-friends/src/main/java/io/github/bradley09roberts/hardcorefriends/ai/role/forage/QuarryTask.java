@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import io.github.bradley09roberts.hardcorefriends.ai.action.Actions;
 import io.github.bradley09roberts.hardcorefriends.ai.role.farm.EditSteps;
+import io.github.bradley09roberts.hardcorefriends.ai.role.mine.MiningHelper;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
@@ -28,9 +29,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 /**
  * By day, Rowan digs dirt and stone from a 5×5 quarry in the gathering ring, top layer first and never more than
  * two layers deep, up to 10 blocks per run. One corner block of the lower layer is left as a step so nobody gets
- * trapped, and she never digs a block with a drop or fluid beneath it. The quarry (corner, next cell, earlier sites)
- * is kept in camp memory under {@code rowan.quarry}, so work resumes after a restart; an exhausted quarry is
- * replaced by a new site.
+ * trapped, she never digs a block with a drop or fluid beneath it, and she leaves stone alone unless she carries a
+ * pickaxe that gets drops from it. The quarry (corner, next cell, dimension, earlier sites) is kept in camp memory
+ * under {@code rowan.quarry}, so work resumes after a restart; an exhausted quarry is replaced by a new site. She
+ * only quarries in the camp's dimension and never touches a quarry recorded in another one.
  */
 public final class QuarryTask implements CompanionTask {
 	public static final String MEMORY = "rowan.quarry";
@@ -63,7 +65,11 @@ public final class QuarryTask implements CompanionTask {
 	@Override
 	public double score(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
-		if (Camp.isNight(level) || !FriendsConfig.get().allowQuarrying) {
+		// The quarry lies outside the camp, so dusk counts as night: the return home would only call her back.
+		if (Camp.isNight(level) || Camp.isDusk(level) || !FriendsConfig.get().allowQuarrying) {
+			return 0;
+		}
+		if (!mayUseMemory(level, Camp.data(level.getServer()))) {
 			return 0;
 		}
 		if (c.backpack().freeSlots() == 0 && !c.backpack().canFit(new ItemStack(Items.DIRT, 10))
@@ -86,6 +92,19 @@ public final class QuarryTask implements CompanionTask {
 		int layer = cell / CELLS;
 		int i = cell % CELLS;
 		return corner.offset(i % QuarrySiteFinder.SIZE, -layer, i / QuarrySiteFinder.SIZE);
+	}
+
+	/**
+	 * The quarry memory holds camp-dimension coordinates: it is only used (advanced, finished or replaced) while Rowan
+	 * is in the camp's dimension, and a quarry recorded in another dimension is left alone.
+	 */
+	private static boolean mayUseMemory(ServerLevel level, CampData data) {
+		if (data.campPos().isPresent() && !Camp.isCampLevel(level, data)) {
+			return false;
+		}
+		CompoundTag mem = data.memory(MEMORY);
+		String dim = mem.getStringOr("dim", "");
+		return !mem.getBooleanOr("active", false) || dim.isEmpty() || dim.equals(Camp.dimensionId(level));
 	}
 
 	/** The lower layer's first corner block stays as a step out of the pit. */
@@ -120,9 +139,13 @@ public final class QuarryTask implements CompanionTask {
 
 	@Override
 	public boolean start(CompanionEntity c) {
-		CampData data = Camp.data(c.level().getServer());
+		ServerLevel level = (ServerLevel) c.level();
+		CampData data = Camp.data(level.getServer());
 		current = null;
 		dug = 0;
+		if (!mayUseMemory(level, data)) {
+			return false;
+		}
 		return corner(data) != null || beginNewSite(c, data);
 	}
 
@@ -135,6 +158,7 @@ public final class QuarryTask implements CompanionTask {
 		}
 		mem.putBoolean("active", true);
 		mem.putLong("corner", site.asLong());
+		mem.putString("dim", Camp.dimensionId((ServerLevel) c.level()));
 		mem.putInt("cell", 0);
 		data.setDirty();
 		return true;
@@ -143,7 +167,7 @@ public final class QuarryTask implements CompanionTask {
 	@Override
 	public TaskStatus tick(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
-		if (Camp.isNight(level)) {
+		if (Camp.isNight(level) || Camp.isDusk(level)) {
 			return dug > 0 ? TaskStatus.SUCCESS : TaskStatus.FAILURE; // the quarry waits for daylight
 		}
 		CampData data = Camp.data(level.getServer());
@@ -226,6 +250,9 @@ public final class QuarryTask implements CompanionTask {
 		BlockState state = level.getBlockState(pos);
 		if (state.isAir() || !state.is(ModTags.EARTH_GATHERABLE)) {
 			return false;
+		}
+		if (!MiningHelper.canHarvest(c, state)) {
+			return false; // stone without a pickaxe would give nothing: leave it
 		}
 		BlockState below = level.getBlockState(pos.below());
 		if (below.isAir() || !below.getFluidState().isEmpty() || below.canBeReplaced()) {

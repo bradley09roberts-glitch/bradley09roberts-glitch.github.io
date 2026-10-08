@@ -11,9 +11,12 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.LeavesBlock;
@@ -28,6 +31,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Structures;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
+import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /** Fern's farming and Rowan's foraging: harvest and replant, tilling, felling, quarrying and berry picking. */
 public class FarmingGameTest {
@@ -200,9 +204,13 @@ public class FarmingGameTest {
 		}
 		CompanionEntity rowan = TestSupport.spawnFriend(helper, FriendId.ROWAN, new BlockPos(24, 2, 16));
 		TestSupport.give(rowan, new ItemStack(Items.STONE_SHOVEL));
+		// Trees left standing in neighbouring test plots lie in her gathering ring too, but behind the test's
+		// barrier walls: keep them from luring her away from the quarry.
+		rowan.scheduler().cooldown("rowan.chop", helper.getLevel().getGameTime(), 3000);
 		BlockPos camp = data.campPos().orElseThrow();
 		helper.succeedWhen(() -> {
-			helper.assertTrue(data.stat("blocks_quarried") >= 30, "Rowan quarried 30 blocks, so far " + data.stat("blocks_quarried"));
+			helper.assertTrue(data.stat("blocks_quarried") >= 30, "Rowan quarried 30 blocks, so far " + data.stat("blocks_quarried")
+				+ " (Rowan " + rowan.activity() + " at " + helper.relativePos(rowan.blockPosition()) + ")");
 			BlockPos corner = QuarryTask.corner(data);
 			helper.assertTrue(corner != null, "an active quarry is remembered");
 			int inner = Camp.radius(data) + 4;
@@ -317,6 +325,144 @@ public class FarmingGameTest {
 				grown |= s.is(Blocks.WHEAT) && s.getValue(CropBlock.AGE) > 0;
 			}
 			helper.assertTrue(grown, "a seedling grew");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_69", maxTicks = 1600)
+	public void fernFetchesSeedsFromChestToTill(GameTestHelper helper) {
+		TestSupport.resetCamp(helper, true);
+		BlockPos water = new BlockPos(22, 1, 16);
+		helper.setBlock(water, Blocks.WATER);
+		Container chest = TestSupport.placeChest(helper, new BlockPos(12, 2, 16), new ItemStack(Items.WHEAT_SEEDS, 16));
+		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, TestSupport.centre());
+		TestSupport.give(fern, new ItemStack(Items.WOODEN_HOE)); // no seeds of her own
+		helper.succeedWhen(() -> {
+			int farmland = 0;
+			int sown = 0;
+			for (BlockPos p : BlockPos.betweenClosed(water.offset(-4, 0, -4), water.offset(4, 0, 4))) {
+				if (helper.getBlockState(p).is(Blocks.FARMLAND)) {
+					farmland++;
+					if (helper.getBlockState(p.above()).is(Blocks.WHEAT)) {
+						sown++;
+					}
+				}
+			}
+			helper.assertTrue(SupplyChest.count(chest, s -> s.is(Items.WHEAT_SEEDS)) < 16, "Fern took seeds from the chest");
+			helper.assertTrue(farmland >= 4, "at least four farmland tilled beside the water, found " + farmland);
+			helper.assertTrue(sown >= 4, "the new farmland is sown with the fetched seeds, found " + sown);
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_70", maxTicks = 1600)
+	public void rowanFinishesTreeSheWasCalledAwayFrom(GameTestHelper helper) {
+		CampData data = campToTheWest(helper);
+		BlockPos base = new BlockPos(24, 2, 16);
+		TestSupport.growOak(helper, base);
+		CompanionEntity rowan = TestSupport.spawnFriend(helper, FriendId.ROWAN, new BlockPos(16, 2, 16));
+		TestSupport.give(rowan, new ItemStack(Items.WOODEN_AXE));
+		boolean[] calledAway = {false};
+		helper.onEachTick(() -> {
+			if (!calledAway[0] && !helper.getBlockState(base).is(BlockTags.LOGS)) {
+				// The base log is cut: call her away, as a hostile, a full backpack or dusk would.
+				calledAway[0] = true;
+				rowan.scheduler().interrupt();
+			}
+		});
+		helper.succeedWhen(() -> {
+			helper.assertTrue(calledAway[0], "Rowan was called away after cutting the base log");
+			for (int y = 0; y < 4; y++) {
+				helper.assertFalse(helper.getBlockState(base.above(y)).is(BlockTags.LOGS), "log " + y
+					+ " of the oak cut, so no trunk is left hanging (Rowan " + rowan.activity() + ")");
+			}
+			helper.assertTrue(rowan.backpack().count(Items.OAK_LOG) >= 4, "Rowan carries all four logs");
+			helper.assertTrue(data.stat("trees_felled") >= 1, "felling counted");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_71", maxTicks = 1600)
+	public void rowanLeavesStoneWithoutPickaxeAndPlayerDropsAlone(GameTestHelper helper) {
+		CampData data = campToTheWest(helper);
+		// Bare stone over the gathering-ring side of the plot (and a stone floor instead of the test's barrier floor,
+		// which counts as built), with one grass block for an oak to stand on.
+		for (int x = 0; x < 32; x++) {
+			for (int z = 0; z < 32; z++) {
+				helper.setBlock(new BlockPos(x, -1, z), Blocks.STONE);
+				if (x >= 10) {
+					helper.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+					helper.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
+				}
+			}
+		}
+		BlockPos base = new BlockPos(24, 2, 16);
+		helper.setBlock(base.below(), Blocks.GRASS_BLOCK);
+		TestSupport.growOak(helper, base);
+		// A sapling a player dropped by the tree (a kind oak leaves never drop, so it cannot merge with theirs).
+		Player player = helper.makeMockPlayer(GameType.SURVIVAL);
+		ItemEntity dropped = new ItemEntity(helper.getLevel(), 0, 0, 0, new ItemStack(Items.BIRCH_SAPLING));
+		BlockPos dropAt = helper.absolutePos(new BlockPos(21, 2, 13));
+		dropped.snapTo(dropAt.getX() + 0.5, dropAt.getY(), dropAt.getZ() + 0.5, 0.0F, 0.0F);
+		dropped.setDeltaMovement(0, 0, 0);
+		dropped.setThrower(player);
+		dropped.setNoPickUpDelay();
+		helper.getLevel().addFreshEntity(dropped);
+		CompanionEntity rowan = TestSupport.spawnFriend(helper, FriendId.ROWAN, new BlockPos(16, 2, 16));
+		TestSupport.give(rowan, new ItemStack(Items.WOODEN_AXE));
+		List<String> stoneDug = new ArrayList<>();
+		WorldEditGuard.listener = e -> {
+			if (e.companion() == rowan && e.verb().equals("broke") && !e.state().is(BlockTags.LOGS) && !e.state().is(BlockTags.LEAVES)) {
+				stoneDug.add(e.state() + " at " + helper.relativePos(e.pos()).toShortString());
+			}
+		};
+		helper.runAfterDelay(1590, () -> WorldEditGuard.listener = null);
+		long[] felledAt = {-1};
+		helper.onEachTick(() -> {
+			if (felledAt[0] < 0 && data.stat("trees_felled") >= 1) {
+				felledAt[0] = helper.getTick();
+			}
+		});
+		helper.succeedWhen(() -> {
+			helper.assertTrue(felledAt[0] >= 0 && helper.getTick() >= felledAt[0] + 300, "the oak was felled a while ago");
+			helper.assertTrue(stoneDug.isEmpty(), "nothing but the tree was dug without a pickaxe: " + stoneDug);
+			helper.assertTrue(rowan.backpack().count(Items.COBBLESTONE) == 0 && rowan.backpack().count(Items.STONE) == 0,
+				"no free cobblestone");
+			helper.assertTrue(dropped.isAlive(), "the sapling a player dropped by the tree is left for them");
+			helper.assertTrue(rowan.backpack().count(Items.BIRCH_SAPLING) == 0, "Rowan did not take the player's sapling");
+			WorldEditGuard.listener = null;
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_72", maxTicks = 600)
+	public void rowanStartsNoOutingAtDusk(GameTestHelper helper) {
+		CampData data = campToTheWest(helper);
+		BlockPos base = new BlockPos(24, 2, 16);
+		TestSupport.growOak(helper, base);
+		TestSupport.setTime(helper, 11200); // dusk: the return home calls everyone in from beyond the camp's inner part
+		// Inside the comfortable part of the camp (16 blocks from the centre), so nothing sends her home yet.
+		CompanionEntity rowan = TestSupport.spawnFriend(helper, FriendId.ROWAN, new BlockPos(2, 2, 16));
+		TestSupport.give(rowan, new ItemStack(Items.WOODEN_AXE), new ItemStack(Items.STONE_SHOVEL));
+		BlockPos camp = data.campPos().orElseThrow();
+		List<String> outings = new ArrayList<>();
+		double[] furthest = {0};
+		helper.onEachTick(() -> {
+			var task = rowan.scheduler().current();
+			if (task != null && (task.id().equals("rowan.chop") || task.id().equals("rowan.quarry")) && outings.size() < 5) {
+				outings.add(task.id() + "@" + helper.getTick());
+			}
+			furthest[0] = Math.max(furthest[0], Math.sqrt(Camp.horizontalDistSqr(rowan.blockPosition(), camp)));
+		});
+		helper.runAfterDelay(500, () -> {
+			helper.assertTrue(Camp.isDusk(helper.getLevel()), "still dusk");
+			helper.assertTrue(outings.isEmpty(), "no felling or quarrying trip started at dusk: " + outings);
+			helper.assertTrue(furthest[0] <= 20, "Rowan stayed in the comfortable part of the camp (furthest " + furthest[0] + ")");
+			for (int y = 0; y < 4; y++) {
+				helper.assertTrue(helper.getBlockState(base.above(y)).is(Blocks.OAK_LOG), "oak log " + y + " still stands");
+			}
+			helper.assertTrue(data.stat("blocks_quarried") == 0, "nothing quarried");
+			// Leave no natural tree behind for later tests' foragers in neighbouring plots.
+			for (BlockPos p : BlockPos.betweenClosed(base.offset(-2, 0, -2), base.offset(2, 4, 2))) {
+				helper.setBlock(p, Blocks.AIR);
+			}
+			helper.succeed();
 		});
 	}
 }

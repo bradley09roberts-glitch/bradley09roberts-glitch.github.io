@@ -7,8 +7,10 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
+import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 
 /**
@@ -86,6 +88,20 @@ public final class MinePlan {
 		return BlockPos.of(tag.getLongOr("entrance", 0L));
 	}
 
+	/** The dimension the mine was dug in ({@code ""} for mines planned before this was recorded). */
+	public String dimension() {
+		return tag.getStringOr("dim", "");
+	}
+
+	/**
+	 * True when the mine lies in this level. A mine from another dimension is left alone there: its coordinates mean
+	 * nothing in this level, so it is neither worked nor abandoned.
+	 */
+	public boolean isIn(ServerLevel level) {
+		String dim = dimension();
+		return dim.isEmpty() || dim.equals(Camp.dimensionId(level));
+	}
+
 	public int bottomY() {
 		return tag.getIntOr("bottom", BOTTOM_Y);
 	}
@@ -136,14 +152,15 @@ public final class MinePlan {
 		data.setDirty();
 	}
 
-	/** Starts a new mine at the entrance (feet position), first heading in {@code dir}. */
-	public void begin(BlockPos entrance, Direction dir, int bottomY) {
+	/** Starts a new mine at the entrance (feet position) in the given dimension, first heading in {@code dir}. */
+	public void begin(BlockPos entrance, Direction dir, int bottomY, String dimension) {
 		long[] old = oldEntrances();
 		for (String key : List.copyOf(tag.keySet())) {
 			tag.remove(key);
 		}
 		tag.putLongArray("old", old);
 		tag.putLong("entrance", entrance.asLong());
+		tag.putString("dim", dimension);
 		tag.putInt("bottom", bottomY);
 		tag.putIntArray("box", new int[] {
 			entrance.getX() - HALF, bottomY - 2, entrance.getZ() - HALF,

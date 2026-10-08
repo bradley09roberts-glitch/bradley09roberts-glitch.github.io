@@ -25,8 +25,9 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 
 /**
  * Fern tills grass or dirt within four blocks of water into farmland with her hoe (it wears with each use), up to
- * eight blocks per run, then sows them. She only does this while carrying at least four seeds, and the farmland in
- * camp is capped by settlement stage (24, 48, 80, 120, 160).
+ * eight blocks per run, then sows them. She only does this with at least four seeds to sow, fetching them from the
+ * supply chest first when her backpack holds fewer, and the farmland in camp is capped by settlement stage (24, 48,
+ * 80, 120, 160).
  */
 public final class TillTask implements CompanionTask {
 	private static final int MAX_PER_RUN = 8;
@@ -41,6 +42,7 @@ public final class TillTask implements CompanionTask {
 	private int plantIndex;
 	private boolean planting;
 	private boolean reported;
+	private boolean fetching;
 
 	public TillTask(FarmContext farm) {
 		this.farm = farm;
@@ -58,7 +60,7 @@ public final class TillTask implements CompanionTask {
 
 	@Override
 	public double score(CompanionEntity c) {
-		if (!c.actions().hasTool(ItemTags.HOES) || c.backpack().count(Crops.IS_SEED) < MIN_SEEDS) {
+		if (!c.actions().hasTool(ItemTags.HOES) || !hasSeedsToSow(c)) {
 			return 0;
 		}
 		farm.stepCampSurvey(c);
@@ -66,6 +68,12 @@ public final class TillTask implements CompanionTask {
 			return 0;
 		}
 		return 40 * CampNeeds.weight(CampNeeds.Need.FOOD);
+	}
+
+	/** At least {@value #MIN_SEEDS} seeds carried, or enough in the supply chest to make up the difference. */
+	static boolean hasSeedsToSow(CompanionEntity c) {
+		int carried = c.backpack().count(Crops.IS_SEED);
+		return carried >= MIN_SEEDS || carried + ReplantTask.chestSeeds(c) >= MIN_SEEDS;
 	}
 
 	/** How much more farmland the camp may have at this stage, or 0 while the camp survey is still running. */
@@ -85,6 +93,7 @@ public final class TillTask implements CompanionTask {
 		plantIndex = 0;
 		planting = false;
 		reported = false;
+		fetching = c.backpack().count(Crops.IS_SEED) < MIN_SEEDS;
 		int limit = Math.min(MAX_PER_RUN, room(c));
 		List<BlockPos> candidates = farm.tillCandidates(c, MAX_PER_RUN);
 		for (int i = 0; i < candidates.size() && targets.size() < limit; i++) {
@@ -96,6 +105,14 @@ public final class TillTask implements CompanionTask {
 	@Override
 	public TaskStatus tick(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
+		if (fetching) {
+			TaskStatus fetched = ReplantTask.fetchSeedsStep(c, level);
+			if (fetched != TaskStatus.SUCCESS) {
+				return fetched;
+			}
+			fetching = false;
+			return TaskStatus.RUNNING;
+		}
 		if (planting || (current == null && targets.isEmpty())) {
 			if (!planting) {
 				planting = true;
@@ -200,5 +217,6 @@ public final class TillTask implements CompanionTask {
 		targets.clear();
 		tilled.clear();
 		current = null;
+		fetching = false;
 	}
 }

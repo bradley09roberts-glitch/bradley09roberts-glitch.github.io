@@ -253,6 +253,10 @@ public final class KeepList {
 				list.add(item("torches", Items.TORCH, 32));
 				list.add(tag("coal", ItemTags.COALS, 8));
 				list.add(item("sticks", Items.STICK, 8));
+				// Seals missing mine floors.
+				list.add(item("cobblestone", Items.COBBLESTONE, 16));
+				// Goes to the furnace, not the chest: nothing takes raw ore back out of the chest.
+				list.add(new Rule("raw ore", s -> s.is(Items.RAW_IRON) || s.is(Items.RAW_COPPER) || s.is(Items.RAW_GOLD), 64));
 			}
 			case EXPLORER -> {
 				// The sword is the role tool; nothing else.

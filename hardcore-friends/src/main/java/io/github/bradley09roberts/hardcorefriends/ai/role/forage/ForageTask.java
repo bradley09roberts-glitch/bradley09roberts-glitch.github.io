@@ -19,16 +19,16 @@ import net.minecraft.world.level.block.state.BlockState;
 import io.github.bradley09roberts.hardcorefriends.ai.role.farm.EditSteps;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
+import io.github.bradley09roberts.hardcorefriends.ai.task.common.ReturnHomeTask;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
-import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 
 /**
  * Rowan picks sweet berries from bushes that have them (like a player: the bush drops back to its first fruitless
  * stage and gives 1–2 berries, or 2–3 when fully grown), and gathers saplings, apples and sticks that fell from the
- * leaves of trees she felled. Outside the camp only by day.
+ * leaves of trees she felled. Out near the camp edge and beyond only by day.
  */
 public final class ForageTask implements CompanionTask {
 	private static final int MAX_BUSHES = 8;
@@ -69,9 +69,9 @@ public final class ForageTask implements CompanionTask {
 		return 35 * CampNeeds.weight(CampNeeds.Need.FOOD);
 	}
 
-	/** At night Rowan only forages inside the camp. */
+	/** At dusk and night Rowan only forages where the return home would not call her straight back. */
 	private static boolean allowedNow(CompanionEntity c, BlockPos pos) {
-		return !Camp.isNight((ServerLevel) c.level()) || WorldEditGuard.inCamp(c, pos);
+		return !ReturnHomeTask.sendsHome(c, pos);
 	}
 
 	@Override

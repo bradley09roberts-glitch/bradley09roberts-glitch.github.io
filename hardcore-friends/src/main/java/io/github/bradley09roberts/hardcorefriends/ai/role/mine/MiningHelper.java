@@ -66,7 +66,8 @@ public final class MiningHelper {
 
 	/**
 	 * The standing spot closest to {@code near} from which {@code target} can be worked: solid floor, two free
-	 * blocks, within reach. Checks at most 7×5×7 positions.
+	 * blocks, within reach. Never the spot on top of the target, so Flint does not dig out his own floor and drop
+	 * into a shaft or a cave. Checks at most 7×5×7 positions.
 	 */
 	public static @Nullable BlockPos standSpotFor(ServerLevel level, BlockPos target, BlockPos near) {
 		BlockPos best = null;
@@ -76,7 +77,7 @@ public final class MiningHelper {
 			for (int dz = -3; dz <= 3; dz++) {
 				for (int dy = -3; dy <= 1; dy++) {
 					feet.set(target.getX() + dx, target.getY() + dy, target.getZ() + dz);
-					if (feet.equals(target) || feet.above().equals(target) || !level.isLoaded(feet)) {
+					if (feet.equals(target) || feet.above().equals(target) || isOnTop(feet, target) || !level.isLoaded(feet)) {
 						continue;
 					}
 					if (!reachableFrom(feet, target, WORK_REACH) || !isStandable(level, feet)) {
@@ -91,6 +92,11 @@ public final class MiningHelper {
 			}
 		}
 		return best;
+	}
+
+	/** True when a friend standing at {@code feet} stands directly on {@code target}: breaking it drops them. */
+	public static boolean isOnTop(BlockPos feet, BlockPos target) {
+		return feet.getX() == target.getX() && feet.getZ() == target.getZ() && feet.getY() == target.getY() + 1;
 	}
 
 	public static boolean isPickaxe(ItemStack stack) {

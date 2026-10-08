@@ -32,6 +32,8 @@ public final class MineSite {
 	private static final int RING_STEP = 6;
 	private static final int ANGLES = 16;
 	private static final int MAX_CHECKED = 40;
+	/** No water or lava may lie within this many blocks of the entrance. */
+	private static final int FLUID_GAP = 3;
 
 	/** An entrance (feet position), the first staircase direction and the bottom level. */
 	public record Site(BlockPos entrance, Direction dir, int bottomY) {
@@ -72,7 +74,10 @@ public final class MineSite {
 			if (checked++ >= MAX_CHECKED) {
 				break;
 			}
-			if (fluidNear(level, feet, 3) || WorldEditGuard.looksPlayerBuilt(level, feet, 4, data)) {
+			if (!areaLoaded(level, feet, FLUID_GAP)) {
+				continue; // at the edge of the loaded land: reading around it would load more chunks
+			}
+			if (fluidNear(level, feet, FLUID_GAP) || WorldEditGuard.looksPlayerBuilt(level, feet, 4, data)) {
 				continue;
 			}
 			Direction away = Direction.getApproximateNearest(feet.getX() - centre.getX(), 0, feet.getZ() - centre.getZ());
@@ -147,6 +152,12 @@ public final class MineSite {
 			}
 		}
 		return false;
+	}
+
+	/** True when every chunk within {@code r} blocks (horizontally) of {@code pos} is loaded. */
+	private static boolean areaLoaded(ServerLevel level, BlockPos pos, int r) {
+		return level.hasChunkAt(pos.getX() - r, pos.getZ() - r) && level.hasChunkAt(pos.getX() + r, pos.getZ() - r)
+			&& level.hasChunkAt(pos.getX() - r, pos.getZ() + r) && level.hasChunkAt(pos.getX() + r, pos.getZ() + r);
 	}
 
 	private static boolean fluidNear(ServerLevel level, BlockPos feet, int r) {

@@ -61,7 +61,11 @@ public final class DigMineTask implements CompanionTask {
 		if (Camp.isNight(level) || Camp.isDusk(level) || !MiningHelper.hasAnyPickaxe(c) || c.backpack().freeSlots() < 2) {
 			return 0;
 		}
-		MinePlan plan = MinePlan.of(Camp.data(level.getServer()));
+		CampData data = Camp.data(level.getServer());
+		MinePlan plan = MinePlan.of(data);
+		if (!mayUsePlan(level, data, plan)) {
+			return 0;
+		}
 		if (plan.exists() && !WorldEditGuard.inResourceZone(c, plan.entrance())) {
 			plan.abandon(); // the camp moved
 		}
@@ -80,8 +84,11 @@ public final class DigMineTask implements CompanionTask {
 			default -> {
 				BlockPos blocked = plan.toolBlocked();
 				if (blocked != null) {
+					if (!level.isLoaded(blocked)) {
+						return 0; // never load the mine's chunk just to look at the block
+					}
 					BlockState state = level.getBlockState(blocked);
-					if (level.isLoaded(blocked) && !state.isAir() && !MiningHelper.canHarvest(c, state)) {
+					if (!state.isAir() && !MiningHelper.canHarvest(c, state)) {
 						return 0;
 					}
 					plan.setToolBlocked(null);
@@ -94,7 +101,11 @@ public final class DigMineTask implements CompanionTask {
 	@Override
 	public boolean start(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
-		MinePlan plan = MinePlan.of(Camp.data(level.getServer()));
+		CampData data = Camp.data(level.getServer());
+		MinePlan plan = MinePlan.of(data);
+		if (!mayUsePlan(level, data, plan)) {
+			return false;
+		}
 		if (plan.phase() == MinePlan.Phase.DONE) {
 			plan.abandon();
 		}
@@ -104,7 +115,7 @@ public final class DigMineTask implements CompanionTask {
 				searchFailedUntil = level.getGameTime() + SEARCH_RETRY;
 				return false;
 			}
-			plan.begin(site.entrance(), site.dir(), site.bottomY());
+			plan.begin(site.entrance(), site.dir(), site.bottomY(), Camp.dimensionId(level));
 			BlockPos e = site.entrance();
 			Speech.say(c, Line.DISCOVERY, "a good spot for a mine at " + e.getX() + " " + e.getY() + " " + e.getZ());
 		}
@@ -218,6 +229,17 @@ public final class DigMineTask implements CompanionTask {
 
 	private TaskStatus done() {
 		return minedThisRun > 0 ? TaskStatus.SUCCESS : TaskStatus.FAILURE;
+	}
+
+	/**
+	 * The mine is camp memory with camp-dimension coordinates: Flint only works (or abandons, or starts) it while he is
+	 * in the camp's dimension, and never touches a mine recorded in another dimension.
+	 */
+	private static boolean mayUsePlan(ServerLevel level, CampData data, MinePlan plan) {
+		if (data.campPos().isPresent() && !Camp.isCampLevel(level, data)) {
+			return false;
+		}
+		return !plan.exists() || plan.isIn(level);
 	}
 
 	/** Could not get to the work: try again later, and give the mine up after {@value #MAX_STUCK} tries in a row. */
