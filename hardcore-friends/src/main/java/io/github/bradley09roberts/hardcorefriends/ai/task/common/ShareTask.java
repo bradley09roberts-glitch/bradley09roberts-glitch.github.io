@@ -81,7 +81,18 @@ public final class ShareTask implements CompanionTask {
 	@Override
 	public double score(CompanionEntity c) {
 		planned = findPlan(c);
-		return planned == null ? 0 : 25 + 25 * c.friendId().generosity();
+		if (planned == null) {
+			return 0;
+		}
+		// Feeding a hurt friend and unblocking the builder come before routine gathering.
+		if (planned.food()) {
+			return 70;
+		}
+		if (planned.recipient().friendId().role() == io.github.bradley09roberts.hardcorefriends.companion.Role.BUILDER
+			&& !CampNeeds.buildShortage().isEmpty()) {
+			return 55 + 10 * c.friendId().generosity();
+		}
+		return 25 + 25 * c.friendId().generosity();
 	}
 
 	/** True when the builder has reported a shortage that this kind of material helps with. */
