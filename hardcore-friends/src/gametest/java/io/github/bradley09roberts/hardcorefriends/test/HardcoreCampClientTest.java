@@ -59,6 +59,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 public class HardcoreCampClientTest implements FabricClientGameTest {
 	private static final int DAYS = Integer.getInteger("hardcorefriends.soakDays", 3);
 	private static final int CHUNK = 6000;
+	/** How steeply the observer in the glass box looks down at the camp. */
+	private static final float OBSERVER_PITCH = 52.0F;
 	/**
 	 * With {@code -Dhardcorefriends.timelapseTicks=N}, a time-lapse frame is taken every N ticks (screenshot
 	 * {@code tl-NNNN.png}) and what everyone is doing, feeling and saying goes to {@code test-reports/timelapse.jsonl}.
@@ -121,18 +123,21 @@ public class HardcoreCampClientTest implements FabricClientGameTest {
 			}
 			long realStart = System.currentTimeMillis();
 			for (int i = 1; i <= steps; i++) {
-				// The test harness steps the server in lockstep with this software-rendered client, so draw fewer
-				// frames while sprinting. View and simulation distance stay at 7 chunks so the whole gathering ring
-				// (about 88 blocks) keeps ticking.
+				// The test harness steps the server in lockstep with this software-rendered client, so drawing is what
+				// limits the sprint. While sprinting the observer looks straight up at the empty sky, which costs almost
+				// nothing to draw, and looks back down at the camp for each picture. View and simulation distance stay
+				// at 7 chunks so the whole gathering ring (about 88 blocks) keeps ticking.
 				context.runOnClient(mc -> {
-					mc.options.framerateLimit().set(10);
+					mc.options.framerateLimit().set(30);
 					mc.options.renderDistance().set(7);
 					mc.options.simulationDistance().set(7);
 				});
+				world.getServer().runOnServer(server -> look(server, -90.0F));
 				world.getServer().runOnServer(server -> server.tickRateManager().requestGameToSprint(step));
 				world.getServer().waitFor(server -> !server.tickRateManager().isSprinting(), ClientGameTestContext.NO_TIMEOUT);
+				world.getServer().runOnServer(server -> look(server, OBSERVER_PITCH));
 				context.runOnClient(mc -> mc.options.framerateLimit().set(60));
-				context.waitTicks(FRAME_TICKS > 0 ? 4 : 40);
+				context.waitTicks(FRAME_TICKS > 0 ? 6 : 40);
 				long ticksDone = (long) i * step;
 				if (FRAME_TICKS > 0) {
 					List<String> said = new ArrayList<>();
@@ -283,6 +288,12 @@ public class HardcoreCampClientTest implements FabricClientGameTest {
 		fixtures.put(pos.immutable(), level.getBlockState(pos));
 	}
 
+	/** Turns the observer's head without moving them: up at the sky while sprinting, down at the camp for pictures. */
+	private static void look(MinecraftServer server, float pitch) {
+		ServerPlayer p = server.getPlayerList().getPlayers().getFirst();
+		p.connection.teleport(p.getX(), p.getY(), p.getZ(), p.getYRot(), pitch);
+	}
+
 	private static void moveObserver(MinecraftServer server, BlockPos camp) {
 		ServerLevel level = server.overworld();
 		BlockPos box = camp.above(16).north(12);
@@ -296,7 +307,7 @@ public class HardcoreCampClientTest implements FabricClientGameTest {
 			}
 		}
 		ServerPlayer p = server.getPlayerList().getPlayers().getFirst();
-		p.connection.teleport(box.getX() + 0.5, box.getY(), box.getZ() + 0.5, 0.0F, 52.0F);
+		p.connection.teleport(box.getX() + 0.5, box.getY(), box.getZ() + 0.5, 0.0F, OBSERVER_PITCH);
 		p.getFoodData().setFoodLevel(20);
 	}
 
