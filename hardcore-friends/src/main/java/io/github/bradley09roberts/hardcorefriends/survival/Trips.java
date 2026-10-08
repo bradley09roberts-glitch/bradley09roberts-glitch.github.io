@@ -18,6 +18,8 @@ import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 
@@ -25,6 +27,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.role.scout.Compass;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
@@ -140,7 +143,35 @@ public final class Trips {
 		if (data.nearDanger(pos, level.getGameTime())) {
 			return true;
 		}
-		return Places.nearest(data, Places.OUTPOST, pos, 64, 0, p -> true) != null;
+		return Places.nearest(data, Places.OUTPOST, pos, 64, Long.MAX_VALUE, p -> true) != null;
+	}
+
+	/** Shelter blocks a friend likes to carry on a trip (enough for a pillar or most of a pillbox). */
+	public static final int KIT_BLOCKS = 8;
+	/** Torches a friend likes to carry on a trip (one for a shelter, one spare). */
+	public static final int KIT_TORCHES = 2;
+
+	/** True when the friend carries less than a trip kit and could use a stop at the chest first. */
+	public static boolean needsKit(CompanionEntity c) {
+		return Shelters.blocksCarried(c) < KIT_BLOCKS / 2 || !c.backpack().has(s -> s.is(Items.TORCH));
+	}
+
+	/**
+	 * Packs a trip kit from the chest: dirt (or cobblestone) up to {@value #KIT_BLOCKS} blocks and a couple of torches,
+	 * for a night shelter or a pillar out of reach. Takes only what the chest has, never more than will fit.
+	 */
+	public static void packKit(CompanionEntity c, Container chest) {
+		int blocks = KIT_BLOCKS - Shelters.blocksCarried(c);
+		if (blocks > 0) {
+			int got = SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.DIRT), blocks);
+			if (got < blocks) {
+				SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.COBBLESTONE), blocks - got);
+			}
+		}
+		int torches = KIT_TORCHES - c.backpack().count(Items.TORCH);
+		if (torches > 0) {
+			SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.TORCH), torches);
+		}
 	}
 
 	/** "a, b and c" without repeats; past four things, the rest are counted ("a, b, c and 3 more"). */
@@ -252,6 +283,23 @@ public final class Trips {
 
 	public static void clear(CompanionEntity c) {
 		c.extra().remove(STATE);
+	}
+
+	/** The longest a trip is remembered, in ticks (two days): after that it is given up and forgotten. */
+	private static final long TRIP_MEMORY = 48000L;
+
+	/**
+	 * True (and the trip forgotten) when a trip has dragged on for two days: the friend could not get there or back,
+	 * so their everyday jobs take over again (they head home at dusk like anyone).
+	 */
+	public static boolean expired(CompanionEntity c, State s) {
+		long now = c.level().getGameTime();
+		if (now - s.startedAt <= TRIP_MEMORY && now >= s.startedAt) {
+			return false;
+		}
+		clear(c);
+		ChunkLoader.stopRoaming(c);
+		return true;
 	}
 
 	// ------------------------------------------------------------------- words

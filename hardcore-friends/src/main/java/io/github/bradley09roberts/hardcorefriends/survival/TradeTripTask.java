@@ -65,6 +65,8 @@ public final class TradeTripTask implements CompanionTask {
 
 	private static long chestCheckedAt = Long.MIN_VALUE;
 	private static boolean chestWorthIt;
+	private static long villageCheckedAt = Long.MIN_VALUE;
+	private static @Nullable BlockPos cachedVillage;
 
 	private final Trips.Walker walker = new Trips.Walker();
 	private Trips.@Nullable State trip;
@@ -108,21 +110,26 @@ public final class TradeTripTask implements CompanionTask {
 		}
 		Trips.State saved = Trips.state(c);
 		if (saved != null) {
+			if (Trips.expired(c, saved)) {
+				Trips.release(ID, c);
+				return 0;
+			}
 			return saved.job.equals(ID) && !Camp.isNight(level) ? 60 : 0;
 		}
 		if (!Trips.allowed() || Camp.isNight(level) || Camp.isDusk(level)
 			|| data.memory(MEMORY).getLongOr("day", -1) == Camp.day(level) || Trips.heldByOther(ID, c)) {
 			return 0;
 		}
-		if (!ChunkLoader.canRoam(level.getServer()) || !Trips.campSafe(level, data) || !Trips.fitToGo(c)) {
+		if (!ChunkLoader.canRoam(level.getServer()) || !Trips.campSafe(level, data) || !Trips.fitToGo(c)
+			|| !chestWorthIt(level, data)) {
 			return 0;
 		}
-		BlockPos village = chooseVillage(level, data, c);
+		BlockPos village = cachedVillage(level, data, c);
 		if (village == null) {
 			return 0;
 		}
 		double distance = Math.sqrt(Camp.horizontalDistSqr(village, c.homePos()));
-		if (!Trips.daylightFor(level, 2 * distance, TRADING_TICKS) || !chestWorthIt(level, data)) {
+		if (!Trips.daylightFor(level, 2 * distance, TRADING_TICKS)) {
 			return 0;
 		}
 		return c.friendId() == FriendId.SAGE || c.friendId() == FriendId.ROWAN ? 48 : 34;
@@ -139,6 +146,17 @@ public final class TradeTripTask implements CompanionTask {
 		chestWorthIt = chest.isPresent() && Trading.hasSomethingToTrade(chest.get())
 			&& !Trading.wants(level, data, chest.get()).isEmpty();
 		return chestWorthIt;
+	}
+
+	/** The village to trade at, worked out at most every ten seconds for everyone (it is the same for every friend). */
+	private static @Nullable BlockPos cachedVillage(ServerLevel level, CampData data, CompanionEntity c) {
+		long now = level.getGameTime();
+		if (now - villageCheckedAt >= 0 && now - villageCheckedAt < CHEST_CACHE_TICKS) {
+			return cachedVillage;
+		}
+		villageCheckedAt = now;
+		cachedVillage = chooseVillage(level, data, c);
+		return cachedVillage;
 	}
 
 	/**
@@ -201,6 +219,9 @@ public final class TradeTripTask implements CompanionTask {
 			}
 			if (!Trips.allowed() && !UNPACK.equals(saved.phase)) {
 				saved.phase = HOME;
+			}
+			if (OUT.equals(saved.phase) && Trips.home(c) && !c.backpack().has(Trading::isTradeGood)) {
+				saved.phase = PACK; // the goods went back into the chest meanwhile (overnight): pack again
 			}
 			Trips.claim(ID, c);
 			return true;
@@ -294,7 +315,9 @@ public final class TradeTripTask implements CompanionTask {
 	private TaskStatus trade(CompanionEntity c, Trips.State t) {
 		ServerLevel level = (ServerLevel) c.level();
 		if (phaseTicks % 40 == 1 && unsafe(level, c, t.destination)) {
-			Places.Place place = Places.nearest(Camp.data(level.getServer()), Places.VILLAGE, t.destination, 64, 0, p -> true);
+			Places.record(level, Places.VILLAGE, t.destination); // a village Scout saw near camp is now on the list too
+			Places.Place place = Places.nearest(Camp.data(level.getServer()), Places.VILLAGE, t.destination, 64,
+				level.getGameTime(), p -> true);
 			if (place != null) {
 				Places.avoidUntil(Camp.data(level.getServer()), place, level.getGameTime() + 24000L);
 			}

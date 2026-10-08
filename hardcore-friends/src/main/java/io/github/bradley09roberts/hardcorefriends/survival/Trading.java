@@ -175,6 +175,7 @@ public final class Trading {
 		int taken = 0;
 		int kinds = 0;
 		boolean foodToSpare = CampNeeds.need(CampNeeds.Need.FOOD) < 0.3;
+		Trips.packKit(c, chest);
 		taken += SupplyChest.withdraw(chest, bp, s -> s.is(Items.EMERALD), MAX_EMERALDS_TAKEN);
 		if (wants.contains(Want.BOOKS) && bp.freeSlots() > 2) {
 			taken += SupplyChest.withdraw(chest, bp, s -> s.is(Items.BOOK), 2);

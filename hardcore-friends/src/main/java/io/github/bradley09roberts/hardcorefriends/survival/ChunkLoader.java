@@ -17,6 +17,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -47,8 +48,10 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  * when they die, leave, change dimension or stop working on their own. Any feature may ask for one with
  * {@link #startRoaming}.
  *
- * <p>Nothing here is saved: tickets are worked out afresh every second and dropped when the server stops, so
- * removing the mod leaves nothing behind.
+ * <p>The tickets themselves are never saved: they are worked out afresh every second and dropped when the server
+ * stops, so removing the mod leaves nothing behind. Only where roaming friends were is remembered (in camp memory),
+ * so that after the world is closed and opened again a friend out on a trip is woken up where they were and can carry
+ * on home, instead of staying frozen far away until someone walks over to them.
  */
 public final class ChunkLoader {
 	/** Keeps the camp area loaded and its entities running (and its dimension awake). Not saved: re-added each second. */
@@ -72,6 +75,10 @@ public final class ChunkLoader {
 	public static final long MAX_ROAM_TICKS = 36000L;
 	/** A roaming friend this far inside the camp area's edge counts as home again. */
 	private static final int HOME_MARGIN = 16;
+	/** Where roaming friends were, kept in camp memory so their land can be woken again after a restart. */
+	private static final String MEMORY = "survival.roaming";
+	/** How long a friend woken after a restart has to turn up before their grant lapses, in ticks. */
+	private static final int RESTORE_GRACE = 400;
 
 	/** A ticket we hold: of which kind, in which dimension, where and how far. */
 	private record Held(TicketType type, ResourceKey<Level> dimension, ChunkPos pos, int radius) {
@@ -85,6 +92,8 @@ public final class ChunkLoader {
 		@Nullable Held ticket;
 		/** Set once they have been outside the camp area, so the grant only lapses when they come back to it. */
 		boolean beenAway;
+		/** Woken after a restart and not seen yet: kept for a short while so the friend can load. */
+		boolean restoring;
 
 		Roamer(UUID friend, long since, String why) {
 			this.friend = friend;
@@ -95,6 +104,11 @@ public final class ChunkLoader {
 
 	private static @Nullable Held camp;
 	private static final Map<UUID, Roamer> ROAMING = new LinkedHashMap<>();
+	/** Whether this server's remembered roaming friends have been woken yet, and when. */
+	private static boolean restored;
+	private static int restoredAt;
+	/** Set when the roaming grants changed since they were last written to camp memory. */
+	private static boolean roamingChanged;
 
 	private ChunkLoader() {
 	}
@@ -146,6 +160,7 @@ public final class ChunkLoader {
 		Roamer roamer = new Roamer(c.getUUID(), level.getGameTime(), why);
 		ROAMING.put(c.getUUID(), roamer);
 		follow(level, roamer, c);
+		remember(level.getServer());
 		return true;
 	}
 
@@ -172,6 +187,7 @@ public final class ChunkLoader {
 		Roamer roamer = ROAMING.remove(c.getUUID());
 		if (roamer != null && c.level() instanceof ServerLevel level) {
 			release(level.getServer(), roamer.ticket);
+			remember(level.getServer());
 		}
 	}
 
@@ -190,7 +206,13 @@ public final class ChunkLoader {
 	private static void update(MinecraftServer server) {
 		boolean anyone = anyoneCounts(server);
 		updateCamp(server, anyone);
+		if (anyone && !restored) {
+			restore(server);
+		}
 		updateRoaming(server, anyone);
+		if (roamingChanged) {
+			remember(server);
+		}
 	}
 
 	/** True when a player who keeps the camp running is online. */
@@ -257,13 +279,19 @@ public final class ChunkLoader {
 		while (it.hasNext()) {
 			Roamer roamer = it.next();
 			CompanionEntity c = loaded.get(roamer.friend);
+			if (c == null && roamer.restoring && anyone && server.getTickCount() - restoredAt < RESTORE_GRACE) {
+				kept++;
+				continue; // woken after a restart: give them a moment to load
+			}
 			String drop = dropReason(roamer, c, anyone, ++kept > max);
 			if (drop != null) {
 				release(server, roamer.ticket);
 				it.remove();
 				kept--;
+				roamingChanged = true;
 				continue;
 			}
+			roamer.restoring = false;
 			follow((ServerLevel) c.level(), roamer, c);
 		}
 	}
@@ -303,6 +331,73 @@ public final class ChunkLoader {
 		Held old = roamer.ticket;
 		roamer.ticket = add(level.getServer(), wanted) ? wanted : null;
 		release(level.getServer(), old);
+		roamingChanged = true;
+	}
+
+	/**
+	 * Wakes the land of the friends who were roaming when the world last closed, so they load and can carry on (their
+	 * trip is remembered with them). Done once, when a player who counts is first online.
+	 */
+	private static void restore(MinecraftServer server) {
+		restored = true;
+		restoredAt = server.getTickCount();
+		CompoundTag mem = Camp.data(server).memory(MEMORY);
+		int max = FriendsConfig.get().maxRoamingFriends;
+		for (String key : List.copyOf(mem.keySet())) {
+			if (ROAMING.size() >= max) {
+				break;
+			}
+			CompoundTag entry = mem.getCompoundOrEmpty(key);
+			Identifier dimensionId = Identifier.tryParse(entry.getStringOr("dim", ""));
+			UUID friend;
+			try {
+				friend = UUID.fromString(key);
+			} catch (IllegalArgumentException e) {
+				continue;
+			}
+			if (dimensionId == null || ROAMING.containsKey(friend)) {
+				continue;
+			}
+			ResourceKey<Level> dimension = ResourceKey.create(Registries.DIMENSION, dimensionId);
+			Held held = new Held(ROAMING_TICKET, dimension, ChunkPos.unpack(entry.getLongOr("chunk", 0L)), ROAMING_RADIUS + 2);
+			Roamer roamer = new Roamer(friend, entry.getLongOr("since", 0L), entry.getStringOr("why", "on a trip"));
+			roamer.beenAway = true;
+			roamer.restoring = true;
+			if (add(server, held)) {
+				roamer.ticket = held;
+				ROAMING.put(friend, roamer);
+			}
+		}
+		roamingChanged = true;
+	}
+
+	/** Writes where the roaming friends are to camp memory (not their tickets: those are never saved). */
+	private static void remember(MinecraftServer server) {
+		roamingChanged = false;
+		CampData data = Camp.data(server);
+		CompoundTag mem = new CompoundTag();
+		for (Roamer roamer : ROAMING.values()) {
+			Held held = roamer.ticket;
+			if (held == null) {
+				continue;
+			}
+			CompoundTag entry = new CompoundTag();
+			entry.putString("dim", held.dimension().identifier().toString());
+			entry.putLong("chunk", held.pos().pack());
+			entry.putLong("since", roamer.since);
+			entry.putString("why", roamer.why);
+			mem.put(roamer.friend.toString(), entry);
+		}
+		CompoundTag old = data.memory(MEMORY);
+		if (!old.equals(mem)) {
+			for (String key : List.copyOf(old.keySet())) {
+				old.remove(key);
+			}
+			for (String key : mem.keySet()) {
+				old.put(key, mem.getCompoundOrEmpty(key));
+			}
+			data.setDirty();
+		}
 	}
 
 	// ----------------------------------------------------------------- tickets
@@ -338,6 +433,8 @@ public final class ChunkLoader {
 	private static void forget() {
 		camp = null;
 		ROAMING.clear();
+		restored = false;
+		roamingChanged = false;
 	}
 
 	/** One line per held ticket, for the trips report. */

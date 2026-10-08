@@ -36,8 +36,8 @@ public final class PillarGoal extends Goal {
 	private static final int HIT_WINDOW = 60;
 	/** How long the ground must be clear before coming down, in ticks. */
 	private static final int CLEAR_FOR = 100;
-	/** The longest a friend waits up a pillar, in ticks (then they come down whatever). */
-	private static final int MAX_WAIT = 20 * 60 * 6;
+	/** The longest a friend waits up a pillar, in ticks (a whole night; then they come down whatever). */
+	private static final int MAX_WAIT = 20 * 60 * 12;
 	/** The game ticks of the last two blows each friend took from a monster. */
 	private static final Map<CompanionEntity, long[]> HITS = new WeakHashMap<>();
 

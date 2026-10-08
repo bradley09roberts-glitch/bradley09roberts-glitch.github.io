@@ -9,12 +9,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.build.ChestWalk;
 import io.github.bradley09roberts.hardcorefriends.ai.role.scout.Compass;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
+import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
@@ -38,6 +40,7 @@ public final class FarTripTask implements CompanionTask {
 	private static final int STEP_OUT = 120;
 	private static final int SECTORS = 8;
 	private static final String MEMORY = "survival.far_trips";
+	private static final String PACK = "pack";
 	private static final String OUT = "out";
 	private static final String HOME = "home";
 	/** How often the land around is looked over, in ticks. */
@@ -59,6 +62,9 @@ public final class FarTripTask implements CompanionTask {
 		if (t == null) {
 			return "exploring far afield";
 		}
+		if (PACK.equals(t.phase)) {
+			return "packing for a trip";
+		}
 		return HOME.equals(t.phase) ? "heading home from a trip" : "on a trip to explore around " + Compass.coords(t.destination);
 	}
 
@@ -74,7 +80,7 @@ public final class FarTripTask implements CompanionTask {
 		Trips.State saved = Trips.state(c);
 		if (saved != null) {
 			// A trip in progress (a fight on the road broke it off): back to it by day; at night the shelter takes over.
-			return saved.job.equals(ID) && !Camp.isNight(level) ? 60 : 0;
+			return saved.job.equals(ID) && !Trips.expired(c, saved) && !Camp.isNight(level) ? 60 : 0;
 		}
 		if (!Trips.allowed() || Camp.isNight(level) || Camp.isDusk(level) || data.memory(MEMORY).getLongOr("day", -1) == Camp.day(level)) {
 			return 0; // one far trip a day
@@ -111,11 +117,14 @@ public final class FarTripTask implements CompanionTask {
 		if (destination == null || !ChunkLoader.startRoaming(c, "exploring far afield")) {
 			return false;
 		}
-		trip = new Trips.State(ID, OUT, destination, level.getGameTime());
+		boolean pack = Trips.needsKit(c) && SupplyChest.of(level).isPresent();
+		trip = new Trips.State(ID, pack ? PACK : OUT, destination, level.getGameTime());
 		Trips.save(c, trip);
 		data.memory(MEMORY).putLong("day", Camp.day(level));
 		data.setDirty();
-		Trips.announce(c, Line.TRIP_START, "the land to the " + Trips.direction(home, destination));
+		if (!pack) {
+			setOff(c, trip);
+		}
 		return true;
 	}
 
@@ -150,6 +159,13 @@ public final class FarTripTask implements CompanionTask {
 		return null;
 	}
 
+	/** Off they go: everyone hears where. */
+	private static void setOff(CompanionEntity c, Trips.State t) {
+		t.phase = OUT;
+		Trips.save(c, t);
+		Trips.announce(c, Line.TRIP_START, "the land to the " + Trips.direction(c.homePos(), t.destination));
+	}
+
 	@Override
 	public TaskStatus tick(CompanionEntity c) {
 		Trips.State t = trip;
@@ -157,6 +173,19 @@ public final class FarTripTask implements CompanionTask {
 			return TaskStatus.FAILURE;
 		}
 		ServerLevel level = (ServerLevel) c.level();
+		if (PACK.equals(t.phase)) {
+			// A few blocks and torches for a night out, from the chest, first.
+			ChestWalk.State walk = ChestWalk.tick(c);
+			if (walk == ChestWalk.State.WALKING) {
+				return TaskStatus.RUNNING;
+			}
+			if (walk == ChestWalk.State.ARRIVED) {
+				ChestWalk.chest(c).ifPresent(chest -> Trips.packKit(c, chest));
+			}
+			c.actions().stopWalking();
+			setOff(c, t);
+			return TaskStatus.RUNNING;
+		}
 		ticks++;
 		if (ticks % SENSE_INTERVAL == 0) {
 			sense(c, level, t);
