@@ -309,6 +309,9 @@ public final class FarmContext {
 		if (data.isPlacedByFriends(level, p) || nearBuild(level, data, p)) {
 			return false;
 		}
+		if (io.github.bradley09roberts.hardcorefriends.progress.work.CaneTask.reservedForCane(level, p)) {
+			return false; // kept for sugar cane beside the cane patch's pool
+		}
 		if (data.site(Structures.ANIMAL_PEN).map(s -> new Pen(s.origin, s.rotation).covers(p.above())).orElse(false)) {
 			return false; // the animals' paddock stays grass
 		}

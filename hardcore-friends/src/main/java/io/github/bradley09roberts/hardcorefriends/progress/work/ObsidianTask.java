@@ -32,6 +32,8 @@ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
+import io.github.bradley09roberts.hardcorefriends.companion.Role;
+import io.github.bradley09roberts.hardcorefriends.companion.Speciality;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.progress.CastPolicy;
@@ -102,8 +104,12 @@ public final class ObsidianTask implements CompanionTask {
 		if (!ProgressPlan.wants(server, Items.OBSIDIAN) || !Trips.fitForDeepWork(c, 2)) {
 			return 0;
 		}
-		if (Tiers.bestPickaxe(c) < Tiers.DIAMOND && Trips.inChest(c, s -> Tiers.pickaxe(s) >= Tiers.DIAMOND) == 0) {
-			return 0;
+		if (Tiers.bestPickaxe(c) < Tiers.DIAMOND) {
+			// Only the miner (or whoever covers mining) takes the camp's diamond pickaxe out of the chest for this.
+			boolean miner = c.friendId().role() == Role.MINER || Speciality.covering(c) == Role.MINER;
+			if (!miner || Trips.inChest(c, s -> Tiers.pickaxe(s) >= Tiers.DIAMOND) == 0) {
+				return 0;
+			}
 		}
 		boolean waterBucket = c.backpack().has(s -> s.is(Items.WATER_BUCKET)) || Trips.inChest(c, s -> s.is(Items.WATER_BUCKET)) > 0;
 		boolean bucket = c.backpack().has(s -> s.is(Items.BUCKET)) || Trips.inChest(c, s -> s.is(Items.BUCKET)) > 0;

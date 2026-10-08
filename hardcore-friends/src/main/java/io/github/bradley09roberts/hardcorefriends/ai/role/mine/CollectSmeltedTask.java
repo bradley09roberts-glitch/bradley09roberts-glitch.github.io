@@ -104,8 +104,13 @@ public final class CollectSmeltedTask implements CompanionTask {
 		ItemStack left = c.backpack().insert(out.copy());
 		int taken = out.getCount() - left.getCount();
 		if (taken > 0) {
+			ItemStack sample = out.copyWithCount(1);
 			f.removeItem(CampFurnace.SLOT_RESULT, taken);
 			f.setChanged();
+			if (Camp.data(level.getServer()).isPlacedByFriends(level, pos)) {
+				// The camp's shared experience grows from its own smelting (package progress).
+				io.github.bradley09roberts.hardcorefriends.progress.Experience.onSmelted(level, sample, taken);
+			}
 		}
 		return taken;
 	}
