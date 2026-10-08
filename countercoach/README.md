@@ -8,9 +8,9 @@ while keeping your chosen build's identity.
 > **Status (build 0.1.0, 2026-10-08):**
 > - Working companion with manual, scenario and replay inputs, real game data (client build
 >   6763), and 89 passing tests.
-> - The Windows installer and zip are built (unsigned). Install and uninstall were checked
->   **under Wine only**.
-> - **Not tested on Windows or with a running Deadlock match.**
+> - The Windows installer and zip are built (unsigned) on a GitHub Windows runner, where the app
+>   launch, silent install/uninstall and all tests pass.
+> - **Not yet tested alongside a running Deadlock match.**
 > - There is **no native mod and no live game integration**, because no permitted interface
 >   exists. See [docs/CAPABILITIES.md](docs/CAPABILITIES.md).
 
@@ -48,6 +48,10 @@ Other commands:
 | `pnpm dist:win` | Build the Windows NSIS installer and portable zip (on Linux this needs Wine 32+64-bit) |
 | `pnpm screenshots` | Drive the real Electron app under Xvfb and capture `docs/screenshots` |
 | `pnpm --filter @countercoach/desktop build:web` | Build the same UI as a static browser preview (`dist-web/`) |
+
+**Download:** open the latest successful
+[CounterCoach Windows build](https://github.com/bradley09roberts-glitch/bradley09roberts-glitch.github.io/actions/workflows/countercoach-windows.yml)
+run, then download the **CounterCoach-Windows-installer** artifact (sign-in required).
 
 Installing, using, disabling, uninstalling and rolling back: [docs/USAGE.md](docs/USAGE.md).
 

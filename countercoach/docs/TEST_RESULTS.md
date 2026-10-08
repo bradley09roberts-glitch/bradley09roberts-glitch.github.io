@@ -18,13 +18,23 @@ simulations, not live-match demonstrations.
 | Renderer console errors during the screenshot run | none |
 | Windows NSIS installer + portable zip build (electron-builder 26.15.3 on Linux with Wine 9.0) | built, **unsigned** (no Authenticode data in the PE headers) |
 | Silent install → shortcuts → uninstall registry entry → silent uninstall, **under Wine** | pass (details below) |
-| App launch on Windows | **untested**. Under Wine the app process started and created its profile folder, but Wine could not render Electron windows (`DCompositionCreateDevice3 failed: Not implemented`), so no smoke report was written. |
+| App launch on Windows | **pass on a GitHub-hosted Windows runner** (`windows-latest`, run [37773343166](https://github.com/bradley09roberts-glitch/bradley09roberts-glitch.github.io/actions/runs/37773343166)): main window visible, overlay always-on-top and non-focusable, data build 6763 loaded. (Under Wine the app could not render, a Wine limitation.) |
+| Silent install → uninstall on Windows | **pass** on the same runner |
+| Typecheck + 89 tests on Windows | **pass** on the same runner (`evaluate()` p50 15.5 ms / p95 31.0 ms) |
 | Overlay over Deadlock (borderless or fullscreen) | **untested** (no game available) |
 | Live / screen-capture adapters | not shipped (not verifiable) |
 
-To test on real Windows, run `.github/workflows/countercoach-windows.yml` (manual trigger). It
-builds on `windows-latest`, runs the tests, smoke-launches the app (writes `smoke-report.json`),
-silently installs and uninstalls, and uploads the installer and zip.
+`.github/workflows/countercoach-windows.yml` builds on `windows-latest` (on pushes to this branch,
+or manually once on main), uploads the installer and zip as the **CounterCoach-Windows-installer**
+artifact, runs the typecheck and tests, smoke-launches the app (writes `smoke-report.json`) and
+silently installs and uninstalls. A CI runner is not a gaming PC: the overlay has still not been
+seen over a running Deadlock match.
+
+Windows runner smoke report (run 37773343166):
+
+```
+{"smoke":true,"platform":"win32","electron":"44.4.5","mainVisible":true,"overlayExists":true,"overlayFocusable":false,"overlayAlwaysOnTop":true,"overlayBounds":{"x":668,"y":16,"width":340,"height":82},"snapshotBuild":6763}
+```
 
 ## Required behaviours (brief §9) → tests
 

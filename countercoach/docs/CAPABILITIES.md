@@ -161,6 +161,6 @@ working in this environment, with how. **Limited** = works with stated restricti
 | Separate-window mode | Implemented, verified (Linux) | The main window works without the overlay. |
 | Settings persistence | Implemented, verified | Relaunch test in the screenshot run. |
 | Background data refresh (non-blocking, validated, rollback) | Implemented | The refresh path uses the same tested ingest core; the in-app download was not exercised end to end in the UI. |
-| Windows packages (NSIS installer + portable zip) | Built (unsigned) | Install, shortcuts, registry, uninstall verified **under Wine only**. App launch on Windows untested. |
+| Windows packages (NSIS installer + portable zip) | Built (unsigned); verified on a Windows CI runner | Launch smoke test and silent install/uninstall passed on `windows-latest` (run 37773343166); install details also checked under Wine. Not yet run on a gaming PC with Deadlock. |
 | Performance (<100 ms local update) | Verified on Linux | p95 21 ms (Node); 8–12 ms in the Electron renderer. Windows not measured. |
 | Statistical ranking from match data | Not used as a ranking model | Only labelled weak priors (pick rate, most-played ability order with sample size). |

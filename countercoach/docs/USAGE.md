@@ -5,13 +5,16 @@ touches Deadlock's files, memory, network traffic or input, and it never buys it
 ability points for you. It is not affiliated with or endorsed by Valve. No claim is made that
 third-party overlays are approved by Valve or safe from enforcement.
 
-> **Testing status:** the Windows package was built and its installer and uninstaller were run
-> under **Wine** on Linux. The app itself was run and screenshotted on Linux. It has **not** been
-> run on real Windows or alongside a live Deadlock match. See [TEST_RESULTS.md](TEST_RESULTS.md).
+> **Testing status:** the app launch and silent install/uninstall passed on a GitHub-hosted
+> Windows runner, and the app was run and screenshotted on Linux. It has **not** been run alongside
+> a live Deadlock match. See [TEST_RESULTS.md](TEST_RESULTS.md).
 
 ## Install
 
-Two packages are produced by `pnpm dist:win`:
+Download the **CounterCoach-Windows-installer** artifact from the latest successful run of the
+[CounterCoach Windows build](https://github.com/bradley09roberts-glitch/bradley09roberts-glitch.github.io/actions/workflows/countercoach-windows.yml)
+workflow (scroll to **Artifacts**; GitHub sign-in required), then unzip it. It contains the two
+packages that `pnpm dist:win` produces:
 
 | File | What it is |
 |---|---|
@@ -127,7 +130,7 @@ CounterCoach makes no game-file changes, so there's nothing in Deadlock to back 
 
 - Installer build: *Settings → Apps → CounterCoach → Uninstall*, or run
   `Uninstall CounterCoach.exe` in the install folder (`/S` for silent). This removes the
-  program, shortcuts and uninstall registry entry. Verified under Wine; not yet on Windows.
+  program, shortcuts and uninstall registry entry (verified on a Windows CI runner and under Wine).
 - Portable build: delete the folder.
 - Remove your data as well: delete `%APPDATA%\CounterCoach`. The uninstaller keeps it on
   purpose so a reinstall keeps your settings.

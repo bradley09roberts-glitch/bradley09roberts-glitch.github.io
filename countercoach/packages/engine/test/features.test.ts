@@ -137,7 +137,7 @@ describe("performance (local scoring cost)", () => {
     times.sort((a, b) => a - b);
     const p50 = times[15]!;
     const p95 = times[28]!;
-    console.log(`[perf] evaluate() p50=${p50.toFixed(1)}ms p95=${p95.toFixed(1)}ms (Linux container, Node ${process.version})`);
+    console.log(`[perf] evaluate() p50=${p50.toFixed(1)}ms p95=${p95.toFixed(1)}ms (${process.platform}, Node ${process.version})`);
     expect(p95).toBeLessThan(100);
   });
 });
