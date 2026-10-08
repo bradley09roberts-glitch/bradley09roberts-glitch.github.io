@@ -1,5 +1,6 @@
 package io.github.bradley09roberts.hardcorefriends.ai.role.build;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
@@ -23,12 +24,15 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 /**
  * Oak's main job: build the next improvement the settlement plan gives the builder, one batch at a time. When there
  * is no crafting table by the supply chest yet, Oak makes that first, because most recipes need it. A supply chest
- * the player already linked counts as built, and so does a crafting table or furnace already standing by it.
+ * the player already linked counts as built, and so does a crafting table or furnace already standing by it. When
+ * the linked supply chest has been broken, Oak drops the dead link and builds a new chest before anything else.
  */
 public final class BuildTask extends BlueprintTask {
 	private static final int TABLE_RECHECK = 200;
+	private static final int CHEST_RECHECK = 200;
 
 	private long tableCheckedAt = -100_000;
+	private long chestCheckedAt = -100_000;
 	private boolean tableNearChest;
 
 	@Override
@@ -48,7 +52,12 @@ public final class BuildTask extends BlueprintTask {
 
 	@Override
 	protected @Nullable Blueprint choose(CompanionEntity c, CampData data) {
-		for (Structures.Entry next : pending(data, Role.BUILDER)) {
+		checkSupplyChest(c, data);
+		List<Structures.Entry> todo = pending(data, Role.BUILDER);
+		if (SupplyChestLink.needsNewChest(data)) {
+			todo.addFirst(Structures.get(Structures.SUPPLY_CHEST)); // the old one was broken; everyone relies on it
+		}
+		for (Structures.Entry next : todo) {
 			boolean trivialChest = next.id().equals(Structures.SUPPLY_CHEST) && data.chestPos().isPresent();
 			if (!trivialChest && !next.id().equals(Structures.CRAFTING_TABLE) && !data.isCompleted(Structures.CRAFTING_TABLE)
 				&& !hasTable(c, data)) {
@@ -82,6 +91,15 @@ public final class BuildTask extends BlueprintTask {
 			}
 		}
 		return false;
+	}
+
+	/** Every 10 seconds: drops the link to a supply chest that has been broken, so a new one gets built. */
+	private void checkSupplyChest(CompanionEntity c, CampData data) {
+		long now = c.level().getGameTime();
+		if (now - chestCheckedAt >= CHEST_RECHECK || now < chestCheckedAt) {
+			chestCheckedAt = now;
+			SupplyChestLink.dropIfBroken((ServerLevel) c.level(), data);
+		}
 	}
 
 	/** Is there a crafting table by the supply chest (or by where it will go)? Rechecked every 10 seconds. */

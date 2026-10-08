@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 import org.jspecify.annotations.Nullable;
 
@@ -284,8 +285,12 @@ public final class BuildJob {
 		if (batch.isEmpty()) {
 			return complete();
 		}
-		wanted = materials(batch);
 		Optional<Container> chest = SupplyChest.of(level());
+		if (batch.stream().anyMatch(p -> p.entry().material() == MaterialSpec.GLASS_PANE)
+			&& !Supplies.canMake(c, chest.orElse(null), Stock.GLASS_PANE, 1)) {
+			batch.replaceAll(BuildJob::withoutGlass); // nobody can make glass: close the windows with planks
+		}
+		wanted = materials(batch);
 		if (carries(wanted)) {
 			return startBuilding(Map.of());
 		}
@@ -300,6 +305,20 @@ public final class BuildJob {
 			return goToTable(missing);
 		}
 		return startBuilding(missing);
+	}
+
+	/**
+	 * A window without glass: when neither the backpack nor the chest holds glass panes or glass to make them, the
+	 * window is filled with planks instead, so the building can still be finished. The plan still asks for glass, so
+	 * the plank counts as something else standing there and is left alone afterwards.
+	 */
+	private static Placement withoutGlass(Placement p) {
+		Blueprint.Entry e = p.entry();
+		if (e.material() != MaterialSpec.GLASS_PANE) {
+			return p;
+		}
+		Blueprint.Entry planks = new Blueprint.Entry(e.dx(), e.dy(), e.dz(), MaterialSpec.PLANKS, UnaryOperator.identity(), e.attachment());
+		return new Placement(p.index(), p.part(), p.pos(), planks, p.rotation());
 	}
 
 	private static Map<Stock, Integer> materials(List<Placement> list) {
@@ -596,7 +615,8 @@ public final class BuildJob {
 		finished = true;
 		if (!repair) {
 			if (bp == Blueprints.SUPPLY_CHEST && data.chestPos().isEmpty()) {
-				SiteFinder.parts(data, bp).stream().findFirst().ifPresent(part -> data.setChestPos(part.origin()));
+				SiteFinder.parts(data, bp).stream().findFirst().map(Part::origin)
+					.filter(origin -> SupplyChest.isValidStorage(level(), origin)).ifPresent(data::setChestPos);
 			}
 			CampProgress.complete(c, bp.id());
 			CampNeeds.reportBuildShortage(level(), Map.of(), "");

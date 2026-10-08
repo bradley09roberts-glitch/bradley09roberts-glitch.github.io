@@ -78,6 +78,9 @@ public final class RepairTask extends BlueprintTask {
 			List<Placement> gaps = BuildJob.missing(level, data, bp.get(), 8);
 			for (Placement p : gaps) {
 				Stock s = p.entry().material().stock();
+				if (s == Stock.GLASS_PANE && !Supplies.canMake(c, chest, s, 1)) {
+					s = Stock.PLANKS; // without glass a window is closed with planks
+				}
 				if (s == null || Supplies.canMake(c, chest, s, 1)) {
 					damaged = bp.get();
 					return damaged;

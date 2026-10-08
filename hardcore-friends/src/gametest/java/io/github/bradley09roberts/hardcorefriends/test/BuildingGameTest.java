@@ -108,6 +108,31 @@ public class BuildingGameTest {
 		data.markCompleted(bp.id());
 	}
 
+	/**
+	 * Builds a plan instantly except the entries of one material (test set-up only), and reserves the site with its
+	 * progress at the first entry left out, as if the builder had got that far.
+	 */
+	private static void buildAllBut(GameTestHelper helper, CampData data, Blueprint bp, List<Part> parts, MaterialSpec left) {
+		ServerLevel level = helper.getLevel();
+		List<Placement> all = Blueprints.placements(bp, parts);
+		int firstLeft = all.size();
+		for (Placement p : all) {
+			if (p.entry().material() == left) {
+				firstLeft = Math.min(firstLeft, p.index());
+				continue;
+			}
+			if (p.isFoundation()) {
+				continue;
+			}
+			BlockState state = p.entry().material() == MaterialSpec.DOOR_TOP
+				? level.getBlockState(p.pos().below()).setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER)
+				: p.entry().stateFor(sample(p.entry().material()), Blueprint.rotation(p.rotation()));
+			level.setBlock(p.pos(), state, Block.UPDATE_ALL);
+		}
+		SiteFinder.reserve(data, bp, parts);
+		data.site(bp.id()).orElseThrow().progress = firstLeft;
+	}
+
 	/** World positions of a reserved plan's entries made of one material. */
 	private static List<BlockPos> positions(CampData data, Blueprint bp, MaterialSpec material) {
 		return Blueprints.placements(bp, SiteFinder.parts(data, bp)).stream()
@@ -372,5 +397,69 @@ public class BuildingGameTest {
 				helper.assertTrue(chestCount(output, s -> s.is(Items.IRON_INGOT)) >= 1, "an iron ingot arrives in the output chest");
 			})
 			.thenSucceed();
+	}
+
+	// ------------------------------------------------------- fixes and edges
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_75", maxTicks = 200)
+	public void campfireIsNotSitedOnPlayersCobblestone(GameTestHelper helper) {
+		CampData data = TestSupport.resetCamp(helper, true);
+		// A player's cobblestone floor where the campfire would go (three blocks south of the centre).
+		for (int x = 13; x <= 19; x++) {
+			for (int z = 18; z <= 22; z++) {
+				helper.setBlock(new BlockPos(x, 2, z), Blocks.COBBLESTONE);
+			}
+		}
+		SiteFinder.Search search = SiteFinder.search(helper.getLevel(), data, Blueprints.CAMPFIRE);
+		List<Part> found = null;
+		for (int i = 0; i < 200 && found == null && !search.failed(); i++) {
+			found = search.step(16);
+		}
+		helper.assertTrue(found != null, "a campfire site is found");
+		BlockPos origin = found.getFirst().origin();
+		BlockState ground = helper.getLevel().getBlockState(origin.below());
+		helper.assertTrue(SiteFinder.isNaturalGround(ground), "the campfire stands on natural ground, not on the player's floor: "
+			+ ground + " under " + origin);
+		helper.succeed();
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_76", maxTicks = 1600)
+	public void oakClosesCabinWindowsWithPlanksWithoutGlass(GameTestHelper helper) {
+		CampData data = atStage(helper, 2);
+		Container chest = TestSupport.placeChest(helper, CHEST, new ItemStack(Items.OAK_LOG, 16));
+		helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
+		Part cabinPart = new Part(helper.absolutePos(new BlockPos(9, 2, 12)), Blueprint.rotationFacing(Direction.EAST));
+		// Everything is up except the two windows, and nobody has any glass.
+		buildAllBut(helper, data, Blueprints.CABIN, List.of(cabinPart), MaterialSpec.GLASS_PANE);
+		CompanionEntity oak = recruit(helper, FriendId.OAK);
+		helper.succeedWhen(() -> {
+			helper.assertTrue(data.isCompleted(Structures.CABIN), "the cabin is finished without glass: " + status(oak, data, Structures.CABIN));
+			List<BlockPos> windows = positions(data, Blueprints.CABIN, MaterialSpec.GLASS_PANE);
+			helper.assertTrue(windows.size() == 2 && count(helper, windows, s -> s.is(BlockTags.PLANKS)) == 2,
+				"both windows are closed with planks");
+			helper.assertTrue(chestCount(chest, s -> s.is(ItemTags.LOGS)) + oak.backpack().count(ItemTags.LOGS) <= 15, "a log became the planks");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_79", maxTicks = 1600)
+	public void oakReplacesBrokenSupplyChest(GameTestHelper helper) {
+		CampData data = atStage(helper, 4);
+		for (Structures.Entry e : Structures.ALL) {
+			data.markCompleted(e.id());
+		}
+		TestSupport.placeChest(helper, CHEST);
+		helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
+		CompanionEntity oak = recruit(helper, FriendId.OAK);
+		TestSupport.give(oak, new ItemStack(Items.OAK_PLANKS, 16));
+		long improvements = data.stat("improvements_built");
+		helper.setBlock(CHEST, Blocks.AIR); // a creeper took the supply chest
+		helper.succeedWhen(() -> {
+			Optional<BlockPos> linked = data.chestPos();
+			helper.assertTrue(linked.isPresent() && data.isPlacedByFriends(linked.get()),
+				"a new chest built by Oak is linked, link " + linked + ": " + status(oak, data, Structures.SUPPLY_CHEST));
+			helper.assertTrue(helper.getLevel().getBlockState(linked.get()).is(Blocks.CHEST), "a chest stands at the linked position");
+			helper.assertTrue(SupplyChest.of(helper.getLevel()).isPresent(), "the supply chest is usable again");
+			helper.assertTrue(data.stat("improvements_built") == improvements, "a replacement is not a new improvement");
+		});
 	}
 }
