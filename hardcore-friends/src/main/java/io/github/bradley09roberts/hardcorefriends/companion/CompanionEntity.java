@@ -602,7 +602,8 @@ public class CompanionEntity extends PathfinderMob {
 		if (hit && getMainHandItem().isDamageableItem() && !Unity.carefulHands(this)) {
 			damageMainHandTool(1);
 		}
-		if (hit && target instanceof LivingEntity living && !living.isAlive()) {
+		// Defending the team earns Unity; butchering or hunting an animal for food does not.
+		if (hit && target instanceof LivingEntity living && !living.isAlive() && target instanceof net.minecraft.world.entity.monster.Enemy) {
 			Unity.add(level, Unity.DEFENCE, 3, 60);
 			Camp.data(level.getServer()).addStat("mobs_defeated", 1);
 		}

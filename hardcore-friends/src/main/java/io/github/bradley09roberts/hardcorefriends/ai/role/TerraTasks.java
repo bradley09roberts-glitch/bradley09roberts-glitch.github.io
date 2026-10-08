@@ -5,13 +5,14 @@ import java.util.List;
 import io.github.bradley09roberts.hardcorefriends.ai.role.terra.FenceTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.terra.LightTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.terra.PathsTask;
+import io.github.bradley09roberts.hardcorefriends.ai.role.terra.PenTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.terra.PlantTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.terra.TidyTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 
 /**
  * Terra's own routines: laying dirt paths between camp features, lighting dark spots with torches, planting saplings
- * and flowers, tidying grass and holes in the camp core, and fencing the farm.
+ * and flowers, tidying grass and holes in the camp core, fencing the farm and building (and mending) the animal pen.
  */
 public final class TerraTasks {
 	private TerraTasks() {
@@ -19,6 +20,6 @@ public final class TerraTasks {
 
 	/** Fresh task instances for one Terra. */
 	public static List<CompanionTask> create() {
-		return List.of(new PathsTask(), new LightTask(), new PlantTask(), new TidyTask(), new FenceTask());
+		return List.of(new PathsTask(), new LightTask(), new PlantTask(), new TidyTask(), new FenceTask(), new PenTask());
 	}
 }

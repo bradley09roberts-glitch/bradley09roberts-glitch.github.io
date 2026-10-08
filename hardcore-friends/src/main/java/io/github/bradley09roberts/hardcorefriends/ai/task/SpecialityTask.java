@@ -57,11 +57,14 @@ public final class SpecialityTask implements CompanionTask {
 	 * Jobs that work on one shared thing and must never run twice at once: one builder per building job (so never
 	 * two on one site), one farm layout and one tiller (the farmland cap), one digger in the mine, one quarry worker,
 	 * one feller (the part-felled tree is one record), one path layer, one fencer, one gardener (tree spacing), one
-	 * explorer (the scout log), and one friend at the furnace.
+	 * explorer (the scout log), and one friend at the furnace; one pen builder, one friend on each pen job (the pen
+	 * jobs also keep out of each other's way at the gate, see {@code Pen.otherAtWork}), one cook at the campfire and one
+	 * hunter.
 	 */
 	public static final Set<String> EXCLUSIVE = Set.of(
 		"oak.build", "oak.repair", "spark.contraption", "fern.farm_plot", "fern.till", "flint.dig_mine", "rowan.quarry",
-		"rowan.chop", "terra.paths", "terra.fence", "terra.plant", "scout.explore", "flint.smelt", "flint.collect_smelted");
+		"rowan.chop", "terra.paths", "terra.fence", "terra.plant", "scout.explore", "flint.smelt", "flint.collect_smelted",
+		"terra.pen", "fern.bring_animal", "fern.breed", "fern.butcher", "fern.shut_gate", "fern.cook", "fern.hunt");
 
 	/** Jobs about what the friend themself carries: nobody else can do them, so whoever carries the load does. */
 	public static final Set<String> PERSONAL = Set.of("rowan.deliver", "flint.smelt");

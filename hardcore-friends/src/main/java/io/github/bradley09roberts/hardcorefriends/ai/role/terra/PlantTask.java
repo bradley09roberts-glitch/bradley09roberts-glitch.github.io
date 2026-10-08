@@ -19,6 +19,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.ranch.Pen;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
@@ -247,6 +248,9 @@ public final class PlantTask implements CompanionTask {
 		}
 		if (Landscape.nearestSiteDistance(data, spot, true) < 8 || WorldEditGuard.touchesFluid(level, spot)) {
 			return false;
+		}
+		if (Pen.site(level).map(p -> p.covers(spot)).orElse(false)) {
+			return false; // the animal pen: out of reach behind its fence, and the animals' grazing
 		}
 		if (Landscape.anyNear(level, ground, 2, 0, 0, s -> s.is(Blocks.FARMLAND))) {
 			return false;

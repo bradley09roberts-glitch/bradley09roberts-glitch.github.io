@@ -10,6 +10,7 @@ import java.util.function.UnaryOperator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.DaylightDetectorBlock;
+import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.HopperBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -92,6 +93,13 @@ public final class Blueprints {
 		.put(0, 0, 0, MaterialSpec.FENCE).put(0, 1, 0, MaterialSpec.REDSTONE_LAMP)
 		.put(0, 2, 0, MaterialSpec.DAYLIGHT_DETECTOR, s -> s.setValue(DaylightDetectorBlock.INVERTED, true)).build();
 
+	/**
+	 * A 9×9 ring of wooden fences round a 7×7 paddock, with a fence gate in the middle of the front (the side facing
+	 * the camp centre). The gate is built open so nobody is shut in while building; the farmer shuts it once animals
+	 * are inside. {@code ai.role.ranch.Pen} reads the paddock's layout from this plan's site.
+	 */
+	public static final Blueprint ANIMAL_PEN = animalPen();
+
 	/** Local positions of the smelter's chests, for players and tests. */
 	public static final int[] SMELTER_INPUT = {0, 4, 0};
 	public static final int[] SMELTER_FUEL = {1, 3, 0};
@@ -103,7 +111,7 @@ public final class Blueprints {
 
 	static {
 		for (Blueprint b : List.of(SUPPLY_CHEST, CAMPFIRE, CRAFTING_TABLE, FURNACE, TORCH_POSTS, CABIN, STOREHOUSE, WATCHTOWER,
-			LANTERN_POSTS, CABIN_2, AUTO_DOOR, HOPPER_DROPOFF, AUTO_SMELTER, LAMP_POSTS)) {
+			LANTERN_POSTS, CABIN_2, AUTO_DOOR, HOPPER_DROPOFF, AUTO_SMELTER, LAMP_POSTS, ANIMAL_PEN)) {
 			BY_ID.put(b.id(), b);
 		}
 	}
@@ -267,7 +275,33 @@ public final class Blueprints {
 		return b.build();
 	}
 
+	/** Local position of the animal pen's gate: the middle of the front row. */
+	public static final int[] PEN_GATE = {4, 0, 0};
+
+	private static Blueprint animalPen() {
+		Blueprint.Builder b = Blueprint.builder(Structures.ANIMAL_PEN, 9, 9).at(11, 11);
+		for (int dx = 0; dx < 9; dx++) {
+			for (int dz = 0; dz < 9; dz++) {
+				if (dx != 0 && dx != 8 && dz != 0 && dz != 8) {
+					continue; // the paddock itself stays open ground
+				}
+				if (dx == 4 && dz == 0) {
+					b.put(dx, 0, dz, MaterialSpec.FENCE_GATE, Blueprints::openGate);
+				} else {
+					b.put(dx, 0, dz, MaterialSpec.FENCE);
+				}
+			}
+		}
+		return b.build();
+	}
+
 	// --------------------------------------------------------------- tweaks
+
+	/** A gate across the front row (east to west in the plan), standing open. */
+	private static BlockState openGate(BlockState s) {
+		return s.hasProperty(FenceGateBlock.OPEN)
+			? s.setValue(FenceGateBlock.FACING, Direction.NORTH).setValue(FenceGateBlock.OPEN, true) : s;
+	}
 
 	private static UnaryOperator<BlockState> facing(Direction direction) {
 		return s -> s.hasProperty(BlockStateProperties.HORIZONTAL_FACING) ? s.setValue(BlockStateProperties.HORIZONTAL_FACING, direction) : s;

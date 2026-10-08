@@ -24,6 +24,8 @@ public final class Structures {
 	public static final String CABIN = "cabin";
 	public static final String PATHS = "paths";
 	public static final String AUTO_DOOR = "auto_door";
+	/** A fenced paddock with a gate where the farmer keeps and breeds cows, pigs, sheep and chickens. */
+	public static final String ANIMAL_PEN = "animal_pen";
 	public static final String STOREHOUSE = "storehouse";
 	public static final String WATCHTOWER = "watchtower";
 	public static final String LANTERN_POSTS = "lantern_posts";
@@ -44,6 +46,8 @@ public final class Structures {
 		new Entry(CABIN, 2, Role.BUILDER, "cabin", false),
 		new Entry(PATHS, 2, Role.LANDSCAPER, "camp paths", false),
 		new Entry(AUTO_DOOR, 2, Role.INVENTOR, "automatic cabin door", false),
+		// Optional: a camp grows without one, but it is where the farmer keeps animals for meat.
+		new Entry(ANIMAL_PEN, 2, Role.LANDSCAPER, "animal pen", true),
 		new Entry(STOREHOUSE, 3, Role.BUILDER, "storehouse", false),
 		new Entry(WATCHTOWER, 3, Role.BUILDER, "watchtower", false),
 		new Entry(LANTERN_POSTS, 3, Role.BUILDER, "lantern posts", false),

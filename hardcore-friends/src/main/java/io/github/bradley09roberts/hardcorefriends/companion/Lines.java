@@ -40,6 +40,7 @@ public final class Lines {
 		sage();
 		terra();
 		rowan();
+		livestock();
 	}
 
 	private Lines() {
@@ -1781,5 +1782,216 @@ public final class Lines {
 			"Happy to help: %1$s.",
 			"I'll pitch in with %1$s.",
 			"Lending a hand: %1$s. That's what friends do.");
+	}
+
+	/**
+	 * Keeping livestock: bringing an animal to the pen (%1$s = "cow"), breeding (%1$s = "pigs"), butchering
+	 * (%1$s = "sheep"), cooking (%1$s = "beef") and hunting (%1$s = "rabbit"). Every friend can do this work, so every
+	 * friend has their own wording, kept together here.
+	 */
+	private static void livestock() {
+		generic(Line.LEADING_ANIMAL, "Come along, %1$s. This way.", "Bringing a %1$s home to the pen.");
+		generic(Line.BRED_ANIMALS, "The %1$s are fed. Young ones soon.", "A little food, and the %1$s are in love.");
+		generic(Line.BUTCHERING, "One %1$s for the stores.", "We need the meat. Sorry, %1$s.");
+		generic(Line.COOKING, "Cooking %1$s on the fire.", "Some %1$s for supper.");
+		generic(Line.HUNTING, "Off to hunt a %1$s.", "Hunting a %1$s for the camp.");
+
+		FriendId f = FriendId.FERN;
+		put(f, Line.LEADING_ANIMAL,
+			"Come along, little %1$s. There's a nice safe pen waiting.",
+			"This way, %1$s. I've got something tasty for you.",
+			"Easy now, %1$s. Home we go.");
+		put(f, Line.BRED_ANIMALS,
+			"A little treat for the %1$s. We'll have young ones soon.",
+			"The %1$s look very happy together.",
+			"There we go. The %1$s will make a little family.");
+		put(f, Line.BUTCHERING,
+			"Sorry, little %1$s. The camp needs feeding.",
+			"It's never easy, but we need the meat. Thank you, %1$s.",
+			"One %1$s for the larder. I'll make it quick.");
+		put(f, Line.COOKING,
+			"A bit of %1$s on the fire. Supper's coming!",
+			"Cooking some %1$s. It'll be lovely and filling.",
+			"Nothing like hot %1$s to keep everyone going.");
+		put(f, Line.HUNTING,
+			"I'll fetch us a %1$s. We need more food.",
+			"Off to find a %1$s. Quick and careful.",
+			"The stores are low. I'll hunt a %1$s.");
+
+		f = FriendId.OAK;
+		put(f, Line.LEADING_ANIMAL,
+			"Bringing a %1$s to the pen. Steady does it.",
+			"One %1$s, heading for the pen.",
+			"Come on, %1$s. The pen's this way.");
+		put(f, Line.BRED_ANIMALS,
+			"Fed the %1$s. That's next season's stock.",
+			"The %1$s are paired up. Good planning.",
+			"Two %1$s fed. The herd will grow.");
+		put(f, Line.BUTCHERING,
+			"Culling a %1$s. The pen's over capacity.",
+			"One %1$s for the stores. It's practical.",
+			"We keep the breeders. This %1$s feeds us.");
+		put(f, Line.COOKING,
+			"Putting some %1$s on the fire.",
+			"Cooking %1$s. Good fuel for good work.",
+			"Some %1$s on the fire, then back to it.");
+		put(f, Line.HUNTING,
+			"Hunting a %1$s. The stores need topping up.",
+			"A %1$s should keep us going. Back soon.",
+			"Off after a %1$s. Short trip.");
+
+		f = FriendId.FLINT;
+		put(f, Line.LEADING_ANIMAL,
+			"Come on, %1$s. Don't make this awkward.",
+			"Escorting a %1$s. It's not a creeper, at least.",
+			"Walk, %1$s. Slowly. Like me in a cave.");
+		put(f, Line.BRED_ANIMALS,
+			"Fed the %1$s. Romance, apparently.",
+			"The %1$s are in love. Good for them.",
+			"Two %1$s, one snack each. Nature does the rest.");
+		put(f, Line.BUTCHERING,
+			"One %1$s for the larder. Nothing personal.",
+			"Sorry, %1$s. Hunger's the more dangerous mob.",
+			"Butchering a %1$s. Grim, but so is starving.");
+		put(f, Line.COOKING,
+			"Cooking %1$s. Safer than mining.",
+			"Some %1$s on the fire. Mind the sparks.",
+			"Grilling %1$s. Fire I can trust, for once.");
+		put(f, Line.HUNTING,
+			"Hunting a %1$s. In daylight, like a sensible person.",
+			"Off after a %1$s. Back before dark.",
+			"A %1$s, then straight home. No caves.");
+
+		f = FriendId.SCOUT;
+		put(f, Line.LEADING_ANIMAL,
+			"Found a %1$s! Bringing it home!",
+			"Follow me, %1$s! Big adventure to the pen!",
+			"This %1$s is coming with me!");
+		put(f, Line.BRED_ANIMALS,
+			"The %1$s are in love! Babies soon!",
+			"Fed the %1$s! The herd's growing!",
+			"Look at the %1$s! Hearts everywhere!");
+		put(f, Line.BUTCHERING,
+			"Butchering a %1$s for the stores. Quick and clean.",
+			"Sorry, %1$s! We need the food.",
+			"One %1$s for supper. That's camp life!");
+		put(f, Line.COOKING,
+			"Cooking %1$s over the fire! Smells amazing!",
+			"Some %1$s on the fire. Explorer's supper!",
+			"Roasting %1$s! Best meal out here!");
+		put(f, Line.HUNTING,
+			"Spotted a %1$s out there! I'll bring it back!",
+			"Hunting a %1$s! Back before sundown!",
+			"Tracking a %1$s for the camp!");
+
+		f = FriendId.SPARK;
+		put(f, Line.LEADING_ANIMAL,
+			"Follow the snack, %1$s! Science!",
+			"Animal transport, manual edition! Come on, %1$s!",
+			"Pen delivery: one %1$s! No redstone needed!");
+		put(f, Line.BRED_ANIMALS,
+			"Fed the %1$s! Biological automation!",
+			"The %1$s are in love! Breeding farm online!",
+			"Two %1$s fed! Output: one baby, eventually!");
+		put(f, Line.BUTCHERING,
+			"Butchering a %1$s! Not my favourite process.",
+			"One %1$s for the food supply. Sorry, little one!",
+			"Harvesting a %1$s. A very manual harvest!");
+		put(f, Line.COOKING,
+			"Cooking %1$s! Heat plus meat equals dinner!",
+			"Some %1$s on the fire! No hopper needed!",
+			"Campfire online! Cooking %1$s!");
+		put(f, Line.HUNTING,
+			"Hunting a %1$s! Field research!",
+			"Off after a %1$s! Sword calibrated!",
+			"A %1$s for the larder! Back soon!");
+
+		f = FriendId.AEGIS;
+		put(f, Line.LEADING_ANIMAL,
+			"Easy, %1$s. You're safe with me.",
+			"I'll see this %1$s to the pen.",
+			"Walk on, %1$s. I'll watch your back.");
+		put(f, Line.BRED_ANIMALS,
+			"The %1$s are fed. The pen grows.",
+			"Fed the %1$s. More to protect.",
+			"The %1$s will breed. Good.");
+		put(f, Line.BUTCHERING,
+			"One %1$s for the stores. Swift and clean.",
+			"A quick end, %1$s. The camp must eat.",
+			"Butchering a %1$s. No suffering.");
+		put(f, Line.COOKING,
+			"Cooking %1$s. Soldiers eat well.",
+			"Some %1$s on the fire. Strength for tomorrow.",
+			"The fire's hot. Cooking %1$s.");
+		put(f, Line.HUNTING,
+			"Hunting a %1$s. Back before dusk.",
+			"I'll bring back a %1$s.",
+			"A %1$s for the camp. Stay alert while I'm out.");
+
+		f = FriendId.SAGE;
+		put(f, Line.LEADING_ANIMAL,
+			"A %1$s in the pen is worth two in the wild.",
+			"Bringing a %1$s home. Patience is the best lead.",
+			"This %1$s will be the start of a herd.");
+		put(f, Line.BRED_ANIMALS,
+			"The %1$s are fed. A small investment, a lasting return.",
+			"Fed the %1$s. Breeding beats hunting in the long run.",
+			"The %1$s will multiply. Planning pays.");
+		put(f, Line.BUTCHERING,
+			"We keep the breeders and eat the surplus. One %1$s.",
+			"A %1$s for the larder. The herd stays balanced.",
+			"Culling one %1$s. A steady pen is a full larder.");
+		put(f, Line.COOKING,
+			"Cooked %1$s fills far more than raw. Onto the fire.",
+			"Cooking %1$s. Fire triples its worth.",
+			"Some %1$s on the fire. A wise use of a raw resource.");
+		put(f, Line.HUNTING,
+			"The stores are thin. I'll hunt a %1$s by daylight.",
+			"Hunting a %1$s. Never the last of a kind.",
+			"A %1$s, taken with care. Back before dusk.");
+
+		f = FriendId.TERRA;
+		put(f, Line.LEADING_ANIMAL,
+			"Come and see your lovely new pen, %1$s.",
+			"This way, %1$s. Mind the flowers.",
+			"A %1$s will look perfect in the pen.");
+		put(f, Line.BRED_ANIMALS,
+			"The %1$s are so sweet together.",
+			"Fed the %1$s. The pen will be lively soon.",
+			"The %1$s are in love. How lovely!");
+		put(f, Line.BUTCHERING,
+			"One %1$s for the stores. I'll tidy up after.",
+			"Sorry, %1$s. I'll keep it quick and neat.",
+			"Butchering a %1$s. Not the pretty part of farming.");
+		put(f, Line.COOKING,
+			"Cooking %1$s. The fire looks so cosy.",
+			"Some %1$s on the campfire. Smells wonderful.",
+			"Cooking %1$s, laid out neatly on the fire.");
+		put(f, Line.HUNTING,
+			"Hunting a %1$s. I'll leave the meadow as I found it.",
+			"Off after a %1$s. Back before the light goes.",
+			"The stores need a %1$s. I'll be careful.");
+
+		f = FriendId.ROWAN;
+		put(f, Line.LEADING_ANIMAL,
+			"Found a %1$s for the pen. Plenty to share later!",
+			"Come on, %1$s. Good food where we're going.",
+			"Bringing a %1$s home. Every bit helps.");
+		put(f, Line.BRED_ANIMALS,
+			"Fed the %1$s. More to go round soon.",
+			"The %1$s are happy. Plenty for everyone later.",
+			"A bit of food for the %1$s. The herd will grow.");
+		put(f, Line.BUTCHERING,
+			"One %1$s, and everybody eats tonight.",
+			"Butchering a %1$s. Nothing goes to waste.",
+			"Sorry, %1$s. You'll feed the whole camp.");
+		put(f, Line.COOKING,
+			"Cooking %1$s. Plenty for everyone!",
+			"Some %1$s on the fire. Come and share!",
+			"Cooking %1$s for the chest. Help yourselves.");
+		put(f, Line.HUNTING,
+			"Hunting a %1$s. I'll share it round.",
+			"Off after a %1$s for the stores.",
+			"A %1$s should feed a few of us. Back soon.");
 	}
 }

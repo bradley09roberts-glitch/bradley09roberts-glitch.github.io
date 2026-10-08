@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 import io.github.bradley09roberts.hardcorefriends.ai.role.TeamCache;
+import io.github.bradley09roberts.hardcorefriends.ai.role.ranch.Pen;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.Structures;
@@ -307,6 +308,9 @@ public final class FarmContext {
 		}
 		if (data.isPlacedByFriends(level, p) || nearBuild(level, data, p)) {
 			return false;
+		}
+		if (data.site(Structures.ANIMAL_PEN).map(s -> new Pen(s.origin, s.rotation).covers(p.above())).orElse(false)) {
+			return false; // the animals' paddock stays grass
 		}
 		return !checkWater || Crops.nearWater(level, p);
 	}

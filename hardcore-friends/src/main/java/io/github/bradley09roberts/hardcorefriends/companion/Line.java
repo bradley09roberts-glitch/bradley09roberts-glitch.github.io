@@ -104,7 +104,19 @@ public enum Line {
 	/** Mood is great. Rare (15 minutes apart), so a happy camp of nine is not a chorus. */
 	MOOD_GREAT(Priority.CASUAL, 18000, 0),
 	/** Picking up work outside their speciality. %1$s = the job, e.g. "harvesting crops". */
-	HELPING_OUT(Priority.CASUAL, 2400, 1);
+	HELPING_OUT(Priority.CASUAL, 2400, 1),
+
+	// Livestock
+	/** Bringing a wild animal home to the pen, on a lead or following its food. %1$s = the animal, e.g. "cow". */
+	LEADING_ANIMAL(Priority.CASUAL, 1200, 1),
+	/** Fed two of the pen's animals so they breed. %1$s = the animals, plural, e.g. "pigs". */
+	BRED_ANIMALS(Priority.CASUAL, 1200, 1),
+	/** About to butcher one of the pen's surplus animals. %1$s = the animal, e.g. "pig". */
+	BUTCHERING(Priority.CASUAL, 1200, 1),
+	/** Putting raw meat on the campfire. %1$s = what is cooking, lower case, e.g. "beef" or "porkchop". */
+	COOKING(Priority.CASUAL, 1200, 1),
+	/** Setting off to hunt a wild animal for the camp. %1$s = the animal, e.g. "rabbit". */
+	HUNTING(Priority.CASUAL, 1200, 1);
 
 	/** How a line is rate-limited and who hears it. */
 	public enum Priority {

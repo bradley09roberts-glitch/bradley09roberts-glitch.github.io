@@ -25,6 +25,8 @@ public enum MaterialSpec {
 	/** The top half of the door below: placed with the same door item, so it needs no second item. */
 	DOOR_TOP(null, s -> s.is(BlockTags.WOODEN_DOORS) && s.getValue(DoorBlock.HALF) == DoubleBlockHalf.UPPER),
 	FENCE(Stock.FENCE, s -> s.is(BlockTags.WOODEN_FENCES)),
+	/** Any wooden fence gate, open or shut: the animal pen's way in. */
+	FENCE_GATE(Stock.FENCE_GATE, s -> s.is(BlockTags.FENCE_GATES)),
 	PRESSURE_PLATE(Stock.PRESSURE_PLATE, s -> s.is(BlockTags.WOODEN_PRESSURE_PLATES)),
 	TORCH(Stock.TORCH, s -> s.is(Blocks.TORCH)),
 	WALL_TORCH(Stock.TORCH, s -> s.is(Blocks.WALL_TORCH)),

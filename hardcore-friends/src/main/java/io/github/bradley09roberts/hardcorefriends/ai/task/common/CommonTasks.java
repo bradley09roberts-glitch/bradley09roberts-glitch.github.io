@@ -2,12 +2,14 @@ package io.github.bradley09roberts.hardcorefriends.ai.task.common;
 
 import java.util.List;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.ranch.LeavePenTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
 
 /**
- * Upkeep jobs every friend shares: depositing, restocking, crafting tools, sharing, going home at night and tidying.
- * Eating, sleeping and the other everyday needs have their own jobs (see {@code NeedsTasks}).
+ * Upkeep jobs every friend shares: depositing, restocking, crafting tools, sharing, going home at night, tidying and
+ * never staying shut in the animal pen. Eating, sleeping and the other everyday needs have their own jobs (see
+ * {@code NeedsTasks}).
  */
 public final class CommonTasks {
 	private CommonTasks() {
@@ -23,6 +25,7 @@ public final class CommonTasks {
 			new FeedPlayerTask(),
 			new ReturnHomeTask(),
 			new CollectItemsTask(),
+			new LeavePenTask(),
 			new IdleTask());
 	}
 }

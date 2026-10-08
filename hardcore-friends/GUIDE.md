@@ -37,14 +37,14 @@ Each friend's role is their speciality: the work they choose first and do best. 
 
 | Friend | Role | Personality | Their speciality |
 |---|---|---|---|
-| **Fern** | Farmer | patient, caring | Harvests ripe crops and replants straight away, tills new farmland next to water, lays out a farm plot (with a water bucket from the chest), bakes bread, uses bone meal, shares food with hungry players |
+| **Fern** | Farmer | patient, caring | Harvests ripe crops and replants straight away, tills new farmland next to water, lays out a farm plot (with a water bucket from the chest), bakes bread, uses bone meal, shares food with hungry players. Keeps livestock: brings wild animals home to the pen, breeds them, butchers the surplus, cooks the meat, and hunts when food is short (section 6) |
 | **Oak** | Builder | practical, methodical | Builds the camp step by step from real materials: chest, campfire, crafting table, furnace, torch posts, cabin, storehouse, watchtower, lantern posts, second cabin. Saws planks and repairs damage |
 | **Flint** | Miner | cautious, dry humour | Mines exposed ores (with the right pickaxe), digs one tidy staircase mine with branch tunnels outside camp, lights it with torches, avoids lava and water, smelts ore in the camp furnace |
 | **Scout** | Explorer | curious, adventurous | Scouts widening rings around camp by day, records ores, trees, lava and villages for the team, and warns you about creepers, mobs closing in, nightfall and storms |
 | **Spark** | Redstone inventor | clever, excitable | Builds working vanilla contraptions: automatic cabin door (pressure plates), drop-off hopper on the supply chest, auto-smelter, and night lamp posts (needs nether materials). Keeps the torch supply up |
 | **Aegis** | Warrior | calm, protective | Guards you and the camp, attacks hostile mobs near players and friends, patrols at night (on the watchtower once it exists), and takes the best sword, armour and shield from the chest |
 | **Sage** | Strategist | thoughtful, observant | Gives Hardcore survival advice for your situation (health, hunger, darkness, phantoms, night, tools, mining depth), works out what the camp is short of, and sets the team's focus |
-| **Terra** | Landscaper | creative, tidy | Lays dirt paths between camp buildings, plants saplings and flowers, puts torches in dark spots (fewer mob spawns), tidies dropped items, fills small holes, fences the farm |
+| **Terra** | Landscaper | creative, tidy | Lays dirt paths between camp buildings, plants saplings and flowers, puts torches in dark spots (fewer mob spawns), tidies dropped items, fills small holes, fences the farm, builds the animal pen |
 | **Rowan** | Forager | resourceful, generous | Fells natural trees outside camp and replants them, quarries dirt and stone from small shallow pits outside camp, picks berries, and delivers building materials to Oak first |
 
 The friends talk in their own voices. Use `/friends chatter quiet|normal|chatty` to set how much. Danger warnings always show.
@@ -105,7 +105,39 @@ The lower a need, the more urgent it is. A mild need waits until the job in hand
 
 Use `/friends needs` to see everyone's needs as bars, their mood, and what each friend is doing about their lowest need. Right-clicking a friend also shows their mood.
 
-## 6. Controls
+## 6. Livestock
+
+Nine friends eat a lot, and wheat alone struggles to keep up: a loaf of bread takes three wheat, while one cooked steak or porkchop fills a friend about as much as one and a half loaves. So once the camp is a Hamlet, the friends keep animals. This is Fern's work; the others help as with any job (section 4).
+
+**The animal pen.** Terra builds a 9×9 ring of wooden fences with a gate inside the camp, on a level patch of natural ground away from your builds, with the gate facing the camp centre. It is built from real materials like any building (31 fences and a gate: about 15 logs' worth of planks and sticks, crafted at a crafting table). The pen is optional: the camp grows to the next stage without it, but the friends keep no animals until it stands. If a fence or the gate goes missing, Terra puts it back.
+
+**Bringing animals home.** By day, Fern looks for wild cows, pigs, sheep and chickens in the camp and the gathering ring and brings them home until the pen has a pair of each. An animal of a kind the pen keeps that got out and wanders the camp is brought back too, while its kind has room.
+
+- **With a lead** in the supply chest she ties it on and leads the animal home. The lead is used up while it is on the animal and comes back when she unties it in the pen, as in vanilla. Leads are optional.
+- **Without a lead** she holds the animal's favourite food and it follows her: wheat for cows and sheep, a carrot, potato or beetroot for pigs, seeds for chickens. The food is only held, not used up.
+- At the gate she first sends the pen's animals standing by it to the back, opens it, draws the animal in a few steps and shuts the gate behind them both. Then she lets it go at the back of the pen and goes out the way every pen job does. If it lags behind outside, she goes out and shuts the gate before going back for it.
+
+**Breeding.** When two grown animals of a kind in the pen are ready, Fern takes two of their food from her backpack or the chest, goes in (shutting the gate behind her), feeds them (the food is used up), and they have a young one. The pen holds up to 6 of a kind (three pairs) and 12 animals in all.
+
+**Butchering.** Fern keeps 4 grown animals of each kind for breeding. When the pen is full (12 animals) she keeps fewer, so there is always room to breed again: 2 of each kind with four kinds in the pen, 3 with three. She butchers the extra ones with a sword or an axe (her own, or one borrowed from the chest), up to two a visit, and gathers the meat, leather, wool and feathers. She never touches a young animal or one in love, never takes a kind below a breeding pair, and never butchers an animal of yours in the pen (named, on a lead, saddled, tamed or owned): those count among the ones she keeps. She only strikes with the gate shut, and goes out again if someone opens it.
+
+**Cooking.** Raw beef, pork, mutton, chicken, rabbit and fish (from her backpack or the chest) go on the camp's lit campfire, up to four at a time. Fern waits by the fire and picks up each piece as it comes off a spot she filled, then puts the cooked food in the supply chest, where everyone eats from. Your own cooking on the same fire, and cooked food already lying about, is left alone (the friends do tidy up items left lying around the camp for a while, into the chest). When the campfire is full she uses the plain furnace the friends built instead, with coal, charcoal or planks fetched for exactly what goes in: she never puts in more meat than the fuel can cook, so the furnace is never left blocked with raw meat. If it ever does go out with raw meat in it, she gives it the fuel it needs. Whoever empties the furnace brings the food to the chest.
+
+**Hunting.** When the camp is short of food, a friend who is healthy and carries a sword or an axe hunts a wild cow, pig, sheep, chicken or rabbit in the gathering ring outside the camp and brings back what it drops.
+
+**Your animals are safe.** The friends never lead away or hunt:
+
+- an animal with a name (from a name tag), a tamed or owned animal, one on a lead, one riding or being ridden, or one wearing a saddle or armour;
+- an animal within 4 blocks of anything you built (fences, gates, walls and every other crafted block), or inside your own fences or walls, also on a hillside or in a long field (fences, walls and gates up to 48 blocks away count);
+- a young animal, or one of the last two of its kind within 24 blocks;
+- an animal in the camp (those belong in the pen) or in the pen itself;
+- anything near where a friend died lately.
+
+They only hunt by day: never at dusk or at night. Animals of yours with a name, a lead, a saddle or an owner are never butchered either, even in the friends' pen. To keep an animal of yours safe anywhere, give it a name or keep it fenced in.
+
+**The gate.** Friends open and shut the pen gate themselves. They never shut it while you are in or right next to the pen, or while anyone stands in the gateway, so while you are there they do not start pen jobs that open it. A friend who ends up inside the pen with nothing to do there walks out and shuts the gate behind them. Eggs laid in the pen and the ground inside it are left alone: nobody tries to tidy up behind the fence or plant flowers there.
+
+## 7. Controls
 
 | Action | How |
 |---|---|
@@ -115,7 +147,7 @@ Use `/friends needs` to see everyone's needs as bars, their mood, and what each 
 | Feed or heal a friend | Right-click with food while they are hurt or hungry; they eat it at once |
 | Hurt a friend on purpose | Only while sneaking. Ordinary swings and arrows pass harmlessly |
 
-## 7. Commands (no cheats needed)
+## 8. Commands (no cheats needed)
 
 | Command | Purpose |
 |---|---|
@@ -139,7 +171,7 @@ Use `/friends needs` to see everyone's needs as bars, their mood, and what each 
 
 None of these commands give items, teleport you, or change time, weather, game mode or difficulty.
 
-## 8. Unity bond
+## 9. Unity bond
 
 The bond grows when you spend time near your friends, when they deliver resources and share with each other, chat with each other (1 point a chat, at most 30 a day), defend one another, and finish camp buildings, and while the whole team is in high spirits (1 point an in-game hour, at most 12 a day). Losing a friend costs 80 points. A low mood costs nothing.
 
@@ -153,11 +185,11 @@ The bond grows when you spend time near your friends, when they deliver resource
 
 None of these bonuses can stop you dying.
 
-## 9. The camp grows into a settlement
+## 10. The camp grows into a settlement
 
-**Campsite → Camp → Hamlet → Village → Settlement.** Each stage needs that stage's buildings finished. The later stages also need Unity: 100 for Hamlet, 250 for Village and 500 for Settlement. Use `/friends camp` to see what is built and what Oak is still waiting for. Everything is built from what is in the supply chest, so keep it stocked or let Rowan and Flint fill it. Cabin windows use glass panes when the chest has glass (6 glass make 16 panes); otherwise Oak closes them with planks. If the supply chest is broken, friends forget it: Oak builds a new one, or you can link another with `/friends chest`. If a friend is not on your team, the others stand in and build their improvements too, just more slowly.
+**Campsite → Camp → Hamlet → Village → Settlement.** Each stage needs that stage's buildings finished. The later stages also need Unity: 100 for Hamlet, 250 for Village and 500 for Settlement. Use `/friends camp` to see what is built and what Oak is still waiting for. Everything is built from what is in the supply chest, so keep it stocked or let Rowan and Flint fill it. Cabin windows use glass panes when the chest has glass (6 glass make 16 panes); otherwise Oak closes them with planks. If the supply chest is broken, friends forget it: Oak builds a new one, or you can link another with `/friends chest`. If a friend is not on your team, the others stand in and build their improvements too, just more slowly. At the Hamlet stage Terra also builds the animal pen (section 6); it is optional and never holds the camp back.
 
-## 10. Hardcore rules
+## 11. Hardcore rules
 
 - Your own Hardcore death is unchanged: one life, then spectator. There are no extra lives.
 - Friends need food. A starving friend loses health down to one heart and cannot heal. Starving never kills them on its own, but it leaves them one hit from death.
@@ -165,15 +197,16 @@ None of these bonuses can stop you dying.
 - A fallen friend's name returns as a newcomer after 3 in-game days. Set `deadFriendsReturnAfterDays` to `-1` in `config/hardcorefriends.json` for permanent loss.
 - Zombies, skeletons, spiders, illagers and witches hunt friends just as they hunt villagers.
 
-## 11. How friends treat your world
+## 12. How friends treat your world
 
 - **Building and landscaping** happen only inside the camp radius: 24 blocks, growing to 40.
 - **Tree felling, quarrying and the staircase mine** happen only in a ring up to 48 blocks beyond the camp. Flint also mines ores that are already exposed, inside the camp or in that ring.
 - Friends never break chests, furnaces, signs, beds or any other block entity, or anything crafted-looking: planks, doors, glass, torches, slabs, stairs, fences and so on. They also stay clear of blocks next to such things.
 - Trees are felled only if they grew naturally (natural leaves), never log walls or trees inside camp. Quarry pits are 5×5 and at most 2 blocks deep. Mines stay inside one 24×24 area.
+- **Animals:** friends only lead away or hunt wild animals, never yours (named, tamed, on a lead, saddled, near anything you built or inside your fences), never butcher yours in their pen, and only hunt by day in the gathering ring outside the camp (section 6). The only blocks they open and shut are the gate of their own pen.
 - Every change is logged (`/friends log`). Turn editing off entirely with `allowWorldEditing: false`, or individually with `allowTreeFelling`, `allowQuarrying` and `allowMining`.
 
-## 12. Honest limits
+## 13. Honest limits
 
 - Friends only act while their area is loaded, which means near a player. They do not work while you are far away, and their needs do not change then either.
 - Every friend can do every job, but a stand-in only works on someone else's speciality in their spare time, and more slowly. A camp missing several specialists grows more slowly.
@@ -186,9 +219,10 @@ None of these bonuses can stop you dying.
 - The farm plot needs a fairly level spot inside camp: a level hole for the water with about 20 level grass or dirt blocks around it. Bumps are fine, but on a camp that is all slopes or rock Fern says she needs "a flat patch of grass", and the camp cannot grow past stage 2 until she gets one. Help her by levelling a patch, or simply pour water on level ground in camp: she farms around any water inside the camp.
 - When the next camp step is waiting on something nobody can fetch (for example nether materials for Spark's lamp posts), friends with nothing useful left to do take a break near camp.
 - Contraptions are a fixed set of vanilla redstone builds.
+- Livestock is cows, pigs, sheep and chickens in one pen; rabbits are only hunted. Friends do not shear sheep, milk cows or collect eggs. An animal following its food can wander off before it reaches the pen; it is fetched again later. An unnamed animal of yours standing loose in the open, with nothing you built nearby, looks wild to the friends: name it or fence it in.
 - Dialogue is pre-written and chosen by situation and personality. It is not free conversation.
 - Purely natural-looking player builds (for example a hut made only of dirt or stone) cannot be told apart from terrain if they sit in the gathering ring outside your camp. Keep such builds inside the camp radius, or add any crafted block nearby.
 
-## 13. Config (`config/hardcorefriends.json`)
+## 14. Config (`config/hardcorefriends.json`)
 
 `chatter`, `campRadius` (24), `maxCampRadius` (40), `resourceRadius` (48), `allowWorldEditing`, `allowTreeFelling`, `allowQuarrying`, `allowMining`, `deadFriendsReturnAfterDays` (3, or −1 for permanent), `followTeleportDistance` (48, 0 = off), `monstersTargetCompanions` (true).
