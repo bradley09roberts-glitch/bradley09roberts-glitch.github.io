@@ -42,7 +42,13 @@ public enum MaterialSpec {
 	FOUNDATION(Stock.FILL, s -> !s.isAir() && s.getFluidState().isEmpty() && !s.canBeReplaced()),
 	LANTERN(Stock.LANTERN, s -> s.is(Blocks.LANTERN)),
 	REDSTONE_LAMP(Stock.REDSTONE_LAMP, s -> s.is(Blocks.REDSTONE_LAMP)),
-	DAYLIGHT_DETECTOR(Stock.DAYLIGHT_DETECTOR, s -> s.is(Blocks.DAYLIGHT_DETECTOR));
+	DAYLIGHT_DETECTOR(Stock.DAYLIGHT_DETECTOR, s -> s.is(Blocks.DAYLIGHT_DETECTOR)),
+	// Sage's plan (package progress): the library, the anvil and the brewing stand.
+	BOOKSHELF(Stock.BOOKSHELF, s -> s.is(Blocks.BOOKSHELF)),
+	ENCHANTING_TABLE(Stock.ENCHANTING_TABLE, s -> s.is(Blocks.ENCHANTING_TABLE)),
+	/** Any anvil, chipped or damaged too: a worn anvil still stands. */
+	ANVIL(Stock.ANVIL, s -> s.is(BlockTags.ANVIL)),
+	BREWING_STAND(Stock.BREWING_STAND, s -> s.is(Blocks.BREWING_STAND));
 
 	private final @Nullable Stock stock;
 	private final Predicate<BlockState> built;

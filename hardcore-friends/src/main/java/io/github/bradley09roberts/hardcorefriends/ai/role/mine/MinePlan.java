@@ -24,6 +24,8 @@ import io.github.bradley09roberts.hardcorefriends.camp.CampData;
  */
 public final class MinePlan {
 	public static final String KEY = "flint.mine";
+	/** Memory key of the deep branch mine at diamond level (package progress), laid out the same way. */
+	public static final String DEEP_KEY = "progress.deep_mine";
 	public static final int BOX_SIZE = 24;
 	/** The box spans entrance − 12 to entrance + 11 on both horizontal axes. */
 	public static final int HALF = BOX_SIZE / 2;
@@ -67,7 +69,12 @@ public final class MinePlan {
 	}
 
 	public static MinePlan of(CampData data) {
-		return new MinePlan(data, data.memory(KEY));
+		return of(data, KEY);
+	}
+
+	/** A mine kept under another memory key: the deep branch mine at diamond level (package progress) uses the same layout. */
+	public static MinePlan of(CampData data, String key) {
+		return new MinePlan(data, data.memory(key));
 	}
 
 	// ------------------------------------------------------------------ state
@@ -120,6 +127,16 @@ public final class MinePlan {
 		return tag.getIntOr("steps", 0);
 	}
 
+	/** The last step of the staircase dug so far (the top of the corridor once branching has begun). */
+	public BlockPos stairEnd() {
+		return BlockPos.of(tag.getLongOr("stair", tag.getLongOr("entrance", 0L)));
+	}
+
+	/** The way the staircase was heading at its last step. */
+	public Direction stairDir() {
+		return Direction.from2DDataValue(tag.getIntOr("sdir", 0));
+	}
+
 	public long finishedAt() {
 		return tag.getLongOr("finishedAt", 0L);
 	}
@@ -168,6 +185,33 @@ public final class MinePlan {
 		tag.putInt("phase", 0);
 		tag.putLong("stair", entrance.asLong());
 		tag.putInt("sdir", dir.get2DDataValue());
+		data.setDirty();
+	}
+
+	/**
+	 * Starts this plan as the continuation of another mine's staircase: the same entrance and box (reaching down to
+	 * {@code bottomY}), carrying on down from that mine's last step in the way it was heading.
+	 */
+	public void beginBelow(MinePlan above, int bottomY) {
+		begin(above.entrance(), above.stairDir(), bottomY, above.dimension());
+		tag.putLong("stair", above.stairEnd().asLong());
+		tag.putInt("steps", above.stepsDug());
+		data.setDirty();
+	}
+
+	/**
+	 * A stair step could not be dug safely (water or lava behind it, loose gravel above): the staircase tries the next
+	 * way round instead, and only after a full turn without a step dug does it stop and branch where it is.
+	 */
+	public void turnStair(Job job) {
+		int turns = tag.getIntOr("turns", 0) + 1;
+		if (turns >= 4) {
+			tag.remove("turns");
+			beginBranches(job.stand(), job.dir());
+			return;
+		}
+		tag.putInt("turns", turns);
+		tag.putInt("sdir", job.dir().getClockWise().get2DDataValue());
 		data.setDirty();
 	}
 
@@ -308,6 +352,7 @@ public final class MinePlan {
 				tag.putLong("stair", job.cell().asLong());
 				tag.putInt("sdir", job.dir().get2DDataValue());
 				tag.putInt("steps", stepsDug() + 1);
+				tag.remove("turns");
 				if (job.cell().getY() <= bottomY()) {
 					beginBranches(job.cell(), job.dir());
 				}
