@@ -76,6 +76,9 @@ public final class CraftToolTask implements CompanionTask {
 			return 0; // restocking will fetch it
 		}
 		boolean cover = KeepList.isCoverTool(c, tool);
+		if (cover && c.backpack().freeSlots() == 0) {
+			return 0; // no room to carry it without putting their own things away
+		}
 		if (findTable(c) == null || affordable(c.backpack(), chest.orElse(null), tool).isEmpty()) {
 			if (!cover) {
 				Speech.say(c, Line.NEED_TOOL, KeepList.toolName(tool));
