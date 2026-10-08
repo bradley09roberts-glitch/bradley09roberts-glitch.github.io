@@ -14,6 +14,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
@@ -23,10 +24,10 @@ import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
- * Finds and reserves building sites. A site must sit inside the camp (two blocks in from its edge) on firm ground
- * that varies by at most one block, with only air or clearable plants where the building goes, nothing that looks
- * player-built within two blocks, and a one-block gap to every other reserved site. The search starts at the
- * plan's preferred spot and widens ring by ring, a few candidates per tick.
+ * Finds and reserves building sites. A site must sit inside the camp (two blocks in from its edge) on firm, natural
+ * ground (never a player's floor or roof) that varies by at most one block, with only air or clearable plants where
+ * the building goes, nothing that looks player-built within two blocks, and a one-block gap to every other reserved
+ * site. The search starts at the plan's preferred spot and widens ring by ring, a few candidates per tick.
  */
 public final class SiteFinder {
 	/** Extra parts of multi-part sites (post rows) live in camp memory under this key. */
@@ -301,7 +302,10 @@ public final class SiteFinder {
 			return false;
 		}
 
-		/** Top of the natural ground in a column near {@code nearY}, or {@link #NO_GROUND}. */
+		/**
+		 * Top of the natural ground in a column near {@code nearY}, or {@link #NO_GROUND}. Only natural terrain counts
+		 * (or the friends' own foundation cobblestone): a player's cobblestone floor or roof is never treated as ground.
+		 */
 		private int groundY(int x, int z, int nearY) {
 			BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
 			for (int y = nearY + 3; y >= nearY - 5; y--) {
@@ -310,13 +314,24 @@ public final class SiteFinder {
 				if (s.isAir() || WorldEditGuard.isClearablePlant(s) && s.getFluidState().isEmpty()) {
 					continue;
 				}
-				if (!s.getFluidState().isEmpty() || s.is(BlockTags.LEAVES) || s.is(BlockTags.LOGS) || !s.isFaceSturdy(level, m, Direction.UP)) {
+				if (!s.getFluidState().isEmpty() || !s.isFaceSturdy(level, m, Direction.UP)) {
 					return NO_GROUND;
 				}
-				return y;
+				boolean ownFoundation = s.is(Blocks.COBBLESTONE) && data.isPlacedByFriends(m);
+				return isNaturalGround(s) || ownFoundation ? y : NO_GROUND;
 			}
 			return NO_GROUND;
 		}
+	}
+
+	/**
+	 * Natural terrain a building may stand on: earth (dirt, grass, podzol, mycelium, mud, moss), sand, gravel, clay,
+	 * natural stone, sandstone, badlands terracotta and snow. Logs, leaves and anything a player crafts are not ground.
+	 */
+	public static boolean isNaturalGround(BlockState s) {
+		return s.is(BlockTags.SUBSTRATE_OVERWORLD) || s.is(BlockTags.SAND) || s.is(BlockTags.BASE_STONE_OVERWORLD)
+			|| s.is(BlockTags.BADLANDS_TERRACOTTA) || s.is(Blocks.GRAVEL) || s.is(Blocks.CLAY) || s.is(Blocks.SANDSTONE)
+			|| s.is(Blocks.RED_SANDSTONE) || s.is(Blocks.SNOW_BLOCK) || s.is(Blocks.CALCITE);
 	}
 
 	/** The main horizontal direction from one position towards another. */

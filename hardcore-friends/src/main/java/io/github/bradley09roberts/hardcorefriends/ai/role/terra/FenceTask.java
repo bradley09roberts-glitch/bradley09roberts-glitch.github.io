@@ -41,9 +41,12 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 
 /**
  * Once the camp is a Village, Terra fences the farm: wooden fences along the {@link FarmFence} line with one fence
- * gate, standing outside the line while working so nobody gets shut in. Fences and the gate come from the backpack
- * or the supply chest, or are crafted at a crafting table from planks, logs and sticks. Cells that are not open
- * ground (water, trees, buildings) are skipped. When every open cell has its fence, the farm fence is finished.
+ * gate, left open so friends can walk in and out, standing outside the line while working so nobody gets shut in.
+ * Fences and the gate come from the backpack or the supply chest, or are crafted at a crafting table from planks,
+ * logs and sticks. Cells that are not open ground (water, trees, buildings, a player's path or anything near a
+ * player's build) are skipped. When every open cell has its fence, the farm fence is finished. Only farmland the
+ * friends tilled is fenced; when the camp's fields are all the player's, there is nothing to fence and the farm fence
+ * no longer holds the camp back.
  */
 public final class FenceTask implements CompanionTask {
 	private static final int PER_RUN = 24;
@@ -103,6 +106,11 @@ public final class FenceTask implements CompanionTask {
 			scannedAt = level.getGameTime();
 			survey(level, data);
 			table = findTable(level, data);
+			if (plan == null && data.isCompleted(Structures.FARM_PLOT) && FarmFence.nothingToFence(level, data)) {
+				// The camp's fields are the player's own: there is no farm of ours to fence, so the camp need not wait.
+				data.markCompleted(Structures.FARM_FENCE);
+				return 0;
+			}
 		}
 		checkFinished(c, data);
 		if (todo.isEmpty()) {
@@ -125,7 +133,7 @@ public final class FenceTask implements CompanionTask {
 			return;
 		}
 		for (FarmFence.Cell cell : plan.cells()) {
-			FarmFence.Status status = FarmFence.status(level, cell);
+			FarmFence.Status status = FarmFence.status(level, data, cell);
 			if (status == FarmFence.Status.DONE) {
 				doneCells++;
 			} else if (status == FarmFence.Status.TODO) {
@@ -337,7 +345,7 @@ public final class FenceTask implements CompanionTask {
 		}
 		FarmFence.Cell cell = current;
 		BlockPos pos = cell.pos();
-		FarmFence.Status status = FarmFence.status(level, cell);
+		FarmFence.Status status = FarmFence.status(level, Camp.data(level.getServer()), cell);
 		if (status != FarmFence.Status.TODO) {
 			current = null;
 			return TaskStatus.RUNNING;
@@ -361,7 +369,8 @@ public final class FenceTask implements CompanionTask {
 		}
 		BlockState state = blockItem.getBlock().defaultBlockState();
 		if (cell.gate()) {
-			state = state.setValue(FenceGateBlock.FACING, cell.outward());
+			// Left open: friends cannot open gates, and a shut one would lock Fern in or out of her farm.
+			state = state.setValue(FenceGateBlock.FACING, cell.outward()).setValue(FenceGateBlock.OPEN, true);
 		}
 		state = Block.updateFromNeighbourShapes(state, level, pos);
 		WorldEditGuard.Verdict verdict = WorldEditGuard.canPlace(c, pos, state, Reason.LANDSCAPE);

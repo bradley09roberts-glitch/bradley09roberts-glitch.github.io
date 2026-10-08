@@ -14,6 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 import io.github.bradley09roberts.hardcorefriends.ai.role.SageAdvisor;
@@ -197,15 +198,46 @@ public class GuardianGameTest {
 		});
 	}
 
+	/** Lays out a farm on the plot's ground: farmland round one water block, tilled by the friends or by a player. */
+	private static void farm(GameTestHelper helper, CampData data, int x0, int x1, int z0, int z1, int waterX, int waterZ,
+		boolean friends) {
+		for (int x = x0; x <= x1; x++) {
+			for (int z = z0; z <= z1; z++) {
+				BlockPos rel = new BlockPos(x, 1, z);
+				boolean water = x == waterX && z == waterZ;
+				helper.setBlock(rel, water ? Blocks.WATER : Blocks.FARMLAND);
+				if (friends && !water) {
+					data.recordPlaced(helper.absolutePos(rel));
+				}
+			}
+		}
+	}
+
+	/** Counts fences and gates on the ring one block outside a farm's bounding box, at fence height. */
+	private static int[] ring(GameTestHelper helper, int x0, int x1, int z0, int z1) {
+		int fences = 0;
+		int gates = 0;
+		for (int x = x0; x <= x1; x++) {
+			for (int z = z0; z <= z1; z++) {
+				if (x != x0 && x != x1 && z != z0 && z != z1) {
+					continue;
+				}
+				BlockState s = helper.getBlockState(new BlockPos(x, 2, z));
+				if (s.is(BlockTags.FENCE_GATES)) {
+					gates++;
+				} else if (s.is(BlockTags.FENCES)) {
+					fences++;
+				}
+			}
+		}
+		return new int[] {fences, gates};
+	}
+
 	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_53", maxTicks = 2400)
 	public void terraFencesTheFarm(GameTestHelper helper) {
 		CampData data = TestSupport.resetCamp(helper, true);
 		data.setStage(3);
-		for (int x = 14; x <= 18; x++) {
-			for (int z = 6; z <= 10; z++) {
-				helper.setBlock(new BlockPos(x, 1, z), x == 16 && z == 8 ? Blocks.WATER : Blocks.FARMLAND);
-			}
-		}
+		farm(helper, data, 14, 18, 6, 10, 16, 8, true);
 		data.putSite(Structures.FARM_PLOT, new CampData.Site(helper.absolutePos(new BlockPos(16, 2, 8)), 0, 0));
 		data.markCompleted(Structures.FARM_PLOT);
 		CompanionEntity terra = TestSupport.spawnFriend(helper, FriendId.TERRA, new BlockPos(16, 2, 14));
@@ -229,7 +261,9 @@ public class GuardianGameTest {
 			}
 			helper.assertTrue(fences == 23 && gates == 1, "the farm is ringed by 23 fences and one gate, found " + fences
 				+ " fences and " + gates + " gates (" + terra.activity() + ")");
-			helper.assertTrue(helper.getBlockState(new BlockPos(16, 2, 11)).is(BlockTags.FENCE_GATES), "the gate faces the camp centre");
+			BlockState gate = helper.getBlockState(new BlockPos(16, 2, 11));
+			helper.assertTrue(gate.is(BlockTags.FENCE_GATES), "the gate faces the camp centre");
+			helper.assertTrue(gate.getValue(FenceGateBlock.OPEN), "the gate is left open so friends can walk through");
 			helper.assertTrue(terra.backpack().count(Items.OAK_FENCE) == 7, "fences came out of the backpack");
 			helper.assertTrue(data.isCompleted(Structures.FARM_FENCE), "the farm fence is finished");
 			helper.assertTrue(helper.getBlockState(new BlockPos(16, 1, 8)).is(Blocks.WATER), "the farm itself is untouched");
@@ -240,11 +274,7 @@ public class GuardianGameTest {
 	public void terraCraftsFencesFromChestWood(GameTestHelper helper) {
 		CampData data = TestSupport.resetCamp(helper, true);
 		data.setStage(3);
-		for (int x = 8; x <= 10; x++) {
-			for (int z = 6; z <= 8; z++) {
-				helper.setBlock(new BlockPos(x, 1, z), x == 9 && z == 7 ? Blocks.WATER : Blocks.FARMLAND);
-			}
-		}
+		farm(helper, data, 8, 10, 6, 8, 9, 7, true);
 		data.putSite(Structures.FARM_PLOT, new CampData.Site(helper.absolutePos(new BlockPos(9, 2, 7)), 0, 0));
 		data.markCompleted(Structures.FARM_PLOT);
 		Container chest = TestSupport.placeChest(helper, new BlockPos(22, 2, 20),
@@ -273,6 +303,57 @@ public class GuardianGameTest {
 			int planksUsed = 64 - SupplyChest.count(chest, s -> s.is(Items.OAK_PLANKS));
 			helper.assertTrue(planksUsed >= 22, "fences and the gate were crafted from the chest's planks, used " + planksUsed);
 			helper.assertTrue(data.isCompleted(Structures.FARM_FENCE), "the farm fence is finished");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_77", maxTicks = 1200)
+	public void terraLeavesPlayersFieldsUnfenced(GameTestHelper helper) {
+		CampData data = TestSupport.resetCamp(helper, true);
+		data.setStage(3);
+		// The player's own field (not tilled by the friends) is what got the farm plot counted.
+		farm(helper, data, 14, 18, 6, 10, 16, 8, false);
+		data.markCompleted(Structures.FARM_PLOT);
+		CompanionEntity terra = TestSupport.spawnFriend(helper, FriendId.TERRA, new BlockPos(16, 2, 14));
+		terra.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_SHOVEL));
+		TestSupport.give(terra, new ItemStack(Items.OAK_FENCE, 30), new ItemStack(Items.OAK_FENCE_GATE, 1));
+		helper.startSequence()
+			.thenIdle(400)
+			.thenExecute(() -> {
+				int[] found = ring(helper, 13, 19, 5, 11);
+				helper.assertTrue(found[0] == 0 && found[1] == 0, "the player's field is not fenced, found " + found[0] + " fences and "
+					+ found[1] + " gates (" + terra.activity() + ")");
+				helper.assertTrue(terra.backpack().count(Items.OAK_FENCE) == 30, "no fence left the backpack");
+				helper.assertTrue(data.isCompleted(Structures.FARM_FENCE), "with no farm of the friends' own, the fence does not hold the camp back");
+			})
+			.thenSucceed();
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_78", maxTicks = 2400)
+	public void terraKeepsFencePostsOffPlayersPath(GameTestHelper helper) {
+		CampData data = TestSupport.resetCamp(helper, true);
+		data.setStage(3);
+		farm(helper, data, 14, 18, 6, 10, 16, 8, true);
+		data.putSite(Structures.FARM_PLOT, new CampData.Site(helper.absolutePos(new BlockPos(16, 2, 8)), 0, 0));
+		data.markCompleted(Structures.FARM_PLOT);
+		// A player's path leading east out of the farm, across the fence line.
+		for (int x = 19; x <= 22; x++) {
+			helper.setBlock(new BlockPos(x, 1, 8), Blocks.DIRT_PATH);
+		}
+		CompanionEntity terra = TestSupport.spawnFriend(helper, FriendId.TERRA, new BlockPos(16, 2, 14));
+		terra.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_SHOVEL));
+		TestSupport.give(terra, new ItemStack(Items.OAK_FENCE, 30), new ItemStack(Items.OAK_FENCE_GATE, 1));
+		helper.succeedWhen(() -> {
+			helper.assertTrue(data.isCompleted(Structures.FARM_FENCE), "the farm fence is finished (" + terra.activity() + ")");
+			for (int z = 6; z <= 10; z++) {
+				BlockPos cell = new BlockPos(19, 2, z);
+				helper.assertTrue(helper.getBlockState(cell).isAir(), "no post on or within two blocks of the player's path at " + cell);
+			}
+			for (int x = 19; x <= 22; x++) {
+				helper.assertTrue(helper.getBlockState(new BlockPos(x, 1, 8)).is(Blocks.DIRT_PATH), "the player's path is untouched");
+			}
+			int[] found = ring(helper, 13, 19, 5, 11);
+			helper.assertTrue(found[0] == 18 && found[1] == 1, "the rest of the ring has 18 fences and one gate, found " + found[0]
+				+ " fences and " + found[1] + " gates");
 		});
 	}
 }

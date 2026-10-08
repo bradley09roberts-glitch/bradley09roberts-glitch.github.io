@@ -164,7 +164,8 @@ public final class Blueprints {
 
 	/**
 	 * A 7×7 cabin with a doorstep in front: plank floor on the ground, log corners, plank walls three high with a
-	 * door and two glass-pane windows, a flat wooden-slab roof and a wall torch inside.
+	 * door and two glass-pane windows, a flat wooden-slab roof and a wall torch inside. Friends cannot make glass, so
+	 * when the camp has none the builder closes the windows with planks instead (see {@code BuildJob}).
 	 */
 	private static Blueprint cabin(String id, int x, int z) {
 		Blueprint.Builder b = Blueprint.builder(id, 7, 8).at(x, z);
