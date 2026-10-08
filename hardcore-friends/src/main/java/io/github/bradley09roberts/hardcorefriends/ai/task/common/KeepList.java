@@ -40,6 +40,11 @@ public final class KeepList {
 	public static final int TOOLS_KEPT = 2;
 	/** Miners wear through pickaxes fastest, so they carry an extra one. */
 	public static final int MINER_PICKAXES_KEPT = 3;
+	/**
+	 * Carrots and potatoes a farmer keeps for planting: one replanting run's worth (a harvest replants from its own
+	 * crop). They are food too, so the rest goes to the chest, where everyone can eat them.
+	 */
+	public static final int SEED_CROPS_KEPT = 16;
 
 	/** Items matching {@code filter} are kept up to {@code amount} in total. */
 	public record Rule(String label, Predicate<ItemStack> filter, int amount) {
@@ -178,6 +183,20 @@ public final class KeepList {
 		return false;
 	}
 
+	/**
+	 * How many of this kind of item the role keeps for its work: its own list, without the food everyone keeps (a
+	 * farmer's seed carrots, but not their four pieces of food). 0 if none.
+	 */
+	public static int workKeep(Role role, ItemStack stack) {
+		int total = 0;
+		for (Rule rule : roleRules(role)) {
+			if (rule.matches(stack)) {
+				total += rule.amount();
+			}
+		}
+		return total;
+	}
+
 	/** How many of this kind of item the role keeps (summing every rule that matches), 0 if none. */
 	public static int keepAmount(Role role, ItemStack stack) {
 		long total = 0;
@@ -276,8 +295,8 @@ public final class KeepList {
 				list.add(item("beetroot seeds", Items.BEETROOT_SEEDS, 64));
 				list.add(item("melon seeds", Items.MELON_SEEDS, 64));
 				list.add(item("pumpkin seeds", Items.PUMPKIN_SEEDS, 64));
-				list.add(item("carrots", Items.CARROT, 64));
-				list.add(item("potatoes", Items.POTATO, 64));
+				list.add(item("carrots", Items.CARROT, SEED_CROPS_KEPT));
+				list.add(item("potatoes", Items.POTATO, SEED_CROPS_KEPT));
 				list.add(item("bone meal", Items.BONE_MEAL, 64));
 				list.add(item("water bucket", Items.WATER_BUCKET, 1));
 			}

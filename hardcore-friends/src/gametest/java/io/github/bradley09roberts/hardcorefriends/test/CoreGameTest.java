@@ -299,6 +299,9 @@ public class CoreGameTest {
 		Skeleton skeleton = helper.spawn(EntityTypes.SKELETON, new BlockPos(30, 2, 16));
 		skeleton.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
 		skeleton.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET)); // no burning in the daylight
+		// Rooted, as in hurtFriendRetreatsOutOfBowRange: a skeleton walking after her can pin Fern against the edge of the
+		// test area, where whether she can step off depends on what earlier tests left beside the plot.
+		skeleton.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.0);
 		skeleton.setTarget(fern);
 		fern.setTarget(skeleton);
 		AvoidDangerGoal probe = new AvoidDangerGoal(fern, true);

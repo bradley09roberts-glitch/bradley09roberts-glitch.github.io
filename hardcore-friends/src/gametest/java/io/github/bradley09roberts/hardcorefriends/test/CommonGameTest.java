@@ -184,7 +184,7 @@ public class CommonGameTest {
 		helper.assertTrue(surplus(oak, Items.WOODEN_PICKAXE) == 1, "a pickaxe is surplus for a builder");
 		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, new BlockPos(24, 2, 24));
 		TestSupport.give(fern, new ItemStack(Items.CARROT, 64), new ItemStack(Items.CARROT, 6), new ItemStack(Items.WHEAT_SEEDS, 20));
-		helper.assertTrue(surplus(fern, Items.CARROT) == 2, "Fern keeps 64 carrots to plant plus 4 to eat");
+		helper.assertTrue(surplus(fern, Items.CARROT) == 50, "Fern keeps 16 carrots to plant plus 4 to eat");
 		helper.assertTrue(surplus(fern, Items.WHEAT_SEEDS) == 0, "Fern keeps her seeds");
 		CompanionEntity flint = TestSupport.spawnFriend(helper, FriendId.FLINT, new BlockPos(8, 2, 24));
 		TestSupport.give(flint, new ItemStack(Items.COBBLESTONE, 40), new ItemStack(Items.RAW_IRON, 12), new ItemStack(Items.RAW_COPPER, 5));

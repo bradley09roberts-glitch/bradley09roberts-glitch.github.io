@@ -6,9 +6,11 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
 
 /**
- * The jobs a friend uses to look after their own needs: eating, sleeping, chatting, relaxing, warming up. Each scores
- * higher the lower its need, so a desperate need beats any work while a mild one waits for the job in hand to end.
- * Their ids start with {@code needs.}, which counts as time off rather than work.
+ * The jobs a friend uses to look after their own needs: eating, sleeping, chatting, relaxing, warming up, and resting
+ * at camp while too weak to work. Each scores higher the lower its need, so a desperate need beats any work (starving
+ * and exhaustion score above {@link io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler#URGENT}) while a
+ * mild one waits for the job in hand to end. Their ids start with {@code needs.}, which counts as time off rather than
+ * work.
  */
 public final class NeedsTasks {
 	private NeedsTasks() {
@@ -21,6 +23,7 @@ public final class NeedsTasks {
 			new SleepTask(),
 			new SocializeTask(),
 			new LeisureTask(id),
-			new ComfortTask());
+			new ComfortTask(),
+			new RestTask());
 	}
 }

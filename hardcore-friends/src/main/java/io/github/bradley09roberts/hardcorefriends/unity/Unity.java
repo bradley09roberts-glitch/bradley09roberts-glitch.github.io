@@ -17,7 +17,6 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.MoodPassives;
-import io.github.bradley09roberts.hardcorefriends.companion.Needs;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 
 /**
@@ -44,9 +43,9 @@ public final class Unity {
 	public static final String BUILD = "build";
 	/** Two friends chatting (see {@link #chat}). */
 	public static final String CHAT = "chat";
-	/** Team spirit: the friends' average mood is great (see {@link #teamSpirit}). */
+	/** Team spirit: the friends are in high spirits (see {@link #teamSpirit}). */
 	public static final String SPIRIT = "spirit";
-	/** Most Unity a great team mood adds in one in-game day, at +1 an in-game hour. */
+	/** Most Unity high team spirits add in one in-game day, at +1 an in-game hour. */
 	public static final int SPIRIT_DAILY_CAP = 12;
 
 	private static final long RALLY_COOLDOWN = 20L * 60 * 10;
@@ -117,12 +116,13 @@ public final class Unity {
 	}
 
 	/**
-	 * One in-game hour of team spirit: while the friends' average mood is great, the bond grows by 1, at most
-	 * {@value #SPIRIT_DAILY_CAP} a day. A low mood costs nothing; it only slows the friends' work. Called hourly from
-	 * {@link #tick}. Returns the amount added.
+	 * One in-game hour of team spirit: while the team is in high spirits (average mood at least
+	 * {@value MoodPassives#HIGH_SPIRITS} with nobody feeling low, see {@link MoodPassives#highSpirits}), the bond grows
+	 * by 1, at most {@value #SPIRIT_DAILY_CAP} a day. A low mood costs nothing; it only slows the friends' work. Called
+	 * hourly from {@link #tick}. Returns the amount added.
 	 */
 	public static int teamSpirit(MinecraftServer server) {
-		if (MoodPassives.teamMood(Companions.all()) != Needs.Mood.GREAT) {
+		if (!MoodPassives.highSpirits(Companions.all())) {
 			return 0;
 		}
 		return add(server.overworld(), SPIRIT, 1, SPIRIT_DAILY_CAP);
@@ -204,12 +204,13 @@ public final class Unity {
 		}
 	}
 
+	/** Close Friends heal faster at camp: 1 health every 4 s, out of a fight and, like all healing, not while starving. */
 	private static void campRegen(MinecraftServer server) {
 		for (CompanionEntity c : Companions.all()) {
 			ServerLevel level = (ServerLevel) c.level();
 			Camp.center(level).ifPresent(center -> {
 				if (Camp.horizontalDistSqr(c.blockPosition(), center) <= Math.pow(Camp.radius(Camp.data(server)), 2)
-					&& c.getHealth() < c.getMaxHealth() && c.getTarget() == null) {
+					&& c.getHealth() < c.getMaxHealth() && c.getTarget() == null && c.needs().canHeal()) {
 					c.heal(1.0F);
 				}
 			});

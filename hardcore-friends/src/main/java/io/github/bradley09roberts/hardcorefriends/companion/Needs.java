@@ -17,8 +17,10 @@ import net.minecraft.world.level.storage.ValueOutput;
  * food, sleeping at night, chatting, relaxing, warming up by the fire), which score higher the lower the need is.
  * Together the needs make a mood, which speeds up or slows down their work and colours what they say.
  *
- * <p>Rates are per second of game time and tuned to the 20-minute Minecraft day: a friend gets hungry about once a
- * day (one loaf of bread's worth), tired by nightfall, and lonely or bored after half a day without company or fun.
+ * <p>Rates are per second of game time and tuned to the 20-minute Minecraft day: a friend gets through about half a
+ * loaf of bread's worth of food a day (a loaf every two days, a little more when at work all day), is tired by
+ * nightfall, and lonely or bored after half a day without company or fun. Sleep restores energy by the in-game time
+ * slept, so a night the players sleep through counts as a whole night.
  */
 public final class Needs {
 	public enum Need {
@@ -62,9 +64,20 @@ public final class Needs {
 	private static final double[] MOOD_WEIGHT = {0.30, 0.25, 0.15, 0.15, 0.15};
 
 	// Per second. A Minecraft day is 1200 seconds.
-	static final double HUNGER_DECAY = 100.0 / 1500.0; // about one loaf of bread's worth per day; faster at work
+	/** About 15 hunger a day, half a loaf of bread (30); see {@link #typicalDailyHunger}. */
+	static final double HUNGER_DECAY = 100.0 / 9000.0;
 	static final double HUNGER_WORK_FACTOR = 1.3;
-	static final double ENERGY_DECAY = 70.0 / 840.0; // from rested at dawn to about 30 by nightfall
+	static final double ENERGY_DECAY = 70.0 / 840.0; // from rested at dawn to about 45 at nightfall, 30 by late evening
+	/** Energy restored per in-game second asleep under a roof: about +100 over a whole night. */
+	public static final double SLEEP_INDOOR_RATE = 100.0 / 500.0;
+	/** Energy restored per in-game second asleep in the open: about +65 over a whole night. */
+	public static final double SLEEP_OUTDOOR_RATE = 65.0 / 500.0;
+	/** At or below this hunger a friend no longer heals, neither on their own nor at camp. */
+	public static final double TOO_HUNGRY_TO_HEAL = 10;
+	/** Seconds of daylight in a Minecraft day (the sky is bright from about tick 0 to 13000); the rest is night. */
+	public static final double DAYLIGHT_SECONDS = 650;
+	/** Seconds in a Minecraft day. */
+	public static final double DAY_SECONDS = 1200;
 	static final double SOCIAL_DECAY = 100.0 / 1000.0;
 	static final double SOCIAL_COMPANY_GAIN = 0.15; // simply being near friends or a player
 	static final double FUN_DECAY = 100.0 / 1100.0;
@@ -128,10 +141,10 @@ public final class Needs {
 
 	/**
 	 * One second of everyday life. {@code working} is true while the friend is on a job (they get hungry and bored
-	 * faster), {@code asleep} while sleeping (energy is then restored by the sleep job, not drained).
+	 * faster), {@code asleep} while sleeping (energy then does not drain: {@link #rest} restores it by the clock).
 	 */
 	public void tickSecond(CompanionEntity c, boolean working, boolean asleep) {
-		add(Need.HUNGER, -HUNGER_DECAY * (working ? HUNGER_WORK_FACTOR : 1.0));
+		add(Need.HUNGER, -hungerDrain(working));
 		if (!asleep) {
 			add(Need.ENERGY, -ENERGY_DECAY);
 		}
@@ -142,6 +155,33 @@ public final class Needs {
 		double target = comfortOfSurroundings(c);
 		double comfort = get(Need.COMFORT);
 		add(Need.COMFORT, Math.clamp(target - comfort, -COMFORT_APPROACH, COMFORT_APPROACH));
+	}
+
+	/** Hunger lost per second: a little faster while working. */
+	public static double hungerDrain(boolean working) {
+		return HUNGER_DECAY * (working ? HUNGER_WORK_FACTOR : 1.0);
+	}
+
+	/**
+	 * Hunger a friend gets through in an ordinary day: at work through the daylight and asleep through the night.
+	 * That is about 15.5, half a loaf of bread (30), so nine friends eat four or five loaves a day.
+	 */
+	public static double typicalDailyHunger() {
+		return hungerDrain(true) * DAYLIGHT_SECONDS + hungerDrain(false) * (DAY_SECONDS - DAYLIGHT_SECONDS);
+	}
+
+	/** True while hunger is high enough for wounds to heal (above {@value #TOO_HUNGRY_TO_HEAL}). */
+	public boolean canHeal() {
+		return get(Need.HUNGER) > TOO_HUNGRY_TO_HEAL;
+	}
+
+	/**
+	 * Restores energy for {@code ticks} of in-game time asleep, faster under a roof. Sleep counts by the clock, so a
+	 * night the players sleep through restores as much as a night slept tick by tick.
+	 */
+	public void rest(CompanionEntity c, long ticks) {
+		boolean indoors = !c.level().canSeeSky(c.blockPosition().above());
+		add(Need.ENERGY, (indoors ? SLEEP_INDOOR_RATE : SLEEP_OUTDOOR_RATE) * ticks / 20.0);
 	}
 
 	/** Another friend or a player within 6 blocks. */
