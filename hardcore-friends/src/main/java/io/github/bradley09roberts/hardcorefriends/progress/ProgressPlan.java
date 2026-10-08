@@ -28,6 +28,7 @@ import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
+import io.github.bradley09roberts.hardcorefriends.town.JobBoard;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 
 /**
@@ -138,6 +139,27 @@ public final class ProgressPlan {
 	/** How many more of this item the plan wants now (0 when it has enough or does not need it). */
 	public static int wanted(MinecraftServer server, Item item) {
 		return wanted.getOrDefault(item, 0);
+	}
+
+	/**
+	 * The plan's wants as job-board requests ({@code /friends jobs}): "For Sage's plan (Diamonds): 3 Diamond", one per
+	 * item still wanted, so players can bring what the plan is waiting for.
+	 */
+	public static List<JobBoard.Request> jobRequests(MinecraftServer server) {
+		Milestone step = current(server);
+		if (!enabled() || step == null) {
+			return List.of();
+		}
+		List<JobBoard.Request> requests = new ArrayList<>();
+		for (Item item : targets.keySet()) {
+			int missing = wanted(server, item);
+			if (missing > 0) {
+				String name = item.getDefaultInstance().getHoverName().getString();
+				requests.add(JobBoard.Request.of("For Sage's plan (" + step.title() + "): " + missing + " " + name,
+					missing, s -> s.is(item)));
+			}
+		}
+		return requests;
 	}
 
 	/** How many of each item the plan wants the camp to own in all, for the step in hand. */

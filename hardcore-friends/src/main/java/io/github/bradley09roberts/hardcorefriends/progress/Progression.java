@@ -29,6 +29,7 @@ import io.github.bradley09roberts.hardcorefriends.progress.work.PickaxeTask;
 import io.github.bradley09roberts.hardcorefriends.progress.work.StationsTask;
 import io.github.bradley09roberts.hardcorefriends.progress.work.WartTask;
 import io.github.bradley09roberts.hardcorefriends.progress.work.WorkshopTask;
+import io.github.bradley09roberts.hardcorefriends.town.JobBoard;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
@@ -50,6 +51,7 @@ public final class Progression {
 		WorldEditGuard.LISTENERS.add(Experience::onEdit);
 		CompanionEvents.HIT.add(Experience::onHit);
 		CampNeeds.EXTRA.add(ProgressPlan::extraNeeds);
+		JobBoard.SUPPLIERS.add(ProgressPlan::jobRequests);
 		ProgressLines.register();
 		recipes();
 		jobs();
