@@ -62,9 +62,17 @@ public final class Camp {
 		return Math.floorMod(level.getOverworldClockTime(), 24000L);
 	}
 
-	/** True from dusk until dawn in dimensions with a day cycle. */
+	/** True from dusk until dawn in dimensions with a day cycle, and under a dark thunderstorm sky by day. */
 	public static boolean isNight(ServerLevel level) {
 		return level.isDarkOutside();
+	}
+
+	/**
+	 * True from nightfall until dawn by the clock: dark outside in the evening or the small hours. A thunderstorm by day
+	 * darkens the sky ({@link #isNight}, so friends come home from the wilds) but is not bedtime and keeps no watch.
+	 */
+	public static boolean isNightTime(ServerLevel level) {
+		return level.isDarkOutside() && timeOfDay(level) >= 12000;
 	}
 
 	/** True in the last minute of daylight, when friends start heading home. */

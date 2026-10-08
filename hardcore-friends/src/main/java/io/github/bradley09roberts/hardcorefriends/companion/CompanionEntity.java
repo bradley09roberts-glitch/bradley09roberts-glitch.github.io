@@ -73,6 +73,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
+import io.github.bradley09roberts.hardcorefriends.combat.Archery;
 import io.github.bradley09roberts.hardcorefriends.item.BackpackItem;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
@@ -104,6 +105,8 @@ public class CompanionEntity extends PathfinderMob {
 	private static final int GIVE_UP_TICKS = 200;
 	/** How long a given-up target is left alone. */
 	private static final int GIVEN_UP_FOR = 600;
+	/** A target given up a second time (within a day) is left alone this long by day; at night, until dawn. */
+	private static final int GIVEN_UP_AGAIN_FOR = 6000;
 
 	private final Backpack backpack = new Backpack();
 	private final Actions actions = new Actions(this);
@@ -129,6 +132,10 @@ public class CompanionEntity extends PathfinderMob {
 	/** When the current target was chosen (tick count), and hostiles given up on until a tick count. */
 	private int targetSetTick;
 	private final Map<UUID, Integer> givenUp = new HashMap<>();
+	/** When each hostile was last given up on (tick count), so a second give-up lasts longer. */
+	private final Map<UUID, Integer> gaveUpAt = new HashMap<>();
+	/** When this friend last pressed their target without a blow landing (an arrow loosed), see {@link #markEngaged}. */
+	private int engagedTick = -1000;
 	/** Set for a newcomer met in the world; null for the nine named friends. */
 	private @Nullable Persona persona;
 	/** Per-friend state kept by the feature packages, each under its own key; saved with the friend. */
@@ -490,7 +497,7 @@ public class CompanionEntity extends PathfinderMob {
 			setTarget(null);
 		} else if (target != null && mode() == CompanionMode.WORK && cannotGetAt(target)) {
 			// Stuck behind a wall or a drop: give it up for a while, instead of standing still with it all night.
-			givenUp.put(target.getUUID(), this.tickCount + GIVEN_UP_FOR);
+			givenUp.put(target.getUUID(), this.tickCount + giveUpTicks(level, target));
 			setTarget(null);
 		}
 		if (this.tickCount % 100 == 0) {
@@ -674,17 +681,22 @@ public class CompanionEntity extends PathfinderMob {
 	 * Whether this friend should stand and fight a threat rather than run. Aegis fights anything but a hissing
 	 * creeper. Everyone else fights hand-to-hand threats within their reach ({@link #meleeReach}) while healthy and
 	 * holding a tool, so friends defend each other instead of being picked off one by one, and still run from
-	 * creepers and when hurt.
+	 * creepers and when hurt. A friend with a bow and arrows also stands up to what they would shoot, from a safe
+	 * distance ({@link Archery#standsWithBow}).
 	 */
 	public boolean canStandAndFight(LivingEntity threat) {
 		if (isRetreating() || !threat.isAlive()) {
 			return false;
 		}
 		if (threat instanceof net.minecraft.world.entity.monster.Creeper creeper) {
-			return isFighter() && creeper.getSwellDir() <= 0 && !creeper.isIgnited() && getHealth() > getMaxHealth() * 0.6F;
+			return Archery.standsWithBow(this, creeper)
+				|| isFighter() && creeper.getSwellDir() <= 0 && !creeper.isIgnited() && getHealth() > getMaxHealth() * 0.6F;
 		}
 		if (isFighter()) {
 			return true;
+		}
+		if (Archery.standsWithBow(this, threat)) {
+			return true; // a bow and arrows, and the threat at a good range for them
 		}
 		double reach = meleeReach(threat);
 		return hasMeleeTool() && isHealthy() && distanceToSqr(threat) <= reach * reach;
@@ -713,20 +725,61 @@ public class CompanionEntity extends PathfinderMob {
 	}
 
 	private boolean outOfReach(LivingEntity target) {
-		double reach = Math.max(NEAR_REACH, meleeReach(target));
+		double reach = Math.max(NEAR_REACH, Math.max(meleeReach(target), Archery.reach(this, target)));
 		return target.distanceToSqr(this) > reach * reach;
 	}
 
-	/** True when a target has been chased this long without a blow either way and is still out of arm's reach. */
+	/**
+	 * True when a target has been chased this long without a blow either way (or an arrow loosed at it), is still out
+	 * of arm's reach, and no whole path leads to it: a long way round is followed to the end, a mob behind a fence or
+	 * on a ledge is not.
+	 */
 	private boolean cannotGetAt(LivingEntity target) {
-		int engaged = Math.max(targetSetTick, Math.max(getLastHurtMobTimestamp(), lastDamagedTick));
-		return this.tickCount - engaged > GIVE_UP_TICKS && target.distanceToSqr(this) > 3 * 3;
+		int engaged = Math.max(Math.max(targetSetTick, engagedTick), Math.max(getLastHurtMobTimestamp(), lastDamagedTick));
+		if (this.tickCount - engaged <= GIVE_UP_TICKS || target.distanceToSqr(this) <= 3 * 3) {
+			return false;
+		}
+		net.minecraft.world.level.pathfinder.Path path = getNavigation().getPath();
+		return path == null || path.isDone() || !path.canReach();
 	}
 
-	/** True while this friend has given up on a hostile they could not get at (see {@link #cannotGetAt}). */
+	/**
+	 * How long to leave a target alone that could not be got at: {@value #GIVEN_UP_FOR} ticks the first time, and when
+	 * the same one is given up again within a day, until dawn at night (so a mob nobody can reach does not wake the
+	 * camp all night) or {@value #GIVEN_UP_AGAIN_FOR} ticks by day.
+	 */
+	private int giveUpTicks(ServerLevel level, LivingEntity target) {
+		gaveUpAt.values().removeIf(at -> this.tickCount - at > 24000);
+		Integer before = gaveUpAt.put(target.getUUID(), this.tickCount);
+		if (before == null) {
+			return GIVEN_UP_FOR;
+		}
+		return Camp.isNightTime(level) ? (int) Math.max(GIVEN_UP_FOR, 24000 - Camp.timeOfDay(level)) : GIVEN_UP_AGAIN_FOR;
+	}
+
+	/**
+	 * True while this friend has given up on a hostile they could not get at (see {@link #cannotGetAt}). One that comes
+	 * within arm's reach, or is landing blows on someone, can be got at after all and is forgiven at once.
+	 */
 	public boolean hasGivenUpOn(LivingEntity threat) {
 		Integer until = givenUp.get(threat.getUUID());
-		return until != null && this.tickCount < until;
+		if (until == null || this.tickCount >= until) {
+			return false;
+		}
+		if (threat.distanceToSqr(this) <= 3 * 3
+			|| threat.getLastHurtMob() != null && threat.tickCount - threat.getLastHurtMobTimestamp() < 60) {
+			givenUp.remove(threat.getUUID());
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Counts as pressing the current target for the give-up timer without a blow landing: an archer calls it for every
+	 * arrow loosed, so a friend shooting at a mob they cannot walk to does not give it up.
+	 */
+	public void markEngaged() {
+		this.engagedTick = this.tickCount;
 	}
 
 	@Override

@@ -30,10 +30,15 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  *
  * <p>At night at the camp this is his part of the rota ({@link NightWatch}): he guards while it is his watch (the
  * first, dusk to midnight, whenever he can keep it), as the other watchers keep theirs by the fire
- * ({@link WatchTask}), and the rest of the night he sleeps like everyone else. Away from any camp he guards all night.
+ * ({@link WatchTask}), and the rest of the night he sleeps like everyone else. On the camp's watch he only stays
+ * beside players inside the camp or within {@value #ESCORT_MARGIN} blocks of its edge: the camp is his charge, and a
+ * player out late has their own escort to ask for (a friend told to follow them). Away from any camp he guards all
+ * night. The night here is the clock's ({@link Camp#isNightTime}): a thunderstorm by day is a day for him.
  */
 public final class GuardTask implements CompanionTask {
 	private static final double PLAYER_RANGE = 48;
+	/** On the camp's watch, players this far beyond the camp's edge are not followed. */
+	private static final int ESCORT_MARGIN = 8;
 	private static final double FOLLOW_START = 6;
 	private static final double FOLLOW_STOP = 3.5;
 	private static final int RUN_TICKS = 20 * 30;
@@ -70,7 +75,7 @@ public final class GuardTask implements CompanionTask {
 	@Override
 	public double score(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
-		if (Camp.isNight(level)) {
+		if (Camp.isNightTime(level)) {
 			if (!campHere(level)) {
 				return WatchTask.SCORE; // no camp to keep a rota: he guards all night
 			}
@@ -106,7 +111,7 @@ public final class GuardTask implements CompanionTask {
 		if (++ticks > RUN_TICKS) {
 			return TaskStatus.SUCCESS;
 		}
-		if (Camp.isNight(level) && campHere(level) && !NightWatch.isOnWatch(c)) {
+		if (Camp.isNightTime(level) && campHere(level) && !NightWatch.isOnWatch(c)) {
 			return TaskStatus.SUCCESS; // his watch is over: bed
 		}
 		if (ticks % 20 == 1) {
@@ -117,7 +122,7 @@ public final class GuardTask implements CompanionTask {
 			return TaskStatus.RUNNING;
 		}
 		following = false;
-		if (Camp.isNight(level) && level.getGameTime() >= towerUnreachableUntil) {
+		if (Camp.isNightTime(level) && level.getGameTime() >= towerUnreachableUntil) {
 			if (level.getGameTime() - lookoutCheckedAt > TOWER_RECHECK) {
 				lookoutCheckedAt = level.getGameTime();
 				lookout = Watchtower.find(level, Camp.data(level.getServer()));
@@ -132,15 +137,23 @@ public final class GuardTask implements CompanionTask {
 
 	// --------------------------------------------------------------- players
 
-	/** The nearby player who most needs a guard: lowest health first, then furthest from camp. */
+	/**
+	 * The nearby player who most needs a guard: lowest health first, then furthest from camp. On the camp's watch,
+	 * only players in or near the camp count.
+	 */
 	private static @Nullable ServerPlayer mostAtRisk(CompanionEntity c, ServerLevel level) {
 		BlockPos camp = c.homePos();
+		boolean campWatch = campHere(level) && NightWatch.isOnWatch(c);
+		double escort = Camp.radius(Camp.data(level.getServer())) + ESCORT_MARGIN;
 		ServerPlayer best = null;
 		double bestHealth = Double.MAX_VALUE;
 		double bestCampDist = -1;
 		for (ServerPlayer p : level.players()) {
 			if (p.isSpectator() || !p.isAlive() || p.distanceToSqr(c) > PLAYER_RANGE * PLAYER_RANGE) {
 				continue;
+			}
+			if (campWatch && Camp.horizontalDistSqr(p.blockPosition(), camp) > escort * escort) {
+				continue; // keeping the camp's watch: the camp is his charge tonight
 			}
 			double health = Math.ceil(p.getHealth());
 			double campDist = Camp.horizontalDistSqr(p.blockPosition(), camp);
