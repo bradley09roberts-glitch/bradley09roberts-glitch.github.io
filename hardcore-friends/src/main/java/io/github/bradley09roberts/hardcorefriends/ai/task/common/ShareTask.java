@@ -35,6 +35,11 @@ public final class ShareTask implements CompanionTask {
 	private static final double RANGE = 24.0;
 	private static final double GIVE_REACH = 2.0;
 	private static final double HURT_FRACTION = 0.6;
+	/**
+	 * Feeding a hurt friend who has nothing to eat comes before any gathering, even when the camp's need for it
+	 * doubles its score (felling 110, harvesting or ore 121).
+	 */
+	private static final double FEED_HURT_FRIEND = 125;
 
 	/** Something a role wants, up to {@code wantCap} carried. {@code need} gates building materials. */
 	private record ShareRule(Set<Role> roles, Predicate<ItemStack> item, int wantCap, @Nullable Need need) {
@@ -87,7 +92,7 @@ public final class ShareTask implements CompanionTask {
 		}
 		// Feeding a hurt friend and unblocking the builder come before routine gathering.
 		if (planned.food()) {
-			return 70;
+			return FEED_HURT_FRIEND;
 		}
 		if (planned.recipient().friendId().role() == io.github.bradley09roberts.hardcorefriends.companion.Role.BUILDER
 			&& !CampNeeds.buildShortage().isEmpty()) {

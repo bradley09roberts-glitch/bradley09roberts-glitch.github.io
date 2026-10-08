@@ -103,6 +103,9 @@ public class CompanionEntity extends PathfinderMob {
 	private long approvedLogsUntil;
 	private boolean deathHandled;
 	private int lastDamagedTick = -1000;
+	/** When sleep was last settled (game time), and the overworld clock then; see {@link #settleSleep}. */
+	private long sleepSettledAt = Long.MIN_VALUE;
+	private long sleepSettledClock;
 
 	public CompanionEntity(EntityType<? extends CompanionEntity> type, Level level) {
 		super(type, level);
@@ -232,6 +235,48 @@ public class CompanionEntity extends PathfinderMob {
 
 	public boolean isAsleep() {
 		return asleep;
+	}
+
+	/**
+	 * Brings sleep up to date, at most once a tick (the friend's own tick and the sleep job both call it). A sleeping
+	 * friend regains energy for each tick asleep, and when the players sleep through the night the overworld clock
+	 * jumps ahead: the skipped time counts as sleep for every friend at work, whether already lying down or still on
+	 * the way to bed, so they wake as rested as after a whole night. Time spent unloaded counts for nothing, as for
+	 * every need.
+	 */
+	public void settleSleep() {
+		if (!(this.level() instanceof ServerLevel level)) {
+			return;
+		}
+		long now = level.getGameTime();
+		if (now == sleepSettledAt) {
+			return;
+		}
+		long clock = level.getOverworldClockTime();
+		boolean first = sleepSettledAt == Long.MIN_VALUE;
+		// How much further the clock moved than the world ticked: a night slept through, never a time going backwards.
+		long skipped = first ? 0 : Math.clamp(clock - sleepSettledClock - (now - sleepSettledAt), 0L, 24000L);
+		sleepSettledAt = now;
+		sleepSettledClock = clock;
+		if (asleep) {
+			needs.rest(this, (first ? 0 : 1) + skipped);
+		} else if (skipped > 0 && mode() == CompanionMode.WORK) {
+			needs.rest(this, skipped);
+		}
+	}
+
+	/** Badly hurt: at or below the health at which this friend falls back to recover (their retreat fraction). */
+	public boolean badlyHurt() {
+		return getHealth() <= getMaxHealth() * friendId().retreatFraction();
+	}
+
+	/**
+	 * Too weak to work: badly hurt and too hungry to heal, as a starving friend soon is. They eat the moment there is
+	 * food, and until then rest at camp and take on no work that could lead them into danger (see
+	 * {@link TaskScheduler}).
+	 */
+	public boolean tooWeakToWork() {
+		return badlyHurt() && !needs.canHeal();
 	}
 
 	/** Set by AvoidDangerGoal while this friend is getting away from something (shown in their status). */
@@ -368,6 +413,7 @@ public class CompanionEntity extends PathfinderMob {
 			boolean working = mode() == CompanionMode.FOLLOW || job != null && !job.id().startsWith("needs.") && !job.id().equals("common.idle");
 			needs.tickSecond(this, working, asleep);
 		}
+		settleSleep();
 		// Following a player or holding a spot, a friend runs no jobs, so they snack from their backpack when hungry.
 		if (this.tickCount % 100 == 0 && mode() != CompanionMode.WORK && needs.get(Needs.Need.HUNGER) < 25) {
 			ItemStack snack = backpack.take(CompanionEntity::isEdible, 1);
@@ -383,7 +429,7 @@ public class CompanionEntity extends PathfinderMob {
 		}
 		// Out of combat and not starving, friends recover like a well-fed player (1 health every 4 seconds).
 		if (this.tickCount % 80 == 0 && getHealth() < getMaxHealth() && this.tickCount - lastDamagedTick > 200
-			&& getTarget() == null && !isOnFire() && needs.get(Needs.Need.HUNGER) > 10) {
+			&& getTarget() == null && !isOnFire() && needs.canHeal()) {
 			heal(1.0F);
 		}
 		RolePassives.tick(this);

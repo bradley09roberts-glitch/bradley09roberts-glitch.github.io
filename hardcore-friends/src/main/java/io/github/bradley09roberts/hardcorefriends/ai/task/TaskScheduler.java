@@ -3,6 +3,7 @@ package io.github.bradley09roberts.hardcorefriends.ai.task;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
@@ -14,9 +15,27 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
  * second, switches when a clearly better job appears (by {@link #PREEMPT_MARGIN}), and fails tasks that run past
  * their time limit so a friend never stays stuck. Other people's work ({@link SpecialityTask}) has a known ceiling,
  * so it is not even scored when it could not win: with every friend able to do every job, that keeps choosing cheap.
+ *
+ * <p>Three rules keep the friend's own needs safe from work: a desperate need ({@link #URGENT}) takes over from any
+ * job at once; work never wakes a sleeper; and a friend too weak to work
+ * ({@link CompanionEntity#tooWeakToWork}) only takes on the jobs in {@link #FIT_WHEN_WEAK}.
  */
 public final class TaskScheduler {
 	public static final double PREEMPT_MARGIN = 25.0;
+	/**
+	 * Desperate needs (starving with food at hand, exhausted at night) score this or more: above anything work can
+	 * reach, which is at most 132 (building, 60, at the camp's full need for materials, weight 2.0, with Sage's 10%
+	 * planning bonus). Such a job comes first, and takes over from a running job with a lower score at once.
+	 */
+	public static final double URGENT = 140;
+	/**
+	 * What a friend too weak to work (badly hurt and too hungry to heal) may still do besides their needs jobs: go
+	 * home, use the camp chest, and grow and bake food in the camp, so a starving camp can still feed itself. Every
+	 * other job, above all work outside the camp (the mine, felling, exploring), waits until they have eaten.
+	 */
+	public static final Set<String> FIT_WHEN_WEAK = Set.of("common.idle", "common.return_home", "common.restock",
+		"common.deposit", "fern.harvest", "fern.replant", "fern.bake", "fern.bone_meal");
+	private static final String NEEDS = "needs.";
 	private static final int EVALUATE_INTERVAL = 20;
 
 	/** Time spent choosing jobs, all friends together, for performance checks. */
@@ -84,9 +103,17 @@ public final class TaskScheduler {
 	}
 
 	private void choose(long gameTime) {
+		boolean weak = companion.tooWeakToWork();
+		if (weak && current != null && !fitWhenWeak(current.id())) {
+			stopCurrent(); // too weak for this now: home to eat or rest
+		}
+		// Work never wakes a sleeper: while they lie asleep, only another need can take over (a starving friend gets up
+		// to eat). Danger wakes them through the sleep job and the reflexes.
+		boolean sleeping = current != null && companion.isAsleep();
 		CompanionTask best = null;
 		double bestScore = 0;
 		// Anything that cannot beat the running job by the margin could never take over, so it need not be scored.
+		// (Only needs jobs reach URGENT, and other people's work never does.)
 		double mustBeat = current != null ? currentScore + PREEMPT_MARGIN : 0;
 		for (CompanionTask task : tasks) {
 			if (task == current) {
@@ -94,6 +121,9 @@ public final class TaskScheduler {
 			}
 			Long until = cooldownUntil.get(task.id());
 			if (until != null && gameTime < until) {
+				continue;
+			}
+			if ((weak && !fitWhenWeak(task.id())) || (sleeping && !task.id().startsWith(NEEDS))) {
 				continue;
 			}
 			// Other people's work has a known ceiling: skip scoring it (and its scans) when it could not win anyway.
@@ -120,7 +150,8 @@ public final class TaskScheduler {
 			return;
 		}
 		if (current != null) {
-			if (bestScore < currentScore + PREEMPT_MARGIN) {
+			boolean urgent = bestScore >= URGENT && bestScore > currentScore;
+			if (!urgent && bestScore < currentScore + PREEMPT_MARGIN) {
 				return;
 			}
 			stopCurrent();
@@ -140,6 +171,11 @@ public final class TaskScheduler {
 			cooldownUntil.put(best.id(), gameTime + best.failureCooldown());
 			safeStop(best);
 		}
+	}
+
+	/** True for the jobs a friend too weak to work may still take on: their needs and {@link #FIT_WHEN_WEAK}. */
+	public static boolean fitWhenWeak(String taskId) {
+		return taskId.startsWith(NEEDS) || FIT_WHEN_WEAK.contains(taskId);
 	}
 
 	private void finish(long gameTime, boolean success) {

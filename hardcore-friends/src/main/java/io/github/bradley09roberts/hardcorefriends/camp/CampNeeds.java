@@ -1,8 +1,11 @@
 package io.github.bradley09roberts.hardcorefriends.camp;
 
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
@@ -11,18 +14,24 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import io.github.bradley09roberts.hardcorefriends.ai.task.common.KeepList;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
-import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
+import io.github.bradley09roberts.hardcorefriends.companion.Needs;
+import io.github.bradley09roberts.hardcorefriends.companion.Role;
 
 /**
  * What the camp is short of, recomputed every 30 seconds from the supply chest and every loaded backpack. Tasks
  * multiply their scores by these needs, so friends naturally drift towards whatever the team lacks. Sage's
  * planning adds a 10% boost to the top need while Sage is around.
+ *
+ * <p>Food is counted as food: in loaves' worth of hunger ({@link #stock} of {@code FOOD}), wheat as the bread it
+ * makes, seeds and seed crops kept for planting not at all, against four days of food for the team.
  */
 public final class CampNeeds {
 	public enum Need {
@@ -47,6 +56,11 @@ public final class CampNeeds {
 	}
 
 	private static final int INTERVAL = 600;
+	/** Food is counted in loaves of bread: the hunger one loaf satisfies. */
+	private static final double LOAF = 30;
+	private static final double WHEAT_PER_LOAF = 3;
+	/** Days of food the camp likes to have in store for the team; with less, farming and foraging speed up. */
+	private static final double FOOD_DAYS = 4;
 	private static final EnumMap<Need, Double> NEEDS = new EnumMap<>(Need.class);
 	private static final EnumMap<Need, Integer> STOCK = new EnumMap<>(Need.class);
 	private static final EnumMap<Need, Integer> BUILD_SHORTAGE = new EnumMap<>(Need.class);
@@ -145,15 +159,26 @@ public final class CampNeeds {
 		for (Need n : Need.values()) {
 			stock.put(n, 0);
 		}
+		double food = 0;
 		for (ServerLevel level : server.getAllLevels()) {
-			SupplyChest.of(level).ifPresent(chest -> count(chest, stock));
+			Optional<Container> chest = SupplyChest.of(level);
+			if (chest.isPresent()) {
+				count(chest.get(), stock);
+				food += food(chest.get(), null);
+			}
 		}
-		for (CompanionEntity c : Companions.all()) {
+		List<CompanionEntity> friends = Companions.all();
+		for (CompanionEntity c : friends) {
 			count(c.backpack().container(), stock);
+			food += food(c.backpack().container(), c.friendId().role());
 		}
+		double loaves = food / LOAF;
+		stock.put(Need.FOOD, (int) Math.round(loaves));
 		STOCK.clear();
 		STOCK.putAll(stock);
-		NEEDS.put(Need.FOOD, shortfall(stock.get(Need.FOOD), 24 + 8 * stage));
+		// Enough food in store for the team's next few days: about half a loaf a friend a day.
+		double foodTarget = Math.max(1, friends.size()) * Needs.typicalDailyHunger() / LOAF * FOOD_DAYS;
+		NEEDS.put(Need.FOOD, Math.clamp(1.0 - loaves / foodTarget, 0.0, 1.0));
 		NEEDS.put(Need.WOOD, shortfall(stock.get(Need.WOOD), 64 + 32 * stage));
 		NEEDS.put(Need.STONE, shortfall(stock.get(Need.STONE), 48 + 32 * stage));
 		NEEDS.put(Need.DIRT, shortfall(stock.get(Need.DIRT), 16 + 8 * stage));
@@ -170,6 +195,36 @@ public final class CampNeeds {
 		return Math.clamp(1.0 - have / (double) target, 0.0, 1.0);
 	}
 
+	/**
+	 * The food in a container, in hunger points: everything a friend can eat, by how filling it is, and wheat as the
+	 * bread it bakes into (three to a loaf). Seeds and raw potatoes are not food (nobody in camp bakes potatoes). In a
+	 * friend's backpack ({@code role} given), crops their work keeps for planting (a farmer's seed carrots) are seed,
+	 * not food.
+	 */
+	private static double food(Container container, @Nullable Role role) {
+		Map<Item, Integer> forPlanting = new HashMap<>();
+		double total = 0;
+		for (int i = 0; i < container.getContainerSize(); i++) {
+			ItemStack s = container.getItem(i);
+			if (s.isEmpty()) {
+				continue;
+			}
+			int n = s.getCount();
+			if (CompanionEntity.isEdible(s)) {
+				if (role != null) {
+					int keep = forPlanting.computeIfAbsent(s.getItem(), item -> KeepList.workKeep(role, s));
+					int kept = Math.min(keep, n);
+					forPlanting.put(s.getItem(), keep - kept);
+					n -= kept;
+				}
+				total += n * CompanionEntity.hungerValue(s);
+			} else if (s.is(Items.WHEAT)) {
+				total += n * LOAF / WHEAT_PER_LOAF;
+			}
+		}
+		return total;
+	}
+
 	private static void count(Container container, EnumMap<Need, Integer> stock) {
 		for (int i = 0; i < container.getContainerSize(); i++) {
 			ItemStack s = container.getItem(i);
@@ -177,9 +232,6 @@ public final class CampNeeds {
 				continue;
 			}
 			int n = s.getCount();
-			if (s.is(ModTags.COMPANION_FOOD) || s.is(Items.WHEAT) || s.is(Items.POTATO)) {
-				stock.merge(Need.FOOD, n, Integer::sum);
-			}
 			if (s.is(ItemTags.LOGS)) {
 				stock.merge(Need.WOOD, n * 4, Integer::sum);
 			} else if (s.is(ItemTags.PLANKS)) {

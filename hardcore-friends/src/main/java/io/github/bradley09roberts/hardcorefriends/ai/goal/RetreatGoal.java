@@ -14,35 +14,38 @@ import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
-import io.github.bradley09roberts.hardcorefriends.companion.Needs;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 
 /**
  * When badly hurt, a friend breaks off whatever they were doing, moves away from danger towards camp or a
- * protector (out of bow range when something is shooting at them), and eats from their backpack once safe. Cautious friends (Flint) retreat earlier; Aegis much later.
+ * protector (out of bow range when something is shooting at them), and eats from their backpack once safe. Cautious
+ * friends (Flint) retreat earlier; Aegis much later.
+ *
+ * <p>Falling back to rest only helps a friend who can heal. One too hungry to heal with nothing in the backpack falls
+ * back only from danger; otherwise their jobs take care of them: they fetch food from the chest, or, with none
+ * anywhere, rest at camp and keep off risky work until there is some (see
+ * {@link io.github.bradley09roberts.hardcorefriends.ai.task.needs.RestTask}).
  */
 public class RetreatGoal extends Goal {
 	private static final double SAFE_DISTANCE = 12;
 	/** An archer in sight must be left further behind: skeletons shoot from about 15 blocks. */
 	private static final double SHOOTER_SAFE_DISTANCE = 20;
-	/** Hunger at or below which a friend no longer heals on their own (see {@code CompanionEntity}). */
-	private static final double TOO_HUNGRY_TO_HEAL = 10;
-	/** How long a calm, starving friend with nothing in the backpack is left to fetch food before retreating again. */
-	private static final int FOOD_BREAK = 20 * 30;
+	/** Danger this close starts (or keeps up) a retreat. */
+	private static final double THREAT_RANGE = 16;
 	private final CompanionEntity companion;
 	private @Nullable Vec3 fleeTo;
 	private int recalc;
 	private int calmTicks;
 	private boolean announced;
-	private long foodBreakUntil;
 
 	public RetreatGoal(CompanionEntity companion) {
 		this.companion = companion;
 		this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK, Goal.Flag.TARGET));
 	}
 
-	private boolean lowHealth() {
-		return companion.getHealth() <= companion.getMaxHealth() * companion.friendId().retreatFraction();
+	/** True when resting can do this friend any good: they can heal, or have something in the backpack to eat. */
+	private boolean restHelps() {
+		return companion.needs().canHeal() || companion.hasFood();
 	}
 
 	@Override
@@ -50,12 +53,11 @@ public class RetreatGoal extends Goal {
 		if (companion.isOnFire() && companion.getTarget() == null) {
 			return true;
 		}
-		if (!lowHealth()) {
+		if (!companion.badlyHurt()) {
 			return false;
 		}
-		// A starving friend cannot heal by resting, so after a calm retreat with nothing to eat their own jobs get a
-		// turn (fetching food from the chest), unless danger turns up.
-		return companion.level().getGameTime() >= foodBreakUntil || Threats.nearest(companion, 16) != null;
+		// Danger always sends a badly hurt friend back. Calm, they only fall back to rest when resting helps.
+		return restHelps() || Threats.nearest(companion, THREAT_RANGE) != null;
 	}
 
 	@Override
@@ -63,8 +65,8 @@ public class RetreatGoal extends Goal {
 		if (companion.isOnFire()) {
 			return true;
 		}
-		// Keep going until reasonably healed, or until calm with nothing left to eat.
-		return companion.getHealth() < companion.getMaxHealth() * 0.7F && !(calmTicks > 200 && !companion.hasFood());
+		// Keep going until reasonably healed, or, for a friend who cannot heal, until the danger has been gone a while.
+		return companion.getHealth() < companion.getMaxHealth() * 0.7F && !(calmTicks > 200 && !restHelps());
 	}
 
 	@Override
@@ -78,10 +80,6 @@ public class RetreatGoal extends Goal {
 
 	@Override
 	public void stop() {
-		if (calmTicks > 200 && !companion.hasFood() && !companion.isOnFire()
-			&& companion.needs().get(Needs.Need.HUNGER) <= TOO_HUNGRY_TO_HEAL) {
-			foodBreakUntil = companion.level().getGameTime() + FOOD_BREAK;
-		}
 		companion.setRetreating(false);
 		companion.getNavigation().stop();
 		if (announced && companion.getHealth() >= companion.getMaxHealth() * 0.7F) {
@@ -100,7 +98,7 @@ public class RetreatGoal extends Goal {
 		LivingEntity threat = Threats.nearestArcher(companion, SHOOTER_SAFE_DISTANCE);
 		double safeDistance = SHOOTER_SAFE_DISTANCE;
 		if (threat == null) {
-			threat = Threats.nearest(companion, 16);
+			threat = Threats.nearest(companion, THREAT_RANGE);
 			safeDistance = SAFE_DISTANCE;
 		}
 		if (threat != null && threat.distanceTo(companion) < safeDistance) {

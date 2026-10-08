@@ -21,8 +21,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 
 /**
- * Fern sows empty farmland in the camp with whichever seed she has most of (wheat seeds, carrots, potatoes or
- * beetroot seeds). With none in her backpack she first fetches some from the supply chest.
+ * Fern sows empty farmland in the camp with the most nourishing seed she has ({@link Crops#bestSeed}: carrots, then
+ * wheat seeds, beetroot seeds, potatoes). With none in her backpack she first fetches some from the supply chest.
  */
 public final class ReplantTask implements CompanionTask {
 	private static final int MAX_PER_RUN = 16;

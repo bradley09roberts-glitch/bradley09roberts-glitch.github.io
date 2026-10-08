@@ -48,12 +48,12 @@ These are the pieces your routines should use. Look at the sources for details.
 
 - **`companion.CompanionEntity`**
   - Identity and state: `friendId()`, `mode()`, `backpack()`, `actions()`, `scheduler()`, `homePos()` (camp centre, or recruit spot without a camp), `restPos()` (inside the cabin once built, else the camp centre), `isFighter()`, `isArmed()`, `isRetreating()`
-  - Needs: `needs()`, `isAsleep()` / `setAsleep(b)` (set by the sleep job; energy does not drain while asleep), `workSpeed(reason)` (skill × mood × Unity rhythm)
+  - Needs: `needs()`, `isAsleep()` / `setAsleep(b)` (set by the sleep job; energy does not drain while asleep), `settleSleep()` (energy for the in-game time asleep, including a night the players slept through; called every tick), `badlyHurt()` (at or below the retreat fraction), `tooWeakToWork()` (badly hurt and too hungry to heal), `workSpeed(reason)` (skill × mood × Unity rhythm)
   - Items and food: `equipBestWeapon()`, `hasFood()`, `isEdible(stack)`, `eat(stack)` (eats an item already taken out of a backpack or chest: heals, fills hunger by `hungerValue(stack)`, keeps the bowl), `eatFromBackpack()` (only when hurt), `damageMainHandTool(n)`, `swingArm()`
   - Trees: `approveLogs(Collection<BlockPos>)` (pre-approve a checked tree before felling), `isApprovedLog(pos)`
   - Other: `nearestProtector(r)`, `statusLine()`, `openBackpack(player)`, `getRandom()`
-- **`companion.Needs`:** `get/set/add(Need, value)` (0–100, 100 = met), `lowest()`, `moodValue()`, `mood()` (`MISERABLE` to `GREAT`, `word()`), `workSpeed()`, `bar(value)`, `summary()`; statics `hasCompany(c)`, `comfortOfSurroundings(c)`, `nearLitCampfire(level, pos, r)`.
-- **`companion.MoodPassives`:** `voice(c)` (says how the friend feels, if anything), `word(need)` ("hunger"), `jobFor(need)` (the needs job's id), `currentJob(c)`, `seeingTo(c, need)`, `moodText(c)`, `teamMood(friends)`.
+- **`companion.Needs`:** `get/set/add(Need, value)` (0–100, 100 = met), `lowest()`, `moodValue()`, `mood()` (`MISERABLE` to `GREAT`, `word()`), `workSpeed()`, `canHeal()` (hunger above `TOO_HUNGRY_TO_HEAL`; every kind of healing checks it), `rest(c, ticks)`, `bar(value)`, `summary()`; statics `hungerDrain(working)`, `typicalDailyHunger()`, `hasCompany(c)`, `comfortOfSurroundings(c)`, `nearLitCampfire(level, pos, r)`.
+- **`companion.MoodPassives`:** `voice(c)` (says how the friend feels, if anything), `word(need)` ("hunger"), `jobFor(need)` (the needs job's id), `currentJob(c)`, `seeingTo(c, need)`, `moodText(c)`, `teamMood(friends)`, `teamMoodValue(friends)`, `highSpirits(friends)`.
 - **`companion.Speciality`:** `interest(id)`, `affinity(id, role)`, `skill(id, role)`, `roleFor(reason)`, `workName(role)`.
 - **`ai.action.Actions`** (`companion.actions()`), all per-tick:
   - `walkTo(pos, reach)` returns true once within reach; check `isStuck()` to give up.
@@ -104,7 +104,7 @@ These are the pieces your routines should use. Look at the sources for details.
   - A new `Line` needs an argument count, generic wording in `Lines.generic()`, and two or more variants in each friend's own voice. `Lines.problems()` checks the whole table (own wording for every friend, length, placeholders, formatting); `MoodGameTest` fails if it finds anything.
 - **`unity.Unity`:**
   - `add(level, category, amount, dailyCap)` with categories `DELIVERY, GIFT, HANDOFF, DEFENCE, BUILD, TIME, CHAT, SPIRIT`
-  - `chat(level)` (+1 for two friends chatting, cap 30/day), `teamSpirit(server)` (hourly, +1 while the team's mood is great, cap `SPIRIT_DAILY_CAP`)
+  - `chat(level)` (+1 for two friends chatting, cap 30/day), `teamSpirit(server)` (hourly, +1 while the team is in high spirits, cap `SPIRIT_DAILY_CAP`)
   - `level(server)`, `workSpeed(c)`, `carefulHands(c)`, `scoutMarksThreats(server)`, `backpackSlots(server)`
 - **`companion.Companions`:** `all()`, `in(level)`, `find(FriendId)`, `near(level, box)`.
 
@@ -116,12 +116,13 @@ Score bands:
 
 | Score | Use for |
 |---|---|
+| 140 and up | Desperate needs only (`TaskScheduler.URGENT`): they take over from any job at once |
 | 70–89 | Urgent upkeep |
 | 40–69 | Main role work |
 | 20–39 | Secondary work |
 | 1–19 | Idle |
 
-Multiply by `CampNeeds.weight(...)` when the task serves a need. `score()` runs at most once a second, so keep scans bounded (≤ 24 blocks around the friend, or cache results and rescan every few seconds).
+Multiply by `CampNeeds.weight(...)` when the task serves a need (up to 2.2: a base of 60 reaches 132, which must stay below `TaskScheduler.URGENT`). `score()` runs at most once a second, so keep scans bounded (≤ 24 blocks around the friend, or cache results and rescan every few seconds).
 
 `tick()` returns `RUNNING`, `SUCCESS` or `FAILURE`. `stop()` must clean up; `actions().reset()` is called for you.
 
@@ -146,7 +147,7 @@ Every friend gets every role's jobs (`ai/task/TaskRegistry`), each wrapped in a 
 Needs jobs live in `ai/task/needs` and are listed in `NeedsTasks.create(id)`; every friend has them all.
 
 1. Give it an id starting with `needs.` (that counts as time off, so hunger and fun do not drain faster while it runs) and add it to `MoodPassives.jobFor` if it is the job for one of the five needs.
-2. Score it from the need: 0 while the need is fine, rising as it falls, into the urgent band (70–89) only when it is desperate, so a mild need waits for the job in hand to end.
+2. Score it from the need: 0 while the need is fine (and 0 when it cannot be met, such as eating with no food anywhere, so it never breaks off work for nothing), rising as it falls, into the urgent band (70–89) when it is pressing, and to `TaskScheduler.URGENT` or more only when it is desperate, so a mild need waits for the job in hand to end. Work never wakes a sleeper, and a friend too weak to work only takes needs jobs and `TaskScheduler.FIT_WHEN_WEAK`.
 3. Change the need with `c.needs().add(Need.X, amount)`, and eat with `c.eat(stack)` so healing, hunger and bowls stay consistent. Sleep jobs call `c.setAsleep(true)` and must set it back to false in `stop()`.
 4. Say what is happening with the needs lines (`HUNGRY`, `ATE`, `SLEEPY`, `CHAT`, `LEISURE`, `COSY` and so on). Every friend already has their own wording.
 5. Pastimes and needs jobs do not change blocks. If one ever must, it goes through `WorldEditGuard` like any other edit.

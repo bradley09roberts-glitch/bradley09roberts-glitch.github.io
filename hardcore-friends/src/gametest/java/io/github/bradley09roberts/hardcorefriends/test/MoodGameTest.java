@@ -35,7 +35,7 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 
 /**
  * Mood and its displays: every friend's own voice for the everyday needs, the needs command (no cheats), mood showing
- * in what friends say, starving that hurts but never kills on its own, a great team mood growing Unity within its
+ * in what friends say, starving that hurts but never kills on its own, high team spirits growing Unity within their
  * daily cap, and hand-feeding a hungry friend.
  */
 public class MoodGameTest {
@@ -146,7 +146,7 @@ public class MoodGameTest {
 	}
 
 	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_104", maxTicks = 20)
-	public void greatTeamMoodGrowsUnityWithinADailyCap(GameTestHelper helper) {
+	public void highTeamSpiritsGrowUnityWithinADailyCap(GameTestHelper helper) {
 		CampData data = TestSupport.resetCamp(helper, true);
 		MinecraftServer server = helper.getLevel().getServer();
 		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, TestSupport.centre());
@@ -162,15 +162,25 @@ public class MoodGameTest {
 		helper.assertValueEqual(Unity.teamSpirit(server), 0, "a merely good team mood adds nothing");
 		setAll(fern, 100);
 		setAll(sage, 40);
-		helper.assertValueEqual(Unity.teamSpirit(server), 0, "one delighted friend does not make a great team mood");
+		helper.assertValueEqual(Unity.teamSpirit(server), 0, "one delighted friend does not lift a team where someone feels low");
 
-		setAll(sage, 100);
-		helper.assertValueEqual(MoodPassives.teamMood(List.of(fern, sage)), Mood.GREAT, "everyone content is a great team mood");
+		// A well-run camp by day: fed, fairly rested, together, a little bored, out in the open. That is not a great
+		// mood (85), but it is high spirits.
+		for (CompanionEntity c : List.of(fern, sage)) {
+			c.needs().set(Need.HUNGER, 85);
+			c.needs().set(Need.ENERGY, 72);
+			c.needs().set(Need.SOCIAL, 90);
+			c.needs().set(Need.FUN, 65);
+			c.needs().set(Need.COMFORT, 60);
+		}
+		helper.assertTrue(MoodPassives.teamMood(List.of(fern, sage)) == Mood.GOOD, "a well-run camp's mood is good, not great");
+		helper.assertTrue(MoodPassives.highSpirits(List.of(fern, sage)), "a well-run camp is in high spirits, team mood "
+			+ MoodPassives.teamMoodValue(List.of(fern, sage)));
 		int gained = 0;
 		for (int hour = 0; hour < 24; hour++) {
 			gained += Unity.teamSpirit(server);
 		}
-		helper.assertValueEqual(gained, Unity.SPIRIT_DAILY_CAP, "a whole great day adds the daily cap and no more");
+		helper.assertValueEqual(gained, Unity.SPIRIT_DAILY_CAP, "a whole day in high spirits adds the daily cap and no more");
 		helper.assertValueEqual(data.unity(), 50 + Unity.SPIRIT_DAILY_CAP, "the bond grew by the daily cap");
 		TestSupport.setTime(helper, 1000 + 24000);
 		helper.assertValueEqual(Unity.teamSpirit(server), 1, "the next day brings a fresh allowance");

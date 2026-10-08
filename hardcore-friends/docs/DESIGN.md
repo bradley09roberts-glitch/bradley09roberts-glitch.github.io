@@ -65,7 +65,7 @@ Goals, in priority order (lower number = higher priority):
 | Prio | Goal | Notes |
 |---|---|---|
 | 0 | `FloatGoal` | swim |
-| 1 | `RetreatGoal` | health ≤ retreatFraction, or on fire, or drowning. Moves away from threats toward camp, Aegis or a player; eats from the backpack once safe; announces once. Keeps 20 blocks from any archer in sight (12 from other threats) and does not drift home while an archer stands within 18 blocks of camp. |
+| 1 | `RetreatGoal` | health ≤ retreatFraction, or on fire, or drowning. Moves away from threats toward camp, Aegis or a player; eats from the backpack once safe; announces once. Keeps 20 blocks from any archer in sight (12 from other threats) and does not drift home while an archer stands within 18 blocks of camp. A friend too hungry to heal (hunger ≤ 10) with nothing in the backpack falls back only from danger (within 16 blocks): resting cannot heal them, so their jobs take over (they eat, or rest at camp, section 6). |
 | 1 | `AvoidDangerGoal` | creepers within 7 blocks (10 if hissing), except a healthy Aegis facing a quiet one. Non-fighters also back away from hostiles within 8 blocks unless healthy and holding a tool (`canStandAndFight`), and leave the line of fire of an archer aiming at them (to 20 blocks). Flees toward protectors. |
 | 3 | `CompanionMeleeGoal` | uses the best weapon from the backpack; only when there is a target |
 | 4 | `FollowLeaderGoal` / `StayGoal` | mode-dependent |
@@ -96,7 +96,11 @@ public interface CompanionTask {
 }
 ```
 
-The scheduler re-scores every 20 ticks. It switches when idle, when the current task finishes, or when another task outscores the current one by ≥ 25. It enforces `maxTicks`, so a stuck task fails.
+The scheduler re-scores every 20 ticks. It switches when idle, when the current task finishes, or when another task outscores the current one by ≥ 25. It enforces `maxTicks`, so a stuck task fails. Three rules keep a friend's own needs safe from work:
+
+- **Desperate needs come first.** A job scoring `TaskScheduler.URGENT` (140) or more takes over at once from any job scoring less, without the margin. Only desperate needs score that high (section 6), and no work can: the most is 132 (building, 60, at the camp's full need for materials, weight 2.0, with Sage's 10% bonus).
+- **Work never wakes a sleeper.** While a friend lies asleep, only another needs job can take over (a starving friend gets up to eat); danger still wakes them (the sleep job and the reflexes).
+- **Too weak to work.** A friend badly hurt (health ≤ retreatFraction) and too hungry to heal (`CompanionEntity.tooWeakToWork`) only takes on needs jobs and `TaskScheduler.FIT_WHEN_WEAK`: going home, the camp chest, and growing and baking food in the camp, so a starving camp can still feed itself. A job outside that list is stopped, so nobody on one heart goes back into the mine, the woods or the wilds.
 
 `TaskRegistry.create(id)` gives every friend the same job list: the common upkeep jobs (`ai/task/common`), the needs jobs (`ai/task/needs`), and every role's jobs, their own role first, each wrapped in a `SpecialityTask` for its role (section 5). The only jobs a friend never gets from another role are `TaskRegistry.SPECIALIST_ONLY`: Aegis's gear and guard duty, Sage's observing and stores review, and Scout's report.
 
@@ -104,12 +108,13 @@ Score bands:
 
 | Score | Meaning |
 |---|---|
+| 140 and up | Desperate needs (`TaskScheduler.URGENT`): starving with food at hand (150), exhausted at night (140) |
 | 70–89 | Urgent upkeep: missing tool, full backpack, night return |
-| 40–69 | Main role work |
+| 40–69 | Main role work (raised by the camp's needs, up to 132) |
 | 20–39 | Secondary help: sharing, tidying, crafting surplus |
 | 1–19 | Idle and social |
 
-`CampNeeds` (recomputed every 30 s) supplies a 0–1 multiplier for food, wood, stone, dirt, torches, ore and build materials. Sage being alive adds a 10% planning bonus to tasks that address the top need.
+`CampNeeds` (recomputed every 30 s) supplies a 0–1 need for food, wood, stone, dirt, torches, ore and build materials. Jobs that meet a need multiply their score by 1 + need (up to 2); Sage being alive adds a 10% planning bonus to tasks that address the top need. Food is counted as food: in loaves' worth of hunger, wheat as the bread it bakes into (three to a loaf), never seeds or raw potatoes, and not the carrots a farmer keeps for planting; the camp wants four days of food for the team (about two loaves a friend).
 
 ### Actions (`ai/action/Actions`)
 
@@ -163,27 +168,34 @@ Each friend has five needs, each from 0 (desperate) to 100 (met). New friends st
 
 | Need | Drift per second | Notes |
 |---|---|---|
-| Hunger | −100/1500, ×1.3 while working | About one loaf of bread's worth a day |
-| Energy | −70/840 while awake | Not while asleep; the sleep job refills it |
+| Hunger | −100/9000, ×1.3 while working | About half a loaf of bread's worth a day (see "Food economy" below) |
+| Energy | −70/840 while awake | Not while asleep. Asleep, it rises by the in-game time slept (`CompanionEntity.settleSleep`): +100/500 a second under a roof, +65/500 in the open, so a night in the cabin is about +100. A night the players sleep through (the clock jumps to morning) counts in full, for friends at work whether already asleep or still on their way to bed |
 | Social | +0.15 with company, −0.1 alone | Company is another friend, or a player who is not spectating, within 6 blocks |
 | Fun | −100/1100 while working | |
 | Comfort | towards the surroundings' comfort, at most 0.5 a second | Base 55; +20 under a roof; +25 near a lit campfire (5 blocks); −30 in rain in the open; −15 dark in the open; −20 below half health |
 
 "Working" means following a player, or on any job other than a needs job (`needs.*`) or idling.
 
-**Meeting needs.** The needs jobs score higher the lower their need: a desperate need is urgent upkeep (70–89) and beats any work; a mild one sits in the main or secondary band and waits for the job in hand to end. Their ids start with `needs.`, which counts as time off.
+**Meeting needs.** The needs jobs score higher the lower their need: a desperate need scores 140 or more (`TaskScheduler.URGENT`), above anything work can score, and takes over from the job in hand at once (section 4); a pressing one is urgent upkeep (70–89); a mild one sits in the main or secondary band and waits for the job in hand to end. Their ids start with `needs.`, which counts as time off.
 
-- `needs.eat`: eats one real food item (`#hardcorefriends:companion_food`), from the backpack first, otherwise taken from the supply chest, choosing the item that best fits the hunger. `CompanionEntity.eat(stack)` heals by the food's nutrition, fills hunger by nutrition × 6 (`hungerValue`), and keeps bowls and bottles. With no food anywhere the friend says `NO_FOOD`.
-- `needs.sleep`: at night tired friends lie down in their own place (side by side in the cabin, or around the camp centre) and regain energy, faster under a roof. They wake at dawn, when hurt, or when a monster comes close. Exhausted friends nap by day. Aegis keeps the first watch.
+- `needs.eat`: eats one real food item (`#hardcorefriends:companion_food`), from the backpack first, otherwise taken from the supply chest, choosing the item that best fits the hunger. `CompanionEntity.eat(stack)` heals by the food's nutrition, fills hunger by nutrition × 6 (`hungerValue`), and keeps bowls and bottles. Below 70 (peckish) it scores 42–60, below 25 (hungry) 80, and below 15 (starving) 150, before anything. With no food in the backpack or the supply chest it scores 0, so it never breaks off work only to find nothing; the friend asks for food instead (`NO_FOOD`, said by `MoodPassives`).
+- `needs.sleep`: at night tired friends lie down in their own place (side by side in the cabin, or around the camp centre) and regain energy, faster under a roof. A friend still fresh finishes useful work in camp first; one exhausted at night (energy below 30) goes to bed before any work (140). Work never wakes a sleeper; they wake at dawn, when hurt, or when a monster comes close. Exhausted friends nap by day. Aegis keeps the first watch.
+- `needs.rest`: a friend too weak to work (badly hurt and too hungry to heal, as a starving friend soon is) comes home and rests by the lit campfire, or at their sleeping place, until there is food; at night they sleep. Meanwhile they take on only needs jobs and `TaskScheduler.FIT_WHEN_WEAK` (going home, the camp chest, growing and baking food in camp), never the mine, felling or exploring, and they eat the moment food turns up.
 - `needs.socialize`: a lonely friend walks over to another friend who is awake and not in trouble (or a player in camp) and they chat (`CHAT`, `CHAT_REPLY`). Both feel better and Unity gains 1 (at most 30 a day).
 - `needs.leisure`: a bored friend spends a short while on a pastime that suits them (`LEISURE`). Pastimes change no block.
 - `needs.cosy`: a chilly friend warms up by a lit campfire or in the cabin (`COSY`).
 
-Needs jobs only run in WORK mode, like every job. A friend who is following or staying eats from the backpack only when hurt (`RetreatGoal`).
+Needs jobs only run in WORK mode, like every job. A friend who is following or staying eats from the backpack only when hurt (`RetreatGoal`) or hungry (below 25).
 
 A player handing food to a friend who is hurt, or whose hunger is below 60, has them eat it at once (it heals and fills hunger); otherwise it goes into the backpack.
 
-**Starving.** At hunger 0 a friend takes 1 starvation damage every 4 s while above 2 health (one heart), as a player does on Normal difficulty. Starving never kills on its own. Health only regenerates while hunger is above 10.
+**Starving.** At hunger 0 a friend takes 1 starvation damage every 4 s while above 2 health (one heart), as a player does on Normal difficulty. Starving never kills on its own. Health only regenerates while hunger is above 10 (`Needs.canHeal`), and that includes the Close Friends healing at camp.
+
+**Food economy.** The numbers are tuned so a reasonably run camp feeds itself:
+
+- **What friends eat.** A day is 1200 s: about 650 s of daylight, at work (×1.3), and 550 s of night, asleep. That is 650 × 0.0144 + 550 × 0.0111 = 15.5 hunger (`Needs.typicalDailyHunger`), about half a loaf of bread (30): a loaf every two days, a little more for a friend at work all day (17.3) and a little less at rest (13.3). Nine friends eat 140 hunger a day: 4.7 loaves, or 14 wheat. A friend eating to 100 lasts six days before starving; from peckish (70) it is four and a half.
+- **What a farm grows.** A field of one crop grows at half speed (vanilla slows a crop with the same crop beside it on a diagonal): one harvest every 2.4 days, 0.42 harvests per farmland a day (17.6 random ticks a day, a 1 in 6 chance each, 42 for seven stages). A wheat harvest gives one wheat (a third of a loaf, 10 hunger); a carrot harvest about 2.7 carrots, 1.7 left to eat once one is replanted (31 hunger). So a farmland feeds 4.2 hunger a day in wheat and 12.9 in carrots.
+- **The starter camp.** Fern's first 16–24 farmland in wheat grow 67–101 hunger a day, half to three quarters of what nine friends eat; the player's starter food, Rowan's berries and apples, and bone meal cover the rest while the camp is new, and the farm doubles to 48 farmland at stage 1 (202 a day, 144%). Fern sows carrots first whenever she has some (`Crops.bestSeed`): 16 farmland of carrots already grow 206 a day. She keeps only 16 carrots and 16 potatoes for planting (`KeepList.SEED_CROPS_KEPT`); the rest go to the chest to be eaten. Potatoes come last: friends cannot eat them raw and nobody in camp bakes them.
 
 **Mood.** `Needs.moodValue()` is the weighted average of the needs (hunger 0.30, energy 0.25, social, fun and comfort 0.15 each):
 
@@ -196,8 +208,8 @@ A player handing food to a friend who is hurt, or whose hunger is below 60, has 
 | 85 and up | great |
 
 - **Work speed:** `Needs.workSpeed()` = 0.8 + 0.3 × mood value / 100, from 0.8 (miserable) to 1.1 (everything met).
-- **Speech:** every 15 s (`MoodPassives`), a friend who is awake and not fighting says `STARVING` at hunger 0 (unless already eating). Otherwise, unless falling back, they say `MOOD_LOW` naming their worst need ("hunger", "energy", "social", "fun" or "comfort") when the mood is low or miserable (unless that need's job is already running), or `MOOD_GREAT` when it is great. The lines' cooldowns (`STARVING` 1 min, `MOOD_LOW` 5 min, `MOOD_GREAT` 15 min) and the friend's chattiness keep this occasional.
-- **Team spirit:** every in-game hour (1000 ticks), if the mood of the team's average needs (all loaded friends) is great, Unity gains 1, at most 12 a day (`Unity.teamSpirit`, category `spirit`). A low mood never costs Unity.
+- **Speech:** every 15 s (`MoodPassives`), a friend who is awake and not fighting and is hungry (below 25), unless already eating, asks for food (`NO_FOOD`) when there is none in the backpack or the supply chest, or says `STARVING` at hunger 0 once they have asked. Otherwise, unless falling back, they say `MOOD_LOW` naming their worst need ("hunger", "energy", "social", "fun" or "comfort") when the mood is low or miserable (unless that need's job is already running), or `MOOD_GREAT` when it is great. The lines' cooldowns (`NO_FOOD` 4 min, `STARVING` 1 min, `MOOD_LOW` 5 min, `MOOD_GREAT` 15 min) and the friend's chattiness keep this occasional.
+- **Team spirit:** every in-game hour (1000 ticks), if the team is in high spirits (`MoodPassives.highSpirits`: the mood of the team's average needs, all loaded friends, is at least 75, and no friend's mood is low or miserable), Unity gains 1, at most 12 a day (`Unity.teamSpirit`, category `spirit`). A low mood never costs Unity. A well-run camp gets there: fed (eating from 70 up to about 100, so hunger averages about 85), rested, together, by day about 0.30 × 85 + 0.25 × 72 + 0.15 × (90 + 65 + 60) = 76. A great mood (85) is a peak, such as a fed friend waking rested, and is what `MOOD_GREAT` celebrates.
 - **Displays:** `/friends needs` shows the five needs as bars, the mood and what the friend is doing about their lowest need; `/friends list` and the right-click status line show the mood (and the worst need when the mood is low).
 
 ## 7. World editing rules (`WorldEditGuard`)
@@ -252,7 +264,7 @@ Stages are gated by completed structures **and** the Unity score:
   - A friend covering a speciality nobody else is working also keeps that speciality's tool. They fetch or make it in spare time, and only when it fits without putting anything away: into an empty hand or a free backpack slot. Their own tool is never moved to the chest to make room for it.
 - **Crafting** (`camp/Crafting`, hard-coded recipes with real consumption): logs to planks, planks to sticks, coal or charcoal + stick to torches, tools (wood, stone, iron), bread, chest, crafting table, furnace, doors, slabs, fences, pressure plates, hopper, redstone torch, daylight detector, redstone lamp, ladder, lantern. Anything beyond the 2×2 recipes needs a crafting table within 6 blocks.
 - **Smelting:** raw iron, copper or gold plus fuel go into the camp furnace; outputs are collected later.
-- **Sharing:** a companion holding what a friend's job needs walks over and hands it across (+2 Unity). Generous friends give food to hungry players and companions.
+- **Sharing:** a companion holding what a friend's job needs walks over and hands it across (+2 Unity). Generous friends give food to hungry players and companions; feeding a hurt friend who has no food (below 60% health) scores 125, before any gathering even at the camp's full need for it.
 
 ## 10. Unity bond
 
@@ -272,7 +284,7 @@ Score 0–1000, saved in `CampData`.
 
 - **Time together:** +1 per minute per friend within 24 blocks of a player (cap 120/day).
 - **Teamwork:** a deposit or delivery +1 (cap 60/day); a direct hand-off +2 (cap 40/day); a friend landing the killing blow on a hostile +3 (cap 60/day); each finished camp improvement +30; each finished contraption +15; a player feeding or gifting a friend +2 (cap 20/day).
-- **Friendship:** two friends chatting +1 (category `chat`, cap 30/day); team spirit, while the team's average mood is great, +1 per in-game hour (category `spirit`, cap 12/day; section 6).
+- **Friendship:** two friends chatting +1 (category `chat`, cap 30/day); team spirit, while the team is in high spirits, +1 per in-game hour (category `spirit`, cap 12/day; section 6).
 
 **Losses:** a friend's death −80; a dismissal −20. A low mood costs nothing.
 
@@ -282,14 +294,14 @@ Score 0–1000, saved in `CampData`.
 |---|---|
 | 100 | 18-slot backpacks; friends feed hungry players |
 | 250 | *Work rhythm*: +15% work speed when another friend is within 12 blocks; *Careful hands*: 20% chance a use costs no durability |
-| 500 | 27-slot backpacks; an extra 1 HP every 4 s while at camp with no target (on top of normal out-of-combat healing); Scout's warnings make the warned mob glow for 8 s |
+| 500 | 27-slot backpacks; an extra 1 HP every 4 s while at camp with no target (on top of normal out-of-combat healing, and like it never while starving); Scout's warnings make the warned mob glow for 8 s |
 | 800 | *Rally*: when a player drops below 6 HP with ≥ 2 friends within 16 blocks, the player gets Regeneration I for 5 s and the friends target the attacker (10-minute cooldown). This does not prevent death. |
 
 ## 11. Role routines (summary)
 
 These are each role's jobs, named after the specialist. Through `SpecialityTask` (section 5) any friend can run them, except the specialist-only duties noted in section 4.
 
-- **Fern:** harvests mature crops and replants immediately from the drops; replants empty farmland; tills more farmland next to water (capped per stage); bakes bread; uses bone meal; feeds hungry players.
+- **Fern:** harvests mature crops and replants immediately from the drops; replants empty farmland, carrots first (the most food per farmland); tills more farmland next to water (capped per stage); bakes bread; uses bone meal; feeds hungry players.
 - **Oak:** builds the next blueprint for the stage; crafts planks, sticks, doors, slabs and torches from stock; repairs missing blocks of finished structures; builds lantern posts.
 - **Flint:**
   - mines exposed ores (pickaxe tier checked);
@@ -329,5 +341,6 @@ These are each role's jobs, named after the specialist. Through `SpecialityTask`
 - Contraptions are a fixed set of vanilla redstone builds.
 - Dialogue is pre-written lines chosen by situation and personality, not free conversation. Chats between friends are an opening line and a reply.
 - Stand-ins work on other specialities only in their spare time and more slowly; a camp missing several specialists grows more slowly.
-- Needs are five numbers met by a fixed set of jobs (eat, sleep, chat, pastime, warm up). Friends sleep on the spot they lie down on, not in beds.
-- Needs jobs run only in WORK mode: a friend following or staying does not eat (except from the backpack when hurt), sleep or rest.
+- Needs are five numbers met by a fixed set of jobs (eat, sleep, chat, pastime, warm up, rest). Friends sleep on the spot they lie down on, not in beds.
+- Friends do not cook: potatoes, raw meat and fish only become their food once a player cooks them.
+- Needs jobs run only in WORK mode: a friend following or staying does not eat (except from the backpack when hurt or hungry), sleep or rest.

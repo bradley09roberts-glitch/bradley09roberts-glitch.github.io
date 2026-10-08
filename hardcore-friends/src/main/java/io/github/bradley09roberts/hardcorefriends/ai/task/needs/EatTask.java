@@ -17,6 +17,7 @@ import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
+import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
@@ -32,18 +33,23 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  * friend has an apple and saves the steak. Eating takes a moment (chewing sounds and crumbs) and genuinely uses the
  * food up; a bowl or bottle goes back into the backpack.
  *
- * <p>Urgent upkeep when hunger is low ({@value #STARVING_SOON}), ordinary work-level priority when merely peckish
- * ({@value #PECKISH}), so a friend finishes the job in hand first.
+ * <p>How soon depends on the hunger: once merely peckish ({@value #PECKISH}) at ordinary work-level priority, so the
+ * job in hand is finished first; when hungry ({@value #HUNGRY}) as urgent upkeep; and when starving
+ * ({@value #STARVING}) before anything else, even the most pressing work. With nothing to eat in the backpack or the
+ * supply chest the job does not come up at all (so it never breaks off work only to find nothing); the friend asks
+ * for food instead ({@link io.github.bradley09roberts.hardcorefriends.companion.MoodPassives}).
  */
 public final class EatTask implements CompanionTask {
-	/** Below this hunger a meal comes before any work. */
-	static final double STARVING_SOON = 25;
-	/** Below this hunger a friend looks for something to eat once the job in hand is done. */
-	static final double PECKISH = 55;
+	/** Below this hunger a friend has a meal once the job in hand is done. */
+	public static final double PECKISH = 70;
+	/** Below this hunger a meal comes before most work, and with nothing to eat anywhere a friend asks for food. */
+	public static final double HUNGRY = 25;
+	/** Below this hunger a meal comes before anything: it outscores any work and takes over from it at once. */
+	public static final double STARVING = 15;
+	/** The starving score: above {@link TaskScheduler#URGENT}, so it beats and interrupts any work. */
+	static final double STARVING_SCORE = TaskScheduler.URGENT + 10;
 	private static final int EAT_TICKS = 30;
 	private static final double CHEST_REACH = 2.5;
-	/** After finding no food anywhere, how long before looking again. */
-	private static final int NO_FOOD_COOLDOWN = 20 * 60;
 
 	private enum Stage { TO_CHEST, EATING }
 
@@ -51,7 +57,6 @@ public final class EatTask implements CompanionTask {
 	private @Nullable BlockPos chestPos;
 	private ItemStack meal = ItemStack.EMPTY;
 	private int chewing;
-	private boolean noFood;
 
 	@Override
 	public String id() {
@@ -66,42 +71,32 @@ public final class EatTask implements CompanionTask {
 	@Override
 	public double score(CompanionEntity c) {
 		double hunger = c.needs().get(Need.HUNGER);
-		if (hunger >= PECKISH) {
-			return 0;
+		if (hunger >= PECKISH || !foodAvailable(c)) {
+			return 0; // nothing to eat anywhere: the friend asks for food (MoodPassives) and keeps working meanwhile
 		}
-		if (hunger < STARVING_SOON) {
-			return hunger <= 0 ? 85 : 80; // food comes first, and a friend with nothing to eat says so (see start)
+		if (hunger < STARVING) {
+			return STARVING_SCORE;
 		}
-		if (!foodAvailable(c)) {
-			return 0; // only peckish, and there is nothing to eat: not worth a word yet
+		if (hunger < HUNGRY) {
+			return 80;
 		}
-		return 42 + (PECKISH - hunger) * 0.6; // 42 when just peckish, up to 60
+		return 42 + (PECKISH - hunger) * 0.4; // 42 when just peckish, up to 60
 	}
 
 	@Override
 	public boolean start(CompanionEntity c) {
-		noFood = false;
 		meal = ItemStack.EMPTY;
 		chewing = 0;
 		chestPos = null;
-		boolean starving = c.needs().get(Need.HUNGER) <= 0;
 		if (c.hasFood()) {
 			stage = Stage.EATING;
 		} else if (chestFood(c) > 0) {
 			stage = Stage.TO_CHEST;
 			chestPos = chestPos(c);
 		} else {
-			// Nothing in the backpack or the chest. The camp's food need (and Sage's plan) already flag the shortage.
-			noFood = true;
-			// One line at a time: ask for food first; a starving friend who already asked says how bad it is.
-			if (starving && Talk.saidRecently(c, Line.NO_FOOD)) {
-				Speech.say(c, Line.STARVING);
-			} else {
-				Speech.say(c, Line.NO_FOOD);
-			}
-			return false;
+			return false; // the last of the food went since scoring
 		}
-		Speech.say(c, starving ? Line.STARVING : Line.HUNGRY);
+		Speech.say(c, c.needs().get(Need.HUNGER) <= 0 ? Line.STARVING : Line.HUNGRY);
 		return stage == Stage.EATING || chestPos != null;
 	}
 
@@ -161,8 +156,7 @@ public final class EatTask implements CompanionTask {
 				stage = Stage.EATING; // someone emptied the chest, but there is food in the backpack after all
 				return TaskStatus.RUNNING;
 			}
-			noFood = true;
-			Speech.say(c, Line.NO_FOOD);
+			Speech.say(c, Line.NO_FOOD); // someone took the last of it on the way
 			return TaskStatus.FAILURE;
 		}
 		meal = container.removeItem(slot, 1);
@@ -229,8 +223,8 @@ public final class EatTask implements CompanionTask {
 		return s -> !sample.isEmpty() && ItemStack.isSameItemSameComponents(s, sample);
 	}
 
-	/** True when there is food in the backpack or the supply chest. */
-	static boolean foodAvailable(CompanionEntity c) {
+	/** True when there is food within reach: in the backpack, or in the supply chest of the camp this friend is in. */
+	public static boolean foodAvailable(CompanionEntity c) {
 		return c.hasFood() || chestFood(c) > 0;
 	}
 
@@ -256,11 +250,6 @@ public final class EatTask implements CompanionTask {
 		meal = ItemStack.EMPTY;
 		chewing = 0;
 		chestPos = null;
-	}
-
-	@Override
-	public int failureCooldown() {
-		return noFood ? NO_FOOD_COOLDOWN : 200;
 	}
 
 	@Override

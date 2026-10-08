@@ -82,24 +82,25 @@ Like characters in The Sims, every friend has five everyday needs, each from 0 (
 
 | Need | Goes down | How friends meet it |
 |---|---|---|
-| **Hunger** | All the time, faster while working. About one loaf of bread's worth a day | They eat real food: from their backpack first, otherwise one item from the supply chest. Bowls go back in the backpack |
-| **Energy** | While awake, so they are tired by nightfall | They sleep at night, inside the cabin once it is built, otherwise around the camp centre. A friend who is exhausted naps by day. Aegis keeps the first watch |
+| **Hunger** | All the time, a little faster while working. About half a loaf of bread's worth a day: a loaf every two days, so nine friends eat four or five loaves a day | They eat real food: from their backpack first, otherwise one item from the supply chest. Bowls go back in the backpack |
+| **Energy** | While awake, so they are tired by nightfall | They sleep at night, inside the cabin once it is built, otherwise around the camp centre. A night you sleep through counts as a whole night's sleep for them too. A friend who is exhausted naps by day. Aegis keeps the first watch |
 | **Social** | While alone. Being near a friend or you fills it | They walk over to another friend for a chat |
 | **Fun** | While working | They take a short break for a pastime that suits them: Flint skips stones, Spark tinkers with a gadget, Sage watches the clouds or the stars, and so on. Pastimes never change your world |
 | **Comfort** | In rain or darkness out in the open, and while badly hurt | They warm up by a lit campfire or go indoors. A roof overhead and a lit campfire nearby are cosy |
 
-The lower a need, the more urgent it is. A mild need waits until the job in hand is done; a desperate one comes before any work. Friends only see to their needs while working on their own: a friend who is following you or holding position puts them off until you send them back to work.
+The lower a need, the more urgent it is. A mild need waits until the job in hand is done; a desperate one comes before any work, however pressing: a starving friend drops everything to eat when there is food, and an exhausted one goes to bed at night. Work never wakes a sleeping friend. Friends only see to their needs while working on their own: a friend who is following you or holding position puts them off until you send them back to work.
 
 **Mood.** Together the needs make a mood: miserable, low, okay, good or great. Hunger and energy count the most.
 
 - Mood changes how fast friends work: 80% when miserable, up to 110% when every need is met.
 - Friends say how they feel now and then. A friend in a low mood names their worst need ("Worst need: fun").
-- When the whole team's average mood is great, the Unity bond grows by 1 every in-game hour (at most 12 a day). A low mood never costs Unity.
+- When the whole team is in high spirits (a good average mood of 75 or more, and nobody feeling low), the Unity bond grows by 1 every in-game hour (at most 12 a day). A fed, rested camp that spends time together gets there. A low mood never costs Unity.
 
-**Food.** Keep food in the supply chest. Bread, baked potatoes, carrots, apples, berries, cookies, dried kelp, pumpkin pie, stews and cooked meat or fish all count; filling food such as cooked beef satisfies more hunger.
+**Food.** Keep food in the supply chest. Bread, baked potatoes, carrots, apples, berries, cookies, dried kelp, pumpkin pie, stews and cooked meat or fish all count; filling food such as cooked beef satisfies more hunger. Friends do not cook, so raw potatoes, meat and fish only count once you cook them.
 
-- A friend who finds no food in their backpack or the chest says so. Put some food in the chest.
-- At hunger 0 a friend is **starving**: they lose half a heart every 4 seconds until they are down to one heart, just as you do on Normal difficulty, and they cannot heal. Starving never kills a friend on its own, but a friend on one heart dies to almost anything. Keep the food coming.
+- Fern's farm feeds the camp. Wheat makes bread (three wheat a loaf); carrots feed about three times as many friends per farmland, so give Fern a few carrots and she plants them first. She keeps 16 for planting and puts the rest in the chest to eat. Her first small farm cannot feed nine friends on wheat alone, so bring some food while the camp is new; once the farm grows at stage 1 it can.
+- A hungry friend who finds no food in their backpack or the chest says so and carries on working. Put some food in the chest.
+- At hunger 0 a friend is **starving**: they lose half a heart every 4 seconds until they are down to one heart, just as you do on Normal difficulty, and they cannot heal, not even at camp. Starving never kills a friend on its own, but a friend on one heart dies to almost anything. A friend that weak stops all work away from camp (no mining, tree felling or exploring) and rests by the campfire until there is food, then eats at once. Keep the food coming.
 - Hand food to a friend who is hurt or hungry and they eat it at once (it heals them and fills their hunger). A friend who is not hungry puts it in their backpack for later.
 
 Use `/friends needs` to see everyone's needs as bars, their mood, and what each friend is doing about their lowest need. Right-clicking a friend also shows their mood.
@@ -140,14 +141,14 @@ None of these commands give items, teleport you, or change time, weather, game m
 
 ## 8. Unity bond
 
-The bond grows when you spend time near your friends, when they deliver resources and share with each other, chat with each other (1 point a chat, at most 30 a day), defend one another, and finish camp buildings, and while the whole team is in a great mood (1 point an in-game hour, at most 12 a day). Losing a friend costs 80 points. A low mood costs nothing.
+The bond grows when you spend time near your friends, when they deliver resources and share with each other, chat with each other (1 point a chat, at most 30 a day), defend one another, and finish camp buildings, and while the whole team is in high spirits (1 point an in-game hour, at most 12 a day). Losing a friend costs 80 points. A low mood costs nothing.
 
 | Level | Points | Bonus |
 |---|---|---|
 | Strangers | 0 | none |
 | Acquaintances | 100 | backpacks hold 18 stacks; friends share food with hungry players |
 | Companions | 250 | **work rhythm**: +15% work speed beside another friend; **careful hands**: 20% less tool wear |
-| Close Friends | 500 | backpacks hold 27 stacks; faster healing at camp; Scout's warnings make threats glow |
+| Close Friends | 500 | backpacks hold 27 stacks; faster healing at camp (not while starving); Scout's warnings make threats glow |
 | Family | 800 | **rally**: below 3 hearts with 2+ friends nearby, you get 5 s of Regeneration I and they target your attacker (10-minute cooldown) |
 
 None of these bonuses can stop you dying.
@@ -176,8 +177,8 @@ None of these bonuses can stop you dying.
 
 - Friends only act while their area is loaded, which means near a player. They do not work while you are far away, and their needs do not change then either.
 - Every friend can do every job, but a stand-in only works on someone else's speciality in their spare time, and more slowly. A camp missing several specialists grows more slowly.
-- Needs are five simple numbers, not a full life simulation. Friends meet them with a fixed set of jobs: eating, sleeping, chatting, a pastime and warming up. They sleep where they lie down (in the cabin or around the camp centre), not in beds.
-- Friends see to their needs only while working on their own. A friend following you or holding position does not eat, sleep or rest; they eat from their backpack only when hurt. Hand them food, or send them back to work now and then.
+- Needs are five simple numbers, not a full life simulation. Friends meet them with a fixed set of jobs: eating, sleeping, chatting, a pastime, warming up and, when too weak to work, resting. They sleep where they lie down (in the cabin or around the camp centre), not in beds.
+- Friends see to their needs only while working on their own. A friend following you or holding position does not eat, sleep or rest; they eat from their backpack only when hurt or very hungry. Hand them food, or send them back to work now and then.
 - Chats between friends are an exchange of pre-written lines, not a real conversation.
 - They build from fixed blueprints, adapted to the wood you have. They do not invent new buildings.
 - Pathfinding is vanilla mob pathfinding. On rough terrain a friend can get stuck. Stuck jobs time out and are retried later.

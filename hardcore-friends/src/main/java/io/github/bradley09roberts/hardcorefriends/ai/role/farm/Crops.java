@@ -27,8 +27,13 @@ import io.github.bradley09roberts.hardcorefriends.companion.Backpack;
  * tilled and where the water is. Everything here only reads the world.
  */
 public final class Crops {
-	/** Plantable seeds, in the order Fern prefers them when stocks are equal. */
-	public static final List<Item> SEEDS = List.of(Items.WHEAT_SEEDS, Items.CARROT, Items.POTATO, Items.BEETROOT_SEEDS);
+	/**
+	 * Plantable seeds, in the order Fern sows them (see {@link #bestSeed}): the most food per farmland first. A carrot
+	 * harvest leaves about 1.7 carrots to eat once one is replanted (31 hunger), a wheat harvest one wheat, a third of a
+	 * loaf (10), a beetroot harvest one beetroot (6). Potatoes come last: friends cannot eat them raw and nobody in camp
+	 * bakes them, so a potato field only feeds the team once a player cooks the crop.
+	 */
+	public static final List<Item> SEEDS = List.of(Items.CARROT, Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.POTATO);
 	public static final Predicate<ItemStack> IS_SEED = Crops::isSeed;
 	/**
 	 * How close Fern walks to a crop before working from where she stands. Stopping short keeps her off the
@@ -91,18 +96,14 @@ public final class Crops {
 		return null;
 	}
 
-	/** The seed Fern carries most of, or null when she has none. */
+	/** The seed Fern sows next: the first in {@link #SEEDS} (most food per farmland) that she carries, or null. */
 	public static @Nullable Item bestSeed(Backpack backpack) {
-		Item best = null;
-		int bestCount = 0;
 		for (Item seed : SEEDS) {
-			int n = backpack.count(seed);
-			if (n > bestCount) {
-				best = seed;
-				bestCount = n;
+			if (backpack.count(seed) > 0) {
+				return seed;
 			}
 		}
-		return best;
+		return null;
 	}
 
 	/** A fully grown field crop, or a melon or pumpkin that grew from an attached stem. */
