@@ -28,6 +28,14 @@
     "minecraft:stripped_oak_log", "minecraft:stripped_spruce_log", "minecraft:stripped_birch_log",
     "minecraft:stripped_jungle_log", "minecraft:stripped_acacia_log", "minecraft:stripped_dark_oak_log",
     "minecraft:stripped_mangrove_log", "minecraft:stripped_cherry_log", "minecraft:stripped_pale_oak_log",
-    "minecraft:farmland", "minecraft:dirt_path"
+    "minecraft:farmland", "minecraft:dirt_path",
+    "minecraft:cobblestone", "minecraft:mossy_cobblestone", "minecraft:mud_bricks", "minecraft:packed_mud",
+    "minecraft:cut_sandstone", "minecraft:smooth_sandstone", "minecraft:chiseled_sandstone",
+    "minecraft:cut_red_sandstone", "minecraft:smooth_red_sandstone", "minecraft:chiseled_red_sandstone",
+    "minecraft:smooth_quartz", "minecraft:quartz_bricks", "minecraft:quartz_pillar", "minecraft:chiseled_quartz_block",
+    "minecraft:polished_blackstone", "minecraft:polished_blackstone_bricks", "minecraft:nether_bricks",
+    "minecraft:red_nether_bricks", "minecraft:purpur_block", "minecraft:purpur_pillar", "minecraft:end_stone_bricks",
+    "minecraft:polished_tuff", "minecraft:tuff_bricks", "minecraft:chiseled_tuff", "minecraft:chiseled_tuff_bricks",
+    "minecraft:chiseled_deepslate", "minecraft:resin_bricks"
   ]
 }

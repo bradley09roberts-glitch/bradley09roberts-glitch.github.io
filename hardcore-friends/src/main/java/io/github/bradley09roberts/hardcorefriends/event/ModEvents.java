@@ -7,6 +7,8 @@ import java.util.WeakHashMap;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Witch;
@@ -16,6 +18,7 @@ import net.minecraft.world.entity.monster.spider.Spider;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 
+import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.camp.CampProgress;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
@@ -43,6 +46,12 @@ public final class ModEvents {
 		ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
 			if (entity instanceof CompanionEntity companion) {
 				Companions.untrack(companion);
+			}
+		});
+		// A block a player breaks is no longer the friends' own, whatever the player puts there next.
+		PlayerBlockBreakEvents.AFTER.register((level, player, pos, state, blockEntity) -> {
+			if (level instanceof ServerLevel serverLevel) {
+				Camp.data(serverLevel.getServer()).forgetPlaced(serverLevel, pos);
 			}
 		});
 		ServerTickEvents.END_SERVER_TICK.register(server -> {

@@ -11,9 +11,11 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 
@@ -22,7 +24,9 @@ import io.github.bradley09roberts.hardcorefriends.registry.ModItems;
 
 /**
  * The backpack a friend drops when they die or are dismissed. Using it empties everything into your inventory
- * (anything that does not fit drops at your feet) and the bag is used up.
+ * (anything that does not fit drops at your feet) and the bag is used up. The bag is fire-resistant (registered
+ * with {@code fireResistant()}), so it floats on lava, and if a cactus or an explosion destroys it the contents
+ * spill out like a shulker box's instead of vanishing.
  */
 public class BackpackItem extends Item {
 	public BackpackItem(Item.Properties properties) {
@@ -41,6 +45,14 @@ public class BackpackItem extends Item {
 			bags.add(bag);
 		}
 		return bags;
+	}
+
+	@Override
+	public void onDestroyed(ItemEntity entity) {
+		ItemContainerContents contents = entity.getItem().set(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
+		if (contents != null) {
+			ItemUtils.onContainerDestroyed(entity, contents.nonEmptyItemCopyStream());
+		}
 	}
 
 	@Override

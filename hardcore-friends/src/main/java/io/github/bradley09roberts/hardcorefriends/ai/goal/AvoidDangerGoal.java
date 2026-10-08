@@ -16,14 +16,23 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 
 /**
  * Keeps a friend away from creepers (everyone, Aegis included once one starts to hiss) and, for friends who are
- * not fighters, away from hostile mobs that come close or go for them. Friends run towards a protector when
- * one is nearby.
+ * not fighters, away from hostile mobs that come close or go for them. A non-fighter also gets out of the line of
+ * fire of a skeleton or other ranged attacker that is shooting at them from beyond fighting range, instead of
+ * standing still to be shot. Friends run towards a protector when one is nearby.
  */
 public class AvoidDangerGoal extends Goal {
+	/** How far away a ranged attacker aiming at a non-fighter is noticed (skeletons shoot from up to 15 blocks). */
+	private static final double SHOOTER_RANGE = 16;
+	/** A friend fleeing a shooter keeps going until this far away, beyond a skeleton's follow range. */
+	private static final double SHOOTER_SAFE_DISTANCE = 20;
+	private static final double SAFE_DISTANCE = 12;
+
 	private final CompanionEntity companion;
 	private final boolean avoidAllHostiles;
 	private @Nullable LivingEntity danger;
+	private double safeDistance = SAFE_DISTANCE;
 	private int recalc;
+	private int shooterScan;
 
 	public AvoidDangerGoal(CompanionEntity companion, boolean avoidAllHostiles) {
 		this.companion = companion;
@@ -44,6 +53,7 @@ public class AvoidDangerGoal extends Goal {
 			boolean hissing = creeper.getSwellDir() > 0 || creeper.isIgnited();
 			boolean bravelyAttacking = companion.isFighter() && !hissing && companion.getHealth() > companion.getMaxHealth() * 0.6F;
 			if (!bravelyAttacking && (d < 7 || (hissing && d < 10))) {
+				safeDistance = SAFE_DISTANCE;
 				return creeper;
 			}
 		}
@@ -51,14 +61,28 @@ public class AvoidDangerGoal extends Goal {
 			return null;
 		}
 		LivingEntity threat = Threats.nearest(companion, 8);
-		if (threat == null) {
+		if (threat != null) {
+			if (companion.canStandAndFight(threat)) {
+				return null; // stand together and fight instead of being picked off alone
+			}
+			double d = threat.distanceTo(companion);
+			if (d < 5 || Threats.isTargeting(threat, companion)) {
+				safeDistance = SAFE_DISTANCE;
+				return threat;
+			}
+		}
+		// A skeleton strafing 8-15 blocks away is out of melee reach, so move out of its line of fire.
+		// Scanned every 10 ticks to keep the wider search cheap.
+		if (++shooterScan < 5) {
 			return null;
 		}
-		if (companion.canStandAndFight(threat)) {
-			return null; // stand together and fight instead of being picked off alone
+		shooterScan = 0;
+		LivingEntity shooter = Threats.nearestShooter(companion, SHOOTER_RANGE);
+		if (shooter != null && !companion.canStandAndFight(shooter)) {
+			safeDistance = SHOOTER_SAFE_DISTANCE;
+			return shooter;
 		}
-		double d = threat.distanceTo(companion);
-		return d < 5 || Threats.isTargeting(threat, companion) ? threat : null;
+		return null;
 	}
 
 	@Override
@@ -71,7 +95,7 @@ public class AvoidDangerGoal extends Goal {
 
 	@Override
 	public boolean canContinueToUse() {
-		return danger != null && danger.isAlive() && danger.distanceTo(companion) < 12;
+		return danger != null && danger.isAlive() && danger.distanceTo(companion) < safeDistance;
 	}
 
 	@Override
