@@ -1,18 +1,30 @@
 package io.github.bradley09roberts.hardcorefriends.companion;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.IllegalFormatException;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Every friend's wording for every {@link Line}. Each friend has at least three variants per line, written in
- * their own voice; {@link Speech} picks one at random and fills the placeholders documented on the line.
+ * Every friend's wording for every {@link Line}. Each friend has their own variants for every line (three or more
+ * for work and lifecycle lines, two to four for the everyday needs), written in their own voice; {@link Speech} picks
+ * one at random and fills the placeholders documented on the line.
  *
  * <p>Rules for the table: British English, under 90 characters before substitution, family friendly, never
  * about mods or code, and suited to a Hardcore world without being grim. A line only uses the placeholders its
  * {@link Line} constant documents, and lines without arguments contain no {@code %} at all. Arguments that may
  * arrive as whole sentences (advice, Scout's report, discoveries) always come last, after a colon, so their own
- * capitals and full stops read naturally. A generic fallback keeps {@link #get} from ever returning nothing.
+ * capitals and full stops read naturally. Food names arrive capitalised ("Sweet Berries"), so food lines avoid
+ * "a"/"that ... was" around them; job and pastime arguments are "-ing" phrases ("felling a tree"). A generic
+ * fallback keeps {@link #get} from ever returning nothing. {@link #problems()} checks the rules that can be checked.
  */
 public final class Lines {
+	/** The longest a template may be before its arguments are filled in. */
+	public static final int MAX_LENGTH = 90;
+	private static final Pattern PLACEHOLDER = Pattern.compile("%(\\d+)\\$s");
 	private static final EnumMap<FriendId, EnumMap<Line, String[]>> TABLE = new EnumMap<>(FriendId.class);
 	private static final EnumMap<Line, String[]> FALLBACK = new EnumMap<>(Line.class);
 	private static final String[] LAST_RESORT = {"Hmm."};
@@ -50,6 +62,68 @@ public final class Lines {
 			}
 		}
 		return LAST_RESORT.clone();
+	}
+
+	/** True if this friend has wording of their own for the line, rather than falling back to the generic one. */
+	public static boolean hasOwn(FriendId friend, Line line) {
+		EnumMap<Line, String[]> own = TABLE.get(friend);
+		String[] variants = own == null ? null : own.get(line);
+		return variants != null && variants.length > 0;
+	}
+
+	/**
+	 * The table's self-check: a description of every breach of the rules above, or an empty list when all is well.
+	 * Every friend has at least two variants of their own for every line; every template, theirs or generic, is at
+	 * most {@value #MAX_LENGTH} characters, uses only the placeholders its line receives ({@link Line#args()}), has no
+	 * {@code %} at all when it receives none, and formats cleanly.
+	 */
+	public static List<String> problems() {
+		List<String> found = new ArrayList<>();
+		for (Line line : Line.values()) {
+			String[] generic = FALLBACK.get(line);
+			if (generic == null || generic.length == 0) {
+				found.add("no generic wording for " + line);
+			} else {
+				check("generic", line, generic, found);
+			}
+			for (FriendId friend : FriendId.values()) {
+				String[] own = hasOwn(friend, line) ? TABLE.get(friend).get(line) : new String[0];
+				if (own.length < 2) {
+					found.add(friend.displayName() + " has " + own.length + " line(s) of their own for " + line + ", not 2 or more");
+				}
+				check(friend.displayName(), line, own, found);
+			}
+		}
+		return found;
+	}
+
+	private static void check(String who, Line line, String[] variants, List<String> found) {
+		Object[] sample = new Object[line.args()];
+		Arrays.fill(sample, "Sample");
+		for (String template : variants) {
+			String where = who + " " + line + " \"" + template + "\"";
+			if (template.isBlank()) {
+				found.add(where + ": blank");
+			}
+			if (template.length() > MAX_LENGTH) {
+				found.add(where + ": longer than " + MAX_LENGTH + " characters");
+			}
+			if (PLACEHOLDER.matcher(template).replaceAll("").contains("%")) {
+				found.add(where + ": a % that is not a %N$s placeholder");
+			}
+			Matcher m = PLACEHOLDER.matcher(template);
+			while (m.find()) {
+				int n = Integer.parseInt(m.group(1));
+				if (n < 1 || n > line.args()) {
+					found.add(where + ": uses %" + n + "$s but the line receives " + line.args() + " argument(s)");
+				}
+			}
+			try {
+				String.format(template, sample);
+			} catch (IllegalFormatException e) {
+				found.add(where + ": does not format (" + e.getMessage() + ")");
+			}
+		}
 	}
 
 	private static void put(FriendId friend, Line line, String... variants) {
@@ -96,18 +170,18 @@ public final class Lines {
 		generic(Line.CAMP_UP, "Our camp is a %1$s now.", "We're a %1$s now!", "A %1$s! Well done, everyone.");
 		generic(Line.IDLE, "All quiet.", "Nice day for it.", "Keep your torches handy.");
 		generic(Line.HUNGRY, "I'm getting hungry.", "Time for a bite to eat.", "My stomach's rumbling.");
-		generic(Line.ATE, "That %1$s hit the spot.", "Mm, %1$s.", "Much better.");
+		generic(Line.ATE, "Mm, %1$s. That hit the spot.", "Mm, %1$s.", "Much better.");
 		generic(Line.NO_FOOD, "There's nothing to eat. Could someone bring food to the chest?", "We're out of food.");
 		generic(Line.STARVING, "I'm starving!", "I need food, now.");
 		generic(Line.SLEEPY, "I'm worn out. Time for bed.", "Off to sleep.", "Goodnight, everyone.");
 		generic(Line.RESTED, "Slept like a log.", "I feel rested.", "Ready for a new day.");
 		generic(Line.CHAT, "Hey %1$s, how's it going?", "%1$s! Got a minute?", "How are you, %1$s?");
 		generic(Line.CHAT_REPLY, "Not bad, thanks for asking.", "Good to see you too.", "Can't complain.");
-		generic(Line.LEISURE, "Time for %1$s.", "A little %1$s, I think.", "I've earned some %1$s.");
+		generic(Line.LEISURE, "Time for %1$s.", "Taking a break: %1$s.", "Just %1$s for a bit.");
 		generic(Line.COSY, "Nothing like a warm fire.", "Ah, that's cosy.", "Warming up a bit.");
-		generic(Line.MOOD_LOW, "I'm not feeling my best. It's the %1$s.", "Could be better, honestly.");
+		generic(Line.MOOD_LOW, "I'm not feeling my best. It's my %1$s need.", "Could be better, honestly.");
 		generic(Line.MOOD_GREAT, "What a lovely day!", "I feel great.", "Life's good at this camp.");
-		generic(Line.HELPING_OUT, "I'll help with %1$s.", "Nobody's on %1$s, so I'll do it.", "Lending a hand: %1$s.");
+		generic(Line.HELPING_OUT, "I'll help with %1$s.", "I'll pitch in: %1$s.", "Lending a hand: %1$s.");
 	}
 
 	/** Fern, the farmer: patient, caring and warm; crops, and making sure everyone has eaten. */
@@ -236,6 +310,57 @@ public final class Lines {
 			"Has everyone eaten? Just checking.",
 			"I do love the smell of fresh bread.",
 			"A full larder makes a happy camp.");
+		// Everyday needs
+		put(f, Line.HUNGRY,
+			"My tummy's rumbling. Time for a little something.",
+			"I'd better eat. I can't look after everyone on an empty stomach.",
+			"Feeling peckish. I'll fetch a bite to eat.");
+		put(f, Line.ATE,
+			"Mm, %1$s. Grown with care, eaten with thanks.",
+			"%1$s. Just what I needed, dear.",
+			"Lovely, %1$s. Now I can keep going.");
+		put(f, Line.NO_FOOD,
+			"Not a crumb left in the chest. Could someone bring food, please?",
+			"The larder's empty and I'm so hungry. Some food in the chest would help, dear.",
+			"Oh dear, no food anywhere. Please, put something to eat in the chest.");
+		put(f, Line.STARVING,
+			"I'm starving. Please, anything to eat!",
+			"So hungry it hurts. I need food soon.");
+		put(f, Line.SLEEPY,
+			"I'm worn out. Off to bed. Goodnight, everyone.",
+			"Time for bed. Sleep well, all of you.",
+			"My eyes are closing. Goodnight, dears.");
+		put(f, Line.RESTED,
+			"Slept beautifully. Good morning, everyone!",
+			"A good night's sleep. Now, who wants breakfast?",
+			"I feel rested and ready for the fields.");
+		put(f, Line.CHAT,
+			"%1$s! Have you eaten today?",
+			"Hello, %1$s. How are you keeping?",
+			"%1$s, come and sit a moment. How's your day been?");
+		put(f, Line.CHAT_REPLY,
+			"Oh, I'm well, %1$s. Thank you for asking.",
+			"Lovely to chat, %1$s. The crops are coming along nicely.",
+			"I'm fine, dear. Are you eating properly, %1$s?");
+		put(f, Line.LEISURE,
+			"Time for %1$s. The crops can spare me a while.",
+			"Just %1$s for a bit. Bliss.",
+			"A little break: %1$s. Good for the soul.");
+		put(f, Line.COSY,
+			"Ah, warm at last. Lovely.",
+			"Nothing like a warm fire after a day in the fields.",
+			"Snug as a seed in the soil.");
+		put(f, Line.MOOD_LOW,
+			"I'm feeling a bit low, I'm afraid. It's my %1$s need, mostly.",
+			"Not my best day. I must see to my %1$s need.");
+		put(f, Line.MOOD_GREAT,
+			"What a lovely day. Everyone's fed and happy!",
+			"I feel wonderful. Full bellies and good friends.",
+			"My heart's as full as the harvest basket.");
+		put(f, Line.HELPING_OUT,
+			"I'll lend a hand with %1$s.",
+			"Not my usual work, but happy to help: %1$s.",
+			"Many hands make light work. I'll be %1$s.");
 	}
 
 	/** Oak, the builder: practical, methodical and measured; plans and materials. */
@@ -363,6 +488,55 @@ public final class Lines {
 			"Good wood, good walls. Simple.",
 			"I'm thinking a porch would suit the cabin.",
 			"Everything's square. I checked twice.");
+		// Everyday needs
+		put(f, Line.HUNGRY,
+			"Stomach's empty. Breaking for food.",
+			"Can't build on an empty stomach. Getting something to eat.",
+			"Time to refuel. Back shortly.");
+		put(f, Line.ATE,
+			"%1$s. Good, solid food.",
+			"Right. %1$s, done. Fuelled for the next shift.",
+			"That's lunch: %1$s. Back to it.");
+		put(f, Line.NO_FOOD,
+			"No food in my pack or the chest. Someone needs to stock the larder.",
+			"Food stores are empty. Put some in the chest and we'll all work better.");
+		put(f, Line.STARVING,
+			"I'm starving. Can't work like this.",
+			"No food for too long. I'm getting weak.");
+		put(f, Line.SLEEPY,
+			"Tools down. Time to sleep.",
+			"Long day. I'm turning in.",
+			"Bed. We'll pick it up in the morning.");
+		put(f, Line.RESTED,
+			"Slept well. Ready to build.",
+			"Good night's rest. The plans are fresh in my head.",
+			"Rested. Let's get to work.");
+		put(f, Line.CHAT,
+			"%1$s. How's your work coming along?",
+			"Got a minute, %1$s? Tell me how things stand.",
+			"%1$s, a quick word. All going to plan?");
+		put(f, Line.CHAT_REPLY,
+			"Steady progress, %1$s. Thanks for asking.",
+			"All square here, %1$s. You?",
+			"Can't complain, %1$s. Walls are up, roof's on.");
+		put(f, Line.LEISURE,
+			"Break time: %1$s. Keeps the hands steady.",
+			"Time for %1$s. Even builders need a rest.");
+		put(f, Line.COSY,
+			"Warm and dry. That's what a good roof is for.",
+			"Good fire. Well laid, too.",
+			"Out of the weather. Proper comfort.");
+		put(f, Line.MOOD_LOW,
+			"Not at my best. Need to fix my %1$s need.",
+			"Morale's low. Worst need: %1$s. I'll sort it.");
+		put(f, Line.MOOD_GREAT,
+			"Everything's going to plan. Feeling good.",
+			"Solid day. Solid camp. Can't ask for more.",
+			"I'm in fine form. Let's build something.");
+		put(f, Line.HELPING_OUT,
+			"Not my trade, but I'll do it properly: %1$s.",
+			"Lending a hand. I'll be %1$s.",
+			"It needs doing, so I'll take on %1$s.");
 	}
 
 	/** Flint, the miner: cautious, with dry, deadpan humour; wary of lava, creepers and dark tunnels. */
@@ -491,6 +665,56 @@ public final class Lines {
 			"Gravel. Why is it always gravel?",
 			"I like caves. I just don't trust them.",
 			"Lava's pretty. From a very long way away.");
+		// Everyday needs
+		put(f, Line.HUNGRY,
+			"I'm hungry. Digging is hungry work. Who knew.",
+			"My stomach's louder than the gravel. Food time.",
+			"Food. Now. Or soon. Soon is fine.");
+		put(f, Line.ATE,
+			"%1$s. Not cave dust. A treat.",
+			"Ate the %1$s. Feeling slightly less doomed.",
+			"Mm, %1$s. Beats gravel, I'll give it that.");
+		put(f, Line.NO_FOOD,
+			"No food in my pack or the chest. That's worrying, and I'm the worrier.",
+			"The chest has no food. Someone fix that before I start eating cobblestone.");
+		put(f, Line.STARVING,
+			"I'm starving. Not a joke. Food, please.",
+			"Starving. Even I can't find the funny side.");
+		put(f, Line.SLEEPY,
+			"I'm exhausted. Bed. Somewhere with no creepers.",
+			"Too tired to be careful. Bed, then.",
+			"Sleeping now. Wake me if anything hisses.");
+		put(f, Line.RESTED,
+			"Slept well. Nothing exploded. Lovely.",
+			"Rested. Still suspicious of everything, but rested.",
+			"Good sleep. No dreams about lava. Mostly.");
+		put(f, Line.CHAT,
+			"%1$s. Seen any lava today? No? Good.",
+			"Got a minute, %1$s? I've got cave stories.",
+			"%1$s. Tell me something that isn't gravel.");
+		put(f, Line.CHAT_REPLY,
+			"Still alive, %1$s. That's the main thing.",
+			"Fine, %1$s. Nothing's exploded. High praise.",
+			"Not bad, %1$s. Found a nice rock earlier.");
+		put(f, Line.LEISURE,
+			"Time for %1$s. Relaxing. Lava-free.",
+			"Break time: %1$s. Don't tell anyone I'm enjoying it.",
+			"Just %1$s for a bit. Very safe. Very calm.");
+		put(f, Line.COSY,
+			"Warm, dry and creeper-free. Perfect.",
+			"Ah, a fire. The good kind of hot.",
+			"Cosy. I could almost relax.");
+		put(f, Line.MOOD_LOW,
+			"Feeling grim. Worst need: %1$s. Fix pending.",
+			"Not great. My %1$s need is dragging me down.");
+		put(f, Line.MOOD_GREAT,
+			"I feel good. Suspiciously good.",
+			"Great day. I'm waiting for the catch.",
+			"I'm almost cheerful. Don't tell anyone.");
+		put(f, Line.HELPING_OUT,
+			"Fine, I'll do it: %1$s. Carefully.",
+			"Not my job, but I'll be %1$s. Lava permitting.",
+			"Pitching in: %1$s. Try to look surprised.");
 	}
 
 	/** Scout, the explorer: curious, adventurous and upbeat; reports clearly. */
@@ -621,6 +845,56 @@ public final class Lines {
 			"Some caves seem to go on forever. I'd love to find the end of one.",
 			"I counted three new hills today. Lovely ones.",
 			"One day I'll find the edge of the world. Or try!");
+		// Everyday needs
+		put(f, Line.HUNGRY,
+			"Exploring makes me so hungry! Snack time.",
+			"My stomach says it's lunchtime!",
+			"Quick bite, then back on the trail!");
+		put(f, Line.ATE,
+			"%1$s! Perfect trail food!",
+			"Mm, %1$s! Ready for the next hill!",
+			"Fuelled up on %1$s! Let's go!");
+		put(f, Line.NO_FOOD,
+			"No food anywhere! Could someone stock the chest? I'll keep an eye out too!",
+			"My pack's empty and so is the chest. We need food!");
+		put(f, Line.STARVING,
+			"I'm starving! I need food, really soon!",
+			"So hungry! I can't keep going like this!");
+		put(f, Line.SLEEPY,
+			"Big day! Off to bed.",
+			"I'm wiped out. Bedtime, adventures tomorrow!",
+			"Goodnight, everyone! Dream of new horizons!");
+		put(f, Line.RESTED,
+			"Slept great! Where are we exploring today?",
+			"Fully rested! I could walk to the edge of the world!",
+			"Morning! I dreamt of a huge cave. Let's find it!");
+		put(f, Line.CHAT,
+			"%1$s! Guess what I saw today!",
+			"Hey, %1$s! Want to hear about the ridge out east?",
+			"%1$s! What's new? Tell me everything!");
+		put(f, Line.CHAT_REPLY,
+			"Hey, %1$s! Great to see you!",
+			"Oh, %1$s, I've got so much to tell you!",
+			"Doing great, %1$s! Just back from the trail!");
+		put(f, Line.LEISURE,
+			"Break time: %1$s! So much out there.",
+			"Time for %1$s! I wonder what's beyond it all.",
+			"Just %1$s for a bit. Planning the next trip!");
+		put(f, Line.COSY,
+			"Ooh, warm! Just what I needed after the trail.",
+			"Cosy! Like a camp in a story.",
+			"Warming up! Then back out there!");
+		put(f, Line.MOOD_LOW,
+			"Feeling a bit flat. My %1$s need, probably.",
+			"Not my brightest day. Worst need: %1$s.");
+		put(f, Line.MOOD_GREAT,
+			"I feel amazing! Best camp ever!",
+			"What a day! I could explore forever!",
+			"Everything's brilliant! Even the clouds!");
+		put(f, Line.HELPING_OUT,
+			"New skill time! I'll try %1$s!",
+			"Ooh, I'll give it a go: %1$s!",
+			"Lending a hand: %1$s! How hard can it be?");
 	}
 
 	/** Spark, the redstone inventor: clever, excitable and fast-talking; gadgets and exclamation marks. */
@@ -749,6 +1023,56 @@ public final class Lines {
 			"Redstone is just very tiny lightning. Probably.",
 			"A lamp that turns on at night! Should I? I should!",
 			"Pistons, pistons, pistons. Sorry, thinking out loud!");
+		// Everyday needs
+		put(f, Line.HUNGRY,
+			"I forgot to eat again! Food time!",
+			"Running low on power! Need a snack!",
+			"Brain needs fuel! Getting food!");
+		put(f, Line.ATE,
+			"%1$s! Fully recharged!",
+			"Mm, %1$s! Power levels rising!",
+			"%1$s, eaten! Back to the circuits!");
+		put(f, Line.NO_FOOD,
+			"No food in the chest! Or my pack! Someone, anyone, food please!",
+			"Food stores empty! That's a design flaw! Can someone fix it?");
+		put(f, Line.STARVING,
+			"Starving! Totally out of power! Food, please!",
+			"So hungry I can't think! That's bad! Food!");
+		put(f, Line.SLEEPY,
+			"So tired! Brain shutting down! Bed!",
+			"Bedtime! I'll dream up new gadgets!",
+			"Powering down for the night! Goodnight!");
+		put(f, Line.RESTED,
+			"Fully recharged! And I had an idea in my sleep!",
+			"Morning! Rested and buzzing!",
+			"Slept brilliantly! Let's invent something!");
+		put(f, Line.CHAT,
+			"%1$s! Want to hear about pistons? Of course you do!",
+			"Ooh, %1$s! I had the best idea! Listen!",
+			"%1$s! Quick question! What would you automate?");
+		put(f, Line.CHAT_REPLY,
+			"%1$s! Hi! I was just thinking about redstone! And you!",
+			"Great, %1$s! I've got three new ideas!",
+			"Brilliant, %1$s! Thanks for asking!");
+		put(f, Line.LEISURE,
+			"Break time! Well, %1$s! Same thing!",
+			"Time for %1$s! My favourite!",
+			"Ooh, %1$s! Relaxing AND useful!");
+		put(f, Line.COSY,
+			"Ooh, toasty! Warm brain, clever brain!",
+			"Lovely and warm! Fires are just very old gadgets!",
+			"Warming up! Perfect thinking spot!");
+		put(f, Line.MOOD_LOW,
+			"I'm running low! Worst need: %1$s!",
+			"Feeling flat! My %1$s need is all wrong!");
+		put(f, Line.MOOD_GREAT,
+			"I feel brilliant! Everything's clicking!",
+			"Best day ever! Ideas everywhere!",
+			"Fully charged and happy! Let's build something!");
+		put(f, Line.HELPING_OUT,
+			"Ooh, I'll help with %1$s! How hard can it be?",
+			"I'll try %1$s! New skills, new ideas!",
+			"Pitching in: %1$s! I might even improve it!");
 	}
 
 	/** Aegis, the warrior: calm and protective, a soldier of few words and steady reassurance. */
@@ -875,6 +1199,56 @@ public final class Lines {
 			"I'm watching. Rest easy.",
 			"Keep your shield ready.",
 			"Nothing gets past me.");
+		// Everyday needs
+		put(f, Line.HUNGRY,
+			"Hungry. I'll eat, then back to guard.",
+			"Time to eat. Stay alert while I do.",
+			"I need food. Back shortly.");
+		put(f, Line.ATE,
+			"%1$s. Good.",
+			"Ate the %1$s. Strong again.",
+			"%1$s. Thank you, whoever stocked it.");
+		put(f, Line.NO_FOOD,
+			"No food in the chest. The team needs supplies.",
+			"Our stores are empty. Bring food to the chest, please.");
+		put(f, Line.STARVING,
+			"Starving. I'm weakening.",
+			"Too long without food. I must eat.");
+		put(f, Line.SLEEPY,
+			"I'll rest now. Stay safe.",
+			"Tired. Someone keep watch.",
+			"Sleeping. Wake me if there's danger.");
+		put(f, Line.RESTED,
+			"Rested. Ready to guard.",
+			"Slept well. Is everyone safe?",
+			"I'm rested. Back on watch.");
+		put(f, Line.CHAT,
+			"%1$s. All well?",
+			"%1$s. How are you holding up?",
+			"A word, %1$s. Are you keeping safe?");
+		put(f, Line.CHAT_REPLY,
+			"All well, %1$s. Thank you.",
+			"I'm fine, %1$s. Stay close.",
+			"Good to see you, %1$s.");
+		put(f, Line.LEISURE,
+			"Off duty: %1$s.",
+			"Practice keeps me sharp: %1$s.",
+			"A quiet moment. Time for %1$s.");
+		put(f, Line.COSY,
+			"Warm. Good.",
+			"A fire. I'll rest a moment.",
+			"Shelter and warmth. Enough.");
+		put(f, Line.MOOD_LOW,
+			"Not at my best. My %1$s need.",
+			"Low spirits. Worst need: %1$s.");
+		put(f, Line.MOOD_GREAT,
+			"All is well. I'm content.",
+			"Good company. Good camp. I'm glad.",
+			"I feel strong today.");
+		put(f, Line.HELPING_OUT,
+			"I'll help: %1$s.",
+			"Not my duty, but I'll do it: %1$s.",
+			"I'll take a turn at %1$s.");
 	}
 
 	/** Sage, the strategist: thoughtful and observant; frames things as plans and lessons. */
@@ -1004,6 +1378,56 @@ public final class Lines {
 			"Always know your way home.",
 			"Prepare in daylight for what the night may bring.",
 			"Hmm. I'm weighing up our food reserves.");
+		// Everyday needs
+		put(f, Line.HUNGRY,
+			"Hunger dulls the mind. I'll eat.",
+			"Time for a meal. A clear head needs a full stomach.",
+			"I should eat before I grow careless.");
+		put(f, Line.ATE,
+			"%1$s. Food is the first rule of survival.",
+			"Ate the %1$s. My mind clears already.",
+			"A sensible meal: %1$s.");
+		put(f, Line.NO_FOOD,
+			"Our food stores are empty. That must be our first priority.",
+			"No food in the chest or my pack. Please stock the larder before anything else.");
+		put(f, Line.STARVING,
+			"I'm starving. This has become urgent.",
+			"Without food I'll weaken quickly. Help, please.");
+		put(f, Line.SLEEPY,
+			"Tiredness breeds mistakes. Time to sleep.",
+			"I'll rest now. Tomorrow, a fresh plan.",
+			"Goodnight. Sleep is a strategy too.");
+		put(f, Line.RESTED,
+			"Rested. My thoughts are clear.",
+			"A good night's sleep. I've already planned the day.",
+			"Well rested. Shall we begin?");
+		put(f, Line.CHAT,
+			"%1$s, a moment? I'd value your view.",
+			"How are things, %1$s? Tell me what you've noticed.",
+			"%1$s. What did you learn today?");
+		put(f, Line.CHAT_REPLY,
+			"A fair question, %1$s. I'm well, thank you.",
+			"Good to talk, %1$s. I've been observing the camp.",
+			"I'm well, %1$s. And you?");
+		put(f, Line.LEISURE,
+			"Time for %1$s. Good for reflection.",
+			"A little %1$s. The mind needs rest too.",
+			"Some %1$s, I think. Patterns everywhere.");
+		put(f, Line.COSY,
+			"Warmth and shelter. Simple, and essential.",
+			"A fire well kept is a camp well kept.",
+			"Comfortable at last. Now I can think.");
+		put(f, Line.MOOD_LOW,
+			"My spirits are low. The cause: my %1$s need.",
+			"I'm not at my best. Worst need: %1$s. Noted.");
+		put(f, Line.MOOD_GREAT,
+			"Everything is in balance. A rare and good feeling.",
+			"I feel well. The plan is working.",
+			"Content. This is what we worked for.");
+		put(f, Line.HELPING_OUT,
+			"This needs doing, so I'll be %1$s.",
+			"Not my speciality, but a sensible use of my time: %1$s.",
+			"Everyone helps where they can. I'll be %1$s.");
 	}
 
 	/** Terra, the landscaper: creative and tidy; paths, greenery and beauty. */
@@ -1130,6 +1554,56 @@ public final class Lines {
 			"Tidy camp, tidy mind.",
 			"I think a little greenery would brighten that wall.",
 			"Every camp deserves a garden.");
+		// Everyday needs
+		put(f, Line.HUNGRY,
+			"I'm hungry. A quick bite, then back to the gardens.",
+			"Time for a snack. Gardening is hungry work.",
+			"Ooh, I'm peckish. Food first.");
+		put(f, Line.ATE,
+			"%1$s. Delicious, and no crumbs on the path.",
+			"Mm, %1$s. Lovely.",
+			"Ate the %1$s. Neatly, of course.");
+		put(f, Line.NO_FOOD,
+			"There's no food in the chest. Could someone fill it, please?",
+			"No food in my pack or the chest. Oh dear.");
+		put(f, Line.STARVING,
+			"I'm starving! I really need to eat.",
+			"So hungry! Please, any food at all.");
+		put(f, Line.SLEEPY,
+			"I'm tired. Off to bed. Goodnight!",
+			"Bedtime. I'll dream of gardens.",
+			"Goodnight, everyone. Sleep tight.");
+		put(f, Line.RESTED,
+			"Slept beautifully. Let's make the camp lovely.",
+			"Good morning! Rested and full of ideas.",
+			"Fresh as a daisy after that sleep.");
+		put(f, Line.CHAT,
+			"%1$s! Have you seen the new flowerbed?",
+			"Hello, %1$s! What do you think of the paths?",
+			"%1$s, come and chat. Isn't it pretty today?");
+		put(f, Line.CHAT_REPLY,
+			"Oh, hello, %1$s! I'm well, thank you.",
+			"Lovely to see you, %1$s.",
+			"I'm fine, %1$s. Mind the flowers!");
+		put(f, Line.LEISURE,
+			"Time for %1$s. Pure joy.",
+			"Just %1$s for a while.",
+			"Break time: %1$s. Beauty is good for the soul.");
+		put(f, Line.COSY,
+			"Ah, cosy. Everything's just right.",
+			"Lovely and warm in here.",
+			"A warm fire and a tidy camp. Perfect.");
+		put(f, Line.MOOD_LOW,
+			"I'm feeling a bit low. My %1$s need is in a muddle.",
+			"Not my best day. Worst need: %1$s.");
+		put(f, Line.MOOD_GREAT,
+			"I feel wonderful! The camp looks beautiful.",
+			"What a lovely day. Everything's in its place.",
+			"So happy! Even the paths look cheerful.");
+		put(f, Line.HELPING_OUT,
+			"I'll help with %1$s. Neatly, of course.",
+			"A change of scene! I'll be %1$s.",
+			"Not my usual job, but I'll make it tidy: %1$s.");
 	}
 
 	/** Rowan, the forager: resourceful and generous; shares everything and gathers wood, stone and dirt for Oak. */
@@ -1257,5 +1731,55 @@ public final class Lines {
 			"Berries, sticks, stones. It all adds up.",
 			"Anyone short of anything? I've got spares.",
 			"A full chest is good. A shared one's better.");
+		// Everyday needs
+		put(f, Line.HUNGRY,
+			"I'm hungry. Better eat before I give all my food away.",
+			"Time for a bite. Back to gathering after.",
+			"Stomach's rumbling. Food time.");
+		put(f, Line.ATE,
+			"%1$s. Good, but better shared.",
+			"Mm, %1$s. Thanks to whoever gathered it.",
+			"Ate the %1$s. Ready to gather more.");
+		put(f, Line.NO_FOOD,
+			"No food left in the chest, and I've given mine away. Could someone bring some?",
+			"Food stores are empty. Let's fill that chest, everyone.");
+		put(f, Line.STARVING,
+			"I'm starving. I need food, quickly.",
+			"Too hungry to keep going. Food, please.");
+		put(f, Line.SLEEPY,
+			"I'm worn out. Goodnight, all.",
+			"Time to sleep. Busy day tomorrow.",
+			"Bed for me. Wake me if anyone needs anything.");
+		put(f, Line.RESTED,
+			"Slept well. Who needs what today?",
+			"Rested and ready to gather.",
+			"Good sleep. Now, breakfast for everyone?");
+		put(f, Line.CHAT,
+			"%1$s! Need anything? I've got spares.",
+			"Hey, %1$s. How are you doing?",
+			"%1$s, how's it going? Short of anything?");
+		put(f, Line.CHAT_REPLY,
+			"Doing well, %1$s. Need anything?",
+			"Good, thanks, %1$s. Pockets full, heart full.",
+			"Can't complain, %1$s. Fancy a berry?");
+		put(f, Line.LEISURE,
+			"Time for %1$s. Free, and plenty to go round.",
+			"A little %1$s. The best things in life are free.",
+			"Break time: %1$s.");
+		put(f, Line.COSY,
+			"Warm and snug. Room for one more by the fire.",
+			"Lovely and warm. Anyone want to join me?",
+			"Cosy. Pull up a log, everyone.");
+		put(f, Line.MOOD_LOW,
+			"Feeling low. Worst need: %1$s.",
+			"Not great. My %1$s need could use some help.");
+		put(f, Line.MOOD_GREAT,
+			"Feeling great. Good friends, full chest.",
+			"What a day! Plenty for everyone.",
+			"I'm so happy. This camp's the best thing I ever found.");
+		put(f, Line.HELPING_OUT,
+			"Happy to help: %1$s.",
+			"I'll pitch in with %1$s.",
+			"Lending a hand: %1$s. That's what friends do.");
 	}
 }

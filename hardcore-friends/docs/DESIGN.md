@@ -18,6 +18,8 @@ This document explains why the code is shaped the way it is and what each part p
 
 ## 2. The nine friends
 
+Each friend's role is their **speciality**; every friend can do every role's work (section 5).
+
 | Id | Name | Role | Skin file | Personality | Chat colour | Starter tool |
 |---|---|---|---|---|---|---|
 | FERN | Fern | Farmer | `fern.png` | patient, caring | `#6BBF59` | wooden hoe |
@@ -74,7 +76,7 @@ Goals, in priority order (lower number = higher priority):
 
 Target goals: `HurtByTargetGoal` (fight back) and, for Aegis, `DefendFriendsTargetGoal` (hostiles within 16 blocks of any player, companion or the camp). In FOLLOW mode every armed friend also defends the leader. `MutualDefenceTargetGoal`: friends not in STAY join fights against hostiles that are going for them, a friend or a player within 8 blocks, when `canStandAndFight` (healthy above max(50%, retreat fraction + 10%) and holding a tool; against an archer a non-fighter only stands its ground within 3 blocks, because chasing a skeleton with a hoe just gets them shot).
 
-Out of combat (no damage for 10 s, no target, not burning) friends recover 1 health every 4 s.
+Out of combat (no damage for 10 s, no target, not burning) and with hunger above 10, friends recover 1 health every 4 s.
 
 **Monsters fight back too.** On entity load, zombies, skeletons, spiders, illagers and witches gain a target goal for companions (config `monstersTargetCompanions`). Without this the companions would be untouchable, which contradicts Hardcore.
 
@@ -96,6 +98,8 @@ public interface CompanionTask {
 
 The scheduler re-scores every 20 ticks. It switches when idle, when the current task finishes, or when another task outscores the current one by ≥ 25. It enforces `maxTicks`, so a stuck task fails.
 
+`TaskRegistry.create(id)` gives every friend the same job list: the common upkeep jobs (`ai/task/common`), the needs jobs (`ai/task/needs`), and every role's jobs, their own role first, each wrapped in a `SpecialityTask` for its role (section 5). The only jobs a friend never gets from another role are `TaskRegistry.SPECIALIST_ONLY`: Aegis's gear and guard duty, Sage's observing and stores review, and Scout's report.
+
 Score bands:
 
 | Score | Meaning |
@@ -116,7 +120,86 @@ Shared, per-tick helpers on the companion:
 - `place(pos, state, item, reason)` and `transform(pos, newState, reason)` (till, path): both go through the guard.
 - `equipBest(toolTag)` puts the best matching tool in the main hand and damages it on every use, so tools break.
 
-## 5. World editing rules (`WorldEditGuard`)
+## 5. Specialities: everyone can do every job
+
+`companion/Speciality` and `ai/task/SpecialityTask`.
+
+Each friend has a speciality (their role) and one **interest**, `Speciality.interest(id)`:
+
+| Friend | Speciality | Interest |
+|---|---|---|
+| Fern | Farmer | Forager |
+| Oak | Builder | Landscaper |
+| Flint | Miner | Redstone inventor |
+| Scout | Explorer | Forager |
+| Spark | Redstone inventor | Miner |
+| Aegis | Warrior | Explorer |
+| Sage | Strategist | Farmer |
+| Terra | Landscaper | Farmer |
+| Rowan | Forager | Builder |
+
+- **Keenness** (`Speciality.affinity`): 1.0 for their speciality, 0.8 for their interest, 0.6 for anything else.
+- **Skill** (`Speciality.skill`): 1.2 for their speciality, 1.0 for their interest, 0.85 for anything else, and 1.0 for work of no particular kind. A world edit's `Reason` names the kind of work (`Speciality.roleFor`: FARM is farming, BUILD building, INVENT redstone, LANDSCAPE landscaping, MINE mining, GATHER_WOOD and GATHER_EARTH foraging).
+- **Work speed** (`CompanionEntity.workSpeed(reason)`) = skill × mood (section 6) × the Unity work rhythm. `Actions.mine` multiplies the block-breaking rate by it.
+
+**`SpecialityTask`** wraps one role job. For a job whose own score is `s`:
+
+| Situation | Score |
+|---|---|
+| The friend's own speciality | `s`, unchanged: a specialist does their own work exactly as they would alone |
+| Standing in: nobody of that speciality is working in this world (dead, not recruited, following or staying) | keenness × min(`s`, 90) × 0.5: at most 36 for their interest and 27 for other work, below their own main work (40 and up) and above idling |
+| Lending a hand: the specialist is working | a quarter of the stand-in score, at most 9: only when there is nothing else at all to do |
+| Personal jobs (`PERSONAL`: delivering what the friend carries, smelting carried ore) | `s` × keenness, whoever is around |
+
+- **Exclusive jobs** (`EXCLUSIVE`: building and repair, contraptions, the farm layout and tilling, the mine, the quarry, felling, paths, fencing, planting, exploring, the furnace) run for one friend at a time; the others score them 0 while someone is on them. A specialist coming back to work asks for their shared job back, and a stand-in on it fails out at once and hands it over.
+- A friend starting a job outside their speciality may say `HELPING_OUT` with the job's description.
+
+## 6. Needs and mood
+
+`companion/Needs` (the numbers), `ai/task/needs` (the jobs that meet them), `companion/MoodPassives` (mood in speech and displays).
+
+Each friend has five needs, each from 0 (desperate) to 100 (met). New friends start at hunger 80, energy 90, social 70, fun 70 and comfort 70. The needs are saved with the entity. Every second (`Needs.tickSecond`):
+
+| Need | Drift per second | Notes |
+|---|---|---|
+| Hunger | −100/1500, ×1.3 while working | About one loaf of bread's worth a day |
+| Energy | −70/840 while awake | Not while asleep; the sleep job refills it |
+| Social | +0.15 with company, −0.1 alone | Company is another friend, or a player who is not spectating, within 6 blocks |
+| Fun | −100/1100 while working | |
+| Comfort | towards the surroundings' comfort, at most 0.5 a second | Base 55; +20 under a roof; +25 near a lit campfire (5 blocks); −30 in rain in the open; −15 dark in the open; −20 below half health |
+
+"Working" means following a player, or on any job other than a needs job (`needs.*`) or idling.
+
+**Meeting needs.** The needs jobs score higher the lower their need: a desperate need is urgent upkeep (70–89) and beats any work; a mild one sits in the main or secondary band and waits for the job in hand to end. Their ids start with `needs.`, which counts as time off.
+
+- `needs.eat`: eats one real food item (`#hardcorefriends:companion_food`), from the backpack first, otherwise taken from the supply chest, choosing the item that best fits the hunger. `CompanionEntity.eat(stack)` heals by the food's nutrition, fills hunger by nutrition × 6 (`hungerValue`), and keeps bowls and bottles. With no food anywhere the friend says `NO_FOOD`.
+- `needs.sleep`: at night tired friends lie down in their own place (side by side in the cabin, or around the camp centre) and regain energy, faster under a roof. They wake at dawn, when hurt, or when a monster comes close. Exhausted friends nap by day. Aegis keeps the first watch.
+- `needs.socialize`: a lonely friend walks over to another friend who is awake and not in trouble (or a player in camp) and they chat (`CHAT`, `CHAT_REPLY`). Both feel better and Unity gains 1 (at most 30 a day).
+- `needs.leisure`: a bored friend spends a short while on a pastime that suits them (`LEISURE`). Pastimes change no block.
+- `needs.cosy`: a chilly friend warms up by a lit campfire or in the cabin (`COSY`).
+
+Needs jobs only run in WORK mode, like every job. A friend who is following or staying eats from the backpack only when hurt (`RetreatGoal`).
+
+A player handing food to a friend who is hurt, or whose hunger is below 60, has them eat it at once (it heals and fills hunger); otherwise it goes into the backpack.
+
+**Starving.** At hunger 0 a friend takes 1 starvation damage every 4 s while above 2 health (one heart), as a player does on Normal difficulty. Starving never kills on its own. Health only regenerates while hunger is above 10.
+
+**Mood.** `Needs.moodValue()` is the weighted average of the needs (hunger 0.30, energy 0.25, social, fun and comfort 0.15 each):
+
+| Mood value | Mood |
+|---|---|
+| below 25 | miserable |
+| 25–45 | low |
+| 45–65 | okay |
+| 65–85 | good |
+| 85 and up | great |
+
+- **Work speed:** `Needs.workSpeed()` = 0.8 + 0.3 × mood value / 100, from 0.8 (miserable) to 1.1 (everything met).
+- **Speech:** every 15 s (`MoodPassives`), a friend who is awake and not fighting says `STARVING` at hunger 0 (unless already eating). Otherwise, unless falling back, they say `MOOD_LOW` naming their worst need ("hunger", "energy", "social", "fun" or "comfort") when the mood is low or miserable (unless that need's job is already running), or `MOOD_GREAT` when it is great. The lines' cooldowns (`STARVING` 1 min, `MOOD_LOW` 5 min, `MOOD_GREAT` 15 min) and the friend's chattiness keep this occasional.
+- **Team spirit:** every in-game hour (1000 ticks), if the mood of the team's average needs (all loaded friends) is great, Unity gains 1, at most 12 a day (`Unity.teamSpirit`, category `spirit`). A low mood never costs Unity.
+- **Displays:** `/friends needs` shows the five needs as bars, the mood and what the friend is doing about their lowest need; `/friends list` and the right-click status line show the mood (and the worst need when the mood is low).
+
+## 7. World editing rules (`WorldEditGuard`)
 
 These rules apply to every reason:
 
@@ -141,7 +224,7 @@ The camp radius starts at `campRadius` (24) and grows by 4 per stage, up to 40.
 
 Each change is appended to `CampData.editLog` (the last 256 entries; see `/friends log`) and counted per companion. Each companion is limited to 1 edit per 8 ticks.
 
-## 6. Shared camp and settlement
+## 8. Shared camp and settlement
 
 `/friends camp set` stores the camp centre and dimension. `/friends chest` links the chest or barrel the player is looking at as the **shared supply chest**. If no chest is linked, Oak builds one from 8 planks at the camp and links it.
 
@@ -160,7 +243,7 @@ Stages are gated by completed structures **and** the Unity score:
 - A `MaterialSpec` accepts any item from a tag (any planks, any log, any wooden slab or door), so whatever wood the team has is used.
 - `SiteFinder` looks for a flat site near the preferred offset. Ground variation must be ≤ 1, filled with cobblestone or dirt foundation blocks from real stock. Every footprint block must be air or a replaceable plant, with no build markers within 2 blocks. Sites never overlap other reserved sites.
 
-## 7. Supplies
+## 9. Supplies
 
 - **Backpack:** 9 slots, 18 at Unity 100 and 27 at Unity 500. It is saved with the entity. Sneak + right-click with an empty hand opens it as a chest UI.
 - **Deposit:** when ≥ 80% full or carrying surplus (anything outside the role's keep-list), a companion walks to the supply chest and deposits it.
@@ -169,7 +252,7 @@ Stages are gated by completed structures **and** the Unity score:
 - **Smelting:** raw iron, copper or gold plus fuel go into the camp furnace; outputs are collected later.
 - **Sharing:** a companion holding what a friend's job needs walks over and hands it across (+2 Unity). Generous friends give food to hungry players and companions.
 
-## 8. Unity bond
+## 10. Unity bond
 
 Score 0–1000, saved in `CampData`.
 
@@ -187,8 +270,9 @@ Score 0–1000, saved in `CampData`.
 
 - **Time together:** +1 per minute per friend within 24 blocks of a player (cap 120/day).
 - **Teamwork:** a deposit or delivery +1 (cap 60/day); a direct hand-off +2 (cap 40/day); a friend landing the killing blow on a hostile +3 (cap 60/day); each finished camp improvement +30; each finished contraption +15; a player feeding or gifting a friend +2 (cap 20/day).
+- **Friendship:** two friends chatting +1 (category `chat`, cap 30/day); team spirit, while the team's average mood is great, +1 per in-game hour (category `spirit`, cap 12/day; section 6).
 
-**Losses:** a friend's death −80; a dismissal −20.
+**Losses:** a friend's death −80; a dismissal −20. A low mood costs nothing.
 
 **Bonuses:**
 
@@ -199,7 +283,9 @@ Score 0–1000, saved in `CampData`.
 | 500 | 27-slot backpacks; an extra 1 HP every 4 s while at camp with no target (on top of normal out-of-combat healing); Scout's warnings make the warned mob glow for 8 s |
 | 800 | *Rally*: when a player drops below 6 HP with ≥ 2 friends within 16 blocks, the player gets Regeneration I for 5 s and the friends target the attacker (10-minute cooldown). This does not prevent death. |
 
-## 9. Role routines (summary)
+## 11. Role routines (summary)
+
+These are each role's jobs, named after the specialist. Through `SpecialityTask` (section 5) any friend can run them, except the specialist-only duties noted in section 4.
 
 - **Fern:** harvests mature crops and replants immediately from the drops; replants empty farmland; tills more farmland next to water (capped per stage); bakes bread; uses bone meal; feeds hungry players.
 - **Oak:** builds the next blueprint for the stage; crafts planks, sticks, doors, slabs and torches from stock; repairs missing blocks of finished structures; builds lantern posts.
@@ -224,17 +310,22 @@ Score 0–1000, saved in `CampData`.
   - tidies dropped items into the chest;
   - fills 1-deep holes;
   - builds farm fences.
-- **Rowan:** fells natural trees (only fully reachable ones) and replants; quarries dirt and stone in bounded 5×5 pits; forages berries, apples and saplings; delivers materials to Oak first (when Oak's build is short of something she carries 16 or more of, the delivery outranks every gathering job).
+- **Rowan:** fells natural trees (only fully reachable ones) and replants; quarries dirt and stone in bounded 5×5 pits; forages berries, apples and saplings; delivers materials to the builder first (Oak, or whoever is building in his place: when the build is short of something she carries 16 or more of, the delivery outranks every gathering job).
 
-## 10. Commands (permission level 0, no cheats)
+## 12. Commands (permission level 0, no cheats)
 
-`/friends help | list | recruit <name> | dismiss <name> | follow <name|all> | stay <name|all> | work <name|all> | where <name> | backpack <name> | camp | camp set | chest | unity | advice | plan | log | chatter <quiet|normal|chatty>`
+`/friends help | list | needs [name|all] | recruit <name> | dismiss <name> | follow <name|all> | stay <name|all> | work <name|all> | where <name> | backpack <name> | camp | camp set | chest | unity | advice | plan | log | chatter <quiet|normal|chatty>`
 
-## 11. Known limits (stated honestly to the user)
+`/friends needs` (default `all`) lists, for each loaded friend, a heading with their mood and current activity, then one line per need: a ten-block bar (`Needs.bar`), the need's name and value, and on the lowest need what the friend is doing about it (seeing to it now, fine for now, waiting until back at work, no food anywhere, or will see to it soon).
+
+## 13. Known limits (stated honestly to the user)
 
 - Friends only act while their chunks are loaded (near a player). They do not work while you are far away.
 - Building follows fixed blueprints adapted to the available wood. They do not design new buildings.
 - Pathfinding is vanilla mob pathfinding. Friends can get stuck on complex terrain; stuck tasks time out and are retried later.
 - Mining is limited to one staircase mine with branch tunnels plus exposed ores near camp. Tree felling is limited to trees they can fully reach.
 - Contraptions are a fixed set of vanilla redstone builds.
-- Dialogue is pre-written lines chosen by situation and personality, not free conversation.
+- Dialogue is pre-written lines chosen by situation and personality, not free conversation. Chats between friends are an opening line and a reply.
+- Stand-ins work on other specialities only in their spare time and more slowly; a camp missing several specialists grows more slowly.
+- Needs are five numbers met by a fixed set of jobs (eat, sleep, chat, pastime, warm up). Friends sleep on the spot they lie down on, not in beds.
+- Needs jobs run only in WORK mode: a friend following or staying does not eat (except from the backpack when hurt), sleep or rest.
