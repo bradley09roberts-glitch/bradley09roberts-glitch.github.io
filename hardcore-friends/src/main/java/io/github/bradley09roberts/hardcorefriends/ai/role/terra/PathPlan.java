@@ -3,12 +3,15 @@ package io.github.bradley09roberts.hardcorefriends.ai.role.terra;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import net.minecraft.core.BlockPos;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.ranch.Pen;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+import io.github.bradley09roberts.hardcorefriends.camp.Structures;
 
 /**
  * Terra's path layout: a straight L-shaped path from the camp centre to every building site and to the supply chest
@@ -26,8 +29,11 @@ public final class PathPlan {
 			return targets;
 		}
 		int maxLength = 2 * Camp.radius(data);
-		for (CampData.Site site : data.sites().values()) {
-			addTarget(targets, centre, site.origin, maxLength);
+		for (Map.Entry<String, CampData.Site> e : data.sites().entrySet()) {
+			CampData.Site site = e.getValue();
+			// The animal pen's path leads to its gate, not along its fence to a corner.
+			BlockPos to = e.getKey().equals(Structures.ANIMAL_PEN) ? new Pen(site.origin, site.rotation).outside() : site.origin;
+			addTarget(targets, centre, to, maxLength);
 		}
 		data.chestPos().ifPresent(chest -> addTarget(targets, centre, chest, maxLength));
 		return targets;

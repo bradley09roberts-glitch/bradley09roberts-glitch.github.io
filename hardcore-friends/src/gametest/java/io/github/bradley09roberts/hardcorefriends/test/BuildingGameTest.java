@@ -80,6 +80,7 @@ public class BuildingGameTest {
 			case SLAB -> Items.OAK_SLAB;
 			case DOOR, DOOR_TOP -> Items.OAK_DOOR;
 			case FENCE -> Items.OAK_FENCE;
+			case FENCE_GATE -> Items.OAK_FENCE_GATE;
 			case PRESSURE_PLATE -> Items.OAK_PRESSURE_PLATE;
 			case TORCH, WALL_TORCH -> Items.TORCH;
 			case GLASS_PANE -> Items.GLASS_PANE;

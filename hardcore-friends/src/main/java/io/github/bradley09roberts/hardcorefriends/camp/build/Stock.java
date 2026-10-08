@@ -38,6 +38,7 @@ public enum Stock {
 	SLAB("wooden slab", "wooden slabs", s -> s.is(ItemTags.WOODEN_SLABS), Need.WOOD),
 	DOOR("wooden door", "wooden doors", s -> s.is(ItemTags.WOODEN_DOORS), Need.WOOD),
 	FENCE("fence", "fences", s -> s.is(ItemTags.WOODEN_FENCES), Need.WOOD),
+	FENCE_GATE("fence gate", "fence gates", s -> s.is(ItemTags.FENCE_GATES), Need.WOOD),
 	PRESSURE_PLATE("pressure plate", "pressure plates", s -> s.is(ItemTags.WOODEN_PRESSURE_PLATES), Need.WOOD),
 	TORCH("torch", "torches", s -> s.is(Items.TORCH), Need.TORCHES),
 	GLASS_PANE("glass pane", "glass panes", s -> s.is(Items.GLASS_PANE), Need.BUILD),
@@ -94,6 +95,7 @@ public enum Stock {
 			case SLAB -> new Recipe(6, true, Map.of(PLANKS, 3));
 			case DOOR -> new Recipe(3, true, Map.of(PLANKS, 6));
 			case FENCE -> new Recipe(3, true, Map.of(PLANKS, 4, STICK, 2));
+			case FENCE_GATE -> new Recipe(1, true, Map.of(PLANKS, 2, STICK, 4));
 			case PRESSURE_PLATE -> new Recipe(1, true, Map.of(PLANKS, 2));
 			case TORCH -> new Recipe(4, false, Map.of(COAL, 1, STICK, 1));
 			case GLASS_PANE -> new Recipe(16, true, Map.of(GLASS, 6));
@@ -128,6 +130,7 @@ public enum Stock {
 			case SLAB -> Crafting.craftWood(c, Crafting.WoodShape.SLAB, target - have);
 			case DOOR -> Crafting.craftWood(c, Crafting.WoodShape.DOOR, target - have);
 			case FENCE -> Crafting.craftWood(c, Crafting.WoodShape.FENCE, target - have);
+			case FENCE_GATE -> Crafting.craftWood(c, Crafting.WoodShape.FENCE_GATE, target - have);
 			case PRESSURE_PLATE -> Crafting.craftWood(c, Crafting.WoodShape.PRESSURE_PLATE, target - have);
 			default -> {
 				Item out = vanillaItem();

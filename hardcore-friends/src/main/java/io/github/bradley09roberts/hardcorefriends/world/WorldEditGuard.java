@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.Fallable;
+import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -246,7 +247,10 @@ public final class WorldEditGuard {
 		}
 	}
 
-	/** Changing a block in place: tilling, making a dirt path, resetting a berry bush, toggling own redstone. */
+	/**
+	 * Changing a block in place: tilling, making a dirt path, resetting a berry bush, toggling own redstone, opening and
+	 * shutting the gate of the friends' own animal pen.
+	 */
 	public static Verdict canTransform(CompanionEntity c, BlockPos pos, BlockState newState, Reason reason) {
 		ServerLevel level = (ServerLevel) c.level();
 		Verdict common = commonChecks(c, level, pos);
@@ -274,6 +278,10 @@ public final class WorldEditGuard {
 				}
 				if (current.getBlock() instanceof CropBlock && current.getBlock() == newState.getBlock()) {
 					yield Verdict.OK; // bone meal growth
+				}
+				if (current.getBlock() instanceof FenceGateBlock && current.getBlock() == newState.getBlock()
+					&& Camp.data(level.getServer()).isPlacedByFriends(level, pos)) {
+					yield Verdict.OK; // opening or shutting the gate of the friends' own animal pen
 				}
 				yield Verdict.deny("not tillable or harvestable");
 			}

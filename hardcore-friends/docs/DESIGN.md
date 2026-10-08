@@ -151,7 +151,7 @@ Each friend has a speciality (their role) and one **interest**, `Speciality.inte
 | Lending a hand: the specialist is working | a quarter of the stand-in score, at most 9: only when there is nothing else at all to do |
 | Personal jobs (`PERSONAL`: delivering what the friend carries, smelting carried ore) | `s` × keenness, whoever is around |
 
-- **Exclusive jobs** (`EXCLUSIVE`: building and repair, contraptions, the farm layout and tilling, the mine, the quarry, felling, paths, fencing, planting, exploring, the furnace) run for one friend at a time; the others score them 0 while someone is on them. A specialist coming back to work asks for their shared job back, and a stand-in on it fails out at once and hands it over.
+- **Exclusive jobs** (`EXCLUSIVE`: building and repair, contraptions, the farm layout and tilling, the mine, the quarry, felling, paths, fencing, planting, exploring, the furnace, the animal pen and each livestock job, section 12) run for one friend at a time; the others score them 0 while someone is on them. A specialist coming back to work asks for their shared job back, and a stand-in on it fails out at once and hands it over.
 - **Claims last only while the job runs.** A claim counts only while its holder is working with that job in hand. A friend who dies or is unloaded lets go of their claims at once, so a friend who leaves mid-job (a camp unloading, a world closed and reopened) never keeps the others off it. A request to hand a job back lapses after 3 s, or as soon as the friend who asked has gone. Claims, requests and chat invitations are forgotten whenever a server starts or stops.
 - A friend starting a job outside their speciality may say `HELPING_OUT` with the job's description.
 
@@ -214,7 +214,7 @@ These rules apply to every reason:
 
 | Reason | Where | May break | May place / transform |
 |---|---|---|---|
-| FARM | camp radius | mature crops, berry harvest (age reset) | seeds onto farmland; till grass/dirt next to water; water from a bucket at a farm site |
+| FARM | camp radius | mature crops, berry harvest (age reset) | seeds onto farmland; till grass/dirt next to water; water from a bucket at a farm site; open or shut a fence gate the friends placed (the animal pen's) |
 | BUILD / INVENT | camp radius | replaceable plants, snow layers, own placed blocks (upgrades) | blueprint blocks into air or replaceable plants only |
 | LANDSCAPE | camp radius | replaceable plants, snow layers | grass/dirt to dirt path; saplings and flowers; torches; dirt into 1-deep holes |
 | MINE | mine box (24×24 around the mine entrance, outside the camp core) plus exposed ores within camp radius + `resourceRadius` | `#hardcorefriends:mineable_natural` only | torches in tunnels |
@@ -235,7 +235,7 @@ Stages are gated by completed structures **and** the Unity score:
 |---|---|---|---|
 | 0 | Campsite | 0 | supply chest (Oak, if none), campfire (3 logs, 3 sticks, 1 coal/charcoal) |
 | 1 | Camp | 0 | crafting table, furnace (8 cobblestone), 4 torch posts, Fern's farm plot (16 farmland around a water source; needs a water bucket if no water nearby). The plot site needs a level, sealed hole for the water and at least 20 level, tillable tiles in the 9×9 square around it; bumps and dips elsewhere in the square are fine |
-| 2 | Hamlet | 100 | Cabin (7×7 planks/logs, door, glass panes, slab roof); Terra's paths; Spark's automatic door (pressure plates) |
+| 2 | Hamlet | 100 | Cabin (7×7 planks/logs, door, glass panes, slab roof); Terra's paths; Spark's automatic door (pressure plates); Terra's animal pen (optional: never holds the stage back; section 12) |
 | 3 | Village | 250 | Storehouse shed with extra chest; Aegis's watchtower (cobblestone, ladder); lantern posts; Spark's drop-off hopper on the supply chest; fenced farm |
 | 4 | Settlement | 500 | Second cabin; Spark's auto-smelter (chests, hoppers, furnace); night lamp posts (inverted daylight detector + redstone lamp) once nether materials exist; flower gardens |
 
@@ -271,7 +271,7 @@ Score 0–1000, saved in `CampData`.
 **Gains** (with daily caps):
 
 - **Time together:** +1 per minute per friend within 24 blocks of a player (cap 120/day).
-- **Teamwork:** a deposit or delivery +1 (cap 60/day); a direct hand-off +2 (cap 40/day); a friend landing the killing blow on a hostile +3 (cap 60/day); each finished camp improvement +30; each finished contraption +15; a player feeding or gifting a friend +2 (cap 20/day).
+- **Teamwork:** a deposit or delivery +1 (cap 60/day); a direct hand-off +2 (cap 40/day); a friend landing the killing blow on a hostile (`Enemy`; butchering or hunting an animal earns nothing) +3 (cap 60/day); each finished camp improvement +30; each finished contraption +15; a player feeding or gifting a friend +2 (cap 20/day).
 - **Friendship:** two friends chatting +1 (category `chat`, cap 30/day); team spirit, while the team's average mood is great, +1 per in-game hour (category `spirit`, cap 12/day; section 6).
 
 **Losses:** a friend's death −80; a dismissal −20. A low mood costs nothing.
@@ -289,7 +289,7 @@ Score 0–1000, saved in `CampData`.
 
 These are each role's jobs, named after the specialist. Through `SpecialityTask` (section 5) any friend can run them, except the specialist-only duties noted in section 4.
 
-- **Fern:** harvests mature crops and replants immediately from the drops; replants empty farmland; tills more farmland next to water (capped per stage); bakes bread; uses bone meal; feeds hungry players.
+- **Fern:** harvests mature crops and replants immediately from the drops; replants empty farmland; tills more farmland next to water (capped per stage); bakes bread; uses bone meal; feeds hungry players; keeps livestock: brings wild animals to the pen, breeds them, butchers the surplus, cooks meat on the campfire, shuts the pen gate, hunts in the gathering ring when food is short (section 12).
 - **Oak:** builds the next blueprint for the stage; crafts planks, sticks, doors, slabs and torches from stock; repairs missing blocks of finished structures; builds lantern posts.
 - **Flint:**
   - mines exposed ores (pickaxe tier checked);
@@ -311,16 +311,44 @@ These are each role's jobs, named after the specialist. Through `SpecialityTask`
   - lights dark spots in camp with torches (spawn-proofing);
   - tidies dropped items into the chest;
   - fills 1-deep holes;
-  - builds farm fences.
+  - builds farm fences;
+  - builds and mends the animal pen (section 12).
 - **Rowan:** fells natural trees (only fully reachable ones) and replants; quarries dirt and stone in bounded 5×5 pits; forages berries, apples and saplings; delivers materials to the builder first (Oak, or whoever is building in his place: when the build is short of something she carries 16 or more of, the delivery outranks every gathering job).
 
-## 12. Commands (permission level 0, no cheats)
+## 12. Livestock (`ai/role/ranch`)
+
+Wheat alone cannot feed nine friends (bread is 30 hunger for three wheat; cooked beef or pork is 48 for one animal drop), so from the Hamlet stage the farmer keeps animals. All of it is farmer work (Fern's speciality; others help or stand in through `SpecialityTask` as usual).
+
+**The pen** (`Structures.ANIMAL_PEN`, stage 2, owner LANDSCAPER, optional). `Blueprints.ANIMAL_PEN` is a 9×9 ring of 31 wooden fences and one fence gate (local (4, 0, 0), the middle of the front) round a 7×7 paddock, built by `terra.pen` (`ai/role/terra/PenTask`, a `BlueprintTask`, reason LANDSCAPE, score 42) through the ordinary `BuildJob`: fences and the gate come from the chest or are crafted at a table (`Stock.FENCE_GATE`: 2 planks + 4 sticks), dips are filled with foundations, and `SiteFinder` sites it like any building (level natural ground inside the camp, clear of other sites and 2 blocks from any build marker), turned so the gate faces the camp centre (preferred offset (11, 11)). The gate is built open so the builder is never shut in. Once finished, a missing fence or gate is put back by the same job (score 50). The reserved site is the pen's record: `ai/role/ranch/Pen` derives the paddock box, the gate, the spot outside it and the spots inside from `CampData.site(ANIMAL_PEN)`. Terra's paths lead to the gate rather than a corner, and Fern never tills inside the pen.
+
+**The gate.** Friends open and shut only a gate they placed, through `WorldEditGuard.canTransform` with reason FARM (same block, `isPlacedByFriends`). Pen jobs walk through it (`Pen.enter` / `Pen.leave`): to the gate, animals within 2 blocks of it are first sent to the back of the paddock (so none slips out, or is jostled out, while it is open), open, through, shut. It is never shut on anything standing in the gateway, on a friend still in the paddock, or while a player is in or within 3 blocks of the pen; a gateway that does not clear within 5 s is left open. `fern.shut_gate` (45) shuts it when it stands open with animals inside and nobody in the paddock. `common.leave_pen` (85, every friend, outside `SpecialityTask`) takes any friend found in the paddock without a pen job in hand (called away mid-job, wandered in) out through the gate, so nobody is ever penned in.
+
+**Jobs** (scores are the specialist's; livestock work is weighted by the camp's FOOD need and stays in the main band: `min(69, base × CampNeeds.weight(FOOD))`):
+
+| Id | Base | What |
+|---|---|---|
+| `fern.bring_animal` | 46 | By day: the nearest wild cow, pig, sheep or chicken (`Wildlife.mayLead`) of a kind with fewer than 2 grown animals in the pen. With a lead (backpack or chest) it is tied on (`setLeashedTo(friend)`; the lead item is used up and given back when untied in the paddock; a snapped lead drops as in vanilla). Otherwise the friend holds the animal's tempt food (`Animal.isFood`: wheat, carrot/potato/beetroot, seeds), not used up, and steers it each tick like vanilla tempting (looks at the friend, walks after them within 10 blocks, stops 2.5 blocks short); a lagging animal is gone back for. Led to a back corner, let go and sent to the other back corner, gate shut behind. Success only if it is still in the pen. |
+| `fern.breed` | 44 | Two ready adults of a kind (age 0, not in love) and room for one more (at most 6 of a kind, 12 in all): two of their food from backpack or chest, into the paddock (gate shut behind), one fed to each (consumed; `setInLove`), out. Vanilla `BreedGoal` makes the young one. |
+| `fern.butcher` | 42 | A kind with more than 4 grown animals (`Livestock.KEEP_ADULTS`, never below a pair): with the best sword or axe (borrowed from the chest if need be) the surplus is killed, at most 2 a visit, never a young animal or one in love; the drops (meat, leather, wool, feathers) near the body are gathered. |
+| `fern.cook` | 48 | Raw beef, pork, mutton, chicken, rabbit, cod or salmon (backpack or chest) on the camp's lit campfire (the `CAMPFIRE` site, else the nearest lit campfire within 10 blocks of the centre), up to its free slots, via `CampfireBlockEntity.placeFood`; the friend tends it and picks up as many cooked pieces as they put on (never a player's), then deposits them in the chest. If the fire is full: the camp furnace, only one the friends placed, with coal or planks; its output is collected by `flint.collect_smelted`. |
+| `fern.hunt` | 40 | Only when FOOD need ≥ 0.4, by day, healthy (above max(0.5, retreat fraction + 0.1) of max health) and armed (sword or axe): the nearest animal `Wildlife.mayHunt` allows; drops gathered. Every rule is checked again every second and before every blow (the block checks afresh); any failure calls the hunt off. |
+| `fern.shut_gate` | 45 (flat) | See the gate. |
+
+`bring_animal`, `breed`, `butcher` and `shut_gate` are the pen jobs (`Pen.JOBS`): besides each being exclusive, none starts while another friend is on any of them, so one friend at a time is at the gate. `cook` and `hunt` are exclusive too (one cook at the fire, one hunter).
+
+**Safety rules** (`Wildlife`). An animal counts as somebody's, and is never led or hunted, when it has a custom name, is tamed or owned (`OwnableEntity` with an owner), is leashed, rides or is ridden, stands within 4 blocks of anything `WorldEditGuard.looksPlayerBuilt` sees (build markers and block entities the friends did not place: fences, gates, walls, crafted blocks; barriers count), or stands inside a player's enclosure (a fence, wall, gate or other player-made block within 24 blocks in each of the four directions; the friends' own blocks do not count). Every job also skips young animals, animals in the pen, animals outside the gathering zone (camp + `resourceRadius`) and anything within 24 blocks of where a friend died in the last three days (`CampData.nearDanger`). Hunting additionally never happens at dusk or night, never inside the camp (camp animals are the pen's), and never takes one of the last two grown animals of a kind within 24 blocks.
+
+**Performance.** One scan of the camp and gathering ring (at most 48 blocks beyond the camp edge) for cows, pigs, sheep, chickens and rabbits serves the whole team (`TeamCache`), at most every 100 ticks. Block-reading checks (player builds, enclosures) run only for animals that pass every cheap check, at most once per animal per scan. Candidates are re-planned every 2–3 seconds; with no animals around, scoring costs a list lookup.
+
+**Talk.** `LEADING_ANIMAL`, `BRED_ANIMALS`, `BUTCHERING`, `COOKING` and `HUNTING`, in every friend's own voice. Killing an animal earns no Unity (only hostiles do); stats: `animals_penned`, `animals_bred`, `animals_butchered`, `animals_hunted`, `meals_cooked`.
+
+## 13. Commands (permission level 0, no cheats)
 
 `/friends help | list | needs [name|all] | recruit <name> | dismiss <name> | follow <name|all> | stay <name|all> | work <name|all> | where <name> | backpack <name> | camp | camp set | chest | unity | advice | plan | log | chatter <quiet|normal|chatty>`
 
 `/friends needs` (default `all`) lists, for each loaded friend, a heading with their mood and current activity, then one line per need: a ten-block bar (`Needs.bar`), the need's name and value, and on the lowest need what the friend is doing about it (seeing to it now, fine for now, waiting until back at work, no food anywhere, or will see to it soon).
 
-## 13. Known limits (stated honestly to the user)
+## 14. Known limits (stated honestly to the user)
 
 - Friends only act while their chunks are loaded (near a player). They do not work while you are far away.
 - Building follows fixed blueprints adapted to the available wood. They do not design new buildings.
@@ -331,3 +359,4 @@ These are each role's jobs, named after the specialist. Through `SpecialityTask`
 - Stand-ins work on other specialities only in their spare time and more slowly; a camp missing several specialists grows more slowly.
 - Needs are five numbers met by a fixed set of jobs (eat, sleep, chat, pastime, warm up). Friends sleep on the spot they lie down on, not in beds.
 - Needs jobs run only in WORK mode: a friend following or staying does not eat (except from the backpack when hurt), sleep or rest.
+- Livestock is cows, pigs, sheep and chickens in one pen (rabbits are only hunted); no shearing, milking or eggs. A lured animal can wander off before the pen and is fetched again later. An unnamed animal of the player's standing loose with nothing player-built nearby looks wild. The camp's food planning (`CampNeeds`) counts cooked meat, not raw meat, as food.

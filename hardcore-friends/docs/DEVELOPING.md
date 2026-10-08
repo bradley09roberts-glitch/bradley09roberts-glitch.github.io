@@ -97,6 +97,10 @@ These are the pieces your routines should use. Look at the sources for details.
   - Zones: `inCamp(c, pos)`, `inResourceZone(c, pos)`.
   - Helpers: `looksPlayerBuilt(level, pos, r, data)`, `isClearablePlant(state)`, `touchesFluid`.
 - **`world.TreeFinder`:** `analyse(level, logPos)` returns an `Optional<Tree>` (`base`, sorted `logs`, `height`); also `nearest(level, centre, radius ≤ 24, maxHeight, allowedPredicate)` and `isNaturalTreeLog`.
+- **`ai.role.ranch`** (livestock, DESIGN.md section 12):
+  - `Pen.of(level)` is the finished animal pen: `paddock()`, `holds(entity)`, `animals(level)`, `gate()`, `outside()`, `inside()`, and `enter` / `leave` for walking through the gate (open, shut, never on anyone).
+  - `Wildlife.around(c)` is the team's cached scan of animals in the camp and gathering ring; `mayLead` and `mayHunt` apply the safety rules that keep the player's animals out of reach. Any job touching animals must go through them.
+  - `Livestock` holds the kinds, their food, and the pen's numbers.
 - **`ai.goal.Threats`:** `isThreat`, `nearest(entity, r)`, `around(entity, r)`, `nearestCreeper`, `isTargeting`.
 - **`companion.Speech`, `Line` and `Lines`:**
   - `Speech.say(c, Line.X, args...)` handles per-line cooldowns and chattiness. `Line` javadoc documents each line's arguments, and `Line.args()` says how many there are.

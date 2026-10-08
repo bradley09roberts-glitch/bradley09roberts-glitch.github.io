@@ -313,6 +313,7 @@ public class GuardianGameTest {
 		// The player's own field (not tilled by the friends) is what got the farm plot counted.
 		farm(helper, data, 14, 18, 6, 10, 16, 8, false);
 		data.markCompleted(Structures.FARM_PLOT);
+		data.markCompleted(Structures.ANIMAL_PEN); // the pen would rightly take these fences (see LivestockGameTest)
 		CompanionEntity terra = TestSupport.spawnFriend(helper, FriendId.TERRA, new BlockPos(16, 2, 14));
 		terra.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_SHOVEL));
 		TestSupport.give(terra, new ItemStack(Items.OAK_FENCE, 30), new ItemStack(Items.OAK_FENCE_GATE, 1));
