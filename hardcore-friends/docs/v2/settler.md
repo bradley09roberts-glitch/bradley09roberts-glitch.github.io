@@ -139,4 +139,5 @@ a newcomer builder builds the camp's buildings even without Oak.
   nine friends.
 - **Requests are fixed lists**, two per trade. A stranger never changes their mind about what they asked for.
 - **Records** of newcomers (in `data/hardcorefriends_settlers.dat`) are updated every few seconds while a newcomer is
-  loaded, so "last seen" can be a little out of date.
+  loaded, so "last seen" can be a little out of date. A newcomer who vanishes without dying or being dismissed (for
+  example if their part of the world is deleted with an outside tool) still counts as alive towards the limits.

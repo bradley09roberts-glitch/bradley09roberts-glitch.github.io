@@ -110,8 +110,14 @@ public final class Requests {
 		for (Want w : request.wants()) {
 			int have = count(player.getInventory(), w);
 			if (have < w.count()) {
-				int short_ = w.count() - have;
-				parts.add(have > 0 && w.count() > 1 ? short_ + " more " + w.many() : w.text(short_));
+				int shortBy = w.count() - have;
+				if (have == 0) {
+					parts.add(w.text(shortBy));
+				} else if (shortBy == 1) {
+					parts.add("one more " + w.one().replaceFirst("^an? ", "")); // "one more torch"
+				} else {
+					parts.add(shortBy + " more " + w.many()); // "3 more torches"
+				}
 			}
 		}
 		return join(parts);

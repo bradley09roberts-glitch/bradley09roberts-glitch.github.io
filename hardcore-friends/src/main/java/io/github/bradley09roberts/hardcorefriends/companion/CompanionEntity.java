@@ -957,17 +957,19 @@ public class CompanionEntity extends PathfinderMob {
 				data.markDanger(blockPosition(), level.getGameTime());
 				data.touchLedger();
 			}
-			// A stranger was never on the team: the team does not mourn them (the settler package tells those nearby).
-			if (isTeamMember()) {
-				BlockPos p = blockPosition();
-				Speech.announce(level.getServer(), Speech.prefix(this).append(Component.literal(
-					cause.getString() + ". Their backpack lies at " + p.getX() + " " + p.getY() + " " + p.getZ() + ".")
-					.withStyle(ChatFormatting.RED)));
-				Unity.lose(level.getServer(), 80);
-				for (CompanionEntity other : Companions.all()) {
-					if (other != this) {
-						Speech.say(other, Line.FRIEND_DIED, displayName());
-					}
+			if (!isTeamMember()) {
+				// A stranger was never on the team: the team does not mourn them (the settler package tells those nearby).
+				super.die(source);
+				return;
+			}
+			BlockPos p = blockPosition();
+			Speech.announce(level.getServer(), Speech.prefix(this).append(Component.literal(
+				cause.getString() + ". Their backpack lies at " + p.getX() + " " + p.getY() + " " + p.getZ() + ".")
+				.withStyle(ChatFormatting.RED)));
+			Unity.lose(level.getServer(), 80);
+			for (CompanionEntity other : Companions.all()) {
+				if (other != this) {
+					Speech.say(other, Line.FRIEND_DIED, displayName());
 				}
 			}
 		}

@@ -119,10 +119,14 @@ final class StrangerGoal extends Goal {
 
 	/** A traveller on their way out: keeps walking away from the camp until nobody is watching (then they go). */
 	private void leave(ServerLevel level) {
-		if (!c.getNavigation().isDone() && c.tickCount < nextPath) {
+		if (c.tickCount < nextPath) {
 			return;
 		}
-		nextPath = c.tickCount + 100;
+		if (!c.getNavigation().isDone()) {
+			nextPath = c.tickCount + 20; // still on their way: look again shortly
+			return;
+		}
+		nextPath = c.tickCount + 40; // at most one new path every two seconds, even when none can be found
 		Vec3 from = Camp.center(level).map(Vec3::atBottomCenterOf).orElse(Vec3.atBottomCenterOf(c.homePos()));
 		Vec3 away = LandRandomPos.getPosAway(c, 16, 6, from);
 		if (away != null) {
@@ -130,9 +134,10 @@ final class StrangerGoal extends Goal {
 		}
 	}
 
+	/** Heads for a spot, working the way out again at most every two seconds (so an unreachable spot costs little). */
 	private void walkTo(BlockPos target, double speed) {
-		if (c.getNavigation().isDone() || c.tickCount >= nextPath) {
-			nextPath = c.tickCount + 60;
+		if (c.tickCount >= nextPath) {
+			nextPath = c.tickCount + 40;
 			c.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, speed);
 		}
 	}

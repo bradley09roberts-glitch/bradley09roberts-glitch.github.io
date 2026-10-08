@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.jspecify.annotations.Nullable;
 
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
 import net.minecraft.core.BlockPos;
@@ -78,7 +79,8 @@ final class VillageSettlers {
 				continue;
 			}
 			Identifier id = structures.getKey(structure);
-			for (long startChunk : entry.getValue()) {
+			for (LongIterator starts = entry.getValue().iterator(); starts.hasNext();) {
+				long startChunk = starts.nextLong();
 				String key = Camp.dimensionId(level) + "|" + id + "|" + startChunk;
 				if (data.villageLookedAt(key)) {
 					continue;
