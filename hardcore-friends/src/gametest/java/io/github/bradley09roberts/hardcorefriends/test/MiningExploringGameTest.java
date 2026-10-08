@@ -5,7 +5,9 @@ import java.util.List;
 
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -19,10 +21,12 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 import io.github.bradley09roberts.hardcorefriends.ai.role.ScoutSenses;
+import io.github.bradley09roberts.hardcorefriends.ai.role.forage.QuarryTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.mine.CampFurnace;
 import io.github.bradley09roberts.hardcorefriends.ai.role.mine.DigMineTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.mine.MinePlan;
 import io.github.bradley09roberts.hardcorefriends.ai.role.mine.MineSite;
+import io.github.bradley09roberts.hardcorefriends.ai.role.mine.MiningHelper;
 import io.github.bradley09roberts.hardcorefriends.ai.role.scout.ExploreTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.scout.ScoutLog;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
@@ -223,6 +227,73 @@ public class MiningExploringGameTest {
 			helper.assertTrue(log.unreportedTotal() == 0, "Scout reported the finds");
 			helper.assertTrue(scout.distanceTo(player) < 6, "Scout walked over to the player");
 			helper.getLevel().getServer().getPlayerList().remove(player);
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_67", maxTicks = 1200)
+	public void flintNeverDigsOutHisOwnFloor(GameTestHelper helper) {
+		TestSupport.resetCamp(helper, true);
+		// A stone platform (well clear of the test's barrier floor, which counts as built) with a short vertical iron
+		// vein right under the spot where Flint stands.
+		for (int x = 13; x <= 19; x++) {
+			for (int z = 13; z <= 19; z++) {
+				for (int y = 2; y <= 4; y++) {
+					helper.setBlock(new BlockPos(x, y, z), Blocks.STONE);
+				}
+			}
+		}
+		BlockPos upper = new BlockPos(16, 4, 16);
+		BlockPos lower = new BlockPos(16, 3, 16);
+		helper.setBlock(upper, Blocks.IRON_ORE);
+		helper.setBlock(lower, Blocks.IRON_ORE);
+		BlockPos stand = upper.above();
+		CompanionEntity flint = TestSupport.spawnFriend(helper, FriendId.FLINT, stand);
+		TestSupport.give(flint, new ItemStack(Items.STONE_PICKAXE));
+		List<String> underFeet = new ArrayList<>();
+		WorldEditGuard.listener = e -> {
+			if (e.companion() == flint && e.verb().equals("broke") && MiningHelper.isOnTop(flint.blockPosition(), e.pos())) {
+				underFeet.add(helper.relativePos(e.pos()).toShortString());
+			}
+		};
+		helper.runAfterDelay(1190, () -> WorldEditGuard.listener = null);
+		int surfaceY = helper.absolutePos(stand).getY();
+		helper.succeedWhen(() -> {
+			helper.assertTrue(underFeet.isEmpty(), "Flint never broke the block he stood on, but did at " + underFeet);
+			helper.assertBlockPresent(Blocks.AIR, upper);
+			helper.assertBlockPresent(Blocks.AIR, lower);
+			helper.assertTrue(flint.backpack().count(Items.RAW_IRON) >= 2, "both ores were mined");
+			helper.assertTrue(flint.getY() >= surfaceY - 0.01, "Flint is still up on the platform, not down the shaft (y "
+				+ flint.getY() + ")");
+			WorldEditGuard.listener = null;
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_68", maxTicks = 600)
+	public void campMineAndQuarryAreLeftAloneInAnotherDimension(GameTestHelper helper) {
+		CampData data = TestSupport.resetCamp(helper, false);
+		// The camp, its mine and its quarry are in the Nether; Flint and Rowan were recruited here, in the overworld.
+		String nether = "minecraft:the_nether";
+		data.setCamp(helper.absolutePos(TestSupport.centre()), nether);
+		BlockPos entrance = helper.absolutePos(TestSupport.centre()).offset(200, 0, 0);
+		MinePlan.of(data).begin(entrance, Direction.EAST, MinePlan.BOTTOM_Y, nether);
+		BlockPos corner = helper.absolutePos(new BlockPos(20, TestSupport.GROUND_Y, 20));
+		CompoundTag quarry = data.memory(QuarryTask.MEMORY);
+		quarry.putBoolean("active", true);
+		quarry.putLong("corner", corner.asLong());
+		quarry.putInt("cell", 0);
+		quarry.putString("dim", nether);
+		CompanionEntity flint = TestSupport.spawnFriend(helper, FriendId.FLINT, new BlockPos(10, 2, 16));
+		TestSupport.give(flint, new ItemStack(Items.STONE_PICKAXE));
+		CompanionEntity rowan = TestSupport.spawnFriend(helper, FriendId.ROWAN, new BlockPos(22, 2, 16));
+		TestSupport.give(rowan, new ItemStack(Items.WOODEN_AXE), new ItemStack(Items.STONE_SHOVEL));
+		helper.runAfterDelay(500, () -> {
+			MinePlan plan = MinePlan.of(data);
+			helper.assertTrue(plan.exists() && plan.entrance().equals(entrance), "the Nether mine was neither abandoned nor replaced");
+			helper.assertTrue(plan.oldEntrances().length == 0, "no mine was given up");
+			helper.assertTrue(corner.equals(QuarryTask.corner(data)), "the Nether quarry is still the active one");
+			helper.assertTrue(data.memory(QuarryTask.MEMORY).getIntOr("cell", -1) == 0, "the Nether quarry was not advanced");
+			helper.assertTrue(data.stat("blocks_mined") == 0 && data.stat("blocks_quarried") == 0, "nothing was dug here for it");
+			helper.succeed();
 		});
 	}
 }

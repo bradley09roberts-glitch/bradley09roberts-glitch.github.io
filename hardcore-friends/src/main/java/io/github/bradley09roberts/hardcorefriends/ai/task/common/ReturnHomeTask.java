@@ -43,10 +43,19 @@ public final class ReturnHomeTask implements CompanionTask {
 
 	/** True when it is getting dark and the friend is outside the comfortable part of the camp. */
 	public static boolean shouldBeHome(CompanionEntity c) {
+		return sendsHome(c, c.blockPosition());
+	}
+
+	/**
+	 * True when this task would call the friend home from {@code pos}: it is dusk or night and the spot lies outside
+	 * the comfortable part of the camp. Work outside the camp checks its targets with this, so a friend never walks
+	 * out to a job only to be sent straight back.
+	 */
+	public static boolean sendsHome(CompanionEntity c, BlockPos pos) {
 		ServerLevel level = (ServerLevel) c.level();
 		int limit = Math.max(4, WorldEditGuard.campRadius(c) - 4);
 		return (Camp.isNight(level) || Camp.isDusk(level))
-			&& Camp.horizontalDistSqr(c.blockPosition(), c.homePos()) > (double) limit * limit;
+			&& Camp.horizontalDistSqr(pos, c.homePos()) > (double) limit * limit;
 	}
 
 	@Override

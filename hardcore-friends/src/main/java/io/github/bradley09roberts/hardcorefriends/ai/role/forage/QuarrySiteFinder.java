@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 
 import io.github.bradley09roberts.hardcorefriends.ai.role.farm.Ground;
+import io.github.bradley09roberts.hardcorefriends.ai.role.mine.MiningHelper;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
@@ -20,9 +21,9 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
  * Picks a 5×5 quarry site in the gathering ring: at least four blocks beyond the camp edge, flat natural ground
- * (dirt, grass, sand, gravel or stone on top) open to the sky above, nothing player-built within three blocks, no
- * water or lava nearby, and at least 12 blocks from reserved building sites and earlier quarries. Sites near Rowan
- * are tried first.
+ * (dirt, grass, sand, gravel, or stone when Rowan carries a pickaxe for it, on top) open to the sky above, nothing
+ * player-built within three blocks, no water or lava nearby, and at least 12 blocks from reserved building sites and
+ * earlier quarries. Sites near Rowan are tried first, and only sites whose surroundings are loaded are judged.
  */
 public final class QuarrySiteFinder {
 	public static final int SIZE = 5;
@@ -107,7 +108,8 @@ public final class QuarrySiteFinder {
 				}
 				top = y;
 				BlockPos ground = new BlockPos(x, y, z);
-				if (!level.getBlockState(ground).is(ModTags.EARTH_GATHERABLE)) {
+				BlockState groundState = level.getBlockState(ground);
+				if (!groundState.is(ModTags.EARTH_GATHERABLE) || !MiningHelper.canHarvest(c, groundState)) {
 					return null;
 				}
 				BlockState above = level.getBlockState(ground.above());
@@ -126,6 +128,12 @@ public final class QuarrySiteFinder {
 			if (Camp.horizontalDistSqr(old.offset(SIZE / 2, 0, SIZE / 2), middle) < SPACING * SPACING) {
 				return null;
 			}
+		}
+		int lo = -MARKER_MARGIN;
+		int hi = SIZE - 1 + MARKER_MARGIN;
+		if (!level.hasChunkAt(x0 + lo, z0 + lo) || !level.hasChunkAt(x0 + hi, z0 + lo) || !level.hasChunkAt(x0 + lo, z0 + hi)
+			|| !level.hasChunkAt(x0 + hi, z0 + hi)) {
+			return null; // the margin reaches unloaded land: never load chunks just to look
 		}
 		for (BlockPos p : BlockPos.betweenClosed(x0 - MARKER_MARGIN, top - MARKER_MARGIN, z0 - MARKER_MARGIN,
 			x0 + SIZE - 1 + MARKER_MARGIN, top + MARKER_MARGIN, z0 + SIZE - 1 + MARKER_MARGIN)) {

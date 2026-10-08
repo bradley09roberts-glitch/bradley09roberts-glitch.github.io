@@ -1,11 +1,21 @@
 package io.github.bradley09roberts.hardcorefriends.test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
+import com.mojang.authlib.GameProfile;
+import io.netty.channel.embedded.EmbeddedChannel;
 
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -42,8 +52,8 @@ public class CommonGameTest {
 			new ItemStack(Items.DIRT, 16), new ItemStack(Items.GRAVEL, 16), new ItemStack(Items.ANDESITE, 16),
 			new ItemStack(Items.DIORITE, 16), new ItemStack(Items.GRANITE, 16), new ItemStack(Items.FLINT, 5));
 		helper.succeedWhen(() -> {
-			helper.assertTrue(SupplyChest.count(chest, s -> s.is(Items.COBBLESTONE)) == 40, "40 cobblestone in the chest");
-			helper.assertTrue(flint.backpack().count(Items.COBBLESTONE) == 0, "no cobblestone left in the backpack");
+			helper.assertTrue(SupplyChest.count(chest, s -> s.is(Items.COBBLESTONE)) == 24, "24 cobblestone in the chest");
+			helper.assertTrue(flint.backpack().count(Items.COBBLESTONE) == 16, "16 cobblestone kept for sealing mine floors");
 			helper.assertTrue(flint.actions().hasTool(ItemTags.PICKAXES), "Flint kept the pickaxe");
 			helper.assertTrue(SupplyChest.count(chest, s -> s.is(Items.STONE_PICKAXE)) == 0, "the pickaxe was not deposited");
 			helper.assertTrue(Camp.data(helper.getLevel().getServer()).stat("deposits") >= 1, "deposit recorded");
@@ -173,13 +183,107 @@ public class CommonGameTest {
 		TestSupport.give(fern, new ItemStack(Items.CARROT, 64), new ItemStack(Items.CARROT, 6), new ItemStack(Items.WHEAT_SEEDS, 20));
 		helper.assertTrue(surplus(fern, Items.CARROT) == 2, "Fern keeps 64 carrots to plant plus 4 to eat");
 		helper.assertTrue(surplus(fern, Items.WHEAT_SEEDS) == 0, "Fern keeps her seeds");
+		CompanionEntity flint = TestSupport.spawnFriend(helper, FriendId.FLINT, new BlockPos(8, 2, 24));
+		TestSupport.give(flint, new ItemStack(Items.COBBLESTONE, 40), new ItemStack(Items.RAW_IRON, 12), new ItemStack(Items.RAW_COPPER, 5));
+		helper.assertTrue(surplus(flint, Items.COBBLESTONE) == 24, "Flint keeps 16 cobblestone to seal mine floors");
+		helper.assertTrue(surplus(flint, Items.RAW_IRON) == 0 && surplus(flint, Items.RAW_COPPER) == 0,
+			"Flint keeps his raw ore for the furnace instead of depositing it");
 		helper.assertTrue(KeepList.isUseful(Role.MINER, new ItemStack(Items.COAL)), "coal is useful to a miner");
 		helper.assertFalse(KeepList.isUseful(Role.STRATEGIST, new ItemStack(Items.COAL)), "coal is not useful to a strategist");
 		helper.assertTrue(KeepList.roleTool(Role.STRATEGIST) == null, "Sage needs no tool");
 		helper.succeed();
 	}
 
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_73", maxTicks = 1400)
+	public void collectorSkipsItemsItCouldNotReach(GameTestHelper helper) {
+		TestSupport.resetCamp(helper, true);
+		// A cobblestone cell (walls two high, so nobody can climb on them, and a roof) with an item shut inside it,
+		// nearer than a second item lying in the open.
+		BlockPos cell = new BlockPos(19, 2, 16);
+		for (int dx = -1; dx <= 1; dx++) {
+			for (int dz = -1; dz <= 1; dz++) {
+				helper.setBlock(cell.offset(dx, 1, dz), Blocks.COBBLESTONE);
+				if (dx != 0 || dz != 0) {
+					helper.setBlock(cell.offset(dx, 0, dz), Blocks.COBBLESTONE);
+				}
+			}
+		}
+		CompanionEntity sage = TestSupport.spawnFriend(helper, FriendId.SAGE, TestSupport.centre());
+		// Keep Sage's other errands from walking her about, so the shut-in item stays the nearest one.
+		long now = helper.getLevel().getGameTime();
+		for (String task : new String[] {"common.idle", "sage.observe", "sage.review_stores"}) {
+			sage.scheduler().cooldown(task, now, 2000);
+		}
+		ItemEntity shutIn = dropItem(helper, new ItemStack(Items.COBBLESTONE, 2), new Vec3(19.5, 2.0, 16.5));
+		ItemEntity open = dropItem(helper, new ItemStack(Items.DIRT, 3), new Vec3(16.5, 2.0, 22.5));
+		helper.succeedWhen(() -> {
+			helper.assertTrue(!open.isAlive(), "the item in the open was tidied once the shut-in one was given up ("
+				+ sage.activity() + " at " + helper.relativePos(sage.blockPosition()) + ")");
+			helper.assertTrue(sage.backpack().count(Items.DIRT) == 3, "the dirt is in Sage's backpack");
+			helper.assertTrue(shutIn.isAlive(), "the shut-in item is still there");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_74", maxTicks = 1200)
+	public void feederGivesUpOnPlayerOutOfReach(GameTestHelper helper) {
+		TestSupport.resetCamp(helper, true);
+		// A hungry player on top of a four-block pillar: nobody on the ground can hand them anything.
+		BlockPos pillar = new BlockPos(16, 2, 22);
+		for (int y = 0; y < 4; y++) {
+			helper.setBlock(pillar.above(y), Blocks.COBBLESTONE);
+		}
+		ServerPlayer player = survivalPlayerInLevel(helper);
+		helper.runBeforeTestEnd(() -> helper.getLevel().getServer().getPlayerList().remove(player));
+		BlockPos top = helper.absolutePos(pillar.above(4));
+		player.snapTo(top.getX() + 0.5, top.getY(), top.getZ() + 0.5, 0.0F, 0.0F);
+		player.getFoodData().setFoodLevel(4);
+		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, TestSupport.centre());
+		TestSupport.give(fern, new ItemStack(Items.BREAD, 6));
+		long[] started = {-1};
+		long[] stopped = {-1};
+		List<Long> restarts = new ArrayList<>();
+		helper.onEachTick(() -> {
+			boolean feeding = fern.scheduler().current() != null && fern.scheduler().current().id().equals("common.feed_player");
+			long tick = helper.getTick();
+			if (feeding && started[0] < 0) {
+				started[0] = tick;
+			} else if (!feeding && started[0] >= 0 && stopped[0] < 0) {
+				stopped[0] = tick;
+			} else if (feeding && stopped[0] >= 0 && restarts.isEmpty()) {
+				restarts.add(tick);
+			}
+		});
+		helper.succeedWhen(() -> {
+			helper.assertTrue(started[0] >= 0, "Fern set off to feed the hungry player");
+			helper.assertTrue(stopped[0] >= 0 && stopped[0] - started[0] <= 300, "Fern gave up on the player out of reach within 15 s"
+				+ " (started at " + started[0] + ", stopped at " + stopped[0] + ")");
+			helper.assertTrue(restarts.isEmpty(), "Fern did not chase the same player again straight away " + restarts);
+			helper.assertTrue(helper.getTick() >= stopped[0] + 450, "waiting long enough to be sure");
+			helper.assertTrue(fern.backpack().count(Items.BREAD) == 6, "no bread was handed over");
+			helper.getLevel().getServer().getPlayerList().remove(player);
+		});
+	}
+
 	// ----------------------------------------------------------------- helpers
+
+	/**
+	 * A server player in the test level, like {@code GameTestHelper.makeMockServerPlayerInLevel()} but in survival
+	 * mode (the helper's player is creative, and friends never feed a creative player).
+	 */
+	private static ServerPlayer survivalPlayerInLevel(GameTestHelper helper) {
+		ServerLevel level = helper.getLevel();
+		CommonListenerCookie cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), "test-hungry-player"), false);
+		ServerPlayer player = new ServerPlayer(level.getServer(), level, cookie.gameProfile(), cookie.clientInformation()) {
+			@Override
+			public GameType gameMode() {
+				return GameType.SURVIVAL;
+			}
+		};
+		Connection connection = new Connection(PacketFlow.SERVERBOUND);
+		new EmbeddedChannel(connection);
+		level.getServer().getPlayerList().placeNewPlayer(connection, player, cookie);
+		return player;
+	}
 
 	private static int surplus(CompanionEntity c, Item item) {
 		Backpack bp = c.backpack();

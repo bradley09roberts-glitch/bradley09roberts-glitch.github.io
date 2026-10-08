@@ -67,6 +67,7 @@ public final class ShareTask implements CompanionTask {
 
 	private @Nullable Plan planned;
 	private @Nullable Plan current;
+	private final EntityApproach approach = new EntityApproach();
 
 	@Override
 	public String id() {
@@ -192,6 +193,7 @@ public final class ShareTask implements CompanionTask {
 	public boolean start(CompanionEntity c) {
 		current = planned;
 		planned = null;
+		approach.reset();
 		return current != null;
 	}
 
@@ -205,8 +207,8 @@ public final class ShareTask implements CompanionTask {
 		if (!friend.isAlive() || friend.isRemoved() || friend.level() != c.level() || friend.distanceToSqr(c) > 32 * 32) {
 			return TaskStatus.FAILURE;
 		}
-		if (!c.actions().walkToEntity(friend, GIVE_REACH)) {
-			return TaskStatus.RUNNING;
+		if (!approach.walk(c, friend, GIVE_REACH)) {
+			return approach.isStuck() ? TaskStatus.FAILURE : TaskStatus.RUNNING;
 		}
 		c.getLookControl().setLookAt(friend);
 		int amount;

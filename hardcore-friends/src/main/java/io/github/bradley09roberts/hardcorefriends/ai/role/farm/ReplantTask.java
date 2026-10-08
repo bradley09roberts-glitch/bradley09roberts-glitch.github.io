@@ -61,7 +61,8 @@ public final class ReplantTask implements CompanionTask {
 		return 50;
 	}
 
-	private static int chestSeeds(CompanionEntity c) {
+	/** Seeds (and seed crops) in the supply chest, 0 without a linked chest in this level. */
+	static int chestSeeds(CompanionEntity c) {
 		return SupplyChest.of((ServerLevel) c.level()).map(chest -> SupplyChest.count(chest, Crops.IS_SEED)).orElse(0);
 	}
 
@@ -125,6 +126,19 @@ public final class ReplantTask implements CompanionTask {
 	}
 
 	private TaskStatus fetchSeeds(CompanionEntity c, ServerLevel level) {
+		TaskStatus status = fetchSeedsStep(c, level);
+		if (status == TaskStatus.SUCCESS) {
+			fetching = false;
+			return TaskStatus.RUNNING;
+		}
+		return status;
+	}
+
+	/**
+	 * One tick of fetching seeds from the supply chest: {@code RUNNING} while walking there, {@code SUCCESS} once up
+	 * to 32 are in the backpack, {@code FAILURE} without a chest, when stuck, or when the chest holds none.
+	 */
+	static TaskStatus fetchSeedsStep(CompanionEntity c, ServerLevel level) {
 		Optional<BlockPos> chestPos = Camp.data(level.getServer()).chestPos();
 		Optional<Container> chest = SupplyChest.of(level);
 		if (chestPos.isEmpty() || chest.isEmpty()) {
@@ -133,11 +147,7 @@ public final class ReplantTask implements CompanionTask {
 		if (!c.actions().walkTo(chestPos.get(), 2.5)) {
 			return c.actions().isStuck() ? TaskStatus.FAILURE : TaskStatus.RUNNING;
 		}
-		if (SupplyChest.withdraw(chest.get(), c.backpack(), Crops.IS_SEED, 32) == 0) {
-			return TaskStatus.FAILURE;
-		}
-		fetching = false;
-		return TaskStatus.RUNNING;
+		return SupplyChest.withdraw(chest.get(), c.backpack(), Crops.IS_SEED, 32) == 0 ? TaskStatus.FAILURE : TaskStatus.SUCCESS;
 	}
 
 	@Override

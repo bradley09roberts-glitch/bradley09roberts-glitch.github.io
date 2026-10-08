@@ -30,8 +30,11 @@ public final class FeedPlayerTask implements CompanionTask {
 	private static final int HUNGRY_AT = 10;
 	private static final int MIN_FOOD = 2;
 	private static final int PLAYER_COOLDOWN = 2400;
+	/** How long a player the friend could not reach (on a roof, a pillar) is left alone. */
+	private static final int UNREACHABLE_COOLDOWN = 600;
 
 	private final Map<UUID, Long> fedUntil = new HashMap<>();
+	private final EntityApproach approach = new EntityApproach();
 	private @Nullable ServerPlayer planned;
 	private @Nullable ServerPlayer target;
 
@@ -83,6 +86,7 @@ public final class FeedPlayerTask implements CompanionTask {
 	public boolean start(CompanionEntity c) {
 		target = planned;
 		planned = null;
+		approach.reset();
 		return target != null;
 	}
 
@@ -92,7 +96,12 @@ public final class FeedPlayerTask implements CompanionTask {
 		if (player == null || !player.isAlive() || player.level() != c.level() || player.distanceToSqr(c) > 24 * 24) {
 			return TaskStatus.FAILURE;
 		}
-		if (!c.actions().walkToEntity(player, 2.0)) {
+		if (!approach.walk(c, player, 2.0)) {
+			if (approach.isStuck()) {
+				// Out of reach: leave this player alone for a while instead of chasing them again straight away.
+				fedUntil.put(player.getUUID(), c.level().getGameTime() + UNREACHABLE_COOLDOWN);
+				return TaskStatus.FAILURE;
+			}
 			return TaskStatus.RUNNING;
 		}
 		c.getLookControl().setLookAt(player);

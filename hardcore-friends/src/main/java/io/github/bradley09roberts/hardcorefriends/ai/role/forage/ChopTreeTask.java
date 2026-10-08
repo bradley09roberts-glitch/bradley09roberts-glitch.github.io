@@ -2,6 +2,7 @@ package io.github.bradley09roberts.hardcorefriends.ai.role.forage;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
 import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
@@ -36,7 +37,9 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 /**
  * By day, Rowan fells the nearest natural tree outside the camp but inside the gathering ring (never the camp's own
  * trees, and never log walls or other built logs), cutting its logs bottom-up with her axe, and replants a sapling
- * on the stump's soil if she carries one, preferably of the same kind.
+ * on the stump's soil if she carries one, preferably of the same kind. Once she has cut into a tree, the logs still
+ * standing are kept in camp memory; called away part-way through (danger, a full backpack, dusk, a restart), she
+ * finishes that tree first next time, so no trunk is left hanging in the air.
  */
 public final class ChopTreeTask implements CompanionTask {
 	private static final int WALK_TIMEOUT = 600;
@@ -55,6 +58,7 @@ public final class ChopTreeTask implements CompanionTask {
 	private int phaseTicks;
 	private int logTicks;
 	private int cut;
+	private boolean resumed;
 	private @Nullable Block logBlock;
 
 	public ChopTreeTask(ForageContext forage) {
@@ -79,7 +83,8 @@ public final class ChopTreeTask implements CompanionTask {
 	@Override
 	public double score(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
-		if (Camp.isNight(level) || !FriendsConfig.get().allowTreeFelling) {
+		// Trees are always outside the camp, so dusk counts as night: the return home would only call her back.
+		if (Camp.isNight(level) || Camp.isDusk(level) || !FriendsConfig.get().allowTreeFelling) {
 			return 0;
 		}
 		if (c.backpack().freeSlots() == 0 && !c.backpack().canFit(new ItemStack(Items.OAK_LOG, 6))) {
@@ -95,16 +100,27 @@ public final class ChopTreeTask implements CompanionTask {
 		if (known == null) {
 			return false;
 		}
-		Optional<Tree> checked = TreeFinder.analyse(level, known.base());
-		if (checked.isEmpty() || !checked.get().base().equals(known.base()) || !ForageContext.mayFell(c, known.base())) {
-			forage.skip(known.base(), level.getGameTime());
-			return false;
+		Tree chosen;
+		if (forage.isUnfinished(known)) {
+			// The rest of a tree she already cut into: checked when she started it, so no new analysis (it would
+			// fail, the base log being gone).
+			chosen = known;
+			logBlock = level.getBlockState(known.logs().getFirst()).getBlock();
+			resumed = true;
+		} else {
+			Optional<Tree> checked = TreeFinder.analyse(level, known.base());
+			if (checked.isEmpty() || !checked.get().base().equals(known.base()) || !ForageContext.mayFell(c, known.base())) {
+				forage.skip(known.base(), level.getGameTime());
+				return false;
+			}
+			chosen = checked.get();
+			logBlock = level.getBlockState(chosen.base()).getBlock();
+			resumed = false;
 		}
-		tree = checked.get();
-		logBlock = level.getBlockState(tree.base()).getBlock();
-		c.approveLogs(tree.logs());
+		tree = chosen;
+		c.approveLogs(chosen.logs());
 		logs.clear();
-		logs.addAll(tree.logs());
+		logs.addAll(chosen.logs());
 		phase = Phase.WALK;
 		phaseTicks = 0;
 		logTicks = 0;
@@ -124,7 +140,7 @@ public final class ChopTreeTask implements CompanionTask {
 		phaseTicks++;
 		switch (phase) {
 			case WALK -> {
-				if (Camp.isNight(level)) {
+				if (Camp.isNight(level) || Camp.isDusk(level)) {
 					return TaskStatus.FAILURE; // no long walks into the dark; a tree already started is finished
 				}
 				if (actions.walkTo(t.base(), 1.5) || actions.canReach(t.base()) && phaseTicks > 20) {
@@ -162,6 +178,10 @@ public final class ChopTreeTask implements CompanionTask {
 						cut++;
 						logs.pollFirst();
 						logTicks = 0;
+						if (!logs.isEmpty()) {
+							// Kept in camp memory as she goes, so even a restart cannot strand the rest of the trunk.
+							forage.noteUnfinished(level, t.base(), List.copyOf(logs));
+						}
 					}
 					case FAILED -> {
 						logs.pollFirst();
@@ -172,7 +192,7 @@ public final class ChopTreeTask implements CompanionTask {
 				}
 			}
 			case REPLANT -> {
-				if (cut == 0) {
+				if (cut == 0 && !resumed) {
 					forage.skip(t.base(), level.getGameTime());
 					return TaskStatus.FAILURE;
 				}
@@ -194,7 +214,7 @@ public final class ChopTreeTask implements CompanionTask {
 	}
 
 	private TaskStatus finish(CompanionEntity c, ServerLevel level, Tree t) {
-		forage.noteFelled(t.base(), level.getGameTime());
+		forage.noteFelled(level, t.base(), level.getGameTime());
 		Camp.data(level.getServer()).addStat("trees_felled", 1);
 		return TaskStatus.SUCCESS;
 	}
@@ -228,7 +248,14 @@ public final class ChopTreeTask implements CompanionTask {
 
 	@Override
 	public void stop(CompanionEntity c) {
+		Tree t = tree;
+		if (t != null && (cut > 0 || resumed) && !logs.isEmpty() && c.level() instanceof ServerLevel level) {
+			// Called away with the trunk cut into: remember what still stands so it is finished first next time.
+			forage.noteUnfinished(level, t.base(), List.copyOf(logs));
+		}
 		tree = null;
 		logs.clear();
+		cut = 0;
+		resumed = false;
 	}
 }

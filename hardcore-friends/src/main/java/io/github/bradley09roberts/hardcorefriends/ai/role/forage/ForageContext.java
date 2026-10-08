@@ -13,10 +13,12 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
@@ -34,9 +36,13 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 /**
  * What Rowan knows about the land around the camp, shared by her routines. Searches are cached and spread out:
  * every 5 seconds one tree search (24 blocks around Rowan, a remembered tree, or one of eight points on the
- * gathering ring, in turn) and one berry search around Rowan.
+ * gathering ring, in turn) and one berry search around Rowan. A tree she was called away from part-way through is
+ * remembered (in camp memory under {@value #FELLING}, so it survives a restart) and finished first: once its base
+ * log is cut, nothing else would recognise the rest of the trunk as a tree.
  */
 public final class ForageContext {
+	/** Camp memory key for a part-felled tree: its stump, the logs still standing and the dimension. */
+	public static final String FELLING = "rowan.felling";
 	private static final int SCAN_INTERVAL = 100;
 	private static final int TREE_RADIUS = 24;
 	/** Taller trees cannot be felled completely from the ground. */
@@ -57,21 +63,37 @@ public final class ForageContext {
 
 	private final Deque<Felled> felled = new ArrayDeque<>();
 
+	private @Nullable Tree unfinished;
+	private String unfinishedDim = "";
+	private boolean unfinishedLoaded;
+
 	/** A tree Rowan cut down, remembered so she can collect saplings, apples and sticks as its leaves fall. */
 	public record Felled(BlockPos pos, long at) {
 	}
 
 	// ------------------------------------------------------------------ trees
 
-	/** Trees may only be felled outside the camp (the camp's greenery is Terra's) but inside the gathering ring. */
+	/**
+	 * Trees may only be felled outside the camp (the camp's greenery is Terra's) but inside the gathering ring. The
+	 * camp is judged horizontally, so a hillside tree high above (or far below) the camp centre is still the camp's.
+	 */
 	public static boolean mayFell(CompanionEntity c, BlockPos pos) {
-		return WorldEditGuard.inResourceZone(c, pos) && !WorldEditGuard.inCamp(c, pos);
+		int r = WorldEditGuard.campRadius(c);
+		return WorldEditGuard.inResourceZone(c, pos)
+			&& Camp.horizontalDistSqr(WorldEditGuard.zoneCentre(c), pos) > (double) r * r;
 	}
 
-	/** The nearest known fellable tree, refreshing the search every 5 seconds. */
+	/**
+	 * The tree to fell next: a part-felled one first, otherwise the nearest known fellable tree, refreshing the search
+	 * every 5 seconds.
+	 */
 	public @Nullable Tree tree(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
 		long now = level.getGameTime();
+		Tree left = unfinished(c, level, now);
+		if (left != null) {
+			return left;
+		}
 		if (tree != null && (!level.isLoaded(tree.base()) || !level.getBlockState(tree.base()).is(BlockTags.LOGS)
 			|| isSkipped(tree.base(), now))) {
 			tree = null;
@@ -155,14 +177,105 @@ public final class ForageContext {
 		}
 	}
 
-	/** Remembers a felled tree and clears the cached target. */
-	public void noteFelled(BlockPos base, long now) {
+	/** Remembers a felled tree and clears the cached target (and the part-felled tree, if this was it). */
+	public void noteFelled(ServerLevel level, BlockPos base, long now) {
 		felled.addLast(new Felled(base.immutable(), now));
 		while (felled.size() > 8) {
 			felled.removeFirst();
 		}
 		tree = null;
 		treeScanAt = Long.MIN_VALUE / 2;
+		if (unfinished != null && unfinished.base().equals(base)) {
+			clearUnfinished(level);
+		}
+	}
+
+	// ------------------------------------------------------------ part-felled tree
+
+	/** True when this tree is the remembered part-felled one: its base is the stump, its logs what still stands. */
+	public boolean isUnfinished(Tree t) {
+		return unfinished != null && unfinished.base().equals(t.base());
+	}
+
+	/**
+	 * Remembers a tree Rowan was called away from after cutting into it: the stump and the logs still standing,
+	 * bottom-up. Its logs are no longer a tree to {@link TreeFinder}, so only this record gets them cut.
+	 */
+	public void noteUnfinished(ServerLevel level, BlockPos stump, List<BlockPos> remaining) {
+		List<BlockPos> logs = List.copyOf(remaining);
+		unfinished = new Tree(stump.immutable(), logs, logs.getLast().getY() - stump.getY() + 1);
+		unfinishedDim = Camp.dimensionId(level);
+		unfinishedLoaded = true;
+		CampData data = Camp.data(level.getServer());
+		CompoundTag mem = data.memory(FELLING);
+		mem.putLong("stump", stump.asLong());
+		mem.putLongArray("logs", logs.stream().mapToLong(BlockPos::asLong).toArray());
+		mem.putString("dim", unfinishedDim);
+		data.setDirty();
+		if (tree != null && tree.base().equals(stump)) {
+			tree = null;
+		}
+	}
+
+	private void clearUnfinished(ServerLevel level) {
+		unfinished = null;
+		unfinishedDim = "";
+		unfinishedLoaded = true;
+		CampData data = Camp.data(level.getServer());
+		CompoundTag mem = data.memory(FELLING);
+		for (String key : List.copyOf(mem.keySet())) {
+			mem.remove(key);
+		}
+		data.setDirty();
+	}
+
+	/**
+	 * The part-felled tree with only its standing logs, or null when there is none here and now (another dimension,
+	 * not loaded, skipped for a while, or no longer in the gathering ring). The record is dropped once every log is
+	 * gone or the tree may no longer be felled.
+	 */
+	private @Nullable Tree unfinished(CompanionEntity c, ServerLevel level, long now) {
+		if (!unfinishedLoaded) {
+			loadUnfinished(level);
+		}
+		Tree u = unfinished;
+		if (u == null || !unfinishedDim.equals(Camp.dimensionId(level)) || isSkipped(u.base(), now)) {
+			return null;
+		}
+		List<BlockPos> standing = new ArrayList<>();
+		for (BlockPos p : u.logs()) {
+			if (!level.isLoaded(p)) {
+				return null;
+			}
+			if (level.getBlockState(p).is(BlockTags.LOGS)) {
+				standing.add(p);
+			}
+		}
+		if (standing.isEmpty() || !mayFell(c, u.base())) {
+			clearUnfinished(level);
+			return null;
+		}
+		return new Tree(u.base(), standing, standing.getLast().getY() - u.base().getY() + 1);
+	}
+
+	private void loadUnfinished(ServerLevel level) {
+		unfinishedLoaded = true;
+		CompoundTag mem = Camp.data(level.getServer()).memory(FELLING);
+		if (!mem.contains("stump")) {
+			return;
+		}
+		List<BlockPos> logs = new ArrayList<>();
+		mem.getLongArray("logs").ifPresent(a -> {
+			for (long l : a) {
+				logs.add(BlockPos.of(l));
+			}
+		});
+		if (logs.isEmpty()) {
+			return;
+		}
+		BlockPos stump = BlockPos.of(mem.getLongOr("stump", 0L));
+		unfinished = new Tree(stump, List.copyOf(logs), logs.getLast().getY() - stump.getY() + 1);
+		unfinishedDim = mem.getStringOr("dim", "");
 	}
 
 	// ---------------------------------------------------------------- berries
@@ -224,7 +337,7 @@ public final class ForageContext {
 				continue;
 			}
 			for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, new AABB(f.pos()).inflate(8),
-				e -> e.isAlive() && !e.hasPickUpDelay() && isForageable(e.getItem()))) {
+				e -> e.isAlive() && !e.hasPickUpDelay() && !(e.getOwner() instanceof Player) && isForageable(e.getItem()))) {
 				if (!found.contains(item) && WorldEditGuard.inResourceZone(c, item.blockPosition())) {
 					found.add(item);
 				}

@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import io.github.bradley09roberts.hardcorefriends.ai.action.Actions;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
+import io.github.bradley09roberts.hardcorefriends.ai.task.common.ReturnHomeTask;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
@@ -98,9 +99,11 @@ public final class MineExposedOreTask implements CompanionTask {
 		if (!MiningHelper.isWantedOre(state)) {
 			return next(c, level);
 		}
-		boolean near = c.position().distanceToSqr(stand.getX() + 0.5, stand.getY(), stand.getZ() + 0.5) <= 2.25;
+		// Never dig out the block under his own feet: step onto the chosen spot beside it first.
+		boolean onTop = MiningHelper.isOnTop(c.blockPosition(), target);
+		boolean near = !onTop && c.position().distanceToSqr(stand.getX() + 0.5, stand.getY(), stand.getZ() + 0.5) <= 2.25;
 		if (!near || !actions.canReach(target)) {
-			if (actions.walkTo(stand, 1.0) && !actions.canReach(target)) {
+			if (actions.walkTo(stand, onTop ? 0.5 : 1.0) && !onTop && !actions.canReach(target)) {
 				skip(level, target);
 				return finish();
 			}
@@ -178,8 +181,9 @@ public final class MineExposedOreTask implements CompanionTask {
 			if (d >= bestDist) {
 				continue;
 			}
-			BlockPos spot = c.actions().canReach(p) ? c.blockPosition() : MiningHelper.standSpotFor(level, p, c.blockPosition());
-			if (spot != null) {
+			BlockPos feet = c.blockPosition();
+			BlockPos spot = !MiningHelper.isOnTop(feet, p) && c.actions().canReach(p) ? feet : MiningHelper.standSpotFor(level, p, feet);
+			if (spot != null && !ReturnHomeTask.sendsHome(c, spot)) {
 				best = p.immutable();
 				bestStand = spot;
 				bestDist = d;
@@ -200,8 +204,8 @@ public final class MineExposedOreTask implements CompanionTask {
 		if (!MiningHelper.isWantedOre(state) || !MiningHelper.touchesAir(level, pos) || isSkipped(level, pos)) {
 			return false;
 		}
-		if (Camp.isNight(level) && !WorldEditGuard.inCamp(c, pos)) {
-			return false;
+		if (ReturnHomeTask.sendsHome(c, pos)) {
+			return false; // dusk or night, and too far out: the return home would only call him back
 		}
 		if (isMineFloor(level, pos)) {
 			return false;
@@ -252,7 +256,7 @@ public final class MineExposedOreTask implements CompanionTask {
 				continue;
 			}
 			BlockPos spot = MiningHelper.standSpotFor(level, p, centre);
-			if (spot != null) {
+			if (spot != null && !ReturnHomeTask.sendsHome(c, spot)) {
 				chosen = p;
 				chosenStand = spot;
 				return;
@@ -317,7 +321,8 @@ public final class MineExposedOreTask implements CompanionTask {
 	 */
 	private static boolean isMineFloor(ServerLevel level, BlockPos pos) {
 		MinePlan plan = MinePlan.of(Camp.data(level.getServer()));
-		return plan.inBox(pos) && MiningHelper.isPassable(level, pos.above()) && MiningHelper.isPassable(level, pos.above(2));
+		return plan.inBox(pos) && plan.isIn(level) && MiningHelper.isPassable(level, pos.above())
+			&& MiningHelper.isPassable(level, pos.above(2));
 	}
 
 	private boolean isSkipped(ServerLevel level, BlockPos pos) {

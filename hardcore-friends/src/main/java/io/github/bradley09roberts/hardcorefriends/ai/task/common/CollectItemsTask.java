@@ -51,7 +51,7 @@ public final class CollectItemsTask implements CompanionTask {
 		ignoredUntil.values().removeIf(until -> until <= now);
 		double best = RANGE * RANGE;
 		for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, c.getBoundingBox().inflate(RANGE, 4, RANGE),
-			e -> mayCollect(c, e))) {
+			e -> mayCollect(c, e) && !ignored(e))) {
 			double d = item.distanceToSqr(c);
 			if (d <= best) {
 				best = d;

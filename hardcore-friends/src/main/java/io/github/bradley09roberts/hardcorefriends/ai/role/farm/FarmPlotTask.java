@@ -93,7 +93,7 @@ public final class FarmPlotTask implements CompanionTask {
 	}
 
 	private static boolean canTill(CompanionEntity c) {
-		return c.actions().hasTool(ItemTags.HOES) && c.backpack().count(Crops.IS_SEED) >= 4;
+		return c.actions().hasTool(ItemTags.HOES) && TillTask.hasSeedsToSow(c);
 	}
 
 	private static boolean bucketAvailable(CompanionEntity c) {
