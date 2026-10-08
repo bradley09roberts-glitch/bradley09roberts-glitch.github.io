@@ -1,9 +1,13 @@
 package io.github.bradley09roberts.hardcorefriends.camp;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
+
+import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -277,6 +281,94 @@ public final class Crafting {
 		}
 		if (target == Items.COBBLESTONE_SLAB) {
 			return swap(bp, List.of(in(s -> s.is(Items.COBBLESTONE), 3)), new ItemStack(Items.COBBLESTONE_SLAB, 6));
+		}
+		return craftExtra(c, target, table, 0);
+	}
+
+	// ------------------------------------------------------- added recipes
+
+	/** One ingredient of an added recipe: how many of the matching items it uses up. */
+	public record Ingredient(Predicate<ItemStack> match, int count, @Nullable Item item) {
+	}
+
+	/**
+	 * A recipe a feature package adds with {@link #addRecipe}: {@code count} of {@code output} from the ingredients,
+	 * at a crafting table if {@code needsTable}. {@link #ensure} uses these after the built-in ones, and makes a missing
+	 * single-item ingredient that has a recipe of its own first (sticks, planks, paper for books...).
+	 */
+	public record Recipe(Item output, int count, boolean needsTable, List<Ingredient> inputs) {
+	}
+
+	private static final List<Recipe> ADDED = new CopyOnWriteArrayList<>();
+	/** How deep {@link #ensure} goes making ingredients of ingredients. */
+	private static final int MAX_RECIPE_DEPTH = 4;
+
+	/** Adds a recipe the friends can craft (called from a feature package's {@code init()}). */
+	public static void addRecipe(Item output, int count, boolean needsTable, Ingredient... inputs) {
+		ADDED.add(new Recipe(output, count, needsTable, List.of(inputs)));
+	}
+
+	/** {@code count} of one item. */
+	public static Ingredient of(Item item, int count) {
+		return new Ingredient(s -> s.is(item), count, item);
+	}
+
+	/** {@code count} of any item in the tag (planks, logs, wool...). */
+	public static Ingredient of(TagKey<Item> tag, int count) {
+		return new Ingredient(s -> s.is(tag), count, null);
+	}
+
+	/** True if the friends know how to make this item (built in or added). */
+	public static boolean hasAddedRecipe(Item item) {
+		for (Recipe r : ADDED) {
+			if (r.output() == item) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean craftExtra(CompanionEntity c, Item target, boolean table, int depth) {
+		Backpack bp = c.backpack();
+		for (Recipe recipe : ADDED) {
+			if (recipe.output() != target || recipe.needsTable() && !table) {
+				continue;
+			}
+			boolean ready = true;
+			for (Ingredient input : recipe.inputs()) {
+				int have = bp.count(input.match());
+				if (have >= input.count()) {
+					continue;
+				}
+				Item sub = input.item();
+				if (sub == null || depth >= MAX_RECIPE_DEPTH) {
+					ready = false;
+					break;
+				}
+				int guard = 0;
+				while (bp.count(input.match()) < input.count() && guard++ < 64) {
+					boolean made = sub == Items.STICK ? ensureSticks(bp, bp.count(Items.STICK) + 1)
+						: sub == Items.TORCH ? ensureTorches(bp, bp.count(Items.TORCH) + 1)
+						: craftExtra(c, sub, table, depth + 1);
+					if (!made) {
+						break;
+					}
+				}
+				if (bp.count(input.match()) < input.count()) {
+					ready = false;
+					break;
+				}
+			}
+			if (!ready) {
+				continue;
+			}
+			List<Input> inputs = new ArrayList<>();
+			for (Ingredient input : recipe.inputs()) {
+				inputs.add(in(input.match(), input.count()));
+			}
+			if (swap(bp, inputs, new ItemStack(recipe.output(), recipe.count()))) {
+				return true;
+			}
 		}
 		return false;
 	}
