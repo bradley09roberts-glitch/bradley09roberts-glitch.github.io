@@ -1,0 +1,101 @@
+{
+ "id": "haze-save-for",
+ "build": 6763,
+ "title": "Not enough souls",
+ "description": "Haze with 500 souls: nothing worthwhile is affordable.",
+ "expectations": [
+  "Decision is SAVE with the remaining souls shown; no BUY NOW"
+ ],
+ "events": [
+  {
+   "t": 0,
+   "event": {
+    "type": "match.start",
+    "matchId": "fx-save",
+    "mode": "standard"
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.hero",
+    "value": 13,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.gameTime",
+    "value": 1200,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.souls",
+    "value": 500,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.items",
+    "value": [
+     "upgrade_blitz_bullets",
+     "upgrade_active_reload",
+     "upgrade_vampire",
+     "upgrade_improved_spirit"
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.standing",
+    "value": "even",
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.enemies",
+    "value": [
+     7,
+     3,
+     2,
+     4,
+     6,
+     11
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.allies",
+    "value": [
+     13,
+     1,
+     8,
+     12,
+     17,
+     20
+    ],
+    "gameTime": 1200
+   }
+  }
+ ]
+}

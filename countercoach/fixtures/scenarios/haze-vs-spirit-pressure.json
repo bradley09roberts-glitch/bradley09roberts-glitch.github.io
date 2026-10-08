@@ -1,0 +1,133 @@
+{
+ "id": "haze-vs-spirit-pressure",
+ "build": 6763,
+ "title": "Haze vs observed spirit pressure",
+ "description": "Same Haze state; enemy Seven shows spirit items and the death recap was 85% spirit.",
+ "expectations": [
+  "Top defensive answer is spirit resist / spirit burst protection"
+ ],
+ "events": [
+  {
+   "t": 0,
+   "event": {
+    "type": "match.start",
+    "matchId": "fx-spirit",
+    "mode": "standard"
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.hero",
+    "value": 13,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.gameTime",
+    "value": 1200,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.souls",
+    "value": 3200,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.items",
+    "value": [
+     "upgrade_blitz_bullets",
+     "upgrade_active_reload",
+     "upgrade_vampire",
+     "upgrade_improved_spirit"
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.standing",
+    "value": "even",
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.enemies",
+    "value": [
+     7,
+     3,
+     2,
+     4,
+     6,
+     11
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.allies",
+    "value": [
+     13,
+     1,
+     8,
+     12,
+     17,
+     20
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 500,
+   "event": {
+    "type": "observe",
+    "field": "enemyItems:2",
+    "value": {
+     "items": [
+      "upgrade_magic_vulnerability",
+      "upgrade_soaring_spirit",
+      "upgrade_arcane_extension"
+     ],
+     "complete": false
+    },
+    "gameTime": 1190
+   }
+  },
+  {
+   "t": 600,
+   "event": {
+    "type": "observe",
+    "field": "me.deathRecap",
+    "value": {
+     "weaponPct": 10,
+     "spiritPct": 85,
+     "meleePct": 5,
+     "killerHeroIds": [
+      2
+     ]
+    },
+    "gameTime": 1180
+   }
+  }
+ ]
+}

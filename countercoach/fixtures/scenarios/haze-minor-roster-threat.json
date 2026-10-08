@@ -1,0 +1,101 @@
+{
+ "id": "haze-minor-roster-threat",
+ "build": 6763,
+ "title": "Minor, uncertain threat",
+ "description": "Haze with 1,600 souls; threats only inferred from enemy hero picks.",
+ "expectations": [
+  "BUY NOW stays on the core route (no counter item)"
+ ],
+ "events": [
+  {
+   "t": 0,
+   "event": {
+    "type": "match.start",
+    "matchId": "fx-minor",
+    "mode": "standard"
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.hero",
+    "value": 13,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.gameTime",
+    "value": 1200,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.souls",
+    "value": 1600,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.items",
+    "value": [
+     "upgrade_blitz_bullets",
+     "upgrade_active_reload",
+     "upgrade_vampire",
+     "upgrade_improved_spirit"
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.standing",
+    "value": "even",
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.enemies",
+    "value": [
+     7,
+     3,
+     2,
+     4,
+     6,
+     11
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.allies",
+    "value": [
+     13,
+     1,
+     8,
+     12,
+     17,
+     20
+    ],
+    "gameTime": 1200
+   }
+  }
+ ]
+}

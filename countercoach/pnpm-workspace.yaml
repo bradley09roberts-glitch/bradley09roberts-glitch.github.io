@@ -1,0 +1,7 @@
+packages:
+  - packages/engine
+  - packages/ingest
+  - apps/desktop
+onlyBuiltDependencies:
+  - electron
+  - esbuild

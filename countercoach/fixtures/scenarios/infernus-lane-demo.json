@@ -1,0 +1,120 @@
+{
+ "id": "infernus-lane-demo",
+ "build": 6763,
+ "title": "Infernus laning (demo)",
+ "description": "Infernus at 4:00 in lane against Abrams and Haze, 900 souls, one unlock and one point unspent.",
+ "expectations": [
+  "Lane threats come from the lane opponents",
+  "Ability advice uses the unlock before points"
+ ],
+ "events": [
+  {
+   "t": 0,
+   "event": {
+    "type": "match.start",
+    "matchId": "fx-lane",
+    "mode": "standard"
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.hero",
+    "value": 1,
+    "gameTime": 240
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.gameTime",
+    "value": 240,
+    "gameTime": 240
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.souls",
+    "value": 900,
+    "gameTime": 240
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.items",
+    "value": [
+     "upgrade_improved_spirit"
+    ],
+    "gameTime": 240
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.enemies",
+    "value": [
+     6,
+     13,
+     2,
+     4,
+     7,
+     11
+    ],
+    "gameTime": 240
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.lane",
+    "value": [
+     6,
+     13
+    ],
+    "gameTime": 240
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.abilities",
+    "value": {
+     "unlocked": [
+      "ability_afterburn"
+     ],
+     "tiers": {
+      "ability_afterburn": 1
+     }
+    },
+    "gameTime": 240
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.unspentPoints",
+    "value": 1,
+    "gameTime": 240
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.unspentUnlocks",
+    "value": 1,
+    "gameTime": 240
+   }
+  }
+ ]
+}

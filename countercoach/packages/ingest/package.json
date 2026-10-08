@@ -1,0 +1,11 @@
+{
+  "name": "@countercoach/ingest",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Node CLI that fetches Deadlock API data, validates it and writes versioned snapshots.",
+  "dependencies": {
+    "@countercoach/engine": "workspace:*",
+    "zod": "4.6.5"
+  }
+}

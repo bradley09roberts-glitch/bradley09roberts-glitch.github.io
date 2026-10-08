@@ -1,0 +1,178 @@
+{
+ "id": "abrams-midgame-demo",
+ "build": 6763,
+ "title": "Abrams mid-game (demo)",
+ "description": "Abrams at 15:00 with core items, 2,400 souls, 3 unspent points; Lady Geist was seen with sustain items.",
+ "expectations": [
+  "Purchase advice follows the Melee brawler route",
+  "Ability advice holds points for the Shoulder Charge T3 breakpoint"
+ ],
+ "events": [
+  {
+   "t": 0,
+   "event": {
+    "type": "match.start",
+    "matchId": "fx-abrams",
+    "mode": "standard"
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.hero",
+    "value": 6,
+    "gameTime": 900
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.gameTime",
+    "value": 900,
+    "gameTime": 900
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.souls",
+    "value": 2400,
+    "gameTime": 900
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.items",
+    "value": [
+     "upgrade_close_range",
+     "upgrade_endurance",
+     "upgrade_lifestrike_gauntlets",
+     "upgrade_melee_charge"
+    ],
+    "gameTime": 900
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.enemies",
+    "value": [
+     13,
+     2,
+     4,
+     1,
+     11,
+     7
+    ],
+    "gameTime": 900
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.allies",
+    "value": [
+     6,
+     3,
+     8,
+     12,
+     17,
+     20
+    ],
+    "gameTime": 900
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.abilities",
+    "value": {
+     "unlocked": [
+      "citadel_ability_passive_beefy",
+      "citadel_ability_bull_charge",
+      "citadel_ability_bull_heal"
+     ],
+     "tiers": {
+      "citadel_ability_bull_charge": 2
+     }
+    },
+    "gameTime": 900
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.unspentPoints",
+    "value": 3,
+    "gameTime": 900
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.unspentUnlocks",
+    "value": 0,
+    "gameTime": 900
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.standing",
+    "value": "even",
+    "gameTime": 900
+   }
+  },
+  {
+   "t": 1000,
+   "event": {
+    "type": "observe",
+    "field": "enemyItems:4",
+    "value": {
+     "items": [
+      "upgrade_health_stealing_magic",
+      "upgrade_resonant_healing"
+     ],
+     "complete": false
+    },
+    "gameTime": 880
+   }
+  },
+  {
+   "t": 5000,
+   "event": {
+    "type": "observe",
+    "field": "me.souls",
+    "value": 3300,
+    "gameTime": 960
+   }
+  },
+  {
+   "t": 9000,
+   "event": {
+    "type": "observe",
+    "field": "me.deathRecap",
+    "value": {
+     "weaponPct": 30,
+     "spiritPct": 65,
+     "meleePct": 5,
+     "killerHeroIds": [
+      4
+     ]
+    },
+    "gameTime": 1010
+   }
+  }
+ ]
+}

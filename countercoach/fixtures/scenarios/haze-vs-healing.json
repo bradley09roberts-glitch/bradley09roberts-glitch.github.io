@@ -1,0 +1,127 @@
+{
+ "id": "haze-vs-healing",
+ "build": 6763,
+ "title": "Haze vs heavy enemy healing",
+ "description": "Lady Geist bought lifesteal/regeneration items and you reported her healing as a major problem.",
+ "expectations": [
+  "BUY NOW is a healing-reduction item Haze applies with bullets"
+ ],
+ "events": [
+  {
+   "t": 0,
+   "event": {
+    "type": "match.start",
+    "matchId": "fx-heal",
+    "mode": "standard"
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.hero",
+    "value": 13,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.gameTime",
+    "value": 1200,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.souls",
+    "value": 3200,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.items",
+    "value": [
+     "upgrade_blitz_bullets",
+     "upgrade_active_reload",
+     "upgrade_vampire",
+     "upgrade_improved_spirit"
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.standing",
+    "value": "even",
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.enemies",
+    "value": [
+     7,
+     3,
+     2,
+     4,
+     6,
+     11
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.allies",
+    "value": [
+     13,
+     1,
+     8,
+     12,
+     17,
+     20
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 500,
+   "event": {
+    "type": "observe",
+    "field": "enemyItems:4",
+    "value": {
+     "items": [
+      "upgrade_health_stealing_magic",
+      "upgrade_resonant_healing"
+     ],
+     "complete": false
+    },
+    "gameTime": 1190
+   }
+  },
+  {
+   "t": 600,
+   "event": {
+    "type": "threat.report",
+    "kind": "enemy_healing",
+    "severity": "major",
+    "sourceHeroId": 4,
+    "note": "Geist out-heals our damage",
+    "gameTime": 1190
+   }
+  }
+ ]
+}

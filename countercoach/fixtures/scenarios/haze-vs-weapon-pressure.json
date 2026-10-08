@@ -1,0 +1,133 @@
+{
+ "id": "haze-vs-weapon-pressure",
+ "build": 6763,
+ "title": "Haze vs observed weapon pressure",
+ "description": "Haze mid-game with 3,200 souls. Enemy Wraith shows weapon items and the last death recap was 85% weapon damage.",
+ "expectations": [
+  "Top defensive answer is bullet resist / weapon protection, not spirit resist"
+ ],
+ "events": [
+  {
+   "t": 0,
+   "event": {
+    "type": "match.start",
+    "matchId": "fx-weapon",
+    "mode": "standard"
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.hero",
+    "value": 13,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.gameTime",
+    "value": 1200,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.souls",
+    "value": 3200,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.items",
+    "value": [
+     "upgrade_blitz_bullets",
+     "upgrade_active_reload",
+     "upgrade_vampire",
+     "upgrade_improved_spirit"
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.standing",
+    "value": "even",
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.enemies",
+    "value": [
+     7,
+     3,
+     2,
+     4,
+     6,
+     11
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.allies",
+    "value": [
+     13,
+     1,
+     8,
+     12,
+     17,
+     20
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 500,
+   "event": {
+    "type": "observe",
+    "field": "enemyItems:7",
+    "value": {
+     "items": [
+      "upgrade_burst_fire",
+      "upgrade_blitz_bullets",
+      "upgrade_titan_round"
+     ],
+     "complete": false
+    },
+    "gameTime": 1190
+   }
+  },
+  {
+   "t": 600,
+   "event": {
+    "type": "observe",
+    "field": "me.deathRecap",
+    "value": {
+     "weaponPct": 85,
+     "spiritPct": 10,
+     "meleePct": 5,
+     "killerHeroIds": [
+      7
+     ]
+    },
+    "gameTime": 1180
+   }
+  }
+ ]
+}

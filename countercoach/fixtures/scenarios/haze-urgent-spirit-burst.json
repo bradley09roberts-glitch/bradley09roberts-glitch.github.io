@@ -1,0 +1,143 @@
+{
+ "id": "haze-urgent-spirit-burst",
+ "build": 6763,
+ "title": "Urgent spirit burst",
+ "description": "Haze with 1,600 souls; died to 95% spirit damage from Lady Geist and reported spirit burst as a major problem.",
+ "expectations": [
+  "BUY NOW answers spirit damage, delaying the core item"
+ ],
+ "events": [
+  {
+   "t": 0,
+   "event": {
+    "type": "match.start",
+    "matchId": "fx-urgent",
+    "mode": "standard"
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.hero",
+    "value": 13,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.gameTime",
+    "value": 1200,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.souls",
+    "value": 1600,
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "me.items",
+    "value": [
+     "upgrade_blitz_bullets",
+     "upgrade_active_reload",
+     "upgrade_vampire",
+     "upgrade_improved_spirit"
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "match.standing",
+    "value": "even",
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.enemies",
+    "value": [
+     7,
+     3,
+     2,
+     4,
+     6,
+     11
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 0,
+   "event": {
+    "type": "observe",
+    "field": "roster.allies",
+    "value": [
+     13,
+     1,
+     8,
+     12,
+     17,
+     20
+    ],
+    "gameTime": 1200
+   }
+  },
+  {
+   "t": 500,
+   "event": {
+    "type": "observe",
+    "field": "enemyItems:4",
+    "value": {
+     "items": [
+      "upgrade_magic_burst",
+      "upgrade_soaring_spirit"
+     ],
+     "complete": false
+    },
+    "gameTime": 1190
+   }
+  },
+  {
+   "t": 600,
+   "event": {
+    "type": "observe",
+    "field": "me.deathRecap",
+    "value": {
+     "weaponPct": 5,
+     "spiritPct": 95,
+     "meleePct": 0,
+     "killerHeroIds": [
+      4
+     ]
+    },
+    "gameTime": 1195
+   }
+  },
+  {
+   "t": 700,
+   "event": {
+    "type": "threat.report",
+    "kind": "spirit_burst",
+    "severity": "major",
+    "sourceHeroId": 4,
+    "note": "One-shot by Essence Bomb combo",
+    "gameTime": 1195
+   }
+  }
+ ]
+}

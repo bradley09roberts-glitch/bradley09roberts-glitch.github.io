@@ -1,0 +1,1 @@
+ability gunslinger_knockbackblast has 0 upgrade tiers (expected 3)

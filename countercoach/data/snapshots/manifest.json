@@ -1,0 +1,14 @@
+{
+  "active": {
+    "file": "snapshot-6763-cf9635cfbf62.json",
+    "clientVersion": 6763,
+    "contentHash": "cf9635cfbf623606998e9dcbfdc9bfd118a302d0d13a39af862d77d434536b3a",
+    "retrievedAt": "2026-10-08T10:21:38.373Z"
+  },
+  "history": [],
+  "lastCheck": {
+    "at": "2026-10-08T10:21:38.494Z",
+    "clientVersion": 6763,
+    "result": "replaced"
+  }
+}
