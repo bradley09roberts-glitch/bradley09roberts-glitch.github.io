@@ -77,7 +77,7 @@ public final class DeliverToBuilderTask implements CompanionTask {
 		if (shortage.isEmpty() || c.backpack().count(wanted(c.backpack(), shortage)) < MIN_LOAD) {
 			return 0;
 		}
-		return findOak(c) != null || SupplyChest.of((ServerLevel) c.level()).isPresent() ? 55 : 0;
+		return findOak(c) != null || SupplyChest.of((ServerLevel) c.level()).isPresent() ? 68 : 0;
 	}
 
 	private static @Nullable CompanionEntity findOak(CompanionEntity c) {
