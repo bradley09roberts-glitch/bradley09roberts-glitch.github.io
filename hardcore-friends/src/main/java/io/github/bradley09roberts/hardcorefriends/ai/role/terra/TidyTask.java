@@ -105,14 +105,18 @@ public final class TidyTask implements CompanionTask {
 		}
 	}
 
-	/** A one-block pit in level ground: air with solid natural blocks below and on all four sides, open above. */
+	/**
+	 * A one-block pit in level ground: air with solid blocks below and on all four sides, open above. Pits in anything
+	 * a player or the friends built are left alone, since they may be there on purpose.
+	 */
 	static boolean isHole(ServerLevel level, CampData data, BlockPos pos) {
 		if (!level.getBlockState(pos).isAir()) {
 			return false;
 		}
 		BlockPos below = pos.below();
 		BlockState floor = level.getBlockState(below);
-		if (!floor.isFaceSturdy(level, below, Direction.UP) || Landscape.isPlayerMade(floor, below, data)) {
+		if (!floor.isFaceSturdy(level, below, Direction.UP) || Landscape.isPlayerMade(floor, below, data)
+			|| data.isPlacedByFriends(below)) {
 			return false;
 		}
 		if (!Landscape.isOpen(level.getBlockState(pos.above())) || WorldEditGuard.touchesFluid(level, pos)) {
@@ -122,7 +126,7 @@ public final class TidyTask implements CompanionTask {
 			BlockPos side = pos.relative(d);
 			BlockState wall = level.getBlockState(side);
 			if (!wall.isFaceSturdy(level, side, d.getOpposite()) || Landscape.isPlayerMade(wall, side, data)
-				|| !Landscape.isOpen(level.getBlockState(side.above()))) {
+				|| data.isPlacedByFriends(side) || !Landscape.isOpen(level.getBlockState(side.above()))) {
 				return false;
 			}
 		}

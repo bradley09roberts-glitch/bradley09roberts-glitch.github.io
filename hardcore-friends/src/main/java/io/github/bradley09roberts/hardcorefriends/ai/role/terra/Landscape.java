@@ -1,6 +1,7 @@
 package io.github.bradley09roberts.hardcorefriends.ai.role.terra;
 
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
 
@@ -77,7 +78,7 @@ public final class Landscape {
 
 	/** True if any block in the square of the given radius around {@code pos} (same y) matches. */
 	public static boolean anyNear(ServerLevel level, BlockPos pos, int radius, int dyMin, int dyMax,
-			java.util.function.Predicate<BlockState> test) {
+			Predicate<BlockState> test) {
 		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
 		for (int dx = -radius; dx <= radius; dx++) {
 			for (int dz = -radius; dz <= radius; dz++) {

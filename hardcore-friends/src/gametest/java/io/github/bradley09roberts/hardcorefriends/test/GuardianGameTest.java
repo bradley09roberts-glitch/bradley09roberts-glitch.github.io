@@ -4,17 +4,24 @@ import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 import io.github.bradley09roberts.hardcorefriends.ai.role.SageAdvisor;
 import io.github.bradley09roberts.hardcorefriends.ai.role.sage.ReviewStoresTask;
+import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
+import io.github.bradley09roberts.hardcorefriends.camp.Structures;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
@@ -87,6 +94,185 @@ public class GuardianGameTest {
 				"Sage went to the supply chest");
 			helper.assertTrue(CampNeeds.stock(CampNeeds.Need.WOOD) >= 256, "the review counted the logs in the chest");
 			helper.assertTrue(CampNeeds.focus() != CampNeeds.Need.WOOD, "wood is not the focus with a full stack of logs");
+		});
+	}
+
+	// ------------------------------------------------------------------ Terra
+
+	/** Counts blocks in the plot (relative y 1 to 4) that match a test. */
+	private static int countInPlot(GameTestHelper helper, java.util.function.Predicate<BlockState> test) {
+		int n = 0;
+		for (int x = 0; x < 32; x++) {
+			for (int z = 0; z < 32; z++) {
+				for (int y = 1; y <= 4; y++) {
+					if (test.test(helper.getBlockState(new BlockPos(x, y, z)))) {
+						n++;
+					}
+				}
+			}
+		}
+		return n;
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_49", maxTicks = 1200)
+	public void terraLaysDirtPathToSite(GameTestHelper helper) {
+		CampData data = TestSupport.resetCamp(helper, true);
+		data.setStage(1);
+		data.putSite(Structures.CABIN, new CampData.Site(helper.absolutePos(new BlockPos(16, 2, 27)), 0, 0));
+		CompanionEntity terra = TestSupport.spawnFriend(helper, FriendId.TERRA, new BlockPos(12, 2, 16));
+		ItemStack shovel = new ItemStack(Items.WOODEN_SHOVEL);
+		terra.setItemSlot(EquipmentSlot.MAINHAND, shovel);
+		helper.succeedWhen(() -> {
+			int paths = 0;
+			for (int z = 16; z <= 26; z++) {
+				if (helper.getBlockState(new BlockPos(16, 1, z)).is(Blocks.DIRT_PATH)) {
+					paths++;
+				}
+			}
+			helper.assertTrue(paths >= 6, "Terra laid at least 6 path blocks towards the cabin site, laid " + paths
+				+ " (" + terra.activity() + ")");
+			ItemStack held = terra.getMainHandItem().is(ItemTags.SHOVELS) ? terra.getMainHandItem()
+				: terra.backpack().find(s -> s.is(ItemTags.SHOVELS));
+			helper.assertTrue(held.getDamageValue() >= paths, "the shovel wore down by one per path block, damage "
+				+ held.getDamageValue());
+			helper.assertTrue(helper.getBlockState(new BlockPos(20, 1, 20)).is(Blocks.GRASS_BLOCK), "grass off the path is untouched");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_50", maxTicks = 1200)
+	public void terraLightsDarkCampAtNight(GameTestHelper helper) {
+		TestSupport.resetCamp(helper, true);
+		TestSupport.setTime(helper, 18000);
+		CompanionEntity terra = TestSupport.spawnFriend(helper, FriendId.TERRA, new BlockPos(14, 2, 14));
+		terra.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_SHOVEL));
+		TestSupport.give(terra, new ItemStack(Items.TORCH, 8));
+		helper.succeedWhen(() -> {
+			int torches = countInPlot(helper, s -> s.is(Blocks.TORCH));
+			helper.assertTrue(torches >= 2, "Terra placed torches in the dark camp, placed " + torches + " ("
+				+ terra.activity() + " at " + helper.relativePos(terra.blockPosition()) + ")");
+			helper.assertTrue(terra.backpack().count(Items.TORCH) <= 8 - torches, "each torch came out of the backpack");
+			helper.assertTrue(helper.getLevel().getBrightness(LightLayer.BLOCK, helper.absolutePos(new BlockPos(16, 2, 16))) >= 8
+				|| torches >= 3, "the camp centre is lit");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_51", maxTicks = 1200)
+	public void terraPlantsSaplingOnTheRing(GameTestHelper helper) {
+		CampData data = TestSupport.resetCamp(helper, false);
+		// The camp centre lies 20 blocks west of the plot centre, so the planting ring (18 to 22 blocks out) crosses the plot.
+		BlockPos campCentre = helper.absolutePos(new BlockPos(-4, 2, 16));
+		data.setCamp(campCentre, Camp.dimensionId(helper.getLevel()));
+		CompanionEntity terra = TestSupport.spawnFriend(helper, FriendId.TERRA, new BlockPos(16, 2, 16));
+		terra.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_SHOVEL));
+		TestSupport.give(terra, new ItemStack(Items.OAK_SAPLING, 4));
+		helper.succeedWhen(() -> {
+			int onRing = 0;
+			for (int x = 0; x < 32; x++) {
+				for (int z = 0; z < 32; z++) {
+					BlockPos rel = new BlockPos(x, 2, z);
+					BlockState s = helper.getBlockState(rel);
+					if (s.is(BlockTags.SAPLINGS) || s.is(BlockTags.LOGS)) {
+						double d = Math.sqrt(Camp.horizontalDistSqr(helper.absolutePos(rel), campCentre));
+						helper.assertTrue(d >= 17.5 && d <= 22.5, "sapling at " + rel + " is on the ring (distance " + d + ")");
+						onRing++;
+					}
+				}
+			}
+			helper.assertTrue(onRing >= 1, "Terra planted a sapling (" + terra.activity() + ")");
+			helper.assertTrue(terra.backpack().count(Items.OAK_SAPLING) == 4 - onRing, "each sapling came out of the backpack");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_52", maxTicks = 1200)
+	public void terraFillsHoleWithDirt(GameTestHelper helper) {
+		TestSupport.resetCamp(helper, true);
+		BlockPos hole = new BlockPos(19, 1, 18);
+		helper.setBlock(hole, Blocks.AIR);
+		CompanionEntity terra = TestSupport.spawnFriend(helper, FriendId.TERRA, new BlockPos(12, 2, 12));
+		terra.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_SHOVEL));
+		TestSupport.give(terra, new ItemStack(Items.DIRT, 4));
+		helper.succeedWhen(() -> {
+			helper.assertTrue(helper.getBlockState(hole).is(Blocks.DIRT), "the hole was filled with dirt (" + terra.activity() + ")");
+			helper.assertTrue(terra.backpack().count(Items.DIRT) == 3, "one dirt came out of the backpack");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_53", maxTicks = 2400)
+	public void terraFencesTheFarm(GameTestHelper helper) {
+		CampData data = TestSupport.resetCamp(helper, true);
+		data.setStage(3);
+		for (int x = 14; x <= 18; x++) {
+			for (int z = 6; z <= 10; z++) {
+				helper.setBlock(new BlockPos(x, 1, z), x == 16 && z == 8 ? Blocks.WATER : Blocks.FARMLAND);
+			}
+		}
+		data.putSite(Structures.FARM_PLOT, new CampData.Site(helper.absolutePos(new BlockPos(16, 2, 8)), 0, 0));
+		data.markCompleted(Structures.FARM_PLOT);
+		CompanionEntity terra = TestSupport.spawnFriend(helper, FriendId.TERRA, new BlockPos(16, 2, 14));
+		terra.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_SHOVEL));
+		TestSupport.give(terra, new ItemStack(Items.OAK_FENCE, 30), new ItemStack(Items.OAK_FENCE_GATE, 1));
+		helper.succeedWhen(() -> {
+			int fences = 0;
+			int gates = 0;
+			for (int x = 13; x <= 19; x++) {
+				for (int z = 5; z <= 11; z++) {
+					if (x != 13 && x != 19 && z != 5 && z != 11) {
+						continue;
+					}
+					BlockState s = helper.getBlockState(new BlockPos(x, 2, z));
+					if (s.is(BlockTags.FENCE_GATES)) {
+						gates++;
+					} else if (s.is(BlockTags.FENCES)) {
+						fences++;
+					}
+				}
+			}
+			helper.assertTrue(fences == 23 && gates == 1, "the farm is ringed by 23 fences and one gate, found " + fences
+				+ " fences and " + gates + " gates (" + terra.activity() + ")");
+			helper.assertTrue(helper.getBlockState(new BlockPos(16, 2, 11)).is(BlockTags.FENCE_GATES), "the gate faces the camp centre");
+			helper.assertTrue(terra.backpack().count(Items.OAK_FENCE) == 7, "fences came out of the backpack");
+			helper.assertTrue(data.isCompleted(Structures.FARM_FENCE), "the farm fence is finished");
+			helper.assertTrue(helper.getBlockState(new BlockPos(16, 1, 8)).is(Blocks.WATER), "the farm itself is untouched");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_54", maxTicks = 2400)
+	public void terraCraftsFencesFromChestWood(GameTestHelper helper) {
+		CampData data = TestSupport.resetCamp(helper, true);
+		data.setStage(3);
+		for (int x = 8; x <= 10; x++) {
+			for (int z = 6; z <= 8; z++) {
+				helper.setBlock(new BlockPos(x, 1, z), x == 9 && z == 7 ? Blocks.WATER : Blocks.FARMLAND);
+			}
+		}
+		data.putSite(Structures.FARM_PLOT, new CampData.Site(helper.absolutePos(new BlockPos(9, 2, 7)), 0, 0));
+		data.markCompleted(Structures.FARM_PLOT);
+		Container chest = TestSupport.placeChest(helper, new BlockPos(22, 2, 20),
+			new ItemStack(Items.OAK_PLANKS, 64), new ItemStack(Items.STICK, 32));
+		helper.setBlock(new BlockPos(22, 2, 23), Blocks.CRAFTING_TABLE);
+		CompanionEntity terra = TestSupport.spawnFriend(helper, FriendId.TERRA, new BlockPos(16, 2, 14));
+		terra.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_SHOVEL));
+		helper.succeedWhen(() -> {
+			int fences = 0;
+			int gates = 0;
+			for (int x = 7; x <= 11; x++) {
+				for (int z = 5; z <= 9; z++) {
+					if (x != 7 && x != 11 && z != 5 && z != 9) {
+						continue;
+					}
+					BlockState s = helper.getBlockState(new BlockPos(x, 2, z));
+					if (s.is(BlockTags.FENCE_GATES)) {
+						gates++;
+					} else if (s.is(BlockTags.FENCES)) {
+						fences++;
+					}
+				}
+			}
+			helper.assertTrue(fences == 15 && gates == 1, "the small farm is ringed by 15 fences and one gate, found " + fences
+				+ " fences and " + gates + " gates (" + terra.activity() + ")");
+			int planksUsed = 64 - SupplyChest.count(chest, s -> s.is(Items.OAK_PLANKS));
+			helper.assertTrue(planksUsed >= 22, "fences and the gate were crafted from the chest's planks, used " + planksUsed);
+			helper.assertTrue(data.isCompleted(Structures.FARM_FENCE), "the farm fence is finished");
 		});
 	}
 }

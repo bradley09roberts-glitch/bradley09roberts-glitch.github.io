@@ -26,11 +26,11 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  *
  * <p>{@link #advice} picks the single most important piece of advice for a player's situation (badly hurt, hungry,
  * night without a bed or armour, darkness, a worn-out tool, phantoms, deep mining, full pockets, storms), then a camp
- * tip, then general Hardcore wisdom. {@link #tick} lets Sage speak up on their own: urgent survival advice to each
- * nearby player at most every three minutes, and the team focus whenever the camp's top need changes.
+ * tip, then general Hardcore wisdom. {@link #tick} lets Sage speak up on their own: survival advice or a camp tip to
+ * each nearby player at most every three minutes, and the team focus whenever the camp's top need changes.
  */
 public final class SageAdvisor {
-	/** How urgent a piece of advice is. Sage only volunteers {@link #SURVIVAL} advice unprompted. */
+	/** How urgent a piece of advice is. Sage volunteers everything except {@link #GENERAL} wisdom unprompted. */
 	public enum Importance {
 		SURVIVAL,
 		CAMP,
@@ -96,8 +96,8 @@ public final class SageAdvisor {
 				continue;
 			}
 			Advice advice = consult(player);
-			if (advice.importance() != Importance.SURVIVAL) {
-				continue;
+			if (advice.importance() == Importance.GENERAL) {
+				continue; // general wisdom is only given when asked
 			}
 			if (Speech.say(sage, Line.ADVICE, addressed(player, advice.text()))) {
 				LAST_ADVISED.put(player.getUUID(), now);

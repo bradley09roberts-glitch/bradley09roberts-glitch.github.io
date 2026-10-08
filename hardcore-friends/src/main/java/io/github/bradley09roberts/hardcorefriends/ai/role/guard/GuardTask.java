@@ -5,8 +5,9 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
@@ -194,11 +195,32 @@ public final class GuardTask implements CompanionTask {
 		if (!level.isLoaded(probe)) {
 			return null;
 		}
-		int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-		if (Math.abs(y - centre.getY()) > 24) {
-			return null;
+		return standSpot(level, x, z, centre.getY() + 6, centre.getY() - 12);
+	}
+
+	/**
+	 * The highest place to stand in a column between two heights: a solid floor (not leaves or a tree trunk) with
+	 * two free blocks above. Looking down from just above camp level keeps posts off roofs and tree tops.
+	 */
+	private static @Nullable BlockPos standSpot(ServerLevel level, int x, int z, int topY, int bottomY) {
+		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos(x, topY, z);
+		for (int y = topY; y >= bottomY; y--) {
+			m.setY(y);
+			BlockState floor = level.getBlockState(m);
+			if (!floor.getFluidState().isEmpty()) {
+				return null; // a post in water or lava is no use
+			}
+			if (floor.getCollisionShape(level, m).isEmpty() || floor.is(BlockTags.LEAVES) || floor.is(BlockTags.LOGS)) {
+				continue;
+			}
+			BlockPos feet = m.above();
+			BlockPos head = feet.above();
+			if (level.getBlockState(feet).getCollisionShape(level, feet).isEmpty()
+				&& level.getBlockState(head).getCollisionShape(level, head).isEmpty()) {
+				return feet.immutable();
+			}
 		}
-		return new BlockPos(x, y, z);
+		return null;
 	}
 
 	// ------------------------------------------------------------- watchtower

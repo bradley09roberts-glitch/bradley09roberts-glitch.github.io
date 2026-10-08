@@ -9,13 +9,13 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.Heightmap;
 
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
@@ -25,6 +25,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Crafting;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
+import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 
@@ -39,11 +40,14 @@ public final class LightTask implements CompanionTask {
 	private static final double SPACING = 5;
 	private static final int SCAN_INTERVAL = 200;
 	private static final int LATTICE = 3;
-	private static final int MAX_RISE = 10;
+	private static final int LOOK_ABOVE = 4;
+	private static final int MAX_DROP = 8;
 	private static final double WORK_REACH = 2.5;
 
 	private static final Predicate<ItemStack> TORCH = s -> s.is(Items.TORCH);
-	private static final Predicate<ItemStack> TORCH_MAKINGS = s -> s.is(Items.TORCH) || s.is(ItemTags.COALS) || s.is(Items.STICK);
+	private static final Predicate<ItemStack> COAL = s -> s.is(ItemTags.COALS);
+	private static final Predicate<ItemStack> STICK = s -> s.is(Items.STICK);
+	private static final Predicate<ItemStack> STICK_MAKINGS = s -> s.is(Items.STICK) || s.is(ItemTags.PLANKS) || s.is(ItemTags.LOGS);
 
 	private enum Phase {
 		FETCH,
@@ -88,17 +92,14 @@ public final class LightTask implements CompanionTask {
 		return 50;
 	}
 
+	/** Torches carried or in the chest, or coal and something to make sticks from (carried or in the chest). */
 	private static boolean torchesAvailable(CompanionEntity c) {
 		var bp = c.backpack();
-		if (bp.has(TORCH)) {
+		if (bp.has(TORCH) || ChestFetch.chestHas(c, TORCH)) {
 			return true;
 		}
-		boolean coal = bp.has(s -> s.is(ItemTags.COALS));
-		boolean stickMakings = bp.has(s -> s.is(Items.STICK) || s.is(ItemTags.PLANKS) || s.is(ItemTags.LOGS));
-		if (coal && stickMakings) {
-			return true;
-		}
-		return ChestFetch.chestHas(c, TORCH) || ChestFetch.chestHas(c, s -> s.is(ItemTags.COALS));
+		boolean coal = bp.has(COAL) || ChestFetch.chestHas(c, COAL);
+		return coal && (bp.has(STICK_MAKINGS) || ChestFetch.chestHas(c, STICK_MAKINGS));
 	}
 
 	/** Looks for dark spots on a coarse lattice over the camp, shifting the lattice each scan to cover every block. */
@@ -120,8 +121,13 @@ public final class LightTask implements CompanionTask {
 				if (!level.isLoaded(probe)) {
 					continue;
 				}
-				BlockPos spot = new BlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
-				if (Math.abs(spot.getY() - centre.getY()) > MAX_RISE || level.getBrightness(LightLayer.BLOCK, spot) >= DARK) {
+				// Look down from just above camp level, so roofs, tree tops and overhangs are not mistaken for ground.
+				BlockPos ground = Landscape.ground(level, x, z, centre.getY() + LOOK_ABOVE, centre.getY() - MAX_DROP);
+				if (ground == null) {
+					continue;
+				}
+				BlockPos spot = ground.above();
+				if (level.getBrightness(LightLayer.BLOCK, spot) >= DARK) {
 					continue;
 				}
 				if (isLightable(level, data, spot)) {
@@ -140,6 +146,7 @@ public final class LightTask implements CompanionTask {
 		BlockPos below = spot.below();
 		BlockState ground = level.getBlockState(below);
 		if (!ground.isFaceSturdy(level, below, Direction.UP) || ground.is(Blocks.DIRT_PATH) || ground.is(Blocks.FARMLAND)
+			|| ground.is(BlockTags.LEAVES) || ground.is(ModTags.NEVER_TOUCH)
 			|| data.isPlacedByFriends(below) || Landscape.isPlayerMade(ground, below, data)) {
 			return false;
 		}
@@ -164,6 +171,21 @@ public final class LightTask implements CompanionTask {
 		return true;
 	}
 
+	/** At the chest: takes torches, or else a little coal and the sticks (or planks) to go with it. */
+	private static void takeTorchMakings(CompanionEntity c) {
+		var bp = c.backpack();
+		ChestFetch.take(c, TORCH, 16 - bp.count(TORCH));
+		if (bp.count(TORCH) >= PER_RUN) {
+			return;
+		}
+		ChestFetch.take(c, COAL, 2 - bp.count(COAL));
+		if (!bp.has(STICK) && !bp.has(s -> s.is(ItemTags.PLANKS) || s.is(ItemTags.LOGS))) {
+			if (ChestFetch.take(c, STICK, 2) == 0 && ChestFetch.take(c, s -> s.is(ItemTags.PLANKS), 2) == 0) {
+				ChestFetch.take(c, s -> s.is(ItemTags.LOGS), 1);
+			}
+		}
+	}
+
 	/** Makes sure at least one torch is carried, crafting from coal and sticks if needed. */
 	private static boolean readyTorches(CompanionEntity c) {
 		if (c.backpack().has(TORCH)) {
@@ -177,9 +199,12 @@ public final class LightTask implements CompanionTask {
 	public TaskStatus tick(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
 		if (phase == Phase.FETCH) {
-			ChestFetch.Result r = ChestFetch.step(c, TORCH_MAKINGS, 16);
+			ChestFetch.Result r = ChestFetch.reach(c);
 			if (r == ChestFetch.Result.RUNNING) {
 				return TaskStatus.RUNNING;
+			}
+			if (r == ChestFetch.Result.DONE) {
+				takeTorchMakings(c);
 			}
 			if (!readyTorches(c)) {
 				Speech.say(c, Line.NEED_MATERIALS, "torches (coal and sticks)");

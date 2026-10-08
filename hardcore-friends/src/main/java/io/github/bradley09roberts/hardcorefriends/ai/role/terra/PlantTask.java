@@ -1,7 +1,6 @@
 package io.github.bradley09roberts.hardcorefriends.ai.role.terra;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -12,6 +11,7 @@ import net.minecraft.tags.BlockItemTags;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.util.Util;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -223,7 +223,7 @@ public final class PlantTask implements CompanionTask {
 						}
 					}
 				}
-				Collections.shuffle(around, new java.util.Random(random.nextLong()));
+				Util.shuffle(around, random);
 				for (BlockPos g : around) {
 					if (cluster.size() >= CLUSTER) {
 						break;

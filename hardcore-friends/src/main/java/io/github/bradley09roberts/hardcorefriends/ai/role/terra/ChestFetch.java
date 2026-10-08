@@ -33,15 +33,37 @@ public final class ChestFetch {
 
 	/** Walks to the chest, then moves up to {@code max} matching items into the backpack. */
 	public static Result step(CompanionEntity c, Predicate<ItemStack> filter, int max) {
+		if (!chestHas(c, filter)) {
+			return Result.FAILED;
+		}
+		Result walk = reach(c);
+		if (walk != Result.DONE) {
+			return walk;
+		}
+		return take(c, filter, max) > 0 ? Result.DONE : Result.FAILED;
+	}
+
+	/** Walks towards the supply chest: {@link Result#DONE} once beside it, FAILED without a chest or when stuck. */
+	public static Result reach(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
 		Optional<BlockPos> pos = Camp.data(level.getServer()).chestPos();
-		Optional<Container> chest = SupplyChest.of(level);
-		if (pos.isEmpty() || chest.isEmpty() || SupplyChest.count(chest.get(), filter) == 0) {
+		if (pos.isEmpty() || SupplyChest.of(level).isEmpty()) {
 			return Result.FAILED;
 		}
 		if (!c.actions().walkTo(pos.get(), REACH)) {
 			return c.actions().isStuck() ? Result.FAILED : Result.RUNNING;
 		}
-		return SupplyChest.withdraw(chest.get(), c.backpack(), filter, max) > 0 ? Result.DONE : Result.FAILED;
+		BlockPos p = pos.get();
+		c.getLookControl().setLookAt(p.getX() + 0.5, p.getY() + 0.5, p.getZ() + 0.5);
+		return Result.DONE;
+	}
+
+	/** Moves up to {@code max} matching items from the chest into the backpack right now. Returns the amount. */
+	public static int take(CompanionEntity c, Predicate<ItemStack> filter, int max) {
+		if (max <= 0) {
+			return 0;
+		}
+		Optional<Container> chest = SupplyChest.of((ServerLevel) c.level());
+		return chest.map(box -> SupplyChest.withdraw(box, c.backpack(), filter, max)).orElse(0);
 	}
 }
