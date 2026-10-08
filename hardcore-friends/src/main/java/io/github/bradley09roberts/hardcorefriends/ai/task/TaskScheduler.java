@@ -60,6 +60,7 @@ public final class TaskScheduler {
 			"common.share", "common.feed_player", "common.restock", "aegis.guard", "aegis.equip_gear", "terra.light",
 			"common.leave_pen", "fern.shut_gate"));
 	}
+
 	/** Told when a friend finishes a job (not when it is interrupted), so the feature packages can count work done. */
 	public interface JobDone {
 		/** {@code ticks} is how long the job ran. */
