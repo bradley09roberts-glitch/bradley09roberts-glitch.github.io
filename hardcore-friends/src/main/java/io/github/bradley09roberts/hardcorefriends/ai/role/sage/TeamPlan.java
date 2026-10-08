@@ -47,7 +47,7 @@ public final class TeamPlan {
 		if (focus == null) {
 			return "Our stores are in good shape. Keep doing what you each do best.";
 		}
-		String who = ownerPresent(focus).map(c -> c.friendId().displayName()).orElse(null);
+		String who = ownerPresent(focus).map(c -> c.displayName()).orElse(null);
 		String problem = switch (focus) {
 			case FOOD -> "Our stores are low on food.";
 			case WOOD -> "Our stores are low on wood.";
@@ -77,7 +77,7 @@ public final class TeamPlan {
 	/** Who waits on what: the builder is whoever has been building (Oak, or a friend standing in for him). */
 	private static String buildProblem(long gameTime) {
 		String shortage = CampNeeds.shortageText(gameTime);
-		String who = DeliverToBuilderTask.builder().map(c -> c.friendId().displayName()).orElse("The builder");
+		String who = DeliverToBuilderTask.builder().map(c -> c.displayName()).orElse("The builder");
 		return who + " is waiting on " + (shortage.isEmpty() ? "building materials" : shortage) + ".";
 	}
 }

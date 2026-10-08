@@ -55,7 +55,7 @@ public final class DeliverToBuilderTask implements CompanionTask {
 	@Override
 	public String describe() {
 		CompanionEntity to = builder;
-		return to != null ? "delivering materials to " + to.friendId().displayName() : "taking building materials to the chest";
+		return to != null ? "delivering materials to " + to.displayName() : "taking building materials to the chest";
 	}
 
 	@Override
@@ -144,7 +144,7 @@ public final class DeliverToBuilderTask implements CompanionTask {
 				return TaskStatus.RUNNING;
 			}
 			c.swingArm();
-			Speech.say(c, Line.SHARE, to.friendId().displayName(), given + " building materials");
+			Speech.say(c, Line.SHARE, to.displayName(), given + " building materials");
 			Unity.add(level, Unity.HANDOFF, 2, 40);
 			Camp.data(level.getServer()).addStat("materials_delivered", given);
 			return TaskStatus.SUCCESS;

@@ -2,6 +2,8 @@ package io.github.bradley09roberts.hardcorefriends.companion;
 
 import java.util.IllegalFormatException;
 import java.util.function.BiConsumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jspecify.annotations.Nullable;
 
@@ -25,6 +27,12 @@ public final class Speech {
 	/** "[Fern] " in the friend's colour. */
 	public static MutableComponent prefix(FriendId id) {
 		return Component.literal("[" + id.displayName() + "] ").withStyle(s -> s.withColor(id.colour()));
+	}
+
+	/** "[Fern] " or a newcomer's "[Mabel] ", in their colour. */
+	public static MutableComponent prefix(CompanionEntity companion) {
+		int colour = companion.nameColour();
+		return Component.literal("[" + companion.displayName() + "] ").withStyle(s -> s.withColor(colour));
 	}
 
 	/**
@@ -69,11 +77,16 @@ public final class Speech {
 		} catch (IllegalFormatException e) {
 			text = template;
 		}
+		if (companion.isSettler()) {
+			// A newcomer shares their archetype's wording ("I'm Fern"), but says their own name.
+			text = text.replaceAll("\\b" + Pattern.quote(companion.friendId().displayName()) + "\\b",
+				Matcher.quoteReplacement(companion.displayName()));
+		}
 		BiConsumer<CompanionEntity, String> hook = listener;
 		if (hook != null) {
 			hook.accept(companion, text);
 		}
-		Component message = prefix(companion.friendId()).append(Component.literal(text).withStyle(ChatFormatting.WHITE));
+		Component message = prefix(companion).append(Component.literal(text).withStyle(ChatFormatting.WHITE));
 		double range = line.priority() == Line.Priority.DANGER ? DANGER_RANGE_SQR : HEARING_RANGE_SQR;
 		boolean heard = false;
 		for (ServerPlayer player : level.players()) {
@@ -93,5 +106,33 @@ public final class Speech {
 	/** A plain system message to one player, in the friend's voice but ignoring cooldowns. */
 	public static void tell(ServerPlayer player, FriendId id, String text) {
 		player.sendSystemMessage(prefix(id).append(Component.literal(text).withStyle(ChatFormatting.WHITE)));
+	}
+
+	/** A plain system message to one player from this friend (named or newcomer), ignoring cooldowns. */
+	public static void tell(ServerPlayer player, CompanionEntity companion, String text) {
+		player.sendSystemMessage(prefix(companion).append(Component.literal(text).withStyle(ChatFormatting.WHITE)));
+	}
+
+	/**
+	 * Free text from a friend to the players within hearing (40 blocks), with no cooldown: for messages that are
+	 * not one of the friend's {@link Line}s, such as reading out a note. Returns true if someone heard it.
+	 */
+	public static boolean sayText(CompanionEntity companion, String text) {
+		if (!(companion.level() instanceof ServerLevel level) || !companion.isAlive()) {
+			return false;
+		}
+		BiConsumer<CompanionEntity, String> hook = listener;
+		if (hook != null) {
+			hook.accept(companion, text);
+		}
+		Component message = prefix(companion).append(Component.literal(text).withStyle(ChatFormatting.WHITE));
+		boolean heard = false;
+		for (ServerPlayer player : level.players()) {
+			if (player.distanceToSqr(companion) <= HEARING_RANGE_SQR) {
+				player.sendSystemMessage(message);
+				heard = true;
+			}
+		}
+		return heard;
 	}
 }

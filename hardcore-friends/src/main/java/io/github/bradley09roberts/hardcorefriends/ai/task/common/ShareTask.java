@@ -245,7 +245,7 @@ public final class ShareTask implements CompanionTask {
 		}
 		ServerLevel level = (ServerLevel) c.level();
 		c.swingArm();
-		Speech.say(c, Line.SHARE, friend.friendId().displayName(), Upkeep.describe(given, moved));
+		Speech.say(c, Line.SHARE, friend.displayName(), Upkeep.describe(given, moved));
 		Unity.add(level, Unity.HANDOFF, 2, 40);
 		Camp.data(level.getServer()).addStat("shares", 1);
 		return TaskStatus.SUCCESS;

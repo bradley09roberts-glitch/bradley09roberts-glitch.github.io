@@ -35,13 +35,18 @@ public class BackpackItem extends Item {
 
 	/** Packs items into one or more backpacks named after the friend. */
 	public static List<ItemStack> pack(FriendId owner, List<ItemStack> items) {
+		return pack(owner.displayName(), owner.colour(), items);
+	}
+
+	/** Packs items into one or more backpacks named after their owner, such as a newcomer. */
+	public static List<ItemStack> pack(String ownerName, int colour, List<ItemStack> items) {
 		List<ItemStack> bags = new ArrayList<>();
 		for (int start = 0; start < items.size(); start += ItemContainerContents.MAX_SIZE) {
 			List<ItemStack> chunk = items.subList(start, Math.min(items.size(), start + ItemContainerContents.MAX_SIZE));
 			ItemStack bag = new ItemStack(ModItems.BACKPACK);
 			bag.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(new ArrayList<>(chunk)));
-			bag.set(DataComponents.CUSTOM_NAME, Component.literal(owner.displayName() + "'s Backpack")
-				.withStyle(s -> s.withColor(owner.colour()).withItalic(false)));
+			bag.set(DataComponents.CUSTOM_NAME, Component.literal(ownerName + "'s Backpack")
+				.withStyle(s -> s.withColor(colour).withItalic(false)));
 			bags.add(bag);
 		}
 		return bags;

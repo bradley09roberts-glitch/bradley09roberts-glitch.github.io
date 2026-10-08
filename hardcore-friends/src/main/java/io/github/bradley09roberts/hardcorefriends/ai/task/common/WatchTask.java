@@ -65,7 +65,7 @@ public final class WatchTask implements CompanionTask {
 		ticks = 0;
 		standing = 0;
 		arrived = false;
-		postIndex = c.friendId().ordinal() % POSTS;
+		postIndex = c.rosterIndex() % POSTS;
 		post = postNear(c, centre, postIndex);
 		Speech.say(c, Line.NIGHT_WATCH);
 		return post != null;

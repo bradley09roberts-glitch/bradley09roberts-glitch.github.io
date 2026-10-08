@@ -212,7 +212,7 @@ public final class NightWatch {
 			.thenComparing(c -> lastNight.contains(c.friendId().key()))
 			.thenComparing(Comparator.comparingInt(CompanionEntity::bestWeaponRank).reversed())
 			.thenComparing(Comparator.comparingDouble(CompanionEntity::getHealth).reversed())
-			.thenComparingInt(c -> c.friendId().ordinal());
+			.thenComparingInt(CompanionEntity::rosterIndex);
 		return pool.stream().min(order).orElse(null);
 	}
 

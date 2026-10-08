@@ -172,7 +172,7 @@ public final class BuildJob {
 			CampNeeds.clearSiteProblem();
 			if (search.clearBox().length == 6) {
 				SiteClearing.reserve(data, bp.id(), search.logsToFell(), search.clearBox());
-				HardcoreFriends.LOGGER.info("{} chose a site for the {} with {} logs to fell", c.friendId().displayName(),
+				HardcoreFriends.LOGGER.info("{} chose a site for the {} with {} logs to fell", c.displayName(),
 					Structures.get(bp.id()).displayName(), search.logsToFell().size());
 			}
 			TaskStatus waiting = waitForClearing(data);
@@ -181,9 +181,9 @@ public final class BuildJob {
 		if (search.failed()) {
 			String name = Structures.get(bp.id()).displayName();
 			String problem = "a clear, fairly level spot for the " + name + " (" + search.problem() + ")";
-			CampNeeds.reportSiteProblem(level(), c.friendId().displayName() + " needs " + problem
+			CampNeeds.reportSiteProblem(level(), c.displayName() + " needs " + problem
 				+ ". Clearing or levelling a patch inside the camp helps.");
-			HardcoreFriends.LOGGER.info("{} found no site for the {} ({})", c.friendId().displayName(), name, search.breakdown());
+			HardcoreFriends.LOGGER.info("{} found no site for the {} ({})", c.displayName(), name, search.breakdown());
 			Speech.say(c, Line.NEED_MATERIALS, problem);
 			return fail(Failure.NO_SITE);
 		}
@@ -200,7 +200,7 @@ public final class BuildJob {
 			return null;
 		}
 		String name = Structures.get(bp.id()).displayName();
-		CampNeeds.reportSiteProblem(level(), c.friendId().displayName() + " is waiting for the trees to be cleared off the "
+		CampNeeds.reportSiteProblem(level(), c.displayName() + " is waiting for the trees to be cleared off the "
 			+ name + " site.");
 		Speech.say(c, Line.NEED_MATERIALS, "the trees cleared off the " + name + " site");
 		return fail(Failure.CLEARING);

@@ -71,6 +71,9 @@ public final class Speciality {
 			case LANDSCAPE -> Role.LANDSCAPER;
 			case MINE -> Role.MINER;
 			case GATHER_WOOD, GATHER_EARTH -> Role.FORAGER;
+			case GRADE -> Role.LANDSCAPER;
+			case CAST -> Role.MINER;
+			case SURVIVAL, EXPEDITION -> null;
 		};
 	}
 
@@ -99,7 +102,7 @@ public final class Speciality {
 				staffed.add(f.friendId().role());
 			}
 		}
-		working.sort(Comparator.comparingInt(f -> f.friendId().ordinal()));
+		working.sort(Comparator.comparingInt(CompanionEntity::rosterIndex));
 		for (Role role : Role.values()) {
 			if (staffed.contains(role) || role == Role.WARRIOR || role == Role.STRATEGIST) {
 				continue;

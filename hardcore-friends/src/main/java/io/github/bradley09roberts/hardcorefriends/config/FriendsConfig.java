@@ -41,6 +41,45 @@ public final class FriendsConfig {
 	/** Lets zombies, skeletons, spiders, illagers and witches hunt companions as they hunt villagers. */
 	public boolean monstersTargetCompanions = true;
 
+	// ---- Independence: living on while you are away, trips, making room to build ----
+	/** Keeps the camp's chunks running while a player of the camp is online anywhere, so friends live on while you are away. */
+	public boolean keepCampLoaded = true;
+	/** How many friends at once may keep the land around them loaded while away on a trip (exploring, trading, deliveries). */
+	public int maxRoamingFriends = 3;
+	/** Lets friends go on trips past the gathering ring on their own (far exploring, foraging trips, trading at villages). */
+	public boolean allowTrips = true;
+	/** Lets friends level uneven ground (dig down bumps, fill dips) to make room for a building. */
+	public boolean allowTerraforming = true;
+	/** The most a building site may be dug down or built up to level it, in blocks. */
+	public int maxGradeDepth = 3;
+
+	// ---- Newcomers: people met in villages, at survivor camps and on the road ----
+	public boolean allowSettlers = true;
+	/** Chance a village has newcomers living in it, met the first time a player comes by. */
+	public double villageSettlerChance = 0.75;
+	/** Most newcomers on the team at once (the nine named friends are not counted). */
+	public int maxSettlers = 12;
+	/** Most newcomers one player may recruit. */
+	public int maxSettlersPerPlayer = 6;
+	/** A wanderer may turn up at the camp now and then, hoping to join. */
+	public boolean wanderingVisitors = true;
+
+	// ---- Combat ----
+	/** Friends with a bow and arrows shoot at hostiles. */
+	public boolean friendsUseBows = true;
+
+	// ---- Beating the game: Sage's plan, the Nether, the stronghold and the End ----
+	/** Sage's long-term plan: iron, diamonds, enchanting, the Nether, the stronghold and the End. */
+	public boolean progressionGoals = true;
+	/** Friends following a player go through portals with them (the Nether, the End and back). */
+	public boolean friendsFollowThroughPortals = true;
+
+	// ---- Several players ----
+	/** Only the camp's owner and the players they trust may give the friends orders, open backpacks or move the camp. */
+	public boolean requireTrust = true;
+	/** Opt-in group event: every few nights a bigger wave of monsters tests the camp. */
+	public boolean siegeNights = false;
+
 	public static FriendsConfig get() {
 		return instance;
 	}
@@ -85,5 +124,10 @@ public final class FriendsConfig {
 		resourceRadius = Math.clamp(resourceRadius, 0, 96);
 		deadFriendsReturnAfterDays = Math.max(-1, deadFriendsReturnAfterDays);
 		followTeleportDistance = Math.max(0, followTeleportDistance);
+		maxRoamingFriends = Math.clamp(maxRoamingFriends, 0, 16);
+		maxGradeDepth = Math.clamp(maxGradeDepth, 0, 6);
+		villageSettlerChance = Math.clamp(villageSettlerChance, 0.0, 1.0);
+		maxSettlers = Math.clamp(maxSettlers, 0, 64);
+		maxSettlersPerPlayer = Math.clamp(maxSettlersPerPlayer, 0, maxSettlers);
 	}
 }

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.jspecify.annotations.Nullable;
 
@@ -42,16 +43,23 @@ public final class TaskScheduler {
 	 * home, use the camp chest, and grow and bake food in the camp, so a starving camp can still feed itself. Every
 	 * other job, above all work outside the camp (the mine, felling, exploring), waits until they have eaten.
 	 */
-	public static final Set<String> FIT_WHEN_WEAK = Set.of("common.idle", "common.return_home", "common.restock",
-		"common.deposit", "fern.harvest", "fern.replant", "fern.bake", "fern.bone_meal");
+	public static final Set<String> FIT_WHEN_WEAK = ConcurrentHashMap.newKeySet();
 	/**
 	 * The jobs that belong to the night, besides the needs jobs: coming home, the watch (anyone's, and Aegis's guard
 	 * and gear), lighting a dark camp (spawn-proofing matters most in the dark), feeding a hurt friend or a hungry
 	 * player, fetching a lost weapon or food from the chest, and idling by the fire. Everything else waits for
 	 * morning.
 	 */
-	public static final Set<String> NIGHT_JOBS = Set.of("common.idle", "common.return_home", "common.watch",
-		"common.share", "common.feed_player", "common.restock", "aegis.guard", "aegis.equip_gear", "terra.light");
+	public static final Set<String> NIGHT_JOBS = ConcurrentHashMap.newKeySet();
+
+	static {
+		FIT_WHEN_WEAK.addAll(Set.of("common.idle", "common.return_home", "common.restock",
+			"common.deposit", "fern.harvest", "fern.replant", "fern.bake", "fern.bone_meal"));
+		// Leaving the animal pen and shutting its gate behind them are part of coming home, so they go on at night too.
+		NIGHT_JOBS.addAll(Set.of("common.idle", "common.return_home", "common.watch",
+			"common.share", "common.feed_player", "common.restock", "aegis.guard", "aegis.equip_gear", "terra.light",
+			"common.leave_pen", "fern.shut_gate"));
+	}
 	private static final String NEEDS = "needs.";
 	private static final int EVALUATE_INTERVAL = 20;
 
@@ -100,7 +108,7 @@ public final class TaskScheduler {
 			status = gameTime - currentStarted > current.maxTicks() ? TaskStatus.FAILURE : current.tick(companion);
 		} catch (RuntimeException e) {
 			HardcoreFriends.LOGGER.error("Task {} of {} crashed; skipping it for a while", current.id(),
-				companion.friendId().displayName(), e);
+				companion.displayName(), e);
 			status = TaskStatus.FAILURE;
 		}
 		if (status != TaskStatus.RUNNING) {

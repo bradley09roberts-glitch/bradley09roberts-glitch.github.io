@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
@@ -61,13 +62,17 @@ public final class SpecialityTask implements CompanionTask {
 	 * jobs also keep out of each other's way at the gate, see {@code Pen.otherAtWork}), one cook at the campfire and one
 	 * hunter.
 	 */
-	public static final Set<String> EXCLUSIVE = Set.of(
-		"oak.build", "oak.repair", "spark.contraption", "fern.farm_plot", "fern.till", "flint.dig_mine", "rowan.quarry",
-		"rowan.chop", "terra.paths", "terra.fence", "terra.plant", "scout.explore", "flint.smelt", "flint.collect_smelted",
-		"terra.pen", "fern.bring_animal", "fern.breed", "fern.butcher", "fern.shut_gate", "fern.cook", "fern.hunt");
-
+	public static final Set<String> EXCLUSIVE = ConcurrentHashMap.newKeySet();
 	/** Jobs about what the friend themself carries: nobody else can do them, so whoever carries the load does. */
-	public static final Set<String> PERSONAL = Set.of("rowan.deliver", "flint.smelt");
+	public static final Set<String> PERSONAL = ConcurrentHashMap.newKeySet();
+
+	static {
+		EXCLUSIVE.addAll(Set.of(
+			"oak.build", "oak.repair", "spark.contraption", "fern.farm_plot", "fern.till", "flint.dig_mine", "rowan.quarry",
+			"rowan.chop", "terra.paths", "terra.fence", "terra.plant", "scout.explore", "flint.smelt", "flint.collect_smelted",
+			"terra.pen", "fern.bring_animal", "fern.breed", "fern.butcher", "fern.shut_gate", "fern.cook", "fern.hunt"));
+		PERSONAL.addAll(Set.of("rowan.deliver", "flint.smelt"));
+	}
 
 	/** The idle job: a specialist doing only this is free to take their work back. */
 	private static final String IDLE = "common.idle";

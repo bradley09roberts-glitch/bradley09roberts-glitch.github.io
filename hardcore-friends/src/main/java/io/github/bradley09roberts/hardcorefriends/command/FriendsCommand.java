@@ -1,14 +1,19 @@
 package io.github.bradley09roberts.hardcorefriends.command;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
@@ -37,6 +42,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.companion.CompanionEvents;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
@@ -63,8 +69,20 @@ public final class FriendsCommand {
 	private FriendsCommand() {
 	}
 
+	/**
+	 * Sub-commands from the feature packages, registered from their {@code init()}: each adds its own branches to
+	 * the {@code /friends} root before it is registered.
+	 */
+	public static final List<Consumer<LiteralArgumentBuilder<CommandSourceStack>>> EXTENSIONS = new CopyOnWriteArrayList<>();
+	/** Extra names offered when typing a friend's name (such as recruited newcomers'). */
+	public static final List<Supplier<Collection<String>>> EXTRA_NAMES = new CopyOnWriteArrayList<>();
+
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-		dispatcher.register(Commands.literal("friends")
+		LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("friends");
+		for (Consumer<LiteralArgumentBuilder<CommandSourceStack>> extension : EXTENSIONS) {
+			extension.accept(root);
+		}
+		dispatcher.register(root
 			.executes(FriendsCommand::help)
 			.then(Commands.literal("help").executes(FriendsCommand::help))
 			.then(Commands.literal("list").executes(FriendsCommand::list))
@@ -97,6 +115,9 @@ public final class FriendsCommand {
 			List<String> names = new ArrayList<>();
 			for (FriendId id : FriendId.values()) {
 				names.add(id.key());
+			}
+			for (Supplier<Collection<String>> extra : EXTRA_NAMES) {
+				names.addAll(extra.get());
 			}
 			if (allowAll) {
 				names.add("all");
@@ -190,7 +211,7 @@ public final class FriendsCommand {
 		Needs.Mood mood = needs.mood();
 		Needs.Need lowest = needs.lowest();
 		List<Component> lines = new ArrayList<>();
-		lines.add(Speech.prefix(c.friendId())
+		lines.add(Speech.prefix(c)
 			.append(Component.literal("mood ").withStyle(ChatFormatting.GRAY))
 			.append(Component.literal(mood.word()).withStyle(moodColour(mood)))
 			.append(Component.literal(" - " + c.activity()).withStyle(ChatFormatting.GRAY)));
@@ -392,6 +413,16 @@ public final class FriendsCommand {
 		return null;
 	}
 
+	/** A recruited newcomer on the team, by name (any case), if loaded. */
+	public static Optional<CompanionEntity> findNewcomer(String name) {
+		for (CompanionEntity c : Companions.all()) {
+			if (c.isSettler() && c.displayName().equalsIgnoreCase(name)) {
+				return Optional.of(c);
+			}
+		}
+		return Optional.empty();
+	}
+
 	private static String names() {
 		StringBuilder sb = new StringBuilder();
 		for (FriendId id : FriendId.values()) {
@@ -415,21 +446,26 @@ public final class FriendsCommand {
 		ServerLevel level = (ServerLevel) c.level();
 		if (c.ticksSinceDamaged() < NO_DISMISS_AFTER_HURT) {
 			// Leaving mid-fight would let a dying friend walk away from a hardcore death.
-			source.sendFailure(Component.literal(c.friendId().displayName() + " is in the middle of a fight and will not leave now."));
+			source.sendFailure(Component.literal(c.displayName() + " is in the middle of a fight and will not leave now."));
 			return 0;
 		}
 		Speech.say(c, Line.DISMISSED);
 		c.dropBackpack(level);
-		CampData data = Camp.data(source.getServer());
-		CampData.Ledger ledger = data.ledger(c.friendId());
-		ledger.state = CampData.LifeState.DISMISSED;
-		ledger.entityId = null;
-		ledger.dismissedAtGameTime = level.getOverworldClockTime();
-		data.touchLedger();
+		if (!c.isSettler()) {
+			CampData data = Camp.data(source.getServer());
+			CampData.Ledger ledger = data.ledger(c.friendId());
+			ledger.state = CampData.LifeState.DISMISSED;
+			ledger.entityId = null;
+			ledger.dismissedAtGameTime = level.getOverworldClockTime();
+			data.touchLedger();
+		}
+		for (CompanionEvents.Dismissed hook : CompanionEvents.DISMISSED) {
+			hook.dismissed(c, level);
+		}
 		Companions.untrack(c);
 		c.discard();
 		Unity.lose(source.getServer(), 20);
-		source.sendSuccess(() -> Component.literal(c.friendId().displayName() + " has left the team. Their backpack was left behind.")
+		source.sendSuccess(() -> Component.literal(c.displayName() + " has left the team. Their backpack was left behind.")
 			.withStyle(ChatFormatting.YELLOW), false);
 		return 1;
 	}
@@ -463,7 +499,7 @@ public final class FriendsCommand {
 			Speech.say(c, switch (mode) {
 				case FOLLOW -> Line.FOLLOW;
 				case STAY -> Line.STAY;
-				case WORK -> Line.WORK;
+				case WORK, STRANGER -> Line.WORK;
 			}, player.getName().getString());
 		}
 		int n = targets.size();
@@ -474,8 +510,13 @@ public final class FriendsCommand {
 
 	private static Optional<CompanionEntity> findLoaded(CommandContext<CommandSourceStack> ctx) {
 		CommandSourceStack source = ctx.getSource();
-		Optional<FriendId> id = FriendId.byKey(StringArgumentType.getString(ctx, "name"));
+		String name = StringArgumentType.getString(ctx, "name");
+		Optional<FriendId> id = FriendId.byKey(name);
 		if (id.isEmpty()) {
+			Optional<CompanionEntity> newcomer = findNewcomer(name);
+			if (newcomer.isPresent()) {
+				return newcomer;
+			}
 			source.sendFailure(Component.literal("Unknown friend. Try: " + names()));
 			return Optional.empty();
 		}
@@ -532,7 +573,7 @@ public final class FriendsCommand {
 		String holding = hand.isEmpty() ? "nothing" : hand.getHoverName().getString()
 			+ (hand.isDamageableItem() ? String.format(Locale.ROOT, " (%d/%d)", hand.getMaxDamage() - hand.getDamageValue(), hand.getMaxDamage()) : "");
 		String contents = sb.isEmpty() ? "empty" : sb.toString();
-		source.sendSuccess(() -> Component.literal(c.friendId().displayName() + " holds " + holding + ". Backpack ("
+		source.sendSuccess(() -> Component.literal(c.displayName() + " holds " + holding + ". Backpack ("
 			+ c.backpack().usedSlots() + "/" + c.backpack().capacity() + "): " + contents + ". Come within 6 blocks to open it."), false);
 		return 1;
 	}
@@ -661,7 +702,7 @@ public final class FriendsCommand {
 		source.sendSuccess(() -> Component.literal("Team plan - focus: " + (focus == null ? "steady work" : focus.label())
 			+ ". Short of: " + CampNeeds.summary()).withStyle(ChatFormatting.GOLD), false);
 		for (CompanionEntity c : Companions.all()) {
-			source.sendSuccess(() -> Speech.prefix(c.friendId()).append(Component.literal(c.activity()).withStyle(ChatFormatting.WHITE)), false);
+			source.sendSuccess(() -> Speech.prefix(c).append(Component.literal(c.activity()).withStyle(ChatFormatting.WHITE)), false);
 		}
 		return 1;
 	}

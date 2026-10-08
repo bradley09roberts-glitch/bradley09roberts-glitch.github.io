@@ -135,6 +135,19 @@ public final class Lines {
 		FALLBACK.put(line, variants);
 	}
 
+	/**
+	 * Adds a friend's own wording for a line, for the feature packages' line tables (registered from their
+	 * {@code init()}). The same rules apply as for the table here: see the class comment and {@link #problems()}.
+	 */
+	public static void define(FriendId friend, Line line, String... variants) {
+		put(friend, line, variants);
+	}
+
+	/** Adds the voice-neutral wording for a line (see {@link #define}). */
+	public static void defineGeneric(Line line, String... variants) {
+		generic(line, variants);
+	}
+
 	/** Plain, voice-neutral wording used when a friend has no line of their own. */
 	private static void generic() {
 		generic(Line.RECRUITED, "Glad to join you, %1$s.", "Hello, %1$s. Let's look after each other.",

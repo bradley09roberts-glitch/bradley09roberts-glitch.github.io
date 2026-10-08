@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.bradley09roberts.hardcorefriends.HardcoreFriends;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
+import io.github.bradley09roberts.hardcorefriends.companion.Persona;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.ArmorModelSet;
@@ -19,9 +20,14 @@ import net.minecraft.world.item.Items;
 
 public class CompanionRenderer extends HumanoidMobRenderer<CompanionEntity, CompanionRenderState, CompanionModel> {
 	private static final Identifier[] SKINS = new Identifier[FriendId.values().length];
+	/** The game's own default player skins, for newcomers (skin ids from {@link Persona#DEFAULT_SKIN_BASE}). */
+	private static final Identifier[] DEFAULT_SKINS = new Identifier[Persona.DEFAULT_SKINS.size()];
 	static {
 		for (int i = 0; i < SKINS.length; i++) {
 			SKINS[i] = Identifier.fromNamespaceAndPath(HardcoreFriends.MOD_ID, "textures/entity/companion/" + FriendId.byOrdinal(i).key() + ".png");
+		}
+		for (int i = 0; i < DEFAULT_SKINS.length; i++) {
+			DEFAULT_SKINS[i] = Identifier.withDefaultNamespace("textures/entity/player/wide/" + Persona.DEFAULT_SKINS.get(i) + ".png");
 		}
 	}
 
@@ -47,6 +53,9 @@ public class CompanionRenderer extends HumanoidMobRenderer<CompanionEntity, Comp
 
 	@Override
 	public Identifier getTextureLocation(CompanionRenderState state) {
+		if (state.skinId >= Persona.DEFAULT_SKIN_BASE) {
+			return DEFAULT_SKINS[Math.floorMod(state.skinId - Persona.DEFAULT_SKIN_BASE, DEFAULT_SKINS.length)];
+		}
 		return SKINS[Math.floorMod(state.skinId, SKINS.length)];
 	}
 

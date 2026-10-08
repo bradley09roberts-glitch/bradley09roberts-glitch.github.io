@@ -32,11 +32,33 @@ public final class Companions {
 		LOADED.clear();
 	}
 
-	/** Living, loaded companions in every level. */
+	/** Living, loaded team members in every level: the friends and recruited newcomers, not strangers. */
 	public static synchronized List<CompanionEntity> all() {
 		List<CompanionEntity> list = new ArrayList<>();
 		for (CompanionEntity c : LOADED) {
+			if (c.isAlive() && !c.isRemoved() && c.isTeamMember()) {
+				list.add(c);
+			}
+		}
+		return list;
+	}
+
+	/** Living, loaded companions in every level, strangers included. */
+	public static synchronized List<CompanionEntity> everyone() {
+		List<CompanionEntity> list = new ArrayList<>();
+		for (CompanionEntity c : LOADED) {
 			if (c.isAlive() && !c.isRemoved()) {
+				list.add(c);
+			}
+		}
+		return list;
+	}
+
+	/** Living, loaded strangers: newcomers met in the world who have not joined the team. */
+	public static List<CompanionEntity> strangers() {
+		List<CompanionEntity> list = new ArrayList<>();
+		for (CompanionEntity c : everyone()) {
+			if (!c.isTeamMember()) {
 				list.add(c);
 			}
 		}
@@ -53,16 +75,23 @@ public final class Companions {
 		return list;
 	}
 
+	/** The named friend {@code id} (never a newcomer who works like them), if loaded and on the team. */
 	public static Optional<CompanionEntity> find(FriendId id) {
 		for (CompanionEntity c : all()) {
-			if (c.friendId() == id) {
+			if (c.friendId() == id && !c.isSettler()) {
 				return Optional.of(c);
 			}
 		}
 		return Optional.empty();
 	}
 
+	/** Team members in the box (strangers are not counted). */
 	public static List<CompanionEntity> near(ServerLevel level, AABB box) {
+		return level.getEntitiesOfClass(CompanionEntity.class, box, c -> c.isAlive() && c.isTeamMember());
+	}
+
+	/** Every companion in the box, strangers included. */
+	public static List<CompanionEntity> nearAnyone(ServerLevel level, AABB box) {
 		return level.getEntitiesOfClass(CompanionEntity.class, box, CompanionEntity::isAlive);
 	}
 }

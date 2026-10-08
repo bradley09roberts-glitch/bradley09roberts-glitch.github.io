@@ -3,6 +3,9 @@ package io.github.bradley09roberts.hardcorefriends.ai.task;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
 
 import io.github.bradley09roberts.hardcorefriends.ai.role.AegisTasks;
 import io.github.bradley09roberts.hardcorefriends.ai.role.FernTasks;
@@ -27,10 +30,22 @@ import io.github.bradley09roberts.hardcorefriends.companion.Role;
  */
 public final class TaskRegistry {
 	/** Jobs only the specialist does: these are what the specialist is, not chores anyone could pick up. */
-	public static final Set<String> SPECIALIST_ONLY = Set.of(
-		"aegis.equip_gear", "aegis.guard", "sage.observe", "sage.review_stores", "scout.report",
-		// Roaming far from camp is Scout's adventure, risky and optional: nobody takes it up in her place.
-		"scout.explore");
+	public static final Set<String> SPECIALIST_ONLY = ConcurrentHashMap.newKeySet();
+
+	static {
+		SPECIALIST_ONLY.addAll(Set.of(
+			"aegis.equip_gear", "aegis.guard", "sage.observe", "sage.review_stores", "scout.report",
+			// Roaming far from camp is Scout's adventure, risky and optional: nobody takes it up in her place.
+			"scout.explore"));
+	}
+
+	/**
+	 * Extra jobs from the feature packages, registered from their {@code init()}. Each pack gives one friend fresh task
+	 * instances, already wrapped in a {@link SpecialityTask} where the job is a speciality's work (packs add the ids of
+	 * shared or personal jobs to {@link SpecialityTask#EXCLUSIVE} or {@link SpecialityTask#PERSONAL} themselves).
+	 * The pack also decides who gets a job at all: a job only the specialist does is simply left out for the others.
+	 */
+	public static final List<Function<FriendId, List<CompanionTask>>> PACKS = new CopyOnWriteArrayList<>();
 
 	private TaskRegistry() {
 	}
@@ -38,6 +53,9 @@ public final class TaskRegistry {
 	public static List<CompanionTask> create(FriendId id) {
 		List<CompanionTask> tasks = new ArrayList<>(CommonTasks.create(id));
 		tasks.addAll(NeedsTasks.create(id));
+		for (Function<FriendId, List<CompanionTask>> pack : PACKS) {
+			tasks.addAll(pack.apply(id));
+		}
 		List<Role> order = new ArrayList<>(List.of(Role.values()));
 		order.remove(id.role());
 		order.addFirst(id.role());

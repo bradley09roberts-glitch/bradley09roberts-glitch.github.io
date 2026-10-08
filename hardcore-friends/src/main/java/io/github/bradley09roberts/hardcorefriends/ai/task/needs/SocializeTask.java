@@ -77,7 +77,7 @@ public final class SocializeTask implements CompanionTask {
 			return "having a chat";
 		}
 		if (partner != null) {
-			return "chatting with " + partner.friendId().displayName();
+			return "chatting with " + partner.displayName();
 		}
 		return player != null ? "chatting with " + player.getName().getString() : "looking for company";
 	}
@@ -146,7 +146,7 @@ public final class SocializeTask implements CompanionTask {
 			if (c.actions().walkToEntity(friend, TALK_REACH)) {
 				together = true;
 				ticks = 0;
-				Speech.say(c, Line.CHAT, friend.friendId().displayName());
+				Speech.say(c, Line.CHAT, friend.displayName());
 			} else if (c.actions().isStuck() || ++ticks > APPROACH_TICKS) {
 				return TaskStatus.FAILURE;
 			}
@@ -160,7 +160,7 @@ public final class SocializeTask implements CompanionTask {
 		c.getLookControl().setLookAt(friend);
 		friend.getLookControl().setLookAt(c);
 		if (++ticks == REPLY_AT) {
-			Speech.say(friend, Line.CHAT_REPLY, c.friendId().displayName());
+			Speech.say(friend, Line.CHAT_REPLY, c.displayName());
 		}
 		if (ticks < CHAT_TICKS) {
 			return TaskStatus.RUNNING;

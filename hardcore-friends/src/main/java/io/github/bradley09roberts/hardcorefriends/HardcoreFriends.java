@@ -6,11 +6,17 @@ import org.slf4j.LoggerFactory;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 
+import io.github.bradley09roberts.hardcorefriends.combat.Combat;
 import io.github.bradley09roberts.hardcorefriends.command.FriendsCommand;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.event.ModEvents;
+import io.github.bradley09roberts.hardcorefriends.expedition.Expeditions;
+import io.github.bradley09roberts.hardcorefriends.progress.Progression;
 import io.github.bradley09roberts.hardcorefriends.registry.ModEntities;
 import io.github.bradley09roberts.hardcorefriends.registry.ModItems;
+import io.github.bradley09roberts.hardcorefriends.settler.Settlers;
+import io.github.bradley09roberts.hardcorefriends.survival.Survival;
+import io.github.bradley09roberts.hardcorefriends.town.Town;
 
 /**
  * Hardcore Friends: nine human companions with their own skills and personalities, a shared camp that grows into a
@@ -26,6 +32,12 @@ public class HardcoreFriends implements ModInitializer {
 		ModItems.init();
 		ModEntities.init();
 		ModEvents.register();
+		Combat.init();
+		Survival.init();
+		Settlers.init();
+		Progression.init();
+		Expeditions.init();
+		Town.init();
 		CommandRegistrationCallback.EVENT.register((dispatcher, context, selection) -> FriendsCommand.register(dispatcher));
 		LOGGER.info("Hardcore Friends ready: nine friends, one life each.");
 	}

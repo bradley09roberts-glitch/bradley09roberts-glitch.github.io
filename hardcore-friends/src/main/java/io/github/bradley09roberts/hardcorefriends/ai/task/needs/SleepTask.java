@@ -229,7 +229,7 @@ public final class SleepTask implements CompanionTask {
 	static @Nullable BlockPos bedFor(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
 		BlockPos rest = c.restPos();
-		int index = c.friendId().ordinal();
+		int index = c.rosterIndex();
 		if (Spots.cabinBuilt(c)) {
 			int[][] slots = {{0, 0}, {1, 0}, {-1, 0}, {0, 1}, {1, 1}, {-1, 1}, {0, -1}, {1, -1}, {-1, -1}};
 			for (int k = 0; k < slots.length; k++) {

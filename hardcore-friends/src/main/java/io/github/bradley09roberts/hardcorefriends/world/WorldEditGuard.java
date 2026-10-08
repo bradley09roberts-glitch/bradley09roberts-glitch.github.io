@@ -1,7 +1,9 @@
 package io.github.bradley09roberts.hardcorefriends.world;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -47,8 +49,34 @@ public final class WorldEditGuard {
 		LANDSCAPE,
 		MINE,
 		GATHER_WOOD,
-		GATHER_EARTH
+		GATHER_EARTH,
+		/** Levelling a building site: digging down bumps and filling dips, inside a recorded site plan. */
+		GRADE,
+		/** Blocks placed to stay alive away from camp (a night shelter, a pillar out of reach, a bridge), and taken back. */
+		SURVIVAL,
+		/** Pouring water on lava to make obsidian, and similar casting. */
+		CAST,
+		/** Work in the Nether and the End with a player (portals, pillars to the end crystals, breaking their cages). */
+		EXPEDITION
 	}
+
+	/**
+	 * The zone and allow-list of a reason whose rules live in a feature package, registered in {@link #POLICIES}. The
+	 * guard's common checks (editing allowed, loaded, pacing, no player right there; for breaking also no block
+	 * entity, no protected or unbreakable block and no breaching water or lava) have already passed when it is asked.
+	 */
+	public interface Policy {
+		Verdict canBreak(CompanionEntity c, ServerLevel level, BlockPos pos, BlockState state);
+
+		Verdict canPlace(CompanionEntity c, ServerLevel level, BlockPos pos, BlockState newState);
+
+		default Verdict canTransform(CompanionEntity c, ServerLevel level, BlockPos pos, BlockState newState) {
+			return Verdict.deny("this job does not reshape blocks");
+		}
+	}
+
+	/** Rules for the reasons the feature packages own (GRADE, SURVIVAL, CAST, EXPEDITION). A reason with none is refused. */
+	public static final Map<Reason, Policy> POLICIES = new ConcurrentHashMap<>();
 
 	public record Verdict(boolean allowed, String why) {
 		public static final Verdict OK = new Verdict(true, "");
@@ -123,6 +151,10 @@ public final class WorldEditGuard {
 		}
 		if (reason != Reason.FARM && breachesFluid(level, pos)) {
 			return Verdict.deny("next to water or lava");
+		}
+		Policy policy = POLICIES.get(reason);
+		if (policy != null) {
+			return policy.canBreak(c, level, pos, state);
 		}
 		CampData data = Camp.data(level.getServer());
 		boolean ownBlock = data.isPlacedByFriends(level, pos);
@@ -219,6 +251,10 @@ public final class WorldEditGuard {
 		if (!level.isUnobstructed(newState, pos, CollisionContext.empty())) {
 			return Verdict.deny("someone is standing there");
 		}
+		Policy policy = POLICIES.get(reason);
+		if (policy != null) {
+			return policy.canPlace(c, level, pos, newState);
+		}
 		switch (reason) {
 			case FARM -> {
 				return inCamp(c, pos) ? Verdict.OK : Verdict.deny("outside the camp");
@@ -256,6 +292,10 @@ public final class WorldEditGuard {
 		Verdict common = commonChecks(c, level, pos);
 		if (!common.allowed()) {
 			return common;
+		}
+		Policy policy = POLICIES.get(reason);
+		if (policy != null) {
+			return policy.canTransform(c, level, pos, newState);
 		}
 		BlockState current = level.getBlockState(pos);
 		// Picking berries is allowed anywhere friends may gather; everything else stays inside the camp.
@@ -399,7 +439,7 @@ public final class WorldEditGuard {
 			observer.accept(new EditEvent(c, verb, pos.immutable(), state, reason));
 		}
 		c.setLastEditTick(level.getGameTime());
-		data.logEdit(String.format("day %d: %s %s %s at %d %d %d (%s)", Camp.day(level), c.friendId().displayName(), verb,
+		data.logEdit(String.format("day %d: %s %s %s at %d %d %d (%s)", Camp.day(level), c.displayName(), verb,
 			BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath(), pos.getX(), pos.getY(), pos.getZ(),
 			reason.name().toLowerCase(java.util.Locale.ROOT)));
 		data.addStat("edits." + reason.name().toLowerCase(java.util.Locale.ROOT), 1);

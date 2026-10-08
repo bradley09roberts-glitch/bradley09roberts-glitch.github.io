@@ -16,6 +16,7 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -78,12 +79,16 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
- * A human companion. One entity type serves all nine friends; the synced {@link FriendId} selects the skin, name,
- * personality and routines. Friends are persistent, mortal and carry their belongings in a {@link Backpack}.
+ * A human companion. One entity type serves all nine friends and every newcomer met in the world: the synced
+ * {@link FriendId} selects the routines, personality and wording, and for a newcomer a {@link Persona} adds their own
+ * name, colour and skin. Friends are persistent, mortal and carry their belongings in a {@link Backpack}. Features
+ * plug in through {@link CompanionEvents} and keep per-friend state in {@link #extra()}.
  */
 public class CompanionEntity extends PathfinderMob {
 	private static final EntityDataAccessor<Integer> DATA_FRIEND = SynchedEntityData.defineId(CompanionEntity.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> DATA_MODE = SynchedEntityData.defineId(CompanionEntity.class, EntityDataSerializers.INT);
+	/** The skin to draw: -1 for the friend's own, otherwise a {@link Persona} skin id. */
+	private static final EntityDataAccessor<Integer> DATA_SKIN = SynchedEntityData.defineId(CompanionEntity.class, EntityDataSerializers.INT);
 	/** A friend whose hunger is below this eats food a player hands them, even at full health. */
 	public static final double EATS_HANDED_FOOD_BELOW = 60;
 	/** How far a friend goes to meet a hand-to-hand threat, away from camp or without a weapon. */
@@ -124,6 +129,10 @@ public class CompanionEntity extends PathfinderMob {
 	/** When the current target was chosen (tick count), and hostiles given up on until a tick count. */
 	private int targetSetTick;
 	private final Map<UUID, Integer> givenUp = new HashMap<>();
+	/** Set for a newcomer met in the world; null for the nine named friends. */
+	private @Nullable Persona persona;
+	/** Per-friend state kept by the feature packages, each under its own key; saved with the friend. */
+	private CompoundTag extra = new CompoundTag();
 
 	public CompanionEntity(EntityType<? extends CompanionEntity> type, Level level) {
 		super(type, level);
@@ -164,6 +173,9 @@ public class CompanionEntity extends PathfinderMob {
 		this.targetSelector.addGoal(1, new HurtByTargetGoal(this, Player.class, CompanionEntity.class));
 		this.targetSelector.addGoal(2, new DefendFriendsTargetGoal(this));
 		this.targetSelector.addGoal(3, new MutualDefenceTargetGoal(this));
+		for (CompanionEvents.Goals hook : CompanionEvents.GOALS) {
+			hook.addGoals(this, this.goalSelector, this.targetSelector);
+		}
 	}
 
 	@Override
@@ -171,17 +183,73 @@ public class CompanionEntity extends PathfinderMob {
 		super.defineSynchedData(builder);
 		builder.define(DATA_FRIEND, 0);
 		builder.define(DATA_MODE, 0);
+		builder.define(DATA_SKIN, -1);
 	}
 
 	// --------------------------------------------------------------- identity
 
+	/**
+	 * Which of the nine friends this is, or for a newcomer the named friend whose work, personality and wording they
+	 * share (see {@link Persona#archetype()}). For their own name use {@link #displayName()}.
+	 */
 	public FriendId friendId() {
 		return FriendId.byOrdinal(this.entityData.get(DATA_FRIEND));
 	}
 
-	/** Index into the skin table, used by the renderer. */
+	/** Skin id for the renderer: 0-8 the nine friends' own, {@link Persona#DEFAULT_SKIN_BASE} and up a default skin. */
 	public int getSkinId() {
-		return this.entityData.get(DATA_FRIEND);
+		int skin = this.entityData.get(DATA_SKIN);
+		return skin >= 0 ? skin : this.entityData.get(DATA_FRIEND);
+	}
+
+	/** Their own name: "Fern", or a newcomer's, such as "Mabel". */
+	public String displayName() {
+		return persona != null ? persona.name() : displayName();
+	}
+
+	/** Their name colour, 0xRRGGBB. */
+	public int nameColour() {
+		return persona != null ? persona.colour() : friendId().colour();
+	}
+
+	/** A newcomer met in the world, rather than one of the nine named friends. */
+	public boolean isSettler() {
+		return persona != null;
+	}
+
+	public @Nullable Persona persona() {
+		return persona;
+	}
+
+	/**
+	 * Makes this friend a newcomer with their own name, colour and skin, working like their archetype. Call once right
+	 * after creating (instead of {@link #setFriendId}).
+	 */
+	public void setPersona(Persona persona) {
+		this.persona = persona;
+		this.entityData.set(DATA_FRIEND, persona.archetype().ordinal());
+		this.entityData.set(DATA_SKIN, persona.skin());
+		this.setCustomName(Component.literal(persona.name()).withStyle(s -> s.withColor(persona.colour())));
+		this.setCustomNameVisible(true);
+		applyStats(persona.archetype());
+	}
+
+	/**
+	 * A small stable number per friend for spreading them out (bed spots, watch posts): the nine friends' own order,
+	 * then newcomers after them.
+	 */
+	public int rosterIndex() {
+		return persona == null ? friendId().ordinal() : FriendId.values().length + (getUUID().hashCode() & 0x3F);
+	}
+
+	/** On the team: anyone but a stranger who has not been recruited yet. */
+	public boolean isTeamMember() {
+		return mode() != CompanionMode.STRANGER;
+	}
+
+	/** Per-friend state kept by the feature packages, each under its own key. Saved and loaded with the friend. */
+	public CompoundTag extra() {
+		return extra;
 	}
 
 	/** Sets who this friend is, including name, stats and starter details. Call once right after creating. */
@@ -336,6 +404,7 @@ public class CompanionEntity extends PathfinderMob {
 			case FOLLOW -> "following " + (leader() != null ? leader().getName().getString() : "you");
 			case STAY -> "holding position";
 			case WORK -> scheduler().activity();
+			case STRANGER -> "minding their own business";
 		};
 	}
 
@@ -431,14 +500,15 @@ public class CompanionEntity extends PathfinderMob {
 				backpack.setCapacity(slots);
 			}
 		}
-		if (this.tickCount % 20 == 0) {
+		// A stranger (not recruited yet) lives off their own home: their needs only start once they join the team.
+		if (this.tickCount % 20 == 0 && isTeamMember()) {
 			CompanionTask job = mode() == CompanionMode.WORK ? scheduler().current() : null;
 			boolean working = mode() == CompanionMode.FOLLOW || job != null && !job.id().startsWith("needs.") && !job.id().equals("common.idle");
 			needs.tickSecond(this, working, asleep);
 		}
 		settleSleep();
 		// Following a player or holding a spot, a friend runs no jobs, so they snack from their backpack when hungry.
-		if (this.tickCount % 100 == 0 && mode() != CompanionMode.WORK && needs.get(Needs.Need.HUNGER) < 25) {
+		if (this.tickCount % 100 == 0 && isTeamMember() && mode() != CompanionMode.WORK && needs.get(Needs.Need.HUNGER) < 25) {
 			ItemStack snack = backpack.take(CompanionEntity::isEdible, 1);
 			if (!snack.isEmpty()) {
 				String name = snack.getHoverName().getString();
@@ -455,8 +525,13 @@ public class CompanionEntity extends PathfinderMob {
 			&& getTarget() == null && !isOnFire() && needs.canHeal()) {
 			heal(1.0F);
 		}
-		RolePassives.tick(this);
-		MoodPassives.tick(this);
+		if (isTeamMember()) {
+			RolePassives.tick(this);
+			MoodPassives.tick(this);
+		}
+		for (CompanionEvents.Tick hook : CompanionEvents.TICK) {
+			hook.tick(this, level);
+		}
 	}
 
 	@Override
@@ -478,6 +553,17 @@ public class CompanionEntity extends PathfinderMob {
 		}
 		if (hand != InteractionHand.MAIN_HAND) {
 			return InteractionResult.PASS;
+		}
+		for (CompanionEvents.Interact hook : CompanionEvents.INTERACT) {
+			InteractionResult result = hook.interact(this, serverPlayer, hand);
+			if (result != InteractionResult.PASS) {
+				return result;
+			}
+		}
+		if (!isTeamMember()) {
+			// A stranger is not one of yours: no backpack to open and no gifts taken (their own handling comes first).
+			serverPlayer.sendSystemMessage(statusLine());
+			return InteractionResult.SUCCESS_SERVER;
 		}
 		ItemStack held = player.getItemInHand(hand);
 		if (held.isEmpty()) {
@@ -518,7 +604,7 @@ public class CompanionEntity extends PathfinderMob {
 			Speech.say(this, Line.THANKS_GIFT, gift.getHoverName().getString());
 			Unity.add(level, Unity.GIFT, 2, 20);
 		} else {
-			serverPlayer.sendSystemMessage(Component.literal(friendId().displayName() + "'s backpack is full.")
+			serverPlayer.sendSystemMessage(Component.literal(displayName() + "'s backpack is full.")
 				.withStyle(ChatFormatting.GRAY));
 		}
 		return InteractionResult.SUCCESS_SERVER;
@@ -530,13 +616,13 @@ public class CompanionEntity extends PathfinderMob {
 		MenuType<ChestMenu> type = rows <= 1 ? MenuType.GENERIC_9x1 : rows == 2 ? MenuType.GENERIC_9x2 : MenuType.GENERIC_9x3;
 		BackpackView view = new BackpackView(this);
 		player.openMenu(new SimpleMenuProvider((id, inventory, p) -> new ChestMenu(type, id, inventory, view, rows),
-			Component.literal(friendId().displayName() + "'s Backpack")));
+			Component.literal(displayName() + "'s Backpack")));
 	}
 
 	/** "Fern (Farmer) - harvesting crops - health 20/20 - mood good - backpack 3/9", shown on right-click. */
 	public Component statusLine() {
 		String health = String.format(Locale.ROOT, "%.0f/%.0f", getHealth(), getMaxHealth());
-		return Component.literal(friendId().displayName() + " (" + friendId().role().title() + ") - " + activity()
+		return Component.literal(displayName() + " (" + friendId().role().title() + ") - " + activity()
 			+ " - health " + health + " - mood " + MoodPassives.moodText(this) + " - backpack " + backpack.usedSlots()
 			+ "/" + backpack.capacity())
 			.withStyle(ChatFormatting.GRAY);
@@ -553,6 +639,12 @@ public class CompanionEntity extends PathfinderMob {
 		}
 		if (attacker instanceof Player player && !player.isShiftKeyDown()) {
 			return false;
+		}
+		for (CompanionEvents.Hurt hook : CompanionEvents.HURT) {
+			damage = hook.hurt(this, level, source, damage);
+			if (damage <= 0) {
+				return false;
+			}
 		}
 		boolean hurt = super.hurtServer(level, source, damage);
 		if (hurt) {
@@ -678,7 +770,21 @@ public class CompanionEntity extends PathfinderMob {
 			Unity.add(level, Unity.DEFENCE, 3, 60);
 			Camp.data(level.getServer()).addStat("mobs_defeated", 1);
 		}
+		if (hit) {
+			onHitLanded(level, target);
+		}
 		return hit;
+	}
+
+	/**
+	 * Tells the {@link CompanionEvents#HIT} listeners that a blow (or an arrow) of this friend's landed. Melee hits call
+	 * it themselves; a ranged attack calls it when its arrow hits.
+	 */
+	public void onHitLanded(ServerLevel level, Entity target) {
+		boolean killed = target instanceof LivingEntity living ? !living.isAlive() : target.isRemoved();
+		for (CompanionEvents.Hit hook : CompanionEvents.HIT) {
+			hook.hit(this, level, target, killed);
+		}
 	}
 
 	public boolean isArmed() {
@@ -828,11 +934,14 @@ public class CompanionEntity extends PathfinderMob {
 		if (this.level() instanceof ServerLevel level && !deathHandled) {
 			deathHandled = true;
 			SpecialityTask.release(getUUID()); // the shared jobs they held, or asked back, are free for the others now
+			for (CompanionEvents.Death hook : CompanionEvents.DEATH) {
+				hook.died(this, level, source);
+			}
 			Component cause = source.getLocalizedDeathMessage(this);
 			dropBackpack(level);
 			CampData data = Camp.data(level.getServer());
 			CampData.Ledger ledger = data.ledger(friendId());
-			if (getUUID().equals(ledger.entityId) || ledger.state == CampData.LifeState.ALIVE) {
+			if (!isSettler() && (getUUID().equals(ledger.entityId) || ledger.state == CampData.LifeState.ALIVE)) {
 				ledger.state = CampData.LifeState.DEAD;
 				ledger.diedAtGameTime = level.getOverworldClockTime();
 				ledger.deaths++;
@@ -843,13 +952,13 @@ public class CompanionEntity extends PathfinderMob {
 				data.touchLedger();
 			}
 			BlockPos p = blockPosition();
-			Speech.announce(level.getServer(), Speech.prefix(friendId()).append(Component.literal(
+			Speech.announce(level.getServer(), Speech.prefix(this).append(Component.literal(
 				cause.getString() + ". Their backpack lies at " + p.getX() + " " + p.getY() + " " + p.getZ() + ".")
 				.withStyle(ChatFormatting.RED)));
 			Unity.lose(level.getServer(), 80);
 			for (CompanionEntity other : Companions.all()) {
 				if (other != this) {
-					Speech.say(other, Line.FRIEND_DIED, friendId().displayName());
+					Speech.say(other, Line.FRIEND_DIED, displayName());
 				}
 			}
 		}
@@ -869,7 +978,7 @@ public class CompanionEntity extends PathfinderMob {
 		if (items.isEmpty()) {
 			return;
 		}
-		for (ItemStack bag : BackpackItem.pack(friendId(), items)) {
+		for (ItemStack bag : BackpackItem.pack(displayName(), nameColour(), items)) {
 			ItemEntity entity = new ItemEntity(level, getX(), getY() + 0.5, getZ(), bag);
 			entity.setUnlimitedLifetime();
 			entity.setPickUpDelay(20);
@@ -905,6 +1014,10 @@ public class CompanionEntity extends PathfinderMob {
 		}
 		backpack.save(output);
 		needs.save(output);
+		output.storeNullable("Persona", Persona.CODEC, persona);
+		if (!extra.isEmpty()) {
+			output.store("Extra", CompoundTag.CODEC, extra);
+		}
 	}
 
 	@Override
@@ -925,5 +1038,7 @@ public class CompanionEntity extends PathfinderMob {
 		});
 		backpack.load(input);
 		needs.load(input);
+		input.read("Persona", Persona.CODEC).ifPresent(this::setPersona);
+		extra = input.read("Extra", CompoundTag.CODEC).map(CompoundTag::copy).orElseGet(CompoundTag::new);
 	}
 }

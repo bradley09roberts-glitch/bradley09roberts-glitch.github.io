@@ -120,7 +120,38 @@ public enum Line {
 	/** Putting raw meat on the campfire. %1$s = what is cooking, lower case, e.g. "beef" or "porkchop". */
 	COOKING(Priority.CASUAL, 1200, 1),
 	/** Setting off to hunt a wild animal for the camp. %1$s = the animal, e.g. "rabbit". */
-	HUNTING(Priority.CASUAL, 1200, 1);
+	HUNTING(Priority.CASUAL, 1200, 1),
+
+	// ==== Combat and gear (package combat): bows, shields, armour, healing ====
+	// (add this package's lines below this comment, each ending with a comma)
+
+	// ==== end of combat ====
+
+	// ==== Independence (package survival): trips, shelters, making room to build, skills ====
+	// (add this package's lines below this comment, each ending with a comma)
+
+	// ==== end of survival ====
+
+	// ==== Newcomers (package settler): strangers, their requests, joining the team ====
+	// (add this package's lines below this comment, each ending with a comma)
+
+	// ==== end of settler ====
+
+	// ==== Beating the game (package progress): Sage's plan, deep mining, enchanting, brewing ====
+	// (add this package's lines below this comment, each ending with a comma)
+
+	// ==== end of progress ====
+
+	// ==== Expeditions (package expedition): portals, the Nether, the stronghold, the End ====
+	// (add this package's lines below this comment, each ending with a comma)
+
+	// ==== end of expedition ====
+
+	// ==== Several players (package town): trust, bonds, jobs, mourning, notes, deliveries ====
+	// (add this package's lines below this comment, each ending with a comma)
+
+	// ==== end of town ====
+	;
 
 	/** How a line is rate-limited and who hears it. */
 	public enum Priority {
