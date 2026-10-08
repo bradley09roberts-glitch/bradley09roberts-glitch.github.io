@@ -1,12 +1,20 @@
 package io.github.bradley09roberts.hardcorefriends.test;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
@@ -33,6 +41,8 @@ import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
+import io.github.bradley09roberts.hardcorefriends.companion.Needs;
+import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
@@ -49,6 +59,11 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 public class HardcoreCampClientTest implements FabricClientGameTest {
 	private static final int DAYS = Integer.getInteger("hardcorefriends.soakDays", 3);
 	private static final int CHUNK = 6000;
+	/**
+	 * With {@code -Dhardcorefriends.timelapseTicks=N}, a time-lapse frame is taken every N ticks (screenshot
+	 * {@code tl-NNNN.png}) and what everyone is doing, feeling and saying goes to {@code test-reports/timelapse.jsonl}.
+	 */
+	private static final int FRAME_TICKS = Integer.getInteger("hardcorefriends.timelapseTicks", 0);
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
@@ -97,9 +112,15 @@ public class HardcoreCampClientTest implements FabricClientGameTest {
 			context.takeScreenshot(TestScreenshotOptions.of("camp-start").withSize(1600, 900).disableCounterPrefix());
 
 			List<String> timeline = new ArrayList<>();
-			int chunks = DAYS * 24000 / CHUNK;
+			int step = FRAME_TICKS > 0 ? FRAME_TICKS : CHUNK;
+			int steps = DAYS * 24000 / step;
+			ConcurrentLinkedQueue<String> spoken = new ConcurrentLinkedQueue<>();
+			List<String> frames = new ArrayList<>();
+			if (FRAME_TICKS > 0) {
+				Speech.listener = (c, text) -> spoken.add(c.friendId().displayName() + ": " + text);
+			}
 			long realStart = System.currentTimeMillis();
-			for (int i = 1; i <= chunks; i++) {
+			for (int i = 1; i <= steps; i++) {
 				// The test harness steps the server in lockstep with this software-rendered client, so draw fewer
 				// frames while sprinting. View and simulation distance stay at 7 chunks so the whole gathering ring
 				// (about 88 blocks) keeps ticking.
@@ -108,18 +129,32 @@ public class HardcoreCampClientTest implements FabricClientGameTest {
 					mc.options.renderDistance().set(7);
 					mc.options.simulationDistance().set(7);
 				});
-				world.getServer().runOnServer(server -> server.tickRateManager().requestGameToSprint(CHUNK));
+				world.getServer().runOnServer(server -> server.tickRateManager().requestGameToSprint(step));
 				world.getServer().waitFor(server -> !server.tickRateManager().isSprinting(), ClientGameTestContext.NO_TIMEOUT);
 				context.runOnClient(mc -> mc.options.framerateLimit().set(60));
-				context.waitTicks(40);
-				String line = world.getServer().computeOnServer(server -> status(server));
-				timeline.add(String.format("%.2f days: %s", i * CHUNK / 24000.0, line));
-				System.out.println("[HardcoreFriendsTest] " + timeline.getLast());
-				if (i % 2 == 0 || i == chunks) {
-					context.takeScreenshot(TestScreenshotOptions.of(String.format("camp-day-%.1f", i * CHUNK / 24000.0))
+				context.waitTicks(FRAME_TICKS > 0 ? 4 : 40);
+				long ticksDone = (long) i * step;
+				if (FRAME_TICKS > 0) {
+					List<String> said = new ArrayList<>();
+					for (String t = spoken.poll(); t != null; t = spoken.poll()) {
+						said.add(t);
+					}
+					int frame = i;
+					frames.add(world.getServer().computeOnServer(server -> frameInfo(server, frame, said)));
+					writeFrames(frames);
+					context.takeScreenshot(TestScreenshotOptions.of(String.format("tl-%04d", i)).withSize(1280, 720).disableCounterPrefix());
+				}
+				if (ticksDone % CHUNK == 0 || i == steps) {
+					String line = world.getServer().computeOnServer(server -> status(server));
+					timeline.add(String.format("%.2f days: %s", ticksDone / 24000.0, line));
+					System.out.println("[HardcoreFriendsTest] " + timeline.getLast());
+				}
+				if (ticksDone % (2 * CHUNK) == 0 || i == steps) {
+					context.takeScreenshot(TestScreenshotOptions.of(String.format("camp-day-%.1f", ticksDone / 24000.0))
 						.withSize(1600, 900).disableCounterPrefix());
 				}
 			}
+			Speech.listener = null;
 			long realSeconds = (System.currentTimeMillis() - realStart) / 1000;
 
 			// A daytime ground-level view of the camp.
@@ -263,6 +298,49 @@ public class HardcoreCampClientTest implements FabricClientGameTest {
 		ServerPlayer p = server.getPlayerList().getPlayers().getFirst();
 		p.connection.teleport(box.getX() + 0.5, box.getY(), box.getZ() + 0.5, 0.0F, 52.0F);
 		p.getFoodData().setFoodLevel(20);
+	}
+
+	/** One time-lapse frame's caption data as a JSON line: clock, weather, and every friend's doings and mood. */
+	private static String frameInfo(MinecraftServer server, int frame, List<String> said) {
+		ServerLevel level = server.overworld();
+		long t = level.getOverworldClockTime();
+		long dayTime = Math.floorMod(t, 24000L);
+		JsonObject o = new JsonObject();
+		o.addProperty("frame", frame);
+		o.addProperty("day", t / 24000 + 1);
+		o.addProperty("clock", String.format("%02d:%02d", (dayTime / 1000 + 6) % 24, dayTime % 1000 * 60 / 1000));
+		o.addProperty("weather", level.isThundering() ? "thunderstorm" : level.isRaining() ? "rain" : "clear");
+		o.addProperty("stage", Camp.stageName(Camp.data(server).stage()));
+		o.addProperty("unity", Camp.data(server).unity());
+		JsonArray friends = new JsonArray();
+		for (FriendId id : FriendId.values()) {
+			JsonObject f = new JsonObject();
+			f.addProperty("name", id.displayName());
+			Companions.find(id).ifPresentOrElse(c -> {
+				Needs needs = c.needs();
+				f.addProperty("activity", c.isAsleep() ? "asleep" : c.activity());
+				f.addProperty("mood", needs.mood().word());
+				Needs.Need low = needs.lowest();
+				f.addProperty("lowest", low.title().toLowerCase(Locale.ROOT) + " " + Math.round(needs.get(low)));
+				f.addProperty("hp", Math.round(c.getHealth()));
+			}, () -> f.addProperty("activity", Camp.data(server).ledger(id).state == CampData.LifeState.DEAD ? "fallen" : "away"));
+			friends.add(f);
+		}
+		o.add("friends", friends);
+		JsonArray lines = new JsonArray();
+		said.forEach(lines::add);
+		o.add("said", lines);
+		return o.toString();
+	}
+
+	private static void writeFrames(List<String> frames) {
+		try {
+			Path dir = Path.of(System.getProperty("user.dir")).resolve("test-reports");
+			Files.createDirectories(dir);
+			Files.write(dir.resolve("timelapse.jsonl"), frames);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 	private static String status(MinecraftServer server) {

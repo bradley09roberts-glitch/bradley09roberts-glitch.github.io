@@ -1,6 +1,9 @@
 package io.github.bradley09roberts.hardcorefriends.companion;
 
 import java.util.IllegalFormatException;
+import java.util.function.BiConsumer;
+
+import org.jspecify.annotations.Nullable;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -27,6 +30,9 @@ public final class Speech {
 	/**
 	 * Says a line if its cooldowns allow. Returns true when something was said.
 	 */
+	/** Test hook: sees every line a friend says, heard or not (the in-game recording captions them). */
+	public static volatile @Nullable BiConsumer<CompanionEntity, String> listener;
+
 	public static boolean say(CompanionEntity companion, Line line, Object... args) {
 		if (!(companion.level() instanceof ServerLevel level) || !companion.isAlive()) {
 			return false;
@@ -62,6 +68,10 @@ public final class Speech {
 			text = String.format(template, args);
 		} catch (IllegalFormatException e) {
 			text = template;
+		}
+		BiConsumer<CompanionEntity, String> hook = listener;
+		if (hook != null) {
+			hook.accept(companion, text);
 		}
 		Component message = prefix(companion.friendId()).append(Component.literal(text).withStyle(ChatFormatting.WHITE));
 		double range = line.priority() == Line.Priority.DANGER ? DANGER_RANGE_SQR : HEARING_RANGE_SQR;
