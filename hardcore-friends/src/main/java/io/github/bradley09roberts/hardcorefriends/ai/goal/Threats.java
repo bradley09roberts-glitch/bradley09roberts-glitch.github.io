@@ -15,7 +15,10 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.monster.Shulker;
+import net.minecraft.world.entity.monster.Witch;
 import net.minecraft.world.entity.monster.breeze.Breeze;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -69,9 +72,20 @@ public final class Threats {
 		return best;
 	}
 
-	/** Mobs that attack from a distance: archers, crossbow and trident users, witches, blazes, ghasts, breezes, shulkers. */
+	/**
+	 * Mobs that attack from a distance: those actually holding a bow, crossbow or trident (skeletons, pillagers,
+	 * trident drowned...), and witches, blazes, ghasts, breezes and shulkers. A drowned or piglin without a ranged
+	 * weapon fights hand to hand, so friends stand together against it like against a zombie.
+	 */
 	public static boolean isRanged(LivingEntity e) {
-		return e instanceof RangedAttackMob || e instanceof Blaze || e instanceof Ghast || e instanceof Breeze || e instanceof Shulker;
+		if (e instanceof Witch || e instanceof Blaze || e instanceof Ghast || e instanceof Breeze || e instanceof Shulker) {
+			return true;
+		}
+		return e instanceof RangedAttackMob && (shoots(e.getMainHandItem()) || shoots(e.getOffhandItem()));
+	}
+
+	private static boolean shoots(ItemStack held) {
+		return held.is(Items.BOW) || held.is(Items.CROSSBOW) || held.is(Items.TRIDENT);
 	}
 
 	/** The nearest ranged attacker within {@code radius} that is aiming at {@code victim} and can see them, or null. */
