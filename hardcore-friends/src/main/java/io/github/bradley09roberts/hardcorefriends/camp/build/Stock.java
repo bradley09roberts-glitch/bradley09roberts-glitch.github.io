@@ -51,7 +51,21 @@ public enum Stock {
 	HOPPER("hopper", "hoppers", s -> s.is(Items.HOPPER), Need.ORE),
 	LANTERN("lantern", "lanterns", s -> s.is(Items.LANTERN), Need.ORE),
 	REDSTONE_LAMP("redstone lamp", "redstone lamps", s -> s.is(Items.REDSTONE_LAMP), Need.BUILD),
-	DAYLIGHT_DETECTOR("daylight detector", "daylight detectors", s -> s.is(Items.DAYLIGHT_DETECTOR), Need.BUILD);
+	DAYLIGHT_DETECTOR("daylight detector", "daylight detectors", s -> s.is(Items.DAYLIGHT_DETECTOR), Need.BUILD),
+
+	// Sage's plan (package progress): raw materials the plan's work gathers, and what is crafted from them
+	SUGAR_CANE("sugar cane", "sugar cane", s -> s.is(Items.SUGAR_CANE), Need.BUILD),
+	LEATHER("leather", "leather", s -> s.is(Items.LEATHER), Need.BUILD),
+	DIAMOND("diamond", "diamonds", s -> s.is(Items.DIAMOND), Need.ORE),
+	OBSIDIAN("obsidian", "obsidian", s -> s.is(Items.OBSIDIAN), Need.ORE),
+	BLAZE_ROD("blaze rod", "blaze rods", s -> s.is(Items.BLAZE_ROD), Need.BUILD),
+	PAPER("paper", "paper", s -> s.is(Items.PAPER), Need.BUILD),
+	BOOK("book", "books", s -> s.is(Items.BOOK), Need.BUILD),
+	BOOKSHELF("bookshelf", "bookshelves", s -> s.is(Items.BOOKSHELF), Need.BUILD),
+	ENCHANTING_TABLE("enchanting table", "enchanting tables", s -> s.is(Items.ENCHANTING_TABLE), Need.BUILD),
+	IRON_BLOCK("block of iron", "blocks of iron", s -> s.is(Items.IRON_BLOCK), Need.ORE),
+	ANVIL("anvil", "anvils", s -> s.is(Items.ANVIL), Need.ORE),
+	BREWING_STAND("brewing stand", "brewing stands", s -> s.is(Items.BREWING_STAND), Need.BUILD);
 
 	/** One vanilla recipe: inputs per craft, items made per craft, and whether a crafting table is needed. */
 	public record Recipe(int yield, boolean needsTable, Map<Stock, Integer> inputs) {
@@ -109,6 +123,13 @@ public enum Stock {
 			case LANTERN -> new Recipe(1, true, Map.of(IRON_NUGGET, 8, TORCH, 1));
 			case REDSTONE_LAMP -> new Recipe(1, true, Map.of(REDSTONE, 4, GLOWSTONE, 1));
 			case DAYLIGHT_DETECTOR -> new Recipe(1, true, Map.of(GLASS, 3, QUARTZ, 3, SLAB, 3));
+			case PAPER -> new Recipe(3, true, Map.of(SUGAR_CANE, 3));
+			case BOOK -> new Recipe(1, false, Map.of(PAPER, 3, LEATHER, 1));
+			case BOOKSHELF -> new Recipe(1, true, Map.of(PLANKS, 6, BOOK, 3));
+			case ENCHANTING_TABLE -> new Recipe(1, true, Map.of(BOOK, 1, DIAMOND, 2, OBSIDIAN, 4));
+			case IRON_BLOCK -> new Recipe(1, true, Map.of(IRON, 9));
+			case ANVIL -> new Recipe(1, true, Map.of(IRON_BLOCK, 3, IRON, 4));
+			case BREWING_STAND -> new Recipe(1, true, Map.of(BLAZE_ROD, 1, STONE_MATERIAL, 3));
 			default -> null;
 		};
 	}
@@ -155,6 +176,13 @@ public enum Stock {
 			case LANTERN -> Items.LANTERN;
 			case REDSTONE_LAMP -> Items.REDSTONE_LAMP;
 			case DAYLIGHT_DETECTOR -> Items.DAYLIGHT_DETECTOR;
+			case PAPER -> Items.PAPER;
+			case BOOK -> Items.BOOK;
+			case BOOKSHELF -> Items.BOOKSHELF;
+			case ENCHANTING_TABLE -> Items.ENCHANTING_TABLE;
+			case IRON_BLOCK -> Items.IRON_BLOCK;
+			case ANVIL -> Items.ANVIL;
+			case BREWING_STAND -> Items.BREWING_STAND;
 			default -> null;
 		};
 	}

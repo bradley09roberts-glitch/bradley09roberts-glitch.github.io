@@ -190,6 +190,22 @@ public enum Line {
 
 	// ==== Beating the game (package progress): Sage's plan, deep mining, enchanting, brewing ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** Sage (or whoever plans in her place) sets the camp's next goal. %1$s = the goal, e.g. "a diamond pickaxe in the camp". */
+	GOAL_NEW(Priority.IMPORTANT, 0, 1),
+	/** A step of Sage's plan is reached. %1$s = the step's name, e.g. "Iron age". */
+	GOAL_REACHED(Priority.IMPORTANT, 0, 1),
+	/** Spotted diamonds while mining. */
+	FOUND_DIAMONDS(Priority.IMPORTANT, 1200, 0),
+	/** Found lava while mining, left the wall in place and went round it. */
+	LAVA_SEALED(Priority.IMPORTANT, 2400, 0),
+	/** Poured water on lava and made obsidian. */
+	OBSIDIAN_MADE(Priority.CASUAL, 1200, 0),
+	/** Enchanted a piece of gear at the table. %1$s = the item's name as the game shows it, e.g. "Iron Sword". */
+	ENCHANTED(Priority.IMPORTANT, 600, 1),
+	/** Took finished potions off the brewing stand. %1$s = what they are, lower case, e.g. "fire resistance". */
+	POTIONS_BREWED(Priority.IMPORTANT, 600, 1),
+	/** Mended worn gear at the anvil. %1$s = the item's name as the game shows it, e.g. "Iron Pickaxe". */
+	REPAIRED(Priority.CASUAL, 1200, 1),
 
 	// ==== end of progress ====
 

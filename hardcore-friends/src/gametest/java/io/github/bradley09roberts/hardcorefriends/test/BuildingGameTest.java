@@ -94,6 +94,10 @@ public class BuildingGameTest {
 			case LANTERN -> Items.LANTERN;
 			case REDSTONE_LAMP -> Items.REDSTONE_LAMP;
 			case DAYLIGHT_DETECTOR -> Items.DAYLIGHT_DETECTOR;
+			case BOOKSHELF -> Items.BOOKSHELF;
+			case ENCHANTING_TABLE -> Items.ENCHANTING_TABLE;
+			case ANVIL -> Items.ANVIL;
+			case BREWING_STAND -> Items.BREWING_STAND;
 		});
 	}
 

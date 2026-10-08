@@ -35,6 +35,12 @@ public final class Structures {
 	public static final String AUTO_SMELTER = "auto_smelter";
 	public static final String LAMP_POSTS = "lamp_posts";
 	public static final String GARDENS = "gardens";
+	/** Sage's plan: an enchanting table ringed by 15 bookshelves (package progress builds it when the plan is ready). */
+	public static final String LIBRARY = "library";
+	/** An anvil by the supply chest, for repairing worn iron and diamond gear (package progress). */
+	public static final String ANVIL = "anvil";
+	/** A brewing stand by the supply chest, once the camp has a blaze rod (package progress). */
+	public static final String BREWING_STAND = "brewing_stand";
 
 	public static final List<Entry> ALL = List.of(
 		new Entry(SUPPLY_CHEST, 0, Role.BUILDER, "supply chest", false),
@@ -56,7 +62,11 @@ public final class Structures {
 		new Entry(CABIN_2, 4, Role.BUILDER, "second cabin", false),
 		new Entry(AUTO_SMELTER, 4, Role.INVENTOR, "auto-smelter", false),
 		new Entry(LAMP_POSTS, 4, Role.INVENTOR, "night lamp posts", true),
-		new Entry(GARDENS, 4, Role.LANDSCAPER, "flower gardens", false));
+		new Entry(GARDENS, 4, Role.LANDSCAPER, "flower gardens", false),
+		// Optional, made for Sage's plan by the progress package's own building job (never Oak's general building list).
+		new Entry(LIBRARY, 3, Role.STRATEGIST, "library", true),
+		new Entry(ANVIL, 3, Role.STRATEGIST, "anvil", true),
+		new Entry(BREWING_STAND, 3, Role.STRATEGIST, "brewing stand", true));
 
 	private Structures() {
 	}

@@ -13,16 +13,19 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.Fallable;
 import net.minecraft.world.level.block.FenceGateBlock;
+import net.minecraft.world.level.block.NetherWartBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.mine.MinePlan;
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprint;
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
@@ -73,6 +76,14 @@ public final class WorldEditGuard {
 		default Verdict canTransform(CompanionEntity c, ServerLevel level, BlockPos pos, BlockState newState) {
 			return Verdict.deny("this job does not reshape blocks");
 		}
+
+		/**
+		 * True if this reason may break a block that is otherwise never touched ({@code ModTags.NEVER_TOUCH}), such as
+		 * obsidian the friends cast themselves. Asked before {@link #canBreak}; the default keeps protected blocks safe.
+		 */
+		default boolean mayBreakProtected(CompanionEntity c, ServerLevel level, BlockPos pos, BlockState state) {
+			return false;
+		}
 	}
 
 	/** Rules for the reasons the feature packages own (GRADE, SURVIVAL, CAST, EXPEDITION). A reason with none is refused. */
@@ -92,6 +103,8 @@ public final class WorldEditGuard {
 
 	/** Optional observer of every completed edit. Null in normal play. */
 	public static volatile java.util.function.@org.jspecify.annotations.Nullable Consumer<EditEvent> listener;
+	/** Feature packages' observers of every completed edit (the camp's experience from mined ores, for one). */
+	public static final List<java.util.function.Consumer<EditEvent>> LISTENERS = new java.util.concurrent.CopyOnWriteArrayList<>();
 
 	private static final int MIN_TICKS_BETWEEN_EDITS = 4;
 	/** How far up a column of sand or gravel is followed when checking for water or lava above it. */
@@ -146,13 +159,14 @@ public final class WorldEditGuard {
 		if (state.hasBlockEntity()) {
 			return Verdict.deny("block entity");
 		}
-		if (state.is(ModTags.NEVER_TOUCH) || state.getDestroySpeed(level, pos) < 0) {
+		Policy policy = POLICIES.get(reason);
+		if (state.is(ModTags.NEVER_TOUCH) && (policy == null || !policy.mayBreakProtected(c, level, pos, state))
+			|| state.getDestroySpeed(level, pos) < 0) {
 			return Verdict.deny("protected block");
 		}
 		if (reason != Reason.FARM && breachesFluid(level, pos)) {
 			return Verdict.deny("next to water or lava");
 		}
-		Policy policy = POLICIES.get(reason);
 		if (policy != null) {
 			return policy.canBreak(c, level, pos, state);
 		}
@@ -167,6 +181,12 @@ public final class WorldEditGuard {
 					return Verdict.OK;
 				}
 				if ((state.is(Blocks.MELON) || state.is(Blocks.PUMPKIN)) && hasAttachedStem(level, pos)) {
+					return Verdict.OK;
+				}
+				if (state.is(Blocks.SUGAR_CANE) && level.getBlockState(pos.below()).is(Blocks.SUGAR_CANE)) {
+					return Verdict.OK; // the top of a sugar cane, leaving its root to grow again
+				}
+				if (state.is(Blocks.NETHER_WART) && state.getValue(NetherWartBlock.AGE) >= NetherWartBlock.MAX_AGE) {
 					return Verdict.OK;
 				}
 				return Verdict.deny("not a ripe crop");
@@ -190,7 +210,10 @@ public final class WorldEditGuard {
 				if (!inResourceZone(c, pos)) {
 					return Verdict.deny("outside the mining area");
 				}
-				if (!state.is(ModTags.MINEABLE_NATURAL)) {
+				// A miner may take back the cobblestone seals the friends put in their own tunnels (deep in a mine's box).
+				boolean ownSeal = ownBlock && (state.is(Blocks.COBBLESTONE) || state.is(Blocks.COBBLED_DEEPSLATE))
+					&& inMineTunnels(level, data, pos);
+				if (!state.is(ModTags.MINEABLE_NATURAL) && !ownSeal) {
 					return Verdict.deny("not natural stone or ore");
 				}
 				if (looksPlayerBuilt(level, pos, 2, data)) {
@@ -270,6 +293,7 @@ public final class WorldEditGuard {
 			}
 			case MINE -> {
 				return newState.is(Blocks.TORCH) || newState.is(Blocks.WALL_TORCH) || newState.is(Blocks.COBBLESTONE)
+					|| newState.is(Blocks.COBBLED_DEEPSLATE)
 					? inResourceZone(c, pos) ? Verdict.OK : Verdict.deny("outside the mining area")
 					: Verdict.deny("miners only place torches and cobblestone seals");
 			}
@@ -328,6 +352,10 @@ public final class WorldEditGuard {
 			case LANDSCAPE -> earth && newState.is(Blocks.DIRT_PATH) && airAbove ? Verdict.OK : Verdict.deny("not path-able");
 			case INVENT -> Camp.data(level.getServer()).isPlacedByFriends(level, pos) && current.getBlock() == newState.getBlock()
 				? Verdict.OK : Verdict.deny("can only adjust our own contraptions");
+			// The friends' own anvil wears with use, as an anvil does for a player: chipped, damaged, then gone.
+			case BUILD -> current.is(BlockTags.ANVIL) && Camp.data(level.getServer()).isPlacedByFriends(level, pos)
+				&& (newState.isAir() ? AnvilBlock.damage(current) == null : newState.equals(AnvilBlock.damage(current)))
+				? Verdict.OK : Verdict.deny("this job does not reshape blocks");
 			default -> Verdict.deny("this job does not reshape blocks");
 		};
 	}
@@ -425,7 +453,7 @@ public final class WorldEditGuard {
 		SoundType sound = newState.getSoundType();
 		level.playSound(null, pos, sound.getHitSound(), SoundSource.BLOCKS, 0.8F, 1.0F);
 		CampData data = Camp.data(level.getServer());
-		if (newState.is(Blocks.DIRT_PATH) || newState.is(Blocks.FARMLAND)) {
+		if (newState.is(Blocks.DIRT_PATH) || newState.is(Blocks.FARMLAND) || newState.is(BlockTags.ANVIL)) {
 			data.recordPlaced(level, pos, newState);
 		}
 		record(c, data, "changed " + BuiltInRegistries.BLOCK.getKey(old.getBlock()).getPath() + " to", newState, pos, reason);
@@ -435,8 +463,14 @@ public final class WorldEditGuard {
 	private static void record(CompanionEntity c, CampData data, String verb, BlockState state, BlockPos pos, Reason reason) {
 		ServerLevel level = (ServerLevel) c.level();
 		var observer = listener;
-		if (observer != null) {
-			observer.accept(new EditEvent(c, verb, pos.immutable(), state, reason));
+		if (observer != null || !LISTENERS.isEmpty()) {
+			EditEvent event = new EditEvent(c, verb, pos.immutable(), state, reason);
+			if (observer != null) {
+				observer.accept(event);
+			}
+			for (java.util.function.Consumer<EditEvent> each : LISTENERS) {
+				each.accept(event);
+			}
 		}
 		c.setLastEditTick(level.getGameTime());
 		data.logEdit(String.format("day %d: %s %s %s at %d %d %d (%s)", Camp.day(level), c.displayName(), verb,
@@ -515,6 +549,24 @@ public final class WorldEditGuard {
 				if (!p.isFoundation() && p.pos().equals(pos)) {
 					return true;
 				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Inside the box of one of the friends' mines (the staircase mine or the deep one) and well below the camp: where
+	 * the miners' own seals are, and never a building's cobblestone.
+	 */
+	private static boolean inMineTunnels(ServerLevel level, CampData data, BlockPos pos) {
+		Optional<BlockPos> centre = data.campPos();
+		if (centre.isPresent() && pos.getY() >= centre.get().getY() - 4) {
+			return false;
+		}
+		for (String key : new String[] {MinePlan.KEY, MinePlan.DEEP_KEY}) {
+			MinePlan plan = MinePlan.of(data, key);
+			if (plan.isIn(level) && plan.inBox(pos)) {
+				return true;
 			}
 		}
 		return false;

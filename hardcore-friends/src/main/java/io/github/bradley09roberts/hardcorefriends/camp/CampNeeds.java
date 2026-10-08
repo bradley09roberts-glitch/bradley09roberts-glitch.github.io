@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
@@ -68,6 +70,11 @@ public final class CampNeeds {
 	private static long lastShortageReport = -100_000;
 	private static String siteProblem = "";
 	private static long lastSiteProblem = -100_000;
+	/**
+	 * Needs raised by the feature packages (Sage's long-term plan wanting iron or diamonds, for one): each is asked after
+	 * every recompute and its values (0 to 1) are merged in by the larger, so they can raise a need but never hide one.
+	 */
+	public static final List<Function<MinecraftServer, Map<Need, Double>>> EXTRA = new CopyOnWriteArrayList<>();
 
 	private CampNeeds() {
 	}
@@ -188,6 +195,11 @@ public final class CampNeeds {
 		NEEDS.put(Need.BUILD, BUILD_SHORTAGE.isEmpty() ? 0.0 : 1.0);
 		for (Map.Entry<Need, Integer> e : BUILD_SHORTAGE.entrySet()) {
 			NEEDS.merge(e.getKey(), 0.8, Math::max);
+		}
+		for (Function<MinecraftServer, Map<Need, Double>> extra : EXTRA) {
+			for (Map.Entry<Need, Double> e : extra.apply(server).entrySet()) {
+				NEEDS.merge(e.getKey(), Math.clamp(e.getValue(), 0.0, 1.0), Math::max);
+			}
 		}
 	}
 

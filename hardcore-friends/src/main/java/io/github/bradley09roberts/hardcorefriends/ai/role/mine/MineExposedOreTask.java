@@ -317,11 +317,15 @@ public final class MineExposedOreTask implements CompanionTask {
 	}
 
 	/**
-	 * An ore that is the floor of a walkway in Flint's mine (stairs or tunnels). Digging it would leave a hole that
-	 * could trap him on the way back up, so it stays.
+	 * An ore that is the floor of a walkway in Flint's mine or the deep mine (stairs or tunnels). Digging it would leave
+	 * a hole that could trap him on the way back up, so it stays.
 	 */
 	private static boolean isMineFloor(ServerLevel level, BlockPos pos) {
-		MinePlan plan = MinePlan.of(Camp.data(level.getServer()));
+		CampData data = Camp.data(level.getServer());
+		return isFloorOf(level, pos, MinePlan.of(data)) || isFloorOf(level, pos, MinePlan.of(data, MinePlan.DEEP_KEY));
+	}
+
+	private static boolean isFloorOf(ServerLevel level, BlockPos pos, MinePlan plan) {
 		return plan.inBox(pos) && plan.isIn(level) && MiningHelper.isPassable(level, pos.above())
 			&& MiningHelper.isPassable(level, pos.above(2));
 	}

@@ -100,6 +100,24 @@ public final class Blueprints {
 	 */
 	public static final Blueprint ANIMAL_PEN = animalPen();
 
+	/** Local position of the library's enchanting table (declared before the plan, which reads it). */
+	public static final int[] LIBRARY_TABLE = {2, 0, 2};
+
+	/**
+	 * Sage's library: an enchanting table in the middle of a 5×5 square, ringed by 15 bookshelves on the ground (every
+	 * edge block but the doorway in the middle of the front), with the ring of air between table and shelves that the
+	 * table needs, and a torch on each corner shelf. Local position of the table: {@link #LIBRARY_TABLE}.
+	 */
+	public static final Blueprint LIBRARY = library();
+
+	/** An anvil a few blocks from the supply chest. */
+	public static final Blueprint ANVIL = Blueprint.builder(Structures.ANVIL, 1, 1).anchor(Blueprint.Anchor.CHEST).at(0, 3)
+		.put(0, 0, 0, MaterialSpec.ANVIL).build();
+
+	/** A brewing stand a few blocks from the supply chest, on the other side. */
+	public static final Blueprint BREWING_STAND = Blueprint.builder(Structures.BREWING_STAND, 1, 1).anchor(Blueprint.Anchor.CHEST)
+		.at(0, -3).put(0, 0, 0, MaterialSpec.BREWING_STAND).build();
+
 	/** Local positions of the smelter's chests, for players and tests. */
 	public static final int[] SMELTER_INPUT = {0, 4, 0};
 	public static final int[] SMELTER_FUEL = {1, 3, 0};
@@ -111,7 +129,7 @@ public final class Blueprints {
 
 	static {
 		for (Blueprint b : List.of(SUPPLY_CHEST, CAMPFIRE, CRAFTING_TABLE, FURNACE, TORCH_POSTS, CABIN, STOREHOUSE, WATCHTOWER,
-			LANTERN_POSTS, CABIN_2, AUTO_DOOR, HOPPER_DROPOFF, AUTO_SMELTER, LAMP_POSTS, ANIMAL_PEN)) {
+			LANTERN_POSTS, CABIN_2, AUTO_DOOR, HOPPER_DROPOFF, AUTO_SMELTER, LAMP_POSTS, ANIMAL_PEN, LIBRARY, ANVIL, BREWING_STAND)) {
 			BY_ID.put(b.id(), b);
 		}
 	}
@@ -292,6 +310,22 @@ public final class Blueprints {
 				}
 			}
 		}
+		return b.build();
+	}
+
+	private static Blueprint library() {
+		Blueprint.Builder b = Blueprint.builder(Structures.LIBRARY, 5, 5).at(12, -1);
+		for (int dx = 0; dx < 5; dx++) {
+			for (int dz = 0; dz < 5; dz++) {
+				boolean edge = dx == 0 || dx == 4 || dz == 0 || dz == 4;
+				if (edge && !(dx == 2 && dz == 0)) {
+					b.put(dx, 0, dz, MaterialSpec.BOOKSHELF);
+				}
+			}
+		}
+		b.put(LIBRARY_TABLE[0], LIBRARY_TABLE[1], LIBRARY_TABLE[2], MaterialSpec.ENCHANTING_TABLE);
+		b.attach(0, 1, 0, MaterialSpec.TORCH).attach(4, 1, 0, MaterialSpec.TORCH)
+			.attach(0, 1, 4, MaterialSpec.TORCH).attach(4, 1, 4, MaterialSpec.TORCH);
 		return b.build();
 	}
 
