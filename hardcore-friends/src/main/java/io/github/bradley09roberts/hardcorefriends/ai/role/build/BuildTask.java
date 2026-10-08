@@ -50,8 +50,10 @@ public final class BuildTask extends BlueprintTask {
 	protected @Nullable Blueprint choose(CompanionEntity c, CampData data) {
 		for (Structures.Entry next : pending(data, Role.BUILDER)) {
 			boolean trivialChest = next.id().equals(Structures.SUPPLY_CHEST) && data.chestPos().isPresent();
-			if (!trivialChest && !next.id().equals(Structures.CRAFTING_TABLE) && !hasTable(c, data)) {
-				// Nearly every recipe needs a crafting table, so that comes first.
+			if (!trivialChest && !next.id().equals(Structures.CRAFTING_TABLE) && !data.isCompleted(Structures.CRAFTING_TABLE)
+				&& !hasTable(c, data)) {
+				// Nearly every recipe needs a crafting table, so that comes first. (A finished one that went missing is
+				// put back by the repair job instead.)
 				return isSetAside(c, Structures.CRAFTING_TABLE) ? null : Blueprints.CRAFTING_TABLE;
 			}
 			Blueprint plan = Blueprints.forId(next.id()).orElse(null);

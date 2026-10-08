@@ -16,6 +16,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
@@ -146,7 +147,6 @@ public class BuildingGameTest {
 			int logs = chestCount(chest, s -> s.is(ItemTags.LOGS)) + oak.backpack().count(ItemTags.LOGS);
 			helper.assertTrue(logs <= 12, "at least four logs were used (crafting table and campfire), " + logs + " left");
 			helper.assertTrue(chestCount(chest, s -> s.is(Items.COAL)) + oak.backpack().count(Items.COAL) <= 1, "one coal was used");
-			DebugLog.done(helper, "campfire", data);
 		});
 	}
 
@@ -163,7 +163,6 @@ public class BuildingGameTest {
 			helper.assertTrue(SupplyChest.of(helper.getLevel()).isPresent(), "the supply chest is usable");
 			helper.assertTrue(data.isPlacedByFriends(linked.get()), "the chest is recorded as the friends' own");
 			helper.assertTrue(oak.backpack().count(ItemTags.PLANKS) <= 4, "12 planks became a crafting table and a chest");
-			DebugLog.done(helper, "supplychest", data);
 		});
 	}
 
@@ -188,7 +187,6 @@ public class BuildingGameTest {
 				&& playerAbs.getZ() <= box[3] + 2;
 			helper.assertFalse(near, "the cabin keeps two blocks away from the player's plank");
 			helper.assertTrue(helper.getBlockState(playerBlock).is(Blocks.OAK_PLANKS), "the player's plank is still there");
-			DebugLog.done(helper, "playerblock", data);
 		});
 	}
 
@@ -219,7 +217,6 @@ public class BuildingGameTest {
 			int logsLeft = chestCount(chest, s -> s.is(ItemTags.LOGS)) + oak.backpack().count(ItemTags.LOGS);
 			helper.assertTrue(logsLeft <= 128 - 45, "real wood was used: " + logsLeft + " logs left");
 			helper.assertTrue(chestCount(chest, s -> s.is(Items.GLASS)) + oak.backpack().count(Items.GLASS) == 0, "glass became panes");
-			DebugLog.done(helper, "cabin", data);
 		});
 	}
 
@@ -325,16 +322,17 @@ public class BuildingGameTest {
 				helper.assertTrue(helper.getLevel().getBlockState(inside).is(BlockTags.WOODEN_PRESSURE_PLATES), "plate inside at " + inside);
 			})
 			.thenExecute(() -> {
-				ItemEntity pebble = new ItemEntity(helper.getLevel(), outside.getX() + 0.5, outside.getY() + 0.1, outside.getZ() + 0.5,
-					new ItemStack(Items.STICK));
+				// A player's dropped stick, lying still on the doorstep plate (friends leave player drops alone).
+				ItemEntity pebble = new ItemEntity(helper.getLevel(), outside.getX() + 0.5, outside.getY() + 0.05, outside.getZ() + 0.5,
+					new ItemStack(Items.STICK), 0, 0, 0);
 				pebble.setPickUpDelay(32767);
+				pebble.setThrower(helper.makeMockPlayer(GameType.SURVIVAL));
 				helper.getLevel().addFreshEntity(pebble);
 			})
 			.thenWaitUntil(() -> helper.assertTrue(helper.getLevel().getBlockState(door).getValue(DoorBlock.OPEN),
 				"something on the doorstep plate opens the door (door " + helper.getLevel().getBlockState(door) + ", plate "
 					+ helper.getLevel().getBlockState(outside) + ", items " + helper.getLevel().getEntitiesOfClass(ItemEntity.class,
 					new net.minecraft.world.phys.AABB(outside).inflate(1)) + ", " + status(spark, data, Structures.AUTO_DOOR) + ")"))
-			.thenExecute(() -> DebugLog.done(helper, "autodoor", data))
 			.thenSucceed();
 	}
 
@@ -349,7 +347,6 @@ public class BuildingGameTest {
 			BlockState above = helper.getBlockState(CHEST.above());
 			helper.assertTrue(above.is(Blocks.HOPPER) && above.getValue(HopperBlock.FACING) == Direction.DOWN, "a hopper points down into the chest");
 			helper.assertTrue(chestCount(chest, s -> s.is(Items.IRON_INGOT)) + spark.backpack().count(Items.IRON_INGOT) == 0, "five iron went into it");
-			DebugLog.done(helper, "hopper", data);
 		});
 	}
 
@@ -374,7 +371,6 @@ public class BuildingGameTest {
 				Container output = SupplyChest.at(helper.getLevel(), Blueprints.at(site, Blueprints.SMELTER_OUTPUT)).orElseThrow();
 				helper.assertTrue(chestCount(output, s -> s.is(Items.IRON_INGOT)) >= 1, "an iron ingot arrives in the output chest");
 			})
-			.thenExecute(() -> DebugLog.done(helper, "smelter", data))
 			.thenSucceed();
 	}
 }

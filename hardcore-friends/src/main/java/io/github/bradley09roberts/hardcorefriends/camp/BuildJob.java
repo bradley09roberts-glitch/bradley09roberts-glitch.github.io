@@ -50,7 +50,8 @@ public final class BuildJob {
 	/** How many entries one run places at most. */
 	public static final int BATCH = 24;
 	private static final int ENTRY_TIMEOUT = 200;
-	private static final int SEARCH_BUDGET = 8;
+	/** Footprint columns the site search may test per tick: a big plan tries fewer candidate spots per tick. */
+	private static final int SEARCH_AREA_BUDGET = 96;
 
 	private enum Phase {
 		SITE,
@@ -160,7 +161,7 @@ public final class BuildJob {
 		if (search == null) {
 			search = SiteFinder.search(level(), data, bp);
 		}
-		List<Part> found = search.step(SEARCH_BUDGET);
+		List<Part> found = search.step(Math.clamp(SEARCH_AREA_BUDGET / (bp.width() * bp.depth()), 2, 16));
 		if (found != null) {
 			SiteFinder.reserve(data, bp, found);
 			return toPlan(found);
