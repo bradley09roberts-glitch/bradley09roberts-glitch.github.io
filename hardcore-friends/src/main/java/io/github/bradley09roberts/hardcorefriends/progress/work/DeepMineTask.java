@@ -530,8 +530,9 @@ public final class DeepMineTask implements CompanionTask {
 		for (BlockPos p : job.clear()) {
 			for (Direction d : Direction.values()) {
 				BlockPos n = p.relative(d);
-				if (wallOres.size() >= MAX_WALL_ORES || n.equals(floor) || n.getY() < job.cell().getY() || wallOres.contains(n)) {
-					continue;
+				if (wallOres.size() >= MAX_WALL_ORES || n.equals(floor) || n.equals(job.stand().below()) || n.getY() < job.cell().getY()
+					|| MiningHelper.isOnTop(c.blockPosition(), n) || wallOres.contains(n)) {
+					continue; // never a walkway's floor, nor the block under the friend
 				}
 				BlockState s = level.getBlockState(n);
 				if (MiningHelper.isWantedOre(s) && MiningHelper.hasPickaxeFor(c, s) && !WorldEditGuard.touchesFluid(level, n)) {
@@ -551,7 +552,8 @@ public final class DeepMineTask implements CompanionTask {
 		while (!wallOres.isEmpty()) {
 			BlockPos ore = wallOres.peekFirst();
 			BlockState s = level.getBlockState(ore);
-			if (!MiningHelper.isWantedOre(s) || !c.actions().canReach(ore) || c.backpack().freeSlots() == 0) {
+			if (!MiningHelper.isWantedOre(s) || !c.actions().canReach(ore) || c.backpack().freeSlots() == 0
+				|| MiningHelper.isOnTop(c.blockPosition(), ore)) {
 				wallOres.pollFirst();
 				continue;
 			}
