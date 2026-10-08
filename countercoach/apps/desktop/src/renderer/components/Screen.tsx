@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { layoutFromCalibration, readField, toPixels, type Rect, type RowTarget, type ScreenLayout } from "@countercoach/engine";
+import { calibrationBadges, layoutFromCalibration, readField, toPixels, type Rect, type RowTarget, type ScreenLayout } from "@countercoach/engine";
 import type { SavedCaptures } from "../../shared/capture";
 import type { Coach } from "../useCoach";
-import type { ReaderSession, ScreenReader } from "../useScreenReader";
+import { toImage, type ReaderSession, type ScreenReader } from "../useScreenReader";
 import { Badge, Icon, Section } from "./common";
 
 /**
@@ -56,25 +56,47 @@ function ImageBoxes({ src, width, height, boxes, onDraw }: { src: string; width:
 }
 
 const STEPS = [
-  { key: "area", title: "1. Item area", help: "Drag a box around every item icon on the scoreboard (all players)." },
-  { key: "icon", title: "2. One icon", help: "Drag a tight box around a single item icon, edge to edge." },
-  { key: "portrait", title: "3. Hero portrait (optional)", help: "Drag a box around the hero portrait in the same row as that icon. This lets the app tell players apart by themselves." },
+  {
+    key: "area",
+    title: "1. Item area",
+    help: "Drag a box around the item icons only. In Deadlock's Tab view that is the strip of small icons under the player cards. Leave out portraits, names, stats, ability circles and the game world.",
+  },
+  { key: "icon", title: "2. One icon", help: "Drag a tight box around one item icon, edge to edge (its tier badge included)." },
+  {
+    key: "portrait",
+    title: "3. Player card portrait (optional)",
+    help: "Drag a box around the portrait of the same player (above the icon in the Tab view). Portraits only suggest who is who: skins can make them look different.",
+  },
 ] as const;
 
-function Calibrate({ c, session, onDone }: { c: Coach; session: ReaderSession; onDone: (layout: ScreenLayout | null) => void }) {
+/** Advice when the drawn item area is far bigger than the item icons need. */
+function areaWarning(area: Rect | null, icon: Rect | null, width: number, height: number): string | null {
+  if (!area || !icon) return null;
+  const side = (icon.w + icon.h) / 2;
+  if (area.h > side * 8 || (area.w * area.h) / (width * height) > 0.25) {
+    return "This item area is much bigger than the item icons need. Big areas include scenery and HUD parts that can be mistaken for items; draw it tighter if you can.";
+  }
+  return null;
+}
+
+function Calibrate({ c, r, session, onDone }: { c: Coach; r: ScreenReader; session: ReaderSession; onDone: (layout: ScreenLayout | null) => void }) {
   const { width, height } = session.capture;
   const [area, setArea] = useState<Rect | null>(null);
   const [icon, setIcon] = useState<Rect | null>(null);
   const [portrait, setPortrait] = useState<Rect | null>(null);
   const step = !area ? 0 : !icon ? 1 : 2;
+  const warning = areaWarning(area, icon, width, height);
   const save = async (withPortrait: boolean) => {
     if (!area || !icon) return;
+    // Learn from the marked icon whether this screen draws tier badges, and their colour.
+    const templates = await r.ensureTemplates();
     const layout = layoutFromCalibration(
       { width, height },
       area,
       icon,
-      withPortrait && portrait ? { box: portrait, rowCy: icon.y + icon.h / 2 } : null,
+      withPortrait && portrait ? { box: portrait } : null,
       new Date().toISOString(),
+      templates ? calibrationBadges(toImage(session.capture), icon, templates) : undefined,
     );
     await c.updateSettings({ screen: { layout } });
     onDone(layout);
@@ -98,8 +120,9 @@ function Calibrate({ c, session, onDone }: { c: Coach; session: ReaderSession; o
         width={width}
         height={height}
         boxes={boxes}
-        onDraw={(r) => (step === 0 ? setArea(r) : step === 1 ? setIcon(r) : setPortrait(r))}
+        onDraw={(rect) => (step === 0 ? setArea(rect) : step === 1 ? setIcon(rect) : setPortrait(rect))}
       />
+      {warning && <p className="flag small">{warning}</p>}
       <div className="row gap">
         <button type="button" className="btn ghost small" onClick={() => (portrait ? setPortrait(null) : icon ? setIcon(null) : setArea(null))} disabled={!area}>
           Undo last box
@@ -148,13 +171,18 @@ function Review({ c, r }: { c: Coach; r: ScreenReader }) {
   const name = (id: number) => data.hero(id)?.name ?? `#${id}`;
   const boxes: DrawnBox[] = read.rows.flatMap((row) => [
     ...row.items.map((it) => ({ rect: it.box, label: "", tone: it.status === "confident" ? ("good" as const) : ("warn" as const) })),
-    ...(row.hero && row.hero.status !== "none" ? [{ rect: row.hero.box, label: name(row.hero.candidates[0]!.heroId!), tone: "portrait" as const }] : []),
+    ...(row.hero?.status === "confident" ? [{ rect: row.hero.box, label: name(row.hero.candidates[0]!.heroId!), tone: "portrait" as const }] : []),
   ]);
   const applied = s.appliedAt != null;
+  const unit = read.orientation === "columns" ? "Player" : "Row";
   const unassigned = s.rows.filter((x) => !x.target).length;
   return (
     <>
-      <Section title={`Read: ${read.rows.length} rows`} right={<span className="muted small">{s.capture.source}</span>} className="span2">
+      <Section
+        title={`Read: ${read.rows.length} ${read.orientation === "columns" ? "players" : "rows"}`}
+        right={<span className="muted small">{s.capture.source}</span>}
+        className="span2"
+      >
         {read.warnings.map((w) => (
           <p key={w} className="flag small">
             {w}
@@ -163,7 +191,7 @@ function Review({ c, r }: { c: Coach; r: ScreenReader }) {
         <ImageBoxes src={s.preview} width={s.capture.width} height={s.capture.height} boxes={boxes} />
       </Section>
       <Section title="Who is who" className="span2">
-        {s.rows.length === 0 && <p className="muted">No item rows were found in the calibrated area.</p>}
+        {s.rows.length === 0 && <p className="muted">No items were found in the calibrated area.</p>}
         <div className="screen-rows">
           {s.rows.map((row) => {
             const hero = row.heroGuess != null ? data.hero(row.heroGuess) : null;
@@ -175,10 +203,12 @@ function Review({ c, r }: { c: Coach; r: ScreenReader }) {
                     className="input"
                     value={targetValue(row.target)}
                     disabled={applied}
-                    aria-label={`Row ${row.index + 1} belongs to`}
+                    aria-label={`${unit} ${row.index + 1} belongs to`}
                     onChange={(e) => r.setRowTarget(row.index, parseTarget(e.target.value))}
                   >
-                    <option value="">Row {row.index + 1}: choose…</option>
+                    <option value="">
+                      {unit} {row.index + 1}: choose…
+                    </option>
                     {me != null && <option value="me">Me ({name(me)})</option>}
                     {enemies.map((id) => (
                       <option key={`e${id}`} value={`enemy:${id}`}>
@@ -190,7 +220,7 @@ function Review({ c, r }: { c: Coach; r: ScreenReader }) {
                         Ally: {name(id)}
                       </option>
                     ))}
-                    <option value="ignore">Ignore this row</option>
+                    <option value="ignore">Ignore (not a player)</option>
                   </select>
                   {row.unknownHeroId != null && !applied && (
                     <span className="row gap-s">
@@ -217,7 +247,10 @@ function Review({ c, r }: { c: Coach; r: ScreenReader }) {
                       </button>
                     </span>
                   )}
-                  <span className="muted tiny">{row.reason}</span>
+                  <span className="muted tiny">
+                    {row.reason}
+                    {!row.target && row.heroHint != null ? ` · portrait looks a bit like ${name(row.heroHint)}` : ""}
+                  </span>
                 </div>
                 <div className="screen-row-items">
                   {row.items.map((it, i) => {
@@ -364,6 +397,7 @@ export function ScreenPanel({ c, r }: { c: Coach; r: ScreenReader }) {
       {calibrating && s && (
         <Calibrate
           c={c}
+          r={r}
           session={s}
           onDone={(newLayout) => {
             setCalibrating(false);

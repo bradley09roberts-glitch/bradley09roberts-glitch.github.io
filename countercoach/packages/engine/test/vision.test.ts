@@ -5,6 +5,11 @@ import { describe, expect, it } from "vitest";
 import {
   ICON_THUMB,
   applyEvents,
+  calibrationBadges,
+  hasContrast,
+  hasTierBadge,
+  learnBadgeHues,
+  measureBadge,
   canAutoApply,
   createMatchState,
   decodeBase64,
@@ -16,14 +21,17 @@ import {
   rankTemplates,
   readField,
   readScreen,
+  scanIcons,
   screenReadEvents,
   thumbnail,
   toPixels,
   type EnemyItemsValue,
   type RgbaImage,
+  type RowTarget,
   type ScreenLayout,
   type TemplateSet,
 } from "../src/index.js";
+import { decodePng } from "../../ingest/src/png.js";
 import { T0, loadSnapshot } from "./helpers.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -59,6 +67,24 @@ function draw(img: RgbaImage, src: Float32Array, x: number, y: number, n: number
   }
 }
 
+/** Tier badge colours: vitality measured on a real capture; weapon and spirit assumed. */
+const BADGE_RGB: Record<string, [number, number, number]> = { vitality: [174, 210, 71], weapon: [230, 150, 50], spirit: [175, 120, 235] };
+const slotOf = (cls: string) => snap.items.find((i) => i.className === cls)!.slot;
+
+/** Draw the HUD's tier badge (a triangle in the top-right corner) over an icon at (x, y), size n. */
+function badge(img: RgbaImage, x: number, y: number, n: number, slot: string): void {
+  const c = BADGE_RGB[slot]!;
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      if ((i + 0.5) / n - (j + 0.5) / n <= 0.65) continue;
+      const p = ((y + j) * img.width + (x + i)) * 4;
+      img.data[p] = c[0];
+      img.data[p + 1] = c[1];
+      img.data[p + 2] = c[2];
+    }
+  }
+}
+
 function blank(w: number, h: number, seed = 1): RgbaImage {
   let s = seed;
   const rnd = () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
@@ -83,13 +109,17 @@ function scoreboard(rows: { hero: number; items: string[] }[], s = 32) {
   rows.forEach((r, k) => {
     const y = y0 + k * pitch;
     draw(img, templatePixels("heroes", (t) => t.id === r.hero && t.variant === "small"), x0 - s - 12, y, s);
-    r.items.forEach((cls, i) => draw(img, templatePixels("items", (t) => t.className === cls), x0 + i * (s + 4), y, s));
+    r.items.forEach((cls, i) => {
+      draw(img, templatePixels("items", (t) => t.className === cls), x0 + i * (s + 4), y, s);
+      badge(img, x0 + i * (s + 4), y, s, slotOf(cls));
+    });
   });
   const layout: ScreenLayout = {
     version: 1,
     aspect: 960 / 540,
     itemArea: { x: (x0 - 8) / 960, y: (y0 - 8) / 540, w: (12 * (s + 4)) / 960, h: (rows.length * pitch + 8) / 540 },
     iconSize: s / 540,
+    orientation: "rows",
     portrait: { x: (x0 - s - 12) / 960, w: s / 960, size: s / 540, offsetY: 0 },
     calibratedAt: "test",
   };
@@ -190,7 +220,7 @@ describe("vision: reading a scoreboard", () => {
   it("falls back to remembered row positions when portraits are not calibrated", () => {
     const noPortrait = readScreen(img, { ...layout, portrait: null }, templates);
     expect(noPortrait.rows.every((r) => r.hero === null)).toBe(true);
-    const remembered = [{ yFrac: noPortrait.rows[1]!.yFrac + 0.004, target: { kind: "enemy" as const, heroId: haze } }];
+    const remembered = [{ posFrac: noPortrait.rows[1]!.posFrac + 0.004, target: { kind: "enemy" as const, heroId: haze } }];
     const props = proposeTargets(noPortrait, { meHero: me, enemies: [haze], allies: [] }, remembered);
     expect(props[1]!.target).toEqual({ kind: "enemy", heroId: haze });
     expect(props[0]!.target).toBeNull();
@@ -236,9 +266,155 @@ describe("vision: refusing bad input", () => {
 
   it("calibration rectangles round-trip through fractions", () => {
     const img = { width: 2560, height: 1440 };
-    const l = layoutFromCalibration(img, { x: 100, y: 200, w: 900, h: 700 }, { x: 120, y: 210, w: 40, h: 42 }, { box: { x: 40, y: 205, w: 50, h: 50 }, rowCy: 231 }, "t");
+    const l = layoutFromCalibration(img, { x: 100, y: 200, w: 900, h: 700 }, { x: 120, y: 210, w: 40, h: 42 }, { box: { x: 40, y: 205, w: 50, h: 50 } }, "t");
     expect(toPixels(l.itemArea, img)).toEqual({ x: 100, y: 200, w: 900, h: 700 });
     expect(l.iconSize * 1440).toBeCloseTo(41, 6);
+    // Portrait to the left of the icon → players are rows.
+    expect(l.orientation).toBe("rows");
     expect(l.portrait!.offsetY * 1440).toBeCloseTo(-1, 6);
+    // Portrait above the icon (Deadlock's Tab view) → players are columns.
+    const c = layoutFromCalibration(img, { x: 100, y: 300, w: 900, h: 80 }, { x: 120, y: 310, w: 40, h: 40 }, { box: { x: 110, y: 20, w: 70, h: 90 } }, "t");
+    expect(c.orientation).toBe("columns");
+    expect(c.portrait!.centerY! * 1440).toBeCloseTo(65, 6);
+  });
+});
+
+describe("vision: a real Deadlock HUD (crops of a user capture)", () => {
+  // Small crops of a real in-game capture (sandbox, Tab view): only item icons on the HUD
+  // background. The capture was a downscaled preview, so icons are as small as 17 px here.
+  const load = (f: string) => decodePng(readFileSync(path.join(root, "fixtures/vision", f)));
+
+  it("reads the two scoreboard items under a player card (17 px, tier badges)", () => {
+    const img = load("real-card-items.png");
+    const layout: ScreenLayout = { version: 1, aspect: img.width / img.height, itemArea: { x: 0, y: 0, w: 1, h: 1 }, iconSize: 17 / img.height, orientation: "columns", portrait: null, calibratedAt: "t" };
+    const r = readScreen(img, layout, templates);
+    expect(r.rows).toHaveLength(1);
+    expect(r.rows[0]!.items.map((i) => i.candidates[0]!.className)).toEqual(["upgrade_superior_stamina", "upgrade_healbuff"]);
+    for (const it of r.rows[0]!.items) {
+      expect(it.status).toBe("confident");
+      expect(it.badge).toBe(true);
+    }
+  });
+
+  it("reads the player's own inventory icons (35 px)", () => {
+    const img = load("real-inventory-items.png");
+    const layout: ScreenLayout = { version: 1, aspect: img.width / img.height, itemArea: { x: 0, y: 0, w: 1, h: 1 }, iconSize: 35 / img.height, orientation: "rows", portrait: null, calibratedAt: "t" };
+    const r = readScreen(img, layout, templates);
+    expect(r.rows.flatMap((g) => g.items.map((i) => [i.candidates[0]!.className, i.status]))).toEqual([
+      ["upgrade_superior_stamina", "confident"],
+      ["upgrade_healbuff", "confident"],
+    ]);
+  });
+
+  it("learns the badge hue from a confirmed icon (vitality ≈ 76°)", () => {
+    const img = load("real-inventory-items.png");
+    const learned = learnBadgeHues(img, [{ box: { x: 8, y: 7, w: 35, h: 35 }, slot: "vitality" }]);
+    expect(learned.vitality).toBeGreaterThan(60);
+    expect(learned.vitality).toBeLessThan(95);
+  });
+});
+
+describe("vision: Tab-view columns over busy scenery", () => {
+  const me = heroId("Abrams");
+  const haze = heroId("Haze");
+  const seven = heroId("Seven");
+  const W = 1280;
+  const H = 720;
+  // Busy "game world": blocks and gradients of varied contrast, like a lit scene behind the HUD.
+  const img = blank(W, H, 5);
+  let seed = 11;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  for (let k = 0; k < 400; k++) {
+    const x = Math.floor(rnd() * W);
+    const y = Math.floor(rnd() * H);
+    const w = 4 + Math.floor(rnd() * 60);
+    const h = 4 + Math.floor(rnd() * 60);
+    const c = [rnd() * 255, rnd() * 200, rnd() * 160];
+    for (let j = y; j < Math.min(H, y + h); j++) for (let i = x; i < Math.min(W, x + w); i++) {
+      const p = (j * W + i) * 4;
+      for (let q = 0; q < 3; q++) img.data[p + q] = 0.6 * img.data[p + q]! + 0.4 * c[q]!;
+    }
+  }
+  const cards = [
+    { hero: me, team: [200, 150, 40], items: ["upgrade_close_range", "upgrade_endurance", "upgrade_melee_charge"] },
+    { hero: haze, team: [50, 90, 200], items: ["upgrade_headshot_booster", "upgrade_rapid_rounds", "upgrade_toxic_bullets", "upgrade_improved_stamina"] },
+    { hero: seven, team: [50, 90, 200], items: ["upgrade_improved_spirit", "upgrade_magic_burst"] },
+  ];
+  const s = 24;
+  const cardW = 70;
+  const truth: { hero: number; items: string[] }[] = [];
+  cards.forEach((cd, k) => {
+    const x0 = 420 + k * (cardW + 12);
+    for (let j = 20; j < 200; j++) for (let i = x0; i < x0 + cardW; i++) {
+      const p = (j * W + i) * 4;
+      for (let q = 0; q < 3; q++) img.data[p + q] = 0.3 * img.data[p + q]! + 0.7 * cd.team[q]!;
+    }
+    draw(img, templatePixels("heroes", (t) => t.id === cd.hero && t.variant === "small"), x0 + 7, 24, 56);
+    cd.items.forEach((cls, i) => {
+      const x = x0 + 8 + (i % 2) * (s + 6);
+      const y = 210 + Math.floor(i / 2) * (s + 6);
+      draw(img, templatePixels("items", (t) => t.className === cls), x, y, s);
+      badge(img, x, y, s, slotOf(cls));
+    });
+    truth.push({ hero: cd.hero, items: cd.items });
+  });
+
+  const sample = { x: 428, y: 210, w: s, h: s };
+  const badges = calibrationBadges(img, sample, templates);
+
+  it("calibration notices the tier badges and learns the marked icon's badge hue", () => {
+    expect(badges).toMatchObject({ present: true, hues: { weapon: expect.any(Number) } });
+  });
+
+  it("groups items under each card and names players from portraits", () => {
+    const layout = layoutFromCalibration(img, { x: 400, y: 200, w: 300, h: 80 }, sample, { box: { x: 427, y: 24, w: 56, h: 56 } }, "t", badges);
+    expect(layout.orientation).toBe("columns");
+    const r = readScreen(img, layout, templates);
+    expect(r.rows.map((g) => g.hero?.candidates[0]?.heroId)).toEqual(truth.map((t) => t.hero));
+    expect(r.rows.map((g) => g.items.map((i) => i.candidates[0]!.className).sort())).toEqual(truth.map((t) => [...t.items].sort()));
+    // Portraits only suggest: a confident portrait proposes its player, anything less is asked.
+    const ctx = { meHero: me, enemies: [haze, seven], allies: [] };
+    const props = proposeTargets(r, ctx);
+    const want: RowTarget[] = [{ kind: "me" }, { kind: "enemy", heroId: haze }, { kind: "enemy", heroId: seven }];
+    props.forEach((p, i) => {
+      if (p.target) expect(p.target).toEqual(want[i]);
+      else expect(r.rows[i]!.hero?.status).not.toBe("confident");
+    });
+    // After the user confirms who each column is once, later reads in the match apply by position.
+    const remembered = r.rows.map((g, i) => ({ posFrac: g.posFrac, target: want[i]! }));
+    const again = proposeTargets(r, ctx, remembered);
+    expect(again.map((p) => p.target)).toEqual(want);
+    expect(canAutoApply(r, again)).toBe(true);
+  });
+
+  it("an oversized item area over the cards and scenery adds no confident junk", () => {
+    const layout = layoutFromCalibration(img, { x: 0, y: 0, w: W, h: H }, sample, null, "t", badges);
+    const r = readScreen(img, layout, templates);
+    const read = r.rows.flatMap((g) => g.items.filter((i) => i.status === "confident").map((i) => i.candidates[0]!.className));
+    const expected = truth.flatMap((t) => t.items);
+    expect(read.filter((c) => !expected.includes(c))).toEqual([]);
+  });
+});
+
+describe("vision: false-match guards", () => {
+  it("a washed-out (low-contrast) copy of an icon is rejected", () => {
+    const t = templates.items.find((x) => x.className === "upgrade_close_range")!;
+    const px = templatePixels("items", (x) => x.className === "upgrade_close_range");
+    const flat = Float32Array.from(px, (v, i) => (i % 4 === 3 ? v : 0.2 + (v - 0.5) * 0.05));
+    expect(hasContrast(px, t)).toBe(true);
+    expect(hasContrast(flat, t)).toBe(false);
+  });
+
+  it("a badge must stand out from the icon; a uniformly coloured patch is not a badge", () => {
+    const yellow = blank(40, 40);
+    for (let i = 0; i < 40 * 40; i++) yellow.data.set([200, 180, 40], i * 4);
+    expect(measureBadge(yellow, { x: 0, y: 0, w: 40, h: 40 }).present).toBe(false);
+    const icon = blank(40, 40);
+    draw(icon, templatePixels("items", (x) => x.className === "upgrade_endurance"), 0, 0, 40);
+    badge(icon, 0, 0, 40, "vitality");
+    expect(hasTierBadge(icon, { x: 0, y: 0, w: 40, h: 40 }, "vitality")).toBe(true);
+    // Wrong slot hue, and screens calibrated as badge-free, never count a badge.
+    expect(hasTierBadge(icon, { x: 0, y: 0, w: 40, h: 40 }, "spirit")).toBe(false);
+    expect(hasTierBadge(icon, { x: 0, y: 0, w: 40, h: 40 }, "vitality", { present: false, hues: {} })).toBe(false);
   });
 });

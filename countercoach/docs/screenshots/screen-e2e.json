@@ -1,5 +1,5 @@
 {
- "note": "SYNTHETIC test image built from community-API art in a made-up layout; not a Deadlock screenshot.",
+ "note": "SYNTHETIC test image built from community-API art, laid out like Deadlock's Tab view as seen on one real capture; not a Deadlock screenshot.",
  "display": "Xvfb 1920x1080 (Linux)",
  "steps": [
   {
@@ -9,17 +9,18 @@
   },
   {
    "name": "calibrate-and-read",
-   "message": "Applied automatically: 12 players, 53 items (1636 ms).",
+   "message": "Found 12 players (2844 ms). Check who each player is, then apply. After that, reads in this match apply on their own.",
    "templates": "Icon templates ready (173 items, 40 heroes), built on this PC from the item art."
   },
   {
    "name": "accuracy",
-   "rows": 12,
-   "expectedRows": 12,
+   "players": 12,
+   "expectedPlayers": 12,
    "itemsCorrect": 53,
    "itemsExpected": 53,
    "wrong": [],
-   "rowsAssignedCorrectly": 12
+   "appliedAutomatically": false,
+   "playersNamedFromPortraits": 11
   },
   {
    "name": "review-apply",
@@ -28,7 +29,8 @@
   {
    "name": "hotkey",
    "via": "xdotool",
-   "overlayNote": "◉ Read 12 players · 53 items"
+   "overlayNote": "◉ Read 12 players · 53 items",
+   "message": "Applied automatically: 12 players, 53 items (2170 ms)."
   },
   {
    "name": "match-tab",

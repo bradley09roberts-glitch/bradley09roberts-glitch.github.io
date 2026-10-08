@@ -11,7 +11,7 @@ simulations, not live-match demonstrations.
 | Check | Result |
 |---|---|
 | `pnpm typecheck` (engine, ingest, tests/scripts, desktop) | pass |
-| `pnpm test` (Vitest, 9 files) | **105 / 105 pass** |
+| `pnpm test` (Vitest, 9 files) | **113 / 113 pass** |
 | Electron app launch on Linux (Xvfb), dev build | pass: main window visible; overlay always-on-top, non-focusable, positioned in the work area |
 | Electron app launch, **packaged** (asar, Linux `dir` build of the same app) | pass |
 | Settings persistence across relaunch | pass (expanded overlay and position restored) |
@@ -22,10 +22,11 @@ simulations, not live-match demonstrations.
 | Silent install → uninstall on Windows | **pass** on the same runner |
 | Typecheck + 89 tests on Windows | **pass** on the same runner (`evaluate()` p50 15.5 ms / p95 31.0 ms) |
 | Overlay over Deadlock (borderless or fullscreen) | **untested** (no game available) |
-| Screen reader: synthetic benchmark (917 icons from the real item art, 10 layouts) | 98.0% found; 99.7% of those identified correctly; **0 wrong among confident reads**; portraits 100% (details below) |
-| Screen reader: end to end in the Electron app (Linux/Xvfb, real `desktopCapturer` capture of a stand-in window showing a synthetic scoreboard) | pass: calibrated with mouse drags, **53/53 items and 12/12 players** read and applied; hotkey path and overlay note work |
-| Screen capture on Windows | checked by the Windows CI smoke step (`capture.ok`) on the next run |
-| Screen reader against a **real Deadlock scoreboard** | **untested**: no real screenshot was available |
+| Screen reader on **a real Deadlock capture** (one user screenshot: sandbox, Tab view, 3 players) | first version **failed** (hundreds of false hits, wrong layout); after the fixes below: both real items read correctly and confidently, nothing else, with a sensible calibration; one stray icon with an oversized one |
+| Screen reader: synthetic benchmark (917 icons from the real item art with tier badges, 10 layouts) | 96.9% found; 99.6% of those identified correctly; **0 wrong among confident reads**; 0 false detections (details below) |
+| Screen reader: end to end in the Electron app (Linux/Xvfb, real `desktopCapturer` capture of a stand-in window showing a synthetic Tab view) | pass: calibrated with mouse drags, **53/53 items in 12/12 player columns**; after assigning players once, the hotkey read applied automatically |
+| Screen capture on Windows | **pass** on the Windows CI runner (run [37781103812](https://github.com/bradley09roberts-glitch/bradley09roberts-glitch.github.io/actions/runs/37781103812)): 1024×768 desktop captured in 145 ms, overlay opacity restored |
+| Screen reader in a **real full match** (12 players, enemy items) | **untested**: the only real capture so far was a sandbox with bots that had no items |
 | Live game-state adapter | not available (no permitted interface) |
 
 `.github/workflows/countercoach-windows.yml` builds on `windows-latest` (on pushes to this branch,
@@ -69,64 +70,74 @@ Windows runner smoke report (run 37773343166):
 
 The sub-100 ms local update target is met on this machine. Windows numbers were not measured.
 Nothing runs continuously for the screen reader: it captures and reads only when you press the
-hotkey (or a button). One read of a calibrated 1920×1080 capture took 1.4–1.7 s in the Electron
-renderer here (≈1.37 s mean in the Node benchmark); the capture itself took 134 ms.
+hotkey (or a button). One read of a calibrated 1920×1080 Tab-view capture took 2.1–2.9 s in the
+Electron renderer here (≈1.2 s mean in the Node benchmark); the capture itself took 134 ms on
+Linux and 145 ms on the Windows CI runner.
 
 ## Screen reader (experimental)
 
-What it does: you press **Ctrl+Alt+R** while the Tab scoreboard is on screen; the app captures
-the screen under the mouse with Electron's documented `desktopCapturer`, finds item icons and
-hero portraits inside a region you calibrated once, and matches them against templates built
-from the community API's item art. Nothing touches the game.
+What it does: press **Ctrl+Alt+R** and hold Tab; the app captures the screen under the mouse with
+Electron's documented `desktopCapturer`, finds item icons inside a region you calibrated once,
+matches them against templates built from the community API's item art, and groups them by
+player. Nothing touches the game.
 
-**What was verified, and how**
+### What the first real capture showed (and what changed)
 
-1. *Template integrity* (`vision.test.ts`): every one of the 173 item templates identifies itself
-   first; the closest pair of different items scores below 0.9 (item art is unique per item;
-   the older white HUD glyphs are shared by up to five items, so they are not used).
-2. *Synthetic benchmark* (`pnpm vision:bench -- --trials 10 --seed 11`): 917 icons rendered
-   from the **original** full-size art at 22–44 px with optional frames, rounded corners,
-   brightness/contrast changes, blur, noise and colour quantisation, plus 12 portraits per image:
+A user's capture of the real Tab view (sandbox match, three players, the capture itself a
+downscaled preview with the app's own boxes drawn on it) showed the first version did not work:
+
+| Finding on the real capture | Change |
+|---|---|
+| Players are **columns** (portrait card on top, items in a small grid underneath), not rows | Calibration infers columns vs rows from where the portrait is; items are grouped by card |
+| ~300 false "icons" in dark scenery, many marked confident: normalised correlation amplifies flat, noisy patches (contrast 0.003–0.03 vs ~0.2 for item art) | Low-contrast patches are skipped and rejected; matches must keep ≥ 85% of the calibrated icon size |
+| Every HUD item icon carries a **tier badge** (triangle with a roman numeral) in its top-right corner, which made the coarse search skip the real icons | Matching ignores that corner; the badge (bright, standing out on three sides) is used as evidence; calibration records that the screen has badges and learns badge colours from icons you confirm |
+| The real icons were recognised well: 0.85–0.93 with the runner-up 0.27–0.51 behind; scenery that slipped through reached ~0.85 but rarely with a wide margin | Confident needs a badge plus 0.72 / margin 0.1, or (on badge-less screens) 0.85 / margin 0.2 |
+| An oversized item area spent the search budget on scenery before reaching the icons | High-contrast positions are tried first; the calibration screen warns when the area is far bigger than needed |
+| Portraits are unreliable: a bot's Abrams wore a different skin from the API art | A portrait only names a player when clearly confident; otherwise you pick once per match and later reads reuse that by position |
+
+Regression tests keep two small crops of that capture (item icons only, `fixtures/vision/real-*.png`).
+
+### Verified, and how
+
+1. *Real capture crops* (`vision.test.ts`): the two scoreboard icons (17 px) read as Stamina
+   Mastery and Healing Tempo, confident, badges seen; the inventory icons (35 px) likewise; the
+   learned vitality badge hue is ≈ 76°.
+2. *Template integrity*: every one of the 173 item templates identifies itself first; the
+   closest pair of different items scores below 0.9.
+3. *Synthetic benchmark* (`pnpm vision:bench -- --trials 10 --seed 11`): 917 icons rendered from
+   the original full-size art at 22–44 px with tier badges, optional frames, rounded corners,
+   brightness/contrast changes, blur, noise and colour quantisation:
 
    ```
-=== Synthetic benchmark (not the real game) ===
    icons rendered        917
-   detected              899 (98.0%)
-   top-1 correct         896 (99.7% of detected)
-   confident             895 (99.6%); wrong while confident: 0 (0.0%)
-   uncertain             4; true item in top 3: 75.0%
-   false detections      1
+   detected              889 (96.9%)
+   top-1 correct         885 (99.6% of detected)
+   confident             885 (99.6%); wrong while confident: 0 (0.0%)
+   uncertain             4; true item in top 3: 50.0%
+   false detections      0
    portraits             top-1 100.0%; confident 100.0%; wrong while confident 0
-   mean read time        1368 ms (1920×1080)
+   mean read time        1239 ms (1920×1080)
    most common confusions:
-     2× upgrade_unstoppable -> upgrade_veil_walker
-     1× upgrade_imbued_duration_extender -> upgrade_weighted_shots
+     2× upgrade_imbued_duration_extender -> upgrade_weighted_shots
+     1× upgrade_unstoppable -> upgrade_veil_walker
+     1× upgrade_weighted_shots -> upgrade_cheat_death
    ```
 
-   Confident reads are applied automatically; uncertain ones (top-3 shown) wait for you.
-3. *End to end in the app* (`apps/desktop/scripts/screen-e2e.cjs`, result in
-   `screenshots/screen-e2e.json`): a frameless window shows `screenshots/synthetic-scoreboard.png`
-   full screen on a 1920×1080 virtual display; the app captures it for real, the script
-   calibrates by dragging three boxes, and checks every row and item against the image's ground
-   truth (`synthetic-scoreboard.json`): **53/53 items, 12/12 rows assigned to the right player**. The
-   same run turns auto-apply off to exercise the review screen, then presses the global hotkey
-   with `xdotool` and confirms the overlay shows "Read 12 players · 53 items". On first use the
-   app downloaded the item art and built its templates locally (173 items, 40 heroes).
+4. *Busy-scenery test* (`vision.test.ts`): a Tab-view mock over 400 random coloured blocks; an
+   item area covering the whole screen adds no confident junk.
+5. *End to end in the app* (`apps/desktop/scripts/screen-e2e.cjs`, `screenshots/screen-e2e.json`):
+   a stand-in window shows `screenshots/synthetic-scoreboard.png` (a Tab-view mock with 12 cards)
+   full screen; the app captures it for real; the script calibrates with three drags; **53/53
+   items in 12/12 columns**; portraits named 11 of 12 players; the script assigns all 12 once and
+   applies; a second read through the global hotkey then **applied automatically** and the overlay
+   showed "Read 12 players · 53 items". Reads took 2.1–2.9 s here.
 
-**Not verified**
+### Not verified
 
-- The real Deadlock scoreboard: its layout, icon size, frames, overlays (cooldowns, upgrade
-  marks), dimming, and **whether enemy items are shown at all**. A November 2024 forum bug report
-  says holding Tab stopped showing other players' items "by default"; the shop's Recent
-  Purchases log (Nov 2024 patch: enemy and ally purchases in different colours) is another
-  screen you could calibrate on, but it shows partial information.
-- Which hero portrait style the scoreboard uses (four styles are kept as templates).
+- A real full match: 12 players, enemy items under enemy cards (the sandbox bots had none).
+- Weapon and spirit badge colours (assumed orange and purple until you confirm such an icon).
 - Capture over exclusive fullscreen (expected to come back black; the app reports that), HDR,
-  and multi-monitor setups other than "capture the display under the mouse".
-- Performance on Windows hardware.
-
-The synthetic scoreboard is made up. It is built from real item art so it tests recognition,
-but it says nothing about where Deadlock draws things.
+  multi-monitor setups other than "capture the display under the mouse", and Windows speed.
 
 ## Wine install/uninstall run (final build)
 
@@ -170,12 +181,12 @@ file limit). Rebuild with `pnpm dist:win`.
 | `screenshots/06-haze-vs-healing-1920x1080.png` | Haze vs reported healing: Toxic Bullets, with Inhibitor deprioritised once bought |
 | `screenshots/07-infernus-lane-2560x1080.png` | Ultrawide; laning; lane plan; unlock before points |
 | `screenshots/08-what-if-1600x900.png` | What-if: one enemy item changes threat strength; advice stable |
-| `screenshots/09-screen-calibrate.png` | Screen reader calibration: item area, one icon, one portrait (on the synthetic scoreboard) |
-| `screenshots/10-screen-read-applied.png` | A confident read applied automatically, with recognised portraits |
-| `screenshots/11-screen-review.png` | Review: who each row belongs to and every icon, before applying |
+| `screenshots/09-screen-calibrate.png` | Screen reader calibration on the Tab-view mock: item strip, one icon, one card portrait |
+| `screenshots/10-screen-read.png` | A read of the Tab-view mock: 12 player columns, portraits where confident |
+| `screenshots/11-screen-review.png` | Review: who each player is and every icon, before applying (first read of a match) |
 | `screenshots/12-overlay-screen-note.png` | Overlay after a hotkey read ("Read 12 players · 53 items") |
 | `screenshots/13-match-after-screen-read.png` | Match tab afterwards: items marked "seen on screen" |
-| `screenshots/synthetic-scoreboard.png` | The **synthetic** test image (not a Deadlock screenshot) |
+| `screenshots/synthetic-scoreboard.png` | The **synthetic** Tab-view mock (not a Deadlock screenshot) |
 
 Under Xvfb (no compositor), the transparent overlay background renders black.
 
@@ -287,4 +298,12 @@ Under Xvfb (no compositor), the transparent overlay background renders black.
  ✓ packages/engine/test/vision.test.ts > vision: refusing bad input > random noise is not read as items
  ✓ packages/engine/test/vision.test.ts > vision: refusing bad input > warns when the capture's aspect ratio differs from the calibration
  ✓ packages/engine/test/vision.test.ts > vision: refusing bad input > calibration rectangles round-trip through fractions
+ ✓ packages/engine/test/vision.test.ts > vision: a real Deadlock HUD (crops of a user capture) > reads the two scoreboard items under a player card (17 px, tier badges)
+ ✓ packages/engine/test/vision.test.ts > vision: a real Deadlock HUD (crops of a user capture) > reads the player's own inventory icons (35 px)
+ ✓ packages/engine/test/vision.test.ts > vision: a real Deadlock HUD (crops of a user capture) > learns the badge hue from a confirmed icon (vitality ≈ 76°)
+ ✓ packages/engine/test/vision.test.ts > vision: Tab-view columns over busy scenery > calibration notices the tier badges and learns the marked icon's badge hue
+ ✓ packages/engine/test/vision.test.ts > vision: Tab-view columns over busy scenery > groups items under each card and names players from portraits
+ ✓ packages/engine/test/vision.test.ts > vision: Tab-view columns over busy scenery > an oversized item area over the cards and scenery adds no confident junk
+ ✓ packages/engine/test/vision.test.ts > vision: false-match guards > a washed-out (low-contrast) copy of an icon is rejected
+ ✓ packages/engine/test/vision.test.ts > vision: false-match guards > a badge must stand out from the icon; a uniformly coloured patch is not a badge
 ```

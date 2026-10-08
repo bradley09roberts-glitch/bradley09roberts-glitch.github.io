@@ -1,367 +1,435 @@
 {
- "note": "SYNTHETIC test image built from community-API art in a made-up layout; not a Deadlock screenshot.",
+ "note": "SYNTHETIC test image built from community-API art, laid out like Deadlock's Tab view as seen on one real capture; not a Deadlock screenshot.",
  "width": 1920,
  "height": 1080,
  "geometry": {
   "itemArea": {
-   "x": 458,
-   "y": 140,
-   "w": 640,
-   "h": 800
+   "x": 432,
+   "y": 160,
+   "w": 1056,
+   "h": 118
   },
-  "icon": 38,
-  "portrait": {
-   "x": 370,
-   "size": 46
-  }
+  "icon": 30
  },
  "rows": [
   {
    "heroId": 6,
    "team": "me",
-   "y": 160,
+   "x": 479,
+   "portrait": {
+    "x": 448,
+    "y": 16,
+    "w": 62,
+    "h": 70
+   },
    "items": [
     {
      "className": "upgrade_close_range",
-     "x": 470,
-     "y": 160
-    },
-    {
-     "className": "upgrade_melee_charge",
-     "x": 513,
-     "y": 160
+     "x": 447,
+     "y": 168
     },
     {
      "className": "upgrade_endurance",
-     "x": 572,
-     "y": 160
+     "x": 481,
+     "y": 168
     },
     {
      "className": "upgrade_lifestrike_gauntlets",
-     "x": 615,
-     "y": 160
+     "x": 447,
+     "y": 202
+    },
+    {
+     "className": "upgrade_melee_charge",
+     "x": 481,
+     "y": 202
     },
     {
      "className": "upgrade_improved_stamina",
-     "x": 658,
-     "y": 160
+     "x": 447,
+     "y": 236
     }
    ]
   },
   {
    "heroId": 3,
    "team": "ally",
-   "y": 220,
+   "x": 561,
+   "portrait": {
+    "x": 530,
+    "y": 16,
+    "w": 62,
+    "h": 70
+   },
    "items": [
-    {
-     "className": "upgrade_health",
-     "x": 470,
-     "y": 220
-    },
     {
      "className": "upgrade_improved_spirit",
      "x": 529,
-     "y": 220
+     "y": 168
     },
     {
      "className": "upgrade_magic_burst",
-     "x": 572,
-     "y": 220
+     "x": 563,
+     "y": 168
+    },
+    {
+     "className": "upgrade_health",
+     "x": 529,
+     "y": 202
     },
     {
      "className": "upgrade_magic_reach",
-     "x": 615,
-     "y": 220
+     "x": 563,
+     "y": 202
     }
    ]
   },
   {
    "heroId": 8,
    "team": "ally",
-   "y": 280,
+   "x": 643,
+   "portrait": {
+    "x": 612,
+    "y": 16,
+    "w": 62,
+    "h": 70
+   },
    "items": [
     {
      "className": "upgrade_headshot_booster",
-     "x": 470,
-     "y": 280
+     "x": 611,
+     "y": 168
     },
     {
      "className": "upgrade_rapid_rounds",
-     "x": 513,
-     "y": 280
+     "x": 645,
+     "y": 168
     },
     {
      "className": "upgrade_endurance",
-     "x": 572,
-     "y": 280
+     "x": 611,
+     "y": 202
     },
     {
      "className": "upgrade_sprint_booster",
-     "x": 615,
-     "y": 280
+     "x": 645,
+     "y": 202
     },
     {
      "className": "upgrade_quick_silver",
-     "x": 674,
-     "y": 280
+     "x": 611,
+     "y": 236
     }
    ]
   },
   {
    "heroId": 12,
    "team": "ally",
-   "y": 340,
+   "x": 725,
+   "portrait": {
+    "x": 694,
+    "y": 16,
+    "w": 62,
+    "h": 70
+   },
    "items": [
     {
-     "className": "upgrade_health",
-     "x": 470,
-     "y": 340
-    },
-    {
      "className": "upgrade_extra_charge",
-     "x": 529,
-     "y": 340
+     "x": 693,
+     "y": 168
     },
     {
      "className": "upgrade_improved_spirit",
-     "x": 572,
-     "y": 340
+     "x": 727,
+     "y": 168
+    },
+    {
+     "className": "upgrade_health",
+     "x": 693,
+     "y": 202
     },
     {
      "className": "upgrade_magic_tempo",
-     "x": 615,
-     "y": 340
+     "x": 727,
+     "y": 202
     }
    ]
   },
   {
    "heroId": 17,
    "team": "ally",
-   "y": 400,
+   "x": 807,
+   "portrait": {
+    "x": 776,
+    "y": 16,
+    "w": 62,
+    "h": 70
+   },
    "items": [
     {
      "className": "upgrade_close_range",
-     "x": 470,
-     "y": 400
-    },
-    {
-     "className": "upgrade_melee_charge",
-     "x": 513,
-     "y": 400
+     "x": 775,
+     "y": 168
     },
     {
      "className": "upgrade_health",
-     "x": 572,
-     "y": 400
+     "x": 809,
+     "y": 168
+    },
+    {
+     "className": "upgrade_melee_charge",
+     "x": 775,
+     "y": 202
     },
     {
      "className": "upgrade_debuff_reducer",
-     "x": 615,
-     "y": 400
+     "x": 809,
+     "y": 202
     }
    ]
   },
   {
    "heroId": 20,
    "team": "ally",
-   "y": 460,
+   "x": 889,
+   "portrait": {
+    "x": 858,
+    "y": 16,
+    "w": 62,
+    "h": 70
+   },
    "items": [
     {
-     "className": "upgrade_endurance",
-     "x": 470,
-     "y": 460
-    },
-    {
      "className": "upgrade_improved_spirit",
-     "x": 529,
-     "y": 460
+     "x": 857,
+     "y": 168
     },
     {
      "className": "upgrade_magic_reach",
-     "x": 572,
-     "y": 460
+     "x": 891,
+     "y": 168
+    },
+    {
+     "className": "upgrade_endurance",
+     "x": 857,
+     "y": 202
     }
    ]
   },
   {
    "heroId": 13,
    "team": "enemy",
-   "y": 570,
+   "x": 1031,
+   "portrait": {
+    "x": 1000,
+    "y": 16,
+    "w": 62,
+    "h": 70
+   },
    "items": [
     {
      "className": "upgrade_headshot_booster",
-     "x": 470,
-     "y": 570
+     "x": 999,
+     "y": 168
     },
     {
      "className": "upgrade_rapid_rounds",
-     "x": 513,
-     "y": 570
+     "x": 1033,
+     "y": 168
     },
     {
      "className": "upgrade_ricochet",
-     "x": 556,
-     "y": 570
+     "x": 999,
+     "y": 202
     },
     {
      "className": "upgrade_toxic_bullets",
-     "x": 599,
-     "y": 570
+     "x": 1033,
+     "y": 202
     },
     {
      "className": "upgrade_improved_stamina",
-     "x": 658,
-     "y": 570
+     "x": 999,
+     "y": 236
     },
     {
      "className": "upgrade_sprint_booster",
-     "x": 701,
-     "y": 570
+     "x": 1033,
+     "y": 236
     }
    ]
   },
   {
    "heroId": 2,
    "team": "enemy",
-   "y": 630,
+   "x": 1113,
+   "portrait": {
+    "x": 1082,
+    "y": 16,
+    "w": 62,
+    "h": 70
+   },
    "items": [
     {
-     "className": "upgrade_health",
-     "x": 470,
-     "y": 630
-    },
-    {
      "className": "upgrade_improved_spirit",
-     "x": 529,
-     "y": 630
+     "x": 1081,
+     "y": 168
     },
     {
      "className": "upgrade_magic_burst",
-     "x": 572,
-     "y": 630
+     "x": 1115,
+     "y": 168
     },
     {
      "className": "upgrade_magic_reach",
-     "x": 615,
-     "y": 630
+     "x": 1081,
+     "y": 202
+    },
+    {
+     "className": "upgrade_health",
+     "x": 1115,
+     "y": 202
     },
     {
      "className": "upgrade_magic_tempo",
-     "x": 658,
-     "y": 630
+     "x": 1081,
+     "y": 236
     }
    ]
   },
   {
    "heroId": 4,
    "team": "enemy",
-   "y": 690,
+   "x": 1195,
+   "portrait": {
+    "x": 1164,
+    "y": 16,
+    "w": 62,
+    "h": 70
+   },
    "items": [
     {
      "className": "upgrade_health_stealing_magic",
-     "x": 470,
-     "y": 690
-    },
-    {
-     "className": "upgrade_health",
-     "x": 513,
-     "y": 690
+     "x": 1163,
+     "y": 168
     },
     {
      "className": "upgrade_resonant_healing",
-     "x": 572,
-     "y": 690
+     "x": 1197,
+     "y": 168
     },
     {
      "className": "upgrade_improved_spirit",
-     "x": 615,
-     "y": 690
+     "x": 1163,
+     "y": 202
+    },
+    {
+     "className": "upgrade_health",
+     "x": 1197,
+     "y": 202
     }
    ]
   },
   {
    "heroId": 1,
    "team": "enemy",
-   "y": 750,
+   "x": 1277,
+   "portrait": {
+    "x": 1246,
+    "y": 16,
+    "w": 62,
+    "h": 70
+   },
    "items": [
     {
      "className": "upgrade_rapid_rounds",
-     "x": 470,
-     "y": 750
-    },
-    {
-     "className": "upgrade_toxic_bullets",
-     "x": 513,
-     "y": 750
-    },
-    {
-     "className": "upgrade_endurance",
-     "x": 572,
-     "y": 750
+     "x": 1245,
+     "y": 168
     },
     {
      "className": "upgrade_improved_spirit",
-     "x": 631,
-     "y": 750
+     "x": 1279,
+     "y": 168
+    },
+    {
+     "className": "upgrade_toxic_bullets",
+     "x": 1245,
+     "y": 202
+    },
+    {
+     "className": "upgrade_endurance",
+     "x": 1279,
+     "y": 202
     }
    ]
   },
   {
    "heroId": 11,
    "team": "enemy",
-   "y": 810,
+   "x": 1359,
+   "portrait": {
+    "x": 1328,
+    "y": 16,
+    "w": 62,
+    "h": 70
+   },
    "items": [
     {
-     "className": "upgrade_health",
-     "x": 470,
-     "y": 810
-    },
-    {
-     "className": "upgrade_debuff_reducer",
-     "x": 513,
-     "y": 810
-    },
-    {
      "className": "upgrade_improved_spirit",
-     "x": 572,
-     "y": 810
+     "x": 1327,
+     "y": 168
+    },
+    {
+     "className": "upgrade_health",
+     "x": 1361,
+     "y": 168
     },
     {
      "className": "upgrade_magic_tempo",
-     "x": 615,
-     "y": 810
+     "x": 1327,
+     "y": 202
+    },
+    {
+     "className": "upgrade_debuff_reducer",
+     "x": 1361,
+     "y": 202
     }
    ]
   },
   {
    "heroId": 7,
    "team": "enemy",
-   "y": 870,
+   "x": 1441,
+   "portrait": {
+    "x": 1410,
+    "y": 16,
+    "w": 62,
+    "h": 70
+   },
    "items": [
     {
      "className": "upgrade_headshot_booster",
-     "x": 470,
-     "y": 870
-    },
-    {
-     "className": "upgrade_sprint_booster",
-     "x": 529,
-     "y": 870
+     "x": 1409,
+     "y": 168
     },
     {
      "className": "upgrade_magic_burst",
-     "x": 588,
-     "y": 870
+     "x": 1443,
+     "y": 168
     },
     {
      "className": "upgrade_improved_spirit",
-     "x": 631,
-     "y": 870
+     "x": 1409,
+     "y": 202
+    },
+    {
+     "className": "upgrade_sprint_booster",
+     "x": 1443,
+     "y": 202
     },
     {
      "className": "upgrade_extra_charge",
-     "x": 674,
-     "y": 870
+     "x": 1409,
+     "y": 236
     }
    ]
   }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   canAutoApply,
   isShopLegal,
+  learnBadgeHues,
   loadTemplates,
   proposeTargets,
   readField,
@@ -32,10 +33,14 @@ export interface ItemEdit {
 
 export interface RowEdit {
   index: number;
-  yFrac: number;
+  /** Position along the player axis (see ScreenRowRead.posFrac); remembered per match. */
+  posFrac: number;
   target: RowTarget | null;
   unknownHeroId: number | null;
+  /** Hero from a confident portrait match. */
   heroGuess: number | null;
+  /** Hero an uncertain portrait match suggests (shown as a hint only). */
+  heroHint: number | null;
   reason: string;
   items: ItemEdit[];
 }
@@ -54,17 +59,17 @@ export interface ReaderSession {
 const REMEMBER_KEY = "cc.screenRows";
 const NOTE_MS = 45_000;
 
-function loadRemembered(matchId: string | null): { yFrac: number; target: RowTarget }[] {
+function loadRemembered(matchId: string | null): { posFrac: number; target: RowTarget }[] {
   if (!matchId) return [];
   try {
-    const all = JSON.parse(localStorage.getItem(REMEMBER_KEY) ?? "{}") as Record<string, { yFrac: number; target: RowTarget }[]>;
-    return Array.isArray(all[matchId]) ? all[matchId]! : [];
+    const all = JSON.parse(localStorage.getItem(REMEMBER_KEY) ?? "{}") as Record<string, { posFrac: number; target: RowTarget }[]>;
+    return Array.isArray(all[matchId]) ? all[matchId]!.filter((r) => typeof r.posFrac === "number") : [];
   } catch {
     return [];
   }
 }
 
-function saveRemembered(matchId: string | null, rows: { yFrac: number; target: RowTarget }[]): void {
+function saveRemembered(matchId: string | null, rows: { posFrac: number; target: RowTarget }[]): void {
   if (!matchId) return;
   try {
     // Only the current match is kept: row positions mean nothing in another match.
@@ -192,7 +197,7 @@ export function useScreenReader(c: Coach, iconsRaw: unknown) {
       for (const e of events) latest.current.send(e);
       saveRemembered(
         latest.current.state.matchId,
-        rows.filter((r) => r.target).map((r) => ({ yFrac: r.yFrac, target: r.target! })),
+        rows.filter((r) => r.target).map((r) => ({ posFrac: r.posFrac, target: r.target! })),
       );
       const players = confirmed.length;
       const items = confirmed.reduce((n, r) => n + r.items.length, 0);
@@ -230,10 +235,11 @@ export function useScreenReader(c: Coach, iconsRaw: unknown) {
       const props = proposeTargets(result, ctx, loadRemembered(c.state.matchId));
       const rows: RowEdit[] = result.rows.map((r, i) => ({
         index: r.index,
-        yFrac: r.yFrac,
+        posFrac: r.posFrac,
         target: props[i]!.target,
         unknownHeroId: props[i]!.unknownHeroId,
-        heroGuess: r.hero && r.hero.status !== "none" ? (r.hero.candidates[0]?.heroId ?? null) : null,
+        heroGuess: r.hero?.status === "confident" ? (r.hero.candidates[0]?.heroId ?? null) : null,
+        heroHint: r.hero?.status === "uncertain" ? (r.hero.candidates[0]?.heroId ?? null) : null,
         reason: props[i]!.reason,
         items: r.items.map((it) => ({ read: it, choice: it.status === "confident" ? it.candidates[0]!.className : null })),
       }));
@@ -252,7 +258,7 @@ export function useScreenReader(c: Coach, iconsRaw: unknown) {
         setMessage(
           result.rows.length === 0
             ? (result.warnings[0] ?? "No item icons found.")
-            : `Found ${result.rows.length} rows (${result.ms} ms). Check ${unsure ? `${unsure} uncertain icon${unsure > 1 ? "s" : ""} and ` : ""}who each row belongs to, then apply.`,
+            : `Found ${result.rows.length} ${result.orientation === "columns" ? "players" : "rows"} (${result.ms} ms). Check ${unsure ? `${unsure} uncertain icon${unsure > 1 ? "s" : ""} and ` : ""}who each ${result.orientation === "columns" ? "player" : "row"} is, then apply. After that, reads in this match apply on their own.`,
         );
         note(result.rows.length ? "Screen read needs a quick check (Screen tab)" : "Screen read found no items");
       }
@@ -324,6 +330,21 @@ export function useScreenReader(c: Coach, iconsRaw: unknown) {
   const confirm = useCallback(() => {
     if (!session) return;
     const res = apply(session.rows, fullInventories, false);
+    // Learn this screen's tier-badge colours from the icons you just confirmed.
+    const c = latest.current;
+    const layout = c.settings.screen.layout;
+    if (layout && layout.badges?.present !== false) {
+      const confirmed = session.rows.flatMap((r) =>
+        r.items
+          .filter((i) => i.choice)
+          .map((i) => ({ box: i.read.box, slot: c.deps.data.item(i.choice!)?.slot }))
+          .filter((x): x is { box: typeof x.box; slot: NonNullable<typeof x.slot> } => !!x.slot),
+      );
+      const learned = learnBadgeHues(toImage(session.capture), confirmed);
+      if (Object.keys(learned).length) {
+        void c.updateSettings({ screen: { layout: { ...layout, badges: { present: true, hues: { ...(layout.badges?.hues ?? {}), ...learned } } } } });
+      }
+    }
     setSession({ ...session, appliedAt: Date.now() });
     setStatus("applied");
     setMessage(`Applied: ${res.players} players, ${res.items} items.`);
@@ -337,10 +358,14 @@ export function useScreenReader(c: Coach, iconsRaw: unknown) {
     note(null);
   }, [note]);
 
+  /** The loaded template set (null until prepared). */
+  const templateSet = useCallback(() => templatesRef.current, []);
+
   return {
     status,
     message,
     session,
+    templateSet,
     templates,
     ensureTemplates,
     fullInventories,

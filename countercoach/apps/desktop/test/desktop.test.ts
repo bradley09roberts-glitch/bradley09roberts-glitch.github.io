@@ -82,7 +82,8 @@ describe("settings", () => {
   });
   it("accepts a valid screen calibration and rejects a malformed one", () => {
     const layout = { version: 1, aspect: 16 / 9, itemArea: { x: 0.2, y: 0.1, w: 0.4, h: 0.8 }, iconSize: 0.035, portrait: null, calibratedAt: "2026-10-08T00:00:00Z" };
-    expect(patchSettings(DEFAULT_SETTINGS, { screen: { layout } }).screen.layout).toEqual(layout);
+    // Older calibrations without an orientation are read as rows.
+    expect(patchSettings(DEFAULT_SETTINGS, { screen: { layout } }).screen.layout).toEqual({ ...layout, orientation: "rows" });
     const bad = patchSettings(DEFAULT_SETTINGS, { screen: { layout: { ...layout, itemArea: { x: 5, y: 0, w: 1, h: 1 } } } });
     expect(bad.screen.layout).toBeNull();
     expect(bad.screen.autoApply).toBe(DEFAULT_SETTINGS.screen.autoApply);

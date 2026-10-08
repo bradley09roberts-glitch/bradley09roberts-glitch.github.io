@@ -1,15 +1,18 @@
 import { z } from "zod";
-import type { Confidence } from "../types.js";
+import type { Confidence, SlotType } from "../types.js";
 import type { EnemyItemsValue, MatchEvent } from "../state/types.js";
-import { toPixels, type FracRect, type Rect, type RgbaImage } from "./image.js";
-import { groupRows, readBox, scanIcons } from "./scan.js";
+import { thumbnail, toPixels, type FracRect, type Rect, type RgbaImage } from "./image.js";
+import { groupRows, readBox, scanIcons, type IconDetection } from "./scan.js";
 import type { Candidate, TemplateSet } from "./templates.js";
 
 /**
  * Reads item icons (and optionally hero portraits) from a user-triggered capture of a screen the
  * player can already see, such as the Tab scoreboard. Nothing here touches the game: it only
- * looks at pixels. The layout comes from a one-time calibration on the user's own screenshot,
- * because the real scoreboard geometry has not been verified by this project.
+ * looks at pixels. The layout comes from a one-time calibration on the user's own screenshot.
+ *
+ * Two layouts are supported. In Deadlock's Tab view (seen on a real capture) each player is a
+ * *column*: a portrait card on top with that player's items underneath. A *rows* layout (portrait
+ * to the left of a line of items) is kept for other screens. The calibration decides which.
  */
 
 const fracRect = z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), w: z.number().min(0).max(1), h: z.number().min(0).max(1) });
@@ -22,30 +25,66 @@ export const screenLayoutSchema = z.object({
   itemArea: fracRect,
   /** Icon side as a fraction of the capture height. */
   iconSize: z.number().positive().max(0.5),
-  /** Optional hero-portrait column: one portrait per row, found at the row's height. */
+  /** "columns": portrait above each player's items (Deadlock Tab view). "rows": portrait to the left. */
+  orientation: z.enum(["rows", "columns"]).default("rows"),
+  /** Optional hero portraits: one per player group. */
   portrait: z
     .object({
+      /** Left edge and width of the calibrated portrait, as fractions of the capture width. */
       x: z.number().min(0).max(1),
       w: z.number().min(0).max(1),
-      /** Portrait side as a fraction of the capture height. */
+      /** Portrait height as a fraction of the capture height. */
       size: z.number().positive().max(0.5),
-      /** Portrait centre minus item-row centre, as a fraction of the capture height. */
+      /** Rows: portrait centre minus item-row centre (fraction of height). */
       offsetY: z.number().min(-0.5).max(0.5),
+      /** Columns: portrait centre (fraction of height); every card's portrait sits at this height. */
+      centerY: z.number().min(0).max(1).optional(),
     })
     .nullable(),
+  /**
+   * Tier badges seen on this screen: whether the calibrated icon had one, and the badge hue per
+   * item slot learned from icons the user confirmed (overrides the defaults in BADGE_HUES).
+   */
+  badges: z
+    .object({
+      present: z.boolean(),
+      hues: z.object({ weapon: z.number().min(0).max(360).optional(), vitality: z.number().min(0).max(360).optional(), spirit: z.number().min(0).max(360).optional() }),
+    })
+    .optional(),
   calibratedAt: z.string(),
 });
 export type ScreenLayout = z.infer<typeof screenLayoutSchema>;
 
-/** Thresholds (normalised cross-correlation). Tuned on synthetic renders; see scripts/vision-bench.ts. */
+/**
+ * Thresholds (normalised cross-correlation). On a real Deadlock capture, true item icons scored
+ * 0.85–0.93 with the runner-up 0.27–0.51 behind; scenery that slipped through scored up to ~0.85
+ * but almost never with a wide margin, so a wide margin is required for an automatic read.
+ */
 export const VISION_THRESHOLDS = {
-  itemConfident: 0.8,
-  itemMargin: 0.03,
+  itemConfident: 0.85,
+  itemMargin: 0.2,
+  /** With a matching tier badge in the corner, slightly lower bars apply. */
+  itemConfidentBadge: 0.72,
+  itemMarginBadge: 0.1,
   itemMin: 0.72,
   heroConfident: 0.75,
   heroMargin: 0.05,
   heroMin: 0.5,
 } as const;
+
+/**
+ * Default hue ranges (degrees) of the tier badge drawn in the top-right corner of HUD item icons,
+ * by item slot. Vitality (yellow-green, ~75°) was measured on a real capture; weapon (orange) and
+ * spirit (purple) are assumptions until the user confirms an icon of that slot, after which the
+ * learned hue (± BADGE_HUE_TOLERANCE) is used. A badge only ever adds evidence.
+ */
+export const BADGE_HUES: Record<SlotType, [number, number]> = {
+  vitality: [55, 110],
+  weapon: [15, 50],
+  spirit: [250, 310],
+};
+
+export const BADGE_HUE_TOLERANCE = 25;
 
 export type ReadStatus = "confident" | "uncertain";
 
@@ -53,13 +92,18 @@ export interface ScreenItemRead {
   box: Rect;
   candidates: Candidate[];
   status: ReadStatus;
+  /** A tier badge of the expected colour was seen in the icon's corner. */
+  badge: boolean;
 }
 
 export interface ScreenRowRead {
   index: number;
   box: Rect;
-  /** Row centre as a fraction of the capture height (used to remember assignments). */
-  yFrac: number;
+  /**
+   * Position of this player group along the player axis, as a fraction of the capture (row:
+   * vertical centre / height; column: horizontal centre / width). Used to remember assignments.
+   */
+  posFrac: number;
   hero: { box: Rect; candidates: Candidate[]; status: ReadStatus | "none" } | null;
   items: ScreenItemRead[];
 }
@@ -67,6 +111,7 @@ export interface ScreenRowRead {
 export interface ScreenRead {
   width: number;
   height: number;
+  orientation: "rows" | "columns";
   rows: ScreenRowRead[];
   warnings: string[];
   ms: number;
@@ -83,10 +128,134 @@ function classify(c: Candidate[], confident: number, margin: number): ReadStatus
   return a >= confident && a - b >= margin ? "confident" : "uncertain";
 }
 
+function classifyItem(c: Candidate[], badge: boolean, badgeScreen: boolean): ReadStatus {
+  const T = VISION_THRESHOLDS;
+  // On a screen whose icons carry tier badges, a badge-less "icon" is not trusted however well
+  // it correlates: on a real capture such matches were scenery.
+  if (!badgeScreen && classify(c, T.itemConfident, T.itemMargin) === "confident") return "confident";
+  return badge ? classify(c, T.itemConfidentBadge, T.itemMarginBadge) : "uncertain";
+}
+
+/**
+ * Measure the icon's top-right corner: is there a bright, saturated badge that stands out from
+ * the art beside it, and what hue is it? (A uniformly coloured patch, such as a team-coloured
+ * card behind a false match, fails the stand-out test.)
+ */
+export function measureBadge(img: RgbaImage, box: Rect): { present: boolean; hue: number } {
+  const th = thumbnail(img, box, 16);
+  const mean = (inside: (u: number, v: number) => boolean): [number, number, number] => {
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    let n = 0;
+    for (let i = 0; i < 256; i++) {
+      const u = ((i % 16) + 0.5) / 16;
+      const v = (Math.floor(i / 16) + 0.5) / 16;
+      if (!inside(u, v)) continue;
+      r += th[i * 4]!;
+      g += th[i * 4 + 1]!;
+      b += th[i * 4 + 2]!;
+      n++;
+    }
+    return [r / n, g / n, b / n];
+  };
+  // The badge's tip (well inside its triangle), and art on three sides of it: diagonally
+  // below-left, to its left along the top edge, and below it along the right edge. A real badge
+  // differs from all three; a coloured card or scenery behind a false match usually does not.
+  const tip = mean((u, v) => u - v > 0.7);
+  const sides = [mean((u, v) => u - v > 0.15 && u - v < 0.45), mean((u, v) => u > 0.2 && u < 0.45 && v < 0.12), mean((u, v) => u > 0.88 && v > 0.4 && v < 0.6)];
+  const [r, g, b] = tip;
+  const mx = Math.max(r, g, b);
+  const mn = Math.min(r, g, b);
+  const d = mx - mn;
+  let hue = d === 0 ? 0 : mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  hue = (hue * 60 + 360) % 360;
+  const standsOut = sides.every((c) => Math.hypot(r - c[0], g - c[1], b - c[2]) >= 0.15);
+  return { present: standsOut && mx >= 0.55 && d / mx >= 0.3, hue };
+}
+
+function hueDistance(a: number, b: number): number {
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+}
+
+/**
+ * Does the icon carry a tier badge of the hue expected for this slot on this screen? On a screen
+ * calibrated as having badges, a slot whose hue has not been learned yet accepts any badge hue
+ * (the assumed defaults could be wrong); otherwise the default ranges apply.
+ */
+export function hasTierBadge(img: RgbaImage, box: Rect, slot: SlotType | null, badges?: ScreenLayout["badges"]): boolean {
+  if (!slot || badges?.present === false) return false;
+  const m = measureBadge(img, box);
+  if (!m.present) return false;
+  const learned = badges?.hues[slot];
+  if (learned != null) return hueDistance(m.hue, learned) <= BADGE_HUE_TOLERANCE;
+  if (badges?.present) return true;
+  const [lo, hi] = BADGE_HUES[slot];
+  return m.hue >= lo && m.hue <= hi;
+}
+
+/**
+ * Learn badge hues per slot from icons the user confirmed (median per slot). Returns only slots
+ * with at least one badge seen.
+ */
+export function learnBadgeHues(img: RgbaImage, confirmed: { box: Rect; slot: SlotType }[]): Partial<Record<SlotType, number>> {
+  const by: Partial<Record<SlotType, number[]>> = {};
+  for (const c of confirmed) {
+    const m = measureBadge(img, c.box);
+    if (m.present) (by[c.slot] ??= []).push(m.hue);
+  }
+  const out: Partial<Record<SlotType, number>> = {};
+  for (const [slot, hs] of Object.entries(by) as [SlotType, number[]][]) {
+    const sorted = [...hs].sort((a, b) => a - b);
+    out[slot] = Math.round(sorted[Math.floor(sorted.length / 2)]!);
+  }
+  return out;
+}
+
+interface Group {
+  members: number[];
+  box: Rect;
+  /** Centre along the player axis, in pixels. */
+  centre: number;
+}
+
+/** Players as columns: cluster icons by horizontal position (a gap wider than ~0.7 icon starts a new player). */
+function groupColumns(dets: IconDetection[], iconPx: number, maxWidth: number | null): Group[] {
+  const order = dets.map((_, i) => i).sort((a, b) => dets[a]!.box.x - dets[b]!.box.x);
+  const groups: number[][] = [];
+  let cur: number[] | null = null;
+  let left = 0;
+  let right = -Infinity;
+  for (const i of order) {
+    const b = dets[i]!.box;
+    const split = !cur || b.x - right > iconPx * 0.7 || (maxWidth != null && b.x + b.w - left > maxWidth);
+    if (split) {
+      cur = [i];
+      groups.push(cur);
+      left = b.x;
+      right = b.x + b.w;
+    } else {
+      cur!.push(i);
+      right = Math.max(right, b.x + b.w);
+    }
+  }
+  return groups.map((members) => {
+    members.sort((a, b) => dets[a]!.box.y - dets[b]!.box.y || dets[a]!.box.x - dets[b]!.box.x);
+    const bs = members.map((m) => dets[m]!.box);
+    const x0 = Math.min(...bs.map((b) => b.x));
+    const y0 = Math.min(...bs.map((b) => b.y));
+    const x1 = Math.max(...bs.map((b) => b.x + b.w));
+    const y1 = Math.max(...bs.map((b) => b.y + b.h));
+    return { members, box: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }, centre: (x0 + x1) / 2 };
+  });
+}
+
 /** Read one capture using a calibrated layout. */
 export function readScreen(img: RgbaImage, layout: ScreenLayout, templates: TemplateSet, opts: ReadOptions = {}): ScreenRead {
   const t0 = Date.now();
   const warnings: string[] = [];
+  const orientation = layout.orientation ?? "rows";
   const aspect = img.width / img.height;
   if (Math.abs(aspect - layout.aspect) / layout.aspect > 0.02) {
     warnings.push(
@@ -95,45 +264,68 @@ export function readScreen(img: RgbaImage, layout: ScreenLayout, templates: Temp
   }
   const T = VISION_THRESHOLDS;
   const itemTemplates = templates.items.filter((t) => !opts.allowItem || opts.allowItem(t.className));
+  const slotOf = new Map(itemTemplates.map((t) => [t.className, t.slot]));
   const iconPx = layout.iconSize * img.height;
-  const dets = scanIcons(img, toPixels(layout.itemArea, img), itemTemplates, { iconPx, minScore: T.itemMin });
-  // A real scoreboard row has at least one clearly readable icon; rows made only of weak matches
-  // are usually panel decoration or patches between icons.
-  const rows = groupRows(dets, iconPx).filter((r) =>
-    r.members.some((m) => classify(dets[m]!.candidates, T.itemConfident, T.itemMargin) === "confident"),
-  );
-  const heroTemplates = templates.heroes.filter((t) => t.heroId != null && (!opts.allowHero || opts.allowHero(t.heroId)));
-  const out: ScreenRowRead[] = rows.map((r, index) => {
-    const items: ScreenItemRead[] = r.members.map((m) => {
-      const d = dets[m]!;
-      return { box: d.box, candidates: d.candidates, status: classify(d.candidates, T.itemConfident, T.itemMargin) };
-    });
-    let hero: ScreenRowRead["hero"] = null;
-    if (layout.portrait && heroTemplates.length) hero = readPortrait(img, layout, r.cy, heroTemplates);
-    return { index, box: r.box, yFrac: r.cy / img.height, hero, items };
+  const raw = scanIcons(img, toPixels(layout.itemArea, img), itemTemplates, { iconPx, minScore: T.itemMin });
+  const badgeScreen = layout.badges?.present === true;
+  const judged = raw.map((d) => {
+    const badge = hasTierBadge(img, d.box, slotOf.get(d.candidates[0]!.className) ?? null, layout.badges);
+    return { d, badge, status: classifyItem(d.candidates, badge, badgeScreen) };
   });
-  if (dets.length === 0) warnings.push("No item icons were found in the calibrated area. Was the scoreboard open when the capture was taken?");
-  return { width: img.width, height: img.height, rows: out, warnings, ms: Date.now() - t0 };
+  // Keep an uncertain icon only if it carries a tier badge, or (on screens without badges) lines
+  // up with a confident icon in the same row or column: stray matches in scenery do neither.
+  const confident = judged.filter((j) => j.status === "confident").map((j) => j.d.box);
+  const aligned = (b: Rect) =>
+    confident.some((c) => {
+      const dx = Math.abs(c.x - b.x);
+      const dy = Math.abs(c.y - b.y);
+      return (dy < iconPx * 0.25 && dx < iconPx * 4) || (dx < iconPx * 0.25 && dy < iconPx * 4);
+    });
+  const keep = judged.filter((j) => j.status === "confident" || j.badge || (!badgeScreen && aligned(j.d.box)));
+  const dets = keep.map((j) => j.d);
+  const info = keep.map((j) => ({ status: j.status, badge: j.badge }));
+
+  const portraitW = layout.portrait ? layout.portrait.w * img.width : null;
+  const groups: Group[] =
+    orientation === "columns"
+      ? groupColumns(dets, iconPx, portraitW != null ? portraitW * 1.3 : null)
+      : groupRows(dets, iconPx).map((r) => ({ members: r.members, box: r.box, centre: r.cy }));
+  // A real player group has at least one clearly readable icon.
+  const players = groups.filter((g) => g.members.some((m) => info[m]!.status === "confident"));
+  const heroTemplates = templates.heroes.filter((t) => t.heroId != null && (!opts.allowHero || opts.allowHero(t.heroId)));
+  const out: ScreenRowRead[] = players.map((g, index) => {
+    const items: ScreenItemRead[] = g.members.map((m) => ({ box: dets[m]!.box, candidates: dets[m]!.candidates, status: info[m]!.status, badge: info[m]!.badge }));
+    const hero = layout.portrait && heroTemplates.length ? readPortrait(img, layout, orientation, g, heroTemplates) : null;
+    return { index, box: g.box, posFrac: g.centre / (orientation === "columns" ? img.width : img.height), hero, items };
+  });
+  if (raw.length === 0) warnings.push("No item icons were found in the calibrated area. Was the scoreboard open when the capture was taken?");
+  return { width: img.width, height: img.height, orientation, rows: out, warnings, ms: Date.now() - t0 };
 }
 
-/** Find the portrait for a row: small search around the expected position. */
-function readPortrait(img: RgbaImage, layout: ScreenLayout, rowCy: number, heroTemplates: TemplateSet["heroes"]): NonNullable<ScreenRowRead["hero"]> {
+/** Find the portrait for a player group: small search around where the calibration says it is. */
+function readPortrait(img: RgbaImage, layout: ScreenLayout, orientation: "rows" | "columns", g: Group, heroTemplates: TemplateSet["heroes"]): NonNullable<ScreenRowRead["hero"]> {
   const p = layout.portrait!;
-  const size = p.size * img.height;
-  const cy = rowCy + p.offsetY * img.height;
-  const xCentre = (p.x + p.w / 2) * img.width;
-  const jitter = size / 4;
-  const step = Math.max(1, size / 8);
+  // Portrait art is square (API art and the in-game card head shot); compare a square at the
+  // centre of the calibrated box rather than squashing a tall card into the template.
+  const side = Math.min(p.w * img.width, p.size * img.height);
+  const w = side;
+  const h = side;
+  const cx = orientation === "columns" ? g.centre : (p.x + p.w / 2) * img.width;
+  const cy = orientation === "columns" ? (p.centerY ?? 0) * img.height : g.centre + p.offsetY * img.height;
+  const jx = w / 4;
+  const jy = h / 4;
+  const step = Math.max(1, Math.min(w, h) / 8);
   let best: { box: Rect; candidates: Candidate[] } | null = null;
-  for (let dy = -jitter; dy <= jitter + 1e-6; dy += step) {
-    for (let dx = -jitter; dx <= jitter + 1e-6; dx += step) {
-      const box = { x: xCentre - size / 2 + dx, y: cy - size / 2 + dy, w: size, h: size };
+  for (let dy = -jy; dy <= jy + 1e-6; dy += step) {
+    for (let dx = -jx; dx <= jx + 1e-6; dx += step) {
+      const box = { x: cx - w / 2 + dx, y: cy - h / 2 + dy, w, h };
       const c = readBox(img, box, heroTemplates, 3);
       if (c[0] && (!best || c[0].score > best.candidates[0]!.score)) best = { box, candidates: c };
     }
   }
   const T = VISION_THRESHOLDS;
-  if (!best || best.candidates[0]!.score < T.heroMin) return { box: best?.box ?? { x: xCentre - size / 2, y: cy - size / 2, w: size, h: size }, candidates: best?.candidates ?? [], status: "none" };
+  const fallback = { x: cx - w / 2, y: cy - h / 2, w, h };
+  if (!best || best.candidates[0]!.score < T.heroMin) return { box: best?.box ?? fallback, candidates: best?.candidates ?? [], status: "none" };
   return { ...best, status: classify(best.candidates, T.heroConfident, T.heroMargin) };
 }
 
@@ -173,7 +365,7 @@ function targetValid(t: RowTarget, ctx: RosterContext): boolean {
  * Suggest who each row belongs to: a confident portrait wins; otherwise a row at the same height
  * as an earlier confirmed read reuses that assignment. Anything else is left for the user.
  */
-export function proposeTargets(read: ScreenRead, ctx: RosterContext, remembered: { yFrac: number; target: RowTarget }[] = []): RowProposal[] {
+export function proposeTargets(read: ScreenRead, ctx: RosterContext, remembered: { posFrac: number; target: RowTarget }[] = []): RowProposal[] {
   const props: RowProposal[] = read.rows.map((r) => {
     const h = r.hero;
     if (h && h.status === "confident") {
@@ -184,9 +376,9 @@ export function proposeTargets(read: ScreenRead, ctx: RosterContext, remembered:
       return { row: r.index, target: null, unknownHeroId: id, reason: "portrait hero is not in your roster" };
     }
     const mem = remembered
-      .filter((m) => Math.abs(m.yFrac - r.yFrac) <= 0.015 && targetValid(m.target, ctx))
-      .sort((a, b) => Math.abs(a.yFrac - r.yFrac) - Math.abs(b.yFrac - r.yFrac))[0];
-    if (mem) return { row: r.index, target: mem.target, unknownHeroId: null, reason: "same row as your last confirmed read" };
+      .filter((m) => Math.abs(m.posFrac - r.posFrac) <= 0.015 && targetValid(m.target, ctx))
+      .sort((a, b) => Math.abs(a.posFrac - r.posFrac) - Math.abs(b.posFrac - r.posFrac))[0];
+    if (mem) return { row: r.index, target: mem.target, unknownHeroId: null, reason: "same place as your last confirmed read" };
     return { row: r.index, target: null, unknownHeroId: null, reason: "choose who this row belongs to" };
   });
   // A player can only be one row: on duplicates keep the first and ask about the rest.
@@ -245,30 +437,58 @@ export function screenReadEvents(
   return events;
 }
 
-/** Build a layout from rectangles the user drew on a capture (all in pixels). */
+/**
+ * Build a layout from rectangles the user drew on a capture (all in pixels). With a portrait, the
+ * orientation follows from where it sits relative to the sample icon: above or below means each
+ * player is a column (Deadlock's Tab view), left or right means rows.
+ */
 export function layoutFromCalibration(
   img: { width: number; height: number },
   itemArea: Rect,
   sampleIcon: Rect,
-  portrait: { box: Rect; rowCy: number | null } | null,
+  portrait: { box: Rect } | null,
   at: string,
+  badges?: ScreenLayout["badges"],
 ): ScreenLayout {
   const frac = (r: Rect): FracRect => ({ x: r.x / img.width, y: r.y / img.height, w: r.w / img.width, h: r.h / img.height });
   const side = (r: Rect) => (r.w + r.h) / 2;
-  const portraitSize = portrait ? side(portrait.box) : 0;
+  let orientation: "rows" | "columns" = "rows";
+  let p: ScreenLayout["portrait"] = null;
+  if (portrait) {
+    const b = portrait.box;
+    const pcx = b.x + b.w / 2;
+    const pcy = b.y + b.h / 2;
+    const icx = sampleIcon.x + sampleIcon.w / 2;
+    const icy = sampleIcon.y + sampleIcon.h / 2;
+    orientation = Math.abs(pcy - icy) > Math.abs(pcx - icx) ? "columns" : "rows";
+    p = {
+      x: b.x / img.width,
+      w: b.w / img.width,
+      size: b.h / img.height,
+      offsetY: orientation === "rows" ? (pcy - icy) / img.height : 0,
+      ...(orientation === "columns" ? { centerY: pcy / img.height } : {}),
+    };
+  }
   return {
     version: 1,
     aspect: img.width / img.height,
     itemArea: frac(itemArea),
     iconSize: side(sampleIcon) / img.height,
-    portrait: portrait
-      ? {
-          x: portrait.box.x / img.width,
-          w: portrait.box.w / img.width,
-          size: portraitSize / img.height,
-          offsetY: portrait.rowCy == null ? 0 : (portrait.box.y + portrait.box.h / 2 - portrait.rowCy) / img.height,
-        }
-      : null,
+    orientation,
+    portrait: p,
+    ...(badges ? { badges } : {}),
     calibratedAt: at,
   };
+}
+
+/**
+ * Inspect the icon the user marked during calibration: which item it is, and whether this screen
+ * draws tier badges (and in which hue for that item's slot).
+ */
+export function calibrationBadges(img: RgbaImage, sampleIcon: Rect, templates: TemplateSet): ScreenLayout["badges"] {
+  const top = readBox(img, sampleIcon, templates.items, 2);
+  const sure = !!top[0] && top[0].score >= 0.6 && top[0].score - (top[1]?.score ?? 0) >= 0.15;
+  const slot = sure ? (templates.items.find((t) => t.className === top[0]!.className)?.slot ?? null) : null;
+  const m = measureBadge(img, sampleIcon);
+  return { present: m.present, hues: m.present && slot ? { [slot]: Math.round(m.hue) } : {} };
 }

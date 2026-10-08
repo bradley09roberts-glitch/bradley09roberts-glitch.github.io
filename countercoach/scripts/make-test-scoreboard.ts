@@ -3,9 +3,10 @@
  *
  *   pnpm tsx scripts/make-test-scoreboard.ts [outDir]
  *
- * It is built from the community API's item art and hero portraits (cached by `pnpm icons`) in a
- * made-up layout: 12 player rows, a portrait, then item icons grouped by category with a thin
- * frame. It is NOT a Deadlock screenshot and says nothing about the real scoreboard's layout.
+ * It is built from the community API's item art and hero portraits (cached by `pnpm icons`), laid
+ * out like Deadlock's Tab view as seen on one real capture: a card per player across the top,
+ * items in a grid under each card, a tier badge on every icon, busy scenery behind. It is NOT a
+ * Deadlock screenshot.
  * Writes synthetic-scoreboard.png and synthetic-scoreboard.json (ground truth + geometry).
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -36,7 +37,6 @@ const BUILDS: Record<number, string[]> = {
   11: ["upgrade_improved_spirit", "upgrade_health", "upgrade_magic_tempo", "upgrade_debuff_reducer"],
   7: ["upgrade_headshot_booster", "upgrade_magic_burst", "upgrade_improved_spirit", "upgrade_sprint_booster", "upgrade_extra_charge"],
 };
-const FRAME: Record<string, [number, number, number]> = { weapon: [196, 128, 58], vitality: [88, 156, 78], spirit: [146, 98, 196] };
 
 async function main(): Promise<void> {
   const manifest = JSON.parse(await readFile(path.join(root, "data/snapshots/manifest.json"), "utf8"));
@@ -80,54 +80,66 @@ async function main(): Promise<void> {
     }
   };
 
-  const panel = { x: 330, y: 120, w: 1260, h: 840 };
-  fill(panel.x, panel.y, panel.w, panel.h, [16, 19, 24], 0.92);
-  const icon = 38;
-  const frame = 2;
-  const pitch = 60;
-  const portrait = 46;
-  const portraitX = 370;
-  const itemsX = 470;
-  const rows: { heroId: number; team: "ally" | "enemy" | "me"; y: number; items: { className: string; x: number; y: number }[] }[] = [];
+  // Busy "game world" behind the HUD: blocks of varied colour and contrast.
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  for (let k = 0; k < 900; k++) {
+    const c: [number, number, number] = [40 + rnd() * 200, 30 + rnd() * 160, 20 + rnd() * 140];
+    fill(Math.floor(rnd() * W), Math.floor(rnd() * H), 6 + Math.floor(rnd() * 90), 6 + Math.floor(rnd() * 90), c, 0.35);
+  }
+  // Tab view modelled on a real capture: one card per player across the top (your team amber on
+  // the left, enemies blue on the right), portrait on top, items under the card in a 2-wide grid,
+  // each icon with a tier badge in its top-right corner.
+  const icon = 30;
+  const gap = 4;
+  const cardW = 74;
+  const cardGap = 8;
+  const portrait = { w: 62, h: 70 };
+  const cardTop = 12;
+  const itemsTop = 168;
+  const BADGE: Record<string, [number, number, number]> = { vitality: [174, 210, 71], weapon: [230, 150, 50], spirit: [175, 120, 235] };
+  const badge = (x: number, y: number, n: number, slot: string) => {
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) if ((i + 0.5) / n - (j + 0.5) / n > 0.65) fill(x + i, y + j, 1, 1, BADGE[slot]!);
+  };
   const order = [
     { id: ME, team: "me" as const },
     ...ALLIES.map((id) => ({ id, team: "ally" as const })),
     ...ENEMIES.map((id) => ({ id, team: "enemy" as const })),
   ];
-  for (let r = 0; r < order.length; r++) {
-    const { id, team } = order[r]!;
-    const y = panel.y + 40 + r * pitch + (r >= 6 ? 50 : 0);
-    fill(panel.x + 10, y - 8, panel.w - 20, pitch - 6, team === "enemy" ? [40, 22, 24] : [22, 32, 40], 0.7);
-    blit(await art(heroUrl.get(id)!), portraitX, y + Math.round((icon - portrait) / 2), portrait);
-    const items = [...BUILDS[id]!].sort((a, b) => {
-      const s = ["weapon", "vitality", "spirit"];
-      return s.indexOf(snap.items.find((i) => i.className === a)!.slot) - s.indexOf(snap.items.find((i) => i.className === b)!.slot);
-    });
-    let x = itemsX;
-    let lastSlot = "";
+  const left = Math.round((W - (12 * cardW + 11 * cardGap + 60)) / 2);
+  const rows: { heroId: number; team: "ally" | "enemy" | "me"; x: number; portrait: { x: number; y: number; w: number; h: number }; items: { className: string; x: number; y: number }[] }[] = [];
+  for (let k = 0; k < order.length; k++) {
+    const { id, team } = order[k]!;
+    const x0 = left + k * (cardW + cardGap) + (k >= 6 ? 60 : 0);
+    fill(x0, cardTop, cardW, itemsTop - cardTop - 8, team === "enemy" ? [52, 92, 190] : [196, 150, 46], 0.9);
+    // Ability circles near the bottom of the card (HUD parts that are not items).
+    for (let a = 0; a < 4; a++) fill(x0 + 6 + a * 17, itemsTop - 30, 12, 12, [235, 235, 235], 0.9);
+    const pr = { x: x0 + Math.round((cardW - portrait.w) / 2), y: cardTop + 4, w: portrait.w, h: portrait.h };
+    blit(await art(heroUrl.get(id)!), pr.x, pr.y + Math.round((pr.h - pr.w) / 2), pr.w);
     const placed: { className: string; x: number; y: number }[] = [];
-    for (const cls of items) {
-      const slot = snap.items.find((i) => i.className === cls)!.slot;
-      if (lastSlot && slot !== lastSlot) x += 16;
-      lastSlot = slot;
-      fill(x, y, icon, icon, FRAME[slot]!);
-      blit(await art(itemUrl.get(cls)!), x + frame, y + frame, icon - 2 * frame);
+    const items = BUILDS[id]!;
+    for (let i = 0; i < items.length; i++) {
+      const cls = items[i]!;
+      const slot = snap.items.find((it) => it.className === cls)!.slot;
+      const x = x0 + Math.round((cardW - 2 * icon - gap) / 2) + (i % 2) * (icon + gap);
+      const y = itemsTop + Math.floor(i / 2) * (icon + gap);
+      blit(await art(itemUrl.get(cls)!), x, y, icon);
+      badge(x, y, icon, slot);
       placed.push({ className: cls, x, y });
-      x += icon + 5;
     }
-    rows.push({ heroId: id, team, y, items: placed });
+    rows.push({ heroId: id, team, x: x0 + cardW / 2, portrait: pr, items: placed });
   }
   await mkdir(outDir, { recursive: true });
   await writeFile(path.join(outDir, "synthetic-scoreboard.png"), encodePng(img));
   const truth = {
-    note: "SYNTHETIC test image built from community-API art in a made-up layout; not a Deadlock screenshot.",
+    note: "SYNTHETIC test image built from community-API art, laid out like Deadlock's Tab view as seen on one real capture; not a Deadlock screenshot.",
     width: W,
     height: H,
-    geometry: { itemArea: { x: itemsX - 12, y: panel.y + 20, w: 640, h: panel.h - 40 }, icon, portrait: { x: portraitX, size: portrait } },
+    geometry: { itemArea: { x: left - 10, y: itemsTop - 8, w: 12 * cardW + 11 * cardGap + 80, h: 3 * (icon + gap) + 16 }, icon },
     rows,
   };
   await writeFile(path.join(outDir, "synthetic-scoreboard.json"), JSON.stringify(truth, null, 1) + "\n");
-  console.log(`wrote ${path.join(outDir, "synthetic-scoreboard.png")} (${rows.length} rows, ${rows.reduce((n, r) => n + r.items.length, 0)} items)`);
+  console.log(`wrote ${path.join(outDir, "synthetic-scoreboard.png")} (${rows.length} players, ${rows.reduce((n, r) => n + r.items.length, 0)} items)`);
 }
 
 main().catch((e) => {

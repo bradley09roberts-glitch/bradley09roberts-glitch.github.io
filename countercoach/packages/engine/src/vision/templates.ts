@@ -9,6 +9,19 @@ import { decodeBase64, encodeBase64, thumbnail, type RgbaImage } from "./image.j
  * cross-correlation, so it tolerates brightness/contrast changes but not different artwork.
  */
 
+/**
+ * In the game's HUD and scoreboard every item icon carries a tier badge (a small triangle with a
+ * roman numeral) in its top-right corner, which the shop art does not have. Item matching ignores
+ * that corner: a point at (u, v) in 0..1 icon coordinates is masked when u − v exceeds this.
+ * Measured on a real Deadlock HUD capture (badge legs ≈ 37% of the icon side).
+ */
+export const BADGE_CUT = 0.55;
+
+/** True when the cell centred at (u, v) (0..1 icon coordinates) lies in the tier-badge corner. */
+export function inBadge(u: number, v: number): boolean {
+  return u - v > BADGE_CUT;
+}
+
 /** Side of the stored thumbnails (pixels). */
 export const ICON_THUMB = 16;
 /** Side of the coarse thumbnails used by the sliding pre-filter. */
@@ -59,6 +72,10 @@ export interface PreparedTemplate {
   pre: Float32Array;
   /** Mean-removed, unit-norm MID² × 3 RGB (alpha-composited on mid grey). */
   mid: Float32Array;
+  /** Item templates ignore the tier-badge corner (see BADGE_CUT); portraits do not. */
+  badgeMask: boolean;
+  /** Weighted luminance standard deviation (0..1): how much contrast the art has. */
+  lumStd: number;
 }
 
 export interface TemplateSet {
@@ -73,12 +90,15 @@ export function prepareTemplate(
   rgba: Float32Array,
   meta: Pick<PreparedTemplate, "key" | "kind" | "className" | "heroId" | "slot" | "variant">,
 ): PreparedTemplate {
-  const n2 = ICON_THUMB * ICON_THUMB;
+  const n = ICON_THUMB;
+  const n2 = n * n;
+  const badgeMask = meta.kind === "item";
   const weight = new Float32Array(n2);
   let wsum = 0;
   let mean = 0;
   for (let i = 0; i < n2; i++) {
-    const a = rgba[i * 4 + 3]!;
+    const masked = badgeMask && inBadge(((i % n) + 0.5) / n, (Math.floor(i / n) + 0.5) / n);
+    const a = masked ? 0 : rgba[i * 4 + 3]!;
     weight[i] = a;
     wsum += a;
     mean += a * (rgba[i * 4]! + rgba[i * 4 + 1]! + rgba[i * 4 + 2]!);
@@ -95,7 +115,35 @@ export function prepareTemplate(
   }
   norm = Math.sqrt(Math.max(norm, 1e-9));
   for (let i = 0; i < vec.length; i++) vec[i]! /= norm;
-  return { ...meta, vec, weight, wsum, pre: prefilterVector(rgba), mid: midVector(rgba) };
+  return {
+    ...meta,
+    vec,
+    weight,
+    wsum,
+    pre: prefilterVector(rgba, badgeMask),
+    mid: midVector(rgba, badgeMask),
+    badgeMask,
+    lumStd: luminanceStd(rgba, weight),
+  };
+}
+
+/** Weighted standard deviation of luminance for an RGBA float thumbnail (weights default to 1). */
+export function luminanceStd(rgba: Float32Array, weight?: Float32Array): number {
+  const n2 = rgba.length / 4;
+  let sw = 0;
+  let s1 = 0;
+  let s2 = 0;
+  for (let i = 0; i < n2; i++) {
+    const w = weight ? weight[i]! : 1;
+    if (w <= 0) continue;
+    const l = 0.299 * rgba[i * 4]! + 0.587 * rgba[i * 4 + 1]! + 0.114 * rgba[i * 4 + 2]!;
+    sw += w;
+    s1 += w * l;
+    s2 += w * l * l;
+  }
+  if (sw <= 0) return 0;
+  const m = s1 / sw;
+  return Math.sqrt(Math.max(0, s2 / sw - m * m));
 }
 
 /**
@@ -105,36 +153,61 @@ export function prepareTemplate(
 export const PREFILTER_INSET = 0.1;
 
 /** Coarse PREFILTER² × 3 vector of the inner region (alpha-composited on mid grey), mean-removed and unit-norm. */
-export function prefilterVector(rgba: Float32Array): Float32Array {
+export function prefilterVector(rgba: Float32Array, badgeMask = false): Float32Array {
   const bytes = new Uint8ClampedArray(rgba.length);
   for (let i = 0; i < rgba.length; i++) bytes[i] = Math.round(rgba[i]! * 255);
   const src = { width: ICON_THUMB, height: ICON_THUMB, data: bytes, order: "rgba" as const };
   const m = ICON_THUMB * PREFILTER_INSET;
   const th = thumbnail(src, { x: m, y: m, w: ICON_THUMB - 2 * m, h: ICON_THUMB - 2 * m }, PREFILTER);
-  const out = new Float32Array(PREFILTER * PREFILTER * 3);
-  for (let i = 0; i < PREFILTER * PREFILTER; i++) {
-    const a = th[i * 4 + 3]!;
-    for (let c = 0; c < 3; c++) out[i * 3 + c] = a * th[i * 4 + c]! + (1 - a) * 0.5;
-  }
-  return normaliseInPlace(out);
+  return opaqueVector(th, PREFILTER, badgeMask ? PREFILTER_INSET : null);
 }
 
 /** MID² × 3 vector of the whole thumbnail (alpha-composited on mid grey), mean-removed and unit-norm. */
-export function midVector(rgba: Float32Array): Float32Array {
+export function midVector(rgba: Float32Array, badgeMask = false): Float32Array {
   const bytes = new Uint8ClampedArray(rgba.length);
   for (let i = 0; i < rgba.length; i++) bytes[i] = Math.round(rgba[i]! * 255);
   const th = thumbnail({ width: ICON_THUMB, height: ICON_THUMB, data: bytes, order: "rgba" }, { x: 0, y: 0, w: ICON_THUMB, h: ICON_THUMB }, MID);
-  return opaqueVector(th, MID);
+  return opaqueVector(th, MID, badgeMask ? 0 : null);
 }
 
-/** Composite an RGBA float thumbnail on mid grey and normalise it. */
-export function opaqueVector(th: Float32Array, n: number): Float32Array {
+/**
+ * Composite an n×n RGBA float thumbnail on mid grey and normalise it. When `badgeInset` is a
+ * number, cells in the tier-badge corner are zeroed (the thumbnail covers the icon inset by that
+ * fraction on each side), so screen crops and item templates are compared on the same cells.
+ */
+export function opaqueVector(th: Float32Array, n: number, badgeInset: number | null = null): Float32Array {
   const out = new Float32Array(n * n * 3);
+  const keep = new Uint8Array(n * n).fill(1);
+  if (badgeInset != null) {
+    for (let i = 0; i < n * n; i++) {
+      const u = badgeInset + (((i % n) + 0.5) / n) * (1 - 2 * badgeInset);
+      const v = badgeInset + ((Math.floor(i / n) + 0.5) / n) * (1 - 2 * badgeInset);
+      if (inBadge(u, v)) keep[i] = 0;
+    }
+  }
+  let mean = 0;
+  let kept = 0;
   for (let i = 0; i < n * n; i++) {
     const a = th[i * 4 + 3]!;
     for (let c = 0; c < 3; c++) out[i * 3 + c] = a * th[i * 4 + c]! + (1 - a) * 0.5;
+    if (keep[i]) {
+      mean += out[i * 3]! + out[i * 3 + 1]! + out[i * 3 + 2]!;
+      kept += 3;
+    }
   }
-  return normaliseInPlace(out);
+  mean = kept ? mean / kept : 0;
+  let norm = 0;
+  for (let i = 0; i < n * n; i++) {
+    for (let c = 0; c < 3; c++) {
+      const v = keep[i] ? out[i * 3 + c]! - mean : 0;
+      out[i * 3 + c] = v;
+      norm += v * v;
+    }
+  }
+  norm = Math.sqrt(norm);
+  if (norm < 1e-6) out.fill(0);
+  else for (let i = 0; i < out.length; i++) out[i]! /= norm;
+  return out;
 }
 
 export function normaliseInPlace(v: Float32Array): Float32Array {

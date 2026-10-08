@@ -18,7 +18,10 @@ const electronBin = path.resolve(root, "../../node_modules/electron/dist/electro
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function drag(page, shot, rect) {
-  await shot.evaluate((el) => el.scrollIntoView({ block: "start" }));
+  // Bring the target into the middle of the window (the app's top bar is sticky).
+  const first = await shot.boundingBox();
+  const k0 = first.width / truth.width;
+  await page.evaluate((dy) => window.scrollBy(0, dy), first.y + (rect.y + rect.h / 2) * k0 - 450);
   await sleep(150);
   const bb = await shot.boundingBox();
   const k = bb.width / truth.width;
@@ -89,14 +92,13 @@ async function drag(page, shot, rect) {
   await showGame(false);
   step("capture-button", { ok: true, message: await main.locator(".screen-page .section-body p.small").first().textContent() });
 
-  // 2) Calibrate with three drags.
+  // 2) Calibrate with three drags: the item strip, one icon, and that player's card portrait.
   const shot = main.locator(".shot").first();
   const r0 = truth.rows[0];
   const it0 = r0.items[0];
   await drag(main, shot, truth.geometry.itemArea);
   await drag(main, shot, { x: it0.x, y: it0.y, w: truth.geometry.icon, h: truth.geometry.icon });
-  const p = truth.geometry.portrait;
-  await drag(main, shot, { x: p.x, y: r0.y + (truth.geometry.icon - p.size) / 2, w: p.size, h: p.size });
+  await drag(main, shot, r0.portrait);
   await main.evaluate(() => window.scrollTo(0, 0));
   await main.screenshot({ path: path.join(out, "09-screen-calibrate.png") });
   await main.getByRole("button", { name: "Save calibration" }).click();
@@ -104,7 +106,7 @@ async function drag(page, shot, rect) {
   const msg1 = await main.locator(".screen-page .section-body p.small").first().textContent();
   step("calibrate-and-read", { message: msg1, templates: await main.locator("text=/Icon templates/").first().textContent() });
 
-  // Score the read against ground truth (row order on screen = row order in the image).
+  // Score the read against ground truth (players left to right = cards left to right).
   const snap = JSON.parse(fs.readFileSync(path.join(root, "public/data/snapshot.json"), "utf8"));
   const itemName = new Map(snap.items.map((i) => [i.className, i.name]));
   const heroName = new Map(snap.heroes.map((h) => [h.id, h.name]));
@@ -113,34 +115,39 @@ async function drag(page, shot, rect) {
   let correct = 0;
   let total = 0;
   const wrong = [];
-  const who = [];
-  for (let i = 0; i < rows; i++) {
-    const got = await rowEls.nth(i).locator(".screen-item-name").allTextContents();
-    const want = truth.rows[i].items.map((x) => itemName.get(x.className));
+  for (let i = 0; i < Math.min(rows, truth.rows.length); i++) {
+    const got = (await rowEls.nth(i).locator(".screen-item-name").allTextContents()).sort();
+    const want = truth.rows[i].items.map((x) => itemName.get(x.className)).sort();
     total += want.length;
-    want.forEach((w, k) => (got[k] === w ? correct++ : wrong.push(`row ${i + 1}: want ${w}, got ${got[k]}`)));
-    who.push(await rowEls.nth(i).locator("select option:checked").textContent());
+    want.forEach((w) => (got.includes(w) ? correct++ : wrong.push(`player ${i + 1}: missing ${w}`)));
+    got.filter((g) => !want.includes(g)).forEach((g) => wrong.push(`player ${i + 1}: extra ${g}`));
   }
+  const auto = /Applied automatically/.test(msg1 || "");
+  const proposed = [];
+  for (let i = 0; i < rows; i++) proposed.push(await rowEls.nth(i).locator("select option:checked").textContent());
   const expectedWho = truth.rows.map((r) => (r.team === "me" ? `Me (${heroName.get(r.heroId)})` : `${r.team === "enemy" ? "Enemy" : "Ally"}: ${heroName.get(r.heroId)}`));
-  step("accuracy", { rows, expectedRows: truth.rows.length, itemsCorrect: correct, itemsExpected: total, wrong, rowsAssignedCorrectly: who.filter((w, i) => w === expectedWho[i]).length });
+  step("accuracy", {
+    players: rows,
+    expectedPlayers: truth.rows.length,
+    itemsCorrect: correct,
+    itemsExpected: total,
+    wrong,
+    appliedAutomatically: auto,
+    playersNamedFromPortraits: proposed.filter((w, i) => w === expectedWho[i]).length,
+  });
   await main.evaluate(() => window.scrollTo(0, 0));
-  await main.screenshot({ path: path.join(out, "10-screen-read-applied.png"), fullPage: false });
+  await main.screenshot({ path: path.join(out, "10-screen-read.png"), fullPage: false });
 
-  // 3) Review flow: turn auto-apply off and read again.
-  const autoApply = main.getByLabel("Apply automatically when every icon and row is confident");
-  // Settings round-trip through the main process, so click and wait instead of check()/uncheck().
-  await autoApply.click();
-  await sleep(400);
-  await main.getByRole("button", { name: "Read again" }).click();
-  await main.waitForSelector("text=Who is who", { timeout: 30000 });
-  await main.waitForSelector(".screen-actions >> text=Apply", { timeout: 30000 });
-  await main.locator(".screen-rows").scrollIntoViewIfNeeded();
-  await main.screenshot({ path: path.join(out, "11-screen-review.png") });
-  await main.locator(".screen-actions").getByRole("button", { name: /^Apply/ }).click();
-  await sleep(500);
-  step("review-apply", { message: await main.locator(".screen-page .section-body p.small").first().textContent() });
-  await autoApply.click();
-  await sleep(400);
+  // 3) First read of a match: say who each player is (portraits only cover some), then apply.
+  if (!auto) {
+    const value = (r) => (r.team === "me" ? "me" : `${r.team}:${r.heroId}`);
+    for (let i = 0; i < Math.min(rows, truth.rows.length); i++) await rowEls.nth(i).locator("select").selectOption(value(truth.rows[i]));
+    await main.locator(".screen-rows").scrollIntoViewIfNeeded();
+    await main.screenshot({ path: path.join(out, "11-screen-review.png") });
+    await main.locator(".screen-actions").getByRole("button", { name: /^Apply/ }).click();
+    await sleep(500);
+    step("review-apply", { message: await main.locator(".screen-page .section-body p.small").first().textContent() });
+  }
 
   // 4) Hotkey path: the global shortcut while the "game" is in front.
   await showGame(true);
@@ -151,11 +158,11 @@ async function drag(page, shot, rect) {
   } catch (e) {
     hotkey = `xdotool failed: ${e.message}`;
   }
-  await sleep(4000);
+  await sleep(5000);
   const note = overlay ? await overlay.locator(".ov-screen").textContent().catch(() => null) : null;
   if (overlay) await overlay.screenshot({ path: path.join(out, "12-overlay-screen-note.png") }).catch(() => {});
   await showGame(false);
-  step("hotkey", { via: hotkey, overlayNote: note });
+  step("hotkey", { via: hotkey, overlayNote: note, message: await main.locator(".screen-page .section-body p.small").first().textContent().catch(() => null) });
 
   // 5) Match tab shows the screen-read items.
   await main.getByRole("tab", { name: "Match" }).click();

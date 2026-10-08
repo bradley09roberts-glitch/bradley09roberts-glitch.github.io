@@ -4,8 +4,8 @@
  *   pnpm vision:bench [-- --trials 6 --seed 1]
  *
  * Renders fake scoreboards from the ORIGINAL full-resolution item art and hero portraits (cached
- * by `pnpm icons`), degrades them (resize, frame, rounded corners, brightness/contrast, blur,
- * noise, colour quantisation) and runs the real reader on them. This measures how well the
+ * by `pnpm icons`), adds the HUD's tier badge to each icon, degrades them (resize, frame, rounded
+ * corners, brightness/contrast, blur, noise, colour quantisation) and runs the real reader on them. This measures how well the
  * templates separate the 173 items at small sizes. It is NOT evidence about the real game's
  * scoreboard, whose layout and styling have not been verified.
  */
@@ -13,6 +13,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  calibrationBadges,
   loadTemplates,
   readScreen,
   thumbnail,
@@ -91,6 +92,7 @@ async function main(): Promise<void> {
         used.add(cls);
         const x = x0 + k * (s + gap) + (k >= 4 ? s * 0.6 : 0);
         blit(img, art.get(cls)!, x, ry, s, { frame, rounded, bright, contrast });
+        badge(img, Math.round(x), ry, s, snap.items.find((i) => i.className === cls)!.slot);
         truth.push({ x, y: ry, cls });
       }
     }
@@ -100,9 +102,12 @@ async function main(): Promise<void> {
       aspect: W / H,
       itemArea: { x: (x0 - s * 0.5) / W, y: (y0 - s * 0.5) / H, w: (16 * (s + gap)) / W, h: (12 * rowPitch + s) / H },
       iconSize: s / H,
+      orientation: "rows",
       portrait: { x: (x0 - portraitSize - s) / W, w: portraitSize / W, size: portraitSize / H, offsetY: 0 },
       calibratedAt: "bench",
     };
+    const t0 = truth[0]!;
+    layout.badges = calibrationBadges(img, { x: t0.x, y: t0.y, w: s, h: s }, templates);
     const read = readScreen(img, layout, templates, { allowItem: (c) => shop.includes(c) });
     totals.ms += read.ms;
     const dets = read.rows.flatMap((r) => r.items);
@@ -151,6 +156,20 @@ async function main(): Promise<void> {
   console.log(`mean read time        ${(totals.ms / TRIALS).toFixed(0)} ms (1920×1080)`);
   const worst = [...confusions.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
   if (worst.length) console.log(`most common confusions:\n  ${worst.map(([k, v]) => `${v}× ${k}`).join("\n  ")}`);
+}
+
+/** The HUD's tier badge: a triangle in the icon's top-right corner (vitality colour measured on a real capture; others assumed). */
+function badge(img: RgbaImage, x: number, y: number, n: number, slot: string): void {
+  const c = ({ vitality: [174, 210, 71], weapon: [230, 150, 50], spirit: [175, 120, 235] } as Record<string, number[]>)[slot]!;
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      if ((i + 0.5) / n - (j + 0.5) / n <= 0.65) continue;
+      const p = ((y + j) * img.width + (x + i)) * 4;
+      img.data[p] = c[0]!;
+      img.data[p + 1] = c[1]!;
+      img.data[p + 2] = c[2]!;
+    }
+  }
 }
 
 /** Draw `src` scaled to size×size at (x, y) with optional frame and rounded corners. */

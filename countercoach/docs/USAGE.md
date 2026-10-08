@@ -81,16 +81,21 @@ Instead of typing items, let CounterCoach read them off your screen:
    in the Screen tab, and the hotkey can be changed in *Settings → Hotkeys*, including to a
    plain F-key such as F8).
 2. **First time only:** open CounterCoach's **Screen** tab. It shows the capture and asks you to
-   drag three boxes: around all the item icons, tightly around one item icon, and (optional but
-   recommended) around the hero portrait in that icon's row. That's the calibration; it is
-   kept for every later match at the same aspect ratio.
-3. From then on, each Ctrl+Alt+R reads every row: which hero it is (from the portrait) and the
-   items in it. Your row fills **your items**, enemy rows fill **enemy items**, ally rows
-   fill **ally items**, and the advice updates. The overlay shows "Read 12 players · 53 items".
-4. If anything is uncertain (an icon that could be two items, a row it can't place, a hero
-   missing from your roster), nothing is applied. A banner points to the Screen tab, where you
-   pick from the top three candidates, choose who a row belongs to, or add a hero to the
-   roster, then press **Apply**.
+   drag three boxes:
+   - around the **strip of small item icons under the player cards** at the top. Only that
+     strip: no portraits, names, stats, ability circles or game world.
+   - tightly around **one item icon**, edge to edge, including the little tier badge in its
+     corner.
+   - around the **portrait of that same player** (optional).
+
+   That's the calibration. It's kept for every later match at the same aspect ratio.
+3. **First read of each match:** the Screen tab lists each player column with the items it
+   read. Pick who each column is (Me, an enemy or an ally) and press **Apply**. Portraits
+   pre-fill the ones they're sure about.
+4. From then on in that match, Ctrl+Alt+R reads and applies on its own: your items, enemy items
+   and ally items update and the overlay shows "Read 12 players · 53 items".
+5. If an icon is uncertain or a column is new, nothing is applied until you check it in the
+   Screen tab (a banner points there).
 
 Good to know:
 
