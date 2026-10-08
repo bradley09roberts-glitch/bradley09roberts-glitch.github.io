@@ -1,0 +1,2470 @@
+From 90a75bf699c521cbc066e1ec9ca627ae9e4f06fd Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 8 Oct 2026 19:52:04 +0000
+Subject: [PATCH] Night safety: bedtime, a watch rota with an alarm, the camp
+ rally, a sword for Sage
+
+From a recorded two-day Hardcore run: friends hardly slept (bedtime scored 45-55
+against camp work at 60-130), Aegis went to bed at midnight and then fought two
+zombies alone (the second killed him), and Sage, with nothing to fight with,
+could only run.
+
+- Bedtime: at night the scheduler offers only needs jobs and NIGHT_JOBS (coming
+  home, the watch, Aegis's guard and gear, Terra lighting a dark camp, feeding a
+  hurt friend or hungry player, restocking a weapon or food, idling) and puts any
+  other job down at nightfall. Sleep scores 75-82 at night, above pastimes, chats
+  and warming up; supper and (without a cabin) warming up by the fire come first.
+  Terra's lighting scores 80 at night so a dark camp is lit before she sleeps.
+- Watch rota (camp/NightWatch): first watch dusk to midnight, second midnight to
+  dawn. Aegis keeps the first when fit; any other watch goes to a friend with a
+  tool to fight with, ranked healthy, not on watch last night (rotation), best
+  weapon, health, roster order. A watcher who dies, leaves, gets too weak or too
+  tired is relieved; a lone friend keeps no watch. Remembered in CampData
+  memory; watchers nap sooner next day. WatchTask keeps watch by the campfire;
+  GuardTask is Aegis's watch only while it is his watch.
+- Alarm: the awake watcher spots hostiles inside the camp (seen, within 12, or
+  attacking someone), shouts ALARM; a new alarm wakes every sleeper in the camp
+  and armed friends go for the alarmed hostiles. A sleeper is woken for their
+  own watch.
+- Rally: inside the camp armed friends join a fight for anyone within 16 blocks
+  and need no line of sight (they path to it; Aegis too); meleeReach is 24 for an
+  armed friend or the watcher in camp. Unreachable hostiles are skipped, and a
+  target neither hit nor hitting for 10 s out of reach is given up for 30 s.
+  Root-caused flake: a friend not yet landed has no path, which no longer
+  counts a hostile as unreachable.
+- Sage starts with a wooden sword; a sword is the strategist's role tool
+  (KeepList, RestockTask, CraftToolTask).
+- NIGHT_WATCH and ALARM lines in every friend's voice.
+- Docs: GUIDE (new section 6, Nights), DESIGN, DEVELOPING, README.
+- NightGameTest (solo_161..168): bedtime beats building, second watch while
+  Aegis sleeps, rota without Aegis, rally from 12 blocks round a wall, alarm
+  wakes a sleeper, Sage's sword, and two whole nights (with and without Aegis).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01AyuPhQ6DXbduBanvmk9kxj
+---
+ hardcore-friends/GUIDE.md                     |  40 +-
+ hardcore-friends/README.md                    |   1 +
+ hardcore-friends/docs/DESIGN.md               |  27 +-
+ hardcore-friends/docs/DEVELOPING.md           |   5 +-
+ .../hardcorefriends/test/CommonGameTest.java  |   2 +-
+ .../hardcorefriends/test/NightGameTest.java   | 426 ++++++++++++++++++
+ .../hardcorefriends/test/TestSupport.java     |   2 +
+ .../test_environment/solo_161.json            |   4 +
+ .../test_environment/solo_162.json            |   4 +
+ .../test_environment/solo_163.json            |   4 +
+ .../test_environment/solo_164.json            |   4 +
+ .../test_environment/solo_165.json            |   4 +
+ .../test_environment/solo_166.json            |   4 +
+ .../test_environment/solo_167.json            |   4 +
+ .../test_environment/solo_168.json            |   4 +
+ .../src/gametest/resources/fabric.mod.json    |   3 +-
+ .../ai/goal/CompanionMeleeGoal.java           |   5 +-
+ .../ai/goal/DefendFriendsTargetGoal.java      |  18 +-
+ .../ai/goal/MutualDefenceTargetGoal.java      |  90 +++-
+ .../ai/role/guard/GuardTask.java              |  25 +-
+ .../ai/role/terra/LightTask.java              |   5 +-
+ .../ai/task/TaskScheduler.java                |  29 +-
+ .../ai/task/common/CommonTasks.java           |   4 +-
+ .../ai/task/common/KeepList.java              |  10 +-
+ .../ai/task/common/ReturnHomeTask.java        |  11 +-
+ .../ai/task/common/WatchTask.java             | 154 +++++++
+ .../ai/task/needs/SleepTask.java              |  79 +++-
+ .../hardcorefriends/ai/task/needs/Spots.java  |  13 +-
+ .../hardcorefriends/camp/NightWatch.java      | 332 ++++++++++++++
+ .../companion/CompanionEntity.java            | 101 ++++-
+ .../hardcorefriends/companion/FriendId.java   |   7 +-
+ .../hardcorefriends/companion/Line.java       |   4 +
+ .../hardcorefriends/companion/Lines.java      |  76 ++++
+ .../hardcorefriends/event/ModEvents.java      |   8 +-
+ 34 files changed, 1416 insertions(+), 93 deletions(-)
+ create mode 100644 hardcore-friends/src/gametest/java/io/github/bradley09roberts/hardcorefriends/test/NightGameTest.java
+ create mode 100644 hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_161.json
+ create mode 100644 hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_162.json
+ create mode 100644 hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_163.json
+ create mode 100644 hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_164.json
+ create mode 100644 hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_165.json
+ create mode 100644 hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_166.json
+ create mode 100644 hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_167.json
+ create mode 100644 hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_168.json
+ create mode 100644 hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/WatchTask.java
+ create mode 100644 hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/camp/NightWatch.java
+
+diff --git a/hardcore-friends/GUIDE.md b/hardcore-friends/GUIDE.md
+index 5c95ba1..f28de9d 100644
+--- a/hardcore-friends/GUIDE.md
++++ b/hardcore-friends/GUIDE.md
+@@ -42,8 +42,8 @@ Each friend's role is their speciality: the work they choose first and do best.
+ | **Flint** | Miner | cautious, dry humour | Mines exposed ores (with the right pickaxe), digs one tidy staircase mine with branch tunnels outside camp, lights it with torches, avoids lava and water, smelts ore in the camp furnace |
+ | **Scout** | Explorer | curious, adventurous | Scouts widening rings around camp by day, records ores, trees, lava and villages for the team, and warns you about creepers, mobs closing in, nightfall and storms |
+ | **Spark** | Redstone inventor | clever, excitable | Builds working vanilla contraptions: automatic cabin door (pressure plates), drop-off hopper on the supply chest, auto-smelter, and night lamp posts (needs nether materials). Keeps the torch supply up |
+-| **Aegis** | Warrior | calm, protective | Guards you and the camp, attacks hostile mobs near players and friends, patrols at night (on the watchtower once it exists), and takes the best sword, armour and shield from the chest |
+-| **Sage** | Strategist | thoughtful, observant | Gives Hardcore survival advice for your situation (health, hunger, darkness, phantoms, night, tools, mining depth), works out what the camp is short of, and sets the team's focus |
++| **Aegis** | Warrior | calm, protective | Guards you and the camp, attacks hostile mobs near players and friends, keeps the first night watch walking his posts round the camp (on the watchtower once it exists), and takes the best sword, armour and shield from the chest |
++| **Sage** | Strategist | thoughtful, observant | Gives Hardcore survival advice for your situation (health, hunger, darkness, phantoms, night, tools, mining depth), works out what the camp is short of, and sets the team's focus. Carries a wooden sword to stand with the others |
+ | **Terra** | Landscaper | creative, tidy | Lays dirt paths between camp buildings, plants saplings and flowers, puts torches in dark spots (fewer mob spawns), tidies dropped items, fills small holes, fences the farm |
+ | **Rowan** | Forager | resourceful, generous | Fells natural trees outside camp and replants them, quarries dirt and stone from small shallow pits outside camp, picks berries, and delivers building materials to Oak first |
+ 
+@@ -83,12 +83,12 @@ Like characters in The Sims, every friend has five everyday needs, each from 0 (
+ | Need | Goes down | How friends meet it |
+ |---|---|---|
+ | **Hunger** | All the time, a little faster while working. About half a loaf of bread's worth a day: a loaf every two days, so nine friends eat four or five loaves a day | They eat real food: from their backpack first, otherwise one item from the supply chest. Bowls go back in the backpack |
+-| **Energy** | While awake, so they are tired by nightfall | They sleep at night, inside the cabin once it is built, otherwise around the camp centre. A night you sleep through counts as a whole night's sleep for them too. A friend who is exhausted naps by day. Aegis keeps the first watch |
++| **Energy** | While awake, so they are tired by nightfall | They go to bed at nightfall and sleep until dawn, inside the cabin once it is built, otherwise around the camp centre, unless it is their turn on watch (section 6). A night you sleep through counts as a whole night's sleep for them too. A friend who is exhausted naps by day, and one who kept a watch naps sooner |
+ | **Social** | While alone. Being near a friend or you fills it | They walk over to another friend for a chat |
+ | **Fun** | While working | They take a short break for a pastime that suits them: Flint skips stones, Spark tinkers with a gadget, Sage watches the clouds or the stars, and so on. Pastimes never change your world |
+ | **Comfort** | In rain or darkness out in the open, and while badly hurt | They warm up by a lit campfire or go indoors. A roof overhead and a lit campfire nearby are cosy |
+ 
+-The lower a need, the more urgent it is. A mild need waits until the job in hand is done; a desperate one comes before any work, however pressing: a starving friend drops everything to eat when there is food, and an exhausted one goes to bed at night. Work never wakes a sleeping friend. Friends only see to their needs while working on their own: a friend who is following you or holding position puts them off until you send them back to work.
++The lower a need, the more urgent it is. A mild need waits until the job in hand is done; a desperate one comes before any work, however pressing: a starving friend drops everything to eat when there is food. At night work waits for the morning, so friends go to bed (section 6). Work never wakes a sleeping friend. Friends only see to their needs while working on their own: a friend who is following you or holding position puts them off until you send them back to work.
+ 
+ **Mood.** Together the needs make a mood: miserable, low, okay, good or great. Hunger and energy count the most.
+ 
+@@ -105,7 +105,20 @@ The lower a need, the more urgent it is. A mild need waits until the job in hand
+ 
+ Use `/friends needs` to see everyone's needs as bars, their mood, and what each friend is doing about their lowest need. Right-clicking a friend also shows their mood.
+ 
+-## 6. Controls
++## 6. Nights: bedtime, the watch and standing together
++
++Nights are when Hardcore friends die, so the camp keeps a night routine.
++
++- **Bedtime.** At nightfall friends put their work down (it waits for the morning) and go to bed: inside the cabin once it is built, otherwise in a ring around the camp centre. Only the jobs that belong to the night go on: a hungry friend has supper first, a chilly one warms up by the campfire first, anyone still out comes home, Terra lights a dark camp before she turns in, and a badly hurt friend with no food is still fed. Pastimes and chats wait for the morning too. Once asleep, nothing but trouble gets them up: they sleep until dawn unless they are hurt, a monster comes close, a friend nearby starts fighting, the watch raises the alarm, or their own watch begins.
++- **The watch rota.** Someone always stays up. The night has two watches: the **first** from dusk to midnight, the **second** from midnight to dawn. Aegis keeps the first watch whenever he is alive and working at the camp. The second goes to a healthy friend with something to fight with: the best armed (any sword before any axe before any other tool), then the healthiest, but never whoever kept a watch the night before if anyone else can, so the duty rotates and nobody loses sleep every night. If Aegis has died, or is away following you, someone else keeps the first watch as well. A watcher who dies, is sent to follow you or stay, gets too weak, or runs out of energy is relieved by the next friend in line. The second watcher sleeps until midnight and is then woken for their watch; whoever kept a watch naps sooner the next day. A friend alone at camp (other than Aegis) has nobody to watch over and simply sleeps.
++- **Keeping watch.** The watcher stands by the campfire (or the camp centre), stepping round it now and then and looking out over the camp, and goes for any hostile that comes into the camp. Aegis keeps his watch walking his posts round the camp, or from the watchtower once it stands.
++- **The alarm.** When the watcher spots a hostile inside the camp, they raise the alarm ("Zombie in the camp! Everyone up!"). Everyone asleep in the camp wakes, and every armed friend in the camp (holding a sword or an axe) goes to fight it. When it is dealt with they go back to bed.
++- **Standing together.** When a hostile goes for a friend or for you inside the camp, armed friends within 16 blocks join in, and any friend holding a tool joins in within 8. Inside the camp they do not need to see it first: they find their way round walls to it. Outside the camp, friends join fights they can see within 8 blocks. A friend who cannot get at a hostile (behind a wall, down a hole) gives up on it after about 10 seconds. Only Aegis goes after skeletons and other archers.
++- **Something to fight with.** Every friend arrives with a tool they can fight back with. Sage, whose planning needs no tool, brings a wooden sword: she keeps it, and fetches or makes another when it breaks.
++
++`/friends list` shows who is "keeping watch". A thunderstorm darkens the sky as much as night does, so friends head home and rest through one by day too.
++
++## 7. Controls
+ 
+ | Action | How |
+ |---|---|
+@@ -115,7 +128,7 @@ Use `/friends needs` to see everyone's needs as bars, their mood, and what each
+ | Feed or heal a friend | Right-click with food while they are hurt or hungry; they eat it at once |
+ | Hurt a friend on purpose | Only while sneaking. Ordinary swings and arrows pass harmlessly |
+ 
+-## 7. Commands (no cheats needed)
++## 8. Commands (no cheats needed)
+ 
+ | Command | Purpose |
+ |---|---|
+@@ -139,7 +152,7 @@ Use `/friends needs` to see everyone's needs as bars, their mood, and what each
+ 
+ None of these commands give items, teleport you, or change time, weather, game mode or difficulty.
+ 
+-## 8. Unity bond
++## 9. Unity bond
+ 
+ The bond grows when you spend time near your friends, when they deliver resources and share with each other, chat with each other (1 point a chat, at most 30 a day), defend one another, and finish camp buildings, and while the whole team is in high spirits (1 point an in-game hour, at most 12 a day). Losing a friend costs 80 points. A low mood costs nothing.
+ 
+@@ -153,19 +166,19 @@ The bond grows when you spend time near your friends, when they deliver resource
+ 
+ None of these bonuses can stop you dying.
+ 
+-## 9. The camp grows into a settlement
++## 10. The camp grows into a settlement
+ 
+ **Campsite → Camp → Hamlet → Village → Settlement.** Each stage needs that stage's buildings finished. The later stages also need Unity: 100 for Hamlet, 250 for Village and 500 for Settlement. Use `/friends camp` to see what is built and what Oak is still waiting for. Everything is built from what is in the supply chest, so keep it stocked or let Rowan and Flint fill it. Cabin windows use glass panes when the chest has glass (6 glass make 16 panes); otherwise Oak closes them with planks. If the supply chest is broken, friends forget it: Oak builds a new one, or you can link another with `/friends chest`. If a friend is not on your team, the others stand in and build their improvements too, just more slowly.
+ 
+-## 10. Hardcore rules
++## 11. Hardcore rules
+ 
+ - Your own Hardcore death is unchanged: one life, then spectator. There are no extra lives.
+ - Friends need food. A starving friend loses health down to one heart and cannot heal. Starving never kills them on its own, but it leaves them one hit from death.
+-- Friends are mortal. They retreat when badly hurt, eat from their backpacks, and run from creepers. Healthy friends holding a tool stand together and fight off zombies and other close attackers, so nobody is picked off alone. Only Aegis goes after skeletons and other archers; everyone else gets out of their line of fire, and a badly hurt friend stays well out of bow range until they recover. Out of combat (no damage for 10 s, no target, not burning) they recover 1 health every 4 s. If they die, they drop a **backpack item** holding everything they carried and wore. It never despawns, and its coordinates go to chat. Use it (right-click) to unpack.
++- Friends are mortal. They retreat when badly hurt, eat from their backpacks, and run from creepers. Healthy friends holding a tool stand together and fight off zombies and other close attackers, so nobody is picked off alone; in the camp armed friends come from further away, and at night the watch raises the alarm (section 6). Only Aegis goes after skeletons and other archers; everyone else gets out of their line of fire, and a badly hurt friend stays well out of bow range until they recover. Out of combat (no damage for 10 s, no target, not burning) they recover 1 health every 4 s. If they die, they drop a **backpack item** holding everything they carried and wore. It never despawns, and its coordinates go to chat. Use it (right-click) to unpack.
+ - A fallen friend's name returns as a newcomer after 3 in-game days. Set `deadFriendsReturnAfterDays` to `-1` in `config/hardcorefriends.json` for permanent loss.
+ - Zombies, skeletons, spiders, illagers and witches hunt friends just as they hunt villagers.
+ 
+-## 11. How friends treat your world
++## 12. How friends treat your world
+ 
+ - **Building and landscaping** happen only inside the camp radius: 24 blocks, growing to 40.
+ - **Tree felling, quarrying and the staircase mine** happen only in a ring up to 48 blocks beyond the camp. Flint also mines ores that are already exposed, inside the camp or in that ring.
+@@ -173,13 +186,14 @@ None of these bonuses can stop you dying.
+ - Trees are felled only if they grew naturally (natural leaves), never log walls or trees inside camp. Quarry pits are 5×5 and at most 2 blocks deep. Mines stay inside one 24×24 area.
+ - Every change is logged (`/friends log`). Turn editing off entirely with `allowWorldEditing: false`, or individually with `allowTreeFelling`, `allowQuarrying` and `allowMining`.
+ 
+-## 12. Honest limits
++## 13. Honest limits
+ 
+ - Friends only act while their area is loaded, which means near a player. They do not work while you are far away, and their needs do not change then either.
+ - Every friend can do every job, but a stand-in only works on someone else's speciality in their spare time, and more slowly. A camp missing several specialists grows more slowly.
+ - Needs are five simple numbers, not a full life simulation. Friends meet them with a fixed set of jobs: eating, sleeping, chatting, a pastime, warming up and, when too weak to work, resting. They sleep where they lie down (in the cabin or around the camp centre), not in beds.
+ - Friends see to their needs only while working on their own. A friend following you or holding position does not eat, sleep or rest; they eat from their backpack only when hurt or very hungry. Hand them food, or send them back to work now and then.
+ - Chats between friends are an exchange of pre-written lines, not a real conversation.
++- The night watch looks out over the camp from the campfire: it notices a hostile it can see, one close by, or one already going for someone, not one in a cave beneath the camp. The alarm wakes friends inside the camp, not those out in the gathering ring.
+ - They build from fixed blueprints, adapted to the wood you have. They do not invent new buildings.
+ - Pathfinding is vanilla mob pathfinding. On rough terrain a friend can get stuck. Stuck jobs time out and are retried later.
+ - Mining is one staircase mine plus exposed ores near camp. Only trees they can fully reach (about 6 blocks tall) are felled.
+@@ -189,6 +203,6 @@ None of these bonuses can stop you dying.
+ - Dialogue is pre-written and chosen by situation and personality. It is not free conversation.
+ - Purely natural-looking player builds (for example a hut made only of dirt or stone) cannot be told apart from terrain if they sit in the gathering ring outside your camp. Keep such builds inside the camp radius, or add any crafted block nearby.
+ 
+-## 13. Config (`config/hardcorefriends.json`)
++## 14. Config (`config/hardcorefriends.json`)
+ 
+ `chatter`, `campRadius` (24), `maxCampRadius` (40), `resourceRadius` (48), `allowWorldEditing`, `allowTreeFelling`, `allowQuarrying`, `allowMining`, `deadFriendsReturnAfterDays` (3, or −1 for permanent), `followTeleportDistance` (48, 0 = off), `monstersTargetCompanions` (true).
+diff --git a/hardcore-friends/README.md b/hardcore-friends/README.md
+index 150349c..60ece39 100644
+--- a/hardcore-friends/README.md
++++ b/hardcore-friends/README.md
+@@ -9,6 +9,7 @@ They choose useful work on their own, cooperate through a shared supply chest, g
+ - **Nine friends**, each with their own skin, personality, speaking voice and speciality.
+ - **Everyone pitches in.** Any friend can do any job. Specialists go first and work fastest; when a specialist is missing, the others stand in, their second interest first.
+ - **Needs and mood, Sims-style.** Hunger, energy, social, fun and comfort. Friends eat real food from their backpack or the supply chest, sleep at night, chat with each other, take short breaks for a pastime and warm up by the fire, all on their own. Their mood speeds up or slows down their work and shows in what they say.
++- **Safe nights.** At nightfall work stops and friends go to bed, while a rota keeps someone on watch (Aegis first, then a rested, armed friend). The watch raises the alarm when a monster comes into camp, sleepers wake, and armed friends come running, so nobody fights alone.
+ - **Real materials.** Everything they build or craft uses real items from the supply chest, and their tools wear out.
+ - **A growing camp**, from campsite to settlement in five stages, built from fixed blueprints.
+ - **A Unity bond** that grows with time together, teamwork, chats and a happy team, and unlocks modest bonuses.
+diff --git a/hardcore-friends/docs/DESIGN.md b/hardcore-friends/docs/DESIGN.md
+index d02e994..3e4ac73 100644
+--- a/hardcore-friends/docs/DESIGN.md
++++ b/hardcore-friends/docs/DESIGN.md
+@@ -28,7 +28,7 @@ Each friend's role is their **speciality**; every friend can do every role's wor
+ | SCOUT | Scout | Explorer | `scout.png` | curious, adventurous | `#3FB0AC` | wooden sword |
+ | SPARK | Spark | Redstone inventor | `spark.png` | clever, excitable | `#E0533D` | wooden pickaxe |
+ | AEGIS | Aegis | Warrior | `aegis.png` | calm, protective | `#6F95D6` | wooden sword |
+-| SAGE | Sage | Strategist | `sage.png` | thoughtful, observant | `#B39DDB` | (none) |
++| SAGE | Sage | Strategist | `sage.png` | thoughtful, observant | `#B39DDB` | wooden sword |
+ | TERRA | Terra | Landscaper | `terra.png` | creative, tidy | `#C27BA0` | wooden shovel |
+ | ROWAN | Rowan | Forager | `rowan.png` | resourceful, generous | `#8DB255` | wooden axe |
+ 
+@@ -74,7 +74,9 @@ Goals, in priority order (lower number = higher priority):
+ | 6 | `LookAtPlayerGoal` | idle polish |
+ | 7 | `RandomLookAroundGoal` | idle polish |
+ 
+-Target goals: `HurtByTargetGoal` (fight back) and, for Aegis, `DefendFriendsTargetGoal` (hostiles within 16 blocks of any player, companion or the camp). In FOLLOW mode every armed friend also defends the leader. `MutualDefenceTargetGoal`: friends not in STAY join fights against hostiles that are going for them, a friend or a player within 8 blocks, when `canStandAndFight` (healthy above max(50%, retreat fraction + 10%) and holding a tool; against an archer a non-fighter only stands its ground within 3 blocks, because chasing a skeleton with a hoe just gets them shot).
++Target goals: `HurtByTargetGoal` (fight back) and, for Aegis, `DefendFriendsTargetGoal` (hostiles within 16 blocks of any player, companion or the camp). In FOLLOW mode every armed friend also defends the leader. `MutualDefenceTargetGoal`: friends not in STAY join fights against hostiles that are going for them, a friend or a player within 8 blocks, when `canStandAndFight` (healthy, `isHealthy`: above max(50%, retreat fraction + 10%), holding a tool, and the threat within their reach, `meleeReach`; against an archer a non-fighter only stands its ground within 3 blocks, because chasing a skeleton with a hoe just gets them shot).
++
++**The rally inside the camp.** Inside the camp friends stand together more widely. An armed friend (sword or axe) at work in the camp joins a fight against a hostile going for anyone within 16 blocks (`MutualDefenceTargetGoal.RALLY_RANGE`) and goes for any hostile the night watch raised the alarm about; the friend on watch takes on any hostile that comes into the camp. For them `meleeReach` against a hand-to-hand threat inside the camp is 24 blocks (`CompanionEntity.CAMP_REACH`, so the target is not dropped on the way), otherwise 8. Inside the camp no line of sight is needed, for Aegis's guard goal too, as long as the hostile is on the camp's own ground (within 4 blocks up or down, not in a cave below): they path to it, and a hostile beyond 8 blocks with no path to it is left alone for 10 s. Any friend at work who has neither landed a blow nor been hit for 10 s while their target is out of arm's reach gives it up for 30 s (`hasGivenUpOn`), so nobody stands all night staring at a zombie behind a wall.
+ 
+ Out of combat (no damage for 10 s, no target, not burning) and with hunger above 10, friends recover 1 health every 4 s.
+ 
+@@ -96,11 +98,12 @@ public interface CompanionTask {
+ }
+ ```
+ 
+-The scheduler re-scores every 20 ticks. It switches when idle, when the current task finishes, or when another task outscores the current one by ≥ 25. It enforces `maxTicks`, so a stuck task fails. Three rules keep a friend's own needs safe from work:
++The scheduler re-scores every 20 ticks. It switches when idle, when the current task finishes, or when another task outscores the current one by ≥ 25. It enforces `maxTicks`, so a stuck task fails. Four rules keep a friend's own needs safe from work:
+ 
+ - **Desperate needs come first.** A job scoring `TaskScheduler.URGENT` (140) or more takes over at once from any job scoring less, without the margin. Only desperate needs score that high (section 6), and no work can: the most is 132 (building, 60, at the camp's full need for materials, weight 2.0, with Sage's 10% bonus).
+ - **Work never wakes a sleeper.** While a friend lies asleep, only another needs job can take over (a starving friend gets up to eat); danger still wakes them (the sleep job and the reflexes).
+ - **Too weak to work.** A friend badly hurt (health ≤ retreatFraction) and too hungry to heal (`CompanionEntity.tooWeakToWork`) only takes on needs jobs and `TaskScheduler.FIT_WHEN_WEAK`: going home, the camp chest, and growing and baking food in the camp, so a starving camp can still feed itself. A job outside that list is stopped, so nobody on one heart goes back into the mine, the woods or the wilds.
++- **The night is for sleep.** At night (`Camp.isNight`) a friend only takes on needs jobs and `TaskScheduler.NIGHT_JOBS`: coming home, the watch (`common.watch`, Aegis's guard and gear), Terra's lighting of a dark camp, feeding a hurt friend or a hungry player, fetching a lost weapon or food from the chest, and idling. Any other job is put down at nightfall and waits for the morning. Bedtime itself (section 6) then only has to beat pastimes, chats and warming up, not work: in the recorded run sleep (45–55) lost to camp work (60–130) all night, and friends hardly slept.
+ 
+ `TaskRegistry.create(id)` gives every friend the same job list: the common upkeep jobs (`ai/task/common`), the needs jobs (`ai/task/needs`), and every role's jobs, their own role first, each wrapped in a `SpecialityTask` for its role (section 5). The only jobs a friend never gets from another role are `TaskRegistry.SPECIALIST_ONLY`: Aegis's gear and guard duty, Sage's observing and stores review, and Scout's report.
+ 
+@@ -109,7 +112,7 @@ Score bands:
+ | Score | Meaning |
+ |---|---|
+ | 140 and up | Desperate needs (`TaskScheduler.URGENT`): starving with food at hand (150), exhausted at night (140) |
+-| 70–89 | Urgent upkeep: missing tool, full backpack, night return |
++| 70–89 | Urgent upkeep: missing tool, full backpack, night return, bedtime (75–82), keeping watch (75), lighting a dark camp at night (80) |
+ | 40–69 | Main role work (raised by the camp's needs, up to 132) |
+ | 20–39 | Secondary help: sharing, tidying, crafting surplus |
+ | 1–19 | Idle and social |
+@@ -179,7 +182,7 @@ Each friend has five needs, each from 0 (desperate) to 100 (met). New friends st
+ **Meeting needs.** The needs jobs score higher the lower their need: a desperate need scores 140 or more (`TaskScheduler.URGENT`), above anything work can score, and takes over from the job in hand at once (section 4); a pressing one is urgent upkeep (70–89); a mild one sits in the main or secondary band and waits for the job in hand to end. Their ids start with `needs.`, which counts as time off.
+ 
+ - `needs.eat`: eats one real food item (`#hardcorefriends:companion_food`), from the backpack first, otherwise taken from the supply chest, choosing the item that best fits the hunger. `CompanionEntity.eat(stack)` heals by the food's nutrition, fills hunger by nutrition × 6 (`hungerValue`), and keeps bowls and bottles. Below 70 (peckish) it scores 42–60, below 25 (hungry) 80, and below 15 (starving) 150, before anything. With no food in the backpack or the supply chest it scores 0, so it never breaks off work only to find nothing; the friend asks for food instead (`NO_FOOD`, said by `MoodPassives`).
+-- `needs.sleep`: at night tired friends lie down in their own place (side by side in the cabin, or around the camp centre) and regain energy, faster under a roof. A friend still fresh finishes useful work in camp first; one exhausted at night (energy below 30) goes to bed before any work (140). Work never wakes a sleeper; they wake at dawn, when hurt, or when a monster comes close. Exhausted friends nap by day. Aegis keeps the first watch.
++- `needs.sleep`: at night everyone not on watch lies down in their own place (side by side in the cabin, or around the camp centre) and regains energy, faster under a roof. Bedtime scores 75 + (100 − energy) × 0.1 (75–82): above every pastime, chat and warm-up (at most 66), and work is not on offer at night (section 4). Supper comes first for a friend below 50 hunger with food at hand (bed scores 40), warming up by the campfire first for one below 30 comfort with no cabin to sleep in (30), and the trip home first for one outside the camp (0); one exhausted (energy below 30) goes to bed before anything but a starving meal (140). Aegis does not turn in with a monster within 24 blocks. Work never wakes a sleeper; they wake at dawn, when hurt, when a monster comes within 8 blocks or a friend within 16 is fighting one, when the watch raises an alarm after they lay down, and when their own watch begins. Exhausted friends nap by day (below 15 energy); Aegis and anyone who kept a watch last night nap below 40.
+ - `needs.rest`: a friend too weak to work (badly hurt and too hungry to heal, as a starving friend soon is) comes home and rests by the lit campfire, or at their sleeping place, until there is food; at night they sleep. Meanwhile they take on only needs jobs and `TaskScheduler.FIT_WHEN_WEAK` (going home, the camp chest, growing and baking food in camp), never the mine, felling or exploring, and they eat the moment food turns up.
+ - `needs.socialize`: a lonely friend walks over to another friend who is awake and not in trouble (or a player in camp) and they chat (`CHAT`, `CHAT_REPLY`). Both feel better and Unity gains 1 (at most 30 a day).
+ - `needs.leisure`: a bored friend spends a short while on a pastime that suits them (`LEISURE`). Pastimes change no block.
+@@ -212,6 +215,15 @@ A player handing food to a friend who is hurt, or whose hunger is below 60, has
+ - **Team spirit:** every in-game hour (1000 ticks), if the team is in high spirits (`MoodPassives.highSpirits`: the mood of the team's average needs, all loaded friends, is at least 75, and no friend's mood is low or miserable), Unity gains 1, at most 12 a day (`Unity.teamSpirit`, category `spirit`). A low mood never costs Unity. A well-run camp gets there: fed (eating from 70 up to about 100, so hunger averages about 85), rested, together, by day about 0.30 × 85 + 0.25 × 72 + 0.15 × (90 + 65 + 60) = 76. A great mood (85) is a peak, such as a fed friend waking rested, and is what `MOOD_GREAT` celebrates.
+ - **Displays:** `/friends needs` shows the five needs as bars, the mood and what the friend is doing about their lowest need; `/friends list` and the right-click status line show the mood (and the worst need when the mood is low).
+ 
++### The night watch (`camp/NightWatch`)
++
++In the recorded two-day run Aegis guarded until midnight and went to bed; a zombie came in, he fought it alone down to one heart, and a second one killed him at the camp centre while everyone slept. Sage, with nothing to fight with, could only run, and was killed. So the camp keeps a watch, raises an alarm and stands together.
++
++- **Two watches.** The first runs from dusk to midnight (time of day 18000), the second from midnight to dawn (`NightWatch.watch`). A night runs from one noon to the next (`nightIndex`), so the morning after still belongs to it.
++- **The rota** (`NightWatch.watcher`, worked out once per tick and remembered in `CampData.memory("night_watch")`, so it survives a reload). Aegis keeps the first watch whenever he is fit for it. Any other watch goes to a friend holding a tool to fight with, ranked: healthy (`isHealthy`); did not keep a watch last night (the duty rotates night by night, so nobody misses sleep every night while anyone else can stand in); best weapon (`bestWeaponRank`: any sword before any axe before any other tool, sturdier first); most health; roster order (so the choice is deterministic). Tonight's first watcher never keeps the second watch too, and a friend alone at the camp (other than Aegis on his first watch) keeps none: there is nobody to watch over. A watcher stays on watch until it ends unless they stop being fit (dead, unloaded, out of WORK mode, too weak to work, or below 15 energy, `TOO_TIRED`), and then the next friend takes over: the rota works with Aegis dead or away. `keptWatchRecently` lets watchers nap sooner the next day.
++- **Keeping watch.** `common.watch` (`WatchTask`, every friend has it; 75 while it is their watch, in 30 s rounds so a pressing need gets a look in) stands by the lit campfire, or the camp centre, stepping round it every 10 s and looking out. Aegis keeps his watch with his guard duty (`GuardTask` scores 75 at night only while it is his watch, and ends its run when his watch does; away from any camp he guards all night as before). A sleeper whose watch begins gets up (`SleepTask` ends).
++- **The alarm.** Every 10 ticks (`NightWatch.tick`) the friend on watch, if awake, looks out: a hostile within 24 blocks of them, inside the camp and within 12 blocks up or down, that they can see, that is within 12 blocks, or that is already going for someone, goes on the alarm list and they shout `ALARM`. A new alarm wakes every sleeper inside the camp (`alarmRaisedSince`); armed friends in the camp go for the hostiles on the list (`alarmed`) while those live and stay in the camp (section 4, the rally).
++
+ ## 7. World editing rules (`WorldEditGuard`)
+ 
+ These rules apply to every reason:
+@@ -315,8 +327,8 @@ These are each role's jobs, named after the specialist. Through `SpecialityTask`
+   - warns nearby players about creepers, approaching hostiles, nightfall, storms and lava;
+   - comes back at dusk.
+ - **Spark:** builds working redstone contraptions (automatic door, drop-off hopper, auto-smelter, night lamps); keeps the torch supply up.
+-- **Aegis:** guards players and the camp; patrols at night (on the watchtower once built); equips the best weapon, armour and shield from the chest.
+-- **Sage:** recomputes camp needs and announces the team focus; gives contextual Hardcore survival advice (health, food, darkness, phantoms, night, armour, tool durability, mining depth); `/friends advice` and `/friends plan` show the report.
++- **Aegis:** guards players and the camp; keeps the first night watch, walking his posts (on the watchtower once built), and sleeps the second half of the night; equips the best weapon, armour and shield from the chest.
++- **Sage:** carries a sword (her role tool, since planning needs none) to stand with the others; recomputes camp needs and announces the team focus; gives contextual Hardcore survival advice (health, food, darkness, phantoms, night, armour, tool durability, mining depth); `/friends advice` and `/friends plan` show the report.
+ - **Terra:**
+   - turns grass into dirt paths between camp features;
+   - plants saplings and flowers;
+@@ -344,3 +356,4 @@ These are each role's jobs, named after the specialist. Through `SpecialityTask`
+ - Needs are five numbers met by a fixed set of jobs (eat, sleep, chat, pastime, warm up, rest). Friends sleep on the spot they lie down on, not in beds.
+ - Friends do not cook: potatoes, raw meat and fish only become their food once a player cooks them.
+ - Needs jobs run only in WORK mode: a friend following or staying does not eat (except from the backpack when hurt or hungry), sleep or rest.
++- The night watch sees what is in sight, close by or already attacking, inside the camp; not a hostile in a cave below it. The alarm wakes sleepers inside the camp only. A daytime thunderstorm is as dark as night (`isDarkOutside`), so friends head home and rest through it.
+diff --git a/hardcore-friends/docs/DEVELOPING.md b/hardcore-friends/docs/DEVELOPING.md
+index 6e1491f..49d53c5 100644
+--- a/hardcore-friends/docs/DEVELOPING.md
++++ b/hardcore-friends/docs/DEVELOPING.md
+@@ -48,6 +48,7 @@ These are the pieces your routines should use. Look at the sources for details.
+ 
+ - **`companion.CompanionEntity`**
+   - Identity and state: `friendId()`, `mode()`, `backpack()`, `actions()`, `scheduler()`, `homePos()` (camp centre, or recruit spot without a camp), `restPos()` (inside the cabin once built, else the camp centre), `isFighter()`, `isArmed()`, `isRetreating()`
++  - Fighting: `canStandAndFight(threat)`, `isHealthy()`, `meleeReach(threat)` (8 blocks, 24 for an armed friend or the watcher inside the camp, 3 against archers), `bestWeaponRank()`, `hasGivenUpOn(threat)`
+   - Needs: `needs()`, `isAsleep()` / `setAsleep(b)` (set by the sleep job; energy does not drain while asleep), `settleSleep()` (energy for the in-game time asleep, including a night the players slept through; called every tick), `badlyHurt()` (at or below the retreat fraction), `tooWeakToWork()` (badly hurt and too hungry to heal), `workSpeed(reason)` (skill × mood × Unity rhythm)
+   - Items and food: `equipBestWeapon()`, `hasFood()`, `isEdible(stack)`, `eat(stack)` (eats an item already taken out of a backpack or chest: heals, fills hunger by `hungerValue(stack)`, keeps the bowl), `eatFromBackpack()` (only when hurt), `damageMainHandTool(n)`, `swingArm()`
+   - Trees: `approveLogs(Collection<BlockPos>)` (pre-approve a checked tree before felling), `isApprovedLog(pos)`
+@@ -128,7 +129,7 @@ Multiply by `CampNeeds.weight(...)` when the task serves a need (up to 2.2: a ba
+ 
+ A task should do one useful unit of work and then return `SUCCESS`, for example "harvest up to 8 ripe crops" or "place 16 blueprint blocks". The scheduler then re-scores everything, so friends respond to new needs.
+ 
+-At night most work routines should score 0 when outside the camp. The common "return home" task brings friends back.
++At night the scheduler offers only needs jobs and `TaskScheduler.NIGHT_JOBS` (coming home, the watch, lighting a dark camp, feeding, fetching a lost weapon or food, idling), and puts any other job down at nightfall: friends sleep. Add a job to `NIGHT_JOBS` only if it truly belongs to the night. The common "return home" task brings friends back, and `camp.NightWatch` says who is on watch (`isOnWatch`).
+ 
+ ### Adding a speciality job
+ 
+@@ -147,7 +148,7 @@ Every friend gets every role's jobs (`ai/task/TaskRegistry`), each wrapped in a
+ Needs jobs live in `ai/task/needs` and are listed in `NeedsTasks.create(id)`; every friend has them all.
+ 
+ 1. Give it an id starting with `needs.` (that counts as time off, so hunger and fun do not drain faster while it runs) and add it to `MoodPassives.jobFor` if it is the job for one of the five needs.
+-2. Score it from the need: 0 while the need is fine (and 0 when it cannot be met, such as eating with no food anywhere, so it never breaks off work for nothing), rising as it falls, into the urgent band (70–89) when it is pressing, and to `TaskScheduler.URGENT` or more only when it is desperate, so a mild need waits for the job in hand to end. Work never wakes a sleeper, and a friend too weak to work only takes needs jobs and `TaskScheduler.FIT_WHEN_WEAK`.
++2. Score it from the need: 0 while the need is fine (and 0 when it cannot be met, such as eating with no food anywhere, so it never breaks off work for nothing), rising as it falls, into the urgent band (70–89) when it is pressing, and to `TaskScheduler.URGENT` or more only when it is desperate, so a mild need waits for the job in hand to end. Work never wakes a sleeper, a friend too weak to work only takes needs jobs and `TaskScheduler.FIT_WHEN_WEAK`, and at night only needs jobs and `TaskScheduler.NIGHT_JOBS` run, so a needs job that should happen at night must outscore bedtime (75 to 82, `SleepTask`) or cap it, as supper and warming up do.
+ 3. Change the need with `c.needs().add(Need.X, amount)`, and eat with `c.eat(stack)` so healing, hunger and bowls stay consistent. Sleep jobs call `c.setAsleep(true)` and must set it back to false in `stop()`.
+ 4. Say what is happening with the needs lines (`HUNGRY`, `ATE`, `SLEEPY`, `CHAT`, `LEISURE`, `COSY` and so on). Every friend already has their own wording.
+ 5. Pastimes and needs jobs do not change blocks. If one ever must, it goes through `WorldEditGuard` like any other edit.
+diff --git a/hardcore-friends/src/gametest/java/io/github/bradley09roberts/hardcorefriends/test/CommonGameTest.java b/hardcore-friends/src/gametest/java/io/github/bradley09roberts/hardcorefriends/test/CommonGameTest.java
+index 3fb6f8b..29ee3fa 100644
+--- a/hardcore-friends/src/gametest/java/io/github/bradley09roberts/hardcorefriends/test/CommonGameTest.java
++++ b/hardcore-friends/src/gametest/java/io/github/bradley09roberts/hardcorefriends/test/CommonGameTest.java
+@@ -193,7 +193,7 @@ public class CommonGameTest {
+ 			"Flint keeps his raw ore for the furnace instead of depositing it");
+ 		helper.assertTrue(KeepList.isUseful(Role.MINER, new ItemStack(Items.COAL)), "coal is useful to a miner");
+ 		helper.assertFalse(KeepList.isUseful(Role.STRATEGIST, new ItemStack(Items.COAL)), "coal is not useful to a strategist");
+-		helper.assertTrue(KeepList.roleTool(Role.STRATEGIST) == null, "Sage needs no tool");
++		helper.assertTrue(KeepList.roleTool(Role.STRATEGIST) == ItemTags.SWORDS, "Sage's planning needs no tool, so a sword is hers");
+ 		helper.succeed();
+ 	}
+ 
+diff --git a/hardcore-friends/src/gametest/java/io/github/bradley09roberts/hardcorefriends/test/NightGameTest.java b/hardcore-friends/src/gametest/java/io/github/bradley09roberts/hardcorefriends/test/NightGameTest.java
+new file mode 100644
+index 0000000..c251502
+--- /dev/null
++++ b/hardcore-friends/src/gametest/java/io/github/bradley09roberts/hardcorefriends/test/NightGameTest.java
+@@ -0,0 +1,426 @@
++package io.github.bradley09roberts.hardcorefriends.test;
++
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.LinkedHashSet;
++import java.util.List;
++import java.util.Locale;
++import java.util.Set;
++
++import net.fabricmc.fabric.api.gametest.v1.GameTest;
++import net.minecraft.core.BlockPos;
++import net.minecraft.gametest.framework.GameTestHelper;
++import net.minecraft.server.level.ServerLevel;
++import net.minecraft.server.level.ServerPlayer;
++import net.minecraft.tags.ItemTags;
++import net.minecraft.world.entity.EntityTypes;
++import net.minecraft.world.entity.EquipmentSlot;
++import net.minecraft.world.entity.LivingEntity;
++import net.minecraft.world.entity.monster.Creeper;
++import net.minecraft.world.entity.monster.zombie.Zombie;
++import net.minecraft.world.item.Item;
++import net.minecraft.world.item.ItemStack;
++import net.minecraft.world.item.Items;
++import net.minecraft.world.level.GameType;
++import net.minecraft.world.level.block.Blocks;
++import net.minecraft.world.phys.Vec3;
++
++import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
++import io.github.bradley09roberts.hardcorefriends.ai.task.common.KeepList;
++import io.github.bradley09roberts.hardcorefriends.camp.Camp;
++import io.github.bradley09roberts.hardcorefriends.camp.CampData;
++import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
++import io.github.bradley09roberts.hardcorefriends.camp.Structures;
++import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
++import io.github.bradley09roberts.hardcorefriends.companion.Companions;
++import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
++import io.github.bradley09roberts.hardcorefriends.companion.Needs.Need;
++import io.github.bradley09roberts.hardcorefriends.companion.Role;
++import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
++
++/**
++ * Night safety, from a recorded two-day Hardcore run in which friends kept getting up to work instead of sleeping,
++ * Aegis went to bed at midnight and then fought two zombies alone (the second killed him), and Sage, with nothing to
++ * fight with, could only run. Covers bedtime, the watch rota, the alarm, the rally inside the camp and a weapon for
++ * everyone.
++ */
++public class NightGameTest {
++	/** A lit campfire just off the camp centre: where the watch is kept and chilly friends warm up. */
++	private static final BlockPos FIRE = new BlockPos(16, 2, 19);
++
++	/** At night a friend with building waiting goes to bed and sleeps; the build waits for the morning. */
++	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_161", maxTicks = 1600)
++	public void friendWithBuildingToDoSleepsAtNight(GameTestHelper helper) {
++		CampData data = TestSupport.resetCamp(helper, true);
++		TestSupport.setTime(helper, 14000);
++		TestSupport.placeChest(helper, new BlockPos(18, 2, 16), new ItemStack(Items.OAK_LOG, 16), new ItemStack(Items.COAL, 2));
++		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, TestSupport.centre());
++		oak.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_AXE));
++		oak.needs().set(Need.ENERGY, 60); // tired, not exhausted: bedtime used to score 49, below the build's 60
++		CompanionEntity aegis = TestSupport.spawnFriend(helper, FriendId.AEGIS, TestSupport.centre().west(3));
++		aegis.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_SWORD)); // he keeps the watch
++		double build = task(oak, "oak.build").score(oak);
++		helper.assertTrue(build >= 60, "the campfire and crafting table are waiting to be built (build scores " + build + ")");
++		List<String> edits = new ArrayList<>();
++		WorldEditGuard.listener = e -> {
++			if (e.companion() == oak) {
++				edits.add(e.verb() + " " + e.state() + " at " + helper.relativePos(e.pos()));
++			}
++		};
++		Set<String> jobs = new LinkedHashSet<>();
++		helper.onEachTick(() -> {
++			CompanionTask job = oak.scheduler().current();
++			if (job != null) {
++				jobs.add(job.id());
++			}
++		});
++		helper.startSequence()
++			.thenWaitUntil(() -> {
++				helper.assertTrue(NightWatch.watcher(helper.getLevel()) == aegis, "Aegis keeps the watch");
++				helper.assertTrue(oak.isAsleep(), "Oak went to bed (" + oak.activity() + ", jobs " + jobs + ")");
++			})
++			.thenIdle(400)
++			.thenExecute(() -> {
++				WorldEditGuard.listener = null;
++				helper.assertTrue(oak.isAsleep(), "Oak stayed asleep with building waiting (" + oak.activity() + ")");
++				helper.assertFalse(jobs.contains("oak.build"), "Oak never started building in the night: " + jobs);
++				helper.assertTrue(edits.isEmpty(), "no block was changed in the night: " + edits);
++				helper.assertFalse(data.isCompleted(Structures.CAMPFIRE), "the campfire waits for the morning");
++			})
++			.thenSucceed();
++	}
++
++	/** After midnight Aegis sleeps while the second watch, a healthy armed friend, keeps watch by the fire. */
++	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_162", maxTicks = 2400)
++	public void secondWatchKeepsWatchWhileAegisSleeps(GameTestHelper helper) {
++		TestSupport.resetCamp(helper, true);
++		TestSupport.setTime(helper, 17400);
++		helper.setBlock(FIRE, Blocks.CAMPFIRE);
++		ServerLevel level = helper.getLevel();
++		CompanionEntity aegis = TestSupport.spawnFriend(helper, FriendId.AEGIS, TestSupport.centre().west(2));
++		CompanionEntity sage = TestSupport.spawnFriend(helper, FriendId.SAGE, TestSupport.centre().east(2));
++		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, TestSupport.centre().north(2));
++		aegis.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_SWORD));
++		sage.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_SWORD));
++		fern.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_HOE));
++		for (CompanionEntity c : List.of(aegis, sage, fern)) {
++			c.needs().set(Need.ENERGY, 70);
++		}
++		Vec3 fire = Vec3.atCenterOf(helper.absolutePos(FIRE));
++		helper.startSequence()
++			.thenWaitUntil(() -> {
++				helper.assertTrue(NightWatch.watch(level) == NightWatch.Watch.FIRST, "before midnight: the first watch");
++				helper.assertTrue(NightWatch.watcher(level) == aegis, "Aegis keeps the first watch, not " + who(level));
++				helper.assertFalse(aegis.isAsleep(), "Aegis is awake on watch (" + aegis.activity() + ")");
++				helper.assertTrue(sage.isAsleep() && fern.isAsleep(), "the others sleep: Sage " + sage.activity() + ", Fern "
++					+ fern.activity());
++			})
++			.thenWaitUntil(() -> {
++				helper.assertTrue(NightWatch.watch(level) == NightWatch.Watch.SECOND, "after midnight: the second watch");
++				helper.assertTrue(NightWatch.watcher(level) == sage, "Sage (sword) keeps the second watch, not " + who(level));
++				helper.assertTrue(aegis.isAsleep(), "Aegis went to bed after his watch (" + aegis.activity() + ")");
++				helper.assertTrue(doing(sage, "common.watch") && !sage.isAsleep(), "Sage got up to keep watch ("
++					+ sage.activity() + ")");
++				double d = sage.position().distanceTo(fire);
++				helper.assertTrue(d <= 5, "Sage keeps watch by the campfire (" + String.format(Locale.ROOT, "%.1f", d) + " blocks)");
++				helper.assertTrue(fern.isAsleep(), "Fern sleeps on (" + fern.activity() + ")");
++			})
++			.thenExecute(() -> helper.assertTrue(NightWatch.keptWatchRecently(aegis) && NightWatch.keptWatchRecently(sage)
++				&& !NightWatch.keptWatchRecently(fern), "the watchers are remembered (they nap sooner tomorrow)"))
++			.thenSucceed();
++	}
++
++	/** With Aegis dead the rota still works: the armed friend takes the first watch, the next the second. */
++	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_163", maxTicks = 2000)
++	public void someoneKeepsWatchWithAegisDead(GameTestHelper helper) {
++		CampData data = TestSupport.resetCamp(helper, true);
++		TestSupport.setTime(helper, 14000);
++		helper.setBlock(FIRE, Blocks.CAMPFIRE);
++		ServerLevel level = helper.getLevel();
++		CompanionEntity aegis = TestSupport.spawnFriend(helper, FriendId.AEGIS, new BlockPos(4, 2, 4));
++		aegis.kill(level);
++		helper.assertTrue(data.ledger(FriendId.AEGIS).state == CampData.LifeState.DEAD, "Aegis has fallen");
++		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, TestSupport.centre().west(2));
++		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, TestSupport.centre().east(2));
++		oak.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_AXE));
++		fern.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_HOE));
++		oak.needs().set(Need.ENERGY, 70);
++		fern.needs().set(Need.ENERGY, 70);
++		helper.startSequence()
++			.thenWaitUntil(() -> {
++				helper.assertTrue(NightWatch.watcher(level) == oak, "Oak (axe) keeps the first watch, not " + who(level));
++				helper.assertTrue(doing(oak, "common.watch") && !oak.isAsleep(), "Oak is keeping watch (" + oak.activity() + ")");
++				helper.assertTrue(fern.isAsleep(), "Fern sleeps (" + fern.activity() + ")");
++			})
++			.thenExecute(() -> TestSupport.setTime(helper, 18500))
++			.thenWaitUntil(() -> {
++				helper.assertTrue(NightWatch.watcher(level) == fern, "Fern takes the second watch, not " + who(level));
++				helper.assertTrue(doing(fern, "common.watch") && !fern.isAsleep(), "Fern got up for her watch (" + fern.activity() + ")");
++				helper.assertTrue(oak.isAsleep(), "Oak sleeps after the first watch (" + oak.activity() + ")");
++			})
++			.thenSucceed();
++	}
++
++	/** A zombie going for a friend in camp is joined by an armed friend 12 blocks away, round a wall he cannot see past. */
++	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_164", maxTicks = 900)
++	public void armedFriendRalliesFromTwelveBlocks(GameTestHelper helper) {
++		TestSupport.resetCamp(helper, true);
++		// A wall between Rowan and the fight, so she must go round it without ever seeing the zombie first.
++		for (int z = 13; z <= 21; z++) {
++			for (int y = 2; y <= 4; y++) {
++				helper.setBlock(new BlockPos(10, y, z), Blocks.COBBLESTONE);
++			}
++		}
++		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, new BlockPos(16, 2, 16));
++		CompanionEntity rowan = TestSupport.spawnFriend(helper, FriendId.ROWAN, new BlockPos(4, 2, 17));
++		fern.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_HOE));
++		rowan.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.STONE_AXE));
++		Zombie zombie = helper.spawn(EntityTypes.ZOMBIE, new BlockPos(16, 2, 19));
++		zombie.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET)); // no burning in the daylight
++		zombie.setTarget(fern);
++		helper.assertFalse(rowan.hasLineOfSight(zombie), "the wall hides the zombie from Rowan");
++		// Just spawned, Rowan has not landed, so no path can be worked out yet: that must not count the zombie as out of
++		// reach (it once kept her out of the fight until Fern had fled beyond the rally's range).
++		helper.assertFalse(rowan.onGround(), "Rowan has not landed yet");
++		double start = rowan.distanceTo(zombie);
++		helper.assertTrue(start > 8 && start < 16, "Rowan starts out of the old 8-block reach (" + start + " blocks)");
++		double[] joinedAt = {-1};
++		helper.onEachTick(() -> {
++			if (joinedAt[0] < 0 && rowan.getTarget() == zombie) {
++				joinedAt[0] = rowan.distanceTo(zombie);
++			}
++		});
++		helper.succeedWhen(() -> {
++			helper.assertTrue(joinedAt[0] > 8, "Rowan joined the fight from beyond 8 blocks (" + joinedAt[0] + "; Rowan "
++				+ rowan.activity() + " at " + helper.relativePos(rowan.blockPosition()) + ", Fern " + fern.activity() + " at "
++				+ helper.relativePos(fern.blockPosition()) + " health " + fern.getHealth() + ", zombie at "
++				+ helper.relativePos(zombie.blockPosition()) + " health " + zombie.getHealth() + ")");
++			helper.assertFalse(zombie.isAlive(), "the zombie was beaten: Fern " + fern.activity() + ", Rowan " + rowan.activity());
++			helper.assertTrue(fern.isAlive() && rowan.isAlive(), "both friends came through");
++		});
++	}
++
++	/** The watch raises the alarm about a hostile in the camp, and a sleeper well away from it wakes. */
++	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_165", maxTicks = 1600)
++	public void sleeperWakesWhenTheWatchRaisesTheAlarm(GameTestHelper helper) {
++		TestSupport.resetCamp(helper, true);
++		TestSupport.setTime(helper, 14000);
++		helper.setBlock(FIRE, Blocks.CAMPFIRE);
++		ServerLevel level = helper.getLevel();
++		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, TestSupport.centre().west(2));
++		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, TestSupport.centre().east(2));
++		oak.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_AXE));
++		fern.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_HOE));
++		oak.needs().set(Need.ENERGY, 70);
++		fern.needs().set(Need.ENERGY, 70);
++		Creeper[] creeper = {null};
++		long[] alarmFrom = {Long.MAX_VALUE};
++		double[] wokeAt = {-1};
++		helper.onEachTick(() -> {
++			if (creeper[0] != null && wokeAt[0] < 0 && !fern.isAsleep()) {
++				wokeAt[0] = fern.distanceTo(creeper[0]);
++			}
++		});
++		helper.startSequence()
++			.thenWaitUntil(() -> {
++				helper.assertTrue(NightWatch.watcher(level) == oak && doing(oak, "common.watch"), "Oak is on watch ("
++					+ oak.activity() + ")");
++				helper.assertTrue(fern.isAsleep(), "Fern is asleep (" + fern.activity() + ")");
++			})
++			.thenExecute(() -> {
++				// A creeper (frozen, so it neither moves nor hisses) comes into the camp at its edge: too far from Fern to
++				// wake her by itself, and the watch does not take on a creeper, so only the alarm can wake her.
++				alarmFrom[0] = level.getGameTime();
++				creeper[0] = helper.spawn(EntityTypes.CREEPER, new BlockPos(28, 2, 6));
++				creeper[0].setNoAi(true);
++				helper.assertTrue(fern.distanceTo(creeper[0]) > 12, "the creeper is well away from Fern");
++			})
++			.thenWaitUntil(() -> {
++				helper.assertTrue(NightWatch.alarmRaisedSince(level, alarmFrom[0] - 1), "Oak raised the alarm");
++				helper.assertTrue(NightWatch.alarmed(level).contains(creeper[0]), "about the creeper");
++				helper.assertTrue(wokeAt[0] > 8, "Fern woke for the alarm, the creeper " + wokeAt[0] + " blocks away");
++			})
++			.thenExecute(() -> creeper[0].discard())
++			.thenSucceed();
++	}
++
++	/** Every friend brings something to fight with; Sage's is a sword, and she stands with Fern against a zombie. */
++	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_166", maxTicks = 900)
++	public void sageStartsWithASwordAndStandsWithFern(GameTestHelper helper) {
++		TestSupport.resetCamp(helper, true);
++		ServerLevel level = helper.getLevel();
++		for (FriendId id : FriendId.values()) {
++			Item tool = id.starterTool();
++			ItemStack stack = tool == null ? ItemStack.EMPTY : new ItemStack(tool);
++			helper.assertTrue(stack.is(ItemTags.SWORDS) || stack.is(ItemTags.AXES) || stack.is(ItemTags.PICKAXES)
++				|| stack.is(ItemTags.SHOVELS) || stack.is(ItemTags.HOES), id.displayName() + " brings something to fight with, not " + stack);
++		}
++		helper.assertTrue(KeepList.roleTool(Role.STRATEGIST) == ItemTags.SWORDS, "a sword is the strategist's tool");
++		ServerPlayer player = (ServerPlayer) helper.makeMockServerPlayer(GameType.SURVIVAL);
++		BlockPos stand = helper.absolutePos(TestSupport.centre());
++		player.snapTo(stand.getX() + 0.5, stand.getY(), stand.getZ() + 0.5, 0.0F, 0.0F);
++		player.getInventory().add(new ItemStack(Items.BREAD, 2));
++		level.getServer().getCommands().performPrefixedCommand(player.createCommandSourceStack().withSuppressedOutput(),
++			"friends recruit sage");
++		CompanionEntity sage = Companions.find(FriendId.SAGE).orElseThrow(() -> new IllegalStateException("Sage was not recruited"));
++		helper.assertTrue(sage.getMainHandItem().is(Items.WOODEN_SWORD), "Sage arrives with a wooden sword, not " + sage.getMainHandItem());
++		helper.assertTrue(KeepList.isRoleTool(Role.STRATEGIST, sage.getMainHandItem()), "her sword counts as her tool, so she keeps it");
++		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, TestSupport.centre().east(2));
++		fern.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_HOE));
++		Zombie zombie = helper.spawn(EntityTypes.ZOMBIE, new BlockPos(16, 2, 22));
++		zombie.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
++		zombie.setTarget(sage);
++		helper.assertTrue(sage.canStandAndFight(zombie), "with a sword, Sage can stand and fight");
++		boolean[] ran = {false};
++		boolean[] sageHit = {false};
++		helper.onEachTick(() -> {
++			if (sage.activity().startsWith("getting away")) {
++				ran[0] = true;
++			}
++			if (zombie.getLastHurtByMob() == sage) {
++				sageHit[0] = true;
++			}
++		});
++		helper.succeedWhen(() -> {
++			helper.assertFalse(zombie.isAlive(), "the zombie was beaten: Sage " + sage.activity() + ", Fern " + fern.activity());
++			helper.assertTrue(sageHit[0], "Sage struck it with her sword");
++			helper.assertFalse(ran[0], "Sage stood her ground instead of running");
++			helper.assertTrue(sage.isAlive() && fern.isAlive(), "both came through");
++		});
++	}
++
++	/**
++	 * A whole night, dusk to dawn, with three friends and two zombies coming into the camp, one in each watch. The
++	 * watch spots each one and raises the alarm, the others get up and stand together, and everyone sees the morning.
++	 */
++	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_167", maxTicks = 12500)
++	public void threeFriendsSeeTheNightThroughTwoZombies(GameTestHelper helper) {
++		wholeNight(helper, List.of(FriendId.AEGIS, FriendId.SAGE, FriendId.FERN),
++			List.of(new Arrival(14500, new BlockPos(1, 2, 1)), new Arrival(19500, new BlockPos(30, 2, 30))),
++			List.of("FIRST Aegis", "SECOND Sage"));
++	}
++
++	/**
++	 * The same without Aegis, and harder: one zombie in the first watch and two together in the second. Sage (the best
++	 * weapon) keeps the first watch, Oak the second, and the three stand together.
++	 */
++	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_168", maxTicks = 12500)
++	public void threeFriendsWithoutAegisHoldTheCamp(GameTestHelper helper) {
++		wholeNight(helper, List.of(FriendId.OAK, FriendId.SAGE, FriendId.FERN),
++			List.of(new Arrival(14500, new BlockPos(1, 2, 1)), new Arrival(19500, new BlockPos(30, 2, 30)),
++				new Arrival(19500, new BlockPos(1, 2, 30))),
++			List.of("FIRST Sage", "SECOND Oak"));
++	}
++
++	/** A zombie walking into the camp at a time of day, from a spot at the camp's edge. */
++	private record Arrival(long timeOfDay, BlockPos at) {
++	}
++
++	/**
++	 * Runs a whole night from dusk to dawn: the friends (holding their starter tools, food in the chest, a campfire by
++	 * the camp centre) must all see the morning, each zombie must be beaten by them in the night (not burnt by the
++	 * sunrise), the watches must go to the expected friends, everyone must sleep some of the night, and the watch must
++	 * raise the alarm for each arrival.
++	 */
++	private static void wholeNight(GameTestHelper helper, List<FriendId> ids, List<Arrival> arrivals, List<String> expectedWatches) {
++		TestSupport.resetCamp(helper, true);
++		TestSupport.setTime(helper, 12000);
++		helper.setBlock(FIRE, Blocks.CAMPFIRE);
++		ServerLevel level = helper.getLevel();
++		TestSupport.placeChest(helper, new BlockPos(20, 2, 16), new ItemStack(Items.BREAD, 16));
++		List<CompanionEntity> friends = new ArrayList<>();
++		BlockPos[] spots = {TestSupport.centre().west(2), TestSupport.centre().east(2), TestSupport.centre().north(2)};
++		for (int i = 0; i < ids.size(); i++) {
++			CompanionEntity c = TestSupport.spawnFriend(helper, ids.get(i), spots[i % spots.length]);
++			c.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ids.get(i).starterTool()));
++			c.needs().set(Need.ENERGY, 75);
++			friends.add(c);
++		}
++		Set<String> watchers = new LinkedHashSet<>();
++		Set<String> slept = new LinkedHashSet<>();
++		List<Zombie> zombies = new ArrayList<>();
++		List<Long> spawnedAt = new ArrayList<>();
++		String[] fights = new String[arrivals.size()];
++		float[] lowest = new float[friends.size()];
++		for (int i = 0; i < friends.size(); i++) {
++			lowest[i] = friends.get(i).getMaxHealth();
++		}
++		long[] alarms = {0};
++		long[] lastAlarm = {Long.MIN_VALUE};
++		helper.onEachTick(() -> {
++			for (int i = 0; i < friends.size(); i++) {
++				lowest[i] = Math.min(lowest[i], friends.get(i).getHealth());
++				if (friends.get(i).isAsleep()) {
++					slept.add(friends.get(i).friendId().displayName());
++				}
++			}
++			for (int i = 0; i < zombies.size(); i++) {
++				Zombie z = zombies.get(i);
++				if (fights[i] == null && !z.isAlive()) {
++					LivingEntity by = z.getLastHurtByMob();
++					fights[i] = "zombie " + (i + 1) + " beaten in " + (level.getGameTime() - spawnedAt.get(i)) + " ticks, last hit by "
++						+ (by == null ? "nobody" : by.getName().getString());
++				}
++			}
++			CompanionEntity w = NightWatch.watcher(level);
++			if (w != null) {
++				watchers.add(NightWatch.watch(level) + " " + w.friendId().displayName());
++			}
++			if (NightWatch.alarmRaisedSince(level, lastAlarm[0])) {
++				alarms[0]++;
++				lastAlarm[0] = level.getGameTime();
++			}
++			long t = Camp.timeOfDay(level);
++			while (zombies.size() < arrivals.size() && t >= arrivals.get(zombies.size()).timeOfDay()) {
++				zombies.add(helper.spawn(EntityTypes.ZOMBIE, arrivals.get(zombies.size()).at()));
++				spawnedAt.add(level.getGameTime());
++			}
++		});
++		long batches = arrivals.stream().mapToLong(Arrival::timeOfDay).distinct().count();
++		helper.startSequence()
++			.thenWaitUntil(() -> helper.assertTrue(Camp.timeOfDay(level) >= 23300, "dawn is coming (" + Camp.timeOfDay(level) + ")"))
++			.thenExecute(() -> {
++				StringBuilder health = new StringBuilder();
++				for (int i = 0; i < friends.size(); i++) {
++					health.append(i == 0 ? "" : ", ").append(friends.get(i).friendId().displayName()).append(' ').append(lowest[i]);
++				}
++				String summary = Arrays.toString(fights) + "; lowest health " + health + "; watches " + watchers + "; " + alarms[0]
++					+ " alarms";
++				System.out.println("[NightGameTest] whole night: " + summary);
++				helper.assertTrue(zombies.size() == arrivals.size(), "every zombie came into the camp");
++				for (CompanionEntity c : friends) {
++					helper.assertTrue(c.isAlive(), c.friendId().displayName() + " lived to see the morning: " + summary);
++				}
++				// Beaten in the fight, well before the sunrise could burn them.
++				helper.assertTrue(Arrays.stream(fights).allMatch(f -> f != null && !f.contains("by nobody")),
++					"each zombie was beaten by the friends in the night: " + summary);
++				helper.assertTrue(watchers.containsAll(expectedWatches), "the watches went to " + expectedWatches + ": " + watchers);
++				for (FriendId id : ids) {
++					helper.assertTrue(slept.contains(id.displayName()), id.displayName() + " slept part of the night: " + slept);
++				}
++				helper.assertTrue(alarms[0] >= batches, "the watch raised the alarm for each arrival (" + alarms[0] + " alarms)");
++			})
++			.thenSucceed();
++	}
++
++	// ---------------------------------------------------------------- helpers
++
++	private static CompanionTask task(CompanionEntity c, String id) {
++		for (CompanionTask t : c.scheduler().tasks()) {
++			if (t.id().equals(id)) {
++				return t;
++			}
++		}
++		throw new IllegalStateException("no task " + id);
++	}
++
++	private static boolean doing(CompanionEntity c, String taskId) {
++		CompanionTask job = c.scheduler().current();
++		return job != null && job.id().equals(taskId);
++	}
++
++	private static String who(ServerLevel level) {
++		CompanionEntity w = NightWatch.watcher(level);
++		return w == null ? "nobody" : w.friendId().displayName() + " (" + w.activity() + ")";
++	}
++}
+diff --git a/hardcore-friends/src/gametest/java/io/github/bradley09roberts/hardcorefriends/test/TestSupport.java b/hardcore-friends/src/gametest/java/io/github/bradley09roberts/hardcorefriends/test/TestSupport.java
+index d1964cd..8387226 100644
+--- a/hardcore-friends/src/gametest/java/io/github/bradley09roberts/hardcorefriends/test/TestSupport.java
++++ b/hardcore-friends/src/gametest/java/io/github/bradley09roberts/hardcorefriends/test/TestSupport.java
+@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.Blocks;
+ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+ import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+ import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
++import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
+ import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
+ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+ import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
+@@ -48,6 +49,7 @@ public final class TestSupport {
+ 		}
+ 		Companions.clear();
+ 		CampNeeds.clear();
++		NightWatch.clear();
+ 		CampData data = Camp.data(level.getServer());
+ 		data.resetForTests();
+ 		if (withCamp) {
+diff --git a/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_161.json b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_161.json
+new file mode 100644
+index 0000000..a897633
+--- /dev/null
++++ b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_161.json
+@@ -0,0 +1,4 @@
++{
++  "type": "minecraft:all_of",
++  "definitions": []
++}
+diff --git a/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_162.json b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_162.json
+new file mode 100644
+index 0000000..a897633
+--- /dev/null
++++ b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_162.json
+@@ -0,0 +1,4 @@
++{
++  "type": "minecraft:all_of",
++  "definitions": []
++}
+diff --git a/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_163.json b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_163.json
+new file mode 100644
+index 0000000..a897633
+--- /dev/null
++++ b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_163.json
+@@ -0,0 +1,4 @@
++{
++  "type": "minecraft:all_of",
++  "definitions": []
++}
+diff --git a/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_164.json b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_164.json
+new file mode 100644
+index 0000000..a897633
+--- /dev/null
++++ b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_164.json
+@@ -0,0 +1,4 @@
++{
++  "type": "minecraft:all_of",
++  "definitions": []
++}
+diff --git a/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_165.json b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_165.json
+new file mode 100644
+index 0000000..a897633
+--- /dev/null
++++ b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_165.json
+@@ -0,0 +1,4 @@
++{
++  "type": "minecraft:all_of",
++  "definitions": []
++}
+diff --git a/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_166.json b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_166.json
+new file mode 100644
+index 0000000..a897633
+--- /dev/null
++++ b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_166.json
+@@ -0,0 +1,4 @@
++{
++  "type": "minecraft:all_of",
++  "definitions": []
++}
+diff --git a/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_167.json b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_167.json
+new file mode 100644
+index 0000000..a897633
+--- /dev/null
++++ b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_167.json
+@@ -0,0 +1,4 @@
++{
++  "type": "minecraft:all_of",
++  "definitions": []
++}
+diff --git a/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_168.json b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_168.json
+new file mode 100644
+index 0000000..a897633
+--- /dev/null
++++ b/hardcore-friends/src/gametest/resources/data/hardcorefriends-test/test_environment/solo_168.json
+@@ -0,0 +1,4 @@
++{
++  "type": "minecraft:all_of",
++  "definitions": []
++}
+diff --git a/hardcore-friends/src/gametest/resources/fabric.mod.json b/hardcore-friends/src/gametest/resources/fabric.mod.json
+index 4307145..ab4b846 100644
+--- a/hardcore-friends/src/gametest/resources/fabric.mod.json
++++ b/hardcore-friends/src/gametest/resources/fabric.mod.json
+@@ -14,7 +14,8 @@
+ 			"io.github.bradley09roberts.hardcorefriends.test.GuardianGameTest",
+ 			"io.github.bradley09roberts.hardcorefriends.test.GeneralistGameTest",
+ 			"io.github.bradley09roberts.hardcorefriends.test.NeedsGameTest",
+-			"io.github.bradley09roberts.hardcorefriends.test.MoodGameTest"
++			"io.github.bradley09roberts.hardcorefriends.test.MoodGameTest",
++			"io.github.bradley09roberts.hardcorefriends.test.NightGameTest"
+ 		],
+ 		"fabric-client-gametest": [
+ 			"io.github.bradley09roberts.hardcorefriends.test.HardcoreSkinsClientTest",
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/goal/CompanionMeleeGoal.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/goal/CompanionMeleeGoal.java
+index 28e8cef..e719a05 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/goal/CompanionMeleeGoal.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/goal/CompanionMeleeGoal.java
+@@ -28,8 +28,9 @@ public class CompanionMeleeGoal extends MeleeAttackGoal {
+ 	}
+ 
+ 	/**
+-	 * Aegis pursues threats; an armed friend in FOLLOW mode defends their leader nearby; everyone else only fights
+-	 * back when cornered (the attacker is right next to them) instead of chasing.
++	 * Aegis pursues threats; an armed friend in FOLLOW mode defends their leader nearby; everyone else fights a threat
++	 * they can stand up to within their reach ({@link CompanionEntity#canStandAndFight}: 8 blocks, or across the camp
++	 * for an armed friend or the watcher inside it), and otherwise only fights back when cornered.
+ 	 */
+ 	private boolean withinFightingRange() {
+ 		LivingEntity target = companion.getTarget();
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/goal/DefendFriendsTargetGoal.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/goal/DefendFriendsTargetGoal.java
+index 90dc8be..8b95add 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/goal/DefendFriendsTargetGoal.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/goal/DefendFriendsTargetGoal.java
+@@ -12,6 +12,7 @@ import net.minecraft.world.entity.monster.Creeper;
+ import net.minecraft.world.phys.Vec3;
+ 
+ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
++import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
+ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+ import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
+ import io.github.bradley09roberts.hardcorefriends.companion.Companions;
+@@ -19,7 +20,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.Companions;
+ /**
+  * Picks hostile mobs that threaten players, friends or the camp. Aegis always guards; other armed friends only
+  * defend their leader in FOLLOW mode. Creepers are left alone unless the defender is healthy and the creeper is
+- * not yet hissing.
++ * not yet hissing. A hostile must be in sight, except inside the camp, where the guard finds his way to it; one he
++ * could not get at is left alone for a while.
+  */
+ public class DefendFriendsTargetGoal extends Goal {
+ 	private static final double GUARD_RADIUS = 16;
+@@ -82,7 +84,7 @@ public class DefendFriendsTargetGoal extends Goal {
+ 	}
+ 
+ 	private boolean valid(LivingEntity e) {
+-		if (!Threats.isThreat(e) || !companion.hasLineOfSight(e)) {
++		if (!Threats.isThreat(e) || companion.hasGivenUpOn(e) || !inSightOrInCamp(e)) {
+ 			return false;
+ 		}
+ 		if (e instanceof Creeper creeper) {
+@@ -92,6 +94,18 @@ public class DefendFriendsTargetGoal extends Goal {
+ 		return true;
+ 	}
+ 
++	/**
++	 * In sight, or, for a guard at work in the camp, anywhere on the camp's own ground: inside the camp nobody needs
++	 * to see a hostile before going for it (a cave below the camp is not its ground).
++	 */
++	private boolean inSightOrInCamp(LivingEntity e) {
++		if (companion.hasLineOfSight(e)) {
++			return true;
++		}
++		return companion.mode() == CompanionMode.WORK && NightWatch.insideCamp(companion) && NightWatch.insideCamp(e)
++			&& Math.abs(e.getY() - companion.getY()) <= 4;
++	}
++
+ 	private double distanceToProtected(Vec3 pos) {
+ 		double best = Double.MAX_VALUE;
+ 		for (ServerPlayer player : ((net.minecraft.server.level.ServerLevel) companion.level()).players()) {
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/goal/MutualDefenceTargetGoal.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/goal/MutualDefenceTargetGoal.java
+index bd138f5..6f60d50 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/goal/MutualDefenceTargetGoal.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/goal/MutualDefenceTargetGoal.java
+@@ -1,25 +1,40 @@
+ package io.github.bradley09roberts.hardcorefriends.ai.goal;
+ 
+ import java.util.EnumSet;
++import java.util.HashMap;
++import java.util.Map;
++import java.util.UUID;
+ 
+ import org.jspecify.annotations.Nullable;
+ 
++import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.entity.LivingEntity;
+ import net.minecraft.world.entity.Mob;
+ import net.minecraft.world.entity.ai.goal.Goal;
+ import net.minecraft.world.entity.player.Player;
+ 
++import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
+ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+ import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
+ 
+ /**
+- * Friends look out for each other: a healthy friend holding a tool joins in against a hostile mob that is going for
+- * them, another friend or a player close by. Aegis has its own wider guard duty; friends told to stay put only
+- * defend themselves.
++ * Friends look out for each other. A healthy friend holding a tool joins in against a hostile mob that is going for
++ * them, another friend or a player within {@value #RANGE} blocks, if they can see it. Inside the camp they stand
++ * together more widely (the rally): an armed friend at work in the camp joins in against a hostile going for anyone
++ * within {@value #RALLY_RANGE} blocks, and goes for any hostile the night watch raised the alarm about; the friend on
++ * watch takes on any hostile that comes into the camp. In the camp nobody needs to see the hostile first: they find
++ * their way to it, and leave alone one they cannot reach. Aegis has his own wider guard duty; friends told to stay
++ * put only defend themselves.
+  */
+ public class MutualDefenceTargetGoal extends Goal {
++	/** Friends join a fight this close, anywhere. */
+ 	private static final double RANGE = 8;
++	/** Armed friends inside the camp join a fight this close. */
++	public static final double RALLY_RANGE = 16;
++	/** A hostile out of reach of a path is not tried again for this long. */
++	private static final int UNREACHABLE_FOR = 200;
+ 	private final CompanionEntity companion;
++	private final Map<UUID, Integer> unreachable = new HashMap<>();
+ 	private @Nullable LivingEntity chosen;
+ 	private int cooldown;
+ 
+@@ -40,25 +55,78 @@ public class MutualDefenceTargetGoal extends Goal {
+ 	}
+ 
+ 	private @Nullable LivingEntity pick() {
++		boolean inCamp = companion.mode() == CompanionMode.WORK && NightWatch.insideCamp(companion);
++		boolean onWatch = inCamp && NightWatch.isOnWatch(companion);
++		boolean rallies = inCamp && companion.isArmed();
++		double scan = onWatch ? CompanionEntity.CAMP_REACH : rallies ? RALLY_RANGE : RANGE;
+ 		LivingEntity best = null;
+-		double bestDist = RANGE * RANGE;
+-		for (LivingEntity threat : Threats.around(companion, RANGE)) {
+-			if (!(threat instanceof Mob mob) || !companion.canStandAndFight(threat) || !companion.hasLineOfSight(threat)) {
++		double bestDist = Double.MAX_VALUE;
++		for (LivingEntity threat : Threats.around(companion, scan)) {
++			if (!(threat instanceof Mob mob) || !worthGoingFor(threat, inCamp)) {
+ 				continue;
+ 			}
+-			LivingEntity victim = mob.getTarget();
+-			boolean defending = victim == companion
+-				|| (victim instanceof CompanionEntity && victim.distanceToSqr(companion) <= RANGE * RANGE)
+-				|| (victim instanceof Player p && !p.isSpectator() && victim.distanceToSqr(companion) <= RANGE * RANGE);
++			boolean campFight = inCamp && NightWatch.insideCamp(threat);
++			double range = campFight && rallies ? RALLY_RANGE : RANGE;
+ 			double d = threat.distanceToSqr(companion);
+-			if (defending && d < bestDist) {
++			LivingEntity victim = mob.getTarget();
++			boolean defending = d <= range * range && (victim == companion
++				|| (victim instanceof CompanionEntity && victim.distanceToSqr(companion) <= range * range)
++				|| (victim instanceof Player p && !p.isSpectator() && victim.distanceToSqr(companion) <= range * range));
++			boolean guarding = onWatch && campFight;
++			if ((defending || guarding) && d < bestDist) {
+ 				bestDist = d;
+ 				best = threat;
+ 			}
+ 		}
++		// The watch raised the alarm: armed friends in the camp go for what it was raised about.
++		if (best == null && rallies) {
++			for (LivingEntity threat : NightWatch.alarmed((ServerLevel) companion.level())) {
++				double d = threat.distanceToSqr(companion);
++				if (d < bestDist && worthGoingFor(threat, true)) {
++					bestDist = d;
++					best = threat;
++				}
++			}
++		}
++		if (best != null && bestDist > RANGE * RANGE && !reachable(best)) {
++			return null;
++		}
+ 		return best;
+ 	}
+ 
++	/**
++	 * A hostile this friend is fit to fight and has not given up on. Out of the camp it must be in sight; in the camp it
++	 * need not be, as long as it is on the same level of ground (not in a cave below).
++	 */
++	private boolean worthGoingFor(LivingEntity threat, boolean inCamp) {
++		if (!companion.canStandAndFight(threat) || companion.hasGivenUpOn(threat)) {
++			return false;
++		}
++		Integer until = unreachable.get(threat.getUUID());
++		if (until != null && companion.tickCount < until) {
++			return false;
++		}
++		if (companion.hasLineOfSight(threat)) {
++			return true;
++		}
++		return inCamp && NightWatch.insideCamp(threat) && Math.abs(threat.getY() - companion.getY()) <= 4;
++	}
++
++	/** Whether a path leads to the hostile; one that cannot be reached is left alone for a while. */
++	private boolean reachable(LivingEntity threat) {
++		if (!companion.onGround() && !companion.isInLiquid() && !companion.isPassenger()) {
++			// Mid-jump (or just spawned, not yet landed) no path can be worked out at all: look again shortly, and do not
++			// count the hostile as out of reach.
++			return false;
++		}
++		if (companion.getNavigation().createPath(threat, 1) != null) {
++			return true;
++		}
++		unreachable.values().removeIf(until -> until <= companion.tickCount);
++		unreachable.put(threat.getUUID(), companion.tickCount + UNREACHABLE_FOR);
++		return false;
++	}
++
+ 	@Override
+ 	public void start() {
+ 		companion.setTarget(chosen);
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/role/guard/GuardTask.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/role/guard/GuardTask.java
+index 705b705..605f8de 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/role/guard/GuardTask.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/role/guard/GuardTask.java
+@@ -13,7 +13,9 @@ import net.minecraft.world.phys.Vec3;
+ import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
+ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
+ import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
++import io.github.bradley09roberts.hardcorefriends.ai.task.common.WatchTask;
+ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
++import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
+ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+ import io.github.bradley09roberts.hardcorefriends.companion.Line;
+ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
+@@ -25,6 +27,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
+  * top of the watchtower once one stands. Fighting is left to the combat reflexes, which take over when a threat
+  * comes close. Walking the posts of an empty camp by day is a quiet duty: Aegis would rather lend a hand where the
+  * camp is short of someone, so it scores below such work.
++ *
++ * <p>At night at the camp this is his part of the rota ({@link NightWatch}): he guards while it is his watch (the
++ * first, dusk to midnight, whenever he can keep it), as the other watchers keep theirs by the fire
++ * ({@link WatchTask}), and the rest of the night he sleeps like everyone else. Away from any camp he guards all night.
+  */
+ public final class GuardTask implements CompanionTask {
+ 	private static final double PLAYER_RANGE = 48;
+@@ -35,7 +41,6 @@ public final class GuardTask implements CompanionTask {
+ 	private static final int LEGS_PER_RUN = 2;
+ 	private static final int TOWER_RECHECK = 20 * 60;
+ 	private static final int CLIMB_LIMIT = 20 * 10;
+-	private static final double NIGHT_WATCH = 70;
+ 	private static final double GUARD_PLAYER = 50;
+ 	private static final double DAY_PATROL = 15;
+ 
+@@ -66,11 +71,18 @@ public final class GuardTask implements CompanionTask {
+ 	public double score(CompanionEntity c) {
+ 		ServerLevel level = (ServerLevel) c.level();
+ 		if (Camp.isNight(level)) {
+-			return NIGHT_WATCH;
++			if (!campHere(level)) {
++				return WatchTask.SCORE; // no camp to keep a rota: he guards all night
++			}
++			return NightWatch.isOnWatch(c) ? WatchTask.SCORE : 0; // off watch, he sleeps
+ 		}
+ 		return mostAtRisk(c, level) != null ? GUARD_PLAYER : DAY_PATROL;
+ 	}
+ 
++	private static boolean campHere(ServerLevel level) {
++		return Camp.isCampLevel(level, Camp.data(level.getServer()));
++	}
++
+ 	@Override
+ 	public boolean start(CompanionEntity c) {
+ 		ticks = 0;
+@@ -80,7 +92,11 @@ public final class GuardTask implements CompanionTask {
+ 		ward = null;
+ 		following = false;
+ 		climbTicks = 0;
+-		Speech.say(c, Line.WORK_START, describe());
++		if (NightWatch.isOnWatch(c)) {
++			Speech.say(c, Line.NIGHT_WATCH);
++		} else {
++			Speech.say(c, Line.WORK_START, describe());
++		}
+ 		return true;
+ 	}
+ 
+@@ -90,6 +106,9 @@ public final class GuardTask implements CompanionTask {
+ 		if (++ticks > RUN_TICKS) {
+ 			return TaskStatus.SUCCESS;
+ 		}
++		if (Camp.isNight(level) && campHere(level) && !NightWatch.isOnWatch(c)) {
++			return TaskStatus.SUCCESS; // his watch is over: bed
++		}
+ 		if (ticks % 20 == 1) {
+ 			ward = mostAtRisk(c, level);
+ 		}
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/role/terra/LightTask.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/role/terra/LightTask.java
+index 6c19402..3325208 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/role/terra/LightTask.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/role/terra/LightTask.java
+@@ -46,6 +46,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
+  * builder.
+  */
+ public final class LightTask implements CompanionTask {
++	/** Lighting a dark camp at night: above bedtime for a rested landscaper (75), so the camp is lit before she sleeps. */
++	private static final double NIGHT_SCORE = 80;
+ 	private static final int PER_RUN = 6;
+ 	private static final int DARK = 8;
+ 	private static final double SPACING = 5;
+@@ -104,7 +106,8 @@ public final class LightTask implements CompanionTask {
+ 		if (darkSpots.isEmpty() || !torchesAvailable(c)) {
+ 			return 0;
+ 		}
+-		return 50;
++		// A dark camp at night is where monsters spawn: lighting it comes before bed while there is energy for it.
++		return Camp.isNight(level) ? NIGHT_SCORE : 50;
+ 	}
+ 
+ 	/**
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/TaskScheduler.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/TaskScheduler.java
+index e235afa..01360b2 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/TaskScheduler.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/TaskScheduler.java
+@@ -7,7 +7,10 @@ import java.util.Set;
+ 
+ import org.jspecify.annotations.Nullable;
+ 
++import net.minecraft.server.level.ServerLevel;
++
+ import io.github.bradley09roberts.hardcorefriends.HardcoreFriends;
++import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+ 
+ /**
+@@ -19,6 +22,12 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+  * <p>Three rules keep the friend's own needs safe from work: a desperate need ({@link #URGENT}) takes over from any
+  * job at once; work never wakes a sleeper; and a friend too weak to work
+  * ({@link CompanionEntity#tooWeakToWork}) only takes on the jobs in {@link #FIT_WHEN_WEAK}.
++ *
++ * <p>A fourth keeps the night for sleep: at night ({@link Camp#isNight}) a friend only takes on their needs jobs and
++ * the jobs that belong to the night ({@link #NIGHT_JOBS}: coming home, keeping watch, lighting a dark camp, feeding a
++ * hurt friend or a hungry player, fetching a lost weapon or food), and puts down any other job at nightfall. So
++ * ordinary work never keeps a friend from bed or pulls them out of it: they go to bed and stay asleep, and the friend
++ * on watch keeps watch.
+  */
+ public final class TaskScheduler {
+ 	public static final double PREEMPT_MARGIN = 25.0;
+@@ -35,6 +44,14 @@ public final class TaskScheduler {
+ 	 */
+ 	public static final Set<String> FIT_WHEN_WEAK = Set.of("common.idle", "common.return_home", "common.restock",
+ 		"common.deposit", "fern.harvest", "fern.replant", "fern.bake", "fern.bone_meal");
++	/**
++	 * The jobs that belong to the night, besides the needs jobs: coming home, the watch (anyone's, and Aegis's guard
++	 * and gear), lighting a dark camp (spawn-proofing matters most in the dark), feeding a hurt friend or a hungry
++	 * player, fetching a lost weapon or food from the chest, and idling by the fire. Everything else waits for
++	 * morning.
++	 */
++	public static final Set<String> NIGHT_JOBS = Set.of("common.idle", "common.return_home", "common.watch",
++		"common.share", "common.feed_player", "common.restock", "aegis.guard", "aegis.equip_gear", "terra.light");
+ 	private static final String NEEDS = "needs.";
+ 	private static final int EVALUATE_INTERVAL = 20;
+ 
+@@ -107,6 +124,10 @@ public final class TaskScheduler {
+ 		if (weak && current != null && !fitWhenWeak(current.id())) {
+ 			stopCurrent(); // too weak for this now: home to eat or rest
+ 		}
++		boolean night = Camp.isNight((ServerLevel) companion.level());
++		if (night && current != null && !fitAtNight(current.id())) {
++			stopCurrent(); // nightfall: the job waits for morning
++		}
+ 		// Work never wakes a sleeper: while they lie asleep, only another need can take over (a starving friend gets up
+ 		// to eat). Danger wakes them through the sleep job and the reflexes.
+ 		boolean sleeping = current != null && companion.isAsleep();
+@@ -123,7 +144,8 @@ public final class TaskScheduler {
+ 			if (until != null && gameTime < until) {
+ 				continue;
+ 			}
+-			if ((weak && !fitWhenWeak(task.id())) || (sleeping && !task.id().startsWith(NEEDS))) {
++			if ((weak && !fitWhenWeak(task.id())) || (night && !fitAtNight(task.id()))
++				|| (sleeping && !task.id().startsWith(NEEDS))) {
+ 				continue;
+ 			}
+ 			// Other people's work has a known ceiling: skip scoring it (and its scans) when it could not win anyway.
+@@ -173,6 +195,11 @@ public final class TaskScheduler {
+ 		}
+ 	}
+ 
++	/** True for the jobs a friend may take on at night: their needs and {@link #NIGHT_JOBS}. */
++	public static boolean fitAtNight(String taskId) {
++		return taskId.startsWith(NEEDS) || NIGHT_JOBS.contains(taskId);
++	}
++
+ 	/** True for the jobs a friend too weak to work may still take on: their needs and {@link #FIT_WHEN_WEAK}. */
+ 	public static boolean fitWhenWeak(String taskId) {
+ 		return taskId.startsWith(NEEDS) || FIT_WHEN_WEAK.contains(taskId);
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/CommonTasks.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/CommonTasks.java
+index 6719c45..f24b2b3 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/CommonTasks.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/CommonTasks.java
+@@ -6,7 +6,8 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
+ import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
+ 
+ /**
+- * Upkeep jobs every friend shares: depositing, restocking, crafting tools, sharing, going home at night and tidying.
++ * Upkeep jobs every friend shares: depositing, restocking, crafting tools, sharing, going home at night, keeping the
++ * night watch when it is their turn, and tidying.
+  * Eating, sleeping and the other everyday needs have their own jobs (see {@code NeedsTasks}).
+  */
+ public final class CommonTasks {
+@@ -22,6 +23,7 @@ public final class CommonTasks {
+ 			new ShareTask(),
+ 			new FeedPlayerTask(),
+ 			new ReturnHomeTask(),
++			new WatchTask(),
+ 			new CollectItemsTask(),
+ 			new IdleTask());
+ 	}
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/KeepList.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/KeepList.java
+index 3d38ff7..d26a75c 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/KeepList.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/KeepList.java
+@@ -61,15 +61,17 @@ public final class KeepList {
+ 
+ 	// ------------------------------------------------------------- role tools
+ 
+-	/** The tool a role needs for its main job, or null (the strategist works without one). */
++	/**
++	 * The tool a role keeps for its work, or null. The strategist's planning needs no tool, so a sword is hers: she keeps
++	 * one, fetches or makes another when it breaks, and can stand and fight with the others.
++	 */
+ 	public static @Nullable TagKey<Item> roleTool(Role role) {
+ 		return switch (role) {
+ 			case FARMER -> ItemTags.HOES;
+ 			case MINER, INVENTOR -> ItemTags.PICKAXES;
+ 			case FORAGER, BUILDER -> ItemTags.AXES;
+ 			case LANDSCAPER -> ItemTags.SHOVELS;
+-			case WARRIOR, EXPLORER -> ItemTags.SWORDS;
+-			case STRATEGIST -> null;
++			case WARRIOR, EXPLORER, STRATEGIST -> ItemTags.SWORDS;
+ 		};
+ 	}
+ 
+@@ -348,7 +350,7 @@ public final class KeepList {
+ 				list.add(item("shield", Items.SHIELD, 1));
+ 			}
+ 			case STRATEGIST -> {
+-				// Sage carries nothing special.
++				// The sword is the role tool; nothing else.
+ 			}
+ 			case LANDSCAPER -> {
+ 				list.add(tag("saplings", ItemTags.SAPLINGS, 16));
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/ReturnHomeTask.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/ReturnHomeTask.java
+index 98c1a94..2c23237 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/ReturnHomeTask.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/ReturnHomeTask.java
+@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerLevel;
+ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
+ import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
+ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
++import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
+ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+ import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
+ import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
+@@ -15,7 +16,7 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
+ 
+ /**
+  * Brings a friend back inside the camp at dusk and at night, when wandering far from the fire gets dangerous.
+- * Aegis is the exception: the guard patrols at night instead.
++ * Aegis on watch is the exception: his guard duty takes him round the camp's edge, or beside a player out late.
+  */
+ public final class ReturnHomeTask implements CompanionTask {
+ 	/** How close to the camp centre a friend walks before the trip counts as done. */
+@@ -35,12 +36,18 @@ public final class ReturnHomeTask implements CompanionTask {
+ 
+ 	@Override
+ 	public double score(CompanionEntity c) {
+-		if (c.friendId() == FriendId.AEGIS || c.mode() != CompanionMode.WORK) {
++		if (c.mode() != CompanionMode.WORK || (c.friendId() == FriendId.AEGIS && onGuardDuty(c))) {
+ 			return 0;
+ 		}
+ 		return shouldBeHome(c) ? 85 : 0;
+ 	}
+ 
++	/** Aegis keeps his watch wherever his guard duty takes him; away from any camp he guards all night. */
++	private static boolean onGuardDuty(CompanionEntity c) {
++		ServerLevel level = (ServerLevel) c.level();
++		return !Camp.isCampLevel(level, Camp.data(level.getServer())) || NightWatch.isOnWatch(c);
++	}
++
+ 	/** True when it is getting dark and the friend is outside the comfortable part of the camp. */
+ 	public static boolean shouldBeHome(CompanionEntity c) {
+ 		return sendsHome(c, c.blockPosition());
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/WatchTask.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/WatchTask.java
+new file mode 100644
+index 0000000..782be3b
+--- /dev/null
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/common/WatchTask.java
+@@ -0,0 +1,154 @@
++package io.github.bradley09roberts.hardcorefriends.ai.task.common;
++
++import org.jspecify.annotations.Nullable;
++
++import net.minecraft.core.BlockPos;
++import net.minecraft.server.level.ServerLevel;
++import net.minecraft.world.entity.LivingEntity;
++
++import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
++import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
++import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
++import io.github.bradley09roberts.hardcorefriends.ai.task.needs.Spots;
++import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
++import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
++import io.github.bradley09roberts.hardcorefriends.companion.Line;
++import io.github.bradley09roberts.hardcorefriends.companion.Speech;
++
++/**
++ * Keeping the night watch, for whoever the rota has put on it ({@link NightWatch}) other than Aegis, whose guard duty
++ * is his watch. The watcher stands by the camp's lit campfire (or the camp centre), stepping round it now and then
++ * and looking out over the camp. Spotting hostiles and raising the alarm is {@link NightWatch}'s lookout, and fighting
++ * is the combat reflexes': the watcher goes for any hostile that comes into the camp
++ * ({@link io.github.bradley09roberts.hardcorefriends.ai.goal.MutualDefenceTargetGoal}). The watch outranks every
++ * pastime, chat and warm-up, and a meal unless the watcher is hungry; it runs in half-minute rounds so a pressing need
++ * gets a look in between them.
++ */
++public final class WatchTask implements CompanionTask {
++	/** The watch's score: urgent upkeep, above bedtime's pastimes and below a hungry friend's meal (80). */
++	public static final double SCORE = 75;
++	private static final int ROUND_TICKS = 20 * 30;
++	/** How long the watcher stands at one spot before stepping round the fire. */
++	private static final int STAND_TICKS = 20 * 10;
++	private static final int POSTS = 6;
++	private static final int POST_DISTANCE = 3;
++
++	private @Nullable BlockPos centre;
++	private @Nullable BlockPos post;
++	private int postIndex;
++	private int ticks;
++	private int standing;
++	private boolean arrived;
++
++	@Override
++	public String id() {
++		return "common.watch";
++	}
++
++	@Override
++	public String describe() {
++		return "keeping watch";
++	}
++
++	@Override
++	public double score(CompanionEntity c) {
++		if (c.isFighter()) {
++			return 0; // Aegis keeps his watch on guard duty
++		}
++		return NightWatch.isOnWatch(c) ? SCORE : 0;
++	}
++
++	@Override
++	public boolean start(CompanionEntity c) {
++		BlockPos fire = Spots.litCampfire(c);
++		centre = fire != null ? fire : c.homePos();
++		ticks = 0;
++		standing = 0;
++		arrived = false;
++		postIndex = c.friendId().ordinal() % POSTS;
++		post = postNear(c, centre, postIndex);
++		Speech.say(c, Line.NIGHT_WATCH);
++		return post != null;
++	}
++
++	@Override
++	public TaskStatus tick(CompanionEntity c) {
++		if (!NightWatch.isOnWatch(c)) {
++			return TaskStatus.SUCCESS; // the watch is over (or has passed to someone else)
++		}
++		if (post == null || centre == null) {
++			return TaskStatus.FAILURE;
++		}
++		if (++ticks > ROUND_TICKS) {
++			return TaskStatus.SUCCESS;
++		}
++		if (!arrived) {
++			boolean there = c.actions().walkTo(post, 1.0);
++			if (!there && c.actions().isStuck()) {
++				if (c.blockPosition().distSqr(centre) > 8 * 8) {
++					return TaskStatus.FAILURE;
++				}
++				there = true; // near enough to the fire to keep watch from here
++			}
++			if (there) {
++				c.actions().stopWalking();
++				arrived = true;
++				standing = 0;
++			}
++			return TaskStatus.RUNNING;
++		}
++		c.getNavigation().stop();
++		LivingEntity threat = Threats.nearest(c, NightWatch.LOOKOUT_RANGE);
++		if (threat != null) {
++			c.getLookControl().setLookAt(threat);
++		} else {
++			// Look out over the camp, turning slowly from one side to the next.
++			double angle = (c.tickCount / 60) * (Math.PI / 3);
++			c.getLookControl().setLookAt(c.getX() + Math.cos(angle) * 8, c.getEyeY(), c.getZ() + Math.sin(angle) * 8);
++		}
++		if (++standing >= STAND_TICKS) {
++			// A step round the fire to another side.
++			postIndex = (postIndex + 1) % POSTS;
++			BlockPos next = postNear(c, centre, postIndex);
++			if (next != null) {
++				post = next;
++				arrived = false;
++			}
++			standing = 0;
++		}
++		return TaskStatus.RUNNING;
++	}
++
++	/** A standing spot a few blocks from the fire (or camp centre) on one of its sides; null if none is free. */
++	private static @Nullable BlockPos postNear(CompanionEntity c, BlockPos centre, int index) {
++		ServerLevel level = (ServerLevel) c.level();
++		for (int k = 0; k < POSTS; k++) {
++			double angle = (index + k) * 2 * Math.PI / POSTS;
++			BlockPos p = Spots.standable(level, centre.offset((int) Math.round(Math.cos(angle) * POST_DISTANCE), 0,
++				(int) Math.round(Math.sin(angle) * POST_DISTANCE)));
++			if (p != null) {
++				return p;
++			}
++		}
++		return Spots.standable(level, centre);
++	}
++
++	@Override
++	public void stop(CompanionEntity c) {
++		post = null;
++		centre = null;
++		arrived = false;
++		ticks = 0;
++		standing = 0;
++	}
++
++	@Override
++	public int failureCooldown() {
++		return 100;
++	}
++
++	@Override
++	public int maxTicks() {
++		return ROUND_TICKS + 20 * 30;
++	}
++}
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/needs/SleepTask.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/needs/SleepTask.java
+index 9dbe986..e3bb7a5 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/needs/SleepTask.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/needs/SleepTask.java
+@@ -14,6 +14,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
+ import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
+ import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
+ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
++import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
+ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+ import io.github.bradley09roberts.hardcorefriends.companion.Companions;
+ import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
+@@ -28,37 +29,56 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
+  * through counts in full, and ends at dawn with a good morning. A friend exhausted in daytime takes a short nap at
+  * camp.
+  *
+- * <p>The tireder the friend, the sooner they turn in: a friend still full of energy finishes useful work in camp
+- * first, and a hungry one eats before bed; one exhausted at night ({@value #EXHAUSTED}) goes to bed whatever the
+- * work. Work never wakes a sleeper (see {@link io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler}).
+- * Sleepers wake whenever they are hurt or a monster comes close; the danger reflexes also interrupt the job, and
+- * {@link #stop} always gets them back on their feet.
++ * <p><b>Bedtime.</b> At night everyone not on watch goes to bed ({@value #BEDTIME} and up, a little more the tireder
++ * they are): above every pastime, chat and cosy warm-up, and, since the scheduler keeps ordinary work for the
++ * morning ({@link TaskScheduler#NIGHT_JOBS}), nothing else keeps them up. Supper comes first for a hungry friend
++ * with food at hand, warming up by the campfire first for a chilly one without a cabin to sleep in, and the trip home
++ * first for one still out. Exhausted at night ({@value #EXHAUSTED}) they go to bed before anything but a starving
++ * friend's meal. Work never wakes a sleeper (see {@link TaskScheduler}).
+  *
+- * <p>Aegis keeps the first watch: he guards until midnight and sleeps the small hours when no monster is about, and
+- * naps by day sooner than the others to make up for it.
++ * <p><b>Waking.</b> Sleepers wake at dawn; when hurt; when a monster comes close or a friend nearby is fighting one;
++ * when the night watch raises the alarm ({@link NightWatch}); and when their own watch begins. The danger reflexes
++ * also interrupt the job, and {@link #stop} always gets them back on their feet.
++ *
++ * <p><b>The watch.</b> Whoever is on watch ({@link NightWatch}) stays up: Aegis keeps the first watch and sleeps the
++ * small hours when no monster is about; the second watcher sleeps until midnight and is then woken for their watch.
++ * Anyone who kept a watch naps by day sooner than the others ({@value #WATCHER_NAP_BELOW}) to make up for it.
+  */
+ public final class SleepTask implements CompanionTask {
+ 	/** Below this energy at night a friend goes to bed before any work (an urgent score). */
+ 	static final double EXHAUSTED = 30;
+ 	/** The score of going to bed exhausted: above {@link TaskScheduler#URGENT}, so no work keeps them up. */
+ 	static final double EXHAUSTED_SCORE = TaskScheduler.URGENT;
++	/**
++	 * Bedtime at night, for a friend fully rested: above every pastime, chat and warm-up (at most 66), so those wait
++	 * for the morning, and below a hungry friend's meal (80) once they are tired.
++	 */
++	static final double BEDTIME = 75;
++	/** Supper first: a hungry friend with food at hand eats before bed. */
++	static final double SUPPER_FIRST = 40;
++	/** Below this hunger, supper comes before bed. */
++	static final double SUPPER_BELOW = 50;
++	/** Warm up first: below the cosy job's lowest score, so a chilly friend huddles by the fire before bed. */
++	static final double WARM_UP_FIRST = 30;
+ 	/** Below this energy in daytime, a friend lies down for a nap at camp. */
+ 	static final double NAP_BELOW = 15;
+-	/** Aegis spends half the night on watch, so he naps by day once below this. */
+-	static final double GUARD_NAP_BELOW = 40;
+-	/** Aegis keeps watch until midnight. */
+-	static final long GUARD_SLEEPS_FROM = 18000;
++	/** A friend who kept a night watch (Aegis keeps one every night) naps by day once below this. */
++	static final double WATCHER_NAP_BELOW = 40;
+ 	/** The longest daytime nap. */
+ 	private static final int NAP_TICKS = 20 * 180;
+ 	private static final double BED_REACH = 0.8;
+ 	/** Sleepers wake when a monster comes this close. */
+ 	private static final double WAKE_DISTANCE = 8;
++	/** Aegis does not turn in with a monster this close. */
++	private static final double PROWLER_DISTANCE = 24;
+ 	private static final int RING = 3;
+ 
+ 	private @Nullable BlockPos bed;
+ 	private boolean lyingDown;
+ 	private boolean nap;
+ 	private int asleepTicks;
++	/** When they lay down (game time), to tell an alarm raised since. */
++	private long layDownAt;
+ 
+ 	@Override
+ 	public String id() {
+@@ -77,26 +97,27 @@ public final class SleepTask implements CompanionTask {
+ 	public double score(CompanionEntity c) {
+ 		ServerLevel level = (ServerLevel) c.level();
+ 		double energy = c.needs().get(Need.ENERGY);
+-		boolean guard = c.friendId() == FriendId.AEGIS;
+ 		if (!Camp.isNight(level)) {
+-			return energy < (guard ? GUARD_NAP_BELOW : NAP_BELOW) ? 75 : 0;
++			boolean watcher = c.friendId() == FriendId.AEGIS || NightWatch.keptWatchRecently(c);
++			return energy < (watcher ? WATCHER_NAP_BELOW : NAP_BELOW) ? 75 : 0;
+ 		}
+ 		if (!Spots.inCamp(c, c.blockPosition())) {
+ 			return 0; // the trip home comes first
+ 		}
+-		if (guard) {
+-			if (energy < NAP_BELOW) {
+-				return 80; // too tired to keep watch
+-			}
+-			// The first watch is his; after midnight he turns in, unless something is prowling about.
+-			return Camp.timeOfDay(level) >= GUARD_SLEEPS_FROM && Threats.nearest(c, 24) == null ? 75 : 0;
++		if (NightWatch.isOnWatch(c)) {
++			return 0; // keeping watch (a watcher too tired to keep it is relieved, see NightWatch)
+ 		}
+ 		if (energy < EXHAUSTED) {
+ 			return EXHAUSTED_SCORE; // only a starving friend's meal comes first
+ 		}
+-		double score = 25 + (100 - energy) * 0.6; // 31 when fresh, 67 when worn out at the end of a day
+-		if (c.needs().get(Need.HUNGER) < 50 && EatTask.foodAvailable(c)) {
+-			score = Math.min(score, 40); // supper first
++		if (c.isFighter() && Threats.nearest(c, PROWLER_DISTANCE) != null) {
++			return 0; // Aegis does not turn in while something is prowling about
++		}
++		double score = BEDTIME + (100 - energy) * 0.1; // 75 when fresh, 82 when worn out
++		if (c.needs().get(Need.HUNGER) < SUPPER_BELOW && EatTask.foodAvailable(c)) {
++			score = SUPPER_FIRST;
++		} else if (c.needs().get(Need.COMFORT) < ComfortTask.CHILLY && !Spots.cabinBuilt(c) && Spots.litCampfire(c) != null) {
++			score = WARM_UP_FIRST; // a few minutes by the fire, then bed
+ 		}
+ 		return score;
+ 	}
+@@ -132,6 +153,9 @@ public final class SleepTask implements CompanionTask {
+ 		if (disturbed(c)) {
+ 			return TaskStatus.FAILURE; // stop() gets them up
+ 		}
++		if (NightWatch.isOnWatch(c)) {
++			return TaskStatus.SUCCESS; // their watch: up they get (the watch job takes over)
++		}
+ 		c.getNavigation().stop();
+ 		asleepTicks++;
+ 		c.settleSleep(); // energy for the time slept, a whole night if the players slept through it
+@@ -166,10 +190,11 @@ public final class SleepTask implements CompanionTask {
+ 		c.setPose(Pose.SLEEPING);
+ 		c.setAsleep(true);
+ 		lyingDown = true;
++		layDownAt = c.level().getGameTime();
+ 		Speech.say(c, Line.SLEEPY);
+ 	}
+ 
+-	/** Hurt by anything but hunger pangs, or a monster close by. */
++	/** Hurt by anything but hunger pangs, a monster close by, a friend fighting nearby, or the alarm raised in camp. */
+ 	private boolean disturbed(CompanionEntity c) {
+ 		if (c.ticksSinceDamaged() < 5) {
+ 			DamageSource source = c.getLastDamageSource();
+@@ -177,7 +202,13 @@ public final class SleepTask implements CompanionTask {
+ 				return true;
+ 			}
+ 		}
+-		return asleepTicks % 10 == 0 && (Threats.nearest(c, WAKE_DISTANCE) != null || friendFighting(c));
++		if (asleepTicks % 10 != 0) {
++			return false;
++		}
++		if (NightWatch.alarmRaisedSince((ServerLevel) c.level(), layDownAt) && NightWatch.insideCamp(c)) {
++			return true; // the watch raised the alarm: everyone up
++		}
++		return Threats.nearest(c, WAKE_DISTANCE) != null || friendFighting(c);
+ 	}
+ 
+ 	/** A friend within 16 blocks is fighting a monster: sleepers get up and stand with them. */
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/needs/Spots.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/needs/Spots.java
+index 4bb02bd..3b73b5c 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/needs/Spots.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/ai/task/needs/Spots.java
+@@ -20,14 +20,15 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
+ 
+ /**
+  * Finding places for everyday life: somewhere to stand, the camp's lit campfire, the inside of the cabin, a block
+- * worth looking at. Every search is bounded and only runs when a job starts (or is cached), never every tick.
++ * worth looking at. Every search is bounded and only runs when a job starts (or is cached), never every tick. The
++ * needs jobs use all of it; the night watch uses the standing spots and the campfire.
+  */
+-final class Spots {
++public final class Spots {
+ 	private Spots() {
+ 	}
+ 
+ 	/** Solid ground below, room for the body, no fluid. */
+-	static boolean isStandable(ServerLevel level, BlockPos p) {
++	public static boolean isStandable(ServerLevel level, BlockPos p) {
+ 		if (!level.isLoaded(p)) {
+ 			return false;
+ 		}
+@@ -40,7 +41,7 @@ final class Spots {
+ 	}
+ 
+ 	/** A standable spot in the column at {@code pos}, looking up to three blocks up and down; null if none. */
+-	static @Nullable BlockPos standable(ServerLevel level, BlockPos pos) {
++	public static @Nullable BlockPos standable(ServerLevel level, BlockPos pos) {
+ 		for (int dy : new int[] {0, 1, -1, 2, -2, 3, -3}) {
+ 			BlockPos p = pos.above(dy);
+ 			if (isStandable(level, p)) {
+@@ -51,7 +52,7 @@ final class Spots {
+ 	}
+ 
+ 	/** True when this position is inside the camp (or near home, for a friend without a camp). */
+-	static boolean inCamp(CompanionEntity c, BlockPos pos) {
++	public static boolean inCamp(CompanionEntity c, BlockPos pos) {
+ 		int r = WorldEditGuard.campRadius(c);
+ 		return Camp.horizontalDistSqr(pos, c.homePos()) <= (double) r * r;
+ 	}
+@@ -127,7 +128,7 @@ final class Spots {
+ 	}
+ 
+ 	/** The camp's own campfire if it stands and burns, otherwise the nearest lit campfire within 10 blocks. */
+-	static @Nullable BlockPos litCampfire(CompanionEntity c) {
++	public static @Nullable BlockPos litCampfire(CompanionEntity c) {
+ 		ServerLevel level = (ServerLevel) c.level();
+ 		CampData data = Camp.data(level.getServer());
+ 		if (Camp.isCampLevel(level, data)) {
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/camp/NightWatch.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/camp/NightWatch.java
+new file mode 100644
+index 0000000..0839fcb
+--- /dev/null
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/camp/NightWatch.java
+@@ -0,0 +1,332 @@
++package io.github.bradley09roberts.hardcorefriends.camp;
++
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.Collections;
++import java.util.Comparator;
++import java.util.LinkedHashSet;
++import java.util.List;
++import java.util.Set;
++import java.util.WeakHashMap;
++
++import org.jspecify.annotations.Nullable;
++
++import net.minecraft.core.BlockPos;
++import net.minecraft.nbt.CompoundTag;
++import net.minecraft.server.MinecraftServer;
++import net.minecraft.server.level.ServerLevel;
++import net.minecraft.world.entity.LivingEntity;
++import net.minecraft.world.entity.Mob;
++
++import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
++import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
++import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
++import io.github.bradley09roberts.hardcorefriends.companion.Companions;
++import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
++import io.github.bradley09roberts.hardcorefriends.companion.Line;
++import io.github.bradley09roberts.hardcorefriends.companion.Needs.Need;
++import io.github.bradley09roberts.hardcorefriends.companion.Speech;
++import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
++
++/**
++ * The camp's night watch: one friend stays awake while the others sleep, and raises the alarm when a hostile comes
++ * into the camp.
++ *
++ * <p><b>The rota.</b> The night has two watches: the first from dusk until midnight ({@value #MIDNIGHT}), the second
++ * from midnight until dawn. Aegis keeps the first watch whenever he is alive and working at the camp. Every other
++ * watch goes to a friend who has something to fight back with, the best available ranked in this order: healthy;
++ * did not keep a watch last night (so the duty rotates night by night and nobody misses sleep every night); the best
++ * weapon (any sword before any axe before any other tool, then the sturdier); the most health; and finally the
++ * friend's place in the roster, so the choice is always the same for the same camp. Tonight's first watcher never
++ * keeps the second watch as well, and a friend alone at the camp (other than Aegis on his first watch) has nobody to
++ * watch over and simply sleeps. A watcher stays on watch until it ends, unless they stop being fit for it (dead, gone, sent
++ * to follow or stay, too weak to work, or too tired, below {@value #TOO_TIRED} energy): then the watch passes to the
++ * next friend, so the camp keeps someone on watch even with Aegis dead or away. Who kept watch is remembered in
++ * {@link CampData#memory} ({@value #MEMORY}), so it survives a reload, and watchers may nap sooner the next day
++ * ({@link #keptWatchRecently}).
++ *
++ * <p><b>The alarm.</b> Every half second the friend on watch, if awake, looks out over the camp: a hostile within
++ * {@value #LOOKOUT_RANGE} blocks of them and inside the camp, that they can see, that is close by, or that is
++ * already going for someone, sets off the alarm (they shout {@link Line#ALARM}). Sleepers in the camp wake for a new
++ * alarm, and armed friends in the camp go for the hostiles it was raised about (see
++ * {@link io.github.bradley09roberts.hardcorefriends.ai.goal.MutualDefenceTargetGoal}). A hostile stays on the alarm
++ * list while it lives and stays inside the camp.
++ */
++public final class NightWatch {
++	/** The two watches of a night. */
++	public enum Watch {
++		/** Dusk until midnight: Aegis's, while he can keep it. */
++		FIRST,
++		/** Midnight until dawn. */
++		SECOND
++	}
++
++	/** Who kept which watch, in {@link CampData#memory}. */
++	public static final String MEMORY = "night_watch";
++	/** Midnight, as a time of day: the first watch hands over to the second. */
++	public static final long MIDNIGHT = 18000;
++	/** Below this energy a friend is too tired to keep watch, and the watch passes on. */
++	public static final double TOO_TIRED = 15;
++	/** How far from the watcher a hostile inside the camp is spotted. */
++	public static final double LOOKOUT_RANGE = 24;
++	/** A hostile this close to the watcher is noticed even out of sight (heard, if not seen). */
++	private static final double HEARD_RANGE = 12;
++	/** A hostile further above or below the watcher than this is in a cave or on a cliff, not in the camp. */
++	private static final double LOOKOUT_HEIGHT = 12;
++	private static final int LOOKOUT_INTERVAL = 10;
++	private static final long NOON = 6000;
++	private static final long DAY = 24000;
++
++	/** Hostiles the alarm was raised about, while they live and stay in the camp. */
++	private static final Set<LivingEntity> ALARMED = Collections.newSetFromMap(new WeakHashMap<>());
++	private static long alarmAt = Long.MIN_VALUE;
++	private static @Nullable ServerLevel alarmLevel;
++
++	/** The watcher worked out this tick, so the many callers each tick share one answer. */
++	private static long cachedAt = Long.MIN_VALUE;
++	private static @Nullable ServerLevel cachedLevel;
++	private static @Nullable CompanionEntity cachedWatcher;
++
++	private NightWatch() {
++	}
++
++	// ------------------------------------------------------------------ rota
++
++	/** The watch being kept now: the first from dusk until midnight, the second from midnight until dawn, null by day. */
++	public static @Nullable Watch watch(ServerLevel level) {
++		if (!Camp.isNight(level) && !Camp.isDusk(level)) {
++			return null;
++		}
++		long t = Camp.timeOfDay(level);
++		return t >= MIDNIGHT || t < NOON ? Watch.SECOND : Watch.FIRST;
++	}
++
++	/** Which night it is: a night runs from one noon to the next, so the morning after still belongs to it. */
++	public static long nightIndex(ServerLevel level) {
++		return Math.floorDiv(level.getOverworldClockTime() - NOON, DAY);
++	}
++
++	/** The friend on watch now, choosing one when the watch starts or its watcher can no longer keep it; null by day. */
++	public static @Nullable CompanionEntity watcher(ServerLevel level) {
++		long now = level.getGameTime();
++		if (cachedAt != now || cachedLevel != level) {
++			cachedAt = now;
++			cachedLevel = level;
++			cachedWatcher = findWatcher(level);
++		}
++		return cachedWatcher;
++	}
++
++	/** True while this friend is the one keeping watch. */
++	public static boolean isOnWatch(CompanionEntity c) {
++		return c.level() instanceof ServerLevel level && watcher(level) == c;
++	}
++
++	/**
++	 * True when this friend kept a watch last night (or is keeping one tonight): they may nap sooner the next day to
++	 * make up the sleep.
++	 */
++	public static boolean keptWatchRecently(CompanionEntity c) {
++		if (!(c.level() instanceof ServerLevel level)) {
++			return false;
++		}
++		CampData data = Camp.data(level.getServer());
++		if (!Camp.isCampLevel(level, data)) {
++			return false;
++		}
++		CompoundTag mem = data.memory(MEMORY);
++		if (mem.getLongOr("night", Long.MIN_VALUE) < nightIndex(level) - 1) {
++			return false;
++		}
++		return keys(mem.getStringOr("kept", "")).contains(c.friendId().key());
++	}
++
++	private static @Nullable CompanionEntity findWatcher(ServerLevel level) {
++		Watch watch = watch(level);
++		if (watch == null) {
++			return null;
++		}
++		CampData data = Camp.data(level.getServer());
++		if (!Camp.isCampLevel(level, data)) {
++			return null;
++		}
++		CompoundTag mem = data.memory(MEMORY);
++		long night = nightIndex(level);
++		long recorded = mem.getLongOr("night", Long.MIN_VALUE);
++		if (recorded != night) {
++			// A new night: last night's watchers are remembered (for the rota), tonight's watches are still open.
++			mem.putString("prev", recorded == night - 1 ? mem.getStringOr("kept", "") : "");
++			mem.putString("kept", "");
++			mem.putString(Watch.FIRST.name(), "");
++			mem.putString(Watch.SECOND.name(), "");
++			mem.putLong("night", night);
++			data.setDirty();
++		}
++		CompanionEntity current = byKey(level, mem.getStringOr(watch.name(), ""));
++		if (current != null && fit(current, level)) {
++			return current;
++		}
++		CompanionEntity chosen = choose(level, watch, mem);
++		String key = chosen == null ? "" : chosen.friendId().key();
++		if (!key.equals(mem.getStringOr(watch.name(), ""))) {
++			mem.putString(watch.name(), key);
++			if (chosen != null) {
++				Set<String> kept = keys(mem.getStringOr("kept", ""));
++				kept.add(key);
++				mem.putString("kept", String.join(",", kept));
++			}
++			data.setDirty();
++		}
++		return chosen;
++	}
++
++	/** The friend best placed to keep this watch, by the rota's order (see the class description); null if nobody can. */
++	private static @Nullable CompanionEntity choose(ServerLevel level, Watch watch, CompoundTag mem) {
++		int atCamp = 0;
++		List<CompanionEntity> pool = new ArrayList<>();
++		for (CompanionEntity c : Companions.in(level)) {
++			if (c.mode() == CompanionMode.WORK && nearCamp(c, level)) {
++				atCamp++;
++				if (fit(c, level)) {
++					pool.add(c);
++				}
++			}
++		}
++		if (watch == Watch.FIRST) {
++			for (CompanionEntity c : pool) {
++				if (c.friendId() == FriendId.AEGIS) {
++					return c; // the first watch is his
++				}
++			}
++		} else {
++			String first = mem.getStringOr(Watch.FIRST.name(), "");
++			pool.removeIf(c -> c.friendId().key().equals(first)); // they kept the first watch: they sleep now
++		}
++		if (atCamp < 2) {
++			return null; // a friend on their own has nobody to watch over: they sleep, and wake if danger comes close
++		}
++		pool.removeIf(c -> !c.hasMeleeTool()); // only someone who can fight back keeps watch
++		Set<String> lastNight = keys(mem.getStringOr("prev", ""));
++		Comparator<CompanionEntity> order = Comparator
++			.comparing((CompanionEntity c) -> !c.isHealthy())
++			.thenComparing(c -> lastNight.contains(c.friendId().key()))
++			.thenComparing(Comparator.comparingInt(CompanionEntity::bestWeaponRank).reversed())
++			.thenComparing(Comparator.comparingDouble(CompanionEntity::getHealth).reversed())
++			.thenComparingInt(c -> c.friendId().ordinal());
++		return pool.stream().min(order).orElse(null);
++	}
++
++	/** Able to keep watch: here at the camp, working on their own, and neither too weak nor too tired. */
++	static boolean fit(CompanionEntity c, ServerLevel level) {
++		if (!c.isAlive() || c.isRemoved() || c.level() != level || c.mode() != CompanionMode.WORK) {
++			return false;
++		}
++		return !c.tooWeakToWork() && c.needs().get(Need.ENERGY) >= TOO_TIRED && nearCamp(c, level);
++	}
++
++	/** At the camp or out in its gathering ring, not off exploring far away. */
++	private static boolean nearCamp(CompanionEntity c, ServerLevel level) {
++		int reach = Camp.radius(Camp.data(level.getServer())) + FriendsConfig.get().resourceRadius;
++		return Camp.horizontalDistSqr(c.blockPosition(), c.homePos()) <= (double) reach * reach;
++	}
++
++	private static @Nullable CompanionEntity byKey(ServerLevel level, String key) {
++		if (key.isEmpty()) {
++			return null;
++		}
++		for (CompanionEntity c : Companions.in(level)) {
++			if (c.friendId().key().equals(key)) {
++				return c;
++			}
++		}
++		return null;
++	}
++
++	private static Set<String> keys(String list) {
++		Set<String> keys = new LinkedHashSet<>();
++		if (!list.isEmpty()) {
++			keys.addAll(Arrays.asList(list.split(",")));
++		}
++		return keys;
++	}
++
++	// ----------------------------------------------------------------- alarm
++
++	/** The friend on watch looks out over the camp; called every server tick, works every half second. */
++	public static void tick(MinecraftServer server) {
++		if (server.getTickCount() % LOOKOUT_INTERVAL != 0) {
++			return;
++		}
++		ALARMED.removeIf(threat -> !threat.isAlive() || threat.isRemoved() || !insideCamp(threat));
++		CampData data = Camp.data(server);
++		for (ServerLevel level : server.getAllLevels()) {
++			if (!Camp.isCampLevel(level, data)) {
++				continue;
++			}
++			CompanionEntity watcher = watcher(level);
++			if (watcher != null && !watcher.isAsleep()) {
++				lookout(watcher, level);
++			}
++		}
++	}
++
++	private static void lookout(CompanionEntity watcher, ServerLevel level) {
++		LivingEntity spotted = null;
++		for (LivingEntity threat : Threats.around(watcher, LOOKOUT_RANGE)) {
++			if (ALARMED.contains(threat) || !insideCamp(threat) || Math.abs(threat.getY() - watcher.getY()) > LOOKOUT_HEIGHT) {
++				continue;
++			}
++			boolean noticed = threat.distanceTo(watcher) <= HEARD_RANGE || watcher.hasLineOfSight(threat)
++				|| threat instanceof Mob mob && mob.getTarget() != null;
++			if (noticed) {
++				ALARMED.add(threat);
++				spotted = threat;
++			}
++		}
++		if (spotted != null) {
++			alarmAt = level.getGameTime();
++			alarmLevel = level;
++			Speech.say(watcher, Line.ALARM, spotted.getName().getString());
++		}
++	}
++
++	/** True if the camp's alarm was raised in this level after the given game time. */
++	public static boolean alarmRaisedSince(ServerLevel level, long since) {
++		return alarmLevel == level && alarmAt > since;
++	}
++
++	/** The hostiles the alarm was raised about that are still alive and inside the camp of this level. */
++	public static List<LivingEntity> alarmed(ServerLevel level) {
++		List<LivingEntity> list = new ArrayList<>();
++		for (LivingEntity threat : ALARMED) {
++			if (threat.level() == level && threat.isAlive() && !threat.isRemoved()) {
++				list.add(threat);
++			}
++		}
++		return list;
++	}
++
++	/** True if this entity stands inside the camp (horizontally) in the camp's own dimension. */
++	public static boolean insideCamp(LivingEntity e) {
++		if (!(e.level() instanceof ServerLevel level)) {
++			return false;
++		}
++		CampData data = Camp.data(level.getServer());
++		if (!Camp.isCampLevel(level, data)) {
++			return false;
++		}
++		BlockPos centre = data.campPos().orElseThrow();
++		int r = Camp.radius(data);
++		return Camp.horizontalDistSqr(e.blockPosition(), centre) <= (double) r * r;
++	}
++
++	/** Forgets the alarm and the cached watcher: a server starting or stopping, or a test resetting the camp. */
++	public static void clear() {
++		ALARMED.clear();
++		alarmAt = Long.MIN_VALUE;
++		alarmLevel = null;
++		cachedAt = Long.MIN_VALUE;
++		cachedLevel = null;
++		cachedWatcher = null;
++	}
++}
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/CompanionEntity.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/CompanionEntity.java
+index d883c06..65f4854 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/CompanionEntity.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/CompanionEntity.java
+@@ -3,6 +3,7 @@ package io.github.bradley09roberts.hardcorefriends.companion;
+ import java.util.ArrayList;
+ import java.util.Collection;
+ import java.util.EnumMap;
++import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.List;
+ import java.util.Locale;
+@@ -70,6 +71,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.TaskRegistry;
+ import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
+ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+ import io.github.bradley09roberts.hardcorefriends.camp.CampData;
++import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
+ import io.github.bradley09roberts.hardcorefriends.item.BackpackItem;
+ import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
+ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
+@@ -84,6 +86,19 @@ public class CompanionEntity extends PathfinderMob {
+ 	private static final EntityDataAccessor<Integer> DATA_MODE = SynchedEntityData.defineId(CompanionEntity.class, EntityDataSerializers.INT);
+ 	/** A friend whose hunger is below this eats food a player hands them, even at full health. */
+ 	public static final double EATS_HANDED_FOOD_BELOW = 60;
++	/** How far a friend goes to meet a hand-to-hand threat, away from camp or without a weapon. */
++	public static final double NEAR_REACH = 8;
++	/**
++	 * How far an armed friend (or the one on watch) goes to meet a hand-to-hand threat when both are inside the camp:
++	 * across the camp, so friends stand together there instead of one being picked off alone.
++	 */
++	public static final double CAMP_REACH = 24;
++	/** How close an archer must be before a friend who is not a fighter stands up to it. */
++	public static final double ARCHER_REACH = 3;
++	/** A target neither hit nor hit back for this long, while out of reach, is given up (it cannot be got at). */
++	private static final int GIVE_UP_TICKS = 200;
++	/** How long a given-up target is left alone. */
++	private static final int GIVEN_UP_FOR = 600;
+ 
+ 	private final Backpack backpack = new Backpack();
+ 	private final Actions actions = new Actions(this);
+@@ -106,6 +121,9 @@ public class CompanionEntity extends PathfinderMob {
+ 	/** When sleep was last settled (game time), and the overworld clock then; see {@link #settleSleep}. */
+ 	private long sleepSettledAt = Long.MIN_VALUE;
+ 	private long sleepSettledClock;
++	/** When the current target was chosen (tick count), and hostiles given up on until a tick count. */
++	private int targetSetTick;
++	private final Map<UUID, Integer> givenUp = new HashMap<>();
+ 
+ 	public CompanionEntity(EntityType<? extends CompanionEntity> type, Level level) {
+ 		super(type, level);
+@@ -387,12 +405,17 @@ public class CompanionEntity extends PathfinderMob {
+ 	protected void customServerAiStep(ServerLevel level) {
+ 		super.customServerAiStep(level);
+ 		LivingEntity target = getTarget();
+-		// A non-fighter drops a target beyond 8 blocks, where canStandAndFight ends: AvoidDangerGoal then moves them
+-		// out of a shooter's line of fire, or they go back to work, instead of standing still.
++		// A non-fighter drops a target beyond their reach (8 blocks, or across the camp for an armed friend in it),
++		// where canStandAndFight ends: AvoidDangerGoal then moves them out of a shooter's line of fire, or they go back
++		// to work, instead of standing still.
+ 		if (target != null && (!target.isAlive() || target.isRemoved() || target.distanceToSqr(this) > 32 * 32
+ 			|| target instanceof Player || target instanceof CompanionEntity
+ 			|| (!Threats.isThreat(target) && getLastHurtByMob() != target)
+-			|| (!isFighter() && mode() != CompanionMode.FOLLOW && target.distanceToSqr(this) > 8 * 8))) {
++			|| (!isFighter() && mode() != CompanionMode.FOLLOW && outOfReach(target)))) {
++			setTarget(null);
++		} else if (target != null && mode() == CompanionMode.WORK && cannotGetAt(target)) {
++			// Stuck behind a wall or a drop: give it up for a while, instead of standing still with it all night.
++			givenUp.put(target.getUUID(), this.tickCount + GIVEN_UP_FOR);
+ 			setTarget(null);
+ 		}
+ 		if (this.tickCount % 100 == 0) {
+@@ -551,8 +574,9 @@ public class CompanionEntity extends PathfinderMob {
+ 
+ 	/**
+ 	 * Whether this friend should stand and fight a threat rather than run. Aegis fights anything but a hissing
+-	 * creeper. Everyone else fights nearby melee threats while healthy and holding a tool, so friends defend each
+-	 * other instead of being picked off one by one, and still run from creepers and when hurt.
++	 * creeper. Everyone else fights hand-to-hand threats within their reach ({@link #meleeReach}) while healthy and
++	 * holding a tool, so friends defend each other instead of being picked off one by one, and still run from
++	 * creepers and when hurt.
+ 	 */
+ 	public boolean canStandAndFight(LivingEntity threat) {
+ 		if (isRetreating() || !threat.isAlive()) {
+@@ -564,10 +588,57 @@ public class CompanionEntity extends PathfinderMob {
+ 		if (isFighter()) {
+ 			return true;
+ 		}
+-		double healthyEnough = Math.max(0.5, friendId().retreatFraction() + 0.1);
+-		// Chasing an archer with a hoe only gets a non-fighter shot: they stand up to one only when it is in arm's reach.
+-		double reach = Threats.isRanged(threat) ? 3 : 8;
+-		return hasMeleeTool() && getHealth() > getMaxHealth() * healthyEnough && distanceToSqr(threat) <= reach * reach;
++		double reach = meleeReach(threat);
++		return hasMeleeTool() && isHealthy() && distanceToSqr(threat) <= reach * reach;
++	}
++
++	/** Healthy enough to stand and fight: above half health, and well above the point where they fall back. */
++	public boolean isHealthy() {
++		return getHealth() > getMaxHealth() * Math.max(0.5, friendId().retreatFraction() + 0.1);
++	}
++
++	/**
++	 * How far this friend goes to meet a threat. Chasing an archer with a hoe only gets a non-fighter shot, so they
++	 * stand up to one only in arm's reach ({@value #ARCHER_REACH}). Against a hand-to-hand threat, an armed friend at
++	 * work in the camp, or whoever is on watch, crosses the camp to stand with the others ({@value #CAMP_REACH}) when
++	 * the threat is inside the camp too; otherwise they meet it within {@value #NEAR_REACH} blocks.
++	 */
++	public double meleeReach(LivingEntity threat) {
++		if (Threats.isRanged(threat)) {
++			return ARCHER_REACH;
++		}
++		if (mode() == CompanionMode.WORK && (isArmed() || NightWatch.isOnWatch(this)) && NightWatch.insideCamp(this)
++			&& NightWatch.insideCamp(threat)) {
++			return CAMP_REACH;
++		}
++		return NEAR_REACH;
++	}
++
++	private boolean outOfReach(LivingEntity target) {
++		double reach = Math.max(NEAR_REACH, meleeReach(target));
++		return target.distanceToSqr(this) > reach * reach;
++	}
++
++	/** True when a target has been chased this long without a blow either way and is still out of arm's reach. */
++	private boolean cannotGetAt(LivingEntity target) {
++		int engaged = Math.max(targetSetTick, Math.max(getLastHurtMobTimestamp(), lastDamagedTick));
++		return this.tickCount - engaged > GIVE_UP_TICKS && target.distanceToSqr(this) > 3 * 3;
++	}
++
++	/** True while this friend has given up on a hostile they could not get at (see {@link #cannotGetAt}). */
++	public boolean hasGivenUpOn(LivingEntity threat) {
++		Integer until = givenUp.get(threat.getUUID());
++		return until != null && this.tickCount < until;
++	}
++
++	@Override
++	public void setTarget(@Nullable LivingEntity target) {
++		// The map is null while the entity is still being constructed (a mob may clear its target from there).
++		if (target != getTarget() && givenUp != null) {
++			targetSetTick = this.tickCount;
++			givenUp.values().removeIf(until -> until <= this.tickCount);
++		}
++		super.setTarget(target);
+ 	}
+ 
+ 	/** Where to spend the night: inside the cabin once it is built, otherwise the camp centre. */
+@@ -613,6 +684,18 @@ public class CompanionEntity extends PathfinderMob {
+ 		return actions.has(s -> s.is(ItemTags.SWORDS) || s.is(ItemTags.AXES));
+ 	}
+ 
++	/**
++	 * How good the best weapon carried is: any sword beats any axe, the sturdier the better (as {@link #equipBestWeapon}
++	 * chooses), then any other tool to hit with; 0 for bare hands.
++	 */
++	public int bestWeaponRank() {
++		int best = rankWeapon(getMainHandItem());
++		for (ItemStack s : backpack.stacks()) {
++			best = Math.max(best, rankWeapon(s));
++		}
++		return best > 0 ? best : hasMeleeTool() ? 1 : 0;
++	}
++
+ 	/** Holds the strongest sword (or axe) carried. */
+ 	public void equipBestWeapon() {
+ 		ItemStack best = ItemStack.EMPTY;
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/FriendId.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/FriendId.java
+index c52a7ae..fdf9acb 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/FriendId.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/FriendId.java
+@@ -24,7 +24,7 @@ public enum FriendId {
+ 		"clever and excitable"),
+ 	AEGIS("Aegis", Role.WARRIOR, 0x6F95D6, 0.4, 0.25, 1.0, 0.6, 0, 0.0, 24, 2, Items.WOODEN_SWORD,
+ 		"calm and protective"),
+-	SAGE("Sage", Role.STRATEGIST, 0xB39DDB, 0.6, 0.50, 0.3, 0.7, 0, 0.0, 20, 0, null,
++	SAGE("Sage", Role.STRATEGIST, 0xB39DDB, 0.6, 0.50, 0.3, 0.7, 0, 0.0, 20, 0, Items.WOODEN_SWORD,
+ 		"thoughtful and observant"),
+ 	TERRA("Terra", Role.LANDSCAPER, 0xC27BA0, 0.5, 0.45, 0.4, 0.7, 0, 0.0, 20, 0, Items.WOODEN_SHOVEL,
+ 		"creative and tidy"),
+@@ -119,7 +119,10 @@ public enum FriendId {
+ 		return baseArmour;
+ 	}
+ 
+-	/** Wooden tool the friend brings when recruited, or {@code null}. */
++	/**
++	 * Wooden tool the friend brings when recruited: every friend brings something they can fight back with (Sage, who
++	 * needs no tool for her planning, a sword), so nobody can only run from a zombie.
++	 */
+ 	public Item starterTool() {
+ 		return starterTool;
+ 	}
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/Line.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/Line.java
+index 11837f7..b0eca93 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/Line.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/Line.java
+@@ -46,6 +46,10 @@ public enum Line {
+ 	NIGHT_RETURN(Priority.CASUAL, 6000, 0),
+ 	/** Morning greeting. */
+ 	MORNING(Priority.CASUAL, 12000, 0),
++	/** Taking the night watch while the others sleep. */
++	NIGHT_WATCH(Priority.IMPORTANT, 6000, 0),
++	/** On watch, raising the alarm: a hostile has come into the camp. %1$s = its name as the game shows it ("Zombie"). */
++	ALARM(Priority.DANGER, 200, 1),
+ 
+ 	// Work
+ 	/** Starting their main job. %1$s = activity. */
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/Lines.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/Lines.java
+index 7d93a7b..83f96b2 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/Lines.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/companion/Lines.java
+@@ -156,6 +156,10 @@ public final class Lines {
+ 		generic(Line.NIGHT_RETURN, "It's getting dark. Heading back to camp.", "Dusk. Time to go home.",
+ 			"Night's coming. Back to camp.");
+ 		generic(Line.MORNING, "Good morning.", "Morning, everyone.", "A new day.");
++		generic(Line.NIGHT_WATCH, "I'll keep watch. Sleep well.", "I've got the watch. Get some rest.",
++			"My watch. Off to bed, everyone.");
++		generic(Line.ALARM, "%1$s in the camp! Everyone up!", "Wake up! %1$s in the camp!",
++			"Alarm! %1$s inside the camp!");
+ 		generic(Line.WORK_START, "I'll be %1$s.", "Time for %1$s.", "Starting on it: %1$s.");
+ 		generic(Line.NEED_TOOL, "I need a tool: %1$s.", "Any %1$s going spare?", "Tool needed: %1$s.");
+ 		generic(Line.TOOL_BROKE, "My %1$s broke.", "There goes my %1$s.", "My %1$s is worn out.");
+@@ -257,6 +261,14 @@ public final class Lines {
+ 			"Good morning! The crops look lovely in the sun.",
+ 			"Morning, everyone. Make sure you have some breakfast.",
+ 			"A new day. Let's see what's ripened overnight.");
++		put(f, Line.NIGHT_WATCH,
++			"I'll keep watch tonight. Sleep tight, dears.",
++			"My turn to watch. Rest now, all of you. I'll wake you if need be.",
++			"I'll sit up by the fire and keep an eye out. Goodnight.");
++		put(f, Line.ALARM,
++			"Wake up, everyone! %1$s in the camp!",
++			"Oh, there's a %1$s coming in! Up, quickly, dears!",
++			"Everyone up! %1$s by the camp, please hurry!");
+ 		put(f, Line.WORK_START,
+ 			"Right, I'll be %1$s if anyone needs me.",
+ 			"Time for %1$s. Slow and steady does it.",
+@@ -435,6 +447,14 @@ public final class Lines {
+ 			"Morning. I've got a plan for today.",
+ 			"Good morning. Let's check the materials and get started.",
+ 			"New day. First job: count the planks.");
++		put(f, Line.NIGHT_WATCH,
++			"I'll take the watch. Get your rest.",
++			"My watch. Nothing gets past the fire.",
++			"Watch is mine tonight. Sleep, we've work in the morning.");
++		put(f, Line.ALARM,
++			"%1$s in the camp! Up, everyone, tools in hand!",
++			"Wake up! %1$s at the camp. Let's deal with it together.",
++			"Alarm! %1$s inside the camp. On your feet!");
+ 		put(f, Line.WORK_START,
+ 			"Starting on it: %1$s.",
+ 			"Plan's set. I'll be %1$s.",
+@@ -611,6 +631,14 @@ public final class Lines {
+ 			"Morning. Survived another night. Impressive, really.",
+ 			"Good morning. Nothing exploded. Promising start.",
+ 			"Morning. Daylight. My favourite kind of light.");
++		put(f, Line.NIGHT_WATCH,
++			"I'll keep watch. Somebody has to stay paranoid.",
++			"My watch. I'll be the one staring at shadows.",
++			"I've got the watch. Sleep. I'll worry for everyone.");
++		put(f, Line.ALARM,
++			"%1$s in the camp. Told you the dark was trouble. Up!",
++			"Everyone up. There's a %1$s, and it's not here to chat.",
++			"Wake up! %1$s in camp. Not a drill.");
+ 		put(f, Line.WORK_START,
+ 			"Right. I'll be %1$s. Carefully.",
+ 			"Time for %1$s. Torches at the ready.",
+@@ -790,6 +818,14 @@ public final class Lines {
+ 			"Morning! The world's waiting to be explored!",
+ 			"Good morning! I wonder what's over the next hill.",
+ 			"Rise and shine! Let's see what's out there!");
++		put(f, Line.NIGHT_WATCH,
++			"I'll take the watch! I can see the whole camp from here.",
++			"Watch is mine! Sleep tight, I'll keep my eyes peeled.",
++			"On watch! Nothing's sneaking past me tonight.");
++		put(f, Line.ALARM,
++			"%1$s in the camp! Everybody up, now!",
++			"Contact! %1$s coming in! Wake up!",
++			"Alarm! %1$s spotted inside the camp!");
+ 		put(f, Line.WORK_START,
+ 			"Off I go, %1$s!",
+ 			"Time for %1$s! Back soon with news.",
+@@ -969,6 +1005,14 @@ public final class Lines {
+ 			"Morning! I dreamt about a piston lift!",
+ 			"Good morning! New day, new inventions!",
+ 			"Morning! Who's ready for some engineering?");
++		put(f, Line.NIGHT_WATCH,
++			"I'm on watch! Best time for thinking, anyway!",
++			"Night watch! I'll keep both eyes open, promise!",
++			"My watch! If only I'd built that alarm bell already!");
++		put(f, Line.ALARM,
++			"%1$s in the camp! Alarm! Alarm! Everyone up!",
++			"Wake up! %1$s! In the camp! Now!",
++			"Intruder alert! %1$s in camp! Up, up, up!");
+ 		put(f, Line.WORK_START,
+ 			"Ooh, %1$s! Let's go!",
+ 			"Time for %1$s! Brilliant!",
+@@ -1146,6 +1190,14 @@ public final class Lines {
+ 			"Morning. Another night behind us.",
+ 			"Dawn. All safe.",
+ 			"Morning. I kept watch. All's well.");
++		put(f, Line.NIGHT_WATCH,
++			"I have the watch. Sleep.",
++			"This watch is mine. Rest easy.",
++			"I'll keep watch. Nothing comes through.");
++		put(f, Line.ALARM,
++			"%1$s in the camp. Up. Arms ready.",
++			"To arms. %1$s inside the camp.",
++			"Wake. %1$s. Stand with me.");
+ 		put(f, Line.WORK_START,
+ 			"On duty: %1$s.",
+ 			"I'll be %1$s.",
+@@ -1323,6 +1375,14 @@ public final class Lines {
+ 			"Good morning. Let's review today's priorities.",
+ 			"Morning. A new day, a fresh plan.",
+ 			"Dawn. I've been thinking about what we need.");
++		put(f, Line.NIGHT_WATCH,
++			"I'll keep the watch. A rested camp is a safe camp.",
++			"My watch. Sleep; I'll keep my eyes on the dark.",
++			"The watch is mine tonight. Someone should always be awake.");
++		put(f, Line.ALARM,
++			"%1$s in the camp! Everyone up, stand together!",
++			"Alarm: %1$s inside the camp. Up, and stay together!",
++			"Wake up! %1$s in camp. Together we're stronger.");
+ 		put(f, Line.WORK_START,
+ 			"Next on the plan: %1$s.",
+ 			"I'll be %1$s. It's the sensible choice.",
+@@ -1501,6 +1561,14 @@ public final class Lines {
+ 			"Good morning! The dew on the grass is lovely.",
+ 			"Morning! Let's make camp prettier today.",
+ 			"Good morning! Everything looks so fresh.");
++		put(f, Line.NIGHT_WATCH,
++			"I'll keep watch. The camp looks lovely by firelight.",
++			"My watch tonight. Sleep well, I'll mind the garden.",
++			"I'm on watch. Nothing's trampling my paths tonight.");
++		put(f, Line.ALARM,
++			"%1$s in the camp! Everyone up, quickly!",
++			"Wake up! A %1$s is trampling through the camp!",
++			"Alarm! %1$s by the paths! Up, everyone!");
+ 		put(f, Line.WORK_START,
+ 			"I'll be %1$s. It'll look lovely when I'm done.",
+ 			"Time for %1$s. Neat and tidy.",
+@@ -1677,6 +1745,14 @@ public final class Lines {
+ 			"Morning! The trees are waiting.",
+ 			"Good morning. Who needs what today?",
+ 			"Morning! I'll fetch whatever the camp's short of.");
++		put(f, Line.NIGHT_WATCH,
++			"I'll keep watch. You lot get some sleep.",
++			"Watch is mine. Rest up, I'll wake you if anything comes.",
++			"I'll sit up by the fire. Sleep tight, all.");
++		put(f, Line.ALARM,
++			"%1$s in the camp! Up, everyone, grab your tools!",
++			"Wake up! %1$s coming in. Let's see it off together!",
++			"Alarm! %1$s at the camp! On your feet!");
+ 		put(f, Line.WORK_START,
+ 			"I'll be %1$s. Back soon with plenty.",
+ 			"Off I go, %1$s.",
+diff --git a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/event/ModEvents.java b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/event/ModEvents.java
+index 8537675..4b70458 100644
+--- a/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/event/ModEvents.java
++++ b/hardcore-friends/src/main/java/io/github/bradley09roberts/hardcorefriends/event/ModEvents.java
+@@ -23,6 +23,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.needs.SocializeTask;
+ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+ import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
+ import io.github.bradley09roberts.hardcorefriends.camp.CampProgress;
++import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
+ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+ import io.github.bradley09roberts.hardcorefriends.companion.Companions;
+ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
+@@ -62,6 +63,7 @@ public final class ModEvents {
+ 			Unity.tick(server);
+ 			CampNeeds.tick(server);
+ 			CampProgress.tick(server);
++			NightWatch.tick(server);
+ 		});
+ 		// A world closed and another opened in the same game keeps no claims, requests or chats from the last one.
+ 		ServerLifecycleEvents.SERVER_STARTING.register(server -> forgetSharedWork());
+@@ -72,10 +74,14 @@ public final class ModEvents {
+ 		});
+ 	}
+ 
+-	/** Forgets who holds which shared job, the requests to hand them back, and the chat invitations and memories. */
++	/**
++	 * Forgets who holds which shared job, the requests to hand them back, the chat invitations and memories, and the
++	 * night watch's alarm.
++	 */
+ 	private static void forgetSharedWork() {
+ 		SpecialityTask.clearClaims();
+ 		SocializeTask.clear();
++		NightWatch.clear();
+ 	}
+ 
+ 	private static boolean huntsCompanions(Mob mob) {
+-- 
+2.43.0
+
