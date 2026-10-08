@@ -134,6 +134,23 @@ public enum Line {
 
 	// ==== Newcomers (package settler): strangers, their requests, joining the team ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** A stranger (not on the team) greets a player who comes close. */
+	STRANGER_HELLO(Priority.IMPORTANT, 3600, 0),
+	/**
+	 * A stranger, having said who they are, asks for something before joining. %1$s = what they ask for, e.g.
+	 * "4 bread and a hoe" (templates read it as "could you bring me %1$s?").
+	 */
+	STRANGER_ASKS(Priority.IMPORTANT, 0, 1),
+	/** Asked again without everything yet. %1$s = what is still missing, e.g. "2 more bread and a hoe". */
+	STRANGER_NOT_YET(Priority.IMPORTANT, 100, 1),
+	/** The stranger joins the team. %1$s = the player who brought what they asked for. */
+	STRANGER_JOINS(Priority.IMPORTANT, 0, 1),
+	/** The stranger would join, but the team (or this player's share of it) is full. */
+	STRANGER_TEAM_FULL(Priority.IMPORTANT, 200, 0),
+	/** A traveller arrives at the edge of the camp, hoping to be asked in. */
+	WANDERER_ARRIVES(Priority.IMPORTANT, 0, 0),
+	/** A traveller nobody asked in sets off again after their day at the camp. */
+	WANDERER_LEAVES(Priority.IMPORTANT, 0, 0),
 
 	// ==== end of settler ====
 

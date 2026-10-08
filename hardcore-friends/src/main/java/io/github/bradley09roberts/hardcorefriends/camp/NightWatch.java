@@ -138,7 +138,7 @@ public final class NightWatch {
 		if (mem.getLongOr("night", Long.MIN_VALUE) < nightIndex(level) - 1) {
 			return false;
 		}
-		return keys(mem.getStringOr("kept", "")).contains(c.friendId().key());
+		return keys(mem.getStringOr("kept", "")).contains(watchKey(c));
 	}
 
 	private static @Nullable CompanionEntity findWatcher(ServerLevel level) {
@@ -167,7 +167,7 @@ public final class NightWatch {
 			return current;
 		}
 		CompanionEntity chosen = choose(level, watch, mem);
-		String key = chosen == null ? "" : chosen.friendId().key();
+		String key = chosen == null ? "" : watchKey(chosen);
 		if (!key.equals(mem.getStringOr(watch.name(), ""))) {
 			mem.putString(watch.name(), key);
 			if (chosen != null) {
@@ -200,7 +200,7 @@ public final class NightWatch {
 			}
 		} else {
 			String first = mem.getStringOr(Watch.FIRST.name(), "");
-			pool.removeIf(c -> c.friendId().key().equals(first)); // they kept the first watch: they sleep now
+			pool.removeIf(c -> watchKey(c).equals(first)); // they kept the first watch: they sleep now
 		}
 		if (atCamp < 2) {
 			return null; // a friend on their own has nobody to watch over: they sleep, and wake if danger comes close
@@ -209,7 +209,7 @@ public final class NightWatch {
 		Set<String> lastNight = keys(mem.getStringOr("prev", ""));
 		Comparator<CompanionEntity> order = Comparator
 			.comparing((CompanionEntity c) -> !c.isHealthy())
-			.thenComparing(c -> lastNight.contains(c.friendId().key()))
+			.thenComparing(c -> lastNight.contains(watchKey(c)))
 			.thenComparing(Comparator.comparingInt(CompanionEntity::bestWeaponRank).reversed())
 			.thenComparing(Comparator.comparingDouble(CompanionEntity::getHealth).reversed())
 			.thenComparingInt(CompanionEntity::rosterIndex);
@@ -235,11 +235,19 @@ public final class NightWatch {
 			return null;
 		}
 		for (CompanionEntity c : Companions.in(level)) {
-			if (c.friendId().key().equals(key)) {
+			if (watchKey(c).equals(key)) {
 				return c;
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Who a watcher is in the rota's memory: a named friend's key ("aegis"), or a newcomer's own id, since newcomers
+	 * share their archetype's key and must never be taken for that friend (or for each other).
+	 */
+	private static String watchKey(CompanionEntity c) {
+		return c.isSettler() ? c.getUUID().toString() : c.friendId().key();
 	}
 
 	private static Set<String> keys(String list) {

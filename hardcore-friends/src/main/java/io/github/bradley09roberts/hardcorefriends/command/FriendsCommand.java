@@ -138,6 +138,7 @@ public final class FriendsCommand {
 			"/friends camp | camp set | chest (look at a chest or barrel)",
 			"/friends unity | plan | advice | log | chatter <quiet|normal|chatty>",
 			"/friends dismiss <name>  - they leave and drop their backpack",
+			"/friends newcomers  - people met in villages, survivor camps and on the road (right-click to talk)",
 			"Right-click a friend: status. Sneak + right-click: open backpack. Give food to feed or heal them.",
 			"Friends: Fern (farmer), Oak (builder), Flint (miner), Scout (explorer), Spark (inventor),",
 			"Aegis (warrior), Sage (strategist), Terra (landscaper), Rowan (forager).",
@@ -171,6 +172,7 @@ public final class FriendsCommand {
 			line.append(Component.literal(text).withStyle(ChatFormatting.WHITE));
 			source.sendSuccess(() -> line, false);
 		}
+		source.sendSuccess(() -> Component.literal("Newcomers met in the world: /friends newcomers").withStyle(ChatFormatting.GRAY), false);
 		return 1;
 	}
 
@@ -536,7 +538,16 @@ public final class FriendsCommand {
 		CommandSourceStack source = ctx.getSource();
 		Optional<FriendId> id = FriendId.byKey(StringArgumentType.getString(ctx, "name"));
 		if (id.isEmpty()) {
-			source.sendFailure(Component.literal("Unknown friend. Try: " + names()));
+			Optional<CompanionEntity> newcomer = findNewcomer(StringArgumentType.getString(ctx, "name"));
+			if (newcomer.isPresent()) {
+				CompanionEntity c = newcomer.get();
+				BlockPos p = c.blockPosition();
+				double dist = c.level() == source.getLevel() ? Math.sqrt(c.distanceToSqr(source.getPosition())) : -1;
+				source.sendSuccess(() -> Component.literal(c.displayName() + " is at " + posText(p)
+					+ (dist >= 0 ? String.format(Locale.ROOT, " (%.0f blocks away)", dist) : "") + ", " + c.activity() + "."), false);
+				return 1;
+			}
+			source.sendFailure(Component.literal("Unknown friend. Try: " + names() + " (newcomers: /friends newcomers)"));
 			return 0;
 		}
 		Optional<CompanionEntity> live = Companions.find(id.get());

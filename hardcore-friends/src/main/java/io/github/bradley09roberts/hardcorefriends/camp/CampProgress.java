@@ -34,7 +34,7 @@ public final class CampProgress {
 		if (data.campPos().isEmpty() || data.stage() >= Camp.MAX_STAGE) {
 			return;
 		}
-		Set<Role> available = availableRoles(data);
+		Set<Role> available = availableRoles(server, data);
 		List<Structures.Entry> missing = Structures.missing(data, data.stage(), available::contains);
 		int nextStage = data.stage() + 1;
 		if (missing.isEmpty() && data.unity() >= Camp.STAGE_UNITY[nextStage]) {
@@ -48,6 +48,16 @@ public final class CampProgress {
 				+ describe(Structures.forStage(nextStage))).withStyle(ChatFormatting.GOLD));
 			Unity.applyBackpackSizes();
 		}
+	}
+
+	/**
+	 * Roles on the team: the named friends who are alive and the newcomers recruited and still alive, loaded or not.
+	 * A newcomer builder lets the camp grow without Oak.
+	 */
+	public static Set<Role> availableRoles(MinecraftServer server, CampData data) {
+		Set<Role> roles = availableRoles(data);
+		roles.addAll(io.github.bradley09roberts.hardcorefriends.settler.Settlers.teamRoles(server));
+		return roles;
 	}
 
 	/** Roles of friends currently on the team (alive), whether or not they are loaded. */

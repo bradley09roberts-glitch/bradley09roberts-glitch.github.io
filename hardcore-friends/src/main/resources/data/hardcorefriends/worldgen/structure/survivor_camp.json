@@ -1,0 +1,6 @@
+{
+  "type": "hardcorefriends:survivor_camp",
+  "biomes": "#hardcorefriends:has_structure/survivor_camp",
+  "spawn_overrides": {},
+  "step": "surface_structures"
+}

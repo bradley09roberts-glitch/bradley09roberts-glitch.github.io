@@ -204,7 +204,7 @@ public class CompanionEntity extends PathfinderMob {
 
 	/** Their own name: "Fern", or a newcomer's, such as "Mabel". */
 	public String displayName() {
-		return persona != null ? persona.name() : displayName();
+		return persona != null ? persona.name() : friendId().displayName();
 	}
 
 	/** Their name colour, 0xRRGGBB. */
@@ -408,8 +408,14 @@ public class CompanionEntity extends PathfinderMob {
 		};
 	}
 
-	/** The camp centre if the camp is in this dimension, otherwise where this friend was recruited. */
+	/**
+	 * The camp centre if the camp is in this dimension, otherwise where this friend was recruited. A stranger (not on
+	 * the team yet) lives somewhere else entirely, so theirs is always their own spot.
+	 */
 	public BlockPos homePos() {
+		if (mode() == CompanionMode.STRANGER && homePos != null) {
+			return homePos;
+		}
 		if (this.level() instanceof ServerLevel level) {
 			var camp = Camp.center(level);
 			if (camp.isPresent()) {
@@ -951,14 +957,17 @@ public class CompanionEntity extends PathfinderMob {
 				data.markDanger(blockPosition(), level.getGameTime());
 				data.touchLedger();
 			}
-			BlockPos p = blockPosition();
-			Speech.announce(level.getServer(), Speech.prefix(this).append(Component.literal(
-				cause.getString() + ". Their backpack lies at " + p.getX() + " " + p.getY() + " " + p.getZ() + ".")
-				.withStyle(ChatFormatting.RED)));
-			Unity.lose(level.getServer(), 80);
-			for (CompanionEntity other : Companions.all()) {
-				if (other != this) {
-					Speech.say(other, Line.FRIEND_DIED, displayName());
+			// A stranger was never on the team: the team does not mourn them (the settler package tells those nearby).
+			if (isTeamMember()) {
+				BlockPos p = blockPosition();
+				Speech.announce(level.getServer(), Speech.prefix(this).append(Component.literal(
+					cause.getString() + ". Their backpack lies at " + p.getX() + " " + p.getY() + " " + p.getZ() + ".")
+					.withStyle(ChatFormatting.RED)));
+				Unity.lose(level.getServer(), 80);
+				for (CompanionEntity other : Companions.all()) {
+					if (other != this) {
+						Speech.say(other, Line.FRIEND_DIED, displayName());
+					}
 				}
 			}
 		}
