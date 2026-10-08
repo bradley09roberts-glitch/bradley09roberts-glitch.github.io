@@ -22,11 +22,13 @@ import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 
 /**
- * The farmer keeps the pen to a sensible size: when a kind has more grown animals than the
- * {@value Livestock#KEEP_ADULTS} kept for breeding, she takes a sword or an axe (her own, or one from the supply chest),
- * goes into the paddock and butchers the surplus, up to two a visit, then gathers the drops (meat, leather, wool,
- * feathers) into her backpack. She never takes a kind below its breeding adults, never a young one, and never an
- * animal in love.
+ * The farmer keeps the pen to a sensible size: when a kind has more grown animals than are kept for breeding
+ * ({@link Livestock#keepAdults}: {@value Livestock#KEEP_ADULTS}, fewer when the pen is full), she takes a sword or an
+ * axe (her own, or one from the supply chest), goes into the paddock and butchers the surplus, up to two a visit, then
+ * gathers the drops (meat, leather, wool, feathers) into her backpack. She never takes a kind below its breeding
+ * adults, never a young one, never an animal in love, and never one that is plainly somebody's (named, on a lead,
+ * saddled, owned: {@link Wildlife#isSomebodys}); those count among the animals kept. She only strikes with the gate
+ * shut, and does not start while a player is in or right by the pen (the gate could not be shut).
  */
 public final class ButcherTask implements CompanionTask {
 	public static final String ID = "fern.butcher";
@@ -62,9 +64,24 @@ public final class ButcherTask implements CompanionTask {
 		return k == null ? "butchering" : "butchering a " + k.singular();
 	}
 
-	/** How many grown animals of the kind are more than the pen keeps. */
+	/**
+	 * How many grown animals of the kind may be butchered: those beyond the ones the pen keeps, and no more than there
+	 * are animals she may take (somebody's animals and ones in love count among the kept, never the taken).
+	 */
 	static int surplus(List<Animal> animals, Livestock.Kind k) {
-		return Livestock.count(animals, k, true) - Livestock.keepAdults(k);
+		int extra = Livestock.count(animals, k, true) - Livestock.keepAdults(animals, k);
+		int takeable = 0;
+		for (Animal a : animals) {
+			if (mayTake(a, k)) {
+				takeable++;
+			}
+		}
+		return Math.min(extra, takeable);
+	}
+
+	/** A grown animal of the kind, not in love (breeding comes first), and nobody's but the camp's. */
+	private static boolean mayTake(Animal a, Livestock.Kind k) {
+		return a.isAlive() && Livestock.kind(a) == k && !a.isBaby() && !a.isInLove() && !Wildlife.isSomebodys(a);
 	}
 
 	@Override
@@ -72,8 +89,8 @@ public final class ButcherTask implements CompanionTask {
 		ServerLevel level = (ServerLevel) c.level();
 		Pen pen = Pen.of(level).orElse(null);
 		planned = null;
-		if (pen == null || Pen.otherAtWork(c)) {
-			return 0;
+		if (pen == null || Pen.otherAtWork(c) || pen.playerNear(level)) {
+			return 0; // with a player by the pen the gate cannot be shut, and nothing is struck with it open
 		}
 		if (!c.isArmed() && Stores.inChest(c, WEAPON) == 0) {
 			return 0;
@@ -138,7 +155,8 @@ public final class ButcherTask implements CompanionTask {
 					return TaskStatus.FAILURE;
 				}
 				if (step == Pen.Step.DONE) {
-					phase = Phase.KILL;
+					// In, but the gate would not shut (someone by it): a struck animal could run out, so out again.
+					phase = pen.get().gateShut(level) ? Phase.KILL : Phase.LEAVE;
 					walk.reset();
 				}
 			}
@@ -160,8 +178,13 @@ public final class ButcherTask implements CompanionTask {
 
 	private void kill(CompanionEntity c, Pen pen, Livestock.Kind k) {
 		ServerLevel level = (ServerLevel) c.level();
+		if (!pen.gateShut(level)) {
+			target = null; // someone opened the gate (or broke it): never strike with it open
+			phase = Phase.LEAVE;
+			return;
+		}
 		Animal a = target;
-		if (a == null || !a.isAlive() || a.isBaby() || a.isInLove() || !pen.holds(a)) {
+		if (a == null || !mayTake(a, k) || !pen.holds(a)) {
 			List<Animal> animals = pen.animals(level);
 			if (surplus(animals, k) <= 0) {
 				phase = Phase.LEAVE;
@@ -188,8 +211,8 @@ public final class ButcherTask implements CompanionTask {
 			}
 			return;
 		}
-		if (a.isBaby() || surplus(pen.animals(level), k) <= 0) {
-			target = null; // never a young one, never below the breeding adults
+		if (!mayTake(a, k) || surplus(pen.animals(level), k) <= 0) {
+			target = null; // never a young one, nobody's own animal, never below the breeding adults
 			phase = Phase.LEAVE;
 			return;
 		}
@@ -204,12 +227,12 @@ public final class ButcherTask implements CompanionTask {
 		}
 	}
 
-	/** The nearest grown animal of the kind that is not in love (breeding comes first). */
+	/** The nearest grown animal of the kind she may take (not in love, not somebody's). */
 	private static @Nullable Animal pick(CompanionEntity c, List<Animal> animals, Livestock.Kind k) {
 		Animal best = null;
 		double bestScore = Double.MAX_VALUE;
 		for (Animal a : animals) {
-			if (Livestock.kind(a) != k || a.isBaby() || a.isInLove()) {
+			if (!mayTake(a, k)) {
 				continue;
 			}
 			double score = a.distanceToSqr(c);

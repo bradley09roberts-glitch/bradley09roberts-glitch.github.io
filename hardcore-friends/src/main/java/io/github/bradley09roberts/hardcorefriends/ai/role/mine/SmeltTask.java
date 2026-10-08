@@ -107,7 +107,7 @@ public final class SmeltTask implements CompanionTask {
 	}
 
 	/** Smelts per fuel item, doubled so planks (1.5) stay whole: coal 16, planks 3. */
-	private static int halfSmeltsPer(ItemStack fuel) {
+	public static int halfSmeltsPer(ItemStack fuel) {
 		if (fuel.is(ItemTags.COALS)) {
 			return 16;
 		}

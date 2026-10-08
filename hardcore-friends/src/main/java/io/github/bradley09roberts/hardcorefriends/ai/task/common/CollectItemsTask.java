@@ -12,6 +12,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.ranch.Pen;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
@@ -64,7 +65,11 @@ public final class CollectItemsTask implements CompanionTask {
 		return KeepList.isUseful(c.friendId().role(), planned.getItem()) ? 35 : 25;
 	}
 
-	/** Whether a friend may tidy this item away: old enough, not a backpack, not thrown by a player, and it fits. */
+	/**
+	 * Whether a friend may tidy this item away: old enough, not a backpack, not thrown by a player, not shut in the
+	 * animal pen (an egg a hen laid: out of reach behind the fence, unless the friend is in the paddock too), and it
+	 * fits.
+	 */
 	public static boolean mayCollect(CompanionEntity c, ItemEntity item) {
 		if (!item.isAlive() || item.isRemoved() || item.isInLava()) {
 			return false;
@@ -75,6 +80,10 @@ public final class CollectItemsTask implements CompanionTask {
 		}
 		Entity thrower = item.getOwner();
 		if (thrower instanceof Player) {
+			return false;
+		}
+		if (c.level() instanceof ServerLevel level
+			&& Pen.site(level).filter(p -> p.covers(item.blockPosition()) && !p.holds(c)).isPresent()) {
 			return false;
 		}
 		return c.backpack().canFit(stack.copyWithCount(1));

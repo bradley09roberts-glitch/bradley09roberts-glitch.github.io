@@ -18,6 +18,7 @@ import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 
 import io.github.bradley09roberts.hardcorefriends.ai.role.TeamCache;
@@ -37,9 +38,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * once per animal per scan, and only for animals that pass every cheap check first.
  *
  * <p>An animal counts as somebody's, and is never led away or hunted, when it has a name, is tamed or owned, is on a
- * lead, rides or is ridden, stands within {@value #PLAYER_BUILD_GAP} blocks of anything a player built
- * ({@link WorldEditGuard#looksPlayerBuilt}: fences, gates and every other build marker), or stands inside a ring of
- * a player's fences or walls.
+ * lead, rides or is ridden, wears a saddle or body armour, stands within {@value #PLAYER_BUILD_GAP} blocks of anything
+ * a player built ({@link WorldEditGuard#looksPlayerBuilt}: fences, gates and every other build marker), or stands
+ * inside a ring of a player's fences or walls ({@link #enclosed}). The first group ({@link #isSomebodys}) also keeps
+ * an animal in the pen from being butchered.
  */
 public final class Wildlife {
 	/** How often the team looks for animals again, in ticks. */
@@ -50,8 +52,12 @@ public final class Wildlife {
 	public static final int PLAYER_BUILD_GAP = 4;
 	/** A hunter leaves the last two of a kind within this many blocks alone. */
 	public static final int KIN_RADIUS = 24;
-	/** How far each way an animal is checked for a player's fence or wall round it. */
+	/** How far each way an animal is checked for a player's fence, wall or gate round it (a long field counts too). */
+	private static final int FENCE_REACH = MAX_RING;
+	/** How far each way an animal is checked for any other player-made block closing it in (a house wall, say). */
 	private static final int ENCLOSURE_REACH = 24;
+	/** The most a fence line on a slope may stand above or below the animal and still be seen. */
+	private static final int SLOPE_BAND = 8;
 
 	/** The team's latest scan. */
 	private static final class Seen {
@@ -93,7 +99,7 @@ public final class Wildlife {
 	 * remembered for the rest of the scan.
 	 */
 	public static boolean looksOwned(ServerLevel level, Animal a) {
-		if (ownedOnSight(a)) {
+		if (isSomebodys(a)) {
 			return true;
 		}
 		Seen seen = seen(level);
@@ -108,12 +114,15 @@ public final class Wildlife {
 
 	/** {@link #looksOwned} worked out afresh, for the moment before a blow is struck. */
 	public static boolean looksOwnedNow(ServerLevel level, Animal a) {
-		return ownedOnSight(a) || nearPlayersThings(level, a);
+		return isSomebodys(a) || nearPlayersThings(level, a);
 	}
 
-	/** Named, tamed or owned, on a lead, riding or ridden. */
-	private static boolean ownedOnSight(Animal a) {
-		if (a.hasCustomName() || a.isLeashed() || a.isPassenger() || a.isVehicle()) {
+	/**
+	 * True if the animal plainly belongs to somebody, wherever it stands (in the pen too): it has a name, is tamed or
+	 * owned, is on a lead, rides or is ridden, or wears a saddle or body armour (only a player puts those on).
+	 */
+	public static boolean isSomebodys(Animal a) {
+		if (a.hasCustomName() || a.isLeashed() || a.isPassenger() || a.isVehicle() || a.isSaddled() || a.isWearingBodyArmor()) {
 			return true;
 		}
 		return a instanceof OwnableEntity owned && owned.getOwnerReference() != null;
@@ -126,9 +135,10 @@ public final class Wildlife {
 	}
 
 	/**
-	 * True if a fence, wall or other player-made block stands in each of the four directions within
-	 * {@value #ENCLOSURE_REACH} blocks: the animal is inside a player's enclosure. The friends' own blocks (the pen)
-	 * do not count.
+	 * True if the animal is inside a player's enclosure: in each of the four directions a fence, wall or fence gate
+	 * stands within {@value #FENCE_REACH} blocks, or another player-made block (a build marker: a house wall, say)
+	 * within {@value #ENCLOSURE_REACH}. Each look follows the lie of the land, so a fence line on a slope, above or
+	 * below the animal, is seen too. The friends' own blocks (the pen) do not count.
 	 */
 	public static boolean enclosed(ServerLevel level, CampData data, BlockPos pos) {
 		for (Direction d : Direction.Plane.HORIZONTAL) {
@@ -141,21 +151,35 @@ public final class Wildlife {
 
 	private static boolean barrierTowards(ServerLevel level, CampData data, BlockPos pos, Direction d) {
 		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
-		for (int i = 1; i <= ENCLOSURE_REACH; i++) {
-			for (int dy = 0; dy <= 1; dy++) {
-				m.set(pos.getX() + d.getStepX() * i, pos.getY() + dy, pos.getZ() + d.getStepZ() * i);
-				if (!level.isLoaded(m)) {
-					return false;
-				}
+		int y = pos.getY();
+		for (int i = 1; i <= FENCE_REACH; i++) {
+			int x = pos.getX() + d.getStepX() * i;
+			int z = pos.getZ() + d.getStepZ() * i;
+			m.set(x, y, z);
+			if (!level.isLoaded(m)) {
+				return false;
+			}
+			// The ground here: a fence or wall stands on it (it blocks motion, so the surface is just above it).
+			int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+			int from = Math.max(y - SLOPE_BAND, Math.min(y, top - 1) - 1);
+			int to = Math.min(y + SLOPE_BAND, Math.max(y + 1, top));
+			for (int at = from; at <= to; at++) {
+				m.setY(at);
 				BlockState s = level.getBlockState(m);
-				boolean barrier = s.is(BlockTags.FENCES) || s.is(BlockTags.WALLS) || s.is(BlockTags.FENCE_GATES)
-					|| s.is(ModTags.BUILD_MARKERS) && !s.is(Blocks.FARMLAND) && !s.is(Blocks.DIRT_PATH);
-				if (barrier && !data.isPlacedByFriends(level, m)) {
+				if (closesIn(s, i) && !data.isPlacedByFriends(level, m)) {
 					return true;
 				}
 			}
 		}
 		return false;
+	}
+
+	/** A block that closes an animal in at this distance: a fence, wall or gate, or near enough any build marker. */
+	private static boolean closesIn(BlockState s, int distance) {
+		if (s.is(BlockTags.FENCES) || s.is(BlockTags.WALLS) || s.is(BlockTags.FENCE_GATES)) {
+			return true;
+		}
+		return distance <= ENCLOSURE_REACH && s.is(ModTags.BUILD_MARKERS) && !s.is(Blocks.FARMLAND) && !s.is(Blocks.DIRT_PATH);
 	}
 
 	/** Cheap checks for any animal the friends may take: alive, grown up, in the gathering zone, out of the pen. */
@@ -170,7 +194,7 @@ public final class Wildlife {
 		if (!WorldEditGuard.inResourceZone(c, pos) || Math.abs(pos.getY() - c.homePos().getY()) > 24) {
 			return false;
 		}
-		return !data.nearDanger(pos, c.level().getGameTime()) && !ownedOnSight(a);
+		return !data.nearDanger(pos, c.level().getGameTime()) && !isSomebodys(a);
 	}
 
 	/**
@@ -185,6 +209,17 @@ public final class Wildlife {
 		}
 		CampData data = Camp.data(level.getServer());
 		return basicallyWild(c, a, pen, data) && !looksOwned(level, a);
+	}
+
+	/** {@link #mayLead} worked out afresh, for the moment the lead goes on or the animal starts to follow. */
+	public static boolean mayLeadNow(CompanionEntity c, Animal a, @Nullable Pen pen) {
+		ServerLevel level = (ServerLevel) c.level();
+		Livestock.Kind kind = Livestock.kind(a);
+		if (kind == null || !kind.penned()) {
+			return false;
+		}
+		CampData data = Camp.data(level.getServer());
+		return basicallyWild(c, a, pen, data) && !looksOwnedNow(level, a);
 	}
 
 	/**

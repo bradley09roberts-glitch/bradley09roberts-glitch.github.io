@@ -71,8 +71,8 @@ public final class BreedTask implements CompanionTask {
 		ServerLevel level = (ServerLevel) c.level();
 		Pen pen = Pen.of(level).orElse(null);
 		planned = null;
-		if (pen == null || Pen.otherAtWork(c)) {
-			return 0;
+		if (pen == null || Pen.otherAtWork(c) || pen.playerNear(level)) {
+			return 0; // with a player by the pen the gate could not be shut behind her
 		}
 		List<Animal> animals = pen.animals(level);
 		if (animals.size() + 1 > Livestock.MAX_TOTAL) {

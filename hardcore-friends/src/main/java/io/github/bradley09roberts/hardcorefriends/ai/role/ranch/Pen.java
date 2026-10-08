@@ -142,6 +142,19 @@ public record Pen(BlockPos origin, int rotation) {
 		return level.getBlockState(gate()).getBlock() instanceof FenceGateBlock;
 	}
 
+	/** True when the gate stands and is shut, so nothing can get out. */
+	public boolean gateShut(Level level) {
+		return hasGate(level) && !gateOpen(level);
+	}
+
+	/**
+	 * True while a player is in or within 3 blocks of the pen. The gate is never shut on them, so pen jobs that open
+	 * it do not start then (it would stand open the whole visit).
+	 */
+	public boolean playerNear(Level level) {
+		return !level.getEntitiesOfClass(Player.class, footprint().inflate(3), p -> !p.isSpectator()).isEmpty();
+	}
+
 	/**
 	 * True if the gate may be shut now: nobody (animal, friend or player) stands in the gateway, no friend is still in
 	 * the paddock, and no player is in or right by the pen.
@@ -153,7 +166,7 @@ public record Pen(BlockPos origin, int rotation) {
 		if (!friendsInside(level, by).isEmpty() || holds(by)) {
 			return false;
 		}
-		return level.getEntitiesOfClass(Player.class, footprint().inflate(3), p -> !p.isSpectator()).isEmpty();
+		return !playerNear(level);
 	}
 
 	/** True when a friend other than {@code c} is at work in the pen or at its gate. */
@@ -311,10 +324,13 @@ public record Pen(BlockPos origin, int rotation) {
 		return c.actions().isStuck() ? Step.FAILED : Step.RUNNING;
 	}
 
-	/** True if nobody (animal, friend or player) stands in the gateway, and no player is in or by the pen. */
-	private boolean gatewayClear(ServerLevel level) {
+	/**
+	 * True if nobody (animal, friend or player) stands in the gateway, and no player is in or by the pen: a friend in
+	 * the paddock may shut the gate behind them.
+	 */
+	boolean gatewayClear(ServerLevel level) {
 		return level.getEntitiesOfClass(LivingEntity.class, new AABB(gate()).inflate(0.05, 0, 0.05), LivingEntity::isAlive).isEmpty()
-			&& level.getEntitiesOfClass(Player.class, footprint().inflate(3), p -> !p.isSpectator()).isEmpty();
+			&& !playerNear(level);
 	}
 
 	/** The direction from the gate into the paddock. */

@@ -110,31 +110,31 @@ Nine friends eat a lot, and wheat alone struggles to keep up: a loaf of bread ta
 
 **The animal pen.** Terra builds a 9×9 ring of wooden fences with a gate inside the camp, on a level patch of natural ground away from your builds, with the gate facing the camp centre. It is built from real materials like any building (31 fences and a gate: about 15 logs' worth of planks and sticks, crafted at a crafting table). The pen is optional: the camp grows to the next stage without it, but the friends keep no animals until it stands. If a fence or the gate goes missing, Terra puts it back.
 
-**Bringing animals home.** By day, Fern looks for wild cows, pigs, sheep and chickens in the camp and the gathering ring and brings them home until the pen has a pair of each.
+**Bringing animals home.** By day, Fern looks for wild cows, pigs, sheep and chickens in the camp and the gathering ring and brings them home until the pen has a pair of each. An animal of a kind the pen keeps that got out and wanders the camp is brought back too, while its kind has room.
 
 - **With a lead** in the supply chest she ties it on and leads the animal home. The lead is used up while it is on the animal and comes back when she unties it in the pen, as in vanilla. Leads are optional.
 - **Without a lead** she holds the animal's favourite food and it follows her: wheat for cows and sheep, a carrot, potato or beetroot for pigs, seeds for chickens. The food is only held, not used up.
-- She opens the gate, leads the animal to the back of the pen, lets it go and shuts the gate behind her.
+- At the gate she first sends the pen's animals standing by it to the back, opens it, draws the animal in a few steps and shuts the gate behind them both. Then she lets it go at the back of the pen and goes out the way every pen job does. If it lags behind outside, she goes out and shuts the gate before going back for it.
 
 **Breeding.** When two grown animals of a kind in the pen are ready, Fern takes two of their food from her backpack or the chest, goes in (shutting the gate behind her), feeds them (the food is used up), and they have a young one. The pen holds up to 6 of a kind (three pairs) and 12 animals in all.
 
-**Butchering.** Fern keeps 4 grown animals of each kind for breeding. When there are more, she butchers the extra ones with a sword or an axe (her own, or one borrowed from the chest), two at a time, and gathers the meat, leather, wool and feathers. She never touches a young animal or one in love, and never takes a kind below its breeding animals.
+**Butchering.** Fern keeps 4 grown animals of each kind for breeding. When the pen is full (12 animals) she keeps fewer, so there is always room to breed again: 2 of each kind with four kinds in the pen, 3 with three. She butchers the extra ones with a sword or an axe (her own, or one borrowed from the chest), up to two a visit, and gathers the meat, leather, wool and feathers. She never touches a young animal or one in love, never takes a kind below a breeding pair, and never butchers an animal of yours in the pen (named, on a lead, saddled, tamed or owned): those count among the ones she keeps. She only strikes with the gate shut, and goes out again if someone opens it.
 
-**Cooking.** Raw beef, pork, mutton, chicken, rabbit and fish (from her backpack or the chest) go on the camp's lit campfire, four at a time. Fern waits by the fire, picks up each piece as it is done and puts the cooked food in the supply chest, where everyone eats from. She only picks up as many pieces as she put on, so your own cooking is left alone. When the campfire is full she uses the camp furnace the friends built instead (with coal, charcoal or planks), and whoever empties the furnace brings the food to the chest.
+**Cooking.** Raw beef, pork, mutton, chicken, rabbit and fish (from her backpack or the chest) go on the camp's lit campfire, up to four at a time. Fern waits by the fire and picks up each piece as it comes off a spot she filled, then puts the cooked food in the supply chest, where everyone eats from. Your own cooking on the same fire, and cooked food already lying about, is left alone (the friends do tidy up items left lying around the camp for a while, into the chest). When the campfire is full she uses the plain furnace the friends built instead, with coal, charcoal or planks fetched for exactly what goes in: she never puts in more meat than the fuel can cook, so the furnace is never left blocked with raw meat. If it ever does go out with raw meat in it, she gives it the fuel it needs. Whoever empties the furnace brings the food to the chest.
 
 **Hunting.** When the camp is short of food, a friend who is healthy and carries a sword or an axe hunts a wild cow, pig, sheep, chicken or rabbit in the gathering ring outside the camp and brings back what it drops.
 
 **Your animals are safe.** The friends never lead away or hunt:
 
-- an animal with a name (from a name tag), a tamed or owned animal, one on a lead, or one riding or being ridden;
-- an animal within 4 blocks of anything you built (fences, gates, walls and every other crafted block), or inside your own fences or walls;
+- an animal with a name (from a name tag), a tamed or owned animal, one on a lead, one riding or being ridden, or one wearing a saddle or armour;
+- an animal within 4 blocks of anything you built (fences, gates, walls and every other crafted block), or inside your own fences or walls, also on a hillside or in a long field (fences, walls and gates up to 48 blocks away count);
 - a young animal, or one of the last two of its kind within 24 blocks;
 - an animal in the camp (those belong in the pen) or in the pen itself;
 - anything near where a friend died lately.
 
-They only hunt by day: never at dusk or at night. To keep an animal of yours safe anywhere, give it a name or keep it fenced in.
+They only hunt by day: never at dusk or at night. Animals of yours with a name, a lead, a saddle or an owner are never butchered either, even in the friends' pen. To keep an animal of yours safe anywhere, give it a name or keep it fenced in.
 
-**The gate.** Friends open and shut the pen gate themselves. They never shut it while you are in or right next to the pen, or while anyone stands in the gateway, and a friend who ends up inside the pen with nothing to do there walks out and shuts the gate behind them.
+**The gate.** Friends open and shut the pen gate themselves. They never shut it while you are in or right next to the pen, or while anyone stands in the gateway, so while you are there they do not start pen jobs that open it. A friend who ends up inside the pen with nothing to do there walks out and shuts the gate behind them. Eggs laid in the pen and the ground inside it are left alone: nobody tries to tidy up behind the fence or plant flowers there.
 
 ## 7. Controls
 
@@ -202,7 +202,7 @@ None of these bonuses can stop you dying.
 - **Tree felling, quarrying and the staircase mine** happen only in a ring up to 48 blocks beyond the camp. Flint also mines ores that are already exposed, inside the camp or in that ring.
 - Friends never break chests, furnaces, signs, beds or any other block entity, or anything crafted-looking: planks, doors, glass, torches, slabs, stairs, fences and so on. They also stay clear of blocks next to such things.
 - Trees are felled only if they grew naturally (natural leaves), never log walls or trees inside camp. Quarry pits are 5×5 and at most 2 blocks deep. Mines stay inside one 24×24 area.
-- **Animals:** friends only lead away or hunt wild animals, never yours (named, tamed, on a lead, near anything you built or inside your fences), and only hunt by day in the gathering ring outside the camp (section 6). The only blocks they open and shut are the gate of their own pen.
+- **Animals:** friends only lead away or hunt wild animals, never yours (named, tamed, on a lead, saddled, near anything you built or inside your fences), never butcher yours in their pen, and only hunt by day in the gathering ring outside the camp (section 6). The only blocks they open and shut are the gate of their own pen.
 - Every change is logged (`/friends log`). Turn editing off entirely with `allowWorldEditing: false`, or individually with `allowTreeFelling`, `allowQuarrying` and `allowMining`.
 
 ## 13. Honest limits

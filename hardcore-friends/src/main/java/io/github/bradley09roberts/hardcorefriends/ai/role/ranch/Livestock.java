@@ -65,13 +65,17 @@ public final class Livestock {
 
 	/** Two of a kind make a breeding pair: the pen is stocked until each kind has a pair. */
 	public static final int PAIR = 2;
-	/** Adults of each kind kept for breeding; the rest are butchered. Never fewer than a {@link #PAIR}. */
+	/**
+	 * Adults of each kind kept for breeding while the pen has room; the rest are butchered. A full pen keeps fewer
+	 * ({@link #keepAdults}), never fewer than a {@link #PAIR}.
+	 */
 	public static final int KEEP_ADULTS = 4;
 	/** At most this many of one kind in the pen, young ones included (three pairs). */
 	public static final int MAX_PER_KIND = 6;
 	/** At most this many animals in the pen altogether. */
 	public static final int MAX_TOTAL = 12;
 
+	/** Raw meats and fish, each at the same place as what it cooks into in {@link #COOKED_MEAT}. */
 	private static final List<Item> RAW_MEAT = List.of(Items.BEEF, Items.PORKCHOP, Items.MUTTON, Items.CHICKEN, Items.RABBIT,
 		Items.COD, Items.SALMON);
 	private static final List<Item> COOKED_MEAT = List.of(Items.COOKED_BEEF, Items.COOKED_PORKCHOP, Items.COOKED_MUTTON,
@@ -113,14 +117,34 @@ public final class Livestock {
 		return n;
 	}
 
-	/** Adults of this kind kept for breeding: {@value #KEEP_ADULTS}, never fewer than a pair. */
-	public static int keepAdults(Kind kind) {
-		return Math.max(PAIR, KEEP_ADULTS);
+	/**
+	 * Grown animals of a kind the pen keeps for breeding, given the animals in it now: {@value #KEEP_ADULTS} while there
+	 * is room for a young one. A full pen ({@value #MAX_TOTAL}) shares its room out among the kinds in it, keeping
+	 * {@code MAX_TOTAL / kinds - 1} of each (2 with four kinds, 3 with three, at most {@value #KEEP_ADULTS}), so there is
+	 * always a surplus to butcher and the room it frees lets breeding go on. Never fewer than a {@value #PAIR}.
+	 */
+	public static int keepAdults(List<? extends Animal> penned, Kind kind) {
+		if (penned.size() + 1 <= MAX_TOTAL) {
+			return Math.max(PAIR, KEEP_ADULTS);
+		}
+		int kinds = 0;
+		for (Kind k : Kind.values()) {
+			if (k.penned() && count(penned, k, false) > 0) {
+				kinds++;
+			}
+		}
+		return Math.max(PAIR, Math.min(KEEP_ADULTS, MAX_TOTAL / Math.max(1, kinds) - 1));
 	}
 
 	/** Raw beef, pork, mutton, chicken, rabbit, cod or salmon: what the campfire turns into a meal. */
 	public static boolean isRawMeat(ItemStack s) {
 		return !s.isEmpty() && RAW_MEAT.contains(s.getItem());
+	}
+
+	/** What a raw meat or fish cooks into ({@link Items#AIR} for anything else). */
+	public static Item cookedFrom(Item raw) {
+		int i = RAW_MEAT.indexOf(raw);
+		return i < 0 ? Items.AIR : COOKED_MEAT.get(i);
 	}
 
 	/** Cooked meat or fish. */

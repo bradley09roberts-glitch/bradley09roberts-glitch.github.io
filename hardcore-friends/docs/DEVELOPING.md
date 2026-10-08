@@ -99,8 +99,10 @@ These are the pieces your routines should use. Look at the sources for details.
 - **`world.TreeFinder`:** `analyse(level, logPos)` returns an `Optional<Tree>` (`base`, sorted `logs`, `height`); also `nearest(level, centre, radius ≤ 24, maxHeight, allowedPredicate)` and `isNaturalTreeLog`.
 - **`ai.role.ranch`** (livestock, DESIGN.md section 12):
   - `Pen.of(level)` is the finished animal pen: `paddock()`, `holds(entity)`, `animals(level)`, `gate()`, `outside()`, `inside()`, and `enter` / `leave` for walking through the gate (open, shut, never on anyone).
-  - `Wildlife.around(c)` is the team's cached scan of animals in the camp and gathering ring; `mayLead` and `mayHunt` apply the safety rules that keep the player's animals out of reach. Any job touching animals must go through them.
-  - `Livestock` holds the kinds, their food, and the pen's numbers.
+  - `Wildlife.around(c)` is the team's cached scan of animals in the camp and gathering ring; `mayLead` and `mayHunt` apply the safety rules that keep the player's animals out of reach. Any job touching animals must go through them, and any job that harms or takes an animal already in the pen must still skip `Wildlife.isSomebodys(animal)` (named, leashed, saddled, owned).
+  - A pen job must never strike an animal while the gate stands open (`Pen.gateShut`), and should not start while `Pen.playerNear` (the gate cannot be shut then).
+  - `Livestock` holds the kinds, their food, and the pen's numbers; `keepAdults(penned, kind)` is the one rule for how many grown animals a kind keeps (fewer when the pen is full).
+  - In game tests, place things at a pen cell with an absolute-to-relative conversion (`LivestockGameTest.rel`), not `GameTestHelper.relativePos`: in 26.3 that turns an unrotated test's positions round by 180 degrees.
 - **`ai.goal.Threats`:** `isThreat`, `nearest(entity, r)`, `around(entity, r)`, `nearestCreeper`, `isTargeting`.
 - **`companion.Speech`, `Line` and `Lines`:**
   - `Speech.say(c, Line.X, args...)` handles per-line cooldowns and chattiness. `Line` javadoc documents each line's arguments, and `Line.args()` says how many there are.
