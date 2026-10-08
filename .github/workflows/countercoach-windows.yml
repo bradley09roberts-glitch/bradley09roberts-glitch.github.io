@@ -1,9 +1,15 @@
 # Build, test and smoke-test the CounterCoach companion on a real Windows runner.
-# Manual only (Actions → "CounterCoach Windows build" → Run workflow); it never runs on push.
+# Runs on pushes to the CounterCoach branch that touch countercoach/, or manually
+# (Actions → "CounterCoach Windows build" → Run workflow, once this file is on main).
 name: CounterCoach Windows build
 
 on:
   workflow_dispatch:
+  push:
+    branches: [claude/beautiful-keller-fuz66v]
+    paths:
+      - "countercoach/**"
+      - ".github/workflows/countercoach-windows.yml"
 
 permissions:
   contents: read
@@ -26,9 +32,18 @@ jobs:
           cache: pnpm
           cache-dependency-path: countercoach/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      - name: Build installer and portable zip
+        run: pnpm --filter @countercoach/desktop dist:win
+      # Upload first so the installer is available even if a later check fails.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CounterCoach-Windows-installer
+          path: |
+            countercoach/apps/desktop/release/CounterCoach-Setup-*.exe
+            countercoach/apps/desktop/release/CounterCoach-*-win-x64.zip
+          if-no-files-found: error
       - run: pnpm typecheck
       - run: pnpm test
-      - run: pnpm --filter @countercoach/desktop dist:win
       - name: Smoke-launch the unpacked app
         shell: pwsh
         run: |
@@ -49,9 +64,3 @@ jobs:
           Start-Sleep -Seconds 5
           if (Test-Path (Join-Path $dir "CounterCoach.exe")) { throw "not uninstalled" }
           "install/uninstall OK"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: countercoach-windows
-          path: |
-            countercoach/apps/desktop/release/CounterCoach-Setup-*.exe
-            countercoach/apps/desktop/release/CounterCoach-*-win-x64.zip
