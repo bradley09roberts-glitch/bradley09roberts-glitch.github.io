@@ -88,6 +88,12 @@ public final class WorldEditGuard {
 		return Camp.horizontalDistSqr(centre, pos) <= (double) r * r && Math.abs(pos.getY() - centre.getY()) <= 24;
 	}
 
+	/** Inside the camp radius, at any height (a hill above the camp is still the camp). */
+	public static boolean inCampHorizontally(CompanionEntity c, BlockPos pos) {
+		int r = campRadius(c);
+		return Camp.horizontalDistSqr(zoneCentre(c), pos) <= (double) r * r;
+	}
+
 	/** Camp plus the resource ring where gathering and mining are allowed. */
 	public static boolean inResourceZone(CompanionEntity c, BlockPos pos) {
 		int r = campRadius(c) + FriendsConfig.get().resourceRadius;
@@ -174,7 +180,7 @@ public final class WorldEditGuard {
 				if (!cfg.allowQuarrying) {
 					return Verdict.deny("quarrying disabled in config");
 				}
-				if (inCamp(c, pos) || !inResourceZone(c, pos)) {
+				if (inCampHorizontally(c, pos) || !inResourceZone(c, pos)) {
 					return Verdict.deny("quarries must be outside the camp but inside the gathering ring");
 				}
 				if (!state.is(ModTags.EARTH_GATHERABLE)) {

@@ -147,7 +147,7 @@ public final class LightTask implements CompanionTask {
 		BlockState ground = level.getBlockState(below);
 		if (!ground.isFaceSturdy(level, below, Direction.UP) || ground.is(Blocks.DIRT_PATH) || ground.is(Blocks.FARMLAND)
 			|| ground.is(BlockTags.LEAVES) || ground.is(ModTags.NEVER_TOUCH)
-			|| data.isPlacedByFriends(below) || Landscape.isPlayerMade(ground, below, data)) {
+			|| data.isPlacedByFriends(level, below) || Landscape.isPlayerMade(level, ground, below, data)) {
 			return false;
 		}
 		if (!Blocks.TORCH.defaultBlockState().canSurvive(level, spot) || WorldEditGuard.touchesFluid(level, spot)) {

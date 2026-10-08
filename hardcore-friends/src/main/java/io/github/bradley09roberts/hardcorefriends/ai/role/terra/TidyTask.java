@@ -115,8 +115,8 @@ public final class TidyTask implements CompanionTask {
 		}
 		BlockPos below = pos.below();
 		BlockState floor = level.getBlockState(below);
-		if (!floor.isFaceSturdy(level, below, Direction.UP) || Landscape.isPlayerMade(floor, below, data)
-			|| data.isPlacedByFriends(below)) {
+		if (!floor.isFaceSturdy(level, below, Direction.UP) || Landscape.isPlayerMade(level, floor, below, data)
+			|| data.isPlacedByFriends(level, below)) {
 			return false;
 		}
 		if (!Landscape.isOpen(level.getBlockState(pos.above())) || WorldEditGuard.touchesFluid(level, pos)) {
@@ -125,8 +125,8 @@ public final class TidyTask implements CompanionTask {
 		for (Direction d : Direction.Plane.HORIZONTAL) {
 			BlockPos side = pos.relative(d);
 			BlockState wall = level.getBlockState(side);
-			if (!wall.isFaceSturdy(level, side, d.getOpposite()) || Landscape.isPlayerMade(wall, side, data)
-				|| data.isPlacedByFriends(side) || !Landscape.isOpen(level.getBlockState(side.above()))) {
+			if (!wall.isFaceSturdy(level, side, d.getOpposite()) || Landscape.isPlayerMade(level, wall, side, data)
+				|| data.isPlacedByFriends(level, side) || !Landscape.isOpen(level.getBlockState(side.above()))) {
 				return false;
 			}
 		}

@@ -88,7 +88,7 @@ public final class CampFurnace {
 							continue;
 						}
 						// Prefer furnaces the friends built, then the one nearest the centre.
-						double score = m.distSqr(centre) + (data.isPlacedByFriends(m) ? 0 : 10_000);
+						double score = m.distSqr(centre) + (data.isPlacedByFriends(level, m) ? 0 : 10_000);
 						if (score < bestScore) {
 							bestScore = score;
 							best = m.immutable();

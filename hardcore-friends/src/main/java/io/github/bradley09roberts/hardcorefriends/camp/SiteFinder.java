@@ -292,7 +292,7 @@ public final class SiteFinder {
 							continue;
 						}
 						BlockState s = level.getBlockState(m);
-						if ((s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(m)
+						if ((s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(level, m)
 							&& !ignoredMarkers.contains(m)) {
 							return true;
 						}
@@ -317,7 +317,7 @@ public final class SiteFinder {
 				if (!s.getFluidState().isEmpty() || !s.isFaceSturdy(level, m, Direction.UP)) {
 					return NO_GROUND;
 				}
-				boolean ownFoundation = s.is(Blocks.COBBLESTONE) && data.isPlacedByFriends(m);
+				boolean ownFoundation = s.is(Blocks.COBBLESTONE) && data.isPlacedByFriends(level, m);
 				return isNaturalGround(s) || ownFoundation ? y : NO_GROUND;
 			}
 			return NO_GROUND;

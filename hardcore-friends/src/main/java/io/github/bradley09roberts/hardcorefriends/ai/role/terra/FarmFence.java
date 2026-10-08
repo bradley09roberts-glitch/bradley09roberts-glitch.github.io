@@ -91,7 +91,7 @@ public final class FarmFence {
 				for (int dy = SEARCH_DY; dy >= -SEARCH_DY; dy--) {
 					m.setY(anchor.getY() + dy);
 					if (level.getBlockState(m).is(Blocks.FARMLAND)) {
-						if (data.isPlacedByFriends(m)) {
+						if (data.isPlacedByFriends(level, m)) {
 							minX = Math.min(minX, m.getX());
 							maxX = Math.max(maxX, m.getX());
 							minZ = Math.min(minZ, m.getZ());
@@ -231,7 +231,7 @@ public final class FarmFence {
 			for (int dy = -MARKER_GAP; dy <= MARKER_GAP; dy++) {
 				for (int dz = -MARKER_GAP; dz <= MARKER_GAP; dz++) {
 					m.set(pos.getX() + dx, pos.getY() + dy, pos.getZ() + dz);
-					if (level.isLoaded(m) && Landscape.isPlayerMade(level.getBlockState(m), m, data) && !chest.contains(m)) {
+					if (level.isLoaded(m) && Landscape.isPlayerMade(level, level.getBlockState(m), m, data) && !chest.contains(m)) {
 						return true;
 					}
 				}

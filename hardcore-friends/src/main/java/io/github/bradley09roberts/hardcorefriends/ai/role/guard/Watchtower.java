@@ -45,7 +45,7 @@ public final class Watchtower {
 				for (int dz = -HALF_WIDTH; dz <= HALF_WIDTH; dz++) {
 					m.set(origin.getX() + dx, origin.getY() + dy, origin.getZ() + dz);
 					BlockState state = level.getBlockState(m);
-					if (stand == null && dy >= MIN_HEIGHT && data.isPlacedByFriends(m)
+					if (stand == null && dy >= MIN_HEIGHT && data.isPlacedByFriends(level, m)
 						&& state.isFaceSturdy(level, m, Direction.UP)
 						&& level.getBlockState(m.above()).getCollisionShape(level, m.above()).isEmpty()
 						&& level.getBlockState(m.above(2)).getCollisionShape(level, m.above(2)).isEmpty()

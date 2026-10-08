@@ -260,7 +260,7 @@ public final class FarmContext {
 		if (!WorldEditGuard.inCamp(c, p) || Camp.horizontalDistSqr(home, p) <= CAMP_CORE * CAMP_CORE) {
 			return false;
 		}
-		if (data.isPlacedByFriends(p) || nearBuild(level, data, p)) {
+		if (data.isPlacedByFriends(level, p) || nearBuild(level, data, p)) {
 			return false;
 		}
 		return !checkWater || Crops.nearWater(level, p);
@@ -271,7 +271,7 @@ public final class FarmContext {
 		for (BlockPos p : BlockPos.betweenClosed(pos.offset(-1, 0, -1), pos.offset(1, 2, 1))) {
 			BlockState s = level.getBlockState(p);
 			if ((s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !s.is(Blocks.FARMLAND) && !s.is(Blocks.DIRT_PATH)
-				&& !data.isPlacedByFriends(p)) {
+				&& !data.isPlacedByFriends(level, p)) {
 				return true;
 			}
 		}

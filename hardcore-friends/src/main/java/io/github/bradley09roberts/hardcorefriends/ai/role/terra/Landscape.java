@@ -60,8 +60,8 @@ public final class Landscape {
 	}
 
 	/** True if a block looks player-made: a build marker the friends did not place themselves. */
-	public static boolean isPlayerMade(BlockState s, BlockPos pos, CampData data) {
-		return (s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(pos);
+	public static boolean isPlayerMade(ServerLevel level, BlockState s, BlockPos pos, CampData data) {
+		return (s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(level, pos);
 	}
 
 	/** Horizontal distance to the nearest site origin, optionally only for sites not yet completed. */

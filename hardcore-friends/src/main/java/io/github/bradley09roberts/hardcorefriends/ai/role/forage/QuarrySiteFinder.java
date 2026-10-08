@@ -138,7 +138,7 @@ public final class QuarrySiteFinder {
 		for (BlockPos p : BlockPos.betweenClosed(x0 - MARKER_MARGIN, top - MARKER_MARGIN, z0 - MARKER_MARGIN,
 			x0 + SIZE - 1 + MARKER_MARGIN, top + MARKER_MARGIN, z0 + SIZE - 1 + MARKER_MARGIN)) {
 			BlockState s = level.getBlockState(p);
-			if ((s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(p)) {
+			if ((s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(level, p)) {
 				return null;
 			}
 			boolean nearPit = p.getX() >= x0 - 1 && p.getX() <= x0 + SIZE && p.getZ() >= z0 - 1 && p.getZ() <= z0 + SIZE

@@ -96,7 +96,7 @@ None of these bonuses can stop you dying.
 
 ## 7. The camp grows into a settlement
 
-**Campsite → Camp → Hamlet → Village → Settlement.** Each stage needs that stage's buildings finished. The later stages also need Unity: 100 for Hamlet, 250 for Village and 500 for Settlement. Use `/friends camp` to see what is built and what Oak is still waiting for. Everything is built from what is in the supply chest, so keep it stocked or let Rowan and Flint fill it. If a role's friend is not on your team, the camp grows without that improvement.
+**Campsite → Camp → Hamlet → Village → Settlement.** Each stage needs that stage's buildings finished. The later stages also need Unity: 100 for Hamlet, 250 for Village and 500 for Settlement. Use `/friends camp` to see what is built and what Oak is still waiting for. Everything is built from what is in the supply chest, so keep it stocked or let Rowan and Flint fill it. Cabin windows use glass panes when the chest has glass (6 glass make 16 panes); otherwise Oak closes them with planks. If the supply chest is broken, friends forget it: Oak builds a new one, or you can link another with `/friends chest`. If a role's friend is not on your team, the camp grows without that improvement.
 
 ## 8. Hardcore rules
 

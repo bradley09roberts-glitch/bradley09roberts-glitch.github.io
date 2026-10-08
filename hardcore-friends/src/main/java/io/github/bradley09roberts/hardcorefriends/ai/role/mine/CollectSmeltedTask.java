@@ -111,7 +111,7 @@ public final class CollectSmeltedTask implements CompanionTask {
 	}
 
 	private static boolean mayTake(ServerLevel level, BlockPos pos, ItemStack out) {
-		if (Camp.data(level.getServer()).isPlacedByFriends(pos)) {
+		if (Camp.data(level.getServer()).isPlacedByFriends(level, pos)) {
 			return true;
 		}
 		return out.is(Items.IRON_INGOT) || out.is(Items.COPPER_INGOT) || out.is(Items.GOLD_INGOT);

@@ -26,6 +26,11 @@ public final class CampProgress {
 			return;
 		}
 		CampData data = Camp.data(server);
+		for (net.minecraft.server.level.ServerLevel level : server.getAllLevels()) {
+			if (Camp.isCampLevel(level, data)) {
+				io.github.bradley09roberts.hardcorefriends.ai.role.build.SupplyChestLink.dropIfBroken(level, data);
+			}
+		}
 		if (data.campPos().isEmpty() || data.stage() >= Camp.MAX_STAGE) {
 			return;
 		}

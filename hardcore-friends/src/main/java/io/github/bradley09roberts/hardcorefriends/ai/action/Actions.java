@@ -108,11 +108,26 @@ public final class Actions {
 		return false;
 	}
 
-	/** Walks to within reach of an entity. */
+	/** Walks to within reach of an entity. Sets {@link #isStuck()} when no progress is made for a while. */
 	public boolean walkToEntity(Entity target, double reach) {
-		if (c.distanceTo(target) <= reach) {
+		double dist = c.distanceTo(target);
+		if (dist <= reach) {
 			c.getNavigation().stop();
+			resetWalk();
 			return true;
+		}
+		BlockPos targetPos = target.blockPosition();
+		if (walkTarget == null || walkTarget.distSqr(targetPos) > 16) {
+			walkTarget = targetPos;
+			noProgressTicks = 0;
+			bestDistance = Double.MAX_VALUE;
+			stuck = false;
+		}
+		if (dist < bestDistance - 0.25) {
+			bestDistance = dist;
+			noProgressTicks = 0;
+		} else if (++noProgressTicks > STUCK_LIMIT) {
+			stuck = true;
 		}
 		if (--repathTimer <= 0 || c.getNavigation().isDone()) {
 			repathTimer = 10;

@@ -114,7 +114,7 @@ public final class FarmPlotFinder {
 		}
 		for (BlockPos p : BlockPos.betweenClosed(centre.offset(-HALF - 2, -1, -HALF - 2), centre.offset(HALF + 2, 3, HALF + 2))) {
 			BlockState s = level.getBlockState(p);
-			if ((s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(p)) {
+			if ((s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(level, p)) {
 				return false;
 			}
 			if (!s.getFluidState().isEmpty()) {
