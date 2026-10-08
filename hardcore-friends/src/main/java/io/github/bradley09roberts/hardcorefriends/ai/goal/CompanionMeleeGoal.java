@@ -37,13 +37,13 @@ public class CompanionMeleeGoal extends MeleeAttackGoal {
 			return false;
 		}
 		if (companion.isFighter()) {
-			return true;
+			return companion.canStandAndFight(target);
 		}
 		double d = companion.distanceTo(target);
-		if (companion.mode() == CompanionMode.FOLLOW && companion.isArmed()) {
-			return d <= 12;
+		if (companion.mode() == CompanionMode.FOLLOW && companion.isArmed() && d <= 12) {
+			return companion.canStandAndFight(target) || d <= 3;
 		}
-		return d <= 3.5;
+		return companion.canStandAndFight(target) || d <= 2.5;
 	}
 
 	@Override

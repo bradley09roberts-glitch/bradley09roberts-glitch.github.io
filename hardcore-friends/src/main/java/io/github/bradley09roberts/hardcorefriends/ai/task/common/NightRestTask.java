@@ -85,7 +85,7 @@ public final class NightRestTask implements CompanionTask {
 			if (legs >= LEGS_PER_RUN) {
 				return TaskStatus.SUCCESS;
 			}
-			spot = Upkeep.randomSpotNear(c, c.homePos(), STAY - 2);
+			spot = Upkeep.randomSpotNear(c, c.restPos(), c.restPos().equals(c.homePos()) ? STAY - 2 : 2);
 			if (spot == null) {
 				legs++;
 				pause = 100;

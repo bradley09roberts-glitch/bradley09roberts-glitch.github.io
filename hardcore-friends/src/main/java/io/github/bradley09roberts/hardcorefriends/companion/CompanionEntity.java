@@ -56,6 +56,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.goal.AvoidDangerGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.CompanionMeleeGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.DefendFriendsTargetGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.FollowLeaderGoal;
+import io.github.bradley09roberts.hardcorefriends.ai.goal.MutualDefenceTargetGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.RetreatGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.StayGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
@@ -91,6 +92,7 @@ public class CompanionEntity extends PathfinderMob {
 	private final Set<BlockPos> approvedLogs = new HashSet<>();
 	private long approvedLogsUntil;
 	private boolean deathHandled;
+	private int lastDamagedTick = -1000;
 
 	public CompanionEntity(EntityType<? extends CompanionEntity> type, Level level) {
 		super(type, level);
@@ -129,6 +131,7 @@ public class CompanionEntity extends PathfinderMob {
 		this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 		this.targetSelector.addGoal(1, new HurtByTargetGoal(this, Player.class, CompanionEntity.class));
 		this.targetSelector.addGoal(2, new DefendFriendsTargetGoal(this));
+		this.targetSelector.addGoal(3, new MutualDefenceTargetGoal(this));
 	}
 
 	@Override
@@ -315,6 +318,11 @@ public class CompanionEntity extends PathfinderMob {
 				backpack.setCapacity(slots);
 			}
 		}
+		// Out of combat, friends recover like a well-fed player (1 health every 4 seconds).
+		if (this.tickCount % 80 == 0 && getHealth() < getMaxHealth() && this.tickCount - lastDamagedTick > 200
+			&& getTarget() == null && !isOnFire()) {
+			heal(1.0F);
+		}
 		RolePassives.tick(this);
 	}
 
@@ -399,7 +407,59 @@ public class CompanionEntity extends PathfinderMob {
 		if (attacker instanceof Player player && !player.isShiftKeyDown()) {
 			return false;
 		}
-		return super.hurtServer(level, source, damage);
+		boolean hurt = super.hurtServer(level, source, damage);
+		if (hurt) {
+			lastDamagedTick = this.tickCount;
+		}
+		return hurt;
+	}
+
+	/** Ticks since this friend last took damage. */
+	public int ticksSinceDamaged() {
+		return this.tickCount - lastDamagedTick;
+	}
+
+	/** True if a sword, axe, pickaxe, shovel or hoe is carried: anything that hits harder than a fist. */
+	public boolean hasMeleeTool() {
+		return actions.has(s -> s.is(ItemTags.SWORDS) || s.is(ItemTags.AXES) || s.is(ItemTags.PICKAXES)
+			|| s.is(ItemTags.SHOVELS) || s.is(ItemTags.HOES));
+	}
+
+	/**
+	 * Whether this friend should stand and fight a threat rather than run. Aegis fights anything but a hissing
+	 * creeper. Everyone else fights nearby melee threats while healthy and holding a tool, so friends defend each
+	 * other instead of being picked off one by one, and still run from creepers and when hurt.
+	 */
+	public boolean canStandAndFight(LivingEntity threat) {
+		if (isRetreating() || !threat.isAlive()) {
+			return false;
+		}
+		if (threat instanceof net.minecraft.world.entity.monster.Creeper creeper) {
+			return isFighter() && creeper.getSwellDir() <= 0 && !creeper.isIgnited() && getHealth() > getMaxHealth() * 0.6F;
+		}
+		if (isFighter()) {
+			return true;
+		}
+		double healthyEnough = Math.max(0.5, friendId().retreatFraction() + 0.1);
+		return hasMeleeTool() && getHealth() > getMaxHealth() * healthyEnough && distanceToSqr(threat) <= 8 * 8;
+	}
+
+	/** Where to spend the night: inside the cabin once it is built, otherwise the camp centre. */
+	public BlockPos restPos() {
+		if (this.level() instanceof ServerLevel level) {
+			CampData data = Camp.data(level.getServer());
+			if (Camp.isCampLevel(level, data) && data.isCompleted(io.github.bradley09roberts.hardcorefriends.camp.Structures.CABIN)) {
+				var site = data.site(io.github.bradley09roberts.hardcorefriends.camp.Structures.CABIN);
+				if (site.isPresent()) {
+					BlockPos inside = io.github.bradley09roberts.hardcorefriends.camp.Blueprint.worldPos(site.get().origin, site.get().rotation, 3, 1, 4);
+					if (level.isLoaded(inside) && level.getBlockState(inside).getCollisionShape(level, inside).isEmpty()
+						&& level.getBlockState(inside.above()).getCollisionShape(level, inside.above()).isEmpty()) {
+						return inside;
+					}
+				}
+			}
+		}
+		return homePos();
 	}
 
 	@Override

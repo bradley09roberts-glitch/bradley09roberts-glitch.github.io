@@ -98,4 +98,30 @@ public class CoreGameTest {
 			helper.succeed();
 		});
 	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_05", maxTicks = 900)
+	public void friendsFightTogetherAgainstAZombie(GameTestHelper helper) {
+		TestSupport.resetCamp(helper, true);
+		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, new BlockPos(14, 2, 16));
+		CompanionEntity rowan = TestSupport.spawnFriend(helper, FriendId.ROWAN, new BlockPos(16, 2, 14));
+		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, new BlockPos(18, 2, 16));
+		fern.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new ItemStack(Items.STONE_HOE));
+		rowan.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new ItemStack(Items.STONE_AXE));
+		oak.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_AXE));
+		var zombie = helper.spawn(net.minecraft.world.entity.EntityTypes.ZOMBIE, new BlockPos(16, 2, 20));
+		zombie.setTarget(fern);
+		helper.succeedWhen(() -> {
+			helper.assertFalse(zombie.isAlive(), "the zombie is defeated (health " + zombie.getHealth() + ")");
+			helper.assertTrue(fern.isAlive() && rowan.isAlive() && oak.isAlive(), "all three friends survive");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_57", maxTicks = 600)
+	public void friendsHealOutOfCombat(GameTestHelper helper) {
+		TestSupport.resetCamp(helper, true);
+		CompanionEntity sage = TestSupport.spawnFriend(helper, FriendId.SAGE, TestSupport.centre());
+		sage.hurtServer(helper.getLevel(), helper.getLevel().damageSources().generic(), 8.0F);
+		float hurt = sage.getHealth();
+		helper.succeedWhen(() -> helper.assertTrue(sage.getHealth() >= hurt + 3, "Sage healed from " + hurt + " to " + sage.getHealth()));
+	}
 }

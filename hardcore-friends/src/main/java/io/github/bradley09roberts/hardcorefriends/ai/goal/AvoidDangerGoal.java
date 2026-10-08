@@ -54,12 +54,10 @@ public class AvoidDangerGoal extends Goal {
 		if (threat == null) {
 			return null;
 		}
-		double d = threat.distanceTo(companion);
-		boolean cornered = companion.isArmed() && Threats.isTargeting(threat, companion)
-			&& companion.getRandom().nextDouble() < companion.friendId().bravery();
-		if (cornered && companion.getHealth() > companion.getMaxHealth() * 0.6F) {
-			return null; // stand and fight back instead
+		if (companion.canStandAndFight(threat)) {
+			return null; // stand together and fight instead of being picked off alone
 		}
+		double d = threat.distanceTo(companion);
 		return d < 5 || Threats.isTargeting(threat, companion) ? threat : null;
 	}
 

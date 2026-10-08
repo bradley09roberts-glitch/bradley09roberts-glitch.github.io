@@ -36,8 +36,8 @@ public final class ModEvents {
 				Companions.track(companion);
 			} else if (entity instanceof Mob mob && FriendsConfig.get().monstersTargetCompanions && huntsCompanions(mob)
 				&& HUNTERS.add(mob)) {
-				// Same priority and line-of-sight rule vanilla zombies use for villagers.
-				mob.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(mob, CompanionEntity.class, mob instanceof Spider));
+				// Same priority vanilla zombies use for villagers; they must actually see a friend to start the hunt.
+				mob.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(mob, CompanionEntity.class, true));
 			}
 		});
 		ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
