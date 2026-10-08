@@ -3,6 +3,7 @@ package io.github.bradley09roberts.hardcorefriends.camp;
 import java.util.Optional;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 
@@ -35,10 +36,49 @@ public final class Camp {
 		return isCampLevel(level, data) ? data.campPos() : Optional.empty();
 	}
 
-	/** Current camp radius: the configured base, growing 4 blocks per stage up to the configured maximum. */
+	/**
+	 * Current camp radius: the configured base, growing 4 blocks per stage, plus any room the camp has grown to fit
+	 * a building ({@link #radiusBonus}), up to the configured maximum.
+	 */
 	public static int radius(CampData data) {
 		FriendsConfig cfg = FriendsConfig.get();
-		return Math.min(cfg.maxCampRadius, cfg.campRadius + 4 * data.stage());
+		return Math.min(cfg.maxCampRadius, cfg.campRadius + 4 * data.stage() + radiusBonus(data));
+	}
+
+	/** Camp memory of the extra room the camp grew to make space for buildings. */
+	private static final String ROOM_MEMORY = "survival.camp_room";
+	/** How far the camp grows at a time when a building does not fit. */
+	public static final int ROOM_STEP = 4;
+
+	/**
+	 * Extra blocks of radius the camp grew because a building would not fit anywhere inside it, even on levelled
+	 * ground. It belongs to this camp centre only: moving the camp starts again without it.
+	 */
+	public static int radiusBonus(CampData data) {
+		if (data.campPos().isEmpty()) {
+			return 0;
+		}
+		CompoundTag tag = data.memory(ROOM_MEMORY);
+		if (tag.getLongOr("centre", Long.MIN_VALUE) != data.campPos().get().asLong()) {
+			return 0;
+		}
+		return Math.max(0, tag.getIntOr("bonus", 0));
+	}
+
+	/**
+	 * Lets the camp grow by {@value #ROOM_STEP} blocks to make room for a building that fits nowhere inside it.
+	 * Returns false when the camp is already as big as the settings allow.
+	 */
+	public static boolean growForRoom(CampData data) {
+		if (data.campPos().isEmpty() || radius(data) >= FriendsConfig.get().maxCampRadius) {
+			return false;
+		}
+		CompoundTag tag = data.memory(ROOM_MEMORY);
+		int bonus = radiusBonus(data) + ROOM_STEP;
+		tag.putLong("centre", data.campPos().get().asLong());
+		tag.putInt("bonus", bonus);
+		data.setDirty();
+		return true;
 	}
 
 	public static String stageName(int stage) {

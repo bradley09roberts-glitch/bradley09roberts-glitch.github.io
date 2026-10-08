@@ -33,6 +33,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * the building goes, nothing that looks player-built within two blocks, and a one-block gap to every other reserved
  * site. The search starts at the plan's preferred spot and widens ring by ring across the whole camp, a few
  * candidates per tick, counting why spots were turned down so a failed search can be explained.
+ *
+ * <p>When no such spot exists, a second pass accepts a few natural trees to fell ({@link SiteClearing}), and a third
+ * accepts uneven natural ground to level, choosing the site that needs the least digging and filling
+ * ({@link SiteGrading}).
  */
 public final class SiteFinder {
 	/** Extra parts of multi-part sites (post rows) live in camp memory under this key. */
@@ -48,6 +52,10 @@ public final class SiteFinder {
 	private static final int MAX_RISE = 8;
 	/** Most natural trees a site may need felled. */
 	private static final int MAX_SITE_TREES = 4;
+	/** A levelled site keeps this far from anything player-built (digging reaches further than building). */
+	private static final int GRADE_MARKER_GAP = 3;
+	/** A site needing no more than this many blocks dug and filled is taken without looking further. */
+	private static final int GRADE_GOOD_ENOUGH = 4;
 
 	private SiteFinder() {
 	}
@@ -79,6 +87,7 @@ public final class SiteFinder {
 	/** Reserves a site so nobody else builds there. Progress starts from zero. */
 	public static void reserve(CampData data, Blueprint bp, List<Part> parts) {
 		SiteClearing.forget(data, bp.id()); // a fresh site starts with nothing to fell
+		SiteGrading.forget(data, bp.id()); // ... and nothing to level
 		Part first = parts.getFirst();
 		if (parts.size() > 1) {
 			long[] origins = new long[parts.size()];
@@ -209,6 +218,17 @@ public final class SiteFinder {
 		private int[] bestClearBox = new int[0];
 		private List<BlockPos> logsToFell = List.of();
 		private int[] clearBox = new int[0];
+		/** Which pass the search is on: 1 flat and clear, 2 with trees to fell, 3 with ground to level. */
+		private int pass = 1;
+		/** Third pass: uneven natural ground is allowed, to be levelled first. Only when no other site exists. */
+		private final boolean gradingAllowed;
+		private boolean gradePass;
+		private @Nullable Part bestGrade;
+		private int bestGradeCost = Integer.MAX_VALUE;
+		private List<BlockPos> bestCut = List.of();
+		private List<BlockPos> bestFill = List.of();
+		private List<BlockPos> gradeCut = List.of();
+		private List<BlockPos> gradeFill = List.of();
 
 		private Search(ServerLevel level, CampData data, Blueprint bp) {
 			this.level = level;
@@ -233,6 +253,19 @@ public final class SiteFinder {
 			reach += Math.max(Math.abs(anchor.getX() - centre.getX()), Math.abs(anchor.getZ() - centre.getZ()));
 			this.maxRing = Math.max(MAX_RING, radius + reach);
 			this.treesAllowed = FriendsConfig.get().allowTreeFelling && bp.parts() == 1 && bp.hasFoundations();
+			FriendsConfig cfg = FriendsConfig.get();
+			this.gradingAllowed = cfg.allowTerraforming && cfg.allowWorldEditing && cfg.maxGradeDepth > 0
+				&& bp.parts() == 1 && bp.hasFoundations();
+		}
+
+		/** The natural blocks to dig away to level the found site (often none), top-down order not implied. */
+		public List<BlockPos> gradeCut() {
+			return gradeCut;
+		}
+
+		/** The spaces to fill to level the found site (often none). */
+		public List<BlockPos> gradeFill() {
+			return gradeFill;
 		}
 
 		/** The logs of the natural trees standing on the found site, which must be felled before building (often none). */
@@ -299,17 +332,33 @@ public final class SiteFinder {
 					ring++;
 					cell = 0;
 					if (ring > maxRing) {
-						if (!secondPass && treesAllowed && found.isEmpty()) {
+						if (pass == 1 && treesAllowed && found.isEmpty()) {
 							// No tree-free spot anywhere: look again, accepting a few natural trees to fell.
+							pass = 2;
 							secondPass = true;
 							ring = 0;
 							cell = 0;
 							continue;
 						}
-						if (secondPass && best != null) {
+						if (pass == 2 && best != null) {
 							logsToFell = bestLogs;
 							clearBox = bestClearBox;
 							found.add(best);
+							return found;
+						}
+						if (pass < 3 && gradingAllowed && found.isEmpty()) {
+							// No level spot anywhere: look again, accepting uneven natural ground to dig down and fill up.
+							pass = 3;
+							secondPass = false;
+							gradePass = true;
+							ring = 0;
+							cell = 0;
+							continue;
+						}
+						if (pass == 3 && bestGrade != null) {
+							gradeCut = bestCut;
+							gradeFill = bestFill;
+							found.add(bestGrade);
 							return found;
 						}
 						failed = true;
@@ -387,6 +436,9 @@ public final class SiteFinder {
 					top = Math.max(top, g);
 					bottom = Math.min(bottom, g);
 				}
+			}
+			if (gradePass) {
+				return checkGraded(box, ground, top, bottom, flatOrigin, rotation, footprintCentre.getY());
 			}
 			if (top - bottom > (bp.hasFoundations() ? 1 : 0) || Math.abs(top + 1 - centre.getY()) > MAX_RISE) {
 				return reject(Reject.UNEVEN);
@@ -488,10 +540,147 @@ public final class SiteFinder {
 			return null;
 		}
 
-		private boolean nearPlayerBuild(int[] box, int minY, int maxY) {
+		/**
+		 * Third pass: a footprint on uneven natural ground, to be levelled before building. Picks the new ground level
+		 * that needs the least digging and filling, at most {@code maxGradeDepth} blocks down or up anywhere. Every block
+		 * to dig must be natural earth, sand, gravel or stone (or a plant) with no water or lava touching it, every
+		 * space to fill must be dry, the building's space above must be clear as on flat ground, the ground just in
+		 * front of the door side must be within a block of the new level (so the way in is not a wall), and nothing
+		 * player-built may lie within {@value #GRADE_MARKER_GAP} blocks. The cheapest site found is remembered and the
+		 * search runs on; one needing almost no work is taken at once.
+		 */
+		private @Nullable Part checkGraded(int[] box, int[] ground, int top, int bottom, BlockPos flatOrigin, int rotation,
+			int nearY) {
+			int limit = FriendsConfig.get().maxGradeDepth;
+			if (top - bottom > 2 * limit) {
+				return reject(Reject.UNEVEN);
+			}
+			int target = Integer.MIN_VALUE;
+			int estimate = Integer.MAX_VALUE;
+			int estimateFill = Integer.MAX_VALUE;
+			for (int t = top - limit; t <= bottom + limit; t++) {
+				if (Math.abs(t + 1 - centre.getY()) > MAX_RISE) {
+					continue;
+				}
+				int dig = 0;
+				int fill = 0;
+				for (int g : ground) {
+					if (g > t) {
+						dig += g - t;
+					} else {
+						fill += t - g;
+					}
+				}
+				// Least work; on a tie, less to fill (digging pays for itself in spoil).
+				if (dig + fill < estimate || dig + fill == estimate && fill < estimateFill) {
+					target = t;
+					estimate = dig + fill;
+					estimateFill = fill;
+				}
+			}
+			if (target == Integer.MIN_VALUE) {
+				return reject(Reject.UNEVEN);
+			}
+			if (estimate >= bestGradeCost) {
+				return null; // a cheaper site is already known
+			}
+			if (!frontWithinReach(flatOrigin, rotation, target, nearY)) {
+				return reject(Reject.UNEVEN);
+			}
+			int width = box[2] - box[0] + 1;
+			int depth = box[3] - box[1] + 1;
+			int floor = target + 1;
+			List<BlockPos> cut = new ArrayList<>();
+			List<BlockPos> fill = new ArrayList<>();
 			BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
-			for (int x = box[0] - MARKER_GAP; x <= box[2] + MARKER_GAP; x++) {
-				for (int z = box[1] - MARKER_GAP; z <= box[3] + MARKER_GAP; z++) {
+			for (int x = 0; x < width; x++) {
+				for (int z = 0; z < depth; z++) {
+					int g = ground[x * depth + z];
+					// Dig: the bump above the new level, then the building's space above that must be free.
+					for (int y = target + 1; y < floor + bp.height(); y++) {
+						m.set(box[0] + x, y, box[1] + z);
+						BlockState s = level.getBlockState(m);
+						if (y <= g) {
+							if (s.isAir()) {
+								continue;
+							}
+							if (!s.getFluidState().isEmpty() || WorldEditGuard.touchesFluid(level, m)) {
+								return reject(Reject.NO_GROUND);
+							}
+							if (s.hasBlockEntity() || !SiteGrading.isGradeable(s)) {
+								return reject(Reject.BLOCKED);
+							}
+							cut.add(m.immutable());
+							continue;
+						}
+						if ((s.isAir() || WorldEditGuard.isClearablePlant(s)) && s.getFluidState().isEmpty()) {
+							continue;
+						}
+						return reject(SiteClearing.isNaturalLeaves(s) || s.is(BlockTags.LOGS) ? Reject.TREES : Reject.BLOCKED);
+					}
+					// Fill: every empty space from the old ground up to the new level, including a hollow under it.
+					for (int y = Math.min(g + 1, target); y <= target; y++) {
+						m.set(box[0] + x, y, box[1] + z);
+						BlockState s = level.getBlockState(m);
+						if (!s.getFluidState().isEmpty()) {
+							return reject(Reject.NO_GROUND);
+						}
+						if (SiteGrading.isFillable(s)) {
+							fill.add(m.immutable());
+						} else if (y > g) {
+							return reject(Reject.BLOCKED);
+						}
+					}
+				}
+			}
+			int cost = cut.size() + fill.size();
+			if (cost >= bestGradeCost) {
+				return null;
+			}
+			if (nearPlayerBuild(box, Math.min(bottom, target) - 1, Math.max(top, floor + bp.height()), GRADE_MARKER_GAP)) {
+				return reject(Reject.PLAYER_BUILD);
+			}
+			Part part = new Part(new BlockPos(flatOrigin.getX(), floor, flatOrigin.getZ()), rotation);
+			bestGrade = part;
+			bestGradeCost = cost;
+			bestCut = List.copyOf(cut);
+			bestFill = List.copyOf(fill);
+			if (cost <= GRADE_GOOD_ENOUGH) {
+				gradeCut = bestCut;
+				gradeFill = bestFill;
+				return part; // hardly any work: no need to look further
+			}
+			return null;
+		}
+
+		/**
+		 * True when the ground just in front of the plan's front (where doors and gates are) lies within a block of the
+		 * new ground level for at least two of the three columns before its middle, so friends can walk in.
+		 */
+		private boolean frontWithinReach(BlockPos flatOrigin, int rotation, int target, int nearY) {
+			int mid = (bp.width() - 1) / 2;
+			int ok = 0;
+			for (int dx = mid - 1; dx <= mid + 1; dx++) {
+				BlockPos front = Blueprint.worldPos(flatOrigin, rotation, dx, 0, -1);
+				if (!level.hasChunkAt(front.getX(), front.getZ())) {
+					continue;
+				}
+				int g = groundY(front.getX(), front.getZ(), nearY);
+				if (g != NO_GROUND && g != TREE_IN_THE_WAY && Math.abs(g - target) <= 1) {
+					ok++;
+				}
+			}
+			return ok >= 2;
+		}
+
+		private boolean nearPlayerBuild(int[] box, int minY, int maxY) {
+			return nearPlayerBuild(box, minY, maxY, MARKER_GAP);
+		}
+
+		private boolean nearPlayerBuild(int[] box, int minY, int maxY, int gap) {
+			BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+			for (int x = box[0] - gap; x <= box[2] + gap; x++) {
+				for (int z = box[1] - gap; z <= box[3] + gap; z++) {
 					for (int y = minY - 1; y <= maxY + 1; y++) {
 						m.set(x, y, z);
 						if (!level.isLoaded(m)) {

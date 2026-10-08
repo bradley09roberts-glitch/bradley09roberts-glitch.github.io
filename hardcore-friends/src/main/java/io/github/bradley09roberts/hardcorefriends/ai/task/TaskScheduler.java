@@ -61,6 +61,15 @@ public final class TaskScheduler {
 			"common.share", "common.feed_player", "common.restock", "aegis.guard", "aegis.equip_gear", "terra.light",
 			"common.leave_pen", "fern.shut_gate"));
 	}
+
+	/** Told when a friend finishes a job (not when it is interrupted), so the feature packages can count work done. */
+	public interface JobDone {
+		/** {@code ticks} is how long the job ran. */
+		void done(CompanionEntity companion, CompanionTask task, boolean success, long ticks);
+	}
+
+	/** Listeners for finished jobs, registered from the feature packages' {@code init()}. */
+	public static final List<JobDone> JOB_DONE = new java.util.concurrent.CopyOnWriteArrayList<>();
 	private static final String NEEDS = "needs.";
 	private static final int EVALUATE_INTERVAL = 20;
 
@@ -226,6 +235,13 @@ public final class TaskScheduler {
 		}
 		current = null;
 		safeStop(task);
+		for (JobDone listener : JOB_DONE) {
+			try {
+				listener.done(companion, task, success, gameTime - currentStarted);
+			} catch (RuntimeException e) {
+				HardcoreFriends.LOGGER.error("A job-done listener crashed for {}", task.id(), e);
+			}
+		}
 	}
 
 	private void stopCurrent() {

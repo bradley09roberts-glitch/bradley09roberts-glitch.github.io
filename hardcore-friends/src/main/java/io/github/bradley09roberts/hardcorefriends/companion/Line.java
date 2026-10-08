@@ -141,6 +141,28 @@ public enum Line {
 
 	// ==== Independence (package survival): trips, shelters, making room to build, skills ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** Setting off on a trip away from camp. %1$s = where to, e.g. "the hills to the north" or "the village at 120 64 -340". */
+	TRIP_START(Priority.IMPORTANT, 1200, 1),
+	/** Found something worth knowing on a trip (heard by everyone). %1$s = what and where, e.g. "a village around 120 64 -340". */
+	TRIP_FIND(Priority.IMPORTANT, 0, 1),
+	/** Back at camp after a trip (heard by everyone). %1$s = what came of it, e.g. "a village and two new places". */
+	TRIP_BACK(Priority.IMPORTANT, 0, 1),
+	/** Cutting a trip short and heading home (hurt, hungry, late or blocked). */
+	TRIP_TURN_BACK(Priority.CASUAL, 1200, 0),
+	/** Made a trade with a villager. %1$s = what they got, e.g. "6 bread" or "3 emeralds". */
+	TRADED(Priority.CASUAL, 600, 1),
+	/** Caught far from camp at night: digging in or walling up for the night. */
+	SHELTER(Priority.IMPORTANT, 6000, 0),
+	/** Morning after a night in a shelter: taking it down and heading home. */
+	SHELTER_MORNING(Priority.CASUAL, 6000, 0),
+	/** Cornered and badly hurt: building a pillar up out of reach. */
+	CORNERED(Priority.DANGER, 400, 0),
+	/** Landed a long fall safely in water poured from a bucket. */
+	CLUTCH(Priority.CASUAL, 600, 0),
+	/** Got better at something. %1$s = the skill, e.g. "farming" or "fighting"; %2$s = the new level, e.g. "3". */
+	LEVEL_UP(Priority.IMPORTANT, 0, 2),
+	/** No room for a building in the camp, even levelled: the camp grows a little. %1$s = the building, e.g. "cabin". */
+	LOOKING_FURTHER(Priority.CASUAL, 2400, 1),
 
 	// ==== end of survival ====
 

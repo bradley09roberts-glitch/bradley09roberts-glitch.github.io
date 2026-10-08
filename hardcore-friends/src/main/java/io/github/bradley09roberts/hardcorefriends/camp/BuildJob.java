@@ -70,7 +70,7 @@ public final class BuildJob {
 		NO_TABLE,
 		SHORT,
 		UNREACHABLE,
-		/** The site still has trees on it to fell first. */
+		/** The site still has trees on it to fell, or ground to level, first. */
 		CLEARING
 	}
 
@@ -175,8 +175,22 @@ public final class BuildJob {
 				HardcoreFriends.LOGGER.info("{} chose a site for the {} with {} logs to fell", c.displayName(),
 					Structures.get(bp.id()).displayName(), search.logsToFell().size());
 			}
+			if (!search.gradeCut().isEmpty() || !search.gradeFill().isEmpty()) {
+				SiteGrading.reserve(data, bp.id(), search.gradeCut(), search.gradeFill());
+				HardcoreFriends.LOGGER.info("{} chose a site for the {} to level: {} blocks to dig, {} to fill",
+					c.displayName(), Structures.get(bp.id()).displayName(), search.gradeCut().size(), search.gradeFill().size());
+			}
 			TaskStatus waiting = waitForClearing(data);
 			return waiting != null ? waiting : toPlan(found);
+		}
+		if (search.failed() && Camp.growForRoom(data)) {
+			// Nothing fits inside the camp, even levelled: let the camp grow a little and look again, further out.
+			String name = Structures.get(bp.id()).displayName();
+			HardcoreFriends.LOGGER.info("{} found no site for the {} ({}); the camp grows to radius {}", c.displayName(), name,
+				search.breakdown(), Camp.radius(data));
+			Speech.say(c, Line.LOOKING_FURTHER, name);
+			search = null;
+			return TaskStatus.RUNNING;
 		}
 		if (search.failed()) {
 			String name = Structures.get(bp.id()).displayName();
@@ -197,12 +211,27 @@ public final class BuildJob {
 	private @Nullable TaskStatus waitForClearing(CampData data) {
 		Optional<SiteClearing.Job> job = SiteClearing.job(data, bp.id());
 		if (job.isEmpty() || !SiteClearing.pending(level(), job.get())) {
-			return null;
+			return waitForGrading(data);
 		}
 		String name = Structures.get(bp.id()).displayName();
 		CampNeeds.reportSiteProblem(level(), c.displayName() + " is waiting for the trees to be cleared off the "
 			+ name + " site.");
 		Speech.say(c, Line.NEED_MATERIALS, "the trees cleared off the " + name + " site");
+		return fail(Failure.CLEARING);
+	}
+
+	/**
+	 * On uneven ground the site may still need levelling: the levelling job (Terra first, the builder too) digs the
+	 * bumps away and fills the dips, and building waits until then.
+	 */
+	private @Nullable TaskStatus waitForGrading(CampData data) {
+		Optional<SiteGrading.Job> job = SiteGrading.job(data, bp.id());
+		if (job.isEmpty() || !SiteGrading.pending(level(), job.get())) {
+			return null;
+		}
+		String name = Structures.get(bp.id()).displayName();
+		CampNeeds.reportSiteProblem(level(), c.displayName() + " is waiting for the " + name + " site to be levelled.");
+		Speech.say(c, Line.NEED_MATERIALS, "the " + name + " site levelled first");
 		return fail(Failure.CLEARING);
 	}
 

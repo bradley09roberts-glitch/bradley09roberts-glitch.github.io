@@ -62,6 +62,24 @@ public final class Speciality {
 		return interest(id) == work ? 1.0 : 0.85;
 	}
 
+	/**
+	 * Work speed of this friend at work of this kind: their {@link #skill(FriendId, Role) skill}, plus up to 20% for
+	 * the experience they have gathered doing it ({@code survival.Skills}). Practice never lifts anyone above a
+	 * specialist at the specialist's own work: outside their speciality a friend stays just under the specialist's
+	 * starting speed.
+	 */
+	public static double skill(CompanionEntity c, @Nullable Role work) {
+		double base = skill(c.friendId(), work);
+		if (work == null) {
+			return base;
+		}
+		double practised = base * (1.0 + io.github.bradley09roberts.hardcorefriends.survival.Skills.workBonus(c, work));
+		return c.friendId().role() == work ? practised : Math.min(practised, SPECIALIST_SKILL - 0.01);
+	}
+
+	/** How fast a specialist starts out at their own work. */
+	private static final double SPECIALIST_SKILL = 1.2;
+
 	/** The kind of work a world edit belongs to, or null for none in particular. */
 	public static @Nullable Role roleFor(WorldEditGuard.Reason reason) {
 		return switch (reason) {

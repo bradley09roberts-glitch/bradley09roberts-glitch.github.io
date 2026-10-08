@@ -378,12 +378,12 @@ public class CompanionEntity extends PathfinderMob {
 	}
 
 	/**
-	 * How fast this friend works at a kind of job: their skill at it (specialists are quicker) times their mood,
-	 * times the team's work rhythm.
+	 * How fast this friend works at a kind of job: their skill at it (specialists are quicker, and practice helps)
+	 * times their mood, times the team's work rhythm.
 	 */
 	public double workSpeed(WorldEditGuard.@Nullable Reason reason) {
 		Role work = reason == null ? null : Speciality.roleFor(reason);
-		return Speciality.skill(friendId(), work) * needs.workSpeed() * Unity.workSpeed(this);
+		return Speciality.skill(this, work) * needs.workSpeed() * Unity.workSpeed(this);
 	}
 
 	/** The job scheduler, built for this friend's role on first use. */
