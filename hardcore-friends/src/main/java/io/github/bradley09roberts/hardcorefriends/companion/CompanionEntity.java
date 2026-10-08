@@ -89,6 +89,7 @@ public class CompanionEntity extends PathfinderMob {
 	private @Nullable TaskScheduler scheduler;
 	private final Needs needs = new Needs();
 	private boolean asleep;
+	private @Nullable LivingEntity fleeingFrom;
 	private @Nullable FriendId schedulerFor;
 	private @Nullable BlockPos homePos;
 	private @Nullable BlockPos stayPos;
@@ -128,7 +129,8 @@ public class CompanionEntity extends PathfinderMob {
 	@Override
 	protected void registerGoals() {
 		this.goalSelector.addGoal(0, new FloatGoal(this));
-		this.goalSelector.addGoal(1, new RetreatGoal(this));
+		// Badly hurt, falling back outranks everything, even dodging a threat (goals never interrupt an equal one).
+		this.goalSelector.addGoal(0, new RetreatGoal(this));
 		this.goalSelector.addGoal(1, new AvoidDangerGoal(this, true));
 		this.goalSelector.addGoal(3, new CompanionMeleeGoal(this));
 		this.goalSelector.addGoal(3, new OpenDoorGoal(this, true));
@@ -231,6 +233,11 @@ public class CompanionEntity extends PathfinderMob {
 		return asleep;
 	}
 
+	/** Set by AvoidDangerGoal while this friend is getting away from something (shown in their status). */
+	public void setFleeingFrom(@Nullable LivingEntity danger) {
+		this.fleeingFrom = danger;
+	}
+
 	/**
 	 * How fast this friend works at a kind of job: their skill at it (specialists are quicker) times their mood,
 	 * times the team's work rhythm.
@@ -253,6 +260,10 @@ public class CompanionEntity extends PathfinderMob {
 	public String activity() {
 		if (retreating) {
 			return "falling back to recover";
+		}
+		LivingEntity dodging = fleeingFrom;
+		if (dodging != null && dodging.isAlive()) {
+			return "getting away from " + dodging.getName().getString();
 		}
 		if (getTarget() != null) {
 			return "fighting " + getTarget().getName().getString();
@@ -696,6 +707,7 @@ public class CompanionEntity extends PathfinderMob {
 				ledger.lastKnownPos = blockPosition();
 				ledger.lastKnownDimension = Camp.dimensionId(level);
 				ledger.deathCause = cause.getString();
+				data.markDanger(blockPosition(), level.getGameTime());
 				data.touchLedger();
 			}
 			BlockPos p = blockPosition();

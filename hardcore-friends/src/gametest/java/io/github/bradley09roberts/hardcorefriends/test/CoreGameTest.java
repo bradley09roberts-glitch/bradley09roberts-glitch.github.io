@@ -33,6 +33,7 @@ import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.ai.goal.AvoidDangerGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.FollowLeaderGoal;
+import io.github.bradley09roberts.hardcorefriends.ai.role.forage.ForageContext;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
@@ -343,6 +344,53 @@ public class CoreGameTest {
 			helper.assertTrue(backInRange.isEmpty(), "while still recovering she stayed out of range, came back to " + backInRange);
 			helper.succeed();
 		});
+	}
+
+	/**
+	 * Dodging a threat must not keep a badly hurt friend from falling back (goals never interrupt an equal one): in a
+	 * river a friend may never get far enough from a drowned for the dodge to end, so the retreat must take over at once.
+	 */
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_111", maxTicks = 200)
+	public void dodgingFriendFallsBackOnceBadlyHurt(GameTestHelper helper) {
+		TestSupport.resetCamp(helper, true);
+		CompanionEntity fern = TestSupport.spawnFriend(helper, FriendId.FERN, new BlockPos(24, 2, 16));
+		Skeleton skeleton = helper.spawn(EntityTypes.SKELETON, new BlockPos(29, 2, 16));
+		skeleton.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
+		skeleton.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
+		skeleton.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.0);
+		skeleton.setTarget(fern);
+		long[] hurtAt = {-1};
+		helper.onEachTick(() -> {
+			if (hurtAt[0] < 0 && fern.activity().startsWith("getting away from")) {
+				fern.setHealth(6.0F); // badly hurt while still dodging, the skeleton only a few blocks off
+				hurtAt[0] = helper.getTick();
+			}
+			if (hurtAt[0] >= 0 && !fern.isRetreating() && helper.getTick() - hurtAt[0] > 10) {
+				helper.fail("badly hurt, Fern should fall back at once, but is " + fern.activity()
+					+ String.format(java.util.Locale.ROOT, " %.1f blocks from the skeleton", fern.distanceTo(skeleton)));
+			}
+		});
+		helper.succeedWhen(() -> {
+			helper.assertTrue(hurtAt[0] >= 0, "Fern first got out of the skeleton's way: " + fern.activity());
+			helper.assertTrue(fern.isRetreating(), "badly hurt, Fern falls back to recover: " + fern.activity());
+		});
+	}
+
+	/** Where a friend died is remembered for three days, and roaming jobs keep away from it. */
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_112", maxTicks = 40)
+	public void deathSpotsAreAvoidedForThreeDays(GameTestHelper helper) {
+		CampData data = TestSupport.resetCamp(helper, true);
+		CompanionEntity rowan = TestSupport.spawnFriend(helper, FriendId.ROWAN, TestSupport.centre());
+		ServerLevel level = helper.getLevel();
+		BlockPos spot = helper.absolutePos(TestSupport.centre()).offset(40, 0, 0);
+		long now = level.getGameTime();
+		helper.assertTrue(ForageContext.mayFell(rowan, spot), "a tree out there may be felled before");
+		data.markDanger(spot, now);
+		helper.assertTrue(data.nearDanger(spot.offset(20, 0, 0), now), "remembered within 24 blocks");
+		helper.assertFalse(data.nearDanger(spot.offset(30, 0, 0), now), "not further away");
+		helper.assertFalse(ForageContext.mayFell(rowan, spot.offset(5, 0, 5)), "no felling where a friend just died");
+		helper.assertFalse(data.nearDanger(spot, now + 3 * 24000 + 1), "forgotten after three days");
+		helper.succeed();
 	}
 
 	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_63", maxTicks = 100)

@@ -329,6 +329,11 @@ public final class CampData extends SavedData {
 
 	// ------------------------------------------------------------ knowledge
 
+	/** POI type for the place a friend died. */
+	public static final String DANGER = "danger";
+	private static final int DANGER_RADIUS = 24;
+	private static final long DANGER_MEMORY = 3L * 24000;
+
 	public List<Poi> pois() {
 		return pois;
 	}
@@ -346,6 +351,23 @@ public final class CampData extends SavedData {
 		pois.add(new Poi(type, pos.immutable(), gameTime));
 		setDirty();
 		return true;
+	}
+
+	/** Where a friend died: remembered as "danger" (newest time wins) so roaming jobs keep away for a while. */
+	public void markDanger(BlockPos pos, long gameTime) {
+		pois.removeIf(p -> p.type.equals(DANGER) && p.pos.distSqr(pos) <= 16);
+		addPoi(DANGER, pos, gameTime);
+	}
+
+	/** True within {@value #DANGER_RADIUS} blocks of where a friend died in the last three in-game days. */
+	public boolean nearDanger(BlockPos pos, long gameTime) {
+		for (Poi p : pois) {
+			if (p.type.equals(DANGER) && gameTime - p.foundAt < DANGER_MEMORY
+				&& Camp.horizontalDistSqr(p.pos, pos) <= (double) DANGER_RADIUS * DANGER_RADIUS) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void removePoi(Poi poi) {
