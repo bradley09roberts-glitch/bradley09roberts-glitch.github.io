@@ -10,6 +10,7 @@ import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 
+import io.github.bradley09roberts.hardcorefriends.ai.goal.Reach;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
@@ -37,8 +38,9 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  * first for one still out. Exhausted at night ({@value #EXHAUSTED}) they go to bed before anything but a starving
  * friend's meal. Work never wakes a sleeper (see {@link TaskScheduler}).
  *
- * <p><b>Waking.</b> Sleepers wake at dawn; when hurt; when a monster comes close or a friend nearby is really fighting
- * one (trading blows, or with it at arm's length, not just staring at a mob they cannot get at); when the night watch
+ * <p><b>Waking.</b> Sleepers wake at dawn; when hurt; when a monster that could get at them comes close (not one shut
+ * in behind a fence); when a friend nearby is really fighting one (trading blows, or with it at arm's length, not just
+ * staring at a mob they cannot get at); when the night watch
  * raises the alarm ({@link NightWatch}); and when their own watch begins. The danger reflexes also interrupt the job,
  * and {@link #stop} always gets them back on their feet.
  *
@@ -217,7 +219,25 @@ public final class SleepTask implements CompanionTask {
 		if (NightWatch.alarmRaisedSince((ServerLevel) c.level(), layDownAt) && NightWatch.insideCamp(c)) {
 			return true; // the watch raised the alarm: everyone up
 		}
-		return Threats.nearest(c, WAKE_DISTANCE) != null || friendFighting(c);
+		return monsterClose(c) || friendFighting(c);
+	}
+
+	/**
+	 * A monster within {@value #WAKE_DISTANCE} blocks that could get at the sleeper: one right beside them, or one a
+	 * whole path leads to ({@link Reach}). A zombie shut in a fenced field next to the beds does not wake the camp every
+	 * time it lies down again; one that gets out, or hurts anyone, does.
+	 */
+	private static boolean monsterClose(CompanionEntity c) {
+		for (LivingEntity threat : Threats.around(c, WAKE_DISTANCE)) {
+			double d = threat.distanceToSqr(c);
+			if (d > WAKE_DISTANCE * WAKE_DISTANCE) {
+				continue;
+			}
+			if (d <= 3 * 3 || Reach.check(c, threat) != Reach.Answer.NO) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

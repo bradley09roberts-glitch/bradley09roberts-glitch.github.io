@@ -130,9 +130,12 @@ fire or in lava drinks a potion of fire resistance if they carry one. Normal foo
   - A friend who is shooting at a hostile never gives it up.
   - A hostile they gave up on that comes within arm's reach, or starts landing blows on someone, is fought again
     straight away.
-- **Sleepers wake only for a real fight.** A friend nearby who is just staring at a mob they cannot reach does not wake
-  the camp. Sleepers get up when a friend within 16 blocks is trading blows (in the last five seconds) or has a hostile
-  within 4 blocks.
+- **Sleepers wake only for real danger.**
+  - A friend nearby who is just staring at a mob they cannot reach does not wake the camp. Sleepers get up when a
+    friend within 16 blocks is trading blows (in the last five seconds) or has a hostile within 4 blocks.
+  - A monster within 8 blocks wakes a sleeper only if it could get at them: it is within 3 blocks, or a path leads
+    to it. A zombie shut in a fenced field next to the beds no longer wakes everyone each time they lie down. If it
+    gets out, or hurts anyone, they wake as before.
 - **No more false alarms from caves.** The watcher raises the alarm about any hostile inside the camp that they can
   see. Out of sight, a hostile only counts when it is on the camp's own ground: within 4 blocks of the watcher's
   height or the camp centre's, and with a path to it. A cave under the camp no longer wakes everyone.
@@ -167,8 +170,10 @@ These existing statements are no longer true, or were never quite true, and shou
     (five minutes by day). Out of sight, or more than 8 blocks away, a hostile with no path to it is not chosen at all.
 - **GUIDE 6b, last line:** "A thunderstorm darkens the sky as much as night does, so friends head home and rest through
   one by day too." Now friends head home and keep working in camp. Only tired friends nap, and no watch is kept.
-- **GUIDE 6b, "Once asleep":** "a friend nearby starts fighting" now means a friend trading blows, or with a hostile
-  within 4 blocks.
+- **GUIDE 6b, "Once asleep":**
+  - "a friend nearby starts fighting" now means a friend trading blows, or with a hostile within 4 blocks.
+  - "a monster comes close" now means a monster within 8 blocks that could get at them (DESIGN 6, `needs.sleep`,
+    too).
 - **GUIDE 6b, "The watch rota":** add that a watcher away from the camp for over 30 seconds hands the watch on, and
   that Aegis, on his watch, only stays beside players in or near the camp.
 - **GUIDE 3 and DESIGN 11, Aegis:** "takes the best sword, armour and shield from the chest" is now every friend's job,
