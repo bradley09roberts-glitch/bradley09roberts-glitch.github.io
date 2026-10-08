@@ -63,8 +63,8 @@ Goals, in priority order (lower number = higher priority):
 | Prio | Goal | Notes |
 |---|---|---|
 | 0 | `FloatGoal` | swim |
-| 1 | `RetreatGoal` | health ≤ retreatFraction, or on fire, or drowning. Moves away from threats toward camp, Aegis or a player; eats from the backpack once safe; announces once. |
-| 1 | `AvoidDangerGoal` | creepers within 7 blocks (10 if hissing), except a healthy Aegis facing a quiet one. Non-fighters also back away from hostiles within 8 blocks unless healthy and holding a tool (`canStandAndFight`). Flees toward protectors. |
+| 1 | `RetreatGoal` | health ≤ retreatFraction, or on fire, or drowning. Moves away from threats toward camp, Aegis or a player; eats from the backpack once safe; announces once. Keeps 20 blocks from any archer in sight (12 from other threats) and does not drift home while an archer stands within 18 blocks of camp. |
+| 1 | `AvoidDangerGoal` | creepers within 7 blocks (10 if hissing), except a healthy Aegis facing a quiet one. Non-fighters also back away from hostiles within 8 blocks unless healthy and holding a tool (`canStandAndFight`), and leave the line of fire of an archer aiming at them (to 20 blocks). Flees toward protectors. |
 | 3 | `CompanionMeleeGoal` | uses the best weapon from the backpack; only when there is a target |
 | 4 | `FollowLeaderGoal` / `StayGoal` | mode-dependent |
 | 5 | `WorkGoal` | runs `TaskScheduler` (MOVE + LOOK flags) |
@@ -72,7 +72,7 @@ Goals, in priority order (lower number = higher priority):
 | 6 | `LookAtPlayerGoal` | idle polish |
 | 7 | `RandomLookAroundGoal` | idle polish |
 
-Target goals: `HurtByTargetGoal` (fight back) and, for Aegis, `DefendFriendsTargetGoal` (hostiles within 16 blocks of any player, companion or the camp). In FOLLOW mode every armed friend also defends the leader. `MutualDefenceTargetGoal`: friends not in STAY join fights against hostiles that are going for them, a friend or a player within 8 blocks, when `canStandAndFight` (healthy above max(50%, retreat fraction + 10%) and holding a tool).
+Target goals: `HurtByTargetGoal` (fight back) and, for Aegis, `DefendFriendsTargetGoal` (hostiles within 16 blocks of any player, companion or the camp). In FOLLOW mode every armed friend also defends the leader. `MutualDefenceTargetGoal`: friends not in STAY join fights against hostiles that are going for them, a friend or a player within 8 blocks, when `canStandAndFight` (healthy above max(50%, retreat fraction + 10%) and holding a tool; against an archer a non-fighter only stands its ground within 3 blocks, because chasing a skeleton with a hoe just gets them shot).
 
 Out of combat (no damage for 10 s, no target, not burning) friends recover 1 health every 4 s.
 
@@ -150,7 +150,7 @@ Stages are gated by completed structures **and** the Unity score:
 | Stage | Name | Unity | Builds (real materials) |
 |---|---|---|---|
 | 0 | Campsite | 0 | supply chest (Oak, if none), campfire (3 logs, 3 sticks, 1 coal/charcoal) |
-| 1 | Camp | 0 | crafting table, furnace (8 cobblestone), 4 torch posts, Fern's farm plot (9×9 around a water source; needs a water bucket if no water nearby) |
+| 1 | Camp | 0 | crafting table, furnace (8 cobblestone), 4 torch posts, Fern's farm plot (16 farmland around a water source; needs a water bucket if no water nearby). The plot site needs a level, sealed hole for the water and at least 20 level, tillable tiles in the 9×9 square around it; bumps and dips elsewhere in the square are fine |
 | 2 | Hamlet | 100 | Cabin (7×7 planks/logs, door, glass panes, slab roof); Terra's paths; Spark's automatic door (pressure plates) |
 | 3 | Village | 250 | Storehouse shed with extra chest; Aegis's watchtower (cobblestone, ladder); lantern posts; Spark's drop-off hopper on the supply chest; fenced farm |
 | 4 | Settlement | 500 | Second cabin; Spark's auto-smelter (chests, hoppers, furnace); night lamp posts (inverted daylight detector + redstone lamp) once nether materials exist; flower gardens |
@@ -224,7 +224,7 @@ Score 0–1000, saved in `CampData`.
   - tidies dropped items into the chest;
   - fills 1-deep holes;
   - builds farm fences.
-- **Rowan:** fells natural trees (only fully reachable ones) and replants; quarries dirt and stone in bounded 5×5 pits; forages berries, apples and saplings; delivers materials to Oak first.
+- **Rowan:** fells natural trees (only fully reachable ones) and replants; quarries dirt and stone in bounded 5×5 pits; forages berries, apples and saplings; delivers materials to Oak first (when Oak's build is short of something she carries 16 or more of, the delivery outranks every gathering job).
 
 ## 10. Commands (permission level 0, no cheats)
 

@@ -101,7 +101,7 @@ None of these bonuses can stop you dying.
 ## 8. Hardcore rules
 
 - Your own Hardcore death is unchanged: one life, then spectator. There are no extra lives.
-- Friends are mortal. They retreat when badly hurt, eat from their backpacks, and run from creepers. Healthy friends holding a tool stand together and fight off zombies and other close attackers, so nobody is picked off alone. Out of combat (no damage for 10 s, no target, not burning) they recover 1 health every 4 s. If they die, they drop a **backpack item** holding everything they carried and wore. It never despawns, and its coordinates go to chat. Use it (right-click) to unpack.
+- Friends are mortal. They retreat when badly hurt, eat from their backpacks, and run from creepers. Healthy friends holding a tool stand together and fight off zombies and other close attackers, so nobody is picked off alone. Only Aegis goes after skeletons and other archers; everyone else gets out of their line of fire, and a badly hurt friend stays well out of bow range until they recover. Out of combat (no damage for 10 s, no target, not burning) they recover 1 health every 4 s. If they die, they drop a **backpack item** holding everything they carried and wore. It never despawns, and its coordinates go to chat. Use it (right-click) to unpack.
 - A fallen friend's name returns as a newcomer after 3 in-game days. Set `deadFriendsReturnAfterDays` to `-1` in `config/hardcorefriends.json` for permanent loss.
 - Zombies, skeletons, spiders, illagers and witches hunt friends just as they hunt villagers.
 
@@ -119,6 +119,8 @@ None of these bonuses can stop you dying.
 - They build from fixed blueprints, adapted to the wood you have. They do not invent new buildings.
 - Pathfinding is vanilla mob pathfinding. On rough terrain a friend can get stuck. Stuck jobs time out and are retried later.
 - Mining is one staircase mine plus exposed ores near camp. Only trees they can fully reach (about 6 blocks tall) are felled.
+- The farm plot needs a fairly level spot inside camp: a level hole for the water with about 20 level grass or dirt blocks around it. Bumps are fine, but on a camp that is all slopes or rock Fern says she needs "a flat patch of grass", and the camp cannot grow past stage 2 until she gets one. Help her by levelling a patch, or simply pour water on level ground in camp: she farms around any water inside the camp.
+- When the next camp step is waiting on something nobody can fetch (for example nether materials for Spark's lamp posts), friends with nothing useful left to do take a break near camp.
 - Contraptions are a fixed set of vanilla redstone builds.
 - Dialogue is pre-written and chosen by situation and personality. It is not free conversation.
 - Purely natural-looking player builds (for example a hut made only of dirt or stone) cannot be told apart from terrain if they sit in the gathering ring outside your camp. Keep such builds inside the camp radius, or add any crafted block nearby.
