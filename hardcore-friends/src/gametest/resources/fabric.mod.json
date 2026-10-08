@@ -5,7 +5,14 @@
 	"name": "Hardcore Friends Tests",
 	"environment": "*",
 	"entrypoints": {
-		"fabric-gametest": ["io.github.bradley09roberts.hardcorefriends.test.SmokeGameTest"],
+		"fabric-gametest": [
+			"io.github.bradley09roberts.hardcorefriends.test.CoreGameTest",
+			"io.github.bradley09roberts.hardcorefriends.test.CommonGameTest",
+			"io.github.bradley09roberts.hardcorefriends.test.FarmingGameTest",
+			"io.github.bradley09roberts.hardcorefriends.test.MiningExploringGameTest",
+			"io.github.bradley09roberts.hardcorefriends.test.BuildingGameTest",
+			"io.github.bradley09roberts.hardcorefriends.test.GuardianGameTest"
+		],
 		"fabric-client-gametest": ["io.github.bradley09roberts.hardcorefriends.test.HardcoreSkinsClientTest"]
 	}
 }

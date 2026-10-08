@@ -72,6 +72,27 @@ public final class CampData extends SavedData {
 	public CampData() {
 	}
 
+	/** Forgets everything. Only used by automated tests, which run one at a time. */
+	public void resetForTests() {
+		campPos = null;
+		campDimension = "minecraft:overworld";
+		chestPos = null;
+		stage = 0;
+		completed.clear();
+		sites.clear();
+		placedBlocks.clear();
+		unity = 0;
+		unityDay = -1;
+		unityToday.clear();
+		lastRallyTime = -1_000_000L;
+		ledger.clear();
+		pois.clear();
+		memory.clear();
+		stats.clear();
+		editLog.clear();
+		setDirty();
+	}
+
 	// ----------------------------------------------------------------- camp
 
 	public Optional<BlockPos> campPos() {

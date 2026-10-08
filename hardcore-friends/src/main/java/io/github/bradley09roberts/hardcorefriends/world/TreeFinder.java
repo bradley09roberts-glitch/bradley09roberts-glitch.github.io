@@ -85,7 +85,8 @@ public final class TreeFinder {
 		sorted.sort(Comparator.comparingInt(BlockPos::getY));
 		BlockPos base = sorted.getFirst();
 		BlockState below = level.getBlockState(base.below());
-		if (!below.is(BlockTags.DIRT) && !below.is(BlockTags.SAND)) {
+		if (!below.is(BlockTags.DIRT) && !below.is(BlockTags.GRASS_BLOCKS) && !below.is(BlockTags.SUPPORTS_VEGETATION)
+			&& !below.is(BlockTags.SAND)) {
 			return Optional.empty();
 		}
 		int height = sorted.getLast().getY() - base.getY() + 1;
