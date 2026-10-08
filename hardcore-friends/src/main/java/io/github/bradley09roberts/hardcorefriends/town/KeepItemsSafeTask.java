@@ -52,7 +52,7 @@ final class KeepItemsSafeTask implements CompanionTask {
 	@Override
 	public String describe() {
 		Mourning.Spot s = spot;
-		return depositing || s == null ? "putting a fallen friend's things in the chest" : "keeping " + s.name + "'s things safe";
+		return depositing || s == null ? "putting a fallen player's things in the chest" : "keeping " + s.name + "'s things safe";
 	}
 
 	@Override

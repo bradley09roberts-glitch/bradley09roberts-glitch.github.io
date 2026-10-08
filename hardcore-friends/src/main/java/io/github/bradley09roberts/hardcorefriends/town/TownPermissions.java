@@ -123,6 +123,13 @@ public final class TownPermissions {
 		player.sendSystemMessage(Component.literal("You are now the camp's owner. On a shared world, only you and the players you "
 			+ "trust (/friends trust <player>) can give the friends orders. Hand it over with /friends owner <player>.")
 			.withStyle(ChatFormatting.GOLD));
+		MinecraftServer server = player.level().getServer();
+		for (ServerPlayer other : server.getPlayerList().getPlayers()) {
+			if (other != player && FriendsConfig.get().requireTrust) {
+				other.sendSystemMessage(Component.literal(player.getName().getString() + " now owns the camp. Ask them to trust you "
+					+ "(/friends trust " + other.getName().getString() + ") to give the friends orders.").withStyle(ChatFormatting.GRAY));
+			}
+		}
 	}
 
 	private static boolean isHost(MinecraftServer server, ServerPlayer player) {
