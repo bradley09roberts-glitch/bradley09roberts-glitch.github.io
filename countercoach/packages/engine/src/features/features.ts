@@ -351,7 +351,7 @@ export function whatIf(deps: EngineDeps, state: MatchState, prefs: Preferences, 
   const bt = new Map(before.threats.map((t) => [t.kind, t.strength]));
   for (const t of after.threats) {
     const d = t.strength - (bt.get(t.kind) ?? 0);
-    if (Math.abs(d) >= 0.1) explanation.push(`${THREAT_LABEL[t.kind]} ${d > 0 ? "rises" : "falls"} (${(bt.get(t.kind) ?? 0).toFixed(2)} → ${t.strength.toFixed(2)})`);
+    if (Math.abs(d) >= 0.02) explanation.push(`${THREAT_LABEL[t.kind]} ${d > 0 ? "rises" : "falls"} (${(bt.get(t.kind) ?? 0).toFixed(2)} → ${t.strength.toFixed(2)})`);
   }
   const top = after.buyNow ?? after.saveFor;
   if (top?.reasons[0]) explanation.push(`Now: ${top.reasons[0]}`);

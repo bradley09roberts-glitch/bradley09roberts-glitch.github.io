@@ -1,0 +1,36 @@
+appId: io.github.countercoach.desktop
+productName: CounterCoach
+copyright: CounterCoach contributors. Not affiliated with or endorsed by Valve.
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**
+  - dist-electron/**
+  - package.json
+  - "!**/*.map"
+asar: true
+npmRebuild: false
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: zip
+      arch: [x64]
+  # rcedit (via Wine on Linux) writes version metadata. No code-signing certificate is configured,
+  # so the executable is UNSIGNED (Windows SmartScreen will warn).
+  signAndEditExecutable: true
+  artifactName: CounterCoach-${version}-win-${arch}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  artifactName: CounterCoach-Setup-${version}-x64.${ext}
+  shortcutName: CounterCoach
+  include: build/installer.nsh
+linux:
+  target: [dir]
+  executableName: countercoach
+# No auto-update server: do not generate update metadata.
+publish: null

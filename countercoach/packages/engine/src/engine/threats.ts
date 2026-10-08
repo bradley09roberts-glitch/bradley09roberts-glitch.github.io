@@ -187,11 +187,14 @@ export function assessThreats(
         ? "observed-items"
         : "roster-only";
     const heroIds = [...new Set(cs.map((c) => c.heroId).filter((x): x is number => x != null))];
+    // Urgent only when the direct (non-kit) evidence is itself substantial: a small share in a
+    // death recap on top of roster inference is not enough.
+    const direct = combine(cs.filter((c) => c.source !== "kit").map((c) => c.amount));
     threats.push({
       kind,
       strength,
       evidence,
-      urgent: strength >= 0.55 && evidence !== "roster-only",
+      urgent: strength >= 0.55 && evidence !== "roster-only" && direct >= 0.25,
       contributions: cs.sort((a, b) => b.amount - a.amount),
       heroIds,
       laneRelevant: lane.length ? heroIds.some((h) => lane.includes(h)) : phase === "lane",

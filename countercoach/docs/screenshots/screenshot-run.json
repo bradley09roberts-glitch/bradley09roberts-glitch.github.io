@@ -1,0 +1,52 @@
+{
+  "out": "/home/user/bradley09roberts-glitch.github.io/countercoach/docs/screenshots",
+  "metrics": [
+    {
+      "type": "Browser",
+      "cpuPercent": 0,
+      "workingSetMB": 213
+    },
+    {
+      "type": "GPU",
+      "cpuPercent": 0,
+      "workingSetMB": 185
+    },
+    {
+      "type": "Utility",
+      "cpuPercent": 0,
+      "workingSetMB": 93
+    },
+    {
+      "type": "Tab",
+      "cpuPercent": 0,
+      "workingSetMB": 269
+    },
+    {
+      "type": "Tab",
+      "cpuPercent": 0,
+      "workingSetMB": 135
+    }
+  ],
+  "totalWorkingSetMB": 895,
+  "computeTexts": [
+    "Computed locally in 10.5 ms.",
+    "Computed locally in 7.9 ms.",
+    "Computed locally in 9.1 ms.",
+    "Computed locally in 15.4 ms.",
+    "Computed locally in 8.5 ms."
+  ],
+  "overlayBounds": {
+    "x": 2144,
+    "y": 16,
+    "width": 400,
+    "height": 254
+  },
+  "persistedOverlayBounds": {
+    "x": 2144,
+    "y": 16,
+    "width": 400,
+    "height": 60
+  },
+  "expandedPersisted": true,
+  "rendererErrors": []
+}

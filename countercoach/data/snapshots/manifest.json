@@ -7,8 +7,8 @@
   },
   "history": [],
   "lastCheck": {
-    "at": "2026-10-08T10:21:38.494Z",
+    "at": "2026-10-08T10:51:31.909Z",
     "clientVersion": 6763,
-    "result": "replaced"
+    "result": "rejected: ability-order statistics coverage dropped (40 → 0 heroes)"
   }
 }

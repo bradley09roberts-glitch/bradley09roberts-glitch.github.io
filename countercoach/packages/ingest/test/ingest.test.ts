@@ -61,3 +61,28 @@ describe("ingest", () => {
     expect(w.warnings.join(" ")).toMatch(/not a shoppable item/);
   });
 });
+
+import { readFileSync } from "node:fs";
+import { compareQuality } from "../src/core.js";
+import type { Snapshot } from "@countercoach/engine";
+
+describe("quality gate", () => {
+  const root = path.resolve(__dirname, "../../..");
+  const m = JSON.parse(readFileSync(path.join(root, "data/snapshots/manifest.json"), "utf8"));
+  const good = JSON.parse(readFileSync(path.join(root, "data/snapshots", m.active.file), "utf8")) as Snapshot;
+  it("accepts an equivalent snapshot", () => {
+    expect(compareQuality(good, good).acceptable).toBe(true);
+  });
+  it("rejects a valid but degraded snapshot (statistics missing) and keeps last-known-good", () => {
+    const degraded = JSON.parse(JSON.stringify(good)) as Snapshot;
+    for (const h of degraded.heroes) h.abilityOrders.orders = [];
+    const q = compareQuality(good, degraded);
+    expect(q.acceptable).toBe(false);
+    expect(q.problems.join(" ")).toMatch(/ability-order statistics coverage dropped/);
+  });
+  it("rejects an older client build", () => {
+    const older = JSON.parse(JSON.stringify(good)) as Snapshot;
+    older.meta.clientVersion = (good.meta.clientVersion ?? 1) - 1;
+    expect(compareQuality(good, older).acceptable).toBe(false);
+  });
+});

@@ -7,5 +7,9 @@
   "dependencies": {
     "@countercoach/engine": "workspace:*",
     "zod": "4.6.5"
+  },
+  "exports": {
+    "./core": "./src/core.ts",
+    "./http": "./src/http.ts"
   }
 }

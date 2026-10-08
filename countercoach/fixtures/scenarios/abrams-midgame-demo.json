@@ -79,7 +79,6 @@
     "type": "observe",
     "field": "roster.allies",
     "value": [
-     6,
      3,
      8,
      12,

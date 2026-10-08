@@ -384,12 +384,12 @@ function reasonsFor(s: ScoredItem, ctx: Ctx): string[] {
     r.push(`Upgrades your ${s.econ.consumes.map((c) => ctx.deps.data.item(c)?.name ?? c).join(" + ")} (pays only the difference)`);
   }
   if (s.parts.path > 0.3) r.push("Builds toward a planned item");
-  if (top?.note) r.push(top.note);
+  if (top?.note && top.contribution >= 0.08) r.push(top.note);
   return r;
 }
 
 function evidenceText(e: AssessedThreat["evidence"]): string {
-  return e === "reported" ? "you reported it" : e === "observed-items" ? "seen in enemy items" : "inferred from enemy heroes only";
+  return e === "reported" ? "from your report or death recap" : e === "observed-items" ? "seen in enemy items" : "inferred from enemy heroes only";
 }
 
 function toAction(s: ScoredItem, ctx: Ctx, extra: Partial<PurchaseAction> = {}): PurchaseAction {

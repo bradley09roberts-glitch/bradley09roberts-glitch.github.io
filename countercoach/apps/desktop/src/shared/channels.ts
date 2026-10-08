@@ -1,0 +1,21 @@
+/** IPC channel names. The preload exposes only these; the main process validates all inputs. */
+export const IPC = {
+  getBootstrap: "cc:get-bootstrap",
+  getSettings: "cc:get-settings",
+  setSettings: "cc:set-settings",
+  checkData: "cc:check-data",
+  refreshData: "cc:refresh-data",
+  overlayUpdate: "cc:overlay-update",
+  overlayModel: "cc:overlay-model",
+  overlaySetEdit: "cc:overlay-set-edit",
+  overlayMoved: "cc:overlay-moved",
+  overlayState: "cc:overlay-state",
+  overlayResize: "cc:overlay-resize",
+  logAppend: "cc:log-append",
+  logList: "cc:log-list",
+  logRead: "cc:log-read",
+  logDeleteAll: "cc:log-delete-all",
+  importReplay: "cc:import-replay",
+  dataEvent: "cc:data-event",
+  settingsEvent: "cc:settings-event",
+} as const;

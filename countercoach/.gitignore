@@ -6,3 +6,5 @@ out/
 .cache/
 data/cache/
 apps/desktop/dist-electron/
+apps/desktop/public/data/
+apps/desktop/dist-web/

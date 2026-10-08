@@ -8,10 +8,11 @@
     "typecheck": "tsc -p packages/engine && tsc -p packages/ingest && tsc -p tsconfig.tests.json && tsc -p apps/desktop",
     "test": "vitest run",
     "ingest": "tsx packages/ingest/src/cli.ts",
-    "coverage-report": "tsx packages/ingest/src/coverageReport.ts",
     "dev": "pnpm --filter @countercoach/desktop dev",
     "build": "pnpm --filter @countercoach/desktop build",
-    "dist:win": "pnpm --filter @countercoach/desktop dist:win"
+    "dist:win": "pnpm --filter @countercoach/desktop dist:win",
+    "docs": "tsx scripts/generate-docs.ts",
+    "screenshots": "cd apps/desktop && xvfb-run -a -s \"-screen 0 2560x1440x24\" node scripts/screenshots.cjs ../../docs/screenshots"
   },
   "engines": {
     "node": ">=22.12.0"

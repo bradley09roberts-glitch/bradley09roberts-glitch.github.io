@@ -1,0 +1,57 @@
+# Build, test and smoke-test the CounterCoach companion on a real Windows runner.
+# Manual only (Actions → "CounterCoach Windows build" → Run workflow); it never runs on push.
+name: CounterCoach Windows build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: countercoach
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: countercoach/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: countercoach/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm --filter @countercoach/desktop dist:win
+      - name: Smoke-launch the unpacked app
+        shell: pwsh
+        run: |
+          $ud = Join-Path $env:RUNNER_TEMP "cc-smoke"
+          $env:COUNTERCOACH_SMOKE = "1"
+          $env:COUNTERCOACH_USER_DATA = $ud
+          $p = Start-Process -FilePath "apps/desktop/release/win-unpacked/CounterCoach.exe" -PassThru
+          if (-not $p.WaitForExit(90000)) { $p.Kill(); throw "app did not exit" }
+          Get-Content (Join-Path $ud "smoke-report.json")
+      - name: Silent install and uninstall
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem apps/desktop/release/CounterCoach-Setup-*.exe | Select-Object -First 1
+          Start-Process $setup.FullName -ArgumentList "/S" -Wait
+          $dir = Join-Path $env:LOCALAPPDATA "Programs/CounterCoach"
+          if (-not (Test-Path (Join-Path $dir "CounterCoach.exe"))) { throw "not installed" }
+          Start-Process (Join-Path $dir "Uninstall CounterCoach.exe") -ArgumentList "/currentuser","/S" -Wait
+          Start-Sleep -Seconds 5
+          if (Test-Path (Join-Path $dir "CounterCoach.exe")) { throw "not uninstalled" }
+          "install/uninstall OK"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: countercoach-windows
+          path: |
+            countercoach/apps/desktop/release/CounterCoach-Setup-*.exe
+            countercoach/apps/desktop/release/CounterCoach-*-win-x64.zip

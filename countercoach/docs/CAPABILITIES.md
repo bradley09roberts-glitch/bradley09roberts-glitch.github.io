@@ -130,3 +130,37 @@ No process injection, memory reading, packet interception, hidden enemy informat
 anti-cheat interaction, automated purchases or ability allocation, game-file edits or
 launch-flag changes. It never treats spectator/broadcast data as live player observations.
 It makes no claim that it is ban-proof or Valve-approved.
+
+## 5. Final capabilities report (delivered build 0.1.0)
+
+**Implemented** = code exists and is exercised by tests or screenshots. **Verified** = shown
+working in this environment, with how. **Limited** = works with stated restrictions.
+**Unavailable** = not delivered, with the reason.
+
+| Feature | Status | Evidence / limits |
+|---|---|---|
+| Delivery route | External Windows companion (Electron 44.4.5 + React 19.3) | Not a native mod. No game files touched. |
+| Native Panorama HUD addon | **Unavailable** | No permitted interface (§1). Not built; nothing was compiled or claimed. |
+| Data ingest (heroes, items, costs, components, abilities, level schedule, tier costs) | Implemented, verified | Build 6763 snapshot validated; 89 tests; quality gate rejected a real degraded rebuild. |
+| Versioning, content hash, last-known-good, diff, compatibility | Implemented, verified | `data.test.ts`, `ingest.test.ts`. |
+| Patch invalidation (review stamps) | Implemented, verified | Changed items halved and flagged; curated-stale profiles; removed references fall back to auto. |
+| Manual adapter (all fields, quick search, recent picks, keyboard) | Implemented, verified | Screenshots 01–07. |
+| Scenario playback (10 fixtures) | Implemented, verified | Scenarios tab; tests. |
+| Replay/post-match (decision logs, review ≤3 lessons) | Implemented, verified (unit) | Logs are opt-in and local; replay stores never mix with live state. |
+| Live game-state adapter | **Unavailable** | No documented Deadlock interface. Spectator feeds are excluded from live use. |
+| Screen-capture adapter | **Unavailable** (not shipped) | Could not be validated against the real game. The ambiguity/correction flow is implemented and tested. |
+| Recommender: BUY NOW / SAVE FOR / ALTERNATIVE with explanations | Implemented, verified | `scenarios.test.ts` (12 behaviours), screenshots. |
+| Counter rules (17, threat → mechanic → responses → conditions → exceptions) | Implemented | Weights are heuristic; item mechanics come from data. See COUNTER_RULES.md. |
+| Stability, pin / reject / defer | Implemented, verified | Tests §11 and features tests. |
+| Ability planner (unlocks vs points, real costs, breakpoints, hold logic, legality) | Implemented, verified | `planner.test.ts`; tier costs 1/2/5 derived from data. |
+| Hero coverage | Limited | All 40 playable heroes have a profile: **6 curated** (Abrams with 2 archetypes, Haze, Seven, Infernus, Dynamo, Lady Geist; AI-authored, awaiting expert review) and **34 basic data-derived**. See COVERAGE.md. |
+| Threat panel, power spike, build repair, team utility, replacement, active hints, lane plan, what-if | Implemented, verified (unit + screenshots) | Power spike gives souls/points remaining, never an ETA. |
+| Game modes | Limited | Standard supported. Ranked assumed to share the in-match rules (unverified). Street Brawl unsupported (no advice). |
+| Unverified game rules (12 slots, component pricing, 50% resale) | Limited | Labelled in the UI and overridable in Settings. |
+| Overlay (collapsed/expanded, scale, opacity, anchors/custom, multi-monitor, click-through, edit mode, no focus steal, hotkeys) | Implemented; verified on Linux/Xvfb | Placement unit-tested for DPI, ultrawide and negative origins. **Not tested over Deadlock or on Windows.** Exclusive fullscreen is not supported. |
+| Separate-window mode | Implemented, verified (Linux) | The main window works without the overlay. |
+| Settings persistence | Implemented, verified | Relaunch test in the screenshot run. |
+| Background data refresh (non-blocking, validated, rollback) | Implemented | The refresh path uses the same tested ingest core; the in-app download was not exercised end to end in the UI. |
+| Windows packages (NSIS installer + portable zip) | Built (unsigned) | Install, shortcuts, registry, uninstall verified **under Wine only**. App launch on Windows untested. |
+| Performance (<100 ms local update) | Verified on Linux | p95 21 ms (Node); 8–12 ms in the Electron renderer. Windows not measured. |
+| Statistical ranking from match data | Not used as a ranking model | Only labelled weak priors (pick rate, most-played ability order with sample size). |
