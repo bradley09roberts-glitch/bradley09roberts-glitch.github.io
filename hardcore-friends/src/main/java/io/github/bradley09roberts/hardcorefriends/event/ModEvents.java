@@ -18,6 +18,8 @@ import net.minecraft.world.entity.monster.spider.Spider;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 
+import io.github.bradley09roberts.hardcorefriends.ai.task.SpecialityTask;
+import io.github.bradley09roberts.hardcorefriends.ai.task.needs.SocializeTask;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.camp.CampProgress;
@@ -46,6 +48,8 @@ public final class ModEvents {
 		ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
 			if (entity instanceof CompanionEntity companion) {
 				Companions.untrack(companion);
+				// Their job stops without a word, so the shared jobs they held are free for the others at once.
+				SpecialityTask.release(companion.getUUID());
 			}
 		});
 		// A block a player breaks is no longer the friends' own, whatever the player puts there next.
@@ -59,10 +63,19 @@ public final class ModEvents {
 			CampNeeds.tick(server);
 			CampProgress.tick(server);
 		});
+		// A world closed and another opened in the same game keeps no claims, requests or chats from the last one.
+		ServerLifecycleEvents.SERVER_STARTING.register(server -> forgetSharedWork());
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			Companions.clear();
 			CampNeeds.clear();
+			forgetSharedWork();
 		});
+	}
+
+	/** Forgets who holds which shared job, the requests to hand them back, and the chat invitations and memories. */
+	private static void forgetSharedWork() {
+		SpecialityTask.clearClaims();
+		SocializeTask.clear();
 	}
 
 	private static boolean huntsCompanions(Mob mob) {

@@ -65,6 +65,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.WorkGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.role.RolePassives;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
+import io.github.bradley09roberts.hardcorefriends.ai.task.SpecialityTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskRegistry;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
@@ -696,6 +697,7 @@ public class CompanionEntity extends PathfinderMob {
 	public void die(DamageSource source) {
 		if (this.level() instanceof ServerLevel level && !deathHandled) {
 			deathHandled = true;
+			SpecialityTask.release(getUUID()); // the shared jobs they held, or asked back, are free for the others now
 			Component cause = source.getLocalizedDeathMessage(this);
 			dropBackpack(level);
 			CampData data = Camp.data(level.getServer());

@@ -37,6 +37,12 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  * layout...) are run by one friend at a time; the others score them 0 while someone is on it. When the specialist
  * comes back to work and finds someone else on their shared job, the other friend hands it over at once.
  *
+ * <p>A claim on a shared job lasts only while its holder is really on it: working, with that job in hand. A friend
+ * who dies or is unloaded lets go of everything at once ({@link #release}), so a friend who leaves mid-job (a camp
+ * unloading, a world closed and reopened) never keeps the others off it. A request to hand a job back lapses after
+ * {@value #HANDOVER_TICKS} ticks, or as soon as the friend who asked has gone. All of this belongs to one running
+ * world and is forgotten when a server starts or stops ({@link #clearClaims}).
+ *
  * <p>When a friend starts work outside their speciality they may say so ({@link Line#HELPING_OUT}).
  */
 public final class SpecialityTask implements CompanionTask {
@@ -173,23 +179,37 @@ public final class SpecialityTask implements CompanionTask {
 		return ON_HAND;
 	}
 
-	/** The friend other than this one running this exclusive job, if they are still alive and loaded. */
+	/** The friend other than this one running this exclusive job right now, if any (see {@link #runner}). */
 	private Optional<CompanionEntity> holder(CompanionEntity c) {
 		UUID holder = RUNNING.get(inner.id());
 		if (holder == null || holder.equals(c.getUUID())) {
 			return Optional.empty();
 		}
-		Optional<CompanionEntity> found = find(holder);
-		if (found.isEmpty()) {
-			RUNNING.remove(inner.id()); // they died or left: the job is free again
-		}
-		return found;
+		return runner(inner.id());
 	}
 
-	/** True while this exclusive job is being handed back to its specialist, who is someone else. */
+	/** True while this friend is really on this job: working, with it as the job in hand. */
+	private static boolean isOn(CompanionEntity friend, String jobId) {
+		CompanionTask doing = friend.mode() == CompanionMode.WORK ? friend.scheduler().current() : null;
+		return doing != null && doing.id().equals(jobId);
+	}
+
+	/**
+	 * True while this exclusive job is being handed back to its specialist, who is someone else. A request stands for
+	 * {@value #HANDOVER_TICKS} ticks and only while the friend who made it is still here; one that has lapsed, or that
+	 * is stamped later than now (left over from another world), is forgotten.
+	 */
 	private boolean handedToAnother(CompanionEntity c) {
 		Handover h = HANDOVER.get(inner.id());
-		return h != null && !h.to().equals(c.getUUID()) && c.level().getGameTime() - h.at() < HANDOVER_TICKS;
+		if (h == null) {
+			return false;
+		}
+		long age = c.level().getGameTime() - h.at();
+		if (age < 0 || age >= HANDOVER_TICKS || find(h.to()).isEmpty()) {
+			HANDOVER.remove(inner.id(), h);
+			return false;
+		}
+		return !h.to().equals(c.getUUID());
 	}
 
 	/**
@@ -234,10 +254,31 @@ public final class SpecialityTask implements CompanionTask {
 
 	@Override
 	public TaskStatus tick(CompanionEntity c) {
-		if (exclusive && !own(c) && handedToAnother(c)) {
-			return TaskStatus.FAILURE; // the specialist is back for it: hand it over (and leave it be for a while)
+		if (exclusive) {
+			if (!own(c) && handedToAnother(c)) {
+				return TaskStatus.FAILURE; // the specialist is back for it: hand it over (and leave it be for a while)
+			}
+			if (!keepClaim(c)) {
+				return TaskStatus.FAILURE; // someone else took it on while this friend was out of reach
+			}
 		}
 		return inner.tick(c);
+	}
+
+	/**
+	 * Keeps this friend's claim on the exclusive job they are running. A friend whose chunk stopped being tracked was
+	 * released ({@link #release}) but may come back still on the job: they claim it again, unless another friend has
+	 * taken it on meanwhile, in which case they leave it to them.
+	 */
+	private boolean keepClaim(CompanionEntity c) {
+		if (c.getUUID().equals(RUNNING.get(inner.id()))) {
+			return true;
+		}
+		if (runner(inner.id()).isPresent()) {
+			return false;
+		}
+		RUNNING.put(inner.id(), c.getUUID());
+		return true;
 	}
 
 	@Override
@@ -266,10 +307,20 @@ public final class SpecialityTask implements CompanionTask {
 		return inner.maxTicks();
 	}
 
-	/** The living, loaded friend running this exclusive job right now, if any. */
+	/**
+	 * The living, loaded friend running this exclusive job right now, if any. A claim whose friend is gone, or is no
+	 * longer working on this job, is stale: it is dropped, so it never keeps anyone off the job.
+	 */
 	public static Optional<CompanionEntity> runner(String jobId) {
 		UUID holder = RUNNING.get(jobId);
-		return holder == null ? Optional.empty() : find(holder);
+		if (holder == null) {
+			return Optional.empty();
+		}
+		Optional<CompanionEntity> found = find(holder).filter(f -> isOn(f, jobId));
+		if (found.isEmpty()) {
+			RUNNING.remove(jobId, holder); // they died, left or moved on: the job is free again
+		}
+		return found;
 	}
 
 	/** The living, loaded friend who last started this exclusive job (running it now or not), if any. */
@@ -282,11 +333,21 @@ public final class SpecialityTask implements CompanionTask {
 		return last == null ? Optional.empty() : find(last);
 	}
 
-	/** Forgets every claim (tests and server restarts). */
+	/**
+	 * Lets go of every job this friend holds and every handover they asked for. Called when a friend dies or is
+	 * unloaded: their job then stops without {@link #stop} being called, and the others must not wait for them.
+	 */
+	public static void release(UUID friend) {
+		RUNNING.values().removeIf(friend::equals);
+		HANDOVER.values().removeIf(h -> h.to().equals(friend));
+	}
+
+	/** Forgets every claim, request and friend on hand: a server starting or stopping, so each world starts clean. */
 	public static void clearClaims() {
 		RUNNING.clear();
 		LAST.clear();
 		HANDOVER.clear();
+		ON_HAND.clear();
 		onHandAt = Long.MIN_VALUE;
 	}
 }

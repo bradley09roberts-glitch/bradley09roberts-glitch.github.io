@@ -152,6 +152,7 @@ Each friend has a speciality (their role) and one **interest**, `Speciality.inte
 | Personal jobs (`PERSONAL`: delivering what the friend carries, smelting carried ore) | `s` × keenness, whoever is around |
 
 - **Exclusive jobs** (`EXCLUSIVE`: building and repair, contraptions, the farm layout and tilling, the mine, the quarry, felling, paths, fencing, planting, exploring, the furnace) run for one friend at a time; the others score them 0 while someone is on them. A specialist coming back to work asks for their shared job back, and a stand-in on it fails out at once and hands it over.
+- **Claims last only while the job runs.** A claim counts only while its holder is working with that job in hand. A friend who dies or is unloaded lets go of their claims at once, so a friend who leaves mid-job (a camp unloading, a world closed and reopened) never keeps the others off it. A request to hand a job back lapses after 3 s, or as soon as the friend who asked has gone. Claims, requests and chat invitations are forgotten whenever a server starts or stops.
 - A friend starting a job outside their speciality may say `HELPING_OUT` with the job's description.
 
 ## 6. Needs and mood
@@ -248,6 +249,7 @@ Stages are gated by completed structures **and** the Unity score:
 - **Backpack:** 9 slots, 18 at Unity 100 and 27 at Unity 500. It is saved with the entity. Sneak + right-click with an empty hand opens it as a chest UI.
 - **Deposit:** when ≥ 80% full or carrying surplus (anything outside the role's keep-list), a companion walks to the supply chest and deposits it.
 - **Restock:** a missing role tool, food below 2, or materials for the current job are fetched from the chest.
+  - A friend covering a speciality nobody else is working also keeps that speciality's tool. They fetch or make it in spare time, and only when it fits without putting anything away: into an empty hand or a free backpack slot. Their own tool is never moved to the chest to make room for it.
 - **Crafting** (`camp/Crafting`, hard-coded recipes with real consumption): logs to planks, planks to sticks, coal or charcoal + stick to torches, tools (wood, stone, iron), bread, chest, crafting table, furnace, doors, slabs, fences, pressure plates, hopper, redstone torch, daylight detector, redstone lamp, ladder, lantern. Anything beyond the 2×2 recipes needs a crafting table within 6 blocks.
 - **Smelting:** raw iron, copper or gold plus fuel go into the camp furnace; outputs are collected later.
 - **Sharing:** a companion holding what a friend's job needs walks over and hands it across (+2 Unity). Generous friends give food to hungry players and companions.

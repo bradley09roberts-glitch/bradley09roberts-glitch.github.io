@@ -2,7 +2,6 @@ package io.github.bradley09roberts.hardcorefriends.ai.task.common;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
 
@@ -23,6 +22,10 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 /**
  * Fetches a missing role tool or some food from the supply chest. The best tool in the chest is taken and held
  * straight away; food is topped up to {@value KeepList#FOOD_KEPT}, cooked food first.
+ *
+ * <p>A tool for a speciality the friend only covers ({@link KeepList#isCoverTool}) is fetched in spare time and never
+ * pushes anything out: it is held if the hand is empty, otherwise carried in the backpack, and with the backpack full
+ * it stays in the chest. Their own tool is never put away to make room for it, so the two never swap back and forth.
  */
 public final class RestockTask implements CompanionTask {
 	private static final int LOW_FOOD = 2;
@@ -46,9 +49,14 @@ public final class RestockTask implements CompanionTask {
 		if (Upkeep.chestPos(level).isEmpty()) {
 			return 0;
 		}
-		if (needsTool(c) && Upkeep.chestCount(level, toolFilter(c)) > 0) {
-			// A tool for a speciality they only cover waits until their own work allows.
-			return KeepList.isCoverTool(c, KeepList.missingTool(c)) ? 30 : 70;
+		TagKey<Item> tool = KeepList.missingTool(c);
+		if (tool != null && Upkeep.chestCount(level, s -> s.is(tool)) > 0) {
+			if (!KeepList.isCoverTool(c, tool)) {
+				return 70;
+			}
+			if (hasRoomForCoverTool(c)) {
+				return 30; // a tool for a speciality they only cover waits until their own work allows
+			}
 		}
 		if (needsFood(c) && Upkeep.chestCount(level, KeepList::isFood) > 0) {
 			return 55;
@@ -64,9 +72,9 @@ public final class RestockTask implements CompanionTask {
 		return KeepList.foodCount(c.backpack()) < LOW_FOOD;
 	}
 
-	private static Predicate<ItemStack> toolFilter(CompanionEntity c) {
-		TagKey<Item> tool = KeepList.missingTool(c);
-		return s -> tool != null && s.is(tool);
+	/** A cover tool is only taken where it fits without putting anything away: an empty hand or a free slot. */
+	private static boolean hasRoomForCoverTool(CompanionEntity c) {
+		return c.getMainHandItem().isEmpty() || c.backpack().freeSlots() > 0;
 	}
 
 	@Override
@@ -108,9 +116,21 @@ public final class RestockTask implements CompanionTask {
 		return TaskStatus.RUNNING;
 	}
 
-	/** Takes the strongest role tool from the container and holds it. */
+	/**
+	 * Takes the strongest missing tool from the container. Their own speciality's tool is held at once, whatever was
+	 * in hand going into the backpack (or the chest if the backpack is full). A cover tool goes into an empty hand or
+	 * the backpack, and is left in the chest when neither has room.
+	 */
 	static boolean takeBestTool(CompanionEntity c, Container chest) {
-		List<Integer> slots = Upkeep.slotsBest(chest, toolFilter(c), Upkeep::toolRank);
+		TagKey<Item> wanted = KeepList.missingTool(c);
+		if (wanted == null) {
+			return false;
+		}
+		boolean cover = KeepList.isCoverTool(c, wanted);
+		if (cover && !hasRoomForCoverTool(c)) {
+			return false;
+		}
+		List<Integer> slots = Upkeep.slotsBest(chest, s -> s.is(wanted), Upkeep::toolRank);
 		if (slots.isEmpty()) {
 			return false;
 		}
@@ -119,8 +139,19 @@ public final class RestockTask implements CompanionTask {
 		if (tool.isEmpty()) {
 			return false;
 		}
-		Upkeep.holdInHand(c, tool, chest);
-		return true;
+		if (!cover || c.getMainHandItem().isEmpty()) {
+			Upkeep.holdInHand(c, tool, chest);
+			return true;
+		}
+		ItemStack left = c.backpack().insert(tool); // whatever they hold stays in hand
+		if (left.isEmpty()) {
+			return true;
+		}
+		left = SupplyChest.insert(chest, left); // no room after all: back where it came from
+		if (!left.isEmpty()) {
+			c.spawnAtLocation((ServerLevel) c.level(), left);
+		}
+		return false;
 	}
 
 	/** Tops the backpack up to {@code target} food items, best food first. Returns how many were taken. */

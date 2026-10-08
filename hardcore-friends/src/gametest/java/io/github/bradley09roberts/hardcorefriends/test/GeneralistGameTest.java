@@ -1,32 +1,49 @@
 package io.github.bradley09roberts.hardcorefriends.test;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.forage.DeliverToBuilderTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.sage.ReviewStoresTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.scout.ExploreTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.scout.ScoutLog;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
+import io.github.bradley09roberts.hardcorefriends.ai.task.SpecialityTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.Structures;
+import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
+import io.github.bradley09roberts.hardcorefriends.registry.ModEntities;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
@@ -295,6 +312,9 @@ public class GeneralistGameTest {
 			helper.assertTrue(data.memory(ReviewStoresTask.MEMORY).contains("at"), "Sage reviewed the stores (Sage is "
 				+ sage.activity() + ")");
 			helper.assertTrue(log.unreportedTotal() == 0, "Scout reported the finds (Scout is " + scout.activity() + ")");
+			// runBeforeTestEnd only runs at the time limit. A player left behind stays in the level, and Aegis in a
+			// test run next to it would guard them instead of working.
+			helper.getLevel().getServer().getPlayerList().remove(player);
 		});
 	}
 
@@ -333,5 +353,225 @@ public class GeneralistGameTest {
 			helper.assertTrue(perChoice < 5.0, String.format("choosing a job takes %.3f ms on average", perChoice));
 			helper.succeed();
 		});
+	}
+
+	// ------------------------------------------------------------- letting go of shared jobs
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_125", maxTicks = 2400)
+	public void reloadedStandInLetsOakTakeHisCabinBack(GameTestHelper helper) {
+		cabinCamp(helper);
+		CompanionEntity rowan = freeRowan(helper, new BlockPos(14, 2, 16));
+		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, new BlockPos(16, 2, 20));
+		oak.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_AXE));
+		oak.setMode(CompanionMode.STAY, null);
+		CompanionEntity[] rowanNow = {rowan};
+		long[] oakBackAt = {-1};
+		helper.onEachTick(() -> {
+			if (oakBackAt[0] < 0 && job(rowan).equals("oak.build")) {
+				// The world is closed and opened again while Rowan is on Oak's cabin, so she comes back with a clean
+				// slate and, as in a real camp where she has her own gathering, does not take the cabin up again.
+				// Then Oak, back from a trip, returns to work with nothing to do but his cabin.
+				rowanNow[0] = reload(helper, rowan);
+				setAside(helper, rowanNow[0], 2400, "rowan.chop", "rowan.quarry", "rowan.forage", "oak.build");
+				oak.setMode(CompanionMode.WORK, null);
+				setAside(helper, oak, 2400, "oak.process_wood", "oak.repair", "clear_site");
+				oakBackAt[0] = helper.getTick();
+			}
+		});
+		helper.succeedWhen(() -> {
+			helper.assertTrue(oakBackAt[0] >= 0, "Rowan stood in on the cabin while Oak was away (she is " + rowan.activity() + ")");
+			helper.assertTrue(rowanNow[0] != rowan && rowanNow[0].getUUID().equals(rowan.getUUID()), "Rowan was loaded again");
+			helper.assertTrue(job(oak).equals("oak.build"), "Oak took his cabin back (Oak is " + oak.activity() + ", Rowan is "
+				+ rowanNow[0].activity() + ")");
+			helper.assertTrue(DeliverToBuilderTask.builder().orElse(null) == oak, "building materials go to Oak, who is building");
+			helper.assertTrue(helper.getTick() - oakBackAt[0] < 400, "Oak was not kept off his cabin, he started after "
+				+ (helper.getTick() - oakBackAt[0]) + " ticks");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_126", maxTicks = 2400)
+	public void cabinStaysWithStandInWhenOakFallsAskingForIt(GameTestHelper helper) {
+		cabinCamp(helper);
+		CompanionEntity rowan = freeRowan(helper, new BlockPos(14, 2, 16));
+		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, new BlockPos(16, 2, 20));
+		oak.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_AXE));
+		oak.setMode(CompanionMode.STAY, null);
+		long[] fellAt = {-1};
+		List<String> problems = new ArrayList<>();
+		helper.onEachTick(() -> {
+			if (oak.mode() == CompanionMode.STAY && job(rowan).equals("oak.build")) {
+				oak.setMode(CompanionMode.WORK, null); // back to work while Rowan is on his cabin: he asks for it back
+			} else if (fellAt[0] < 0 && oak.mode() == CompanionMode.WORK && handovers().containsKey("oak.build")) {
+				oak.kill(helper.getLevel());
+				fellAt[0] = helper.getTick();
+				if (handovers().containsKey("oak.build")) {
+					problems.add("Oak's request for his cabin outlived him");
+				}
+			}
+		});
+		helper.succeedWhen(() -> {
+			helper.assertTrue(fellAt[0] >= 0, "Oak came back for his cabin (Oak is " + oak.activity() + ", Rowan is "
+				+ rowan.activity() + ")");
+			helper.assertTrue(problems.isEmpty(), String.join("; ", problems));
+			helper.assertTrue(job(rowan).equals("oak.build"), "Rowan carries on with the cabin after Oak's death (she is "
+				+ rowan.activity() + ")");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_127", maxTicks = 1600)
+	public void handoverLeftFromAnotherWorldLapses(GameTestHelper helper) {
+		cabinCamp(helper);
+		// The world played before this one ran for longer, and its builder had just asked for his cabin back when it
+		// closed: the request names a friend who is not here and a time this world has not reached.
+		leaveHandover("oak.build", UUID.randomUUID(), helper.getLevel().getGameTime() + 1_000_000);
+		helper.runBeforeTestEnd(() -> handovers().remove("oak.build"));
+		CompanionEntity rowan = freeRowan(helper, new BlockPos(14, 2, 16));
+		helper.succeedWhen(() -> {
+			helper.assertFalse(handovers().containsKey("oak.build"), "the request from the other world was forgotten");
+			helper.assertTrue(job(rowan).equals("oak.build"), "Rowan stands in on the cabin (she is " + rowan.activity() + ")");
+		});
+	}
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_128", maxTicks = 1600)
+	public void friendBackInRangeKeepsTheirJob(GameTestHelper helper) {
+		cabinCamp(helper);
+		CompanionEntity rowan = freeRowan(helper, new BlockPos(14, 2, 16));
+		ServerLevel level = helper.getLevel();
+		long[] backAt = {-1};
+		helper.onEachTick(() -> {
+			if (backAt[0] < 0 && job(rowan).equals("oak.build")) {
+				// Her chunk drops out of range for a moment and comes back, as at the edge of a player's view: she is
+				// unloaded, which lets go of the cabin, and loaded again still on it.
+				ServerEntityEvents.ENTITY_UNLOAD.invoker().onUnload(rowan, level);
+				helper.assertTrue(SpecialityTask.runner("oak.build").isEmpty(), "unloading let go of the cabin");
+				ServerEntityEvents.ENTITY_LOAD.invoker().onLoad(rowan, level);
+				backAt[0] = helper.getTick();
+			}
+		});
+		helper.succeedWhen(() -> {
+			helper.assertTrue(backAt[0] >= 0 && helper.getTick() > backAt[0] + 2, "Rowan was on the cabin and came back in range"
+				+ " (she is " + rowan.activity() + ")");
+			helper.assertTrue(job(rowan).equals("oak.build"), "Rowan is still building (she is " + rowan.activity() + ")");
+			helper.assertTrue(SpecialityTask.runner("oak.build").orElse(null) == rowan, "Rowan holds the cabin again, so"
+				+ " nobody else starts on it");
+		});
+	}
+
+	// ------------------------------------------------------------- tools for covered work
+
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_129", maxTicks = 1400)
+	public void fullBackpackKeepsOwnToolOverCoverTool(GameTestHelper helper) {
+		TestSupport.resetCamp(helper, true);
+		Container chest = TestSupport.placeChest(helper, CHEST, new ItemStack(Items.WOODEN_HOE));
+		// Oak works the camp alone, so he covers farming and wants a hoe besides his axe. His backpack is full of
+		// building stock he keeps, so there is no room for it without putting his axe away.
+		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, TestSupport.centre());
+		oak.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_AXE));
+		TestSupport.give(oak, new ItemStack(Items.OAK_PLANKS, 16), new ItemStack(Items.OAK_LOG, 8),
+			new ItemStack(Items.COBBLESTONE, 16), new ItemStack(Items.GLASS_PANE, 8), new ItemStack(Items.OAK_DOOR),
+			new ItemStack(Items.OAK_SLAB, 8), new ItemStack(Items.LADDER, 4), new ItemStack(Items.OAK_FENCE, 4),
+			new ItemStack(Items.BREAD, 4));
+		helper.assertTrue(oak.backpack().freeSlots() == 0, "Oak's backpack starts full");
+		// Fetching from the chest is all he does here.
+		long now = helper.getLevel().getGameTime();
+		for (CompanionTask task : oak.scheduler().tasks()) {
+			if (!task.id().equals("common.restock")) {
+				oak.scheduler().cooldown(task.id(), now, 1400);
+			}
+		}
+		List<String> slips = new ArrayList<>();
+		helper.onEachTick(() -> {
+			if (slips.size() < 4 && !oak.getMainHandItem().is(Items.WOODEN_AXE)) {
+				slips.add("tick " + helper.getTick() + " holding " + oak.getMainHandItem());
+			}
+			if (slips.size() < 4 && SupplyChest.count(chest, s -> s.is(ItemTags.AXES)) > 0) {
+				slips.add("tick " + helper.getTick() + " his axe was in the chest");
+			}
+		});
+		helper.runAfterDelay(300, () -> {
+			helper.assertTrue(slips.isEmpty(), "with a full backpack Oak kept his axe: " + slips);
+			helper.assertTrue(SupplyChest.count(chest, s -> s.is(Items.WOODEN_HOE)) == 1, "the hoe stayed in the chest");
+			oak.backpack().remove(s -> s.is(Items.LADDER), 4); // a slot comes free
+		});
+		helper.succeedWhen(() -> {
+			helper.assertTrue(helper.getTick() > 300, "waiting for a slot to come free");
+			helper.assertTrue(slips.isEmpty(), "Oak kept his axe in hand throughout: " + slips);
+			helper.assertTrue(oak.backpack().count(Items.WOODEN_HOE) == 1, "with a slot free Oak carries the hoe (he is "
+				+ oak.activity() + ")");
+			helper.assertTrue(SupplyChest.count(chest, s -> s.is(Items.WOODEN_HOE)) == 0, "the hoe left the chest");
+		});
+	}
+
+	// ------------------------------------------------------------- helpers for claims
+
+	/** A hamlet with the cabin to build next: logs, glass and coal in the chest, and a crafting table beside it. */
+	private static CampData cabinCamp(GameTestHelper helper) {
+		CampData data = TestSupport.resetCamp(helper, true);
+		data.setStage(2);
+		for (Structures.Entry e : Structures.ALL) {
+			if (e.stage() < 2) {
+				data.markCompleted(e.id());
+			}
+		}
+		TestSupport.placeChest(helper, CHEST, new ItemStack(Items.OAK_LOG, 64), new ItemStack(Items.OAK_LOG, 64),
+			new ItemStack(Items.GLASS, 6), new ItemStack(Items.COAL, 2));
+		helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
+		return data;
+	}
+
+	/** Rowan with her axe and her own gathering caught up, so she is free to stand in on building. */
+	private static CompanionEntity freeRowan(GameTestHelper helper, BlockPos at) {
+		CompanionEntity rowan = TestSupport.spawnFriend(helper, FriendId.ROWAN, at);
+		rowan.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.WOODEN_AXE));
+		setAside(helper, rowan, 2400, "rowan.chop", "rowan.quarry", "rowan.forage");
+		return rowan;
+	}
+
+	/** Saves a friend and loads them back as a new entity, as closing and opening the world again does. */
+	private static CompanionEntity reload(GameTestHelper helper, CompanionEntity c) {
+		ServerLevel level = helper.getLevel();
+		TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
+		c.saveWithoutId(output);
+		CompoundTag saved = output.buildResult();
+		c.discard();
+		CompanionEntity copy = ModEntities.COMPANION.create(level, EntitySpawnReason.LOAD);
+		if (copy == null) {
+			throw new IllegalStateException("could not create companion");
+		}
+		copy.load(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), saved));
+		level.addFreshEntity(copy);
+		return copy;
+	}
+
+	/**
+	 * The open requests to hand a shared job back, by job id. They are private to {@link SpecialityTask}, and only a
+	 * world switch leaves a foreign one behind, which a game test cannot do, so these tests reach in.
+	 */
+	@SuppressWarnings("unchecked")
+	private static Map<String, Object> handovers() {
+		try {
+			Field field = SpecialityTask.class.getDeclaredField("HANDOVER");
+			field.setAccessible(true);
+			return (Map<String, Object>) field.get(null);
+		} catch (ReflectiveOperationException e) {
+			throw new IllegalStateException("cannot read the handover requests", e);
+		}
+	}
+
+	/** Leaves a request to hand this job to a friend, stamped with the given game time. */
+	private static void leaveHandover(String jobId, UUID to, long at) {
+		try {
+			for (Class<?> type : SpecialityTask.class.getDeclaredClasses()) {
+				if (type.getSimpleName().equals("Handover")) {
+					Constructor<?> make = type.getDeclaredConstructor(UUID.class, long.class);
+					make.setAccessible(true);
+					handovers().put(jobId, make.newInstance(to, at));
+					return;
+				}
+			}
+		} catch (ReflectiveOperationException e) {
+			throw new IllegalStateException("cannot leave a handover request", e);
+		}
+		throw new IllegalStateException("no handover record in SpecialityTask");
 	}
 }
