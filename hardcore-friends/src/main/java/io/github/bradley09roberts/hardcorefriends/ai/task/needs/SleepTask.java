@@ -14,6 +14,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Needs.Need;
@@ -169,7 +170,18 @@ public final class SleepTask implements CompanionTask {
 				return true;
 			}
 		}
-		return asleepTicks % 10 == 0 && Threats.nearest(c, WAKE_DISTANCE) != null;
+		return asleepTicks % 10 == 0 && (Threats.nearest(c, WAKE_DISTANCE) != null || friendFighting(c));
+	}
+
+	/** A friend within 16 blocks is fighting a monster: sleepers get up and stand with them. */
+	private static boolean friendFighting(CompanionEntity c) {
+		for (CompanionEntity other : Companions.all()) {
+			if (other != c && other.level() == c.level() && other.distanceToSqr(c) <= 16 * 16
+				&& other.getTarget() != null && Threats.isThreat(other.getTarget())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

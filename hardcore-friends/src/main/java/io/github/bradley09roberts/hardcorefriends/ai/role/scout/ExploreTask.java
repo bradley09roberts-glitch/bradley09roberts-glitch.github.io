@@ -9,6 +9,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
@@ -54,6 +55,13 @@ public final class ExploreTask implements CompanionTask {
 		// Someone exploring in Scout's place keeps to their own roam: the log moves on, but their rings stay closer in.
 		int ring = Math.min(log.ring(), rings(c.friendId()) - 1);
 		waypoint = waypoint(level, c.homePos(), ring, log.point(), c.getBlockY());
+		// No walks into water or to where a friend died lately: that point is marked visited and skipped.
+		CampData data = Camp.data(level.getServer());
+		for (int tries = 0; tries < POINTS_PER_RING && (inWater(level, waypoint) || data.nearDanger(waypoint, level.getGameTime())); tries++) {
+			log.advance(rings(), POINTS_PER_RING, false);
+			ring = Math.min(log.ring(), rings(c.friendId()) - 1);
+			waypoint = waypoint(level, c.homePos(), ring, log.point(), c.getBlockY());
+		}
 		survey.reset();
 		Speech.say(c, Line.WORK_START, describe());
 		return true;
@@ -124,6 +132,11 @@ public final class ExploreTask implements CompanionTask {
 		BlockPos column = new BlockPos(x, fallbackY, z);
 		int y = level.isLoaded(column) ? level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) : fallbackY;
 		return new BlockPos(x, y, z);
+	}
+
+	/** True when the waypoint's surface is water (a river, lake or sea). */
+	private static boolean inWater(ServerLevel level, BlockPos waypoint) {
+		return level.isLoaded(waypoint) && !level.getFluidState(waypoint.below()).isEmpty();
 	}
 
 	/** The survey this task runs, exposed for tests. */

@@ -28,7 +28,9 @@ import io.github.bradley09roberts.hardcorefriends.companion.Role;
 public final class TaskRegistry {
 	/** Jobs only the specialist does: these are what the specialist is, not chores anyone could pick up. */
 	public static final Set<String> SPECIALIST_ONLY = Set.of(
-		"aegis.equip_gear", "aegis.guard", "sage.observe", "sage.review_stores", "scout.report");
+		"aegis.equip_gear", "aegis.guard", "sage.observe", "sage.review_stores", "scout.report",
+		// Roaming far from camp is Scout's adventure, risky and optional: nobody takes it up in her place.
+		"scout.explore");
 
 	private TaskRegistry() {
 	}

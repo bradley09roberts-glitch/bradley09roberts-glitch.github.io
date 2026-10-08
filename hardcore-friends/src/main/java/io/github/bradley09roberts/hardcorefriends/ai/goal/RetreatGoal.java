@@ -150,6 +150,7 @@ public class RetreatGoal extends Goal {
 				return towards;
 			}
 		}
-		return DefaultRandomPos.getPosAway(companion, 16, 7, threat.position());
+		Vec3 land = LandRandomPos.getPosAway(companion, 16, 7, threat.position()); // out of the water if possible
+		return land != null ? land : DefaultRandomPos.getPosAway(companion, 16, 7, threat.position());
 	}
 }

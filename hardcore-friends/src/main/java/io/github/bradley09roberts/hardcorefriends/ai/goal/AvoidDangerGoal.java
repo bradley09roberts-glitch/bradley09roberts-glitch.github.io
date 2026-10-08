@@ -7,6 +7,7 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.util.DefaultRandomPos;
+import net.minecraft.world.entity.ai.util.LandRandomPos;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.phys.Vec3;
 
@@ -88,6 +89,7 @@ public class AvoidDangerGoal extends Goal {
 	@Override
 	public void start() {
 		recalc = 0;
+		companion.setFleeingFrom(danger);
 		if (danger instanceof Creeper) {
 			Speech.say(companion, Line.CREEPER);
 		}
@@ -101,6 +103,7 @@ public class AvoidDangerGoal extends Goal {
 	@Override
 	public void stop() {
 		danger = null;
+		companion.setFleeingFrom(null);
 		companion.getNavigation().stop();
 	}
 
@@ -120,6 +123,10 @@ public class AvoidDangerGoal extends Goal {
 			LivingEntity protector = companion.nearestProtector(20);
 			if (protector != null && protector.distanceToSqr(danger) > companion.distanceToSqr(danger) + 9) {
 				target = protector.position();
+			}
+			if (target == null) {
+				// Onto dry land where possible: drowned and other swimmers are faster than a friend in the water.
+				target = LandRandomPos.getPosAway(companion, 12, 6, danger.position());
 			}
 			if (target == null) {
 				target = DefaultRandomPos.getPosAway(companion, 12, 6, danger.position());

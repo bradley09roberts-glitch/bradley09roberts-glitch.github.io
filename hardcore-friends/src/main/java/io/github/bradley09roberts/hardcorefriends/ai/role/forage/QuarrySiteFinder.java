@@ -81,7 +81,7 @@ public final class QuarrySiteFinder {
 				break;
 			}
 			BlockPos corner = check(c, level, data, anchor, anchor.getX() + o[0] - SIZE / 2, anchor.getZ() + o[1] - SIZE / 2, avoid);
-			if (corner != null) {
+			if (corner != null && !data.nearDanger(corner, level.getGameTime())) {
 				return corner;
 			}
 		}

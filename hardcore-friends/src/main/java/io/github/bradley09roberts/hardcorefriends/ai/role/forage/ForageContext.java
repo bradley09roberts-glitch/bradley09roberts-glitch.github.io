@@ -104,7 +104,8 @@ public final class ForageContext {
 	public static boolean mayFell(CompanionEntity c, BlockPos pos) {
 		int r = WorldEditGuard.campRadius(c);
 		return WorldEditGuard.inResourceZone(c, pos)
-			&& Camp.horizontalDistSqr(WorldEditGuard.zoneCentre(c), pos) > (double) r * r;
+			&& Camp.horizontalDistSqr(WorldEditGuard.zoneCentre(c), pos) > (double) r * r
+			&& !Camp.data(c.level().getServer()).nearDanger(pos, c.level().getGameTime());
 	}
 
 	/**
