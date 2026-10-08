@@ -92,10 +92,13 @@ public final class Archery {
 		if (!Threats.isThreat(threat) || c.isRetreating() || !canShoot(c)) {
 			return false;
 		}
+		if (c.isFighter()) {
+			return threat instanceof Creeper || outOfMeleeReach(c, threat); // Aegis prefers his blade
+		}
 		if (threat instanceof Creeper || isShootTarget(threat)) {
 			return true;
 		}
-		if (!c.isFighter() && (!c.isArmed() || !c.isHealthy() || prefersBowByNature(c))) {
+		if (!c.isArmed() || !c.isHealthy() || prefersBowByNature(c)) {
 			return true;
 		}
 		return outOfMeleeReach(c, threat);

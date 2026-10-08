@@ -66,6 +66,7 @@ public final class Combat {
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			GearPlan.clear();
 			Smithing.clear();
+			SmithTask.clearClaim();
 			Reach.clear();
 		});
 	}

@@ -67,12 +67,15 @@ public final class FriendlyFire {
 	 * animal (see the class description). Hostile mobs, even named ones, are fair game.
 	 */
 	public static boolean isProtected(Entity victim) {
-		if (victim instanceof Player || victim instanceof CompanionEntity || victim instanceof AbstractVillager
-			|| victim instanceof AbstractGolem || victim instanceof Allay || victim instanceof ArmorStand) {
+		if (victim instanceof Player || victim instanceof CompanionEntity) {
 			return true;
 		}
 		if (victim instanceof Enemy) {
-			return false;
+			return false; // hostiles first: a shulker is a golem to the game, but a hostile one
+		}
+		if (victim instanceof AbstractVillager || victim instanceof AbstractGolem || victim instanceof Allay
+			|| victim instanceof ArmorStand) {
+			return true;
 		}
 		if (victim instanceof Animal animal) {
 			return Wildlife.isSomebodys(animal);

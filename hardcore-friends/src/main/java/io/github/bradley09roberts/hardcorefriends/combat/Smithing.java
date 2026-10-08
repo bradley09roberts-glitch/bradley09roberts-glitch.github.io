@@ -36,7 +36,8 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  * <li>armour for everyone else.</li>
  * </ol>
  * Only spare materials in the chest are used: never diamonds below a reserve of {@value #DIAMOND_RESERVE} (a pickaxe and
- * an enchanting table's worth), never iron below {@value #IRON_RESERVE} or cobblestone below {@value #STONE_RESERVE},
+ * an enchanting table's worth), never iron below {@value #IRON_RESERVE} ({@value #SHIELD_IRON_RESERVE} for a shield) or
+ * cobblestone below {@value #STONE_RESERVE},
  * and no iron, wood or stone at all while the building in hand is short of that kind
  * ({@link CampNeeds#buildShortage()}). Nothing the smith carries for their own work is used: everything is fetched
  * from the chest, and whatever is left over goes back. The gear goes into the chest, and the friends' gear job hands it
@@ -47,6 +48,8 @@ public final class Smithing {
 	public static final int DIAMOND_RESERVE = 7;
 	/** Iron ingots always left in the chest (a hopper's worth for Spark). */
 	public static final int IRON_RESERVE = 5;
+	/** Iron ingots left in the chest when making a shield (one ingot each, and worth it early on). */
+	public static final int SHIELD_IRON_RESERVE = 1;
 	/** Cobblestone always left in the chest for building. */
 	public static final int STONE_RESERVE = 16;
 	/** Arrows are made while the chest holds fewer than this. */
@@ -140,7 +143,7 @@ public final class Smithing {
 		Budget b = new Budget(chest);
 		Map<CompanionEntity, List<GearPlan.Pick>> fromChest = GearPlan.assign(level, chest);
 		// 1. Shields for everyone.
-		if (b.iron >= 1 && b.wood(6, 0)) {
+		if (b.shieldIron >= 1 && b.wood(6, 0)) {
 			for (CompanionEntity c : team) {
 				if (c.getOffhandItem().isEmpty() && !Gear.hasShield(c) && !gets(fromChest, c, GearPlan.Kind.SHIELD, null)) {
 					return new Order(Items.SHIELD, 1, c, 50, List.of(new Material(IRON, 1)), 6, 0);
@@ -275,6 +278,8 @@ public final class Smithing {
 	/** What the chest can spare, after the reserves and whatever the building in hand is short of. */
 	private static final class Budget {
 		final int iron;
+		/** Iron a shield may use (a smaller reserve). */
+		final int shieldIron;
 		final int diamonds;
 		final int leather;
 		final int stone;
@@ -289,7 +294,9 @@ public final class Smithing {
 		Budget(Container chest) {
 			Map<CampNeeds.Need, Integer> shortage = CampNeeds.buildShortage();
 			boolean wood = !shortage.containsKey(CampNeeds.Need.WOOD);
-			iron = shortage.containsKey(CampNeeds.Need.ORE) ? 0 : Math.max(0, SupplyChest.count(chest, IRON) - IRON_RESERVE);
+			int ironInChest = shortage.containsKey(CampNeeds.Need.ORE) ? 0 : SupplyChest.count(chest, IRON);
+			iron = Math.max(0, ironInChest - IRON_RESERVE);
+			shieldIron = Math.max(0, ironInChest - SHIELD_IRON_RESERVE);
 			diamonds = Math.max(0, SupplyChest.count(chest, DIAMOND) - DIAMOND_RESERVE);
 			leather = SupplyChest.count(chest, LEATHER);
 			stone = shortage.containsKey(CampNeeds.Need.STONE) ? 0 : Math.max(0, SupplyChest.count(chest, STONE) - STONE_RESERVE);

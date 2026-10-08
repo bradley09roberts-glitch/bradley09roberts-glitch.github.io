@@ -90,7 +90,14 @@ public final class SmithTask implements CompanionTask {
 
 	private static boolean claimedByOther(CompanionEntity c, ServerLevel level) {
 		UUID holder = smith;
-		return holder != null && !holder.equals(c.getUUID()) && level.getGameTime() - smithSeen < CLAIM_TICKS;
+		long since = level.getGameTime() - smithSeen;
+		return holder != null && !holder.equals(c.getUUID()) && since >= 0 && since < CLAIM_TICKS;
+	}
+
+	/** Forgets who is smithing: a server stopping (the next world starts with nobody at the table). */
+	static void clearClaim() {
+		smith = null;
+		smithSeen = -100_000;
 	}
 
 	@Override
