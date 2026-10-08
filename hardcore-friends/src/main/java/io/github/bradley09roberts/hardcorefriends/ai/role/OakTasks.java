@@ -13,6 +13,6 @@ public final class OakTasks {
 	}
 
 	public static List<CompanionTask> create() {
-		return List.of(new BuildTask(), new RepairTask(), new ProcessWoodTask());
+		return List.of(); // EXPERIMENT
 	}
 }

@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -55,6 +56,13 @@ public class BuildingGameTest {
 			data.markCompleted(id);
 		}
 		return data;
+	}
+
+	/** Spawns a friend at the camp centre holding their starter tool, as {@code /friends recruit} does. */
+	private static CompanionEntity recruit(GameTestHelper helper, FriendId id) {
+		CompanionEntity c = TestSupport.spawnFriend(helper, id, TestSupport.centre());
+		c.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(id.starterTool()));
+		return c;
 	}
 
 	/** A plain item that builds this material, for setting up structures directly in tests. */
@@ -129,7 +137,7 @@ public class BuildingGameTest {
 	public void oakBuildsCampfireFromLogsAndCoal(GameTestHelper helper) {
 		CampData data = TestSupport.resetCamp(helper, true);
 		Container chest = TestSupport.placeChest(helper, CHEST, new ItemStack(Items.OAK_LOG, 16), new ItemStack(Items.COAL, 2));
-		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, TestSupport.centre());
+		CompanionEntity oak = recruit(helper, FriendId.OAK);
 		helper.succeedWhen(() -> {
 			helper.assertTrue(data.isCompleted(Structures.CAMPFIRE), "campfire finished: " + status(oak, data, Structures.CAMPFIRE));
 			BlockPos fire = data.site(Structures.CAMPFIRE).orElseThrow().origin;
@@ -145,7 +153,7 @@ public class BuildingGameTest {
 	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_34", maxTicks = 1600)
 	public void oakBuildsSupplyChestWhenNoneLinked(GameTestHelper helper) {
 		CampData data = TestSupport.resetCamp(helper, true);
-		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, TestSupport.centre());
+		CompanionEntity oak = recruit(helper, FriendId.OAK);
 		TestSupport.give(oak, new ItemStack(Items.OAK_PLANKS, 16));
 		helper.succeedWhen(() -> {
 			helper.assertTrue(data.isCompleted(Structures.SUPPLY_CHEST), "supply chest finished: " + status(oak, data, Structures.SUPPLY_CHEST));
@@ -168,7 +176,7 @@ public class BuildingGameTest {
 		BlockPos playerBlock = new BlockPos(3, 2, 15);
 		helper.setBlock(playerBlock, Blocks.OAK_PLANKS);
 		BlockPos playerAbs = helper.absolutePos(playerBlock);
-		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, TestSupport.centre());
+		CompanionEntity oak = recruit(helper, FriendId.OAK);
 		helper.succeedWhen(() -> {
 			helper.assertTrue(helper.getBlockState(playerBlock).is(Blocks.OAK_PLANKS), "the player's plank is never broken");
 			Optional<CampData.Site> site = data.site(Structures.CABIN);
@@ -190,7 +198,7 @@ public class BuildingGameTest {
 		Container chest = TestSupport.placeChest(helper, CHEST, new ItemStack(Items.OAK_LOG, 64), new ItemStack(Items.OAK_LOG, 64),
 			new ItemStack(Items.GLASS, 6), new ItemStack(Items.COAL, 2));
 		helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
-		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, TestSupport.centre());
+		CompanionEntity oak = recruit(helper, FriendId.OAK);
 		helper.succeedWhen(() -> {
 			helper.assertTrue(data.isCompleted(Structures.CABIN), "cabin finished: " + status(oak, data, Structures.CABIN));
 			Blueprint cabin = Blueprints.CABIN;
@@ -227,7 +235,7 @@ public class BuildingGameTest {
 		BlockPos torch = positions(data, Blueprints.CABIN, MaterialSpec.WALL_TORCH).getFirst();
 		helper.getLevel().setBlock(wall, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
 		helper.getLevel().setBlock(torch, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
-		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, TestSupport.centre());
+		CompanionEntity oak = recruit(helper, FriendId.OAK);
 		helper.succeedWhen(() -> {
 			helper.assertTrue(helper.getLevel().getBlockState(wall).is(BlockTags.PLANKS), "the missing wall plank is back: " + status(oak, data, Structures.CABIN));
 			helper.assertTrue(helper.getLevel().getBlockState(torch).is(Blocks.WALL_TORCH), "the wall torch is back");
@@ -239,7 +247,7 @@ public class BuildingGameTest {
 		CampData data = atStage(helper, 2);
 		TestSupport.placeChest(helper, CHEST, new ItemStack(Items.COAL, 4));
 		helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
-		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, TestSupport.centre());
+		CompanionEntity oak = recruit(helper, FriendId.OAK);
 		helper.succeedWhen(() -> {
 			helper.assertTrue(CampNeeds.buildShortage().containsKey(CampNeeds.Need.WOOD), "the cabin reports a wood shortage: " + status(oak, data, Structures.CABIN));
 			helper.assertTrue(CampNeeds.shortageText(helper.getLevel().getGameTime()).contains("planks"), "the shortage names planks");
@@ -255,7 +263,7 @@ public class BuildingGameTest {
 			data.markCompleted(e.id());
 		}
 		Container chest = TestSupport.placeChest(helper, CHEST, new ItemStack(Items.BIRCH_LOG, 16), new ItemStack(Items.COAL, 1));
-		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, TestSupport.centre());
+		CompanionEntity oak = recruit(helper, FriendId.OAK);
 		helper.succeedWhen(() -> {
 			int planks = chestCount(chest, s -> s.is(ItemTags.PLANKS));
 			helper.assertTrue(planks >= 24, "planks sawn and stored, " + planks + ": " + status(oak, data, Structures.CABIN));
@@ -271,7 +279,7 @@ public class BuildingGameTest {
 		CampData data = atStage(helper, 3, Structures.STOREHOUSE);
 		TestSupport.placeChest(helper, CHEST, new ItemStack(Items.COBBLESTONE, 64), new ItemStack(Items.OAK_LOG, 16), new ItemStack(Items.COAL, 2));
 		helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
-		CompanionEntity oak = TestSupport.spawnFriend(helper, FriendId.OAK, TestSupport.centre());
+		CompanionEntity oak = recruit(helper, FriendId.OAK);
 		helper.succeedWhen(() -> {
 			helper.assertTrue(data.isCompleted(Structures.WATCHTOWER), "watchtower finished: " + status(oak, data, Structures.WATCHTOWER));
 			Blueprint tower = Blueprints.WATCHTOWER;
@@ -291,7 +299,7 @@ public class BuildingGameTest {
 			data.markCompleted(e.id());
 		}
 		Container chest = TestSupport.placeChest(helper, CHEST, new ItemStack(Items.COAL, 4), new ItemStack(Items.OAK_PLANKS, 2));
-		CompanionEntity spark = TestSupport.spawnFriend(helper, FriendId.SPARK, TestSupport.centre());
+		CompanionEntity spark = recruit(helper, FriendId.SPARK);
 		helper.succeedWhen(() -> {
 			helper.assertTrue(chestCount(chest, s -> s.is(Items.TORCH)) == 16, "four coal and two planks make 16 torches: " + status(spark, data, ""));
 			helper.assertTrue(chestCount(chest, s -> s.is(Items.COAL)) == 0 && chestCount(chest, s -> s.is(ItemTags.PLANKS)) == 0, "all used");
@@ -305,7 +313,7 @@ public class BuildingGameTest {
 		helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
 		Part cabinPart = new Part(helper.absolutePos(new BlockPos(9, 2, 12)), Blueprint.rotationFacing(Direction.EAST));
 		buildInstantly(helper, data, Blueprints.CABIN, List.of(cabinPart));
-		CompanionEntity spark = TestSupport.spawnFriend(helper, FriendId.SPARK, TestSupport.centre());
+		CompanionEntity spark = recruit(helper, FriendId.SPARK);
 		CampData.Site site = data.site(Structures.CABIN).orElseThrow();
 		BlockPos door = Blueprints.at(site, Blueprints.CABIN_DOOR);
 		BlockPos outside = Blueprint.worldPos(site.origin, site.rotation, 3, 1, 0);
@@ -323,7 +331,9 @@ public class BuildingGameTest {
 				helper.getLevel().addFreshEntity(pebble);
 			})
 			.thenWaitUntil(() -> helper.assertTrue(helper.getLevel().getBlockState(door).getValue(DoorBlock.OPEN),
-				"something on the doorstep plate opens the door"))
+				"something on the doorstep plate opens the door (door " + helper.getLevel().getBlockState(door) + ", plate "
+					+ helper.getLevel().getBlockState(outside) + ", items " + helper.getLevel().getEntitiesOfClass(ItemEntity.class,
+					new net.minecraft.world.phys.AABB(outside).inflate(1)) + ", " + status(spark, data, Structures.AUTO_DOOR) + ")"))
 			.thenExecute(() -> DebugLog.done(helper, "autodoor", data))
 			.thenSucceed();
 	}
@@ -333,7 +343,7 @@ public class BuildingGameTest {
 		CampData data = atStage(helper, 3, Structures.AUTO_DOOR);
 		Container chest = TestSupport.placeChest(helper, CHEST, new ItemStack(Items.IRON_INGOT, 5), new ItemStack(Items.OAK_PLANKS, 8));
 		helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
-		CompanionEntity spark = TestSupport.spawnFriend(helper, FriendId.SPARK, TestSupport.centre());
+		CompanionEntity spark = recruit(helper, FriendId.SPARK);
 		helper.succeedWhen(() -> {
 			helper.assertTrue(data.isCompleted(Structures.HOPPER_DROPOFF), "drop-off hopper finished: " + status(spark, data, Structures.HOPPER_DROPOFF));
 			BlockState above = helper.getBlockState(CHEST.above());
@@ -349,7 +359,7 @@ public class BuildingGameTest {
 		TestSupport.placeChest(helper, CHEST, new ItemStack(Items.IRON_INGOT, 15), new ItemStack(Items.OAK_LOG, 16),
 			new ItemStack(Items.COBBLESTONE, 16));
 		helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
-		CompanionEntity spark = TestSupport.spawnFriend(helper, FriendId.SPARK, TestSupport.centre());
+		CompanionEntity spark = recruit(helper, FriendId.SPARK);
 		helper.startSequence()
 			.thenWaitUntil(() -> helper.assertTrue(data.isCompleted(Structures.AUTO_SMELTER), "auto-smelter finished: "
 				+ status(spark, data, Structures.AUTO_SMELTER)))

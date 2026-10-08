@@ -89,7 +89,7 @@ public class CommonGameTest {
 		TestSupport.give(rowan, new ItemStack(Items.OAK_LOG, 32), new ItemStack(Items.STONE_AXE));
 		CampNeeds.reportBuildShortage(helper.getLevel(), Map.of(CampNeeds.Need.WOOD, 32), "32 logs");
 		helper.succeedWhen(() -> {
-			helper.assertTrue(rowan.backpack().count(Items.OAK_LOG) < 32, "Rowan handed over logs");
+			helper.assertTrue(rowan.backpack().count(Items.OAK_LOG) < 32, "Rowan handed over logs: rowan " + rowan.activity() + " at " + helper.relativePos(rowan.blockPosition()) + " oak " + oak.activity() + " at " + helper.relativePos(oak.blockPosition()) + " shortage " + CampNeeds.buildShortage());
 			int oakWood = oak.backpack().count(Items.OAK_LOG) * 4 + oak.backpack().count(Items.OAK_PLANKS);
 			helper.assertTrue(oakWood > 0, "Oak received the wood");
 			helper.assertTrue(rowan.actions().hasTool(ItemTags.AXES), "Rowan kept the axe");
@@ -152,7 +152,7 @@ public class CommonGameTest {
 		TestSupport.give(rowan, new ItemStack(Items.BREAD, 6));
 		oak.setHealth(oak.getMaxHealth() * 0.5F);
 		helper.succeedWhen(() -> {
-			helper.assertTrue(rowan.backpack().count(Items.BREAD) < 6, "Rowan gave bread away");
+			helper.assertTrue(rowan.backpack().count(Items.BREAD) < 6, "Rowan gave bread away: rowan " + rowan.activity() + " at " + helper.relativePos(rowan.blockPosition()) + " oak " + oak.activity() + " at " + helper.relativePos(oak.blockPosition()) + " hp " + oak.getHealth());
 			helper.assertTrue(rowan.backpack().count(Items.BREAD) >= 1, "Rowan kept some bread");
 			helper.assertTrue(oak.backpack().count(Items.BREAD) > 0 || oak.getHealth() > oak.getMaxHealth() * 0.5F,
 				"Oak received food");
