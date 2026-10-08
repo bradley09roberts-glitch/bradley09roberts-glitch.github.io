@@ -106,6 +106,9 @@ public final class CaneTask implements CompanionTask {
 		int tall = 0;
 		int empty = 0;
 		for (BlockPos g : spots) {
+			if (!level.isLoaded(g)) {
+				continue;
+			}
 			BlockState above = level.getBlockState(g.above());
 			if (above.is(Blocks.SUGAR_CANE) && level.getBlockState(g.above(2)).is(Blocks.SUGAR_CANE)) {
 				tall++;
@@ -143,8 +146,8 @@ public final class CaneTask implements CompanionTask {
 		patch = null;
 		patchStep = PatchStep.FETCH;
 		List<BlockPos> spots = spots(level);
-		boolean anyTall = spots.stream().anyMatch(g -> level.getBlockState(g.above(2)).is(Blocks.SUGAR_CANE));
-		boolean anyEmpty = spots.stream().anyMatch(g -> level.getBlockState(g.above()).isAir());
+		boolean anyTall = spots.stream().anyMatch(g -> level.isLoaded(g) && level.getBlockState(g.above(2)).is(Blocks.SUGAR_CANE));
+		boolean anyEmpty = spots.stream().anyMatch(g -> level.isLoaded(g) && level.getBlockState(g.above()).isAir());
 		if (anyTall) {
 			mode = Mode.HARVEST;
 		} else if (anyEmpty && hasCane(c)) {
@@ -211,7 +214,7 @@ public final class CaneTask implements CompanionTask {
 		BlockPos best = null;
 		double bestDist = Double.MAX_VALUE;
 		for (BlockPos g : spots(level)) {
-			if (!level.getBlockState(g.above(2)).is(Blocks.SUGAR_CANE)) {
+			if (!level.isLoaded(g) || !level.getBlockState(g.above(2)).is(Blocks.SUGAR_CANE)) {
 				continue;
 			}
 			BlockPos top = g.above(2);
@@ -274,7 +277,7 @@ public final class CaneTask implements CompanionTask {
 		double bestDist = Double.MAX_VALUE;
 		for (BlockPos g : spots(level)) {
 			BlockPos spot = g.above();
-			if (!level.getBlockState(spot).isAir() || !Blocks.SUGAR_CANE.defaultBlockState().canSurvive(level, spot)) {
+			if (!level.isLoaded(g) || !level.getBlockState(spot).isAir() || !Blocks.SUGAR_CANE.defaultBlockState().canSurvive(level, spot)) {
 				continue;
 			}
 			double d = spot.distSqr(c.blockPosition());

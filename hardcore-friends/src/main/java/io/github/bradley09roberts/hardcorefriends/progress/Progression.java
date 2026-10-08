@@ -89,6 +89,7 @@ public final class Progression {
 			Crafting.of(Items.BROWN_MUSHROOM, 1), Crafting.of(Items.SUGAR, 1));
 		Crafting.addRecipe(Items.MAGMA_CREAM, 1, false, Crafting.of(Items.BLAZE_POWDER, 1), Crafting.of(Items.SLIME_BALL, 1));
 		Crafting.addRecipe(Items.DIAMOND_PICKAXE, 1, true, Crafting.of(Items.DIAMOND, 3), Crafting.of(Items.STICK, 2));
+		Crafting.addRecipe(Items.IRON_SWORD, 1, true, Crafting.of(Items.IRON_INGOT, 2), Crafting.of(Items.STICK, 1));
 	}
 
 	/**

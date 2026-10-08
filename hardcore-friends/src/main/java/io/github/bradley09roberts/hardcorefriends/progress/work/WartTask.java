@@ -31,6 +31,7 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.progress.ProgressData;
 import io.github.bradley09roberts.hardcorefriends.progress.ProgressPlan;
+import io.github.bradley09roberts.hardcorefriends.progress.Stations;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
@@ -84,7 +85,7 @@ public final class WartTask implements CompanionTask {
 			return 40;
 		}
 		boolean soulSand = c.backpack().has(s -> s.is(Items.SOUL_SAND)) || Trips.inChest(c, s -> s.is(Items.SOUL_SAND)) > 0;
-		boolean wanted = ProgressPlan.wants(server, Items.NETHER_WART) || beds.isEmpty();
+		boolean wanted = ProgressPlan.wants(server, Items.NETHER_WART) || Stations.brewingStand(level) != null;
 		return soulSand && wanted && beds.size() < ProgressData.get(server).maxWartBeds() ? 34 : 0;
 	}
 

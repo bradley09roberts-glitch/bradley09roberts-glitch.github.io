@@ -28,6 +28,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.Crafting;
 import io.github.bradley09roberts.hardcorefriends.camp.Structures;
+import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
@@ -38,7 +39,7 @@ import io.github.bradley09roberts.hardcorefriends.progress.Stations;
 
 /**
  * Sage's workshop: crafting what the plan needs from what the camp has gathered, a batch at a time, at the camp's
- * crafting table. Paper from sugar cane and books from paper and leather (for the library's shelves), a bucket for
+ * crafting table. An iron sword for the fighters in the iron age, paper from sugar cane and books from paper and leather (for the library's shelves), a bucket for
  * obsidian, a flint and steel for the portal, glass bottles for brewing (and putting sand in the camp furnace to make
  * the glass), eyes of ender from ender pearls and blaze powder, and for the brewer magma cream and glistering melon.
  * The ingredients come out of the supply chest and the results go back in. Blaze rods are only ground into powder
@@ -65,6 +66,9 @@ public final class WorkshopTask implements CompanionTask {
 	private @Nullable Job job;
 	private Phase phase = Phase.FETCH;
 	private @Nullable BlockPos station;
+	/** What the friend carried of each ingredient, and of the result, before this job: theirs to keep. */
+	private int[] ownBefore = new int[0];
+	private int outputBefore;
 
 	@Override
 	public String id() {
@@ -103,6 +107,15 @@ public final class WorkshopTask implements CompanionTask {
 			return null;
 		}
 		CampData camp = Camp.data(server);
+		if (ProgressPlan.current(server) == Milestone.IRON_AGE && s.ironSwords() < Math.max(1, s.warriors())
+			&& s.inChest(Items.IRON_INGOT) >= 2) {
+			boolean sticks = s.inChest(Items.STICK) >= 1;
+			if (sticks || Trips.inChest(c, st -> st.is(ItemTags.PLANKS)) >= 2) {
+				// The plan's iron age: an iron sword for the fighters (the warrior takes it from the chest).
+				return new Job("an iron sword", Items.IRON_SWORD, 1, List.of(need(Items.IRON_INGOT, 2),
+					sticks ? need(Items.STICK, 1) : new Need(st -> st.is(ItemTags.PLANKS), 2)), false);
+			}
+		}
 		int books = ProgressPlan.wanted(server, Items.BOOK);
 		if (books > 0 && s.inChest(Items.PAPER) >= 3 && s.inChest(Items.LEATHER) >= 1) {
 			int n = Math.min(MAX_CRAFTS, Math.min(books, Math.min(s.inChest(Items.PAPER) / 3, s.inChest(Items.LEATHER))));
@@ -219,6 +232,11 @@ public final class WorkshopTask implements CompanionTask {
 		if (chest.isEmpty()) {
 			return TaskStatus.FAILURE;
 		}
+		ownBefore = new int[j.needs().size()];
+		outputBefore = c.backpack().count(j.output());
+		for (int i = 0; i < j.needs().size(); i++) {
+			ownBefore[i] = c.backpack().count(j.needs().get(i).match());
+		}
 		for (Need n : j.needs()) {
 			int have = c.backpack().count(n.match());
 			Trips.take(chest.get(), c, n.match(), n.count() - have);
@@ -326,12 +344,23 @@ public final class WorkshopTask implements CompanionTask {
 		return TaskStatus.SUCCESS;
 	}
 
-	/** Puts what was made and any ingredients left over back in the chest. */
-	private static void returnAll(Container chest, CompanionEntity c, Job j) {
-		Trips.putBack(chest, c, st -> st.is(j.output()));
-		for (Need n : j.needs()) {
-			Trips.putBack(chest, c, n.match());
+	/**
+	 * Puts what was made and any ingredients left over back in the chest: only what this job brought or made, never
+	 * the friend's own things (a builder standing in keeps their planks).
+	 */
+	private void returnAll(Container chest, CompanionEntity c, Job j) {
+		int made = c.backpack().count(j.output()) - outputBefore;
+		if (made > 0) {
+			SupplyChest.deposit(c.backpack(), chest, st -> st.is(j.output()), made);
 		}
+		for (int i = 0; i < j.needs().size() && i < ownBefore.length; i++) {
+			Need n = j.needs().get(i);
+			int left = c.backpack().count(n.match()) - ownBefore[i];
+			if (left > 0) {
+				SupplyChest.deposit(c.backpack(), chest, n.match(), left);
+			}
+		}
+		// Blaze powder and gold nuggets left over from making an ingredient (a rod gives two powder, an ingot nine nuggets).
 		Trips.putBack(chest, c, st -> st.is(Items.BLAZE_POWDER) || st.is(Items.GOLD_NUGGET));
 	}
 

@@ -110,7 +110,7 @@ public final class DigMineTask implements CompanionTask {
 			plan.abandon();
 		}
 		if (!plan.exists()) {
-			MineSite.Site site = MineSite.find(c, plan.oldEntrances());
+			MineSite.Site site = MineSite.find(c, avoiding(data, plan));
 			if (site == null) {
 				searchFailedUntil = level.getGameTime() + SEARCH_RETRY;
 				return false;
@@ -240,6 +240,18 @@ public final class DigMineTask implements CompanionTask {
 			return false;
 		}
 		return !plan.exists() || plan.isIn(level);
+	}
+
+	/** Old entrances to keep away from, and the deep mine's (package progress), so two mines never share one box. */
+	private static long[] avoiding(CampData data, MinePlan plan) {
+		long[] old = plan.oldEntrances();
+		MinePlan deep = MinePlan.of(data, MinePlan.DEEP_KEY);
+		if (!deep.exists()) {
+			return old;
+		}
+		long[] all = java.util.Arrays.copyOf(old, old.length + 1);
+		all[old.length] = deep.entrance().asLong();
+		return all;
 	}
 
 	/** Could not get to the work: try again later, and give the mine up after {@value #MAX_STUCK} tries in a row. */
