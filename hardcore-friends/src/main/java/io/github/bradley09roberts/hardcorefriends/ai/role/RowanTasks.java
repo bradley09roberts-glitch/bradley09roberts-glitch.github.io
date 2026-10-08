@@ -2,6 +2,7 @@ package io.github.bradley09roberts.hardcorefriends.ai.role;
 
 import java.util.List;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.build.ClearSiteTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.forage.ChopTreeTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.forage.DeliverToBuilderTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.forage.ForageContext;
@@ -11,7 +12,8 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 
 /**
  * Rowan's own routines: felling natural trees outside the camp and replanting, quarrying a bounded pit in the
- * gathering ring, foraging berries and fallen goods, and delivering what the builder is short of. The routines share
+ * gathering ring, foraging berries and fallen goods, delivering what the builder is short of, and clearing the trees off
+ * a building site in a forest camp. The routines share
  * one {@link ForageContext}, so the land is searched once.
  */
 public final class RowanTasks {
@@ -24,6 +26,8 @@ public final class RowanTasks {
 			new ChopTreeTask(forage),
 			new QuarryTask(),
 			new ForageTask(forage),
-			new DeliverToBuilderTask());
+			new DeliverToBuilderTask(),
+			// Felling the trees on a forest-camp building site comes before felling outside (at most 110).
+			new ClearSiteTask(115));
 	}
 }

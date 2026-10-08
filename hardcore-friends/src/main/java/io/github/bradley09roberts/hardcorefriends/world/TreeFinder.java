@@ -41,6 +41,9 @@ public final class TreeFinder {
 	private TreeFinder() {
 	}
 
+	/** The tallest trunk a friend can fell completely, standing in the stump's place (reach 4.5 from the eyes). */
+	public static final int FELLABLE_HEIGHT = 6;
+
 	public static boolean isNaturalTreeLog(ServerLevel level, BlockPos pos) {
 		return analyse(level, pos).isPresent();
 	}
@@ -51,6 +54,11 @@ public final class TreeFinder {
 	 */
 	public static Optional<Tree> analyse(ServerLevel level, BlockPos start) {
 		return analyse(level, start, Integer.MAX_VALUE, null);
+	}
+
+	/** Like {@link #analyse(ServerLevel, BlockPos)}, but empty as soon as the trunk proves taller than {@code maxHeight}. */
+	public static Optional<Tree> analyse(ServerLevel level, BlockPos start, int maxHeight) {
+		return analyse(level, start, maxHeight, null);
 	}
 
 	/**

@@ -52,6 +52,8 @@ public final class CampNeeds {
 	private static final EnumMap<Need, Integer> BUILD_SHORTAGE = new EnumMap<>(Need.class);
 	private static String shortageText = "";
 	private static long lastShortageReport = -100_000;
+	private static String siteProblem = "";
+	private static long lastSiteProblem = -100_000;
 
 	private CampNeeds() {
 	}
@@ -61,6 +63,7 @@ public final class CampNeeds {
 		STOCK.clear();
 		BUILD_SHORTAGE.clear();
 		shortageText = "";
+		siteProblem = "";
 	}
 
 	public static void tick(MinecraftServer server) {
@@ -110,6 +113,21 @@ public final class CampNeeds {
 		for (Map.Entry<Need, Integer> e : shortage.entrySet()) {
 			NEEDS.merge(e.getKey(), 0.8, Math::max);
 		}
+	}
+
+	/** A builder could not find anywhere to put a building; shown by {@code /friends camp} for a while. */
+	public static void reportSiteProblem(ServerLevel level, String text) {
+		siteProblem = text;
+		lastSiteProblem = level.getGameTime();
+	}
+
+	public static void clearSiteProblem() {
+		siteProblem = "";
+	}
+
+	/** The latest site problem, if reported within the last five minutes, else "". */
+	public static String siteProblem(long gameTime) {
+		return gameTime - lastSiteProblem < 20 * 300 ? siteProblem : "";
 	}
 
 	public static Map<Need, Integer> buildShortage() {

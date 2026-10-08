@@ -24,6 +24,7 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import io.github.bradley09roberts.hardcorefriends.HardcoreFriends;
 import io.github.bradley09roberts.hardcorefriends.ai.action.Actions;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.build.CampFeatures;
@@ -68,7 +69,9 @@ public final class BuildJob {
 		NO_SITE,
 		NO_TABLE,
 		SHORT,
-		UNREACHABLE
+		UNREACHABLE,
+		/** The site still has trees on it to fell first. */
+		CLEARING
 	}
 
 	private final CompanionEntity c;
@@ -146,7 +149,8 @@ public final class BuildJob {
 			parts = List.of();
 		}
 		if (!parts.isEmpty()) {
-			return toPlan(parts);
+			TaskStatus waiting = waitForClearing(data);
+			return waiting != null ? waiting : toPlan(parts);
 		}
 		List<Part> fixed = SiteFinder.fixedParts(level(), data, bp);
 		if (fixed != null) {
@@ -165,9 +169,41 @@ public final class BuildJob {
 		List<Part> found = search.step(Math.clamp(SEARCH_AREA_BUDGET / (bp.width() * bp.depth()), 2, 16));
 		if (found != null) {
 			SiteFinder.reserve(data, bp, found);
-			return toPlan(found);
+			CampNeeds.clearSiteProblem();
+			if (search.clearBox().length == 6) {
+				SiteClearing.reserve(data, bp.id(), search.logsToFell(), search.clearBox());
+				HardcoreFriends.LOGGER.info("{} chose a site for the {} with {} logs to fell", c.friendId().displayName(),
+					Structures.get(bp.id()).displayName(), search.logsToFell().size());
+			}
+			TaskStatus waiting = waitForClearing(data);
+			return waiting != null ? waiting : toPlan(found);
 		}
-		return search.failed() ? fail(Failure.NO_SITE) : TaskStatus.RUNNING;
+		if (search.failed()) {
+			String name = Structures.get(bp.id()).displayName();
+			String problem = "a clear, fairly level spot for the " + name + " (" + search.problem() + ")";
+			CampNeeds.reportSiteProblem(level(), c.friendId().displayName() + " needs " + problem
+				+ ". Clearing or levelling a patch inside the camp helps.");
+			HardcoreFriends.LOGGER.info("{} found no site for the {} ({})", c.friendId().displayName(), name, search.breakdown());
+			Speech.say(c, Line.NEED_MATERIALS, problem);
+			return fail(Failure.NO_SITE);
+		}
+		return TaskStatus.RUNNING;
+	}
+
+	/**
+	 * In a forest camp the site may still have natural trees or overhanging leaves on it: the clearing job (Rowan
+	 * first, the builder too) takes those away, and building waits until then.
+	 */
+	private @Nullable TaskStatus waitForClearing(CampData data) {
+		Optional<SiteClearing.Job> job = SiteClearing.job(data, bp.id());
+		if (job.isEmpty() || !SiteClearing.pending(level(), job.get())) {
+			return null;
+		}
+		String name = Structures.get(bp.id()).displayName();
+		CampNeeds.reportSiteProblem(level(), c.friendId().displayName() + " is waiting for the trees to be cleared off the "
+			+ name + " site.");
+		Speech.say(c, Line.NEED_MATERIALS, "the trees cleared off the " + name + " site");
+		return fail(Failure.CLEARING);
 	}
 
 	private boolean insideCamp(List<Part> parts) {
@@ -218,7 +254,7 @@ public final class BuildJob {
 		if (s.isAir()) {
 			return Slot.EMPTY;
 		}
-		if (WorldEditGuard.isClearablePlant(s)) {
+		if (WorldEditGuard.isClearablePlant(s) || SiteClearing.isNaturalLeaves(s)) {
 			return Slot.PLANT;
 		}
 		return Slot.FOREIGN;

@@ -127,10 +127,11 @@ public abstract class BlueprintTask implements CompanionTask {
 				case NO_SITE -> 2400;
 				case NO_TABLE -> 600;
 				case UNREACHABLE -> 300;
+				case CLEARING -> 400;
 				case NONE -> 200;
 			};
 			boolean planSpecific = j.failure() == BuildJob.Failure.SHORT || j.failure() == BuildJob.Failure.NO_SITE
-				|| j.failure() == BuildJob.Failure.UNREACHABLE;
+				|| j.failure() == BuildJob.Failure.UNREACHABLE || j.failure() == BuildJob.Failure.CLEARING;
 			if (planSpecific) {
 				setAsideUntil.put(j.blueprint().id(), c.level().getGameTime() + wait);
 				cooldown = 60; // try the next plan soon

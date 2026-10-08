@@ -35,7 +35,7 @@ public final class DeliverToBuilderTask implements CompanionTask {
 	private static final int MIN_LOAD = 16;
 	private static final double OAK_RANGE = 48;
 	private static final int TIMEOUT = 20 * 60;
-	private static final double DELIVERY_SCORE = 90;
+	private static final double DELIVERY_SCORE = 120;
 
 	private @Nullable CompanionEntity oak;
 	private Predicate<ItemStack> load = s -> false;
@@ -79,7 +79,8 @@ public final class DeliverToBuilderTask implements CompanionTask {
 		if (shortage.isEmpty() || c.backpack().count(wanted(c.backpack(), shortage)) < MIN_LOAD) {
 			return 0;
 		}
-		// The builder is stuck without this load, so handing it over beats any gathering (at most 40 x 2.2 = 88).
+		// The builder is stuck without this load, so handing it over beats any gathering (felling scores at most
+		// 50 x 2.2 = 110 when wood is short and Sage has made it the team's focus).
 		return findOak(c) != null || SupplyChest.of((ServerLevel) c.level()).isPresent() ? DELIVERY_SCORE : 0;
 	}
 

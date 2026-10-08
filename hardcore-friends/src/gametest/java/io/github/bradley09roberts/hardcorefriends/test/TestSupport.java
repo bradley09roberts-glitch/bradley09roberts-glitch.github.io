@@ -18,6 +18,7 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
+import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.registry.ModEntities;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 
@@ -54,6 +55,7 @@ public final class TestSupport {
 		}
 		setTime(helper, 1000);
 		clearWeather(helper);
+		FriendsConfig.get().campRadius = 24; // a test that shrank the camp may have ended early
 		return data;
 	}
 

@@ -457,6 +457,10 @@ public final class FriendsCommand {
 		if (!shortage.isEmpty()) {
 			lines.add("Oak still needs: " + shortage);
 		}
+		String siteProblem = CampNeeds.siteProblem(source.getLevel().getGameTime());
+		if (!siteProblem.isEmpty()) {
+			lines.add(siteProblem);
+		}
 		for (String line : lines) {
 			source.sendSuccess(() -> Component.literal(line).withStyle(ChatFormatting.GRAY), false);
 		}

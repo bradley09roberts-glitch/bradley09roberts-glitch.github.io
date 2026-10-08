@@ -46,7 +46,7 @@ public final class ForageContext {
 	private static final int SCAN_INTERVAL = 100;
 	private static final int TREE_RADIUS = 24;
 	/** Taller trees cannot be felled completely from the ground. */
-	private static final int MAX_TREE_HEIGHT = 6;
+	private static final int MAX_TREE_HEIGHT = TreeFinder.FELLABLE_HEIGHT;
 	private static final int RING_POINTS = 8;
 	private static final int BERRY_RADIUS = 24;
 	private static final int BERRY_DY = 4;

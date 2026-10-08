@@ -24,6 +24,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Blueprint;
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+import io.github.bradley09roberts.hardcorefriends.camp.SiteClearing;
 import io.github.bradley09roberts.hardcorefriends.camp.SiteFinder;
 import io.github.bradley09roberts.hardcorefriends.camp.build.Placement;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
@@ -144,7 +145,10 @@ public final class WorldEditGuard {
 				if (ownBlock || isClearablePlant(state)) {
 					return Verdict.OK;
 				}
-				return Verdict.deny("only plants, snow and our own blocks may be cleared");
+				if (reason == Reason.BUILD && SiteClearing.isNaturalLeaves(state)) {
+					return Verdict.OK; // trimming a tree's leaves out of a building's way (placed leaves are persistent)
+				}
+				return Verdict.deny("only plants, snow, natural leaves and our own blocks may be cleared");
 			}
 			case MINE -> {
 				if (!cfg.allowMining) {

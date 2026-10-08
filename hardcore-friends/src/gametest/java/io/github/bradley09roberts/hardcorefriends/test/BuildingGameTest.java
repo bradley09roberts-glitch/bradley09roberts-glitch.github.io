@@ -1,7 +1,10 @@
 package io.github.bradley09roberts.hardcorefriends.test;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
@@ -26,8 +29,10 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprint;
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
+import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
+import io.github.bradley09roberts.hardcorefriends.camp.SiteClearing;
 import io.github.bradley09roberts.hardcorefriends.camp.SiteFinder;
 import io.github.bradley09roberts.hardcorefriends.camp.Structures;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
@@ -36,6 +41,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.build.Part;
 import io.github.bradley09roberts.hardcorefriends.camp.build.Placement;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
+import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 
 /** Oak's building and Spark's contraptions: site finding, real materials, full structures and working redstone. */
 public class BuildingGameTest {
@@ -242,6 +248,55 @@ public class BuildingGameTest {
 			int logsLeft = chestCount(chest, s -> s.is(ItemTags.LOGS)) + oak.backpack().count(ItemTags.LOGS);
 			helper.assertTrue(logsLeft <= 128 - 45, "real wood was used: " + logsLeft + " logs left");
 			helper.assertTrue(chestCount(chest, s -> s.is(Items.GLASS)) + oak.backpack().count(Items.GLASS) == 0, "glass became panes");
+		});
+	}
+
+	/**
+	 * A camp in a forest: trees every five blocks, so no tree-free spot fits the cabin. Oak picks the site with the
+	 * fewest trees, exactly those are felled (by Rowan and Oak, no replanting there), every other camp tree stands,
+	 * and the cabin gets built.
+	 */
+	@GameTest(structure = TestSupport.PLOT, environment = "hardcorefriends-test:solo_80", maxTicks = 14000)
+	public void forestCampClearsTreesForTheCabin(GameTestHelper helper) {
+		CampData data = atStage(helper, 2);
+		FriendsConfig.get().campRadius = 8; // stage 2 makes it 16: the whole camp fits on the test plot
+		List<BlockPos> trunks = new ArrayList<>();
+		for (int x = 1; x < 32; x += 5) {
+			for (int z = 1; z < 32; z += 5) {
+				if (Math.abs(x - 17) + Math.abs(z - 16) > 3) { // the camp centre, chest and table stay clear
+					BlockPos base = new BlockPos(x, 2, z);
+					TestSupport.growOak(helper, base);
+					trunks.add(base);
+				}
+			}
+		}
+		TestSupport.placeChest(helper, CHEST, new ItemStack(Items.OAK_LOG, 64), new ItemStack(Items.OAK_LOG, 64),
+			new ItemStack(Items.GLASS, 6), new ItemStack(Items.COAL, 2));
+		helper.setBlock(TABLE, Blocks.CRAFTING_TABLE);
+		CompanionEntity oak = recruit(helper, FriendId.OAK);
+		CompanionEntity rowan = recruit(helper, FriendId.ROWAN);
+		Set<BlockPos> toFell = new HashSet<>();
+		helper.onEachTick(() -> SiteClearing.job(data, Structures.CABIN).ifPresent(j -> toFell.addAll(j.logs())));
+		BlockPos centre = helper.absolutePos(TestSupport.centre());
+		helper.succeedWhen(() -> {
+			helper.assertTrue(data.isCompleted(Structures.CABIN), "cabin finished: " + status(oak, data, Structures.CABIN)
+				+ "; " + rowan.activity());
+			helper.assertTrue(!toFell.isEmpty(), "the cabin site needed trees felled");
+			for (BlockPos log : toFell) {
+				helper.assertFalse(helper.getLevel().getBlockState(log).is(BlockTags.LOGS), "site tree log felled at " + log);
+			}
+			int standing = 0;
+			for (BlockPos rel : trunks) {
+				BlockPos abs = helper.absolutePos(rel);
+				boolean onSite = toFell.contains(abs);
+				boolean inCamp = Camp.horizontalDistSqr(abs, centre) <= 16 * 16;
+				if (inCamp && !onSite) {
+					helper.assertTrue(helper.getLevel().getBlockState(abs).is(BlockTags.LOGS), "camp tree at " + rel + " still stands");
+					standing++;
+				}
+			}
+			helper.assertTrue(standing >= 10, "most camp trees stand: " + standing);
+			FriendsConfig.get().campRadius = 24;
 		});
 	}
 
