@@ -15,14 +15,20 @@ import java.util.UUID;
 
 import com.mojang.serialization.Codec;
 
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
@@ -50,7 +56,11 @@ public final class CampData extends SavedData {
 	private int stage;
 	private final Set<String> completed = new LinkedHashSet<>();
 	private final Map<String, Site> sites = new LinkedHashMap<>();
-	private final LongOpenHashSet placedBlocks = new LongOpenHashSet();
+	/**
+	 * Blocks the friends placed, per dimension: position to the block placed there. {@link Blocks#AIR} marks a
+	 * record from an older save whose block is not known yet; the first check fills it in.
+	 */
+	private final Map<String, Long2ObjectOpenHashMap<Block>> placedBlocks = new HashMap<>();
 
 	// Unity
 	private int unity;
@@ -161,20 +171,110 @@ public final class CampData extends SavedData {
 	}
 
 	/** Records a block the friends placed so they may later upgrade or repair it and build next to it. */
+	public void recordPlaced(Level level, BlockPos pos, BlockState state) {
+		Long2ObjectOpenHashMap<Block> placed = placedIn(dimensionKey(level));
+		long key = pos.asLong();
+		if (!placed.containsKey(key) && placedCount() >= MAX_PLACED) {
+			return;
+		}
+		if (placed.put(key, state.getBlock()) != state.getBlock()) {
+			setDirty();
+		}
+	}
+
+	/**
+	 * Records a position in the camp's dimension without knowing the block (the first level-aware check fills
+	 * it in). Prefer {@link #recordPlaced(Level, BlockPos, BlockState)}.
+	 */
 	public void recordPlaced(BlockPos pos) {
-		if (placedBlocks.size() < MAX_PLACED && placedBlocks.add(pos.asLong())) {
+		Long2ObjectOpenHashMap<Block> placed = placedIn(campDimension);
+		if (!placed.containsKey(pos.asLong()) && placedCount() < MAX_PLACED) {
+			placed.put(pos.asLong(), Blocks.AIR);
 			setDirty();
 		}
 	}
 
+	public void forgetPlaced(Level level, BlockPos pos) {
+		Long2ObjectOpenHashMap<Block> placed = placedBlocks.get(dimensionKey(level));
+		if (placed != null && placed.remove(pos.asLong()) != null) {
+			setDirty();
+		}
+	}
+
+	/** Forgets a position in every dimension. Prefer {@link #forgetPlaced(Level, BlockPos)}. */
 	public void forgetPlaced(BlockPos pos) {
-		if (placedBlocks.remove(pos.asLong())) {
-			setDirty();
+		for (Long2ObjectOpenHashMap<Block> placed : placedBlocks.values()) {
+			if (placed.remove(pos.asLong()) != null) {
+				setDirty();
+			}
 		}
 	}
 
+	/**
+	 * True while the block the friends placed at {@code pos} in this level is still there. The same coordinates in
+	 * another dimension do not count, and once the friends' block is gone (broken, burnt, blown up or replaced by a
+	 * player's own block) the record is dropped, so whatever stands there now is judged on its own.
+	 */
+	public boolean isPlacedByFriends(Level level, BlockPos pos) {
+		Long2ObjectOpenHashMap<Block> placed = placedBlocks.get(dimensionKey(level));
+		if (placed == null) {
+			return false;
+		}
+		long key = pos.asLong();
+		Block recorded = placed.get(key);
+		if (recorded == null) {
+			return false;
+		}
+		if (!level.isLoaded(pos)) {
+			return true; // cannot look; trust the record
+		}
+		BlockState now = level.getBlockState(pos);
+		if (recorded == Blocks.AIR) {
+			if (now.isAir()) {
+				placed.remove(key);
+				setDirty();
+				return false;
+			}
+			placed.put(key, now.getBlock()); // an older save's record: learn what stands there
+			setDirty();
+			return true;
+		}
+		if (now.is(recorded)) {
+			return true;
+		}
+		placed.remove(key);
+		setDirty();
+		return false;
+	}
+
+	/**
+	 * True if the friends recorded a block at these coordinates in any dimension, without checking it is still
+	 * there. Prefer {@link #isPlacedByFriends(Level, BlockPos)}, which the guard uses.
+	 */
 	public boolean isPlacedByFriends(BlockPos pos) {
-		return placedBlocks.contains(pos.asLong());
+		long key = pos.asLong();
+		for (Long2ObjectOpenHashMap<Block> placed : placedBlocks.values()) {
+			if (placed.containsKey(key)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Long2ObjectOpenHashMap<Block> placedIn(String dimension) {
+		return placedBlocks.computeIfAbsent(dimension, k -> new Long2ObjectOpenHashMap<>());
+	}
+
+	private int placedCount() {
+		int total = 0;
+		for (Long2ObjectOpenHashMap<Block> placed : placedBlocks.values()) {
+			total += placed.size();
+		}
+		return total;
+	}
+
+	private static String dimensionKey(Level level) {
+		return level.dimension().identifier().toString();
 	}
 
 	// ---------------------------------------------------------------- unity
@@ -313,6 +413,10 @@ public final class CampData extends SavedData {
 		public LifeState state = LifeState.NEVER_RECRUITED;
 		public UUID entityId;
 		public long diedAtGameTime;
+		/** When the friend was last dismissed (overworld clock); they need a day before they will rejoin. */
+		public long dismissedAtGameTime;
+		/** Whether this friend has had their starter tool. A newcomer after a death gets a fresh one. */
+		public boolean starterGiven;
 		public int deaths;
 		public BlockPos lastKnownPos;
 		public String lastKnownDimension = "minecraft:overworld";
@@ -348,9 +452,26 @@ public final class CampData extends SavedData {
 			CompoundTag s = sitesTag.getCompoundOrEmpty(key);
 			data.sites.put(key, new Site(BlockPos.of(s.getLongOr("origin", 0L)), s.getIntOr("rot", 0), s.getIntOr("progress", 0)));
 		}
+		CompoundTag placedTag = tag.getCompoundOrEmpty("placedBlocks");
+		for (String dim : placedTag.keySet()) {
+			CompoundTag d = placedTag.getCompoundOrEmpty(dim);
+			long[] positions = d.getLongArray("pos").orElse(new long[0]);
+			int[] blocks = d.getIntArray("block").orElse(new int[0]);
+			List<Block> palette = new ArrayList<>();
+			for (Tag t : d.getListOrEmpty("palette")) {
+				palette.add(t.asString().map(Identifier::tryParse).flatMap(BuiltInRegistries.BLOCK::getOptional).orElse(Blocks.AIR));
+			}
+			Long2ObjectOpenHashMap<Block> placed = data.placedIn(dim);
+			for (int i = 0; i < positions.length; i++) {
+				int b = i < blocks.length ? blocks[i] : -1;
+				placed.put(positions[i], b >= 0 && b < palette.size() ? palette.get(b) : Blocks.AIR);
+			}
+		}
+		// Saves from before blocks were recorded per dimension: bare positions in the camp's dimension.
 		tag.getLongArray("placed").ifPresent(a -> {
+			Long2ObjectOpenHashMap<Block> placed = data.placedIn(data.campDimension);
 			for (long l : a) {
-				data.placedBlocks.add(l);
+				placed.putIfAbsent(l, Blocks.AIR);
 			}
 		});
 		data.unity = Math.clamp(tag.getIntOr("unity", 0), 0, 1000);
@@ -378,6 +499,9 @@ public final class CampData extends SavedData {
 					}
 				}
 				e.diedAtGameTime = l.getLongOr("diedAt", 0L);
+				e.dismissedAtGameTime = l.getLongOr("dismissedAt", 0L);
+				// Anyone recruited in an older save already had their starter tool.
+				e.starterGiven = l.getBooleanOr("starterGiven", e.state != LifeState.NEVER_RECRUITED);
 				e.deaths = l.getIntOr("deaths", 0);
 				l.getLongArray("pos").filter(a -> a.length == 1).ifPresent(a -> e.lastKnownPos = BlockPos.of(a[0]));
 				e.lastKnownDimension = l.getStringOr("dim", "minecraft:overworld");
@@ -425,7 +549,35 @@ public final class CampData extends SavedData {
 			sitesTag.put(key, s);
 		});
 		tag.put("sites", sitesTag);
-		tag.putLongArray("placed", placedBlocks.toLongArray());
+		CompoundTag placedTag = new CompoundTag();
+		placedBlocks.forEach((dim, placed) -> {
+			if (placed.isEmpty()) {
+				return;
+			}
+			List<Block> palette = new ArrayList<>();
+			Map<Block, Integer> index = new HashMap<>();
+			long[] positions = new long[placed.size()];
+			int[] blocks = new int[placed.size()];
+			int i = 0;
+			for (Long2ObjectMap.Entry<Block> e : placed.long2ObjectEntrySet()) {
+				positions[i] = e.getLongKey();
+				blocks[i] = index.computeIfAbsent(e.getValue(), b -> {
+					palette.add(b);
+					return palette.size() - 1;
+				});
+				i++;
+			}
+			ListTag paletteTag = new ListTag();
+			for (Block b : palette) {
+				paletteTag.add(StringTag.valueOf(BuiltInRegistries.BLOCK.getKey(b).toString()));
+			}
+			CompoundTag d = new CompoundTag();
+			d.putLongArray("pos", positions);
+			d.putIntArray("block", blocks);
+			d.put("palette", paletteTag);
+			placedTag.put(dim, d);
+		});
+		tag.put("placedBlocks", placedTag);
 		tag.putInt("unity", unity);
 		tag.putLong("unityDay", unityDay);
 		CompoundTag today = new CompoundTag();
@@ -440,6 +592,8 @@ public final class CampData extends SavedData {
 				l.putString("uuid", e.entityId.toString());
 			}
 			l.putLong("diedAt", e.diedAtGameTime);
+			l.putLong("dismissedAt", e.dismissedAtGameTime);
+			l.putBoolean("starterGiven", e.starterGiven);
 			l.putInt("deaths", e.deaths);
 			if (e.lastKnownPos != null) {
 				l.putLongArray("pos", new long[] {e.lastKnownPos.asLong()});

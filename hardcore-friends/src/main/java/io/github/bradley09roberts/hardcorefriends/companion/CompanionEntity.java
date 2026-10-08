@@ -46,6 +46,7 @@ import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.SwingAnimation;
+import net.minecraft.world.item.component.UseRemainder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.storage.ValueInput;
@@ -299,10 +300,12 @@ public class CompanionEntity extends PathfinderMob {
 	protected void customServerAiStep(ServerLevel level) {
 		super.customServerAiStep(level);
 		LivingEntity target = getTarget();
+		// A non-fighter drops a target beyond 8 blocks, where canStandAndFight ends: AvoidDangerGoal then moves them
+		// out of a shooter's line of fire, or they go back to work, instead of standing still.
 		if (target != null && (!target.isAlive() || target.isRemoved() || target.distanceToSqr(this) > 32 * 32
 			|| target instanceof Player || target instanceof CompanionEntity
 			|| (!Threats.isThreat(target) && getLastHurtByMob() != target)
-			|| (!isFighter() && mode() != CompanionMode.FOLLOW && target.distanceToSqr(this) > 10 * 10))) {
+			|| (!isFighter() && mode() != CompanionMode.FOLLOW && target.distanceToSqr(this) > 8 * 8))) {
 			setTarget(null);
 		}
 		if (this.tickCount % 100 == 0) {
@@ -359,7 +362,17 @@ public class CompanionEntity extends PathfinderMob {
 		FoodProperties food = held.get(DataComponents.FOOD);
 		if (food != null && getHealth() < getMaxHealth()) {
 			heal(Math.max(1, food.nutrition()));
+			UseRemainder remainder = held.get(DataComponents.USE_REMAINDER);
 			held.consume(1, player);
+			if (remainder != null && !player.hasInfiniteMaterials()) {
+				// Stews leave a bowl and honey leaves a bottle, just as when the player eats them.
+				ItemStack leftover = remainder.convertInto().create();
+				if (held.isEmpty()) {
+					player.setItemInHand(hand, leftover);
+				} else if (!player.getInventory().add(leftover)) {
+					player.spawnAtLocation(level, leftover);
+				}
+			}
 			level.playSound(null, blockPosition(), SoundEvents.GENERIC_EAT.value(), SoundSource.NEUTRAL, 1.0F, 1.0F);
 			Speech.say(this, Line.THANKS_FOOD);
 			Unity.add(level, Unity.GIFT, 2, 20);
@@ -584,6 +597,13 @@ public class CompanionEntity extends PathfinderMob {
 		}
 		FoodProperties props = food.get(DataComponents.FOOD);
 		heal(props != null ? Math.max(1, props.nutrition()) : 2);
+		UseRemainder remainder = food.get(DataComponents.USE_REMAINDER);
+		if (remainder != null) {
+			ItemStack left = backpack.insert(remainder.convertInto().create());
+			if (!left.isEmpty() && this.level() instanceof ServerLevel level) {
+				spawnAtLocation(level, left);
+			}
+		}
 		this.playSound(SoundEvents.GENERIC_EAT.value(), 0.8F, 1.0F);
 		this.swingArm();
 		return true;

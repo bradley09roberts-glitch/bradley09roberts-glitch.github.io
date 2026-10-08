@@ -14,7 +14,7 @@ public final class ModItems {
 	public static final ResourceKey<Item> BACKPACK_KEY =
 		ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(HardcoreFriends.MOD_ID, "backpack"));
 	public static final Item BACKPACK = Registry.register(BuiltInRegistries.ITEM, BACKPACK_KEY,
-		new BackpackItem(new Item.Properties().setId(BACKPACK_KEY).stacksTo(1)));
+		new BackpackItem(new Item.Properties().setId(BACKPACK_KEY).stacksTo(1).fireResistant()));
 
 	private ModItems() {
 	}

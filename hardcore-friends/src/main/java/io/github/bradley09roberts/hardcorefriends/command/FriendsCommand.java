@@ -51,6 +51,10 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  */
 public final class FriendsCommand {
 	public static final int RECRUIT_COST = 2;
+	/** A dismissed friend needs one in-game day before they will rejoin. */
+	public static final long REJOIN_AFTER_DISMISSAL = 24000L;
+	/** A friend hurt within this many ticks is in a fight and will not leave. */
+	public static final int NO_DISMISS_AFTER_HURT = 200;
 
 	private FriendsCommand() {
 	}
@@ -128,7 +132,7 @@ public final class FriendsCommand {
 			Optional<CompanionEntity> live = Companions.find(id);
 			String text = switch (ledger.state) {
 				case NEVER_RECRUITED -> "not recruited yet";
-				case DISMISSED -> "dismissed (can be recruited again)";
+				case DISMISSED -> "dismissed (can be recruited again a day after leaving)";
 				case DEAD -> deadText(source.getLevel(), ledger);
 				case ALIVE -> live.map(c -> c.activity() + String.format(Locale.ROOT, " (%.0f hp)", c.getHealth()))
 					.orElse("away (last seen " + posText(ledger.lastKnownPos) + ")");
@@ -188,6 +192,14 @@ public final class FriendsCommand {
 				return 0;
 			}
 		}
+		if (ledger.state == CampData.LifeState.DISMISSED) {
+			long wait = ledger.dismissedAtGameTime + REJOIN_AFTER_DISMISSAL - level.getOverworldClockTime();
+			if (wait > 0) {
+				source.sendFailure(Component.literal(String.format(Locale.ROOT,
+					"%s only just left the team. Give them %.1f more days before asking them back.", id.displayName(), wait / 24000.0)));
+				return 0;
+			}
+		}
 		Inventory inv = player.getInventory();
 		int food = 0;
 		for (int i = 0; i < inv.getContainerSize(); i++) {
@@ -222,9 +234,12 @@ public final class FriendsCommand {
 		companion.setHomePos(player.blockPosition());
 		companion.setHealth(companion.getMaxHealth());
 		companion.backpack().setCapacity(Unity.backpackSlots(source.getServer()));
-		if (id.starterTool() != null) {
+		// The starter tool comes once per friend (a newcomer after a death gets their own). A dismissed friend's tool
+		// went into the backpack they left behind, so rejoining does not make a new one.
+		if (id.starterTool() != null && (!ledger.starterGiven || ledger.state == CampData.LifeState.DEAD)) {
 			companion.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(id.starterTool()));
 		}
+		ledger.starterGiven = true;
 		boolean hasCampHere = Camp.isCampLevel(level, data);
 		companion.setMode(hasCampHere ? CompanionMode.WORK : CompanionMode.FOLLOW, player);
 		level.addFreshEntity(companion);
@@ -296,12 +311,18 @@ public final class FriendsCommand {
 		}
 		CompanionEntity c = found.get();
 		ServerLevel level = (ServerLevel) c.level();
+		if (c.ticksSinceDamaged() < NO_DISMISS_AFTER_HURT) {
+			// Leaving mid-fight would let a dying friend walk away from a hardcore death.
+			source.sendFailure(Component.literal(c.friendId().displayName() + " is in the middle of a fight and will not leave now."));
+			return 0;
+		}
 		Speech.say(c, Line.DISMISSED);
 		c.dropBackpack(level);
 		CampData data = Camp.data(source.getServer());
 		CampData.Ledger ledger = data.ledger(c.friendId());
 		ledger.state = CampData.LifeState.DISMISSED;
 		ledger.entityId = null;
+		ledger.dismissedAtGameTime = level.getOverworldClockTime();
 		data.touchLedger();
 		Companions.untrack(c);
 		c.discard();

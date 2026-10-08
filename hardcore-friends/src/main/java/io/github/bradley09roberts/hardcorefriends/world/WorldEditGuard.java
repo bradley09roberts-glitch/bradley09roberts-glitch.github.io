@@ -1,6 +1,7 @@
 package io.github.bradley09roberts.hardcorefriends.world;
 
 import java.util.List;
+import java.util.Optional;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -13,13 +14,18 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.Fallable;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 
+import io.github.bradley09roberts.hardcorefriends.camp.Blueprint;
+import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+import io.github.bradley09roberts.hardcorefriends.camp.SiteFinder;
+import io.github.bradley09roberts.hardcorefriends.camp.build.Placement;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
@@ -58,6 +64,8 @@ public final class WorldEditGuard {
 	public static volatile java.util.function.@org.jspecify.annotations.Nullable Consumer<EditEvent> listener;
 
 	private static final int MIN_TICKS_BETWEEN_EDITS = 4;
+	/** How far up a column of sand or gravel is followed when checking for water or lava above it. */
+	private static final int MAX_FALLING_COLUMN = 16;
 
 	private WorldEditGuard() {
 	}
@@ -105,11 +113,11 @@ public final class WorldEditGuard {
 		if (state.is(ModTags.NEVER_TOUCH) || state.getDestroySpeed(level, pos) < 0) {
 			return Verdict.deny("protected block");
 		}
-		if (reason != Reason.FARM && touchesFluid(level, pos)) {
+		if (reason != Reason.FARM && breachesFluid(level, pos)) {
 			return Verdict.deny("next to water or lava");
 		}
 		CampData data = Camp.data(level.getServer());
-		boolean ownBlock = data.isPlacedByFriends(pos);
+		boolean ownBlock = data.isPlacedByFriends(level, pos);
 		switch (reason) {
 			case FARM -> {
 				if (!inCamp(c, pos)) {
@@ -201,9 +209,15 @@ public final class WorldEditGuard {
 			return Verdict.deny("someone is standing there");
 		}
 		switch (reason) {
-			case FARM, BUILD, INVENT, LANDSCAPE -> {
+			case FARM -> {
+				return inCamp(c, pos) ? Verdict.OK : Verdict.deny("outside the camp");
+			}
+			case BUILD, INVENT, LANDSCAPE -> {
 				if (!inCamp(c, pos)) {
 					return Verdict.deny("outside the camp");
+				}
+				if (restsOnPlayerBuild(level, pos.below())) {
+					return Verdict.deny("would sit on a player's build");
 				}
 				return Verdict.OK;
 			}
@@ -238,7 +252,7 @@ public final class WorldEditGuard {
 		if (!inCamp(c, pos)) {
 			return Verdict.deny("outside the camp");
 		}
-		if (current.hasBlockEntity() && !Camp.data(level.getServer()).isPlacedByFriends(pos)) {
+		if (current.hasBlockEntity() && !Camp.data(level.getServer()).isPlacedByFriends(level, pos)) {
 			return Verdict.deny("block entity");
 		}
 		boolean airAbove = level.getBlockState(pos.above()).isAir();
@@ -254,7 +268,7 @@ public final class WorldEditGuard {
 				yield Verdict.deny("not tillable or harvestable");
 			}
 			case LANDSCAPE -> earth && newState.is(Blocks.DIRT_PATH) && airAbove ? Verdict.OK : Verdict.deny("not path-able");
-			case INVENT -> Camp.data(level.getServer()).isPlacedByFriends(pos) && current.getBlock() == newState.getBlock()
+			case INVENT -> Camp.data(level.getServer()).isPlacedByFriends(level, pos) && current.getBlock() == newState.getBlock()
 				? Verdict.OK : Verdict.deny("can only adjust our own contraptions");
 			default -> Verdict.deny("this job does not reshape blocks");
 		};
@@ -285,6 +299,10 @@ public final class WorldEditGuard {
 	/**
 	 * Breaks a block (after the caller has spent the mining time), putting drops into the backpack with overflow on
 	 * the ground. Damages the held tool if it was the right tool. Returns false if the guard refused.
+	 *
+	 * <p>Like a player, a friend only gets drops from blocks that need a proper tool (stone, ores) when holding one:
+	 * stone broken with an axe or bare hands is lost. Blocks the friends placed themselves always come back, so
+	 * taking down their own work never wastes camp materials.
 	 */
 	public static boolean breakBlock(CompanionEntity c, BlockPos pos, Reason reason) {
 		Verdict v = canBreak(c, pos, reason);
@@ -294,7 +312,10 @@ public final class WorldEditGuard {
 		ServerLevel level = (ServerLevel) c.level();
 		BlockState state = level.getBlockState(pos);
 		ItemStack tool = c.getMainHandItem();
-		List<ItemStack> drops = Block.getDrops(state, level, pos, null, c, tool);
+		CampData data = Camp.data(level.getServer());
+		boolean harvest = !state.requiresCorrectToolForDrops() || tool.isCorrectToolForDrops(state)
+			|| data.isPlacedByFriends(level, pos);
+		List<ItemStack> drops = harvest ? Block.getDrops(state, level, pos, null, c, tool) : List.of();
 		if (!level.destroyBlock(pos, false, c)) {
 			return false;
 		}
@@ -307,8 +328,7 @@ public final class WorldEditGuard {
 		if (!tool.isEmpty() && tool.isDamageableItem() && state.getDestroySpeed(level, pos) > 0 && !Unity.carefulHands(c)) {
 			c.damageMainHandTool(1);
 		}
-		CampData data = Camp.data(level.getServer());
-		data.forgetPlaced(pos);
+		data.forgetPlaced(level, pos);
 		record(c, data, "broke", state, pos, reason);
 		return true;
 	}
@@ -327,7 +347,7 @@ public final class WorldEditGuard {
 		level.playSound(null, pos, sound.getPlaceSound(), SoundSource.BLOCKS, (sound.getVolume() + 1.0F) / 2.0F, sound.getPitch() * 0.8F);
 		CampData data = Camp.data(level.getServer());
 		if (reason != Reason.FARM || !(state.getBlock() instanceof CropBlock)) {
-			data.recordPlaced(pos);
+			data.recordPlaced(level, pos, state);
 		}
 		record(c, data, "placed", state, pos, reason);
 		return true;
@@ -348,7 +368,7 @@ public final class WorldEditGuard {
 		level.playSound(null, pos, sound.getHitSound(), SoundSource.BLOCKS, 0.8F, 1.0F);
 		CampData data = Camp.data(level.getServer());
 		if (newState.is(Blocks.DIRT_PATH) || newState.is(Blocks.FARMLAND)) {
-			data.recordPlaced(pos);
+			data.recordPlaced(level, pos, newState);
 		}
 		record(c, data, "changed " + BuiltInRegistries.BLOCK.getKey(old.getBlock()).getPath() + " to", newState, pos, reason);
 		return true;
@@ -374,13 +394,72 @@ public final class WorldEditGuard {
 		return state.canBeReplaced() && state.getFluidState().isEmpty() && !state.isAir() || state.is(Blocks.SNOW);
 	}
 
+	/** True if the block or any neighbour holds water or lava. A neighbour in an unloaded chunk counts as wet. */
 	public static boolean touchesFluid(ServerLevel level, BlockPos pos) {
 		for (Direction d : Direction.values()) {
-			if (!level.getFluidState(pos.relative(d)).isEmpty()) {
+			BlockPos n = pos.relative(d);
+			if (!level.isLoaded(n) || !level.getFluidState(n).isEmpty()) {
 				return true;
 			}
 		}
 		return !level.getFluidState(pos).isEmpty();
+	}
+
+	/**
+	 * True if breaking this block could let water or lava in: the block touches fluid, or it holds up a column of
+	 * sand, gravel or other falling blocks that touches fluid (the column drops into the gap and the fluid follows).
+	 */
+	public static boolean breachesFluid(ServerLevel level, BlockPos pos) {
+		if (touchesFluid(level, pos)) {
+			return true;
+		}
+		BlockPos.MutableBlockPos p = pos.mutable();
+		for (int i = 0; i < MAX_FALLING_COLUMN; i++) {
+			p.move(Direction.UP);
+			if (!level.isInWorldBounds(p) || !(level.getBlockState(p).getBlock() instanceof Fallable)) {
+				return false;
+			}
+			if (touchesFluid(level, p)) {
+				return true;
+			}
+		}
+		return true; // a taller column than we are willing to check: assume the worst
+	}
+
+	/**
+	 * True if a new block placed on top of {@code below} would sit on something that looks player-built and that the
+	 * friends did not place. The linked supply chest is shared (Spark's drop-off hopper sits on it), and the blocks of
+	 * the friends' own reserved buildings count as theirs even if a player patched one of them.
+	 */
+	private static boolean restsOnPlayerBuild(ServerLevel level, BlockPos below) {
+		if (!level.isLoaded(below)) {
+			return true;
+		}
+		BlockState s = level.getBlockState(below);
+		if (!s.is(ModTags.BUILD_MARKERS) && !s.hasBlockEntity()) {
+			return false;
+		}
+		CampData data = Camp.data(level.getServer());
+		if (data.isPlacedByFriends(level, below) || SiteFinder.chestHalves(level, data).contains(below)) {
+			return false;
+		}
+		return !Camp.isCampLevel(level, data) || !partOfFriendsBuilding(data, below);
+	}
+
+	/** True if {@code pos} is one of the blocks (not the foundations) of a building site the friends reserved. */
+	private static boolean partOfFriendsBuilding(CampData data, BlockPos pos) {
+		for (String id : data.sites().keySet()) {
+			Optional<Blueprint> bp = Blueprints.forId(id);
+			if (bp.isEmpty()) {
+				continue;
+			}
+			for (Placement p : Blueprints.placements(bp.get(), SiteFinder.parts(data, bp.get()))) {
+				if (!p.isFoundation() && p.pos().equals(pos)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private static boolean hasAttachedStem(ServerLevel level, BlockPos pos) {
@@ -407,7 +486,7 @@ public final class WorldEditGuard {
 						continue;
 					}
 					BlockState s = level.getBlockState(m);
-					if ((s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(m)) {
+					if ((s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(level, m)) {
 						return true;
 					}
 				}

@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 
+import io.github.bradley09roberts.hardcorefriends.companion.Backpack;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
@@ -58,8 +59,12 @@ public final class Actions {
 
 	// ---------------------------------------------------------------- walking
 
+	/**
+	 * Navigation speed modifier for task walking. Always 1.0: Scout's speed bonus is already part of the
+	 * movement-speed attribute (see {@code CompanionEntity.applyStats}), and the modifier multiplies it.
+	 */
 	public double speed() {
-		return 1.0 + c.friendId().speedBonus();
+		return 1.0;
 	}
 
 	/** True when the friend's eyes are within reach of the centre of a block. */
@@ -285,13 +290,16 @@ public final class Actions {
 		return true;
 	}
 
-	/** Holds whichever carried item mines this block fastest (or keeps the current item). */
+	/**
+	 * Holds whichever carried item mines this block fastest (or keeps the current item). Looks at every backpack
+	 * slot, like {@link #has} and {@link #equip}, so a tool kept beyond a shrunken capacity is still used.
+	 */
 	public void equipBestFor(BlockState state) {
 		ItemStack hand = c.getMainHandItem();
 		float best = hand.isEmpty() ? 1.0F : hand.getDestroySpeed(state);
 		boolean bestCorrect = !hand.isEmpty() && hand.isCorrectToolForDrops(state);
 		int bestSlot = -1;
-		for (int i = 0; i < c.backpack().capacity(); i++) {
+		for (int i = 0; i < Backpack.MAX_SLOTS; i++) {
 			ItemStack s = c.backpack().get(i);
 			if (s.isEmpty() || !s.isDamageableItem()) {
 				continue;
