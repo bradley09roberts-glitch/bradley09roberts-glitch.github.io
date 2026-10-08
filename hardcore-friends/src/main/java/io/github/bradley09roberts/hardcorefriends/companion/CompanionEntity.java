@@ -76,6 +76,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.combat.Archery;
 import io.github.bradley09roberts.hardcorefriends.item.BackpackItem;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
+import io.github.bradley09roberts.hardcorefriends.town.TownPermissions;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
@@ -591,6 +592,10 @@ public class CompanionEntity extends PathfinderMob {
 		FoodProperties food = held.get(DataComponents.FOOD);
 		// A hurt or hungry friend eats food handed to them at once; anyone else puts it in their backpack for later.
 		if (food != null && (getHealth() < getMaxHealth() || needs.get(Needs.Need.HUNGER) < EATS_HANDED_FOOD_BELOW)) {
+			ItemStack meal = held.copyWithCount(1);
+			for (CompanionEvents.Gift hook : CompanionEvents.GIFT) {
+				hook.gift(this, serverPlayer, meal, true);
+			}
 			heal(Math.max(1, food.nutrition()));
 			needs.add(Needs.Need.HUNGER, hungerValue(held));
 			UseRemainder remainder = held.get(DataComponents.USE_REMAINDER);
@@ -616,11 +621,26 @@ public class CompanionEntity extends PathfinderMob {
 			held.shrink(given);
 			Speech.say(this, Line.THANKS_GIFT, gift.getHoverName().getString());
 			Unity.add(level, Unity.GIFT, 2, 20);
+			for (CompanionEvents.Gift hook : CompanionEvents.GIFT) {
+				hook.gift(this, serverPlayer, gift.copyWithCount(given), false);
+			}
 		} else {
 			serverPlayer.sendSystemMessage(Component.literal(displayName() + "'s backpack is full.")
 				.withStyle(ChatFormatting.GRAY));
 		}
 		return InteractionResult.SUCCESS_SERVER;
+	}
+
+	/**
+	 * Leading a friend about on a lead is an order like any other: on a shared world, only the camp's owner and the
+	 * players they trust may tie one on (see the town package).
+	 */
+	@Override
+	public boolean canHaveALeashAttachedTo(Entity holder) {
+		if (holder instanceof ServerPlayer player && !TownPermissions.isAllowed(player)) {
+			return false;
+		}
+		return super.canHaveALeashAttachedTo(holder);
 	}
 
 	/** Opens the backpack as a chest screen for a nearby player. */

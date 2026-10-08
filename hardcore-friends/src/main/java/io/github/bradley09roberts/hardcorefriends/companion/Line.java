@@ -216,6 +216,28 @@ public enum Line {
 
 	// ==== Several players (package town): trust, bonds, jobs, mourning, notes, deliveries ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** A warm hello to a player this friend is close to (right-click). %1$s = player name. */
+	GREET_WARM(Priority.IMPORTANT, 0, 1),
+	/** A cool hello to a player who has hurt or let down this friend (right-click). %1$s = player name. */
+	GREET_COOL(Priority.IMPORTANT, 0, 1),
+	/** A player has died in a Hardcore world. %1$s = their name. */
+	MOURN_PLAYER(Priority.IMPORTANT, 0, 1),
+	/** About to read out a note left for the camp (the note itself follows). %1$s = who wrote it. */
+	NOTE_FOUND(Priority.IMPORTANT, 0, 1),
+	/** A player delivered what the camp asked for on the job board. %1$s = player name. */
+	THANKS_DELIVERY(Priority.IMPORTANT, 0, 1),
+	/** Left a delivery in a player's mailbox (heard by everyone). %1$s = whose mailbox. */
+	MAIL_DELIVERED(Priority.IMPORTANT, 0, 1),
+	/** Politely refusing an order from a player the camp does not trust. %1$s = player name. */
+	REFUSE_ORDER(Priority.IMPORTANT, 100, 1),
+	/** Politely refusing to follow a player they no longer trust (a very low bond). %1$s = player name. */
+	REFUSE_FOLLOW(Priority.IMPORTANT, 100, 1),
+	/** Gathering a fallen player's things to keep them safe in the chest. %1$s = whose things. */
+	KEEPING_ITEMS(Priority.IMPORTANT, 600, 1),
+	/** At dusk before a siege night: monsters will gather at the camp's edge at midnight. */
+	SIEGE_DUSK(Priority.DANGER, 0, 0),
+	/** Dawn after a siege night that everyone lived through. */
+	SIEGE_HELD(Priority.IMPORTANT, 0, 0),
 
 	// ==== end of town ====
 	;

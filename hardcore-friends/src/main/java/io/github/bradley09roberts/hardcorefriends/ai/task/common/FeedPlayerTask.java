@@ -3,6 +3,7 @@ package io.github.bradley09roberts.hardcorefriends.ai.task.common;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.ToIntBiFunction;
 
 import org.jspecify.annotations.Nullable;
 
@@ -32,6 +33,11 @@ public final class FeedPlayerTask implements CompanionTask {
 	private static final int PLAYER_COOLDOWN = 2400;
 	/** How long a player the friend could not reach (on a roof, a pillar) is left alone. */
 	private static final int UNREACHABLE_COOLDOWN = 600;
+	/**
+	 * Which hungry player a friend feeds first, from the feature packages (the town package: a player the friend is
+	 * close to). Higher comes first; among equals, the nearest.
+	 */
+	public static volatile ToIntBiFunction<CompanionEntity, ServerPlayer> priority = (c, player) -> 0;
 
 	private final Map<UUID, Long> fedUntil = new HashMap<>();
 	private final EntityApproach approach = new EntityApproach();
@@ -61,12 +67,19 @@ public final class FeedPlayerTask implements CompanionTask {
 		long now = level.getGameTime();
 		fedUntil.values().removeIf(until -> until <= now);
 		double best = RANGE * RANGE;
+		int bestPriority = Integer.MIN_VALUE;
+		ToIntBiFunction<CompanionEntity, ServerPlayer> rank = priority;
 		for (ServerPlayer player : level.players()) {
 			if (!isHungry(player) || fedUntil.containsKey(player.getUUID())) {
 				continue;
 			}
 			double d = player.distanceToSqr(c);
-			if (d <= best) {
+			if (d > RANGE * RANGE) {
+				continue;
+			}
+			int p = rank.applyAsInt(c, player);
+			if (p > bestPriority || p == bestPriority && d <= best) {
+				bestPriority = p;
 				best = d;
 				planned = player;
 			}

@@ -21,6 +21,7 @@ import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.registry.ModEntities;
+import io.github.bradley09roberts.hardcorefriends.town.Town;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 
 /**
@@ -52,6 +53,7 @@ public final class TestSupport {
 		NightWatch.clear();
 		CampData data = Camp.data(level.getServer());
 		data.resetForTests();
+		Town.resetForTests(level.getServer()); // each test's mock player is a new player: no owner left from the last
 		if (withCamp) {
 			data.setCamp(helper.absolutePos(centre()), Camp.dimensionId(level));
 		}

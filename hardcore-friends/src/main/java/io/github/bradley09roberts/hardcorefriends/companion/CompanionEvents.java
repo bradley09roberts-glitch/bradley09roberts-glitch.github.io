@@ -10,6 +10,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Hooks into a friend's life that the feature packages ({@code combat}, {@code survival}, {@code settler},
@@ -55,6 +56,15 @@ public final class CompanionEvents {
 	}
 
 	/**
+	 * A player handed a friend something and the friend took it: food they eat at once ({@code ate}, called just
+	 * before they eat it, so their health and hunger are still as they were), or anything put into their backpack
+	 * ({@code given} holds what went in).
+	 */
+	public interface Gift {
+		void gift(CompanionEntity companion, ServerPlayer player, ItemStack given, boolean ate);
+	}
+
+	/**
 	 * Adds AI goals to a newly created friend. Runs inside the entity's constructor (from {@code registerGoals}), so
 	 * only the selectors and the entity's type and level are ready: keep it to {@code addGoal} calls.
 	 */
@@ -69,6 +79,7 @@ public final class CompanionEvents {
 	public static final List<Death> DEATH = new CopyOnWriteArrayList<>();
 	public static final List<Goals> GOALS = new CopyOnWriteArrayList<>();
 	public static final List<Dismissed> DISMISSED = new CopyOnWriteArrayList<>();
+	public static final List<Gift> GIFT = new CopyOnWriteArrayList<>();
 
 	private CompanionEvents() {
 	}
