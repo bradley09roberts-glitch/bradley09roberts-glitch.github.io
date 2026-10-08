@@ -12,8 +12,9 @@ import io.github.bradley09roberts.hardcorefriends.ai.role.farm.TillTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 
 /**
- * Fern's own routines: harvesting and replanting, sowing empty farmland, tilling near water, laying out the farm
- * plot, baking bread and using bone meal. They share one {@link FarmContext}, so the fields are surveyed once.
+ * The farmer's routines (Fern's, and anyone's who helps or stands in for her): harvesting and replanting, sowing
+ * empty farmland, tilling near water, laying out the farm plot, baking bread and using bone meal. One friend's
+ * routines share one {@link FarmContext}, so the fields are surveyed once.
  */
 public final class FernTasks {
 	private FernTasks() {

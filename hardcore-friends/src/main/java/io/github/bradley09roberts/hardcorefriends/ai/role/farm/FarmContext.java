@@ -15,27 +15,29 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.TeamCache;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.Structures;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.companion.Role;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
- * What Fern knows about the fields, shared by all her routines. Two cached surveys keep the cost bounded:
+ * What a farmer knows about the fields, shared by one friend's farming routines (Fern's, or anyone helping out).
+ * Two cached surveys keep the cost bounded:
  * <ul>
- * <li>a local 3D scan up to 16 blocks around Fern (and around the farm when she is away from it), refreshed every
- * 5 seconds, which lists ripe and growing crops, empty farmland, shore water and crafting tables;</li>
- * <li>a camp-wide surface survey, spread over many calls (a few hundred columns at a time), which counts farmland
- * and finds water anywhere inside the camp.</li>
+ * <li>a local 3D scan up to 16 blocks around the friend (and around the farm when they are away from it), refreshed
+ * every 5 seconds, which lists ripe and growing crops, empty farmland, shore water and crafting tables;</li>
+ * <li>a camp-wide surface survey ({@link CampSurvey}, one for the whole team), spread over many calls (a few hundred
+ * columns at a time), which counts farmland and finds water anywhere inside the camp.</li>
  * </ul>
  */
 public final class FarmContext {
 	private static final int LOCAL_RADIUS = 16;
 	private static final int LOCAL_DY = 4;
 	private static final int LOCAL_INTERVAL = 100;
-	private static final int COLUMNS_PER_STEP = 600;
 	private static final int MAX_WATER = 64;
 	/** Fern does not till right in the middle of the camp, where the fire and paths go. */
 	private static final int CAMP_CORE = 3;
@@ -48,34 +50,76 @@ public final class FarmContext {
 	private final List<BlockPos> shoreWater = new ArrayList<>();
 	private @Nullable BlockPos table;
 	private @Nullable List<BlockPos> tillCache;
+	private long copiedAt = Long.MIN_VALUE;
 
-	// camp survey (one pass covers every column of the camp disc)
-	private int surveyCursor;
-	private int surveyRadius = -1;
-	private @Nullable BlockPos surveyCentre;
-	private int passFarmland;
-	private long passSumX;
-	private long passSumZ;
-	private final List<BlockPos> passWater = new ArrayList<>();
-	private int farmland = -1;
-	private @Nullable BlockPos farmlandCentre;
-	private List<BlockPos> campWater = List.of();
-	private long lastSurveyStep = Long.MIN_VALUE;
+	/** The latest local scan anyone made, which friends other than the farmer reuse instead of scanning again. */
+	private static final class Snapshot {
+		private long at = Long.MIN_VALUE / 2;
+		private List<BlockPos> ripe = List.of();
+		private List<BlockPos> growing = List.of();
+		private List<BlockPos> emptyFarmland = List.of();
+		private List<BlockPos> shoreWater = List.of();
+		private @Nullable BlockPos table;
+	}
+
+	private static Snapshot snapshot(CompanionEntity c) {
+		return TeamCache.get((ServerLevel) c.level(), "farm.local", Snapshot::new);
+	}
 
 	// ------------------------------------------------------------ local scan
 
-	/** Rescans around the farm if the last scan is older than 5 seconds. */
+	/**
+	 * Rescans around the farm if the last scan is older than 5 seconds. The farmer keeps her own schedule, exactly as
+	 * when she farmed alone; anyone else reuses the team's latest scan while it is fresh, so a field is not scanned
+	 * once for every friend who might lend a hand.
+	 */
 	public void refresh(CompanionEntity c) {
 		long now = c.level().getGameTime();
-		if (now - localScanAt >= LOCAL_INTERVAL) {
+		Snapshot shared = snapshot(c);
+		if (c.friendId().role() == Role.FARMER) {
+			if (now - localScanAt >= LOCAL_INTERVAL) {
+				localScanAt = now;
+				scanLocal(c);
+				publish(shared, now);
+			}
+			return;
+		}
+		if (now - shared.at >= LOCAL_INTERVAL) {
 			localScanAt = now;
 			scanLocal(c);
+			publish(shared, now);
+		} else if (copiedAt != shared.at) {
+			copiedAt = shared.at;
+			copy(ripe, shared.ripe);
+			copy(growing, shared.growing);
+			copy(emptyFarmland, shared.emptyFarmland);
+			copy(shoreWater, shared.shoreWater);
+			if (shared.table != null) {
+				table = shared.table;
+			}
+			tillCache = null;
 		}
 	}
 
-	/** Forces a rescan on the next {@link #refresh}, after the fields changed. */
-	public void invalidate() {
+	private void publish(Snapshot shared, long now) {
+		shared.at = now;
+		shared.ripe = List.copyOf(ripe);
+		shared.growing = List.copyOf(growing);
+		shared.emptyFarmland = List.copyOf(emptyFarmland);
+		shared.shoreWater = List.copyOf(shoreWater);
+		shared.table = table;
+		copiedAt = now;
+	}
+
+	private static void copy(List<BlockPos> into, List<BlockPos> from) {
+		into.clear();
+		into.addAll(from);
+	}
+
+	/** Forces a rescan on the next {@link #refresh}, after the fields changed (for everyone sharing the scan too). */
+	public void invalidate(CompanionEntity c) {
 		localScanAt = Long.MIN_VALUE / 2;
+		snapshot(c).at = Long.MIN_VALUE / 2;
 	}
 
 	public List<BlockPos> ripe() {
@@ -116,11 +160,12 @@ public final class FarmContext {
 		if (plot.isPresent()) {
 			return plot.get().origin;
 		}
-		if (farmlandCentre != null) {
-			return farmlandCentre;
+		CampSurvey survey = survey(c);
+		if (survey.farmlandCentre() != null) {
+			return survey.farmlandCentre();
 		}
 		BlockPos home = c.homePos();
-		return campWater.stream().min(Comparator.comparingDouble(w -> w.distSqr(home))).orElse(null);
+		return survey.water().stream().min(Comparator.comparingDouble(w -> w.distSqr(home))).orElse(null);
 	}
 
 	private void scanLocal(CompanionEntity c) {
@@ -280,102 +325,41 @@ public final class FarmContext {
 
 	// ----------------------------------------------------------- camp survey
 
-	/**
-	 * Surveys the next few hundred surface columns of the camp. Call once per scoring round; a full pass over a
-	 * radius-24 camp takes about three calls, a radius-40 camp about nine.
-	 */
-	public void stepCampSurvey(CompanionEntity c) {
-		ServerLevel level = (ServerLevel) c.level();
-		if (level.getGameTime() == lastSurveyStep) {
-			return; // several routines may ask in the same scoring round
-		}
-		lastSurveyStep = level.getGameTime();
-		CampData data = Camp.data(level.getServer());
-		BlockPos centre = c.homePos();
-		int radius = Camp.radius(data);
-		if (surveyCentre == null || !surveyCentre.equals(centre) || surveyRadius != radius) {
-			surveyCentre = centre;
-			surveyRadius = radius;
-			restartPass();
-			farmland = -1;
-		}
-		int side = 2 * radius + 1;
-		int total = side * side;
-		int budget = COLUMNS_PER_STEP;
-		while (budget > 0 && surveyCursor < total) {
-			int dx = surveyCursor % side - radius;
-			int dz = surveyCursor / side - radius;
-			surveyCursor++;
-			if (dx * dx + dz * dz > radius * radius) {
-				continue;
-			}
-			budget--;
-			int x = centre.getX() + dx;
-			int z = centre.getZ() + dz;
-			if (!level.hasChunkAt(x, z)) {
-				continue;
-			}
-			int y = Ground.surfaceY(level, x, z, centre.getY());
-			if (y == Ground.NONE) {
-				continue;
-			}
-			BlockPos top = new BlockPos(x, y, z);
-			BlockState state = level.getBlockState(top);
-			if (state.is(Blocks.FARMLAND)) {
-				passFarmland++;
-				passSumX += x;
-				passSumZ += z;
-			} else if (Crops.isWaterSource(state) && passWater.size() < MAX_WATER) {
-				passWater.add(top);
-			}
-		}
-		if (surveyCursor >= total) {
-			farmland = passFarmland;
-			farmlandCentre = passFarmland > 0
-				? new BlockPos((int) Math.floorDiv(passSumX, passFarmland), centre.getY(), (int) Math.floorDiv(passSumZ, passFarmland))
-				: null;
-			if (farmlandCentre != null) {
-				int fy = Ground.surfaceY(level, farmlandCentre.getX(), farmlandCentre.getZ(), centre.getY());
-				farmlandCentre = new BlockPos(farmlandCentre.getX(), fy == Ground.NONE ? centre.getY() : fy + 1, farmlandCentre.getZ());
-			}
-			campWater = List.copyOf(passWater);
-			restartPass();
-		}
+	/** The camp survey for this friend's dimension, shared by every friend (see {@link CampSurvey}). */
+	private static CampSurvey survey(CompanionEntity c) {
+		return CampSurvey.of((ServerLevel) c.level());
 	}
 
-	private void restartPass() {
-		surveyCursor = 0;
-		passFarmland = 0;
-		passSumX = 0;
-		passSumZ = 0;
-		passWater.clear();
+	/**
+	 * Surveys the next few hundred surface columns of the camp. Call once per scoring round; a full pass over a
+	 * radius-24 camp takes about three calls, a radius-40 camp about nine. The survey is shared, so however many
+	 * friends call this it moves on at most once a second.
+	 */
+	public void stepCampSurvey(CompanionEntity c) {
+		survey(c).step(c);
 	}
 
 	/** Farmland counted in the camp by the last complete survey, or -1 before the first pass finishes. */
-	public int campFarmland() {
-		return farmland;
+	public int campFarmland(CompanionEntity c) {
+		return survey(c).farmland();
 	}
 
 	/** Surface water sources found in the camp by the last complete survey. */
-	public List<BlockPos> campWater() {
-		return campWater;
+	public List<BlockPos> campWater(CompanionEntity c) {
+		return survey(c).water();
 	}
 
-	public boolean campSurveyed() {
-		return farmland >= 0;
+	public boolean campSurveyed(CompanionEntity c) {
+		return survey(c).farmland() >= 0;
 	}
 
 	/** Counts newly tilled farmland straight away, so the stage cap holds between survey passes. */
-	public void noteTilled(int n) {
-		if (farmland >= 0) {
-			farmland += n;
-		}
+	public void noteTilled(CompanionEntity c, int n) {
+		survey(c).noteTilled(n);
 	}
 
-	/** Records water Fern placed herself, so the farm plot is known before the next survey pass. */
-	public void noteWater(BlockPos pos) {
-		List<BlockPos> list = new ArrayList<>(campWater);
-		list.add(pos.immutable());
-		campWater = List.copyOf(list);
+	/** Records water placed for the farm, so the farm plot is known before the next survey pass. */
+	public void noteWater(CompanionEntity c, BlockPos pos) {
+		survey(c).noteWater(pos);
 	}
 }

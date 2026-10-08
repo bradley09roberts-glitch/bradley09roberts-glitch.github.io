@@ -11,10 +11,10 @@ import io.github.bradley09roberts.hardcorefriends.ai.role.forage.QuarryTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 
 /**
- * Rowan's own routines: felling natural trees outside the camp and replanting, quarrying a bounded pit in the
- * gathering ring, foraging berries and fallen goods, delivering what the builder is short of, and clearing the trees off
- * a building site in a forest camp. The routines share
- * one {@link ForageContext}, so the land is searched once.
+ * The forager's routines (Rowan's, and anyone's who helps or stands in for her): felling natural trees outside the
+ * camp and replanting, quarrying a bounded pit in the gathering ring, foraging berries and fallen goods, delivering
+ * what the builder is short of, and clearing the trees off a building site in a forest camp. One friend's routines
+ * share one {@link ForageContext}, so the land is searched once.
  */
 public final class RowanTasks {
 	private RowanTasks() {

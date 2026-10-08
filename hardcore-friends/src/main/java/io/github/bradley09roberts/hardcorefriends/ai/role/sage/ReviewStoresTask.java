@@ -19,9 +19,12 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
  * Every few minutes Sage walks to the supply chest, takes stock (recomputing the camp's needs) and announces the
- * team's focus, naming the friend best placed to cover it.
+ * team's focus, naming the friend best placed to cover it. Only Sage plans, so when a review is due it comes before
+ * any other work Sage might be helping with.
  */
 public final class ReviewStoresTask implements CompanionTask {
+	/** Main work: above anything Sage would do outside planning (see {@code SpecialityTask}). */
+	private static final double SCORE = 60;
 	/** {@link CampData#memory} key; holds {@code "at"} (game time of the last review). */
 	public static final String MEMORY = "sage.review";
 	private static final double CHEST_REACH = 2.0;
@@ -45,7 +48,7 @@ public final class ReviewStoresTask implements CompanionTask {
 		if (Camp.isNight(level) && !WorldEditGuard.inCamp(c, c.blockPosition())) {
 			return 0;
 		}
-		return SupplyChest.of(level).isPresent() ? 30 : 0;
+		return SupplyChest.of(level).isPresent() ? SCORE : 0;
 	}
 
 	@Override

@@ -28,6 +28,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
+import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.common.KeepList;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
@@ -211,10 +212,13 @@ public class CommonGameTest {
 			}
 		}
 		CompanionEntity sage = TestSupport.spawnFriend(helper, FriendId.SAGE, TestSupport.centre());
-		// Keep Sage's other errands from walking her about, so the shut-in item stays the nearest one.
+		// Keep Sage's other errands from walking her about, so the shut-in item stays the nearest one. Now that every
+		// friend can stand in for absent friends, those errands include everyone else's work (quarrying, building...).
 		long now = helper.getLevel().getGameTime();
-		for (String task : new String[] {"common.idle", "sage.observe", "sage.review_stores"}) {
-			sage.scheduler().cooldown(task, now, 2000);
+		for (CompanionTask task : sage.scheduler().tasks()) {
+			if (!task.id().equals("common.collect_items")) {
+				sage.scheduler().cooldown(task.id(), now, 2000);
+			}
 		}
 		ItemEntity shutIn = dropItem(helper, new ItemStack(Items.COBBLESTONE, 2), new Vec3(19.5, 2.0, 16.5));
 		ItemEntity open = dropItem(helper, new ItemStack(Items.DIRT, 3), new Vec3(16.5, 2.0, 22.5));

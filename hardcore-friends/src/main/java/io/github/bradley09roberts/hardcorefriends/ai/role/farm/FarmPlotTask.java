@@ -23,6 +23,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Structures;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
+import io.github.bradley09roberts.hardcorefriends.companion.Role;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 
@@ -79,17 +80,18 @@ public final class FarmPlotTask implements CompanionTask {
 			return 0;
 		}
 		farm.stepCampSurvey(c);
-		if (!farm.campSurveyed()) {
+		if (!farm.campSurveyed(c)) {
 			return 0;
 		}
-		if (farm.campFarmland() >= PLOT_FARMLAND) {
+		if (farm.campFarmland(c) >= PLOT_FARMLAND) {
 			return 65;
 		}
-		if (!farm.campWater().isEmpty()) {
-			// Tilling grows the farm from here; only speak up if Fern lacks what tilling needs.
-			return canTill(c) ? 0 : 25;
+		boolean farmer = c.friendId().role() == Role.FARMER;
+		if (!farm.campWater(c).isEmpty()) {
+			// Tilling grows the farm from here; only the farmer speaks up if she lacks what tilling needs.
+			return canTill(c) || !farmer ? 0 : 25;
 		}
-		return bucketAvailable(c) ? 60 : 30;
+		return bucketAvailable(c) ? 60 : farmer ? 30 : 0;
 	}
 
 	private static boolean canTill(CompanionEntity c) {
@@ -108,11 +110,11 @@ public final class FarmPlotTask implements CompanionTask {
 	public boolean start(CompanionEntity c) {
 		phaseTicks = 0;
 		site = null;
-		if (farm.campFarmland() >= PLOT_FARMLAND) {
+		if (farm.campFarmland(c) >= PLOT_FARMLAND) {
 			phase = Phase.COMPLETE;
 			return true;
 		}
-		if (!farm.campWater().isEmpty()) {
+		if (!farm.campWater(c).isEmpty()) {
 			if (!c.actions().hasTool(ItemTags.HOES)) {
 				Speech.say(c, Line.NEED_TOOL, "hoe");
 			} else {
@@ -223,8 +225,8 @@ public final class FarmPlotTask implements CompanionTask {
 				}
 				CampData data = Camp.data(level.getServer());
 				data.putSite(Structures.FARM_PLOT, new CampData.Site(centre, 0, 0));
-				farm.noteWater(centre);
-				farm.invalidate();
+				farm.noteWater(c, centre);
+				farm.invalidate(c);
 				yield TaskStatus.SUCCESS;
 			}
 			case WAIT -> TaskStatus.RUNNING;

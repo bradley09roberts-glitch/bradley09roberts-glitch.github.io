@@ -15,11 +15,13 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 import io.github.bradley09roberts.hardcorefriends.ai.action.Actions;
+import io.github.bradley09roberts.hardcorefriends.ai.role.TeamCache;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.companion.Role;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 
@@ -38,6 +40,14 @@ public final class TidyTask implements CompanionTask {
 	private final List<BlockPos> weeds = new ArrayList<>();
 	private final List<BlockPos> holes = new ArrayList<>();
 	private long scannedAt = -100_000;
+	private long copiedAt = Long.MIN_VALUE;
+
+	/** The team's latest look over the camp core, which friends other than the landscaper reuse while it is fresh. */
+	private static final class Shared {
+		private long at = Long.MIN_VALUE / 2;
+		private List<BlockPos> weeds = List.of();
+		private List<BlockPos> holes = List.of();
+	}
 
 	private @Nullable BlockPos current;
 	private boolean currentIsHole;
@@ -65,10 +75,7 @@ public final class TidyTask implements CompanionTask {
 		if (Camp.isNight(level) && !WorldEditGuard.inCamp(c, c.blockPosition())) {
 			return 0;
 		}
-		if (level.getGameTime() - scannedAt >= SCAN_INTERVAL) {
-			scannedAt = level.getGameTime();
-			scan(level, data);
-		}
+		refresh(c, level, data);
 		if (!weeds.isEmpty() || (!holes.isEmpty() && dirtAvailable(c))) {
 			return 35;
 		}
@@ -77,6 +84,30 @@ public final class TidyTask implements CompanionTask {
 
 	private static boolean dirtAvailable(CompanionEntity c) {
 		return c.backpack().has(DIRT) || ChestFetch.chestHas(c, DIRT);
+	}
+
+	/**
+	 * Looks over the camp core every 5 seconds. The landscaper looks on her own schedule, exactly as when she worked
+	 * alone; anyone else reuses the team's latest look while it is fresh.
+	 */
+	private void refresh(CompanionEntity c, ServerLevel level, CampData data) {
+		long now = level.getGameTime();
+		Shared shared = TeamCache.get(level, "terra.tidy", Shared::new);
+		boolean own = c.friendId().role() == Role.LANDSCAPER;
+		if (now - (own ? scannedAt : shared.at) >= SCAN_INTERVAL) {
+			scannedAt = now;
+			scan(level, data);
+			shared.at = now;
+			shared.weeds = List.copyOf(weeds);
+			shared.holes = List.copyOf(holes);
+			copiedAt = now;
+		} else if (!own && copiedAt != shared.at) {
+			copiedAt = shared.at;
+			weeds.clear();
+			weeds.addAll(shared.weeds);
+			holes.clear();
+			holes.addAll(shared.holes);
+		}
 	}
 
 	private void scan(ServerLevel level, CampData data) {
@@ -242,6 +273,7 @@ public final class TidyTask implements CompanionTask {
 
 	private TaskStatus finish(ServerLevel level) {
 		scannedAt = -100_000;
+		TeamCache.get(level, "terra.tidy", Shared::new).at = Long.MIN_VALUE / 2;
 		if (weedsDone + holesDone == 0) {
 			return TaskStatus.FAILURE;
 		}

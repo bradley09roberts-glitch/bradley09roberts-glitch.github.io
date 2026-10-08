@@ -2,6 +2,7 @@ package io.github.bradley09roberts.hardcorefriends.ai.role.terra;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
@@ -11,19 +12,27 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.TeamCache;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
+import io.github.bradley09roberts.hardcorefriends.camp.Blueprint;
+import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.Crafting;
+import io.github.bradley09roberts.hardcorefriends.camp.Structures;
+import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
+import io.github.bradley09roberts.hardcorefriends.camp.build.Stock;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
+import io.github.bradley09roberts.hardcorefriends.companion.Role;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
@@ -32,7 +41,9 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 /**
  * Terra spawn-proofs the camp: finds dark ground (block light below 8) in camp, away from paths, farmland, buildings
  * and unfinished building sites, and places torches at least 5 blocks apart, up to 6 per run. Torches come from the
- * backpack, are crafted from carried coal and sticks, or are fetched from the supply chest.
+ * backpack, are crafted from carried coal and sticks, or are fetched from the supply chest. Lighting is a nicety: the
+ * torches the camp's unfinished buildings still call for (and the coal to make them) stay in the chest for the
+ * builder.
  */
 public final class LightTask implements CompanionTask {
 	private static final int PER_RUN = 6;
@@ -56,7 +67,14 @@ public final class LightTask implements CompanionTask {
 
 	private final List<BlockPos> darkSpots = new ArrayList<>();
 	private long scannedAt = -100_000;
+	private long copiedAt = Long.MIN_VALUE;
 	private int scanCount;
+
+	/** The team's latest look for dark spots, which friends other than the landscaper reuse while it is fresh. */
+	private static final class Shared {
+		private long at = Long.MIN_VALUE / 2;
+		private List<BlockPos> spots = List.of();
+	}
 
 	private final List<BlockPos> placedThisRun = new ArrayList<>();
 	private Phase phase = Phase.LIGHT;
@@ -82,24 +100,85 @@ public final class LightTask implements CompanionTask {
 		if (Camp.isNight(level) && !WorldEditGuard.inCamp(c, c.blockPosition())) {
 			return 0;
 		}
-		if (level.getGameTime() - scannedAt >= SCAN_INTERVAL) {
-			scannedAt = level.getGameTime();
-			scan(c, level, data);
-		}
+		refreshSpots(c, level, data);
 		if (darkSpots.isEmpty() || !torchesAvailable(c)) {
 			return 0;
 		}
 		return 50;
 	}
 
-	/** Torches carried or in the chest, or coal and something to make sticks from (carried or in the chest). */
+	/**
+	 * Torches carried or spare in the chest, or coal (carried or spare) and something to make sticks from (carried or
+	 * in the chest).
+	 */
 	private static boolean torchesAvailable(CompanionEntity c) {
 		var bp = c.backpack();
-		if (bp.has(TORCH) || ChestFetch.chestHas(c, TORCH)) {
+		Spare spare = Spare.of(c);
+		if (bp.has(TORCH) || spare.torches() > 0) {
 			return true;
 		}
-		boolean coal = bp.has(COAL) || ChestFetch.chestHas(c, COAL);
+		boolean coal = bp.has(COAL) || spare.coal() > 0;
 		return coal && (bp.has(STICK_MAKINGS) || ChestFetch.chestHas(c, STICK_MAKINGS));
+	}
+
+	/** What the chest can give for lighting: torches and coal beyond what unfinished buildings need. */
+	private record Spare(int torches, int coal) {
+		static Spare of(CompanionEntity c) {
+			ServerLevel level = (ServerLevel) c.level();
+			Optional<Container> chest = SupplyChest.of(level);
+			if (chest.isEmpty()) {
+				return new Spare(0, 0);
+			}
+			int torches = SupplyChest.count(chest.get(), TORCH);
+			int coal = SupplyChest.count(chest.get(), COAL);
+			int reserved = torchesForBuildings(Camp.data(level.getServer()));
+			int coalReserved = (Math.max(0, reserved - torches) + 3) / 4; // one coal makes four torches
+			return new Spare(Math.max(0, torches - reserved), Math.max(0, coal - coalReserved));
+		}
+	}
+
+	/** Torches that the camp's unfinished buildings (this stage and earlier) still call for, lanterns included. */
+	static int torchesForBuildings(CampData data) {
+		int total = 0;
+		for (Structures.Entry e : Structures.ALL) {
+			if (e.stage() > data.stage() || data.isCompleted(e.id())) {
+				continue;
+			}
+			Optional<Blueprint> plan = Blueprints.forId(e.id());
+			if (plan.isEmpty()) {
+				continue;
+			}
+			int each = 0;
+			for (Blueprint.Entry entry : plan.get().entries()) {
+				Stock stock = entry.material().stock();
+				if (stock == Stock.TORCH || stock == Stock.LANTERN) { // a lantern is made around a torch
+					each++;
+				}
+			}
+			total += each * plan.get().parts();
+		}
+		return total;
+	}
+
+	/**
+	 * Looks for dark spots every 10 seconds. The landscaper looks on her own schedule, exactly as when she worked alone;
+	 * anyone else reuses the team's latest look while it is fresh.
+	 */
+	private void refreshSpots(CompanionEntity c, ServerLevel level, CampData data) {
+		long now = level.getGameTime();
+		Shared shared = TeamCache.get(level, "terra.dark_spots", Shared::new);
+		boolean own = c.friendId().role() == Role.LANDSCAPER;
+		if (now - (own ? scannedAt : shared.at) >= SCAN_INTERVAL) {
+			scannedAt = now;
+			scan(c, level, data);
+			shared.at = now;
+			shared.spots = List.copyOf(darkSpots);
+			copiedAt = now;
+		} else if (!own && copiedAt != shared.at) {
+			copiedAt = shared.at;
+			darkSpots.clear();
+			darkSpots.addAll(shared.spots);
+		}
 	}
 
 	/** Looks for dark spots on a coarse lattice over the camp, shifting the lattice each scan to cover every block. */
@@ -171,14 +250,14 @@ public final class LightTask implements CompanionTask {
 		return true;
 	}
 
-	/** At the chest: takes torches, or else a little coal and the sticks (or planks) to go with it. */
+	/** At the chest: takes spare torches, or else a little spare coal and the sticks (or planks) to go with it. */
 	private static void takeTorchMakings(CompanionEntity c) {
 		var bp = c.backpack();
-		ChestFetch.take(c, TORCH, 16 - bp.count(TORCH));
+		ChestFetch.take(c, TORCH, Math.min(16 - bp.count(TORCH), Spare.of(c).torches()));
 		if (bp.count(TORCH) >= PER_RUN) {
 			return;
 		}
-		ChestFetch.take(c, COAL, 2 - bp.count(COAL));
+		ChestFetch.take(c, COAL, Math.min(2 - bp.count(COAL), Spare.of(c).coal()));
 		if (!bp.has(STICK) && !bp.has(s -> s.is(ItemTags.PLANKS) || s.is(ItemTags.LOGS))) {
 			if (ChestFetch.take(c, STICK, 2) == 0 && ChestFetch.take(c, s -> s.is(ItemTags.PLANKS), 2) == 0) {
 				ChestFetch.take(c, s -> s.is(ItemTags.LOGS), 1);
@@ -282,7 +361,8 @@ public final class LightTask implements CompanionTask {
 	}
 
 	private TaskStatus finish(ServerLevel level) {
-		scannedAt = -100_000; // light has changed; look again next time
+		scannedAt = -100_000; // light has changed; look again next time (everyone)
+		TeamCache.get(level, "terra.dark_spots", Shared::new).at = Long.MIN_VALUE / 2;
 		if (placedThisRun.isEmpty()) {
 			return TaskStatus.FAILURE;
 		}

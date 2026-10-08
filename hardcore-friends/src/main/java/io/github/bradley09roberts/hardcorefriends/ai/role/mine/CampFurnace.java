@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.TeamCache;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
@@ -18,7 +19,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 /**
  * Finds and remembers the camp's furnace (or blast furnace) within {@value #RADIUS} blocks of the supply chest or
  * the camp centre. Furnaces the friends built themselves are preferred. The search is cached and repeated at most
- * every {@value #SEARCH_INTERVAL} ticks. One instance is shared by Flint's smelting routines.
+ * every {@value #SEARCH_INTERVAL} ticks, and the result is shared by the whole team (the camp has one furnace, however
+ * many friends look for it).
  */
 public final class CampFurnace {
 	/** Furnace slots, as in {@link AbstractFurnaceBlockEntity}. */
@@ -28,23 +30,31 @@ public final class CampFurnace {
 	public static final int RADIUS = 10;
 	private static final int SEARCH_INTERVAL = 200;
 
-	private @Nullable BlockPos cached;
-	private long nextSearch;
+	/** What the team knows about the furnace: where it is, and when to look again if nobody knows. */
+	private static final class Known {
+		private @Nullable BlockPos pos;
+		private long nextSearch;
+	}
+
+	private static Known known(ServerLevel level) {
+		return TeamCache.get(level, "camp.furnace", Known::new);
+	}
 
 	/** The furnace position, if one is known and still there. */
 	public @Nullable BlockPos pos(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
-		if (cached != null && furnaceAt(level, cached) != null) {
-			return cached;
+		Known known = known(level);
+		if (known.pos != null && furnaceAt(level, known.pos) != null) {
+			return known.pos;
 		}
-		cached = null;
+		known.pos = null;
 		long now = level.getGameTime();
-		if (now < nextSearch) {
+		if (now < known.nextSearch) {
 			return null;
 		}
-		nextSearch = now + SEARCH_INTERVAL;
-		cached = search(c, level);
-		return cached;
+		known.nextSearch = now + SEARCH_INTERVAL;
+		known.pos = search(c, level);
+		return known.pos;
 	}
 
 	public @Nullable AbstractFurnaceBlockEntity get(CompanionEntity c) {
@@ -53,9 +63,10 @@ public final class CampFurnace {
 	}
 
 	/** Forgets the cached furnace so the next call searches again (used by tests and after camp changes). */
-	public void forget() {
-		cached = null;
-		nextSearch = 0;
+	public void forget(CompanionEntity c) {
+		Known known = known((ServerLevel) c.level());
+		known.pos = null;
+		known.nextSearch = 0;
 	}
 
 	public static @Nullable AbstractFurnaceBlockEntity furnaceAt(ServerLevel level, BlockPos pos) {

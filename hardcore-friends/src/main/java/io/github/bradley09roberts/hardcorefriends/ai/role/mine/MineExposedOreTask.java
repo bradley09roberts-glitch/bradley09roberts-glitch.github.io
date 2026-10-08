@@ -21,6 +21,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
+import io.github.bradley09roberts.hardcorefriends.companion.Role;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
@@ -262,8 +263,8 @@ public final class MineExposedOreTask implements CompanionTask {
 				return;
 			}
 		}
-		if (lackedTool) {
-			Speech.say(c, Line.NEED_TOOL, "better pickaxe");
+		if (lackedTool && c.friendId().role() == Role.MINER) {
+			Speech.say(c, Line.NEED_TOOL, "better pickaxe"); // a friend helping out just leaves that ore to Flint
 		}
 	}
 

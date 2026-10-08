@@ -21,6 +21,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.CampProgress;
 import io.github.bradley09roberts.hardcorefriends.camp.Structures;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
+import io.github.bradley09roberts.hardcorefriends.companion.Role;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
@@ -70,7 +71,9 @@ public final class PathsTask implements CompanionTask {
 			return 0;
 		}
 		if (!c.actions().hasTool(ItemTags.SHOVELS)) {
-			Speech.say(c, Line.NEED_TOOL, "shovel");
+			if (c.friendId().role() == Role.LANDSCAPER) {
+				Speech.say(c, Line.NEED_TOOL, "shovel"); // only the landscaper asks; anyone else just leaves it
+			}
 			return 0;
 		}
 		return 45;

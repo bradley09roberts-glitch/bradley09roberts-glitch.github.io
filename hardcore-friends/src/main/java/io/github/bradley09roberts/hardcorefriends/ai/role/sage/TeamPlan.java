@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
 
+import io.github.bradley09roberts.hardcorefriends.ai.role.forage.DeliverToBuilderTask;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds.Need;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
@@ -73,8 +74,10 @@ public final class TeamPlan {
 		return problem + " " + String.format(request, who);
 	}
 
+	/** Who waits on what: the builder is whoever has been building (Oak, or a friend standing in for him). */
 	private static String buildProblem(long gameTime) {
 		String shortage = CampNeeds.shortageText(gameTime);
-		return shortage.isEmpty() ? "Oak is waiting on building materials." : "Oak is waiting on " + shortage + ".";
+		String who = DeliverToBuilderTask.builder().map(c -> c.friendId().displayName()).orElse("The builder");
+		return who + " is waiting on " + (shortage.isEmpty() ? "building materials" : shortage) + ".";
 	}
 }
