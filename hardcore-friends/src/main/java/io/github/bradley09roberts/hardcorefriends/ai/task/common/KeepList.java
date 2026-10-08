@@ -61,15 +61,17 @@ public final class KeepList {
 
 	// ------------------------------------------------------------- role tools
 
-	/** The tool a role needs for its main job, or null (the strategist works without one). */
+	/**
+	 * The tool a role keeps for its work, or null. The strategist's planning needs no tool, so a sword is hers: she keeps
+	 * one, fetches or makes another when it breaks, and can stand and fight with the others.
+	 */
 	public static @Nullable TagKey<Item> roleTool(Role role) {
 		return switch (role) {
 			case FARMER -> ItemTags.HOES;
 			case MINER, INVENTOR -> ItemTags.PICKAXES;
 			case FORAGER, BUILDER -> ItemTags.AXES;
 			case LANDSCAPER -> ItemTags.SHOVELS;
-			case WARRIOR, EXPLORER -> ItemTags.SWORDS;
-			case STRATEGIST -> null;
+			case WARRIOR, EXPLORER, STRATEGIST -> ItemTags.SWORDS;
 		};
 	}
 
@@ -348,7 +350,7 @@ public final class KeepList {
 				list.add(item("shield", Items.SHIELD, 1));
 			}
 			case STRATEGIST -> {
-				// Sage carries nothing special.
+				// The sword is the role tool; nothing else.
 			}
 			case LANDSCAPER -> {
 				list.add(tag("saplings", ItemTags.SAPLINGS, 16));

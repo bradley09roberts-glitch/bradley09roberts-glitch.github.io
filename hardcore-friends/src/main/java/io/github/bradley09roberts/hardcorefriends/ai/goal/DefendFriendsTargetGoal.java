@@ -12,6 +12,7 @@ import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
@@ -19,7 +20,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 /**
  * Picks hostile mobs that threaten players, friends or the camp. Aegis always guards; other armed friends only
  * defend their leader in FOLLOW mode. Creepers are left alone unless the defender is healthy and the creeper is
- * not yet hissing.
+ * not yet hissing. A hostile must be in sight, except inside the camp, where the guard finds his way to it; one he
+ * could not get at is left alone for a while.
  */
 public class DefendFriendsTargetGoal extends Goal {
 	private static final double GUARD_RADIUS = 16;
@@ -82,7 +84,7 @@ public class DefendFriendsTargetGoal extends Goal {
 	}
 
 	private boolean valid(LivingEntity e) {
-		if (!Threats.isThreat(e) || !companion.hasLineOfSight(e)) {
+		if (!Threats.isThreat(e) || companion.hasGivenUpOn(e) || !inSightOrInCamp(e)) {
 			return false;
 		}
 		if (e instanceof Creeper creeper) {
@@ -90,6 +92,18 @@ public class DefendFriendsTargetGoal extends Goal {
 				&& companion.getHealth() > companion.getMaxHealth() * 0.6F;
 		}
 		return true;
+	}
+
+	/**
+	 * In sight, or, for a guard at work in the camp, anywhere on the camp's own ground: inside the camp nobody needs
+	 * to see a hostile before going for it (a cave below the camp is not its ground).
+	 */
+	private boolean inSightOrInCamp(LivingEntity e) {
+		if (companion.hasLineOfSight(e)) {
+			return true;
+		}
+		return companion.mode() == CompanionMode.WORK && NightWatch.insideCamp(companion) && NightWatch.insideCamp(e)
+			&& Math.abs(e.getY() - companion.getY()) <= 4;
 	}
 
 	private double distanceToProtected(Vec3 pos) {

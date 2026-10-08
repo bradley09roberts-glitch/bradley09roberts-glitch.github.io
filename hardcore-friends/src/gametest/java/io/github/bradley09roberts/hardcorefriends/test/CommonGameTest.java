@@ -193,7 +193,7 @@ public class CommonGameTest {
 			"Flint keeps his raw ore for the furnace instead of depositing it");
 		helper.assertTrue(KeepList.isUseful(Role.MINER, new ItemStack(Items.COAL)), "coal is useful to a miner");
 		helper.assertFalse(KeepList.isUseful(Role.STRATEGIST, new ItemStack(Items.COAL)), "coal is not useful to a strategist");
-		helper.assertTrue(KeepList.roleTool(Role.STRATEGIST) == null, "Sage needs no tool");
+		helper.assertTrue(KeepList.roleTool(Role.STRATEGIST) == ItemTags.SWORDS, "Sage's planning needs no tool, so a sword is hers");
 		helper.succeed();
 	}
 

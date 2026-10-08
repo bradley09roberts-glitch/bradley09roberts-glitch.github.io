@@ -13,7 +13,9 @@ import net.minecraft.world.phys.Vec3;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
+import io.github.bradley09roberts.hardcorefriends.ai.task.common.WatchTask;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
@@ -25,6 +27,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * top of the watchtower once one stands. Fighting is left to the combat reflexes, which take over when a threat
  * comes close. Walking the posts of an empty camp by day is a quiet duty: Aegis would rather lend a hand where the
  * camp is short of someone, so it scores below such work.
+ *
+ * <p>At night at the camp this is his part of the rota ({@link NightWatch}): he guards while it is his watch (the
+ * first, dusk to midnight, whenever he can keep it), as the other watchers keep theirs by the fire
+ * ({@link WatchTask}), and the rest of the night he sleeps like everyone else. Away from any camp he guards all night.
  */
 public final class GuardTask implements CompanionTask {
 	private static final double PLAYER_RANGE = 48;
@@ -35,7 +41,6 @@ public final class GuardTask implements CompanionTask {
 	private static final int LEGS_PER_RUN = 2;
 	private static final int TOWER_RECHECK = 20 * 60;
 	private static final int CLIMB_LIMIT = 20 * 10;
-	private static final double NIGHT_WATCH = 70;
 	private static final double GUARD_PLAYER = 50;
 	private static final double DAY_PATROL = 15;
 
@@ -66,9 +71,16 @@ public final class GuardTask implements CompanionTask {
 	public double score(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
 		if (Camp.isNight(level)) {
-			return NIGHT_WATCH;
+			if (!campHere(level)) {
+				return WatchTask.SCORE; // no camp to keep a rota: he guards all night
+			}
+			return NightWatch.isOnWatch(c) ? WatchTask.SCORE : 0; // off watch, he sleeps
 		}
 		return mostAtRisk(c, level) != null ? GUARD_PLAYER : DAY_PATROL;
+	}
+
+	private static boolean campHere(ServerLevel level) {
+		return Camp.isCampLevel(level, Camp.data(level.getServer()));
 	}
 
 	@Override
@@ -80,7 +92,11 @@ public final class GuardTask implements CompanionTask {
 		ward = null;
 		following = false;
 		climbTicks = 0;
-		Speech.say(c, Line.WORK_START, describe());
+		if (NightWatch.isOnWatch(c)) {
+			Speech.say(c, Line.NIGHT_WATCH);
+		} else {
+			Speech.say(c, Line.WORK_START, describe());
+		}
 		return true;
 	}
 
@@ -89,6 +105,9 @@ public final class GuardTask implements CompanionTask {
 		ServerLevel level = (ServerLevel) c.level();
 		if (++ticks > RUN_TICKS) {
 			return TaskStatus.SUCCESS;
+		}
+		if (Camp.isNight(level) && campHere(level) && !NightWatch.isOnWatch(c)) {
+			return TaskStatus.SUCCESS; // his watch is over: bed
 		}
 		if (ticks % 20 == 1) {
 			ward = mostAtRisk(c, level);

@@ -7,7 +7,10 @@ import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
+import net.minecraft.server.level.ServerLevel;
+
 import io.github.bradley09roberts.hardcorefriends.HardcoreFriends;
+import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 
 /**
@@ -19,6 +22,12 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
  * <p>Three rules keep the friend's own needs safe from work: a desperate need ({@link #URGENT}) takes over from any
  * job at once; work never wakes a sleeper; and a friend too weak to work
  * ({@link CompanionEntity#tooWeakToWork}) only takes on the jobs in {@link #FIT_WHEN_WEAK}.
+ *
+ * <p>A fourth keeps the night for sleep: at night ({@link Camp#isNight}) a friend only takes on their needs jobs and
+ * the jobs that belong to the night ({@link #NIGHT_JOBS}: coming home, keeping watch, lighting a dark camp, feeding a
+ * hurt friend or a hungry player, fetching a lost weapon or food), and puts down any other job at nightfall. So
+ * ordinary work never keeps a friend from bed or pulls them out of it: they go to bed and stay asleep, and the friend
+ * on watch keeps watch.
  */
 public final class TaskScheduler {
 	public static final double PREEMPT_MARGIN = 25.0;
@@ -35,6 +44,14 @@ public final class TaskScheduler {
 	 */
 	public static final Set<String> FIT_WHEN_WEAK = Set.of("common.idle", "common.return_home", "common.restock",
 		"common.deposit", "fern.harvest", "fern.replant", "fern.bake", "fern.bone_meal");
+	/**
+	 * The jobs that belong to the night, besides the needs jobs: coming home, the watch (anyone's, and Aegis's guard
+	 * and gear), lighting a dark camp (spawn-proofing matters most in the dark), feeding a hurt friend or a hungry
+	 * player, fetching a lost weapon or food from the chest, and idling by the fire. Everything else waits for
+	 * morning.
+	 */
+	public static final Set<String> NIGHT_JOBS = Set.of("common.idle", "common.return_home", "common.watch",
+		"common.share", "common.feed_player", "common.restock", "aegis.guard", "aegis.equip_gear", "terra.light");
 	private static final String NEEDS = "needs.";
 	private static final int EVALUATE_INTERVAL = 20;
 
@@ -107,6 +124,10 @@ public final class TaskScheduler {
 		if (weak && current != null && !fitWhenWeak(current.id())) {
 			stopCurrent(); // too weak for this now: home to eat or rest
 		}
+		boolean night = Camp.isNight((ServerLevel) companion.level());
+		if (night && current != null && !fitAtNight(current.id())) {
+			stopCurrent(); // nightfall: the job waits for morning
+		}
 		// Work never wakes a sleeper: while they lie asleep, only another need can take over (a starving friend gets up
 		// to eat). Danger wakes them through the sleep job and the reflexes.
 		boolean sleeping = current != null && companion.isAsleep();
@@ -123,7 +144,8 @@ public final class TaskScheduler {
 			if (until != null && gameTime < until) {
 				continue;
 			}
-			if ((weak && !fitWhenWeak(task.id())) || (sleeping && !task.id().startsWith(NEEDS))) {
+			if ((weak && !fitWhenWeak(task.id())) || (night && !fitAtNight(task.id()))
+				|| (sleeping && !task.id().startsWith(NEEDS))) {
 				continue;
 			}
 			// Other people's work has a known ceiling: skip scoring it (and its scans) when it could not win anyway.
@@ -171,6 +193,11 @@ public final class TaskScheduler {
 			cooldownUntil.put(best.id(), gameTime + best.failureCooldown());
 			safeStop(best);
 		}
+	}
+
+	/** True for the jobs a friend may take on at night: their needs and {@link #NIGHT_JOBS}. */
+	public static boolean fitAtNight(String taskId) {
+		return taskId.startsWith(NEEDS) || NIGHT_JOBS.contains(taskId);
 	}
 
 	/** True for the jobs a friend too weak to work may still take on: their needs and {@link #FIT_WHEN_WEAK}. */

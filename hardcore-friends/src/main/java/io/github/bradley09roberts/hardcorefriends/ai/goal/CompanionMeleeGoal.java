@@ -28,8 +28,9 @@ public class CompanionMeleeGoal extends MeleeAttackGoal {
 	}
 
 	/**
-	 * Aegis pursues threats; an armed friend in FOLLOW mode defends their leader nearby; everyone else only fights
-	 * back when cornered (the attacker is right next to them) instead of chasing.
+	 * Aegis pursues threats; an armed friend in FOLLOW mode defends their leader nearby; everyone else fights a threat
+	 * they can stand up to within their reach ({@link CompanionEntity#canStandAndFight}: 8 blocks, or across the camp
+	 * for an armed friend or the watcher inside it), and otherwise only fights back when cornered.
 	 */
 	private boolean withinFightingRange() {
 		LivingEntity target = companion.getTarget();

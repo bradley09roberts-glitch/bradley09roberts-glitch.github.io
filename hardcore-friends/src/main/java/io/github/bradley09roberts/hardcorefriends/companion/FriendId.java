@@ -24,7 +24,7 @@ public enum FriendId {
 		"clever and excitable"),
 	AEGIS("Aegis", Role.WARRIOR, 0x6F95D6, 0.4, 0.25, 1.0, 0.6, 0, 0.0, 24, 2, Items.WOODEN_SWORD,
 		"calm and protective"),
-	SAGE("Sage", Role.STRATEGIST, 0xB39DDB, 0.6, 0.50, 0.3, 0.7, 0, 0.0, 20, 0, null,
+	SAGE("Sage", Role.STRATEGIST, 0xB39DDB, 0.6, 0.50, 0.3, 0.7, 0, 0.0, 20, 0, Items.WOODEN_SWORD,
 		"thoughtful and observant"),
 	TERRA("Terra", Role.LANDSCAPER, 0xC27BA0, 0.5, 0.45, 0.4, 0.7, 0, 0.0, 20, 0, Items.WOODEN_SHOVEL,
 		"creative and tidy"),
@@ -119,7 +119,10 @@ public enum FriendId {
 		return baseArmour;
 	}
 
-	/** Wooden tool the friend brings when recruited, or {@code null}. */
+	/**
+	 * Wooden tool the friend brings when recruited: every friend brings something they can fight back with (Sage, who
+	 * needs no tool for her planning, a sword), so nobody can only run from a zombie.
+	 */
 	public Item starterTool() {
 		return starterTool;
 	}

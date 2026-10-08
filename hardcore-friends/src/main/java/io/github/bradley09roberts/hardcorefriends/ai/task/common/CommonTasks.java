@@ -7,9 +7,9 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
 
 /**
- * Upkeep jobs every friend shares: depositing, restocking, crafting tools, sharing, going home at night, tidying and
- * never staying shut in the animal pen. Eating, sleeping and the other everyday needs have their own jobs (see
- * {@code NeedsTasks}).
+ * Upkeep jobs every friend shares: depositing, restocking, crafting tools, sharing, going home at night, keeping the
+ * night watch when it is their turn, tidying and never staying shut in the animal pen. Eating, sleeping and the other
+ * everyday needs have their own jobs (see {@code NeedsTasks}).
  */
 public final class CommonTasks {
 	private CommonTasks() {
@@ -24,6 +24,7 @@ public final class CommonTasks {
 			new ShareTask(),
 			new FeedPlayerTask(),
 			new ReturnHomeTask(),
+			new WatchTask(),
 			new CollectItemsTask(),
 			new LeavePenTask(),
 			new IdleTask());

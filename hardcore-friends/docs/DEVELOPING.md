@@ -48,6 +48,7 @@ These are the pieces your routines should use. Look at the sources for details.
 
 - **`companion.CompanionEntity`**
   - Identity and state: `friendId()`, `mode()`, `backpack()`, `actions()`, `scheduler()`, `homePos()` (camp centre, or recruit spot without a camp), `restPos()` (inside the cabin once built, else the camp centre), `isFighter()`, `isArmed()`, `isRetreating()`
+  - Fighting: `canStandAndFight(threat)`, `isHealthy()`, `meleeReach(threat)` (8 blocks, 24 for an armed friend or the watcher inside the camp, 3 against archers), `bestWeaponRank()`, `hasGivenUpOn(threat)`
   - Needs: `needs()`, `isAsleep()` / `setAsleep(b)` (set by the sleep job; energy does not drain while asleep), `settleSleep()` (energy for the in-game time asleep, including a night the players slept through; called every tick), `badlyHurt()` (at or below the retreat fraction), `tooWeakToWork()` (badly hurt and too hungry to heal), `workSpeed(reason)` (skill × mood × Unity rhythm)
   - Items and food: `equipBestWeapon()`, `hasFood()`, `isEdible(stack)`, `eat(stack)` (eats an item already taken out of a backpack or chest: heals, fills hunger by `hungerValue(stack)`, keeps the bowl), `eatFromBackpack()` (only when hurt), `damageMainHandTool(n)`, `swingArm()`
   - Trees: `approveLogs(Collection<BlockPos>)` (pre-approve a checked tree before felling), `isApprovedLog(pos)`
@@ -134,7 +135,7 @@ Multiply by `CampNeeds.weight(...)` when the task serves a need (up to 2.2: a ba
 
 A task should do one useful unit of work and then return `SUCCESS`, for example "harvest up to 8 ripe crops" or "place 16 blueprint blocks". The scheduler then re-scores everything, so friends respond to new needs.
 
-At night most work routines should score 0 when outside the camp. The common "return home" task brings friends back.
+At night the scheduler offers only needs jobs and `TaskScheduler.NIGHT_JOBS` (coming home, the watch, lighting a dark camp, feeding, fetching a lost weapon or food, idling), and puts any other job down at nightfall: friends sleep. Add a job to `NIGHT_JOBS` only if it truly belongs to the night. The common "return home" task brings friends back, and `camp.NightWatch` says who is on watch (`isOnWatch`).
 
 ### Adding a speciality job
 
@@ -153,7 +154,7 @@ Every friend gets every role's jobs (`ai/task/TaskRegistry`), each wrapped in a 
 Needs jobs live in `ai/task/needs` and are listed in `NeedsTasks.create(id)`; every friend has them all.
 
 1. Give it an id starting with `needs.` (that counts as time off, so hunger and fun do not drain faster while it runs) and add it to `MoodPassives.jobFor` if it is the job for one of the five needs.
-2. Score it from the need: 0 while the need is fine (and 0 when it cannot be met, such as eating with no food anywhere, so it never breaks off work for nothing), rising as it falls, into the urgent band (70–89) when it is pressing, and to `TaskScheduler.URGENT` or more only when it is desperate, so a mild need waits for the job in hand to end. Work never wakes a sleeper, and a friend too weak to work only takes needs jobs and `TaskScheduler.FIT_WHEN_WEAK`.
+2. Score it from the need: 0 while the need is fine (and 0 when it cannot be met, such as eating with no food anywhere, so it never breaks off work for nothing), rising as it falls, into the urgent band (70–89) when it is pressing, and to `TaskScheduler.URGENT` or more only when it is desperate, so a mild need waits for the job in hand to end. Work never wakes a sleeper, a friend too weak to work only takes needs jobs and `TaskScheduler.FIT_WHEN_WEAK`, and at night only needs jobs and `TaskScheduler.NIGHT_JOBS` run, so a needs job that should happen at night must outscore bedtime (75 to 82, `SleepTask`) or cap it, as supper and warming up do.
 3. Change the need with `c.needs().add(Need.X, amount)`, and eat with `c.eat(stack)` so healing, hunger and bowls stay consistent. Sleep jobs call `c.setAsleep(true)` and must set it back to false in `stop()`.
 4. Say what is happening with the needs lines (`HUNGRY`, `ATE`, `SLEEPY`, `CHAT`, `LEISURE`, `COSY` and so on). Every friend already has their own wording.
 5. Pastimes and needs jobs do not change blocks. If one ever must, it goes through `WorldEditGuard` like any other edit.

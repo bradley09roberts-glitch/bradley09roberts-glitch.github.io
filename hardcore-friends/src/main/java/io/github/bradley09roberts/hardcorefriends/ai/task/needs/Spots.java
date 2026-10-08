@@ -20,14 +20,15 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
  * Finding places for everyday life: somewhere to stand, the camp's lit campfire, the inside of the cabin, a block
- * worth looking at. Every search is bounded and only runs when a job starts (or is cached), never every tick.
+ * worth looking at. Every search is bounded and only runs when a job starts (or is cached), never every tick. The
+ * needs jobs use all of it; the night watch uses the standing spots and the campfire.
  */
-final class Spots {
+public final class Spots {
 	private Spots() {
 	}
 
 	/** Solid ground below, room for the body, no fluid. */
-	static boolean isStandable(ServerLevel level, BlockPos p) {
+	public static boolean isStandable(ServerLevel level, BlockPos p) {
 		if (!level.isLoaded(p)) {
 			return false;
 		}
@@ -40,7 +41,7 @@ final class Spots {
 	}
 
 	/** A standable spot in the column at {@code pos}, looking up to three blocks up and down; null if none. */
-	static @Nullable BlockPos standable(ServerLevel level, BlockPos pos) {
+	public static @Nullable BlockPos standable(ServerLevel level, BlockPos pos) {
 		for (int dy : new int[] {0, 1, -1, 2, -2, 3, -3}) {
 			BlockPos p = pos.above(dy);
 			if (isStandable(level, p)) {
@@ -51,7 +52,7 @@ final class Spots {
 	}
 
 	/** True when this position is inside the camp (or near home, for a friend without a camp). */
-	static boolean inCamp(CompanionEntity c, BlockPos pos) {
+	public static boolean inCamp(CompanionEntity c, BlockPos pos) {
 		int r = WorldEditGuard.campRadius(c);
 		return Camp.horizontalDistSqr(pos, c.homePos()) <= (double) r * r;
 	}
@@ -127,7 +128,7 @@ final class Spots {
 	}
 
 	/** The camp's own campfire if it stands and burns, otherwise the nearest lit campfire within 10 blocks. */
-	static @Nullable BlockPos litCampfire(CompanionEntity c) {
+	public static @Nullable BlockPos litCampfire(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
 		CampData data = Camp.data(level.getServer());
 		if (Camp.isCampLevel(level, data)) {

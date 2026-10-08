@@ -3,6 +3,7 @@ package io.github.bradley09roberts.hardcorefriends.companion;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -70,6 +71,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.TaskRegistry;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.item.BackpackItem;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
@@ -84,6 +86,19 @@ public class CompanionEntity extends PathfinderMob {
 	private static final EntityDataAccessor<Integer> DATA_MODE = SynchedEntityData.defineId(CompanionEntity.class, EntityDataSerializers.INT);
 	/** A friend whose hunger is below this eats food a player hands them, even at full health. */
 	public static final double EATS_HANDED_FOOD_BELOW = 60;
+	/** How far a friend goes to meet a hand-to-hand threat, away from camp or without a weapon. */
+	public static final double NEAR_REACH = 8;
+	/**
+	 * How far an armed friend (or the one on watch) goes to meet a hand-to-hand threat when both are inside the camp:
+	 * across the camp, so friends stand together there instead of one being picked off alone.
+	 */
+	public static final double CAMP_REACH = 24;
+	/** How close an archer must be before a friend who is not a fighter stands up to it. */
+	public static final double ARCHER_REACH = 3;
+	/** A target neither hit nor hit back for this long, while out of reach, is given up (it cannot be got at). */
+	private static final int GIVE_UP_TICKS = 200;
+	/** How long a given-up target is left alone. */
+	private static final int GIVEN_UP_FOR = 600;
 
 	private final Backpack backpack = new Backpack();
 	private final Actions actions = new Actions(this);
@@ -106,6 +121,9 @@ public class CompanionEntity extends PathfinderMob {
 	/** When sleep was last settled (game time), and the overworld clock then; see {@link #settleSleep}. */
 	private long sleepSettledAt = Long.MIN_VALUE;
 	private long sleepSettledClock;
+	/** When the current target was chosen (tick count), and hostiles given up on until a tick count. */
+	private int targetSetTick;
+	private final Map<UUID, Integer> givenUp = new HashMap<>();
 
 	public CompanionEntity(EntityType<? extends CompanionEntity> type, Level level) {
 		super(type, level);
@@ -387,12 +405,17 @@ public class CompanionEntity extends PathfinderMob {
 	protected void customServerAiStep(ServerLevel level) {
 		super.customServerAiStep(level);
 		LivingEntity target = getTarget();
-		// A non-fighter drops a target beyond 8 blocks, where canStandAndFight ends: AvoidDangerGoal then moves them
-		// out of a shooter's line of fire, or they go back to work, instead of standing still.
+		// A non-fighter drops a target beyond their reach (8 blocks, or across the camp for an armed friend in it),
+		// where canStandAndFight ends: AvoidDangerGoal then moves them out of a shooter's line of fire, or they go back
+		// to work, instead of standing still.
 		if (target != null && (!target.isAlive() || target.isRemoved() || target.distanceToSqr(this) > 32 * 32
 			|| target instanceof Player || target instanceof CompanionEntity
 			|| (!Threats.isThreat(target) && getLastHurtByMob() != target)
-			|| (!isFighter() && mode() != CompanionMode.FOLLOW && target.distanceToSqr(this) > 8 * 8))) {
+			|| (!isFighter() && mode() != CompanionMode.FOLLOW && outOfReach(target)))) {
+			setTarget(null);
+		} else if (target != null && mode() == CompanionMode.WORK && cannotGetAt(target)) {
+			// Stuck behind a wall or a drop: give it up for a while, instead of standing still with it all night.
+			givenUp.put(target.getUUID(), this.tickCount + GIVEN_UP_FOR);
 			setTarget(null);
 		}
 		if (this.tickCount % 100 == 0) {
@@ -551,8 +574,9 @@ public class CompanionEntity extends PathfinderMob {
 
 	/**
 	 * Whether this friend should stand and fight a threat rather than run. Aegis fights anything but a hissing
-	 * creeper. Everyone else fights nearby melee threats while healthy and holding a tool, so friends defend each
-	 * other instead of being picked off one by one, and still run from creepers and when hurt.
+	 * creeper. Everyone else fights hand-to-hand threats within their reach ({@link #meleeReach}) while healthy and
+	 * holding a tool, so friends defend each other instead of being picked off one by one, and still run from
+	 * creepers and when hurt.
 	 */
 	public boolean canStandAndFight(LivingEntity threat) {
 		if (isRetreating() || !threat.isAlive()) {
@@ -564,10 +588,57 @@ public class CompanionEntity extends PathfinderMob {
 		if (isFighter()) {
 			return true;
 		}
-		double healthyEnough = Math.max(0.5, friendId().retreatFraction() + 0.1);
-		// Chasing an archer with a hoe only gets a non-fighter shot: they stand up to one only when it is in arm's reach.
-		double reach = Threats.isRanged(threat) ? 3 : 8;
-		return hasMeleeTool() && getHealth() > getMaxHealth() * healthyEnough && distanceToSqr(threat) <= reach * reach;
+		double reach = meleeReach(threat);
+		return hasMeleeTool() && isHealthy() && distanceToSqr(threat) <= reach * reach;
+	}
+
+	/** Healthy enough to stand and fight: above half health, and well above the point where they fall back. */
+	public boolean isHealthy() {
+		return getHealth() > getMaxHealth() * Math.max(0.5, friendId().retreatFraction() + 0.1);
+	}
+
+	/**
+	 * How far this friend goes to meet a threat. Chasing an archer with a hoe only gets a non-fighter shot, so they
+	 * stand up to one only in arm's reach ({@value #ARCHER_REACH}). Against a hand-to-hand threat, an armed friend at
+	 * work in the camp, or whoever is on watch, crosses the camp to stand with the others ({@value #CAMP_REACH}) when
+	 * the threat is inside the camp too; otherwise they meet it within {@value #NEAR_REACH} blocks.
+	 */
+	public double meleeReach(LivingEntity threat) {
+		if (Threats.isRanged(threat)) {
+			return ARCHER_REACH;
+		}
+		if (mode() == CompanionMode.WORK && (isArmed() || NightWatch.isOnWatch(this)) && NightWatch.insideCamp(this)
+			&& NightWatch.insideCamp(threat)) {
+			return CAMP_REACH;
+		}
+		return NEAR_REACH;
+	}
+
+	private boolean outOfReach(LivingEntity target) {
+		double reach = Math.max(NEAR_REACH, meleeReach(target));
+		return target.distanceToSqr(this) > reach * reach;
+	}
+
+	/** True when a target has been chased this long without a blow either way and is still out of arm's reach. */
+	private boolean cannotGetAt(LivingEntity target) {
+		int engaged = Math.max(targetSetTick, Math.max(getLastHurtMobTimestamp(), lastDamagedTick));
+		return this.tickCount - engaged > GIVE_UP_TICKS && target.distanceToSqr(this) > 3 * 3;
+	}
+
+	/** True while this friend has given up on a hostile they could not get at (see {@link #cannotGetAt}). */
+	public boolean hasGivenUpOn(LivingEntity threat) {
+		Integer until = givenUp.get(threat.getUUID());
+		return until != null && this.tickCount < until;
+	}
+
+	@Override
+	public void setTarget(@Nullable LivingEntity target) {
+		// The map is null while the entity is still being constructed (a mob may clear its target from there).
+		if (target != getTarget() && givenUp != null) {
+			targetSetTick = this.tickCount;
+			givenUp.values().removeIf(until -> until <= this.tickCount);
+		}
+		super.setTarget(target);
 	}
 
 	/** Where to spend the night: inside the cabin once it is built, otherwise the camp centre. */
@@ -612,6 +683,18 @@ public class CompanionEntity extends PathfinderMob {
 
 	public boolean isArmed() {
 		return actions.has(s -> s.is(ItemTags.SWORDS) || s.is(ItemTags.AXES));
+	}
+
+	/**
+	 * How good the best weapon carried is: any sword beats any axe, the sturdier the better (as {@link #equipBestWeapon}
+	 * chooses), then any other tool to hit with; 0 for bare hands.
+	 */
+	public int bestWeaponRank() {
+		int best = rankWeapon(getMainHandItem());
+		for (ItemStack s : backpack.stacks()) {
+			best = Math.max(best, rankWeapon(s));
+		}
+		return best > 0 ? best : hasMeleeTool() ? 1 : 0;
 	}
 
 	/** Holds the strongest sword (or axe) carried. */
