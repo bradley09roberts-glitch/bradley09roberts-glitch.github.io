@@ -46,6 +46,10 @@ public enum Line {
 	NIGHT_RETURN(Priority.CASUAL, 6000, 0),
 	/** Morning greeting. */
 	MORNING(Priority.CASUAL, 12000, 0),
+	/** Taking the night watch while the others sleep. */
+	NIGHT_WATCH(Priority.IMPORTANT, 6000, 0),
+	/** On watch, raising the alarm: a hostile has come into the camp. %1$s = its name as the game shows it ("Zombie"). */
+	ALARM(Priority.DANGER, 200, 1),
 
 	// Work
 	/** Starting their main job. %1$s = activity. */

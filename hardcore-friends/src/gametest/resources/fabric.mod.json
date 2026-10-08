@@ -14,7 +14,8 @@
 			"io.github.bradley09roberts.hardcorefriends.test.GuardianGameTest",
 			"io.github.bradley09roberts.hardcorefriends.test.GeneralistGameTest",
 			"io.github.bradley09roberts.hardcorefriends.test.NeedsGameTest",
-			"io.github.bradley09roberts.hardcorefriends.test.MoodGameTest"
+			"io.github.bradley09roberts.hardcorefriends.test.MoodGameTest",
+			"io.github.bradley09roberts.hardcorefriends.test.NightGameTest"
 		],
 		"fabric-client-gametest": [
 			"io.github.bradley09roberts.hardcorefriends.test.HardcoreSkinsClientTest",

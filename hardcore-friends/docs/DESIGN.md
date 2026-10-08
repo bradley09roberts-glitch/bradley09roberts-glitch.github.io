@@ -28,7 +28,7 @@ Each friend's role is their **speciality**; every friend can do every role's wor
 | SCOUT | Scout | Explorer | `scout.png` | curious, adventurous | `#3FB0AC` | wooden sword |
 | SPARK | Spark | Redstone inventor | `spark.png` | clever, excitable | `#E0533D` | wooden pickaxe |
 | AEGIS | Aegis | Warrior | `aegis.png` | calm, protective | `#6F95D6` | wooden sword |
-| SAGE | Sage | Strategist | `sage.png` | thoughtful, observant | `#B39DDB` | (none) |
+| SAGE | Sage | Strategist | `sage.png` | thoughtful, observant | `#B39DDB` | wooden sword |
 | TERRA | Terra | Landscaper | `terra.png` | creative, tidy | `#C27BA0` | wooden shovel |
 | ROWAN | Rowan | Forager | `rowan.png` | resourceful, generous | `#8DB255` | wooden axe |
 
@@ -74,7 +74,9 @@ Goals, in priority order (lower number = higher priority):
 | 6 | `LookAtPlayerGoal` | idle polish |
 | 7 | `RandomLookAroundGoal` | idle polish |
 
-Target goals: `HurtByTargetGoal` (fight back) and, for Aegis, `DefendFriendsTargetGoal` (hostiles within 16 blocks of any player, companion or the camp). In FOLLOW mode every armed friend also defends the leader. `MutualDefenceTargetGoal`: friends not in STAY join fights against hostiles that are going for them, a friend or a player within 8 blocks, when `canStandAndFight` (healthy above max(50%, retreat fraction + 10%) and holding a tool; against an archer a non-fighter only stands its ground within 3 blocks, because chasing a skeleton with a hoe just gets them shot).
+Target goals: `HurtByTargetGoal` (fight back) and, for Aegis, `DefendFriendsTargetGoal` (hostiles within 16 blocks of any player, companion or the camp). In FOLLOW mode every armed friend also defends the leader. `MutualDefenceTargetGoal`: friends not in STAY join fights against hostiles that are going for them, a friend or a player within 8 blocks, when `canStandAndFight` (healthy, `isHealthy`: above max(50%, retreat fraction + 10%), holding a tool, and the threat within their reach, `meleeReach`; against an archer a non-fighter only stands its ground within 3 blocks, because chasing a skeleton with a hoe just gets them shot).
+
+**The rally inside the camp.** Inside the camp friends stand together more widely. An armed friend (sword or axe) at work in the camp joins a fight against a hostile going for anyone within 16 blocks (`MutualDefenceTargetGoal.RALLY_RANGE`) and goes for any hostile the night watch raised the alarm about; the friend on watch takes on any hostile that comes into the camp. For them `meleeReach` against a hand-to-hand threat inside the camp is 24 blocks (`CompanionEntity.CAMP_REACH`, so the target is not dropped on the way), otherwise 8. Inside the camp no line of sight is needed, for Aegis's guard goal too, as long as the hostile is on the camp's own ground (within 4 blocks up or down, not in a cave below): they path to it, and a hostile beyond 8 blocks with no path to it is left alone for 10 s. Any friend at work who has neither landed a blow nor been hit for 10 s while their target is out of arm's reach gives it up for 30 s (`hasGivenUpOn`), so nobody stands all night staring at a zombie behind a wall.
 
 Out of combat (no damage for 10 s, no target, not burning) and with hunger above 10, friends recover 1 health every 4 s.
 
@@ -96,11 +98,12 @@ public interface CompanionTask {
 }
 ```
 
-The scheduler re-scores every 20 ticks. It switches when idle, when the current task finishes, or when another task outscores the current one by ≥ 25. It enforces `maxTicks`, so a stuck task fails. Three rules keep a friend's own needs safe from work:
+The scheduler re-scores every 20 ticks. It switches when idle, when the current task finishes, or when another task outscores the current one by ≥ 25. It enforces `maxTicks`, so a stuck task fails. Four rules keep a friend's own needs safe from work:
 
 - **Desperate needs come first.** A job scoring `TaskScheduler.URGENT` (140) or more takes over at once from any job scoring less, without the margin. Only desperate needs score that high (section 6), and no work can: the most is 132 (building, 60, at the camp's full need for materials, weight 2.0, with Sage's 10% bonus).
 - **Work never wakes a sleeper.** While a friend lies asleep, only another needs job can take over (a starving friend gets up to eat); danger still wakes them (the sleep job and the reflexes).
 - **Too weak to work.** A friend badly hurt (health ≤ retreatFraction) and too hungry to heal (`CompanionEntity.tooWeakToWork`) only takes on needs jobs and `TaskScheduler.FIT_WHEN_WEAK`: going home, the camp chest, and growing and baking food in the camp, so a starving camp can still feed itself. A job outside that list is stopped, so nobody on one heart goes back into the mine, the woods or the wilds.
+- **The night is for sleep.** At night (`Camp.isNight`) a friend only takes on needs jobs and `TaskScheduler.NIGHT_JOBS`: coming home, the watch (`common.watch`, Aegis's guard and gear), Terra's lighting of a dark camp, feeding a hurt friend or a hungry player, fetching a lost weapon or food from the chest, and idling. Any other job is put down at nightfall and waits for the morning. Bedtime itself (section 6) then only has to beat pastimes, chats and warming up, not work: in the recorded run sleep (45–55) lost to camp work (60–130) all night, and friends hardly slept.
 
 `TaskRegistry.create(id)` gives every friend the same job list: the common upkeep jobs (`ai/task/common`), the needs jobs (`ai/task/needs`), and every role's jobs, their own role first, each wrapped in a `SpecialityTask` for its role (section 5). The only jobs a friend never gets from another role are `TaskRegistry.SPECIALIST_ONLY`: Aegis's gear and guard duty, Sage's observing and stores review, and Scout's report.
 
@@ -109,7 +112,7 @@ Score bands:
 | Score | Meaning |
 |---|---|
 | 140 and up | Desperate needs (`TaskScheduler.URGENT`): starving with food at hand (150), exhausted at night (140) |
-| 70–89 | Urgent upkeep: missing tool, full backpack, night return |
+| 70–89 | Urgent upkeep: missing tool, full backpack, night return, bedtime (75–82), keeping watch (75), lighting a dark camp at night (80) |
 | 40–69 | Main role work (raised by the camp's needs, up to 132) |
 | 20–39 | Secondary help: sharing, tidying, crafting surplus |
 | 1–19 | Idle and social |
@@ -179,7 +182,7 @@ Each friend has five needs, each from 0 (desperate) to 100 (met). New friends st
 **Meeting needs.** The needs jobs score higher the lower their need: a desperate need scores 140 or more (`TaskScheduler.URGENT`), above anything work can score, and takes over from the job in hand at once (section 4); a pressing one is urgent upkeep (70–89); a mild one sits in the main or secondary band and waits for the job in hand to end. Their ids start with `needs.`, which counts as time off.
 
 - `needs.eat`: eats one real food item (`#hardcorefriends:companion_food`), from the backpack first, otherwise taken from the supply chest, choosing the item that best fits the hunger. `CompanionEntity.eat(stack)` heals by the food's nutrition, fills hunger by nutrition × 6 (`hungerValue`), and keeps bowls and bottles. Below 70 (peckish) it scores 42–60, below 25 (hungry) 80, and below 15 (starving) 150, before anything. With no food in the backpack or the supply chest it scores 0, so it never breaks off work only to find nothing; the friend asks for food instead (`NO_FOOD`, said by `MoodPassives`).
-- `needs.sleep`: at night tired friends lie down in their own place (side by side in the cabin, or around the camp centre) and regain energy, faster under a roof. A friend still fresh finishes useful work in camp first; one exhausted at night (energy below 30) goes to bed before any work (140). Work never wakes a sleeper; they wake at dawn, when hurt, or when a monster comes close. Exhausted friends nap by day. Aegis keeps the first watch.
+- `needs.sleep`: at night everyone not on watch lies down in their own place (side by side in the cabin, or around the camp centre) and regains energy, faster under a roof. Bedtime scores 75 + (100 − energy) × 0.1 (75–82): above every pastime, chat and warm-up (at most 66), and work is not on offer at night (section 4). Supper comes first for a friend below 50 hunger with food at hand (bed scores 40), warming up by the campfire first for one below 30 comfort with no cabin to sleep in (30), and the trip home first for one outside the camp (0); one exhausted (energy below 30) goes to bed before anything but a starving meal (140). Aegis does not turn in with a monster within 24 blocks. Work never wakes a sleeper; they wake at dawn, when hurt, when a monster comes within 8 blocks or a friend within 16 is fighting one, when the watch raises an alarm after they lay down, and when their own watch begins. Exhausted friends nap by day (below 15 energy); Aegis and anyone who kept a watch last night nap below 40.
 - `needs.rest`: a friend too weak to work (badly hurt and too hungry to heal, as a starving friend soon is) comes home and rests by the lit campfire, or at their sleeping place, until there is food; at night they sleep. Meanwhile they take on only needs jobs and `TaskScheduler.FIT_WHEN_WEAK` (going home, the camp chest, growing and baking food in camp), never the mine, felling or exploring, and they eat the moment food turns up.
 - `needs.socialize`: a lonely friend walks over to another friend who is awake and not in trouble (or a player in camp) and they chat (`CHAT`, `CHAT_REPLY`). Both feel better and Unity gains 1 (at most 30 a day).
 - `needs.leisure`: a bored friend spends a short while on a pastime that suits them (`LEISURE`). Pastimes change no block.
@@ -211,6 +214,15 @@ A player handing food to a friend who is hurt, or whose hunger is below 60, has 
 - **Speech:** every 15 s (`MoodPassives`), a friend who is awake and not fighting and is hungry (below 25), unless already eating, asks for food (`NO_FOOD`) when there is none in the backpack or the supply chest, or says `STARVING` at hunger 0 once they have asked. Otherwise, unless falling back, they say `MOOD_LOW` naming their worst need ("hunger", "energy", "social", "fun" or "comfort") when the mood is low or miserable (unless that need's job is already running), or `MOOD_GREAT` when it is great. The lines' cooldowns (`NO_FOOD` 4 min, `STARVING` 1 min, `MOOD_LOW` 5 min, `MOOD_GREAT` 15 min) and the friend's chattiness keep this occasional.
 - **Team spirit:** every in-game hour (1000 ticks), if the team is in high spirits (`MoodPassives.highSpirits`: the mood of the team's average needs, all loaded friends, is at least 75, and no friend's mood is low or miserable), Unity gains 1, at most 12 a day (`Unity.teamSpirit`, category `spirit`). A low mood never costs Unity. A well-run camp gets there: fed (eating from 70 up to about 100, so hunger averages about 85), rested, together, by day about 0.30 × 85 + 0.25 × 72 + 0.15 × (90 + 65 + 60) = 76. A great mood (85) is a peak, such as a fed friend waking rested, and is what `MOOD_GREAT` celebrates.
 - **Displays:** `/friends needs` shows the five needs as bars, the mood and what the friend is doing about their lowest need; `/friends list` and the right-click status line show the mood (and the worst need when the mood is low).
+
+### The night watch (`camp/NightWatch`)
+
+In the recorded two-day run Aegis guarded until midnight and went to bed; a zombie came in, he fought it alone down to one heart, and a second one killed him at the camp centre while everyone slept. Sage, with nothing to fight with, could only run, and was killed. So the camp keeps a watch, raises an alarm and stands together.
+
+- **Two watches.** The first runs from dusk to midnight (time of day 18000), the second from midnight to dawn (`NightWatch.watch`). A night runs from one noon to the next (`nightIndex`), so the morning after still belongs to it.
+- **The rota** (`NightWatch.watcher`, worked out once per tick and remembered in `CampData.memory("night_watch")`, so it survives a reload). Aegis keeps the first watch whenever he is fit for it. Any other watch goes to a friend holding a tool to fight with, ranked: healthy (`isHealthy`); did not keep a watch last night (the duty rotates night by night, so nobody misses sleep every night while anyone else can stand in); best weapon (`bestWeaponRank`: any sword before any axe before any other tool, sturdier first); most health; roster order (so the choice is deterministic). Tonight's first watcher never keeps the second watch too, and a friend alone at the camp (other than Aegis on his first watch) keeps none: there is nobody to watch over. A watcher stays on watch until it ends unless they stop being fit (dead, unloaded, out of WORK mode, too weak to work, or below 15 energy, `TOO_TIRED`), and then the next friend takes over: the rota works with Aegis dead or away. `keptWatchRecently` lets watchers nap sooner the next day.
+- **Keeping watch.** `common.watch` (`WatchTask`, every friend has it; 75 while it is their watch, in 30 s rounds so a pressing need gets a look in) stands by the lit campfire, or the camp centre, stepping round it every 10 s and looking out. Aegis keeps his watch with his guard duty (`GuardTask` scores 75 at night only while it is his watch, and ends its run when his watch does; away from any camp he guards all night as before). A sleeper whose watch begins gets up (`SleepTask` ends).
+- **The alarm.** Every 10 ticks (`NightWatch.tick`) the friend on watch, if awake, looks out: a hostile within 24 blocks of them, inside the camp and within 12 blocks up or down, that they can see, that is within 12 blocks, or that is already going for someone, goes on the alarm list and they shout `ALARM`. A new alarm wakes every sleeper inside the camp (`alarmRaisedSince`); armed friends in the camp go for the hostiles on the list (`alarmed`) while those live and stay in the camp (section 4, the rally).
 
 ## 7. World editing rules (`WorldEditGuard`)
 
@@ -315,8 +327,8 @@ These are each role's jobs, named after the specialist. Through `SpecialityTask`
   - warns nearby players about creepers, approaching hostiles, nightfall, storms and lava;
   - comes back at dusk.
 - **Spark:** builds working redstone contraptions (automatic door, drop-off hopper, auto-smelter, night lamps); keeps the torch supply up.
-- **Aegis:** guards players and the camp; patrols at night (on the watchtower once built); equips the best weapon, armour and shield from the chest.
-- **Sage:** recomputes camp needs and announces the team focus; gives contextual Hardcore survival advice (health, food, darkness, phantoms, night, armour, tool durability, mining depth); `/friends advice` and `/friends plan` show the report.
+- **Aegis:** guards players and the camp; keeps the first night watch, walking his posts (on the watchtower once built), and sleeps the second half of the night; equips the best weapon, armour and shield from the chest.
+- **Sage:** carries a sword (her role tool, since planning needs none) to stand with the others; recomputes camp needs and announces the team focus; gives contextual Hardcore survival advice (health, food, darkness, phantoms, night, armour, tool durability, mining depth); `/friends advice` and `/friends plan` show the report.
 - **Terra:**
   - turns grass into dirt paths between camp features;
   - plants saplings and flowers;
@@ -344,3 +356,4 @@ These are each role's jobs, named after the specialist. Through `SpecialityTask`
 - Needs are five numbers met by a fixed set of jobs (eat, sleep, chat, pastime, warm up, rest). Friends sleep on the spot they lie down on, not in beds.
 - Friends do not cook: potatoes, raw meat and fish only become their food once a player cooks them.
 - Needs jobs run only in WORK mode: a friend following or staying does not eat (except from the backpack when hurt or hungry), sleep or rest.
+- The night watch sees what is in sight, close by or already attacking, inside the camp; not a hostile in a cave below it. The alarm wakes sleepers inside the camp only. A daytime thunderstorm is as dark as night (`isDarkOutside`), so friends head home and rest through it.

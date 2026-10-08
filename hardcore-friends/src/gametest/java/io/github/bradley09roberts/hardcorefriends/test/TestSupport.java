@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.Blocks;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
+import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
@@ -48,6 +49,7 @@ public final class TestSupport {
 		}
 		Companions.clear();
 		CampNeeds.clear();
+		NightWatch.clear();
 		CampData data = Camp.data(level.getServer());
 		data.resetForTests();
 		if (withCamp) {

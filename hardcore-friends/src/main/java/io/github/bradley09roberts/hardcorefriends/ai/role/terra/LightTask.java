@@ -46,6 +46,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
  * builder.
  */
 public final class LightTask implements CompanionTask {
+	/** Lighting a dark camp at night: above bedtime for a rested landscaper (75), so the camp is lit before she sleeps. */
+	private static final double NIGHT_SCORE = 80;
 	private static final int PER_RUN = 6;
 	private static final int DARK = 8;
 	private static final double SPACING = 5;
@@ -104,7 +106,8 @@ public final class LightTask implements CompanionTask {
 		if (darkSpots.isEmpty() || !torchesAvailable(c)) {
 			return 0;
 		}
-		return 50;
+		// A dark camp at night is where monsters spawn: lighting it comes before bed while there is energy for it.
+		return Camp.isNight(level) ? NIGHT_SCORE : 50;
 	}
 
 	/**

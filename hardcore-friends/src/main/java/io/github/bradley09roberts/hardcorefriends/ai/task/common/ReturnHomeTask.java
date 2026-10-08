@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
@@ -15,7 +16,7 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
  * Brings a friend back inside the camp at dusk and at night, when wandering far from the fire gets dangerous.
- * Aegis is the exception: the guard patrols at night instead.
+ * Aegis on watch is the exception: his guard duty takes him round the camp's edge, or beside a player out late.
  */
 public final class ReturnHomeTask implements CompanionTask {
 	/** How close to the camp centre a friend walks before the trip counts as done. */
@@ -35,10 +36,16 @@ public final class ReturnHomeTask implements CompanionTask {
 
 	@Override
 	public double score(CompanionEntity c) {
-		if (c.friendId() == FriendId.AEGIS || c.mode() != CompanionMode.WORK) {
+		if (c.mode() != CompanionMode.WORK || (c.friendId() == FriendId.AEGIS && onGuardDuty(c))) {
 			return 0;
 		}
 		return shouldBeHome(c) ? 85 : 0;
+	}
+
+	/** Aegis keeps his watch wherever his guard duty takes him; away from any camp he guards all night. */
+	private static boolean onGuardDuty(CompanionEntity c) {
+		ServerLevel level = (ServerLevel) c.level();
+		return !Camp.isCampLevel(level, Camp.data(level.getServer())) || NightWatch.isOnWatch(c);
 	}
 
 	/** True when it is getting dark and the friend is outside the comfortable part of the camp. */

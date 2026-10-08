@@ -9,6 +9,7 @@ They choose useful work on their own, cooperate through a shared supply chest, g
 - **Nine friends**, each with their own skin, personality, speaking voice and speciality.
 - **Everyone pitches in.** Any friend can do any job. Specialists go first and work fastest; when a specialist is missing, the others stand in, their second interest first.
 - **Needs and mood, Sims-style.** Hunger, energy, social, fun and comfort. Friends eat real food from their backpack or the supply chest, sleep at night, chat with each other, take short breaks for a pastime and warm up by the fire, all on their own. Their mood speeds up or slows down their work and shows in what they say.
+- **Safe nights.** At nightfall work stops and friends go to bed, while a rota keeps someone on watch (Aegis first, then a rested, armed friend). The watch raises the alarm when a monster comes into camp, sleepers wake, and armed friends come running, so nobody fights alone.
 - **Real materials.** Everything they build or craft uses real items from the supply chest, and their tools wear out.
 - **A growing camp**, from campsite to settlement in five stages, built from fixed blueprints.
 - **A Unity bond** that grows with time together, teamwork, chats and a happy team, and unlocks modest bonuses.

@@ -14,6 +14,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
@@ -28,37 +29,56 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  * through counts in full, and ends at dawn with a good morning. A friend exhausted in daytime takes a short nap at
  * camp.
  *
- * <p>The tireder the friend, the sooner they turn in: a friend still full of energy finishes useful work in camp
- * first, and a hungry one eats before bed; one exhausted at night ({@value #EXHAUSTED}) goes to bed whatever the
- * work. Work never wakes a sleeper (see {@link io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler}).
- * Sleepers wake whenever they are hurt or a monster comes close; the danger reflexes also interrupt the job, and
- * {@link #stop} always gets them back on their feet.
+ * <p><b>Bedtime.</b> At night everyone not on watch goes to bed ({@value #BEDTIME} and up, a little more the tireder
+ * they are): above every pastime, chat and cosy warm-up, and, since the scheduler keeps ordinary work for the
+ * morning ({@link TaskScheduler#NIGHT_JOBS}), nothing else keeps them up. Supper comes first for a hungry friend
+ * with food at hand, warming up by the campfire first for a chilly one without a cabin to sleep in, and the trip home
+ * first for one still out. Exhausted at night ({@value #EXHAUSTED}) they go to bed before anything but a starving
+ * friend's meal. Work never wakes a sleeper (see {@link TaskScheduler}).
  *
- * <p>Aegis keeps the first watch: he guards until midnight and sleeps the small hours when no monster is about, and
- * naps by day sooner than the others to make up for it.
+ * <p><b>Waking.</b> Sleepers wake at dawn; when hurt; when a monster comes close or a friend nearby is fighting one;
+ * when the night watch raises the alarm ({@link NightWatch}); and when their own watch begins. The danger reflexes
+ * also interrupt the job, and {@link #stop} always gets them back on their feet.
+ *
+ * <p><b>The watch.</b> Whoever is on watch ({@link NightWatch}) stays up: Aegis keeps the first watch and sleeps the
+ * small hours when no monster is about; the second watcher sleeps until midnight and is then woken for their watch.
+ * Anyone who kept a watch naps by day sooner than the others ({@value #WATCHER_NAP_BELOW}) to make up for it.
  */
 public final class SleepTask implements CompanionTask {
 	/** Below this energy at night a friend goes to bed before any work (an urgent score). */
 	static final double EXHAUSTED = 30;
 	/** The score of going to bed exhausted: above {@link TaskScheduler#URGENT}, so no work keeps them up. */
 	static final double EXHAUSTED_SCORE = TaskScheduler.URGENT;
+	/**
+	 * Bedtime at night, for a friend fully rested: above every pastime, chat and warm-up (at most 66), so those wait
+	 * for the morning, and below a hungry friend's meal (80) once they are tired.
+	 */
+	static final double BEDTIME = 75;
+	/** Supper first: a hungry friend with food at hand eats before bed. */
+	static final double SUPPER_FIRST = 40;
+	/** Below this hunger, supper comes before bed. */
+	static final double SUPPER_BELOW = 50;
+	/** Warm up first: below the cosy job's lowest score, so a chilly friend huddles by the fire before bed. */
+	static final double WARM_UP_FIRST = 30;
 	/** Below this energy in daytime, a friend lies down for a nap at camp. */
 	static final double NAP_BELOW = 15;
-	/** Aegis spends half the night on watch, so he naps by day once below this. */
-	static final double GUARD_NAP_BELOW = 40;
-	/** Aegis keeps watch until midnight. */
-	static final long GUARD_SLEEPS_FROM = 18000;
+	/** A friend who kept a night watch (Aegis keeps one every night) naps by day once below this. */
+	static final double WATCHER_NAP_BELOW = 40;
 	/** The longest daytime nap. */
 	private static final int NAP_TICKS = 20 * 180;
 	private static final double BED_REACH = 0.8;
 	/** Sleepers wake when a monster comes this close. */
 	private static final double WAKE_DISTANCE = 8;
+	/** Aegis does not turn in with a monster this close. */
+	private static final double PROWLER_DISTANCE = 24;
 	private static final int RING = 3;
 
 	private @Nullable BlockPos bed;
 	private boolean lyingDown;
 	private boolean nap;
 	private int asleepTicks;
+	/** When they lay down (game time), to tell an alarm raised since. */
+	private long layDownAt;
 
 	@Override
 	public String id() {
@@ -77,26 +97,27 @@ public final class SleepTask implements CompanionTask {
 	public double score(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
 		double energy = c.needs().get(Need.ENERGY);
-		boolean guard = c.friendId() == FriendId.AEGIS;
 		if (!Camp.isNight(level)) {
-			return energy < (guard ? GUARD_NAP_BELOW : NAP_BELOW) ? 75 : 0;
+			boolean watcher = c.friendId() == FriendId.AEGIS || NightWatch.keptWatchRecently(c);
+			return energy < (watcher ? WATCHER_NAP_BELOW : NAP_BELOW) ? 75 : 0;
 		}
 		if (!Spots.inCamp(c, c.blockPosition())) {
 			return 0; // the trip home comes first
 		}
-		if (guard) {
-			if (energy < NAP_BELOW) {
-				return 80; // too tired to keep watch
-			}
-			// The first watch is his; after midnight he turns in, unless something is prowling about.
-			return Camp.timeOfDay(level) >= GUARD_SLEEPS_FROM && Threats.nearest(c, 24) == null ? 75 : 0;
+		if (NightWatch.isOnWatch(c)) {
+			return 0; // keeping watch (a watcher too tired to keep it is relieved, see NightWatch)
 		}
 		if (energy < EXHAUSTED) {
 			return EXHAUSTED_SCORE; // only a starving friend's meal comes first
 		}
-		double score = 25 + (100 - energy) * 0.6; // 31 when fresh, 67 when worn out at the end of a day
-		if (c.needs().get(Need.HUNGER) < 50 && EatTask.foodAvailable(c)) {
-			score = Math.min(score, 40); // supper first
+		if (c.isFighter() && Threats.nearest(c, PROWLER_DISTANCE) != null) {
+			return 0; // Aegis does not turn in while something is prowling about
+		}
+		double score = BEDTIME + (100 - energy) * 0.1; // 75 when fresh, 82 when worn out
+		if (c.needs().get(Need.HUNGER) < SUPPER_BELOW && EatTask.foodAvailable(c)) {
+			score = SUPPER_FIRST;
+		} else if (c.needs().get(Need.COMFORT) < ComfortTask.CHILLY && !Spots.cabinBuilt(c) && Spots.litCampfire(c) != null) {
+			score = WARM_UP_FIRST; // a few minutes by the fire, then bed
 		}
 		return score;
 	}
@@ -132,6 +153,9 @@ public final class SleepTask implements CompanionTask {
 		if (disturbed(c)) {
 			return TaskStatus.FAILURE; // stop() gets them up
 		}
+		if (NightWatch.isOnWatch(c)) {
+			return TaskStatus.SUCCESS; // their watch: up they get (the watch job takes over)
+		}
 		c.getNavigation().stop();
 		asleepTicks++;
 		c.settleSleep(); // energy for the time slept, a whole night if the players slept through it
@@ -166,10 +190,11 @@ public final class SleepTask implements CompanionTask {
 		c.setPose(Pose.SLEEPING);
 		c.setAsleep(true);
 		lyingDown = true;
+		layDownAt = c.level().getGameTime();
 		Speech.say(c, Line.SLEEPY);
 	}
 
-	/** Hurt by anything but hunger pangs, or a monster close by. */
+	/** Hurt by anything but hunger pangs, a monster close by, a friend fighting nearby, or the alarm raised in camp. */
 	private boolean disturbed(CompanionEntity c) {
 		if (c.ticksSinceDamaged() < 5) {
 			DamageSource source = c.getLastDamageSource();
@@ -177,7 +202,13 @@ public final class SleepTask implements CompanionTask {
 				return true;
 			}
 		}
-		return asleepTicks % 10 == 0 && (Threats.nearest(c, WAKE_DISTANCE) != null || friendFighting(c));
+		if (asleepTicks % 10 != 0) {
+			return false;
+		}
+		if (NightWatch.alarmRaisedSince((ServerLevel) c.level(), layDownAt) && NightWatch.insideCamp(c)) {
+			return true; // the watch raised the alarm: everyone up
+		}
+		return Threats.nearest(c, WAKE_DISTANCE) != null || friendFighting(c);
 	}
 
 	/** A friend within 16 blocks is fighting a monster: sleepers get up and stand with them. */

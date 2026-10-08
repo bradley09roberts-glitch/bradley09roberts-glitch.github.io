@@ -23,6 +23,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.needs.SocializeTask;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.camp.CampProgress;
+import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
@@ -62,6 +63,7 @@ public final class ModEvents {
 			Unity.tick(server);
 			CampNeeds.tick(server);
 			CampProgress.tick(server);
+			NightWatch.tick(server);
 		});
 		// A world closed and another opened in the same game keeps no claims, requests or chats from the last one.
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> forgetSharedWork());
@@ -72,10 +74,14 @@ public final class ModEvents {
 		});
 	}
 
-	/** Forgets who holds which shared job, the requests to hand them back, and the chat invitations and memories. */
+	/**
+	 * Forgets who holds which shared job, the requests to hand them back, the chat invitations and memories, and the
+	 * night watch's alarm.
+	 */
 	private static void forgetSharedWork() {
 		SpecialityTask.clearClaims();
 		SocializeTask.clear();
+		NightWatch.clear();
 	}
 
 	private static boolean huntsCompanions(Mob mob) {

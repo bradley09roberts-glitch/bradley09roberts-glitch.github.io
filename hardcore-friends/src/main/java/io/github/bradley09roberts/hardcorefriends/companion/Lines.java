@@ -156,6 +156,10 @@ public final class Lines {
 		generic(Line.NIGHT_RETURN, "It's getting dark. Heading back to camp.", "Dusk. Time to go home.",
 			"Night's coming. Back to camp.");
 		generic(Line.MORNING, "Good morning.", "Morning, everyone.", "A new day.");
+		generic(Line.NIGHT_WATCH, "I'll keep watch. Sleep well.", "I've got the watch. Get some rest.",
+			"My watch. Off to bed, everyone.");
+		generic(Line.ALARM, "%1$s in the camp! Everyone up!", "Wake up! %1$s in the camp!",
+			"Alarm! %1$s inside the camp!");
 		generic(Line.WORK_START, "I'll be %1$s.", "Time for %1$s.", "Starting on it: %1$s.");
 		generic(Line.NEED_TOOL, "I need a tool: %1$s.", "Any %1$s going spare?", "Tool needed: %1$s.");
 		generic(Line.TOOL_BROKE, "My %1$s broke.", "There goes my %1$s.", "My %1$s is worn out.");
@@ -257,6 +261,14 @@ public final class Lines {
 			"Good morning! The crops look lovely in the sun.",
 			"Morning, everyone. Make sure you have some breakfast.",
 			"A new day. Let's see what's ripened overnight.");
+		put(f, Line.NIGHT_WATCH,
+			"I'll keep watch tonight. Sleep tight, dears.",
+			"My turn to watch. Rest now, all of you. I'll wake you if need be.",
+			"I'll sit up by the fire and keep an eye out. Goodnight.");
+		put(f, Line.ALARM,
+			"Wake up, everyone! %1$s in the camp!",
+			"Oh, there's a %1$s coming in! Up, quickly, dears!",
+			"Everyone up! %1$s by the camp, please hurry!");
 		put(f, Line.WORK_START,
 			"Right, I'll be %1$s if anyone needs me.",
 			"Time for %1$s. Slow and steady does it.",
@@ -435,6 +447,14 @@ public final class Lines {
 			"Morning. I've got a plan for today.",
 			"Good morning. Let's check the materials and get started.",
 			"New day. First job: count the planks.");
+		put(f, Line.NIGHT_WATCH,
+			"I'll take the watch. Get your rest.",
+			"My watch. Nothing gets past the fire.",
+			"Watch is mine tonight. Sleep, we've work in the morning.");
+		put(f, Line.ALARM,
+			"%1$s in the camp! Up, everyone, tools in hand!",
+			"Wake up! %1$s at the camp. Let's deal with it together.",
+			"Alarm! %1$s inside the camp. On your feet!");
 		put(f, Line.WORK_START,
 			"Starting on it: %1$s.",
 			"Plan's set. I'll be %1$s.",
@@ -611,6 +631,14 @@ public final class Lines {
 			"Morning. Survived another night. Impressive, really.",
 			"Good morning. Nothing exploded. Promising start.",
 			"Morning. Daylight. My favourite kind of light.");
+		put(f, Line.NIGHT_WATCH,
+			"I'll keep watch. Somebody has to stay paranoid.",
+			"My watch. I'll be the one staring at shadows.",
+			"I've got the watch. Sleep. I'll worry for everyone.");
+		put(f, Line.ALARM,
+			"%1$s in the camp. Told you the dark was trouble. Up!",
+			"Everyone up. There's a %1$s, and it's not here to chat.",
+			"Wake up! %1$s in camp. Not a drill.");
 		put(f, Line.WORK_START,
 			"Right. I'll be %1$s. Carefully.",
 			"Time for %1$s. Torches at the ready.",
@@ -790,6 +818,14 @@ public final class Lines {
 			"Morning! The world's waiting to be explored!",
 			"Good morning! I wonder what's over the next hill.",
 			"Rise and shine! Let's see what's out there!");
+		put(f, Line.NIGHT_WATCH,
+			"I'll take the watch! I can see the whole camp from here.",
+			"Watch is mine! Sleep tight, I'll keep my eyes peeled.",
+			"On watch! Nothing's sneaking past me tonight.");
+		put(f, Line.ALARM,
+			"%1$s in the camp! Everybody up, now!",
+			"Contact! %1$s coming in! Wake up!",
+			"Alarm! %1$s spotted inside the camp!");
 		put(f, Line.WORK_START,
 			"Off I go, %1$s!",
 			"Time for %1$s! Back soon with news.",
@@ -969,6 +1005,14 @@ public final class Lines {
 			"Morning! I dreamt about a piston lift!",
 			"Good morning! New day, new inventions!",
 			"Morning! Who's ready for some engineering?");
+		put(f, Line.NIGHT_WATCH,
+			"I'm on watch! Best time for thinking, anyway!",
+			"Night watch! I'll keep both eyes open, promise!",
+			"My watch! If only I'd built that alarm bell already!");
+		put(f, Line.ALARM,
+			"%1$s in the camp! Alarm! Alarm! Everyone up!",
+			"Wake up! %1$s! In the camp! Now!",
+			"Intruder alert! %1$s in camp! Up, up, up!");
 		put(f, Line.WORK_START,
 			"Ooh, %1$s! Let's go!",
 			"Time for %1$s! Brilliant!",
@@ -1146,6 +1190,14 @@ public final class Lines {
 			"Morning. Another night behind us.",
 			"Dawn. All safe.",
 			"Morning. I kept watch. All's well.");
+		put(f, Line.NIGHT_WATCH,
+			"I have the watch. Sleep.",
+			"This watch is mine. Rest easy.",
+			"I'll keep watch. Nothing comes through.");
+		put(f, Line.ALARM,
+			"%1$s in the camp. Up. Arms ready.",
+			"To arms. %1$s inside the camp.",
+			"Wake. %1$s. Stand with me.");
 		put(f, Line.WORK_START,
 			"On duty: %1$s.",
 			"I'll be %1$s.",
@@ -1323,6 +1375,14 @@ public final class Lines {
 			"Good morning. Let's review today's priorities.",
 			"Morning. A new day, a fresh plan.",
 			"Dawn. I've been thinking about what we need.");
+		put(f, Line.NIGHT_WATCH,
+			"I'll keep the watch. A rested camp is a safe camp.",
+			"My watch. Sleep; I'll keep my eyes on the dark.",
+			"The watch is mine tonight. Someone should always be awake.");
+		put(f, Line.ALARM,
+			"%1$s in the camp! Everyone up, stand together!",
+			"Alarm: %1$s inside the camp. Up, and stay together!",
+			"Wake up! %1$s in camp. Together we're stronger.");
 		put(f, Line.WORK_START,
 			"Next on the plan: %1$s.",
 			"I'll be %1$s. It's the sensible choice.",
@@ -1501,6 +1561,14 @@ public final class Lines {
 			"Good morning! The dew on the grass is lovely.",
 			"Morning! Let's make camp prettier today.",
 			"Good morning! Everything looks so fresh.");
+		put(f, Line.NIGHT_WATCH,
+			"I'll keep watch. The camp looks lovely by firelight.",
+			"My watch tonight. Sleep well, I'll mind the garden.",
+			"I'm on watch. Nothing's trampling my paths tonight.");
+		put(f, Line.ALARM,
+			"%1$s in the camp! Everyone up, quickly!",
+			"Wake up! A %1$s is trampling through the camp!",
+			"Alarm! %1$s by the paths! Up, everyone!");
 		put(f, Line.WORK_START,
 			"I'll be %1$s. It'll look lovely when I'm done.",
 			"Time for %1$s. Neat and tidy.",
@@ -1677,6 +1745,14 @@ public final class Lines {
 			"Morning! The trees are waiting.",
 			"Good morning. Who needs what today?",
 			"Morning! I'll fetch whatever the camp's short of.");
+		put(f, Line.NIGHT_WATCH,
+			"I'll keep watch. You lot get some sleep.",
+			"Watch is mine. Rest up, I'll wake you if anything comes.",
+			"I'll sit up by the fire. Sleep tight, all.");
+		put(f, Line.ALARM,
+			"%1$s in the camp! Up, everyone, grab your tools!",
+			"Wake up! %1$s coming in. Let's see it off together!",
+			"Alarm! %1$s at the camp! On your feet!");
 		put(f, Line.WORK_START,
 			"I'll be %1$s. Back soon with plenty.",
 			"Off I go, %1$s.",
