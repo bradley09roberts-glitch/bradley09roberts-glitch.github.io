@@ -12,6 +12,7 @@ import net.minecraft.world.entity.ai.util.DefaultRandomPos;
 import net.minecraft.world.entity.ai.util.LandRandomPos;
 import net.minecraft.world.phys.Vec3;
 
+import io.github.bradley09roberts.hardcorefriends.combat.Tactics;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
@@ -19,7 +20,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 /**
  * When badly hurt, a friend breaks off whatever they were doing, moves away from danger towards camp or a
  * protector (out of bow range when something is shooting at them), and eats from their backpack once safe. Cautious
- * friends (Flint) retreat earlier; Aegis much later.
+ * friends (Flint) retreat earlier; Aegis much later. The healthiest armed friend nearby takes over the fight they
+ * leave ({@link Tactics#tagOut}).
  *
  * <p>Falling back to rest only helps a friend who can heal. One too hungry to heal with nothing in the backpack falls
  * back only from danger; otherwise their jobs take care of them: they fetch food from the chest, or, with none
@@ -71,6 +73,10 @@ public class RetreatGoal extends Goal {
 
 	@Override
 	public void start() {
+		LivingEntity attacker = companion.getTarget();
+		if (attacker != null && attacker.isAlive()) {
+			Tactics.tagOut(companion, attacker); // the healthiest armed friend nearby takes the fight over
+		}
 		companion.setTarget(null);
 		companion.setRetreating(true);
 		recalc = 0;

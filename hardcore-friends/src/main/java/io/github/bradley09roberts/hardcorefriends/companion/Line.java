@@ -124,6 +124,18 @@ public enum Line {
 
 	// ==== Combat and gear (package combat): bows, shields, armour, healing ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** Drawing a bow on a hostile. %1$s = its name as the game shows it ("Skeleton"). */
+	DRAW_BOW(Priority.CASUAL, 600, 1),
+	/** Raising a shield against an archer drawing on them or a creeper about to blow. */
+	RAISE_SHIELD(Priority.CASUAL, 600, 0),
+	/** Eating or drinking something to heal in a fight. %1$s = the item as the game shows it ("Golden Apple"). */
+	EMERGENCY_HEAL(Priority.DANGER, 300, 1),
+	/** Put on or took up better gear from the chest. %1$s = the item as the game shows it ("Iron Chestplate"). */
+	NEW_GEAR(Priority.CASUAL, 1200, 1),
+	/** Made a piece of gear at the crafting table for the chest. %1$s = the item as the game shows it ("Shield"). */
+	MADE_GEAR(Priority.CASUAL, 1200, 1),
+	/** Taking over the fight from a friend who is falling back hurt. %1$s = that friend's name, %2$s = the mob's name. */
+	TAKE_OVER(Priority.CASUAL, 400, 2),
 
 	// ==== end of combat ====
 

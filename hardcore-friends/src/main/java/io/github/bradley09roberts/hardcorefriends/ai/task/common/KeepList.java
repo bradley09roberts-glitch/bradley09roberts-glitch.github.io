@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
@@ -55,6 +56,8 @@ public final class KeepList {
 
 	private static final Map<Role, List<Rule>> ROLE_RULES = new EnumMap<>(Role.class);
 	private static final Map<Role, List<Rule>> ALL_RULES = new EnumMap<>(Role.class);
+	/** Rules every friend keeps besides their role's, added by the feature packages ({@link #addCommonRule}). */
+	private static final List<Rule> COMMON_RULES = new CopyOnWriteArrayList<>();
 
 	private KeepList() {
 	}
@@ -158,7 +161,7 @@ public final class KeepList {
 		return ROLE_RULES.computeIfAbsent(role, KeepList::buildRoleRules);
 	}
 
-	/** Every keep rule for a role: its role tool, its own list, then food. */
+	/** Every keep rule for a role: its role tool, its own list, the rules everyone keeps, then food. */
 	public static List<Rule> rules(Role role) {
 		return ALL_RULES.computeIfAbsent(role, r -> {
 			List<Rule> list = new ArrayList<>();
@@ -167,9 +170,19 @@ public final class KeepList {
 				list.add(new Rule(toolName(tool), s -> s.is(tool), r == Role.MINER ? MINER_PICKAXES_KEPT : TOOLS_KEPT));
 			}
 			list.addAll(roleRules(r));
+			list.addAll(COMMON_RULES);
 			list.add(new Rule("food", KeepList::isFood, FOOD_KEPT));
 			return List.copyOf(list);
 		});
+	}
+
+	/**
+	 * Adds something every friend keeps in their backpack whatever their role (a weapon, a bow and arrows, emergency
+	 * healing...), so depositing never empties them of it. Called from a feature package's {@code init()}.
+	 */
+	public static void addCommonRule(Rule rule) {
+		COMMON_RULES.add(rule);
+		ALL_RULES.clear();
 	}
 
 	/** True if the role keeps this kind of item for its work (role tool or role list; food does not count). */

@@ -24,7 +24,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
  * job at once; work never wakes a sleeper; and a friend too weak to work
  * ({@link CompanionEntity#tooWeakToWork}) only takes on the jobs in {@link #FIT_WHEN_WEAK}.
  *
- * <p>A fourth keeps the night for sleep: at night ({@link Camp#isNight}) a friend only takes on their needs jobs and
+ * <p>A fourth keeps the night for sleep: at night ({@link Camp#isNightTime}; a daytime thunderstorm only sends friends
+ * home from the wilds, where the outdoor jobs stop themselves) a friend only takes on their needs jobs and
  * the jobs that belong to the night ({@link #NIGHT_JOBS}: coming home, keeping watch, lighting a dark camp, feeding a
  * hurt friend or a hungry player, fetching a lost weapon or food), and puts down any other job at nightfall. So
  * ordinary work never keeps a friend from bed or pulls them out of it: they go to bed and stay asleep, and the friend
@@ -132,7 +133,7 @@ public final class TaskScheduler {
 		if (weak && current != null && !fitWhenWeak(current.id())) {
 			stopCurrent(); // too weak for this now: home to eat or rest
 		}
-		boolean night = Camp.isNight((ServerLevel) companion.level());
+		boolean night = Camp.isNightTime((ServerLevel) companion.level());
 		if (night && current != null && !fitAtNight(current.id())) {
 			stopCurrent(); // nightfall: the job waits for morning
 		}

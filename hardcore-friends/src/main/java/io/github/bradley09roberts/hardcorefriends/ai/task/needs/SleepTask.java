@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
@@ -36,9 +37,13 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  * first for one still out. Exhausted at night ({@value #EXHAUSTED}) they go to bed before anything but a starving
  * friend's meal. Work never wakes a sleeper (see {@link TaskScheduler}).
  *
- * <p><b>Waking.</b> Sleepers wake at dawn; when hurt; when a monster comes close or a friend nearby is fighting one;
- * when the night watch raises the alarm ({@link NightWatch}); and when their own watch begins. The danger reflexes
- * also interrupt the job, and {@link #stop} always gets them back on their feet.
+ * <p><b>Waking.</b> Sleepers wake at dawn; when hurt; when a monster comes close or a friend nearby is really fighting
+ * one (trading blows, or with it at arm's length, not just staring at a mob they cannot get at); when the night watch
+ * raises the alarm ({@link NightWatch}); and when their own watch begins. The danger reflexes also interrupt the job,
+ * and {@link #stop} always gets them back on their feet.
+ *
+ * <p>Night here is the clock's ({@link Camp#isNightTime}): in a thunderstorm by day only a friend tired enough for a
+ * nap lies down; the rest carry on with the camp's work.
  *
  * <p><b>The watch.</b> Whoever is on watch ({@link NightWatch}) stays up: Aegis keeps the first watch and sleeps the
  * small hours when no monster is about; the second watcher sleeps until midnight and is then woken for their watch.
@@ -71,6 +76,10 @@ public final class SleepTask implements CompanionTask {
 	private static final double WAKE_DISTANCE = 8;
 	/** Aegis does not turn in with a monster this close. */
 	private static final double PROWLER_DISTANCE = 24;
+	/** A friend who hit or was hit this recently is fighting (sleepers nearby wake). */
+	private static final int FIGHTING_TICKS = 100;
+	/** A friend with their target this close is fighting (sleepers nearby wake). */
+	private static final double FIGHTING_REACH = 4;
 	private static final int RING = 3;
 
 	private @Nullable BlockPos bed;
@@ -97,7 +106,7 @@ public final class SleepTask implements CompanionTask {
 	public double score(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
 		double energy = c.needs().get(Need.ENERGY);
-		if (!Camp.isNight(level)) {
+		if (!Camp.isNightTime(level)) {
 			boolean watcher = c.friendId() == FriendId.AEGIS || NightWatch.keptWatchRecently(c);
 			return energy < (watcher ? WATCHER_NAP_BELOW : NAP_BELOW) ? 75 : 0;
 		}
@@ -124,7 +133,7 @@ public final class SleepTask implements CompanionTask {
 
 	@Override
 	public boolean start(CompanionEntity c) {
-		nap = !Camp.isNight((ServerLevel) c.level());
+		nap = !Camp.isNightTime((ServerLevel) c.level());
 		lyingDown = false;
 		asleepTicks = 0;
 		bed = bedFor(c);
@@ -160,7 +169,7 @@ public final class SleepTask implements CompanionTask {
 		asleepTicks++;
 		c.settleSleep(); // energy for the time slept, a whole night if the players slept through it
 		double energy = c.needs().get(Need.ENERGY);
-		boolean night = Camp.isNight(level);
+		boolean night = Camp.isNightTime(level);
 		if (nap && night) {
 			nap = false; // dozed off into the night: sleep till morning
 		}
@@ -211,11 +220,22 @@ public final class SleepTask implements CompanionTask {
 		return Threats.nearest(c, WAKE_DISTANCE) != null || friendFighting(c);
 	}
 
-	/** A friend within 16 blocks is fighting a monster: sleepers get up and stand with them. */
+	/**
+	 * A friend within 16 blocks is really fighting a monster: sleepers get up and stand with them. Really fighting
+	 * means trading blows (they landed a blow or an arrow, or were hit, in the last {@value #FIGHTING_TICKS} ticks) or the
+	 * monster is within {@value #FIGHTING_REACH} blocks of them, so a friend staring at a mob they cannot get at does
+	 * not keep the camp awake.
+	 */
 	private static boolean friendFighting(CompanionEntity c) {
 		for (CompanionEntity other : Companions.all()) {
-			if (other != c && other.level() == c.level() && other.distanceToSqr(c) <= 16 * 16
-				&& other.getTarget() != null && Threats.isThreat(other.getTarget())) {
+			LivingEntity target = other.getTarget();
+			if (other == c || other.level() != c.level() || other.distanceToSqr(c) > 16 * 16 || target == null
+				|| !Threats.isThreat(target)) {
+				continue;
+			}
+			boolean blows = other.ticksSinceDamaged() < FIGHTING_TICKS
+				|| other.tickCount - other.getLastHurtMobTimestamp() < FIGHTING_TICKS;
+			if (blows || target.distanceToSqr(other) <= FIGHTING_REACH * FIGHTING_REACH) {
 				return true;
 			}
 		}
