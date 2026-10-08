@@ -222,10 +222,15 @@ public final class WorldEditGuard {
 		if (!common.allowed()) {
 			return common;
 		}
+		BlockState current = level.getBlockState(pos);
+		// Picking berries is allowed anywhere friends may gather; everything else stays inside the camp.
+		boolean berryPick = reason == Reason.FARM && current.is(Blocks.SWEET_BERRY_BUSH) && newState.is(Blocks.SWEET_BERRY_BUSH);
+		if (berryPick) {
+			return inResourceZone(c, pos) ? Verdict.OK : Verdict.deny("outside the gathering area");
+		}
 		if (!inCamp(c, pos)) {
 			return Verdict.deny("outside the camp");
 		}
-		BlockState current = level.getBlockState(pos);
 		if (current.hasBlockEntity() && !Camp.data(level.getServer()).isPlacedByFriends(pos)) {
 			return Verdict.deny("block entity");
 		}
@@ -236,8 +241,8 @@ public final class WorldEditGuard {
 				if (earth && newState.is(Blocks.FARMLAND) && airAbove) {
 					yield Verdict.OK;
 				}
-				if (current.is(Blocks.SWEET_BERRY_BUSH) && newState.is(Blocks.SWEET_BERRY_BUSH)) {
-					yield Verdict.OK;
+				if (current.getBlock() instanceof CropBlock && current.getBlock() == newState.getBlock()) {
+					yield Verdict.OK; // bone meal growth
 				}
 				yield Verdict.deny("not tillable or harvestable");
 			}

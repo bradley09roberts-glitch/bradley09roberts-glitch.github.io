@@ -17,6 +17,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
+import io.github.bradley09roberts.hardcorefriends.camp.CampProgress;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
@@ -47,6 +48,7 @@ public final class ModEvents {
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			Unity.tick(server);
 			CampNeeds.tick(server);
+			CampProgress.tick(server);
 		});
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			Companions.clear();
