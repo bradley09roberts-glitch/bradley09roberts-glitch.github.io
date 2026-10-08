@@ -52,6 +52,8 @@ public final class Mail {
 	public static final int MAX_PER_PLAYER = 3;
 	/** How long the next delivery is worked out for everyone, in ticks. */
 	private static final int CACHE_TICKS = 200;
+	/** A delivery asked for and not made within this long (three in-game days) is dropped. */
+	private static final long REQUEST_LASTS = 72000L;
 
 	/** One kind of item to deliver and how many. */
 	public record Want(Identifier item, int count) {
@@ -170,7 +172,10 @@ public final class Mail {
 		}
 		TownData data = TownData.get(server);
 		long day = Camp.day(level);
+		long now = level.getGameTime();
 		GAVE_UP.values().removeIf(d -> d != day);
+		// A request nobody could carry out in three days (or with nowhere to take it) is dropped, so the queue never clogs.
+		data.pruneQueue(r -> now - r.askedAt() > REQUEST_LASTS || now < r.askedAt() || data.mailbox(r.player()).isEmpty());
 		for (TownData.SendRequest r : data.queue()) {
 			Optional<TownData.Mailbox> box = data.mailbox(r.player());
 			if (box.isEmpty() || outOfReach(server, box.get()) != null || !receives(server, r.player()) || GAVE_UP.containsKey(r.player())) {

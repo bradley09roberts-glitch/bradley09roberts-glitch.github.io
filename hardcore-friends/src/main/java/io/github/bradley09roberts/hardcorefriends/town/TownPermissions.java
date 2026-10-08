@@ -8,7 +8,6 @@ import org.jspecify.annotations.Nullable;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -172,8 +171,9 @@ public final class TownPermissions {
 			}
 			return InteractionResult.PASS;
 		}
-		// Food is always welcome from anyone; anything else goes into the backpack, which is the camp's business.
-		if (held.get(DataComponents.FOOD) == null && !mayCommand(player)) {
+		// Real food is always welcome from anyone; anything else (rotten flesh included) goes into the backpack, which is
+		// the camp's business.
+		if (!CompanionEntity.isEdible(held) && !mayCommand(player)) {
 			refuse(player, c);
 			return InteractionResult.SUCCESS_SERVER;
 		}

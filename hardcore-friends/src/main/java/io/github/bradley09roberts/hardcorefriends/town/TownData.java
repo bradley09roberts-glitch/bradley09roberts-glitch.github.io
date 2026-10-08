@@ -356,6 +356,13 @@ public final class TownData extends SavedData {
 		}
 	}
 
+	/** Drops the deliveries that can no longer be made (too old, or nowhere to take them). */
+	public void pruneQueue(java.util.function.Predicate<SendRequest> stale) {
+		if (queue.removeIf(stale)) {
+			setDirty();
+		}
+	}
+
 	public long lastSurplus(UUID player) {
 		return lastSurplus.getOrDefault(player, Long.MIN_VALUE);
 	}

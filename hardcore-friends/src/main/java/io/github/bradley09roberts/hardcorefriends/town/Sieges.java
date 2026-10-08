@@ -17,6 +17,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -56,6 +57,8 @@ public final class Sieges {
 	private static final int SPAWNED = 2;
 	/** Tag on every monster of a wave. */
 	static final String TAG = "hardcorefriends.siege";
+	/** A monster of the wave goes for a defender this close (about a zombie's own follow range). */
+	private static final double TARGET_RANGE = 32;
 
 	private Sieges() {
 	}
@@ -69,6 +72,9 @@ public final class Sieges {
 		CampData camp = Camp.data(server);
 		ServerLevel level = campLevel(server, camp);
 		if (level == null) {
+			if (data.siegePhase() != NONE) {
+				data.setSiege(NONE, -1, false); // the camp moved somewhere without nights: no siege tonight
+			}
 			return;
 		}
 		long day = Camp.day(level);
@@ -146,7 +152,7 @@ public final class Sieges {
 		int spawned = 0;
 		for (int attempt = 0; attempt < wave * 8 && spawned < wave; attempt++) {
 			double angle = side + (random.nextDouble() - 0.5) * Math.toRadians(80);
-			double dist = radius + 4 + random.nextInt(8);
+			double dist = radius + 2 + random.nextInt(7);
 			int x = Mth.floor(centre.getX() + 0.5 + Math.cos(angle) * dist);
 			int z = Mth.floor(centre.getZ() + 0.5 + Math.sin(angle) * dist);
 			EntityType<? extends Mob> type = pick(random);
@@ -202,7 +208,35 @@ public final class Sieges {
 		mob.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.EVENT, null);
 		mob.addTag(TAG);
 		level.addFreshEntityWithPassengers(mob);
+		// The wave comes for the camp: the nearest friend within reach, or else the nearest player.
+		LivingEntity target = nearestDefender(level, mob);
+		if (target != null) {
+			mob.setTarget(target);
+		}
 		return true;
+	}
+
+	/** The nearest friend on the team within {@value #TARGET_RANGE} blocks of the monster, or else the nearest player. */
+	private static @Nullable LivingEntity nearestDefender(ServerLevel level, Mob mob) {
+		LivingEntity best = null;
+		double bestDist = TARGET_RANGE * TARGET_RANGE;
+		for (CompanionEntity c : Companions.near(level, mob.getBoundingBox().inflate(TARGET_RANGE))) {
+			double d = c.distanceToSqr(mob);
+			if (d < bestDist) {
+				bestDist = d;
+				best = c;
+			}
+		}
+		if (best == null) {
+			for (ServerPlayer p : level.players()) {
+				double d = p.distanceToSqr(mob);
+				if (!p.isSpectator() && !p.isCreative() && p.isAlive() && d < bestDist) {
+					bestDist = d;
+					best = p;
+				}
+			}
+		}
+		return best;
 	}
 
 	/** The morning after: a reward if nobody fell, and the next siege night planned. */

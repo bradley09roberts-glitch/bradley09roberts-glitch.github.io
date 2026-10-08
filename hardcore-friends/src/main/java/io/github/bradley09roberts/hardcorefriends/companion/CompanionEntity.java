@@ -76,6 +76,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.combat.Archery;
 import io.github.bradley09roberts.hardcorefriends.item.BackpackItem;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
+import io.github.bradley09roberts.hardcorefriends.town.TownPermissions;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
@@ -628,6 +629,18 @@ public class CompanionEntity extends PathfinderMob {
 				.withStyle(ChatFormatting.GRAY));
 		}
 		return InteractionResult.SUCCESS_SERVER;
+	}
+
+	/**
+	 * Leading a friend about on a lead is an order like any other: on a shared world, only the camp's owner and the
+	 * players they trust may tie one on (see the town package).
+	 */
+	@Override
+	public boolean canHaveALeashAttachedTo(Entity holder) {
+		if (holder instanceof ServerPlayer player && !TownPermissions.isAllowed(player)) {
+			return false;
+		}
+		return super.canHaveALeashAttachedTo(holder);
 	}
 
 	/** Opens the backpack as a chest screen for a nearby player. */

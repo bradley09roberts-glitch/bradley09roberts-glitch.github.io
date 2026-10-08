@@ -241,6 +241,7 @@ final class MailTripTask implements CompanionTask {
 				return TaskStatus.RUNNING;
 			}
 			case FAILED -> {
+				tell(c, m, "I couldn't get to the supply chest to pack a delivery for you, so nothing was sent.");
 				finish(c);
 				return TaskStatus.FAILURE;
 			}
@@ -249,6 +250,7 @@ final class MailTripTask implements CompanionTask {
 		}
 		Optional<Container> chest = ChestWalk.chest(c);
 		if (chest.isEmpty()) {
+			tell(c, m, "I couldn't get to the supply chest to pack a delivery for you, so nothing was sent.");
 			finish(c);
 			return TaskStatus.FAILURE;
 		}

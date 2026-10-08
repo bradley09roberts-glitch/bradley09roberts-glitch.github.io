@@ -108,15 +108,23 @@ public final class JobBoard {
 				continue;
 			}
 			String rest = m.group(2);
+			// The longest name that fits wins: "glass panes" are panes, not glass. Kinds sharing a name ("cobblestone")
+			// all count.
 			Predicate<ItemStack> matches = null;
 			boolean planks = false;
+			int longest = 0;
 			for (Stock s : Stock.values()) {
-				String plural = s.describe(2).substring(2);
-				String singular = s.describe(1).substring(2);
-				if (rest.equals(plural) || rest.equals(singular) || rest.startsWith(plural + " ") || rest.startsWith(singular + " ")) {
-					matches = matches == null ? s::matches : matches.or(s::matches);
-					planks |= s == Stock.PLANKS;
+				int fit = Math.max(fit(rest, s.describe(2).substring(2)), fit(rest, s.describe(1).substring(2)));
+				if (fit == 0 || fit < longest) {
+					continue;
 				}
+				if (fit > longest) {
+					longest = fit;
+					matches = null;
+					planks = false;
+				}
+				matches = matches == null ? s::matches : matches.or(s::matches);
+				planks |= s == Stock.PLANKS;
 			}
 			if (matches == null || count <= 0) {
 				continue;
@@ -131,6 +139,11 @@ public final class JobBoard {
 			}
 		}
 		return list;
+	}
+
+	/** How much of {@code text} the item name covers: all of it, or the start up to a space; 0 when it does not fit. */
+	private static int fit(String text, String name) {
+		return text.equals(name) || text.startsWith(name + " ") ? name.length() : 0;
 	}
 
 	/** The camp's everyday needs, by how pressing they are (the same targets the camp itself works to). */
