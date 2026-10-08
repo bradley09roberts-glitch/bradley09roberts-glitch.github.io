@@ -36,7 +36,8 @@ flat dry ground, never right next to a village. They are about as common as iglo
 
 ### Travellers
 
-Once your camp has grown to a **Camp** (stage 1), a traveller may turn up every two to four in-game days. They arrive
+Once your camp has grown to a **Camp** (stage 1), and as long as it is under the open sky (not in the Nether or the
+End), a traveller may turn up every two to four in-game days. They arrive
 in the morning, walking in from the wilds to the edge of the camp, say hello, and stay for a day. If nobody asks them
 in, they say goodbye the next day and walk off, and are gone once nobody can see them. Someone has to be at or near the
 camp for a traveller to come; none come while your team already has as many newcomers as it may.

@@ -47,8 +47,8 @@ final class Wanderers {
 			return;
 		}
 		ServerLevel level = campLevel(server, camp);
-		if (level == null) {
-			return;
+		if (level == null || level.dimensionType().hasCeiling() || !level.dimensionType().hasSkyLight()) {
+			return; // travellers walk in under the open sky, not onto the Nether's roof
 		}
 		SettlerData data = SettlerData.get(server);
 		long now = level.getGameTime();
