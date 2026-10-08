@@ -1,52 +1,72 @@
 # Hardcore Friends 1.0.0: test results
 
-These are honest results. They include what failed, what that taught me, and what still is not perfect. All tests ran in this build environment on Minecraft Java 26.3 with Fabric Loader 0.19.5 and Fabric API 0.162.0+26.3. **None of your own saves were opened or touched.** Every test world was created fresh inside the build folder.
+These results are honest: they include what went wrong, what was fixed, and what is still not perfect. Everything ran on Minecraft Java 26.3 with Fabric Loader 0.19.5 and Fabric API 0.162.0+26.3. **None of your own saves were opened or touched.** Every test world was created fresh inside the build folder.
 
-## 1. Automated game tests (server side): 80 of 80 pass
+## 1. Automated game tests: 143 of 143 pass
 
-The suite has 79 Hardcore Friends tests plus one test from the Fabric framework. Each runs in its own small test plot with a fresh camp:
+The final code passed the full server suite twice in a row (`test-logs/server-gametests-summary.txt`). Each test runs in its own small plot with a fresh camp.
 
-| Area | Tests | Examples |
-|---|---|---|
-| Core rules | 16 | world-edit guard preserves player builds and stays inside its zones, only natural trees count as trees, death drops a backpack holding everything, friends fight a zombie together, heal out of combat, leave a skeleton's line of fire, a hurt friend stays out of bow range, backpacks survive lava |
-| Teamwork and supplies | 11 | deposit surplus but keep tools, restock the best tool, craft a stone pickaxe, Rowan hands logs to Oak during a shortage, share food with a hurt friend, come home at night |
-| Farming and foraging | 15 | harvest and replant, till beside water, lay out the farm plot (also on bumpy ground), bake bread, fell only natural trees and replant, quarry stays 5×5 and 2 deep, no stone dug without a pickaxe |
-| Building and redstone | 15 | campfire, supply chest, whole cabin, repairs, watchtower, sites avoid player builds, automatic door, drop-off hopper, auto-smelter |
-| Mining and exploring | 10 | exposed ore needs the right pickaxe, staircase mine digs only natural stone inside its box, smelting, Scout records ores |
-| Guardian, strategist, landscaper | 12 | Aegis equips better gear and defends a friend, Sage reviews the stores, Terra's paths, lighting, planting, fences |
+| Area | What is covered |
+|---|---|
+| Core rules | The world-edit guard keeps player builds safe and stays in its zones; only natural trees count. A death drops a backpack with everything. Friends fight zombies and plain drowned together and heal out of combat. They leave a skeleton's line of fire, a badly hurt friend falls back at once even while dodging, and places where a friend died are avoided for three days. |
+| Teamwork and supplies | Depositing, restocking and crafting tools; shares and deliveries to a stuck builder; feeding a hurt friend first. |
+| Everyone pitches in | Any friend can do any job, but specialists keep theirs. A stand-in builds or farms when the specialist is missing, shared jobs are never doubled up, and claims are released when a friend leaves or dies. Stand-ins carry the tools for work nobody covers. |
+| Needs and mood | Friends eat real food from the backpack or the chest. A starving friend drops work to eat, and one at one heart rests at camp. They sleep at night (a skipped night counts), wake when hurt, chat (raising Unity), take pastimes that change no blocks, and warm up by the fire. Mood lines, the `/friends needs` command, and starving that never kills on its own are also covered. |
+| Farming and foraging | Harvesting and replanting (carrots first), tilling, the farm plot on bumpy ground, baking and bone meal. Felling only natural trees and replanting them; bounded quarries. |
+| Building and redstone | The whole cabin and its repairs, the watchtower, and sites that avoid player builds. A forest camp has the trees on the cabin site cleared first. The automatic door, drop-off hopper and auto-smelter. |
+| Livestock | Terra builds the pen. Friends lure or lead animals home, breed them, butcher only the surplus, and cook meat on the campfire or in the furnace. Hunting is only allowed by day, outside camp, on wild animals. Your named, leashed, saddled, fenced or baby animals are never touched, and the last pair is always kept. |
+| Mining, exploring, guarding, landscaping | Ores need the right pickaxe, and the staircase mine stays in its box. Scout's finds, Aegis's gear and guard duty, Sage's store reviews, and Terra's paths, lights, plants and fences. |
 
-**Stability:** six full runs in a row after the final fixes all passed (80/80 each time). Earlier repeated runs found four tests that failed only sometimes. I traced each one to a cause instead of re-running until it passed:
+**How the suite was kept honest.** Each fix comes with a test that fails on the old code. Whenever a test failed only some of the time, I traced the root cause instead of re-running it. Those causes included:
+- a thunderstorm darkening the test world;
+- a farm field with no water;
+- a mock player left behind by another test;
+- a skeleton chasing a friend into the edge of the test area;
+- a real scoring bug where quarrying beat delivering logs to a stuck builder.
 
-- *Rowan went quarrying while Oak waited for her logs.* A real priority bug: quarrying could outscore delivering to a blocked builder. Fixed (delivery now comes first), and the test now sets up the worst case every time.
-- *A hurt friend drifted back into a skeleton's range.* A real behaviour bug: retreating ended 12 blocks away, inside bow range, and "drift home" could walk her back. Fixed, and a new test covers it.
-- *A farmer charged a skeleton with a hoe.* A real behaviour bug, fixed: only Aegis goes after archers.
-- *Friends rested at noon in two Rowan tests.* A test-world issue: random thunderstorms make it "dark outside", which correctly sends friends home. The tests now pin clear weather.
-- *Farmland turned back to dirt in the harvest test.* A test-world issue: the test field had no water. It now has water, like a real farm.
+## 2. In-game Hardcore test (real client, fresh world): 12 of 12
 
-## 2. In-game test in a fresh Hardcore world (client)
+A real Minecraft client created a new **Hardcore** world, which forces cheats off.
 
-A real Minecraft client (software-rendered, no GPU) created a new **Hardcore** world. Hardcore forces cheats off.
+- The vanilla `/time set` was refused, while `/friends` commands worked.
+- All nine friends were recruited for exactly 18 common food, and a duplicate recruit was refused.
+- Fern's death dropped her backpack, and she could not be recruited straight back.
+- The player's own death showed **"Game Over!"** and then spectator mode, with no extra life.
 
-SOAK_RESULTS_SKINS
+Screenshots are in `screenshots/`. They show your nine skins in game, front and back, with name tags.
 
-## 3. Two days of real terrain in Hardcore (client soak)
+## 3. Two in-game days on real terrain: recording 2
 
-SOAK_RESULTS_CAMP
+This was a fresh Hardcore world on a hilly birch forest by a river, with all nine friends and a starter chest. It ran two full in-game days with the camera recording. The video is `videos/hardcore-two-days-timelapse.mp4`; the panel under the picture shows each friend's mood, what they are doing, and what they say.
 
-## 4. Production install check
+- **7 of 9 survived.** Sage and Aegis were killed by zombies in the camp on the first night, and nobody died after that.
+- **The camp reached Village**: supply chest, crafting table, campfire, furnace, farm plot, torch posts, paths, cabin, automatic door and farm fence. Unity ended at 274 (Companions).
+- **All 45 of the test's player-built blocks were untouched**, and all 614 block changes by friends stayed inside their zones.
+- This run used the code just before livestock was added (`5a65fea`). Livestock is covered by the automated tests above but was not in this recording.
 
-PROD_RESULTS
+**What the first night showed.** Aegis guards until midnight and then sleeps, so the camp had no watch after that. He fought a zombie alone, and Sage, the one friend with no weapon, could only run. This is written up as a known limit in GUIDE.md, section 13. A night-watch rota, a bedtime routine, a camp-wide rally and a sword for Sage are built on a separate branch (`wf/night-safety`) but not in this release: they still need their review fixes and testing with livestock.
 
-## 5. Skin checks
+## 4. What went wrong on the way, and was fixed
 
-All nine supplied skins are packed into the mod byte-for-byte unchanged. They were checked with your saved make-minecraft-skins skill's own bundled validator and renderer:
+An earlier recording (`videos/first-recording-before-drowned-fix.mp4`) lost Scout and Flint to drowned in a river, and then most of the camp on the first night. The cause was a bug of mine: drowned without a trident counted as archers, so friends ran from them instead of fighting together, and a dodging friend never fell back to recover. Both are fixed and tested. The second recording above is the result.
 
-- Every skin is a valid 64×64 RGBA PNG on the Classic (Steve, 4-pixel arms) model, with all 36 base faces filled.
-- 3D previews of each friend are in `skin-previews/` (`<name>-preview.png` with the overlay layer, `<name>-base-only.png` without it), plus `all-friends-preview.png`.
-- In game the skins render on the classic wide-arm model with every overlay layer showing. See the screenshots in `screenshots/`.
+A code review of the needs and generalist systems confirmed 13 problems, all now fixed. They included:
+- friends eating three times more than intended, and a farm that could never feed nine;
+- urgent needs losing to busy work;
+- stale job claims after a reload.
 
-## 6. What was not tested
+A review of livestock confirmed 14 more, all fixed. The most important: a friend could have butchered your named or saddled animals in the pen, and a full pen could stall for good.
 
-- Multiplayer with several real players at once (the code is server-side and should work, but only single-player and a dedicated server console were run).
-- Very long play (weeks of in-game time), the Nether and the End with friends following, and every possible terrain type.
-- Real GPUs: the client ran on software rendering, so frame rate was not measured.
+## 5. Production install check
+
+This used the official Fabric server launcher with this release's JAR and Fabric API 0.162.0+26.3 (CurseForge file 9078180), on a fresh Hardcore world. It loaded with no errors, and `/friends help`, `/friends list`, `/friends camp`, `/friends unity` and `/friends needs` all worked from the console (`test-logs/production-server-check.txt`). The JAR contains no test code.
+
+## 6. Skin checks
+
+All nine supplied skins are packed into the mod byte for byte, unchanged. They were validated with your saved make-minecraft-skins skill's own bundled validator and renderer. Each is a 64×64 RGBA PNG on the Classic (Steve) model with all 36 base faces filled. 3D previews are in `skin-previews/`, and in-game views are in `screenshots/`.
+
+## 7. Not tested
+
+- Multiplayer with several real players at once.
+- Weeks of in-game time, the Nether and the End, and every kind of terrain. Livestock was not tested over a long real-world run.
+- Real graphics cards: the client ran on software rendering, so frame rate was not measured.

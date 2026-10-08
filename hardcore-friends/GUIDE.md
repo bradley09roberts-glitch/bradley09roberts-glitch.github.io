@@ -208,6 +208,7 @@ None of these bonuses can stop you dying.
 
 ## 13. Honest limits
 
+- **Nights are the dangerous time.** Aegis guards until midnight and then sleeps; there is no second watch yet. Friends only step into a fight within 8 blocks of it, and Sage carries no weapon, so she can only run. In the two-day test run, 2 of 9 friends died to zombies on the first night and none after. Stay near camp after dark, light it well, and help in fights. A night-watch rota is planned for a later update.
 - Friends only act while their area is loaded, which means near a player. They do not work while you are far away, and their needs do not change then either.
 - Every friend can do every job, but a stand-in only works on someone else's speciality in their spare time, and more slowly. A camp missing several specialists grows more slowly.
 - Needs are five simple numbers, not a full life simulation. Friends meet them with a fixed set of jobs: eating, sleeping, chatting, a pastime, warming up and, when too weak to work, resting. They sleep where they lie down (in the cabin or around the camp centre), not in beds.
