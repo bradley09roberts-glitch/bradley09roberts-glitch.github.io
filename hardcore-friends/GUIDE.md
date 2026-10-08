@@ -29,11 +29,13 @@
 3. Stand where you want to live and type `/friends camp set`.
 4. Place a chest or barrel nearby. Look at it and type `/friends chest`; this becomes the **shared supply chest**. If there is no chest, Oak builds one from planks.
 5. Recruit: `/friends recruit fern`, `/friends recruit oak`, and so on.
-6. Put useful starter supplies in the chest: logs, cobblestone, coal, seeds, a water bucket and some food. The friends restock from it, deposit what they gather into it, and build with what is in it.
+6. Put useful starter supplies in the chest: logs, cobblestone, coal, seeds, a water bucket and **food**. The friends restock from it, deposit what they gather into it, build with what is in it, and eat from it when they are hungry.
 
 ## 3. The nine friends
 
-| Friend | Role | Personality | What they do on their own |
+Each friend's role is their speciality: the work they choose first and do best. Any friend can do any of these jobs, though (see section 4).
+
+| Friend | Role | Personality | Their speciality |
 |---|---|---|---|
 | **Fern** | Farmer | patient, caring | Harvests ripe crops and replants straight away, tills new farmland next to water, lays out a farm plot (with a water bucket from the chest), bakes bread, uses bone meal, shares food with hungry players |
 | **Oak** | Builder | practical, methodical | Builds the camp step by step from real materials: chest, campfire, crafting table, furnace, torch posts, cabin, storehouse, watchtower, lantern posts, second cabin. Saws planks and repairs damage |
@@ -47,23 +49,79 @@
 
 The friends talk in their own voices. Use `/friends chatter quiet|normal|chatty` to set how much. Danger warnings always show.
 
-## 4. Controls
+## 4. Everyone pitches in
+
+Every friend can do every kind of work: farming, building, mining, exploring, redstone, landscaping and foraging. Their role is their **speciality**, and each also has one **interest**, the work they like next best.
+
+| Friend | Speciality | Interest |
+|---|---|---|
+| Fern | Farming | Foraging |
+| Oak | Building | Landscaping |
+| Flint | Mining | Redstone |
+| Scout | Exploring | Foraging |
+| Spark | Redstone | Mining |
+| Aegis | Guarding | Exploring |
+| Sage | Planning | Farming |
+| Terra | Landscaping | Farming |
+| Rowan | Foraging | Building |
+
+How they share the work:
+
+- **Specialists go first.** Whenever there is work of their own kind, a friend does it; other people's work comes after.
+- **Standing in.** When nobody of a speciality is working (that friend has died, has not been recruited yet, or is following you or holding position), the others pick that work up in their spare time, their interest first. A camp without Fern still gets its crops harvested and replanted, just less eagerly.
+- **Lending a hand.** While the specialist is around, the others only help with that work when they have nothing else at all to do.
+- **One at a time on shared jobs.** A building, the mine, the quarry, the farm's layout, the paths, a tree being felled: one friend works on each at a time, so two friends never build the same cabin. When the specialist comes back to work, a stand-in hands the job back at once.
+- **Skill.** Specialists mine, chop and dig 20% faster at their own work. Their interest goes at normal speed, and anything else 15% slower.
+- **Duties that stay with one friend:** Aegis's guard duty and gear, Sage's observations and stores review, and Scout's reports.
+
+A friend starting work outside their speciality may say so, for example "I'll lend a hand with harvesting crops."
+
+## 5. Needs and mood
+
+Like characters in The Sims, every friend has five everyday needs, each from 0 (desperate) to 100 (fully met). Friends look after them on their own.
+
+| Need | Goes down | How friends meet it |
+|---|---|---|
+| **Hunger** | All the time, faster while working. About one loaf of bread's worth a day | They eat real food: from their backpack first, otherwise one item from the supply chest. Bowls go back in the backpack |
+| **Energy** | While awake, so they are tired by nightfall | They sleep at night, inside the cabin once it is built, otherwise around the camp centre. A friend who is exhausted naps by day. Aegis keeps the first watch |
+| **Social** | While alone. Being near a friend or you fills it | They walk over to another friend for a chat |
+| **Fun** | While working | They take a short break for a pastime that suits them: Flint skips stones, Spark tinkers with a gadget, Sage watches the clouds or the stars, and so on. Pastimes never change your world |
+| **Comfort** | In rain or darkness out in the open, and while badly hurt | They warm up by a lit campfire or go indoors. A roof overhead and a lit campfire nearby are cosy |
+
+The lower a need, the more urgent it is. A mild need waits until the job in hand is done; a desperate one comes before any work. Friends only see to their needs while working on their own: a friend who is following you or holding position puts them off until you send them back to work.
+
+**Mood.** Together the needs make a mood: miserable, low, okay, good or great. Hunger and energy count the most.
+
+- Mood changes how fast friends work: 80% when miserable, up to 110% when every need is met.
+- Friends say how they feel now and then. A friend in a low mood names their worst need ("Worst need: fun").
+- When the whole team's average mood is great, the Unity bond grows by 1 every in-game hour (at most 12 a day). A low mood never costs Unity.
+
+**Food.** Keep food in the supply chest. Bread, baked potatoes, carrots, apples, berries, cookies, dried kelp, pumpkin pie, stews and cooked meat or fish all count; filling food such as cooked beef satisfies more hunger.
+
+- A friend who finds no food in their backpack or the chest says so. Put some food in the chest.
+- At hunger 0 a friend is **starving**: they lose half a heart every 4 seconds until they are down to one heart, just as you do on Normal difficulty, and they cannot heal. Starving never kills a friend on its own, but a friend on one heart dies to almost anything. Keep the food coming.
+- Hand food to a friend who is hurt or hungry and they eat it at once (it heals them and fills their hunger). A friend who is not hungry puts it in their backpack for later.
+
+Use `/friends needs` to see everyone's needs as bars, their mood, and what each friend is doing about their lowest need. Right-clicking a friend also shows their mood.
+
+## 6. Controls
 
 | Action | How |
 |---|---|
-| See a friend's status | Right-click them with an empty hand |
+| See a friend's status and mood | Right-click them with an empty hand |
 | Open their backpack | Sneak + right-click with an empty hand |
 | Give an item | Right-click them while holding it (it goes into their backpack) |
-| Heal a friend | Right-click with food while they are hurt |
+| Feed or heal a friend | Right-click with food while they are hurt or hungry; they eat it at once |
 | Hurt a friend on purpose | Only while sneaking. Ordinary swings and arrows pass harmlessly |
 
-## 5. Commands (no cheats needed)
+## 7. Commands (no cheats needed)
 
 | Command | Purpose |
 |---|---|
 | `/friends` or `/friends help` | Overview |
 | `/friends recruit <name>` | Recruit a friend (2 common food) |
-| `/friends list` | Everyone's status, health and current job |
+| `/friends list` | Everyone's status, health, mood and current job |
+| `/friends needs [name\|all]` | Each friend's five needs as bars with numbers, their mood, and what they are doing about their lowest need |
 | `/friends follow <name\|all>` | Come with me; they help fight and carry loot |
 | `/friends stay <name\|all>` | Hold this spot |
 | `/friends work <name\|all>` | Back to their own routines (default) |
@@ -80,9 +138,9 @@ The friends talk in their own voices. Use `/friends chatter quiet|normal|chatty`
 
 None of these commands give items, teleport you, or change time, weather, game mode or difficulty.
 
-## 6. Unity bond
+## 8. Unity bond
 
-The bond grows when you spend time near your friends, when they deliver resources and share with each other, defend one another, and finish camp buildings. Losing a friend costs 80 points.
+The bond grows when you spend time near your friends, when they deliver resources and share with each other, chat with each other (1 point a chat, at most 30 a day), defend one another, and finish camp buildings, and while the whole team is in a great mood (1 point an in-game hour, at most 12 a day). Losing a friend costs 80 points. A low mood costs nothing.
 
 | Level | Points | Bonus |
 |---|---|---|
@@ -94,18 +152,19 @@ The bond grows when you spend time near your friends, when they deliver resource
 
 None of these bonuses can stop you dying.
 
-## 7. The camp grows into a settlement
+## 9. The camp grows into a settlement
 
-**Campsite → Camp → Hamlet → Village → Settlement.** Each stage needs that stage's buildings finished. The later stages also need Unity: 100 for Hamlet, 250 for Village and 500 for Settlement. Use `/friends camp` to see what is built and what Oak is still waiting for. Everything is built from what is in the supply chest, so keep it stocked or let Rowan and Flint fill it. Cabin windows use glass panes when the chest has glass (6 glass make 16 panes); otherwise Oak closes them with planks. If the supply chest is broken, friends forget it: Oak builds a new one, or you can link another with `/friends chest`. If a role's friend is not on your team, the camp grows without that improvement.
+**Campsite → Camp → Hamlet → Village → Settlement.** Each stage needs that stage's buildings finished. The later stages also need Unity: 100 for Hamlet, 250 for Village and 500 for Settlement. Use `/friends camp` to see what is built and what Oak is still waiting for. Everything is built from what is in the supply chest, so keep it stocked or let Rowan and Flint fill it. Cabin windows use glass panes when the chest has glass (6 glass make 16 panes); otherwise Oak closes them with planks. If the supply chest is broken, friends forget it: Oak builds a new one, or you can link another with `/friends chest`. If a friend is not on your team, the others stand in and build their improvements too, just more slowly.
 
-## 8. Hardcore rules
+## 10. Hardcore rules
 
 - Your own Hardcore death is unchanged: one life, then spectator. There are no extra lives.
+- Friends need food. A starving friend loses health down to one heart and cannot heal. Starving never kills them on its own, but it leaves them one hit from death.
 - Friends are mortal. They retreat when badly hurt, eat from their backpacks, and run from creepers. Healthy friends holding a tool stand together and fight off zombies and other close attackers, so nobody is picked off alone. Only Aegis goes after skeletons and other archers; everyone else gets out of their line of fire, and a badly hurt friend stays well out of bow range until they recover. Out of combat (no damage for 10 s, no target, not burning) they recover 1 health every 4 s. If they die, they drop a **backpack item** holding everything they carried and wore. It never despawns, and its coordinates go to chat. Use it (right-click) to unpack.
 - A fallen friend's name returns as a newcomer after 3 in-game days. Set `deadFriendsReturnAfterDays` to `-1` in `config/hardcorefriends.json` for permanent loss.
 - Zombies, skeletons, spiders, illagers and witches hunt friends just as they hunt villagers.
 
-## 9. How friends treat your world
+## 11. How friends treat your world
 
 - **Building and landscaping** happen only inside the camp radius: 24 blocks, growing to 40.
 - **Tree felling, quarrying and the staircase mine** happen only in a ring up to 48 blocks beyond the camp. Flint also mines ores that are already exposed, inside the camp or in that ring.
@@ -113,9 +172,13 @@ None of these bonuses can stop you dying.
 - Trees are felled only if they grew naturally (natural leaves), never log walls or trees inside camp. Quarry pits are 5×5 and at most 2 blocks deep. Mines stay inside one 24×24 area.
 - Every change is logged (`/friends log`). Turn editing off entirely with `allowWorldEditing: false`, or individually with `allowTreeFelling`, `allowQuarrying` and `allowMining`.
 
-## 10. Honest limits
+## 12. Honest limits
 
-- Friends only act while their area is loaded, which means near a player. They do not work while you are far away.
+- Friends only act while their area is loaded, which means near a player. They do not work while you are far away, and their needs do not change then either.
+- Every friend can do every job, but a stand-in only works on someone else's speciality in their spare time, and more slowly. A camp missing several specialists grows more slowly.
+- Needs are five simple numbers, not a full life simulation. Friends meet them with a fixed set of jobs: eating, sleeping, chatting, a pastime and warming up. They sleep where they lie down (in the cabin or around the camp centre), not in beds.
+- Friends see to their needs only while working on their own. A friend following you or holding position does not eat, sleep or rest; they eat from their backpack only when hurt. Hand them food, or send them back to work now and then.
+- Chats between friends are an exchange of pre-written lines, not a real conversation.
 - They build from fixed blueprints, adapted to the wood you have. They do not invent new buildings.
 - Pathfinding is vanilla mob pathfinding. On rough terrain a friend can get stuck. Stuck jobs time out and are retried later.
 - Mining is one staircase mine plus exposed ores near camp. Only trees they can fully reach (about 6 blocks tall) are felled.
@@ -125,6 +188,6 @@ None of these bonuses can stop you dying.
 - Dialogue is pre-written and chosen by situation and personality. It is not free conversation.
 - Purely natural-looking player builds (for example a hut made only of dirt or stone) cannot be told apart from terrain if they sit in the gathering ring outside your camp. Keep such builds inside the camp radius, or add any crafted block nearby.
 
-## 11. Config (`config/hardcorefriends.json`)
+## 13. Config (`config/hardcorefriends.json`)
 
 `chatter`, `campRadius` (24), `maxCampRadius` (40), `resourceRadius` (48), `allowWorldEditing`, `allowTreeFelling`, `allowQuarrying`, `allowMining`, `deadFriendsReturnAfterDays` (3, or −1 for permanent), `followTeleportDistance` (48, 0 = off), `monstersTargetCompanions` (true).

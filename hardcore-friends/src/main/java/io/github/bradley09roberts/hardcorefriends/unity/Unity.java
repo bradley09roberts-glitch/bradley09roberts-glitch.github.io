@@ -16,6 +16,8 @@ import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
+import io.github.bradley09roberts.hardcorefriends.companion.MoodPassives;
+import io.github.bradley09roberts.hardcorefriends.companion.Needs;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 
 /**
@@ -40,8 +42,16 @@ public final class Unity {
 	public static final String HANDOFF = "handoff";
 	public static final String DEFENCE = "defence";
 	public static final String BUILD = "build";
+	/** Two friends chatting (see {@link #chat}). */
+	public static final String CHAT = "chat";
+	/** Team spirit: the friends' average mood is great (see {@link #teamSpirit}). */
+	public static final String SPIRIT = "spirit";
+	/** Most Unity a great team mood adds in one in-game day, at +1 an in-game hour. */
+	public static final int SPIRIT_DAILY_CAP = 12;
 
 	private static final long RALLY_COOLDOWN = 20L * 60 * 10;
+	/** One in-game hour, in ticks. */
+	private static final long HOUR = 1000;
 
 	private Unity() {
 	}
@@ -103,7 +113,19 @@ public final class Unity {
 
 	/** Two friends had a chat: +1, at most 30 a day. */
 	public static void chat(ServerLevel level) {
-		add(level, "chat", 1, 30);
+		add(level, CHAT, 1, 30);
+	}
+
+	/**
+	 * One in-game hour of team spirit: while the friends' average mood is great, the bond grows by 1, at most
+	 * {@value #SPIRIT_DAILY_CAP} a day. A low mood costs nothing; it only slows the friends' work. Called hourly from
+	 * {@link #tick}. Returns the amount added.
+	 */
+	public static int teamSpirit(MinecraftServer server) {
+		if (MoodPassives.teamMood(Companions.all()) != Needs.Mood.GREAT) {
+			return 0;
+		}
+		return add(server.overworld(), SPIRIT, 1, SPIRIT_DAILY_CAP);
 	}
 
 	public static void lose(MinecraftServer server, int amount) {
@@ -156,11 +178,14 @@ public final class Unity {
 		return level(server) >= 3;
 	}
 
-	/** Called every server tick. Handles time-together gains, camp healing and the Family rally. */
+	/** Called every server tick. Handles time-together and team-spirit gains, camp healing and the Family rally. */
 	public static void tick(MinecraftServer server) {
 		long tick = server.getTickCount();
 		if (tick % 1200 == 0) {
 			timeTogether(server);
+		}
+		if (tick % HOUR == 0) {
+			teamSpirit(server);
 		}
 		if (tick % 80 == 0 && level(server) >= 3) {
 			campRegen(server);

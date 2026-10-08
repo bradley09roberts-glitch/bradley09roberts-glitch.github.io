@@ -2,104 +2,109 @@ package io.github.bradley09roberts.hardcorefriends.companion;
 
 /**
  * Situations a friend can speak about. Each friend has their own wording in {@link Lines}. Arguments are
- * substituted with {@link String#format}; the documented placeholders say what each line receives.
+ * substituted with {@link String#format}; the documented placeholders say what each line receives, and
+ * {@link #args()} says how many there are (the dialogue self-check, {@link Lines#problems()}, holds every
+ * template to it).
  */
 public enum Line {
 	// Lifecycle and orders
 	/** Just recruited. %1$s = player name. */
-	RECRUITED(Priority.IMPORTANT, 0),
+	RECRUITED(Priority.IMPORTANT, 0, 1),
 	/** Ordered to follow. %1$s = player name. */
-	FOLLOW(Priority.IMPORTANT, 0),
+	FOLLOW(Priority.IMPORTANT, 0, 1),
 	/** Ordered to hold position. */
-	STAY(Priority.IMPORTANT, 0),
+	STAY(Priority.IMPORTANT, 0, 0),
 	/** Ordered back to autonomous work. */
-	WORK(Priority.IMPORTANT, 0),
+	WORK(Priority.IMPORTANT, 0, 0),
 	/** Dismissed from the team. */
-	DISMISSED(Priority.IMPORTANT, 0),
+	DISMISSED(Priority.IMPORTANT, 0, 0),
 	/** Player right-clicked them: a status greeting. %1$s = current activity, %2$s = player name. */
-	GREETING(Priority.IMPORTANT, 0),
+	GREETING(Priority.IMPORTANT, 0, 2),
 	/** Player handed them food. */
-	THANKS_FOOD(Priority.IMPORTANT, 0),
+	THANKS_FOOD(Priority.IMPORTANT, 0, 0),
 	/** Player handed them a non-food item. %1$s = item name. */
-	THANKS_GIFT(Priority.IMPORTANT, 0),
+	THANKS_GIFT(Priority.IMPORTANT, 0, 1),
 
 	// Danger
 	/** Health low; falling back. */
-	RETREAT(Priority.DANGER, 200),
+	RETREAT(Priority.DANGER, 200, 0),
 	/** Recovered after retreating. */
-	RECOVERED(Priority.CASUAL, 600),
+	RECOVERED(Priority.CASUAL, 600, 0),
 	/** Saw a creeper close by. */
-	CREEPER(Priority.DANGER, 200),
+	CREEPER(Priority.DANGER, 200, 0),
 	/** Engaging a hostile mob. %1$s = mob name. */
-	FIGHT(Priority.CASUAL, 400),
+	FIGHT(Priority.CASUAL, 400, 1),
 	/** Warning a player about something. %1$s = player name, %2$s = hazard description. */
-	WARNING(Priority.DANGER, 100),
+	WARNING(Priority.DANGER, 100, 2),
 	/** Another friend just died. %1$s = their name. */
-	FRIEND_DIED(Priority.IMPORTANT, 0),
+	FRIEND_DIED(Priority.IMPORTANT, 0, 1),
 	/** A player is badly hurt nearby. %1$s = player name. */
-	PLAYER_HURT(Priority.DANGER, 600),
+	PLAYER_HURT(Priority.DANGER, 600, 1),
 
 	// Day cycle
 	/** Heading home because night is falling. */
-	NIGHT_RETURN(Priority.CASUAL, 6000),
+	NIGHT_RETURN(Priority.CASUAL, 6000, 0),
 	/** Morning greeting. */
-	MORNING(Priority.CASUAL, 12000),
+	MORNING(Priority.CASUAL, 12000, 0),
 
 	// Work
 	/** Starting their main job. %1$s = activity. */
-	WORK_START(Priority.CASUAL, 1200),
+	WORK_START(Priority.CASUAL, 1200, 1),
 	/** Needs a tool. %1$s = tool kind, e.g. "pickaxe". */
-	NEED_TOOL(Priority.CASUAL, 2400),
+	NEED_TOOL(Priority.CASUAL, 2400, 1),
 	/** Their tool just broke. %1$s = item name. */
-	TOOL_BROKE(Priority.IMPORTANT, 0),
+	TOOL_BROKE(Priority.IMPORTANT, 0, 1),
 	/** Missing materials. %1$s = short list, e.g. "12 planks, 3 glass panes". */
-	NEED_MATERIALS(Priority.CASUAL, 2400),
+	NEED_MATERIALS(Priority.CASUAL, 2400, 1),
 	/** Dropped items into the supply chest. */
-	DEPOSIT(Priority.CASUAL, 2400),
+	DEPOSIT(Priority.CASUAL, 2400, 0),
 	/** Gave something to another friend or player. %1$s = recipient, %2$s = item description. */
-	SHARE(Priority.CASUAL, 600),
+	SHARE(Priority.CASUAL, 600, 2),
 	/** Finished a structure. %1$s = structure name. */
-	BUILD_DONE(Priority.IMPORTANT, 0),
+	BUILD_DONE(Priority.IMPORTANT, 0, 1),
 	/** Finished a contraption. %1$s = contraption name. */
-	CONTRAPTION_DONE(Priority.IMPORTANT, 0),
+	CONTRAPTION_DONE(Priority.IMPORTANT, 0, 1),
 	/** Found something interesting. %1$s = description with coordinates. */
-	DISCOVERY(Priority.CASUAL, 600),
+	DISCOVERY(Priority.CASUAL, 600, 1),
 	/** Strategy or survival advice. %1$s = the advice text. */
-	ADVICE(Priority.CASUAL, 1200),
+	ADVICE(Priority.CASUAL, 1200, 1),
 	/** The team bond reached a new level. %1$s = level name. */
-	UNITY_UP(Priority.IMPORTANT, 0),
+	UNITY_UP(Priority.IMPORTANT, 0, 1),
 	/** The camp reached a new stage. %1$s = stage name. */
-	CAMP_UP(Priority.IMPORTANT, 0),
+	CAMP_UP(Priority.IMPORTANT, 0, 1),
 	/** Idle small talk with no arguments. */
-	IDLE(Priority.CASUAL, 3600),
+	IDLE(Priority.CASUAL, 3600, 0),
 
 	// Everyday needs (Sims-style)
 	/** Getting hungry; going to find food. */
-	HUNGRY(Priority.CASUAL, 2400),
-	/** Just ate. %1$s = food name. */
-	ATE(Priority.CASUAL, 1200),
+	HUNGRY(Priority.CASUAL, 2400, 0),
+	/** Just ate. %1$s = food name as the item shows it, e.g. "Bread" or "Sweet Berries" (capitalised). */
+	ATE(Priority.CASUAL, 1200, 1),
 	/** Hungry and there is no food in the backpack or the supply chest. */
-	NO_FOOD(Priority.IMPORTANT, 4800),
+	NO_FOOD(Priority.IMPORTANT, 4800, 0),
 	/** Very hungry: starving hurts. */
-	STARVING(Priority.DANGER, 1200),
+	STARVING(Priority.DANGER, 1200, 0),
 	/** Tired; going to bed. */
-	SLEEPY(Priority.CASUAL, 6000),
+	SLEEPY(Priority.CASUAL, 6000, 0),
 	/** Woke up rested. */
-	RESTED(Priority.CASUAL, 6000),
+	RESTED(Priority.CASUAL, 6000, 0),
 	/** Opening a chat with another friend. %1$s = the other friend's name. */
-	CHAT(Priority.CASUAL, 600),
+	CHAT(Priority.CASUAL, 600, 1),
 	/** Answering a friend who started a chat. %1$s = the other friend's name. */
-	CHAT_REPLY(Priority.CASUAL, 600),
+	CHAT_REPLY(Priority.CASUAL, 600, 1),
 	/** Starting some fun. %1$s = what they are doing, e.g. "skipping stones". */
-	LEISURE(Priority.CASUAL, 1200),
+	LEISURE(Priority.CASUAL, 1200, 1),
 	/** Warming up by the fire or under a roof. */
-	COSY(Priority.CASUAL, 2400),
-	/** Mood has dropped low. %1$s = the need that is worst, e.g. "hunger". */
-	MOOD_LOW(Priority.CASUAL, 6000),
-	/** Mood is great. */
-	MOOD_GREAT(Priority.CASUAL, 9600),
+	COSY(Priority.CASUAL, 2400, 0),
+	/**
+	 * Mood has dropped low. %1$s = the need that is worst, as a lower-case word: "hunger", "energy", "social",
+	 * "fun" or "comfort" (templates read it as "my %1$s need" or "worst need: %1$s").
+	 */
+	MOOD_LOW(Priority.CASUAL, 6000, 1),
+	/** Mood is great. Rare (15 minutes apart), so a happy camp of nine is not a chorus. */
+	MOOD_GREAT(Priority.CASUAL, 18000, 0),
 	/** Picking up work outside their speciality. %1$s = the job, e.g. "harvesting crops". */
-	HELPING_OUT(Priority.CASUAL, 2400);
+	HELPING_OUT(Priority.CASUAL, 2400, 1);
 
 	/** How a line is rate-limited and who hears it. */
 	public enum Priority {
@@ -113,10 +118,12 @@ public enum Line {
 
 	private final Priority priority;
 	private final int cooldownTicks;
+	private final int args;
 
-	Line(Priority priority, int cooldownTicks) {
+	Line(Priority priority, int cooldownTicks, int args) {
 		this.priority = priority;
 		this.cooldownTicks = cooldownTicks;
+		this.args = args;
 	}
 
 	public Priority priority() {
@@ -126,5 +133,10 @@ public enum Line {
 	/** Minimum ticks between two uses of this line by the same friend. */
 	public int cooldownTicks() {
 		return cooldownTicks;
+	}
+
+	/** How many arguments the line receives: its templates may use {@code %1$s} up to {@code %<args>$s}, no more. */
+	public int args() {
+		return args;
 	}
 }

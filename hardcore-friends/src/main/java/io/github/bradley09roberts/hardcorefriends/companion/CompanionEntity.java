@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -80,6 +81,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 public class CompanionEntity extends PathfinderMob {
 	private static final EntityDataAccessor<Integer> DATA_FRIEND = SynchedEntityData.defineId(CompanionEntity.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> DATA_MODE = SynchedEntityData.defineId(CompanionEntity.class, EntityDataSerializers.INT);
+	/** A friend whose hunger is below this eats food a player hands them, even at full health. */
+	public static final double EATS_HANDED_FOOD_BELOW = 60;
 
 	private final Backpack backpack = new Backpack();
 	private final Actions actions = new Actions(this);
@@ -363,6 +366,7 @@ public class CompanionEntity extends PathfinderMob {
 			heal(1.0F);
 		}
 		RolePassives.tick(this);
+		MoodPassives.tick(this);
 	}
 
 	@Override
@@ -396,8 +400,10 @@ public class CompanionEntity extends PathfinderMob {
 			return InteractionResult.SUCCESS_SERVER;
 		}
 		FoodProperties food = held.get(DataComponents.FOOD);
-		if (food != null && getHealth() < getMaxHealth()) {
+		// A hurt or hungry friend eats food handed to them at once; anyone else puts it in their backpack for later.
+		if (food != null && (getHealth() < getMaxHealth() || needs.get(Needs.Need.HUNGER) < EATS_HANDED_FOOD_BELOW)) {
 			heal(Math.max(1, food.nutrition()));
+			needs.add(Needs.Need.HUNGER, hungerValue(held));
 			UseRemainder remainder = held.get(DataComponents.USE_REMAINDER);
 			held.consume(1, player);
 			if (remainder != null && !player.hasInfiniteMaterials()) {
@@ -437,11 +443,12 @@ public class CompanionEntity extends PathfinderMob {
 			Component.literal(friendId().displayName() + "'s Backpack")));
 	}
 
+	/** "Fern (Farmer) - harvesting crops - health 20/20 - mood good - backpack 3/9", shown on right-click. */
 	public Component statusLine() {
-		String health = String.format("%.0f/%.0f", getHealth(), getMaxHealth());
+		String health = String.format(Locale.ROOT, "%.0f/%.0f", getHealth(), getMaxHealth());
 		return Component.literal(friendId().displayName() + " (" + friendId().role().title() + ") - " + activity()
-			+ " - health " + health + " - mood " + needs.mood().word() + " - backpack " + backpack.usedSlots() + "/"
-			+ backpack.capacity())
+			+ " - health " + health + " - mood " + MoodPassives.moodText(this) + " - backpack " + backpack.usedSlots()
+			+ "/" + backpack.capacity())
 			.withStyle(ChatFormatting.GRAY);
 	}
 

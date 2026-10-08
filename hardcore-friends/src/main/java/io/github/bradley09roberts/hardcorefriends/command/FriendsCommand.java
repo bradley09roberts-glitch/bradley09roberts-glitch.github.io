@@ -1,6 +1,7 @@
 package io.github.bradley09roberts.hardcorefriends.command;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -30,6 +31,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
 import io.github.bradley09roberts.hardcorefriends.ai.role.RolePassives;
+import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
@@ -39,6 +41,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
+import io.github.bradley09roberts.hardcorefriends.companion.MoodPassives;
+import io.github.bradley09roberts.hardcorefriends.companion.Needs;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.registry.ModEntities;
@@ -64,6 +68,9 @@ public final class FriendsCommand {
 			.executes(FriendsCommand::help)
 			.then(Commands.literal("help").executes(FriendsCommand::help))
 			.then(Commands.literal("list").executes(FriendsCommand::list))
+			.then(Commands.literal("needs")
+				.executes(ctx -> needs(ctx, "all"))
+				.then(friendArg(true).executes(ctx -> needs(ctx, StringArgumentType.getString(ctx, "name")))))
 			.then(Commands.literal("recruit").then(friendArg(false).executes(FriendsCommand::recruit)))
 			.then(Commands.literal("dismiss").then(friendArg(false).executes(FriendsCommand::dismiss)))
 			.then(Commands.literal("follow").then(friendArg(true).executes(ctx -> order(ctx, CompanionMode.FOLLOW))))
@@ -105,13 +112,15 @@ public final class FriendsCommand {
 			"Hardcore Friends - nine companions, one life each.",
 			"/friends recruit <name>  - costs " + RECRUIT_COST + " common food (bread, apples, carrots, potatoes, meat...)",
 			"/friends list | where <name> | backpack <name>",
+			"/friends needs [name|all]  - hunger, energy, social, fun, comfort and mood",
 			"/friends follow|stay|work <name|all>",
 			"/friends camp | camp set | chest (look at a chest or barrel)",
 			"/friends unity | plan | advice | log | chatter <quiet|normal|chatty>",
 			"/friends dismiss <name>  - they leave and drop their backpack",
-			"Right-click a friend: status. Sneak + right-click: open backpack. Give food to heal them.",
+			"Right-click a friend: status. Sneak + right-click: open backpack. Give food to feed or heal them.",
 			"Friends: Fern (farmer), Oak (builder), Flint (miner), Scout (explorer), Spark (inventor),",
-			"Aegis (warrior), Sage (strategist), Terra (landscaper), Rowan (forager)."
+			"Aegis (warrior), Sage (strategist), Terra (landscaper), Rowan (forager).",
+			"Everyone can do every job; their role is their speciality. They eat, sleep and rest on their own."
 		};
 		for (String line : lines) {
 			ctx.getSource().sendSuccess(() -> Component.literal(line).withStyle(ChatFormatting.GRAY), false);
@@ -134,13 +143,106 @@ public final class FriendsCommand {
 				case NEVER_RECRUITED -> "not recruited yet";
 				case DISMISSED -> "dismissed (can be recruited again a day after leaving)";
 				case DEAD -> deadText(source.getLevel(), ledger);
-				case ALIVE -> live.map(c -> c.activity() + String.format(Locale.ROOT, " (%.0f hp)", c.getHealth()))
+				case ALIVE -> live.map(c -> c.activity() + String.format(Locale.ROOT, " (%.0f hp, mood %s)", c.getHealth(),
+						c.needs().mood().word()))
 					.orElse("away (last seen " + posText(ledger.lastKnownPos) + ")");
 			};
 			line.append(Component.literal(text).withStyle(ChatFormatting.WHITE));
 			source.sendSuccess(() -> line, false);
 		}
 		return 1;
+	}
+
+	// ------------------------------------------------------------------ needs
+
+	/** A need at or above this can wait; below it, a friend will see to it. */
+	private static final double NEED_FINE = 50;
+
+	/** {@code /friends needs [name|all]}: each friend's five needs as bars, their mood, and what they do about it. */
+	private static int needs(CommandContext<CommandSourceStack> ctx, String name) {
+		CommandSourceStack source = ctx.getSource();
+		List<CompanionEntity> friends = new ArrayList<>();
+		if ("all".equalsIgnoreCase(name)) {
+			friends.addAll(Companions.all());
+			friends.sort(Comparator.comparing(CompanionEntity::friendId));
+			if (friends.isEmpty()) {
+				source.sendFailure(Component.literal("None of your friends are nearby. Recruit one with /friends recruit <name>."));
+				return 0;
+			}
+		} else {
+			findLoaded(ctx).ifPresent(friends::add);
+			if (friends.isEmpty()) {
+				return 0;
+			}
+		}
+		source.sendSuccess(() -> Component.literal("Needs and mood (100 = fully met)").withStyle(ChatFormatting.GOLD), false);
+		for (CompanionEntity c : friends) {
+			for (Component line : needsReport(c)) {
+				source.sendSuccess(() -> line, false);
+			}
+		}
+		return friends.size();
+	}
+
+	/** A heading with the friend's mood and job, then one bar per need; the lowest says what is being done about it. */
+	private static List<Component> needsReport(CompanionEntity c) {
+		Needs needs = c.needs();
+		Needs.Mood mood = needs.mood();
+		Needs.Need lowest = needs.lowest();
+		List<Component> lines = new ArrayList<>();
+		lines.add(Speech.prefix(c.friendId())
+			.append(Component.literal("mood ").withStyle(ChatFormatting.GRAY))
+			.append(Component.literal(mood.word()).withStyle(moodColour(mood)))
+			.append(Component.literal(" - " + c.activity()).withStyle(ChatFormatting.GRAY)));
+		for (Needs.Need need : Needs.Need.values()) {
+			double value = needs.get(need);
+			MutableComponent line = Component.literal("  ")
+				.append(Component.literal(Needs.bar(value)).withStyle(barColour(value)))
+				.append(Component.literal(" " + need.title() + " " + Math.round(value)).withStyle(ChatFormatting.WHITE));
+			if (need == lowest) {
+				line.append(Component.literal("  lowest: " + needPlan(c, need)).withStyle(ChatFormatting.YELLOW));
+			}
+			lines.add(line);
+		}
+		return lines;
+	}
+
+	/** What a friend is doing about a need, in a few words. */
+	private static String needPlan(CompanionEntity c, Needs.Need need) {
+		CompanionTask job = MoodPassives.currentJob(c);
+		if (job != null && MoodPassives.seeingTo(c, need)) {
+			return "seeing to it now (" + job.describe() + ")";
+		}
+		if (c.needs().get(need) >= NEED_FINE) {
+			return "fine for now";
+		}
+		if (c.mode() != CompanionMode.WORK) {
+			return (c.mode() == CompanionMode.FOLLOW ? "following you" : "holding position")
+				+ "; will see to it once back at work";
+		}
+		if (need == Needs.Need.HUNGER && !c.hasFood() && !chestHasFood(c)) {
+			return "no food in the backpack or the supply chest - please bring some";
+		}
+		return "will see to it soon";
+	}
+
+	private static boolean chestHasFood(CompanionEntity c) {
+		return c.level() instanceof ServerLevel level
+			&& SupplyChest.of(level).map(chest -> SupplyChest.count(chest, CompanionEntity::isEdible) > 0).orElse(false);
+	}
+
+	private static ChatFormatting barColour(double value) {
+		return value >= NEED_FINE ? ChatFormatting.GREEN : value >= 25 ? ChatFormatting.YELLOW : ChatFormatting.RED;
+	}
+
+	private static ChatFormatting moodColour(Needs.Mood mood) {
+		return switch (mood) {
+			case MISERABLE -> ChatFormatting.RED;
+			case LOW -> ChatFormatting.GOLD;
+			case OKAY -> ChatFormatting.WHITE;
+			case GOOD -> ChatFormatting.GREEN;
+			case GREAT -> ChatFormatting.AQUA;
+		};
 	}
 
 	private static String deadText(ServerLevel level, CampData.Ledger ledger) {
@@ -536,8 +638,8 @@ public final class FriendsCommand {
 			int idx = i;
 			source.sendSuccess(() -> Component.literal(" - " + Unity.BONUSES[idx]).withStyle(ChatFormatting.GRAY), false);
 		}
-		source.sendSuccess(() -> Component.literal("Grows with time together, deliveries, sharing, defending each other and finishing camp buildings. "
-			+ "Losing a friend costs 80.").withStyle(ChatFormatting.DARK_GRAY), false);
+		source.sendSuccess(() -> Component.literal("Grows with time together, deliveries, sharing, friends chatting, a happy team, "
+			+ "defending each other and finishing camp buildings. Losing a friend costs 80.").withStyle(ChatFormatting.DARK_GRAY), false);
 		return 1;
 	}
 
