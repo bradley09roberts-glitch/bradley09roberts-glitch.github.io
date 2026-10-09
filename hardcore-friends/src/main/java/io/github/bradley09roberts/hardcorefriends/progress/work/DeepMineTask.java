@@ -20,8 +20,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Fallable;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 import io.github.bradley09roberts.hardcorefriends.ai.action.Actions;
+import io.github.bradley09roberts.hardcorefriends.ai.role.build.ChestWalk;
 import io.github.bradley09roberts.hardcorefriends.ai.role.mine.MinePlan;
 import io.github.bradley09roberts.hardcorefriends.ai.role.mine.MineSite;
 import io.github.bradley09roberts.hardcorefriends.ai.role.mine.MiningHelper;
@@ -47,17 +49,20 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * branches every 3 blocks. Where the staircase mine near camp already reaches its bottom, the deep stairs carry on down
  * from its last step; otherwise they start from a new entrance in the gathering ring.
  *
- * <p>Safety, before every block: the block and everything round it is looked at, and if water or lava is there it
- * is left standing as a wall (the guard never opens a block that touches either) and the work goes round it: a stair
- * turns, a branch ends. Lava found this way is remembered as a camp point of interest. Loose gravel or sand overhead is
- * also gone round, never dug under. Stairs only ever go down one step at a time beside the friend, never straight
- * down. Once a step or tunnel block is open, any hole it broke into (a cave beside, above or below) is sealed with
- * carried cobblestone or cobbled deepslate, so nothing flows or walks in; a block that opens into a cave too wide to
- * seal is gone round instead. A torch goes down every 8 blocks. Ores in the walls and ceiling of the new tunnel are
- * dug out on the way (diamond needs the iron pickaxe this job requires), the floor never.
+ * <p>Safety: each step or tunnel block is looked over before any of it is dug. If water or lava is by it, loose
+ * gravel or sand over it, the floor of a walkway in it (the stairs are the way back up and are never undermined), a
+ * hole beside it into a cave too wide to seal, or a hole that may be a player's tunnel (a build within
+ * {@value #PLAYER_GAP} blocks), it is left standing as a wall and the work goes round it: a stair turns (never back
+ * the way it came), a branch ends. Lava found this way is remembered as a camp point of interest. Stairs only ever go
+ * down one step at a time beside the friend, never straight down. Once a piece is open, any hole it broke into (a cave
+ * beside, above or below) is sealed with carried cobblestone or cobbled deepslate, so nothing flows or walks in; a
+ * piece that still cannot be made safe is filled back in before the work goes round. A torch goes down every 8 blocks.
+ * Ores in the walls and ceiling of the new tunnel are dug out on the way (diamond needs the iron pickaxe this job
+ * requires), never the floor nor an ore with gravel or sand resting on it.
  *
- * <p>The friend stops and heads home below 60% health, when hungry, out of food or torches, with a full pack, or as
- * the afternoon ends (the way back up is long).
+ * <p>The friend fetches seal blocks from the chest first when short of them, and stops and heads home below 60%
+ * health, when hungry, out of food, torches or seal blocks, with a full pack, or as the afternoon ends (the way back
+ * up is long).
  */
 public final class DeepMineTask implements CompanionTask {
 	/** The level the branches are dug at: where diamonds are most common. */
@@ -78,15 +83,40 @@ public final class DeepMineTask implements CompanionTask {
 	/** Turn back at this time of day, whatever is left to dig. */
 	private static final long TURN_BACK = 10500;
 	private static final String POI_LAVA = "lava";
+	/** Seal blocks a friend wants to carry before a deep trip; fewer, and they are fetched from the chest. */
+	private static final int MIN_SEAL_BLOCKS = 8;
+	/** How many seal blocks are taken from the chest at a time. */
+	private static final int SEAL_BLOCKS_TAKEN = 16;
+	/** A hole within this many blocks of anything player-built may be a player's tunnel: it is never dug into. */
+	private static final int PLAYER_GAP = 6;
+	/** Open air this close below the entrance (or higher) that the sky shines on is the surface, not a cave. */
+	private static final int SURFACE_DEPTH = 4;
+	/** How long a seal waits for someone standing in the hole to move before the hole counts as unsealable. */
+	private static final int MAX_SEAL_WAIT = 100;
+
+	/** What a seal attempt came to. */
+	private enum Seal {
+		DONE,
+		/** Not this tick (the guard's pacing, or someone standing there): try again. */
+		WAIT,
+		FAILED
+	}
 
 	private long searchFailedUntil;
 	private MinePlan.@Nullable Job job;
 	private int clearIndex;
 	private int minedThisRun;
 	private int redig;
+	private boolean surveyed;
 	private boolean sealed;
 	private boolean oresQueued;
 	private boolean torchTried;
+	private boolean fetching;
+	/** The job was given up after some of it was dug: its dug blocks are being filled back in first. */
+	private boolean refilling;
+	private int sealWait;
+	/** The blocks this run dug for the current job, top down. */
+	private final List<BlockPos> dug = new ArrayList<>();
 	private final Deque<BlockPos> wallOres = new ArrayDeque<>();
 	private int checkTimer;
 
@@ -149,6 +179,10 @@ public final class DeepMineTask implements CompanionTask {
 				}
 			}
 		}
+		int seals = Trips.sealBlocks(c);
+		if (seals < MIN_SEAL_BLOCKS && seals + Trips.inChest(c, Trips::isSealBlock) < MIN_SEAL_BLOCKS) {
+			return 0; // nothing to seal holes into caves with
+		}
 		// At least what the staircase mine near camp scores for stone and ore (this mine yields both too), so while
 		// diamonds are wanted the miner works down here rather than up there.
 		double wanted = Math.max(ProgressPlan.weight(server, Items.DIAMOND), ProgressPlan.weight(server, Items.LAPIS_LAZULI));
@@ -179,6 +213,7 @@ public final class DeepMineTask implements CompanionTask {
 		resetJob();
 		minedThisRun = 0;
 		checkTimer = 0;
+		fetching = Trips.sealBlocks(c) < MIN_SEAL_BLOCKS;
 		Speech.say(c, Line.WORK_START, describe());
 		return true;
 	}
@@ -230,6 +265,9 @@ public final class DeepMineTask implements CompanionTask {
 		if (Camp.isNight(level) || Camp.isDusk(level) || Camp.timeOfDay(level) > TURN_BACK) {
 			return done();
 		}
+		if (fetching) {
+			return fetchSeals(c);
+		}
 		if (--checkTimer <= 0) {
 			checkTimer = 20;
 			if (!Trips.fitForDeepWork(c, 2)) {
@@ -260,7 +298,18 @@ public final class DeepMineTask implements CompanionTask {
 		if (!actions.walkTo(current.stand(), 1.0)) {
 			return actions.isStuck() ? stuck(plan) : TaskStatus.RUNNING;
 		}
-		// 1. Clear the step or tunnel block, top down, looking at everything round each block first.
+		if (refilling) {
+			return refill(c, level, data, plan, now);
+		}
+		// 0. Look the piece over before any of it is dug.
+		if (!surveyed) {
+			TaskStatus wait = survey(c, level, data, plan, current, now);
+			if (wait != null) {
+				return wait;
+			}
+			surveyed = true;
+		}
+		// 1. Clear the step or tunnel block, top down, looking at everything round each block again first.
 		while (clearIndex < current.clear().size()) {
 			BlockPos pos = current.clear().get(clearIndex);
 			if (!plan.inBox(pos)) {
@@ -278,6 +327,9 @@ public final class DeepMineTask implements CompanionTask {
 			if (clearIndex == 0 && looseAbove(level, pos)) {
 				return refuse(c, plan, now); // gravel or sand overhead would pour in: go round
 			}
+			if (MinePlan.isWalkwayFloor(level, data, pos)) {
+				return refuse(c, plan, now); // the floor of a step or tunnel block: the way back up is never undermined
+			}
 			if (!MiningHelper.canHarvest(c, state)) {
 				plan.setToolBlocked(pos);
 				Speech.say(c, Line.NEED_TOOL, "better pickaxe");
@@ -293,44 +345,39 @@ public final class DeepMineTask implements CompanionTask {
 			if (result == Actions.Result.FAILED) {
 				return refuse(c, plan, now);
 			}
+			dug.add(pos.immutable());
 			minedThisRun++;
 			data.addStat("blocks_mined", 1);
 			clearIndex++;
-			if (minedThisRun >= BLOCKS_PER_RUN && clearIndex < current.clear().size()) {
-				return done();
-			}
 		}
 		// 2. Anything that fell back in (gravel from a pocket) is dug out again, a few times at most.
-		for (int i = 0; i < current.clear().size(); i++) {
-			if (!MiningHelper.isPassable(level, current.clear().get(i))) {
-				if (++redig > MAX_REDIG) {
-					return refuse(c, plan, now);
-				}
-				clearIndex = i;
-				return TaskStatus.RUNNING;
-			}
+		TaskStatus fell = digOutFallen(c, plan, current, level, now);
+		if (fell != null) {
+			return fell;
 		}
 		// 3. A floor to stand on.
 		BlockPos floor = current.cell().below();
 		if (!MiningHelper.isSolidFloor(level, floor)) {
-			if (paced(c, floor)) {
+			Seal seal = seal(c, level, floor);
+			if (seal == Seal.WAIT) {
 				return TaskStatus.RUNNING;
 			}
-			if (!seal(c, level, floor)) {
+			if (seal == Seal.FAILED) {
 				return refuse(c, plan, now);
 			}
 		}
 		// 4. Seal any hole into a cave round the new blocks.
 		if (!sealed) {
-			List<BlockPos> openings = openings(level, data, current);
+			List<BlockPos> openings = openings(level, data, plan, current);
 			if (openings.size() > MAX_SEALS_PER_JOB) {
 				return refuse(c, plan, now);
 			}
 			for (BlockPos hole : openings) {
-				if (paced(c, hole)) {
+				Seal seal = seal(c, level, hole);
+				if (seal == Seal.WAIT) {
 					return TaskStatus.RUNNING;
 				}
-				if (!seal(c, level, hole)) {
+				if (seal == Seal.FAILED) {
 					return refuse(c, plan, now);
 				}
 			}
@@ -339,13 +386,18 @@ public final class DeepMineTask implements CompanionTask {
 		// 5. Ores showing in the new walls and ceiling.
 		if (!oresQueued) {
 			oresQueued = true;
-			queueWallOres(c, level, current);
+			queueWallOres(c, level, data, current);
 		}
 		TaskStatus ores = mineWallOres(c, level, data);
 		if (ores != null) {
 			return ores;
 		}
-		// 6. Light.
+		// 6. Nothing fell in while the ores came out.
+		fell = digOutFallen(c, plan, current, level, now);
+		if (fell != null) {
+			return fell;
+		}
+		// 7. Light.
 		if (plan.torchDue() && !torchTried) {
 			if (paced(c, current.stand())) {
 				return TaskStatus.RUNNING;
@@ -358,12 +410,14 @@ public final class DeepMineTask implements CompanionTask {
 		}
 		plan.complete(current);
 		job = null;
+		dug.clear();
 		return minedThisRun >= BLOCKS_PER_RUN ? TaskStatus.SUCCESS : TaskStatus.RUNNING;
 	}
 
 	@Override
 	public void stop(CompanionEntity c) {
 		resetJob();
+		fetching = false;
 	}
 
 	@Override
@@ -386,9 +440,13 @@ public final class DeepMineTask implements CompanionTask {
 	private void resetJobProgress() {
 		clearIndex = 0;
 		redig = 0;
+		surveyed = false;
 		sealed = false;
 		oresQueued = false;
 		torchTried = false;
+		refilling = false;
+		sealWait = 0;
+		dug.clear();
 		wallOres.clear();
 	}
 
@@ -404,11 +462,114 @@ public final class DeepMineTask implements CompanionTask {
 		return TaskStatus.FAILURE;
 	}
 
-	/** This piece cannot be dug safely: the stairs turn, a branch ends, or the corridor (and the mine) is finished. */
+	/** Takes cobblestone (or cobbled deepslate) from the chest before setting off: holes into caves are sealed with it. */
+	private TaskStatus fetchSeals(CompanionEntity c) {
+		ChestWalk.State walk = ChestWalk.tick(c);
+		if (walk == ChestWalk.State.WALKING) {
+			return TaskStatus.RUNNING;
+		}
+		if (walk == ChestWalk.State.ARRIVED) {
+			ChestWalk.chest(c).ifPresent(chest -> {
+				int want = SEAL_BLOCKS_TAKEN - Trips.sealBlocks(c);
+				int got = Trips.take(chest, c, s -> s.is(Items.COBBLESTONE), want);
+				Trips.take(chest, c, s -> s.is(Items.COBBLED_DEEPSLATE), want - got);
+			});
+		}
+		fetching = false;
+		if (Trips.sealBlocks(c) < MIN_SEAL_BLOCKS) {
+			Speech.say(c, Line.NEED_MATERIALS, "cobblestone");
+			return done();
+		}
+		return TaskStatus.RUNNING;
+	}
+
+	/**
+	 * Step 0: everything that would make a piece be given up is looked at before any of it is dug, so nothing is opened
+	 * only to be left open: water or lava by it, loose gravel over it, the floor of a walkway or a block the guard will
+	 * not let them dig in it, a cave beside it too big to wall in, a hole that will not take a seal or that may be a
+	 * player's tunnel. Any of those: the work goes round. Too few seal blocks for its holes: home for more first. Null
+	 * when the piece may be dug.
+	 */
+	private @Nullable TaskStatus survey(CompanionEntity c, ServerLevel level, CampData data, MinePlan plan, MinePlan.Job job,
+			long now) {
+		if (paced(c, job.stand())) {
+			return TaskStatus.RUNNING; // the guard's answers below only count between edits
+		}
+		for (int i = 0; i < job.clear().size(); i++) {
+			BlockPos pos = job.clear().get(i);
+			if (!plan.inBox(pos)) {
+				return refuse(c, plan, now);
+			}
+			if (fluidAround(level, pos)) {
+				noteFluid(c, level, data, pos);
+				return refuse(c, plan, now);
+			}
+			if (MiningHelper.isPassable(level, pos)) {
+				continue;
+			}
+			BlockState state = level.getBlockState(pos);
+			if ((i == 0 && looseAbove(level, pos)) || MinePlan.isWalkwayFloor(level, data, pos)) {
+				return refuse(c, plan, now); // gravel overhead, or the floor of a step or tunnel block
+			}
+			if (!MiningHelper.canHarvest(c, state)) {
+				plan.setToolBlocked(pos);
+				Speech.say(c, Line.NEED_TOOL, "better pickaxe");
+				return done();
+			}
+			WorldEditGuard.Verdict verdict = WorldEditGuard.canBreak(c, pos, reasonFor(c, state, pos));
+			if (!verdict.allowed()) {
+				return passing(verdict) ? TaskStatus.RUNNING : refuse(c, plan, now);
+			}
+		}
+		List<BlockPos> toSeal = openings(level, data, plan, job);
+		if (toSeal.size() > MAX_SEALS_PER_JOB) {
+			return refuse(c, plan, now); // a big cave: go round before opening anything into it
+		}
+		BlockPos floor = job.cell().below();
+		if (!MiningHelper.isSolidFloor(level, floor)) {
+			toSeal.add(floor);
+		}
+		for (BlockPos p : toSeal) {
+			BlockState s = level.getBlockState(p);
+			if (!s.isAir() && !s.canBeReplaced()) {
+				return refuse(c, plan, now);
+			}
+			WorldEditGuard.Verdict verdict = WorldEditGuard.canPlace(c, p, Blocks.COBBLESTONE.defaultBlockState(), WorldEditGuard.Reason.MINE);
+			if (!verdict.allowed()) {
+				return passing(verdict) ? TaskStatus.RUNNING : refuse(c, plan, now);
+			}
+		}
+		for (BlockPos p : toSeal) {
+			if (WorldEditGuard.looksPlayerBuilt(level, p, PLAYER_GAP, data)) {
+				return refuse(c, plan, now); // it may be a player's tunnel or cellar: never broken into
+			}
+		}
+		if (Trips.sealBlocks(c) < toSeal.size()) {
+			Speech.say(c, Line.NEED_MATERIALS, "cobblestone");
+			return done();
+		}
+		return null;
+	}
+
+	/** A guard refusal that passes by itself: the edit pacing, a player right by the block, someone standing in it. */
+	private static boolean passing(WorldEditGuard.Verdict verdict) {
+		String why = verdict.why();
+		return "pacing".equals(why) || "a player is right there".equals(why) || "someone is standing there".equals(why);
+	}
+
+	/**
+	 * This piece cannot be dug safely: the stairs turn (never back the way they came), a branch ends, or the corridor
+	 * (and the mine) is finished. If some of it was dug already, that is filled back in first.
+	 */
 	private TaskStatus refuse(CompanionEntity c, MinePlan plan, long now) {
+		c.actions().cancelMining();
+		if (!dug.isEmpty() && !refilling) {
+			refilling = true;
+			sealWait = 0;
+			return TaskStatus.RUNNING;
+		}
 		MinePlan.Job refused = job;
 		resetJob();
-		c.actions().cancelMining();
 		if (refused == null) {
 			return TaskStatus.RUNNING;
 		}
@@ -418,6 +579,43 @@ public final class DeepMineTask implements CompanionTask {
 			plan.refuse(refused, now);
 		}
 		return TaskStatus.RUNNING;
+	}
+
+	/**
+	 * Fills the blocks this piece dug back in with seal blocks, one at a time, bottom first, so a piece that is given up
+	 * leaves no cave joined to the tunnel. Never fills a mine's walkway. Then the piece is given up.
+	 */
+	private TaskStatus refill(CompanionEntity c, ServerLevel level, CampData data, MinePlan plan, long now) {
+		while (!dug.isEmpty()) {
+			BlockPos pos = dug.getLast();
+			if (!MiningHelper.isPassable(level, pos) || MinePlan.isWalkwaySpace(level, data, pos)) {
+				dug.removeLast();
+				continue;
+			}
+			Seal seal = seal(c, level, pos);
+			if (seal == Seal.WAIT) {
+				return TaskStatus.RUNNING;
+			}
+			dug.removeLast();
+		}
+		return refuse(c, plan, now);
+	}
+
+	/**
+	 * Steps 2 and 6: a block of the piece that is no longer open (gravel fell in) is dug out again, a few times at most.
+	 * Null when the piece is open.
+	 */
+	private @Nullable TaskStatus digOutFallen(CompanionEntity c, MinePlan plan, MinePlan.Job job, ServerLevel level, long now) {
+		for (int i = 0; i < job.clear().size(); i++) {
+			if (!MiningHelper.isPassable(level, job.clear().get(i))) {
+				if (++redig > MAX_REDIG) {
+					return refuse(c, plan, now);
+				}
+				clearIndex = i;
+				return TaskStatus.RUNNING;
+			}
+		}
+		return null;
 	}
 
 	/** Water or lava in the block or any block touching it (unloaded counts as wet). */
@@ -466,11 +664,12 @@ public final class DeepMineTask implements CompanionTask {
 	}
 
 	/**
-	 * Open blocks touching the newly dug ones that are not part of the tunnel: the way back (the step or tunnel block
-	 * the friend stands in) and the floor are left out, and so are the staircase mine's own tunnels. Each is a hole into
-	 * a cave.
+	 * Open blocks touching the piece's blocks that are not part of the tunnel: the way back (the step or tunnel block
+	 * the friend stands in) and the floor are left out, and so are the mines' own steps and tunnels and the open air at
+	 * the top of the stairs. Each is a hole into a cave. They depend only on where the piece is, so they can be counted
+	 * before it is dug.
 	 */
-	private static List<BlockPos> openings(ServerLevel level, CampData data, MinePlan.Job job) {
+	private static List<BlockPos> openings(ServerLevel level, CampData data, MinePlan plan, MinePlan.Job job) {
 		Set<BlockPos> tunnel = new HashSet<>(job.clear());
 		BlockPos stand = job.stand();
 		tunnel.add(stand);
@@ -478,6 +677,7 @@ public final class DeepMineTask implements CompanionTask {
 		tunnel.add(stand.above(2));
 		tunnel.add(job.cell().below());
 		MinePlan shallow = MinePlan.of(data);
+		int surface = plan.entrance().getY() - SURFACE_DEPTH;
 		List<BlockPos> holes = new ArrayList<>();
 		for (BlockPos p : job.clear()) {
 			for (Direction d : Direction.values()) {
@@ -489,31 +689,46 @@ public final class DeepMineTask implements CompanionTask {
 					continue; // the staircase mine's own stairs and tunnels
 				}
 				BlockState s = level.getBlockState(n);
-				if (MiningHelper.isPassable(level, n) && !s.is(Blocks.TORCH) && !s.is(Blocks.WALL_TORCH)) {
-					holes.add(n.immutable());
+				if (!MiningHelper.isPassable(level, n) || s.is(Blocks.TORCH) || s.is(Blocks.WALL_TORCH)) {
+					continue;
 				}
+				if (n.getY() >= surface && n.getY() >= level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, n.getX(), n.getZ())) {
+					continue; // open to the sky by the entrance: the surface, not a cave
+				}
+				if (MinePlan.isWalkwaySpace(level, data, n)) {
+					continue; // a step or tunnel block of the mines: never filled in
+				}
+				holes.add(n.immutable());
 			}
 		}
 		return holes;
 	}
 
-	/** Fills an open space with one carried cobblestone or cobbled deepslate (the friends may take it back later). */
-	private static boolean seal(CompanionEntity c, ServerLevel level, BlockPos pos) {
+	/**
+	 * Fills an open space with one carried cobblestone or cobbled deepslate (the friends may take it back later). Waits
+	 * a little while the guard's pacing holds or someone stands in the way.
+	 */
+	private Seal seal(CompanionEntity c, ServerLevel level, BlockPos pos) {
 		if (!c.actions().canReach(pos)) {
-			return false;
+			return Seal.FAILED;
 		}
 		BlockState current = level.getBlockState(pos);
 		if (!current.isAir() && !current.canBeReplaced()) {
-			return false;
+			return Seal.FAILED;
 		}
-		if (c.backpack().has(s -> s.is(Items.COBBLESTONE))) {
-			return c.actions().place(pos, Blocks.COBBLESTONE.defaultBlockState(), s -> s.is(Items.COBBLESTONE), WorldEditGuard.Reason.MINE);
+		boolean cobble = c.backpack().has(s -> s.is(Items.COBBLESTONE));
+		if (!cobble && !c.backpack().has(s -> s.is(Items.COBBLED_DEEPSLATE))) {
+			return Seal.FAILED;
 		}
-		if (c.backpack().has(s -> s.is(Items.COBBLED_DEEPSLATE))) {
-			return c.actions().place(pos, Blocks.COBBLED_DEEPSLATE.defaultBlockState(), s -> s.is(Items.COBBLED_DEEPSLATE),
-				WorldEditGuard.Reason.MINE);
+		BlockState block = cobble ? Blocks.COBBLESTONE.defaultBlockState() : Blocks.COBBLED_DEEPSLATE.defaultBlockState();
+		WorldEditGuard.Verdict verdict = WorldEditGuard.canPlace(c, pos, block, WorldEditGuard.Reason.MINE);
+		if (!verdict.allowed()) {
+			return passing(verdict) && ++sealWait <= MAX_SEAL_WAIT ? Seal.WAIT : Seal.FAILED;
 		}
-		return false;
+		sealWait = 0;
+		boolean placed = c.actions().place(pos, block, s -> s.is(cobble ? Items.COBBLESTONE : Items.COBBLED_DEEPSLATE),
+			WorldEditGuard.Reason.MINE);
+		return placed ? Seal.DONE : Seal.FAILED;
 	}
 
 	/** True while the guard's per-friend edit pacing would refuse a placement this tick. */
@@ -522,8 +737,12 @@ public final class DeepMineTask implements CompanionTask {
 		return !v.allowed() && "pacing".equals(v.why());
 	}
 
-	/** Wanted ores showing in the walls and ceiling of the new blocks (never the floor), that this friend can dig. */
-	private void queueWallOres(CompanionEntity c, ServerLevel level, MinePlan.Job job) {
+	/**
+	 * Wanted ores showing in the walls and ceiling of the new blocks that this friend can dig. Never the floor (nor the
+	 * floor of any walkway of the mines), and never an ore with gravel or sand resting on it, which would pour into the
+	 * tunnel.
+	 */
+	private void queueWallOres(CompanionEntity c, ServerLevel level, CampData data, MinePlan.Job job) {
 		wallOres.clear();
 		boolean diamonds = false;
 		BlockPos floor = job.cell().below();
@@ -535,7 +754,8 @@ public final class DeepMineTask implements CompanionTask {
 					continue; // never a walkway's floor, nor the block under the friend
 				}
 				BlockState s = level.getBlockState(n);
-				if (MiningHelper.isWantedOre(s) && MiningHelper.hasPickaxeFor(c, s) && !WorldEditGuard.touchesFluid(level, n)) {
+				if (MiningHelper.isWantedOre(s) && MiningHelper.hasPickaxeFor(c, s) && !WorldEditGuard.touchesFluid(level, n)
+					&& !looseAbove(level, n) && !MinePlan.isWalkwayFloor(level, data, n)) {
 					wallOres.add(n.immutable());
 					diamonds |= s.is(BlockItemTags.DIAMOND_ORES.block());
 				}
@@ -553,7 +773,7 @@ public final class DeepMineTask implements CompanionTask {
 			BlockPos ore = wallOres.peekFirst();
 			BlockState s = level.getBlockState(ore);
 			if (!MiningHelper.isWantedOre(s) || !c.actions().canReach(ore) || c.backpack().freeSlots() == 0
-				|| MiningHelper.isOnTop(c.blockPosition(), ore)) {
+				|| MiningHelper.isOnTop(c.blockPosition(), ore) || looseAbove(level, ore)) {
 				wallOres.pollFirst();
 				continue;
 			}

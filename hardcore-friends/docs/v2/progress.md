@@ -60,19 +60,32 @@ While the plan wants diamonds (or lapis for enchanting), and the miner carries a
   Everything stays inside the mine's 24×24 box.
 - **Layout:** a 1-wide staircase with 3 blocks of head room, spiralling down one step at a time (never straight down),
   then a 2-high corridor with 2-high branches every 3 blocks, alternating sides, up to 16 long.
-- **Safety, before every block:** the block and everything touching it is looked at. Water or lava there: the wall is
-  left standing (the friends never open a block that touches either) and the work goes round: a stair turns, a branch
-  ends. Lava found this way is remembered as a camp point of interest ("lava"), and the friend says so. Loose gravel or
-  sand overhead is gone round, never dug under. Gravel that falls in is dug out again (a few times at most).
-- **Holes into caves** round each new block are sealed with carried cobblestone or cobbled deepslate (bring some, or
-  it comes from the digging). A block that opens into a cave too big to wall in is gone round instead. Missing floors
-  are filled the same way. The miners may later dig their own seals back out, only deep inside their mine boxes.
+- **The way back up is never cut:** the stairs are how a miner climbs out, so a step never heads back the way the
+  last one came (that would dig out the floor of the step above), the corridor never runs back under the stairs, and
+  the first deep step below the staircase mine never runs along its corridor. On top of that, every block a friend
+  walks on in either mine (each step, corridor and branch block, the entrance) is remembered, and the block under one
+  is never dug, whatever the job. The same goes for the staircase mine near camp.
+- **Safety, before each step or tunnel block is dug:** it and everything touching it is looked over first. Water or
+  lava there: the wall is left standing (the friends never open a block that touches either) and the work goes round:
+  a stair turns (to either side, never back), a branch ends. Lava found this way is remembered as a camp point of
+  interest ("lava"), and the friend says so. Loose gravel or sand overhead is gone round, never dug under. Gravel that
+  falls in is dug out again (a few times at most). Ores with gravel or sand resting on them are left in the wall.
+- **Holes into caves** round each new block are counted before it is dug: more than 4 (a cave too big to wall in), a
+  hole that will not take a seal, or a hole with anything player-built within 6 blocks (it may be your tunnel or
+  cellar) and the block is not dug at all: the work goes round. Otherwise, once it is dug, each hole is sealed with
+  cobblestone or cobbled deepslate, and missing floors are filled the same way. If a piece still cannot be made safe
+  after it was dug, it is filled back in before the work goes round. Seals only ever go inside (or right beside) the
+  friends' own mine boxes, never within 3 blocks of anything player-built. The open air at the top of the stairs is
+  not sealed. The miners may later dig their own seals back out, only deep inside their mine boxes.
+- **Seal blocks:** the miner takes up to 16 cobblestone (or cobbled deepslate) from the chest before a deep trip when
+  he carries fewer than 8, and the digging adds more. With fewer than 8 in his pack and the chest together, no deep
+  trip starts; when he runs short of what a step needs, he heads home for more.
 - **Light:** a torch every 8 blocks.
 - **Ores** showing in the new walls and ceiling (never the floor) are dug out on the way: diamond, redstone, lapis,
   gold, iron, coal, copper, emerald. They go into the backpack and from there to the chest.
 - **Home again:** the miner stops and heads home below **60% health**, when hungry, with no food, no torches (or coal
   to make them) or a full pack, and in the late afternoon (the way back up is long). No new deep trip starts after
-  mid-afternoon.
+  mid-afternoon. When he has dug his share for one trip (24 blocks), he finishes the step in hand before turning back.
 - If the stairs cannot get deep enough at a spot (lava or water all round), that mine is given up and a new one is
   started elsewhere. A finished deep mine is followed by a new one a day later, if diamonds are still wanted.
 
@@ -89,16 +102,22 @@ With the diamond pickaxe and a **water bucket**, the miner makes obsidian (the p
 table and 10 for a portal):
 
 - **Where:** at still lava the camp knows of inside the gathering ring: lava Scout reported near camp, and lava the
-  deep mine found. Lava in a cave the friends cannot walk to is left alone for a day.
+  deep mine found. Lava in a cave the friends cannot walk to, with nowhere dry to stand by it, or with none they may
+  cast (see the rules) is left alone for a day.
 - **How:** standing on dry ground with no lava touching their feet or head, they pour water on a lava source and scoop
   it back, so the source turns into obsidian and the bucket stays full. Then they mine the obsidian (about ten seconds a
   block), but only once nothing round it is liquid: lava sources touching it are turned to obsidian first; obsidian next
   to flowing lava or water is left where it is. Never the block under their own feet.
 - **Rules (the `CAST` world-edit rule):** only a still source block of plain lava (never a cauldron, never lava pouring
   down into something), only in the camp's dimension and inside the gathering ring, never within 4 blocks of anything
-  player-built. Only obsidian the friends made themselves is ever mined (if you break it, it is no longer theirs).
-- **Buckets:** with no water bucket in the camp, Sage makes a bucket (3 iron). It is filled at a pool that tops itself
-  up (two or more water sources beside it, solid ground or water under it), so the pool never changes.
+  player-built. The lava must look natural, because players keep lava too: lava open to the sky at **y = 40 or
+  higher** is never touched (it could be your moat or pool; lava under a roof, in a cave, or deeper down is fine), and
+  everything touching it must be air, water, lava or natural ground (stone, deepslate, dirt, gravel and the like),
+  never glass or anything placed. Only obsidian the friends made themselves is ever mined (if you break it, it is no
+  longer theirs).
+- **Buckets:** with no water bucket the obsidian work can use (the farmer's own water bucket does not count, as she
+  keeps it for the farm), Sage makes a bucket (3 iron). It is filled at a pool that tops itself up (two or more water
+  sources beside it, solid ground or water under it), so the pool never changes.
 
 ## Sugar cane, paper and books
 
@@ -189,9 +208,18 @@ it happens at night.
   lot of the day walking, and the miner turns back in the late afternoon. Diamonds come a few at a time.
 - **Pathfinding into deep caves:** the friends seal holes into caves round their tunnels, but a cave opened by digging
   out an ore in the wall is not sealed, and the vanilla pathfinder may still route through a cave on the way to the
-  work. Lava never flows in (the friends never open a block that touches it), but monsters can.
-- **Obsidian needs known lava.** The friends only use lava Scout reported near camp or the deep mine found, and only
-  lava they can walk up to on dry ground. Without such lava, the obsidian has to come from you.
+  work. Lava never flows in (the friends never open a block that touches it), but monsters can. A trip cut short
+  (hurt, hungry, night falling) can leave the step in hand half dug and its holes unsealed until the next trip.
+- **Your tunnels:** the deep mine never digs into a hole with anything player-built within 6 blocks, and never seals
+  outside its own mine box. A long, completely unlit tunnel of yours that runs through the friends' mine box at their
+  depth, with nothing you placed near the spot, cannot be told from a cave: they could break into it and seal it.
+- **The deep mine is cautious:** caves near the stairs make them turn often, and stairs that cannot get within 18
+  blocks of the bottom are given up and started again elsewhere. In very cave-riddled ground it can take a few
+  attempts to reach diamond level.
+- **Obsidian needs known, natural lava.** The friends only use lava Scout reported near camp or the deep mine found,
+  only lava they can walk up to on dry ground, and never lava open to the sky at y = 40 or above, which rules out
+  surface lava lakes (they cannot be told from a player's moat). Lava in caves and deep down is fine. Without such
+  lava, the obsidian has to come from you.
 - **Leather is the slow part of books.** 46 books need 46 leather; only Fern's butchering (for food) and your gifts
   provide it. Rabbit hide is not turned into leather.
 - **Sugar cane needs a start:** at least one piece in the chest or growing in the camp. Cane growing inside the camp is

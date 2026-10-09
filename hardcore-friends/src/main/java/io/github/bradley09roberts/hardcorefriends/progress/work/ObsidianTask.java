@@ -65,6 +65,8 @@ public final class ObsidianTask implements CompanionTask {
 	private static final double REACH = 4.4;
 	private static final String POI_LAVA = "lava";
 	private static final int SKIP_TICKS = 24000;
+	/** The guard's cast rule (a few hundred block reads) is asked of at most this many lava sources per search. */
+	private static final int MAX_GUARD_CHECKS = 32;
 
 	private enum Phase {
 		FETCH,
@@ -81,8 +83,15 @@ public final class ObsidianTask implements CompanionTask {
 	private final Set<BlockPos> skip = new HashSet<>();
 	/** The lava or obsidian this run went for. */
 	private @Nullable BlockPos target;
-	/** Places with no way to them, left alone for a day. */
+	/**
+	 * Places left alone for a day: work with no way to it or nowhere dry to stand by it, and remembered lava spots with
+	 * no lava there the friends may cast.
+	 */
 	private final Map<BlockPos, Long> skipUntil = new HashMap<>();
+	/** The remembered lava spot the target was found at, if it came from one. */
+	private @Nullable BlockPos targetPoi;
+	/** How often the guard's cast rule may still be asked in the search under way. */
+	private int guardChecks;
 	private @Nullable BlockPos water;
 	private int casts;
 	private int mined;
@@ -129,14 +138,20 @@ public final class ObsidianTask implements CompanionTask {
 		return 48 * ProgressPlan.weight(server, Items.OBSIDIAN);
 	}
 
-	/** Cheap: a lava spot remembered in the gathering ring, or cast obsidian left standing. */
-	private static boolean anyLavaKnown(CompanionEntity c, ServerLevel level, CampData data) {
+	/** Cheap: a lava spot remembered in the gathering ring (and not set aside for now), or cast obsidian left standing. */
+	private boolean anyLavaKnown(CompanionEntity c, ServerLevel level, CampData data) {
+		long now = level.getGameTime();
 		for (CampData.Poi poi : data.pois()) {
-			if (POI_LAVA.equals(poi.type) && WorldEditGuard.inResourceZone(c, poi.pos)) {
+			if (POI_LAVA.equals(poi.type) && WorldEditGuard.inResourceZone(c, poi.pos) && !isSkipped(poi.pos, now)) {
 				return true;
 			}
 		}
 		return !ProgressData.get(level.getServer()).castPositions(level, 1).isEmpty();
+	}
+
+	private boolean isSkipped(BlockPos pos, long now) {
+		Long until = skipUntil.get(pos);
+		return until != null && until > now;
 	}
 
 	@Override
@@ -146,6 +161,7 @@ public final class ObsidianTask implements CompanionTask {
 		water = null;
 		mining = null;
 		target = null;
+		targetPoi = null;
 		skip.clear();
 		casts = 0;
 		mined = 0;
@@ -265,9 +281,11 @@ public final class ObsidianTask implements CompanionTask {
 		}
 		if (!c.actions().walkTo(spot, 0.6)) {
 			if (c.actions().isStuck()) {
-				BlockPos t = target;
-				if (t != null) {
-					skipUntil.put(t, level.getGameTime() + SKIP_TICKS); // no way there (lava in a cave out of reach): leave it a day
+				// No way there (lava in a cave out of reach): leave it, and the lava spot it was found at, a day.
+				for (BlockPos t : new BlockPos[] {target, targetPoi}) {
+					if (t != null) {
+						skipUntil.put(t, level.getGameTime() + SKIP_TICKS);
+					}
 				}
 				return finish();
 			}
@@ -302,6 +320,7 @@ public final class ObsidianTask implements CompanionTask {
 		}
 		BlockPos ready = null;
 		BlockPos holdingIn = null;
+		BlockPos holdingFor = null;
 		BlockPos open = null;
 		BlockPos feet = c.blockPosition();
 		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
@@ -331,6 +350,7 @@ public final class ObsidianTask implements CompanionTask {
 							if (source != null) {
 								bestHolding = d;
 								holdingIn = source;
+								holdingFor = m.immutable();
 							}
 						}
 					} else if (d < bestOpen && s.is(Blocks.LAVA) && CastPolicy.isStillLavaSource(level, m, s) && exposed(level, m)) {
@@ -352,6 +372,9 @@ public final class ObsidianTask implements CompanionTask {
 		if (!verdict.allowed()) {
 			if (!"pacing".equals(verdict.why())) {
 				skip.add(cast);
+				if (cast == holdingIn && holdingFor != null) {
+					skip.add(holdingFor); // held in by lava that may not be cast: it cannot be mined, so leave it
+				}
 			}
 			return TaskStatus.RUNNING;
 		}
@@ -394,8 +417,11 @@ public final class ObsidianTask implements CompanionTask {
 
 	// ------------------------------------------------------------------ checks
 
-	/** A lava source next to this obsidian that the friend can reach and cast, or null if any liquid there cannot be. */
-	private static @Nullable BlockPos castableNeighbour(CompanionEntity c, ServerLevel level, BlockPos obsidian) {
+	/**
+	 * A lava source next to this obsidian that the friend can reach and cast, or null if any liquid there cannot be
+	 * (lava the guard already refused this run included).
+	 */
+	private @Nullable BlockPos castableNeighbour(CompanionEntity c, ServerLevel level, BlockPos obsidian) {
 		BlockPos found = null;
 		for (Direction d : Direction.values()) {
 			BlockPos n = obsidian.relative(d);
@@ -403,22 +429,26 @@ public final class ObsidianTask implements CompanionTask {
 				continue;
 			}
 			BlockState state = level.getBlockState(n);
-			if (!CastPolicy.isStillLavaSource(level, n, state) || !inReach(c, n) || !WorldEditGuard.inResourceZone(c, n)) {
-				return null; // water, flowing lava or out of reach beside it: leave this one be
+			if (skip.contains(n) || !CastPolicy.isStillLavaSource(level, n, state) || !inReach(c, n)
+				|| !WorldEditGuard.inResourceZone(c, n)) {
+				return null; // water, flowing lava, lava we may not cast or out of reach beside it: leave this one be
 			}
 			found = n.immutable();
 		}
 		return found;
 	}
 
-	/** A lava source the guard's cast rule allows (checked without the pacing). */
+	/** A lava source the guard's cast rule allows (checked without the pacing, which would hide the rule's answer). */
 	private static boolean castable(CompanionEntity c, ServerLevel level, BlockPos pos) {
 		BlockState s = level.getBlockState(pos);
 		if (!CastPolicy.isStillLavaSource(level, pos, s)) {
 			return false;
 		}
 		WorldEditGuard.Verdict v = WorldEditGuard.canTransform(c, pos, Blocks.OBSIDIAN.defaultBlockState(), WorldEditGuard.Reason.CAST);
-		return v.allowed() || "pacing".equals(v.why());
+		if ("pacing".equals(v.why())) {
+			v = CastPolicy.castRule(c, level, pos);
+		}
+		return v.allowed();
 	}
 
 	/** Some face of the block is open to the air, so water can be poured on it. */
@@ -450,56 +480,79 @@ public final class ObsidianTask implements CompanionTask {
 
 	/**
 	 * A dry, lava-safe standing spot within reach of work: first cast obsidian left from before, then still lava at the
-	 * remembered lava spots in the gathering ring. Bounded: a handful of spots, each looked at in a small box.
+	 * remembered lava spots in the gathering ring. Bounded: a handful of spots, each looked at in a small box, and the
+	 * guard's (costly) cast rule asked of at most {@value #MAX_GUARD_CHECKS} lava sources. Places that came to nothing
+	 * are set aside for a day, so later searches do not look at them again.
 	 */
 	private @Nullable BlockPos findStand(CompanionEntity c, ServerLevel level) {
 		CampData data = Camp.data(level.getServer());
 		ProgressData progress = ProgressData.get(level.getServer());
 		long now = level.getGameTime();
 		skipUntil.values().removeIf(until -> until <= now);
-		List<BlockPos> targets = new ArrayList<>();
+		guardChecks = MAX_GUARD_CHECKS;
 		for (BlockPos p : progress.castPositions(level, 8)) {
 			if (!level.isLoaded(p)) {
 				continue;
 			}
-			if (level.getBlockState(p).is(Blocks.OBSIDIAN)) {
-				targets.add(p);
-			} else {
+			if (!level.getBlockState(p).is(Blocks.OBSIDIAN)) {
 				progress.forgetCast(level, p); // mined or gone: no longer ours to mine
+				continue;
 			}
+			if (isSkipped(p, now)) {
+				continue;
+			}
+			BlockPos spot = standFor(level, p, c.blockPosition());
+			if (spot != null) {
+				target = p;
+				targetPoi = null;
+				return spot;
+			}
+			skipUntil.put(p, now + SKIP_TICKS); // nowhere dry to stand by it
 		}
 		List<CampData.Poi> lava = new ArrayList<>();
 		for (CampData.Poi poi : data.pois()) {
-			if (POI_LAVA.equals(poi.type) && level.isLoaded(poi.pos) && WorldEditGuard.inResourceZone(c, poi.pos)) {
+			if (POI_LAVA.equals(poi.type) && level.isLoaded(poi.pos) && WorldEditGuard.inResourceZone(c, poi.pos)
+				&& !isSkipped(poi.pos, now)) {
 				lava.add(poi);
 			}
 		}
 		lava.sort(Comparator.comparingDouble(p -> p.pos.distSqr(c.blockPosition())));
-		for (int i = 0; i < lava.size() && i < MAX_POIS; i++) {
-			BlockPos source = lavaNear(c, level, lava.get(i).pos);
-			if (source != null) {
-				targets.add(source);
-			} else if (!anyLava(level, lava.get(i).pos)) {
-				data.removePoi(lava.get(i)); // the lava there is gone
-			}
-		}
-		for (BlockPos target : targets) {
-			if (skipUntil.containsKey(target)) {
+		for (int i = 0; i < lava.size() && i < MAX_POIS && guardChecks > 0; i++) {
+			CampData.Poi poi = lava.get(i);
+			BlockPos source = lavaNear(c, level, poi.pos, now);
+			if (source == null) {
+				if (!anyLava(level, poi.pos)) {
+					data.removePoi(poi); // the lava there is gone
+				} else if (guardChecks >= 0) {
+					skipUntil.put(poi.pos.immutable(), now + SKIP_TICKS); // lava, but none the friends may cast
+				}
 				continue;
 			}
-			BlockPos spot = standFor(level, target, c.blockPosition());
+			BlockPos spot = standFor(level, source, c.blockPosition());
 			if (spot != null) {
-				this.target = target;
+				target = source;
+				targetPoi = poi.pos.immutable();
 				return spot;
 			}
+			skipUntil.put(poi.pos.immutable(), now + SKIP_TICKS); // nowhere dry to stand by its lava
 		}
 		return null;
 	}
 
-	/** A castable, open lava source within 3 blocks of a remembered lava spot. */
-	private static @Nullable BlockPos lavaNear(CompanionEntity c, ServerLevel level, BlockPos centre) {
+	/**
+	 * A castable, open lava source within 3 blocks of a remembered lava spot. The cheap checks (a still source with a
+	 * face open to the air, not set aside) come first; the guard's rule is asked last, within the search's budget.
+	 */
+	private @Nullable BlockPos lavaNear(CompanionEntity c, ServerLevel level, BlockPos centre, long now) {
 		for (BlockPos p : BlockPos.betweenClosed(centre.offset(-3, -2, -3), centre.offset(3, 2, 3))) {
-			if (level.isLoaded(p) && castable(c, level, p) && exposed(level, p)) {
+			if (!level.isLoaded(p) || !CastPolicy.isStillLavaSource(level, p, level.getBlockState(p)) || !exposed(level, p)
+				|| isSkipped(p, now)) {
+				continue;
+			}
+			if (--guardChecks < 0) {
+				return null; // enough for one search: the rest is looked at next time
+			}
+			if (castable(c, level, p)) {
 				return p.immutable();
 			}
 		}

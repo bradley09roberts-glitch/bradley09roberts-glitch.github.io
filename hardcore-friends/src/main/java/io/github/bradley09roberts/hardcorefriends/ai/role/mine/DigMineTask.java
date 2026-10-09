@@ -27,7 +27,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * {@value #BLOCKS_PER_RUN} blocks and then ends, so he can take the stone back to camp. Blocks are only broken
  * through the guard: natural stone and ores (plus topsoil at the entrance, outside the camp). A refused block ends
  * that part of the mine. Missing floors are sealed with carried cobblestone, and a torch goes down every
- * {@value MinePlan#TORCH_SPACING} blocks.
+ * {@value MinePlan#TORCH_SPACING} blocks. The floor under any step or tunnel block of the camp's mines is never dug
+ * ({@link MinePlan#isWalkwayFloor}), so the way back up always stays climbable.
  */
 public final class DigMineTask implements CompanionTask {
 	public static final int BLOCKS_PER_RUN = 12;
@@ -160,6 +161,9 @@ public final class DigMineTask implements CompanionTask {
 			if (MiningHelper.isPassable(level, pos)) {
 				clearIndex++;
 				continue;
+			}
+			if (MinePlan.isWalkwayFloor(level, data, pos)) {
+				return refuse(plan, now); // the floor of a step or tunnel block: the way back up is never undermined
 			}
 			if (!MiningHelper.canHarvest(c, state)) {
 				plan.setToolBlocked(pos);
