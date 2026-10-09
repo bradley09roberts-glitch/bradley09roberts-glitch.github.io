@@ -104,6 +104,7 @@ public class TravelGoal extends Goal {
 		c.actions().stopWalking();
 		plan = Plan.NONE;
 		way = null;
+		recheck = 0; // look again at once afterwards, before any job gets going in the wrong world
 	}
 
 	/** Lets go of the roaming ticket the expedition asked for, once this friend has nowhere to go. */

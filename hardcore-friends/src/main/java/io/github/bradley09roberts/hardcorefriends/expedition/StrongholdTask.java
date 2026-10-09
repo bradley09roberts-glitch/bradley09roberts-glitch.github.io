@@ -36,6 +36,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.progress.Milestone;
 import io.github.bradley09roberts.hardcorefriends.progress.ProgressPlan;
@@ -172,10 +173,21 @@ public final class StrongholdTask implements CompanionTask {
 			|| ExpeditionData.get(server).latest(ExpeditionData.STRONGHOLD).isPresent()) {
 			return 0;
 		}
-		if (!eyesAvailable(c, level) || !ChunkLoader.canRoam(server) || !Trips.fitToGo(c) || !Trips.campSafe(level, data)) {
+		if (!eyesAvailable(c, level) || !ChunkLoader.canRoam(server) || !Trips.fitToGo(c) || !Trips.campSafe(level, data)
+			|| someoneElseSearching(c)) {
 			return 0;
 		}
 		return 58;
+	}
+
+	/** True when another friend is already out looking (one search at a time, even between its runs). */
+	private static boolean someoneElseSearching(CompanionEntity c) {
+		for (CompanionEntity other : Companions.all()) {
+			if (other != c && onTrip(other)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static boolean eyesAvailable(CompanionEntity c, ServerLevel level) {

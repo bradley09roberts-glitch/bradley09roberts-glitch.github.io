@@ -51,7 +51,7 @@ public class FillPortalGoal extends Goal {
 
 	@Override
 	public boolean canUse() {
-		if (--lookAgain > 0 || c.level().dimension() == Level.END || !(c.level() instanceof ServerLevel level)) {
+		if (--lookAgain > 0 || c.level().dimension() != Level.OVERWORLD || !(c.level() instanceof ServerLevel level)) {
 			return false;
 		}
 		lookAgain = LOOK_EVERY;
