@@ -20,6 +20,9 @@ import net.minecraft.world.phys.AABB;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
+import io.github.bradley09roberts.hardcorefriends.navigation.Sprint;
+import io.github.bradley09roberts.hardcorefriends.navigation.Terrain;
+import io.github.bradley09roberts.hardcorefriends.navigation.Wayfinder;
 
 /**
  * FOLLOW mode: stay a few blocks from the leader, catching up if left far behind in the same dimension (sooner in the
@@ -29,6 +32,11 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  * <p>In the End a friend is never put down within {@value #CRYSTAL_CLEARANCE} blocks of a living end crystal (a blast
  * from one the player sets off throws people about that far), and never up a tower or a pillar beside a leader who has
  * climbed one: they walk after them instead, and wait at the bottom.
+ *
+ * <p>Friends run when the leader is far ahead (on any path longer than {@code Sprint.START_AT} blocks) and keep up with
+ * a sprinting leader. A friend who is stuck (the {@code Wayfinder} has seen them get nowhere for
+ * {@value #STUCK_CATCH_UP} ticks) and more than {@value #STUCK_GAP} blocks behind catches up at once rather than wait
+ * for the leader to get {@code followTeleportDistance} away, in any dimension, when catching up is on.
  */
 public class FollowLeaderGoal extends Goal {
 	/** In the End, a friend further than this from their leader catches up rather than walks (when catching up is on). */
@@ -39,6 +47,10 @@ public class FollowLeaderGoal extends Goal {
 	private static final int UP_HIGH = 6;
 	/** How far round the leader the ground is looked at, in blocks (outside the widest tower's top). */
 	private static final int GROUND_LOOK = 8;
+	/** A friend stuck this long (ticks) catches up with their leader at once... */
+	private static final int STUCK_CATCH_UP = 100;
+	/** ...when the leader is more than this many blocks away. */
+	private static final int STUCK_GAP = 8;
 	private final CompanionEntity companion;
 	private @Nullable ServerPlayer leader;
 	private int recalc;
@@ -96,12 +108,17 @@ public class FollowLeaderGoal extends Goal {
 			// The End is islands over the void: a long walk after the player is a walk along their narrow bridge.
 			teleport = Math.min(teleport, END_CATCH_UP);
 		}
-		if (teleport > 0 && companion.distanceToSqr(leader) > (double) teleport * teleport
+		boolean stuck = teleport > 0 && Wayfinder.troubleTicks(companion) >= STUCK_CATCH_UP
+			&& companion.distanceToSqr(leader) > STUCK_GAP * STUCK_GAP;
+		if (teleport > 0 && (stuck || companion.distanceToSqr(leader) > (double) teleport * teleport)
 			&& !upHighInEnd(companion.level(), leader.blockPosition())) {
 			tryCatchUp();
 			return;
 		}
-		companion.getNavigation().moveTo(leader, leader.isSprinting() ? 1.35 : 1.1);
+		if (leader.isSprinting()) {
+			Sprint.hurry(companion, 20, false); // keep up: they run too (the sprint itself gives the extra speed)
+		}
+		companion.getNavigation().moveTo(leader, 1.1);
 	}
 
 	private void tryCatchUp() {
@@ -134,7 +151,7 @@ public class FollowLeaderGoal extends Goal {
 			BlockState below = level.getBlockState(p.below());
 			if (below.isFaceSturdy(level, p.below(), Direction.UP)
 				&& level.getBlockState(p).isAir() && level.getBlockState(p.above()).isAir()
-				&& below.getFluidState().isEmpty()) {
+				&& below.getFluidState().isEmpty() && !Terrain.hazard(below) && !Terrain.nearLava(level, p)) {
 				return p;
 			}
 		}

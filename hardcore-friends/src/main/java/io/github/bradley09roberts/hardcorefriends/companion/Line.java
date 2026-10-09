@@ -274,6 +274,24 @@ public enum Line {
 
 	// ==== Finding the way (package navigation): getting unstuck, caves, water, sprinting ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** Stuck on the spot while trying to get somewhere; trying another way. */
+	STUCK(Priority.CASUAL, 1200, 0),
+	/** Free again after being stuck. */
+	UNSTUCK(Priority.CASUAL, 1200, 0),
+	/** Lost underground: setting off to find the way out to daylight. */
+	LOST_IN_CAVE(Priority.IMPORTANT, 2400, 0),
+	/** Out of a cave and under the open sky again. */
+	FOUND_WAY_OUT(Priority.IMPORTANT, 2400, 0),
+	/** No way out on foot: digging a staircase up. */
+	DIGGING_OUT(Priority.IMPORTANT, 2400, 0),
+	/** Under water and running out of air. */
+	GASPING(Priority.DANGER, 200, 0),
+	/** Stuck in the water or caught in a current: swimming for the shore. */
+	SWIMMING_OUT(Priority.CASUAL, 1200, 0),
+	/** Just brought back (home, or to their leader) after being stuck or lost a long time. */
+	RESCUED(Priority.IMPORTANT, 0, 0),
+	/** Setting off at a run on a long way. */
+	SPRINTING(Priority.CASUAL, 6000, 0),
 
 	// ==== end of navigation ====
 
