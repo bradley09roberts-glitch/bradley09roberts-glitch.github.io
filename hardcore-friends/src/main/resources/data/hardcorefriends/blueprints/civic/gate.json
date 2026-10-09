@@ -1,0 +1,68 @@
+{
+  "name": "town gate",
+  "kind": "civic:gate",
+  "styles": ["stone", "town", "plains", "mountain"],
+  "size": [11, 3],
+  "front": "north",
+  "palette": {
+    "S": "stone_bricks",
+    "c": "cobblestone",
+    "w": "stone_brick_wall",
+    "_": {"block": "stone_brick_slab", "type": "bottom"},
+    "a": {"block": "stone_brick_stairs", "facing": "west", "half": "top"},
+    "e": {"block": "stone_brick_stairs", "facing": "east", "half": "top"},
+    "b": {"block": "iron_bars", "optional": true},
+    "t": {"block": "lantern", "fallback": "torch"},
+    "l": {"block": "lantern", "hanging": true, "optional": true},
+    "3": {"block": "wall_torch", "facing": "east"},
+    "4": {"block": "wall_torch", "facing": "west"}
+  },
+  "layers": [
+    [
+      "ccc.....ccc",
+      "ccc.....ccc",
+      "ccc.....ccc"
+    ],
+    [
+      "SSS.....SSS",
+      "SSS.....SSS",
+      "SSS.....SSS"
+    ],
+    [
+      "SSS.....SSS",
+      "SSS3...4SSS",
+      "SSS.....SSS"
+    ],
+    [
+      "SSSa.l.eSSS",
+      "SSSabbbeSSS",
+      "SSSa.l.eSSS"
+    ],
+    [
+      "SSSSSSSSSSS",
+      "SSSSSSSSSSS",
+      "SSSSSSSSSSS"
+    ],
+    [
+      "SSSw_w_wSSS",
+      "SSS_____SSS",
+      "SSSw_w_wSSS"
+    ],
+    [
+      "SSS.....SSS",
+      "SSS.....SSS",
+      "SSS.....SSS"
+    ],
+    [
+      "w_w.....w_w",
+      "_t_....._t_",
+      "w_w.....w_w"
+    ]
+  ],
+  "markers": {
+    "gate": [[5, 0, 1]],
+    "door": [[5, 0, -1]],
+    "join": [[-1, 0, 1], [11, 0, 1]]
+  },
+  "meta": {"size": "medium", "length": 11}
+}

@@ -1,0 +1,83 @@
+{
+  "name": "farm shed",
+  "kind": "workplace:farmer",
+  "styles": ["oak", "spruce", "plains", "forest", "taiga"],
+  "wood": "oak",
+  "size": [7, 6],
+  "front": "north",
+  "palette": {
+    "C": "cobblestone",
+    "F": {"block": "planks", "wood": "oak"},
+    "L": {"block": "log", "wood": "oak", "axis": "y"},
+    "X": {"block": "log", "wood": "oak", "axis": "x"},
+    "Z": {"block": "log", "wood": "oak", "axis": "z"},
+    "W": {"block": "planks", "wood": "oak"},
+    "v": {"block": "stairs", "facing": "south", "wood": "spruce"},
+    "^": {"block": "stairs", "facing": "north", "wood": "spruce"},
+    "H": {"block": "chest", "facing": "north"},
+    "O": {"block": "barrel", "facing": "up"},
+    "2": {"block": "wall_torch", "facing": "north"},
+    "4": {"block": "wall_torch", "facing": "west"},
+    "&": "composter",
+    "Y": {"block": "hay_bale", "axis": "y", "optional": true},
+    "a": {"block": "cauldron", "optional": true},
+    "c": "cobblestone"
+  },
+  "layers": [
+    [
+      ".......",
+      ".CCCCC.",
+      ".CFFFC.",
+      ".CFFFC.",
+      ".CCCCC.",
+      "......."
+    ],
+    [
+      ".......",
+      ".L...L.",
+      ".cY.ac.",
+      ".c&HOc.",
+      ".LcccL.",
+      "......."
+    ],
+    [
+      ".......",
+      ".L...L.",
+      ".WY.4W.",
+      ".W.2.W.",
+      ".LWWWL.",
+      "......."
+    ],
+    [
+      "vvvvvvv",
+      ".XXXXX.",
+      ".Z...Z.",
+      ".Z...Z.",
+      ".XXXXX.",
+      "^^^^^^^"
+    ],
+    [
+      ".......",
+      "vvvvvvv",
+      ".W...W.",
+      ".W...W.",
+      "^^^^^^^",
+      "......."
+    ],
+    [
+      ".......",
+      ".......",
+      "vvvvvvv",
+      "^^^^^^^",
+      ".......",
+      "......."
+    ]
+  ],
+  "markers": {
+    "door": [[3, 0, 0]],
+    "inside": [[3, 1, 2]],
+    "job": [[2, 1, 3]],
+    "chest": [[3, 1, 3]]
+  },
+  "meta": {"profession": "farmer", "size": "small", "open_front": true}
+}

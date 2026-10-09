@@ -1,0 +1,77 @@
+{
+  "name": "orchard",
+  "kind": "farm:orchard",
+  "styles": ["oak", "birch", "plains", "forest"],
+  "wood": "oak",
+  "size": [13, 13],
+  "front": "north",
+  "palette": {
+    "i": {"block": "fence", "wood": "oak"},
+    "t": {"block": "lantern", "fallback": "torch"},
+    "d": "dirt",
+    "*": {"block": "flower"},
+    "X": {"block": "log", "wood": "oak", "axis": "x"},
+    "Z": {"block": "log", "wood": "oak", "axis": "z"},
+    "w": "cobblestone_wall",
+    "O": {"block": "barrel", "facing": "up"},
+    "h": {"block": "chest", "facing": "south"},
+    "5": {"block": "stairs", "facing": "west", "wood": "oak"},
+    "6": {"block": "stairs", "facing": "east", "wood": "oak"},
+    "8": {"block": "stairs", "facing": "north", "wood": "oak"},
+    "9": {"block": "stairs", "facing": "south", "wood": "oak"}
+  },
+  "layers": [
+    [
+      "iiiiii.iiiiii",
+      "iOO.......h.i",
+      "i.XXX...XXX.i",
+      "i.ZdZ...ZdZ.i",
+      "i.XXX...XXX.i",
+      "i.....9.....i",
+      "idd..6w5..ddi",
+      "i.....8.....i",
+      "i.XXX...XXX.i",
+      "i.ZdZ...ZdZ.i",
+      "i.XXX.d.XXX.i",
+      "i.....d.....i",
+      "iiiiiiiiiiiii"
+    ],
+    [
+      "t....t.t....t",
+      ".O...........",
+      ".............",
+      ".............",
+      ".............",
+      ".............",
+      ".**...i...**.",
+      ".............",
+      ".............",
+      ".............",
+      "......*......",
+      "......*......",
+      "t...........t"
+    ],
+    [
+      ".............",
+      ".............",
+      ".............",
+      ".............",
+      ".............",
+      ".............",
+      "......t......",
+      ".............",
+      ".............",
+      ".............",
+      ".............",
+      ".............",
+      "............."
+    ]
+  ],
+  "markers": {
+    "sapling": [[3, 1, 3], [9, 1, 3], [3, 1, 9], [9, 1, 9]],
+    "door": [[6, 0, -1]],
+    "inside": [[6, 0, 1]],
+    "chest": [[10, 0, 1]]
+  },
+  "meta": {"size": "large", "trees": 4}
+}

@@ -1,0 +1,114 @@
+{
+  "name": "fishmonger's stall",
+  "kind": "shop:fishmonger",
+  "styles": ["spruce", "birch", "taiga", "plains"],
+  "wood": "spruce",
+  "size": [9, 7],
+  "front": "north",
+  "palette": {
+    "C": "cobblestone",
+    "s": {"block": "cobblestone_stairs", "facing": "south"},
+    "F": {"block": "planks", "wood": "spruce"},
+    "L": {"block": "log", "wood": "spruce", "axis": "y"},
+    "X": {"block": "log", "wood": "spruce", "axis": "x"},
+    "Z": {"block": "log", "wood": "spruce", "axis": "z"},
+    "W": {"block": "planks", "wood": "birch"},
+    "R": {"block": "planks", "wood": "spruce"},
+    "v": {"block": "stairs", "facing": "south", "wood": "spruce"},
+    "^": {"block": "stairs", "facing": "north", "wood": "spruce"},
+    "=": {"block": "slab", "wood": "spruce", "type": "bottom"},
+    "}": {"block": "chest", "facing": "west"},
+    "O": {"block": "barrel", "facing": "up"},
+    "2": {"block": "wall_torch", "facing": "north"},
+    "3": {"block": "wall_torch", "facing": "east"},
+    "4": {"block": "wall_torch", "facing": "west"},
+    "n": {"block": "slab", "wood": "spruce", "type": "top"},
+    "t": {"block": "lantern", "fallback": "torch"},
+    "c": {"block": "cauldron", "optional": true}
+  },
+  "layers": [
+    [
+      "....s....",
+      ".CFFFFFC.",
+      ".CFFFFFC.",
+      ".CFFFFFC.",
+      ".CFFFFFC.",
+      ".CCCCCCC.",
+      "........."
+    ],
+    [
+      ".........",
+      ".L.....L.",
+      ".WOnnO.W.",
+      ".W.....W.",
+      ".WOcO}.W.",
+      ".LWWWWWL.",
+      "........."
+    ],
+    [
+      ".........",
+      ".L.....L.",
+      ".Wt..t.W.",
+      ".W3...4W.",
+      ".W..2..W.",
+      ".LWWWWWL.",
+      "........."
+    ],
+    [
+      "vvvvvvvvv",
+      ".LXXXXXL.",
+      ".Z.....Z.",
+      ".Z.....Z.",
+      ".Z.....Z.",
+      ".LXXXXXL.",
+      "^^^^^^^^^"
+    ],
+    [
+      ".........",
+      "vvvvvvvvv",
+      ".W.....W.",
+      ".W.....W.",
+      ".W.....W.",
+      "^^^^^^^^^",
+      "........."
+    ],
+    [
+      ".........",
+      ".........",
+      "vvvvvvvvv",
+      ".W.....W.",
+      "^^^^^^^^^",
+      ".........",
+      "........."
+    ],
+    [
+      ".........",
+      ".........",
+      ".........",
+      "RRRRRRRRR",
+      ".........",
+      ".........",
+      "........."
+    ],
+    [
+      ".........",
+      ".........",
+      ".........",
+      "=========",
+      ".........",
+      ".........",
+      "........."
+    ]
+  ],
+  "markers": {
+    "door": [[4, 0, -1]],
+    "inside": [[4, 1, 1]],
+    "counter": [[4, 1, 3]],
+    "customer": [[4, 1, 1]],
+    "job": [[4, 1, 4]],
+    "chest": [[5, 1, 4]],
+    "display": [[2, 1, 2], [5, 1, 2]],
+    "sign": [[4, 2, 1]]
+  },
+  "meta": {"shop": "fishmonger", "profession": "fishmonger", "size": "small", "open_front": true}
+}

@@ -1,0 +1,111 @@
+{
+  "name": "desert general store",
+  "kind": "shop:general",
+  "styles": ["sandstone", "desert"],
+  "size": [11, 10],
+  "front": "north",
+  "palette": {
+    "S": "sandstone",
+    "P": "cut_sandstone",
+    "s": {"block": "sandstone_stairs", "facing": "south"},
+    "_": {"block": "sandstone_slab", "type": "bottom"},
+    "n": {"block": "sandstone_slab", "type": "top"},
+    "w": "sandstone_wall",
+    "D": {"block": "door", "wood": "jungle", "facing": "south", "hinge": "left"},
+    "g": {"block": "glass_pane", "optional": true},
+    "a": {"block": "carpet", "colour": "orange"},
+    "b": {"block": "carpet", "colour": "white"},
+    "O": {"block": "barrel", "facing": "up"},
+    "H": {"block": "chest", "facing": "north"},
+    "f": {"block": "potted_flower"},
+    "1": {"block": "wall_torch", "facing": "south"},
+    "2": {"block": "wall_torch", "facing": "north"},
+    "3": {"block": "wall_torch", "facing": "east"},
+    "4": {"block": "wall_torch", "facing": "west"}
+  },
+  "layers": [
+    [
+      ".w...s...w.",
+      "._________.",
+      ".SSSSSSSSS.",
+      ".SSSSSSSSS.",
+      ".SSSSSSSSS.",
+      ".SSSSSSSSS.",
+      ".SSSSSSSSS.",
+      ".SSSSSSSSS.",
+      ".SSSSSSSSS.",
+      ".SSSSSSSSS."
+    ],
+    [
+      ".w.......w.",
+      "...........",
+      ".PSSPDPSSP.",
+      ".SO.....OS.",
+      ".S.......S.",
+      ".SOnnnnO.S.",
+      ".S.......S.",
+      ".S.......S.",
+      ".SOOHOHOOS.",
+      ".PSSSSSSSP."
+    ],
+    [
+      ".w.......w.",
+      "....2.2....",
+      ".PggP.PggP.",
+      ".Sf.1.1.fS.",
+      ".S3.....4S.",
+      ".g.......g.",
+      ".S3.....4S.",
+      ".g.......g.",
+      ".SO.2.2.OS.",
+      ".PSSSSSSSP."
+    ],
+    [
+      "._________.",
+      "._________.",
+      ".PSSPPPSSP.",
+      ".S.......S.",
+      ".S.......S.",
+      ".S.......S.",
+      ".S.......S.",
+      ".S.......S.",
+      ".S.......S.",
+      ".PSSSSSSSP."
+    ],
+    [
+      ".ababababa.",
+      ".ababababa.",
+      ".PSSPSPSSP.",
+      ".S_______S.",
+      ".S_______S.",
+      ".S_______S.",
+      ".S_______S.",
+      ".S_______S.",
+      ".S_______S.",
+      ".PSSSSSSSP."
+    ],
+    [
+      "...........",
+      "...........",
+      ".wwwwwwwww.",
+      ".w.......w.",
+      ".w.......w.",
+      ".w.......w.",
+      ".w.......w.",
+      ".w.......w.",
+      ".w.......w.",
+      ".wwwwwwwww."
+    ]
+  ],
+  "markers": {
+    "door": [[5, 0, -1]],
+    "inside": [[5, 1, 3]],
+    "counter": [[5, 1, 6]],
+    "customer": [[5, 1, 4]],
+    "job": [[5, 1, 8]],
+    "chest": [[4, 1, 8], [6, 1, 8]],
+    "display": [[2, 1, 3], [8, 1, 3], [2, 1, 5], [7, 1, 5]],
+    "sign": [[5, 3, 1]]
+  },
+  "meta": {"shop": "general", "profession": "shopkeeper", "size": "medium"}
+}

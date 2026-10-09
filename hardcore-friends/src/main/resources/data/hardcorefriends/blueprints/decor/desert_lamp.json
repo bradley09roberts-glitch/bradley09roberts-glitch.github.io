@@ -1,0 +1,30 @@
+{
+  "name": "sandstone lamp",
+  "kind": "decor:lamp",
+  "styles": ["sandstone", "desert"],
+  "size": [1, 1],
+  "front": "north",
+  "palette": {
+    "S": "cut_sandstone",
+    "w": "sandstone_wall",
+    "t": {"block": "lantern", "fallback": "torch"}
+  },
+  "layers": [
+    [
+      "S"
+    ],
+    [
+      "w"
+    ],
+    [
+      "w"
+    ],
+    [
+      "t"
+    ]
+  ],
+  "markers": {
+    "light": [[0, 3, 0]]
+  },
+  "meta": {"size": "tiny"}
+}

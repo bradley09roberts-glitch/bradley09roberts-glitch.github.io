@@ -1,0 +1,54 @@
+{
+  "name": "flower garden",
+  "kind": "decor:garden",
+  "styles": ["oak", "birch", "plains", "forest", "town"],
+  "wood": "oak",
+  "size": [7, 7],
+  "front": "north",
+  "palette": {
+    "X": {"block": "log", "wood": "oak", "axis": "x"},
+    "Z": {"block": "log", "wood": "oak", "axis": "z"},
+    "L": {"block": "log", "wood": "oak", "axis": "y"},
+    "d": "dirt",
+    "*": {"block": "flower"},
+    "%": {"block": "tall_flower"},
+    "_": {"block": "stone_brick_slab", "type": "bottom"},
+    "S": "stone_bricks",
+    "i": {"block": "fence", "wood": "oak"},
+    "t": {"block": "lantern", "fallback": "torch"}
+  },
+  "layers": [
+    [
+      "LXX_XXL",
+      "Zdd_ddZ",
+      "Zdd_ddZ",
+      "___S___",
+      "Zdd_ddZ",
+      "Zdd_ddZ",
+      "LXX_XXL"
+    ],
+    [
+      ".......",
+      ".%*.*%.",
+      ".**.**.",
+      "...i...",
+      ".**.**.",
+      ".%*.*%.",
+      "......."
+    ],
+    [
+      ".......",
+      ".......",
+      ".......",
+      "...t...",
+      ".......",
+      ".......",
+      "......."
+    ]
+  ],
+  "markers": {
+    "light": [[3, 2, 3]],
+    "door": [[3, 0, -1]]
+  },
+  "meta": {"size": "small"}
+}

@@ -1,0 +1,44 @@
+{
+  "name": "signpost",
+  "kind": "decor:signpost",
+  "styles": ["oak", "spruce", "plains", "forest", "taiga", "town"],
+  "wood": "spruce",
+  "size": [3, 3],
+  "front": "north",
+  "palette": {
+    "w": "cobblestone_wall",
+    "i": {"block": "fence", "wood": "spruce"},
+    "t": {"block": "lantern", "fallback": "torch"},
+    "q": {"block": "trapdoor", "wood": "spruce", "facing": "north", "open": "true", "half": "top"},
+    "j": {"block": "trapdoor", "wood": "spruce", "facing": "south", "open": "true", "half": "top"},
+    "y": {"block": "trapdoor", "wood": "spruce", "facing": "west", "open": "true", "half": "top"},
+    "o": {"block": "trapdoor", "wood": "spruce", "facing": "east", "open": "true", "half": "top"}
+  },
+  "layers": [
+    [
+      "...",
+      ".w.",
+      "..."
+    ],
+    [
+      ".q.",
+      ".i.",
+      ".j."
+    ],
+    [
+      "...",
+      "yio",
+      "..."
+    ],
+    [
+      "...",
+      ".t.",
+      "..."
+    ]
+  ],
+  "markers": {
+    "light": [[1, 3, 1]],
+    "sign": [[1, 2, 1]]
+  },
+  "meta": {"size": "tiny"}
+}
