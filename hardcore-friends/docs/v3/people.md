@@ -247,6 +247,8 @@ In `config/hardcorefriends.json`, under "Living together":
   it simply waits.
 - A grown-up born here starts with no tool and has to fetch or make one.
 - The skin list is read from the mod's own JAR: new skins mean rebuilding the mod and giving every player the new JAR.
+  An entry whose texture path has a typo draws the game's purple-and-black "missing texture" (the tool writes the
+  paths from the files themselves, so it cannot make that mistake).
 - A child is a smaller body and can slip under ledges and through gaps a grown-up cannot. They only grow up where a
   grown-up fits, but a parent may not always be able to follow them.
 - If both of a child's parents die, the child stays on the team and is looked after by the camp as a whole (their
