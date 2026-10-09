@@ -39,6 +39,8 @@ public class FriendNavigation extends GroundPathNavigation {
 
 	/** The last new path that was cut short at a cave mouth (no initial value: the parent constructor runs first). */
 	private @Nullable Path caveCut;
+	/** A second navigation for the same friend that only works out paths ({@link #probe}); made when first needed. */
+	private @Nullable FriendNavigation prober;
 
 	public FriendNavigation(CompanionEntity companion, Level level) {
 		super(companion, level);
@@ -58,6 +60,30 @@ public class FriendNavigation extends GroundPathNavigation {
 	 */
 	public boolean cutAtCave(@Nullable Path path) {
 		return path != null && path == caveCut;
+	}
+
+	/**
+	 * Works out the friend's path to {@code target} (within {@code reachRange}) without walking it and without touching
+	 * this navigation: the path being walked, where it leads and its reach all stay as they are. Vanilla's
+	 * {@code createPath} remembers the place asked about as the target, so a later re-path (a block changing nearby)
+	 * would send a walking friend there instead. For questions about places the friend is not walking to
+	 * ({@link Routes}).
+	 */
+	public @Nullable Path probe(BlockPos target, int reachRange) {
+		if (!(this.mob instanceof CompanionEntity c)) {
+			return null;
+		}
+		FriendNavigation p = prober;
+		if (p == null) {
+			p = new FriendNavigation(c, this.level);
+			prober = p;
+		}
+		NodeEvaluator mine = this.nodeEvaluator;
+		p.setCanFloat(mine.canFloat());
+		p.setCanOpenDoors(mine.canOpenDoors());
+		p.setCanWalkOverFences(mine.canWalkOverFences());
+		p.getNodeEvaluator().setCanPassDoors(mine.canPassDoors());
+		return p.createPath(target, reachRange);
 	}
 
 	@Override

@@ -90,8 +90,8 @@ final class StairPlan implements Plan {
 
 	@Override
 	public boolean start(CompanionEntity c, ServerLevel level) {
-		if (c.isChild() || !c.isTeamMember() || !FriendsConfig.get().allowWorldEditing) {
-			return false;
+		if (c.isChild() || !c.isTeamMember() || !FriendsConfig.get().allowWorldEditing || free(c, level)) {
+			return false; // free already: nothing to dig
 		}
 		Direction first = towards != null && Math.abs(towards.getX() - c.getX()) + Math.abs(towards.getZ() - c.getZ()) > 2
 			? Direction.getApproximateNearest(towards.getX() + 0.5 - c.getX(), 0, towards.getZ() + 0.5 - c.getZ())
@@ -294,7 +294,7 @@ final class StairPlan implements Plan {
 		if (outOfCave) {
 			return !Terrain.underground(level, f) && Ways.canLeave(level, f, 6, 250);
 		}
-		return Ways.canLeave(level, f, freeRadius, 1500);
+		return Ways.canLeave(level, f, freeRadius); // the same measure that found them shut in
 	}
 
 	@Override

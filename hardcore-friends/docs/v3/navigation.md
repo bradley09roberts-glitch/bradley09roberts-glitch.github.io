@@ -60,18 +60,28 @@ are trying to get somewhere and getting nowhere, they work through these steps:
    they swim. In a hole full of water with steep sides, they cut a step out just above the waterline.
 4. **Shut in.** In a pit or a hole they cannot walk out of, they put a block of dirt or cobblestone from their backpack
    underfoot, once or twice, the way players do. Then they step out onto the edge and take the blocks back. With no
-   blocks, or if the hole is deeper, they dig a staircase up.
+   blocks, or if the hole is deeper, they dig a staircase up. A friend shut in on a job underground (a hole in the
+   mine) only digs until they can get about again, not all the way to the surface. A friend whose walks keep failing
+   away from camp checks whether they can get 24 blocks away on foot or swimming (the bottom of a ravine, say). If
+   not, they dig a staircase towards home until they can. Open water counts as a way out, so a riverbank or a lake
+   shore never looks like a pit.
 5. **Lost in a cave.** Underground, trying to get somewhere that is not, and getting no nearer: they look for the
    nearest spot under open sky they can walk to, up to 48 blocks away, and walk there. Along a dark way, they put a
    torch down every so often if they carry any. If there is no way out on foot, they dig a staircase up.
 6. **Brought home (last resort).** A friend on the team who is still in trouble after two in-game minutes, trapped
-   underground while badly hurt or starving, or about to drown, is brought home safely. A friend who is following you
-   is brought back to you instead. Everyone is told, for example "Rowan got lost in a cave and found the way home."
+   underground while badly hurt or starving, or about to drown, is brought home safely. Time lost underground is added
+   up until they are out, so a friend who can wander about a big cave but never find the way out is brought home too,
+   however many times they try in between. A friend who is following you is brought back to you instead. Everyone is
+   told, for example "Rowan got lost in a cave and found the way home."
 
 A friend is never brought home out of a fight, out of a job that is still getting on with things (a mine that is
 being dug, for example), or when you told them to stay put. A friend who is following you and gets stuck catches up
 with you after a few seconds (when catching up is on, `followTeleportDistance` above 0), instead of waiting until you
-are 48 blocks away.
+are 48 blocks away. That comes first: they only start walking out of a cave or digging if the catch-up does not
+happen. Walking after you while you walk on counts as getting somewhere, so a friend following you out of a cave is
+not taken for lost. A follower only counts as heading for you while following you is what moves them, so one who
+stands at their spot on purpose (an archer in the dragon fight, say) is never "stuck" short of you. When you are up a
+pillar in the End, or next to an end crystal, a friend is never brought back to you there.
 
 **Digging out** follows the edit rules friends use to stay alive away from camp. A staircase digs at most three
 blocks a step, and only natural ground: dirt, grass, sand, gravel, clay, and plain stone, granite, diorite, andesite
@@ -90,7 +100,10 @@ Friends sprint like players:
 
 They use the real sprint. You see them run, with dust at their feet, and they move 30% faster. They slow to a walk 5
 blocks from where they are going. They do not sprint in water (they swim), when hungry (hunger 25 or less), when
-sneaking, or (unless running from something) beside a long drop or near lava. Running costs a little more hunger.
+sneaking, or (unless running from something) beside a long drop or near lava, where they stand or a few steps ahead.
+That holds when they keep up with you too: sprint along a bridge over the void or past a lava lake and they walk
+after you. Running costs a little more hunger: a second of running costs about two thirds as much again as a second
+of work, so ten minutes of running adds about 6 to a day's 15 or so.
 Children sprint too, but tire after about ten seconds and need a while to get their breath back. Now and then a friend
 says something cheerful as they set off on a long run.
 
@@ -117,7 +130,7 @@ Digging and placing blocks to get out also needs `allowWorldEditing` to be on.
 (none, caution or serious), `Senses.heard(c)` (monsters heard, nearest first), `Senses.lowOnAir(c)` and
 `Senses.inCurrent(c)`. `Routes.reachable(c, pos, reach)` says whether a friend can walk somewhere along a whole path,
 without ducking underground on a walk between two places on the surface (cached; meant for the one target a job is
-about to choose). `Wayfinder.troubleTicks(c)` says how long a friend has been stuck. `Sprint.hurry(c, ticks, fleeing)`
+about to choose; safe to ask while the friend walks somewhere else, as the path is worked out on the side). `Wayfinder.troubleTicks(c)` says how long a friend has been stuck. `Sprint.hurry(c, ticks, fleeing)`
 makes a friend run.
 
 ## Honest limits
@@ -131,8 +144,12 @@ Nothing here has been run in the game. Everything below is untested.
   windowless room or a deep overhang can count as underground. Paths through one cost more, and a friend inside one,
   heading outside, may think they are lost. A cave right under a thin roof can count as the surface.
 - **Searches are bounded.** The way out of a cave is looked for up to 48 blocks away and 3,000 spots. A friend deep in
-  a big cave system may find nothing and start digging up instead. Long, winding ways out of the water can be missed
-  in the same way.
+  a big cave system may find nothing and start digging up instead, or, below the deepslate line, wait to be brought
+  home (about two minutes of being lost, added up). Long, winding ways out of the water can be missed in the same
+  way. The searches swim across and up, never down, so a way out that means diving under a wall is not found.
+- **Jobs do not check their targets yet.** `Routes.reachable` exists, but the jobs do not ask it before choosing a
+  target. A job whose target can only be reached through a cave is still chosen. The walk then stops at the cave
+  mouth and gives up, and the job picks again later, perhaps the same target.
 - **Digging up is slow** without a pickaxe (about 7 seconds a stone block), and it stops at sand or gravel overhead,
   at water or lava, at blocks you or the friends built, and at the camp's edge. It cannot dig deepslate, cobblestone
   or sandstone (the shared edit rules for staying alive do not allow them), so deep down below the deepslate line, or
@@ -147,6 +164,7 @@ Nothing here has been run in the game. Everything below is untested.
   something the path did not foresee. They do not sprint beside a long drop or near lava unless they are fleeing.
 - **Hearing** only changes paths for monsters within 12 blocks, and only when the path is worked out. A monster that
   moves afterwards is noticed at the next path.
-- **Performance.** Paths look at up to 768 spots, against 512 before, and each spot is checked a little more. Searches
-  for a way out run only for a friend in trouble, at most every 10 seconds. With many friends stuck at once, there may
-  be short spikes.
+- **Performance.** Paths look at up to 768 spots, against 512 before, and each spot is checked a little more. A walk
+  whose path stops short of the target (a cave mouth, the last dry step) is worked out again once a second, not every
+  tick. Searches for a way out run only for a friend in trouble, at most every 10 seconds. With many friends stuck at
+  once, there may be short spikes.

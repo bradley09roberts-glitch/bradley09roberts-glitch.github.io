@@ -53,6 +53,11 @@ public final class Actions {
 	private int noProgressTicks;
 	private double bestDistance = Double.MAX_VALUE;
 	private boolean stuck;
+	/**
+	 * The last path worked out cannot reach the target (it stops short): once walked, it is not worked out again until
+	 * the usual interval is up, rather than every tick (the same short way would come back each time).
+	 */
+	private boolean partialPath;
 	/** Where the last walk was headed, and when a walk was last asked for (game time): see {@link #walkIntent()}. */
 	private @Nullable BlockPos intent;
 	private long intentAt = Long.MIN_VALUE;
@@ -100,6 +105,7 @@ public final class Actions {
 			noProgressTicks = 0;
 			bestDistance = Double.MAX_VALUE;
 			stuck = false;
+			partialPath = false;
 		}
 		if (dist < bestDistance - 0.25) {
 			bestDistance = dist;
@@ -107,9 +113,10 @@ public final class Actions {
 		} else if (++noProgressTicks > STUCK_LIMIT) {
 			giveUp();
 		}
-		if (--repathTimer <= 0 || c.getNavigation().isDone()) {
+		if (--repathTimer <= 0 || c.getNavigation().isDone() && !partialPath) {
 			repathTimer = REPATH_INTERVAL;
 			Path path = c.getNavigation().createPath(target, Math.max(0, (int) Math.floor(reach) - 1));
+			partialPath = path != null && !path.canReach();
 			if (onlyThroughACave(path)) {
 				giveUp(); // the only way on from here leads underground: not a way for a job on the surface
 			} else if (path == null || !c.getNavigation().moveTo(path, speed())) {
@@ -144,6 +151,14 @@ public final class Actions {
 	}
 
 	/**
+	 * Says where the friend is heading when something other than these walks moves them (following their leader), so
+	 * the stuck watcher knows they are trying to get there. Call it every tick or two while that lasts.
+	 */
+	public void heading(BlockPos target) {
+		noteIntent(target);
+	}
+
+	/**
 	 * Where a job is walking the friend to just now (asked for in the last ten ticks, and not there yet), or null. The
 	 * stuck watcher uses it to tell "stuck" from "standing still on purpose".
 	 */
@@ -167,6 +182,7 @@ public final class Actions {
 			noProgressTicks = 0;
 			bestDistance = Double.MAX_VALUE;
 			stuck = false;
+			partialPath = false;
 		}
 		if (dist < bestDistance - 0.25) {
 			bestDistance = dist;
@@ -174,9 +190,11 @@ public final class Actions {
 		} else if (++noProgressTicks > STUCK_LIMIT) {
 			giveUp();
 		}
-		if (--repathTimer <= 0 || c.getNavigation().isDone()) {
+		if (--repathTimer <= 0 || c.getNavigation().isDone() && !partialPath) {
 			repathTimer = 10;
 			c.getNavigation().moveTo(target, speed());
+			Path path = c.getNavigation().getPath();
+			partialPath = path != null && !path.canReach();
 		}
 		return false;
 	}
@@ -195,6 +213,7 @@ public final class Actions {
 		noProgressTicks = 0;
 		bestDistance = Double.MAX_VALUE;
 		stuck = false;
+		partialPath = false;
 	}
 
 	// ----------------------------------------------------------------- mining

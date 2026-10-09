@@ -20,6 +20,9 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
  * <p>Paths cost something to work out, so each answer is remembered per friend and place: a way there for
  * {@value #KEEP_YES} ticks, none for {@value #KEEP_NO}. Do not call it from a job's score for many places at once:
  * check the one place the job is about to choose.
+ *
+ * <p>Asking is safe while the friend walks somewhere else: the path is worked out on the side
+ * ({@link FriendNavigation#probe}), never on the navigation they are walking with.
  */
 public final class Routes {
 	private static final int KEEP_YES = 100;
@@ -51,7 +54,8 @@ public final class Routes {
 		if (!c.onGround() && !c.isInLiquid() && !c.isPassenger()) {
 			return false;
 		}
-		Path path = c.getNavigation().createPath(target, Math.max(0, reach));
+		// Worked out on the side: asking never changes where a walking friend is going.
+		Path path = c.getNavigation() instanceof FriendNavigation nav ? nav.probe(target, Math.max(0, reach)) : null;
 		boolean ok = path != null && path.canReach() && !throughCave(level, c, path, target);
 		if (known.size() > 64) {
 			known.values().removeIf(e -> e >> 1 <= now);

@@ -48,8 +48,8 @@ public final class Senses {
 	private static final double PATH_WARY = 12;
 
 	private static final Map<CompanionEntity, Reading> READINGS = new WeakHashMap<>();
-	private static final Reading CALM = new Reading(Long.MIN_VALUE, false, 15, false, false, false, false, Vec3.ZERO, false, false,
-		false, false, List.of(), new long[0], new long[0]);
+	/** The calm answers off the server (never kept: a reading kept is always one taken at a real game time). */
+	private static final Reading CALM = calm(Long.MIN_VALUE);
 
 	/** How much danger a friend senses at once. */
 	public enum Danger {
@@ -158,10 +158,18 @@ public final class Senses {
 		READINGS.clear();
 	}
 
+	/** Nothing sensed at all, taken at {@code at}. */
+	private static Reading calm(long at) {
+		return new Reading(at, false, 15, false, false, false, false, Vec3.ZERO, false, false, false, false, List.of(), new long[0],
+			new long[0]);
+	}
+
 	private static Reading sense(CompanionEntity c, ServerLevel level, long now) {
 		BlockPos feet = c.blockPosition();
 		if (!level.isLoaded(feet)) {
-			return CALM;
+			// Out of the world's height or in land not loaded: calm for now, and sensed again at the next refresh (a
+			// reading dated long ago would never be refreshed: the age sum would overflow).
+			return calm(now);
 		}
 		BlockPos head = feet.above();
 		boolean underground = Terrain.underground(level, feet) && Terrain.underground(level, head);

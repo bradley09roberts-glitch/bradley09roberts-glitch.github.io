@@ -19,6 +19,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 
@@ -50,10 +51,14 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * <li><b>Lost in a cave</b> (underground, heading for somewhere that is not, and getting no nearer): walk the way found
  * to the nearest open sky ({@link CaveExitPlan}), or dig up to it.</li>
  * <li><b>Last resort:</b> a friend on the team still in trouble after {@value #RESCUE_AFTER} ticks (two in-game
- * minutes), trapped underground hurt or starving, or about to drown, is brought home (or to their leader) and
- * everyone is told. Never out of a fight, never out of a mine job that is going fine, never one told to stay put, and
- * not at all when {@code rescueStuckFriends} is off.</li>
+ * minutes), lost underground that long all told (a friend who can walk about a big cave but not out of it is calmed
+ * between tries, so this is added up and only cleared once they are out), trapped underground hurt or starving, or
+ * about to drown, is brought home (or to their leader) and everyone is told. Never out of a fight, never out of a mine
+ * job that is going fine, never one told to stay put, and not at all when {@code rescueStuckFriends} is off.</li>
  * </ol>
+ *
+ * <p>A friend following their leader who gets stuck is caught up with them by {@code FollowLeaderGoal} first (when
+ * catching up is on); the slower ways out start only if that does not happen.
  *
  * <p>Watching costs a few comparisons every {@value #CHECK} ticks per friend; the searches for a way out run only for a
  * friend in trouble, at most every {@value #PROBE_GAP} ticks.
@@ -73,6 +78,10 @@ public final class Wayfinder {
 	private static final int CONFINED_AFTER = 400;
 	/** Underground, heading for somewhere that is not, getting no nearer, this long: lost. */
 	private static final int LOST_AFTER = 300;
+	/** How often (ticks) the watcher looks whether a friend got any nearer where they are going. */
+	private static final int WINDOW = 100;
+	/** A pause longer than this (busy, or not going anywhere) starts the look at progress afresh, without a verdict. */
+	private static final int WINDOW_STALE = 300;
 	/** Stuck in the water this long: swim for the shore. */
 	private static final int WATER_AFTER = 40;
 	/** Not wanting to go anywhere for this long ends any trouble (a short gap between two jobs only pauses the count). */
@@ -95,6 +104,10 @@ public final class Wayfinder {
 	private static final int GIVEN_UP_WALKS = 3;
 	private static final int GIVEN_UP_WINDOW = 2400;
 	private static final int HEMMED_CHECK_GAP = 600;
+	/** How far a friend must be able to get on foot not to count as hemmed in. */
+	private static final int HEMMED_RADIUS = 24;
+	/** A friend following, stuck and about to be caught up with their leader, gets this long before anything slower starts. */
+	private static final int CATCH_UP_FIRST = 2 * FollowLeaderGoal.STUCK_CATCH_UP;
 
 	/**
 	 * Jobs that move a friend in tight spots on purpose and see to getting out themselves (the night shelter steps into
@@ -133,10 +146,17 @@ public final class Wayfinder {
 		boolean saidStuck;
 		@Nullable Vec3 patchAt;
 		int confined;
-		@Nullable BlockPos windowDest;
-		double windowDistance;
+		/** Where the friend stood at the last look at their progress, and when (see {@link #track}). */
+		@Nullable Vec3 windowPos;
 		long windowAt;
 		int lost;
+		/**
+		 * Ticks lost underground added up over every try to get out, which {@link #calm} does not clear: only getting out
+		 * from under the ground (or being brought home) starts it again. A friend who can walk about a big cave but never
+		 * out of it is calmed again and again (each walk given up looks like "only that place is out of reach"); this is
+		 * what still brings them home in the end.
+		 */
+		int lostInAll;
 		long troubleSince = -1;
 		int idle;
 		int weakUnderground;
@@ -147,7 +167,8 @@ public final class Wayfinder {
 		final Map<Plan.Kind, Long> cooldown = new EnumMap<>(Plan.Kind.class);
 		final LongOpenHashSet blocked = new LongOpenHashSet();
 		long blockedUntil;
-		final long[] givenUp = {Long.MIN_VALUE, Long.MIN_VALUE, Long.MIN_VALUE};
+		/** When the last walks were given up (game time); "never" is far enough back that {@code now - at} cannot overflow. */
+		final long[] givenUp = {Long.MIN_VALUE / 2, Long.MIN_VALUE / 2, Long.MIN_VALUE / 2};
 		int givenUpNext;
 		long nextProbe;
 		long nextHemmedCheck;
@@ -155,6 +176,10 @@ public final class Wayfinder {
 		@Nullable BlockPos unreachable;
 		long unreachableUntil;
 
+		/**
+		 * Ends the trouble on the spot. The running totals for being lost underground and weak down there are left alone:
+		 * they end only when the friend is out (see {@link #track} and {@link #countWeakness}) or brought home.
+		 */
 		void calm(Vec3 pos) {
 			still = 0;
 			confined = 0;
@@ -163,7 +188,6 @@ public final class Wayfinder {
 			stillAt = pos;
 			patchAt = pos;
 			troubleSince = -1;
-			weakUnderground = 0;
 		}
 	}
 
@@ -239,7 +263,7 @@ public final class Wayfinder {
 			return "coming up for air";
 		}
 		if (w.troubleSince < 0) {
-			return null;
+			return w.lostInAll >= LOST_AFTER ? "lost underground (" + w.lostInAll / 20 + " s in all)" : null;
 		}
 		String what = w.lost >= LOST_AFTER ? "lost underground" : w.confined >= CONFINED_AFTER ? "hemmed in" : "stuck";
 		return what + " (" + troubleTicks(c) / 20 + " s)";
@@ -303,17 +327,15 @@ public final class Wayfinder {
 	}
 
 	/**
-	 * Where the friend is trying to get to just now: a job's walk, their leader (following, and more than five blocks
-	 * behind), or wherever their path leads; null when they are not trying to go anywhere.
+	 * Where the friend is trying to get to just now: a job's walk, their leader (while following them is what moves the
+	 * friend: {@code FollowLeaderGoal} says so through {@code Actions.heading}, so a friend another goal keeps in place
+	 * on purpose, such as an archer at their spot in the dragon fight, is not "stuck" short of their leader), or
+	 * wherever their path leads; null when they are not trying to go anywhere.
 	 */
 	static @Nullable BlockPos destination(CompanionEntity c) {
 		BlockPos walk = c.actions().walkIntent();
 		if (walk != null) {
 			return walk;
-		}
-		if (c.mode() == CompanionMode.FOLLOW) {
-			ServerPlayer leader = c.leader();
-			return FollowLeaderGoal.canFollow(c, leader) && c.distanceToSqr(leader) > 25 ? leader.blockPosition() : null;
 		}
 		PathNavigation nav = c.getNavigation();
 		return nav.isInProgress() ? nav.getTargetPos() : null;
@@ -321,6 +343,9 @@ public final class Wayfinder {
 
 	private static void track(CompanionEntity c, ServerLevel level, Watch w, Senses.Reading r, @Nullable BlockPos dest, long now) {
 		Vec3 pos = c.position();
+		if (!r.underground()) {
+			w.lostInAll = 0; // out from under the ground: whatever happened down there is over
+		}
 		if (dest == null) {
 			// Between two jobs, or done walking: the counts wait. Wanting to go nowhere for a while ends the trouble.
 			w.idle += CHECK;
@@ -356,17 +381,23 @@ public final class Wayfinder {
 		} else if (!there && !givenUp && dest.distToCenterSqr(w.patchAt) > (PATCH_RADIUS + 2) * (PATCH_RADIUS + 2)) {
 			w.confined += CHECK;
 		}
-		if (now - w.windowAt >= 100) {
-			boolean same = w.windowDest != null && w.windowDest.distSqr(dest) <= 16;
-			boolean nearer = same && toDest < w.windowDistance - 2;
+		if (w.windowPos == null || now - w.windowAt > WINDOW_STALE) {
+			// The first look, or the first after a long pause: count from here, with no verdict on the time away.
+			w.windowAt = now;
+			w.windowPos = pos;
+		} else if (now - w.windowAt >= WINDOW) {
+			// Nearer means nearer where they are going now than they were a window ago, so following someone on the move
+			// (who is a new place every time) counts as getting somewhere too.
+			boolean nearer = toDest < w.windowPos.distanceTo(Vec3.atBottomCenterOf(dest)) - 2;
 			if (r.underground() && !w.destUnderground && !there && !nearer) {
-				w.lost += (int) Math.min(100, now - w.windowAt);
+				int ticks = (int) Math.min(WINDOW, now - w.windowAt);
+				w.lost += ticks;
+				w.lostInAll += ticks;
 			} else {
 				w.lost = 0;
 			}
 			w.windowAt = now;
-			w.windowDistance = toDest;
-			w.windowDest = dest.immutable();
+			w.windowPos = pos;
 		}
 		boolean trouble = w.still >= NUDGE_AFTER || w.confined >= CONFINED_AFTER || w.lost >= LOST_AFTER
 			|| r.inWater() && w.still >= WATER_AFTER;
@@ -374,7 +405,6 @@ public final class Wayfinder {
 			w.troubleSince = now;
 		} else if (!trouble && w.still == 0 && w.confined == 0 && w.lost == 0 && w.gasping == 0) {
 			w.troubleSince = -1;
-			w.weakUnderground = 0;
 		}
 	}
 
@@ -384,9 +414,9 @@ public final class Wayfinder {
 		}
 		// In the water: no hopping about, straight for the shore (or a step cut out of a hole with steep sides).
 		if (r.inWater()) {
-			BlockPos dest = w.dest;
-			boolean carriedOff = r.inCurrent() && w.windowDest != null && w.windowDest.distSqr(dest) <= 16
-				&& c.position().distanceTo(Vec3.atBottomCenterOf(dest)) > w.windowDistance + CARRIED_OFF;
+			Vec3 dest = Vec3.atBottomCenterOf(w.dest);
+			boolean carriedOff = r.inCurrent() && w.windowPos != null
+				&& c.position().distanceTo(dest) > w.windowPos.distanceTo(dest) + CARRIED_OFF;
 			if (r.waterfall() || carriedOff || w.still >= WATER_AFTER || w.confined >= CONFINED_AFTER / 2 || r.inCurrent() && w.still >= 20) {
 				startTrouble(w, now);
 				if (!tryPlan(c, level, w, new ShorePlan(w.dest), now) && w.still >= WATER_AFTER * 3 && mayDig(c, level)) {
@@ -395,8 +425,10 @@ public final class Wayfinder {
 			}
 			return;
 		}
+		// Following, and about to be caught up with their leader: that comes first, before anything slower.
+		boolean catchUp = catchUpComing(c);
 		// Lost in a cave: walk out to the sky, or dig up to it.
-		if (w.lost >= LOST_AFTER && mayWalkOut(c)) {
+		if (w.lost >= LOST_AFTER && mayWalkOut(c) && !catchUp) {
 			if (tryPlan(c, level, w, new CaveExitPlan(), now)) {
 				return;
 			}
@@ -408,6 +440,9 @@ public final class Wayfinder {
 			nudge(c, level, w, now);
 			return;
 		}
+		if (catchUp) {
+			return;
+		}
 		if ((w.still >= LOOK_AFTER || w.confined >= CONFINED_AFTER) && now >= w.nextProbe) {
 			w.nextProbe = now + PROBE_GAP;
 			lookForWayOut(c, level, w, r, now);
@@ -415,24 +450,41 @@ public final class Wayfinder {
 		}
 		if (givenUpLately(w, now) >= GIVEN_UP_WALKS && now >= w.nextHemmedCheck && mayDig(c, level)) {
 			w.nextHemmedCheck = now + HEMMED_CHECK_GAP;
-			if (!Ways.canLeave(level, c.blockPosition(), 24, 2500)) {
+			if (!Ways.canLeave(level, c.blockPosition(), HEMMED_RADIUS)) {
 				startTrouble(w, now);
-				tryPlan(c, level, w, new StairPlan(home(c), false, 24), now);
+				tryPlan(c, level, w, new StairPlan(home(c), false, HEMMED_RADIUS), now);
 			}
 		}
+	}
+
+	/**
+	 * True while a friend following their leader will soon be caught up with them ({@code FollowLeaderGoal} does that
+	 * once they have been stuck a few seconds, when catching up is on and the leader is far enough off), and has not been
+	 * in trouble for long: no cave walk or digging is started meanwhile, as that would keep the catch-up from happening.
+	 */
+	private static boolean catchUpComing(CompanionEntity c) {
+		return FollowLeaderGoal.willCatchUp(c) && troubleTicks(c) < CATCH_UP_FIRST;
 	}
 
 	/** Stuck a while, the nudges no help: shut in, lost, or only the place they want is out of reach? */
 	private static void lookForWayOut(CompanionEntity c, ServerLevel level, Watch w, Senses.Reading r, long now) {
 		BlockPos feet = c.blockPosition();
-		if (!Ways.canLeave(level, feet, 8, 400)) {
+		boolean lostUnderground = r.underground() && !w.destUnderground;
+		if (!Ways.canLeave(level, feet, 8)) {
+			// Digging up to the surface only for a friend who wants to be up there: one shut in on a job underground (a
+			// hole in the mine) digs until they can get about again.
 			if (mayDig(c, level) && (tryPlan(c, level, w, new StepPlan(), now)
-				|| tryPlan(c, level, w, new StairPlan(w.dest, r.underground(), 8), now))) {
+				|| tryPlan(c, level, w, new StairPlan(w.dest, lostUnderground, 8), now))) {
 				return;
 			}
 			return; // nothing they can do from here: the rescue comes in time
 		}
-		if (r.underground() && !w.destUnderground && mayWalkOut(c) && tryPlan(c, level, w, new CaveExitPlan(), now)) {
+		if (lostUnderground) {
+			if (mayWalkOut(c) && !tryPlan(c, level, w, new CaveExitPlan(), now) && mayDig(c, level)) {
+				tryPlan(c, level, w, new StairPlan(home(c), true, 6), now);
+			}
+			// Lost in a cave they can walk about but not out of (no sky near enough, nothing they can dig): not "only that
+			// place is out of reach", so the trouble goes on. Both are tried again later, and in the end the rescue comes.
 			return;
 		}
 		// They can get about; only that one place is out of reach. Their job gives it up on its own.
@@ -651,10 +703,11 @@ public final class Wayfinder {
 
 	// -------------------------------------------------------------------- rescue
 
+	/** Counts the time spent in trouble (or known to be lost) underground while badly hurt or starving. */
 	private static void countWeakness(CompanionEntity c, Watch w, Senses.Reading r) {
 		boolean underground = r.underground() || w.plan != null && w.plan.kind() != Plan.Kind.SHORE && w.plan.kind() != Plan.Kind.STEP;
 		boolean weak = c.badlyHurt() || c.isTeamMember() && c.needs().get(Needs.Need.HUNGER) <= Needs.TOO_HUNGRY_TO_HEAL && !c.hasFood();
-		if (w.troubleSince >= 0 && underground && weak) {
+		if ((w.troubleSince >= 0 || w.lostInAll >= LOST_AFTER) && underground && weak) {
 			w.weakUnderground += CHECK;
 		} else {
 			w.weakUnderground = 0;
@@ -671,16 +724,16 @@ public final class Wayfinder {
 			rescue(c, level, w, Trouble.DROWNING, now);
 			return;
 		}
-		if (w.troubleSince < 0 || workingFine(c, w, now)) {
-			return;
-		}
-		long trouble = now - w.troubleSince;
+		// Lost underground for two minutes all told, however often they were calmed in between (each walk given up in a
+		// big cave they cannot get out of looks like "only that place is out of reach").
+		boolean lostLong = w.lostInAll >= RESCUE_AFTER;
 		boolean weak = w.weakUnderground >= WEAK_RESCUE_AFTER;
-		if (trouble < RESCUE_AFTER && !weak) {
+		long trouble = w.troubleSince < 0 ? 0 : now - w.troubleSince;
+		if (trouble < RESCUE_AFTER && !weak && !lostLong || workingFine(c, w, now)) {
 			return;
 		}
 		Plan plan = w.plan;
-		boolean caveTrouble = r.underground() || plan != null && plan.kind() == Plan.Kind.CAVE_EXIT;
+		boolean caveTrouble = r.underground() || lostLong || plan != null && plan.kind() == Plan.Kind.CAVE_EXIT;
 		Trouble why = weak ? Trouble.TRAPPED : caveTrouble ? Trouble.CAVE : r.inWater() ? Trouble.WATER : Trouble.STUCK;
 		rescue(c, level, w, why, now);
 	}
@@ -719,9 +772,14 @@ public final class Wayfinder {
 		String where = "home";
 		ServerPlayer leader = c.leader();
 		if (c.mode() == CompanionMode.FOLLOW && FollowLeaderGoal.canFollow(c, leader)) {
-			spot = FollowLeaderGoal.catchUpSpot(level, leader.blockPosition(), c.getRandom());
-			if (spot == null) {
-				spot = Terrain.safeSpotNear(level, leader.blockPosition(), 4);
+			BlockPos at = leader.blockPosition();
+			// The catch-up's own rules: never up a pillar beside a leader who has climbed one in the End, never beside a
+			// live end crystal. In the End only a spot it picks will do; elsewhere any safe spot near the leader.
+			if (!FollowLeaderGoal.upHighInEnd(level, at)) {
+				spot = FollowLeaderGoal.catchUpSpot(level, at, c.getRandom());
+				if (spot == null && level.dimension() != Level.END) {
+					spot = Terrain.safeSpotNear(level, at, 4);
+				}
 			}
 			where = "back to " + leader.getName().getString();
 		} else if (c.mode() == CompanionMode.WORK) {
@@ -748,6 +806,8 @@ public final class Wayfinder {
 		c.snapTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, c.getYRot(), c.getXRot());
 		c.resetFallDistance();
 		w.calm(c.position());
+		w.lostInAll = 0;
+		w.weakUnderground = 0;
 		w.gasping = 0;
 		w.lastRescue = now;
 		w.blocked.clear();
@@ -788,10 +848,12 @@ public final class Wayfinder {
 		return Camp.isCampLevel(level, Camp.data(level.getServer())) && WorldEditGuard.inCampHorizontally(c, c.blockPosition());
 	}
 
+	/** How many walks were given up in the last {@value #GIVEN_UP_WINDOW} ticks (a slot never used counts as long ago). */
 	private static int givenUpLately(Watch w, long now) {
 		int n = 0;
 		for (long at : w.givenUp) {
-			if (now - at <= GIVEN_UP_WINDOW) {
+			long ago = now - at;
+			if (ago >= 0 && ago <= GIVEN_UP_WINDOW) {
 				n++;
 			}
 		}

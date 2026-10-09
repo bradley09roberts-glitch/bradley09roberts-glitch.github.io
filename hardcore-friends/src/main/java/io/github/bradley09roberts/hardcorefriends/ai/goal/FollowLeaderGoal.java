@@ -48,7 +48,7 @@ public class FollowLeaderGoal extends Goal {
 	/** How far round the leader the ground is looked at, in blocks (outside the widest tower's top). */
 	private static final int GROUND_LOOK = 8;
 	/** A friend stuck this long (ticks) catches up with their leader at once... */
-	private static final int STUCK_CATCH_UP = 100;
+	public static final int STUCK_CATCH_UP = 100;
 	/** ...when the leader is more than this many blocks away. */
 	private static final int STUCK_GAP = 8;
 	private final CompanionEntity companion;
@@ -99,6 +99,11 @@ public class FollowLeaderGoal extends Goal {
 			return; // canContinueToUse is only checked every other tick
 		}
 		companion.getLookControl().setLookAt(leader, 10.0F, companion.getMaxHeadXRot());
+		if (companion.distanceToSqr(leader) > 25) {
+			// Following is what moves them just now: the stuck watcher counts the leader as where they are going (and
+			// only while this runs, so a friend another goal keeps in place on purpose is not "stuck").
+			companion.actions().heading(leader.blockPosition());
+		}
 		if (--recalc > 0) {
 			return;
 		}
@@ -119,6 +124,19 @@ public class FollowLeaderGoal extends Goal {
 			Sprint.hurry(companion, 20, false); // keep up: they run too (the sprint itself gives the extra speed)
 		}
 		companion.getNavigation().moveTo(leader, 1.1);
+	}
+
+	/**
+	 * True when this friend, following and stuck for {@value #STUCK_CATCH_UP} ticks, would be caught up with their
+	 * leader: catching up is on, the leader can be followed, is more than {@value #STUCK_GAP} blocks away and is not up a
+	 * pillar in the End. The stuck watcher lets that happen before starting anything slower (a walk out of a cave,
+	 * digging), which would keep this goal from running.
+	 */
+	public static boolean willCatchUp(CompanionEntity companion) {
+		ServerPlayer leader = companion.leader();
+		return companion.mode() == CompanionMode.FOLLOW && FriendsConfig.get().followTeleportDistance > 0
+			&& canFollow(companion, leader) && companion.distanceToSqr(leader) > STUCK_GAP * STUCK_GAP
+			&& !upHighInEnd(companion.level(), leader.blockPosition());
 	}
 
 	private void tryCatchUp() {
@@ -169,9 +187,10 @@ public class FollowLeaderGoal extends Goal {
 
 	/**
 	 * True in the End while the leader stands more than {@value #UP_HIGH} blocks above the lowest ground a few blocks
-	 * round them (the void does not count): up a tower or a pillar. A friend is not put up there beside them.
+	 * round them (the void does not count): up a tower or a pillar. A friend is not put up there beside them, neither by
+	 * catching up nor by the stuck watcher's rescue.
 	 */
-	private static boolean upHighInEnd(Level level, BlockPos at) {
+	public static boolean upHighInEnd(Level level, BlockPos at) {
 		if (level.dimension() != Level.END) {
 			return false;
 		}

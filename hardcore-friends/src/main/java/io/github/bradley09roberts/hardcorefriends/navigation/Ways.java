@@ -28,6 +28,10 @@ import net.minecraft.world.phys.Vec3;
  * get away from here at all, the way to the nearest spot under open sky, and the best way out of the water. Each
  * search looks at a fixed number of spots at most and only at loaded blocks, so it is cheap enough to run now and then
  * for a friend in trouble (never every tick, and never for every friend at once).
+ *
+ * <p>Swimming goes across and up, never down: a friend has no reason to dive (it is how they would drown), and a lake
+ * or the sea then costs a search one spot a column, as dry land does, rather than every block of water down to the
+ * bottom. Otherwise a friend on the shore of deep water would look shut in, the search spent before it got anywhere.
  */
 final class Ways {
 	private static final byte UNKNOWN = 0;
@@ -126,14 +130,8 @@ final class Ways {
 				}
 			}
 		}
-		if (here == SWIM) {
-			// Swimming: up to the surface (or out onto a ledge above) and down through the water.
-			if (spots.kind(p.above()) != NONE) {
-				out.add(p.above());
-			}
-			if (spots.kind(p.below()) == SWIM) {
-				out.add(p.below());
-			}
+		if (here == SWIM && spots.kind(p.above()) != NONE) {
+			out.add(p.above()); // swimming up to the surface (or out onto a ledge above); never diving down
 		}
 	}
 
@@ -187,6 +185,23 @@ final class Ways {
 	static boolean canLeave(ServerLevel level, BlockPos start, int radius, int maxSpots) {
 		return search(level, start, radius + 1, maxSpots,
 			p -> Math.max(Math.abs(p.getX() - start.getX()), Math.abs(p.getZ() - start.getZ())) >= radius, p -> true) != null;
+	}
+
+	/**
+	 * {@link #canLeave(ServerLevel, BlockPos, int, int)} with the usual number of spots for that distance
+	 * ({@link #spotsToLeave}). The test for being shut in and the test for being free again use this, so a friend
+	 * judged shut in is judged free by the same measure once they are.
+	 */
+	static boolean canLeave(ServerLevel level, BlockPos start, int radius) {
+		return canLeave(level, start, radius, spotsToLeave(radius));
+	}
+
+	/**
+	 * Spots a search may look at to get {@code radius} blocks away: open ground needs about twice the radius squared (a
+	 * diamond of spots a step at a time), so this leaves room for twice that again (ledges, trees, the odd overhang).
+	 */
+	static int spotsToLeave(int radius) {
+		return 4 * radius * radius + 200;
 	}
 
 	/**
