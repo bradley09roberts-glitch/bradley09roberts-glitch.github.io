@@ -22,9 +22,9 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
  * still with a bounded number of spots looked at), and two rules for a way that cannot reach its goal:
  *
  * <ul>
- * <li>On a walk between two places on the surface, a way that would go into a cave stops at the cave mouth. The
- * friend does not follow a dead end underground; {@link #cutAtCave} tells the job the goal cannot be reached that way
- * ({@code Actions.walkTo} then gives up at once, so the job picks another target).</li>
+ * <li>On a walk between two places on the surface, a way that cannot reach its goal and would end in a cave stops at
+ * the cave mouth. The friend does not follow a dead end underground; {@link #cutAtCave} tells the job the goal cannot
+ * be reached that way ({@code Actions.walkTo} then gives up at once, so the job picks another target).</li>
  * <li>A way that cannot reach its goal does not end out in the water: it stops at the last dry step.</li>
  * </ul>
  *
@@ -89,19 +89,20 @@ public class FriendNavigation extends GroundPathNavigation {
 	}
 
 	/**
-	 * Shortens a way that cannot reach its goal: on a surface walk it stops before the first underground step, and it
-	 * never ends in water (unless the friend is in the water already, when getting anywhere is better than nowhere).
+	 * Shortens a way that cannot reach its goal. On a surface walk that would end underground (the search went into a
+	 * cave because it got nearer the goal that way: a dead end), it stops at the cave mouth, before the underground
+	 * stretch it ends in. It never ends in water (unless the friend is in the water already, when getting anywhere is
+	 * better than nowhere).
 	 */
 	private void trimDeadEnd(ServerLevel level, Path path, boolean surface) {
 		int keep = path.getNodeCount();
-		if (surface) {
-			for (int i = 1; i < keep; i++) {
-				if (Terrain.underground(level, path.getNodePos(i))) {
-					keep = i;
-					caveCut = path;
-					break;
-				}
+		if (surface && keep > 1 && Terrain.underground(level, path.getNodePos(keep - 1))) {
+			int mouth = keep - 1;
+			while (mouth > 1 && Terrain.underground(level, path.getNodePos(mouth - 1))) {
+				mouth--;
 			}
+			keep = mouth;
+			caveCut = path;
 		}
 		if (!this.mob.isInWater()) {
 			while (keep > 1 && level.isLoaded(path.getNodePos(keep - 1))
