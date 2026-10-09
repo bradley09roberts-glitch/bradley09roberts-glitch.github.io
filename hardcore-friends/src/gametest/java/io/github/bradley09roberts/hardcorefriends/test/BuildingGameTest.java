@@ -99,6 +99,8 @@ public class BuildingGameTest {
 			case ANVIL -> Items.ANVIL;
 			case BREWING_STAND -> Items.BREWING_STAND;
 			case OBSIDIAN -> Items.OBSIDIAN;
+			// 3.0 materials: the plan's sample block's own item (any wood or colour will do for set-up).
+			default -> m.sample().asItem();
 		});
 	}
 

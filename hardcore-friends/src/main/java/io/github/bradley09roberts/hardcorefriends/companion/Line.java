@@ -269,6 +269,16 @@ public enum Line {
 
 	// ==== Better builds (package architecture): plans, materials, scaffolding ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** Putting up a scaffolding pillar to reach a high wall or roof. %1$s = the building, e.g. "cabin" or "oak cottage". */
+	SCAFFOLDING(Priority.CASUAL, 3600, 1),
+	/** Finished one of the village's buildings (heard by everyone near). %1$s = the building, e.g. "oak cottage". */
+	BUILDING_FINISHED(Priority.IMPORTANT, 0, 1),
+	/** Loading the camp furnace to make a building material. %1$s = what, e.g. "glass" or "stone". */
+	FIRING_KILN(Priority.CASUAL, 2400, 1),
+	/** Off to dig something the builders need from the ground. %1$s = what, "sand" or "clay". */
+	DIGGING_SAND(Priority.CASUAL, 2400, 1),
+	/** Shearing a wild sheep for the builders' wool. */
+	SHEARING(Priority.CASUAL, 2400, 0),
 
 	// ==== end of architecture ====
 

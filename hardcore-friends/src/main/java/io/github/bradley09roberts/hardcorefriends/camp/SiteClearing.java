@@ -136,8 +136,16 @@ public final class SiteClearing {
 			&& !state.getValue(LeavesBlock.PERSISTENT);
 	}
 
-	/** A readable name for a plan's site in speech. */
+	/** A readable name for a plan's site in speech (a camp structure's name, or a library plan's). */
 	public static String siteName(@Nullable String planId) {
-		return planId == null ? "building" : Structures.get(planId).displayName();
+		if (planId == null) {
+			return "building";
+		}
+		for (Structures.Entry e : Structures.ALL) {
+			if (e.id().equals(planId)) {
+				return e.displayName();
+			}
+		}
+		return "building";
 	}
 }

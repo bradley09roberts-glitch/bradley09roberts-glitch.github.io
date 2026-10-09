@@ -1,0 +1,109 @@
+{
+  "name": "sandstone hut",
+  "kind": "house",
+  "styles": ["sandstone", "desert"],
+  "wood": "birch",
+  "size": [7, 7],
+  "front": "north",
+  "palette": {
+    "S": "sandstone",
+    "P": "cut_sandstone",
+    "s": {"block": "sandstone_stairs", "facing": "south"},
+    "w": "sandstone_wall",
+    "_": {"block": "sandstone_slab", "type": "bottom"},
+    "D": {"block": "door", "wood": "birch", "facing": "south", "hinge": "left"},
+    "g": {"block": "glass_pane", "optional": true},
+    "k": {"block": "lantern", "hanging": true, "fallback": {"block": "wall_torch", "facing": "north"}},
+    "l": {"block": "lantern", "hanging": true, "optional": true},
+    "B": {"block": "bed", "facing": "south", "colour": "yellow"},
+    "N": {"block": "bed", "facing": "north", "colour": "yellow"},
+    "E": {"block": "bed", "facing": "east", "colour": "yellow"},
+    "Q": {"block": "bed", "facing": "west", "colour": "yellow"},
+    "H": {"block": "chest", "facing": "north"},
+    "h": {"block": "chest", "facing": "south"},
+    "}": {"block": "chest", "facing": "west"},
+    "{": {"block": "chest", "facing": "east"},
+    "T": "crafting_table",
+    "U": {"block": "furnace", "facing": "south"},
+    "u": {"block": "furnace", "facing": "north"},
+    "M": {"block": "smoker", "facing": "south"},
+    "V": {"block": "smoker", "facing": "north"},
+    "O": {"block": "barrel", "facing": "up"},
+    "r": {"block": "carpet", "colour": "orange"},
+    "f": {"block": "potted_flower"},
+    "i": {"block": "fence", "wood": "birch"},
+    "m": {"block": "pressure_plate", "wood": "birch"},
+    "5": {"block": "stairs", "wood": "birch", "facing": "west"},
+    "6": {"block": "stairs", "wood": "birch", "facing": "east"},
+    "8": {"block": "stairs", "wood": "birch", "facing": "north"},
+    "9": {"block": "stairs", "wood": "birch", "facing": "south"},
+    "K": {"block": "bookshelf", "optional": true},
+    "1": {"block": "wall_torch", "facing": "south"},
+    "2": {"block": "wall_torch", "facing": "north"}
+  },
+  "layers": [
+    [
+      "...s...",
+      "SSSSSSS",
+      "SSSSSSS",
+      "SSSSSSS",
+      "SSSSSSS",
+      "SSSSSSS",
+      "SSSSSSS"
+    ],
+    [
+      ".......",
+      "PSSDSSP",
+      "ST...US",
+      "S.rrr.S",
+      "SBrrrBS",
+      "S.OHO.S",
+      "PSSSSSP"
+    ],
+    [
+      "..k.k..",
+      "PgS.SgP",
+      "S.1.1.S",
+      "g.....g",
+      "S.....S",
+      "S.f.f.S",
+      "PSgSgSP"
+    ],
+    [
+      "..___..",
+      "PPPPPPP",
+      "P.....P",
+      "P..l..P",
+      "P.....P",
+      "P.....P",
+      "PPPPPPP"
+    ],
+    [
+      ".......",
+      "SSSSSSS",
+      "SSSSSSS",
+      "SSSSSSS",
+      "SSSSSSS",
+      "SSSSSSS",
+      "SSSSSSS"
+    ],
+    [
+      ".......",
+      "wwwwwww",
+      "w.....w",
+      "w.....w",
+      "w.....w",
+      "w.....w",
+      "wwwwwww"
+    ]
+  ],
+  "markers": {
+    "door": [[3, 0, -1]],
+    "inside": [[3, 1, 2]],
+    "bed": [[1, 1, 4], [5, 1, 4]],
+    "chest": [[3, 1, 5]],
+    "crafting": [[1, 1, 2]],
+    "light": [[3, 3, 3]]
+  },
+  "meta": {"beds": 2, "capacity": 2, "size": "small"}
+}

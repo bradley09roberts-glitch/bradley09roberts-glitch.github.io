@@ -147,7 +147,7 @@ public final class LightTask implements CompanionTask {
 			if (e.stage() > data.stage() || data.isCompleted(e.id())) {
 				continue;
 			}
-			Optional<Blueprint> plan = Blueprints.forId(e.id());
+			Optional<Blueprint> plan = Blueprints.forSite(data, e.id());
 			if (plan.isEmpty()) {
 				continue;
 			}

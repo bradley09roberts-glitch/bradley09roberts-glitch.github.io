@@ -45,7 +45,7 @@ public final class ContraptionTask extends BlueprintTask {
 	protected @Nullable Blueprint choose(CompanionEntity c, CampData data) {
 		ServerLevel level = (ServerLevel) c.level();
 		for (Structures.Entry next : pending(data, Role.INVENTOR)) {
-			Blueprint plan = Blueprints.forId(next.id()).orElse(null);
+			Blueprint plan = Blueprints.forSite(data, next.id()).orElse(null);
 			if (plan == null || isSetAside(c, plan.id())) {
 				continue;
 			}

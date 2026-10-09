@@ -1,0 +1,101 @@
+{
+  "name": "watchtower",
+  "kind": "camp:watchtower",
+  "styles": [],
+  "size": [5, 5],
+  "front": "north",
+  "camp": {"offsets": [[-8, 9]]},
+  "palette": {
+    "C": "cobblestone",
+    "s": {"block": "cobblestone_stairs", "facing": "south"},
+    "n": {"block": "cobblestone_stairs", "facing": "north"},
+    "e": {"block": "cobblestone_stairs", "facing": "east"},
+    "w": {"block": "cobblestone_stairs", "facing": "west"},
+    "P": "planks",
+    "L": {"block": "log", "axis": "y"},
+    "i": "fence",
+    "#": {"block": "ladder", "facing": "north"},
+    "k": {"block": "lantern", "hanging": false, "optional": true, "fallback": "torch"},
+    "v": {"block": "stairs", "facing": "south", "wood": "spruce"},
+    "^": {"block": "stairs", "facing": "north", "wood": "spruce"},
+    ">": {"block": "stairs", "facing": "east", "wood": "spruce"},
+    "<": {"block": "stairs", "facing": "west", "wood": "spruce"},
+    "=": {"block": "slab", "type": "bottom", "wood": "spruce"}
+  },
+  "layers": [
+    [
+      "sssss",
+      "eCCCw",
+      "eCCCw",
+      "eCCCw",
+      "nnnnn"
+    ],
+    [
+      ".....",
+      ".C-C.",
+      ".C#C.",
+      ".CCC.",
+      "....."
+    ],
+    [
+      ".....",
+      ".C-C.",
+      ".C#C.",
+      ".CCC.",
+      "....."
+    ],
+    [
+      ".....",
+      ".LPL.",
+      ".P#P.",
+      ".LPL.",
+      "....."
+    ],
+    [
+      ".....",
+      ".LiL.",
+      ".i#i.",
+      ".LPL.",
+      "....."
+    ],
+    [
+      ".....",
+      ".LPL.",
+      ".P#P.",
+      ".LPL.",
+      "....."
+    ],
+    [
+      "PPPPP",
+      "PPPPP",
+      "PP#PP",
+      "PPPPP",
+      "PPPPP"
+    ],
+    [
+      "LiiiL",
+      "i...i",
+      "i...i",
+      "i...i",
+      "LiiiL"
+    ],
+    [
+      "L.k.L",
+      ".....",
+      "k...k",
+      ".....",
+      "L.k.L"
+    ],
+    [
+      "vvvvv",
+      ">===<",
+      ">===<",
+      ">===<",
+      "^^^^^"
+    ]
+  ],
+  "markers": {
+    "lookout": [[1, 7, 1]],
+    "ladder": [[2, 1, 2]]
+  }
+}

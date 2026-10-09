@@ -85,6 +85,17 @@ public final class FriendsConfig {
 	public int maxDeliveryDistance = 400;
 
 	// ---- Better builds (package architecture) ----
+	/**
+	 * New camp buildings use the 3.0 plans (a cottage, a timber-framed store, a roofed watchtower); false keeps the 2.x
+	 * boxes. A building already started keeps its plan either way.
+	 */
+	public boolean fancyCampBuildings = true;
+	/** Builders put up temporary dirt or cobblestone pillars to reach high walls and roofs, and take them down again. */
+	public boolean allowScaffolding = true;
+	/** The tallest scaffolding pillar a builder puts up, in blocks (2 to 6). */
+	public int maxScaffoldHeight = 6;
+	/** Friends shear wild sheep for the wool their builds need (never a named, leashed, penned or player's sheep). */
+	public boolean friendsShearSheep = true;
 
 	// ---- Finding the way (package navigation) ----
 
@@ -146,5 +157,7 @@ public final class FriendsConfig {
 		maxFollowersPerPlayer = Math.clamp(maxFollowersPerPlayer, 1, 64);
 		// A delivery is a day trip there and back: past about 600 blocks there is never daylight enough for one.
 		maxDeliveryDistance = Math.clamp(maxDeliveryDistance, 0, 600);
+		// Better builds: a pillar taller than six cannot be taken down from the ground beside it.
+		maxScaffoldHeight = Math.clamp(maxScaffoldHeight, 2, 6);
 	}
 }

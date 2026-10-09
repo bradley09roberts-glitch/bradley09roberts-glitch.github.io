@@ -20,21 +20,33 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 /**
  * One trip's worth of gathering building materials into a friend's backpack: finished items come out of the supply
  * chest first, then the raw ingredients for whatever must still be crafted, and the crafting itself uses the real
- * recipes in {@code Crafting}. Items already promised to an earlier part of the same request are never counted
- * twice. When no crafting table is in reach, the ingredients are still collected and {@link #needsTable()} says
- * that the crafting has to wait until the friend stands by a table.
+ * recipes in {@code Crafting} and {@link WoodWork}. Items already promised to an earlier part of the same request are
+ * never counted twice. When no crafting table is in reach, the ingredients are still collected and
+ * {@link #needsTable()} says that the crafting has to wait until the friend stands by a table.
+ *
+ * <p>A request may name a preferred wood or colour per kind ({@link #prefer}): those items come out of the chest
+ * first and are crafted from first, so a spruce house gets spruce stairs when the camp has spruce, and any wood when
+ * it has not. A kind with two recipes (a bed from wool, else a straw bed from hay) uses the first one whose
+ * ingredients the camp has.
  */
 public final class Supplies {
 	private final CompanionEntity c;
 	private final @Nullable Container chest;
 	private final boolean table;
 	private final Map<Stock, Integer> committed = new EnumMap<>(Stock.class);
+	private final Map<Stock, String> preferred = new EnumMap<>(Stock.class);
 	private boolean needsTable;
 
 	public Supplies(CompanionEntity c, @Nullable Container chest, boolean nearTable) {
 		this.c = c;
 		this.chest = chest;
 		this.table = nearTable;
+	}
+
+	/** Prefers this wood or colour for a kind (ignored when null). Returns this, for chaining. */
+	public Supplies prefer(Map<Stock, String> preferences) {
+		preferred.putAll(preferences);
+		return this;
 	}
 
 	/** True if something could not be crafted because no crafting table was within reach. */
@@ -51,7 +63,7 @@ public final class Supplies {
 		order.sort(Comparator.comparingInt(e -> rank(e.getKey())));
 		Map<Stock, Integer> missing = new LinkedHashMap<>();
 		for (Map.Entry<Stock, Integer> e : order) {
-			obtain(e.getKey(), e.getValue());
+			obtain(e.getKey(), e.getValue(), 0);
 		}
 		// Check at the end: a later craft may have used up something an earlier entry relied on.
 		Backpack bp = c.backpack();
@@ -69,7 +81,7 @@ public final class Supplies {
 	}
 
 	/** Makes sure {@code count} more of a kind are carried on top of what this trip already promised. */
-	private boolean obtain(Stock s, int count) {
+	private boolean obtain(Stock s, int count, int depth) {
 		if (count <= 0) {
 			return true;
 		}
@@ -81,30 +93,59 @@ public final class Supplies {
 				SupplyChest.withdraw(chest, bp, st -> st.is(Items.DIRT), need - have);
 				have = bp.count(s.item());
 			}
+			String wish = preferred.get(s);
+			if (have < need && wish != null) {
+				SupplyChest.withdraw(chest, bp, st -> s.matches(st) && MaterialSpec.matchesVariant(st, wish), need - have);
+				have = bp.count(s.item());
+			}
 			if (have < need) {
 				SupplyChest.withdraw(chest, bp, s.item(), need - have);
 			}
 			have = bp.count(s.item());
 		}
-		Stock.Recipe recipe = s.recipe();
-		if (have < need && recipe != null) {
-			int crafts = (need - have + recipe.yield() - 1) / recipe.yield();
-			boolean inputs = true;
-			for (Map.Entry<Stock, Integer> in : recipe.inputs().entrySet()) {
-				inputs &= obtain(in.getKey(), crafts * in.getValue());
-			}
-			if (inputs && recipe.needsTable() && !table) {
-				needsTable = true; // ingredients stay promised for crafting at the table
-			} else if (inputs) {
-				s.craft(c, need);
+		if (have < need && depth <= 4) {
+			Stock.Recipe recipe = chooseRecipe(s, need - have);
+			if (recipe != null) {
+				int crafts = (need - have + recipe.yield() - 1) / recipe.yield();
+				boolean inputs = true;
 				for (Map.Entry<Stock, Integer> in : recipe.inputs().entrySet()) {
-					committed.merge(in.getKey(), -crafts * in.getValue(), Integer::sum);
+					inputs &= obtain(in.getKey(), crafts * in.getValue(), depth + 1);
 				}
+				if (inputs && recipe.needsTable() && !table) {
+					needsTable = true; // ingredients stay promised for crafting at the table
+				} else if (inputs) {
+					s.craft(c, need, preferred.get(s));
+					for (Map.Entry<Stock, Integer> in : recipe.inputs().entrySet()) {
+						committed.merge(in.getKey(), -crafts * in.getValue(), Integer::sum);
+					}
+				}
+				have = bp.count(s.item());
 			}
-			have = bp.count(s.item());
 		}
 		committed.merge(s, count, Integer::sum);
 		return have >= need;
+	}
+
+	/** The first recipe whose ingredients are carried, stored or makeable; the first one if none are. */
+	private Stock.@Nullable Recipe chooseRecipe(Stock s, int missing) {
+		List<Stock.Recipe> recipes = s.recipes();
+		if (recipes.size() <= 1) {
+			return recipes.isEmpty() ? null : recipes.getFirst();
+		}
+		for (Stock.Recipe r : recipes) {
+			int crafts = (missing + r.yield() - 1) / r.yield();
+			boolean ok = true;
+			for (Map.Entry<Stock, Integer> in : r.inputs().entrySet()) {
+				if (!canMake(c, chest, in.getKey(), crafts * in.getValue())) {
+					ok = false;
+					break;
+				}
+			}
+			if (ok) {
+				return r;
+			}
+		}
+		return recipes.getFirst();
 	}
 
 	/** Crafted things first (most complex first), then planks and sticks, then raw materials. */
@@ -164,16 +205,22 @@ public final class Supplies {
 		if (have >= count) {
 			return true;
 		}
-		Stock.Recipe recipe = s.recipe();
-		if (recipe == null || depth > 3) {
+		if (depth > 3) {
 			return false;
 		}
-		int crafts = (count - have + recipe.yield() - 1) / recipe.yield();
-		for (Map.Entry<Stock, Integer> in : recipe.inputs().entrySet()) {
-			if (!canMake(c, chest, in.getKey(), crafts * in.getValue(), depth + 1)) {
-				return false;
+		for (Stock.Recipe recipe : s.recipes()) {
+			int crafts = (count - have + recipe.yield() - 1) / recipe.yield();
+			boolean ok = true;
+			for (Map.Entry<Stock, Integer> in : recipe.inputs().entrySet()) {
+				if (!canMake(c, chest, in.getKey(), crafts * in.getValue(), depth + 1)) {
+					ok = false;
+					break;
+				}
+			}
+			if (ok) {
+				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 }

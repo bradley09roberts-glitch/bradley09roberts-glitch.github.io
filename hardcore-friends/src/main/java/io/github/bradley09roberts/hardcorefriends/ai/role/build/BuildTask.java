@@ -65,7 +65,7 @@ public final class BuildTask extends BlueprintTask {
 				// put back by the repair job instead.)
 				return isSetAside(c, Structures.CRAFTING_TABLE) ? null : Blueprints.CRAFTING_TABLE;
 			}
-			Blueprint plan = Blueprints.forId(next.id()).orElse(null);
+			Blueprint plan = Blueprints.forSite(data, next.id()).orElse(null);
 			if (plan != null && !isSetAside(c, plan.id())) {
 				return plan;
 			}

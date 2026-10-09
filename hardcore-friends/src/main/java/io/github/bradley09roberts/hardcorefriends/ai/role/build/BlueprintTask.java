@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprint;
+import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
 import io.github.bradley09roberts.hardcorefriends.camp.BuildJob;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
@@ -50,6 +51,14 @@ public abstract class BlueprintTask implements CompanionTask {
 		return false;
 	}
 
+	/**
+	 * The key of the site the plan is built on: the plan's own id for the camp's structures. A job working on a library
+	 * site (a house the village planned) returns that site's key.
+	 */
+	protected String siteKey(Blueprint plan) {
+		return plan.id();
+	}
+
 	/** True while a plan is set aside after it could not be built. */
 	protected boolean isSetAside(CompanionEntity c, String structureId) {
 		Long until = setAsideUntil.get(structureId);
@@ -73,7 +82,7 @@ public abstract class BlueprintTask implements CompanionTask {
 		if (plan == null) {
 			return repair() ? "repairing the camp" : "building";
 		}
-		String name = Structures.get(plan.id()).displayName();
+		String name = Blueprints.isCampStructure(plan.id()) ? Structures.get(plan.id()).displayName() : plan.name();
 		return (repair() ? "repairing the " : "building the ") + name;
 	}
 
@@ -106,7 +115,7 @@ public abstract class BlueprintTask implements CompanionTask {
 			doneWithoutBuilding = true;
 			return true;
 		}
-		job = new BuildJob(c, target, reason(), repair());
+		job = new BuildJob(c, target, siteKey(target), reason(), repair());
 		Speech.say(c, Line.WORK_START, describe());
 		return true;
 	}
@@ -133,7 +142,7 @@ public abstract class BlueprintTask implements CompanionTask {
 			boolean planSpecific = j.failure() == BuildJob.Failure.SHORT || j.failure() == BuildJob.Failure.NO_SITE
 				|| j.failure() == BuildJob.Failure.UNREACHABLE || j.failure() == BuildJob.Failure.CLEARING;
 			if (planSpecific) {
-				setAsideUntil.put(j.blueprint().id(), c.level().getGameTime() + wait);
+				setAsideUntil.put(j.siteKey(), c.level().getGameTime() + wait);
 				cooldown = 60; // try the next plan soon
 			} else {
 				cooldown = wait;

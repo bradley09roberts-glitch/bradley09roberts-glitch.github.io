@@ -2,11 +2,13 @@ package io.github.bradley09roberts.hardcorefriends.camp;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 
 import org.jspecify.annotations.Nullable;
 
@@ -15,11 +17,19 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.AbstractBedBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CrossCollisionBlock;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.DoublePlantBlock;
+import net.minecraft.world.level.block.FlowerPotBlock;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.TallFlowerBlock;
+import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -27,6 +37,11 @@ import net.minecraft.world.phys.Vec3;
 import io.github.bradley09roberts.hardcorefriends.HardcoreFriends;
 import io.github.bradley09roberts.hardcorefriends.ai.action.Actions;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
+import io.github.bradley09roberts.hardcorefriends.architecture.Construction;
+import io.github.bradley09roberts.hardcorefriends.architecture.MaterialDemand;
+import io.github.bradley09roberts.hardcorefriends.architecture.Pots;
+import io.github.bradley09roberts.hardcorefriends.architecture.Scaffold;
+import io.github.bradley09roberts.hardcorefriends.architecture.Styles;
 import io.github.bradley09roberts.hardcorefriends.camp.build.CampFeatures;
 import io.github.bradley09roberts.hardcorefriends.camp.build.MaterialSpec;
 import io.github.bradley09roberts.hardcorefriends.camp.build.Part;
@@ -37,16 +52,29 @@ import io.github.bradley09roberts.hardcorefriends.companion.Backpack;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
+import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
- * One run of building a blueprint, shared by Oak (structures) and Spark (contraptions). A run reserves a site if
- * needed, picks the next batch of up to {@value #BATCH} unbuilt entries, fetches their materials from the supply
- * chest (crafting planks, slabs, doors, torches and the rest from real ingredients), then walks round placing them
- * in order. Progress is stored on the site, so an interrupted build carries on where it stopped.
+ * One run of building a blueprint, shared by Oak (structures), Spark (contraptions) and the village's builders
+ * (library plans on their own sites). A run reserves a site if needed (camp structures only: library sites are
+ * reserved by whoever plans them), picks the next batch of up to {@value #BATCH} unbuilt entries, fetches their
+ * materials from the supply chest (crafting planks, stairs, doors, beds, torches and the rest from real ingredients,
+ * the plan's wood and colours first), then walks round placing them in order. Progress is stored on the site, so an
+ * interrupted build carries on where it stopped; a run hands back after a couple of minutes so big buildings never
+ * stall a friend.
  *
- * <p>Nothing that is not a plant or snow is ever broken. If something foreign has appeared in the plan's space since
- * the site was reserved, that entry is simply left out.
+ * <p>Order: foundations, then each layer of the structure bottom-up, then the attachments bottom-up (windows, doors,
+ * furniture, lights). Within a layer the builder takes whatever is in reach first. Doors, beds and tall flowers go
+ * down as two halves. Decoration ({@code optional}) is left out while its material cannot be had and added later by
+ * the repair job; an entry with a {@code fallback} uses that instead (a torch for a lantern) when its own material
+ * cannot be had.
+ *
+ * <p>Reach: a block a friend cannot reach from the ground is reached from a spot nearby, on a temporary scaffold
+ * pillar if need be ({@link Scaffold}); the pillar is taken down as soon as the friend is done up there.
+ *
+ * <p>Nothing that is not a plant, snow or the friends' own scaffolding is ever broken. If something foreign has
+ * appeared in the plan's space since the site was reserved, that entry is simply left out.
  */
 public final class BuildJob {
 	/** How many entries one run places at most. */
@@ -54,13 +82,22 @@ public final class BuildJob {
 	private static final int ENTRY_TIMEOUT = 200;
 	/** Footprint columns the site search may test per tick: a big plan tries fewer candidate spots per tick. */
 	private static final int SEARCH_AREA_BUDGET = 96;
+	/** A run that has gone on this long finishes its batch early and hands back, so it never hits the task's time limit. */
+	private static final int RUN_BUDGET = 20 * 150;
+	/** The longest a friend spends putting up one pillar before giving up on it. */
+	private static final int CLIMB_LIMIT = 20 * 40;
+	/** The longest a friend spends coming down one pillar before leaving it to the clean-up job. */
+	private static final int DESCEND_LIMIT = 20 * 30;
+	/** How many of a plan's remaining entries are looked through for its material forecast. */
+	private static final int FORECAST_SCAN = 4096;
 
 	private enum Phase {
 		SITE,
 		PLAN,
 		TO_CHEST,
 		TO_TABLE,
-		BUILD
+		BUILD,
+		DESCEND
 	}
 
 	/** Why a run ended without success, so tasks can pick their cooldown. */
@@ -76,31 +113,57 @@ public final class BuildJob {
 
 	private final CompanionEntity c;
 	private final Blueprint bp;
+	private final String siteKey;
 	private final WorldEditGuard.Reason reason;
 	private final boolean repair;
+	private final boolean campStructure;
 	private Phase phase = Phase.SITE;
 	private SiteFinder.@Nullable Search search;
 	private List<Placement> all = List.of();
 	private List<Placement> batch = new ArrayList<>();
 	private Map<Stock, Integer> wanted = Map.of();
+	private Map<Stock, String> preferences = Map.of();
+	private final Map<Stock, Boolean> makeable = new EnumMap<>(Stock.class);
+	private @Nullable String siteWood;
+	private @Nullable Set<BlockPos> planCells;
 	private @Nullable BlockPos tablePos;
 	private int index;
 	private int entryTicks;
 	private int placed;
 	private int skipped;
+	private int runTicks;
 	private @Nullable BlockPos stepAside;
+	private Scaffold.@Nullable Climb climb;
+	private int climbTicks;
+	private int descendTicks;
+	private boolean endAfterDescent;
+	private final Set<Integer> scaffoldTried = new HashSet<>();
 	private Failure failure = Failure.NONE;
 	private boolean finished;
 
 	public BuildJob(CompanionEntity companion, Blueprint blueprint, WorldEditGuard.Reason reason, boolean repair) {
+		this(companion, blueprint, blueprint.id(), reason, repair);
+	}
+
+	/**
+	 * A run on the site with this key (a camp structure id, or a library site's own key) built from this plan.
+	 */
+	public BuildJob(CompanionEntity companion, Blueprint blueprint, String siteKey, WorldEditGuard.Reason reason, boolean repair) {
 		this.c = companion;
 		this.bp = blueprint;
+		this.siteKey = siteKey;
 		this.reason = reason;
 		this.repair = repair;
+		this.campStructure = Blueprints.isCampStructure(siteKey);
 	}
 
 	public Blueprint blueprint() {
 		return bp;
+	}
+
+	/** The key of the site this run builds on. */
+	public String siteKey() {
+		return siteKey;
 	}
 
 	public Failure failure() {
@@ -124,40 +187,62 @@ public final class BuildJob {
 		return Camp.data(level().getServer());
 	}
 
+	/** The building's name in speech ("cabin", "oak cottage"). */
+	private String name() {
+		return Blueprints.displayName(data(), siteKey);
+	}
+
 	public TaskStatus tick() {
+		runTicks++;
 		return switch (phase) {
 			case SITE -> tickSite();
 			case PLAN -> plan();
 			case TO_CHEST -> tickToChest();
 			case TO_TABLE -> tickToTable();
 			case BUILD -> tickBuild();
+			case DESCEND -> tickDescend();
 		};
 	}
 
 	public void stop() {
 		c.actions().reset();
 		stepAside = null;
+		climb = null;
+		// Up a pillar? The descent reflex takes the friend straight back down.
+		Scaffold.release(c);
 	}
 
 	// ------------------------------------------------------------------ site
 
 	private TaskStatus tickSite() {
 		CampData data = data();
-		List<Part> parts = SiteFinder.parts(data, bp);
-		if (!parts.isEmpty() && !repair && !data.isCompleted(bp.id()) && !insideCamp(parts)) {
-			data.removeSite(bp.id()); // the camp has moved since this was planned: start again at the new camp
+		if (Scaffold.onScaffold(c)) {
+			// Left up a pillar by an earlier run: come down first.
+			phase = Phase.DESCEND;
+			descendTicks = 0;
+			return TaskStatus.RUNNING;
+		}
+		List<Part> parts = SiteFinder.parts(data, siteKey, bp);
+		if (!parts.isEmpty() && !repair && !Blueprints.isFinished(data, siteKey) && !insideCamp(parts)) {
+			if (!campStructure) {
+				return fail(Failure.NO_SITE); // a library site outside the camp: whoever planned it decides what to do
+			}
+			data.removeSite(siteKey); // the camp has moved since this was planned: start again at the new camp
 			parts = List.of();
 		}
 		if (!parts.isEmpty()) {
 			TaskStatus waiting = waitForClearing(data);
 			return waiting != null ? waiting : toPlan(parts);
 		}
+		if (!campStructure) {
+			return fail(Failure.NO_SITE); // library sites are reserved by whoever plans them
+		}
 		List<Part> fixed = SiteFinder.fixedParts(level(), data, bp);
 		if (fixed != null) {
 			if (fixed.isEmpty()) {
 				return fail(Failure.NO_SITE);
 			}
-			SiteFinder.reserve(data, bp, fixed);
+			SiteFinder.reserve(data, siteKey, bp, fixed, Styles.woodFor(level(), fixed.getFirst().origin(), bp));
 			return toPlan(fixed);
 		}
 		if (repair) {
@@ -168,24 +253,24 @@ public final class BuildJob {
 		}
 		List<Part> found = search.step(Math.clamp(SEARCH_AREA_BUDGET / (bp.width() * bp.depth()), 2, 16));
 		if (found != null) {
-			SiteFinder.reserve(data, bp, found);
+			SiteFinder.reserve(data, siteKey, bp, found, Styles.woodFor(level(), found.getFirst().origin(), bp));
 			CampNeeds.clearSiteProblem();
 			if (search.clearBox().length == 6) {
-				SiteClearing.reserve(data, bp.id(), search.logsToFell(), search.clearBox());
-				HardcoreFriends.LOGGER.info("{} chose a site for the {} with {} logs to fell", c.displayName(),
-					Structures.get(bp.id()).displayName(), search.logsToFell().size());
+				SiteClearing.reserve(data, siteKey, search.logsToFell(), search.clearBox());
+				HardcoreFriends.LOGGER.info("{} chose a site for the {} with {} logs to fell", c.displayName(), name(),
+					search.logsToFell().size());
 			}
 			if (!search.gradeCut().isEmpty() || !search.gradeFill().isEmpty()) {
-				SiteGrading.reserve(data, bp.id(), search.gradeCut(), search.gradeFill());
+				SiteGrading.reserve(data, siteKey, search.gradeCut(), search.gradeFill());
 				HardcoreFriends.LOGGER.info("{} chose a site for the {} to level: {} blocks to dig, {} to fill",
-					c.displayName(), Structures.get(bp.id()).displayName(), search.gradeCut().size(), search.gradeFill().size());
+					c.displayName(), name(), search.gradeCut().size(), search.gradeFill().size());
 			}
 			TaskStatus waiting = waitForClearing(data);
 			return waiting != null ? waiting : toPlan(found);
 		}
 		if (search.failed() && Camp.growForRoom(data)) {
 			// Nothing fits inside the camp, even levelled: let the camp grow a little and look again, further out.
-			String name = Structures.get(bp.id()).displayName();
+			String name = name();
 			HardcoreFriends.LOGGER.info("{} found no site for the {} ({}); the camp grows to radius {}", c.displayName(), name,
 				search.breakdown(), Camp.radius(data));
 			Speech.say(c, Line.LOOKING_FURTHER, name);
@@ -193,7 +278,7 @@ public final class BuildJob {
 			return TaskStatus.RUNNING;
 		}
 		if (search.failed()) {
-			String name = Structures.get(bp.id()).displayName();
+			String name = name();
 			String problem = "a clear, fairly level spot for the " + name + " (" + search.problem() + ")";
 			CampNeeds.reportSiteProblem(level(), c.displayName() + " needs " + problem
 				+ ". Clearing or levelling a patch inside the camp helps.");
@@ -209,11 +294,11 @@ public final class BuildJob {
 	 * first, the builder too) takes those away, and building waits until then.
 	 */
 	private @Nullable TaskStatus waitForClearing(CampData data) {
-		Optional<SiteClearing.Job> job = SiteClearing.job(data, bp.id());
+		Optional<SiteClearing.Job> job = SiteClearing.job(data, siteKey);
 		if (job.isEmpty() || !SiteClearing.pending(level(), job.get())) {
 			return waitForGrading(data);
 		}
-		String name = Structures.get(bp.id()).displayName();
+		String name = name();
 		CampNeeds.reportSiteProblem(level(), c.displayName() + " is waiting for the trees to be cleared off the "
 			+ name + " site.");
 		Speech.say(c, Line.NEED_MATERIALS, "the trees cleared off the " + name + " site");
@@ -226,11 +311,11 @@ public final class BuildJob {
 	 * ({@link SiteGrading#stillToDo}) before the first block goes down, so nobody digs the new floor back out.
 	 */
 	private @Nullable TaskStatus waitForGrading(CampData data) {
-		Optional<SiteGrading.Job> job = SiteGrading.job(data, bp.id());
+		Optional<SiteGrading.Job> job = SiteGrading.job(data, siteKey);
 		if (job.isEmpty() || !SiteGrading.stillToDo(level(), data, job.get())) {
 			return null;
 		}
-		String name = Structures.get(bp.id()).displayName();
+		String name = name();
 		CampNeeds.reportSiteProblem(level(), c.displayName() + " is waiting for the " + name + " site to be levelled.");
 		Speech.say(c, Line.NEED_MATERIALS, "the " + name + " site levelled first");
 		return fail(Failure.CLEARING);
@@ -247,6 +332,8 @@ public final class BuildJob {
 
 	private TaskStatus toPlan(List<Part> parts) {
 		all = Blueprints.placements(bp, parts);
+		String recorded = Blueprints.siteWood(data(), siteKey);
+		siteWood = recorded != null ? recorded : bp.wood();
 		phase = Phase.PLAN;
 		return TaskStatus.RUNNING;
 	}
@@ -270,15 +357,17 @@ public final class BuildJob {
 			return Slot.FOREIGN;
 		}
 		BlockState s = level.getBlockState(p.pos());
-		MaterialSpec m = p.entry().material();
-		if (m.isBuilt(s)) {
+		Blueprint.Entry e = p.entry();
+		MaterialSpec m = e.material();
+		if (e.isBuilt(s)) {
 			return Slot.BUILT;
 		}
-		if (m == MaterialSpec.DOOR_TOP) {
-			BlockState below = level.getBlockState(p.pos().below());
-			boolean pending = below.isAir() || WorldEditGuard.isClearablePlant(below);
-			if (!isLowerDoor(below) && !pending) {
-				return Slot.FOREIGN; // the door was left out, so its top is too
+		if (m.isSecondHalf()) {
+			BlockPos first = firstHalfPos(p);
+			BlockState firstState = level.getBlockState(first);
+			boolean pending = firstState.isAir() || WorldEditGuard.isClearablePlant(firstState);
+			if (!isFirstHalf(m, firstState) && !pending) {
+				return Slot.FOREIGN; // the first half was left out, so its other half is too
 			}
 		}
 		if (s.isAir()) {
@@ -290,8 +379,30 @@ public final class BuildJob {
 		return Slot.FOREIGN;
 	}
 
-	private static boolean isLowerDoor(BlockState state) {
-		return state.getBlock() instanceof DoorBlock && state.getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER;
+	/** Where the first half of a second-half entry stands: below a door's top or a tall flower's top, behind a bed's head. */
+	private static BlockPos firstHalfPos(Placement p) {
+		if (p.entry().material() == MaterialSpec.BED_HEAD) {
+			Direction facing = facingOf(p);
+			return p.pos().relative(facing.getOpposite());
+		}
+		return p.pos().below();
+	}
+
+	/** The horizontal facing the entry's own tweak gives it on this site. */
+	private static Direction facingOf(Placement p) {
+		BlockState sample = p.entry().tweak().apply(p.entry().material().sample().defaultBlockState())
+			.rotate(Blueprint.rotation(p.rotation()));
+		return sample.hasProperty(BlockStateProperties.HORIZONTAL_FACING) ? sample.getValue(BlockStateProperties.HORIZONTAL_FACING)
+			: Direction.NORTH;
+	}
+
+	private static boolean isFirstHalf(MaterialSpec second, BlockState state) {
+		return switch (second) {
+			case DOOR_TOP -> state.getBlock() instanceof DoorBlock && state.getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER;
+			case BED_HEAD -> state.getBlock() instanceof AbstractBedBlock && state.getValue(AbstractBedBlock.PART) == BedPart.FOOT;
+			case TALL_FLOWER_TOP -> state.getBlock() instanceof TallFlowerBlock && state.getValue(DoublePlantBlock.HALF) == DoubleBlockHalf.LOWER;
+			default -> false;
+		};
 	}
 
 	private boolean needsWork(Placement p) {
@@ -299,13 +410,24 @@ public final class BuildJob {
 		return s == Slot.EMPTY || s == Slot.PLANT;
 	}
 
+	/** Needs work and is not decoration whose material (and fallback) cannot be had right now. */
+	private boolean needsWorkNow(Placement p) {
+		Blueprint.Entry e = p.entry();
+		return needsWork(p) && (!e.optional() || available(e) || e.fallback() != null && available(e.withFallback()));
+	}
+
 	/**
 	 * Blocks of a finished structure that have gone missing: places where the plan has a block but there is only
 	 * air or a plant now. Foundations are not counted. Returns at most {@code limit} placements.
 	 */
 	public static List<Placement> missing(ServerLevel level, CampData data, Blueprint bp, int limit) {
+		return missing(level, data, bp.id(), bp, limit);
+	}
+
+	/** {@link #missing(ServerLevel, CampData, Blueprint, int)} for the site with this key. */
+	public static List<Placement> missing(ServerLevel level, CampData data, String siteKey, Blueprint bp, int limit) {
 		List<Placement> list = new ArrayList<>();
-		List<Part> parts = SiteFinder.parts(data, bp);
+		List<Part> parts = SiteFinder.parts(data, siteKey, bp);
 		if (parts.isEmpty()) {
 			return list;
 		}
@@ -313,7 +435,7 @@ public final class BuildJob {
 			if (list.size() >= limit) {
 				break;
 			}
-			if (!p.isFoundation()) {
+			if (!p.isFoundation() && p.entry().material() != MaterialSpec.AIR) {
 				Slot s = slot(level, p);
 				if (s == Slot.EMPTY || s == Slot.PLANT) {
 					list.add(p);
@@ -323,16 +445,28 @@ public final class BuildJob {
 		return list;
 	}
 
+	/** True if what this entry is made of can be had now: carried, in the chest, or craftable from what is (cached per run). */
+	private boolean available(Blueprint.Entry e) {
+		Stock s = e.material().stock();
+		Stock extra = e.material().extraStock();
+		return (s == null || canMake(s)) && (extra == null || canMake(extra));
+	}
+
+	private boolean canMake(Stock s) {
+		return makeable.computeIfAbsent(s, k -> Supplies.canMake(c, SupplyChest.of(level()).orElse(null), k, 1));
+	}
+
 	private TaskStatus plan() {
 		CampData data = data();
-		Optional<CampData.Site> site = data.site(bp.id());
+		Optional<CampData.Site> site = data.site(siteKey);
 		if (site.isEmpty()) {
 			return fail(Failure.NO_SITE);
 		}
+		makeable.clear();
 		batch = new ArrayList<>();
 		if (repair) {
 			for (Placement p : all) {
-				if (!p.isFoundation() && batch.size() < BATCH && needsWork(p)) {
+				if (!p.isFoundation() && batch.size() < BATCH && needsWorkNow(p)) {
 					batch.add(p);
 				}
 			}
@@ -343,20 +477,31 @@ public final class BuildJob {
 			}
 			setProgress(site.get(), progress);
 			for (int i = progress; i < all.size() && batch.size() < BATCH; i++) {
-				if (needsWork(all.get(i))) {
+				if (needsWorkNow(all.get(i))) {
 					batch.add(all.get(i));
 				}
 			}
+			forecast(progress);
 		}
 		if (batch.isEmpty()) {
 			return complete();
 		}
-		Optional<Container> chest = SupplyChest.of(level());
-		if (batch.stream().anyMatch(p -> p.entry().material() == MaterialSpec.GLASS_PANE)
-			&& !Supplies.canMake(c, chest.orElse(null), Stock.GLASS_PANE, 1)) {
-			batch.replaceAll(BuildJob::withoutGlass); // nobody can make glass: close the windows with planks
-		}
+		// Anything whose own material cannot be had is built from its fallback, if that can be had.
+		batch.replaceAll(p -> {
+			Blueprint.Entry e = p.entry();
+			if (e.fallback() == null || available(e)) {
+				return p;
+			}
+			Blueprint.Entry alt = e.withFallback();
+			return available(alt) ? new Placement(p.index(), p.part(), p.pos(), alt, p.rotation()) : p;
+		});
 		wanted = materials(batch);
+		preferences = preferences(batch);
+		if (FriendsConfig.get().allowScaffolding && highestAboveGround(batch) >= 4) {
+			// Something up high: bring enough dirt or cobblestone for a pillar (it comes back when taken down).
+			wanted.merge(Stock.FILL, FriendsConfig.get().maxScaffoldHeight, Integer::sum);
+		}
+		Optional<Container> chest = SupplyChest.of(level());
 		if (carries(wanted)) {
 			return startBuilding(Map.of());
 		}
@@ -365,7 +510,7 @@ public final class BuildJob {
 			return TaskStatus.RUNNING;
 		}
 		// No supply chest yet (Oak building the first one): use what is carried.
-		Supplies supplies = new Supplies(c, null, Crafting.nearCraftingTable(c));
+		Supplies supplies = new Supplies(c, null, Crafting.nearCraftingTable(c)).prefer(preferences);
 		Map<Stock, Integer> missing = supplies.gather(wanted);
 		if (supplies.needsTable()) {
 			return goToTable(missing);
@@ -373,18 +518,36 @@ public final class BuildJob {
 		return startBuilding(missing);
 	}
 
-	/**
-	 * A window without glass: when neither the backpack nor the chest holds glass panes or glass to make them, the
-	 * window is filled with planks instead, so the building can still be finished. The plan still asks for glass, so
-	 * the plank counts as something else standing there and is left alone afterwards.
-	 */
-	private static Placement withoutGlass(Placement p) {
-		Blueprint.Entry e = p.entry();
-		if (e.material() != MaterialSpec.GLASS_PANE) {
-			return p;
+	/** How many blocks above the site's ground floor the highest entry of the batch is. */
+	private int highestAboveGround(List<Placement> list) {
+		int base = data().site(siteKey).map(s -> s.origin.getY()).orElse(c.getBlockY());
+		int top = Integer.MIN_VALUE;
+		for (Placement p : list) {
+			top = Math.max(top, p.pos().getY() - base);
 		}
-		Blueprint.Entry planks = new Blueprint.Entry(e.dx(), e.dy(), e.dz(), MaterialSpec.PLANKS, UnaryOperator.identity(), e.attachment());
-		return new Placement(p.index(), p.part(), p.pos(), planks, p.rotation());
+		return top;
+	}
+
+	/** Tells the camp what the rest of this building calls for, so the materials can be gathered and made ahead. */
+	private void forecast(int from) {
+		Map<Stock, Integer> remaining = new EnumMap<>(Stock.class);
+		int end = Math.min(all.size(), from + FORECAST_SCAN);
+		for (int i = from; i < end; i++) {
+			Blueprint.Entry e = all.get(i).entry();
+			Stock s = e.material().stock();
+			if (s == null) {
+				continue; // decoration counts too: asking for its glass is how the windows get glass later
+			}
+			if (!needsWork(all.get(i))) {
+				continue;
+			}
+			remaining.merge(s, 1, Integer::sum);
+			Stock extra = e.material().extraStock();
+			if (extra != null) {
+				remaining.merge(extra, 1, Integer::sum);
+			}
+		}
+		MaterialDemand.report(level(), siteKey, remaining);
 	}
 
 	private static Map<Stock, Integer> materials(List<Placement> list) {
@@ -394,8 +557,35 @@ public final class BuildJob {
 			if (s != null) {
 				map.merge(s, 1, Integer::sum);
 			}
+			Stock extra = p.entry().material().extraStock();
+			if (extra != null) {
+				map.merge(extra, 1, Integer::sum);
+			}
 		}
 		return map;
+	}
+
+	/** The wood or colour each kind of the batch should be, by majority (the entry's own wish, else the site's wood). */
+	private Map<Stock, String> preferences(List<Placement> list) {
+		Map<Stock, Map<String, Integer>> votes = new EnumMap<>(Stock.class);
+		for (Placement p : list) {
+			String wish = wish(p.entry());
+			Stock s = p.entry().material().stock();
+			if (wish != null && s != null) {
+				votes.computeIfAbsent(s, k -> new HashMap<>()).merge(wish, 1, Integer::sum);
+			}
+		}
+		Map<Stock, String> chosen = new EnumMap<>(Stock.class);
+		votes.forEach((s, v) -> v.entrySet().stream().max(Map.Entry.comparingByValue()).ifPresent(w -> chosen.put(s, w.getKey())));
+		return chosen;
+	}
+
+	/** The wood or colour an entry would like: its own, or for wooden parts the site's wood. */
+	private @Nullable String wish(Blueprint.Entry e) {
+		if (e.variant() != null) {
+			return e.variant();
+		}
+		return e.material().variant() == MaterialSpec.Variant.WOOD ? siteWood : null;
 	}
 
 	private boolean carries(Map<Stock, Integer> map) {
@@ -423,7 +613,7 @@ public final class BuildJob {
 		actions.stopWalking();
 		c.getLookControl().setLookAt(Vec3.atCenterOf(chestPos.get()));
 		makeRoom(chest.get());
-		Supplies supplies = new Supplies(c, chest.get(), Crafting.nearCraftingTable(c));
+		Supplies supplies = new Supplies(c, chest.get(), Crafting.nearCraftingTable(c)).prefer(preferences);
 		Map<Stock, Integer> missing = supplies.gather(wanted);
 		if (supplies.needsTable()) {
 			return goToTable(missing);
@@ -452,7 +642,7 @@ public final class BuildJob {
 		}
 		actions.stopWalking();
 		c.getLookControl().setLookAt(Vec3.atCenterOf(tablePos));
-		Supplies supplies = new Supplies(c, null, true);
+		Supplies supplies = new Supplies(c, null, true).prefer(preferences);
 		return startBuilding(supplies.gather(wanted));
 	}
 
@@ -481,7 +671,10 @@ public final class BuildJob {
 			return;
 		}
 		Predicate<ItemStack> keep = s -> s.isDamageableItem() || CompanionEntity.isEdible(s);
-		for (Stock s : Stock.values()) {
+		for (Stock s : wanted.keySet()) {
+			keep = keep.or(s.item());
+		}
+		for (Stock s : List.of(Stock.LOG, Stock.PLANKS, Stock.STICK, Stock.COBBLESTONE, Stock.FILL)) {
 			keep = keep.or(s.item());
 		}
 		Predicate<ItemStack> keepFinal = keep;
@@ -501,14 +694,9 @@ public final class BuildJob {
 			if (gap != null && (gap.entry().attachment() != p.entry().attachment() || gap.entry().dy() != p.entry().dy())) {
 				break;
 			}
-			Stock s = p.entry().material().stock();
-			if (s != null) {
-				int used = carried.getOrDefault(s, 0) + 1;
-				if (c.backpack().count(s.item()) < used) {
-					gap = p;
-					continue;
-				}
-				carried.put(s, used);
+			if (!carriedFor(p, carried)) {
+				gap = p;
+				continue;
 			}
 			buildable.add(p);
 		}
@@ -537,11 +725,35 @@ public final class BuildJob {
 		return TaskStatus.RUNNING;
 	}
 
+	/** True if what this placement needs is carried, beyond what earlier placements of the batch already use. */
+	private boolean carriedFor(Placement p, Map<Stock, Integer> carried) {
+		Stock s = p.entry().material().stock();
+		Stock extra = p.entry().material().extraStock();
+		for (Stock k : new Stock[] {s, extra}) {
+			if (k != null && c.backpack().count(k.item()) < carried.getOrDefault(k, 0) + 1) {
+				return false;
+			}
+		}
+		for (Stock k : new Stock[] {s, extra}) {
+			if (k != null) {
+				carried.merge(k, 1, Integer::sum);
+			}
+		}
+		return true;
+	}
+
 	// ----------------------------------------------------------------- build
 
 	private TaskStatus tickBuild() {
-		if (index >= batch.size()) {
-			return endBatch();
+		if (climb != null) {
+			return tickClimb();
+		}
+		boolean onScaffold = Scaffold.onScaffold(c);
+		if (onScaffold) {
+			Scaffold.markBusy(c);
+		}
+		if (index >= batch.size() || runTicks > RUN_BUDGET) {
+			return endBatch(onScaffold);
 		}
 		Placement p = batch.get(index);
 		if (++entryTicks > ENTRY_TIMEOUT) {
@@ -560,13 +772,16 @@ public final class BuildJob {
 			}
 			return TaskStatus.RUNNING;
 		}
-		if (!actions.canReach(pos)) {
-			actions.walkTo(pos, 2.0);
-			if (actions.isStuck()) {
-				actions.stopWalking();
-				return skip();
+		boolean inMyWay = c.getBoundingBox().intersects(new AABB(pos));
+		if (!actions.canReach(pos) || onScaffold && inMyWay) {
+			if (pullReachableForward()) {
+				return TaskStatus.RUNNING;
 			}
-			return TaskStatus.RUNNING;
+			if (onScaffold) {
+				startDescent(false);
+				return TaskStatus.RUNNING;
+			}
+			return approach(p);
 		}
 		actions.stopWalking();
 		if (slot == Slot.PLANT) {
@@ -576,34 +791,47 @@ public final class BuildJob {
 			}
 			return TaskStatus.RUNNING;
 		}
+		MaterialSpec material = p.entry().material();
+		if (material == MaterialSpec.AIR) {
+			return next(false); // an empty cell that should be empty
+		}
 		ServerLevel level = level();
 		if (level.getGameTime() - c.lastEditTick() < 4) {
 			return TaskStatus.RUNNING; // the guard paces edits
 		}
-		MaterialSpec material = p.entry().material();
 		BlockState state;
 		ItemStack chosen = ItemStack.EMPTY;
-		if (material == MaterialSpec.DOOR_TOP) {
-			BlockState below = level.getBlockState(pos.below());
-			if (!isLowerDoor(below)) {
-				return skip(); // the lower half could not be placed
+		ItemStack flower = ItemStack.EMPTY;
+		if (material.isSecondHalf()) {
+			state = secondHalf(level, p);
+			if (state == null) {
+				return skip(); // the first half could not be placed
 			}
-			state = below.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER);
 		} else {
-			ItemStack found = c.backpack().find(material::accepts);
+			ItemStack found = choose(p.entry());
 			if (found.isEmpty()) {
-				return endBatch(); // something took our materials; plan again next time
+				return endBatch(onScaffold); // something took our materials; plan again next time
 			}
 			chosen = found.copyWithCount(1);
 			state = p.entry().stateFor(chosen, Blueprint.rotation(p.rotation()));
-			if (state.getBlock() instanceof CrossCollisionBlock) {
+			if (material == MaterialSpec.POTTED_FLOWER) {
+				flower = c.backpack().find(Stock.FLOWER::matches);
+				BlockState potted = flower.isEmpty() ? null : Pots.pottedFor(flower);
+				if (potted == null) {
+					return skip();
+				}
+				state = potted;
+				flower = flower.copyWithCount(1);
+			}
+			if (state.getBlock() instanceof CrossCollisionBlock || state.getBlock() instanceof WallBlock
+				|| state.getBlock() instanceof StairBlock) {
 				state = Block.updateFromNeighbourShapes(state, level, pos);
 			}
 		}
 		WorldEditGuard.Verdict verdict = WorldEditGuard.canPlace(c, pos, state, reason);
 		if (!verdict.allowed()) {
 			if ("someone is standing there".equals(verdict.why())) {
-				if (c.getBoundingBox().intersects(new AABB(pos))) {
+				if (inMyWay && !onScaffold) {
 					stepAside = freeSpotNear(pos);
 					if (stepAside == null) {
 						return skip();
@@ -617,7 +845,7 @@ public final class BuildJob {
 			return skip();
 		}
 		boolean ok;
-		if (material == MaterialSpec.DOOR_TOP) {
+		if (material.isSecondHalf()) {
 			ok = WorldEditGuard.placeBlock(c, pos, state, reason);
 			if (ok) {
 				c.swingArm();
@@ -625,6 +853,10 @@ public final class BuildJob {
 		} else {
 			ItemStack template = chosen;
 			ok = actions.place(pos, state, s -> ItemStack.isSameItemSameComponents(s, template), reason);
+			if (ok && !flower.isEmpty()) {
+				ItemStack flowerTemplate = flower;
+				c.backpack().remove(s -> ItemStack.isSameItemSameComponents(s, flowerTemplate), 1);
+			}
 		}
 		if (!ok) {
 			return skip();
@@ -632,6 +864,183 @@ public final class BuildJob {
 		placed++;
 		onPlaced(p);
 		return next(true);
+	}
+
+	/** The item to build an entry from: one of the wood or colour it would like if carried, otherwise any that fits. */
+	private ItemStack choose(Blueprint.Entry e) {
+		MaterialSpec m = e.material();
+		String wish = wish(e);
+		if (wish != null) {
+			ItemStack preferred = c.backpack().find(s -> m.accepts(s) && m.prefers(s, wish));
+			if (!preferred.isEmpty()) {
+				return preferred;
+			}
+		}
+		if (m == MaterialSpec.FOUNDATION || m == MaterialSpec.DIRT) {
+			ItemStack dirt = c.backpack().find(s -> s.is(net.minecraft.world.item.Items.DIRT));
+			if (!dirt.isEmpty()) {
+				return dirt; // dirt before cobblestone: cobblestone is worth more
+			}
+		}
+		return c.backpack().find(m::accepts);
+	}
+
+	/** The second half of a two-part block, made from its first half; null if the first half is not there. */
+	private static @Nullable BlockState secondHalf(ServerLevel level, Placement p) {
+		BlockPos firstPos = firstHalfPos(p);
+		BlockState first = level.getBlockState(firstPos);
+		MaterialSpec m = p.entry().material();
+		if (!isFirstHalf(m, first)) {
+			return null;
+		}
+		return switch (m) {
+			case DOOR_TOP -> first.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER);
+			case TALL_FLOWER_TOP -> first.setValue(DoublePlantBlock.HALF, DoubleBlockHalf.UPPER);
+			case BED_HEAD -> first.getValue(BlockStateProperties.HORIZONTAL_FACING) == facingOf(p)
+				? first.setValue(AbstractBedBlock.PART, BedPart.HEAD) : null;
+			default -> null;
+		};
+	}
+
+	/**
+	 * Moves the next entry of the same layer that is in reach right now (and is not the second half of something) to
+	 * the front, so the builder works round what is close instead of walking or climbing for each block in drawing
+	 * order. True if one was found.
+	 */
+	private boolean pullReachableForward() {
+		Placement current = batch.get(index);
+		for (int i = index + 1; i < batch.size(); i++) {
+			Placement other = batch.get(i);
+			if (other.entry().attachment() != current.entry().attachment() || other.entry().dy() != current.entry().dy()) {
+				break;
+			}
+			if (other.entry().material().isSecondHalf() || !c.actions().canReach(other.pos())
+				|| c.getBoundingBox().intersects(new AABB(other.pos())) || !needsWork(other)) {
+				continue;
+			}
+			batch.set(i, current);
+			batch.set(index, other);
+			entryTicks = 0;
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Gets within reach of an entry: walks there if it can be reached from the ground; if it is too high, or there is
+	 * no way to it, stands somewhere nearby that reaches it, on a scaffold pillar if need be. Each entry gets one try at
+	 * a scaffold; after that it is skipped (and picked up by a later run).
+	 */
+	private TaskStatus approach(Placement p) {
+		Actions actions = c.actions();
+		BlockPos pos = p.pos();
+		double dx = c.getX() - (pos.getX() + 0.5);
+		double dz = c.getZ() - (pos.getZ() + 0.5);
+		boolean tooHigh = dx * dx + dz * dz <= 2.5 * 2.5 && pos.getY() > c.getBlockY() + 3;
+		if (!tooHigh) {
+			actions.walkTo(pos, 2.0);
+			if (!actions.isStuck()) {
+				return TaskStatus.RUNNING;
+			}
+			actions.stopWalking();
+		}
+		if (!scaffoldTried.add(p.index())) {
+			return skip();
+		}
+		List<BlockPos> others = new ArrayList<>();
+		for (int i = index + 1; i < batch.size() && others.size() < 16; i++) {
+			others.add(batch.get(i).pos());
+		}
+		Scaffold.Spot spot = Scaffold.plan(c, pos, planCells(), others);
+		if (spot == null) {
+			return skip();
+		}
+		if (spot.height() > 0 && !Scaffold.canScaffold(c)) {
+			if (FriendsConfig.get().allowScaffolding) {
+				Speech.say(c, Line.NEED_MATERIALS, "some dirt or cobblestone for scaffolding");
+			}
+			return skip();
+		}
+		if (spot.height() > 0) {
+			Speech.say(c, Line.SCAFFOLDING, name());
+		}
+		climb = new Scaffold.Climb(spot);
+		climbTicks = 0;
+		return TaskStatus.RUNNING;
+	}
+
+	/** Every cell the plan uses on this site (no scaffold may stand in one), worked out once per run. */
+	private Set<BlockPos> planCells() {
+		Set<BlockPos> cells = planCells;
+		if (cells == null) {
+			cells = new HashSet<>();
+			for (Placement p : all) {
+				if (!p.isFoundation()) {
+					cells.add(p.pos());
+				}
+			}
+			planCells = cells;
+		}
+		return cells;
+	}
+
+	private TaskStatus tickClimb() {
+		Scaffold.Climb current = climb;
+		if (current == null) {
+			return TaskStatus.RUNNING;
+		}
+		if (++climbTicks > CLIMB_LIMIT) {
+			climb = null;
+			if (Scaffold.onScaffold(c)) {
+				startDescent(false);
+				return TaskStatus.RUNNING;
+			}
+			return skip();
+		}
+		switch (current.tick(c)) {
+			case DONE -> {
+				climb = null;
+				entryTicks = 0; // now in reach: the entry gets its full time
+			}
+			case FAILED -> {
+				climb = null;
+				c.actions().stopWalking();
+				if (Scaffold.onScaffold(c)) {
+					startDescent(false);
+					return TaskStatus.RUNNING;
+				}
+				return skip();
+			}
+			case WORKING -> {
+			}
+		}
+		return TaskStatus.RUNNING;
+	}
+
+	private void startDescent(boolean thenEnd) {
+		c.actions().stopWalking();
+		phase = Phase.DESCEND;
+		descendTicks = 0;
+		endAfterDescent = thenEnd;
+	}
+
+	private TaskStatus tickDescend() {
+		Scaffold.markBusy(c);
+		Scaffold.Step step = Scaffold.descend(c);
+		if (step == Scaffold.Step.DONE || ++descendTicks > DESCEND_LIMIT) {
+			c.actions().cancelMining();
+			if (step != Scaffold.Step.DONE) {
+				Scaffold.release(c); // could not get down (a player right by the pillar): the reflex keeps trying
+				return fail(Failure.UNREACHABLE);
+			}
+			if (endAfterDescent || all.isEmpty()) {
+				phase = all.isEmpty() ? Phase.SITE : Phase.BUILD;
+				return all.isEmpty() ? TaskStatus.RUNNING : finishBatch();
+			}
+			phase = Phase.BUILD;
+			entryTicks = 0;
+		}
+		return TaskStatus.RUNNING;
 	}
 
 	private void onPlaced(Placement p) {
@@ -644,7 +1053,7 @@ public final class BuildJob {
 		index++;
 		entryTicks = 0;
 		if (progressMade && !repair) {
-			data().site(bp.id()).ifPresent(site -> {
+			data().site(siteKey).ifPresent(site -> {
 				int progress = site.progress;
 				while (progress < all.size() && !needsWork(all.get(progress))) {
 					progress++;
@@ -662,13 +1071,22 @@ public final class BuildJob {
 		return next(false);
 	}
 
-	private TaskStatus endBatch() {
+	/** Ends the batch: first down from any scaffold, then {@link #finishBatch}. */
+	private TaskStatus endBatch(boolean onScaffold) {
+		if (onScaffold) {
+			startDescent(true);
+			return TaskStatus.RUNNING;
+		}
+		return finishBatch();
+	}
+
+	private TaskStatus finishBatch() {
 		c.actions().reset();
 		if (placed == 0 && skipped > 0) {
 			return fail(Failure.UNREACHABLE);
 		}
 		for (Placement p : all) {
-			if ((!repair || !p.isFoundation()) && needsWork(p)) {
+			if ((!repair || !p.isFoundation()) && needsWorkNow(p)) {
 				return TaskStatus.SUCCESS; // more to do next run
 			}
 		}
@@ -677,14 +1095,21 @@ public final class BuildJob {
 
 	private TaskStatus complete() {
 		CampData data = data();
-		data.site(bp.id()).ifPresent(site -> setProgress(site, all.size()));
+		data.site(siteKey).ifPresent(site -> setProgress(site, all.size()));
 		finished = true;
 		if (!repair) {
-			if (bp == Blueprints.SUPPLY_CHEST && data.chestPos().isEmpty()) {
-				SiteFinder.parts(data, bp).stream().findFirst().map(Part::origin)
-					.filter(origin -> SupplyChest.isValidStorage(level(), origin)).ifPresent(data::setChestPos);
+			MaterialDemand.clear(siteKey);
+			if (campStructure) {
+				if (bp == Blueprints.SUPPLY_CHEST && data.chestPos().isEmpty()) {
+					SiteFinder.parts(data, siteKey, bp).stream().findFirst().map(Part::origin)
+						.filter(origin -> SupplyChest.isValidStorage(level(), origin)).ifPresent(data::setChestPos);
+				}
+				CampProgress.complete(c, siteKey);
+			} else if (!Blueprints.isFinished(data, siteKey)) {
+				Blueprints.markFinished(data, siteKey, true);
+				Speech.say(c, Line.BUILDING_FINISHED, name());
+				Construction.fireFinished(level(), siteKey, bp);
 			}
-			CampProgress.complete(c, bp.id());
 			CampNeeds.reportBuildShortage(level(), Map.of(), "");
 		}
 		return TaskStatus.SUCCESS;
