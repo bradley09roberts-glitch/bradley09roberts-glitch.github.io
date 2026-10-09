@@ -66,6 +66,13 @@ public final class ChunkLoader {
 	 */
 	public static volatile Predicate<ServerPlayer> campLoadAllowed = player -> true;
 
+	/**
+	 * Friends who keep a roaming grant even when not working on their own: the expedition package's friends making
+	 * their way back to a portal in another dimension (following their leader through it, or going home), who would
+	 * otherwise freeze as soon as the player has gone.
+	 */
+	public static volatile Predicate<CompanionEntity> roamsInAnyMode = c -> false;
+
 	/** How often the tickets are brought up to date, in ticks. */
 	private static final int INTERVAL = 20;
 	/** Entity-ticking radius around a roaming friend, in chunks: their own chunk and the ring around it. */
@@ -329,7 +336,7 @@ public final class ChunkLoader {
 		if (!anyone || overLimit) {
 			return "not allowed now";
 		}
-		if (c.mode() != CompanionMode.WORK) {
+		if (c.mode() != CompanionMode.WORK && !roamsInAnyMode.test(c)) {
 			return "not on their own";
 		}
 		if (roamer.ticket != null && !roamer.ticket.dimension().equals(level.dimension())) {

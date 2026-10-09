@@ -48,7 +48,9 @@ public enum MaterialSpec {
 	ENCHANTING_TABLE(Stock.ENCHANTING_TABLE, s -> s.is(Blocks.ENCHANTING_TABLE)),
 	/** Any anvil, chipped or damaged too: a worn anvil still stands. */
 	ANVIL(Stock.ANVIL, s -> s.is(BlockTags.ANVIL)),
-	BREWING_STAND(Stock.BREWING_STAND, s -> s.is(Blocks.BREWING_STAND));
+	BREWING_STAND(Stock.BREWING_STAND, s -> s.is(Blocks.BREWING_STAND)),
+	// Expeditions (package expedition): the Nether portal's frame.
+	OBSIDIAN(Stock.OBSIDIAN, s -> s.is(Blocks.OBSIDIAN));
 
 	private final @Nullable Stock stock;
 	private final Predicate<BlockState> built;

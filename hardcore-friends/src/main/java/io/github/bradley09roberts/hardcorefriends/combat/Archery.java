@@ -3,6 +3,8 @@ package io.github.bradley09roberts.hardcorefriends.combat;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import org.jspecify.annotations.Nullable;
+
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -24,6 +26,7 @@ import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Reach;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
@@ -183,11 +186,41 @@ public final class Archery {
 	}
 
 	/**
+	 * Makes the arrow for one shot instead of the usual one, for a feature that needs an arrow of its own (the
+	 * expedition package's arrows that can hurt the ender dragon). Returns null to let the usual arrow be made.
+	 */
+	public interface ArrowMaker {
+		@Nullable AbstractArrow make(CompanionEntity c, ServerLevel level, ItemStack projectile, ItemStack bow, float power);
+	}
+
+	/** Works out where an arrow is aimed once it exists (it starts just below the friend's eyes). */
+	public interface Aim {
+		Vec3 direction(AbstractArrow arrow);
+	}
+
+	/**
 	 * Looses one arrow from the bow in the main hand at the target, as a skeleton does, with {@code power} from the
 	 * draw time ({@code BowItem.getPowerForTime}). Takes the arrow from the backpack (plain arrows first) unless the bow
 	 * has Infinity. Returns false if there was no bow or arrow.
 	 */
 	public static boolean shoot(CompanionEntity c, ServerLevel level, LivingEntity target, float power) {
+		return loose(c, level, power, VELOCITY, UNCERTAINTY, null, arrow -> {
+			double xd = target.getX() - c.getX();
+			double yd = target.getY(0.3333333333333333) - arrow.getY();
+			double zd = target.getZ() - c.getZ();
+			double flat = Math.sqrt(xd * xd + zd * zd);
+			return new Vec3(xd, yd + flat * 0.2F, zd);
+		});
+	}
+
+	/**
+	 * Looses one arrow from the bow in the main hand in the direction {@code aim} gives, at {@code velocity} (a
+	 * skeleton's is {@value #VELOCITY}, a player's full draw 3.0) and with {@code uncertainty} (lower is truer), made
+	 * by {@code maker} if one is given. The ammunition, the bow's wear and enchantments, and picking a missed arrow up
+	 * again work as for {@link #shoot}. Returns false if there was no bow or arrow.
+	 */
+	public static boolean loose(CompanionEntity c, ServerLevel level, float power, float velocity, float uncertainty,
+		@Nullable ArrowMaker maker, Aim aim) {
 		ItemStack bow = c.getMainHandItem();
 		if (!bow.is(Items.BOW) || bow.isEmpty()) {
 			return false;
@@ -212,15 +245,15 @@ public final class Archery {
 		} else {
 			projectile.set(DataComponents.INTANGIBLE_PROJECTILE, Unit.INSTANCE); // Infinity: nothing to pick up
 		}
-		AbstractArrow arrow = ProjectileUtil.getMobArrow(c, projectile, power, bow);
+		AbstractArrow arrow = maker == null ? null : maker.make(c, level, projectile, bow, power);
+		if (arrow == null) {
+			arrow = ProjectileUtil.getMobArrow(c, projectile, power, bow);
+		}
 		if (used) {
 			arrow.pickup = AbstractArrow.Pickup.ALLOWED; // a real arrow that missed can be picked up again
 		}
-		double xd = target.getX() - c.getX();
-		double yd = target.getY(0.3333333333333333) - arrow.getY();
-		double zd = target.getZ() - c.getZ();
-		double flat = Math.sqrt(xd * xd + zd * zd);
-		Projectile.spawnProjectileUsingShoot(arrow, level, projectile, xd, yd + flat * 0.2F, zd, VELOCITY, UNCERTAINTY);
+		Vec3 direction = aim.direction(arrow);
+		Projectile.spawnProjectileUsingShoot(arrow, level, projectile, direction.x, direction.y, direction.z, velocity, uncertainty);
 		c.playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (c.getRandom().nextFloat() * 0.4F + 0.8F));
 		bow.hurtAndBreak(1, c, EquipmentSlot.MAINHAND);
 		c.markEngaged();

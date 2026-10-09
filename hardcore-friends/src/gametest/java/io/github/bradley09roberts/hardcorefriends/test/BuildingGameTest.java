@@ -98,6 +98,7 @@ public class BuildingGameTest {
 			case ENCHANTING_TABLE -> Items.ENCHANTING_TABLE;
 			case ANVIL -> Items.ANVIL;
 			case BREWING_STAND -> Items.BREWING_STAND;
+			case OBSIDIAN -> Items.OBSIDIAN;
 		});
 	}
 
