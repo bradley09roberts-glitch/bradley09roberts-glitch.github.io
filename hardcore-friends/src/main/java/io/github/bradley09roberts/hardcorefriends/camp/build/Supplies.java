@@ -12,6 +12,7 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Items;
 
+import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds.Need;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.Backpack;
@@ -30,6 +31,9 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
  * ingredients the camp has.
  */
 public final class Supplies {
+	/** Above this food need, wheat is not used to make anything (hay bales for straw beds). */
+	private static final double FOOD_SHORT = 0.4;
+
 	private final CompanionEntity c;
 	private final @Nullable Container chest;
 	private final boolean table;
@@ -201,6 +205,9 @@ public final class Supplies {
 	}
 
 	private static boolean canMake(CompanionEntity c, @Nullable Container chest, Stock s, int count, int depth) {
+		if (s == Stock.WHEAT && depth > 0 && CampNeeds.need(Need.FOOD) > FOOD_SHORT) {
+			return false; // wheat is bread first: no straw beds while the camp is short of food
+		}
 		int have = available(c, chest, s);
 		if (have >= count) {
 			return true;

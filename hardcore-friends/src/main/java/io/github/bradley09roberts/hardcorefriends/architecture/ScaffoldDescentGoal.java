@@ -12,15 +12,21 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
  * night, for a meal, a fight, or the world was reloaded) digs their way straight back down, block by block, before
  * doing anything else, so nobody is left stranded up a pillar or wanders off it onto a roof. High priority, holding
  * movement, so no job walks them off the edge first; it gives way only to the survival package's own pillar reflex.
+ * If the way down stays barred for half a minute (a player standing right by the pillar, water that has flowed in
+ * beside it), the friend is left to their other goals for a minute before trying again, so the reflex never holds
+ * them for good.
  */
 public final class ScaffoldDescentGoal extends Goal {
-	/** Give up after this long without getting a block lower (a player standing right by the pillar, say). */
+	/** Give up after this long without getting a block lower. */
 	private static final int STUCK_LIMIT = 20 * 30;
+	/** How long to leave it after giving up. */
+	private static final int RETRY_AFTER = 20 * 60;
 
 	private final CompanionEntity c;
 	private int stuckTicks;
 	private double lastY;
 	private boolean done;
+	private long retryAt = Long.MIN_VALUE;
 
 	public ScaffoldDescentGoal(CompanionEntity companion) {
 		this.c = companion;
@@ -29,7 +35,10 @@ public final class ScaffoldDescentGoal extends Goal {
 
 	@Override
 	public boolean canUse() {
-		if (!(c.level() instanceof ServerLevel) || c.isPassenger() || Scaffold.busy(c)) {
+		if (!(c.level() instanceof ServerLevel level) || c.isPassenger() || Scaffold.busy(c)) {
+			return false;
+		}
+		if (level.getGameTime() < retryAt) {
 			return false;
 		}
 		return Scaffold.onScaffold(c);
@@ -72,5 +81,8 @@ public final class ScaffoldDescentGoal extends Goal {
 	@Override
 	public void stop() {
 		c.actions().cancelMining();
+		if (stuckTicks >= STUCK_LIMIT) {
+			retryAt = c.level().getGameTime() + RETRY_AFTER;
+		}
 	}
 }
