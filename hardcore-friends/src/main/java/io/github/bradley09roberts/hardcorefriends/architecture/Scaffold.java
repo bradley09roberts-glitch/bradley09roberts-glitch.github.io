@@ -2,6 +2,7 @@ package io.github.bradley09roberts.hardcorefriends.architecture;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,8 +55,10 @@ public final class Scaffold {
 	private static final int TRIES_BEFORE_LIFT = 3;
 	/** Columns tried around the block to reach (a square of this half-width). */
 	private static final int SEARCH = 3;
-	/** Most candidate spots checked with a real path, per search. */
+	/** The cheapest candidate spots, each checked with a real path of its own, per search. */
 	private static final int PATH_CHECKS = 3;
+	/** The other candidate spots are checked in groups of this many, one path search per group. */
+	private static final int GROUP_CHECKS = 16;
 
 	/** Where to put a pillar: the feet position at its bottom, and how many blocks to stack (0 = just stand there). */
 	public record Spot(BlockPos base, int height) {
@@ -186,11 +189,19 @@ public final class Scaffold {
 	 * blocks to the side, with the pillar's cells and the standing room above it all empty, inside the camp, outside the
 	 * plan's own cells ({@code planCells}), away from water, lava and anything player-built. Lower pillars and spots
 	 * that also reach more of {@code alsoWanted} win. Null if there is none.
+	 *
+	 * <p>The cheapest spots get a path check each. The cheapest can all be out of walking reach (a ledge inside the
+	 * building, the floor of a basin walled in from outside) while a dearer spot is a short walk away, so the rest are
+	 * then checked in groups, cheapest first, with one path search per group that finds the nearest spot of the group
+	 * the friend can walk to.
 	 */
 	public static @Nullable Spot plan(CompanionEntity c, BlockPos target, Set<BlockPos> planCells, List<BlockPos> alsoWanted) {
 		ServerLevel level = (ServerLevel) c.level();
 		CampData data = Camp.data(level.getServer());
 		int maxHeight = FriendsConfig.get().allowScaffolding ? FriendsConfig.get().maxScaffoldHeight : 0;
+		// The lowest floor worth a look: from the top of the tallest pillar there, a block five higher one column to the
+		// side is still in reach (so a full-height pillar on the ground reaches the ridge of a 12-high plan).
+		int lowest = target.getY() - maxHeight - 5;
 		record Candidate(Spot spot, double cost) {
 		}
 		List<Candidate> candidates = new ArrayList<>();
@@ -202,7 +213,7 @@ public final class Scaffold {
 				}
 				int x = target.getX() + dx;
 				int z = target.getZ() + dz;
-				for (int y = target.getY() - 1; y >= target.getY() - maxHeight - 4; y--) {
+				for (int y = target.getY() - 1; y >= lowest; y--) {
 					m.set(x, y, z);
 					if (!level.isLoaded(m)) {
 						break;
@@ -237,20 +248,35 @@ public final class Scaffold {
 		}
 		candidates.sort(Comparator.comparingDouble(Candidate::cost));
 		int checked = 0;
+		Map<BlockPos, Spot> group = new HashMap<>();
 		for (Candidate cand : candidates) {
-			if (checked >= PATH_CHECKS) {
-				break;
-			}
 			Spot spot = cand.spot();
 			if (spot.height() > 0 && nearPlayerBuild(level, data, spot)) {
 				continue;
 			}
-			checked++;
-			if (c.blockPosition().equals(spot.base()) || canWalkTo(c, spot.base())) {
-				return spot;
+			if (checked < PATH_CHECKS) {
+				checked++;
+				if (c.blockPosition().equals(spot.base()) || canWalkTo(c, spot.base())) {
+					return spot;
+				}
+				continue;
+			}
+			group.put(spot.base(), spot);
+			if (group.size() >= GROUP_CHECKS) {
+				Spot found = nearestWalkable(c, group);
+				if (found != null) {
+					return found;
+				}
+				group.clear();
 			}
 		}
-		return null;
+		return group.isEmpty() ? null : nearestWalkable(c, group);
+	}
+
+	/** The spot of the group the friend can walk to soonest (one path search for all of them), or null if none. */
+	private static @Nullable Spot nearestWalkable(CompanionEntity c, Map<BlockPos, Spot> group) {
+		Path path = c.getNavigation().createPath(group.keySet(), 0);
+		return path != null && path.canReach() ? group.get(path.getTarget()) : null;
 	}
 
 	/** The fewest blocks to stack on {@code base} so {@code target} is in reach, or -1 if more than {@code max}. */

@@ -7,7 +7,7 @@
   "front": "north",
   "palette": {
     "S": "sandstone",
-    "w": "sandstone_wall",
+    "c": "cut_sandstone",
     "L": {"block": "log", "wood": "jungle", "axis": "y"},
     "X": {"block": "log", "wood": "jungle", "axis": "x"},
     "v": {"block": "stairs", "facing": "south", "wood": "jungle"},
@@ -26,11 +26,11 @@
       "SSSSS"
     ],
     [
-      "wwwww",
-      "w...w",
+      "ccccc",
+      "c...c",
       "S...S",
-      "w...w",
-      "wwwww"
+      "c...c",
+      "ccccc"
     ],
     [
       ".....",

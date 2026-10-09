@@ -86,7 +86,9 @@ time and the materials arrive in batches.
 - **Two-part blocks:** doors, beds and tall flowers go down as two halves.
 - **Scaffolding:** a wall or roof out of reach from the ground is reached from a temporary pillar of dirt or
   cobblestone (at most `maxScaffoldHeight`, 6 blocks), put up beside or inside the building the way a player does it,
-  never in a spot the building uses, next to water or lava, or by anything you built. The builder digs it out again
+  never in a spot the building uses, next to water or lava, or by anything you built. The builder prefers a low
+  pillar close by; when the handiest spots are somewhere it cannot walk to (a ledge inside, the floor of a walled
+  basin), it looks further round for one it can. It digs the pillar out again
   when done up there, and gets the blocks back. A friend called away while up a pillar comes straight down first. A
   pillar left behind (say the world was closed mid-climb) is taken down by the builder later. Turn scaffolding off
   with `allowScaffolding` (high parts are then skipped).
@@ -243,6 +245,10 @@ drawing: `"facing": "south"` on a front door drawn with `"front": "north"` faces
 4. Leave headroom: the friends walk in through the door and reach high parts from the ground, from inside, or from a
    pillar up to 6 blocks; a building whose upper floor is only reachable by a ladder will have its top built from
    pillars outside. For two storeys draw a staircase of `stairs` (not a ladder) with a hole in the floor above it.
+   Wherever the floor steps up (onto a stair, a slab or a block), the lower spot needs **three** blocks of air above
+   it, not two: a friend's head rises before their feet are on the step. So the first stair is never right behind a
+   two-high doorway; leave a level spot inside the door first. Keep anything a friend cannot walk to (a ledge, a
+   walled basin) out of reach of the roof's middle, or the builder has to look further for a place to stand.
 5. Add the markers your kind needs (see the table).
 6. `/reload`, then `/friends builds check`: every problem is listed with its layer, row and column, and the file is
    skipped until it is fixed. `/friends builds <id>` shows what the plan will cost.
@@ -295,8 +301,12 @@ streets. `/friends builds` lists them all; `/friends builds <kind>` (`house`, `s
   the repair job adds them when the camp can make them. The few job blocks that need iron (the smithy's blast furnace,
   the smith's smithing table, the mason's stonecutter) are the exception: those buildings wait for the iron.
 - **Room to walk.** Every marked spot (beds, chests, job blocks, counters, seats, lookouts) can be walked to from the
-  front door, with two blocks of headroom; two-storey plans have a staircase of stairs (never a ladder) with a rail
-  round the stairwell.
+  front door, with two blocks of headroom, and three wherever the floor steps up (a stair, a slab, a step), as a
+  grown friend's head rises before their feet are on the step; two-storey plans have a staircase of stairs (never a
+  ladder) with a rail round the stairwell. Basins (the wells, the fountain) have a rim one block high, so a friend
+  who ends up inside a dry one can climb out.
+- **Safe upper floors.** Windows on upper floors have a fence rail across their bottom row (the glass above it), so
+  nobody can step, or be knocked, out of an upper floor before the camp has glass for the windows.
 
 ## Kinds, and the spots they mark
 
@@ -313,7 +323,8 @@ Facts in `meta`: `beds` and `capacity` (houses), `size` (`tiny`, `small`, `mediu
 `shop`, `profession` (the trade that works there: `baker`, `shopkeeper`, `butcher`, `fishmonger`, `tailor`,
 `blacksmith`, `fisher`, `mason`, `beekeeper`, `carpenter`, `doctor`, `shepherd`, `farmer`, `teacher`, `innkeeper`),
 `open_front` (no door: a stall or an open forge), `faces: water` (the fishing hut's deck should face the water),
-`needs: water` (a well, the fountain and the wheat field wait for someone to pour water at their `water` spots),
+`needs: water` (a well, the fountain and the wheat field are built dry: no job pours water yet, so the `water` spots
+mark where a player, or a later job, should pour it),
 `seats`, `stalls`, `hives`, `guest_beds`, `tables`, `length` (wall and gate segments).
 
 Styles name the biome and the materials (`oak`, `spruce`, `birch`, `dark_oak`, `acacia`, `sandstone`, `stone`, `plains`,
@@ -338,8 +349,8 @@ and earth, `B` bell, `+` furniture and work blocks.
 | `house/stone_house` | `house` | stone, dark_oak, mountain, plains | 11 × 9, 9 | 4 | wood 216, stone 99, glass pane 14, barrel 4 |
 | `house/birch_house` | `house` | birch, forest | 11 × 9, 9 | 4 | wood 284, stone 29, glass pane 14, bed 4 |
 | `house/sandstone_house` | `house` | sandstone, desert | 9 × 9, 6 | 4 | sandstone 258, glass pane 8, carpet 6, wood 5 |
-| `house/oak_townhouse` | `house` | oak, plains | 13 × 9, 12 | 6 | wood 405, stone 109, glass pane 22, carpet 6 |
-| `house/dark_oak_manor` | `house` | dark_oak, forest | 13 × 9, 12 | 6 | wood 405, stone 109, glass pane 22, carpet 6 |
+| `house/oak_townhouse` | `house` | oak, plains | 13 × 9, 12 | 6 | wood 412, stone 109, glass pane 15, carpet 6 |
+| `house/dark_oak_manor` | `house` | dark_oak, forest | 13 × 9, 12 | 6 | wood 412, stone 109, glass pane 15, carpet 6 |
 | `house/oak_hut` | `house` | oak, plains, forest | 7 × 8, 8 | 1 | wood 141, stone 19, glass pane 5, lantern 3 |
 | `house/plains_farmhouse` | `house` | oak, plains | 13 × 11, 10 | 3 | wood 360, stone 50, glass pane 11, wall torch 5 |
 | `house/taiga_cottage` | `house` | spruce, taiga, snowy | 9 × 9, 12 | 2 | wood 259, stone 55, glass pane 6, carpet 4 |
@@ -347,7 +358,7 @@ and earth, `B` bell, `+` furniture and work blocks.
 | `house/birch_cottage` | `house` | birch, forest | 9 × 9, 9 | 2 | wood 184, stone 25, glass pane 7, barrel 4 |
 | `house/dark_oak_cottage` | `house` | dark_oak, forest, stone | 11 × 11, 11 | 3 | wood 319, stone 107, glass pane 12, wall torch 4 |
 | `house/desert_courtyard_house` | `house` | sandstone, desert | 11 × 12, 6 | 4 | sandstone 395, glass pane 8, wall torch 8, barrel 5 |
-| `house/stone_townhouse` | `house` | stone, dark_oak, plains, forest, town | 9 × 11, 12 | 4 | wood 294, stone 103, glass pane 17, barrel 7 |
+| `house/stone_townhouse` | `house` | stone, dark_oak, plains, forest, town | 9 × 11, 12 | 4 | wood 296, stone 103, glass pane 15, barrel 7 |
 | `house/acacia_house` | `house` | acacia, savanna | 11 × 10, 9 | 2 | wood 293, stone 27, glass pane 8, wall torch 5 |
 
 - **Oak cottage** (`house/oak_cottage`): The camp cottage's design as a house: oak frame on a cobblestone plinth, plank
@@ -430,7 +441,7 @@ and earth, `B` bell, `+` furniture and work blocks.
                              /##o##\                      ===
                             /|-----|\                    =====
                              |o#|#o|                    =======
-  !!!!!!!!!!!                |o#|#o|                   =========
+  !!!!!!!!!!!                |!#|#!|                   =========
   %%%%%%%%%%%                -------                  ===========
   %%%%___%%%%                ~*~%~*~                   !*!###!*!
   %%o%***%o%%               :%o%*%o%:                  !o!***!"!
@@ -583,30 +594,31 @@ and earth, `B` bell, `+` furniture and work blocks.
 
 | Plan | Kind | Styles | Size (w × d, high) | Trade | Main materials |
 |---|---|---|---|---|---|
-| `civic/town_hall` | `civic:town_hall` | oak, stone, plains, forest, town | 15 × 14, 12 |  | wood 459, stone 144, glass pane 28, wall torch 9 |
+| `civic/town_hall` | `civic:town_hall` | oak, stone, plains, forest, town | 15 × 14, 11 |  | wood 444, stone 144, glass pane 28, wall torch 9 |
 | `civic/well` | `civic:well` | stone, oak, spruce, plains, forest, taiga, town | 5 × 5, 6 |  | stone 41, wood 24, wall torch 2, lantern 1 |
 | `civic/desert_well` | `civic:well` | sandstone, desert | 5 × 5, 6 |  | sandstone 41, wood 24, wall torch 2, lantern 1 |
 | `civic/school` | `civic:school` | birch, oak, plains, forest, town | 13 × 11, 11 | teacher | wood 318, stone 63, glass pane 24, wall torch 7 |
-| `civic/tavern` | `civic:tavern` | oak, spruce, plains, forest, taiga, town | 15 × 9, 12 | innkeeper | wood 404, stone 147, glass pane 35, wall torch 11 |
+| `civic/tavern` | `civic:tavern` | oak, spruce, plains, forest, taiga, town | 15 × 9, 12 | innkeeper | wood 412, stone 147, glass pane 27, wall torch 11 |
 | `civic/market` | `civic:market` | oak, spruce, plains, forest, taiga, town | 13 × 13, 5 |  | wood 121, carpet 64, barrel 16, dirt 8 |
 | `civic/chapel` | `civic:chapel` | stone, spruce, plains, forest, taiga, town | 9 × 15, 11 |  | wood 258, stone 197, glass pane 32, carpet 8 |
 | `civic/wall` | `civic:wall` | stone, town, plains, mountain | 9 × 3, 5 |  | stone 69, wall torch 4 |
 | `civic/gate` | `civic:gate` | stone, town, plains, mountain | 11 × 3, 8 |  | stone 178, lantern 4, iron bars 3, wall torch 2 |
-| `civic/watchtower` | `civic:watchtower` | stone, spruce, town, plains, mountain, taiga | 7 × 7, 12 |  | stone 212, wood 58, wall torch 5, lantern 4 |
+| `civic/watchtower` | `civic:watchtower` | stone, spruce, town, plains, mountain, taiga | 7 × 7, 12 |  | stone 217, wood 58, lantern 4, wall torch 3 |
 
 - **Town hall** (`civic/town_hall`): The town hall: a long timber hall on a stone-brick base with a gabled portico at
   the front where the town bell hangs, a council table down the middle with benches, a lectern at the head, shelves of
   records and tall windows.
-- **Well** (`civic/well`): A village well: a stone-floored basin behind a low wall, two log posts with torches carrying
-  a little roof, and a lantern hanging from the beam over the basin. The plan cannot pour water: the basin's "water"
-  spots wait for a bucket.
-- **Desert well** (`civic/desert_well`): The well in sandstone for desert towns: a sandstone basin and wall, jungle-wood
-  posts and roof, and a lantern over the basin. Dry until someone pours water at its "water" spots.
+- **Well** (`civic/well`): A village well: a stone-floored basin inside a cobblestone rim, two log posts with torches
+  carrying a little roof, and a lantern hanging from the beam over the basin. The rim is one block high, so a friend
+  who ends up in the dry basin can climb out. The plan cannot pour water: the basin's "water" spots wait for a bucket.
+- **Desert well** (`civic/desert_well`): The well in sandstone for desert towns: a sandstone basin inside a cut
+  sandstone rim, jungle-wood posts and roof, and a lantern over the basin. Dry until someone pours water at its "water"
+  spots.
 - **School** (`civic/school`): The school: one bright classroom under a hipped roof, two rows of benches with desks
   facing the teacher's lectern and board at the back, bookshelves, tall windows, and a bell by the door.
 - **Tavern** (`civic/tavern`): The tavern and inn: two storeys, stone below and timber above. Downstairs a taproom with
   three tables, a bar with the innkeeper's spot behind it and the kitchen smoker, and barrels of ale; upstairs four
-  guest beds. A canopy and lanterns over the door and a chimney at the east gable.
+  guest beds behind railed windows. A canopy and lanterns over the door and a chimney at the east gable.
 - **Market** (`civic/market`): A market square: four stalls round a central aisle, each with posts, a slab roof striped
   with carpet, a counter with a lantern and stock barrels behind, and a flower bed with a lamp in the middle.
 - **Chapel** (`civic/chapel`): A stone-brick chapel: a tall nave with buttresses and tall windows, rows of pews either
@@ -615,13 +627,13 @@ and earth, `B` bell, `+` furniture and work blocks.
   crenellated top and torches on both faces. Segments join end to end along their length (the "join" spots).
 - **Town gate** (`civic/gate`): The town gate: two solid stone towers with crenellated tops and lanterns, an arch
   between them with a portcullis of iron bars raised in its crown, and a walkway over the arch. The way through is open.
-- **Watchtower** (`civic/watchtower`): A stone watchtower: a stepped plinth, a spiral stair round a central pillar
-  (stairs all the way, no ladder) up to a lookout with a parapet, lights on its corners and a slab roof on posts.
+- **Watchtower** (`civic/watchtower`): A stone watchtower: a stepped plinth, a level landing inside the door, then a
+  spiral stair round a central pillar (stairs all the way, no ladder, three blocks of headroom on every step) up to a
+  lookout with a parapet, lights on its corners and a slab roof on posts.
 
 ```
   town hall         well              desert well
   _______________
-  ###############
   =======_=======
   =======#=======
   ======/o\======
@@ -630,7 +642,7 @@ and earth, `B` bell, `+` furniture and work blocks.
    |o#|%*B*%|#o|    =====             =====
    |o#|!###!|#o|    | * |             | * |
    %%%%!*+*!%%%%    |* *|             |* *|
-   %%%%!%D%!%%%%    !!!!!             !!!!!
+   %%%%!%D%!%%%%    %%%%%             %%%%%
    %%%%%===%%%%%    %%%%%             %%%%%
 ```
 
@@ -642,7 +654,7 @@ and earth, `B` bell, `+` furniture and work blocks.
       =====         ===============
      =======        ===============
     =========        |oo|oo|oo|oo|%
-   ===========       |oo|oo|oo|oo|%
+   ===========       |!!|!!|!!|!!|%
   =============      -----===-----%    ~~~~   ~~~~
    |oo|B#*|oo|       %%%%%*%*%%%%%%    ____ * ____
    |oo|###|oo|       %%o%o%%%o%o%%%    !  ! ! !  !
@@ -724,7 +736,7 @@ and earth, `B` bell, `+` furniture and work blocks.
 | `decor/desert_lamp` | `decor:lamp` | sandstone, desert | 1 × 1, 4 |  | sandstone 3, lantern 1 |
 | `decor/bench` | `decor:bench` | oak, spruce, plains, forest, town | 4 × 2, 1 |  | wood 4, potted flower 2 |
 | `decor/flower_garden` | `decor:garden` | oak, birch, plains, forest, town | 7 × 7, 3 |  | wood 21, dirt 16, stone 13, flower 12 |
-| `decor/fountain` | `decor:fountain` | stone, plains, forest, town, mountain | 7 × 7, 5 |  | stone 76, lantern 1 |
+| `decor/fountain` | `decor:fountain` | stone, plains, forest, town, mountain | 7 × 7, 4 |  | stone 75, lantern 1 |
 | `decor/signpost` | `decor:signpost` | oak, spruce, plains, forest, taiga, town | 3 × 3, 4 |  | wood 6, stone 1, lantern 1 |
 
 - **Lamp post** (`decor/lamp_post`): A lamp post: a cobblestone foot, a fence post and a lantern on top (a torch until
@@ -736,9 +748,9 @@ and earth, `B` bell, `+` furniture and work blocks.
 - **Bench** (`decor/bench`): A park bench: two stair seats with trapdoor arms and a potted flower at each end behind it.
 - **Flower garden** (`decor/flower_garden`): A little formal garden: four raised flower beds edged with logs, stone
   paths between them crossing at a lamp, and tall flowers in the middle of each bed.
-- **Fountain** (`decor/fountain`): A stone fountain: a square basin with a raised rim and a column in the middle
-  carrying a lantern. The plan cannot pour water: the basin's "water" spots wait for a bucket (until then it is a dry
-  basin).
+- **Fountain** (`decor/fountain`): A stone fountain: a square basin with a raised rim and a short column in the middle
+  carrying a lantern, low enough to be hung from outside the rim. The plan cannot pour water: the basin's "water" spots
+  wait for a bucket (until then it is a dry basin).
 - **Signpost** (`decor/signpost`): A crossroads signpost: a post on a stone foot with plank boards pointing four ways at
   two heights and a lantern on top.
 
@@ -755,8 +767,7 @@ and earth, `B` bell, `+` furniture and work blocks.
 ```
   bench            flower garden    fountain
                                        *
-                                       !
-                      *                %
+                      *                !
                     ""!""           %%%%%%%
   "=="             |--_--|          %%%%%%%
 ```
@@ -774,11 +785,14 @@ and earth, `B` bell, `+` furniture and work blocks.
 - None of these plans has been built in a game yet. Every file was checked outside the game two ways: by the mod's own
   plan reader (all 54 load, with no errors and no warnings), and by a script that also checks that every lantern, torch,
   door, carpet, flower and plate has something to hang from or stand on, that every covered floor is lit, and that every
-  marked spot can be walked to from the door. How they look in the world, and how the friends cope with the bigger
-  ones, is untested.
-- **Water.** The plan format cannot pour water. The wells, the fountain and the wheat field's channels are dry until a
-  player (or a job that reads the `water` spots) pours it; a dry fountain is just a stone basin, and the wheat field's
-  soil is plain dirt until a farmer tills it next to water.
+  marked spot can be walked to from the door. A second script builds each plan in the friends' order with a grown
+  friend's real size (three blocks of air to step up, a jump of one block, a drop of three at most), the builders'
+  reach and the scaffolding rules: on level ground every block of every plan can be placed and every marked spot can
+  be walked to. That script is a model, not the game. How they look in the world, and how the friends cope with the
+  bigger ones, is untested.
+- **Water.** The plan format cannot pour water, and no job pours it yet: the wells, the fountain and the wheat field's
+  channels stay dry until a player pours it at the `water` spots; a dry fountain is just a stone basin, and the wheat
+  field's soil is plain dirt until a farmer tills it next to water (it then dries out unless watered by hand).
 - **Saplings and beehives** are not building materials: the orchard's four tree beds wait for someone to plant them
   (`sapling` spots), and the apiary's hive stands wait for the beekeeper to put hives on them (`hive` spots). The hive
   stands are a lit campfire under a hay bale, as the game requires for calm bees; nobody can stand on the campfires.
@@ -787,17 +801,21 @@ and earth, `B` bell, `+` furniture and work blocks.
 - **Iron.** The smithy cannot finish without its blast furnace (five iron), nor the smith's shop without its smithing
   table, nor the mason's yard without its stonecutter.
 - **Big buildings are big.** The town hall (15 × 14), tavern, barn, chapel and school each take 400 to 660 blocks and a
-  large, fairly level site. The tallest (12 high: the town hall, tavern, barn, stone townhouse, taiga cottage and
-  watchtower) need the builders' scaffolding for the top of the roof; the ends of their ridges are within reach of a
-  full-height pillar on level ground or on the upper floor, but not much more. A block the builders cannot reach is
-  skipped and tried again later, and until it is placed the building does not count as finished.
+  large, fairly level site. The tallest (12 high: the tavern, barn, stone townhouse, taiga cottage and watchtower; the
+  town hall is 11) need the builders' scaffolding for the top of the roof; the ends of their ridges are within reach of
+  a full-height pillar on level ground or on the upper floor, but not much more, so a sloping site can leave one out of
+  reach. A block the builders cannot reach is skipped and tried again later, and until it is placed the building does
+  not count as finished.
 - **Open buildings.** The smithy, the fish stall, the farm shed, the market stalls, the mason's yard and the apiary have
   no door to shut. They are lit, so nothing spawns in them, but a mob can walk in at night.
 - **Windows** are open holes until the camp can make glass, as for the first ten houses. They sit two blocks above the
-  ground outside, so a grown mob cannot climb in, but a baby zombie could squeeze through one.
+  ground outside, so a grown mob cannot climb in, but a baby zombie could squeeze through one. Upper-floor windows
+  have a fence rail across the bottom row, so nobody can climb or fall out of one.
 - **The courtyard house** is open to the sky in the middle: a spider climbing the walls could drop into the courtyard.
 - **Stairs.** The two two-storey plans (the stone townhouse and the tavern) and the watchtower's spiral stair (seven
-  steps round a pillar, tight turns) depend on the friends' pathfinding over stairs, which has not been tried in game.
+  steps round a pillar, tight turns, each entered from its low side with three blocks of headroom) depend on the
+  friends' pathfinding over stairs, which has not been tried in game. The watchtower's lookout has an open stairwell
+  in one corner: a friend who steps into it drops at most three blocks onto the stair.
 - **Walls and gates** are 9- and 11-block segments; the village has to line them up end to end using the `join` spots.
   The gate's towers are solid stone (nothing to spawn in).
 - Some furniture is only the look of it: the school's board is a patch of dark planks, the signpost's boards are
@@ -813,8 +831,10 @@ and earth, `B` bell, `+` furniture and work blocks.
 - The game tests in `BuildingGameTest` still describe the 2.x cabin and watchtower (window and block counts); they
   compile but will need their expectations updated to the new plans.
 - Scaffolding is a pillar the friend jumps up, like a player; reaching the middle of a wide roof relies on a pillar
-  inside the building or on its upper floor, found by a small search. Spots it cannot reach are skipped and tried again
-  next run. A friend knocked off a pillar takes fall damage like anyone else (at most six blocks).
+  inside the building or on its upper floor, found by a small search of the 48 columns round the block (the three
+  handiest spots get a path each, the rest are checked sixteen at a time, so a block nobody can reach costs at most six
+  path searches per try). Spots it cannot reach are skipped and tried again next run. A friend knocked off a pillar
+  takes fall damage like anyone else (at most six blocks).
 - A pillar whose blocks cannot be dug back out (water has flowed in beside it, or a player stands right next to it)
   stays until the clean-up job can take it down; the friend on it waits a while, then is left to find their own way.
 - Windows without glass are open holes; a lantern that became a torch stays a torch even once there is iron.
