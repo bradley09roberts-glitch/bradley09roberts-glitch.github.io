@@ -41,7 +41,9 @@ import io.github.bradley09roberts.hardcorefriends.survival.Trips;
  * the mailbox (the land around them kept running by survival's roaming loader when it lies beyond the camp's area),
  * puts the things into that container and nothing else, and comes home, bringing back whatever did not fit. Anyone may
  * go; Rowan (and newcomer foragers) are keenest. One delivery at a time. Hurt, hungry, tired, a storm or the evening
- * drawing in send them home early, with the delivery; a mailbox that is gone or out of reach is let go for the day.
+ * drawing in send them home early, with the delivery; a mailbox that is gone or out of reach is let go for the day. The
+ * player is told, and a delivery they asked for goes back in the queue for another trip. Only what was packed is
+ * delivered: the friend's own things of the same kind stay with them.
  */
 final class MailTripTask implements CompanionTask {
 	static final String ID = "town.mail";
@@ -57,18 +59,31 @@ final class MailTripTask implements CompanionTask {
 	private static final String HOME = "home";
 	private static final String UNPACK = "unpack";
 
-	/** One kind of item in a delivery: how many were wanted, packed and left in the mailbox. */
+	/**
+	 * One kind of item in a delivery: how many were wanted, packed and left in the mailbox, and how many of the kind the
+	 * friend carried before packing ({@code own}: their own, which never goes into the delivery).
+	 */
 	private static final class Entry {
 		final Identifier item;
 		final int wanted;
 		int packed;
 		int delivered;
+		int own;
 
-		Entry(Identifier item, int wanted, int packed, int delivered) {
+		Entry(Identifier item, int wanted, int packed, int delivered, int own) {
 			this.item = item;
 			this.wanted = wanted;
 			this.packed = packed;
 			this.delivered = delivered;
+			this.own = own;
+		}
+
+		/**
+		 * How many may still go into the mailbox (or back into the chest): what was packed and not yet delivered, but
+		 * never the friend's own (a snack on the road comes out of the delivery, not out of what they keep).
+		 */
+		int spare(CompanionEntity c, Item it) {
+			return Math.min(packed - delivered, carried(c, it) - own);
 		}
 	}
 
@@ -185,7 +200,7 @@ final class MailTripTask implements CompanionTask {
 		}
 		Manifest m = new Manifest(d.player(), d.name(), d.request() != null, d.request() != null ? d.request().askedAt() : 0);
 		for (Mail.Want w : d.wants()) {
-			m.entries.add(new Entry(w.item(), w.count(), 0, 0));
+			m.entries.add(new Entry(w.item(), w.count(), 0, 0, 0));
 		}
 		TownData data = TownData.get(level.getServer());
 		if (d.request() != null) {
@@ -262,6 +277,7 @@ final class MailTripTask implements CompanionTask {
 				continue;
 			}
 			Item it = item.get();
+			entry.own = carried(c, it);
 			entry.packed = SupplyChest.withdraw(chest.get(), c.backpack(), s -> Mail.matches(s, it), entry.wanted);
 			if (entry.packed > 0) {
 				packed += entry.packed;
@@ -284,17 +300,23 @@ final class MailTripTask implements CompanionTask {
 	}
 
 	private TaskStatus out(CompanionEntity c, Trips.State t) {
+		Manifest m = manifest;
 		if (Trips.turnBackReason(c) != null) {
 			Speech.say(c, Line.TRIP_TURN_BACK);
+			if (m != null) {
+				tell(c, m, "I had to turn back on the way to your mailbox, so I've brought your delivery home."
+					+ (requeue(c, m) ? " It will come another time." : ""));
+			}
 			setPhase(c, t, HOME);
 			return TaskStatus.RUNNING;
 		}
 		switch (walker.walk(c, t.destination, 4)) {
 			case ARRIVED -> setPhase(c, t, DROP);
 			case BLOCKED -> {
-				Manifest m = manifest;
 				if (m != null) {
 					Mail.gaveUp((ServerLevel) c.level(), m.player);
+					tell(c, m, "I couldn't find a way to your mailbox at " + Compass.coords(t.destination) + ", so I've brought your "
+						+ "delivery home." + (requeue(c, m) ? " I'll try again another day." : ""));
 				}
 				setPhase(c, t, HOME);
 			}
@@ -311,7 +333,8 @@ final class MailTripTask implements CompanionTask {
 		if (!c.actions().walkTo(box, 2.0)) {
 			if (c.actions().isStuck() || phaseTicks > MAX_DROP_TICKS) {
 				Mail.gaveUp(level, m.player);
-				tell(c, m, "I couldn't get to your mailbox at " + Compass.coords(box) + ", so I've brought your delivery home.");
+				tell(c, m, "I couldn't get to your mailbox at " + Compass.coords(box) + ", so I've brought your delivery home."
+					+ (requeue(c, m) ? " I'll try again another day." : ""));
 				setPhase(c, t, HOME);
 			}
 			return TaskStatus.RUNNING;
@@ -332,11 +355,14 @@ final class MailTripTask implements CompanionTask {
 		List<String> parts = new ArrayList<>();
 		for (Entry entry : m.entries) {
 			Optional<Item> item = Mail.sendable(entry.item);
-			int left = entry.packed - entry.delivered;
-			if (item.isEmpty() || left <= 0) {
+			if (item.isEmpty()) {
 				continue;
 			}
 			Item it = item.get();
+			int left = entry.spare(c, it);
+			if (left <= 0) {
+				continue;
+			}
 			int put = SupplyChest.deposit(c.backpack(), container.get(), s -> Mail.matches(s, it), left);
 			entry.delivered += put;
 			if (put > 0) {
@@ -390,15 +416,48 @@ final class MailTripTask implements CompanionTask {
 		if (chest.isPresent()) {
 			for (Entry entry : m.entries) {
 				Optional<Item> item = Mail.sendable(entry.item);
-				int back = entry.packed - entry.delivered;
-				if (item.isPresent() && back > 0) {
+				if (item.isPresent()) {
 					Item it = item.get();
-					SupplyChest.deposit(c.backpack(), chest.get(), s -> Mail.matches(s, it), back);
+					int back = entry.spare(c, it);
+					if (back > 0) {
+						SupplyChest.deposit(c.backpack(), chest.get(), s -> Mail.matches(s, it), back);
+					}
 				}
 			}
 		}
 		finish(c);
 		return TaskStatus.SUCCESS;
+	}
+
+	/** How many of this item the friend carries now. */
+	private static int carried(CompanionEntity c, Item it) {
+		int n = 0;
+		for (ItemStack s : c.backpack().stacks()) {
+			if (Mail.matches(s, it)) {
+				n += s.getCount();
+			}
+		}
+		return n;
+	}
+
+	/**
+	 * A delivery the player asked for that could not be made goes back in the queue, once per trip (it is still dropped
+	 * three days after it was asked for). Returns true when it was put back.
+	 */
+	private static boolean requeue(CompanionEntity c, Manifest m) {
+		if (!m.requested || m.entries.size() != 1 || !(c.level() instanceof ServerLevel level)) {
+			return false;
+		}
+		m.requested = false;
+		save(c, m);
+		Entry e = m.entries.getFirst();
+		TownData data = TownData.get(level.getServer());
+		if (data.mailbox(m.player).isEmpty()
+			|| !data.enqueue(new TownData.SendRequest(m.player, m.name, e.item, Math.clamp(e.wanted, 1, 64), m.askedAt))) {
+			return false;
+		}
+		Mail.invalidate();
+		return true;
 	}
 
 	/** Tells the player the delivery is for, if they are online. */
@@ -469,6 +528,7 @@ final class MailTripTask implements CompanionTask {
 			l.putInt("wanted", entry.wanted);
 			l.putInt("packed", entry.packed);
 			l.putInt("delivered", entry.delivered);
+			l.putInt("own", entry.own);
 			lines.add(l);
 		}
 		tag.put("lines", lines);
@@ -493,7 +553,7 @@ final class MailTripTask implements CompanionTask {
 				Identifier item = Identifier.tryParse(l.getStringOr("item", ""));
 				if (item != null && BuiltInRegistries.ITEM.containsKey(item)) {
 					m.entries.add(new Entry(item, Math.max(0, l.getIntOr("wanted", 0)), Math.max(0, l.getIntOr("packed", 0)),
-						Math.max(0, l.getIntOr("delivered", 0))));
+						Math.max(0, l.getIntOr("delivered", 0)), Math.max(0, l.getIntOr("own", 0))));
 				}
 			}
 		}

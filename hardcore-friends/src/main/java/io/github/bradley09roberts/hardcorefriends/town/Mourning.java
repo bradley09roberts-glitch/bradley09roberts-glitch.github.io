@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
 
@@ -21,7 +22,10 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -29,6 +33,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
@@ -49,6 +54,12 @@ import io.github.bradley09roberts.hardcorefriends.survival.Trips;
  * which goes into the supply chest, and everyone is told who has them and where they are. The bag keeps the things
  * together, so no friend wears the armour or eats the food; using the bag empties it into your inventory.
  *
+ * <p>Friends are never sent into what killed the player. They only go when a creature (not an explosion) or hunger
+ * killed them, and that creature being gone is checked at the spot: never after lava, fire, a fall, drowning, an
+ * explosion, the void or being crushed, whose danger may still lie there. The spot must be lit, out of water and lava,
+ * in a world with day and night, with no monster within bow range; each item must lie in the light, out of water and
+ * away from lava.
+ *
  * <p>Nothing here touches the player's own death, respawn or game mode: this only listens.
  */
 public final class Mourning {
@@ -62,6 +73,10 @@ public final class Mourning {
 	private static final String KEEPSAKE = "hardcorefriends_keepsake";
 	/** How often a death spot is looked over (safe? items left?), in ticks, for every friend together. */
 	private static final int CHECK_TICKS = 20;
+	/** Monsters this far beyond the items (about a skeleton's bow range) make the spot unsafe. */
+	private static final double THREAT_REACH = 16;
+	/** The spot and every item gathered must be at least this bright: daylight in the open, or a well-lit place. */
+	private static final int MIN_LIGHT = 8;
 
 	/** Where a player died, and what is known about it. */
 	static final class Spot {
@@ -70,20 +85,27 @@ public final class Mourning {
 		final ResourceKey<Level> dimension;
 		final BlockPos pos;
 		final long at;
+		/**
+		 * True when friends must leave the things where they lie: what killed the player may still be there (lava, a
+		 * fall, drowning, an explosion...), or the world has no day and night (the Nether, the End).
+		 */
+		final boolean leaveBe;
 		/** The item entities dropped at the death (marked as the player's own), by id. */
 		final Set<UUID> items = new HashSet<>();
 		boolean marked;
 		boolean announced;
-		long checkedAt = Long.MIN_VALUE;
+		/** Game time of the last look over the spot; -1 before the first. */
+		long checkedAt = -1;
 		boolean safe;
 		boolean hasItems;
 
-		Spot(UUID player, String name, ResourceKey<Level> dimension, BlockPos pos, long at) {
+		Spot(UUID player, String name, ResourceKey<Level> dimension, BlockPos pos, long at, boolean leaveBe) {
 			this.player = player;
 			this.name = name;
 			this.dimension = dimension;
 			this.pos = pos;
 			this.at = at;
+			this.leaveBe = leaveBe;
 		}
 	}
 
@@ -102,7 +124,8 @@ public final class Mourning {
 		MinecraftServer server = level.getServer();
 		long now = level.getGameTime();
 		SPOTS.removeIf(s -> s.player.equals(player.getUUID()) || now - s.at > WINDOW || now < s.at);
-		SPOTS.add(new Spot(player.getUUID(), player.getName().getString(), level.dimension(), player.blockPosition(), now));
+		boolean leaveBe = !placeMayBeSafe(source) || level.dimensionType().hasFixedTime();
+		SPOTS.add(new Spot(player.getUUID(), player.getName().getString(), level.dimension(), player.blockPosition(), now, leaveBe));
 		Sieges.playerDied(player);
 		TownData data = TownData.get(server);
 		data.remember(player);
@@ -113,6 +136,23 @@ public final class Mourning {
 		data.addMemorial(new TownData.Memorial(player.getName().getString(), cause, Camp.dimensionId(level), player.blockPosition(),
 			Camp.day(level)));
 		mourn(server, player);
+	}
+
+	/**
+	 * Whether friends may go to where the player died: only when a creature killed them (whether it is still about is
+	 * checked at the spot) or something in the player rather than the place did (hunger, poison, a potion). Never after
+	 * lava, fire, a fall, drowning, freezing, lightning, an explosion, the void, suffocation or anything else the place
+	 * itself did, which could still catch a friend there.
+	 */
+	private static boolean placeMayBeSafe(DamageSource source) {
+		if (source.is(DamageTypeTags.IS_EXPLOSION) || source.is(DamageTypeTags.IS_FIRE) || source.is(DamageTypes.SONIC_BOOM)) {
+			return false;
+		}
+		if (source.getEntity() instanceof LivingEntity) {
+			return true;
+		}
+		return source.is(DamageTypes.STARVE) || source.is(DamageTypes.MAGIC) || source.is(DamageTypes.WITHER)
+			|| source.is(DamageTypes.GENERIC) || source.is(DamageTypes.GENERIC_KILL);
 	}
 
 	/** The friends closest to the player say goodbye: the closest one is heard by everyone, two more nearby. */
@@ -160,14 +200,18 @@ public final class Mourning {
 		}
 	}
 
-	/** The death drops lie within a few blocks and are brand new: they are the player's, whatever happens next. */
+	/**
+	 * The death drops lie within a few blocks and are brand new: they are the player's, whatever happens next. A fallen
+	 * friend's backpack never despawns (its age stays below zero), so one lying nearby, even from the same fight, is
+	 * never mistaken for the player's: it stays where everyone was told it lies.
+	 */
 	private static void mark(ServerLevel level, MinecraftServer server, Spot s) {
 		if (!level.isLoaded(s.pos)) {
 			return;
 		}
 		Entity owner = server.getPlayerList().getPlayer(s.player);
 		for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, new AABB(s.pos).inflate(4),
-			e -> e.isAlive() && e.getAge() <= 20 && e.getOwner() == null)) {
+			e -> e.isAlive() && e.getAge() >= 0 && e.getAge() <= 20 && e.getOwner() == null)) {
 			s.items.add(item.getUUID());
 			if (owner != null) {
 				item.setThrower(owner);
@@ -177,8 +221,11 @@ public final class Mourning {
 
 	// ------------------------------------------------------------- the job
 
-	/** The death spot a friend could help with now, if any: the nearest in their level, safe, with items left. */
-	static @Nullable Spot spotFor(CompanionEntity c, ServerLevel level) {
+	/**
+	 * The death spot a friend could help with now, if any: the nearest in their level, safe, with items left, that also
+	 * passes {@code usable} (for example: with an item no other friend is fetching).
+	 */
+	static @Nullable Spot spotFor(CompanionEntity c, ServerLevel level, Predicate<Spot> usable) {
 		if (SPOTS.isEmpty()) {
 			return null;
 		}
@@ -194,7 +241,7 @@ public final class Mourning {
 				continue;
 			}
 			check(level, s, now);
-			if (s.safe && s.hasItems) {
+			if (s.safe && s.hasItems && usable.test(s)) {
 				best = s;
 				bestDist = d;
 			}
@@ -202,19 +249,63 @@ public final class Mourning {
 		return best;
 	}
 
-	/** Is the spot safe (daylight, no monster within 16 blocks) and is anything left? Worked out once a second. */
+	/**
+	 * Is the spot safe, and is anything left to fetch? Safe means: a death friends may go to at all
+	 * ({@link Spot#leaveBe}), by day, lit, out of water and lava, and no monster within bow range of the items. Worked
+	 * out once a second.
+	 */
 	private static void check(ServerLevel level, Spot s, long now) {
-		if (now - s.checkedAt < CHECK_TICKS && now >= s.checkedAt) {
+		if (s.checkedAt >= 0 && now >= s.checkedAt && now - s.checkedAt < CHECK_TICKS) {
 			return;
 		}
 		s.checkedAt = now;
-		if (!level.isLoaded(s.pos) || Camp.isNight(level)) {
-			s.safe = false;
+		s.safe = false;
+		s.hasItems = false;
+		if (s.leaveBe || !level.isLoaded(s.pos) || Camp.isNight(level) || !lit(level, s.pos) || nearFluid(level, s.pos, false)) {
 			return;
 		}
-		AABB around = new AABB(s.pos).inflate(16, 8, 16);
+		AABB around = area(s).inflate(THREAT_REACH, THREAT_REACH / 2, THREAT_REACH);
 		s.safe = level.getEntitiesOfClass(LivingEntity.class, around, Threats::isThreat).isEmpty();
-		s.hasItems = s.safe && !level.getEntitiesOfClass(ItemEntity.class, area(s), e -> belongs(s, e)).isEmpty();
+		if (s.safe) {
+			for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, area(s), e -> belongs(s, e))) {
+				if (fetchable(level, item)) {
+					s.hasItems = true;
+					break;
+				}
+			}
+		}
+	}
+
+	/** Bright enough to see by (and for no monster to spawn): daylight in the open, or a well-lit place. */
+	private static boolean lit(ServerLevel level, BlockPos pos) {
+		return level.isLoaded(pos)
+			&& Math.max(level.getMaxLocalRawBrightness(pos), level.getMaxLocalRawBrightness(pos.above())) >= MIN_LIGHT;
+	}
+
+	/** Water or lava ({@code lavaOnly}: just lava) in or right next to this block. Only looks at loaded blocks. */
+	private static boolean nearFluid(ServerLevel level, BlockPos pos, boolean lavaOnly) {
+		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+		for (int dx = -1; dx <= 1; dx++) {
+			for (int dy = -1; dy <= 1; dy++) {
+				for (int dz = -1; dz <= 1; dz++) {
+					m.setWithOffset(pos, dx, dy, dz);
+					if (!level.isLoaded(m)) {
+						continue;
+					}
+					FluidState fluid = level.getFluidState(m);
+					if (!fluid.isEmpty() && (!lavaOnly || fluid.is(FluidTags.LAVA))) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	/** An item a friend may go and fetch: in the light, not in water or lava, and not right next to lava. */
+	static boolean fetchable(ServerLevel level, ItemEntity item) {
+		BlockPos p = item.blockPosition();
+		return !item.isInWater() && !item.isInLava() && lit(level, p) && !nearFluid(level, p, true);
 	}
 
 	static boolean stillSafe(ServerLevel level, Spot s) {
@@ -227,9 +318,9 @@ public final class Mourning {
 	}
 
 	/**
-	 * Whether an item counts as the dead player's: one dropped at the death, or any item lying near the spot that
-	 * nobody threw or that the dead player threw. A friend's backpack is never taken (unless it was in the player's
-	 * inventory), nor anything another player dropped.
+	 * Whether an item counts as the dead player's: one dropped at the death, one the dead player threw, or one nobody
+	 * threw that turned up since the death (not one lying there before, which an offline player may have thrown). A
+	 * friend's backpack is never taken (unless it was in the player's inventory), nor anything another player dropped.
 	 */
 	static boolean belongs(Spot s, ItemEntity item) {
 		if (!item.isAlive() || item.isRemoved() || item.getItem().isEmpty() || item.isInLava()) {
@@ -242,16 +333,43 @@ public final class Mourning {
 			return false;
 		}
 		Entity thrower = item.getOwner();
-		return thrower == null || thrower.getUUID().equals(s.player);
+		if (thrower != null) {
+			return thrower.getUUID().equals(s.player);
+		}
+		long since = item.level().getGameTime() - s.at;
+		return since >= 0 && item.getAge() >= 0 && item.getAge() <= since + 20;
 	}
 
-	/** The nearest item of the spot's that no other friend is on the way to, within reach of the spot. */
+	/** True while a player died in the last five minutes (otherwise there is nothing to keep safe). */
+	static boolean active() {
+		return !SPOTS.isEmpty();
+	}
+
+	/** True when the spot has an item this friend could fetch: one no other friend is on the way to, not given up on. */
+	static boolean hasFreeItem(CompanionEntity c, ServerLevel level, Spot s, Set<UUID> ignored) {
+		for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, area(s), e -> free(c, s, e, ignored))) {
+			if (fetchable(level, item)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** The spot's item, not given up on by this friend, and not claimed by another friend. */
+	private static boolean free(CompanionEntity c, Spot s, ItemEntity item, Set<UUID> ignored) {
+		if (ignored.contains(item.getUUID()) || !belongs(s, item)) {
+			return false;
+		}
+		UUID holder = CLAIMED.get(item.getUUID());
+		return holder == null || holder.equals(c.getUUID());
+	}
+
+	/** The nearest item of the spot's that no other friend is on the way to and that is safe to fetch. */
 	static @Nullable ItemEntity nextItem(CompanionEntity c, ServerLevel level, Spot s, Set<UUID> ignored) {
 		ItemEntity best = null;
 		double bestDist = Double.MAX_VALUE;
-		for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, area(s), e -> belongs(s, e) && !ignored.contains(e.getUUID()))) {
-			UUID holder = CLAIMED.get(item.getUUID());
-			if (holder != null && !holder.equals(c.getUUID())) {
+		for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, area(s), e -> free(c, s, e, ignored))) {
+			if (!fetchable(level, item)) {
 				continue;
 			}
 			double d = item.distanceToSqr(c);

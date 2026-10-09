@@ -168,6 +168,7 @@ final class TownCommands {
 			return 0;
 		}
 		say(source, who.get().getValue() + " is no longer trusted with the camp.", ChatFormatting.YELLOW);
+		TownPermissions.letGoAll(); // friends following them, or on their lead, let go now
 		return 1;
 	}
 
@@ -284,18 +285,21 @@ final class TownCommands {
 			source.sendFailure(Component.literal("No camp yet, so there are no jobs. Set one with /friends camp set."));
 			return 0;
 		}
-		List<JobBoard.Request> requests = JobBoard.requests(server);
+		List<JobBoard.Job> board = JobBoard.board(server);
 		say(source, "The camp's job board", ChatFormatting.GOLD);
-		if (requests.isEmpty()) {
+		if (board.isEmpty()) {
 			say(source, "Nothing is needed right now: the camp is well stocked.", ChatFormatting.GREEN);
 		}
-		for (int i = 0; i < requests.size(); i++) {
-			String text = " #" + (i + 1) + "  " + requests.get(i).text();
+		for (int i = 0; i < board.size(); i++) {
+			JobBoard.Job job = board.get(i);
+			String text = " #" + (i + 1) + "  " + job.request().text() + (job.kind().withoutNumber() ? "" : "  (by number)");
 			say(source, text, ChatFormatting.WHITE);
 		}
-		if (!requests.isEmpty()) {
-			say(source, "Bring them within " + (int) DELIVER_REACH + " blocks of the supply chest and use /friends deliver "
-				+ "(or /friends deliver <number> for one job).", ChatFormatting.GRAY);
+		if (!board.isEmpty()) {
+			say(source, "Bring them within " + (int) DELIVER_REACH + " blocks of the supply chest. /friends deliver brings building "
+				+ "and camp materials; /friends deliver <number> brings one job, and is the only way to give food or what Sage's "
+				+ "plan wants. Only your main inventory is used: never your hotbar, armour, off hand, tools, buckets or totems.",
+				ChatFormatting.GRAY);
 		}
 		TownData data = TownData.get(server);
 		List<Map.Entry<UUID, Integer>> helpers = new ArrayList<>(data.helpedAll().entrySet());
@@ -310,9 +314,10 @@ final class TownCommands {
 		}
 		ServerPlayer player = source.getPlayer();
 		if (player != null) {
+			JobBoard.remember(player, board); // these are the numbers /friends deliver <number> means for this player
 			say(source, "You have helped with " + data.helped(player.getUUID()) + " things so far.", ChatFormatting.DARK_GRAY);
 		}
-		return requests.size();
+		return board.size();
 	}
 
 	private static int deliver(CommandContext<CommandSourceStack> ctx, int number) throws CommandSyntaxException {
@@ -332,20 +337,35 @@ final class TownCommands {
 				+ Compass.coords(chestPos.get()) + " to deliver."));
 			return 0;
 		}
-		List<JobBoard.Request> requests = JobBoard.requests(server);
-		if (requests.isEmpty()) {
+		List<JobBoard.Job> board = JobBoard.board(server);
+		if (board.isEmpty()) {
 			say(source, "The camp needs nothing right now. Thank you all the same!", ChatFormatting.GREEN);
 			return 0;
 		}
-		if (number > requests.size()) {
-			source.sendFailure(Component.literal("There is no job #" + number + ". See /friends jobs."));
-			return 0;
+		List<JobBoard.Job> chosen;
+		if (number > 0) {
+			// The job the player saw under this number, not whatever has moved into its place since.
+			StringBuilder why = new StringBuilder();
+			Optional<JobBoard.Job> job = JobBoard.numbered(player, board, number, why);
+			if (job.isEmpty()) {
+				source.sendFailure(Component.literal(why.toString()));
+				return 0;
+			}
+			chosen = List.of(job.get());
+		} else {
+			chosen = board.stream().filter(j -> j.kind().withoutNumber()).toList();
+			if (chosen.isEmpty()) {
+				source.sendFailure(Component.literal("The jobs on the board now (food, or what Sage's plan wants) are only brought "
+					+ "by number, so you choose what to give. See /friends jobs, then /friends deliver <number>."));
+				return 0;
+			}
 		}
-		List<JobBoard.Request> chosen = number > 0 ? List.of(requests.get(number - 1)) : requests;
-		JobBoard.Delivered done = JobBoard.deliver(player, chest.get(), chosen);
+		JobBoard.Delivered done = JobBoard.deliver(player, chest.get(), chosen, number > 0);
 		if (done.total() == 0) {
 			source.sendFailure(Component.literal(done.chestFull() ? "The supply chest is full."
-				: "You have nothing the camp asked for (plain items only: nothing enchanted, renamed or worn is taken)."));
+				: "You have nothing in your main inventory that " + (number > 0 ? "job #" + number + " asks for" : "the camp asked for")
+				+ ". Plain items only: never from your hotbar, and never tools, armour, buckets, totems, or anything enchanted, "
+				+ "renamed or worn" + (number > 0 ? "." : "; food and Sage's plan only by number.")));
 			return 0;
 		}
 		TownData data = TownData.get(server);
@@ -369,8 +389,12 @@ final class TownCommands {
 			Speech.say(thanker, Line.THANKS_DELIVERY, player.getName().getString());
 		}
 		CampNeeds.recompute(server); // the board and the friends see the delivery at once
-		say(source, "You delivered " + done.describe() + " to the supply chest." + (done.chestFull() ? " The chest is full now." : "")
+		String forJob = number > 0 ? " for job #" + number + " (" + chosen.getFirst().source() + ")" : "";
+		say(source, "You delivered " + done.describe() + " to the supply chest" + forJob + "." + (done.chestFull() ? " The chest is full now." : "")
 			+ " You have helped with " + data.helped(player.getUUID()) + " things in all.", ChatFormatting.GREEN);
+		if (number == 0 && board.stream().anyMatch(j -> !j.kind().withoutNumber())) {
+			say(source, "Food and what Sage's plan wants are only brought by number: /friends deliver <number>.", ChatFormatting.GRAY);
+		}
 		return done.total();
 	}
 

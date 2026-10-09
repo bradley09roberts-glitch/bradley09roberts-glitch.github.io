@@ -47,6 +47,11 @@ public final class TownData extends SavedData {
 	public static final int MAX_NOTES = 20;
 	/** Deliveries waiting at once, for everyone together. */
 	public static final int MAX_QUEUE = 12;
+	/**
+	 * A player who never had a share of the surplus. Compare with it rather than subtract from it: a day minus this
+	 * overflows.
+	 */
+	public static final long NEVER = Long.MIN_VALUE;
 
 	/** A player the camp lost. */
 	public record Memorial(String name, String cause, String dimension, BlockPos pos, long day) {
@@ -363,8 +368,9 @@ public final class TownData extends SavedData {
 		}
 	}
 
+	/** The in-game day of this player's last share of the camp's surplus, or {@link #NEVER}. */
 	public long lastSurplus(UUID player) {
-		return lastSurplus.getOrDefault(player, Long.MIN_VALUE);
+		return lastSurplus.getOrDefault(player, NEVER);
 	}
 
 	public void setLastSurplus(UUID player, long day) {
@@ -474,7 +480,7 @@ public final class TownData extends SavedData {
 		for (String key : surplusTag.keySet()) {
 			UUID id = uuid(key);
 			if (id != null) {
-				data.lastSurplus.put(id, surplusTag.getLongOr(key, Long.MIN_VALUE));
+				data.lastSurplus.put(id, surplusTag.getLongOr(key, NEVER));
 			}
 		}
 		data.nextSiegeDay = tag.getLongOr("nextSiege", -1L);

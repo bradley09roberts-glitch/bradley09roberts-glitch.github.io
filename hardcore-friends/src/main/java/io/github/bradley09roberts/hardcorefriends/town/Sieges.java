@@ -14,6 +14,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
@@ -33,6 +34,7 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 import io.github.bradley09roberts.hardcorefriends.survival.Trips;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
+import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
  * Siege nights, a group event for servers that want one ({@code siegeNights}, off by default). Once the camp is a
@@ -40,9 +42,9 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  * dusk ("Something's stirring tonight. Stay close.") so players can come and help. The wave is fair for the camp:
  * {@value #MIN_WAVE} to {@value #MAX_WAVE} zombies, skeletons and spiders (never creepers, which would blow up
  * buildings), more for a bigger camp and more defenders. They only appear on dark ground where monsters could spawn
- * anyway, never within {@value #PLAYER_GAP} blocks of a player or {@value #FRIEND_GAP} of a friend, never on anything
- * built, and only while a player is near enough to the camp for them to stay. If everyone lives to see the dawn, the
- * camp gains {@value #REWARD} Unity.
+ * anyway, never within {@value #PLAYER_GAP} blocks of a player or {@value #FRIEND_GAP} of a friend, never on or right
+ * beside anything built, and only while a player is near enough to the camp for them to stay. At dawn the wave's
+ * monsters still near the camp are gone. If everyone lives to see the dawn, the camp gains {@value #REWARD} Unity.
  */
 public final class Sieges {
 	public static final int MIN_WAVE = 4;
@@ -183,8 +185,10 @@ public final class Sieges {
 			return false;
 		}
 		BlockPos pos = new BlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z), z);
-		if (level.getBlockState(pos.below()).is(ModTags.BUILD_MARKERS)
-			|| Camp.data(level.getServer()).isPlacedByFriends(level, pos.below())) {
+		CampData camp = Camp.data(level.getServer());
+		// Never on or right beside anything built: the friends' work, or what looks player-made (a path, a fence, a chest).
+		if (level.getBlockState(pos.below()).is(ModTags.BUILD_MARKERS) || camp.isPlacedByFriends(level, pos.below())
+			|| WorldEditGuard.looksPlayerBuilt(level, pos, 1, camp)) {
 			return false;
 		}
 		AABB near = new AABB(pos).inflate(PLAYER_GAP);
@@ -207,6 +211,9 @@ public final class Sieges {
 		}
 		mob.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.EVENT, null);
 		mob.addTag(TAG);
+		for (Entity rider : mob.getIndirectPassengers()) {
+			rider.addTag(TAG); // a spider's skeleton rider is part of the wave too
+		}
 		level.addFreshEntityWithPassengers(mob);
 		// The wave comes for the camp: the nearest friend within reach, or else the nearest player.
 		LivingEntity target = nearestDefender(level, mob);
@@ -247,6 +254,7 @@ public final class Sieges {
 		if (phase != SPAWNED) {
 			return;
 		}
+		disperse(level, Camp.data(server));
 		if (lost) {
 			notice(server, "The siege is over, but not everyone saw the dawn.");
 			return;
@@ -257,6 +265,20 @@ public final class Sieges {
 		}
 		Unity.add(level, "siege", REWARD, 0);
 		notice(server, "Everyone lived through the siege night. Unity +" + REWARD + ".");
+	}
+
+	/**
+	 * The wave leaves with the night: its monsters still about near the camp at dawn are gone (one a player has named
+	 * stays). Any further off despawn as monsters do when no player is near.
+	 */
+	private static void disperse(ServerLevel level, CampData camp) {
+		camp.campPos().ifPresent(centre -> {
+			int r = Camp.radius(camp) + 48;
+			AABB around = new AABB(centre).inflate(r, 64, r);
+			for (Mob mob : level.getEntitiesOfClass(Mob.class, around, m -> m.isAlive() && m.entityTags().contains(TAG) && !m.hasCustomName())) {
+				mob.discard();
+			}
+		});
 	}
 
 	/** A friend fell during a siege night: no reward this time. */

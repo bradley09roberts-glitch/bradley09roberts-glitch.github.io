@@ -35,7 +35,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  * <p>What a bond does: the hello on a right-click is warm ({@value #WARM} and up) or cool ({@value #COOL} and down);
  * at {@value #CLOSE} and up the friend defends that player first and feeds them first when they are hungry; at
  * {@value #DISTRUST} and down they will not follow that player (they say so politely), and stop following if the bond
- * falls that far on the way. Nothing here ever makes a friend hurt a player.
+ * falls that far on the way (once back in the camp's world, so nobody is left lost in the Nether). A player who plays
+ * alone is never refused. Nothing here ever makes a friend hurt a player.
  */
 public final class Bonds {
 	public static final int MIN = -100;
@@ -144,9 +145,12 @@ public final class Bonds {
 		return bond > DISTRUST ? ChatFormatting.GOLD : ChatFormatting.RED;
 	}
 
-	/** True when the friend has come to distrust this player too much to follow them. */
+	/**
+	 * True when the friend has come to distrust this player too much to follow them. Never for a player who plays alone
+	 * ({@link TownPermissions#playsAlone}): on a world of their own, the friends always come along.
+	 */
 	public static boolean refusesToFollow(CompanionEntity c, ServerPlayer player) {
-		return get(c, player.getUUID()) <= DISTRUST;
+		return get(c, player.getUUID()) <= DISTRUST && !TownPermissions.playsAlone(player);
 	}
 
 	/** For the food-sharing job: 1 for a player this friend is close to (fed first), otherwise 0. */
@@ -234,7 +238,10 @@ public final class Bonds {
 		}
 	}
 
-	/** Every friend's tick: defend a close player first, and stop following a player they have come to distrust. */
+	/**
+	 * Every friend's tick: defend a close player first, and stop following a player they have come to distrust. Away
+	 * from home (in the Nether, say) they stick with that player until they are back, rather than be left lost there.
+	 */
 	static void tick(CompanionEntity c, ServerLevel level) {
 		if (!c.isTeamMember() || !c.isAlive()) {
 			return;
@@ -244,7 +251,7 @@ public final class Bonds {
 			&& !c.isAsleep()) {
 			defendClosePlayer(c, level);
 		}
-		if (phase == 50 && c.mode() == CompanionMode.FOLLOW) {
+		if (phase == 50 && c.mode() == CompanionMode.FOLLOW && TownPermissions.atHome(level)) {
 			ServerPlayer leader = c.leader();
 			if (leader != null && refusesToFollow(c, leader)) {
 				c.setMode(CompanionMode.WORK, null);
