@@ -84,6 +84,16 @@ public final class FriendsConfig {
 	/** How far from the camp a player's mailbox may be for friends to take deliveries there, in blocks (0 = no deliveries, at most 600). */
 	public int maxDeliveryDistance = 400;
 
+	// ---- Better builds (package architecture) ----
+
+	// ---- Finding the way (package navigation) ----
+
+	// ---- Living together (package people) ----
+
+	// ---- A proper village (package village) ----
+
+	// ---- Shops and trades (package market) ----
+
 	public static FriendsConfig get() {
 		return instance;
 	}

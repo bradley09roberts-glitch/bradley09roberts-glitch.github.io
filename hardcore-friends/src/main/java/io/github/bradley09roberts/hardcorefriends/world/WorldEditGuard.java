@@ -379,6 +379,9 @@ public final class WorldEditGuard {
 		if (!FriendsConfig.get().allowWorldEditing) {
 			return Verdict.deny("world editing disabled in config");
 		}
+		if (c.isChild()) {
+			return Verdict.deny("children leave the world as it is");
+		}
 		if (!level.isLoaded(pos) || !level.isInWorldBounds(pos)) {
 			return Verdict.deny("not loaded");
 		}

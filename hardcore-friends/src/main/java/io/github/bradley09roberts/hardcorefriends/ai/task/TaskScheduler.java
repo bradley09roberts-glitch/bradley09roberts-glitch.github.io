@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiPredicate;
 
 import org.jspecify.annotations.Nullable;
 
@@ -52,6 +54,11 @@ public final class TaskScheduler {
 	 * morning.
 	 */
 	public static final Set<String> NIGHT_JOBS = ConcurrentHashMap.newKeySet();
+	/**
+	 * Vetoes from the feature packages: a job a filter answers false for is not taken up by that friend, and is put
+	 * down if it is already running (children do no work, a shopkeeper keeps to their shop, and so on).
+	 */
+	public static final List<BiPredicate<CompanionEntity, String>> JOB_FILTERS = new CopyOnWriteArrayList<>();
 
 	static {
 		FIT_WHEN_WEAK.addAll(Set.of("common.idle", "common.return_home", "common.restock",
@@ -146,6 +153,9 @@ public final class TaskScheduler {
 		if (night && current != null && !fitAtNight(current.id())) {
 			stopCurrent(); // nightfall: the job waits for morning
 		}
+		if (current != null && !allowedByFilters(current.id())) {
+			stopCurrent();
+		}
 		// Work never wakes a sleeper: while they lie asleep, only another need can take over (a starving friend gets up
 		// to eat). Danger wakes them through the sleep job and the reflexes.
 		boolean sleeping = current != null && companion.isAsleep();
@@ -163,7 +173,7 @@ public final class TaskScheduler {
 				continue;
 			}
 			if ((weak && !fitWhenWeak(task.id())) || (night && !fitAtNight(task.id()))
-				|| (sleeping && !task.id().startsWith(NEEDS))) {
+				|| (sleeping && !task.id().startsWith(NEEDS)) || !allowedByFilters(task.id())) {
 				continue;
 			}
 			// Other people's work has a known ceiling: skip scoring it (and its scans) when it could not win anyway.
@@ -211,6 +221,16 @@ public final class TaskScheduler {
 			cooldownUntil.put(best.id(), gameTime + best.failureCooldown());
 			safeStop(best);
 		}
+	}
+
+	/** False if any of the {@link #JOB_FILTERS} vetoes this job for this friend. */
+	private boolean allowedByFilters(String taskId) {
+		for (BiPredicate<CompanionEntity, String> filter : JOB_FILTERS) {
+			if (!filter.test(companion, taskId)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/** True for the jobs a friend may take on at night: their needs and {@link #NIGHT_JOBS}. */

@@ -266,6 +266,31 @@ public enum Line {
 	SIEGE_HELD(Priority.IMPORTANT, 0, 0),
 
 	// ==== end of town ====
+
+	// ==== Better builds (package architecture): plans, materials, scaffolding ====
+	// (add this package's lines below this comment, each ending with a comma)
+
+	// ==== end of architecture ====
+
+	// ==== Finding the way (package navigation): getting unstuck, caves, water, sprinting ====
+	// (add this package's lines below this comment, each ending with a comma)
+
+	// ==== end of navigation ====
+
+	// ==== Living together (package people): friendship, romance, weddings, children ====
+	// (add this package's lines below this comment, each ending with a comma)
+
+	// ==== end of people ====
+
+	// ==== A proper village (package village): homes, beds, routines, growth ====
+	// (add this package's lines below this comment, each ending with a comma)
+
+	// ==== end of village ====
+
+	// ==== Shops and trades (package market): professions, shops, trading ====
+	// (add this package's lines below this comment, each ending with a comma)
+
+	// ==== end of market ====
 	;
 
 	/** How a line is rate-limited and who hears it. */

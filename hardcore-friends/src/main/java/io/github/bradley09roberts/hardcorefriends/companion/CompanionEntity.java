@@ -91,6 +91,10 @@ public class CompanionEntity extends PathfinderMob {
 	private static final EntityDataAccessor<Integer> DATA_MODE = SynchedEntityData.defineId(CompanionEntity.class, EntityDataSerializers.INT);
 	/** The skin to draw: -1 for the friend's own, otherwise a {@link Persona} skin id. */
 	private static final EntityDataAccessor<Integer> DATA_SKIN = SynchedEntityData.defineId(CompanionEntity.class, EntityDataSerializers.INT);
+	/** A child of the village: half size, no work, no fighting, no block changes (see {@link #isChild()}). */
+	private static final EntityDataAccessor<Boolean> DATA_CHILD = SynchedEntityData.defineId(CompanionEntity.class, EntityDataSerializers.BOOLEAN);
+	/** How big a child is next to a grown-up. */
+	public static final double CHILD_SCALE = 0.55;
 	/** A friend whose hunger is below this eats food a player hands them, even at full health. */
 	public static final double EATS_HANDED_FOOD_BELOW = 60;
 	/** How far a friend goes to meet a hand-to-hand threat, away from camp or without a weapon. */
@@ -192,6 +196,7 @@ public class CompanionEntity extends PathfinderMob {
 		builder.define(DATA_FRIEND, 0);
 		builder.define(DATA_MODE, 0);
 		builder.define(DATA_SKIN, -1);
+		builder.define(DATA_CHILD, false);
 	}
 
 	// --------------------------------------------------------------- identity
@@ -248,6 +253,23 @@ public class CompanionEntity extends PathfinderMob {
 	 */
 	public int rosterIndex() {
 		return persona == null ? friendId().ordinal() : FriendId.values().length + (getUUID().hashCode() & 0x3F);
+	}
+
+	/**
+	 * A child born in the village (the {@code people} package raises them). Children are smaller, never work, fight or
+	 * change a block, and keep near their family; they grow up into a newcomer who works like anyone else.
+	 */
+	public boolean isChild() {
+		return this.entityData.get(DATA_CHILD);
+	}
+
+	/** Makes this friend a child or grown up, with the matching size. */
+	public void setChild(boolean child) {
+		this.entityData.set(DATA_CHILD, child);
+		var scale = this.getAttribute(Attributes.SCALE);
+		if (scale != null) {
+			scale.setBaseValue(child ? CHILD_SCALE : 1.0);
+		}
 	}
 
 	/** On the team: anyone but a stranger who has not been recruited yet. */
@@ -717,7 +739,7 @@ public class CompanionEntity extends PathfinderMob {
 	 * distance ({@link Archery#standsWithBow}).
 	 */
 	public boolean canStandAndFight(LivingEntity threat) {
-		if (isRetreating() || !threat.isAlive()) {
+		if (isRetreating() || !threat.isAlive() || isChild()) {
 			return false;
 		}
 		if (threat instanceof net.minecraft.world.entity.monster.Creeper creeper) {
@@ -1111,6 +1133,9 @@ public class CompanionEntity extends PathfinderMob {
 		backpack.save(output);
 		needs.save(output);
 		output.storeNullable("Persona", Persona.CODEC, persona);
+		if (isChild()) {
+			output.putBoolean("Child", true);
+		}
 		if (!extra.isEmpty()) {
 			output.store("Extra", CompoundTag.CODEC, extra);
 		}
@@ -1135,6 +1160,7 @@ public class CompanionEntity extends PathfinderMob {
 		backpack.load(input);
 		needs.load(input);
 		input.read("Persona", Persona.CODEC).ifPresent(this::setPersona);
+		setChild(input.getBooleanOr("Child", false));
 		extra = input.read("Extra", CompoundTag.CODEC).map(CompoundTag::copy).orElseGet(CompoundTag::new);
 	}
 }
