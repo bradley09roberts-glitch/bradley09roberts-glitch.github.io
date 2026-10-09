@@ -87,6 +87,11 @@ public final class FriendsConfig {
 	// ---- Better builds (package architecture) ----
 
 	// ---- Finding the way (package navigation) ----
+	/**
+	 * A friend on the team stuck or lost for a long time (two in-game minutes), trapped underground hurt or starving, or
+	 * about to drown, is brought home (or back to their leader) and everyone is told. Off for Hardcore purists.
+	 */
+	public boolean rescueStuckFriends = true;
 
 	// ---- Living together (package people) ----
 	/** Friends may fall for each other, go on dates, get engaged and marry. */

@@ -42,6 +42,7 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.OpenDoorGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
@@ -51,6 +52,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.item.component.UseRemainder;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -76,6 +78,8 @@ import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.civic.Families;
 import io.github.bradley09roberts.hardcorefriends.combat.Archery;
 import io.github.bradley09roberts.hardcorefriends.item.BackpackItem;
+import io.github.bradley09roberts.hardcorefriends.navigation.FriendNavigation;
+import io.github.bradley09roberts.hardcorefriends.navigation.Terrain;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 import io.github.bradley09roberts.hardcorefriends.town.TownPermissions;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
@@ -156,6 +160,11 @@ public class CompanionEntity extends PathfinderMob {
 		this.setPathfindingMalus(PathType.FIRE_IN_NEIGHBOR, 16.0F);
 		this.setPathfindingMalus(PathType.FIRE, -1.0F);
 		this.setPathfindingMalus(PathType.DAMAGING_IN_NEIGHBOR, 16.0F);
+		// Walking beside water is safe (vanilla's 8 kept friends off every riverbank); sinking into powder snow, or
+		// brushing past pointed dripstone and wither roses, is not.
+		this.setPathfindingMalus(PathType.WATER_BORDER, 2.0F);
+		this.setPathfindingMalus(PathType.ON_TOP_OF_POWDER_SNOW, 20.0F);
+		this.setPathfindingMalus(PathType.DAMAGE_CAUTIOUS, 8.0F);
 		for (EquipmentSlot slot : EquipmentSlot.values()) {
 			this.setDropChance(slot, 0.0F); // gear goes into the dropped backpack instead
 		}
@@ -166,8 +175,48 @@ public class CompanionEntity extends PathfinderMob {
 			.add(Attributes.MAX_HEALTH, 20.0)
 			.add(Attributes.MOVEMENT_SPEED, 0.3)
 			.add(Attributes.ATTACK_DAMAGE, 1.0)
-			.add(Attributes.FOLLOW_RANGE, 32.0)
+			.add(Attributes.FOLLOW_RANGE, FOLLOW_RANGE)
 			.add(Attributes.ARMOR, 0.0);
+	}
+
+	/**
+	 * How far a friend's paths reach, in blocks (vanilla mobs: 16). Paths are worked out by
+	 * {@link FriendNavigation}, which looks at a bounded number of spots for each.
+	 */
+	public static final double FOLLOW_RANGE = FriendNavigation.PATH_LENGTH;
+
+	/** Every friend finds their way with the navigation package's paths (see {@link FriendNavigation}). */
+	@Override
+	protected PathNavigation createNavigation(Level level) {
+		return new FriendNavigation(this, level);
+	}
+
+	/**
+	 * Friends never drop more than three blocks on a path, even in a fight (vanilla lets a mob with a target risk
+	 * its health on a bigger drop): a fall they cannot climb back up is how many of them ended up trapped.
+	 */
+	@Override
+	public int getMaxFallDistance() {
+		return Math.min(3, super.getMaxFallDistance());
+	}
+
+	/**
+	 * How good a spot is to head for when picking one at random (getting away from danger, wandering): dry ground under
+	 * the sky is best, water and caves worst. Never below zero, so nothing that asks "may a friend be here" changes.
+	 */
+	@Override
+	public float getWalkTargetValue(BlockPos pos, LevelReader level) {
+		if (!(level instanceof ServerLevel server) || !server.isLoaded(pos)) {
+			return 0.0F;
+		}
+		float value = 10.0F;
+		if (!server.getFluidState(pos).isEmpty() || !server.getFluidState(pos.below()).isEmpty()) {
+			value -= 6.0F;
+		}
+		if (Terrain.underground(server, pos)) {
+			value -= 8.0F;
+		}
+		return Math.max(0.0F, value);
 	}
 
 	@Override
@@ -303,6 +352,10 @@ public class CompanionEntity extends PathfinderMob {
 		var speed = this.getAttribute(Attributes.MOVEMENT_SPEED);
 		if (speed != null) {
 			speed.setBaseValue(0.3 * (1.0 + id.speedBonus()));
+		}
+		var reach = this.getAttribute(Attributes.FOLLOW_RANGE);
+		if (reach != null) {
+			reach.setBaseValue(FOLLOW_RANGE); // a friend saved before paths reached this far is brought up to date
 		}
 	}
 

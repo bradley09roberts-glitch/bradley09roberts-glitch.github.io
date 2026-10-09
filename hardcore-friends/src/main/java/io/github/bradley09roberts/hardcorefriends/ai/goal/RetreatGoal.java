@@ -16,6 +16,7 @@ import io.github.bradley09roberts.hardcorefriends.combat.Tactics;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
+import io.github.bradley09roberts.hardcorefriends.navigation.Sprint;
 
 /**
  * When badly hurt, a friend breaks off whatever they were doing, moves away from danger towards camp or a
@@ -27,6 +28,9 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  * back only from danger; otherwise their jobs take care of them: they fetch food from the chest, or, with none
  * anywhere, rest at camp and keep off risky work until there is some (see
  * {@link io.github.bradley09roberts.hardcorefriends.ai.task.needs.RestTask}).
+ *
+ * <p>Running from danger is a sprint ({@code Sprint.hurry}); a refuge picked at random is chosen out in the open where
+ * possible (dry ground under the sky, see {@code CompanionEntity.getWalkTargetValue}), never down a cave by choice.
  */
 public class RetreatGoal extends Goal {
 	private static final double SAFE_DISTANCE = 12;
@@ -109,6 +113,7 @@ public class RetreatGoal extends Goal {
 		}
 		if (threat != null && threat.distanceTo(companion) < safeDistance) {
 			calmTicks = 0;
+			Sprint.hurry(companion, 10, true);
 			if (!announced) {
 				Speech.say(companion, Line.RETREAT);
 				announced = true;

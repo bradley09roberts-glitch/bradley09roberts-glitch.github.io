@@ -18,6 +18,8 @@ import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.companion.Backpack;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.navigation.FriendNavigation;
+import io.github.bradley09roberts.hardcorefriends.navigation.Wayfinder;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
@@ -25,6 +27,11 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * Per-friend, per-tick building blocks for tasks: walking somewhere, mining with real tool speed and wear,
  * placing blocks from the backpack, and reshaping blocks with a tool. Every block change goes through
  * {@link WorldEditGuard}.
+ *
+ * <p>Walking uses the friend's own paths ({@link FriendNavigation}): a place that can only be reached through a cave
+ * from the surface is given up at once (the walk reports {@link #isStuck()}), so the job picks something else rather
+ * than leading the friend underground. Where the friend is walking to is shared with the stuck watcher
+ * ({@link #walkIntent()}, {@link Wayfinder}), which helps them out when they really are stuck.
  */
 public final class Actions {
 	public enum Result {
@@ -46,6 +53,14 @@ public final class Actions {
 	private int noProgressTicks;
 	private double bestDistance = Double.MAX_VALUE;
 	private boolean stuck;
+	/**
+	 * The last path worked out cannot reach the target (it stops short): once walked, it is not worked out again until
+	 * the usual interval is up, rather than every tick (the same short way would come back each time).
+	 */
+	private boolean partialPath;
+	/** Where the last walk was headed, and when a walk was last asked for (game time): see {@link #walkIntent()}. */
+	private @Nullable BlockPos intent;
+	private long intentAt = Long.MIN_VALUE;
 
 	// mining
 	private @Nullable BlockPos miningPos;
@@ -83,29 +98,73 @@ public final class Actions {
 			resetWalk();
 			return true;
 		}
+		noteIntent(target);
 		if (!target.equals(walkTarget)) {
 			walkTarget = target.immutable();
 			repathTimer = 0;
 			noProgressTicks = 0;
 			bestDistance = Double.MAX_VALUE;
 			stuck = false;
+			partialPath = false;
 		}
 		if (dist < bestDistance - 0.25) {
 			bestDistance = dist;
 			noProgressTicks = 0;
 		} else if (++noProgressTicks > STUCK_LIMIT) {
-			stuck = true;
+			giveUp();
 		}
-		if (--repathTimer <= 0 || c.getNavigation().isDone()) {
+		if (--repathTimer <= 0 || c.getNavigation().isDone() && !partialPath) {
 			repathTimer = REPATH_INTERVAL;
 			Path path = c.getNavigation().createPath(target, Math.max(0, (int) Math.floor(reach) - 1));
-			if (path == null || !c.getNavigation().moveTo(path, speed())) {
+			partialPath = path != null && !path.canReach();
+			if (onlyThroughACave(path)) {
+				giveUp(); // the only way on from here leads underground: not a way for a job on the surface
+			} else if (path == null || !c.getNavigation().moveTo(path, speed())) {
 				if (++noProgressTicks > STUCK_LIMIT / 2 && c.getNavigation().isDone()) {
-					stuck = true;
+					giveUp();
 				}
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * True when the way worked out stops at a cave mouth right where the friend stands (or a step or two on): the
+	 * place cannot be reached over the surface from here.
+	 */
+	private boolean onlyThroughACave(@Nullable Path path) {
+		return path != null && c.getNavigation() instanceof FriendNavigation nav && nav.cutAtCave(path)
+			&& path.getNodeCount() - path.getNextNodeIndex() <= 2;
+	}
+
+	/** The walk is given up as stuck (the job decides what to do; the stuck watcher hears of it once). */
+	private void giveUp() {
+		if (!stuck) {
+			stuck = true;
+			Wayfinder.walkGivenUp(c);
+		}
+	}
+
+	private void noteIntent(BlockPos target) {
+		intent = target;
+		intentAt = c.level().getGameTime();
+	}
+
+	/**
+	 * Says where the friend is heading when something other than these walks moves them (following their leader), so
+	 * the stuck watcher knows they are trying to get there. Call it every tick or two while that lasts.
+	 */
+	public void heading(BlockPos target) {
+		noteIntent(target);
+	}
+
+	/**
+	 * Where a job is walking the friend to just now (asked for in the last ten ticks, and not there yet), or null. The
+	 * stuck watcher uses it to tell "stuck" from "standing still on purpose".
+	 */
+	public @Nullable BlockPos walkIntent() {
+		long since = c.level().getGameTime() - intentAt;
+		return since >= 0 && since <= 10 ? intent : null;
 	}
 
 	/** Walks to within reach of an entity. Sets {@link #isStuck()} when no progress is made for a while. */
@@ -117,21 +176,25 @@ public final class Actions {
 			return true;
 		}
 		BlockPos targetPos = target.blockPosition();
+		noteIntent(targetPos);
 		if (walkTarget == null || walkTarget.distSqr(targetPos) > 16) {
 			walkTarget = targetPos;
 			noProgressTicks = 0;
 			bestDistance = Double.MAX_VALUE;
 			stuck = false;
+			partialPath = false;
 		}
 		if (dist < bestDistance - 0.25) {
 			bestDistance = dist;
 			noProgressTicks = 0;
 		} else if (++noProgressTicks > STUCK_LIMIT) {
-			stuck = true;
+			giveUp();
 		}
-		if (--repathTimer <= 0 || c.getNavigation().isDone()) {
+		if (--repathTimer <= 0 || c.getNavigation().isDone() && !partialPath) {
 			repathTimer = 10;
 			c.getNavigation().moveTo(target, speed());
+			Path path = c.getNavigation().getPath();
+			partialPath = path != null && !path.canReach();
 		}
 		return false;
 	}
@@ -150,6 +213,7 @@ public final class Actions {
 		noProgressTicks = 0;
 		bestDistance = Double.MAX_VALUE;
 		stuck = false;
+		partialPath = false;
 	}
 
 	// ----------------------------------------------------------------- mining
