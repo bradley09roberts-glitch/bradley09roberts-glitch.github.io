@@ -7,7 +7,7 @@
 ### Option A: CurseForge app (easiest)
 
 1. Open the CurseForge app and go to **Minecraft → Create Custom Profile → Import**.
-2. Choose `Hardcore-Friends-1.0.0-CurseForge.zip`.
+2. Choose `Hardcore-Friends-2.0.0-CurseForge.zip`.
 3. CurseForge installs Minecraft 26.3, Fabric Loader 0.19.5, Fabric API 0.162.0+26.3 and the mod.
 4. Press **Play**. This creates a separate profile with its own saves folder, so your existing worlds are not touched.
 
@@ -15,7 +15,7 @@
 
 1. Install the Fabric Loader for Minecraft 26.3 with the official installer from fabricmc.net (choose loader 0.19.5 or newer).
 2. Put two files in your `.minecraft/mods` folder:
-   - `hardcore-friends-1.0.0.jar`
+   - `hardcore-friends-2.0.0.jar`
    - **Fabric API** `0.162.0+26.3` (from CurseForge or Modrinth)
 3. Start the **Fabric** profile in the Minecraft Launcher.
 4. **Back up your saves first.** Adding a mod to an existing world is permanent for that world.
@@ -31,21 +31,46 @@
 5. Recruit: `/friends recruit fern`, `/friends recruit oak`, and so on.
 6. Put useful starter supplies in the chest: logs, cobblestone, coal, seeds, a water bucket and **food**. The friends restock from it, deposit what they gather into it, build with what is in it, and eat from it when they are hungry.
 
+### What's new in 2.0
+
+**Nothing in 2.0 has been played yet.** It all compiles and every part was read through and reviewed against the
+game's own code, but you are the first to try it in game. Test in a copy of a world (or a new one) first.
+
+- **They live on while you're away.** The camp keeps running while you are online anywhere (section 16).
+- **They go off on their own.** Scout explores up to 300 blocks out, friends trade at villages, and a friend caught out
+  at night builds a shelter (section 16).
+- **They make room to build.** No flat spot? They level the ground, or spread the camp out a little (section 16).
+- **They get better.** Every friend levels up in each kind of work and in fighting (section 16).
+- **Gear and fighting.** Everyone wears the best armour they can get, carries a shield, shoots bows, heals in an
+  emergency and fights as a team; a smith makes gear from spare materials (section 15).
+- **Newcomers.** People to meet and recruit in villages, at new survivor camps in the world, and travellers who visit
+  your camp (section 17).
+- **Sage's plan to beat the game.** Iron, diamonds from a deep mine, obsidian, a library with an enchanting table,
+  enchanting, an anvil, brewing (section 18).
+- **Expeditions you lead.** Your party follows you through portals; they barter with piglins, hunt blazes, find the
+  stronghold, fill the End portal and help fight the dragon (section 19).
+- **Several players.** An owner and trusted players, a bond with each player, a job board, mourning and keeping a
+  fallen player's things safe, notes, mailbox deliveries, opt-in siege nights (section 20).
+- **Safer nights.** The night watch from 1.0's honest limits is in, with the problems found in it fixed (section 6b).
+
+Each of those sections is a summary. The full details, settings and honest limits of each part are in `docs/v2/`
+(`combat.md`, `survival.md`, `settler.md`, `progress.md`, `expedition.md`, `town.md`).
+
 ## 3. The nine friends
 
 Each friend's role is their speciality: the work they choose first and do best. Any friend can do any of these jobs, though (see section 4).
 
 | Friend | Role | Personality | Their speciality |
 |---|---|---|---|
-| **Fern** | Farmer | patient, caring | Harvests ripe crops and replants straight away, tills new farmland next to water, lays out a farm plot (with a water bucket from the chest), bakes bread, uses bone meal, shares food with hungry players. Keeps livestock: brings wild animals home to the pen, breeds them, butchers the surplus, cooks the meat, and hunts when food is short (section 6) |
-| **Oak** | Builder | practical, methodical | Builds the camp step by step from real materials: chest, campfire, crafting table, furnace, torch posts, cabin, storehouse, watchtower, lantern posts, second cabin. Saws planks and repairs damage |
-| **Flint** | Miner | cautious, dry humour | Mines exposed ores (with the right pickaxe), digs one tidy staircase mine with branch tunnels outside camp, lights it with torches, avoids lava and water, smelts ore in the camp furnace |
-| **Scout** | Explorer | curious, adventurous | Scouts widening rings around camp by day, records ores, trees, lava and villages for the team, and warns you about creepers, mobs closing in, nightfall and storms |
-| **Spark** | Redstone inventor | clever, excitable | Builds working vanilla contraptions: automatic cabin door (pressure plates), drop-off hopper on the supply chest, auto-smelter, and night lamp posts (needs nether materials). Keeps the torch supply up |
-| **Aegis** | Warrior | calm, protective | Guards you and the camp, attacks hostile mobs near players and friends, keeps the first night watch walking his posts round the camp (on the watchtower once it exists), and takes the best sword, armour and shield from the chest |
-| **Sage** | Strategist | thoughtful, observant | Gives Hardcore survival advice for your situation (health, hunger, darkness, phantoms, night, tools, mining depth), works out what the camp is short of, and sets the team's focus. Carries a wooden sword to stand with the others |
-| **Terra** | Landscaper | creative, tidy | Lays dirt paths between camp buildings, plants saplings and flowers, puts torches in dark spots (fewer mob spawns), tidies dropped items, fills small holes, fences the farm, builds the animal pen |
-| **Rowan** | Forager | resourceful, generous | Fells natural trees outside camp and replants them, quarries dirt and stone from small shallow pits outside camp, picks berries, and delivers building materials to Oak first |
+| **Fern** | Farmer | patient, caring | Harvests ripe crops and replants straight away, tills new farmland next to water, lays out a farm plot (with a water bucket from the chest), bakes bread, uses bone meal, shares food with hungry players. Keeps livestock: brings wild animals home to the pen, breeds them, butchers the surplus, cooks the meat, and hunts when food is short (section 6). Grows sugar cane and nether wart for Sage's plan |
+| **Oak** | Builder | practical, methodical | Builds the camp step by step from real materials: chest, campfire, crafting table, furnace, torch posts, cabin, storehouse, watchtower, lantern posts, second cabin; later the library, the anvil, the brewing stand and the Nether portal. Saws planks, repairs damage and mends gear at the anvil |
+| **Flint** | Miner | cautious, dry humour | Mines exposed ores (with the right pickaxe), digs one tidy staircase mine with branch tunnels outside camp, lights it with torches, avoids lava and water, smelts ore in the camp furnace. For Sage's plan he digs a branch mine down at diamond level, sealing off lava and caves, and makes obsidian |
+| **Scout** | Explorer | curious, adventurous | Scouts widening rings around camp by day, records ores, trees, lava and villages for the team, and warns you about creepers, mobs closing in, nightfall and storms. Goes on day trips up to 300 blocks out, and finds the stronghold by throwing eyes of ender. Prefers the bow |
+| **Spark** | Redstone inventor | clever, excitable | Builds working vanilla contraptions: automatic cabin door (pressure plates), drop-off hopper on the supply chest, auto-smelter, and night lamp posts (needs nether materials). Keeps the torch supply up, and brews potions at the brewing stand |
+| **Aegis** | Warrior | calm, protective | Guards you and the camp, attacks hostile mobs near players and friends, and keeps the first night watch walking his posts round the camp (on the watchtower once it exists). Gets first pick of the armour, swords and shields in the chest |
+| **Sage** | Strategist | thoughtful, observant | Gives Hardcore survival advice for your situation (health, hunger, darkness, phantoms, night, tools, mining depth), works out what the camp is short of, and sets the team's focus. Keeps the plan to beat the game, makes paper, books and eyes of ender in her workshop, and enchants gear. Carries a sword and prefers the bow |
+| **Terra** | Landscaper | creative, tidy | Lays dirt paths between camp buildings, plants saplings and flowers, puts torches in dark spots (fewer mob spawns), tidies dropped items, fills small holes, fences the farm, builds the animal pen, and levels uneven ground so a building fits |
+| **Rowan** | Forager | resourceful, generous | Fells natural trees outside camp and replants them, quarries dirt and stone from small shallow pits outside camp, picks berries, and delivers building materials to Oak first. Keen on trading trips to villages and on deliveries to players' mailboxes |
 
 The friends talk in their own voices. Use `/friends chatter quiet|normal|chatty` to set how much. Danger warnings always show.
 
@@ -71,8 +96,9 @@ How they share the work:
 - **Standing in.** When nobody of a speciality is working (that friend has died, has not been recruited yet, or is following you or holding position), the others pick that work up in their spare time, their interest first. A camp without Fern still gets its crops harvested and replanted, just less eagerly.
 - **Lending a hand.** While the specialist is around, the others only help with that work when they have nothing else at all to do.
 - **One at a time on shared jobs.** A building, the mine, the quarry, the farm's layout, the paths, a tree being felled: one friend works on each at a time, so two friends never build the same cabin. When the specialist comes back to work, a stand-in hands the job back at once.
-- **Skill.** Specialists mine, chop and dig 20% faster at their own work. Their interest goes at normal speed, and anything else 15% slower.
-- **Duties that stay with one friend:** Aegis's guard duty and gear, Sage's observations and stores review, and Scout's reports.
+- **Skill.** Specialists mine, chop and dig 20% faster at their own work. Their interest goes at normal speed, and anything else 15% slower. Everyone also gets faster with practice (section 16), but a stand-in never overtakes the specialist.
+- **Duties that stay with one friend:** Aegis's guard duty, Sage's observations and stores review, Scout's reports and her far trips.
+- **Newcomers** (section 17) work like the named friend who shares their trade: a newcomer builder is a second Oak, with their own name.
 
 A friend starting work outside their speciality may say so, for example "I'll lend a hand with harvesting crops."
 
@@ -141,14 +167,14 @@ They only hunt by day: never at dusk or at night. Animals of yours with a name, 
 
 Nights are when Hardcore friends die, so the camp keeps a night routine.
 
-- **Bedtime.** At nightfall friends put their work down (it waits for the morning) and go to bed: inside the cabin once it is built, otherwise in a ring around the camp centre. Only the jobs that belong to the night go on: a hungry friend has supper first, a chilly one warms up by the campfire first, anyone still out comes home, Terra lights a dark camp before she turns in, and a badly hurt friend with no food is still fed. Pastimes and chats wait for the morning too. Once asleep, nothing but trouble gets them up: they sleep until dawn unless they are hurt, a monster comes close, a friend nearby starts fighting, the watch raises the alarm, or their own watch begins.
-- **The watch rota.** Someone always stays up. The night has two watches: the **first** from dusk to midnight, the **second** from midnight to dawn. Aegis keeps the first watch whenever he is alive and working at the camp. The second goes to a healthy friend with something to fight with: the best armed (any sword before any axe before any other tool), then the healthiest, but never whoever kept a watch the night before if anyone else can, so the duty rotates and nobody loses sleep every night. If Aegis has died, or is away following you, someone else keeps the first watch as well. A watcher who dies, is sent to follow you or stay, gets too weak, or runs out of energy is relieved by the next friend in line. The second watcher sleeps until midnight and is then woken for their watch; whoever kept a watch naps sooner the next day. A friend alone at camp (other than Aegis) has nobody to watch over and simply sleeps.
-- **Keeping watch.** The watcher stands by the campfire (or the camp centre), stepping round it now and then and looking out over the camp, and goes for any hostile that comes into the camp. Aegis keeps his watch walking his posts round the camp, or from the watchtower once it stands.
-- **The alarm.** When the watcher spots a hostile inside the camp, they raise the alarm ("Zombie in the camp! Everyone up!"). Everyone asleep in the camp wakes, and every armed friend in the camp (holding a sword or an axe) goes to fight it. When it is dealt with they go back to bed.
-- **Standing together.** When a hostile goes for a friend or for you inside the camp, armed friends within 16 blocks join in, and any friend holding a tool joins in within 8. Inside the camp they do not need to see it first: they find their way round walls to it. Outside the camp, friends join fights they can see within 8 blocks. A friend who cannot get at a hostile (behind a wall, down a hole) gives up on it after about 10 seconds. Only Aegis goes after skeletons and other archers.
+- **Bedtime.** At nightfall friends put their work down (it waits for the morning) and go to bed: inside the cabin once it is built, otherwise in a ring around the camp centre. Only the jobs that belong to the night go on: a hungry friend has supper first, a chilly one warms up by the campfire first, anyone still out comes home, Terra lights a dark camp before she turns in, and a badly hurt friend with no food is still fed. Pastimes and chats wait for the morning too. Once asleep, nothing but trouble gets them up: they sleep until dawn unless they are hurt, a monster that could get at them comes within 8 blocks, a friend within 16 blocks is trading blows (or has a hostile within 4 blocks), the watch raises the alarm, or their own watch begins.
+- **The watch rota.** Someone always stays up. The night has two watches: the **first** from dusk to midnight, the **second** from midnight to dawn. Aegis keeps the first watch whenever he is alive and working at the camp. The second goes to a healthy friend with something to fight with: the best armed (any sword before any axe before any other tool), then the healthiest, but never whoever kept a watch the night before if anyone else can, so the duty rotates and nobody loses sleep every night. If Aegis has died, or is away following you, someone else keeps the first watch as well. A watcher who dies, is sent to follow you or stay, gets too weak, runs out of energy, or is more than 24 blocks beyond the camp's edge for over 30 seconds is relieved by the next friend in line, and friends at the camp are chosen before friends away from it. The second watcher sleeps until midnight and is then woken for their watch; whoever kept a watch naps sooner the next day. A friend alone at camp (other than Aegis) has nobody to watch over and simply sleeps.
+- **Keeping watch.** The watcher stands by the campfire (or the camp centre), stepping round it now and then and looking out over the camp, and goes for any hostile that comes into the camp. Aegis keeps his watch walking his posts round the camp, or from the watchtower once it stands; on his watch he only stays beside players inside the camp or within 8 blocks of its edge.
+- **The alarm.** When the watcher spots a hostile inside the camp (one they can see, or one out of sight on the camp's own ground with a way to it, not one in a cave beneath), they raise the alarm ("Zombie in the camp! Everyone up!"). Everyone asleep in the camp wakes, and every armed friend in the camp (holding a sword or an axe) goes to fight it. When it is dealt with they go back to bed. Each hostile raises the alarm once a night.
+- **Standing together.** When a hostile goes for a friend or for you inside the camp, armed friends within 16 blocks join in, and any friend holding a tool joins in within 8. Inside the camp they do not need to see it first: they find their way round walls to it, but only when a whole path leads there. Outside the camp, friends join fights they can see within 8 blocks. A friend who goes 10 seconds without landing a blow, with no way through to the hostile, gives it up for 30 seconds; a second time, until dawn. Friends with a bow shoot archers and anything they cannot reach (section 15).
 - **Something to fight with.** Every friend arrives with a tool they can fight back with. Sage, whose planning needs no tool, brings a wooden sword: she keeps it, and fetches or makes another when it breaks.
 
-`/friends list` shows who is "keeping watch". A thunderstorm darkens the sky as much as night does, so friends head home and rest through one by day too.
+`/friends list` shows who is "keeping watch". A thunderstorm by day darkens the sky, so friends out in the wilds come home, but in camp they carry on working (only a tired friend naps) and no watch is kept: the watches follow the clock.
 
 ## 7. Controls
 
@@ -181,6 +207,16 @@ Nights are when Hardcore friends die, so the camp keeps a night routine.
 | `/friends log` | The last block changes friends made |
 | `/friends dismiss <name>` | They leave and drop their backpack (costs Unity) |
 | `/friends chatter <quiet\|normal\|chatty>` | How talkative they are |
+| `/friends gear` | What each friend nearby wears and carries (section 15) |
+| `/friends skills [name]` / `/friends trips` | Levels in each kind of work / who is away and the places found (section 16) |
+| `/friends newcomers` | Newcomers on the team, and strangers near you and what they would like (section 17) |
+| `/friends goals` | Sage's plan, the step in hand and what it needs (section 18) |
+| `/friends party [list]` / `party add\|remove <name>` / `party go` / `party home` | Your expedition party (section 19) |
+| `/friends trusted` / `trust <player>` / `untrust <player>` / `owner <player>` | Who may give orders (section 20) |
+| `/friends bond [name]` | Bonds between friends and players (section 20) |
+| `/friends jobs` / `/friends deliver [number]` | What the camp needs / bring it to the chest (section 20) |
+| `/friends note <text>` / `/friends notes` | Leave a note for the camp / see the notes (section 20) |
+| `/friends mailbox [remove]` / `/friends send <item> <count>` | Your mailbox for deliveries / ask for something (section 20) |
 
 None of these commands give items, teleport you, or change time, weather, game mode or difficulty.
 
@@ -206,9 +242,10 @@ None of these bonuses can stop you dying.
 
 - Your own Hardcore death is unchanged: one life, then spectator. There are no extra lives.
 - Friends need food. A starving friend loses health down to one heart and cannot heal. Starving never kills them on its own, but it leaves them one hit from death.
-- Friends are mortal. They retreat when badly hurt, eat from their backpacks, and run from creepers. Healthy friends holding a tool stand together and fight off zombies and other close attackers, so nobody is picked off alone; in the camp armed friends come from further away, and at night the watch raises the alarm (section 6). Only Aegis goes after skeletons and other archers; everyone else gets out of their line of fire, and a badly hurt friend stays well out of bow range until they recover. Out of combat (no damage for 10 s, no target, not burning) they recover 1 health every 4 s. If they die, they drop a **backpack item** holding everything they carried and wore. It never despawns, and its coordinates go to chat. Use it (right-click) to unpack.
+- Friends are mortal. They retreat when badly hurt, eat from their backpacks, and run from creepers. Healthy friends holding a tool stand together and fight off zombies and other close attackers, so nobody is picked off alone; in the camp armed friends come from further away, and at night the watch raises the alarm (section 6). Friends with a bow shoot skeletons and other archers; everyone else gets out of their line of fire, and a badly hurt friend stays well out of bow range until they recover. In a fight a badly hurt friend eats a golden apple or drinks a healing potion if they carry one. Out of combat (no damage for 10 s, no target, not burning) they recover 1 health every 4 s. If they die, they drop a **backpack item** holding everything they carried and wore. It never despawns, and its coordinates go to chat. Use it (right-click) to unpack.
 - A fallen friend's name returns as a newcomer after 3 in-game days. Set `deadFriendsReturnAfterDays` to `-1` in `config/hardcorefriends.json` for permanent loss.
 - Zombies, skeletons, spiders, illagers and witches hunt friends just as they hunt villagers.
+- Newcomers (section 17) are mortal too: a newcomer who dies is gone for good.
 
 ## 12. How friends treat your world
 
@@ -217,20 +254,22 @@ None of these bonuses can stop you dying.
 - Friends never break chests, furnaces, signs, beds or any other block entity, or anything crafted-looking: planks, doors, glass, torches, slabs, stairs, fences and so on. They also stay clear of blocks next to such things.
 - Trees are felled only if they grew naturally (natural leaves), never log walls or trees inside camp. Quarry pits are 5×5 and at most 2 blocks deep. Mines stay inside one 24×24 area.
 - **Animals:** friends only lead away or hunt wild animals, never yours (named, tamed, on a lead, saddled, near anything you built or inside your fences), never butcher yours in their pen, and only hunt by day in the gathering ring outside the camp (section 6). The only blocks they open and shut are the gate of their own pen.
+- **New in 2.0**, each with its own strict rules (details in `docs/v2/`): Terra levels building sites inside the camp (natural ground only, never within 3 blocks of your builds, at most 3 blocks up or down); friends caught out at night build a small shelter or pillar up out of reach and take it all back afterwards (never within 6 blocks of your builds); Flint's deep mine stays in its own box and seals caves only inside it; obsidian is only made from natural lava (never lava open to the sky at y = 40 or above); on expeditions Scout builds a small marker over the stronghold and friends pillar up to the End crystals. Survivor camps (section 17) are new world generation in newly explored chunks only.
 - Every change is logged (`/friends log`). Turn editing off entirely with `allowWorldEditing: false`, or individually with `allowTreeFelling`, `allowQuarrying` and `allowMining`.
 
 ## 13. Honest limits
 
-- **Nights are the dangerous time.** Aegis guards until midnight and then sleeps; there is no second watch yet. Friends only step into a fight within 8 blocks of it, and Sage carries no weapon, so she can only run. In the two-day test run, 2 of 9 friends died to zombies on the first night and none after. Stay near camp after dark, light it well, and help in fights. A night-watch rota is planned for a later update.
-- Friends only act while their area is loaded, which means near a player. They do not work while you are far away, and their needs do not change then either.
+- **2.0 has not been played yet.** Everything new in this version compiles and was reviewed by reading it against the game's own code, but none of it has been tried in game. Expect rough edges, and test in a copy of your world first. Each part's own honest limits are in `docs/v2/`.
+- **Nights are the dangerous time.** The night watch, the alarm and standing together are new in 2.0 and untested in game. In 1.0's two-day test run, before the watch existed, 2 of 9 friends died to zombies on the first night and none after. Stay near camp after dark, light it well, and help in fights.
+- The camp keeps running while you (the owner or a trusted player) are online anywhere, but not while nobody is online. Monsters only spawn near players, so an empty camp gets no new ones, but those already there keep fighting.
 - Every friend can do every job, but a stand-in only works on someone else's speciality in their spare time, and more slowly. A camp missing several specialists grows more slowly.
 - Needs are five simple numbers, not a full life simulation. Friends meet them with a fixed set of jobs: eating, sleeping, chatting, a pastime, warming up and, when too weak to work, resting. They sleep where they lie down (in the cabin or around the camp centre), not in beds.
 - Friends see to their needs only while working on their own. A friend following you or holding position does not eat, sleep or rest; they eat from their backpack only when hurt or very hungry. Hand them food, or send them back to work now and then.
 - Chats between friends are an exchange of pre-written lines, not a real conversation.
-- The night watch looks out over the camp from the campfire: it notices a hostile it can see, one close by, or one already going for someone, not one in a cave beneath the camp. The alarm wakes friends inside the camp, not those out in the gathering ring.
+- The night watch looks out over the camp from the campfire: it notices a hostile it can see, or one out of sight on the camp's own ground with a way to it, not one in a cave beneath the camp. The alarm wakes friends inside the camp, not those out in the gathering ring.
 - They build from fixed blueprints, adapted to the wood you have. They do not invent new buildings.
 - Pathfinding is vanilla mob pathfinding. On rough terrain a friend can get stuck. Stuck jobs time out and are retried later.
-- Mining is one staircase mine plus exposed ores near camp. Only trees they can fully reach (about 6 blocks tall) are felled.
+- Mining is one staircase mine plus exposed ores near camp, and (for Sage's plan) one deep branch mine at a time. Only trees they can fully reach (about 6 blocks tall) are felled.
 - The farm plot needs a fairly level spot inside camp: a level hole for the water with about 20 level grass or dirt blocks around it. Bumps are fine, but on a camp that is all slopes or rock Fern says she needs "a flat patch of grass", and the camp cannot grow past stage 2 until she gets one. Help her by levelling a patch, or simply pour water on level ground in camp: she farms around any water inside the camp.
 - When the next camp step is waiting on something nobody can fetch (for example nether materials for Spark's lamp posts), friends with nothing useful left to do take a break near camp.
 - Contraptions are a fixed set of vanilla redstone builds.
@@ -241,3 +280,169 @@ None of these bonuses can stop you dying.
 ## 14. Config (`config/hardcorefriends.json`)
 
 `chatter`, `campRadius` (24), `maxCampRadius` (40), `resourceRadius` (48), `allowWorldEditing`, `allowTreeFelling`, `allowQuarrying`, `allowMining`, `deadFriendsReturnAfterDays` (3, or −1 for permanent), `followTeleportDistance` (48, 0 = off), `monstersTargetCompanions` (true).
+
+New in 2.0:
+
+| Setting | Default | What it does |
+|---|---|---|
+| `keepCampLoaded` | `true` | The camp keeps running while the owner or a trusted player is online anywhere |
+| `maxRoamingFriends` | `3` | How many friends away on trips keep the land around them running at once |
+| `allowTrips` | `true` | Scout's far trips, trading trips, the stronghold search |
+| `allowTerraforming` | `true` | Levelling uneven ground for buildings |
+| `maxGradeDepth` | `3` | The most a site is dug down or built up, in blocks |
+| `allowSettlers` | `true` | Strangers appear in villages, survivor camps and as travellers |
+| `villageSettlerChance` | `0.75` | Chance a village has newcomers, decided once per village |
+| `maxSettlers` / `maxSettlersPerPlayer` | `12` / `6` | Newcomers on the team at once / per recruiting player |
+| `wanderingVisitors` | `true` | Travellers visit the camp every few days |
+| `friendsUseBows` | `true` | Friends shoot, fetch and make bows and arrows |
+| `progressionGoals` | `true` | Sage's plan to beat the game |
+| `friendsFollowThroughPortals` | `true` | Following friends come through portals with you |
+| `requireTrust` | `true` | Only the owner and trusted players give orders, open backpacks, move the camp |
+| `maxFollowersPerPlayer` | `4` | Most friends following one player (never limits a player who plays alone) |
+| `maxDeliveryDistance` | `400` | How far a mailbox may be (0 = no deliveries, 600 at most) |
+| `siegeNights` | `false` | Opt-in waves of monsters every few nights once the camp is a Village |
+
+## 15. Gear and fighting (new in 2.0)
+
+Full details: `docs/v2/combat.md`.
+
+- **Everyone gears up.** Every friend wears the best armour they can get, from their backpack or the supply chest,
+  carries a shield, and takes a better sword or axe when the chest has one. Aegis chooses first, then whoever fights at
+  night, then everyone else. Bow users top up their arrows. Each friend keeps a golden apple or a healing potion for
+  emergencies (never an enchanted golden apple from the chest).
+- **The smith.** When the chest has spare materials, a friend crafts gear at the camp's crafting table: shields for
+  everyone first, then swords, armour for the fighters, bows, arrows, then armour for everyone. Only spare materials
+  are used: 7 diamonds, 5 iron and 16 cobblestone always stay, nothing a building is short of, and nothing Sage's plan
+  is collecting.
+- **Bows.** Anyone with a bow and arrows shoots archers, witches, blazes, phantoms, creepers (from 7 blocks or more)
+  and anything they cannot reach. Scout and Sage prefer the bow; Aegis prefers his blade. They never shoot while you,
+  a friend, a villager or any animal is in or near the line of fire, and friends' arrows and blows can never hurt
+  players, friends, villagers, golems or anybody's animals.
+- **Kill credit.** A mob a friend kills counts as killed by you (their leader, or the nearest player within 32
+  blocks), so blaze rods and experience still drop, as with a tamed wolf's kills.
+- **Shields** go up against archers drawing on them and swelling creepers. **Emergency healing:** below 40% health in a
+  fight, a friend drinks a healing potion or eats a golden apple; a burning friend drinks fire resistance.
+- **Teamwork.** Friends focus on a hostile a teammate is already fighting, and the healthiest armed friend takes over
+  from one falling back hurt.
+- **Tip:** the supply chest is shared. Armour, bows, golden apples and potions you leave in it will be used. Keep your
+  own in another chest.
+
+## 16. Independence: living on, trips, room to build, staying alive, getting better (new in 2.0)
+
+Full details: `docs/v2/survival.md`.
+
+- **The camp lives on.** While the owner or a trusted player is online anywhere, the camp and its gathering ring keep
+  running: friends work, eat and sleep, crops grow. A friend on a trip keeps the land around them running too (at most
+  3 at once). When nobody is online, nothing runs.
+- **Scout's far trips.** Once a day, when the camp is safe and fed, Scout explores up to 300 blocks out and reports
+  villages, survivor camps, ruined portals (obsidian), pillager outposts (she turns back), temples and new biomes, to
+  everyone on the server. `/friends trips` lists the places found.
+- **Trading trips.** When a village is known within 300 blocks, a friend (Sage and Rowan keenest) takes the camp's
+  surplus there, trades with the villagers' real offers (never stealing, never hurting anyone), buys what the camp
+  needs, and brings it home. They take up to 12 emeralds from the supply chest each trip.
+- **Trips are careful.** Only by day, healthy, fed and carrying food, with daylight to get back; they turn back when
+  hurt, hungry, tired, in a storm or late, and keep away from places where a friend died.
+- **Room to build.** No flat spot? Trees on the site are felled first (as before). If even that fails, Terra levels
+  uneven natural ground (at most 3 blocks up or down, never near your builds). If nothing fits, the camp grows a
+  little and the friends look further out.
+- **Caught out at night.** A friend far from camp after dark digs into a hillside, digs down or builds a small pillbox
+  around themselves, sleeps, and takes it all back at dawn. A badly hurt friend cornered by zombies pillars up out of
+  reach. A falling friend with a water bucket breaks their fall.
+- **Getting more skilled.** Each friend has a level from 0 to 10 in every kind of work and in fighting. Levels make
+  them up to 20% faster at that work, and up to +2 attack and +2 hearts in a fight. `/friends skills [name]`.
+
+## 17. Newcomers: people to meet and recruit (new in 2.0)
+
+Full details: `docs/v2/settler.md`.
+
+Besides the nine friends, the world now has other people in it, each with their own name, look (one of the game's
+default skins) and trade:
+
+- **In villages:** the first time you walk into a village, there is a good chance one or two live there.
+- **At survivor camps:** a new kind of place in the world, a small camp of tents round a campfire with a chest of
+  supplies and one to three strangers, in temperate biomes. Only newly explored land gets them.
+- **Travellers:** once your camp is a Camp, someone may walk up every few days and stay a day.
+
+**To recruit one:** right-click them. They tell you who they are and ask for something small for their trade (a
+farmer: 4 bread and a hoe; a miner: a stone pickaxe and 8 torches...). Bring it in your inventory and right-click
+again: they take exactly what they asked for (never anything enchanted or renamed) and join. A newcomer works like the
+named friend who shares their trade, under their own name: give them orders by name (`/friends follow mabel`), feed
+them, open their backpack. Up to 12 newcomers on the team, 6 per player. `/friends newcomers` lists them and the
+strangers near you. A newcomer who dies is gone for good.
+
+## 18. Sage's plan: beating the game step by step (new in 2.0)
+
+Full details: `docs/v2/progress.md`.
+
+The camp works towards beating the game one step at a time. `/friends goals` shows the plan and what the step in hand
+needs. Each step reached is announced and adds 40 Unity.
+
+1. **Settled** (the camp is a Village) → 2. **Iron age** (iron pickaxes, an iron sword, 10 iron in stock) →
+3. **Diamonds** (a diamond pickaxe) → 4. **Enchanting** (an enchanting table with 15 bookshelves) →
+5. **Nether ready** (10 obsidian and a flint and steel) → 6. **Blaze rods** (7) → 7. **Ender pearls** (12) →
+8. **Eyes of ender** (12) → 9. **Stronghold found** → 10. **End portal open** → 11. **Dragon defeated**.
+
+What the friends do for it on their own:
+
+- **Deep mining.** With an iron pickaxe, Flint digs a branch mine down at diamond level. He never digs straight down,
+  never opens a block touching water or lava, walls off caves with cobblestone, lights it with torches, never digs out
+  the floor of his way back up, and heads home when hurt, hungry or late.
+- **Obsidian.** With the diamond pickaxe and a water bucket, the miner pours water on natural lava (cave lava, or lava
+  below y = 40) and mines the obsidian. Lava open to the sky at y = 40 or above is never touched: it might be yours.
+- **Books and the library.** Fern grows sugar cane, Sage makes paper and books (books need leather: help with it), and
+  Oak builds a library with an enchanting table and 15 bookshelves.
+- **Enchanting.** The camp shares one experience pool (from ores, smelting and defeated mobs). At level 30 Sage enchants
+  the best gear in the chest with 3 lapis, using the game's own enchanting. Named gear is never touched.
+- **The anvil and brewing.** Oak builds an anvil and mends worn iron and diamond gear; once blaze rods come home, a
+  brewing stand, where Spark brews fire resistance, healing, regeneration and strength.
+
+What you help with: leather (books need 46), a first sugar cane, and everything from the Nether and the End (blaze
+rods, ender pearls, nether wart, soul sand): that is what expeditions are for.
+
+## 19. Expeditions you lead: the Nether, the stronghold and the End (new in 2.0)
+
+Full details: `docs/v2/expedition.md`.
+
+The friends prepare everything, but the dangerous trips are **expeditions you lead**: in Hardcore, a dragon fought
+without you would only make graves.
+
+- **Your party.** `/friends party add <name>`, then `/friends party go`: your party follows you (packing food, fire
+  resistance and what the plan's step needs at the chest first). `/friends party home` sends them back to work.
+- **Through portals.** Friends following you within 32 blocks come through portals with you, and come home with you.
+  One left behind walks to the portal and follows. A friend whose leader has gone waits by their portal for 3 minutes,
+  then goes home through it. Friends never wander through a portal on their own.
+- **The camp portal.** Once the plan is Nether ready, Oak builds a portal at camp and lights it.
+- **In the Nether** they barter gold with calm piglins, shoot blazes (the rods drop thanks to kill credit), pick up
+  useful drops and gather nether wart and soul sand. Calm piglins are left alone.
+- **The stronghold.** Scout throws real eyes of ender, walks 200 blocks across and throws again, works out where the
+  lines cross, walks there (sheltering at night), marks the spot with a small cobblestone pillar and a torch, and
+  tells everyone the coordinates. She never digs down.
+- **The End portal.** With you in the portal room, friends carrying eyes set them in the empty frames and open it.
+- **The dragon.** Archers shoot the end crystals from spots with a clear shot (never while anyone is within 12 blocks of
+  one), a friend pillars up to break open caged crystals, archers shoot the dragon in flight, and fighters strike it
+  when it perches. They step out of its breath and keep away from the island's edge. When it dies: a big
+  celebration, 100 Unity, and the plan's last step.
+
+## 20. Several players (new in 2.0)
+
+Full details: `docs/v2/town.md`. On a world you play alone, none of this gets in your way.
+
+- **Owner and trust.** The first player to change anything owns the camp. While `requireTrust` is on, only the owner and
+  players they trust (`/friends trust <player>`) may give orders, recruit, open backpacks, hand over anything but
+  food, put a friend on a lead, move the camp or ask for deliveries, or hurt a friend at all. Anyone may look and anyone
+  may feed a friend. The single-player host and operators are always allowed, and someone playing alone is never
+  limited or refused.
+- **Bonds.** Each friend has a bond with each player (-100 to 100) that grows with food and gifts, help in fights,
+  deliveries and time together, and falls if you hit or dismiss them. Close friends defend you first and feed you
+  first; a friend who distrusts you will not follow you. `/friends bond`.
+- **The job board.** `/friends jobs` lists what the camp needs, including what Sage's plan wants. Stand near the chest
+  and `/friends deliver` (or `/friends deliver <number>` for food and the plan's items): only from your main inventory,
+  never your hotbar, tools, armour, buckets, golden food or anything enchanted or renamed.
+- **When a player dies.** In Hardcore the friends mourn them and the camp remembers them (`/friends camp`). By day, if
+  it is safe (lit, no monsters, not after lava, falls, drowning or explosions), friends gather the dropped items into a
+  bag and put it in the supply chest.
+- **Notes.** `/friends note <text>` (spectators too): a friend reads it out at camp. `/friends notes`.
+- **Mailboxes.** `/friends mailbox` while looking at your own chest. A friend brings you a share of the camp's plenty
+  every few days, and what you ask for with `/friends send <item> <count>`. They only ever put things into your mailbox.
+- **Siege nights** (off by default, `siegeNights`): every five to eight nights once the camp is a Village, a wave of
+  monsters gathers at the camp's edge at midnight, with a warning at dusk. Survive it together for 30 Unity.
