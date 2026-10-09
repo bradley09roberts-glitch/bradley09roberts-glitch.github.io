@@ -55,7 +55,7 @@ final class ShorePlan implements Plan {
 		if (!c.isInWater() && c.onGround()) {
 			return Status.DONE;
 		}
-		if (!Terrain.standable(level, to)) {
+		if (!Terrain.canStand(level, to)) {
 			return Status.FAILED; // the landing has gone (a block placed, the water risen): look again
 		}
 		if (--repath <= 0 || c.getNavigation().isDone()) {

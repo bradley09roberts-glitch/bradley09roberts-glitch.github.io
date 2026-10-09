@@ -71,10 +71,10 @@ final class StepPlan implements Plan {
 		BlockPos raised = feet.above(r);
 		for (Direction d : Direction.Plane.HORIZONTAL) {
 			BlockPos side = raised.relative(d);
-			if (Terrain.standable(level, side)) {
+			if (Terrain.canStand(level, side)) {
 				return side;
 			}
-			if (Terrain.passable(level, raised.above(2)) && Terrain.standable(level, side.above())) {
+			if (Terrain.passable(level, raised.above(2)) && Terrain.canStand(level, side.above())) {
 				return side.above();
 			}
 		}
@@ -176,7 +176,7 @@ final class StepPlan implements Plan {
 		}
 		double dx = to.getX() + 0.5 - c.getX();
 		double dz = to.getZ() + 0.5 - c.getZ();
-		if (c.getY() >= to.getY() - 0.01 && dx * dx + dz * dz < 0.36 && c.onGround()) {
+		if (c.getY() >= to.getY() - 0.2 && dx * dx + dz * dz < 0.36 && c.onGround()) { // a path block is a little low
 			phase = Phase.TAKE_BACK;
 			phaseTicks = 0;
 			return Status.RUNNING;
@@ -207,8 +207,7 @@ final class StepPlan implements Plan {
 			forget(c, top);
 			return Status.RUNNING;
 		}
-		return ledge != null && c.blockPosition().equals(ledge) || Ways.canLeave(level, c.blockPosition(), 6, 200)
-			? Status.DONE : Status.FAILED;
+		return Ways.canLeave(level, c.blockPosition(), 6, 200) ? Status.DONE : Status.FAILED;
 	}
 
 	private void forget(CompanionEntity c, BlockPos pos) {

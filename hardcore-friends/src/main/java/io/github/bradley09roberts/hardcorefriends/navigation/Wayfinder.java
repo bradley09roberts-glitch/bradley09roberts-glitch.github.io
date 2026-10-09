@@ -492,7 +492,7 @@ public final class Wayfinder {
 			? new Direction[] {facing.getClockWise(), facing.getCounterClockWise(), facing.getOpposite()}
 			: new Direction[] {facing.getCounterClockWise(), facing.getClockWise(), facing.getOpposite()};
 		for (Direction d : sides) {
-			if (Terrain.standable(level, feet.relative(d))) {
+			if (Terrain.canStand(level, feet.relative(d))) {
 				return d;
 			}
 		}
@@ -726,9 +726,11 @@ public final class Wayfinder {
 			where = "back to " + leader.getName().getString();
 		} else if (c.mode() == CompanionMode.WORK) {
 			BlockPos here = c.blockPosition();
-			// Somewhere that leads somewhere, and not back into the hole they are in (a pit inside the camp).
+			int[] looked = {0};
+			// Somewhere that leads somewhere, and not back into the hole they are in (a pit inside the camp); the
+			// nearest couple of dozen safe spots are looked at, no more.
 			spot = Terrain.safeSpotNear(level, c.homePos(), 8,
-				p -> p.distSqr(here) > 9 && Ways.canLeave(level, p, 4, 120));
+				p -> p.distSqr(here) > 9 && ++looked[0] <= 24 && Ways.canLeave(level, p, 4, 120));
 		}
 		if (spot == null || !level.isPositionEntityTicking(spot)) {
 			w.lastRescue = now - RESCUE_GAP + 200; // nowhere safe just now (not loaded?): try again in a while

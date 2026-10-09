@@ -111,6 +111,24 @@ public final class Terrain {
 			&& at.getFluidState().isEmpty() && head.getFluidState().isEmpty() && !hazard(at) && !hazard(head);
 	}
 
+	/**
+	 * Like {@link #standable}, but any floor with something to stand on will do (a slab, a dirt path, farmland, the top
+	 * of a stair), as when a friend walks: for spots to step or climb onto, rather than spots to be put down on.
+	 */
+	public static boolean canStand(LevelReader level, BlockPos feet) {
+		if (!level.hasChunkAt(feet)) {
+			return false;
+		}
+		BlockPos belowPos = feet.below();
+		BlockState below = level.getBlockState(belowPos);
+		BlockState at = level.getBlockState(feet);
+		BlockState head = level.getBlockState(feet.above());
+		return !below.getCollisionShape(level, belowPos).isEmpty() && !hazard(below) && !below.is(BlockTags.LEAVES)
+			&& below.getFluidState().isEmpty() && at.getCollisionShape(level, feet).isEmpty()
+			&& head.getCollisionShape(level, feet.above()).isEmpty() && at.getFluidState().isEmpty()
+			&& head.getFluidState().isEmpty() && !hazard(at) && !hazard(head);
+	}
+
 	/** True when lava is within a block of this spot (any of the 26 blocks round it, or the spot itself). */
 	public static boolean nearLava(LevelReader level, BlockPos pos) {
 		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
