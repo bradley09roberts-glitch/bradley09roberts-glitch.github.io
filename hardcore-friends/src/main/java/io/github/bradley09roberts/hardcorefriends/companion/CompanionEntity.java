@@ -310,8 +310,14 @@ public class CompanionEntity extends PathfinderMob {
 		return CompanionMode.byOrdinal(this.entityData.get(DATA_MODE));
 	}
 
-	/** Changes standing orders. {@code leader} is the player to follow in FOLLOW mode. */
+	/**
+	 * Changes standing orders. {@code leader} is the player to follow in FOLLOW mode. A child never follows anyone off
+	 * (FOLLOW becomes WORK): following would catch them up to the player wherever that is, a cave or the wilds at night.
+	 */
 	public void setMode(CompanionMode mode, @Nullable ServerPlayer leader) {
+		if (mode == CompanionMode.FOLLOW && isChild()) {
+			mode = CompanionMode.WORK;
+		}
 		this.entityData.set(DATA_MODE, mode.ordinal());
 		this.leaderId = leader != null ? leader.getUUID() : null;
 		this.stayPos = mode == CompanionMode.STAY ? this.blockPosition() : null;

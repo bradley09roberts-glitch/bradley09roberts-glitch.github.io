@@ -517,6 +517,19 @@ public final class FriendsCommand {
 			}
 			return 0;
 		}
+		if (mode == CompanionMode.FOLLOW) {
+			// Children never go off adventuring: refused here, before the follow goal could fetch one across the map.
+			for (CompanionEntity c : targets) {
+				if (c.isChild()) {
+					source.sendSuccess(() -> Component.literal(c.displayName() + " is too young to go off adventuring and stays at home.")
+						.withStyle(ChatFormatting.GRAY), false);
+				}
+			}
+			targets.removeIf(CompanionEntity::isChild);
+			if (targets.isEmpty()) {
+				return 0;
+			}
+		}
 		// Friends who distrust this player will not follow them, and nobody may lead away more than their share.
 		targets = TownPermissions.acceptOrder(player, targets, mode);
 		if (targets.isEmpty()) {

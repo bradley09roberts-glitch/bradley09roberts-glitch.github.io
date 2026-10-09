@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -21,8 +22,10 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 
+import io.github.bradley09roberts.hardcorefriends.ai.goal.Reach;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
@@ -84,7 +87,11 @@ final class Children {
 		return !c.isChild() || jobId.startsWith("needs.") || jobId.startsWith("navigation.") || JOBS.contains(jobId);
 	}
 
-	/** Once a second for each child: stay home rather than follow anyone off, and grow up when the time comes. */
+	/**
+	 * Once a second for each child: stay home rather than follow anyone off (a child is never given FOLLOW in the first
+	 * place, see {@link CompanionEntity#setMode}; this only catches one loaded from an old save), and grow up when the
+	 * time comes.
+	 */
 	static void second(CompanionEntity c, ServerLevel level, PeopleData data, PeopleData.Person person) {
 		MinecraftServer server = level.getServer();
 		if (c.mode() == CompanionMode.FOLLOW) {
@@ -176,8 +183,10 @@ final class Children {
 	// ---------------------------------------------------------------- danger
 
 	/**
-	 * Children in this world with a monster after them or right beside them, worked out at most every 10 ticks for the
-	 * whole world (one box search per child), however many grown-ups ask.
+	 * Children in this world with a monster after them, or right beside them with nothing in between (a whole path
+	 * leads from the child to it, {@link Reach}: not one through the cabin wall, in a fenced pen or in a cave under
+	 * their feet), worked out at most every 10 ticks for the whole world (one box search per child), however many
+	 * grown-ups ask.
 	 */
 	static List<Danger> inDanger(ServerLevel level) {
 		long now = level.getGameTime();
@@ -190,13 +199,31 @@ final class Children {
 				}
 				for (Mob mob : level.getEntitiesOfClass(Mob.class, child.getBoundingBox().inflate(16, 8, 16),
 					m -> m.isAlive() && Threats.isThreat(m) && (m.getTarget() == child || m.distanceToSqr(child) <= 4 * 4))) {
-					list.add(new Danger(child, mob));
+					if (mob.getTarget() == child || Reach.check(child, mob) != Reach.Answer.NO) {
+						list.add(new Danger(child, mob));
+					}
 				}
 			}
 			cached = new DangerList(now, List.copyOf(list));
 			DANGER.put(level.dimension(), cached);
 		}
 		return cached.list();
+	}
+
+	/**
+	 * At or just below the ground's surface there (indoors in a cabin counts; a tree's leaves overhead are not ground):
+	 * never down a mine or in a cave, where a child would be in the dark with whatever lives there.
+	 */
+	static boolean nearSurface(ServerLevel level, BlockPos pos) {
+		return pos.getY() >= level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ()) - 6;
+	}
+
+	/**
+	 * Down a cave or the mine under the camp: well below the surface and below home. Inside the camp's circle by
+	 * distance alone, but no place for a child ({@link StayCloseTask} brings them back up).
+	 */
+	static boolean belowGround(CompanionEntity c, ServerLevel level, BlockPos pos) {
+		return pos.getY() < c.restPos().getY() - 3 && !nearSurface(level, pos);
 	}
 
 	/** True if {@code adult} is one of this child's parents. */

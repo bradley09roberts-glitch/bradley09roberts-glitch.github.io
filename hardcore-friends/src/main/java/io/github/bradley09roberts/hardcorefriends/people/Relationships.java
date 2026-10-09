@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -286,8 +287,9 @@ final class Relationships {
 			data.person(other).ifPresent(p -> Speech.say(speaker, Line.BREAK_UP, p.name));
 		}
 		if (married) {
+			// The one who moves out is still on the team: a home of their own (a household of one), not "gone for good".
 			UUID leaver = leaver(data, bond);
-			Homes.get().moveOut(server, leaver);
+			Homes.get().moveIn(server, leaver, Set.of(leaver));
 			announce(server, names + " have gone their separate ways, but they'll always be family to their children.");
 		} else {
 			announce(server, names + " have decided to just be friends.");

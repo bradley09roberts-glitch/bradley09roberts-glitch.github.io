@@ -40,7 +40,11 @@ public final class Homes {
 		 */
 		boolean roomForOneMore(MinecraftServer server, Collection<UUID> parents);
 
-		/** A newcomer to the household (a newborn, a partner moving in): give them a bed in the household's home. */
+		/**
+		 * A newcomer to the household (a newborn, a partner moving in): give them a bed in the household's home. Also
+		 * someone moving to a home of their own after a marriage ends ({@code household} is just them): they are still
+		 * on the team and need a bed, in another home, after leaving their old one.
+		 */
 		void moveIn(MinecraftServer server, UUID resident, Collection<UUID> household);
 
 		/** Someone left for good (died, was dismissed): their bed is free again. */

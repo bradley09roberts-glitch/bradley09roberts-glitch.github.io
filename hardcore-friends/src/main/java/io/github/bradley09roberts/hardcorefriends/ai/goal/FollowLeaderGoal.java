@@ -50,8 +50,8 @@ public class FollowLeaderGoal extends Goal {
 
 	@Override
 	public boolean canUse() {
-		if (companion.mode() != CompanionMode.FOLLOW) {
-			return false;
+		if (companion.mode() != CompanionMode.FOLLOW || companion.isChild()) {
+			return false; // a child is never caught up to a leader (they stay at home; see setMode)
 		}
 		leader = companion.leader();
 		return canFollow(companion, leader) && companion.distanceToSqr(leader) > 25;

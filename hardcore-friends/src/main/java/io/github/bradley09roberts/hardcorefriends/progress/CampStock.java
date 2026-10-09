@@ -167,6 +167,9 @@ public final class CampStock {
 			for (int i = 0; i < Backpack.MAX_SLOTS; i++) {
 				s.add(bp.get(i), false);
 			}
+			if (c.isChild()) {
+				continue; // what they carry counts, but a child takes no tools, so they are nobody's miner or warrior yet
+			}
 			if (c.friendId().role() == Role.MINER) {
 				s.miners++;
 				if (Tiers.bestPickaxe(c) >= Tiers.IRON) {

@@ -1,6 +1,7 @@
 package io.github.bradley09roberts.hardcorefriends.people;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,8 +16,16 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
+import io.github.bradley09roberts.hardcorefriends.ai.goal.Reach;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
 import io.github.bradley09roberts.hardcorefriends.ai.task.needs.Spots;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
@@ -30,11 +39,12 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 
 /**
  * Weddings. An engaged couple marry on their wedding day, in the late morning (time of day 5000 to 10000), at the town
- * hall once the village has built one, otherwise at the camp centre: when both are at the camp and nothing hostile is
- * about, the wedding begins ({@link #second}), everyone free at the camp gathers round in a ring
- * ({@link WeddingTask}), the couple say their vows, they are married and take one family name, a guest raises a toast,
- * the bell rings and Unity rises. A wedding the couple cannot get to in two minutes, or that a monster or nightfall
- * interrupts, is put off until the next day.
+ * hall once the village has built one, otherwise at the camp centre: when both are at the camp and no monster that
+ * could spoil it is about ({@link #hostileNear}), the wedding begins ({@link #second}), everyone free at the camp
+ * gathers round in a ring ({@link WeddingTask}), the couple say their vows, they are married and take one family name,
+ * a guest raises a toast, the bell rings and Unity rises. A wedding the couple cannot get to in two minutes, or that a
+ * monster or nightfall interrupts, is put off until the next day; so is one that a monster about or no clear spot
+ * kept from starting all morning, and everyone is told why.
  *
  * <p>One wedding at a time. The ceremony lives in memory only: a server stopping mid-wedding simply starts it again
  * the next morning, since the couple are still engaged in the saved records.
@@ -52,6 +62,12 @@ final class Weddings {
 	private static final int GATHER_MAX = 20 * 120;
 	/** Unity for a wedding (category "wedding"). */
 	private static final String UNITY_WEDDING = "wedding";
+	/** Monsters this far from the venue (half that above or below) may spoil a wedding... */
+	private static final double SPOIL_RANGE = 12;
+	/** ...if about level with it, within this many blocks up or down (not in a cave beneath it), unless archers. */
+	private static final double SPOIL_LEVEL = 4;
+	/** With no roomy spot near the centre, any standable spot this far out will do. */
+	private static final int CRAMPED_REACH = 8;
 
 	/** The wedding under way: the couple, where, and how far along it is. */
 	static final class Ceremony {
@@ -82,7 +98,16 @@ final class Weddings {
 		}
 	}
 
+	/** Why a due wedding could not start this morning (no clear spot, a monster about), and on which day. */
+	private record Blocked(long day, String why) {
+	}
+
 	private static @Nullable Ceremony active;
+	/**
+	 * Couples whose wedding the camp kept from starting this morning: told why and put off to tomorrow once the morning
+	 * is over. In memory only (by bond), like the ceremony.
+	 */
+	private static final Map<PeopleData.Bond, Blocked> BLOCKED = new HashMap<>();
 
 	private Weddings() {
 	}
@@ -99,6 +124,7 @@ final class Weddings {
 
 	static void clear() {
 		active = null;
+		BLOCKED.clear();
 	}
 
 	/** Every second: start a wedding that is due, or move the one under way along. */
@@ -127,7 +153,15 @@ final class Weddings {
 			}
 			long time = Camp.timeOfDay(level);
 			CampData camp = Camp.data(server);
-			if (time < WINDOW_START || time >= WINDOW_END || Camp.isNight(level) || !Camp.isCampLevel(level, camp)
+			if (time >= WINDOW_END) {
+				// The morning is over. If the camp itself kept the wedding from starting, say why and try tomorrow.
+				Blocked held = BLOCKED.remove(bond);
+				if (held != null && held.day() == day) {
+					putOff(server, data, bond, held.why());
+				}
+				continue;
+			}
+			if (time < WINDOW_START || Camp.isNight(level) || !Camp.isCampLevel(level, camp)
 				|| camp.campPos().isEmpty()) {
 				continue;
 			}
@@ -139,9 +173,15 @@ final class Weddings {
 				continue;
 			}
 			BlockPos venue = venue(level, camp);
-			if (venue == null || hostileNear(level, venue)) {
+			if (venue == null) {
+				BLOCKED.put(bond, new Blocked(day, "there was nowhere clear to stand for it"));
 				continue;
 			}
+			if (hostileNear(level, venue, a)) {
+				BLOCKED.put(bond, new Blocked(day, "a monster kept too close to the wedding spot"));
+				continue;
+			}
+			BLOCKED.remove(bond);
 			active = new Ceremony(bond.a, bond.b, level.dimension(), venue, level.getGameTime());
 			Relationships.announce(server, "The wedding of " + a.displayName() + " and " + b.displayName()
 				+ " is starting at the camp! Everyone is gathering round.");
@@ -158,7 +198,7 @@ final class Weddings {
 			return;
 		}
 		long now = level.getGameTime();
-		if (!w.married && (Camp.isNight(level) || hostileNear(level, w.venue))) {
+		if (!w.married && (Camp.isNight(level) || hostileNear(level, w.venue, a))) {
 			postpone(server, w, Camp.isNight(level) ? "it got too late" : "a monster came too close");
 			return;
 		}
@@ -241,9 +281,14 @@ final class Weddings {
 		if (bond == null || bond.status != PeopleData.Status.ENGAGED) {
 			return;
 		}
+		putOff(server, data, bond, why);
+	}
+
+	/** An engaged couple's wedding moves to tomorrow, and everyone is told why. */
+	private static void putOff(MinecraftServer server, PeopleData data, PeopleData.Bond bond, String why) {
 		bond.weddingDay = PeopleEvents.day(server) + 1;
 		data.setDirty();
-		String names = data.person(w.a).map(p -> p.name).orElse("Someone") + " and " + data.person(w.b).map(p -> p.name).orElse("someone");
+		String names = data.person(bond.a).map(p -> p.name).orElse("Someone") + " and " + data.person(bond.b).map(p -> p.name).orElse("someone");
 		Relationships.announce(server, "The wedding of " + names + " is put off until tomorrow: " + why + ".");
 	}
 
@@ -258,9 +303,33 @@ final class Weddings {
 		return guests.isEmpty() ? null : guests.get(level.getRandom().nextInt(guests.size()));
 	}
 
-	private static boolean hostileNear(ServerLevel level, BlockPos venue) {
-		return Threats.archerNear(level, venue, 12) || !level.getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class,
-			new net.minecraft.world.phys.AABB(venue).inflate(12, 6, 12), Threats::isThreat).isEmpty();
+	/**
+	 * A monster within {@value #SPOIL_RANGE} blocks that would spoil the wedding: one going for a player or anyone on
+	 * the team, or one in plain sight of the venue that could get there: an archer (it shoots from where it stands), or
+	 * a monster out of the water, about level with the venue, that a whole path leads to from {@code host} (one of the
+	 * couple, {@link Reach}). A drowned in the river, a zombie shut in the animal pen or a skeleton in a cave under the
+	 * camp centre does not put a wedding off.
+	 */
+	private static boolean hostileNear(ServerLevel level, BlockPos venue, CompanionEntity host) {
+		Vec3 eye = Vec3.atBottomCenterOf(venue).add(0, 1.6, 0);
+		for (LivingEntity mob : level.getEntitiesOfClass(LivingEntity.class,
+			new AABB(venue).inflate(SPOIL_RANGE, SPOIL_RANGE / 2, SPOIL_RANGE), Threats::isThreat)) {
+			if (mob instanceof Mob m && (m.getTarget() instanceof Player || m.getTarget() instanceof CompanionEntity)) {
+				return true;
+			}
+			boolean inSight = level.clip(new ClipContext(eye, mob.getEyePosition(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE,
+				mob)).getType() == HitResult.Type.MISS;
+			if (!inSight) {
+				continue;
+			}
+			if (Threats.isRanged(mob)) {
+				return true;
+			}
+			if (!mob.isInWater() && Math.abs(mob.getY() - venue.getY()) <= SPOIL_LEVEL && Reach.check(host, mob) != Reach.Answer.NO) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static void hearts(ServerLevel level, CompanionEntity c) {
@@ -283,16 +352,26 @@ final class Weddings {
 		return camp.campPos().map(centre -> clearSpot(level, centre)).orElse(null);
 	}
 
-	/** A standable spot two to five blocks from {@code around} with room either side for the couple. */
+	/**
+	 * A standable spot two to five blocks from {@code around} with room either side for the couple; in a cramped camp
+	 * centre, any standable spot two to {@value #CRAMPED_REACH} blocks away (the couple then stand as near it as they
+	 * can, and the vows begin once both are close).
+	 */
 	private static @Nullable BlockPos clearSpot(ServerLevel level, BlockPos around) {
-		for (int r = 2; r <= 5; r++) {
+		BlockPos roomy = ring(level, around, 5, true);
+		return roomy != null ? roomy : ring(level, around, CRAMPED_REACH, false);
+	}
+
+	/** The first standable spot in rings two to {@code reach} blocks from {@code around}, with room either side if asked. */
+	private static @Nullable BlockPos ring(ServerLevel level, BlockPos around, int reach, boolean roomEitherSide) {
+		for (int r = 2; r <= reach; r++) {
 			for (int dx = -r; dx <= r; dx++) {
 				for (int dz = -r; dz <= r; dz++) {
 					if (Math.max(Math.abs(dx), Math.abs(dz)) != r) {
 						continue;
 					}
 					BlockPos spot = Spots.standable(level, around.offset(dx, 0, dz));
-					if (spot != null && Spots.isStandable(level, spot.west()) && Spots.isStandable(level, spot.east())) {
+					if (spot != null && (!roomEitherSide || Spots.isStandable(level, spot.west()) && Spots.isStandable(level, spot.east()))) {
 						return spot;
 					}
 				}

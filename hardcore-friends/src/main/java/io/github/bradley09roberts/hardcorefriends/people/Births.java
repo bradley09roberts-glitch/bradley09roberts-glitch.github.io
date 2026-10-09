@@ -3,6 +3,7 @@ package io.github.bradley09roberts.hardcorefriends.people;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -39,7 +40,7 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 /**
  * Babies. Once a minute each married couple who could start a family has a small chance (about once in fifteen
  * minutes of being able to) of finding they are expecting; the baby arrives about an in-game day later, beside a
- * parent at the camp, as a child of the camp ({@link Children}).
+ * parent at the camp and up at ground level there (never down the mine), as a child of the camp ({@link Children}).
  *
  * <p>A couple can have a baby when ({@link #whyNot} says which is missing): children are switched on; both are
  * alive, grown up and at the camp together; they married at least a day ago; their youngest is at least
@@ -54,6 +55,8 @@ final class Births {
 	static final int MOST_CHILDREN = 4;
 	/** The camp's food need (0 plenty to 1 none) above which no baby is planned. */
 	static final double FOOD_NEED_MAX = 0.4;
+	/** A parent at most this many blocks above or below the camp centre is about level with it, for a baby to arrive. */
+	private static final int GROUND_LEVEL = 6;
 	/** Sleeping places in a cabin (the sleep job's slots). */
 	static final int CABIN_BEDS = 9;
 	/** How long a baby is expected before arriving (overworld clock ticks). */
@@ -164,6 +167,20 @@ final class Births {
 		return Camp.horizontalDistSqr(c.blockPosition(), camp.campPos().get()) <= (double) r * r;
 	}
 
+	/**
+	 * At the camp and up at ground level there, about level with the camp centre and near the surface: where a baby
+	 * may arrive beside them. Never down the camp mine or in a cave under the camp, which lie inside the camp's circle
+	 * by distance alone ({@link #atCamp} says nothing of height).
+	 */
+	private static boolean atCampAboveGround(CompanionEntity c) {
+		if (!atCamp(c) || !(c.level() instanceof ServerLevel level)) {
+			return false;
+		}
+		BlockPos here = c.blockPosition();
+		Optional<BlockPos> centre = Camp.data(level.getServer()).campPos();
+		return centre.isPresent() && Math.abs(here.getY() - centre.get().getY()) <= GROUND_LEVEL && Children.nearSurface(level, here);
+	}
+
 	/** The couple's living children together. */
 	private static List<PeopleData.Person> childrenOf(PeopleData data, PeopleData.Bond bond) {
 		List<PeopleData.Person> list = new ArrayList<>();
@@ -228,11 +245,11 @@ final class Births {
 	 */
 	private static void deliver(MinecraftServer server, PeopleData data, PeopleData.Bond bond, PeopleData.Person pa, PeopleData.Person pb) {
 		CompanionEntity parent = PeopleEvents.loaded(server, bond.a);
-		if (parent == null || !atCamp(parent)) {
+		if (parent == null || !atCampAboveGround(parent)) {
 			parent = PeopleEvents.loaded(server, bond.b);
 		}
-		if (parent == null || !atCamp(parent) || !(parent.level() instanceof ServerLevel level)) {
-			return; // nobody home yet: the baby arrives when a parent is back at the camp
+		if (parent == null || !atCampAboveGround(parent) || !(parent.level() instanceof ServerLevel level)) {
+			return; // nobody home yet (or only down the mine): the baby arrives when a parent is back up at the camp
 		}
 		BlockPos spot = besideParent(level, parent);
 		CompanionEntity child = spot == null ? null : ModEntities.COMPANION.create(level, EntitySpawnReason.BREEDING);
@@ -261,13 +278,17 @@ final class Births {
 		PeopleData.Person kid = data.addBaby(child.getUUID(), name, family, archetype, colour, List.of(parent.getUUID(), bond.other(parent.getUUID())), day);
 		bond.babyDue = -1;
 		bond.lastBabyDay = day;
-		// Family start out close: parents and child, brothers and sisters.
+		// Family start out close: parents and child, brothers and sisters. Born friends, so nobody announces it later.
 		for (UUID p : kid.parents) {
-			data.bond(kid.id, p).friendship = 70;
+			PeopleData.Bond tie = data.bond(kid.id, p);
+			tie.friendship = 70;
+			tie.friendsSaid = true;
 		}
 		for (PeopleData.Person sibling : childrenOf(data, bond)) {
 			if (!sibling.id.equals(kid.id)) {
-				data.bond(kid.id, sibling.id).friendship = 50;
+				PeopleData.Bond tie = data.bond(kid.id, sibling.id);
+				tie.friendship = 50;
+				tie.friendsSaid = true;
 			}
 		}
 		data.setDirty();

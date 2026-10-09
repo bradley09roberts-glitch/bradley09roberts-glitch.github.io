@@ -62,6 +62,12 @@ free at the camp, children included, gathers in a ring round the couple; the cou
 a guest raises a toast; the bell rings; Unity rises (+30); and the couple take **one family name**. A wedding the couple
 cannot get to within two minutes, or that a monster or nightfall interrupts, is put off until the next day.
 
+"A monster about" means one within 12 blocks of the spot that could really spoil it: one going for a player or
+anyone on the team, an archer in plain sight, or a monster in plain sight, about level with the spot and out of the
+water, that the couple could walk up to. A drowned in the river, a zombie shut in the animal pen or a skeleton in a
+cave under the camp does not hold a wedding up. If a monster about (or a camp centre too cramped to stand in) keeps
+the wedding from starting all morning, it is put off until the next day and everyone is told why.
+
 A married couple are one **household**. Once the village builds homes, the village gives the household a home together.
 
 ### When it goes wrong
@@ -80,7 +86,8 @@ Name tags still show first names only; family names appear in the commands and a
 
 Once a minute, each married couple who could start a family has a small chance (about once in fifteen minutes) of
 finding they are **expecting**; everyone is told, and the baby **arrives about an in-game day later**, beside a parent
-at the camp. A couple can have a baby when:
+at the camp and up at ground level there (never down the camp mine or in a cave under the camp: the baby waits until
+a parent is back up). A couple can have a baby when:
 
 - children are switched on (`children` in the settings);
 - both are alive, grown up, **at the camp together** and at work there (not following anyone off);
@@ -102,8 +109,9 @@ later shares it), the family name, a child's skin, and a trade taken from a pare
 
 Children are drawn at a little over half size. For `childhoodDays` in-game days (10 by default) a child:
 
-- **never works**, never fights and never changes a block. They do not follow players off adventuring (a child told
-  to follow stays at home), cannot join an expedition party, cannot be dismissed, and do not go through portals;
+- **never works**, never fights and never changes a block. They do not follow players off adventuring (`/friends
+  follow` leaves children out, with a note that they are too young, so a child is never fetched to you across the
+  map), cannot join an expedition party, cannot be dismissed, and do not go through portals;
 - **eats** when hungry, from the camp chest like anyone; a parent who has food brings some to a hungry child who has
   none on them;
 - **plays** by day inside the camp: tag and hide-and-seek with another child, or chasing the chickens about (never
@@ -113,10 +121,17 @@ Children are drawn at a little over half size. For `childhoodDays` in-game days 
   and learn their own trade;
 - **goes home early**: from the end of the afternoon (time of day 11000) they go home, to their bed in the family's
   village home or the cabin, and stay in; at nightfall they go to bed;
-- **keeps near home**: a child who strays outside the camp comes straight back;
-- **runs to a grown-up** when a monster comes within 12 blocks: a parent about level with them first (never down into
-  a mine after one), otherwise a fighter or a player, otherwise home. **Parents and Aegis** (and any warrior) go for a monster that is after a child before anything else,
-  if they are fit to fight.
+- **keeps near home**: a child who strays outside the camp, or ends up below ground under it (down a cave or the
+  mine), comes straight back;
+- **runs to a grown-up** when a monster within 12 blocks could get at them: one right beside them, or one in plain
+  sight that is going for them or that they could walk up to (not one behind the cabin wall, in a fenced pen, in the
+  river or in a cave below). They run to a parent about level with them first (never down into a mine after one),
+  otherwise a fighter or a player, but only to someone further from the monster than they are, who is not fighting
+  or on watch, and, after dark, who is indoors: a child never runs out of the cabin into the night. With nobody like
+  that, they go home, or stay put if they are already indoors at the camp. A sleeping child is woken only by the
+  same rule as anyone asleep (a monster that could get at them). **Parents and Aegis** (and any warrior) go for a
+  monster that is after a child, or right beside one with nothing in between, before anything else, if they are fit
+  to fight; one who is asleep only gets up for a monster that is going for a child.
 
 Children take food from you (right-click with food: they eat it if hungry, or keep it), but nothing else: tools,
 weapons and building materials are for grown-ups.
@@ -220,7 +235,9 @@ In `config/hardcorefriends.json`, under "Living together":
   parents as recorded; children while alive; the household is a married couple and their children still young (a
   child's household is that of the parent they live with); the family name as carried.
 - The people package calls `Homes.roomForOneMore` before a baby is planned, `Homes.moveIn` for a newborn and for the
-  household at a wedding, and `Homes.moveOut` when someone dies, is dismissed, or moves out of a marriage that ended.
+  household at a wedding, and `Homes.moveOut` only when someone dies or is dismissed. The spouse who moves out of a
+  marriage that ended is still on the team: they get `Homes.moveIn(server, them, Set.of(them))`, a household of one
+  that needs a bed in a home of its own, so the village should take them out of the old home and find them another.
 - A child only does `needs.*` jobs, `navigation.*` jobs (getting unstuck must never be kept from a child; the edit
   guard refuses all their block changes anyway) and the jobs in `People.childJobs()` (play, learn, home time, stay
   close, weddings, idling, coming home, leaving the pen). A job that should be open to children too (going to their
@@ -249,6 +266,8 @@ In `config/hardcorefriends.json`, under "Living together":
 - The skin list is read from the mod's own JAR: new skins mean rebuilding the mod and giving every player the new JAR.
   An entry whose texture path has a typo draws the game's purple-and-black "missing texture" (the tool writes the
   paths from the files themselves, so it cannot make that mistake).
+- "Below ground" (for a child kept near home, and where a baby arrives) is a simple test: more than six blocks under
+  the surface there and below home. A child in a very tall building on low ground may be walked home for nothing.
 - A child is a smaller body and can slip under ledges and through gaps a grown-up cannot. They only grow up where a
   grown-up fits, but a parent may not always be able to follow them.
 - If both of a child's parents die, the child stays on the team and is looked after by the camp as a whole (their

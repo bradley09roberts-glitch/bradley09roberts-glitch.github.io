@@ -11,7 +11,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
@@ -95,19 +94,11 @@ final class LearnTask implements CompanionTask {
 			CompanionEntity parent = PeopleEvents.loaded(level.getServer(), id);
 			if (parent != null && parent.level() == level && parent.distanceToSqr(c) <= PARENT_RANGE * PARENT_RANGE
 				&& Relationships.working(parent) && parent.mode() == CompanionMode.WORK && Spots.inCamp(c, parent.blockPosition())
-				&& !parent.isChild() && nearSurface(level, parent.blockPosition())) {
+				&& !parent.isChild() && Children.nearSurface(level, parent.blockPosition())) {
 				return parent;
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * At or just below the ground's surface there (indoors in a cabin counts): never down a mine or in a cave, where a
-	 * child following to watch would be in the dark with whatever lives there.
-	 */
-	private static boolean nearSurface(ServerLevel level, BlockPos pos) {
-		return pos.getY() >= level.getHeight(Heightmap.Types.WORLD_SURFACE, pos.getX(), pos.getZ()) - 6;
 	}
 
 	/** The teacher at work in this world, looked up at most every few seconds through {@code Professions}. */
@@ -178,7 +169,7 @@ final class LearnTask implements CompanionTask {
 		}
 		CompanionEntity teacher = PeopleEvents.loaded(level.getServer(), id);
 		if (teacher == null || teacher.level() != level || !Spots.inCamp(c, teacher.blockPosition())
-			|| school == null && (!Relationships.working(teacher) || !nearSurface(level, teacher.blockPosition()))) {
+			|| school == null && (!Relationships.working(teacher) || !Children.nearSurface(level, teacher.blockPosition()))) {
 			return done();
 		}
 		if (++ticks > LESSON_TICKS) {

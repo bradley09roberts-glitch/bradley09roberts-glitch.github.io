@@ -16,7 +16,9 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
  * CompanionEntity#canStandAndFight}: healthy, armed, within their reach) goes for a monster that is after a child,
  * their own child if they are a parent, any child if they are a fighter (Aegis and the warriors among the newcomers).
  * A target goal, above fighting back for themselves; it looks at the camp's endangered children, worked out once every
- * 10 ticks for the whole world ({@link Children#inDanger}).
+ * 10 ticks for the whole world ({@link Children#inDanger}: a monster going for a child, or right beside one with
+ * nothing in between). A grown-up asleep only gets up for a monster that is going for a child; for one that is merely
+ * close, the sleep job's own waking rules (a monster that could get at the sleeper, the night watch's alarm) decide.
  */
 final class ProtectChildGoal extends Goal {
 	private static final double REACH = 24;
@@ -45,6 +47,9 @@ final class ProtectChildGoal extends Goal {
 			double d = adult.distanceToSqr(mob);
 			if (d >= best || adult.hasGivenUpOn(mob) || !adult.canStandAndFight(mob)) {
 				continue;
+			}
+			if (adult.isAsleep() && mob.getTarget() != danger.child()) {
+				continue; // a sleeper gets up for a monster going for a child; one only nearby is the sleep job's to judge
 			}
 			if (adult.isFighter() || Children.isParent(level.getServer(), adult, danger.child())) {
 				best = d;

@@ -143,7 +143,9 @@ public final class Skins {
 		if (path != null) {
 			try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
 				read(JsonParser.parseReader(reader), skins);
-			} catch (IOException | JsonParseException | IllegalStateException e) {
+			} catch (IOException | RuntimeException e) {
+				// Any mistake in the file (bad JSON, a list that is not a list...) falls back to the built-in skins, once:
+				// the result is kept, so a broken file never throws again.
 				HardcoreFriends.LOGGER.warn("Could not read {}, using the built-in skins: {}", FILE, e.getMessage());
 				skins.clear();
 			}
@@ -156,10 +158,11 @@ public final class Skins {
 	}
 
 	private static void read(JsonElement root, Map<Integer, Skin> skins) {
-		JsonArray list = root.getAsJsonObject().getAsJsonArray("skins");
-		if (list == null) {
+		JsonElement skinsList = root.isJsonObject() ? root.getAsJsonObject().get("skins") : null;
+		if (skinsList == null || !skinsList.isJsonArray()) {
 			throw new JsonParseException("no \"skins\" list");
 		}
+		JsonArray list = skinsList.getAsJsonArray();
 		for (JsonElement element : list) {
 			Skin skin = entry(element);
 			if (skin == null) {
