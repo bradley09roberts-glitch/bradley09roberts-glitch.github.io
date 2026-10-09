@@ -41,6 +41,8 @@ public final class Structures {
 	public static final String ANVIL = "anvil";
 	/** A brewing stand by the supply chest, once the camp has a blaze rod (package progress). */
 	public static final String BREWING_STAND = "brewing_stand";
+	/** A Nether portal at the camp, built and lit once Sage's plan says the camp is ready (package expedition). */
+	public static final String NETHER_PORTAL = "nether_portal";
 
 	public static final List<Entry> ALL = List.of(
 		new Entry(SUPPLY_CHEST, 0, Role.BUILDER, "supply chest", false),
@@ -66,7 +68,9 @@ public final class Structures {
 		// Optional, made for Sage's plan by the progress package's own building job (never Oak's general building list).
 		new Entry(LIBRARY, 3, Role.STRATEGIST, "library", true),
 		new Entry(ANVIL, 3, Role.STRATEGIST, "anvil", true),
-		new Entry(BREWING_STAND, 3, Role.STRATEGIST, "brewing stand", true));
+		new Entry(BREWING_STAND, 3, Role.STRATEGIST, "brewing stand", true),
+		// Optional, built and lit by the expedition package's own job for the plan (never Oak's general building list).
+		new Entry(NETHER_PORTAL, 3, Role.STRATEGIST, "Nether portal", true));
 
 	private Structures() {
 	}

@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.NeutralMob;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Enemy;
@@ -17,6 +18,7 @@ import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.monster.Shulker;
 import net.minecraft.world.entity.monster.Witch;
 import net.minecraft.world.entity.monster.breeze.Breeze;
+import net.minecraft.world.entity.monster.piglin.Piglin;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
@@ -29,10 +31,19 @@ public final class Threats {
 	private Threats() {
 	}
 
-	/** Hostile mobs, plus neutral mobs (endermen, piglins) only once they are angry at someone. */
+	/**
+	 * Hostile mobs, plus neutral mobs (endermen, zombified piglins) only once they are angry at someone, and piglins only
+	 * once they go for a player or a friend: a calm piglin is someone to barter with, and one blow sets the whole crowd
+	 * on everyone. The ender dragon is never
+	 * chased like a mob (it flies over the void): the expedition package fights it with goals of its own.
+	 */
 	public static boolean isThreat(LivingEntity e) {
-		if (!e.isAlive() || !(e instanceof Enemy) || e instanceof CompanionEntity) {
+		if (!e.isAlive() || !(e instanceof Enemy) || e instanceof CompanionEntity || e instanceof EnderDragon) {
 			return false;
+		}
+		if (e instanceof Piglin piglin) {
+			LivingEntity target = piglin.getTarget(); // not one hunting a hoglin: only one going for us
+			return target instanceof net.minecraft.world.entity.player.Player || target instanceof CompanionEntity;
 		}
 		if (e instanceof NeutralMob && e instanceof Mob mob) {
 			return mob.getTarget() != null;

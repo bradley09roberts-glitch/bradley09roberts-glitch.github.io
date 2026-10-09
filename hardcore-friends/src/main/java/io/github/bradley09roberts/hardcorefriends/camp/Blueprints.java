@@ -118,6 +118,16 @@ public final class Blueprints {
 	public static final Blueprint BREWING_STAND = Blueprint.builder(Structures.BREWING_STAND, 1, 1).anchor(Blueprint.Anchor.CHEST)
 		.at(0, -3).put(0, 0, 0, MaterialSpec.BREWING_STAND).build();
 
+	/** Local position of the bottom of the Nether portal's opening, where it is lit (declared before the plan). */
+	public static final int[] PORTAL_FIRE = {1, 1, 0};
+
+	/**
+	 * A Nether portal for expeditions: a frame of 10 obsidian, 4 wide and 5 high, standing on the ground, with its four
+	 * corners in cobblestone (a portal does not need them) round a 2×3 opening. The expedition package's own job builds
+	 * it once Sage's plan says the camp is ready, then lights it at {@link #PORTAL_FIRE}.
+	 */
+	public static final Blueprint NETHER_PORTAL = netherPortal();
+
 	/** Local positions of the smelter's chests, for players and tests. */
 	public static final int[] SMELTER_INPUT = {0, 4, 0};
 	public static final int[] SMELTER_FUEL = {1, 3, 0};
@@ -129,7 +139,8 @@ public final class Blueprints {
 
 	static {
 		for (Blueprint b : List.of(SUPPLY_CHEST, CAMPFIRE, CRAFTING_TABLE, FURNACE, TORCH_POSTS, CABIN, STOREHOUSE, WATCHTOWER,
-			LANTERN_POSTS, CABIN_2, AUTO_DOOR, HOPPER_DROPOFF, AUTO_SMELTER, LAMP_POSTS, ANIMAL_PEN, LIBRARY, ANVIL, BREWING_STAND)) {
+			LANTERN_POSTS, CABIN_2, AUTO_DOOR, HOPPER_DROPOFF, AUTO_SMELTER, LAMP_POSTS, ANIMAL_PEN, LIBRARY, ANVIL, BREWING_STAND,
+			NETHER_PORTAL)) {
 			BY_ID.put(b.id(), b);
 		}
 	}
@@ -326,6 +337,20 @@ public final class Blueprints {
 		b.put(LIBRARY_TABLE[0], LIBRARY_TABLE[1], LIBRARY_TABLE[2], MaterialSpec.ENCHANTING_TABLE);
 		b.attach(0, 1, 0, MaterialSpec.TORCH).attach(4, 1, 0, MaterialSpec.TORCH)
 			.attach(0, 1, 4, MaterialSpec.TORCH).attach(4, 1, 4, MaterialSpec.TORCH);
+		return b.build();
+	}
+
+	private static Blueprint netherPortal() {
+		Blueprint.Builder b = Blueprint.builder(Structures.NETHER_PORTAL, 4, 1).at(-3, 15);
+		for (int dx = 0; dx < 4; dx++) {
+			for (int dy = 0; dy <= 4; dy++) {
+				boolean side = dx == 0 || dx == 3;
+				boolean end = dy == 0 || dy == 4;
+				if (side || end) {
+					b.put(dx, dy, 0, side && end ? MaterialSpec.COBBLESTONE : MaterialSpec.OBSIDIAN); // the rest is the opening
+				}
+			}
+		}
 		return b.build();
 	}
 

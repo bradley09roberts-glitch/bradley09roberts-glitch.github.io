@@ -416,8 +416,15 @@ public class CompanionEntity extends PathfinderMob {
 	}
 
 	/**
-	 * The camp centre if the camp is in this dimension, otherwise where this friend was recruited. A stranger (not on
-	 * the team yet) lives somewhere else entirely, so theirs is always their own spot.
+	 * Where "home" is for a friend away in another dimension than the camp's (the Nether, the End): the expedition
+	 * package's answer (their leader, or the portal they came in by), or null to fall back to the recruit spot.
+	 */
+	public static volatile java.util.function.@Nullable Function<CompanionEntity, @Nullable BlockPos> awayHome;
+
+	/**
+	 * The camp centre if the camp is in this dimension, otherwise (away on an expedition) the way back the expedition
+	 * package gives ({@link #awayHome}), otherwise where this friend was recruited. A stranger (not on the team yet)
+	 * lives somewhere else entirely, so theirs is always their own spot.
 	 */
 	public BlockPos homePos() {
 		if (mode() == CompanionMode.STRANGER && homePos != null) {
@@ -427,6 +434,11 @@ public class CompanionEntity extends PathfinderMob {
 			var camp = Camp.center(level);
 			if (camp.isPresent()) {
 				return camp.get();
+			}
+			var away = awayHome;
+			BlockPos there = away != null && isTeamMember() ? away.apply(this) : null;
+			if (there != null) {
+				return there;
 			}
 		}
 		return homePos != null ? homePos : this.blockPosition();

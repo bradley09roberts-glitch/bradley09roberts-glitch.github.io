@@ -211,6 +211,32 @@ public enum Line {
 
 	// ==== Expeditions (package expedition): portals, the Nether, the stronghold, the End ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** Came through a portal right behind their leader (one friend speaks for the group). */
+	PORTAL_THROUGH(Priority.IMPORTANT, 1200, 0),
+	/** Left on their own in another dimension: heading home through the portal they came in by. */
+	PORTAL_HOME(Priority.IMPORTANT, 2400, 0),
+	/** The Nether portal at the camp has just been lit. */
+	PORTAL_LIT(Priority.IMPORTANT, 0, 0),
+	/** Tossing a gold ingot to a piglin to barter. */
+	BARTER(Priority.CASUAL, 1200, 0),
+	/** Brought down a blaze in the Nether (a blaze rod for the plan, with luck). */
+	BLAZE_ROD(Priority.IMPORTANT, 600, 0),
+	/** Spotted a Nether fortress. */
+	FORTRESS_SEEN(Priority.IMPORTANT, 6000, 0),
+	/** Threw an eye of ender to find the stronghold. %1$s = the compass direction it flew, e.g. "north-east". */
+	EYE_THROWN(Priority.IMPORTANT, 200, 1),
+	/** Home from finding the stronghold. %1$s = where it is, e.g. "x 1204, z -388" (templates end with it). */
+	STRONGHOLD_FOUND(Priority.IMPORTANT, 0, 1),
+	/** Set the last eye in the End portal frame, and it opened. */
+	PORTAL_FILLED(Priority.IMPORTANT, 0, 0),
+	/** Setting off to pillar up beside a caged end crystal and open its cage. */
+	CAGE_CLIMB(Priority.IMPORTANT, 600, 0),
+	/** An end crystal they shot has gone up. */
+	CRYSTAL_DOWN(Priority.IMPORTANT, 100, 0),
+	/** The ender dragon has landed on the portal: time for blades. */
+	DRAGON_PERCHED(Priority.DANGER, 400, 0),
+	/** The ender dragon is defeated. */
+	VICTORY(Priority.IMPORTANT, 0, 0),
 
 	// ==== end of expedition ====
 
