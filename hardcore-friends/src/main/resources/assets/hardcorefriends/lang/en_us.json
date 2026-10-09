@@ -1,4 +1,9 @@
 {
   "entity.hardcorefriends.companion": "Friend",
-  "item.hardcorefriends.backpack": "Friend's Backpack"
+  "item.hardcorefriends.backpack": "Friend's Backpack",
+  "death.attack.hardcorefriends.friend_strike": "%1$s was struck down by %2$s",
+  "death.attack.hardcorefriends.friend_strike.player": "%1$s was struck down by %2$s while fighting %3$s",
+  "death.attack.hardcorefriends.friend_arrow": "%1$s was shot by %2$s",
+  "death.attack.hardcorefriends.friend_arrow.player": "%1$s was shot by %2$s while fighting %3$s",
+  "structure.hardcorefriends.survivor_camp": "Survivor Camp"
 }

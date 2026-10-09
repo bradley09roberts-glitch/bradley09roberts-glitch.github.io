@@ -137,7 +137,7 @@ public final class FriendsCommand {
 
 	private static int help(CommandContext<CommandSourceStack> ctx) {
 		String[] lines = {
-			"Hardcore Friends - nine companions, one life each.",
+			"Hardcore Friends - nine companions and the newcomers you meet, one life each.",
 			"/friends recruit <name>  - costs " + RECRUIT_COST + " common food (bread, apples, carrots, potatoes, meat...)",
 			"/friends list | where <name> | backpack <name>",
 			"/friends needs [name|all]  - hunger, energy, social, fun, comfort and mood",
@@ -145,6 +145,9 @@ public final class FriendsCommand {
 			"/friends camp | camp set | chest (look at a chest or barrel)",
 			"/friends unity | plan | advice | log | chatter <quiet|normal|chatty>",
 			"/friends dismiss <name>  - they leave and drop their backpack",
+			"/friends goals  - Sage's plan to beat the game, step by step",
+			"/friends skills [name] | trips | gear  - what they've learnt, where they've gone, what they wear",
+			"/friends party add|remove <name> | party go | party home  - your expedition party (Nether, End)",
 			"/friends newcomers  - people met in villages, survivor camps and on the road (right-click to talk)",
 			"/friends jobs | deliver | bond | note <text> | notes | mailbox | send <item> <count> | trusted | trust <player>",
 			"Right-click a friend: status. Sneak + right-click: open backpack. Give food to feed or heal them.",
