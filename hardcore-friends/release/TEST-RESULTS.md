@@ -1,5 +1,7 @@
 # Hardcore Friends 1.0.0: test results
 
+> **These are 1.0's results.** Version 2.0 was not tested in game, at your request: see `TESTING-2.0.md` for what was checked instead and what to try first. The 1.0 parts of the mod are largely unchanged, but the night watch was reworked and many new features touch them.
+
 These results are honest: they include what went wrong, what was fixed, and what is still not perfect. Everything ran on Minecraft Java 26.3 with Fabric Loader 0.19.5 and Fabric API 0.162.0+26.3. **None of your own saves were opened or touched.** Every test world was created fresh inside the build folder.
 
 ## 1. Automated game tests: 143 of 143 pass

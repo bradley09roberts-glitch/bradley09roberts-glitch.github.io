@@ -1,9 +1,10 @@
 # Hardcore Friends 2.0: what to test
 
 You asked me not to run any tests, so **none of 2.0 has been played**. Everything compiles, and every part was read
-through by a separate reviewer against Minecraft 26.3's own code. The reviewers found 41 real problems, and all were
-fixed before this release (one more was checked and wasn't real). That is not the same as playing it. 1.0's test
-results (still valid for the 1.0 parts) are in `TEST-RESULTS.md`.
+through by a separate reviewer against Minecraft 26.3's own code. The reviewers found 46 real problems (5 in the night
+watch, 9 in combat and independence, 10 in Sage's plan and newcomers, 12 in the multiplayer features, 10 in
+expeditions), and all 46 were fixed before this release; one more was checked and wasn't real. That is not the same as
+playing it. 1.0's test results (still valid for the 1.0 parts) are in `TEST-RESULTS.md`.
 
 **Use a copy of a world, or a new one.** 2.0 adds new world generation (survivor camps), so test in a fresh world first.
 
@@ -87,6 +88,8 @@ friends' last block changes, and the game log (`logs/latest.log`) shows any erro
 
 ## Known limits worth knowing before you start
 
+- A friend following you far from camp in the overworld stops when you log out or die there (nothing runs near them
+  any more), and carries on when a player comes back. Friends in the Nether or the End are handled: they head home.
 - The supply chest is shared: friends use armour, bows, golden apples and potions you leave in it.
 - Books for the library need 46 leather; obsidian needs cave lava or lava below y = 40. These steps are slow.
 - Plain dirt or stone you placed inside a site being levelled can look natural and be dug away.
