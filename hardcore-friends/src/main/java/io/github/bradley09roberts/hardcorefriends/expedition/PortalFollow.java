@@ -60,9 +60,35 @@ final class PortalFollow {
 		@Nullable Line line) {
 	}
 
+	/**
+	 * A follower coming along with their leader, tried each tick for a little while: the land by the player on the far
+	 * side may take a tick or two to start running after they arrive. {@code spoken} is shared by the group, so one
+	 * friend speaks for them all.
+	 */
+	private static final class Along {
+		final CompanionEntity friend;
+		final UUID player;
+		final BlockPos portalHere;
+		final BlockPos portalThere;
+		final boolean[] spoken;
+		int triesLeft = COME_ALONG_TRIES;
+
+		Along(CompanionEntity friend, UUID player, BlockPos portalHere, BlockPos portalThere, boolean[] spoken) {
+			this.friend = friend;
+			this.player = player;
+			this.portalHere = portalHere;
+			this.portalThere = portalThere;
+			this.spoken = spoken;
+		}
+	}
+
+	/** How many ticks a follower keeps trying to come along before making for the portal on foot instead. */
+	private static final int COME_ALONG_TRIES = 40;
+
 	private static final Map<UUID, Last> LAST = new HashMap<>();
 	private static final List<PlayerMove> PLAYER_MOVES = new ArrayList<>();
 	private static final List<FriendMove> FRIEND_MOVES = new ArrayList<>();
+	private static final List<Along> ALONG = new ArrayList<>();
 
 	private PortalFollow() {
 	}
@@ -88,6 +114,7 @@ final class PortalFollow {
 		LAST.clear();
 		PLAYER_MOVES.clear();
 		FRIEND_MOVES.clear();
+		ALONG.clear();
 	}
 
 	/** Asks for a friend's own crossing, made at the end of this tick (see the class description). */
@@ -112,6 +139,9 @@ final class PortalFollow {
 					HardcoreFriends.LOGGER.error("Friends could not follow a player through a portal", e);
 				}
 			}
+		}
+		if (!ALONG.isEmpty()) {
+			comeAlong(server);
 		}
 		if (!FRIEND_MOVES.isEmpty()) {
 			List<FriendMove> moves = List.copyOf(FRIEND_MOVES);
@@ -173,28 +203,56 @@ final class PortalFollow {
 				}
 			}
 		}
-		boolean spoken = false;
-		int crossed = 0;
+		boolean[] spoken = new boolean[1];
 		for (CompanionEntity c : along) {
-			BlockPos near = FollowLeaderGoal.catchUpSpot(to, portalThere, c.getRandom());
-			CompanionEntity moved = Travel.cross(c, to, near != null ? near : portalThere, portalHere, portalThere);
-			if (moved == null) {
-				// No safe footing by the player (a lava lake round the portal...): they make for the portal instead.
-				Travel.setChase(c, player.getUUID(), portalHere, Travel.dimId(to), portalThere);
-				continue;
-			}
-			crossed++;
-			if (!spoken) {
-				spoken = Speech.say(moved, Line.PORTAL_THROUGH);
-			}
+			ALONG.add(new Along(c, player.getUUID(), portalHere, portalThere, spoken));
 		}
-		if (crossed > 0 && to.dimension() == Level.END && ProgressPlan.enabled()) {
-			// Into the End with the friends: whoever found the stronghold, the plan has got this far.
-			ProgressPlan.complete(server, Milestone.STRONGHOLD);
-			ProgressPlan.complete(server, Milestone.END_PORTAL);
-		}
+		comeAlong(server);
 		if (stranded(from)) {
 			strandedCheck(from);
+		}
+	}
+
+	/**
+	 * Brings each waiting follower across beside their leader (see {@link Along}). One whose leader has gone again, or
+	 * who still finds no safe footing by them after a couple of seconds (a lava lake round the portal...), makes for the
+	 * portal on foot instead ({@link TravelGoal}).
+	 */
+	private static void comeAlong(MinecraftServer server) {
+		List<Along> waiting = List.copyOf(ALONG);
+		ALONG.clear();
+		for (Along a : waiting) {
+			CompanionEntity c = a.friend;
+			ServerPlayer player = server.getPlayerList().getPlayer(a.player);
+			if (!c.isAlive() || c.isRemoved() || player == null || !player.isAlive() || c.level() == player.level()) {
+				continue;
+			}
+			ServerLevel to = player.level();
+			CompanionEntity moved = null;
+			try {
+				BlockPos near = FollowLeaderGoal.catchUpSpot(to, a.portalThere, c.getRandom());
+				moved = Travel.cross(c, to, near != null ? near : a.portalThere, a.portalHere, a.portalThere);
+			} catch (RuntimeException e) {
+				HardcoreFriends.LOGGER.error("{} could not come through a portal", c.displayName(), e);
+			}
+			if (moved != null) {
+				if (!a.spoken[0]) {
+					a.spoken[0] = Speech.say(moved, Line.PORTAL_THROUGH);
+				}
+				if (to.dimension() == Level.END && ProgressPlan.enabled()) {
+					// Into the End with the friends: whoever found the stronghold, the plan has got this far.
+					ProgressPlan.complete(server, Milestone.STRONGHOLD);
+					ProgressPlan.complete(server, Milestone.END_PORTAL);
+				}
+			} else if (--a.triesLeft > 0) {
+				ALONG.add(a);
+			} else {
+				Travel.setChase(c, a.player, a.portalHere, Travel.dimId(to), a.portalThere);
+				Travel.setRoaming(c, true);
+				if (!ChunkLoader.startRoaming(c, "following " + player.getName().getString() + " through a portal")) {
+					Travel.setRoaming(c, false);
+				}
+			}
 		}
 	}
 
@@ -215,8 +273,8 @@ final class PortalFollow {
 	 */
 	private static void strandedCheck(ServerLevel level) {
 		for (CompanionEntity c : Companions.in(level)) {
-			if (Travel.roaming(c) || !Travel.abroad(c)) {
-				continue;
+			if (Travel.roaming(c) || !Travel.abroad(c) || c.mode() == CompanionMode.FOLLOW && c.leader() != null) {
+				continue; // at home, already moving, or off after a leader who is online (coming along, or following)
 			}
 			Travel.setRoaming(c, true);
 			if (!ChunkLoader.startRoaming(c, "making their way home from another dimension")) {

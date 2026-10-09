@@ -15,8 +15,14 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 
-/** FOLLOW mode: stay a few blocks from the leader, catching up if left far behind in the same dimension. */
+/**
+ * FOLLOW mode: stay a few blocks from the leader, catching up if left far behind in the same dimension (sooner in the
+ * End, where the way to the leader is often a narrow bridge over the void). Following a leader into another dimension
+ * is the expedition package's {@code TravelGoal}.
+ */
 public class FollowLeaderGoal extends Goal {
+	/** In the End, a friend further than this from their leader catches up rather than walks (when catching up is on). */
+	private static final int END_CATCH_UP = 16;
 	private final CompanionEntity companion;
 	private @Nullable ServerPlayer leader;
 	private int recalc;
@@ -70,6 +76,10 @@ public class FollowLeaderGoal extends Goal {
 		}
 		recalc = 10;
 		int teleport = FriendsConfig.get().followTeleportDistance;
+		if (teleport > 0 && companion.level().dimension() == Level.END) {
+			// The End is islands over the void: a long walk after the player is a walk along their narrow bridge.
+			teleport = Math.min(teleport, END_CATCH_UP);
+		}
 		if (teleport > 0 && companion.distanceToSqr(leader) > (double) teleport * teleport) {
 			tryCatchUp();
 			return;

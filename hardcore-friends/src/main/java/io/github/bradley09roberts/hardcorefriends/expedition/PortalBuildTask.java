@@ -1,6 +1,7 @@
 package io.github.bradley09roberts.hardcorefriends.expedition;
 
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -48,7 +49,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * the builder puts up the portal's frame through the ordinary blueprint system ({@link Blueprints#NETHER_PORTAL}: real
  * obsidian from the chest, a proper site in the camp, the guard's {@code BUILD} rules), then fetches the flint and
  * steel and lights it by setting fire in the opening, which is what makes a portal for a player too. Everyone on the
- * server hears that it is lit. It is lit once: a portal that goes out later is the players' to relight. Not built when
+ * server hears that it is lit. A frame that lost a block before it was lit is mended first. It is lit once: a portal
+ * that goes out later is the players' to relight. Not built when
  * the players already go through a portal of their own at the camp, and only in the overworld or the Nether, where
  * portals work. Checked at most every {@value #CHECK_INTERVAL} ticks.
  */
@@ -60,6 +62,8 @@ public final class PortalBuildTask extends BlueprintTask {
 	private long checkedAt = Long.MIN_VALUE / 2;
 	private boolean wanted;
 	private boolean lighting;
+	/** This run puts back blocks missing from a finished frame (before it can be lit). */
+	private boolean mending;
 	private boolean fetched;
 	private int lightTicks;
 
@@ -81,6 +85,11 @@ public final class PortalBuildTask extends BlueprintTask {
 	@Override
 	protected double baseScore() {
 		return 50;
+	}
+
+	@Override
+	protected boolean repair() {
+		return mending;
 	}
 
 	@Override
@@ -107,7 +116,15 @@ public final class PortalBuildTask extends BlueprintTask {
 		}
 		Container chest = SupplyChest.of(level).orElse(null);
 		if (data.isCompleted(Structures.NETHER_PORTAL)) {
-			return hasFlintAndSteel(c, chest); // built: only the lighting is left
+			// Built: only the lighting is left, once any gap in the frame is mended (with obsidian the camp has).
+			List<Placement> gaps = BuildJob.missing(level, data, Blueprints.NETHER_PORTAL, 16);
+			for (Placement p : gaps) {
+				Stock s = p.entry().material().stock();
+				if (s != null && !Supplies.canMake(c, chest, s, 1)) {
+					return false;
+				}
+			}
+			return hasFlintAndSteel(c, chest);
 		}
 		// A portal the players already use at the camp will do.
 		BlockPos centre = data.campPos().get();
@@ -148,7 +165,9 @@ public final class PortalBuildTask extends BlueprintTask {
 	public boolean start(CompanionEntity c) {
 		checkedAt = Long.MIN_VALUE / 2; // look again with fresh eyes
 		CampData data = Camp.data(c.level().getServer());
-		lighting = data.isCompleted(Structures.NETHER_PORTAL);
+		boolean built = data.isCompleted(Structures.NETHER_PORTAL);
+		mending = built && !BuildJob.missing((ServerLevel) c.level(), data, Blueprints.NETHER_PORTAL, 1).isEmpty();
+		lighting = built && !mending;
 		fetched = false;
 		lightTicks = 0;
 		if (lighting) {
@@ -167,6 +186,7 @@ public final class PortalBuildTask extends BlueprintTask {
 		super.stop(c);
 		c.actions().reset();
 		lighting = false;
+		mending = false;
 	}
 
 	@Override

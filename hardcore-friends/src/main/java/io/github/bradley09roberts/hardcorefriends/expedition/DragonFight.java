@@ -72,10 +72,17 @@ public final class DragonFight {
 
 	/** A full draw, as a player's: the speed friends loose arrows at the crystals and the dragon. */
 	static final float FULL_DRAW = 3.0F;
-	/** Nobody may stand this close to a crystal when it is shot (it blows up). */
-	static final double BLAST_CLEARANCE = 8;
-	/** Crystals and the dragon are looked for this far from the middle of the island. */
-	private static final double ARENA = 160;
+	/**
+	 * Nobody may stand this close to a crystal when it is shot: it blows up, and its blast throws people about this far
+	 * (twice its power of 6) even when it cannot hurt them.
+	 */
+	static final double BLAST_CLEARANCE = 12;
+	/** Crystals are looked for this far from the middle of the island (the towers stand about 42 blocks out). */
+	private static final double ARENA = 64;
+	/** After a climb to a cage, the next try at that crystal waits this long (from another side). */
+	private static final long CLIMB_AGAIN = 1200;
+	/** Climbs tried at one crystal before leaving it to the players. */
+	private static final int MAX_CLIMBS = 4;
 	private static final int UNITY_FOR_VICTORY = 100;
 
 	/** Where an archer can shoot a crystal from: a spot on the ground with a clear arc to it. */
@@ -91,6 +98,8 @@ public final class DragonFight {
 	private static final Map<UUID, ShootSpot> SPOTS = new HashMap<>();
 	private static final Map<UUID, Long> NO_SPOT_UNTIL = new HashMap<>();
 	private static @Nullable Climb climb;
+	/** Per crystal: how many climbs were tried, and when the next may start. */
+	private static final Map<UUID, long[]> CLIMBS_TRIED = new HashMap<>();
 	private static boolean wasSitting;
 
 	private DragonFight() {
@@ -102,6 +111,7 @@ public final class DragonFight {
 		SPOTS.clear();
 		NO_SPOT_UNTIL.clear();
 		climb = null;
+		CLIMBS_TRIED.clear();
 		wasSitting = false;
 	}
 
@@ -123,7 +133,12 @@ public final class DragonFight {
 		CRYSTALS.addAll(end.getEntitiesOfClass(EndCrystal.class, arena, EndCrystal::isAlive));
 		SPOTS.keySet().removeIf(id -> CRYSTALS.stream().noneMatch(c -> c.getUUID().equals(id)));
 		EnderDragon d = dragon;
-		boolean sitting = d != null && d.getPhaseManager().getCurrentPhase().isSitting() && !dying(d);
+		if (d == null || !active(end)) {
+			wasSitting = false;
+			climb = null;
+			return; // no fight on: nothing to shoot or climb
+		}
+		boolean sitting = perched(d);
 		if (sitting && !wasSitting) {
 			callOut(end, d, Line.DRAGON_PERCHED);
 		}
@@ -146,13 +161,13 @@ public final class DragonFight {
 		}
 	}
 
-	/** True while there is a fight on in this level: a living dragon, or crystals left. */
+	/** True while there is a fight on in this level: a living dragon (crystals left over after it fell are left alone). */
 	static boolean active(ServerLevel level) {
 		if (level.dimension() != Level.END) {
 			return false;
 		}
 		EnderDragon d = dragon;
-		return d != null && d.isAlive() && !dying(d) || !CRYSTALS.isEmpty();
+		return d != null && d.isAlive() && !d.isRemoved() && !dying(d);
 	}
 
 	static @Nullable EnderDragon dragon() {
@@ -366,11 +381,14 @@ public final class DragonFight {
 			&& pos.getY() >= k.baseY() && pos.getY() < k.topY();
 	}
 
-	/** The climb is over (done, given up or the climber gone). */
+	/** The climb is over (done, given up or the climber gone): that crystal waits a while before another try. */
 	static void endClimb(CompanionEntity c) {
 		Climb k = climb;
 		if (k != null && k.friend().equals(c.getUUID())) {
 			climb = null;
+			long[] tried = CLIMBS_TRIED.computeIfAbsent(k.crystal(), id -> new long[2]);
+			tried[0]++;
+			tried[1] = c.level().getGameTime() + CLIMB_AGAIN;
 		}
 	}
 
@@ -409,11 +427,14 @@ public final class DragonFight {
 		if (d == null) {
 			return; // no dragon to fight: nobody climbs anything
 		}
+		long now = level.getGameTime();
 		for (EndCrystal crystal : CRYSTALS) {
-			if (SPOTS.containsKey(crystal.getUUID()) || !caged(level, crystal)) {
+			long[] tried = CLIMBS_TRIED.get(crystal.getUUID());
+			if (SPOTS.containsKey(crystal.getUUID()) || tried != null && (tried[0] >= MAX_CLIMBS || now < tried[1])
+				|| !caged(level, crystal)) {
 				continue;
 			}
-			Climb plan = planClimb(level, crystal);
+			Climb plan = planClimb(level, crystal, tried == null ? 0 : (int) tried[0]);
 			if (plan == null) {
 				continue;
 			}
@@ -444,11 +465,11 @@ public final class DragonFight {
 	 * Where to pillar up beside a caged crystal's tower: a column three blocks out from its middle on one of its four
 	 * sides, with solid ground under it (not the void) and nothing in the way up to the cage's lowest ring.
 	 */
-	private static @Nullable Climb planClimb(ServerLevel level, EndCrystal crystal) {
+	private static @Nullable Climb planClimb(ServerLevel level, EndCrystal crystal, int tried) {
 		BlockPos at = crystal.blockPosition();
 		int topY = at.getY() - 1; // the cage's bottom ring is level with the bedrock under the crystal
-		int[][] sides = {{3, 0}, {-3, 0}, {0, 3}, {0, -3}};
-		Climb best = null;
+		int[][] sides = {{3, 0}, {0, 3}, {-3, 0}, {0, -3}};
+		List<Climb> options = new ArrayList<>();
 		for (int[] side : sides) {
 			int x = at.getX() + side[0];
 			int z = at.getZ() + side[1];
@@ -468,12 +489,16 @@ public final class DragonFight {
 			if (!clear || ground == Integer.MIN_VALUE || !level.getFluidState(new BlockPos(x, ground + 1, z)).isEmpty()) {
 				continue;
 			}
-			Climb option = new Climb(new UUID(0, 0), crystal.getUUID(), x, z, ground + 1, topY);
-			if (best == null || option.baseY() > best.baseY()) {
-				best = option; // the side with the highest ground needs the fewest blocks
+			if (ground + 1 < topY) {
+				options.add(new Climb(new UUID(0, 0), crystal.getUUID(), x, z, ground + 1, topY));
 			}
 		}
-		return best;
+		if (options.isEmpty()) {
+			return null;
+		}
+		// The side with the highest ground needs the fewest blocks; a later try goes round to the next side.
+		options.sort((a, b) -> Integer.compare(b.baseY(), a.baseY()));
+		return options.get(tried % options.size());
 	}
 
 	/** The crystal a climb is for, if it is still there. */

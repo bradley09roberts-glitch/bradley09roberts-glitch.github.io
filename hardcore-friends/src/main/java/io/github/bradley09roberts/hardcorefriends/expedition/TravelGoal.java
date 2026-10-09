@@ -62,6 +62,7 @@ public class TravelGoal extends Goal {
 	private int noProgress;
 	private double bestDist = Double.MAX_VALUE;
 	private boolean announced;
+	private int landCheck;
 
 	public TravelGoal(CompanionEntity companion) {
 		this.c = companion;
@@ -169,8 +170,9 @@ public class TravelGoal extends Goal {
 					return;
 				}
 			}
-			if (c.tickCount % 100 == 0) {
-				holdLand();
+			if (++landCheck >= 5) {
+				landCheck = 0;
+				holdLand(); // every few seconds: a player may have come or gone
 			}
 		}
 		if (c.tickCount % 100 == 0 && c.mode() == CompanionMode.WORK) {
