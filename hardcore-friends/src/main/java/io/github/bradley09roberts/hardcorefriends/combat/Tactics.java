@@ -49,13 +49,14 @@ public final class Tactics {
 
 	/**
 	 * The distance by which to rank a threat for this friend: its real distance, less {@value #FOCUS_BONUS} when a
-	 * teammate is already fighting it and this friend can get at it (or shoot it).
+	 * teammate is already fighting it and this friend can get at it (or shoot it). Asked for every threat in a look
+	 * round, so it works out new paths only within the friend's small allowance ({@code Archery.pathTo}).
 	 */
 	public static double rankDistance(CompanionEntity c, LivingEntity threat, double dist) {
 		if (!teammateFighting(c, threat)) {
 			return dist;
 		}
-		boolean canHelp = Archery.wouldShoot(c, threat) || Reach.check(c, threat) != Reach.Answer.NO;
+		boolean canHelp = Archery.wouldShoot(c, threat) || Archery.pathTo(c, threat) != Reach.Answer.NO;
 		return canHelp ? Math.max(0, dist - FOCUS_BONUS) : dist;
 	}
 

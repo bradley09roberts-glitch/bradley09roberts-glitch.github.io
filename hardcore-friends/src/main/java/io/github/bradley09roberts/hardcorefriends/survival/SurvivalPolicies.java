@@ -36,9 +36,10 @@ final class SurvivalPolicies {
 	}
 
 	/**
-	 * Levelling a building site ({@code GRADE}): only inside a levelling plan's box, digging only natural earth, sand,
-	 * gravel, stone and plants (or the friends' own fill) away from anything player-built, and filling only the
-	 * plan's own spaces with dirt, coarse dirt, cobblestone or stone. Off when terraforming is switched off.
+	 * Levelling a building site ({@code GRADE}): digging only the blocks an open levelling plan lists to cut, and only
+	 * natural earth, sand, gravel, stone and plants away from anything player-built (never a block the friends placed:
+	 * that belongs to a building), and filling only the plan's own spaces with dirt, coarse dirt, cobblestone or stone.
+	 * Off when terraforming is switched off.
 	 */
 	static final class Grade implements WorldEditGuard.Policy {
 		@Override
@@ -50,15 +51,16 @@ final class SurvivalPolicies {
 			if (!Camp.isCampLevel(level, data)) {
 				return Verdict.deny("not at the camp");
 			}
-			Optional<SiteGrading.Job> plan = SiteGrading.planAt(data, pos);
-			if (plan.isEmpty()) {
+			if (!SiteGrading.isCut(data, pos)) {
 				return Verdict.deny("not part of a site being levelled");
 			}
-			boolean ownFill = data.isPlacedByFriends(level, pos) && SiteGrading.isFillBlock(state);
-			if (!SiteGrading.isGradeable(state) && !ownFill) {
+			if (data.isPlacedByFriends(level, pos)) {
+				return Verdict.deny("our own block: part of a building, not the ground");
+			}
+			if (!SiteGrading.isGradeable(state)) {
 				return Verdict.deny("only natural earth, sand, gravel, stone and plants may be dug away");
 			}
-			if (!ownFill && WorldEditGuard.looksPlayerBuilt(level, pos, 2, data)) {
+			if (WorldEditGuard.looksPlayerBuilt(level, pos, 2, data)) {
 				return Verdict.deny("too close to a build");
 			}
 			return Verdict.OK;
@@ -84,15 +86,17 @@ final class SurvivalPolicies {
 	/**
 	 * Staying alive away from camp ({@code SURVIVAL}): placing only dirt, cobblestone, stone, a torch or water (to
 	 * break a fall) right around the friend, never within {@value #BUILD_GAP} blocks of anything player-built and never
-	 * water where it would boil away; breaking only the pieces the friend placed themselves, or the few natural blocks
-	 * they planned to dig to get under cover; taking back only their own water.
+	 * water where it would boil away; breaking only the pieces the friend placed themselves (still what they placed,
+	 * or their dirt grown over with grass), or the few natural blocks they planned to dig to get under cover or out of
+	 * it again; taking back only their own water.
 	 */
 	static final class Survival implements WorldEditGuard.Policy {
 		@Override
 		public Verdict canBreak(CompanionEntity c, ServerLevel level, BlockPos pos, BlockState state) {
 			CampData data = Camp.data(level.getServer());
 			if (Shelters.isPiece(c, pos) && near(c, pos, 5)) {
-				return data.isPlacedByFriends(level, pos) ? Verdict.OK : Verdict.deny("not our own block any more");
+				return Shelters.stillOurs(c, pos, state) || data.isPlacedByFriends(level, pos) ? Verdict.OK
+					: Verdict.deny("not our own block any more");
 			}
 			if (Shelters.mayDig(c, pos) && near(c, pos, 3)) {
 				if (!SiteGrading.isGradeable(state)) {

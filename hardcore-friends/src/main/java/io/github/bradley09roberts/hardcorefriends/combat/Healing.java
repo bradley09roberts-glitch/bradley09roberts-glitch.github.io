@@ -9,6 +9,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
 import io.github.bradley09roberts.hardcorefriends.ai.role.guard.Gear;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
@@ -16,11 +17,13 @@ import io.github.bradley09roberts.hardcorefriends.companion.Needs;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 
 /**
- * Emergency healing. In a fight (a target, hurt in the last five seconds, or falling back) at low health (below
- * {@value #LOW_FRACTION} of their health, or {@value #LOW_HEALTH} points), a friend uses the best thing in their
- * backpack: a potion of healing (it works at once), a golden apple (regeneration and absorption), a potion of
- * regeneration, and only when nearly dead ({@value #DIRE_FRACTION}) an enchanted golden apple. A friend already
- * regenerating waits for it to work unless nearly dead. A potion of fire resistance is drunk when on fire or in lava.
+ * Emergency healing. In a fight (a target, hurt by a monster or other attacker in the last five seconds, or falling
+ * back from danger; hunger pangs, falls, fire and drowning do not count, so a famine does not use up the camp's
+ * potions) at low health (below {@value #LOW_FRACTION} of their health, or {@value #LOW_HEALTH} points), a friend uses
+ * the best thing in their backpack: a potion of healing (it works at once), a golden apple (regeneration and
+ * absorption), a potion of regeneration, and only when nearly dead ({@value #DIRE_FRACTION}) an enchanted golden
+ * apple. A friend already regenerating waits for it to work unless nearly dead. A potion of fire resistance is drunk
+ * when on fire or in lava.
  * The items are really used up and their real effects applied, the way the game applies them when a player eats or
  * drinks ({@link ItemStack#finishUsingItem}); the empty bottle goes back into the backpack. Normal food is not touched:
  * that is for hunger. Checked every half second per friend.
@@ -56,10 +59,9 @@ public final class Healing {
 				return;
 			}
 		}
-		boolean fighting = c.getTarget() != null || c.ticksSinceDamaged() < 100 || c.isRetreating();
 		float health = c.getHealth();
 		double fraction = health / c.getMaxHealth();
-		if (!fighting || fraction >= LOW_FRACTION && health > LOW_HEALTH) {
+		if (fraction >= LOW_FRACTION && health > LOW_HEALTH || !fighting(c)) {
 			return;
 		}
 		boolean dire = fraction < DIRE_FRACTION;
@@ -74,6 +76,22 @@ public final class Healing {
 		if (dire) {
 			use(c, level, s -> s.is(Items.ENCHANTED_GOLDEN_APPLE));
 		}
+	}
+
+	/**
+	 * In a fight: a target, falling back, or hurt by an attacker (a monster, or whoever shot or threw at them) in the
+	 * last five seconds. Damage with nobody behind it (hunger, a fall, fire, drowning) is not a fight: natural healing
+	 * and food see to that, and the emergency items are kept for when something is trying to kill them.
+	 */
+	private static boolean fighting(CompanionEntity c) {
+		if (c.getTarget() != null) {
+			return true;
+		}
+		if (c.tickCount - c.getLastHurtByMobTimestamp() < 100 && c.getLastHurtByMob() != null) {
+			return true;
+		}
+		// Falling back to rest after a fall is no fight; falling back from danger is.
+		return c.isRetreating() && Threats.nearest(c, 16) != null;
 	}
 
 	/** Eats or drinks one matching item from the backpack, with its real effects. False if none is carried. */

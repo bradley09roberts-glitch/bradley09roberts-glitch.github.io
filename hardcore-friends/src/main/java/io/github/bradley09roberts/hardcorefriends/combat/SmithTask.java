@@ -9,8 +9,11 @@ import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -32,7 +35,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  * or the camp centre), and brings the gear and anything left over back to the chest, where the friends' gear job hands
  * it out. Only one friend smiths at a time. Anyone can do it, in the main part of the day (it waits for the morning at
  * night); shields come first and score highest. Counts are kept so nothing the smith carried for their own work is
- * used up or put away.
+ * used up or put away. A smith called away after fetching (by nightfall or a fight) remembers what they still owe the
+ * chest, and puts it back first thing next time.
  */
 public final class SmithTask implements CompanionTask {
 	private static final double CHEST_REACH = 2.5;
@@ -40,11 +44,17 @@ public final class SmithTask implements CompanionTask {
 	private static final int TABLE_RESCAN = 600;
 	/** A smith not seen at work for this long has let go of the job. */
 	private static final int CLAIM_TICKS = 40;
+	/** What an interrupted smith still owes the chest (item id to count), kept with the friend. */
+	private static final String OWED = "combat.smith_owed";
+	/** Putting back what an interrupted job fetched comes before other day work of its kind. */
+	private static final double SETTLE_SCORE = 45;
 
 	private static @Nullable UUID smith;
 	private static long smithSeen = -100_000;
 
 	private enum Phase {
+		/** Taking back to the chest what an interrupted job fetched. */
+		SETTLE,
 		FETCH,
 		CRAFT,
 		RETURN
@@ -74,7 +84,13 @@ public final class SmithTask implements CompanionTask {
 
 	@Override
 	public double score(CompanionEntity c) {
-		if (c.mode() != CompanionMode.WORK || c.backpack().freeSlots() < 3) {
+		if (c.mode() != CompanionMode.WORK) {
+			return 0;
+		}
+		if (owes(c)) {
+			return SETTLE_SCORE;
+		}
+		if (c.backpack().freeSlots() < 3) {
 			return 0;
 		}
 		ServerLevel level = (ServerLevel) c.level();
@@ -105,6 +121,11 @@ public final class SmithTask implements CompanionTask {
 		ServerLevel level = (ServerLevel) c.level();
 		Optional<Container> chest = SupplyChest.of(level);
 		chestPos = Camp.data(level.getServer()).chestPos().orElse(null);
+		if (chest.isPresent() && chestPos != null && owes(c)) {
+			order = null;
+			phase = Phase.SETTLE; // what the last, interrupted job fetched goes back first
+			return true;
+		}
 		table = findTable(c);
 		if (chest.isEmpty() || chestPos == null || table == null || claimedByOther(c, level)) {
 			return false;
@@ -136,6 +157,9 @@ public final class SmithTask implements CompanionTask {
 	@Override
 	public TaskStatus tick(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
+		if (phase == Phase.SETTLE) {
+			return settle(c, level);
+		}
 		Smithing.Order o = order;
 		if (o == null || chestPos == null || table == null) {
 			return TaskStatus.FAILURE;
@@ -294,10 +318,87 @@ public final class SmithTask implements CompanionTask {
 		if (c.getUUID().equals(smith)) {
 			smith = null;
 		}
+		Smithing.Order o = order;
+		if (o != null && (phase == Phase.CRAFT || phase == Phase.RETURN)) {
+			owe(c, o); // called away with the materials (or the gear) still in hand: they go back next time
+		}
 		order = null;
 		table = null;
 		phase = Phase.FETCH;
 		Smithing.clear(); // the next order is worked out afresh
+	}
+
+	/** True when an interrupted job left this friend owing the chest what they fetched. */
+	private static boolean owes(CompanionEntity c) {
+		return c.extra().contains(OWED);
+	}
+
+	/**
+	 * Remembers, with the friend, what this job fetched (or made) and has not put back yet, by item, so it is not
+	 * mistaken for their own things next time.
+	 */
+	private void owe(CompanionEntity c, Smithing.Order o) {
+		CompoundTag owed = c.extra().getCompoundOrEmpty(OWED);
+		Backpack bp = c.backpack();
+		int product = bp.count(o.item()) - productBefore;
+		if (product > 0) {
+			addOwed(owed, o.item(), product);
+		}
+		for (int i = 0; i < kinds.size(); i++) {
+			int spare = gained(c, i);
+			for (ItemStack s : bp.stacks()) {
+				if (spare <= 0) {
+					break;
+				}
+				if (kinds.get(i).test(s)) {
+					int n = Math.min(spare, s.getCount());
+					addOwed(owed, s.getItem(), n);
+					spare -= n;
+				}
+			}
+		}
+		if (!owed.isEmpty()) {
+			c.extra().put(OWED, owed);
+		}
+	}
+
+	private static void addOwed(CompoundTag owed, Item item, int count) {
+		String key = BuiltInRegistries.ITEM.getKey(item).toString();
+		owed.putInt(key, owed.getIntOr(key, 0) + count);
+	}
+
+	/** Walks to the chest and puts back what an interrupted job fetched (whatever of it is still carried). */
+	private TaskStatus settle(CompanionEntity c, ServerLevel level) {
+		if (chestPos == null) {
+			return TaskStatus.FAILURE;
+		}
+		if (!c.actions().walkTo(chestPos, CHEST_REACH)) {
+			return c.actions().isStuck() ? TaskStatus.FAILURE : TaskStatus.RUNNING;
+		}
+		Optional<Container> chest = SupplyChest.at(level, chestPos);
+		if (chest.isEmpty()) {
+			return TaskStatus.FAILURE;
+		}
+		c.getLookControl().setLookAt(Vec3.atCenterOf(chestPos));
+		CompoundTag owed = c.extra().getCompoundOrEmpty(OWED);
+		Backpack bp = c.backpack();
+		for (String key : owed.keySet()) {
+			int count = owed.getIntOr(key, 0);
+			Item item = null;
+			for (ItemStack s : bp.stacks()) {
+				if (BuiltInRegistries.ITEM.getKey(s.getItem()).toString().equals(key)) {
+					item = s.getItem();
+					break;
+				}
+			}
+			if (item != null && count > 0) {
+				Item kind = item;
+				SupplyChest.deposit(bp, chest.get(), s -> s.is(kind), count);
+			}
+		}
+		c.extra().remove(OWED); // anything the chest had no room for goes with the next deposit trip
+		c.swingArm();
+		return TaskStatus.SUCCESS;
 	}
 
 	@Override

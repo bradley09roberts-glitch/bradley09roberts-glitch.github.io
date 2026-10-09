@@ -50,8 +50,9 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  *
  * <p>The tickets themselves are never saved: they are worked out afresh every second and dropped when the server
  * stops, so removing the mod leaves nothing behind. Only where roaming friends were is remembered (in camp memory),
- * so that after the world is closed and opened again a friend out on a trip is woken up where they were and can carry
- * on home, instead of staying frozen far away until someone walks over to them.
+ * so that after the world is closed and opened again, or the last player leaves a server and someone comes back, a
+ * friend out on a trip is woken up where they were and can carry on home, instead of staying frozen far away until
+ * someone walks over to them.
  */
 public final class ChunkLoader {
 	/** Keeps the camp area loaded and its entities running (and its dimension awake). Not saved: re-added each second. */
@@ -206,13 +207,37 @@ public final class ChunkLoader {
 	private static void update(MinecraftServer server) {
 		boolean anyone = anyoneCounts(server);
 		updateCamp(server, anyone);
-		if (anyone && !restored) {
+		if (!anyone) {
+			pause(server);
+			return;
+		}
+		if (!restored) {
 			restore(server);
 		}
 		updateRoaming(server, anyone);
 		if (roamingChanged) {
 			remember(server);
 		}
+	}
+
+	/**
+	 * Nobody who counts is online (the last player left a server that keeps running): the roaming friends' land stops
+	 * running, as everything else does, but where they are is kept in camp memory, so the next player to come online
+	 * wakes them again ({@link #restore}) instead of finding them stranded far away.
+	 */
+	private static void pause(MinecraftServer server) {
+		if (!restored && ROAMING.isEmpty()) {
+			return;
+		}
+		if (roamingChanged) {
+			remember(server); // where they are now, before the tickets go
+		}
+		for (Roamer roamer : ROAMING.values()) {
+			release(server, roamer.ticket);
+		}
+		ROAMING.clear();
+		restored = false;
+		roamingChanged = false;
 	}
 
 	/** True when a player who keeps the camp running is online. */
@@ -336,7 +361,8 @@ public final class ChunkLoader {
 
 	/**
 	 * Wakes the land of the friends who were roaming when the world last closed, so they load and can carry on (their
-	 * trip is remembered with them). Done once, when a player who counts is first online.
+	 * trip is remembered with them). Done when a player who counts comes online: first, and again each time after
+	 * nobody was ({@link #pause}).
 	 */
 	private static void restore(MinecraftServer server) {
 		restored = true;

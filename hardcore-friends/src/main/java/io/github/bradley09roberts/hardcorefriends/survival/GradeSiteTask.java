@@ -153,6 +153,9 @@ public final class GradeSiteTask implements CompanionTask {
 			return TaskStatus.FAILURE;
 		}
 		ServerLevel level = (ServerLevel) c.level();
+		if (!SiteGrading.isOpen(Camp.data(level.getServer()), j.planId())) {
+			return done(c, level); // retired (finished, or the site built on or given up): nothing here is ours to dig
+		}
 		return switch (phase) {
 			case PREP -> prep(c, level, j);
 			case CUT -> cut(c, level, j);
@@ -314,8 +317,14 @@ public final class GradeSiteTask implements CompanionTask {
 	}
 
 	private TaskStatus done(CompanionEntity c, ServerLevel level) {
+		CampData data = Camp.data(level.getServer());
 		if (worked > 0) {
-			Camp.data(level.getServer()).addStat("site_blocks_levelled", worked);
+			data.addStat("site_blocks_levelled", worked);
+		}
+		SiteGrading.Job j = job;
+		if (j != null) {
+			// Levelled: retire the plan now, before the building's floor goes down where the bumps were.
+			SiteGrading.job(data, j.planId()).ifPresent(open -> SiteGrading.stillToDo(level, data, open));
 		}
 		return worked > 0 ? TaskStatus.SUCCESS : TaskStatus.FAILURE; // nothing done: wait a while before looking again
 	}

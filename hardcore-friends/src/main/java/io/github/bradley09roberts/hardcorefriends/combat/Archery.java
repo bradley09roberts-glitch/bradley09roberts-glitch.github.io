@@ -1,5 +1,8 @@
 package io.github.bradley09roberts.hardcorefriends.combat;
 
+import java.util.Map;
+import java.util.WeakHashMap;
+
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -59,6 +62,11 @@ public final class Archery {
 	private static final float UNCERTAINTY = 3.0F;
 	/** The arrow's speed, as a skeleton's. */
 	private static final float VELOCITY = 1.6F;
+	/** New paths a friend may work out per round for choosing bow or blade and whom to help ({@link #pathTo}). */
+	private static final int ROUND_PATHS = 1;
+	private static final int ROUND_TICKS = 10;
+	/** Per friend: {round start, paths worked out in it}. Weak, so unloaded friends are forgotten. */
+	private static final Map<CompanionEntity, long[]> PATH_ROUNDS = new WeakHashMap<>();
 
 	private Archery() {
 	}
@@ -86,7 +94,8 @@ public final class Archery {
 
 	/**
 	 * Whether this friend would shoot at this threat at all, from a good distance (see the class description). Cheap
-	 * unless a path has to be worked out (only for a melee fighter facing a hand-to-hand threat, and cached).
+	 * unless a path has to be worked out (only for a melee fighter facing a hand-to-hand threat, cached, and at most
+	 * one new one a friend every half second: {@link #pathTo}).
 	 */
 	public static boolean wouldShoot(CompanionEntity c, LivingEntity threat) {
 		if (!Threats.isThreat(threat) || c.isRetreating() || !canShoot(c)) {
@@ -109,7 +118,32 @@ public final class Archery {
 		if (!threat.onGround() && !threat.isInLiquid() && threat.getY() - c.getY() > 2.5) {
 			return true;
 		}
-		return Reach.check(c, threat) == Reach.Answer.NO;
+		return pathTo(c, threat) == Reach.Answer.NO;
+	}
+
+	/**
+	 * {@link Reach#check}, but a friend works out at most {@value #ROUND_PATHS} new path every {@value #ROUND_TICKS}
+	 * ticks for these choices (bow or blade, which threat to help with); remembered answers are free. These are asked
+	 * for every threat in a look round and, through {@code canStandAndFight}, every couple of ticks by the reflexes, so
+	 * without a cap a big fight would cost several path searches a tick. Past the cap the answer is {@code UNKNOWN}
+	 * (taken as "can get there") until the next round.
+	 */
+	static Reach.Answer pathTo(CompanionEntity c, LivingEntity threat) {
+		Reach.Answer known = Reach.known(c, threat);
+		if (known != null) {
+			return known;
+		}
+		long now = c.level().getGameTime();
+		long[] round = PATH_ROUNDS.computeIfAbsent(c, k -> new long[] {Long.MIN_VALUE, 0});
+		if (now - round[0] >= ROUND_TICKS || now < round[0]) {
+			round[0] = now;
+			round[1] = 0;
+		}
+		if (round[1] >= ROUND_PATHS) {
+			return Reach.Answer.UNKNOWN;
+		}
+		round[1]++;
+		return Reach.check(c, threat);
 	}
 
 	/** The closest this friend shoots this threat from: nearer than that they fight hand to hand or back away. */

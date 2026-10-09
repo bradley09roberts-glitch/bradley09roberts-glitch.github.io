@@ -7,6 +7,7 @@ import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
 
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
@@ -21,6 +22,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Crafting;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
+import io.github.bradley09roberts.hardcorefriends.progress.ProgressPlan;
 
 /**
  * What the camp's smith makes next, from spare materials in the supply chest, for friends who lack gear the chest
@@ -37,8 +39,9 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  * </ol>
  * Only spare materials in the chest are used: never diamonds below a reserve of {@value #DIAMOND_RESERVE} (a pickaxe and
  * an enchanting table's worth), never iron below {@value #IRON_RESERVE} ({@value #SHIELD_IRON_RESERVE} for a shield) or
- * cobblestone below {@value #STONE_RESERVE},
- * and no iron, wood or stone at all while the building in hand is short of that kind
+ * cobblestone below {@value #STONE_RESERVE}, never what Sage's plan is collecting (iron in the iron age, leather for
+ * the library's books, a flint for the flint and steel; none at all of what it is still short of), and no iron, wood
+ * or stone at all while the building in hand is short of that kind
  * ({@link CampNeeds#buildShortage()}). Nothing the smith carries for their own work is used: everything is fetched
  * from the chest, and whatever is left over goes back. The gear goes into the chest, and the friends' gear job hands it
  * out.
@@ -140,8 +143,9 @@ public final class Smithing {
 		if (team.isEmpty()) {
 			return null;
 		}
-		Budget b = new Budget(chest);
-		Map<CompanionEntity, List<GearPlan.Pick>> fromChest = GearPlan.assign(level, chest);
+		Budget b = new Budget(level.getServer(), chest);
+		// What the chest already holds for each friend, room in their backpack or not: nothing is made twice.
+		Map<CompanionEntity, List<GearPlan.Pick>> fromChest = GearPlan.assign(level, chest, false);
 		// 1. Shields for everyone.
 		if (b.shieldIron >= 1 && b.wood(6, 0)) {
 			for (CompanionEntity c : team) {
@@ -291,21 +295,34 @@ public final class Smithing {
 		final int feathers;
 		final int arrows;
 
-		Budget(Container chest) {
+		Budget(MinecraftServer server, Container chest) {
 			Map<CampNeeds.Need, Integer> shortage = CampNeeds.buildShortage();
 			boolean wood = !shortage.containsKey(CampNeeds.Need.WOOD);
 			int ironInChest = shortage.containsKey(CampNeeds.Need.ORE) ? 0 : SupplyChest.count(chest, IRON);
-			iron = Math.max(0, ironInChest - IRON_RESERVE);
-			shieldIron = Math.max(0, ironInChest - SHIELD_IRON_RESERVE);
-			diamonds = Math.max(0, SupplyChest.count(chest, DIAMOND) - DIAMOND_RESERVE);
-			leather = SupplyChest.count(chest, LEATHER);
+			iron = spare(server, Items.IRON_INGOT, ironInChest, IRON_RESERVE);
+			shieldIron = spare(server, Items.IRON_INGOT, ironInChest, SHIELD_IRON_RESERVE);
+			diamonds = spare(server, Items.DIAMOND, SupplyChest.count(chest, DIAMOND), DIAMOND_RESERVE);
+			leather = spare(server, Items.LEATHER, SupplyChest.count(chest, LEATHER), 0);
 			stone = shortage.containsKey(CampNeeds.Need.STONE) ? 0 : Math.max(0, SupplyChest.count(chest, STONE) - STONE_RESERVE);
 			planks = wood ? SupplyChest.count(chest, PLANKS) + 4 * SupplyChest.count(chest, LOGS) : 0;
 			sticks = wood ? SupplyChest.count(chest, STICKS) : 0;
 			string = SupplyChest.count(chest, STRING);
-			flint = SupplyChest.count(chest, FLINT);
+			flint = spare(server, Items.FLINT, SupplyChest.count(chest, FLINT), 0);
 			feathers = SupplyChest.count(chest, FEATHER);
 			arrows = SupplyChest.count(chest, s -> s.is(ItemTags.ARROWS));
+		}
+
+		/**
+		 * How many of an item in the chest the smith may use: beyond their own reserve and beyond what Sage's plan is
+		 * collecting ({@link ProgressPlan#stockTargets}: iron in the iron age, leather for the library's books, the
+		 * diamonds kept back). While the plan still wants more of it ({@link ProgressPlan#wants}), none at all.
+		 */
+		private static int spare(MinecraftServer server, Item item, int inChest, int reserve) {
+			if (ProgressPlan.wants(server, item)) {
+				return 0;
+			}
+			int keep = Math.max(reserve, ProgressPlan.stockTargets(server).getOrDefault(item, 0));
+			return Math.max(0, inChest - keep);
 		}
 
 		/** The chest can spare {@code planksNeeded} planks and {@code sticksNeeded} sticks (made from planks if need be). */

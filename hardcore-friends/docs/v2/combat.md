@@ -23,6 +23,8 @@ Before this update only Aegis took armour and weapons from the supply chest. Now
   carrier with fewer than 16 arrows tops up to 32.
 - **Emergency healing.** Each friend takes a golden apple or a potion of healing or regeneration from the chest: two
   for Aegis, one for everyone else. They never take an **enchanted** golden apple from the chest.
+- **Room to carry it.** A weapon carried for fights, a bow, arrows and healing go into the backpack, so a friend only
+  goes to the chest for them with room in their backpack. Armour and shields are worn, so they always fit.
 - This also happens at night. The friend on watch gears up before starting their watch.
 
 **Tip:** the supply chest is shared. If you keep your own spare armour, bows, golden apples or potions in it, the
@@ -56,7 +58,11 @@ Only spare materials are used:
 - **Cobblestone:** at least 16 always stays in the chest.
 - **Building materials:** while the building Oak is working on is short of iron, wood or stone, the smith does not
   use that material at all.
-- **The smith's own things:** nothing the smith carries for their own work is ever used up.
+- **Sage's plan:** what the plan is collecting stays in the chest: iron in the iron age, leather for the library's
+  books, a flint for the flint and steel, the diamonds it keeps back. While the plan is still short of one of these,
+  the smith uses none of it. Once it has enough, only what is beyond the plan's amount is used.
+- **The smith's own things:** nothing the smith carries for their own work is ever used up. A smith called away
+  mid-job (by nightfall or a fight) remembers what they fetched and puts it back in the chest first thing next day.
 
 ## Bows
 
@@ -97,8 +103,10 @@ yours does, and wears down the same way.
 
 ## Emergency healing
 
-A friend in a fight with less than 40% of their health (or 3 hearts or less) uses the best thing in their backpack, in
-this order:
+A friend in a fight with less than 40% of their health (or 3 hearts or less) uses the best thing in their backpack.
+"In a fight" means they have a target, a monster (or anyone) hurt them in the last five seconds, or they are falling
+back with danger near. Hunger, falls, fire and drowning do not count, so a famine does not use up the camp's potions.
+They use, in this order:
 
 1. a potion of healing (it works at once);
 2. a golden apple;
@@ -211,7 +219,9 @@ These existing statements are no longer true, or were never quite true, and shou
   against the game's own sources.
 - **Path checks are vanilla path finding.** A mob the path finder cannot reach within its search range (32 blocks)
   counts as out of reach even if a very long way round exists. A mob that becomes reachable (a gate opened) is noticed
-  again within 10 seconds.
+  again within 10 seconds. To keep big fights cheap, a friend works out at most one new path every half second to
+  choose between bow and blade and which fight to help with, so in a crowd it can take a few seconds to notice that a
+  mob is out of reach and switch to the bow.
 - **Aiming.** Friends aim as skeletons do. They do not lead a moving target, so a running mob is often missed at
   range, and arrows can glance off walls. Friends shoot at the speed and damage of a skeleton's arrow, not a fully
   drawn player's.
@@ -225,10 +235,13 @@ These existing statements are no longer true, or were never quite true, and shou
   potions you put in the supply chest (not enchanted golden apples).
 - **Smithing:**
   - Smithing needs a crafting table within 8 blocks of the supply chest or the camp centre.
-  - Iron armour for nine friends uses a lot of iron. The reserve of 5 ingots and the building check protect what is
-    needed now, not what a later stage or Sage's plan will need.
-  - If the smith is called away mid-job (by nightfall or a fight), the materials they fetched stay in their backpack
-    until their next trip to the chest.
+  - Iron armour for nine friends uses a lot of iron. The reserve of 5 ingots, the building check and Sage's plan
+    protect what is needed now and for the plan's step in hand, not what a later step will need (the anvil's iron,
+    for one).
+  - In the iron age no iron goes to shields or armour until the plan has its iron; while the library is short of
+    books, leather armour waits too.
+  - A smith called away mid-job puts back next day only what they still carry of what they fetched; anything the
+    chest has no room for goes with their next deposit trip.
   - The order of what gets made is fixed. Axes are never made: they are already tools for Oak and Rowan.
 - **Weapons are ranked "any sword before any axe".** This is the old rule, so a stone sword counts as better than an
   iron axe.

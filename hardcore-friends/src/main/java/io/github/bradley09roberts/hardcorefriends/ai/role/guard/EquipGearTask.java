@@ -114,23 +114,28 @@ public final class EquipGearTask implements CompanionTask {
 			taken[i] = chest.get().removeItem(picks.get(i).chestSlot(), picks.get(i).count());
 		}
 		ItemStack shown = ItemStack.EMPTY;
+		boolean kept = false;
 		for (int i = 0; i < picks.size(); i++) {
 			if (taken[i].isEmpty()) {
 				continue;
 			}
 			GearPlan.Pick pick = picks.get(i);
-			switch (pick.kind()) {
+			boolean got = switch (pick.kind()) {
 				case ARMOUR -> wear(c, level, chest.get(), pick.slot(), taken[i]);
 				case SHIELD -> wear(c, level, chest.get(), EquipmentSlot.OFFHAND, taken[i]);
 				case WEAPON -> takeWeapon(c, level, chest.get(), taken[i]);
 				default -> carry(c, level, chest.get(), taken[i]);
-			}
-			if (pick.kind() == GearPlan.Kind.ARMOUR || pick.kind() == GearPlan.Kind.WEAPON || shown.isEmpty()
-				&& (pick.kind() == GearPlan.Kind.SHIELD || pick.kind() == GearPlan.Kind.BOW)) {
+			};
+			kept |= got;
+			if (got && (pick.kind() == GearPlan.Kind.ARMOUR || pick.kind() == GearPlan.Kind.WEAPON || shown.isEmpty()
+				&& (pick.kind() == GearPlan.Kind.SHIELD || pick.kind() == GearPlan.Kind.BOW))) {
 				shown = taken[i];
 			}
 		}
 		chest.get().setChanged();
+		if (!kept) {
+			return TaskStatus.FAILURE; // nothing fitted after all: everything went back, so wait a good while
+		}
 		c.swingArm();
 		if (c.isFighter()) {
 			c.equipBestWeapon();
@@ -141,25 +146,26 @@ public final class EquipGearTask implements CompanionTask {
 		return TaskStatus.SUCCESS;
 	}
 
-	/** Puts on a piece (armour or a shield); what was worn there goes back into the chest. */
-	private static void wear(CompanionEntity c, ServerLevel level, Container chest, @Nullable EquipmentSlot slot, ItemStack piece) {
+	/** Puts on a piece (armour or a shield); what was worn there goes back into the chest. True if it was kept. */
+	private static boolean wear(CompanionEntity c, ServerLevel level, Container chest, @Nullable EquipmentSlot slot,
+		ItemStack piece) {
 		if (slot == null) {
-			carry(c, level, chest, piece);
-			return;
+			return carry(c, level, chest, piece);
 		}
 		ItemStack old = c.getItemBySlot(slot);
 		c.setItemSlot(slot, piece);
 		if (!old.isEmpty()) {
 			stow(c, level, chest, old, true);
 		}
+		return true;
 	}
 
 	/**
 	 * Takes up a better weapon. Their own kind of tool (a sword for the sword carriers, an axe for the woodcutters) goes
 	 * into the hand, the old one back into the chest; any other weapon goes into the backpack for fights, replacing
-	 * the best weapon they carried before unless that is their own work tool.
+	 * the best weapon they carried before unless that is their own work tool. True if the new weapon was kept.
 	 */
-	private static void takeWeapon(CompanionEntity c, ServerLevel level, Container chest, ItemStack weapon) {
+	private static boolean takeWeapon(CompanionEntity c, ServerLevel level, Container chest, ItemStack weapon) {
 		TagKey<Item> roleTool = KeepList.roleTool(c.friendId().role());
 		boolean ownKind = roleTool != null && weapon.is(roleTool);
 		if (ownKind) {
@@ -169,7 +175,7 @@ public final class EquipGearTask implements CompanionTask {
 				// A weapon in hand was the one replaced (back to the chest); a work tool goes into the backpack.
 				stow(c, level, chest, hand, Gear.isWeapon(hand) && Gear.weaponRank(hand) >= packWeaponRank(c));
 			}
-			return;
+			return true;
 		}
 		int oldSlot = bestPackWeapon(c);
 		ItemStack hand = c.getMainHandItem();
@@ -177,7 +183,7 @@ public final class EquipGearTask implements CompanionTask {
 		ItemStack left = c.backpack().insert(weapon);
 		if (!left.isEmpty()) {
 			stow(c, level, chest, left, true); // no room after all: back where it came from
-			return;
+			return false;
 		}
 		if (handIsBest) {
 			if (roleTool == null || !hand.is(roleTool)) {
@@ -190,6 +196,7 @@ public final class EquipGearTask implements CompanionTask {
 				stow(c, level, chest, c.backpack().removeSlot(oldSlot), true);
 			}
 		}
+		return true;
 	}
 
 	/** The backpack slot of the best sword or axe carried, or -1. */
@@ -211,12 +218,14 @@ public final class EquipGearTask implements CompanionTask {
 		return slot < 0 ? 0 : Gear.weaponRank(c.backpack().get(slot));
 	}
 
-	/** Into the backpack (a bow, arrows, healing); what does not fit goes back into the chest. */
-	private static void carry(CompanionEntity c, ServerLevel level, Container chest, ItemStack stack) {
+	/** Into the backpack (a bow, arrows, healing); what does not fit goes back into the chest. True if any was kept. */
+	private static boolean carry(CompanionEntity c, ServerLevel level, Container chest, ItemStack stack) {
+		int count = stack.getCount();
 		ItemStack left = c.backpack().insert(stack);
 		if (!left.isEmpty()) {
 			stow(c, level, chest, left, true);
 		}
+		return left.getCount() < count;
 	}
 
 	/**
