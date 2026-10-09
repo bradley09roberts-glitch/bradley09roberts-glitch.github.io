@@ -3,6 +3,7 @@ package io.github.bradley09roberts.hardcorefriends.architecture;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds.Need;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.camp.build.Stock;
+import io.github.bradley09roberts.hardcorefriends.camp.build.WoodWork;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 
@@ -81,14 +83,22 @@ public final class MaterialDemand {
 		if (demand.isEmpty()) {
 			return Map.of();
 		}
-		Map<Stock, Integer> stored = stored(server);
+		Map<String, Integer> woolColours = new HashMap<>();
+		Map<Stock, Integer> stored = stored(server, woolColours);
 		// Work from finished goods back to raw materials, so each step only asks for what the step above still lacks.
 		List<Stock> order = new ArrayList<>(List.of(Stock.values()));
 		order.sort(Comparator.comparingInt((Stock s) -> depth(s, 0)).reversed());
 		Map<Stock, Integer> short_ = new EnumMap<>(Stock.class);
+		int woolGroup = 1; // a bed short: its wool must come three of one colour; carpets two
 		for (Stock s : order) {
 			int want = demand.getOrDefault(s, 0);
-			int lack = want - stored.getOrDefault(s, 0);
+			int have = stored.getOrDefault(s, 0);
+			if (s == Stock.WOOL && woolGroup > 1) {
+				// Odd wool of mixed colours makes no bed or carpet: only whole sets of one colour count, so the
+				// shearing goes on until there are enough.
+				have = WoodWork.woolSets(woolColours, woolGroup) * woolGroup;
+			}
+			int lack = want - have;
 			if (lack <= 0) {
 				continue;
 			}
@@ -98,6 +108,9 @@ public final class MaterialDemand {
 			if (recipe != null) {
 				int crafts = (lack + recipe.yield() - 1) / recipe.yield();
 				recipe.inputs().forEach((in, n) -> demand.merge(in, crafts * n, Integer::sum));
+				if (s == Stock.BED || s == Stock.CARPET) {
+					woolGroup = Math.max(woolGroup, recipe.inputs().getOrDefault(Stock.WOOL, 1));
+				}
 			} else if (from != null) {
 				demand.merge(from, lack, Integer::sum);
 			}
@@ -123,8 +136,11 @@ public final class MaterialDemand {
 		return d;
 	}
 
-	/** Everything in the supply chest and the team's backpacks, by kind (an item may count for several kinds). */
-	private static Map<Stock, Integer> stored(MinecraftServer server) {
+	/**
+	 * Everything in the supply chest and the team's backpacks, by kind (an item may count for several kinds); the wool
+	 * among it is also counted by colour into {@code woolColours}.
+	 */
+	private static Map<Stock, Integer> stored(MinecraftServer server, Map<String, Integer> woolColours) {
 		Map<Stock, Integer> stored = new EnumMap<>(Stock.class);
 		List<Container> containers = new ArrayList<>();
 		for (ServerLevel level : server.getAllLevels()) {
@@ -139,6 +155,7 @@ public final class MaterialDemand {
 				if (item.isEmpty()) {
 					continue;
 				}
+				WoodWork.countWool(woolColours, item);
 				for (Stock s : Stock.values()) {
 					if (s.matches(item)) {
 						stored.merge(s, item.getCount(), Integer::sum);

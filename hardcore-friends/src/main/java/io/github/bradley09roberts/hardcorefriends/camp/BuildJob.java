@@ -17,6 +17,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.AbstractBedBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -86,7 +87,11 @@ public final class BuildJob {
 	private static final int RUN_BUDGET = 20 * 150;
 	/** The longest a friend spends putting up one pillar before giving up on it. */
 	private static final int CLIMB_LIMIT = 20 * 40;
-	/** The longest a friend spends coming down one pillar before leaving it to the clean-up job. */
+	/**
+	 * The longest a friend spends coming down a pillar without getting a block lower before leaving it to the descent
+	 * reflex and the clean-up job. Per block, not for the whole pillar: cobblestone dug without a pickaxe takes the
+	 * best part of ten seconds a block.
+	 */
 	private static final int DESCEND_LIMIT = 20 * 30;
 	/** How many of a plan's remaining entries are looked through for its material forecast. */
 	private static final int FORECAST_SCAN = 4096;
@@ -125,6 +130,10 @@ public final class BuildJob {
 	private Map<Stock, String> preferences = Map.of();
 	private final Map<Stock, Boolean> makeable = new EnumMap<>(Stock.class);
 	private @Nullable String siteWood;
+	/** The site record this run was planned on; a different one (or none) means it was given up or planned afresh. */
+	private CampData.@Nullable Site plannedSite;
+	/** Blocks to carry for a scaffold pillar this batch, if it reaches up high (0 if not). */
+	private int scaffoldBlocks;
 	private @Nullable Set<BlockPos> planCells;
 	private @Nullable BlockPos tablePos;
 	private int index;
@@ -136,6 +145,7 @@ public final class BuildJob {
 	private Scaffold.@Nullable Climb climb;
 	private int climbTicks;
 	private int descendTicks;
+	private double descendY;
 	private boolean endAfterDescent;
 	private final Set<Integer> scaffoldTried = new HashSet<>();
 	private Failure failure = Failure.NONE;
@@ -216,10 +226,12 @@ public final class BuildJob {
 
 	private TaskStatus tickSite() {
 		CampData data = data();
+		if (!Camp.isCampLevel(level(), data)) {
+			return fail(Failure.NO_SITE); // sites (and the camp's own coordinates) only mean anything in the camp's dimension
+		}
 		if (Scaffold.onScaffold(c)) {
 			// Left up a pillar by an earlier run: come down first.
-			phase = Phase.DESCEND;
-			descendTicks = 0;
+			startDescent(false);
 			return TaskStatus.RUNNING;
 		}
 		List<Part> parts = SiteFinder.parts(data, siteKey, bp);
@@ -462,6 +474,7 @@ public final class BuildJob {
 		if (site.isEmpty()) {
 			return fail(Failure.NO_SITE);
 		}
+		plannedSite = site.get();
 		makeable.clear();
 		batch = new ArrayList<>();
 		if (repair) {
@@ -497,12 +510,13 @@ public final class BuildJob {
 		});
 		wanted = materials(batch);
 		preferences = preferences(batch);
-		if (FriendsConfig.get().allowScaffolding && highestAboveGround(batch) >= 4) {
-			// Something up high: bring enough dirt or cobblestone for a pillar (it comes back when taken down).
-			wanted.merge(Stock.FILL, FriendsConfig.get().maxScaffoldHeight, Integer::sum);
-		}
+		// Something up high may need a pillar: blocks for one are taken along if the chest has them (they come back when
+		// it is taken down), but they are not part of what the batch needs, so a camp without any is not held up or
+		// reported short until a pillar is actually wanted (see approach).
+		scaffoldBlocks = FriendsConfig.get().allowScaffolding && highestAboveGround(batch) >= 4
+			? FriendsConfig.get().maxScaffoldHeight : 0;
 		Optional<Container> chest = SupplyChest.of(level());
-		if (carries(wanted)) {
+		if (carries(wanted) && !(data.chestPos().isPresent() && wantsScaffoldBlocks(chest.orElse(null)))) {
 			return startBuilding(Map.of());
 		}
 		if (chest.isPresent() && data.chestPos().isPresent()) {
@@ -597,6 +611,38 @@ public final class BuildJob {
 		return true;
 	}
 
+	/**
+	 * True if this batch may need a pillar and the chest can top up the blocks carried for one: dirt above all, which
+	 * digs out in a moment by hand where cobblestone takes the best part of ten seconds a block without a pickaxe (and
+	 * the builder carries an axe), else cobblestone.
+	 */
+	private boolean wantsScaffoldBlocks(@Nullable Container chest) {
+		if (scaffoldBlocks <= 0 || chest == null) {
+			return false;
+		}
+		Backpack bp = c.backpack();
+		if (bp.count(Items.DIRT) < scaffoldBlocks && SupplyChest.count(chest, s -> s.is(Items.DIRT)) > 0) {
+			return true;
+		}
+		return bp.count(Stock.FILL.item()) < scaffoldBlocks && SupplyChest.count(chest, Stock.FILL.item()) > 0;
+	}
+
+	/** Tops up the blocks carried for a pillar from the chest, dirt first ({@link #wantsScaffoldBlocks}). */
+	private void takeScaffoldBlocks(Container chest) {
+		if (scaffoldBlocks <= 0) {
+			return;
+		}
+		Backpack bp = c.backpack();
+		int dirt = bp.count(Items.DIRT);
+		if (dirt < scaffoldBlocks) {
+			SupplyChest.withdraw(chest, bp, s -> s.is(Items.DIRT), scaffoldBlocks - dirt);
+		}
+		int fill = bp.count(Stock.FILL.item());
+		if (fill < scaffoldBlocks) {
+			SupplyChest.withdraw(chest, bp, Stock.FILL.item(), scaffoldBlocks - fill);
+		}
+	}
+
 	// ----------------------------------------------------------------- fetch
 
 	private TaskStatus tickToChest() {
@@ -615,6 +661,7 @@ public final class BuildJob {
 		makeRoom(chest.get());
 		Supplies supplies = new Supplies(c, chest.get(), Crafting.nearCraftingTable(c)).prefer(preferences);
 		Map<Stock, Integer> missing = supplies.gather(wanted);
+		takeScaffoldBlocks(chest.get());
 		if (supplies.needsTable()) {
 			return goToTable(missing);
 		}
@@ -686,15 +733,25 @@ public final class BuildJob {
 	 * gatherers prioritise it. Fails when not even the first entry can be built.
 	 */
 	private TaskStatus startBuilding(Map<Stock, Integer> missing) {
-		// Build everything carried for, but never start a higher layer while the one below still has gaps.
+		// Build everything carried for, but never start a higher layer while the one below still has gaps. Decoration
+		// that could not be had is simply left out (the repair job adds it later): it never holds up the layers above,
+		// such as a carpet row holding back the door tops and lights.
 		Map<Stock, Integer> carried = new EnumMap<>(Stock.class);
 		List<Placement> buildable = new ArrayList<>();
+		Set<BlockPos> leftOut = new HashSet<>();
 		Placement gap = null;
 		for (Placement p : batch) {
 			if (gap != null && (gap.entry().attachment() != p.entry().attachment() || gap.entry().dy() != p.entry().dy())) {
 				break;
 			}
+			if (p.entry().material().isSecondHalf() && leftOut.contains(firstHalfPos(p))) {
+				continue; // its first half was left out
+			}
 			if (!carriedFor(p, carried)) {
+				if (p.entry().optional()) {
+					leftOut.add(p.pos());
+					continue;
+				}
 				gap = p;
 				continue;
 			}
@@ -744,7 +801,18 @@ public final class BuildJob {
 
 	// ----------------------------------------------------------------- build
 
+	/** True while the site this run was planned on is still reserved: not given up, or planned afresh, meanwhile. */
+	private boolean siteHeld() {
+		CampData.Site held = plannedSite;
+		return held == null || data().site(siteKey).orElse(null) == held;
+	}
+
 	private TaskStatus tickBuild() {
+		if (runTicks % 20 == 0 && !siteHeld()) {
+			// The site was given up (the village replanned): place nothing more there, but come down from any pillar first.
+			climb = null;
+			return endBatch(Scaffold.onScaffold(c));
+		}
 		if (climb != null) {
 			return tickClimb();
 		}
@@ -877,7 +945,7 @@ public final class BuildJob {
 			}
 		}
 		if (m == MaterialSpec.FOUNDATION || m == MaterialSpec.DIRT) {
-			ItemStack dirt = c.backpack().find(s -> s.is(net.minecraft.world.item.Items.DIRT));
+			ItemStack dirt = c.backpack().find(s -> s.is(Items.DIRT));
 			if (!dirt.isEmpty()) {
 				return dirt; // dirt before cobblestone: cobblestone is worth more
 			}
@@ -957,6 +1025,7 @@ public final class BuildJob {
 		}
 		if (spot.height() > 0 && !Scaffold.canScaffold(c)) {
 			if (FriendsConfig.get().allowScaffolding) {
+				reportScaffoldShortage(spot.height());
 				Speech.say(c, Line.NEED_MATERIALS, "some dirt or cobblestone for scaffolding");
 			}
 			return skip();
@@ -967,6 +1036,20 @@ public final class BuildJob {
 		climb = new Scaffold.Climb(spot);
 		climbTicks = 0;
 		return TaskStatus.RUNNING;
+	}
+
+	/**
+	 * A pillar is wanted and there is nothing to build it from: adds dirt or cobblestone to what the camp is told the
+	 * building is short of (keeping anything already reported), so the gatherers bring some.
+	 */
+	private void reportScaffoldShortage(int blocks) {
+		String text = Stock.FILL.describe(blocks);
+		Map<CampNeeds.Need, Integer> shortage = new EnumMap<>(CampNeeds.Need.class);
+		shortage.putAll(CampNeeds.buildShortage());
+		Supplies.needs(Map.of(Stock.FILL, blocks)).forEach((need, n) -> shortage.merge(need, n, Math::max));
+		String before = CampNeeds.shortageText(level().getGameTime());
+		CampNeeds.reportBuildShortage(level(), shortage, before.isEmpty() ? text
+			: before.contains(Stock.FILL.describe(2).substring(2)) ? before : before + ", " + text);
 	}
 
 	/** Every cell the plan uses on this site (no scaffold may stand in one), worked out once per run. */
@@ -1021,12 +1104,17 @@ public final class BuildJob {
 		c.actions().stopWalking();
 		phase = Phase.DESCEND;
 		descendTicks = 0;
+		descendY = c.getY();
 		endAfterDescent = thenEnd;
 	}
 
 	private TaskStatus tickDescend() {
 		Scaffold.markBusy(c);
 		Scaffold.Step step = Scaffold.descend(c);
+		if (c.getY() < descendY - 0.5) {
+			descendY = c.getY(); // a block lower: the next block gets its own time
+			descendTicks = 0;
+		}
 		if (step == Scaffold.Step.DONE || ++descendTicks > DESCEND_LIMIT) {
 			c.actions().cancelMining();
 			if (step != Scaffold.Step.DONE) {
@@ -1082,6 +1170,9 @@ public final class BuildJob {
 
 	private TaskStatus finishBatch() {
 		c.actions().reset();
+		if (!siteHeld()) {
+			return fail(Failure.NO_SITE);
+		}
 		if (placed == 0 && skipped > 0) {
 			return fail(Failure.UNREACHABLE);
 		}

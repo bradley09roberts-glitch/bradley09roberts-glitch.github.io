@@ -3,13 +3,17 @@ package io.github.bradley09roberts.hardcorefriends.camp.build;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
 
 import net.minecraft.world.Container;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
@@ -28,7 +32,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
  * <p>A request may name a preferred wood or colour per kind ({@link #prefer}): those items come out of the chest
  * first and are crafted from first, so a spruce house gets spruce stairs when the camp has spruce, and any wood when
  * it has not. A kind with two recipes (a bed from wool, else a straw bed from hay) uses the first one whose
- * ingredients the camp has.
+ * ingredients the camp has. Beds and carpets need their wool all of one colour, so for them wool is counted, and taken,
+ * in whole sets of one colour: three odd wool of mixed colours make no bed.
  */
 public final class Supplies {
 	/** Above this food need, wheat is not used to make anything (hay bales for straw beds). */
@@ -113,7 +118,9 @@ public final class Supplies {
 				int crafts = (need - have + recipe.yield() - 1) / recipe.yield();
 				boolean inputs = true;
 				for (Map.Entry<Stock, Integer> in : recipe.inputs().entrySet()) {
-					inputs &= obtain(in.getKey(), crafts * in.getValue(), depth + 1);
+					int group = sameColourGroup(s, in.getKey(), in.getValue());
+					inputs &= group > 1 ? obtainWoolSets(crafts * in.getValue(), group, preferred.get(s), depth + 1)
+						: obtain(in.getKey(), crafts * in.getValue(), depth + 1);
 				}
 				if (inputs && recipe.needsTable() && !table) {
 					needsTable = true; // ingredients stay promised for crafting at the table
@@ -130,6 +137,84 @@ public final class Supplies {
 		return have >= need;
 	}
 
+	/**
+	 * Wool for beds or carpets, which take {@code group} wool of one colour each: whole sets of one colour come out of
+	 * the chest (the wished-for colour first, then the colours there is most of), and white sets are finished with white
+	 * wool made from string. Odd wool of mixed colours stays where it is, as nothing here can be made from it.
+	 */
+	private boolean obtainWoolSets(int count, int group, @Nullable String wish, int depth) {
+		Backpack bp = c.backpack();
+		int reserved = Math.max(0, committed.getOrDefault(Stock.WOOL, 0)); // wool an earlier part of this trip relies on
+		int sets = (count + group - 1) / group + (reserved + group - 1) / group;
+		Map<String, Integer> carried = woolByColour(c, null);
+		int have = WoodWork.woolSets(carried, group);
+		Container from = chest;
+		if (have < sets && from != null) {
+			Map<String, Integer> all = woolByColour(c, from);
+			List<String> order = new ArrayList<>(all.keySet());
+			order.sort(Comparator.comparingInt((String k) -> all.get(k)).reversed());
+			if (wish != null && order.remove(wish)) {
+				order.addFirst(wish);
+			}
+			for (String colour : order) {
+				while (have < sets) {
+					int inBackpack = carried.getOrDefault(colour, 0);
+					int toNext = group - inBackpack % group;
+					if (all.get(colour) - inBackpack < toNext) {
+						break;
+					}
+					int got = SupplyChest.withdraw(from, bp, woolOf(colour), toNext);
+					carried.merge(colour, got, Integer::sum);
+					if (got < toNext) {
+						break;
+					}
+					have++;
+				}
+			}
+		}
+		if (have < sets && depth <= 4) {
+			String white = DyeColor.WHITE.getName();
+			if (from != null) {
+				carried.merge(white, SupplyChest.withdraw(from, bp, woolOf(white), group), Integer::sum); // the odd few left
+				have = WoodWork.woolSets(carried, group);
+			}
+			int more = (sets - have) * group - carried.getOrDefault(white, 0) % group;
+			if (more > 0 && obtain(Stock.STRING, more * 4, depth + 1)) {
+				Stock.WOOL.craft(c, bp.count(Stock.WOOL.item()) + more); // four string to a white wool
+				committed.merge(Stock.STRING, -more * 4, Integer::sum);
+			}
+			have = WoodWork.woolSets(woolByColour(c, null), group);
+		}
+		committed.merge(Stock.WOOL, count, Integer::sum);
+		return have >= sets;
+	}
+
+	/**
+	 * How many of an ingredient must be of one colour in each craft: the wool of a bed (three) or of carpets (two). One
+	 * for everything else.
+	 */
+	private static int sameColourGroup(Stock product, Stock input, int perCraft) {
+		return input == Stock.WOOL && (product == Stock.BED || product == Stock.CARPET) ? perCraft : 1;
+	}
+
+	/** Wool by colour, carried plus what is in the chest (if given). */
+	private static Map<String, Integer> woolByColour(CompanionEntity c, @Nullable Container chest) {
+		Map<String, Integer> byColour = new HashMap<>();
+		for (ItemStack s : c.backpack().stacks()) {
+			WoodWork.countWool(byColour, s);
+		}
+		if (chest != null) {
+			for (int i = 0; i < chest.getContainerSize(); i++) {
+				WoodWork.countWool(byColour, chest.getItem(i));
+			}
+		}
+		return byColour;
+	}
+
+	private static Predicate<ItemStack> woolOf(String colour) {
+		return s -> Stock.WOOL.matches(s) && colour.equals(WoodWork.colourOf(s));
+	}
+
 	/** The first recipe whose ingredients are carried, stored or makeable; the first one if none are. */
 	private Stock.@Nullable Recipe chooseRecipe(Stock s, int missing) {
 		List<Stock.Recipe> recipes = s.recipes();
@@ -140,7 +225,8 @@ public final class Supplies {
 			int crafts = (missing + r.yield() - 1) / r.yield();
 			boolean ok = true;
 			for (Map.Entry<Stock, Integer> in : r.inputs().entrySet()) {
-				if (!canMake(c, chest, in.getKey(), crafts * in.getValue())) {
+				int group = sameColourGroup(s, in.getKey(), in.getValue());
+				if (!canMake(c, chest, in.getKey(), crafts * in.getValue(), 0, group)) {
 					ok = false;
 					break;
 				}
@@ -199,14 +285,24 @@ public final class Supplies {
 		return n;
 	}
 
-	/** True if at least {@code count} of a kind are carried or stored, or could be crafted from what is. */
+	/**
+	 * True if at least {@code count} of a kind are carried or stored, or could be crafted from what is. Beds and carpets
+	 * count only wool that makes whole sets of one colour (three for a bed, two for carpets).
+	 */
 	public static boolean canMake(CompanionEntity c, @Nullable Container chest, Stock s, int count) {
-		return canMake(c, chest, s, count, 0);
+		return canMake(c, chest, s, count, 0, 1);
 	}
 
-	private static boolean canMake(CompanionEntity c, @Nullable Container chest, Stock s, int count, int depth) {
+	/** {@code group}: how many of {@code s} each craft needs of one colour (wool for a bed or carpets), else 1. */
+	private static boolean canMake(CompanionEntity c, @Nullable Container chest, Stock s, int count, int depth, int group) {
 		if (s == Stock.WHEAT && depth > 0 && CampNeeds.need(Need.FOOD) > FOOD_SHORT) {
 			return false; // wheat is bread first: no straw beds while the camp is short of food
+		}
+		if (s == Stock.WOOL && group > 1) {
+			// Whole sets of one colour, with string as white wool (four to one), as obtainWoolSets gathers them.
+			Map<String, Integer> byColour = woolByColour(c, chest);
+			byColour.merge(DyeColor.WHITE.getName(), available(c, chest, Stock.STRING) / 4, Integer::sum);
+			return WoodWork.woolSets(byColour, group) * group >= count;
 		}
 		int have = available(c, chest, s);
 		if (have >= count) {
@@ -219,7 +315,8 @@ public final class Supplies {
 			int crafts = (count - have + recipe.yield() - 1) / recipe.yield();
 			boolean ok = true;
 			for (Map.Entry<Stock, Integer> in : recipe.inputs().entrySet()) {
-				if (!canMake(c, chest, in.getKey(), crafts * in.getValue(), depth + 1)) {
+				int inGroup = sameColourGroup(s, in.getKey(), in.getValue());
+				if (!canMake(c, chest, in.getKey(), crafts * in.getValue(), depth + 1, inGroup)) {
 					ok = false;
 					break;
 				}

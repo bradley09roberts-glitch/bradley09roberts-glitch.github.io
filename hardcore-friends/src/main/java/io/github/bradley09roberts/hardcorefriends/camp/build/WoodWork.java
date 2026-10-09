@@ -251,6 +251,28 @@ public final class WoodWork {
 
 	// ------------------------------------------------------------------- colour
 
+	/** Adds a stack to a count of wool by colour ("white" to 5), if it is wool. */
+	public static void countWool(Map<String, Integer> byColour, ItemStack stack) {
+		if (!stack.isEmpty() && stack.is(ItemTags.WOOL)) {
+			String colour = colourOf(stack);
+			if (colour != null) {
+				byColour.merge(colour, stack.getCount(), Integer::sum);
+			}
+		}
+	}
+
+	/**
+	 * How many sets of {@code group} wool of one colour a count by colour makes: a bed takes three wool of one colour and
+	 * a carpet two, so odd wool of mixed colours makes neither.
+	 */
+	public static int woolSets(Map<String, Integer> byColour, int group) {
+		int sets = 0;
+		for (int n : byColour.values()) {
+			sets += n / Math.max(1, group);
+		}
+		return sets;
+	}
+
 	/** The colour with at least {@code count} wool carried: the preferred one if it has enough, else the most carried. */
 	private static @Nullable String woolColour(Backpack bp, int count, @Nullable String preferred) {
 		if (preferred != null && bp.count(s -> s.is(ItemTags.WOOL) && preferred.equals(colourOf(s))) >= count) {

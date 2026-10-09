@@ -8,15 +8,19 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
 
 import io.github.bradley09roberts.hardcorefriends.ai.action.Actions;
 import io.github.bradley09roberts.hardcorefriends.ai.role.TeamCache;
+import io.github.bradley09roberts.hardcorefriends.ai.role.mine.MiningHelper;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
@@ -33,9 +37,12 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * Sand for glass and sandstone, and clay for bricks and flower pots, when the buildings under way are short of them
  * ({@link MaterialDemand}): by day the friend digs the top block of natural sand or clay on dry ground in the gathering
  * ring (never inside the camp, never a block touching water, the guard's {@code GATHER_EARTH} rules: never near
- * anything player-built). Only the surface layer is taken, so no pits are left and nothing falls. The places are found
- * by a slow scan of the ring's surface, a few dozen columns at a time, shared by the team; the forager's job, anyone
- * may help.
+ * anything player-built). Only the surface layer is taken: a block is dug only while it is level with the ground on all
+ * four sides, so a column is never dug twice (the block left at the bottom of the dip is not level with its
+ * surroundings) and every dip is one block deep, easy to step out of. Never the block a friend or animal stands on, the
+ * digger's own included. Only every other column is looked at, so the dips stay apart. The places are found by a
+ * slow scan of the ring's surface, a few dozen columns at a time, shared by the team; the forager's job, anyone may
+ * help.
  */
 public final class DigSandTask implements CompanionTask {
 	public static final String ID = "rowan.dig_sand";
@@ -144,7 +151,8 @@ public final class DigSandTask implements CompanionTask {
 			BlockState s = level.getBlockState(m);
 			boolean isSand = s.is(Blocks.SAND) || s.is(Blocks.RED_SAND);
 			boolean isClay = s.is(Blocks.CLAY);
-			if (!isSand && !isClay || WorldEditGuard.touchesFluid(level, m) || data.isPlacedByFriends(level, m)) {
+			if (!isSand && !isClay || WorldEditGuard.touchesFluid(level, m) || data.isPlacedByFriends(level, m)
+				|| !levelWithSurroundings(level, m)) {
 				continue;
 			}
 			List<BlockPos> into = isSand ? finds.sandNext : finds.clayNext;
@@ -152,6 +160,22 @@ public final class DigSandTask implements CompanionTask {
 				into.add(m.immutable());
 			}
 		}
+	}
+
+	/**
+	 * True if the block is part of the natural surface, not the floor of a hole: nothing solid stands on any of its four
+	 * sides one block up. Once a top block is dug, the one below it sits in a hole and is never taken, so a column is
+	 * only ever dug one block deep and no pit is left that a friend or an animal cannot step out of. A side in an
+	 * unloaded chunk counts as solid (it is never loaded to look).
+	 */
+	private static boolean levelWithSurroundings(ServerLevel level, BlockPos pos) {
+		for (Direction d : Direction.Plane.HORIZONTAL) {
+			BlockPos side = pos.relative(d).above();
+			if (!level.isLoaded(side) || !level.getBlockState(side).getCollisionShape(level, side).isEmpty()) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static List<BlockPos> sorted(List<BlockPos> list, BlockPos centre) {
@@ -189,7 +213,7 @@ public final class DigSandTask implements CompanionTask {
 		}
 		BlockState s = level.getBlockState(p);
 		boolean right = wantClay ? s.is(Blocks.CLAY) : s.is(Blocks.SAND) || s.is(Blocks.RED_SAND);
-		return right && level.getBlockState(p.above()).isAir();
+		return right && level.getBlockState(p.above()).isAir() && levelWithSurroundings(level, p);
 	}
 
 	@Override
@@ -206,6 +230,20 @@ public final class DigSandTask implements CompanionTask {
 		if (!stillThere(level, target) || ++blockTicks > BLOCK_TIMEOUT) {
 			return moveOn(c, level, target, false);
 		}
+		if (MiningHelper.isOnTop(c.blockPosition(), target)) {
+			// Never dig out the block underfoot: step onto the ground beside it first.
+			BlockPos off = sideToStand(level, target);
+			if (off == null) {
+				return moveOn(c, level, target, false);
+			}
+			if (actions.walkTo(off, 0.5)) {
+				c.getMoveControl().setWantedPosition(off.getX() + 0.5, off.getY(), off.getZ() + 0.5, 0.6);
+			}
+			return actions.isStuck() ? moveOn(c, level, target, false) : TaskStatus.RUNNING;
+		}
+		if (!level.getEntitiesOfClass(LivingEntity.class, new AABB(target.above()), e -> e != c && e.isAlive()).isEmpty()) {
+			return moveOn(c, level, target, false); // someone is standing on it
+		}
 		if (!actions.canReach(target)) {
 			actions.walkTo(target, 2.0);
 			if (actions.isStuck()) {
@@ -220,6 +258,20 @@ public final class DigSandTask implements CompanionTask {
 			case FAILED -> moveOn(c, level, target, false);
 			case RUNNING -> TaskStatus.RUNNING;
 		};
+	}
+
+	/** Somewhere beside the block to stand while digging it: firm ground and room for a friend, or null. */
+	private static @Nullable BlockPos sideToStand(ServerLevel level, BlockPos target) {
+		for (Direction d : Direction.Plane.HORIZONTAL) {
+			BlockPos floor = target.relative(d);
+			BlockPos feet = floor.above();
+			if (level.isLoaded(feet) && level.getBlockState(floor).isFaceSturdy(level, floor, Direction.UP)
+				&& level.getBlockState(feet).getCollisionShape(level, feet).isEmpty() && level.getFluidState(feet).isEmpty()
+				&& level.getBlockState(feet.above()).getCollisionShape(level, feet.above()).isEmpty()) {
+				return feet;
+			}
+		}
+		return null;
 	}
 
 	private TaskStatus moveOn(CompanionEntity c, ServerLevel level, BlockPos done, boolean success) {

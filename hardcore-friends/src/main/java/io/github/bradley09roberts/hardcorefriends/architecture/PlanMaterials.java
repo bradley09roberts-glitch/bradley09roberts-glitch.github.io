@@ -14,9 +14,11 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.AbstractCauldronBlock;
+import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.FlowerBlock;
 
 import io.github.bradley09roberts.hardcorefriends.camp.build.MaterialSpec;
 import io.github.bradley09roberts.hardcorefriends.camp.build.WoodWork;
@@ -98,9 +100,8 @@ public final class PlanMaterials {
 		if (block.isEmpty() || block.get() == Blocks.AIR && !path.equals("air")) {
 			return Optional.empty();
 		}
-		BlockState state = block.get().defaultBlockState();
 		for (MaterialSpec spec : matchOrder()) {
-			if (spec.isBuilt(state)) {
+			if (countsAs(spec, block.get(), path)) {
 				String variant = switch (spec.variant()) {
 					case WOOD -> WoodWork.woodOf(new ItemStack(block.get().asItem()));
 					case COLOUR -> WoodWork.colourOf(new ItemStack(block.get().asItem()));
@@ -110,6 +111,57 @@ public final class PlanMaterials {
 			}
 		}
 		return Optional.empty();
+	}
+
+	/**
+	 * True if a vanilla block counts as this material, judged without block tags: plans are read while the server's
+	 * data loads, before the game binds its block tags on a fresh start, so a tag test would turn "spruce_stairs" down
+	 * then and accept it after {@code /reload}. Wooden and wool materials go by name (the block with its wood swapped
+	 * for oak, or its colour for white, is the material's own sample block), the rest by their block class or the
+	 * material's own tag-free test.
+	 */
+	private static boolean countsAs(MaterialSpec spec, Block block, String path) {
+		return switch (spec) {
+			case PLANKS, LOG, STRIPPED_LOG, SLAB, DOOR, DOOR_TOP, FENCE, FENCE_GATE, PRESSURE_PLATE, STAIRS, TRAPDOOR ->
+				isSample(spec, asOak(block, path));
+			case WOOL, CARPET -> isSample(spec, asWhite(block, path));
+			case FLOWER -> block instanceof FlowerBlock;
+			case ANVIL -> block instanceof AnvilBlock;
+			case CAULDRON -> block instanceof AbstractCauldronBlock;
+			default -> spec.isBuilt(block.defaultBlockState());
+		};
+	}
+
+	private static boolean isSample(MaterialSpec spec, @Nullable String name) {
+		return name != null && name.equals(BuiltInRegistries.BLOCK.getKey(spec.sample()).getPath());
+	}
+
+	/**
+	 * The id with its wood swapped for oak, and a log's other forms (wood, stem, hyphae) called a log, as the logs tag
+	 * counts them: {@code stripped_spruce_wood} becomes {@code stripped_oak_log}. Null if it names no wood the game has
+	 * planks for.
+	 */
+	private static @Nullable String asOak(Block block, String path) {
+		String wood = WoodWork.woodOf(new ItemStack(block.asItem()));
+		if (wood == null || !WoodWork.isWood(wood)) {
+			return null;
+		}
+		boolean stripped = path.startsWith("stripped_");
+		String rest = stripped ? path.substring("stripped_".length()) : path;
+		if (!rest.startsWith(wood + "_")) {
+			return null;
+		}
+		String suffix = rest.substring(wood.length());
+		if (suffix.equals("_wood") || suffix.equals("_stem") || suffix.equals("_hyphae")) {
+			suffix = "_log";
+		}
+		return (stripped ? "stripped_oak" : "oak") + suffix;
+	}
+
+	/** The id with its colour swapped for white ({@code red_carpet} becomes {@code white_carpet}), or null. */
+	private static @Nullable String asWhite(Block block, String path) {
+		String colour = WoodWork.colourOf(new ItemStack(block.asItem()));
+		return colour == null || !path.startsWith(colour + "_") ? null : "white" + path.substring(colour.length());
 	}
 
 	/** Materials in the order a block is matched against them: the narrower ones before the wider tags. */

@@ -183,6 +183,18 @@ public final class CampData extends SavedData {
 	}
 
 	/**
+	 * Records a block the friends placed even when the record is full, or learns what it has become (dirt grown over
+	 * with grass). Only for the few short-lived blocks the friends must always be able to take back down, such as their
+	 * scaffolding, whose own record says which they are: a scaffold block missing from this record could never be dug
+	 * out again.
+	 */
+	public void keepPlaced(Level level, BlockPos pos, BlockState state) {
+		if (placedIn(dimensionKey(level)).put(pos.asLong(), state.getBlock()) != state.getBlock()) {
+			setDirty();
+		}
+	}
+
+	/**
 	 * Records a position in the camp's dimension without knowing the block (the first level-aware check fills
 	 * it in). Prefer {@link #recordPlaced(Level, BlockPos, BlockState)}.
 	 */
