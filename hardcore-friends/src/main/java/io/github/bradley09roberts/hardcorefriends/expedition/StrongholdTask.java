@@ -54,6 +54,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * player-built), comes home and tells everyone where it is. She never digs down. A trip of a day or more: she shelters
  * at night like anyone far from camp, and carries on in the morning; hurt or hungry, she turns back and reports what
  * she knows.
+ *
+ * <p>Her land keeps running the whole way (a roaming ticket, renewed every {@value #REFRESH_ROAMING} ticks: one lapses
+ * after a day and a half, and the trip can take three days). After {@value #TRIP_MEMORY} ticks out she turns for home
+ * with what she knows; the trip is only forgotten once she is back, never with her far away and her land let go.
  */
 public final class StrongholdTask implements CompanionTask {
 	static final String ID = "scout.stronghold";
@@ -68,10 +72,14 @@ public final class StrongholdTask implements CompanionTask {
 	private static final double MIN_ANGLE = Math.toRadians(2.0);
 	/** Further than this from the throws, the crossing is not believed. */
 	private static final int MAX_DISTANCE = 6000;
-	/** The longest the trip is remembered (three days): after that it is given up. */
+	/** The longest the search goes on (three days): after that she comes home with what she knows. */
 	private static final long TRIP_MEMORY = 72000L;
-	/** A roaming ticket lapses after a day and a half: it is asked for afresh this often on a long trip. */
+	/** A roaming ticket lapses after a day and a half: it is renewed this often on a long trip. */
 	private static final long REFRESH_ROAMING = 12000L;
+	/** When her roaming ticket was last granted or renewed (game time), in the trip state. */
+	private static final String ROAM_AT = "roamAt";
+	/** An eye that comes down closer than this (horizontally) to where it was thrown went straight down: it is here. */
+	private static final double STRAIGHT_DOWN = 2;
 	private static final String MEMORY = "expedition.stronghold_search";
 
 	private static final String PACK = "pack";
@@ -92,7 +100,6 @@ public final class StrongholdTask implements CompanionTask {
 	private int eyeGoneTicks;
 	private @Nullable ItemEntity dropped;
 	private int phaseTicks;
-	private long roamingSince;
 	private int markStep;
 
 	@Override
@@ -151,10 +158,16 @@ public final class StrongholdTask implements CompanionTask {
 			return 0;
 		}
 		if (onTrip(c)) {
-			long started = state(c).getLongOr("started", 0L);
+			CompoundTag t = state(c);
+			long started = t.getLongOr("started", 0L);
 			if (level.getGameTime() - started > TRIP_MEMORY || level.getGameTime() < started) {
-				giveUp(c);
-				return 0;
+				if (Trips.home(c)) {
+					giveUp(c);
+					return 0;
+				}
+				if (!HOME.equals(phase(t))) {
+					setPhase(c, t, HOME); // three days out: home with what she knows (her land kept running on the way)
+				}
 			}
 			if (Camp.isNight(level)) {
 				return 0; // the night shelter takes over; on in the morning
@@ -208,18 +221,36 @@ public final class StrongholdTask implements CompanionTask {
 		dropped = null;
 		phaseTicks = 0;
 		markStep = 0;
-		if (!ChunkLoader.startRoaming(c, "finding the stronghold") && !Trips.home(c)) {
-			return false;
+		CompoundTag t = onTrip(c) ? state(c) : null;
+		if (t == null) {
+			t = new CompoundTag();
+			t.putString("phase", PACK);
+			t.putLong("started", level.getGameTime());
 		}
-		roamingSince = level.getGameTime();
-		if (onTrip(c)) {
-			return true;
+		if (!holdLand(c, level, t) && !Trips.home(c)) {
+			return false; // out of camp with no land kept running for her: not now
 		}
-		CompoundTag t = new CompoundTag();
-		t.putString("phase", PACK);
-		t.putLong("started", level.getGameTime());
 		save(c, t);
 		return true;
+	}
+
+	/**
+	 * Keeps her land running for the whole trip: asks for a roaming ticket when she holds none, and renews the one she
+	 * holds every {@value #REFRESH_ROAMING} ticks (the time is kept in the trip state, so neither the end of a run nor
+	 * a night in a shelter starts the count again). Returns false when she holds none and none can be given.
+	 */
+	private static boolean holdLand(CompanionEntity c, ServerLevel level, CompoundTag t) {
+		long now = level.getGameTime();
+		long at = t.getLongOr(ROAM_AT, Long.MIN_VALUE);
+		boolean held = ChunkLoader.isRoaming(c);
+		if (held && at != Long.MIN_VALUE && now >= at && now - at < REFRESH_ROAMING) {
+			return true;
+		}
+		if (held ? ChunkLoader.renewRoaming(c) : ChunkLoader.startRoaming(c, "finding the stronghold")) {
+			t.putLong(ROAM_AT, now);
+			return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -233,11 +264,8 @@ public final class StrongholdTask implements CompanionTask {
 		if (phaseTicks % 100 == 0) {
 			Trips.snack(c);
 		}
-		if (level.getGameTime() - roamingSince > REFRESH_ROAMING) {
-			// A long trip outlasts one roaming ticket: let it go and ask again at once (nothing unloads in between).
-			roamingSince = level.getGameTime();
-			ChunkLoader.stopRoaming(c);
-			ChunkLoader.startRoaming(c, "finding the stronghold");
+		if (level.getGameTime() % 20 == 0 && !Trips.home(c)) {
+			holdLand(c, level, t); // a long trip outlasts one roaming ticket (see the class description)
 		}
 		String phase = phase(t);
 		if (!HOME.equals(phase) && !PACK.equals(phase) && turnBack(c)) {
@@ -370,8 +398,16 @@ public final class StrongholdTask implements CompanionTask {
 		double dx = last.x - (from.getX() + 0.5);
 		double dz = last.z - (from.getZ() + 0.5);
 		eye = null;
-		if (dx * dx + dz * dz < 4) {
-			return TaskStatus.RUNNING; // hardly moved: throw again
+		if (dx * dx + dz * dz < STRAIGHT_DOWN * STRAIGHT_DOWN) {
+			// It went (almost) straight down: the stronghold is right here. Another throw would only do the same.
+			t.putLong("estimate", from.asLong());
+			t.putLong("dest", from.asLong());
+			t.putBoolean("here", true);
+			eyeGoneTicks = 0;
+			dropped = null;
+			setPhase(c, t, COLLECT);
+			phaseTicks = 0;
+			return TaskStatus.RUNNING;
 		}
 		ListTag throwsTag = t.getListOrEmpty("throws");
 		CompoundTag one = new CompoundTag();
@@ -417,8 +453,18 @@ public final class StrongholdTask implements CompanionTask {
 		return afterThrows(c, level, t);
 	}
 
-	/** With two throws or more, works out where the lines cross; otherwise walks across for the next throw. */
+	/**
+	 * With an eye that went straight down, marks the spot where she stands; with two throws or more, works out where
+	 * the lines cross; otherwise walks across for the next throw.
+	 */
 	private TaskStatus afterThrows(CompanionEntity c, ServerLevel level, CompoundTag t) {
+		if (t.getBooleanOr("here", false)) {
+			t.remove("here"); // "estimate" and "dest" are where she threw it from
+			setPhase(c, t, SPOT);
+			walker.reset();
+			phaseTicks = 0;
+			return TaskStatus.RUNNING;
+		}
 		List<double[]> throwsMade = throwsOf(t);
 		if (throwsMade.size() >= 2) {
 			BlockPos spot = crossing(throwsMade);

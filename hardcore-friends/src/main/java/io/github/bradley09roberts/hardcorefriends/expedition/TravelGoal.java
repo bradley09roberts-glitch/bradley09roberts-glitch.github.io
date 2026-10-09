@@ -10,6 +10,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
@@ -31,6 +33,10 @@ import io.github.bradley09roberts.hardcorefriends.survival.ChunkLoader;
  * <p>Never stranded: a portal they cannot get to (no path, the way blocked) is given up after
  * {@value #GIVE_UP_TICKS} ticks without progress, and they find their way across from where they stand. While no
  * player is near, a roaming ticket keeps their land running so they do not freeze half way.
+ *
+ * <p>Never into danger on the way: they stop beside an End portal's opening rather than in it (there is nothing under
+ * a stronghold's but a drop into lava). In the End they walk nowhere: the way they came in is the platform off the
+ * main island, the way to it a bridge over the void, so they wait where they stand and cross from there.
  */
 public class TravelGoal extends Goal {
 	private enum Plan {
@@ -63,6 +69,10 @@ public class TravelGoal extends Goal {
 	private double bestDist = Double.MAX_VALUE;
 	private boolean announced;
 	private int landCheck;
+	/** The portal {@link #stand} was worked out for, and where to stand to go through it (null: the portal itself). */
+	private @Nullable BlockPos standFor;
+	private @Nullable BlockPos stand;
+	private boolean standChecked;
 
 	public TravelGoal(CompanionEntity companion) {
 		this.c = companion;
@@ -191,10 +201,13 @@ public class TravelGoal extends Goal {
 		}
 	}
 
-	/** Waits a few blocks from the portal they came in by (or where they are, if they do not know one). */
+	/**
+	 * Waits a few blocks from the portal they came in by (or where they are, if they do not know one, or in the End:
+	 * see the class description).
+	 */
 	private void waitByPortal() {
 		Travel.Way w = way;
-		if (w == null || c.blockPosition().distSqr(w.portal()) <= 4 * 4) {
+		if (w == null || c.level().dimension() == Level.END || c.blockPosition().distSqr(w.portal()) <= 4 * 4) {
 			c.actions().stopWalking();
 			return;
 		}
@@ -213,13 +226,18 @@ public class TravelGoal extends Goal {
 			Speech.say(c, Line.PORTAL_HOME);
 		}
 		Travel.Way w = way;
+		if (level.dimension() == Level.END) {
+			c.actions().stopWalking();
+			crossFrom(level, w); // no walking to the platform over the void (see the class description)
+			return;
+		}
 		if (w == null) {
 			if (plan == Plan.GO_HOME && ++noProgress > 100) {
 				crossFrom(level, null); // no portal known on this side: they find their way home from here
 			}
 			return;
 		}
-		BlockPos portal = w.portal();
+		BlockPos portal = standBy(level, w.portal());
 		double flat = Math.sqrt(Camp.horizontalDistSqr(c.blockPosition(), portal));
 		double dy = Math.abs(c.getY() - portal.getY());
 		if (flat <= AT_PORTAL && dy <= 3) {
@@ -244,6 +262,26 @@ public class TravelGoal extends Goal {
 				c.actions().stopWalking(); // try another way round next tick
 			}
 		}
+	}
+
+	/**
+	 * Where to walk to go through this portal: a safe spot beside it when it is an End portal (its opening has no floor),
+	 * the portal itself otherwise. Worked out once, as soon as the portal's land is running (a look round of a few
+	 * blocks, at most once a second until then).
+	 */
+	private BlockPos standBy(ServerLevel level, BlockPos portal) {
+		if (!portal.equals(standFor)) {
+			standFor = portal;
+			stand = null;
+			standChecked = false;
+		}
+		if (!standChecked && c.tickCount % 20 == 0 && level.isPositionEntityTicking(portal)) {
+			standChecked = true;
+			if (level.getBlockState(portal).is(Blocks.END_PORTAL)) {
+				stand = Travel.safeSpot(level, portal, 4);
+			}
+		}
+		return stand != null ? stand : portal;
 	}
 
 	/**
@@ -283,24 +321,24 @@ public class TravelGoal extends Goal {
 		deferred = 40; // the crossing happens at the end of the tick; nothing more to do meanwhile
 	}
 
-	/** Asks for a roaming ticket while no player is near (so they keep moving), and lets it go once one is. */
+	/**
+	 * Asks for a roaming ticket while no player is near (so they keep moving). Asked for again whenever none is
+	 * actually held: the survival package may have let one go (nobody online for a while, away too long), and one
+	 * granted in the dimension they have just left does not count here.
+	 */
 	private void holdLand() {
 		if (!(c.level() instanceof ServerLevel level)) {
 			return;
 		}
 		boolean playerNear = false;
 		for (ServerPlayer p : level.players()) {
-			if (!p.isSpectator() && p.distanceToSqr(c) <= PLAYER_NEAR * PLAYER_NEAR) {
+			if (p.isAlive() && !p.isSpectator() && p.distanceToSqr(c) <= PLAYER_NEAR * PLAYER_NEAR) {
 				playerNear = true;
 				break;
 			}
 		}
-		if (!playerNear && !Travel.roaming(c)) {
-			Travel.setRoaming(c, true);
-			if (!ChunkLoader.startRoaming(c, plan == Plan.GO_HOME ? "making their way home through a portal"
-				: "making their way to a portal")) {
-				Travel.setRoaming(c, false);
-			}
+		if (!playerNear && !Travel.holdsLand(c)) {
+			Travel.holdLand(c, plan == Plan.GO_HOME ? "making their way home through a portal" : "making their way to a portal");
 		}
 	}
 
