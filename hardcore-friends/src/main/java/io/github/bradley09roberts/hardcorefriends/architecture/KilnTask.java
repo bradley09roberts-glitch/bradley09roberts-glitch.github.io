@@ -1,6 +1,7 @@
 package io.github.bradley09roberts.hardcorefriends.architecture;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
 
@@ -45,6 +46,8 @@ public final class KilnTask implements CompanionTask {
 	/** Planks go in the furnace only when the chest holds at least this many: they are building material first. */
 	private static final int SPARE_PLANKS = 48;
 	private static final int MAX_LOAD = 32;
+	/** Half-smelts one plank burns for (see {@link SmeltTask#halfSmeltsPer}). */
+	private static final int PLANK_HALF_SMELTS = 3;
 
 	private enum Phase {
 		CHEST,
@@ -59,6 +62,8 @@ public final class KilnTask implements CompanionTask {
 	private @Nullable Work work;
 	private long checkedAt = Long.MIN_VALUE / 2;
 	private Phase phase = Phase.CHEST;
+	/** Planks taken from the chest's spare ones as fuel for this load: the only planks that may go in the furnace. */
+	private int fuelPlanks;
 
 	@Override
 	public String id() {
@@ -160,13 +165,14 @@ public final class KilnTask implements CompanionTask {
 		if (work == null) {
 			return false;
 		}
+		fuelPlanks = 0;
 		phase = carriesEnough(c, work) ? Phase.FURNACE : Phase.CHEST;
 		Speech.say(c, Line.FIRING_KILN, work.making().describe(2).substring(2));
 		return true;
 	}
 
 	private static boolean carriesEnough(CompanionEntity c, Work w) {
-		return c.backpack().count(w.from()) >= w.count() && c.backpack().has(s -> s.is(ItemTags.COALS));
+		return c.backpack().count(w.from()) >= w.count() && coalHalfSmelts(c.backpack()) >= w.count() * 2;
 	}
 
 	@Override
@@ -194,17 +200,19 @@ public final class KilnTask implements CompanionTask {
 					if (need > 0) {
 						SupplyChest.withdraw(chest.get(), bp, s -> s.is(w.from()), need);
 					}
+					// Only coal and charcoal count as carried fuel: the builder's planks are for building.
 					int halfSmelts = w.count() * 2;
-					int carriedFuel = fuelHalfSmelts(bp);
+					int carriedFuel = coalHalfSmelts(bp);
 					if (carriedFuel < halfSmelts) {
 						int coalNeeded = (halfSmelts - carriedFuel + 15) / 16;
 						int got = SupplyChest.withdraw(chest.get(), bp, s -> s.is(ItemTags.COALS), coalNeeded);
 						if (got < coalNeeded && SupplyChest.count(chest.get(), s -> s.is(ItemTags.PLANKS)) >= SPARE_PLANKS) {
-							int planks = ((halfSmelts - fuelHalfSmelts(bp)) + 2) / 3;
-							SupplyChest.withdraw(chest.get(), bp, s -> s.is(ItemTags.PLANKS), Math.min(planks, 24));
+							int planks = ((halfSmelts - coalHalfSmelts(bp)) + PLANK_HALF_SMELTS - 1) / PLANK_HALF_SMELTS;
+							int spare = Math.min(planks, 24);
+							fuelPlanks += SupplyChest.withdraw(chest.get(), bp, s -> s.is(ItemTags.PLANKS), spare);
 						}
 					}
-					if (bp.count(w.from()) <= 0 || fuelHalfSmelts(bp) <= 0) {
+					if (bp.count(w.from()) <= 0 || coalHalfSmelts(bp) <= 0 && fuelPlanks <= 0) {
 						return TaskStatus.FAILURE;
 					}
 					phase = Phase.FURNACE;
@@ -237,20 +245,36 @@ public final class KilnTask implements CompanionTask {
 		return TaskStatus.SUCCESS;
 	}
 
-	/** Fuel carried, in half-smelts (coal 16, planks 3; see {@link SmeltTask#halfSmeltsPer}). */
-	private static int fuelHalfSmelts(Backpack bp) {
+	/** Coal and charcoal carried, in half-smelts (16 each; see {@link SmeltTask#halfSmeltsPer}). */
+	private static int coalHalfSmelts(Backpack bp) {
 		int total = 0;
 		for (ItemStack s : bp.stacks()) {
-			total += SmeltTask.halfSmeltsPer(s) * s.getCount();
+			if (s.is(ItemTags.COALS)) {
+				total += SmeltTask.halfSmeltsPer(s) * s.getCount();
+			}
 		}
 		return total;
+	}
+
+	/**
+	 * The fuel to put in: coal or charcoal, or planks only up to the spare ones taken from the chest for this load (never
+	 * the builder's own building planks); the same as the fuel slot already holds, if it holds any. A slot of planks
+	 * with no planks to spare gets nothing more: it burns down, and coal goes in next time.
+	 */
+	private ItemStack fuelFor(Backpack bp, ItemStack fuelSlot) {
+		Predicate<ItemStack> usable = s -> s.is(ItemTags.COALS) || fuelPlanks > 0 && s.is(ItemTags.PLANKS);
+		if (!fuelSlot.isEmpty()) {
+			return bp.find(s -> usable.test(s) && ItemStack.isSameItemSameComponents(s, fuelSlot));
+		}
+		ItemStack coal = bp.find(s -> s.is(ItemTags.COALS));
+		return coal.isEmpty() ? bp.find(usable) : coal;
 	}
 
 	/**
 	 * Puts the makings in the input slot (empty, or holding the same) and enough fuel in the fuel slot (empty, or the
 	 * same fuel) for everything queued. Returns how many items went in.
 	 */
-	private static int load(Backpack bp, AbstractFurnaceBlockEntity f, Work w) {
+	private int load(Backpack bp, AbstractFurnaceBlockEntity f, Work w) {
 		ItemStack input = f.getItem(CampFurnace.SLOT_INPUT);
 		if (!input.isEmpty() && !input.is(w.from())) {
 			return 0;
@@ -276,16 +300,21 @@ public final class KilnTask implements CompanionTask {
 		ItemStack fuelSlot = f.getItem(CampFurnace.SLOT_FUEL);
 		int needHalf = queued * 2 - SmeltTask.halfSmeltsPer(fuelSlot) * fuelSlot.getCount();
 		if (needHalf > 0) {
-			ItemStack fuel = fuelSlot.isEmpty()
-				? bp.find(s -> s.is(ItemTags.COALS)).isEmpty() ? bp.find(s -> s.is(ItemTags.PLANKS)) : bp.find(s -> s.is(ItemTags.COALS))
-				: bp.find(s -> ItemStack.isSameItemSameComponents(s, fuelSlot));
+			ItemStack fuel = fuelFor(bp, fuelSlot);
 			int per = SmeltTask.halfSmeltsPer(fuel);
 			if (!fuel.isEmpty() && per > 0 && f.canPlaceItem(CampFurnace.SLOT_FUEL, fuel)) {
 				ItemStack template = fuel.copyWithCount(1);
+				boolean planks = template.is(ItemTags.PLANKS);
 				int want = (needHalf + per - 1) / per;
+				if (planks) {
+					want = Math.min(want, fuelPlanks);
+				}
 				int space = fuelSlot.isEmpty() ? template.getMaxStackSize() : fuelSlot.getMaxStackSize() - fuelSlot.getCount();
 				ItemStack fuelTaken = bp.take(s -> ItemStack.isSameItemSameComponents(s, template), Math.min(want, space));
 				if (!fuelTaken.isEmpty()) {
+					if (planks) {
+						fuelPlanks -= fuelTaken.getCount();
+					}
 					if (fuelSlot.isEmpty()) {
 						f.setItem(CampFurnace.SLOT_FUEL, fuelTaken);
 					} else {

@@ -66,78 +66,111 @@ public final class Scaffold {
 	}
 
 	private static final Map<CompanionEntity, Long> BUSY = new WeakHashMap<>();
-	private static final Map<CampData, LongOpenHashSet> CACHE = new WeakHashMap<>();
+	private static final Map<CampData, Records> CACHE = new WeakHashMap<>();
+
+	/** The scaffold blocks still standing, and which of them are cobblestone (the rest are dirt). */
+	private record Records(LongOpenHashSet blocks, LongOpenHashSet stone) {
+	}
 
 	private Scaffold() {
 	}
 
 	// ----------------------------------------------------------------- records
 
-	private static LongOpenHashSet blocks(CampData data) {
+	private static Records records(CampData data) {
 		return CACHE.computeIfAbsent(data, d -> {
-			LongOpenHashSet set = new LongOpenHashSet();
-			for (long l : d.memory(MEMORY).getLongArray("blocks").orElse(new long[0])) {
-				set.add(l);
+			CompoundTag mem = d.memory(MEMORY);
+			LongOpenHashSet blocks = new LongOpenHashSet();
+			for (long l : mem.getLongArray("blocks").orElse(new long[0])) {
+				blocks.add(l);
 			}
-			return set;
+			LongOpenHashSet stone = new LongOpenHashSet();
+			for (long l : mem.getLongArray("stone").orElse(new long[0])) {
+				stone.add(l);
+			}
+			return new Records(blocks, stone);
 		});
 	}
 
-	private static void save(CampData data, LongOpenHashSet set) {
+	private static void save(CampData data, Records rec) {
 		CompoundTag mem = data.memory(MEMORY);
-		mem.putLongArray("blocks", set.toLongArray());
+		mem.putLongArray("blocks", rec.blocks().toLongArray());
+		mem.putLongArray("stone", rec.stone().toLongArray());
 		data.setDirty();
 	}
 
-	/** Remembers a scaffold block the friends just placed (in the camp's dimension). */
-	static void add(ServerLevel level, BlockPos pos) {
+	/**
+	 * Remembers a scaffold block the friends just placed (in the camp's dimension). The camp's record of placed blocks
+	 * gets it too, even when that record is full, so the edit guard always lets the friends dig it back out.
+	 */
+	static void add(ServerLevel level, BlockPos pos, BlockState state) {
 		CampData data = Camp.data(level.getServer());
-		LongOpenHashSet set = blocks(data);
-		if (set.add(pos.asLong())) {
-			save(data, set);
+		Records rec = records(data);
+		rec.blocks().add(pos.asLong());
+		if (state.is(Blocks.COBBLESTONE)) {
+			rec.stone().add(pos.asLong());
+		} else {
+			rec.stone().remove(pos.asLong());
 		}
+		data.keepPlaced(level, pos, state);
+		save(data, rec);
 	}
 
 	/** Forgets a scaffold block (taken down, or gone some other way). */
 	static void remove(ServerLevel level, BlockPos pos) {
 		CampData data = Camp.data(level.getServer());
-		LongOpenHashSet set = blocks(data);
-		if (set.remove(pos.asLong())) {
-			save(data, set);
+		Records rec = records(data);
+		rec.stone().remove(pos.asLong());
+		if (rec.blocks().remove(pos.asLong())) {
+			save(data, rec);
 		}
 	}
 
 	/** True if any scaffold block is remembered (cheap). */
 	public static boolean any(ServerLevel level) {
-		return !blocks(Camp.data(level.getServer())).isEmpty();
+		return !records(Camp.data(level.getServer())).blocks().isEmpty();
 	}
 
 	/**
-	 * True if this is a scaffold block the friends put up and is still standing there. A record whose block has gone
-	 * (or was replaced) is forgotten.
+	 * True if this is a scaffold block the friends put up and is still standing there. The scaffold record is what
+	 * counts, not the camp's general record of placed blocks (which takes no new blocks once full, and forgets dirt the
+	 * moment grass grows over it): a dirt block stays the friends' while it is dirt, grass or mycelium, a cobblestone one
+	 * while it is cobblestone. While it stands, the camp's placed-block record is kept in step with it, so the edit
+	 * guard lets the friends take it down. A record whose block has gone (or was replaced) is forgotten.
 	 */
 	public static boolean isScaffold(ServerLevel level, BlockPos pos) {
 		CampData data = Camp.data(level.getServer());
-		LongOpenHashSet set = blocks(data);
-		if (set.isEmpty() || !set.contains(pos.asLong()) || !Camp.isCampLevel(level, data)) {
+		Records rec = records(data);
+		long key = pos.asLong();
+		if (rec.blocks().isEmpty() || !rec.blocks().contains(key) || !Camp.isCampLevel(level, data)) {
 			return false;
 		}
 		if (!level.isLoaded(pos)) {
 			return true; // cannot look; trust the record
 		}
 		BlockState s = level.getBlockState(pos);
-		if ((s.is(Blocks.DIRT) || s.is(Blocks.COBBLESTONE) || s.is(Blocks.GRASS_BLOCK)) && data.isPlacedByFriends(level, pos)) {
+		boolean same;
+		if (rec.stone().contains(key)) {
+			same = s.is(Blocks.COBBLESTONE);
+		} else {
+			same = s.is(Blocks.DIRT) || s.is(Blocks.GRASS_BLOCK) || s.is(Blocks.MYCELIUM)
+				// a record saved before cobblestone was told apart: only if the camp's own record agrees
+				|| s.is(Blocks.COBBLESTONE) && data.isPlacedByFriends(level, pos);
+		}
+		if (same) {
+			data.keepPlaced(level, pos, s);
 			return true;
 		}
-		set.remove(pos.asLong());
-		save(data, set);
+		rec.blocks().remove(key);
+		rec.stone().remove(key);
+		save(data, rec);
 		return false;
 	}
 
 	/** Every scaffold block still remembered, for the clean-up job (a copy). */
 	static List<BlockPos> all(ServerLevel level) {
 		List<BlockPos> list = new ArrayList<>();
-		LongArrayList copy = new LongArrayList(blocks(Camp.data(level.getServer())));
+		LongArrayList copy = new LongArrayList(records(Camp.data(level.getServer())).blocks());
 		for (long l : copy) {
 			list.add(BlockPos.of(l));
 		}
@@ -383,6 +416,11 @@ public final class Scaffold {
 				if (!c.onGround()) {
 					return Step.WORKING; // land first
 				}
+				if (!inColumn(c, feet) || Math.abs(c.getY() - feet.getY()) >= 0.6) {
+					// Pushed or knocked off the pillar: never pull them back into it at ground height. Whatever was put
+					// up is recorded, so the clean-up job takes it down.
+					return Step.FAILED;
+				}
 				c.setPos(feet.getX() + 0.5, c.getY(), feet.getZ() + 0.5);
 				c.getJumpControl().jump();
 			}
@@ -392,6 +430,9 @@ public final class Scaffold {
 			}
 			if (ticks > TICKS_PER_TRY) {
 				ticks = 0;
+				if (!inColumn(c, feet) || c.getY() < feet.getY() - 0.1) {
+					return Step.FAILED; // knocked off mid-jump
+				}
 				if (++tries >= TRIES_BEFORE_LIFT) {
 					// The jumps fall short (a slab underfoot, a low branch): lift them the last bit, as there is room above.
 					c.setPos(feet.getX() + 0.5, feet.getY() + 1.0, feet.getZ() + 0.5);
@@ -413,11 +454,18 @@ public final class Scaffold {
 			if (!c.actions().place(feet, state, s -> ItemStack.isSameItemSameComponents(s, template), WorldEditGuard.Reason.BUILD)) {
 				return false;
 			}
-			add(level, feet);
+			add(level, feet, state);
 			placed++;
 			ticks = 0;
 			tries = 0;
 			return true;
+		}
+
+		/** True if the friend is (horizontally) in the pillar's column. */
+		private static boolean inColumn(CompanionEntity c, BlockPos feet) {
+			double dx = c.getX() - (feet.getX() + 0.5);
+			double dz = c.getZ() - (feet.getZ() + 0.5);
+			return dx * dx + dz * dz < 0.8 * 0.8;
 		}
 	}
 

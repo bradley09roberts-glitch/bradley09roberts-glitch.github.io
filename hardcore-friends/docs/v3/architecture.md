@@ -53,8 +53,9 @@ Plans can use, with vanilla recipes and real ingredients: planks, logs and strip
 axe), wooden stairs, slabs, doors, trapdoors, fences, gates and pressure plates (all of one wood, the plan's wood
 when the camp has it), cobblestone and its stairs, slabs and walls, stone, smooth stone and their slabs and stairs,
 stone bricks and their stairs, slabs and walls, bricks and brick stairs and slabs, sandstone, cut and smooth sandstone
-and sandstone stairs, slabs and walls, glass and glass panes, wool (from sheep, or four string), carpets, beds (wool
-and planks; three hay bales make four straw beds when there is no wool), barrels, flower pots (with a flower in),
+and sandstone stairs, slabs and walls, glass and glass panes, wool (from sheep, or four string), carpets (two wool of
+one colour make three), beds (three wool of one colour and planks; three hay bales make four straw beds when there is
+no wool), barrels, flower pots (with a flower in),
 lanterns, torches, iron bars, iron chains, hay bales, bookshelves, chests, crafting tables, furnaces, smokers, blast
 furnaces, smithing, fletching and cartography tables, looms, stonecutters, grindstones, composters, lecterns,
 cauldrons, campfires, ladders, and a bell if one is in the supply chest (friends cannot make bells).
@@ -62,13 +63,17 @@ cauldrons, campfires, ladders, and a bell if one is in the supply chest (friends
 New jobs make the materials buildings are short of. Each job is a speciality's, but anyone helps:
 
 - **Firing at the furnace** (the builder): glass from sand, stone from cobblestone, smooth stone from stone, bricks
-  from clay and smooth sandstone from sandstone, with coal or charcoal (planks only when the chest has plenty). Only in
-  the friends' own furnace, and only when its input is empty or holds the same thing.
+  from clay and smooth sandstone from sandstone, with coal or charcoal (spare planks from the chest only when it has
+  plenty, never the builder's own building planks). Only in the friends' own furnace, and only when its input is empty
+  or holds the same thing.
 - **Digging sand and clay** (the forager): by day, the top block of dry sand or clay in the gathering ring, never
-  inside the camp, never next to water, never near anything you built. No pits are left.
+  inside the camp, never next to water, never near anything you built. Only a block level with the ground on all four
+  sides is taken, in every other column, so each spot is dug once and left as a dip one block deep that anyone can
+  step out of: no pits. Never the block a friend or an animal is standing on.
 - **Shearing sheep** (the farmer): wild sheep in the gathering ring, with shears from the chest (or a pair made from
   two iron ingots when the chest has six or more). Never a named, leashed, penned or owned sheep, or one by your
-  builds. Turn it off with `friendsShearSheep`.
+  builds. Turn it off with `friendsShearSheep`. Beds and carpets need their wool all of one colour, so odd wool of
+  mixed colours does not count towards them: the shearing goes on until there is enough of one colour.
 
 The builders also tell the camp what a whole building will need, so gatherers fetch wood, stone and earth ahead of
 time and the materials arrive in batches.
@@ -80,10 +85,16 @@ time and the materials arrive in batches.
 - **Two-part blocks:** doors, beds and tall flowers go down as two halves.
 - **Scaffolding:** a wall or roof out of reach from the ground is reached from a temporary pillar of dirt or
   cobblestone (at most `maxScaffoldHeight`, 6 blocks), put up beside or inside the building the way a player does it,
-  never in a spot the building uses, next to water or lava, or by anything you built. The builder digs it out again
-  when done up there, and gets the blocks back. A friend called away while up a pillar comes straight down first. A
-  pillar left behind (say the world was closed mid-climb) is taken down by the builder later. Turn scaffolding off
-  with `allowScaffolding` (high parts are then skipped).
+  never in a spot the building uses, next to water or lava, or by anything you built. The builder takes dirt for it
+  from the chest when there is some (it digs out in a moment by hand; cobblestone takes the best part of ten seconds a
+  block without a pickaxe). The builder digs it out again when done up there, and gets the blocks back. A friend
+  called away while up a pillar comes straight down first. A pillar left behind (say the world was closed mid-climb)
+  is taken down by the builder later. Pillars have their own record, so they are always recognised and taken down,
+  even after grass has grown over the dirt. A friend pushed or knocked off a pillar half-way up stops there; the
+  clean-up job takes the stub down. If the camp has no dirt or cobblestone at all, the builder only asks for some once a
+  pillar is actually needed. Turn scaffolding off with `allowScaffolding` (high parts are then skipped).
+- **Decoration never holds a building up:** carpets, flowers and the like that cannot be had are left out of the
+  batch, and the layers above them (door tops, lights, windows) go on being built. The repair job adds them later.
 - **Big buildings** are built in batches of 24 blocks and saved block by block, so nothing is lost if the work is
   interrupted, and a builder hands back after a couple of minutes so other work gets a turn.
 
@@ -194,7 +205,10 @@ Either a material name (`"planks"`), or an object:
 
 A vanilla block id works too and keeps its wood or colour as the wish: `minecraft:spruce_stairs` is `stairs` wishing
 for spruce, `red_bed` is `bed` wishing for red, `minecraft:stripped_birch_log` is `stripped_log` wishing for birch.
-Blocks the friends cannot make (concrete, terracotta, copper, quartz, other mods' blocks) are errors.
+Wooden and wool blocks are recognised by name (a wood the game has planks for, or a dye colour, then the part:
+`_planks`, `_log`, `_wood`, `_stem`, `_hyphae`, `_slab`, `_stairs`, `_door`, `_trapdoor`, `_fence`, `_fence_gate`,
+`_pressure_plate`, `_wool`, `_carpet`), so a plan loads the same on a fresh server start as after `/reload`. Blocks the
+friends cannot make (concrete, terracotta, copper, quartz, other mods' blocks) are errors.
 
 ### Two-part blocks
 
@@ -262,6 +276,8 @@ styles.
   `ai.role.build.BlueprintTask` does (a `SpecialityTask` around your own task is the usual way). Use reason `BUILD`.
 - `isFinished`, `progress`, `planOf`, `markers(level, key, "bed")` (world positions), `sites(level)`,
   `release(level, key)` (forgets the site; the blocks stay), and `FINISHED` listeners told when a building is done.
+  A run notices within a second that its site was released (or reserved afresh) and stops placing, coming down from
+  any pillar first. Runs only work in the camp's dimension: a job handed to a friend elsewhere ends at once.
 
 The builder's repair job also checks finished library buildings, two at a time, and mends them.
 
@@ -279,10 +295,16 @@ The builder's repair job also checks finished library buildings, two at a time, 
   next run. A friend knocked off a pillar takes fall damage like anyone else (at most six blocks).
 - A pillar whose blocks cannot be dug back out (water has flowed in beside it, or a player stands right next to it)
   stays until the clean-up job can take it down; the friend on it waits a while, then is left to find their own way.
+  Coming down gives up only after half a minute without getting a block lower, so a cobblestone pillar dug without a
+  pickaxe (several seconds a block) still comes down in one go.
 - Windows without glass are open holes; a lantern that became a torch stays a torch even once there is iron.
 - Wool comes from wild sheep (and the pen's butchered surplus): no shearing in the pen. Clay is rare on dry land, so
-  bricks and flower pots may never come; plans mark them as decoration.
+  bricks and flower pots may never come; plans mark them as decoration. Friends cannot dye wool, so coloured odd wool
+  that never makes up a set of one colour sits in the chest unused.
+- Sand digging leaves a scatter of one-block dips (every other column) in the sand it takes from; they are easy to
+  walk out of, but the ground is not filled back in.
 - Plans are not checked against the camp's real terrain beyond the usual site search: very big plans need big, fairly
   level spots, and the camp grows to find room.
 - Data packs can add and replace library plans but not the camp's own buildings.
 - The camp's record of blocks the friends placed holds 20,000 positions; a large village may need it raised.
+  Scaffolding does not depend on it (pillars keep their own record), so a full record never strands a builder.
