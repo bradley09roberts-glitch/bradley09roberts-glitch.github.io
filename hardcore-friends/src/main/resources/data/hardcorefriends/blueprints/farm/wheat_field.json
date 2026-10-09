@@ -1,0 +1,67 @@
+{
+  "name": "wheat field",
+  "kind": "farm:wheat",
+  "styles": ["oak", "plains", "forest", "taiga", "savanna"],
+  "wood": "oak",
+  "size": [13, 11],
+  "front": "north",
+  "palette": {
+    "L": {"block": "log", "wood": "oak", "axis": "y"},
+    "X": {"block": "log", "wood": "oak", "axis": "x"},
+    "Z": {"block": "log", "wood": "oak", "axis": "z"},
+    "d": "dirt",
+    "i": {"block": "fence", "wood": "oak"},
+    "t": {"block": "lantern", "fallback": "torch"},
+    "&": "composter",
+    "Y": {"block": "hay_bale", "axis": "y", "optional": true}
+  },
+  "layers": [
+    [
+      "LXXXXXXXXXXXL",
+      "Zddd.ddd.dddZ",
+      "Zddd.ddd.dddZ",
+      "Zddd.ddd.dddZ",
+      "Zddd.ddd.dddZ",
+      "Zddd.ddd.dddZ",
+      "Zddd.ddd.dddZ",
+      "Zddd.ddd.dddZ",
+      "Zddd.ddd.dddZ",
+      "Zddd.ddd.dddZ",
+      "LXXXXXXXXXXXL"
+    ],
+    [
+      "iiiiii.iiiiii",
+      "i...........i",
+      "i...........i",
+      "i...........&",
+      "i...........i",
+      "i...........i",
+      "i...........i",
+      "i...........Y",
+      "i...........i",
+      "i...........i",
+      "iiiiiiiiiiiii"
+    ],
+    [
+      "t....t.t....t",
+      ".............",
+      ".............",
+      ".............",
+      ".............",
+      "t...........t",
+      ".............",
+      ".............",
+      ".............",
+      ".............",
+      "t.....t.....t"
+    ]
+  ],
+  "markers": {
+    "water": [[4, 0, 9], [8, 0, 9], [4, 0, 2], [8, 0, 2], [8, 0, 4], [4, 0, 4], [4, 0, 6], [8, 0, 6], [4, 0, 8], [8, 0, 8], [4, 0, 1], [8, 0, 1], [4, 0, 3], [8, 0, 3], [4, 0, 5], [8, 0, 5], [4, 0, 7], [8, 0, 7]],
+    "door": [[6, 0, -1]],
+    "inside": [[6, 1, 1]],
+    "field": [[1, 0, 1], [11, 0, 9]],
+    "job": [[12, 1, 3]]
+  },
+  "meta": {"size": "large", "crop": "wheat", "needs": "water", "soil": 81}
+}

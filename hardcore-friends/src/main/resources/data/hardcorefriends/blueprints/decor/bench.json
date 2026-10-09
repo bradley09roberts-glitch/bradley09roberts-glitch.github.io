@@ -1,0 +1,25 @@
+{
+  "name": "bench",
+  "kind": "decor:bench",
+  "styles": ["oak", "spruce", "plains", "forest", "town"],
+  "wood": "spruce",
+  "size": [4, 2],
+  "front": "north",
+  "palette": {
+    "8": {"block": "stairs", "facing": "north", "wood": "spruce"},
+    "y": {"block": "trapdoor", "wood": "spruce", "facing": "west", "open": "true", "half": "top"},
+    "o": {"block": "trapdoor", "wood": "spruce", "facing": "east", "open": "true", "half": "top"},
+    "f": {"block": "potted_flower"}
+  },
+  "layers": [
+    [
+      "f..f",
+      "y88o"
+    ]
+  ],
+  "markers": {
+    "sit": [[1, 0, 1], [2, 0, 1]],
+    "door": [[1, 0, 2]]
+  },
+  "meta": {"size": "tiny", "seats": 2}
+}

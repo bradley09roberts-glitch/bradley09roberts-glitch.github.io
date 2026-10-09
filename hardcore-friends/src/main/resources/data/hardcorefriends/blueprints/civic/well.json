@@ -1,0 +1,69 @@
+{
+  "name": "well",
+  "kind": "civic:well",
+  "styles": ["stone", "oak", "spruce", "plains", "forest", "taiga", "town"],
+  "wood": "spruce",
+  "size": [5, 5],
+  "front": "north",
+  "palette": {
+    "S": "stone_bricks",
+    "w": "cobblestone_wall",
+    "L": {"block": "log", "wood": "spruce", "axis": "y"},
+    "X": {"block": "log", "wood": "spruce", "axis": "x"},
+    "v": {"block": "stairs", "facing": "south", "wood": "spruce"},
+    "^": {"block": "stairs", "facing": "north", "wood": "spruce"},
+    "=": {"block": "slab", "wood": "spruce", "type": "bottom"},
+    "l": {"block": "lantern", "hanging": true, "optional": true},
+    "3": {"block": "wall_torch", "facing": "east"},
+    "4": {"block": "wall_torch", "facing": "west"}
+  },
+  "layers": [
+    [
+      "SSSSS",
+      "SSSSS",
+      "SSSSS",
+      "SSSSS",
+      "SSSSS"
+    ],
+    [
+      "wwwww",
+      "w...w",
+      "S...S",
+      "w...w",
+      "wwwww"
+    ],
+    [
+      ".....",
+      ".....",
+      "L3.4L",
+      ".....",
+      "....."
+    ],
+    [
+      ".....",
+      ".....",
+      "L.l.L",
+      ".....",
+      "....."
+    ],
+    [
+      ".....",
+      "vvvvv",
+      "XXXXX",
+      "^^^^^",
+      "....."
+    ],
+    [
+      ".....",
+      ".....",
+      "=====",
+      ".....",
+      "....."
+    ]
+  ],
+  "markers": {
+    "water": [[1, 1, 2], [2, 1, 1], [3, 1, 1], [1, 1, 1], [2, 1, 3], [3, 1, 3], [2, 1, 2], [3, 1, 2], [1, 1, 3]],
+    "door": [[2, 0, -1]]
+  },
+  "meta": {"size": "small", "needs": "water"}
+}

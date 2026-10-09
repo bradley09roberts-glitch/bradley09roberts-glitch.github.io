@@ -1,0 +1,73 @@
+{
+  "name": "apiary",
+  "kind": "workplace:beekeeper",
+  "styles": ["oak", "plains", "forest", "birch"],
+  "wood": "oak",
+  "size": [11, 11],
+  "front": "north",
+  "palette": {
+    "h": {"block": "chest", "facing": "south"},
+    "O": {"block": "barrel", "facing": "up"},
+    "i": {"block": "fence", "wood": "oak"},
+    "l": {"block": "lantern", "hanging": true, "optional": true},
+    "d": "dirt",
+    "*": {"block": "flower"},
+    "%": {"block": "tall_flower"},
+    "Y": {"block": "hay_bale", "axis": "y"},
+    "c": {"block": "campfire", "lit": "true"},
+    "G": {"block": "fence_gate", "wood": "oak", "facing": "south", "open": "true"},
+    "_": {"block": "slab", "wood": "spruce", "type": "bottom"},
+    "&": "composter",
+    "t": {"block": "lantern", "fallback": "torch"}
+  },
+  "layers": [
+    [
+      "iiiiiGiiiii",
+      "i......ihii",
+      "iddd...&.Oi",
+      "i......i.ii",
+      "iddd......i",
+      "i.........i",
+      "i.c.c.c.c.i",
+      "i.........i",
+      "iddd...dddi",
+      "i.........i",
+      "iiiiiiiiiii"
+    ],
+    [
+      "t.........t",
+      ".......ili.",
+      ".*%*.......",
+      ".......i.i.",
+      ".***.......",
+      "...........",
+      "..Y.Y.Y.Y..",
+      "...........",
+      ".***...*%*.",
+      "...........",
+      "t.........t"
+    ],
+    [
+      "...........",
+      ".......___.",
+      ".......___.",
+      ".......___.",
+      "...........",
+      "...........",
+      "...........",
+      "...........",
+      "...........",
+      "...........",
+      "..........."
+    ]
+  ],
+  "markers": {
+    "hive": [[2, 2, 6], [4, 2, 6], [6, 2, 6], [8, 2, 6]],
+    "door": [[5, 0, -1]],
+    "inside": [[5, 0, 1]],
+    "job": [[9, 0, 2]],
+    "chest": [[8, 0, 1]],
+    "composter": [[7, 0, 2]]
+  },
+  "meta": {"profession": "beekeeper", "size": "medium", "hives": 4}
+}

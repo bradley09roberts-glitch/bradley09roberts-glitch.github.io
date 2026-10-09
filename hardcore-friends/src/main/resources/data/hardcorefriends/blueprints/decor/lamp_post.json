@@ -1,0 +1,31 @@
+{
+  "name": "lamp post",
+  "kind": "decor:lamp",
+  "styles": ["oak", "spruce", "plains", "forest", "taiga", "town"],
+  "wood": "spruce",
+  "size": [1, 1],
+  "front": "north",
+  "palette": {
+    "w": "cobblestone_wall",
+    "i": {"block": "fence", "wood": "spruce"},
+    "t": {"block": "lantern", "fallback": "torch"}
+  },
+  "layers": [
+    [
+      "w"
+    ],
+    [
+      "i"
+    ],
+    [
+      "i"
+    ],
+    [
+      "t"
+    ]
+  ],
+  "markers": {
+    "light": [[0, 3, 0]]
+  },
+  "meta": {"size": "tiny"}
+}
