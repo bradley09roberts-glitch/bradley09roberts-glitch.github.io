@@ -48,14 +48,24 @@ They only take what is in the chest. When they are back at work, the deposit job
 - **On their own.** A friend in the Nether or the End whose leader has gone (logged out, died, or went home without
   them), or one you told to stay there and left alone, waits by the portal they came in by for **3 minutes**, then
   goes home through it and back to work. A follower at home whose leader is unreachable goes back to work after the
-  same wait.
+  same wait. The moment you log out, die or become a spectator over there, your followers there are given a roaming
+  ticket (while there are any to give), so they do not freeze when your part of that world stops running; so is
+  everyone else left there once the last player has gone.
 - **Back to work.** `/friends work <name>` (or `/friends party home`) on a friend in another dimension sends them home
   through the portal. Away from the camp's dimension no job ever runs, so nobody tries to walk to a camp in another
   world.
 - **No accidental trips.** Friends never step through a portal on their own: one wandering through the camp's portal
   stays where they are. They only cross when following you, or when going home.
+- **The End portal's opening.** A stronghold's End portal has nothing under it but a drop into lava. Friends walking to
+  it stop on firm ground beside the opening and cross from there. A friend knocked or pushed into the opening is
+  lifted straight out onto firm ground beside it, and goes across on purpose if you are in the End and they follow you.
 - **The End.** In the End a follower more than 16 blocks behind you catches up beside you instead of walking (if
-  catching up is on, `followTeleportDistance`): the way to you there is often a narrow bridge over the void.
+  catching up is on, `followTeleportDistance`): the way to you there is often a narrow bridge over the void. They are
+  never put down within 12 blocks of a living end crystal, and never up a tower or a pillar you have climbed (more than
+  6 blocks above the ground round you): then they walk after you and wait at the bottom.
+- **Going home from the End.** The way into the End comes out on the platform off the main island, and the way to it
+  is a bridge over the void, so friends in the End never walk there: a friend waiting there waits where they stand,
+  and one going home (or after you) goes across from where they stand.
 
 ## The Nether portal at camp
 
@@ -65,6 +75,8 @@ on a proper building site, from real materials in the chest. Then he fetches the
 Everyone on the server hears that it is lit, with its coordinates.
 
 - It is built and lit once. A portal that goes out later is yours to light again.
+- Snow that has settled in the opening (or grass grown there) is cleared before lighting: a portal needs an empty
+  opening. Anything else in the way is yours to clear (the builder says so).
 - If you already go through a portal of your own at the camp, the friends do not build another.
 - A lit portal in the overworld can let zombified piglins through, as any portal does.
 
@@ -74,18 +86,24 @@ Friends following you stay within a few blocks of you, and make themselves usefu
 
 - **Picking things up.** Ender pearls, potions, string, obsidian, crying obsidian, quartz, blaze rods and powder, nether
   wart, glowstone dust, magma cream, ghast tears, gold and fire charges lying within 8 blocks. Never anything you threw,
-  anything right next to you (you may be about to take it), or anything in lava or fire.
+  anything within 4 blocks of you (you may be about to take it), anything a piglin threw for your own gold, anything
+  lying where a player died in the last five minutes (their things), or anything in lava or fire.
 - **Bartering.** A friend carrying gold ingots tosses one to a calm, grown piglin near you about every 15 seconds
   while the camp wants what piglins trade: ender pearls or obsidian for the plan, or the camp has little string,
-  quartz or fire resistance. Never a piglin that is angry, already admiring gold, or that you have just hit. The
-  piglin throws its trade towards you; the friends pick up the useful bits.
+  quartz or fire resistance. Never a piglin that is angry, already admiring gold, or that you have just hit, and only
+  to one standing on firm ground with no lava or fire between them or round it (the gold would be lost). The piglin
+  throws its trade towards you; the friends pick up the useful bits of trades for their own gold only.
 - **Piglins are left alone.** Friends treat a piglin as a threat only once it goes for you or a friend. Calm piglins
   are no longer attacked (before this, Aegis would have started a fight with every piglin in sight).
 - **Blazes.** Archers shoot blazes with the bow (the combat update), and a blaze a friend kills drops its rod because
   the kill is credited to you.
-- **Nether wart and soul sand.** While the camp has fewer than 24 wart or 12 soul sand, friends harvest nether wart
-  within 5 blocks, and the soul sand it grows on, up to 12 wart and 6 soul sand each. Never beside anything you
-  built (a fortress's own bricks do not count). Back at camp, they go into the chest for the brewing.
+- **Nether wart and soul sand.** While the camp has fewer than 24 wart or 12 soul sand, friends gather within 5 blocks,
+  up to 12 wart and 6 soul sand each. Wart: only ripe wart in a fortress's garden, picked and replanted at once (one
+  wart of each harvest goes back in), so a garden is never stripped; wart outside a fortress is always somebody's
+  farm and is left alone. Soul sand: only from the open floor of a soul sand valley, outside fortresses and never
+  within 3 blocks of any nether wart, so a wart farm's soil is never dug up. Never beside anything you built (in a
+  fortress its own bricks, fences and stairs do not count, anything else does). Back at camp, they go into the chest
+  for the brewing.
 - **Places.** The portal you came out of and any fortress you walk into with friends are remembered
   (`/friends party` lists them), and one friend calls the fortress out.
 - **Safety.** Friends keep out of lava and fire as they always do, drink a fire resistance potion when burning (the
@@ -99,7 +117,8 @@ When Sage's plan reaches **Stronghold found** (the camp has its eyes of ender), 
 2. She walks out past the camp's edge and throws an eye. It is a real eye of ender: you can watch it fly. She notes
    the way it flew and picks it up again if it did not break (it survives four times in five).
 3. She walks **200 blocks** across that line and throws another. Where the two lines cross is the stronghold. If the
-   lines are nearly parallel (it is very far away), she walks across again and throws a third.
+   lines are nearly parallel (it is very far away), she walks across again and throws a third. An eye that goes
+   straight down means she is standing over it: she marks it there and then.
 4. She walks there (it can be over a thousand blocks: she shelters at night like anyone far from camp and carries on
    in the morning) and builds a small marker over the spot: three cobblestone with a torch on top, only into air,
    never within 6 blocks of anything you built.
@@ -107,8 +126,10 @@ When Sage's plan reaches **Stronghold found** (the camp has its eyes of ender), 
    the plan's **Stronghold found** step is done.
 
 She never digs down. Hurt, or hungry with nothing to eat, she turns back and reports what she knows. If the way is
-blocked (an ocean), she reports the spot unmarked. Nobody else does this while Scout is about; without her, another
-friend stands in. Trips must be on (`allowTrips`).
+blocked (an ocean), she reports the spot unmarked. Her part of the world keeps running for the whole trip (her
+roaming ticket is renewed as she goes, nights in a shelter included). After three days out she comes home with what
+she knows; the trip is only forgotten once she is back, never with her far away. Nobody else does this while Scout
+is about; without her, another friend stands in. Trips must be on (`allowTrips`).
 
 If you find the stronghold first and walk into it with friends following you, the step is done too.
 
@@ -139,8 +160,11 @@ Friends who come through to the End with you help in the fight:
   edge, and never use beds. Nobody chases the dragon like a mob. If a friend is knocked into the void there is nothing
   anyone can do: this is Hardcore.
 - **Victory.** When the dragon dies, every friend in the End cheers, the Unity bond grows by **100**, everyone on the
-  server hears who was there, and Sage's plan reaches its last step. When you go through the exit portal, the friends
-  near you come home with you.
+  server hears who was there, and Sage's plan reaches its last step. The first time you go through the exit portal the
+  credits roll and you are out of the End at once, so the End stops running: every friend following you there comes
+  home to the camp straight away, and catches up with you when you are back at your spawn point. (Without a camp
+  running in another dimension, they wait in the End with a roaming ticket, while there are any, and come through to
+  you when the credits end.) Later trips through the exit portal work like any other portal.
 
 ## Settings (`config/hardcorefriends.json`)
 
@@ -174,18 +198,24 @@ own code, but none of it has been played.
   through after you, landing by the portal you came out of.
 - **Left behind, far away.** A friend left in another dimension keeps moving only while there is a roaming ticket to
   give (3 by default, shared with trips). Without one, or once the world is closed, they wait where they are until a
-  player comes by again. A friend who cannot reach the portal for 90 seconds (no path) finds their way across from
+  player comes by again. The same goes when the last player on the server logs out over there: nothing runs while
+  nobody is online. A friend who cannot reach the portal for 90 seconds (no path) finds their way across from
   where they stand. A friend going home whose portal on the far side is not loaded comes out at the camp instead (if
   the camp is in that dimension and running); otherwise they wait and try again.
 - **No camp, no way.** A friend in the Nether or the End who never came through a portal (put there some other way)
   and has no camp to go home to waits there.
-- **Following through the End exit portal.** After the credits you come back at your spawn point; friends who were
-  near you at the exit portal come along. Friends further off walk to the exit portal and come through to your spawn
-  point.
+- **Following through the End exit portal.** The first time (the credits), your followers in the End are taken home
+  to the camp the moment the credits start, before the End stops running. A follower far from the exit portal (out on
+  another island) may already have stopped by then, and stays there until a player goes back.
+  If you quit during the credits, your followers at the camp go back to work after the usual 3-minute wait.
 - **The stronghold search is long.** A stronghold is usually over a thousand blocks away. Scout's trip can take two
-  or three days, with nights in a shelter; it is given up after three days. Scout only throws from the overworld, uses
-  up the eyes that break, and is a stand-in friend's job without her. The marker is built on the surface over the
-  spot, which can be off by a few blocks.
+  or three days, with nights in a shelter; after three days she comes home with what she knows. If she cannot find a
+  way home she keeps trying (her land keeps running, using one of the roaming tickets). Scout only throws from the
+  overworld, uses up the eyes that break, and is a stand-in friend's job without her. The marker is built on the
+  surface over the spot, which can be off by a few blocks.
+- **Nether gathering is modest.** Wart is only picked ripe in a fortress's garden and always replanted, and soul sand
+  only dug from a soul sand valley's floor, so a trip that sees neither brings none home. A wart farm of yours outside
+  a fortress is never touched; one you keep in a fortress's garden has its ripe wart picked, but always replanted.
 - **Bartering is simple.** The friends toss gold and pick up what lands near them. They do not choose a trade, and you
   may get to the piglin's throw first.
 - **Places are the expeditions' own list** (shown by `/friends party`, 64 at most). Only the stronghold is also added to
@@ -202,10 +232,12 @@ These existing statements change with this update and should be updated when it 
   did, so armed friends would have attacked calm piglins). The ender dragon is never a threat to chase: the expedition
   goals fight it.
 - **DESIGN 4, goals table:** add `CageClimbGoal` (−1), `EndHazardGoal` (1), `PackGoal` and `DragonFightGoal` (3),
-  `TravelGoal`, `FillPortalGoal` and `NetherHelpGoal` (4). `FollowLeaderGoal` catches up at 16 blocks in the End.
+  `TravelGoal`, `FillPortalGoal` and `NetherHelpGoal` (4). `FollowLeaderGoal` catches up at 16 blocks in the End,
+  never within 12 blocks of a living end crystal and never beside a leader up a tower or pillar.
 - **DESIGN 3, Modes:** FOLLOW now goes through portals with the leader; a friend in another dimension with nobody to
   follow goes home after 3 minutes.
 - **DESIGN 7, World editing:** add the `EXPEDITION` reason (see the Nether, stronghold and End rules above).
 - **DESIGN 8, stage 3:** add the optional Nether portal (built for Sage's plan).
 - **`CompanionEntity.homePos`:** away from the camp's dimension it is the leader (when following) or the portal the
-  friend came in by, so falling back leads there rather than to the camp's coordinates in the wrong world.
+  friend came in by, so falling back leads there rather than to the camp's coordinates in the wrong world. In the End,
+  without their leader, it is where they stand (the way in is the platform over the void).

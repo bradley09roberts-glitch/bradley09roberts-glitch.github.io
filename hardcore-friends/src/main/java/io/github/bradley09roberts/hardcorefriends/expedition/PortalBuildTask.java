@@ -24,6 +24,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+import io.github.bradley09roberts.hardcorefriends.ai.action.Actions;
 import io.github.bradley09roberts.hardcorefriends.ai.role.build.BlueprintTask;
 import io.github.bradley09roberts.hardcorefriends.ai.role.build.ChestWalk;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
@@ -215,9 +216,20 @@ public final class PortalBuildTask extends BlueprintTask {
 		if (!BuildJob.missing(level, data, Blueprints.NETHER_PORTAL, 1).isEmpty()) {
 			return TaskStatus.FAILURE; // the frame has a gap: it cannot hold a portal
 		}
-		if (!openingClear(level, site.get())) {
-			Speech.say(c, Line.NEED_MATERIALS, "the portal's opening cleared");
-			return TaskStatus.FAILURE;
+		BlockPos blocked = inOpening(level, site.get());
+		if (blocked != null) {
+			if (!WorldEditGuard.isClearablePlant(level.getBlockState(blocked))) {
+				Speech.say(c, Line.NEED_MATERIALS, "the portal's opening cleared");
+				return TaskStatus.FAILURE;
+			}
+			// Snow fallen on the frame's floor, or grass grown in it: cleared first (a portal needs an empty opening).
+			if (!c.actions().canReach(blocked)) {
+				c.actions().walkTo(blocked, 2.5);
+				return c.actions().isStuck() ? TaskStatus.FAILURE : TaskStatus.RUNNING;
+			}
+			c.actions().stopWalking();
+			return c.actions().mine(blocked, WorldEditGuard.Reason.BUILD) == Actions.Result.FAILED ? TaskStatus.FAILURE
+				: TaskStatus.RUNNING;
 		}
 		if (!c.actions().has(s -> s.is(Items.FLINT_AND_STEEL))) {
 			if (fetched) {
@@ -267,18 +279,18 @@ public final class PortalBuildTask extends BlueprintTask {
 		return TaskStatus.FAILURE;
 	}
 
-	/** The 2×3 opening holds nothing but air (or fire). */
-	private static boolean openingClear(ServerLevel level, CampData.Site site) {
+	/** The first place in the 2×3 opening that holds anything but air (or fire), or null when it is clear. */
+	private static @Nullable BlockPos inOpening(ServerLevel level, CampData.Site site) {
 		for (int dx = 1; dx <= 2; dx++) {
 			for (int dy = 1; dy <= 3; dy++) {
 				BlockPos p = Blueprint.worldPos(site.origin, site.rotation, dx, dy, 0);
 				BlockState s = level.getBlockState(p);
 				if (!s.isAir() && !s.is(net.minecraft.tags.BlockTags.FIRE)) {
-					return false;
+					return p;
 				}
 			}
 		}
-		return true;
+		return null;
 	}
 
 	/** The portal is lit: remembered, said, and everyone on the server hears where. */

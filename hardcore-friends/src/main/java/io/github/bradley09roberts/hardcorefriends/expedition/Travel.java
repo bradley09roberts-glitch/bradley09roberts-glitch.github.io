@@ -25,6 +25,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
+import io.github.bradley09roberts.hardcorefriends.survival.ChunkLoader;
 
 /**
  * A friend's travels between dimensions: which dimension is home, the way they came in (kept with them, so they can
@@ -162,9 +163,31 @@ public final class Travel {
 		}
 	}
 
-	/** True while this friend holds a roaming ticket the expedition asked for (making their way to a portal). */
+	/**
+	 * True while the expedition has asked for a roaming ticket for this friend (making their way to a portal). The
+	 * survival package may have dropped the ticket since (nobody online, away too long): whether one is actually held is
+	 * {@link ChunkLoader#isRoaming}, see {@link #holdsLand}.
+	 */
 	public static boolean roaming(CompanionEntity c) {
 		return c.extra().getCompoundOrEmpty(KEY).getBooleanOr("roam", false);
+	}
+
+	/** True when the expedition asked for this friend's land to keep running and a ticket really is held where they are. */
+	static boolean holdsLand(CompanionEntity c) {
+		return roaming(c) && ChunkLoader.isRoaming(c);
+	}
+
+	/**
+	 * Asks for a roaming ticket for this friend on the expedition's behalf (see {@link #roaming}). Returns false, with
+	 * nothing remembered, when none can be given.
+	 */
+	static boolean holdLand(CompanionEntity c, String why) {
+		setRoaming(c, true);
+		if (ChunkLoader.startRoaming(c, why)) {
+			return true;
+		}
+		setRoaming(c, false);
+		return false;
 	}
 
 	static void setRoaming(CompanionEntity c, boolean roaming) {
@@ -182,7 +205,9 @@ public final class Travel {
 
 	/**
 	 * Where "home" is for a friend away from the camp's dimension ({@link CompanionEntity#awayHome}): their leader
-	 * when following one here, otherwise the portal they came in by. Null at home, or with neither.
+	 * when following one here, otherwise the portal they came in by. In the End, without their leader, it is where they
+	 * stand: the way they came in is the platform off the main island, and the way to it a bridge over the void (they
+	 * go home from where they are, see {@link TravelGoal}). Null at home, or with none of these.
 	 */
 	static @Nullable BlockPos awayHome(CompanionEntity c) {
 		if (!(c.level() instanceof ServerLevel level) || !abroad(c)) {
@@ -193,6 +218,9 @@ public final class Travel {
 			if (leader != null && leader.isAlive() && leader.level() == level) {
 				return leader.blockPosition();
 			}
+		}
+		if (level.dimension() == Level.END) {
+			return c.blockPosition();
 		}
 		Way back = arrival(c);
 		return back != null ? back.portal() : null;
@@ -234,6 +262,7 @@ public final class Travel {
 		t.remove("wait");
 		t.remove("roam"); // a roaming ticket stays in the dimension it was granted in, and lapses there
 		friend.setPortalCooldown(Expeditions.PORTAL_GUARD);
+		friend.resetFallDistance(); // the new friend is made from the old one's data: a fall half done would land here
 		return friend;
 	}
 

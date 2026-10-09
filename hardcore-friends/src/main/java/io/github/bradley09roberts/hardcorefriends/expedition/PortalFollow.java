@@ -2,8 +2,10 @@ package io.github.bradley09roberts.hardcorefriends.expedition;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -23,6 +25,7 @@ import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.HardcoreFriends;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.FollowLeaderGoal;
+import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
@@ -31,7 +34,6 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.progress.Milestone;
 import io.github.bradley09roberts.hardcorefriends.progress.ProgressPlan;
-import io.github.bradley09roberts.hardcorefriends.survival.ChunkLoader;
 
 /**
  * Friends following a player go through portals with them. When a player changes dimension (through a portal, or
@@ -39,6 +41,12 @@ import io.github.bradley09roberts.hardcorefriends.survival.ChunkLoader;
  * they left comes along, onto a safe spot beside them; a follower further off remembers the portal and walks to it
  * ({@link TravelGoal}), and is given a roaming ticket so they keep moving once the player has gone. Each crossing is
  * remembered both ways ({@link ExpeditionData}), so friends can always find a way back.
+ *
+ * <p>A player can also leave a dimension without a portal: by logging out, by dying, or into the credits after the
+ * dragon (the first time through the End's exit portal the player is taken out of the End at once, and only comes
+ * back at their spawn point when the credits end). With no player left, that part of the world stops running at once,
+ * so this is looked for every tick ({@link #playerLeft}): the friends left there are given roaming tickets so they can
+ * wait and then go home, and after the dragon the player's followers are taken home to the camp straight away.
  *
  * <p>Crossings are queued and made at the end of the server tick, outside entity ticking: a friend crossing to
  * another dimension is replaced by a new entity, which must not happen half way through anyone's tick.
@@ -86,6 +94,8 @@ final class PortalFollow {
 	private static final int COME_ALONG_TRIES = 40;
 
 	private static final Map<UUID, Last> LAST = new HashMap<>();
+	/** Players already seen gone from where they were (logged out, dead, a spectator, in the credits), so seen once. */
+	private static final Set<UUID> GONE = new HashSet<>();
 	private static final List<PlayerMove> PLAYER_MOVES = new ArrayList<>();
 	private static final List<FriendMove> FRIEND_MOVES = new ArrayList<>();
 	private static final List<Along> ALONG = new ArrayList<>();
@@ -100,7 +110,8 @@ final class PortalFollow {
 				PLAYER_MOVES.add(new PlayerMove(player.getUUID(), origin.dimension(), last.pos()));
 			}
 		});
-		// Leaving the End by the exit portal shows the credits and then makes the player anew at their spawn point.
+		// Leaving the End by the exit portal shows the credits and then makes the player anew at their spawn point
+		// (the friends left in the End were looked after when the credits began: see playerLeft).
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
 			if (alive && oldPlayer.level() != newPlayer.level()) {
 				PLAYER_MOVES.add(new PlayerMove(newPlayer.getUUID(), oldPlayer.level().dimension(), oldPlayer.position()));
@@ -112,6 +123,7 @@ final class PortalFollow {
 
 	static void clear() {
 		LAST.clear();
+		GONE.clear();
 		PLAYER_MOVES.clear();
 		FRIEND_MOVES.clear();
 		ALONG.clear();
@@ -157,9 +169,71 @@ final class PortalFollow {
 				}
 			}
 		}
+		for (Map.Entry<UUID, Last> e : LAST.entrySet()) {
+			ServerPlayer player = server.getPlayerList().getPlayer(e.getKey());
+			// Logged out, dead (or taken out of the End for the credits, which counts as not alive), or a spectator.
+			if (player != null && player.isAlive() && !player.isSpectator()) {
+				GONE.remove(e.getKey());
+			} else if (GONE.add(e.getKey())) {
+				try {
+					playerLeft(server, player, e.getValue());
+				} catch (RuntimeException ex) {
+					HardcoreFriends.LOGGER.error("Friends could not be looked after when a player left", ex);
+				}
+			}
+		}
 		LAST.keySet().removeIf(id -> server.getPlayerList().getPlayer(id) == null);
+		GONE.removeIf(id -> !LAST.containsKey(id));
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			LAST.put(player.getUUID(), new Last(player.level().dimension(), player.position()));
+		}
+	}
+
+	/**
+	 * A player has left the dimension they were in other than through a portal: logged out, died, became a spectator,
+	 * or went into the credits after the dragon. Their part of the world stops running at once, so: after the dragon,
+	 * their followers go home now ({@link #homeAfterDragon}); and the friends left there with nobody to follow are given
+	 * roaming tickets so they can wait and then make their way home ({@link #strandedCheck}).
+	 */
+	private static void playerLeft(MinecraftServer server, @Nullable ServerPlayer player, Last last) {
+		ServerLevel from = server.getLevel(last.dim());
+		if (from == null) {
+			return;
+		}
+		if (player != null && player.wonGame && from.dimension() == Level.END) {
+			homeAfterDragon(server, player, from, last.pos());
+		}
+		strandedCheck(from);
+	}
+
+	/**
+	 * A player went through the End's exit portal for the first time: the credits roll, the player is out of the End
+	 * at once and only comes back, at their spawn point, when the credits end (minutes later, or never if they quit).
+	 * The End stops running within a second, so the friends following them come home now, to the camp (which keeps
+	 * running while anyone is online), and catch up with the player once they are back. Without a running camp to go to
+	 * in another dimension, they are left to {@link #strandedCheck} (a roaming ticket while there are any to give, and
+	 * they come along when the player respawns).
+	 */
+	private static void homeAfterDragon(MinecraftServer server, ServerPlayer player, ServerLevel end, Vec3 exitPos) {
+		ServerLevel home = server.getLevel(Travel.homeDimension(server));
+		if (home == null || home == end) {
+			return;
+		}
+		BlockPos camp = Camp.center(home).filter(home::isPositionEntityTicking).orElse(null);
+		if (camp == null) {
+			return;
+		}
+		boolean spoken = false;
+		for (CompanionEntity c : Companions.in(end)) {
+			ServerPlayer leader = c.leader();
+			if (c.mode() != CompanionMode.FOLLOW || leader == null || !leader.getUUID().equals(player.getUUID()) || c.isRemoved()) {
+				continue;
+			}
+			ALONG.removeIf(a -> a.friend == c);
+			CompanionEntity moved = Travel.cross(c, home, camp, BlockPos.containing(exitPos), camp);
+			if (moved != null && !spoken) {
+				spoken = Speech.say(moved, Line.PORTAL_THROUGH);
+			}
 		}
 	}
 
@@ -197,10 +271,7 @@ final class PortalFollow {
 			} else {
 				// Too far off to come at once: they make for the portal, and their land keeps running while they do.
 				Travel.setChase(c, player.getUUID(), portalHere, Travel.dimId(to), portalThere);
-				Travel.setRoaming(c, true);
-				if (!ChunkLoader.startRoaming(c, "following " + player.getName().getString() + " through a portal")) {
-					Travel.setRoaming(c, false);
-				}
+				Travel.holdLand(c, "following " + player.getName().getString() + " through a portal");
 			}
 		}
 		boolean[] spoken = new boolean[1];
@@ -208,9 +279,7 @@ final class PortalFollow {
 			ALONG.add(new Along(c, player.getUUID(), portalHere, portalThere, spoken));
 		}
 		comeAlong(server);
-		if (stranded(from)) {
-			strandedCheck(from);
-		}
+		strandedCheck(from);
 	}
 
 	/**
@@ -248,37 +317,44 @@ final class PortalFollow {
 				ALONG.add(a);
 			} else {
 				Travel.setChase(c, a.player, a.portalHere, Travel.dimId(to), a.portalThere);
-				Travel.setRoaming(c, true);
-				if (!ChunkLoader.startRoaming(c, "following " + player.getName().getString() + " through a portal")) {
-					Travel.setRoaming(c, false);
-				}
+				Travel.holdLand(c, "following " + player.getName().getString() + " through a portal");
 			}
 		}
 	}
 
-	/** True when no player is left in this dimension. */
+	/** True when no living player (spectators do not count) is left in this dimension. */
 	private static boolean stranded(ServerLevel level) {
 		for (ServerPlayer p : level.players()) {
-			if (!p.isSpectator()) {
+			if (p.isAlive() && !p.isSpectator()) {
 				return false;
 			}
 		}
 		return true;
 	}
 
+	/** True when the friend's leader can be followed: online, alive (not dead, not in the credits), not a spectator. */
+	private static boolean leaderPresent(CompanionEntity c) {
+		ServerPlayer leader = c.leader();
+		return leader != null && leader.isAlive() && !leader.isSpectator();
+	}
+
 	/**
-	 * The last player has left a dimension: friends still there, away from home and not off after them, are given a
-	 * roaming ticket (while there are any to give) so they can wait at the portal they came in by and then make their
-	 * way home, instead of freezing where they stand.
+	 * Friends away from home in this dimension who would freeze where they stand are given a roaming ticket (while
+	 * there are any to give), so they can wait by the portal they came in by and then make their way home: once the
+	 * last player has left it, everyone there not off after a leader who can be followed; and, even with other players
+	 * still about, the followers whose leader has gone (logged out, died, or into the credits after the dragon).
 	 */
 	private static void strandedCheck(ServerLevel level) {
+		boolean empty = stranded(level);
 		for (CompanionEntity c : Companions.in(level)) {
-			if (Travel.roaming(c) || !Travel.abroad(c) || c.mode() == CompanionMode.FOLLOW && c.leader() != null) {
-				continue; // at home, already moving, or off after a leader who is online (coming along, or following)
+			if (!Travel.abroad(c) || Travel.holdsLand(c)) {
+				continue; // at home, or their land already keeps running
 			}
-			Travel.setRoaming(c, true);
-			if (!ChunkLoader.startRoaming(c, "making their way home from another dimension")) {
-				Travel.setRoaming(c, false);
+			boolean following = c.mode() == CompanionMode.FOLLOW;
+			if (following && leaderPresent(c) || !empty && !following) {
+				continue; // off after a leader who is about (coming along, or following), or other players are here
+			}
+			if (!Travel.holdLand(c, "making their way home from another dimension")) {
 				return; // no more tickets to give
 			}
 		}

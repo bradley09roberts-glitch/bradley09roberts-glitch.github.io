@@ -23,6 +23,7 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.BuiltinStructures;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
+import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.ai.task.SpecialityTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskRegistry;
@@ -99,6 +100,8 @@ public final class Expeditions {
 		ServerLivingEntityEvents.AFTER_DEATH.register((victim, source) -> {
 			if (victim instanceof EnderDragon dragon && victim.level() instanceof ServerLevel level) {
 				DragonFight.defeated(level, dragon);
+			} else if (victim instanceof ServerPlayer player) {
+				Pickup.playerDied(player); // what they dropped is theirs: never picked up on an expedition
 			}
 		});
 		ServerTickEvents.END_SERVER_TICK.register(Expeditions::serverTick);
@@ -107,6 +110,7 @@ public final class Expeditions {
 			DragonFight.clear();
 			StrongholdTask.clear();
 			NetherHelpGoal.clear();
+			Pickup.clear();
 		});
 	}
 
@@ -126,8 +130,45 @@ public final class Expeditions {
 		if (level.dimension() == Level.END && c.getTarget() instanceof EnderDragon) {
 			c.setTarget(null); // never chased like a mob over the void: the dragon fight goals deal with it
 		}
+		if (level.dimension() != Level.END) {
+			outOfEndPortal(c, level);
+		}
 		if ((c.tickCount + c.getId()) % 20 == 0 && c.isTeamMember()) {
 			countWait(c, level);
+		}
+	}
+
+	/**
+	 * A friend in (or just fallen through) the opening of an End portal outside the End: knocked in by a silverfish,
+	 * jostled, or a step too far. On the portal guard they would only fall through it, and a stronghold's opening has
+	 * nothing under it but a drop into lava. One following a leader who is in the End goes across on purpose (at the end
+	 * of the tick, if there is room on the far side); everyone is lifted out onto firm ground beside it at once.
+	 */
+	private static void outOfEndPortal(CompanionEntity c, ServerLevel level) {
+		BlockPos feet = c.blockPosition();
+		BlockPos portal = null;
+		for (int dy = 0; dy <= 2 && portal == null; dy++) {
+			if (level.getBlockState(feet.above(dy)).is(Blocks.END_PORTAL)) {
+				portal = feet.above(dy);
+			}
+		}
+		if (portal == null) {
+			return;
+		}
+		ServerLevel end = level.getServer().getLevel(Level.END);
+		ServerPlayer leader = c.leader();
+		if (end != null && c.mode() == CompanionMode.FOLLOW && leader != null && leader.isAlive() && !leader.isSpectator()
+			&& leader.level() == end && FriendsConfig.get().friendsFollowThroughPortals) {
+			BlockPos near = end.isPositionEntityTicking(ServerLevel.END_SPAWN_POINT) ? ServerLevel.END_SPAWN_POINT : leader.blockPosition();
+			PortalFollow.request(c, end, near, portal, ServerLevel.END_SPAWN_POINT, Line.PORTAL_THROUGH);
+		}
+		BlockPos spot = Travel.safeSpot(level, portal, 4);
+		if (spot != null) {
+			c.getNavigation().stop();
+			c.setDeltaMovement(Vec3.ZERO);
+			c.snapTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, c.getYRot(), c.getXRot());
+			c.resetFallDistance();
+			c.clearFire();
 		}
 	}
 
@@ -141,6 +182,9 @@ public final class Expeditions {
 		boolean alone = switch (c.mode()) {
 			case FOLLOW -> {
 				ServerPlayer leader = c.leader();
+				if (leader != null && leader.wonGame) {
+					yield false; // watching the credits after the dragon: they will be back
+				}
 				boolean present = leader != null && leader.isAlive() && !leader.isSpectator();
 				if (present && leader.level() == level) {
 					yield false;

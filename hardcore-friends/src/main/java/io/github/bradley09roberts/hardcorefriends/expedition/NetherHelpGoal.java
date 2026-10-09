@@ -1,7 +1,12 @@
 package io.github.bradley09roberts.hardcorefriends.expedition;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.WeakHashMap;
 
 import org.jspecify.annotations.Nullable;
@@ -10,6 +15,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -17,11 +25,15 @@ import net.minecraft.world.entity.monster.piglin.Piglin;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.NetherWartBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.ai.action.Actions;
+import io.github.bradley09roberts.hardcorefriends.ai.role.farm.EditSteps;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
@@ -35,8 +47,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * picking up useful things lying about (ender pearls, potions, string, obsidian, quartz, blaze rods, nether wart,
  * glowstone dust, magma cream, ghast tears, gold), bartering with piglins (a friend carrying gold tosses an ingot to
  * a calm piglin now and then while the camp wants what piglins trade: pearls, string, fire resistance, obsidian or
- * quartz) and gathering nether wart and the soul sand it grows on for the camp's brewing, within reason. Never near
- * lava or fire, never a piglin that is angry, busy admiring gold, or that the player has just hit.
+ * quartz) and gathering nether wart and soul sand for the camp's brewing, within reason: ripe wart in a fortress,
+ * picked and replanted in one go, and soul sand from the open floor of a soul sand valley, never a wart farm's soil
+ * (see {@link ExpeditionPolicy}). Never near lava or fire (gold is only tossed where it cannot land in either), never
+ * a piglin that is angry, busy admiring gold, or that the player has just hit.
  */
 public class NetherHelpGoal extends Goal {
 	private enum Job {
@@ -59,9 +73,15 @@ public class NetherHelpGoal extends Goal {
 	private static final int WART_ENOUGH = 24;
 	private static final int SOUL_SAND_ENOUGH = 12;
 	private static final int JOB_TIME = 20 * 15;
+	/** At most this many places are checked against the edit rules each look round (nearest first). */
+	private static final int GATHER_CHECKS = 6;
+	/** A piglin's throw this soon after a friend's gold reached it is the friends' trade (it admires gold for 6 s). */
+	private static final long BARTER_WINDOW = 20 * 20;
 
 	/** When each friend last tossed gold to a piglin (game time). */
 	private static final Map<CompanionEntity, Long> LAST_BARTER = new WeakHashMap<>();
+	/** Piglins a friend tossed gold to, and when (game time): what they throw next is the friends' to pick up. */
+	private static final Map<UUID, Long> BARTERED = new HashMap<>();
 
 	private final CompanionEntity c;
 	private Job job = Job.NONE;
@@ -238,9 +258,13 @@ public class NetherHelpGoal extends Goal {
 			return;
 		}
 		c.actions().stopWalking();
+		ServerLevel level = (ServerLevel) c.level();
+		if (!safeToss(level, p)) {
+			job = Job.NONE; // the gold could end up in lava or fire: not this piglin, not now
+			return;
+		}
 		ItemStack gold = c.backpack().take(s -> s.is(Items.GOLD_INGOT), 1);
 		if (!gold.isEmpty()) {
-			ServerLevel level = (ServerLevel) c.level();
 			ItemEntity thrown = new ItemEntity(level, c.getX(), c.getEyeY() - 0.3, c.getZ(), gold);
 			Vec3 toward = p.position().subtract(c.position()).normalize().scale(0.25);
 			thrown.setDeltaMovement(toward.x, 0.2, toward.z);
@@ -249,16 +273,63 @@ public class NetherHelpGoal extends Goal {
 			level.addFreshEntity(thrown);
 			c.swingArm();
 			LAST_BARTER.put(c, level.getGameTime());
+			BARTERED.values().removeIf(at -> level.getGameTime() - at > BARTER_WINDOW || level.getGameTime() < at);
+			BARTERED.put(p.getUUID(), level.getGameTime());
 			Speech.say(c, Line.BARTER);
 		}
 		job = Job.NONE;
 	}
 
+	/**
+	 * True when an item this piglin threw is the friends' trade: a friend tossed it gold within the last
+	 * {@value #BARTER_WINDOW} ticks, and the item appeared after that (a throw for a player's own gold is theirs).
+	 */
+	static boolean friendsTrade(ServerLevel level, Piglin piglin, ItemEntity item) {
+		Long at = BARTERED.get(piglin.getUUID());
+		long now = level.getGameTime();
+		return at != null && now >= at && now - at <= BARTER_WINDOW && item.getAge() <= now - at;
+	}
+
+	/**
+	 * True when gold tossed to this piglin lands safely: the piglin stands on firm ground out of lava, and there is no
+	 * lava or fire on the way to it, under the way, or round where it stands.
+	 */
+	private boolean safeToss(ServerLevel level, Piglin p) {
+		if (!p.onGround() || p.isInLava() || p.isOnFire()) {
+			return false;
+		}
+		Vec3 from = c.position();
+		Vec3 to = p.position();
+		int steps = Math.max(1, (int) Math.ceil(from.distanceTo(to) * 2));
+		for (int i = 0; i <= steps; i++) {
+			BlockPos at = BlockPos.containing(from.lerp(to, (double) i / steps));
+			if (hot(level, at) || hot(level, at.below())) {
+				return false;
+			}
+		}
+		for (BlockPos q : BlockPos.betweenClosed(p.blockPosition().offset(-1, -1, -1), p.blockPosition().offset(1, 0, 1))) {
+			if (hot(level, q)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/** Lava (or any fluid), fire or an unloaded place. */
+	private static boolean hot(ServerLevel level, BlockPos pos) {
+		if (!level.isLoaded(pos)) {
+			return true;
+		}
+		var state = level.getBlockState(pos);
+		return !state.getFluidState().isEmpty() || state.is(BlockTags.FIRE) || state.is(Blocks.MAGMA_BLOCK);
+	}
+
 	// ---------------------------------------------------------------- gather
 
 	/**
-	 * Nether wart (ripe first) or the soul sand it grows on, within five blocks, when the camp is short of either and
-	 * this friend has room for more; only what the {@code EXPEDITION} rules allow (nothing beside a player's build).
+	 * Ripe nether wart to pick (and replant) or soul sand to dig, within five blocks, when the camp is short of either
+	 * and this friend has room for more; only what the {@code EXPEDITION} rules allow (see {@link ExpeditionPolicy}).
+	 * Wart first, nearest first; only the nearest few places are checked against the rules.
 	 */
 	private @Nullable BlockPos gatherSpot(ServerLevel level) {
 		CampStock.Snapshot s = CampStock.get(level.getServer());
@@ -268,41 +339,45 @@ public class NetherHelpGoal extends Goal {
 			return null;
 		}
 		BlockPos here = c.blockPosition();
-		BlockPos best = null;
-		double bestDist = Double.MAX_VALUE;
+		List<Spot> found = new ArrayList<>();
 		for (BlockPos p : BlockPos.betweenClosed(here.offset(-5, -2, -5), here.offset(5, 2, 5))) {
 			if (!level.isLoaded(p)) {
 				continue;
 			}
 			var state = level.getBlockState(p);
-			boolean wart = wantWart && state.is(Blocks.NETHER_WART);
-			// Soul sand only from under wart already picked, or beside wart: a wart patch, not the whole valley.
-			boolean sand = wantSand && state.is(Blocks.SOUL_SAND) && level.getBlockState(p.above()).isAir() && besideWart(level, p);
-			if (!wart && !sand) {
-				continue;
-			}
-			double d = p.distSqr(here) + (sand ? 4 : 0);
-			if (d < bestDist && mayBreak(p)) {
-				best = p.immutable();
-				bestDist = d;
+			boolean wart = wantWart && ripeWart(state);
+			boolean sand = wantSand && state.is(Blocks.SOUL_SAND) && level.getBlockState(p.above()).isAir();
+			if (wart || sand) {
+				found.add(new Spot(p.immutable(), wart, p.distSqr(here) + (wart ? 0 : 4)));
 			}
 		}
-		return best;
-	}
-
-	/** True when the edit rules let this friend break the block (a pause between edits does not count against it). */
-	private boolean mayBreak(BlockPos pos) {
-		WorldEditGuard.Verdict v = WorldEditGuard.canBreak(c, pos, WorldEditGuard.Reason.EXPEDITION);
-		return v.allowed() || "pacing".equals(v.why());
-	}
-
-	private static boolean besideWart(ServerLevel level, BlockPos sand) {
-		for (BlockPos p : BlockPos.betweenClosed(sand.offset(-1, 1, -1), sand.offset(1, 1, 1))) {
-			if (level.getBlockState(p).is(Blocks.NETHER_WART)) {
-				return true;
+		found.sort(Comparator.comparingDouble(Spot::order));
+		for (int i = 0; i < found.size() && i < GATHER_CHECKS; i++) {
+			Spot spot = found.get(i);
+			if (allowed(spot.wart() ? WorldEditGuard.canTransform(c, spot.pos(), replanted(), WorldEditGuard.Reason.EXPEDITION)
+				: WorldEditGuard.canBreak(c, spot.pos(), WorldEditGuard.Reason.EXPEDITION))) {
+				return spot.pos();
 			}
 		}
-		return false;
+		return null;
+	}
+
+	/** A place to gather from: ripe wart or soul sand, and how soon to try it (nearest first, wart before sand). */
+	private record Spot(BlockPos pos, boolean wart, double order) {
+	}
+
+	/** True when the edit rules allow it (a pause between edits does not count against it). */
+	private static boolean allowed(WorldEditGuard.Verdict v) {
+		return v.allowed() || EditSteps.paced(v);
+	}
+
+	private static boolean ripeWart(BlockState state) {
+		return state.is(Blocks.NETHER_WART) && state.getValue(NetherWartBlock.AGE) >= NetherWartBlock.MAX_AGE;
+	}
+
+	/** Nether wart just replanted: its first stage. */
+	private static BlockState replanted() {
+		return Blocks.NETHER_WART.defaultBlockState().setValue(NetherWartBlock.AGE, 0);
 	}
 
 	private void gather() {
@@ -313,7 +388,7 @@ public class NetherHelpGoal extends Goal {
 		}
 		ServerLevel level = (ServerLevel) c.level();
 		var state = level.getBlockState(at);
-		if (!state.is(Blocks.NETHER_WART) && !state.is(Blocks.SOUL_SAND)) {
+		if (!ripeWart(state) && !state.is(Blocks.SOUL_SAND)) {
 			job = Job.NONE;
 			return;
 		}
@@ -325,14 +400,40 @@ public class NetherHelpGoal extends Goal {
 			return;
 		}
 		c.actions().stopWalking();
-		Actions.Result r = c.actions().mine(at, WorldEditGuard.Reason.EXPEDITION);
-		if (r != Actions.Result.RUNNING) {
-			job = Job.NONE;
+		if (state.is(Blocks.SOUL_SAND)) {
+			Actions.Result r = c.actions().mine(at, WorldEditGuard.Reason.EXPEDITION);
+			if (r != Actions.Result.RUNNING) {
+				job = Job.NONE;
+			}
+			return;
+		}
+		// Ripe wart: picked and replanted in one go, as a player would (one wart of the harvest goes back in).
+		List<ItemStack> drops = Block.getDrops(state, level, at, null, c, c.getMainHandItem());
+		switch (EditSteps.transform(c, at, replanted(), WorldEditGuard.Reason.EXPEDITION, null)) {
+			case DONE -> {
+				boolean seedKept = false;
+				for (ItemStack drop : drops) {
+					if (!seedKept && drop.is(Items.NETHER_WART)) {
+						drop.shrink(1);
+						seedKept = true;
+					}
+					ItemStack left = drop.isEmpty() ? ItemStack.EMPTY : c.backpack().insert(drop);
+					if (!left.isEmpty()) {
+						c.spawnAtLocation(level, left);
+					}
+				}
+				level.playSound(null, at, SoundEvents.NETHER_WART_PLANTED, SoundSource.BLOCKS, 1.0F, 1.0F);
+				job = Job.NONE;
+			}
+			case FAILED -> job = Job.NONE;
+			case WAIT -> {
+			}
 		}
 	}
 
 	/** Forgets who bartered when (a server stopping). */
 	static void clear() {
 		LAST_BARTER.clear();
+		BARTERED.clear();
 	}
 }

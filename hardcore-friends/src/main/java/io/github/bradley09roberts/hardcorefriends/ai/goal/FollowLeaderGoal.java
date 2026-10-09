@@ -1,15 +1,21 @@
 package io.github.bradley09roberts.hardcorefriends.ai.goal;
 
 import java.util.EnumSet;
+import java.util.List;
 
 import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
 
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
@@ -19,10 +25,20 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  * FOLLOW mode: stay a few blocks from the leader, catching up if left far behind in the same dimension (sooner in the
  * End, where the way to the leader is often a narrow bridge over the void). Following a leader into another dimension
  * is the expedition package's {@code TravelGoal}.
+ *
+ * <p>In the End a friend is never put down within {@value #CRYSTAL_CLEARANCE} blocks of a living end crystal (a blast
+ * from one the player sets off throws people about that far), and never up a tower or a pillar beside a leader who has
+ * climbed one: they walk after them instead, and wait at the bottom.
  */
 public class FollowLeaderGoal extends Goal {
 	/** In the End, a friend further than this from their leader catches up rather than walks (when catching up is on). */
 	private static final int END_CATCH_UP = 16;
+	/** In the End, nobody is put down this close to a living end crystal (twice its blast power of 6). */
+	private static final double CRYSTAL_CLEARANCE = 12;
+	/** In the End, a leader standing this far above the ground round about is up a tower or a pillar. */
+	private static final int UP_HIGH = 6;
+	/** How far round the leader the ground is looked at, in blocks (outside the widest tower's top). */
+	private static final int GROUND_LOOK = 8;
 	private final CompanionEntity companion;
 	private @Nullable ServerPlayer leader;
 	private int recalc;
@@ -80,7 +96,8 @@ public class FollowLeaderGoal extends Goal {
 			// The End is islands over the void: a long walk after the player is a walk along their narrow bridge.
 			teleport = Math.min(teleport, END_CATCH_UP);
 		}
-		if (teleport > 0 && companion.distanceToSqr(leader) > (double) teleport * teleport) {
+		if (teleport > 0 && companion.distanceToSqr(leader) > (double) teleport * teleport
+			&& !upHighInEnd(companion.level(), leader.blockPosition())) {
 			tryCatchUp();
 			return;
 		}
@@ -100,6 +117,9 @@ public class FollowLeaderGoal extends Goal {
 	 * generates terrain and never puts a friend somewhere that will not tick.
 	 */
 	public static @Nullable BlockPos catchUpSpot(Level level, BlockPos base, RandomSource random) {
+		List<EndCrystal> crystals = level.dimension() == Level.END
+			? level.getEntitiesOfClass(EndCrystal.class, new AABB(base).inflate(CRYSTAL_CLEARANCE + 4), Entity::isAlive)
+			: List.of();
 		for (int i = 0; i < 12; i++) {
 			BlockPos p = base.offset(random.nextInt(7) - 3, random.nextInt(3) - 1, random.nextInt(7) - 3);
 			if (Math.abs(p.getX() - base.getX()) < 2 && Math.abs(p.getZ() - base.getZ()) < 2) {
@@ -108,13 +128,47 @@ public class FollowLeaderGoal extends Goal {
 			if (!level.isLoaded(p) || !level.isLoaded(p.below()) || !level.isLoaded(p.above())) {
 				continue;
 			}
+			if (nearCrystal(crystals, p)) {
+				continue;
+			}
 			BlockState below = level.getBlockState(p.below());
-			if (below.isFaceSturdy(level, p.below(), net.minecraft.core.Direction.UP)
+			if (below.isFaceSturdy(level, p.below(), Direction.UP)
 				&& level.getBlockState(p).isAir() && level.getBlockState(p.above()).isAir()
 				&& below.getFluidState().isEmpty()) {
 				return p;
 			}
 		}
 		return null;
+	}
+
+	private static boolean nearCrystal(List<EndCrystal> crystals, BlockPos p) {
+		for (EndCrystal crystal : crystals) {
+			if (crystal.distanceToSqr(p.getX() + 0.5, p.getY(), p.getZ() + 0.5) < CRYSTAL_CLEARANCE * CRYSTAL_CLEARANCE) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * True in the End while the leader stands more than {@value #UP_HIGH} blocks above the lowest ground a few blocks
+	 * round them (the void does not count): up a tower or a pillar. A friend is not put up there beside them.
+	 */
+	private static boolean upHighInEnd(Level level, BlockPos at) {
+		if (level.dimension() != Level.END) {
+			return false;
+		}
+		int lowest = Integer.MAX_VALUE;
+		for (Direction d : Direction.Plane.HORIZONTAL) {
+			BlockPos p = at.relative(d, GROUND_LOOK);
+			if (!level.isLoaded(p)) {
+				continue;
+			}
+			int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ());
+			if (ground > level.getMinY() + 1) {
+				lowest = Math.min(lowest, ground);
+			}
+		}
+		return lowest != Integer.MAX_VALUE && at.getY() - lowest > UP_HIGH;
 	}
 }

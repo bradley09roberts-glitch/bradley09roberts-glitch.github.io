@@ -46,7 +46,8 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  * and follow them as they walk, at most {@code maxRoamingFriends} at once. It is let go as soon as they are back in the
  * camp area, after {@value #MAX_ROAM_TICKS} ticks away at most (they then wait, frozen, until someone comes by), or
  * when they die, leave, change dimension or stop working on their own. Any feature may ask for one with
- * {@link #startRoaming}.
+ * {@link #startRoaming}; a trip known to last longer than {@value #MAX_ROAM_TICKS} ticks starts the time limit afresh
+ * with {@link #renewRoaming} now and then.
  *
  * <p>The tickets themselves are never saved: they are worked out afresh every second and dropped when the server
  * stops, so removing the mod leaves nothing behind. Only where roaming friends were is remembered (in camp memory),
@@ -95,7 +96,8 @@ public final class ChunkLoader {
 	/** A friend's roaming grant. */
 	private static final class Roamer {
 		final UUID friend;
-		final long since;
+		/** When the grant was made (or last renewed): it lapses {@link ChunkLoader#MAX_ROAM_TICKS} ticks later. */
+		long since;
 		String why;
 		@Nullable Held ticket;
 		/** Set once they have been outside the camp area, so the grant only lapses when they come back to it. */
@@ -151,13 +153,21 @@ public final class ChunkLoader {
 	/**
 	 * Asks for the land around a friend to keep running while they are away from camp ({@code why} is shown by
 	 * {@code /friends trips}). Returns true when granted, or already held. Refused when keeping land loaded is
-	 * switched off, nobody who counts is online, or {@code maxRoamingFriends} friends already hold one.
+	 * switched off, nobody who counts is online, or {@code maxRoamingFriends} friends already hold one. A grant still
+	 * held in the dimension the friend has just left (it lapses there within a second) is let go and asked for afresh
+	 * here, so a friend who has just gone through a portal is not told "held" for a ticket about to be dropped.
 	 */
 	public static boolean startRoaming(CompanionEntity c, String why) {
 		if (!(c.level() instanceof ServerLevel level) || !c.isAlive() || c.isRemoved()) {
 			return false;
 		}
 		Roamer held = ROAMING.get(c.getUUID());
+		if (held != null && !heldHere(held, level)) {
+			ROAMING.remove(c.getUUID());
+			release(level.getServer(), held.ticket);
+			roamingChanged = true;
+			held = null;
+		}
 		if (held != null) {
 			held.why = why;
 			return true;
@@ -178,9 +188,34 @@ public final class ChunkLoader {
 		return max > 0 && ROAMING.size() < max && anyoneCounts(server);
 	}
 
-	/** True when this friend holds a roaming ticket. */
+	/**
+	 * True when this friend holds a roaming ticket where they are now (one left behind in the dimension they have just
+	 * left does not count: it is dropped within a second).
+	 */
 	public static boolean isRoaming(CompanionEntity c) {
-		return ROAMING.containsKey(c.getUUID());
+		Roamer held = ROAMING.get(c.getUUID());
+		return held != null && c.level() instanceof ServerLevel level && heldHere(held, level);
+	}
+
+	/** True unless the grant's ticket is in another dimension than {@code level}. */
+	private static boolean heldHere(Roamer held, ServerLevel level) {
+		Held ticket = held.ticket;
+		return ticket == null || ticket.dimension().equals(level.dimension());
+	}
+
+	/**
+	 * Starts a friend's grant's time limit ({@value #MAX_ROAM_TICKS} ticks) afresh, for a trip known to take longer
+	 * than that (Scout's search for the stronghold, which can take three days): call it now and then while the trip
+	 * goes on. Returns false when they hold no grant where they are (ask with {@link #startRoaming} instead).
+	 */
+	public static boolean renewRoaming(CompanionEntity c) {
+		Roamer held = ROAMING.get(c.getUUID());
+		if (held == null || !(c.level() instanceof ServerLevel level) || !heldHere(held, level)) {
+			return false;
+		}
+		held.since = level.getGameTime();
+		roamingChanged = true; // the new time is what a restart restores
+		return true;
 	}
 
 	/** Why each roaming friend holds a ticket, by friend, for the trips report. */

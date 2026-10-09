@@ -20,7 +20,9 @@ camp's own dimension. Friends work, eat, sleep and keep the night watch. Crops g
 
 A friend away on a trip also keeps the land around them running (a 3×3 area of chunks that moves with them). At most
 `maxRoamingFriends` friends can do this at once (3 by default). This ends when they are back at camp, after a day and
-a half at most, or when they die, are dismissed, follow you or change dimension. If you close the world while a
+a half at most, or when they die, are dismissed, follow you or change dimension. A trip known to take longer (Scout's
+search for the stronghold, which can take three days) renews it as it goes, so it never runs out half way. A friend
+who has just gone through a portal and asks again on the other side gets a fresh one there at once. If you close the world while a
 friend is out, they wake up where they were next time you play and carry on home. The same goes for a server that
 keeps running after the last player leaves: the friend waits where they are, and carries on home as soon as someone
 comes back online.
