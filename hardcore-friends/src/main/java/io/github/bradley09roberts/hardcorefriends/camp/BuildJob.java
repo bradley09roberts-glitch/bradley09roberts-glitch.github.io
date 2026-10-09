@@ -222,11 +222,12 @@ public final class BuildJob {
 
 	/**
 	 * On uneven ground the site may still need levelling: the levelling job (Terra first, the builder too) digs the
-	 * bumps away and fills the dips, and building waits until then.
+	 * bumps away and fills the dips, and building waits until then. Once it is done the levelling plan is retired
+	 * ({@link SiteGrading#stillToDo}) before the first block goes down, so nobody digs the new floor back out.
 	 */
 	private @Nullable TaskStatus waitForGrading(CampData data) {
 		Optional<SiteGrading.Job> job = SiteGrading.job(data, bp.id());
-		if (job.isEmpty() || !SiteGrading.pending(level(), job.get())) {
+		if (job.isEmpty() || !SiteGrading.stillToDo(level(), data, job.get())) {
 			return null;
 		}
 		String name = Structures.get(bp.id()).displayName();

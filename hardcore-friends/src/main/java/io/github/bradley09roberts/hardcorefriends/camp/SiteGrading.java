@@ -28,11 +28,16 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * records exactly which blocks to cut and which spaces to fill, and the box they lie in; the levelling job ({@code
  * survival.GradeSiteTask}) works through it, the building waits for it, and the {@code GRADE} edit rules only allow
  * those blocks and spaces. Kept in camp memory per plan, so a restart carries on where the levelling stopped.
+ *
+ * <p>The blocks to cut lie inside the building's own lowest layers (the new floor is where the bumps were), so a plan
+ * is retired for good the first time it has nothing left to do ({@link #stillToDo}), before a single block of the
+ * building goes down. A block the friends placed never counts as one to dig, either.
  */
 public final class SiteGrading {
 	private static final String MEMORY = "hardcorefriends.site_grading";
 	/** How long a worked-out answer to "is there levelling to do?" is reused, in ticks. */
 	private static final int ACTIVE_CACHE_TICKS = 20;
+	private static final long[] NONE = new long[0];
 
 	/**
 	 * A plan's levelling still to do: the natural blocks to dig away, the spaces to fill, the box around both {minX,
@@ -79,6 +84,7 @@ public final class SiteGrading {
 		activeAt = Long.MIN_VALUE;
 	}
 
+	/** Forgets a plan's levelling: the site was built on, given up or reserved afresh, or the levelling is done. */
 	public static void forget(CampData data, String planId) {
 		if (data.memory(MEMORY).contains(planId)) {
 			data.memory(MEMORY).remove(planId);
@@ -89,15 +95,23 @@ public final class SiteGrading {
 
 	/** The levelling job of a plan whose site is reserved and not yet built, if any. */
 	public static Optional<Job> job(CampData data, String planId) {
-		CompoundTag tag = data.memory(MEMORY).getCompoundOrEmpty(planId);
-		if (tag.isEmpty() || data.site(planId).isEmpty() || data.isCompleted(planId)) {
+		if (!isOpen(data, planId)) {
 			return Optional.empty();
 		}
+		CompoundTag tag = data.memory(MEMORY).getCompoundOrEmpty(planId);
 		int[] box = tag.getIntArray("box").orElse(new int[0]);
 		if (box.length != 6) {
 			return Optional.empty();
 		}
 		return Optional.of(new Job(planId, set(tag, "cut"), set(tag, "fill"), box, set(tag, "skipped")));
+	}
+
+	/**
+	 * True while a plan's levelling is still on record and its site reserved and unbuilt. Cheap: a job in hand asks
+	 * every tick, so it stops as soon as the plan is retired.
+	 */
+	public static boolean isOpen(CampData data, String planId) {
+		return data.memory(MEMORY).contains(planId) && data.site(planId).isPresent() && !data.isCompleted(planId);
 	}
 
 	private static LongSet set(CompoundTag tag, String key) {
@@ -144,12 +158,26 @@ public final class SiteGrading {
 				}
 				continue;
 			}
-			if (pending(level, job.get())) {
+			if (stillToDo(level, data, job.get())) {
 				activeJob = job.get();
 				break;
 			}
+			activeAt = now; // retired just now (stillToDo forgot it)
 		}
 		return Optional.ofNullable(activeJob);
+	}
+
+	/**
+	 * True while the plan still has levelling to do. The first time it has none, the plan is retired for good: the site
+	 * is the building's from then on, and nothing digs there under the levelling rules again. Its blocks to cut lie in
+	 * the building's own lowest layers, so a plan left on record would have its floor dug back out.
+	 */
+	public static boolean stillToDo(ServerLevel level, CampData data, Job job) {
+		if (pending(level, job)) {
+			return true;
+		}
+		forget(data, job.planId());
+		return false;
 	}
 
 	/** Forgets the cached answer of {@link #active}, e.g. when a server stops. */
@@ -160,27 +188,44 @@ public final class SiteGrading {
 
 	/**
 	 * True while a recorded block still stands to be dug or a recorded space still waits to be filled. A position in
-	 * a chunk that is not loaded counts as still to do (and is not loaded to look).
+	 * a chunk that is not loaded counts as still to do (and is not loaded to look). A block the friends placed where a
+	 * bump was is the building's, not one to dig.
 	 */
 	public static boolean pending(ServerLevel level, Job job) {
+		CampData data = Camp.data(level.getServer());
 		for (long l : job.cut()) {
 			BlockPos p = BlockPos.of(l);
-			if (!job.skipped().contains(l) && (!level.isLoaded(p) || !level.getBlockState(p).isAir())) {
+			if (!job.skipped().contains(l) && (!level.isLoaded(p) || toCut(level, data, p))) {
 				return true;
 			}
 		}
-		return !fillsLeft(level, job).isEmpty();
+		for (long l : job.fill()) {
+			BlockPos p = BlockPos.of(l);
+			if (!job.skipped().contains(l) && (!level.isLoaded(p) || isFillable(level.getBlockState(p)))) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-	/** The recorded blocks still standing, top-down (so nothing is left hanging); only those in loaded chunks. */
+	/** True when a recorded block to cut is still there: anything but air, unless the friends placed it. */
+	private static boolean toCut(ServerLevel level, CampData data, BlockPos pos) {
+		return !level.getBlockState(pos).isAir() && !data.isPlacedByFriends(level, pos);
+	}
+
+	/**
+	 * The recorded blocks still standing, top-down (so nothing is left hanging); only those in loaded chunks, and
+	 * never a block the friends placed.
+	 */
 	public static List<BlockPos> cutsLeft(ServerLevel level, Job job) {
+		CampData data = Camp.data(level.getServer());
 		List<BlockPos> list = new ArrayList<>();
 		for (long l : job.cut()) {
 			if (job.skipped().contains(l)) {
 				continue;
 			}
 			BlockPos p = BlockPos.of(l);
-			if (level.isLoaded(p) && !level.getBlockState(p).isAir()) {
+			if (level.isLoaded(p) && toCut(level, data, p)) {
 				list.add(p);
 			}
 		}
@@ -221,6 +266,34 @@ public final class SiteGrading {
 	/** What a dip may be filled with: plain dirt, coarse dirt, cobblestone or stone. */
 	public static boolean isFillBlock(BlockState state) {
 		return state.is(Blocks.DIRT) || state.is(Blocks.COARSE_DIRT) || state.is(Blocks.COBBLESTONE) || state.is(Blocks.STONE);
+	}
+
+	/**
+	 * True if an open levelling plan lists this position as a block to dig away and nobody gave up on it (for the edit
+	 * rules: only these may be dug). Reads the records in place, as it is asked every tick while a block is dug.
+	 */
+	public static boolean isCut(CampData data, BlockPos pos) {
+		long key = pos.asLong();
+		for (String planId : data.memory(MEMORY).keySet()) {
+			CompoundTag tag = data.memory(MEMORY).getCompoundOrEmpty(planId);
+			int[] box = tag.getIntArray("box").orElse(new int[0]);
+			if (box.length == 6 && pos.getX() >= box[0] && pos.getX() <= box[3] && pos.getY() >= box[1] && pos.getY() <= box[4]
+				&& pos.getZ() >= box[2] && pos.getZ() <= box[5] && isOpen(data, planId)
+				&& contains(tag.getLongArray("cut").orElse(NONE), key)
+				&& !contains(tag.getLongArray("skipped").orElse(NONE), key)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean contains(long[] packed, long key) {
+		for (long l : packed) {
+			if (l == key) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** The levelling plan whose box holds this position, if any (for the edit rules). */

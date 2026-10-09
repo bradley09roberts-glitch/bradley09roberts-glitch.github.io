@@ -543,11 +543,11 @@ public final class SiteFinder {
 		/**
 		 * Third pass: a footprint on uneven natural ground, to be levelled before building. Picks the new ground level
 		 * that needs the least digging and filling, at most {@code maxGradeDepth} blocks down or up anywhere. Every block
-		 * to dig must be natural earth, sand, gravel or stone (or a plant) with no water or lava touching it, every
-		 * space to fill must be dry, the building's space above must be clear as on flat ground, the ground just in
-		 * front of the door side must be within a block of the new level (so the way in is not a wall), and nothing
-		 * player-built may lie within {@value #GRADE_MARKER_GAP} blocks. The cheapest site found is remembered and the
-		 * search runs on; one needing almost no work is taken at once.
+		 * to dig must be natural earth, sand, gravel or stone (or a plant), not placed by the friends, with no water or
+		 * lava touching it, every space to fill must be dry, the building's space above must be clear as on flat
+		 * ground, the ground just in front of the door side must be within a block of the new level (so the way in is
+		 * not a wall), and nothing player-built may lie within {@value #GRADE_MARKER_GAP} blocks. The cheapest site
+		 * found is remembered and the search runs on; one needing almost no work is taken at once.
 		 */
 		private @Nullable Part checkGraded(int[] box, int[] ground, int top, int bottom, BlockPos flatOrigin, int rotation,
 			int nearY) {
@@ -607,8 +607,8 @@ public final class SiteFinder {
 							if (!s.getFluidState().isEmpty() || WorldEditGuard.touchesFluid(level, m)) {
 								return reject(Reject.NO_GROUND);
 							}
-							if (s.hasBlockEntity() || !SiteGrading.isGradeable(s)) {
-								return reject(Reject.BLOCKED);
+							if (s.hasBlockEntity() || !SiteGrading.isGradeable(s) || data.isPlacedByFriends(level, m)) {
+								return reject(Reject.BLOCKED); // only natural ground is dug: the friends' own blocks are not
 							}
 							cut.add(m.immutable());
 							continue;

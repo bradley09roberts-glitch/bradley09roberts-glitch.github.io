@@ -143,7 +143,7 @@ public final class TradeTripTask implements CompanionTask {
 		}
 		chestCheckedAt = now;
 		Optional<Container> chest = SupplyChest.of(level);
-		chestWorthIt = chest.isPresent() && Trading.hasSomethingToTrade(chest.get())
+		chestWorthIt = chest.isPresent() && Trading.hasSomethingToTrade(level.getServer(), chest.get())
 			&& !Trading.wants(level, data, chest.get()).isEmpty();
 		return chestWorthIt;
 	}

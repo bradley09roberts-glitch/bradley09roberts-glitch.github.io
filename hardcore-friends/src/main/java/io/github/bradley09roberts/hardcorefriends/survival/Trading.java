@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
 
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.ItemTags;
@@ -28,12 +29,15 @@ import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.Backpack;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
+import io.github.bradley09roberts.hardcorefriends.progress.ProgressPlan;
 
 /**
  * What a trading trip takes, what it buys, and the trade itself. Friends take the camp's surplus (crops when food is
  * plentiful, wool, coal, sticks, string, feathers, flint, paper, clay, leather, rotten flesh) and a few emeralds from
- * the supply chest, sell surplus to villagers who buy it for emeralds, and spend emeralds on what the camp is short
- * of: food, glass, arrows for anyone with a bow, ender pearls and enchanted books later on, and a piece of iron gear.
+ * the supply chest, never what Sage's plan is still collecting ({@code ProgressPlan}: leather and paper for the
+ * library's books, the books themselves), sell surplus to villagers who buy it for emeralds, and spend emeralds on
+ * what the camp is short of: food, glass, arrows for anyone with a bow, ender pearls and enchanted books later on, and
+ * a piece of iron gear.
  * A trade works exactly as a player's does: the villager's own offer, its real price, paid in full from the backpack,
  * and the offer is used up (the villager gains experience as usual). Nothing is ever taken without paying.
  */
@@ -141,7 +145,7 @@ public final class Trading {
 		if (data.stage() >= 3 && (chest == null || SupplyChest.count(chest, s -> s.is(Items.ENDER_PEARL)) < 12)) {
 			wants.add(Want.PEARLS);
 		}
-		if (data.stage() >= 3 && chest != null && SupplyChest.count(chest, s -> s.is(Items.BOOK)) > 0
+		if (data.stage() >= 3 && chest != null && booksSpare(level.getServer(), chest) > 0
 			&& SupplyChest.count(chest, s -> s.is(Items.ENCHANTED_BOOK)) < 4) {
 			wants.add(Want.BOOKS);
 		}
@@ -152,13 +156,13 @@ public final class Trading {
 	}
 
 	/** True when the chest holds anything worth taking to a village: surplus goods or emeralds. */
-	public static boolean hasSomethingToTrade(Container chest) {
+	public static boolean hasSomethingToTrade(MinecraftServer server, Container chest) {
 		if (SupplyChest.count(chest, s -> s.is(Items.EMERALD)) > 0) {
 			return true;
 		}
 		boolean foodToSpare = CampNeeds.need(CampNeeds.Need.FOOD) < 0.3;
 		for (Good good : GOODS) {
-			if ((!good.food() || foodToSpare) && SupplyChest.count(chest, good.item()) > good.keep()) {
+			if ((!good.food() || foodToSpare) && spare(server, chest, good.item(), good.keep()) > 0) {
 				return true;
 			}
 		}
@@ -166,19 +170,46 @@ public final class Trading {
 	}
 
 	/**
+	 * How many of a kind of goods the chest can spare: beyond {@code keep}, and beyond whatever Sage's plan is
+	 * collecting (leather and paper for the library's books, the books themselves). While the plan is still short of
+	 * it, none is spare; once it has enough, the plan's whole amount stays.
+	 */
+	private static int spare(MinecraftServer server, Container chest, Predicate<ItemStack> item, int keep) {
+		int inChest = SupplyChest.count(chest, item);
+		int kept = keep;
+		for (Map.Entry<Item, Integer> target : ProgressPlan.stockTargets(server).entrySet()) {
+			if (item.test(target.getKey().getDefaultInstance())) {
+				if (ProgressPlan.wants(server, target.getKey())) {
+					return 0;
+				}
+				kept = Math.max(kept, target.getValue());
+			}
+		}
+		return Math.max(0, inChest - kept);
+	}
+
+	/** Plain books the chest can spare to pay a librarian with: none while the plan's library still needs them. */
+	private static int booksSpare(MinecraftServer server, Container chest) {
+		return spare(server, chest, s -> s.is(Items.BOOK), 0);
+	}
+
+	/**
 	 * Packs goods for a trip from the chest into the backpack: surplus of up to {@value #MAX_KINDS} kinds (a stack
-	 * of each at most), a few emeralds, and a book or two for a librarian when enchanted books are wanted, always
-	 * leaving two backpack slots free for what is bought. Returns how many items were taken.
+	 * of each at most), a few emeralds, and a book or two for a librarian when enchanted books are wanted (only books
+	 * the library does not need), always leaving two backpack slots free for what is bought. Returns how many items
+	 * were taken.
 	 */
 	public static int pack(CompanionEntity c, Container chest, Set<Want> wants) {
 		Backpack bp = c.backpack();
+		MinecraftServer server = ((ServerLevel) c.level()).getServer();
 		int taken = 0;
 		int kinds = 0;
 		boolean foodToSpare = CampNeeds.need(CampNeeds.Need.FOOD) < 0.3;
 		Trips.packKit(c, chest);
 		taken += SupplyChest.withdraw(chest, bp, s -> s.is(Items.EMERALD), MAX_EMERALDS_TAKEN);
-		if (wants.contains(Want.BOOKS) && bp.freeSlots() > 2) {
-			taken += SupplyChest.withdraw(chest, bp, s -> s.is(Items.BOOK), 2);
+		int books = Math.min(2, booksSpare(server, chest));
+		if (wants.contains(Want.BOOKS) && books > 0 && bp.freeSlots() > 2) {
+			taken += SupplyChest.withdraw(chest, bp, s -> s.is(Items.BOOK), books);
 		}
 		for (Good good : GOODS) {
 			if (kinds >= MAX_KINDS || bp.freeSlots() <= 2) {
@@ -187,7 +218,7 @@ public final class Trading {
 			if (good.food() && !foodToSpare) {
 				continue;
 			}
-			int spare = SupplyChest.count(chest, good.item()) - good.keep();
+			int spare = spare(server, chest, good.item(), good.keep());
 			if (spare <= 0) {
 				continue;
 			}
@@ -210,14 +241,14 @@ public final class Trading {
 	 * trades made of each want so far this trip.
 	 */
 	public static Optional<Done> tradeOnce(CompanionEntity c, Villager villager, Set<Want> wants, Map<Want, Integer> made) {
-		if (!(c.level() instanceof ServerLevel)) {
+		if (!(c.level() instanceof ServerLevel level)) {
 			return Optional.empty();
 		}
 		MerchantOffers offers = villager.getOffers();
 		if (c.backpack().count(Items.EMERALD) < EMERALDS_ENOUGH) {
 			for (MerchantOffer offer : offers) {
-				if (!offer.isOutOfStock() && offer.getResult().is(Items.EMERALD) && sellable(offer) && affordable(c, offer)
-					&& trade(c, villager, offer)) {
+				if (!offer.isOutOfStock() && offer.getResult().is(Items.EMERALD) && sellable(level.getServer(), offer)
+					&& affordable(c, offer) && trade(c, villager, offer)) {
 					return Optional.of(new Done(offer.getResult().copy(), true));
 				}
 			}
@@ -237,11 +268,15 @@ public final class Trading {
 
 	/** True when a villager has any offer a friend carrying this backpack could use now. */
 	public static boolean anythingFor(CompanionEntity c, Villager villager, Set<Want> wants, Map<Want, Integer> made) {
+		if (!(c.level() instanceof ServerLevel level)) {
+			return false;
+		}
 		for (MerchantOffer offer : villager.getOffers()) {
 			if (offer.isOutOfStock() || !affordable(c, offer)) {
 				continue;
 			}
-			if (offer.getResult().is(Items.EMERALD) ? sellable(offer) : wantFor(offer.getResult(), wants, made) != null) {
+			if (offer.getResult().is(Items.EMERALD) ? sellable(level.getServer(), offer)
+				: wantFor(offer.getResult(), wants, made) != null) {
 				return true;
 			}
 		}
@@ -257,12 +292,18 @@ public final class Trading {
 		return null;
 	}
 
-	/** An offer buying something the camp has spare (paid in a single kind of item). */
-	private static boolean sellable(MerchantOffer offer) {
+	/**
+	 * An offer buying something the camp has spare (paid in a single kind of item), and nothing Sage's plan is still
+	 * short of (leather or paper a friend happened to carry along).
+	 */
+	private static boolean sellable(MinecraftServer server, MerchantOffer offer) {
 		if (!offer.getCostB().isEmpty()) {
 			return false;
 		}
 		ItemStack cost = offer.getCostA();
+		if (ProgressPlan.wants(server, cost.getItem())) {
+			return false;
+		}
 		for (Good good : GOODS) {
 			if (good.item().test(cost)) {
 				return true;

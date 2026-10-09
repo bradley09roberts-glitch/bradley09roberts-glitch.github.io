@@ -27,7 +27,9 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * {@value #PILLAR} blocks with dirt or cobblestone from their backpack, the old trick zombies cannot follow. They wait
  * up there until the monsters have gone or the sun is up, then come down, taking the blocks back. Never against
  * archers (they would shoot), spiders (they climb) or creepers, never in water, and never within six blocks of
- * anything player-built. A reflex above falling back, so nothing interrupts it once begun.
+ * anything player-built. A reflex above falling back, so nothing interrupts it once begun. Like falling back, it holds
+ * the target too: up there they pick no fight (and keep none), so they heal naturally instead of using up their
+ * emergency healing.
  */
 public final class PillarGoal extends Goal {
 	private static final double CORNER_RANGE = 4;
@@ -59,7 +61,7 @@ public final class PillarGoal extends Goal {
 
 	public PillarGoal(CompanionEntity companion) {
 		this.c = companion;
-		this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.JUMP, Goal.Flag.LOOK));
+		this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.JUMP, Goal.Flag.LOOK, Goal.Flag.TARGET));
 	}
 
 	/** Remembers a blow from a monster (a {@code CompanionEvents.HURT} listener; changes nothing). */
@@ -136,6 +138,9 @@ public final class PillarGoal extends Goal {
 	@Override
 	public void tick() {
 		ServerLevel level = (ServerLevel) c.level();
+		if (c.getTarget() != null) {
+			c.setTarget(null); // the target goals still pick one when hit: none to fight from up here
+		}
 		switch (stage) {
 			case UP -> {
 				switch (climber.step(c, level)) {

@@ -1,7 +1,10 @@
 package io.github.bradley09roberts.hardcorefriends.survival;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
@@ -21,6 +24,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Fallable;
 import net.minecraft.world.level.block.state.BlockState;
 
+import io.github.bradley09roberts.hardcorefriends.HardcoreFriends;
 import io.github.bradley09roberts.hardcorefriends.ai.action.Actions;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
@@ -33,6 +37,7 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
+import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 
@@ -41,12 +46,14 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
  * gets under cover instead of walking through the night: into a hillside (two natural blocks dug out, the way in
  * walled up behind them), down into the ground (two blocks dug down, a roof put on), or, on open ground, a 1×2
  * pillbox of dirt or cobblestone from their backpack. A torch goes inside if they carry one, and they sleep until
- * dawn. In the morning they take every block they placed back, put back the ground they dug, and carry on home.
+ * dawn. In the morning they take every block they placed back (waiting while a player stands right beside one), put
+ * back the ground they dug, and carry on home. They never leave shut in: if, after all that, there is no way out from
+ * where they stand, they dig one through the natural ground beside them.
  *
  * <p>Every block goes through the edit guard ({@code SURVIVAL}): only shelter blocks and a torch, right around the
  * friend, never within six blocks of anything player-built, digging at most the {@value #MAX_DIGS} natural blocks
- * planned, and taking back only the friend's own pieces. The shelter is remembered with the friend, so a fight or a
- * reload in the middle carries on where it left off.
+ * planned (and, only to get out, up to three more a try), and taking back only the friend's own pieces. The shelter
+ * is remembered with the friend, so a fight or a reload in the middle carries on where it left off.
  */
 public final class ShelterTask implements CompanionTask {
 	public static final String ID = "survival.shelter";
@@ -58,6 +65,10 @@ public final class ShelterTask implements CompanionTask {
 	private static final int PROGRESS_INTERVAL = 200;
 	/** A friend further than this from their shelter has lost it (pushed off, fled): it is given up. */
 	private static final int LOST_DISTANCE = 16;
+	/** How many ways out a friend shut in tries to dig before giving up (each at most three natural blocks). */
+	private static final int ESCAPE_ROUNDS = 4;
+	/** Why the edit guard may refuse a block only for a moment: the friend waits for these instead of moving on. */
+	private static final Set<String> WAITS = Set.of("a player is right there", "pacing", "not loaded");
 
 	private enum Kind {
 		HILLSIDE,
@@ -82,6 +93,10 @@ public final class ShelterTask implements CompanionTask {
 	private int restored;
 	private boolean lying;
 	private int awakeTicks;
+	/** A way out being dug (top first), the blocks the guard refused for one, and how many have been tried. */
+	private final List<BlockPos> escape = new ArrayList<>();
+	private final Set<BlockPos> refused = new HashSet<>();
+	private int escapeRounds;
 	// Progress towards home at night, for "no path home".
 	private long sampleAt = Long.MIN_VALUE;
 	private double sampleDistance;
@@ -154,6 +169,9 @@ public final class ShelterTask implements CompanionTask {
 		restored = 0;
 		lying = false;
 		awakeTicks = 0;
+		escape.clear();
+		refused.clear();
+		escapeRounds = 0;
 		if (load(c)) {
 			Plan p = plan;
 			if (p == null || c.blockPosition().distSqr(p.space()) > LOST_DISTANCE * LOST_DISTANCE) {
@@ -425,6 +443,14 @@ public final class ShelterTask implements CompanionTask {
 	private TaskStatus dismantle(CompanionEntity c, ServerLevel level, Plan p) {
 		wake(c);
 		Actions actions = c.actions();
+		if (!FriendsConfig.get().allowWorldEditing) {
+			// Nothing may be changed: the shelter stays as it is, and they go as soon as there is a way out.
+			if (Shelters.wayOut(level, c.blockPosition())) {
+				abandon(c);
+				return TaskStatus.SUCCESS;
+			}
+			return TaskStatus.RUNNING;
+		}
 		// 1. Take back every piece (the torch, the walls, the roof), nearest first.
 		BlockPos piece = nextPiece(c, level, p);
 		if (piece != null) {
@@ -436,6 +462,11 @@ public final class ShelterTask implements CompanionTask {
 				return TaskStatus.RUNNING;
 			}
 			actions.stopWalking();
+			if (mustWait(c, piece)) {
+				return TaskStatus.RUNNING; // a player right beside it (or the chunk loading): try again in a moment
+			}
+			// A piece refused for good (no longer the block they placed, or water beside it) is left standing; the
+			// way-out check below makes sure that does not shut them in.
 			switch (actions.mine(piece, Reason.SURVIVAL)) {
 				case DONE, FAILED -> Shelters.removePiece(c, piece);
 				case RUNNING -> {
@@ -478,8 +509,118 @@ public final class ShelterTask implements CompanionTask {
 				return TaskStatus.RUNNING;
 			}
 		}
+		// 3. Never leave anyone shut in: with no way out from where they stand (a roof that could not be taken back, no
+		// blocks left to climb out of a hole), they dig one through the natural ground beside them.
+		if (!Shelters.wayOut(level, c.blockPosition())) {
+			TaskStatus digging = digOut(c, level, p);
+			if (digging != null) {
+				return digging;
+			}
+			HardcoreFriends.LOGGER.warn("{} found no way out of their shelter at {} that they may dig", c.displayName(),
+				c.blockPosition().toShortString());
+		}
 		finish(c);
 		return TaskStatus.SUCCESS;
+	}
+
+	/**
+	 * True when a block cannot be changed just now but will be soon: a player standing right beside it, the pace of
+	 * edits, or its chunk still loading. The friend waits rather than leave a piece of their shelter standing.
+	 */
+	private static boolean mustWait(CompanionEntity c, BlockPos pos) {
+		return WAITS.contains(WorldEditGuard.canBreak(c, pos, Reason.SURVIVAL).why());
+	}
+
+	/** Digs the next block of a way out; null when there is none left to try. */
+	private @Nullable TaskStatus digOut(CompanionEntity c, ServerLevel level, Plan p) {
+		escape.removeIf(pos -> Shelters.open(level, pos, Set.of()));
+		if (escape.isEmpty()) {
+			if (escapeRounds >= ESCAPE_ROUNDS) {
+				return null;
+			}
+			escapeRounds++;
+			escape.addAll(escapeRoute(c, level, p));
+			if (escape.isEmpty()) {
+				return null;
+			}
+			Shelters.planDigs(c, escape); // the edit rules let them dig exactly these
+		}
+		BlockPos dig = escape.getFirst();
+		if (mustWait(c, dig)) {
+			return TaskStatus.RUNNING;
+		}
+		switch (c.actions().mine(dig, Reason.SURVIVAL)) {
+			case DONE -> escape.remove(dig);
+			case FAILED -> {
+				refused.add(dig); // try another way next time round
+				escape.clear();
+			}
+			case RUNNING -> {
+			}
+		}
+		return TaskStatus.RUNNING;
+	}
+
+	/**
+	 * The natural blocks (at most three, top first) to dig so a friend shut in where they stand can get out: a gap two
+	 * high beside them, or a step up beside them with room to jump, and in either case one more step on from there
+	 * the same way, so they come out rather than tunnel in. The way they came in is tried first, and the way up first
+	 * from a hole.
+	 */
+	private List<BlockPos> escapeRoute(CompanionEntity c, ServerLevel level, Plan p) {
+		BlockPos feet = c.blockPosition();
+		List<Direction> sides = new ArrayList<>(Direction.Plane.HORIZONTAL.stream().toList());
+		int dx = p.origin().getX() - feet.getX();
+		int dz = p.origin().getZ() - feet.getZ();
+		if (dx != 0 || dz != 0) {
+			Direction back = Math.abs(dx) >= Math.abs(dz) ? dx > 0 ? Direction.EAST : Direction.WEST
+				: dz > 0 ? Direction.SOUTH : Direction.NORTH;
+			sides.remove(back);
+			sides.addFirst(back);
+		}
+		boolean upFirst = feet.getY() < p.origin().getY();
+		for (int pass = 0; pass < 2; pass++) {
+			boolean up = pass == 0 == upFirst;
+			for (Direction d : sides) {
+				BlockPos side = feet.relative(d);
+				if (up && Shelters.open(level, side, Set.of())) {
+					continue; // nothing there to step up onto
+				}
+				List<BlockPos> cells = up ? List.of(feet.above(2), side.above(2), side.above())
+					: List.of(side.above(), side);
+				Set<BlockPos> dug = new HashSet<>();
+				for (BlockPos cell : cells) {
+					if (!Shelters.open(level, cell, Set.of())) {
+						dug.add(cell);
+					}
+				}
+				BlockPos landing = up ? side.above() : side;
+				if (!dug.isEmpty() && Shelters.canStep(level, landing, d, dug) && diggable(c, level, dug)) {
+					List<BlockPos> route = new ArrayList<>(dug);
+					route.sort(Comparator.comparingInt((BlockPos pos) -> pos.getY()).reversed());
+					return route;
+				}
+			}
+		}
+		return List.of();
+	}
+
+	/**
+	 * True when every block of a way out may be dug: natural ground, not refused already, not letting water or lava
+	 * in, and with no sand or gravel above that would come down on the friend.
+	 */
+	private boolean diggable(CompanionEntity c, ServerLevel level, Set<BlockPos> route) {
+		for (BlockPos cell : route) {
+			BlockState s = level.getBlockState(cell);
+			if (refused.contains(cell) || s.hasBlockEntity() || !SiteGrading.isGradeable(s)
+				|| WorldEditGuard.breachesFluid(level, cell) || !SurvivalPolicies.near(c, cell, 3)) {
+				return false;
+			}
+			if (!route.contains(cell.above()) && level.getBlockState(cell.above()).getBlock() instanceof Fallable) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/** The nearest of this shelter's own pieces still standing. */

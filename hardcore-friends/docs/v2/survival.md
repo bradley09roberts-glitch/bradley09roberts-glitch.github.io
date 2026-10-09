@@ -21,7 +21,9 @@ camp's own dimension. Friends work, eat, sleep and keep the night watch. Crops g
 A friend away on a trip also keeps the land around them running (a 3×3 area of chunks that moves with them). At most
 `maxRoamingFriends` friends can do this at once (3 by default). This ends when they are back at camp, after a day and
 a half at most, or when they die, are dismissed, follow you or change dimension. If you close the world while a
-friend is out, they wake up where they were next time you play and carry on home.
+friend is out, they wake up where they were next time you play and carry on home. The same goes for a server that
+keeps running after the last player leaves: the friend waits where they are, and carries on home as soon as someone
+comes back online.
 
 ## Trips
 
@@ -64,7 +66,9 @@ goes at a time, at most once a day.
    - wool, coal, sticks, string, feathers, flint, paper, clay, leather or rotten flesh
    - wheat, carrots, potatoes, beetroot, pumpkins or melons, but only when the camp has plenty of food
 
-   They also take **up to 12 emeralds** from the chest.
+   They also take **up to 12 emeralds** from the chest. They never take what Sage's plan is collecting: while the
+   plan wants leather, paper or books for the library, those stay in the chest (only what is beyond the plan's needs
+   may go), and nothing the plan is still short of is ever sold.
 2. They walk to the village and trade with each villager whose offers fit. This works exactly like your own trades:
    the villager's real offer and price, paid in full, and the offer is used up. First they sell surplus to villagers
    who buy it for emeralds. Then they buy what the camp is short of:
@@ -72,7 +76,8 @@ goes at a time, at most once a day.
    - glass, when the chest has little
    - arrows, when someone carries a bow
    - ender pearls, once the camp is a Village
-   - enchanted books, once the camp is a Village and the chest has a plain book to pay with
+   - enchanted books, once the camp is a Village and the chest has a plain book to pay with that the library does not
+     need
    - one piece of iron gear, when the chest has little
 3. They walk home and put everything they bought, and anything unsold, into the chest. They keep a little food for
    themselves.
@@ -100,7 +105,8 @@ spot exists:
    from the top down and keeps the spoil, then fills the dips from the bottom up with dirt or cobblestone, using the
    spoil first. She takes a pickaxe and extra fill from the supply chest if she needs them. If she runs short of fill,
    she says so, and the camp's need for dirt goes up, so the quarry tops it up. The building waits until the levelling
-   is done.
+   is done. Once it is, the levelling is over for good: the building's floor goes where the bumps were, and nobody
+   digs there again. Terra only ever digs natural ground, never a block the friends placed.
 3. **Looking further (new):** if nothing fits even with levelling, the camp grows by 4 blocks and the search starts
    again, further out, up to `maxCampRadius` (40 by default). The friend says something like "No room for the cabin in
    camp. We'll spread out a little." The extra room belongs to this camp: moving the camp with `/friends camp set`
@@ -124,13 +130,23 @@ placed, put back the ground they dug (they climb out of a dug-down shelter the w
 themselves), and carry on home. Each shelter uses only dirt, cobblestone, stone and torches, right around the friend,
 and digs at most two natural blocks. Friends never build a shelter within 6 blocks of anything you built.
 
+A friend never stays shut in:
+
+- If you are standing right next to their shelter in the morning, they wait for you to step back before taking a
+  block down.
+- A dirt roof that grew grass overnight is still theirs to take down.
+- If, after all that, there is still no way out from where they stand (they have no blocks left to climb out of the
+  hole, for example), they dig one through the natural ground beside them: a step to climb out of a hole, or a gap
+  to walk through. That is at most three blocks a try, never near anything you built, and the hole is left.
+
 ### Out of reach when cornered
 
 A friend might be badly hurt, with two or more zombies (or other hand-to-hand monsters) within 4 blocks, still being
 hit while trying to fall back. If they carry at least 3 dirt or cobblestone blocks, they pillar up 3 blocks, the old
 trick zombies cannot follow. They wait up there until the monsters have gone or the sun is up (at most a whole night),
-then come down, taking the blocks back. They never do this when an archer, a spider or a creeper is about, in water,
-or within 6 blocks of anything you built.
+then come down, taking the blocks back. Up there they pick no fight, so they heal naturally rather than use up their
+emergency healing. They never do this when an archer, a spider or a creeper is about, in water, or within 6 blocks of
+anything you built.
 
 ### Breaking a fall
 
@@ -192,7 +208,8 @@ Nothing here has been run in the game yet. Everything below is untested.
   ground, they may still be out at dusk, and then they build a shelter.
 - **Trading.** Trading picks from what villagers already offer. A village without the right professions gives
   nothing useful, and friends do not cure, breed or protect villagers. Friends take up to 12 emeralds a trip from the
-  supply chest.
+  supply chest. While Sage's plan is collecting leather, paper or books, those are seldom spare, so trips have less
+  to sell.
 - **Finds.** Scout only notices structures in the chunks loaded around her as she walks, so she can walk right past a
   temple 40 blocks to the side. Each biome is reported only the first time it is found. The camp's point-of-interest
   list is short (64 entries), so trip finds are also kept in a longer list of their own (96 entries).
@@ -205,6 +222,10 @@ Nothing here has been run in the game yet. Everything below is untested.
   pillbox (up to 9 blocks). Trips pack 8 blocks if the chest has them. Friends who are not on a trip carry blocks only
   if they happen to have some. A friend with neither walks home in the dark as before. Climbing out of a dug-down
   shelter uses a jump-and-place trick. If a jump falls short three times, the friend is lifted the last bit.
+- **Getting out.** "No way out" is judged from the blocks right around the friend. If what shuts them in is not
+  natural ground (a block you put in their doorway, for example), they cannot dig through it and stay put until you
+  let them out. If world editing is switched off while a friend is in a shelter, they leave it standing and go as
+  soon as there is a way out.
 - **Pillars.** "Cornered" is a guess: badly hurt, two monsters close and two blows taken lately. A friend may pillar up
   when running would have worked, or not pillar up when it was needed. A friend who dies on a pillar leaves its blocks
   standing.
