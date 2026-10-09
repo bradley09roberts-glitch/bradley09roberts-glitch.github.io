@@ -342,8 +342,8 @@ and earth, `B` bell, `+` furniture and work blocks.
 | `house/dark_oak_manor` | `house` | dark_oak, forest | 13 × 9, 12 | 6 | wood 405, stone 109, glass pane 22, carpet 6 |
 | `house/oak_hut` | `house` | oak, plains, forest | 7 × 8, 8 | 1 | wood 141, stone 19, glass pane 5, lantern 3 |
 | `house/plains_farmhouse` | `house` | oak, plains | 13 × 11, 10 | 3 | wood 360, stone 50, glass pane 11, wall torch 5 |
-| `house/taiga_cottage` | `house` | spruce, taiga, snowy | 9 × 9, 12 | 2 | wood 259, stone 56, glass pane 6, carpet 4 |
-| `house/taiga_longhouse` | `house` | spruce, taiga, snowy, stone | 13 × 11, 12 | 6 | wood 359, stone 103, glass pane 9, bed 6 |
+| `house/taiga_cottage` | `house` | spruce, taiga, snowy | 9 × 9, 12 | 2 | wood 259, stone 55, glass pane 6, carpet 4 |
+| `house/taiga_longhouse` | `house` | spruce, taiga, snowy, stone | 13 × 11, 11 | 6 | wood 359, stone 102, glass pane 9, bed 6 |
 | `house/birch_cottage` | `house` | birch, forest | 9 × 9, 9 | 2 | wood 184, stone 25, glass pane 7, barrel 4 |
 | `house/dark_oak_cottage` | `house` | dark_oak, forest, stone | 11 × 11, 11 | 3 | wood 319, stone 107, glass pane 12, wall torch 4 |
 | `house/desert_courtyard_house` | `house` | sandstone, desert | 11 × 12, 6 | 4 | sandstone 395, glass pane 8, wall torch 8, barrel 5 |
@@ -393,8 +393,8 @@ and earth, `B` bell, `+` furniture and work blocks.
 
 ```
   oak hut             plains farmhouse    taiga cottage
-                                              _ !
-                                              # %
+                                              _
+                                              # !
                       !                      /#\%
                       %____________          ###%
      _                %############         /###\
@@ -409,8 +409,7 @@ and earth, `B` bell, `+` furniture and work blocks.
 
 ```
   taiga longhouse     birch cottage       dark oak cottage
-              !
-  ____________%                           ___________
+  ____________!                           ___________
   ############%                           ###########
   =============           _               ====/#\====
   =============           #               ===/#|#\===
@@ -443,7 +442,7 @@ and earth, `B` bell, `+` furniture and work blocks.
 
 | Plan | Kind | Styles | Size (w × d, high) | Trade | Main materials |
 |---|---|---|---|---|---|
-| `shop/bakery` | `shop:bakery` | oak, plains, forest | 11 × 9, 12 | baker | wood 265, stone 50, glass pane 14, dirt 4 |
+| `shop/bakery` | `shop:bakery` | oak, plains, forest | 11 × 9, 11 | baker | wood 265, stone 49, glass pane 14, dirt 4 |
 | `shop/general_store` | `shop:general` | spruce, taiga, plains, forest | 13 × 11, 11 | shopkeeper | wood 408, stone 35, barrel 19, glass pane 12 |
 | `shop/butcher` | `shop:butcher` | stone, oak, plains, mountain | 9 × 9, 10 | butcher | wood 144, stone 81, barrel 6, glass pane 6 |
 | `shop/fishmonger` | `shop:fishmonger` | spruce, birch, taiga, plains | 9 × 7, 8 | fishmonger | wood 152, stone 16, barrel 4, wall torch 3 |
@@ -468,8 +467,7 @@ and earth, `B` bell, `+` furniture and work blocks.
 
 ```
   bakery            general store     butcher's shop
-       !
-       %            _____________
+       !            _____________
   ___________       #############         _
   ###########       =============         #
   ===========       =============        ===
@@ -511,7 +509,7 @@ and earth, `B` bell, `+` furniture and work blocks.
 | Plan | Kind | Styles | Size (w × d, high) | Trade | Main materials |
 |---|---|---|---|---|---|
 | `workplace/fishing_hut` | `workplace:fisher` | spruce, taiga, plains, forest | 9 × 11, 8 | fisher | wood 163, stone 17, barrel 5, wall torch 5 |
-| `workplace/smithy` | `workplace:blacksmith` | stone, mountain, plains, taiga, spruce | 11 × 9, 12 | blacksmith | wood 171, stone 130, wall torch 4, barrel 3 |
+| `workplace/smithy` | `workplace:blacksmith` | stone, mountain, plains, taiga, spruce | 11 × 9, 11 | blacksmith | wood 171, stone 129, wall torch 4, barrel 3 |
 | `workplace/masons_yard` | `workplace:mason` | stone, mountain, plains | 11 × 11, 7 | mason | stone 116, wood 101, wall torch 4, barrel 3 |
 | `workplace/apiary` | `workplace:beekeeper` | oak, plains, forest, birch | 11 × 11, 3 | beekeeper | wood 57, dirt 12, flower 10, lantern 5 |
 | `workplace/carpenters_workshop` | `workplace:carpenter` | oak, plains, forest | 11 × 9, 10 | carpenter | wood 285, stone 29, glass pane 10, barrel 5 |
@@ -543,7 +541,6 @@ and earth, `B` bell, `+` furniture and work blocks.
 ```
   fishing hut      smithy           mason's yard
                         !
-                        %
                    ___________
                    ###########
       _            ===========
@@ -590,7 +587,7 @@ and earth, `B` bell, `+` furniture and work blocks.
 | `civic/well` | `civic:well` | stone, oak, spruce, plains, forest, taiga, town | 5 × 5, 6 |  | stone 41, wood 24, wall torch 2, lantern 1 |
 | `civic/desert_well` | `civic:well` | sandstone, desert | 5 × 5, 6 |  | sandstone 41, wood 24, wall torch 2, lantern 1 |
 | `civic/school` | `civic:school` | birch, oak, plains, forest, town | 13 × 11, 11 | teacher | wood 318, stone 63, glass pane 24, wall torch 7 |
-| `civic/tavern` | `civic:tavern` | oak, spruce, plains, forest, taiga, town | 15 × 9, 12 | innkeeper | wood 403, stone 148, glass pane 35, wall torch 11 |
+| `civic/tavern` | `civic:tavern` | oak, spruce, plains, forest, taiga, town | 15 × 9, 12 | innkeeper | wood 404, stone 147, glass pane 35, wall torch 11 |
 | `civic/market` | `civic:market` | oak, spruce, plains, forest, taiga, town | 13 × 13, 5 |  | wood 121, carpet 64, barrel 16, dirt 8 |
 | `civic/chapel` | `civic:chapel` | stone, spruce, plains, forest, taiga, town | 9 × 15, 11 |  | wood 258, stone 197, glass pane 32, carpet 8 |
 | `civic/wall` | `civic:wall` | stone, town, plains, mountain | 9 × 3, 5 |  | stone 69, wall torch 4 |
@@ -639,7 +636,7 @@ and earth, `B` bell, `+` furniture and work blocks.
 
 ```
   school            tavern            market
-                    ______________!
+                    _______________
        ___          ===============
        ###          ===============
       =====         ===============
@@ -790,7 +787,10 @@ and earth, `B` bell, `+` furniture and work blocks.
 - **Iron.** The smithy cannot finish without its blast furnace (five iron), nor the smith's shop without its smithing
   table, nor the mason's yard without its stonecutter.
 - **Big buildings are big.** The town hall (15 × 14), tavern, barn, chapel and school each take 400 to 660 blocks and a
-  large, fairly level site; the taller ones (up to 12 high) need the builders' scaffolding for their roofs.
+  large, fairly level site. The tallest (12 high: the town hall, tavern, barn, stone townhouse, taiga cottage and
+  watchtower) need the builders' scaffolding for the top of the roof; the ends of their ridges are within reach of a
+  full-height pillar on level ground or on the upper floor, but not much more. A block the builders cannot reach is
+  skipped and tried again later, and until it is placed the building does not count as finished.
 - **Open buildings.** The smithy, the fish stall, the farm shed, the market stalls, the mason's yard and the apiary have
   no door to shut. They are lit, so nothing spawns in them, but a mob can walk in at night.
 - **Windows** are open holes until the camp can make glass, as for the first ten houses. They sit two blocks above the
