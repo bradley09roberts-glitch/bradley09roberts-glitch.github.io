@@ -144,6 +144,9 @@ final class SettlerEvents {
 
 	/** A recruit: their record kept fresh, and the walk home ends at the camp. */
 	private static void recruitSecond(CompanionEntity c, ServerLevel level) {
+		if (c.isChild()) {
+			return; // a child of the camp (the people package keeps their records) joins these records when grown up
+		}
 		CompoundTag tag = Strangers.state(c);
 		if (tag.getBooleanOr(Strangers.TO_CAMP, false)) {
 			if (c.mode() != CompanionMode.FOLLOW) {

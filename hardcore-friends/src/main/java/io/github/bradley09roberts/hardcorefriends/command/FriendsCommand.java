@@ -463,6 +463,10 @@ public final class FriendsCommand {
 		}
 		CompanionEntity c = found.get();
 		ServerLevel level = (ServerLevel) c.level();
+		if (c.isChild()) {
+			source.sendFailure(Component.literal(c.displayName() + " is only a child and stays with their family."));
+			return 0;
+		}
 		if (c.ticksSinceDamaged() < NO_DISMISS_AFTER_HURT) {
 			// Leaving mid-fight would let a dying friend walk away from a hardcore death.
 			source.sendFailure(Component.literal(c.displayName() + " is in the middle of a fight and will not leave now."));

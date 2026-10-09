@@ -89,6 +89,18 @@ public final class FriendsConfig {
 	// ---- Finding the way (package navigation) ----
 
 	// ---- Living together (package people) ----
+	/** Friends may fall for each other, go on dates, get engaged and marry. */
+	public boolean romance = true;
+	/** Married couples may have children (they need room at home, food in the camp and the population under the cap). */
+	public boolean children = true;
+	/** In-game days a child takes to grow up (1 to 100). */
+	public int childhoodDays = 10;
+	/** Most people on the team at once, named friends, newcomers and children together; no baby is born beyond it (0 to 200). */
+	public int maxPopulation = 30;
+	/** In-game days a couple waits after one baby before another (1 to 60). */
+	public int daysBetweenChildren = 5;
+	/** How fast friendships and romances grow: 1 is normal, 2 twice as fast, 0.5 half as fast (0.25 to 4). */
+	public double relationshipSpeed = 1.0;
 
 	// ---- A proper village (package village) ----
 
@@ -146,5 +158,10 @@ public final class FriendsConfig {
 		maxFollowersPerPlayer = Math.clamp(maxFollowersPerPlayer, 1, 64);
 		// A delivery is a day trip there and back: past about 600 blocks there is never daylight enough for one.
 		maxDeliveryDistance = Math.clamp(maxDeliveryDistance, 0, 600);
+		// Living together (package people)
+		childhoodDays = Math.clamp(childhoodDays, 1, 100);
+		maxPopulation = Math.clamp(maxPopulation, 0, 200);
+		daysBetweenChildren = Math.clamp(daysBetweenChildren, 1, 60);
+		relationshipSpeed = Double.isFinite(relationshipSpeed) ? Math.clamp(relationshipSpeed, 0.25, 4.0) : 1.0;
 	}
 }

@@ -115,7 +115,7 @@ public final class Speciality {
 		List<CompanionEntity> working = new ArrayList<>();
 		Set<Role> staffed = EnumSet.noneOf(Role.class);
 		for (CompanionEntity f : Companions.all()) {
-			if (f.isAlive() && f.mode() == CompanionMode.WORK) {
+			if (f.isAlive() && f.mode() == CompanionMode.WORK && !f.isChild()) { // children do no work
 				working.add(f);
 				staffed.add(f.friendId().role());
 			}

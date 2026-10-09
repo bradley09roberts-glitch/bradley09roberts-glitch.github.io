@@ -245,7 +245,7 @@ public final class NightWatch {
 
 	/** Able to keep watch: here at the camp, working on their own, and neither too weak nor too tired. */
 	static boolean fit(CompanionEntity c, ServerLevel level) {
-		if (!c.isAlive() || c.isRemoved() || c.level() != level || c.mode() != CompanionMode.WORK) {
+		if (!c.isAlive() || c.isRemoved() || c.level() != level || c.mode() != CompanionMode.WORK || c.isChild()) {
 			return false;
 		}
 		return !c.tooWeakToWork() && c.needs().get(Need.ENERGY) >= TOO_TIRED && nearCamp(c, level);

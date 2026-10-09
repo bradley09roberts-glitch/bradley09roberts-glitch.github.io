@@ -13,14 +13,18 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
  *
  * @param name      what they are called, e.g. "Mabel"
  * @param colour    their name colour, 0xRRGGBB
- * @param skin      a skin id: 0-8 are the nine friends' own skins, {@value #DEFAULT_SKIN_BASE} and up the game's
- *                  default player skins ({@link #DEFAULT_SKINS})
+ * @param skin      a skin number from the skin list ({@code people.Skins}, read from {@code skins.json}): 0-8 are the
+ *                  nine friends' own skins, {@value #DEFAULT_SKIN_BASE}-108 the game's default player skins with wide
+ *                  arms ({@link #DEFAULT_SKINS}), 109-117 the same with slim arms, and 1000 up any skins added later
  * @param archetype the named friend whose work, personality numbers and wording they share
  */
 public record Persona(String name, int colour, int skin, FriendId archetype) {
 	/** Skin ids from here up are the game's own default player skins, in {@link #DEFAULT_SKINS} order. */
 	public static final int DEFAULT_SKIN_BASE = 100;
-	/** The game's default player skins (classic, wide-armed), as named in {@code textures/entity/player/wide/}. */
+	/**
+	 * The game's default player skins, as named in {@code textures/entity/player/wide/} and {@code slim/}: wide-armed from
+	 * {@value #DEFAULT_SKIN_BASE}, slim-armed nine numbers later.
+	 */
 	public static final List<String> DEFAULT_SKINS = List.of(
 		"steve", "alex", "ari", "efe", "kai", "makena", "noor", "sunny", "zuri");
 
