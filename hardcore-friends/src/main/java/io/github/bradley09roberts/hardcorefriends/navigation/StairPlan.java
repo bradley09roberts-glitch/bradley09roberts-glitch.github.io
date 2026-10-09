@@ -17,6 +17,8 @@ import net.minecraft.world.level.block.Fallable;
 import net.minecraft.world.level.block.state.BlockState;
 
 import io.github.bradley09roberts.hardcorefriends.ai.action.Actions;
+import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.SiteGrading;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
@@ -30,9 +32,9 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
  * No way out on foot: dig a staircase up, the way a player does, one step up and one across at a time, towards home
  * where the ground allows. Each step digs at most three blocks (headroom above the friend, and the two blocks of the
  * next step), and only natural earth, sand, gravel and stone, never a block with anything stored in it, never a block
- * touching water or lava (so nothing floods in), never under loose sand or gravel that would fall on them, and never
- * near anything a player built: the {@code SURVIVAL} edit rules allow exactly the blocks planned for the step and
- * nothing else. A torch goes down every few steps in the dark if they carry one. Starting in the water (a hole with
+ * touching water or lava (so nothing floods in), never under loose sand or gravel that would fall on them, never near
+ * anything a player built, never a block the friends placed and never inside the camp: the {@code SURVIVAL} edit rules
+ * allow exactly the blocks planned for the step and nothing else. A torch goes down every few steps in the dark if they carry one. Starting in the water (a hole with
  * steep sides) the first step is cut just above the waterline.
  *
  * <p>Done when the friend can get away on foot: out of the cave (for a friend lost underground) or free to walk
@@ -155,10 +157,13 @@ final class StairPlan implements Plan {
 			}
 			BlockPos floor = f.relative(d);
 			BlockPos step = floor.above();
+			if (!level.isLoaded(floor) || !level.isLoaded(step.above())) {
+				continue;
+			}
 			BlockState floorState = level.getBlockState(floor);
-			if (!level.isLoaded(floor) || floorState.getCollisionShape(level, floor).isEmpty() || Terrain.hazard(floorState)
+			if (!floorState.isFaceSturdy(level, floor, Direction.UP) || Terrain.hazard(floorState)
 				|| !floorState.getFluidState().isEmpty()) {
-				continue; // nothing to step up onto that way
+				continue; // nothing firm to step up onto that way (open air, a fence, a slab)
 			}
 			List<BlockPos> dig = new ArrayList<>();
 			for (BlockPos cell : List.of(f.above(2), step.above(), step)) {
@@ -194,11 +199,19 @@ final class StairPlan implements Plan {
 	}
 
 	private boolean diggable(CompanionEntity c, ServerLevel level, List<BlockPos> dig) {
+		CampData data = Camp.data(level.getServer());
+		boolean campHere = Camp.isCampLevel(level, data);
 		for (BlockPos cell : dig) {
+			if (refused.contains(cell) || !level.isLoaded(cell) || !level.isLoaded(cell.above())) {
+				return false;
+			}
 			BlockState s = level.getBlockState(cell);
-			if (refused.contains(cell) || !level.isLoaded(cell) || s.hasBlockEntity() || !s.getFluidState().isEmpty()
+			if (s.hasBlockEntity() || !s.getFluidState().isEmpty()
 				|| !SiteGrading.isGradeable(s) || WorldEditGuard.breachesFluid(level, cell)) {
 				return false;
+			}
+			if (data.isPlacedByFriends(level, cell) || campHere && WorldEditGuard.inCampHorizontally(c, cell)) {
+				return false; // the friends' own building work, or the camp itself: never dug to get out
 			}
 			if (!dig.contains(cell.above()) && level.getBlockState(cell.above()).getBlock() instanceof Fallable) {
 				return false; // sand or gravel above would come down on them
@@ -221,11 +234,11 @@ final class StairPlan implements Plan {
 		}
 		c.getNavigation().stop();
 		BlockPos cell = cells.getFirst();
-		if (WAITS.contains(WorldEditGuard.canBreak(c, cell, Reason.SURVIVAL).why())) {
-			return Status.RUNNING;
-		}
 		Actions.Result result = c.actions().mine(cell, Reason.SURVIVAL);
 		if (result == Actions.Result.FAILED) {
+			if (WAITS.contains(WorldEditGuard.canBreak(c, cell, Reason.SURVIVAL).why())) {
+				return Status.RUNNING; // only "not just now" (a player right beside it): wait
+			}
 			refused.add(cell);
 			c.actions().cancelMining();
 			giveUpDirection();

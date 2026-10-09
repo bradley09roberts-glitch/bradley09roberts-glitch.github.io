@@ -255,8 +255,9 @@ public final class Wayfinder {
 		Senses.Reading r = Senses.read(c);
 		air(c, level, w, r);
 		if (w.plan != null) {
-			if (now - w.planTicked > PLAN_STALE) {
-				endPlan(c, w, false, false);
+			boolean toldToStay = c.mode() == CompanionMode.STAY && w.plan.kind() != Plan.Kind.SHORE;
+			if (now - w.planTicked > PLAN_STALE || toldToStay) {
+				endPlan(c, w, false, false); // something else has their legs, or a player told them to stay put
 			} else {
 				countWeakness(c, w, r);
 				rescueIfDue(c, level, w, r, now);
@@ -368,7 +369,7 @@ public final class Wayfinder {
 				&& c.position().distanceTo(Vec3.atBottomCenterOf(dest)) > w.windowDistance + CARRIED_OFF;
 			if (r.waterfall() || carriedOff || w.still >= WATER_AFTER || w.confined >= CONFINED_AFTER / 2 || r.inCurrent() && w.still >= 20) {
 				startTrouble(w, now);
-				if (!tryPlan(c, level, w, new ShorePlan(w.dest), now) && w.still >= WATER_AFTER * 3 && mayDig(c)) {
+				if (!tryPlan(c, level, w, new ShorePlan(w.dest), now) && w.still >= WATER_AFTER * 3 && mayDig(c, level)) {
 					tryPlan(c, level, w, new StairPlan(w.dest, false, 8), now);
 				}
 			}
@@ -379,7 +380,7 @@ public final class Wayfinder {
 			if (tryPlan(c, level, w, new CaveExitPlan(), now)) {
 				return;
 			}
-			if (mayDig(c) && tryPlan(c, level, w, new StairPlan(home(c), true, 6), now)) {
+			if (mayDig(c, level) && tryPlan(c, level, w, new StairPlan(home(c), true, 6), now)) {
 				return;
 			}
 		}
@@ -392,7 +393,7 @@ public final class Wayfinder {
 			lookForWayOut(c, level, w, r, now);
 			return;
 		}
-		if (givenUpLately(w, now) >= GIVEN_UP_WALKS && now >= w.nextHemmedCheck && mayDig(c) && !inCamp(c, level)) {
+		if (givenUpLately(w, now) >= GIVEN_UP_WALKS && now >= w.nextHemmedCheck && mayDig(c, level)) {
 			w.nextHemmedCheck = now + HEMMED_CHECK_GAP;
 			if (!Ways.canLeave(level, c.blockPosition(), 24, 2500)) {
 				startTrouble(w, now);
@@ -405,7 +406,8 @@ public final class Wayfinder {
 	private static void lookForWayOut(CompanionEntity c, ServerLevel level, Watch w, Senses.Reading r, long now) {
 		BlockPos feet = c.blockPosition();
 		if (!Ways.canLeave(level, feet, 8, 400)) {
-			if (mayDig(c) && (tryPlan(c, level, w, new StepPlan(), now) || tryPlan(c, level, w, new StairPlan(w.dest, r.underground(), 8), now))) {
+			if (mayDig(c, level) && (tryPlan(c, level, w, new StepPlan(), now)
+				|| tryPlan(c, level, w, new StairPlan(w.dest, r.underground(), 8), now))) {
 				return;
 			}
 			return; // nothing they can do from here: the rescue comes in time
@@ -736,9 +738,13 @@ public final class Wayfinder {
 
 	// ------------------------------------------------------------------- helpers
 
-	/** May dig or place blocks to get out: a grown-up on the team, with world editing on. */
-	private static boolean mayDig(CompanionEntity c) {
-		return c.isTeamMember() && !c.isChild() && c.mode() != CompanionMode.STAY && FriendsConfig.get().allowWorldEditing;
+	/**
+	 * May dig or place blocks to get out: a grown-up on the team, with world editing on, outside the camp (shut in at
+	 * camp means a building or the pen, which are never dug through; a nudge, the doors and the rescue see to that).
+	 */
+	private static boolean mayDig(CompanionEntity c, ServerLevel level) {
+		return c.isTeamMember() && !c.isChild() && c.mode() != CompanionMode.STAY && FriendsConfig.get().allowWorldEditing
+			&& !inCamp(c, level);
 	}
 
 	/** May walk off to find the way out of a cave: anyone not told to stay put. */

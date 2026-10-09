@@ -14,7 +14,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEvents;
  * <li>{@link FriendNavigation} and {@link FriendNodeEvaluator}: every friend's paths (made in
  * {@code CompanionEntity.createNavigation}), so every walk in {@code Actions}, the trip walker, following and fleeing
  * use them.</li>
- * <li>{@link Senses}: what a friend can hear and feel, for any package to ask.</li>
+ * <li>{@link Senses}: what a friend can hear and feel, for any package to ask; {@link Routes}: whether a friend can
+ * walk somewhere without ducking underground, for jobs choosing a target.</li>
  * <li>{@link Wayfinder} (watching every friend for getting stuck) and {@link WayOutGoal} (the plans to get out:
  * {@link ShorePlan}, {@link CaveExitPlan}, {@link StepPlan}, {@link StairPlan}), and the last-resort rescue.</li>
  * <li>{@link Sprint}: running on long walks.</li>
@@ -40,6 +41,7 @@ public final class Navigation {
 			Wayfinder.clear();
 			Sprint.clear();
 			Senses.clear();
+			Routes.clear();
 		});
 	}
 }

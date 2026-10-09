@@ -104,7 +104,8 @@ public class FriendNavigation extends GroundPathNavigation {
 			}
 		}
 		if (!this.mob.isInWater()) {
-			while (keep > 1 && level.getFluidState(path.getNodePos(keep - 1)).is(FluidTags.WATER)) {
+			while (keep > 1 && level.isLoaded(path.getNodePos(keep - 1))
+				&& level.getFluidState(path.getNodePos(keep - 1)).is(FluidTags.WATER)) {
 				keep--;
 			}
 		}

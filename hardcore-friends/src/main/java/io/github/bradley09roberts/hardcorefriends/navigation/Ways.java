@@ -17,6 +17,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
@@ -65,8 +66,7 @@ final class Ways {
 			}
 			BlockState at = level.getBlockState(p);
 			BlockState head = level.getBlockState(m.setWithOffset(p, 0, 1, 0));
-			if (!at.getCollisionShape(level, p).isEmpty() || !head.getCollisionShape(level, m).isEmpty()
-				|| Terrain.hazard(at) || Terrain.hazard(head)) {
+			if (!open(at, p) || !open(head, m) || Terrain.hazard(at) || Terrain.hazard(head)) {
 				return NONE;
 			}
 			FluidState fluid = at.getFluidState();
@@ -85,7 +85,12 @@ final class Ways {
 		}
 
 		boolean passable(BlockPos p) {
-			return level.isLoaded(p) && Terrain.passable(level, p) && !level.getFluidState(p).is(FluidTags.LAVA);
+			return level.isLoaded(p) && open(level.getBlockState(p), p) && !level.getFluidState(p).is(FluidTags.LAVA);
+		}
+
+		/** Nothing to bump into, or a wooden door (friends open those). */
+		private boolean open(BlockState state, BlockPos p) {
+			return state.getCollisionShape(level, p).isEmpty() || state.getBlock() instanceof DoorBlock door && door.type().canOpenByHand();
 		}
 	}
 
