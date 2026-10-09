@@ -8,6 +8,7 @@ import com.mojang.authlib.GameProfile;
 
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
@@ -36,6 +37,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.goal.AvoidDangerGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.FollowLeaderGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
 import io.github.bradley09roberts.hardcorefriends.ai.role.forage.ForageContext;
+import io.github.bradley09roberts.hardcorefriends.ai.role.mine.MinePlan;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
@@ -206,6 +208,8 @@ public class CoreGameTest {
 		helper.assertTrue(flint.backpack().count(Items.COBBLESTONE) == 1, "stone broken with a pickaxe drops cobblestone");
 		// The friends' own blocks always come back, whatever tool takes them down.
 		BlockPos seal = helper.absolutePos(new BlockPos(14, 2, 20));
+		// Seals only go in the friends' own mines: plan one here.
+		MinePlan.of(Camp.data(helper.getLevel().getServer())).begin(seal, Direction.NORTH, seal.getY() - 20, Camp.dimensionId(helper.getLevel()));
 		flint.setLastEditTick(-100);
 		helper.assertTrue(WorldEditGuard.placeBlock(flint, seal, Blocks.COBBLESTONE.defaultBlockState(), Reason.MINE), "Flint places a seal");
 		rowan.setLastEditTick(-100);

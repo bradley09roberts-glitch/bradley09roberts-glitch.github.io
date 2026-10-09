@@ -127,7 +127,11 @@ public final class StationsTask extends BlueprintTask {
 		return false;
 	}
 
-	/** True when everything the station still lacks is carried, in the chest, or can be crafted from what is. */
+	/**
+	 * True when everything the station still lacks is carried, in the chest, or can be crafted from what is, all of it
+	 * together: the library's bookshelves and its table both take books, so each material is counted against what the
+	 * others already use.
+	 */
 	private static boolean makeable(CompanionEntity c, ServerLevel level, CampData data, Blueprint plan) {
 		Map<Stock, Integer> need = new EnumMap<>(Stock.class);
 		if (data.site(plan.id()).isPresent()) {
@@ -146,8 +150,35 @@ public final class StationsTask extends BlueprintTask {
 			}
 		}
 		Container chest = SupplyChest.of(level).orElse(null);
+		Map<Stock, Integer> used = new EnumMap<>(Stock.class);
 		for (Map.Entry<Stock, Integer> e : need.entrySet()) {
-			if (!Supplies.canMake(c, chest, e.getKey(), e.getValue())) {
+			if (!reserve(c, chest, e.getKey(), e.getValue(), used, 0)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Sets aside {@code count} of a kind from what is carried and stored, less what earlier parts already set aside,
+	 * crafting the rest from its ingredients (set aside the same way). False when there is not enough.
+	 */
+	private static boolean reserve(CompanionEntity c, @Nullable Container chest, Stock s, int count, Map<Stock, Integer> used, int depth) {
+		int taken = used.getOrDefault(s, 0);
+		int free = Math.max(0, Supplies.available(c, chest, s) - taken);
+		int take = Math.min(free, count);
+		used.put(s, taken + take);
+		int missing = count - take;
+		if (missing <= 0) {
+			return true;
+		}
+		Stock.Recipe recipe = s.recipe();
+		if (recipe == null || depth > 3) {
+			return false;
+		}
+		int crafts = (missing + recipe.yield() - 1) / recipe.yield();
+		for (Map.Entry<Stock, Integer> in : recipe.inputs().entrySet()) {
+			if (!reserve(c, chest, in.getKey(), crafts * in.getValue(), used, depth + 1)) {
 				return false;
 			}
 		}

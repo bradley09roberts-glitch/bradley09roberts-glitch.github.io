@@ -292,10 +292,25 @@ public final class WorldEditGuard {
 				return Verdict.OK;
 			}
 			case MINE -> {
-				return newState.is(Blocks.TORCH) || newState.is(Blocks.WALL_TORCH) || newState.is(Blocks.COBBLESTONE)
-					|| newState.is(Blocks.COBBLED_DEEPSLATE)
-					? inResourceZone(c, pos) ? Verdict.OK : Verdict.deny("outside the mining area")
-					: Verdict.deny("miners only place torches and cobblestone seals");
+				boolean torch = newState.is(Blocks.TORCH) || newState.is(Blocks.WALL_TORCH);
+				if (!torch && !newState.is(Blocks.COBBLESTONE) && !newState.is(Blocks.COBBLED_DEEPSLATE)) {
+					return Verdict.deny("miners only place torches and cobblestone seals");
+				}
+				if (!inResourceZone(c, pos)) {
+					return Verdict.deny("outside the mining area");
+				}
+				if (torch) {
+					return Verdict.OK;
+				}
+				// Seals only go in (or right beside) the friends' own mines, never into a tunnel a player dug.
+				CampData data = Camp.data(level.getServer());
+				if (!nearMineBox(level, data, pos)) {
+					return Verdict.deny("seals only go in our own mines");
+				}
+				if (looksPlayerBuilt(level, pos, 3, data)) {
+					return Verdict.deny("too close to a build");
+				}
+				return Verdict.OK;
 			}
 			case GATHER_WOOD -> {
 				return newState.is(BlockTags.SAPLINGS) && inResourceZone(c, pos) ? Verdict.OK
@@ -566,6 +581,17 @@ public final class WorldEditGuard {
 		for (String key : new String[] {MinePlan.KEY, MinePlan.DEEP_KEY}) {
 			MinePlan plan = MinePlan.of(data, key);
 			if (plan.isIn(level) && plan.inBox(pos)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Inside the box of one of the friends' mines in this level, or touching it (a hole beside a tunnel at its edge). */
+	private static boolean nearMineBox(ServerLevel level, CampData data, BlockPos pos) {
+		for (String key : new String[] {MinePlan.KEY, MinePlan.DEEP_KEY}) {
+			MinePlan plan = MinePlan.of(data, key);
+			if (plan.exists() && plan.isIn(level) && plan.box().inflatedBy(1).isInside(pos)) {
 				return true;
 			}
 		}

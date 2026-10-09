@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
@@ -38,6 +39,7 @@ public final class CampStock {
 		private int miners;
 		private int minersWithIron;
 		private int warriors;
+		private int keptWaterBuckets;
 		private boolean hasChest;
 
 		/** How many of this item the camp owns (chest, backpacks and hands). */
@@ -81,6 +83,14 @@ public final class CampStock {
 		/** Loaded warriors on the team (the fighters the plan wants iron swords for). */
 		public int warriors() {
 			return warriors;
+		}
+
+		/**
+		 * Water buckets the farmers keep for the farm (one each, by their keep list). They never come back to the chest,
+		 * so other work (obsidian) cannot count on them.
+		 */
+		public int keptWaterBuckets() {
+			return keptWaterBuckets;
 		}
 
 		/** True when the supply chest was there to count. */
@@ -165,6 +175,10 @@ public final class CampStock {
 			}
 			if (c.friendId().role() == Role.WARRIOR) {
 				s.warriors++;
+			}
+			if (c.friendId().role() == Role.FARMER
+				&& (bp.count(Items.WATER_BUCKET) > 0 || c.getMainHandItem().is(Items.WATER_BUCKET))) {
+				s.keptWaterBuckets++;
 			}
 		}
 		return s;

@@ -123,8 +123,9 @@ a newcomer builder builds the camp's buildings even without Oak.
   under it are filled with dirt (up to four deep) and up to four blocks of air are cleared above its floor, cutting
   through grass, flowers, snow and the odd bump. A tree from a neighbouring chunk can be cut, leaving a few floating
   leaves that soon decay. A camp on a pond or a lava pool that appeared after its spot was chosen is not built at all.
-- **Trees can still grow at the edges of a survivor camp.** The ground round the fire is a worn dirt path, where
-  nothing grows, but grass at the edges may get a tree or flowers after the camp is built.
+- **Trees can still grow at the edges of a survivor camp.** The ground round the fire is mostly a worn dirt path, where
+  nothing grows (always where the strangers stand, so no tree or bush grows round them), but the odd patch of grass by
+  the fire and the grass at the edges may get a tree or flowers after the camp is built.
 - **Strangers made with the world are named before the world knows who else is alive**; a duplicate name is quietly
   changed as soon as their part of the world is first loaded, before anyone could have met them.
 - **Village detection** only looks at chunks already loaded: a village is noticed when you are standing in or right

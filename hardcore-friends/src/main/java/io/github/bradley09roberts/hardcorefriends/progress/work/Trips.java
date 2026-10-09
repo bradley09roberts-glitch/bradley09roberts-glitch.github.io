@@ -109,6 +109,11 @@ final class Trips {
 
 	/** Blocks carried for sealing holes and gaps: cobblestone and cobbled deepslate. */
 	static int sealBlocks(CompanionEntity c) {
-		return c.backpack().count(s -> s.is(Items.COBBLESTONE) || s.is(Items.COBBLED_DEEPSLATE));
+		return c.backpack().count(Trips::isSealBlock);
+	}
+
+	/** Cobblestone or cobbled deepslate: what the miners seal holes with. */
+	static boolean isSealBlock(ItemStack s) {
+		return s.is(Items.COBBLESTONE) || s.is(Items.COBBLED_DEEPSLATE);
 	}
 }

@@ -309,7 +309,7 @@ public final class ProgressPlan {
 			int obsidian = (tableMade ? 0 : TABLE_OBSIDIAN) + (step <= Milestone.NETHER_READY.ordinal() ? PORTAL_OBSIDIAN : 0);
 			if (obsidian > 0) {
 				target.put(Items.OBSIDIAN, obsidian);
-				if (s.total(Items.WATER_BUCKET) == 0) {
+				if (spareWaterBuckets(s) == 0) {
 					target.put(Items.BUCKET, 1);
 				}
 			}
@@ -341,7 +341,7 @@ public final class ProgressPlan {
 		target.forEach((item, want) -> {
 			int have = s.total(item);
 			if (item == Items.BUCKET) {
-				have += s.total(Items.WATER_BUCKET);
+				have += spareWaterBuckets(s);
 			}
 			if (item == Items.GLASS_BOTTLE) {
 				have += s.total(Items.POTION);
@@ -352,6 +352,14 @@ public final class ProgressPlan {
 		});
 		targets = target;
 		wanted = more;
+	}
+
+	/**
+	 * Water buckets other work can use: all the camp's, less the one each farmer keeps for the farm (that one never
+	 * comes back to the chest, so the obsidian work could never have it).
+	 */
+	private static int spareWaterBuckets(CampStock.Snapshot s) {
+		return Math.max(0, s.total(Items.WATER_BUCKET) - s.keptWaterBuckets());
 	}
 
 	/** Bookshelves already standing in the library (0 without a library table). */

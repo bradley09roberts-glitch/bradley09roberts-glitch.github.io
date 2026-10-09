@@ -146,15 +146,27 @@ public class SurvivorCampPiece extends StructurePiece {
 				// A worn floor round the fire: nothing grows on a path, so no tree springs up in the middle of the camp.
 				boolean hearth = Math.abs(lx - 6) <= 3 && lz >= 5 && lz <= 11;
 				boolean inTent = lz >= 2 && lz <= 4 && (lx >= 2 && lx <= 4 || lx >= 8 && lx <= 10);
-				if ((hearth && random.nextInt(8) != 0) || inTent) {
+				// The strangers' own spots are always path, so no tree, bush or pumpkin grows where they stand.
+				if (isSpot(lx, lz) || inTent || (hearth && random.nextInt(8) != 0)) {
 					BlockPos floor = at(lx, -1, lz);
 					BlockState s = chunkBB.isInside(floor) ? level.getBlockState(floor) : air;
-					if (s.is(Blocks.GRASS_BLOCK) || s.is(Blocks.DIRT) || s.is(Blocks.COARSE_DIRT) || s.is(Blocks.PODZOL)) {
+					if (s.is(Blocks.GRASS_BLOCK) || s.is(Blocks.DIRT) || s.is(Blocks.COARSE_DIRT) || s.is(Blocks.PODZOL)
+						|| isSpot(lx, lz) && s.is(BlockTags.DIRT)) {
 						level.setBlock(floor, Blocks.DIRT_PATH.defaultBlockState(), 2);
 					}
 				}
 			}
 		}
+	}
+
+	/** True for a cell where a stranger stands by day. */
+	private static boolean isSpot(int lx, int lz) {
+		for (int[] spot : SPOTS) {
+			if (spot[0] == lx && spot[1] == lz) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
