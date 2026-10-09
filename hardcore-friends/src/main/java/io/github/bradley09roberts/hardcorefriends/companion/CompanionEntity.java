@@ -986,7 +986,7 @@ public class CompanionEntity extends PathfinderMob {
 		if (isChild() && this.level() instanceof ServerLevel level) {
 			for (UUID parentId : Families.get().parentsOf(level.getServer(), getUUID())) {
 				if (level.getEntity(parentId) instanceof CompanionEntity parent && parent.isAlive() && !parent.isRetreating()
-					&& parent.distanceToSqr(this) < bestDist) {
+					&& parent.distanceToSqr(this) < bestDist && Math.abs(parent.getY() - getY()) <= 6) {
 					bestDist = parent.distanceToSqr(this);
 					best = parent;
 				}

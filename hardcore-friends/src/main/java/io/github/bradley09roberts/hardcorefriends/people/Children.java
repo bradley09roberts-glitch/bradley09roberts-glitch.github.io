@@ -31,6 +31,7 @@ import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Persona;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
+import io.github.bradley09roberts.hardcorefriends.settler.Personas;
 import io.github.bradley09roberts.hardcorefriends.settler.SettlerData;
 import io.github.bradley09roberts.hardcorefriends.survival.Skills;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
@@ -74,9 +75,13 @@ final class Children {
 		DANGER.clear();
 	}
 
-	/** The job filter: a child only takes on their needs and {@link #JOBS}; grown-ups are not affected. */
+	/**
+	 * The job filter: a child only takes on their needs, {@link #JOBS} and the navigation package's jobs (getting
+	 * unstuck from a cave or water must never be kept from a child; the edit guard refuses all their block changes in
+	 * any case). Grown-ups are not affected.
+	 */
 	static boolean mayDo(CompanionEntity c, String jobId) {
-		return !c.isChild() || jobId.startsWith("needs.") || JOBS.contains(jobId);
+		return !c.isChild() || jobId.startsWith("needs.") || jobId.startsWith("navigation.") || JOBS.contains(jobId);
 	}
 
 	/** Once a second for each child: stay home rather than follow anyone off, and grow up when the time comes. */
@@ -132,7 +137,8 @@ final class Children {
 		c.scheduler().interrupt();
 		String trade = c.friendId().role().title().toLowerCase(Locale.ROOT);
 		Speech.say(c, Line.GROWN_UP, trade);
-		Relationships.announceGold(server, person.fullName() + " has grown up and starts work as a " + trade + best(c) + ".");
+		Relationships.announceGold(server, person.fullName() + " has grown up and starts work as "
+			+ Personas.tradeWithArticle(c.friendId().role()) + best(c) + ".");
 		Unity.add(level, UNITY_FAMILY, 15, 45);
 	}
 

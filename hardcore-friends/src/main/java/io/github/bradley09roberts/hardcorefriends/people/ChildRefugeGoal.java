@@ -103,7 +103,9 @@ final class ChildRefugeGoal extends Goal {
 			double best = 32 * 32;
 			for (UUID id : PeopleData.get(level.getServer()).person(child.getUUID()).map(p -> p.parents).orElse(java.util.List.of())) {
 				CompanionEntity parent = PeopleEvents.loaded(level.getServer(), id);
-				if (parent != null && parent.level() == level && !parent.isRetreating() && parent.distanceToSqr(child) < best) {
+				// Never down into a mine after a parent working below: only one about level with the child.
+				if (parent != null && parent.level() == level && !parent.isRetreating() && parent.distanceToSqr(child) < best
+					&& Math.abs(parent.getY() - child.getY()) <= 6) {
 					best = parent.distanceToSqr(child);
 					refuge = parent;
 				}

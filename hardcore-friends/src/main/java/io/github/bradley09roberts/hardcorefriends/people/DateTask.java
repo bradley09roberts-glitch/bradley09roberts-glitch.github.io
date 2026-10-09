@@ -10,6 +10,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
@@ -186,7 +189,10 @@ final class DateTask implements CompanionTask {
 		return null;
 	}
 
-	/** The highest place to stand in the camp near the friend, sampled every third column: the best view west. */
+	/**
+	 * The highest natural ground in the camp near the friend (earth, sand or stone underfoot, never a roof or a wall, and
+	 * at most a few blocks up), sampled every third column: the best view west.
+	 */
 	private static @Nullable BlockPos highGround(CompanionEntity c, ServerLevel level) {
 		BlockPos here = c.blockPosition();
 		BlockPos best = null;
@@ -200,12 +206,21 @@ final class DateTask implements CompanionTask {
 				}
 				int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
 				BlockPos p = new BlockPos(x, top, z);
-				if (Math.abs(top - here.getY()) <= 10 && Spots.isStandable(level, p) && (best == null || p.getY() > best.getY())) {
+				if (top - here.getY() > 5 || here.getY() - top > 5 || !natural(level.getBlockState(p.below()))) {
+					continue;
+				}
+				if (Spots.isStandable(level, p) && (best == null || p.getY() > best.getY())) {
 					best = p;
 				}
 			}
 		}
 		return best;
+	}
+
+	/** Earth, sand, gravel or natural stone: ground, not something built. */
+	private static boolean natural(BlockState s) {
+		return s.is(BlockTags.DIRT) || s.is(BlockTags.SAND) || s.is(BlockTags.BASE_STONE_OVERWORLD) || s.is(Blocks.GRAVEL)
+			|| s.is(Blocks.SNOW_BLOCK);
 	}
 
 	@Override

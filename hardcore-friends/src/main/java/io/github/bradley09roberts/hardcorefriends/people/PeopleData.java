@@ -293,30 +293,51 @@ public final class PeopleData extends SavedData {
 	}
 
 	/**
-	 * Family: one is the other's parent or grandparent, they share a parent, or one is married to the other's parent.
-	 * Family never court each other.
+	 * Family: one descends from the other, they share a forebear (brothers and sisters, cousins, aunts and uncles), or
+	 * one is the partner of the other's parent. Family never court each other.
 	 */
 	public boolean related(UUID a, UUID b) {
 		Person pa = people.get(a);
 		Person pb = people.get(b);
-		if (pa == null || pb == null) {
-			return false;
+		if (pa == null || pb == null || pa.parents.isEmpty() && pb.parents.isEmpty()) {
+			return false; // neither was born here: no family ties to check
 		}
-		if (pa.parents.contains(b) || pb.parents.contains(a)) {
-			return true;
-		}
-		for (UUID parent : pa.parents) {
-			if (pb.parents.contains(parent)) {
-				return true;
-			}
-			Person grand = people.get(parent);
-			if (grand != null && (grand.parents.contains(b) || b.equals(grand.partner))) {
+		Set<UUID> lineA = lineage(a);
+		for (UUID id : lineage(b)) {
+			if (lineA.contains(id)) {
 				return true;
 			}
 		}
-		for (UUID parent : pb.parents) {
-			Person grand = people.get(parent);
-			if (grand != null && (grand.parents.contains(a) || a.equals(grand.partner))) {
+		return stepParent(pa, b) || stepParent(pb, a);
+	}
+
+	/** This person and their forebears, three generations back. */
+	private Set<UUID> lineage(UUID id) {
+		Set<UUID> line = new HashSet<>();
+		List<UUID> generation = List.of(id);
+		line.add(id);
+		for (int depth = 0; depth < 3 && !generation.isEmpty(); depth++) {
+			List<UUID> next = new ArrayList<>();
+			for (UUID person : generation) {
+				Person p = people.get(person);
+				if (p != null) {
+					for (UUID parent : p.parents) {
+						if (line.add(parent)) {
+							next.add(parent);
+						}
+					}
+				}
+			}
+			generation = next;
+		}
+		return line;
+	}
+
+	/** {@code other} is the partner of one of this person's parents. */
+	private boolean stepParent(Person p, UUID other) {
+		for (UUID parentId : p.parents) {
+			Person parent = people.get(parentId);
+			if (parent != null && other.equals(parent.partner)) {
 				return true;
 			}
 		}
@@ -336,8 +357,8 @@ public final class PeopleData extends SavedData {
 		}
 		if (p.child) {
 			Person parent = p.homeParent == null ? null : people.get(p.homeParent);
-			if (parent != null && parent.alive()) {
-				return household(parent.id);
+			if (parent != null && parent.alive() && !parent.child) {
+				return household(parent.id); // a grown-up's household: no further step, whatever the records say
 			}
 			home.add(id);
 			return home;

@@ -55,6 +55,8 @@ final class PlayTask implements CompanionTask {
 		final long until;
 		@Nullable BlockPos hideSpot;
 		long tagAt;
+		/** The child asked has come to play. */
+		boolean joined;
 		boolean over;
 
 		Match(Game game, UUID a, @Nullable UUID b, UUID it, long until) {
@@ -115,6 +117,7 @@ final class PlayTask implements CompanionTask {
 		Match asked = MATCHES.get(c.getUUID());
 		if (asked != null && !asked.over && c.getUUID().equals(asked.b)) {
 			match = asked;
+			asked.joined = true;
 			return true;
 		}
 		CompanionEntity mate = playmate(c, level);
@@ -179,6 +182,10 @@ final class PlayTask implements CompanionTask {
 			if (mate == null || mate.level() != level || mate.distanceToSqr(c) > 32 * 32 || mate.isAsleep()) {
 				m.over = true;
 				return TaskStatus.SUCCESS;
+			}
+			if (!m.joined && ticks > 20 * 5) {
+				m.over = true; // they were busy after all
+				return TaskStatus.FAILURE;
 			}
 		}
 		if (level.getGameTime() > m.until || Camp.isNight(level)) {
