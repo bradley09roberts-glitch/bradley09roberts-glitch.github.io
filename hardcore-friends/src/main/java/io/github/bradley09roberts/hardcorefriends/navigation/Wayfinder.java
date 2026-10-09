@@ -2,7 +2,9 @@ package io.github.bradley09roberts.hardcorefriends.navigation;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.jspecify.annotations.Nullable;
 
@@ -93,6 +95,17 @@ public final class Wayfinder {
 	private static final int GIVEN_UP_WALKS = 3;
 	private static final int GIVEN_UP_WINDOW = 2400;
 	private static final int HEMMED_CHECK_GAP = 600;
+
+	/**
+	 * Jobs that move a friend in tight spots on purpose and see to getting out themselves (the night shelter steps into
+	 * a one-block space and climbs out of a dug-down one): while one of these is running, the friend is not watched
+	 * for being stuck. Feature packages may add their own from their {@code init()}.
+	 */
+	public static final Set<String> SELF_MANAGED = ConcurrentHashMap.newKeySet();
+
+	static {
+		SELF_MANAGED.add("survival.shelter");
+	}
 
 	/** What kind of trouble a friend was in, for the news when they are brought home. */
 	enum Trouble {
@@ -278,8 +291,15 @@ public final class Wayfinder {
 
 	/** Busy with something that moves them on purpose (or keeps them still on purpose). */
 	private static boolean busy(CompanionEntity c) {
-		return c.getTarget() != null || c.isRetreating() || Sprint.fleeing(c) || c.isPassenger() || c.isAsleep()
-			|| c.isSleeping() || c.isLeashed();
+		if (c.getTarget() != null || c.isRetreating() || Sprint.fleeing(c) || c.isPassenger() || c.isAsleep()
+			|| c.isSleeping() || c.isLeashed()) {
+			return true;
+		}
+		if (c.mode() == CompanionMode.WORK) {
+			CompanionTask job = c.scheduler().current();
+			return job != null && SELF_MANAGED.contains(job.id());
+		}
+		return false;
 	}
 
 	/**
@@ -442,10 +462,10 @@ public final class Wayfinder {
 		block(w, ahead, now);
 		if (c.onGround()) {
 			c.getJumpControl().jump();
-		}
-		Direction side = sideStep(level, c, dest);
-		if (side != null) {
-			c.addDeltaMovement(new Vec3(side.getStepX() * 0.12, 0, side.getStepZ() * 0.12));
+			Direction side = sideStep(level, c, dest);
+			if (side != null) {
+				c.addDeltaMovement(new Vec3(side.getStepX() * 0.12, 0, side.getStepZ() * 0.12));
+			}
 		}
 		c.getNavigation().stop(); // the next walk works out a new path, round the blocked spot
 	}
@@ -739,12 +759,14 @@ public final class Wayfinder {
 	// ------------------------------------------------------------------- helpers
 
 	/**
-	 * May dig or place blocks to get out: a grown-up on the team, with world editing on, outside the camp (shut in at
-	 * camp means a building or the pen, which are never dug through; a nudge, the doors and the rescue see to that).
+	 * May dig or place blocks to get out: a grown-up on the team, with world editing on, in a world with a sky (in the
+	 * Nether and the End a friend is with a player, who leads the way; catching up and the rescue see to them), and
+	 * outside the camp (shut in at camp means a building or the pen, which are never dug through; a nudge, the doors
+	 * and the rescue see to that).
 	 */
 	private static boolean mayDig(CompanionEntity c, ServerLevel level) {
 		return c.isTeamMember() && !c.isChild() && c.mode() != CompanionMode.STAY && FriendsConfig.get().allowWorldEditing
-			&& !inCamp(c, level);
+			&& Terrain.caveAware(level) && !inCamp(c, level);
 	}
 
 	/** May walk off to find the way out of a cave: anyone not told to stay put. */

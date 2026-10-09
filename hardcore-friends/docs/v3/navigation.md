@@ -74,9 +74,10 @@ with you after a few seconds (when catching up is on, `followTeleportDistance` a
 are 48 blocks away.
 
 **Digging out** follows the edit rules friends use to stay alive away from camp. A staircase digs at most three
-blocks a step, and only natural earth, sand, gravel and stone. It never digs a block with anything stored in it, a
-block touching water or lava, under loose sand or gravel, near anything you built, anything the friends built, or
-anywhere inside the camp. Inside the camp, a friend who is shut in (in a building, or in the pen) never digs or places
+blocks a step, and only natural ground: dirt, grass, sand, gravel, clay, and plain stone, granite, diorite, andesite
+and tuff. It never digs a block with anything stored in it, a block touching water or lava, under loose sand or
+gravel, near anything you built, anything the friends built, or anywhere inside the camp. Friends only dig or place
+blocks to get out in the Overworld. In the Nether and the End they are with you, so they catch up with you instead. Inside the camp, a friend who is shut in (in a building, or in the pen) never digs or places
 blocks. They hop, try the doors, and in the end are brought out. Children never change a block. They swim, walk out
 of caves and get brought home like everyone else.
 
@@ -133,8 +134,11 @@ Nothing here has been run in the game. Everything below is untested.
   a big cave system may find nothing and start digging up instead. Long, winding ways out of the water can be missed
   in the same way.
 - **Digging up is slow** without a pickaxe (about 7 seconds a stone block), and it stops at sand or gravel overhead,
-  at water or lava, at blocks you or the friends built, and at the camp's edge. A friend who cannot dig any further
-  waits to be brought home.
+  at water or lava, at blocks you or the friends built, and at the camp's edge. It cannot dig deepslate, cobblestone
+  or sandstone (the shared edit rules for staying alive do not allow them), so deep down below the deepslate line, or
+  in a desert, a friend can only walk out. A friend who cannot dig any further waits to be brought home.
+- **The night shelter** looks after itself: while a friend is building, sleeping in or leaving their shelter, they
+  are not watched for being stuck.
 - **The rescue is a teleport.** It puts the friend on a safe, loaded spot near the camp centre (or near you), and only
   when that spot is loaded. A friend stuck while the camp is not loaded waits until it is. Purists can turn it off.
 - **Nudges** push a friend a little sideways and make them hop. In a crowd at the chest this can look odd.
