@@ -1,0 +1,103 @@
+{
+  "name": "storehouse",
+  "kind": "camp:storehouse",
+  "styles": [],
+  "size": [7, 8],
+  "front": "north",
+  "camp": {"offsets": [[9, -8]]},
+  "palette": {
+    "C": "cobblestone",
+    "c": "cobblestone",
+    "P": "planks",
+    "L": {"block": "log", "axis": "y"},
+    "X": {"block": "log", "axis": "x"},
+    "Z": {"block": "log", "axis": "z"},
+    "D": {"block": "door", "facing": "south", "hinge": "left"},
+    "g": {"block": "glass_pane", "optional": true},
+    "k": {"block": "lantern", "hanging": true, "fallback": {"block": "wall_torch", "facing": "north"}},
+    "l": {"block": "lantern", "hanging": true, "optional": true},
+    "v": {"block": "stairs", "facing": "south", "wood": "spruce"},
+    "^": {"block": "stairs", "facing": "north", "wood": "spruce"},
+    "R": {"block": "planks", "wood": "spruce"},
+    "=": {"block": "slab", "type": "bottom", "wood": "spruce"},
+    "O": {"block": "barrel", "facing": "up"},
+    "H": {"block": "chest", "facing": "north"},
+    "t": {"block": "wall_torch", "facing": "north"}
+  },
+  "layers": [
+    [
+      "...c...",
+      "CCCCCCC",
+      "CPPPPPC",
+      "CPPPPPC",
+      "CPPPPPC",
+      "CPPPPPC",
+      "CCCCCCC",
+      "......."
+    ],
+    [
+      ".......",
+      "LPPDPPL",
+      "PO...OP",
+      "P.....P",
+      "P.....P",
+      "POH.HOP",
+      "LPPPPPL",
+      "......."
+    ],
+    [
+      "..k.k..",
+      "LPP.PPL",
+      "PO...OP",
+      "g.....g",
+      "P.....P",
+      "P..t..P",
+      "LPPPPPL",
+      "......."
+    ],
+    [
+      "vvvvvvv",
+      "LXXXXXL",
+      "Z.....Z",
+      "Z.....Z",
+      "Z.....Z",
+      "Z.....Z",
+      "LXXXXXL",
+      "^^^^^^^"
+    ],
+    [
+      ".......",
+      "vvvvvvv",
+      "P.....P",
+      "P.....P",
+      "P.....P",
+      "P.....P",
+      "^^^^^^^",
+      "......."
+    ],
+    [
+      ".......",
+      ".......",
+      "vvvvvvv",
+      "P..l..P",
+      "P.....P",
+      "^^^^^^^",
+      ".......",
+      "......."
+    ],
+    [
+      ".......",
+      ".......",
+      ".......",
+      "vvvvvvv",
+      "^^^^^^^",
+      ".......",
+      ".......",
+      "......."
+    ]
+  ],
+  "markers": {
+    "door": [[3, 0, -1]],
+    "chest": [[2, 1, 5], [4, 1, 5]]
+  }
+}

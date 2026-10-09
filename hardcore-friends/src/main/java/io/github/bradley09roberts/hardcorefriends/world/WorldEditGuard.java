@@ -559,11 +559,11 @@ public final class WorldEditGuard {
 	/** True if {@code pos} is one of the blocks (not the foundations) of a building site the friends reserved. */
 	private static boolean partOfFriendsBuilding(CampData data, BlockPos pos) {
 		for (String id : data.sites().keySet()) {
-			Optional<Blueprint> bp = Blueprints.forId(id);
+			Optional<Blueprint> bp = Blueprints.forSite(data, id);
 			if (bp.isEmpty()) {
 				continue;
 			}
-			for (Placement p : Blueprints.placements(bp.get(), SiteFinder.parts(data, bp.get()))) {
+			for (Placement p : Blueprints.placements(bp.get(), SiteFinder.parts(data, id, bp.get()))) {
 				if (!p.isFoundation() && p.pos().equals(pos)) {
 					return true;
 				}

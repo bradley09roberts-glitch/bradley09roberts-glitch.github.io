@@ -64,14 +64,19 @@ public final class SiteFinder {
 
 	/** The reserved parts of a plan, or an empty list if it has no site yet. */
 	public static List<Part> parts(CampData data, Blueprint bp) {
-		Optional<CampData.Site> site = data.site(bp.id());
+		return parts(data, bp.id(), bp);
+	}
+
+	/** The reserved parts of the site with this key, built from this plan, or an empty list if there is no site. */
+	public static List<Part> parts(CampData data, String siteKey, Blueprint bp) {
+		Optional<CampData.Site> site = data.site(siteKey);
 		if (site.isEmpty()) {
 			return List.of();
 		}
 		if (bp.parts() == 1) {
 			return List.of(new Part(site.get().origin, site.get().rotation));
 		}
-		CompoundTag tag = data.memory(PARTS_MEMORY).getCompoundOrEmpty(bp.id());
+		CompoundTag tag = data.memory(PARTS_MEMORY).getCompoundOrEmpty(siteKey);
 		long[] origins = tag.getLongArray("origins").orElse(new long[0]);
 		int[] rotations = tag.getIntArray("rotations").orElse(new int[0]);
 		if (origins.length != bp.parts() || rotations.length != origins.length) {
@@ -86,8 +91,17 @@ public final class SiteFinder {
 
 	/** Reserves a site so nobody else builds there. Progress starts from zero. */
 	public static void reserve(CampData data, Blueprint bp, List<Part> parts) {
-		SiteClearing.forget(data, bp.id()); // a fresh site starts with nothing to fell
-		SiteGrading.forget(data, bp.id()); // ... and nothing to level
+		reserve(data, bp.id(), bp, parts, bp.wood());
+	}
+
+	/**
+	 * Reserves a site under a key (a structure id, or a library site's own key such as {@code village.house.3}),
+	 * remembering the plan and the wood its wooden parts should prefer. Progress starts from zero.
+	 */
+	public static void reserve(CampData data, String siteKey, Blueprint bp, List<Part> parts, @Nullable String wood) {
+		SiteClearing.forget(data, siteKey); // a fresh site starts with nothing to fell
+		SiteGrading.forget(data, siteKey); // ... and nothing to level
+		Blueprints.recordPlan(data, siteKey, bp, wood);
 		Part first = parts.getFirst();
 		if (parts.size() > 1) {
 			long[] origins = new long[parts.size()];
@@ -99,9 +113,9 @@ public final class SiteFinder {
 			CompoundTag tag = new CompoundTag();
 			tag.putLongArray("origins", origins);
 			tag.putIntArray("rotations", rotations);
-			data.memory(PARTS_MEMORY).put(bp.id(), tag);
+			data.memory(PARTS_MEMORY).put(siteKey, tag);
 		}
-		data.putSite(bp.id(), new CampData.Site(first.origin(), first.rotation(), 0));
+		data.putSite(siteKey, new CampData.Site(first.origin(), first.rotation(), 0));
 	}
 
 	/**
@@ -147,12 +161,12 @@ public final class SiteFinder {
 				continue;
 			}
 			BlockPos o = e.getValue().origin;
-			Optional<Blueprint> bp = Blueprints.forId(id);
+			Optional<Blueprint> bp = Blueprints.forSite(data, id);
 			if (bp.isPresent()) {
 				if (bp.get().anchor() == Blueprint.Anchor.CABIN || bp.get().anchor() == Blueprint.Anchor.CHEST_TOP) {
 					continue; // part of another structure
 				}
-				for (Part part : parts(data, bp.get())) {
+				for (Part part : parts(data, id, bp.get())) {
 					boxes.add(bp.get().footprint(part.origin(), part.rotation()));
 				}
 			} else if (id.equals(Structures.FARM_PLOT)) {

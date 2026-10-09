@@ -8,6 +8,7 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 
+import io.github.bradley09roberts.hardcorefriends.architecture.MaterialDemand;
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprint;
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
 import io.github.bradley09roberts.hardcorefriends.camp.BuildJob;
@@ -24,13 +25,17 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 /**
  * Oak puts back blocks that have gone missing from finished buildings (a torch knocked off, a wall plank taken by
  * a creeper), using the same materials as the plan. Only empty spots are refilled; nothing is ever replaced. The
- * buildings are checked every ten seconds.
+ * buildings are checked every ten seconds: the camp's own each time, and the village's finished library buildings
+ * (houses, shops) two at a time in turn, so a big village costs no more per check. This is also how decoration left
+ * out while its material could not be had (glass in a window, a flower pot) is added once it can.
  */
 public final class RepairTask extends BlueprintTask {
 	private static final int RESCAN = 200;
 
 	private long scannedAt = -100_000;
 	private @Nullable Blueprint damaged;
+	private @Nullable String damagedKey;
+	private int libraryCursor;
 
 	@Override
 	public String id() {
@@ -65,29 +70,88 @@ public final class RepairTask extends BlueprintTask {
 		}
 		scannedAt = now;
 		damaged = null;
+		damagedKey = null;
 		ServerLevel level = (ServerLevel) c.level();
 		Container chest = SupplyChest.of(level).orElse(null);
 		for (Structures.Entry e : Structures.ALL) {
 			if (e.owner() != Role.BUILDER || e.id().equals(Structures.SUPPLY_CHEST) || !data.isCompleted(e.id()) || isSetAside(c, e.id())) {
 				continue;
 			}
-			Optional<Blueprint> bp = Blueprints.forId(e.id());
+			Optional<Blueprint> bp = Blueprints.forSite(data, e.id());
 			if (bp.isEmpty() || data.site(e.id()).isEmpty()) {
 				continue;
 			}
-			List<Placement> gaps = BuildJob.missing(level, data, bp.get(), 8);
-			for (Placement p : gaps) {
-				Stock s = p.entry().material().stock();
-				if (s == Stock.GLASS_PANE && !Supplies.canMake(c, chest, s, 1)) {
-					s = Stock.PLANKS; // without glass a window is closed with planks
-				}
-				if (s == null || Supplies.canMake(c, chest, s, 1)) {
-					damaged = bp.get();
-					return damaged;
-				}
+			if (repairable(c, chest, gaps(level, data, e.id(), bp.get()))) {
+				damaged = bp.get();
+				damagedKey = e.id();
+				return damaged;
 			}
 		}
+		List<String> sites = new java.util.ArrayList<>(Blueprints.librarySites(data));
+		sites.sort(String::compareTo);
+		for (int k = 0; k < Math.min(2, sites.size()); k++) {
+			String key = sites.get(Math.floorMod(libraryCursor + k, sites.size()));
+			if (!Blueprints.isFinished(data, key) || isSetAside(c, key)) {
+				continue;
+			}
+			Optional<Blueprint> bp = Blueprints.forSite(data, key);
+			if (bp.isPresent() && repairable(c, chest, gaps(level, data, key, bp.get()))) {
+				damaged = bp.get();
+				damagedKey = key;
+				libraryCursor += k;
+				return damaged;
+			}
+		}
+		libraryCursor += 2;
 		return null;
+	}
+
+	/**
+	 * Up to eight gaps in a finished building, also reported to the camp's material demand, so what they need (glass
+	 * for a window left open, bricks for a flower pot) gets made even while nothing can fill them yet.
+	 */
+	private static List<Placement> gaps(ServerLevel level, CampData data, String key, Blueprint bp) {
+		List<Placement> gaps = BuildJob.missing(level, data, key, bp, 8);
+		String demandKey = "repair:" + key;
+		if (gaps.isEmpty()) {
+			MaterialDemand.clear(demandKey);
+			return gaps;
+		}
+		java.util.Map<Stock, Integer> wanted = new java.util.EnumMap<>(Stock.class);
+		for (Placement p : gaps) {
+			Stock s = p.entry().material().stock();
+			Stock extra = p.entry().material().extraStock();
+			if (s != null) {
+				wanted.merge(s, 1, Integer::sum);
+			}
+			if (extra != null) {
+				wanted.merge(extra, 1, Integer::sum);
+			}
+		}
+		MaterialDemand.report(level, demandKey, wanted);
+		return gaps;
+	}
+
+	/** True if one of these gaps can be filled from what is carried or stored (with its fallback, if it has one). */
+	private static boolean repairable(CompanionEntity c, @Nullable Container chest, List<Placement> gaps) {
+		for (Placement p : gaps) {
+			Blueprint.Entry e = p.entry();
+			if (fillable(c, chest, e) || e.fallback() != null && fillable(c, chest, e.withFallback())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean fillable(CompanionEntity c, @Nullable Container chest, Blueprint.Entry e) {
+		Stock s = e.material().stock();
+		Stock extra = e.material().extraStock();
+		return (s == null || Supplies.canMake(c, chest, s, 1)) && (extra == null || Supplies.canMake(c, chest, extra, 1));
+	}
+
+	@Override
+	protected String siteKey(Blueprint plan) {
+		return plan == damaged && damagedKey != null ? damagedKey : plan.id();
 	}
 
 	@Override

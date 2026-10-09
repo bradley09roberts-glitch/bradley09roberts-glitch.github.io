@@ -1,0 +1,121 @@
+{
+  "name": "cabin",
+  "kind": "camp:cabin",
+  "styles": [],
+  "size": [7, 9],
+  "front": "north",
+  "camp": {"offsets": [[-10, -1]]},
+  "palette": {
+    "C": "cobblestone",
+    "c": "cobblestone",
+    "P": "planks",
+    "L": {"block": "log", "axis": "y"},
+    "X": {"block": "log", "axis": "x"},
+    "Z": {"block": "log", "axis": "z"},
+    "D": {"block": "door", "facing": "south", "hinge": "left"},
+    "g": {"block": "glass_pane", "optional": true},
+    "k": {"block": "lantern", "hanging": true, "fallback": {"block": "wall_torch", "facing": "north"}},
+    "l": {"block": "lantern", "hanging": true, "optional": true},
+    "v": {"block": "stairs", "facing": "south", "wood": "spruce"},
+    "^": {"block": "stairs", "facing": "north", "wood": "spruce"},
+    "R": {"block": "planks", "wood": "spruce"},
+    "=": {"block": "slab", "type": "bottom", "wood": "spruce"},
+    "O": {"block": "barrel", "facing": "up"},
+    "t": {"block": "wall_torch", "facing": "north"}
+  },
+  "layers": [
+    [
+      "...c...",
+      "CCCCCCC",
+      "CPPPPPC",
+      "CPPPPPC",
+      "CPPPPPC",
+      "CPPPPPC",
+      "CPPPPPC",
+      "CCCCCCC",
+      "......."
+    ],
+    [
+      ".......",
+      "LPPDPPL",
+      "P.....P",
+      "P.....P",
+      "P.....P",
+      "P.....P",
+      "PO...OP",
+      "LPPPPPL",
+      "......."
+    ],
+    [
+      "..k.k..",
+      "LgP.PgL",
+      "P.....P",
+      "P.....P",
+      "g.....g",
+      "P.....P",
+      "P.t...P",
+      "LPPgPPL",
+      "......."
+    ],
+    [
+      "vvvvvvv",
+      "LXXXXXL",
+      "Z.....Z",
+      "Z.....Z",
+      "Z.....Z",
+      "Z.....Z",
+      "Z.....Z",
+      "LXXXXXL",
+      "^^^^^^^"
+    ],
+    [
+      ".......",
+      "vvvvvvv",
+      "P.....P",
+      "P.....P",
+      "P.....P",
+      "P.....P",
+      "P.....P",
+      "^^^^^^^",
+      "......."
+    ],
+    [
+      ".......",
+      ".......",
+      "vvvvvvv",
+      "P.....P",
+      "g..l..g",
+      "P.....P",
+      "^^^^^^^",
+      ".......",
+      "......."
+    ],
+    [
+      ".......",
+      ".......",
+      ".......",
+      "vvvvvvv",
+      "RRRRRRR",
+      "^^^^^^^",
+      ".......",
+      ".......",
+      "......."
+    ],
+    [
+      ".......",
+      ".......",
+      ".......",
+      ".......",
+      "=======",
+      ".......",
+      ".......",
+      ".......",
+      "......."
+    ]
+  ],
+  "markers": {
+    "door": [[3, 0, -1]],
+    "inside": [[3, 1, 4]],
+    "light": [[3, 5, 4]]
+  }
+}

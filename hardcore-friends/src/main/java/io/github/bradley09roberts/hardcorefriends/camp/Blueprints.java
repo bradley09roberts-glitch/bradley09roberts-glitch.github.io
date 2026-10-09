@@ -1,5 +1,9 @@
 package io.github.bradley09roberts.hardcorefriends.camp;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -7,7 +11,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
+import org.jspecify.annotations.Nullable;
+
+import com.google.gson.JsonParser;
+
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.DaylightDetectorBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
@@ -17,15 +26,31 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.SlabType;
 
+import io.github.bradley09roberts.hardcorefriends.HardcoreFriends;
+import io.github.bradley09roberts.hardcorefriends.architecture.PlanParser;
 import io.github.bradley09roberts.hardcorefriends.camp.build.MaterialSpec;
 import io.github.bradley09roberts.hardcorefriends.camp.build.Part;
 import io.github.bradley09roberts.hardcorefriends.camp.build.Placement;
+import io.github.bradley09roberts.hardcorefriends.civic.BlueprintLibrary;
+import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 
 /**
- * The camp's building plans: everything Oak builds and every contraption Spark makes. Plans are small and use
- * ordinary survival materials. Coordinates are local: x to the east, z to the south, the front on the north side.
+ * The camp's building plans: everything Oak builds and every contraption Spark makes. Plans use ordinary survival
+ * materials. Coordinates are local: x to the east, z to the south, the front on the north side.
+ *
+ * <p>The cabin, the storehouse and the watchtower are proper buildings since 3.0 (a cottage with a gable roof, a
+ * timber-framed store, a tower with a roofed lookout), drawn in the building-plan file format in
+ * {@code /hardcorefriends/camp_plans/} inside the mod. Their old box-shaped plans are kept as "legacy" plans: a site
+ * reserved before 3.0, or one already finished, keeps the plan it was started with ({@link #forSite}), so old saves
+ * never end up with half of one plan and half of another. The config option {@code fancyCampBuildings} chooses the
+ * old plans for new sites too.
+ *
+ * <p>Every reserved site remembers its plan (and the wood chosen for it) in camp memory under
+ * {@value #SITES_MEMORY}, which is also how library buildings (houses, shops...) on the camp's sites are found again.
  */
 public final class Blueprints {
+	/** Camp memory key: for each site key, the plan it was reserved with, its wood and whether it is finished. */
+	public static final String SITES_MEMORY = "architecture.sites";
 	/** A chest just east of the camp centre, linked as the supply chest once built. */
 	public static final Blueprint SUPPLY_CHEST = Blueprint.builder(Structures.SUPPLY_CHEST, 1, 1).at(2, 0)
 		.put(0, 0, 0, MaterialSpec.CHEST, facing(Direction.NORTH)).build();
@@ -45,15 +70,39 @@ public final class Blueprints {
 		.at(6, 6).at(-6, 6).at(6, -6).at(-6, -6).fixedFacing()
 		.put(0, 0, 0, MaterialSpec.FENCE).attach(0, 1, 0, MaterialSpec.TORCH).build();
 
-	public static final Blueprint CABIN = cabin(Structures.CABIN, -10, -1);
+	/** The 2.x cabin: a 7×7 plank box with a flat slab roof. Kept for sites started before 3.0. */
+	public static final Blueprint LEGACY_CABIN = cabin(Structures.CABIN, -10, -1);
 
-	public static final Blueprint CABIN_2 = cabin(Structures.CABIN_2, 0, -11);
+	/** The 2.x second cabin (same plan as {@link #LEGACY_CABIN}). */
+	public static final Blueprint LEGACY_CABIN_2 = cabin(Structures.CABIN_2, 0, -11);
 
-	/** A 5×5 plank shed with a door and two chests against the back wall. */
-	public static final Blueprint STOREHOUSE = storehouse();
+	/** The 2.x storehouse: a 5×5 plank shed with a door and two chests against the back wall. */
+	public static final Blueprint LEGACY_STOREHOUSE = storehouse();
 
-	/** A 3×3 cobblestone tower with a ladder inside and a slab lookout ringed by torches. */
-	public static final Blueprint WATCHTOWER = watchtower();
+	/** The 2.x watchtower: a 3×3 cobblestone tower with a ladder inside and a slab lookout ringed by torches. */
+	public static final Blueprint LEGACY_WATCHTOWER = watchtower();
+
+	/**
+	 * The cabin: a cottage with a log frame on a cobblestone plinth, plank walls, a stair gable roof whose eaves overhang
+	 * the doorstep, open windows that get glass once the camp can make it, a porch lantern and a vaulted room inside.
+	 * Keeps the 2.x contract: the door's lower half at local {@link #CABIN_DOOR}, a solid doorstep in front of it and
+	 * floor behind it (the automatic door's pressure plates), and a clear, roofed 3×3 around {@link #CABIN_INSIDE}
+	 * where friends sleep.
+	 */
+	public static final Blueprint CABIN = campPlan("cabin", Structures.CABIN, LEGACY_CABIN);
+
+	/** The second cabin: the same cottage, elsewhere in the camp. */
+	public static final Blueprint CABIN_2 = CABIN.copyAs(Structures.CABIN_2, "camp/cabin_2", List.of(new int[] {0, -11}));
+
+	/** The storehouse: a timber-framed store with a gable roof, chests and barrels along the walls. */
+	public static final Blueprint STOREHOUSE = campPlan("storehouse", Structures.STOREHOUSE, LEGACY_STOREHOUSE);
+
+	/**
+	 * The watchtower: a stone-based tower with a one-block ladder shaft (climbable the way {@code GuardTask} climbs it),
+	 * a railed lookout platform and a roof over it. The lookout is the only sturdy floor up there with headroom, so
+	 * {@code ai.role.guard.Watchtower} finds it.
+	 */
+	public static final Blueprint WATCHTOWER = campPlan("watchtower", Structures.WATCHTOWER, LEGACY_WATCHTOWER);
 
 	/** Tall fence posts carrying lanterns near the camp's main features. */
 	public static final Blueprint LANTERN_POSTS = Blueprint.builder(Structures.LANTERN_POSTS, 1, 1)
@@ -132,25 +181,184 @@ public final class Blueprints {
 	public static final int[] SMELTER_INPUT = {0, 4, 0};
 	public static final int[] SMELTER_FUEL = {1, 3, 0};
 	public static final int[] SMELTER_OUTPUT = {0, 0, 0};
-	/** Local position of the cabin's door (lower half). */
+	/** Local position of the cabin's door (lower half), the same in the 2.x cabin and the 3.0 cottage. */
 	public static final int[] CABIN_DOOR = {3, 1, 1};
+	/** Local position of the middle of the cabin's floor, where friends sleep (the same in both cabins). */
+	public static final int[] CABIN_INSIDE = {3, 1, 4};
 
 	private static final Map<String, Blueprint> BY_ID = new LinkedHashMap<>();
+	/** Plans replaced in 3.0, by structure id: used for sites started (or finished) before 3.0. */
+	private static final Map<String, Blueprint> LEGACY = new LinkedHashMap<>();
+	/** Every camp plan, current and legacy, by plan id. */
+	private static final Map<String, Blueprint> BY_PLAN_ID = new LinkedHashMap<>();
 
 	static {
 		for (Blueprint b : List.of(SUPPLY_CHEST, CAMPFIRE, CRAFTING_TABLE, FURNACE, TORCH_POSTS, CABIN, STOREHOUSE, WATCHTOWER,
 			LANTERN_POSTS, CABIN_2, AUTO_DOOR, HOPPER_DROPOFF, AUTO_SMELTER, LAMP_POSTS, ANIMAL_PEN, LIBRARY, ANVIL, BREWING_STAND,
 			NETHER_PORTAL)) {
 			BY_ID.put(b.id(), b);
+			BY_PLAN_ID.put(b.planId(), b);
+		}
+		for (Blueprint b : List.of(LEGACY_CABIN, LEGACY_CABIN_2, LEGACY_STOREHOUSE, LEGACY_WATCHTOWER)) {
+			if (BY_ID.get(b.id()) != b) {
+				LEGACY.put(b.id(), b);
+			}
+			BY_PLAN_ID.put(b.planId(), b);
 		}
 	}
 
 	private Blueprints() {
 	}
 
-	/** The plan for a structure id, if the builders or the inventor make it. */
+	/**
+	 * The plan a new site for this structure is built from: the 3.0 plan, or the 2.x one when the config option
+	 * {@code fancyCampBuildings} is off. For a structure that already has a site, use {@link #forSite}.
+	 */
 	public static Optional<Blueprint> forId(String structureId) {
+		if (!FriendsConfig.get().fancyCampBuildings) {
+			Blueprint legacy = LEGACY.get(structureId);
+			if (legacy != null) {
+				return Optional.of(legacy);
+			}
+		}
 		return Optional.ofNullable(BY_ID.get(structureId));
+	}
+
+	/**
+	 * The plan a site is built from. A site remembers the plan it was reserved with, so it keeps it even if the mod's
+	 * plans change; a camp site with no record was reserved before 3.0 and keeps the 2.x plan; a structure without a
+	 * site gets {@link #forId}. Library sites (houses, shops) give their library plan, or nothing if a data pack has
+	 * since removed it.
+	 */
+	public static Optional<Blueprint> forSite(CampData data, String siteKey) {
+		CompoundTag rec = record(data, siteKey);
+		String ref = rec.getStringOr("plan", "");
+		boolean camp = BY_ID.containsKey(siteKey);
+		boolean inUse = data.site(siteKey).isPresent() || data.isCompleted(siteKey);
+		if (camp && !inUse) {
+			return forId(siteKey);
+		}
+		if (!ref.isEmpty()) {
+			Optional<Blueprint> recorded = byPlanId(ref);
+			if (recorded.isPresent()) {
+				return recorded;
+			}
+		}
+		if (camp) {
+			Blueprint legacy = LEGACY.get(siteKey);
+			return legacy != null && ref.isEmpty() ? Optional.of(legacy) : forId(siteKey);
+		}
+		return Optional.empty();
+	}
+
+	/** A camp plan (current or legacy) or a library plan by its plan id. */
+	public static Optional<Blueprint> byPlanId(String planId) {
+		Blueprint camp = BY_PLAN_ID.get(planId);
+		return camp != null ? Optional.of(camp) : BlueprintLibrary.get().get(planId);
+	}
+
+	/** A readable name for a site in speech: the camp structure's name, or the plan's ("oak cottage"). */
+	public static String displayName(CampData data, String siteKey) {
+		for (Structures.Entry e : Structures.ALL) {
+			if (e.id().equals(siteKey)) {
+				return e.displayName();
+			}
+		}
+		return forSite(data, siteKey).map(Blueprint::name).orElse("building");
+	}
+
+	/** True if this site key is one of the camp's own improvements (a {@link Structures} id). */
+	public static boolean isCampStructure(String siteKey) {
+		for (Structures.Entry e : Structures.ALL) {
+			if (e.id().equals(siteKey)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// ------------------------------------------------------------- site records
+
+	private static CompoundTag record(CampData data, String siteKey) {
+		return data.memory(SITES_MEMORY).getCompoundOrEmpty(siteKey);
+	}
+
+	/** Remembers which plan (and wood) a site was reserved with; a fresh reservation is not finished. */
+	public static void recordPlan(CampData data, String siteKey, Blueprint plan, @Nullable String wood) {
+		CompoundTag rec = new CompoundTag();
+		rec.putString("plan", plan.planId());
+		if (wood != null) {
+			rec.putString("wood", wood);
+		}
+		data.memory(SITES_MEMORY).put(siteKey, rec);
+		data.setDirty();
+	}
+
+	/** The wood chosen for a site when it was reserved (its wooden parts prefer it), or null. */
+	public static @Nullable String siteWood(CampData data, String siteKey) {
+		String wood = record(data, siteKey).getStringOr("wood", "");
+		return wood.isEmpty() ? null : wood;
+	}
+
+	/** Marks a site's building finished (or not), for library sites, whose completion is not a camp stage. */
+	public static void markFinished(CampData data, String siteKey, boolean finished) {
+		CompoundTag sites = data.memory(SITES_MEMORY);
+		CompoundTag rec = sites.getCompoundOrEmpty(siteKey);
+		rec.putBoolean("done", finished);
+		sites.put(siteKey, rec);
+		data.setDirty();
+	}
+
+	/** True once a site's building was finished: a completed camp structure, or a library site marked finished. */
+	public static boolean isFinished(CampData data, String siteKey) {
+		return data.isCompleted(siteKey) || record(data, siteKey).getBooleanOr("done", false);
+	}
+
+	/** Forgets a site's record (the site itself is removed by the caller). */
+	public static void forgetRecord(CampData data, String siteKey) {
+		if (data.memory(SITES_MEMORY).remove(siteKey) != null) {
+			data.setDirty();
+		}
+	}
+
+	/** Site keys of every reserved site built from a library plan (houses, shops...), in no particular order. */
+	public static List<String> librarySites(CampData data) {
+		List<String> keys = new ArrayList<>();
+		for (String key : data.memory(SITES_MEMORY).keySet()) {
+			if (!isCampStructure(key) && data.site(key).isPresent()) {
+				keys.add(key);
+			}
+		}
+		return keys;
+	}
+
+	/**
+	 * Reads one of the mod's own camp plans from {@code /hardcorefriends/camp_plans/<file>.json} inside the mod, in the
+	 * building-plan format. If the file is missing or wrong (which would be a bug in the mod), the legacy plan is used
+	 * and the problem logged, so the camp still builds.
+	 */
+	private static Blueprint campPlan(String file, String structureId, Blueprint fallback) {
+		String path = "/hardcorefriends/camp_plans/" + file + ".json";
+		try (InputStream in = Blueprints.class.getResourceAsStream(path)) {
+			if (in == null) {
+				HardcoreFriends.LOGGER.error("Camp plan {} is missing; using the old plan", path);
+				return fallback;
+			}
+			try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+				PlanParser.Result result = PlanParser.parse(structureId, "camp/" + file, JsonParser.parseReader(reader));
+				if (result.plan() == null) {
+					HardcoreFriends.LOGGER.error("Camp plan {} is wrong ({}); using the old plan", path, String.join("; ", result.errors()));
+					return fallback;
+				}
+				for (String w : result.warnings()) {
+					HardcoreFriends.LOGGER.warn("Camp plan {}: {}", path, w);
+				}
+				return result.plan();
+			}
+		} catch (Exception e) {
+			HardcoreFriends.LOGGER.error("Camp plan {} could not be read; using the old plan", path, e);
+			return fallback;
+		}
 	}
 
 	/** World position of a local block on a single-part site. */
@@ -200,12 +408,12 @@ public final class Blueprints {
 	// ---------------------------------------------------------------- plans
 
 	/**
-	 * A 7×7 cabin with a doorstep in front: plank floor on the ground, log corners, plank walls three high with a
-	 * door and two glass-pane windows, a flat wooden-slab roof and a wall torch inside. Friends cannot make glass, so
-	 * when the camp has none the builder closes the windows with planks instead (see {@code BuildJob}).
+	 * The 2.x cabin: a 7×7 box with a doorstep in front: plank floor on the ground, log corners, plank walls three high
+	 * with a door and two glass-pane windows, a flat wooden-slab roof and a wall torch inside. When the camp has no
+	 * glass the builder closes the windows with planks instead (the windows' fallback).
 	 */
 	private static Blueprint cabin(String id, int x, int z) {
-		Blueprint.Builder b = Blueprint.builder(id, 7, 8).at(x, z);
+		Blueprint.Builder b = Blueprint.builder(id, 7, 8).at(x, z).planId("legacy/" + id).kind("camp:" + id);
 		b.put(3, 0, 0, MaterialSpec.PLANKS); // doorstep
 		for (int dx = 0; dx < 7; dx++) {
 			for (int dz = 1; dz <= 7; dz++) {
@@ -225,7 +433,8 @@ public final class Blueprints {
 						continue; // doorway
 					}
 					if (dy == 2 && dz == 4 && edgeX) {
-						b.put(dx, dy, dz, MaterialSpec.GLASS_PANE);
+						b.entry(new Blueprint.Entry(dx, dy, dz, MaterialSpec.GLASS_PANE, UnaryOperator.identity(), false, null, false,
+							new Blueprint.Alternative(MaterialSpec.PLANKS, UnaryOperator.identity(), null)));
 						continue;
 					}
 					b.put(dx, dy, dz, edgeX && edgeZ ? MaterialSpec.LOG : MaterialSpec.PLANKS);
@@ -244,7 +453,8 @@ public final class Blueprints {
 	}
 
 	private static Blueprint storehouse() {
-		Blueprint.Builder b = Blueprint.builder(Structures.STOREHOUSE, 5, 6).at(9, -8);
+		Blueprint.Builder b = Blueprint.builder(Structures.STOREHOUSE, 5, 6).at(9, -8).planId("legacy/storehouse")
+			.kind("camp:storehouse");
 		b.put(2, 0, 0, MaterialSpec.PLANKS); // doorstep
 		for (int dy = 0; dy <= 2; dy++) {
 			for (int dx = 0; dx < 5; dx++) {
@@ -275,7 +485,8 @@ public final class Blueprints {
 	}
 
 	private static Blueprint watchtower() {
-		Blueprint.Builder b = Blueprint.builder(Structures.WATCHTOWER, 3, 3).at(-8, 9);
+		Blueprint.Builder b = Blueprint.builder(Structures.WATCHTOWER, 3, 3).at(-8, 9).planId("legacy/watchtower")
+			.kind("camp:watchtower");
 		for (int dy = 0; dy <= 3; dy++) {
 			for (int dx = 0; dx < 3; dx++) {
 				for (int dz = 0; dz < 3; dz++) {
