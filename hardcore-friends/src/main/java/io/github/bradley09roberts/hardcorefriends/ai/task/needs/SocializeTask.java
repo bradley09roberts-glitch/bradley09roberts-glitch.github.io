@@ -60,6 +60,12 @@ public final class SocializeTask implements CompanionTask {
 	private record Invite(UUID from, long until) {
 	}
 
+	/**
+	 * Told when two friends have had a chat (the one who came over first), so the people package can bring them closer.
+	 */
+	public static final java.util.List<java.util.function.BiConsumer<CompanionEntity, CompanionEntity>> CHATTED =
+		new java.util.concurrent.CopyOnWriteArrayList<>();
+
 	private @Nullable CompanionEntity partner;
 	private @Nullable Player player;
 	private @Nullable UUID listeningTo;
@@ -169,6 +175,9 @@ public final class SocializeTask implements CompanionTask {
 		friend.needs().add(Need.SOCIAL, PARTNER_GAIN);
 		Unity.chat((ServerLevel) c.level());
 		remember(c.getUUID(), friend.getUUID(), c.level().getGameTime());
+		for (java.util.function.BiConsumer<CompanionEntity, CompanionEntity> listener : CHATTED) {
+			listener.accept(c, friend);
+		}
 		return TaskStatus.SUCCESS;
 	}
 

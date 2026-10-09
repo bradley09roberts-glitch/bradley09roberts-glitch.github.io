@@ -173,13 +173,16 @@ public final class SpecialityTask implements CompanionTask {
 		return specialist != null && specialist != c && specialist.level() == c.level();
 	}
 
-	/** The friends in WORK mode, by speciality; worked out once per game tick for everyone. */
+	/**
+	 * The friends in WORK mode, by speciality; worked out once per game tick for everyone. A child does no work, so a
+	 * child of a trade never counts as its specialist being on hand.
+	 */
 	private static Map<Role, CompanionEntity> onHand(long gameTime) {
 		if (onHandAt != gameTime) {
 			onHandAt = gameTime;
 			ON_HAND.clear();
 			for (CompanionEntity friend : Companions.all()) {
-				if (friend.mode() == CompanionMode.WORK) {
+				if (friend.mode() == CompanionMode.WORK && !friend.isChild()) {
 					ON_HAND.put(friend.friendId().role(), friend);
 				}
 			}

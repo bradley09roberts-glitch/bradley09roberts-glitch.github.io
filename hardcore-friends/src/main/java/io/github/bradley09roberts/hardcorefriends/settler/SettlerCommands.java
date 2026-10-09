@@ -99,7 +99,9 @@ final class SettlerCommands {
 			case DISMISSED -> "left the team";
 		};
 		line.append(Component.literal(text).withStyle(n.state == SettlerData.State.ALIVE ? ChatFormatting.WHITE : ChatFormatting.DARK_GRAY));
-		if (!n.recruitedByName.isEmpty()) {
+		if (n.born) {
+			line.append(Component.literal(" - born in the camp").withStyle(ChatFormatting.DARK_GRAY));
+		} else if (!n.recruitedByName.isEmpty()) {
 			line.append(Component.literal(" - asked in by " + n.recruitedByName).withStyle(ChatFormatting.DARK_GRAY));
 		}
 		return line;

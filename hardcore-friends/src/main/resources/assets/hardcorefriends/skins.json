@@ -1,0 +1,32 @@
+{
+	"_help": "The skins people wear. To add one: put a 64x64 player skin PNG in textures/entity/people/wide/ (classic arms) or textures/entity/people/slim/ (slim arms), then add an entry here with a new id of 1000 or more. Never change or reuse an id a world already uses. model: wide or slim. for: adult, child or any (named: only the friend it belongs to, never picked at random). See docs/v3/people.md.",
+	"skins": [
+		{"id": 0, "texture": "hardcorefriends:textures/entity/companion/fern.png", "model": "wide", "for": "named"},
+		{"id": 1, "texture": "hardcorefriends:textures/entity/companion/oak.png", "model": "wide", "for": "named"},
+		{"id": 2, "texture": "hardcorefriends:textures/entity/companion/flint.png", "model": "wide", "for": "named"},
+		{"id": 3, "texture": "hardcorefriends:textures/entity/companion/scout.png", "model": "wide", "for": "named"},
+		{"id": 4, "texture": "hardcorefriends:textures/entity/companion/spark.png", "model": "wide", "for": "named"},
+		{"id": 5, "texture": "hardcorefriends:textures/entity/companion/aegis.png", "model": "wide", "for": "named"},
+		{"id": 6, "texture": "hardcorefriends:textures/entity/companion/sage.png", "model": "wide", "for": "named"},
+		{"id": 7, "texture": "hardcorefriends:textures/entity/companion/terra.png", "model": "wide", "for": "named"},
+		{"id": 8, "texture": "hardcorefriends:textures/entity/companion/rowan.png", "model": "wide", "for": "named"},
+		{"id": 100, "texture": "minecraft:textures/entity/player/wide/steve.png", "model": "wide", "for": "any"},
+		{"id": 101, "texture": "minecraft:textures/entity/player/wide/alex.png", "model": "wide", "for": "any"},
+		{"id": 102, "texture": "minecraft:textures/entity/player/wide/ari.png", "model": "wide", "for": "any"},
+		{"id": 103, "texture": "minecraft:textures/entity/player/wide/efe.png", "model": "wide", "for": "any"},
+		{"id": 104, "texture": "minecraft:textures/entity/player/wide/kai.png", "model": "wide", "for": "any"},
+		{"id": 105, "texture": "minecraft:textures/entity/player/wide/makena.png", "model": "wide", "for": "any"},
+		{"id": 106, "texture": "minecraft:textures/entity/player/wide/noor.png", "model": "wide", "for": "any"},
+		{"id": 107, "texture": "minecraft:textures/entity/player/wide/sunny.png", "model": "wide", "for": "any"},
+		{"id": 108, "texture": "minecraft:textures/entity/player/wide/zuri.png", "model": "wide", "for": "any"},
+		{"id": 109, "texture": "minecraft:textures/entity/player/slim/steve.png", "model": "slim", "for": "any"},
+		{"id": 110, "texture": "minecraft:textures/entity/player/slim/alex.png", "model": "slim", "for": "any"},
+		{"id": 111, "texture": "minecraft:textures/entity/player/slim/ari.png", "model": "slim", "for": "any"},
+		{"id": 112, "texture": "minecraft:textures/entity/player/slim/efe.png", "model": "slim", "for": "any"},
+		{"id": 113, "texture": "minecraft:textures/entity/player/slim/kai.png", "model": "slim", "for": "any"},
+		{"id": 114, "texture": "minecraft:textures/entity/player/slim/makena.png", "model": "slim", "for": "any"},
+		{"id": 115, "texture": "minecraft:textures/entity/player/slim/noor.png", "model": "slim", "for": "any"},
+		{"id": 116, "texture": "minecraft:textures/entity/player/slim/sunny.png", "model": "slim", "for": "any"},
+		{"id": 117, "texture": "minecraft:textures/entity/player/slim/zuri.png", "model": "slim", "for": "any"}
+	]
+}

@@ -106,6 +106,10 @@ final class PartyCommand {
 			return 0;
 		}
 		CompanionEntity c = found.get();
+		if (c.isChild()) {
+			ctx.getSource().sendFailure(Component.literal(c.displayName() + " is only a child and stays safe at home."));
+			return 0;
+		}
 		ExpeditionData data = ExpeditionData.get(ctx.getSource().getServer());
 		Optional<UUID> before = data.partyOf(c.getUUID());
 		data.join(player.getUUID(), c.getUUID(), c.displayName());

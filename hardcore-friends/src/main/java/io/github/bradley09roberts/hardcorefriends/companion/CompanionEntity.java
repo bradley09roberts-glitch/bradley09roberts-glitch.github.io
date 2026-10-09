@@ -73,6 +73,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
+import io.github.bradley09roberts.hardcorefriends.civic.Families;
 import io.github.bradley09roberts.hardcorefriends.combat.Archery;
 import io.github.bradley09roberts.hardcorefriends.item.BackpackItem;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
@@ -309,8 +310,14 @@ public class CompanionEntity extends PathfinderMob {
 		return CompanionMode.byOrdinal(this.entityData.get(DATA_MODE));
 	}
 
-	/** Changes standing orders. {@code leader} is the player to follow in FOLLOW mode. */
+	/**
+	 * Changes standing orders. {@code leader} is the player to follow in FOLLOW mode. A child never follows anyone off
+	 * (FOLLOW becomes WORK): following would catch them up to the player wherever that is, a cave or the wilds at night.
+	 */
 	public void setMode(CompanionMode mode, @Nullable ServerPlayer leader) {
+		if (mode == CompanionMode.FOLLOW && isChild()) {
+			mode = CompanionMode.WORK;
+		}
 		this.entityData.set(DATA_MODE, mode.ordinal());
 		this.leaderId = leader != null ? leader.getUUID() : null;
 		this.stayPos = mode == CompanionMode.STAY ? this.blockPosition() : null;
@@ -479,8 +486,9 @@ public class CompanionEntity extends PathfinderMob {
 		this.retreating = retreating;
 	}
 
+	/** A warrior by trade (Aegis, or a newcomer who fights like him), grown up: a child of any trade never fights. */
 	public boolean isFighter() {
-		return friendId().role() == Role.WARRIOR;
+		return friendId().role() == Role.WARRIOR && !isChild();
 	}
 
 	public long lastEditTick() {
@@ -587,6 +595,12 @@ public class CompanionEntity extends PathfinderMob {
 		return false;
 	}
 
+	/** A child at play never wanders through the camp's Nether portal. */
+	@Override
+	public boolean canUsePortal(boolean ignorePassenger) {
+		return !isChild() && super.canUsePortal(ignorePassenger);
+	}
+
 	@Override
 	public boolean requiresCustomPersistence() {
 		return true;
@@ -689,7 +703,7 @@ public class CompanionEntity extends PathfinderMob {
 	/** "Fern (Farmer) - harvesting crops - health 20/20 - mood good - backpack 3/9", shown on right-click. */
 	public Component statusLine() {
 		String health = String.format(Locale.ROOT, "%.0f/%.0f", getHealth(), getMaxHealth());
-		return Component.literal(displayName() + " (" + friendId().role().title() + ") - " + activity()
+		return Component.literal(displayName() + " (" + (isChild() ? "Child" : friendId().role().title()) + ") - " + activity()
 			+ " - health " + health + " - mood " + MoodPassives.moodText(this) + " - backpack " + backpack.usedSlots()
 			+ "/" + backpack.capacity())
 			.withStyle(ChatFormatting.GRAY);
@@ -838,6 +852,9 @@ public class CompanionEntity extends PathfinderMob {
 
 	@Override
 	public void setTarget(@Nullable LivingEntity target) {
+		if (target != null && isChild()) {
+			target = null; // a child never takes anyone on: they run to a grown-up instead (the people package)
+		}
 		// The map is null while the entity is still being constructed (a mob may clear its target from there).
 		if (target != getTarget() && givenUp != null) {
 			targetSetTick = this.tickCount;
@@ -871,7 +888,7 @@ public class CompanionEntity extends PathfinderMob {
 
 	@Override
 	public boolean doHurtTarget(ServerLevel level, Entity target) {
-		if (target instanceof Player || target instanceof CompanionEntity) {
+		if (target instanceof Player || target instanceof CompanionEntity || isChild()) {
 			return false;
 		}
 		boolean hit = super.doHurtTarget(level, target);
@@ -968,10 +985,22 @@ public class CompanionEntity extends PathfinderMob {
 		}
 	}
 
-	/** A player or Aegis nearby to run towards when in danger. */
+	/** A player or Aegis nearby to run towards when in danger; for a child, a parent nearby first. */
 	public @Nullable LivingEntity nearestProtector(double radius) {
 		LivingEntity best = null;
 		double bestDist = radius * radius;
+		if (isChild() && this.level() instanceof ServerLevel level) {
+			for (UUID parentId : Families.get().parentsOf(level.getServer(), getUUID())) {
+				if (level.getEntity(parentId) instanceof CompanionEntity parent && parent.isAlive() && !parent.isRetreating()
+					&& parent.distanceToSqr(this) < bestDist && Math.abs(parent.getY() - getY()) <= 6) {
+					bestDist = parent.distanceToSqr(this);
+					best = parent;
+				}
+			}
+			if (best != null) {
+				return best;
+			}
+		}
 		if (!isFighter()) {
 			for (CompanionEntity c : Companions.near((ServerLevel) level(), getBoundingBox().inflate(radius))) {
 				if (c != this && c.isFighter() && !c.isRetreating()) {

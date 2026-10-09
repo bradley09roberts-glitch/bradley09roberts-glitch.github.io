@@ -279,6 +279,44 @@ public enum Line {
 
 	// ==== Living together (package people): friendship, romance, weddings, children ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** Two friends have become good friends. %1$s = the other friend's name. */
+	BECAME_FRIENDS(Priority.IMPORTANT, 1200, 1),
+	/** Asking another friend to go out together. %1$s = their name. */
+	ASK_OUT(Priority.IMPORTANT, 0, 1),
+	/** Saying yes to going out, or to a proposal. %1$s = the one who asked. */
+	ACCEPT(Priority.IMPORTANT, 0, 1),
+	/** Setting off on a date (an evening walk, the fireside, the sunset). %1$s = their sweetheart's name. */
+	DATE(Priority.IMPORTANT, 2400, 1),
+	/** Asking their sweetheart to marry them. %1$s = their sweetheart's name. */
+	PROPOSE(Priority.IMPORTANT, 0, 1),
+	/** Their promise at their own wedding. %1$s = the one they are marrying. */
+	WEDDING_VOWS(Priority.IMPORTANT, 0, 1),
+	/** A guest's toast at a wedding. %1$s = the couple, e.g. "Fern and Oak". */
+	WEDDING_TOAST(Priority.IMPORTANT, 0, 1),
+	/** A couple are expecting a baby. %1$s = the other parent's name. */
+	BABY_NEWS(Priority.IMPORTANT, 0, 1),
+	/** A parent introducing the new baby. %1$s = the baby's name. */
+	BABY_ARRIVED(Priority.IMPORTANT, 0, 1),
+	/** A parent whose child has died. %1$s = the child's name. */
+	MOURN_CHILD(Priority.IMPORTANT, 0, 1),
+	/** A friend whose husband or wife has died. %1$s = their name. */
+	MOURN_PARTNER(Priority.IMPORTANT, 0, 1),
+	/** A cross word between two friends who are both in a low mood. %1$s = the other friend's name. */
+	QUARREL(Priority.CASUAL, 6000, 1),
+	/** Calling off a romance that has gone sour (they stay on the team). %1$s = the other's name. */
+	BREAK_UP(Priority.IMPORTANT, 0, 1),
+	/** A child's first words, just arrived in the camp. Only children say it. */
+	CHILD_FIRST_WORDS(Priority.IMPORTANT, 0, 0),
+	/** A child at play. %1$s = the game: "tag", "hide-and-seek", "chicken chase" or "explorers". Only children say it. */
+	CHILD_PLAY(Priority.CASUAL, 600, 1),
+	/** A child watching and learning. %1$s = the kind of work, e.g. "farming". Only children say it. */
+	CHILD_LEARN(Priority.CASUAL, 1200, 1),
+	/** A child sent home early at the end of the day. Only children say it. */
+	CHILD_BEDTIME(Priority.CASUAL, 6000, 0),
+	/** A child running from a monster to a grown-up. Only children say it. */
+	CHILD_SCARED(Priority.DANGER, 200, 0),
+	/** A child who has just grown up. %1$s = their trade, lower case, e.g. "farmer". */
+	GROWN_UP(Priority.IMPORTANT, 0, 1),
 
 	// ==== end of people ====
 

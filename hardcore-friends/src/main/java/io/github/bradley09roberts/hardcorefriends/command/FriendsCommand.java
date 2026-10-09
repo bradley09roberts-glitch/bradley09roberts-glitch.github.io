@@ -463,6 +463,10 @@ public final class FriendsCommand {
 		}
 		CompanionEntity c = found.get();
 		ServerLevel level = (ServerLevel) c.level();
+		if (c.isChild()) {
+			source.sendFailure(Component.literal(c.displayName() + " is only a child and stays with their family."));
+			return 0;
+		}
 		if (c.ticksSinceDamaged() < NO_DISMISS_AFTER_HURT) {
 			// Leaving mid-fight would let a dying friend walk away from a hardcore death.
 			source.sendFailure(Component.literal(c.displayName() + " is in the middle of a fight and will not leave now."));
@@ -512,6 +516,19 @@ public final class FriendsCommand {
 				source.sendFailure(Component.literal("No friends within 64 blocks."));
 			}
 			return 0;
+		}
+		if (mode == CompanionMode.FOLLOW) {
+			// Children never go off adventuring: refused here, before the follow goal could fetch one across the map.
+			for (CompanionEntity c : targets) {
+				if (c.isChild()) {
+					source.sendSuccess(() -> Component.literal(c.displayName() + " is too young to go off adventuring and stays at home.")
+						.withStyle(ChatFormatting.GRAY), false);
+				}
+			}
+			targets.removeIf(CompanionEntity::isChild);
+			if (targets.isEmpty()) {
+				return 0;
+			}
 		}
 		// Friends who distrust this player will not follow them, and nobody may lead away more than their share.
 		targets = TownPermissions.acceptOrder(player, targets, mode);

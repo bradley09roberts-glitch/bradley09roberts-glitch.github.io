@@ -41,12 +41,19 @@ public final class ShareTask implements CompanionTask {
 	 */
 	private static final double FEED_HURT_FRIEND = 125;
 
-	/** Something a role wants, up to {@code wantCap} carried. {@code need} gates building materials. */
+	/**
+	 * Something a role wants, up to {@code wantCap} carried. {@code need} gates building materials. A child is not
+	 * handed work materials (they do no work); a hurt child is still fed.
+	 */
 	private record ShareRule(Set<Role> roles, Predicate<ItemStack> item, int wantCap, @Nullable Need need) {
 		boolean wantedBy(CompanionEntity friend) {
-			return roles.contains(friend.friendId().role()) && (need == null || buildShortage(need));
+			return !friend.isChild() && roles.contains(friend.friendId().role()) && (need == null || buildShortage(need));
 		}
 	}
+
+	/** Told after a friend hands another something (giver, receiver), so the people package can bring them closer. */
+	public static final List<java.util.function.BiConsumer<CompanionEntity, CompanionEntity>> SHARED =
+		new java.util.concurrent.CopyOnWriteArrayList<>();
 
 	private static final Predicate<ItemStack> SEEDS = s -> s.is(Items.WHEAT_SEEDS) || s.is(Items.BEETROOT_SEEDS)
 		|| s.is(Items.MELON_SEEDS) || s.is(Items.PUMPKIN_SEEDS);
@@ -248,6 +255,9 @@ public final class ShareTask implements CompanionTask {
 		Speech.say(c, Line.SHARE, friend.displayName(), Upkeep.describe(given, moved));
 		Unity.add(level, Unity.HANDOFF, 2, 40);
 		Camp.data(level.getServer()).addStat("shares", 1);
+		for (java.util.function.BiConsumer<CompanionEntity, CompanionEntity> listener : SHARED) {
+			listener.accept(c, friend);
+		}
 		return TaskStatus.SUCCESS;
 	}
 

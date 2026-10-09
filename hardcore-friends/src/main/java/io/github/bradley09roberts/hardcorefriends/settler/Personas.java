@@ -10,6 +10,7 @@ import net.minecraft.util.RandomSource;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
 import io.github.bradley09roberts.hardcorefriends.companion.Persona;
 import io.github.bradley09roberts.hardcorefriends.companion.Role;
+import io.github.bradley09roberts.hardcorefriends.people.Skins;
 
 /**
  * Who the newcomers are: their names, looks, trades and the short story each tells when they first meet a player.
@@ -125,11 +126,12 @@ public final class Personas {
 
 	/**
 	 * A new person: a name nobody living is using (from {@code taken}, compared without case), a trade, a colour and a
-	 * default skin. With every name in use, a used one is allowed rather than failing.
+	 * grown-up's skin from the skin list ({@code people.Skins}). With every name in use, a used one is allowed rather
+	 * than failing.
 	 */
 	public static Persona create(RandomSource random, Set<String> taken) {
 		return new Persona(freeName(random, taken), COLOURS[random.nextInt(COLOURS.length)],
-			Persona.DEFAULT_SKIN_BASE + random.nextInt(Persona.DEFAULT_SKINS.size()), randomArchetype(random));
+			Skins.randomFor(random, false), randomArchetype(random));
 	}
 
 	/** A random name not in {@code taken} (lower-case names), or any name if all are taken. */

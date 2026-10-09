@@ -60,6 +60,8 @@ public final class SettlerData extends SavedData {
 		public @Nullable BlockPos lastPos;
 		public String lastDimension = "minecraft:overworld";
 		public String cause = "";
+		/** Born in the camp and grown up there (the people package): never counted against the newcomer limit. */
+		public boolean born;
 
 		public Newcomer(UUID id, String name, FriendId archetype, int colour) {
 			this.id = id;
@@ -113,11 +115,11 @@ public final class SettlerData extends SavedData {
 		return n;
 	}
 
-	/** Newcomers on the team and alive. */
+	/** Newcomers on the team and alive, not counting those born in the camp (the newcomer limit is for recruits). */
 	public int aliveCount() {
 		int n = 0;
 		for (Newcomer c : newcomers.values()) {
-			if (c.state == State.ALIVE) {
+			if (c.state == State.ALIVE && !c.born) {
 				n++;
 			}
 		}
@@ -243,6 +245,7 @@ public final class SettlerData extends SavedData {
 			c.getLongArray("pos").filter(a -> a.length == 1).ifPresent(a -> n.lastPos = BlockPos.of(a[0]));
 			n.lastDimension = c.getStringOr("dim", "minecraft:overworld");
 			n.cause = c.getStringOr("cause", "");
+			n.born = c.getBooleanOr("born", false);
 			data.newcomers.put(id, n);
 		}
 		CompoundTag strangerTag = tag.getCompoundOrEmpty("strangers");
@@ -281,6 +284,9 @@ public final class SettlerData extends SavedData {
 			}
 			c.putString("dim", n.lastDimension);
 			c.putString("cause", n.cause);
+			if (n.born) {
+				c.putBoolean("born", true);
+			}
 			list.add(c);
 		}
 		tag.put("newcomers", list);

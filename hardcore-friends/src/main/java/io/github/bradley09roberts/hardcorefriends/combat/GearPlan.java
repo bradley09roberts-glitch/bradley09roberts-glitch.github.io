@@ -104,7 +104,8 @@ public final class GearPlan {
 		}
 		double reach = Camp.radius(data) + FriendsConfig.get().resourceRadius;
 		for (CompanionEntity c : Companions.in(level)) {
-			if (c.mode() == CompanionMode.WORK && Camp.horizontalDistSqr(c.blockPosition(), centre.get()) <= reach * reach) {
+			// Children wear no armour and carry no weapons: nothing is set aside for them.
+			if (c.mode() == CompanionMode.WORK && !c.isChild() && Camp.horizontalDistSqr(c.blockPosition(), centre.get()) <= reach * reach) {
 				team.add(c);
 			}
 		}
