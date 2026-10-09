@@ -14,8 +14,10 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -43,9 +45,10 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  * and {@value #HEALING_OTHERS} for the others (an enchanted golden apple is too precious to take);</li>
  * </ul>
  * then bows go round, Scout, Sage and Aegis first, and arrows to every bow carrier who is short ({@value #ARROWS_LOW}),
- * up to {@value #ARROWS_KEPT}. So the chest's best gear always goes where it matters most, and two friends never set
- * out for the same piece. Worked out for the team at most every {@value #REFRESH} ticks for scoring, and afresh at
- * the chest.
+ * up to {@value #ARROWS_KEPT}. What is carried rather than worn (a weapon not of their own kind, healing, a bow,
+ * arrows) is only handed to a friend with room for it in their backpack. So the chest's best gear always goes where it
+ * matters most, and two friends never set out for the same piece. Worked out for the team at most every
+ * {@value #REFRESH} ticks for scoring, and afresh at the chest.
  */
 public final class GearPlan {
 	/** What one pick is for. */
@@ -135,8 +138,21 @@ public final class GearPlan {
 		cached = Map.of();
 	}
 
-	/** Who takes what from this chest, worked out afresh (see the class description). */
+	/**
+	 * Who takes what from this chest, worked out afresh (see the class description). Only what will fit in each
+	 * friend's backpack is handed out (a bow, arrows, healing, a weapon carried for fights), so a friend with a full
+	 * backpack is not sent to the chest again and again for something they cannot carry.
+	 */
 	public static Map<CompanionEntity, List<Pick>> assign(ServerLevel level, Container chest) {
+		return assign(level, chest, true);
+	}
+
+	/**
+	 * Who takes what from this chest. With {@code roomMatters} off, a pick is made whether or not it fits in the
+	 * backpack yet: the smith asks this way, so it does not make another bow for a friend whose bow is waiting in the
+	 * chest until they have made room.
+	 */
+	public static Map<CompanionEntity, List<Pick>> assign(ServerLevel level, Container chest, boolean roomMatters) {
 		int size = chest.getContainerSize();
 		int[] left = new int[size];
 		for (int i = 0; i < size; i++) {
@@ -144,8 +160,11 @@ public final class GearPlan {
 		}
 		List<CompanionEntity> team = team(level);
 		Map<CompanionEntity, List<Pick>> plan = new LinkedHashMap<>();
+		Map<CompanionEntity, int[]> rooms = new HashMap<>();
 		for (CompanionEntity c : team) {
 			List<Pick> picks = new ArrayList<>();
+			int[] room = {roomMatters ? c.backpack().freeSlots() : Integer.MAX_VALUE};
+			rooms.put(c, room);
 			for (EquipmentSlot slot : Gear.ARMOUR_SLOTS) {
 				pickArmour(c, chest, left, slot, picks);
 			}
@@ -154,10 +173,16 @@ public final class GearPlan {
 				claim(picks, left, Kind.SHIELD, EquipmentSlot.OFFHAND, best, 1);
 			}
 			int carried = Gear.bestWeaponRank(c);
-			int weapon = bestSlot(chest, left, s -> Gear.weaponRank(s) > carried ? Gear.weaponRank(s) : -1);
-			claim(picks, left, Kind.WEAPON, EquipmentSlot.MAINHAND, weapon, 1);
+			TagKey<Item> ownTool = KeepList.roleTool(c.friendId().role());
+			// Their own kind of tool goes into the hand; any other weapon is carried, so it needs a free slot.
+			int weapon = bestSlot(chest, left, s -> Gear.weaponRank(s) > carried
+				&& (ownTool != null && s.is(ownTool) || room[0] > 0) ? Gear.weaponRank(s) : -1);
+			if (claim(picks, left, Kind.WEAPON, EquipmentSlot.MAINHAND, weapon, 1)
+				&& (ownTool == null || !chest.getItem(weapon).is(ownTool)) && room[0] != Integer.MAX_VALUE) {
+				room[0]--;
+			}
 			int wantHealing = (c.isFighter() ? HEALING_FIGHTER : HEALING_OTHERS) - Gear.healingItems(c);
-			takeStack(chest, left, picks, Kind.HEALING, wantHealing,
+			takeStack(c, chest, left, room, picks, Kind.HEALING, wantHealing,
 				s -> Gear.isHealing(s) && !s.is(Items.ENCHANTED_GOLDEN_APPLE));
 			plan.put(c, picks);
 		}
@@ -166,21 +191,49 @@ public final class GearPlan {
 			archers.sort(Comparator.comparing((CompanionEntity c) -> !(Archery.prefersBowByNature(c) || c.isFighter())));
 			for (CompanionEntity c : archers) {
 				List<Pick> picks = plan.get(c);
+				int[] room = rooms.get(c);
 				boolean bow = Gear.hasBow(c);
 				if (!bow) {
 					int best = bestSlot(chest, left, s -> s.is(Items.BOW) ? 1 + durabilityLeft(s) : -1);
-					bow = claim(picks, left, Kind.BOW, null, best, 1);
+					bow = best >= 0 && fits(c, chest.getItem(best), 1, room) && claim(picks, left, Kind.BOW, null, best, 1);
 				}
 				int have = Gear.arrows(c);
 				if (bow && have < ARROWS_LOW) {
-					takeStack(chest, left, picks, Kind.ARROWS, ARROWS_KEPT - have, s -> s.is(Items.ARROW));
-					takeStack(chest, left, picks, Kind.ARROWS, ARROWS_KEPT - have - taken(picks, Kind.ARROWS),
+					takeStack(c, chest, left, room, picks, Kind.ARROWS, ARROWS_KEPT - have, s -> s.is(Items.ARROW));
+					takeStack(c, chest, left, room, picks, Kind.ARROWS, ARROWS_KEPT - have - taken(picks, Kind.ARROWS),
 						s -> s.is(ItemTags.ARROWS) && !s.is(Items.ARROW));
 				}
 			}
 		}
 		plan.values().removeIf(List::isEmpty);
 		return plan;
+	}
+
+	/**
+	 * True when {@code count} of this item would fit in the friend's backpack: onto stacks of it they carry, then into
+	 * the free slots left after their earlier picks ({@code room}, counted down here). Always true when room does not
+	 * matter.
+	 */
+	private static boolean fits(CompanionEntity c, ItemStack stack, int count, int[] room) {
+		if (room[0] == Integer.MAX_VALUE) {
+			return true;
+		}
+		int onto = 0;
+		for (ItemStack s : c.backpack().stacks()) {
+			if (ItemStack.isSameItemSameComponents(s, stack)) {
+				onto += Math.max(0, s.getMaxStackSize() - s.getCount());
+			}
+		}
+		int rest = count - onto;
+		if (rest <= 0) {
+			return true;
+		}
+		int slots = (rest + stack.getMaxStackSize() - 1) / stack.getMaxStackSize();
+		if (slots > room[0]) {
+			return false;
+		}
+		room[0] -= slots;
+		return true;
 	}
 
 	private static void pickArmour(CompanionEntity c, Container chest, int[] left, EquipmentSlot slot, List<Pick> picks) {
@@ -223,14 +276,16 @@ public final class GearPlan {
 		return true;
 	}
 
-	/** Claims up to {@code want} matching items, spread over as many chest slots as it takes. */
-	private static void takeStack(Container chest, int[] left, List<Pick> picks, Kind kind, int want,
-		java.util.function.Predicate<ItemStack> match) {
+	/** Claims up to {@code want} matching items that fit in the backpack, spread over as many chest slots as it takes. */
+	private static void takeStack(CompanionEntity c, Container chest, int[] left, int[] room, List<Pick> picks, Kind kind,
+		int want, java.util.function.Predicate<ItemStack> match) {
 		for (int i = 0; i < left.length && want > 0; i++) {
 			if (left[i] > 0 && match.test(chest.getItem(i))) {
 				int n = Math.min(want, left[i]);
-				claim(picks, left, kind, null, i, n);
-				want -= n;
+				if (fits(c, chest.getItem(i), n, room)) {
+					claim(picks, left, kind, null, i, n);
+					want -= n;
+				}
 			}
 		}
 	}
