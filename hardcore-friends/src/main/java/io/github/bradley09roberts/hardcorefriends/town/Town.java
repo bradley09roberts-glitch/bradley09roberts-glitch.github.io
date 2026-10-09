@@ -45,11 +45,14 @@ public final class Town {
 		CompanionEvents.INTERACT.add(0, TownPermissions::interact);
 		CompanionEvents.INTERACT.add(Bonds::greet);
 		CompanionEvents.GIFT.add(Bonds::gift);
+		// A player the camp does not trust cannot hurt a friend at all: checked before any other hurt hook sees the blow.
+		CompanionEvents.HURT.add(0, TownPermissions::hurt);
 		CompanionEvents.HURT.add(Bonds::hurt);
 		CompanionEvents.DEATH.add(Bonds::died);
 		CompanionEvents.DEATH.add(Sieges::friendDied);
 		CompanionEvents.DISMISSED.add(Bonds::dismissed);
 		CompanionEvents.TICK.add(Bonds::tick);
+		CompanionEvents.TICK.add(TownPermissions::tick);
 		FeedPlayerTask.priority = Bonds::feedPriority;
 
 		// Jobs for everyone: keeping a fallen player's things safe, and mailbox deliveries (one friend at a time).
@@ -76,9 +79,10 @@ public final class Town {
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> clear());
 	}
 
-	/** Forgets what is kept in memory only: daily caps, death spots, note waits, the planned delivery. */
+	/** Forgets what is kept in memory only: daily caps, death spots, note waits, the planned delivery, job numbers. */
 	private static void clear() {
 		Bonds.clear();
+		JobBoard.clear();
 		Mourning.clear();
 		Notes.clear();
 		Mail.clear();

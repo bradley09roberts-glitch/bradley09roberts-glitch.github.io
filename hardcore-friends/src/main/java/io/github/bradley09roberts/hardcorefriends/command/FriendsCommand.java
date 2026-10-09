@@ -56,6 +56,7 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.registry.ModEntities;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 import io.github.bradley09roberts.hardcorefriends.town.Bonds;
+import io.github.bradley09roberts.hardcorefriends.town.Mail;
 import io.github.bradley09roberts.hardcorefriends.town.TownPermissions;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 
@@ -682,7 +683,7 @@ public final class FriendsCommand {
 		BlockPos best = null;
 		double bestDist = Double.MAX_VALUE;
 		for (BlockPos p : BlockPos.betweenClosed(centre.offset(-radius, -3, -radius), centre.offset(radius, 3, radius))) {
-			if (SupplyChest.isValidStorage(level, p)) {
+			if (SupplyChest.isValidStorage(level, p) && Mail.mailboxAt(level, p).isEmpty()) { // never a player's mailbox
 				double d = p.distSqr(centre);
 				if (d < bestDist) {
 					bestDist = d;
@@ -707,6 +708,13 @@ public final class FriendsCommand {
 		}
 		CampData data = Camp.data(source.getServer());
 		BlockPos pos = blockHit.getBlockPos();
+		Optional<String> mailbox = Mail.mailboxAt(player.level(), pos);
+		if (mailbox.isPresent()) {
+			// Friends only ever put things into a mailbox: as the supply chest, they would take from it too.
+			source.sendFailure(Component.literal("That is " + mailbox.get() + "'s mailbox, so it cannot be the supply chest. "
+				+ "Choose another chest or barrel (or remove the mailbox first with /friends mailbox remove)."));
+			return 0;
+		}
 		if (data.campPos().isEmpty()) {
 			data.setCamp(player.blockPosition(), Camp.dimensionId(player.level()));
 			source.sendSuccess(() -> Component.literal("No camp was set, so your camp is now here.").withStyle(ChatFormatting.GRAY), false);

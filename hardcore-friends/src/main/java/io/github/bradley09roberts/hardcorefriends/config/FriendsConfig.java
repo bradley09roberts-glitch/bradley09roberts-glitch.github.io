@@ -81,7 +81,7 @@ public final class FriendsConfig {
 	public boolean siegeNights = false;
 	/** Most friends who may follow one player at once, so nobody takes the whole team away from the camp. */
 	public int maxFollowersPerPlayer = 4;
-	/** How far from the camp a player's mailbox may be for friends to take deliveries there, in blocks (0 = no deliveries). */
+	/** How far from the camp a player's mailbox may be for friends to take deliveries there, in blocks (0 = no deliveries, at most 600). */
 	public int maxDeliveryDistance = 400;
 
 	public static FriendsConfig get() {
@@ -134,6 +134,7 @@ public final class FriendsConfig {
 		maxSettlers = Math.clamp(maxSettlers, 0, 64);
 		maxSettlersPerPlayer = Math.clamp(maxSettlersPerPlayer, 0, maxSettlers);
 		maxFollowersPerPlayer = Math.clamp(maxFollowersPerPlayer, 1, 64);
-		maxDeliveryDistance = Math.clamp(maxDeliveryDistance, 0, 1000);
+		// A delivery is a day trip there and back: past about 600 blocks there is never daylight enough for one.
+		maxDeliveryDistance = Math.clamp(maxDeliveryDistance, 0, 600);
 	}
 }

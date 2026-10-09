@@ -6,11 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -107,6 +110,21 @@ public final class Mail {
 		return null;
 	}
 
+	/**
+	 * Whose mailbox the container at {@code pos} is (either half of a double chest), if anyone's. Friends only ever put
+	 * things into a mailbox, so it can never also be the camp's supply chest.
+	 */
+	public static Optional<String> mailboxAt(ServerLevel level, BlockPos pos) {
+		TownData data = TownData.get(level.getServer());
+		String dimension = Camp.dimensionId(level);
+		for (Map.Entry<UUID, TownData.Mailbox> e : data.mailboxes().entrySet()) {
+			if (e.getValue().dimension().equals(dimension) && samePlace(level, e.getValue().pos(), pos)) {
+				return Optional.of(data.name(e.getKey()));
+			}
+		}
+		return Optional.empty();
+	}
+
 	/** The same container: the same block, or the two halves of one double chest. */
 	private static boolean samePlace(ServerLevel level, BlockPos a, BlockPos b) {
 		if (a.equals(b)) {
@@ -140,9 +158,12 @@ public final class Mail {
 		return null;
 	}
 
-	/** True when this player gets deliveries: a player of the camp (or anyone, when trust is not required). */
+	/**
+	 * True when this player gets deliveries: whoever may give the friends orders (the owner, a trusted player, the host,
+	 * an operator, anyone before the camp has an owner, or anyone when trust is not required).
+	 */
 	static boolean receives(MinecraftServer server, UUID player) {
-		return !FriendsConfig.get().requireTrust || TownPermissions.isOwnerOrTrusted(server, player);
+		return TownPermissions.isAllowed(server, player);
 	}
 
 	// ------------------------------------------------------------ deliveries
@@ -174,8 +195,19 @@ public final class Mail {
 		long day = Camp.day(level);
 		long now = level.getGameTime();
 		GAVE_UP.values().removeIf(d -> d != day);
-		// A request nobody could carry out in three days (or with nowhere to take it) is dropped, so the queue never clogs.
-		data.pruneQueue(r -> now - r.askedAt() > REQUEST_LASTS || now < r.askedAt() || data.mailbox(r.player()).isEmpty());
+		// A request nobody could carry out in three days (or with nowhere to take it) is dropped, so the queue never clogs;
+		// the player is told, rather than left waiting.
+		Predicate<TownData.SendRequest> stale = r -> now - r.askedAt() > REQUEST_LASTS || now < r.askedAt() || data.mailbox(r.player()).isEmpty();
+		for (TownData.SendRequest r : data.queue()) {
+			ServerPlayer asker = stale.test(r) ? server.getPlayerList().getPlayer(r.player()) : null;
+			if (asker != null) {
+				String what = BuiltInRegistries.ITEM.getOptional(r.item()).map(i -> new ItemStack(i).getHoverName().getString())
+					.orElse(r.item().toString());
+				asker.sendSystemMessage(Component.literal("The friends could not bring your " + r.count() + " " + what
+					+ " in time, so that delivery was dropped. Ask again with /friends send.").withStyle(ChatFormatting.YELLOW));
+			}
+		}
+		data.pruneQueue(stale);
 		for (TownData.SendRequest r : data.queue()) {
 			Optional<TownData.Mailbox> box = data.mailbox(r.player());
 			if (box.isEmpty() || outOfReach(server, box.get()) != null || !receives(server, r.player()) || GAVE_UP.containsKey(r.player())) {
@@ -190,7 +222,7 @@ public final class Mail {
 		List<Want> surplus = null;
 		for (Map.Entry<UUID, TownData.Mailbox> e : data.mailboxes().entrySet()) {
 			UUID player = e.getKey();
-			if (day - data.lastSurplus(player) < SURPLUS_EVERY_DAYS || outOfReach(server, e.getValue()) != null
+			if (!surplusDue(data.lastSurplus(player), day) || outOfReach(server, e.getValue()) != null
 				|| !receives(server, player) || GAVE_UP.containsKey(player)) {
 				continue;
 			}
@@ -203,6 +235,14 @@ public final class Mail {
 			return new Delivery(player, data.name(player), e.getValue().pos(), surplus, null);
 		}
 		return null;
+	}
+
+	/**
+	 * True when a player's share of the surplus is due: never had one ({@link TownData#NEVER}), the days have passed, or
+	 * the clock has been turned back since the last.
+	 */
+	private static boolean surplusDue(long last, long day) {
+		return last == TownData.NEVER || day < last || day - last >= SURPLUS_EVERY_DAYS;
 	}
 
 	/**
