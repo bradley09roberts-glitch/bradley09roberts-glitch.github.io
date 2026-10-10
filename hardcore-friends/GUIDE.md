@@ -155,7 +155,7 @@ The lower a need, the more urgent it is. A mild need waits until the job in hand
 - Friends say how they feel now and then. A friend in a low mood names their worst need ("Worst need: fun").
 - When the whole team is in high spirits (a good average mood of 75 or more, and nobody feeling low), the Unity bond grows by 1 every in-game hour (at most 12 a day). A fed, rested camp that spends time together gets there. A low mood never costs Unity.
 
-**Food.** Keep food in the supply chest. Bread, baked potatoes, carrots, apples, berries, cookies, dried kelp, pumpkin pie, stews and cooked meat or fish all count; filling food such as cooked beef satisfies more hunger. Friends do not cook, so raw potatoes, meat and fish only count once you cook them.
+**Food.** Keep food in the supply chest. Bread, baked potatoes, carrots, apples, berries, cookies, dried kelp, pumpkin pie, stews and cooked meat or fish all count; filling food such as cooked beef satisfies more hunger. Friends never eat raw potatoes, meat or fish: those only count once they are cooked, by you, by Fern on the campfire or in the furnace (section 6), or, from 3.0, by the camp's cook (section 25).
 
 - Fern's farm feeds the camp. Wheat makes bread (three wheat a loaf); carrots feed about three times as many friends per farmland, so give Fern a few carrots and she plants them first. She keeps 16 for planting and puts the rest in the chest to eat. Her first small farm cannot feed nine friends on wheat alone, so bring some food while the camp is new; once the farm grows at stage 1 it can.
 - A hungry friend who finds no food in their backpack or the chest says so and carries on working. Put some food in the chest.
@@ -281,9 +281,16 @@ None of these commands give free items, teleport you, or change time, weather, g
 
 The bond grows when you spend time near your friends, when they deliver resources and share with each other, chat with each other (1 point a chat, at most 30 a day), defend one another, and finish camp buildings, and while the whole team is in high spirits (1 point an in-game hour, at most 12 a day). Losing a friend costs 80 points. A low mood costs nothing.
 
-New in 3.0, Unity also grows from weddings (+30) and children growing up (+15) (section 23), finished village
-buildings (section 24), feasts (+10, section 26), guards standing the night, raids beaten off and fires put out
-(section 27), and new pets (+3, at most 6 a day, section 28).
+New in 3.0, Unity also grows from:
+
+- couples getting together (+5, at most 20 a day), weddings (+30), births (+10, at most 30 a day) and children
+  growing up (+15) (section 23);
+- finished village buildings: houses (+10, at most 40 a day), civic buildings, farms, shops and workplaces (+15) and
+  the town hall (+30) (section 24);
+- trading at a shop (+1, at most 10 a day, section 25);
+- feasts (+10), birthdays (+2, at most 6 a day) and funerals (+5, at most 10 a day) (section 26);
+- guards standing the night, raids beaten off and fires put out (section 27);
+- new pets (+3, at most 6 a day, section 28).
 
 | Level | Points | Bonus |
 |---|---|---|
@@ -297,7 +304,7 @@ None of these bonuses can stop you dying.
 
 ## 10. The camp grows into a settlement
 
-**Campsite → Camp → Hamlet → Village → Settlement → Town → City.** Each stage needs that stage's buildings finished. The later stages also need Unity: 100 for Hamlet, 250 for Village, 500 for Settlement, 650 for Town and 800 for City. Use `/friends camp` to see what is built and what Oak is still waiting for. Everything is built from what is in the supply chest, so keep it stocked or let Rowan and Flint fill it. Cabin windows use glass panes when the chest has glass (6 glass make 16 panes); otherwise Oak closes them with planks. If the supply chest is broken, friends forget it: Oak builds a new one, or you can link another with `/friends chest`. If a friend is not on your team, the others stand in and build their improvements too, just more slowly. At the Hamlet stage Terra also builds the animal pen (section 6); it is optional and never holds the camp back.
+**Campsite → Camp → Hamlet → Village → Settlement → Town → City.** Each stage needs that stage's buildings finished. The later stages also need Unity: 100 for Hamlet, 250 for Village, 500 for Settlement, 650 for Town and 800 for City. Use `/friends camp` to see what is built and what Oak is still waiting for. Everything is built from what is in the supply chest, so keep it stocked or let Rowan and Flint fill it. Cabin windows get glass panes when the camp has glass (6 glass make 16 panes); until then they are left open, and the repair job fills them in later (section 21). Only the old 2.x box cabin (with `fancyCampBuildings` off, or one started before 3.0) closes them with planks instead. If the supply chest is broken, friends forget it: Oak builds a new one, or you can link another with `/friends chest`. If a friend is not on your team, the others stand in and build their improvements too, just more slowly. At the Hamlet stage Terra also builds the animal pen (section 6); it is optional and never holds the camp back.
 
 **New in 3.0.** The cabin, storehouse and watchtower are proper buildings now (section 21). When the camp becomes a
 Village, the friends lay out a town plan and start building houses, streets and the village's own buildings
@@ -328,7 +335,7 @@ Settlement's own buildings must be finished too. `/friends village` shows what t
 - **Tree felling, quarrying and the staircase mine** happen only in a ring up to 48 blocks beyond the camp. Flint also mines ores that are already exposed, inside the camp or in that ring.
 - Friends never break chests, furnaces, signs, beds or any other block entity, or anything crafted-looking: planks, doors, glass, torches, slabs, stairs, fences and so on. They also stay clear of blocks next to such things.
 - Trees are felled only if they grew naturally (natural leaves), never log walls or trees inside camp. Quarry pits are 5×5 and at most 2 blocks deep. Mines stay inside one 24×24 area.
-- **Animals:** friends only lead away or hunt wild animals, never yours (named, tamed, on a lead, saddled, near anything you built or inside your fences), never butcher yours in their pen, and only hunt by day in the gathering ring outside the camp (section 6). The only blocks they open and shut are the gate of their own pen.
+- **Animals:** friends only lead away or hunt wild animals, never yours (named, tamed, on a lead, saddled, near anything you built or inside your fences), never butcher yours in their pen, and only hunt by day in the gathering ring outside the camp (section 6). Like villagers, friends open and shut wooden doors they walk through, and when the alarm goes they shut their own doors behind them (section 27). The only gate they open is their own pen's, and from 3.0 they also fill and empty their own composter and take honey from their own beehives (section 25).
 - **New in 2.0**, each with its own strict rules (details in `docs/v2/`): Terra levels building sites inside the camp (natural ground only, never within 3 blocks of your builds, at most 3 blocks up or down); friends caught out at night build a small shelter or pillar up out of reach and take it all back afterwards (never within 6 blocks of your builds); Flint's deep mine stays in its own box and seals caves only inside it; obsidian is only made from natural lava (never lava open to the sky at y = 40 or above); on expeditions Scout builds a small marker over the stronghold and friends pillar up to the End crystals. Survivor camps (section 17) are new world generation in newly explored chunks only.
 - **New in 3.0**, each with its own strict rules (details in `docs/v3/`):
   - Village plots go only on firm natural ground: never on water, a field, your floors or under trees, and never
@@ -407,7 +414,7 @@ New in 3.0 (numbers outside the range shown are brought back into it when the ga
 | `maxScaffoldHeight` | `6` | The tallest pillar, in blocks (2 to 6) |
 | `friendsShearSheep` | `true` | Friends shear wild sheep for the wool their builds need |
 | **Finding the way** (section 22) | | |
-| `rescueStuckFriends` | `true` | A friend stuck or lost for two in-game minutes (sooner when trapped underground hurt or starving, or about to drown) is brought home, or back to you. Turn it off for pure Hardcore |
+| `rescueStuckFriends` | `true` | A friend stuck or lost for about two minutes (sooner when trapped underground hurt or starving, or about to drown) is brought home, or back to you. Turn it off for pure Hardcore |
 | **Living together** (section 23) | | |
 | `romance` | `true` | Friends may fall for each other, go on dates, get engaged and marry |
 | `children` | `true` | Married couples may have children |
@@ -601,9 +608,9 @@ Full details: `docs/v3/architecture.md`.
   styles, 7 shops, 8 workplaces, 10 civic buildings (town hall, wells, school, tavern, market, chapel, wall, gate,
   watchtower), 3 farms and 7 pieces of street decoration. Each is picked to suit the land and the wood in the chest:
   spruce cabins in the taiga, sandstone houses in the desert, oak cottages on the plains.
-- **Nothing rare holds a building up.** Windows stay open until the camp can make glass, lanterns are torches until it
-  has iron, and carpets, flowers and the like are added later by the repair job. Only the smithy, the smith's shop and
-  the mason's yard wait for iron, for their work blocks.
+- **Nothing rare holds a building up.** Windows stay open until the camp can make glass, a lantern is built as a torch
+  while the camp has no iron (and stays one), and carpets, flowers and the like are added later by the repair job.
+  Only the smithy, the smith's shop and the mason's yard wait for iron, for their work blocks.
 - **Building properly.** Foundations first, then the walls and floors layer by layer, the roof last, then doors,
   windows, furniture and lights. Big buildings go up in batches of 24 blocks, saved block by block.
 - **Scaffolding.** A wall or roof out of reach is built from a temporary pillar of dirt or cobblestone, at most 6
@@ -617,7 +624,9 @@ Full details: `docs/v3/architecture.md`.
 **How to take part.** The friends choose and build everything themselves. You can speed them up: sand, clay, coal,
 iron and wool (or shears) in the supply chest all help, and dirt in the chest makes quick scaffolding. They cannot make
 a bell: put one in the chest for the town hall (and the alarm, section 27). To add plans of your own, put them in a
-data pack (the file format is in `docs/v3/architecture.md`), `/reload`, then check them with `/friends builds check`.
+data pack in the world's `datapacks` folder (the file format is in `docs/v3/architecture.md`), then reopen the world
+(or restart the server) to load them, and check them with `/friends builds check`. `/reload` also loads them, but it
+is a vanilla command that needs cheats or operator rights.
 
 **Commands** (read-only): `/friends builds` (every plan by kind), `/friends builds <kind>` (`house`, `shop`,
 `shop:bakery`, `civic:tavern`...), `/friends builds <plan id>` (one plan, such as `house/oak_cottage`: size, styles,
@@ -657,11 +666,11 @@ running water, and some died down there alone. 3.0 changes how they choose their
   to the best shore, across the current rather than with it; putting a block of dirt or cobblestone from their
   backpack underfoot to climb out of a pit (and taking it back); walking out of a cave to the nearest open sky within
   48 blocks, putting torches down along a dark way if they carry any; and digging a staircase up.
-- **Brought home.** As a last resort, a friend still in trouble after two in-game minutes (sooner when trapped
-  underground hurt or starving, or about to drown) is brought safely home, or back to you if following you, and
-  everyone is told: "Rowan got lost in a cave and found the way home." Never out of a fight, out of a job that is
-  getting on, or after you told them to stay. A stuck follower catches up with you after a few seconds when
-  `followTeleportDistance` is above 0.
+- **Brought home.** As a last resort, a friend still in trouble after about two minutes (half a minute when trapped
+  underground hurt or starving, a few seconds when about to drown) is brought safely home, or back to you if
+  following you, and everyone is told: "Rowan got lost in a cave and found the way home." Never out of a fight, out
+  of a job that is getting on, or after you told them to stay. A stuck follower catches up with you after a few
+  seconds when `followTeleportDistance` is above 0.
 - **Digging out** only touches natural ground (dirt, grass, sand, gravel, clay, stone, granite, diorite, andesite and
   tuff), never near anything you or the friends built, never inside the camp, and only in the Overworld. Children
   never change a block.
@@ -713,21 +722,26 @@ arriving), never changes a block, and happens on its own.
   expeditions or go through portals. They play tag and hide-and-seek, watch a parent at work to learn (or go to school
   once there is a teacher), go home from the late afternoon, and run to a grown-up when a monster could get at them.
   Parents and Aegis go for a monster after a child first. Children take food from you, nothing else.
-- **Growing up.** A grown child joins the team at a trade taken from a parent's trade or interest, with the skill they
-  picked up (Unity +15). People born in the camp never count against `maxSettlers`. They start with no tools.
+- **Growing up.** A grown child joins the team with a speciality taken from a parent's speciality or interest (farmer,
+  builder, miner...), and the skill they picked up (Unity +15). People born in the camp never count against
+  `maxSettlers`. They start with no tools.
 - **Hardcore.** A child who dies is gone for good, and the whole camp mourns. A widowed friend may in time love again.
 - **Skins.** Newcomers and children wear skins from the 82-skin **medieval village set** (62 grown-ups and 20
   children, half wide-armed, half slim): tradespeople, everyday villagers, children, and villagers dressed for desert,
   snow, jungle, swamp, savanna and dark forest. They tend to wear one to suit their trade or the land they were met in,
   and a skin nobody else wears is chosen first. To add your own, see "Adding skins" in `docs/v3/people.md` (64x64
   PNGs, `python3 tools/add_skins.py`, then rebuild the mod); `docs/v3/skin-prompt.md` has a prompt for getting more.
+  The script tags a skin by the first word after `adult_` or `child_` when it is a trade or place it knows, so put that
+  word straight after the prefix: `adult_baker_rosa.png` is tagged baker, but `adult_rosa_baker.png` gets no tag. Tags
+  only matter when choosing a grown-up's skin.
 
 **How to take part.** Keep the camp fed and rested (moods matter), and let the village build houses: that is the real
 way to make room for babies.
 
-**Commands** (read-only; first names like `pip`, or full names): `/friends family` (every family) and
-`/friends family <name>` (partner, parents, children, home); `/friends couples` (couples, wedding days, what a baby
-still needs); `/friends relationships` and `/friends relationships <name>` (the closest friendships).
+**Commands** (read-only; type first names only, like `pip`: a full name with a space in it will not work):
+`/friends family` (every family) and `/friends family <name>` (partner, parents, children, home); `/friends couples`
+(couples, wedding days, what a baby still needs); `/friends relationships` and `/friends relationships <name>` (the
+closest friendships).
 
 **Settings:** `romance`, `children`, `childhoodDays`, `maxPopulation`, `daysBetweenChildren`, `relationshipSpeed`
 (section 14).
@@ -773,8 +787,8 @@ When the camp becomes a **Village** (Unity 250), the friends stop living round a
 | City | the town gate across a main street, with two lengths of wall each side, and the barn |
 
 Shops and workplaces go up as the trades ask for them (section 25). The Town and the City need people, houses and
-civic buildings as well as Unity (section 10). Finished civic buildings, shops and workplaces give Unity (+15, the
-town hall +30), new houses +10 (at most 40 a day).
+civic buildings as well as Unity (section 10). Finished civic buildings, farms, shops and workplaces give Unity (+15,
+the town hall +30), new houses +10 (at most 40 a day).
 
 **How to take part.** Keep the chest stocked: a house is 150 to 400 blocks, the town hall about 600. Gravel and
 cobblestone surface the streets; the farmer needs a bucket (three iron) for the water. Plots avoid trees, water and
@@ -822,9 +836,10 @@ the camp needs it, needs and the night watch always win, and nobody works a trad
 | Teacher | school | Teaches the children, who learn their own trade faster there |
 | Innkeeper (the camp's cook) | tavern, or the campfire | Cooks meat and fish, bakes potatoes, makes stews, all for the supply chest |
 
-- **Who gets which.** Sage gives each workplace to the grown-up who suits it best, newcomers first, never the last
-  friend of a speciality. Children and strangers never hold a trade, and at least `friendsWithoutTrade` grown-ups (3)
-  always stay free. Everyone is told, and a friend's status line shows it: "Mabel (Forager, Baker)".
+- **Who gets which.** Sage gives each workplace to the grown-up who suits it best, newcomers first, and never the last
+  friend of a speciality if anyone else will do. Children and strangers never hold a trade, and at least
+  `friendsWithoutTrade` grown-ups (3) always stay free. Everyone is told, and a friend's status line shows it: "Mabel
+  (Forager, Baker)".
 - **Before there are workplaces**, a Hamlet with six or more grown-ups has a cook at the campfire, a stallholder at the
   supply chest, a fisher on a bank (with open water near) and a shepherd at the pen (with two or more sheep). They move
   in when their workplace is built.
@@ -860,7 +875,7 @@ Full details: `docs/v3/life.md`. All of it happens by itself; you are welcome to
 plan, it all happens at the camp centre.
 
 - **The calendar.** It follows the world's own day count: seven-day weeks, and four seasons of 10 days each, so 40
-  days a year. `/friends calendar` shows the date ("Wednesday, day 42: the 2nd day of summer, year 2") and what is on.
+  days a year. `/friends calendar` shows the date ("Sunday, day 42: the 2nd day of spring, year 2") and what is on.
 - **Market day.** Every Saturday, once the village has a market or a shop, shopkeepers spend more of the day at their
   counters calling out to passers-by, and everyone else looks round the market once. Prices and stock do not change.
 - **Feasts.** The **midsummer feast**, the **harvest festival** (on the last day of autumn, only if the farms did
@@ -955,8 +970,9 @@ each tonight, who is on duty, fires to put out, and the tallies so far. `/friend
 
 - Taking cover is simple: walking to a spot inside and standing there. The way to a shelter or the bell is judged in a
   straight line, so the path walked can still bend past danger.
-- The watchtower's spiral stair has not been tried in game. The walls have no walkway: wall guards stand on the ground
-  and cannot shoot over. There are no special tactics against ravagers or evokers.
+- The spiral stair up the village's own watchtower (Town stage) has not been tried in game. The walls have no
+  walkway: wall guards stand on the ground and cannot shoot over. There are no special tactics against ravagers or
+  evokers.
 - Fire is put out by hand only, with no water: a big blaze can spread faster than two friends can put it out.
 - A bell you ring for fun still sends the children indoors for at least half a minute.
 
