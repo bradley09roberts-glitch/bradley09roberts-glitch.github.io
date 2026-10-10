@@ -1,5 +1,7 @@
 package io.github.bradley09roberts.hardcorefriends.settler;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import net.minecraft.core.BlockPos;
@@ -28,6 +30,7 @@ import net.minecraft.world.level.material.FluidState;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Persona;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
+import io.github.bradley09roberts.hardcorefriends.people.Skins;
 import io.github.bradley09roberts.hardcorefriends.registry.ModEntities;
 
 /**
@@ -63,6 +66,8 @@ public class SurvivorCampPiece extends StructurePiece {
 	private final int strangers;
 	/** Which strangers have been added already (one bit each), so a re-run never adds them twice. */
 	private int spawned;
+	/** Skins given to this camp's people so far, so tent-mates look different (not saved: only a preference). */
+	private final List<Integer> skinsHere = new ArrayList<>();
 
 	public SurvivorCampPiece(BlockPos origin, int rotation, int tents, int strangers) {
 		super(SurvivorCamp.PIECE, 0, new BoundingBox(origin.getX(), origin.getY() - FOUNDATION, origin.getZ(),
@@ -237,7 +242,8 @@ public class SurvivorCampPiece extends StructurePiece {
 		}
 		int[] inside = TENT_INSIDE[i % tents];
 		// Names are checked against the world's living people on the stranger's first tick, on the server thread.
-		Persona persona = Personas.create(random, Set.of());
+		Persona persona = Personas.create(random, Set.of(), Skins.placeOf(level.getBiome(spot)), skinsHere);
+		skinsHere.add(persona.skin());
 		Strangers.setUp(c, persona, spot, Personas.Origin.CAMP, Personas.story(random, Personas.Origin.CAMP),
 			at(inside[0], 0, inside[1]));
 		c.snapTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, random.nextFloat() * 360.0F, 0.0F);

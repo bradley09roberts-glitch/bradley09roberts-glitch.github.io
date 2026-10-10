@@ -6,12 +6,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
@@ -22,12 +25,18 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
+import net.minecraft.tags.BiomeTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.biome.Biome;
 
 import io.github.bradley09roberts.hardcorefriends.HardcoreFriends;
+import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
 import io.github.bradley09roberts.hardcorefriends.companion.Persona;
+import io.github.bradley09roberts.hardcorefriends.companion.Role;
 
 /**
  * Every skin a person can wear, read once from {@code assets/hardcorefriends/skins.json} in the mod's own jar, so the
@@ -39,6 +48,11 @@ import io.github.bradley09roberts.hardcorefriends.companion.Persona;
  * and 109-117 the same nine with slim arms (Steve, Alex, Ari, Efe, Kai, Makena, Noor, Sunny, Zuri). New skins take
  * numbers from 1000 up; adding one is a PNG and a line of JSON (see {@code docs/v3/people.md}). A missing or broken
  * file falls back to the built-in list, and a broken entry is skipped with a warning, so a typo never stops the game.
+ *
+ * <p>A skin may carry tags: a trade ({@code "baker"}, {@code "guard"}...) or a place ({@code "desert"},
+ * {@code "snowy"}...). When a skin is picked for someone, one that suits their trade or the land they come from is
+ * more likely, one nobody nearby wears is preferred, and once enough skins have been added the game's own default
+ * skins are only used when nothing else suits.
  */
 public final class Skins {
 	/** Who may be given a skin when one is picked at random. */
@@ -57,12 +71,49 @@ public final class Skins {
 		}
 	}
 
-	/** One skin: its number, its texture, whether it uses the slim arms, and who may wear it. */
-	public record Skin(int id, Identifier texture, boolean slim, Wear wear) {
+	/** One skin: its number, its texture, whether it uses the slim arms, who may wear it, and its tags (lower case). */
+	public record Skin(int id, Identifier texture, boolean slim, Wear wear, Set<String> tags) {
+		public Skin {
+			tags = Set.copyOf(tags);
+		}
+
+		Skin(int id, Identifier texture, boolean slim, Wear wear) {
+			this(id, texture, slim, wear, Set.of());
+		}
+
+		boolean hasAny(Collection<String> wanted) {
+			for (String tag : wanted) {
+				if (tags.contains(tag)) {
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 
 	/** First number for skins added after the built-in ones. */
 	public static final int FIRST_EXTRA_ID = 1000;
+	/** With at least this many added skins suiting someone, the game's default skins are left for when nothing else suits. */
+	private static final int ENOUGH_ADDED = 6;
+	/** Chance of a skin from the land someone comes from, when there is one nobody nearby wears. */
+	private static final float PLACE_CHANCE = 0.4F;
+	/** Chance of a skin of someone's own trade, when there is one nobody nearby wears. */
+	private static final float TRADE_CHANCE = 0.6F;
+
+	/** The skin tags that go with each kind of work (a newcomer's trade, or a grown-up child's). */
+	private static final Map<Role, List<String>> TRADE_TAGS = new EnumMap<>(Role.class);
+
+	static {
+		TRADE_TAGS.put(Role.FARMER, List.of("farmer", "farmhand", "shepherd", "beekeeper"));
+		TRADE_TAGS.put(Role.BUILDER, List.of("carpenter", "mason"));
+		TRADE_TAGS.put(Role.MINER, List.of("miner", "blacksmith", "mason"));
+		TRADE_TAGS.put(Role.EXPLORER, List.of("traveller", "wanderer", "hunter", "fisher"));
+		TRADE_TAGS.put(Role.INVENTOR, List.of("scholar", "tailor", "weaver", "blacksmith"));
+		TRADE_TAGS.put(Role.WARRIOR, List.of("guard", "hunter"));
+		TRADE_TAGS.put(Role.STRATEGIST, List.of("scholar", "teacher", "doctor", "shopkeeper"));
+		TRADE_TAGS.put(Role.LANDSCAPER, List.of("farmhand", "mason", "carpenter"));
+		TRADE_TAGS.put(Role.FORAGER, List.of("hunter", "fisher", "baker", "butcher", "innkeeper", "beekeeper"));
+	}
 	/** The slim-armed copies of the game's default skins start here (the wide ones at {@link Persona#DEFAULT_SKIN_BASE}). */
 	public static final int SLIM_DEFAULT_BASE = Persona.DEFAULT_SKIN_BASE + 9;
 	private static final String FILE = "assets/" + HardcoreFriends.MOD_ID + "/skins.json";
@@ -111,16 +162,91 @@ public final class Skins {
 	 * named friend's own skin.
 	 */
 	public static int randomFor(RandomSource random, boolean child) {
-		List<Skin> choice = new ArrayList<>();
+		return randomFor(random, child, null, List.of(), Set.of());
+	}
+
+	/**
+	 * A skin for a new person that suits them where it can: grown-up and "any" skins for an adult, child and "any" skins
+	 * for a child, never a named friend's own. Skins nobody in {@code worn} wears come first. Then, by chance, one tagged
+	 * with {@code place} (the land they come from, see {@link #placeOf}), else one tagged with any of {@code trades} (see
+	 * {@link #tradeTags}), else any that suits. Once enough skins have been added, the game's default skins are only
+	 * picked when no added skin suits.
+	 */
+	public static int randomFor(RandomSource random, boolean child, @Nullable String place, Collection<String> trades,
+			Collection<Integer> worn) {
+		List<Skin> suitable = new ArrayList<>();
+		int added = 0;
 		for (Skin skin : all().values()) {
 			if (skin.wear().suits(child)) {
-				choice.add(skin);
+				suitable.add(skin);
+				if (skin.id() >= FIRST_EXTRA_ID) {
+					added++;
+				}
 			}
 		}
-		if (choice.isEmpty()) {
+		if (suitable.isEmpty()) {
 			return Persona.DEFAULT_SKIN_BASE + random.nextInt(Persona.DEFAULT_SKINS.size());
 		}
-		return choice.get(random.nextInt(choice.size())).id();
+		if (added >= ENOUGH_ADDED) {
+			suitable.removeIf(skin -> skin.id() < FIRST_EXTRA_ID);
+		}
+		List<Skin> fresh = new ArrayList<>(suitable);
+		fresh.removeIf(skin -> worn.contains(skin.id()));
+		List<Skin> pool = fresh.isEmpty() ? suitable : fresh;
+		if (place != null) {
+			List<Skin> local = pool.stream().filter(skin -> skin.tags().contains(place)).toList();
+			if (!local.isEmpty() && random.nextFloat() < PLACE_CHANCE) {
+				return local.get(random.nextInt(local.size())).id();
+			}
+		}
+		if (!trades.isEmpty()) {
+			List<Skin> trade = pool.stream().filter(skin -> skin.hasAny(trades)).toList();
+			if (!trade.isEmpty() && random.nextFloat() < TRADE_CHANCE) {
+				return trade.get(random.nextInt(trade.size())).id();
+			}
+		}
+		return pool.get(random.nextInt(pool.size())).id();
+	}
+
+	/** The skins worn by everyone in the loaded world now (friends, newcomers, strangers, children). Server thread only. */
+	public static Set<Integer> wornNow() {
+		Set<Integer> worn = new java.util.HashSet<>();
+		for (CompanionEntity c : Companions.everyone()) {
+			worn.add(c.getSkinId());
+		}
+		return worn;
+	}
+
+	/** The skin tags that go with a kind of work, e.g. carpenter and mason for a builder. */
+	public static List<String> tradeTags(Role role) {
+		return TRADE_TAGS.getOrDefault(role, List.of());
+	}
+
+	/**
+	 * The place tag for skins from this biome ({@code desert}, {@code snowy}, {@code jungle}, {@code swamp},
+	 * {@code savanna} or {@code dark_forest}), read from the game's biome tags so modded biomes that use them count
+	 * too, or null for anywhere else.
+	 */
+	public static @Nullable String placeOf(Holder<Biome> biome) {
+		if (biome.is(BiomeTags.HAS_VILLAGE_DESERT) || biome.is(BiomeTags.HAS_DESERT_PYRAMID) || biome.is(BiomeTags.IS_BADLANDS)) {
+			return "desert";
+		}
+		if (biome.is(BiomeTags.HAS_VILLAGE_SNOWY) || biome.is(BiomeTags.HAS_IGLOO) || biome.is(BiomeTags.SPAWNS_SNOW_FOXES)) {
+			return "snowy";
+		}
+		if (biome.is(BiomeTags.IS_JUNGLE)) {
+			return "jungle";
+		}
+		if (biome.is(BiomeTags.HAS_SWAMP_HUT) || biome.is(BiomeTags.HAS_RUINED_PORTAL_SWAMP)) {
+			return "swamp";
+		}
+		if (biome.is(BiomeTags.IS_SAVANNA)) {
+			return "savanna";
+		}
+		if (biome.is(BiomeTags.HAS_WOODLAND_MANSION)) {
+			return "dark_forest";
+		}
+		return null;
 	}
 
 	/** True if a person of this age may wear this skin (unknown numbers count as fine: they draw as a default). */
@@ -183,11 +309,17 @@ public final class Skins {
 			Identifier texture = Identifier.tryParse(o.get("texture").getAsString());
 			String model = o.has("model") ? o.get("model").getAsString().toLowerCase(Locale.ROOT) : "wide";
 			String wear = o.has("for") ? o.get("for").getAsString().toUpperCase(Locale.ROOT) : "ANY";
+			List<String> tags = new ArrayList<>();
+			if (o.has("tags")) {
+				for (JsonElement tag : o.get("tags").getAsJsonArray()) {
+					tags.add(tag.getAsString().toLowerCase(Locale.ROOT));
+				}
+			}
 			if (id < 0 || texture == null || !texture.getPath().endsWith(".png") || !(model.equals("wide") || model.equals("slim"))) {
 				HardcoreFriends.LOGGER.warn("Skipping a skin in {}: {}", FILE, element);
 				return null;
 			}
-			return new Skin(id, texture, model.equals("slim"), Wear.valueOf(wear));
+			return new Skin(id, texture, model.equals("slim"), Wear.valueOf(wear), Set.copyOf(tags));
 		} catch (RuntimeException e) {
 			HardcoreFriends.LOGGER.warn("Skipping a skin in {} ({}): {}", FILE, e.getMessage(), element);
 			return null;

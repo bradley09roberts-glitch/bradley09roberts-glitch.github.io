@@ -1,8 +1,9 @@
 # Getting lots of skins made
 
 The village people (newcomers, settlers, and children born in the camp) pick their looks from the mod's skin list.
-Out of the box that list has the nine friends' own skins plus the game's nine default skins, in wide and slim. More
-skins mean a village that doesn't look like a crowd of Steves and Alexes.
+The mod now ships with the 82-skin medieval village set (skins 1000 to 1081, see `people.md`) made from this prompt.
+More skins still mean more variety: run the prompt again asking for new people (and new names), and they are added
+from number 1082 up.
 
 ## The prompt
 

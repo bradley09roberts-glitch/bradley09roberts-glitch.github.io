@@ -11,6 +11,11 @@ Usage:  python3 tools/add_skins.py          (then rebuild the mod with ./gradlew
 2. Run this script. Every PNG not yet in skins.json gets an entry with the next free number from 1000 up. Skins
    already listed keep their numbers (worlds remember skins by number, so numbers never change).
 
+Tags: the first word of the name after adult_/child_ becomes the skin's tag when it is a trade or a place the mod
+knows (see TRADES and PLACES below), e.g. adult_baker_rosa.png is tagged "baker" and adult_dark_forest_greta.png
+"dark_forest". People are more likely to wear a skin whose tags match their trade or the land they come from. A
+skin with no known word is untagged and worn by anyone of the right age.
+
 Files that are not 64x64 PNGs, or whose names have other characters, are reported and skipped.
 """
 from __future__ import annotations
@@ -28,6 +33,22 @@ FOLDERS = {"wide": ASSETS / "textures" / "entity" / "people" / "wide",
            "slim": ASSETS / "textures" / "entity" / "people" / "slim"}
 FIRST_ID = 1000
 NAME = re.compile(r"^[a-z0-9_]+\.png$")
+# Kept in step with people/Skins.java (TRADE_TAGS and the place tags).
+TRADES = {"baker", "butcher", "fisher", "shepherd", "beekeeper", "mason", "carpenter", "blacksmith", "tailor",
+          "teacher", "doctor", "shopkeeper", "innkeeper", "farmer", "guard", "farmhand", "hunter", "miner", "scholar",
+          "traveller", "wanderer", "weaver", "bard"}
+PLACES = {"desert", "snowy", "jungle", "swamp", "savanna", "dark_forest"}
+
+
+def tags_for(file_name: str) -> list[str]:
+    words = file_name[:-len(".png")].split("_")
+    if words[0] in ("adult", "child"):
+        words = words[1:]
+    for size in (2, 1):
+        word = "_".join(words[:size])
+        if len(words) > size and (word in TRADES or word in PLACES):
+            return [word]
+    return []
 
 
 def png_size(path: Path) -> tuple[int, int] | None:
@@ -60,9 +81,13 @@ def main() -> int:
             wear = "child" if png.name.startswith("child_") else "adult" if png.name.startswith("adult_") else "any"
             while next_id in used:
                 next_id += 1
-            skins.append({"id": next_id, "texture": texture, "model": model, "for": wear})
+            entry = {"id": next_id, "texture": texture, "model": model, "for": wear}
+            tags = tags_for(png.name)
+            if tags:
+                entry["tags"] = tags
+            skins.append(entry)
             used.add(next_id)
-            print(f"added {next_id}: {model}/{png.name} ({wear})")
+            print(f"added {next_id}: {model}/{png.name} ({wear}{', ' + ', '.join(tags) if tags else ''})")
             next_id += 1
             added += 1
     if added:

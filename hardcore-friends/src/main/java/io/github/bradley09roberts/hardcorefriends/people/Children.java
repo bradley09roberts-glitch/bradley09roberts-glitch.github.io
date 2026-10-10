@@ -134,7 +134,8 @@ final class Children {
 		data.setDirty();
 		Persona persona = c.persona();
 		if (persona != null && !Skins.suits(persona.skin(), false)) {
-			c.setPersona(new Persona(persona.name(), persona.colour(), Skins.randomFor(c.getRandom(), false), persona.archetype()));
+			int skin = Skins.randomFor(c.getRandom(), false, null, Skins.tradeTags(persona.archetype().role()), Skins.wornNow());
+			c.setPersona(new Persona(persona.name(), persona.colour(), skin, persona.archetype()));
 		}
 		SettlerData settlers = SettlerData.get(server);
 		SettlerData.Newcomer record = settlers.recordJoined(c.getUUID(), c.displayName(), c.friendId(), c.nameColour(), null, "",

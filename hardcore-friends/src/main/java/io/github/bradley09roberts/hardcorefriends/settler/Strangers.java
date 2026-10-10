@@ -22,6 +22,7 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.Persona;
+import io.github.bradley09roberts.hardcorefriends.people.Skins;
 import io.github.bradley09roberts.hardcorefriends.registry.ModEntities;
 
 /**
@@ -97,7 +98,7 @@ public final class Strangers {
 		if (c == null) {
 			return null;
 		}
-		Persona persona = Personas.create(random, data.namesInUse(null));
+		Persona persona = Personas.create(random, data.namesInUse(null), Skins.placeOf(level.getBiome(spot)), Skins.wornNow());
 		setUp(c, persona, spot, origin, Personas.story(random, origin), nightSpot);
 		c.snapTo(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5, random.nextFloat() * 360.0F, 0.0F);
 		if (!level.addFreshEntity(c)) {

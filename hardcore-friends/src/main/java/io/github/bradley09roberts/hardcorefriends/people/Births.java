@@ -263,7 +263,8 @@ final class Births {
 		String family = !pa.family.isEmpty() ? pa.family : pb.family;
 		FriendId archetype = archetype(random, pa.archetype, pb.archetype);
 		int colour = COLOURS[random.nextInt(COLOURS.length)];
-		child.setPersona(new Persona(name, colour, Skins.randomFor(random, true), archetype));
+		// A baby looks different from the other children about, where the skin list allows.
+		child.setPersona(new Persona(name, colour, Skins.randomFor(random, true, null, List.of(), Skins.wornNow()), archetype));
 		child.setChild(true);
 		child.setMode(CompanionMode.WORK, null);
 		child.setHomePos(Camp.center(level).orElse(parent.blockPosition()));

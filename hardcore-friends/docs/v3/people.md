@@ -172,10 +172,32 @@ Built in:
 | 0 to 8 | the nine friends' own (Fern, Oak, Flint, Scout, Spark, Aegis, Sage, Terra, Rowan) |
 | 100 to 108 | the game's default skins with wide arms: Steve, Alex, Ari, Efe, Kai, Makena, Noor, Sunny, Zuri |
 | 109 to 117 | the same nine with slim arms |
-| 1000 and up | skins you add |
+| 1000 to 1081 | the medieval village set: 62 grown-ups and 20 children, half wide and half slim (below) |
+| 1082 and up | skins you add |
 
-Newcomers get a random `adult` or `any` skin; babies a random `child` or `any` skin; a child who grows up in a
-`child`-only skin is given a grown-up's one.
+### Who wears what
+
+- Newcomers (survivors, wanderers, settlers) get an `adult` or `any` skin; babies a `child` or `any` skin; a child who
+  grows up in a `child`-only skin is given a grown-up's one.
+- **Fitting skins.** A skin can carry **tags**: a trade or a place. A newcomer is more likely to wear a skin of a trade
+  that goes with their work (a builder: carpenter or mason; a farmer: farmer, farmhand, shepherd or beekeeper; a
+  warrior: guard or hunter...), and someone met in a desert, snowy, jungle, swamp, savanna or dark forest biome is
+  likely to be dressed for it. A child growing up gets a skin to suit their trade the same way.
+- **Everyone looks different.** A skin nobody in the loaded world is wearing is chosen first; only when every
+  suitable skin is taken are skins shared. People in the same survivor camp get different skins.
+- **The default skins step back.** Once at least six added skins suit someone (true with the village set), the
+  game's own Steve, Alex and friends are only used if nothing else suits. Anyone already wearing one keeps it.
+
+### The medieval village set (1000 to 1081)
+
+| Group | Skins | Tags |
+|---|---|---|
+| Tradespeople (30) | two each of baker, butcher, fisher, shepherd, beekeeper, mason, carpenter, blacksmith, tailor, teacher, doctor, shopkeeper, innkeeper, farmer, guard | the trade |
+| Everyday villagers (20) | farmhands, travellers, a wanderer, a hunter, a miner, a scholar, a weaver, a bard, parents, grandparents, young adults | the trade where there is one |
+| Children (20) | smocks, dungarees, jumpers, scarves, dresses (`child_` skins, worn only by children) | none |
+| Biome villagers (12) | two each for desert, snowy, jungle, swamp, savanna and dark forest | the place |
+
+Every one was checked before going in: 64x64, the right arm width, no see-through gaps in the body, no duplicates.
 
 ### Adding skins
 
@@ -189,14 +211,21 @@ sleeves, trousers). Draw it for wide arms (4 pixels) or slim arms (3 pixels).
    File names use only lower case letters, digits and underscores (`baker_girl.png`). Start the name with `child_`
    for a skin only children wear, or `adult_` for one only grown-ups wear; any other name may be worn by anyone.
 2. Run `python3 tools/add_skins.py` in `hardcore-friends/`. It gives every new PNG an entry with the next free number
-   from 1000 up (and skips, with a message, any file that is not a 64x64 PNG or has a bad name).
+   from 1000 up (and skips, with a message, any file that is not a 64x64 PNG or has a bad name). The first word
+   after `adult_` or `child_` becomes the skin's tag when it is a trade or place the mod knows: `adult_baker_rosa.png`
+   is tagged `baker`, `adult_snowy_astrid.png` is tagged `snowy`. Known trades: baker, butcher, fisher, shepherd,
+   beekeeper, mason, carpenter, blacksmith, tailor, teacher, doctor, shopkeeper, innkeeper, farmer, guard, farmhand,
+   hunter, miner, scholar, traveller, wanderer, weaver, bard. Places: desert, snowy, jungle, swamp, savanna,
+   dark_forest.
 3. Rebuild the mod (`./gradlew build`) and install the new JAR on the server and every player's game.
 
 Or add an entry by hand, in the `skins` list of `skins.json`:
 
 ```json
-{"id": 1000, "texture": "hardcorefriends:textures/entity/people/wide/baker_girl.png", "model": "wide", "for": "child"}
+{"id": 1082, "texture": "hardcorefriends:textures/entity/people/wide/adult_potter_june.png", "model": "wide", "for": "adult", "tags": ["mason"]}
 ```
+
+`tags` is optional.
 
 Rules: every `id` is used once; **never change or reuse a number** a world already uses (people remember their skin
 by number); a mistake in the file never stops the game: a broken entry is skipped with a warning in the log, and a

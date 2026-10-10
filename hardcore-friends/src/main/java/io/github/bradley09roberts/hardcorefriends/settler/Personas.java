@@ -1,9 +1,12 @@
 package io.github.bradley09roberts.hardcorefriends.settler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
+import org.jspecify.annotations.Nullable;
 
 import net.minecraft.util.RandomSource;
 
@@ -130,8 +133,20 @@ public final class Personas {
 	 * than failing.
 	 */
 	public static Persona create(RandomSource random, Set<String> taken) {
-		return new Persona(freeName(random, taken), COLOURS[random.nextInt(COLOURS.length)],
-			Skins.randomFor(random, false), randomArchetype(random));
+		return create(random, taken, null, Set.of());
+	}
+
+	/**
+	 * A new person as {@link #create(RandomSource, Set)}, whose skin is likely to suit their trade and the land they
+	 * come from ({@code place}, a place tag from {@link Skins#placeOf}, or null), and is preferably one nobody in
+	 * {@code worn} wears.
+	 */
+	public static Persona create(RandomSource random, Set<String> taken, @Nullable String place, Collection<Integer> worn) {
+		FriendId archetype = randomArchetype(random);
+		String name = freeName(random, taken);
+		int colour = COLOURS[random.nextInt(COLOURS.length)];
+		int skin = Skins.randomFor(random, false, place, Skins.tradeTags(archetype.role()), worn);
+		return new Persona(name, colour, skin, archetype);
 	}
 
 	/** A random name not in {@code taken} (lower-case names), or any name if all are taken. */
