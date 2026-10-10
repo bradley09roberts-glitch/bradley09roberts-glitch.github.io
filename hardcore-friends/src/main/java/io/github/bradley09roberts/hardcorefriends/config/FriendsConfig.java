@@ -135,6 +135,12 @@ public final class FriendsConfig {
 	// ---- Defending the village (package defence) ----
 
 	// ---- Pets and maps (package pets) ----
+	/** Friends and children adopt stray cats and wild wolves, fed from the camp's own fish and bones. */
+	public boolean pets = true;
+	/** Most pets the camp keeps at once (0 to 50); each person has at most one. */
+	public int maxPets = 8;
+	/** The explorer draws maps of the land round the camp and where trips went, from the camp's paper and a compass. */
+	public boolean scoutMaps = true;
 
 	public static FriendsConfig get() {
 		return instance;
@@ -200,5 +206,6 @@ public final class FriendsConfig {
 		// Village life (package life)
 		// Defending the village (package defence)
 		// Pets and maps (package pets)
+		maxPets = Math.clamp(maxPets, 0, 50);
 	}
 }
