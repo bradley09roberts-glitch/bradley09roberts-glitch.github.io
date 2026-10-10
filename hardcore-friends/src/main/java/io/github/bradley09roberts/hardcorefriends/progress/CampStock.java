@@ -123,7 +123,8 @@ public final class CampStock {
 	}
 
 	private static Snapshot current = new Snapshot();
-	private static long countedAt = Long.MIN_VALUE;
+	/** "Never" is half of {@code Long.MIN_VALUE}, so {@code now - countedAt} cannot overflow (and read as fresh). */
+	private static long countedAt = Long.MIN_VALUE / 2;
 
 	private CampStock() {
 	}
@@ -141,7 +142,7 @@ public final class CampStock {
 	/** Forgets the last count (a world closing), so the next world starts afresh. */
 	public static void clear() {
 		current = new Snapshot();
-		countedAt = Long.MIN_VALUE;
+		countedAt = Long.MIN_VALUE / 2;
 	}
 
 	private static Snapshot count(MinecraftServer server) {

@@ -151,7 +151,7 @@ public final class Archery {
 			return known;
 		}
 		long now = c.level().getGameTime();
-		long[] round = PATH_ROUNDS.computeIfAbsent(c, k -> new long[] {Long.MIN_VALUE, 0});
+		long[] round = PATH_ROUNDS.computeIfAbsent(c, k -> new long[] {Long.MIN_VALUE / 2, 0}); // halved: now - MIN_VALUE overflows
 		if (now - round[0] >= ROUND_TICKS || now < round[0]) {
 			round[0] = now;
 			round[1] = 0;
