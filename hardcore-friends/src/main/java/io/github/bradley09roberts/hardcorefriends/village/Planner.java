@@ -58,16 +58,16 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  * decoration (lamp posts along the streets, benches, a garden, a fountain). At most {@code villageBuildsAtOnce}
  * buildings are under way at once, plus two pieces of decoration; one plot search runs at a time.
  *
- * <p>Costs: a few cheap checks and at most two ground surveys a tick while a search runs; otherwise a little work once
- * a second and a reconcile every ten seconds.
+ * <p>Costs: a few cheap checks and one to three ground surveys a tick (by the plan's size) while a search runs;
+ * otherwise a little work once a second and a reconcile every ten seconds.
  */
 public final class Planner {
 	/** The town plan is laid out once the camp reaches this stage (the Village). */
 	public static final int VILLAGE_STAGE = 3;
 	/** Site keys of the village's buildings start with this. */
 	public static final String KEY_PREFIX = "village.";
-	/** A plot search has this many ground surveys a tick. */
-	private static final int SURVEYS_PER_TICK = 2;
+	/** A plot search surveys about this many footprint columns of ground a tick (one to three plots). */
+	private static final int SURVEY_AREA_PER_TICK = 240;
 	/** How long a kind (or a household's house) waits after no plot could be found, in ticks. */
 	private static final int NO_ROOM_WAIT = 20 * 60 * 5;
 	/** Decoration under way at once, besides the buildings. */
@@ -599,7 +599,9 @@ public final class Planner {
 	}
 
 	private static void stepSearch(ServerLevel level, CampData camp, VillageData v, PlotSearch s) {
-		PlotSearch.Found found = s.step(level, camp, v, SURVEYS_PER_TICK);
+		// About 240 footprint columns of ground a tick: three cottages, or one town hall.
+		int surveys = Math.clamp(SURVEY_AREA_PER_TICK / Math.max(1, s.plan.width() * s.plan.depth()), 1, 3);
+		PlotSearch.Found found = s.step(level, camp, v, surveys);
 		if (found != null) {
 			search = null;
 			reserve(level, camp, v, s, found);

@@ -65,7 +65,7 @@ final class Housing {
 			}
 		}
 		houses.sort(Comparator.comparingInt(Housing::capacity).thenComparingInt(p -> p.id));
-		// Households whose new house has just been finished come first: it was built for them.
+		// A household already together in a house with room for all stays (anyone of it not yet in moves in).
 		List<Households.Household> unhoused = new ArrayList<>();
 		for (Households.Household h : roster.households()) {
 			VillageData.Plot together = together(houses, h);
@@ -84,7 +84,7 @@ final class Housing {
 		for (int i = 0; i < unhoused.size(); i++) {
 			Households.Household h = unhoused.get(i);
 			for (VillageData.Plot p : houses) {
-				if (!Collections.disjoint(p.intended, h.members()) && free(p, h) >= h.size()) {
+				if (!Collections.disjoint(p.intended, h.members()) && onlyTheirs(p, h) && capacity(p) >= h.size()) {
 					moveAll(v, houses, p, h, moves);
 					unhoused.remove(i--);
 					break;
@@ -106,7 +106,7 @@ final class Housing {
 						break;
 					}
 				}
-				if (!reservedForOthers && free(p, h) >= h.size()) {
+				if (!reservedForOthers && onlyTheirs(p, h) && capacity(p) >= h.size()) {
 					moveAll(v, houses, p, h, moves);
 					stillWaiting.removeAll(h.members());
 					unhoused.remove(i--);
@@ -135,6 +135,11 @@ final class Housing {
 			return null;
 		}
 		return found;
+	}
+
+	/** True if nobody outside the household lives in the house: a household never moves in with strangers. */
+	private static boolean onlyTheirs(VillageData.Plot p, Households.Household h) {
+		return h.members().containsAll(p.residents.keySet());
 	}
 
 	/** Beds in the house not taken by people outside the household. */
