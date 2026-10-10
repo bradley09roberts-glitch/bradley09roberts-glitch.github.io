@@ -13,6 +13,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.AbstractBedBlock;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.Block;
@@ -464,7 +465,11 @@ public final class WorldEditGuard {
 		SoundType sound = state.getSoundType();
 		level.playSound(null, pos, sound.getPlaceSound(), SoundSource.BLOCKS, (sound.getVolume() + 1.0F) / 2.0F, sound.getPitch() * 0.8F);
 		CampData data = Camp.data(level.getServer());
-		if (reason != Reason.FARM || !(state.getBlock() instanceof CropBlock)) {
+		if (state.getBlock() instanceof AbstractBedBlock) {
+			// A friend sleeps only in a bed the friends placed (never a player's), so beds are recorded even once the
+			// record is full: a large village's later houses would otherwise have beds nobody may sleep in.
+			data.keepPlaced(level, pos, state);
+		} else if (reason != Reason.FARM || !(state.getBlock() instanceof CropBlock)) {
 			data.recordPlaced(level, pos, state);
 		}
 		record(c, data, "placed", state, pos, reason);

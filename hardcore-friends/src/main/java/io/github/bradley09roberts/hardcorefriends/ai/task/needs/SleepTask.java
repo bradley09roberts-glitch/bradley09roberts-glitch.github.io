@@ -43,10 +43,11 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  * friend's meal. Work never wakes a sleeper (see {@link TaskScheduler}).
  *
  * <p><b>Waking.</b> Sleepers wake at dawn; when hurt; when a monster that could get at them comes close (not one shut
- * in behind a fence); when a friend nearby is really fighting one (trading blows, or with it at arm's length, not just
- * staring at a mob they cannot get at); when the night watch
- * raises the alarm ({@link NightWatch}); and when their own watch begins. The danger reflexes also interrupt the job,
- * and {@link #stop} always gets them back on their feet.
+ * in behind a fence, nor one outside the closed door of the house they sleep in: monsters do not open doors); when a
+ * friend nearby is really fighting one (trading blows, or with it at arm's length, not just staring at a mob they cannot
+ * get at); grown-ups when the night watch raises the alarm about a hostile within {@value NightWatch#ALARM_RANGE}
+ * blocks of them ({@link NightWatch}; a child sleeps on unless the monster could get at them); and when their own
+ * watch begins. The danger reflexes also interrupt the job, and {@link #stop} always gets them back on their feet.
  *
  * <p>Night here is the clock's ({@link Camp#isNightTime}): in a thunderstorm by day only a friend tired enough for a
  * nap lies down; the rest carry on with the camp's work.
@@ -254,7 +255,10 @@ public final class SleepTask implements CompanionTask {
 		Speech.say(c, Line.SLEEPY);
 	}
 
-	/** Hurt by anything but hunger pangs, a monster close by, a friend fighting nearby, or the alarm raised in camp. */
+	/**
+	 * Hurt by anything but hunger pangs, a monster close by, a friend fighting nearby, or (a grown-up) the alarm raised
+	 * about a hostile near them in camp.
+	 */
 	private boolean disturbed(CompanionEntity c) {
 		if (c.ticksSinceDamaged() < 5 && !hungerPang(c)) {
 			return true;
@@ -262,8 +266,9 @@ public final class SleepTask implements CompanionTask {
 		if (asleepTicks % 10 != 0) {
 			return false;
 		}
-		if (NightWatch.alarmRaisedSince((ServerLevel) c.level(), layDownAt) && NightWatch.insideCamp(c)) {
-			return true; // the watch raised the alarm: everyone up
+		if (!c.isChild() && NightWatch.alarmRaisedSince((ServerLevel) c.level(), layDownAt) && NightWatch.insideCamp(c)
+			&& NightWatch.alarmedNear(c)) {
+			return true; // the watch raised the alarm about a hostile near here: everyone round about up
 		}
 		return monsterClose(c) || friendFighting(c);
 	}
@@ -275,9 +280,10 @@ public final class SleepTask implements CompanionTask {
 	}
 
 	/**
-	 * A monster within {@value #WAKE_DISTANCE} blocks that could get at the sleeper: one right beside them, or one a
-	 * whole path leads to ({@link Reach}). A zombie shut in a fenced field next to the beds does not wake the camp every
-	 * time it lies down again; one that gets out, or hurts anyone, does.
+	 * A monster within {@value #WAKE_DISTANCE} blocks that could get at the sleeper: one right beside them with nothing
+	 * in between, or one a whole path leads to with every door kept shut ({@link Reach#checkDoorsShut}), as monsters do
+	 * not open doors. A zombie shut in a fenced field next to the beds, or standing outside the closed front door of the
+	 * house, does not wake the sleeper every time they lie down again; one that gets in, or hurts anyone, does.
 	 */
 	private static boolean monsterClose(CompanionEntity c) {
 		for (LivingEntity threat : Threats.around(c, WAKE_DISTANCE)) {
@@ -285,7 +291,7 @@ public final class SleepTask implements CompanionTask {
 			if (d > WAKE_DISTANCE * WAKE_DISTANCE) {
 				continue;
 			}
-			if (d <= 3 * 3 || Reach.check(c, threat) != Reach.Answer.NO) {
+			if (d <= 3 * 3 && c.hasLineOfSight(threat) || Reach.checkDoorsShut(c, threat) != Reach.Answer.NO) {
 				return true;
 			}
 		}

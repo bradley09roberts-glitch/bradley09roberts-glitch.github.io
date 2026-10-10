@@ -70,6 +70,14 @@ public class FriendNavigation extends GroundPathNavigation {
 	 * ({@link Routes}).
 	 */
 	public @Nullable Path probe(BlockPos target, int reachRange) {
+		return probe(target, reachRange, this.nodeEvaluator.canOpenDoors());
+	}
+
+	/**
+	 * As {@link #probe(BlockPos, int)}, opening closed wooden doors on the way only if {@code openDoors}: with it false,
+	 * the way a monster that cannot open a door would have to come (a sleeper behind their front door asks this).
+	 */
+	public @Nullable Path probe(BlockPos target, int reachRange, boolean openDoors) {
 		if (!(this.mob instanceof CompanionEntity c)) {
 			return null;
 		}
@@ -80,7 +88,7 @@ public class FriendNavigation extends GroundPathNavigation {
 		}
 		NodeEvaluator mine = this.nodeEvaluator;
 		p.setCanFloat(mine.canFloat());
-		p.setCanOpenDoors(mine.canOpenDoors());
+		p.setCanOpenDoors(openDoors);
 		p.setCanWalkOverFences(mine.canWalkOverFences());
 		p.getNodeEvaluator().setCanPassDoors(mine.canPassDoors());
 		return p.createPath(target, reachRange);

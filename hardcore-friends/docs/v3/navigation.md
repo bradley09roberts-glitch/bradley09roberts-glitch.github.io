@@ -86,10 +86,13 @@ pillar in the End, or next to an end crystal, a friend is never brought back to 
 **Digging out** follows the edit rules friends use to stay alive away from camp. A staircase digs at most three
 blocks a step, and only natural ground: dirt, grass, sand, gravel, clay, and plain stone, granite, diorite, andesite
 and tuff. It never digs a block with anything stored in it, a block touching water or lava, under loose sand or
-gravel, near anything you built, anything the friends built, or anywhere inside the camp. Friends only dig or place
-blocks to get out in the Overworld. In the Nether and the End they are with you, so they catch up with you instead. Inside the camp, a friend who is shut in (in a building, or in the pen) never digs or places
-blocks. They hop, try the doors, and in the end are brought out. Children never change a block. They swim, walk out
-of caves and get brought home like everyone else.
+gravel, near anything you built, anything the friends built, or on the camp's own ground. Friends only dig or place
+blocks to get out in the Overworld. In the Nether and the End they are with you, so they catch up with you instead.
+On the camp's own ground, a friend who is shut in (in a building, or in the pen) never digs or places blocks. They
+hop, try the doors, and in the end are brought out. The camp's own ground is the heart of the camp (its size before
+the village, at any depth) and, in the village round it, the sites of the village's buildings near the camp's height.
+The rest of a grown village, its gardens and verges, and the caves, ravines and mines under it, are dug out of like
+anywhere else. Children never change a block. They swim, walk out of caves and get brought home like everyone else.
 
 ## Sprinting
 
@@ -150,8 +153,10 @@ Nothing here has been run in the game. Everything below is untested.
 - **Jobs do not check their targets yet.** `Routes.reachable` exists, but the jobs do not ask it before choosing a
   target. A job whose target can only be reached through a cave is still chosen. The walk then stops at the cave
   mouth and gives up, and the job picks again later, perhaps the same target.
+- **A staircase out of a cave under the village** comes up through the village's open ground (a garden, a verge)
+  and is left there, as it would be in the wilds; it never comes up through a building's site or the camp's heart.
 - **Digging up is slow** without a pickaxe (about 7 seconds a stone block), and it stops at sand or gravel overhead,
-  at water or lava, at blocks you or the friends built, and at the camp's edge. It cannot dig deepslate, cobblestone
+  at water or lava, at blocks you or the friends built, and at the camp's own ground. It cannot dig deepslate, cobblestone
   or sandstone (the shared edit rules for staying alive do not allow them), so deep down below the deepslate line, or
   in a desert, a friend can only walk out. A friend who cannot dig any further waits to be brought home.
 - **The night shelter** looks after itself: while a friend is building, sleeping in or leaving their shelter, they

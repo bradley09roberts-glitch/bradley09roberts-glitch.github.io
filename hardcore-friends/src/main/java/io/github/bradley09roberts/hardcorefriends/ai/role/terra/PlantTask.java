@@ -30,6 +30,8 @@ import io.github.bradley09roberts.hardcorefriends.camp.Structures;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
+import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
+import io.github.bradley09roberts.hardcorefriends.village.TownPlan;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 
@@ -38,6 +40,12 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
  * near the camp edge (between radius − 6 and radius − 2), at least 5 blocks from each other, paths, fields and
  * building sites. Flowers go in small clusters a few blocks from finished buildings and the supply chest. With a
  * Settlement, 12 flowers and 6 trees make the flower gardens.
+ *
+ * <p>Where the camp will grow into a village ({@code villageHomes}), its town plan is fixed by the camp centre, and its
+ * plots front the streets: a tree there would rule out every plot over it for good (nobody fells a tree in the camp).
+ * So the saplings go anywhere in the camp at least {@value #TOWN_STREET_GAP} blocks back from every street of the plan
+ * instead of on the ring: behind the rows of houses, where only the deepest buildings reach, never on a street, its
+ * verge or a lamp post's spot.
  */
 public final class PlantTask implements CompanionTask {
 	private static final int MAX_TREES = 12;
@@ -49,6 +57,14 @@ public final class PlantTask implements CompanionTask {
 	private static final double TREE_SPACING = 5;
 	private static final int CHECK_INTERVAL = 200;
 	private static final double WORK_REACH = 2.5;
+	/**
+	 * Where there will be a village, trees keep at least this far from the middle of every street of its town plan:
+	 * past the path, the verge and the plots of most buildings (a house or shop reaches about eleven blocks back from
+	 * its street, the deepest a little further).
+	 */
+	private static final int TOWN_STREET_GAP = 14;
+	/** Spots tried per run on the town plan's ground, most of which is plots: telling them apart reads no blocks. */
+	private static final int TOWN_TRIES = 200;
 
 	private static final Predicate<ItemStack> SAPLING = s -> s.is(ItemTags.SAPLINGS) && s.getItem() instanceof BlockItem;
 	private static final Predicate<ItemStack> FLOWER = s -> s.is(BlockItemTags.SMALL_FLOWERS.item()) && !s.is(Items.WITHER_ROSE)
@@ -140,21 +156,29 @@ public final class PlantTask implements CompanionTask {
 
 	// ----------------------------------------------------------------- spots
 
-	/** Up to two sapling spots on the outer ring, preferring Terra's side of the camp. */
+	/**
+	 * Up to two sapling spots, preferring Terra's side of the camp: on the outer ring, or, where there will be a
+	 * village, anywhere in the camp well back from the town plan's streets.
+	 */
 	private static List<BlockPos> treeSpots(CompanionEntity c, ServerLevel level, CampData data) {
 		List<BlockPos> chosen = new ArrayList<>();
 		BlockPos centre = data.campPos().orElseThrow();
 		int radius = WorldEditGuard.campRadius(c);
-		double inner = Math.max(4, radius - 6);
+		boolean town = FriendsConfig.get().villageHomes;
+		double inner = town ? TownPlan.SQUARE_OUTER + 2 : Math.max(4, radius - 6); // a town: beyond the square's decorations
 		double outer = Math.max(inner + 1, radius - 2);
 		double bearing = Math.atan2(c.getZ() - centre.getZ(), c.getX() - centre.getX());
 		RandomSource random = c.getRandom();
 		List<BlockPos> grown = Garden.trees(data);
-		for (int i = 0; i < 40 && chosen.size() < TREES_PER_RUN; i++) {
-			double angle = i < 24 ? bearing + (random.nextDouble() * 2 - 1) * Math.PI / 3 : random.nextDouble() * Math.PI * 2;
+		int tries = town ? TOWN_TRIES : 40;
+		for (int i = 0; i < tries && chosen.size() < TREES_PER_RUN; i++) {
+			double angle = i < tries * 3 / 5 ? bearing + (random.nextDouble() * 2 - 1) * Math.PI / 3 : random.nextDouble() * Math.PI * 2;
 			double r = inner + random.nextDouble() * (outer - inner);
 			int x = centre.getX() + (int) Math.round(Math.cos(angle) * r);
 			int z = centre.getZ() + (int) Math.round(Math.sin(angle) * r);
+			if (town && TownPlan.onStreet(centre, x, z, TOWN_STREET_GAP - 1 - TownPlan.HALF)) {
+				continue; // a street, its verge or the plots along it, now or once the village comes
+			}
 			BlockPos ground = Landscape.ground(level, x, z, centre.getY() + 4, centre.getY() - 6);
 			if (ground == null) {
 				continue;

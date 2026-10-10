@@ -2,7 +2,9 @@ package io.github.bradley09roberts.hardcorefriends.ai.role.terra;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.WeakHashMap;
 import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
@@ -32,7 +34,6 @@ import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.camp.build.Stock;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
-import io.github.bradley09roberts.hardcorefriends.companion.Role;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
@@ -42,8 +43,13 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
  * Terra spawn-proofs the camp: finds dark ground (block light below 8) in camp, away from paths, farmland, buildings
  * and unfinished building sites, and places torches at least 5 blocks apart, up to 6 per run. Torches come from the
  * backpack, are crafted from carried coal and sticks, or are fetched from the supply chest. Lighting is a nicety: the
- * torches the camp's unfinished buildings still call for (and the coal to make them) stay in the chest for the
- * builder.
+ * torches the camp's unfinished buildings still call for, the village's houses and shops under way included (and the
+ * coal to make them), stay in the chest for the builders.
+ *
+ * <p>The look for dark ground is the team's, one at a time, a few hundred columns a step ({@link Survey}), so a camp
+ * grown to the size of its village costs no more in any one tick than a small one, however many friends light it.
+ * After dark only the heart of the camp is lit ({@link Camp#coreRadius}, the camp without its village): the village's
+ * outer streets and plots wait for the day (and have their lamp posts), so lighting never keeps a friend out late.
  */
 public final class LightTask implements CompanionTask {
 	/** Lighting a dark camp at night: above bedtime for a rested landscaper (75), so the camp is lit before she sleeps. */
@@ -53,7 +59,15 @@ public final class LightTask implements CompanionTask {
 	private static final double SPACING = 5;
 	private static final int SCAN_INTERVAL = 200;
 	private static final int LATTICE = 3;
+	/** Columns of the lattice looked at per step of the team's look, at most one step every {@value #STEP_INTERVAL} ticks. */
+	private static final int COLUMNS_PER_STEP = 250;
+	private static final int STEP_INTERVAL = 20;
 	private static final int LOOK_ABOVE = 4;
+	/**
+	 * Where the ground {@value #LOOK_ABOVE} blocks above the camp's is solid, the look starts again from this high: the
+	 * village builds on ground up to eight blocks above the camp's, which would otherwise never be lit.
+	 */
+	private static final int HILL_ABOVE = 9;
 	private static final int MAX_DROP = 8;
 	private static final double WORK_REACH = 2.5;
 
@@ -67,15 +81,96 @@ public final class LightTask implements CompanionTask {
 		LIGHT
 	}
 
-	private final List<BlockPos> darkSpots = new ArrayList<>();
-	private long scannedAt = -100_000;
-	private long copiedAt = Long.MIN_VALUE;
-	private int scanCount;
+	private static final String SURVEY = "terra.dark_spots";
 
-	/** The team's latest look for dark spots, which friends other than the landscaper reuse while it is fresh. */
-	private static final class Shared {
+	private final List<BlockPos> darkSpots = new ArrayList<>();
+	/** Which of the team's looks {@link #darkSpots} was copied from. */
+	private int copiedPass = -1;
+
+	/** What a look for dark spots needs to know about the camp: worked out once a look, not once a column. */
+	private record Layout(BlockPos centre, List<BlockPos> pathTargets, List<BlockPos> unfinishedSites) {
+		static Layout of(CampData data) {
+			BlockPos centre = data.campPos().orElse(BlockPos.ZERO);
+			return new Layout(centre, PathPlan.targets(data), Landscape.unfinishedSiteOrigins(data));
+		}
+	}
+
+	/**
+	 * The team's look for dark spots in the camp, one for everyone (whatever their role) in this dimension, kept in the
+	 * {@link TeamCache}. A look goes over a coarse lattice of the camp a step at a time, shifting the lattice each look
+	 * to cover every block in the end; a new one starts {@value #SCAN_INTERVAL} ticks after the last finished, or
+	 * straight away once torches have been placed.
+	 */
+	private static final class Survey {
+		/** When the last look finished (game time); long ago means a new look is wanted now. */
 		private long at = Long.MIN_VALUE / 2;
+		/** How many looks have finished, so each friend knows when theirs is out of date. */
+		private int pass;
 		private List<BlockPos> spots = List.of();
+		private long lastStep = Long.MIN_VALUE / 2;
+		// The look under way.
+		private boolean looking;
+		private int cursor;
+		private int lookCount;
+		private int radius;
+		private int offX;
+		private int offZ;
+		private BlockPos centre = BlockPos.ZERO;
+		private @Nullable Layout layout;
+		private final List<BlockPos> found = new ArrayList<>();
+
+		/** Looks at the next stretch of the camp, at most once every {@value #STEP_INTERVAL} ticks. */
+		void step(ServerLevel level, CampData data, long now) {
+			if (now >= lastStep && now - lastStep < STEP_INTERVAL) {
+				return; // several friends may ask in the same second
+			}
+			lastStep = now;
+			BlockPos home = data.campPos().orElseThrow();
+			int r = Math.max(0, Camp.radius(data) - 1);
+			Layout plan = layout;
+			if (!looking || plan == null || r != radius || !home.equals(centre)) {
+				looking = true;
+				cursor = 0;
+				radius = r;
+				centre = home;
+				offX = lookCount % LATTICE;
+				offZ = (lookCount / LATTICE) % LATTICE;
+				lookCount++;
+				plan = Layout.of(data);
+				layout = plan;
+				found.clear();
+			}
+			int across = (2 * r - offX) / LATTICE + 1;
+			int down = (2 * r - offZ) / LATTICE + 1;
+			int total = across * down;
+			int budget = COLUMNS_PER_STEP;
+			while (budget > 0 && cursor < total) {
+				int dx = -r + offX + (cursor % across) * LATTICE;
+				int dz = -r + offZ + (cursor / across) * LATTICE;
+				cursor++;
+				if (dx * dx + dz * dz > r * r) {
+					continue;
+				}
+				budget--;
+				BlockPos spot = darkSpot(level, data, plan, centre.getX() + dx, centre.getZ() + dz);
+				if (spot != null) {
+					found.add(spot);
+				}
+			}
+			if (cursor >= total) {
+				looking = false;
+				spots = List.copyOf(found);
+				found.clear();
+				layout = null;
+				at = now;
+				pass++;
+			}
+		}
+
+		/** Torches went up: light has changed, so a new look is wanted (one under way carries on). */
+		void lightChanged() {
+			at = Long.MIN_VALUE / 2;
+		}
 	}
 
 	private final List<BlockPos> placedThisRun = new ArrayList<>();
@@ -99,15 +194,32 @@ public final class LightTask implements CompanionTask {
 		if (data.campPos().isEmpty() || !Camp.isCampLevel(level, data)) {
 			return 0;
 		}
-		if (Camp.isNight(level) && !WorldEditGuard.inCamp(c, c.blockPosition())) {
+		boolean night = Camp.isNight(level);
+		if (night && !WorldEditGuard.inCamp(c, c.blockPosition())) {
 			return 0;
 		}
-		refreshSpots(c, level, data);
-		if (darkSpots.isEmpty() || !torchesAvailable(c)) {
+		refreshSpots(level, data);
+		if (darkSpots.isEmpty() || night && !anyInHeart(data) || !torchesAvailable(c)) {
 			return 0;
 		}
 		// A dark camp at night is where monsters spawn: lighting it comes before bed while there is energy for it.
-		return Camp.isNight(level) ? NIGHT_SCORE : 50;
+		return night ? NIGHT_SCORE : 50;
+	}
+
+	/** True if a dark spot lies in the heart of the camp ({@link Camp#coreRadius}), the part lit after dark. */
+	private boolean anyInHeart(CampData data) {
+		BlockPos centre = data.campPos().orElseThrow();
+		for (BlockPos p : darkSpots) {
+			if (inHeart(data, centre, p)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean inHeart(CampData data, BlockPos centre, BlockPos p) {
+		int core = Camp.coreRadius(data);
+		return Camp.horizontalDistSqr(p, centre) <= (double) core * core;
 	}
 
 	/**
@@ -116,8 +228,11 @@ public final class LightTask implements CompanionTask {
 	 */
 	private static boolean torchesAvailable(CompanionEntity c) {
 		var bp = c.backpack();
+		if (bp.has(TORCH)) {
+			return true;
+		}
 		Spare spare = Spare.of(c);
-		if (bp.has(TORCH) || spare.torches() > 0) {
+		if (spare.torches() > 0) {
 			return true;
 		}
 		boolean coal = bp.has(COAL) || spare.coal() > 0;
@@ -134,93 +249,110 @@ public final class LightTask implements CompanionTask {
 			}
 			int torches = SupplyChest.count(chest.get(), TORCH);
 			int coal = SupplyChest.count(chest.get(), COAL);
-			int reserved = torchesForBuildings(Camp.data(level.getServer()));
+			int reserved = TeamCache.get(level, "terra.torch_reserve", Reserve::new).of(level);
 			int coalReserved = (Math.max(0, reserved - torches) + 3) / 4; // one coal makes four torches
 			return new Spare(Math.max(0, torches - reserved), Math.max(0, coal - coalReserved));
 		}
 	}
 
-	/** Torches that the camp's unfinished buildings (this stage and earlier) still call for, lanterns included. */
+	/**
+	 * Torches that the camp's unfinished buildings (this stage and earlier) and the village's buildings under way still
+	 * call for, lanterns included.
+	 */
 	static int torchesForBuildings(CampData data) {
 		int total = 0;
 		for (Structures.Entry e : Structures.ALL) {
 			if (e.stage() > data.stage() || data.isCompleted(e.id())) {
 				continue;
 			}
-			Optional<Blueprint> plan = Blueprints.forSite(data, e.id());
-			if (plan.isEmpty()) {
-				continue;
+			total += Blueprints.forSite(data, e.id()).map(LightTask::torchesIn).orElse(0);
+		}
+		// The village's houses, shops and lamp posts under way want theirs too: wall torches, and lanterns.
+		for (String key : Blueprints.librarySites(data)) {
+			if (!Blueprints.isFinished(data, key)) {
+				total += Blueprints.forSite(data, key).map(LightTask::torchesIn).orElse(0);
 			}
-			int each = 0;
-			for (Blueprint.Entry entry : plan.get().entries()) {
-				Stock stock = entry.material().stock();
-				if (stock == Stock.TORCH || stock == Stock.LANTERN) { // a lantern is made around a torch
-					each++;
-				}
-			}
-			total += each * plan.get().parts();
 		}
 		return total;
 	}
 
-	/**
-	 * Looks for dark spots every 10 seconds. The landscaper looks on her own schedule, exactly as when she worked alone;
-	 * anyone else reuses the team's latest look while it is fresh.
-	 */
-	private void refreshSpots(CompanionEntity c, ServerLevel level, CampData data) {
-		long now = level.getGameTime();
-		Shared shared = TeamCache.get(level, "terra.dark_spots", Shared::new);
-		boolean own = c.friendId().role() == Role.LANDSCAPER;
-		if (now - (own ? scannedAt : shared.at) >= SCAN_INTERVAL) {
-			scannedAt = now;
-			scan(c, level, data);
-			shared.at = now;
-			shared.spots = List.copyOf(darkSpots);
-			copiedAt = now;
-		} else if (!own && copiedAt != shared.at) {
-			copiedAt = shared.at;
-			darkSpots.clear();
-			darkSpots.addAll(shared.spots);
+	/** Torches per plan, counted once: plans last the whole game (a data pack reload makes new ones, and these go). */
+	private static final Map<Blueprint, Integer> TORCHES_IN = new WeakHashMap<>();
+
+	/** How many torches a plan calls for, lanterns included (a lantern is made around a torch). */
+	private static int torchesIn(Blueprint plan) {
+		return TORCHES_IN.computeIfAbsent(plan, p -> {
+			int each = 0;
+			for (Blueprint.Entry entry : p.entries()) {
+				Stock stock = entry.material().stock();
+				if (stock == Stock.TORCH || stock == Stock.LANTERN) {
+					each++;
+				}
+			}
+			return each * p.parts();
+		});
+	}
+
+	/** The torches kept back for buildings, worked out every few seconds rather than at every look at the chest. */
+	private static final class Reserve {
+		private long at = Long.MIN_VALUE / 2;
+		private int torches;
+
+		int of(ServerLevel level) {
+			long now = level.getGameTime();
+			if (now < at || now - at >= SCAN_INTERVAL / 2) {
+				at = now;
+				torches = torchesForBuildings(Camp.data(level.getServer()));
+			}
+			return torches;
 		}
 	}
 
-	/** Looks for dark spots on a coarse lattice over the camp, shifting the lattice each scan to cover every block. */
-	private void scan(CompanionEntity c, ServerLevel level, CampData data) {
-		darkSpots.clear();
-		BlockPos centre = data.campPos().orElseThrow();
-		int r = WorldEditGuard.campRadius(c) - 1;
-		int offX = scanCount % LATTICE;
-		int offZ = (scanCount / LATTICE) % LATTICE;
-		scanCount++;
-		for (int dx = -r + offX; dx <= r; dx += LATTICE) {
-			for (int dz = -r + offZ; dz <= r; dz += LATTICE) {
-				if (dx * dx + dz * dz > r * r) {
-					continue;
-				}
-				int x = centre.getX() + dx;
-				int z = centre.getZ() + dz;
-				BlockPos probe = new BlockPos(x, centre.getY(), z);
-				if (!level.isLoaded(probe)) {
-					continue;
-				}
-				// Look down from just above camp level, so roofs, tree tops and overhangs are not mistaken for ground.
-				BlockPos ground = Landscape.ground(level, x, z, centre.getY() + LOOK_ABOVE, centre.getY() - MAX_DROP);
-				if (ground == null) {
-					continue;
-				}
-				BlockPos spot = ground.above();
-				if (level.getBrightness(LightLayer.BLOCK, spot) >= DARK) {
-					continue;
-				}
-				if (isLightable(level, data, spot)) {
-					darkSpots.add(spot);
-				}
+	/**
+	 * Steps the team's look for dark spots along when one is wanted, and takes its latest finished look if this friend
+	 * has not yet.
+	 */
+	private void refreshSpots(ServerLevel level, CampData data) {
+		long now = level.getGameTime();
+		Survey survey = TeamCache.get(level, SURVEY, Survey::new);
+		if (survey.looking || now - survey.at >= SCAN_INTERVAL || now < survey.at) {
+			survey.step(level, data, now);
+		}
+		if (copiedPass != survey.pass) {
+			copiedPass = survey.pass;
+			darkSpots.clear();
+			darkSpots.addAll(survey.spots);
+		}
+	}
+
+	/** The dark spot on this column of the camp where a torch could stand, or null. */
+	private static @Nullable BlockPos darkSpot(ServerLevel level, CampData data, Layout layout, int x, int z) {
+		BlockPos centre = layout.centre();
+		if (!level.hasChunkAt(x, z)) {
+			return null;
+		}
+		// Look down from just above camp level, so roofs, tree tops and overhangs are not mistaken for ground. Where the
+		// ground there is solid it rises (a hillside the village has spread onto): look again from higher up.
+		int top = centre.getY() + LOOK_ABOVE;
+		BlockPos ground = Landscape.ground(level, x, z, top, centre.getY() - MAX_DROP);
+		if (ground != null && ground.getY() == top) {
+			BlockPos higher = Landscape.ground(level, x, z, centre.getY() + HILL_ABOVE, top + 1);
+			if (higher != null) {
+				ground = higher;
 			}
 		}
+		if (ground == null) {
+			return null;
+		}
+		BlockPos spot = ground.above();
+		if (level.getBrightness(LightLayer.BLOCK, spot) >= DARK || !isLightable(level, data, layout, spot)) {
+			return null;
+		}
+		return spot;
 	}
 
 	/** A natural, open, solid-floored spot off the paths, fields and building sites where a torch can stand. */
-	private static boolean isLightable(ServerLevel level, CampData data, BlockPos spot) {
+	private static boolean isLightable(ServerLevel level, CampData data, Layout layout, BlockPos spot) {
 		BlockState here = level.getBlockState(spot);
 		if (!(here.isAir() || Landscape.isWeed(here)) || !here.getFluidState().isEmpty()) {
 			return false;
@@ -235,7 +367,8 @@ public final class LightTask implements CompanionTask {
 		if (!Blocks.TORCH.defaultBlockState().canSurvive(level, spot) || WorldEditGuard.touchesFluid(level, spot)) {
 			return false;
 		}
-		if (PathPlan.onPath(data, spot) || Landscape.nearestSiteDistance(data, spot, true) < 5) {
+		if (PathPlan.onPath(layout.centre(), layout.pathTargets(), spot)
+			|| Landscape.nearestDistance(layout.unfinishedSites(), spot) < 5) {
 			return false;
 		}
 		return !Landscape.anyNear(level, below, 2, 0, 0, s -> s.is(Blocks.FARMLAND));
@@ -331,23 +464,34 @@ public final class LightTask implements CompanionTask {
 		return TaskStatus.RUNNING;
 	}
 
-	/** The best remaining dark spot: inner camp first, then close to Terra; skips spots that are no longer dark. */
+	/**
+	 * The best remaining dark spot: inner camp first, then close to Terra; skips spots that are no longer dark. After
+	 * dark only the heart of the camp is lit.
+	 */
 	private @Nullable BlockPos pickNext(CompanionEntity c, ServerLevel level) {
 		CampData data = Camp.data(level.getServer());
 		BlockPos centre = c.homePos();
+		boolean night = Camp.isNight(level);
+		Layout layout = Layout.of(data);
 		while (!darkSpots.isEmpty()) {
 			BlockPos best = null;
 			double bestRank = Double.MAX_VALUE;
 			for (BlockPos p : darkSpots) {
+				if (night && !inHeart(data, layout.centre(), p)) {
+					continue; // the village's outer streets wait for the day
+				}
 				double rank = Math.sqrt(Camp.horizontalDistSqr(p, centre)) + 0.5 * Math.sqrt(p.distSqr(c.blockPosition()));
 				if (rank < bestRank) {
 					bestRank = rank;
 					best = p;
 				}
 			}
+			if (best == null) {
+				return null;
+			}
 			darkSpots.remove(best);
-			if (best != null && level.getBrightness(LightLayer.BLOCK, best) < DARK && farFromPlaced(best)
-				&& isLightable(level, data, best)) {
+			if (level.getBrightness(LightLayer.BLOCK, best) < DARK && farFromPlaced(best)
+				&& isLightable(level, data, layout, best)) {
 				return best;
 			}
 		}
@@ -364,8 +508,7 @@ public final class LightTask implements CompanionTask {
 	}
 
 	private TaskStatus finish(ServerLevel level) {
-		scannedAt = -100_000; // light has changed; look again next time (everyone)
-		TeamCache.get(level, "terra.dark_spots", Shared::new).at = Long.MIN_VALUE / 2;
+		TeamCache.get(level, SURVEY, Survey::new).lightChanged(); // light has changed: the team looks again
 		if (placedThisRun.isEmpty()) {
 			return TaskStatus.FAILURE;
 		}

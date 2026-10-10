@@ -11,6 +11,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.pathfinder.Path;
 
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.navigation.FriendNavigation;
 
 /**
  * Whether a friend can walk all the way to a mob. Vanilla path finding hands back the best partial path when the mob
@@ -34,6 +35,8 @@ public final class Reach {
 	private static final int KEEP_UNREACHABLE = 200;
 	/** Per friend: mob id to {until game time, 1 reachable / 0 not}. Weak, so unloaded friends are forgotten. */
 	private static final Map<CompanionEntity, Map<UUID, long[]>> CACHE = new WeakHashMap<>();
+	/** The same for paths with every door kept shut ({@link #checkDoorsShut}). */
+	private static final Map<CompanionEntity, Map<UUID, long[]>> CACHE_DOORS_SHUT = new WeakHashMap<>();
 
 	private Reach() {
 	}
@@ -71,8 +74,39 @@ public final class Reach {
 		return ok ? Answer.YES : Answer.NO;
 	}
 
+	/**
+	 * Whether a whole path leads between the friend and the mob with every door kept shut: whether a monster that cannot
+	 * open doors could get at the friend (a zombie outside a sleeper's closed front door cannot). Cached as
+	 * {@link #check} is, separately from it.
+	 */
+	public static Answer checkDoorsShut(CompanionEntity c, LivingEntity target) {
+		if (target.level() != c.level() || !target.isAlive()) {
+			return Answer.NO;
+		}
+		if (!(c.getNavigation() instanceof FriendNavigation nav)) {
+			return check(c, target);
+		}
+		long now = c.level().getGameTime();
+		Map<UUID, long[]> known = CACHE_DOORS_SHUT.computeIfAbsent(c, k -> new HashMap<>());
+		long[] entry = known.get(target.getUUID());
+		if (entry != null && now < entry[0]) {
+			return entry[1] == 1 ? Answer.YES : Answer.NO;
+		}
+		if (!c.onGround() && !c.isInLiquid() && !c.isPassenger()) {
+			return Answer.UNKNOWN; // mid-jump (or not yet landed) no path can be worked out at all
+		}
+		Path path = nav.probe(target.blockPosition(), 1, false);
+		boolean ok = path != null && path.canReach();
+		if (known.size() > 32) {
+			known.values().removeIf(e -> e[0] <= now);
+		}
+		known.put(target.getUUID(), new long[] {now + (ok ? KEEP_REACHABLE : KEEP_UNREACHABLE), ok ? 1 : 0});
+		return ok ? Answer.YES : Answer.NO;
+	}
+
 	/** Forgets every answer: a server starting or stopping. */
 	public static void clear() {
 		CACHE.clear();
+		CACHE_DOORS_SHUT.clear();
 	}
 }

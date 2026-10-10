@@ -46,8 +46,17 @@ public final class Camp {
 	 * further, as far as they reach ({@link #villageReach}, up to the village's own maximum).
 	 */
 	public static int radius(CampData data) {
+		return Math.max(coreRadius(data), villageReach(data));
+	}
+
+	/**
+	 * The camp's own radius, without the village: the configured base, growing 4 blocks per stage, plus any room grown
+	 * for a building, up to the configured maximum. This is the heart of the camp (its own buildings, the pen, the
+	 * fields), for rules that were made for a camp of that size and should not spread over the whole village.
+	 */
+	public static int coreRadius(CampData data) {
 		FriendsConfig cfg = FriendsConfig.get();
-		return Math.max(Math.min(cfg.maxCampRadius, cfg.campRadius + 4 * data.stage() + radiusBonus(data)), villageReach(data));
+		return Math.min(cfg.maxCampRadius, cfg.campRadius + 4 * data.stage() + radiusBonus(data));
 	}
 
 	/** Camp memory of how far the village's town plan reaches from this camp centre (set by the village package). */

@@ -83,10 +83,15 @@ public final class PathPlan {
 	/** True if the column lies on a planned path. Cheap: no world access. */
 	public static boolean onPath(CampData data, BlockPos pos) {
 		BlockPos centre = data.campPos().orElse(null);
-		if (centre == null) {
-			return false;
-		}
-		for (BlockPos target : targets(data)) {
+		return centre != null && onPath(centre, targets(data), pos);
+	}
+
+	/**
+	 * True if the column lies on a path from {@code centre} to one of these {@link #targets}: for checking many columns
+	 * against the same plan, with the targets worked out once (the village's sites make the list long).
+	 */
+	public static boolean onPath(BlockPos centre, List<BlockPos> targets, BlockPos pos) {
+		for (BlockPos target : targets) {
 			if (pos.getZ() == centre.getZ() && between(pos.getX(), centre.getX(), target.getX())) {
 				return true;
 			}
@@ -99,9 +104,14 @@ public final class PathPlan {
 
 	/** True if the column is on or right beside a planned path. */
 	public static boolean nearPath(CampData data, BlockPos pos, int margin) {
+		BlockPos centre = data.campPos().orElse(null);
+		if (centre == null) {
+			return false;
+		}
+		List<BlockPos> targets = targets(data);
 		for (int dx = -margin; dx <= margin; dx++) {
 			for (int dz = -margin; dz <= margin; dz++) {
-				if (onPath(data, pos.offset(dx, 0, dz))) {
+				if (onPath(centre, targets, pos.offset(dx, 0, dz))) {
 					return true;
 				}
 			}
