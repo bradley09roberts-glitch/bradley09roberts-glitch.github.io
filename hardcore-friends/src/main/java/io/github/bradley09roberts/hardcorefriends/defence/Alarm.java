@@ -51,17 +51,20 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  * their posts, and when the danger has passed (or at dawn) somebody gives the all-clear.
  *
  * <p><b>What rings it</b> ({@link Cause}): hostiles closing in on the village at night in numbers (at least
- * {@code alarmHordeSize} seen in the village or just beyond its edge at once); a creeper inside the village, day or
- * night; a vanilla raid on or near the village ({@code ServerLevel.getRaidAt} the camp centre); a player in the village
- * with the Raid Omen (a raid is about to start); and a player ringing a bell in the village themselves.
+ * {@code alarmHordeSize} seen in the village or just beyond its edge at once, one of them new and inside the village
+ * itself); a creeper inside the village, day or night; a vanilla raid on or near the village
+ * ({@code ServerLevel.getRaidAt} the camp centre); a player in the village with the Raid Omen (a raid is about to
+ * start); and a player ringing a bell in the village themselves.
  *
  * <p><b>Who sees what.</b> Twice a second ({@value #INTERVAL} ticks) the friends who are awake in the village look
  * about them with the existing {@link Threats} helpers: the friend on the night watch and the guards on duty every
  * time, and up to {@value #ROTATING_SENSORS} others in turn. A hostile counts when it is in the village (up at ground
  * level, {@link Area}) and a friend can see it, or it is within {@value #HEARD} blocks of one; the night watch's own
  * alarm list counts too. At most {@value #SIGHT_CHECKS} lines of sight are worked out a round, so a big fight stays
- * cheap. Each hostile raises the alarm once while it stays about: one still in sight after an all-clear does not ring
- * it again, though one that went away (unseen for {@value #FORGET} ticks) and came back does.
+ * cheap. Each hostile raises the alarm once while it stays about: one still in sight after an all-clear (including one
+ * first seen while the alarm was on) does not ring it again, though one that went away (unseen for {@value #FORGET}
+ * ticks) and came back does. A creeper seen during an alarm is the exception: it still rings it once it is inside the
+ * village after the all-clear.
  *
  * <p><b>The all-clear</b> comes once nothing has been seen inside the village for {@value #ALL_CLEAR} ticks (and the alarm
  * has rung for at least {@value #MIN_ALARM}), or at dawn for an alarm raised at night; a raid holds it until the raid
@@ -160,7 +163,8 @@ public final class Alarm {
 	private static @Nullable Raid raid;
 	private static boolean raidSettled;
 	private static int sensorCursor;
-	private static long lastPlayerAlarm = Long.MIN_VALUE;
+	/** "Never" is half of {@code Long.MIN_VALUE}, so {@code now - lastPlayerAlarm} cannot overflow. */
+	private static long lastPlayerAlarm = Long.MIN_VALUE / 2;
 
 	private Alarm() {
 	}
@@ -369,9 +373,11 @@ public final class Alarm {
 			}
 		}
 		if (Camp.isNightTime(level) && present.size() >= FriendsConfig.get().alarmHordeSize) {
+			// In numbers, and one not reported before has come into the village itself: the all-clear is judged inside
+			// the village too, so prowlers at its edge alone never ring it again and again through the night.
 			boolean fresh = false;
 			for (LivingEntity t : present) {
-				fresh |= !REPORTED.contains(t);
+				fresh |= !REPORTED.contains(t) && Area.inside(level, t.blockPosition(), centre, radius);
 			}
 			if (fresh) {
 				REPORTED.addAll(present);
@@ -402,10 +408,14 @@ public final class Alarm {
 	private static void keep(ServerLevel level, CampData data, State s, long now, @Nullable Raid ongoing) {
 		BlockPos centre = data.campPos().orElseThrow();
 		int radius = Camp.radius(data);
+		boolean inside = false;
 		for (LivingEntity t : present(level)) {
-			if (Area.inside(level, t.blockPosition(), centre, radius)) {
+			if (!(t instanceof Creeper)) {
+				REPORTED.add(t); // seen during this alarm: still about after the all-clear, it does not ring it again
+			}
+			if (!inside && Area.inside(level, t.blockPosition(), centre, radius)) {
+				inside = true;
 				s.lastThreat = now; // still in the village (one only prowling past its edge does not keep everyone in)
-				break;
 			}
 		}
 		if (ongoing != null) {
@@ -414,11 +424,13 @@ public final class Alarm {
 				s.cause = Cause.RAID; // monsters, a bad omen or a player's ring turned out to be a raid
 				s.ringWanted = true;
 				s.rung = false;
+				s.failedRingers.clear();
 			}
 			if (ongoing.getGroupsSpawned() > s.raidWaves) {
 				if (s.raidWaves > 0) {
-					s.ringWanted = true; // a new wave: ring again
+					s.ringWanted = true; // a new wave: ring again, and anyone may be asked afresh
 					s.rung = false;
+					s.failedRingers.clear();
 				}
 				s.raidWaves = ongoing.getGroupsSpawned();
 			}
@@ -557,7 +569,9 @@ public final class Alarm {
 		long time = mem.getLongOr("last_time", 0);
 		String when = time >= 12500 && time < 23500 ? "at night" : time < 6000 ? "in the morning" : "in the afternoon";
 		long length = mem.getLongOr("last_length", -1);
-		String end = length < 0 ? "still ringing" : "all clear after " + minutes(length);
+		// No length and no alarm on: the game stopped (or the defence was switched off) before the all-clear.
+		String end = length >= 0 ? "all clear after " + minutes(length)
+			: state != null ? "still ringing" : "over without an all-clear";
 		return String.format(Locale.ROOT, "day %d, %s: %s; %s", mem.getLongOr("last_day", 0), when, what, end);
 	}
 
@@ -580,6 +594,6 @@ public final class Alarm {
 		raid = null;
 		raidSettled = false;
 		sensorCursor = 0;
-		lastPlayerAlarm = Long.MIN_VALUE;
+		lastPlayerAlarm = Long.MIN_VALUE / 2;
 	}
 }

@@ -39,7 +39,8 @@ final class Posts {
 	private static final double CREEPER_PATH = 6;
 
 	private static List<Post> cache = List.of();
-	private static long cachedAt = Long.MIN_VALUE;
+	/** "Never" is half of {@code Long.MIN_VALUE}, so {@code now - cachedAt} cannot overflow. */
+	private static long cachedAt = Long.MIN_VALUE / 2;
 
 	private Posts() {
 	}
@@ -218,6 +219,6 @@ final class Posts {
 
 	static void clear() {
 		cache = List.of();
-		cachedAt = Long.MIN_VALUE;
+		cachedAt = Long.MIN_VALUE / 2;
 	}
 }

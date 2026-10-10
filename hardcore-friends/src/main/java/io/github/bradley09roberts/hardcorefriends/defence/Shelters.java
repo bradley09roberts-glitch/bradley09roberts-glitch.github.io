@@ -64,7 +64,8 @@ final class Shelters {
 	private static final double INSIDE = 7;
 
 	private static List<Shelter> cache = List.of();
-	private static long cachedAt = Long.MIN_VALUE;
+	/** "Never" is half of {@code Long.MIN_VALUE}, so {@code now - cachedAt} cannot overflow. */
+	private static long cachedAt = Long.MIN_VALUE / 2;
 
 	private Shelters() {
 	}
@@ -266,6 +267,6 @@ final class Shelters {
 
 	static void clear() {
 		cache = List.of();
-		cachedAt = Long.MIN_VALUE;
+		cachedAt = Long.MIN_VALUE / 2;
 	}
 }

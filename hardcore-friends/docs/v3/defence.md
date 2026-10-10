@@ -13,7 +13,8 @@ Nothing here has been run in game yet. See **Honest limits** at the end.
 **What rings it:**
 
 - **Monsters closing in at night**: at least `alarmHordeSize` hostiles (3 by default) seen in the village, or just
-  beyond its edge, at the same time.
+  beyond its edge, at the same time, once one of them that has not rung it before has come into the village itself.
+  Monsters only prowling round the edge do not ring it.
 - **A creeper inside the village**, by day or night.
 - **A raid**: a pillager raid on the village, or on a game village near the camp.
 - **A bad omen**: a player in the village with the Raid Omen (a raid is about to start), so everyone is ready before
@@ -25,11 +26,14 @@ Nothing here has been run in game yet. See **Honest limits** at the end.
 **Who notices.** The friends who are awake in the village keep an eye out: the one on the night watch and the guards
 always, and the others in turn. A hostile counts when one of them can see it, or it is right beside them (within 6
 blocks), and it is in the village at ground level: a zombie in a cave under the houses does not ring the bell. Each
-hostile rings it once while it stays about.
+hostile rings it once while it stays about, and one first seen while the alarm was already on does not ring it again
+after the all-clear (a creeper still does, if it comes into the village).
 
 **The bell.** The nearest friend who is awake, grown up and fit runs to the bell and rings it three times, with the
-game's own bell, so you hear it and raiders near it glow just as when a villager rings it. Nobody is ever sent to a
-bell with a creeper near it, and with other monsters beside the bell only someone fit to fight is sent. The bell rung is, in this order:
+game's own bell, so you hear it and raiders near it glow just as when a villager rings it. They put down whatever
+work they had in hand for it. Nobody is ever sent to a bell with a creeper near it, nor past a creeper on the way (nor
+anyone with a creeper close by them), and whoever is asked is let off if a creeper comes into their way; with other
+monsters beside the bell only someone fit to fight is sent. The bell rung is, in this order:
 
 1. the **town hall's bell** (once a bell hangs there: the builders hang it once the camp has a bell in the chest);
 2. the **friends' own bell**: if the village has no bell at all and no town hall yet (planned or standing: the town
@@ -54,7 +58,8 @@ With no bell (or nobody near it), the alarm is simply shouted. During a raid the
   warrior, holds a guard trade, or carries a sword, an axe or a bow with arrows. They go to the post nearest the
   danger (a gate, a stretch of wall, the bell, the camp centre), never right on top of it, never near a creeper and
   never past one on the way, and stand ready there. The alarm gets sleeping fighters up, as the night watch's alarm does. The friend on the night
-  watch and the guards on duty keep their own posts.
+  watch and the guards on duty keep their own posts (the friend on watch does so even with only a pick or a hoe:
+  they are not sent indoors).
 - **Who the defenders go for first**: a monster at a door (zombies trying to break doors in on Hard, vindicators),
   then one going for someone in the village (a villager, an iron golem, you, a friend; a skeleton shooting in from
   outside), then a spider climbing a wall, then any other raider. They never fire with you, a villager, a friend or an
@@ -144,8 +149,12 @@ All at permission level 0, with cheats off, and changing nothing.
 - **The village's bell needs a bell.** The friends cannot make one; the town hall's bell spot stays empty until the
   supply chest has a bell, and the friends' own square bell needs one too. Without any bell the alarm is shouted.
 - **Who rings it.** Only a friend awake, at work in the village and within 48 blocks of the bell is asked; at night
-  that is usually the night watch or a guard. A friend busy with something more urgent than the bell (a starving
-  friend's meal) is let off after 40 seconds and the alarm goes on without the bell.
+  that is usually the night watch or a guard. A shopkeeper serving a player is not asked. A friend busy with a need
+  more urgent than the bell (a starving friend's meal) is let off after 40 seconds and the next nearest is asked; with
+  nobody left to ask, the alarm is shouted. During a raid everyone may be asked again at each new wave. The way to the
+  bell is judged in a straight line, as for taking cover (below).
+- **The last alarm** shown by `/friends defence` reads "over without an all-clear" when the game was closed (or the
+  defence switched off) while it rang.
 - **Taking cover is simple.** People walk to a spot inside and stand there; a shelter's "inside" is the plan's marked
   spot, and "away from the windows" only avoids standing right beside glass. Shutting the door is tried once, a moment
   after they are in, and only on the friends' own wooden doors (not on anyone in the doorway). Before the village has

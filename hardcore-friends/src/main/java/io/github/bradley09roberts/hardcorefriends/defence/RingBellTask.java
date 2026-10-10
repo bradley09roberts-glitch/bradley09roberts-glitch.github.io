@@ -15,7 +15,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.Line;
  * Ringing the village bell when the alarm goes up: the friend {@link Ringing} asked runs to the bell and rings it
  * {@value #STROKES} times, a second apart, with the game's own bell ring (players hear it; raiders near it glow), and
  * calls out the danger. It scores {@value #SCORE}, above every job but a desperate need, and only for the friend asked.
- * A creeper coming near the bell, or the way there failing, lets them off (someone else is asked).
+ * A creeper coming near the bell, near them or into their way ({@link Ringing}, twice a second), or the way there
+ * failing, lets them off (someone else is asked).
  */
 final class RingBellTask implements CompanionTask {
 	static final String ID = "defence.ring_bell";

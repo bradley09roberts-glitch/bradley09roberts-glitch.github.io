@@ -48,9 +48,10 @@ final class Bells {
 	private static final int HEIGHT = 32;
 
 	private static List<Bell> known = List.of();
-	private static long knownAt = Long.MIN_VALUE;
+	/** When each list was made; "never" is half of {@code Long.MIN_VALUE}, so {@code now - knownAt} cannot overflow. */
+	private static long knownAt = Long.MIN_VALUE / 2;
 	private static int chestBells;
-	private static long chestAt = Long.MIN_VALUE;
+	private static long chestAt = Long.MIN_VALUE / 2;
 
 	private Bells() {
 	}
@@ -80,8 +81,8 @@ final class Bells {
 
 	/** Forgets the bells found, so the next look finds them afresh (a bell was just put up). */
 	static void invalidate() {
-		knownAt = Long.MIN_VALUE;
-		chestAt = Long.MIN_VALUE;
+		knownAt = Long.MIN_VALUE / 2;
+		chestAt = Long.MIN_VALUE / 2;
 	}
 
 	static boolean isBell(ServerLevel level, BlockPos pos) {
@@ -257,8 +258,8 @@ final class Bells {
 
 	static void clear() {
 		known = List.of();
-		knownAt = Long.MIN_VALUE;
+		knownAt = Long.MIN_VALUE / 2;
 		chestBells = 0;
-		chestAt = Long.MIN_VALUE;
+		chestAt = Long.MIN_VALUE / 2;
 	}
 }

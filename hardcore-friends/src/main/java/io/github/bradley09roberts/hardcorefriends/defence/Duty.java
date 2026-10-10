@@ -34,7 +34,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.Needs.Need;
  * <ul>
  * <li><b>Fighters</b> ({@link #fighter}): grown-ups who are fit to fight (healthy, not too tired, not falling back) and
  * are warriors, hold the guard trade, or carry a sword, an axe or a bow with arrows. They go to their posts
- * ({@link ToPostsTask}), except the friend on the night watch and the guards on duty, who keep their own.</li>
+ * ({@link ToPostsTask}), except the friend on the night watch and the guards on duty, who keep their own (the watch
+ * does even when they hold only a pick or a hoe and so are no fighter: they are not sent indoors).</li>
  * <li><b>Everyone else</b>, children above all, takes cover indoors ({@link TakeCoverTask}) when the village has a
  * shelter. At night a child or grown-up already indoors with a bed indoors (their home, the cabin) simply sleeps.</li>
  * </ul>
@@ -87,11 +88,13 @@ final class Duty {
 				continue;
 			}
 			UUID id = c.getUUID();
+			if (c == watcher || GuardRota.isOnDuty(c)) {
+				NO_SLEEP.add(id); // the watch (armed or not) and the guards keep their own posts, never sent indoors
+				continue;
+			}
 			if (fighter(c)) {
-				if (c != watcher && !GuardRota.isOnDuty(c)) {
-					FIGHTERS.add(id);
-					callAway(c, ToPostsTask.ID);
-				}
+				FIGHTERS.add(id);
+				callAway(c, ToPostsTask.ID);
 				NO_SLEEP.add(id);
 				continue;
 			}
