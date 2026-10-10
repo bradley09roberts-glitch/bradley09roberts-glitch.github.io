@@ -48,9 +48,10 @@ public final class VillageData extends SavedData {
 	 * One plot of the town plan and the building on it.
 	 *
 	 * <p>{@code street} is the street it fronts ({@link TownPlan#STREETS} index; the town gate straddles one, with side
-	 * 0), or -1 for the square, {@link TownPlan#WATERSIDE} or {@link TownPlan#EDGE} (the town walls). {@code box} is the building's footprint {minX, minZ, maxX, maxZ}. For a house,
-	 * {@code intended} is the household it was planned for and {@code residents} who lives there now, each with the
-	 * index of their bed among the plan's {@code bed} markers (-1: no bed free yet).
+	 * 0), or -1 for the square, {@link TownPlan#WATERSIDE} or {@link TownPlan#EDGE} (the town walls). {@code box} is
+	 * the building's footprint {minX, minZ, maxX, maxZ}. For a house, {@code intended} is the household it was planned
+	 * for and {@code residents} who lives there now, each with the index of their bed among the plan's {@code bed}
+	 * markers (-1: no bed free yet).
 	 */
 	public static final class Plot {
 		public final int id;

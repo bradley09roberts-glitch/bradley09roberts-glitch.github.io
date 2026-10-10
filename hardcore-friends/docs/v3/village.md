@@ -184,7 +184,8 @@ govern levelling plots; `allowScaffolding` (architecture part) high building.
   ("this bed is occupied"), as with villagers. A world saved while a friend slept leaves the bed marked until they wake
   on loading. Players' respawn points are not looked at.
 - **The routine** is simple: friends walk to a spot at home, the square or a friend's house and stand there; there is no
-  sitting on chairs. Meals are eaten from what the friend carries.
+  sitting on chairs. Meals are eaten from what the friend carries. The chests in a house are part of the building only:
+  friends do not keep their own things in them yet (everything still goes to the camp's supply chest).
 - **Streets** are surfaced block by block (the path dug up, the new block put in); if someone keeps standing on the spot
   the earth goes back, and in rare cases a one-block dip may be left, which the next pass paths over.
 - **Walls** are only two lengths each side of the gate, not a ring round the village. The gate goes at the end of the

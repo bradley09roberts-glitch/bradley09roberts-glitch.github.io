@@ -122,7 +122,8 @@ final class StreetsTask implements CompanionTask {
 			Speech.say(c, Line.NEED_TOOL, "shovel");
 		}
 		Block surface = surface(v);
-		if (surface != null && !survey.surfaces.isEmpty() && (carried(c, surface.asItem()) > 0 || ChestFetch.chestHas(c, s -> s.is(surface.asItem())))) {
+		@Nullable Item item = surface == null ? null : surface.asItem();
+		if (item != null && !survey.surfaces.isEmpty() && (carried(c, item) > 0 || ChestFetch.chestHas(c, s -> s.is(item)))) {
 			return 36;
 		}
 		return 0;

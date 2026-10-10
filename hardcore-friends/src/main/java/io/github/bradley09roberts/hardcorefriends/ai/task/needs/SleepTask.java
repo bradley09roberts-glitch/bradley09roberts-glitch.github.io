@@ -29,10 +29,11 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 /**
  * Sleeps through the night at home: in their own bed in their village home once they have one ({@code civic.Homes}:
  * lying down in it as villagers do, the bed marked taken until they get up), otherwise each friend has their own place
- * to lie down, inside the cabin once it is built, otherwise in a ring around the camp centre. Sleep restores energy by the in-game time slept (faster under a roof: a
- * full night in the cabin is about +100, see {@link CompanionEntity#settleSleep}), so a night the players sleep
- * through counts in full, and ends at dawn with a good morning. A friend exhausted in daytime takes a short nap at
- * camp.
+ * to lie down, inside the cabin once it is built, otherwise in a ring around the camp centre. Sleep restores energy
+ * by the in-game time slept (faster under a roof: a full night in the cabin is about +100, see
+ * {@link CompanionEntity#settleSleep}), so a night the players sleep through counts in full, and ends at dawn with a
+ * good morning. A friend exhausted in daytime takes a short nap at camp. A friend who cannot get to their own bed
+ * sleeps the old way for a while.
  *
  * <p><b>Bedtime.</b> At night everyone not on watch goes to bed ({@value #BEDTIME} and up, a little more the tireder
  * they are): above every pastime, chat and cosy warm-up, and, since the scheduler keeps ordinary work for the

@@ -174,9 +174,11 @@ public final class Spots {
 		if (!(state.getBlock() instanceof AbstractBedBlock)) {
 			return null;
 		}
-		BlockPos head = state.getValue(AbstractBedBlock.PART) == BedPart.HEAD ? foot : foot.relative(state.getValue(AbstractBedBlock.FACING));
+		BlockPos head = state.getValue(AbstractBedBlock.PART) == BedPart.HEAD ? foot
+			: foot.relative(state.getValue(AbstractBedBlock.FACING));
 		BlockState headState = level.isLoaded(head) ? level.getBlockState(head) : null;
-		if (headState == null || !(headState.getBlock() instanceof AbstractBedBlock) || headState.getValue(AbstractBedBlock.PART) != BedPart.HEAD) {
+		if (headState == null || !(headState.getBlock() instanceof AbstractBedBlock)
+			|| headState.getValue(AbstractBedBlock.PART) != BedPart.HEAD) {
 			return null;
 		}
 		if (!Camp.data(level.getServer()).isPlacedByFriends(level, head) || !inCamp(c, head)) {
@@ -227,7 +229,8 @@ public final class Spots {
 	static boolean lieInBed(CompanionEntity c, BlockPos head) {
 		ServerLevel level = (ServerLevel) c.level();
 		BlockState state = level.getBlockState(head);
-		if (!(state.getBlock() instanceof AbstractBedBlock) || state.getValue(AbstractBedBlock.OCCUPIED) && someoneElseAsleep(level, head, c)) {
+		if (!(state.getBlock() instanceof AbstractBedBlock)
+			|| state.getValue(AbstractBedBlock.OCCUPIED) && someoneElseAsleep(level, head, c)) {
 			return false;
 		}
 		return c.startSleeping(head);
