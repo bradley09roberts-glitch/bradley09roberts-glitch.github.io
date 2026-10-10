@@ -83,7 +83,14 @@ final class VisitGraveTask implements CompanionTask {
 	private static LifeData.@Nullable Grave graveFor(CompanionEntity c, ServerLevel level, LifeData data, LifeData.@Nullable Mourn m) {
 		long day = Calendar.today(level.getServer());
 		boolean familyDay = Math.floorMod(day + c.getUUID().hashCode(), 5) == 0;
-		for (LifeData.Grave g : Graves.made(level, data)) {
+		if (m == null && !familyDay) {
+			return null;
+		}
+		String dim = Camp.dimensionId(level);
+		for (LifeData.Grave g : data.graves) {
+			if (!g.made || g.pos == null || !g.dimension.equals(dim)) {
+				continue;
+			}
 			if (m != null && m.name().equals(g.name) || familyDay && g.family.contains(c.getUUID())) {
 				return g;
 			}
@@ -202,7 +209,7 @@ final class VisitGraveTask implements CompanionTask {
 
 	@Override
 	public int failureCooldown() {
-		return 20 * 60 * 2;
+		return 20 * 60 * 8;
 	}
 
 	@Override

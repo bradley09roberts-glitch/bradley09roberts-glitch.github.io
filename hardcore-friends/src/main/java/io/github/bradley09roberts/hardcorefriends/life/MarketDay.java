@@ -39,17 +39,32 @@ final class MarketDay {
 		return Calendar.marketDay(day) && time >= FROM && time < UNTIL;
 	}
 
-	/** True if the village has any stalls to visit: a market square, or someone keeping a shop. */
+	/**
+	 * True if the village has any stalls to visit: a market square, or someone keeping a shop. Looked at again at most
+	 * every half minute.
+	 */
 	static boolean hasStalls(ServerLevel level) {
-		if (VillagePlan.isBuilt(level.getServer(), "civic:market")) {
-			return true;
+		long now = level.getGameTime();
+		if (now - stallsAt < 600 && now >= stallsAt) {
+			return stalls;
 		}
+		stallsAt = now;
+		stalls = VillagePlan.isBuilt(level.getServer(), "civic:market");
 		for (CompanionEntity c : Places.freePeople(level)) {
-			if (stall(c).isPresent()) {
-				return true;
+			if (stalls) {
+				break;
 			}
+			stalls = stall(c).isPresent();
 		}
-		return false;
+		return stalls;
+	}
+
+	private static boolean stalls;
+	private static long stallsAt = Long.MIN_VALUE;
+
+	static void clear() {
+		stalls = false;
+		stallsAt = Long.MIN_VALUE;
 	}
 
 	/** Where this friend keeps a stall (their shop's work place), if they hold a shop trade. */

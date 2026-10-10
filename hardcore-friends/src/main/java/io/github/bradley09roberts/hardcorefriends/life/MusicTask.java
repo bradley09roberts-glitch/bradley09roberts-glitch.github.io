@@ -23,6 +23,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.role.build.ChestWalk;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.Crafting;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.civic.Professions;
@@ -67,6 +68,9 @@ final class MusicTask implements CompanionTask {
 	/** The day music was played (ordinary evenings: once), and the day no note block could be had. */
 	private static long playedDay = -1;
 	private static long noBlockDay = -1;
+	/** Failed tries at putting the note block down today. */
+	private static int placeFails;
+	private static long placeFailDay = -1;
 
 	private enum Step {
 		FETCH,
@@ -94,6 +98,8 @@ final class MusicTask implements CompanionTask {
 		chosenAt = Long.MIN_VALUE;
 		playedDay = -1;
 		noBlockDay = -1;
+		placeFails = 0;
+		placeFailDay = -1;
 	}
 
 	@Override
@@ -194,8 +200,10 @@ final class MusicTask implements CompanionTask {
 		ServerLevel level = (ServerLevel) c.level();
 		ticks++;
 		stepTicks++;
-		if (ticks % 20 == 0 && (Places.hostileNear(level, c.blockPosition(), Places.SPOIL_RANGE) || Camp.isNightTime(level))) {
-			return takeDownOrLeave(c, level);
+		if (ticks % 20 == 0 && step != Step.TAKE_DOWN
+			&& (Places.hostileNear(level, c.blockPosition(), Places.SPOIL_RANGE) || Camp.isNightTime(level) || !Places.free(c))) {
+			step = Step.TAKE_DOWN; // danger, nightfall or their watch: the music stops
+			stepTicks = 0;
 		}
 		if (atFeast && Gatherings.activeFor(c) == null && step != Step.TAKE_DOWN) {
 			step = Step.TAKE_DOWN; // the feast is over
@@ -261,14 +269,24 @@ final class MusicTask implements CompanionTask {
 			return TaskStatus.RUNNING;
 		}
 		if (stepTicks > 20 * 5) {
-			return TaskStatus.FAILURE; // nowhere to put it down
+			long day = Calendar.today(level.getServer());
+			if (placeFailDay != day) {
+				placeFailDay = day;
+				placeFails = 0;
+			}
+			if (++placeFails >= 3) {
+				noBlockDay = day; // nowhere to put it down, three times: not tonight
+			}
+			return TaskStatus.FAILURE;
 		}
 		BlockPos here = c.blockPosition();
+		CampData camp = Camp.data(level.getServer());
 		for (Direction d : Direction.Plane.HORIZONTAL) {
 			BlockPos p = here.relative(d);
 			BlockState at = level.getBlockState(p);
 			if (!at.isAir() || !level.getBlockState(p.below()).isFaceSturdy(level, p.below(), Direction.UP)
-				|| level.getBlockState(p.below()).is(Blocks.CAMPFIRE) || !level.getBlockState(p.above()).isAir()) {
+				|| level.getBlockState(p.below()).is(Blocks.CAMPFIRE) || !level.getBlockState(p.above()).isAir()
+				|| WorldEditGuard.looksPlayerBuilt(level, p, 1, camp)) {
 				continue;
 			}
 			NoteBlockInstrument below = level.getBlockState(p.below()).instrument();
@@ -278,7 +296,8 @@ final class MusicTask implements CompanionTask {
 				block = p.immutable();
 				instrument = chosen;
 				IN_USE.add(block);
-				LifeData.get(level.getServer()).addTemp(Camp.dimensionId(level), block, Blocks.NOTE_BLOCK, level.getServer().overworld().getOverworldClockTime() + LEAVE_FOR);
+				long clock = level.getServer().overworld().getOverworldClockTime();
+				LifeData.get(level.getServer()).addTemp(Camp.dimensionId(level), block, Blocks.NOTE_BLOCK, clock + LEAVE_FOR);
 				Speech.say(c, Line.MUSIC_PLAY);
 				step = Step.PLAY;
 				stepTicks = 0;

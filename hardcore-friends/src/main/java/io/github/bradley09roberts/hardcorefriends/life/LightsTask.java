@@ -13,7 +13,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 import io.github.bradley09roberts.hardcorefriends.ai.role.build.ChestWalk;
@@ -21,6 +20,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.ai.task.needs.Spots;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
@@ -104,10 +104,13 @@ final class LightsTask implements CompanionTask {
 			return false;
 		}
 		spots.clear();
+		CampData camp = Camp.data(level.getServer());
 		for (int i = 0; i < LIGHTS; i++) {
 			double angle = Math.PI * 2 * i / LIGHTS + Math.PI / LIGHTS;
-			BlockPos p = Spots.standable(level, centre.offset((int) Math.round(Math.cos(angle) * RING), 0, (int) Math.round(Math.sin(angle) * RING)));
-			if (p != null && Math.abs(p.getY() - centre.getY()) <= 3) {
+			BlockPos p = Spots.standable(level,
+				centre.offset((int) Math.round(Math.cos(angle) * RING), 0, (int) Math.round(Math.sin(angle) * RING)));
+			// Never against something a player built: the lights are the square's, for one night.
+			if (p != null && Math.abs(p.getY() - centre.getY()) <= 3 && !WorldEditGuard.looksPlayerBuilt(level, p, 1, camp)) {
 				spots.add(p);
 			}
 		}

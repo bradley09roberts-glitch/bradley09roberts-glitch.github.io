@@ -47,6 +47,11 @@ final class GraveTask implements CompanionTask {
 
 	/** The friend making a grave just now: one at a time. */
 	private static @Nullable UUID digger;
+	/** The day the camp had no stone for a headstone (tried again the next day). */
+	private static long noStoneDay = -1;
+	/** Whether any grave waits to be made, looked at every few seconds rather than by every friend every second. */
+	private static boolean pending;
+	private static long pendingAt = Long.MIN_VALUE;
 
 	private enum Step {
 		FETCH,
@@ -63,6 +68,9 @@ final class GraveTask implements CompanionTask {
 
 	static void clear() {
 		digger = null;
+		noStoneDay = -1;
+		pending = false;
+		pendingAt = Long.MIN_VALUE;
 	}
 
 	@Override
@@ -82,10 +90,16 @@ final class GraveTask implements CompanionTask {
 			|| Camp.isNight(level) || Calendar.time(level.getServer()) > 11500) {
 			return 0;
 		}
-		if (digger != null && !digger.equals(c.getUUID()) && Places.loaded(level, digger) != null) {
+		if (digger != null && !digger.equals(c.getUUID()) && Places.loaded(level, digger) != null
+			|| noStoneDay == Calendar.today(level.getServer())) {
 			return 0;
 		}
-		return next(level) != null ? SCORE : 0;
+		long now = level.getGameTime();
+		if (now - pendingAt >= 100 || now < pendingAt) {
+			pendingAt = now;
+			pending = next(level) != null;
+		}
+		return pending ? SCORE : 0;
 	}
 
 	/** The oldest grave still to be made in this world, not yet given up. */
@@ -175,7 +189,8 @@ final class GraveTask implements CompanionTask {
 			SupplyChest.withdraw(chest, c.backpack(), Graves::isFlower, 2 - c.backpack().count(Graves::isFlower));
 		}
 		if (!c.backpack().has(Graves::isHeadstone)) {
-			return TaskStatus.FAILURE; // nothing to make a headstone of: later, when the camp has stone
+			noStoneDay = Calendar.today(level.getServer()); // nothing to make a headstone of: tomorrow, when the camp has stone
+			return TaskStatus.FAILURE;
 		}
 		return goTo(Step.WALK);
 	}
@@ -290,6 +305,7 @@ final class GraveTask implements CompanionTask {
 		g.made = true;
 		reserve(level, g);
 		data.setDirty();
+		pendingAt = Long.MIN_VALUE;
 		Speech.say(c, Line.GRAVE_MADE, g.name);
 		return TaskStatus.SUCCESS;
 	}

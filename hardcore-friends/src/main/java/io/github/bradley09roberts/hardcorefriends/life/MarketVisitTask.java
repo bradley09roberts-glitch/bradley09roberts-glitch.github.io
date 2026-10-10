@@ -58,7 +58,10 @@ final class MarketVisitTask implements CompanionTask {
 			return 0;
 		}
 		Long last = VISITED.get(c.getUUID());
-		return last != null && last == Calendar.today(level.getServer()) ? 0 : SCORE;
+		if (last != null && last == Calendar.today(level.getServer()) || !MarketDay.hasStalls(level)) {
+			return 0;
+		}
+		return SCORE;
 	}
 
 	@Override

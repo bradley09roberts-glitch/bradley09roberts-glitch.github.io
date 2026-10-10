@@ -142,7 +142,7 @@ public final class FriendsConfig {
 	// ---- Village life (package life) ----
 	/** Feasts and festivals, market days, music in the evenings and birthdays (the calendar and the Chronicle always run). */
 	public boolean villageLife = true;
-	/** A fallen friend gets a grave at the camp's cemetery (a headstone, a sign with their name, flowers) and a funeral. */
+	/** A fallen friend gets a grave at the camp's cemetery (a headstone, a sign with their name, flowers); funerals are held either way. */
 	public boolean graves = true;
 	/** The Village Chronicle is also written out as a real book, at the town hall's lectern or in the supply chest. */
 	public boolean chronicleBook = true;

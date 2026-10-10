@@ -92,6 +92,8 @@ final class Gatherings {
 		long phaseAt;
 		int step;
 		boolean spoke;
+		/** A monster near the middle just now (looked at once a second): nobody new comes until it is gone. */
+		boolean danger;
 		@Nullable UUID speaker;
 		final Set<UUID> arrived = new LinkedHashSet<>();
 		final Set<UUID> attended = new LinkedHashSet<>();
@@ -125,6 +127,7 @@ final class Gatherings {
 	private static @Nullable Gathering active;
 	/** Today's feast cook (chosen once a day) and the cooks who carry the feast's food (kept from putting it away). */
 	private static long cookDay = -1;
+	private static long cookAt = Long.MIN_VALUE;
 	private static @Nullable UUID cook;
 	private static final Set<UUID> FEAST_FOOD = new HashSet<>();
 
@@ -340,6 +343,7 @@ final class Gatherings {
 		}
 		g.arrived.removeIf(id -> Places.loaded(level, id) == null);
 		boolean danger = Places.hostileNear(level, g.centre, Places.SPOIL_RANGE);
+		g.danger = danger;
 		switch (g.phase) {
 			case GATHERING -> {
 				int about = Places.freePeople(level).size();
@@ -439,7 +443,8 @@ final class Gatherings {
 		long since = now - g.phaseAt;
 		CompanionEntity someone = there.get(level.getRandom().nextInt(there.size()));
 		if (since % 100 < 20) {
-			level.sendParticles(ParticleTypes.HEART, someone.getX(), someone.getY() + someone.getBbHeight() + 0.3, someone.getZ(), 1, 0.3, 0.1, 0.3, 0.0);
+			level.sendParticles(ParticleTypes.HEART, someone.getX(), someone.getY() + someone.getBbHeight() + 0.3, someone.getZ(), 1,
+				0.3, 0.1, 0.3, 0.0);
 		}
 		if (since % 160 < 20 && since > 60) {
 			Speech.say(someone, Line.FESTIVAL_CHEER);
@@ -619,7 +624,8 @@ final class Gatherings {
 	 * longest. Chosen once a day among those about.
 	 */
 	static @Nullable UUID cookFor(ServerLevel level, long day) {
-		if (cookDay == day && cook != null && Places.loaded(level, cook) != null) {
+		long now = level.getGameTime();
+		if (cookDay == day && (cook != null && Places.loaded(level, cook) != null || cook == null && now - cookAt < 600 && now >= cookAt)) {
 			return cook;
 		}
 		LifeData data = LifeData.get(level.getServer());
@@ -643,6 +649,7 @@ final class Gatherings {
 			}
 		}
 		cookDay = day;
+		cookAt = now;
 		cook = best == null ? null : best.getUUID();
 		return cook;
 	}

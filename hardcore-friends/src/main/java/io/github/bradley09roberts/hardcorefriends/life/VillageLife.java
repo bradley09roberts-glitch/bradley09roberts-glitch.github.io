@@ -129,6 +129,7 @@ public final class VillageLife {
 		TidyUpTask.clear();
 		FeastCookTask.clear();
 		MarketVisitTask.clear();
+		MarketDay.clear();
 		ChronicleTask.clear();
 	}
 }

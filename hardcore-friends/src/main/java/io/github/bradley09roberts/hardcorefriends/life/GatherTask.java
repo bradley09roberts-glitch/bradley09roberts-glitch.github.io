@@ -51,7 +51,7 @@ final class GatherTask implements CompanionTask {
 	@Override
 	public double score(CompanionEntity c) {
 		Gatherings.Gathering g = Gatherings.activeFor(c);
-		if (g == null || !Places.free(c) || c.isRetreating() || c.getTarget() != null) {
+		if (g == null || g.danger || !Places.free(c) || c.isRetreating() || c.getTarget() != null) {
 			return 0;
 		}
 		return g.kind == Gatherings.Kind.FUNERAL ? FUNERAL : FEAST;
@@ -76,8 +76,9 @@ final class GatherTask implements CompanionTask {
 		Direction f = g.facing;
 		boolean half = f != null;
 		int perRing = half ? 7 : 10;
-		double radius = (half ? 3 : 4) + 2 * (slot / perRing);
-		BlockPos s = Places.ringSpot(level, g.centre, slot % perRing, perRing, radius, half, half ? f.getStepX() : 0, half ? f.getStepZ() : 0);
+		int place = Math.floorMod(slot, perRing * 3); // three rings at most, however often people come and go
+		double radius = (half ? 3 : 4) + 2 * (place / perRing);
+		BlockPos s = Places.ringSpot(level, g.centre, place % perRing, perRing, radius, half, half ? f.getStepX() : 0, half ? f.getStepZ() : 0);
 		return s != null ? s : Places.standableNear(level, g.centre, 5);
 	}
 
@@ -88,8 +89,13 @@ final class GatherTask implements CompanionTask {
 			return TaskStatus.SUCCESS; // it is over
 		}
 		ticks++;
-		if (ticks % 20 == 0 && Places.hostileNear(level, c.blockPosition(), DANGER)) {
-			return TaskStatus.FAILURE; // a monster close by: the reflexes and the fighters see to it first
+		if (ticks % 20 == 0) {
+			if (Places.hostileNear(level, c.blockPosition(), DANGER)) {
+				return TaskStatus.FAILURE; // a monster close by: the reflexes and the fighters see to it first
+			}
+			if (!Places.free(c)) {
+				return TaskStatus.SUCCESS; // their watch begins, or they have left the camp: off they go
+			}
 		}
 		BlockPos to = spot;
 		if (to == null) {

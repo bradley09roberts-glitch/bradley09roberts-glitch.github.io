@@ -276,7 +276,8 @@ final class ChronicleTask implements CompanionTask {
 
 	/** A book and quill: from the chest, or made from a book (or paper and leather), an ink sac and a feather. */
 	private static boolean getBookAndQuill(CompanionEntity c, Container chest, ServerLevel level) {
-		if (c.backpack().has(s -> s.is(Items.WRITABLE_BOOK)) || SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.WRITABLE_BOOK), 1) > 0) {
+		if (c.backpack().has(s -> s.is(Items.WRITABLE_BOOK))
+			|| SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.WRITABLE_BOOK), 1) > 0) {
 			return true;
 		}
 		boolean book = SupplyChest.count(chest, s -> s.is(Items.BOOK)) > 0

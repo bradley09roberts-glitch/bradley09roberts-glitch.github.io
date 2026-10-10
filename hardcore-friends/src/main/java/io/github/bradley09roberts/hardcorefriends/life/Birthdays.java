@@ -11,9 +11,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
@@ -134,7 +136,7 @@ final class Birthdays {
 		if (chest == null || !c.backpack().canFit(new ItemStack(Items.COOKIE))) {
 			return;
 		}
-		for (var treat : new net.minecraft.world.item.Item[] {Items.COOKIE, Items.PUMPKIN_PIE, Items.APPLE}) {
+		for (var treat : new Item[] {Items.COOKIE, Items.PUMPKIN_PIE, Items.APPLE}) {
 			if (SupplyChest.count(chest, s -> s.is(treat)) >= 4 && SupplyChest.withdraw(chest, c.backpack(), s -> s.is(treat), 1) > 0) {
 				return;
 			}
@@ -142,7 +144,7 @@ final class Birthdays {
 	}
 
 	/** Takes one of an item out of a container. */
-	private static boolean take(Container container, net.minecraft.world.item.Item item) {
+	private static boolean take(Container container, Item item) {
 		for (int i = 0; i < container.getContainerSize(); i++) {
 			ItemStack s = container.getItem(i);
 			if (!s.isEmpty() && s.is(item)) {
@@ -161,7 +163,7 @@ final class Birthdays {
 	private static boolean bakeryCake(ServerLevel level) {
 		for (VillagePlan.Building bakery : VillagePlan.buildingsOfKind(level.getServer(), "shop:bakery")) {
 			for (BlockPos pos : bakery.marker("chest")) {
-				if (!level.isLoaded(pos) || !io.github.bradley09roberts.hardcorefriends.camp.Camp.data(level.getServer()).isPlacedByFriends(level, pos)) {
+				if (!level.isLoaded(pos) || !Camp.data(level.getServer()).isPlacedByFriends(level, pos)) {
 					continue;
 				}
 				Container shelf = SupplyChest.at(level, pos).orElse(null);

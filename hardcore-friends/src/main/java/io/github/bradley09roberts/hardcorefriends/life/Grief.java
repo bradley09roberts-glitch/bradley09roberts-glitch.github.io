@@ -72,9 +72,10 @@ final class Grief {
 		family.addAll(Families.get().childrenOf(server, id));
 		family.remove(id);
 		String full = Chronicle.fullName(server, id, name);
-		Chronicle.write(server, (c.isChild() ? "Little " : "") + full + " " + gently(source, c, level) + ".");
-
 		CampData camp = Camp.data(server);
+		if (data.started || camp.campPos().isPresent()) {
+			Chronicle.write(server, (c.isChild() ? "Little " : "") + full + " " + gently(source, c, level) + ".");
+		}
 		if (camp.campPos().isPresent()) {
 			holdFuneral(data, id, name, day + 1);
 			if (FriendsConfig.get().graves && data.graves.size() < LifeData.MAX_GRAVES) {
@@ -161,11 +162,6 @@ final class Grief {
 		if (!c.isAsleep() && c.getTarget() == null && c.getRandom().nextInt(m.deep() ? 90 : 180) == 0) {
 			Speech.say(c, Line.MOURNING, m.name());
 		}
-	}
-
-	/** True while this friend mourns someone; {@code name} narrows it to mourning that person. */
-	static boolean mourning(LifeData data, UUID id) {
-		return data.mourning.containsKey(id);
 	}
 
 	/** A gentle telling of how someone died: "was lost in a fight with a zombie, far from home". */
