@@ -251,8 +251,15 @@ final class AdoptTask implements CompanionTask {
 			&& Math.abs(a.getBlockY() - c.homePos().getY()) <= (c.isChild() ? 6 : 24);
 	}
 
-	/** True if the friend carries, or the chest holds, what tames this kind. */
+	/**
+	 * True if the friend carries, or the chest holds, what tames this kind. A cat's raw fish is food the cooks make
+	 * meals from, so no cat is tamed while the camp is short of food ({@link FeedPetTask#foodToSpare}); bones are nobody's
+	 * dinner.
+	 */
 	private static boolean hasFood(CompanionEntity c, ServerLevel level, PetKind kind) {
+		if (kind == PetKind.CAT && !FeedPetTask.foodToSpare()) {
+			return false;
+		}
 		return c.backpack().count(kind.tamingFood()) >= 1 || Workbench.stock(level, "tame." + kind.key(), kind.tamingFood()) >= 1;
 	}
 

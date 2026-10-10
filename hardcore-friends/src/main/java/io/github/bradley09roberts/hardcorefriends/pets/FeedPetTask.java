@@ -1,6 +1,7 @@
 package io.github.bradley09roberts.hardcorefriends.pets;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
 
@@ -19,6 +20,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.ai.task.common.EntityApproach;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
@@ -30,9 +32,11 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 /**
  * An owner feeds their pet from the camp's stock: whenever it is hurt (the food heals it, as when a player feeds their
  * pet), and otherwise as a treat every other day. A cat gets raw fish; a dog rotten flesh first, else raw meat, never
- * the cooked food the friends eat themselves. One piece at a time, fetched from the chest if not carried. Children see
- * to their own pets too, before their games (it changes no block and keeps them in the camp: a child only goes to a pet
- * inside the camp and near the height of home, and stops if it wanders off); grown-ups in the spare time between jobs.
+ * the cooked food the friends eat themselves. Raw meat and fish are what the cooks make everyone's meals from, so while
+ * the camp is short of food ({@link #foodToSpare}) a dog only gets rotten flesh and a cat waits. One piece at a time,
+ * fetched from the chest if not carried. Children see to their own pets too, before their games (it changes no block
+ * and keeps them in the camp: a child only goes to a pet inside the camp and near the height of home, and stops if it
+ * wanders off); grown-ups in the spare time between jobs.
  * Nobody goes to a pet in the middle of a fight (a dog after a monster, a pet just bitten): it is fed once that is over.
  * A pet that cannot be reached is left a few minutes before anyone tries again.
  */
@@ -48,6 +52,13 @@ final class FeedPetTask implements CompanionTask {
 	private static final int TREAT_DAYS = 2;
 	private static final double RANGE = 32;
 	private static final double FEED_REACH = 2.0;
+	/**
+	 * Above this need for food (0 plenty, 1 none) the camp is short of it, and no pet gets anything a person could eat:
+	 * the line the birthday presents keep to.
+	 */
+	static final double FOOD_SHORT = 0.4;
+	private static final Predicate<ItemStack> ROTTEN_FLESH = s -> s.is(Items.ROTTEN_FLESH);
+	private static final Predicate<ItemStack> NOTHING = s -> false;
 
 	private enum Phase {
 		CHEST,
@@ -90,13 +101,28 @@ final class FeedPetTask implements CompanionTask {
 			return 0;
 		}
 		PetKind kind = record.get().kind;
-		if (c.backpack().count(kind.treat()) < 1 && Workbench.stock(level, "treat." + kind.key(), kind.treat()) < 1) {
+		boolean spare = foodToSpare();
+		Predicate<ItemStack> food = treat(kind, spare);
+		if (c.backpack().count(food) < 1 && Workbench.stock(level, spare ? "treat." + kind.key() : "rotten_flesh", food) < 1) {
 			return 0;
 		}
 		if (level.getGameTime() < unreachableUntil) {
 			return 0;
 		}
 		return (hurt ? HURT_SCORE : TREAT_SCORE) + (c.isChild() ? CHILD_BONUS : 0);
+	}
+
+	/** True while the camp has food to spare for its pets' raw meat and fish (see {@link #FOOD_SHORT}). */
+	static boolean foodToSpare() {
+		return CampNeeds.need(CampNeeds.Need.FOOD) <= FOOD_SHORT;
+	}
+
+	/** What the owner may feed this pet now: its usual treat, or with food short only rotten flesh (none for a cat). */
+	private static Predicate<ItemStack> treat(PetKind kind, boolean foodToSpare) {
+		if (foodToSpare) {
+			return kind.treat();
+		}
+		return kind == PetKind.WOLF ? ROTTEN_FLESH : NOTHING;
 	}
 
 	/**
@@ -120,7 +146,7 @@ final class FeedPetTask implements CompanionTask {
 			return false;
 		}
 		approach.reset();
-		phase = c.backpack().count(record.get().kind.treat()) >= 1 ? Phase.APPROACH : Phase.CHEST;
+		phase = c.backpack().count(treat(record.get().kind, foodToSpare())) >= 1 ? Phase.APPROACH : Phase.CHEST;
 		return true;
 	}
 
@@ -136,6 +162,7 @@ final class FeedPetTask implements CompanionTask {
 			return TaskStatus.FAILURE; // off out of the camp, or into a fight: fed later
 		}
 		PetKind kind = record.get().kind;
+		Predicate<ItemStack> treat = treat(kind, foodToSpare());
 		if (phase == Phase.CHEST) {
 			ChestWalk.State walk = ChestWalk.tick(c);
 			if (walk == ChestWalk.State.FAILED) {
@@ -146,8 +173,8 @@ final class FeedPetTask implements CompanionTask {
 				Workbench.forgetStock(level);
 				// Rotten flesh first for a dog: nobody else wants it.
 				boolean got = chest.isPresent() && (kind == PetKind.WOLF
-					&& SupplyChest.withdraw(chest.get(), c.backpack(), s -> s.is(Items.ROTTEN_FLESH), 1) > 0
-					|| SupplyChest.withdraw(chest.get(), c.backpack(), kind.treat(), 1) > 0);
+					&& SupplyChest.withdraw(chest.get(), c.backpack(), ROTTEN_FLESH, 1) > 0
+					|| SupplyChest.withdraw(chest.get(), c.backpack(), treat, 1) > 0);
 				if (!got) {
 					return TaskStatus.FAILURE;
 				}
@@ -163,7 +190,11 @@ final class FeedPetTask implements CompanionTask {
 			return TaskStatus.RUNNING;
 		}
 		c.getLookControl().setLookAt(a);
-		ItemStack food = c.backpack().take(kind.treat(), 1);
+		// Rotten flesh first for a dog here too: an owner who carries raw meat (a cook, a hunter) keeps it for the pot.
+		ItemStack food = kind == PetKind.WOLF ? c.backpack().take(ROTTEN_FLESH, 1) : ItemStack.EMPTY;
+		if (food.isEmpty()) {
+			food = c.backpack().take(treat, 1);
+		}
 		if (food.isEmpty()) {
 			return TaskStatus.FAILURE;
 		}

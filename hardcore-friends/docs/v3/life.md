@@ -132,7 +132,7 @@ Chronicle begins with a line about the camp as it is, and only what happens from
 - **The book.** The Chronicle's keeper (Sage, else a strategist, else whoever has been with the camp longest) writes it
   out in a real written book, now and then by day when there is news. The first copy needs a **book and quill** from the
   supply chest, or a book (or three paper and a leather), an **ink sac** and a **feather** to make one: put them in the
-  chest. Only a **blank** book and quill is used: one with anything written in it, or with a name of its own, is yours
+  chest (books, paper and leather that Sage's plan is gathering for the library are left for it). Only a **blank** book and quill is used: one with anything written in it, or with a name of its own, is yours
   and is never taken, so your notes are safe in the chest. Until the village has a town hall the book is kept in the supply chest; after that it lies on the **town hall's
   lectern** (if the builders left the lectern out, a lectern from the chest is put on its spot; with none in the chest,
   the keeper tries again the next day). You can read it there like any lectern book. If you put a book of your own on

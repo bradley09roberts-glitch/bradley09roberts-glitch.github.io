@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.network.Filterable;
 import net.minecraft.world.Container;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
@@ -37,6 +38,7 @@ import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Role;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
+import io.github.bradley09roberts.hardcorefriends.progress.ProgressPlan;
 import io.github.bradley09roberts.hardcorefriends.village.VillagePlan;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
@@ -296,19 +298,20 @@ final class ChronicleTask implements CompanionTask {
 	}
 
 	/**
-	 * A blank book and quill: from the chest, or made from a book (or paper and leather), an ink sac and a feather.
+	 * A blank book and quill: from the chest, or made from a book (or paper and leather), an ink sac and a feather. Books,
+	 * paper and leather that Sage's plan is collecting for the library are left alone ({@link #spare}).
 	 */
 	private static boolean getBookAndQuill(CompanionEntity c, Container chest, ServerLevel level) {
 		if (c.backpack().has(ChronicleTask::blank) || SupplyChest.withdraw(chest, c.backpack(), ChronicleTask::blank, 1) > 0) {
 			return true;
 		}
-		boolean book = SupplyChest.count(chest, s -> s.is(Items.BOOK)) > 0
-			|| SupplyChest.count(chest, s -> s.is(Items.PAPER)) >= 3 && SupplyChest.count(chest, s -> s.is(Items.LEATHER)) >= 1;
+		boolean spareBook = spare(level, chest, Items.BOOK) >= 1;
+		boolean book = spareBook || spare(level, chest, Items.PAPER) >= 3 && spare(level, chest, Items.LEATHER) >= 1;
 		if (!book || SupplyChest.count(chest, s -> s.is(Items.INK_SAC)) < 1 || SupplyChest.count(chest, s -> s.is(Items.FEATHER)) < 1) {
 			noBookDay = Calendar.today(level.getServer());
 			return false;
 		}
-		if (SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.BOOK), 1) == 0) {
+		if (!spareBook || SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.BOOK), 1) == 0) {
 			SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.PAPER), 3);
 			SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.LEATHER), 1);
 		}
@@ -323,6 +326,18 @@ final class ChronicleTask implements CompanionTask {
 			|| s.is(Items.FEATHER), 8);
 		noBookDay = Calendar.today(level.getServer());
 		return false;
+	}
+
+	/**
+	 * How many of an item in the chest the Chronicle may use: none while Sage's plan still wants more of it, else what
+	 * lies beyond the plan's target (the rule trading and the smith keep too).
+	 */
+	private static int spare(ServerLevel level, Container chest, Item item) {
+		if (ProgressPlan.wants(level.getServer(), item)) {
+			return 0;
+		}
+		int kept = ProgressPlan.stockTargets(level.getServer()).getOrDefault(item, 0);
+		return Math.max(0, SupplyChest.count(chest, s -> s.is(item)) - kept);
 	}
 
 	/** No town hall lectern: the current volume is written (or brought up to date) and kept in the supply chest. */

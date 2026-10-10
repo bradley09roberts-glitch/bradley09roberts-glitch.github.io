@@ -17,9 +17,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Util;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.world.entity.ai.goal.BreedGoal;
+import net.minecraft.world.entity.ai.goal.CatLieOnBlockGoal;
 import net.minecraft.world.entity.ai.goal.CatSitOnBlockGoal;
 import net.minecraft.world.entity.ai.goal.FollowOwnerGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -51,10 +54,13 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  * fetches a pet within the camp; vanilla's panicking teleport is replaced by a plain panic; vanilla's sitting, which
  * also sits a pet down wherever it is whenever its owner is not loaded or is in another dimension (so a pet of the whole
  * camp, or one whose owner is down the mine or on a trip, would never move again), is replaced by {@link SitGoal}, which
- * sits only when told to; cats no longer sit on chests (the camp chest is shared with the players); pets do not breed;
- * and a dog's vanilla targeting (its owner's
- * target, anyone who hits it, players it is angry at, any skeleton) is replaced by {@link PetGuardGoal}, which only
- * ever goes for monsters after its owner or itself, never near a creeper, while a dog also keeps out of a creeper's way.
+ * sits only when told to; cats no longer sit on chests (the camp chest is shared with the players) or go off to lie on
+ * any bed or furnace near by for minutes at a time (it would outrank following, calling and going home); pets do not
+ * breed; and a dog's vanilla targeting (its owner's target, anyone who hits it, players it is angry at, any skeleton)
+ * is replaced by {@link PetGuardGoal}, which only ever goes for monsters after its owner or itself, never near a
+ * creeper, while a dog also keeps out of a creeper's way.
+ * A target set from outside (a wild wolf hurt near by calls every wolf with the same owner to help, and to the game a
+ * pet whose owner is away or gone has none, as a wild wolf has none) is dropped, anger and all, within a second.
  */
 final class PetBrain {
 	/** What the pet is to do. */
@@ -125,7 +131,7 @@ final class PetBrain {
 			return;
 		}
 		pet.goalSelector.removeAllGoals(g -> g instanceof FollowOwnerGoal || g instanceof BreedGoal
-			|| g instanceof CatSitOnBlockGoal || g instanceof TamableAnimal.TamableAnimalPanicGoal
+			|| g instanceof CatSitOnBlockGoal || g instanceof CatLieOnBlockGoal || g instanceof TamableAnimal.TamableAnimalPanicGoal
 			|| g instanceof SitWhenOrderedToGoal);
 		pet.goalSelector.addGoal(1, pet instanceof Wolf
 			? new PanicGoal(pet, 1.5, DamageTypeTags.PANIC_ENVIRONMENTAL_CAUSES)
@@ -154,6 +160,16 @@ final class PetBrain {
 			if (!name.isBlank() && !name.equals(record.name) && name.length() <= 32) {
 				record.name = name;
 			}
+		}
+		// Only PetGuardGoal picks a pet's targets, and only fair ones. Anything else (a wild wolf's call for help, which
+		// recruits every wolf whose owner the game cannot find, as for a wild one) is dropped with its anger, so the pet
+		// does not chase a player out of the camp for good.
+		LivingEntity target = pet.getTarget();
+		if (target != null && !PetGuardGoal.fair(pet, target)) {
+			if (pet instanceof NeutralMob angry) {
+				angry.stopBeingAngry();
+			}
+			pet.setTarget(null);
 		}
 		if (!pet.isTame() || pet.isLeashed() || pet.isPassenger() || pet.isVehicle()) {
 			s.plan = Plan.NONE;

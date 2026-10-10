@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
@@ -31,7 +32,8 @@ import io.github.bradley09roberts.hardcorefriends.progress.ProgressPlan;
  * and the cartography table stand (looked for near the chest and the camp centre, at most every 30 seconds), and the
  * real recipes for an empty map (eight paper round a compass), a compass (four iron and a redstone) and an item frame
  * (eight sticks round a piece of leather), made at a table as a player makes them. Paper, leather and iron that Sage's
- * plan is still collecting are never taken, and eight iron always stay in the chest.
+ * plan is collecting are never taken (none while it still wants more, and never below its target once it has enough,
+ * as for trading), and eight iron always stay in the chest.
  */
 final class Workbench {
 	/** How far from the chest (or the camp centre) a work table is looked for. */
@@ -167,16 +169,23 @@ final class Workbench {
 		if (stock(level, "map", EMPTY_MAP) >= 1) {
 			return true;
 		}
-		return spare(level, Items.PAPER) && stock(level, "paper", PAPER) >= 8 && (stock(level, "compass", COMPASS) >= 1
-			|| spare(level, Items.IRON_INGOT) && stock(level, "iron", IRON) >= IRON_KEPT + 4 && stock(level, "redstone", REDSTONE) >= 1);
+		return spare(level, Items.PAPER, stock(level, "paper", PAPER), 0) >= 8 && (stock(level, "compass", COMPASS) >= 1
+			|| spare(level, Items.IRON_INGOT, stock(level, "iron", IRON), IRON_KEPT) >= 4 && stock(level, "redstone", REDSTONE) >= 1);
 	}
 
 	/**
-	 * True if the camp can spare this for maps and frames: Sage's plan is not still collecting it (paper and leather
-	 * for the library's books, iron for its stock). What the plan waits for is never taken.
+	 * How many of this the camp can spare for maps and frames, of the {@code inChest} the chest holds: beyond
+	 * {@code keep}, and beyond what Sage's plan is collecting (paper and leather for the library's books, iron for its
+	 * stock). While the plan still wants more of it, none; once it has enough, the plan's whole amount stays, so a map
+	 * never eats into what the plan has already gathered (the rule trading and the smith keep too).
 	 */
-	static boolean spare(ServerLevel level, Item item) {
-		return !ProgressPlan.wants(level.getServer(), item);
+	static int spare(ServerLevel level, Item item, int inChest, int keep) {
+		MinecraftServer server = level.getServer();
+		if (ProgressPlan.wants(server, item)) {
+			return 0;
+		}
+		int kept = Math.max(keep, ProgressPlan.stockTargets(server).getOrDefault(item, 0));
+		return Math.max(0, inChest - kept);
 	}
 
 	/**
@@ -192,11 +201,11 @@ final class Workbench {
 		if (carriesMapMakings(bp)) {
 			return true;
 		}
-		if (bp.count(PAPER) < 8 && (!spare(level, Items.PAPER) || SupplyChest.count(chest, PAPER) + bp.count(PAPER) < 8)) {
+		if (bp.count(PAPER) < 8 && spare(level, Items.PAPER, SupplyChest.count(chest, PAPER), 0) + bp.count(PAPER) < 8) {
 			return false;
 		}
 		boolean compass = bp.count(COMPASS) >= 1 || SupplyChest.count(chest, COMPASS) >= 1;
-		boolean iron = spare(level, Items.IRON_INGOT) && SupplyChest.count(chest, IRON) >= IRON_KEPT + 4 - bp.count(IRON)
+		boolean iron = spare(level, Items.IRON_INGOT, SupplyChest.count(chest, IRON), IRON_KEPT) >= 4 - bp.count(IRON)
 			&& SupplyChest.count(chest, REDSTONE) + bp.count(REDSTONE) >= 1;
 		if (!compass && !iron) {
 			return false;
@@ -251,7 +260,7 @@ final class Workbench {
 
 	/** True if the supply chest holds an item frame or what one takes (leather, and sticks or planks for them). */
 	static boolean chestHasFrameMakings(ServerLevel level) {
-		return stock(level, "frame", FRAME) >= 1 || spare(level, Items.LEATHER) && stock(level, "leather", LEATHER) >= 1
+		return stock(level, "frame", FRAME) >= 1 || spare(level, Items.LEATHER, stock(level, "leather", LEATHER), 0) >= 1
 			&& (stock(level, "sticks", STICK) >= 8 || stock(level, "planks", PLANKS) >= 4);
 	}
 
@@ -265,7 +274,7 @@ final class Workbench {
 			SupplyChest.withdraw(chest, bp, FRAME, 1);
 			return bp.count(FRAME) >= 1;
 		}
-		if (bp.count(LEATHER) < 1 && (!spare(level, Items.LEATHER) || SupplyChest.count(chest, LEATHER) < 1)) {
+		if (bp.count(LEATHER) < 1 && spare(level, Items.LEATHER, SupplyChest.count(chest, LEATHER), 0) < 1) {
 			return false;
 		}
 		SupplyChest.withdraw(chest, bp, LEATHER, Math.max(0, 1 - bp.count(LEATHER)));

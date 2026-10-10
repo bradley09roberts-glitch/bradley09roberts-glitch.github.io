@@ -32,7 +32,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
  * Where finished maps hang: on the inside walls of the village's town hall (a building site whose key names the town
- * hall, finished), or, before there is one, the camp's library. A frame only ever goes on a wall block the friends
+ * hall, finished), or, before there is one, the camp's cabin (the library is only a ring of shelves on the ground, with
+ * no wall or roof to hang a frame on). A frame only ever goes on a wall block the friends
  * placed themselves (never a player's build), inside under a roof, in the camp, away from doors and from anything
  * a player built, and on a spot the edit guard would let a builder place a block (so the guard's own rules apply:
  * world editing switched on, loaded, not a child, no player standing right there). Item frames are entities rather
@@ -54,7 +55,7 @@ final class MapFrames {
 	private MapFrames() {
 	}
 
-	/** The site key of the building maps hang in, if one stands: the town hall first, else the camp's library. */
+	/** The site key of the building maps hang in, if one stands: the town hall first, else the camp's cabin. */
 	static Optional<String> building(ServerLevel level) {
 		CampData data = Camp.data(level.getServer());
 		if (!Camp.isCampLevel(level, data)) {
@@ -71,15 +72,15 @@ final class MapFrames {
 				return Optional.of(key);
 			}
 		}
-		if (data.isCompleted(Structures.LIBRARY) && data.site(Structures.LIBRARY).isPresent()) {
-			return Optional.of(Structures.LIBRARY);
+		if (data.isCompleted(Structures.CABIN) && data.site(Structures.CABIN).isPresent()) {
+			return Optional.of(Structures.CABIN);
 		}
 		return Optional.empty();
 	}
 
-	/** "the town hall" or "the library", for messages. */
+	/** "the town hall" or "the cabin", for messages. */
 	static String buildingName(String key) {
-		return key.contains("town_hall") ? "the town hall" : key.equals(Structures.LIBRARY) ? "the library" : "the hall";
+		return key.contains("town_hall") ? "the town hall" : key.equals(Structures.CABIN) ? "the cabin" : "the hall";
 	}
 
 	/**

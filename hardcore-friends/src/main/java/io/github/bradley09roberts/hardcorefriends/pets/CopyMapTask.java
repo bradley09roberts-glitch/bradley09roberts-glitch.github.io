@@ -35,7 +35,9 @@ import io.github.bradley09roberts.hardcorefriends.survival.Trips;
  * empty map from the chest, or eight paper and a compass made into one at the table) and walks it over. The copy is the
  * same map as the original, as a copy made at a table is. With nothing to make one from, the maker says so and the
  * request is dropped; a request nobody can see to within {@value #EXPIRES_TICKS} ticks lapses with a word to the player.
- * Never a free item: the empty map the copy is made on always comes out of the camp's stock.
+ * Never a free item: the empty map the copy is made on always comes out of the camp's stock. It is day work, not a night
+ * job: at night bedtime outranks it, so a copy under way at nightfall is put down and its request lapses (and
+ * {@code /friends map} says to ask again in the morning).
  */
 final class CopyMapTask implements CompanionTask {
 	static final String ID = "pets.copy_map";
@@ -120,8 +122,8 @@ final class CopyMapTask implements CompanionTask {
 	}
 
 	/**
-	 * True if the maker may go to this player: in the same level and within {@value #RANGE} blocks, and after dark only
-	 * with both of them inside the camp (the map maker never walks out into the night for a copy: they set off only from
+	 * True if the maker may go to this player: in the same level and within {@value #RANGE} blocks, and when dark (a
+	 * thunderstorm by day) only with both of them inside the camp (the map maker never walks out into the night for a copy: they set off only from
 	 * home, and once {@code underway} stop a step or two past the camp's edge). Asked again all the way over, so a player
 	 * who walks off out of the camp is not followed.
 	 */

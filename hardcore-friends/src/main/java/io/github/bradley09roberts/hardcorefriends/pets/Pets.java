@@ -17,7 +17,6 @@ import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.item.Items;
 
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskRegistry;
-import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.ai.task.common.KeepList;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.Structures;
@@ -64,8 +63,6 @@ public final class Pets {
 		// Children may adopt a pet, feed it and play with it: none of it changes a block or takes them out of the camp.
 		People.allowChildJob(AdoptTask.ID);
 		People.allowChildJob(FeedPetTask.ID);
-		// A player waiting in the camp for a copy of a map can have it after dark too.
-		TaskScheduler.NIGHT_JOBS.add(CopyMapTask.ID);
 		// The map maker keeps the maps they are drawing or bringing home, a spare empty map and a frame for hanging one
 		// (any other map a friend picks up goes to the chest as usual).
 		KeepList.addCommonRule(new KeepList.Rule("maps", Maps::keeps, 6));
