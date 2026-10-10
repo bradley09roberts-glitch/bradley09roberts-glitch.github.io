@@ -35,8 +35,8 @@ bug, but tell me anyway if it spoils the game.
 
 ## A quick way to the Village
 
-The new cabin, finding the way, sprinting, friendships, the calendar and the Chronicle work from day one. Much of the
-rest waits for the **Village**, the fourth stage. In the fresh world:
+Finding the way, sprinting, friendships, the calendar and the Chronicle work from day one; the new cabin goes up once
+the camp is a Hamlet. Much of the rest waits for the **Village**, the fourth stage. In the fresh world:
 
 1. `/friends camp set`, put down a chest, `/friends chest`, and recruit all nine (2 common food each).
 2. Stock the chest. A trip into Creative is fine, as the friends still build only from what is in it: stacks of logs
@@ -45,27 +45,32 @@ rest waits for the **Village**, the fourth stage. In the fresh world:
 3. Stay close: Unity grows by 1 a minute for each friend within 24 blocks of you (up to 120 a day), besides chats,
    finished buildings and high spirits. Sleep through the nights.
 4. Follow it with `/friends camp` (what is built, what Oak is waiting for), `/friends unity` and `/friends plan`;
-   `/friends jobs` and `/friends deliver` hand over what the camp is short of.
+   `/friends jobs` lists what the camp is short of, and `/friends deliver`, standing near the chest, hands over what
+   matches from your main inventory.
 
 **Camp** needs the chest and campfire; **Hamlet** the crafting table, furnace, torch posts and farm plot, and Unity
 100; **Village** the cabin, the camp paths and Spark's automatic door, and Unity 250 (the animal pen is optional).
 1.0's test camp got there in two in-game days, but the new cabin is a much bigger build, so allow longer. No command
-adds Unity or skips a stage. The Town and the City come a good while later: `/friends village` says what each needs.
+adds Unity or skips a stage. After the Village comes the Settlement (Unity 500), then a good while later the Town and
+the City (see 4.7).
 
 ## 1. Building
 
 - [ ] **1.1 The new cabin.** **Expect:** a cottage on a cobblestone plinth with a log frame, plank walls, a stair roof
-  with eaves, five windows (open until the camp has glass), lights and two barrels; friends sleep in it and Spark's door
-  still works. **Bug:** roof gaps that never fill, blocks floating in mid-air, a door nobody can get through.
+  with eaves, seven windows (two at the front, one in each side wall, one at the back and one in each gable end; open
+  until the camp has glass), lights and two barrels; friends sleep in it and Spark's door still works. **Bug:** roof
+  gaps that never fill, blocks floating in mid-air, a door nobody can get through.
 - [ ] **1.2 Scaffolding.** Watch any roof go up. **Expect:** a pillar of dirt or cobblestone (6 high at most) beside or
   inside the building, climbed, then dug out again with the blocks kept; one left when you quit mid-climb is taken down
   later. **Bug:** pillars left for good, a pillar against something of yours, a friend stranded on top.
-- [ ] **1.3 Making materials.** **Expect:** glass and stone fired in the friends' own furnace; sand and clay dug
-  outside the camp as one-block dips in every other column, never by water; wild sheep sheared for wool. **Bug:** your
-  furnace used, a hole you can't step out of, your sheep (named, on a lead or penned) sheared.
-- [ ] **1.4 Decoration never holds a building up.** **Expect:** buildings finish without the glass, flowers or carpets
-  the camp can't make yet (lanterns become torches without iron); the repair job adds them later. **Bug:** a building
-  stuck unfinished for days over a carpet or flower pot.
+- [ ] **1.3 Making materials.** **Expect:** glass and stone fired in the friends' own furnace; sand and clay dug outside
+  the camp as one-block dips in every other column, never by water; wild sheep sheared for wool. **Bug:** your furnace
+  used, a hole you can't step out of, your sheep (named, on a lead, or in a pen of your own) sheared. The shepherd
+  shearing the camp's own sheep in its animal pen is meant to happen (5.7).
+- [ ] **1.4 Decoration never holds a building up.** **Expect:** buildings finish without the glass, flowers, carpets or
+  flower pots the camp can't make yet, and the repair job adds those later. A lantern the camp had no iron for becomes a
+  torch, and stays a torch even once there is iron. **Bug:** a building stuck unfinished for days over a carpet or
+  flower pot.
 - [ ] **1.5 Village buildings look right.** **Expect:** roofs with eaves, shuttered windows, lit rooms, the front door
   on the street with the ground at it within a step, a style that suits the land (spruce in the taiga, sandstone in the
   desert). **Bug:** a house facing away from the street, a door you can't walk up to, mobs spawning indoors.
@@ -76,20 +81,25 @@ adds Unity or skips a stage. The Town and the City come a good while later: `/fr
 ## 2. Finding the way
 
 - [ ] **2.1 Round, not through.** Watch friends on long walks (Rowan to the trees, anyone to a far job). **Expect:**
-  round hills, not through the caves under them; back from cliff edges; never a drop of more than three blocks; never
-  into a waterfall. **Bug:** a cave detour on a surface errand, or a jump down a ledge they can't climb back up.
-- [ ] **2.2 Lost in a cave.** `/friends follow <name>` deep into a dark cave, then `/friends work <name>` and leave.
-  **Expect:** they head for open sky (torches down if they carry any) or dig a staircase up; lost for about two in-game
-  minutes in all, they are brought home ("Rowan got lost in a cave and found the way home."), but never out of a fight
-  or a job that is getting on (Flint's mine). **Bug:** no rescue, digging through anything built, dying without trying.
+  round hills, not through the caves under them; back from cliff edges; drops of two or three blocks less favoured but
+  allowed (even though they can't be walked back up), never more than three; never into a waterfall. **Bug:** a cave
+  detour on a surface errand, or a drop of more than three blocks.
+- [ ] **2.2 Lost in a cave.** `/friends follow <name>` deep into a dark cave, then `/friends work <name>` and go out of
+  sight. Pick a cave in the gathering ring round the camp, which keeps running while you are away; for a cave further
+  out, stay within render distance, as nothing out there runs once you have gone. **Expect:** they head for open sky
+  (torches down if they carry any) or dig a staircase up; lost for about two real minutes in all (sooner if they are
+  badly hurt or starving down there, or about to drown), they are brought home ("Rowan got lost in a cave and found the
+  way home."), but never out of a fight or a job that is getting on (Flint's mine). **Bug:** no rescue, digging through
+  anything built, dying without trying.
 - [ ] **2.3 Shut in a pit.** Give a friend some dirt (right-click them with it), lead them into a hole two deep that you
   dug in natural ground outside the camp, `/friends stay <name>`, climb out, wait, then `/friends work <name>`.
   **Expect:** nothing while on stay; then a hop, a block or two underfoot, out, and the blocks taken back (or a
   staircase dug). **Bug:** blocks left behind, rescue or digging while on stay, still there after two minutes.
-- [ ] **2.4 Running water.** Set `followTeleportDistance` to 0 for this one and back to 48 after (otherwise a stuck
-  follower just catches up with you, which is right but hides the rest). Cross a fast river, then
-  `/friends follow <name>`. **Expect:** they swim across against the current, climb out at a bank that leads
-  somewhere, never build a bridge, and are brought to you if the river truly cuts them off. **Bug:** swept downstream.
+- [ ] **2.4 Running water.** For this one, quit the game, set `followTeleportDistance` to 0 and start again; afterwards
+  quit again and put it back to 48 (the file is only read at start-up). Otherwise a stuck follower just catches up with
+  you, which is right but hides the rest. Cross a fast river, then `/friends follow <name>`. **Expect:** they swim
+  across against the current, climb out at a bank that leads somewhere, never build a bridge, and are brought to you if
+  the river truly cuts them off. **Bug:** swept downstream.
 - [ ] **2.5 Sprinting.** **Expect:** a real sprint (dust at their feet, about 30% faster) for anything more than 12
   blocks off, walking the last 5; none in water, when hungry, beside a long drop or near lava unless fleeing (sprint
   past a lava lake with followers: they walk). Children tire after ten seconds or so. **Bug:** sprinting off an edge.
@@ -144,11 +154,16 @@ adds Unity or skips a stage. The Town and the City come a good while later: `/fr
   work, then from a little before sunset home (or by the well without a house), sometimes round at a friend's.
   **Bug:** nobody going home in the evening.
 - [ ] **4.6 Water.** With a bucket (or three iron) in the chest. **Expect:** the farmer fills the well's basin a bucket
-  at a time, none spilling; the wheat field tilled, sown and harvested; saplings in the orchard. **Bug:** water running
-  onto the street.
-- [ ] **4.7 Town and City.** **Expect:** the Town at Unity 650 with 14 people, 5 houses, the town hall, the well and one
-  of tavern, market, school or chapel; the City at 800 with 22 people, 9 houses and more; each celebrated. **Bug:** a
-  stage reached without what it needs, or stuck with everything met.
+  at a time, none spilling. The wheat field and the orchard are Town buildings, so those checks wait for the Town: the
+  field tilled, sown and harvested, saplings in the orchard. **Bug:** water running onto the street.
+- [ ] **4.7 Settlement, Town and City.** **Expect:** the Settlement at Unity 500 once the Village stage's camp buildings
+  stand (storehouse, watchtower, lantern posts, drop-off hopper and farm fence). The Town at Unity 650 with 14 people, 5
+  houses, the town hall, the well and one of tavern, market, school or chapel, and also the Settlement stage's own camp
+  buildings: the second cabin, the auto-smelter and the flower gardens (the night lamp posts are optional). The City at
+  800 with 22 people, 9 houses and more. Each stage is announced, the Town and the City with a celebration. From the
+  Settlement on, `/friends village` shows the Unity, people, houses and civic buildings the next stage still lacks; the
+  camp buildings are only in `/friends camp` ("Built:"), so check both. **Bug:** a stage reached without what it needs,
+  or stuck with everything in both met.
 - [ ] **4.8 Moving the camp** (a throwaway copy only). **Expect:** `/friends camp set` well away lets the plan go
   (everyone is told), the houses stay empty and a new plan starts; within three blocks the village stays. **Bug:**
   anything knocked down.
@@ -161,8 +176,9 @@ adds Unity or skips a stage. The Town and the City come a good while later: `/fr
 - [ ] **5.2 Workplaces.** **Expect:** about one a day asked for as the village grows (bakery, smithy, fishing hut...),
   its holder moving in, the fishing hut's deck facing the water. **Bug:** a finished workplace unused for days.
 - [ ] **5.3 The trading screen.** By day, right-click a shopkeeper at their counter (`/friends shops` says where).
-  **Expect:** the game's trading screen (sneak and right-click still gives status and backpack); shut at dusk, in a dark
-  thunderstorm, or when the keeper is busy (they say so). **Bug:** trading at night, a screen that won't close, a crash.
+  **Expect:** the game's trading screen (sneak and right-click with an empty hand still opens the backpack; the status
+  line needs a plain right-click away from the counter); shut at dusk, in a dark thunderstorm, or when the keeper is
+  busy (they say so). **Bug:** trading at night, a screen that won't close, a crash.
 - [ ] **5.4 Prices.** **Expect:** fixed villager prices (six bread for an emerald, a bed for three, twenty wheat bought
   for one), the same every visit; a shop never buys what it sells that day and always buys for less. **Bug:** a price
   that changes, or any way to make emeralds trading round in circles.
@@ -179,13 +195,16 @@ adds Unity or skips a stage. The Town and the City come a good while later: `/fr
 
 ## 6. Village life
 
-- [ ] **6.1 The calendar and market day.** **Expect:** `/friends calendar` gives today's date ("Wednesday, day 42: the
-  2nd day of summer, year 2") and the next ten days. On Saturdays, once there is a market or a shopkeeper, keepers call
-  out at their counters and everyone else wanders over once. **Bug:** the date jumping or going backwards.
-- [ ] **6.2 A feast.** **Expect:** from late afternoon everyone free in a ring at the square, a few words from Sage (or
-  whoever has been there longest), a portion each from the cook (never more than half the chest's food, none if the
-  camp is hungry), music, home at nightfall; at the winter lights, lanterns round the square, gone next morning; the
-  night watch stays on watch. **Bug:** food taken from a hungry camp, lights left up, a feast that never ends.
+- [ ] **6.1 The calendar and market day.** **Expect:** `/friends calendar` gives today's date (day 42, for example, is
+  "Sunday, day 42: the 2nd day of spring, year 2" with the usual 10-day seasons, and "Sunday, day 42: the 3rd day of
+  summer, year 4" with `daysPerSeason` 3) and the next ten days. On Saturdays, once there is a market or a shopkeeper,
+  keepers call out at their counters and everyone else wanders over once. **Bug:** the date jumping or going backwards.
+- [ ] **6.2 A feast.** For the winter feast, put eight lanterns (or 32 torches: only those beyond 24 are used) in the
+  chest. **Expect:** from late afternoon everyone free in a ring at the square, a few words from Sage (or whoever has
+  been there longest), a portion each from the cook for everyone a little hungry (a well-fed friend getting nothing is
+  normal; never more than half the chest's food, none if the camp is hungry), music, home at nightfall; at the winter
+  lights, up to eight lights round the square, gone next morning; the night watch stays on watch. **Bug:** food taken
+  from a hungry camp, lights left up, a feast that never ends.
 - [ ] **6.3 Music.** Tuesday, Thursday, Saturday and Sunday evenings, with a note block in the chest (or eight planks
   and a redstone dust). **Expect:** a note block put down in the tavern (or at the square), two or three tunes you
   know, picked up again. **Bug:** a note block still there the next day, or music on the evening of a funeral.
@@ -198,7 +217,9 @@ adds Unity or skips a stage. The Town and the City come a good while later: `/fr
   **Bug:** a grave on a street, a plot or your build; anything later built over it.
 - [ ] **6.6 The Chronicle.** Put a blank book and quill (or a book, an ink sac and a feather) in the chest. **Expect:**
   `/friends chronicle` with lines for arrivals, weddings, births, buildings, stages, feasts and raids; the book in the
-  chest, then on the town hall's lectern; take it and a new copy is written. **Bug:** a book of yours used or changed.
+  chest, then on the town hall's lectern. Before taking the book, put a second blank book and quill (or what makes one)
+  in the chest: the keeper writes a new copy from it. With nothing in the stores to make one, no new copy is normal.
+  **Bug:** a book of yours used or changed.
 
 ## 7. Defence
 
@@ -212,26 +233,32 @@ adds Unity or skips a stage. The Town and the City come a good while later: `/fr
 - [ ] **7.3 Guards.** **Expect:** once the village's own watchtower, gate or walls stand (Town and City buildings, not
   the camp's first watchtower), `/friends defence` names tonight's guards: two shifts of up to two, armed, never the
   night watch, an archer shooting from the lookout. **Bug:** one friend on both shifts, or a guard stuck on the stair.
-- [ ] **7.4 A raid** (test world first). Walk into the village with Bad Omen (an ominous bottle from a raid captain,
-  or `/effect give @s minecraft:bad_omen` with commands on); the game may not count the camp as a village, so a game
-  village within 96 blocks works too. **Expect:** the alarm before the raiders, a bell each wave, 40 Unity and a
-  Chronicle line if it is beaten off. **Bug:** a friend hitting a villager or golem, children left outside.
+- [ ] **7.4 A raid** (test world first). Walk into the village with Bad Omen (an ominous bottle from a raid captain, or
+  `/effect give @s minecraft:bad_omen` with commands on); the game may not count the camp as a village, so a game
+  village within 96 blocks of the camp centre works too. **Expect:** with the Raid Omen in the friends' own village (the
+  camp and 16 blocks round it), the alarm before the raiders arrive; with the omen kept to a game village, no early
+  warning: the alarm comes once the raid there has started. Then a bell each wave, 40 Unity and a Chronicle line if it
+  is beaten off. **Bug:** a friend hitting a villager or golem, children left outside.
 - [ ] **7.5 Fire** (test world). Light something wooden of the friends' near the houses, and a block of netherrack.
   **Expect:** one or two grown-ups soon put the first out by hand, from outside the flames, and the repair job puts back
   what burnt; the netherrack fire is left alone. **Bug:** friends walking into fire, or breaking anything but the fire.
 
 ## 8. Pets and maps
 
-- [ ] **8.1 Adopting.** Put raw cod and bones in the chest; wolves live in forests and taiga, stray cats near game
-  villages or once the village has five or more beds close together. **Expect:** a pet tamed, named and announced
-  (`/friends pets`); one each, eight in all, only with a home for it. **Bug:** a pet of yours touched or led off.
+- [ ] **8.1 Adopting.** Put raw cod, bones and some rotten flesh (or raw meat, for dogs' treats in 8.2) in the chest;
+  wolves live in forests and taiga, stray cats near game villages or once the village has five or more beds close
+  together. **Expect:** a pet tamed, named and announced (`/friends pets`); one each, eight in all, only with a home for
+  it. **Bug:** a pet of yours touched or led off.
 - [ ] **8.2 Day and night.** **Expect:** by day it follows its owner about the camp, at night it sits by their bed, it
-  gets a treat from the chest every other day, and a dog fights monsters attacking its owner (never a creeper). **Bug:**
-  a pet teleporting across the world, sitting on the supply chest, hurting anything but monsters, or hurt by a friend.
+  gets a treat from the chest every other day (raw fish for a cat; rotten flesh, else raw meat, for a dog, never cooked
+  food), and a dog fights monsters attacking its owner (never a creeper). **Bug:** a pet teleporting across the world,
+  sitting on the supply chest, hurting anything but monsters, or hurt by a friend.
 - [ ] **8.3 Scout's maps.** Put an empty map and an item frame in the chest (or eight paper and a compass; Sage's plan
   gets its paper and iron first). **Expect:** Scout draws the camp map as she walks, then hangs it in a frame inside the
-  town hall (or the library); later trips bring maps of land further off, marked with places found (`/friends maps`).
-  **Bug:** a frame on your build or outdoors, a map that never finishes.
+  town hall (or the library). Before the Settlement's town hall or Sage's library, or with no frame to be had, the map
+  going into the camp chest is normal: she hangs it later, once there is a hall with room on its walls. Later trips
+  bring maps of land further off, marked with places found (`/friends maps`). **Bug:** a frame on your build or
+  outdoors, a map that never finishes.
 - [ ] **8.4 Copies.** Right-click Scout holding an empty map, or `/friends map` within 48 blocks of her. **Expect:** a
   copy of the finished map for where you stand, made from real stock (or she says what is short). **Bug:** a map from
   nothing, or your empty map taken with no copy.
