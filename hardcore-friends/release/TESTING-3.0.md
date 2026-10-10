@@ -195,10 +195,12 @@ the City (see 4.7).
   (everyone is told), the houses stay empty and a new plan starts; within three blocks the village stays and the camp
   keeps its size. **Bug:** anything knocked down.
 - [ ] **4.9 The night watch over the village** (test world). Once houses stand on the outer streets, let a zombie in
-  among them at night (or wait for one). **Expect:** the watcher at the campfire raises the alarm, the grown-ups asleep
-  within 40 blocks of it get up and the armed ones go for it, while the far end of the village and the children sleep
-  on (unless it could get at them). **Bug:** a monster among the outer houses never noticed, or the whole village
-  woken for one at the far end.
+  among them at night where the watcher at the campfire can see it (down an open street from the campfire), or wait
+  for one that goes for someone. **Expect:** the watcher raises the alarm, the grown-ups asleep within 40 blocks of it
+  get up and the armed ones go for it, while the far end of the village and the children sleep on (unless it could get
+  at them). A lone monster hidden behind houses, going for nobody and not close to the watcher, is not noticed (a
+  known limit: the watcher cannot see round houses). **Bug:** a monster in the watcher's sight, or going for someone in
+  the village, never noticed, or the whole village woken for one at the far end.
 
 ## 5. Trades and shops
 
@@ -215,9 +217,12 @@ the City (see 4.7).
   for one), the same every visit; a shop never buys what it sells that day and always buys for less. **Bug:** a price
   that changes, or any way to make emeralds trading round in circles.
 - [ ] **5.5 Stock and takings.** Put a few emeralds in the supply chest for keepers' empty tills. **Expect:** only what
-  is on the shelves offered (the camp stall only what the camp can spare), never the planks, torches or beds the
-  buildings under way still need, what you sell going to the supply chest, at most 32 emeralds' worth bought a visit.
-  **Bug:** an offer of something the shop hasn't got, or building stock sold while a building waits for it.
+  is on the shelves offered (the camp stall only what the camp can spare), what you sell going to the supply chest, at
+  most 32 emeralds' worth bought a visit. The camp stall, and keepers restocking their shelves from the supply chest,
+  never take the planks, torches or beds the buildings under way still need. Building stock already on a shop's own
+  shelves is still sold while a building waits for it (a known limit: the builders never take from a shop's chests).
+  **Bug:** an offer of something the shop hasn't got, or the camp stall selling (or a keeper taking from the supply
+  chest for the shelves) building stock a building waits for.
 - [ ] **5.6 No duplication (important).** Count a shop's stock and your emeralds, then open the screen and close it
   every way: Esc, walking off, dusk falling, Save and Quit; on a server, log off mid-trade and try two players at once.
   **Expect:** everything not sold back on the shelves, nothing more. **Bug:** any item or emerald from nowhere, or gone
