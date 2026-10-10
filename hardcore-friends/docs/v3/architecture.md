@@ -71,7 +71,9 @@ New jobs make the materials buildings are short of. Each job is a speciality's, 
 - **Firing at the furnace** (the builder): glass from sand, stone from cobblestone, smooth stone from stone, bricks
   from clay and smooth sandstone from sandstone, with coal or charcoal (spare planks from the chest only when it has
   plenty, never the builder's own building planks). Only in the friends' own furnace, and only when its input is empty
-  or holds the same thing.
+  or holds the same thing. What is already in the furnace counts towards the need, and a furnace already at work is
+  only topped up with eight or more, so the builder is not sent to it for one block at a time. A trip to the furnace
+  never takes the builder off a building under way: it waits until that run of building ends.
 - **Digging sand and clay** (the forager): by day, the top block of dry sand or clay in the gathering ring, never
   inside the camp, never next to water, never near anything you built. Only a block level with the ground on all four
   sides is taken, in every other column, so each spot is dug once and left as a dip one block deep that anyone can
@@ -83,6 +85,13 @@ New jobs make the materials buildings are short of. Each job is a speciality's, 
 
 The builders also tell the camp what a whole building will need, so gatherers fetch wood, stone and earth ahead of
 time and the materials arrive in batches.
+
+When a batch cannot be fetched in full, its builder tells the camp what that building is short of. Each building
+keeps its own report, so several friends building at once (the builder, households on their own homes, the
+landscaper) never hide each other's. A report is dropped as soon as that building's next batch is supplied, when it
+is finished or let go, and after ten minutes without being made again. Gatherers bring the missing materials to the
+friend whose building is short, and the smith leaves as much iron, wood and stone in the chest as the buildings asked
+for (no more), so gear is still made while houses go up.
 
 ## Building properly
 
@@ -134,7 +143,10 @@ All are read-only and work at permission level 0 with cheats off.
 Plans live in a data pack (or the mod) at `data/<namespace>/blueprints/<path>.json`. The plan's id is
 `<namespace>:<path>`: `data/hardcorefriends/blueprints/house/oak_cottage.json` is `hardcorefriends:house/oak_cottage`.
 Sub-folders are just part of the id. Plans load with the server's data and again on `/reload`; a data pack file with
-the same id replaces the mod's. The camp's own buildings are in the mod at `/hardcorefriends/camp_plans/` in the same
+the same id replaces the mod's. A replaced or changed plan only applies to buildings started afterwards: every
+building already begun or standing keeps the version it was started with (a copy is saved with the world), so it is
+finished, repaired and furnished from the same plan, and its beds, doors and counters stay where they are. This holds
+across `/reload`, a data pack added or removed, and updates of the mod. The camp's own buildings are in the mod at `/hardcorefriends/camp_plans/` in the same
 format (they are not in the library and a data pack cannot replace them).
 
 ```json
@@ -283,7 +295,8 @@ styles.
   too close to a player's build, overlapping another site), or empty if it can. `origin` is the plan's local
   (0, 0, 0) on the ground floor (one above the ground); rotation 0–3 turns the front from north to east, south, west.
 - `reserve(level, key, plan, origin, rotation, wood)`: reserves the site and remembers the plan (and the wood, null
-  for the plan's own or the camp's).
+  for the plan's own or the camp's). The site keeps that version of the plan: `planOf` and `markers` give it even
+  after a data pack or an update has changed the plan under its id.
 - `job(friend, key, reason, repair)`: a `camp.BuildJob` for a friend's next run at it; tick it like
   `ai.role.build.BlueprintTask` does (a `SpecialityTask` around your own task is the usual way). Use reason `BUILD`.
 - `isFinished`, `progress`, `planOf`, `markers(level, key, "bed")` (world positions), `sites(level)`,
@@ -864,5 +877,13 @@ and earth, `B` bell, `+` furniture and work blocks.
 - Plans are not checked against the camp's real terrain beyond the usual site search: very big plans need big, fairly
   level spots, and the camp grows to find room.
 - Data packs can add and replace library plans but not the camp's own buildings.
-- The camp's record of blocks the friends placed holds 20,000 positions; a large village may need it raised.
-  Scaffolding does not depend on it (pillars keep their own record), so a full record never strands a builder.
+- The camp's record of blocks the friends placed holds 100,000 positions (a City-stage village comes to about 20,000
+  with the camp, and an old village left behind by a camp move stays counted). Since 3.0 it also tells the friends
+  which beds, shop chests, furnaces and street paths are their own, so if it ever filled, what they built afterwards
+  would look player-built to them: homes not slept in, shops not stocked, plots along new streets turned down. The
+  server log says so when it fills. Scaffolding does not depend on it (pillars keep their own record).
+- A plan bigger than 21,000 characters of JSON (the mod's largest is under 7,000) is not saved with its sites: those
+  sites follow the library's plan under that id, as before.
+- The camp's own buildings (the cottage, storehouse, watchtower) are not saved with their sites like library plans:
+  a later update of the mod that changed one would change it under buildings already started, as 3.0 did with the 2.x
+  plans (which it kept for old sites).

@@ -19,6 +19,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.needs.SleepTask;
 import io.github.bradley09roberts.hardcorefriends.architecture.Construction;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+import io.github.bradley09roberts.hardcorefriends.camp.SiteFinder;
 import io.github.bradley09roberts.hardcorefriends.civic.Homes;
 import io.github.bradley09roberts.hardcorefriends.command.FriendsCommand;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
@@ -58,6 +59,9 @@ public final class Village {
 		CompanionEvents.DEATH.add((c, level, source) -> leaves(c, level));
 		CompanionEvents.DISMISSED.add(Village::leaves);
 		Construction.FINISHED.add((level, siteKey, plan) -> Planner.finished(level, siteKey));
+		// The camp's own buildings keep off the town plan's streets and lamp spots once it is laid out.
+		SiteFinder.KEEP_CLEAR.add((level, box) -> VillageData.get(level.getServer()).centre()
+			.map(centre -> TownPlan.boxOnStreet(centre, box, 1) || TownPlan.coversLampSlot(centre, box)).orElse(false));
 		FriendsCommand.EXTENSIONS.add(VillageCommands::register);
 		FriendsCommand.CAMP_STATUS.add(Village::campStatus);
 		ServerTickEvents.END_SERVER_TICK.register(Village::serverTick);

@@ -40,9 +40,9 @@ import io.github.bradley09roberts.hardcorefriends.progress.ProgressPlan;
  * Only spare materials in the chest are used: never diamonds below a reserve of {@value #DIAMOND_RESERVE} (a pickaxe and
  * an enchanting table's worth), never iron below {@value #IRON_RESERVE} ({@value #SHIELD_IRON_RESERVE} for a shield) or
  * cobblestone below {@value #STONE_RESERVE}, never what Sage's plan is collecting (iron in the iron age, leather for
- * the library's books, a flint for the flint and steel; none at all of what it is still short of), and no iron, wood
- * or stone at all while the building in hand is short of that kind
- * ({@link CampNeeds#buildShortage()}). Nothing the smith carries for their own work is used: everything is fetched
+ * the library's books, a flint for the flint and steel; none at all of what it is still short of), and never the iron,
+ * wood or stone the buildings under way are short of ({@link CampNeeds#buildShortage()}: as much as they asked for is
+ * left for them). Nothing the smith carries for their own work is used: everything is fetched
  * from the chest, and whatever is left over goes back. The gear goes into the chest, and the friends' gear job hands it
  * out.
  */
@@ -296,16 +296,18 @@ public final class Smithing {
 		final int arrows;
 
 		Budget(MinecraftServer server, Container chest) {
+			// What the buildings are short of is left for them, and only that much: the rest may be used.
 			Map<CampNeeds.Need, Integer> shortage = CampNeeds.buildShortage();
-			boolean wood = !shortage.containsKey(CampNeeds.Need.WOOD);
-			int ironInChest = shortage.containsKey(CampNeeds.Need.ORE) ? 0 : SupplyChest.count(chest, IRON);
+			int woodShort = shortage.getOrDefault(CampNeeds.Need.WOOD, 0);
+			int wood = SupplyChest.count(chest, PLANKS) + 4 * SupplyChest.count(chest, LOGS);
+			int ironInChest = Math.max(0, SupplyChest.count(chest, IRON) - shortage.getOrDefault(CampNeeds.Need.ORE, 0));
 			iron = spare(server, Items.IRON_INGOT, ironInChest, IRON_RESERVE);
 			shieldIron = spare(server, Items.IRON_INGOT, ironInChest, SHIELD_IRON_RESERVE);
 			diamonds = spare(server, Items.DIAMOND, SupplyChest.count(chest, DIAMOND), DIAMOND_RESERVE);
 			leather = spare(server, Items.LEATHER, SupplyChest.count(chest, LEATHER), 0);
-			stone = shortage.containsKey(CampNeeds.Need.STONE) ? 0 : Math.max(0, SupplyChest.count(chest, STONE) - STONE_RESERVE);
-			planks = wood ? SupplyChest.count(chest, PLANKS) + 4 * SupplyChest.count(chest, LOGS) : 0;
-			sticks = wood ? SupplyChest.count(chest, STICKS) : 0;
+			stone = Math.max(0, SupplyChest.count(chest, STONE) - STONE_RESERVE - shortage.getOrDefault(CampNeeds.Need.STONE, 0));
+			planks = Math.max(0, wood - woodShort);
+			sticks = woodShort > wood ? 0 : SupplyChest.count(chest, STICKS);
 			string = SupplyChest.count(chest, STRING);
 			flint = spare(server, Items.FLINT, SupplyChest.count(chest, FLINT), 0);
 			feathers = SupplyChest.count(chest, FEATHER);

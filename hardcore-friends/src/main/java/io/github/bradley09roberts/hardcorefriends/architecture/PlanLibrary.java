@@ -1,13 +1,22 @@
 package io.github.bradley09roberts.hardcorefriends.architecture;
 
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.jspecify.annotations.Nullable;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -32,6 +41,10 @@ import io.github.bradley09roberts.hardcorefriends.civic.BlueprintLibrary;
  *
  * <p>Provides {@link BlueprintLibrary}: {@code get(id)}, {@code byKind(kind)} (exact kind, or every sub-kind for a kind
  * with no colon: {@code shop} gives {@code shop:bakery} and {@code shop:smithy}) and {@code ids()}.
+ *
+ * <p>Every plan read keeps the content it was read from ({@link #sourceOf}), so a site can remember the exact version
+ * of the plan it was reserved with and go on using it ({@link #kept}) after a data pack or an update of the mod
+ * changes or removes the plan under that id: a building is never finished, repaired or furnished from another plan.
  */
 public final class PlanLibrary implements BlueprintLibrary.Provider {
 	/** The library's reload listener id. */
@@ -43,8 +56,26 @@ public final class PlanLibrary implements BlueprintLibrary.Provider {
 		static final Snapshot EMPTY = new Snapshot(Map.of(), List.of(), 0, 0);
 	}
 
+	/** A plan file's content as read (compact JSON), and its fingerprint. */
+	public record Source(String json, String print) {
+		/**
+		 * Longest content kept with a site: a saved text may take at most 65,535 bytes, and a character at most three
+		 * (the mod's largest plan is under 7,000 characters).
+		 */
+		static final int MAX_KEPT = 21_000;
+
+		/** True if this content can be kept with a site in the world's save. */
+		public boolean keepable() {
+			return !json.isEmpty() && json.length() <= MAX_KEPT;
+		}
+	}
+
 	static final PlanLibrary INSTANCE = new PlanLibrary();
 	private static volatile Snapshot snapshot = Snapshot.EMPTY;
+	/** The content each plan in memory was read from (loaded or kept), by the plan object itself. */
+	private static final Map<Blueprint, Source> SOURCES = Collections.synchronizedMap(new WeakHashMap<>());
+	/** Plans read again from content kept with sites, by id and fingerprint (empty: it no longer reads). */
+	private static final Map<String, Optional<Blueprint>> KEPT = new ConcurrentHashMap<>();
 
 	private PlanLibrary() {
 	}
@@ -94,6 +125,44 @@ public final class PlanLibrary implements BlueprintLibrary.Provider {
 		return map;
 	}
 
+	// ------------------------------------------------------------------- versions
+
+	/** The content a library plan was read from, or null for plans that are not from the library (the camp's own). */
+	public static @Nullable Source sourceOf(Blueprint plan) {
+		return SOURCES.get(plan);
+	}
+
+	/**
+	 * The plan with this id as it was when its content was kept (a site reserved with an older version): read again from
+	 * that content, once per version. Empty if it no longer reads (the mod's plan format changed), and logged once.
+	 */
+	public static Optional<Blueprint> kept(String id, String print, String json) {
+		return KEPT.computeIfAbsent(id + "@" + print, k -> {
+			try {
+				PlanParser.Result result = PlanParser.parse(id, JsonParser.parseString(json));
+				if (result.plan() != null) {
+					SOURCES.put(result.plan(), new Source(json, print));
+					return Optional.of(result.plan());
+				}
+				HardcoreFriends.LOGGER.warn("The kept version of building plan {} no longer reads ({}); its sites use the "
+					+ "library's", id, String.join("; ", result.errors()));
+			} catch (RuntimeException e) {
+				HardcoreFriends.LOGGER.warn("The kept version of building plan {} no longer reads; its sites use the library's", id, e);
+			}
+			return Optional.empty();
+		});
+	}
+
+	/** A short fingerprint of a plan's content: the same content always gives the same one. */
+	static String fingerprint(String json) {
+		try {
+			byte[] hash = MessageDigest.getInstance("SHA-256").digest(json.getBytes(StandardCharsets.UTF_8));
+			return HexFormat.of().formatHex(hash, 0, 8);
+		} catch (NoSuchAlgorithmException e) {
+			return Integer.toHexString(json.hashCode()) + "-" + json.length(); // every Java has SHA-256; just in case
+		}
+	}
+
 	// -------------------------------------------------------------------- loading
 
 	/** Reads every plan file; runs off the server thread while data loads. */
@@ -110,8 +179,10 @@ public final class PlanLibrary implements BlueprintLibrary.Provider {
 			String id = file.getNamespace() + ":" + path.substring(FOLDER.length() + 1, path.length() - ".json".length());
 			read++;
 			PlanParser.Result result;
+			String content = "";
 			try (Reader reader = f.getValue().openAsReader()) {
 				JsonElement json = JsonParser.parseReader(reader);
+				content = json.toString(); // compact: the same plan gives the same text however the file is laid out
 				result = PlanParser.parse(id, json);
 			} catch (Exception e) {
 				result = new PlanParser.Result(null, List.of("could not be read: " + e.getMessage()), List.of());
@@ -127,6 +198,7 @@ public final class PlanLibrary implements BlueprintLibrary.Provider {
 				HardcoreFriends.LOGGER.warn("Building plan {} skipped: {}", id, String.join("; ", result.errors()));
 			} else {
 				byId.put(id, result.plan());
+				SOURCES.put(result.plan(), new Source(content, fingerprint(content)));
 			}
 		}
 		return new Snapshot(Map.copyOf(byId), List.copyOf(problems), read, skipped);

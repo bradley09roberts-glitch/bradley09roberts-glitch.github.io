@@ -1,11 +1,14 @@
 package io.github.bradley09roberts.hardcorefriends.camp;
 
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -22,6 +25,7 @@ import net.minecraft.world.item.Items;
 
 import io.github.bradley09roberts.hardcorefriends.ai.task.common.KeepList;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
 import io.github.bradley09roberts.hardcorefriends.companion.Needs;
@@ -34,6 +38,11 @@ import io.github.bradley09roberts.hardcorefriends.companion.Role;
  *
  * <p>Food is counted as food: in loaves' worth of hunger ({@link #stock} of {@code FOOD}), wheat as the bread it
  * makes, seeds and seed crops kept for planting not at all, against four days of food for the team.
+ *
+ * <p>Building shortages are kept per building ({@link #reportBuildShortage(ServerLevel, String, CompanionEntity, Map,
+ * String)}), since several friends build at once (the builder, households on their own homes, the landscaper): one
+ * builder's report never hides another's, a building's shortage is dropped once its builder is no longer short, the
+ * building is finished or its site let go, and any report not renewed for {@value #SHORTAGE_STALE} ticks lapses.
  */
 public final class CampNeeds {
 	public enum Need {
@@ -65,9 +74,19 @@ public final class CampNeeds {
 	private static final double FOOD_DAYS = 4;
 	private static final EnumMap<Need, Double> NEEDS = new EnumMap<>(Need.class);
 	private static final EnumMap<Need, Integer> STOCK = new EnumMap<>(Need.class);
-	private static final EnumMap<Need, Integer> BUILD_SHORTAGE = new EnumMap<>(Need.class);
-	private static String shortageText = "";
-	private static long lastShortageReport = -100_000;
+	/** A building's shortage lapses when its builder has not reported it again for this long (ten minutes). */
+	private static final long SHORTAGE_STALE = 20 * 60 * 10;
+	/** Key for reports that belong to no building in particular (levelling a site, tests). */
+	private static final String ANY_SITE = "";
+
+	/** One building's report: what it is short of, in words, when, and who is building it (null if nobody). */
+	private record Shortage(Map<Need, Integer> amounts, String text, long at, @Nullable UUID builder) {
+	}
+
+	/** Each building's latest shortage report, by site key, oldest report first. */
+	private static final Map<String, Shortage> BUILD_SHORTAGES = new LinkedHashMap<>();
+	/** Every live report added up, kept ready for the many callers ({@link #buildShortage()}). */
+	private static Map<Need, Integer> buildShortage = Map.of();
 	private static String siteProblem = "";
 	private static long lastSiteProblem = -100_000;
 	/**
@@ -82,8 +101,8 @@ public final class CampNeeds {
 	public static void clear() {
 		NEEDS.clear();
 		STOCK.clear();
-		BUILD_SHORTAGE.clear();
-		shortageText = "";
+		BUILD_SHORTAGES.clear();
+		buildShortage = Map.of();
 		siteProblem = "";
 	}
 
@@ -124,16 +143,88 @@ public final class CampNeeds {
 		return w;
 	}
 
-	/** The builder reports what the current blueprint still lacks so gatherers can prioritise it. */
+	/**
+	 * A shortage that belongs to no building in particular (levelling a site): replaces the last such report. It lapses
+	 * like any other; an empty map withdraws it.
+	 */
 	public static void reportBuildShortage(ServerLevel level, Map<Need, Integer> shortage, String description) {
-		BUILD_SHORTAGE.clear();
-		BUILD_SHORTAGE.putAll(shortage);
-		shortageText = description;
-		lastShortageReport = level.getGameTime();
-		NEEDS.put(Need.BUILD, shortage.isEmpty() ? 0.0 : 1.0);
+		reportBuildShortage(level, ANY_SITE, null, shortage, description);
+	}
+
+	/**
+	 * A builder reports what this building's batch still lacks, so gatherers can prioritise it (and bring it to them).
+	 * Replaces the building's earlier report; an empty map means it is short of nothing now.
+	 */
+	public static void reportBuildShortage(ServerLevel level, String siteKey, @Nullable CompanionEntity builder,
+		Map<Need, Integer> shortage, String description) {
+		if (shortage.isEmpty()) {
+			clearBuildShortage(siteKey);
+			return;
+		}
+		BUILD_SHORTAGES.remove(siteKey); // re-added at the end: the newest report comes last
+		BUILD_SHORTAGES.put(siteKey, new Shortage(Map.copyOf(shortage), description, level.getGameTime(),
+			builder == null ? null : builder.getUUID()));
+		refreshBuildShortage(level.getGameTime());
 		for (Map.Entry<Need, Integer> e : shortage.entrySet()) {
 			NEEDS.merge(e.getKey(), 0.8, Math::max);
 		}
+	}
+
+	/**
+	 * Adds to what this building is reported short of (keeping the larger amount of each, and the words already given:
+	 * "6 dirt or cobblestone" is not added again to a report that already asks for some), for a need that turns up
+	 * mid-batch, such as blocks for a scaffold pillar.
+	 */
+	public static void addBuildShortage(ServerLevel level, String siteKey, @Nullable CompanionEntity builder,
+		Map<Need, Integer> extra, String description) {
+		Shortage before = live(siteKey, level.getGameTime());
+		Map<Need, Integer> merged = new EnumMap<>(Need.class);
+		if (before != null) {
+			merged.putAll(before.amounts());
+		}
+		extra.forEach((need, n) -> merged.merge(need, n, Math::max));
+		String words = description.replaceFirst("^\\d+ ", "");
+		String text = before == null || before.text().isEmpty() ? description
+			: before.text().contains(words) ? before.text() : before.text() + ", " + description;
+		reportBuildShortage(level, siteKey, builder, merged, text);
+	}
+
+	/** This building is short of nothing any more: it was supplied, finished, or its site was let go. */
+	public static void clearBuildShortage(String siteKey) {
+		if (BUILD_SHORTAGES.remove(siteKey) != null) {
+			buildShortage = merge();
+			if (BUILD_SHORTAGES.isEmpty()) {
+				NEEDS.put(Need.BUILD, 0.0);
+			}
+		}
+	}
+
+	/** One building's report, if it has not lapsed. */
+	private static @Nullable Shortage live(String siteKey, long gameTime) {
+		Shortage s = BUILD_SHORTAGES.get(siteKey);
+		return s != null && !stale(s, gameTime) ? s : null;
+	}
+
+	private static boolean stale(Shortage s, long gameTime) {
+		return gameTime - s.at() > SHORTAGE_STALE || gameTime < s.at();
+	}
+
+	/** Drops lapsed reports and adds up the rest; the building need follows whether anything is short. */
+	private static void refreshBuildShortage(long gameTime) {
+		BUILD_SHORTAGES.values().removeIf(s -> stale(s, gameTime));
+		buildShortage = merge();
+		NEEDS.put(Need.BUILD, BUILD_SHORTAGES.isEmpty() ? 0.0 : 1.0);
+	}
+
+	private static Map<Need, Integer> merge() {
+		if (BUILD_SHORTAGES.isEmpty()) {
+			return Map.of();
+		}
+		EnumMap<Need, Integer> total = new EnumMap<>(Need.class);
+		for (Shortage s : BUILD_SHORTAGES.values()) {
+			s.amounts().forEach((need, n) -> total.merge(need, n, Integer::sum));
+		}
+		return Collections.unmodifiableMap(total);
 	}
 
 	/** A builder could not find anywhere to put a building; shown by {@code /friends camp} for a while. */
@@ -151,12 +242,40 @@ public final class CampNeeds {
 		return gameTime - lastSiteProblem < 20 * 300 ? siteProblem : "";
 	}
 
+	/** What the buildings under way are short of, all their live reports added up (read-only). */
 	public static Map<Need, Integer> buildShortage() {
-		return BUILD_SHORTAGE;
+		return buildShortage;
 	}
 
+	/**
+	 * The friend whose building most recently reported a shortage that still stands, if they are still at work: the
+	 * one to bring materials to.
+	 */
+	public static Optional<CompanionEntity> shortageBuilder() {
+		UUID who = null;
+		for (Shortage s : BUILD_SHORTAGES.values()) {
+			if (s.builder() != null) {
+				who = s.builder(); // the newest report comes last
+			}
+		}
+		if (who == null) {
+			return Optional.empty();
+		}
+		for (CompanionEntity c : Companions.all()) {
+			if (c.getUUID().equals(who)) {
+				return c.isAlive() && !c.isRemoved() && c.mode() == CompanionMode.WORK ? Optional.of(c) : Optional.empty();
+			}
+		}
+		return Optional.empty();
+	}
+
+	/** The words of the latest shortage report, if made within the last five minutes, else "". */
 	public static String shortageText(long gameTime) {
-		return gameTime - lastShortageReport < 20 * 300 ? shortageText : "";
+		Shortage latest = null;
+		for (Shortage s : BUILD_SHORTAGES.values()) {
+			latest = s;
+		}
+		return latest != null && gameTime - latest.at() < 20 * 300 && gameTime >= latest.at() ? latest.text() : "";
 	}
 
 	public static void recompute(MinecraftServer server) {
@@ -192,9 +311,9 @@ public final class CampNeeds {
 		NEEDS.put(Need.TORCHES, shortfall(stock.get(Need.TORCHES), 8 + 4 * stage));
 		NEEDS.put(Need.ORE, shortfall(stock.get(Need.ORE), 6 + 6 * stage));
 		NEEDS.put(Need.SEEDS, shortfall(stock.get(Need.SEEDS), 8));
-		NEEDS.put(Need.BUILD, BUILD_SHORTAGE.isEmpty() ? 0.0 : 1.0);
-		for (Map.Entry<Need, Integer> e : BUILD_SHORTAGE.entrySet()) {
-			NEEDS.merge(e.getKey(), 0.8, Math::max);
+		refreshBuildShortage(server.overworld().getGameTime());
+		for (Need n : buildShortage.keySet()) {
+			NEEDS.merge(n, 0.8, Math::max);
 		}
 		for (Function<MinecraftServer, Map<Need, Double>> extra : EXTRA) {
 			for (Map.Entry<Need, Double> e : extra.apply(server).entrySet()) {

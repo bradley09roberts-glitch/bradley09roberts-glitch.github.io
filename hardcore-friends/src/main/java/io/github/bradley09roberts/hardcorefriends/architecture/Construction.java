@@ -17,6 +17,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
 import io.github.bradley09roberts.hardcorefriends.camp.BuildJob;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.camp.SiteClearing;
 import io.github.bradley09roberts.hardcorefriends.camp.SiteFinder;
 import io.github.bradley09roberts.hardcorefriends.camp.SiteGrading;
@@ -174,8 +175,9 @@ public final class Construction {
 	}
 
 	/**
-	 * Lets a site go: forgets the reservation, the plan record and any felling or levelling planned for it. Blocks
-	 * already built stay as they are (they are still the friends' own, so they can be built on or taken down later).
+	 * Lets a site go: forgets the reservation, the plan record, any felling or levelling planned for it and anything it
+	 * was asking for. Blocks already built stay as they are (they are still the friends' own, so they can be built on or
+	 * taken down later).
 	 */
 	public static void release(ServerLevel level, String siteKey) {
 		CampData data = Camp.data(level.getServer());
@@ -187,6 +189,7 @@ public final class Construction {
 		SiteClearing.forget(data, siteKey);
 		SiteGrading.forget(data, siteKey);
 		MaterialDemand.clear(siteKey);
+		CampNeeds.clearBuildShortage(siteKey);
 	}
 
 	/** Every library site in the camp (built or not), by key. */

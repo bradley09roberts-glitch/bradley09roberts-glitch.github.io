@@ -27,6 +27,8 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.SlabType;
 
 import io.github.bradley09roberts.hardcorefriends.HardcoreFriends;
+import io.github.bradley09roberts.hardcorefriends.architecture.MaterialDemand;
+import io.github.bradley09roberts.hardcorefriends.architecture.PlanLibrary;
 import io.github.bradley09roberts.hardcorefriends.architecture.PlanParser;
 import io.github.bradley09roberts.hardcorefriends.camp.build.MaterialSpec;
 import io.github.bradley09roberts.hardcorefriends.camp.build.Part;
@@ -47,10 +49,15 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  *
  * <p>Every reserved site remembers its plan (and the wood chosen for it) in camp memory under
  * {@value #SITES_MEMORY}, which is also how library buildings (houses, shops...) on the camp's sites are found again.
+ * A library site also keeps the version of its plan it was reserved with (the plan file's content, shared by every site
+ * of that version, under {@value #PLAN_SOURCES_MEMORY}), so a data pack or an update of the mod that changes or removes
+ * the plan under that id leaves buildings already begun or standing as they are: only new sites use the new version.
  */
 public final class Blueprints {
 	/** Camp memory key: for each site key, the plan it was reserved with, its wood and whether it is finished. */
 	public static final String SITES_MEMORY = "architecture.sites";
+	/** Camp memory key: the content of each library plan version a site was reserved with, by its fingerprint. */
+	public static final String PLAN_SOURCES_MEMORY = "architecture.plan_sources";
 	/** A chest just east of the camp centre, linked as the supply chest once built. */
 	public static final Blueprint SUPPLY_CHEST = Blueprint.builder(Structures.SUPPLY_CHEST, 1, 1).at(2, 0)
 		.put(0, 0, 0, MaterialSpec.CHEST, facing(Direction.NORTH)).build();
@@ -225,10 +232,11 @@ public final class Blueprints {
 	}
 
 	/**
-	 * The plan a site is built from. A site remembers the plan it was reserved with, so it keeps it even if the mod's
-	 * plans change; a camp site with no record was reserved before 3.0 and keeps the 2.x plan; a structure without a
-	 * site gets {@link #forId}. Library sites (houses, shops) give their library plan, or nothing if a data pack has
-	 * since removed it.
+	 * The plan a site is built from. A site remembers the plan it was reserved with, so it keeps it even if the plans
+	 * change: a camp site with no record was reserved before 3.0 and keeps the 2.x plan; a library site (houses, shops)
+	 * keeps the version of its library plan it was reserved with, even after a data pack or an update of the mod has
+	 * changed or removed the plan under that id ({@link #libraryPlan}). A structure without a site gets
+	 * {@link #forId}.
 	 */
 	public static Optional<Blueprint> forSite(CampData data, String siteKey) {
 		CompoundTag rec = record(data, siteKey);
@@ -239,7 +247,7 @@ public final class Blueprints {
 			return forId(siteKey);
 		}
 		if (!ref.isEmpty()) {
-			Optional<Blueprint> recorded = byPlanId(ref);
+			Optional<Blueprint> recorded = camp || BY_PLAN_ID.containsKey(ref) ? byPlanId(ref) : libraryPlan(data, rec, ref);
 			if (recorded.isPresent()) {
 				return recorded;
 			}
@@ -249,6 +257,54 @@ public final class Blueprints {
 			return legacy != null && ref.isEmpty() ? Optional.of(legacy) : forId(siteKey);
 		}
 		return Optional.empty();
+	}
+
+	/**
+	 * A library site's plan: the library's while it is still the version the site was reserved with, else that version
+	 * read again from what the site kept. A site reserved before versions were kept takes the library's version as it
+	 * is now as its own. With nothing kept (or what was kept no longer reads), the library's plan, if it has one.
+	 */
+	private static Optional<Blueprint> libraryPlan(CampData data, CompoundTag rec, String ref) {
+		Optional<Blueprint> current = BlueprintLibrary.get().get(ref);
+		String print = rec.getStringOr("src", "");
+		if (print.isEmpty()) {
+			current.ifPresent(plan -> keepVersion(data, rec, plan));
+			return current;
+		}
+		PlanLibrary.Source now = current.map(PlanLibrary::sourceOf).orElse(null);
+		if (now != null && now.print().equals(print)) {
+			return current;
+		}
+		String json = data.memory(PLAN_SOURCES_MEMORY).getStringOr(print, "");
+		Optional<Blueprint> kept = json.isEmpty() ? Optional.empty() : PlanLibrary.kept(ref, print, json);
+		return kept.isPresent() ? kept : current;
+	}
+
+	/** Notes in a site's record which version of a library plan it is built from, keeping that version's content. */
+	private static void keepVersion(CampData data, CompoundTag rec, Blueprint plan) {
+		PlanLibrary.Source source = PlanLibrary.sourceOf(plan);
+		if (source == null || !source.keepable()) {
+			return; // not a library plan, or too big to keep in the save: the site follows the library
+		}
+		rec.putString("src", source.print());
+		data.memory(PLAN_SOURCES_MEMORY).putString(source.print(), source.json());
+		data.setDirty();
+	}
+
+	/** Forgets a kept plan version once no site is built from it any more. */
+	private static void dropVersionIfUnused(CampData data, String print) {
+		if (print.isEmpty()) {
+			return;
+		}
+		CompoundTag sites = data.memory(SITES_MEMORY);
+		for (String key : sites.keySet()) {
+			if (print.equals(sites.getCompoundOrEmpty(key).getStringOr("src", ""))) {
+				return;
+			}
+		}
+		if (data.memory(PLAN_SOURCES_MEMORY).remove(print) != null) {
+			data.setDirty();
+		}
 	}
 
 	/** A camp plan (current or legacy) or a library plan by its plan id. */
@@ -283,14 +339,22 @@ public final class Blueprints {
 		return data.memory(SITES_MEMORY).getCompoundOrEmpty(siteKey);
 	}
 
-	/** Remembers which plan (and wood) a site was reserved with; a fresh reservation is not finished. */
+	/**
+	 * Remembers which plan (and wood) a site was reserved with, and for a library plan which version of it; a fresh
+	 * reservation is not finished.
+	 */
 	public static void recordPlan(CampData data, String siteKey, Blueprint plan, @Nullable String wood) {
+		String before = record(data, siteKey).getStringOr("src", "");
 		CompoundTag rec = new CompoundTag();
 		rec.putString("plan", plan.planId());
 		if (wood != null) {
 			rec.putString("wood", wood);
 		}
 		data.memory(SITES_MEMORY).put(siteKey, rec);
+		if (!BY_PLAN_ID.containsKey(plan.planId())) {
+			keepVersion(data, rec, plan);
+		}
+		dropVersionIfUnused(data, before);
 		data.setDirty();
 	}
 
@@ -300,13 +364,21 @@ public final class Blueprints {
 		return wood.isEmpty() ? null : wood;
 	}
 
-	/** Marks a site's building finished (or not), for library sites, whose completion is not a camp stage. */
+	/**
+	 * Marks a site's building finished (or not), for library sites, whose completion is not a camp stage. A finished
+	 * building asks for no more materials, however it was finished (the last batch, or the village calling it as good
+	 * as finished): its forecast and any shortage it reported are dropped.
+	 */
 	public static void markFinished(CampData data, String siteKey, boolean finished) {
 		CompoundTag sites = data.memory(SITES_MEMORY);
 		CompoundTag rec = sites.getCompoundOrEmpty(siteKey);
 		rec.putBoolean("done", finished);
 		sites.put(siteKey, rec);
 		data.setDirty();
+		if (finished) {
+			MaterialDemand.clear(siteKey);
+			CampNeeds.clearBuildShortage(siteKey);
+		}
 	}
 
 	/** True once a site's building was finished: a completed camp structure, or a library site marked finished. */
@@ -314,11 +386,13 @@ public final class Blueprints {
 		return data.isCompleted(siteKey) || record(data, siteKey).getBooleanOr("done", false);
 	}
 
-	/** Forgets a site's record (the site itself is removed by the caller). */
+	/** Forgets a site's record, and the plan version it kept if no other site uses it (the caller removes the site). */
 	public static void forgetRecord(CampData data, String siteKey) {
+		String print = record(data, siteKey).getStringOr("src", "");
 		if (data.memory(SITES_MEMORY).remove(siteKey) != null) {
 			data.setDirty();
 		}
+		dropVersionIfUnused(data, print);
 	}
 
 	/** Site keys of every reserved site built from a library plan (houses, shops...), in no particular order. */
