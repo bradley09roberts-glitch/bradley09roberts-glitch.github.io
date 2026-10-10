@@ -150,11 +150,13 @@ final class ShopTrade extends Marker implements Merchant {
 			if (sales.size() >= MAX_SALES) {
 				break;
 			}
+			// At the camp stall only what the camp can spare of the good, all its kinds together (oak and spruce planks).
+			int spareLeft = shop.stall() ? good.spare(Stores.count(level, shop.stock(), good.match())) : Integer.MAX_VALUE;
 			for (ItemStack sample : distinct(level, good, 2)) {
 				if (sales.size() >= MAX_SALES) {
 					break;
 				}
-				int available = available(level, good, sample);
+				int available = Math.min(spareLeft, Stores.count(level, shop.stock(), s -> ItemStack.isSameItemSameComponents(s, sample)));
 				int units = Math.min(MAX_UNITS, available / good.unit());
 				if (units <= 0) {
 					continue;
@@ -177,6 +179,7 @@ final class ShopTrade extends Marker implements Merchant {
 				sales.add(sale);
 				offers.add(sale.offer);
 				selling.add(sample.getItem());
+				spareLeft -= real * good.unit();
 			}
 		}
 		stockPurchases(level, selling);
@@ -265,12 +268,6 @@ final class ShopTrade extends Marker implements Merchant {
 			}
 		}
 		return samples;
-	}
-
-	/** How many of this item the shop may sell: all of it in a shop's own chests, only the spare at the camp stall. */
-	private int available(ServerLevel level, Catalogue.Good good, ItemStack sample) {
-		int have = Stores.count(level, shop.stock(), s -> ItemStack.isSameItemSameComponents(s, sample));
-		return shop.stall() ? Math.min(have, good.spare(Stores.count(level, shop.stock(), good.match()))) : have;
 	}
 
 	/** Takes up to {@code max} matching items out of the shop's stock chests into {@code into}. Returns how many. */

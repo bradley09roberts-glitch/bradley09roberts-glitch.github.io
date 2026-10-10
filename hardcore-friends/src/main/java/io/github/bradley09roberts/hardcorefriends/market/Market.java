@@ -65,6 +65,7 @@ public final class Market {
 	private Market() {
 	}
 
+	/** Wires the market into the friends, the scheduler, the commands and the server's ticks (once, at start-up). */
 	public static void init() {
 		MarketLines.register();
 		Professions.provide(new ProfessionsProvider());
@@ -157,12 +158,20 @@ public final class Market {
 		if (!Camp.isCampLevel(level, Camp.data(level.getServer()))) {
 			return null;
 		}
+		// The smithy's blacksmith first; the smith's shop's (who also forges for sale) only when there is no smithy.
 		MarketData data = MarketData.get(level.getServer());
 		for (CompanionEntity c : Companions.in(level)) {
 			MarketData.Holding h = data.holding(c.getUUID());
-			if (h != null && h.trade == Trade.BLACKSMITH && !h.atCamp() && c.mode() == CompanionMode.WORK && !c.isChild()) {
+			if (h == null || h.trade != Trade.BLACKSMITH || h.atCamp() || c.mode() != CompanionMode.WORK || c.isChild()) {
+				continue;
+			}
+			boolean shop = Workplaces.byKey(level, h.site).map(Workplace::isShop).orElse(true);
+			if (!shop) {
 				blacksmith = c.getUUID();
 				break;
+			}
+			if (blacksmith == null) {
+				blacksmith = c.getUUID();
 			}
 		}
 		return blacksmith;

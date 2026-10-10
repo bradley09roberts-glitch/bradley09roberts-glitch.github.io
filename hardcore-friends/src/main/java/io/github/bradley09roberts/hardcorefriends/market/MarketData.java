@@ -78,12 +78,14 @@ public final class MarketData extends SavedData {
 	public MarketData() {
 	}
 
+	/** The world's market record (created empty the first time). */
 	public static MarketData get(MinecraftServer server) {
 		return server.getDataStorage().computeIfAbsent(TYPE);
 	}
 
 	// --------------------------------------------------------------- holdings
 
+	/** This person's trade, or null if they hold none. */
 	public @Nullable Holding holding(UUID who) {
 		return holdings.get(who);
 	}
@@ -98,6 +100,7 @@ public final class MarketData extends SavedData {
 		return Optional.empty();
 	}
 
+	/** Every trade held, in the order given (read only). */
 	public Collection<Holding> holdings() {
 		return Collections.unmodifiableCollection(holdings.values());
 	}
@@ -119,6 +122,7 @@ public final class MarketData extends SavedData {
 		return h;
 	}
 
+	/** Notes a holder seen at the camp now (and their name, for listings while they are away). */
 	public void seen(Holding h, long now, String name) {
 		if (h.seen != now || !h.name.equals(name)) {
 			h.seen = now;
@@ -134,17 +138,20 @@ public final class MarketData extends SavedData {
 		return requested.getOrDefault(kind, -1L);
 	}
 
+	/** Remembers that this building kind was asked of the village today. */
 	public void markRequested(String kind, long day) {
 		requested.put(kind, day);
 		setDirty();
 	}
 
+	/** Every building kind asked for, with the day it was last asked (read only). */
 	public Map<String, Long> requested() {
 		return Collections.unmodifiableMap(requested);
 	}
 
 	// ------------------------------------------------------------------ sales
 
+	/** Counts one trade with a player at a shop, and the emeralds paid in or out. */
 	public void recordSale(String shop, int emeraldsIn, int emeraldsOut) {
 		sales.merge(shop, 1L, Long::sum);
 		emeraldsTaken += Math.max(0, emeraldsIn);
@@ -152,10 +159,12 @@ public final class MarketData extends SavedData {
 		setDirty();
 	}
 
+	/** Trades made at one shop (its workplace key, or "camp"). */
 	public long sales(String shop) {
 		return sales.getOrDefault(shop, 0L);
 	}
 
+	/** Trades made at every shop together. */
 	public long totalSales() {
 		long total = 0;
 		for (long n : sales.values()) {
@@ -164,10 +173,12 @@ public final class MarketData extends SavedData {
 		return total;
 	}
 
+	/** Emeralds players have paid the shops, all told. */
 	public long emeraldsTaken() {
 		return emeraldsTaken;
 	}
 
+	/** Emeralds the shops have paid players, all told. */
 	public long emeraldsPaid() {
 		return emeraldsPaid;
 	}

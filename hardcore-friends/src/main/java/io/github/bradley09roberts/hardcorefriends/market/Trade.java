@@ -92,6 +92,7 @@ public enum Trade {
 		return suits.getFirst();
 	}
 
+	/** The trade with this id ("baker"), ignoring case. */
 	public static Optional<Trade> byId(@Nullable String id) {
 		if (id == null) {
 			return Optional.empty();

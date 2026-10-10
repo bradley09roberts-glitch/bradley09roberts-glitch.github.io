@@ -67,6 +67,7 @@ public final class Workplaces {
 		cachedAt = Long.MIN_VALUE / 2;
 	}
 
+	/** The standing workplace with this key, if there is one. */
 	public static Optional<Workplace> byKey(ServerLevel level, String key) {
 		if (key.isEmpty()) {
 			return Optional.empty();
