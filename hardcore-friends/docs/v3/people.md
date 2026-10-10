@@ -48,7 +48,9 @@ Once a day, in the late afternoon or evening (time of day 9000 to 12500), a coup
 the camp: watching the **sunset** from the highest natural ground about, sitting by the **campfire**, or an **evening
 walk**. One asks; the other stops what they are doing to join them unless they are busy with something pressing.
 Hearts float up, both feel happier (fun and company), and the romance grows (+8, friendship +3). A date never changes
-a block and ends at nightfall.
+a block and ends at nightfall. Whoever keeps the night watch (it starts at dusk) is neither asked out nor asks, and a
+date ends when one of the two goes on watch. In a village, a date comes before the evening at home: from time of day
+11000 a couple who have not had their date yet go out first, and the one asked leaves home to join them.
 
 ### Engagement and the wedding
 
@@ -98,7 +100,8 @@ a parent is back up). A couple can have a baby when:
 - the camp has **food in store** (the camp's food need at most 0.4: well stocked, not just enough for today);
 - both are at least in an **okay mood**;
 - and there is **room at home**: a free bed in their village home; or, while the village has no homes at all, a spare
-  place in the camp's finished cabins (nine to a cabin, for everyone on the team).
+  place in the camp's finished cabin (nine places, for everyone on the team; the second cabin does not count, as
+  nobody sleeps in it).
 
 `/friends couples` says, for every married couple, what is still missing.
 
@@ -119,16 +122,20 @@ Children are drawn at a little over half size. For `childhoodDays` in-game days 
 - **learns**: they follow a parent who is at work inside the camp, above ground (never down a mine), and watch from a
   few steps away, picking up skill in that work; if the village has a **teacher** at work, they go to school instead
   and learn their own trade;
-- **goes home early**: from the end of the afternoon (time of day 11000) they go home, to their bed in the family's
-  village home or the cabin, and stay in; at nightfall they go to bed;
+- **goes home early**: from the end of the afternoon (time of day 11000) they go home, to beside their own bed in the
+  family's village house (or just inside its front door), or to the cabin if the family has no house yet, and stay
+  in; at nightfall they go to bed;
 - **keeps near home**: a child who strays outside the camp, or ends up below ground under it (down a cave or the
   mine), comes straight back;
 - **runs to a grown-up** when a monster within 12 blocks could get at them: one right beside them, or one in plain
   sight that is going for them or that they could walk up to (not one behind the cabin wall, in a fenced pen, in the
   river or in a cave below). They run to a parent about level with them first (never down into a mine after one),
   otherwise a fighter or a player, but only to someone further from the monster than they are, who is not fighting
-  or on watch, and, after dark, who is indoors: a child never runs out of the cabin into the night. With nobody like
-  that, they go home, or stay put if they are already indoors at the camp. A sleeping child is woken only by the
+  or on watch, and, after dark, who is indoors: a child never runs out of the cabin into the night. A child already
+  indoors after dark does not go out at all, even to a parent under another roof: only a grown-up in the same room
+  (a few blocks away, nothing in between) will do. With nobody like that, they go home, into their own house in the
+  village (or the cabin, without a house), but only if home is further from the monster than they are; they stay
+  put if they are already indoors at the camp. A sleeping child is woken only by the
   same rule as anyone asleep (a monster that could get at them). **Parents and Aegis** (and any warrior) go for a
   monster that is after a child, or right beside one with nothing in between, before anything else, if they are fit
   to fight; one who is asleep only gets up for a monster that is going for a child.
@@ -288,9 +295,9 @@ In `config/hardcorefriends.json`, under "Living together":
   a baby takes a day to arrive and `childhoodDays` to grow up. `relationshipSpeed` and `childhoodDays` speed it up.
 - Relationships only change while the people are loaded together. Friends far away on trips, or a camp unloaded while
   you are away, make no progress.
-- Without a village (no homes yet), babies need spare places in finished cabins (nine to a cabin) for the whole team,
-  which most camps with all nine friends will not have until the second cabin. The village package's homes are the
-  real way to make room.
+- Without a village (no homes yet), babies need spare places in the finished cabin (nine places) for the whole team,
+  which a camp with all nine friends alive does not have: the second cabin adds none, as the sleep job only uses the
+  first. The village package's homes are the real way to make room.
 - Dates and games are simple: walking to a spot, standing together, looking at each other or the sunset, with hearts.
   Tag and hide-and-seek are rough (children run about on the camp's own paths; hiding is crouching a few blocks away).
 - Children speak their own lines for playing, learning, bedtime, fright, first words and growing up, but other

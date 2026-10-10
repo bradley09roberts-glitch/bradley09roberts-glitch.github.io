@@ -11,13 +11,15 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.pathfinder.Path;
 
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.navigation.FriendNavigation;
 
 /**
  * Whether a friend can walk all the way to a mob. Vanilla path finding hands back the best partial path when the mob
  * cannot be reached (a zombie inside a fence ring, a skeleton on a ledge, a spider on a roof), so "a path exists" says
  * nothing: only a path that {@linkplain Path#canReach() reaches} the mob counts. Paths are costly to work out, so each
  * answer is remembered for a while per friend and mob: a way there for {@value #KEEP_REACHABLE} ticks, none for
- * {@value #KEEP_UNREACHABLE}.
+ * {@value #KEEP_UNREACHABLE}. The path is only worked out ({@link FriendNavigation#probe}), never taken as where the
+ * friend is going: a later re-path would otherwise send them towards the mob asked about.
  */
 public final class Reach {
 	/** The answer to "can this friend get there?". */
@@ -62,7 +64,8 @@ public final class Reach {
 		if (!c.onGround() && !c.isInLiquid() && !c.isPassenger()) {
 			return Answer.UNKNOWN; // mid-jump (or not yet landed) no path can be worked out at all
 		}
-		Path path = c.getNavigation().createPath(target, 1);
+		Path path = c.getNavigation() instanceof FriendNavigation nav ? nav.probe(target.blockPosition(), 1)
+			: c.getNavigation().createPath(target, 1);
 		boolean ok = path != null && path.canReach();
 		if (known.size() > 32) {
 			known.values().removeIf(e -> e[0] <= now);

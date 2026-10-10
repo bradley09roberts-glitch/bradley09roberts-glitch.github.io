@@ -61,6 +61,7 @@ public final class People {
 		TaskRegistry.PACKS.add(id -> List.of(new PlayTask(), new LearnTask(), new ChildHomeTask(), new StayCloseTask(),
 			new FeedChildTask(), new DateTask(), new WeddingTask()));
 		TaskScheduler.JOB_FILTERS.add(Children::mayDo);
+		TaskScheduler.JOB_FILTERS.add(DateTask::mayDo);
 
 		CompanionEvents.TICK.add(PeopleEvents::tick);
 		CompanionEvents.DEATH.add(PeopleEvents::died);
