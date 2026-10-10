@@ -290,6 +290,10 @@ In `config/hardcorefriends.json`, under "Living together":
 
 ## Honest limits
 
+- **A friend brought back after being lost keeps their old records.** If a named friend vanishes without dying (their
+  last spot is loaded but they are not there, say removed by a command or another mod) and you bring them back with
+  `/friends recruit <name>`, their old self is still married, still a parent, and still holds a home and a trade in
+  the records, and nothing clears that.
 - **Nothing here has been run in game yet.** It compiles; the numbers (how fast friendships grow, how often babies
   come) are first guesses and may need tuning once you have watched a few days.
 - The pace is slow on purpose: a couple typically needs a week or two of in-game days from meeting to marrying, and

@@ -96,7 +96,7 @@ python3 tools/add_skins.py           # number new skin PNGs into skins.json (doc
 | Loom | 1.18 |
 | Gradle | 9.7.1 |
 
-- **3.0.0:** a village of their own: better builds, finding the way and sprinting, families, a proper village with houses and real beds, trades and shops, village life, defence, pets and maps, and 82 village skins. Not yet played in game.
+- **3.0.0:** a village of their own: better builds, finding the way and sprinting, families, a proper village with houses and real beds, trades and shops, village life, defence, pets and maps, and 82 village skins. Not yet played in game. The 2.0.0 JAR and ZIP are kept in `release/old/2.0.0/` if you need to go back (restore a backup of your world from before 3.0 as well: a world played in 3.0 has village, family and shop records that 2.0 does not know).
 - **2.0.0:** independence, gear and fighting, newcomers, Sage's plan to beat the game, expeditions you lead, and several players.
 - **1.0.0:** the nine friends, everyone pitching in, needs and mood, the camp from campsite to settlement, and the Unity bond.
 

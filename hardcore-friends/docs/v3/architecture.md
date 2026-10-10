@@ -10,7 +10,7 @@ beds...) from what they gather, and put up temporary scaffolding to reach roofs.
 
 - **The cabin** (Hamlet stage): a cottage, 7 × 9, on a cobblestone plinth with a log frame, plank walls and a stair
   roof with eaves over the doorstep and the back. Porch lanterns (torches until the camp has iron), a lantern hanging
-  from the ridge inside, two barrels, and five windows. Friends still sleep inside it, and Spark's automatic door
+  from the ridge inside, two barrels, and seven windows. Friends still sleep inside it, and Spark's automatic door
   still works: the door, the doorstep and the floor behind the door are where they always were.
 - **The second cabin** (Settlement stage): the same cottage.
 - **The storehouse** (Village stage): a timber-framed store with a gable roof, two chests and six barrels.
