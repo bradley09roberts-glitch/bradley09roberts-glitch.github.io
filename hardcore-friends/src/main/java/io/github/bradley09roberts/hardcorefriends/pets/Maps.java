@@ -23,6 +23,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import net.minecraft.world.level.saveddata.maps.MapDecorationTypes;
@@ -297,7 +298,11 @@ final class Maps {
 
 	// --------------------------------------------------------------- drawing
 
-	/** Every tick of every friend: the map maker draws in what they carry, and sees to their maps now and then. */
+	/**
+	 * Every tick of every friend: the map maker draws in what they carry, and sees to their maps now and then. So does an
+	 * explorer who was the map maker a while (Scout away when they came) and still carries a map: they finish it and
+	 * bring it home, or it would never be done and keep the camp from getting another.
+	 */
 	static void tick(CompanionEntity c, ServerLevel level) {
 		if (!isExplorer(c) || !FriendsConfig.get().scoutMaps) {
 			return;
@@ -306,8 +311,11 @@ final class Maps {
 		if (phase % 4 == 0) {
 			draw(c, level, phase / 4);
 		}
-		if (phase % 100 == 0 && isMaker(c)) {
-			upkeep(c, level);
+		if (phase % 100 == 0) {
+			boolean maker = isMaker(c);
+			if (maker || !PetsData.get(level.getServer()).carriedBy(c.getUUID()).isEmpty()) {
+				upkeep(c, level, maker);
+			}
 		}
 	}
 
@@ -340,10 +348,11 @@ final class Maps {
 	}
 
 	/**
-	 * Every five seconds for the map maker: maps that left their backpack are written off, drawing is counted, maps
-	 * that are drawn enough are finished, and a trip map is started when they are out beyond every map.
+	 * Every five seconds for the map maker (or an explorer still carrying maps): maps that left their backpack are
+	 * written off, drawing is counted, maps that are drawn enough are finished, and the map maker starts a trip map when
+	 * they are out beyond every map.
 	 */
-	private static void upkeep(CompanionEntity c, ServerLevel level) {
+	private static void upkeep(CompanionEntity c, ServerLevel level, boolean maker) {
 		PetsData data = PetsData.get(level.getServer());
 		long day = Camp.day(level);
 		for (MapRecord m : data.carriedBy(c.getUUID())) {
@@ -368,7 +377,9 @@ final class Maps {
 				finish(c, level, m);
 			}
 		}
-		maybeStartTripMap(c, level, data);
+		if (maker) {
+			maybeStartTripMap(c, level, data);
+		}
 		refreshCarried(level.getServer());
 	}
 
@@ -444,14 +455,15 @@ final class Maps {
 
 	/**
 	 * Every so often for the maps not carried: a hung map whose frame is loaded but no longer holds it, or a map put
-	 * away whose chest is loaded but no longer holds it, was taken by someone and is written off.
+	 * away whose chest is loaded but no longer holds it, was taken by someone and is written off. A frame is only looked
+	 * for once the entities of its chunk have loaded too (they load a moment after the blocks).
 	 */
 	static void checkPlaced(MinecraftServer server) {
 		PetsData data = PetsData.get(server);
 		ServerLevel campLevel = campLevel(server);
 		for (MapRecord m : data.maps()) {
 			if (m.state == MapState.HUNG && m.frame != null && campLevel != null && campLevel.isLoaded(m.frame)
-				&& MapFrames.frameWith(campLevel, m.frame, m.id).isEmpty()) {
+				&& campLevel.areEntitiesLoaded(ChunkPos.pack(m.frame)) && MapFrames.frameWith(campLevel, m.frame, m.id).isEmpty()) {
 				m.state = MapState.GONE;
 				m.frame = null;
 				data.setDirty();

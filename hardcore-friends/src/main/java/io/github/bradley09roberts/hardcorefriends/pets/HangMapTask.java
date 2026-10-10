@@ -27,7 +27,8 @@ import io.github.bradley09roberts.hardcorefriends.survival.Trips;
  * The map maker brings a finished map home: into an item frame on the town hall's wall (or the camp library's, before
  * there is a town hall), or, with nowhere to hang it or no frame to be had, into the camp's chest. A frame is taken
  * from the chest or made at the crafting table from the camp's leather and sticks. Maps already put away in the chest
- * are fetched and hung once a hall stands with room on its walls.
+ * are fetched and hung once a hall stands with room on its walls (by the map maker). An explorer who drew a map while
+ * they were the map maker brings it home all the same.
  */
 final class HangMapTask implements CompanionTask {
 	static final String ID = "pets.hang_map";
@@ -64,9 +65,9 @@ final class HangMapTask implements CompanionTask {
 
 	@Override
 	public double score(CompanionEntity c) {
-		if (!(c.level() instanceof ServerLevel level) || c.mode() != CompanionMode.WORK || !Maps.isMaker(c)
-			|| c.getTarget() != null || c.isAsleep() || Camp.isNight(level) || Camp.center(level).isEmpty()
-			|| Trips.state(c) != null || !Trips.home(c)) {
+		if (!(c.level() instanceof ServerLevel level) || c.mode() != CompanionMode.WORK || !Maps.isExplorer(c)
+			|| !FriendsConfig.get().scoutMaps || c.getTarget() != null || c.isAsleep() || Camp.isNight(level)
+			|| Camp.center(level).isEmpty() || Trips.state(c) != null || !Trips.home(c)) {
 			return 0;
 		}
 		long now = level.getGameTime();
@@ -77,8 +78,8 @@ final class HangMapTask implements CompanionTask {
 		PetsData data = PetsData.get(level.getServer());
 		if (finishedCarried(c, data) != null) {
 			planned = CARRIED_SCORE;
-		} else if (now >= blockedUntil && FriendsConfig.get().allowWorldEditing && !data.maps(MapState.STORED).isEmpty()
-			&& MapFrames.building(level).isPresent()
+		} else if (Maps.isMaker(c) && now >= blockedUntil && FriendsConfig.get().allowWorldEditing
+			&& !data.maps(MapState.STORED).isEmpty() && MapFrames.building(level).isPresent()
 			&& (Workbench.carriesFrameMakings(c.backpack()) || Workbench.chestHasFrameMakings(level))
 			&& Workbench.craftingTable(level) != null) {
 			planned = STORED_SCORE;
@@ -108,6 +109,9 @@ final class HangMapTask implements CompanionTask {
 			spot = MapFrames.freeSpot(level, hall.get());
 		}
 		if (map == null) {
+			if (!Maps.isMaker(c)) {
+				return false; // maps put away are the map maker's to hang
+			}
 			List<MapRecord> stored = data.maps(MapState.STORED);
 			if (stored.isEmpty() || spot == null) {
 				blockedUntil = level.getGameTime() + BLOCKED_TICKS; // no room on the walls just now

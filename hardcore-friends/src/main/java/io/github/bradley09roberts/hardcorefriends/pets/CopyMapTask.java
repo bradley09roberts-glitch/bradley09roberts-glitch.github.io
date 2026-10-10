@@ -112,18 +112,29 @@ final class CopyMapTask implements CompanionTask {
 	private static @Nullable ServerPlayer waiting(CompanionEntity c, ServerLevel level) {
 		for (UUID id : REQUESTS.keySet()) {
 			ServerPlayer p = level.getServer().getPlayerList().getPlayer(id);
-			if (p == null || p.level() != level || p.isSpectator() || p.distanceToSqr(c) > RANGE * RANGE) {
-				continue;
+			if (p != null && mayGoTo(c, level, p, false)) {
+				return p;
 			}
-			// After dark only inside the camp, both of them: the map maker never walks out into the night for a copy.
-			Optional<BlockPos> centre = Camp.center(level);
-			if (Camp.isNight(level) && (!Trips.home(c) || centre.isEmpty()
-				|| !PetBrain.aboutCamp(level, centre.get(), p.blockPosition(), 0))) {
-				continue;
-			}
-			return p;
 		}
 		return null;
+	}
+
+	/**
+	 * True if the maker may go to this player: in the same level and within {@value #RANGE} blocks, and after dark only
+	 * with both of them inside the camp (the map maker never walks out into the night for a copy: they set off only from
+	 * home, and once {@code underway} stop a step or two past the camp's edge). Asked again all the way over, so a player
+	 * who walks off out of the camp is not followed.
+	 */
+	private static boolean mayGoTo(CompanionEntity c, ServerLevel level, ServerPlayer p, boolean underway) {
+		if (p.level() != level || p.isSpectator() || p.distanceToSqr(c) > RANGE * RANGE) {
+			return false;
+		}
+		if (!Camp.isNight(level)) {
+			return true;
+		}
+		Optional<BlockPos> centre = Camp.center(level);
+		return centre.isPresent() && PetBrain.aboutCamp(level, centre.get(), p.blockPosition(), 0)
+			&& (underway ? PetBrain.aboutCamp(level, centre.get(), c.blockPosition(), 4) : Trips.home(c));
 	}
 
 	@Override
@@ -162,8 +173,8 @@ final class CopyMapTask implements CompanionTask {
 		ServerLevel level = (ServerLevel) c.level();
 		ServerPlayer p = player == null ? null : level.getServer().getPlayerList().getPlayer(player);
 		Request req = player == null ? null : REQUESTS.get(player);
-		if (p == null || req == null || p.level() != level) {
-			return TaskStatus.FAILURE;
+		if (p == null || req == null || !mayGoTo(c, level, p, true)) {
+			return TaskStatus.FAILURE; // the request stays: seen to when they are back, or it lapses
 		}
 		switch (phase) {
 			case CHEST -> {

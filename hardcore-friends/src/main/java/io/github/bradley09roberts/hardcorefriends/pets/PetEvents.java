@@ -248,7 +248,8 @@ final class PetEvents {
 					LOADED.remove(a);
 					continue;
 				}
-				if ((a.tickCount + a.getId()) % 20 != 0 || !(a.level() instanceof ServerLevel level)) {
+				// By the server's clock, not the pet's own: a pet in a chunk at the edge of the loaded world does not tick.
+				if ((now + a.getId()) % 20 != 0 || !(a.level() instanceof ServerLevel level)) {
 					continue;
 				}
 				Optional<PetsData.Pet> record = data.pet(a.getUUID());

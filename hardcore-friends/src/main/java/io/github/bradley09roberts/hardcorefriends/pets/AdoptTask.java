@@ -47,11 +47,12 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  *
  * <p>Only wild animals: never one that is named, tamed or owned, on a lead, ridden, saddled or armoured, near anything
  * a player built or inside a player's fences ({@link Wildlife}), an angry or young wolf, or one where a friend died
- * lately. A child only takes in a cat (or the camp's own pet) inside the camp. Nobody adopts unless pets are on, the
- * person has none, the camp keeps fewer than {@code maxPets}, and the camp has a home for the pet ({@link Pets#hasHomeFor}).
- * Children score this above their everyday play (only being asked to play comes first); a parent finding a pet for
- * their child, in the spare time between jobs; a grown-up for themselves only when they have little else to do. An
- * animal that cannot be reached is left alone for a few minutes, so nobody keeps walking at it.
+ * lately. A child only takes in a cat (or the camp's own pet) inside the camp and near the height of home. Nobody
+ * adopts unless pets are on, the person has none, the camp keeps fewer than {@code maxPets}, and the camp has a home for
+ * the pet ({@link Pets#hasHomeFor}). Children score this above their everyday play (only being asked to play comes
+ * first); a parent finding a pet for their child (a cat or a dog, from as far as the gathering ring: how a child gets a
+ * dog) in the spare time between jobs, before one for themselves; a grown-up for themselves only when they have little
+ * else to do. An animal that cannot be reached is left alone for a few minutes, so nobody keeps walking at it.
  */
 final class AdoptTask implements CompanionTask {
 	static final String ID = "pets.adopt";
@@ -135,13 +136,14 @@ final class AdoptTask implements CompanionTask {
 		return c.isChild() ? CHILD_SCORE : p.forWhom() != c ? FOR_CHILD_SCORE : GROWN_UP_SCORE;
 	}
 
-	/** Who this friend would adopt for (themselves, or one of their children), and the animal, or null. */
+	/**
+	 * Who this friend would adopt for, and the animal, or null: a grown-up's child without a pet first (kids and pets),
+	 * else themselves.
+	 */
 	private @Nullable Plan plan(CompanionEntity c, ServerLevel level) {
 		MinecraftServer server = level.getServer();
 		CompanionEntity forWhom = null;
-		if (Pets.mayHavePet(server, c)) {
-			forWhom = c;
-		} else if (!c.isChild()) {
+		if (!c.isChild()) {
 			for (UUID kid : Families.get().childrenOf(server, c.getUUID())) {
 				CompanionEntity child = Pets.companion(server, kid);
 				if (child != null && child.isChild() && child.level() == level && Pets.mayHavePet(server, child)) {
@@ -149,6 +151,9 @@ final class AdoptTask implements CompanionTask {
 					break;
 				}
 			}
+		}
+		if (forWhom == null && Pets.mayHavePet(server, c)) {
+			forWhom = c;
 		}
 		if (forWhom == null) {
 			return null;
@@ -236,9 +241,14 @@ final class AdoptTask implements CompanionTask {
 		return WorldEditGuard.inResourceZone(c, pos) && Math.abs(pos.getY() - home.getY()) <= 24;
 	}
 
-	/** A pet of the whole camp is taken in where it is: inside the camp, loaded beside the friend. */
+	/**
+	 * A pet of the whole camp is taken in where it is: inside the camp, loaded beside the friend, and (as for a wild
+	 * animal) near the height of home for a child, never far below or above it for a grown-up, so nobody follows one
+	 * down a shaft or into the mine.
+	 */
 	private static boolean campPetMayGo(CompanionEntity c, TamableAnimal a) {
-		return a.isAlive() && !a.isLeashed() && a.level() == c.level() && WorldEditGuard.inCampHorizontally(c, a.blockPosition());
+		return a.isAlive() && !a.isLeashed() && a.level() == c.level() && WorldEditGuard.inCampHorizontally(c, a.blockPosition())
+			&& Math.abs(a.getBlockY() - c.homePos().getY()) <= (c.isChild() ? 6 : 24);
 	}
 
 	/** True if the friend carries, or the chest holds, what tames this kind. */
@@ -403,7 +413,9 @@ final class AdoptTask implements CompanionTask {
 		record.lastPos = a.blockPosition();
 		record.lastSeen = level.getGameTime();
 		data.setDirty();
-		PetBrain.install(a);
+		// Known from now on as a pet that has just loaded is: given its goals and thought about every second (a wild
+		// animal loaded long before it was tamed, so the loading hook passed it by).
+		PetEvents.loaded(a, level);
 
 		Speech.say(owner, Line.PET_ADOPTED, record.name, p.kind().word());
 		String who = Pets.fullName(server, owner);

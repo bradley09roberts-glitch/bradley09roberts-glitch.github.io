@@ -2,6 +2,7 @@ package io.github.bradley09roberts.hardcorefriends.pets;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +22,9 @@ import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.world.entity.ai.goal.BreedGoal;
 import net.minecraft.world.entity.ai.goal.CatSitOnBlockGoal;
 import net.minecraft.world.entity.ai.goal.FollowOwnerGoal;
+import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.PanicGoal;
+import net.minecraft.world.entity.ai.goal.SitWhenOrderedToGoal;
 import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.level.block.Blocks;
@@ -45,8 +48,11 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  *
  * <p>The pet's own goals are changed once when it loads ({@link #install}): vanilla's following, which teleports a pet
  * to its owner wherever they are (and could load chunks to do it), is replaced by {@link PetMoveGoal}, which only
- * fetches a pet within the camp; vanilla's panicking teleport is replaced by a plain panic; cats no longer sit on
- * chests (the camp chest is shared with the players); pets do not breed; and a dog's vanilla targeting (its owner's
+ * fetches a pet within the camp; vanilla's panicking teleport is replaced by a plain panic; vanilla's sitting, which
+ * also sits a pet down wherever it is whenever its owner is not loaded or is in another dimension (so a pet of the whole
+ * camp, or one whose owner is down the mine or on a trip, would never move again), is replaced by {@link SitGoal}, which
+ * sits only when told to; cats no longer sit on chests (the camp chest is shared with the players); pets do not breed;
+ * and a dog's vanilla targeting (its owner's
  * target, anyone who hits it, players it is angry at, any skeleton) is replaced by {@link PetGuardGoal}, which only
  * ever goes for monsters after its owner or itself, never near a creeper, while a dog also keeps out of a creeper's way.
  */
@@ -70,6 +76,8 @@ final class PetBrain {
 		@Nullable BlockPos spot;
 		/** How close counts as there (a spot) or close enough (following). */
 		double arrive = 2.0;
+		/** Going home to sit: only the spot itself will do (a step short could be a pressure plate or a doorway). */
+		boolean exact;
 		/** How far off the owner may get before the pet follows. */
 		double start = 6.0;
 		double speed = 1.0;
@@ -117,10 +125,12 @@ final class PetBrain {
 			return;
 		}
 		pet.goalSelector.removeAllGoals(g -> g instanceof FollowOwnerGoal || g instanceof BreedGoal
-			|| g instanceof CatSitOnBlockGoal || g instanceof TamableAnimal.TamableAnimalPanicGoal);
+			|| g instanceof CatSitOnBlockGoal || g instanceof TamableAnimal.TamableAnimalPanicGoal
+			|| g instanceof SitWhenOrderedToGoal);
 		pet.goalSelector.addGoal(1, pet instanceof Wolf
 			? new PanicGoal(pet, 1.5, DamageTypeTags.PANIC_ENVIRONMENTAL_CAUSES)
 			: new PanicGoal(pet, 1.5));
+		pet.goalSelector.addGoal(2, new SitGoal(pet));
 		pet.goalSelector.addGoal(6, new PetMoveGoal(pet));
 		pet.targetSelector.removeAllGoals(g -> true);
 		if (pet instanceof Wolf wolf) {
@@ -171,20 +181,29 @@ final class PetBrain {
 		}
 		if (Camp.isNightTime(level)) {
 			BlockPos spot = nightSpot(level, pet, record, owner, s, now);
-			if (pet.position().distanceToSqr(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5) <= 2.0 * 2.0) {
+			// It sits on its spot, or on a free tile right beside it: never a step short on a pressure plate (which would
+			// hold Spark's automatic door open all night) or in a doorway. The spot itself only falls short of a free tile
+			// when nothing round the bed is one (a bed walled in by furniture): then on the spot it is.
+			BlockPos at = pet.blockPosition();
+			boolean there = standable(level, at)
+				? pet.position().distanceToSqr(spot.getX() + 0.5, spot.getY(), spot.getZ() + 0.5) <= 1.5 * 1.5
+				: at.equals(spot) && !level.getBlockState(at).is(BlockTags.PRESSURE_PLATES);
+			if (there) {
 				sit(pet, s);
 				s.plan = Plan.SIT;
 			} else {
 				releaseSit(pet, s);
 				s.plan = Plan.GO_TO;
 				s.spot = spot;
-				s.arrive = 1.5;
+				s.exact = true;
+				s.arrive = 0;
 				s.speed = 1.0;
 			}
 			return;
 		}
 		releaseSit(pet, s);
 		s.nightSpot = null;
+		s.exact = false;
 		int margin = s.plan == Plan.FOLLOW ? KEEP_FOLLOWING_MARGIN : FOLLOW_MARGIN;
 		if (owner != null && owner.level() == level && !owner.isAsleep() && aboutCamp(level, centre.get(), owner.blockPosition(), margin)) {
 			boolean already = s.plan == Plan.FOLLOW;
@@ -203,6 +222,7 @@ final class PetBrain {
 		if (Camp.horizontalDistSqr(pet.blockPosition(), centre.get()) > (double) ROAM * ROAM) {
 			s.plan = Plan.GO_TO;
 			s.spot = home;
+			s.exact = false;
 			s.arrive = 4.0;
 			s.speed = 1.0;
 		} else {
@@ -274,8 +294,8 @@ final class PetBrain {
 	}
 
 	/**
-	 * Loaded, open for a small animal, on a solid floor that is not fire, a campfire or water, and not a pressure plate
-	 * (a pet sitting on one all night would hold Spark's automatic door open).
+	 * Loaded, open for a small animal (or a rug on the floor), on a solid floor that is not fire, a campfire or water,
+	 * and not a pressure plate (a pet sitting on one all night would hold Spark's automatic door open).
 	 */
 	static boolean standable(ServerLevel level, BlockPos p) {
 		if (!level.isLoaded(p) || !level.isLoaded(p.below())) {
@@ -283,7 +303,8 @@ final class PetBrain {
 		}
 		BlockState here = level.getBlockState(p);
 		BlockState floor = level.getBlockState(p.below());
-		return here.getCollisionShape(level, p).isEmpty() && here.getFluidState().isEmpty() && !here.is(BlockTags.FIRE)
+		return (here.getCollisionShape(level, p).isEmpty() || here.is(BlockTags.WOOL_CARPETS)) && here.getFluidState().isEmpty()
+			&& !here.is(BlockTags.FIRE)
 			&& !here.is(BlockTags.PRESSURE_PLATES) && !here.is(Blocks.TRIPWIRE) && !here.is(BlockTags.DOORS)
 			&& !here.is(BlockTags.CAMPFIRES) && !floor.is(BlockTags.CAMPFIRES) && !floor.is(BlockTags.FIRE)
 			&& floor.isFaceSturdy(level, p.below(), Direction.UP)
@@ -306,14 +327,55 @@ final class PetBrain {
 		if (pet.isOrderedToSit()) {
 			pet.setOrderedToSit(false);
 		}
+		if (pet.isInSittingPose()) {
+			pet.setInSittingPose(false); // a pet saved sitting gets the pose back on loading, before any goal runs
+		}
 		s.sitByUs = false;
+	}
+
+	/**
+	 * Sits while told to, and only then. Vanilla's sitting goal also sits a tamed animal down wherever it stands whenever
+	 * its owner is not loaded or is in another dimension, which for a pet of the camp is whenever its owner is down the
+	 * mine, on a trip or gone for good: it would hold the pet there (in a doorway, on a pressure plate) and keep
+	 * {@link PetMoveGoal} from ever running.
+	 */
+	static final class SitGoal extends Goal {
+		private final TamableAnimal pet;
+
+		SitGoal(TamableAnimal pet) {
+			this.pet = pet;
+			this.setFlags(EnumSet.of(Goal.Flag.JUMP, Goal.Flag.MOVE));
+		}
+
+		@Override
+		public boolean canUse() {
+			return pet.isTame() && pet.isOrderedToSit() && pet.onGround() && !pet.isInWater();
+		}
+
+		@Override
+		public boolean canContinueToUse() {
+			return pet.isOrderedToSit();
+		}
+
+		@Override
+		public void start() {
+			pet.getNavigation().stop();
+			pet.setInSittingPose(true);
+		}
+
+		@Override
+		public void stop() {
+			pet.setInSittingPose(false);
+		}
 	}
 
 	// -------------------------------------------------------------- teleport
 
 	/**
 	 * Brings a pet that cannot find its way (a shut door, a ledge) to a free spot beside {@code target}, as the game
-	 * brings a pet to its player. Only onto loaded ground, never into a wall or water.
+	 * brings a pet to its player. Only onto loaded ground, never into a wall or water. With {@code exact} (a pet's place
+	 * for the night) the spot itself comes first, and the tiles round it must be ones it may sit on ({@link #standable}),
+	 * so it is never put down on a pressure plate by the door.
 	 */
 	static boolean teleportNear(TamableAnimal pet, BlockPos target, boolean exact) {
 		if (!(pet.level() instanceof ServerLevel level) || !level.isLoaded(target) || !nearCamp(level, pet.blockPosition())) {
@@ -345,7 +407,7 @@ final class PetBrain {
 				|| !level.isLoaded(p.offset(1, 0, -1))) {
 				continue;
 			}
-			if (WalkNodeEvaluator.getPathTypeStatic(pet, p) != PathType.WALKABLE) {
+			if (WalkNodeEvaluator.getPathTypeStatic(pet, p) != PathType.WALKABLE || exact && !p.equals(target) && !standable(level, p)) {
 				continue;
 			}
 			BlockPos delta = p.subtract(pet.blockPosition());

@@ -10,8 +10,9 @@ Everything happens by itself. Nothing here has been run in game yet; see **Hones
 ## Adopting a pet
 
 - **Who.** Anyone on the team who has no pet: the nine friends, newcomers and the children of the camp. Children are
-  keenest (they will go and make friends with a stray before playing); a parent also finds a pet for a child of theirs
-  who has none; grown-ups adopt one for themselves when they have little else to do.
+  keenest (they will go and make friends with a stray before playing); a parent finds a pet for a child of theirs who
+  has none before one for themselves, in the spare time between jobs, and may bring a cat or a dog from anywhere a
+  grown-up adopts (this is how a child gets a dog); grown-ups adopt one for themselves when they have little else to do.
 - **What.** A **stray cat** (tamed with raw cod or raw salmon, as you would) or a **wild wolf** (tamed with bones).
   Tamed wolves are called dogs. Parrots are not kept.
 - **How.** The friend takes a few fish or bones from the camp chest, walks up to the animal and feeds it. Each one has
@@ -19,7 +20,9 @@ Everything happens by itself. Nothing here has been run in game yet; see **Hones
   from a list of cosy pet names (Biscuit, Marmalade, Pudding, Scamp, Bracken...), everyone is told ("Pip Hart has a new
   cat and has named it Biscuit."), and the new owner says hello to it. Unity +3 (at most 6 a day).
 - **Where.** Grown-ups look in the camp and the gathering ring round it. A child only makes friends with a cat inside
-  the camp. Nobody goes after a pet by night, at dusk, or when hurt.
+  the camp, near the height of home. A pet of the whole camp is taken in where it is inside the camp, by a child only
+  near the height of home and by a grown-up only within 24 blocks of it (nobody follows one down a shaft). Nobody goes
+  after a pet by night, at dusk, or when hurt.
 - **Never someone else's.** The friends never tame, lead or touch an animal that is named, tamed or owned, on a lead,
   ridden, saddled or wearing armour, near anything a player built or inside a player's fences, an angry or young wolf,
   or one standing where a friend died lately (the same rules that keep your animals safe from hunting).
@@ -36,13 +39,20 @@ taiga.
   mine, on a trip, following you, or to bed for a nap) the pet stays about the camp centre. When the owner comes back
   and the pet is far off, they call it by name ("Biscuit! Here, Biscuit!") and it comes running.
 - **At night** a pet goes home and sits beside its owner's bed: in their house in the village, or where they sleep in
-  the cabin or round the camp. It gets up in the morning.
+  the cabin or round the camp. It walks right onto its spot and sits there (or on a free tile next to it), never a step
+  short on a pressure plate, so Spark's automatic door shuts behind it. It gets up in the morning.
+- **Sitting** happens only at night, when the camp settles it. In the game a tamed animal sits down wherever it is
+  whenever its owner is not about; a pet of the camp does not, so the camp's own pet, or one whose owner is down the
+  mine or off on a trip, keeps wandering about the camp and goes home at night.
 - **Fed from the stock.** Now and then (every other day, and whenever it is hurt) the owner gives it a treat from the
   chest: raw fish for a cat; rotten flesh first, else raw meat, for a dog (never the cooked food the friends eat). Food
-  heals a pet, as when you feed yours.
+  heals a pet, as when you feed yours. Nobody goes to a pet in the middle of a fight (it is fed once that is over), and
+  a child only goes to their pet while it is inside the camp near the height of home, and stops if it wanders off.
 - **Company.** A friend near their pet is a little happier (fun and comfort), and now and then makes a fuss of it.
 - **Getting unstuck.** A pet that cannot find its way to its owner or its home inside the camp (a shut door, a ledge) is
-  brought to them, as your own pets are. A pet that has strayed well beyond the camp walks back.
+  brought to them, as your own pets are; at night only onto its spot or a free tile beside it. When there is no free
+  spot (its owner up on a pillar, say) it tries again every few seconds. A pet that has strayed well beyond the camp
+  walks back.
 
 ## Dogs and danger
 
@@ -66,8 +76,8 @@ last spot loaded but the pet nowhere to be found) is given up as lost.
 
 ## Scout's maps
 
-- **Making maps.** Scout (or a newcomer who explores like her; one map maker at a time) makes empty maps the way you
-  do: eight paper round a compass at the crafting table (or at the cartography table, once the camp has one). If the
+- **Making maps.** Scout (or a newcomer who explores like her; one map maker at a time, though an explorer who started
+  a map while Scout was away still finishes it and brings it home) makes empty maps the way you do: eight paper round a compass at the crafting table (or at the cartography table, once the camp has one). If the
   chest has no compass she makes one from four iron (only iron the camp can spare: it keeps eight back) and a redstone.
   An empty map in the chest is used first. She never takes paper, leather or iron that Sage's plan is still collecting
   (paper and leather for the library's books), so maps wait until the plan has what it needs.
@@ -104,7 +114,9 @@ All work at permission level 0 with cheats off; none hands out a free item.
 | `/friends map` | Ask the map maker for a copy of the best finished map for where you stand |
 | `/friends map <number>` | Ask for a copy of one map (numbers from `/friends maps`) |
 
-Stay within 48 blocks of the map maker for your copy; a request nobody can see to within two and a half minutes lapses.
+Stay within 48 blocks of the map maker for your copy (and inside the camp after dark); a request nobody can see to
+within two and a half minutes lapses. If you walk off beyond that while the copy is on its way, the map maker stops
+rather than follow you, and brings it once you are back.
 
 ## Settings
 
@@ -133,14 +145,16 @@ In `config/hardcorefriends.json`, under "Pets and maps":
 - **Stray cats are rare** away from villages; a camp may only get cats once its village has five or more beds close
   together. Parrots are not kept.
 - **A pet's goals are changed**: vanilla's following (which teleports a pet to its owner anywhere, even across the
-  world) is replaced by following about the camp only; cats no longer sit on chests (the camp chest is shared with you);
-  pets do not breed. A pet is fetched when stuck only inside the camp and its gathering ring: one led far away on a lead
+  world) is replaced by following about the camp only; vanilla's sitting (whenever the owner is not about) by sitting
+  only when settled for the night; cats no longer sit on chests (the camp chest is shared with you); pets do not breed. A pet is fetched when stuck only inside the camp and its gathering ring: one led far away on a lead
   walks home and may get stuck in rough country.
 - **You cannot order a friend's pet** (sit, dye its collar, armour it): in the game only its owner can, and its owner
   is a friend. You can feed it, put it on a lead, or rename it with a name tag (the camp calls it by its new name).
 - **Pets do not go on trips or expeditions**, and a pet pushed through a portal stays on the other side until it comes
   back by itself.
-- **Night spots** are beside the owner's bed; a pet may wait at a shut door for a while before it is brought in.
+- **Night spots** are beside the owner's bed; a pet may wait at a shut door for a while before it is brought in. When the
+  owner's bed is walled in by furniture with no free tile round it, the pet sits on the bed if it can get up there,
+  else it stands about beside it all night.
 - **A lost pet** is only noticed when its last known spot is loaded again and it is not there, and only after about five
   minutes of that.
 - **Maps** use the game's own drawing, done for the friend instead of a player, one slice at a time and only on land

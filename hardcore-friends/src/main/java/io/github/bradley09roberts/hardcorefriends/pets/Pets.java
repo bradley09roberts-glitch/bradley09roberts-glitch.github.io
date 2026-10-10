@@ -72,8 +72,10 @@ public final class Pets {
 		KeepList.addCommonRule(new KeepList.Rule("item frames", s -> s.is(Items.ITEM_FRAME), 1));
 
 		CompanionEvents.TICK.add(PetEvents::companionTick);
-		CompanionEvents.DEATH.add((c, level, source) -> PetEvents.ownerLeft(c, level, true));
-		CompanionEvents.DISMISSED.add((c, level) -> PetEvents.ownerLeft(c, level, false));
+		// Ahead of the people package's hooks: those mark the friend gone and let go of their marriage and children, after
+		// which the family lists (living people only) no longer name the husband or wife or the young ones at home.
+		CompanionEvents.DEATH.add(0, (c, level, source) -> PetEvents.ownerLeft(c, level, true));
+		CompanionEvents.DISMISSED.add(0, (c, level) -> PetEvents.ownerLeft(c, level, false));
 		CompanionEvents.HURT.add(PetEvents::companionHurt);
 		CompanionEvents.INTERACT.add(PetEvents::interact);
 

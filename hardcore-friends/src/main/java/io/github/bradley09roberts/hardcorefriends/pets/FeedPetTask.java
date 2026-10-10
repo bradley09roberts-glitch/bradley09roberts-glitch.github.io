@@ -31,8 +31,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * An owner feeds their pet from the camp's stock: whenever it is hurt (the food heals it, as when a player feeds their
  * pet), and otherwise as a treat every other day. A cat gets raw fish; a dog rotten flesh first, else raw meat, never
  * the cooked food the friends eat themselves. One piece at a time, fetched from the chest if not carried. Children see
- * to their own pets too, before their games (it changes no block and keeps them in the camp); grown-ups in the spare
- * time between jobs. A pet that cannot be reached is left a few minutes before anyone tries again.
+ * to their own pets too, before their games (it changes no block and keeps them in the camp: a child only goes to a pet
+ * inside the camp and near the height of home, and stops if it wanders off); grown-ups in the spare time between jobs.
+ * Nobody goes to a pet in the middle of a fight (a dog after a monster, a pet just bitten): it is fed once that is over.
+ * A pet that cannot be reached is left a few minutes before anyone tries again.
  */
 final class FeedPetTask implements CompanionTask {
 	static final String ID = "pets.feed";
@@ -79,7 +81,7 @@ final class FeedPetTask implements CompanionTask {
 			return 0;
 		}
 		TamableAnimal a = level.getEntity(record.get().id) instanceof TamableAnimal t && t.isAlive() ? t : null;
-		if (a == null || a.distanceToSqr(c) > RANGE * RANGE || a.isLeashed()) {
+		if (a == null || a.distanceToSqr(c) > RANGE * RANGE || a.isLeashed() || !mayGoTo(c, a)) {
 			return 0;
 		}
 		boolean hurt = a.getHealth() < a.getMaxHealth() - 1.0F;
@@ -95,6 +97,18 @@ final class FeedPetTask implements CompanionTask {
 			return 0;
 		}
 		return (hurt ? HURT_SCORE : TREAT_SCORE) + (c.isChild() ? CHILD_BONUS : 0);
+	}
+
+	/**
+	 * True if the owner may go to the pet where it is just now: never while it is fighting or was bitten a moment ago,
+	 * and a child only to a pet inside the camp and within a few blocks of the height of home (as for adopting one).
+	 */
+	private static boolean mayGoTo(CompanionEntity c, TamableAnimal a) {
+		if (a.getTarget() != null || a.getLastHurtByMob() != null && a.tickCount - a.getLastHurtByMobTimestamp() < 100) {
+			return false;
+		}
+		return !c.isChild()
+			|| WorldEditGuard.inCampHorizontally(c, a.blockPosition()) && Math.abs(a.getBlockY() - c.homePos().getY()) <= 6;
 	}
 
 	@Override
@@ -117,6 +131,9 @@ final class FeedPetTask implements CompanionTask {
 		Optional<PetsData.Pet> record = PetsData.get(level.getServer()).petOf(c.getUUID());
 		if (a == null || !a.isAlive() || record.isEmpty() || !record.get().id.equals(a.getUUID())) {
 			return TaskStatus.FAILURE;
+		}
+		if (c.tickCount % 10 == 0 && !mayGoTo(c, a)) {
+			return TaskStatus.FAILURE; // off out of the camp, or into a fight: fed later
 		}
 		PetKind kind = record.get().kind;
 		if (phase == Phase.CHEST) {

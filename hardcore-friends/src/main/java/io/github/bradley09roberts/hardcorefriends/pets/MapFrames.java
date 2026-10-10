@@ -138,10 +138,16 @@ final class MapFrames {
 
 	/**
 	 * True if a frame may hang here: open air under a roof, on a solid wall block the friends placed, inside the camp,
-	 * not beside a door, with no other picture or frame there and nothing a player built within a block.
+	 * not beside a door, with no other picture or frame there and nothing a player built within a block. Everything it
+	 * looks at (the wall, the neighbours, the block round them) must be loaded: a spot by a chunk at the edge of the
+	 * loaded land is passed over rather than have the game load that chunk to look.
 	 */
 	static boolean fits(ServerLevel level, CampData data, Spot spot) {
 		BlockPos pos = spot.pos();
+		if (!level.isLoaded(pos.offset(-1, 0, -1)) || !level.isLoaded(pos.offset(1, 0, 1)) || !level.isLoaded(pos.offset(-1, 0, 1))
+			|| !level.isLoaded(pos.offset(1, 0, -1))) {
+			return false;
+		}
 		BlockState here = level.getBlockState(pos);
 		if (!here.isAir() || !level.getFluidState(pos).isEmpty() || level.canSeeSky(pos)) {
 			return false;
