@@ -64,11 +64,15 @@ public final class Landscape {
 		return (s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(level, pos);
 	}
 
-	/** Horizontal distance to the nearest site origin, optionally only for sites not yet completed. */
+	/**
+	 * Horizontal distance to the nearest site origin, optionally only for sites not yet completed (a grave's reserved
+	 * ground is never a building still to come).
+	 */
 	public static double nearestSiteDistance(CampData data, BlockPos pos, boolean unfinishedOnly) {
 		double best = Double.MAX_VALUE;
 		for (Map.Entry<String, CampData.Site> e : data.sites().entrySet()) {
-			if (unfinishedOnly && data.isCompleted(e.getKey())) {
+			if (unfinishedOnly && (data.isCompleted(e.getKey())
+				|| e.getKey().startsWith(io.github.bradley09roberts.hardcorefriends.life.VillageLife.GRAVE_SITES))) {
 				continue;
 			}
 			best = Math.min(best, Math.sqrt(Camp.horizontalDistSqr(e.getValue().origin, pos)));

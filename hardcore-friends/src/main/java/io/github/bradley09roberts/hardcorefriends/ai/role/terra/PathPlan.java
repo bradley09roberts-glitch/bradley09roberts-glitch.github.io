@@ -33,6 +33,9 @@ public final class PathPlan {
 			if (e.getKey().startsWith(io.github.bradley09roberts.hardcorefriends.village.Planner.KEY_PREFIX)) {
 				continue; // the village's buildings front its own streets (the village package lays those)
 			}
+			if (e.getKey().startsWith(io.github.bradley09roberts.hardcorefriends.life.VillageLife.GRAVE_SITES)) {
+				continue; // a grave is no building: no path of its own to each one
+			}
 			CampData.Site site = e.getValue();
 			// The animal pen's path leads to its gate, not along its fence to a corner.
 			BlockPos to = e.getKey().equals(Structures.ANIMAL_PEN) ? new Pen(site.origin, site.rotation).outside() : site.origin;
