@@ -1,8 +1,10 @@
 package io.github.bradley09roberts.hardcorefriends.life;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
@@ -30,6 +32,8 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.needs.Spots;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.SiteFinder;
+import io.github.bradley09roberts.hardcorefriends.village.TownPlan;
+import io.github.bradley09roberts.hardcorefriends.village.VillageData;
 import io.github.bradley09roberts.hardcorefriends.village.VillagePlan;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
@@ -37,8 +41,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * The cemetery: a small plot of graves at the edge of the village (behind the chapel once there is one), in rows that
  * face the camp. Each grave is a headstone (a stone wall post, or a stone block), a sign in front of it with the name,
  * the day and "Rest well", and a flower either side. The plot is chosen once, on level natural ground inside the camp,
- * away from the streets, the other buildings' sites and anything a player built; each grave's ground is then reserved as
- * a camp site of its own ({@code life.grave.N}), so no plot, street or building is ever put over it.
+ * away from the streets (measured from the town plan's own centre once there is a plan), the other buildings' sites,
+ * the graves of any older plot (and the place in front of each where its visitors stand) and anything a player
+ * built; each grave's ground is then reserved as a camp site of its own ({@code life.grave.N}), so no plot, street or
+ * building is ever put over it.
  *
  * <p>The town plan has no cemetery of its own to ask for, so the friends lay this one out themselves. Every block goes
  * through the edit guard, from the camp's own stock (see {@link GraveTask}).
@@ -52,12 +58,13 @@ final class Graves {
 	/** Headstones, the best first; any one of them will do. */
 	static final List<Item> HEADSTONES = List.of(Items.STONE_BRICK_WALL, Items.MOSSY_STONE_BRICK_WALL, Items.COBBLESTONE_WALL,
 		Items.MOSSY_COBBLESTONE_WALL, Items.ANDESITE_WALL, Items.STONE_BRICKS, Items.MOSSY_STONE_BRICKS, Items.COBBLESTONE);
-	/** Places in the camp within this of the camp centre are the square's: no graves. */
+	/** Places in the camp within this of the camp centre are the square's (where the feasts are): no graves. */
 	private static final int CLEAR_OF_CENTRE = 8;
-	/** How far a grave keeps from the main streets through the camp centre and the lanes (the village's grid). */
+	/**
+	 * How far a grave's headstone keeps from the middle line of the main streets through the village's centre and of the
+	 * lanes {@link TownPlan#SPACING} out (the town plan's grid): its flowers and sign stay off the path and the verge.
+	 */
 	private static final int CLEAR_OF_STREETS = 4;
-	/** The village's lanes run this far out from the centre. */
-	private static final int LANES = 34;
 
 	private Graves() {
 	}
@@ -145,7 +152,7 @@ final class Graves {
 		boolean fresh = false;
 		if (data.cemetery == null || !data.cemeteryDimension.equals(camp.campDimension()) || !Places.inCamp(level, data.cemetery)) {
 			// Each try for the same grave looks round the camp in a different order (a plot nobody could reach is let go).
-			BlockPos anchor = chooseAnchor(level, camp, reserved, data.nextGrave + grave.tries);
+			BlockPos anchor = chooseAnchor(level, camp, withGraves(level, data, reserved, null), data.nextGrave + grave.tries);
 			if (anchor == null) {
 				return null;
 			}
@@ -157,9 +164,10 @@ final class Graves {
 			data.setDirty();
 		}
 		Direction toward = Direction.from2DDataValue(data.cemeteryFacing);
+		List<int[]> taken = withGraves(level, data, reserved, data.cemetery);
 		for (int i = data.nextCell; i < data.nextCell + 12; i++) {
 			BlockPos h = surface(level, cell(data.cemetery, toward, i));
-			if (h != null && cellOk(level, camp, h, toward, reserved)) {
+			if (h != null && cellOk(level, camp, h, toward, taken)) {
 				grave.pos = h;
 				grave.facing = toward.get2DDataValue();
 				grave.dimension = camp.campDimension();
@@ -221,7 +229,7 @@ final class Graves {
 
 	/**
 	 * The camp's reserved building sites, but not the graves' own small reservations: graves sit side by side in their
-	 * rows, which the cells already space out.
+	 * rows, which the cells already space out ({@link #withGraves} adds back those of the other plots).
 	 */
 	private static List<int[]> reserved(CampData camp) {
 		List<int[]> boxes = new ArrayList<>(SiteFinder.reservedBoxes(camp, ""));
@@ -230,6 +238,35 @@ final class Graves {
 				BlockPos o = e.getValue().origin;
 				boxes.removeIf(b -> b[0] == o.getX() - 1 && b[1] == o.getZ() - 1 && b[2] == o.getX() + 1 && b[3] == o.getZ() + 1);
 			}
+		}
+		return boxes;
+	}
+
+	/**
+	 * The reserved sites and every grave given a spot outside the plot being filled ({@code plot}, null while a new one
+	 * is chosen), each with the place two blocks in front of its headstone where its visitors stand: a new plot laid
+	 * out beside an older one keeps clear of its graves and their visitors. The graves of the plot being filled are left
+	 * out, as its cells space them already. Bounded: one pass over the graves and the plot's cells.
+	 */
+	private static List<int[]> withGraves(ServerLevel level, LifeData data, List<int[]> reserved, @Nullable BlockPos plot) {
+		List<int[]> boxes = new ArrayList<>(reserved);
+		Set<Long> plotCells = new HashSet<>();
+		if (plot != null) {
+			Direction toward = Direction.from2DDataValue(data.cemeteryFacing);
+			for (int i = 0; i < data.nextCell; i++) {
+				BlockPos c = cell(plot, toward, i);
+				plotCells.add(BlockPos.asLong(c.getX(), 0, c.getZ()));
+			}
+		}
+		String dim = Camp.dimensionId(level);
+		for (LifeData.Grave g : data.graves) {
+			BlockPos h = g.pos;
+			if (h == null || !g.dimension.equals(dim) || plotCells.contains(BlockPos.asLong(h.getX(), 0, h.getZ()))) {
+				continue;
+			}
+			BlockPos visitor = h.relative(facing(g), 2);
+			boxes.add(new int[] {Math.min(h.getX() - 1, visitor.getX()), Math.min(h.getZ() - 1, visitor.getZ()),
+				Math.max(h.getX() + 1, visitor.getX()), Math.max(h.getZ() + 1, visitor.getZ())});
 		}
 		return boxes;
 	}
@@ -283,13 +320,15 @@ final class Graves {
 	 * inside the camp and clear of the square, the streets, every reserved site and anything a player built.
 	 */
 	static boolean cellOk(ServerLevel level, CampData camp, BlockPos h, Direction toward, List<int[]> reserved) {
-		BlockPos centre = camp.campPos().orElse(null);
-		if (centre == null || !Places.inCamp(level, h)) {
+		BlockPos campCentre = camp.campPos().orElse(null);
+		if (campCentre == null || !Places.inCamp(level, h)) {
 			return false;
 		}
-		int dx = h.getX() - centre.getX();
-		int dz = h.getZ() - centre.getZ();
-		if (dx * dx + dz * dz < CLEAR_OF_CENTRE * CLEAR_OF_CENTRE || nearStreet(dx) || nearStreet(dz)) {
+		if (Camp.horizontalDistSqr(campCentre, h) < CLEAR_OF_CENTRE * CLEAR_OF_CENTRE) {
+			return false;
+		}
+		BlockPos streets = streetsCentre(level, camp, campCentre);
+		if (nearStreet(h.getX() - streets.getX()) || nearStreet(h.getZ() - streets.getZ())) {
 			return false;
 		}
 		if (camp.chestPos().isPresent() && camp.chestPos().get().distSqr(h) < 25) {
@@ -323,9 +362,18 @@ final class Graves {
 		return !WorldEditGuard.looksPlayerBuilt(level, h, 3, camp);
 	}
 
+	/**
+	 * Where the village's square and streets are laid out from: the town plan's own centre once there is a plan (it
+	 * stays put when the camp is set again a step or two away), else the camp centre, round which a plan will be laid.
+	 */
+	private static BlockPos streetsCentre(ServerLevel level, CampData camp, BlockPos campCentre) {
+		VillageData village = VillageData.get(level.getServer());
+		return village.centre().filter(c -> village.dimension().equals(camp.campDimension())).orElse(campCentre);
+	}
+
 	private static boolean nearStreet(int offset) {
 		int a = Math.abs(offset);
-		return a <= CLEAR_OF_STREETS || Math.abs(a - LANES) <= CLEAR_OF_STREETS;
+		return a <= CLEAR_OF_STREETS || Math.abs(a - TownPlan.SPACING) <= CLEAR_OF_STREETS;
 	}
 
 	/** Natural, firm, level ground under {@code p} (no field, path or water), and room for a block and a head above. */

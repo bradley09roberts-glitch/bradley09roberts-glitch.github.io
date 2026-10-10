@@ -33,6 +33,7 @@ import io.github.bradley09roberts.hardcorefriends.companion.Needs;
 import io.github.bradley09roberts.hardcorefriends.companion.Role;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
+import io.github.bradley09roberts.hardcorefriends.defence.Alarm;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 
 /**
@@ -45,6 +46,12 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  * quiet. A gathering ends at nightfall, or when the day it belongs to is over (the players slept through the night).
  * The Chronicle records each one. Only one gathering runs at a time; a funeral comes first: on a feast day a funeral
  * that is due is held from {@value #FUNERAL_FROM_FEAST_DAY}, before the feast's hour, and the feast follows it.
+ *
+ * <p>While a monster is near the middle or the village's alarm rings, the gathering waits: nobody new comes, and the
+ * time it gives people to gather stands still, so everyone taking cover or at their posts does not end it. The
+ * gathering under way is kept in {@link LifeData}, so after a restart (or Save and Quit) it carries on, or, if its
+ * evening is over by then, is closed as it stood: a feast whose words were said is still written in the Chronicle,
+ * and a funeral whose words were said counts as held.
  */
 final class Gatherings {
 	enum Kind {
@@ -95,8 +102,15 @@ final class Gatherings {
 		long phaseAt;
 		int step;
 		boolean spoke;
-		/** A monster near the middle just now (looked at once a second): nobody new comes until it is gone. */
+		/**
+		 * A monster near the middle, or the village's alarm, just now (looked at once a second): nobody new comes until
+		 * it is over, and the gathering's clock waits.
+		 */
 		boolean danger;
+		/** Ticks spent gathering with no danger about: how long people have had to come. */
+		int waited;
+		/** The alarm rang while people were gathering: a funeral that could not be held then is not counted a try. */
+		boolean alarmed;
 		@Nullable UUID speaker;
 		final Set<UUID> arrived = new LinkedHashSet<>();
 		final Set<UUID> attended = new LinkedHashSet<>();
@@ -173,6 +187,12 @@ final class Gatherings {
 		}
 		noteHarvest(server, data, day);
 		morning(server, level, data, day, time);
+		if (active == null && !data.running.isEmpty()) {
+			resume(server, level, data, day, time);
+			if (active == null) {
+				return; // closed as it stood, or its place is not loaded yet (tried again in a second)
+			}
+		}
 		Gathering g = active;
 		if (g != null) {
 			if (g.day != day || g.dimension != level.dimension()) {
@@ -279,10 +299,18 @@ final class Gatherings {
 		boolean canStart = time < FUNERAL_LATEST_START && !Camp.isNight(level) && !Places.freePeople(level).isEmpty();
 		if (!canStart) {
 			if (time >= FUNERAL_LATEST_START || Camp.isNightTime(level)) {
-				putOff(server, data, due, day);
+				putOff(server, data, due, day, true);
 			}
 			return;
 		}
+		Gathering g = funeralAt(level, data, due, day);
+		if (g != null) {
+			begin(data, g);
+		}
+	}
+
+	/** A funeral's gathering at the grave (else the cemetery, else the square); null while that place is not loaded. */
+	private static @Nullable Gathering funeralAt(ServerLevel level, LifeData data, LifeData.Funeral due, long day) {
 		LifeData.Grave grave = null;
 		for (LifeData.Grave g : Graves.made(level, data)) {
 			if (due.ids.contains(g.id)) {
@@ -302,14 +330,19 @@ final class Gatherings {
 			centre = Places.square(level);
 		}
 		if (centre == null || !level.isLoaded(centre)) {
-			return;
+			return null;
 		}
-		active = new Gathering(Kind.FUNERAL, null, due, level, centre, facing, day);
+		return new Gathering(Kind.FUNERAL, null, due, level, centre, facing, day);
 	}
 
-	/** A funeral that could not be held this evening moves to tomorrow; after a few evenings it is kept quietly. */
-	private static void putOff(MinecraftServer server, LifeData data, LifeData.Funeral f, long day) {
-		f.tries++;
+	/**
+	 * A funeral that could not be held this evening moves to tomorrow; after a few evenings it is kept quietly. An
+	 * evening lost to the alarm ({@code counts} false) is not one of those few.
+	 */
+	private static void putOff(MinecraftServer server, LifeData data, LifeData.Funeral f, long day, boolean counts) {
+		if (counts) {
+			f.tries++;
+		}
 		if (f.tries >= FUNERAL_TRIES) {
 			data.funerals.remove(f);
 			Chronicle.write(server, Chronicle.and(f.names) + (f.names.size() == 1 ? " was" : " were")
@@ -329,12 +362,69 @@ final class Gatherings {
 			data.markDone("feast:" + day);
 			return;
 		}
-		BlockPos centre = Places.square(level);
-		if (centre == null || !level.isLoaded(centre) || Places.freePeople(level).isEmpty()) {
+		Gathering g = feastAt(level, feast, day);
+		if (g == null || Places.freePeople(level).isEmpty()) {
 			return;
 		}
 		data.markDone("feast:" + day);
-		active = new Gathering(Kind.FEAST, feast, null, level, centre, null, day);
+		begin(data, g);
+	}
+
+	/** A feast's gathering at the square; null while the square is not loaded. */
+	private static @Nullable Gathering feastAt(ServerLevel level, Calendar.Feast feast, long day) {
+		BlockPos centre = Places.square(level);
+		if (centre == null || !level.isLoaded(centre)) {
+			return null;
+		}
+		return new Gathering(Kind.FEAST, feast, null, level, centre, null, day);
+	}
+
+	/** The gathering is under way, and the world keeps it, so a restart in the middle can carry it on. */
+	private static void begin(LifeData data, Gathering g) {
+		active = g;
+		data.running = g.kind == Kind.FEAST ? "feast" : "funeral";
+		data.runningDay = g.day;
+		data.runningSpoke = g.spoke;
+		data.runningFor = g.funeral == null ? null : g.funeral.ids.getFirst();
+		data.setDirty();
+	}
+
+	/**
+	 * The world was loaded again (a restart, or Save and Quit) in the middle of a gathering. If its evening is not over
+	 * it carries on where it was: still gathering, or for a feast whose words were said, straight on with the party.
+	 * Otherwise it is closed as it stood, so a feast whose words were said is written in the Chronicle and gives its
+	 * Unity, and a funeral whose words were said counts as held (rather than being held again from the start, or put
+	 * off). While its place is not loaded yet, it waits for that.
+	 */
+	private static void resume(MinecraftServer server, ServerLevel level, LifeData data, long day, long time) {
+		Kind kind = "funeral".equals(data.running) ? Kind.FUNERAL : Kind.FEAST;
+		Calendar.Feast feast = kind == Kind.FEAST ? Calendar.feastOn(data.runningDay) : null;
+		LifeData.Funeral funeral = null;
+		for (LifeData.Funeral f : data.funerals) {
+			if (kind == Kind.FUNERAL && f.ids.contains(data.runningFor)) {
+				funeral = f;
+				break;
+			}
+		}
+		if (kind == Kind.FEAST ? feast == null : funeral == null) {
+			data.stopRunning(); // nothing left to carry on (the days per season were changed, or the funeral is over)
+			return;
+		}
+		boolean spoke = data.runningSpoke;
+		if (data.runningDay != day || time >= ENDS_BY || Camp.isNightTime(level) || kind == Kind.FUNERAL && spoke) {
+			BlockPos camp = Camp.data(server).campPos().orElseThrow();
+			finish(server, level, new Gathering(kind, feast, funeral, level, camp, null, data.runningDay), spoke);
+			return;
+		}
+		Gathering g = feast != null ? feastAt(level, feast, day) : funeralAt(level, data, funeral, day);
+		if (g == null) {
+			return;
+		}
+		if (spoke) {
+			g.spoke = true;
+			g.phase = Phase.PARTY;
+		}
+		active = g;
 	}
 
 	// ------------------------------------------------------------- stepping
@@ -346,18 +436,23 @@ final class Gatherings {
 			return;
 		}
 		g.arrived.removeIf(id -> Places.loaded(level, id) == null);
-		boolean danger = Places.hostileNear(level, g.centre, Places.SPOIL_RANGE);
+		boolean alarm = Alarm.isActive();
+		boolean danger = alarm || Places.hostileNear(level, g.centre, Places.SPOIL_RANGE);
 		g.danger = danger;
 		switch (g.phase) {
 			case GATHERING -> {
+				if (danger) {
+					g.alarmed |= alarm;
+					return; // everyone is taking cover or seeing to it: the time to gather waits with them
+				}
+				g.waited += 20;
 				int about = Places.freePeople(level).size();
 				int present = g.arrived.size();
-				long waited = now - g.startedAt;
 				int wait = g.kind == Kind.FUNERAL ? GATHER_TICKS_FUNERAL : GATHER_TICKS_FEAST;
-				boolean enough = present > 0 && (present >= Math.ceil(QUORUM * about) || waited >= wait);
-				if (enough && !danger) {
+				boolean enough = present > 0 && (present >= Math.ceil(QUORUM * about) || g.waited >= wait);
+				if (enough) {
 					words(level, g);
-				} else if (waited > GATHER_MAX && present == 0) {
+				} else if (g.waited > GATHER_MAX && present == 0) {
 					finish(server, level, g, false);
 				}
 			}
@@ -382,6 +477,9 @@ final class Gatherings {
 		g.phase = Phase.WORDS;
 		g.phaseAt = level.getGameTime();
 		g.spoke = true;
+		LifeData data = LifeData.get(level.getServer());
+		data.runningSpoke = true;
+		data.setDirty();
 		if (speaker == null) {
 			return;
 		}
@@ -552,6 +650,7 @@ final class Gatherings {
 	private static void finish(MinecraftServer server, ServerLevel level, Gathering g, boolean held) {
 		active = null;
 		LifeData data = LifeData.get(server);
+		data.stopRunning();
 		int count = g.attended.size();
 		String who = who(g);
 		if (g.kind == Kind.FEAST && g.feast != null) {
@@ -563,8 +662,8 @@ final class Gatherings {
 			if (speaker != null) {
 				Speech.say(speaker, Line.FESTIVAL_END, g.feast.phrase());
 			}
-			Speech.announce(server, Component.literal(Calendar.capital(g.feast.phrase()) + " is over: " + count
-				+ " came to the square.").withStyle(ChatFormatting.GOLD));
+			Speech.announce(server, Component.literal(Calendar.capital(g.feast.phrase()) + " is over"
+				+ (count > 0 ? ": " + count + " came to the square." : ".")).withStyle(ChatFormatting.GOLD));
 			Chronicle.write(server, Calendar.capital(g.feast.phrase()) + " was held at the square" + (who.isEmpty() ? "." : ": " + who + " came."));
 			Unity.add(level, FESTIVAL_UNITY, 10, 10);
 			return;
@@ -574,7 +673,7 @@ final class Gatherings {
 			return;
 		}
 		if (!held) {
-			putOff(server, data, f, g.day);
+			putOff(server, data, f, g.day, !g.alarmed);
 			return;
 		}
 		data.funerals.remove(f);

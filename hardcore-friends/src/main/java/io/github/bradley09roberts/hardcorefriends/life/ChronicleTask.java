@@ -190,6 +190,14 @@ final class ChronicleTask implements CompanionTask {
 	public boolean start(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
 		lectern = lecternSpot(level);
+		LifeData data = LifeData.get(level.getServer());
+		BlockPos kept = data.bookPlace.equals("lectern") && data.bookDimension.equals(Camp.dimensionId(level)) ? data.bookPos
+			: null;
+		if (lectern != null && !level.isLoaded(lectern) || kept != null && !level.isLoaded(kept)) {
+			// The town hall is out of the loaded world just now: another time, rather than loading it (or writing a
+			// second copy of a book that is still lying there).
+			return false;
+		}
 		ticks = 0;
 		stand = null;
 		step = needsChest(c, level) ? Step.CHEST : Step.WALK;
@@ -250,8 +258,8 @@ final class ChronicleTask implements CompanionTask {
 			}
 		}
 		Container chest = SupplyChest.of(level).orElse(null);
-		if (chest == null) {
-			return TaskStatus.FAILURE;
+		if (chest == null || lectern != null && !level.isLoaded(lectern)) {
+			return TaskStatus.FAILURE; // (the town hall went out of the loaded world meanwhile: another time)
 		}
 		LifeData data = LifeData.get(level.getServer());
 		if (full(data) && data.bookPlace.equals("chest")) {
@@ -396,7 +404,10 @@ final class ChronicleTask implements CompanionTask {
 		BlockState state = level.getBlockState(at);
 		if (state.isAir()) {
 			BlockState lecternState = Blocks.LECTERN.defaultBlockState().setValue(LecternBlock.FACING, facing(level, at));
-			c.actions().place(at, lecternState, s -> s.is(Items.LECTERN), WorldEditGuard.Reason.BUILD);
+			if (c.actions().place(at, lecternState, s -> s.is(Items.LECTERN), WorldEditGuard.Reason.BUILD)) {
+				// Recorded even when the record of placed blocks is full: the keeper must know it as the friends' own.
+				Camp.data(level.getServer()).keepPlaced(level, at, lecternState);
+			}
 			return TaskStatus.RUNNING;
 		}
 		if (!state.is(Blocks.LECTERN) || !Camp.data(level.getServer()).isPlacedByFriends(level, at)

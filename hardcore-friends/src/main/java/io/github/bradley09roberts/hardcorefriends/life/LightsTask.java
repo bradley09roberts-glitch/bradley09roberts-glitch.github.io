@@ -156,6 +156,8 @@ final class LightsTask implements CompanionTask {
 		BlockState state = Block.byItem(item).defaultBlockState();
 		if (level.getBlockState(spot).isAir() && state.canSurvive(level, spot)
 			&& c.actions().place(spot, state, s -> s.is(item), WorldEditGuard.Reason.BUILD)) {
+			// Recorded even when the camp's record of placed blocks is full: a light up for one night must come down again.
+			Camp.data(level.getServer()).keepPlaced(level, spot, state);
 			LifeData.get(level.getServer()).addTemp(Camp.dimensionId(level), spot, state.getBlock(), nextMorning(level));
 			placed++;
 			index++;

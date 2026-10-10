@@ -319,6 +319,7 @@ final class MusicTask implements CompanionTask {
 			NoteBlockInstrument chosen = below.worksAboveNoteBlock() || !below.isTunable() ? NoteBlockInstrument.HARP : below;
 			BlockState state = Blocks.NOTE_BLOCK.defaultBlockState().setValue(NoteBlock.INSTRUMENT, chosen);
 			if (c.actions().place(p, state, s -> s.is(Items.NOTE_BLOCK), WorldEditGuard.Reason.BUILD)) {
+				camp.keepPlaced(level, p, state); // even when the record of placed blocks is full: it must come down again
 				block = p.immutable();
 				instrument = chosen;
 				IN_USE.put(block, c.getUUID());

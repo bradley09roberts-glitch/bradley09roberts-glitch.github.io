@@ -46,8 +46,14 @@ Sage, or whoever has been with the camp longest. Then it is a party until nightf
   chest.
 
 At nightfall the speaker says good night, everyone goes home to bed, the feast goes in the Chronicle, and the camp gains
-a little Unity (10). A monster near the square holds the party up until it is dealt with; a feast that nobody could
-come to is simply missed. The night watch never leaves the watch for a feast.
+a little Unity (10). A monster near the square holds the party up until it is dealt with, and so does the village's
+alarm: while it rings, everyone takes cover or goes to their post, and the feast waits for them to come back rather than
+giving up on them. A feast that nobody could come to is simply missed. The night watch never leaves the watch for a
+feast.
+
+If you save and quit (or the server restarts) during a feast or a funeral, it carries on when the world is loaded again
+that evening, straight on with the party if the words were already said. If the evening is over by then, a feast whose
+words were said still goes in the Chronicle and gives its Unity, and a funeral whose words were said counts as held.
 
 ## Market day
 
@@ -97,8 +103,9 @@ When someone of the team dies for good:
 - **A grave** is made, usually the same day or the next morning: a grown-up fetches a headstone (a stone wall post, or a
   stone block; cobblestone only when the camp has plenty), a sign (or makes one from planks and a stick) and a flower or
   two from the supply chest, and puts them up at the **cemetery**: a small plot the friends lay out themselves on level
-  natural ground towards the edge of the camp, behind the chapel once the village has one, away from the streets and
-  from anything you built. Graves stand in rows facing the camp. The sign reads "In memory of", the name, the day and
+  natural ground towards the edge of the camp, behind the chapel once the village has one, away from the streets, from
+  anything you built, and from the graves already there and the place in front of each where visitors stand (when a
+  plot is full and a new one is begun). Graves stand in rows facing the camp. The sign reads "In memory of", the name, the day and
   "Rest well", and is waxed so it cannot be changed by accident. Each grave's ground is reserved so nothing is ever
   built over it.
 - **The funeral** is held the next evening (from time 10000; on a feast day it comes first, from time 9000, and the
@@ -107,7 +114,8 @@ When someone of the team dies for good:
   after another, and if a parent was lost, the other parent (or the speaker) promises the children will be looked after.
   Then a moment's quiet, and everyone goes about their evening. If the funeral cannot be held (nobody at the camp, a
   monster about, a storm), it moves to the next evening; after three evenings the one lost is remembered quietly in the
-  Chronicle instead.
+  Chronicle instead. An evening lost to the village's alarm (everyone taking cover until nightfall) is not one of the
+  three.
 - **Visits.** While they mourn, friends visit the grave once a day, say a few words and leave a flower if a place by the
   headstone is empty; family keep visiting now and then for good (about one day in five). Children visit too.
 
@@ -140,6 +148,8 @@ Chronicle begins with a line about the camp as it is, and only what happens from
 - A book holds 100 pages. When a volume is full, the keeper writes its last lines in, begins the next one in a new book
   and the full one goes to the supply chest (Volume I, Volume II...).
 - If you take the book away, it is yours to keep: the keeper writes the volume out again in a new book from the stores.
+- While the town hall is out of the loaded world (with `keepCampLoaded` off and nobody near it), the keeper waits rather
+  than loading it or writing a second copy.
 
 ## Commands
 
@@ -170,7 +180,9 @@ All work at permission level 0 with cheats off, and only show things.
   filter keeps the feast's cook from putting the feast's food back in the chest before the feast.
 - Every block change goes through the edit guard's existing rules: BUILD for the graves (headstone, sign, flowers), the
   winter lights, the musician's note block and a missing lectern; INVENT (the friends' own block, the same block) for
-  showing or clearing the book on the friends' own lectern. No new rule is registered.
+  showing or clearing the book on the friends' own lectern. No new rule is registered. The winter lights, the note
+  block and a lectern from the chest are recorded as the friends' own (`CampData.keepPlaced`) even when the camp's
+  record of placed blocks is full, so they can always be taken down (or used) again.
 - Each grave reserves its ground as a camp site (`life.grave.N`, a 3 by 3 box round the headstone; the prefix is
   `life.VillageLife.GRAVE_SITES`), so the town plan, the streets and the builders keep off it. Terra's landscaping does
   not count these as buildings still to come (it lights and plants round the graves as anywhere) and lays no path to
@@ -193,9 +205,12 @@ All work at permission level 0 with cheats off, and only show things.
   a grave may not find a place (it is tried again, six times, and the name stays in the Chronicle). A spot nobody can
   walk to (up a ledge, inside a fenced field) also counts as a failed try; after two, another spot is chosen, and a
   plot with no grave in it yet is laid out somewhere else. A grave that failed waits behind the others until the next
-  day, so it never holds up the graves after it. The friends keep
-  four blocks off the lines where the village's streets run, from the camp centre and 34 blocks out, which is the town
-  plan's grid; the lanes' exact positions are assumed, not asked.
+  day, so it never holds up the graves after it. The friends keep a grave's headstone four blocks off the middle lines
+  of the village's streets, measured from the town plan's own centre once there is a plan (which stays put when the
+  camp is set again a step or two away), else from the camp centre: the main streets through it and the lanes 34
+  blocks out (`TownPlan.SPACING`). Graves made before this rule are not moved.
+- **A feast or funeral resumed after a restart** forgets who had already come: the Chronicle names only those who
+  come (again) afterwards, and a feast closed after its evening ended names nobody.
 - **Signs** are made as oak signs from any planks (the game would match the wood). A camp with no planks to spare and no
   signs gets a plain headstone.
 - **Flowers** for graves only come from the supply chest: friends do not pick wild flowers for them.
