@@ -43,7 +43,8 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  * with the camp longest), and then a feast is a party (the cook hands out the food they brought from the stores, the
  * musician plays, everyone's fun and company fill, children play), while a funeral has its farewells and a moment of
  * quiet. A gathering ends at nightfall, or when the day it belongs to is over (the players slept through the night).
- * The Chronicle records each one. Only one gathering runs at a time; a funeral comes first.
+ * The Chronicle records each one. Only one gathering runs at a time; a funeral comes first: on a feast day a funeral
+ * that is due is held from {@value #FUNERAL_FROM_FEAST_DAY}, before the feast's hour, and the feast follows it.
  */
 final class Gatherings {
 	enum Kind {
@@ -61,6 +62,8 @@ final class Gatherings {
 	static final long FEAST_FROM = 9500;
 	static final long FEAST_LATEST_START = 11500;
 	static final long FUNERAL_FROM = 10000;
+	/** On a feast day a funeral due is held earlier, so that it comes before the feast rather than being put off by it. */
+	static final long FUNERAL_FROM_FEAST_DAY = 9000;
 	static final long FUNERAL_LATEST_START = 11800;
 	/** Every gathering is over by now (just after sunset) if night has not already ended it. */
 	static final long ENDS_BY = 13000;
@@ -179,7 +182,8 @@ final class Gatherings {
 			}
 			return;
 		}
-		if (time >= FUNERAL_FROM && time < ENDS_BY) {
+		long funeralFrom = Calendar.feastOn(day) != null ? FUNERAL_FROM_FEAST_DAY : FUNERAL_FROM;
+		if (time >= funeralFrom && time < ENDS_BY) {
 			startFuneral(server, level, data, day, time);
 		}
 		if (active == null && time >= FEAST_FROM && time < FEAST_LATEST_START) {

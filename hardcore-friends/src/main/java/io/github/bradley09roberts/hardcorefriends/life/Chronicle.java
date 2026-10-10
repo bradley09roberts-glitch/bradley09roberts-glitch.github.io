@@ -56,7 +56,10 @@ public final class Chronicle {
 	static final int MAX_PAGES = 100;
 	/** The lines shown on one page of {@code /friends chronicle}. */
 	static final int CHAT_PAGE = 8;
-	/** Raids near the camp being watched, by raid id (not saved: a raid in progress over a restart is not told). */
+	/**
+	 * Raids near the camp being watched, by raid id (not saved). Only a raid still under way is taken up: a finished one
+	 * stays about for its celebration afterwards, and would otherwise be told again at every look.
+	 */
 	private static final Map<Integer, Raid> RAIDS = new HashMap<>();
 	private static final int RAID_RANGE = 96;
 
@@ -328,7 +331,7 @@ public final class Chronicle {
 			return;
 		}
 		Raid raid = level.getRaids().getNearbyRaid(centre, RAID_RANGE * RAID_RANGE);
-		if (raid != null) {
+		if (raid != null && !raid.isOver()) {
 			level.getRaids().getId(raid).ifPresent(id -> RAIDS.putIfAbsent(id, raid));
 		}
 		for (Iterator<Map.Entry<Integer, Raid>> it = RAIDS.entrySet().iterator(); it.hasNext();) {

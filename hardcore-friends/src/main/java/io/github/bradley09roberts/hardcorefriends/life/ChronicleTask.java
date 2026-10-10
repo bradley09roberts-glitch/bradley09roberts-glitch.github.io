@@ -16,6 +16,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.WritableBookContent;
 import net.minecraft.world.item.component.WrittenBookContent;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LecternBlock;
@@ -44,9 +45,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * whoever has been with the camp longest) goes now and then by day, when there is news, to where the book is kept and
  * brings it up to date: on the lectern in the town hall once the village has one (a lectern from the stores is put on
  * the plan's spot if the builders left it out), until then in the camp's supply chest. The first copy is written in a
- * book and quill from the chest (or one made there from a book, an ink sac and a feather): a real item, used up. When a
- * volume's hundred pages are full, the next volume is begun in a new book and the full one goes to the chest. A book a
- * player takes away is theirs to keep; the keeper writes the volume out again in a new book.
+ * blank book and quill from the chest (or one made there from a book, an ink sac and a feather): a real item, used up.
+ * A book and quill with anything written in it, or a name of its own, is someone's and is never taken. When a volume's
+ * hundred pages are full, its last lines are written in, the next volume is begun in a new book and the full one goes
+ * to the chest. A book a player takes away is theirs to keep; the keeper writes the volume out again in a new book.
  *
  * <p>Every change to the lectern goes through the edit guard: the lectern is the friends' own block, and showing or
  * clearing its book is changing that block in place (the INVENT rule: the friends' own block, the same block).
@@ -63,6 +65,8 @@ final class ChronicleTask implements CompanionTask {
 	private static long keeperAt = Long.MIN_VALUE;
 	/** The day no book and quill could be had (tried again the next day). */
 	private static long noBookDay = -1;
+	/** The day the town hall's lectern spot stood empty with no lectern to be had (the move is tried the next day). */
+	private static long noLecternDay = -1;
 	/** The town hall's lectern spot, looked up at most every half minute. */
 	private static @Nullable BlockPos spot;
 	private static long spotAt = Long.MIN_VALUE;
@@ -82,6 +86,7 @@ final class ChronicleTask implements CompanionTask {
 		keeper = null;
 		keeperAt = Long.MIN_VALUE;
 		noBookDay = -1;
+		noLecternDay = -1;
 		spot = null;
 		spotAt = Long.MIN_VALUE;
 	}
@@ -110,7 +115,7 @@ final class ChronicleTask implements CompanionTask {
 		}
 		boolean news = data.bookWritten < data.entries.size();
 		boolean noBook = data.bookPlace.isEmpty();
-		boolean move = data.bookPlace.equals("chest") && lecternSpot(level) != null;
+		boolean move = data.bookPlace.equals("chest") && noLecternDay != day && lecternSpot(level) != null;
 		if (noBook && noBookDay == day) {
 			return 0;
 		}
@@ -145,7 +150,8 @@ final class ChronicleTask implements CompanionTask {
 
 	/**
 	 * The town hall's lectern spot, if a town hall stands: the plan's lectern marker, holding the friends' own lectern or
-	 * still empty (for a lectern from the stores).
+	 * still empty (for a lectern from the stores). A lectern with someone else's book on it is not one: the Chronicle
+	 * stays where it is until the book is taken off again.
 	 */
 	static @Nullable BlockPos lecternSpot(ServerLevel level) {
 		long now = level.getGameTime();
@@ -165,7 +171,14 @@ final class ChronicleTask implements CompanionTask {
 					continue;
 				}
 				BlockState s = level.getBlockState(p);
-				if (s.is(Blocks.LECTERN) && camp.isPlacedByFriends(level, p) || s.isAir()) {
+				if (s.is(Blocks.LECTERN) && camp.isPlacedByFriends(level, p)) {
+					if (s.getValue(LecternBlock.HAS_BOOK) && level.getBlockEntity(p) instanceof LecternBlockEntity desk
+						&& volumeOf(desk.getBook()) <= 0) {
+						continue; // a player's own book lies there
+					}
+					return p;
+				}
+				if (s.isAir()) {
 					return p;
 				}
 			}
@@ -242,10 +255,18 @@ final class ChronicleTask implements CompanionTask {
 		}
 		LifeData data = LifeData.get(level.getServer());
 		if (full(data) && data.bookPlace.equals("chest")) {
+			int old = slotIn(chest, data.volume);
+			if (old >= 0) {
+				write(chest.getItem(old), data, c); // its last lines go in first
+				chest.setChanged();
+			}
 			nextVolume(data); // the full one stays in the chest, among the camp's keepsakes
 		}
 		int slot = slotIn(chest, data.volume);
 		boolean toLectern = lectern != null && (level.getBlockState(lectern).is(Blocks.LECTERN) || haveLectern(c, chest));
+		if (lectern != null && !toLectern) {
+			noLecternDay = Calendar.today(level.getServer()); // the spot stays empty for today: no lectern in the stores
+		}
 		if (slot >= 0 && toLectern && !full(data)) {
 			ItemStack book = chest.getItem(slot).copy();
 			if (!c.backpack().canFit(book)) {
@@ -274,10 +295,11 @@ final class ChronicleTask implements CompanionTask {
 		return SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.LECTERN), 1) > 0;
 	}
 
-	/** A book and quill: from the chest, or made from a book (or paper and leather), an ink sac and a feather. */
+	/**
+	 * A blank book and quill: from the chest, or made from a book (or paper and leather), an ink sac and a feather.
+	 */
 	private static boolean getBookAndQuill(CompanionEntity c, Container chest, ServerLevel level) {
-		if (c.backpack().has(s -> s.is(Items.WRITABLE_BOOK))
-			|| SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.WRITABLE_BOOK), 1) > 0) {
+		if (c.backpack().has(ChronicleTask::blank) || SupplyChest.withdraw(chest, c.backpack(), ChronicleTask::blank, 1) > 0) {
 			return true;
 		}
 		boolean book = SupplyChest.count(chest, s -> s.is(Items.BOOK)) > 0
@@ -292,7 +314,8 @@ final class ChronicleTask implements CompanionTask {
 		}
 		SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.INK_SAC), 1);
 		SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.FEATHER), 1);
-		if (Crafting.ensure(c, Items.WRITABLE_BOOK, 1)) {
+		// One more than they carry: a written-in book and quill on them does not count.
+		if (Crafting.ensure(c, Items.WRITABLE_BOOK, c.backpack().count(Items.WRITABLE_BOOK) + 1)) {
 			return true;
 		}
 		// Could not be made after all: everything goes back.
@@ -398,6 +421,9 @@ final class ChronicleTask implements CompanionTask {
 				WorldEditGuard.Reason.INVENT)) {
 				return TaskStatus.RUNNING;
 			}
+			if (vol == data.volume) {
+				write(there, data, c); // the full volume's last lines go in before it is put away
+			}
 			c.backpack().insert(there.copy());
 			desk.setBook(ItemStack.EMPTY);
 			if (vol == data.volume) {
@@ -465,9 +491,9 @@ final class ChronicleTask implements CompanionTask {
 		data.setDirty();
 	}
 
-	/** A new written book for the current volume, made from a book and quill out of the backpack (used up); or empty. */
+	/** A new written book for the current volume, made from a blank book and quill out of the backpack (used up); or empty. */
 	private static ItemStack newBook(CompanionEntity c, LifeData data) {
-		if (c.backpack().remove(s -> s.is(Items.WRITABLE_BOOK), 1) != 1) {
+		if (c.backpack().remove(ChronicleTask::blank, 1) != 1) {
 			return ItemStack.EMPTY;
 		}
 		ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
@@ -507,7 +533,17 @@ final class ChronicleTask implements CompanionTask {
 	}
 
 	private static boolean hasOwnBook(CompanionEntity c, int volume) {
-		return c.backpack().has(s -> volumeOf(s) == volume) || c.backpack().has(s -> s.is(Items.WRITABLE_BOOK));
+		return c.backpack().has(s -> volumeOf(s) == volume) || c.backpack().has(ChronicleTask::blank);
+	}
+
+	/**
+	 * A book and quill nobody has written in and nobody has named: the only kind the Chronicle is written in. Players
+	 * keep their notes in book and quills in the chest, and those are never used up.
+	 */
+	private static boolean blank(ItemStack s) {
+		return s.is(Items.WRITABLE_BOOK) && !s.has(DataComponents.CUSTOM_NAME)
+			&& s.getOrDefault(DataComponents.WRITABLE_BOOK_CONTENT, WritableBookContent.EMPTY).pages().stream()
+				.allMatch(page -> page.raw().isBlank());
 	}
 
 	/** Takes the current volume out of the backpack, if carried. */

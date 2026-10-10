@@ -43,7 +43,7 @@ final class LightsTask implements CompanionTask {
 	private static final double RING = 7;
 	private static final long FROM = 8500;
 	private static final long UNTIL = 12300;
-	/** Torches only when the chest holds at least this many (the camp's own lighting comes first). */
+	/** Torches only from what the chest holds beyond this many (the camp's own lighting comes first). */
 	private static final int TORCHES_SPARE = 24;
 
 	private static long litDay = -1;
@@ -184,8 +184,8 @@ final class LightsTask implements CompanionTask {
 			int want = spots.size() - c.backpack().count(LightsTask::isLight);
 			want -= SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.LANTERN), Math.max(0, want));
 			int torches = SupplyChest.count(chest, s -> s.is(Items.TORCH));
-			if (want > 0 && torches >= TORCHES_SPARE) {
-				SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.TORCH), Math.min(want, torches - TORCHES_SPARE + LIGHTS));
+			if (want > 0 && torches > TORCHES_SPARE) {
+				SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.TORCH), Math.min(want, torches - TORCHES_SPARE));
 			}
 		}
 		if (!c.backpack().has(LightsTask::isLight)) {

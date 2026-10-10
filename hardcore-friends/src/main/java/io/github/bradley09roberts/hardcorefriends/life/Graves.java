@@ -144,7 +144,8 @@ final class Graves {
 		}
 		boolean fresh = false;
 		if (data.cemetery == null || !data.cemeteryDimension.equals(camp.campDimension()) || !Places.inCamp(level, data.cemetery)) {
-			BlockPos anchor = chooseAnchor(level, camp, reserved, data.nextGrave);
+			// Each try for the same grave looks round the camp in a different order (a plot nobody could reach is let go).
+			BlockPos anchor = chooseAnchor(level, camp, reserved, data.nextGrave + grave.tries);
 			if (anchor == null) {
 				return null;
 			}
@@ -174,6 +175,35 @@ final class Graves {
 		return null;
 	}
 
+	/**
+	 * Lets go of a grave's spot that nobody could walk to (up a ledge, inside a fenced field, over water), so the next
+	 * try takes another. A plot with no grave made in it yet is let go as well: the next try lays the cemetery out
+	 * somewhere else rather than in the same hard-to-reach place.
+	 */
+	static void letGo(ServerLevel level, LifeData data, LifeData.Grave grave) {
+		grave.pos = null;
+		BlockPos plot = data.cemetery;
+		if (plot != null && !anyMadeIn(level, data, plot)) {
+			data.cemetery = null;
+		}
+		data.setDirty();
+	}
+
+	/** True if a grave stands in one of the plot's cells handed out so far. */
+	private static boolean anyMadeIn(ServerLevel level, LifeData data, BlockPos plot) {
+		Direction toward = Direction.from2DDataValue(data.cemeteryFacing);
+		for (LifeData.Grave g : made(level, data)) {
+			BlockPos h = g.pos;
+			for (int i = 0; h != null && i < data.nextCell; i++) {
+				BlockPos cell = cell(plot, toward, i);
+				if (cell.getX() == h.getX() && cell.getZ() == h.getZ()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	/** Grave {@code i}'s headstone column: rows of {@value #PER_ROW} along the side, each row further from the camp. */
 	static BlockPos cell(BlockPos anchor, Direction toward, int i) {
 		Direction side = toward.getClockWise();
@@ -196,7 +226,7 @@ final class Graves {
 	private static List<int[]> reserved(CampData camp) {
 		List<int[]> boxes = new ArrayList<>(SiteFinder.reservedBoxes(camp, ""));
 		for (Map.Entry<String, CampData.Site> e : camp.sites().entrySet()) {
-			if (e.getKey().startsWith("life.grave.")) {
+			if (e.getKey().startsWith(VillageLife.GRAVE_SITES)) {
 				BlockPos o = e.getValue().origin;
 				boxes.removeIf(b -> b[0] == o.getX() - 1 && b[1] == o.getZ() - 1 && b[2] == o.getX() + 1 && b[3] == o.getZ() + 1);
 			}

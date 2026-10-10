@@ -19,7 +19,8 @@ it needs no setting up. Day 1 is the world's first day.
 - **Three feasts:** the **midsummer feast** in the middle of summer, the **harvest festival** on the last day of autumn
   (only if the farms did well: enough crops harvested since autumn began, or the stores full), and the **winter
   lights** in the middle of winter.
-- **Music** is played every other evening (Tuesday, Thursday, Saturday and Sunday) and at every feast.
+- **Music** is played every other evening (Tuesday, Thursday, Saturday and Sunday) and at every feast, but not on the
+  evening of a funeral.
 
 `/friends calendar` shows today's date ("Wednesday, day 42: the 2nd day of summer, year 2"), what is on today, and the
 next ten days: feasts, market days, birthdays and funerals. `/friends camp` has a line about it too.
@@ -40,8 +41,8 @@ Sage, or whoever has been with the camp longest. Then it is a party until nightf
   none when the camp is hungry (then people eat what they carry). Food not eaten goes back to the chest afterwards.
 - **Company and fun** fill up for everyone at the square; there are hearts, cheering, and children running about.
 - **Music.** The village's musician plays at every feast (see Music).
-- **The winter lights.** On the winter feast one friend puts up to eight lanterns (or, when the camp has plenty, torches)
-  in a ring round the square at dusk. They glow all night and are taken down the next morning and go back to the
+- **The winter lights.** On the winter feast one friend puts up to eight lanterns (or torches, only from what the chest
+  holds beyond 24, which stay for the camp's own lighting) in a ring round the square at dusk. They glow all night and are taken down the next morning and go back to the
   chest.
 
 At nightfall the speaker says good night, everyone goes home to bed, the feast goes in the Chronicle, and the camp gains
@@ -68,6 +69,10 @@ note block from the supply chest (or make one at the crafting table from eight p
 beside them in the tavern (or at the square, before there is a tavern), play two or three old tunes (Twinkle Twinkle,
 Frere Jacques, Ode to Joy, Greensleeves), and pick it back up. The notes are the note block's own sounds, with the
 instrument set by the block it stands on, and you hear them from a good way off. Everyone nearby enjoys it.
+
+On a feast day there is no music before the feast: the musician waits and plays at the feast itself, leaving the ring
+to play once the feast has begun. On the evening of a funeral there is no music at all. A note block left standing (the
+musician called away, lost, or gone out of the loaded world mid-tune) is taken down by the tidying-up by day.
 
 ## Birthdays
 
@@ -96,7 +101,8 @@ When someone of the team dies for good:
   from anything you built. Graves stand in rows facing the camp. The sign reads "In memory of", the name, the day and
   "Rest well", and is waxed so it cannot be changed by accident. Each grave's ground is reserved so nothing is ever
   built over it.
-- **The funeral** is held the next evening (from time 10000): everyone free gathers in a half ring in front of the grave,
+- **The funeral** is held the next evening (from time 10000; on a feast day it comes first, from time 9000, and the
+  feast follows it): everyone free gathers in a half ring in front of the grave,
   someone says a few words (Sage, or family, or whoever has been with the camp longest), three friends say goodbye one
   after another, and if a parent was lost, the other parent (or the speaker) promises the children will be looked after.
   Then a moment's quiet, and everyone goes about their evening. If the funeral cannot be held (nobody at the camp, a
@@ -126,11 +132,13 @@ Chronicle begins with a line about the camp as it is, and only what happens from
 - **The book.** The Chronicle's keeper (Sage, else a strategist, else whoever has been with the camp longest) writes it
   out in a real written book, now and then by day when there is news. The first copy needs a **book and quill** from the
   supply chest, or a book (or three paper and a leather), an **ink sac** and a **feather** to make one: put them in the
-  chest. Until the village has a town hall the book is kept in the supply chest; after that it lies on the **town hall's
-  lectern** (if the builders left the lectern out, a lectern from the chest is put on its spot). You can read it there
-  like any lectern book.
-- A book holds 100 pages. When a volume is full, the keeper begins the next one in a new book and the full one goes to
-  the supply chest (Volume I, Volume II...).
+  chest. Only a **blank** book and quill is used: one with anything written in it, or with a name of its own, is yours
+  and is never taken, so your notes are safe in the chest. Until the village has a town hall the book is kept in the supply chest; after that it lies on the **town hall's
+  lectern** (if the builders left the lectern out, a lectern from the chest is put on its spot; with none in the chest,
+  the keeper tries again the next day). You can read it there like any lectern book. If you put a book of your own on
+  that lectern, it is left alone and the Chronicle stays in the chest until you take your book off again.
+- A book holds 100 pages. When a volume is full, the keeper writes its last lines in, begins the next one in a new book
+  and the full one goes to the supply chest (Volume I, Volume II...).
 - If you take the book away, it is yours to keep: the keeper writes the volume out again in a new book from the stores.
 
 ## Commands
@@ -163,8 +171,10 @@ All work at permission level 0 with cheats off, and only show things.
 - Every block change goes through the edit guard's existing rules: BUILD for the graves (headstone, sign, flowers), the
   winter lights, the musician's note block and a missing lectern; INVENT (the friends' own block, the same block) for
   showing or clearing the book on the friends' own lectern. No new rule is registered.
-- Each grave reserves its ground as a camp site (`life.grave.N`, a 3 by 3 box round the headstone), so the town plan,
-  the streets and the builders keep off it.
+- Each grave reserves its ground as a camp site (`life.grave.N`, a 3 by 3 box round the headstone; the prefix is
+  `life.VillageLife.GRAVE_SITES`), so the town plan, the streets and the builders keep off it. Terra's landscaping does
+  not count these as buildings still to come (it lights and plants round the graves as anywhere) and lays no path to
+  each grave.
 
 ## Honest limits
 
@@ -180,7 +190,10 @@ All work at permission level 0 with cheats off, and only show things.
   the stalls and more visitors.
 - **The cemetery is laid out by the friends**, as the town plan has no cemetery of its own. It needs level natural
   ground inside the camp, away from the square, the streets' lines and anything you built; in a crowded or hilly camp
-  a grave may not find a place (it is tried again, six times, and the name stays in the Chronicle). The friends keep
+  a grave may not find a place (it is tried again, six times, and the name stays in the Chronicle). A spot nobody can
+  walk to (up a ledge, inside a fenced field) also counts as a failed try; after two, another spot is chosen, and a
+  plot with no grave in it yet is laid out somewhere else. A grave that failed waits behind the others until the next
+  day, so it never holds up the graves after it. The friends keep
   four blocks off the lines where the village's streets run, from the camp centre and 34 blocks out, which is the town
   plan's grid; the lanes' exact positions are assumed, not asked.
 - **Signs** are made as oak signs from any planks (the game would match the wood). A camp with no planks to spare and no

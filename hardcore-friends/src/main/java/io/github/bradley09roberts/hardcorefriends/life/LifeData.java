@@ -88,8 +88,12 @@ public final class LifeData extends SavedData {
 		String dimension = "";
 		int facing;
 		boolean made;
-		/** Failed attempts at making it (no spot, no stone), so a hopeless one is given up. */
+		/** Failed attempts at making it (no spot, no stone, a spot nobody could walk to), so a hopeless one is given up. */
 		int tries;
+		/** Walks to its spot that came to nothing (not saved): after two, the spot is let go and another chosen. */
+		int walkFails;
+		/** The day its last attempt failed (not saved): for the rest of that day the graves after it go first. */
+		long failedDay = -1;
 
 		Grave(int number, UUID id, String name, String fullName, long died) {
 			this.number = number;
@@ -101,7 +105,7 @@ public final class LifeData extends SavedData {
 
 		/** The camp site key that reserves the grave's ground, so nothing is built over it. */
 		String siteKey() {
-			return "life.grave." + number;
+			return VillageLife.GRAVE_SITES + number;
 		}
 	}
 

@@ -35,8 +35,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * planks and a stick to make one at the crafting table) and a flower or two from the supply chest, walks to the next
  * free place in the cemetery ({@link Graves}), and puts up the headstone, the sign with the name written on it, and the
  * flowers, each through the edit guard (BUILD inside the camp). Then the grave's ground is reserved as a camp site so
- * nothing is ever built over it. One friend at a time, by day, in the camp. A grave whose cemetery has no room left is
- * tried again later, up to {@value #MAX_TRIES} times; the name is in the Chronicle either way.
+ * nothing is ever built over it. One friend at a time, by day, in the camp. A grave whose cemetery has no room left, or
+ * whose spot nobody can walk to, is tried again later, up to {@value #MAX_TRIES} times (a spot that could not be reached
+ * twice is let go for another); the name is in the Chronicle either way. A grave that failed waits behind the others for
+ * the rest of the day, so one that cannot be made does not hold up the graves after it.
  */
 final class GraveTask implements CompanionTask {
 	static final String ID = "life.grave";
@@ -44,6 +46,8 @@ final class GraveTask implements CompanionTask {
 	static final int MAX_TRIES = 6;
 	private static final int PLACE_EVERY = 10;
 	private static final int GIVE_UP_PLACING = 20 * 8;
+	/** A walk to the grave longer than this has gone wrong (round and round below a ledge, most likely). */
+	private static final int WALK_LIMIT = 20 * 60;
 
 	/** The friend making a grave just now: one at a time. */
 	private static @Nullable UUID digger;
@@ -65,6 +69,7 @@ final class GraveTask implements CompanionTask {
 	private int stuckPlacing;
 	private int part;
 	private @Nullable BlockPos stand;
+	private int walkFrom;
 
 	static void clear() {
 		digger = null;
@@ -102,16 +107,26 @@ final class GraveTask implements CompanionTask {
 		return pending ? SCORE : 0;
 	}
 
-	/** The oldest grave still to be made in this world, not yet given up. */
+	/**
+	 * The oldest grave still to be made in this world, not yet given up. One that already failed today comes after the
+	 * others, so a grave that cannot be made just now does not hold up the rest.
+	 */
 	private static LifeData.@Nullable Grave next(ServerLevel level) {
 		LifeData data = LifeData.get(level.getServer());
 		String dim = Camp.dimensionId(level);
+		long today = Calendar.today(level.getServer());
+		LifeData.Grave later = null;
 		for (LifeData.Grave g : data.graves) {
 			if (!g.made && g.tries < MAX_TRIES && (g.dimension.isEmpty() || g.dimension.equals(dim))) {
-				return g;
+				if (g.failedDay != today) {
+					return g;
+				}
+				if (later == null) {
+					later = g;
+				}
 			}
 		}
-		return null;
+		return later;
 	}
 
 	@Override
@@ -205,25 +220,44 @@ final class GraveTask implements CompanionTask {
 		if (stand == null) {
 			LifeData data = LifeData.get(level.getServer());
 			if (Graves.place(level, data, g) == null) {
-				g.tries++;
-				data.setDirty();
-				return TaskStatus.FAILURE;
+				return failed(level, g);
 			}
 			stand = Graves.visitorSpot(level, g);
 			if (stand == null) {
 				if (!g.made && !Camp.data(level.getServer()).isPlacedByFriends(level, g.pos)) {
 					g.pos = null; // the spot in front was blocked since: look for another place next time
 				}
-				g.tries++;
-				data.setDirty();
-				return TaskStatus.FAILURE;
+				return failed(level, g);
 			}
+			walkFrom = ticks;
 		}
 		if (c.actions().walkTo(stand, 1.2)) {
 			step = Step.BUILD;
 			return TaskStatus.RUNNING;
 		}
-		return c.actions().isStuck() ? TaskStatus.FAILURE : TaskStatus.RUNNING;
+		return c.actions().isStuck() || ticks - walkFrom > WALK_LIMIT ? unreachable(level, g) : TaskStatus.RUNNING;
+	}
+
+	/**
+	 * Nobody could walk to the grave's spot: a failed try. The second time the spot is let go (unless its headstone is
+	 * already up), so the next try takes another one.
+	 */
+	private static TaskStatus unreachable(ServerLevel level, LifeData.Grave g) {
+		BlockPos h = g.pos;
+		if (++g.walkFails >= 2 && h != null && !Camp.data(level.getServer()).isPlacedByFriends(level, h)) {
+			g.walkFails = 0;
+			Graves.letGo(level, LifeData.get(level.getServer()), g);
+		}
+		return failed(level, g);
+	}
+
+	/** A failed try at a grave: counted, so a hopeless one is given up, and the grave waits behind the others today. */
+	private static TaskStatus failed(ServerLevel level, LifeData.Grave g) {
+		g.tries++;
+		g.failedDay = Calendar.today(level.getServer());
+		LifeData.get(level.getServer()).setDirty();
+		pendingAt = Long.MIN_VALUE;
+		return TaskStatus.FAILURE;
 	}
 
 	/** The headstone, then the sign (written on), then the flowers, one every half second. */
@@ -237,9 +271,7 @@ final class GraveTask implements CompanionTask {
 			return TaskStatus.RUNNING;
 		}
 		if (++stuckPlacing > GIVE_UP_PLACING / PLACE_EVERY) {
-			g.tries++; // someone standing in the way, most likely: try again later, but not for ever
-			LifeData.get(level.getServer()).setDirty();
-			return TaskStatus.FAILURE;
+			return failed(level, g); // someone standing in the way, most likely: try again later, but not for ever
 		}
 		Direction toward = Graves.facing(g);
 		switch (part) {

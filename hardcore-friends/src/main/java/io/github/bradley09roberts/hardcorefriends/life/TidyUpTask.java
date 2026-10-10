@@ -67,7 +67,7 @@ final class TidyUpTask implements CompanionTask {
 		LifeData.Temp best = null;
 		double bestDist = Double.MAX_VALUE;
 		for (LifeData.Temp t : data.temps) {
-			if (!t.dimension.equals(dim) || clock < t.until || MusicTask.IN_USE.contains(t.pos)) {
+			if (!t.dimension.equals(dim) || clock < t.until || MusicTask.inUse(level, t.pos)) {
 				continue;
 			}
 			UUID holder = CLAIMS.get(t.pos);

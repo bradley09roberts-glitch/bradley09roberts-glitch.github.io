@@ -41,6 +41,12 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEvents;
  * {@link ChronicleTask}; {@link LifeCommands}, {@link LifeLines}, {@link Places} and {@link Later}.
  */
 public final class VillageLife {
+	/**
+	 * The start of the camp site keys that reserve the graves' ground ({@code life.grave.N}): kept clear by the builders
+	 * and the town plan, but no building still to come, so the landscaping lights and plants round them as anywhere.
+	 */
+	public static final String GRAVE_SITES = "life.grave.";
+
 	private VillageLife() {
 	}
 

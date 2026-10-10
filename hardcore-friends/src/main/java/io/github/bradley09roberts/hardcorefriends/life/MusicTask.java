@@ -1,7 +1,7 @@
 package io.github.bradley09roberts.hardcorefriends.life;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -21,6 +21,7 @@ import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 
 import io.github.bradley09roberts.hardcorefriends.ai.role.build.ChestWalk;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
+import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
@@ -45,11 +46,14 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * (their own block, recorded), play a few tunes, and take it back up after. The notes are the note block's own sounds
  * (its instrument from the block it stands on), played straight to everyone nearby with the floating notes, without
  * tuning the block for every note. Everyone within earshot enjoys it (fun). A note block left behind (the musician
- * called away mid-tune) is taken down later by {@link TidyUpTask}.
+ * called away mid-tune, or lost) is taken down later by {@link TidyUpTask}. On the evening of a feast or a funeral there
+ * is no ordinary evening music beforehand: the musician plays at the feast, and not at all at a funeral.
  */
 final class MusicTask implements CompanionTask {
 	static final String ID = "life.music";
 	private static final double FEAST_SCORE = 85;
+	/** Enough to take the musician from standing in the feast's ring ({@link GatherTask}) to playing for it. */
+	private static final double FEAST_TAKE_OVER = GatherTask.FEAST + TaskScheduler.PREEMPT_MARGIN;
 	private static final double EVENING_SCORE = 50;
 	private static final long EVENING_FROM = 9000;
 	private static final long EVENING_UNTIL = 12000;
@@ -60,8 +64,8 @@ final class MusicTask implements CompanionTask {
 	/** How long a note block may stand before the tidying may take it down, if its musician has gone. */
 	private static final long LEAVE_FOR = 20 * 60 * 5;
 
-	/** Note blocks being played just now (the tidying leaves these alone). */
-	static final Set<BlockPos> IN_USE = new HashSet<>();
+	/** Note blocks being played just now, and by whom (the tidying leaves these alone while their musician plays on). */
+	private static final Map<BlockPos, UUID> IN_USE = new HashMap<>();
 	/** The evening's musician, chosen now and then. */
 	private static @Nullable UUID musician;
 	private static long chosenAt = Long.MIN_VALUE;
@@ -125,13 +129,35 @@ final class MusicTask implements CompanionTask {
 		}
 		Gatherings.Gathering g = Gatherings.activeFor(c);
 		if (g != null) {
-			return g.kind == Gatherings.Kind.FEAST ? FEAST_SCORE : 0; // no music at a funeral
+			if (g.kind != Gatherings.Kind.FEAST) {
+				return 0; // no music at a funeral
+			}
+			CompanionTask doing = c.scheduler().current();
+			return doing != null && GatherTask.ID.equals(doing.id()) ? FEAST_TAKE_OVER : FEAST_SCORE;
 		}
 		long time = Calendar.time(level.getServer());
-		if (playedDay == day || !Calendar.musicEvening(day) || time < EVENING_FROM || time >= EVENING_UNTIL) {
+		if (playedDay == day || !Calendar.musicEvening(day) || time < EVENING_FROM || time >= EVENING_UNTIL
+			|| gatheringAhead(level, day, time)) {
 			return 0;
 		}
 		return EVENING_SCORE;
+	}
+
+	/**
+	 * True if this evening has a feast still to begin (the music waits and is played at the feast) or a funeral to hold
+	 * (no music that evening): ordinary evening music would only be broken off for it, its note block left behind.
+	 */
+	private static boolean gatheringAhead(ServerLevel level, long day, long time) {
+		LifeData data = LifeData.get(level.getServer());
+		if (Calendar.feastOn(day) != null && time < Gatherings.FEAST_LATEST_START && !data.isDone("feast:" + day)) {
+			return true;
+		}
+		for (LifeData.Funeral f : data.funerals) {
+			if (f.day <= day) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -295,7 +321,7 @@ final class MusicTask implements CompanionTask {
 			if (c.actions().place(p, state, s -> s.is(Items.NOTE_BLOCK), WorldEditGuard.Reason.BUILD)) {
 				block = p.immutable();
 				instrument = chosen;
-				IN_USE.add(block);
+				IN_USE.put(block, c.getUUID());
 				long clock = level.getServer().overworld().getOverworldClockTime();
 				LifeData.get(level.getServer()).addTemp(Camp.dimensionId(level), block, Blocks.NOTE_BLOCK, clock + LEAVE_FOR);
 				Speech.say(c, Line.MUSIC_PLAY);
@@ -380,6 +406,24 @@ final class MusicTask implements CompanionTask {
 			return finish(level);
 		}
 		return TaskStatus.RUNNING;
+	}
+
+	/**
+	 * True while the note block at {@code pos} is being played: its musician is about and still at their music. One
+	 * whose musician died, or went out of reach of the world mid-tune, is let go here for the tidying.
+	 */
+	static boolean inUse(ServerLevel level, BlockPos pos) {
+		UUID who = IN_USE.get(pos);
+		if (who == null) {
+			return false;
+		}
+		CompanionEntity c = Places.loaded(level, who);
+		CompanionTask doing = c == null ? null : c.scheduler().current();
+		if (doing != null && ID.equals(doing.id())) {
+			return true;
+		}
+		IN_USE.remove(pos);
+		return false;
 	}
 
 	private static void forget(ServerLevel level, BlockPos at) {
