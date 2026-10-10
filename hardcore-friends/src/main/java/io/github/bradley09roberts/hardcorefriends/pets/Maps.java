@@ -1,8 +1,10 @@
 package io.github.bradley09roberts.hardcorefriends.pets;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -74,6 +76,11 @@ final class Maps {
 
 	private static @Nullable UUID makerId;
 	private static long makerAt = Long.MIN_VALUE / 2;
+	/**
+	 * The map numbers being drawn or carried home just now, so the map maker keeps those maps in their backpack (a keep
+	 * rule) while any other map a friend picks up (one fallen from its frame, say) is tidied into the chest as usual.
+	 */
+	private static volatile Set<Integer> carriedIds = Set.of();
 
 	private Maps() {
 	}
@@ -81,6 +88,27 @@ final class Maps {
 	static void clear() {
 		makerId = null;
 		makerAt = Long.MIN_VALUE / 2;
+		carriedIds = Set.of();
+	}
+
+	/** Brings the list of maps being carried up to date (on starting, and whenever a map is started or seen to). */
+	static void refreshCarried(MinecraftServer server) {
+		Set<Integer> ids = new HashSet<>();
+		for (MapRecord m : PetsData.get(server).maps()) {
+			if (m.state == MapState.DRAWING || m.state == MapState.FINISHED) {
+				ids.add(m.id);
+			}
+		}
+		carriedIds = Set.copyOf(ids);
+	}
+
+	/** For the keep rule: a map being drawn or carried home, or an empty map. */
+	static boolean keeps(ItemStack s) {
+		if (s.is(Items.MAP)) {
+			return true;
+		}
+		MapId id = s.is(Items.FILLED_MAP) ? s.get(DataComponents.MAP_ID) : null;
+		return id != null && carriedIds.contains(id.id());
 	}
 
 	// ---------------------------------------------------------------- makers
@@ -158,6 +186,7 @@ final class Maps {
 		ItemStack stack = new ItemStack(Items.FILLED_MAP);
 		stack.set(DataComponents.MAP_ID, id);
 		label(stack, rec);
+		refreshCarried(level.getServer());
 		Workbench.give(c, stack);
 		Camp.data(level.getServer()).addStat("maps_started", 1);
 		return rec;
@@ -180,6 +209,12 @@ final class Maps {
 		Optional<BlockPos> centre = data.campPos();
 		if (centre.isPresent() && rec.covers(data.campDimension(), centre.get().getX(), centre.get().getZ())) {
 			MapItemSavedData.addTargetDecoration(stack, centre.get(), "hardcorefriends_camp", MapDecorationTypes.TARGET_POINT);
+		}
+		// The village, once it has a town hall: a village mark on the hall.
+		Optional<BlockPos> hall = MapFrames.building(level).filter(key -> key.contains("town_hall"))
+			.flatMap(data::site).map(site -> site.origin);
+		if (hall.isPresent() && rec.covers(data.campDimension(), hall.get().getX(), hall.get().getZ())) {
+			MapItemSavedData.addTargetDecoration(stack, hall.get(), "hardcorefriends_village", MapDecorationTypes.PLAINS_VILLAGE);
 		}
 		if (!rec.dimension.equals(data.campDimension())) {
 			return;
@@ -334,6 +369,7 @@ final class Maps {
 			}
 		}
 		maybeStartTripMap(c, level, data);
+		refreshCarried(level.getServer());
 	}
 
 	/** The map is drawn: marked, named, and announced by its maker, ready to be hung up. */

@@ -69,7 +69,7 @@ final class PetsLines {
 		line(Line.PET_LOST,
 			v("Oh, %1$s... I'll miss you, my %2$s.", "Goodbye, %1$s. You were the best %2$s.", "%1$s is gone. I can't believe it."),
 			v("My poor %1$s. Rest now, sweet %2$s.", "Oh, %1$s. I'll never forget you, dear %2$s."),
-			v("%1$s was a good %2$s. The best.", "I'll make %1$s a little marker. It's only right."),
+			v("%1$s was a good %2$s. The best.", "I'll not forget you, %1$s. Not ever."),
 			v("%1$s... that's not fair. Not fair at all.", "I'll miss you, %1$s. Best %2$s there was."),
 			v("Oh, %1$s... no more adventures together.", "%1$s was the bravest %2$s in the world."),
 			v("%1$s is gone. No invention can fix this.", "I'll miss my %2$s, %1$s. Everything's quieter now."),
@@ -101,7 +101,7 @@ final class PetsLines {
 			v("A map for you, %1$s. Know the land, stay safe.", "Here, %1$s. Plan your way before you go."),
 			v("A copy of the map, %1$s. Study it well.", "Here, %1$s. A map is a wise companion."),
 			v("A map for you, %1$s. Isn't it pretty?", "Here, %1$s, a copy. I helped with the colours!"),
-			v("A map for you, %1$s! Free as a berry.", "Here, %1$s, take a copy. Share and share alike!"));
+			v("A map for you, %1$s! I've drawn in the berry bushes.", "Here, %1$s, take a copy. Share and share alike!"));
 		line(Line.MAP_NO_PAPER,
 			v("I can't make a map: the chest is short of paper or a compass.", "No paper or compass to spare for a map, sorry.",
 				"A map needs eight paper and a compass. We haven't got them."),

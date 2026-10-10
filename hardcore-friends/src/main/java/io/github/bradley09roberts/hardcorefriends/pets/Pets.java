@@ -66,8 +66,9 @@ public final class Pets {
 		People.allowChildJob(FeedPetTask.ID);
 		// A player waiting in the camp for a copy of a map can have it after dark too.
 		TaskScheduler.NIGHT_JOBS.add(CopyMapTask.ID);
-		// The map maker keeps the maps they are drawing or bringing home, a spare empty map and a frame for hanging one.
-		KeepList.addCommonRule(new KeepList.Rule("maps", s -> s.is(Items.FILLED_MAP) || s.is(Items.MAP), 6));
+		// The map maker keeps the maps they are drawing or bringing home, a spare empty map and a frame for hanging one
+		// (any other map a friend picks up goes to the chest as usual).
+		KeepList.addCommonRule(new KeepList.Rule("maps", Maps::keeps, 6));
 		KeepList.addCommonRule(new KeepList.Rule("item frames", s -> s.is(Items.ITEM_FRAME), 1));
 
 		CompanionEvents.TICK.add(PetEvents::companionTick);
@@ -84,6 +85,8 @@ public final class Pets {
 
 		FriendsCommand.EXTENSIONS.add(PetsCommands::register);
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> clear());
+		// Before any friend ticks: which maps are being carried, so none is tidied into the chest by mistake.
+		ServerLifecycleEvents.SERVER_STARTED.register(Maps::refreshCarried);
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> clear());
 	}
 

@@ -18,6 +18,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
+import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.pets.PetsData.MapRecord;
 import io.github.bradley09roberts.hardcorefriends.pets.PetsData.MapState;
 import io.github.bradley09roberts.hardcorefriends.survival.Trips;
@@ -34,6 +35,8 @@ final class HangMapTask implements CompanionTask {
 	private static final double STORED_SCORE = 18;
 	private static final int PLAN_INTERVAL = 200;
 	private static final double HANG_REACH = 2.5;
+	/** After a map could not be hung (no room, or the edit rules said no), stored maps wait this long for another go. */
+	private static final int BLOCKED_TICKS = 20 * 600;
 
 	private enum Phase {
 		CHEST,
@@ -47,6 +50,7 @@ final class HangMapTask implements CompanionTask {
 	private MapFrames.@Nullable Spot spot;
 	private long plannedAt = Long.MIN_VALUE / 2;
 	private double planned;
+	private long blockedUntil = Long.MIN_VALUE / 2;
 
 	@Override
 	public String id() {
@@ -73,7 +77,8 @@ final class HangMapTask implements CompanionTask {
 		PetsData data = PetsData.get(level.getServer());
 		if (finishedCarried(c, data) != null) {
 			planned = CARRIED_SCORE;
-		} else if (!data.maps(MapState.STORED).isEmpty() && MapFrames.building(level).isPresent()
+		} else if (now >= blockedUntil && FriendsConfig.get().allowWorldEditing && !data.maps(MapState.STORED).isEmpty()
+			&& MapFrames.building(level).isPresent()
 			&& (Workbench.carriesFrameMakings(c.backpack()) || Workbench.chestHasFrameMakings(level))
 			&& Workbench.craftingTable(level) != null) {
 			planned = STORED_SCORE;
@@ -98,13 +103,14 @@ final class HangMapTask implements CompanionTask {
 		PetsData data = PetsData.get(level.getServer());
 		map = finishedCarried(c, data);
 		spot = null;
-		Optional<String> hall = MapFrames.building(level);
+		Optional<String> hall = FriendsConfig.get().allowWorldEditing ? MapFrames.building(level) : Optional.empty();
 		if (hall.isPresent()) {
 			spot = MapFrames.freeSpot(level, hall.get());
 		}
 		if (map == null) {
 			List<MapRecord> stored = data.maps(MapState.STORED);
 			if (stored.isEmpty() || spot == null) {
+				blockedUntil = level.getGameTime() + BLOCKED_TICKS; // no room on the walls just now
 				return false;
 			}
 			map = stored.getFirst();
@@ -193,8 +199,11 @@ final class HangMapTask implements CompanionTask {
 				}
 				Maps.decorate(level, held, m);
 				if (c.backpack().count(Workbench.FRAME) < 1 || !MapFrames.hang(c, at, held)) {
-					// The spot was taken or the guard said no (a player standing there, say): try again later.
-					return TaskStatus.FAILURE;
+					// The spot was taken or the guard said no (a player standing there, say): into the chest for now,
+					// to be hung another time.
+					blockedUntil = level.getGameTime() + BLOCKED_TICKS;
+					phase = Phase.STORE;
+					return TaskStatus.RUNNING;
 				}
 				c.backpack().remove(s -> Maps.isMap(s, m.id), 1);
 				c.backpack().remove(Workbench.FRAME, 1);
@@ -226,6 +235,10 @@ final class HangMapTask implements CompanionTask {
 		}
 		m.state = MapState.FINISHED;
 		m.holder = c.getUUID();
+		if (c.level() instanceof ServerLevel level) {
+			PetsData.get(level.getServer()).setDirty();
+			Maps.refreshCarried(level.getServer()); // kept in the backpack now, not tidied back into the chest
+		}
 		return true;
 	}
 

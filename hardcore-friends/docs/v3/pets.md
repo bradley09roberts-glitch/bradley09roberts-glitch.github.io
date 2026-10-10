@@ -77,8 +77,9 @@ last spot loaded but the pet nowhere to be found) is given up as lost.
   off every map already drawn, it becomes a map of where she is: 512 blocks across (1:4), named after where it lies
   ("Map of the land 300 blocks north-east of the camp"). It is finished when she is home with some of it drawn (or
   after six days).
-- **Marks.** A finished map is marked with the camp and the places found on trips that lie on it: villages, survivor
-  camps, temples, ruined portals and pillager outposts, with the game's own map markers.
+- **Marks.** A finished map is marked with the camp, the village's town hall (once there is one) and the places found
+  on trips that lie on it: villages, survivor camps, temples, ruined portals and pillager outposts, with the game's own
+  map markers.
 - **Hung on the wall.** Scout takes a finished map to the **town hall** (or the camp's **library** before there is a town
   hall) and hangs it in an item frame on an inside wall, near the lectern. The frame comes from the chest or is made at
   the crafting table from eight sticks and a piece of leather. Frames only go on walls the friends built, inside, under
@@ -120,8 +121,8 @@ In `config/hardcorefriends.json`, under "Pets and maps":
   26.3), tagged `hardcorefriends.pet`. Item frames the map maker hung are tagged `hardcorefriends.map_frame`.
 - Jobs: `pets.adopt`, `pets.feed` (both open to children through `People.allowChildJob`), `pets.make_map`,
   `pets.hang_map`, `pets.copy_map` (a night job too, for a player waiting in the camp).
-- Every friend keeps up to six maps and one item frame in their backpack (common keep rules), so the map maker's maps
-  are never tidied away to the chest.
+- Two common keep rules: up to six maps (empty maps, and the maps being drawn or carried home; any other map a friend
+  picks up still goes to the chest) and one item frame, so the map maker's maps are never tidied away to the chest.
 - The town hall is found as a camp site whose key contains `town_hall` (finished), or a library site of kind
   `civic:town_hall`; the camp's library (`Structures.LIBRARY`) is the fallback.
 
@@ -147,8 +148,9 @@ In `config/hardcorefriends.json`, under "Pets and maps":
   rather than called.
 - **In Java Edition a cartography table does not make a map from paper alone**, so it is only another table to work at;
   a map always costs eight paper and a compass.
-- **Marks** use the game's own map markers on the map item (its target marker for the camp, the village, camp and
-  pyramid icons for villages, survivor camps and temples, the red X for a ruined portal, a red pointer for an outpost),
+- **Marks** use the game's own map markers on the map item (its target marker for the camp, the plains village icon for
+  the town hall and for villages found, the camp and pyramid icons for survivor camps and temples, the red X for a
+  ruined portal, a red pointer for an outpost),
   so they show on the map in hand and in a frame; no banners are placed. They are added when a map is finished, hung
   or put away, and to every copy, so a place found later only shows on copies made after it was found.
 - **Copies share the original.** Taking a hung map out of its frame, or a stored one out of the chest, is allowed (it is
