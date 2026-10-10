@@ -46,18 +46,22 @@ and `/friends village` shows it):
   chest in (a ridge slab just out of reach never keeps anyone out); the builder's repair job adds the rest later.
 - **Growing families.** A wedding brings two households together in the bigger of their two houses (the other goes to
   whoever needs one next); a baby takes the spare bed; a family that has outgrown its house gets a bigger one built,
-  moves in, and its old house goes to someone else. Someone whose marriage ends gets a home of their own again. Someone
-  who dies or is dismissed moves out, and a house hardly begun for a household that is gone is given up.
-- **Newcomers and grown-up children** count as households of their own and get houses too.
+  moves in as soon as it stands, and its old house goes to someone else. Someone whose marriage ends gets a home of
+  their own again. Someone who dies or is dismissed moves out, and a house hardly begun for a household that is gone
+  is given up.
+- **Newcomers and grown-up children** count as households of their own and get houses too. A child who grows up keeps
+  their bed in their parents' house until a house of their own stands (an empty one, or one built for them), then moves
+  out; their parents have room for another baby again once they have gone.
 - **Never a player's house.** Friends only live in the houses they built on their own plots.
 
 ## Real beds
 
 A friend with a home sleeps in **their own bed** there: they walk home, lie down in it as villagers do (the bed is
 marked taken while they sleep in it), and get up at dawn, when hurt or when the watch raises the alarm, exactly as
-before. Without a home (or while their bed is missing, or a player is asleep in it) they sleep as before: in the cabin,
-or round the camp centre. Players can still sleep through the night as usual: only players count for that, and a
-friend never takes a bed a player is lying in. The night watch is kept as before; the friend on watch stays up.
+before (hunger pangs, which the game counts as a hurt, wake a starving friend only for a moment: they lie straight
+back down). Without a home (or while their bed is missing, or a player is asleep in it) they sleep as before: in the
+cabin, or round the camp centre. Players can still sleep through the night as usual: only players count for that, and
+a friend never takes a bed a player is lying in. The night watch is kept as before; the friend on watch stays up.
 
 ## The day
 
@@ -78,12 +82,15 @@ Children keep their own day (the people part of 3.0): play, lessons, an early ni
 - **Terra lays the streets** with a shovel: the open stretch of every street becomes a trodden path. From the
   Settlement on the paths are surfaced with gravel (when the camp has some), and from the Town on with cobblestone, from
   the chest's stock. Only grass, dirt and the friends' own path blocks are touched, never under a building, never by
-  water. **Lamp posts** go up on the verges every 12 blocks, beside the stretches with something built.
+  water, never over a hollow (the roof of a cave, an overhang: gravel would fall through and leave a hole), and not
+  within three blocks of the friends' mines, whose stairways run just under the ground (the street has a gap there).
+  **Lamp posts** go up on the verges every 12 blocks, beside the stretches with something built.
 - **Water.** Building plans cannot pour water, so once a well, the fountain or the wheat field stands, the farmer pours
   it: into a dry `water` spot of the basin, one bucket at a time, and the water runs on along the basin by itself; spots
   it cannot reach get a bucket of their own. Only into a basin that holds water (solid under every spot and solid or
   more basin round it), so not a drop can run out. The bucket is filled at a pool that tops itself up at once, or the
-  camp's water bucket is used. The camp needs a bucket (three iron) for this.
+  camp's water bucket is used. The camp needs a bucket (three iron) for this. A basin the farmer cannot fill (no such
+  pool nearby) is left for five minutes while the rest of the grounds (the field, the orchard) are tended.
 - **The wheat field**'s soil is tilled where water is near, sown (wheat first) and harvested by the farmer; the
   **orchard** gets a sapling on each of its tree spots.
 
@@ -147,7 +154,9 @@ govern levelling plots; `allowScaffolding` (architecture part) high building.
 - `requestBuilding(server, kind, reason)` and `requestBuilding(server, kind, reason, count)`: ask for one (or `count`)
   buildings of a library kind (`shop:bakery`, `workplace:fisher`, `civic:school`...; a kind without a colon means any of
   its sub-kinds). Asking again changes nothing. Returns false only if the library has no plan of that kind. Requests are
-  built after houses for households with none and the well, and before the stage's own civic buildings.
+  built after houses for households with none and the well, and before the stage's own civic buildings. A request that
+  finds no plot waits five minutes under the kind asked for (`shop` as a whole, for a kind without a colon), so the
+  civic buildings and the rest go ahead meanwhile.
 - `buildingsOfKind(server, kind)`: the standing ones, oldest first, as `Building` records: site key, kind, plan id, name,
   dimension, origin, rotation, `built`, and every marker in world positions (`marker("counter")`, `first("job")`).
   `allOfKind` includes those still being built; `building(server, siteKey)` one by key.
@@ -174,8 +183,10 @@ govern levelling plots; `allowScaffolding` (architecture part) high building.
 - **The camp grows to the village's size** (up to 64 blocks): the friends' camp jobs (lighting, paths, the gathering
   ring, quarries, hunting, which all stay outside or inside the camp) work over a larger area, so gathering trips get
   longer.
-- **Moving the camp** (`/friends camp set` elsewhere) lets the whole town plan go: unfinished buildings stop, the
-  houses' blocks stay, and nobody lives in them any more. A new plan is laid at the new camp.
+- **Moving the camp** (`/friends camp set` elsewhere, more than three blocks from the plan's centre or to another
+  dimension) lets the whole town plan go (everyone is told): unfinished buildings stop, the houses' blocks stay, and
+  nobody lives in them any more. A new plan is laid at the new camp. Setting the camp again within three blocks of
+  where it was (standing by the campfire, say) keeps the village as it is.
 - **Turning `villageHomes` off** stops new plots and building, but plots already reserved stay reserved.
 - **Water** only goes into basins that hold it; a fountain or channel whose rim is not solid blocks all round stays dry.
   Water that flows in from the first bucket fills the rest of a small basin as running water rather than still water. A
@@ -187,7 +198,8 @@ govern levelling plots; `allowScaffolding` (architecture part) high building.
   sitting on chairs. Meals are eaten from what the friend carries. The chests in a house are part of the building only:
   friends do not keep their own things in them yet (everything still goes to the camp's supply chest).
 - **Streets** are surfaced block by block (the path dug up, the new block put in); if someone keeps standing on the spot
-  the earth goes back, and in rare cases a one-block dip may be left, which the next pass paths over.
+  the earth goes back, and in rare cases a one-block dip may be left, which the next pass paths over. Stretches over
+  a hollow or near the mines are left as grass, so a street can have gaps.
 - **Walls** are only two lengths each side of the gate, not a ring round the village. The gate goes at the end of the
   High Street or Market Street, and the village may later grow past it.
 - **The wheat field** is the village's: the farmer tills, sows and harvests it with the camp's seeds, and it counts

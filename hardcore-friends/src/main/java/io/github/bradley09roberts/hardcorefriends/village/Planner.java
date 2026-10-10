@@ -53,10 +53,11 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  * never holds the village up), and keeps the camp's radius as wide as the village.
  *
  * <p>What it builds, in order: a house for each household that has none (a married couple's with a spare bed for a
- * baby), a bigger house for a household that has outgrown its own, the well in the square, the buildings other
- * packages asked for ({@link VillagePlan#requestBuilding}), the civic buildings of the camp's stage, and the
- * decoration (lamp posts along the streets, benches, a garden, a fountain). At most {@code villageBuildsAtOnce}
- * buildings are under way at once, plus two pieces of decoration; one plot search runs at a time.
+ * baby), a bigger house for a household that has outgrown its own, a house of their own for a grown-up child still
+ * living with their parents, the well in the square, the buildings other packages asked for
+ * ({@link VillagePlan#requestBuilding}), the civic buildings of the camp's stage, and the decoration (lamp posts along
+ * the streets, benches, a garden, a fountain). At most {@code villageBuildsAtOnce} buildings are under way at once,
+ * plus two pieces of decoration; one plot search runs at a time.
  *
  * <p>Costs: a few cheap checks and one to three ground surveys a tick (by the plan's size) while a search runs;
  * otherwise a little work once a second and a reconcile every ten seconds.
@@ -74,6 +75,11 @@ public final class Planner {
 	private static final int DECOR_AT_ONCE = 2;
 	/** Lamp posts only go up near something standing, within this many blocks. */
 	private static final int LAMP_NEAR = 20;
+	/**
+	 * A camp set again within this many blocks of the plan's centre (a player standing by the campfire to link a chest
+	 * again, say) keeps the village; only a camp moved further lets the plan go.
+	 */
+	private static final int CENTRE_KEPT_WITHIN = 3;
 
 	/** The civic buildings each stage adds (from the Village on), in the order they are built. */
 	private static final List<List<String>> CIVIC = List.of(
@@ -139,8 +145,12 @@ public final class Planner {
 		if (level == null || camp.campPos().isEmpty()) {
 			return;
 		}
-		if (v.centre().isPresent() && (!v.centre().get().equals(camp.campPos().get()) || !v.dimension().equals(camp.campDimension()))) {
-			reset(level, camp, v); // the camp moved: the old plan belongs to the old place
+		if (v.centre().isPresent() && movedAway(camp, v)) {
+			if (v.plots().stream().anyMatch(VillageData.Plot::standing)) {
+				Speech.announce(server, Component.literal("The camp has moved, so the old village's town plan is let go: "
+					+ "its buildings stay where they are, but nobody lives in them any more.").withStyle(ChatFormatting.GOLD));
+			}
+			reset(level, camp, v); // the camp moved elsewhere: the old plan belongs to the old place
 			return;
 		}
 		PlotSearch s = search;
@@ -155,6 +165,9 @@ public final class Planner {
 				layOut(level, camp, v);
 			}
 			return;
+		}
+		if (Camp.villageReach(camp) == 0) {
+			syncReach(camp, v); // the camp was set again close by: the camp keeps covering the village from its new centre
 		}
 		if (tick % 200 == 7 || reconcileSoon) {
 			reconcileSoon = false;
@@ -196,7 +209,22 @@ public final class Planner {
 		HardcoreFriends.LOGGER.info("The village's town plan is laid out round {}", centre);
 	}
 
-	/** Lets the whole plan go: every site not yet standing is released, and the homes are forgotten. */
+	/**
+	 * True if the camp has moved away from the town plan's centre: to another dimension, or more than
+	 * {@value #CENTRE_KEPT_WITHIN} blocks. The plan keeps its own centre when the camp is set again close by.
+	 */
+	private static boolean movedAway(CampData camp, VillageData v) {
+		BlockPos centre = v.centre().orElseThrow();
+		BlockPos campPos = camp.campPos().orElseThrow();
+		return !v.dimension().equals(camp.campDimension())
+			|| Camp.horizontalDistSqr(centre, campPos) > CENTRE_KEPT_WITHIN * CENTRE_KEPT_WITHIN
+			|| Math.abs(centre.getY() - campPos.getY()) > CENTRE_KEPT_WITHIN;
+	}
+
+	/**
+	 * Lets the whole plan go: every plot's site is released, standing buildings too (their blocks stay where they are),
+	 * and the homes are forgotten.
+	 */
 	static void reset(ServerLevel level, CampData camp, VillageData v) {
 		for (VillageData.Plot p : List.copyOf(v.plots())) {
 			Construction.release(level, p.siteKey);
@@ -212,27 +240,31 @@ public final class Planner {
 		camp.setDirty();
 	}
 
-	/** Records how far the village reaches, so the camp (and the edit rules) grow with it. */
+	/**
+	 * Records how far the village reaches, so the camp (and the edit rules) grow with it. Measured from the camp's own
+	 * centre, which a camp set again close by may have moved a few blocks off the plan's.
+	 */
 	static void syncReach(CampData camp, VillageData v) {
 		BlockPos centre = v.centre().orElse(null);
 		if (centre == null) {
 			return;
 		}
+		BlockPos from = camp.campPos().orElse(centre);
 		double far = 0;
 		for (VillageData.Plot p : v.plots()) {
-			far = Math.max(far, Math.sqrt(TownPlan.farthestSqr(centre, p.box)));
+			far = Math.max(far, Math.sqrt(TownPlan.farthestSqr(from, p.box)));
 		}
 		for (Map.Entry<Integer, int[]> e : v.openStreets().entrySet()) {
 			TownPlan.Street s = TownPlan.STREETS.get(Math.clamp(e.getKey(), 0, TownPlan.STREETS.size() - 1));
 			for (int t : e.getValue()) {
 				BlockPos end = TownPlan.column(s, centre, t, 0);
-				far = Math.max(far, Math.sqrt(Camp.horizontalDistSqr(end, centre)));
+				far = Math.max(far, Math.sqrt(Camp.horizontalDistSqr(end, from)));
 			}
 		}
 		int reach = Math.min(TownPlan.maxRadius(), (int) Math.ceil(far) + 4);
 		CompoundTag tag = camp.memory(Camp.VILLAGE_MEMORY);
-		if (tag.getIntOr("reach", -1) != reach || tag.getLongOr("centre", 0L) != centre.asLong()) {
-			tag.putLong("centre", centre.asLong());
+		if (tag.getIntOr("reach", -1) != reach || tag.getLongOr("centre", 0L) != from.asLong()) {
+			tag.putLong("centre", from.asLong());
 			tag.putInt("reach", reach);
 			camp.setDirty();
 		}
@@ -440,7 +472,7 @@ public final class Planner {
 		Households.Roster roster = Households.roster(server, residents);
 		List<Housing.Need> needs = Housing.needs(v, roster);
 		if (underway < cap) {
-			// Homes first: a household with none, then one that has outgrown its own.
+			// Homes first: a household with none, then one that has outgrown its own, then a grown-up child's own.
 			for (Housing.Need need : needs) {
 				if (need.urgency() == Housing.Urgency.BABY_ROOM) {
 					continue;
@@ -527,7 +559,7 @@ public final class Planner {
 			WAIT.put(waitKey, now + NO_ROOM_WAIT);
 			return false;
 		}
-		begin(level, v, centre, PlotSearch.Mode.STREET, plan, "house", "home", need.household().members());
+		begin(level, v, centre, PlotSearch.Mode.STREET, plan, "house", "home", waitKey, need.household().members());
 		return true;
 	}
 
@@ -566,7 +598,8 @@ public final class Planner {
 			return false;
 		}
 		Blueprint b = plan.get();
-		begin(level, v, centre, modeFor(b), b, b.kind(), purpose, Set.of());
+		// A search that finds no plot holds back the kind asked for: "shop" (any shop) waits, not just the bakery picked.
+		begin(level, v, centre, modeFor(b), b, b.kind(), purpose, kind, Set.of());
 		return true;
 	}
 
@@ -587,14 +620,14 @@ public final class Planner {
 	}
 
 	private static void begin(ServerLevel level, VillageData v, BlockPos centre, PlotSearch.Mode mode, Blueprint plan, String kind,
-		String purpose, Set<UUID> intended) {
+		String purpose, String waitKey, Set<UUID> intended) {
 		List<TownPlan.Candidate> candidates = switch (mode) {
 			case SQUARE -> TownPlan.squareCandidates(centre, plan);
 			case WATERFRONT -> PlotSearch.waterfrontCandidates(level, centre, plan);
 			case GATE -> TownPlan.gateCandidates(centre, plan, v);
 			case WALL, STREET -> TownPlan.streetCandidates(centre, plan);
 		};
-		search = new PlotSearch(mode, plan, kind, purpose, intended, candidates, centre);
+		search = new PlotSearch(mode, plan, kind, purpose, waitKey, intended, candidates, centre);
 		fallbackTried = false;
 	}
 
@@ -614,20 +647,19 @@ public final class Planner {
 		if (s.mode == PlotSearch.Mode.SQUARE && !fallbackTried) {
 			// No room left round the square: along a street will do.
 			BlockPos centre = v.centre().orElseThrow();
-			search = new PlotSearch(PlotSearch.Mode.STREET, s.plan, s.kind, s.purpose, s.intended,
+			search = new PlotSearch(PlotSearch.Mode.STREET, s.plan, s.kind, s.purpose, s.waitKey, s.intended,
 				TownPlan.streetCandidates(centre, s.plan), centre);
 			fallbackTried = true;
 			return;
 		}
-		// A length of wall waits on its own, so the other side of the gate still gets its walls.
-		String waitKey = s.mode == PlotSearch.Mode.WALL ? s.purpose : s.kind;
+		// What was asked for waits (a length of wall on its own, so the other side of the gate still gets its walls).
 		if (s.kind.equals("house")) {
 			// A household's anchor is its first grown-up; waiting on every member keeps the household waiting whoever leads it.
 			for (UUID id : s.intended) {
 				WAIT.put("home:" + id, level.getGameTime() + NO_ROOM_WAIT);
 			}
 		} else {
-			WAIT.put(waitKey, level.getGameTime() + NO_ROOM_WAIT);
+			WAIT.put(s.waitKey, level.getGameTime() + NO_ROOM_WAIT);
 		}
 		lastProblem = "No plot found for a " + s.plan.name() + ": " + s.problem() + ". Clearing or levelling ground along the streets "
 			+ "helps (or a larger villageRadius).";
@@ -642,7 +674,7 @@ public final class Planner {
 		String key = siteKey(s.kind, id);
 		BlockPos origin = new BlockPos(c.origin().getX(), r.floorY(), c.origin().getZ());
 		if (!Construction.reserve(level, key, s.plan, origin, c.rotation(), null)) {
-			WAIT.put(s.kind, level.getGameTime() + 200);
+			WAIT.put(s.waitKey, level.getGameTime() + 200);
 			return;
 		}
 		if (!r.cut().isEmpty() || !r.fill().isEmpty()) {
@@ -741,7 +773,8 @@ public final class Planner {
 					WAIT.put("civic:wall", now + NO_ROOM_WAIT);
 					return false;
 				}
-				search = new PlotSearch(PlotSearch.Mode.WALL, wall, "civic:wall", "wall:" + side + n, Set.of(), List.of(c), centre);
+				search = new PlotSearch(PlotSearch.Mode.WALL, wall, "civic:wall", "wall:" + side + n, "wall:" + side + n, Set.of(),
+					List.of(c), centre);
 				fallbackTried = true;
 				return true;
 			}

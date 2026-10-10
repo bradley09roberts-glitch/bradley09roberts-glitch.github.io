@@ -16,14 +16,21 @@ import org.jspecify.annotations.Nullable;
  * Who lives in which house, worked out again from the households every few seconds: everyone who has left the team
  * moves out; a household lives together in one house with a bed each; a household that has grown (a wedding, a baby)
  * moves to a house big enough as soon as there is one, and its old house goes to whoever needs one; a house built for
- * a household goes to that household first. What cannot be met becomes a {@link Need}: a house to build. Children take
- * beds in their parents' house. Only standing houses are lived in.
+ * a household goes to that household first, and a family moves into the bigger house built for it even while the old
+ * one still holds them all. A household that shares its house with another household's grown-ups (a grown-up child
+ * still in their parents' house) only lodges there: it keeps its beds until a house of its own is free. What cannot
+ * be met becomes a {@link Need}: a house to build. Children take beds in their parents' house. Only standing houses
+ * are lived in.
  */
 final class Housing {
-	/** How pressing a household's need for a house is: none at all, too small, or no spare bed for a baby. */
+	/**
+	 * How pressing a household's need for a house is: none at all, too small, lodging in another household's house (a
+	 * bed, but not a home of their own), or no spare bed for a baby.
+	 */
 	enum Urgency {
 		NO_HOME,
 		TOO_SMALL,
+		LODGING,
 		BABY_ROOM
 	}
 
@@ -65,16 +72,26 @@ final class Housing {
 			}
 		}
 		houses.sort(Comparator.comparingInt(Housing::capacity).thenComparingInt(p -> p.id));
-		// A household already together in a house with room for all stays (anyone of it not yet in moves in).
+		List<Households.Household> all = roster.households();
+		// A household already together in a house with room for all stays (anyone of it not yet in moves in), unless a
+		// bigger house built for it stands (the family that outgrew its house), or it only lodges with another household.
 		List<Households.Household> unhoused = new ArrayList<>();
-		for (Households.Household h : roster.households()) {
+		for (Households.Household h : all) {
 			VillageData.Plot together = together(houses, h);
 			if (together != null) {
+				VillageData.Plot bigger = biggerBuiltFor(houses, h, together, all);
+				if (bigger != null) {
+					moveAll(v, houses, bigger, h, moves);
+					continue;
+				}
 				for (UUID m : h.members()) {
 					if (!together.residents.containsKey(m)) {
 						moveInto(v, houses, together, m);
 						moves.add(new Move(m, together));
 					}
+				}
+				if (lodging(together, h, all)) {
+					unhoused.add(h); // keeps its beds here until a house of its own is free
 				}
 				continue;
 			}
@@ -84,7 +101,7 @@ final class Housing {
 		for (int i = 0; i < unhoused.size(); i++) {
 			Households.Household h = unhoused.get(i);
 			for (VillageData.Plot p : houses) {
-				if (!Collections.disjoint(p.intended, h.members()) && onlyTheirs(p, h) && capacity(p) >= h.size()) {
+				if (builtFor(p, h, all) && onlyTheirs(p, h) && capacity(p) >= h.size()) {
 					moveAll(v, houses, p, h, moves);
 					unhoused.remove(i--);
 					break;
@@ -135,6 +152,71 @@ final class Housing {
 			return null;
 		}
 		return found;
+	}
+
+	/**
+	 * A standing house built for this household with more beds than the one it lives in, holding nobody else: the
+	 * bigger house built when the family outgrew its own. Null if there is none.
+	 */
+	private static VillageData.@Nullable Plot biggerBuiltFor(List<VillageData.Plot> houses, Households.Household h,
+		VillageData.Plot current, List<Households.Household> all) {
+		VillageData.Plot best = null;
+		for (VillageData.Plot p : houses) {
+			if (p != current && capacity(p) > capacity(current) && capacity(p) >= h.size() && builtFor(p, h, all)
+				&& onlyTheirs(p, h) && (best == null || capacity(p) > capacity(best))) {
+				best = p;
+			}
+		}
+		return best;
+	}
+
+	/**
+	 * True if the house was built for this household: it holds some of the people the house was planned for, and no
+	 * other household holds more of them (a family's house stays theirs when one of the children grows up).
+	 */
+	private static boolean builtFor(VillageData.Plot p, Households.Household h, List<Households.Household> all) {
+		int mine = overlap(p.intended, h.members());
+		if (mine == 0) {
+			return false;
+		}
+		for (Households.Household other : all) {
+			if (other != h && overlap(p.intended, other.members()) > mine) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * True if the household only lodges in this house: grown-ups of another household live there too, and that
+	 * household has the better claim to it (more of its people living there, then more of those it was built for, then
+	 * the first in the roster). The usual lodger is a grown-up child still in their parents' house.
+	 */
+	private static boolean lodging(VillageData.Plot p, Households.Household h, List<Households.Household> all) {
+		int mine = overlap(p.residents.keySet(), h.members());
+		int mineIntended = overlap(p.intended, h.members());
+		for (Households.Household other : all) {
+			if (other == h || Collections.disjoint(p.residents.keySet(), other.adults())) {
+				continue;
+			}
+			int theirs = overlap(p.residents.keySet(), other.members());
+			int theirsIntended = overlap(p.intended, other.members());
+			if (theirs != mine ? theirs > mine
+				: theirsIntended != mineIntended ? theirsIntended > mineIntended : all.indexOf(other) < all.indexOf(h)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static int overlap(Set<UUID> a, Set<UUID> b) {
+		int n = 0;
+		for (UUID id : a) {
+			if (b.contains(id)) {
+				n++;
+			}
+		}
+		return n;
 	}
 
 	/** True if nobody outside the household lives in the house: a household never moves in with strangers. */
@@ -213,13 +295,15 @@ final class Housing {
 
 	/**
 	 * What houses the households need, most pressing first: households with no house at all, then households split
-	 * between houses or without a bed each, then married couples with no spare bed for a baby. A household that already
-	 * has a house being built for it needs nothing more for now.
+	 * between houses or without a bed each, then households lodging in another household's house (a grown-up child at
+	 * their parents'), then married couples with no spare bed for a baby. A household that already has a house being
+	 * built for it, or a bigger one standing ready for it, needs nothing more for now.
 	 */
 	static List<Need> needs(VillageData v, Households.Roster roster) {
 		List<Need> list = new ArrayList<>();
-		for (Households.Household h : roster.households()) {
-			if (planned(v, h)) {
+		List<Households.Household> all = roster.households();
+		for (Households.Household h : all) {
+			if (planned(v, h, all)) {
 				continue;
 			}
 			VillageData.Plot home = null;
@@ -250,6 +334,8 @@ final class Housing {
 				list.add(new Need(h, h.wantBeds(), Urgency.NO_HOME));
 			} else if (split || bedless || housed < h.size()) {
 				list.add(new Need(h, h.wantBeds(), Urgency.TOO_SMALL));
+			} else if (lodging(home, h, all)) {
+				list.add(new Need(h, h.wantBeds(), Urgency.LODGING));
 			} else if (capacity(home) < h.wantBeds()) {
 				list.add(new Need(h, h.wantBeds(), Urgency.BABY_ROOM));
 			}
@@ -258,10 +344,16 @@ final class Housing {
 		return list;
 	}
 
-	/** True if a house is being built for (anyone of) this household, or one stands empty that was built for them. */
-	static boolean planned(VillageData v, Households.Household h) {
+	/**
+	 * True if a house is being built for (anyone of) this household, or one stands empty that was built for them with a
+	 * bed for everyone they would like: {@link #reconcile} moves them into it, so no other is planned meanwhile.
+	 */
+	static boolean planned(VillageData v, Households.Household h, List<Households.Household> all) {
 		for (VillageData.Plot p : v.plots()) {
-			if (p.isHouse() && !p.standing() && !Collections.disjoint(p.intended, h.members())) {
+			if (!p.isHouse() || Collections.disjoint(p.intended, h.members())) {
+				continue;
+			}
+			if (!p.standing() || p.residents.isEmpty() && capacity(p) >= h.wantBeds() && builtFor(p, h, all)) {
 				return true;
 			}
 		}

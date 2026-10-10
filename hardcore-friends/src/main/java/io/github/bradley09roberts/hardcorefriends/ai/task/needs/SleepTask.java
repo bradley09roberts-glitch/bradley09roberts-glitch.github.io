@@ -196,7 +196,10 @@ public final class SleepTask implements CompanionTask {
 			return TaskStatus.RUNNING;
 		}
 		if (realBed != null && !c.isSleeping()) {
-			return TaskStatus.FAILURE; // the bed is gone (broken, or the game got them up): stop() sees to the rest
+			// Any hurt gets a sleeper out of a real bed, hunger pangs too: a starving friend lies straight back down.
+			if (!hungerPang(c) || !Spots.lieInBed(c, realBed)) {
+				return TaskStatus.FAILURE; // the bed is gone (broken, or the game got them up): stop() sees to the rest
+			}
 		}
 		if (disturbed(c)) {
 			return TaskStatus.FAILURE; // stop() gets them up
@@ -253,11 +256,8 @@ public final class SleepTask implements CompanionTask {
 
 	/** Hurt by anything but hunger pangs, a monster close by, a friend fighting nearby, or the alarm raised in camp. */
 	private boolean disturbed(CompanionEntity c) {
-		if (c.ticksSinceDamaged() < 5) {
-			DamageSource source = c.getLastDamageSource();
-			if (source == null || !source.is(DamageTypes.STARVE)) {
-				return true;
-			}
+		if (c.ticksSinceDamaged() < 5 && !hungerPang(c)) {
+			return true;
 		}
 		if (asleepTicks % 10 != 0) {
 			return false;
@@ -266,6 +266,12 @@ public final class SleepTask implements CompanionTask {
 			return true; // the watch raised the alarm: everyone up
 		}
 		return monsterClose(c) || friendFighting(c);
+	}
+
+	/** Just hurt by hunger pangs (starving), which never wakes a sleeper on its own. */
+	private static boolean hungerPang(CompanionEntity c) {
+		DamageSource source = c.getLastDamageSource();
+		return c.ticksSinceDamaged() < 5 && source != null && source.is(DamageTypes.STARVE);
 	}
 
 	/**

@@ -8,6 +8,7 @@ import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,6 +16,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -40,7 +42,9 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
  * is a Settlement the paths are surfaced with gravel (when the camp has some), and from the Town on with cobblestone:
  * the friends' own path block is dug up and the new block put in its place, from the supply chest's stock. Nothing but
  * the friends' own path and natural grass or dirt is touched, nothing under a building or its site, nothing by water
- * (the edit guard's rules), and only inside the camp, which the village has grown to cover.
+ * (the edit guard's rules), and only inside the camp, which the village has grown to cover. Ground with nothing firm
+ * under it (the roof of a cave, an overhang) and the ground over and round the friends' mines are left as they are:
+ * gravel laid there would fall through and leave a hole in the street.
  *
  * <p>The street cells are surveyed for the whole team in passes of a few hundred columns at a time, once every half
  * minute; each run does up to {@value #PER_RUN} cells.
@@ -155,6 +159,7 @@ final class StreetsTask implements CompanionTask {
 		}
 		List<int[]> sites = SiteFinder.reservedBoxes(camp, "");
 		Block surface = surface(v);
+		String dimension = v.dimension();
 		int budget = SCAN_BUDGET;
 		while (budget-- > 0) {
 			if (s.street >= TownPlan.STREETS.size()) {
@@ -186,8 +191,9 @@ final class StreetsTask implements CompanionTask {
 				s.across = -TownPlan.HALF;
 				s.along++;
 			}
-			if (underSite(column, sites) || Camp.horizontalDistSqr(column, centre) <= 4) {
-				continue;
+			if (underSite(column, sites) || Camp.horizontalDistSqr(column, centre) <= 4
+				|| TownPlan.nearMine(camp, dimension, new int[] {column.getX(), column.getZ(), column.getX(), column.getZ()})) {
+				continue; // the mines' stairways run just under the ground: the street leaves a gap there, as the plots do
 			}
 			BlockPos ground = Landscape.ground(level, column.getX(), column.getZ(), centre.getY() + PlotSurvey.MAX_RISE,
 				centre.getY() - PlotSurvey.MAX_RISE);
@@ -196,7 +202,7 @@ final class StreetsTask implements CompanionTask {
 			}
 			BlockState state = level.getBlockState(ground);
 			BlockState above = level.getBlockState(ground.above());
-			if (!Landscape.isOpen(above)) {
+			if (!Landscape.isOpen(above) || !firmUnder(level, ground)) {
 				continue;
 			}
 			if (Landscape.isEarth(state)) {
@@ -206,6 +212,15 @@ final class StreetsTask implements CompanionTask {
 				s.nextSurfaces.add(ground);
 			}
 		}
+	}
+
+	/**
+	 * True if the block under a street cell holds up whatever is laid on it: never the roof of a cave or a mine's
+	 * stairway, where gravel would fall through and leave a hole in the street (and a drop for anyone walking it).
+	 */
+	private static boolean firmUnder(ServerLevel level, BlockPos cell) {
+		BlockPos below = cell.below();
+		return level.isLoaded(below) && level.getBlockState(below).isFaceSturdy(level, below, Direction.UP);
 	}
 
 	private static boolean underSite(BlockPos column, List<int[]> sites) {
@@ -295,7 +310,7 @@ final class StreetsTask implements CompanionTask {
 	/** Grass or dirt to a trodden path, with a shovel. */
 	private TaskStatus pathStep(CompanionEntity c, ServerLevel level, BlockPos cell) {
 		BlockState state = level.getBlockState(cell);
-		if (!Landscape.isEarth(state) || !Landscape.isOpen(level.getBlockState(cell.above()))) {
+		if (!Landscape.isEarth(state) || !Landscape.isOpen(level.getBlockState(cell.above())) || !firmUnder(level, cell)) {
 			current = null;
 			return TaskStatus.RUNNING;
 		}
@@ -320,7 +335,8 @@ final class StreetsTask implements CompanionTask {
 	/**
 	 * The friends' own path block dug up and the street surface put in its place. The surface block is carried before
 	 * the path is dug, and nobody may stand on the cell, so a street is only ever left with a hole if the new block is
-	 * refused for long (then the dug-up earth goes back).
+	 * refused for long (then the dug-up earth goes back). Only over firm ground: gravel over a hollow would fall
+	 * through, so if the ground under the cell has gone meanwhile the earth goes back instead.
 	 */
 	private TaskStatus surfaceStep(CompanionEntity c, ServerLevel level, BlockPos cell, Block surface) {
 		Item item = surface.asItem();
@@ -328,7 +344,7 @@ final class StreetsTask implements CompanionTask {
 		CampData camp = Camp.data(level.getServer());
 		if (!dug) {
 			if (state.is(surface) || !(state.is(Blocks.DIRT_PATH) || state.is(Blocks.GRAVEL)) || !camp.isPlacedByFriends(level, cell)
-				|| carried(c, item) == 0 || someoneOn(level, cell)) {
+				|| carried(c, item) == 0 || someoneOn(level, cell) || !firmUnder(level, cell)) {
 				current = null;
 				return carried(c, item) == 0 ? finish() : TaskStatus.RUNNING;
 			}
@@ -351,7 +367,9 @@ final class StreetsTask implements CompanionTask {
 		if (level.getGameTime() - c.lastEditTick() < 4) {
 			return TaskStatus.RUNNING;
 		}
-		if (c.actions().place(cell, surface.defaultBlockState(), s -> s.is(item), Reason.LANDSCAPE)) {
+		if (surface instanceof FallingBlock && FallingBlock.isFree(level.getBlockState(cell.below()))) {
+			placeTries = PLACE_TRIES; // the ground under it gave way: gravel would fall, so the earth goes back
+		} else if (c.actions().place(cell, surface.defaultBlockState(), s -> s.is(item), Reason.LANDSCAPE)) {
 			worked++;
 			current = null;
 			return TaskStatus.RUNNING;

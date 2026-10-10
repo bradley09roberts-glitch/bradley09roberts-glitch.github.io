@@ -1,8 +1,10 @@
 package io.github.bradley09roberts.hardcorefriends.village;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -54,7 +56,9 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
  * four blocks, sown with seeds (wheat first) and its ripe crop harvested; the next visit sows it again.</li>
  * <li><b>The orchard.</b> A sapling (from the backpack or the chest) on each {@code sapling} spot that is bare earth.</li>
  * </ul>
- * One friend at a time (an exclusive job), by day, up to {@value #PER_RUN} cells a run.
+ * One friend at a time (an exclusive job), by day, up to {@value #PER_RUN} cells a run. A piece of work that came to
+ * nothing (no water that tops itself up within reach of the basin, cells nobody can get to) is set aside for a few
+ * minutes, so the grounds after it (the field, the orchard) are not kept waiting behind it.
  */
 final class GroundsTask implements CompanionTask {
 	static final String ID = "village.grounds";
@@ -62,6 +66,8 @@ final class GroundsTask implements CompanionTask {
 	private static final int CHOOSE_INTERVAL = 200;
 	private static final double REACH = 2.5;
 	private static final int HYDRATION = 4;
+	/** How long a piece of the grounds' work that came to nothing is left before it is tried again. */
+	private static final int SET_ASIDE = 20 * 60 * 5;
 
 	/** What a run does. */
 	private enum Work {
@@ -75,6 +81,9 @@ final class GroundsTask implements CompanionTask {
 
 	private @Nullable Plan chosen;
 	private long chosenAt = Long.MIN_VALUE / 2;
+	/** Work set aside after a run that came to nothing ({@code WATER@siteKey}), until this game time. */
+	private final Map<String, Long> setAside = new HashMap<>();
+	private long now;
 	private @Nullable Plan plan;
 	private final List<BlockPos> todo = new ArrayList<>();
 	private @Nullable BlockPos current;
@@ -113,10 +122,15 @@ final class GroundsTask implements CompanionTask {
 		return chosen == null ? 0 : chosen.work() == Work.WATER ? 46 : 42;
 	}
 
-	/** The first piece of the grounds that wants doing and can be done with what is carried or stored. */
-	private static @Nullable Plan choose(CompanionEntity c, ServerLevel level) {
+	/**
+	 * The first piece of the grounds that wants doing and can be done with what is carried or stored, passing over
+	 * work set aside after a run that came to nothing.
+	 */
+	private @Nullable Plan choose(CompanionEntity c, ServerLevel level) {
 		VillageData v = VillageData.get(level.getServer());
 		CampData camp = Camp.data(level.getServer());
+		long time = level.getGameTime();
+		setAside.values().removeIf(until -> until <= time || until - time > SET_ASIDE);
 		for (VillageData.Plot p : v.plots()) {
 			if (!p.standing()) {
 				continue;
@@ -125,19 +139,20 @@ final class GroundsTask implements CompanionTask {
 			if (bp == null) {
 				continue;
 			}
-			if ("water".equals(bp.meta().get("needs")) && hasWater(c)) {
+			if ("water".equals(bp.meta().get("needs")) && hasWater(c) && !setAside.containsKey(key(Work.WATER, p.siteKey))) {
 				List<BlockPos> dry = dryWaterSpots(level, p.siteKey);
 				if (!dry.isEmpty()) {
 					return new Plan(Work.WATER, p.siteKey, dry);
 				}
 			}
-			if (!bp.marker("field").isEmpty()) {
+			if (!bp.marker("field").isEmpty() && !setAside.containsKey(key(Work.FIELD, p.siteKey))) {
 				List<BlockPos> cells = fieldWork(c, level, p.siteKey);
 				if (!cells.isEmpty()) {
 					return new Plan(Work.FIELD, p.siteKey, cells);
 				}
 			}
-			if (!bp.marker("sapling").isEmpty() && has(c, s -> s.is(ItemTags.SAPLINGS))) {
+			if (!bp.marker("sapling").isEmpty() && has(c, s -> s.is(ItemTags.SAPLINGS))
+				&& !setAside.containsKey(key(Work.SAPLINGS, p.siteKey))) {
 				List<BlockPos> spots = new ArrayList<>();
 				for (BlockPos s : Construction.markers(level, p.siteKey, "sapling")) {
 					if (level.isLoaded(s) && level.getBlockState(s).isAir() && level.getBlockState(s.below()).is(BlockTags.DIRT)) {
@@ -150,6 +165,10 @@ final class GroundsTask implements CompanionTask {
 			}
 		}
 		return null;
+	}
+
+	private static String key(Work work, String siteKey) {
+		return work + "@" + siteKey;
 	}
 
 	/** Carried, or in the supply chest. */
@@ -301,6 +320,7 @@ final class GroundsTask implements CompanionTask {
 	@Override
 	public TaskStatus tick(CompanionEntity c) {
 		ServerLevel level = (ServerLevel) c.level();
+		now = level.getGameTime();
 		Plan p = plan;
 		if (p == null || Camp.isNight(level)) {
 			return finish();
@@ -508,6 +528,10 @@ final class GroundsTask implements CompanionTask {
 
 	private TaskStatus finish() {
 		current = null;
+		Plan p = plan;
+		if (worked == 0 && p != null) {
+			setAside.put(key(p.work(), p.siteKey()), now + SET_ASIDE); // the next run tries the rest of the grounds
+		}
 		return worked > 0 ? TaskStatus.SUCCESS : TaskStatus.FAILURE;
 	}
 

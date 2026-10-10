@@ -23,7 +23,8 @@ import io.github.bradley09roberts.hardcorefriends.camp.SiteFinder;
  * round the square, on the waterside, or at the end of a main street for the gate), each first checked cheaply against
  * the plan (inside the village, off the streets and the square, clear of other plots and sites, the mines and the lamp
  * spots), then on the ground ({@link PlotSurvey}). A spot on level ground is taken at once; one needing levelling is
- * remembered, and the one needing the least work is taken if nothing level turns up.
+ * remembered, and the one needing the least work is taken if nothing level turns up, once it has been checked and
+ * surveyed again (a search can take a while, and the ground or the sites round it may have changed meanwhile).
  */
 final class PlotSearch {
 	/** Where to look. */
@@ -50,6 +51,11 @@ final class PlotSearch {
 	final Blueprint plan;
 	final String kind;
 	final String purpose;
+	/**
+	 * What the planner holds back when no plot is found: the kind it was asked for ({@code shop} when any shop will
+	 * do, not the {@code shop:bakery} picked for it), a household's {@code home:} key, a length of wall.
+	 */
+	final String waitKey;
 	final Set<UUID> intended;
 	private final List<TownPlan.Candidate> candidates;
 	private final BlockPos centre;
@@ -59,12 +65,13 @@ final class PlotSearch {
 	private boolean done;
 	private final int[] rejected = new int[PlotSurvey.Reject.values().length + 1];
 
-	PlotSearch(Mode mode, Blueprint plan, String kind, String purpose, Set<UUID> intended, List<TownPlan.Candidate> candidates,
-		BlockPos centre) {
+	PlotSearch(Mode mode, Blueprint plan, String kind, String purpose, String waitKey, Set<UUID> intended,
+		List<TownPlan.Candidate> candidates, BlockPos centre) {
 		this.mode = mode;
 		this.plan = plan;
 		this.kind = kind;
 		this.purpose = purpose;
+		this.waitKey = waitKey;
 		this.intended = Set.copyOf(intended);
 		this.candidates = candidates;
 		this.centre = centre;
@@ -88,8 +95,12 @@ final class PlotSearch {
 			if (index >= candidates.size()) {
 				done = true;
 				TownPlan.Candidate c = best;
-				PlotSurvey.Result r = bestResult;
-				return c != null && r != null ? new Found(c, r) : null;
+				if (c == null || !fits(camp, v, c, taken)) {
+					return null; // nothing found, or the best spot has been taken since it was surveyed
+				}
+				// Surveyed again: the ground may have changed since (a player digging, a camp building begun).
+				PlotSurvey.Result r = survey(level, camp, c).result();
+				return r != null ? new Found(c, r) : null;
 			}
 			TownPlan.Candidate c = candidates.get(index++);
 			if (!fits(camp, v, c, taken)) {
@@ -98,9 +109,7 @@ final class PlotSearch {
 				continue;
 			}
 			surveys--;
-			boolean waterfront = mode == Mode.WATERFRONT;
-			boolean grade = mode != Mode.SQUARE || plan.width() * plan.depth() > 9;
-			PlotSurvey.Outcome out = PlotSurvey.survey(level, camp, plan, c.origin(), c.rotation(), centre.getY(), waterfront, grade);
+			PlotSurvey.Outcome out = survey(level, camp, c);
 			PlotSurvey.Result r = out.result();
 			if (r == null) {
 				PlotSurvey.Reject why = out.reject();
@@ -120,6 +129,12 @@ final class PlotSearch {
 			}
 		}
 		return null;
+	}
+
+	private PlotSurvey.Outcome survey(ServerLevel level, CampData camp, TownPlan.Candidate c) {
+		boolean waterfront = mode == Mode.WATERFRONT;
+		boolean grade = mode != Mode.SQUARE || plan.width() * plan.depth() > 9;
+		return PlotSurvey.survey(level, camp, plan, c.origin(), c.rotation(), centre.getY(), waterfront, grade);
 	}
 
 	/** Plain words for what most often ruled spots out. */
