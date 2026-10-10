@@ -350,6 +350,18 @@ public enum Line {
 
 	// ==== A proper village (package village): homes, beds, routines, growth ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** Moving into a home of their own in the village. %1$s = the house, lower case, e.g. "oak cottage". */
+	MOVED_IN(Priority.IMPORTANT, 1200, 1),
+	/** The village has a new street, with its first building going up on it. %1$s = its name, e.g. "North Lane". */
+	NEW_STREET(Priority.IMPORTANT, 1200, 1),
+	/** The village's town hall is finished. */
+	TOWN_HALL_DONE(Priority.IMPORTANT, 0, 0),
+	/** Heading home for the evening. */
+	GOING_HOME(Priority.CASUAL, 12000, 0),
+	/** Asking a friend round to their house for the evening. %1$s = the friend's name. */
+	INVITE_OVER(Priority.CASUAL, 12000, 1),
+	/** The village has grown into a bigger place. %1$s = what it is now, e.g. "Town". */
+	VILLAGE_GROWS(Priority.IMPORTANT, 0, 1),
 
 	// ==== end of village ====
 

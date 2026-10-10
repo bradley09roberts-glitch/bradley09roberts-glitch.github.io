@@ -8,20 +8,25 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.block.AbstractBedBlock;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.phys.AABB;
 
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprint;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.Structures;
+import io.github.bradley09roberts.hardcorefriends.civic.Homes;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
- * Finding places for everyday life: somewhere to stand, the camp's lit campfire, the inside of the cabin, a block
- * worth looking at. Every search is bounded and only runs when a job starts (or is cached), never every tick. The
- * needs jobs use all of it; the night watch uses the standing spots and the campfire.
+ * Finding places for everyday life: somewhere to stand, the camp's lit campfire, the inside of the cabin, a friend's
+ * own bed in their village home, a block worth looking at. Every search is bounded and only runs when a job starts (or
+ * is cached), never every tick. The needs jobs use all of it; the night watch uses the standing spots and the campfire.
  */
 public final class Spots {
 	private Spots() {
@@ -149,5 +154,82 @@ public final class Spots {
 		ServerLevel level = (ServerLevel) c.level();
 		BlockPos rest = c.restPos();
 		return !rest.equals(c.homePos()) && sheltered(level, rest);
+	}
+
+	// ------------------------------------------------------------- real beds
+
+	/**
+	 * The head of this friend's own bed in their village home ({@code civic.Homes}), if they have one they can sleep in
+	 * now: a whole bed the friends placed themselves (never a player's), inside the camp, and not taken by anyone else
+	 * asleep in it (a player who lay down in it first keeps it). Null otherwise: they sleep in the cabin or round the camp
+	 * as before.
+	 */
+	public static @Nullable BlockPos ownBed(CompanionEntity c) {
+		ServerLevel level = (ServerLevel) c.level();
+		BlockPos foot = Homes.get().bedFor(c).orElse(null);
+		if (foot == null || !level.isLoaded(foot)) {
+			return null;
+		}
+		BlockState state = level.getBlockState(foot);
+		if (!(state.getBlock() instanceof AbstractBedBlock)) {
+			return null;
+		}
+		BlockPos head = state.getValue(AbstractBedBlock.PART) == BedPart.HEAD ? foot : foot.relative(state.getValue(AbstractBedBlock.FACING));
+		BlockState headState = level.isLoaded(head) ? level.getBlockState(head) : null;
+		if (headState == null || !(headState.getBlock() instanceof AbstractBedBlock) || headState.getValue(AbstractBedBlock.PART) != BedPart.HEAD) {
+			return null;
+		}
+		if (!Camp.data(level.getServer()).isPlacedByFriends(level, head) || !inCamp(c, head)) {
+			return null;
+		}
+		if (headState.getValue(AbstractBedBlock.OCCUPIED) && someoneElseAsleep(level, head, c)) {
+			return null;
+		}
+		return head;
+	}
+
+	/** True if anyone but this friend (a player, another friend) lies asleep in the bed whose head is here. */
+	static boolean someoneElseAsleep(ServerLevel level, BlockPos head, CompanionEntity c) {
+		return !level.getEntitiesOfClass(LivingEntity.class, new AABB(head).inflate(1.0),
+			e -> e != c && e.isSleeping() && head.equals(e.getSleepingPos().orElse(null))).isEmpty();
+	}
+
+	/** A spot to stand beside the bed (by its head or foot), nearest the friend; null if it is walled in. */
+	static @Nullable BlockPos besideBed(CompanionEntity c, BlockPos head) {
+		ServerLevel level = (ServerLevel) c.level();
+		BlockState state = level.getBlockState(head);
+		if (!(state.getBlock() instanceof AbstractBedBlock)) {
+			return null;
+		}
+		BlockPos foot = head.relative(state.getValue(AbstractBedBlock.FACING).getOpposite());
+		BlockPos best = null;
+		double bestDist = Double.MAX_VALUE;
+		for (BlockPos part : new BlockPos[] {foot, head}) {
+			for (Direction d : Direction.Plane.HORIZONTAL) {
+				BlockPos p = part.relative(d);
+				if (p.equals(foot) || p.equals(head) || !isStandable(level, p)) {
+					continue;
+				}
+				double dist = p.distSqr(c.blockPosition());
+				if (dist < bestDist) {
+					bestDist = dist;
+					best = p;
+				}
+			}
+		}
+		return best;
+	}
+
+	/**
+	 * Lies down in the bed whose head is here, as villagers do (the vanilla sleeping pose, the bed marked taken). False if
+	 * it is no longer a bed or someone else got there first.
+	 */
+	static boolean lieInBed(CompanionEntity c, BlockPos head) {
+		ServerLevel level = (ServerLevel) c.level();
+		BlockState state = level.getBlockState(head);
+		if (!(state.getBlock() instanceof AbstractBedBlock) || state.getValue(AbstractBedBlock.OCCUPIED) && someoneElseAsleep(level, head, c)) {
+			return false;
+		}
+		return c.startSleeping(head);
 	}
 }

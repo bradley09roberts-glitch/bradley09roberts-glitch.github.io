@@ -15,8 +15,12 @@ import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Role;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
+import io.github.bradley09roberts.hardcorefriends.village.VillageGrowth;
 
-/** Advances the camp to its next stage once the current stage's improvements are done and the bond is strong enough. */
+/**
+ * Advances the camp to its next stage once the current stage's improvements are done and the bond is strong enough;
+ * past the Settlement, once the village has grown enough too ({@link VillageGrowth}).
+ */
 public final class CampProgress {
 	private CampProgress() {
 	}
@@ -37,15 +41,21 @@ public final class CampProgress {
 		Set<Role> available = availableRoles(server, data);
 		List<Structures.Entry> missing = Structures.missing(data, data.stage(), available::contains);
 		int nextStage = data.stage() + 1;
-		if (missing.isEmpty() && data.unity() >= Camp.STAGE_UNITY[nextStage]) {
+		// The Town and the City are the village's stages: they also need its people, houses and civic buildings.
+		if (missing.isEmpty() && data.unity() >= Camp.STAGE_UNITY[nextStage] && VillageGrowth.ready(server, nextStage)) {
 			data.setStage(nextStage);
 			String name = Camp.stageName(nextStage);
-			List<CompanionEntity> friends = Companions.all();
-			if (!friends.isEmpty()) {
-				Speech.say(friends.get(server.getTickCount() % friends.size()), Line.CAMP_UP, name);
+			boolean village = nextStage >= VillageGrowth.TOWN;
+			if (village) {
+				VillageGrowth.celebrate(server, nextStage);
+			} else {
+				List<CompanionEntity> friends = Companions.all();
+				if (!friends.isEmpty()) {
+					Speech.say(friends.get(server.getTickCount() % friends.size()), Line.CAMP_UP, name);
+				}
 			}
 			Speech.announce(server, Component.literal("Your camp has grown into a " + name + "! New projects: "
-				+ describe(Structures.forStage(nextStage))).withStyle(ChatFormatting.GOLD));
+				+ (village ? VillageGrowth.projects(nextStage) : describe(Structures.forStage(nextStage)))).withStyle(ChatFormatting.GOLD));
 			Unity.applyBackpackSizes();
 		}
 	}

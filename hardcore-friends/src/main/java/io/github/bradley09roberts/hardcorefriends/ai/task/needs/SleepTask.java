@@ -9,6 +9,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Reach;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
@@ -17,6 +18,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
+import io.github.bradley09roberts.hardcorefriends.civic.Homes;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.FriendId;
@@ -25,8 +27,9 @@ import io.github.bradley09roberts.hardcorefriends.companion.Needs.Need;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 
 /**
- * Sleeps through the night at home: each friend has their own place to lie down, inside the cabin once it is built,
- * otherwise in a ring around the camp centre. Sleep restores energy by the in-game time slept (faster under a roof: a
+ * Sleeps through the night at home: in their own bed in their village home once they have one ({@code civic.Homes}:
+ * lying down in it as villagers do, the bed marked taken until they get up), otherwise each friend has their own place
+ * to lie down, inside the cabin once it is built, otherwise in a ring around the camp centre. Sleep restores energy by the in-game time slept (faster under a roof: a
  * full night in the cabin is about +100, see {@link CompanionEntity#settleSleep}), so a night the players sleep
  * through counts in full, and ends at dawn with a good morning. A friend exhausted in daytime takes a short nap at
  * camp.
@@ -85,6 +88,8 @@ public final class SleepTask implements CompanionTask {
 	private static final int RING = 3;
 
 	private @Nullable BlockPos bed;
+	/** The head of their own bed in their village home, when they sleep in a real bed ({@link Spots#ownBed}). */
+	private @Nullable BlockPos realBed;
 	private boolean lyingDown;
 	private boolean nap;
 	private int asleepTicks;
@@ -127,7 +132,8 @@ public final class SleepTask implements CompanionTask {
 		double score = BEDTIME + (100 - energy) * 0.1; // 75 when fresh, 82 when worn out
 		if (c.needs().get(Need.HUNGER) < SUPPER_BELOW && EatTask.foodAvailable(c)) {
 			score = SUPPER_FIRST;
-		} else if (c.needs().get(Need.COMFORT) < ComfortTask.CHILLY && !Spots.cabinBuilt(c) && Spots.litCampfire(c) != null) {
+		} else if (c.needs().get(Need.COMFORT) < ComfortTask.CHILLY && !Spots.cabinBuilt(c)
+			&& Homes.get().homeOf(level.getServer(), c.getUUID()).isEmpty() && Spots.litCampfire(c) != null) {
 			score = WARM_UP_FIRST; // a few minutes by the fire, then bed
 		}
 		return score;
@@ -138,6 +144,13 @@ public final class SleepTask implements CompanionTask {
 		nap = !Camp.isNightTime((ServerLevel) c.level());
 		lyingDown = false;
 		asleepTicks = 0;
+		// A friend with a home of their own sleeps in their own bed there; everyone else as before.
+		realBed = Spots.ownBed(c);
+		if (realBed != null) {
+			BlockPos beside = Spots.besideBed(c, realBed);
+			bed = beside != null ? beside : realBed;
+			return true;
+		}
 		bed = bedFor(c);
 		return bed != null;
 	}
@@ -149,7 +162,9 @@ public final class SleepTask implements CompanionTask {
 			return TaskStatus.FAILURE;
 		}
 		if (!lyingDown) {
-			boolean there = c.actions().walkTo(bed, BED_REACH);
+			BlockPos own = realBed;
+			boolean there = c.actions().walkTo(bed, BED_REACH)
+				|| own != null && c.position().distanceToSqr(Vec3.atBottomCenterOf(own)) <= 2.5 * 2.5;
 			if (!there && c.actions().isStuck()) {
 				if (c.blockPosition().distSqr(bed) > 9) {
 					return TaskStatus.FAILURE;
@@ -157,9 +172,17 @@ public final class SleepTask implements CompanionTask {
 				there = true; // close enough: lie down here
 			}
 			if (there) {
-				lieDown(c);
+				if (own != null && Spots.lieInBed(c, own)) {
+					inBed(c);
+				} else {
+					realBed = null;
+					lieDown(c);
+				}
 			}
 			return TaskStatus.RUNNING;
+		}
+		if (realBed != null && !c.isSleeping()) {
+			return TaskStatus.FAILURE; // the bed is gone (broken, or the game got them up): stop() sees to the rest
 		}
 		if (disturbed(c)) {
 			return TaskStatus.FAILURE; // stop() gets them up
@@ -186,6 +209,15 @@ public final class SleepTask implements CompanionTask {
 			return TaskStatus.SUCCESS;
 		}
 		return TaskStatus.RUNNING;
+	}
+
+	/** Lying in their own bed, as villagers do (the game has already put them in the sleeping pose on the bed). */
+	private void inBed(CompanionEntity c) {
+		c.actions().stopWalking();
+		c.setAsleep(true);
+		lyingDown = true;
+		layDownAt = c.level().getGameTime();
+		Speech.say(c, Line.SLEEPY);
 	}
 
 	private void lieDown(CompanionEntity c) {
@@ -298,12 +330,19 @@ public final class SleepTask implements CompanionTask {
 	public void stop(CompanionEntity c) {
 		wake(c);
 		bed = null;
+		realBed = null;
 		lyingDown = false;
 		asleepTicks = 0;
 	}
 
-	/** Gets a friend back on their feet. Safe to call when they are already awake. */
-	static void wake(CompanionEntity c) {
+	/**
+	 * Gets a friend back on their feet, out of their bed if they were in one (which frees it, as for a villager). Safe
+	 * to call when they are already awake.
+	 */
+	public static void wake(CompanionEntity c) {
+		if (c.isSleeping()) {
+			c.stopSleeping();
+		}
 		if (c.getPose() == Pose.SLEEPING) {
 			c.setPose(Pose.STANDING);
 		}

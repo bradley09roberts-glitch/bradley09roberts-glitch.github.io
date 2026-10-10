@@ -11,10 +11,14 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 
 /** Static access to the shared camp: where it is, how big it is and what stage it has reached. */
 public final class Camp {
-	public static final String[] STAGE_NAMES = {"Campsite", "Camp", "Hamlet", "Village", "Settlement"};
+	/**
+	 * The camp's stages. Saves store the stage number, so new stages are only ever added at the end: the Town and the
+	 * City (the village package's growth) come after the Settlement.
+	 */
+	public static final String[] STAGE_NAMES = {"Campsite", "Camp", "Hamlet", "Village", "Settlement", "Town", "City"};
 	public static final int MAX_STAGE = STAGE_NAMES.length - 1;
 	/** Unity needed before each stage's buildings may begin. */
-	public static final int[] STAGE_UNITY = {0, 0, 100, 250, 500};
+	public static final int[] STAGE_UNITY = {0, 0, 100, 250, 500, 650, 800};
 
 	private Camp() {
 	}
@@ -38,11 +42,30 @@ public final class Camp {
 
 	/**
 	 * Current camp radius: the configured base, growing 4 blocks per stage, plus any room the camp has grown to fit
-	 * a building ({@link #radiusBonus}), up to the configured maximum.
+	 * a building ({@link #radiusBonus}), up to the configured maximum; or, once the village's streets and plots reach
+	 * further, as far as they reach ({@link #villageReach}, up to the village's own maximum).
 	 */
 	public static int radius(CampData data) {
 		FriendsConfig cfg = FriendsConfig.get();
-		return Math.min(cfg.maxCampRadius, cfg.campRadius + 4 * data.stage() + radiusBonus(data));
+		return Math.max(Math.min(cfg.maxCampRadius, cfg.campRadius + 4 * data.stage() + radiusBonus(data)), villageReach(data));
+	}
+
+	/** Camp memory of how far the village's town plan reaches from this camp centre (set by the village package). */
+	public static final String VILLAGE_MEMORY = "village.reach";
+
+	/**
+	 * How far the village's streets and plots reach from the camp centre, in blocks, up to {@code villageRadius}: the
+	 * camp grows with its village. It belongs to this camp centre only: moving the camp starts again without it.
+	 */
+	public static int villageReach(CampData data) {
+		if (data.campPos().isEmpty()) {
+			return 0;
+		}
+		CompoundTag tag = data.memory(VILLAGE_MEMORY);
+		if (tag.getLongOr("centre", Long.MIN_VALUE) != data.campPos().get().asLong()) {
+			return 0;
+		}
+		return Math.clamp(tag.getIntOr("reach", 0), 0, FriendsConfig.get().villageRadius);
 	}
 
 	/** Camp memory of the extra room the camp grew to make space for buildings. */

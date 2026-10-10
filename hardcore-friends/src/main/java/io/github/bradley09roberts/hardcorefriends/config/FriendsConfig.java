@@ -119,6 +119,15 @@ public final class FriendsConfig {
 	public double relationshipSpeed = 1.0;
 
 	// ---- A proper village (package village) ----
+	/**
+	 * Once the camp is a Village, the friends lay out a town plan (streets, plots, a square), build a house for every
+	 * household and sleep in their own beds; the camp then grows into a Town and a City. False keeps the camp as it was.
+	 */
+	public boolean villageHomes = true;
+	/** How far from the camp centre the village's streets and plots may spread, in blocks; the camp grows with them. */
+	public int villageRadius = 64;
+	/** Most village buildings (houses, civic buildings, shops) under way at once, each with one builder at a time. */
+	public int villageBuildsAtOnce = 3;
 
 	// ---- Shops and trades (package market) ----
 
@@ -181,5 +190,8 @@ public final class FriendsConfig {
 		relationshipSpeed = Double.isFinite(relationshipSpeed) ? Math.clamp(relationshipSpeed, 0.25, 4.0) : 1.0;
 		// Better builds: a pillar taller than six cannot be taken down from the ground beside it.
 		maxScaffoldHeight = Math.clamp(maxScaffoldHeight, 2, 6);
+		// A proper village: never smaller than the camp itself, and no further out than the chunks the camp can keep running.
+		villageRadius = Math.clamp(villageRadius, campRadius, 96);
+		villageBuildsAtOnce = Math.clamp(villageBuildsAtOnce, 1, 8);
 	}
 }

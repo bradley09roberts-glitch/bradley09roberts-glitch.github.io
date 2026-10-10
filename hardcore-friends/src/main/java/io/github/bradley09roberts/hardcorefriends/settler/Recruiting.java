@@ -81,6 +81,13 @@ final class Recruiting {
 				+ cfg.maxSettlers + ").");
 			return InteractionResult.SUCCESS_SERVER;
 		}
+		if (io.github.bradley09roberts.hardcorefriends.village.VillagePlan.populationFull(level.getServer())) {
+			// The village's population cap: everyone on the team, children included.
+			Speech.say(c, Line.STRANGER_TEAM_FULL);
+			Strangers.note(player, "Your village already has as many people as this world allows (maxPopulation "
+				+ cfg.maxPopulation + ").");
+			return InteractionResult.SUCCESS_SERVER;
+		}
 		if (data.aliveRecruitedBy(player.getUUID()) >= cfg.maxSettlersPerPlayer) {
 			Speech.say(c, Line.STRANGER_TEAM_FULL);
 			Strangers.note(player, "You have already asked in " + data.aliveRecruitedBy(player.getUUID())
