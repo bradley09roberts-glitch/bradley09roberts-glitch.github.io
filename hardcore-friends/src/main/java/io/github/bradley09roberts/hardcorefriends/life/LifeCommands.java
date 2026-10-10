@@ -92,7 +92,7 @@ final class LifeCommands {
 		boolean life = FriendsConfig.get().villageLife;
 		Calendar.Feast feast = Calendar.feastOn(day);
 		if (feast != null && life) {
-			if (today && data.isDone("feast:" + day) && Gatherings.active() == null) {
+			if (today && data.isDone("feast:" + day) && Gatherings.active() == null && data.running.isEmpty()) {
 				list.add(Calendar.capital(feast.phrase()) + (Calendar.time(server) >= Gatherings.FEAST_FROM ? " (over)" : " (not this year)"));
 			} else {
 				list.add(Calendar.capital(feast.phrase()) + " at the square, from the late afternoon"

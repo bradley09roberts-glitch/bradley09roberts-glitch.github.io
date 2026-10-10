@@ -33,10 +33,10 @@ import io.github.bradley09roberts.hardcorefriends.HardcoreFriends;
 /**
  * What the world remembers of village life: the people (when each joined or was born, their last birthday, and their
  * family as last seen, so a death can be mourned by the right people even after the people package has let them go),
- * the cemetery and its graves, the funerals still to hold, who is mourning whom, the Village Chronicle's entries and
- * where its book is kept, the temporary blocks to take down again (festival lights, a musician's note block), and what
- * the Chronicle has already noticed (stages, buildings, milestones, arrivals, weddings, births, firsts). Stored in
- * {@code data/hardcorefriends_life.dat}.
+ * the cemetery and its graves, the funerals still to hold and the gathering under way, who is mourning whom, the
+ * Village Chronicle's entries and where its book is kept, the temporary blocks to take down again (festival lights, a
+ * musician's note block), and what the Chronicle has already noticed (stages, buildings, milestones, arrivals,
+ * weddings, births, firsts). Stored in {@code data/hardcorefriends_life.dat}.
  */
 public final class LifeData extends SavedData {
 	public static final Codec<LifeData> CODEC = CompoundTag.CODEC.xmap(LifeData::fromTag, LifeData::toTag);
@@ -193,6 +193,14 @@ public final class LifeData extends SavedData {
 	long harvestYear = -1;
 	/** Days on which an occasion was announced or held (kept short). */
 	final Set<String> done = new LinkedHashSet<>();
+	/**
+	 * The gathering under way ("feast" or "funeral", "" for none), its day, whether its words were said, and for a
+	 * funeral the first of those it is for: kept, so a restart in the middle neither loses it nor holds it twice.
+	 */
+	String running = "";
+	long runningDay = -1;
+	boolean runningSpoke;
+	@Nullable UUID runningFor;
 
 	public LifeData() {
 	}
@@ -237,6 +245,15 @@ public final class LifeData extends SavedData {
 
 	boolean isDone(String key) {
 		return done.contains(key);
+	}
+
+	/** No gathering under way any more (it ended, or there is nothing left of it to carry on). */
+	void stopRunning() {
+		running = "";
+		runningDay = -1;
+		runningSpoke = false;
+		runningFor = null;
+		setDirty();
 	}
 
 	// ------------------------------------------------------------------ temps
@@ -362,6 +379,11 @@ public final class LifeData extends SavedData {
 		d.harvestBase = tag.getLongOr("harvestBase", -1L);
 		d.harvestYear = tag.getLongOr("harvestYear", -1L);
 		readStrings(tag, "done", d.done);
+		CompoundTag running = tag.getCompoundOrEmpty("running");
+		d.running = running.getStringOr("kind", "");
+		d.runningDay = running.getLongOr("day", -1L);
+		d.runningSpoke = running.getBooleanOr("spoke", false);
+		d.runningFor = uuid(running.getStringOr("for", ""));
 		return d;
 	}
 
@@ -474,6 +496,16 @@ public final class LifeData extends SavedData {
 		tag.putLong("harvestBase", harvestBase);
 		tag.putLong("harvestYear", harvestYear);
 		writeStrings(tag, "done", done);
+		if (!running.isEmpty()) {
+			CompoundTag t = new CompoundTag();
+			t.putString("kind", running);
+			t.putLong("day", runningDay);
+			t.putBoolean("spoke", runningSpoke);
+			if (runningFor != null) {
+				t.putString("for", runningFor.toString());
+			}
+			tag.put("running", t);
+		}
 		return tag;
 	}
 

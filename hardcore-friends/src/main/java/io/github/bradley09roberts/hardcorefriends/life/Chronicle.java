@@ -142,9 +142,13 @@ public final class Chronicle {
 		List<UUID> known = new ArrayList<>();
 		for (FriendId id : FriendId.values()) {
 			CampData.Ledger ledger = camp.ledger(id);
-			if (ledger.state == CampData.LifeState.ALIVE && ledger.entityId != null) {
+			if (ledger.entityId == null) {
+				continue;
+			}
+			// The lost count too: a child whose parents have died was still born before the Chronicle began.
+			known.add(ledger.entityId);
+			if (ledger.state == CampData.LifeState.ALIVE) {
 				data.ledgerIds.put(id.key(), ledger.entityId);
-				known.add(ledger.entityId);
 			}
 		}
 		for (SettlerData.Newcomer n : SettlerData.get(server).newcomers()) {
