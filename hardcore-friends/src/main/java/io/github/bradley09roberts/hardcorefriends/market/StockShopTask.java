@@ -131,9 +131,8 @@ final class StockShopTask extends TradeJob {
 		if (t == null || s == null || supply.isEmpty() || s.stock().isEmpty()) {
 			return TaskStatus.FAILURE;
 		}
-		BlockPos from = t.toShop() ? supply.get() : s.stock().getFirst();
 		if (!loaded) {
-			BlockPos source = t.toShop() ? from : firstHolding(level, s, t.match());
+			BlockPos source = t.toShop() ? supply.get() : firstHolding(level, s, t.match());
 			if (source == null) {
 				return TaskStatus.FAILURE;
 			}

@@ -151,7 +151,9 @@ final class KeepShopTask extends TradeJob {
 
 	@Override
 	public int failureCooldown() {
-		return 20; // straight back to the counter if a customer is waiting
+		// A counter that cannot be reached is not tried again at once. (While serving, the job never fails: a keeper
+		// whose run times out stays put at the counter, as nothing else is allowed meanwhile.)
+		return 20 * 30;
 	}
 
 	@Override

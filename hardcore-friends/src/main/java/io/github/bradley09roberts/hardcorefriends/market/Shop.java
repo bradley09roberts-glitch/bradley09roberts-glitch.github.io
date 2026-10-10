@@ -31,7 +31,7 @@ record Shop(String key, String type, String title, String described, BlockPos co
 				return Optional.empty();
 			}
 			Optional<BlockPos> chest = Stores.supplyPos(level);
-			return chest.map(pos -> new Shop("camp", "stall", "Camp Stall", "the camp stall", pos, null, List.of(pos), pos, true));
+			return chest.map(pos -> new Shop("camp", "stall", "Camp Stall", "the camp stall", besideChest(level, pos), null, List.of(pos), pos, true));
 		}
 		Optional<Workplace> found = Workplaces.byKey(level, h.site);
 		if (found.isEmpty() || !found.get().isShop() || found.get().counter() == null) {
@@ -42,6 +42,19 @@ record Shop(String key, String type, String title, String described, BlockPos co
 		String title = w.kind().equals("civic:market") ? "Market Stall" : capitalised(w.name());
 		return Optional.of(new Shop(w.key(), w.shopType(), title, w.described(), w.counter(), w.customer(), chests,
 			chests.isEmpty() ? null : chests.getFirst(), false));
+	}
+
+	/** Where the stallholder stands: dry ground right beside the supply chest (or the chest itself, if there is none). */
+	private static BlockPos besideChest(ServerLevel level, BlockPos chest) {
+		for (net.minecraft.core.Direction d : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+			for (int dy = 0; dy >= -1; dy--) {
+				BlockPos p = chest.relative(d).above(dy);
+				if (FishSpots.standable(level, p)) {
+					return p;
+				}
+			}
+		}
+		return chest;
 	}
 
 	/** "General Store" from "general store". */

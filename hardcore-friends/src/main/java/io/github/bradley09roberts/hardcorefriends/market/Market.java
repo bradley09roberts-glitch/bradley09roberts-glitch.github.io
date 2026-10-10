@@ -80,9 +80,8 @@ public final class Market {
 		CompanionEvents.DISMISSED.add(Market::left);
 		Construction.FINISHED.add((level, key, plan) -> Workplaces.invalidate());
 
-		// A fishing rod and shears are kept like any tool, not tidied away to the chest after every trip.
+		// A fishing rod is kept like any tool, not tidied away to the chest after every trip (only fishers use one).
 		KeepList.addCommonRule(new KeepList.Rule("fishing rod", s -> s.is(Items.FISHING_ROD), 1));
-		KeepList.addCommonRule(new KeepList.Rule("shears", s -> s.is(Items.SHEARS), 1));
 		recipe(Items.FISHING_ROD, 1, true, Crafting.of(Items.STICK, 3), Crafting.of(Items.STRING, 2));
 		recipe(Items.BEEHIVE, 1, true, Crafting.of(ItemTags.PLANKS, 6), Crafting.of(Items.HONEYCOMB, 3));
 		recipe(Items.BOWL, 4, true, Crafting.of(ItemTags.PLANKS, 3));

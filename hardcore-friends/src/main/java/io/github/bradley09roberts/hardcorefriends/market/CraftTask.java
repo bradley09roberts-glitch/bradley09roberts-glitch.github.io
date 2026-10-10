@@ -42,6 +42,8 @@ final class CraftTask extends TradeJob {
 	private static final double SCORE = 45;
 	private static final int MAX_CRAFTS = 8;
 	private static final int REPLAN = 100;
+	/** Most of one product a workplace's own chests (a shop's shelves) keep. */
+	private static final int SHELF = 24;
 
 	private enum Phase {
 		FETCH,
@@ -357,17 +359,24 @@ final class CraftTask extends TradeJob {
 		return out;
 	}
 
+	/**
+	 * How many of a product the workplace's own chests keep: food only while the camp has food to spare (otherwise all of
+	 * it goes to the supply chest, where everyone eats from), and never more than a shelf's worth.
+	 */
+	private static int shelfTarget(Products.Product p) {
+		boolean food = p.output().components().has(net.minecraft.core.component.DataComponents.FOOD);
+		if (food && CampNeeds.need(CampNeeds.Need.FOOD) > Catalogue.FOOD_TO_SPARE + 0.15) {
+			return 0;
+		}
+		return Math.min(p.target(), SHELF);
+	}
+
 	private TaskStatus deliver(CompanionEntity c, ServerLevel level, Batch b) {
 		Products.Product p = b.product();
 		List<BlockPos> shelves = triedShelves ? List.of() : Stores.chests(level, place);
 		int onShelves = Stores.count(level, shelves, s -> s.is(p.output()));
-		BlockPos to = null;
-		if (!shelves.isEmpty() && onShelves < p.target()) {
-			to = shelves.getFirst();
-		}
-		if (to == null) {
-			to = Stores.supplyPos(level).orElse(null);
-		}
+		int shelfRoom = Math.max(0, shelfTarget(p) - onShelves);
+		BlockPos to = !shelves.isEmpty() && shelfRoom > 0 ? shelves.getFirst() : Stores.supplyPos(level).orElse(null);
 		if (to == null) {
 			return TaskStatus.SUCCESS; // nowhere to put it: it stays in the backpack for the tidying
 		}
@@ -382,17 +391,16 @@ final class CraftTask extends TradeJob {
 			}
 		}
 		boolean toShelves = shelves.contains(to);
-		int room = toShelves ? Math.max(0, p.target() - onShelves) : made;
-		int put = Stores.deposit(c, to, s -> s.is(p.output()), Math.min(made, room));
+		int put = Stores.deposit(c, to, s -> s.is(p.output()), toShelves ? Math.min(made, shelfRoom) : made);
 		made -= put;
 		Item back = p.returns();
-		if (back != null && !returnedEmpties) {
-			returnedEmpties = true;
+		if (back != null && !toShelves && !returnedEmpties) {
+			returnedEmpties = true; // the cake's buckets go back to the supply chest, for milking
 			Stores.deposit(c, to, s -> s.is(back), b.crafts() * p.returnsCount());
 		}
 		if (made > 0 && toShelves) {
 			triedShelves = true;
-			return TaskStatus.RUNNING; // the rest to the supply chest (the shelves are full now)
+			return TaskStatus.RUNNING; // the rest to the supply chest
 		}
 		return TaskStatus.SUCCESS;
 	}

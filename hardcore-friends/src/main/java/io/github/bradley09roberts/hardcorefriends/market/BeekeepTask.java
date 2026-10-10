@@ -198,22 +198,25 @@ final class BeekeepTask extends TradeJob {
 				wildBees = level.getEntitiesOfClass(Bee.class, new AABB(centre.get()).inflate(r, 24, r), Bee::isAlive);
 			}
 		}
-		Bee best = null;
-		double bestDist = Double.MAX_VALUE;
+		// The cheap checks for every bee, then the look round for anything a player built only for the nearest few.
+		List<Bee> near = new ArrayList<>();
 		for (Bee b : wildBees) {
-			if (!mayLead(level, data, b, apiary)) {
-				continue;
-			}
-			double d = b.distanceToSqr(c);
-			if (d < bestDist) {
-				bestDist = d;
-				best = b;
+			if (mayLeadQuick(level, data, b, apiary)) {
+				near.add(b);
 			}
 		}
-		return best;
+		near.sort(java.util.Comparator.comparingDouble(b -> b.distanceToSqr(c)));
+		for (int i = 0; i < near.size() && i < 3; i++) {
+			Bee b = near.get(i);
+			if (!WorldEditGuard.looksPlayerBuilt(level, b.blockPosition(), 6, data)) {
+				return b;
+			}
+		}
+		return null;
 	}
 
-	private static boolean mayLead(ServerLevel level, CampData data, Bee b, BlockPos apiary) {
+	/** Every rule but the look round for player builds (see the class comment). */
+	private static boolean mayLeadQuick(ServerLevel level, CampData data, Bee b, BlockPos apiary) {
 		if (!b.isAlive() || b.isRemoved() || b.level() != level || b.isAngry() || Wildlife.isSomebodys(b)) {
 			return false;
 		}
@@ -221,7 +224,7 @@ final class BeekeepTask extends TradeJob {
 		if (home != null && (home.equals(apiary) || !level.isLoaded(home) || !level.getBlockState(home).is(Blocks.BEE_NEST))) {
 			return false; // already ours, or living in a hive someone made (or somewhere unseen)
 		}
-		return !WorldEditGuard.looksPlayerBuilt(level, b.blockPosition(), 6, data) && !data.nearDanger(b.blockPosition(), level.getGameTime());
+		return !data.nearDanger(b.blockPosition(), level.getGameTime());
 	}
 
 	@Override
@@ -311,7 +314,7 @@ final class BeekeepTask extends TradeJob {
 	private TaskStatus go(CompanionEntity c, ServerLevel level, Plan p) {
 		if (p.kind() == Kind.BEE) {
 			Bee b = bee;
-			if (b == null || !mayLead(level, Camp.data(level.getServer()), b, p.hive())) {
+			if (b == null || !mayLeadQuick(level, Camp.data(level.getServer()), b, p.hive())) {
 				return TaskStatus.FAILURE;
 			}
 			c.actions().equip(s -> s.is(ItemTags.BEE_FOOD));

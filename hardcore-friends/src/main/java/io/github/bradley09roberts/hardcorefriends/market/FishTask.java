@@ -61,6 +61,9 @@ final class FishTask extends TradeJob {
 	private int catches;
 	private final List<ItemStack> caught = new ArrayList<>();
 	private boolean said;
+	private List<FishSpots.Spot> knownSpots = List.of();
+	private long spotsAt = Long.MIN_VALUE / 2;
+	private static final int SPOTS_REFRESH = 200;
 
 	FishTask() {
 		super(ID, Set.of(), Trade.FISHER, Trade.FISHMONGER);
@@ -76,7 +79,12 @@ final class FishTask extends TradeJob {
 		if (!workingHours(level) || c.backpack().freeSlots() < 3 || c.badlyHurt()) {
 			return 0;
 		}
-		if (spots(level, w).isEmpty() || !hasRod(c) && !canGetRod(level)) {
+		long now = level.getGameTime();
+		if (now - spotsAt >= SPOTS_REFRESH || now < spotsAt) {
+			spotsAt = now;
+			knownSpots = spots(level, w);
+		}
+		if (knownSpots.isEmpty() || !hasRod(c) && !canGetRod(level)) {
 			return 0;
 		}
 		return Math.min(64, SCORE * CampNeeds.weight(CampNeeds.Need.FOOD));

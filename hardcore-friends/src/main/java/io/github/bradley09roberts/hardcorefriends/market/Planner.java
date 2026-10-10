@@ -49,9 +49,9 @@ import io.github.bradley09roberts.hardcorefriends.survival.Skills;
  * own work never runs short of hands (a trade's jobs only add to its holder's day; their speciality still comes first
  * when the camp needs it). Someone holding a trade at the camp moves to its workplace once one stands.
  *
- * <p><b>At the camp.</b> Before the village has workplaces, a camp of six or more grown-ups gives a few trades to people
- * plainly: a stallholder at the supply chest (from the Hamlet), a fisher on the nearest bank, a shepherd at the pen and a
- * cook at the campfire.
+ * <p><b>At the camp.</b> Before the village has workplaces, a camp of six or more grown-ups that has grown to a Hamlet
+ * gives a few trades to people plainly: a cook at the campfire, a fisher on the nearest bank, a stallholder at the supply
+ * chest and a shepherd at the pen.
  *
  * <p><b>Letting go.</b> A trade is given up when its holder dies, is dismissed, has not been seen in the camp's world for
  * two days, or their workplace no longer stands.
@@ -67,6 +67,8 @@ final class Planner {
 	private static final long ABSENT_TICKS = 48_000;
 	/** A camp needs this many grown-ups before anyone takes up a trade at the camp itself. */
 	private static final int CAMP_TRADE_ADULTS = 6;
+	/** ...and must have grown to a Hamlet. */
+	private static final int CAMP_TRADE_STAGE = 2;
 	/** Days before the same kind of building is asked for again. */
 	private static final long ASK_AGAIN_DAYS = 3;
 
@@ -169,8 +171,8 @@ final class Planner {
 				take(server, level, data, best, w.trade(), w, now);
 			}
 		}
-		// Plainer trades at the camp, while there is no workplace for them.
-		if (adults.size() < CAMP_TRADE_ADULTS) {
+		// Plainer trades at the camp, while there is no workplace for them: a camp of a Hamlet or more, with hands to spare.
+		if (adults.size() < CAMP_TRADE_ADULTS || Camp.data(server).stage() < CAMP_TRADE_STAGE) {
 			return;
 		}
 		for (Trade trade : CAMP_TRADES) {
