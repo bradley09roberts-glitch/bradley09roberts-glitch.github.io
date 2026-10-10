@@ -142,6 +142,17 @@ public final class FriendsConfig {
 	// ---- Village life (package life) ----
 
 	// ---- Defending the village (package defence) ----
+	/**
+	 * The village defends itself: the alarm bell, children and non-fighters taking cover indoors, fighters at their
+	 * posts, guards on the walls at night, standing up to raids. False leaves only the night watch.
+	 */
+	public boolean villageDefence = true;
+	/** Guards at the watchtower, gate and walls each half of the night, once the village has built them (0 to 6). */
+	public int guardsPerShift = 2;
+	/** How many hostiles seen in the village at once at night make the friends ring the alarm bell (1 to 20). */
+	public int alarmHordeSize = 3;
+	/** Friends put out fires near the houses and the camp. */
+	public boolean fireWatch = true;
 
 	// ---- Pets and maps (package pets) ----
 
@@ -211,6 +222,8 @@ public final class FriendsConfig {
 		friendsWithoutTrade = Math.clamp(friendsWithoutTrade, 0, 20);
 		// Village life (package life)
 		// Defending the village (package defence)
+		guardsPerShift = Math.clamp(guardsPerShift, 0, 6);
+		alarmHordeSize = Math.clamp(alarmHordeSize, 1, 20);
 		// Pets and maps (package pets)
 	}
 }

@@ -396,6 +396,21 @@ public enum Line {
 
 	// ==== Defending the village (package defence): the bell, guards, raids, fire ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/**
+	 * Raising the alarm: ringing the village bell, or shouting it where there is no bell to ring. %1$s = the danger,
+	 * lower case: "monsters", "a creeper", "raiders", "raiders on the way" or "trouble".
+	 */
+	ALARM_BELL(Priority.DANGER, 600, 1),
+	/** Going indoors (home, a neighbour's house, the town hall, the cabin) while the alarm is on. */
+	TAKE_COVER(Priority.CASUAL, 2400, 0),
+	/** A fighter heading for their post when the alarm rings, or a guard starting a night on the walls. */
+	TO_THE_WALLS(Priority.IMPORTANT, 2400, 0),
+	/** The danger has passed: everyone may come out again. */
+	ALL_CLEAR(Priority.IMPORTANT, 1200, 0),
+	/** A raid on the village beaten off. */
+	RAID_WON(Priority.IMPORTANT, 0, 0),
+	/** A fire near the houses or the camp put out. */
+	FIRE_OUT(Priority.CASUAL, 1200, 0),
 	// ==== end of defence ====
 
 	// ==== Pets and maps (package pets) ====

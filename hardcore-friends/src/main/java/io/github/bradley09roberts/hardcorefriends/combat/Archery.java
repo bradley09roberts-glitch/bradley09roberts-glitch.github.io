@@ -1,7 +1,10 @@
 package io.github.bradley09roberts.hardcorefriends.combat;
 
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Predicate;
 
 import org.jspecify.annotations.Nullable;
 
@@ -70,6 +73,12 @@ public final class Archery {
 	private static final int ROUND_TICKS = 10;
 	/** Per friend: {round start, paths worked out in it}. Weak, so unloaded friends are forgotten. */
 	private static final Map<CompanionEntity, long[]> PATH_ROUNDS = new WeakHashMap<>();
+	/**
+	 * The feature packages' say that a friend holds a post and shoots whatever they would fight rather than leave it to
+	 * close in with a blade: a guard up the village watchtower or behind its wall (the defence package). Asked only for
+	 * a friend who can shoot.
+	 */
+	public static final List<Predicate<CompanionEntity>> HOLDS_POST = new CopyOnWriteArrayList<>();
 
 	private Archery() {
 	}
@@ -103,6 +112,11 @@ public final class Archery {
 	public static boolean wouldShoot(CompanionEntity c, LivingEntity threat) {
 		if (!Threats.isThreat(threat) || c.isRetreating() || !canShoot(c)) {
 			return false;
+		}
+		for (Predicate<CompanionEntity> post : HOLDS_POST) {
+			if (post.test(c)) {
+				return true; // on a post above or behind a wall: shoot from there rather than leave it
+			}
 		}
 		if (c.isFighter()) {
 			return threat instanceof Creeper || outOfMeleeReach(c, threat); // Aegis prefers his blade
