@@ -59,7 +59,7 @@ New in 3.0 (details in [docs/v3](docs/v3)):
 
 ## Documentation
 
-- **Players:** read [GUIDE.md](GUIDE.md) for installing, the nine friends, 1.0 and 2.0. The guide has not been updated for 3.0 yet: until it is, 3.0 is covered part by part in [docs/v3](docs/v3), below.
+- **Players:** read [GUIDE.md](GUIDE.md): installing, the nine friends, and everything up to 3.0 (sections 21 to 28 are new in 3.0). Testing 3.0? Start with [release/TESTING-3.0.md](release/TESTING-3.0.md).
 - **3.0, part by part** (what each part does, its commands, its settings and its honest limits):
   - [docs/v3/architecture.md](docs/v3/architecture.md): better builds, the 54 plans, new materials, scaffolding, and how to write your own plans.
   - [docs/v3/navigation.md](docs/v3/navigation.md): paths, senses, sprinting, getting out of caves and away from flowing water, and the rescue.

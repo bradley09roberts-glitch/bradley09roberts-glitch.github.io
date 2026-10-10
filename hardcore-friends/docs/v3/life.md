@@ -22,7 +22,7 @@ it needs no setting up. Day 1 is the world's first day.
 - **Music** is played every other evening (Tuesday, Thursday, Saturday and Sunday) and at every feast, but not on the
   evening of a funeral.
 
-`/friends calendar` shows today's date ("Wednesday, day 42: the 2nd day of summer, year 2"), what is on today, and the
+`/friends calendar` shows today's date ("Sunday, day 42: the 2nd day of spring, year 2"), what is on today, and the
 next ten days: feasts, market days, birthdays and funerals. `/friends camp` has a line about it too.
 
 Before the village has a town plan, everything happens at the camp: the square is the open ground round the camp

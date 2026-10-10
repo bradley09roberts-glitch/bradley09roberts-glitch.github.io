@@ -249,7 +249,7 @@ All work at permission level 0 with cheats off and change nothing.
 | `/friends relationships` | the closest friendships in the camp |
 | `/friends relationships <name>` | one person's partner and closest friends, with friendship and romance |
 
-Names are first names (`pip`) or full names; the nine friends by their own names.
+Names are first names only (`pip`): a full name has a space in it, which the command will not take. The nine friends go by their own names.
 
 ## Settings
 
