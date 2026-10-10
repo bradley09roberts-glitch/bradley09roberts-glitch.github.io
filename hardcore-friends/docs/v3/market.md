@@ -116,8 +116,9 @@ Both are read-only and work at permission level 0 with cheats off.
 - `civic.Professions` answers a friend's trade id (`baker`, `teacher`...), where they work (their workplace's job block;
   for the teacher the school's `teacher` spot; for a trade held at the camp, its camp spot) and a trade's title.
 - The market finds workplaces through `architecture.Construction` (any finished library site of a trade's kind,
-  whoever built it), and asks for new ones through `village.VillagePlan.requestBuilding(server, kind, reason)`, looked up
-  by name (`market.VillageLink`). Without the town plan, nothing is asked and trades work plainly at the camp.
+  whoever built it), and asks for new ones through `village.VillagePlan.requestBuilding(server, kind, reason)`
+  (`market.VillageLink`). With the town plan off (`villageHomes: false`), nothing is asked and trades work plainly at
+  the camp.
 - `TaskScheduler.JOB_FILTERS`: a keeper serving a player does only `market.keep_shop` and their needs; once a blacksmith
   is at work, `combat.smith` is theirs alone.
 - The edit guard's FARM rules allow two more changes, only on the friends' own blocks: filling and emptying their
