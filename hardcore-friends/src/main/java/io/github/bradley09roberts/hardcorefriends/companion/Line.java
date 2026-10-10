@@ -392,6 +392,42 @@ public enum Line {
 
 	// ==== Village life (package life): calendar, festivals, music, funerals, the Chronicle ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** A feast or festival is on today. %1$s = its name ("the midsummer feast"). */
+	FESTIVAL_BEGINS(Priority.IMPORTANT, 6000, 1),
+	/** A few words to everyone gathered at a feast. %1$s = its name ("the harvest festival"). */
+	FESTIVAL_SPEECH(Priority.IMPORTANT, 0, 1),
+	/** Enjoying a feast with everyone. */
+	FESTIVAL_CHEER(Priority.CASUAL, 1200, 0),
+	/** The feast is over. %1$s = its name. */
+	FESTIVAL_END(Priority.IMPORTANT, 0, 1),
+	/** The cook hands out food at a feast. */
+	FEAST_SERVING(Priority.CASUAL, 1200, 0),
+	/** The winter lights are lit round the square. */
+	LIGHTS_UP(Priority.IMPORTANT, 6000, 0),
+	/** A stallholder calls out on market day. %1$s = their stall, e.g. "the baker's stall". */
+	MARKET_DAY(Priority.CASUAL, 1200, 1),
+	/** Looking round the stalls on market day. */
+	MARKET_BROWSE(Priority.CASUAL, 2400, 0),
+	/** Wishing someone a happy birthday. %1$s = their name. */
+	BIRTHDAY_WISH(Priority.IMPORTANT, 1200, 1),
+	/** The birthday friend thanks everyone. */
+	BIRTHDAY_THANKS(Priority.IMPORTANT, 1200, 0),
+	/** Starting to play tunes on a note block. */
+	MUSIC_PLAY(Priority.CASUAL, 2400, 0),
+	/** A few words at a funeral. %1$s = the name (or names) of those remembered. */
+	FUNERAL_WORDS(Priority.IMPORTANT, 0, 1),
+	/** Saying goodbye at a funeral. %1$s = the name of the one remembered. */
+	FUNERAL_FAREWELL(Priority.IMPORTANT, 0, 1),
+	/** Promising to look after a child who lost a parent. %1$s = the child's name. */
+	FUNERAL_CARE(Priority.IMPORTANT, 0, 1),
+	/** Missing someone who died, in the days after. %1$s = their name. */
+	MOURNING(Priority.CASUAL, 6000, 1),
+	/** At someone's grave. %1$s = their name. */
+	GRAVE_VISIT(Priority.CASUAL, 2400, 1),
+	/** Finished making a grave. %1$s = the name on it. */
+	GRAVE_MADE(Priority.IMPORTANT, 0, 1),
+	/** Writing the day's news in the Village Chronicle. */
+	CHRONICLE_WRITING(Priority.CASUAL, 2400, 0),
 	// ==== end of life ====
 
 	// ==== Defending the village (package defence): the bell, guards, raids, fire ====

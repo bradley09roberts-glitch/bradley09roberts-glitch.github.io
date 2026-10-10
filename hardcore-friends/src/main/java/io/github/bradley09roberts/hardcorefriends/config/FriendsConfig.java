@@ -140,6 +140,14 @@ public final class FriendsConfig {
 	public boolean requestWorkplaces = true;
 
 	// ---- Village life (package life) ----
+	/** Feasts and festivals, market days, music in the evenings and birthdays (the calendar and the Chronicle always run). */
+	public boolean villageLife = true;
+	/** A fallen friend gets a grave at the camp's cemetery (a headstone, a sign with their name, flowers) and a funeral. */
+	public boolean graves = true;
+	/** The Village Chronicle is also written out as a real book, at the town hall's lectern or in the supply chest. */
+	public boolean chronicleBook = true;
+	/** Days in each of the calendar's four seasons; a year is four seasons (3 to 30). */
+	public int daysPerSeason = 10;
 
 	// ---- Defending the village (package defence) ----
 
@@ -210,6 +218,7 @@ public final class FriendsConfig {
 		// Shops and trades (package market)
 		friendsWithoutTrade = Math.clamp(friendsWithoutTrade, 0, 20);
 		// Village life (package life)
+		daysPerSeason = Math.clamp(daysPerSeason, 3, 30);
 		// Defending the village (package defence)
 		// Pets and maps (package pets)
 	}

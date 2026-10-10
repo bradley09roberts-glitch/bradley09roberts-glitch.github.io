@@ -1,0 +1,323 @@
+package io.github.bradley09roberts.hardcorefriends.life;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.jspecify.annotations.Nullable;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.StandingSignBlock;
+import net.minecraft.world.level.block.state.BlockState;
+
+import io.github.bradley09roberts.hardcorefriends.ai.role.build.ChestWalk;
+import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
+import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
+import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+import io.github.bradley09roberts.hardcorefriends.camp.Crafting;
+import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
+import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.companion.Line;
+import io.github.bradley09roberts.hardcorefriends.companion.Speech;
+import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
+import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
+
+/**
+ * Making a grave for someone who died: a grown-up fetches a headstone (a stone wall, or a stone block), a sign (or six
+ * planks and a stick to make one at the crafting table) and a flower or two from the supply chest, walks to the next
+ * free place in the cemetery ({@link Graves}), and puts up the headstone, the sign with the name written on it, and the
+ * flowers, each through the edit guard (BUILD inside the camp). Then the grave's ground is reserved as a camp site so
+ * nothing is ever built over it. One friend at a time, by day, in the camp. A grave whose cemetery has no room left is
+ * tried again later, up to {@value #MAX_TRIES} times; the name is in the Chronicle either way.
+ */
+final class GraveTask implements CompanionTask {
+	static final String ID = "life.grave";
+	private static final double SCORE = 52;
+	static final int MAX_TRIES = 6;
+	private static final int PLACE_EVERY = 10;
+	private static final int GIVE_UP_PLACING = 20 * 8;
+
+	/** The friend making a grave just now: one at a time. */
+	private static @Nullable UUID digger;
+
+	private enum Step {
+		FETCH,
+		WALK,
+		BUILD
+	}
+
+	private LifeData.@Nullable Grave grave;
+	private Step step = Step.FETCH;
+	private int ticks;
+	private int stuckPlacing;
+	private int part;
+	private @Nullable BlockPos stand;
+
+	static void clear() {
+		digger = null;
+	}
+
+	@Override
+	public String id() {
+		return ID;
+	}
+
+	@Override
+	public String describe() {
+		LifeData.Grave g = grave;
+		return g == null ? "making a grave" : "making a grave for " + g.name;
+	}
+
+	@Override
+	public double score(CompanionEntity c) {
+		if (!FriendsConfig.get().graves || c.isChild() || !Places.free(c) || !(c.level() instanceof ServerLevel level)
+			|| Camp.isNight(level) || Calendar.time(level.getServer()) > 11500) {
+			return 0;
+		}
+		if (digger != null && !digger.equals(c.getUUID()) && Places.loaded(level, digger) != null) {
+			return 0;
+		}
+		return next(level) != null ? SCORE : 0;
+	}
+
+	/** The oldest grave still to be made in this world, not yet given up. */
+	private static LifeData.@Nullable Grave next(ServerLevel level) {
+		LifeData data = LifeData.get(level.getServer());
+		String dim = Camp.dimensionId(level);
+		for (LifeData.Grave g : data.graves) {
+			if (!g.made && g.tries < MAX_TRIES && (g.dimension.isEmpty() || g.dimension.equals(dim))) {
+				return g;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public boolean start(CompanionEntity c) {
+		ServerLevel level = (ServerLevel) c.level();
+		grave = next(level);
+		if (grave == null) {
+			return false;
+		}
+		digger = c.getUUID();
+		ticks = 0;
+		stuckPlacing = 0;
+		part = 0;
+		stand = null;
+		step = hasMaterials(c) ? Step.WALK : Step.FETCH;
+		return true;
+	}
+
+	private static boolean hasMaterials(CompanionEntity c) {
+		return c.backpack().has(Graves::isHeadstone) && c.backpack().has(Graves::isSign);
+	}
+
+	@Override
+	public TaskStatus tick(CompanionEntity c) {
+		ServerLevel level = (ServerLevel) c.level();
+		LifeData.Grave g = grave;
+		if (g == null || g.made || Camp.isNight(level) || ++ticks > maxTicks()) {
+			return TaskStatus.FAILURE;
+		}
+		if (c.tickCount % 20 == 0 && Places.hostileNear(level, c.blockPosition(), Places.SPOIL_RANGE)) {
+			return TaskStatus.FAILURE; // the grave can wait; the reflexes see to the danger
+		}
+		return switch (step) {
+			case FETCH -> fetch(c, level);
+			case WALK -> walk(c, level, g);
+			case BUILD -> build(c, level, g);
+		};
+	}
+
+	/** At the supply chest: a headstone, a sign (or what makes one) and up to two flowers. */
+	private TaskStatus fetch(CompanionEntity c, ServerLevel level) {
+		switch (ChestWalk.tick(c)) {
+			case WALKING -> {
+				return TaskStatus.RUNNING;
+			}
+			case FAILED -> {
+				return hasMaterials(c) ? goTo(Step.WALK) : TaskStatus.FAILURE;
+			}
+			default -> {
+			}
+		}
+		Container chest = SupplyChest.of(level).orElse(null);
+		if (chest == null) {
+			return TaskStatus.FAILURE;
+		}
+		if (!c.backpack().has(Graves::isHeadstone)) {
+			for (Item stone : Graves.HEADSTONES) {
+				// Cobblestone, the plainest, only when the camp has plenty for its building.
+				int keep = stone == Items.COBBLESTONE ? 64 : 0;
+				if (SupplyChest.count(chest, s -> s.is(stone)) > keep && SupplyChest.withdraw(chest, c.backpack(), s -> s.is(stone), 1) > 0) {
+					break;
+				}
+			}
+		}
+		if (!c.backpack().has(Graves::isSign) && SupplyChest.withdraw(chest, c.backpack(), Graves::isSign, 1) == 0
+			&& SupplyChest.count(chest, s -> s.is(ItemTags.PLANKS)) >= 32) {
+			// Make one at the crafting table by the chest: six planks and a stick for three signs (the rest go back).
+			SupplyChest.withdraw(chest, c.backpack(), s -> s.is(ItemTags.PLANKS), 6);
+			if (!c.backpack().has(s -> s.is(Items.STICK))) {
+				SupplyChest.withdraw(chest, c.backpack(), s -> s.is(Items.STICK), 1);
+			}
+			Crafting.ensure(c, Items.OAK_SIGN, 1);
+		}
+		if (c.backpack().count(Graves::isFlower) < 2) {
+			SupplyChest.withdraw(chest, c.backpack(), Graves::isFlower, 2 - c.backpack().count(Graves::isFlower));
+		}
+		if (!c.backpack().has(Graves::isHeadstone)) {
+			return TaskStatus.FAILURE; // nothing to make a headstone of: later, when the camp has stone
+		}
+		return goTo(Step.WALK);
+	}
+
+	private TaskStatus goTo(Step s) {
+		step = s;
+		stuckPlacing = 0;
+		return TaskStatus.RUNNING;
+	}
+
+	private TaskStatus walk(CompanionEntity c, ServerLevel level, LifeData.Grave g) {
+		if (stand == null) {
+			LifeData data = LifeData.get(level.getServer());
+			if (Graves.place(level, data, g) == null) {
+				g.tries++;
+				data.setDirty();
+				return TaskStatus.FAILURE;
+			}
+			stand = Graves.visitorSpot(level, g);
+			if (stand == null) {
+				if (!g.made && !Camp.data(level.getServer()).isPlacedByFriends(level, g.pos)) {
+					g.pos = null; // the spot in front was blocked since: look for another place next time
+				}
+				g.tries++;
+				data.setDirty();
+				return TaskStatus.FAILURE;
+			}
+		}
+		if (c.actions().walkTo(stand, 1.2)) {
+			step = Step.BUILD;
+			return TaskStatus.RUNNING;
+		}
+		return c.actions().isStuck() ? TaskStatus.FAILURE : TaskStatus.RUNNING;
+	}
+
+	/** The headstone, then the sign (written on), then the flowers, one every half second. */
+	private TaskStatus build(CompanionEntity c, ServerLevel level, LifeData.Grave g) {
+		BlockPos h = g.pos;
+		if (h == null) {
+			return TaskStatus.FAILURE;
+		}
+		c.getLookControl().setLookAt(h.getX() + 0.5, h.getY() + 0.5, h.getZ() + 0.5);
+		if (ticks % PLACE_EVERY != 0) {
+			return TaskStatus.RUNNING;
+		}
+		if (++stuckPlacing > GIVE_UP_PLACING / PLACE_EVERY) {
+			g.tries++; // someone standing in the way, most likely: try again later, but not for ever
+			LifeData.get(level.getServer()).setDirty();
+			return TaskStatus.FAILURE;
+		}
+		Direction toward = Graves.facing(g);
+		switch (part) {
+			case 0 -> {
+				ItemStack stone = c.backpack().find(Graves::isHeadstone);
+				if (stone.isEmpty()) {
+					return TaskStatus.FAILURE;
+				}
+				Item item = stone.getItem();
+				BlockState state = Block.byItem(item).defaultBlockState();
+				if (level.getBlockState(h).is(state.getBlock()) && Camp.data(level.getServer()).isPlacedByFriends(level, h)
+					|| c.actions().place(h, state, s -> s.is(item), WorldEditGuard.Reason.BUILD)) {
+					reserve(level, g); // from the first stone on, nothing else is put on this ground
+					part = 1;
+					stuckPlacing = 0;
+				}
+			}
+			case 1 -> {
+				BlockPos signPos = Graves.signPos(g);
+				ItemStack sign = c.backpack().find(Graves::isSign);
+				if (sign.isEmpty() && !(level.getBlockState(signPos).getBlock() instanceof StandingSignBlock)) {
+					part = 2; // no sign to be had: a plain headstone, the name kept in the Chronicle
+					return TaskStatus.RUNNING;
+				}
+				Item item = sign.getItem();
+				BlockState state = Graves.signState(sign, toward);
+				if (level.getBlockState(signPos).getBlock() instanceof StandingSignBlock
+					&& Camp.data(level.getServer()).isPlacedByFriends(level, signPos)) {
+					Graves.inscribe(level, signPos, g); // put up on an earlier try
+					part = 2;
+					stuckPlacing = 0;
+				} else if (state.canSurvive(level, signPos) && c.actions().place(signPos, state, s -> s.is(item), WorldEditGuard.Reason.BUILD)) {
+					Graves.inscribe(level, signPos, g);
+					part = 2;
+					stuckPlacing = 0;
+				} else if (!state.canSurvive(level, signPos)) {
+					part = 2;
+				}
+			}
+			default -> {
+				List<BlockPos> spots = Graves.flowerSpots(g);
+				int index = part - 2;
+				if (index >= spots.size() || !c.backpack().has(Graves::isFlower)) {
+					return finish(c, level, g);
+				}
+				BlockPos spot = spots.get(index);
+				ItemStack flower = c.backpack().find(Graves::isFlower);
+				Item item = flower.getItem();
+				BlockState state = Block.byItem(item).defaultBlockState();
+				if (!level.getBlockState(spot).isAir() || !state.canSurvive(level, spot)
+					|| c.actions().place(spot, state, s -> s.is(item), WorldEditGuard.Reason.BUILD)) {
+					part++;
+					stuckPlacing = 0;
+				}
+			}
+		}
+		return TaskStatus.RUNNING;
+	}
+
+	/** The grave stands: its ground is reserved as a camp site, and the maker says so. */
+	private TaskStatus finish(CompanionEntity c, ServerLevel level, LifeData.Grave g) {
+		LifeData data = LifeData.get(level.getServer());
+		g.made = true;
+		reserve(level, g);
+		data.setDirty();
+		Speech.say(c, Line.GRAVE_MADE, g.name);
+		return TaskStatus.SUCCESS;
+	}
+
+	/** Reserves the grave's ground as a camp site of its own (a 3 by 3 box round the headstone). */
+	private static void reserve(ServerLevel level, LifeData.Grave g) {
+		CampData camp = Camp.data(level.getServer());
+		if (g.pos != null && camp.site(g.siteKey()).isEmpty()) {
+			camp.putSite(g.siteKey(), new CampData.Site(g.pos, 0, 0));
+		}
+	}
+
+	@Override
+	public void stop(CompanionEntity c) {
+		if (c.getUUID().equals(digger)) {
+			digger = null;
+		}
+		grave = null;
+		stand = null;
+	}
+
+	@Override
+	public int failureCooldown() {
+		return 20 * 60 * 3;
+	}
+
+	@Override
+	public int maxTicks() {
+		return 20 * 150;
+	}
+}
