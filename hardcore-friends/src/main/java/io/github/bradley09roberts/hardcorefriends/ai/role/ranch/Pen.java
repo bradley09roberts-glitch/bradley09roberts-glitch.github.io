@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -26,6 +27,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.Structures;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
+import io.github.bradley09roberts.hardcorefriends.pets.Pets;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
@@ -35,7 +37,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  *
  * <p>Also the way through the gate: friends open it, step through and shut it behind them, always through
  * {@link WorldEditGuard} (the gate is the friends' own block). A gate is never shut on someone standing in it, on a
- * player inside the pen, or on a friend still in the paddock, so nobody is ever penned in.
+ * player inside the pen, or on a friend still in the paddock, so nobody is ever penned in. The camp's own pets are the
+ * one exception ({@link #campPet}): nobody waits on them at the gate.
  */
 public record Pen(BlockPos origin, int rotation) {
 	/** The jobs that work inside the pen or at its gate: one friend at the gate at a time. */
@@ -156,17 +159,28 @@ public record Pen(BlockPos origin, int rotation) {
 	}
 
 	/**
-	 * True if the gate may be shut now: nobody (animal, friend or player) stands in the gateway, no friend is still in
-	 * the paddock, and no player is in or right by the pen.
+	 * True if the gate may be shut now: nobody (animal, friend or player; the camp's pets aside) stands in the gateway,
+	 * no friend is still in the paddock, and no player is in or right by the pen.
 	 */
 	public boolean safeToShut(ServerLevel level, CompanionEntity by) {
-		if (!level.getEntitiesOfClass(LivingEntity.class, new AABB(gate()).inflate(0.1, 0, 0.1), LivingEntity::isAlive).isEmpty()) {
+		if (!level.getEntitiesOfClass(LivingEntity.class, new AABB(gate()).inflate(0.1, 0, 0.1), e -> e.isAlive() && !campPet(e)).isEmpty()) {
 			return false;
 		}
 		if (!friendsInside(level, by).isEmpty() || holds(by)) {
 			return false;
 		}
 		return !playerNear(level);
+	}
+
+	/**
+	 * True for one of the camp's pets. A pet keeps by its owner, so a rancher's dog or cat idles in and out of the
+	 * gateway; were it waited on like anyone else there, the gate would be left open for the whole job and the livestock
+	 * could wander out. So the gate is shut regardless: a pet partly in a shut gate can still step out of it either way,
+	 * and one shut in or out of the pen is brought out like any stuck pet (to its owner, or home at night). Nor is a pet
+	 * livestock to be sent to the back of the paddock.
+	 */
+	static boolean campPet(Entity e) {
+		return e instanceof TamableAnimal && e.entityTags().contains(Pets.PET_TAG);
 	}
 
 	/** True when a friend other than {@code c} is at work in the pen or at its gate. */
@@ -219,14 +233,15 @@ public record Pen(BlockPos origin, int rotation) {
 
 	/**
 	 * Sends the pen's animals standing by the gate (in the gateway or within two blocks of it inside) towards the back
-	 * of the paddock, so none slips out, or is jostled out, while the gate is open. True if any had to be sent.
+	 * of the paddock, so none slips out, or is jostled out, while the gate is open. True if any had to be sent. The
+	 * camp's pets are not the pen's animals ({@link #campPet}).
 	 */
 	public boolean shooFromGate(ServerLevel level) {
 		BlockPos g = gate();
 		AABB near = new AABB(g).inflate(2.0, 1.0, 2.0);
 		BlockPos to = back();
 		boolean any = false;
-		for (Animal a : level.getEntitiesOfClass(Animal.class, near, a -> a.isAlive() && (holds(a) || inGateway(a)))) {
+		for (Animal a : level.getEntitiesOfClass(Animal.class, near, a -> a.isAlive() && !campPet(a) && (holds(a) || inGateway(a)))) {
 			any = true;
 			if (a.getNavigation().isDone()) {
 				a.getNavigation().moveTo(to.getX() + 0.5, to.getY(), to.getZ() + 0.5, 1.0);
@@ -325,11 +340,11 @@ public record Pen(BlockPos origin, int rotation) {
 	}
 
 	/**
-	 * True if nobody (animal, friend or player) stands in the gateway, and no player is in or by the pen: a friend in
-	 * the paddock may shut the gate behind them.
+	 * True if nobody (animal, friend or player; the camp's pets aside) stands in the gateway, and no player is in or by
+	 * the pen: a friend in the paddock may shut the gate behind them.
 	 */
 	boolean gatewayClear(ServerLevel level) {
-		return level.getEntitiesOfClass(LivingEntity.class, new AABB(gate()).inflate(0.05, 0, 0.05), LivingEntity::isAlive).isEmpty()
+		return level.getEntitiesOfClass(LivingEntity.class, new AABB(gate()).inflate(0.05, 0, 0.05), e -> e.isAlive() && !campPet(e)).isEmpty()
 			&& !playerNear(level);
 	}
 
