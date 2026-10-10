@@ -1,8 +1,8 @@
 package io.github.bradley09roberts.hardcorefriends.settler;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -66,8 +66,11 @@ public class SurvivorCampPiece extends StructurePiece {
 	private final int strangers;
 	/** Which strangers have been added already (one bit each), so a re-run never adds them twice. */
 	private int spawned;
-	/** Skins given to this camp's people so far, so tent-mates look different (not saved: only a preference). */
-	private final List<Integer> skinsHere = new ArrayList<>();
+	/**
+	 * Skins given to this camp's people so far, so tent-mates look different (not saved: only a preference). Thread-safe:
+	 * world generation can place the camp's chunks on several threads at once.
+	 */
+	private final List<Integer> skinsHere = new CopyOnWriteArrayList<>();
 
 	public SurvivorCampPiece(BlockPos origin, int rotation, int tents, int strangers) {
 		super(SurvivorCamp.PIECE, 0, new BoundingBox(origin.getX(), origin.getY() - FOUNDATION, origin.getZ(),
