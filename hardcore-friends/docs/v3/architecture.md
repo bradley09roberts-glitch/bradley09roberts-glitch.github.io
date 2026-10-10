@@ -291,7 +291,8 @@ styles.
   A run notices within a second that its site was released (or reserved afresh) and stops placing, coming down from
   any pillar first. Runs only work in the camp's dimension: a job handed to a friend elsewhere ends at once.
 
-The builder's repair job also checks finished library buildings, two at a time, and mends them.
+The builder's repair job also checks finished library buildings, two at a time, and mends them. It looks past gaps it
+cannot fill yet (carpets without wool, windows without glass), so a torch knocked off a wall behind them is put back.
 
 ---
 

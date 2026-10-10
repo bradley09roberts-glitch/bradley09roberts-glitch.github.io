@@ -42,9 +42,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
  * is a Settlement the paths are surfaced with gravel (when the camp has some), and from the Town on with cobblestone:
  * the friends' own path block is dug up and the new block put in its place, from the supply chest's stock. Nothing but
  * the friends' own path and natural grass or dirt is touched, nothing under a building or its site, nothing by water
- * (the edit guard's rules), and only inside the camp, which the village has grown to cover. Ground with nothing firm
- * under it (the roof of a cave, an overhang) and the ground over and round the friends' mines are left as they are:
- * gravel laid there would fall through and leave a hole in the street.
+ * (the edit guard's rules), nothing within two blocks of anything a player built (a lawn, a garden, a yard), and only
+ * inside the camp, which the village has grown to cover. Ground with nothing firm under it (the roof of a cave, an
+ * overhang) and the ground over and round the friends' mines are left as they are: gravel laid there would fall
+ * through and leave a hole in the street.
  *
  * <p>The street cells are surveyed for the whole team in passes of a few hundred columns at a time, once every half
  * minute; each run does up to {@value #PER_RUN} cells.
@@ -57,6 +58,10 @@ final class StreetsTask implements CompanionTask {
 	private static final double WORK_REACH = 2.5;
 	private static final int FETCH = 16;
 	private static final int PLACE_TRIES = 40;
+	/** A street cell this close to something a player built is left as it is. */
+	private static final int PLAYER_GAP = 2;
+	/** What a look round for a player's build costs from a scan's budget, in street cells. */
+	private static final int PLAYER_CHECK_COST = 3;
 
 	/** The team's survey of the streets: which cells still want a path, which want surfacing. */
 	private static final class Survey {
@@ -206,12 +211,24 @@ final class StreetsTask implements CompanionTask {
 				continue;
 			}
 			if (Landscape.isEarth(state)) {
-				s.nextPaths.add(ground);
+				budget -= PLAYER_CHECK_COST; // the look round for a player's build reads about a hundred blocks
+				if (!nearPlayerBuild(level, camp, ground)) {
+					s.nextPaths.add(ground);
+				}
 			} else if (surface != null && !state.is(surface) && (state.is(Blocks.DIRT_PATH) || state.is(Blocks.GRAVEL))
 				&& camp.isPlacedByFriends(level, ground)) {
 				s.nextSurfaces.add(ground);
 			}
 		}
+	}
+
+	/**
+	 * True if something a player built (a build marker or a block entity the friends did not place) is within
+	 * {@value #PLAYER_GAP} blocks: a lawn by a player's house, a garden, the yard by a fence. The street keeps clear of
+	 * it, as the plots and lamp posts do, and leaves the ground there as it is.
+	 */
+	private static boolean nearPlayerBuild(ServerLevel level, CampData camp, BlockPos ground) {
+		return WorldEditGuard.looksPlayerBuilt(level, ground, PLAYER_GAP, camp);
 	}
 
 	/**
@@ -310,8 +327,9 @@ final class StreetsTask implements CompanionTask {
 	/** Grass or dirt to a trodden path, with a shovel. */
 	private TaskStatus pathStep(CompanionEntity c, ServerLevel level, BlockPos cell) {
 		BlockState state = level.getBlockState(cell);
-		if (!Landscape.isEarth(state) || !Landscape.isOpen(level.getBlockState(cell.above())) || !firmUnder(level, cell)) {
-			current = null;
+		if (!Landscape.isEarth(state) || !Landscape.isOpen(level.getBlockState(cell.above())) || !firmUnder(level, cell)
+			|| nearPlayerBuild(level, Camp.data(level.getServer()), cell)) {
+			current = null; // a player may have built here since the survey
 			return TaskStatus.RUNNING;
 		}
 		BlockState path = Blocks.DIRT_PATH.defaultBlockState();

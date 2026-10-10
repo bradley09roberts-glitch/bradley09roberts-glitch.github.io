@@ -19,10 +19,10 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 /**
  * The village's answers to {@code civic.Homes}, read from {@link VillageData}: a home is a standing house plot, its
  * beds are the plan's {@code bed} spots (the foot of each bed) in the world, and its residents are who the village
- * moved in. A newborn or a partner joining a household takes a free bed in the household's house (or waits for a
- * bigger one, which the village then builds); someone leaving a marriage is moved out and housed again on their own;
- * someone who died or was dismissed is moved out. Everything else is worked out again by the planner every few
- * seconds, so a missed call never leaves anyone homeless for long.
+ * moved in. A newborn or a partner joining a household takes a free bed in the household's house (or keeps the bed
+ * they have until a bigger one, which the village then builds, stands); someone leaving a marriage is moved out and
+ * housed again on their own; someone who died or was dismissed is moved out. Everything else is worked out again by
+ * the planner every few seconds, so a missed call never leaves anyone homeless for long.
  */
 final class HomesProvider implements Homes.Provider {
 	@Override
@@ -90,13 +90,21 @@ final class HomesProvider implements Homes.Provider {
 				v.touch();
 			}
 		} else {
+			// Into the household's home with the most beds that still has one free. With none free (two people from
+			// one-bed huts marrying, say) everyone keeps the bed they have: the reconcile then moves the household into a
+			// house with a bed for each, or has a bigger one built, rather than leaving someone without a bed meanwhile.
+			VillageData.Plot best = null;
 			for (UUID other : others) {
 				Optional<VillageData.Plot> home = v.homeOf(other).filter(VillageData.Plot::standing);
-				if (home.isPresent()) {
-					Housing.moveInto(v, List.of(), home.get(), resident);
-					Housing.assignBeds(v, home.get());
-					break;
+				if (home.isPresent() && !home.get().residents.containsKey(resident)
+					&& Housing.capacity(home.get()) > home.get().residents.size()
+					&& (best == null || Housing.capacity(home.get()) > Housing.capacity(best))) {
+					best = home.get();
 				}
+			}
+			if (best != null) {
+				Housing.moveInto(v, List.of(), best, resident);
+				Housing.assignBeds(v, best);
 			}
 		}
 		Planner.reconcileSoon();

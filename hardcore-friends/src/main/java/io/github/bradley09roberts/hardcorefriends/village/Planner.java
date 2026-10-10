@@ -49,8 +49,8 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  * The village's planner, run from the server tick: it lays out the town plan when the camp becomes a Village, keeps the
  * houses matched to the households ({@link Housing}), decides what to build next and finds it a plot
  * ({@link PlotSearch}), reserves the site for the builders ({@link Construction}), opens the streets the plots front,
- * notices when a building stands (finished, or 95% built with its beds and chests in, so one ridge slab out of reach
- * never holds the village up), and keeps the camp's radius as wide as the village.
+ * notices when a building stands (finished, or 95% built with its lights, doors, beds and chests in, so one ridge slab
+ * out of reach never holds the village up), and keeps the camp's radius as wide as the village.
  *
  * <p>What it builds, in order: a house for each household that has none (a married couple's with a spare bed for a
  * baby), a bigger house for a household that has outgrown its own, a house of their own for a grown-up child still
@@ -59,8 +59,9 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  * the streets, benches, a garden, a fountain). At most {@code villageBuildsAtOnce} buildings are under way at once,
  * plus two pieces of decoration; one plot search runs at a time.
  *
- * <p>Costs: a few cheap checks and one to three ground surveys a tick (by the plan's size) while a search runs;
- * otherwise a little work once a second and a reconcile every ten seconds.
+ * <p>Costs: a few cheap checks and one to three ground surveys a tick (by the plan's size) while a search runs, and a
+ * minute's rest after three searches in a row found nothing; otherwise a little work once a second and a reconcile
+ * every ten seconds.
  */
 public final class Planner {
 	/** The town plan is laid out once the camp reaches this stage (the Village). */
@@ -71,6 +72,12 @@ public final class Planner {
 	private static final int SURVEY_AREA_PER_TICK = 240;
 	/** How long a kind (or a household's house) waits after no plot could be found, in ticks. */
 	private static final int NO_ROOM_WAIT = 20 * 60 * 5;
+	/**
+	 * After this many plot searches in a row found nothing (a village out of room, on rough ground), the planner rests
+	 * for {@link #REST} before it looks again, rather than surveying every tick for one household or kind after another.
+	 */
+	private static final int FAILURES_BEFORE_REST = 3;
+	private static final int REST = 20 * 60;
 	/** Decoration under way at once, besides the buildings. */
 	private static final int DECOR_AT_ONCE = 2;
 	/** Lamp posts only go up near something standing, within this many blocks. */
@@ -100,6 +107,10 @@ public final class Planner {
 	private static boolean reconcileSoon;
 	private static int standingCursor;
 	private static String lastProblem = "";
+	private static int failedInRow;
+	private static long restUntil = Long.MIN_VALUE;
+	/** The problems already written to the log since a plot was last found (one plan and reason each, so few). */
+	private static final Set<String> LOGGED = new HashSet<>();
 	private static final Map<String, Integer> BEDS = new ConcurrentHashMap<>();
 
 	private Planner() {
@@ -113,6 +124,9 @@ public final class Planner {
 		reconcileSoon = false;
 		standingCursor = 0;
 		lastProblem = "";
+		failedInRow = 0;
+		restUntil = Long.MIN_VALUE;
+		LOGGED.clear();
 		BEDS.clear();
 	}
 
@@ -166,9 +180,9 @@ public final class Planner {
 			}
 			return;
 		}
-		if (Camp.villageReach(camp) == 0) {
-			syncReach(camp, v); // the camp was set again close by: the camp keeps covering the village from its new centre
-		}
+		// The camp may have been set again close by: it keeps covering the village, measured again from its new centre.
+		// (Camp.villageReach keeps the old reach meanwhile; this only writes when something changed.)
+		syncReach(camp, v);
 		if (tick % 200 == 7 || reconcileSoon) {
 			reconcileSoon = false;
 			checkSites(level, camp, v);
@@ -176,7 +190,7 @@ public final class Planner {
 			v.setStreetLevel(camp.stage() >= VillageGrowth.TOWN ? 2 : camp.stage() > VILLAGE_STAGE ? 1 : 0);
 			syncReach(camp, v);
 		}
-		if (search == null && tick % 100 == 7 && FriendsConfig.get().villageHomes) {
+		if (search == null && tick % 100 == 7 && FriendsConfig.get().villageHomes && level.getGameTime() >= restUntil) {
 			planNext(level, camp, v);
 		}
 	}
@@ -235,6 +249,9 @@ public final class Planner {
 		v.clearPlan();
 		search = null;
 		WAIT.clear();
+		failedInRow = 0;
+		restUntil = Long.MIN_VALUE;
+		LOGGED.clear();
 		CompoundTag reach = camp.memory(Camp.VILLAGE_MEMORY);
 		reach.putInt("reach", 0);
 		camp.setDirty();
@@ -312,30 +329,13 @@ public final class Planner {
 	}
 
 	/**
-	 * True when a building is as good as finished: 95% of its structure (decoration aside) is in, every bed stands on
-	 * its bed spot and every chest spot holds its chest or barrel.
+	 * True when a building is as good as finished: 95% of its structure (decoration aside) is in, every light and door
+	 * is in (so nothing can spawn or walk in where the household sleeps), every bed stands on its bed spot and every
+	 * chest spot holds its chest or barrel.
 	 */
 	static boolean mostlyBuilt(ServerLevel level, CampData camp, String key, Blueprint plan) {
-		List<Part> parts = SiteFinder.parts(camp, key, plan);
-		if (parts.isEmpty()) {
-			return false;
-		}
-		int total = 0;
-		int built = 0;
-		for (Placement p : Blueprints.placements(plan, parts)) {
-			Blueprint.Entry e = p.entry();
-			if (p.isFoundation() || e.material() == MaterialSpec.AIR || e.optional()) {
-				continue;
-			}
-			if (!level.isLoaded(p.pos())) {
-				return false;
-			}
-			total++;
-			if (e.isBuilt(level.getBlockState(p.pos()))) {
-				built++;
-			}
-		}
-		if (total == 0 || built < total * 0.95) {
+		Tally t = tally(level, camp, key, plan);
+		if (t == null || t.total() == 0 || t.vitalMissing() || t.built() < t.total() * 0.95) {
 			return false;
 		}
 		for (BlockPos bed : Construction.markers(level, key, "bed")) {
@@ -350,6 +350,66 @@ public final class Planner {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * What of a building's plan stands in the world: its entries counted (foundations, air and decoration aside), those
+	 * built, and whether a light or a door is still missing.
+	 */
+	private record Tally(int total, int built, boolean vitalMissing) {
+	}
+
+	/** Counts what of a site's plan is built, or null if the site is gone or some of it is in an unloaded chunk. */
+	private static @Nullable Tally tally(ServerLevel level, CampData camp, String key, Blueprint plan) {
+		List<Part> parts = SiteFinder.parts(camp, key, plan);
+		if (parts.isEmpty()) {
+			return null;
+		}
+		int total = 0;
+		int built = 0;
+		boolean vitalMissing = false;
+		for (Placement p : Blueprints.placements(plan, parts)) {
+			Blueprint.Entry e = p.entry();
+			if (p.isFoundation() || e.material() == MaterialSpec.AIR || e.optional()) {
+				continue;
+			}
+			if (!level.isLoaded(p.pos())) {
+				return null;
+			}
+			total++;
+			if (e.isBuilt(level.getBlockState(p.pos()))) {
+				built++;
+			} else if (vital(e.material()) || e.fallback() != null && vital(e.fallback().material())) {
+				vitalMissing = true;
+			}
+		}
+		return new Tally(total, built, vitalMissing);
+	}
+
+	/** A light or a door: what keeps monsters out of a building at night, never left to the repair job. */
+	private static boolean vital(MaterialSpec m) {
+		return m == MaterialSpec.TORCH || m == MaterialSpec.WALL_TORCH || m == MaterialSpec.LANTERN || m == MaterialSpec.DOOR
+			|| m == MaterialSpec.DOOR_TOP;
+	}
+
+	/**
+	 * How much of a building is actually built, 0 to 1, by the blocks placed (foundations, air and decoration aside: the
+	 * builders' own progress counts firm ground under a plot as done before a block is placed). -1 if it cannot be told
+	 * now (the site is gone, or part of it is in an unloaded chunk).
+	 */
+	static double builtShare(ServerLevel level, CampData camp, String key) {
+		Optional<Blueprint> plan = Blueprints.forSite(camp, key);
+		if (plan.isEmpty()) {
+			return -1;
+		}
+		if (Blueprints.isFinished(camp, key)) {
+			return 1;
+		}
+		Tally t = tally(level, camp, key, plan.get());
+		if (t == null) {
+			return -1;
+		}
+		return t.total() == 0 ? 1 : t.built() / (double) t.total();
 	}
 
 	/** Called when the builders finish a village building (the architecture package's listener). */
@@ -415,12 +475,16 @@ public final class Planner {
 			v.rememberName(c.getUUID(), c.displayName());
 		}
 		// A house planned for a household that is gone (everyone in it died or left) and hardly begun is given up, so no
-		// materials go into a home nobody needs. One already well on is finished, for whoever needs a home next.
+		// materials go into a home nobody needs. One already well on is finished, for whoever needs a home next. Measured
+		// by the blocks actually placed: the builders' own progress counts the firm ground under the plot as done.
+		CampData camp = Camp.data(server);
 		for (VillageData.Plot p : List.copyOf(v.plots())) {
-			if (p.isHouse() && !p.standing() && !p.intended.isEmpty() && p.intended.stream().noneMatch(roster::contains)
-				&& Construction.progress(level, p.siteKey) < 0.1) {
-				Construction.release(level, p.siteKey);
-				v.removePlot(p);
+			if (p.isHouse() && !p.standing() && !p.intended.isEmpty() && p.intended.stream().noneMatch(roster::contains)) {
+				double share = builtShare(level, camp, p.siteKey);
+				if (share >= 0 && share < 0.1) {
+					Construction.release(level, p.siteKey);
+					v.removePlot(p);
+				}
 			}
 		}
 		List<Housing.Move> moves = Housing.reconcile(v, roster);
@@ -661,9 +725,15 @@ public final class Planner {
 		} else {
 			WAIT.put(s.waitKey, level.getGameTime() + NO_ROOM_WAIT);
 		}
-		lastProblem = "No plot found for a " + s.plan.name() + ": " + s.problem() + ". Clearing or levelling ground along the streets "
-			+ "helps (or a larger villageRadius).";
-		HardcoreFriends.LOGGER.info("The village found no plot for a {} ({})", s.plan.name(), s.problem());
+		if (++failedInRow >= FAILURES_BEFORE_REST) {
+			failedInRow = 0;
+			restUntil = level.getGameTime() + REST; // out of room for now: no survey every tick for a minute
+		}
+		lastProblem = "No plot found for a " + s.plan.name() + ": " + s.problem() + ". Clearing or levelling ground along the "
+			+ "streets helps (or a larger villageRadius).";
+		if (LOGGED.add(lastProblem)) { // once per problem until a plot is found again
+			HardcoreFriends.LOGGER.info("The village found no plot for a {} ({})", s.plan.name(), s.problem());
+		}
 	}
 
 	/** Reserves the site found for a building, with any levelling, opens its street and records the plot. */
@@ -685,6 +755,8 @@ public final class Planner {
 		plot.intended.addAll(s.intended);
 		v.addPlot(plot);
 		lastProblem = "";
+		failedInRow = 0;
+		LOGGED.clear();
 		openStreetFor(level, v, plot);
 		syncReach(camp, v);
 		HardcoreFriends.LOGGER.info("The village planned a {} at {} ({})", s.plan.name(), origin, TownPlan.sideName(c.street(), c.side()));

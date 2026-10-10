@@ -275,7 +275,8 @@ In `config/hardcorefriends.json`, under "Living together":
 
 - `civic.Families` answers: the partner is the living **husband or wife** (couples only going out live apart);
   parents as recorded; children while alive; the household is a married couple and their children still young (a
-  child's household is that of the parent they live with); the family name as carried.
+  child's household is that of the parent they live with); the family name as carried; and the babies on the way
+  (`babiesOnTheWay`), which the village counts towards `maxPopulation` before letting a newcomer join.
 - The people package calls `Homes.roomForOneMore` before a baby is planned, `Homes.moveIn` for a newborn and for the
   household at a wedding, and `Homes.moveOut` only when someone dies or is dismissed. The spouse who moves out of a
   marriage that ended is still on the team: they get `Homes.moveIn(server, them, Set.of(them))`, a household of one

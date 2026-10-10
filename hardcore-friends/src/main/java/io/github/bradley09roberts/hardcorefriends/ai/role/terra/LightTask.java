@@ -140,7 +140,11 @@ public final class LightTask implements CompanionTask {
 		}
 	}
 
-	/** Torches that the camp's unfinished buildings (this stage and earlier) still call for, lanterns included. */
+	/**
+	 * Torches that the camp's unfinished buildings (this stage and earlier) still call for, lanterns included, and those
+	 * of the village's houses and other library buildings under way (their lights, decoration aside: a house is not
+	 * lived in until its lights are in).
+	 */
 	static int torchesForBuildings(CampData data) {
 		int total = 0;
 		for (Structures.Entry e : Structures.ALL) {
@@ -148,19 +152,29 @@ public final class LightTask implements CompanionTask {
 				continue;
 			}
 			Optional<Blueprint> plan = Blueprints.forSite(data, e.id());
-			if (plan.isEmpty()) {
-				continue;
+			if (plan.isPresent()) {
+				total += torches(plan.get(), false) * plan.get().parts();
 			}
-			int each = 0;
-			for (Blueprint.Entry entry : plan.get().entries()) {
-				Stock stock = entry.material().stock();
-				if (stock == Stock.TORCH || stock == Stock.LANTERN) { // a lantern is made around a torch
-					each++;
-				}
+		}
+		for (String key : Blueprints.librarySites(data)) {
+			Optional<Blueprint> plan = Blueprints.isFinished(data, key) ? Optional.empty() : Blueprints.forSite(data, key);
+			if (plan.isPresent()) {
+				total += torches(plan.get(), true) * plan.get().parts();
 			}
-			total += each * plan.get().parts();
 		}
 		return total;
+	}
+
+	/** Torches (lanterns included: a lantern is made around a torch) in one copy of a plan. */
+	private static int torches(Blueprint plan, boolean requiredOnly) {
+		int each = 0;
+		for (Blueprint.Entry entry : plan.entries()) {
+			Stock stock = entry.material().stock();
+			if ((stock == Stock.TORCH || stock == Stock.LANTERN) && !(requiredOnly && entry.optional())) {
+				each++;
+			}
+		}
+		return each;
 	}
 
 	/**

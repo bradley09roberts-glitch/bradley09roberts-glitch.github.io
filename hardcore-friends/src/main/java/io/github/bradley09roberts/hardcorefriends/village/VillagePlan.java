@@ -18,6 +18,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.civic.BlueprintLibrary;
+import io.github.bradley09roberts.hardcorefriends.civic.Families;
 
 /**
  * The village's public face for the other packages (the market above all): ask for a building of a kind
@@ -82,10 +83,12 @@ public final class VillagePlan {
 
 	/**
 	 * True when the team has reached the population cap ({@code maxPopulation}): no newcomer joins beyond it (as no baby
-	 * is born beyond it), so the village never grows past what the server can bear.
+	 * is born beyond it), so the village never grows past what the server can bear. Babies on the way count, as they do
+	 * for the births, so newcomers never take the places of babies already expected.
 	 */
 	public static boolean populationFull(MinecraftServer server) {
-		return population(server) >= io.github.bradley09roberts.hardcorefriends.config.FriendsConfig.get().maxPopulation;
+		return population(server) + Families.get().babiesOnTheWay(server)
+			>= io.github.bradley09roberts.hardcorefriends.config.FriendsConfig.get().maxPopulation;
 	}
 
 	/** True once the village has asked its builders for this kind (planned, being built or standing) or it is requested. */

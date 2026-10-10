@@ -55,15 +55,23 @@ public final class Camp {
 
 	/**
 	 * How far the village's streets and plots reach from the camp centre, in blocks, up to {@code villageRadius}: the
-	 * camp grows with its village. It belongs to this camp centre only: moving the camp starts again without it.
+	 * camp grows with its village. It belongs to this camp centre only: moving the camp starts again without it. A camp
+	 * set again within three blocks (standing by the campfire) keeps the village, so it keeps the reach too, from the
+	 * moment it is set (the village measures it again from the new centre within a second).
 	 */
 	public static int villageReach(CampData data) {
 		if (data.campPos().isEmpty()) {
 			return 0;
 		}
 		CompoundTag tag = data.memory(VILLAGE_MEMORY);
-		if (tag.getLongOr("centre", Long.MIN_VALUE) != data.campPos().get().asLong()) {
-			return 0;
+		long stored = tag.getLongOr("centre", Long.MIN_VALUE);
+		BlockPos now = data.campPos().get();
+		if (stored != now.asLong()) {
+			int dx = BlockPos.getX(stored) - now.getX();
+			int dz = BlockPos.getZ(stored) - now.getZ();
+			if (stored == Long.MIN_VALUE || dx * dx + dz * dz > 9 || Math.abs(BlockPos.getY(stored) - now.getY()) > 3) {
+				return 0;
+			}
 		}
 		return Math.clamp(tag.getIntOr("reach", 0), 0, FriendsConfig.get().villageRadius);
 	}
