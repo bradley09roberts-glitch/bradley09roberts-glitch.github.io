@@ -12,6 +12,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiPredicate;
 
 import org.jspecify.annotations.Nullable;
 
@@ -74,6 +76,11 @@ public final class NightWatch {
 
 	/** Who kept which watch, in {@link CampData#memory}. */
 	public static final String MEMORY = "night_watch";
+	/**
+	 * Rules from the feature packages that let a friend off a watch: one answering true for a friend and a watch keeps
+	 * them from being chosen for it (the defence package lets the first shift's guards sleep the second watch).
+	 */
+	public static final List<BiPredicate<CompanionEntity, Watch>> EXCUSED = new CopyOnWriteArrayList<>();
 	/** Midnight, as a time of day: the first watch hands over to the second. */
 	public static final long MIDNIGHT = 18000;
 	/** Below this energy a friend is too tired to keep watch, and the watch passes on. */
@@ -216,6 +223,7 @@ public final class NightWatch {
 				}
 			}
 		}
+		pool.removeIf(c -> EXCUSED.stream().anyMatch(rule -> rule.test(c, watch)));
 		if (watch == Watch.FIRST) {
 			CampData data = Camp.data(level.getServer());
 			for (CompanionEntity c : pool) {

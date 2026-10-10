@@ -35,20 +35,33 @@ import io.github.bradley09roberts.hardcorefriends.companion.Needs.Need;
  * <li><b>Fighters</b> ({@link #fighter}): grown-ups who are fit to fight (healthy, not too tired, not falling back) and
  * are warriors, hold the guard trade, or carry a sword, an axe or a bow with arrows. They go to their posts
  * ({@link ToPostsTask}), except the friend on the night watch and the guards on duty, who keep their own (the watch
- * does even when they hold only a pick or a hoe and so are no fighter: they are not sent indoors).</li>
+ * does even when they hold only a pick or a hoe and so are no fighter: they are not sent indoors). A fighter who wears
+ * out below {@value #TOO_TIRED} energy, or is asleep with less than {@value #WAKE} when the alarm finds them, sits the
+ * rest of this alarm out ({@link #TIRED}), so a tired fighter is not got up again each time a short sleep lifts them
+ * back over the line.</li>
  * <li><b>Everyone else</b>, children above all, takes cover indoors ({@link TakeCoverTask}) when the village has a
- * shelter. At night a child or grown-up already indoors with a bed indoors (their home, the cabin) simply sleeps.</li>
+ * shelter. At night a child or grown-up already indoors with a bed indoors (their home, the cabin) simply sleeps;
+ * one found asleep out in the open (their own bed taken or out of reach, so they lay down the old way) is treated as
+ * sleeping out in the open until the all-clear: got up, and kept indoors.</li>
  * </ul>
  *
  * <p>The filter ({@link #mayDo}) keeps three kinds of friend out of bed: the guards on duty, the fighters while the
  * alarm is on (the alarm gets them up, as the night watch's does), and those taking cover whose bed is out in the open.
- * Every other job choice is left to the scores.
+ * It also keeps the guards on duty from their evening at home and from a feast at the square, which would otherwise
+ * hold them from their posts until nightfall. Every other job choice is left to the scores.
  */
 final class Duty {
-	/** The sleep job's id: the only job the filter ever holds back. */
+	/** The sleep job's id: held back from everyone who must stay up (see the class description). */
 	static final String SLEEP = "needs.sleep";
+	/**
+	 * Time off a guard on duty puts down for their post: the village's evening at home and going to a feast at the
+	 * square (the village and village life packages' jobs, which outscore standing guard).
+	 */
+	private static final Set<String> OFF_DUTY = Set.of("needs.evening", "needs.festival");
 	/** Below this energy nobody counts as a fighter: they would only be a danger to themselves. */
 	private static final double TOO_TIRED = 20;
+	/** A fighter asleep with less energy than this is left asleep for the alarm: a few minutes up would wear them out. */
+	private static final double WAKE = 40;
 	/** A friend who cannot reach shelter this many times in one alarm stays where they are. */
 	private static final int COVER_TRIES = 3;
 	private static final int BED_CHECK = 20 * 10;
@@ -59,6 +72,10 @@ final class Duty {
 	private static final Map<UUID, Integer> COVER_FAILS = new HashMap<>();
 	/** Friends whose work the alarm has already put down this time (see {@link #callAway}). */
 	private static final Set<UUID> CALLED = new HashSet<>();
+	/** Too tired to fight this alarm: out of it until the all-clear, however a nap lifts their energy meanwhile. */
+	private static final Set<UUID> TIRED = new HashSet<>();
+	/** Found asleep out in the open this alarm (their own bed taken or out of reach): their bed counts as outdoors. */
+	private static final Set<UUID> SLEPT_OUT = new HashSet<>();
 	/** Where each friend's bed is (see {@link #bedShelter}), and when that was looked at. */
 	private record BedRecord(long at, @Nullable String shelter) {
 	}
@@ -77,6 +94,8 @@ final class Duty {
 		if (!Alarm.isActive()) {
 			COVER_FAILS.clear();
 			CALLED.clear();
+			TIRED.clear();
+			SLEPT_OUT.clear();
 			return;
 		}
 		boolean shelters = !Shelters.all(level).isEmpty();
@@ -92,7 +111,11 @@ final class Duty {
 				NO_SLEEP.add(id); // the watch (armed or not) and the guards keep their own posts, never sent indoors
 				continue;
 			}
-			if (fighter(c)) {
+			double energy = c.needs().get(Need.ENERGY);
+			if (energy < TOO_TIRED || c.isAsleep() && energy < WAKE) {
+				TIRED.add(id); // worn out, or asleep and not rested enough to be got up: out of it until the all-clear
+			}
+			if (!TIRED.contains(id) && fighter(c)) {
 				FIGHTERS.add(id);
 				callAway(c, ToPostsTask.ID);
 				NO_SLEEP.add(id);
@@ -101,8 +124,12 @@ final class Duty {
 			if (!shelters || COVER_FAILS.getOrDefault(id, 0) >= COVER_TRIES) {
 				continue;
 			}
+			boolean asleepIndoors = c.isAsleep() && !level.canSeeSky(c.blockPosition().above());
+			if (c.isAsleep() && !asleepIndoors) {
+				SLEPT_OUT.add(id); // their own bed is taken or out of reach: they lay down the old way, out in the open
+			}
 			boolean bedIndoors = sleepsIndoors(c, level, now);
-			if (night && bedIndoors && (c.isAsleep() || inOwnShelter(c, level, now))) {
+			if (night && bedIndoors && (asleepIndoors || inOwnShelter(c, level, now))) {
 				continue; // tucked up indoors already, where their bed is: they sleep on
 			}
 			COVER.add(id);
@@ -172,9 +199,13 @@ final class Duty {
 
 	/**
 	 * Which shelter their bed is in: their village home's key ({@code civic.Homes}), the cabin's, or null when they sleep
-	 * out in the open (round the camp centre). Looked at every {@value #BED_CHECK} ticks at most.
+	 * out in the open (round the camp centre), or were found asleep out there this alarm ({@link #SLEPT_OUT}). Looked at
+	 * every {@value #BED_CHECK} ticks at most.
 	 */
 	static @Nullable String bedShelter(CompanionEntity c, ServerLevel level, long now) {
+		if (SLEPT_OUT.contains(c.getUUID())) {
+			return null; // their own bed is taken or out of reach: indoors they stay, awake, until the all-clear
+		}
 		BedRecord known = SLEEPS_INDOORS.get(c);
 		if (known != null && now - known.at() < BED_CHECK && now >= known.at()) {
 			return known.shelter();
@@ -193,9 +224,12 @@ final class Duty {
 		return shelter;
 	}
 
-	/** The job filter: only the sleep job is ever held back (see the class description). */
+	/** The job filter: bed for those who must stay up, and time off for the guards on duty (see the class description). */
 	static boolean mayDo(CompanionEntity c, String jobId) {
-		return !SLEEP.equals(jobId) || !NO_SLEEP.contains(c.getUUID());
+		if (SLEEP.equals(jobId)) {
+			return !NO_SLEEP.contains(c.getUUID());
+		}
+		return !OFF_DUTY.contains(jobId) || !GuardRota.isOnDuty(c);
 	}
 
 	/** True while this friend should be at a post for the alarm. */
@@ -227,6 +261,8 @@ final class Duty {
 		NO_SLEEP.clear();
 		COVER_FAILS.clear();
 		CALLED.clear();
+		TIRED.clear();
+		SLEPT_OUT.clear();
 		SLEEPS_INDOORS.clear();
 	}
 }

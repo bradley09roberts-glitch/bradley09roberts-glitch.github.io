@@ -16,6 +16,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.TaskRegistry;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.combat.Archery;
 import io.github.bradley09roberts.hardcorefriends.command.FriendsCommand;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEvents;
@@ -66,6 +67,9 @@ public final class Defence {
 		CompanionEvents.DEATH.add((companion, level, source) -> FireWatch.forget(companion.getUUID()));
 		CompanionEvents.DISMISSED.add((companion, level) -> FireWatch.forget(companion.getUUID()));
 		Archery.HOLDS_POST.add(GuardRota::holdsPost);
+		// Nobody stands both halves of the night: the first shift's guards are not picked for the second watch.
+		NightWatch.EXCUSED.add((c, watch) -> watch == NightWatch.Watch.SECOND && c.level() instanceof ServerLevel level
+			&& GuardRota.stoodFirstShift(c, level));
 
 		FriendsCommand.EXTENSIONS.add(DefenceCommands::register);
 		FriendsCommand.CAMP_STATUS.add(DefenceCommands::campStatus);

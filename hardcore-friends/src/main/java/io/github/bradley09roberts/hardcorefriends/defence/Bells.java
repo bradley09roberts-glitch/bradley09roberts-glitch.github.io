@@ -27,6 +27,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.SiteFinder;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
+import io.github.bradley09roberts.hardcorefriends.village.TownPlan;
 import io.github.bradley09roberts.hardcorefriends.village.VillagePlan;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
@@ -34,7 +35,9 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * The village's bells: the town hall's and the school's (the building library's {@code bell} spots, once a bell hangs
  * there), the bell the friends put up at the square themselves ({@link PutUpBellTask}), and any other bell standing in
  * the village, such as the old bell of a game village the camp grew up in. They are found every minute from the loaded
- * chunks' block entities round the camp (never loading a chunk), and rung with the game's own bell ring.
+ * chunks' block entities round the camp (never loading a chunk), and rung with the game's own bell ring. A look taken
+ * while a bell's own spot was not loaded yet (the world just opened) is taken again a few seconds later; the friends'
+ * own bell counts as standing until its spot is loaded and shows otherwise, so they never put up a second one for it.
  */
 final class Bells {
 	/** A bell in the village and what it is ("the town hall bell"). */
@@ -43,11 +46,17 @@ final class Bells {
 
 	/** Where the friends' own bell hangs, in {@link Alarm#MEMORY}. */
 	static final String OWN_BELL = "bell";
+	/** The camp centre their own bell was put up for, in {@link Alarm#MEMORY}: a camp moved elsewhere has none yet. */
+	private static final String OWN_BELL_CAMP = "bell_camp";
 	private static final int REFRESH = 20 * 60;
+	/** A look taken while a bell's spot was not loaded is taken again this soon. */
+	private static final int RETRY = 20 * 2;
 	/** Bells this far above or below the camp centre are not the village's. */
 	private static final int HEIGHT = 32;
 
 	private static List<Bell> known = List.of();
+	/** Set by {@link #find} when a bell's spot was not loaded, so the list may be short. */
+	private static boolean partial;
 	/** When each list was made; "never" is half of {@code Long.MIN_VALUE}, so {@code now - knownAt} cannot overflow. */
 	private static long knownAt = Long.MIN_VALUE / 2;
 	private static int chestBells;
@@ -63,7 +72,11 @@ final class Bells {
 			return known;
 		}
 		knownAt = now;
+		partial = false;
 		known = find(level);
+		if (partial) {
+			knownAt = now - REFRESH + RETRY; // a bell's spot was not loaded yet: look again soon
+		}
 		return known;
 	}
 
@@ -109,17 +122,24 @@ final class Bells {
 		Set<BlockPos> seen = new HashSet<>();
 		for (VillagePlan.Building b : VillagePlan.buildingsOfKind(server, "civic:town_hall")) {
 			for (BlockPos p : b.marker("bell")) {
+				partial |= !level.isLoaded(p);
 				if (isBell(level, p) && seen.add(p)) {
 					list.add(new Bell(p.immutable(), "the town hall bell", 0));
 				}
 			}
 		}
 		Optional<BlockPos> own = ownBell(data);
-		if (own.isPresent() && isBell(level, own.get()) && seen.add(own.get())) {
-			list.add(new Bell(own.get(), "the village bell", 1));
+		if (own.isPresent() && inVillage(own.get(), centre, radius)) {
+			// Not loaded yet, it is taken to stand still: the friends never put up a second bell for want of a look at it.
+			boolean unseen = !level.isLoaded(own.get());
+			partial |= unseen;
+			if ((unseen || isBell(level, own.get())) && seen.add(own.get())) {
+				list.add(new Bell(own.get(), "the village bell", 1));
+			}
 		}
 		for (VillagePlan.Building b : VillagePlan.buildingsOfKind(server, "civic:school")) {
 			for (BlockPos p : b.marker("bell")) {
+				partial |= !level.isLoaded(p);
 				if (isBell(level, p) && seen.add(p)) {
 					list.add(new Bell(p.immutable(), "the school bell", 2));
 				}
@@ -139,8 +159,7 @@ final class Bells {
 				}
 				for (BlockEntity be : chunk.getBlockEntities().values()) {
 					BlockPos p = be.getBlockPos();
-					if (be instanceof BellBlockEntity && Math.abs(p.getY() - centre.getY()) <= HEIGHT
-						&& Camp.horizontalDistSqr(p, centre) <= (double) radius * radius && seen.add(p)) {
+					if (be instanceof BellBlockEntity && inVillage(p, centre, radius) && seen.add(p)) {
 						list.add(new Bell(p.immutable(), "the old village bell", 3));
 					}
 				}
@@ -151,6 +170,11 @@ final class Bells {
 		return List.copyOf(list);
 	}
 
+	/** Within the village's reach of the camp centre, and not far above or below it. */
+	private static boolean inVillage(BlockPos p, BlockPos centre, int radius) {
+		return Math.abs(p.getY() - centre.getY()) <= HEIGHT && Camp.horizontalDistSqr(p, centre) <= (double) radius * radius;
+	}
+
 	/**
 	 * True once the village has a town hall planned, going up or standing: its plan has a bell spot, which the builders fill
 	 * from the chest themselves, so the friends do not take the chest's bell to the square.
@@ -159,17 +183,26 @@ final class Bells {
 		return VillagePlan.isRequested(level.getServer(), "civic:town_hall");
 	}
 
-	/** Where the friends hung their own bell, if they did. */
+	/**
+	 * Where the friends hung their own bell for this camp, if they did: a bell put up for a camp since moved elsewhere
+	 * ({@code /friends camp set}) is not this one's.
+	 */
 	static Optional<BlockPos> ownBell(CampData data) {
 		CompoundTag mem = data.memory(Alarm.MEMORY);
 		if (!mem.contains(OWN_BELL)) {
+			return Optional.empty();
+		}
+		if (mem.contains(OWN_BELL_CAMP)
+			&& !data.campPos().map(c -> c.asLong() == mem.getLongOr(OWN_BELL_CAMP, 0L)).orElse(false)) {
 			return Optional.empty();
 		}
 		return Optional.of(BlockPos.of(mem.getLongOr(OWN_BELL, 0L)));
 	}
 
 	static void rememberOwnBell(CampData data, BlockPos pos) {
-		data.memory(Alarm.MEMORY).putLong(OWN_BELL, pos.asLong());
+		CompoundTag mem = data.memory(Alarm.MEMORY);
+		mem.putLong(OWN_BELL, pos.asLong());
+		data.campPos().ifPresent(c -> mem.putLong(OWN_BELL_CAMP, c.asLong()));
 		data.setDirty();
 		invalidate();
 	}
@@ -187,8 +220,9 @@ final class Bells {
 
 	/**
 	 * Where the friends hang a bell of their own: on open ground at the square, a few blocks from the camp centre
-	 * (the campfire), never on a reserved building site, beside a player's build or a block entity, so it is in nobody's
-	 * way. Null if there is no such spot.
+	 * (the campfire), never on a reserved building site, beside a player's build or a block entity, nor on or beside
+	 * the line of the main streets the town plan runs through the square (a bell there would stand in the street for
+	 * good once it is laid), so it is in nobody's way. Null if there is no such spot.
 	 */
 	static @Nullable BlockPos squareSpot(ServerLevel level, CampData data) {
 		Optional<BlockPos> camp = data.campPos();
@@ -201,7 +235,7 @@ final class Bells {
 		for (int distance = 3; distance <= 6; distance++) {
 			for (int[] d : new int[][] {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}) {
 				int step = Math.max(3, (int) Math.round(distance / Math.sqrt(2)));
-				BlockPos p = squareCandidate(level, data, sites, centre.offset(d[0] * step, 0, d[1] * step));
+				BlockPos p = squareCandidate(level, data, sites, centre, centre.offset(d[0] * step, 0, d[1] * step));
 				if (p != null) {
 					return p;
 				}
@@ -211,7 +245,7 @@ final class Bells {
 			for (int k = 0; k < 16; k++) {
 				double angle = k * Math.PI / 8;
 				BlockPos column = centre.offset((int) Math.round(Math.cos(angle) * distance), 0, (int) Math.round(Math.sin(angle) * distance));
-				BlockPos p = squareCandidate(level, data, sites, column);
+				BlockPos p = squareCandidate(level, data, sites, centre, column);
 				if (p != null) {
 					return p;
 				}
@@ -221,9 +255,10 @@ final class Bells {
 	}
 
 	/** A spot in this column for the bell, if it is free, open ground and nobody's: see {@link #squareSpot}. */
-	private static @Nullable BlockPos squareCandidate(ServerLevel level, CampData data, List<int[]> sites, BlockPos column) {
-		if (!level.isLoaded(column)) {
-			return null;
+	private static @Nullable BlockPos squareCandidate(ServerLevel level, CampData data, List<int[]> sites, BlockPos centre,
+		BlockPos column) {
+		if (!level.isLoaded(column) || TownPlan.onStreet(centre, column.getX(), column.getZ(), 1)) {
+			return null; // on the line of a street to come, or its verge
 		}
 		BlockPos p = Spots.standable(level, column);
 		if (p == null || !level.canSeeSky(p) || onSite(p, sites) || nearBlockEntity(level, p)
@@ -259,6 +294,7 @@ final class Bells {
 	static void clear() {
 		known = List.of();
 		knownAt = Long.MIN_VALUE / 2;
+		partial = false;
 		chestBells = 0;
 		chestAt = Long.MIN_VALUE / 2;
 	}

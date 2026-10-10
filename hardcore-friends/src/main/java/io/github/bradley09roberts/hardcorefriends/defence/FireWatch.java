@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
@@ -27,7 +28,10 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  * Spotting fires in the village and the camp: lightning, lava, a creeper's work. Once a second a slice of the camp's
  * loaded chunk sections is looked over, cheaply: a section's palette says whether it could hold fire at all
  * ({@code LevelChunkSection.maybeHas}), and only one that could is searched block by block, at most
- * {@value #FULL_SCANS} a round, so the whole village is gone over every few seconds without loading a chunk.
+ * {@value #FULL_SCANS} a round, so the whole village is gone over every few seconds without loading a chunk. The
+ * palette keeps fire listed after a blaze is out (until the chunk is next loaded), so a section searched with nothing
+ * found is searched again only after {@value #RESEARCH} ticks: a burnt corner of the village does not use up the
+ * rounds and slow the look for new fires everywhere else.
  *
  * <p>A fire is put out ({@link PutOutFireTask}) when it is ordinary fire (never soul fire, and never a fire burning for
  * good on netherrack or another everlasting base: that is somebody's fireplace) inside the camp, at most
@@ -38,6 +42,8 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 final class FireWatch {
 	private static final int PALETTES_PER_ROUND = 48;
 	private static final int FULL_SCANS = 2;
+	/** A section searched block by block and found clear is searched again after this long (see the class description). */
+	private static final int RESEARCH = 20 * 10;
 	private static final int MAX_FIRES = 64;
 	private static final int HEIGHT = 24;
 	private static final int LAVA_CLEARANCE = 2;
@@ -48,6 +54,8 @@ final class FireWatch {
 	private static final Set<BlockPos> FIRES = new LinkedHashSet<>();
 	private static final Map<BlockPos, Long> GIVEN_UP = new HashMap<>();
 	private static final Map<UUID, BlockPos> CLAIMS = new HashMap<>();
+	/** Sections ({@link SectionPos#asLong}) searched block by block and found clear, with when. */
+	private static final Map<Long, Long> CLEAR = new HashMap<>();
 	private static int cursor;
 
 	private FireWatch() {
@@ -96,17 +104,29 @@ final class FireWatch {
 				continue;
 			}
 			LevelChunkSection section = chunk.getSection(sectionIndex);
+			long key = SectionPos.asLong(cx, sy, cz);
 			if (section.hasOnlyAir() || !section.maybeHas(FireWatch::isFire)) {
+				CLEAR.remove(key);
 				continue;
 			}
+			Long clearAt = CLEAR.get(key);
+			if (clearAt != null && now - clearAt < RESEARCH && now >= clearAt) {
+				continue; // searched lately and nothing burning: only the palette remembers an old fire
+			}
 			full++;
-			scanSection(level, data, section, cx, sy, cz, centre, radius, now);
+			if (scanSection(level, section, cx, sy, cz, centre, radius, now)) {
+				CLEAR.remove(key);
+			} else {
+				CLEAR.put(key, now);
+			}
 		}
 		cursor = Math.floorMod(cursor, total);
 	}
 
-	private static void scanSection(ServerLevel level, CampData data, LevelChunkSection section, int cx, int sy, int cz,
+	/** Searches a section block by block for fires to put out; true if it holds any (listed, or no room to list it). */
+	private static boolean scanSection(ServerLevel level, LevelChunkSection section, int cx, int sy, int cz,
 		BlockPos centre, int radius, long now) {
+		boolean burning = false;
 		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
 		for (int y = 0; y < 16; y++) {
 			for (int z = 0; z < 16; z++) {
@@ -115,13 +135,19 @@ final class FireWatch {
 					if (!isFire(state)) {
 						continue;
 					}
+					if (FIRES.size() >= MAX_FIRES) {
+						burning = true; // enough on the list already: search here again next time round
+						continue;
+					}
 					m.set((cx << 4) + x, (sy << 4) + y, (cz << 4) + z);
-					if (FIRES.size() < MAX_FIRES && worthPuttingOut(level, m, centre, radius, now)) {
+					if (worthPuttingOut(level, m, centre, radius, now)) {
 						FIRES.add(m.immutable());
+						burning = true;
 					}
 				}
 			}
 		}
+		return burning;
 	}
 
 	/** Ordinary fire; soul fire burns blue on purpose, and is left alone. */
@@ -264,6 +290,7 @@ final class FireWatch {
 		FIRES.clear();
 		GIVEN_UP.clear();
 		CLAIMS.clear();
+		CLEAR.clear();
 		cursor = 0;
 	}
 
