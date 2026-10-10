@@ -17,14 +17,13 @@ import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 /**
  * The village's workplaces as they stand: every finished library building of a trade's kind in the camp's world,
  * whoever put it up (the village's town plan builds them through {@code architecture.Construction}, so the market finds
- * them there and needs nothing else of the village). A building counts as standing once it is finished, or 95% built
- * with the last few blocks left to the repair job, so a trade never waits for ever on one ridge slab. Worked out at most
- * every ten seconds and on a building being finished, so asking is cheap.
+ * them there and needs nothing else of the village). A building counts as standing once it is finished, which the
+ * village also says of one 95% built with every bed and chest in place (the last few blocks left to the repair job), so
+ * a trade never waits for ever on one ridge slab. Worked out at most every ten seconds and on a building being finished,
+ * so asking is cheap.
  */
 public final class Workplaces {
 	private static final int REFRESH = 200;
-	/** How much of a building must stand before its trade starts there. */
-	static final double STANDING = 0.95;
 
 	private static List<Workplace> cache = List.of();
 	private static long cachedAt = Long.MIN_VALUE / 2;
@@ -91,9 +90,13 @@ public final class Workplaces {
 		return list;
 	}
 
-	/** True once the site's building is finished, or nearly ({@link #STANDING}). */
+	/**
+	 * True once the site's building is finished: built to the end, or marked finished by the village once it is as good
+	 * as built (95% of its structure, every bed and chest in place). One answer for both packages, so a trade never
+	 * starts in a building the village does not count as standing, nor before its chests are in.
+	 */
 	static boolean standing(ServerLevel level, String site) {
-		return Construction.isFinished(level, site) || Construction.progress(level, site) >= STANDING;
+		return Construction.isFinished(level, site);
 	}
 
 	/** True if a site of this kind is reserved (built or not): the village has it in hand. */

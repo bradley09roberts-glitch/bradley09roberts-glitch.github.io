@@ -150,7 +150,7 @@ final class ShopTrade extends Marker implements Merchant {
 				break;
 			}
 			// At the camp stall only what the camp can spare of the good, all its kinds together (oak and spruce planks).
-			int spareLeft = shop.stall() ? good.spare(Stores.count(level, shop.stock(), good.match())) : Integer.MAX_VALUE;
+			int spareLeft = shop.stall() ? good.spare(level, Stores.count(level, shop.stock(), good.match())) : Integer.MAX_VALUE;
 			for (ItemStack sample : distinct(level, good, 2)) {
 				if (sales.size() >= MAX_SALES) {
 					break;

@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
+import org.jspecify.annotations.Nullable;
+
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.DyeColor;
@@ -19,7 +21,8 @@ import io.github.bradley09roberts.hardcorefriends.camp.build.Stock;
  * What each kind of shop sells and buys, and for how much. Prices are fixed (the game's own villager prices where it
  * has them: six loaves for an emerald, a bed for three, twenty wheat bought for one), so they are fair and never drift.
  * Shops sell only what they really have: a shop's own chests, all of them its stock; the camp stall only what the
- * supply chest can spare (food only while the camp has plenty, building stock above what the camp keeps). They buy only
+ * supply chest can spare (food only while the camp has plenty, building stock above what the camp keeps and the
+ * buildings under way still need); shops are stocked from the supply chest on the same terms. They buy only
  * what the camp is short of right now, paying from their takings, and never buy back what they are selling that day,
  * and they buy each thing for less than they would sell it, so trading round in circles never pays.
  */
@@ -29,15 +32,22 @@ final class Catalogue {
 
 	/**
 	 * Something a shop sells: the items, how many make one trade ({@code unit}), the price in emeralds, how many the
-	 * supply chest keeps back before any is spare, and whether it is food (spare only while the camp has plenty).
+	 * supply chest keeps back before any is spare, whether it is food (spare only while the camp has plenty), and the
+	 * builders' kind of stock it is, if any.
 	 */
-	record Good(String key, Predicate<ItemStack> match, int unit, int price, int keep, boolean food) {
-		/** How many of {@code have} in the supply chest the camp can spare for sale. */
-		int spare(int have) {
+	record Good(String key, Predicate<ItemStack> match, int unit, int price, int keep, boolean food, @Nullable Stock building) {
+		/**
+		 * How many of {@code have} in the supply chest the camp can spare for sale. Building stock is spare only above
+		 * what the camp keeps and what the buildings under way still call for, so a shop's shelves never take the
+		 * builders' planks, torches or beds out of their reach.
+		 */
+		int spare(ServerLevel level, int have) {
 			if (food) {
 				return CampNeeds.need(CampNeeds.Need.FOOD) <= FOOD_TO_SPARE ? have / 2 : 0;
 			}
-			return Math.max(0, have - keep);
+			Stock kind = building;
+			int forBuilding = kind == null ? 0 : MaterialDemand.wanted(level.getServer(), kind);
+			return Math.max(0, have - keep - forBuilding);
 		}
 	}
 
@@ -46,30 +56,30 @@ final class Catalogue {
 	}
 
 	private static Good food(String key, Item item, int unit, int price) {
-		return new Good(key, s -> s.is(item), unit, price, 0, true);
+		return new Good(key, s -> s.is(item), unit, price, 0, true, null);
 	}
 
-	private static Good stock(String key, Predicate<ItemStack> match, int unit, int price, int keep) {
-		return new Good(key, match, unit, price, keep, false);
+	private static Good stock(String key, Predicate<ItemStack> match, int unit, int price, int keep, @Nullable Stock building) {
+		return new Good(key, match, unit, price, keep, false, building);
 	}
 
 	private static final List<Good> BAKERY = List.of(
 		food("bread", Items.BREAD, 6, 1),
 		food("cookie", Items.COOKIE, 12, 1),
 		food("pumpkin_pie", Items.PUMPKIN_PIE, 4, 1),
-		stock("cake", s -> s.is(Items.CAKE), 1, 1, 0),
+		stock("cake", s -> s.is(Items.CAKE), 1, 1, 0, null),
 		food("baked_potato", Items.BAKED_POTATO, 8, 1));
 
 	private static final List<Good> GENERAL = List.of(
 		food("bread", Items.BREAD, 6, 1),
 		food("baked_potato", Items.BAKED_POTATO, 8, 1),
 		food("apple", Items.APPLE, 6, 1),
-		stock("torch", s -> s.is(Items.TORCH), 16, 1, 64),
-		stock("planks", s -> s.is(ItemTags.PLANKS), 16, 1, 64),
-		stock("log", s -> s.is(ItemTags.LOGS), 8, 1, 32),
-		stock("cobblestone", s -> s.is(Items.COBBLESTONE), 32, 1, 128),
-		stock("stick", s -> s.is(Items.STICK), 32, 1, 64),
-		stock("coal", s -> s.is(Items.COAL) || s.is(Items.CHARCOAL), 10, 1, 48));
+		stock("torch", s -> s.is(Items.TORCH), 16, 1, 64, Stock.TORCH),
+		stock("planks", s -> s.is(ItemTags.PLANKS), 16, 1, 64, Stock.PLANKS),
+		stock("log", s -> s.is(ItemTags.LOGS), 8, 1, 32, Stock.LOG),
+		stock("cobblestone", s -> s.is(Items.COBBLESTONE), 32, 1, 128, Stock.COBBLESTONE),
+		stock("stick", s -> s.is(Items.STICK), 32, 1, 64, Stock.STICK),
+		stock("coal", s -> s.is(Items.COAL) || s.is(Items.CHARCOAL), 10, 1, 48, Stock.COAL));
 
 	private static final List<Good> BUTCHER = List.of(
 		food("cooked_porkchop", Items.COOKED_PORKCHOP, 5, 1),
@@ -85,9 +95,9 @@ final class Catalogue {
 		food("salmon", Items.SALMON, 12, 1));
 
 	private static final List<Good> TAILOR = List.of(
-		stock("wool", s -> s.is(ItemTags.WOOL), 1, 1, 32),
-		stock("carpet", s -> s.is(ItemTags.WOOL_CARPETS), 4, 1, 16),
-		stock("bed", s -> s.is(ItemTags.BEDS), 1, 3, 2));
+		stock("wool", s -> s.is(ItemTags.WOOL), 1, 1, 32, Stock.WOOL),
+		stock("carpet", s -> s.is(ItemTags.WOOL_CARPETS), 4, 1, 16, Stock.CARPET),
+		stock("bed", s -> s.is(ItemTags.BEDS), 1, 3, 2, Stock.BED));
 
 	/** The smith's goods, sold one at a time, priced by what they are and how worn they are ({@link #toolPrice}). */
 	private static final Map<Item, Integer> SMITH_PRICES = Map.ofEntries(

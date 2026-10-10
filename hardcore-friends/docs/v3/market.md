@@ -15,7 +15,7 @@ trade uses real materials from the camp's chests, and every shop sells only what
 | **Butcher** | butcher's shop (`shop:butcher`) | Cooks raw meat in the shop's smoker and sells cooked meat; buys raw meat when the camp is short of food. |
 | **Fishmonger** | fish stall (`shop:fishmonger`) | Fishes like the fisher, and sells raw and cooked fish; buys fish when food is short. |
 | **Tailor** | tailor's shop (`shop:tailor`) | Makes carpets and beds (wool of one colour each) for the builders, keeps a few on the shop's shelves, sells wool, carpets and beds; buys string and wool when the builders need wool. |
-| **Blacksmith** | smithy (`workplace:blacksmith`) or smith's shop (`shop:smith`) | Takes over the camp's smith work (the gear the friends need): while a blacksmith is at work, nobody else does it. At the smith's shop they also make plain iron tools and armour for sale when the camp has 40 or more iron ingots, and sell them; the shop buys coal and iron. |
+| **Blacksmith** | smithy (`workplace:blacksmith`) or smith's shop (`shop:smith`) | Does the camp's smith work (the gear the friends need) whenever it is their most useful job: while they are at it, and for a minute after each piece, nobody else starts it. While they are busy with their own work, too weak, short of backpack room or away, anyone may make the gear, as before there was a blacksmith. At the smith's shop they also make plain iron tools and armour for sale when the camp has 40 or more iron ingots, and sell them; the shop buys coal and iron. |
 | **Fisher** | fishing hut (`workplace:fisher`), or the nearest bank | Fishes by day with a rod (from the chest, or made from three sticks and two string), from the hut's deck or a dry bank by open water: a bite every five to thirty seconds, the game's own fishing catch (mostly fish, now and then junk, never treasure). The fish go to the supply chest for the cooks. |
 | **Mason** | mason's yard (`workplace:mason`) | Cuts what the builders are short of at the stonecutter, at its better yields (a block makes a stair or two slabs): stone bricks, and stairs, slabs and walls of cobblestone, stone, stone bricks, bricks and sandstone, and cut sandstone. |
 | **Beekeeper** | apiary (`workplace:beekeeper`) | Puts beehives on the apiary's hive stands (a hive from the chest, or made from six planks and three honeycomb), leads wild bees home to them holding out a flower, and takes the honey from full hives: honeycomb with shears, or honey bottles with glass bottles. Only ever with the campfire lit beneath, so the bees stay calm. A bee is only led away if it has no home or lives in a wild nest (one a tree grew with, on a natural tree's trunk, with nothing built near it): never your hive's bees, nor those of a nest you moved with Silk Touch. |
@@ -57,8 +57,8 @@ hut, farm shed, school, tavern and the market square's four stalls. The village'
 the market asks it for the next one about once an in-game day, as the village grows (only while there are fewer
 workplaces than about half the grown-ups, counting those already asked for and not yet begun, and only what suits the
 camp: a fishing hut where there is water, a school once there are children, a smithy or mason's yard once there is iron
-to spare). A building counts as ready once it is
-finished, or 95% built with the last few blocks left to the repair job.
+to spare). A building counts as ready once the village counts it as standing: finished, or 95% of its structure built
+with every bed and chest in place (the last few blocks are left to the repair job).
 
 Each trade works at its building's work station (the plan's `job` spot), shopkeepers stand at the `counter`, and shops
 keep their stock in the building's own chests. Ingredients come from the supply chest, never more than the camp keeps
@@ -77,7 +77,7 @@ it dark enough for monsters.
 - **What they sell** is what the shop really holds: the bakery's own bread and pies, the butcher's cooked meat, the
   tailor's carpets and beds, the smith's tools (priced by how worn they are). A stallholder at the camp sells only what
   the camp can spare: food only while the camp has plenty (and then half of it at most), building stock above what the
-  camp keeps (64 planks and torches, 128 cobblestone...).
+  camp keeps (64 planks and torches, 128 cobblestone...) and what the buildings under way still need.
 - **What they buy** is what the camp is short of right now (wheat and other crops, meat or fish when food is short, coal,
   iron, logs, cobblestone, string and wool for the builders), paid from the shop's takings, at most 32 emeralds' worth a
   visit. Shops never buy back what they are selling that day, and always buy for less than they sell.
@@ -88,9 +88,10 @@ it dark enough for monsters.
   stops), everything not sold goes back. What you buy is what was on the shelf; what you sell goes into the supply chest.
 - A shopkeeper goes to the counter when a player comes up to it (within 8 blocks), stays while someone is that near
   (three minutes at most, unless serving, so a player busy beside the counter does not keep them from their work), and
-  minds it when they have nothing else to do. They keep the shop stocked from the supply chest (only what the camp can spare), take food back to the
-  supply chest when the camp is hungry, and take takings above 48 emeralds to the supply chest (for the camp's own trading
-  trips), or bring a few to an empty till.
+  minds it when they have nothing else to do. They keep the shop stocked from the supply chest (only what the camp can
+  spare, never the planks, torches, beds or other stock the builders still need), take food back to the supply chest
+  when the camp is hungry, and take takings above 48 emeralds to the supply chest (for the camp's own trading trips), or
+  bring a few to an empty till.
 
 ## Commands
 
@@ -119,8 +120,11 @@ Both are read-only and work at permission level 0 with cheats off.
   whoever built it), and asks for new ones through `village.VillagePlan.requestBuilding(server, kind, reason)`
   (`market.VillageLink`). With the town plan off (`villageHomes: false`), nothing is asked and trades work plainly at
   the camp.
-- `TaskScheduler.JOB_FILTERS`: a keeper serving a player does only `market.keep_shop` and their needs; once a blacksmith
-  is at work, `combat.smith` is theirs alone.
+- `TaskScheduler.JOB_FILTERS`: a keeper serving a player does only `market.keep_shop` and their needs; while the
+  blacksmith is running `combat.smith`, and for a minute after, nobody else starts it (a run already under way is
+  finished, and a friend who still owes the chest from an interrupted run may always put it back).
+- The market keeps shop shelves off the builders' stock with `architecture.MaterialDemand.wanted` (everything the
+  buildings under way still call for, stored or not).
 - The edit guard's FARM rules allow two more changes, only on the friends' own blocks: filling and emptying their
   composter, and taking the honey from their beehive (same hive, same facing, less honey).
 
@@ -138,12 +142,15 @@ Both are read-only and work at permission level 0 with cheats off.
   until the shopkeeper takes it back, which they do when the camp is hungry; shelves only take food while the camp has
   plenty, and while it has not, the food on them does not count towards what the baker and butcher make, so they bake
   and cook for the supply chest. Friends' food counts (`/friends plan`) do not include the shelves. Only shops have
-  shelves: the tavern's cooking all goes to the supply chest.
+  shelves: the tavern's cooking all goes to the supply chest. Building stock already on a shelf (put there while nothing
+  was being built) stays there: the builders never take from a shop's chests.
 - **Stalls at the camp** trade straight from the supply chest; a player who is not trusted can therefore buy the camp's
   spare goods there. That is by design, and the camp keeps generous amounts back, but switch `playerShops` off on a
   server where that is unwelcome.
-- **The blacksmith** takes over the camp's smith work, but it is still done at the camp's crafting table (the combat
-  package's job), not at the smithy. The doctor does not brew; potions come from Sage's brewing (the progress package).
+- **The blacksmith** has no extra pull towards the smith work: they take it when it beats their own work (a miner
+  blacksmith often keeps mining), and only then hold it for a minute. It is still done at the camp's crafting table
+  (the combat package's job), not at the smithy. The doctor does not brew; potions come from Sage's brewing (the
+  progress package).
 - **The farmer** composts; they do not grow pumpkins, melons or beetroot of their own.
 - **The fisher** never catches treasure (it needs a real bobber in open water); their catch is fish and some junk.
 - **Bees.** Beehives need honeycomb (or a hive) from you to start: the friends never take honey from a wild nest.
