@@ -147,7 +147,7 @@ final class Births {
 		if (!homes.homes(server).isEmpty()) {
 			return homes.roomForOneMore(server, List.of(bond.a, bond.b)) ? null : "there is no free bed in their home";
 		}
-		return population < cabinBeds(server) ? null : "the camp needs a home with a spare bed (a cabin sleeps nine)";
+		return population < cabinBeds(server) ? null : "the camp needs a home with a spare bed (the cabin sleeps nine)";
 	}
 
 	private static boolean mourning(PeopleData data, UUID id, long clock) {
@@ -222,11 +222,13 @@ final class Births {
 		return n;
 	}
 
-	/** Places to sleep in the camp's finished cabins, for the reckoning before the village has homes. */
+	/**
+	 * Places to sleep in the camp's finished cabin, for the reckoning before the village has homes. Only the first cabin
+	 * counts: it is the one the sleep job lays everyone down in (its nine places round the resting spot); nobody sleeps
+	 * in the second cabin, so it makes no room for a baby.
+	 */
 	private static int cabinBeds(MinecraftServer server) {
-		CampData camp = Camp.data(server);
-		int cabins = (camp.isCompleted(Structures.CABIN) ? 1 : 0) + (camp.isCompleted(Structures.CABIN_2) ? 1 : 0);
-		return cabins * CABIN_BEDS;
+		return Camp.data(server).isCompleted(Structures.CABIN) ? CABIN_BEDS : 0;
 	}
 
 	private static void expect(MinecraftServer server, PeopleData data, PeopleData.Bond bond, CompanionEntity a, CompanionEntity b,

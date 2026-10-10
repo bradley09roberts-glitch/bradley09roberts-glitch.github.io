@@ -19,6 +19,7 @@ import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.ai.task.needs.Spots;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Needs;
@@ -31,6 +32,10 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  * the lit campfire, or an evening walk side by side. One of them asks; the other, invited, stops what they are doing
  * unless it is pressing. Hearts float up, their fun and company needs fill, and romance grows. Changes no block.
  *
+ * <p>Whoever keeps the night watch (from dusk) neither asks nor is asked. From the evening ({@value #EVENING}) a date
+ * comes before the village's evening at home: the asker's score is then just above it, and a friend with a date in
+ * hand is kept off it ({@link #mayDo}), so the one asked comes even if they had already gone home for the evening.
+ *
  * <p>At the end of a date a couple who have been going out for two days or more, been on a few dates and are deeply
  * in love (friendship and romance 70 or more) may get engaged: one proposes, the other says yes, and the wedding is
  * set for the next day ({@link Weddings}).
@@ -41,6 +46,12 @@ final class DateTask implements CompanionTask {
 	private static final double ASK = 66;
 	/** The one asked stops for it unless they are busy with something pressing. */
 	private static final double ASKED = 90;
+	/** From the evening the asker scores just above the village's evening at home (70), so a date can still happen. */
+	private static final double ASK_EVENING = 72;
+	/** Evening: sunset dates, and the village's evening at home begins. */
+	private static final long EVENING = 11000;
+	/** The village's evening at home, which a friend with a date in hand leaves for it ({@link #mayDo}). */
+	private static final String EVENING_JOB = "needs.evening";
 	private static final long FROM = 9000;
 	private static final long UNTIL = 12500;
 	private static final double PARTNER_RANGE = 32;
@@ -79,6 +90,18 @@ final class DateTask implements CompanionTask {
 		OUTINGS.clear();
 	}
 
+	/**
+	 * Job filter: a friend with a date in hand (asking or asked) is kept off the village's evening at home until it is
+	 * over, so the one asked stops it and comes. A map lookup, and only for that one job.
+	 */
+	static boolean mayDo(CompanionEntity c, String jobId) {
+		if (!jobId.equals(EVENING_JOB)) {
+			return true;
+		}
+		Outing o = OUTINGS.get(c.getUUID());
+		return o == null || o.over || c.level().getGameTime() > o.until;
+	}
+
 	@Override
 	public String id() {
 		return ID;
@@ -109,19 +132,23 @@ final class DateTask implements CompanionTask {
 				OUTINGS.remove(c.getUUID(), mine);
 				return 0;
 			}
-			return mine.asked.equals(c.getUUID()) ? ASKED : 0;
+			return mine.asked.equals(c.getUUID()) && !NightWatch.isOnWatch(c) ? ASKED : 0;
 		}
 		if (!FriendsConfig.get().romance) {
 			return 0;
 		}
 		long time = Camp.timeOfDay(level);
-		if (time < FROM || time >= UNTIL || Camp.isNightTime(level) || !Spots.inCamp(c, c.blockPosition())) {
+		if (time < FROM || time >= UNTIL || Camp.isNightTime(level) || NightWatch.isOnWatch(c)
+			|| !Spots.inCamp(c, c.blockPosition())) {
 			return 0;
 		}
-		return partnerFor(c, level) != null ? ASK : 0;
+		return partnerFor(c, level) == null ? 0 : time >= EVENING ? ASK_EVENING : ASK;
 	}
 
-	/** Their sweetheart, if both are free for a date today: loaded nearby, at the camp, not dated today, not busy. */
+	/**
+	 * Their sweetheart, if both are free for a date today: loaded nearby, at the camp, not dated today, not busy and not
+	 * keeping the night watch.
+	 */
 	private static @Nullable CompanionEntity partnerFor(CompanionEntity c, ServerLevel level) {
 		MinecraftServer server = level.getServer();
 		PeopleData data = PeopleData.get(server);
@@ -132,7 +159,7 @@ final class DateTask implements CompanionTask {
 		CompanionEntity partner = PeopleEvents.loaded(server, bond.other(c.getUUID()));
 		if (partner == null || partner.level() != level || partner.distanceToSqr(c) > PARTNER_RANGE * PARTNER_RANGE
 			|| OUTINGS.containsKey(partner.getUUID()) || !Relationships.free(partner) || partner.isChild()
-			|| !Spots.inCamp(partner, partner.blockPosition())) {
+			|| NightWatch.isOnWatch(partner) || !Spots.inCamp(partner, partner.blockPosition())) {
 			return null;
 		}
 		return partner;
@@ -167,7 +194,7 @@ final class DateTask implements CompanionTask {
 	/** Where to go: the sunset late on, the fire if it burns, otherwise a walk. */
 	private static @Nullable Outing plan(CompanionEntity c, ServerLevel level, CompanionEntity partner) {
 		long until = level.getGameTime() + (long) 20 * 90;
-		if (Camp.timeOfDay(level) >= 11000) {
+		if (Camp.timeOfDay(level) >= EVENING) {
 			BlockPos high = highGround(c, level);
 			if (high != null) {
 				return new Outing(c.getUUID(), partner.getUUID(), Kind.SUNSET, high, until);
@@ -232,7 +259,8 @@ final class DateTask implements CompanionTask {
 		boolean asker = o.asker.equals(c.getUUID());
 		CompanionEntity partner = PeopleEvents.loaded(level.getServer(), asker ? o.asked : o.asker);
 		long now = level.getGameTime();
-		if (partner == null || partner.level() != level || now > o.until || Camp.isNightTime(level)) {
+		if (partner == null || partner.level() != level || now > o.until || Camp.isNightTime(level) || NightWatch.isOnWatch(c)
+			|| NightWatch.isOnWatch(partner)) {
 			o.over = true;
 			return TaskStatus.SUCCESS;
 		}
