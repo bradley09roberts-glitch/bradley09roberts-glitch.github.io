@@ -54,8 +54,9 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  *
  * <p>The watches follow the clock ({@link Camp#isNightTime}): a thunderstorm by day darkens the sky but keeps no watch.
  *
- * <p><b>The alarm.</b> Every half second the friend on watch, if awake, looks out over the camp: a hostile within
- * {@value #LOOKOUT_RANGE} blocks of them and inside the camp that they can see, or one on the camp's own ground (within
+ * <p><b>The alarm.</b> Every half second the friend on watch, if awake, looks out over the camp, all of it however far
+ * the village has grown it (at least {@value #LOOKOUT_RANGE} blocks round them, at most {@value #MAX_LOOKOUT}): a
+ * hostile inside the camp that they can see, or one on the camp's own ground (within
  * {@value #GROUND_HEIGHT} blocks of the watcher's level or the camp's, not in a cave beneath it) that is close by or
  * already going for someone in the camp, and that a path leads to, sets off the alarm (they shout {@link Line#ALARM}).
  * Sleepers in the camp within {@value #ALARM_RANGE} blocks of a hostile it was raised about wake for a new alarm,
@@ -80,13 +81,19 @@ public final class NightWatch {
 	public static final long MIDNIGHT = 18000;
 	/** Below this energy a friend is too tired to keep watch, and the watch passes on. */
 	public static final double TOO_TIRED = 15;
-	/** How far from the watcher a hostile inside the camp is spotted. */
+	/** How far from the watcher a hostile inside the camp is spotted at least (further, if the camp reaches further). */
 	public static final double LOOKOUT_RANGE = 24;
 	/**
 	 * Sleepers wake, and armed friends rally, for an alarm about a hostile this close to them: as far as a sleeper in the
 	 * old camp's cabin ever was from one the watcher by the campfire spotted.
 	 */
 	public static final double ALARM_RANGE = 40;
+
+	/**
+	 * The furthest the watcher looks out, for a camp grown by its village (whose homes stand up to {@code villageRadius}
+	 * blocks out, 64 at most): its whole ground from the watch post by the campfire, with room to spare.
+	 */
+	private static final double MAX_LOOKOUT = 96;
 	/** A hostile this close to the watcher is noticed even out of sight (heard, if not seen), on the camp's own ground. */
 	private static final double HEARD_RANGE = 12;
 	/** Seen, a hostile further above or below the watcher than this is on a cliff or down a ravine, not in the camp. */
@@ -344,8 +351,12 @@ public final class NightWatch {
 
 	private static void lookout(CompanionEntity watcher, ServerLevel level, CampData data) {
 		BlockPos centre = data.campPos().orElse(watcher.homePos());
+		// The whole camp, as far as the village has grown it, not just the old camp round the campfire: homes stand out
+		// there with friends asleep in them.
+		double range = Math.clamp(Camp.radius(data) + Math.sqrt(Camp.horizontalDistSqr(watcher.blockPosition(), centre)),
+			LOOKOUT_RANGE, MAX_LOOKOUT);
 		LivingEntity spotted = null;
-		for (LivingEntity threat : Threats.around(watcher, LOOKOUT_RANGE)) {
+		for (LivingEntity threat : Threats.around(watcher, range)) {
 			if (ALARMED.contains(threat) || !insideCamp(threat) || Math.abs(threat.getY() - watcher.getY()) > LOOKOUT_HEIGHT
 				|| !noticed(watcher, threat, centre)) {
 				continue;

@@ -21,7 +21,9 @@ and `/friends village` shows it):
   one-block verge beside the three-block-wide street. Plots are sized from each building's own plan, so a cottage takes a
   small plot and the town hall a big one, and plots never overlap each other, the camp's own buildings, the mines, the
   square or a street. A street only opens (and gets laid) as far as its plots reach, so the village grows outwards from
-  the square, street by street. Everyone is told when a new street opens.
+  the square, street by street. Everyone is told when a new street opens. The camp's own buildings put up once the
+  plan is drawn (the storehouse, the watchtower, the second cabin, the library, lantern posts...) keep off the streets
+  and the lamp spots too, and a camp building's site and a plot reserved while it was being looked for never overlap.
 - **The ground.** The streets follow the land as it lies. A plot is only taken on firm natural ground, never on water, a
   field, a player's floor or under trees, and never within two blocks of anything you built (three where the ground has
   to be levelled). Gently uneven ground is levelled first by the levelling job (the survival part of 2.0: bumps dug,
@@ -76,7 +78,9 @@ not open doors; one right beside them in plain sight, or one with a way in, does
 not wake the far end of the village; armed friends rally to an alarm within the same 40 blocks. Children sleep through
 the alarm unless the monster could get at them. Without a home (or while their bed is missing, or a player is asleep in it) they sleep as before: in the
 cabin, or round the camp centre. Players can still sleep through the night as usual: only players count for that, and
-a friend never takes a bed a player is lying in. The night watch is kept as before; the friend on watch stays up.
+a friend never takes a bed a player is lying in. The night watch is kept as before; the friend on watch stays up and
+looks out over the whole camp, as far as the village has grown it (up to 96 blocks round them), so a monster among the
+outer houses raises the alarm and wakes the sleepers there.
 
 ## The day
 
@@ -215,7 +219,10 @@ govern levelling plots; `allowScaffolding` (architecture part) high building.
 - **Moving the camp** (`/friends camp set` elsewhere, more than three blocks from the plan's centre or to another
   dimension) lets the whole town plan go (everyone is told): unfinished buildings stop, the houses' blocks stay, and
   nobody lives in them any more. A new plan is laid at the new camp. Setting the camp again within three blocks of
-  where it was (standing by the campfire, say) keeps the village as it is.
+  where it was (standing by the campfire, say) keeps the village as it is, and the camp keeps its size.
+- **The night watch** is still one friend at the campfire. They see the whole village but cannot see round houses; a
+  monster out of their sight is noticed when it is close to them or going for someone, as before. The second watcher
+  may be woken at midnight in a home at the edge of the village and walk to the campfire through the dark.
 - **Turning `villageHomes` off** stops new plots and building, but plots already reserved stay reserved.
 - **Water** only goes into basins that hold it; a fountain or channel whose rim is not solid blocks all round stays dry.
   Water that flows in from the first bucket fills the rest of a small basin as running water rather than still water. A

@@ -64,25 +64,35 @@ public final class Camp {
 
 	/**
 	 * How far the village's streets and plots reach from the camp centre, in blocks, up to {@code villageRadius}: the
-	 * camp grows with its village. It belongs to this camp centre only: moving the camp starts again without it. A camp
-	 * set again within three blocks (standing by the campfire) keeps the village, so it keeps the reach too, from the
-	 * moment it is set (the village measures it again from the new centre within a second).
+	 * camp grows with its village. It belongs to this camp centre only: moving the camp starts again without it. Setting
+	 * the camp again within {@value #SAME_CENTRE} blocks keeps it (the village keeps its town plan then too), counted
+	 * from the new centre, so the camp does not shrink for the moment before the village measures it again.
 	 */
 	public static int villageReach(CampData data) {
-		if (data.campPos().isEmpty()) {
+		int shift = shiftFrom(data, data.memory(VILLAGE_MEMORY));
+		if (shift < 0) {
 			return 0;
 		}
-		CompoundTag tag = data.memory(VILLAGE_MEMORY);
-		long stored = tag.getLongOr("centre", Long.MIN_VALUE);
-		BlockPos now = data.campPos().get();
-		if (stored != now.asLong()) {
-			int dx = BlockPos.getX(stored) - now.getX();
-			int dz = BlockPos.getZ(stored) - now.getZ();
-			if (stored == Long.MIN_VALUE || dx * dx + dz * dz > 9 || Math.abs(BlockPos.getY(stored) - now.getY()) > 3) {
-				return 0;
-			}
+		return Math.clamp(data.memory(VILLAGE_MEMORY).getIntOr("reach", 0) + shift, 0, FriendsConfig.get().villageRadius);
+	}
+
+	/** A camp set again this close to where it was (in blocks, every way) keeps what it grew. */
+	private static final int SAME_CENTRE = 3;
+
+	/**
+	 * How far the camp centre is from the centre a memory was recorded for (rounded up), or -1 when that is another
+	 * place: not recorded, more than {@value #SAME_CENTRE} blocks off, or no camp.
+	 */
+	private static int shiftFrom(CampData data, CompoundTag tag) {
+		if (data.campPos().isEmpty() || !tag.contains("centre")) {
+			return -1;
 		}
-		return Math.clamp(tag.getIntOr("reach", 0), 0, FriendsConfig.get().villageRadius);
+		BlockPos was = BlockPos.of(tag.getLongOr("centre", 0L));
+		BlockPos now = data.campPos().get();
+		if (Math.abs(was.getY() - now.getY()) > SAME_CENTRE || horizontalDistSqr(was, now) > SAME_CENTRE * SAME_CENTRE) {
+			return -1;
+		}
+		return (int) Math.ceil(Math.sqrt(horizontalDistSqr(was, now)));
 	}
 
 	/** Camp memory of the extra room the camp grew to make space for buildings. */
@@ -92,17 +102,12 @@ public final class Camp {
 
 	/**
 	 * Extra blocks of radius the camp grew because a building would not fit anywhere inside it, even on levelled
-	 * ground. It belongs to this camp centre only: moving the camp starts again without it.
+	 * ground. It belongs to this camp centre only: moving the camp starts again without it (setting it again within
+	 * {@value #SAME_CENTRE} blocks keeps it, as for {@link #villageReach}).
 	 */
 	public static int radiusBonus(CampData data) {
-		if (data.campPos().isEmpty()) {
-			return 0;
-		}
 		CompoundTag tag = data.memory(ROOM_MEMORY);
-		if (tag.getLongOr("centre", Long.MIN_VALUE) != data.campPos().get().asLong()) {
-			return 0;
-		}
-		return Math.max(0, tag.getIntOr("bonus", 0));
+		return shiftFrom(data, tag) < 0 ? 0 : Math.max(0, tag.getIntOr("bonus", 0));
 	}
 
 	/**

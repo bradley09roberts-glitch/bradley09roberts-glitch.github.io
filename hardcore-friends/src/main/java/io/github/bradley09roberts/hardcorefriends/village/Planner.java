@@ -183,6 +183,11 @@ public final class Planner {
 		// The camp may have been set again close by: it keeps covering the village, measured again from its new centre.
 		// (Camp.villageReach keeps the old reach meanwhile; this only writes when something changed.)
 		syncReach(camp, v);
+		for (VillageData.Plot p : v.plots()) {
+			if (!BEDS.containsKey(p.siteKey)) { // beds of the plan version the site was reserved with (see bedCount)
+				Blueprints.forSite(camp, p.siteKey).ifPresent(b -> BEDS.put(p.siteKey, b.marker("bed").size()));
+			}
+		}
 		if (tick % 200 == 7 || reconcileSoon) {
 			reconcileSoon = false;
 			checkSites(level, camp, v);
@@ -451,15 +456,13 @@ public final class Planner {
 		camp.addStat("village_buildings", 1);
 	}
 
-	/** Beds in a house plot's plan (its {@code bed} spots); remembered per plan. */
+	/**
+	 * Beds in a house plot's plan (its {@code bed} spots): of the plan version its site was reserved with, as the bed
+	 * spots themselves are, noted per site once a second; until then, the library's plan.
+	 */
 	static int bedCount(VillageData.Plot p) {
-		Integer known = BEDS.get(p.planId);
-		if (known != null) {
-			return known;
-		}
-		int beds = Blueprints.byPlanId(p.planId).map(b -> b.marker("bed").size()).orElse(0);
-		BEDS.put(p.planId, beds);
-		return beds;
+		Integer known = BEDS.get(p.siteKey);
+		return known != null ? known : Blueprints.byPlanId(p.planId).map(b -> b.marker("bed").size()).orElse(0);
 	}
 
 	// ---------------------------------------------------------------- housing

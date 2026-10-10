@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiPredicate;
 
 import org.jspecify.annotations.Nullable;
 
@@ -37,6 +39,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * <p>When no such spot exists, a second pass accepts a few natural trees to fell ({@link SiteClearing}), and a third
  * accepts uneven natural ground to level, choosing the site that needs the least digging and filling
  * ({@link SiteGrading}).
+ *
+ * <p>A search runs over many ticks while others reserve sites too (the village plans its plots meanwhile), so each
+ * step looks at the reserved sites as they are now, a best spot remembered from earlier in a pass is checked again
+ * before it is taken, and the builder checks the parts once more before reserving them ({@link #isFree}).
  */
 public final class SiteFinder {
 	/** Extra parts of multi-part sites (post rows) live in camp memory under this key. */
@@ -56,6 +62,13 @@ public final class SiteFinder {
 	private static final int GRADE_MARKER_GAP = 3;
 	/** A site needing no more than this many blocks dug and filled is taken without looking further. */
 	private static final int GRADE_GOOD_ENOUGH = 4;
+
+	/**
+	 * Ground other packages keep clear of the camp's own buildings, given the level and a footprint {minX, minZ, maxX,
+	 * maxZ}: true rules the footprint out (the village's streets and lamp spots, once its town plan is laid out).
+	 * Checked for every candidate a search makes, so each must be cheap.
+	 */
+	public static final List<BiPredicate<ServerLevel, int[]>> KEEP_CLEAR = new CopyOnWriteArrayList<>();
 
 	private SiteFinder() {
 	}
@@ -178,6 +191,35 @@ public final class SiteFinder {
 		return boxes;
 	}
 
+	/**
+	 * True if none of these parts touches another reserved site now (with the usual one-block gap): a search spans many
+	 * ticks, so the builder checks again just before reserving what it found.
+	 */
+	public static boolean isFree(CampData data, String siteKey, Blueprint bp, List<Part> parts) {
+		List<int[]> others = reservedBoxes(data, siteKey);
+		for (Part part : parts) {
+			if (clashes(bp.footprint(part.origin(), part.rotation()), others)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * True if a footprint touches any of these boxes. Single blocks of camp furniture (chest, table, furnace) may stand
+	 * side by side; anything else keeps a one-block gap.
+	 */
+	private static boolean clashes(int[] box, List<int[]> others) {
+		boolean single = box[0] == box[2] && box[1] == box[3];
+		for (int[] other : others) {
+			int gap = single && other[0] == other[2] && other[1] == other[3] ? 0 : 1;
+			if (box[0] - gap <= other[2] && box[2] + gap >= other[0] && box[1] - gap <= other[3] && box[3] + gap >= other[1]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	// --------------------------------------------------------------- search
 
 	/** Starts a search for a free site for every part of a plan. */
@@ -209,7 +251,8 @@ public final class SiteFinder {
 		private final Blueprint bp;
 		private final BlockPos centre;
 		private final int radius;
-		private final List<int[]> taken;
+		/** Other sites' footprints and the parts found so far: read afresh every step. */
+		private List<int[]> taken;
 		private final Set<BlockPos> ignoredMarkers = new HashSet<>();
 		private final List<Part> found = new ArrayList<>();
 		private final int maxRing;
@@ -332,6 +375,7 @@ public final class SiteFinder {
 			if (failed) {
 				return null;
 			}
+			refreshTaken(); // a site may have been reserved since the last step
 			// Spots outside the camp or on another site cost almost nothing to rule out, so only real ground checks
 			// count against the budget (with a cap on the cheap ones too).
 			int cheap = 0;
@@ -354,6 +398,14 @@ public final class SiteFinder {
 							cell = 0;
 							continue;
 						}
+						if (pass == 2 && best != null && !stillFree(best)) {
+							// Another site was reserved on the best spot since it was found: look again.
+							best = null;
+							bestTrees = Integer.MAX_VALUE;
+							ring = 0;
+							cell = 0;
+							continue;
+						}
 						if (pass == 2 && best != null) {
 							logsToFell = bestLogs;
 							clearBox = bestClearBox;
@@ -365,6 +417,13 @@ public final class SiteFinder {
 							pass = 3;
 							secondPass = false;
 							gradePass = true;
+							ring = 0;
+							cell = 0;
+							continue;
+						}
+						if (pass == 3 && bestGrade != null && !stillFree(bestGrade)) {
+							bestGrade = null;
+							bestGradeCost = Integer.MAX_VALUE;
 							ring = 0;
 							cell = 0;
 							continue;
@@ -403,6 +462,20 @@ public final class SiteFinder {
 			return found.size() >= bp.parts() ? found : null;
 		}
 
+		/** Reads the other sites' footprints as they are now, and adds the parts found so far. */
+		private void refreshTaken() {
+			List<int[]> now = reservedBoxes(data, bp.id());
+			for (Part part : found) {
+				now.add(bp.footprint(part.origin(), part.rotation()));
+			}
+			taken = now;
+		}
+
+		/** True if a part remembered earlier in the search still keeps clear of every site reserved since. */
+		private boolean stillFree(Part part) {
+			return !clashes(bp.footprint(part.origin(), part.rotation()), taken);
+		}
+
 		/**
 		 * Returns the part placed here if this footprint is a good site, else null. On the second pass a site with
 		 * trees is remembered as the best so far (fewest trees) instead, and the search runs on.
@@ -423,11 +496,11 @@ public final class SiteFinder {
 			if (centre.getX() >= box[0] - 1 && centre.getX() <= box[2] + 1 && centre.getZ() >= box[1] - 1 && centre.getZ() <= box[3] + 1) {
 				return reject(Reject.NO_ROOM);
 			}
-			boolean single = box[0] == box[2] && box[1] == box[3];
-			for (int[] other : taken) {
-				// Single blocks of camp furniture (chest, table, furnace) may stand side by side; anything else keeps a gap.
-				int gap = single && other[0] == other[2] && other[1] == other[3] ? 0 : 1;
-				if (box[0] - gap <= other[2] && box[2] + gap >= other[0] && box[1] - gap <= other[3] && box[3] + gap >= other[1]) {
+			if (clashes(box, taken)) {
+				return reject(Reject.NO_ROOM);
+			}
+			for (BiPredicate<ServerLevel, int[]> keepClear : KEEP_CLEAR) {
+				if (keepClear.test(level, box)) {
 					return reject(Reject.NO_ROOM);
 				}
 			}

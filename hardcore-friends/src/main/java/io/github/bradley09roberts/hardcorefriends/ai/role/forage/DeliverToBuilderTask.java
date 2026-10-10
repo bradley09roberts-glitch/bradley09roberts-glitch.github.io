@@ -32,7 +32,8 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 /**
  * When the current build is short of wood, stone or dirt and this friend carries at least 16 of what is missing (logs
  * or planks, cobblestone, dirt), they take it straight to the builder if within 48 blocks, or else to the supply
- * chest. The builder is whoever is building right now, else Oak while he is working, else whoever built last; the
+ * chest. The builder is the friend whose building reported the shortage (a household building its own home, say),
+ * else whoever is on the camp's build job right now, else Oak while he is working, else whoever built last; the
  * builder themself never delivers (they carry what they need straight to the site).
  */
 public final class DeliverToBuilderTask implements CompanionTask {
@@ -95,8 +96,15 @@ public final class DeliverToBuilderTask implements CompanionTask {
 		return findBuilder(c) != null || SupplyChest.of((ServerLevel) c.level()).isPresent() ? DELIVERY_SCORE : 0;
 	}
 
-	/** Whoever is building: the friend on the build job now, else Oak if he is working, else whoever built last. */
+	/**
+	 * Whoever is building: the friend whose building is short, else the friend on the build job now, else Oak if he is
+	 * working, else whoever built last.
+	 */
 	public static Optional<CompanionEntity> builder() {
+		Optional<CompanionEntity> reporter = CampNeeds.shortageBuilder();
+		if (reporter.isPresent()) {
+			return reporter;
+		}
 		Optional<CompanionEntity> now = SpecialityTask.runner(BUILD_JOB);
 		if (now.isPresent()) {
 			return now;

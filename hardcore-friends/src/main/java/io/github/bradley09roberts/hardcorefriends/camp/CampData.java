@@ -47,7 +47,14 @@ public final class CampData extends SavedData {
 
 	private static final int MAX_POIS = 64;
 	private static final int MAX_LOG = 256;
-	private static final int MAX_PLACED = 20000;
+	/**
+	 * Most block positions the record of the friends' blocks holds, across every dimension. Since 3.0 it also says which
+	 * beds, shop chests, furnaces and street paths are the friends' own: a City-stage village with its streets comes to
+	 * roughly 20,000 on top of the camp's own blocks, and an old village left behind when the camp moves stays recorded,
+	 * so there is room for several. Should it ever fill, new blocks go unrecorded (and look player-built to the
+	 * friends), which is logged once.
+	 */
+	private static final int MAX_PLACED = 100_000;
 
 	// Camp
 	private BlockPos campPos;
@@ -61,6 +68,8 @@ public final class CampData extends SavedData {
 	 * record from an older save whose block is not known yet; the first check fills it in.
 	 */
 	private final Map<String, Long2ObjectOpenHashMap<Block>> placedBlocks = new HashMap<>();
+	/** The full record has been logged this session. */
+	private boolean placedFullLogged;
 
 	// Unity
 	private int unity;
@@ -175,6 +184,7 @@ public final class CampData extends SavedData {
 		Long2ObjectOpenHashMap<Block> placed = placedIn(dimensionKey(level));
 		long key = pos.asLong();
 		if (!placed.containsKey(key) && placedCount() >= MAX_PLACED) {
+			logPlacedFull();
 			return;
 		}
 		if (placed.put(key, state.getBlock()) != state.getBlock()) {
@@ -200,9 +210,24 @@ public final class CampData extends SavedData {
 	 */
 	public void recordPlaced(BlockPos pos) {
 		Long2ObjectOpenHashMap<Block> placed = placedIn(campDimension);
-		if (!placed.containsKey(pos.asLong()) && placedCount() < MAX_PLACED) {
-			placed.put(pos.asLong(), Blocks.AIR);
-			setDirty();
+		if (placed.containsKey(pos.asLong())) {
+			return;
+		}
+		if (placedCount() >= MAX_PLACED) {
+			logPlacedFull();
+			return;
+		}
+		placed.put(pos.asLong(), Blocks.AIR);
+		setDirty();
+	}
+
+	/** Says once a session that the record is full, since from then on the friends' new blocks look player-built. */
+	private void logPlacedFull() {
+		if (!placedFullLogged) {
+			placedFullLogged = true;
+			HardcoreFriends.LOGGER.warn("The record of blocks the friends placed is full ({} positions): blocks they place "
+				+ "from now on are not recorded, so beds, shop chests and paths they add will look player-built to them",
+				MAX_PLACED);
 		}
 	}
 

@@ -38,6 +38,12 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  * supply chest (coal or charcoal; planks only when there are plenty) and loads the friends' own furnace, only when its
  * input is empty or holds the same thing and its output is free for what it makes, so nobody's smelting is disturbed
  * and a player's furnace is never used. The results are collected by the usual furnace job and put in the chest.
+ *
+ * <p>What the furnace already holds counts towards the need (the makings queued in its input, the results waiting in
+ * its output), and a furnace already at work is only topped up with a proper load ({@value #MIN_TOP_UP} or more), so
+ * the builder is not walked to the furnace every few seconds with one block. The job's score is capped at
+ * {@value #MAX_SCORE}, below a building under way plus the scheduler's switching margin, so a trip to the furnace waits
+ * until the builder's run on a building ends instead of pulling them off it.
  */
 public final class KilnTask implements CompanionTask {
 	public static final String ID = "oak.kiln";
@@ -46,6 +52,13 @@ public final class KilnTask implements CompanionTask {
 	/** Planks go in the furnace only when the chest holds at least this many: they are building material first. */
 	private static final int SPARE_PLANKS = 48;
 	private static final int MAX_LOAD = 32;
+	/** A furnace already at work is topped up only with at least this many. */
+	private static final int MIN_TOP_UP = 8;
+	/**
+	 * The most the job scores, however short the buildings are: below the village's building runs (52) plus
+	 * {@code TaskScheduler.PREEMPT_MARGIN}, so it never takes the builder off a building under way.
+	 */
+	private static final double MAX_SCORE = 60;
 	/** Half-smelts one plank burns for (see {@link SmeltTask#halfSmeltsPer}). */
 	private static final int PLANK_HALF_SMELTS = 3;
 
@@ -86,7 +99,7 @@ public final class KilnTask implements CompanionTask {
 			checkedAt = now;
 			work = choose(c, level);
 		}
-		return work == null ? 0 : 44 * CampNeeds.weight(CampNeeds.Need.BUILD);
+		return work == null ? 0 : Math.min(MAX_SCORE, 44 * CampNeeds.weight(CampNeeds.Need.BUILD));
 	}
 
 	/** What to smelt now, if the buildings need it, the camp has its makings and fuel, and the furnace is free for it. */
@@ -107,13 +120,19 @@ public final class KilnTask implements CompanionTask {
 		ItemStack input = f.getItem(CampFurnace.SLOT_INPUT);
 		ItemStack output = f.getItem(CampFurnace.SLOT_RESULT);
 		for (Stock making : SMELTED) {
-			int lack = MaterialDemand.missing(level.getServer(), making);
 			Stock from = making.smeltedFrom();
 			Item result = making.smeltedItem();
-			if (lack <= 0 || from == null || result == null) {
+			if (from == null || result == null) {
 				continue;
 			}
 			if (!output.isEmpty() && !output.is(result)) {
+				continue;
+			}
+			// The furnace's own load counts: what is queued in its input and what waits in its output (the demand only
+			// counts the chest and the backpacks), so the same need is not loaded twice.
+			int queued = !input.isEmpty() && from.matches(input) ? input.getCount() : 0;
+			int lack = MaterialDemand.missing(level.getServer(), making) - queued - output.getCount();
+			if (lack <= 0) {
 				continue;
 			}
 			Item fromItem = itemOf(c, chest, from, input);
@@ -123,7 +142,8 @@ public final class KilnTask implements CompanionTask {
 			int room = input.isEmpty() ? 64 : input.getMaxStackSize() - input.getCount();
 			int have = c.backpack().count(fromItem) + (chest == null ? 0 : SupplyChest.count(chest, s -> s.is(fromItem)));
 			int count = Math.min(Math.min(lack, MAX_LOAD), Math.min(room, have));
-			if (count > 0) {
+			// An idle furnace takes any load; one already at work is only worth the walk for a proper load.
+			if (count > 0 && (input.isEmpty() || count >= MIN_TOP_UP)) {
 				return new Work(making, fromItem, count);
 			}
 		}

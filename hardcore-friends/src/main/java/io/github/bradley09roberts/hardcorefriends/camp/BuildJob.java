@@ -95,6 +95,11 @@ public final class BuildJob {
 	private static final int DESCEND_LIMIT = 20 * 30;
 	/** How many of a plan's remaining entries are looked through for its material forecast. */
 	private static final int FORECAST_SCAN = 4096;
+	/**
+	 * Ticks a friend stands at the end of the way towards an entry, getting no closer, before looking for a spot to
+	 * reach it from: well before the stuck watcher would start nudging them about.
+	 */
+	private static final int APPROACH_PATIENCE = 30;
 
 	private enum Phase {
 		SITE,
@@ -148,6 +153,10 @@ public final class BuildJob {
 	private double descendY;
 	private boolean endAfterDescent;
 	private final Set<Integer> scaffoldTried = new HashSet<>();
+	/** The entry being walked towards, the closest the friend has got to it, and how long they have got no closer. */
+	private int approachFor = -1;
+	private double approachBest;
+	private int approachStill;
 	private Failure failure = Failure.NONE;
 	private boolean finished;
 
@@ -264,6 +273,11 @@ public final class BuildJob {
 			search = SiteFinder.search(level(), data, bp);
 		}
 		List<Part> found = search.step(Math.clamp(SEARCH_AREA_BUDGET / (bp.width() * bp.depth()), 2, 16));
+		if (found != null && !SiteFinder.isFree(data, siteKey, bp, found)) {
+			// Someone reserved a site there (a village plot) while the search ran: look again.
+			search = null;
+			return TaskStatus.RUNNING;
+		}
 		if (found != null) {
 			SiteFinder.reserve(data, siteKey, bp, found, Styles.woodFor(level(), found.getFirst().origin(), bp));
 			CampNeeds.clearSiteProblem();
@@ -757,20 +771,20 @@ public final class BuildJob {
 			}
 			buildable.add(p);
 		}
-		if (!missing.isEmpty()) {
-			Map<Stock, Integer> stillMissing = new EnumMap<>(Stock.class);
-			for (Map.Entry<Stock, Integer> e : missing.entrySet()) {
-				int have = c.backpack().count(e.getKey().item());
-				int need = wanted.getOrDefault(e.getKey(), 0);
-				if (have < need) {
-					stillMissing.put(e.getKey(), need - have);
-				}
+		Map<Stock, Integer> stillMissing = new EnumMap<>(Stock.class);
+		for (Map.Entry<Stock, Integer> e : missing.entrySet()) {
+			int have = c.backpack().count(e.getKey().item());
+			int need = wanted.getOrDefault(e.getKey(), 0);
+			if (have < need) {
+				stillMissing.put(e.getKey(), need - have);
 			}
-			if (!stillMissing.isEmpty()) {
-				String text = Supplies.describe(stillMissing);
-				CampNeeds.reportBuildShortage(level(), Supplies.needs(stillMissing), text);
-				Speech.say(c, Line.NEED_MATERIALS, text);
-			}
+		}
+		if (!stillMissing.isEmpty()) {
+			String text = Supplies.describe(stillMissing);
+			CampNeeds.reportBuildShortage(level(), siteKey, c, Supplies.needs(stillMissing), text);
+			Speech.say(c, Line.NEED_MATERIALS, text);
+		} else {
+			CampNeeds.clearBuildShortage(siteKey); // supplied: this building is short of nothing now
 		}
 		if (buildable.isEmpty()) {
 			return fail(Failure.SHORT);
@@ -996,8 +1010,9 @@ public final class BuildJob {
 
 	/**
 	 * Gets within reach of an entry: walks there if it can be reached from the ground; if it is too high, or there is
-	 * no way to it, stands somewhere nearby that reaches it, on a scaffold pillar if need be. Each entry gets one try at
-	 * a scaffold; after that it is skipped (and picked up by a later run).
+	 * no way to it (the walk stops short of reach, as it does below a wall or roof block), stands somewhere nearby that
+	 * reaches it, on a scaffold pillar if need be. Each entry gets one try at a scaffold; after that it is skipped (and
+	 * picked up by a later run).
 	 */
 	private TaskStatus approach(Placement p) {
 		Actions actions = c.actions();
@@ -1007,7 +1022,7 @@ public final class BuildJob {
 		boolean tooHigh = dx * dx + dz * dz <= 2.5 * 2.5 && pos.getY() > c.getBlockY() + 3;
 		if (!tooHigh) {
 			actions.walkTo(pos, 2.0);
-			if (!actions.isStuck()) {
+			if (!actions.isStuck() && !stoppedShort(p)) {
 				return TaskStatus.RUNNING;
 			}
 			actions.stopWalking();
@@ -1039,17 +1054,31 @@ public final class BuildJob {
 	}
 
 	/**
-	 * A pillar is wanted and there is nothing to build it from: adds dirt or cobblestone to what the camp is told the
+	 * True once the walk towards this entry has ended short of reach: the friend has stood at the end of the way there
+	 * for {@value #APPROACH_PATIENCE} ticks without getting any closer. Walking on the spot until the walk counts as
+	 * stuck would only have the stuck watcher hop and push them about beside the wall.
+	 */
+	private boolean stoppedShort(Placement p) {
+		double dist = c.position().distanceTo(Vec3.atCenterOf(p.pos()));
+		if (approachFor != p.index() || dist < approachBest - 0.25) {
+			approachFor = p.index();
+			approachBest = dist;
+			approachStill = 0;
+			return false;
+		}
+		if (c.getNavigation().isDone()) {
+			approachStill++; // standing at the end of the way there (walking round a corner does not count)
+		}
+		return approachStill > APPROACH_PATIENCE;
+	}
+
+	/**
+	 * A pillar is wanted and there is nothing to build it from: adds dirt or cobblestone to what the camp is told this
 	 * building is short of (keeping anything already reported), so the gatherers bring some.
 	 */
 	private void reportScaffoldShortage(int blocks) {
-		String text = Stock.FILL.describe(blocks);
-		Map<CampNeeds.Need, Integer> shortage = new EnumMap<>(CampNeeds.Need.class);
-		shortage.putAll(CampNeeds.buildShortage());
-		Supplies.needs(Map.of(Stock.FILL, blocks)).forEach((need, n) -> shortage.merge(need, n, Math::max));
-		String before = CampNeeds.shortageText(level().getGameTime());
-		CampNeeds.reportBuildShortage(level(), shortage, before.isEmpty() ? text
-			: before.contains(Stock.FILL.describe(2).substring(2)) ? before : before + ", " + text);
+		CampNeeds.addBuildShortage(level(), siteKey, c, Supplies.needs(Map.of(Stock.FILL, blocks)),
+			Stock.FILL.describe(blocks));
 	}
 
 	/** Every cell the plan uses on this site (no scaffold may stand in one), worked out once per run. */
@@ -1201,7 +1230,7 @@ public final class BuildJob {
 				Speech.say(c, Line.BUILDING_FINISHED, name());
 				Construction.fireFinished(level(), siteKey, bp);
 			}
-			CampNeeds.reportBuildShortage(level(), Map.of(), "");
+			CampNeeds.clearBuildShortage(siteKey);
 		}
 		return TaskStatus.SUCCESS;
 	}
