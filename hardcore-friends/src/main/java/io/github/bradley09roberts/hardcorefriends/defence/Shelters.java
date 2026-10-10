@@ -201,9 +201,7 @@ final class Shelters {
 			if (t.position().distanceToSqr(to) <= keepOff * keepOff) {
 				return false;
 			}
-			double path = creeper ? CREEPER_PATH : PATH;
-			if (distanceToSegmentSqr(t.position(), from, to) <= path * path
-				&& t.position().distanceToSqr(to) < from.distanceToSqr(to)) {
+			if (Area.inTheWay(t.position(), from, to, creeper ? CREEPER_PATH : PATH)) {
 				return false; // it stands between them and the shelter
 			}
 		}
@@ -264,16 +262,6 @@ final class Shelters {
 			}
 		}
 		return false;
-	}
-
-	private static double distanceToSegmentSqr(Vec3 p, Vec3 a, Vec3 b) {
-		Vec3 ab = b.subtract(a);
-		double len = ab.lengthSqr();
-		if (len < 1.0E-6) {
-			return p.distanceToSqr(a);
-		}
-		double t = Math.clamp(p.subtract(a).dot(ab) / len, 0.0, 1.0);
-		return p.distanceToSqr(a.add(ab.scale(t)));
 	}
 
 	static void clear() {

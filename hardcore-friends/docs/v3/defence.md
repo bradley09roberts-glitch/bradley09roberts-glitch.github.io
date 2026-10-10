@@ -18,7 +18,9 @@ Nothing here has been run in game yet. See **Honest limits** at the end.
 - **A raid**: a pillager raid on the village, or on a game village near the camp.
 - **A bad omen**: a player in the village with the Raid Omen (a raid is about to start), so everyone is ready before
   the raiders arrive.
-- **You**: ring a bell in the village yourself (right-click it) and the village treats it as an alarm.
+- **You**: ring a bell in the village yourself (right-click it) and the village treats it as an alarm. On a shared
+  world, only the camp's owner and the players they trust can sound it this way (as with giving orders); anyone may
+  still ring a bell for the sound.
 
 **Who notices.** The friends who are awake in the village keep an eye out: the one on the night watch and the guards
 always, and the others in turn. A hostile counts when one of them can see it, or it is right beside them (within 6
@@ -27,7 +29,7 @@ hostile rings it once while it stays about.
 
 **The bell.** The nearest friend who is awake, grown up and fit runs to the bell and rings it three times, with the
 game's own bell, so you hear it and raiders near it glow just as when a villager rings it. Nobody is ever sent to a
-bell with a creeper near it. The bell rung is, in this order:
+bell with a creeper near it, and with other monsters beside the bell only someone fit to fight is sent. The bell rung is, in this order:
 
 1. the **town hall's bell** (once a bell hangs there: the builders hang it once the camp has a bell in the chest);
 2. the **friends' own bell**: if the village has no bell at all and no town hall yet (planned or standing: the town
@@ -45,13 +47,13 @@ With no bell (or nobody near it), the alarm is simply shouted. During a raid the
 - **Children and everyone not fit to fight go indoors**: to their own home if it is safe to get to, otherwise the
   nearest other house, the town hall (or the tavern, chapel or school), or the camp's cabin. They never run towards a
   creeper, or past a monster standing between them and the door; if there is nowhere safe to go, they stay where they
-  are and the usual reflexes keep them away from danger. Once in, they **shut the door behind them** (only the
+  are and the usual reflexes keep them away from danger. Heavy work is put down for it. Once in, they **shut the door behind them** (only the
   friends' own wooden doors, which you can always open) and stand at a spot inside, away from the windows where the
   house allows. Someone already indoors stays put. At night, anyone indoors whose bed is there simply goes to bed.
 - **Fighters take their posts**: everyone grown up and fit to fight (healthy, not too tired, not falling back) who is a
   warrior, holds a guard trade, or carries a sword, an axe or a bow with arrows. They go to the post nearest the
-  danger (a gate, a stretch of wall, the bell, the camp centre), never right on top of it and never near a creeper, and
-  stand ready there. The alarm gets sleeping fighters up, as the night watch's alarm does. The friend on the night
+  danger (a gate, a stretch of wall, the bell, the camp centre), never right on top of it, never near a creeper and
+  never past one on the way, and stand ready there. The alarm gets sleeping fighters up, as the night watch's alarm does. The friend on the night
   watch and the guards on duty keep their own posts.
 - **Who the defenders go for first**: a monster at a door (zombies trying to break doors in on Hard, vindicators),
   then one going for someone in the village (a villager, an iron golem, you, a friend; a skeleton shooting in from

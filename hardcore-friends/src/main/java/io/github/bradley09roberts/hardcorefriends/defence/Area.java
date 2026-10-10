@@ -7,6 +7,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.Vec3;
 
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
@@ -60,6 +61,24 @@ final class Area {
 		}
 		BlockPos centre = data.campPos().orElseThrow();
 		return inside(level, e.blockPosition(), centre, Camp.radius(data) + margin);
+	}
+
+	/**
+	 * True if this danger stands between {@code from} and {@code to}: within {@code clearance} blocks of the straight way
+	 * there, and nearer the end of it than the start.
+	 */
+	static boolean inTheWay(Vec3 danger, Vec3 from, Vec3 to, double clearance) {
+		return distanceToSegmentSqr(danger, from, to) <= clearance * clearance && danger.distanceToSqr(to) < from.distanceToSqr(to);
+	}
+
+	private static double distanceToSegmentSqr(Vec3 p, Vec3 a, Vec3 b) {
+		Vec3 ab = b.subtract(a);
+		double len = ab.lengthSqr();
+		if (len < 1.0E-6) {
+			return p.distanceToSqr(a);
+		}
+		double t = Math.clamp(p.subtract(a).dot(ab) / len, 0.0, 1.0);
+		return p.distanceToSqr(a.add(ab.scale(t)));
 	}
 
 	/** True if this friend is at work with the team in the village (not following anyone off, not down the mine). */

@@ -25,7 +25,7 @@ import io.github.bradley09roberts.hardcorefriends.village.VillagePlan;
  *
  * <p>When the alarm rings, fighters go to the post nearest the danger that is not right on top of it, or, before the
  * village has any, to the bell or the camp centre ({@link #alarmPost}); never within {@value Alarm#CREEPER_CLEARANCE}
- * blocks of a creeper.
+ * blocks of a creeper or past one on the way.
  */
 final class Posts {
 	/** One post: what it is ("the watchtower lookout"), where the guard stands, and the patrol from it. */
@@ -35,6 +35,8 @@ final class Posts {
 	private static final int REFRESH = 20 * 60;
 	/** A fighter is not sent to a post closer than this to the danger itself. */
 	private static final double FRONT = 4;
+	/** Nor to one whose straight way there passes this close to a creeper. */
+	private static final double CREEPER_PATH = 6;
 
 	private static List<Post> cache = List.of();
 	private static long cachedAt = Long.MIN_VALUE;
@@ -185,13 +187,24 @@ final class Posts {
 		for (BlockPos c : candidates) {
 			Vec3 at = Vec3.atBottomCenterOf(c);
 			double d = at.distanceToSqr(from);
-			if (focus != null && d < FRONT * FRONT || nearCreeper(at, creepers) || d >= bestDist) {
+			if (focus != null && d < FRONT * FRONT || d >= bestDist || nearCreeper(at, creepers)
+				|| creeperInTheWay(fighter.position(), at, creepers)) {
 				continue;
 			}
 			bestDist = d;
 			best = c;
 		}
 		return best;
+	}
+
+	/** True if a creeper stands near the straight way from the fighter to the post: they are never sent past one. */
+	private static boolean creeperInTheWay(Vec3 from, Vec3 to, List<LivingEntity> creepers) {
+		for (LivingEntity creeper : creepers) {
+			if (Area.inTheWay(creeper.position(), from, to, CREEPER_PATH)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static boolean nearCreeper(Vec3 at, List<LivingEntity> creepers) {
