@@ -102,7 +102,7 @@ final class StockShopTask extends TradeJob {
 			if (onShelves >= target) {
 				continue;
 			}
-			int spare = good.spare(Stores.supplyCount(level, good.match()));
+			int spare = good.spare(level, Stores.supplyCount(level, good.match()));
 			int n = Math.min(Math.min(target - onShelves, spare), 64);
 			if (n >= good.unit()) {
 				return new Trip(good.key().replace('_', ' '), good.match(), n, true);

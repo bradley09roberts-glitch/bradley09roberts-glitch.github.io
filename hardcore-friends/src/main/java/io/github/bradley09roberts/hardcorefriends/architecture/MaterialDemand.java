@@ -37,6 +37,7 @@ public final class MaterialDemand {
 
 	private static final Map<String, Forecast> FORECASTS = new ConcurrentHashMap<>();
 	private static volatile Map<Stock, Integer> missing = Map.of();
+	private static volatile Map<Stock, Integer> wanted = Map.of();
 	private static volatile long computedAt = Long.MIN_VALUE / 2;
 
 	private MaterialDemand() {
@@ -56,6 +57,7 @@ public final class MaterialDemand {
 	public static void clearAll() {
 		FORECASTS.clear();
 		missing = Map.of();
+		wanted = Map.of();
 		computedAt = Long.MIN_VALUE / 2;
 	}
 
@@ -74,6 +76,15 @@ public final class MaterialDemand {
 		return missing;
 	}
 
+	/**
+	 * How many of this kind the buildings under way still call for, stored or not (with what the missing parts are made
+	 * from), so nothing else takes the builders' stock out of their reach (a shop stocking its shelves).
+	 */
+	public static int wanted(MinecraftServer server, Stock s) {
+		missing(server); // worked out together, every 30 s
+		return wanted.getOrDefault(s, 0);
+	}
+
 	private static Map<Stock, Integer> compute(MinecraftServer server, long now) {
 		Map<Stock, Integer> demand = new EnumMap<>(Stock.class);
 		FORECASTS.values().removeIf(f -> now - f.at() > STALE || now < f.at());
@@ -81,6 +92,7 @@ public final class MaterialDemand {
 			f.remaining().forEach((k, v) -> demand.merge(k, v, Integer::sum));
 		}
 		if (demand.isEmpty()) {
+			wanted = Map.of();
 			return Map.of();
 		}
 		Map<String, Integer> woolColours = new HashMap<>();
@@ -115,6 +127,7 @@ public final class MaterialDemand {
 				demand.merge(from, lack, Integer::sum);
 			}
 		}
+		wanted = Map.copyOf(demand);
 		return Map.copyOf(short_);
 	}
 

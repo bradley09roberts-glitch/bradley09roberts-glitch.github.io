@@ -57,10 +57,17 @@ public final class Market {
 	/** Every job of this package has an id starting with this. */
 	public static final String JOB_PREFIX = "market.";
 	private static final String SMITH_JOB = "combat.smith";
+	/** What a friend called away from smithing still owes the chest: the combat package's record, kept with them. */
+	private static final String SMITH_OWED = "combat.smith_owed";
 	private static final int SMITH_REFRESH = 100;
+	/** The smith work stays the blacksmith's for this long after they were last seen at it (a minute). */
+	private static final int SMITH_HOLD = 20 * 60;
 
 	private static @Nullable UUID blacksmith;
 	private static long blacksmithAt = Long.MIN_VALUE / 2;
+	/** The blacksmith last seen at the smith work, and when. */
+	private static @Nullable UUID smithing;
+	private static long smithingAt = Long.MIN_VALUE / 2;
 
 	private Market() {
 	}
@@ -125,6 +132,8 @@ public final class Market {
 		BeekeepTask.clear();
 		blacksmith = null;
 		blacksmithAt = Long.MIN_VALUE / 2;
+		smithing = null;
+		smithingAt = Long.MIN_VALUE / 2;
 	}
 
 	/** This friend's trade, if they hold one. */
@@ -133,18 +142,45 @@ public final class Market {
 	}
 
 	/**
-	 * The trades' job filter. A keeper serving a player does nothing but mind the counter and their own needs; and once
-	 * the village has a blacksmith at work, the camp's smith work is theirs.
+	 * The trades' job filter. A keeper serving a player does nothing but mind the counter and their own needs; and while
+	 * the village's blacksmith is at the camp's smith work, it is theirs ({@link #maySmith}).
 	 */
 	static boolean mayDo(CompanionEntity c, String jobId) {
 		if (Shops.isTrading(c)) {
 			return jobId.startsWith("needs.") || jobId.equals(KeepShopTask.ID);
 		}
 		if (jobId.equals(SMITH_JOB) && c.level() instanceof ServerLevel level) {
-			UUID smith = blacksmithAtWork(level);
-			return smith == null || smith.equals(c.getUUID());
+			return maySmith(c, level);
 		}
 		return true;
+	}
+
+	/**
+	 * The camp's smith work is the blacksmith's while they really do it: at it now, or within the last minute (between
+	 * one piece and the next). A blacksmith busy with their own work, too weak, short of backpack room or away on a trip
+	 * leaves it to anyone, as before there was one, so the camp's gear never waits on them. A piece already under way is
+	 * finished, and putting back what an interrupted run fetched is always allowed, so nothing stays owed.
+	 */
+	private static boolean maySmith(CompanionEntity c, ServerLevel level) {
+		UUID smith = blacksmithAtWork(level);
+		if (smith == null) {
+			return true;
+		}
+		CompanionTask current = c.scheduler().current();
+		boolean atIt = current != null && current.id().equals(SMITH_JOB);
+		long now = level.getGameTime();
+		if (smith.equals(c.getUUID())) {
+			if (atIt) {
+				smithing = smith; // seen at it: each check while the job runs (every second) renews the hold
+				smithingAt = now;
+			}
+			return true;
+		}
+		if (atIt || c.extra().contains(SMITH_OWED)) {
+			return true;
+		}
+		long since = now - smithingAt;
+		return !smith.equals(smithing) || since < 0 || since >= SMITH_HOLD;
 	}
 
 	/**
