@@ -121,6 +121,14 @@ public final class FriendsConfig {
 	// ---- A proper village (package village) ----
 
 	// ---- Shops and trades (package market) ----
+	/** Grown-ups take up village trades (baker, fisher, shopkeeper...) at the village's workplaces, or plainly at the camp. */
+	public boolean villageTrades = true;
+	/** Shopkeepers at their counters trade with players by day (the game's trading screen, paid in emeralds). */
+	public boolean playerShops = true;
+	/** Grown-ups always left without a trade, so the camp's own work never runs short of hands (0 to 20). */
+	public int friendsWithoutTrade = 3;
+	/** The market asks the village's town plan for shops and workplaces as the village grows. */
+	public boolean requestWorkplaces = true;
 
 	public static FriendsConfig get() {
 		return instance;
@@ -181,5 +189,7 @@ public final class FriendsConfig {
 		relationshipSpeed = Double.isFinite(relationshipSpeed) ? Math.clamp(relationshipSpeed, 0.25, 4.0) : 1.0;
 		// Better builds: a pillar taller than six cannot be taken down from the ground beside it.
 		maxScaffoldHeight = Math.clamp(maxScaffoldHeight, 2, 6);
+		// Shops and trades (package market)
+		friendsWithoutTrade = Math.clamp(friendsWithoutTrade, 0, 20);
 	}
 }
