@@ -130,6 +130,12 @@ public final class FriendsConfig {
 	/** The market asks the village's town plan for shops and workplaces as the village grows. */
 	public boolean requestWorkplaces = true;
 
+	// ---- Village life (package life) ----
+
+	// ---- Defending the village (package defence) ----
+
+	// ---- Pets and maps (package pets) ----
+
 	public static FriendsConfig get() {
 		return instance;
 	}
@@ -191,5 +197,8 @@ public final class FriendsConfig {
 		maxScaffoldHeight = Math.clamp(maxScaffoldHeight, 2, 6);
 		// Shops and trades (package market)
 		friendsWithoutTrade = Math.clamp(friendsWithoutTrade, 0, 20);
+		// Village life (package life)
+		// Defending the village (package defence)
+		// Pets and maps (package pets)
 	}
 }

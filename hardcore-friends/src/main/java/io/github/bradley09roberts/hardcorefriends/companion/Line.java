@@ -377,6 +377,18 @@ public enum Line {
 	TRADE_WORK(Priority.CASUAL, 2400, 1),
 
 	// ==== end of market ====
+
+	// ==== Village life (package life): calendar, festivals, music, funerals, the Chronicle ====
+	// (add this package's lines below this comment, each ending with a comma)
+	// ==== end of life ====
+
+	// ==== Defending the village (package defence): the bell, guards, raids, fire ====
+	// (add this package's lines below this comment, each ending with a comma)
+	// ==== end of defence ====
+
+	// ==== Pets and maps (package pets) ====
+	// (add this package's lines below this comment, each ending with a comma)
+	// ==== end of pets ====
 	;
 
 	/** How a line is rate-limited and who hears it. */
