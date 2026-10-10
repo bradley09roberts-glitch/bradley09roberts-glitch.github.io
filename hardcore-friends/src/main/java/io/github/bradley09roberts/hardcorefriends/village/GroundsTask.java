@@ -177,12 +177,11 @@ final class GroundsTask implements CompanionTask {
 				return List.of();
 			}
 			BlockState here = level.getBlockState(w);
-			if (!here.getFluidState().isEmpty()) {
-				continue; // wet already
-			}
-			if (!here.isAir()) {
+			boolean wet = !here.getFluidState().isEmpty();
+			if (!wet && !here.isAir()) {
 				return List.of(); // something stands in the basin
 			}
+			// Every spot, wet or dry, must hold its water: a basin with a gap anywhere gets no more.
 			BlockState below = level.getBlockState(w.below());
 			if (!below.isFaceSturdy(level, w.below(), Direction.UP) && !below.getFluidState().is(FluidTags.WATER)) {
 				return List.of();
@@ -198,7 +197,9 @@ final class GroundsTask implements CompanionTask {
 					return List.of(); // the water could run out this way
 				}
 			}
-			dry.add(w);
+			if (!wet) {
+				dry.add(w);
+			}
 		}
 		return dry;
 	}
@@ -226,20 +227,43 @@ final class GroundsTask implements CompanionTask {
 	private static List<BlockPos> fieldWork(CompanionEntity c, ServerLevel level, String siteKey) {
 		boolean hoe = c.actions().hasTool(ItemTags.HOES);
 		boolean seeds = has(c, Crops.IS_SEED);
+		List<BlockPos> soil = soil(level, siteKey);
 		List<BlockPos> list = new ArrayList<>();
-		for (BlockPos cell : soil(level, siteKey)) {
+		if (soil.isEmpty()) {
+			return list;
+		}
+		// The water round the field, looked up once: a few hundred block reads, not one search per cell.
+		List<BlockPos> water = new ArrayList<>();
+		BlockPos first = soil.getFirst();
+		BlockPos last = soil.getLast();
+		for (BlockPos p : BlockPos.betweenClosed(first.offset(-HYDRATION, 0, -HYDRATION), last.offset(HYDRATION, 1, HYDRATION))) {
+			if (level.isLoaded(p) && level.getFluidState(p).is(FluidTags.WATER)) {
+				water.add(p.immutable());
+			}
+		}
+		for (BlockPos cell : soil) {
 			if (!level.isLoaded(cell)) {
 				continue;
 			}
 			BlockState s = level.getBlockState(cell);
 			BlockState above = level.getBlockState(cell.above());
-			if (hoe && Landscape.isEarth(s) && above.isAir() && nearWater(level, cell)
+			if (hoe && Landscape.isEarth(s) && above.isAir() && near(water, cell)
 				|| seeds && s.is(Blocks.FARMLAND) && above.isAir()
 				|| Crops.isRipe(level, cell.above(), above)) {
 				list.add(cell);
 			}
 		}
 		return list;
+	}
+
+	private static boolean near(List<BlockPos> water, BlockPos cell) {
+		for (BlockPos w : water) {
+			if (Math.abs(w.getX() - cell.getX()) <= HYDRATION && Math.abs(w.getZ() - cell.getZ()) <= HYDRATION
+				&& w.getY() >= cell.getY() && w.getY() <= cell.getY() + 1) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** Water within {@value #HYDRATION} blocks across, on the soil's level or one above: farmland there stays moist. */

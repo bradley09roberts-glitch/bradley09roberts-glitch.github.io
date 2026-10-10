@@ -1,16 +1,21 @@
 package io.github.bradley09roberts.hardcorefriends.village;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
+import io.github.bradley09roberts.hardcorefriends.ai.action.Actions;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
 import io.github.bradley09roberts.hardcorefriends.architecture.Construction;
+import io.github.bradley09roberts.hardcorefriends.camp.Blueprint;
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
 import io.github.bradley09roberts.hardcorefriends.camp.BuildJob;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
@@ -70,6 +75,7 @@ final class VillageBuildTask implements CompanionTask {
 	private @Nullable String chosen;
 	private long chosenAt = Long.MIN_VALUE / 2;
 	private int cooldown = 600;
+	private final List<BlockPos> torches = new ArrayList<>();
 
 	VillageBuildTask(Mode mode) {
 		this.mode = mode;
@@ -169,6 +175,8 @@ final class VillageBuildTask implements CompanionTask {
 		job = j;
 		siteKey = key;
 		targetName = Blueprints.displayName(Camp.data(level.getServer()), key);
+		torches.clear();
+		torches.addAll(ownTorches(level, key));
 		CLAIMS.put(key, new Claim(c.getUUID(), level.getGameTime()));
 		Speech.say(c, Line.WORK_START, describe());
 		return true;
@@ -187,6 +195,10 @@ final class VillageBuildTask implements CompanionTask {
 			return TaskStatus.FAILURE; // someone else has it (a claim that lapsed while we were away)
 		}
 		CLAIMS.put(key, new Claim(c.getUUID(), now));
+		if (!torches.isEmpty()) {
+			takeUpTorch(c, (ServerLevel) c.level());
+			return TaskStatus.RUNNING;
+		}
 		TaskStatus status = j.tick();
 		if (status == TaskStatus.FAILURE) {
 			int wait = switch (j.failure()) {
@@ -203,8 +215,56 @@ final class VillageBuildTask implements CompanionTask {
 		return status;
 	}
 
+	/**
+	 * The friends' own torches standing where the building goes (the landscaper lit the ground before the village grew
+	 * over it): taken up first, so none is left in a wall. Only torches the friends placed, through the edit guard.
+	 */
+	private static List<BlockPos> ownTorches(ServerLevel level, String key) {
+		List<BlockPos> list = new ArrayList<>();
+		VillageData.Plot plot = VillageData.get(level.getServer()).plotBySite(key).orElse(null);
+		CampData camp = Camp.data(level.getServer());
+		Blueprint plan = Blueprints.forSite(camp, key).orElse(null);
+		if (plot == null || plan == null) {
+			return list;
+		}
+		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+		for (int x = plot.box[0]; x <= plot.box[2]; x++) {
+			for (int z = plot.box[1]; z <= plot.box[3]; z++) {
+				for (int y = plot.floorY - 1; y < plot.floorY + plan.height(); y++) {
+					m.set(x, y, z);
+					if (level.isLoaded(m) && PlotSurvey.ownTorch(level, camp, level.getBlockState(m), m)) {
+						list.add(m.immutable());
+					}
+				}
+			}
+		}
+		return list;
+	}
+
+	private void takeUpTorch(CompanionEntity c, ServerLevel level) {
+		BlockPos t = torches.getFirst();
+		if (!PlotSurvey.ownTorch(level, Camp.data(level.getServer()), level.getBlockState(t), t)) {
+			torches.removeFirst();
+			return;
+		}
+		if (!c.actions().canReach(t)) {
+			c.actions().walkTo(t, 2.5);
+			if (c.actions().isStuck()) {
+				c.actions().stopWalking();
+				torches.removeFirst(); // out of reach: the building simply goes round it
+			}
+			return;
+		}
+		c.actions().stopWalking();
+		if (c.actions().mine(t, WorldEditGuard.Reason.BUILD) != Actions.Result.RUNNING) {
+			torches.removeFirst();
+		}
+	}
+
 	@Override
 	public void stop(CompanionEntity c) {
+		c.actions().cancelMining();
+		torches.clear();
 		BuildJob j = job;
 		if (j != null) {
 			j.stop();

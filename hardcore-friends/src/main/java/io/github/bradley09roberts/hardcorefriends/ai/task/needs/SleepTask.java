@@ -86,10 +86,14 @@ public final class SleepTask implements CompanionTask {
 	/** A friend with their target this close is fighting (sleepers nearby wake). */
 	private static final double FIGHTING_REACH = 4;
 	private static final int RING = 3;
+	/** How long a friend who could not get to their own bed sleeps the old way before trying it again. */
+	private static final int BED_BLOCKED_TICKS = 20 * 60 * 5;
 
 	private @Nullable BlockPos bed;
 	/** The head of their own bed in their village home, when they sleep in a real bed ({@link Spots#ownBed}). */
 	private @Nullable BlockPos realBed;
+	/** Until when their own bed is left alone after they could not get to it (game time). */
+	private long realBedBlockedUntil = Long.MIN_VALUE;
 	private boolean lyingDown;
 	private boolean nap;
 	private int asleepTicks;
@@ -145,7 +149,7 @@ public final class SleepTask implements CompanionTask {
 		lyingDown = false;
 		asleepTicks = 0;
 		// A friend with a home of their own sleeps in their own bed there; everyone else as before.
-		realBed = Spots.ownBed(c);
+		realBed = c.level().getGameTime() < realBedBlockedUntil ? null : Spots.ownBed(c);
 		if (realBed != null) {
 			BlockPos beside = Spots.besideBed(c, realBed);
 			bed = beside != null ? beside : realBed;
@@ -163,9 +167,18 @@ public final class SleepTask implements CompanionTask {
 		}
 		if (!lyingDown) {
 			BlockPos own = realBed;
+			// Beside the bed, or right by its head (never through a wall: that is two blocks or more away).
 			boolean there = c.actions().walkTo(bed, BED_REACH)
-				|| own != null && c.position().distanceToSqr(Vec3.atBottomCenterOf(own)) <= 2.5 * 2.5;
+				|| own != null && c.position().distanceToSqr(Vec3.atBottomCenterOf(own)) <= 1.5 * 1.5;
 			if (!there && c.actions().isStuck()) {
+				if (own != null) {
+					// Their own bed cannot be got to tonight (a door blocked, say): sleep the old way, and try it again later.
+					realBedBlockedUntil = c.level().getGameTime() + BED_BLOCKED_TICKS;
+					realBed = null;
+					bed = bedFor(c);
+					c.actions().stopWalking();
+					return bed != null ? TaskStatus.RUNNING : TaskStatus.FAILURE;
+				}
 				if (c.blockPosition().distSqr(bed) > 9) {
 					return TaskStatus.FAILURE;
 				}

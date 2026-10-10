@@ -11,8 +11,8 @@ import org.jspecify.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprint;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
@@ -161,8 +161,10 @@ final class PlotSearch {
 		if (mode != Mode.GATE && mode != Mode.WALL && TownPlan.coversLampSlot(centre, box)) {
 			return false;
 		}
+		// A length of wall joins the gate (or the wall before it) end to end: it may touch, but never overlap.
+		int gap = mode == Mode.WALL ? 0 : 1;
 		for (int[] other : taken) {
-			if (TownPlan.overlaps(box, other, 1)) {
+			if (TownPlan.overlaps(box, other, gap)) {
 				return false;
 			}
 		}
@@ -201,7 +203,7 @@ final class PlotSearch {
 				BlockPos bank = w.relative(land);
 				int rotation = Blueprint.rotationFacing(land.getOpposite());
 				BlockPos origin = TownPlan.originAt(bank, rotation, mid, 0);
-				list.add(new TownPlan.Candidate(-1, 0, 0, rotation, origin, plan.footprint(origin, rotation)));
+				list.add(new TownPlan.Candidate(TownPlan.WATERSIDE, 0, 0, rotation, origin, plan.footprint(origin, rotation)));
 			}
 		}
 		return list;

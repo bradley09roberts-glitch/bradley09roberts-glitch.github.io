@@ -113,12 +113,29 @@ public final class TownPlan {
 		return false;
 	}
 
-	/** A readable side of a street: "the north side of High Street". */
+	/** The street code of a plot by the water (not on a street). */
+	public static final int WATERSIDE = -2;
+	/** The street code of a length of town wall. */
+	public static final int EDGE = -3;
+
+	/**
+	 * Where a plot is, readably: "the north side of High Street", "the square", "the waterside", "the edge of the
+	 * village", or for the town gate across a street "High Street, at the edge of the village".
+	 */
 	public static String sideName(int street, int side) {
+		if (street == WATERSIDE) {
+			return "the waterside";
+		}
+		if (street == EDGE) {
+			return "the edge of the village";
+		}
 		if (street < 0 || street >= STREETS.size()) {
-			return "by the square";
+			return "the square";
 		}
 		Street s = STREETS.get(street);
+		if (side == 0) {
+			return s.name() + ", at the edge of the village";
+		}
 		String dir = s.alongX() ? (side > 0 ? "south" : "north") : (side > 0 ? "east" : "west");
 		return "the " + dir + " side of " + s.name();
 	}
@@ -273,7 +290,7 @@ public final class TownPlan {
 		int offsetZ = pieceJoin[2] - wallJoin[2];
 		BlockPos shift = Blueprint.worldPos(BlockPos.ZERO, rotation, offsetX, 0, offsetZ);
 		BlockPos origin = new BlockPos(pieceOrigin.getX() + shift.getX(), 0, pieceOrigin.getZ() + shift.getZ());
-		return new Candidate(-1, right ? 1 : -1, 0, rotation, origin, wall.footprint(origin, rotation));
+		return new Candidate(EDGE, right ? 1 : -1, 0, rotation, origin, wall.footprint(origin, rotation));
 	}
 
 	private static int @Nullable [] extremeJoin(Blueprint plan, boolean highest) {

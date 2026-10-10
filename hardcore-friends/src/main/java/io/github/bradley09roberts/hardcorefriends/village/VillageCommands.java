@@ -54,11 +54,12 @@ final class VillageCommands {
 		return Commands.argument("name", StringArgumentType.word()).suggests((ctx, builder) -> {
 			MinecraftServer server = ctx.getSource().getServer();
 			VillageData v = VillageData.get(server);
+			Households.Roster roster = roster(server, v);
 			List<String> names = new ArrayList<>();
-			for (UUID id : roster(server, v).adults()) {
+			for (UUID id : roster.adults()) {
 				names.add(Households.firstName(server, v, id).toLowerCase(Locale.ROOT));
 			}
-			for (UUID id : roster(server, v).children()) {
+			for (UUID id : roster.children()) {
 				names.add(Households.firstName(server, v, id).toLowerCase(Locale.ROOT));
 			}
 			return SharedSuggestionProvider.suggest(names, builder);

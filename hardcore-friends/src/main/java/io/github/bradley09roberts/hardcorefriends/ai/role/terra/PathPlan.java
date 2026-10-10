@@ -14,8 +14,8 @@ import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.Structures;
 
 /**
- * Terra's path layout: a straight L-shaped path from the camp centre to every building site and to the supply chest
- * (first along x, then along z). Pure geometry from the camp data, so other routines can keep clear of planned paths.
+ * Terra's path layout: a straight L-shaped path from the camp centre to every building site of the camp (not the
+ * village's, which front its own streets) and to the supply chest (first along x, then along z). Pure geometry from the camp data, so other routines can keep clear of planned paths.
  */
 public final class PathPlan {
 	private PathPlan() {
@@ -30,6 +30,9 @@ public final class PathPlan {
 		}
 		int maxLength = 2 * Camp.radius(data);
 		for (Map.Entry<String, CampData.Site> e : data.sites().entrySet()) {
+			if (e.getKey().startsWith(io.github.bradley09roberts.hardcorefriends.village.Planner.KEY_PREFIX)) {
+				continue; // the village's buildings front its own streets (the village package lays those)
+			}
 			CampData.Site site = e.getValue();
 			// The animal pen's path leads to its gate, not along its fence to a corner.
 			BlockPos to = e.getKey().equals(Structures.ANIMAL_PEN) ? new Pen(site.origin, site.rotation).outside() : site.origin;

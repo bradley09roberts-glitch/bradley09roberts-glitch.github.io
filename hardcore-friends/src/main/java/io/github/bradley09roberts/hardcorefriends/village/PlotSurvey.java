@@ -13,7 +13,6 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
-import io.github.bradley09roberts.hardcorefriends.architecture.Construction;
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprint;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.SiteClearing;
@@ -30,7 +29,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * the footprint must be natural ground (or the friends' own foundations) in the band round the camp's height: never
  * water, a field, a player's floor or a tree trunk; the building's space must be clear but for plants, snow and
  * natural leaves; the ground in front of the door must be within a step of the floor (for a waterside plan, the water
- * must be right in front instead); and nothing a player built may lie within two blocks (three when levelling).
+ * must be right in front instead); and nothing a player built may lie within two blocks (three when levelling). The
+ * friends' own torches (lighting the camp's ground) do not count against a plot: the builder takes them up first.
  *
  * <p>Reads only loaded blocks: any part of the plot that is not loaded rules it out for now. Costs about the
  * footprint times the height in block reads, so the planner surveys at most a few candidates per tick.
@@ -178,7 +178,7 @@ final class PlotSurvey {
 					if (!s.getFluidState().isEmpty()) {
 						return Outcome.no(Reject.WATER);
 					}
-					if (s.isAir() || WorldEditGuard.isClearablePlant(s) || SiteClearing.isNaturalLeaves(s)) {
+					if (s.isAir() || WorldEditGuard.isClearablePlant(s) || SiteClearing.isNaturalLeaves(s) || ownTorch(level, data, s, m)) {
 						continue;
 					}
 					return Outcome.no(s.is(BlockTags.LOGS) ? Reject.TREES : Reject.BLOCKED);
@@ -192,12 +192,6 @@ final class PlotSurvey {
 		int gap = levelled ? 3 : 2;
 		if (nearPlayerBuild(level, data, box, Math.min(bottom, target) - 1, floor + plan.height() + 1, gap, m)) {
 			return Outcome.no(Reject.PLAYER_BUILD);
-		}
-		if (!levelled) {
-			// The builders' own check, so the site is one they will build on (overlaps, ground, space).
-			if (Construction.check(level, plan, new BlockPos(origin.getX(), floor, origin.getZ()), rotation).isPresent()) {
-				return Outcome.no(Reject.BLOCKED);
-			}
 		}
 		return new Outcome(new Result(floor, List.copyOf(cut), List.copyOf(fill)), null);
 	}
@@ -250,7 +244,7 @@ final class PlotSurvey {
 			if (!s.getFluidState().isEmpty()) {
 				return NONE + Reject.WATER.ordinal();
 			}
-			if (WorldEditGuard.isClearablePlant(s) || SiteClearing.isNaturalLeaves(s)) {
+			if (WorldEditGuard.isClearablePlant(s) || SiteClearing.isNaturalLeaves(s) || ownTorch(level, data, s, m)) {
 				continue;
 			}
 			if (s.is(BlockTags.LOGS)) {
@@ -271,6 +265,14 @@ final class PlotSurvey {
 			return SiteFinder.isNaturalGround(s) || ownFoundation ? y : NONE + Reject.NO_GROUND.ordinal();
 		}
 		return NONE + Reject.NO_GROUND.ordinal();
+	}
+
+	/**
+	 * A torch the friends put down themselves (the landscaper lights dark ground in the camp, which the village grows
+	 * over): the builder takes it up before building ({@link VillageBuildTask}), so it never rules a plot out.
+	 */
+	static boolean ownTorch(ServerLevel level, CampData data, BlockState s, BlockPos pos) {
+		return (s.is(Blocks.TORCH) || s.is(Blocks.WALL_TORCH)) && data.isPlacedByFriends(level, pos);
 	}
 
 	private static boolean nearPlayerBuild(ServerLevel level, CampData data, int[] box, int minY, int maxY, int gap,

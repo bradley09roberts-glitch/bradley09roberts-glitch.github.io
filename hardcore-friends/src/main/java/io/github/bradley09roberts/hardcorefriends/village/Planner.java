@@ -129,6 +129,10 @@ public final class Planner {
 	// ------------------------------------------------------------------- tick
 
 	static void tick(MinecraftServer server) {
+		int tick = server.getTickCount();
+		if (search == null && tick % 20 != 7) {
+			return; // nothing to do between the once-a-second checks unless a plot search is running
+		}
 		CampData camp = Camp.data(server);
 		VillageData v = VillageData.get(server);
 		ServerLevel level = campLevel(server, camp);
@@ -139,12 +143,11 @@ public final class Planner {
 			reset(level, camp, v); // the camp moved: the old plan belongs to the old place
 			return;
 		}
-		long now = level.getGameTime();
 		PlotSearch s = search;
 		if (s != null) {
 			stepSearch(level, camp, v, s);
 		}
-		if (now % 20 != 7) {
+		if (tick % 20 != 7) {
 			return;
 		}
 		if (v.centre().isEmpty()) {
@@ -153,14 +156,14 @@ public final class Planner {
 			}
 			return;
 		}
-		if (now % 200 == 7 || reconcileSoon) {
+		if (tick % 200 == 7 || reconcileSoon) {
 			reconcileSoon = false;
 			checkSites(level, camp, v);
 			reconcile(level, v);
-			v.setStreetLevel(camp.stage() >= 5 ? 2 : camp.stage() >= 4 ? 1 : 0);
+			v.setStreetLevel(camp.stage() >= VillageGrowth.TOWN ? 2 : camp.stage() > VILLAGE_STAGE ? 1 : 0);
 			syncReach(camp, v);
 		}
-		if (search == null && now % 100 == 7 && FriendsConfig.get().villageHomes) {
+		if (search == null && tick % 100 == 7 && FriendsConfig.get().villageHomes) {
 			planNext(level, camp, v);
 		}
 	}
@@ -237,15 +240,13 @@ public final class Planner {
 
 	// ------------------------------------------------------------------ sites
 
-	/**
-	 * Notices buildings that now stand (a few a time), and plots whose site is gone (released by hand, or its plan
-	 * removed from the library), which are dropped.
-	 */
+	/** Notices buildings that now stand (a few a time), and drops plots whose site has been released. */
 	private static void checkSites(ServerLevel level, CampData camp, VillageData v) {
 		List<VillageData.Plot> plots = List.copyOf(v.plots());
 		for (VillageData.Plot p : plots) {
-			if (camp.site(p.siteKey).isEmpty() || Blueprints.forSite(camp, p.siteKey).isEmpty()) {
-				Construction.release(level, p.siteKey);
+			// A site released by someone else is gone for good. (A plan missing from the library, say while a data pack
+			// reloads, is not: the plot waits for it to come back.)
+			if (camp.site(p.siteKey).isEmpty()) {
 				v.removePlot(p);
 				reconcileSoon = true;
 			}
@@ -381,6 +382,15 @@ public final class Planner {
 		for (CompanionEntity c : Companions.all()) {
 			v.rememberName(c.getUUID(), c.displayName());
 		}
+		// A house planned for a household that is gone (everyone in it died or left) and hardly begun is given up, so no
+		// materials go into a home nobody needs. One already well on is finished, for whoever needs a home next.
+		for (VillageData.Plot p : List.copyOf(v.plots())) {
+			if (p.isHouse() && !p.standing() && !p.intended.isEmpty() && p.intended.stream().noneMatch(roster::contains)
+				&& Construction.progress(level, p.siteKey) < 0.1) {
+				Construction.release(level, p.siteKey);
+				v.removePlot(p);
+			}
+		}
 		List<Housing.Move> moves = Housing.reconcile(v, roster);
 		Map<VillageData.Plot, List<String>> movedIn = new HashMap<>();
 		for (Housing.Move m : moves) {
@@ -464,7 +474,7 @@ public final class Planner {
 					return;
 				}
 			}
-			if (stage >= 6 && planWalls(level, camp, v, now)) {
+			if (stage >= VillageGrowth.CITY && planWalls(level, camp, v, now)) {
 				return;
 			}
 		}
@@ -607,15 +617,16 @@ public final class Planner {
 			fallbackTried = true;
 			return;
 		}
-		String waitKey = s.kind.equals("house") && !s.intended.isEmpty() ? "home:" + s.intended.stream().min(UUID::compareTo).orElseThrow()
-			: s.kind;
+		// A length of wall waits on its own, so the other side of the gate still gets its walls.
+		String waitKey = s.mode == PlotSearch.Mode.WALL ? s.purpose : s.kind;
 		if (s.kind.equals("house")) {
 			// A household's anchor is its first grown-up; waiting on every member keeps the household waiting whoever leads it.
 			for (UUID id : s.intended) {
 				WAIT.put("home:" + id, level.getGameTime() + NO_ROOM_WAIT);
 			}
+		} else {
+			WAIT.put(waitKey, level.getGameTime() + NO_ROOM_WAIT);
 		}
-		WAIT.put(waitKey, level.getGameTime() + NO_ROOM_WAIT);
 		lastProblem = "No plot found for a " + s.plan.name() + ": " + s.problem() + ". Clearing or levelling ground along the streets "
 			+ "helps (or a larger villageRadius).";
 		HardcoreFriends.LOGGER.info("The village found no plot for a {} ({})", s.plan.name(), s.problem());
@@ -714,6 +725,9 @@ public final class Planner {
 				if (existing != null) {
 					last = existing;
 					continue;
+				}
+				if (waiting("wall:" + side + n, now)) {
+					break; // no room for this length just now: try the other side
 				}
 				Optional<CampData.Site> site = camp.site(last.siteKey);
 				Optional<Blueprint> piece = Blueprints.forSite(camp, last.siteKey);
