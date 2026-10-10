@@ -15,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.EntityReference;
 import net.minecraft.world.entity.NeutralMob;
@@ -335,7 +336,7 @@ final class AdoptTask implements CompanionTask {
 					return TaskStatus.FAILURE; // out of fish or bones: another day
 				}
 				c.swingArm();
-				a.playSound(net.minecraft.sounds.SoundEvents.GENERIC_EAT.value(), 0.8F, 1.0F);
+				a.playSound(SoundEvents.GENERIC_EAT.value(), 0.8F, 1.0F);
 				if (a.getRandom().nextInt(3) == 0) {
 					return adopt(c, level, p) ? TaskStatus.SUCCESS : TaskStatus.FAILURE;
 				}

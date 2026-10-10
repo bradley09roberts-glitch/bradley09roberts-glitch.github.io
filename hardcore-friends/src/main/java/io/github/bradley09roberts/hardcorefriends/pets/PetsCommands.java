@@ -66,21 +66,19 @@ final class PetsCommands {
 		send(source, Component.literal("The camp's pets (" + data.pets().size() + " of " + cfg.maxPets + ")").withStyle(ChatFormatting.GOLD));
 		for (PetsData.Pet p : data.pets()) {
 			CompanionEntity owner = Pets.companion(server, p.owner);
-			String whose;
+			String kind = p.kind == PetKind.WOLF ? "dog (a tamed wolf)" : "cat";
+			String who;
 			if (p.owner == null) {
-				whose = "the camp's own";
+				who = p.name + ", the camp's own " + kind;
 			} else {
 				String name = owner != null ? Pets.fullName(server, owner) : p.ownerName.isEmpty() ? "someone away" : p.ownerName;
-				whose = owner != null && owner.isChild() ? name + " and their " + p.kind.word() : name + "'s " + p.kind.word();
+				// "Pip Hart and their cat Biscuit": a child and their pet go together.
+				who = owner != null && owner.isChild() ? name + " and their " + kind + " " + p.name : p.name + ", " + name + "'s " + kind;
 			}
-			String kind = p.kind == PetKind.WOLF ? "dog (a tamed wolf)" : "cat";
 			TamableAnimal a = Pets.pet(server, p.id);
 			String where = a != null ? doing(server, a, owner) : "last seen at " + place(p.dimension, p.lastPos);
 			String health = a != null ? String.format(Locale.ROOT, ", health %.0f/%.0f", a.getHealth(), a.getMaxHealth()) : "";
-			String line = p.owner == null
-				? "- " + p.name + ", a " + kind + ", " + whose + ": " + where + health
-				: "- " + p.name + ", " + kind + ": " + whose + ", " + where + health;
-			send(source, Component.literal(line).withStyle(ChatFormatting.GRAY));
+			send(source, Component.literal("- " + who + ": " + where + health).withStyle(ChatFormatting.GRAY));
 		}
 		return data.pets().size();
 	}

@@ -12,6 +12,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import io.github.bradley09roberts.hardcorefriends.ai.role.build.ChestWalk;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
@@ -128,7 +129,7 @@ final class FeedPetTask implements CompanionTask {
 				Workbench.forgetStock(level);
 				// Rotten flesh first for a dog: nobody else wants it.
 				boolean got = chest.isPresent() && (kind == PetKind.WOLF
-					&& SupplyChest.withdraw(chest.get(), c.backpack(), s -> s.is(net.minecraft.world.item.Items.ROTTEN_FLESH), 1) > 0
+					&& SupplyChest.withdraw(chest.get(), c.backpack(), s -> s.is(Items.ROTTEN_FLESH), 1) > 0
 					|| SupplyChest.withdraw(chest.get(), c.backpack(), kind.treat(), 1) > 0);
 				if (!got) {
 					return TaskStatus.FAILURE;

@@ -9,6 +9,7 @@ import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -18,6 +19,7 @@ import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.phys.AABB;
 
 import io.github.bradley09roberts.hardcorefriends.architecture.Construction;
@@ -202,7 +204,7 @@ final class MapFrames {
 	static Optional<ItemFrame> frameWith(ServerLevel level, BlockPos pos, int mapId) {
 		for (ItemFrame f : level.getEntitiesOfClass(ItemFrame.class, new AABB(pos).inflate(0.5))) {
 			ItemStack held = f.getItem();
-			var id = held.get(net.minecraft.core.component.DataComponents.MAP_ID);
+			MapId id = held.get(DataComponents.MAP_ID);
 			if (id != null && id.id() == mapId) {
 				return Optional.of(f);
 			}

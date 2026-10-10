@@ -102,7 +102,7 @@ final class PetMoveGoal extends Goal {
 			pet.getLookControl().setLookAt(owner, 10.0F, pet.getMaxHeadXRot());
 			boolean fetch = dist > FAR_BEHIND || stuck > FOLLOW_STUCK && dist > s.start;
 			if (fetch && PetBrain.inCamp(level, owner.blockPosition()) && owner.onGround()) {
-				if (PetBrain.teleportNear(pet, owner.blockPosition())) {
+				if (PetBrain.teleportNear(pet, owner.blockPosition(), false)) {
 					reset();
 					return;
 				}
@@ -117,7 +117,7 @@ final class PetMoveGoal extends Goal {
 		if (spot == null) {
 			return;
 		}
-		if (stuck > SPOT_STUCK && PetBrain.inCamp(level, spot) && PetBrain.teleportNear(pet, spot)) {
+		if (stuck > SPOT_STUCK && PetBrain.inCamp(level, spot) && PetBrain.teleportNear(pet, spot, true)) {
 			reset();
 			return;
 		}

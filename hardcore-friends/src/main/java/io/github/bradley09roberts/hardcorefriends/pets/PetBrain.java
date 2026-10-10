@@ -1,5 +1,6 @@
 package io.github.bradley09roberts.hardcorefriends.pets;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.util.Util;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.world.entity.ai.goal.BreedGoal;
@@ -313,19 +315,31 @@ final class PetBrain {
 	 * Brings a pet that cannot find its way (a shut door, a ledge) to a free spot beside {@code target}, as the game
 	 * brings a pet to its player. Only onto loaded ground, never into a wall or water.
 	 */
-	static boolean teleportNear(TamableAnimal pet, BlockPos target) {
+	static boolean teleportNear(TamableAnimal pet, BlockPos target, boolean exact) {
 		if (!(pet.level() instanceof ServerLevel level) || !level.isLoaded(target) || !nearCamp(level, pet.blockPosition())) {
 			return false; // a pet far out in the wilds (led off by a player, say) walks home; it is never fetched from afar
 		}
-		var random = pet.getRandom();
-		for (int attempt = 0; attempt < 10; attempt++) {
-			int dx = random.nextIntBetweenInclusive(-2, 2);
-			int dz = random.nextIntBetweenInclusive(-2, 2);
-			int dy = random.nextIntBetweenInclusive(-1, 1);
-			if (dx == 0 && dz == 0) {
-				continue;
+		// The spot itself first (a pet's own place), then right beside it, then a step further: the nearest free spot,
+		// so a pet fetched into a small room does not land on the far side of its wall.
+		List<BlockPos> tries = new ArrayList<>();
+		if (exact) {
+			tries.add(target);
+		}
+		for (int ring = 1; ring <= 2; ring++) {
+			List<BlockPos> around = new ArrayList<>();
+			for (int dx = -ring; dx <= ring; dx++) {
+				for (int dz = -ring; dz <= ring; dz++) {
+					if (Math.max(Math.abs(dx), Math.abs(dz)) == ring) {
+						for (int dy : new int[] {0, 1, -1}) {
+							around.add(target.offset(dx, dy, dz));
+						}
+					}
+				}
 			}
-			BlockPos p = target.offset(dx, dy, dz);
+			Util.shuffle(around, pet.getRandom());
+			tries.addAll(around);
+		}
+		for (BlockPos p : tries) {
 			// The pathing check looks at the blocks round the spot, so every chunk it could touch must be loaded.
 			if (!level.isLoaded(p.offset(-1, 0, -1)) || !level.isLoaded(p.offset(1, 0, 1)) || !level.isLoaded(p.offset(-1, 0, 1))
 				|| !level.isLoaded(p.offset(1, 0, -1))) {
