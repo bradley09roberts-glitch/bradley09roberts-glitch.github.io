@@ -33,7 +33,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
  * where the ground allows. Each step digs at most three blocks (headroom above the friend, and the two blocks of the
  * next step), and only natural earth, sand, gravel and stone, never a block with anything stored in it, never a block
  * touching water or lava (so nothing floods in), never under loose sand or gravel that would fall on them, never near
- * anything a player built, never a block the friends placed and never inside the camp: the {@code SURVIVAL} edit rules
+ * anything a player built, never a block the friends placed and never on the camp's own ground (the heart of the camp,
+ * and the village's building sites: {@link Wayfinder#campGround}): the {@code SURVIVAL} edit rules
  * allow exactly the blocks planned for the step and nothing else. A torch goes down every few steps in the dark if they carry one. Starting in the water (a hole with
  * steep sides) the first step is cut just above the waterline.
  *
@@ -200,7 +201,6 @@ final class StairPlan implements Plan {
 
 	private boolean diggable(CompanionEntity c, ServerLevel level, List<BlockPos> dig) {
 		CampData data = Camp.data(level.getServer());
-		boolean campHere = Camp.isCampLevel(level, data);
 		for (BlockPos cell : dig) {
 			if (refused.contains(cell) || !level.isLoaded(cell) || !level.isLoaded(cell.above())) {
 				return false;
@@ -210,8 +210,8 @@ final class StairPlan implements Plan {
 				|| !SiteGrading.isGradeable(s) || WorldEditGuard.breachesFluid(level, cell)) {
 				return false;
 			}
-			if (data.isPlacedByFriends(level, cell) || campHere && WorldEditGuard.inCampHorizontally(c, cell)) {
-				return false; // the friends' own building work, or the camp itself: never dug to get out
+			if (data.isPlacedByFriends(level, cell) || Wayfinder.campGround(level, cell)) {
+				return false; // the friends' own building work, or the camp's own ground: never dug to get out
 			}
 			if (!dig.contains(cell.above()) && level.getBlockState(cell.above()).getBlock() instanceof Fallable) {
 				return false; // sand or gravel above would come down on them

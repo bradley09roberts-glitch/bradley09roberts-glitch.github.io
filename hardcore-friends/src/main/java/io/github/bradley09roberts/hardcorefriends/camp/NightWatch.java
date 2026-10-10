@@ -58,8 +58,10 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  * {@value #LOOKOUT_RANGE} blocks of them and inside the camp that they can see, or one on the camp's own ground (within
  * {@value #GROUND_HEIGHT} blocks of the watcher's level or the camp's, not in a cave beneath it) that is close by or
  * already going for someone in the camp, and that a path leads to, sets off the alarm (they shout {@link Line#ALARM}).
- * Sleepers in the camp wake for a new alarm, and armed friends in the camp go for the hostiles it was raised about
- * (see {@link io.github.bradley09roberts.hardcorefriends.ai.goal.MutualDefenceTargetGoal}). A hostile stays on the
+ * Sleepers in the camp within {@value #ALARM_RANGE} blocks of a hostile it was raised about wake for a new alarm,
+ * and armed friends in the camp that close go for those hostiles (see
+ * {@link io.github.bradley09roberts.hardcorefriends.ai.goal.MutualDefenceTargetGoal}): the alarm is shouted across the
+ * camp's heart, not to every house of a village that has grown to sixty blocks and more. A hostile stays on the
  * alarm list while it lives and stays within {@value #EDGE_MARGIN} blocks of the camp's edge, and the alarm is raised
  * about each hostile once a night: one that wanders out and back in is gone for again without waking the camp.
  */
@@ -80,6 +82,11 @@ public final class NightWatch {
 	public static final double TOO_TIRED = 15;
 	/** How far from the watcher a hostile inside the camp is spotted. */
 	public static final double LOOKOUT_RANGE = 24;
+	/**
+	 * Sleepers wake, and armed friends rally, for an alarm about a hostile this close to them: as far as a sleeper in the
+	 * old camp's cabin ever was from one the watcher by the campfire spotted.
+	 */
+	public static final double ALARM_RANGE = 40;
 	/** A hostile this close to the watcher is noticed even out of sight (heard, if not seen), on the camp's own ground. */
 	private static final double HEARD_RANGE = 12;
 	/** Seen, a hostile further above or below the watcher than this is on a cliff or down a ravine, not in the camp. */
@@ -387,6 +394,19 @@ public final class NightWatch {
 			}
 		}
 		return list;
+	}
+
+	/** True if a hostile the alarm was raised about is still within {@value #ALARM_RANGE} blocks of this friend. */
+	public static boolean alarmedNear(CompanionEntity c) {
+		if (!(c.level() instanceof ServerLevel level)) {
+			return false;
+		}
+		for (LivingEntity threat : alarmed(level)) {
+			if (threat.distanceToSqr(c) <= ALARM_RANGE * ALARM_RANGE) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** True if this entity stands inside the camp (horizontally) in the camp's own dimension. */

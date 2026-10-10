@@ -29,7 +29,13 @@ and `/friends village` shows it):
   door must be within a step of the floor, so everyone can walk in. Hills, lakes and your builds simply leave gaps in
   the rows.
 - **The camp grows with its village.** The camp's radius (the area the friends work in, and the edit rules' camp zone)
-  grows to cover every plot and street, up to `villageRadius` (64 blocks by default).
+  grows to cover every plot and street, up to `villageRadius` (64 blocks by default). A friend at home on the outer
+  plots, at work there or on Aegis's patrol is at the camp: they only build a shelter for the night more than 8 blocks
+  beyond its edge (and 48 from its centre), as out in the wilds before. Terra lights the whole village by day, but after
+  dark only the heart of the camp (its size before the village), so the outer streets never keep her out late. The
+  torches and lanterns the village's buildings under way still call for stay in the chest for the builders. Her
+  saplings go at least 14 blocks back from every street of the town plan (behind the rows of houses), never on a street,
+  a verge or a plot front, even before the plan is drawn up.
 
 ## Houses of their own
 
@@ -63,9 +69,12 @@ and `/friends village` shows it):
 ## Real beds
 
 A friend with a home sleeps in **their own bed** there: they walk home, lie down in it as villagers do (the bed is
-marked taken while they sleep in it), and get up at dawn, when hurt or when the watch raises the alarm, exactly as
-before (hunger pangs, which the game counts as a hurt, wake a starving friend only for a moment: they lie straight
-back down). Without a home (or while their bed is missing, or a player is asleep in it) they sleep as before: in the
+marked taken while they sleep in it), and get up at dawn, when hurt or when the watch raises the alarm about a monster
+within 40 blocks of them, as before (hunger pangs, which the game counts as a hurt, wake a starving friend only for a
+moment: they lie straight back down). A monster outside the closed door of the house does not wake them (monsters do
+not open doors; one right beside them in plain sight, or one with a way in, does), and an alarm at the campfire does
+not wake the far end of the village; armed friends rally to an alarm within the same 40 blocks. Children sleep through
+the alarm unless the monster could get at them. Without a home (or while their bed is missing, or a player is asleep in it) they sleep as before: in the
 cabin, or round the camp centre. Players can still sleep through the night as usual: only players count for that, and
 a friend never takes a bed a player is lying in. The night watch is kept as before; the friend on watch stays up.
 
@@ -149,7 +158,7 @@ All work at permission level 0 with cheats off and change nothing.
 | Setting | Default | What it does |
 |---|---|---|
 | `villageHomes` | `true` | Lay out the town plan at the Village stage and build homes; `false` keeps the camp as it was (no new plots, no Town or City). Houses already built are still lived in. |
-| `villageRadius` | `64` | How far from the camp centre the village's streets and plots may spread (from `campRadius` to 96). The camp grows with them. |
+| `villageRadius` | `64` | How far from the camp centre the village's streets and plots may spread (from `campRadius` to 96). The camp grows with them, and with `keepCampLoaded` the area kept running while you are online grows too (the camp plus its 48-block gathering ring: about 15×15 chunks at 64, 19×19 at 96, against 13×13 before the village). |
 | `villageBuildsAtOnce` | `3` | Most village buildings under way at once, besides two pieces of decoration (1 to 8). |
 
 `maxPopulation` (people part) is the village's population cap; `maxGradeDepth` and `allowTerraforming` (survival part)
@@ -189,7 +198,9 @@ govern levelling plots; `allowScaffolding` (architecture part) high building.
 - **Big plots are hard to find** on rough ground: a building that finds no plot waits five minutes and tries again
   (`/friends village` says why), and after three searches in a row find nothing the planner rests a minute before
   looking again. Clearing or levelling ground along the streets, or a larger `villageRadius`, helps. Trees on a plot
-  rule it out (no felling for village plots).
+  rule it out (no felling for village plots). Terra plants hers well back from the streets, but the deepest buildings
+  (a few plans reach 12 to 15 blocks back) can still find one of hers in the way, and saplings she planted on the ring
+  round the camp before this rule stay where they are.
 - **A house waits for its lights.** A house is not lived in until every light and the door are in, so a camp with no
   coal (or charcoal) for torches keeps its households in the cabin until the gatherers bring some.
 - **Streets and your ground.** A street keeps two blocks clear of anything you built, but grass further than that from
@@ -197,7 +208,10 @@ govern levelling plots; `allowScaffolding` (architecture part) high building.
   made a path there. Keep such ground off the street lines (or put something of yours on it).
 - **The camp grows to the village's size** (up to 64 blocks): the friends' camp jobs (lighting, paths, the gathering
   ring, quarries, hunting, which all stay outside or inside the camp) work over a larger area, so gathering trips get
-  longer.
+  longer, and with `keepCampLoaded` more chunks are kept running (see `villageRadius`). Lighting looks over the camp a
+  few hundred columns a second, so a new dark patch can take ten to twenty seconds to be noticed. It finds ground up
+  to eight blocks above the camp's (as high as the village builds), so higher ground stays dark, and street surfaces
+  themselves never get a torch (the verges beside them do).
 - **Moving the camp** (`/friends camp set` elsewhere, more than three blocks from the plan's centre or to another
   dimension) lets the whole town plan go (everyone is told): unfinished buildings stop, the houses' blocks stay, and
   nobody lives in them any more. A new plan is laid at the new camp. Setting the camp again within three blocks of

@@ -42,8 +42,9 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
 
 /**
- * A friend caught far from camp after dark (more than {@value #FAR_FROM_HOME} blocks out, or getting no nearer home)
- * gets under cover instead of walking through the night: into a hillside (two natural blocks dug out, the way in
+ * A friend caught far from camp after dark (more than {@value #FAR_FROM_HOME} blocks from its centre and more than
+ * {@value #BEYOND_EDGE} blocks beyond its edge, which a village pushes out past its furthest plot, or getting no nearer
+ * home) gets under cover instead of walking through the night: into a hillside (two natural blocks dug out, the way in
  * walled up behind them), down into the ground (two blocks dug down, a roof put on), or, on open ground, a 1×2
  * pillbox of dirt or cobblestone from their backpack. A torch goes inside if they carry one, and they sleep until
  * dawn. In the morning they take every block they placed back (waiting while a player stands right beside one), put
@@ -54,11 +55,21 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard.Reason;
  * friend, never within six blocks of anything player-built, digging at most the {@value #MAX_DIGS} natural blocks
  * planned (and, only to get out, up to three more a try), and taking back only the friend's own pieces. The shelter
  * is remembered with the friend, so a fight or a reload in the middle carries on where it left off.
+ *
+ * <p>The friend on watch ({@link NightWatch}) never shelters: their watch is kept at the camp. One whose watch begins
+ * while they are under cover gets up, takes the shelter down and goes back to keep it, as a sleeper at the camp is
+ * woken for theirs; otherwise nobody would look out over the camp and the watch would never pass on.
  */
 public final class ShelterTask implements CompanionTask {
 	public static final String ID = "survival.shelter";
 	/** Further than this from home at night, a friend shelters rather than walk on in the dark. */
 	public static final int FAR_FROM_HOME = 48;
+	/**
+	 * Nor within this many blocks beyond the camp's edge: a village camp reaches further than {@value #FAR_FROM_HOME}
+	 * blocks, and a friend at home on its outer plots, at work there or on the patrol ring is at the camp, not out in
+	 * the wilds.
+	 */
+	public static final int BEYOND_EDGE = 8;
 	private static final int MAX_DIGS = 3;
 	private static final String STATE = "survival.shelter";
 	/** How often progress towards home is measured at night, in ticks. */
@@ -132,11 +143,11 @@ public final class ShelterTask implements CompanionTask {
 		if (c.isInWater() || !c.onGround() || c.isPassenger()) {
 			return 0;
 		}
-		if (c.friendId() == FriendId.AEGIS && (NightWatch.isOnWatch(c) || level.getNearestPlayer(c, 24) != null)) {
-			return 0; // on guard duty, or beside a player out late
+		if (NightWatch.isOnWatch(c) || c.friendId() == FriendId.AEGIS && level.getNearestPlayer(c, 24) != null) {
+			return 0; // on watch (kept at the camp, or on Aegis's guard duty), or Aegis beside a player out late
 		}
 		double distance = Math.sqrt(Camp.horizontalDistSqr(c.blockPosition(), c.homePos()));
-		boolean far = distance > FAR_FROM_HOME;
+		boolean far = distance > farFromHome(c);
 		if (!far && !notGettingHome(c, level, distance)) {
 			return 0;
 		}
@@ -144,6 +155,15 @@ public final class ShelterTask implements CompanionTask {
 			return 0; // nothing to wall up with and nothing to dig into
 		}
 		return 115; // above heading home in the dark (85), below a starving meal
+	}
+
+	/**
+	 * How far from home a friend counts as out in the wilds at night: {@value #FAR_FROM_HOME} blocks, or, at the camp's
+	 * own level, {@value #BEYOND_EDGE} beyond the camp's edge once the camp (with its village) reaches further than that.
+	 */
+	static int farFromHome(CompanionEntity c) {
+		boolean campHere = c.level() instanceof ServerLevel level && Camp.center(level).isPresent();
+		return campHere ? Math.max(FAR_FROM_HOME, WorldEditGuard.campRadius(c) + BEYOND_EDGE) : FAR_FROM_HOME;
 	}
 
 	/** True when, outside the camp at night, the friend has got no nearer home over the last ten seconds. */
@@ -154,7 +174,7 @@ public final class ShelterTask implements CompanionTask {
 			sampleDistance = distance;
 			notGettingHome = false;
 		} else if (now - sampleAt >= PROGRESS_INTERVAL) {
-			notGettingHome = sampleDistance - distance < 4 && distance > WorldEditGuard.campRadius(c) + 8;
+			notGettingHome = sampleDistance - distance < 4 && distance > WorldEditGuard.campRadius(c) + BEYOND_EDGE;
 			sampleAt = now;
 			sampleDistance = distance;
 		}
@@ -320,6 +340,12 @@ public final class ShelterTask implements CompanionTask {
 			stepTicks = 0;
 			save(c);
 			Speech.say(c, Line.SHELTER_MORNING);
+		} else if (stage != Stage.DISMANTLE && NightWatch.isOnWatch(c)) {
+			// Their watch has begun: up they get, take the shelter down and go back to keep it (the watch job takes over).
+			wake(c);
+			stage = Stage.DISMANTLE;
+			stepTicks = 0;
+			save(c);
 		}
 		return switch (stage) {
 			case BUILD -> build(c, level, p);

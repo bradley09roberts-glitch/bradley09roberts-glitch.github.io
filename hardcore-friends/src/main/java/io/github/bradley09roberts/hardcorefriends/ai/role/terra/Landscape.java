@@ -1,5 +1,7 @@
 package io.github.bradley09roberts.hardcorefriends.ai.role.terra;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -10,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
@@ -65,19 +68,40 @@ public final class Landscape {
 	}
 
 	/**
-	 * Horizontal distance to the nearest site origin, optionally only for sites not yet completed (a grave's reserved
-	 * ground is never a building still to come).
+	 * Horizontal distance to the nearest site origin, optionally only for sites not yet finished (a camp structure
+	 * completed, or a village building marked finished: {@link Blueprints#isFinished}; a grave's reserved ground is never
+	 * a building still to come).
 	 */
 	public static double nearestSiteDistance(CampData data, BlockPos pos, boolean unfinishedOnly) {
 		double best = Double.MAX_VALUE;
 		for (Map.Entry<String, CampData.Site> e : data.sites().entrySet()) {
-			if (unfinishedOnly && (data.isCompleted(e.getKey())
+			if (unfinishedOnly && (Blueprints.isFinished(data, e.getKey())
 				|| e.getKey().startsWith(io.github.bradley09roberts.hardcorefriends.life.VillageLife.GRAVE_SITES))) {
 				continue;
 			}
 			best = Math.min(best, Math.sqrt(Camp.horizontalDistSqr(e.getValue().origin, pos)));
 		}
 		return best;
+	}
+
+	/** The origins of every site whose building is not finished yet, village buildings included. */
+	public static List<BlockPos> unfinishedSiteOrigins(CampData data) {
+		List<BlockPos> origins = new ArrayList<>();
+		for (Map.Entry<String, CampData.Site> e : data.sites().entrySet()) {
+			if (!Blueprints.isFinished(data, e.getKey())) {
+				origins.add(e.getValue().origin);
+			}
+		}
+		return origins;
+	}
+
+	/** Horizontal distance from {@code pos} to the nearest of these points (a very large number when there are none). */
+	public static double nearestDistance(List<BlockPos> points, BlockPos pos) {
+		double best = Double.MAX_VALUE;
+		for (BlockPos p : points) {
+			best = Math.min(best, Camp.horizontalDistSqr(p, pos));
+		}
+		return best == Double.MAX_VALUE ? best : Math.sqrt(best);
 	}
 
 	/** True if any block in the square of the given radius around {@code pos} (same y) matches. */

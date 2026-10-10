@@ -866,4 +866,6 @@ and earth, `B` bell, `+` furniture and work blocks.
   level spots, and the camp grows to find room.
 - Data packs can add and replace library plans but not the camp's own buildings.
 - The camp's record of blocks the friends placed holds 20,000 positions; a large village may need it raised.
-  Scaffolding does not depend on it (pillars keep their own record), so a full record never strands a builder.
+  Scaffolding does not depend on it (pillars keep their own record), so a full record never strands a builder, and
+  beds are always recorded, so the houses built after it fills still have beds their families may sleep in. Other
+  blocks placed after it fills (a house's chests, say) are not known as the friends' own.

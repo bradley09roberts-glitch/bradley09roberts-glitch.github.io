@@ -1,6 +1,7 @@
 package io.github.bradley09roberts.hardcorefriends.navigation;
 
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -28,13 +29,14 @@ import io.github.bradley09roberts.hardcorefriends.ai.goal.FollowLeaderGoal;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
+import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+import io.github.bradley09roberts.hardcorefriends.camp.SiteFinder;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Needs;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
-import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
  * Keeps an eye on every friend (every mode, team members and strangers alike) for getting stuck, and helps them out,
@@ -823,12 +825,12 @@ public final class Wayfinder {
 	/**
 	 * May dig or place blocks to get out: a grown-up on the team, with world editing on, in a world with a sky (in the
 	 * Nether and the End a friend is with a player, who leads the way; catching up and the rescue see to them), and
-	 * outside the camp (shut in at camp means a building or the pen, which are never dug through; a nudge, the doors
-	 * and the rescue see to that).
+	 * not on the camp's own ground ({@link #campGround}: shut in there means a building or the pen, which are never dug
+	 * through; a nudge, the doors and the rescue see to that).
 	 */
 	private static boolean mayDig(CompanionEntity c, ServerLevel level) {
 		return c.isTeamMember() && !c.isChild() && c.mode() != CompanionMode.STAY && FriendsConfig.get().allowWorldEditing
-			&& Terrain.caveAware(level) && !inCamp(c, level);
+			&& Terrain.caveAware(level) && !campGround(level, c.blockPosition());
 	}
 
 	/** May walk off to find the way out of a cave: anyone not told to stay put. */
@@ -844,8 +846,49 @@ public final class Wayfinder {
 		return c.isTeamMember() ? c.homePos() : null;
 	}
 
-	private static boolean inCamp(CompanionEntity c, ServerLevel level) {
-		return Camp.isCampLevel(level, Camp.data(level.getServer())) && WorldEditGuard.inCampHorizontally(c, c.blockPosition());
+	/** How far round a village building's site its ground counts as the building's. */
+	private static final int SITE_MARGIN = 2;
+	/** Below or above the camp centre's height by more than this, a village building's site is not in the way. */
+	private static final int SITE_HEIGHT = 16;
+	private static @Nullable ServerLevel boxesLevel;
+	private static long boxesAt = Long.MIN_VALUE;
+	private static List<int[]> boxes = List.of();
+
+	/**
+	 * True when {@code pos} is the camp's own ground, never dug or built on to get out: the heart of the camp
+	 * ({@link Camp#coreRadius}: its own buildings, the pen and the fields) at any depth, as before there was a village;
+	 * and, in the village round it, the sites of its buildings (houses, shops, the town hall) near the camp's height.
+	 * The rest of the village (its gardens and verges, a creeper's crater, and the caves, ravines and mines under it) is
+	 * dug out of as anywhere else, with the same care: only natural ground, never a block the friends placed.
+	 */
+	static boolean campGround(ServerLevel level, BlockPos pos) {
+		CampData data = Camp.data(level.getServer());
+		if (!Camp.isCampLevel(level, data)) {
+			return false;
+		}
+		BlockPos centre = data.campPos().orElseThrow();
+		double d = Camp.horizontalDistSqr(centre, pos);
+		int core = Camp.coreRadius(data);
+		if (d <= (double) core * core) {
+			return true;
+		}
+		int r = Camp.radius(data);
+		if (d > (double) r * r || Math.abs(pos.getY() - centre.getY()) > SITE_HEIGHT) {
+			return false;
+		}
+		long now = level.getGameTime();
+		if (boxesLevel != level || boxesAt != now) {
+			boxesLevel = level; // worked out once a tick: a staircase checks several blocks at a time
+			boxesAt = now;
+			boxes = SiteFinder.reservedBoxes(data, "");
+		}
+		for (int[] box : boxes) {
+			if (pos.getX() >= box[0] - SITE_MARGIN && pos.getX() <= box[2] + SITE_MARGIN
+				&& pos.getZ() >= box[1] - SITE_MARGIN && pos.getZ() <= box[3] + SITE_MARGIN) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** How many walks were given up in the last {@value #GIVEN_UP_WINDOW} ticks (a slot never used counts as long ago). */

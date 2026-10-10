@@ -23,8 +23,9 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
  * Friends look out for each other. A healthy friend holding a tool joins in against a hostile mob that is going for
  * them, another friend or a player within {@value #RANGE} blocks, if they can see it. Inside the camp they stand
  * together more widely (the rally): an armed friend at work in the camp joins in against a hostile going for anyone
- * within {@value #RALLY_RANGE} blocks, and goes for any hostile the night watch raised the alarm about; the friend on
- * watch takes on any hostile that comes into the camp. A friend with a bow and arrows covers anyone within bow range
+ * within {@value #RALLY_RANGE} blocks, and goes for any hostile the night watch raised the alarm about within
+ * {@value NightWatch#ALARM_RANGE} blocks (not one at the far end of a village); the friend on watch takes on any hostile
+ * that comes into the camp. A friend with a bow and arrows covers anyone within bow range
  * ({@value Archery#BOW_RANGE} blocks) against what they would shoot.
  *
  * <p>In the camp nobody needs to see the hostile first: they find their way to it. Out of sight, or further than
@@ -94,10 +95,11 @@ public class MutualDefenceTargetGoal extends Goal {
 				candidates.add(candidate(threat, d));
 			}
 		}
-		// The watch raised the alarm: armed friends in the camp go for what it was raised about.
+		// The watch raised the alarm: armed friends in the camp go for what it was raised about, near them.
 		if (candidates.isEmpty() && rallies) {
 			for (LivingEntity threat : NightWatch.alarmed((ServerLevel) companion.level())) {
-				if (worthGoingFor(threat, true)) {
+				if (threat.distanceToSqr(companion) <= NightWatch.ALARM_RANGE * NightWatch.ALARM_RANGE
+					&& worthGoingFor(threat, true)) {
 					candidates.add(candidate(threat, threat.distanceToSqr(companion)));
 				}
 			}
