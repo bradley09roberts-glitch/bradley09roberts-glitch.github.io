@@ -47,4 +47,15 @@ final class FamiliesProvider implements Families.Provider {
 	public Optional<String> familyName(MinecraftServer server, UUID person) {
 		return PeopleData.get(server).person(person).map(p -> p.family).filter(name -> !name.isEmpty());
 	}
+
+	@Override
+	public int babiesOnTheWay(MinecraftServer server) {
+		int n = 0;
+		for (PeopleData.Bond bond : PeopleData.get(server).bonds()) {
+			if (bond.babyDue >= 0) {
+				n++; // as Births.population counts them
+			}
+		}
+		return n;
+	}
 }

@@ -31,6 +31,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  */
 public final class RepairTask extends BlueprintTask {
 	private static final int RESCAN = 200;
+	/** Gaps looked at in one building, in build order. */
+	private static final int GAPS_LOOKED_AT = 48;
 
 	private long scannedAt = -100_000;
 	private @Nullable Blueprint damaged;
@@ -107,18 +109,20 @@ public final class RepairTask extends BlueprintTask {
 	}
 
 	/**
-	 * Up to eight gaps in a finished building, also reported to the camp's material demand, so what they need (glass
-	 * for a window left open, bricks for a flower pot) gets made even while nothing can fill them yet.
+	 * Gaps in a finished building, the first eight of them also reported to the camp's material demand, so what they
+	 * need (glass for a window left open, bricks for a flower pot) gets made even while nothing can fill them yet. Up
+	 * to {@value #GAPS_LOOKED_AT} are looked at, so a torch knocked off a wall is still seen behind a row of carpets
+	 * and windows the camp cannot make yet (lights come last in the build order).
 	 */
 	private static List<Placement> gaps(ServerLevel level, CampData data, String key, Blueprint bp) {
-		List<Placement> gaps = BuildJob.missing(level, data, key, bp, 8);
+		List<Placement> gaps = BuildJob.missing(level, data, key, bp, GAPS_LOOKED_AT);
 		String demandKey = "repair:" + key;
 		if (gaps.isEmpty()) {
 			MaterialDemand.clear(demandKey);
 			return gaps;
 		}
 		java.util.Map<Stock, Integer> wanted = new java.util.EnumMap<>(Stock.class);
-		for (Placement p : gaps) {
+		for (Placement p : gaps.subList(0, Math.min(8, gaps.size()))) {
 			Stock s = p.entry().material().stock();
 			Stock extra = p.entry().material().extraStock();
 			if (s != null) {

@@ -42,16 +42,22 @@ and `/friends village` shows it):
   for the roofs). **Everyone builds their own home in their spare time**; Oak (the builder) puts up everyone else's
   buildings and anyone's house. Up to `villageBuildsAtOnce` buildings (3) go up at once, one builder on each.
 - **Moving in.** As soon as a house stands its household moves in, each to a bed of their own, children in their
-  parents' house. A house counts as standing once it is finished, or as good as: 95% of it built with every bed and
-  chest in (a ridge slab just out of reach never keeps anyone out); the builder's repair job adds the rest later.
-- **Growing families.** A wedding brings two households together in the bigger of their two houses (the other goes to
-  whoever needs one next); a baby takes the spare bed; a family that has outgrown its house gets a bigger one built,
-  moves in as soon as it stands, and its old house goes to someone else. Someone whose marriage ends gets a home of
-  their own again. Someone who dies or is dismissed moves out, and a house hardly begun for a household that is gone
-  is given up.
+  parents' house. A house counts as standing once it is finished, or as good as: 95% of it built with every light, door,
+  bed and chest in (a ridge slab just out of reach never keeps anyone out, but nobody sleeps in a house that is dark
+  inside or has no door); the builder's repair job adds the rest later. Torches the village's unfinished buildings
+  still need stay in the chest: the landscaper lights the camp only with the ones to spare.
+- **Growing families.** A wedding brings two households together in one of their two houses with a bed for each of
+  them, the bigger one when both have room (the other goes to whoever needs one next). When neither has (two friends
+  from one-bed huts, say), everyone keeps their own bed and a house with room for them all is built; they move in
+  together as soon as it stands. A baby takes the spare bed; a family that has outgrown its house gets a bigger one
+  built, moves in as soon as it stands, and its old house goes to someone else. Someone whose marriage ends gets a home
+  of their own again (a child who lives with them keeps their bed in the old house until it stands, then moves in with
+  them). Someone who dies or is dismissed moves out, and a house hardly begun (less than a tenth of its blocks placed)
+  for a household that is gone is given up.
 - **Newcomers and grown-up children** count as households of their own and get houses too. A child who grows up keeps
   their bed in their parents' house until a house of their own stands (an empty one, or one built for them), then moves
-  out; their parents have room for another baby again once they have gone.
+  out; their parents have room for another baby again once they have gone. A grown-up child who marries and still
+  lives at their parents' only moves to a house with a spare bed for a baby (built for them, or an empty one).
 - **Never a player's house.** Friends only live in the houses they built on their own plots.
 
 ## Real beds
@@ -70,9 +76,10 @@ a friend never takes a bed a player is lying in. The night watch is kept as befo
   hungry still eats wherever they are, as before.
 - **Work** through the day: the camp's jobs, the village's buildings, the streets.
 - **The evening** (from time 11000 until nightfall): everyone puts the day's work down and goes home, or to the square
-  by the well if they have no house yet, to be with their family and neighbours. Now and then a friend asks someone
-  round for the evening, and the guest comes to theirs. Building in a hurry, the night watch, a hungry friend's meal and
-  every danger come first.
+  by the well if they have no house yet, to be with their family and neighbours (not under a thunderstorm's dark sky,
+  when monsters can spawn in the open). Now and then a friend asks someone round for the evening, and the guest comes
+  to theirs until sunset (time 12000), then walks home while it is still light. Building in a hurry, the night watch,
+  a hungry friend's meal and every danger come first.
 - **Bed** in their own house at nightfall.
 
 Children keep their own day (the people part of 3.0): play, lessons, an early night at home in their own bed.
@@ -82,7 +89,7 @@ Children keep their own day (the people part of 3.0): play, lessons, an early ni
 - **Terra lays the streets** with a shovel: the open stretch of every street becomes a trodden path. From the
   Settlement on the paths are surfaced with gravel (when the camp has some), and from the Town on with cobblestone, from
   the chest's stock. Only grass, dirt and the friends' own path blocks are touched, never under a building, never by
-  water, never over a hollow (the roof of a cave, an overhang: gravel would fall through and leave a hole), and not
+  water, never within two blocks of anything you built (a lawn by your house, a garden, a yard), never over a hollow (the roof of a cave, an overhang: gravel would fall through and leave a hole), and not
   within three blocks of the friends' mines, whose stairways run just under the ground (the street has a gap there).
   **Lamp posts** go up on the verges every 12 blocks, beside the stretches with something built.
 - **Water.** Building plans cannot pour water, so once a well, the fountain or the wheat field stands, the farmer pours
@@ -121,7 +128,8 @@ is told when the village grows, and a friend celebrates. Finished civic building
 Unity (+15, the town hall +30), and new houses a little (+10, at most 40 a day).
 
 **Population cap.** The village never grows beyond `maxPopulation` people (30 by default, a setting of the people part):
-no baby is born and no newcomer joins beyond it.
+no baby is born and no newcomer joins beyond it. Babies on the way count towards it, so a newcomer never takes the
+place of a baby already expected.
 
 ## Commands
 
@@ -129,7 +137,7 @@ All work at permission level 0 with cheats off and change nothing.
 
 | Command | What it shows |
 |---|---|
-| `/friends village` | the village: people (and the cap), homes and other buildings, the streets and their surface, the plots (what stands on each, who lives there, how far along a building is and who it is for), what is being looked for, what other parts asked for, and what the next stage still needs |
+| `/friends village` | the village: people, babies on the way (and the cap), homes and other buildings, the streets and their surface, the plots (what stands on each, who lives there, how far along a building is by the blocks placed, and who it is for), what is being looked for, what other parts asked for, and what the next stage still needs |
 | `/friends village plots` | every plot, lamp posts included |
 | `/friends home` | where everyone lives, household by household (or why someone has no home yet) |
 | `/friends home <name>` | one person: their house and street, their bed, and who they live with |
@@ -161,7 +169,8 @@ govern levelling plots; `allowScaffolding` (architecture part) high building.
   dimension, origin, rotation, `built`, and every marker in world positions (`marker("counter")`, `first("job")`).
   `allOfKind` includes those still being built; `building(server, siteKey)` one by key.
 - `isBuilt(server, kind)`, `isSiteBuilt(server, siteKey)`, `isRequested(server, kind)`.
-- `population(server)` and `populationFull(server)`.
+- `population(server)` (the people living) and `populationFull(server)` (the cap reached, babies on the way included,
+  through `civic.Families.babiesOnTheWay`).
 
 `civic.Homes` is implemented: `homeOf`, `bedFor` (the foot of the friend's bed), `homes` (standing houses),
 `roomForOneMore`, `moveIn` and `moveOut`. Village site keys start with `village.` (the town hall's contains
@@ -178,8 +187,14 @@ govern levelling plots; `allowScaffolding` (architecture part) high building.
 - **Slow.** A house is 150 to 400 blocks of real materials, a town hall about 600. With one builder and everyone else
   building their own home in their spare time, a full village takes many in-game days, and the gatherers will be busy.
 - **Big plots are hard to find** on rough ground: a building that finds no plot waits five minutes and tries again
-  (`/friends village` says why). Clearing or levelling ground along the streets, or a larger `villageRadius`, helps.
-  Trees on a plot rule it out (no felling for village plots).
+  (`/friends village` says why), and after three searches in a row find nothing the planner rests a minute before
+  looking again. Clearing or levelling ground along the streets, or a larger `villageRadius`, helps. Trees on a plot
+  rule it out (no felling for village plots).
+- **A house waits for its lights.** A house is not lived in until every light and the door are in, so a camp with no
+  coal (or charcoal) for torches keeps its households in the cabin until the gatherers bring some.
+- **Streets and your ground.** A street keeps two blocks clear of anything you built, but grass further than that from
+  your blocks looks natural: a big lawn or the middle of a large fenced field that a street runs through can still be
+  made a path there. Keep such ground off the street lines (or put something of yours on it).
 - **The camp grows to the village's size** (up to 64 blocks): the friends' camp jobs (lighting, paths, the gathering
   ring, quarries, hunting, which all stay outside or inside the camp) work over a larger area, so gathering trips get
   longer.

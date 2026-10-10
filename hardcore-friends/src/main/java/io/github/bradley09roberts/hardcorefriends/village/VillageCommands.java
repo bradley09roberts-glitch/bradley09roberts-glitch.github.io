@@ -28,6 +28,7 @@ import io.github.bradley09roberts.hardcorefriends.architecture.Construction;
 import io.github.bradley09roberts.hardcorefriends.camp.Blueprints;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
+import io.github.bradley09roberts.hardcorefriends.civic.Families;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 
 /**
@@ -102,8 +103,10 @@ final class VillageCommands {
 			}
 		}
 		int cap = FriendsConfig.get().maxPopulation;
+		int expected = Families.get().babiesOnTheWay(server); // counted towards the cap, as for the births
 		send(source, Component.literal("The " + Camp.stageName(camp.stage()).toLowerCase(Locale.ROOT) + ": " + roster.population()
-			+ " people (at most " + cap + "), " + homes + " homes and " + (standing - homes) + " other buildings standing, "
+			+ " people" + (expected > 0 ? " and " + expected + (expected == 1 ? " baby" : " babies") + " on the way" : "")
+			+ " (at most " + cap + "), " + homes + " homes and " + (standing - homes) + " other buildings standing, "
 			+ underway + " being built.").withStyle(ChatFormatting.GOLD));
 		List<String> streets = new ArrayList<>();
 		for (Map.Entry<Integer, int[]> e : v.openStreets().entrySet()) {
@@ -183,7 +186,9 @@ final class VillageCommands {
 				sb.append("standing");
 			}
 		} else {
-			int percent = level == null ? 0 : (int) Math.round(100 * Construction.progress(level, p.siteKey));
+			// The blocks actually placed (the builders' own progress counts firm ground under the plot as done).
+			double share = level == null ? 0 : Planner.builtShare(level, camp, p.siteKey);
+			int percent = (int) Math.round(100 * (share >= 0 ? share : Construction.progress(level, p.siteKey)));
 			sb.append("being built, ").append(percent).append("%");
 			if (p.isHouse() && !p.intended.isEmpty()) {
 				List<String> people = new ArrayList<>();

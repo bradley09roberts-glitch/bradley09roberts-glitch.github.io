@@ -26,6 +26,11 @@ public final class Families {
 
 		/** A family name for display ("Hart"), or empty. */
 		Optional<String> familyName(MinecraftServer server, UUID person);
+
+		/** Babies on the way in the whole team: they count towards the population cap already, as the births do. */
+		default int babiesOnTheWay(MinecraftServer server) {
+			return 0;
+		}
 	}
 
 	private static final Provider NONE = new Provider() {

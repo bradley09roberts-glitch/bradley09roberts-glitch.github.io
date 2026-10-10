@@ -25,8 +25,10 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
  * The village evening: from the end of the afternoon (time of day {@value #FROM}) until nightfall, a grown-up of the
  * village puts the day's work down and goes home (or, without a home of their own yet, to the square by the well),
  * to be with their family and neighbours; now and then a friend with a home asks someone round for the evening, and
- * the guest comes to theirs. Company there fills the social need on its own (people within a few blocks of each other).
- * At nightfall the sleep job takes over: everyone is already home, a step from their own bed.
+ * the guest comes to theirs until sunset ({@value #VISIT_UNTIL}), then goes home while it is still light. Company
+ * there fills the social need on its own (people within a few blocks of each other). Nobody stands about on the square
+ * under a thunderstorm's dark sky. At nightfall the sleep job takes over: everyone is already home, a step from their
+ * own bed.
  *
  * <p>A needs job ({@code needs.*}), so it counts as time off. It scores {@value #SCORE}: urgent upkeep, so ordinary
  * work (below 45) gives way to it, but building in a hurry, the night watch, a hungry friend's meal and every danger
@@ -35,6 +37,13 @@ import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 final class EveningTask implements CompanionTask {
 	static final String ID = "needs.evening";
 	static final long FROM = 11000;
+	/**
+	 * A visit ends at sunset, well before nightfall (about 12500, when monsters start to come out), so the guest is home
+	 * across the village before dark.
+	 */
+	static final long VISIT_UNTIL = 12000;
+	/** Nobody is asked round with less of the visit left than this (the walk there takes some of it). */
+	private static final long VISIT_AT_LEAST = 400;
 	private static final double SCORE = 70;
 	/** How likely a friend with a home is to ask someone round. */
 	private static final double INVITE_CHANCE = 0.3;
@@ -50,6 +59,7 @@ final class EveningTask implements CompanionTask {
 
 	private @Nullable BlockPos spot;
 	private @Nullable String visiting;
+	private boolean atSquare;
 	private boolean arrived;
 	private int stillTicks;
 
@@ -97,18 +107,22 @@ final class EveningTask implements CompanionTask {
 		}
 		if (visiting == null && Routine.home(c).isPresent()) {
 			Speech.say(c, Line.GOING_HOME);
-			if (c.getRandom().nextDouble() < INVITE_CHANCE) {
+			if (Camp.timeOfDay(level) < VISIT_UNTIL - VISIT_AT_LEAST && c.getRandom().nextDouble() < INVITE_CHANCE) {
 				invite(c, level);
 			}
 		}
 		return spot != null;
 	}
 
-	/** Chooses where to go: a home they were invited to, else their own, else the square. */
+	/**
+	 * Chooses where to go: a home they were invited to (until sunset), else their own, else the square (not under a
+	 * thunderstorm's dark sky, when monsters can spawn out in the open).
+	 */
 	private boolean retarget(CompanionEntity c, ServerLevel level) {
 		long now = level.getGameTime();
+		atSquare = false;
 		Invite invite = INVITES.get(c.getUUID());
-		if (invite != null && now < invite.until()) {
+		if (invite != null && now < invite.until() && Camp.timeOfDay(level) < VISIT_UNTIL) {
 			Optional<VillageData.Plot> host = VillageData.get(level.getServer()).plotBySite(invite.homeKey());
 			BlockPos s = host.filter(VillageData.Plot::standing).map(p -> Routine.spotIn(level, p, "sit", "inside", "door")).orElse(null);
 			if (s != null) {
@@ -121,8 +135,9 @@ final class EveningTask implements CompanionTask {
 		INVITES.remove(c.getUUID());
 		Optional<VillageData.Plot> home = Routine.home(c);
 		BlockPos s = home.map(p -> Routine.spotIn(level, p, "inside", "sit", "door")).orElse(null);
-		if (s == null) {
+		if (s == null && !Camp.isNight(level)) {
 			s = Routine.square(level, c);
+			atSquare = s != null;
 		}
 		spot = s;
 		return s != null;
@@ -158,6 +173,19 @@ final class EveningTask implements CompanionTask {
 		ServerLevel level = (ServerLevel) c.level();
 		if (Camp.isNightTime(level) || Camp.timeOfDay(level) >= 13500) {
 			return TaskStatus.SUCCESS; // bedtime: the sleep job takes over
+		}
+		if (atSquare && Camp.isNight(level)) {
+			return TaskStatus.FAILURE; // a thunderstorm darkens the sky: nobody stands about out in the open
+		}
+		if (visiting != null && Camp.timeOfDay(level) >= VISIT_UNTIL) {
+			// Sunset: the visit is over, and the guest goes home while it is still light.
+			INVITES.remove(c.getUUID());
+			visiting = null;
+			arrived = false;
+			stillTicks = 0;
+			if (!retarget(c, level)) {
+				return TaskStatus.SUCCESS;
+			}
 		}
 		if (visiting == null && INVITES.containsKey(c.getUUID()) && !arrived) {
 			retarget(c, level); // asked round on the way home
@@ -209,6 +237,7 @@ final class EveningTask implements CompanionTask {
 		}
 		spot = null;
 		visiting = null;
+		atSquare = false;
 		arrived = false;
 	}
 

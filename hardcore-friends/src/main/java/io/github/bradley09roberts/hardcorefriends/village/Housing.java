@@ -76,6 +76,7 @@ final class Housing {
 		// A household already together in a house with room for all stays (anyone of it not yet in moves in), unless a
 		// bigger house built for it stands (the family that outgrew its house), or it only lodges with another household.
 		List<Households.Household> unhoused = new ArrayList<>();
+		Set<Households.Household> lodgers = new HashSet<>();
 		for (Households.Household h : all) {
 			VillageData.Plot together = together(houses, h);
 			if (together != null) {
@@ -92,6 +93,7 @@ final class Housing {
 				}
 				if (lodging(together, h, all)) {
 					unhoused.add(h); // keeps its beds here until a house of its own is free
+					lodgers.add(h);
 				}
 				continue;
 			}
@@ -108,13 +110,16 @@ final class Housing {
 				}
 			}
 		}
-		// Pass two: any other house with room that nobody it was built for still needs.
+		// Pass two: any other house with room that nobody it was built for still needs. A household that only lodges has a
+		// bed each meanwhile, so it waits for a house with every bed it would like: a married couple at the parents' may
+		// be expecting (the parents' spare bed let them), and a house with no bed for the baby would leave it without one.
 		Set<UUID> stillWaiting = new HashSet<>();
 		for (Households.Household h : unhoused) {
 			stillWaiting.addAll(h.members());
 		}
 		for (int i = 0; i < unhoused.size(); i++) {
 			Households.Household h = unhoused.get(i);
+			int beds = lodgers.contains(h) ? h.wantBeds() : h.size();
 			for (VillageData.Plot p : houses) {
 				boolean reservedForOthers = false;
 				for (UUID id : p.intended) {
@@ -123,7 +128,7 @@ final class Housing {
 						break;
 					}
 				}
-				if (!reservedForOthers && onlyTheirs(p, h) && capacity(p) >= h.size()) {
+				if (!reservedForOthers && onlyTheirs(p, h) && capacity(p) >= beds) {
 					moveAll(v, houses, p, h, moves);
 					stillWaiting.removeAll(h.members());
 					unhoused.remove(i--);
@@ -137,7 +142,12 @@ final class Housing {
 		return moves;
 	}
 
-	/** The one house the whole household lives in with room for them all, or null. */
+	/**
+	 * The one house the whole household lives in with room for them all, or null. A house where only its children
+	 * live is not the household's: a parent who moved out when a marriage ended keeps a child who lives with them
+	 * (Families' household), but is not moved straight back into the old home for it; the child keeps their bed there
+	 * until the household has a house of its own.
+	 */
 	private static VillageData.@Nullable Plot together(List<VillageData.Plot> houses, Households.Household h) {
 		VillageData.Plot found = null;
 		for (VillageData.Plot p : houses) {
@@ -148,7 +158,7 @@ final class Housing {
 				found = p;
 			}
 		}
-		if (found == null || free(found, h) < h.size()) {
+		if (found == null || free(found, h) < h.size() || Collections.disjoint(found.residents.keySet(), h.adults())) {
 			return null;
 		}
 		return found;
