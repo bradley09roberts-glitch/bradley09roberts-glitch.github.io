@@ -194,16 +194,16 @@ Nine friends eat a lot, and wheat alone struggles to keep up: a loaf of bread ta
 
 They only hunt by day: never at dusk or at night. Animals of yours with a name, a lead, a saddle or an owner are never butchered either, even in the friends' pen. To keep an animal of yours safe anywhere, give it a name or keep it fenced in.
 
-**The gate.** Friends open and shut the pen gate themselves. They never shut it while you are in or right next to the pen, or while anyone stands in the gateway, so while you are there they do not start pen jobs that open it. A friend who ends up inside the pen with nothing to do there walks out and shuts the gate behind them. Eggs laid in the pen and the ground inside it are left alone: nobody tries to tidy up behind the fence or plant flowers there.
+**The gate.** Friends open and shut the pen gate themselves. They never shut it while you are in or right next to the pen, or while anyone stands in the gateway, so while you are there they do not start pen jobs that open it. The camp's own pets (3.0, section 28) do not count: a pet idling in the gateway never holds the gate open, and it is never herded to the back with the animals. A friend who ends up inside the pen with nothing to do there walks out and shuts the gate behind them. Eggs laid in the pen and the ground inside it are left alone: nobody tries to tidy up behind the fence or plant flowers there.
 
 ## 6b. Nights: bedtime, the watch and standing together
 
 Nights are when Hardcore friends die, so the camp keeps a night routine.
 
-- **Bedtime.** At nightfall friends put their work down (it waits for the morning) and go to bed: in their own bed once they have a house in the village (section 24), otherwise inside the cabin once it is built, otherwise in a ring around the camp centre. Only the jobs that belong to the night go on: a hungry friend has supper first, a chilly one warms up by the campfire first, anyone still out comes home, Terra lights a dark camp before she turns in, and a badly hurt friend with no food is still fed. Pastimes and chats wait for the morning too. Once asleep, nothing but trouble gets them up: they sleep until dawn unless they are hurt, a monster that could get at them comes within 8 blocks, a friend within 16 blocks is trading blows (or has a hostile within 4 blocks), the watch raises the alarm, or their own watch begins.
-- **The watch rota.** Someone always stays up. The night has two watches: the **first** from dusk to midnight, the **second** from midnight to dawn. Aegis keeps the first watch whenever he is alive and working at the camp. The second goes to a healthy friend with something to fight with: the best armed (any sword before any axe before any other tool), then the healthiest, but never whoever kept a watch the night before if anyone else can, so the duty rotates and nobody loses sleep every night. If Aegis has died, or is away following you, someone else keeps the first watch as well. A watcher who dies, is sent to follow you or stay, gets too weak, runs out of energy, or is more than 24 blocks beyond the camp's edge for over 30 seconds is relieved by the next friend in line, and friends at the camp are chosen before friends away from it. The second watcher sleeps until midnight and is then woken for their watch; whoever kept a watch naps sooner the next day. A friend alone at camp (other than Aegis) has nobody to watch over and simply sleeps.
-- **Keeping watch.** The watcher stands by the campfire (or the camp centre), stepping round it now and then and looking out over the camp, and goes for any hostile that comes into the camp. Aegis keeps his watch walking his posts round the camp, or from the watchtower once it stands; on his watch he only stays beside players inside the camp or within 8 blocks of its edge.
-- **The alarm.** When the watcher spots a hostile inside the camp (one they can see, or one out of sight on the camp's own ground with a way to it, not one in a cave beneath), they raise the alarm ("Zombie in the camp! Everyone up!"). Everyone asleep in the camp wakes, and every armed friend in the camp (holding a sword or an axe) goes to fight it. When it is dealt with they go back to bed. Each hostile raises the alarm once a night.
+- **Bedtime.** At nightfall friends put their work down (it waits for the morning) and go to bed: in their own bed once they have a house in the village (section 24), otherwise inside the cabin once it is built, otherwise in a ring around the camp centre. Only the jobs that belong to the night go on: a hungry friend has supper first, a chilly one warms up by the campfire first, anyone still out comes home, Terra lights a dark camp before she turns in, and a badly hurt friend with no food is still fed. Pastimes and chats wait for the morning too. Once asleep, nothing but trouble gets them up: they sleep until dawn unless they are hurt, a monster that could get at them comes within 8 blocks (one right beside them in plain sight, or one with a way in: monsters do not open doors, so one outside a shut door does not count), a friend within 16 blocks is trading blows (or has a hostile within 4 blocks), the watch raises the alarm about a monster near them, or their own watch begins.
+- **The watch rota.** Someone always stays up. The night has two watches: the **first** from dusk to midnight, the **second** from midnight to dawn. Aegis keeps the first watch whenever he is alive and working at the camp. The second goes to a healthy friend with something to fight with: the best armed (any sword before any axe before any other tool), then the healthiest, but never whoever kept a watch the night before if anyone else can, so the duty rotates and nobody loses sleep every night. From 3.0, a guard who stood the first half of the night (section 27) is never picked for the second watch. If Aegis has died, or is away following you, someone else keeps the first watch as well. A watcher who dies, is sent to follow you or stay, gets too weak, runs out of energy, or is more than 24 blocks beyond the camp's edge for over 30 seconds is relieved by the next friend in line, and friends at the camp are chosen before friends away from it. The second watcher sleeps until midnight and is then woken for their watch; whoever kept a watch naps sooner the next day. A friend alone at camp (other than Aegis) has nobody to watch over and simply sleeps.
+- **Keeping watch.** The watcher stands by the campfire (or the camp centre), stepping round it now and then and looking out over the whole camp (in 3.0, as far as the village has grown it, up to 96 blocks round them), and goes for any hostile that comes into the camp within 24 blocks of them. For one further out, the alarm (below) wakes the friends near it, and the armed ones there go for it. Aegis keeps his watch walking his posts round the camp, or from the watchtower once it stands; on his watch he only stays beside players inside the camp or within 8 blocks of its edge.
+- **The alarm.** When the watcher spots a hostile inside the camp (one they can see, or one out of sight on the camp's own ground with a way to it, not one in a cave beneath), they raise the alarm ("Zombie in the camp! Everyone up!"). Every grown-up asleep in the camp within 40 blocks of it wakes, and every armed friend in the camp (holding a sword or an axe) within those 40 blocks goes to fight it. Friends asleep further off (at the far end of a big village) and children sleep on, unless the monster could get at them. When it is dealt with they go back to bed. Each hostile raises the alarm once a night.
 - **Standing together.** When a hostile goes for a friend or for you inside the camp, armed friends within 16 blocks join in, and any friend holding a tool joins in within 8. Inside the camp they do not need to see it first: they find their way round walls to it, but only when a whole path leads there. Outside the camp, friends join fights they can see within 8 blocks. A friend who goes 10 seconds without landing a blow, with no way through to the hostile, gives it up for 30 seconds; a second time, until dawn. Friends with a bow shoot archers and anything they cannot reach (section 15).
 - **Something to fight with.** Every friend arrives with a tool they can fight back with. Sage, whose planning needs no tool, brings a wooden sword: she keeps it, and fetches or makes another when it breaks.
 
@@ -265,7 +265,7 @@ New in 3.0 (all work without cheats, and all but `/friends map` only show things
 | `/friends family [name]` | Every family by family name / one person's partner, parents, children and who they live with (section 23) |
 | `/friends couples` | Couples going out, engaged or married, the wedding day, and a baby on the way or what is still missing for one (section 23) |
 | `/friends relationships [name]` | The closest friendships in the camp / one person's partner and closest friends (section 23) |
-| `/friends village` / `village plots` | The village: people, homes, buildings, streets, plots and what the next stage still needs / every plot (section 24) |
+| `/friends village` / `village plots` | The village: people, babies on the way, homes, buildings, streets, plots and what the next stage still needs / every plot (section 24) |
 | `/friends home [name]` | Where everyone lives, household by household / one person's house, street, bed and household (section 24) |
 | `/friends trades` | Who holds which trade, where, and what they are doing; workplaces still waiting (section 25) |
 | `/friends shops` | Each shop, its keeper, where it is, whether it is open, and its trades so far (section 25) |
@@ -273,7 +273,7 @@ New in 3.0 (all work without cheats, and all but `/friends map` only show things
 | `/friends chronicle [page]` | The latest page of the Village Chronicle and where the book is / another page, 1 being the oldest (section 26) |
 | `/friends defence` | The alarm, the bells, the guard posts and who stands each tonight, fires to put out, and the tallies so far (section 27) |
 | `/friends pets` / `/friends maps` | Every pet, whose it is and what it is doing / every map and where it is (section 28) |
-| `/friends map [number]` | Ask Scout for a copy of the best map for where you stand / of one map; she makes it from the camp's own paper and brings it to you (section 28) |
+| `/friends map [number]` | Ask Scout for a copy of the best map for where you stand / of one map; she makes it from the camp's own paper and brings it to you. By day, for the owner and trusted players (section 28) |
 
 None of these commands give free items, teleport you, or change time, weather, game mode or difficulty.
 
@@ -340,13 +340,15 @@ Settlement's own buildings must be finished too. `/friends village` shows what t
 - **New in 3.0**, each with its own strict rules (details in `docs/v3/`):
   - Village plots go only on firm natural ground: never on water, a field, your floors or under trees, and never
     within 2 blocks of anything you built (3 where the ground is levelled). Streets are laid only on grass, dirt and
-    the friends' own path blocks. Friends only live in houses they built on their own plots (section 24).
+    the friends' own path blocks, never within 2 blocks of anything you built. Friends only live in houses they built
+    on their own plots (section 24).
   - Builders put up temporary dirt or cobblestone pillars (at most 6 high) to reach roofs, never by your builds, and
     dig them out again (section 21).
   - The forager digs single blocks of sand and clay by day in the gathering ring, leaving one-block dips, never next
     to water or near your builds; the farmer shears wild sheep, never yours (section 21).
   - A friend shut in a hole away from camp may put a block underfoot or dig a staircase out through natural ground,
-    never near anything you or the friends built and never inside the camp (section 22).
+    never near anything you or the friends built and never on the camp's own ground: its heart and the sites of the
+    village's buildings (section 22).
   - Graves go at a small cemetery on level natural ground away from the streets and your builds (section 26).
   - Fire near the houses and the camp is put out by hand, in your builds too, but never a fireplace on netherrack
     (section 27).
@@ -368,7 +370,7 @@ Settlement's own buildings must be finished too. `/friends village` shows what t
 - Needs are five simple numbers, not a full life simulation. Friends meet them with a fixed set of jobs: eating, sleeping, chatting, a pastime, warming up and, when too weak to work, resting. From 3.0 a friend with a house sleeps in their own bed (section 24); without one, they sleep where they lie down (in the cabin or around the camp centre).
 - Friends see to their needs only while working on their own. A friend following you or holding position does not eat, sleep or rest; they eat from their backpack only when hurt or very hungry. Hand them food, or send them back to work now and then.
 - Chats between friends are an exchange of pre-written lines, not a real conversation.
-- The night watch looks out over the camp from the campfire: it notices a hostile it can see, or one out of sight on the camp's own ground with a way to it, not one in a cave beneath the camp. The alarm wakes friends inside the camp, not those out in the gathering ring.
+- The night watch looks out over the camp from the campfire: it notices a hostile it can see, or one out of sight on the camp's own ground with a way to it, not one in a cave beneath the camp. In a grown village the watcher sees the whole village but cannot see round houses: a monster out of sight there is noticed only when it is close to them or going for someone. The alarm wakes grown-ups inside the camp within 40 blocks of the monster, not those further off or out in the gathering ring.
 - They build from fixed plans (in 3.0, the building library's 54, plus any you add with a data pack), adapted to the wood the camp has. They do not invent new buildings, and they choose what to build and where themselves: there is no ordering a building.
 - Since 3.0 the friends find their way with paths of their own and get themselves out of caves, holes and water (section 22), but that is untested in game, and a friend can still get stuck: stuck jobs time out and are retried later, and as a last resort a friend stuck for long is brought home (`rescueStuckFriends`).
 - Mining is one staircase mine plus exposed ores near camp, and (for Sage's plan) one deep branch mine at a time. Only trees they can fully reach (about 6 blocks tall) are felled.
@@ -424,7 +426,7 @@ New in 3.0 (numbers outside the range shown are brought back into it when the ga
 | `relationshipSpeed` | `1.0` | How fast friendships and romances grow: 2 is twice as fast, 0.5 half as fast (0.25 to 4) |
 | **The village** (section 24) | | |
 | `villageHomes` | `true` | Lay out the town plan at the Village stage and build homes; `false` keeps the camp as it was (no new plots, no Town or City). Houses already built are still lived in |
-| `villageRadius` | `64` | How far from the camp centre the streets and plots may spread, in blocks (from `campRadius` to 96); the camp grows with them |
+| `villageRadius` | `64` | How far from the camp centre the streets and plots may spread, in blocks (from `campRadius` to 96); the camp grows with them, and with `keepCampLoaded` so does the area kept running while you are online (about 15×15 chunks at 64, 19×19 at 96, against 13×13 before the village) |
 | `villageBuildsAtOnce` | `3` | Most village buildings under way at once, besides two pieces of decoration (1 to 8) |
 | **Trades and shops** (section 25) | | |
 | `villageTrades` | `true` | Grown-ups take up trades. Off: nobody works a trade (trades already given are kept for when it is on again) |
@@ -577,9 +579,9 @@ Full details: `docs/v2/town.md`. On a world you play alone, none of this gets in
 
 - **Owner and trust.** The first player to change anything owns the camp. While `requireTrust` is on, only the owner and
   players they trust (`/friends trust <player>`) may give orders, recruit, open backpacks, hand over anything but
-  food, put a friend on a lead, move the camp or ask for deliveries, or hurt a friend at all. Anyone may look and anyone
-  may feed a friend. The single-player host and operators are always allowed, and someone playing alone is never
-  limited or refused.
+  food, put a friend on a lead, move the camp or ask for deliveries (and, from 3.0, a copy of a map with
+  `/friends map`), or hurt a friend at all. Anyone may look and anyone may feed a friend. The single-player host and
+  operators are always allowed, and someone playing alone is never limited or refused.
 - **Bonds.** Each friend has a bond with each player (-100 to 100) that grows with food and gifts, help in fights,
   deliveries and time together, and falls if you hit or dismiss them. Close friends defend you first and feed you
   first; a friend who distrusts you will not follow you. `/friends bond`.
@@ -600,8 +602,9 @@ Full details: `docs/v2/town.md`. On a world you play alone, none of this gets in
 Full details: `docs/v3/architecture.md`.
 
 - **The camp's own buildings, rebuilt.** The cabin (Hamlet) is now a cottage on a cobblestone plinth, with a log frame,
-  plank walls, a stair roof with eaves, five windows, porch lanterns and two barrels; the second cabin (Settlement) is
-  the same cottage. Friends still sleep inside, and Spark's automatic door still works. The storehouse (Village) is
+  plank walls, a stair roof with eaves, seven windows, porch lanterns and two barrels; the second cabin (Settlement) is
+  the same cottage. Friends still sleep inside the first cabin (nobody sleeps in the second), and Spark's automatic
+  door still works. The storehouse (Village) is
   timber-framed with two chests and six barrels. The watchtower (Village) has a stepped stone base, arrow slits, a
   ladder up the middle and a roofed lookout, where Aegis still keeps watch.
 - **The building library.** The village (section 24) and the trades (section 25) build from 54 plans: 19 houses in nine
@@ -617,16 +620,26 @@ Full details: `docs/v3/architecture.md`.
   blocks high, which the builder digs out again afterwards. A friend called away comes straight down first, and a
   pillar left behind is taken down later.
 - **Making materials.** The builder fires glass, stone, smooth stone, bricks and smooth sandstone in the friends'
-  furnace. The forager digs sand and clay by day in the gathering ring (single blocks, leaving shallow dips anyone can
-  step out of). The farmer shears wild sheep for wool. Builders tell the camp what a whole building needs, so the
+  furnace. What is already in the furnace counts, and a furnace already at work is only topped up with eight or more,
+  so the builder is not sent to it for one block at a time; a trip to the furnace waits until the run of building in
+  hand is over. The forager digs sand and clay by day in the gathering ring (single blocks, leaving shallow dips anyone
+  can step out of). The farmer shears wild sheep for wool. Builders tell the camp what a whole building needs, so the
   gatherers fetch it ahead of time.
+- **Shortages.** When a building runs short, the gatherers bring what is missing to the friend building it, and the
+  smith leaves as much iron, wood and stone in the chest as the buildings asked for (no more), so gear is still made
+  while houses go up. Each building keeps its own list, so several going up at once never hide each other's.
+- **Repairs.** The builder's repair job looks past gaps it cannot fill yet (carpets without wool, windows without
+  glass), so a torch knocked off a wall behind them is still put back.
 
 **How to take part.** The friends choose and build everything themselves. You can speed them up: sand, clay, coal,
 iron and wool (or shears) in the supply chest all help, and dirt in the chest makes quick scaffolding. They cannot make
 a bell: put one in the chest for the town hall (and the alarm, section 27). To add plans of your own, put them in a
 data pack in the world's `datapacks` folder (the file format is in `docs/v3/architecture.md`), then reopen the world
 (or restart the server) to load them, and check them with `/friends builds check`. `/reload` also loads them, but it
-is a vanilla command that needs cheats or operator rights.
+is a vanilla command that needs cheats or operator rights. A plan you add or change only applies to buildings started
+afterwards: every library building already begun or standing keeps the version of its plan it was started with (a copy
+is saved with the world), so it is finished, repaired and furnished from that, and its beds, doors and counters stay
+where they are. That holds across `/reload`, a data pack added or removed, and updates of the mod.
 
 **Commands** (read-only): `/friends builds` (every plan by kind), `/friends builds <kind>` (`house`, `shop`,
 `shop:bakery`, `civic:tavern`...), `/friends builds <plan id>` (one plan, such as `house/oak_cottage`: size, styles,
@@ -646,6 +659,15 @@ sand and clay follows `allowQuarrying`.
   Friends cannot dye wool.
 - Sand digging leaves a scatter of one-block dips that are not filled back in.
 - A friend knocked off a pillar takes fall damage like anyone (six blocks at most).
+- A plan bigger than 21,000 characters of JSON, not counting its spacing (the mod's largest is under 7,000), is not
+  saved with its sites: those buildings follow whatever plan has that id now. The camp's own buildings (the cottage,
+  storehouse and watchtower) are not saved with their sites either, so a later update of the mod that changed one
+  would change it under buildings already started.
+- The camp remembers up to 100,000 blocks the friends placed (a City-stage village comes to about 20,000, and an old
+  village left behind by a camp move still counts). It also tells them which beds, shop chests, furnaces and street
+  paths are their own, so if it ever filled, what they built afterwards would look like yours to them (beds excepted:
+  those are always remembered): shops not stocked, plots along new streets turned down. The server log says so when it
+  fills. Scaffolding keeps its own record, so a full one never strands a builder.
 
 
 ## 22. Finding the way: paths, senses, getting unstuck and sprinting (new in 3.0)
@@ -672,8 +694,12 @@ running water, and some died down there alone. 3.0 changes how they choose their
   of a job that is getting on, or after you told them to stay. A stuck follower catches up with you after a few
   seconds when `followTeleportDistance` is above 0.
 - **Digging out** only touches natural ground (dirt, grass, sand, gravel, clay, stone, granite, diorite, andesite and
-  tuff), never near anything you or the friends built, never inside the camp, and only in the Overworld. Children
-  never change a block.
+  tuff), never near anything you or the friends built, never on the camp's own ground, and only in the Overworld.
+  The camp's own ground is its heart (the camp's size before the village, at any depth) and the sites of the village's
+  buildings near the camp's height; there a friend shut in a building or the pen never digs or places blocks: they
+  hop, try the doors, and in the end are brought out.
+  The rest of a grown village (its gardens and verges, and the caves and mines under it) is dug out of like anywhere
+  else. Children never change a block.
 - **Sprinting.** Friends sprint like players (dust at their feet, 30% faster) when more than 12 blocks of path are
   left, when running from danger, and to keep up with you while you sprint; not in water, when hungry, or (unless
   fleeing) beside a long drop or near lava. Running costs a little more hunger. Children tire after about ten seconds.
@@ -695,6 +721,8 @@ water, current, lava, drops, monsters heard, danger, whether they are stuck or g
   stops at the cave mouth, and the job picks again later.
 - The way out is looked for up to 48 blocks away, and digging cannot go through deepslate, cobblestone or sandstone:
   deep down, or in a desert, a friend who cannot walk out waits to be brought home.
+- A staircase dug out of a cave under the village comes up through its open ground (a garden, a verge) and is left
+  there, as it would be in the wilds; never through a building's site or the heart of the camp.
 - The rescue is a teleport to a safe, loaded spot; a friend stuck while the camp is not loaded waits until it is.
 
 ## 23. Living together: friends, couples, children and skins (new in 3.0)
@@ -707,7 +735,9 @@ arriving), never changes a block, and happens on its own.
   falls, so a fed, rested camp gets on well. At 50 they are good friends, at 75 close friends, at 90 best friends.
 - **Romance.** Two single, friendly grown-ups who are not family may fall for each other (about four pairs in ten
   never will). One asks the other out and everyone is told: "Fern and Oak are going out together. How lovely!" Each
-  day, in the late afternoon or evening, a couple watches the sunset, sits by the campfire or goes for a walk.
+  day, in the late afternoon or evening, a couple watches the sunset, sits by the campfire or goes for a walk. In a
+  village the date comes before the evening at home. Whoever keeps the night watch is neither asked out nor asks, and
+  a date ends when one of the two goes on watch.
 - **Weddings.** After two days and three dates, deeply in love, one proposes, and the wedding is the next morning at
   the camp centre (or the town hall, once there is one). Everyone free gathers in a ring, the couple say their vows,
   the bell rings, Unity +30, and they take one family name (everyone has one: Hart, Ashby, Fletcher...). A monster
@@ -716,12 +746,16 @@ arriving), never changes a block, and happens on its own.
 - **Babies.** A married couple may find they are expecting; the baby arrives about a day later. They need to be at the
   camp together and at work there, married a day, with food in store, both in at least an okay mood, fewer than four
   children, `daysBetweenChildren` since the last, the team under `maxPopulation`, and **room at home**: a free bed in
-  their village house, or before there are houses, spare places in the finished cabins (nine to a cabin, for the
-  whole team). `/friends couples` says what is missing.
+  their village house, or before there are houses, a spare place in the finished cabin (nine places for the whole
+  team; the second cabin adds none, as nobody sleeps in it). `/friends couples` says what is missing. A baby on the way
+  counts towards `maxPopulation`, so a newcomer never takes the place of a baby already expected.
 - **Children** stay children for `childhoodDays` (10 days). They never work, fight, follow players off, join
   expeditions or go through portals. They play tag and hide-and-seek, watch a parent at work to learn (or go to school
-  once there is a teacher), go home from the late afternoon, and run to a grown-up when a monster could get at them.
-  Parents and Aegis go for a monster after a child first. Children take food from you, nothing else.
+  once there is a teacher), and from the late afternoon go home, to beside their own bed in the family's house (or the
+  cabin, while the family has no house), and stay in. When a monster could get at them they run to a grown-up; after
+  dark a child already indoors stays in, and only runs to a grown-up in the same room. With nobody to run to, they go
+  home, but only if home is further from the monster than they are. Parents and Aegis go for a monster after a child
+  first. Children take food from you, nothing else.
 - **Growing up.** A grown child joins the team with a speciality taken from a parent's speciality or interest (farmer,
   builder, miner...), and the skill they picked up (Unity +15). People born in the camp never count against
   `maxSettlers`. They start with no tools.
@@ -751,7 +785,8 @@ closest friendships).
 - Slow on purpose: a week or two of in-game days from meeting to marrying (`relationshipSpeed` and `childhoodDays`
   speed it up). The numbers are first guesses.
 - Relationships only change while the people are loaded together.
-- Before there are village houses, most camps with all nine friends have no room for a baby until the second cabin.
+- Before there are village houses, a camp with all nine friends alive has no room for a baby: the cabin sleeps nine,
+  and the second cabin adds no room.
 - Dates and games are simple: walking to a spot and standing together, with hearts.
 - New skins mean rebuilding the mod and giving every player the new JAR; never renumber a skin a world already uses.
 
@@ -764,20 +799,34 @@ When the camp becomes a **Village** (Unity 250), the friends stop living round a
 - **Streets and plots.** Six streets on a grid: the **High Street** east to west through the camp centre, **Market
   Street** north to south, and four lanes 34 blocks out, with the **square** round the campfire where the main streets
   cross. Plots line the streets, every front door facing the street, and the village grows outwards street by street.
-  The camp grows to cover it, up to `villageRadius`.
+  The camp grows to cover it, up to `villageRadius`, and the camp's own later buildings keep off the streets too. A
+  friend at home on the outer plots is at the camp: nobody builds a night shelter unless they are more than 8 blocks
+  beyond its edge.
 - **Houses of their own.** Every household (a single friend, or a couple and their children) gets a house from the
   library, chosen by the beds it needs and the style that suits the land. Everyone builds their own home in their
   spare time; Oak (the builder) puts up everything else and anyone's house. A household moves in once its house is
-  finished (or 95% built, with every bed and chest in). A wedding brings two households together, a growing family
-  gets a bigger house, and newcomers and grown-up children get houses of their own.
-- **Real beds.** A friend with a house sleeps in their own bed as villagers do, and gets up at dawn, when hurt or when
-  the alarm goes. A friend never takes a bed a player is lying in, and only players count for sleeping through the
-  night. The night watch goes on as before.
+  finished, or 95% built with every light, door, bed and chest in: nobody sleeps in a house that is dark inside or has
+  no door. A wedding brings two households together in one of their houses with a bed for each of them (when neither
+  house has room, everyone keeps their own bed until a house big enough for them all is built). A growing family gets
+  a bigger house, and newcomers and grown-up children get houses of their own.
+- **Real beds.** A friend with a house sleeps in their own bed as villagers do, and gets up at dawn, when hurt, when a
+  monster that could get at them comes close (one outside the shut front door does not count: monsters do not open
+  doors), or when the night watch raises the alarm about a monster within 40 blocks of them. A friend never takes a bed
+  a player is lying in, and only players count for sleeping through the night. The night watch is still kept from the
+  campfire, but the watcher looks out over the whole village (up to 96 blocks round them), so a monster among the
+  outer houses raises the alarm and wakes the friends asleep near it, while the far end of the village and the
+  children sleep on.
 - **The day.** Breakfast and lunch at their own table (or now and then at the tavern), work, then from the late
-  afternoon home (or to the square) to be with family and neighbours, sometimes asking someone round.
+  afternoon home (or to the square, but not under a thunderstorm's dark sky) to be with family and neighbours,
+  sometimes asking someone round; a guest walks home at sunset, while it is still light.
 - **Streets, water and fields.** Terra lays the streets as paths, surfaced with gravel from the Settlement and
-  cobblestone from the Town, with lamp posts every 12 blocks. The farmer fills the well, fountain and wheat field with
-  a bucket, and tills, sows and harvests the field; the orchard gets its saplings.
+  cobblestone from the Town, with lamp posts every 12 blocks; never within two blocks of anything you built (a lawn
+  by your house, a garden, a yard). The farmer fills the well, fountain and wheat field with a bucket, and tills, sows
+  and harvests the field; the orchard gets its saplings.
+- **Lights and trees.** Terra lights the whole village by day, but after dark only the heart of the camp (its size
+  before the village), so the outer streets never keep her out late. The torches and lanterns the village's buildings
+  under way still need stay in the chest for the builders. Her saplings go at least 14 blocks back from every street
+  (behind the rows of houses), never on a street, a verge or a plot's front.
 
 | Stage | What goes up besides the houses |
 |---|---|
@@ -790,21 +839,37 @@ Shops and workplaces go up as the trades ask for them (section 25). The Town and
 civic buildings as well as Unity (section 10). Finished civic buildings, farms, shops and workplaces give Unity (+15,
 the town hall +30), new houses +10 (at most 40 a day).
 
-**How to take part.** Keep the chest stocked: a house is 150 to 400 blocks, the town hall about 600. Gravel and
-cobblestone surface the streets; the farmer needs a bucket (three iron) for the water. Plots avoid trees, water and
-your builds, so clearing or levelling ground along the streets helps. Moving the camp with `/friends camp set` (more
-than three blocks away) lets the whole town plan go: the houses stay, but nobody lives in them any more.
+**How to take part.** Keep the chest stocked: a house is 150 to 400 blocks, the town hall about 600. Coal (or
+charcoal) for torches matters too, as nobody moves into a house until its lights are in. Gravel and cobblestone
+surface the streets; the farmer needs a bucket (three iron) for the water. Plots avoid trees, water and your builds,
+so clearing or levelling ground along the streets helps. Moving the camp with `/friends camp set` (more than three
+blocks away) lets the whole town plan go: the houses stay, but nobody lives in them any more. Setting it again within
+three blocks (standing by the campfire, say) keeps the village, and the camp keeps its size.
 
-**Commands** (read-only): `/friends village` (people, homes, buildings, streets, plots, and what the next stage still
-needs), `/friends village plots` (every plot), `/friends home` (where everyone lives), `/friends home <name>` (one
-person's house, street and bed).
+**Commands** (read-only): `/friends village` (people, babies on the way, homes, buildings, streets, plots, and what
+the next stage still needs), `/friends village plots` (every plot), `/friends home` (where everyone lives),
+`/friends home <name>` (one person's house, street and bed).
 
 **Settings:** `villageHomes`, `villageRadius`, `villageBuildsAtOnce` (section 14); `maxPopulation` caps the village.
 
 **Limits.**
 
 - The grid is square to the compass: streets are not curved round hills, and plots are skipped where the ground is
-  wrong. Big plots are hard to find on rough ground; a building with no plot tries again after five minutes.
+  wrong. Big plots are hard to find on rough ground; a building with no plot tries again after five minutes, and after
+  three searches in a row find nothing the planner rests a minute. Terra's saplings keep well back from the streets,
+  but the deepest buildings can still find one in the way, and the saplings she planted on the ring round the camp in
+  a 2.0 world stay where they are.
+- A house waits for its lights: a camp with no coal or charcoal for torches keeps its households in the cabin until the
+  gatherers bring some.
+- A street keeps two blocks clear of anything you built, but grass further than that from your blocks looks natural: a
+  big lawn, or the middle of a large fenced field, that a street runs through can still become path. Keep such ground
+  off the street lines, or put something of yours on it.
+- The night watch is still one friend at the campfire: they see the whole village but not round houses, and a monster
+  out of their sight is noticed only when it is close to them or going for someone. The second watcher may be woken
+  at midnight in a home at the edge of the village and walk to the campfire through the dark.
+- Lighting looks over a big village a little at a time, so a new dark patch can take ten to twenty seconds to be
+  noticed. Ground more than eight blocks above the camp's stays dark, and street surfaces never get a torch (the
+  verges beside them do).
 - Slow: with one builder and everyone else building in their spare time, a full village takes many in-game days.
 - The routine is simple: friends walk to a spot and stand there (no sitting on chairs), and a house's chests are only
   furniture. While a friend sleeps in their bed, you cannot lie down in it.
@@ -825,7 +890,7 @@ the camp needs it, needs and the night watch always win, and nobody works a trad
 | Butcher | butcher's shop | Cooks raw meat in the smoker and sells it |
 | Fishmonger | fish stall | Fishes, and sells raw and cooked fish |
 | Tailor | tailor's shop | Makes carpets and beds for the builders; sells wool, carpets and beds |
-| Blacksmith | smithy or smith's shop | Takes over the camp's smith work; at the shop, makes and sells plain iron tools and armour when the camp has 40 or more iron |
+| Blacksmith | smithy or smith's shop | Does the camp's smith work when it is their most useful job (nobody else starts it while they are at it, or for a minute after); while they are busy, too weak or away, anyone may make the gear, as before. At the shop, makes and sells plain iron tools and armour when the camp has 40 or more iron |
 | Fisher | fishing hut, or a bank | Fishes by day with a rod; the catch goes to the chest for the cooks |
 | Mason | mason's yard | Cuts stone bricks, stairs, slabs and walls for the builders at the stonecutter |
 | Beekeeper | apiary | Puts hives on the stands, leads wild bees home, and takes the honey with the campfire lit beneath |
@@ -846,9 +911,10 @@ the camp needs it, needs and the night watch always win, and nobody works a trad
 
 **How to take part: shopping.** **Right-click a shopkeeper standing at their counter by day** to open the game's
 trading screen (sneak and right-click for their backpack instead). Anyone may trade, trusted or not. They **sell** only
-what the shop really holds (a stallholder at the camp only what the camp can spare), and **buy** what the camp is short
-of right now, at most 32 emeralds' worth a visit and always for less than they sell. **Prices** are the game's own
-villager prices where it has them (six loaves for an emerald, a bed for three) and never change. Nothing is made from
+what the shop really holds (a stallholder at the camp only what the camp can spare), and never stock the planks,
+torches, beds or other things the buildings under way still need; they **buy** what the camp is short of right now,
+at most 32 emeralds' worth a visit and always for less than they sell. **Prices** are the game's own villager prices
+where it has them (six loaves for an emerald, a bed for three) and never change. Nothing is made from
 thin air: the goods on offer come out of the shop's chests while the screen is open and go back if unsold, and what
 you sell goes into the supply chest. Shops shut at dusk and in a thunderstorm dark enough for monsters, and a keeper
 serves one customer at a time. The beekeeper needs honeycomb or a beehive from you to start: friends never take honey
@@ -865,8 +931,11 @@ from a wild nest.
   emeralds are lost (never duplicated). Renamed emeralds or goods become plain ones.
 - Stalls at the camp trade straight from the supply chest, so a player the owner does not trust can buy the camp's
   spare goods there. Switch `playerShops` off on a server where that is unwelcome.
-- The blacksmith still works at the camp's crafting table, the doctor does not brew, the fisher never catches
-  treasure, and the tailor does not dye.
+- The blacksmith still works at the camp's crafting table, and has no extra pull towards the smith work: a miner
+  blacksmith often keeps mining. The doctor does not brew, the fisher never catches treasure, and the tailor does not
+  dye.
+- Building stock already on a shop's shelf (put there while nothing was being built) stays there: the builders never
+  take from a shop's chests.
 - Workplaces need the village's town plan; without it the trades work plainly at the camp.
 
 ## 26. Village life: calendar, feasts, music, birthdays, funerals and the Chronicle (new in 3.0)
@@ -882,7 +951,13 @@ plan, it all happens at the camp centre.
   well) and the **winter lights**. From the late afternoon everyone free gathers in a ring at the square, someone
   (Sage, or whoever has been with the camp longest) says a few words, and it is a party until nightfall: the cook hands
   round food from the stores (never more than the camp can spare), and there is music. For the winter lights, up to
-  eight lanterns glow round the square all night. Unity +10.
+  eight lanterns glow round the square all night. Unity +10. A monster near the square holds the party up until it is
+  dealt with, and so does the village's alarm (section 27): while the bell rings everyone takes cover or goes to their
+  post, and the feast waits for them to come back. If you save and quit (or the server restarts) during a feast, it
+  carries on when the world is loaded again that evening, straight on with the party if the words were already said;
+  if the evening is over by then, a feast whose words were said still goes in the Chronicle and gives its Unity. A
+  funeral cut short the same way carries on that evening only if its words were not yet said: one whose words were
+  said counts as held straight away and is not held a second time.
 - **Music.** Every other evening and at every feast, the village's musician (a bard, else the innkeeper, else a
   tinkerer like Spark, else the chattiest friend) puts a note block down and plays two or three old tunes (Frere
   Jacques, Greensleeves...), then picks it up again.
@@ -890,8 +965,11 @@ plan, it all happens at the camp centre.
   is plentiful there is a cake from the chest (or a smaller treat).
 - **Funerals and graves.** When someone dies for good, everyone mourns for a few days. A grown-up makes a grave at a
   small **cemetery** the friends lay out on level natural ground towards the camp's edge (behind the chapel, once
-  there is one): a headstone, a waxed sign reading "In memory of", the name, the day and "Rest well", and flowers. The
-  next evening everyone gathers for the funeral and three friends say goodbye. Mourners visit and leave flowers.
+  there is one), away from the streets, your builds and the graves already there: a headstone, a waxed sign reading
+  "In memory of", the name, the day and "Rest well", and flowers. The next evening everyone gathers for the funeral
+  and three friends say goodbye. If it cannot be held (nobody at the camp, a monster about, a storm), it moves to the
+  next evening; after three evenings the one lost is remembered quietly in the Chronicle instead. An evening lost to
+  the village's alarm is not one of the three. Mourners visit and leave flowers.
 - **The Village Chronicle.** Everything is written down, one dated line at a time: "Day 42, spring: Mabel and Oak were
   married at the town hall, and became the Hart family." Arrivals, births, weddings, deaths, finished buildings, new
   stages, feasts and funerals, Sage's plan, the first steps into the Nether and the End, dragons and raids. The keeper
@@ -900,7 +978,9 @@ plan, it all happens at the camp centre.
 
 **How to take part.** Come to the square on a feast day. Put a **blank book and quill** in the chest (or a book, or
 three paper and a leather, with an ink sac and a feather) for the Chronicle; one with writing in it, or a name of its
-own, is never taken. A note block (or eight planks and a redstone dust) gives music; flowers in the chest go on graves.
+own, is never taken. Books, paper and leather that Sage's plan is gathering for the library are left for it, so while
+the library's books are still being made, a book and quill of your own is the quickest way. A note block (or eight
+planks and a redstone dust) gives music; flowers in the chest go on graves.
 
 **Commands** (read-only): `/friends calendar` (today and the next ten days: feasts, market days, birthdays, funerals),
 `/friends chronicle` (the latest page and where the book is), `/friends chronicle <page>` (page 1 is the oldest).
@@ -911,6 +991,8 @@ own, is never taken. A note block (or eight planks and a redstone dust) gives mu
 
 - Feasts are short: late afternoon to nightfall is about three minutes of real time, and sleeping through the evening
   ends one early. Friends on urgent jobs join late or not at all.
+- A feast or funeral carried on after a restart forgets who had already come: the Chronicle names only those who come
+  (again) afterwards, and a feast closed after its evening ended names nobody.
 - The cook bakes spare wheat into bread and brings ready food; they do not cook specially.
 - The cemetery needs level natural ground inside the camp, away from the streets and your builds: in a crowded or hilly
   camp a grave may not find a place (the name stays in the Chronicle).
@@ -931,16 +1013,23 @@ Full details: `docs/v3/defence.md`. The friends defend the village by themselves
 
 The nearest friend who is awake, grown up and fit runs to the bell and rings it three times, so raiders near it glow.
 Nobody is sent to a bell with a creeper near it. The bell is the town hall's, else the friends' own bell at the
-square, else the school bell, else any other bell in the village. With no bell, the alarm is shouted.
+square (stood a few blocks from the campfire, off the line of the main streets), else the school bell, else any other
+bell in the village. With no bell, the alarm is shouted. If you move the camp, the bell at the old square is no longer
+the friends' own: still within the village, it is rung like any other bell; otherwise they put up another at the new
+square when the chest has a bell.
 
 **When it rings:**
 
 - **Taking cover.** Children and anyone not fit to fight go indoors (home, another house, the town hall, tavern, chapel
   or school, or the cabin), shut the friends' own wooden door behind them, and stand away from the windows. They never
-  run towards a creeper or past a monster.
+  run towards a creeper or past a monster. At night, anyone indoors whose bed is there simply goes to bed; someone
+  found asleep out in the open (their own bed taken or out of reach) is got up and kept indoors until the all-clear.
 - **Fighters to their posts.** Everyone grown up, fit and armed takes the post nearest the danger (a gate, a stretch
   of wall, the bell, the camp centre), never near a creeper. They go first for a monster at a door, then one going for
   someone, then a spider climbing a wall. They never shoot with you, a villager, a friend or an animal in the way.
+  The alarm gets sleeping fighters up if they have had enough sleep (40 energy or more); one with less is left asleep.
+  A fighter who wears out below 20 energy goes to bed and sits out the rest of that alarm, so nobody is got up and
+  sent back to bed over and over.
 - **The all-clear** comes once nothing has been seen in the village for 30 seconds, or at dawn for a night alarm. A raid
   keeps the alarm on until it is over; any other alarm ends after five minutes at most.
 
@@ -948,9 +1037,13 @@ square, else the school bell, else any other bell in the village. With no bell, 
 
 - **Guards.** Once the village has built its own watchtower, town gate or walls (Town and City stages; the camp's first
   watchtower does not count), up to `guardsPerShift` (2) armed grown-ups stand guard each half of the night besides
-  the night watch, warriors first, taking turns. A guard with a bow shoots from the watchtower's lookout; others stand
-  by the gate or the wall and walk short patrols. Each guard earns 2 Unity in the morning (at most 8 a day) and may
-  nap the next day.
+  the night watch, warriors first, taking turns. A guard must be rested (35 energy or more) to be picked. Nobody
+  stands both halves: everyone who stood any part of the first shift sleeps the second, and is not picked for the
+  night watch's second half either. A guard who gets hurt, worn out (below 20 energy) or stuck is relieved, and is not
+  picked again that night. A guard picked at dusk goes straight to their post, leaving the evening at home and a feast
+  to the others (one napping after last night's shift gets up for it). A guard with a bow shoots from the
+  watchtower's lookout; others stand by the gate or the wall and walk short patrols. Each guard earns 2 Unity in the
+  morning (at most 8 a day) and may nap the next day.
 - **Raids.** The friends fight raiders together, helping villagers and iron golems (never hurting them). A raid beaten
   off earns 40 Unity (at most 80 a day). **Note:** the friends' village has beds and bells, so the game may count it as
   a village: walking into it with Bad Omen starts a raid on the friends.
@@ -973,7 +1066,12 @@ each tonight, who is on duty, fires to put out, and the tallies so far. `/friend
 - The spiral stair up the village's own watchtower (Town stage) has not been tried in game. The walls have no
   walkway: wall guards stand on the ground and cannot shoot over. There are no special tactics against ravagers or
   evokers.
-- Fire is put out by hand only, with no water: a big blaze can spread faster than two friends can put it out.
+- Fire is put out by hand only, with no water: a big blaze can spread faster than two friends can put it out. Where a
+  fire has burnt before, a new one can take a few seconds longer to be noticed.
+- Fighters stand at their posts for the whole alarm, and a long night of alarms tires them out. As a fighter asleep
+  with less than 40 energy is not got up at all, a village of tired people may have few at their posts.
+- Whether a sleeper is indoors is judged by the sky above them: a bed under a glass roof counts as out in the open,
+  and its sleeper is got up and sent to stand inside at the alarm.
 - A bell you ring for fun still sends the children indoors for at least half a minute.
 
 ## 28. Pets and maps (new in 3.0)
@@ -985,34 +1083,44 @@ Full details: `docs/v3/pets.md`.
   Children are keenest, and a parent finds a pet for their child before one for themselves. The pet gets a cosy name
   and everyone is told: "Pip Hart has a new cat and has named it Biscuit." Unity +3 (at most 6 a day). One pet each, at
   most `maxPets` (8) in the camp, and only when the owner has a home for it (their village house, or before then a
-  finished cabin). Parrots are not kept.
+  finished cabin). No cat is tamed while the camp is short of food: its raw fish is what the cooks make meals from.
+  Parrots are not kept.
 - **Never yours.** The friends never tame, lead or touch an animal that is named, tamed or owned, on a lead, ridden,
   saddled or wearing armour, near anything you built or inside your fences, or a young or angry wolf.
 - **Life with a pet.** By day a pet follows its owner about the camp, and stays near the camp centre while they are
   off. Called by name ("Biscuit! Here, Biscuit!") it comes running. At night it goes home and sits beside its owner's
   bed. The owner feeds it from the chest now and then (fish for a cat; rotten flesh, else raw meat, for a dog), and
-  whenever it is hurt.
-- **Dogs and danger.** A dog stands up for its owner like your own tamed wolf, but never goes for a creeper. Cats keep
-  phantoms and creepers away. A pet of the camp only ever hurts monsters, and friends never hurt a pet.
+  whenever it is hurt. While the camp is short of food, raw meat and fish are kept for the cooks: a dog only gets
+  rotten flesh, and a cat waits until there is food to spare. A pet that tags along into the animal pen never holds the
+  gate open and is never herded with the livestock; one shut in or out is brought to its owner (or home at night).
+- **Dogs and danger.** A dog stands up for its owner like your own tamed wolf, but never goes for a creeper, nor for a
+  monster its owner would shoot (it would be in the way of the arrows). Cats keep phantoms and creepers away. A pet
+  of the camp only ever hurts monsters, and friends never hurt a pet. A wild wolf you hit can call a dog to help, as
+  wolves call each other, but the dog drops it, anger and all, within a second.
 - **When an owner is gone**, the pet goes to their family (a young child first), else to a child with no pet, else it
   stays on as the camp's own pet until someone takes it in.
 - **Scout's maps.** Scout makes empty maps from eight paper round a compass (making a compass from four spare iron and
   a redstone if need be). Her first map is of the camp, 256 blocks across, drawn as she walks about; after that she maps
   where her trips take her (512 blocks across, such as "Map of the land 300 blocks north-east of the camp"). Finished
   maps are marked with the camp, the town hall and the places her trips found, and hung in an item frame on the town
-  hall's wall (the camp's library before there is a town hall), or kept in the chest.
+  hall's wall (inside the camp's cabin before there is a town hall), or kept in the chest.
 - **A copy for you.** Right-click Scout holding an **empty map** of your own and she gives you a copy of a finished map
-  (the one showing where you stand, else the camp's, else the newest). Or type `/friends map`: she makes the copy from
-  the camp's own stock and brings it over; stay within 48 blocks. If the camp is short of paper or a compass, she says
-  so. A copy keeps filling in as Scout draws.
+  (the one showing where you stand, else the camp's, else the newest); that works at any hour. Or type `/friends map`:
+  she makes the copy from the camp's own stock and brings it over; stay within 48 blocks. As it uses up the camp's
+  stores, `/friends map` is for the camp's owner and the players they trust, as other orders are (section 20), and
+  only by day: after nightfall she is off to bed, so ask in the morning (a copy still on its way at nightfall lapses
+  too). If the camp is short of paper
+  or a compass, she says so. A copy keeps filling in as Scout draws.
 
 **How to take part.** Raw cod or salmon and bones in the chest let the friends adopt and feed pets, and rotten flesh
-feeds dogs. Paper and a compass (or iron and redstone) let Scout make maps; Sage's plan comes first, so she never takes
-paper, leather or iron it is still collecting.
+feeds dogs (the only treat a dog gets while the camp is short of food). Paper and a compass (or iron and redstone) let
+Scout make maps. Sage's plan comes first: she never takes paper, leather or iron the plan is collecting (paper and
+leather for the library's books, iron in the iron age), none while it still wants more and, once it has enough, only
+what lies beyond its amount.
 
 **Commands:** `/friends pets` (every pet, whose it is, what it is doing, its health), `/friends maps` (every map, what
 it shows, how much is drawn, where it is), `/friends map` / `/friends map <number>` (ask for a copy of the best map for
-where you stand / of one map).
+where you stand / of one map; by day, for the owner and trusted players).
 
 **Settings:** `pets`, `maxPets`, `scoutMaps` (section 14).
 
@@ -1021,7 +1129,7 @@ where you stand / of one map).
 - Stray cats are rare away from villages: a camp may only get cats once its village has five or more beds close
   together. Wolves live in forests and taiga.
 - Pets follow only about the camp (no teleporting across the world), sit only at night, do not breed, and do not go on
-  trips or expeditions.
+  trips or expeditions. Cats do not sit on chests, or lie on beds and furnaces for minutes on end.
 - You cannot give orders to a friend's pet (sit, collar, armour), but you can feed it, put it on a lead, or rename it
   with a name tag.
 - Maps are drawn only from land already loaded, and the Nether is not mapped. A place found later only shows on copies
