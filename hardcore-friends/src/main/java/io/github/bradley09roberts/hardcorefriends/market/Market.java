@@ -108,12 +108,21 @@ public final class Market {
 		List<CompanionTask> list = new ArrayList<>();
 		list.add(new KeepShopTask());
 		list.add(new StockShopTask());
+		list.add(new CraftTask());
+		list.add(new PartsTask());
+		list.add(new FishTask());
+		list.add(new ShearFlockTask());
+		list.add(new BeekeepTask());
+		list.add(new TeachTask());
+		list.add(new DoctorTask());
+		list.add(new CompostTask());
 		return list;
 	}
 
 	private static void clear() {
 		Workplaces.invalidate();
 		FishSpots.clear();
+		BeekeepTask.clear();
 		blacksmith = null;
 		blacksmithAt = Long.MIN_VALUE / 2;
 	}

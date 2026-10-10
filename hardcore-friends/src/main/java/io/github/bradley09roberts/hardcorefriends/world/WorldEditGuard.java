@@ -14,8 +14,10 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ComposterBlock;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.Fallable;
 import net.minecraft.world.level.block.FenceGateBlock;
@@ -361,6 +363,18 @@ public final class WorldEditGuard {
 				if (current.getBlock() instanceof FenceGateBlock && current.getBlock() == newState.getBlock()
 					&& Camp.data(level.getServer()).isPlacedByFriends(level, pos)) {
 					yield Verdict.OK; // opening or shutting the gate of the friends' own animal pen
+				}
+				// The market's farmer and beekeeper (village trades): filling or emptying the friends' own composter, and
+				// taking the honey from the friends' own beehive (the same hive, facing the same way, with less honey).
+				if (current.getBlock() instanceof ComposterBlock && current.getBlock() == newState.getBlock()
+					&& Camp.data(level.getServer()).isPlacedByFriends(level, pos)) {
+					yield Verdict.OK;
+				}
+				if (current.is(Blocks.BEEHIVE) && newState.is(Blocks.BEEHIVE)
+					&& newState.getValue(BeehiveBlock.FACING) == current.getValue(BeehiveBlock.FACING)
+					&& newState.getValue(BeehiveBlock.HONEY_LEVEL) < current.getValue(BeehiveBlock.HONEY_LEVEL)
+					&& Camp.data(level.getServer()).isPlacedByFriends(level, pos)) {
+					yield Verdict.OK;
 				}
 				yield Verdict.deny("not tillable or harvestable");
 			}

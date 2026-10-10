@@ -42,6 +42,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.CampNeeds;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
+import io.github.bradley09roberts.hardcorefriends.civic.Professions;
 import io.github.bradley09roberts.hardcorefriends.command.FriendsCommand;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
@@ -300,6 +301,14 @@ final class TownCommands {
 				+ "and camp materials; /friends deliver <number> brings one job, and is the only way to give food or what Sage's "
 				+ "plan wants. Only your main inventory is used: never your hotbar, armour, off hand, tools, buckets or totems.",
 				ChatFormatting.GRAY);
+		}
+		// The village's trades (package market, through civic.Professions): who works at what besides their speciality.
+		List<String> trades = new ArrayList<>();
+		for (CompanionEntity c : Companions.all()) {
+			Professions.get().professionOf(c).ifPresent(p -> trades.add(c.displayName() + " (" + Professions.get().title(p) + ")"));
+		}
+		if (!trades.isEmpty()) {
+			say(source, "Village trades: " + String.join(", ", trades) + ". See /friends trades and /friends shops.", ChatFormatting.GRAY);
 		}
 		TownData data = TownData.get(server);
 		List<Map.Entry<UUID, Integer>> helpers = new ArrayList<>(data.helpedAll().entrySet());

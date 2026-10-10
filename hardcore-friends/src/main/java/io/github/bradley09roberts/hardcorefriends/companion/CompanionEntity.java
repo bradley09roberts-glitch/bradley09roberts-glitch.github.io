@@ -76,6 +76,7 @@ import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.civic.Families;
+import io.github.bradley09roberts.hardcorefriends.civic.Professions;
 import io.github.bradley09roberts.hardcorefriends.combat.Archery;
 import io.github.bradley09roberts.hardcorefriends.item.BackpackItem;
 import io.github.bradley09roberts.hardcorefriends.navigation.FriendNavigation;
@@ -753,10 +754,14 @@ public class CompanionEntity extends PathfinderMob {
 			Component.literal(displayName() + "'s Backpack")));
 	}
 
-	/** "Fern (Farmer) - harvesting crops - health 20/20 - mood good - backpack 3/9", shown on right-click. */
+	/**
+	 * "Fern (Farmer) - harvesting crops - health 20/20 - mood good - backpack 3/9", shown on right-click; a village trade
+	 * follows the speciality ("Mabel (Forager, Baker)").
+	 */
 	public Component statusLine() {
 		String health = String.format(Locale.ROOT, "%.0f/%.0f", getHealth(), getMaxHealth());
-		return Component.literal(displayName() + " (" + (isChild() ? "Child" : friendId().role().title()) + ") - " + activity()
+		String trade = isChild() ? "" : Professions.get().professionOf(this).map(p -> ", " + Professions.get().title(p)).orElse("");
+		return Component.literal(displayName() + " (" + (isChild() ? "Child" : friendId().role().title() + trade) + ") - " + activity()
 			+ " - health " + health + " - mood " + MoodPassives.moodText(this) + " - backpack " + backpack.usedSlots()
 			+ "/" + backpack.capacity())
 			.withStyle(ChatFormatting.GRAY);

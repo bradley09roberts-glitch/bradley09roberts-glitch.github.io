@@ -530,7 +530,7 @@ final class ShopTrade extends Marker implements Merchant {
 			}
 		}
 		if (!left.isEmpty() && keeper.isAlive() && !keeper.isRemoved()) {
-			left = keeper.backpack().insert(left);
+			left = Stores.intoBackpack(keeper.backpack(), left);
 		}
 		if (!left.isEmpty()) {
 			BlockPos at = shop.counter();

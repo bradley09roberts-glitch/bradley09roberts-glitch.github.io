@@ -113,10 +113,37 @@ final class Stores {
 			}
 		}
 		if (!left.isEmpty()) {
-			left = c.backpack().insert(left);
+			left = intoBackpack(c.backpack(), left);
 		}
 		if (!left.isEmpty()) {
 			c.spawnAtLocation(level, left);
+		}
+	}
+
+	/**
+	 * Puts a stack into a backpack a proper stack at a time (a stack of four stews is four slots, not one). Returns what
+	 * did not fit.
+	 */
+	static ItemStack intoBackpack(Backpack bp, ItemStack stack) {
+		ItemStack rest = stack.copy();
+		ItemStack left = ItemStack.EMPTY;
+		while (!rest.isEmpty()) {
+			ItemStack piece = rest.split(Math.max(1, rest.getMaxStackSize()));
+			ItemStack spill = bp.insert(piece);
+			if (!spill.isEmpty()) {
+				spill.grow(rest.getCount());
+				rest = ItemStack.EMPTY;
+				left = spill;
+			}
+		}
+		return left;
+	}
+
+	/** Into the friend's backpack, or at their feet if it is full: never lost. */
+	static void give(CompanionEntity c, ItemStack stack) {
+		ItemStack left = intoBackpack(c.backpack(), stack);
+		while (!left.isEmpty()) {
+			c.spawnAtLocation((ServerLevel) c.level(), left.split(Math.max(1, left.getMaxStackSize())));
 		}
 	}
 
