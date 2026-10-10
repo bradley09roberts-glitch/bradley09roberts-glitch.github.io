@@ -1,6 +1,7 @@
 package io.github.bradley09roberts.hardcorefriends.settler;
 
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -22,12 +23,13 @@ import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Persona;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
+import io.github.bradley09roberts.hardcorefriends.people.Skins;
 
 /**
  * The settler package's hooks into each newcomer's life ({@code CompanionEvents}): a stranger's first tick (their name
- * checked against the world's living people), greeting players who come close, a traveller arriving and, after a day,
- * leaving; a recruit's records kept up to date (where they were last seen), and arriving at the camp after following
- * the player home; and what happens when one dies or is dismissed.
+ * and skin checked against the world's living people), greeting players who come close, a traveller arriving and,
+ * after a day, leaving; a recruit's records kept up to date (where they were last seen), and arriving at the camp
+ * after following the player home; and what happens when one dies or is dismissed.
  *
  * <p>The tick hook runs for every friend every tick, so it returns at once for the nine named friends and does its
  * work once a second per newcomer, spread over the second by entity id.
@@ -59,7 +61,7 @@ final class SettlerEvents {
 		CompoundTag tag = Strangers.state(c);
 		SettlerData data = SettlerData.get(level.getServer());
 		if (!tag.getBooleanOr(Strangers.REGISTERED, false)) {
-			register(c, data);
+			register(c, level, data);
 			tag.putBoolean(Strangers.REGISTERED, true);
 		}
 		boolean traveller = Personas.Origin.ROAD.key().equals(tag.getStringOr(Strangers.ORIGIN, ""));
@@ -72,17 +74,31 @@ final class SettlerEvents {
 	}
 
 	/**
-	 * A stranger made as the world was generated is checked against the living people once it first ticks: a name
-	 * already taken by someone living is changed before anyone has met them.
+	 * A stranger made as the world was generated is checked against the living people once it first ticks, before
+	 * anyone has met them: a name already taken by someone living is changed, and so is a skin someone else in the
+	 * loaded world already wears, when a free one suits them. (World generation runs off the server thread, so their
+	 * camp could only keep its own people's skins apart.)
 	 */
-	private static void register(CompanionEntity c, SettlerData data) {
+	private static void register(CompanionEntity c, ServerLevel level, SettlerData data) {
 		Persona persona = c.persona();
 		if (persona == null) {
 			return;
 		}
-		if (data.namesInUse(c.getUUID()).contains(persona.name().toLowerCase(Locale.ROOT))) {
-			persona = new Persona(Personas.freeName(c.getRandom(), data.namesInUse(c.getUUID())), persona.colour(), persona.skin(),
-				persona.archetype());
+		String name = persona.name();
+		if (data.namesInUse(c.getUUID()).contains(name.toLowerCase(Locale.ROOT))) {
+			name = Personas.freeName(c.getRandom(), data.namesInUse(c.getUUID()));
+		}
+		int skin = persona.skin();
+		Set<Integer> worn = Skins.wornByOthers(c);
+		if (worn.contains(skin)) {
+			int other = Skins.randomFor(c.getRandom(), false, Skins.placeOf(level.getBiome(c.blockPosition())),
+				Skins.tradeTags(persona.role()), worn);
+			if (!worn.contains(other)) {
+				skin = other; // with every suitable skin worn, they keep the one they have
+			}
+		}
+		if (!name.equals(persona.name()) || skin != persona.skin()) {
+			persona = new Persona(name, persona.colour(), skin, persona.archetype());
 			c.setPersona(persona);
 		}
 		data.rememberStranger(c.getUUID(), persona.name());

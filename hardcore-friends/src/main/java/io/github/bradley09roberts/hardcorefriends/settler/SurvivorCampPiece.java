@@ -244,7 +244,7 @@ public class SurvivorCampPiece extends StructurePiece {
 			return;
 		}
 		int[] inside = TENT_INSIDE[i % tents];
-		// Names are checked against the world's living people on the stranger's first tick, on the server thread.
+		// Names and skins are checked against the living people on the stranger's first tick, on the server thread.
 		Persona persona = Personas.create(random, Set.of(), Skins.placeOf(level.getBiome(spot)), skinsHere);
 		skinsHere.add(persona.skin());
 		Strangers.setUp(c, persona, spot, Personas.Origin.CAMP, Personas.story(random, Personas.Origin.CAMP),

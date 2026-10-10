@@ -1,5 +1,5 @@
 {
-	"_help": "The skins people wear. To add one: put a 64x64 player skin PNG in textures/entity/people/wide/ (classic arms) or textures/entity/people/slim/ (slim arms), then add an entry here with a new id of 1000 or more. Never change or reuse an id a world already uses. model: wide or slim. for: adult, child or any (named: only the friend it belongs to, never picked at random). See docs/v3/people.md.",
+	"_help": "The skins people wear. To add one: put a 64x64 player skin PNG in textures/entity/people/wide/ (classic arms) or textures/entity/people/slim/ (slim arms), then add an entry here with a new id of 1000 or more. Never change or reuse an id a world already uses. model: wide or slim. for: adult, child or any (named: only the friend it belongs to, never picked at random). tags (optional): trades or places, e.g. [\"baker\"] or [\"desert\"], so grown-ups of that trade or from that land wear it more often. See docs/v3/people.md.",
 	"skins": [
 		{"id": 0, "texture": "hardcorefriends:textures/entity/companion/fern.png", "model": "wide", "for": "named"},
 		{"id": 1, "texture": "hardcorefriends:textures/entity/companion/oak.png", "model": "wide", "for": "named"},

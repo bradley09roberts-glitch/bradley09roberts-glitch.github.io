@@ -107,7 +107,7 @@ public final class Skins {
 		TRADE_TAGS.put(Role.FARMER, List.of("farmer", "farmhand", "shepherd", "beekeeper"));
 		TRADE_TAGS.put(Role.BUILDER, List.of("carpenter", "mason"));
 		TRADE_TAGS.put(Role.MINER, List.of("miner", "blacksmith", "mason"));
-		TRADE_TAGS.put(Role.EXPLORER, List.of("traveller", "wanderer", "hunter", "fisher"));
+		TRADE_TAGS.put(Role.EXPLORER, List.of("traveller", "wanderer", "bard", "hunter", "fisher"));
 		TRADE_TAGS.put(Role.INVENTOR, List.of("scholar", "tailor", "weaver", "blacksmith"));
 		TRADE_TAGS.put(Role.WARRIOR, List.of("guard", "hunter"));
 		TRADE_TAGS.put(Role.STRATEGIST, List.of("scholar", "teacher", "doctor", "shopkeeper"));
@@ -210,9 +210,19 @@ public final class Skins {
 
 	/** The skins worn by everyone in the loaded world now (friends, newcomers, strangers, children). Server thread only. */
 	public static Set<Integer> wornNow() {
+		return wornByOthers(null);
+	}
+
+	/**
+	 * The skins worn by everyone in the loaded world now but {@code self} (null leaves nobody out), so a person can ask
+	 * whether someone else already wears their skin. Server thread only.
+	 */
+	public static Set<Integer> wornByOthers(@Nullable CompanionEntity self) {
 		Set<Integer> worn = new java.util.HashSet<>();
 		for (CompanionEntity c : Companions.everyone()) {
-			worn.add(c.getSkinId());
+			if (c != self) {
+				worn.add(c.getSkinId());
+			}
 		}
 		return worn;
 	}

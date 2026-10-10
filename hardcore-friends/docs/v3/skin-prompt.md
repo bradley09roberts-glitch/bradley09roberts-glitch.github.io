@@ -23,9 +23,11 @@ FORMAT (must be exact, or the game can't use them):
   no gradients smeared across the whole skin, no text or logos.
 - Faces: friendly, varied, simple Minecraft-style eyes (2 pixels wide), no scary or gory looks.
 - File names: lower case letters, digits and underscores only, ending in .png.
-  Start the name with adult_ for a grown-up and child_ for a child. Example: adult_baker_rosa.png,
-  child_pip_freckles.png. Put "wide" or "slim" in your reply next to each file, or deliver them in two folders
-  named wide and slim.
+  Start the name with adult_ for a grown-up and child_ for a child. For a tradesperson or a biome villager, the
+  trade or biome word comes straight after that, then their name: adult_<trade or biome>_<name>.png, for
+  example adult_baker_rosa.png or adult_dark_forest_greta.png (never adult_rosa_baker.png). Others are just
+  adult_<name>.png or child_<name>.png, e.g. child_pip_freckles.png. Put "wide" or "slim" in your reply next to
+  each file, or deliver them in two folders named wide and slim.
 
 THE PEOPLE (mix skin tones, hair colours and textures, ages, body shapes and genders across every batch;
 roughly half wide and half slim; earthy, practical medieval-village clothes, each trade recognisable at a glance):
@@ -47,6 +49,8 @@ player skin; the game shrinks them. Nothing an adult would wear (no aprons of a 
 
 Batch 4, biome villagers (12): desert (light linen, head wraps), snowy (fur-lined coats and hoods), jungle and
 swamp (light fabrics, leaf-green and brown), savanna (warm earth tones), dark forest (deep greens and greys).
+Name each after its biome: adult_desert_<name>.png, adult_snowy_<name>.png, and the same with jungle, swamp,
+savanna and dark_forest.
 
 Deliver each batch as PNG files with a short list: file name, wide or slim, who it is.
 ```
@@ -57,8 +61,10 @@ Deliver each batch as PNG files with a short list: file name, wide or slim, who 
    - wide-armed: `hardcore-friends/src/main/resources/assets/hardcorefriends/textures/entity/people/wide/`
    - slim-armed: `hardcore-friends/src/main/resources/assets/hardcorefriends/textures/entity/people/slim/`
 2. Run `python3 tools/add_skins.py` from the `hardcore-friends` folder. Every new PNG gets a skin number from 1000
-   up; names starting `child_` are worn only by children and `adult_` only by grown-ups. Files that aren't 64x64
-   PNGs, or have capitals or spaces in the name, are listed and skipped, so you can fix and re-run.
+   up; names starting `child_` are worn only by children and `adult_` only by grown-ups. A known trade or biome word
+   straight after the prefix (`adult_baker_rosa.png`, `adult_desert_amina.png`) becomes the skin's tag, so people of
+   that trade or from that land wear it more often (see "Adding skins" in `people.md` for the words it knows). Files
+   that aren't 64x64 PNGs, or have capitals or spaces in the name, are listed and skipped, so you can fix and re-run.
 3. Rebuild the mod (`./gradlew build`) and give everyone the new JAR (the skin list is inside the JAR).
 
 Or just send me the PNGs (or a zip) and I'll drop them in, check them and rebuild.

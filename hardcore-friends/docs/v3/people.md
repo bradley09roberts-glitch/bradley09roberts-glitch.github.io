@@ -181,10 +181,14 @@ Built in:
   grows up in a `child`-only skin is given a grown-up's one.
 - **Fitting skins.** A skin can carry **tags**: a trade or a place. A newcomer is more likely to wear a skin of a trade
   that goes with their work (a builder: carpenter or mason; a farmer: farmer, farmhand, shepherd or beekeeper; a
-  warrior: guard or hunter...), and someone met in a desert, snowy, jungle, swamp, savanna or dark forest biome is
-  likely to be dressed for it. A child growing up gets a skin to suit their trade the same way.
+  warrior: guard or hunter; an explorer: traveller, wanderer, bard, hunter or fisher...). Someone met in a desert,
+  snowy, jungle, swamp, savanna or dark forest biome has about a 2 in 5 chance of being dressed for it, while one of
+  that land's skins is still free. A child growing up gets a skin to suit their trade the same way.
 - **Everyone looks different.** A skin nobody in the loaded world is wearing is chosen first; only when every
-  suitable skin is taken are skins shared. People in the same survivor camp get different skins.
+  suitable skin is taken are skins shared. People in the same survivor camp get different skins. A camp is made as
+  the world is generated, before its people can be checked against anyone else, so each camp stranger is checked
+  when they first wake: if someone else in the loaded world already wears their skin, they are given a free one
+  (and a new name, if someone living has theirs).
 - **The default skins step back.** Once at least six added skins suit someone (true with the village set), the
   game's own Steve, Alex and friends are only used if nothing else suits. Anyone already wearing one keeps it.
 
@@ -212,11 +216,13 @@ sleeves, trousers). Draw it for wide arms (4 pixels) or slim arms (3 pixels).
    for a skin only children wear, or `adult_` for one only grown-ups wear; any other name may be worn by anyone.
 2. Run `python3 tools/add_skins.py` in `hardcore-friends/`. It gives every new PNG an entry with the next free number
    from 1000 up (and skips, with a message, any file that is not a 64x64 PNG or has a bad name). The first word
-   after `adult_` or `child_` becomes the skin's tag when it is a trade or place the mod knows: `adult_baker_rosa.png`
-   is tagged `baker`, `adult_snowy_astrid.png` is tagged `snowy`. Known trades: baker, butcher, fisher, shepherd,
-   beekeeper, mason, carpenter, blacksmith, tailor, teacher, doctor, shopkeeper, innkeeper, farmer, guard, farmhand,
-   hunter, miner, scholar, traveller, wanderer, weaver, bard. Places: desert, snowy, jungle, swamp, savanna,
-   dark_forest.
+   after `adult_` or `child_` (or the first word of a name with neither) becomes the skin's tag when it is a trade or
+   place the mod knows: `adult_baker_rosa.png` and `adult_baker.png` are tagged `baker`, `adult_snowy_astrid.png` is
+   tagged `snowy`, but `adult_rosa_baker.png` gets no tag, so put the trade or place straight after the prefix. Tags
+   only matter on `adult` and `any` skins: children's skins are picked without them. Known trades: baker, butcher,
+   fisher, shepherd, beekeeper, mason, carpenter, blacksmith, tailor, teacher, doctor, shopkeeper, innkeeper, farmer,
+   guard, farmhand, hunter, miner, scholar, traveller, wanderer, weaver, bard. Places: desert, snowy, jungle, swamp,
+   savanna, dark_forest.
 3. Rebuild the mod (`./gradlew build`) and install the new JAR on the server and every player's game.
 
 Or add an entry by hand, in the `skins` list of `skins.json`:

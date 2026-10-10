@@ -355,8 +355,9 @@ Full details: `docs/v2/survival.md`.
 
 Full details: `docs/v2/settler.md`.
 
-Besides the nine friends, the world now has other people in it, each with their own name, look (one of the game's
-default skins) and trade:
+Besides the nine friends, the world now has other people in it, each with their own name, look (a skin from the
+mod's medieval village set, chosen to suit their trade or land and to differ from everyone else's where it can; see
+"Skins" in `docs/v3/people.md`) and trade:
 
 - **In villages:** the first time you walk into a village, there is a good chance one or two live there.
 - **At survivor camps:** a new kind of place in the world, a small camp of tents round a campfire with a chest of

@@ -11,9 +11,11 @@ Usage:  python3 tools/add_skins.py          (then rebuild the mod with ./gradlew
 2. Run this script. Every PNG not yet in skins.json gets an entry with the next free number from 1000 up. Skins
    already listed keep their numbers (worlds remember skins by number, so numbers never change).
 
-Tags: the first word of the name after adult_/child_ becomes the skin's tag when it is a trade or a place the mod
-knows (see TRADES and PLACES below), e.g. adult_baker_rosa.png is tagged "baker" and adult_dark_forest_greta.png
-"dark_forest". People are more likely to wear a skin whose tags match their trade or the land they come from. A
+Tags: the first word of the name after adult_/child_ (or the very first word, for a name with neither) becomes the
+skin's tag when it is a trade or a place the mod knows (see TRADES and PLACES below), e.g. adult_baker_rosa.png and
+adult_baker.png are tagged "baker" and adult_dark_forest_greta.png "dark_forest"; adult_rosa_baker.png is not, as
+the trade or place must come first. Grown-ups are more likely to wear a skin whose tags match their trade or the
+land they come from (tags on child_ skins are kept but never used: children's skins are picked without them). A
 skin with no known word is untagged and worn by anyone of the right age.
 
 Files that are not 64x64 PNGs, or whose names have other characters, are reported and skipped.
@@ -46,7 +48,7 @@ def tags_for(file_name: str) -> list[str]:
         words = words[1:]
     for size in (2, 1):
         word = "_".join(words[:size])
-        if len(words) > size and (word in TRADES or word in PLACES):
+        if len(words) >= size and (word in TRADES or word in PLACES):
             return [word]
     return []
 

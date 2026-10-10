@@ -12,8 +12,10 @@ Aegis), but under their own name.
   a name, and none is called after one of the nine friends.
 - **Trades.** Any of the nine kinds of work. Farmers, foragers, builders, miners and landscapers are the most common;
   warriors and strategists are rarer.
-- **Looks.** One of the game's own default player skins (Steve, Alex, Ari, Efe, Kai, Makena, Noor, Sunny, Zuri), and a
-  name colour of their own.
+- **Looks.** A skin from the mod's skin list, and a name colour of their own. In 2.0 this was one of the game's own
+  default player skins (Steve, Alex, Ari, Efe, Kai, Makena, Noor, Sunny, Zuri); since 3.0 it is one of the medieval
+  village set, chosen to suit their trade and the land they come from and to differ from everyone else's where it
+  can (see "Skins" in `docs/v3/people.md`). Anyone already wearing a default skin keeps it.
 - **Stories.** When you first talk to one, they tell you who they are and a little about themselves ("I lost my village
   to pillagers last spring", "I've been walking north for weeks").
 
