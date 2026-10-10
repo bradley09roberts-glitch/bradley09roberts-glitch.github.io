@@ -355,6 +355,26 @@ public enum Line {
 
 	// ==== Shops and trades (package market): professions, shops, trading ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** Opening the shop for the day at the counter. %1$s = the shop, e.g. "the bakery" or "a market stall". */
+	SHOP_OPEN(Priority.CASUAL, 12000, 1),
+	/** Thanking a player for a trade across the counter. %1$s = the player's name. */
+	SHOP_SALE(Priority.CASUAL, 600, 1),
+	/** Taking up a village trade. %1$s = the trade, lower case, e.g. "baker" or "cook". */
+	TRADE_TAKEN(Priority.IMPORTANT, 0, 1),
+	/** Casting a line at the water. */
+	FISHING(Priority.CASUAL, 2400, 0),
+	/** At work at the bakery's oven. */
+	BAKING(Priority.CASUAL, 2400, 0),
+	/** Shearing the camp's own sheep over the pen fence. */
+	SHEARING_FLOCK(Priority.CASUAL, 2400, 0),
+	/** Taking honey or honeycomb from the hives. */
+	HONEY(Priority.CASUAL, 2400, 0),
+	/** Teaching the children at school. */
+	TEACHING(Priority.CASUAL, 3600, 0),
+	/** Seeing to a hurt or poorly friend. %1$s = the patient's name. */
+	HEALING(Priority.CASUAL, 600, 1),
+	/** At work in their trade. %1$s = the work, an "-ing" phrase, e.g. "cutting stone". */
+	TRADE_WORK(Priority.CASUAL, 2400, 1),
 
 	// ==== end of market ====
 	;
