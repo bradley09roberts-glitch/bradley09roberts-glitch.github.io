@@ -57,8 +57,9 @@ import io.github.bradley09roberts.hardcorefriends.survival.Skills;
  * two days, or their workplace no longer stands.
  *
  * <p><b>Asking for buildings.</b> Once an in-game day at most, while the village has fewer workplaces than about half its
- * grown-ups, the next workplace on the list that suits the camp (a fishing hut where there is water, a school once
- * there are children) is asked of the village's town plan ({@link VillageLink}).
+ * grown-ups (counting those standing, going up, or asked for and not yet begun), the next workplace on the list that
+ * suits the camp (a fishing hut where there is water, a school once there are children) is asked of the village's town
+ * plan ({@link VillageLink}). A kind asked for and not yet begun is asked again every few days.
  */
 final class Planner {
 	private static final int INTERVAL = 200;
@@ -369,20 +370,23 @@ final class Planner {
 			}
 		}
 		int stage = Camp.data(server).stage();
+		// What the village has in hand: standing or going up, or already asked for (the town plan keeps a request until
+		// it gets round to it, which may be many days, so a kind asked for counts as on its way).
 		int have = 0;
 		for (Want want : WANTS) {
-			if (Workplaces.underWay(level, want.kind())) {
+			if (Workplaces.underWay(level, want.kind()) || data.requestedOn(want.kind()) >= 0) {
 				have++;
 			}
 		}
-		if (have >= adults / 2 + 1) {
-			return;
-		}
+		boolean enough = have >= adults / 2 + 1;
 		for (Want want : WANTS) {
 			if (stage < want.stage() || Workplaces.underWay(level, want.kind())) {
 				continue;
 			}
 			long last = data.requestedOn(want.kind());
+			if (enough && last < 0) {
+				continue; // enough asked for: no new kind until the village grows (one asked before may be asked again)
+			}
 			if (last >= 0 && day - last < ASK_AGAIN_DAYS && day >= last) {
 				continue;
 			}

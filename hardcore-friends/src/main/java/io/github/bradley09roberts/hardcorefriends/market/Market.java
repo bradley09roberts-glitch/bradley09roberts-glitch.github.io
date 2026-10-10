@@ -147,17 +147,20 @@ public final class Market {
 		return true;
 	}
 
-	/** The village's blacksmith, if they are at work in the camp's world (looked up every few seconds). */
+	/**
+	 * The village's blacksmith, if they are at work in the camp's world (looked up every few seconds). Asked from any
+	 * other world (a friend away in the Nether), the answer is none, and the camp's own answer is left as it is.
+	 */
 	private static @Nullable UUID blacksmithAtWork(ServerLevel level) {
+		if (!Camp.isCampLevel(level, Camp.data(level.getServer()))) {
+			return null;
+		}
 		long now = level.getGameTime();
 		if (now - blacksmithAt < SMITH_REFRESH && now >= blacksmithAt) {
 			return blacksmith;
 		}
 		blacksmithAt = now;
 		blacksmith = null;
-		if (!Camp.isCampLevel(level, Camp.data(level.getServer()))) {
-			return null;
-		}
 		// The smithy's blacksmith first; the smith's shop's (who also forges for sale) only when there is no smithy.
 		MarketData data = MarketData.get(level.getServer());
 		for (CompanionEntity c : Companions.in(level)) {
@@ -177,14 +180,27 @@ public final class Market {
 		return blacksmith;
 	}
 
-	/** Finished trade work trains the trade's kind of work, as any job does its speciality's. */
+	/**
+	 * Finished trade work trains the trade's kind of work, as any job does its speciality's. Minding the shop is not work
+	 * done (a quiet spell at the counter ends the same way): a keeper learns from the trades they make instead
+	 * ({@link #traded}).
+	 */
 	private static void jobDone(CompanionEntity c, CompanionTask task, boolean success, long ticks) {
-		if (!success || !(task instanceof TradeJob) || !(c.level() instanceof ServerLevel level)) {
+		if (!success || !(task instanceof TradeJob) || task instanceof KeepShopTask || !(c.level() instanceof ServerLevel level)) {
 			return;
 		}
+		train(c, level, (int) Math.min(5, 1 + ticks / 600));
+	}
+
+	/** A trade made with a player trains the keeper's trade a little. */
+	static void traded(CompanionEntity keeper, ServerLevel level) {
+		train(keeper, level, 1);
+	}
+
+	private static void train(CompanionEntity c, ServerLevel level, int xp) {
 		MarketData.Holding h = holding(level.getServer(), c);
 		if (h != null) {
-			Skills.add(c, Speciality.workName(h.trade.skillRole()), (int) Math.min(5, 1 + ticks / 600));
+			Skills.add(c, Speciality.workName(h.trade.skillRole()), xp);
 		}
 	}
 

@@ -32,8 +32,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * Work at a trade's station ({@link Products}): the baker at the bakery's oven, the innkeeper at the tavern's kitchen
  * (or, as the camp's cook, at the campfire), the butcher at the shop's smoker, the smith making goods for the smith's
  * shop. One batch a run: the ingredients (and fuel, for cooking) are fetched from the supply chest, the work is done at
- * the station (a little while per piece, quicker for a skilled or cheerful friend), and the goods go into the
- * workplace's chests (a shop's shelves, the tavern's larder) up to the product's target, the rest to the supply chest.
+ * the station (a little while per piece, quicker for a skilled or cheerful friend), and the goods go onto a shop's
+ * shelves (its own chests) up to the product's target, the rest to the supply chest. Any other workplace's goods (the
+ * tavern's meals) all go to the supply chest: only a shop's shelves are ever emptied again, by sales or, for food, by the
+ * keeper taking it back when the camp is hungry, so food left in the tavern's chests would feed nobody.
  * Exactly the ingredients fetched are used up; a run broken off leaves them in the backpack for the camp's tidying.
  * The station block is only stood beside and never changed.
  */
@@ -106,7 +108,7 @@ final class CraftTask extends TradeJob {
 		}
 		BlockPos work = station(level, h, w, false);
 		BlockPos heat = station(level, h, w, true);
-		List<BlockPos> shelves = Stores.chests(level, w);
+		List<BlockPos> shelves = shelves(level, w);
 		Batch best = null;
 		int bestShort = 0;
 		for (Products.Product p : list) {
@@ -114,7 +116,9 @@ final class CraftTask extends TradeJob {
 			if (at == null || !p.allowed().test(level)) {
 				continue;
 			}
-			int have = Stores.supplyCount(level, s -> s.is(p.output())) + Stores.count(level, shelves, s -> s.is(p.output()));
+			// What is on the shelves counts only while it may stay there: food short, the camp's food is what is made for.
+			int onShelves = shelfTarget(p) > 0 ? Stores.count(level, shelves, s -> s.is(p.output())) : 0;
+			int have = Stores.supplyCount(level, s -> s.is(p.output())) + onShelves;
 			int shortBy = p.target() - have;
 			if (shortBy <= 0) {
 				continue;
@@ -152,7 +156,7 @@ final class CraftTask extends TradeJob {
 	private static @Nullable BlockPos station(ServerLevel level, MarketData.Holding h, @Nullable Workplace w, boolean heat) {
 		if (w == null) {
 			BlockPos camp = Market.campStation(level, h.trade);
-			return camp != null && (!heat || isHeat(level.getBlockState(camp))) ? camp : null;
+			return camp != null && (!heat || level.isLoaded(camp) && isHeat(level.getBlockState(camp))) ? camp : null;
 		}
 		if (!heat) {
 			return w.job();
@@ -360,8 +364,16 @@ final class CraftTask extends TradeJob {
 	}
 
 	/**
-	 * How many of a product the workplace's own chests keep: food only while the camp has food to spare (otherwise all of
-	 * it goes to the supply chest, where everyone eats from), and never more than a shelf's worth.
+	 * A shop's shelves (its own chests); none for any other workplace, whose goods all go to the supply chest (see the
+	 * class comment).
+	 */
+	private static List<BlockPos> shelves(ServerLevel level, @Nullable Workplace w) {
+		return w != null && w.isShop() ? Stores.chests(level, w) : List.of();
+	}
+
+	/**
+	 * How many of a product a shop's shelves keep: food only while the camp has food to spare (otherwise all of it goes
+	 * to the supply chest, where everyone eats from), and never more than a shelf's worth.
 	 */
 	private static int shelfTarget(Products.Product p) {
 		boolean food = p.output().components().has(net.minecraft.core.component.DataComponents.FOOD);
@@ -373,7 +385,7 @@ final class CraftTask extends TradeJob {
 
 	private TaskStatus deliver(CompanionEntity c, ServerLevel level, Batch b) {
 		Products.Product p = b.product();
-		List<BlockPos> shelves = triedShelves ? List.of() : Stores.chests(level, place);
+		List<BlockPos> shelves = triedShelves ? List.of() : shelves(level, place);
 		int onShelves = Stores.count(level, shelves, s -> s.is(p.output()));
 		int shelfRoom = Math.max(0, shelfTarget(p) - onShelves);
 		BlockPos to = !shelves.isEmpty() && shelfRoom > 0 ? shelves.getFirst() : Stores.supplyPos(level).orElse(null);

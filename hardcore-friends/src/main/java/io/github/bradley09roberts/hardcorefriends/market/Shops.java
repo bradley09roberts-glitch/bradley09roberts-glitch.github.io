@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.jspecify.annotations.Nullable;
+
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -25,12 +27,14 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
  * trading screen opens ({@link ShopTrade}). Anyone may trade, trusted with the camp or not: buying and selling at a
  * shop changes nothing of the camp's but its stock and takings, at fair prices, so this runs before the camp's trust
  * check (which would otherwise turn away an untrusted player holding their emeralds). Sneaking, or handing food to a
- * hungry or hurt keeper, goes on to the usual handling. A keeper serves one player at a time; at night, away from the
- * counter, fighting or asleep, there is no shop.
+ * hungry or hurt keeper, goes on to the usual handling. A keeper serves one player at a time; from dusk, in a dark
+ * storm, away from the counter, fighting or asleep, there is no shop.
  */
 final class Shops {
 	/** How close to their counter a keeper must be to open the shop. */
 	static final double AT_COUNTER = 3;
+	private static final String FOR_THE_NIGHT = "for the night";
+	private static final String FOR_THE_STORM = "till the storm passes";
 	private static final Map<UUID, ShopTrade> OPEN = new HashMap<>();
 
 	private Shops() {
@@ -55,8 +59,10 @@ final class Shops {
 		if (wantsToEat(c, held)) {
 			return InteractionResult.PASS; // a hungry or hurt keeper takes the food first
 		}
-		if (Camp.isNightTime(level)) {
-			Speech.tell(player, c, "Sorry, " + player.getName().getString() + ", the shop's shut for the night. Come back in the morning!");
+		String shut = shut(level);
+		if (shut != null) {
+			Speech.tell(player, c, "Sorry, " + player.getName().getString() + ", the shop's shut " + shut + ". "
+				+ (shut.equals(FOR_THE_STORM) ? "Come back when it clears!" : "Come back in the morning!"));
 			return InteractionResult.SUCCESS_SERVER;
 		}
 		if (c.getTarget() != null || c.isAsleep() || c.isRetreating()) {
@@ -81,6 +87,18 @@ final class Shops {
 		c.getNavigation().stop();
 		c.getLookControl().setLookAt(player);
 		return InteractionResult.SUCCESS_SERVER;
+	}
+
+	/**
+	 * Why the shops are shut just now ("for the night", "till the storm passes"), or null while they are open. They keep
+	 * the trades' working hours, so no customer holds a keeper at the counter past dusk, when the friends head home, or
+	 * through a storm dark enough for monsters (the market's job filter keeps a serving keeper from going home).
+	 */
+	static @Nullable String shut(ServerLevel level) {
+		if (TradeJob.workingHours(level)) {
+			return null;
+		}
+		return Camp.isNightTime(level) || Camp.isDusk(level) ? FOR_THE_NIGHT : FOR_THE_STORM;
 	}
 
 	/** True while this friend is serving a player at their counter. */

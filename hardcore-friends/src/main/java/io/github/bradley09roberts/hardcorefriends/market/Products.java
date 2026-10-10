@@ -21,7 +21,7 @@ import io.github.bradley09roberts.hardcorefriends.companion.Line;
  * What the station trades make, with the game's own recipes and real ingredients from the supply chest: the baker's
  * bread, cookies, pies, cakes and baked potatoes; the cook's (innkeeper's) cooked meat and fish, stews and soups; the
  * butcher's cooked meat; and, for the smith's shop, plain iron tools and armour when the camp has iron to spare. Each
- * product is made only while the village has fewer than its target (in the workplace's chests and the supply chest
+ * product is made only while the village has fewer than its target (on a shop's shelves and in the supply chest
  * together), and its ingredients leave the supply chest only above what the camp keeps back (seed potatoes, sugar cane
  * for Sage's paper, planks for building). Cooking needs heat at the work station (a smoker, furnace or campfire) and
  * fuel, as the game's furnaces do: a piece of coal cooks eight, a plank one and a half.

@@ -106,4 +106,13 @@ abstract class TradeJob implements CompanionTask {
 	static boolean workingHours(ServerLevel level) {
 		return !Camp.isNight(level) && !Camp.isDusk(level);
 	}
+
+	/**
+	 * True if a friend is in a fight: they have a target, or an attacker (a monster, or whoever shot at them) hurt them
+	 * within the last {@code ticks}. Damage with nobody behind it (poison, withering, hunger, a fall) is no fight, so a
+	 * friend taking it every second or so is still calm enough to be treated, or to fish.
+	 */
+	static boolean fighting(CompanionEntity c, int ticks) {
+		return c.getTarget() != null || c.getLastHurtByMob() != null && c.tickCount - c.getLastHurtByMobTimestamp() < ticks;
+	}
 }

@@ -20,7 +20,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
-import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionMode;
 import io.github.bradley09roberts.hardcorefriends.companion.Companions;
@@ -111,7 +110,7 @@ final class MarketCommands {
 			Shop s = shop.get();
 			BlockPos at = s.counter();
 			String state = !FriendsConfig.get().playerShops ? "shops are switched off"
-				: Camp.isNightTime(level) ? "shut for the night"
+				: Shops.shut(level) != null ? "shut " + Shops.shut(level)
 				: Shops.isTrading(c) ? "serving a customer"
 				: c.position().distanceToSqr(at.getX() + 0.5, at.getY(), at.getZ() + 0.5) <= Shops.AT_COUNTER * Shops.AT_COUNTER
 				? "open: the keeper is at the counter" : "the keeper is busy elsewhere";

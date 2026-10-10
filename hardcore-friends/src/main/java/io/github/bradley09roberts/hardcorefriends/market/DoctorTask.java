@@ -43,6 +43,7 @@ final class DoctorTask extends TradeJob {
 	private static final int REPLAN = 100;
 	private static final double BADLY_HURT = 0.4;
 	private static final double DIRE = 0.3;
+	/** A patient is seen to once this long after anything attacked them (poison and withering go on hurting: no matter). */
 	private static final int CALM_TICKS = 100;
 	private static final List<Holder<MobEffect>> AILMENTS = List.of(MobEffects.POISON, MobEffects.WITHER);
 
@@ -83,8 +84,7 @@ final class DoctorTask extends TradeJob {
 	private static @Nullable Case findCase(CompanionEntity doctor, ServerLevel level, @Nullable Workplace w) {
 		List<BlockPos> stores = stores(level, w);
 		for (CompanionEntity p : Companions.in(level)) {
-			if (!p.isAlive() || p.mode() == CompanionMode.FOLLOW || p.getTarget() != null || p.ticksSinceDamaged() < CALM_TICKS
-				|| !WorldEditGuard.inCamp(doctor, p.blockPosition())) {
+			if (!p.isAlive() || p.mode() == CompanionMode.FOLLOW || fighting(p, CALM_TICKS) || !WorldEditGuard.inCamp(doctor, p.blockPosition())) {
 				continue;
 			}
 			boolean ailing = false;

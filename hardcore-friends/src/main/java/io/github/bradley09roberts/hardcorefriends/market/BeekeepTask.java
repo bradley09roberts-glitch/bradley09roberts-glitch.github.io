@@ -12,6 +12,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.animal.bee.Bee;
 import net.minecraft.world.item.ItemStack;
@@ -33,6 +34,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
+import io.github.bradley09roberts.hardcorefriends.registry.ModTags;
+import io.github.bradley09roberts.hardcorefriends.world.TreeFinder;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
 
 /**
@@ -45,8 +48,10 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * three honeycomb), placed through the edit guard like any building block.</li>
  * <li><b>Bees.</b> While the hives have room, a wild bee from the gathering ring is led home: the beekeeper holds out a
  * flower, the bee follows (as bees follow a player holding one), and at the apiary it is shown its new hive. Only a bee
- * with no home, or whose home is a wild nest; never one living in a hive someone made, a named or leashed bee, an angry
- * one, or one near anything a player built.</li>
+ * with no home, or whose home is a wild nest (as a tree grew it: on a natural tree's trunk, facing south as every grown
+ * nest does, with nothing a player built round it); never one living in a hive someone made or in a nest someone moved
+ * (nothing records who placed a block, so a nest that does not look grown is taken for a player's), a named or leashed
+ * bee, an angry one, or one near anything a player built.</li>
  * </ul>
  * The honeycomb and honey go to the supply chest.
  */
@@ -58,6 +63,8 @@ final class BeekeepTask extends TradeJob {
 	private static final int HONEY_BOTTLES_KEPT = 4;
 	/** Within this many blocks of its new hive a bee finds its own way there (bees forget a home 48 blocks off). */
 	private static final int KNOWS_THE_WAY = 32;
+	/** How far round a wild nest nothing a player built may be. */
+	private static final int NEST_CLEAR = 4;
 
 	private enum Kind {
 		HONEY,
@@ -198,7 +205,8 @@ final class BeekeepTask extends TradeJob {
 				wildBees = level.getEntitiesOfClass(Bee.class, new AABB(centre.get()).inflate(r, 24, r), Bee::isAlive);
 			}
 		}
-		// The cheap checks for every bee, then the look round for anything a player built only for the nearest few.
+		// The cheap checks for every bee, then the look at its nest and round it for anything a player built only for the
+		// nearest few.
 		List<Bee> near = new ArrayList<>();
 		for (Bee b : wildBees) {
 			if (mayLeadQuick(level, data, b, apiary)) {
@@ -208,11 +216,57 @@ final class BeekeepTask extends TradeJob {
 		near.sort(java.util.Comparator.comparingDouble(b -> b.distanceToSqr(c)));
 		for (int i = 0; i < near.size() && i < 3; i++) {
 			Bee b = near.get(i);
-			if (!WorldEditGuard.looksPlayerBuilt(level, b.blockPosition(), 6, data)) {
+			BlockPos home = b.getHivePos();
+			if ((home == null || wildNest(level, data, home)) && !WorldEditGuard.looksPlayerBuilt(level, b.blockPosition(), 6, data)) {
 				return b;
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * A bee nest as a tree grew it: facing south (the game grows every nest that way), against the trunk of a natural
+	 * tree, and with nothing a player built within {@value #NEST_CLEAR} blocks of it. A bee forages up to 24 blocks from
+	 * its nest, so the look round the bee itself never sees a nest a player moved into their base with Silk Touch; this
+	 * does, and such a nest's bees are left alone.
+	 */
+	private static boolean wildNest(ServerLevel level, CampData data, BlockPos nest) {
+		BlockState s = level.getBlockState(nest);
+		if (!s.is(Blocks.BEE_NEST) || s.getValue(BeehiveBlock.FACING) != Direction.SOUTH) {
+			return false;
+		}
+		boolean onTree = false;
+		for (Direction d : Direction.Plane.HORIZONTAL) {
+			BlockPos log = nest.relative(d);
+			if (level.isLoaded(log) && level.getBlockState(log).is(BlockTags.LOGS) && TreeFinder.isNaturalTreeLog(level, log)) {
+				onTree = true;
+				break;
+			}
+		}
+		return onTree && !builtNear(level, data, nest);
+	}
+
+	/** {@code WorldEditGuard.looksPlayerBuilt} round a nest, without counting the nest itself (it has a block entity). */
+	private static boolean builtNear(ServerLevel level, CampData data, BlockPos nest) {
+		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+		for (int dx = -NEST_CLEAR; dx <= NEST_CLEAR; dx++) {
+			for (int dy = -NEST_CLEAR; dy <= NEST_CLEAR; dy++) {
+				for (int dz = -NEST_CLEAR; dz <= NEST_CLEAR; dz++) {
+					if (dx == 0 && dy == 0 && dz == 0) {
+						continue;
+					}
+					m.set(nest.getX() + dx, nest.getY() + dy, nest.getZ() + dz);
+					if (!level.isLoaded(m)) {
+						continue;
+					}
+					BlockState s = level.getBlockState(m);
+					if ((s.is(ModTags.BUILD_MARKERS) || s.hasBlockEntity()) && !data.isPlacedByFriends(level, m)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	/** Every rule but the look round for player builds (see the class comment). */
@@ -384,17 +438,20 @@ final class BeekeepTask extends TradeJob {
 
 	/**
 	 * Walking back towards the apiary with the bee following the flower. Once it is near enough to know the way (within
-	 * {@value #KNOWS_THE_WAY} blocks of its new hive), it is shown its new home and goes there by itself, as bees do.
+	 * {@value #KNOWS_THE_WAY} blocks of its new hive, with the hive's chunk loaded so it can be seen to have room), it is
+	 * shown its new home and goes there by itself, as bees do.
 	 */
 	private TaskStatus lead(CompanionEntity c, ServerLevel level, Plan p) {
 		Bee b = bee;
 		if (b == null || !b.isAlive() || b.isAngry() || b.distanceToSqr(c) > 16 * 16 || ++ticks > 20 * 90) {
 			return TaskStatus.FAILURE;
 		}
-		if (!(level.getBlockEntity(p.hive()) instanceof BeehiveBlockEntity be) || be.isFull()) {
+		// Looking at an unloaded hive would load its chunk, every tick: until it is loaded the bee is simply led on.
+		boolean hiveLoaded = level.isLoaded(p.hive());
+		if (hiveLoaded && (!(level.getBlockEntity(p.hive()) instanceof BeehiveBlockEntity be) || be.isFull())) {
 			return TaskStatus.FAILURE;
 		}
-		if (b.distanceToSqr(Vec3.atCenterOf(p.hive())) <= KNOWS_THE_WAY * KNOWS_THE_WAY) {
+		if (hiveLoaded && b.distanceToSqr(Vec3.atCenterOf(p.hive())) <= KNOWS_THE_WAY * KNOWS_THE_WAY) {
 			b.setHivePos(p.hive());
 			Camp.data(level.getServer()).addStat("bees_brought", 1);
 			return TaskStatus.SUCCESS;

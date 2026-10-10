@@ -32,7 +32,6 @@ import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.phys.Vec3;
 
-import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
@@ -47,7 +46,7 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  * takings). Each sale uses up exactly the goods it hands over (the screen shows a copy, the held goods are what it
  * stands for) and keeps the emeralds paid; each purchase pays out one held emerald and puts exactly what the player gave
  * into the supply chest. When the screen closes, for any reason (the player shuts it, walks off, logs out or dies, the
- * keeper is called away, night falls, the server stops), everything still held goes back: goods to the shop's chests,
+ * keeper is called away, dusk comes, the server stops), everything still held goes back: goods to the shop's chests,
  * emeralds to its takings chest, anything without room to the supply chest, then the keeper's backpack, and only then
  * onto the ground at the counter. An offer runs out as soon as its held goods are gone, and every purchase offer runs
  * out the moment the held emeralds cannot pay for it, so the screen never hands over more than is there.
@@ -393,6 +392,7 @@ final class ShopTrade extends Marker implements Merchant {
 		Speech.say(keeper, Line.SHOP_SALE, customer.getName().getString());
 		keeper.swingArm();
 		Unity.add(level, "trade", 1, 10);
+		Market.traded(keeper, level);
 	}
 
 	@Override
@@ -424,8 +424,8 @@ final class ShopTrade extends Marker implements Merchant {
 	}
 
 	/**
-	 * The screen stays open while the keeper is alive, at their counter, not fighting, by day, still keeping this shop,
-	 * and the player is close by.
+	 * The screen stays open while the keeper is alive, at their counter, not fighting, in the shop's hours (not from
+	 * dusk, nor in a dark storm), still keeping this shop, and the player is close by.
 	 */
 	@Override
 	public boolean stillValid(Player player) {
@@ -437,7 +437,7 @@ final class ShopTrade extends Marker implements Merchant {
 			|| keeper.position().distanceToSqr(Vec3.atBottomCenterOf(shop.counter())) > COUNTER_SLACK * COUNTER_SLACK) {
 			return false;
 		}
-		if (Camp.isNightTime(level) || keeper.getTarget() != null || keeper.isAsleep()) {
+		if (Shops.shut(level) != null || keeper.getTarget() != null || keeper.isAsleep()) {
 			return false;
 		}
 		MarketData.Holding h = Market.holding(level.getServer(), keeper);

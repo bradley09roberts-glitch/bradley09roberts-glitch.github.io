@@ -20,24 +20,30 @@ import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 
 /**
  * Minding the shop: by day the keeper stands behind their counter (or by the supply chest, for the camp stall) and
- * serves whoever comes. They go there when a player comes within {@value #CUSTOMERS} blocks of it (58, main work) and
- * stay while one is about; with nothing else at all to do they wait there anyway (12, just above idling). While serving
- * a player the job is all they do (95; the market's job filter keeps everything but their needs away), so the screen is
- * never closed by the keeper wandering off. Opening the shop is said once a day. The shop shuts at night.
+ * serves whoever comes. They go there when a player comes up to it, within {@value #CUSTOMERS} blocks (58, main work),
+ * and stay while one is that near, for three minutes at most unless serving: a player merely about the camp, or busy
+ * beside the counter, does not keep them from their trade's work and their speciality (a running job is never
+ * re-scored, so a long visit at 58 would shut out all the ordinary work). With nothing else at all to do they wait
+ * there anyway (12, just above idling). While serving a player the job is all they do (95; the market's job filter
+ * keeps everything but their needs away), so the screen is never closed by the keeper wandering off. Opening the shop
+ * is said once a day. The shop shuts at dusk.
  */
 final class KeepShopTask extends TradeJob {
 	static final String ID = "market.keep_shop";
-	/** How near a player must come for the keeper to go and open up. */
-	static final int CUSTOMERS = 24;
+	/** How near a player must come for the keeper to go and open up: up to the shop, not merely into the camp. */
+	static final int CUSTOMERS = 8;
 	private static final double SERVING = 95;
 	private static final double CUSTOMER_COMING = 58;
 	private static final double MINDING = 12;
 	/** A visit with nobody about ends after this long. */
-	private static final int QUIET_TICKS = 20 * 30;
+	private static final int QUIET_TICKS = 20 * 15;
+	/** A visit with nobody being served ends after this long, whoever is about. */
+	private static final int MINDING_TICKS = 20 * 180;
 	private static final String KEY = "market";
 
 	private @Nullable Shop shop;
 	private int quiet;
+	private int ticks;
 	private boolean opened;
 
 	KeepShopTask() {
@@ -90,6 +96,7 @@ final class KeepShopTask extends TradeJob {
 		ServerLevel level = (ServerLevel) c.level();
 		shop = Shop.of(level, c, holding(c)).orElse(null);
 		quiet = 0;
+		ticks = 0;
 		opened = false;
 		return shop != null;
 	}
@@ -99,7 +106,10 @@ final class KeepShopTask extends TradeJob {
 		ServerLevel level = (ServerLevel) c.level();
 		Shop s = shop;
 		boolean serving = Shops.isTrading(c);
-		if (s == null || !serving && !workingHours(level)) {
+		if (!serving) {
+			ticks++;
+		}
+		if (s == null || !serving && (!workingHours(level) || ticks > MINDING_TICKS)) {
 			return TaskStatus.SUCCESS;
 		}
 		switch (Stores.stand(c, s.counter(), 0.8)) {

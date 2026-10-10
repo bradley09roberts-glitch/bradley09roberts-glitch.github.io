@@ -46,6 +46,8 @@ final class FishTask extends TradeJob {
 	private static final int MIN_WAIT = 100;
 	private static final int MAX_WAIT = 600;
 	private static final int STRING_FOR_ROD = 2;
+	/** Ticks after an attacker's hit before the line goes out again. */
+	private static final int INTERRUPTED = 40;
 
 	private enum Phase {
 		ROD,
@@ -211,6 +213,9 @@ final class FishTask extends TradeJob {
 		if (c.isInWater()) {
 			return TaskStatus.FAILURE; // never fish standing in the water
 		}
+		if (fighting(c, INTERRUPTED)) {
+			return TaskStatus.RUNNING; // on the spot, but no casting while something is after them (the reflexes see to it)
+		}
 		phase = Phase.FISH;
 		cast(c, level, s);
 		return TaskStatus.RUNNING;
@@ -231,8 +236,10 @@ final class FishTask extends TradeJob {
 	}
 
 	private TaskStatus fish(CompanionEntity c, ServerLevel level, FishSpots.Spot s) {
-		if (c.getTarget() != null || c.ticksSinceDamaged() < 40 || c.position().distanceToSqr(Vec3.atBottomCenterOf(s.stand())) > 2.5 * 2.5) {
-			phase = Phase.GO; // something happened: back to the spot (or the job ends, through the reflexes)
+		// Only a real interruption means a fresh cast: a fight, or being pushed off the spot. Damage with nobody behind it
+		// (hunger every four seconds, poison) does not, or a starving fisher would never wait long enough for a bite.
+		if (fighting(c, INTERRUPTED) || c.position().distanceToSqr(Vec3.atBottomCenterOf(s.stand())) > 2.5 * 2.5) {
+			phase = Phase.GO; // back to the spot (or the job ends, through the reflexes)
 			return TaskStatus.RUNNING;
 		}
 		c.getLookControl().setLookAt(Vec3.atCenterOf(s.water()));
