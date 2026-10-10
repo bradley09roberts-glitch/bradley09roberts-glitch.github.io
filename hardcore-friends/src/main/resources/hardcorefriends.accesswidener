@@ -2,3 +2,5 @@ accessWidener v2 official
 
 # Lets the mod add a "hunt companions" goal to zombies, skeletons, spiders, illagers and witches.
 accessible field net/minecraft/world/entity/Mob targetSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;
+# Lets the pets package give the friends' cats and dogs their own following and homing goals in place of vanilla's.
+accessible field net/minecraft/world/entity/Mob goalSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;

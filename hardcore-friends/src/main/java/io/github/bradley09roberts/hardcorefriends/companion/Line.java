@@ -415,6 +415,20 @@ public enum Line {
 
 	// ==== Pets and maps (package pets) ====
 	// (add this package's lines below this comment, each ending with a comma)
+	/** A friend or child has just adopted a pet and named it. %1$s = the pet's name, %2$s = "cat" or "dog". */
+	PET_ADOPTED(Priority.IMPORTANT, 0, 2),
+	/** Playing with or making a fuss of their own pet. %1$s = the pet's name, %2$s = "cat" or "dog". */
+	PET_PLAY(Priority.CASUAL, 2400, 2),
+	/** Calling their pet over by name. %1$s = the pet's name. */
+	PET_CALL(Priority.CASUAL, 1200, 1),
+	/** Their pet has died or gone missing for good. %1$s = the pet's name, %2$s = "cat" or "dog". */
+	PET_LOST(Priority.IMPORTANT, 0, 2),
+	/** The map maker has finished a map. %1$s = what it shows, e.g. "the camp" or "the land to the north-east". */
+	MAP_FINISHED(Priority.IMPORTANT, 0, 1),
+	/** The map maker hands a player a copy of a map. %1$s = the player's name. */
+	MAP_HANDED(Priority.IMPORTANT, 0, 1),
+	/** The map maker cannot make a map: the camp is short of paper or a compass. */
+	MAP_NO_PAPER(Priority.IMPORTANT, 0, 0),
 	// ==== end of pets ====
 	;
 
