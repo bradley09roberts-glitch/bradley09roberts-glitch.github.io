@@ -56,6 +56,10 @@ taiga.
   brought to them, as your own pets are; at night only onto its spot or a free tile beside it. When there is no free
   spot (its owner up on a pillar, say) it tries again every few seconds. A pet that has strayed well beyond the camp
   walks back.
+- **At the animal pen.** A pet that tags along into the pen or idles in its gateway never holds the gate open: the
+  friends do not wait on it at the gate, shut the gate as usual (a pet half in a shut gate can still step out), and
+  never herd it to the back with the livestock. A pet shut in or out is brought out like any stuck pet, to its owner,
+  or home at night.
 
 ## Dogs and danger
 
