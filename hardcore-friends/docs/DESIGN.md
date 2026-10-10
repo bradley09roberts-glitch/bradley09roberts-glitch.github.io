@@ -389,3 +389,93 @@ Items inside the pen are not tidied by `common.collect_items` unless the friend 
 - Livestock is cows, pigs, sheep and chickens in one pen (rabbits are only hunted); no shearing, milking or eggs. A lured animal can wander off before the pen and is fetched again later. An unnamed animal of the player's standing loose with nothing player-built nearby looks wild. The camp's food planning (`CampNeeds`) counts cooked meat, not raw meat, as food.
 
 - The night watch sees what is in sight, close by or already attacking, inside the camp; not a hostile in a cave below it. The alarm wakes sleepers inside the camp only. A daytime thunderstorm is as dark as night (`isDarkOutside`), so friends head home and rest through it.
+
+## 15. 3.0: a village of their own
+
+3.0 adds eight feature packages and a ninth, `civic`, that holds only the interfaces they answer each other through. Each package has a page in `docs/v3/` with its behaviour, settings, commands, a "for other packages" section and its honest limits; this section is the map of how they fit together. Nothing in 3.0 has been run in game yet.
+
+### 15.1 The packages
+
+| Package | Owns | Provides | Page |
+|---|---|---|---|
+| `architecture` | The building library (plans as data files under `data/<ns>/blueprints/`, reloaded with `/reload`; `camp.Blueprints` reads the camp's own plans, in the same format, from `/hardcorefriends/camp_plans/` inside the mod), `Construction` (building a plan on a chosen site), `Styles`, scaffolding, the material jobs (firing at the furnace, digging sand and clay, shearing), `/friends builds` | `civic.BlueprintLibrary` | `architecture.md` |
+| `navigation` | Every friend's paths (`FriendNavigation`, from `CompanionEntity.createNavigation`), `Senses`, `Routes`, `Wayfinder` and `WayOutGoal` (getting unstuck, the rescue), `Sprint`, `/friends senses` | | `navigation.md` |
+| `people` | Friendship and romance, dates, weddings, births, children and growing up, family names, the skin list (`skins.json`), `/friends family`, `couples`, `relationships` | `civic.Families` | `people.md` |
+| `village` | The town plan (streets and plots), households and houses, real beds, the daily routine, streets, water and fields, the Town and City stages (`VillageGrowth`), `/friends village`, `home` | `civic.Homes`, `VillagePlan` | `village.md` |
+| `market` | The 15 trades, assigning them, workplaces, shops and the trading screen, `/friends trades`, `shops` | `civic.Professions` | `market.md` |
+| `life` | The calendar, feasts, market day, music, birthdays, grief, funerals and graves, the Village Chronicle, `/friends calendar`, `chronicle` | `VillageLife.chronicle` | `life.md` |
+| `defence` | The alarm and the bells, taking cover, posts, the guard rota, raids, the fire watch, `/friends defence` | `Alarm.isActive` | `defence.md` |
+| `pets` | Adopting and keeping cats and dogs, Scout's maps and their frames, `/friends pets`, `maps`, `map` | | `pets.md` |
+| `civic` | Interfaces only: `Homes`, `Families`, `Professions`, `BlueprintLibrary` | | |
+
+Each package keeps what it must remember in its own saved data (`VillageData`, `PeopleData`, `MarketData`, `LifeData`, `PetsData`); building sites stay in `CampData` like the camp's own (village site keys start with `village.`, graves' with `life.grave.`).
+
+### 15.2 The civic facades
+
+Every facade has the same shape: a nested `Provider` interface, a do-nothing default, a `volatile` current provider, `provide(p)` (called once, from the owning package's `init()`) and `get()`. Callers always go through `get()`, so any package, and the core, works more plainly without the owner: nobody has a house, everyone is single, nobody holds a trade, there are no library plans. People are named by entity UUID, which stays the same when a friend changes dimension.
+
+| Facade | Provided by | Answers | Asked by |
+|---|---|---|---|
+| `Homes` | `village.HomesProvider` | `homeOf`, `bedFor` (the foot of the friend's own bed), `homes`, `roomForOneMore`, `moveIn`, `moveOut`. Default: no homes, never room for one more, moving in or out does nothing | The sleep and rest jobs (own bed: `SleepTask`, `Spots.ownBed`); people (room for a baby, a newborn or a married household moving in, someone who left moving out, a child's way home); defence (shelters); pets (a pet's home and its night spot by the bed) |
+| `Families` | `people.FamiliesProvider` | `partnerOf` (the living husband or wife), `parentsOf`, `childrenOf`, `householdOf`, `familyName`. Default: everyone single, a household of one | Village (households to house); life (who mourns, names in the Chronicle); pets (who inherits a pet, a parent adopting for a child, full names); `CompanionEntity.nearestProtector` (a child runs to a parent first) |
+| `Professions` | `market.ProfessionsProvider` | `professionOf`, `workplaceOf`, `title`. Default: no trades | The status line ("Mabel (Forager, Baker)"); people (the school's teacher); life (market-day stallholders, the musician, the feast cook); defence (a `guard` trade, should one ever exist); `/friends jobs` |
+| `BlueprintLibrary` | `architecture.PlanLibrary` (a data reload listener) | `get(id)`, `byKind(kind)` (exact, or every sub-kind of a kind without a colon), `ids()`. Default: no plans | `camp.Blueprints` (a site's plan by id), `architecture.Styles` and `/friends builds`, the village planner, growth and `VillagePlan`, the market planner |
+
+### 15.3 `VillagePlan` and `Construction`
+
+`village.VillagePlan` is not a facade but the village's own public API, all static, server thread only and cheap (no world scans):
+
+- `requestBuilding(server, kind, reason[, count])` asks for library buildings of a kind (`shop:bakery`, `workplace:fisher`, `civic:school`; a kind without a colon means any of its sub-kinds). Asking again changes nothing; it returns false only when the library has no plan of that kind. The village chooses the plot and the moment.
+- `buildingsOfKind` (standing, oldest first), `allOfKind` (being built too) and `building(server, siteKey)` return `Building` records: site key, kind, plan id, name, dimension, origin, rotation, `built`, and every marker in world positions (`marker("counter")`, `first("job")`). `isBuilt`, `isSiteBuilt`, `isRequested`.
+- `population` and `populationFull` (the team against `maxPopulation`).
+
+Asked by the market (`VillageLink` asks for workplaces; the market then finds finished ones through `Construction`), life (the tavern, the market square's stalls, the town hall and its lectern, the chapel for the cemetery, the bakery's shelves for a birthday cake), defence (the town hall's and the school's bells, the watchtower, gate and walls as guard posts, houses and civic buildings as shelters) and the settler package (no newcomer joins once the population is full).
+
+The village planner (`village.Planner`, run from the server tick) builds in this order: a house for each household with none, a bigger house for a household that has outgrown its own, a house for a grown-up child still living with their parents, the well in the square, the buildings asked for through `requestBuilding`, the stage's own civic buildings, then decoration. At most `villageBuildsAtOnce` buildings are under way, plus two pieces of decoration, and one plot search runs at a time. A building counts as standing when finished, or 95% built with every bed and chest in. A request that finds no plot waits five minutes.
+
+Underneath, `architecture.Construction` builds any library plan on a site key of the caller's choosing (never a camp structure id): `check`, `reserve`, `job` (a `camp.BuildJob`, run through the ordinary building code and the edit guard), `isFinished`, `progress`, `markers`, `release`, and the `FINISHED` listeners. The town hall's site key contains `town_hall` and is marked completed in `CampData` once it stands, which is how the wedding and the map maker find it.
+
+### 15.4 How the packages plug in
+
+`HardcoreFriends.onInitialize` calls each package's `init()` once, after the 2.0 packages, in this order: architecture, navigation, people, village, market, life, defence, pets. Each registers its civic provider, where it has one, and its hooks there; the few places where the core calls into 3.0 directly are listed at the end of this section.
+
+**The scheduler.**
+
+- **Jobs** come through `TaskRegistry.PACKS`, so every friend carries every job. A speciality's work is wrapped in a `SpecialityTask` for that role (section 5): architecture's scaffolding clean-up and kiln (builder), sand and clay (forager) and shearing (farmer); the village's buildings (builder), decoration and streets (landscaper) and water and fields (farmer); defence's putting up a bell (builder). Building one's own home is `PERSONAL`; the one-at-a-time jobs (a pillar, the furnace, the sand, the sheep, the streets, the grounds, the bell) are `EXCLUSIVE`. Every other 3.0 job scores 0 for anyone it is not for (a trade's work, a guard's shift, a child's games). Job ids start with the package's name (`village.`, `people.`, `market.`, `life.`, `defence.`, `pets.`), except architecture's, which are named after the specialist like the core's (`oak.kiln`, `oak.scaffold`, `rowan.dig_sand`, `fern.shear`), and the needs jobs below. Navigation adds no jobs: it works through a goal and the friend's tick.
+- **Time off.** The village's evening and meals (`needs.evening`, `needs.meal`) and life's gatherings, market visits and grave visits (`needs.festival`, `needs.market`, `needs.remember`) are needs jobs, so they count as time off and may run at night (section 4).
+- **`TaskScheduler.JOB_FILTERS`**: people (a child only takes `needs.*` jobs, any `navigation.*` job and `People.childJobs()`; `People.allowChildJob` adds defence's taking cover and pets' adopting and feeding); market (a keeper serving a player does only `market.keep_shop` and their needs; once a blacksmith is at work, `combat.smith` is theirs alone); life (the feast cook keeps the feast's food until the feast); defence (keeps the guards on duty, the fighters during an alarm, and those taking cover whose bed is out in the open, out of bed).
+- **`NIGHT_JOBS`**: defence's bell, taking cover, posts, guard duty and fire watch; pets' copying a map for a player waiting in the camp. **`FIT_WHEN_WEAK`**: taking cover.
+- **`TaskScheduler.JOB_DONE`**: the market counts finished trade work as practice in the trade's kind of work.
+
+**Events and other hooks.**
+
+| Hook | 3.0 uses |
+|---|---|
+| `CompanionEvents.GOALS` | architecture: coming down from scaffolding (goal, priority 0); navigation: `WayOutGoal` (goal, 2); people: a child running to a grown-up (goal, 2) and grown-ups protecting a child (target, 1); defence: who the defenders go for first (target, 2) |
+| `CompanionEvents.TICK` | navigation (watching for stuck friends, sprinting); people (once a second: every team member is on record, and children keep near home and grow up when their time comes); village (a friend left lying in a bed without the sleep job gets up); life (mourning); pets (drawing maps, fussing a pet) |
+| `CompanionEvents.DEATH`, `DISMISSED` | pets first (registered at index 0: the pet passes to the family before the people package lets the family go); people (the family); village (out of bed, `Homes.moveOut`); market (the trade is given up); life (grief, the funeral, the grave, the Chronicle); defence (the fire watch forgets them) |
+| `CompanionEvents.INTERACT`, `HIT`, `HURT` | market's shop trading runs first (index 0), before the camp's trust check, so any player can trade; people: children taking food (`INTERACT`), fighting side by side (`HIT`); pets: an empty map handed to Scout (`INTERACT`), no harm to a friend from a camp pet (`HURT`) |
+| `SocializeTask.CHATTED`, `ShareTask.SHARED` | people: chats and sharing raise friendship |
+| `Construction.FINISHED` | village (a plot stands, people move in), market (workplaces are found again), life (a line in the Chronicle) |
+| `CampNeeds.EXTRA` | architecture: what a building is short of raises the camp's needs, so gatherers fetch ahead |
+| `KeepList.addCommonRule` | market: one fishing rod; pets: up to six maps and one item frame |
+| `combat.Archery.HOLDS_POST` | defence: the guard at the watchtower lookout shoots rather than closing in |
+| `FriendsCommand.EXTENSIONS`, `CAMP_STATUS` | every package's sub-commands; village, life and defence add a line to `/friends camp` |
+| Fabric events | server tick: people, the village and market planners, life, defence, pets; server start and stop clear in-memory state; market closes open trading screens as the server stops (goods held for the visit go back); defence: `UseBlockCallback` (a player ringing a bell; only the owner and trusted players sound the alarm that way); pets: entity load and unload, `AFTER_DEATH`, and `ALLOW_DAMAGE` (section 15.5); architecture: the plans' data reload listener |
+
+**Where the core asks 3.0.** A few core classes call the facades or the village directly, so they behave the same with or without a provider: the sleep and rest jobs use `Homes` for the friend's own bed; the status line shows a trade from `Professions`; a child's protector is a parent from `Families`; `CampProgress` asks `VillageGrowth.ready` before the Town and City stages (both added to the end of `Camp.STAGE_NAMES`, as saves store the stage number); settler recruiting asks `VillagePlan.populationFull`; `CompanionEntity` carries the child flag and builds the navigation package's path finder.
+
+### 15.5 3.0 and the hard rules
+
+- **No new edit reason.** Every block 3.0 changes goes through the existing reasons of `WorldEditGuard`: scaffolding, the village's buildings, beehives, graves, the square's bell, the musician's note block and the winter lights are BUILD; streets, fire put out and a torch at a dark guard post are LANDSCAPE; water, fields, the composter and the beehive's honey are FARM (the guard allows those two only on the friends' own blocks: the same composter, or the same hive facing the same way with less honey); the friends' own lectern and doors are INVENT; levelling plots is GRADE; getting out of a pit or cave is SURVIVAL. Children never change a block: the guard refuses every edit by a child. Item frames for maps are entities: the guard is asked as if a builder placed a block there, and the hanging is logged by hand.
+- **Player death is untouched.** The pets package registers `ServerLivingEntityEvents.ALLOW_DAMAGE`, but it only ever looks at damage dealt by a camp pet, and lets that through only when the victim is a hostile that is neither a player nor a friend. It never touches player death; `ALLOW_DEATH` is still never registered for players.
+- **No free items.** Shops only move the shop's own stock and takings at fixed prices, and goods held for a visit go back when the screen closes; a map copy uses the player's empty map or the camp's paper and compass. Every new command works at permission level 0 with cheats off.
+
+### 15.6 What 3.0 changes in the limits above
+
+Section 14 describes the 2.x camp. With 3.0:
+
+- Buildings come from data files (the camp's own plans and the library's 54), chosen by style; friends still do not design buildings of their own.
+- Paths are the friends' own (`navigation.FriendNavigation`), not plain mob pathfinding, and a stuck friend works through the navigation package's steps to get out, with a rescue as the last resort (`rescueStuckFriends`; its honest limits apply).
+- A friend with a home sleeps in their own bed; without one they sleep as before.
+- The camp grows past the Settlement into the Town and the City, and its radius grows with the village, up to `villageRadius`.
