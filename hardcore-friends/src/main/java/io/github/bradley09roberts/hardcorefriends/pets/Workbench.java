@@ -23,13 +23,15 @@ import io.github.bradley09roberts.hardcorefriends.camp.Crafting;
 import io.github.bradley09roberts.hardcorefriends.camp.SupplyChest;
 import io.github.bradley09roberts.hardcorefriends.companion.Backpack;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
+import io.github.bradley09roberts.hardcorefriends.progress.ProgressPlan;
 
 /**
  * The camp's stock and work tables as the map and pet jobs use them: how much of something the supply chest holds
  * (remembered for a few seconds, so nine friends scoring jobs every second cost one look), where the crafting table
  * and the cartography table stand (looked for near the chest and the camp centre, at most every 30 seconds), and the
  * real recipes for an empty map (eight paper round a compass), a compass (four iron and a redstone) and an item frame
- * (eight sticks round a piece of leather), made at a table as a player makes them.
+ * (eight sticks round a piece of leather), made at a table as a player makes them. Paper, leather and iron that Sage's
+ * plan is still collecting are never taken, and eight iron always stay in the chest.
  */
 final class Workbench {
 	/** How far from the chest (or the camp centre) a work table is looked for. */
@@ -165,8 +167,16 @@ final class Workbench {
 		if (stock(level, "map", EMPTY_MAP) >= 1) {
 			return true;
 		}
-		return stock(level, "paper", PAPER) >= 8 && (stock(level, "compass", COMPASS) >= 1
-			|| stock(level, "iron", IRON) >= IRON_KEPT + 4 && stock(level, "redstone", REDSTONE) >= 1);
+		return spare(level, Items.PAPER) && stock(level, "paper", PAPER) >= 8 && (stock(level, "compass", COMPASS) >= 1
+			|| spare(level, Items.IRON_INGOT) && stock(level, "iron", IRON) >= IRON_KEPT + 4 && stock(level, "redstone", REDSTONE) >= 1);
+	}
+
+	/**
+	 * True if the camp can spare this for maps and frames: Sage's plan is not still collecting it (paper and leather
+	 * for the library's books, iron for its stock). What the plan waits for is never taken.
+	 */
+	static boolean spare(ServerLevel level, Item item) {
+		return !ProgressPlan.wants(level.getServer(), item);
 	}
 
 	/**
@@ -182,11 +192,12 @@ final class Workbench {
 		if (carriesMapMakings(bp)) {
 			return true;
 		}
-		if (SupplyChest.count(chest, PAPER) + bp.count(PAPER) < 8) {
+		if (bp.count(PAPER) < 8 && (!spare(level, Items.PAPER) || SupplyChest.count(chest, PAPER) + bp.count(PAPER) < 8)) {
 			return false;
 		}
 		boolean compass = bp.count(COMPASS) >= 1 || SupplyChest.count(chest, COMPASS) >= 1;
-		boolean iron = SupplyChest.count(chest, IRON) >= IRON_KEPT + 4 - bp.count(IRON) && SupplyChest.count(chest, REDSTONE) + bp.count(REDSTONE) >= 1;
+		boolean iron = spare(level, Items.IRON_INGOT) && SupplyChest.count(chest, IRON) >= IRON_KEPT + 4 - bp.count(IRON)
+			&& SupplyChest.count(chest, REDSTONE) + bp.count(REDSTONE) >= 1;
 		if (!compass && !iron) {
 			return false;
 		}
@@ -240,8 +251,8 @@ final class Workbench {
 
 	/** True if the supply chest holds an item frame or what one takes (leather, and sticks or planks for them). */
 	static boolean chestHasFrameMakings(ServerLevel level) {
-		return stock(level, "frame", FRAME) >= 1
-			|| stock(level, "leather", LEATHER) >= 1 && (stock(level, "sticks", STICK) >= 8 || stock(level, "planks", PLANKS) >= 4);
+		return stock(level, "frame", FRAME) >= 1 || spare(level, Items.LEATHER) && stock(level, "leather", LEATHER) >= 1
+			&& (stock(level, "sticks", STICK) >= 8 || stock(level, "planks", PLANKS) >= 4);
 	}
 
 	/** Takes an item frame, or its makings, from the chest. Returns true if the friend now carries enough for one. */
@@ -254,7 +265,7 @@ final class Workbench {
 			SupplyChest.withdraw(chest, bp, FRAME, 1);
 			return bp.count(FRAME) >= 1;
 		}
-		if (bp.count(LEATHER) < 1 && SupplyChest.count(chest, LEATHER) < 1) {
+		if (bp.count(LEATHER) < 1 && (!spare(level, Items.LEATHER) || SupplyChest.count(chest, LEATHER) < 1)) {
 			return false;
 		}
 		SupplyChest.withdraw(chest, bp, LEATHER, Math.max(0, 1 - bp.count(LEATHER)));

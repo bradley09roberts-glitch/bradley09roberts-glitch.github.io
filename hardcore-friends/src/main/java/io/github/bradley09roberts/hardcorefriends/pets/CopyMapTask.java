@@ -115,7 +115,10 @@ final class CopyMapTask implements CompanionTask {
 			if (p == null || p.level() != level || p.isSpectator() || p.distanceToSqr(c) > RANGE * RANGE) {
 				continue;
 			}
-			if (Camp.isNight(level) && !Trips.home(c)) {
+			// After dark only inside the camp, both of them: the map maker never walks out into the night for a copy.
+			Optional<BlockPos> centre = Camp.center(level);
+			if (Camp.isNight(level) && (!Trips.home(c) || centre.isEmpty()
+				|| !PetBrain.aboutCamp(level, centre.get(), p.blockPosition(), 0))) {
 				continue;
 			}
 			return p;

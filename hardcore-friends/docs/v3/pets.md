@@ -69,7 +69,8 @@ last spot loaded but the pet nowhere to be found) is given up as lost.
 - **Making maps.** Scout (or a newcomer who explores like her; one map maker at a time) makes empty maps the way you
   do: eight paper round a compass at the crafting table (or at the cartography table, once the camp has one). If the
   chest has no compass she makes one from four iron (only iron the camp can spare: it keeps eight back) and a redstone.
-  An empty map in the chest is used first.
+  An empty map in the chest is used first. She never takes paper, leather or iron that Sage's plan is still collecting
+  (paper and leather for the library's books), so maps wait until the plan has what it needs.
 - **The map of the camp.** Her first map is of the camp: 256 blocks across (1:2), centred on the camp centre. She fills
   it in as she walks about, exactly as a map fills in for you, but only from land already loaded (she never makes the
   game load new land to draw it). It is finished when 60% of it is drawn (or a quarter of it, after three days).
