@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
 import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
 import io.github.bradley09roberts.hardcorefriends.ai.task.TaskStatus;
+import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
@@ -54,6 +55,9 @@ final class GuardDutyTask implements CompanionTask {
 	private int leg;
 	private int pause;
 	private boolean lit;
+	private @Nullable LivingEntity watching;
+	/** The shift this guard last called out going on guard for (a night's index, doubled, plus one for the second). */
+	private long announced = Long.MIN_VALUE;
 
 	@Override
 	public String id() {
@@ -88,7 +92,14 @@ final class GuardDutyTask implements CompanionTask {
 		if (post == null) {
 			return false;
 		}
-		Alarm.say(c, Line.TO_THE_WALLS);
+		if (c.level() instanceof ServerLevel level) {
+			NightWatch.Watch watch = NightWatch.watch(level);
+			long shift = NightWatch.nightIndex(level) * 2 + (watch == NightWatch.Watch.SECOND ? 1 : 0);
+			if (shift != announced) {
+				announced = shift; // once a shift, not every round
+				Alarm.say(c, Line.TO_THE_WALLS);
+			}
+		}
 		return true;
 	}
 
@@ -150,9 +161,12 @@ final class GuardDutyTask implements CompanionTask {
 		return TaskStatus.RUNNING;
 	}
 
-	/** Looks at the nearest hostile about, else slowly round the post. */
+	/** Looks at the nearest hostile about (looked for twice a second), else slowly round the post. */
 	private void lookOut(CompanionEntity c) {
-		LivingEntity threat = Threats.nearest(c, 24);
+		if (c.tickCount % 10 == 0 || watching != null && !watching.isAlive()) {
+			watching = Threats.nearest(c, 24);
+		}
+		LivingEntity threat = watching;
 		if (threat != null) {
 			c.getLookControl().setLookAt(threat);
 			return;
@@ -166,7 +180,7 @@ final class GuardDutyTask implements CompanionTask {
 	 * itself, so nobody stands in it), through the edit guard.
 	 */
 	private static void lightPost(CompanionEntity c, ServerLevel level, BlockPos stand) {
-		if (level.getBrightness(LightLayer.BLOCK, stand) > DARK || !c.backpack().has(s -> s.is(Items.TORCH))) {
+		if (!level.isLoaded(stand) || level.getBrightness(LightLayer.BLOCK, stand) > DARK || !c.backpack().has(s -> s.is(Items.TORCH))) {
 			return;
 		}
 		BlockState torch = Blocks.TORCH.defaultBlockState();
@@ -182,6 +196,7 @@ final class GuardDutyTask implements CompanionTask {
 	@Override
 	public void stop(CompanionEntity c) {
 		post = null;
+		watching = null;
 		stage = Stage.GOING;
 		ticks = 0;
 		standing = 0;

@@ -15,8 +15,9 @@ import io.github.bradley09roberts.hardcorefriends.companion.Line;
  * own home if it is safe to get to, else the nearest house, the town hall or another public building, or the cabin
  * ({@link Shelters}), never towards a creeper or (for a child) past any monster. Once in they shut the door behind them
  * (their own wooden doors only) and stay at a spot inside, away from the windows where the plan allows, until the
- * all-clear; one already indoors in a shelter simply stays put. At night, someone indoors whose bed is there too goes to
- * bed rather than standing about. It changes no block but the door.
+ * all-clear; one already indoors in a shelter simply stays put. At night, someone indoors where their own bed is (their
+ * home, the cabin) goes to bed rather than standing about; anyone else waits indoors for the all-clear before walking
+ * home to bed. It changes no block but the door.
  *
  * <p>It scores {@value #SCORE}: above all work and every ordinary need, below a desperate one (a starving friend eats
  * first) and below ringing the bell. The fighting reflexes keep running underneath (a child still runs from a monster
@@ -109,8 +110,8 @@ final class TakeCoverTask implements CompanionTask {
 			doorDone = true;
 			Shelters.shutDoor(c, s);
 		}
-		if (night && Duty.sleepsIndoors(c, level, level.getGameTime()) && Shelters.indoors(level, c)) {
-			return TaskStatus.SUCCESS; // indoors with a bed indoors: off to bed (the sleep job)
+		if (night && Duty.inOwnShelter(c, level, level.getGameTime())) {
+			return TaskStatus.SUCCESS; // indoors where their bed is: off to bed (the sleep job)
 		}
 		if (ticks % 80 == 0) {
 			c.getLookControl().setLookAt(c.getX() + c.getRandom().nextInt(7) - 3, c.getEyeY(), c.getZ() + c.getRandom().nextInt(7) - 3);

@@ -75,8 +75,8 @@ public final class Archery {
 	private static final Map<CompanionEntity, long[]> PATH_ROUNDS = new WeakHashMap<>();
 	/**
 	 * The feature packages' say that a friend holds a post and shoots whatever they would fight rather than leave it to
-	 * close in with a blade: a guard up the village watchtower or behind its wall (the defence package). Asked only for
-	 * a friend who can shoot.
+	 * close in with a blade: a guard up at the village watchtower's lookout (the defence package). Asked only for a
+	 * friend who can shoot.
 	 */
 	public static final List<Predicate<CompanionEntity>> HOLDS_POST = new CopyOnWriteArrayList<>();
 
@@ -115,7 +115,7 @@ public final class Archery {
 		}
 		for (Predicate<CompanionEntity> post : HOLDS_POST) {
 			if (post.test(c)) {
-				return true; // on a post above or behind a wall: shoot from there rather than leave it
+				return true; // up on a post: shoot from there rather than leave it
 			}
 		}
 		if (c.isFighter()) {

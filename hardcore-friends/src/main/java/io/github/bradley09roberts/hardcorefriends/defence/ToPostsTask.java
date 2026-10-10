@@ -30,6 +30,7 @@ final class ToPostsTask implements CompanionTask {
 	private @Nullable BlockPos post;
 	private boolean arrived;
 	private int ticks;
+	private @Nullable LivingEntity watching;
 
 	@Override
 	public String id() {
@@ -80,7 +81,10 @@ final class ToPostsTask implements CompanionTask {
 			return TaskStatus.RUNNING;
 		}
 		c.actions().stopWalking();
-		LivingEntity threat = Threats.nearest(c, 24);
+		if (ticks % 10 == 0 || watching != null && !watching.isAlive()) {
+			watching = Threats.nearest(c, 24);
+		}
+		LivingEntity threat = watching;
 		if (threat != null) {
 			c.getLookControl().setLookAt(threat);
 		} else {
@@ -95,6 +99,7 @@ final class ToPostsTask implements CompanionTask {
 	@Override
 	public void stop(CompanionEntity c) {
 		post = null;
+		watching = null;
 		arrived = false;
 		ticks = 0;
 	}

@@ -20,7 +20,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.Line;
  * Who rings the bell. When the alarm wants the bell rung, the nearest friend who is awake, grown up, at work in the
  * village and fit (not falling back, not badly hurt, not on fire) within {@value #RANGE} blocks of the bell is asked;
  * they run to it and ring it ({@link RingBellTask}). Nobody is ever sent to a bell with a creeper within
- * {@value Alarm#CREEPER_CLEARANCE} blocks of it. A ringer who has not rung it {@value #TIMEOUT} ticks after being asked
+ * {@value Alarm#CREEPER_CLEARANCE} blocks of it, and with any other hostile within {@value #CONTESTED} blocks of it only a
+ * friend fit to fight ({@link Duty#fighter}) is. A ringer who has not rung it {@value #TIMEOUT} ticks after being asked
  * (or who is no longer fit to go) is let off and someone else asked; with no bell, or nobody to ring it, the alarm is
  * shouted instead by the friend nearest the danger.
  */
@@ -28,6 +29,8 @@ final class Ringing {
 	private static final double RANGE = 48;
 	/** A ringer asked this long ago who has not rung it is let off. */
 	private static final int TIMEOUT = 20 * 40;
+	/** With a hostile this close to the bell, only a fighter is sent to ring it. */
+	private static final double CONTESTED = 8;
 
 	private Ringing() {
 	}
@@ -53,11 +56,12 @@ final class Ringing {
 		}
 		s.bell = bell.pos();
 		Vec3 at = Vec3.atCenterOf(bell.pos());
+		boolean contested = hostileNear(level, at);
 		CompanionEntity best = null;
 		double bestDist = RANGE * RANGE;
 		for (CompanionEntity c : Companions.in(level)) {
-			if (s.failedRingers.contains(c.getUUID()) || !fit(c)) {
-				continue;
+			if (s.failedRingers.contains(c.getUUID()) || !fit(c) || contested && !Duty.fighter(c)) {
+				continue; // with monsters by the bell, only someone fit to fight goes to it
 			}
 			double d = c.distanceToSqr(at);
 			if (d < bestDist) {
@@ -97,6 +101,16 @@ final class Ringing {
 	static boolean fit(CompanionEntity c) {
 		return c.isAlive() && !c.isChild() && !c.isAsleep() && c.mode() == CompanionMode.WORK && !c.isRetreating()
 			&& !c.isOnFire() && !c.tooWeakToWork() && c.getHealth() > c.getMaxHealth() * 0.4F && Area.atHome(c);
+	}
+
+	/** True if a hostile seen lately is within {@value #CONTESTED} blocks of the bell. */
+	private static boolean hostileNear(ServerLevel level, Vec3 bell) {
+		for (LivingEntity t : Alarm.present(level)) {
+			if (t.distanceToSqr(bell) <= CONTESTED * CONTESTED) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** True if a creeper seen lately is within {@value Alarm#CREEPER_CLEARANCE} blocks of the bell. */

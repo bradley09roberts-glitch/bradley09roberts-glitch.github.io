@@ -148,6 +148,9 @@ final class Shelters {
 	private static boolean besideWindow(ServerLevel level, BlockPos feet) {
 		for (Direction d : Direction.Plane.HORIZONTAL) {
 			for (BlockPos p : new BlockPos[] {feet.relative(d), feet.above().relative(d)}) {
+				if (!level.isLoaded(p)) {
+					continue;
+				}
 				Block block = level.getBlockState(p).getBlock();
 				if (block instanceof TransparentBlock || block instanceof IronBarsBlock) {
 					return true;
@@ -213,13 +216,17 @@ final class Shelters {
 		if (level.canSeeSky(feet.above())) {
 			return null;
 		}
+		Shelter best = null;
+		double bestDist = INSIDE * INSIDE;
 		for (Shelter s : all(level)) {
 			BlockPos spot = s.spot();
-			if (Math.abs(spot.getY() - feet.getY()) <= 3 && Camp.horizontalDistSqr(spot, feet) <= INSIDE * INSIDE) {
-				return s;
+			double d = Camp.horizontalDistSqr(spot, feet);
+			if (Math.abs(spot.getY() - feet.getY()) <= 3 && d <= bestDist) {
+				bestDist = d;
+				best = s; // the nearest, where two houses stand close together
 			}
 		}
-		return null;
+		return best;
 	}
 
 	/** True if this friend is indoors in one of the village's shelters. */

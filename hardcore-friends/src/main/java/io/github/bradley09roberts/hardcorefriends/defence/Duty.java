@@ -6,13 +6,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
+import java.util.function.BiPredicate;
+
+import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
+import io.github.bradley09roberts.hardcorefriends.ai.task.CompanionTask;
+import io.github.bradley09roberts.hardcorefriends.ai.task.TaskScheduler;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.camp.CampData;
 import io.github.bradley09roberts.hardcorefriends.camp.NightWatch;
+import io.github.bradley09roberts.hardcorefriends.camp.Structures;
 import io.github.bradley09roberts.hardcorefriends.civic.Homes;
 import io.github.bradley09roberts.hardcorefriends.civic.Professions;
 import io.github.bradley09roberts.hardcorefriends.combat.Archery;
@@ -50,8 +56,13 @@ final class Duty {
 	private static final Set<UUID> COVER = new HashSet<>();
 	private static final Set<UUID> NO_SLEEP = new HashSet<>();
 	private static final Map<UUID, Integer> COVER_FAILS = new HashMap<>();
-	/** Whether each friend sleeps indoors (a bed at home, or the cabin), and when that was looked at. */
-	private static final Map<CompanionEntity, long[]> SLEEPS_INDOORS = new WeakHashMap<>();
+	/** Friends whose work the alarm has already put down this time (see {@link #callAway}). */
+	private static final Set<UUID> CALLED = new HashSet<>();
+	/** Where each friend's bed is (see {@link #bedShelter}), and when that was looked at. */
+	private record BedRecord(long at, @Nullable String shelter) {
+	}
+
+	private static final Map<CompanionEntity, BedRecord> SLEEPS_INDOORS = new WeakHashMap<>();
 
 	private Duty() {
 	}
@@ -64,6 +75,7 @@ final class Duty {
 		NO_SLEEP.addAll(GuardRota.onDutyIds());
 		if (!Alarm.isActive()) {
 			COVER_FAILS.clear();
+			CALLED.clear();
 			return;
 		}
 		boolean shelters = !Shelters.all(level).isEmpty();
@@ -78,6 +90,7 @@ final class Duty {
 			if (fighter(c)) {
 				if (c != watcher && !GuardRota.isOnDuty(c)) {
 					FIGHTERS.add(id);
+					callAway(c, ToPostsTask.ID);
 				}
 				NO_SLEEP.add(id);
 				continue;
@@ -86,14 +99,41 @@ final class Duty {
 				continue;
 			}
 			boolean bedIndoors = sleepsIndoors(c, level, now);
-			if (night && bedIndoors && (c.isAsleep() || Shelters.indoors(level, c))) {
-				continue; // tucked up indoors already: they sleep on
+			if (night && bedIndoors && (c.isAsleep() || inOwnShelter(c, level, now))) {
+				continue; // tucked up indoors already, where their bed is: they sleep on
 			}
 			COVER.add(id);
+			callAway(c, TakeCoverTask.ID);
 			if (!bedIndoors) {
 				NO_SLEEP.add(id); // their bed is out in the open: indoors they stay until the all-clear
 			}
 		}
+	}
+
+	/**
+	 * Once an alarm, puts down whatever work this friend has in hand so the alarm's job ({@code job}) is chosen next:
+	 * heavy work at the camp's full need scores more than the margin a job needs to take over from it. Their needs
+	 * (a meal, a nap), getting unstuck and the defence's own jobs are left running (the scores sort those out), as is
+	 * anything another package's filter would not let them leave for this job (a shopkeeper serving a player).
+	 */
+	private static void callAway(CompanionEntity c, String job) {
+		if (!CALLED.add(c.getUUID())) {
+			return;
+		}
+		CompanionTask current = c.scheduler().current();
+		if (current == null) {
+			return;
+		}
+		String id = current.id();
+		if (id.startsWith("needs.") || id.startsWith("navigation.") || id.startsWith(Defence.JOB_PREFIX)) {
+			return;
+		}
+		for (BiPredicate<CompanionEntity, String> filter : TaskScheduler.JOB_FILTERS) {
+			if (!filter.test(c, job)) {
+				return;
+			}
+		}
+		c.scheduler().interrupt();
 	}
 
 	/**
@@ -117,17 +157,37 @@ final class Duty {
 
 	/** Their bed is indoors: their own bed in their village home, or the cabin's resting place under its roof. */
 	static boolean sleepsIndoors(CompanionEntity c, ServerLevel level, long now) {
-		long[] known = SLEEPS_INDOORS.get(c);
-		if (known != null && now - known[0] < BED_CHECK && now >= known[0]) {
-			return known[1] != 0;
+		return bedShelter(c, level, now) != null;
+	}
+
+	/** True if this friend is indoors in the shelter where their own bed is (their home, or the cabin). */
+	static boolean inOwnShelter(CompanionEntity c, ServerLevel level, long now) {
+		String bed = bedShelter(c, level, now);
+		Shelters.Shelter here = bed == null ? null : Shelters.containing(level, c);
+		return here != null && here.key().equals(bed);
+	}
+
+	/**
+	 * Which shelter their bed is in: their village home's key ({@code civic.Homes}), the cabin's, or null when they sleep
+	 * out in the open (round the camp centre). Looked at every {@value #BED_CHECK} ticks at most.
+	 */
+	static @Nullable String bedShelter(CompanionEntity c, ServerLevel level, long now) {
+		BedRecord known = SLEEPS_INDOORS.get(c);
+		if (known != null && now - known.at() < BED_CHECK && now >= known.at()) {
+			return known.shelter();
 		}
-		boolean indoors = Homes.get().bedFor(c).isPresent();
-		if (!indoors) {
+		String shelter = null;
+		if (Homes.get().bedFor(c).isPresent()) {
+			shelter = Homes.get().homeOf(level.getServer(), c.getUUID()).map(Homes.Home::id).orElse(null);
+		}
+		if (shelter == null) {
 			BlockPos rest = c.restPos();
-			indoors = level.isLoaded(rest) && !level.canSeeSky(rest.above()) && !rest.equals(c.homePos());
+			if (level.isLoaded(rest) && !level.canSeeSky(rest.above()) && !rest.equals(c.homePos())) {
+				shelter = Structures.CABIN; // the cabin's resting place (CompanionEntity.restPos)
+			}
 		}
-		SLEEPS_INDOORS.put(c, new long[] {now, indoors ? 1 : 0});
-		return indoors;
+		SLEEPS_INDOORS.put(c, new BedRecord(now, shelter));
+		return shelter;
 	}
 
 	/** The job filter: only the sleep job is ever held back (see the class description). */
@@ -163,6 +223,7 @@ final class Duty {
 		COVER.clear();
 		NO_SLEEP.clear();
 		COVER_FAILS.clear();
+		CALLED.clear();
 		SLEEPS_INDOORS.clear();
 	}
 }

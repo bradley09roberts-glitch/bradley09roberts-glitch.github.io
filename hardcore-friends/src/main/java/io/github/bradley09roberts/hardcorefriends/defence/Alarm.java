@@ -43,6 +43,7 @@ import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.companion.Line;
 import io.github.bradley09roberts.hardcorefriends.companion.Speech;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
+import io.github.bradley09roberts.hardcorefriends.town.TownPermissions;
 import io.github.bradley09roberts.hardcorefriends.unity.Unity;
 
 /**
@@ -471,6 +472,7 @@ public final class Alarm {
 		}
 		if (watched.isVictory()) {
 			raidSettled = true;
+			raid = null;
 			int gained = Unity.add(level, UNITY_RAID, RAID_UNITY, RAID_UNITY_CAP);
 			data.addStat("defence.raids_won", 1);
 			CompanionEntity speaker = speaker(level, state);
@@ -483,6 +485,7 @@ public final class Alarm {
 			}
 		} else if (watched.isLoss() || watched.isStopped()) {
 			raidSettled = true;
+			raid = null;
 			data.addStat("defence.raids_lost", 1);
 		}
 	}
@@ -490,12 +493,14 @@ public final class Alarm {
 	// ----------------------------------------------------------- player rings
 
 	/**
-	 * A player used a bell: if it is in the village, remember it, and once the bell is seen shaking (the use rang it)
-	 * the alarm sounds. Never stops the use itself.
+	 * A player used a bell: if it is in the village and the player may give the friends orders (on a shared world, the
+	 * camp's owner and the players they trust), remember it, and once the bell is seen shaking (the use rang it) the
+	 * alarm sounds. Never stops the use itself.
 	 */
 	static InteractionResult bellUsed(Player player, Level world, InteractionHand hand, BlockHitResult hit) {
-		if (!(world instanceof ServerLevel level) || player.isSpectator()) {
-			return InteractionResult.PASS;
+		if (!(world instanceof ServerLevel level) || !(player instanceof ServerPlayer sp) || sp.isSpectator()
+			|| !TownPermissions.isAllowed(sp)) {
+			return InteractionResult.PASS; // a visitor the camp does not trust cannot call everyone indoors
 		}
 		BlockPos pos = hit.getBlockPos();
 		if (!level.isLoaded(pos) || !(level.getBlockState(pos).getBlock() instanceof BellBlock)) {

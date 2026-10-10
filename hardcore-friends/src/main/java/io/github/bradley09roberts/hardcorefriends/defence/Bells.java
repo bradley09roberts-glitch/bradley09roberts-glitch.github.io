@@ -16,8 +16,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.BellBlock;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BellBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 
 import io.github.bradley09roberts.hardcorefriends.ai.task.needs.Spots;
@@ -194,22 +196,44 @@ final class Bells {
 		}
 		BlockPos centre = camp.get();
 		List<int[]> sites = SiteFinder.reservedBoxes(data, "");
+		// Corners of the square first: the village's two main streets cross at the campfire, east-west and north-south.
+		for (int distance = 3; distance <= 6; distance++) {
+			for (int[] d : new int[][] {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}) {
+				int step = Math.max(3, (int) Math.round(distance / Math.sqrt(2)));
+				BlockPos p = squareCandidate(level, data, sites, centre.offset(d[0] * step, 0, d[1] * step));
+				if (p != null) {
+					return p;
+				}
+			}
+		}
 		for (int distance = 3; distance <= 6; distance++) {
 			for (int k = 0; k < 16; k++) {
 				double angle = k * Math.PI / 8;
 				BlockPos column = centre.offset((int) Math.round(Math.cos(angle) * distance), 0, (int) Math.round(Math.sin(angle) * distance));
-				BlockPos p = Spots.standable(level, column);
-				if (p == null || !level.canSeeSky(p) || onSite(p, sites) || nearBlockEntity(level, p)
-					|| WorldEditGuard.looksPlayerBuilt(level, p, 2, data)) {
-					continue;
+				BlockPos p = squareCandidate(level, data, sites, column);
+				if (p != null) {
+					return p;
 				}
-				if (!level.getBlockState(p.below()).isFaceSturdy(level, p.below(), Direction.UP)) {
-					continue;
-				}
-				return p;
 			}
 		}
 		return null;
+	}
+
+	/** A spot in this column for the bell, if it is free, open ground and nobody's: see {@link #squareSpot}. */
+	private static @Nullable BlockPos squareCandidate(ServerLevel level, CampData data, List<int[]> sites, BlockPos column) {
+		if (!level.isLoaded(column)) {
+			return null;
+		}
+		BlockPos p = Spots.standable(level, column);
+		if (p == null || !level.canSeeSky(p) || onSite(p, sites) || nearBlockEntity(level, p)
+			|| WorldEditGuard.looksPlayerBuilt(level, p, 2, data)) {
+			return null;
+		}
+		BlockState floor = level.getBlockState(p.below());
+		if (!floor.isFaceSturdy(level, p.below(), Direction.UP) || floor.is(Blocks.DIRT_PATH) || floor.is(Blocks.GRAVEL)) {
+			return null; // not on a street or a path
+		}
+		return p;
 	}
 
 	private static boolean onSite(BlockPos p, List<int[]> boxes) {
@@ -224,7 +248,7 @@ final class Bells {
 	/** True if a block entity (the campfire, a chest, a door's neighbour bell...) is within a block of the spot. */
 	private static boolean nearBlockEntity(ServerLevel level, BlockPos p) {
 		for (BlockPos q : BlockPos.betweenClosed(p.offset(-1, -1, -1), p.offset(1, 1, 1))) {
-			if (level.getBlockState(q).hasBlockEntity()) {
+			if (!level.isLoaded(q) || level.getBlockState(q).hasBlockEntity()) {
 				return true;
 			}
 		}
