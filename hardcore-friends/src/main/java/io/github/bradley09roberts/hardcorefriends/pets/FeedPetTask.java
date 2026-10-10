@@ -30,12 +30,17 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * An owner feeds their pet from the camp's stock: whenever it is hurt (the food heals it, as when a player feeds their
  * pet), and otherwise as a treat every other day. A cat gets raw fish; a dog rotten flesh first, else raw meat, never
  * the cooked food the friends eat themselves. One piece at a time, fetched from the chest if not carried. Children see
- * to their own pets too: it changes no block and keeps them in the camp.
+ * to their own pets too, before their games (it changes no block and keeps them in the camp); grown-ups in the spare
+ * time between jobs. A pet that cannot be reached is left a few minutes before anyone tries again.
  */
 final class FeedPetTask implements CompanionTask {
 	static final String ID = "pets.feed";
 	private static final double HURT_SCORE = 34;
 	private static final double TREAT_SCORE = 14;
+	/** What a child adds: a child sees to their pet before their games, a grown-up after their work. */
+	private static final double CHILD_BONUS = 22;
+	/** A pet that could not be reached is left for this long before anyone tries to feed it again. */
+	private static final int UNREACHABLE_TICKS = 20 * 300;
 	/** Days between treats for a pet that is not hurt. */
 	private static final int TREAT_DAYS = 2;
 	private static final double RANGE = 32;
@@ -48,6 +53,7 @@ final class FeedPetTask implements CompanionTask {
 
 	private Phase phase = Phase.CHEST;
 	private @Nullable TamableAnimal pet;
+	private long unreachableUntil = Long.MIN_VALUE / 2;
 	private final EntityApproach approach = new EntityApproach();
 
 	@Override
@@ -84,7 +90,10 @@ final class FeedPetTask implements CompanionTask {
 		if (c.backpack().count(kind.treat()) < 1 && Workbench.stock(level, "treat." + kind.key(), kind.treat()) < 1) {
 			return 0;
 		}
-		return hurt ? HURT_SCORE : TREAT_SCORE;
+		if (level.getGameTime() < unreachableUntil) {
+			return 0;
+		}
+		return (hurt ? HURT_SCORE : TREAT_SCORE) + (c.isChild() ? CHILD_BONUS : 0);
 	}
 
 	@Override
@@ -129,7 +138,11 @@ final class FeedPetTask implements CompanionTask {
 			return TaskStatus.RUNNING;
 		}
 		if (!approach.walk(c, a, FEED_REACH)) {
-			return approach.isStuck() ? TaskStatus.FAILURE : TaskStatus.RUNNING;
+			if (approach.isStuck()) {
+				unreachableUntil = level.getGameTime() + UNREACHABLE_TICKS;
+				return TaskStatus.FAILURE;
+			}
+			return TaskStatus.RUNNING;
 		}
 		c.getLookControl().setLookAt(a);
 		ItemStack food = c.backpack().take(kind.treat(), 1);

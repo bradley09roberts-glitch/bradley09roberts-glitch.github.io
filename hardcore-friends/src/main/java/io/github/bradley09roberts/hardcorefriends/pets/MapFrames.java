@@ -146,7 +146,7 @@ final class MapFrames {
 		}
 		BlockPos wall = spot.wall();
 		BlockState wallState = level.getBlockState(wall);
-		if (!wallState.isSolid() || wallState.hasBlockEntity() || !data.isPlacedByFriends(level, wall)) {
+		if (!wallState.isFaceSturdy(level, wall, spot.facing()) || wallState.hasBlockEntity() || !data.isPlacedByFriends(level, wall)) {
 			return false;
 		}
 		for (Direction d : Direction.values()) {

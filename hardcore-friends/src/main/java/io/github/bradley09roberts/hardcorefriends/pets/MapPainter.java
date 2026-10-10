@@ -25,7 +25,7 @@ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
  * shading and water depth) with the friend as the one holding it, and two differences that keep it safe: it only
  * looks at chunks that are already loaded (a friend never makes the game load or generate land just to draw it), and
  * it draws a smaller circle round the friend ({@code radius} blocks), one sixteenth of the columns per call, so each
- * call costs a few hundred block lookups. Maps of dimensions with a ceiling (the Nether) are not drawn.
+ * call costs about a thousand block lookups at most. Maps of dimensions with a ceiling (the Nether) are not drawn.
  */
 final class MapPainter {
 	private MapPainter() {
@@ -51,12 +51,12 @@ final class MapPainter {
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		BlockPos.MutableBlockPos below = new BlockPos.MutableBlockPos();
 		boolean changed = false;
-		boolean consecutive = false;
 		for (int imgX = holderX - radius + 1; imgX < holderX + radius; imgX++) {
-			if ((imgX & 15) != (step & 15) && !consecutive) {
+			// One column in sixteen per call. (The game also redraws the next column after one that changed, which on
+			// fresh land redraws the whole circle at once; left out, so every call costs about the same.)
+			if ((imgX & 15) != (step & 15)) {
 				continue;
 			}
-			consecutive = false;
 			double previousHeight = 0.0;
 			for (int imgY = holderY - radius - 1; imgY < holderY + radius; imgY++) {
 				if (imgX < 0 || imgY < -1 || imgX >= 128 || imgY >= 128) {
@@ -115,9 +115,7 @@ final class MapPainter {
 				}
 				previousHeight = averageHeight;
 				if (imgY >= 0 && distSqr < radius * radius && (!ditherBlack || (imgX + imgY & 1) != 0)) {
-					boolean now = data.updateColor(imgX, imgY, colour.getPackedId(brightness));
-					consecutive |= now;
-					changed |= now;
+					changed |= data.updateColor(imgX, imgY, colour.getPackedId(brightness));
 				}
 			}
 		}

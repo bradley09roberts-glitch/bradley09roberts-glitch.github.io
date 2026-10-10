@@ -72,9 +72,16 @@ final class PetEvents {
 			if (kind == null) {
 				return;
 			}
-			// Known by its tag but not on the list (the list was lost): take it back on as a pet of the camp.
-			PetsData.Pet p = data.newPet(a.getUUID(), kind, a.hasCustomName() ? a.getCustomName().getString() : "Pet");
+			// Known by its tag but not on the list (the list was lost): back to its owner if they are here and have no
+			// other pet, else a pet of the camp.
+			PetsData.Pet p = data.newPet(a.getUUID(), kind, a.hasCustomName() && a.getCustomName() != null ? a.getCustomName().getString() : "Pet");
 			p.adoptedDay = Camp.day(level);
+			EntityReference<LivingEntity> was = a.getOwnerReference();
+			CompanionEntity owner = was == null ? null : Pets.companion(level.getServer(), was.getUUID());
+			if (owner != null && owner.isTeamMember() && data.petOf(owner.getUUID()).isEmpty()) {
+				p.owner = owner.getUUID();
+				p.ownerName = owner.displayName();
+			}
 			record = Optional.of(p);
 		}
 		PetsData.Pet p = record.get();
@@ -97,10 +104,12 @@ final class PetEvents {
 			return;
 		}
 		LOADED.remove(a);
-		PetsData.get(level.getServer()).pet(a.getUUID()).ifPresent(p -> {
+		PetsData data = PetsData.get(level.getServer());
+		data.pet(a.getUUID()).ifPresent(p -> {
 			p.dimension = Camp.dimensionId(level);
 			p.lastPos = a.blockPosition();
 			p.lastSeen = level.getGameTime();
+			data.setDirty();
 		});
 	}
 
@@ -251,6 +260,7 @@ final class PetEvents {
 				p.lastPos = a.blockPosition();
 				p.lastSeen = level.getGameTime();
 				p.missing = 0;
+				data.setDirty(); // where it was last seen is saved with the world
 				PetBrain.think(level, a, p);
 			}
 		}

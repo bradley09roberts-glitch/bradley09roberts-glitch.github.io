@@ -48,19 +48,21 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * a player built or inside a player's fences ({@link Wildlife}), an angry or young wolf, or one where a friend died
  * lately. A child only takes in a cat (or the camp's own pet) inside the camp. Nobody adopts unless pets are on, the
  * person has none, the camp keeps fewer than {@code maxPets}, and the camp has a home for the pet ({@link Pets#hasHomeFor}).
- * Children score this above their play; grown-ups only when they have little else to do.
+ * Children score this above their everyday play (only being asked to play comes first); a parent finding a pet for
+ * their child, in the spare time between jobs; a grown-up for themselves only when they have little else to do. An
+ * animal that cannot be reached is left alone for a few minutes, so nobody keeps walking at it.
  */
 final class AdoptTask implements CompanionTask {
 	static final String ID = "pets.adopt";
-	private static final double CHILD_SCORE = 26;
-	private static final double FOR_CHILD_SCORE = 24;
+	private static final double CHILD_SCORE = 58;
+	private static final double FOR_CHILD_SCORE = 30;
 	private static final double GROWN_UP_SCORE = 12;
 	private static final int PLAN_INTERVAL = 60;
 	private static final int SCAN_INTERVAL = 200;
 	private static final int FEED_GAP = 25;
 	private static final double FEED_REACH = 2.0;
 	private static final int FOOD_TAKEN = 5;
-	private static final int IGNORE_TICKS = 2400;
+	private static final int IGNORE_TICKS = 20 * 300;
 
 	/** The team's look at the strays round the camp, per dimension, refreshed every {@value #SCAN_INTERVAL} ticks. */
 	private static final class Seen {
@@ -156,6 +158,7 @@ final class AdoptTask implements CompanionTask {
 	/** The nearest animal this friend may adopt for {@code forWhom}, with the food for it carried or in the chest. */
 	private @Nullable Plan choose(CompanionEntity c, ServerLevel level, CompanionEntity forWhom) {
 		PetsData data = PetsData.get(level.getServer());
+		boolean full = Pets.atCap(level.getServer());
 		Plan best = null;
 		double bestDist = Double.MAX_VALUE;
 		for (TamableAnimal a : seen(c, level)) {
@@ -167,7 +170,7 @@ final class AdoptTask implements CompanionTask {
 				continue;
 			}
 			boolean campPet = Pets.isPet(a) && data.pet(a.getUUID()).map(p -> p.owner == null).orElse(false);
-			if (campPet ? !campPetMayGo(c, a) : !mayTame(c, a, kind)) {
+			if (campPet ? !campPetMayGo(c, a) : full || !mayTame(c, a, kind)) {
 				continue;
 			}
 			if (!campPet && !hasFood(c, level, kind)) {
@@ -299,7 +302,11 @@ final class AdoptTask implements CompanionTask {
 			}
 			case APPROACH -> {
 				if (!approach.walk(c, a, FEED_REACH)) {
-					return approach.isStuck() ? TaskStatus.FAILURE : TaskStatus.RUNNING;
+					if (approach.isStuck()) {
+						ignored.put(a.getUUID(), level.getGameTime() + IGNORE_TICKS); // out of reach: leave it a while
+						return TaskStatus.FAILURE;
+					}
+					return TaskStatus.RUNNING;
 				}
 				if (p.campPet()) {
 					return adopt(c, level, p) ? TaskStatus.SUCCESS : TaskStatus.FAILURE;

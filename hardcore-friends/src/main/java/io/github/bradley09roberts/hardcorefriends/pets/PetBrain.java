@@ -22,6 +22,7 @@ import net.minecraft.world.entity.ai.goal.FollowOwnerGoal;
 import net.minecraft.world.entity.ai.goal.PanicGoal;
 import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
@@ -84,6 +85,8 @@ final class PetBrain {
 	/** The owner counts as about the camp within this many blocks beyond its edge (more once already following). */
 	private static final int FOLLOW_MARGIN = 4;
 	private static final int KEEP_FOLLOWING_MARGIN = 16;
+	/** A pet that cannot find its way is only fetched while within this many blocks of the camp's edge. */
+	private static final int NEAR_CAMP = 48;
 
 	private static final Map<TamableAnimal, State> STATES = new WeakHashMap<>();
 	private static final Set<TamableAnimal> INSTALLED = Collections.newSetFromMap(new WeakHashMap<>());
@@ -133,6 +136,13 @@ final class PetBrain {
 	static void think(ServerLevel level, TamableAnimal pet, PetsData.Pet record) {
 		State s = state(pet);
 		long now = level.getGameTime();
+		// A player may give a pet a new name with a name tag: the camp calls it by that from then on.
+		if (pet.hasCustomName() && pet.getCustomName() != null) {
+			String name = pet.getCustomName().getString();
+			if (!name.isBlank() && !name.equals(record.name) && name.length() <= 32) {
+				record.name = name;
+			}
+		}
 		if (!pet.isTame() || pet.isLeashed() || pet.isPassenger() || pet.isVehicle()) {
 			s.plan = Plan.NONE;
 			return;
@@ -261,7 +271,10 @@ final class PetBrain {
 		return base;
 	}
 
-	/** Loaded, open for a small animal, on a solid floor that is not fire, a campfire or water. */
+	/**
+	 * Loaded, open for a small animal, on a solid floor that is not fire, a campfire or water, and not a pressure plate
+	 * (a pet sitting on one all night would hold Spark's automatic door open).
+	 */
 	static boolean standable(ServerLevel level, BlockPos p) {
 		if (!level.isLoaded(p) || !level.isLoaded(p.below())) {
 			return false;
@@ -269,6 +282,7 @@ final class PetBrain {
 		BlockState here = level.getBlockState(p);
 		BlockState floor = level.getBlockState(p.below());
 		return here.getCollisionShape(level, p).isEmpty() && here.getFluidState().isEmpty() && !here.is(BlockTags.FIRE)
+			&& !here.is(BlockTags.PRESSURE_PLATES) && !here.is(Blocks.TRIPWIRE) && !here.is(BlockTags.DOORS)
 			&& !here.is(BlockTags.CAMPFIRES) && !floor.is(BlockTags.CAMPFIRES) && !floor.is(BlockTags.FIRE)
 			&& floor.isFaceSturdy(level, p.below(), Direction.UP)
 			&& level.getBlockState(p.above()).getCollisionShape(level, p.above()).isEmpty();
@@ -300,8 +314,8 @@ final class PetBrain {
 	 * brings a pet to its player. Only onto loaded ground, never into a wall or water.
 	 */
 	static boolean teleportNear(TamableAnimal pet, BlockPos target) {
-		if (!(pet.level() instanceof ServerLevel level) || !level.isLoaded(target)) {
-			return false;
+		if (!(pet.level() instanceof ServerLevel level) || !level.isLoaded(target) || !nearCamp(level, pet.blockPosition())) {
+			return false; // a pet far out in the wilds (led off by a player, say) walks home; it is never fetched from afar
 		}
 		var random = pet.getRandom();
 		for (int attempt = 0; attempt < 10; attempt++) {
@@ -335,5 +349,11 @@ final class PetBrain {
 	static boolean inCamp(ServerLevel level, BlockPos pos) {
 		CampData data = Camp.data(level.getServer());
 		return Camp.isCampLevel(level, data) && data.campPos().map(c -> aboutCamp(level, c, pos, KEEP_FOLLOWING_MARGIN)).orElse(false);
+	}
+
+	/** True if the spot lies in the camp or its gathering ring (where a lost pet may still be fetched home from). */
+	private static boolean nearCamp(ServerLevel level, BlockPos pos) {
+		CampData data = Camp.data(level.getServer());
+		return Camp.isCampLevel(level, data) && data.campPos().map(c -> aboutCamp(level, c, pos, NEAR_CAMP)).orElse(false);
 	}
 }

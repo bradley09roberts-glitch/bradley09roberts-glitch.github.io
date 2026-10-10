@@ -150,10 +150,11 @@ public final class Pets {
 
 	/**
 	 * True if this person may have a pet now: pets are on, they are on the team (working, not off following a player),
-	 * they have none, the camp has room for one more and a home for it.
+	 * they have none, and the camp has a home for it. (Whether the camp has room for one more is asked separately: a
+	 * pet of the whole camp may always be taken in.)
 	 */
 	static boolean mayHavePet(MinecraftServer server, CompanionEntity who) {
 		return FriendsConfig.get().pets && who.isAlive() && who.isTeamMember() && who.mode() == CompanionMode.WORK
-			&& PetsData.get(server).petOf(who.getUUID()).isEmpty() && !atCap(server) && hasHomeFor(server, who.getUUID());
+			&& PetsData.get(server).petOf(who.getUUID()).isEmpty() && hasHomeFor(server, who.getUUID());
 	}
 }

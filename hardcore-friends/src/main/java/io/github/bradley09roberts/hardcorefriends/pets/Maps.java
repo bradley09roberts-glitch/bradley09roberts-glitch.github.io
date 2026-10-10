@@ -264,7 +264,7 @@ final class Maps {
 
 	/** Every tick of every friend: the map maker draws in what they carry, and sees to their maps now and then. */
 	static void tick(CompanionEntity c, ServerLevel level) {
-		if (!isExplorer(c)) {
+		if (!isExplorer(c) || !FriendsConfig.get().scoutMaps) {
 			return;
 		}
 		int phase = c.tickCount + c.getId();
@@ -375,6 +375,24 @@ final class Maps {
 		int distance = (int) Math.round(Math.sqrt((double) dx * dx + dz * dz) / 50.0) * 50;
 		String shows = "the land " + distance + " blocks " + Compass.direction(dx, dz) + " of the camp";
 		start(c, at, TRIP_SCALE, shows, false);
+	}
+
+	/**
+	 * The map of the camp where it is now, unless it was lost. A camp moved elsewhere ({@code /friends camp set}) is
+	 * off its old map, so it gets a new one.
+	 */
+	static Optional<MapRecord> campMapHere(ServerLevel level) {
+		Optional<BlockPos> centre = Camp.center(level);
+		if (centre.isEmpty()) {
+			return Optional.empty();
+		}
+		String dim = Camp.dimensionId(level);
+		for (MapRecord m : PetsData.get(level.getServer()).maps()) {
+			if (m.camp && m.state != MapState.GONE && m.covers(dim, centre.get().getX(), centre.get().getZ())) {
+				return Optional.of(m);
+			}
+		}
+		return Optional.empty();
 	}
 
 	/** Starts the map of the camp from one of the maker's empty maps. */

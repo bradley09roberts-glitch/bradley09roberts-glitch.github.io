@@ -33,6 +33,8 @@ final class MakeMapTask implements CompanionTask {
 	private static final double SPARE_SCORE = 24;
 	private static final int PLAN_INTERVAL = 200;
 	private static final String SHORT_SAID = "pets.maps_short_day";
+	/** Days between reminders that the camp has nothing to make its first map from. */
+	private static final int SHORT_EVERY_DAYS = 5;
 
 	private enum Phase {
 		CHEST,
@@ -73,7 +75,7 @@ final class MakeMapTask implements CompanionTask {
 
 	private static double plan(CompanionEntity c, ServerLevel level) {
 		PetsData data = PetsData.get(level.getServer());
-		boolean campMap = data.campMap().isEmpty();
+		boolean campMap = Maps.campMapHere(level).isEmpty();
 		boolean spare = !campMap && Trips.allowed() && c.backpack().count(Workbench.EMPTY_MAP) < 1
 			&& data.carriedBy(c.getUUID()).stream().noneMatch(m -> m.state == MapState.DRAWING && !m.camp);
 		if (!campMap && !spare) {
@@ -95,10 +97,11 @@ final class MakeMapTask implements CompanionTask {
 		return campMap ? CAMP_MAP_SCORE : SPARE_SCORE;
 	}
 
-	/** The camp has no map yet and nothing to make one with: the maker says so, at most once a day. */
+	/** The camp has no map yet and nothing to make one with: the maker says so, at most every few days. */
 	private static void sayShort(CompanionEntity c, ServerLevel level) {
 		long day = Camp.day(level);
-		if (c.extra().getLongOr(SHORT_SAID, -1L) != day) {
+		long said = c.extra().getLongOr(SHORT_SAID, Long.MIN_VALUE / 2);
+		if (day - said >= SHORT_EVERY_DAYS || day < said) {
 			c.extra().putLong(SHORT_SAID, day);
 			Speech.say(c, Line.MAP_NO_PAPER);
 		}
@@ -162,8 +165,7 @@ final class MakeMapTask implements CompanionTask {
 				return TaskStatus.RUNNING;
 			}
 			case MAKE -> {
-				PetsData data = PetsData.get(level.getServer());
-				if (data.campMap().isEmpty() && !Maps.startCampMap(c)) {
+				if (Maps.campMapHere(level).isEmpty() && !Maps.startCampMap(c)) {
 					return TaskStatus.FAILURE;
 				}
 				return TaskStatus.SUCCESS;
