@@ -39,7 +39,8 @@ import io.github.bradley09roberts.hardcorefriends.world.WorldEditGuard;
  * the village, the town hall or another public building (the tavern, the chapel, the school), else the camp's cabin.
  * Each shelter has a spot to stand inside it (the plan's {@code inside} spot, else a seat or a table), away from the
  * windows where there is a choice, and the door in front of it. The list is worked out at most every
- * {@value #REFRESH} ticks, and only while it is wanted (an alarm, a command).
+ * {@value #REFRESH} ticks, and only while it is wanted (an alarm, a command); again a few seconds later when a
+ * building's spots were not loaded yet (the world just opened), so a shelter is not missed for want of a look.
  *
  * <p>A shelter is never chosen towards danger: not one with a hostile seen lately within {@value #KEEP_OFF} blocks of
  * it (a creeper within {@value Alarm#CREEPER_CLEARANCE}), nor one whose straight way there passes a hostile standing
@@ -55,6 +56,8 @@ final class Shelters {
 	}
 
 	private static final int REFRESH = 20 * 30;
+	/** A look taken while a shelter's spots were not loaded is taken again this soon. */
+	private static final int RETRY = 20 * 2;
 	/** Shelters further than this from a friend are too far to run to. */
 	private static final double MAX_DISTANCE = 64;
 	private static final double KEEP_OFF = 6;
@@ -66,6 +69,8 @@ final class Shelters {
 	private static List<Shelter> cache = List.of();
 	/** "Never" is half of {@code Long.MIN_VALUE}, so {@code now - cachedAt} cannot overflow. */
 	private static long cachedAt = Long.MIN_VALUE / 2;
+	/** Set by {@link #find} when a shelter was passed over because its spots were not loaded. */
+	private static boolean partial;
 
 	private Shelters() {
 	}
@@ -77,7 +82,11 @@ final class Shelters {
 			return cache;
 		}
 		cachedAt = now;
+		partial = false;
 		cache = find(level);
+		if (partial) {
+			cachedAt = now - REFRESH + RETRY; // a shelter's spots were not loaded yet: look again soon
+		}
 		return cache;
 	}
 
@@ -117,6 +126,7 @@ final class Shelters {
 			}
 			// The cabin's middle, as the friends' resting place has it (CompanionEntity.restPos).
 			BlockPos inside = Blueprint.worldPos(site.get().origin, site.get().rotation, 3, 1, 4);
+			partial |= !level.isLoaded(inside);
 			if (Spots.isStandable(level, inside) && !level.canSeeSky(inside.above())) {
 				list.add(new Shelter(cabin, "the cabin", inside, null, Set.of()));
 			}
@@ -127,10 +137,15 @@ final class Shelters {
 	/** A spot inside a building: the first of its marked spots with room to stand under its roof, away from windows if possible. */
 	private static @Nullable BlockPos spotIn(ServerLevel level, VillagePlan.Building b, String... markers) {
 		BlockPos fallback = null;
+		boolean unloaded = false;
 		for (String marker : markers) {
 			for (BlockPos p : b.marker(marker)) {
 				for (BlockPos q : new BlockPos[] {p, p.north(), p.south(), p.east(), p.west(), p.above()}) {
-					if (!level.isLoaded(q) || !Spots.isStandable(level, q) || level.canSeeSky(q.above())) {
+					if (!level.isLoaded(q)) {
+						unloaded = true;
+						continue;
+					}
+					if (!Spots.isStandable(level, q) || level.canSeeSky(q.above())) {
 						continue;
 					}
 					if (!besideWindow(level, q)) {
@@ -142,6 +157,7 @@ final class Shelters {
 				}
 			}
 		}
+		partial |= fallback == null && unloaded; // passed over for want of a look: try again soon
 		return fallback;
 	}
 
@@ -268,5 +284,6 @@ final class Shelters {
 	static void clear() {
 		cache = List.of();
 		cachedAt = Long.MIN_VALUE / 2;
+		partial = false;
 	}
 }

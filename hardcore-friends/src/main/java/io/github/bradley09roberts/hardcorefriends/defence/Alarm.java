@@ -140,6 +140,12 @@ public final class Alarm {
 	static final int ALL_CLEAR = 20 * 30;
 	static final int MIN_ALARM = 20 * 30;
 	static final int MAX_ALARM = 20 * 60 * 5;
+	/**
+	 * Longer than any alarm rings: the game gives up on a raid after 40 minutes, and every other alarm ends within
+	 * {@value #MAX_ALARM} ticks. The time limit of the jobs that last the whole alarm (taking cover, standing at a post),
+	 * which end themselves at the all-clear, so a long raid never times them out and lets other work in for a moment.
+	 */
+	static final int LONGEST_ALARM = 20 * 60 * 45;
 	/** A player's ring sounds the alarm again at most this often. */
 	private static final int PLAYER_RING_GAP = 20 * 30;
 	/** Nobody is sent to a bell with a creeper this close to it. */

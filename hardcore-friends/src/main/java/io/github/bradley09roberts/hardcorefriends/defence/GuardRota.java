@@ -38,10 +38,13 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  * from midnight to dawn, each with up to {@code guardsPerShift} guards (no more than there are posts). A guard is a
  * grown-up at work in the village, fit (healthy, not too tired, not too weak) and armed with a sword, an axe or a bow;
  * chosen in this order: the guard trade (should the market give it), warriors, those who did not stand guard last
- * night, the best weapon, the most health, and the roster. Nobody keeps both shifts, and the friend on the watch is
- * never a guard as well. A bow carrier takes the watchtower lookout when it is free; the others the gate, then the
- * walls. A guard stays on until their shift ends unless they stop being fit, or could not reach their post
- * {@value #TRIES} times; then someone else takes the post.
+ * night, the best weapon, the most health, and the roster. Nobody keeps both shifts (everyone who stood any part of
+ * the first is let off the second, and {@link #stoodFirstShift} keeps them off the night watch's second half too), and
+ * the friend on the watch is never a guard as well. A bow carrier takes the watchtower lookout when it is free; the
+ * others the gate, then the walls. A guard stays on until their shift ends unless they stop being fit, or could not
+ * reach their post {@value #TRIES} times; then someone else takes the post, and the one relieved is not picked again
+ * that night. Taking a post needs more energy ({@value #FRESH}) than keeping one ({@value #TOO_TIRED}), so a guard
+ * relieved worn out is not woken for the post again as soon as a short sleep lifts them over the line.
  *
  * <p>Guards are paid in respect: in the morning the camp gains {@value #PAY} Unity for each who stood guard (at most
  * {@value #PAY_CAP} a day), and they may nap during the day ({@link GuardRestTask}). Who stood which shift is
@@ -49,11 +52,18 @@ import io.github.bradley09roberts.hardcorefriends.unity.Unity;
  */
 final class GuardRota {
 	static final String MEMORY = "defence.guards";
+	/** Everyone who stood any part of tonight's first shift, in {@link #MEMORY}. */
+	private static final String FIRST_SERVED = "first";
+	/** Guards relieved tonight (hurt, worn out, stuck, gone off): not picked again until tomorrow night. */
+	private static final String RELIEVED = "relieved";
 	static final String UNITY_GUARD = "guard";
 	private static final int PAY = 2;
 	private static final int PAY_CAP = 8;
 	private static final int TRIES = 3;
+	/** Below this energy a guard is relieved. */
 	private static final double TOO_TIRED = 20;
+	/** A friend needs this much energy to be picked for a post. */
+	private static final double FRESH = 35;
 	/** A guard further than this beyond the village's edge is not at the village. */
 	private static final int AWAY = 16;
 	/** A guard within this distance of a high post's stand is up there (and shoots from it). */
@@ -117,6 +127,24 @@ final class GuardRota {
 		return keys(mem.getStringOr("served", "")).contains(key(c));
 	}
 
+	/**
+	 * True when this friend stood guard in tonight's first shift, any part of it: they sleep the second half of the
+	 * night, so the night watch does not pick them for its second watch either (a {@link NightWatch#EXCUSED} rule).
+	 */
+	static boolean stoodFirstShift(CompanionEntity c, ServerLevel level) {
+		CampData data = Camp.data(level.getServer());
+		if (!Camp.isCampLevel(level, data)) {
+			return false;
+		}
+		CompoundTag mem = data.memory(MEMORY);
+		if (mem.getLongOr("night", Long.MIN_VALUE) != NightWatch.nightIndex(level)) {
+			return false;
+		}
+		String k = key(c);
+		return keys(mem.getStringOr(FIRST_SERVED, "")).contains(k)
+			|| parse(mem.getStringOr(NightWatch.Watch.FIRST.name(), "")).containsKey(k);
+	}
+
 	/** The guard could not get to their post: after {@value #TRIES} tries someone else takes it. */
 	static void failed(CompanionEntity c) {
 		FAILS.merge(c.getUUID(), 1, Integer::sum);
@@ -146,6 +174,8 @@ final class GuardRota {
 			boolean lastNight = mem.getLongOr("night", Long.MIN_VALUE) == night - 1;
 			mem.putString("prev", lastNight ? mem.getStringOr("served", "") : "");
 			mem.putString("served", "");
+			mem.putString(FIRST_SERVED, "");
+			mem.putString(RELIEVED, "");
 			mem.putString(NightWatch.Watch.FIRST.name(), "");
 			mem.putString(NightWatch.Watch.SECOND.name(), "");
 			mem.putBoolean("paid", false);
@@ -162,19 +192,33 @@ final class GuardRota {
 		Map<String, Integer> kept = new LinkedHashMap<>();
 		Map<UUID, Posts.Post> duty = new HashMap<>();
 		Set<Integer> taken = new HashSet<>();
+		Set<String> relieved = keys(mem.getStringOr(RELIEVED, ""));
+		boolean newlyRelieved = false;
 		for (Map.Entry<String, Integer> e : parse(mem.getStringOr(watch.name(), "")).entrySet()) {
 			CompanionEntity g = byKey(team, e.getKey());
 			int post = e.getValue();
-			if (g != null && post >= 0 && post < posts.size() && fit(g, level, centre, reach) && FAILS.getOrDefault(g.getUUID(), 0) < TRIES
-				&& !NightWatch.isOnWatch(g) && taken.add(post)) {
+			if (g == null) {
+				continue;
+			}
+			if (!fit(g, level, centre, reach, TOO_TIRED) || FAILS.getOrDefault(g.getUUID(), 0) >= TRIES) {
+				newlyRelieved |= relieved.add(e.getKey()); // hurt, worn out, stuck or gone off: done for the night
+				continue;
+			}
+			if (post >= 0 && post < posts.size() && !NightWatch.isOnWatch(g) && taken.add(post)) {
 				kept.put(e.getKey(), post);
 				duty.put(g.getUUID(), posts.get(post));
 			}
 		}
+		if (newlyRelieved) {
+			mem.putString(RELIEVED, String.join(",", relieved));
+			data.setDirty();
+		}
 		int wanted = Math.min(posts.size(), cfg.guardsPerShift);
 		if (kept.size() < wanted) {
-			Set<String> resting = new HashSet<>();
+			Set<String> resting = new HashSet<>(relieved);
 			if (watch == NightWatch.Watch.SECOND) {
+				// Everyone who stood any part of the first shift sleeps the second.
+				resting.addAll(keys(mem.getStringOr(FIRST_SERVED, "")));
 				resting.addAll(parse(mem.getStringOr(NightWatch.Watch.FIRST.name(), "")).keySet());
 				// The first watch's keeper sleeps the second half of the night too (the rota's memory, same keys).
 				resting.add(data.memory(NightWatch.MEMORY).getStringOr(NightWatch.Watch.FIRST.name(), ""));
@@ -184,7 +228,7 @@ final class GuardRota {
 			for (CompanionEntity g : team) {
 				String k = key(g);
 				if (!kept.containsKey(k) && !resting.contains(k) && !NightWatch.isOnWatch(g)
-					&& FAILS.getOrDefault(g.getUUID(), 0) < TRIES && fit(g, level, centre, reach)) {
+					&& FAILS.getOrDefault(g.getUUID(), 0) < TRIES && fit(g, level, centre, reach, FRESH)) {
 					pool.add(g);
 				}
 			}
@@ -214,18 +258,26 @@ final class GuardRota {
 			Set<String> served = keys(mem.getStringOr("served", ""));
 			served.addAll(kept.keySet());
 			mem.putString("served", String.join(",", served));
+			if (watch == NightWatch.Watch.FIRST) {
+				Set<String> first = keys(mem.getStringOr(FIRST_SERVED, ""));
+				first.addAll(kept.keySet());
+				mem.putString(FIRST_SERVED, String.join(",", first));
+			}
 			data.setDirty();
 		}
 		ON_DUTY.clear();
 		ON_DUTY.putAll(duty);
 	}
 
-	/** Fit to stand guard: grown up, at work at the village, armed, healthy, and neither too tired nor too weak. */
-	private static boolean fit(CompanionEntity c, ServerLevel level, BlockPos centre, int reach) {
+	/**
+	 * Fit to stand guard: grown up, at work at the village, armed, healthy, not too weak, and with at least
+	 * {@code energy} (more to take a post than to keep one).
+	 */
+	private static boolean fit(CompanionEntity c, ServerLevel level, BlockPos centre, int reach, double energy) {
 		if (!c.isAlive() || c.isRemoved() || c.level() != level || c.mode() != CompanionMode.WORK || c.isChild() || !c.isTeamMember()) {
 			return false;
 		}
-		if (c.tooWeakToWork() || !c.isHealthy() || c.needs().get(Need.ENERGY) < TOO_TIRED || c.isRetreating()) {
+		if (c.tooWeakToWork() || !c.isHealthy() || c.needs().get(Need.ENERGY) < energy || c.isRetreating()) {
 			return false;
 		}
 		if (!c.isArmed() && !Archery.canShoot(c)) {

@@ -116,6 +116,6 @@ final class ToPostsTask implements CompanionTask {
 
 	@Override
 	public int maxTicks() {
-		return 20 * 60 * 6;
+		return Alarm.LONGEST_ALARM; // it ends itself at the all-clear, however long a raid lasts
 	}
 }

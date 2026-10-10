@@ -21,7 +21,9 @@ import io.github.bradley09roberts.hardcorefriends.village.VillagePlan;
  * of each watchtower ({@code civic:watchtower}'s {@code lookout} spots), each town gate (beside the way through, its
  * {@code gate} spot), and each length of town wall (on the village side of its middle, half way between its two
  * {@code join} ends). Each post has a short patrol: a gate's runs up the street into the village, a wall's along the
- * inside of the wall to its ends; the lookout has none (the guard stays up there). Worked out at most once a minute.
+ * inside of the wall to its ends; the lookout has none (the guard stays up there). Worked out at most once a minute,
+ * or again a few seconds later when a post's spot was not loaded yet (the world just opened), so the guards are not
+ * stood down for a minute for want of a look.
  *
  * <p>When the alarm rings, fighters go to the post nearest the danger that is not right on top of it, or, before the
  * village has any, to the bell or the camp centre ({@link #alarmPost}); never within {@value Alarm#CREEPER_CLEARANCE}
@@ -33,6 +35,8 @@ final class Posts {
 	}
 
 	private static final int REFRESH = 20 * 60;
+	/** A look taken while a post's spot was not loaded is taken again this soon. */
+	private static final int RETRY = 20 * 2;
 	/** A fighter is not sent to a post closer than this to the danger itself. */
 	private static final double FRONT = 4;
 	/** Nor to one whose straight way there passes this close to a creeper. */
@@ -41,6 +45,8 @@ final class Posts {
 	private static List<Post> cache = List.of();
 	/** "Never" is half of {@code Long.MIN_VALUE}, so {@code now - cachedAt} cannot overflow. */
 	private static long cachedAt = Long.MIN_VALUE / 2;
+	/** Set by {@link #find} when a post's spot was not loaded, so the list may be short. */
+	private static boolean partial;
 
 	private Posts() {
 	}
@@ -52,7 +58,11 @@ final class Posts {
 			return cache;
 		}
 		cachedAt = now;
+		partial = false;
 		cache = find(level);
+		if (partial) {
+			cachedAt = now - REFRESH + RETRY; // a post's spot was not loaded yet: look again soon
+		}
 		return cache;
 	}
 
@@ -66,6 +76,7 @@ final class Posts {
 		BlockPos centre = data.campPos().orElseThrow();
 		for (VillagePlan.Building tower : VillagePlan.buildingsOfKind(server, "civic:watchtower")) {
 			for (BlockPos p : tower.marker("lookout")) {
+				partial |= !level.isLoaded(p);
 				if (level.isLoaded(p) && Spots.isStandable(level, p)) {
 					posts.add(new Post("the watchtower lookout", p.immutable(), true, List.of()));
 					break;
@@ -78,6 +89,7 @@ final class Posts {
 			if (way == null || ends.size() < 2) {
 				continue;
 			}
+			partial |= !level.isLoaded(way);
 			int[] along = axis(ends.get(0), ends.get(1));
 			int[] in = inward(way, along, centre);
 			BlockPos stand = standable(level, way.offset(2 * along[0], 0, 2 * along[1]));
@@ -104,6 +116,7 @@ final class Posts {
 			BlockPos a = ends.get(0);
 			BlockPos b = ends.get(1);
 			BlockPos mid = new BlockPos((a.getX() + b.getX()) / 2, (a.getY() + b.getY()) / 2, (a.getZ() + b.getZ()) / 2);
+			partial |= !level.isLoaded(mid);
 			int[] in = inward(mid, axis(a, b), centre);
 			BlockPos stand = standable(level, mid.offset(2 * in[0], 0, 2 * in[1]));
 			if (stand == null) {
@@ -220,5 +233,6 @@ final class Posts {
 	static void clear() {
 		cache = List.of();
 		cachedAt = Long.MIN_VALUE / 2;
+		partial = false;
 	}
 }

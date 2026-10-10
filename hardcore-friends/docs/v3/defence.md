@@ -39,8 +39,11 @@ monsters beside the bell only someone fit to fight is sent. The bell rung is, in
 2. the **friends' own bell**: if the village has no bell at all and no town hall yet (planned or standing: the town
    hall takes the chest's bell for its own bell spot), and the supply chest holds a bell, the builder (or anyone in
    their place) stands it on the ground at the square, a few blocks from the campfire, on a free spot that is no
-   building's site and nowhere near your builds. The friends cannot make bells: put one in the chest (villagers sell
-   them, and game villages have one);
+   building's site, nowhere near your builds, and off the line of the village's two main streets (which cross at the
+   campfire once the village lays them out). The friends cannot make bells: put one in the chest (villagers sell
+   them, and game villages have one). If you move the camp, the bell at the old square is no longer the friends'
+   own: still within the village, it is rung as any other bell; otherwise they put up another at the new square
+   when the chest has a bell;
 3. the **school bell**;
 4. **any other bell in the village**, such as the old bell of a game village the camp grew up in, or one you hung.
 
@@ -54,10 +57,15 @@ With no bell (or nobody near it), the alarm is simply shouted. During a raid the
   are and the usual reflexes keep them away from danger. Heavy work is put down for it. Once in, they **shut the door behind them** (only the
   friends' own wooden doors, which you can always open) and stand at a spot inside, away from the windows where the
   house allows. Someone already indoors stays put. At night, anyone indoors whose bed is there simply goes to bed.
+  Someone found asleep out in the open (their own bed taken or out of reach, so they lay down the old way) is got up
+  and kept indoors like anyone whose bed is outdoors, until the all-clear.
 - **Fighters take their posts**: everyone grown up and fit to fight (healthy, not too tired, not falling back) who is a
   warrior, holds a guard trade, or carries a sword, an axe or a bow with arrows. They go to the post nearest the
   danger (a gate, a stretch of wall, the bell, the camp centre), never right on top of it, never near a creeper and
-  never past one on the way, and stand ready there. The alarm gets sleeping fighters up, as the night watch's alarm does. The friend on the night
+  never past one on the way, and stand ready there. The alarm gets sleeping fighters up, as the night watch's alarm
+  does, if they have had enough sleep (40 energy or more); one with less is left asleep for this alarm. A fighter
+  who wears out below 20 energy goes to bed and sits out the rest of this alarm, even once a nap has lifted them back
+  over 20, so nobody is got up and sent back to bed over and over. The friend on the night
   watch and the guards on duty keep their own posts (the friend on watch does so even with only a pick or a hoe:
   they are not sent indoors).
 - **Who the defenders go for first**: a monster at a door (zombies trying to break doors in on Hard, vindicators),
@@ -75,11 +83,15 @@ Once the village has a **watchtower**, a **town gate** or **town walls** (the To
 guards stand there at night, besides the night watch. Before that the night watch is all there is, as in 2.0.
 
 - **Two shifts**, like the night watch: dusk to midnight, and midnight to dawn. Each shift has up to
-  `guardsPerShift` guards (2 by default), no more than there are posts. Nobody stands both shifts, and the friend on
-  the night watch is never a guard too.
-- **Who**: grown-ups at work in the village who are healthy, not too tired and armed (a sword, an axe or a bow).
-  Warriors first, then whoever did not stand guard last night, then the best armed. A guard who gets hurt, worn out or
-  stuck is relieved and someone else takes the post.
+  `guardsPerShift` guards (2 by default), no more than there are posts. Nobody stands both shifts: everyone who stood
+  any part of the first shift sleeps the second, and is not picked for the night watch's second half either. The
+  friend on the night watch is never a guard too.
+- **Who**: grown-ups at work in the village who are healthy, rested (35 energy or more) and armed (a sword, an axe or
+  a bow). Warriors first, then whoever did not stand guard last night, then the best armed. A guard who gets hurt,
+  worn out (below 20 energy) or stuck is relieved and someone else takes the post; the one relieved is not picked
+  again that night.
+- **On duty from dusk**: a guard picked at dusk goes straight to their post. They leave the evening at home and a feast
+  at the square to the others, and a guard napping after last night's shift gets up for it.
 - **The posts**: the lookout at the top of the watchtower (a guard with a bow goes up there and **shoots from the
   top** rather than climbing down to fight), the town gate (beside the way through, with a sword), and each stretch of
   wall (on the village side). A guard at the gate or a wall now and then walks a short patrol up the street or along
@@ -141,6 +153,10 @@ All at permission level 0, with cheats off, and changing nothing.
 - `combat.Archery.HOLDS_POST` (new): a predicate list; a friend for whom one says true shoots whatever they would fight
   rather than closing in. The defence package uses it for the guard at the watchtower lookout.
 - `Alarm.isActive()` is public, for any package that wants to know the bell is ringing.
+- `camp.NightWatch.EXCUSED` (new): a list of rules; a friend one of them answers true for (with the watch) is not
+  chosen for that watch. The defence package uses it to keep the first shift's guards off the second watch.
+- The defence job filter keeps a guard on duty off `needs.evening` (the village's evening at home) and
+  `needs.festival` (a feast or funeral), as those packages already do for the friend on the night watch.
 
 ## Honest limits
 
@@ -167,7 +183,10 @@ All at permission level 0, with cheats off, and changing nothing.
   on the ground on the village side and cannot shoot over the wall. A guard at the lookout who chases a target out of
   bow range walks down after it, and goes back up when the fight is over.
 - **Fighters at their posts** stand there for the whole alarm, sleep included; a long night of alarms leaves them
-  tired (below 20 energy they count as non-fighters and go to bed).
+  tired (below 20 energy they count as non-fighters and go to bed for the rest of that alarm). A fighter asleep with
+  less than 40 energy is not got up at all, so a village of tired people may have few at their posts.
+- **Asleep in the open**: whether a sleeper is indoors is judged by the sky above them, as elsewhere in the mod; a bed
+  under a glass roof counts as out in the open, and its sleeper is got up and sent to stand inside at the alarm.
 - **Raids**: the friends fight raiders with their usual combat; there is no special tactic against ravagers or
   evokers' fangs, and a raid at night means nobody sleeps much. The raid has to be within 96 blocks of the camp centre
   to count (the game's own raid distance).
@@ -175,7 +194,9 @@ All at permission level 0, with cheats off, and changing nothing.
   player carrying Bad Omen into a camp the game does not count as a village starts no raid and rings no bell.
 - **Fire** is put out by hand only: no water buckets. A big blaze spreads faster than two friends can put it out, and
   fire on a roof out of reach is left alone. The village is looked over for fire about every 10 seconds, so a fire can
-  burn a few blocks before anyone comes. Fire in a player's build inside the camp is put out too (fire is never a
+  burn a few blocks before anyone comes. Where a fire has burnt before, the game keeps a trace of it until the chunk
+  is next loaded, so such a spot is searched block by block at most every 10 seconds: a new fire there can take a
+  few seconds longer to be noticed. Fire in a player's build inside the camp is put out too (fire is never a
   build), but never a fireplace on netherrack.
 - **The Village Chronicle**: the village life package (built at the same time) had no way in for other packages yet,
   so a raid won is not written in the Chronicle.

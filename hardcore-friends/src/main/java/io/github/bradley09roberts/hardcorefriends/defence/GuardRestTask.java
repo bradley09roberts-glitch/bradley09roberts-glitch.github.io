@@ -14,7 +14,8 @@ import io.github.bradley09roberts.hardcorefriends.companion.Needs.Need;
  * Guards sleep in the day: a friend who stood guard last night ({@link GuardRota#stoodGuardRecently}) and is below
  * {@value #NAP_BELOW} energy lies down for a nap at home by day, as the night watch's keepers do. The nap itself is the
  * sleep job's ({@link SleepTask}: their own bed if they have one, the same waking rules, up again when rested or after
- * a few minutes), so it is the same rest, only offered sooner. Not while the alarm is on.
+ * a few minutes), so it is the same rest, only offered sooner. Not while the alarm is on, nor once they are on guard
+ * again (picked at dusk for tonight's first shift, say): the post comes first, and a napping guard gets up for it.
  */
 final class GuardRestTask implements CompanionTask {
 	static final String ID = "defence.guard_rest";
@@ -36,7 +37,8 @@ final class GuardRestTask implements CompanionTask {
 
 	@Override
 	public double score(CompanionEntity c) {
-		if (c.isChild() || !(c.level() instanceof ServerLevel level) || Camp.isNightTime(level) || Alarm.isActive()) {
+		if (c.isChild() || !(c.level() instanceof ServerLevel level) || Camp.isNightTime(level) || Alarm.isActive()
+			|| GuardRota.isOnDuty(c)) {
 			return 0;
 		}
 		if (c.needs().get(Need.ENERGY) >= NAP_BELOW || !Spots.inCamp(c, c.blockPosition()) || !GuardRota.stoodGuardRecently(c)) {
@@ -52,8 +54,8 @@ final class GuardRestTask implements CompanionTask {
 
 	@Override
 	public TaskStatus tick(CompanionEntity c) {
-		if (Alarm.isActive()) {
-			return TaskStatus.SUCCESS; // the bell: up they get
+		if (Alarm.isActive() || GuardRota.isOnDuty(c)) {
+			return TaskStatus.SUCCESS; // the bell, or their shift: up they get
 		}
 		return nap.tick(c);
 	}
