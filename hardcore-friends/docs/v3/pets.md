@@ -27,7 +27,8 @@ Everything happens by itself. Nothing here has been run in game yet; see **Hones
   ridden, saddled or wearing armour, near anything a player built or inside a player's fences, an angry or young wolf,
   or one standing where a friend died lately (the same rules that keep your animals safe from hunting).
 - **Limits.** One pet per person; at most `maxPets` (8) in the camp; and only when the camp has **a home for it**: the
-  owner's house in the village, or, before the village has any houses, a finished cabin at the camp.
+  owner's house in the village, or, before the village has any houses, a finished cabin at the camp. No cat is tamed
+  while the camp is short of food (its raw fish is what the cooks make meals from); bones are nobody's dinner.
 
 Stray cats only appear near villages in the game, so a camp usually gets cats once its own village has beds (five or
 more beds near each other bring strays, as in any village), or if it is near a village. Wolves live in forests and
@@ -46,8 +47,10 @@ taiga.
   mine or off on a trip, keeps wandering about the camp and goes home at night.
 - **Fed from the stock.** Now and then (every other day, and whenever it is hurt) the owner gives it a treat from the
   chest: raw fish for a cat; rotten flesh first, else raw meat, for a dog (never the cooked food the friends eat). Food
-  heals a pet, as when you feed yours. Nobody goes to a pet in the middle of a fight (it is fed once that is over), and
-  a child only goes to their pet while it is inside the camp near the height of home, and stops if it wanders off.
+  heals a pet, as when you feed yours. While the camp is short of food, raw meat and fish are kept for the cooks: a dog
+  only gets rotten flesh, and a cat waits until there is food to spare. Nobody goes to a pet in the middle of a fight
+  (it is fed once that is over), and a child only goes to their pet while it is inside the camp near the height of
+  home, and stops if it wanders off.
 - **Company.** A friend near their pet is a little happier (fun and comfort), and now and then makes a fuss of it.
 - **Getting unstuck.** A pet that cannot find its way to its owner or its home inside the camp (a shut door, a ledge) is
   brought to them, as your own pets are; at night only onto its spot or a free tile beside it. When there is no free
@@ -57,12 +60,14 @@ taiga.
 ## Dogs and danger
 
 - A dog stands up for its owner like your own tamed wolf: it goes for a **monster** that is attacking its owner, one its
-  owner is fighting, or one that bit it, within 16 blocks, and gives up the chase once the monster is far from its
-  owner. It never goes for a creeper, never for a monster with a creeper close by, and keeps out of a creeper's way.
+  owner is fighting hand to hand (not one its owner would shoot: a dog at the monster would be in the way of every
+  arrow), or one that bit it, within 16 blocks, and gives up the chase once the monster is far from its owner. It never
+  goes for a creeper, never for a monster with a creeper close by, and keeps out of a creeper's way.
 - Cats keep phantoms and creepers away, as they do in the game.
 - **Never hurt.** A pet of the camp only ever hurts monsters: any harm it would do to a player, a friend, a villager, a
   golem, another pet or anyone's animal is refused outright, and a friend is never hurt by a pet (so nobody ever turns
-  on one). The friends never hurt a pet either (their blows and arrows never land on a tamed animal).
+  on one). The friends never hurt a pet either (their blows and arrows never land on a tamed animal). A wild wolf you
+  hit can call a dog to help, as wolves call each other; the dog drops it, anger and all, within a second.
 
 ## When a pet's owner is gone
 
@@ -79,8 +84,9 @@ last spot loaded but the pet nowhere to be found) is given up as lost.
 - **Making maps.** Scout (or a newcomer who explores like her; one map maker at a time, though an explorer who started
   a map while Scout was away still finishes it and brings it home) makes empty maps the way you do: eight paper round a compass at the crafting table (or at the cartography table, once the camp has one). If the
   chest has no compass she makes one from four iron (only iron the camp can spare: it keeps eight back) and a redstone.
-  An empty map in the chest is used first. She never takes paper, leather or iron that Sage's plan is still collecting
-  (paper and leather for the library's books), so maps wait until the plan has what it needs.
+  An empty map in the chest is used first. She never takes paper, leather or iron that Sage's plan is collecting (paper
+  and leather for the library's books, iron in the iron age): none while the plan still wants more, and once it has
+  enough only what lies beyond the plan's amount, so maps wait until the plan has what it needs and never eat into it.
 - **The map of the camp.** Her first map is of the camp: 256 blocks across (1:2), centred on the camp centre. She fills
   it in as she walks about, exactly as a map fills in for you, but only from land already loaded (she never makes the
   game load new land to draw it). It is finished when 60% of it is drawn (or a quarter of it, after three days).
@@ -91,17 +97,19 @@ last spot loaded but the pet nowhere to be found) is given up as lost.
 - **Marks.** A finished map is marked with the camp, the village's town hall (once there is one) and the places found
   on trips that lie on it: villages, survivor camps, temples, ruined portals and pillager outposts, with the game's own
   map markers.
-- **Hung on the wall.** Scout takes a finished map to the **town hall** (or the camp's **library** before there is a town
-  hall) and hangs it in an item frame on an inside wall, near the lectern. The frame comes from the chest or is made at
-  the crafting table from eight sticks and a piece of leather. Frames only go on walls the friends built, inside, under
+- **Hung on the wall.** Scout takes a finished map to the **town hall** (or the camp's **cabin** before there is a town
+  hall) and hangs it in an item frame on an inside wall, near the lectern (in the cabin, near its middle). The frame
+  comes from the chest or is made at the crafting table from eight sticks and a piece of leather. Frames only go on walls the friends built, inside, under
   the roof, away from doors and from anything you built, and only where the friends' building rules would let them
   place a block. With nowhere to hang it, or no frame to be had, the map goes in the camp chest, and Scout hangs it
   later, once there is a hall with room on its walls.
 - **Copies for you.** Right-click Scout with an **empty map** of your own and she gives you a copy of a finished map (the
   one showing where you stand, else the camp's, else the newest); your empty map is used up. Or type `/friends map`:
   she makes the copy from the camp's own stock (an empty map from the chest, or eight paper and a compass) and walks it
-  over to you. Never a free item: if the camp is short of paper or a compass, she says so. A copy is the same map, as a
-  copy made at a table is: it fills in further as Scout goes on drawing.
+  over to you. Never a free item: if the camp is short of paper or a compass, she says so. As it uses up the camp's
+  stores, `/friends map` is for the camp's owner and the players they trust (as other orders are), and only by day:
+  after nightfall she is off to bed, so ask in the morning (an empty map of your own works at any hour). A copy is the
+  same map, as a copy made at a table is: it fills in further as Scout goes on drawing.
 
 ## Commands
 
@@ -111,12 +119,12 @@ All work at permission level 0 with cheats off; none hands out a free item.
 |---|---|
 | `/friends pets` | Every pet: its name and kind, whose it is ("Pip Hart and their cat"), what it is doing and where, and its health |
 | `/friends maps` | Every map: its number, what it shows, how much is drawn, and where it is (being drawn, hanging, in the chest, lost) |
-| `/friends map` | Ask the map maker for a copy of the best finished map for where you stand |
+| `/friends map` | Ask the map maker for a copy of the best finished map for where you stand (owner and trusted players, by day) |
 | `/friends map <number>` | Ask for a copy of one map (numbers from `/friends maps`) |
 
-Stay within 48 blocks of the map maker for your copy (and inside the camp after dark); a request nobody can see to
-within two and a half minutes lapses. If you walk off beyond that while the copy is on its way, the map maker stops
-rather than follow you, and brings it once you are back.
+Stay within 48 blocks of the map maker for your copy (and inside the camp under a dark stormy sky); a request nobody
+can see to within two and a half minutes lapses, as does one still on its way at nightfall. If you walk off beyond that
+while the copy is on its way, the map maker stops rather than follow you, and brings it once you are back.
 
 ## Settings
 
@@ -133,11 +141,12 @@ In `config/hardcorefriends.json`, under "Pets and maps":
 - A pet is a vanilla cat or wolf, tamed with its owner set to the friend (any living entity may own a tamed animal in
   26.3), tagged `hardcorefriends.pet`. Item frames the map maker hung are tagged `hardcorefriends.map_frame`.
 - Jobs: `pets.adopt`, `pets.feed` (both open to children through `People.allowChildJob`), `pets.make_map`,
-  `pets.hang_map`, `pets.copy_map` (a night job too, for a player waiting in the camp).
+  `pets.hang_map`, `pets.copy_map` (all day jobs).
 - Two common keep rules: up to six maps (empty maps, and the maps being drawn or carried home; any other map a friend
   picks up still goes to the chest) and one item frame, so the map maker's maps are never tidied away to the chest.
 - The town hall is found as a camp site whose key contains `town_hall` (finished), or a library site of kind
-  `civic:town_hall`; the camp's library (`Structures.LIBRARY`) is the fallback.
+  `civic:town_hall`; the camp's cabin (`Structures.CABIN`) is the fallback (Sage's library is a ring of shelves on the
+  ground, with no wall or roof to hang a frame on).
 
 ## Honest limits
 
@@ -146,8 +155,9 @@ In `config/hardcorefriends.json`, under "Pets and maps":
   together. Parrots are not kept.
 - **A pet's goals are changed**: vanilla's following (which teleports a pet to its owner anywhere, even across the
   world) is replaced by following about the camp only; vanilla's sitting (whenever the owner is not about) by sitting
-  only when settled for the night; cats no longer sit on chests (the camp chest is shared with you); pets do not breed. A pet is fetched when stuck only inside the camp and its gathering ring: one led far away on a lead
-  walks home and may get stuck in rough country.
+  only when settled for the night; cats no longer sit on chests (the camp chest is shared with you) or wander off to
+  lie on any bed or furnace near by for minutes on end; pets do not breed. A pet is fetched when stuck only inside the
+  camp and its gathering ring: one led far away on a lead walks home and may get stuck in rough country.
 - **You cannot order a friend's pet** (sit, dye its collar, armour it): in the game only its owner can, and its owner
   is a friend. You can feed it, put it on a lead, or rename it with a name tag (the camp calls it by its new name).
 - **Pets do not go on trips or expeditions**, and a pet pushed through a portal stays on the other side until it comes

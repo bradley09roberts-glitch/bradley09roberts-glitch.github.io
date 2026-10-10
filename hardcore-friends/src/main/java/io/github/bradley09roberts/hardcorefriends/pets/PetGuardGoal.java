@@ -14,11 +14,13 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 
 import io.github.bradley09roberts.hardcorefriends.ai.goal.Threats;
+import io.github.bradley09roberts.hardcorefriends.combat.Archery;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
 
 /**
  * A dog of the camp stands up for its owner as a player's tamed wolf does, but only ever against monsters: one going
- * for its owner, one its owner is fighting, or one that bit the dog. Never a player, a friend, a villager, a golem or
+ * for its owner, one its owner is fighting hand to hand (not one the owner would shoot: the dog would be in the way of
+ * every arrow), or one that bit the dog. Never a player, a friend, a villager, a golem or
  * anyone's animal ({@link #fair}), never a creeper, and never a monster with a creeper close by (a dog would only set
  * it off beside the people it is guarding). The dog drops the chase once the monster is far from its owner. Damage a
  * pet would deal to anything but a monster is refused outright as well ({@link PetEvents#allowDamage}).
@@ -72,8 +74,10 @@ final class PetGuardGoal extends Goal {
 		if (hurtOwner != null && owner.tickCount - owner.getLastHurtByMobTimestamp() < RECENT && good(hurtOwner)) {
 			return hurtOwner;
 		}
+		// The owner's own target only when they will fight it hand to hand: a dog biting at a monster stands right in
+		// the line of fire, so an owner who would shoot it could never loose an arrow while the dog was there.
 		LivingEntity ownersTarget = owner.getTarget();
-		return ownersTarget != null && good(ownersTarget) ? ownersTarget : null;
+		return ownersTarget != null && good(ownersTarget) && !Archery.prefersBow(owner, ownersTarget) ? ownersTarget : null;
 	}
 
 	private boolean good(LivingEntity e) {

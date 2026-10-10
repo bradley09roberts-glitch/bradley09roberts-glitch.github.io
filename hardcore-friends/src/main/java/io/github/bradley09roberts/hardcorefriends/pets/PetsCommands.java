@@ -25,12 +25,14 @@ import io.github.bradley09roberts.hardcorefriends.companion.Companions;
 import io.github.bradley09roberts.hardcorefriends.config.FriendsConfig;
 import io.github.bradley09roberts.hardcorefriends.pets.PetsData.MapRecord;
 import io.github.bradley09roberts.hardcorefriends.pets.PetsData.MapState;
+import io.github.bradley09roberts.hardcorefriends.town.TownPermissions;
 
 /**
  * {@code /friends pets} (every pet: its name and kind, whose it is and where), {@code /friends maps} (every map the
  * camp's explorer made: what it shows, how far along, where it is) and {@code /friends map [number]} (ask the map maker
  * for a copy, made from the camp's own paper). All work at permission level 0 with cheats off; the copy is never a
- * free item (it is drawn on an empty map from the camp's stock, carried over by the map maker).
+ * free item (it is drawn on an empty map from the camp's stock, carried over by the map maker), so asking for one is
+ * kept for the players trusted with orders ({@link TownPermissions#require}), and is only taken by day.
  */
 final class PetsCommands {
 	private PetsCommands() {
@@ -153,6 +155,10 @@ final class PetsCommands {
 			source.sendFailure(Component.literal("Only a player can be handed a map."));
 			return 0;
 		}
+		// A copy uses up the camp's paper and a compass: a delivery from the stores, so only for those trusted with orders.
+		if (!TownPermissions.require(source)) {
+			return 0;
+		}
 		ServerLevel level = player.level();
 		PetsData data = PetsData.get(source.getServer());
 		Optional<MapRecord> map = number < 0 ? Maps.bestFor(level, player.blockPosition()) : data.map(number).filter(Maps::done);
@@ -170,6 +176,12 @@ final class PetsCommands {
 		}
 		if (maker == null) {
 			source.sendFailure(Component.literal("The camp's explorer is not about to make you a copy just now."));
+			return 0;
+		}
+		// Copies are made by day: after nightfall the map maker goes to bed, and work never keeps a friend up.
+		if (maker.level() instanceof ServerLevel makerLevel && Camp.isNightTime(makerLevel)) {
+			source.sendFailure(Component.literal(maker.displayName() + " makes copies by day. Ask again in the morning, or "
+				+ "right-click " + maker.displayName() + " with an empty map of your own."));
 			return 0;
 		}
 		if (CopyMapTask.pending(player.getUUID())) {

@@ -28,6 +28,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import io.github.bradley09roberts.hardcorefriends.HardcoreFriends;
 import io.github.bradley09roberts.hardcorefriends.camp.Camp;
 import io.github.bradley09roberts.hardcorefriends.civic.Families;
 import io.github.bradley09roberts.hardcorefriends.companion.CompanionEntity;
@@ -238,41 +239,52 @@ final class PetEvents {
 
 	// ----------------------------------------------------------------- ticks
 
-	/** Every server tick: each loaded pet thinks once a second; lost pets and maps are checked now and then. */
+	/**
+	 * Every server tick: each loaded pet thinks once a second; lost pets and maps are checked now and then. A failure is
+	 * logged rather than let out into the server's tick (one pet's trouble never stops the others, or the server).
+	 */
 	static void serverTick(MinecraftServer server) {
-		long now = server.overworld().getGameTime();
-		if (!LOADED.isEmpty()) {
-			PetsData data = PetsData.get(server);
-			for (TamableAnimal a : new ArrayList<>(LOADED)) {
-				if (a.isRemoved() || !a.isAlive()) {
-					LOADED.remove(a);
-					continue;
+		try {
+			long now = server.overworld().getGameTime();
+			if (!LOADED.isEmpty()) {
+				PetsData data = PetsData.get(server);
+				for (TamableAnimal a : new ArrayList<>(LOADED)) {
+					if (a.isRemoved() || !a.isAlive()) {
+						LOADED.remove(a);
+						continue;
+					}
+					// By the server's clock, not the pet's own: a pet in a chunk at the edge of the loaded world does not tick.
+					if ((now + a.getId()) % 20 != 0 || !(a.level() instanceof ServerLevel level)) {
+						continue;
+					}
+					Optional<PetsData.Pet> record = data.pet(a.getUUID());
+					if (record.isEmpty()) {
+						continue;
+					}
+					PetsData.Pet p = record.get();
+					p.dimension = Camp.dimensionId(level);
+					p.lastPos = a.blockPosition();
+					p.lastSeen = level.getGameTime();
+					p.missing = 0;
+					data.setDirty(); // where it was last seen is saved with the world
+					try {
+						PetBrain.think(level, a, p);
+					} catch (RuntimeException e) {
+						HardcoreFriends.LOGGER.error("Pet {} failed to think this second", p.name, e);
+					}
 				}
-				// By the server's clock, not the pet's own: a pet in a chunk at the edge of the loaded world does not tick.
-				if ((now + a.getId()) % 20 != 0 || !(a.level() instanceof ServerLevel level)) {
-					continue;
-				}
-				Optional<PetsData.Pet> record = data.pet(a.getUUID());
-				if (record.isEmpty()) {
-					continue;
-				}
-				PetsData.Pet p = record.get();
-				p.dimension = Camp.dimensionId(level);
-				p.lastPos = a.blockPosition();
-				p.lastSeen = level.getGameTime();
-				p.missing = 0;
-				data.setDirty(); // where it was last seen is saved with the world
-				PetBrain.think(level, a, p);
 			}
-		}
-		if (now % MISSING_CHECK == 0) {
-			checkMissing(server);
-		}
-		if (now % PLACED_MAPS_CHECK == 7) {
-			Maps.checkPlaced(server);
-		}
-		if (now % 20 == 3) {
-			CopyMapTask.expire(server, now);
+			if (now % MISSING_CHECK == 0) {
+				checkMissing(server);
+			}
+			if (now % PLACED_MAPS_CHECK == 7) {
+				Maps.checkPlaced(server);
+			}
+			if (now % 20 == 3) {
+				CopyMapTask.expire(server, now);
+			}
+		} catch (RuntimeException e) {
+			HardcoreFriends.LOGGER.error("Pets and maps failed this tick", e);
 		}
 	}
 
