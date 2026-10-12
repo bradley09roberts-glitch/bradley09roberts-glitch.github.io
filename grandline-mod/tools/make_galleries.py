@@ -6,7 +6,7 @@
 Writes into <out dir>:
   settlement_<style>.png      every settlement building type of one style (AFTER), camera from the south-east
   before_after_<style>.png    the same types BEFORE | AFTER side by side for a few styles
-  landmark_<id>.png           each landmark: AFTER views 0 and 2 plus floor cut-aways (BEFORE thumbnail inset)
+  <id>.png                    each landmark: AFTER views 0 and 2 plus floor cut-aways (BEFORE thumbnail inset)
 Renders come from tools/render_structure.py (real block models and textures, Minecraft face shading).
 """
 import json
@@ -100,7 +100,7 @@ def main():
                 canvas.paste(b, (bx, by), b)
                 img = canvas
         if img is not None:
-            save(img, os.path.join(out, f'landmark_{lid}.png'))
+            save(img, os.path.join(out, f'{lid}.png'))
             print('landmark', lid)
 
 

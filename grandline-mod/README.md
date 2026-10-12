@@ -11,6 +11,10 @@ Private distribution.
 - Story bible: [docs/STORY.md](docs/STORY.md)
 - Screenshots from the automated real-client test: [docs/screenshots](docs/screenshots/README.md)
 - Art sources (Higgsfield): [docs/ART.md](docs/ART.md)
+- **0.2.0 building, texture and shader overhaul**: what changed, install, rollback and the validation report:
+  [docs/OVERHAUL.md](docs/OVERHAUL.md). Structure ledger: [docs/STRUCTURE_AUDIT.md](docs/STRUCTURE_AUDIT.md); block kit:
+  [docs/BUILDING_KIT.md](docs/BUILDING_KIT.md); art direction: [docs/ART_DIRECTION.md](docs/ART_DIRECTION.md); asset list:
+  [docs/ASSET_LIST.md](docs/ASSET_LIST.md)
 
 ## Install (client)
 
@@ -18,7 +22,7 @@ Private distribution.
 2. Install **NeoForge 21.1.259 or newer for Minecraft 1.21.1** with the installer from https://neoforged.net
    (choose "Install client").
 3. Copy both jars from `dist/` into your `.minecraft/mods` folder:
-   - `grandline-0.1.0.jar` — the mod
+   - `grandline-0.2.0.jar` — the mod (it replaces `grandline-0.1.0.jar`: remove the old jar)
    - `geckolib-neoforge-1.21.1-4.9.3.jar` — required library (animated creature/beast models)
 4. Start the NeoForge 1.21.1 profile. Create a new world and under **World Type** pick **Grand Line Ocean World**
    (the mod's ocean world replaces the normal Overworld; the Nether and End stay vanilla).
@@ -114,7 +118,8 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
 `/grandline island list|here|tp <id>`, `/grandline fruit give|set|remove|awaken|ledger`, `/grandline char info|level|
 mastery|style|haki|conqueror|beli|reset`, `/grandline npc <role> [tier]`, `/grandline quest <id>`,
 `/grandline terrain revert`, `/grandline test env|ship <class> [helm]|sail <0-3>|anchor <bool>|ability <id>|storm|
-inventory`, `/bustercall status|issue <player>|cancel <player>`, `/base raid|remove <island>`, `/career admin merit <n>|rank <n>|envoy|seats`.
+inventory|calm <bool>`, `/grandline test place <type> <style> [rotation]|showcase <style>|kit|view <target> <n>` (these
+four build into the world where you stand: use a test world), `/bustercall status|issue <player>|cancel <player>`, `/base raid|remove <island>`, `/career admin merit <n>|rank <n>|envoy|seats`.
 
 ## Building from source
 
@@ -146,5 +151,8 @@ Generated files (textures, models, data, sounds) are committed, so a plain `./gr
 | Two clients on one ship | as above with `GL_CLIENTTEST=mp_a ./gradlew runClient` and `GL_CLIENTTEST=mp_b ./gradlew runClient2` |
 | Server load (20 simulated players) | `GL_SELFTEST=load ./gradlew runServer` (`GL_LOADTEST_PLAYERS`, `GL_LOADTEST_SECONDS`) → `run/loadtest-report.txt` |
 | Inventory document | after phase 1: `python3 tools/gen_inventory.py` |
+| Every settlement building (type × style × rotation) and every landmark | `GL_SELFTEST=landmarks ./gradlew runServer` → `run/selftest-phaselandmarks.txt` |
+| Structure dumps for the audit and offline renders | `GL_SELFTEST=structures ./gradlew runServer` (`GL_DUMP_ONLY`, `GL_DUMP_TOWNS`) → `run/structdump/`; then `python3 -I tools/render_structure.py run/structdump -o <dir>` |
+| Architecture captures in the real client | server `GL_SELFTEST=client`; client `GL_CLIENTTEST=arch GL_ARCH_TARGETS="name=town:<island>@0;..."` |
 
 `run/server.properties` must contain `level-type=grandline\:ocean_world` (the test harness uses port 25570).
