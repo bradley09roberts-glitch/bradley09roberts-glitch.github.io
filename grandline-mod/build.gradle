@@ -1,0 +1,130 @@
+plugins {
+    id 'java-library'
+    id 'idea'
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    version = project.neo_version
+
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.INFO
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+repositories {
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content { includeGroup("software.bernie.geckolib") }
+    }
+}
+
+dependencies {
+    implementation "software.bernie.geckolib:geckolib-neoforge-${minecraft_version}:${geckolib_version}"
+}
+
+// Merge per-feature language fragments (src/main/lang/<locale>/*.json) into assets/grandline/lang/<locale>.json
+def langSrc = file('src/main/lang')
+def langOut = layout.buildDirectory.dir('generated/lang')
+tasks.register('mergeLang') {
+    inputs.dir(langSrc).optional()
+    outputs.dir(langOut)
+    doLast {
+        def outDir = langOut.get().asFile
+        project.delete(outDir)
+        if (!langSrc.exists()) return
+        langSrc.eachDir { localeDir ->
+            def merged = new TreeMap<String, Object>()
+            localeDir.eachFileMatch(~/.*\.json/) { f ->
+                def parsed = new groovy.json.JsonSlurper().parse(f)
+                parsed.each { k, v ->
+                    if (merged.containsKey(k) && merged[k] != v) {
+                        throw new GradleException("Duplicate lang key ${k} in ${f}")
+                    }
+                    merged[k] = v
+                }
+            }
+            def target = new File(outDir, "assets/${mod_id}/lang/${localeDir.name}.json")
+            target.parentFile.mkdirs()
+            target.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(merged))
+        }
+    }
+}
+sourceSets.main.resources.srcDir(langOut)
+
+tasks.named('processResources', ProcessResources) {
+    dependsOn 'mergeLang'
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            neo_version_range      : neo_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+            mod_authors            : mod_authors,
+            mod_description        : mod_description,
+            geckolib_version       : geckolib_version
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+// Copy the built jar into dist/ for delivery
+tasks.register('dist', Copy) {
+    dependsOn 'jar'
+    from(tasks.named('jar'))
+    into(file('dist'))
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
