@@ -120,7 +120,7 @@ public final class SelfTest {
         s.halt(false);
     }
 
-    private static ServerLevel ow(MinecraftServer s) {
+    static ServerLevel ow(MinecraftServer s) {
         return s.overworld();
     }
 
@@ -129,7 +129,7 @@ public final class SelfTest {
         return l.getHeight(Heightmap.Types.OCEAN_FLOOR, x, z);
     }
 
-    private static FakePlayer fake(MinecraftServer s) {
+    static FakePlayer fake(MinecraftServer s) {
         if (fake == null) {
             fake = FakePlayerFactory.get(ow(s), new GameProfile(FAKE_ID, "SelfTestPirate"));
         }
@@ -594,6 +594,7 @@ public final class SelfTest {
             vic.discard();
             return 0;
         });
+        SelfTestOriginals.phase1(steps); // Devil Fruits wave 3 — ORIGINAL fruit mechanics (test/SelfTestOriginals.java)
         // ---------- knockdown/permadeath data rules ----------
         steps.add(s -> {
             CharacterData d = new CharacterData();
@@ -945,7 +946,7 @@ public final class SelfTest {
     private static BlockPos arenaPos;
 
     /** A flat stone platform in the sky above Shiokaze Isle for controlled tests. */
-    private static BlockPos arena(ServerLevel l) {
+    static BlockPos arena(ServerLevel l) {
         if (arenaPos == null) {
             WorldPlan p = WorldPlan.of(l.getServer());
             Island i = p.byId("shiokaze_isle");
@@ -963,7 +964,7 @@ public final class SelfTest {
         return arenaPos;
     }
 
-    private static HumanoidNpc npc(ServerLevel l, String role, int tier, BlockPos pos) {
+    static HumanoidNpc npc(ServerLevel l, String role, int tier, BlockPos pos) {
         HumanoidNpc n = ModEntities.HUMANOID_NPC.get().create(l);
         n.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0, 0);
         n.configure(role, tier, "", pos, "", l.random);

@@ -65,7 +65,7 @@ public final class DevilFruits {
         def("kaze", FruitType.LOGIA, 7, false, 0x9AE8C8, 0xF0FFF8, Element.WIND);
         def("shio", FruitType.PARAMECIA, 5, false, 0xF4F4F4, 0xBFD8E0, Element.PHYSICAL);
         def("kagami", FruitType.PARAMECIA, 7, false, 0xC0E8FF, 0xFFFFFF, Element.LIGHT);
-        def("tako_kraken", FruitType.MYTHICAL_ZOAN, 8, false, 0x8A2A4A, 0xE07A9A, Element.BLUNT);
+        def("tako_kraken", FruitType.MYTHICAL_ZOAN, 8, false, 0x8A2A4A, 0xE07A9A, Element.BLUNT).zoanModel = "kraken";
         def("rasen", FruitType.PARAMECIA, 6, false, 0xE0A04A, 0x8A4A2A, Element.IMPACT);
         def("kane", FruitType.PARAMECIA, 5, false, 0xE0C04A, 0x8A7A2A, Element.SOUND);
         def("tsuchi", FruitType.LOGIA, 6, false, 0x7A5A3A, 0x4A3A2A, Element.PHYSICAL);
@@ -74,6 +74,20 @@ public final class DevilFruits {
         def("hari", FruitType.PARAMECIA, 4, false, 0xA0A0A0, 0x606060, Element.PIERCE);
         def("hoshi", FruitType.LOGIA, 9, false, 0x1A1A4A, 0xF0E08A, Element.LIGHT);
         def("uzu", FruitType.PARAMECIA, 6, false, 0x2A6AB0, 0x8AD0F0, Element.WATER);
+        // ---- original fruits, third wave (designs: docs/FRUITS_ORIGINAL.md) ----
+        def("mitsu", FruitType.LOGIA, 6, false, 0xF0B020, 0xFFE08A, Element.PHYSICAL);
+        def("kabi", FruitType.LOGIA, 6, false, 0x6A7A3A, 0xC8D0A0, Element.POISON);
+        def("funa", FruitType.PARAMECIA, 5, false, 0x8A5A2A, 0xF0E6C8, Element.BLUNT);
+        def("tenki", FruitType.PARAMECIA, 8, false, 0x5A8AD0, 0xF0F0F0, Element.LIGHTNING);
+        def("kusuri", FruitType.PARAMECIA, 5, false, 0x6AC08A, 0xF0F0F0, Element.POISON);
+        def("wana", FruitType.PARAMECIA, 4, false, 0x5A4A3A, 0xB0A070, Element.PIERCE);
+        def("kusari", FruitType.PARAMECIA, 4, false, 0x707880, 0xB0B8C0, Element.BLUNT);
+        def("nemu", FruitType.PARAMECIA, 6, false, 0x6A5AA8, 0xD8D0F8, Element.SOUND);
+        def("nendo", FruitType.SPECIAL_PARAMECIA, 5, false, 0xB0703A, 0xD8A878, Element.BLUNT);
+        def("abura", FruitType.SPECIAL_PARAMECIA, 4, false, 0x2A2418, 0xA08A3A, Element.PHYSICAL);
+        def("same_megalodon", FruitType.ANCIENT_ZOAN, 6, false, 0x5A7A8A, 0xE8E8E8, Element.SLASH).zoanModel = "megalodon";
+        def("kame_genbu", FruitType.MYTHICAL_ZOAN, 8, false, 0x1E2A2A, 0x3A8A6A, Element.WATER).zoanModel = "genbu";
+        def("kaeru_dartfrog", FruitType.ZOAN, 3, false, 0x2A8AE0, 0x1A1A1A, Element.POISON).zoanModel = "dart_frog";
     }
 
     /** Load implementation classes (each registers its abilities onto its fruit). */
@@ -125,6 +139,27 @@ public final class DevilFruits {
         com.grandline.fruit.impl.SpinosaurusFruit.init(get("ryu_spinosaurus"));
         com.grandline.fruit.impl.SeiryuFruit.init(get("uo_seiryu"));
         com.grandline.fruit.impl.OrochiFruit.init(get("hebi_orochi"));
+        // ---- third wave: original fruits ----
+        com.grandline.fruit.impl.TakoKrakenFruit.init(get("tako_kraken"));
+        com.grandline.fruit.impl.RasenFruit.init(get("rasen"));
+        com.grandline.fruit.impl.TsuchiFruit.init(get("tsuchi"));
+        com.grandline.fruit.impl.KiriFruit.init(get("kiri"));
+        com.grandline.fruit.impl.TenbinFruit.init(get("tenbin"));
+        com.grandline.fruit.impl.HariFruit.init(get("hari"));
+        com.grandline.fruit.impl.HoshiFruit.init(get("hoshi"));
+        com.grandline.fruit.impl.MitsuFruit.init(get("mitsu"));
+        com.grandline.fruit.impl.KabiFruit.init(get("kabi"));
+        com.grandline.fruit.impl.FunaFruit.init(get("funa"));
+        com.grandline.fruit.impl.TenkiFruit.init(get("tenki"));
+        com.grandline.fruit.impl.KusuriFruit.init(get("kusuri"));
+        com.grandline.fruit.impl.WanaFruit.init(get("wana"));
+        com.grandline.fruit.impl.KusariFruit.init(get("kusari"));
+        com.grandline.fruit.impl.NemuFruit.init(get("nemu"));
+        com.grandline.fruit.impl.NendoFruit.init(get("nendo"));
+        com.grandline.fruit.impl.AburaFruit.init(get("abura"));
+        com.grandline.fruit.impl.MegalodonFruit.init(get("same_megalodon"));
+        com.grandline.fruit.impl.GenbuFruit.init(get("kame_genbu"));
+        com.grandline.fruit.impl.DartFrogFruit.init(get("kaeru_dartfrog"));
     }
 
     @Nullable
