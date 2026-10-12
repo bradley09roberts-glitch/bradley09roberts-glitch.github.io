@@ -34,6 +34,7 @@ public final class ModItems {
     public static final DeferredItem<Item> SEA_KING_STEAK = ITEMS.register("sea_king_steak", () -> new Item(new Item.Properties()
             .food(new FoodProperties.Builder().nutrition(14).saturationModifier(1.2f).build())));
     public static final DeferredItem<Item> WANTED_POSTER = ITEMS.register("wanted_poster", () -> new WantedPosterItem(new Item.Properties().stacksTo(16)));
+    public static final DeferredItem<Item> BELI_POUCH = ITEMS.register("beli_pouch", () -> new BeliPouchItem(new Item.Properties().stacksTo(16)));
     public static final DeferredItem<Item> PONEGLYPH_RUBBING = ITEMS.register("poneglyph_rubbing", () -> new Item(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC)));
 
     private static DeferredItem<GLWeaponItem> weapon(String id, WeaponClass wc, String grade, float dmg, float speed, int dur, double reach) {

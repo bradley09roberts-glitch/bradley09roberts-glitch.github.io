@@ -618,6 +618,13 @@ public class ShipEntity extends Entity {
         return InteractionResult.PASS;
     }
 
+    /** Seat a player at a station (used by tests and crew commands); returns false when the seat is taken. */
+    public boolean seatPlayer(ServerPlayer sp, int seat) {
+        if (seat < 0 || seat >= seats.length || getFirstPassengerAtSeat(seat) != null) return false;
+        seatOf.put(sp.getUUID(), seat);
+        return sp.startRiding(this, true);
+    }
+
     public float hatchZ() {
         return cls.masts >= 2 ? (mastZ(0) + mastZ(1)) / 2 : -cls.length * 0.1f;
     }

@@ -156,6 +156,7 @@ public final class Island {
                 double inner = t <= 0.72 ? peak * 0.22 + 6 * (1 - t / 0.72) : peak * 0.22;
                 h = sea + 1 + Math.max(inner, peak * wall * smooth(0.66, 0.78, t)) + detail * 0.7;
             }
+            case SEA -> h = sea - 7 - 5 * t;
             case GIANT_TREE, HILLS -> h = sea + 1 + peak * Math.pow(inv, 1.2) * (0.55 + 0.45 * (n(px * 0.005, pz * 0.005) + 1) / 2) + detail;
             default -> h = sea + 1 + peak * inv + detail;
         }
@@ -167,9 +168,15 @@ public final class Island {
     /** Terrain height including settlement pads (flattened plots). */
     public double height(int px, int pz) {
         double h = naturalHeight(px, pz);
-        if (Double.isNaN(h) || settlementType == SettlementType.NONE && landmarks.isEmpty()) return h;
+        if (Double.isNaN(h)) return h;
         Settlement s = settlement();
-        if (!s.bounds(px, pz)) return h;
+        for (Plot p : s.secrets) {
+            double out = p.outsideDistance(px, pz);
+            if (out > 4) continue;
+            double w = out <= 1 ? 1 : 1 - (out - 1) / 3.0;
+            h = Mth.lerp(w, h, p.y() - 1);
+        }
+        if (s.plots.isEmpty() || !s.bounds(px, pz)) return h;
         for (Plot p : s.plots) {
             if (!p.flatten()) continue;
             double out = p.outsideDistance(px, pz);

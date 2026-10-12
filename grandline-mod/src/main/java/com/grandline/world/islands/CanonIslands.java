@@ -30,7 +30,7 @@ public final class CanonIslands {
         l.add(c("island_of_rare_animals", 25500, 27000, 300).shape(HILLS, 30).theme(TROPICAL).settle(NONE).tier(2).landmark("treasure_cache", 0, 0));
         l.add(c("syrup_village", 19000, 16500, 520).shape(PLATEAU, 26).theme(TEMPERATE).settle(VILLAGE).tier(1).landmark("hilltop_mansion", 140, 40));
         l.add(c("mirror_ball_island", 17000, 25500, 280).shape(FLAT, 8).theme(TROPICAL).settle(HAMLET).tier(2));
-        l.add(c("baratie", 15500, 13500, 22).shape(FLAT, 0).theme(TEMPERATE).settle(NONE).tier(2).landmark("baratie", 0, 0));
+        l.add(c("baratie", 15500, 13500, 40).shape(SEA, 0).theme(TEMPERATE).settle(NONE).tier(2).landmark("baratie", 0, 0));
         l.add(c("cocoyasi", 12000, 18500, 650).shape(HILLS, 35).theme(TROPICAL).settle(VILLAGE).tier(2).landmark("arlong_park", 330, -60).landmark("tangerine_grove", -120, 80));
         l.add(c("loguetown", 5500, 9500, 600).shape(HILLS, 22).theme(TEMPERATE).style(BuildStyle.STONE_TOWN).settle(CITY).faction("marine").tier(2).landmark("execution_platform", 0, 0).landmark("marine_base", 220, 120));
         // ---------------- North Blue (x>0, z<0) ----------------

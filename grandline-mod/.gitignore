@@ -1,5 +1,5 @@
 .gradle/
-build/
+/build/
 run/
 runs/
 out/
@@ -7,3 +7,4 @@ out/
 .idea/
 logs/
 src/generated/resources/.cache/
+run-client/

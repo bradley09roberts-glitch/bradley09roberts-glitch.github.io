@@ -46,9 +46,10 @@ public final class Knockdown {
         sp.setSprinting(false);
         sp.stopUsingItem();
         sp.sendSystemMessage(Component.translatable("grandline.knockdown.you", GLConfig.KNOCKDOWN_SECONDS.get()).withStyle(ChatFormatting.RED));
-        if (src.getEntity() instanceof GLNpc npc) npc.onKnockedDownPlayer(sp);
         GLNetwork.anim(sp, "knocked_down");
         CharacterManager.markVisualsDirty(sp);
+        // last: an outlaw may rob and release the player at once (standUp plays get_up after knocked_down)
+        if (src.getEntity() instanceof GLNpc npc) npc.onKnockedDownPlayer(sp);
     }
 
     static void tick(ServerPlayer sp, CharacterData d) {

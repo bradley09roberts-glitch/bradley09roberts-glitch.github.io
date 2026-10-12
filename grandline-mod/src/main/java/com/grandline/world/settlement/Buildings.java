@@ -22,6 +22,9 @@ public final class Buildings {
     public static final String LOOT_WAREHOUSE = "grandline:chests/warehouse";
     public static final String LOOT_RUIN = "grandline:chests/ruin";
     public static final String LOOT_TREASURE = "grandline:chests/treasure";
+    public static final String LOOT_WRECK = "grandline:chests/wreck";
+    public static final String LOOT_SHRINE = "grandline:chests/shrine";
+    public static final String LOOT_CACHE = "grandline:chests/cache";
 
     public static void build(Plot plot, BuildStyle style, Builder b) {
         switch (plot.type()) {
@@ -47,6 +50,10 @@ public final class Buildings {
             case SHIPWRIGHT -> shipwright(b, style);
             case HUT -> hut(b, style);
             case LANDMARK -> {}
+            case BURIED_TREASURE -> buriedTreasure(b);
+            case HIDDEN_CACHE -> hiddenCache(b);
+            case LOST_SHRINE -> lostShrine(b, style);
+            case SHIPWRECK -> shipwreck(b);
         }
     }
 
@@ -432,6 +439,97 @@ public final class Buildings {
         b.bed(1, 1, 2, Blocks.BROWN_BED, Direction.SOUTH);
         b.barrel(3, 1, 3, LOOT_HOUSE);
         b.marker("npc", 2, 1, 2, npc("resident"));
+    }
+
+    // ---------------------------------------------------------------- island secrets
+
+    /** A faint X of coarse soil over a chest buried three blocks down. */
+    private static void buriedTreasure(Builder b) {
+        b.fill(0, -4, 0, 4, -1, 4, Blocks.DIRT);
+        for (int i = 0; i < 5; i++) {
+            b.set(i, 0, i, Blocks.COARSE_DIRT);
+            b.set(4 - i, 0, i, Blocks.COARSE_DIRT);
+        }
+        b.set(2, 0, 2, Blocks.ROOTED_DIRT);
+        b.chest(2, -3, 2, Direction.NORTH, LOOT_TREASURE);
+        b.marker("treasure", 2, -3, 2);
+        if (b.rand(7, 3) == 0) b.set(0, 1, 4, Blocks.SKELETON_SKULL);
+    }
+
+    /** A mossy boulder hiding a trapdoor and ladder down to a smuggler's cellar. */
+    private static void hiddenCache(Builder b) {
+        // boulder
+        for (int x = 0; x < 7; x++)
+            for (int z = 0; z < 7; z++)
+                for (int y = 0; y < 4; y++) {
+                    double d = Math.pow((x - 3) / 3.2, 2) + Math.pow((z - 3) / 3.2, 2) + Math.pow(y / 3.4, 2);
+                    if (d < 1) b.set(x, y, z, (x * 7 + z * 3 + y) % 4 == 0 ? Blocks.MOSSY_COBBLESTONE : Blocks.COBBLESTONE);
+                }
+        // the entrance: a gap on the boulder's north foot with a trapdoor
+        b.clear(3, 0, 0, 3, 1, 1);
+        b.set(3, 0, 1, Blocks.SPRUCE_TRAPDOOR.defaultBlockState());
+        // shaft and cellar
+        b.clear(3, -6, 1, 3, -1, 1);
+        b.ladderUp(3, -6, 2, 6, Direction.NORTH);
+        b.fill(0, -8, 1, 6, -8, 6, Blocks.SPRUCE_PLANKS);
+        b.walls(0, -7, 1, 6, -4, 6, Blocks.STONE_BRICKS);
+        b.clear(1, -7, 2, 5, -5, 5);
+        b.fill(0, -4, 1, 6, -4, 6, Blocks.STONE_BRICKS);
+        b.clear(3, -4, 1, 3, -4, 2);
+        b.hanging(3, -5, 4, Blocks.LANTERN);
+        b.chest(1, -7, 5, Direction.EAST, LOOT_CACHE);
+        b.barrel(5, -7, 5, LOOT_WAREHOUSE);
+        b.barrel(5, -7, 4, LOOT_WAREHOUSE);
+        b.set(1, -7, 2, Blocks.CARTOGRAPHY_TABLE);
+        b.marker("secret", 3, -7, 4);
+    }
+
+    /** A small forgotten shrine: stone base, pillars, candles and an offering chest. */
+    private static void lostShrine(Builder b, BuildStyle st) {
+        b.foundation(0, 0, 6, 6, Blocks.MOSSY_STONE_BRICKS, 6);
+        b.fill(0, 0, 0, 6, 0, 6, Blocks.MOSSY_STONE_BRICKS);
+        b.clear(0, 1, 0, 6, 6, 6);
+        b.fill(1, 1, 1, 5, 1, 5, Blocks.STONE_BRICKS);
+        for (int[] c : new int[][]{{1, 1}, {5, 1}, {1, 5}, {5, 5}}) {
+            b.fill(c[0], 2, c[1], c[0], 4, c[1], Blocks.STONE_BRICK_WALL);
+        }
+        b.fill(1, 5, 1, 5, 5, 5, Blocks.MOSSY_STONE_BRICK_SLAB);
+        b.fill(2, 5, 2, 4, 5, 4, Blocks.MOSSY_STONE_BRICKS);
+        b.set(3, 2, 3, Blocks.CHISELED_STONE_BRICKS);
+        b.set(3, 3, 3, Blocks.CANDLE.defaultBlockState().setValue(net.minecraft.world.level.block.CandleBlock.CANDLES, 3));
+        b.set(2, 2, 2, Blocks.CANDLE);
+        b.set(4, 2, 4, Blocks.CANDLE);
+        b.chest(3, 2, 4, Direction.NORTH, LOOT_SHRINE);
+        b.set(0, 1, 3, Blocks.FERN);
+        b.set(6, 1, 2, Blocks.FERN);
+        b.marker("secret", 3, 2, 3);
+    }
+
+    /** A sunken merchant ship on the coastal shelf, listing to one side, with a chest in the hold. */
+    private static void shipwreck(Builder b) {
+        int w = b.w, d = b.d;
+        int cx = w / 2;
+        for (int z = 1; z < d - 1; z++) {
+            double t = (z - d / 2.0) / (d / 2.0);
+            int half = (int) Math.round((w / 2.0 - 1) * Math.sqrt(Math.max(0, 1 - t * t * t * t)));
+            boolean broken = z > d * 0.62 && z < d * 0.75;
+            for (int x = cx - half; x <= cx + half; x++) {
+                if (broken && b.rand(z * 17 + x, 3) > 0) continue;
+                b.set(x, 0, z, Blocks.DARK_OAK_PLANKS);
+                if (x == cx - half || x == cx + half) {
+                    int h = x == cx - half ? 3 : 1; // listing: one side higher
+                    for (int y = 1; y <= h; y++) if (!(broken && y > 1)) b.set(x, y, z, z % 3 == 0 ? Blocks.STRIPPED_DARK_OAK_LOG : Blocks.DARK_OAK_PLANKS);
+                }
+            }
+        }
+        // broken mast lying across the deck and a stump
+        b.fill(cx, 1, d / 3, cx, 3, d / 3, Blocks.STRIPPED_SPRUCE_LOG);
+        for (int i = 0; i < 7; i++) b.set(Math.min(w - 1, cx + i), 1, d / 3 + 2 + i / 3, Blocks.STRIPPED_SPRUCE_LOG);
+        b.set(cx + 1, 1, d / 2, Blocks.SEAGRASS);
+        b.set(cx - 2, 1, d / 4, Blocks.SEAGRASS);
+        b.chest(cx, 1, d - 4, Direction.NORTH, LOOT_WRECK);
+        b.barrel(cx - 1, 1, d - 4, LOOT_WAREHOUSE);
+        b.marker("treasure", cx, 1, d - 4);
     }
 
     private Buildings() {}

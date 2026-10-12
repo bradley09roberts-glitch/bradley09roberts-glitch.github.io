@@ -31,6 +31,10 @@ public final class ModDataComponents {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> SHIP_CLASS = TYPES.register("ship_class",
             () -> DataComponentType.<String>builder().persistent(Codec.STRING).networkSynchronized(ByteBufCodecs.STRING_UTF8).build());
 
+    /** Beli held by a coin pouch (redeemed on use). */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> BELI = TYPES.register("beli",
+            () -> DataComponentType.<Integer>builder().persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build());
+
     public static void register(IEventBus bus) {
         TYPES.register(bus);
     }

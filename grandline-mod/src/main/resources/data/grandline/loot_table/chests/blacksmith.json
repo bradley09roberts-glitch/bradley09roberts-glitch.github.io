@@ -1,0 +1,156 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": {
+        "type": "minecraft:uniform",
+        "min": 3,
+        "max": 6
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:iron_ingot",
+          "weight": 12,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 5
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:iron_nugget",
+          "weight": 10,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 3,
+                "max": 12
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:coal",
+          "weight": 10,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 8
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:flint",
+          "weight": 5,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:cutlass",
+          "weight": 4
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:knife",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:spear",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:tonfa",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:brass_knuckles",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:iron_kanabo",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:fine_katana",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:fine_cutlass",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:steel_spear",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:seastone_shard",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:beli_pouch",
+          "weight": 6,
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "grandline:beli": 130
+              }
+            },
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 3
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "random_sequence": "grandline:chests/blacksmith"
+}

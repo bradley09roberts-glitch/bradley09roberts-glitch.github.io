@@ -15,6 +15,8 @@ import java.util.List;
 public final class Settlement {
     public final Island island;
     public final List<Plot> plots = new ArrayList<>();
+    /** Island secrets (buried treasure, caches, shrines, wrecks); kept out of {@link #plots} so towns stay compact. */
+    public final List<Plot> secrets = new ArrayList<>();
     /** Road segments {x1, z1, x2, z2}. */
     public final List<int[]> roads = new ArrayList<>();
     public int centerX, centerZ;
@@ -60,6 +62,7 @@ public final class Settlement {
         if (island.settlementType != SettlementType.NONE) {
             layoutTown(s, island, r);
         }
+        layoutSecrets(s, island, new LegacyRandomSource(island.seed ^ 0x5EC2E7L));
         // bounds
         s.minX = Integer.MAX_VALUE;
         s.minZ = Integer.MAX_VALUE;
@@ -87,9 +90,11 @@ public final class Settlement {
     private static void layoutTown(Settlement s, Island island, RandomSource r) {
         // pick a centre on solid land
         int cx = island.x, cz = island.z;
-        for (int attempt = 0; attempt < 24; attempt++) {
+        for (int attempt = 0; attempt < 64; attempt++) {
             double ang = r.nextDouble() * Math.PI * 2;
-            double dist = island.radius * (attempt == 0 ? 0.0 : 0.05 + r.nextDouble() * 0.35);
+            // first near the middle; later attempts also try the outer land band (rings, atolls, crater rims)
+            double spread = attempt < 24 ? 0.35 : 0.85;
+            double dist = island.radius * (attempt == 0 ? 0.0 : 0.05 + r.nextDouble() * spread);
             int tx = island.x + (int) (Math.cos(ang) * dist), tz = island.z + (int) (Math.sin(ang) * dist);
             if (!buildable(island, tx - 5, tz - 5, 10, 10, 6) || overlaps(s, tx - 5, tz - 5, 10, 10, 6)) continue;
             cx = tx;
@@ -269,6 +274,62 @@ public final class Settlement {
         }
     }
 
+    /** Buried treasure, hidden caches, lost shrines and shipwrecks scattered away from the town. */
+    private static void layoutSecrets(Settlement s, Island island, RandomSource r) {
+        if (island.shape == com.grandline.world.IslandShape.SEA || island.radius < 60) return;
+        int count = Mth.clamp(1 + island.radius / 220, 1, 6);
+        for (int i = 0; i < count; i++) {
+            BuildingType type = i == 0 ? BuildingType.BURIED_TREASURE : switch (r.nextInt(5)) {
+                case 0 -> BuildingType.BURIED_TREASURE;
+                case 1 -> BuildingType.HIDDEN_CACHE;
+                case 2 -> BuildingType.LOST_SHRINE;
+                default -> BuildingType.SHIPWRECK;
+            };
+            Rotation rot = Rotation.values()[r.nextInt(4)];
+            boolean swap = rot == Rotation.CLOCKWISE_90 || rot == Rotation.COUNTERCLOCKWISE_90;
+            int sx = swap ? type.d : type.w, sz = swap ? type.w : type.d;
+            for (int attempt = 0; attempt < 40; attempt++) {
+                double ang = r.nextDouble() * Math.PI * 2;
+                int x0, z0, y;
+                if (type == BuildingType.SHIPWRECK) {
+                    // coastal shelf: walk outward until the floor is 5..16 below sea level
+                    int px = Integer.MIN_VALUE, pz = 0;
+                    for (int d = (int) (island.radius * 0.6); d < island.radius * 1.5; d += 6) {
+                        int tx = island.x + (int) (Math.cos(ang) * d), tz = island.z + (int) (Math.sin(ang) * d);
+                        double h = island.naturalHeight(tx, tz);
+                        if (!Double.isNaN(h) && h < WorldPlan.SEA_LEVEL - 5 && h > WorldPlan.SEA_LEVEL - 16) {
+                            px = tx;
+                            pz = tz;
+                            break;
+                        }
+                    }
+                    if (px == Integer.MIN_VALUE) continue;
+                    x0 = px - sx / 2;
+                    z0 = pz - sz / 2;
+                    double hmax = -999;
+                    for (int a = 0; a <= 2; a++)
+                        for (int b = 0; b <= 2; b++) {
+                            double h = island.naturalHeight(x0 + sx * a / 2, z0 + sz * b / 2);
+                            hmax = Math.max(hmax, Double.isNaN(h) ? WorldPlan.SEA_LEVEL - 20 : h);
+                        }
+                    if (hmax > WorldPlan.SEA_LEVEL - 4) continue;
+                    y = (int) Math.round(avgNatural(island, x0, z0, sx, sz)) + 1;
+                } else {
+                    double dist = island.radius * (0.15 + r.nextDouble() * 0.65);
+                    int px = island.x + (int) (Math.cos(ang) * dist), pz = island.z + (int) (Math.sin(ang) * dist);
+                    x0 = px - sx / 2;
+                    z0 = pz - sz / 2;
+                    if (!buildable(island, x0, z0, sx, sz, 4)) continue;
+                    if (s.hasCenter && Math.hypot(px - s.centerX, pz - s.centerZ) < 60) continue;
+                    y = Math.max(WorldPlan.SEA_LEVEL + 2, (int) Math.round(avgNatural(island, x0, z0, sx, sz)) + 1);
+                }
+                if (overlaps(s, x0, z0, sx, sz, 12) || overlapsAny(s.secrets, x0, z0, sx, sz, 12)) continue;
+                s.secrets.add(new Plot(type, x0, y, z0, sx, sz, rot, island.seed * 977 + i * 31L + attempt, "", true));
+                break;
+            }
+        }
+    }
+
     private static double avgNatural(Island island, int x0, int z0, int sx, int sz) {
         double sum = 0;
         int n = 0;
@@ -297,7 +358,11 @@ public final class Settlement {
     }
 
     private static boolean overlaps(Settlement s, int x0, int z0, int sx, int sz, int gap) {
-        for (Plot p : s.plots) {
+        return overlapsAny(s.plots, x0, z0, sx, sz, gap);
+    }
+
+    private static boolean overlapsAny(List<Plot> plots, int x0, int z0, int sx, int sz, int gap) {
+        for (Plot p : plots) {
             if (x0 < p.x() + p.sizeX() + gap && x0 + sx + gap > p.x() && z0 < p.z() + p.sizeZ() + gap && z0 + sz + gap > p.z()) return true;
         }
         return false;

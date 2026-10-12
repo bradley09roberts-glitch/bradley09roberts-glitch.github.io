@@ -1,0 +1,5 @@
+{
+  "item.grandline.beli_pouch": "Beli Pouch",
+  "item.grandline.beli_pouch.amount": "Holds %s Beli (use to add to your purse)",
+  "grandline.beli.gained": "+%s Beli"
+}

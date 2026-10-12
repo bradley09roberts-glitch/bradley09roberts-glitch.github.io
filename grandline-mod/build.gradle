@@ -24,7 +24,12 @@ neoForge {
     runs {
         client {
             client()
+            gameDirectory = project.file('run-client')
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            // Automated client verification: GL_CLIENTTEST=1 joins a local dedicated server and runs ClientSelfTest
+            if (System.getenv('GL_CLIENTTEST') != null) {
+                programArguments.addAll('--quickPlayMultiplayer', 'localhost:25565', '--username', 'Tester', '--width', '1280', '--height', '720')
+            }
         }
         server {
             server()

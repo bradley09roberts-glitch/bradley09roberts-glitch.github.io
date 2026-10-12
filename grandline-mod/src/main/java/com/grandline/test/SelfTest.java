@@ -73,7 +73,7 @@ public final class SelfTest {
 
     @SubscribeEvent
     public static void onStart(ServerStartedEvent e) {
-        if (PHASE == null) return;
+        if (PHASE == null || PHASE.equals("client")) return;
         steps = new ArrayDeque<>();
         REPORT.add("Grand Line Odyssey self-test, phase " + PHASE + ", " + new Date());
         if (PHASE.equals("1")) phase1();
@@ -218,6 +218,41 @@ public final class SelfTest {
             int planks = 0;
             for (int dx = -6; dx <= 6; dx++) for (int dz = -12; dz <= 12; dz++) if (l.getBlockState(new BlockPos(b.x + dx, WorldPlan.SEA_LEVEL + 1, b.z + dz)).is(Blocks.OAK_PLANKS)) planks++;
             check("Baratie restaurant ship built on the water", planks > 20, planks + " deck planks");
+            return 0;
+        });
+        // island secrets and chest loot
+        steps.add(s -> {
+            WorldPlan p = WorldPlan.of(s);
+            int total = 0, with = 0;
+            for (Island isl : p.islands) {
+                int n = isl.settlement().secrets.size();
+                total += n;
+                if (n > 0) with++;
+            }
+            check("islands carry secrets (treasure, caches, shrines, wrecks)", with >= p.islands.size() * 0.8, total + " secrets on " + with + "/" + p.islands.size() + " islands");
+            ServerLevel l = ow(s);
+            Island isl = p.byId("dawn_island");
+            Plot t = isl.settlement().secrets.stream().filter(pl -> pl.type() == com.grandline.world.settlement.BuildingType.BURIED_TREASURE).findFirst().orElse(null);
+            if (t != null) {
+                BlockPos chest = new com.grandline.world.build.Builder(new com.grandline.world.build.BlockSink() {
+                    @Override public void set(int x, int y, int z, net.minecraft.world.level.block.state.BlockState st) {}
+                }, t.x(), t.y(), t.z(), t.type().w, t.type().d, t.rotation(), t.seed()).world(2, -3, 2);
+                l.getChunk(chest.getX() >> 4, chest.getZ() >> 4);
+                var be = l.getBlockEntity(chest);
+                check("buried treasure chest generated under its X", be instanceof net.minecraft.world.level.block.entity.ChestBlockEntity, "at " + chest.toShortString());
+            } else check("buried treasure chest generated under its X", false, "dawn_island has no buried treasure");
+            int ok = 0;
+            String sample = "";
+            for (String n : List.of("house", "tavern", "shop", "blacksmith", "marine", "warehouse", "ruin", "starter", "treasure", "wreck", "shrine", "cache")) {
+                var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.LOOT_TABLE, GrandLine.id("chests/" + n));
+                var table = s.reloadableRegistries().getLootTable(key);
+                var items = table.getRandomItems(new net.minecraft.world.level.storage.loot.LootParams.Builder(l)
+                        .withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN, net.minecraft.world.phys.Vec3.ZERO)
+                        .create(net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.CHEST));
+                if (table != net.minecraft.world.level.storage.loot.LootTable.EMPTY && !items.isEmpty()) ok++;
+                if (n.equals("treasure")) sample = items.toString();
+            }
+            check("all 12 chest loot tables load and roll items", ok == 12, ok + "/12; treasure roll " + sample);
             return 0;
         });
         // NPC markers & spawning

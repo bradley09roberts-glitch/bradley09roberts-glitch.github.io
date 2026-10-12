@@ -193,8 +193,12 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
         int minX = chunk.getPos().getMinBlockX(), minZ = chunk.getPos().getMinBlockZ();
         int maxX = minX + 15, maxZ = minZ + 15;
         for (Island isl : plan.candidates(cx, cz)) {
-            if (isl.settlementType == com.grandline.world.settlement.SettlementType.NONE && isl.landmarks.isEmpty()) continue;
             Settlement st = isl.settlement();
+            for (Plot p : st.secrets) {
+                if (p.x() - 2 > maxX || p.x() + p.sizeX() + 2 < minX || p.z() - 2 > maxZ || p.z() + p.sizeZ() + 2 < minZ) continue;
+                Buildings.build(p, isl.style, new Builder(sink, p.x(), p.y(), p.z(), p.type().w, p.type().d, p.rotation(), p.seed()));
+            }
+            if (st.plots.isEmpty() && !st.hasDock) continue;
             if (st.maxX < minX || st.minX > maxX || st.maxZ < minZ || st.minZ > maxZ) continue;
             stampRoads(isl, st, sink, minX, minZ, maxX, maxZ);
             stampDock(isl, st, sink, minX, minZ, maxX, maxZ);
