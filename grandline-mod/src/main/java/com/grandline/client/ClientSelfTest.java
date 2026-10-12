@@ -215,7 +215,8 @@ public final class ClientSelfTest {
         cmd("effect give @s minecraft:resistance 900 3 true", 5);
         cmd("effect give @s minecraft:regeneration 900 2 true", 5);
         for (String role : new String[]{"marine_captain", "pirate_captain", "fishman_brute", "giant_warrior", "kuja_warrior"}) {
-            cmd("grandline npc " + role + " 5", 5);
+            cmd("grandline npc " + role + " 5", 1);
+            cmd("execute as @e[type=grandline:npc,distance=..8] run data merge entity @s {NoAI:1b}", 4); // freeze at once
             cmd("tp @s ~3 ~ ~ 0 0", 5);
         }
         // they pose for the camera and stand as targets: five elite NPCs at once would finish the tester in seconds
