@@ -578,6 +578,11 @@ First run of a real client against the dedicated server. Result: no client crash
   (the party appears at the base's edge); fruit terrain changes and Buster Call craters inside a base are not blocked
   (they revert anyway); hands get a new name each time they are put down; crew ships are repaired at the dock but not
   otherwise kept (no recall or mooring); a claim whose founder and captain are both gone needs an operator to transfer.
+- After the merge (with the boss fights, sound and ambience): the first full run had 7 FAILs, all raid checks after
+  the landing: the landing party's spots at the base's edge lie up to 221 blocks from the dock on a big island,
+  outside the area the test loaded, so the ship arrived and could not land. The test now keeps the flag area
+  loaded (a crew member within 160 blocks keeps it loaded in real play) and reports spots and crew if a landing
+  fails (`BaseRaids.landingReport`). Full phase 1 576/576, phase 2 18/18, no exception (11:00-11:30).
 
 ## Work in flight (background agents)
 - Faction careers (ranks, titles, perks for every path).
