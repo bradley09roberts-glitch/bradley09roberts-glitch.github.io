@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:impact_dial"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_sky_people.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_sky_people.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_sky_people": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_sky_people"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_sky_people"
+    ]
+  ]
+}

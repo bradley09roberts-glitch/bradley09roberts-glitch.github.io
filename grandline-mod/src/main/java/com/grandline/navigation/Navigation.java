@@ -34,6 +34,7 @@ public final class Navigation {
         // just arrived where the ground is still generating (join, teleport, respawn): discover once it has loaded,
         // so the level-up below does not make the server thread wait for the player's own chunk
         if (!com.grandline.core.Chunks.ready(sp.level(), sp.getBlockX(), sp.getBlockZ())) return;
+        com.grandline.journey.Journey.onSea(sp); // journey: entering a new sea
         Island isl = plan.islandAt(sp.getBlockX(), sp.getBlockZ());
         if (isl == null || isl.t(sp.getBlockX(), sp.getBlockZ()) >= 1.0) isl = plan.pointAt(sp.getBlockX(), sp.getBlockZ(), 40); // Mary Geoise
         if (isl != null && (isl.radius < 10 || isl.t(sp.getBlockX(), sp.getBlockZ()) < 1.0)) {
@@ -49,6 +50,7 @@ public final class Navigation {
                 if (isl.canon) QuestEvents.onDiscover(sp, "any_canon");
                 if (isl.zone == com.grandline.world.SeaZone.NEW_WORLD) QuestEvents.onDiscover(sp, "any_new_world");
                 QuestEvents.onDiscover(sp, "any");
+                com.grandline.journey.Journey.onDiscover(sp, isl);
                 CharacterManager.markDirty(sp);
             }
             // Log Pose recording

@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/root",
+  "display": {
+    "icon": {
+      "id": "grandline:ship_hatch"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.set_sail.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.set_sail.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "set_sail": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "set_sail"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "set_sail"
+    ]
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/first_island",
+  "display": {
+    "icon": {
+      "id": "grandline:blue_sardine"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.east_blue.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.east_blue.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "east_blue": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "east_blue"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "east_blue"
+    ]
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:eternal_pose"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_three_eye.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_three_eye.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_three_eye": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_three_eye"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_three_eye"
+    ]
+  ]
+}

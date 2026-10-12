@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/root",
+  "display": {
+    "icon": {
+      "id": "grandline:torn_map"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.story_part1.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.story_part1.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "story_part1": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "story_part1"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "story_part1"
+    ]
+  ]
+}

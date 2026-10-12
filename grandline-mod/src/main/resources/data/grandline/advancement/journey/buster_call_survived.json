@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/bounty_100m",
+  "display": {
+    "icon": {
+      "id": "grandline:cannonball"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.buster_call_survived.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.buster_call_survived.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "buster_call_survived": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "buster_call_survived"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "buster_call_survived"
+    ]
+  ]
+}

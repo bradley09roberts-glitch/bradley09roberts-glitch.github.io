@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/haki_observation",
+  "display": {
+    "icon": {
+      "id": "grandline:musket"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.haki_future_sight.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.haki_future_sight.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "haki_future_sight": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "haki_future_sight"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "haki_future_sight"
+    ]
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/root",
+  "display": {
+    "icon": {
+      "id": "grandline:behemoth_carp"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.giant_catch.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.giant_catch.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "giant_catch": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "giant_catch"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "giant_catch"
+    ]
+  ]
+}

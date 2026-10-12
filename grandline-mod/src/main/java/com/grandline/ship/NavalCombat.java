@@ -838,6 +838,8 @@ public final class NavalCombat {
             else if (from.equals("pirate") && Faction.isLaw(d.faction)) d.addReputation(Faction.MARINE.id(), 20 + 10 * ship.cls.ordinal());
             CharacterManager.markDirty(sp);
             com.grandline.quest.Quests.progress(sp, "capture", from.isEmpty() ? "any" : from, 1);
+            com.grandline.journey.Journey.onPrize(sp);
+            com.grandline.journey.DenDenMushi.onPrizeTaken(sp, from); // a Marine prize may hold her captain's black snail
         }
         ship.level().playSound(null, ship.blockPosition(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1f, 0.8f);
         return true;

@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/crew_recruit",
+  "display": {
+    "icon": {
+      "id": "grandline:grilled_fish"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.crew_five.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.crew_five.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "crew_five": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "crew_five"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "crew_five"
+    ]
+  ]
+}

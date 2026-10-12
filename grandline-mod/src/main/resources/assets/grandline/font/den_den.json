@@ -1,0 +1,13 @@
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "grandline:font/den_den.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": [
+        "\ue000\ue001\ue002\ue003"
+      ]
+    }
+  ]
+}

@@ -36,6 +36,8 @@ public final class Bounties {
         }
         sp.displayClientMessage(Component.translatable("grandline.bounty.raised", String.format("%,d", d.bounty)).withStyle(ChatFormatting.YELLOW), true);
         CharacterManager.markVisualsDirty(sp);
+        com.grandline.journey.Journey.onBounty(sp, d.bounty); // journey: poster, 10M, 100M, 1B
+        com.grandline.ship.BusterCall.onCrime(sp); // a crime seen from a Marine base may bring a Buster Call
     }
 
     public static ItemStack poster(CharacterData d) {

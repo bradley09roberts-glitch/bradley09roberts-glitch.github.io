@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/bounty_100m",
+  "display": {
+    "icon": {
+      "id": "grandline:seastone_jitte"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.bounty_1b.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.bounty_1b.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "bounty_1b": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "bounty_1b"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "bounty_1b"
+    ]
+  ]
+}

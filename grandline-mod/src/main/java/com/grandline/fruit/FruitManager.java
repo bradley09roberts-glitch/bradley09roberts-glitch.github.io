@@ -56,6 +56,7 @@ public final class FruitManager {
         sp.sendSystemMessage(Component.translatable("grandline.fruit.eaten", Component.translatable(f.translationKey())).withStyle(ChatFormatting.LIGHT_PURPLE));
         Loadouts.refresh(sp, d);
         CharacterManager.markVisualsDirty(sp);
+        com.grandline.journey.Journey.onFruitEaten(sp);
     }
 
     /** Admin/testing: give a fruit item, respecting uniqueness. */

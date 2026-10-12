@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:whip"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_long_arm.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_long_arm.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_long_arm": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_long_arm"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_long_arm"
+    ]
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/haki_conqueror",
+  "display": {
+    "icon": {
+      "id": "grandline:enma"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.haki_infusion.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.haki_infusion.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "haki_infusion": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "haki_infusion"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "haki_infusion"
+    ]
+  ]
+}

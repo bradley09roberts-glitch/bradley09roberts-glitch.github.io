@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/den_call",
+  "display": {
+    "icon": {
+      "id": "grandline:black_den_den_mushi"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.den_eavesdrop.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.den_eavesdrop.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "den_eavesdrop": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "den_eavesdrop"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "den_eavesdrop"
+    ]
+  ]
+}

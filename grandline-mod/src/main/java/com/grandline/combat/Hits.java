@@ -241,6 +241,7 @@ public final class Hits {
                 sp.displayClientMessage(net.minecraft.network.chat.Component.translatable("grandline.mastery.up",
                         net.minecraft.network.chat.Component.translatable("mastery.grandline." + masteryKey.replace('/', '.')), d.mastery(masteryKey)), true);
                 com.grandline.combat.Loadouts.refresh(sp, d);
+                com.grandline.journey.Journey.onMastery(sp, d, masteryKey);
             }
             CharacterManager.markDirty(sp);
         }

@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/ship_buy",
+  "display": {
+    "icon": {
+      "id": "grandline:sea_king_steak"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.sea_king.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.sea_king.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "sea_king": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "sea_king"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "sea_king"
+    ]
+  ]
+}

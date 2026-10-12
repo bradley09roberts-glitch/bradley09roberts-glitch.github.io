@@ -29,6 +29,7 @@ public final class GrandLine {
         ModWorldgen.register(modBus);
         ModCreativeTabs.register(modBus);
         com.grandline.activity.ActivityRegistry.register(modBus); // sea activities: treasure maps, fishing, cooking
+        com.grandline.journey.JourneyRegistry.register(modBus); // journey advancements (milestone trigger), Den Den Mushi
         GLNetwork.register(modBus);
         modBus.addListener(this::setup);
     }

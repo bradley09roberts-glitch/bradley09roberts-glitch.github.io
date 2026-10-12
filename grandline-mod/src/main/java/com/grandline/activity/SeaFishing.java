@@ -198,6 +198,7 @@ public final class SeaFishing {
             boolean fry = st.is(ActivityItems.SEA_KING_FRY.get());
             xp += (fry ? 40 : isGiant(st) ? 14 : 8) + Meals.quality(st) * 4;
             Quests.progress(sp, "fish", BuiltInRegistries.ITEM.getKey(st.getItem()).getPath(), 1);
+            com.grandline.journey.Journey.onCatch(sp, st);
             if (fry || isGiant(st) || Meals.quality(st) == 2)
                 sp.displayClientMessage(Component.translatable("grandline.fishing.big", st.getHoverName()).withStyle(ChatFormatting.AQUA), true);
         }

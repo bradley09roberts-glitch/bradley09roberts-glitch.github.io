@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/story_part4",
+  "display": {
+    "icon": {
+      "id": "grandline:seastone_jitte"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.ending_true_justice.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.ending_true_justice.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "criteria": {
+    "ending_true_justice": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "ending_true_justice"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ending_true_justice"
+    ]
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/root",
+  "display": {
+    "icon": {
+      "id": "grandline:saltfire_curry"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.signature_dish.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.signature_dish.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "signature_dish": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "signature_dish"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "signature_dish"
+    ]
+  ]
+}

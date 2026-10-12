@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/fruit_eat",
+  "display": {
+    "icon": {
+      "id": "grandline:style_scroll"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.fruit_master.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.fruit_master.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "fruit_master": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "fruit_master"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "fruit_master"
+    ]
+  ]
+}

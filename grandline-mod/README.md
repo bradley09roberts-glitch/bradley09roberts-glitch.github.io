@@ -87,13 +87,16 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
   solves it. A rod cast at sea lands that sea's own fish (a fishing skill raises their quality; storms and a navigator
   bring up giants and Sea King fry). Cook them at a campfire, smoker or furnace, or into dishes in the crafting grid,
   for meal buffs (stamina, strength, Haki, swimming, cold/heat resistance); a crew cook cooks better and feeds you at sea.
+- **The journey**: an advancement tab tracks your voyage (seas, fruit, Haki, bounty, ships, crew, saga, endings, races); it belongs to your account and survives a permadeath.
+- **Den Den Mushi**: use a snail to call anyone carrying one (`/den`); crew snails talk to your crew (`/crew invite`), Baby Den Den carry one message, black snails from Marine officers overhear the Marines.
+- **Buster Call**: past 500M Beli, a crime by a Marine base or a Vice Admiral who lived may bring a rare, announced fleet bombardment; outlast, outrun or sink it (config `busterCall`).
 
 ## Admin and test commands (op)
 
 `/grandline island list|here|tp <id>`, `/grandline fruit give|set|remove|awaken|ledger`, `/grandline char info|level|
 mastery|style|haki|conqueror|beli|reset`, `/grandline npc <role> [tier]`, `/grandline quest <id>`,
 `/grandline terrain revert`, `/grandline test env|ship <class> [helm]|sail <0-3>|anchor <bool>|ability <id>|storm|
-inventory`.
+inventory`, `/bustercall status|issue <player>|cancel <player>`.
 
 ## Building from source
 

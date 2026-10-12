@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/paradise",
+  "display": {
+    "icon": {
+      "id": "grandline:sea_king_fry"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.calm_belt.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.calm_belt.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "calm_belt": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "calm_belt"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "calm_belt"
+    ]
+  ]
+}

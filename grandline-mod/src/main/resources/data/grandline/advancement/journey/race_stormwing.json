@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:cloud_skipper"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_stormwing.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_stormwing.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_stormwing": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_stormwing"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_stormwing"
+    ]
+  ]
+}

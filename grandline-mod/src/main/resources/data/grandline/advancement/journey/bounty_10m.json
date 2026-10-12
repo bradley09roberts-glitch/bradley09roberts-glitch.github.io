@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/bounty_poster",
+  "display": {
+    "icon": {
+      "id": "grandline:beli_pouch"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.bounty_10m.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.bounty_10m.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "bounty_10m": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "bounty_10m"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "bounty_10m"
+    ]
+  ]
+}

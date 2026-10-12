@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:tidewater_sashimi"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_reefborn.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_reefborn.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_reefborn": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_reefborn"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_reefborn"
+    ]
+  ]
+}

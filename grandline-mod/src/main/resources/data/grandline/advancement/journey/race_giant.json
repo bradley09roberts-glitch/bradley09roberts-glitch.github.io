@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:iron_kanabo"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_giant.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_giant.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_giant": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_giant"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_giant"
+    ]
+  ]
+}
