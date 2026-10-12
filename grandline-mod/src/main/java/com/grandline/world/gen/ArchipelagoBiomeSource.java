@@ -90,10 +90,24 @@ public final class ArchipelagoBiomeSource extends BiomeSource {
             if (theme == IslandTheme.CLOUD || theme == IslandTheme.CORAL) return theme.wildBiome;
             if (s.height <= WorldPlan.SEA_LEVEL + 2 && isl.t(x, z) > 0.88) return theme == IslandTheme.SNOW || theme == IslandTheme.ICE ? Biomes.SNOWY_BEACH : Biomes.BEACH;
             Settlement st = isl.settlement();
-            if (st.bounds(x, z)) return theme.settledBiome;
+            // the settled (sparser) biome only around the buildings themselves, so the wilds between a town and its
+            // outlying landmarks keep their forests instead of the whole bounding box turning to plains
+            if (st.bounds(x, z) && nearPlot(st, x, z)) return theme.settledBiome;
             return theme.wildBiome;
         }
         return seaBiome(s.zone);
+    }
+
+    private static boolean nearPlot(Settlement st, int x, int z) {
+        if (st.hasCenter && Math.abs(x - st.centerX) < 40 && Math.abs(z - st.centerZ) < 40) return true;
+        for (com.grandline.world.settlement.Plot p : st.plots) if (p.contains(x, z, 20)) return true;
+        for (int[] r : st.roads) {
+            double vx = r[2] - r[0], vz = r[3] - r[1], len2 = vx * vx + vz * vz;
+            double k = len2 == 0 ? 0 : Math.max(0, Math.min(1, ((x - r[0]) * vx + (z - r[1]) * vz) / len2));
+            double dx = r[0] + vx * k - x, dz = r[1] + vz * k - z;
+            if (dx * dx + dz * dz < 12 * 12) return true;
+        }
+        return false;
     }
 
     static ResourceKey<Biome> seaBiome(SeaZone z) {

@@ -104,12 +104,24 @@ public final class WorldPlan {
         this.kind = Kind.OCEAN;
         this.floorNoise = new SimplexNoise(new LegacyRandomSource(seed ^ 0x51F1L));
         this.wallNoise = new SimplexNoise(new LegacyRandomSource(seed ^ 0xBEEFL));
-        List<IslandSpec> specs = new ArrayList<>(CanonIslands.all());
-        specs.addAll(generateOriginals(seed, specs, proceduralCount));
+        // Existing worlds must not change: the core canon roster and the originals keep their order, and so their
+        // island seeds (noise, coastline, town layout). Originals are laid out around the core roster only; canon
+        // islands added later come after them, and an original that would crowd one is dropped (its index stays used).
+        List<IslandSpec> core = CanonIslands.core();
+        List<IslandSpec> originals = generateOriginals(seed, core, proceduralCount);
+        List<IslandSpec> added = CanonIslands.additions();
+        Set<IslandSpec> dropped = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (IslandSpec o : originals)
+            if (added.stream().anyMatch(a -> Math.hypot(a.x - o.x, a.z - o.z) < a.radius + o.radius + 800)) dropped.add(o);
+        List<IslandSpec> specs = new ArrayList<>(core);
+        specs.addAll(originals);
+        specs.addAll(added);
         List<Island> list = new ArrayList<>();
         long i = 0;
         for (IslandSpec spec : specs) {
-            Island island = new Island(this, spec, seed * 31 + (spec.id.hashCode() * 0x9E3779B97F4A7C15L) + i++);
+            long index = i++;
+            if (dropped.contains(spec)) continue;
+            Island island = new Island(this, spec, seed * 31 + (spec.id.hashCode() * 0x9E3779B97F4A7C15L) + index);
             list.add(island);
             byId.put(island.id, island);
             index(island);
@@ -219,6 +231,7 @@ public final class WorldPlan {
     /** Mutable result of {@link #sample}. */
     public static final class Sample {
         public int height;          // top solid block y
+        public double exact;        // unrounded terrain height (slopes, surface variety)
         public int waterTop = SEA_LEVEL;
         @Nullable public Island island;
         public SeaZone zone;
@@ -243,6 +256,7 @@ public final class WorldPlan {
                 }
             }
             out.height = (int) Math.floor(best);
+            out.exact = best;
             out.island = owner;
             return;
         }
@@ -289,6 +303,7 @@ public final class WorldPlan {
             }
         }
         out.height = (int) Math.floor(best);
+        out.exact = best;
         out.island = owner;
     }
 

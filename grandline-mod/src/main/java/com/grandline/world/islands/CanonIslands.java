@@ -19,7 +19,18 @@ import static com.grandline.world.settlement.SettlementType.*;
  * Sky islands (Skypiea, Weatheria) and the deep sea (Fish-Man Island) live in their own dimensions.
  */
 public final class CanonIslands {
+    /** Every canon island: the original roster plus {@link #additions()}. */
     public static List<IslandSpec> all() {
+        List<IslandSpec> l = core();
+        l.addAll(additions());
+        return l;
+    }
+
+    /**
+     * The original roster. Procedural islands are laid out around these only, so adding canon islands later never
+     * moves an existing world's original islands (see {@link #additions()}).
+     */
+    public static List<IslandSpec> core() {
         List<IslandSpec> l = new ArrayList<>();
         // ---------------- East Blue (x>0, z>0): the route runs west toward Reverse Mountain ----------------
         l.add(c("shiokaze_isle", 36000, 20000, 380).shape(HILLS, 26).theme(TEMPERATE).settle(VILLAGE).starter(Blue.EAST).tier(1).landmark("starter_shrine", 40, -60).named("Shiokaze Isle"));
@@ -100,6 +111,31 @@ public final class CanonIslands {
         l.add(c("elbaph", -12500, 1500, 1500).shape(GIANT_TREE, 60).theme(GIANT_FOREST).style(BuildStyle.GIANT).settle(CITY).faction("giants").tier(9).landmark("treasure_tree", 0, 0));
         l.add(c("lodestar_island", -7000, -2400, 450).shape(HILLS, 50).theme(VOLCANIC).settle(NONE).tier(9));
         l.add(c("laugh_tale", -3000, 0, 600).shape(HILLS, 40).theme(TROPICAL).settle(NONE).tier(10).landmark("laugh_tale_ruins", 0, 0));
+        return l;
+    }
+
+    /**
+     * Canon places added after the first roster. They are placed after the procedural islands; an original island that
+     * would crowd one of them is dropped instead of moving the others. Landmark builders: LandmarkBuildersExtra.
+     */
+    public static List<IslandSpec> additions() {
+        List<IslandSpec> l = new ArrayList<>();
+        // East Blue: the endless bridge built by forced labour, reaching out across the sea
+        l.add(c("tequila_wolf", 8500, 24500, 250).shape(FLAT, 6).theme(ROCKY).style(BuildStyle.STONE_TOWN).settle(HAMLET).faction("world_government").tier(2)
+                .landmark("endless_bridge", 337, 0, 3));
+        // North Blue: the fleet-kingdom that has no land of its own, here moored at sea
+        l.add(c("germa_kingdom", 24000, -27500, 40).shape(SEA, 0).theme(SNOW).settle(NONE).tier(3).landmark("germa_fleet", 0, 0));
+        l.add(c("rommel_kingdom", 12000, -27000, 480).shape(HILLS, 30).theme(SNOW).style(BuildStyle.STONE_TOWN).settle(TOWN).tier(2).landmark("rommel_keep", 0, -130));
+        // West Blue
+        l.add(c("oykot_kingdom", -31000, -11500, 550).shape(HILLS, 24).theme(TEMPERATE).style(BuildStyle.STONE_TOWN).settle(CITY).tier(2).landmark("oykot_palace", 0, -180));
+        l.add(c("god_valley", -17000, -27500, 600).shape(HILLS, 32).theme(DARK).settle(RUINS).tier(3).landmark("god_valley_ruins", 0, 0));
+        // Paradise: a resort island
+        l.add(c("kyuka_island", 17000, 3000, 380).shape(HILLS, 18).theme(TROPICAL).style(BuildStyle.VENETIAN).settle(TOWN).tier(3).landmark("kyuka_resort", 0, 120));
+        // New World
+        l.add(c("lulusia_kingdom", -16000, -1600, 600).shape(BLAST, 26).theme(VOLCANIC).settle(NONE).tier(8).landmark("lulusia_memorial", 430, 0, 1));
+        l.add(c("prodence_kingdom", -45500, 600, 450).shape(HILLS, 30).theme(MEADOW).style(BuildStyle.STONE_TOWN).settle(CITY).tier(6).landmark("prodence_castle", 0, -150));
+        l.add(c("karai_bari_island", -22500, 300, 420).shape(HILLS, 22).theme(SAVANNA).style(BuildStyle.STONE_TOWN).settle(TOWN).faction("pirate").tier(7).landmark("mercenary_guild_hall", 0, 0));
+        l.add(c("mogaro_kingdom", -31500, -3000, 450).shape(PLATEAU, 26).theme(WHITE_ROCK).style(BuildStyle.PALACE).settle(CITY).tier(7).landmark("mogaro_royal_gate", 0, -160));
         return l;
     }
 

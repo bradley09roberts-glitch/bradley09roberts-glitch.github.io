@@ -157,6 +157,13 @@ public final class Island {
                 h = sea + 1 + Math.max(inner, peak * wall * smooth(0.66, 0.78, t)) + detail * 0.7;
             }
             case SEA -> h = sea - 7 - 5 * t;
+            case BLAST -> {
+                // perfectly round pit (no coastline wobble) with sheer walls, inside a scorched rim
+                double dn = Math.sqrt(dd) / radius;
+                double inner = 0.6;
+                if (dn < inner) h = sea - 18 - 14 * (1 - (dn / inner) * (dn / inner));
+                else h = sea + 1 + peak * Math.exp(-(dn - inner) / 0.12) + 3 * inv + detail * 0.5;
+            }
             case GIANT_TREE, HILLS -> h = sea + 1 + peak * Math.pow(inv, 1.2) * (0.55 + 0.45 * (n(px * 0.005, pz * 0.005) + 1) / 2) + detail;
             default -> h = sea + 1 + peak * inv + detail;
         }
@@ -169,6 +176,7 @@ public final class Island {
     public double height(int px, int pz) {
         double h = naturalHeight(px, pz);
         if (Double.isNaN(h)) return h;
+        h += microRelief(px, pz, h);
         Settlement s = settlement();
         for (Plot p : s.secrets) {
             double out = p.outsideDistance(px, pz);
@@ -185,6 +193,27 @@ public final class Island {
             h = Mth.lerp(w, h, p.y() - 1);
         }
         return h;
+    }
+
+    /**
+     * Small-scale relief (hummocks a few blocks across, about one block high) so that wide gentle slopes do not floor
+     * into long regular 1-block contour terraces. Fades out toward the beach so coasts and beaches stay as they were,
+     * and is added before the settlement pads are applied so plots stay flat. Not part of {@link #naturalHeight}, which
+     * settlement layout uses, so town layouts are unchanged.
+     */
+    public double microRelief(int px, int pz, double h) {
+        if (shape == IslandShape.SEA) return 0;
+        double k = Mth.clamp((h - (WorldPlan.SEA_LEVEL + 2.5)) / 3.0, 0, 1);
+        if (k <= 0) return 0;
+        double amp = shape == IslandShape.DUNES || shape == IslandShape.TERRACES || theme == IslandTheme.CLOUD ? 0.7 : 1.0;
+        // towns keep tidy, gently rolling streets: the relief fades out over 12 blocks into the settlement's bounds
+        Settlement s = settlement();
+        if (!s.plots.isEmpty()) {
+            int ox = Math.max(Math.max(s.minX - px, px - s.maxX), 0), oz = Math.max(Math.max(s.minZ - pz, pz - s.maxZ), 0);
+            double out = Math.max(ox, oz);
+            if (out < 12) amp *= 0.25 + 0.75 * (out / 12.0);
+        }
+        return k * amp * (n(px * 0.07 + 41.3, pz * 0.07 - 23.9) * 1.1 + n(px * 0.18 - 7.1, pz * 0.18 + 13.7) * 0.3);
     }
 
     private static double smooth(double edge0, double edge1, double v) {

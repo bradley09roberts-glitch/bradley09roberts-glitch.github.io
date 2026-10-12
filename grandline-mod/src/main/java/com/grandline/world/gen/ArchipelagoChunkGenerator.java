@@ -114,6 +114,7 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
         WorldPlan plan = plan(randomState);
         LevelChunkSection[] sections = chunk.getSections();
         for (LevelChunkSection sec : sections) sec.acquire();
+        long t0 = cpuTime();
         try {
             switch (kind) {
                 case OCEAN -> fill(plan, chunk);
@@ -123,7 +124,19 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
         } finally {
             for (LevelChunkSection sec : sections) sec.release();
         }
+        FILL_NANOS.add(cpuTime() - t0);
+        FILL_CHUNKS.increment();
         return CompletableFuture.completedFuture(chunk);
+    }
+
+    /** CPU time spent in terrain fill and in island decoration, for the self-test's generation-speed report. */
+    public static final java.util.concurrent.atomic.LongAdder FILL_NANOS = new java.util.concurrent.atomic.LongAdder(),
+            FILL_CHUNKS = new java.util.concurrent.atomic.LongAdder(), DECOR_NANOS = new java.util.concurrent.atomic.LongAdder(),
+            DECOR_CHUNKS = new java.util.concurrent.atomic.LongAdder();
+    private static final java.lang.management.ThreadMXBean THREADS = java.lang.management.ManagementFactory.getThreadMXBean();
+
+    private static long cpuTime() {
+        return THREADS.isCurrentThreadCpuTimeSupported() ? THREADS.getCurrentThreadCpuTime() : System.nanoTime();
     }
 
     private static SimplexNoise caveNoise(long seed) {
@@ -135,26 +148,39 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
         Heightmap surface = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
         int minY = chunk.getMinBuildHeight();
         int x0 = chunk.getPos().getMinBlockX(), z0 = chunk.getPos().getMinBlockZ();
-        WorldPlan.Sample s = new WorldPlan.Sample();
+        WorldPlan.Sample[] grid = grid(plan, x0, z0);
+        SurfacePalette pal = palette(plan);
+        SurfacePalette.Column col = new SurfacePalette.Column();
         SimplexNoise cave = caveNoise(plan.seed);
         for (int lx = 0; lx < 16; lx++)
             for (int lz = 0; lz < 16; lz++) {
                 int x = x0 + lx, z = z0 + lz;
-                plan.sample(x, z, s);
+                WorldPlan.Sample s = grid[(lx + 1) * G + lz + 1];
                 int h = Math.max(minY + 2, Math.min(chunk.getMaxBuildHeight() - 2, s.height));
                 Island isl = s.island;
                 IslandTheme theme = isl != null ? isl.themeAt(x, z) : null;
                 boolean land = h >= WorldPlan.SEA_LEVEL;
                 BlockState top, sub, mid;
+                boolean rock = false;
+                double wobble = 0;
+                int rockDepth = 8;
                 if (s.redLine || (isl == null && land && !s.canal)) {
                     top = h > 250 ? Blocks.RED_SANDSTONE.defaultBlockState() : Blocks.RED_TERRACOTTA.defaultBlockState();
                     sub = Blocks.TERRACOTTA.defaultBlockState();
                     mid = ((h + x / 7) & 3) == 0 ? Blocks.ORANGE_TERRACOTTA.defaultBlockState() : Blocks.RED_TERRACOTTA.defaultBlockState();
                 } else if (theme != null && land) {
                     boolean beach = h <= WorldPlan.SEA_LEVEL + 2 && isl.t(x, z) > 0.84;
-                    boolean steep = isSteep(plan, s, x, z, h);
-                    top = (beach ? theme.beach : steep && theme != IslandTheme.DESERT ? theme.stone : theme.surface).defaultBlockState();
-                    sub = (beach ? theme.beach : theme.subsurface).defaultBlockState();
+                    if (beach) {
+                        top = sub = theme.beach.defaultBlockState();
+                    } else {
+                        double sl = slope(grid, lx, lz);
+                        pal.surface(theme, x, h, z, sl, col);
+                        rockDepth = rockDepth(sl);
+                        top = col.top;
+                        rock = col.rock;
+                        sub = theme.subsurface.defaultBlockState();
+                        if (rock) wobble = pal.wobble(x, z);
+                    }
                     mid = theme.stone.defaultBlockState();
                 } else {
                     // sea floor
@@ -171,6 +197,7 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
                     else if (y <= h) {
                         int depth = h - y;
                         if (depth == 0) st = top;
+                        else if (depth < rockDepth && rock) st = SurfacePalette.strata(theme, x, y, z, wobble);
                         else if (depth < 4) st = sub;
                         else if (depth < 8) st = mid;
                         else st = y < 0 ? DEEPSLATE : STONE;
@@ -189,7 +216,44 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
                 }
                 ocean.update(lx, lastSolid, lz, top);
                 surface.update(lx, Math.max(lastSolid, waterTop), lz, waterTop > lastSolid ? WATER : top);
+                // snowfields: snow layers follow the unrounded height, so gentle slopes become smooth ramps, not terraces
+                if ((theme == IslandTheme.SNOW || theme == IslandTheme.ICE) && land && lastSolid == h && h < chunk.getMaxBuildHeight() - 2)
+                    smoothLayer(chunk, surface, lx, h, lz, s.exact);
             }
+    }
+
+    /** How deep a rock column shows strata: tall cliffs get banded rock all the way down their exposed face. */
+    private static int rockDepth(double slope) {
+        return Math.max(8, Math.min(64, (int) (slope * 2.2) + 3));
+    }
+
+    /** Side of the sample grid: the chunk plus a one-column border (for slopes). */
+    static final int G = 18;
+
+    /** Terrain samples for the chunk and a one-block border, indexed [(lx + 1) * 18 + lz + 1]. */
+    static WorldPlan.Sample[] grid(WorldPlan plan, int x0, int z0) {
+        WorldPlan.Sample[] g = new WorldPlan.Sample[G * G];
+        for (int i = 0; i < G; i++)
+            for (int j = 0; j < G; j++) {
+                WorldPlan.Sample s = new WorldPlan.Sample();
+                plan.sample(x0 + i - 1, z0 + j - 1, s);
+                g[i * G + j] = s;
+            }
+        return g;
+    }
+
+    /** Terrain slope (blocks of rise per block) at a chunk column. */
+    static double slope(WorldPlan.Sample[] g, int lx, int lz) {
+        int i = lx + 1, j = lz + 1;
+        double dx = (g[(i + 1) * G + j].exact - g[(i - 1) * G + j].exact) * 0.5;
+        double dz = (g[i * G + j + 1].exact - g[i * G + j - 1].exact) * 0.5;
+        return Math.max(Math.abs(dx), Math.abs(dz));
+    }
+
+    private static final java.util.Map<Long, SurfacePalette> PALETTES = new java.util.concurrent.ConcurrentHashMap<>();
+
+    static SurfacePalette palette(WorldPlan plan) {
+        return PALETTES.computeIfAbsent(plan.seed, SurfacePalette::new);
     }
 
     // ------------------------------------------------------------------ the White Sea (sky)
@@ -199,21 +263,30 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
         Heightmap surface = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
         int x0 = chunk.getPos().getMinBlockX(), z0 = chunk.getPos().getMinBlockZ();
         BlockState cloud = com.grandline.registry.ModBlocks.ISLAND_CLOUD.get().defaultBlockState();
-        WorldPlan.Sample s = new WorldPlan.Sample();
+        WorldPlan.Sample[] grid = grid(plan, x0, z0);
+        SurfacePalette pal = palette(plan);
+        SurfacePalette.Column col = new SurfacePalette.Column();
         int floorBottom = com.grandline.world.SkyWorld.FLOOR_Y - 1;
         for (int lx = 0; lx < 16; lx++)
             for (int lz = 0; lz < 16; lz++) {
                 int x = x0 + lx, z = z0 + lz;
-                plan.sample(x, z, s);
+                WorldPlan.Sample s = grid[(lx + 1) * G + lz + 1];
                 int h = Math.max(com.grandline.world.SkyWorld.FLOOR_Y, Math.min(chunk.getMaxBuildHeight() - 2, s.height));
                 Island isl = s.island;
                 IslandTheme theme = isl != null ? isl.themeAt(x, z) : null;
                 boolean cloudCol = theme == null || theme == IslandTheme.CLOUD || h < WorldPlan.SEA_LEVEL;
                 BlockState top, sub, mid;
+                boolean rock = false;
+                double wobble = 0;
+                int rockDepth = 8;
                 if (cloudCol) top = sub = mid = cloud;
                 else {
-                    boolean steep = isSteep(plan, s, x, z, h);
-                    top = (steep ? theme.stone : theme.surface).defaultBlockState();
+                    double sl = slope(grid, lx, lz);
+                    pal.surface(theme, x, h, z, sl, col);
+                    rockDepth = rockDepth(sl);
+                    top = col.top;
+                    rock = col.rock;
+                    if (rock) wobble = pal.wobble(x, z);
                     sub = theme.subsurface.defaultBlockState();
                     mid = theme.stone.defaultBlockState();
                 }
@@ -221,13 +294,24 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
                     BlockState st;
                     if (y <= h) {
                         int depth = h - y;
-                        st = depth == 0 ? top : depth < 4 ? sub : y <= floorBottom + 1 ? cloud : mid;
+                        st = depth == 0 ? top : y <= floorBottom + 1 ? cloud : depth < rockDepth && rock ? SurfacePalette.strata(theme, x, y, z, wobble) : depth < 4 ? sub : mid;
                     } else st = WATER; // Sea Cloud (tinted by the white_sea biome)
                     chunk.getSection(chunk.getSectionIndex(y)).setBlockState(lx, y & 15, lz, st, false);
                 }
                 ocean.update(lx, h, lz, top);
                 surface.update(lx, Math.max(h, WorldPlan.SEA_LEVEL), lz, h >= WorldPlan.SEA_LEVEL ? top : WATER);
+                // Island Cloud: a soft layer following the unrounded height smooths the terraces into rounded swells
+                if (theme == IslandTheme.CLOUD && h >= WorldPlan.SEA_LEVEL && h < chunk.getMaxBuildHeight() - 2) smoothLayer(chunk, surface, lx, h, lz, s.exact);
             }
+    }
+
+    /** Snow layer (1–7 eighths) on top of column (lx, h, lz) matching the fractional part of the terrain height. */
+    private static void smoothLayer(ChunkAccess chunk, Heightmap surface, int lx, int h, int lz, double exact) {
+        int layers = (int) ((exact - Math.floor(exact)) * 8);
+        if (layers < 1) return;
+        BlockState snow = Blocks.SNOW.defaultBlockState().setValue(net.minecraft.world.level.block.SnowLayerBlock.LAYERS, Math.min(7, layers));
+        chunk.getSection(chunk.getSectionIndex(h + 1)).setBlockState(lx, (h + 1) & 15, lz, snow, false);
+        surface.update(lx, h + 1, lz, snow);
     }
 
     // ------------------------------------------------------------------ the deep sea
@@ -238,18 +322,27 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
         int minY = chunk.getMinBuildHeight();
         int x0 = chunk.getPos().getMinBlockX(), z0 = chunk.getPos().getMinBlockZ();
         BlockState membrane = com.grandline.registry.ModBlocks.BUBBLE_MEMBRANE.get().defaultBlockState();
-        WorldPlan.Sample s = new WorldPlan.Sample();
+        WorldPlan.Sample[] grid = grid(plan, x0, z0);
+        SurfacePalette pal = palette(plan);
+        SurfacePalette.Column col = new SurfacePalette.Column();
         for (int lx = 0; lx < 16; lx++)
             for (int lz = 0; lz < 16; lz++) {
                 int x = x0 + lx, z = z0 + lz;
-                plan.sample(x, z, s);
+                WorldPlan.Sample s = grid[(lx + 1) * G + lz + 1];
                 int h = Math.max(minY + 2, s.height);
                 Island isl = s.island;
                 IslandTheme theme = isl != null ? isl.themeAt(x, z) : null;
                 BlockState top, sub, mid;
+                boolean rock = false;
+                double wobble = 0;
+                int rockDepth = 8;
                 if (theme != null) {
-                    boolean steep = isSteep(plan, s, x, z, h);
-                    top = (steep ? theme.stone : theme.surface).defaultBlockState();
+                    double sl = slope(grid, lx, lz);
+                    pal.surface(theme, x, h, z, sl, col);
+                    rockDepth = rockDepth(sl);
+                    top = col.top;
+                    rock = col.rock;
+                    if (rock) wobble = pal.wobble(x, z);
                     sub = theme.subsurface.defaultBlockState();
                     mid = theme.stone.defaultBlockState();
                 } else {
@@ -265,7 +358,7 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
                     if (y == minY || (y < minY + 4 && ((x ^ z ^ y) & 3) == 0)) st = BEDROCK;
                     else if (y <= h) {
                         int depth = h - y;
-                        st = depth == 0 ? top : depth < 4 ? sub : depth < 8 ? mid : y < 0 ? DEEPSLATE : STONE;
+                        st = depth == 0 ? top : depth < rockDepth && rock ? SurfacePalette.strata(theme, x, y, z, wobble) : depth < 4 ? sub : depth < 8 ? mid : y < 0 ? DEEPSLATE : STONE;
                     } else if (dome != null && y > WorldPlan.SEA_LEVEL && com.grandline.world.DeepWorld.inAnyDome(x, y, z)) {
                         highestAir = y;
                         continue;
@@ -276,14 +369,6 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
                 ocean.update(lx, h, lz, top);
                 surface.update(lx, com.grandline.world.DeepWorld.WATER_TOP, lz, WATER);
             }
-    }
-
-    private static boolean isSteep(WorldPlan plan, WorldPlan.Sample s, int x, int z, int h) {
-        Island isl = s.island;
-        if (isl == null) return false;
-        double a = isl.height(x + 2, z), b = isl.height(x, z + 2);
-        if (Double.isNaN(a) || Double.isNaN(b)) return false;
-        return Math.abs(a - h) > 5 || Math.abs(b - h) > 5;
     }
 
     // ------------------------------------------------------------------ decoration (vanilla features + settlements)
@@ -298,6 +383,10 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
         int cx = chunk.getPos().getMiddleBlockX(), cz = chunk.getPos().getMiddleBlockZ();
         int minX = chunk.getPos().getMinBlockX(), minZ = chunk.getPos().getMinBlockZ();
         int maxX = minX + 15, maxZ = minZ + 15;
+        long t0 = cpuTime();
+        IslandDecor.decorate(plan, sink, minX, minZ); // scattered theme features (before buildings, which keep their plots clear)
+        DECOR_NANOS.add(cpuTime() - t0);
+        DECOR_CHUNKS.increment();
         for (Island isl : plan.around(cx, cz)) {
             Settlement st = isl.settlement();
             for (Plot p : st.secrets) {
@@ -350,7 +439,7 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
                         if (cur == null || cur.isAir() || cur.liquid()) continue;
                         if (!(cur.is(Blocks.GRASS_BLOCK) || cur.is(Blocks.DIRT) || cur.is(Blocks.SAND) || cur.is(Blocks.SNOW_BLOCK) || cur.is(Blocks.PODZOL)
                                 || cur.is(Blocks.COARSE_DIRT) || cur.is(Blocks.RED_SAND) || cur.is(Blocks.MUD) || cur.is(Blocks.MYCELIUM) || cur.is(Blocks.PINK_CONCRETE_POWDER)
-                                || cur.is(Blocks.STONE) || cur.is(Blocks.CALCITE) || cur.is(Blocks.BLACKSTONE) || cur.is(Blocks.GRAVEL))) continue;
+                                || cur.is(Blocks.STONE) || cur.is(Blocks.CALCITE) || cur.is(Blocks.BLACKSTONE) || cur.is(Blocks.GRAVEL) || SurfacePalette.NATURAL.contains(cur.getBlock()))) continue;
                         sink.set(px, y, pz, road);
                         for (int k = 1; k <= 3; k++) {
                             BlockState above = sink.get(px, y + k, pz);

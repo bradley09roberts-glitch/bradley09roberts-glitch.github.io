@@ -18,8 +18,11 @@ public enum BuildStyle {
     FUTURE(Blocks.WHITE_CONCRETE, Blocks.QUARTZ_PILLAR, Blocks.SMOOTH_QUARTZ, Blocks.QUARTZ_STAIRS, Blocks.QUARTZ_SLAB, Blocks.LIGHT_GRAY_CONCRETE, Blocks.LIGHT_BLUE_STAINED_GLASS_PANE, Blocks.IRON_DOOR, Blocks.IRON_BARS, Blocks.SEA_LANTERN, Blocks.CYAN_CONCRETE),
     GIANT(Blocks.SPRUCE_PLANKS, Blocks.SPRUCE_LOG, Blocks.STRIPPED_SPRUCE_LOG, Blocks.SPRUCE_STAIRS, Blocks.SPRUCE_SLAB, Blocks.MOSSY_COBBLESTONE, Blocks.GLASS_PANE, Blocks.SPRUCE_DOOR, Blocks.SPRUCE_FENCE, Blocks.LANTERN, Blocks.BROWN_WOOL),
     PALACE(Blocks.QUARTZ_BRICKS, Blocks.QUARTZ_PILLAR, Blocks.SMOOTH_QUARTZ, Blocks.QUARTZ_STAIRS, Blocks.QUARTZ_SLAB, Blocks.CHISELED_QUARTZ_BLOCK, Blocks.GLASS_PANE, Blocks.SPRUCE_DOOR, Blocks.IRON_BARS, Blocks.LANTERN, Blocks.GOLD_BLOCK),
-    /** Skypiea: rounded white cloud-stone houses with sky-blue trim. */
-    CLOUD(Blocks.WHITE_CONCRETE, Blocks.BIRCH_LOG, Blocks.SMOOTH_QUARTZ, Blocks.QUARTZ_STAIRS, Blocks.QUARTZ_SLAB, Blocks.WHITE_WOOL, Blocks.LIGHT_BLUE_STAINED_GLASS_PANE, Blocks.BIRCH_DOOR, Blocks.BIRCH_FENCE, Blocks.PEARLESCENT_FROGLIGHT, Blocks.LIGHT_BLUE_CONCRETE),
+    /**
+     * Skypiea: white cloud-stone houses with sky-blue corners, aqua roofs, a blue plinth and gold trim, so they read
+     * against the white Island Cloud they stand on.
+     */
+    CLOUD(Blocks.WHITE_CONCRETE, Blocks.LIGHT_BLUE_CONCRETE, Blocks.SMOOTH_QUARTZ, Blocks.PRISMARINE_BRICK_STAIRS, Blocks.PRISMARINE_BRICK_SLAB, Blocks.LIGHT_BLUE_CONCRETE, Blocks.LIGHT_BLUE_STAINED_GLASS_PANE, Blocks.BIRCH_DOOR, Blocks.BIRCH_FENCE, Blocks.PEARLESCENT_FROGLIGHT, Blocks.GOLD_BLOCK),
     /** Fish-Man Island: coral and prismarine with sea-lantern light. */
     CORAL(Blocks.PRISMARINE_BRICKS, Blocks.DARK_PRISMARINE, Blocks.SMOOTH_SANDSTONE, Blocks.DARK_PRISMARINE_STAIRS, Blocks.DARK_PRISMARINE_SLAB, Blocks.PRISMARINE, Blocks.LIGHT_BLUE_STAINED_GLASS_PANE, Blocks.WARPED_DOOR, Blocks.WARPED_FENCE, Blocks.SEA_LANTERN, Blocks.TUBE_CORAL_BLOCK);
 

@@ -148,6 +148,7 @@ public final class SelfTest {
     // ============================================================== PHASE 1
 
     private static void phase1() {
+        WorldPolishTests.phase1(steps); // island terrain polish, new canon islands, generation speed (test/WorldPolishTests.java)
         steps.add(s -> {
             WorldPlan p = WorldPlan.of(s);
             check("ocean world active", p != null, "");

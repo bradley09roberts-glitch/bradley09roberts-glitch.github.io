@@ -60,6 +60,7 @@ public final class QuestRegistry {
         // ---------------- The Saltfire Saga: island arcs, faction variants, crew quests (docs/STORY.md) ----------------
         StoryQuests.register(ALL);
         StoryQuestsExtra.register(ALL); // Skypiea, Fish-Man Island and a local story on every other canon island
+        IslandQuestsExtra.register(ALL); // a local job on each canon island added by CanonIslands.additions
     }
 
     // ------------------------------------------------------------------ faction variants & requirements

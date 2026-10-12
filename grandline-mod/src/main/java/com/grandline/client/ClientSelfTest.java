@@ -74,6 +74,7 @@ public final class ClientSelfTest {
         steps = new ArrayDeque<>();
         if ("mp_a".equals(MODE)) buildCaptain();
         else if ("mp_b".equals(MODE)) buildMate();
+        else if ("tour".equals(MODE)) buildTour();
         else if ("naval".equals(MODE)) {
             createCharacter("Tester", "human");
             cmd("grandline test env", 10);
@@ -296,6 +297,7 @@ public final class ClientSelfTest {
         shot2("30_fishman_island_inside", "execute in grandline:deep_sea run tp @s 170 110 40 110 15");
         shot2("31_fishman_island_bubble", "execute in grandline:deep_sea run tp @s 330 160 0 90 15");
         shot2("32_deep_sea_route", "execute in grandline:deep_sea run tp @s -1400 70 10 -90 0");
+        islandPolishShots();
         // weather
         cmd("execute in minecraft:overworld run tp @s 36000 120 20000", 60);
         cmd("grandline test storm", 260);
@@ -543,6 +545,37 @@ public final class ClientSelfTest {
             p.yRotO = yaw;
             p.xRotO = pitch;
         }, 10);
+    }
+
+    /** Re-textured terrain and decoration, Fish-Man Island's coral gardens, Skypiea houses and some added canon islands. */
+    private static void islandPolishShots() {
+        shot2("50_terrain_dawn_slopes", "execute in minecraft:overworld run tp @s 30780 135 23720 -135 22");
+        shot2("51_terrain_fishman_coral", "execute in grandline:deep_sea run tp @s -60 112 -110 30 35");
+        shot2("52_skypiea_houses", "execute in grandline:sky run tp @s -470 92 70 0 20");
+        shot2("53_tequila_wolf_bridge", "execute in minecraft:overworld run tp @s 8850 88 24548 -105 12");
+        shot2("54_germa_fleet", "execute in minecraft:overworld run tp @s 23950 100 -27440 -140 32");
+        shot2("55_lulusia_crater", "execute in minecraft:overworld run tp @s -16000 84 -1300 0 4");
+        shot2("56_kyuka_resort", "execute in minecraft:overworld run tp @s 16990 86 3088 0 22");
+    }
+
+    /** Quick world tour (GL_CLIENTTEST=tour): terrain and island shots only, for iterating on world generation. */
+    private static void buildTour() {
+        createCharacter("Tester", "human");
+        cmd("gamemode spectator", 10);
+        shot2("22_marineford", "tp @s 54200 150 -2570 0 30");
+        shot2("24_alabasta", "tp @s 19650 120 -700 0 25");
+        shot2("26_original_island", "grandline island tp shiokaze_isle");
+        shot2("28_angel_island", "execute in grandline:sky run tp @s -450 120 -20 0 30");
+        shot2("30_fishman_island_inside", "execute in grandline:deep_sea run tp @s 170 110 40 110 15");
+        islandPolishShots();
+        shot2("57_god_valley", "execute in minecraft:overworld run tp @s -17035 105 -27535 -45 35");
+        shot2("58_oykot_palace", "execute in minecraft:overworld run tp @s -31000 100 -11730 0 25");
+        shot2("59_karai_bari_guild", "execute in minecraft:overworld run tp @s -22500 95 260 0 30");
+        shot2("60_mogaro_gate", "execute in minecraft:overworld run tp @s -31500 110 -3200 0 22");
+        shot2("61_rommel_keep", "execute in minecraft:overworld run tp @s 12000 110 -27175 0 28");
+        shot2("62_prodence_castle", "execute in minecraft:overworld run tp @s -45500 110 410 0 25");
+        shot2("63_lulusia_memorial", "execute in minecraft:overworld run tp @s -15570 100 -1640 0 30");
+        add("done", ClientSelfTest::finish, 0);
     }
 
     private static void shot2(String name, String tp) {

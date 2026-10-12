@@ -84,6 +84,7 @@ public final class Landmarks {
         reg("revolutionary_hq", new Spec(41, 41, true, false, 0), FinalSeaLandmarks::revolutionaryHq);
         reg("future_lab", new Spec(41, 41, true, false, 0), FinalSeaLandmarks::futureLab);
         reg("pirate_hive", new Spec(41, 41, true, false, 0), FinalSeaLandmarks::pirateHive);
+        LandmarkBuildersExtra.registerAll(Landmarks::reg); // set pieces of the later canon islands (CanonIslands.additions)
     }
 
     private static void reg(String id, Spec spec, LandmarkBuilder builder) {
