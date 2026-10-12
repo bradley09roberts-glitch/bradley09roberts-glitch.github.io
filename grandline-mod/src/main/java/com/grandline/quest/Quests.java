@@ -32,7 +32,10 @@ public final class Quests {
         if (!QuestRegistry.requirementsMet(d, q)) return false;
         CompoundTag prog = new CompoundTag();
         d.questProgress.put(questId, prog);
-        sp.sendSystemMessage(Component.translatable("grandline.quest.started", Component.translatable(q.titleKey())).withStyle(ChatFormatting.AQUA));
+        sp.sendSystemMessage(Component.translatable("grandline.quest.started", QuestRegistry.title(q)).withStyle(ChatFormatting.AQUA));
+        Component desc = QuestRegistry.generatedDescription(q);
+        if (desc != null) sp.sendSystemMessage(desc.copy().withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+        com.grandline.quest.story.IslandStories.onQuestStarted(sp, q); // wanted posters, letters, parcels for generated jobs
         // islands discovered before the quest began still count
         boolean credited = false;
         for (int i = 0; i < q.objectives().size(); i++) {
@@ -62,7 +65,7 @@ public final class Quests {
                 if (cur >= o.count()) continue;
                 prog.putInt("o" + i, Math.min(o.count(), cur + amount));
                 changed = true;
-                sp.displayClientMessage(Component.translatable("grandline.quest.progress", Component.translatable(q.titleKey()), Math.min(o.count(), cur + amount), o.count()), true);
+                sp.displayClientMessage(Component.translatable("grandline.quest.progress", QuestRegistry.title(q), Math.min(o.count(), cur + amount), o.count()), true);
             }
             if (changed && complete(q, prog)) finish(sp, d, q);
         }
@@ -81,10 +84,10 @@ public final class Quests {
         int lv = d.addXp(q.xp());
         d.beli += q.beli();
         q.reputation().forEach(d::addReputation);
-        if (q.bounty() > 0) com.grandline.npc.Bounties.raise(sp, d, q.bounty(), Component.translatable(q.titleKey()));
+        if (q.bounty() > 0) com.grandline.npc.Bounties.raise(sp, d, q.bounty(), QuestRegistry.title(q));
         for (var item : q.rewardItems()) sp.getInventory().add(item.get());
         if (q.flag() != null) d.flags.add(q.flag());
-        sp.sendSystemMessage(Component.translatable("grandline.quest.complete", Component.translatable(q.titleKey()), q.xp(), q.beli()).withStyle(ChatFormatting.GOLD));
+        sp.sendSystemMessage(Component.translatable("grandline.quest.complete", QuestRegistry.title(q), q.xp(), q.beli()).withStyle(ChatFormatting.GOLD));
         if (lv > 0) {
             sp.sendSystemMessage(Component.translatable("grandline.level.up", d.level).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             CharacterManager.applyAttributes(sp);

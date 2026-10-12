@@ -28,7 +28,9 @@ public class DialogueScreen extends Screen {
         for (int i = 0; i < opts.size(); i++) {
             String opt = opts.getString(i);
             Component label;
-            if (opt.startsWith("quest:")) label = Component.translatable("dialogue.grandline.option.quest", Component.translatable("quest.grandline." + opt.substring(6)));
+            Component generated = data.getCompound("labels").contains(opt) ? parse(data.getCompound("labels").getString(opt)) : null;
+            if (generated != null) label = generated; // generated quests: title with names and places, sent by the server
+            else if (opt.startsWith("quest:")) label = Component.translatable("dialogue.grandline.option.quest", Component.translatable("quest.grandline." + opt.substring(6)));
             else if (opt.startsWith("ferry|") || opt.startsWith("seatrain|")) {
                 String[] p = opt.split("\\|");
                 label = Component.translatable("dialogue.grandline.option." + p[0], p.length > 3 ? p[3] : p[1], p.length > 2 ? p[2] : "?");
@@ -56,9 +58,23 @@ public class DialogueScreen extends Screen {
         g.drawString(font, title.copy().withStyle(net.minecraft.ChatFormatting.GOLD), x, y, 0xFFFFFFFF);
         g.drawString(font, Component.translatable("role.grandline." + data.getString("role")).withStyle(net.minecraft.ChatFormatting.GRAY), x, y + 11, 0xFFAAAAAA);
         int ly = y + 28;
-        for (FormattedText line : font.getSplitter().splitLines(Component.translatable(data.getString("greeting")), 310, Style.EMPTY)) {
+        Component greeting = data.contains("greetingText") ? parse(data.getString("greetingText")) : null;
+        if (greeting == null) greeting = Component.translatable(data.getString("greeting"));
+        for (FormattedText line : font.getSplitter().splitLines(greeting, 310, Style.EMPTY)) {
             g.drawString(font, line.getString(), x, ly, 0xFFEFEFEF);
             ly += 11;
+        }
+    }
+
+    /** A component serialized by the server (generated names and places), or null if it cannot be read. */
+    @org.jetbrains.annotations.Nullable
+    private static Component parse(String json) {
+        var mc = net.minecraft.client.Minecraft.getInstance();
+        if (mc.level == null || json.isEmpty()) return null;
+        try {
+            return Component.Serializer.fromJson(json, mc.level.registryAccess());
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 

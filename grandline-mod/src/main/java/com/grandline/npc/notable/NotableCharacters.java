@@ -57,6 +57,14 @@ public final class NotableCharacters {
 
     private static final Map<String, Notable> ALL = new LinkedHashMap<>();
     private static final Map<String, List<Notable>> BY_ISLAND = new HashMap<>();
+    /**
+     * People generated for the current world from its seed (island stories, job-board outlaws and contacts:
+     * quest/story). Installed when the world starts, never saved: the seed regenerates them. Their names and titles are
+     * components (generated names) instead of language keys.
+     */
+    private static final Map<String, Notable> GENERATED = new LinkedHashMap<>();
+    private static final Map<String, List<Notable>> GENERATED_BY_ISLAND = new HashMap<>();
+    private static final Map<String, net.minecraft.network.chat.Component> NAMES = new HashMap<>(), TITLES = new HashMap<>();
 
     // ------------------------------------------------------------------ builder
 
@@ -253,19 +261,80 @@ public final class NotableCharacters {
 
     @Nullable
     public static Notable get(String id) {
-        return ALL.get(id);
+        Notable n = ALL.get(id);
+        return n != null ? n : GENERATED.get(id);
     }
 
+    /** The whole cast: the hand-written characters, then the people generated for the current world. */
     public static Collection<Notable> all() {
-        return Collections.unmodifiableCollection(ALL.values());
+        if (GENERATED.isEmpty()) return Collections.unmodifiableCollection(ALL.values());
+        List<Notable> l = new ArrayList<>(ALL.size() + GENERATED.size());
+        l.addAll(ALL.values());
+        l.addAll(GENERATED.values());
+        return Collections.unmodifiableList(l);
     }
 
     public static List<Notable> onIsland(String islandId) {
-        return BY_ISLAND.getOrDefault(islandId, List.of());
+        List<Notable> a = BY_ISLAND.getOrDefault(islandId, List.of()), g = GENERATED_BY_ISLAND.getOrDefault(islandId, List.of());
+        if (g.isEmpty()) return a;
+        if (a.isEmpty()) return g;
+        List<Notable> l = new ArrayList<>(a);
+        l.addAll(g);
+        return l;
     }
 
     public static Set<String> islands() {
-        return Collections.unmodifiableSet(BY_ISLAND.keySet());
+        if (GENERATED_BY_ISLAND.isEmpty()) return Collections.unmodifiableSet(BY_ISLAND.keySet());
+        Set<String> s = new LinkedHashSet<>(BY_ISLAND.keySet());
+        s.addAll(GENERATED_BY_ISLAND.keySet());
+        return s;
+    }
+
+    // ------------------------------------------------------------------ generated people (per world)
+
+    /** A generated person: plain data, never registered in the hand-written cast. */
+    public static Notable generated(String id, Group g, Faction f, String role, int tier, String island, int dx, int dz, String style, int obs, int arm,
+                                    String race, String weapon, Disposition disp) {
+        Race r = Race.byId(race);
+        return new Notable(id, g, f, role, tier, island, dx, dz, null, style, obs, arm, 0, race, r.baseScale, weapon, disp, false, "");
+    }
+
+    /** Replace the generated people with these (name and title per id). */
+    public static void installGenerated(Collection<Notable> people, Map<String, net.minecraft.network.chat.Component> names,
+                                        Map<String, net.minecraft.network.chat.Component> titles) {
+        clearGenerated();
+        for (Notable n : people) {
+            if (ALL.containsKey(n.id()) || GENERATED.put(n.id(), n) != null) throw new IllegalStateException("duplicate notable " + n.id());
+            GENERATED_BY_ISLAND.computeIfAbsent(n.island(), k -> new ArrayList<>()).add(n);
+        }
+        NAMES.putAll(names);
+        TITLES.putAll(titles);
+    }
+
+    public static void clearGenerated() {
+        GENERATED.clear();
+        GENERATED_BY_ISLAND.clear();
+        NAMES.clear();
+        TITLES.clear();
+    }
+
+    public static boolean isGenerated(String id) {
+        return GENERATED.containsKey(id);
+    }
+
+    public static int generatedCount() {
+        return GENERATED.size();
+    }
+
+    /** Display name: the language entry for the hand-written cast, the generated name for generated people. */
+    public static net.minecraft.network.chat.Component name(Notable n) {
+        net.minecraft.network.chat.Component c = NAMES.get(n.id());
+        return c != null ? c : net.minecraft.network.chat.Component.translatable(n.nameKey());
+    }
+
+    public static net.minecraft.network.chat.Component title(Notable n) {
+        net.minecraft.network.chat.Component c = TITLES.get(n.id());
+        return c != null ? c : net.minecraft.network.chat.Component.translatable(n.titleKey());
     }
 
     public static List<Notable> recruitable() {

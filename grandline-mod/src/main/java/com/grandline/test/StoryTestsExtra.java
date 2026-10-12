@@ -79,6 +79,9 @@ final class StoryTestsExtra {
             }
             case "poneglyph", "ship", "arrested", "fruit_kill" -> t.equals("any");
             case "collect" -> QuestCollect.valid(t);
+            // generated island stories and jobs (quest/story): places to reach, beasts and Sea Kings to slay
+            case "reach" -> com.grandline.quest.story.IslandStories.site(t) != null;
+            case "slay" -> com.grandline.quest.story.StorySites.slayable(t);
             default -> false;
         };
     }

@@ -93,6 +93,8 @@ def island_status(i):
         notes.append("layout error: " + i["error"])
     if i["quests"] == 0 and i["canon"]:
         notes.append("no story quest yet (board jobs only)" if i["boards"] else "no quests yet")
+    if not i["canon"] and i.get("plan", "ocean") == "ocean" and not i.get("story"):
+        notes.append("no local story")  # every original island should have a generated story (quest/story)
     hits = mentioned(i["id"])
     if not placeholders and not i.get("error") and (not inhabited or i["npcs"] > 0):
         st = "tested" if hits else "playable"
@@ -136,21 +138,30 @@ for i in orig:
     z["npcs"] += i["npcs"]
     z["chests"] += i["chests"]
     z["secrets"] += i["secrets"]
-w("| Sea zone | Islands | Settled | NPC spawns | Chests | Secrets |")
-w("|---|---|---|---|---|---|")
+    z["stories"] = z.get("stories", 0) + (1 if i.get("story") else 0)
+    z["jobs"] = z.get("jobs", 0) + i.get("boardJobs", 0)
+w("| Sea zone | Islands | Settled | NPC spawns | Chests | Secrets | Local stories | Board jobs |")
+w("|---|---|---|---|---|---|---|---|")
 for k, z in sorted(by_zone.items()):
-    w(f"| {k.lower()} | {z['n']} | {z['settled']} | {z['npcs']} | {z['chests']} | {z['secrets']} |")
+    w(f"| {k.lower()} | {z['n']} | {z['settled']} | {z['npcs']} | {z['chests']} | {z['secrets']} | {z.get('stories', 0)} | {z.get('jobs', 0)} |")
 w("")
-w(f"Original island status: {status_counts(orow)}. Original islands use generic quest-board jobs; authored story")
-w("quests are tied to canon islands and the four starter islands.")
+templates = {}
+for i in orig:
+    if i.get("story"):
+        templates[i["story"]] = templates.get(i["story"], 0) + 1
+with_story = sum(1 for i in orig if i.get("story"))
+w(f"Original island status: {status_counts(orow)}. {with_story}/{len(orig)} original islands have a local story generated from the")
+w("world seed (quest/story, docs/STORY.md, \"Original islands\"): " + ", ".join(f"{LANG.get('story.grandline.tpl.' + t, t)} {n}" for t, n in sorted(templates.items())) + ".")
+w("Settled islands' notice boards also offer generated jobs (deliveries, escorts, outlaw hunts, nests or camps, salvage, fish, meals, timber).")
 w("")
 w("<details><summary>Full list of original islands</summary>")
 w("")
-w("| Id | Name | Sea | Shape | Theme | Settlement | Buildings | NPC spawns | Chests | Secrets | Status |")
-w("|---|---|---|---|---|---|---|---|---|---|---|")
+w("| Id | Name | Sea | Shape | Theme | Settlement | Buildings | NPC spawns | Chests | Secrets | Story | Status |")
+w("|---|---|---|---|---|---|---|---|---|---|---|---|")
 for i in sorted(orig, key=lambda i: (i["zone"], i["x"])):
     st, _ = island_status(i)
-    w(f"| {i['id']} | {island_name(i)} | {i['zone'].lower()} | {i['shape'].lower()} | {i['theme'].lower()} | {i['settlement'].lower()} | {i['buildings']} | {i['npcs']} | {i['chests']} | {i['secrets']} | {st} |")
+    story = LANG.get("story.grandline.tpl." + i["story"], i["story"]) if i.get("story") else "—"
+    w(f"| {i['id']} | {island_name(i)} | {i['zone'].lower()} | {i['shape'].lower()} | {i['theme'].lower()} | {i['settlement'].lower()} | {i['buildings']} | {i['npcs']} | {i['chests']} | {i['secrets']} | {story} | {st} |")
 w("")
 w("</details>")
 w("")
@@ -256,7 +267,8 @@ w("")
 # ---------------- Characters ----------------
 w("## Characters")
 w("")
-named = inv.get("notables", [])
+generated_people = [n for n in inv.get("notables", []) if n.get("generated")]
+named = [n for n in inv.get("notables", []) if not n.get("generated")]
 if named:
     w("### Named original characters")
     w("")
@@ -272,6 +284,10 @@ if named:
         title = LANG.get(n["titleKey"], "")
         crew = n["crewRole"] if n["recruitable"] else ""
         w(f"| {name} | {title} | {n['group']} | {n['faction']} | {n['island']} | {n['tier']} | {n['fruit'] or '—'} | {n['style']} | {crew} | {st} | {'; '.join(hits)} |")
+    w("")
+if generated_people:
+    w(f"Plus {len(generated_people)} people generated from the world seed for the island stories and the notice boards (givers, "
+      "witnesses, villains, outlaws, couriers), named by sea; they spawn and die like the cast above.")
     w("")
 w("### NPC roles (archetypes)")
 w("")
@@ -293,7 +309,11 @@ for q in qs:
 w("| Arc | Quests | Islands |")
 w("|---|---|---|")
 for a, l in sorted(arcs.items()):
-    w(f"| {a} | {len(l)} | {', '.join(sorted({q['island'] for q in l if q['island']})) or 'any'} |")
+    isl = sorted({q['island'] for q in l if q['island']})
+    if any(q.get("generated") for q in l):  # generated arcs span the whole world: count, don't list
+        w(f"| {a} | {len(l)} | {len(isl)} islands (generated from the seed) |")
+        continue
+    w(f"| {a} | {len(l)} | {', '.join(isl) or 'any'} |")
 w("")
 
 with open(os.path.join(ROOT, "docs", "INVENTORY.md"), "w", encoding="utf-8") as f:

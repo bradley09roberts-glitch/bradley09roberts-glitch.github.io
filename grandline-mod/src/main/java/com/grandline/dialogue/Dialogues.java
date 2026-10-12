@@ -55,7 +55,24 @@ public final class Dialogues {
         com.grandline.navigation.Ferries.addOptions(sp, npc, opts); // ferries and the Sea Train
         opts.add(StringTag.valueOf("leave"));
         t.put("options", opts);
+        labelGenerated(sp, t, opts);
         GLNetwork.toPlayer(sp, new GLNetwork.OpenScreen("dialogue", t));
+    }
+
+    /**
+     * Generated quests (island stories, job-board jobs) have no fixed language key: their titles, with the generated
+     * names and places, travel with the dialogue as serialized components ("labels": option → component JSON).
+     */
+    public static void labelGenerated(ServerPlayer sp, CompoundTag t, ListTag opts) {
+        CompoundTag labels = new CompoundTag();
+        for (int i = 0; i < opts.size(); i++) {
+            String opt = opts.getString(i);
+            if (!opt.startsWith("quest:")) continue;
+            QuestDef q = QuestRegistry.get(opt.substring(6));
+            if (q == null || !QuestRegistry.isGenerated(q.id())) continue;
+            labels.putString(opt, Component.Serializer.toJson(Component.translatable("dialogue.grandline.option.quest", QuestRegistry.title(q)), sp.registryAccess()));
+        }
+        if (!labels.isEmpty()) t.put("labels", labels);
     }
 
     private static boolean isStarter(ServerPlayer sp, GLNpc npc) {
@@ -78,6 +95,10 @@ public final class Dialogues {
 
     /** Handle a chosen dialogue option. */
     public static void choose(ServerPlayer sp, int npcId, String option) {
+        if (npcId == com.grandline.quest.story.JobBoard.BOARD_ID) { // a notice board, not a person
+            com.grandline.quest.story.JobBoard.choose(sp, option);
+            return;
+        }
         Entity e = sp.level().getEntity(npcId);
         if (!(e instanceof GLNpc npc) || npc.distanceTo(sp) > 8) return;
         CharacterData d = Characters.get(sp);

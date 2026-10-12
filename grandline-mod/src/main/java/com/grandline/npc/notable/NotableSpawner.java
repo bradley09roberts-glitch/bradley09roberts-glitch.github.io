@@ -72,6 +72,8 @@ public final class NotableSpawner {
                 NotableState.Entry e = st.entry(n.id());
                 switch (e.status) {
                     case UNSPAWNED -> {
+                        // generated outlaws and travellers only turn up for a player whose job is about them
+                        if (!com.grandline.quest.story.IslandStories.mayAppear(n, sp)) continue;
                         // wait (non-blocking) until the stand search area has finished loading instead of stalling the
                         // server thread on chunks that are still generating (self-test scans have no player and go now)
                         if (d <= SPAWN_RADIUS && (sp == null || !com.grandline.core.Chunks.pendingAround(level, hx, hz, STAND_SEARCH))) spawn(level, n, isl);
@@ -92,6 +94,12 @@ public final class NotableSpawner {
     public static void scanAt(ServerLevel level, int x, int z) {
         WorldPlan plan = WorldPlan.forLevel(level);
         if (plan != null) scan(level, plan, NotableState.get(level.getServer()), x, z, null, new HashSet<>());
+    }
+
+    /** Same, for a given player standing at (x, z) (self-test hook: who may appear depends on that player's jobs). */
+    public static void scanAt(ServerLevel level, int x, int z, ServerPlayer sp) {
+        WorldPlan plan = WorldPlan.forLevel(level);
+        if (plan != null) scan(level, plan, NotableState.get(level.getServer()), x, z, sp, new HashSet<>());
     }
 
     /** Spawn a notable at its home now if it has not been spawned yet (story/test hook). */
@@ -122,7 +130,7 @@ public final class NotableSpawner {
         npc.setAllegiance(n.faction(), pos);
         applyStats(npc, n);
         equip(npc, n);
-        npc.setCustomName(Component.translatable(n.nameKey()));
+        npc.setCustomName(NotableCharacters.name(n));
         npc.setCustomNameVisible(true);
         NotableState.get(server).set(n.id(), Status.ALIVE, npc.getUUID(), "", level.getGameTime());
         level.addFreshEntity(npc);

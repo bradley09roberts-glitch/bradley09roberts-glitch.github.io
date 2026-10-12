@@ -85,7 +85,8 @@ public final class InventoryDump {
         JsonObject root = new JsonObject();
         WorldPlan plan = WorldPlan.of(server);
         Map<String, Integer> questsByIsland = new HashMap<>();
-        for (QuestDef q : QuestRegistry.all()) if (q.island() != null && !q.island().isEmpty()) questsByIsland.merge(q.island(), 1, Integer::sum);
+        for (QuestDef q : QuestRegistry.all()) // story quests per island (notice-board jobs are counted separately)
+            if (q.island() != null && !q.island().isEmpty() && !q.giverRole().equals(com.grandline.quest.story.JobBoard.GIVER)) questsByIsland.merge(q.island(), 1, Integer::sum);
 
         JsonArray islands = new JsonArray();
         java.util.List<WorldPlan> plans = new java.util.ArrayList<>();
@@ -160,6 +161,13 @@ public final class InventoryDump {
                 sink.roles.forEach(roles::addProperty);
                 o.add("roles", roles);
                 o.addProperty("quests", questsByIsland.getOrDefault(isl.id, 0));
+                var story = com.grandline.quest.story.IslandStories.storyOf(isl.id); // generated local story (original islands)
+                o.addProperty("story", story == null ? "" : story.template().id);
+                o.addProperty("storyPeople", story == null ? 0 : story.people().size());
+                int jobs = 0;
+                for (QuestDef q : QuestRegistry.offeredBy(com.grandline.quest.story.JobBoard.GIVER, isl.id, false))
+                    if (q.island().equals(isl.id) && com.grandline.quest.QuestRegistry.variantFaction(q.id()) == null) jobs++;
+                o.addProperty("boardJobs", jobs);
                 islands.add(o);
             }
         }
@@ -267,6 +275,7 @@ public final class InventoryDump {
             o.addProperty("giver", q.giverRole());
             o.addProperty("objectives", q.objectives().size());
             o.addProperty("repeatable", q.repeatable());
+            o.addProperty("generated", QuestRegistry.isGenerated(q.id()));
             quests.add(o);
         }
         root.add("quests", quests);
@@ -286,6 +295,7 @@ public final class InventoryDump {
             o.addProperty("race", n.race());
             o.addProperty("recruitable", n.recruitable());
             o.addProperty("crewRole", n.crewRole() == null ? "" : n.crewRole());
+            o.addProperty("generated", com.grandline.npc.notable.NotableCharacters.isGenerated(n.id()));
             notables.add(o);
         }
         root.add("notables", notables);
