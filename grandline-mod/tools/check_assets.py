@@ -27,6 +27,7 @@ VANILLA_ITEMS = set('''
 apple arrow baked_potato barrel blue_dye bone bread carrot coal cobblestone compass cooked_beef cooked_cod cooked_salmon copper_ingot
 diamond emerald flint glass glass_bottle gold_block gold_ingot gold_nugget golden_apple gravel gunpowder honey_bottle iron_chestplate
 iron_helmet iron_ingot iron_nugget lantern lead leather oak_log oak_planks paper potato potion spruce_planks stick string sugar torch wheat
+rotten_flesh nautilus_shell heart_of_the_sea prismarine_shard prismarine_crystals feather amethyst_shard candle experience_bottle map 
 '''.split())
 VANILLA_TAGS = {'minecraft:logs', 'minecraft:planks', 'minecraft:swords'}
 

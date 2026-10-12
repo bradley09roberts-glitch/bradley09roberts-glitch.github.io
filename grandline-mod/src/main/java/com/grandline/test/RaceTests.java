@@ -185,7 +185,14 @@ final class RaceTests {
             String fruit = d.fruit;
             d.fruit = null; // no Logia body in the way
             d.race = Race.HUMAN;
+            // earlier steps can leave Observation on, a future-sight buff or i-frames: clear them for the baseline
+            CombatState fcs = CombatState.of(fp);
+            boolean obs = fcs.observation;
+            fcs.observation = false;
+            fcs.iframesUntil = 0;
+            fcs.buffs.remove("future_sight");
             Hits.Result plain = Hits.hit(att, fp, 4, Hits.Info.physical(0.1f));
+            fcs.observation = obs;
             d.race = Race.THREE_EYE;
             CombatState.of(fp).iframesUntil = 0;
             boolean used = CombatManager.useAbility(fp, ab("race/three_eye/foresight"), att);

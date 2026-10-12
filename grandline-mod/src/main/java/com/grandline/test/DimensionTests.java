@@ -83,6 +83,7 @@ final class DimensionTests {
         final List<ShipEntity> ferries = new ArrayList<>();
         final List<HumanoidNpc> riders = new ArrayList<>();
         final List<Double> startDist = new ArrayList<>();
+        final List<Vec3> startPos = new ArrayList<>();
         final List<String> dests = new ArrayList<>();
         final int[] waited = {0};
         steps.add(s -> {
@@ -115,13 +116,15 @@ final class DimensionTests {
                 riders.add(rider);
                 dests.add(dest);
                 startDist.add(f.position().distanceTo(f.ferryTarget));
+                startPos.add(f.position());
             }
             SelfTest.check("booking a passage puts you aboard the ferry", ferries.size() == opts.size() && !ferries.isEmpty(),
                     ferries.size() + "/" + opts.size() + " passengers aboard, bound for " + dests);
             worker.discard();
             return 1;
         });
-        // under way at real ferry speed: every ferry clears the harbour and closes on its destination
+        // under way at real ferry speed: every ferry leaves its berth (closing on the destination, or first rounding
+        // the home island when the destination lies behind it)
         steps.add(s -> {
             if (ferries.isEmpty()) return 0;
             int under = 0;
@@ -130,12 +133,12 @@ final class DimensionTests {
                 ShipEntity f = ferries.get(k);
                 follow(f);
                 double now = f.ferryTarget == null ? 0 : f.position().distanceTo(f.ferryTarget);
-                if (f.isRemoved() || startDist.get(k) - now >= 150) under++;
-                else lag.append(String.format(" %s: %.0f closer at %s yaw %.0f speed %.2f wp %s;", dests.get(k), startDist.get(k) - now, f.blockPosition().toShortString(), f.getYRot(), f.speed(), f.ferryWaypoint == null ? "-" : BlockPos.containing(f.ferryWaypoint).toShortString()));
+                if (f.isRemoved() || startDist.get(k) - now >= 150 || f.position().distanceTo(startPos.get(k)) >= 200) under++;
+                else lag.append(String.format(" %s: %.0f closer, %.0f from berth, at %s yaw %.0f speed %.2f wp %s;", dests.get(k), startDist.get(k) - now, f.position().distanceTo(startPos.get(k)), f.blockPosition().toShortString(), f.getYRot(), f.speed(), f.ferryWaypoint == null ? "-" : BlockPos.containing(f.ferryWaypoint).toShortString()));
             }
             if (under < ferries.size() && ++waited[0] < 1500) return -1;
             SelfTest.check("every ferry gets under way toward its destination", under == ferries.size(),
-                    under + "/" + ferries.size() + " cleared the harbour and closed 150 blocks within " + waited[0] + " ticks" + lag);
+                    under + "/" + ferries.size() + " left the harbour (200 blocks from the berth or 150 closer) within " + waited[0] + " ticks" + lag);
             // keep the first; skip the long middle of its voyage: open water ~220 blocks short of the dock
             for (int k = 1; k < ferries.size(); k++) {
                 ferries.get(k).ferryTarget = null;
