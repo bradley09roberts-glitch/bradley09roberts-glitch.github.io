@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_pirate_supernova",
+  "display": {
+    "icon": {
+      "id": "grandline:beli_pouch"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_pirate_emperor.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_pirate_emperor.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_pirate_emperor": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_pirate_emperor"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_pirate_emperor"
+    ]
+  ]
+}

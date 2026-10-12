@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_hunter_licensed",
+  "display": {
+    "icon": {
+      "id": "grandline:grappling_hook"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_hunter_gold.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_hunter_gold.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_hunter_gold": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_hunter_gold"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_hunter_gold"
+    ]
+  ]
+}

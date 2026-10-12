@@ -16,12 +16,14 @@ public final class Bounties {
     public static final long[] THRESHOLDS = {1_000_000, 10_000_000, 50_000_000, 100_000_000, 300_000_000, 500_000_000, 1_000_000_000L, 3_000_000_000L};
 
     public static void raise(ServerPlayer sp, CharacterData d, long amount, Component reason) {
+        amount += com.grandline.career.Careers.onCrime(sp, d, amount); // careers: Marine demerits (demotion, desertion); a Warlord's letter revoked
         if (d.faction == Faction.MARINE && amount > 0) {
             // Marines lose standing instead and may be branded deserters
             d.addReputation(Faction.MARINE.id(), -(int) Math.min(200, amount / 2000));
             if (d.reputation(Faction.MARINE.id()) < -300) {
                 d.faction = Faction.PIRATE;
                 sp.sendSystemMessage(Component.translatable("grandline.faction.deserter").withStyle(ChatFormatting.DARK_RED));
+                amount += com.grandline.career.Careers.onDeserted(sp, d); // careers: the deserter's bounty; seats, squad and colours lost
             } else return;
         }
         long before = d.bounty;
@@ -38,6 +40,7 @@ public final class Bounties {
         CharacterManager.markVisualsDirty(sp);
         com.grandline.journey.Journey.onBounty(sp, d.bounty); // journey: poster, 10M, 100M, 1B
         com.grandline.ship.BusterCall.onCrime(sp); // a crime seen from a Marine base may bring a Buster Call
+        com.grandline.career.Careers.onBountyRaised(sp, d); // careers: a pirate's infamy follows the bounty
     }
 
     public static ItemStack poster(CharacterData d) {

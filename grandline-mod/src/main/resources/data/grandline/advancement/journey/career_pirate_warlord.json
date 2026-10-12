@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_pirate_supernova",
+  "display": {
+    "icon": {
+      "id": "grandline:letter_of_marque"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_pirate_warlord.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_pirate_warlord.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_pirate_warlord": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_pirate_warlord"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_pirate_warlord"
+    ]
+  ]
+}

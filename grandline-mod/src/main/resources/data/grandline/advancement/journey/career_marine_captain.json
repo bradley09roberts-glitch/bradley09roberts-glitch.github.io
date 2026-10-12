@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_marine_ensign",
+  "display": {
+    "icon": {
+      "id": "grandline:fine_katana"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_marine_captain.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_marine_captain.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_marine_captain": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_marine_captain"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_marine_captain"
+    ]
+  ]
+}

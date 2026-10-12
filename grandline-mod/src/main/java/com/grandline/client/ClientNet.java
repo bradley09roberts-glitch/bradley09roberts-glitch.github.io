@@ -29,6 +29,7 @@ public final class ClientNet {
             if (mc.level != null) {
                 Entity e = mc.level.getEntity(p.entityId());
                 if (e != null) e.refreshDimensions();
+                if (e instanceof net.minecraft.world.entity.player.Player pl) pl.refreshDisplayName(); // careers: the title on the name tag
                 if (e == mc.player && mc.player != null) mc.player.setForcedPose(merged.getBoolean("knocked") ? net.minecraft.world.entity.Pose.SWIMMING : null);
             }
         });

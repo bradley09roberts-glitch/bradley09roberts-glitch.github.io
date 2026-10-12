@@ -21,6 +21,8 @@ def item_ids():
     plain += re.findall(r'(?:ITEMS\.register|\bfish|\bdish)\("([a-z0-9_]+)"', _read('activity/ActivityItems.java'))
     # the journey: Den Den Mushi snails
     plain += re.findall(r'ITEMS\.register\("([a-z0-9_]+)"', _read('journey/JourneyRegistry.java'))
+    # careers: the Marine coat, the letter of marque
+    plain += re.findall(r'ITEMS\.register\("([a-z0-9_]+)"', _read('career/CareerRegistry.java'))
     weapons = re.findall(r'\bweapon\("([a-z0-9_]+)"', src)
     return plain, weapons
 

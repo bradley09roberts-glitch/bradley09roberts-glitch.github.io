@@ -32,6 +32,15 @@ public final class Shops {
     public static final String[] PAINTINGS = {"red_line", "reverse_mountain", "knock_up_stream", "white_sea", "bubble_city", "sabaody_grove",
             "calm_belt", "last_island", "sea_train", "cyclone"};
 
+    /** What this NPC sells this player: a career shop (Marine supply, a pirate port's fence, revolutionary contacts) or the usual. */
+    static List<Offer> offers(ServerPlayer sp, GLNpc npc) {
+        var career = com.grandline.career.CareerPerks.shop(sp, npc);
+        if (career == null) return offers(npc);
+        List<Offer> l = new java.util.ArrayList<>();
+        for (var o : career) l.add(new Offer(o.item(), o.count(), o.price()));
+        return l;
+    }
+
     static List<Offer> offers(GLNpc npc) {
         List<Offer> l = new java.util.ArrayList<>(offers(npc.role()));
         // sea activities: treasure maps from shady dealers, catches and dishes from cooks, fishing rods
@@ -83,7 +92,7 @@ public final class Shops {
         t.putLong("beli", d.beli);
         ListTag l = new ListTag();
         int i = 0;
-        for (Offer o : offers(npc)) {
+        for (Offer o : offers(sp, npc)) {
             CompoundTag e = new CompoundTag();
             e.putInt("i", i++);
             e.putString("item", o.item);
@@ -100,13 +109,14 @@ public final class Shops {
         double mult = 1 + (npc.tier() - 1) * 0.15;
         int rep = d.reputation("island/" + npc.islandId()) + d.reputation(npc.faction().id());
         mult *= Math.max(0.6, 1 - rep / 2000.0);
+        mult *= com.grandline.career.CareerPerks.priceFactor(d); // careers: a merchant's discount
         return Math.max(1, Math.round(o.price * mult));
     }
 
     public static void buy(ServerPlayer sp, int npcId, int index) {
         Entity e = sp.level().getEntity(npcId);
         if (!(e instanceof GLNpc npc) || npc.distanceTo(sp) > 8) return;
-        List<Offer> list = offers(npc);
+        List<Offer> list = offers(sp, npc);
         if (index < 0 || index >= list.size()) return;
         Offer o = list.get(index);
         CharacterData d = Characters.get(sp);
@@ -117,6 +127,7 @@ public final class Shops {
         }
         Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(o.item));
         d.beli -= price;
+        com.grandline.career.Careers.onTrade(sp, price); // careers: a merchant's trade
         ItemStack stack = o.painting != null ? painting(o.painting) : new ItemStack(item, o.count);
         if (!sp.getInventory().add(stack)) sp.drop(stack, false);
         CharacterManager.markDirty(sp);

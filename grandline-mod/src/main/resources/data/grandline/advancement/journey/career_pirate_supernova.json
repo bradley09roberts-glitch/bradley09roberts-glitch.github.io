@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_path",
+  "display": {
+    "icon": {
+      "id": "grandline:wanted_poster"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_pirate_supernova.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_pirate_supernova.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_pirate_supernova": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_pirate_supernova"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_pirate_supernova"
+    ]
+  ]
+}

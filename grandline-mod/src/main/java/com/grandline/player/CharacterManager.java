@@ -67,6 +67,7 @@ public final class CharacterManager {
         t.putString("faction", d.faction.id());
         t.putLong("bounty", d.bounty);
         t.putString("name", d.name);
+        com.grandline.career.Careers.visuals(player, d, t); // careers: the title on name tags
         return t;
     }
 

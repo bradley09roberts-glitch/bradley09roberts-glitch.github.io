@@ -55,6 +55,7 @@ public final class NpcOutcomes {
         if (!npc.notableId().isEmpty()) com.grandline.quest.Quests.progress(by, "arrest", npc.notableId(), 1);
         long reward = rewardFor(npc);
         if (npc.faction() == Faction.PIRATE || npc.faction() == Faction.WILD) {
+            reward += com.grandline.career.Careers.onArrest(by, d, npc, reward); // careers: Marine merit, a hunter's licence bonus
             d.beli += reward;
             d.addReputation(Faction.MARINE.id(), 8);
             by.sendSystemMessage(Component.translatable("grandline.bounty.collected", reward).withStyle(ChatFormatting.GOLD));

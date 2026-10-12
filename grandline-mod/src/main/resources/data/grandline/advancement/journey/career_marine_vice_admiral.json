@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_marine_captain",
+  "display": {
+    "icon": {
+      "id": "grandline:black_den_den_mushi"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_marine_vice_admiral.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_marine_vice_admiral.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_marine_vice_admiral": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_marine_vice_admiral"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_marine_vice_admiral"
+    ]
+  ]
+}

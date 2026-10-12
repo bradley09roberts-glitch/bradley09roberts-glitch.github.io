@@ -130,6 +130,8 @@ public abstract class GLNpc extends PathfinderMob {
         if (e == this) return false;
         if (e instanceof net.minecraft.server.level.ServerPlayer sp && PrisonSystem.isJailed(sp)) return false;
         if (getLastHurtByMob() == e || getTarget() == e) return true;
+        Boolean career = com.grandline.career.Careers.hostility(this, e); // careers: squads, Warlords, safe houses, pirates' respect
+        if (career != null) return career;
         Boolean story = com.grandline.npc.notable.NotableHooks.hostility(this, e); // story cast & crews
         if (story != null) return story;
         Boolean sea = com.grandline.ship.LivingSea.hostility(this, e); // ship crews keep to their deck; harbour raids

@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_path",
+  "display": {
+    "icon": {
+      "id": "grandline:sea_chart"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_civilian_apprentice.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_civilian_apprentice.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_civilian_apprentice": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_civilian_apprentice"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_civilian_apprentice"
+    ]
+  ]
+}

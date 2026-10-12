@@ -160,7 +160,7 @@ final class NpcShipAi {
         var d = Characters.get(p);
         if (ship.life.wronged(p)) return true;
         return switch (ship.npcFaction) {
-            case LivingSea.MARINE -> d.bounty > 0 || d.faction == Faction.PIRATE || d.faction == Faction.REVOLUTIONARY;
+            case LivingSea.MARINE -> !com.grandline.career.Careers.protectedAtSea(p) && (d.bounty > 0 || d.faction == Faction.PIRATE || d.faction == Faction.REVOLUTIONARY); // careers: a Warlord
             case LivingSea.HUNTER -> d.bounty >= LivingSea.HUNTED && d.faction != Faction.MARINE; // licensed hunters go after wanted heads
             case LivingSea.MERCHANT -> false;
             // raiders leave notorious pirates alone half the time (stable per ship and player) and spare raid allies

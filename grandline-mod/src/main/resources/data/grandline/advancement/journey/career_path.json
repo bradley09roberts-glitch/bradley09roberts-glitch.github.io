@@ -1,0 +1,59 @@
+{
+  "parent": "grandline:journey/root",
+  "display": {
+    "icon": {
+      "id": "grandline:marine_coat"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_path.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_path.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "marine": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_marine_seaman"
+      }
+    },
+    "pirate": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_pirate_supernova"
+      }
+    },
+    "revolutionary": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_revolutionary_officer"
+      }
+    },
+    "hunter": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_hunter_licensed"
+      }
+    },
+    "civilian": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_civilian_apprentice"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "marine",
+      "pirate",
+      "revolutionary",
+      "hunter",
+      "civilian"
+    ]
+  ]
+}
