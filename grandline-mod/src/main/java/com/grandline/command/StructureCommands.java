@@ -252,8 +252,9 @@ public final class StructureCommands {
             cx = plot.x() + plot.sizeX() / 2.0;
             cz = plot.z() + plot.sizeZ() / 2.0;
             int size = Math.max(plot.sizeX(), plot.sizeZ());
-            dist = size * 0.9 + 10;
-            height = size * 0.45 + 6;
+            boolean deep = l.dimension().location().getPath().equals("deep_sea");
+            dist = deep ? size * 0.6 + 4 : size * 0.9 + 10; // under water the view is short: frame from inside the dome
+            height = deep ? size * 0.3 + 4 : size * 0.45 + 6;
             lookY = plot.y() + Math.min(18, size * 0.25);
             final double fx = cx, fz = cz;
             place(sp, l, fx, fz, dist, height, n, plot.y(), lookY);
@@ -320,7 +321,9 @@ public final class StructureCommands {
         double ang = Math.toRadians(n * 90 + 45 + (n >= 4 ? 22.5 : 0));
         double x = cx + Math.sin(ang) * d, z = cz - Math.cos(ang) * d;
         l.getChunk((int) x >> 4, (int) z >> 4);
-        double y = Math.max(baseY + h, l.getHeight(Heightmap.Types.MOTION_BLOCKING, (int) x, (int) z) + 1.6);
+        // in the deep sea the water itself blocks motion, so stand on the sea floor instead of on the surface far above
+        Heightmap.Types ground = l.dimension().location().getPath().equals("deep_sea") ? Heightmap.Types.OCEAN_FLOOR : Heightmap.Types.MOTION_BLOCKING;
+        double y = Math.max(baseY + h, l.getHeight(ground, (int) x, (int) z) + 1.6);
         double dx = cx - x, dz = cz - z, dy = lookY - (y + 1.62);
         float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
         float pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
