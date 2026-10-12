@@ -237,6 +237,7 @@ public final class ClientSelfTest {
     private static void buildCaptain() {
         createCharacter("Captain", "human");
         cmd("grandline test env", 10);
+        cmd("grandline test calm", 10); // no chance sea battle where the galleon is launched
         cmd("career admin rank 3", 20); // a career title the mate should see over the captain's head
         // open water south of the starter island (a harbour's coastline changes with the world seed and can run the
         // galleon aground within a few blocks)

@@ -60,6 +60,23 @@ public final class TestCommands {
                 .then(Commands.literal("passing").executes(c -> passing(c, -1))
                         .then(Commands.argument("offset", com.mojang.brigadier.arguments.DoubleArgumentType.doubleArg(0, 30))
                                 .executes(c -> passing(c, com.mojang.brigadier.arguments.DoubleArgumentType.getDouble(c, "offset")))))
+                .then(Commands.literal("calm").executes(c -> {
+                    // pause the living sea and clear NPC ships nearby (two-client test: no chance encounter at the start)
+                    com.grandline.core.GLConfig.LIVING_SEA.set(false);
+                    var l = c.getSource().getLevel();
+                    var at = c.getSource().getPosition();
+                    int n = 0;
+                    for (var sh : l.getEntitiesOfClass(com.grandline.ship.ShipEntity.class, new net.minecraft.world.phys.AABB(at, at).inflate(400))) {
+                        if (sh.npcFaction.isEmpty()) continue;
+                        for (var u : com.grandline.ship.NavalCombat.npcCrew(sh)) {
+                            var e = l.getEntity(u);
+                            if (e != null) e.discard();
+                        }
+                        sh.discard();
+                        n++;
+                    }
+                    return GLCommands.ok(c, "Living sea paused; " + n + " NPC ships cleared");
+                }))
                 .then(Commands.literal("base").executes(c -> {
                     // stand on a claimable island heart holding a crew flag (client test of planting it, the base and the chart)
                     ServerPlayer sp = c.getSource().getPlayerOrException();
