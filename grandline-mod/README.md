@@ -68,6 +68,9 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
   recover sunk ships; get a coating at Sabaody to dive.
 - **Bounties**: crimes raise your bounty; at each threshold you get your wanted poster (use it to look at it).
 - **Paintings**: ten painted scenes of the seas; merchants sell three on each island and treasure hides more.
+- **Stories and jobs**: canon islands have their arcs; every original island has its own local story with named
+  people (generated from the world seed). Right-click a town's notice board for jobs: letters, escorts, wanted
+  outlaws (the poster says where they hide), nests, wrecks, fish, meals and timber.
 - **Crew**: recruit named characters through their quests; they follow you, fight with you, revive you and give ship
   bonuses (shipwright, helmsman, cook, doctor, navigator, musician, sniper...).
 

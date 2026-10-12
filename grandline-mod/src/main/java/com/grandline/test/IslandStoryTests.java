@@ -78,6 +78,8 @@ final class IslandStoryTests {
     static void prelude(Deque<SelfTest.Step> steps) {
         steps.add(s -> {
             FakePlayer fp = SelfTest.fake(s);
+            BlockPos c = SelfTest.arena(s.overworld()); // where phase 1 keeps the test character
+            fp.moveTo(c.getX() + 0.5, c.getY(), c.getZ() + 0.5);
             CharacterData d = Characters.get(fp);
             if (d.created) return 0;
             CompoundTag req = new CompoundTag();
@@ -89,6 +91,18 @@ final class IslandStoryTests {
             var err = com.grandline.player.CharacterManager.create(fp, req);
             check("test character created (quick phase)", err == null, err == null ? "" : err.getString());
             return 0;
+        });
+        // phase 1 has long had Shells Town loaded (ferry tests) when the crew checks run; warm it up the same way, so the
+        // freshly spawned crew candidate is already tracked by the level when the checks look for it
+        steps.add(s -> {
+            var n = NotableCharacters.get("petra");
+            Island isl = n == null ? null : WorldPlan.of(s).byId(n.island());
+            if (isl == null) return 0;
+            ChunkPos cp = new ChunkPos((isl.x + n.dx()) >> 4, (isl.z + n.dz()) >> 4);
+            s.overworld().getChunkSource().addRegionTicket(TicketType.FORCED, cp, 3, cp);
+            for (int dx = -3; dx <= 3; dx++)
+                for (int dz = -3; dz <= 3; dz++) s.overworld().getChunk(cp.x + dx, cp.z + dz);
+            return 100;
         });
     }
 
@@ -298,6 +312,18 @@ final class IslandStoryTests {
                 "job.grandline.letter_for", "job.grandline.where")) if (!keys.contains(k)) missing.add(k);
         check("every island story and job text exists (titles, descriptions, greetings, rumours, places)", missing.isEmpty(),
                 used.size() + " keys used" + (missing.isEmpty() ? "" : "; missing " + missing));
+        // and renders with its arguments: no leftover placeholders or raw keys (the server's language has the mod's texts)
+        List<String> broken = new ArrayList<>();
+        int rendered = 0;
+        for (Component c : all) {
+            if (c == null) continue;
+            String text = c.getString();
+            rendered++;
+            if (text.contains("%") || text.contains("story.grandline.") || text.contains("job.grandline.") || text.isBlank()) broken.add(text);
+        }
+        check("island story and job texts render with their names and places", broken.isEmpty() && rendered > 1000,
+                rendered + " texts rendered, e.g. \"" + (all.isEmpty() || all.get(0) == null ? "" : all.get(0).getString()) + "\" / \""
+                        + (world.descs().isEmpty() ? "" : world.descs().values().iterator().next().getString()) + "\"" + (broken.isEmpty() ? "" : "; broken " + broken.subList(0, Math.min(5, broken.size()))));
         return 0;
     }
 
