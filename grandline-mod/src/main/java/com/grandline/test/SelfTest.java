@@ -265,6 +265,21 @@ public final class SelfTest {
                 if (n.equals("treasure")) sample = items.toString();
             }
             check("all 12 chest loot tables load and roll items", ok == 12, ok + "/12; treasure roll " + sample);
+            // the painted sea scenes: registered painting variants, placeable, sold by merchants, in treasure loot
+            var variants = s.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.PAINTING_VARIANT);
+            int reg = 0, placeable = 0;
+            for (String v : com.grandline.dialogue.Shops.PAINTINGS) {
+                var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.PAINTING_VARIANT, GrandLine.id(v));
+                var h = variants.getHolder(key);
+                if (h.isPresent()) {
+                    reg++;
+                    if (h.get().is(net.minecraft.tags.PaintingVariantTags.PLACEABLE)) placeable++;
+                }
+            }
+            var stack = com.grandline.dialogue.Shops.painting("red_line");
+            var ed = stack.get(net.minecraft.core.component.DataComponents.ENTITY_DATA);
+            check("ten sea paintings are registered, placeable and sold as their scene", reg == 10 && placeable == 10 && ed != null && ed.copyTag().getString("variant").equals("grandline:red_line"),
+                    reg + " registered, " + placeable + " placeable, shop item " + (ed == null ? "-" : ed.copyTag()));
             return 0;
         });
         // landmarks: every registered set piece builds deterministically inside its footprint (see LandmarkCheck)

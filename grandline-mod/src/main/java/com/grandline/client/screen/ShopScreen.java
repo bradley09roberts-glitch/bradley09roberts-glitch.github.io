@@ -51,7 +51,8 @@ public class ShopScreen extends Screen {
             ItemStack s = new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.parse(o.getString("item"))), o.getInt("count"));
             g.renderItem(s, x, y + 2);
             g.renderItemDecorations(font, s, x, y + 2);
-            g.drawString(font, s.getHoverName(), x + 20, y + 6, 0xFFFFFFFF);
+            Component name = o.contains("painting") ? Component.translatable("painting.grandline." + o.getString("painting") + ".title") : s.getHoverName();
+            g.drawString(font, name, x + 20, y + 6, 0xFFFFFFFF);
         }
     }
 

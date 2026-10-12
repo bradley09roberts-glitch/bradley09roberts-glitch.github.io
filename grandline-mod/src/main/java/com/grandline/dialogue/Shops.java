@@ -21,7 +21,35 @@ import java.util.List;
 
 /** Beli shops by NPC role. Prices scale with the island's tier; reputation gives discounts. */
 public final class Shops {
-    record Offer(String item, int count, long price) {}
+    /** An offer; {@code painting} names a painting variant when the item is a painting of a particular scene. */
+    record Offer(String item, int count, long price, @org.jetbrains.annotations.Nullable String painting) {
+        Offer(String item, int count, long price) {
+            this(item, count, price, null);
+        }
+    }
+
+    /** The painted scenes of the seas (Higgsfield art, see docs/ART.md); each island's merchant stocks three. */
+    public static final String[] PAINTINGS = {"red_line", "reverse_mountain", "knock_up_stream", "white_sea", "bubble_city", "sabaody_grove",
+            "calm_belt", "last_island", "sea_train", "cyclone"};
+
+    static List<Offer> offers(GLNpc npc) {
+        List<Offer> base = offers(npc.role());
+        if (!npc.role().equals("merchant") && !npc.role().equals("shopkeeper")) return base;
+        List<Offer> l = new java.util.ArrayList<>(base);
+        int h = Math.floorMod(npc.islandId().hashCode(), PAINTINGS.length);
+        for (int k = 0; k < 3; k++) l.add(new Offer("minecraft:painting", 1, 2500 + k * 1500L, PAINTINGS[(h + k * 3) % PAINTINGS.length]));
+        return l;
+    }
+
+    /** A painting item that hangs the given scene. */
+    public static ItemStack painting(String variant) {
+        ItemStack st = new ItemStack(net.minecraft.world.item.Items.PAINTING);
+        CompoundTag t = new CompoundTag();
+        t.putString("id", "minecraft:painting");
+        t.putString("variant", "grandline:" + variant);
+        st.set(net.minecraft.core.component.DataComponents.ENTITY_DATA, net.minecraft.world.item.component.CustomData.of(t));
+        return st;
+    }
 
     static List<Offer> offers(String role) {
         return switch (role) {
@@ -45,10 +73,11 @@ public final class Shops {
         t.putLong("beli", d.beli);
         ListTag l = new ListTag();
         int i = 0;
-        for (Offer o : offers(npc.role())) {
+        for (Offer o : offers(npc)) {
             CompoundTag e = new CompoundTag();
             e.putInt("i", i++);
             e.putString("item", o.item);
+            if (o.painting != null) e.putString("painting", o.painting);
             e.putInt("count", o.count);
             e.putLong("price", price(o, npc, d));
             l.add(e);
@@ -67,7 +96,7 @@ public final class Shops {
     public static void buy(ServerPlayer sp, int npcId, int index) {
         Entity e = sp.level().getEntity(npcId);
         if (!(e instanceof GLNpc npc) || npc.distanceTo(sp) > 8) return;
-        List<Offer> list = offers(npc.role());
+        List<Offer> list = offers(npc);
         if (index < 0 || index >= list.size()) return;
         Offer o = list.get(index);
         CharacterData d = Characters.get(sp);
@@ -78,7 +107,7 @@ public final class Shops {
         }
         Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(o.item));
         d.beli -= price;
-        ItemStack stack = new ItemStack(item, o.count);
+        ItemStack stack = o.painting != null ? painting(o.painting) : new ItemStack(item, o.count);
         if (!sp.getInventory().add(stack)) sp.drop(stack, false);
         CharacterManager.markDirty(sp);
         open(sp, npc);
