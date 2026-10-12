@@ -220,6 +220,8 @@ public final class SelfTest {
             check("Baratie restaurant ship built on the water", planks > 20, planks + " deck planks");
             return 0;
         });
+        // landmarks: every registered set piece builds deterministically inside its footprint (see LandmarkCheck)
+        steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
         // NPC markers & spawning
         steps.add(s -> {
             WorldPlan p = WorldPlan.of(s);
