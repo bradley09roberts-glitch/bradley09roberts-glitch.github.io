@@ -65,6 +65,7 @@ public final class ClientSelfTest {
         cmd("execute in minecraft:overworld run tp @s 36000 120 20000", 40);
         cmd("gamemode survival", 10);
         cmd("grandline test base", 120);
+        cmd("kill @e[type=!minecraft:player,distance=..40]", 10); // anything that wandered up since (a claim is refused near hostiles)
         add("plant the crew flag", () -> {
             Minecraft mc = Minecraft.getInstance();
             var p = mc.player;
