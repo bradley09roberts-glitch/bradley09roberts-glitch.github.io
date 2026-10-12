@@ -26,6 +26,8 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class Navigation {
     public static final int LOG_TICKS = 20 * 60 * 3;
+    /** Last music place sent to each player (0 sea, 1 island, 2 Wano). */
+    private static final java.util.Map<ServerPlayer, Integer> MUSIC_PLACE = new java.util.WeakHashMap<>(); // a new login is a new ServerPlayer
 
     public static void tick(ServerPlayer sp, CharacterData d) {
         if (sp.tickCount % 40 != 0) return;
@@ -37,13 +39,17 @@ public final class Navigation {
         com.grandline.journey.Journey.onSea(sp); // journey: entering a new sea
         Island isl = plan.islandAt(sp.getBlockX(), sp.getBlockZ());
         if (isl == null || isl.t(sp.getBlockX(), sp.getBlockZ()) >= 1.0) isl = plan.pointAt(sp.getBlockX(), sp.getBlockZ(), 40); // Mary Geoise
-        if (isl != null && (isl.radius < 10 || isl.t(sp.getBlockX(), sp.getBlockZ()) < 1.0)) {
+        boolean onIsland = isl != null && (isl.radius < 10 || isl.t(sp.getBlockX(), sp.getBlockZ()) < 1.0);
+        int place = !onIsland ? 0 : isl.id.equals("wano_country") || isl.id.equals("onigashima") ? 2 : 1;
+        if (!Integer.valueOf(place).equals(MUSIC_PLACE.put(sp, place))) // situational music (client/GLMusic)
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(sp, new com.grandline.net.GLNetwork.Fx("music_place", sp.getX(), sp.getY(), sp.getZ(), place, 0, 0));
+        if (onIsland) {
             if (d.discoveredIslands.add(isl.id)) {
                 Component name = isl.canon && isl.name == null ? Component.translatable(isl.translationKey()) : Component.literal(isl.name);
                 sp.sendSystemMessage(Component.translatable("grandline.discover", name).withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD));
                 sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(name.copy().withStyle(ChatFormatting.GOLD)));
                 sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(Component.translatable("zone.grandline." + isl.zone.id())));
-                sp.level().playSound(null, sp.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6f, 1.2f);
+                sp.playNotifySound(com.grandline.registry.ModSounds.UI_DISCOVER.get(), SoundSource.PLAYERS, 1f, 1f);
                 int xp = 40 + isl.tier * 30 + (isl.canon ? 60 : 0);
                 if (d.addXp(xp) > 0) CharacterManager.applyAttributes(sp);
                 QuestEvents.onDiscover(sp, isl.id);

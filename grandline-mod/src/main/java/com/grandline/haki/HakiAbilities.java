@@ -33,10 +33,12 @@ public final class HakiAbilities {
         });
         Ability.builder("haki/armament/toggle", Ability.Source.HAKI, "armament").cooldown(10).stamina(0).anim("harden").exec((u, c) -> {
             if (u instanceof ServerPlayer sp) Haki.toggle(sp, 1);
+            u.level().playSound(null, u.getX(), u.getY(), u.getZ(), com.grandline.registry.ModSounds.HAKI_ARMAMENT.get(), net.minecraft.sounds.SoundSource.PLAYERS, 0.8f, 1.1f);
             return true;
         });
         Ability.builder("haki/armament/hardening", Ability.Source.HAKI, "armament").unlock(20).cooldown(300).stamina(0).haki(30).anim("harden").exec((u, c) -> {
             CombatState.of(u).buffs.put("hardening", 20 * 10);
+            u.level().playSound(null, u.getX(), u.getY(), u.getZ(), com.grandline.registry.ModSounds.HAKI_ARMAMENT.get(), net.minecraft.sounds.SoundSource.PLAYERS, 1.2f, 0.8f);
             if (u instanceof ServerPlayer sp) Haki.sendState(sp);
             return true;
         });

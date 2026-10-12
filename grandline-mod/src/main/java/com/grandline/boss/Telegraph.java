@@ -301,7 +301,7 @@ public final class Telegraph {
     /** Wind-up sound when the marker appears. */
     void windupSound() {
         Vec3 at = fight.boss.position();
-        SoundEvent s = own ? (move.windup >= 36 ? SoundEvents.WARDEN_SONIC_CHARGE : SoundEvents.EVOKER_PREPARE_ATTACK) : SoundEvents.BEACON_POWER_SELECT;
+        SoundEvent s = own ? (move.windup >= 36 ? com.grandline.registry.ModSounds.BOSS_TELEGRAPH.get() : SoundEvents.EVOKER_PREPARE_ATTACK) : SoundEvents.BEACON_POWER_SELECT;
         fight.level.playSound(null, at.x, at.y, at.z, s, SoundSource.HOSTILE, own ? 1.4f : 0.7f, own ? 0.8f : 1.6f);
     }
 

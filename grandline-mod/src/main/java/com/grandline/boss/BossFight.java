@@ -339,7 +339,7 @@ public final class BossFight {
         enraged = true;
         Vec3 p = boss.position();
         GLNetwork.fx(boss, "boss_enrage", p.x, p.y + 1, p.z, boss.getBbWidth() + 2, 0, 0);
-        level.playSound(null, p.x, p.y, p.z, SoundEvents.RAVAGER_ROAR, SoundSource.HOSTILE, 2f, 0.6f);
+        level.playSound(null, p.x, p.y, p.z, com.grandline.registry.ModSounds.BOSS_ENRAGE.get(), SoundSource.HOSTILE, 3f, 1f);
         say(Component.translatable("grandline.boss.enraged", boss.getDisplayName()).withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
         updateBar();
     }
@@ -357,7 +357,8 @@ public final class BossFight {
         holdStill();
         GLNetwork.anim(boss, "roar");
         Vec3 p = boss.position();
-        level.playSound(null, p.x, p.y, p.z, SoundEvents.ENDER_DRAGON_GROWL, SoundSource.HOSTILE, 2.5f, 0.8f);
+        level.playSound(null, p.x, p.y, p.z, com.grandline.registry.ModSounds.BOSS_ROAR.get(), SoundSource.HOSTILE, 3f, 0.9f + level.random.nextFloat() * 0.2f);
+        level.playSound(null, p.x, p.y, p.z, com.grandline.registry.ModSounds.BOSS_PHASE.get(), SoundSource.HOSTILE, 3f, 1f);
         GLNetwork.fx(boss, "boss_roar", p.x, p.y + 0.2, p.z, (float) (8 + boss.getBbWidth()), next, 0);
         say(Component.translatable("grandline.boss.says", boss.getDisplayName(), Component.translatable(def.phaseLineKey(next))).withStyle(ChatFormatting.GOLD));
         BossHaki.phaseBurst(this, now);

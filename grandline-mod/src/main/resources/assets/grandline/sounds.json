@@ -1,0 +1,281 @@
+{
+  "boss.enrage": {
+    "subtitle": "subtitles.grandline.boss.enrage",
+    "sounds": [
+      "grandline:boss/enrage_1"
+    ]
+  },
+  "boss.phase": {
+    "subtitle": "subtitles.grandline.boss.phase",
+    "sounds": [
+      "grandline:boss/phase_1"
+    ]
+  },
+  "boss.roar": {
+    "subtitle": "subtitles.grandline.boss.roar",
+    "sounds": [
+      "grandline:boss/roar_1",
+      "grandline:boss/roar_2"
+    ]
+  },
+  "boss.telegraph": {
+    "subtitle": "subtitles.grandline.boss.telegraph",
+    "sounds": [
+      "grandline:boss/telegraph_1"
+    ]
+  },
+  "combat.geppo": {
+    "subtitle": "subtitles.grandline.combat.geppo",
+    "sounds": [
+      "grandline:combat/geppo_1",
+      "grandline:combat/geppo_2"
+    ]
+  },
+  "combat.soru": {
+    "subtitle": "subtitles.grandline.combat.soru",
+    "sounds": [
+      "grandline:combat/soru_1",
+      "grandline:combat/soru_2"
+    ]
+  },
+  "den_den.pickup": {
+    "subtitle": "subtitles.grandline.den_den.pickup",
+    "sounds": [
+      "grandline:den_den/pickup_1"
+    ]
+  },
+  "den_den.ring": {
+    "subtitle": "subtitles.grandline.den_den.ring",
+    "sounds": [
+      "grandline:den_den/ring_1"
+    ]
+  },
+  "fruit.dark": {
+    "subtitle": "subtitles.grandline.fruit.dark",
+    "sounds": [
+      "grandline:fruit/dark_1",
+      "grandline:fruit/dark_2"
+    ]
+  },
+  "fruit.drums": {
+    "subtitle": "subtitles.grandline.fruit.drums",
+    "sounds": [
+      "grandline:fruit/drums_1"
+    ]
+  },
+  "fruit.flame": {
+    "subtitle": "subtitles.grandline.fruit.flame",
+    "sounds": [
+      "grandline:fruit/flame_1",
+      "grandline:fruit/flame_2",
+      "grandline:fruit/flame_3"
+    ]
+  },
+  "fruit.gas": {
+    "subtitle": "subtitles.grandline.fruit.gas",
+    "sounds": [
+      "grandline:fruit/gas_1",
+      "grandline:fruit/gas_2"
+    ]
+  },
+  "fruit.ice": {
+    "subtitle": "subtitles.grandline.fruit.ice",
+    "sounds": [
+      "grandline:fruit/ice_1",
+      "grandline:fruit/ice_2"
+    ]
+  },
+  "fruit.light": {
+    "subtitle": "subtitles.grandline.fruit.light",
+    "sounds": [
+      "grandline:fruit/light_1",
+      "grandline:fruit/light_2"
+    ]
+  },
+  "fruit.quake": {
+    "subtitle": "subtitles.grandline.fruit.quake",
+    "sounds": [
+      "grandline:fruit/quake_1",
+      "grandline:fruit/quake_2"
+    ]
+  },
+  "fruit.room": {
+    "subtitle": "subtitles.grandline.fruit.room",
+    "sounds": [
+      "grandline:fruit/room_1"
+    ]
+  },
+  "fruit.rubber": {
+    "subtitle": "subtitles.grandline.fruit.rubber",
+    "sounds": [
+      "grandline:fruit/rubber_1",
+      "grandline:fruit/rubber_2",
+      "grandline:fruit/rubber_3"
+    ]
+  },
+  "fruit.shambles": {
+    "subtitle": "subtitles.grandline.fruit.shambles",
+    "sounds": [
+      "grandline:fruit/shambles_1",
+      "grandline:fruit/shambles_2"
+    ]
+  },
+  "fruit.thunder": {
+    "subtitle": "subtitles.grandline.fruit.thunder",
+    "sounds": [
+      "grandline:fruit/thunder_1",
+      "grandline:fruit/thunder_2",
+      "grandline:fruit/thunder_3"
+    ]
+  },
+  "fruit.transform": {
+    "subtitle": "subtitles.grandline.fruit.transform",
+    "sounds": [
+      "grandline:fruit/transform_1",
+      "grandline:fruit/transform_2"
+    ]
+  },
+  "haki.armament": {
+    "subtitle": "subtitles.grandline.haki.armament",
+    "sounds": [
+      "grandline:haki/armament_1",
+      "grandline:haki/armament_2"
+    ]
+  },
+  "haki.conqueror": {
+    "subtitle": "subtitles.grandline.haki.conqueror",
+    "sounds": [
+      "grandline:haki/conqueror_1",
+      "grandline:haki/conqueror_2"
+    ]
+  },
+  "haki.observation": {
+    "subtitle": "subtitles.grandline.haki.observation",
+    "sounds": [
+      "grandline:haki/observation_1"
+    ]
+  },
+  "music.battle": {
+    "sounds": [
+      {
+        "name": "grandline:music/battle",
+        "stream": true
+      }
+    ]
+  },
+  "music.boss": {
+    "sounds": [
+      {
+        "name": "grandline:music/boss",
+        "stream": true
+      }
+    ]
+  },
+  "music.deep_sea": {
+    "sounds": [
+      {
+        "name": "grandline:music/deep_sea",
+        "stream": true
+      }
+    ]
+  },
+  "music.east_blue": {
+    "sounds": [
+      {
+        "name": "grandline:music/east_blue",
+        "stream": true
+      }
+    ]
+  },
+  "music.grand_line": {
+    "sounds": [
+      {
+        "name": "grandline:music/grand_line",
+        "stream": true
+      }
+    ]
+  },
+  "music.island": {
+    "sounds": [
+      {
+        "name": "grandline:music/island",
+        "stream": true
+      }
+    ]
+  },
+  "music.new_world": {
+    "sounds": [
+      {
+        "name": "grandline:music/new_world",
+        "stream": true
+      }
+    ]
+  },
+  "music.sky": {
+    "sounds": [
+      {
+        "name": "grandline:music/sky",
+        "stream": true
+      }
+    ]
+  },
+  "music.wano": {
+    "sounds": [
+      {
+        "name": "grandline:music/wano",
+        "stream": true
+      }
+    ]
+  },
+  "player.knockdown": {
+    "subtitle": "subtitles.grandline.player.knockdown",
+    "sounds": [
+      "grandline:player/knockdown_1"
+    ]
+  },
+  "sea_king.call": {
+    "subtitle": "subtitles.grandline.sea_king.call",
+    "sounds": [
+      "grandline:sea_king/call_1",
+      "grandline:sea_king/call_2"
+    ]
+  },
+  "ship.bell": {
+    "subtitle": "subtitles.grandline.ship.bell",
+    "sounds": [
+      "grandline:ship/bell_1"
+    ]
+  },
+  "ship.cannon": {
+    "subtitle": "subtitles.grandline.ship.cannon",
+    "sounds": [
+      "grandline:ship/cannon_1",
+      "grandline:ship/cannon_2",
+      "grandline:ship/cannon_3"
+    ]
+  },
+  "ship.horn": {
+    "subtitle": "subtitles.grandline.ship.horn",
+    "sounds": [
+      "grandline:ship/horn_1"
+    ]
+  },
+  "ui.bounty": {
+    "subtitle": "subtitles.grandline.ui.bounty",
+    "sounds": [
+      "grandline:ui/bounty_1"
+    ]
+  },
+  "ui.discover": {
+    "subtitle": "subtitles.grandline.ui.discover",
+    "sounds": [
+      "grandline:ui/discover_1"
+    ]
+  },
+  "ui.quest": {
+    "subtitle": "subtitles.grandline.ui.quest",
+    "sounds": [
+      "grandline:ui/quest_1"
+    ]
+  }
+}

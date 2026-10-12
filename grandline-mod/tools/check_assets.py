@@ -209,6 +209,28 @@ def main():
     lang = {}
     for p in glob.glob(os.path.join(source.ROOT, 'src/main/lang/en_us/*.json')):
         lang.update(json.load(open(p, encoding='utf-8')))
+
+    # ---------------------------------------------------------------- sounds (ModSounds.IDS vs sounds.json and the .ogg files)
+    import re
+    ms = open(os.path.join(source.ROOT, 'src/main/java/com/grandline/registry/ModSounds.java'), encoding='utf-8').read()
+    ids = re.findall(r'"([a-z_]+\.[a-z_]+)"', ms[ms.index('IDS = {'):ms.index('};', ms.index('IDS = {'))])
+    registered = set(re.findall(r'sfx\("([a-z_.]+)"\)', ms))
+    if set(ids) != registered:
+        err(f'ModSounds.IDS and the registered events differ: {sorted(set(ids) ^ registered)}')
+    sj = os.path.join(A, 'grandline/sounds.json')
+    sounds = json.load(open(sj)) if os.path.isfile(sj) else {}
+    for sid in ids:
+        if sid not in sounds:
+            err(f'sound {sid}: missing from sounds.json (run tools/gen_sounds.py)')
+            continue
+        for e in sounds[sid]['sounds']:
+            name = e['name'] if isinstance(e, dict) else e
+            f = os.path.join(A, 'grandline/sounds', name.split(':')[1] + '.ogg')
+            if not os.path.isfile(f):
+                err(f'sound {sid}: missing file {os.path.relpath(f, A)}')
+        sub = sounds[sid].get('subtitle')
+        if sub and sub not in lang:
+            err(f'sound {sid}: no lang entry for its subtitle {sub}')
     for iid in sorted(items):
         key = ('block.grandline.' if iid in blocks else 'item.grandline.') + iid
         if key not in lang:
@@ -222,7 +244,7 @@ def main():
             print('  ', p)
         sys.exit(1)
     print(f'OK: {len(items)} items, {len(blocks)} blocks, {len(source.skin_ids())} skins, {len(source.projectile_kinds())} projectiles, '
-          f'{len(source.loot_table_ids())} chest loot tables referenced by code; all resources present.')
+          f'{len(source.loot_table_ids())} chest loot tables referenced by code, {len(ids)} sound events; all resources present.')
 
 
 if __name__ == '__main__':

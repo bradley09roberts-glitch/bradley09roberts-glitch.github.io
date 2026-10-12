@@ -199,7 +199,7 @@ public final class BusterCall {
         if (!server.getPlayerList().getPlayers().contains(sp)) sp.sendSystemMessage(msg);
         sp.connection.send(new ClientboundSetTitleTextPacket(Component.translatable("grandline.buster.title").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD)));
         sp.connection.send(new ClientboundSetSubtitleTextPacket(Component.translatable("grandline.buster.subtitle", secs).withStyle(ChatFormatting.GOLD)));
-        sp.level().playSound(null, sp.blockPosition(), SoundEvents.RAID_HORN.value(), SoundSource.HOSTILE, 4f, 0.8f);
+        sp.level().playSound(null, sp.blockPosition(), com.grandline.registry.ModSounds.SHIP_HORN.get(), SoundSource.HOSTILE, 6f, 0.85f);
         DenDenMushi.overheard(server, Component.translatable("grandline.buster.overheard", d.name, place));
         GrandLine.LOGGER.info("Buster Call issued against {} (bounty {}) near {} after a report ({})", d.name, d.bounty, place.getString(), reason);
         return c;

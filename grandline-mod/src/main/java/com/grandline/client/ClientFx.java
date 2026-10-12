@@ -131,6 +131,11 @@ public final class ClientFx {
             ClientWeather.update((int) a, b, c);
             return;
         }
+        if (kind.equals("music_place")) { // where we are, for the situational music (Navigation)
+            GLMusic.place = (int) a;
+            return;
+        }
+        FxSounds.play(l, kind, x, y, z); // the mod's own sound for this effect, if it has one
         if (canonWave3(l, kind, x, y, z, a, b, c)) return; // fruit wave 3 (canon), see block below
         if (originalWave3(l, kind, x, y, z, a, b, c)) return; // Devil Fruits wave 3, ORIGINAL fruits (block at the end of this class)
         if (originalWave4(l, kind, x, y, z, a, b, c)) return; // Devil Fruits wave 4, ORIGINAL fruits (block at the end of this class)

@@ -569,7 +569,7 @@ public class ShipEntity extends Entity {
         if (!exact) dir = dir.add(0, 0.06, 0);
         Vec3 muzzle = muzzle(seat);
         NavalCombat.launch(this, shooter instanceof LivingEntity le ? le : null, muzzle, dir, damage, ammo);
-        level().playSound(null, BlockPos.containing(muzzle), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.NEUTRAL, 1.2f, 1.3f);
+        level().playSound(null, BlockPos.containing(muzzle), com.grandline.registry.ModSounds.SHIP_CANNON.get(), SoundSource.NEUTRAL, 4f, 0.9f + random.nextFloat() * 0.2f);
         ((ServerLevel) level()).sendParticles(ParticleTypes.LARGE_SMOKE, muzzle.x, muzzle.y, muzzle.z, 8, 0.3, 0.3, 0.3, 0.02);
     }
 

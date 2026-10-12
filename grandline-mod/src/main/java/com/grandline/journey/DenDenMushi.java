@@ -213,7 +213,7 @@ public final class DenDenMushi {
         for (ServerPlayer p : List.of(c.caller, c.callee)) {
             deliver(p, line(DenDenMushiItem.Kind.PERSONAL, Component.translatable("grandline.den.connected", name(c.other(p))).append(" ")
                     .append(button("grandline.den.hang_up", "/den hangup", ChatFormatting.RED)), ChatFormatting.GREEN));
-            p.level().playSound(null, p.blockPosition(), SoundEvents.NOTE_BLOCK_CHIME.value(), SoundSource.PLAYERS, 0.6f, 1.6f);
+            p.level().playSound(null, p.blockPosition(), com.grandline.registry.ModSounds.DEN_DEN_PICKUP.get(), SoundSource.PLAYERS, 1f, 1f);
             Journey.milestone(p, Journey.DEN_CALL);
         }
         return true;
@@ -264,8 +264,7 @@ public final class DenDenMushi {
     }
 
     private static void ring(ServerPlayer p, long t) {
-        float pitch = (t / 30) % 2 == 0 ? 1.4f : 1.2f;
-        p.level().playSound(null, p.blockPosition(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, 0.8f, pitch);
+        p.level().playSound(null, p.blockPosition(), com.grandline.registry.ModSounds.DEN_DEN_RING.get(), SoundSource.PLAYERS, 1f, 1f);
         p.displayClientMessage(Component.translatable("grandline.den.puru").withStyle(ChatFormatting.GREEN), true);
     }
 
@@ -313,7 +312,7 @@ public final class DenDenMushi {
         if (!from.isCreative()) inv.getItem(slot).shrink(1);
         deliver(to, line(k, Component.empty().append(name(from).copy().withStyle(ChatFormatting.DARK_PURPLE)).append(": ").append(text), ChatFormatting.LIGHT_PURPLE));
         deliver(from, line(k, Component.translatable("grandline.den.baby_sent", name(to)), ChatFormatting.GRAY));
-        to.level().playSound(null, to.blockPosition(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, 0.5f, 1.8f);
+        to.level().playSound(null, to.blockPosition(), com.grandline.registry.ModSounds.DEN_DEN_RING.get(), SoundSource.PLAYERS, 0.6f, 1.5f);
         return true;
     }
 
@@ -479,7 +478,7 @@ public final class DenDenMushi {
                         end(c);
                         deliver(c.caller, line(DenDenMushiItem.Kind.PERSONAL, Component.translatable("grandline.den.missed", name(c.callee)), ChatFormatting.GRAY));
                         deliver(c.callee, line(DenDenMushiItem.Kind.PERSONAL, Component.translatable("grandline.den.missed_callee", name(c.caller)), ChatFormatting.GRAY));
-                    } else if ((c.ringUntil - now) % 30 == 0) ring(c.callee, c.ringUntil - now);
+                    } else if ((c.ringUntil - now) % 40 == 0) ring(c.callee, c.ringUntil - now);
                 } else if (now % 40 == 0 && (!carries(c.caller, JourneyRegistry.DEN_DEN_MUSHI.get()) || !carries(c.callee, JourneyRegistry.DEN_DEN_MUSHI.get()))) {
                     hangUp(c.caller); // a snail was dropped or put away in a chest: the line goes dead
                 }

@@ -32,6 +32,7 @@ public final class Bounties {
                 ItemStack poster = poster(d);
                 poster.update(DataComponents.CUSTOM_DATA, CustomData.EMPTY, c -> c.update(tag -> tag.putUUID("uuid", sp.getUUID())));
                 sp.getInventory().add(poster);
+                sp.playNotifySound(com.grandline.registry.ModSounds.UI_BOUNTY.get(), net.minecraft.sounds.SoundSource.PLAYERS, 1f, 1f);
             }
         }
         sp.displayClientMessage(Component.translatable("grandline.bounty.raised", String.format("%,d", d.bounty)).withStyle(ChatFormatting.YELLOW), true);

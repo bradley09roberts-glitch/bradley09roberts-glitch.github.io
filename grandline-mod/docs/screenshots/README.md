@@ -138,3 +138,7 @@ the distance fog is closer than on a real PC) against a dedicated server on 2026
 ### The journey: the mod's own advancement tab
 
 ![The journey: the mod's own advancement tab](14f_journey_advancements.jpg)
+
+### An Emperor boss fight: boss bar with title, giant boss (`/grandline test boss hrolf`)
+
+![An Emperor boss fight](35g_boss_fight.jpg)

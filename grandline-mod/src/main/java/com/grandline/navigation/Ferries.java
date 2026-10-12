@@ -140,6 +140,7 @@ public final class Ferries {
             ship.discard();
             return null;
         }
+        l.playSound(null, ship.getX(), ship.getY(), ship.getZ(), com.grandline.registry.ModSounds.SHIP_BELL.get(), net.minecraft.sounds.SoundSource.NEUTRAL, 3f, 1f);
         return ship;
     }
 
@@ -323,6 +324,7 @@ public final class Ferries {
     }
 
     private static void arrive(ShipEntity ship, ServerLevel l) {
+        l.playSound(null, ship.getX(), ship.getY(), ship.getZ(), com.grandline.registry.ModSounds.SHIP_BELL.get(), net.minecraft.sounds.SoundSource.NEUTRAL, 3f, 0.9f);
         WorldPlan plan = WorldPlan.forLevel(l);
         Island dest = plan == null ? null : plan.byId(ship.ferryIsland);
         BlockPos land = null;

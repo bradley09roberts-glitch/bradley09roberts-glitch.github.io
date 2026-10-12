@@ -67,7 +67,7 @@ public final class BossHaki {
         f.clashes++;
         Vec3 a = b.getEyePosition(), p = who.getEyePosition();
         GLNetwork.fx(b, "boss_clash", a.x, a.y, a.z, (float) p.x, (float) p.y, (float) p.z);
-        f.level.playSound(null, b.getX(), b.getY(), b.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 2f, 0.5f);
+        f.level.playSound(null, b.getX(), b.getY(), b.getZ(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 1.4f, 0.5f);
         PowerKit.push(who, b.position(), 0.7, 0.25);
         boolean holds = pressure(who) >= pressure(b) * 0.7;
         if (holds) {
