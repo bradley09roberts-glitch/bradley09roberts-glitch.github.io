@@ -164,6 +164,19 @@ First run of a real client against the dedicated server. Result: no client crash
 - After the merge, the tests had to generate their test areas before looking for water (game code no longer blocks on
   chunks); dims suite 112/112 again.
 
+### Naval combat and ship customisation (agent, merged 06:00)
+- Boarding: grappling hooks haul two ships side by side (or tow a prize); NPC raiders grapple and send boarding
+  parties; your crew follow you across; beat a ship's crew and stand on its deck to take it as a prize (a shipwright
+  buys or refits it; taking a Marine ship raises your bounty).
+- Ramming (closing speed and size; iron ram bow upgrade), gun crews who man cannons and lead moving targets, orders
+  (V fire at will / hold, N shot type, `/ship fire|hold|ammo|cut|status`), chain shot (tears rigging, slows) and grape
+  shot; Marine squadrons in formation, vice-admiral squadrons near the Marine headquarters for big bounties.
+- Customisation: 7 figureheads, 8 emblems on flag and sails, flag/emblem/sail colours and hull paint on a new shipyard
+  page with a live preview; saved on the ship and in the registry.
+- Verified by the agent on the merged tree: phase 1 272/273 (the one failure was the ferry check fixed since),
+  phase 2 9/9 (look, registry copy and captured prize survive a restart); naval client shots 41–47 read by eye.
+- Not built: NPC ships fighting each other; hired NPC gunners outside your recruited crew.
+
 ### Sea Kings, Zoan beasts, wildlife (agent, merged 05:40)
 - Sea Kings: three variants (serpent, maw, horned) in three tiers (25–80 blocks long, 180–1000 HP), the head is the
   entity and 14 body segments follow its path (cannons, fruits and melee hit anywhere on the body). They swim deep,
@@ -184,7 +197,6 @@ First run of a real client against the dedicated server. Result: no client crash
 - Paintings: merchants sell three per island; treasure chests and wrecks may hold one.
 
 ## Work in flight (background agents)
-- Naval combat and ship customisation.
 - World polish and missing canon islands.
 - Devil Fruit wave 4: 15 more original fruits (originals 25 → 40).
 
