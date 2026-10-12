@@ -265,6 +265,8 @@ public final class SelfTest {
             check("all 12 chest loot tables load and roll items", ok == 12, ok + "/12; treasure roll " + sample);
             return 0;
         });
+        // landmarks: every registered set piece builds deterministically inside its footprint (see LandmarkCheck)
+        steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
         // NPC markers & spawning
         steps.add(s -> {
             WorldPlan p = WorldPlan.of(s);
