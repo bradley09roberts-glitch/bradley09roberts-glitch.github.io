@@ -176,6 +176,26 @@ final class DimensionTests {
         });
     }
 
+    /** Every island given a settlement actually gets buildings (archipelagos and crags fall back to a grid search). */
+    static void settledIslands(Deque<SelfTest.Step> steps) {
+        steps.add(s -> {
+            int settled = 0;
+            List<String> empty = new ArrayList<>();
+            for (WorldPlan plan : new WorldPlan[]{WorldPlan.of(s), WorldPlan.forLevel(s.getLevel(com.grandline.world.SkyWorld.LEVEL)), WorldPlan.forLevel(s.getLevel(com.grandline.world.DeepWorld.LEVEL))}) {
+                if (plan == null) continue;
+                for (Island i : plan.islands) {
+                    if (i.settlementType == com.grandline.world.settlement.SettlementType.NONE) continue;
+                    settled++;
+                    boolean any = false;
+                    for (var p : i.settlement().plots) if (p.type() != com.grandline.world.settlement.BuildingType.LANDMARK) any = true;
+                    if (!any) empty.add(i.id);
+                }
+            }
+            SelfTest.check("every settled island has buildings", empty.isEmpty(), settled + " settled islands, empty: " + empty);
+            return 0;
+        });
+    }
+
     /** Mary Geoise is a point on top of the Red Line: its set piece is built, it is protected, and it can be discovered. */
     static void holyLand(Deque<SelfTest.Step> steps) {
         steps.add(s -> {

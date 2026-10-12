@@ -81,6 +81,7 @@ public final class SelfTest {
             steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
             DimensionTests.ferry(steps);
             DimensionTests.holyLand(steps);
+            DimensionTests.settledIslands(steps);
             DimensionTests.awakening(steps);
             DimensionTests.shipClasses(steps);
             DimensionTests.phase1(steps);
@@ -754,6 +755,7 @@ public final class SelfTest {
         DimensionTests.shipClasses(steps);
         DimensionTests.ferry(steps);
         DimensionTests.holyLand(steps);
+        DimensionTests.settledIslands(steps);
         DimensionTests.phase1(steps);
         CreatureSelfTest.phase1(steps); // Sea Kings, Calm Belt, Zoan beast forms
         ActivityTests.phase1(steps); // sea activities: treasure maps, fishing, cooking (test/ActivityTests.java)

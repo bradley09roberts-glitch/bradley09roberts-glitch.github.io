@@ -182,35 +182,26 @@ public final class Settlement {
             wanted.add(roll < 2 ? BuildingType.HOUSE_SMALL : roll < 3 ? BuildingType.HOUSE_LARGE : filler);
         }
 
-        int spiral = 0;
-        int placed = 0;
-        for (BuildingType type : wanted) {
-            boolean ok = false;
-            for (int attempt = 0; attempt < 60 && !ok; attempt++, spiral++) {
-                double rad = (type == BuildingType.PLAZA || type == BuildingType.WELL) && placed == 0 ? 0 : 13 + 8.5 * Math.sqrt(spiral);
-                double ang = spiral * 2.39996 + r.nextDouble() * 0.3;
-                int px = cx + (int) Math.round(Math.cos(ang) * rad);
-                int pz = cz + (int) Math.round(Math.sin(ang) * rad);
-                // door faces the centre
-                double dx = cx - px, dz = cz - pz;
-                Rotation rot;
-                if (Math.abs(dx) > Math.abs(dz)) rot = dx > 0 ? Rotation.CLOCKWISE_90 : Rotation.COUNTERCLOCKWISE_90;
-                else rot = dz > 0 ? Rotation.CLOCKWISE_180 : Rotation.NONE;
-                if (rad == 0) rot = Rotation.NONE;
-                boolean swap = rot == Rotation.CLOCKWISE_90 || rot == Rotation.COUNTERCLOCKWISE_90;
-                int sx = swap ? type.d : type.w, sz = swap ? type.w : type.d;
-                int x0 = px - sx / 2, z0 = pz - sz / 2;
-                if (!buildable(island, x0, z0, sx, sz, type == BuildingType.WATCHTOWER ? 9 : 6)) continue;
-                if (overlaps(s, x0, z0, sx, sz, 3)) continue;
-                int y = (int) Math.round(avgNatural(island, x0, z0, sx, sz));
-                y = Math.max(WorldPlan.SEA_LEVEL + 2, y + 1);
-                s.plots.add(new Plot(type, x0, y, z0, sx, sz, rot, island.seed * 31 + spiral, "", true));
-                // road from door to centre
-                int doorX = px + (rot == Rotation.CLOCKWISE_90 ? sx / 2 + 1 : rot == Rotation.COUNTERCLOCKWISE_90 ? -sx / 2 - 1 : 0);
-                int doorZ = pz + (rot == Rotation.NONE ? -sz / 2 - 1 : rot == Rotation.CLOCKWISE_180 ? sz / 2 + 1 : 0);
-                if (rad > 0) s.roads.add(new int[]{doorX, doorZ, cx, cz});
-                ok = true;
-                placed++;
+        int placed = placeBuildings(s, island, r, wanted, cx, cz, 0);
+        if (placed == 0) {
+            // nothing fitted round the first centre (archipelagos, crags, a centre left in the water): search the
+            // island on a grid for buildable ground nearest its middle and try once more, a little more forgiving of
+            // slopes. Only islands whose first layout came out empty take this path, so other towns are unchanged.
+            int best = Integer.MAX_VALUE, bx = cx, bz = cz;
+            for (int gx = -island.radius; gx <= island.radius; gx += 6)
+                for (int gz = -island.radius; gz <= island.radius; gz += 6) {
+                    int tx = island.x + gx, tz = island.z + gz, d2 = gx * gx + gz * gz;
+                    if (d2 >= best || !buildable(island, tx - 5, tz - 5, 10, 10, 8) || overlaps(s, tx - 5, tz - 5, 10, 10, 6)) continue;
+                    best = d2;
+                    bx = tx;
+                    bz = tz;
+                }
+            if (best < Integer.MAX_VALUE) {
+                cx = bx;
+                cz = bz;
+                s.centerX = cx;
+                s.centerZ = cz;
+                placed = placeBuildings(s, island, new LegacyRandomSource(island.seed ^ 0x2E7A1L), wanted, cx, cz, 2);
             }
         }
 
@@ -272,6 +263,42 @@ public final class Settlement {
                 }
             }
         }
+    }
+
+    /** Lay out {@code wanted} on a spiral round (cx, cz); returns how many fitted. */
+    private static int placeBuildings(Settlement s, Island island, RandomSource r, List<BuildingType> wanted, int cx, int cz, int slopeBonus) {
+        int spiral = 0;
+        int placed = 0;
+        for (BuildingType type : wanted) {
+            boolean ok = false;
+            for (int attempt = 0; attempt < 60 && !ok; attempt++, spiral++) {
+                double rad = (type == BuildingType.PLAZA || type == BuildingType.WELL) && placed == 0 ? 0 : 13 + 8.5 * Math.sqrt(spiral);
+                double ang = spiral * 2.39996 + r.nextDouble() * 0.3;
+                int px = cx + (int) Math.round(Math.cos(ang) * rad);
+                int pz = cz + (int) Math.round(Math.sin(ang) * rad);
+                // door faces the centre
+                double dx = cx - px, dz = cz - pz;
+                Rotation rot;
+                if (Math.abs(dx) > Math.abs(dz)) rot = dx > 0 ? Rotation.CLOCKWISE_90 : Rotation.COUNTERCLOCKWISE_90;
+                else rot = dz > 0 ? Rotation.CLOCKWISE_180 : Rotation.NONE;
+                if (rad == 0) rot = Rotation.NONE;
+                boolean swap = rot == Rotation.CLOCKWISE_90 || rot == Rotation.COUNTERCLOCKWISE_90;
+                int sx = swap ? type.d : type.w, sz = swap ? type.w : type.d;
+                int x0 = px - sx / 2, z0 = pz - sz / 2;
+                if (!buildable(island, x0, z0, sx, sz, (type == BuildingType.WATCHTOWER ? 9 : 6) + slopeBonus)) continue;
+                if (overlaps(s, x0, z0, sx, sz, 3)) continue;
+                int y = (int) Math.round(avgNatural(island, x0, z0, sx, sz));
+                y = Math.max(WorldPlan.SEA_LEVEL + 2, y + 1);
+                s.plots.add(new Plot(type, x0, y, z0, sx, sz, rot, island.seed * 31 + spiral, "", true));
+                // road from door to centre
+                int doorX = px + (rot == Rotation.CLOCKWISE_90 ? sx / 2 + 1 : rot == Rotation.COUNTERCLOCKWISE_90 ? -sx / 2 - 1 : 0);
+                int doorZ = pz + (rot == Rotation.NONE ? -sz / 2 - 1 : rot == Rotation.CLOCKWISE_180 ? sz / 2 + 1 : 0);
+                if (rad > 0) s.roads.add(new int[]{doorX, doorZ, cx, cz});
+                ok = true;
+                placed++;
+            }
+        }
+        return placed;
     }
 
     /** Buried treasure, hidden caches, lost shrines and shipwrecks scattered away from the town. */
