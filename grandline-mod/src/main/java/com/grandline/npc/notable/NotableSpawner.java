@@ -41,6 +41,7 @@ import java.util.UUID;
  */
 public final class NotableSpawner {
     public static final int SPAWN_RADIUS = 160;
+    private static final int STAND_SEARCH = 40;
     private static final int FALLEN_CREDIT_RADIUS = 64;
 
     public static void tick(MinecraftServer server) {
@@ -71,7 +72,9 @@ public final class NotableSpawner {
                 NotableState.Entry e = st.entry(n.id());
                 switch (e.status) {
                     case UNSPAWNED -> {
-                        if (d <= SPAWN_RADIUS) spawn(level, n, isl);
+                        // wait (non-blocking) until the stand search area has finished loading instead of stalling the
+                        // server thread on chunks that are still generating (self-test scans have no player and go now)
+                        if (d <= SPAWN_RADIUS && (sp == null || !com.grandline.core.Chunks.pendingAround(level, hx, hz, STAND_SEARCH))) spawn(level, n, isl);
                     }
                     case ALIVE -> {
                         if (d <= 48 && missingChecked.add(n.id())) checkMissing(level, st, n, e, hx, hz);
@@ -104,7 +107,7 @@ public final class NotableSpawner {
 
     @Nullable
     static HumanoidNpc spawn(ServerLevel level, Notable n, Island isl) {
-        BlockPos pos = findStand(level, isl.x + n.dx(), isl.z + n.dz(), 40);
+        BlockPos pos = findStand(level, isl.x + n.dx(), isl.z + n.dz(), STAND_SEARCH);
         if (pos == null) return null;
         HumanoidNpc npc = ModEntities.HUMANOID_NPC.get().create(level);
         if (npc == null) return null;

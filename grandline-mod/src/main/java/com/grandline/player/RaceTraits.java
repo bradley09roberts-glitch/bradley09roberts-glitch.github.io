@@ -20,6 +20,7 @@ public final class RaceTraits {
         com.grandline.quest.Awakening.tick(sp, d);
         com.grandline.race.RacePowers.tick(sp, d); // swim speed, racial passives, Sulong exhaustion
         if (sp.tickCount % 20 != 0) return;
+        if (!com.grandline.core.Chunks.ready(sp.level(), sp.getBlockX(), sp.getBlockZ())) return; // own chunk still generating (join/teleport): no biome/sky reads that would stall the server
         Race r = d.race;
         boolean inWater = sp.isInWater();
         BlockPos pos = sp.blockPosition();
