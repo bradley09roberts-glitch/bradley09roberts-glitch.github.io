@@ -416,6 +416,10 @@ public final class Buildings {
 
     /** Townhouse (9x9): two storeys, upper storey framed over a beam band, stair inside, kitchen below, bedrooms above. */
     static void townhouse(Builder b, Mats m) {
+        if (m.roofKind == RoofKind.FLAT) {
+            stepped(b, m, 3, false);
+            return;
+        }
         int w = b.w, d = b.d;
         boolean alongX = b.rand(2, 4) != 0;
         site(b, m, 0, 0, w - 1, d - 1, 2 * H + 8);
@@ -447,8 +451,79 @@ public final class Buildings {
         porchBench(b, m, w, 0);
     }
 
+    /**
+     * Flat-roof styles (Alabasta, Egghead): a stepped two-storey house. The upper storey stands back from the street
+     * ({@code back} rows, or from the east side when {@code side}), leaving a roof terrace with a parapet, a door out
+     * from the upper room, a shade awning, a bench and planters; the upper roof is a flat deck of its own.
+     */
+    static void stepped(Builder b, Mats m, int back, boolean side) {
+        int w = b.w, d = b.d;
+        site(b, m, 0, 0, w - 1, d - 1, 2 * H + 6);
+        shell(b, m, 0, 0, w - 1, d - 1, 1);
+        // the terrace: the ground storey's roof, with a parapet and a plaster coping
+        b.fill(1, H, 1, w - 2, H, d - 2, m.floor);
+        BlockState coping = Mats.plasterSlab(m.wall) != null ? Mats.plasterSlab(m.wall) : Arch.slab(m.roofSlab, SlabType.BOTTOM);
+        for (int x = 0; x < w; x++) for (int z = 0; z < d; z++)
+            if (x == 0 || z == 0 || x == w - 1 || z == d - 1) {
+                b.set(x, H + 1, z, m.wall);
+                b.set(x, H + 2, z, coping);
+            }
+        // the upper storey, set back
+        int ux1 = 0, uz1 = side ? 0 : back, ux2 = side ? w - 1 - back : w - 1, uz2 = d - 1;
+        for (int y = H + 1; y <= 2 * H - 1; y++) {
+            b.fill(ux1, y, uz1, ux2, y, uz1, m.upperWall);
+            b.fill(ux1, y, uz2, ux2, y, uz2, m.upperWall);
+            b.fill(ux1, y, uz1, ux1, y, uz2, m.upperWall);
+            b.fill(ux2, y, uz1, ux2, y, uz2, m.upperWall);
+        }
+        for (int[] c : new int[][]{{ux1, uz1}, {ux2, uz1}, {ux1, uz2}, {ux2, uz2}}) b.fill(c[0], H + 1, c[1], c[0], 2 * H - 1, c[1], m.frame);
+        band(b, m, ux1, uz1, ux2, uz2, 2 * H);
+        Arch.flat(b, m, ux1, uz1, ux2, uz2, 2 * H, false, true);
+        terrace(b, m, ux1, uz1, ux2, uz2, 2 * H + 1);
+        // doors: the street door, and one from the upper room onto the terrace
+        door(b, m, w / 2, 0, Direction.NORTH, false);
+        if (side) b.door(ux2, H + 1, d / 2, m.door.getBlock(), Direction.EAST);
+        else b.door(w / 2, H + 1, uz1, m.door.getBlock(), Direction.NORTH);
+        windows(b, m, 0, 0, w - 1, d - 1, 1, w / 2);
+        for (int x = ux1 + 2; x <= ux2 - 2; x += 4) {
+            if (!side && Math.abs(x - w / 2) <= 1) continue;
+            Arch.window(b, m, x, H + 2, uz1, Direction.NORTH, 2, true);
+            Arch.window(b, m, x, H + 2, uz2, Direction.SOUTH, 2, true);
+        }
+        // terrace life: an awning on posts, a bench and planters
+        Block awn = m.awning != null ? m.awning : ArchBlocks.YELLOW_AWNING.get();
+        if (side) {
+            for (int z = 2; z <= d - 3; z++) b.set(ux2 + 1, 2 * H - 1, z, Arch.facing(awn.defaultBlockState(), Direction.EAST));
+            b.set(w - 2, H + 1, 2, Arch.decor(ArchBlocks.PLANK_BENCH, Direction.WEST));
+            b.set(w - 2, H + 1, d - 3, Arch.decor(ArchBlocks.FLOWER_PLANTER, Direction.WEST));
+        } else {
+            for (int x = 1; x <= w - 2; x++) b.set(x, 2 * H - 1, uz1 - 1, Arch.facing(awn.defaultBlockState(), Direction.NORTH));
+            b.set(2, H + 1, 1, Arch.decor(ArchBlocks.PLANK_BENCH, Direction.SOUTH));
+            b.set(w - 3, H + 1, 1, Arch.decor(ArchBlocks.FLOWER_PLANTER, Direction.NORTH));
+            b.set(w - 2, H + 1, 1, Blocks.POTTED_CACTUS.defaultBlockState());
+        }
+        // inside: kitchen and parlour below, a stair up into the back room, bedroom above
+        stairsUp(b, m, 1, Math.max(uz1, 1) + 1, Direction.SOUTH, 2);
+        stove(b, m, w - 2, 1, d - 2, Direction.NORTH);
+        b.set(w - 3, 1, d - 2, Blocks.BARREL.defaultBlockState().setValue(BarrelBlock.FACING, Direction.UP));
+        Arch.tableSet(b, w / 2 + 1, 1, d / 2, chair(m));
+        b.chest(w - 2, 1, 1, Direction.WEST, LOOT_HOUSE);
+        b.hanging(w / 2, H - 1, d / 2, m.lantern.getBlock());
+        b.marker("npc", w / 2, 1, d / 2 + 1, npc("resident"));
+        int u = H + 1;
+        b.bed(ux2 - 1, u, uz2 - 2, Blocks.ORANGE_BED, Direction.SOUTH);
+        b.bed(ux2 - 3, u, uz2 - 2, Blocks.YELLOW_BED, Direction.SOUTH);
+        b.chest(ux2 - 1, u, uz1 + 1, Direction.WEST, LOOT_HOUSE);
+        b.hanging((ux1 + ux2) / 2, u + H - 2, (uz1 + uz2) / 2, m.lantern.getBlock());
+        if (m.style == BuildStyle.DESERT && b.rand(6, 3) == 0) desertDome(b, m, (ux1 + ux2) / 2, (uz1 + uz2) / 2, 2 * H + 1, 2);
+    }
+
     /** Large house (11x9): two storeys with a cross-gabled entrance bay, chimney stack and a bigger household. */
     static void largeHouse(Builder b, Mats m) {
+        if (m.roofKind == RoofKind.FLAT) {
+            stepped(b, m, 4, true);
+            return;
+        }
         int w = b.w, d = b.d;
         site(b, m, 0, 0, w - 1, d - 1, 2 * H + 9);
         shell(b, m, 0, 0, w - 1, d - 1, 2);

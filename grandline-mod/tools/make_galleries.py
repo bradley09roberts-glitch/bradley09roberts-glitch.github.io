@@ -15,6 +15,12 @@ import sys
 
 from PIL import Image, ImageDraw
 
+
+def save(img, path):
+    """256-colour PNG: these are review sheets, a third of the size of full-colour ones."""
+    img.convert('RGB').quantize(colors=256, method=Image.Quantize.MEDIANCUT).save(path, optimize=True)
+
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import render_structure as R  # noqa: E402
 
@@ -61,7 +67,7 @@ def main():
         for t in TYPES:
             p = os.path.join(after, f'{t}__{st}.json')
             cells.append((t, iso(p) if os.path.exists(p) else None))
-        sheet(cells, 6, 300, 250, f'Settlement buildings, style {st} (AFTER; offline render)').save(os.path.join(out, f'settlement_{st}.png'), optimize=True)
+        save(sheet(cells, 6, 300, 250, f'Settlement buildings, style {st} (AFTER; offline render)'), os.path.join(out, f'settlement_{st}.png'))
         print('settlement', st)
     for st in ('village', 'desert', 'wano', 'snow', 'venetian', 'marine'):
         cells = []
@@ -69,7 +75,7 @@ def main():
             pb, pa = os.path.join(before, f'{t}__{st}.json'), os.path.join(after, f'{t}__{st}.json')
             cells.append((f'{t}  before', iso(pb) if os.path.exists(pb) else None))
             cells.append((f'{t}  after', iso(pa) if os.path.exists(pa) else None))
-        sheet(cells, 6, 260, 220, f'Before | after, style {st} (offline renders of the structure dumps)').save(os.path.join(out, f'before_after_{st}.png'), optimize=True)
+        save(sheet(cells, 6, 260, 220, f'Before | after, style {st} (offline renders of the structure dumps)'), os.path.join(out, f'before_after_{st}.png'))
         print('before/after', st)
     for f in sorted(os.listdir(after)):
         if not f.endswith('.json'):
@@ -94,7 +100,7 @@ def main():
                 canvas.paste(b, (bx, by), b)
                 img = canvas
         if img is not None:
-            img.save(os.path.join(out, f'landmark_{lid}.png'), optimize=True)
+            save(img, os.path.join(out, f'landmark_{lid}.png'))
             print('landmark', lid)
 
 

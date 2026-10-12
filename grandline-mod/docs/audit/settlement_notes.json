@@ -9,14 +9,14 @@
  "house": {
   "role": "Townhouse (9x9), the default town filler; NPC: resident.",
   "before": "Same box as the cottage scaled to 9x9, ladder in a corner, roof as a single stair gable.",
-  "after": "Two storeys: stone plinth + main walls below, the style's upper wall (timber framing in East Blue/Loguetown/Drum) over a beam band; straight staircase with a railing instead of the ladder; kitchen/parlour below, two bedrooms above; dormer window on some, desert domes on some; chimney.",
+  "after": "Two storeys: stone plinth + main walls below, the style's upper wall (timber framing in East Blue/Loguetown/Drum) over a beam band; straight staircase with a railing instead of the ladder; kitchen/parlour below, two bedrooms above; dormer window on some, desert domes on some; chimney. In the flat-roof styles (Alabasta, Egghead) the upper storey steps back from the street instead, leaving a roof terrace with a parapet, a shade awning, a bench and planters, with a door out from the upper room.",
   "anchors": "npc:resident, loot house x2.",
   "status": "rebuilt"
  },
  "house_large": {
   "role": "Large house (11x9); NPC: resident.",
   "before": "Two-storey box with a ladder, 2 beds upstairs.",
-  "after": "Two storeys with a cross-gabled entrance bay facing the street (window in the gable), half wall dividing dining room and kitchen, cauldron, two table sets, three beds upstairs, chimney stack on the side wall.",
+  "after": "Two storeys with a cross-gabled entrance bay facing the street (window in the gable), half wall dividing dining room and kitchen, cauldron, two table sets, three beds upstairs, chimney stack on the side wall. In the flat-roof styles the upper storey is set back from one side, leaving a side terrace with an awning, a bench and a planter.",
   "anchors": "npc:resident, loot house x2.",
   "status": "rebuilt"
  },
