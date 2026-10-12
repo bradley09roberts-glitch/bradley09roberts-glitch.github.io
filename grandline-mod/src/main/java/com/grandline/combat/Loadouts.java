@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Ability slot sets: 0 = martial (style + weapon arts), 1 = Devil Fruit, 2 = Haki.
+ * Ability slot sets: 0 = martial (style + weapon arts), 1 = Devil Fruit, 2 = Haki, 3 = race.
  * Slots auto-fill with unlocked techniques; players can rearrange them in the abilities screen.
  */
 public final class Loadouts {
@@ -48,6 +48,13 @@ public final class Loadouts {
             if (com.grandline.haki.HakiAbilities.canUse(sp, a) && (sp.isCreative() || d.mastery(a.masteryKey()) >= a.unlockMastery())) haki.add(a.id());
         }
         fill(d.loadout[2], haki, id -> Abilities.get(id) != null && Abilities.get(id).source() == Ability.Source.HAKI);
+
+        List<String> race = new ArrayList<>();
+        for (Ability a : Abilities.of(Ability.Source.RACE, d.race.id())) if (sp.isCreative() || d.mastery(a.masteryKey()) >= a.unlockMastery()) race.add(a.id());
+        fill(d.loadout[3], race, id -> {
+            Ability a = Abilities.get(id);
+            return a != null && a.source() == Ability.Source.RACE && a.owner().equals(d.race.id());
+        });
         CharacterManager.markDirty(sp);
     }
 

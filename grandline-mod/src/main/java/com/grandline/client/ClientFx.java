@@ -132,6 +132,7 @@ public final class ClientFx {
             return;
         }
         if (canonWave3(l, kind, x, y, z, a, b, c)) return; // fruit wave 3 (canon), see block below
+        if (raceFx(l, kind, x, y, z, a, b, c)) return; // race powers, see block below
         if (kind.startsWith("hit_")) {
             String el = kind.substring(4);
             ParticleOptions p = switch (el) {
@@ -554,6 +555,7 @@ public final class ClientFx {
         if (l == null) return;
         double x = p.getX(), y = p.getY() + size / 2, z = p.getZ();
         if (canonWave3Trail(l, p, kind, x, y, z, size)) return; // fruit wave 3 (canon), see block below
+        if (raceTrail(l, p, kind, x, y, z, size)) return; // race powers, see block below
         switch (kind) {
             case "fire_fist", "fire_bullet", "flame_emperor", "fire_bird" -> burst(l, ParticleTypes.FLAME, x, y, z, 2 + (int) (size * 6), size, 0.02);
             case "ice_spear" -> burst(l, ParticleTypes.SNOWFLAKE, x, y, z, 2, size, 0.01);
@@ -936,6 +938,275 @@ public final class ClientFx {
         return true;
     }
     // ===================================================================== end fruit wave 3 (canon)
+
+    // ===================================================================== race powers
+    // Effects for the racial techniques and passives (com.grandline.race): every kind is prefixed "race_" (projectile
+    // impacts "impact_race_"). Return true when handled; anything else falls through to the shared effects above.
+
+    private static boolean raceFx(ClientLevel l, String kind, double x, double y, double z, float a, float b, float c) {
+        boolean impact = kind.startsWith("impact_race_");
+        if (!impact && !kind.startsWith("race_")) return false;
+        RandomSource r = l.random;
+        Vec3 from = new Vec3(x, y, z), to = new Vec3(a, b, c);
+        if (impact) {
+            switch (kind.substring(12)) {
+                case "boulder" -> {
+                    burst(l, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.STONE.defaultBlockState()), x, y, z, 30, 1.2, 0.3);
+                    burst(l, ParticleTypes.CAMPFIRE_COSY_SMOKE, x, y, z, 4, 0.8, 0.02);
+                }
+                case "coral_lance" -> burst(l, dust(0xFF6F91, 1.1f), x, y, z, 12, 0.4, 0.2);
+                case "feather" -> burst(l, dust(0xE8E8F0, 0.8f), x, y, z, 6, 0.3, 0.15);
+                default -> burst(l, ParticleTypes.CRIT, x, y, z, 6, 0.4, 0.3);
+            }
+            return true;
+        }
+        switch (kind.substring(5)) {
+            // ---- Human ----
+            case "second_wind" -> {
+                ring(l, ParticleTypes.CLOUD, x, y - 0.8, z, 1.5, 24, 0.15);
+                burst(l, ParticleTypes.HAPPY_VILLAGER, x, y, z, 8, 0.8, 0.05);
+            }
+            case "rally" -> l.addParticle(ParticleTypes.ANGRY_VILLAGER, x, y, z, 0, 0.05, 0);
+            case "sand_throw" -> {
+                for (int i = 0; i < 24; i++) l.addParticle(dust(0xC9B07A, 0.9f), x, y, z, a * 0.5 + (r.nextDouble() - 0.5) * 0.3, b * 0.5 + r.nextDouble() * 0.1, c * 0.5 + (r.nextDouble() - 0.5) * 0.3);
+            }
+            case "last_stand" -> {
+                column(l, dust(0xFFD34A, 1.4f), x, y - 1, z, 0.8, 2.2, 40);
+                burst(l, ParticleTypes.TOTEM_OF_UNDYING, x, y, z, 12, 0.6, 0.2);
+            }
+            // ---- Fish-Man / Merfolk / Whalefolk ----
+            case "riptide" -> {
+                line(l, ParticleTypes.SPLASH, from, to, 0.3);
+                line(l, ParticleTypes.BUBBLE, from, to, 0.6);
+            }
+            case "wave" -> {
+                ring(l, ParticleTypes.SPLASH, x, y, z, a, 60, 0.45);
+                disc(l, ParticleTypes.FALLING_WATER, x, y, z, a, 40, 0, 0.3);
+            }
+            case "whirlpool" -> spiral(l, ParticleTypes.SPLASH, x, y, z, a, 1.2, 60, 0.4, 0.15);
+            case "tail_sweep" -> {
+                ring(l, ParticleTypes.SWEEP_ATTACK, x, y + 0.4, z, a, 6, 0.4);
+                ring(l, ParticleTypes.SPLASH, x, y, z, a, 30, 0.35);
+            }
+            case "song" -> {
+                ring(l, ParticleTypes.NOTE, x, y, z, a * 0.3, b > 0 ? 24 : 14, 0.3);
+                if (b > 0) ring(l, ParticleTypes.NAUTILUS, x, y - 1, z, a * 0.2, 30, 0.4);
+            }
+            case "fish_strike" -> {
+                Vec3 off = new Vec3(r.nextDouble() - 0.5, r.nextDouble() * 0.5, r.nextDouble() - 0.5).normalize().scale(2.5);
+                line(l, dust(0x6FB7E0, 1.0f), from.add(off), from, 0.25);
+                burst(l, ParticleTypes.SPLASH, x, y, z, 10, 0.4, 0.2);
+            }
+            case "bubbles" -> burst(l, ParticleTypes.BUBBLE_POP, x, y, z, 20, 1.0, 0.08);
+            case "geyser" -> {
+                for (int i = 0; i < 50; i++) l.addParticle(ParticleTypes.SPLASH, x + (r.nextDouble() - 0.5) * 0.8, y, z + (r.nextDouble() - 0.5) * 0.8, (r.nextDouble() - 0.5) * 0.3, 0.9 + r.nextDouble() * 0.5, (r.nextDouble() - 0.5) * 0.3);
+                ring(l, ParticleTypes.CLOUD, x, y - 2, z, a, 30, 0.3);
+            }
+            case "whale_song" -> {
+                ring(l, dust(0x3D6E9E, 1.6f), x, y, z, a, 70, 0.6);
+                ring(l, ParticleTypes.NOTE, x, y + 1, z, a * 0.3, 10, 0.2);
+            }
+            // ---- Mink ----
+            case "electro_hit" -> {
+                burst(l, ParticleTypes.ELECTRIC_SPARK, x, y, z, 14, 0.6, 0.5);
+                burst(l, dust(0xFFF59A, 0.8f), x, y, z, 6, 0.4, 0.1);
+            }
+            case "moon_roar" -> {
+                ring(l, dust(0xFFFFFF, 2.0f), x, y, z, 3, 50, 0.4);
+                burst(l, ParticleTypes.END_ROD, x, y + 0.6, z, 20, 1.0, 0.1);
+                shake(8);
+            }
+            // ---- Sky People ----
+            case "jet" -> {
+                line(l, ParticleTypes.CLOUD, from, to, 0.4);
+                line(l, ParticleTypes.POOF, from, to, 0.9);
+            }
+            case "flame_jet" -> {
+                for (int i = 0; i < 30; i++) {
+                    double sp = 0.3 + r.nextDouble() * 0.4;
+                    l.addParticle(ParticleTypes.FLAME, x, y - 0.2, z, a * sp + (r.nextDouble() - 0.5) * 0.12, b * sp + (r.nextDouble() - 0.5) * 0.12, c * sp + (r.nextDouble() - 0.5) * 0.12);
+                }
+            }
+            case "impact" -> {
+                l.addParticle(b > 0 ? ParticleTypes.EXPLOSION_EMITTER : ParticleTypes.EXPLOSION, x, y, z, 0, 0, 0);
+                ring(l, ParticleTypes.CLOUD, x, y, z, Math.max(1, a), 30 + (int) (a * 10), 0.5);
+                if (b > 0) shake(12);
+            }
+            // ---- Long-Arm / Snakeneck / Vinefolk lines ----
+            case "long_arm" -> line(l, dust(0xE9C8A8, 1.3f), from, to, 0.35);
+            case "coil" -> {
+                line(l, dust(0x6E8B3D, 1.2f), from, to, 0.3);
+                burst(l, ParticleTypes.CRIT, a, b, c, 6, 0.3, 0.2);
+            }
+            case "vine" -> {
+                line(l, dust(0x3E8A3A, 1.3f), from, to, 0.3);
+                line(l, ParticleTypes.COMPOSTER, from, to, 0.8);
+            }
+            case "windmill" -> {
+                ring(l, ParticleTypes.SWEEP_ATTACK, x, y, z, a, 8, 0.5);
+                ring(l, ParticleTypes.CLOUD, x, y, z, a, 40, 0.5);
+            }
+            // ---- Long-Leg ----
+            case "vault" -> ring(l, ParticleTypes.CLOUD, x, y + 0.1, z, 1.2, 20, 0.25);
+            // ---- Three-Eye ----
+            case "third_eye" -> {
+                burst(l, dust(a > 0 ? 0xFF7AE0 : 0xC8A2FF, 1.2f), x, y + 0.3, z, 20, 0.3, 0.05);
+                ring(l, dust(0xC8A2FF, 0.8f), x, y, z, 1.6, 30, 0.2);
+            }
+            case "gaze" -> line(l, dust(0xC8A2FF, 0.9f), from, to, 0.4);
+            case "evade" -> {
+                int race = (int) a;
+                ParticleOptions p = race == com.grandline.player.Race.THREE_EYE.ordinal() ? dust(0xC8A2FF, 1.1f)
+                        : race == com.grandline.player.Race.SNAKENECK.ordinal() ? dust(0x6E8B3D, 1.1f) : ParticleTypes.CLOUD;
+                burst(l, p, x, y, z, 14, 0.8, 0.05);
+            }
+            case "counter" -> {
+                burst(l, ParticleTypes.CRIT, x, y, z, 16, 0.5, 0.5);
+                l.addParticle(ParticleTypes.SWEEP_ATTACK, x, y, z, 0, 0, 0);
+            }
+            // ---- Tontatta ----
+            case "blur" -> line(l, dust(0xFFFFFF, 0.6f), from, to, 0.4);
+            case "vanish" -> burst(l, ParticleTypes.POOF, x, y, z, 14, 0.5, 0.05);
+            case "ambush" -> {
+                burst(l, ParticleTypes.CRIT, x, y, z, 20, 0.6, 0.4);
+                burst(l, ParticleTypes.ENCHANTED_HIT, x, y, z, 10, 0.6, 0.3);
+            }
+            case "lift" -> burst(l, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.DIRT.defaultBlockState()), x, y - 0.5, z, 16, 0.6, 0.2);
+            case "flurry" -> burst(l, ParticleTypes.CRIT, x, y, z, 5, 0.6, 0.3);
+            // ---- Giant / Buccaneer / Stonehide ----
+            case "war_cry" -> {
+                ring(l, dust(0xC9483B, 2.0f), x, y, z, a, 80, 0.7);
+                shake(10);
+            }
+            case "rubble" -> burst(l, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.STONE.defaultBlockState()), x, y, z, 40, a, 0.25);
+            case "rockslide" -> line(l, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.STONE.defaultBlockState()), from, to, 0.4);
+            case "fissure" -> {
+                line(l, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.COARSE_DIRT.defaultBlockState()), from, to, 0.25);
+                line(l, ParticleTypes.CAMPFIRE_COSY_SMOKE, from, to, 1.5);
+            }
+            case "rage" -> {
+                column(l, dust(0xB0201A, 1.5f), x, y - 1, z, 1.0, 2.5, 40);
+                burst(l, ParticleTypes.ANGRY_VILLAGER, x, y + 1, z, 3, 0.6, 0.05);
+            }
+            case "stone" -> {
+                sphere(l, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.STONE.defaultBlockState()), x, y, z, Math.max(0.8, a), 30);
+                if (b > 0) ring(l, dust(0x8A8A8A, 1.6f), x, y - 0.9, z, 1.5, 24, 0.1);
+            }
+            // ---- Lunarian / Emberkin ----
+            case "flame_wings" -> {
+                for (int i = 0; i < 30; i++) {
+                    double side = r.nextBoolean() ? 1 : -1, t = r.nextDouble();
+                    l.addParticle(ParticleTypes.FLAME, x + side * (0.3 + t * 1.2), y + t * 0.8, z + (r.nextDouble() - 0.5) * 0.3, 0, 0.03, 0);
+                }
+            }
+            case "fortitude" -> {
+                dome(l, dust(0xF0A040, 1.2f), x, y - 1, z, 1.4, 50);
+                burst(l, ParticleTypes.FLAME, x, y, z, 10, 0.8, 0.02);
+            }
+            case "ember" -> {
+                ring(l, ParticleTypes.FLAME, x, y - 0.6, z, a, 50, 0.3);
+                burst(l, ParticleTypes.LAVA, x, y, z, 6, 0.6, 0.2);
+            }
+            case "eruption_warn" -> disc(l, ParticleTypes.SMOKE, x, y, z, a, 30, 0, 0.05);
+            case "eruption" -> {
+                for (int i = 0; i < 60; i++) l.addParticle(r.nextInt(3) == 0 ? ParticleTypes.LAVA : ParticleTypes.FLAME, x + (r.nextDouble() - 0.5) * a, y, z + (r.nextDouble() - 0.5) * a, 0, 0.5 + r.nextDouble() * 0.6, 0);
+                burst(l, ParticleTypes.LARGE_SMOKE, x, y + 2, z, 16, a, 0.05);
+            }
+            // ---- Reefborn ----
+            case "coral" -> {
+                if (b > 0) sphere(l, dust(0xFF6F91, 1.2f), x, y, z, Math.max(0.8, a), 40);
+                else for (int i = 0; i < 40; i++) {
+                    double ang = r.nextDouble() * Math.PI * 2, d = r.nextDouble() * a;
+                    int col = r.nextBoolean() ? 0xFF6F91 : 0xFFA94D;
+                    l.addParticle(dust(col, 1.3f), x + Math.cos(ang) * d, y, z + Math.sin(ang) * d, 0, 0.25 + r.nextDouble() * 0.2, 0);
+                }
+            }
+            case "tidepool" -> {
+                disc(l, ParticleTypes.SPLASH, x, y, z, a, 30, 0.05, 0.05);
+                burst(l, ParticleTypes.HEART, x, y + 0.6, z, 1, a * 0.6, 0.02);
+            }
+            // ---- Stormwing / Starborn ----
+            case "gale" -> {
+                for (int i = 0; i < 30; i++) l.addParticle(ParticleTypes.CLOUD, x, y - 0.3, z, a * (0.4 + r.nextDouble() * 0.5) + (r.nextDouble() - 0.5) * 0.3, (r.nextDouble() - 0.5) * 0.1, c * (0.4 + r.nextDouble() * 0.5) + (r.nextDouble() - 0.5) * 0.3);
+                burst(l, dust(0xE8E8F0, 0.7f), x, y, z, 6, 0.6, 0.2);
+            }
+            case "thunder" -> {
+                ring(l, ParticleTypes.ELECTRIC_SPARK, x, y, z, a, 40, 0.5);
+                burst(l, ParticleTypes.ELECTRIC_SPARK, x, y + 1, z, 20, 1, 0.5);
+            }
+            case "star_warn" -> ring(l, dust(0xFFF2B0, 1.0f), x, y, z, a, 24, 0.02);
+            case "starfall" -> {
+                for (int i = 0; i < 20; i++) l.addParticle(ParticleTypes.END_ROD, x + (r.nextDouble() - 0.5) * 0.6, y + 6 - i * 0.3, z + (r.nextDouble() - 0.5) * 0.6, 0, -0.5, 0);
+                burst(l, dust(0xFFF2B0, 1.5f), x, y + 0.5, z, 30, a, 0.2);
+                l.addParticle(ParticleTypes.FLASH, x, y + 0.5, z, 0, 0, 0);
+            }
+            case "stardust" -> {
+                line(l, ParticleTypes.END_ROD, from, to, 0.6);
+                line(l, dust(0x9FB8FF, 0.8f), from, to, 0.3);
+            }
+            case "constellation" -> {
+                for (int i = 0; i < 6; i++) {
+                    double ang = i * Math.PI / 3;
+                    Vec3 s1 = new Vec3(x + Math.cos(ang) * a, y + (i % 2) * b * 0.5, z + Math.sin(ang) * a);
+                    Vec3 s2 = new Vec3(x + Math.cos(ang + Math.PI / 3) * a, y + ((i + 1) % 2) * b * 0.5, z + Math.sin(ang + Math.PI / 3) * a);
+                    line(l, dust(0xFFF2B0, 0.7f), s1, s2, 0.25);
+                    l.addParticle(ParticleTypes.END_ROD, s1.x, s1.y, s1.z, 0, 0, 0);
+                }
+            }
+            case "supernova" -> {
+                l.addParticle(ParticleTypes.FLASH, x, y, z, 0, 0, 0);
+                sphere(l, ParticleTypes.END_ROD, x, y, z, a * 0.5, 80);
+                ring(l, dust(0xFFF2B0, 2.0f), x, y, z, a, 80, 0.7);
+                shake(10);
+            }
+            // ---- Abyssal ----
+            case "lure" -> {
+                line(l, dust(0x7FFFD4, 0.9f), from, to, 0.35);
+                burst(l, ParticleTypes.GLOW, x, y, z, 6, 0.3, 0.02);
+            }
+            case "ink" -> burst(l, ParticleTypes.SQUID_INK, x, y, z, 40 + (int) (a * 8), Math.max(1, a), 0.05);
+            case "pressure" -> {
+                sphere(l, dust(0x0B2A4A, 1.4f), x, y, z, Math.max(0.6, a), 40);
+                burst(l, ParticleTypes.BUBBLE_POP, x, y, z, 10, a, 0.05);
+            }
+            case "maw" -> {
+                burst(l, ParticleTypes.CRIT, x, y, z, 14, 0.5, 0.3);
+                burst(l, a > 0 ? ParticleTypes.SQUID_INK : dust(0x7FFFD4, 0.9f), x, y, z, 10, 0.6, 0.1);
+            }
+            // ---- Vinefolk ----
+            case "roots" -> column(l, dust(0x5A3E1B, 1.2f), x, y, z, a, Math.max(0.6, b * 0.5), 40);
+            case "bloom" -> {
+                burst(l, ParticleTypes.COMPOSTER, x, y, z, 20, 0.9, 0.05);
+                if (a > 0) burst(l, ParticleTypes.WAX_OFF, x, y + 1, z, 10, 0.8, 0.05);
+            }
+            case "thorns" -> {
+                for (int i = 0; i < 40; i++) {
+                    double ang = r.nextDouble() * Math.PI * 2, el = (r.nextDouble() - 0.3) * 0.6;
+                    l.addParticle(dust(0x2E5A1E, 0.9f), x, y, z, Math.cos(ang) * 0.5, el, Math.sin(ang) * 0.5);
+                }
+            }
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean raceTrail(ClientLevel l, Entity p, String kind, double x, double y, double z, float size) {
+        switch (kind) {
+            case "race_boulder" -> {
+                burst(l, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.STONE.defaultBlockState()), x, y, z, 3, size, 0.02);
+                if (p.tickCount % 3 == 0) l.addParticle(ParticleTypes.SMOKE, x, y, z, 0, 0, 0);
+            }
+            case "race_coral_lance" -> l.addParticle(dust(0xFF6F91, 0.9f), x, y, z, 0, 0, 0);
+            case "race_feather" -> l.addParticle(dust(0xE8E8F0, 0.6f), x, y, z, 0, 0, 0);
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+    // ===================================================================== end race powers
 
     public static int shakeTicks = 0;
 

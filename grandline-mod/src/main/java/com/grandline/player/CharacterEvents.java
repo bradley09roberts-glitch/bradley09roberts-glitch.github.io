@@ -46,6 +46,7 @@ public final class CharacterEvents {
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer sp)) return;
         CharacterManager.applyAttributes(sp);
+        if (Characters.get(sp).created) com.grandline.combat.Loadouts.refresh(sp, Characters.get(sp)); // fills newer sets (race)
         CharacterManager.syncToOwner(sp);
         CharacterManager.broadcastVisuals(sp);
         if (!Characters.get(sp).created) CharacterManager.openCreationScreen(sp);

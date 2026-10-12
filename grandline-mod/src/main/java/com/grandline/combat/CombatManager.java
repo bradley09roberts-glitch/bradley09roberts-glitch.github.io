@@ -262,6 +262,10 @@ public final class CombatManager {
             if (!p.isCreative() && d.mastery(a.masteryKey()) < a.unlockMastery()) return false;
             if (a.source() == Ability.Source.HAKI && !HakiAbilities.canUse(user, a)) return false;
         }
+        if (a.source() == Ability.Source.RACE) {
+            com.grandline.player.Race r = com.grandline.race.RaceKit.raceOf(user);
+            if (r == null || !r.id().equals(a.owner())) return false;
+        }
         if (a.source() == Ability.Source.WEAPON) {
             WeaponClass wc = weaponOf(user.getMainHandItem());
             if (wc == null || !wc.id().equals(a.owner())) return false;

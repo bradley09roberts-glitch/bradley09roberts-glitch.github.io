@@ -1,0 +1,130 @@
+{
+ "hud.grandline.set.race": "Race",
+ "grandline.race.no_target": "No target within reach.",
+ "grandline.race.sulong_end": "The moon's power fades — your body is spent.",
+
+ "mastery.grandline.race.human": "Human Mastery",
+ "mastery.grandline.race.fishman": "Fish-Man Mastery",
+ "mastery.grandline.race.merfolk": "Merfolk Mastery",
+ "mastery.grandline.race.mink": "Mink Mastery",
+ "mastery.grandline.race.sky_people": "Sky People Mastery",
+ "mastery.grandline.race.long_arm": "Long-Arm Mastery",
+ "mastery.grandline.race.long_leg": "Long-Leg Mastery",
+ "mastery.grandline.race.three_eye": "Three-Eye Mastery",
+ "mastery.grandline.race.tontatta": "Tontatta Mastery",
+ "mastery.grandline.race.giant": "Giant Mastery",
+ "mastery.grandline.race.lunarian": "Lunarian Mastery",
+ "mastery.grandline.race.buccaneer": "Buccaneer Mastery",
+ "mastery.grandline.race.snakeneck": "Snakeneck Mastery",
+ "mastery.grandline.race.reefborn": "Reefborn Mastery",
+ "mastery.grandline.race.stormwing": "Stormwing Mastery",
+ "mastery.grandline.race.stonehide": "Stonehide Mastery",
+ "mastery.grandline.race.abyssal": "Abyssal Mastery",
+ "mastery.grandline.race.emberkin": "Emberkin Mastery",
+ "mastery.grandline.race.vinefolk": "Vinefolk Mastery",
+ "mastery.grandline.race.whalefolk": "Whalefolk Mastery",
+ "mastery.grandline.race.starborn": "Starborn Mastery",
+
+ "ability.grandline.race.human.second_wind": "Second Wind",
+ "ability.grandline.race.human.rallying_cry": "Rallying Cry",
+ "ability.grandline.race.human.dirty_trick": "Dirty Trick",
+ "ability.grandline.race.human.last_stand": "Last Stand",
+
+ "ability.grandline.race.fishman.riptide_dash": "Riptide Dash",
+ "ability.grandline.race.fishman.droplet_volley": "Water Droplet Volley",
+ "ability.grandline.race.fishman.buraikan": "Buraikan",
+ "ability.grandline.race.fishman.inner_ripple": "Water Heart: Inner Ripple",
+
+ "ability.grandline.race.merfolk.tail_whirl": "Tail Whirl",
+ "ability.grandline.race.merfolk.siren_song": "Siren Song",
+ "ability.grandline.race.merfolk.call_of_the_sea": "Call of the Sea",
+ "ability.grandline.race.merfolk.mermaid_embrace": "Mermaid's Embrace",
+
+ "ability.grandline.race.mink.electro": "Electro",
+ "ability.grandline.race.mink.electro_pounce": "Electro Pounce",
+ "ability.grandline.race.mink.sulong": "Sulong",
+ "ability.grandline.race.mink.electro_storm": "Electro Storm",
+
+ "ability.grandline.race.sky_people.jet_dial": "Jet Dial",
+ "ability.grandline.race.sky_people.flame_dial": "Flame Dial",
+ "ability.grandline.race.sky_people.impact_dial": "Impact Dial",
+ "ability.grandline.race.sky_people.reject_dial": "Reject Dial",
+
+ "ability.grandline.race.long_arm.long_grab": "Long Grab",
+ "ability.grandline.race.long_arm.extended_flurry": "Extended Flurry",
+ "ability.grandline.race.long_arm.windmill_sweep": "Windmill Sweep",
+ "ability.grandline.race.long_arm.high_snatch": "High Snatch",
+
+ "ability.grandline.race.long_leg.stilt_kick": "Stilt Kick",
+ "ability.grandline.race.long_leg.sky_vault": "Sky Vault",
+ "ability.grandline.race.long_leg.crescent_sweep": "Crescent Sweep",
+ "ability.grandline.race.long_leg.heaven_drop": "Heaven Drop",
+
+ "ability.grandline.race.three_eye.foresight": "Foresight",
+ "ability.grandline.race.three_eye.piercing_gaze": "Piercing Gaze",
+ "ability.grandline.race.three_eye.precognitive_counter": "Precognitive Counter",
+
+ "ability.grandline.race.tontatta.blur_dash": "Blur Dash",
+ "ability.grandline.race.tontatta.vanish": "Vanish",
+ "ability.grandline.race.tontatta.mighty_lift": "Mighty Lift",
+ "ability.grandline.race.tontatta.tiny_fist_flurry": "Tiny Fist Flurry",
+
+ "ability.grandline.race.giant.giant_stomp": "Giant Stomp",
+ "ability.grandline.race.giant.battle_cry": "Battle Cry of Elbaph",
+ "ability.grandline.race.giant.elbaph_smash": "Elbaph Smash",
+ "ability.grandline.race.giant.boulder_hurl": "Boulder Hurl",
+
+ "ability.grandline.race.lunarian.flame_wings": "Flame Wings",
+ "ability.grandline.race.lunarian.blaze_burst": "Blaze Burst",
+ "ability.grandline.race.lunarian.wing_dive": "Wing Dive",
+ "ability.grandline.race.lunarian.lunarian_fortitude": "Lunarian Fortitude",
+
+ "ability.grandline.race.buccaneer.bull_rush": "Bull Rush",
+ "ability.grandline.race.buccaneer.bone_crusher": "Bone Crusher",
+ "ability.grandline.race.buccaneer.ground_breaker": "Ground Breaker",
+ "ability.grandline.race.buccaneer.unchained": "Unchained",
+
+ "ability.grandline.race.snakeneck.neck_lash": "Neck Lash",
+ "ability.grandline.race.snakeneck.coil_strike": "Coil Strike",
+ "ability.grandline.race.snakeneck.serpent_sway": "Serpent Sway",
+
+ "ability.grandline.race.reefborn.coral_spikes": "Coral Spikes",
+ "ability.grandline.race.reefborn.reef_shell": "Reef Shell",
+ "ability.grandline.race.reefborn.tidepool": "Tidepool",
+ "ability.grandline.race.reefborn.coral_lance": "Coral Lance",
+
+ "ability.grandline.race.stormwing.gale_burst": "Gale Burst",
+ "ability.grandline.race.stormwing.updraft": "Updraft",
+ "ability.grandline.race.stormwing.feather_volley": "Feather Volley",
+ "ability.grandline.race.stormwing.thunderhead": "Thunderhead",
+
+ "ability.grandline.race.stonehide.stone_skin": "Stone Skin",
+ "ability.grandline.race.stonehide.rockslide_charge": "Rockslide Charge",
+ "ability.grandline.race.stonehide.earthen_spine": "Earthen Spine",
+ "ability.grandline.race.stonehide.living_fortress": "Living Fortress",
+
+ "ability.grandline.race.abyssal.lure_light": "Lure Light",
+ "ability.grandline.race.abyssal.ink_cloud": "Ink Cloud",
+ "ability.grandline.race.abyssal.crushing_depths": "Crushing Depths",
+ "ability.grandline.race.abyssal.abyssal_maw": "Abyssal Maw",
+
+ "ability.grandline.race.emberkin.ember_flare": "Ember Flare",
+ "ability.grandline.race.emberkin.magma_horns": "Magma Horns",
+ "ability.grandline.race.emberkin.cinder_shot": "Cinder Shot",
+ "ability.grandline.race.emberkin.eruption": "Eruption",
+
+ "ability.grandline.race.vinefolk.vine_lash": "Vine Lash",
+ "ability.grandline.race.vinefolk.entangle": "Entangle",
+ "ability.grandline.race.vinefolk.photosynthesis": "Photosynthesis",
+ "ability.grandline.race.vinefolk.thorn_burst": "Thorn Burst",
+
+ "ability.grandline.race.whalefolk.blowhole_geyser": "Blowhole Geyser",
+ "ability.grandline.race.whalefolk.whale_song": "Whale Song",
+ "ability.grandline.race.whalefolk.breach_slam": "Breach Slam",
+ "ability.grandline.race.whalefolk.sounding_dive": "Sounding Dive",
+
+ "ability.grandline.race.starborn.starfall": "Starfall",
+ "ability.grandline.race.starborn.astral_step": "Astral Step",
+ "ability.grandline.race.starborn.constellation_bind": "Constellation Bind",
+ "ability.grandline.race.starborn.supernova": "Supernova"
+}
