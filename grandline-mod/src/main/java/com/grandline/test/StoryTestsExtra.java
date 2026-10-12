@@ -79,6 +79,9 @@ final class StoryTestsExtra {
             }
             case "poneglyph", "ship", "arrested", "fruit_kill" -> t.equals("any");
             case "collect" -> QuestCollect.valid(t);
+            // sea activities: a sea catch (SeaFishing.onCatch), a treasure map's secret found (TreasureMaps.opened)
+            case "fish" -> t.equals("any") || com.grandline.activity.ActivityItems.FISH.stream().anyMatch(f -> f.getId().getPath().equals(t));
+            case "treasure" -> t.equals("any");
             default -> false;
         };
     }

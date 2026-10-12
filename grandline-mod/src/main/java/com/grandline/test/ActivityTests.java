@@ -76,6 +76,8 @@ final class ActivityTests {
     static void phase1(Deque<SelfTest.Step> steps) {
         // ---------- items: models, textures and names ----------
         steps.add(s -> {
+            FakePlayer who = SelfTest.fake(s);
+            start[0] = who.position(); // put back at the end: later steps expect the fake player where it was
             List<String> missing = new ArrayList<>();
             String lang = resource("/assets/grandline/lang/en_us.json");
             for (var it : ActivityItems.ALL) {
@@ -447,7 +449,19 @@ final class ActivityTests {
             ItemStack stew = new ItemStack(ActivityItems.FISHERMAN_STEW.get());
             stew.onCraftedBy(s.overworld(), fp, 1);
             noCook[0] = Meals.quality(stew);
-            return 40;
+            waited[0] = 0;
+            return 1;
+        });
+        // wait until the cook's home is really loaded (a fixed wait leaves the generator busy for the steps after this one)
+        steps.add(s -> {
+            var n = NotableCharacters.get("hilde");
+            Island isl = WorldPlan.of(s).byId(n.island());
+            int hx = isl.x + n.dx(), hz = isl.z + n.dz();
+            ServerLevel l = s.overworld();
+            boolean ready = l.isPositionEntityTicking(new BlockPos(hx, 64, hz));
+            for (int dx = -3; dx <= 3 && ready; dx++)
+                for (int dz = -3; dz <= 3 && ready; dz++) ready = l.getChunkSource().hasChunk((hx >> 4) + dx, (hz >> 4) + dz);
+            return ready || ++waited[0] > 1200 ? 0 : -1;
         });
         steps.add(s -> {
             ServerLevel l = s.overworld();
@@ -469,7 +483,8 @@ final class ActivityTests {
             stew.onCraftedBy(l, fp, 1);
             int withCook = Meals.quality(stew);
             check("a crew cook makes better dishes", joined && hasCook && withCook == noCook[0] + 1,
-                    "recruited=" + joined + " cook in crew=" + hasCook + " quality " + noCook[0] + " -> " + withCook);
+                    "recruited=" + joined + " cook in crew=" + hasCook + " quality " + noCook[0] + " -> " + withCook + " (home loaded after " + waited[0]
+                            + " ticks, cook in the world=" + (l.getEntity(hilde.getUUID()) != null) + ")");
             // the galley: a raw catch from the hold becomes a fine (or prime) dish, and everyone gets a hot meal
             ItemStack raw = new ItemStack(ActivityItems.RAINBOW_TUNA.get());
             raw.set(ActivityRegistry.QUALITY.get(), 1);
@@ -487,7 +502,13 @@ final class ActivityTests {
             l.getChunkSource().removeRegionTicket(TicketType.FORCED, cp, 3, cp);
             return 0;
         });
+        steps.add(s -> {
+            if (start[0] != null) SelfTest.fake(s).moveTo(start[0].x, start[0].y, start[0].z);
+            return 0;
+        });
     }
+
+    private static final Vec3[] start = new Vec3[1];
 
     /** Phase 2 (after a restart): the secrets looted in phase 1 are still remembered by the world. */
     static void phase2(Deque<SelfTest.Step> steps) {
@@ -498,7 +519,7 @@ final class ActivityTests {
         });
     }
 
-    private static final int[] noCook = new int[1];
+    private static final int[] noCook = new int[1], waited = new int[1];
 
     // ================================================================== helpers
 
