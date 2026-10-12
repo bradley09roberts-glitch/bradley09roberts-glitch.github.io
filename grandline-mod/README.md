@@ -114,7 +114,10 @@ Requires JDK 21. From this folder:
 python3 -I tools/gen_lang.py      # regenerate language fragments after adding content
 python3 -I tools/gen_assets.py    # regenerate textures, models, loot tables, recipes and tags
 python3 -I tools/gen_animations.py
+python3 tools/gen_sounds.py       # re-render the music and sound effects (needs numpy and ffmpeg with libvorbis)
 ```
+
+Generated files (textures, models, data, sounds) are committed, so a plain `./gradlew build` needs only the JDK.
 
 ### Automated verification
 
