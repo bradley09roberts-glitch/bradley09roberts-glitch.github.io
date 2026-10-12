@@ -67,6 +67,8 @@ public final class NotableHooks {
         if (npc.level().isClientSide) return null;
         Boolean crew = CrewManager.hostility(npc, e);
         if (crew != null) return crew;
+        Boolean boss = com.grandline.boss.BossManager.hostility(npc, e); // boss fights: everyone engaged is a foe
+        if (boss != null) return boss;
         boolean otherNotable = e instanceof GLNpc o && !o.notableId().isEmpty();
         if (npc.notableId().isEmpty()) return otherNotable ? Boolean.FALSE : null;
         Notable n = NotableCharacters.get(npc.notableId());

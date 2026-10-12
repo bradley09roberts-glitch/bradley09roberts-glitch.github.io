@@ -148,6 +148,7 @@ public abstract class GLNpc extends PathfinderMob {
 
     /** A player was knocked down by this NPC: Marines arrest, outlaws rob and leave, beasts finish. */
     public void onKnockedDownPlayer(ServerPlayer sp) {
+        if (com.grandline.boss.BossManager.deferKnockdown(this, sp)) return; // boss fights: no finishing blow while others still fight
         CharacterData d = Characters.get(sp);
         if (killsDowned()) return;
         setTarget(null);

@@ -21,6 +21,7 @@ def item_ids():
     plain += re.findall(r'(?:ITEMS\.register|\bfish|\bdish)\("([a-z0-9_]+)"', _read('activity/ActivityItems.java'))
     # the journey: Den Den Mushi snails
     plain += re.findall(r'ITEMS\.register\("([a-z0-9_]+)"', _read('journey/JourneyRegistry.java'))
+    plain += re.findall(r'ITEMS\.register\("([a-z0-9_]+)"', _read('boss/BossItems.java'))  # boss fights: the Haki scroll
     weapons = re.findall(r'\bweapon\("([a-z0-9_]+)"', src)
     return plain, weapons
 
