@@ -28,8 +28,12 @@ public class ShipRenderer extends EntityRenderer<ShipEntity> {
         return TEX;
     }
 
+    /** Ships drawn this frame (see ShipRenderFallback). */
+    public static final java.util.Set<Integer> DRAWN = new java.util.HashSet<>();
+
     @Override
     public void render(ShipEntity ship, float yaw, float partial, PoseStack ps, MultiBufferSource buf, int light) {
+        DRAWN.add(ship.getId());
         ShipMesh mesh = ShipMesh.of(ship.cls);
         float t = ship.tickCount + partial;
         float ryaw = Mth.rotLerp(partial, ship.yRotO, ship.getYRot());
