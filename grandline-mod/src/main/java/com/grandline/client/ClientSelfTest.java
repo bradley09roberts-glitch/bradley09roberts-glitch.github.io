@@ -213,6 +213,8 @@ public final class ClientSelfTest {
             cmd("grandline npc " + role + " 5", 5);
             cmd("tp @s ~3 ~ ~ 0 0", 5);
         }
+        // they pose for the camera and stand as targets: five elite NPCs at once would finish the tester in seconds
+        cmd("execute as @e[type=grandline:npc,distance=..30] run data merge entity @s {NoAI:1b}", 10);
         cmd("tp @s ~-9 ~ ~-3 0 8", 40);
         shot("06_npc_lineup");
         camera(CameraType.THIRD_PERSON_BACK);
