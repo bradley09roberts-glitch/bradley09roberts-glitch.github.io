@@ -230,6 +230,33 @@ def _haki_scroll():
     return render(g, {'p': paper, 'k': M(HAKI_LACQUER), 'e': Force(paper, LT), 'c': M(HAKI_VIOLET), 't': M(HAKI_VIOLET, outline=False)})
 
 
+# ============================================================================================ music discs
+VINYL = ['#060608', '#101014', '#1a1a20', '#26262e', '#34343e', '#4a4a56']
+DISC_LABELS = {
+    'east_blue': ['#0a1e3c', '#123264', '#1e4c96', '#2e6ac8', '#4a8ae6', '#86b8f8'],
+    'grand_line': ['#3a2606', '#64420a', '#946614', '#c48e22', '#e6b43c', '#f8dc86'],
+    'wano': ['#3a0a14', '#64121e', '#961e30', '#c82e46', '#e65a72', '#f8a0b0'],
+    'boss': ['#1e0632', '#360c54', '#54147e', '#7a1ea8', '#a040d0', '#d090f0'],
+}
+
+
+def _music_disc(label):
+    g = Grid()
+    g.disc(7.5, 7.5, 7.4, 'v')
+    g.disc(7.5, 7.5, 3.1, 'l')
+    g.put(7, 7, 'h')
+    g.put(8, 8, 'h')
+    g.put(7, 8, 'h')
+    g.put(8, 7, 'h')
+    grooves = lambda x, y, i: DK if i == MD and int(math.hypot(x - 7.5, y - 7.5)) % 2 == 0 else i
+    vinyl = M(VINYL, pattern=grooves)
+    return render(g, {'v': vinyl, 'l': M(DISC_LABELS[label], outline=False), 'h': Fixed('#060608')})
+
+
+for _d in DISC_LABELS:
+    item('music_disc_' + _d)(lambda _d=_d: _music_disc(_d))
+
+
 # ============================================================================================ ammo & materials
 @item('bullet')
 def _bullet():

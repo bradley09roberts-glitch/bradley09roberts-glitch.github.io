@@ -611,6 +611,36 @@
       "entries": [
         {
           "type": "minecraft:item",
+          "name": "grandline:music_disc_east_blue",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:music_disc_grand_line",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:music_disc_wano",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:music_disc_boss",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:empty",
+          "weight": 16
+        }
+      ]
+    },
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
           "name": "grandline:beli_pouch",
           "weight": 1,
           "functions": [

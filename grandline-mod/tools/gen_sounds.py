@@ -4,6 +4,7 @@
     python3 tools/gen_sounds.py            # everything
     python3 tools/gen_sounds.py sfx        # only the sound effects
     python3 tools/gen_sounds.py music wano # only the named songs
+    python3 tools/gen_sounds.py discs      # only the mono music-disc copies of the rendered tracks
 
 Needs numpy and ffmpeg (with libvorbis). Output: src/main/resources/assets/grandline/sounds/** and sounds.json.
 Sound effects are mono (Minecraft only attenuates mono sounds with distance); music is stereo and streamed.
@@ -30,6 +31,9 @@ LEVEL = {'haki.observation': 0.6, 'den_den.pickup': 0.55, 'ui.quest': 0.7, 'ui.d
          'fruit.quake': 0.66, 'fruit.thunder': 0.66}
 # impacts whose energy sits in a few transients: saturate them so they are as loud as vanilla explosions
 DENSE = {'ship.cannon': 3.0, 'fruit.quake': 4.0, 'fruit.thunder': 5.0, 'haki.conqueror': 2.0, 'fruit.flame': 1.6}
+
+# tracks that are also music discs: a mono copy (a jukebox is a positional source and only mono sounds attenuate)
+DISCS = ['east_blue', 'grand_line', 'wano', 'boss']
 
 ROOT = os.path.dirname(HERE)
 ASSETS = os.path.join(ROOT, 'src', 'main', 'resources', 'assets', 'grandline')
@@ -78,6 +82,20 @@ def render_sfx(defs):
     defs.update(out)
 
 
+def disc(src, name, defs):
+    os.makedirs(os.path.join(SOUNDS, 'music', 'disc'), exist_ok=True)
+    subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', src, '-ac', '1', '-c:a', 'libvorbis', '-q:a', '2',
+                    '-map_metadata', '-1', os.path.join(SOUNDS, 'music', 'disc', name + '.ogg')], check=True)
+    defs['disc.' + name] = {'sounds': [{'name': 'grandline:music/disc/' + name, 'stream': True}]}
+
+
+def render_discs(defs):
+    """Mono disc copies from the already rendered stereo tracks."""
+    for name in DISCS:
+        disc(os.path.join(SOUNDS, 'music', name + '.ogg'), name, defs)
+        print('  disc', name)
+
+
 def render_music(defs, only):
     tmp = tempfile.mkdtemp()
     for name, fn in music.SONGS.items():
@@ -87,6 +105,8 @@ def render_music(defs, only):
         wav = os.path.join(tmp, name + '.wav')
         st = fn(wav)
         encode(wav, os.path.join(SOUNDS, 'music', name + '.ogg'), 2)
+        if name in DISCS:
+            disc(wav, name, defs)
         rms = 10 * np.log10(np.mean(st.mean(axis=0) ** 2) + 1e-12)
         print(f'  music {name}: {st.shape[1] / SR:.1f} s, rms {rms:.1f} dB, peak {np.abs(st).max():.2f}')
         defs['music.' + name] = {'sounds': [{'name': 'grandline:music/' + name, 'stream': True}]}
@@ -103,6 +123,8 @@ def main():
         render_sfx(defs)
     if not args or args[0] == 'music':
         render_music(defs, set(args[1:]))
+    if args and args[0] == 'discs':
+        render_discs(defs)
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(dict(sorted(defs.items())), f, indent=2)
         f.write('\n')

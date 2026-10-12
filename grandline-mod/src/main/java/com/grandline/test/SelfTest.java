@@ -784,6 +784,20 @@ public final class SelfTest {
         StoryTestsExtra.phase1(steps); // Skypiea, Fish-Man Island, local stories, sky/deep notables
         IslandStoryTests.phase1(steps); // procedural stories on original islands, the richer job board (test/IslandStoryTests.java)
         BossTests.phase1(steps); // boss fights: bars, phases, telegraphs, Haki rules, scaling, fair knockdowns, rewards (test/BossTests.java)
+        steps.add(s -> { // the mod's own sounds and music discs (registry/ModSounds, registry/MusicDiscs)
+            int missing = 0;
+            for (String id : com.grandline.registry.ModSounds.IDS)
+                if (!net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.containsKey(com.grandline.GrandLine.id(id))) missing++;
+            check("sound events registered", missing == 0, (com.grandline.registry.ModSounds.IDS.length - missing) + "/" + com.grandline.registry.ModSounds.IDS.length);
+            int discs = 0;
+            for (var d : List.of(com.grandline.registry.MusicDiscs.DISC_EAST_BLUE, com.grandline.registry.MusicDiscs.DISC_GRAND_LINE,
+                    com.grandline.registry.MusicDiscs.DISC_WANO, com.grandline.registry.MusicDiscs.DISC_BOSS)) {
+                var jp = new net.minecraft.world.item.ItemStack(d.get()).get(net.minecraft.core.component.DataComponents.JUKEBOX_PLAYABLE);
+                if (jp != null && jp.song().unwrap(s.registryAccess()).filter(h -> h.value().lengthInSeconds() > 60).isPresent()) discs++;
+            }
+            check("music discs play their jukebox songs", discs == 4, discs + "/4 discs resolve to a jukebox song over a minute long");
+            return 0;
+        });
         JourneyTests.phase1(steps); // journey advancements, Den Den Mushi, Buster Call (test/JourneyTests.java; runs last)
     }
 

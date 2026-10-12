@@ -29,5 +29,13 @@
   "subtitles.grandline.ui.discover": "Island discovered",
   "subtitles.grandline.player.knockdown": "Heartbeat",
   "subtitles.grandline.combat.soru": "Shave",
-  "subtitles.grandline.combat.geppo": "Moon Walk"
+  "subtitles.grandline.combat.geppo": "Moon Walk",
+  "item.grandline.music_disc_east_blue": "Music Disc",
+  "item.grandline.music_disc_grand_line": "Music Disc",
+  "item.grandline.music_disc_wano": "Music Disc",
+  "item.grandline.music_disc_boss": "Music Disc",
+  "jukebox_song.grandline.east_blue": "Grand Line Odyssey - Wind in the Sails",
+  "jukebox_song.grandline.grand_line": "Grand Line Odyssey - Bound for the Grand Line",
+  "jukebox_song.grandline.wano": "Grand Line Odyssey - Land of Wano",
+  "jukebox_song.grandline.boss": "Grand Line Odyssey - The Emperor's Wrath"
 }

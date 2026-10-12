@@ -22,6 +22,7 @@ def item_ids():
     # the journey: Den Den Mushi snails
     plain += re.findall(r'ITEMS\.register\("([a-z0-9_]+)"', _read('journey/JourneyRegistry.java'))
     plain += re.findall(r'ITEMS\.register\("([a-z0-9_]+)"', _read('boss/BossItems.java'))  # boss fights: the Haki scroll
+    plain += [f'music_disc_{s}' for s in re.findall(r'disc\("music_disc_[a-z_]+", "([a-z_]+)"\)', _read('registry/MusicDiscs.java'))]
     weapons = re.findall(r'\bweapon\("([a-z0-9_]+)"', src)
     return plain, weapons
 

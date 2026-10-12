@@ -89,6 +89,10 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
   for meal buffs (stamina, strength, Haki, swimming, cold/heat resistance); a crew cook cooks better and feeds you at sea.
 - **The journey**: an advancement tab tracks your voyage (seas, fruit, Haki, bounty, ships, crew, saga, endings, races); it belongs to your account and survives a permadeath.
 - **Den Den Mushi**: use a snail to call anyone carrying one (`/den`); crew snails talk to your crew (`/crew invite`), Baby Den Den carry one message, black snails from Marine officers overhear the Marines.
+- **Music and sound**: nine original tracks follow where you are and what you do (a shanty in the Blues, a march in
+  Paradise, the New World, island towns, Wano, the sky islands, the deep sea, battles and bosses); Haki, Devil Fruits,
+  cannons, the Den Den Mushi and bosses have their own sounds. Four tracks are music discs hidden in treasure and
+  wrecks. All of it is synthesised by `tools/gen_sounds.py`.
 - **Buster Call**: past 500M Beli, a crime by a Marine base or a Vice Admiral who lived may bring a rare, announced fleet bombardment; outlast, outrun or sink it (config `busterCall`).
 
 ## Admin and test commands (op)

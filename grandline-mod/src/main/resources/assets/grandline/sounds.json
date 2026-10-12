@@ -50,6 +50,38 @@
       "grandline:den_den/ring_1"
     ]
   },
+  "disc.boss": {
+    "sounds": [
+      {
+        "name": "grandline:music/disc/boss",
+        "stream": true
+      }
+    ]
+  },
+  "disc.east_blue": {
+    "sounds": [
+      {
+        "name": "grandline:music/disc/east_blue",
+        "stream": true
+      }
+    ]
+  },
+  "disc.grand_line": {
+    "sounds": [
+      {
+        "name": "grandline:music/disc/grand_line",
+        "stream": true
+      }
+    ]
+  },
+  "disc.wano": {
+    "sounds": [
+      {
+        "name": "grandline:music/disc/wano",
+        "stream": true
+      }
+    ]
+  },
   "fruit.dark": {
     "subtitle": "subtitles.grandline.fruit.dark",
     "sounds": [

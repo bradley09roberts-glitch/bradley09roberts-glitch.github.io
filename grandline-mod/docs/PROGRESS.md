@@ -481,6 +481,31 @@ First run of a real client against the dedicated server. Result: no client crash
   ship encounters that bring an Admiral to the player at sea (the sea arena behaviours trigger when a fight happens
   near water); relics are named stacks of existing weapons rather than items with their own models.
 
+### Sound effects and music, synthesised (09:45–10:40)
+- Everything is original and computed: `tools/audio/synth.py` is a small numpy synthesiser (additive and
+  Karplus-Strong instruments, drums, FFT filters, a convolution reverb with a synthetic room, a bus mixer and master
+  chain), `tools/audio/music.py` composes nine tracks as code (melodies in a bar-checked notation, chord
+  progressions, accompaniment patterns), `tools/audio/sfx.py` designs 31 effects, and `tools/gen_sounds.py` renders
+  them to OGG Vorbis with ffmpeg and writes `sounds.json` (mono effects, stereo streamed music). No samples, no
+  transcriptions: the melodies are new.
+- Music (about 10 minutes, 6.5 MB): "Wind in the Sails" (a jig-time shanty, the Blues at sea), "Bound for the Grand
+  Line" (march, Paradise and the title screen), "Into the New World", "Harbour Town" (calypso, on islands), "Clash on
+  the Waves" (battle), "The Emperor's Wrath" (bosses), "Above the Clouds" (Lydian waltz, sky islands), "Beneath the
+  Waves" (deep sea, Fish-Man Island) and "Land of Wano" (koto, shakuhachi, shamisen and taiko on the miyako-bushi
+  scale). Loudness matches the newer vanilla tracks (about -18 LUFS); effects match vanilla effects (-14 to -19
+  LUFS), measured with ffmpeg's EBU R128 meter against the game's own assets.
+- `client/GLMusic` (NeoForge `SelectMusicEvent`): a boss bar that asks for boss music plays the boss theme, a fight
+  (you hit or were hit by a foe, or a cannon, boss roar or Sea King call within 48 blocks, in the last 12 s) the
+  battle theme; otherwise the sea zone from the biome, the island you stand on (the server sends 0 sea / 1 island /
+  2 Wano from `Navigation`), the sky or the deep sea. Other dimensions keep vanilla music.
+- Effects: `client/FxSounds` layers a sound onto ~90 fruit, Haki and boss visual effects (rate-limited per kind);
+  server-side, ship cannons, the Den Den Mushi ring and pick-up, the Buster Call horn, ferry bells, island
+  discovery, quest completion, a new bounty poster, knockdowns, Sea King spawns, Armament Haki and boss
+  roars/phase changes/wind-ups/enrage use the new sounds. Subtitles in `lang/en_us/sounds.json`.
+- Music discs: four tracks (east_blue, grand_line, wano, boss) as jukebox songs with mono copies, in treasure and
+  wreck chests and the creative tab.
+- Verified: `check_assets.py` checks every registered event against `sounds.json`, the files and the subtitles.
+
 ## Work in flight (background agents)
 - Faction careers (ranks, titles, perks for every path).
 - Crew bases on claimed islands.
@@ -494,7 +519,7 @@ First run of a real client against the dedicated server. Result: no client crash
 - Living sea: convoys never cross the Calm Belt; harbour raids plunder only Beli; no quests hook into sea battles.
 - NPC ships never fight from hired NPC gunners on player ships (only your recruited crew man the guns).
 - Balance (damage, bounty, rewards, spawn rates) is tuned only as far as the automated tests; it needs real play.
-- No custom music or sound effects (vanilla sounds throughout); Higgsfield's available audio models here are speech
-  only.
+- Sound: the music and effects are synthesised, judged by measurement (tuning, loudness, spectra) and by the game
+  decoding and playing them, not by ear; nobody has listened to them yet. Many abilities still use vanilla sounds.
 - Everything client-visual is checked under software OpenGL at render distance 7: lighting, distance and frame rate
   on a real GPU are untested.

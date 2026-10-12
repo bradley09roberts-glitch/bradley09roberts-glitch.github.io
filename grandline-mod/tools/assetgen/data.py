@@ -246,6 +246,9 @@ PAINTINGS = ['red_line', 'reverse_mountain', 'knock_up_stream', 'white_sea', 'bu
              'calm_belt', 'last_island', 'sea_train', 'cyclone']
 
 
+DISCS = ['east_blue', 'grand_line', 'wano', 'boss']  # registry/MusicDiscs.java
+
+
 def painting(variant, weight=1):
     """A painting item that hangs one of the painted sea scenes (docs/ART.md)."""
     return item('painting', weight, None, None, {'function': 'minecraft:set_components', 'components': {
@@ -316,6 +319,7 @@ def chest_tables():
         pool([gl('style_scroll', 2, None, None, comp('style', s)) for s in STYLES_COMMON]
              + [gl('style_scroll', 1, None, None, comp('style', s)) for s in STYLES_RARE] + [empty(30)], 1),
         pool([painting(p) for p in PAINTINGS] + [empty(30)], 1),
+        pool([gl(f'music_disc_{d}', 1) for d in DISCS] + [empty(16)], 1),
     ])
     t['starter'] = chest('starter', [
         pool([item('bread', 1, 6, 8)], 1),
@@ -331,6 +335,7 @@ def chest_tables():
         pool([gl('cutlass', 4, None, None, worn(0.4, 0.9)), gl('musket', 2, None, None, worn(0.4, 0.9)),
               gl('flintlock', 3, None, None, worn(0.4, 0.9)), gl('sea_chart', 4), gl('log_pose', 2), item('heart_of_the_sea', 1), empty(8)], 1),
         pool([painting(p) for p in PAINTINGS] + [empty(40)], 1),
+        pool([gl(f'music_disc_{d}', 1) for d in DISCS] + [empty(30)], 1),
     ])
     t['shrine'] = chest('shrine', [
         pool([item('candle', 8, 1, 3), item('gold_nugget', 8, 2, 8), item('amethyst_shard', 6, 1, 4), item('experience_bottle', 6, 1, 4),

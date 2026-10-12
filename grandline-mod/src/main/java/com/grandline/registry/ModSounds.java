@@ -58,6 +58,11 @@ public final class ModSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> MUSIC_SKY = sfx("music.sky");
     public static final DeferredHolder<SoundEvent, SoundEvent> MUSIC_DEEP_SEA = sfx("music.deep_sea");
     public static final DeferredHolder<SoundEvent, SoundEvent> MUSIC_WANO = sfx("music.wano");
+    // mono copies for the music discs (a jukebox is a positional source)
+    public static final DeferredHolder<SoundEvent, SoundEvent> DISC_EAST_BLUE = sfx("disc.east_blue");
+    public static final DeferredHolder<SoundEvent, SoundEvent> DISC_GRAND_LINE = sfx("disc.grand_line");
+    public static final DeferredHolder<SoundEvent, SoundEvent> DISC_WANO = sfx("disc.wano");
+    public static final DeferredHolder<SoundEvent, SoundEvent> DISC_BOSS = sfx("disc.boss");
 
     /** Every event, for the self-test and tools/check_assets.py. */
     public static final String[] IDS = {"haki.conqueror", "haki.armament", "haki.observation", "fruit.rubber", "fruit.flame",
@@ -65,7 +70,7 @@ public final class ModSounds {
             "fruit.transform", "fruit.drums", "boss.roar", "boss.phase", "boss.telegraph", "boss.enrage", "ship.cannon", "ship.bell",
             "ship.horn", "sea_king.call", "den_den.ring", "den_den.pickup", "ui.bounty", "ui.quest", "ui.discover", "player.knockdown",
             "combat.soru", "combat.geppo", "music.east_blue", "music.grand_line", "music.new_world", "music.island", "music.battle",
-            "music.boss", "music.sky", "music.deep_sea", "music.wano"};
+            "music.boss", "music.sky", "music.deep_sea", "music.wano", "disc.east_blue", "disc.grand_line", "disc.wano", "disc.boss"};
 
     private static DeferredHolder<SoundEvent, SoundEvent> sfx(String name) {
         return SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(GrandLine.id(name)));

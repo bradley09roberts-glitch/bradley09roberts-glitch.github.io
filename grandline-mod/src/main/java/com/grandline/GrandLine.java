@@ -32,6 +32,7 @@ public final class GrandLine {
         com.grandline.activity.ActivityRegistry.register(modBus); // sea activities: treasure maps, fishing, cooking
         com.grandline.journey.JourneyRegistry.register(modBus); // journey advancements (milestone trigger), Den Den Mushi
         com.grandline.boss.BossItems.register(modBus); // boss fights: the Haki scroll (relics are named weapon stacks)
+        MusicDiscs.register(modBus); // music discs of the mod's own tracks
         GLNetwork.register(modBus);
         modBus.addListener(this::setup);
     }
