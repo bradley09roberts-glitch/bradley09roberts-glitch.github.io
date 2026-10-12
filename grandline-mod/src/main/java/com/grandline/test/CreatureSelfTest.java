@@ -326,7 +326,14 @@ final class CreatureSelfTest {
             var isl = WorldPlan.of(s).byId("shiokaze_isle");
             int x = isl.x + isl.radius / 3, z = isl.z - isl.radius / 3;
             for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) l.setChunkForced((x >> 4) + dx, (z >> 4) + dz, true);
-            int y = l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+            // a flat stone platform high above the island: the island's terrain (and the town on it) varies with the
+            // world seed and a 2.4-block-tall Lapahn cannot always path to its prey there
+            int y = 160;
+            for (int dx = -4; dx <= 20; dx++)
+                for (int dz = -6; dz <= 10; dz++) {
+                    l.setBlockAndUpdate(new BlockPos(x + dx, y - 1, z + dz), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+                    for (int dy = 0; dy <= 4; dy++) l.setBlockAndUpdate(new BlockPos(x + dx, y + dy, z + dz), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                }
             land[0] = new BlockPos(x, y, z);
             int i = 0;
             for (WildBeast.Kind k : WildBeast.Kind.values()) wild[i] = WildlifeSpawner.spawn(l, k, x + 0.5 + (i++) * 4, y, z + 0.5, 0);
