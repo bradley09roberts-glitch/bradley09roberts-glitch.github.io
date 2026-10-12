@@ -43,7 +43,7 @@ public final class PopulationManager extends SavedData {
             WorldPlan plan = WorldPlan.forLevel(level);
             if (plan == null) continue;
             for (ServerPlayer sp : level.players()) {
-                for (Island isl : plan.candidates(sp.getBlockX(), sp.getBlockZ())) {
+                for (Island isl : plan.around(sp.getBlockX(), sp.getBlockZ())) {
                     if (isl.distance(sp.getBlockX(), sp.getBlockZ()) > isl.radius + radius) continue;
                     if (isl.settlementType == com.grandline.world.settlement.SettlementType.NONE && isl.landmarks.isEmpty()) continue;
                     pm.populate(level, isl, sp, radius);

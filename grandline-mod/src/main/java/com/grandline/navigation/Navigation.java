@@ -32,7 +32,8 @@ public final class Navigation {
         WorldPlan plan = WorldPlan.forLevel(sp.level()); // ocean world, White Sea or deep sea
         if (plan == null) return;
         Island isl = plan.islandAt(sp.getBlockX(), sp.getBlockZ());
-        if (isl != null && isl.t(sp.getBlockX(), sp.getBlockZ()) < 1.0) {
+        if (isl == null || isl.t(sp.getBlockX(), sp.getBlockZ()) >= 1.0) isl = plan.pointAt(sp.getBlockX(), sp.getBlockZ(), 40); // Mary Geoise
+        if (isl != null && (isl.radius < 10 || isl.t(sp.getBlockX(), sp.getBlockZ()) < 1.0)) {
             if (d.discoveredIslands.add(isl.id)) {
                 Component name = isl.canon && isl.name == null ? Component.translatable(isl.translationKey()) : Component.literal(isl.name);
                 sp.sendSystemMessage(Component.translatable("grandline.discover", name).withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD));

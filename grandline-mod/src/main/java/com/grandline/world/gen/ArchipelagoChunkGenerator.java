@@ -298,7 +298,7 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
         int cx = chunk.getPos().getMiddleBlockX(), cz = chunk.getPos().getMiddleBlockZ();
         int minX = chunk.getPos().getMinBlockX(), minZ = chunk.getPos().getMinBlockZ();
         int maxX = minX + 15, maxZ = minZ + 15;
-        for (Island isl : plan.candidates(cx, cz)) {
+        for (Island isl : plan.around(cx, cz)) {
             Settlement st = isl.settlement();
             for (Plot p : st.secrets) {
                 if (p.x() - 2 > maxX || p.x() + p.sizeX() + 2 < minX || p.z() - 2 > maxZ || p.z() + p.sizeZ() + 2 < minZ) continue;

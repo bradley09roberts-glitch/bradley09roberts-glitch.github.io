@@ -80,6 +80,7 @@ public final class SelfTest {
         else if (PHASE.equals("dims")) {
             steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
             DimensionTests.ferry(steps);
+            DimensionTests.holyLand(steps);
             DimensionTests.awakening(steps);
             DimensionTests.shipClasses(steps);
             DimensionTests.phase1(steps);
@@ -716,6 +717,7 @@ public final class SelfTest {
         DimensionTests.awakening(steps);
         DimensionTests.shipClasses(steps);
         DimensionTests.ferry(steps);
+        DimensionTests.holyLand(steps);
         DimensionTests.phase1(steps);
         // ---------- persistence fixtures for phase 2 ----------
         steps.add(s -> {

@@ -171,6 +171,34 @@ final class DimensionTests {
         });
     }
 
+    /** Mary Geoise is a point on top of the Red Line: its set piece is built, it is protected, and it can be discovered. */
+    static void holyLand(Deque<SelfTest.Step> steps) {
+        steps.add(s -> {
+            ServerLevel ow = s.overworld();
+            WorldPlan plan = WorldPlan.of(s);
+            Island mg = plan.byId("mary_geoise");
+            if (mg == null) { SelfTest.check("Mary Geoise is built on the Red Line", false, "no island"); return 0; }
+            load(ow, mg.x, mg.z, 3);
+            int quartz = 0;
+            for (int dx = -24; dx <= 24; dx++)
+                for (int dz = -24; dz <= 24; dz++)
+                    if (ow.getBlockState(new BlockPos(mg.x + dx, 301, mg.z + dz)).is(net.minecraft.world.level.block.Blocks.QUARTZ_BRICKS)) quartz++;
+            int guards = 0;
+            for (var p : mg.settlement().plots)
+                for (var m : com.grandline.npc.MarkerCollector.markers(mg, p)) if (m.kind().equals("npc")) guards++;
+            boolean prot = com.grandline.world.TownProtection.protectedAt(plan, mg.x, mg.z);
+            var sp = SelfTest.fake(s);
+            var d = com.grandline.player.Characters.get(sp);
+            d.discoveredIslands.remove(mg.id);
+            sp.moveTo(mg.x + 3.5, 302, mg.z + 3.5);
+            sp.tickCount = 40;
+            com.grandline.navigation.Navigation.tick(sp, d);
+            SelfTest.check("Mary Geoise is built on the Red Line, protected, peopled and discoverable", quartz > 200 && guards > 0 && prot && d.discoveredIslands.contains(mg.id),
+                    quartz + " quartz floor blocks at y301, " + guards + " NPC markers, protected=" + prot + ", discovered=" + d.discoveredIslands.contains(mg.id));
+            return 0;
+        });
+    }
+
     /** Fruit awakening: mastery + level start the trial; fruit kills and the New World complete it. */
     static void awakening(Deque<SelfTest.Step> steps) {
         steps.add(s -> {
