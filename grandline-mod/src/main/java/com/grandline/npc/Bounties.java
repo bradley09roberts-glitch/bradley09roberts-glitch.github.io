@@ -29,7 +29,9 @@ public final class Bounties {
         for (long t : THRESHOLDS) {
             if (before < t && d.bounty >= t) {
                 sp.server.getPlayerList().broadcastSystemMessage(Component.translatable("grandline.bounty.new_poster", d.name, String.format("%,d", d.bounty)).withStyle(ChatFormatting.YELLOW), false);
-                sp.getInventory().add(poster(d));
+                ItemStack poster = poster(d);
+                poster.update(DataComponents.CUSTOM_DATA, CustomData.EMPTY, c -> c.update(tag -> tag.putUUID("uuid", sp.getUUID())));
+                sp.getInventory().add(poster);
             }
         }
         sp.displayClientMessage(Component.translatable("grandline.bounty.raised", String.format("%,d", d.bounty)).withStyle(ChatFormatting.YELLOW), true);

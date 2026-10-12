@@ -17,6 +17,14 @@ public class WantedPosterItem extends Item {
     }
 
     @Override
+    public net.minecraft.world.InteractionResultHolder<ItemStack> use(net.minecraft.world.level.Level level, net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
+        if (cd != null && level.isClientSide) com.grandline.client.screen.WantedPosterScreen.open(cd.copyTag()); // client-only class, never reached on a server
+        return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+    }
+
+    @Override
     public void appendHoverText(ItemStack stack, TooltipContext ctx, List<Component> tip, TooltipFlag flag) {
         CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
         if (cd == null) return;
