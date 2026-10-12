@@ -412,6 +412,67 @@ First run of a real client against the dedicated server. Result: no client crash
 - Full run on the merged tree with the journey: phase 1 483/483, phase 2 14/14, no exceptions; inventory regenerated
   from it (240 tested, 373 playable, 0 partial).
 
+### Crew bases on claimed islands (agent)
+- Claiming (`base/CrewBases`, `base/CrewFlagItem`): a crew flag (new block + item; crafted from sticks and leather,
+  sold by shipwrights and general stores) planted at the heart of an uninhabited original island claims it for the
+  player's crew (`CharacterData.crewId`, or the character alone as a crew of one). Refused: canon and starter islands,
+  islands with a settlement, the shore (outside the inner 70% of the radius; 95% for rings and atolls), within reach
+  of the island's story places (set pieces, island secrets, the local story's sites and people), with a hostile within
+  24 blocks ("clear the threat"), anywhere but the ocean world's overworld (never the sky or the deep sea), an island
+  someone holds, and more than `claimsPerCrew` (1) per crew. Claims are a SavedData (`grandline_bases`); the claim is
+  announced server-wide and every sea chart shows a flag with the crew's name (an anvil-named flag names the crew;
+  `/base name`), the viewer's own in gold. `/base abandon` and `/base transfer <player>` (founder, captain or op).
+- Building (`CrewBases.onBreak/onPlace/onUseBlock/onExplosion`): inside the claim (a circle of `claimRadius` 64 round
+  the flag, story places and secrets left open) only the crew may break and place blocks, open containers, pour
+  buckets or light fires, and blasts by outsiders leave the blocks; the flag cannot be broken by hand (an op in
+  creative strikes it). `TownProtection` is untouched and still applies everywhere.
+- The base: the base chest (new block) opens one 54-slot warehouse per base, shared by the crew, saved with the claim;
+  the dock (nearest open water, found at claim time or set with `/base dock`) repairs crew ships within 40 blocks for
+  free (5% hull and rigging every 6 s). `/base` (or using the flag) is a clickable chat menu; upgrades cost Beli plus
+  materials from the pack and then the warehouse: watchtower (raid ships sighted far out, every crew member online
+  warned, raiders glow), dojo (style/Haki training inside the base x1.5, through `Hits.train`), galley (dishes cooked
+  inside +1 quality, through `Meals.onCooked`; a hot meal every minute), medical bay (a heart every 2 s), shipyard
+  slip (ship upgrades for your ship at the dock at 75%, no coating) and quarters (up to four hired hands: guard,
+  sailor, sword master, existing humanoid roles who live at the flag while crew are near, never turn on the crew,
+  fight raiders; a dead hand is gone).
+- Raids (`ship/BaseRaids`, after `HarbourRaids`/`BusterCall`): every 5 s, a base with a crew member within 160 blocks,
+  past its cooldown (40 min; 20 min after the claim) may draw a raid (chance 0.002 per check; config `bases`): a pirate
+  ship, or for a wanted/pirate crew a Marine ship, within the shared NPC ship cap, never in the Calm Belt, on open water
+  off the shore nearest the flag, captained from here (sails in, anchors) and landing at most six raiders at the
+  base's edge. Beaten: repelled, the crew members who fought are paid. Raiders by the flag with no defender (crew
+  member up and about, or hand) within 16 blocks for `captureSeconds` (20): the flag is taken (server-wide), retake it
+  within `graceSeconds` (60) or the claim is removed (flag down, half the warehouse carried off, the rest spilled).
+  Still standing after 3 min: they plunder a few stacks and leave. Raids live in memory (a restart drops one).
+- Shared files touched: `GrandLine` (registry line), `GLConfig` (`bases` section), `Navigation` (chart data split out
+  as `chartData`, bases list), `ChartScreen` (flags), `Hits.train` (1), `Meals.onCooked` (1), `GLNpc.isHostileTo` (1
+  hook), `Shops` (1), `SelfTest` (3), `tools/gen_assets.py`, `tools/assetgen/source.py` (+ new `assetgen/base_items.py`),
+  README, lang fragment `bases.json`.
+- Verified (`test/BaseTests`, 30 checks in phase 1 and 2 in phase 2; quick run `GL_SELFTEST=bases` 30/30), with
+  fake players counted as online: refusals on a canon island, a village island, a story place, the shore, the sky and
+  with a bandit near (allowed once it is gone); the real flag item, anvil-named, claims the island (block placed, item
+  used, announced, on a rival's chart under the crew's name, a dock found); a crewmate cannot claim a second island, a
+  rival cannot claim a held one and a transfer to a crew at its limit is refused; the real block events: captain and
+  mate break and place, the rival cannot, nor open a chest, nobody breaks the flag, outside the claim the rival may,
+  an Orange Town plot stays protected for the base's captain too; the warehouse is shared (the mate sees the captain's
+  gold through a chest menu) and refused to the rival; the dojo upgrade refused poor and short, then built from the
+  pack's iron and the warehouse's planks (Beli 100,000 -> 65,000); style and Haki training +15 instead of +10 inside
+  only (weapon +10); a dish quality 1 inside, 0 outside; medical bay 8 -> 10 hp inside only; the hot meal; a crew
+  sloop at the dock 70 -> 140 hull for free, the rival's untouched; the slip fits fine sails for 9,000; four hands
+  hired, the fifth and the rival refused, none hostile to the crew, a killed hand is struck off; no raid without room
+  under the ship cap, then exactly one ship; it sails in and lands two raiders inside the base, who fight the crew and
+  the hands (and the hands them); killed, the raid is repelled and the captain who fought is paid (the mate not); a
+  Marine raid with a watchtower warns both crew members (not the rival), its raiders glow; undefended, the flag is
+  taken after 397 ticks (announced), retaken when the captain returns, taken again, and when the grace runs out the
+  claim is removed, the flag block gone, the gold carried off, off the chart; a claim transferred to another crew
+  (who may build there, the old crew not) and abandoned by its new founder (a non-member refused). Phase 2: the
+  fixture claim (crew, flag block, name, dojo and quarters, 7 diamonds in the warehouse, a sailor) and its chart flag
+  are back after the restart. Full run on one fresh world: phase 1 513/513, phase 2 16/16, no exceptions.
+- Not done / not verified: nothing seen in a real client (flag model and textures, the chart flag, the chat menu);
+  the menu is chat buttons, not a screen; the boats rowing in and the march up from a distant beach are not played out
+  (the party appears at the base's edge); fruit terrain changes and Buster Call craters inside a base are not blocked
+  (they revert anyway); hands get a new name each time they are put down; crew ships are repaired at the dock but not
+  otherwise kept (no recall or mooring); a claim whose founder and captain are both gone needs an operator to transfer.
+
 ## Work in flight (background agents)
 - Endgame boss encounters (Emperors, Admirals, Warlords: boss bars, phases, telegraphed signature attacks).
 

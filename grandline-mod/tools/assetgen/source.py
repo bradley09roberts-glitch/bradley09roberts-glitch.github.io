@@ -26,7 +26,8 @@ def item_ids():
 
 
 def block_ids():
-    return re.findall(r'BLOCKS\.register\("([a-z0-9_]+)"', _read('registry/ModBlocks.java'))
+    # crew bases register their blocks into ModBlocks.BLOCKS from their own class
+    return re.findall(r'BLOCKS\.register\("([a-z0-9_]+)"', _read('registry/ModBlocks.java') + _read('base/BaseRegistry.java'))
 
 
 def skin_ids():

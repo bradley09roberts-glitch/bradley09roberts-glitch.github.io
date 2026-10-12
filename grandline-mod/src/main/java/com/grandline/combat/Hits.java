@@ -237,6 +237,7 @@ public final class Hits {
     public static void train(LivingEntity e, String masteryKey, int amount) {
         if (e instanceof ServerPlayer sp) {
             CharacterData d = Characters.get(sp);
+            amount = com.grandline.base.CrewBases.trainingBonus(sp, masteryKey, amount); // a base dojo
             if (d.addMastery(masteryKey, amount)) {
                 sp.displayClientMessage(net.minecraft.network.chat.Component.translatable("grandline.mastery.up",
                         net.minecraft.network.chat.Component.translatable("mastery.grandline." + masteryKey.replace('/', '.')), d.mastery(masteryKey)), true);

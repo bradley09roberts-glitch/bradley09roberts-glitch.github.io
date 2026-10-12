@@ -90,13 +90,14 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
 - **The journey**: an advancement tab tracks your voyage (seas, fruit, Haki, bounty, ships, crew, saga, endings, races); it belongs to your account and survives a permadeath.
 - **Den Den Mushi**: use a snail to call anyone carrying one (`/den`); crew snails talk to your crew (`/crew invite`), Baby Den Den carry one message, black snails from Marine officers overhear the Marines.
 - **Buster Call**: past 500M Beli, a crime by a Marine base or a Vice Admiral who lived may bring a rare, announced fleet bombardment; outlast, outrun or sink it (config `busterCall`).
+- **Crew bases**: plant a crew flag (shipwrights sell it) at the heart of an uninhabited original island to claim it for your crew (on everyone's sea chart); only your crew builds there, a base chest is your shared warehouse, the dock repairs your ships for free, `/base` builds a watchtower, dojo, galley, medical bay, shipyard slip and quarters for hired hands; raiders may come while you are near, and an undefended flag can be captured (config `bases`).
 
 ## Admin and test commands (op)
 
 `/grandline island list|here|tp <id>`, `/grandline fruit give|set|remove|awaken|ledger`, `/grandline char info|level|
 mastery|style|haki|conqueror|beli|reset`, `/grandline npc <role> [tier]`, `/grandline quest <id>`,
 `/grandline terrain revert`, `/grandline test env|ship <class> [helm]|sail <0-3>|anchor <bool>|ability <id>|storm|
-inventory`, `/bustercall status|issue <player>|cancel <player>`.
+inventory`, `/bustercall status|issue <player>|cancel <player>`, `/base raid|remove <island>`.
 
 ## Building from source
 

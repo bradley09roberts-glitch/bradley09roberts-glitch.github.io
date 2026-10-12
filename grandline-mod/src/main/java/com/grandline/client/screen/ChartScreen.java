@@ -78,6 +78,17 @@ public class ChartScreen extends Screen {
                 g.drawString(font, Component.translatable("screen.grandline.chart_treasure", isl), x + 4, z + 3, col, false);
             }
         }
+        // claimed islands: a little flag on its pole, with the crew's name (yours in gold)
+        ListTag bases = data.getList("bases", Tag.TAG_COMPOUND);
+        for (int i = 0; i < bases.size(); i++) {
+            CompoundTag e = bases.getCompound(i);
+            int x = sx(e.getInt("x")), z = sz(e.getInt("z"));
+            int col = e.getBoolean("mine") ? 0xFFC8901C : 0xFF1E1A16;
+            g.fill(x, z - 7, x + 1, z + 1, INK);
+            g.fill(x + 1, z - 7, x + 6, z - 3, col);
+            Component crew = e.getString("crew").isEmpty() ? Component.translatable("grandline.base.default_crew", e.getString("founder")) : Component.literal(e.getString("crew"));
+            if (zoom > 1.2 || e.getBoolean("mine")) g.drawString(font, Component.translatable("screen.grandline.chart_base", crew), x + 7, z - 8, col, false);
+        }
         int px = sx(data.getInt("px")), pz = sz(data.getInt("pz"));
         for (int i = -3; i <= 3; i++) { // you are here: a red ink cross
             g.fill(px + i, pz + i, px + i + 1, pz + i + 1, 0xFFB01818);

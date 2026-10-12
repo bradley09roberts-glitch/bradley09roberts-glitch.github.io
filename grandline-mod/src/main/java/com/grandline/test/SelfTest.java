@@ -97,6 +97,7 @@ public final class SelfTest {
         }
         else if (PHASE.equals("activities")) ActivityTests.phase1(steps); // quick run: treasure maps, fishing, cooking
         else if (PHASE.equals("journey")) JourneyTests.phase1(steps); // quick run: advancements, Den Den Mushi, Buster Call
+        else if (PHASE.equals("bases")) BaseTests.phase1(steps); // quick run: crew bases on claimed islands
         else phase2();
     }
 
@@ -782,6 +783,7 @@ public final class SelfTest {
         storySteps();
         StoryTestsExtra.phase1(steps); // Skypiea, Fish-Man Island, local stories, sky/deep notables
         IslandStoryTests.phase1(steps); // procedural stories on original islands, the richer job board (test/IslandStoryTests.java)
+        BaseTests.phase1(steps); // crew bases: claims, building rights, warehouse, upgrades, dock, hands, raids (test/BaseTests.java)
         JourneyTests.phase1(steps); // journey advancements, Den Den Mushi, Buster Call (test/JourneyTests.java; runs last)
     }
 
@@ -969,6 +971,7 @@ public final class SelfTest {
         IslandStoryTests.phase2(steps); // generated stories regenerate identically; generated people's fates persist
         ActivityTests.phase2(steps); // looted island secrets persist
         JourneyTests.phase2(steps); // journey advancements belong to the account and are saved with it
+        BaseTests.phase2(steps); // a claimed island with its upgrades, warehouse and hands survives the restart
         final String[] fx = new String[1];
         steps.add(s -> {
             fx[0] = Files.readString(Path.of("selftest-fixtures.txt")).trim();
