@@ -180,6 +180,25 @@ public final class ClientSelfTest {
 
     /** Sea Kings beside a ship in the Calm Belt, a Sea King attack, and Zoan full-beast forms (players and NPCs). */
     private static void creatureShots() {
+        // the earlier fights can leave the tester dead or knocked down: respawn and recreate the character if needed
+        add("respawn for creature shots", () -> {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player.isDeadOrDying() || mc.screen instanceof net.minecraft.client.gui.screens.DeathScreen) mc.player.respawn();
+        }, 60);
+        add("recreate character if needed", () -> {
+            Minecraft mc = Minecraft.getInstance();
+            if (!ClientState.LOCAL.created) {
+                CompoundTag t = new CompoundTag();
+                t.putString("name", "Tester");
+                t.putString("race", "fishman");
+                t.putString("faction", "pirate");
+                t.putString("origin", "east");
+                t.put("appearance", new Appearance().save());
+                PacketDistributor.sendToServer(new GLNetwork.CreateCharacter(t));
+            }
+            mc.setScreen(null);
+        }, 60);
+        steps.add(new Step("wait for character", () -> ClientState.LOCAL.created && Minecraft.getInstance().player.isAlive(), () -> Minecraft.getInstance().setScreen(null), 20));
         cmd("gamemode creative", 10);
         cmd("grandline test env", 10);
         cmd("tp @s 20000 70 5250 0 10", 260);
@@ -203,6 +222,15 @@ public final class ClientSelfTest {
         cmd("grandline test seaking serpent 3 hold 40", 80);
         shot("31_seaking_from_below");
         cmd("kill @e[type=grandline:sea_king]", 10);
+        if (CREATURES_ONLY) { // head close-ups of each variant
+            for (String v : new String[]{"serpent", "maw", "horned"}) {
+                cmd("tp @s ~ 69 ~ 0 0", 10);
+                cmd("grandline test seaking " + v + " 1 hold 13", 40);
+                cmd("tp @s ~ ~ ~ 42 24", 30);
+                shot("closeup_seaking_" + v);
+                cmd("kill @e[type=grandline:sea_king]", 10);
+            }
+        }
         cmd("tp @s @e[type=grandline:ship_galleon,limit=1,sort=nearest]", 10);
         cmd("tp @s ~-22 ~30 ~-22 -45 48", 20);
         cmd("grandline test seaking horned 2", 240);
