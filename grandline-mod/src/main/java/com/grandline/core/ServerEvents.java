@@ -36,20 +36,35 @@ public final class ServerEvents {
 
     @SubscribeEvent
     public static void onLevelTick(LevelTickEvent.Post e) {
-        if (e.getLevel() instanceof ServerLevel sl) CombatState.tickAll(sl.getGameTime(), sl);
+        if (e.getLevel() instanceof ServerLevel sl) {
+            long t = Perf.start();
+            CombatState.tickAll(sl.getGameTime(), sl);
+            Perf.lap("combatState", t);
+        }
     }
 
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post e) {
-        TerrainChanges.tick(e.getServer());
-        PopulationManager.tick(e.getServer());
-        com.grandline.world.Encounters.tick(e.getServer());
-        com.grandline.ship.ShipInteriors.tick(e.getServer());
-        com.grandline.ship.SeaEncounters.tick(e.getServer());
-        com.grandline.ship.SpecialRoutes.tick(e.getServer());
-        com.grandline.world.weather.SeaWeather.tick(e.getServer());
-        com.grandline.npc.crew.CrewBonuses.tick(e.getServer());
-        com.grandline.npc.notable.NotableSpawner.tick(e.getServer());
+        net.minecraft.server.MinecraftServer s = e.getServer();
+        long t = Perf.start(); // opt-in subsystem timing for the load test (a boolean check otherwise)
+        TerrainChanges.tick(s);
+        t = Perf.lap("terrainChanges", t);
+        PopulationManager.tick(s);
+        t = Perf.lap("population", t);
+        com.grandline.world.Encounters.tick(s);
+        t = Perf.lap("encounters", t);
+        com.grandline.ship.ShipInteriors.tick(s);
+        t = Perf.lap("shipInteriors", t);
+        com.grandline.ship.SeaEncounters.tick(s);
+        t = Perf.lap("seaEncounters", t);
+        com.grandline.ship.SpecialRoutes.tick(s);
+        t = Perf.lap("specialRoutes", t);
+        com.grandline.world.weather.SeaWeather.tick(s);
+        t = Perf.lap("seaWeather", t);
+        com.grandline.npc.crew.CrewBonuses.tick(s);
+        t = Perf.lap("crewBonuses", t);
+        com.grandline.npc.notable.NotableSpawner.tick(s);
+        Perf.lap("notables+crew", t);
     }
 
     @SubscribeEvent
@@ -76,14 +91,18 @@ public final class ServerEvents {
     /** Agreed: vanilla hostile mobs are replaced by setting-appropriate enemies in the ocean world. */
     @SubscribeEvent
     public static void onFinalizeSpawn(FinalizeSpawnEvent e) {
-        if (!GLConfig.REPLACE_VANILLA_HOSTILES.get()) return;
-        if (!(e.getLevel().getLevel() instanceof ServerLevel sl) || sl.dimension() != Level.OVERWORLD) return;
-        if (!(sl.getChunkSource().getGenerator() instanceof ArchipelagoChunkGenerator)) return;
+        if (!(e.getLevel().getLevel() instanceof ServerLevel sl) || !replacesVanillaHostiles(sl)) return;
         MobSpawnType t = e.getSpawnType();
         if ((t == MobSpawnType.NATURAL || t == MobSpawnType.CHUNK_GENERATION) && e.getEntity().getType().getCategory() == MobCategory.MONSTER) {
             e.setSpawnCancelled(true);
             e.setCanceled(true);
         }
+    }
+
+    /** Whether vanilla hostiles are replaced in this level: the ocean world's overworld, when the config says so. */
+    public static boolean replacesVanillaHostiles(ServerLevel sl) {
+        return sl.dimension() == Level.OVERWORLD && sl.getChunkSource().getGenerator() instanceof ArchipelagoChunkGenerator
+                && GLConfig.REPLACE_VANILLA_HOSTILES.get();
     }
 
     /** Town protection: settlements cannot be broken (configurable); creative/op players are exempt. */

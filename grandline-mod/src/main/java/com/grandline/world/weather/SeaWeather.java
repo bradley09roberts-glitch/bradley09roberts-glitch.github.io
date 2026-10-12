@@ -177,6 +177,7 @@ public final class SeaWeather {
     private static void strike(ServerLevel l, ServerPlayer sp) {
         double ang = l.random.nextDouble() * Math.PI * 2, r = 18 + l.random.nextDouble() * 70;
         int x = (int) (sp.getX() + Math.cos(ang) * r), z = (int) (sp.getZ() + Math.sin(ang) * r);
+        if (!com.grandline.core.Chunks.ready(l, x, z)) return; // no strike into sea that is still generating
         int y = l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, x, z);
         LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(l);
         if (bolt == null) return;

@@ -33,7 +33,7 @@ public final class Encounters {
             int bx = sp.getBlockX() + (int) (Math.cos(ang) * 28), bz = sp.getBlockZ() + (int) (Math.sin(ang) * 28);
             for (int i = 0; i < count; i++) {
                 int x = bx + level.random.nextInt(5) - 2, z = bz + level.random.nextInt(5) - 2;
-                if (!level.isLoaded(new BlockPos(x, 64, z))) continue;
+                if (!com.grandline.core.Chunks.ready(level, x, z)) continue; // loaded now (not still generating)
                 int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
                 if (y <= WorldPlan.SEA_LEVEL) continue;
                 HumanoidNpc npc = ModEntities.HUMANOID_NPC.get().create(level);

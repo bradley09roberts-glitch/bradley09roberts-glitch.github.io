@@ -31,6 +31,9 @@ public final class Navigation {
         if (sp.tickCount % 40 != 0) return;
         WorldPlan plan = WorldPlan.forLevel(sp.level()); // ocean world, White Sea or deep sea
         if (plan == null) return;
+        // just arrived where the ground is still generating (join, teleport, respawn): discover once it has loaded,
+        // so the level-up below does not make the server thread wait for the player's own chunk
+        if (!com.grandline.core.Chunks.ready(sp.level(), sp.getBlockX(), sp.getBlockZ())) return;
         Island isl = plan.islandAt(sp.getBlockX(), sp.getBlockZ());
         if (isl != null && isl.t(sp.getBlockX(), sp.getBlockZ()) < 1.0) {
             if (d.discoveredIslands.add(isl.id)) {

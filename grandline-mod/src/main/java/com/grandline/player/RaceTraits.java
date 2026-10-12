@@ -18,6 +18,7 @@ public final class RaceTraits {
         com.grandline.fruit.FruitRules.tick(sp);
         com.grandline.navigation.Navigation.tick(sp, d);
         if (sp.tickCount % 20 != 0) return;
+        if (!com.grandline.core.Chunks.ready(sp.level(), sp.getBlockX(), sp.getBlockZ())) return; // own chunk still generating (join/teleport): no biome/sky reads that would stall the server
         Race r = d.race;
         boolean inWater = sp.isInWater();
         BlockPos pos = sp.blockPosition();

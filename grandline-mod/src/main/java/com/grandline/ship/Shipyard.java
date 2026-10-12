@@ -232,7 +232,8 @@ public final class Shipyard {
                 boolean ok = true;
                 for (int dx = -6; dx <= 6 && ok; dx += 3)
                     for (int dz = -6; dz <= 6 && ok; dz += 3)
-                        if (!l.getBlockState(new BlockPos(x + dx, WorldPlan.SEA_LEVEL, z + dz)).is(net.minecraft.world.level.block.Blocks.WATER)
+                        if (!com.grandline.core.Chunks.ready(l, x + dx, z + dz) // never wait for a chunk that is still generating
+                                || !l.getBlockState(new BlockPos(x + dx, WorldPlan.SEA_LEVEL, z + dz)).is(net.minecraft.world.level.block.Blocks.WATER)
                                 || !l.getBlockState(new BlockPos(x + dx, WorldPlan.SEA_LEVEL + 1, z + dz)).isAir()) ok = false;
                 if (ok) return new Vec3(x + 0.5, WorldPlan.SEA_LEVEL + 0.9, z + 0.5);
             }

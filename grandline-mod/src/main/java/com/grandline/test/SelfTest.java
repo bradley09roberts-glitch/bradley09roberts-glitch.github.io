@@ -73,7 +73,7 @@ public final class SelfTest {
 
     @SubscribeEvent
     public static void onStart(ServerStartedEvent e) {
-        if (PHASE == null || PHASE.equals("client")) return;
+        if (PHASE == null || PHASE.equals("client") || PHASE.equals("load")) return; // "load" is LoadTest
         steps = new ArrayDeque<>();
         REPORT.add("Grand Line Odyssey self-test, phase " + PHASE + ", " + new Date());
         if (PHASE.equals("1")) phase1();
