@@ -210,5 +210,6 @@
  "item.grandline.letter_of_marque": "Letter of Marque",
  "item.grandline.letter_of_marque.holder": "Issued by the World Government to %s",
  "screen.grandline.career": "Career: %s",
- "screen.grandline.career_next": "Next: %s (%s / %s)"
+ "screen.grandline.career_next": "Next: %s (%s / %s)",
+ "grandline.handbook.p11": "§lCareers§r\n\nEvery path has ranks: type /career to see yours. Marines report to an officer for promotion; pirates rise with bounty and deeds; revolutionaries take missions; hunters earn licences; civilians make a name. Your title shows in chat."
 }

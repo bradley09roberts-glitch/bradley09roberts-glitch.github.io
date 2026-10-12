@@ -172,6 +172,7 @@ public final class CharacterManager {
         markVisualsDirty(player);
         StartLocations.sendToStart(player, d);
         Handbook.give(player);
+        com.grandline.career.Careers.onCreated(player, d); // careers: the bottom rank of the chosen path
         com.grandline.journey.Journey.onCreated(player); // journey: the first milestones (and anything already earned)
         GrandLine.LOGGER.info("Character created for {}: {} the {} ({} from {} Blue), conqueror={}", player.getGameProfile().getName(), name, race.id(), faction.id(), origin.id(), d.conquerorTrait);
         return null;

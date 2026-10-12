@@ -77,7 +77,7 @@ public final class CareerPerks {
         if (t == null) return;
         CareerState c = d.career;
         long day = Careers.day(sp.server);
-        if (c.lastPaidDay < 0) c.lastPaidDay = day;
+        if (c.lastPaidDay == CareerState.NEVER) c.lastPaidDay = day;
         if (day <= c.lastPaidDay) return;
         c.lastPaidDay = day;
         c.demerits = Math.max(0, c.demerits - 2);

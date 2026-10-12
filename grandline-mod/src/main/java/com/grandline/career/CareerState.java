@@ -23,8 +23,9 @@ public final class CareerState {
     public long collected;
     /** Civilian merchant: Beli traded in shops. */
     public long trade;
-    /** The in-game day of the last rank pay. */
-    public long lastPaidDay = -1;
+    /** The in-game day of the last rank pay ({@link #NEVER}: not yet started). */
+    public long lastPaidDay = NEVER;
+    public static final long NEVER = Long.MIN_VALUE;
     /** The highest rank ever held in this career. */
     public int best;
     /** Tallies: arrests, brought_in, sea_wins, deeds, missions, freed, heads, demotions... */
@@ -102,7 +103,7 @@ public final class CareerState {
         demerits = t.getInt("demerits");
         collected = t.getLong("collected");
         trade = t.getLong("trade");
-        lastPaidDay = t.contains("paidDay") ? t.getLong("paidDay") : -1;
+        lastPaidDay = t.contains("paidDay") ? t.getLong("paidDay") : NEVER;
         best = t.getInt("best");
         counts.clear();
         CompoundTag c = t.getCompound("counts");

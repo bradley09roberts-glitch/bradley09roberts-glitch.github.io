@@ -117,6 +117,12 @@ public final class Careers {
 
     // ================================================================== state
 
+    /** CharacterManager.create: a new character starts its career at the bottom rank (pay counted from today). */
+    public static void onCreated(ServerPlayer sp, CharacterData d) {
+        ensure(sp, d);
+        changed(sp);
+    }
+
     /** The character's career, started (or started over after a change of faction) as needed; null without one. */
     @Nullable
     public static CareerTrack ensure(ServerPlayer sp, CharacterData d) {
@@ -254,15 +260,15 @@ public final class Careers {
         c.best = Math.max(c.best, to);
         c.due = false;
         String rid = t.rank(to).id();
+        if (t == CareerTrack.PIRATE && to == t.top() && c.warlord) Warlords.renounce(sp, d); // no Emperor serves the Government
         Component title = rankTitle(d, t, to);
+        changed(sp); // the new title first: the chat lines below carry it
         tell(sp, Component.translatable("grandline.career.promoted", title).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         CareerPerks.onPromoted(sp, d, t, to);
         if (big(t, to)) announce(sp.server, Component.translatable("grandline.career.announce." + t.id(), d.name, title).withStyle(ChatFormatting.YELLOW));
         String m = MILESTONES.get(t.id() + ":" + rid);
         if (m != null) Journey.milestone(sp, m);
-        if (t == CareerTrack.PIRATE && to == t.top() && c.warlord) Warlords.renounce(sp, d); // no Emperor serves the Government
         GrandLine.LOGGER.info("Career: {} ({}) promoted to {} {}", d.name, sp.getGameProfile().getName(), t.id(), rid);
-        changed(sp);
         return true;
     }
 
