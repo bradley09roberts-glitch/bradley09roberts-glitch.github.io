@@ -25,11 +25,23 @@ import java.util.*;
 final class NavalTests {
     private static final String FIXTURE = "selftest-naval.txt";
 
+    /** Test sites (offsets from the open-sea anchor point) that must keep ticking. */
+    private static final double[][] SITES = {{0, 0}, {17, 7}, {120, -30}, {120, 0}, {240, 0}, {276, -12}, {0, 60}, {8, 60}, {40, 100},
+            {120, 140}, {100, 110}, {140, 110}, {-60, 60}};
+    /** Chunks this test forced (released when it is done, so later tests run on a normally loaded server). */
+    private static final Set<Long> FORCED = new HashSet<>();
+
     private static void load(ServerLevel l, double x, double z, int radius) {
         ChunkPos cp = new ChunkPos(BlockPos.containing(x, 0, z));
         l.getChunkSource().addRegionTicket(TicketType.FORCED, cp, radius, cp);
         for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++) l.setChunkForced(cp.x + dx, cp.z + dz, true);
         l.getChunk(cp.x, cp.z);
+    }
+
+    /** Phase 1 clean-up: let the test area unload (entities are saved with their chunks). */
+    private static void release(ServerLevel l) {
+        for (long c : FORCED) l.setChunkForced(ChunkPos.getX(c), ChunkPos.getZ(c), false);
+        FORCED.clear();
     }
 
     private static ShipEntity ship(ServerLevel l, ShipClass c, double x, double z, float yaw, String name) {
@@ -78,16 +90,19 @@ final class NavalTests {
             at[0] = o[0];
             at[1] = o[1];
             ServerLevel l = srv.overworld();
-            // the whole test area stays entity-ticking (as it would around players aboard)
-            for (int cx = ((int) at[0] - 96) >> 4; cx <= ((int) at[0] + 300) >> 4; cx++)
-                for (int cz = ((int) at[1] - 64) >> 4; cz <= ((int) at[1] + 180) >> 4; cz++) l.setChunkForced(cx, cz, true);
+            // keep each test site entity-ticking (as it would be around players aboard); released again at the end
+            for (double[] pt : SITES)
+                for (int dx = -1; dx <= 1; dx++)
+                    for (int dz = -1; dz <= 1; dz++) {
+                        int cx = (((int) (at[0] + pt[0])) >> 4) + dx, cz = (((int) (at[1] + pt[1])) >> 4) + dz;
+                        if (FORCED.add(ChunkPos.asLong(cx, cz))) l.setChunkForced(cx, cz, true);
+                    }
             waited[0] = 0;
             return 1;
         });
         steps.add(srv -> {
             ServerLevel l = srv.overworld();
-            double[][] pts = {{0, 0}, {17, 7}, {120, -30}, {120, 0}, {240, 0}, {276, -12}, {0, 60}, {8, 60}, {40, 100}, {120, 140}, {100, 110}, {140, 110}, {-60, 60}};
-            for (double[] pt : pts)
+            for (double[] pt : SITES)
                 if (!l.isPositionEntityTicking(BlockPos.containing(at[0] + pt[0], 64, at[1] + pt[1])) && ++waited[0] < 3000) return -1;
             SelfTest.check("naval test waters loaded", true, "after " + waited[0] + " ticks at " + (int) at[0] + "," + (int) at[1]);
             return 0;
@@ -197,7 +212,6 @@ final class NavalTests {
             ServerLevel l = srv.overworld();
             FakePlayer fp = SelfTest.fake(srv);
             double x = at[0], z = at[1] + 60;
-            load(l, x, z, 4);
             s[6] = ship(l, ShipClass.CARAVEL, x, z, 0, "Selftest Merchant");
             s[6].owner = fp.getUUID();
             s[6].setAnchored(true);
@@ -246,7 +260,6 @@ final class NavalTests {
         // ---------- squadrons ----------
         steps.add(srv -> {
             ServerLevel l = srv.overworld();
-            load(l, at[0] + 120, at[1] + 120, 4);
             List<ShipEntity> sq = SeaEncounters.spawnSquadronAt(l, new Vec3(at[0] + 120, WorldPlan.SEA_LEVEL + 0.9, at[1] + 140), 0, com.grandline.world.SeaZone.PARADISE, false);
             boolean led = sq.size() >= 2;
             for (int i = 1; i < sq.size(); i++) sq.get(i).noDespawn = true;
@@ -289,6 +302,7 @@ final class NavalTests {
             }
             for (var e : l.getEntitiesOfClass(GLNpc.class, new AABB(at[0] - 80, 40, at[1] - 80, at[0] + 80, 90, at[1] + 140), e -> e.getTags().contains("gl_boarder"))) e.discard();
             Files.writeString(Path.of(FIXTURE), c.getUUID() + " " + c.blockPosition().getX() + " " + c.blockPosition().getZ() + " " + c.look().encode() + " " + c.shipId + " " + s[7].shipId);
+            release(l);
             return 40;
         });
     }

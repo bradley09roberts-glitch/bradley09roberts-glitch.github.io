@@ -956,10 +956,12 @@ public final class SelfTest {
             check("fruit ledger survived restart", FruitWorldData.get(s).state("goro") == FruitWorldData.State.OWNED, "goro=" + FruitWorldData.get(s).state("goro") + " owner=" + FruitWorldData.get(s).ownerName("goro"));
             return 60; // let entities load
         });
+        final int[] npcWait = {0};
         steps.add(s -> {
             String[] parts = fx[0].split(" ");
             UUID id = UUID.fromString(parts[0]);
             var e = ow(s).getEntity(id);
+            if (e == null && ++npcWait[0] < 400) return -1; // entities load asynchronously (slow on a busy machine)
             check("NPC entity persisted across restart", e instanceof HumanoidNpc, e == null ? "missing" : e.getName().getString() + " at " + e.blockPosition());
             return 0;
         });
