@@ -88,6 +88,22 @@ public final class DevilFruits {
         def("same_megalodon", FruitType.ANCIENT_ZOAN, 6, false, 0x5A7A8A, 0xE8E8E8, Element.SLASH).zoanModel = "megalodon";
         def("kame_genbu", FruitType.MYTHICAL_ZOAN, 8, false, 0x1E2A2A, 0x3A8A6A, Element.WATER).zoanModel = "genbu";
         def("kaeru_dartfrog", FruitType.ZOAN, 3, false, 0x2A8AE0, 0x1A1A1A, Element.POISON).zoanModel = "dart_frog";
+        // ---- original fruits, fourth wave: White Sea, deep sea / Fish-Man Island, Sabaody / New World (docs/FRUITS_ORIGINAL.md) ----
+        def("hai", FruitType.LOGIA, 7, false, 0x5A5A60, 0xE0602A, Element.SMOKE);
+        def("yako", FruitType.LOGIA, 6, false, 0x10305A, 0x5AF0FF, Element.LIGHT);
+        def("shinku", FruitType.LOGIA, 8, false, 0xE4ECF4, 0x2A2A3E, Element.WIND);
+        def("kai", FruitType.SPECIAL_PARAMECIA, 6, false, 0xF0E2C8, 0xD8907A, Element.PHYSICAL);
+        def("fusen", FruitType.PARAMECIA, 4, false, 0xE8405A, 0xFFE04A, Element.BLUNT);
+        def("shinju", FruitType.PARAMECIA, 5, false, 0xF4F0EA, 0xC8B4E0, Element.PHYSICAL);
+        def("kagi", FruitType.PARAMECIA, 7, false, 0xC8A040, 0x3A2A1A, Element.PHYSICAL);
+        def("hanabi", FruitType.PARAMECIA, 5, false, 0xE83A5A, 0x4AC8FF, Element.FIRE);
+        def("hata", FruitType.PARAMECIA, 7, false, 0x1A1A1A, 0xF4F4F4, Element.PHYSICAL);
+        def("taru", FruitType.PARAMECIA, 3, false, 0x8A5A2A, 0x5A5A5A, Element.BLUNT);
+        def("kujira_bakekujira", FruitType.MYTHICAL_ZOAN, 9, false, 0xD8E0E8, 0x2A3A5A, Element.DARKNESS).zoanModel = "bakekujira";
+        def("itachi_raiju", FruitType.MYTHICAL_ZOAN, 8, false, 0x3A5AD8, 0xF2E14A, Element.LIGHTNING).zoanModel = "raiju";
+        def("sasori_seascorpion", FruitType.ANCIENT_ZOAN, 6, false, 0x7A3A2A, 0xD8A060, Element.PIERCE).zoanModel = "sea_scorpion";
+        def("tonbo_meganeura", FruitType.ANCIENT_ZOAN, 5, false, 0x2A8A7A, 0xC8F0E8, Element.SLASH).zoanModel = "meganeura";
+        def("kaba_hippo", FruitType.ZOAN, 4, false, 0x8A6A7A, 0xE87A7A, Element.BLUNT).zoanModel = "hippo";
     }
 
     /** Load implementation classes (each registers its abilities onto its fruit). */
@@ -160,6 +176,22 @@ public final class DevilFruits {
         com.grandline.fruit.impl.MegalodonFruit.init(get("same_megalodon"));
         com.grandline.fruit.impl.GenbuFruit.init(get("kame_genbu"));
         com.grandline.fruit.impl.DartFrogFruit.init(get("kaeru_dartfrog"));
+        // ---- fourth wave: original fruits ----
+        com.grandline.fruit.impl.HaiFruit.init(get("hai"));
+        com.grandline.fruit.impl.YakoFruit.init(get("yako"));
+        com.grandline.fruit.impl.ShinkuFruit.init(get("shinku"));
+        com.grandline.fruit.impl.KaiFruit.init(get("kai"));
+        com.grandline.fruit.impl.FusenFruit.init(get("fusen"));
+        com.grandline.fruit.impl.ShinjuFruit.init(get("shinju"));
+        com.grandline.fruit.impl.KagiFruit.init(get("kagi"));
+        com.grandline.fruit.impl.HanabiFruit.init(get("hanabi"));
+        com.grandline.fruit.impl.HataFruit.init(get("hata"));
+        com.grandline.fruit.impl.TaruFruit.init(get("taru"));
+        com.grandline.fruit.impl.BakekujiraFruit.init(get("kujira_bakekujira"));
+        com.grandline.fruit.impl.RaijuFruit.init(get("itachi_raiju"));
+        com.grandline.fruit.impl.SeaScorpionFruit.init(get("sasori_seascorpion"));
+        com.grandline.fruit.impl.MeganeuraFruit.init(get("tonbo_meganeura"));
+        com.grandline.fruit.impl.HippoFruit.init(get("kaba_hippo"));
     }
 
     @Nullable

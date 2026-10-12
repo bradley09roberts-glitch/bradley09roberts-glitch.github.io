@@ -630,6 +630,7 @@ public final class SelfTest {
             return 0;
         });
         SelfTestOriginals.phase1(steps); // Devil Fruits wave 3 — ORIGINAL fruit mechanics (test/SelfTestOriginals.java)
+        SelfTestWave4.phase1(steps); // Devil Fruits wave 4 — ORIGINAL fruits (test/SelfTestWave4.java)
         RaceTests.phase1(steps); // racial powers
         // ---------- knockdown/permadeath data rules ----------
         steps.add(s -> {

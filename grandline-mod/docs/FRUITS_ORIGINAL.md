@@ -11,10 +11,11 @@ Grand Line Odyssey's own fruits (`canon=false` in `fruit/DevilFruits.java`). Eac
 - **Terrain** changes are always temporary (`fruit/TerrainChanges`), revert on their own and never touch towns.
 - **Unlocks** are fruit-mastery levels; *Awakening* abilities also need an awakened fruit (NPCs: tier 9+).
 - All abilities work for NPC users (they aim at their combat target) and have client effects in the
-  "Devil Fruits wave 3 — ORIGINAL fruits" block of `client/ClientFx.java`.
+  "Devil Fruits wave 3 — ORIGINAL fruits" and "Devil Fruits wave 4 — ORIGINAL fruits" blocks of `client/ClientFx.java`.
 
 Implementation: `fruit/impl/<Name>Fruit.java`; shared helpers in `OriginalKit`, damage-reactive rules (sleep,
-chain echo, oil + fire) in `OriginalFruitEvents`. Text: `src/main/lang/en_us/fruits_wave3_original.json`.
+chain echo, oil + fire) in `OriginalFruitEvents` (wave 4: the Hata brand in `Wave4FruitEvents`). Text:
+`src/main/lang/en_us/fruits_wave3_original.json` and `fruits_wave4.json`. Wave 4 checks: `test/SelfTestWave4.java`.
 
 | Fruit | Type | Element | Tier | Signature |
 |---|---|---|---|---|
@@ -43,6 +44,21 @@ chain echo, oil + fire) in `OriginalFruitEvents`. Text: `src/main/lang/en_us/fru
 | Same Same no Mi, Model: Megalodon | Ancient Zoan (`megalodon`) | Slash | 6 | ground-swimming, hull breaking |
 | Kame Kame no Mi, Model: Genbu | Mythical Zoan (`genbu`) | Water | 8 | shell fortress, crew ward |
 | Kaeru Kaeru no Mi, Model: Poison Dart Frog | Zoan (`dart_frog`) | Poison | 3 | toxic skin, tongue, leaps |
+| Hai Hai no Mi | Logia | Smoke (ash) | 7 | choking ash, pyroclastic surge, ash casts — New World volcanoes |
+| Yako Yako no Mi | Logia | Light | 6 | glowing plankton: marks, lures, milky sea — deep sea |
+| Shinku Shinku no Mi | Logia | Wind | 8 | vacuum: stolen breath, implosion, dead air — White Sea |
+| Kai Kai no Mi | Special Paramecia | Physical | 6 | Dial body: store impact and release it — White Sea |
+| Fusen Fusen no Mi | Paramecia | Blunt | 4 | inflated foes float away and pop — White Sea |
+| Shinju Shinju no Mi | Paramecia | Physical | 5 | nacre layers, pearl prisons — Fish-Man Island |
+| Kagi Kagi no Mi | Paramecia | Physical | 7 | lock joints and techniques, unlock limits — Sabaody |
+| Hanabi Hanabi no Mi | Paramecia | Fire | 5 | rockets, star mines, chrysanthemum shells — Wano |
+| Hata Hata no Mi | Paramecia | Physical | 7 | territory banners, Jolly Roger brand — New World |
+| Taru Taru no Mi | Paramecia | Blunt | 3 | barrels, powder kegs, barrel bunker |
+| Kujira Kujira no Mi, Model: Bakekujira | Mythical Zoan (`bakekujira`) | Darkness | 9 | ghost whale: swallow, sky swim, falls from the sky |
+| Itachi Itachi no Mi, Model: Raiju | Mythical Zoan (`raiju`) | Lightning | 8 | thunder beast: arcing claws, lightning leaps — White Sea |
+| Sasori Sasori no Mi, Model: Jaekelopterus | Ancient Zoan (`sea_scorpion`) | Pierce | 6 | sea scorpion: pincers, venom, carapace — deep sea |
+| Tonbo Tonbo no Mi, Model: Meganeura | Ancient Zoan (`meganeura`) | Slash | 5 | griffinfly: darts, snatch-and-drop, compound eyes — White Sea |
+| Kaba Kaba no Mi, Model: Hippopotamus | Zoan (`hippo`) | Blunt | 4 | jaws, charge, blood sweat, mud — Sabaody swamps |
 
 ---
 
@@ -306,3 +322,191 @@ until the sleep ends or **anyone** hurts it; three drowsiness stacks put a targe
 - 55 **Poison Monsoon** *(Awakening)* — toxic rain on enemies; you and allies heal in it.
 
 **Passive:** transformed, close attackers are poisoned; immune to poison. **Weaknesses:** standard + dry heat (Fire +25%).
+
+---
+
+## Wave 4 — fifteen new originals (White Sea, deep sea, Sabaody / New World)
+
+Brings the originals to 40 (3 Logia, 7 Paramecia incl. 1 Special, 5 Zoans: 2 Mythical, 2 Ancient, 1 plain). Every
+fruit has 6–7 abilities (unlocks 0 / 5–12 / 20–30, awakening 55); Zoan abilities marked *(form)* need the hybrid/full
+body (players are refused in human form, NPCs transform on their own). The Zoans keep the standard Zoan stats
+(`fruit/Zoan.java`) and get hybrid features in `client/render/RaceLayer.java` (whale fin and flukes, raiju ears and
+tail, scorpion chelicerae/carapace/curled tail, griffinfly wings, hippo snout and tusks).
+
+### Hai Hai no Mi — Ash-Ash Fruit (Logia, Smoke, tier 7)
+**Concept:** the grey breath of the New World's volcanic islands — the user becomes volcanic ash.
+- 0 **Cinder Shot** — smouldering clot of ash (Fire); its puff blinds and chokes.
+- 5 **Ash Cloud** — a cloud at a point for 6 s: blind, choking (air drained), enemies lose track.
+- 12 **Pyroclastic Surge** — rush 11 blocks as a burning ash avalanche (brief i-frames); the path is scorched and thrown.
+- 20 **Ash Cast** — ash sets like stone around the target (temporary tuff shell, 4.5 s, stun).
+- 30 **Ashfall** — ash rains on an area, slowing harder every second, then the hot ash flares.
+- 55 **Volcanic Winter** *(Awakening)* — 6 s of darkness and ash over a wide area (allies hidden), ending with every enemy cast in ash.
+
+**Passive:** fire and magma cannot burn what has already burnt (they pass through, no damage); attackers get ash in
+their eyes. **Weaknesses:** standard Logia + water turns ash to slurry (+30%, the body is solid for 4 s; rain too).
+
+### Yako Yako no Mi — Glow-Glow Fruit (Logia, Light, tier 6)
+**Concept:** a cloud of bioluminescent plankton — the living light of the deep sea around Fish-Man Island.
+- 0 **Glow Bead** — a spark that *marks* the target (glowing, cannot hide, +20% from the user).
+- 5 **Lure Light** — an angler's lure at a point for 6 s pulls and dazes enemies, then bursts.
+- 12 **Abyssal Flash** — a deep-sea startle-flash: blinding cone, stagger, lose track.
+- 20 **Sea Sparkle** — marks/reveals every enemy within 14; allies get night vision and speed.
+- 30 **Living Light** — scatter and re-form behind the target with a burst of light (i-frames).
+- 55 **Milky Sea** *(Awakening)* — 10 s glowing field: enemies dazzled and burned (marked ones double), allies invisible and mending.
+
+**Passive:** in the dark (deep sea dimension, night, caves) +15% damage and slow regeneration; marked enemies take +20%.
+**Weaknesses:** standard Logia + darkness smothers the glow (Darkness always connects, +30%).
+
+### Shinku Shinku no Mi — Vacuum-Vacuum Fruit (Logia, Wind, tier 8)
+**Concept:** the thin air of the White Sea taken to its end — the user becomes empty space.
+- 0 **Void Bullet** — a sphere of nothing that implodes on impact, dragging enemies in.
+- 5 **Breathless** — steals the target's breath: unblockable choking damage over 3 s, air drained, gasping.
+- 12 **Implosion** — everything near a point (projectiles too) is sucked in, then crushed.
+- 20 **Dead Air** — 8 s dome: enemies gasp and are put out, projectiles inside drop dead, ranged blows on the user halved.
+- 30 **Decompression** — blasts everything away and launches the user up (slow fall).
+- 55 **Absolute Void** *(Awakening)* — 3 s of dragging, choking void, then a thunderclap of Impact as the air rushes back.
+
+**Passive:** immune to wind (own element) and sound (nothing carries in a vacuum); fire at half strength; no fall
+damage; +15% in thin air (White Sea dimension or very high up). **Weaknesses:** standard Logia + Impact shockwaves always
+connect (+25%).
+
+### Kai Kai no Mi — Shell-Shell Fruit (Special Paramecia, tier 6)
+**Concept:** the body grows the Dials of Skypiea and works like every one of them.
+- 0 **Breath Dial** — gust cone that blows enemies away.
+- 5 **Flame Dial** — a burst of stored flame (projectile).
+- 10 **Flash Dial** — blinding flash cone.
+- 15 **Impact Dial** — for 2.5 s, 75% of every blow is soaked into the shell; then the stored impact bursts out in front (6 + 1.5× stored, unblockable).
+- 20 **Jet Dial** — Waver-speed dash (can angle upward) ramming through enemies.
+- 30 **Milky Dial** — a temporary cloud road unrolls along the look: across the sea, gaps or up to ledges (only replaces air/water; reverts after 20 s).
+- 55 **Reject Dial** *(Awakening)* — point-blank, 26 + 3× stored impact, unblockable; the recoil costs the user a sixth of their current health.
+
+**Passive:** a tenth of every melee blow taken is stored as impact (cap 40); in the White Sea the Breath/Flame/Flash
+dials recharge faster. **Weaknesses:** standard.
+
+### Fusen Fusen no Mi — Balloon-Balloon Fruit (Paramecia, Blunt, tier 4)
+**Concept:** anything the user touches can be blown up like a balloon and sent floating towards the White Sea.
+- 0 **Balloon Bomb** — a drifting balloon that bursts and bounces enemies up.
+- 5 **Inflate** — the target levitates helplessly (weak, guard dropped) for ~3 s, then pops and drops.
+- 10 **Bounce Body** — blunt -50%, attackers bounced back, huge jumps.
+- 20 **Float Away** — rise out of reach, drift down slowly; the launch bounces nearby enemies.
+- 30 **Balloon Bouquet** — every enemy within 7 floats up together, then all pop.
+- 55 **Great Ascension** *(Awakening)* — everything within 11 is lifted high and popped far above the ground; allies drift down safely.
+
+**Passive:** rubbery skin (blunt/impact -25%), no fall damage. **Weaknesses:** standard + sharp things pop it (pierce/slash +25%).
+
+### Shinju Shinju no Mi — Pearl-Pearl Fruit (Paramecia, tier 5)
+**Concept:** the user secretes nacre like the oysters of Fish-Man Island's coral beds.
+- 0 **Pearl Shot** — a fast pearl. 20 **Pearl Barrage** — a fan of five.
+- 5 **Nacre Armour** — +3 layers (max 6); each layer halves one blow and breaks.
+- 12 **Pearl Prison** — the target is coated shut in pearl (temporary quartz shell, 4 s).
+- 30 **Lustre** — every layer bursts into blinding light; damage grows per layer spent.
+- 55 **Black Pearl** *(Awakening)* — the strongest foe within 16 is swallowed by a black pearl and crushed for 4 s; the user then wears six layers.
+
+**Passive:** one layer regrows every 10 s (up to 2 on its own). **Weaknesses:** standard.
+
+### Kagi Kagi no Mi — Key-Key Fruit (Paramecia, tier 7)
+**Concept:** everything has a lock and the user holds every key — born on the dark side of Sabaody (collars and keys).
+The one lock it can never pick is seastone.
+- 0 **Key Shot** — a key that turns in the target (slowed).
+- 5 **Lock Joint** — rooted for 3+ s.
+- 12 **Lock Away** — every technique the target has (fruit, style, race, weapon arts) is put on cooldown for 5+ s; players are told.
+- 20 **Unlock** — user and allies shed slows, weakness and stagger, and gain strength and speed.
+- 30 **Lockdown** — every enemy within 7: joints rooted 2 s, techniques locked 3 s.
+- 55 **Master Key** *(Awakening)* — the user's own fruit cooldowns reset; every enemy within 12 is rooted for 2 s and its techniques locked for 6 s.
+
+**Passive:** the user's joints cannot be locked (heavy slows fall away); locked or rooted enemies take +20% from the
+user. **Weaknesses:** standard (seastone included).
+
+### Hanabi Hanabi no Mi — Firework-Firework Fruit (Paramecia, Fire, tier 5)
+**Concept:** a festival night in Wano packed into one body.
+- 0 **Rocket** — a bottle rocket that bursts in coloured sparks.
+- 5 **Sparkler** — three quick slashes of sparks (ignite).
+- 12 **Rocket Ride** — ride a rocket forward and up; the landing bursts.
+- 20 **Star Mine** — five shells burst one after another around a point.
+- 30 **Chrysanthemum** — the great shell opens over the target: wide fire, ignite, dazzle.
+- 55 **Grand Finale** *(Awakening)* — 4 s of shells over random enemies within 14, then one enormous chrysanthemum.
+
+**Passive:** immune to fire (own element). **Weaknesses:** standard + damp powder: water +30%, and the user's fire is a
+third weaker in rain or water.
+
+### Hata Hata no Mi — Flag-Flag Fruit (Paramecia, tier 7)
+**Concept:** in the New World, whatever flag flies over a place is its law — this fruit raises flags anywhere.
+- 0 **Flagpole Thrust** — a flagpole spear along a line.
+- 5 **Jolly Roger** — brand the target: +20% damage from **everyone** for 12+ s (`Wave4FruitEvents`).
+- 12 **Plant the Flag** — a 15 s territory (r 7): allies strength + resistance + regeneration, enemies weakened and slowed; the user takes -20% inside.
+- 20 **Flag Wave** — a snapping flag blows enemies away and knocks projectiles out of the air.
+- 30 **White Flag** — enemies within 8 "surrender": they drop their target, weakness III, slowed, guard dropped.
+- 55 **Emperor's Territory** *(Awakening)* — 20 s territory (r 14): allies strength II, enemies branded and ground down every second.
+
+**Passive:** -20% damage inside the user's own territory. **Weaknesses:** standard.
+
+### Taru Taru no Mi — Barrel-Barrel Fruit (Paramecia, Blunt, tier 3)
+**Concept:** a humble sailor's fruit — barrels of every kind come out of the user, who can roll up inside one.
+- 0 **Barrel Toss**. 5 **Barrel Roll** — bowl over everyone along 10 blocks.
+- 12 **Powder Keg** — an exploding keg (no block damage).
+- 20 **Barrel Bunker** — 4 s inside an iron-hooped barrel: 70% of damage soaked, attackers shoved off.
+- 30 **Grog Ration** — heals, feeds and strengthens the crew; the cask is cracked over the nearest enemy's head.
+- 55 **Barrel Avalanche** *(Awakening)* — barrels rain on an area for 3 s, every fourth a powder keg.
+
+**Passive:** iron hoops (blunt -15%). **Weaknesses:** standard + wooden staves (fire +20%).
+
+### Kujira Kujira no Mi, Model: Bakekujira — Whale-Whale Fruit, Model: Ghost Whale (Mythical Zoan, Darkness, tier 9)
+**Concept:** the skeletal ghost whale of the New World's sailors' tales, swimming through the air instead of the sea
+(it is still drained if it ever touches the sea).
+- 0 **Transform**. 0 **Bone Breach** *(form)* — rises out of the ground and slams; enemies thrown up.
+- 5 **Ghost Song** *(form)* — enemies within 12 wither, slow, see darkness and lose track.
+- 12 **Sky Swim** *(form)* — 8 s of air-swimming: slow fall, speed, the glide keeps rising gently.
+- 20 **Engulf** *(form)* — swallow one target for 2.5 s (held inside, ground, blinded), then spit it out.
+- 30 **Rib Harpoons** *(form)* — three piercing bone harpoons that drag targets down.
+- 55 **Abyssal Requiem** *(Awakening)* — a colossal ghost whale falls on an area: 22 unblockable, withering curse, enemy ships take 150 hull damage.
+
+**Passive:** half spirit — in form, plain physical blows (no Haki) -20%; no fall damage in form; immune to darkness.
+**Weaknesses:** standard Zoan + light banishes ghosts (+25%).
+
+### Itachi Itachi no Mi, Model: Raiju — Weasel-Weasel Fruit, Model: Raiju (Mythical Zoan, Lightning, tier 8)
+**Concept:** the thunder beast of the White Sea's storm clouds, which falls to earth inside a lightning bolt.
+- 0 **Transform**. 0 **Thunder Claw** *(form)* — lightning claws; each hit arcs to the next enemy.
+- 5 **Storm Pounce** *(form)* — spring along a bolt onto the prey (stun).
+- 12 **Ball Lightning** — a crackling ball that zaps everyone near its impact.
+- 20 **Thunderfall** *(form)* — leap into the clouds and come down as a lightning bolt on the target.
+- 30 **Static Fur** — 12 s: speed II, attackers shocked harder, a discharge on activation.
+- 55 **Thunder Beast's Rampage** *(Awakening)* — eight lightning leaps from enemy to enemy within 14 (i-frames), then a thunderclap.
+
+**Passive:** in form, close attackers are shocked; immune to lightning; in rain or thunder faster and +15%.
+**Weaknesses:** standard Zoan.
+
+### Sasori Sasori no Mi, Model: Jaekelopterus — Scorpion-Scorpion Fruit, Model: Sea Scorpion (Ancient Zoan, Pierce, tier 6)
+**Concept:** the giant sea scorpion of the ancient oceans, the largest arthropod that ever lived — a legend of the deep
+around Fish-Man Island.
+- 0 **Transform**. 0 **Pincer Crush** *(form)* — three squeezes that break any guard (unblockable).
+- 5 **Tail Sting** *(form)* — a line strike: venom and a moment of paralysis.
+- 12 **Scuttle** — sideways dash (alternating sides, brief i-frames), raking both ends.
+- 20 **Carapace** — 8 s resistance II; melee attackers chip on the shell.
+- 30 **Spine Volley** — a fan of five venom spines.
+- 55 **Paleozoic Reign** *(Awakening)* — phantom pincers burst up along a 14-block line: 18 unblockable, venom, stun.
+
+**Passive:** in form, cuts and thrusts -20%, a third of its blows envenom. **Weaknesses:** standard Zoan + heavy blows
+crack the shell (blunt/impact +20%).
+
+### Tonbo Tonbo no Mi, Model: Meganeura — Dragonfly-Dragonfly Fruit, Model: Griffinfly (Ancient Zoan, Slash, tier 5)
+**Concept:** the giant dragonfly of the ancient skies, the first great hunter of the air — at home over the White Sea.
+- 0 **Transform**. 0 **Wing Slash** *(form)* — a wide cutting buzz.
+- 5 **Dart** *(form)* — an instant 9-block dart in any direction, up and down included.
+- 12 **Hover** *(form)* — a short rise, then 6 s of slow drifting.
+- 20 **Snatch** *(form)* — seize the prey, carry it up, then hurl it down (real fall damage).
+- 30 **Compound Eyes** — 15 s: hidden enemies within 20 revealed; one blow in four sidestepped.
+- 55 **Carboniferous Swarm** *(Awakening)* — 5 s of phantom griffinflies diving on every enemy within 12.
+
+**Passive:** in form no fall damage and a quick flier (faster in the White Sea); one blow in ten sidestepped.
+**Weaknesses:** standard Zoan + thin wings burn (fire +25%).
+
+### Kaba Kaba no Mi, Model: Hippopotamus — Hippo-Hippo Fruit (Zoan, Blunt, tier 4)
+**Concept:** the river horse of the Sabaody mangrove swamps — and hippos never could swim; they walk along the bottom.
+- 0 **Transform**. 0 **Gaping Jaws** *(form)* — a huge bite cone.
+- 5 **River Charge** *(form)* — a 10-block charge that runs everyone down.
+- 12 **Blood Sweat** — heal, regeneration, resistance; puts out fire and washes poison away.
+- 20 **Mud Wallow** — temporary mud disc: enemies bogged down, the hippo mends in it.
+- 30 **Territorial Bellow** *(form)* — enemies within 8 shoved back, weakened, slowed.
+- 55 **Behemoth** *(Awakening)* — three growing quake-stamps that throw everything into the air.
+
+**Passive:** in form, a thick hide (blunt/slash -20%); mends while standing in mud. **Weaknesses:** standard Zoan.
