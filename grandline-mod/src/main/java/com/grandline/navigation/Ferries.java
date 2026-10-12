@@ -96,17 +96,22 @@ public final class Ferries {
             sp.sendSystemMessage(Component.translatable("grandline.ship.no_berth"));
             return true;
         }
-        if (!sp.isCreative()) d.beli -= price;
+        if (!sp.isCreative()) d.beli -= price; // only charged once the passenger is actually aboard
         CharacterManager.markDirty(sp);
         sp.sendSystemMessage(Component.translatable(train ? "grandline.ferry.seatrain_board" : "grandline.ferry.board", p[3]).withStyle(ChatFormatting.AQUA));
         return true;
     }
 
+    /** Launch a ferry (or the Sea Train) next to {@code near} with {@code passenger} aboard; null if there is no water or no seat. */
     @Nullable
-    public static ShipEntity launch(ServerPlayer sp, Entity near, Island dest, boolean train) {
-        ServerLevel l = sp.serverLevel();
+    public static ShipEntity launch(Entity passenger, Entity near, Island dest, boolean train) {
+        if (!(passenger.level() instanceof ServerLevel l)) return null;
         ShipClass cls = train ? ShipClass.BRIGANTINE : ShipClass.CARAVEL;
-        Vec3 pos = Shipyard.findWaterPublic(l, near.blockPosition());
+        // berth off the local dock tip (open water, bow to the sea) when there is one, else beside the NPC
+        WorldPlan plan = WorldPlan.forLevel(l);
+        Island here = plan == null ? null : plan.nearest(near.getBlockX(), near.getBlockZ(), 300);
+        Vec3 pos = here != null && here.settlement().hasDock ? Shipyard.findWaterPublic(l, BlockPos.containing(dockOf(here))) : null;
+        if (pos == null) pos = Shipyard.findWaterPublic(l, near.blockPosition());
         if (pos == null) return null;
         ShipEntity ship = ModEntities.SHIPS.get(cls).get().create(l);
         if (ship == null) return null;
@@ -121,7 +126,11 @@ public final class Ferries {
         ship.ferrySpeed = train ? 3.2f : 1.9f;
         l.addFreshEntity(ship);
         int seat = ship.cls.cannons + 1;
-        while (seat < ship.seatCount() && !ship.seatPlayer(sp, seat)) seat++;
+        while (seat < ship.seatCount() && !ship.seatPlayer(passenger, seat)) seat++;
+        if (passenger.getVehicle() != ship) {
+            ship.discard();
+            return null;
+        }
         return ship;
     }
 
@@ -137,7 +146,11 @@ public final class Ferries {
 
     // ------------------------------------------------------------------ steering (called from ShipEntity)
 
-    /** Steer toward the target, around land; returns the speed to hold this tick. Arrives and lands passengers. */
+    /**
+     * Steer toward the target, around land; returns the speed to hold this tick. Arrives and lands passengers.
+     * Two layers: islands on the way (from the world plan) are rounded through a waypoint off their flank, and the
+     * hull's width is swept ahead for docks, rocks and coastline the plan does not know about.
+     */
     public static float steer(ShipEntity ship, ServerLevel l) {
         Vec3 to = ship.ferryTarget.subtract(ship.position());
         double dist = to.horizontalDistance();
@@ -149,13 +162,28 @@ public final class Ferries {
             arrive(ship, l);
             return 0;
         }
-        float want = (float) Math.toDegrees(Math.atan2(-to.x, to.z));
-        // look ahead; if land blocks the way, bear off to whichever side is clear
-        if (!clear(l, ship, want, 46)) {
-            for (int off = 25; off <= 120; off += 25) {
-                if (clear(l, ship, want + off, 46)) { want += off; break; }
-                if (clear(l, ship, want - off, 46)) { want -= off; break; }
-            }
+        if (ship.ferryWaypoint == null || l.getGameTime() % 20 == 0) ship.ferryWaypoint = waypoint(ship, l);
+        Vec3 aim = ship.ferryWaypoint != null ? ship.ferryWaypoint.subtract(ship.position()) : to;
+        float want = (float) Math.toDegrees(Math.atan2(-aim.x, aim.z));
+        int look = 40 + (int) ship.cls.length;
+        if (ship.ferryDetourT > 0) {
+            ship.ferryDetourT--;
+            want = ship.ferryDetour;
+        } else if (free(l, ship, want, look) < look) {
+            // bear off to the nearest clear heading; if none is fully clear take the most open one and hold it a while
+            float best = want;
+            int bestFree = -1;
+            search:
+            for (int off = 15; off <= 180; off += 15)
+                for (int sgn = 1; sgn >= -1; sgn -= 2) {
+                    float y = want + off * sgn;
+                    int f = free(l, ship, y, look);
+                    if (f >= look) { best = y; break search; }
+                    if (f > bestFree) { bestFree = f; best = y; }
+                }
+            ship.ferryDetour = best;
+            ship.ferryDetourT = 80;
+            want = best;
         }
         float diff = Mth.wrapDegrees(want - ship.getYRot());
         ship.setRudder(Mth.clamp(diff / 25f, -1, 1));
@@ -164,19 +192,74 @@ public final class Ferries {
             l.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, stack.x, stack.y, stack.z, 2, 0.2, 0.3, 0.2, 0.01);
         }
         float slow = dist < 90 ? (float) Math.max(0.3, dist / 90) : 1f;
+        if (Math.abs(diff) > 70) slow = Math.min(slow, 0.35f); // come about before making way
         return ship.cls.speed * ship.ferrySpeed * slow;
     }
 
-    private static boolean clear(ServerLevel l, ShipEntity ship, float yawDeg, int ahead) {
-        double yaw = Math.toRadians(yawDeg);
-        double hx = -Math.sin(yaw), hz = Math.cos(yaw);
-        for (int d = 10; d <= ahead; d += 6) {
-            BlockPos p = BlockPos.containing(ship.getX() + hx * d, WorldPlan.SEA_LEVEL + 1, ship.getZ() + hz * d);
-            if (!l.hasChunkAt(p)) return true;
-            if (!l.getBlockState(p).getCollisionShape(l, p).isEmpty()) return false;
-            if (!l.getBlockState(p.below()).getFluidState().isSource() && !l.getBlockState(p.below()).isAir()) return false;
+    /** A point off the flank of the first island between the ship and its target (null if the way is open). */
+    @Nullable
+    private static Vec3 waypoint(ShipEntity ship, ServerLevel l) {
+        WorldPlan plan = WorldPlan.forLevel(l);
+        if (plan == null) return null;
+        double px = ship.getX(), pz = ship.getZ();
+        double dx = ship.ferryTarget.x - px, dz = ship.ferryTarget.z - pz;
+        double len2 = dx * dx + dz * dz;
+        if (len2 < 1) return null;
+        // inside an island's waters (leaving port, or pushed in by a detour) with the course running over the island:
+        // work round it, a quarter-step at a time toward the side the target lies on
+        for (Island i : plan.islands) {
+            if (i.id.equals(ship.ferryIsland)) continue;
+            double r = i.radius * 1.25 + 24;
+            double cx = i.x - px, cz = i.z - pz;
+            if (cx * cx + cz * cz >= r * r) continue;
+            double t = Mth.clamp((cx * dx + cz * dz) / len2, 0, 1);
+            double qx = dx * t - cx, qz = dz * t - cz;
+            double core = i.radius * 1.05 + 8;
+            if (qx * qx + qz * qz >= core * core) continue;
+            double ang = Math.atan2(pz - i.z, px - i.x);
+            double delta = Mth.wrapDegrees(Math.toDegrees(Math.atan2(ship.ferryTarget.z - i.z, ship.ferryTarget.x - i.x) - ang));
+            double a2 = ang + Math.toRadians(Math.copySign(Math.min(Math.abs(delta), 45), delta));
+            return new Vec3(i.x + Math.cos(a2) * (r + 10), ship.getY(), i.z + Math.sin(a2) * (r + 10));
         }
-        return true;
+        Island first = null;
+        double firstT = 2, firstR = 0;
+        for (Island i : plan.islands) {
+            if (i.id.equals(ship.ferryIsland)) continue;
+            double r = i.radius * 1.25 + 24;
+            double cx = i.x - px, cz = i.z - pz;
+            if (cx * cx + cz * cz < r * r) continue; // inside its waters but the course is clear of the island itself
+            double t = (cx * dx + cz * dz) / len2;
+            if (t <= 0 || t >= 1) continue;
+            double qx = dx * t - cx, qz = dz * t - cz;
+            if (qx * qx + qz * qz >= r * r) continue;
+            if (t < firstT) { first = i; firstT = t; firstR = r; }
+        }
+        if (first == null) return null;
+        // pass on the side of the line the island centre is not on
+        double qx = px + dx * firstT - first.x, qz = pz + dz * firstT - first.z;
+        double ql = Math.sqrt(qx * qx + qz * qz);
+        if (ql < 1) { qx = -dz; qz = dx; ql = Math.sqrt(len2); }
+        double off = firstR + 30;
+        return new Vec3(first.x + qx / ql * off, ship.getY(), first.z + qz / ql * off);
+    }
+
+    /** Clear water ahead on a heading, swept across the hull's beam: blocks until the first obstacle (max if none). */
+    private static int free(ServerLevel l, ShipEntity ship, float yawDeg, int max) {
+        double yaw = Math.toRadians(yawDeg);
+        double c = Math.cos(yaw), s = Math.sin(yaw);
+        double half = ship.cls.beam / 2.0 + 1;
+        BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
+        for (int d = (int) (ship.cls.length / 2) + 1; d <= max; d += 3)
+            for (double side = -half; side <= half + 0.01; side += half) {
+                double x = ship.getX() + side * c - d * s, z = ship.getZ() + side * s + d * c;
+                p.set(Mth.floor(x), WorldPlan.SEA_LEVEL, Mth.floor(z));
+                if (!l.hasChunkAt(p)) return max;
+                var at = l.getBlockState(p);
+                if (!at.getCollisionShape(l, p).isEmpty() || (!at.getFluidState().isSource() && !at.isAir())) return d;
+                p.move(0, 1, 0);
+                if (!l.getBlockState(p).getCollisionShape(l, p).isEmpty()) return d;
+            }
+        return max;
     }
 
     private static void arrive(ShipEntity ship, ServerLevel l) {
@@ -190,10 +273,9 @@ public final class Ferries {
         }
         for (Entity e : List.copyOf(ship.getPassengers())) {
             e.stopRiding();
-            if (land != null && e instanceof ServerPlayer sp) {
-                sp.teleportTo(land.getX() + 0.5, land.getY() + 0.1, land.getZ() + 0.5);
-                sp.sendSystemMessage(Component.translatable("grandline.ferry.arrived").withStyle(ChatFormatting.GOLD));
-            }
+            if (land == null) continue;
+            e.teleportTo(land.getX() + 0.5, land.getY() + 0.1, land.getZ() + 0.5);
+            if (e instanceof ServerPlayer sp) sp.sendSystemMessage(Component.translatable("grandline.ferry.arrived").withStyle(ChatFormatting.GOLD));
         }
         ship.ferryTarget = null;
         ship.setAnchored(true);

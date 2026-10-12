@@ -26,7 +26,9 @@ import net.minecraft.world.phys.Vec3;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 import java.util.UUID;
 
 /** Self-test steps for the White Sea and the deep sea (terrain, bubbles, and ships with crews travelling between seas). */
@@ -77,8 +79,11 @@ final class DimensionTests {
 
     /** A ferry booked at a dockworker sails the passenger to another island of the same sea and lands them on its dock. */
     static void ferry(Deque<SelfTest.Step> steps) {
-        final ShipEntity[] ferry = new ShipEntity[1];
-        final String[] dest = new String[1];
+        // every route offered at the dock gets a ferry with a townsperson aboard (NeoForge's FakePlayer refuses to ride)
+        final List<ShipEntity> ferries = new ArrayList<>();
+        final List<HumanoidNpc> riders = new ArrayList<>();
+        final List<Double> startDist = new ArrayList<>();
+        final List<String> dests = new ArrayList<>();
         final int[] waited = {0};
         steps.add(s -> {
             ServerLevel ow = s.overworld();
@@ -95,32 +100,73 @@ final class DimensionTests {
             worker.moveTo(dock.getX() + 0.5, dock.getY(), dock.getZ() + 0.5, 0, 0);
             worker.configure("dockworker", 1, home.id, dock, "", ow.random);
             ow.addFreshEntity(worker);
-            sp.teleportTo(dock.getX() + 1.5, dock.getY(), dock.getZ() + 0.5);
             var opts = new net.minecraft.nbt.ListTag();
             com.grandline.navigation.Ferries.addOptions(sp, worker, opts);
             SelfTest.check("dockworkers offer ferries to discovered islands of the same sea", !opts.isEmpty(), opts.size() + " routes, first: " + (opts.isEmpty() ? "" : opts.getString(0)));
-            if (opts.isEmpty()) return 0;
-            String opt = opts.getString(0);
-            dest[0] = opt.split("\\|")[1];
-            d.beli = Math.max(d.beli, 100000);
-            com.grandline.navigation.Ferries.choose(sp, worker, opt);
-            ferry[0] = sp.getVehicle() instanceof ShipEntity f ? f : null;
-            SelfTest.check("booking a passage puts you aboard the ferry", ferry[0] != null && ferry[0].ferryTarget != null, ferry[0] == null ? "not aboard" : "aboard, bound for " + dest[0]);
-            if (ferry[0] != null) ferry[0].ferrySpeed = 9f; // test speed
+            for (int k = 0; k < opts.size(); k++) {
+                String dest = opts.getString(k).split("\\|")[1];
+                HumanoidNpc rider = ModEntities.HUMANOID_NPC.get().create(ow);
+                rider.moveTo(dock.getX() + 1.5, dock.getY(), dock.getZ() + 0.5, 0, 0);
+                rider.configure("villager", 1, home.id, dock, "", ow.random);
+                ow.addFreshEntity(rider);
+                ShipEntity f = com.grandline.navigation.Ferries.launch(rider, worker, plan.byId(dest), false);
+                if (f == null || rider.getVehicle() != f) { rider.discard(); continue; }
+                ferries.add(f);
+                riders.add(rider);
+                dests.add(dest);
+                startDist.add(f.position().distanceTo(f.ferryTarget));
+            }
+            SelfTest.check("booking a passage puts you aboard the ferry", ferries.size() == opts.size() && !ferries.isEmpty(),
+                    ferries.size() + "/" + opts.size() + " passengers aboard, bound for " + dests);
             worker.discard();
             return 1;
         });
+        // under way at real ferry speed: every ferry clears the harbour and closes on its destination
         steps.add(s -> {
-            if (ferry[0] == null) return 0;
-            var sp = SelfTest.fake(s);
-            follow(ferry[0]);
-            ChunkPos ahead = new ChunkPos(BlockPos.containing(ferry[0].position().add(ferry[0].heading().scale(48))));
-            s.overworld().getChunkSource().addRegionTicket(TicketType.FORCED, ahead, 2, ahead);
-            if (!ferry[0].isRemoved() && ++waited[0] < 4000) return -1;
-            Island d = WorldPlan.of(s).byId(dest[0]);
+            if (ferries.isEmpty()) return 0;
+            int under = 0;
+            StringBuilder lag = new StringBuilder();
+            for (int k = 0; k < ferries.size(); k++) {
+                ShipEntity f = ferries.get(k);
+                follow(f);
+                double now = f.ferryTarget == null ? 0 : f.position().distanceTo(f.ferryTarget);
+                if (f.isRemoved() || startDist.get(k) - now >= 150) under++;
+                else lag.append(String.format(" %s: %.0f closer at %s yaw %.0f speed %.2f wp %s;", dests.get(k), startDist.get(k) - now, f.blockPosition().toShortString(), f.getYRot(), f.speed(), f.ferryWaypoint == null ? "-" : BlockPos.containing(f.ferryWaypoint).toShortString()));
+            }
+            if (under < ferries.size() && ++waited[0] < 1500) return -1;
+            SelfTest.check("every ferry gets under way toward its destination", under == ferries.size(),
+                    under + "/" + ferries.size() + " cleared the harbour and closed 150 blocks within " + waited[0] + " ticks" + lag);
+            // keep the first; skip the long middle of its voyage: open water ~220 blocks short of the dock
+            for (int k = 1; k < ferries.size(); k++) {
+                ferries.get(k).ferryTarget = null;
+                ferries.get(k).discard();
+                riders.get(k).discard();
+            }
+            ShipEntity f = ferries.get(0);
+            Vec3 t = f.ferryTarget;
+            if (t == null) return 0;
+            Vec3 dir = f.position().subtract(t).multiply(1, 0, 1).normalize();
+            ServerLevel ow = s.overworld();
+            Vec3 near = t.add(dir.scale(220));
+            load(ow, near.x, near.z, 4);
+            Vec3 w = com.grandline.ship.Shipyard.findWaterPublic(ow, BlockPos.containing(near));
+            if (w != null) near = w;
+            f.moveTo(near.x, near.y, near.z, f.getYRot(), 0);
+            riders.get(0).moveTo(near.x, near.y + 2, near.z);
+            waited[0] = 0;
+            return 1;
+        });
+        steps.add(s -> {
+            if (ferries.isEmpty()) return 0;
+            ShipEntity f = ferries.get(0);
+            var sp = riders.get(0);
+            follow(f);
+            if (!f.isRemoved() && ++waited[0] < 3000) return -1;
+            Island d = WorldPlan.of(s).byId(dests.get(0));
             double away = d.distance(sp.getBlockX(), sp.getBlockZ()) - d.radius;
-            SelfTest.check("the ferry sails there through the world and lands you on the destination's dock", ferry[0].isRemoved() && !sp.isPassenger() && away < 120,
-                    String.format("after %d ticks: %s, passenger %.0f blocks from %s's shore", waited[0], ferry[0].isRemoved() ? "arrived" : "still sailing at " + ferry[0].blockPosition().toShortString(), away, dest[0]));
+            SelfTest.check("the ferry sails there through the world and lands you on the destination's dock", f.isRemoved() && !sp.isPassenger() && away < 120,
+                    String.format("after %d ticks: %s, passenger %.0f blocks from %s's shore", waited[0], f.isRemoved() ? "arrived" : "still sailing at " + f.blockPosition().toShortString(), away, dests.get(0)));
+            sp.discard();
             return 0;
         });
     }

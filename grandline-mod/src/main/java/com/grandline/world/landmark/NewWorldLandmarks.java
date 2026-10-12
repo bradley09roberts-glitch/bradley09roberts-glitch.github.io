@@ -32,7 +32,7 @@ final class NewWorldLandmarks {
         heap(b, 141, 3, 3, 1, 2, 2, Blocks.BLACKSTONE, Blocks.BASALT, Blocks.COAL_BLOCK);
         heap(b, 142, 2, 32, 1, 2, 1, Blocks.BLACKSTONE, Blocks.MAGMA_BLOCK, Blocks.BASALT);
         for (int[] f : new int[][]{{9, 2}, {14, 33}, {1, 18}}) b.set(f[0], 1, f[1], Blocks.CAMPFIRE);
-        deadTree(b, 12, 1, 2, 5, 143, Blocks.CRIMSON_STEM);
+        deadTree(b, 12, 1, 3, 5, 143, Blocks.CRIMSON_STEM); // branches reach 3 out: keep them inside the footprint
         for (int[] s : new int[][]{{36, 2}, {39, 9}, {38, 31}, {31, 33}}) {
             int h = 4 + b.rand(s[0], 4);
             b.fill(s[0], 1, s[1], s[0], h, s[1], Blocks.PACKED_ICE);

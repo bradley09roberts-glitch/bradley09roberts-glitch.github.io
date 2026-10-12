@@ -71,6 +71,9 @@ public class ShipEntity extends Entity {
     public String ferryIsland = "";
     public float ferrySpeed = 1.8f;
     public int ferryIdle;
+    public float ferryDetour;
+    public int ferryDetourT;
+    @Nullable public Vec3 ferryWaypoint;
 
     @Override
     public boolean shouldBeSaved() {
@@ -399,8 +402,7 @@ public class ShipEntity extends Entity {
         if (speed > 0) {
             Vec3 bow = toWorldAt(next, 0, cls.length / 2.0 + 0.5);
             if (!sl.hasChunkAt(BlockPos.containing(bow))) {
-                speed = 0;
-                next = position();
+                next = position(); // wait for the chunk ahead without losing way
             } else if (solidAt(sl, bow) || solidAt(sl, toWorldAt(next, cls.beam / 2.0, cls.length * 0.25)) || solidAt(sl, toWorldAt(next, -cls.beam / 2.0, cls.length * 0.25))) {
                 if (speed > cls.speed * 0.6f) hurtHull(speed * 40, null);
                 speed = 0;
@@ -657,10 +659,13 @@ public class ShipEntity extends Entity {
     }
 
     /** Seat a player at a station (used by tests and crew commands); returns false when the seat is taken. */
-    public boolean seatPlayer(ServerPlayer sp, int seat) {
+    /** Seat a player (or any passenger: crew, pets) on a given seat; false if it is taken or the ride is refused. */
+    public boolean seatPlayer(Entity sp, int seat) {
         if (seat < 0 || seat >= seats.length || getFirstPassengerAtSeat(seat) != null) return false;
         seatOf.put(sp.getUUID(), seat);
-        return sp.startRiding(this, true);
+        if (sp.startRiding(this, true)) return true;
+        seatOf.remove(sp.getUUID());
+        return false;
     }
 
     public float hatchZ() {

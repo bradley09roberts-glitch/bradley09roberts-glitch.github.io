@@ -78,6 +78,7 @@ public final class SelfTest {
         REPORT.add("Grand Line Odyssey self-test, phase " + PHASE + ", " + new Date());
         if (PHASE.equals("1")) phase1();
         else if (PHASE.equals("dims")) {
+            steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
             DimensionTests.ferry(steps);
             DimensionTests.awakening(steps);
             DimensionTests.shipClasses(steps);
