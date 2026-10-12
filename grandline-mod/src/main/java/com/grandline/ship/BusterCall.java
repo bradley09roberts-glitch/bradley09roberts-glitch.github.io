@@ -102,6 +102,8 @@ public final class BusterCall {
         public long sailFrom, bombardFrom, bombardUntil, withdrawUntil;
         public final List<ShipEntity> ships = new ArrayList<>();
         final Map<UUID, Double> bearings = new HashMap<>();
+        /** Each warship's bombardment station: open water round the target, chosen when she joins the fleet. */
+        final Map<UUID, Vec3> stations = new HashMap<>();
         /** Warships sunk, beaten or taken (as opposed to left behind when the target sailed out of the loaded world). */
         final Set<UUID> beaten = new HashSet<>();
         public Vec3 focus;
@@ -398,6 +400,7 @@ public final class BusterCall {
             for (UUID u : s.naval.crew) if (l.getEntity(u) instanceof GLNpc m) m.addTag(TAG);
             c.ships.add(s);
             c.bearings.put(s.getUUID(), Math.atan2(at.z - c.focus.z, at.x - c.focus.x));
+            c.stations.put(s.getUUID(), station(l, c, at, cls));
             c.spawned++;
             added++;
         }
@@ -405,10 +408,54 @@ public final class BusterCall {
     }
 
     /** Each warship keeps to its own bearing from the target, closing to its station off the target. */
+    /**
+     * A bombardment station for a warship that came in at {@code from}: open water as close to the target as the coast
+     * allows (60 blocks out at the nearest), searched over bearings within 90 degrees of her own (turning away costs a
+     * little), and clear of the other warships' stations. A ship that came in behind the island so sails round to
+     * the sea side instead of running aground.
+     */
+    static Vec3 station(ServerLevel l, Call c, Vec3 from, ShipClass cls) {
+        WorldPlan plan = WorldPlan.forLevel(l);
+        double b0 = Math.atan2(from.z - c.focus.z, from.x - c.focus.x);
+        double start = 60 + cls.length / 2.0, reach = Math.max(start, horiz(from, c.focus)) + 40;
+        int clear = cls.length / 2 + 2;
+        Vec3 best = null;
+        double bestScore = Double.MAX_VALUE;
+        if (plan != null)
+            for (int k = -6; k <= 6; k++) { // 15 degree steps either side of her own bearing
+                double b = b0 + k * Math.PI / 12;
+                for (double d = start; d <= reach; d += 8) {
+                    double x = c.focus.x + Math.cos(b) * d, z = c.focus.z + Math.sin(b) * d;
+                    if (!sea(plan, x, z, clear)) continue;
+                    Vec3 at = new Vec3(x, c.focus.y, z);
+                    double score = d + Math.abs(k) * Math.PI / 12 * 40;
+                    for (Vec3 other : c.stations.values()) if (horiz(other, at) < 24) score += 100;
+                    if (score < bestScore) {
+                        bestScore = score;
+                        best = at;
+                    }
+                    break; // the nearest open water on this bearing
+                }
+            }
+        return best != null ? best : c.focus.add(Math.cos(b0) * start, 0, Math.sin(b0) * start); // no open water: the old station
+    }
+
+    /** Deep water in the world plan all round (x, z) (chunk-independent). */
+    private static boolean sea(WorldPlan plan, double x, double z, int clear) {
+        WorldPlan.Sample smp = new WorldPlan.Sample();
+        int bx = Mth.floor(x), bz = Mth.floor(z);
+        for (int dx = -clear; dx <= clear; dx += 3)
+            for (int dz = -clear; dz <= clear; dz += 3) {
+                plan.sample(bx + dx, bz + dz, smp);
+                if (smp.height > WorldPlan.SEA_LEVEL - 3 || smp.redLine || smp.canal) return false;
+            }
+        return true;
+    }
+
     private static void steer(ServerLevel l, Call c, ShipEntity sh) {
         double b = c.bearings.getOrDefault(sh.getUUID(), 0.0);
         double station = 60 + sh.cls.length / 2.0;
-        Vec3 st = c.focus.add(Math.cos(b) * station, 0, Math.sin(b) * station);
+        Vec3 st = c.stations.getOrDefault(sh.getUUID(), c.focus.add(Math.cos(b) * station, 0, Math.sin(b) * station));
         double d = horiz(sh.position(), st);
         sh.setAnchored(false);
         if (d < 14) {
