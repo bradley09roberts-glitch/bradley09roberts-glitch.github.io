@@ -212,6 +212,7 @@ public final class HarbourRaids {
             plundered(ship, sl, isl, standing, now);
             return;
         }
+        RaidPlunder.tick(ship, sl, isl, standing, now - life.landedAt); // raiders carry off the market's goods (ship/RaidPlunder)
         Vec3 at = standing.get(0).position();
         AABB town = new AABB(at, at).inflate(80, 24, 80);
         int defenders = 0;
@@ -277,6 +278,7 @@ public final class HarbourRaids {
     private static void repelled(ShipEntity ship, ServerLevel sl, Island isl, long now) {
         SeaLife life = ship.life;
         leave(ship, now);
+        RaidPlunder.recover(ship, sl); // the beaten raiders drop the goods they carried
         LivingSea.announce(sl, Ferries.dockOf(isl), Component.translatable("grandline.living_sea.raid_repelled", MerchantShips.islandName(isl)).withStyle(ChatFormatting.GOLD));
         for (var en : life.fought.entrySet()) {
             if (now - en.getValue() > RAID_TICKS + 1200 || life.raidAllies.contains(en.getKey())) continue;

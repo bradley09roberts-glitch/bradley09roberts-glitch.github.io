@@ -115,6 +115,7 @@ public final class NavalCombat {
         int phase = Math.floorMod(ship.getId(), 10);
         if (now % 10 == phase && !ship.flag(ShipEntity.F_NPC)) crewStations(ship, sl);
         if (!ship.flag(ShipEntity.F_NPC) && ship.flag(ShipEntity.F_FIRE_AT_WILL)) gunnery(ship, sl, now);
+        if (!ship.flag(ShipEntity.F_NPC)) HiredGunners.tick(ship, sl, now); // hired gunners at a player's guns (ship/HiredGunners)
         if (ship.flag(ShipEntity.F_NPC) && now % 20 == phase) captureCheck(ship, sl);
         if (now % 200 == 0) n.aggressors.values().removeIf(t -> now - t > 1200);
     }
@@ -583,7 +584,7 @@ public final class NavalCombat {
         ServerPlayer cap = ship.owner == null ? null : sl.getServer().getPlayerList().getPlayer(ship.owner);
         if (ship.owner != null && (cap == null || cap.distanceToSqr(ship) > 64 * 64)) return; // nobody to give the order or hand out shot
         for (int seat = 1; seat <= ship.cls.cannons; seat++) {
-            if (!(ship.getFirstPassengerAtSeat(seat) instanceof GLNpc gunner) || !gunner.isAlive() || gunner.flag(GLNpc.FLAG_SURRENDER)) continue;
+            if (!(ship.getFirstPassengerAtSeat(seat) instanceof GLNpc gunner) || !gunner.isAlive() || gunner.flag(GLNpc.FLAG_SURRENDER) || HiredGunners.isHired(gunner)) continue; // hired gunners: HiredGunners
             if (n.seatCd.getOrDefault(seat, 0L) > now) continue;
             String ammo = ammo(ship);
             if (cap != null && !cap.isCreative()) {

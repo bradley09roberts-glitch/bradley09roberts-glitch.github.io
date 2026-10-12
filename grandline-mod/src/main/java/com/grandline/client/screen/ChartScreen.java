@@ -89,6 +89,26 @@ public class ChartScreen extends Screen {
             Component crew = e.getString("crew").isEmpty() ? Component.translatable("grandline.base.default_crew", e.getString("founder")) : Component.literal(e.getString("crew"));
             if (zoom > 1.2 || e.getBoolean("mine")) g.drawString(font, Component.translatable("screen.grandline.chart_base", crew), x + 7, z - 8, col, false);
         }
+        // the player's sea jobs: a named pirate ship's last-seen point (and where she is once sighted), a convoy's port and
+        // her merchantman, an escort's destination: a ring of ink in the job's colour with its label
+        ListTag jobs = data.getList("seajobs", Tag.TAG_COMPOUND);
+        for (int i = 0; i < jobs.size(); i++) {
+            CompoundTag e = jobs.getCompound(i);
+            String kind = e.getString("kind");
+            int x = sx(e.getInt("x")), z = sz(e.getInt("z"));
+            int col = kind.equals("sink") || kind.equals("sighted") ? 0xFF8E1A14 : kind.startsWith("convoy") ? 0xFF1C4E80 : 0xFF2E6B2A;
+            int r = kind.equals("sink") ? 4 : 3;
+            for (int q = -r; q <= r; q++) { // a ring (a hollow square at this size), filled for a ship seen now
+                g.fill(x + q, z - r, x + q + 1, z - r + 1, col);
+                g.fill(x + q, z + r, x + q + 1, z + r + 1, col);
+                g.fill(x - r, z + q, x - r + 1, z + q + 1, col);
+                g.fill(x + r, z + q, x + r + 1, z + q + 1, col);
+            }
+            if (kind.equals("sighted") || kind.equals("convoy_ship")) g.fill(x - 1, z - 1, x + 2, z + 2, col);
+            Component isl = e.getString("island").isEmpty() ? Component.empty()
+                    : e.getString("islandName").isEmpty() ? Component.translatable("island.grandline." + e.getString("island")) : Component.literal(e.getString("islandName"));
+            g.drawString(font, Component.translatable("screen.grandline.chart_job." + kind, e.getString("name"), isl), x + r + 3, z - 4, col, false);
+        }
         int px = sx(data.getInt("px")), pz = sz(data.getInt("pz"));
         for (int i = -3; i <= 3; i++) { // you are here: a red ink cross
             g.fill(px + i, pz + i, px + i + 1, pz + i + 1, 0xFFB01818);

@@ -315,6 +315,7 @@ final class SeaBattleJobs {
         Island origin = plan == null || q == null ? null : plan.byId(q.island());
         Island dest = plan == null ? null : plan.byId(g.target());
         if (origin == null || dest == null || !Chunks.ready(l, (int) c.x, (int) c.z)) return null;
+        if (ConvoyCap.held(sp, l, c, g)) return null; // the shared NPC ship cap: she waits in port until there is room
         ShipClass cls = origin.zone.isBlue() ? ShipClass.CARAVEL : ShipClass.BRIGANTINE;
         Vec3 pos = LivingSea.openWater(l, c.x, c.z, cls.length / 2 + 2);
         if (pos == null) pos = Shipyard.findWaterPublic(l, BlockPos.containing(c.x, WorldPlan.SEA_LEVEL, c.z));

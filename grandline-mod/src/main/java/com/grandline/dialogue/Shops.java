@@ -35,7 +35,7 @@ public final class Shops {
     /** What this NPC sells this player: a career shop (Marine supply, a pirate port's fence, revolutionary contacts) or the usual. */
     static List<Offer> offers(ServerPlayer sp, GLNpc npc) {
         var career = com.grandline.career.CareerPerks.shop(sp, npc);
-        if (career == null) return offers(npc);
+        if (career == null) { List<Offer> l = offers(npc); l.removeIf(o -> !com.grandline.ship.RaidPlunder.available(npc, o.item())); return l; } // goods carried off by harbour raiders (ship/RaidPlunder)
         List<Offer> l = new java.util.ArrayList<>();
         for (var o : career) l.add(new Offer(o.item(), o.count(), o.price()));
         return l;
