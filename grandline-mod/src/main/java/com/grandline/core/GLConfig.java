@@ -31,6 +31,10 @@ public final class GLConfig {
     public static final ModConfigSpec.IntValue BUSTER_CALL_SHIPS;
     public static final ModConfigSpec.IntValue BUSTER_CALL_COOLDOWN_MINUTES;
     public static final ModConfigSpec.BooleanValue BUSTER_CALL_TERRAIN;
+    public static final ModConfigSpec.BooleanValue BASES, BASE_RAIDS;
+    public static final ModConfigSpec.IntValue BASE_CLAIMS_PER_CREW, BASE_RADIUS, BASE_CAPTURE_SECONDS, BASE_GRACE_SECONDS, BASE_RAID_COOLDOWN_MINUTES,
+            BASE_NEW_CLAIM_GRACE_MINUTES;
+    public static final ModConfigSpec.DoubleValue BASE_RAID_CHANCE;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -78,6 +82,26 @@ public final class GLConfig {
                 .defineInRange("cooldownMinutes", 60, 0, 10080);
         BUSTER_CALL_TERRAIN = b.comment("Shells crater the wild (never a town); craters revert like Devil Fruit terrain changes.")
                 .define("terrainDamage", true);
+        b.pop();
+        b.push("bases");
+        BASES = b.comment("Crew bases: plant a crew flag at the heart of an uninhabited original island to claim it for your crew.")
+                .define("enabled", true);
+        BASE_CLAIMS_PER_CREW = b.comment("Islands one crew may hold at a time.")
+                .defineInRange("claimsPerCrew", 1, 1, 16);
+        BASE_RADIUS = b.comment("Radius (blocks) round the flag inside which only the crew may build (story places and island secrets stay open).")
+                .defineInRange("claimRadius", 64, 16, 256);
+        BASE_RAIDS = b.comment("Pirate or Marine raids on bases while crew members are near (they count against the NPC ship cap).")
+                .define("raids", true);
+        BASE_RAID_CHANCE = b.comment("Chance per 5 s, per base with crew near, that a raid sets out (after the cooldown).")
+                .defineInRange("raidChance", 0.002, 0.0, 1.0);
+        BASE_RAID_COOLDOWN_MINUTES = b.comment("Minutes between raids on the same base.")
+                .defineInRange("raidCooldownMinutes", 40, 0, 10080);
+        BASE_NEW_CLAIM_GRACE_MINUTES = b.comment("Minutes after a claim before the first raid may come.")
+                .defineInRange("newClaimGraceMinutes", 20, 0, 10080);
+        BASE_CAPTURE_SECONDS = b.comment("Seconds raiders must hold the flag with no defender near before it is taken.")
+                .defineInRange("captureSeconds", 20, 1, 600);
+        BASE_GRACE_SECONDS = b.comment("Seconds the crew has to retake a taken flag before the island is lost.")
+                .defineInRange("graceSeconds", 60, 0, 3600);
         b.pop();
         b.push("fruits");
         FRUIT_TERRAIN_CHANGES = b.define("terrainChanges", true);

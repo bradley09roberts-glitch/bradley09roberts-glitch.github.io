@@ -151,8 +151,15 @@ public final class Navigation {
     }
 
     public static void openChart(ServerPlayer sp) {
+        CompoundTag t = chartData(sp);
+        if (t != null) GLNetwork.toPlayer(sp, new GLNetwork.OpenScreen("chart", t));
+    }
+
+    /** What the sea chart shows this player (null outside the ocean world). */
+    @org.jetbrains.annotations.Nullable
+    public static CompoundTag chartData(ServerPlayer sp) {
         WorldPlan plan = WorldPlan.of(sp.server);
-        if (plan == null) return;
+        if (plan == null) return null;
         CharacterData d = Characters.get(sp);
         CompoundTag t = new CompoundTag();
         ListTag l = new ListTag();
@@ -172,11 +179,12 @@ public final class Navigation {
         }
         t.put("islands", l);
         t.put("treasures", com.grandline.activity.TreasureMaps.chartMarks(sp)); // X marks of the treasure maps read
+        t.put("bases", com.grandline.base.CrewBases.chartMarks(sp)); // claimed islands, under their crews' names
         t.putInt("px", sp.getBlockX());
         t.putInt("pz", sp.getBlockZ());
         t.putInt("total", plan.islands.size());
         t.putInt("discovered", d.discoveredIslands.size());
-        GLNetwork.toPlayer(sp, new GLNetwork.OpenScreen("chart", t));
+        return t;
     }
 
     private Navigation() {}
