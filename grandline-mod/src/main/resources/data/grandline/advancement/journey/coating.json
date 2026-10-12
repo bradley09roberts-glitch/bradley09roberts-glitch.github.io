@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/sabaody",
+  "display": {
+    "icon": {
+      "id": "grandline:bubble_membrane"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.coating.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.coating.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "coating": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "coating"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "coating"
+    ]
+  ]
+}

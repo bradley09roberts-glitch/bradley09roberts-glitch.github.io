@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/paradise",
+  "display": {
+    "icon": {
+      "id": "grandline:island_cloud"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.skypiea.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.skypiea.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "skypiea": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "skypiea"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "skypiea"
+    ]
+  ]
+}

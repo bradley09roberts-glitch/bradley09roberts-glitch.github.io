@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/alabasta",
+  "display": {
+    "icon": {
+      "id": "grandline:war_hammer"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.water_7.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.water_7.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "water_7": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "water_7"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "water_7"
+    ]
+  ]
+}

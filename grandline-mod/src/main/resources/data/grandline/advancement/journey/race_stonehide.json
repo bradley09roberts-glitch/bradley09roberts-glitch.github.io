@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:seastone"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_stonehide.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_stonehide.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_stonehide": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_stonehide"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_stonehide"
+    ]
+  ]
+}

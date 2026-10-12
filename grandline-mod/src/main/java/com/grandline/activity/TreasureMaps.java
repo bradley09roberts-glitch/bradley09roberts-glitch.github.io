@@ -263,6 +263,7 @@ public final class TreasureMaps {
             sp.level().playSound(null, pos, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7f, 1.0f);
             if (lv > 0) CharacterManager.applyAttributes(sp);
             Quests.progress(sp, "treasure", "any", solved);
+            com.grandline.journey.Journey.onTreasureSolved(sp);
         }
         CharacterManager.markDirty(sp);
         return solved;

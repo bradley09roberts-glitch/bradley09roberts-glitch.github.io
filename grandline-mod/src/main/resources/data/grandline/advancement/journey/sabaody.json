@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/water_7",
+  "display": {
+    "icon": {
+      "id": "grandline:beli_pouch"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.sabaody.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.sabaody.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "sabaody": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "sabaody"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "sabaody"
+    ]
+  ]
+}

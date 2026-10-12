@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/first_island",
+  "display": {
+    "icon": {
+      "id": "grandline:harbor_bream"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.west_blue.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.west_blue.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "west_blue": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "west_blue"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "west_blue"
+    ]
+  ]
+}

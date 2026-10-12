@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/story_part4",
+  "display": {
+    "icon": {
+      "id": "grandline:wanted_poster"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.ending_last_bounty.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.ending_last_bounty.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "criteria": {
+    "ending_last_bounty": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "ending_last_bounty"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ending_last_bounty"
+    ]
+  ]
+}

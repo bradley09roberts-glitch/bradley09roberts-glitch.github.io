@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/first_island",
+  "display": {
+    "icon": {
+      "id": "grandline:fisherman_stew"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.north_blue.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.north_blue.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "north_blue": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "north_blue"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "north_blue"
+    ]
+  ]
+}

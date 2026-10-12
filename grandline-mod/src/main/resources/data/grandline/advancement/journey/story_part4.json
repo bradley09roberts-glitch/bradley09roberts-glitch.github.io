@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/story_part3",
+  "display": {
+    "icon": {
+      "id": "grandline:poneglyph_rubbing"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.story_part4.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.story_part4.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "story_part4": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "story_part4"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "story_part4"
+    ]
+  ]
+}

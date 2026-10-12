@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/haki_armament",
+  "display": {
+    "icon": {
+      "id": "grandline:iron_kanabo"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.haki_emission.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.haki_emission.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "haki_emission": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "haki_emission"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "haki_emission"
+    ]
+  ]
+}

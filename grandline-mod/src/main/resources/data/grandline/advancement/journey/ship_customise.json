@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/ship_upgrade",
+  "display": {
+    "icon": {
+      "id": "grandline:cutlass"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.ship_customise.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.ship_customise.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ship_customise": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "ship_customise"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ship_customise"
+    ]
+  ]
+}

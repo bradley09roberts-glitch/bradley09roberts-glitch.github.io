@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/fruit_master",
+  "display": {
+    "icon": {
+      "id": "grandline:fruit_bloom"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.fruit_awaken.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.fruit_awaken.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "fruit_awaken": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "fruit_awaken"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "fruit_awaken"
+    ]
+  ]
+}

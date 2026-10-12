@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/root",
+  "display": {
+    "icon": {
+      "id": "grandline:wanted_poster"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.bounty_poster.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.bounty_poster.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "bounty_poster": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "bounty_poster"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "bounty_poster"
+    ]
+  ]
+}

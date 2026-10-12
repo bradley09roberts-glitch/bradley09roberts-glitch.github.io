@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/story_part1",
+  "display": {
+    "icon": {
+      "id": "grandline:poneglyph"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.story_part2.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.story_part2.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "story_part2": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "story_part2"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "story_part2"
+    ]
+  ]
+}

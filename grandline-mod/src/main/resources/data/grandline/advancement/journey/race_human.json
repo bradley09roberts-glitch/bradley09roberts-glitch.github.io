@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:katana"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_human.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_human.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_human": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_human"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_human"
+    ]
+  ]
+}

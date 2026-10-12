@@ -213,6 +213,7 @@ public final class Meals {
             if (d.addMastery(COOKING, 6) && player instanceof ServerPlayer sp)
                 sp.sendSystemMessage(Component.translatable("grandline.cooking.level", d.mastery(COOKING)).withStyle(ChatFormatting.GOLD));
             if (player instanceof ServerPlayer sp) CharacterManager.markDirty(sp);
+            com.grandline.journey.Journey.onCooked(player, stack);
         }
     }
 

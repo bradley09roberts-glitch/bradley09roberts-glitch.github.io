@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/ship_buy",
+  "display": {
+    "icon": {
+      "id": "grandline:grappling_hook"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.ship_prize.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.ship_prize.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ship_prize": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "ship_prize"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ship_prize"
+    ]
+  ]
+}

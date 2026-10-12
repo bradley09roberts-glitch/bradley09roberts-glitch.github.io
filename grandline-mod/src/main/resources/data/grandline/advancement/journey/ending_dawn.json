@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/story_part4",
+  "display": {
+    "icon": {
+      "id": "grandline:weather_staff"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.ending_dawn.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.ending_dawn.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "criteria": {
+    "ending_dawn": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "ending_dawn"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ending_dawn"
+    ]
+  ]
+}

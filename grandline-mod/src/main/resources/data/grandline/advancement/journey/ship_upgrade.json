@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/ship_buy",
+  "display": {
+    "icon": {
+      "id": "grandline:chain_shot"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.ship_upgrade.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.ship_upgrade.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ship_upgrade": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "ship_upgrade"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ship_upgrade"
+    ]
+  ]
+}

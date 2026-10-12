@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/set_sail",
+  "display": {
+    "icon": {
+      "id": "grandline:anchor_chain"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.ship_buy.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.ship_buy.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ship_buy": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "ship_buy"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ship_buy"
+    ]
+  ]
+}

@@ -135,6 +135,7 @@ public final class Shipyard {
                 }
                 if (!sp.isCreative()) d.beli -= c.price;
                 Quests.progress(sp, "ship", "any", 1);
+                com.grandline.journey.Journey.onShipBought(sp);
                 sp.sendSystemMessage(Component.translatable("grandline.ship.bought", Component.translatable("ship_class.grandline." + c.id())).withStyle(ChatFormatting.GOLD));
             }
             case "upgrade" -> {
@@ -151,6 +152,7 @@ public final class Shipyard {
                 ship.addUpgrade(up);
                 if (up.equals("reinforced_hull")) ship.repair(ship.maxHull());
                 ShipRegistry.get(sp.server).update(ship);
+                com.grandline.journey.Journey.onShipUpgraded(sp, up);
                 sp.sendSystemMessage(Component.translatable("grandline.ship.upgraded", Component.translatable("ship_upgrade.grandline." + up)).withStyle(ChatFormatting.GOLD));
             }
             case "repair" -> {
@@ -177,6 +179,7 @@ public final class Shipyard {
                 }
                 if (!sp.isCreative()) d.beli -= fee;
                 customise(ship, look, t.getInt("sail") & 0xFFFFFF, t.getInt("hullc") & 0xFFFFFF);
+                com.grandline.journey.Journey.onShipCustomised(sp);
                 sp.sendSystemMessage(Component.translatable("grandline.naval.customised", ship.shipName()).withStyle(ChatFormatting.GOLD));
             }
             case "sell_prize", "claim_prize" -> {

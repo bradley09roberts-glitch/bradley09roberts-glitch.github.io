@@ -452,6 +452,7 @@ public class ShipEntity extends Entity {
                 canalLeg = -1;
                 setFlag(F_CANAL, false);
                 setPos(getX() + 40, WorldPlan.SEA_LEVEL + 0.9, getZ());
+                com.grandline.journey.Journey.onCanalCrossed(this);
                 for (Entity p : getPassengers()) if (p instanceof ServerPlayer sp) sp.sendSystemMessage(Component.translatable("grandline.ship.grand_line").withStyle(net.minecraft.ChatFormatting.GOLD, net.minecraft.ChatFormatting.BOLD));
             }
         }
@@ -499,6 +500,7 @@ public class ShipEntity extends Entity {
         if ((flags & 16) != 0 && sail() > 0) entityData.set(SAIL, (byte) (sail() - 1));
         if ((flags & 4) != 0) coupDeBurst(sp);
         if (sail() > 0 && anchored() && (flags & 8) != 0) setFlag(F_ANCHOR, false);
+        if ((flags & 8) != 0 && sail() > 0) com.grandline.journey.Journey.onSetSail(sp);
     }
 
     public void setSail(int s) {

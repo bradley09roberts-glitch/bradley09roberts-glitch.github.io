@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/den_call",
+  "display": {
+    "icon": {
+      "id": "grandline:crew_den_den_mushi"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.den_crew.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.den_crew.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "den_crew": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "den_crew"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "den_crew"
+    ]
+  ]
+}

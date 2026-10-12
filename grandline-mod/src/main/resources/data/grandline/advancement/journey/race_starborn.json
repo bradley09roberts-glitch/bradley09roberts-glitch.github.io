@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:thunder_eel"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_starborn.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_starborn.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_starborn": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_starborn"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_starborn"
+    ]
+  ]
+}

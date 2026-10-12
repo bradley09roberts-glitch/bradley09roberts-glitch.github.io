@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/new_world",
+  "display": {
+    "icon": {
+      "id": "grandline:poneglyph_rubbing"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.laugh_tale.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.laugh_tale.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "laugh_tale": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "laugh_tale"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "laugh_tale"
+    ]
+  ]
+}

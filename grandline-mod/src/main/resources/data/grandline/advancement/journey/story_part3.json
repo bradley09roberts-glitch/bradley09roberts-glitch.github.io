@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/story_part2",
+  "display": {
+    "icon": {
+      "id": "grandline:shusui"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.story_part3.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.story_part3.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "story_part3": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "story_part3"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "story_part3"
+    ]
+  ]
+}

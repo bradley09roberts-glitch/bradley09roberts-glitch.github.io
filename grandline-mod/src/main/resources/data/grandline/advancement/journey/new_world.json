@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/fishman_island",
+  "display": {
+    "icon": {
+      "id": "grandline:crimson_marlin"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.new_world.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.new_world.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "new_world": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "new_world"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "new_world"
+    ]
+  ]
+}

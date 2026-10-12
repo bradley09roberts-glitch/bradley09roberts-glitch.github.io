@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:needlenose_gar"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_fishman.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_fishman.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_fishman": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_fishman"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_fishman"
+    ]
+  ]
+}

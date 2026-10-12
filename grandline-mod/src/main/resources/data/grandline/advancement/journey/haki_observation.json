@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/root",
+  "display": {
+    "icon": {
+      "id": "grandline:war_bow"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.haki_observation.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.haki_observation.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "haki_observation": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "haki_observation"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "haki_observation"
+    ]
+  ]
+}

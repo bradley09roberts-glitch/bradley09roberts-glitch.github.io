@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/coating",
+  "display": {
+    "icon": {
+      "id": "grandline:abyss_lanternfish"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.fishman_island.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.fishman_island.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "fishman_island": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "fishman_island"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "fishman_island"
+    ]
+  ]
+}

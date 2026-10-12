@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/paradise",
+  "display": {
+    "icon": {
+      "id": "grandline:weather_staff"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.alabasta.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.alabasta.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "alabasta": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "alabasta"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "alabasta"
+    ]
+  ]
+}

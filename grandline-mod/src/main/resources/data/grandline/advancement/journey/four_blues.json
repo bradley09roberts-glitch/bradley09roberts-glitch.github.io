@@ -1,0 +1,58 @@
+{
+  "parent": "grandline:journey/first_island",
+  "display": {
+    "icon": {
+      "id": "grandline:eternal_pose"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.four_blues.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.four_blues.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "east_blue": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "east_blue"
+      }
+    },
+    "west_blue": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "west_blue"
+      }
+    },
+    "north_blue": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "north_blue"
+      }
+    },
+    "south_blue": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "south_blue"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "east_blue"
+    ],
+    [
+      "west_blue"
+    ],
+    [
+      "north_blue"
+    ],
+    [
+      "south_blue"
+    ]
+  ]
+}

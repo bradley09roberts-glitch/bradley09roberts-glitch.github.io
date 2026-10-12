@@ -811,6 +811,7 @@ public class SeaKing extends Mob implements GeoEntity, Enemy {
                 if (d.created) {
                     int levels = d.addXp(new int[]{0, 220, 650, 1600}[tier()]);
                     sp.sendSystemMessage(Component.translatable("grandline.seaking.slain", getDisplayName()).withStyle(ChatFormatting.GOLD));
+                    com.grandline.journey.Journey.onSeaKingSlain(sp);
                     if (levels > 0) {
                         sp.sendSystemMessage(Component.translatable("grandline.level.up", d.level).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
                         CharacterManager.applyAttributes(sp);

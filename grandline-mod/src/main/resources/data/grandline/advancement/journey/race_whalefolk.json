@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:behemoth_carp"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_whalefolk.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_whalefolk.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_whalefolk": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_whalefolk"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_whalefolk"
+    ]
+  ]
+}

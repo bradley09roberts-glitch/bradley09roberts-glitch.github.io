@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/first_island",
+  "display": {
+    "icon": {
+      "id": "grandline:meat_on_bone"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.south_blue.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.south_blue.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "south_blue": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "south_blue"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "south_blue"
+    ]
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/haki_emission",
+  "display": {
+    "icon": {
+      "id": "grandline:tonfa"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.haki_internal.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.haki_internal.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "haki_internal": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "haki_internal"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "haki_internal"
+    ]
+  ]
+}

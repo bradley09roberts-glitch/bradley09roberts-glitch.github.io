@@ -1,0 +1,110 @@
+{
+  "parent": "grandline:journey/crew_five",
+  "display": {
+    "icon": {
+      "id": "grandline:pirates_feast"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.crew_full.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.crew_full.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "navigator": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "crew_role_navigator"
+      }
+    },
+    "cook": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "crew_role_cook"
+      }
+    },
+    "doctor": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "crew_role_doctor"
+      }
+    },
+    "shipwright": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "crew_role_shipwright"
+      }
+    },
+    "musician": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "crew_role_musician"
+      }
+    },
+    "sniper": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "crew_role_sniper"
+      }
+    },
+    "helmsman": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "crew_role_helmsman"
+      }
+    },
+    "archaeologist": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "crew_role_archaeologist"
+      }
+    },
+    "swordsman": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "crew_role_swordsman"
+      }
+    },
+    "swordswoman": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "crew_role_swordswoman"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "navigator"
+    ],
+    [
+      "cook"
+    ],
+    [
+      "doctor"
+    ],
+    [
+      "shipwright"
+    ],
+    [
+      "musician"
+    ],
+    [
+      "sniper"
+    ],
+    [
+      "helmsman"
+    ],
+    [
+      "archaeologist"
+    ],
+    [
+      "swordsman",
+      "swordswoman"
+    ]
+  ]
+}

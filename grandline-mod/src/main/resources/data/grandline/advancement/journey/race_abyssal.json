@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:abyss_lanternfish"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_abyssal.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_abyssal.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_abyssal": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_abyssal"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_abyssal"
+    ]
+  ]
+}

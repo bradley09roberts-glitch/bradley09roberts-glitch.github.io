@@ -262,6 +262,7 @@ public final class CrewManager {
         sp.sendSystemMessage(Component.translatable(n.joinedKey()).withStyle(ChatFormatting.ITALIC));
         d.flags.add("crew_" + n.id());
         CharacterManager.markDirty(sp);
+        com.grandline.journey.Journey.onRecruit(sp);
         return true;
     }
 

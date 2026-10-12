@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/root",
+  "display": {
+    "icon": {
+      "id": "grandline:brass_knuckles"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.haki_armament.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.haki_armament.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "haki_armament": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "haki_armament"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "haki_armament"
+    ]
+  ]
+}

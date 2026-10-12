@@ -33,6 +33,7 @@ public final class Awakening {
             sp.level().playSound(null, sp.blockPosition(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1f, 0.7f);
             GLNetwork.fx(sp, "awaken", sp.getX(), sp.getY() + 1, sp.getZ(), 1, 0, 0);
             CharacterManager.markDirty(sp);
+            com.grandline.journey.Journey.onAwakened(sp);
             return;
         }
         if (d.level >= LEVEL && d.mastery("fruit/" + d.fruit) >= MASTERY && !d.questProgress.containsKey("awakening_trial")) {

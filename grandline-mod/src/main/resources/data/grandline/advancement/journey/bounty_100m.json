@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/bounty_10m",
+  "display": {
+    "icon": {
+      "id": "grandline:seastone_cuffs"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.bounty_100m.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.bounty_100m.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "bounty_100m": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "bounty_100m"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "bounty_100m"
+    ]
+  ]
+}

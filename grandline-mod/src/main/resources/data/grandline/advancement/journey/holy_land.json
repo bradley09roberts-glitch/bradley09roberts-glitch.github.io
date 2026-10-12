@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/sabaody",
+  "display": {
+    "icon": {
+      "id": "grandline:seastone_bricks"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.holy_land.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.holy_land.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "holy_land": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "holy_land"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "holy_land"
+    ]
+  ]
+}

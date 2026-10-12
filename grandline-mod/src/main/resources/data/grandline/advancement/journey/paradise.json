@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/reverse_mountain",
+  "display": {
+    "icon": {
+      "id": "grandline:rainbow_tuna"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.paradise.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.paradise.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "paradise": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "paradise"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "paradise"
+    ]
+  ]
+}

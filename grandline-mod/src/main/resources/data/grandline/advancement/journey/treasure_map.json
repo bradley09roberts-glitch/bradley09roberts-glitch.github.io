@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/root",
+  "display": {
+    "icon": {
+      "id": "grandline:treasure_map"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.treasure_map.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.treasure_map.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "treasure_map": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "treasure_map"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "treasure_map"
+    ]
+  ]
+}

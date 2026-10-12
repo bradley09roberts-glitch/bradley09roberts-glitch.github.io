@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/root",
+  "display": {
+    "icon": {
+      "id": "grandline:devil_fruit"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.fruit_eat.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.fruit_eat.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "fruit_eat": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "fruit_eat"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "fruit_eat"
+    ]
+  ]
+}

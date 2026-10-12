@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/root",
+  "display": {
+    "icon": {
+      "id": "grandline:yoru"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.haki_conqueror.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.haki_conqueror.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "haki_conqueror": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "haki_conqueror"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "haki_conqueror"
+    ]
+  ]
+}

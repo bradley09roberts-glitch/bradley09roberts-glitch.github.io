@@ -330,6 +330,80 @@ First run of a real client against the dedicated server. Result: no client crash
 - Verified: `GL_SELFTEST=activities` 34/34; full phase 1 377/377 and phase 2 10/10 on the same world.
 - Not seen in a client yet: the treasure map screen, chart marks and the new sprites in game.
 
+### The journey: advancements, Den Den Mushi, Buster Call (agent)
+- Advancements (`journey/Journey`, `journey/MilestoneTrigger`; data from `tools/gen_journey.py` into
+  `data/grandline/advancement/journey/`): 78 vanilla advancements in their own tab with a code-drawn sea background
+  and mod-item icons. Every one is granted through one custom criterion, `grandline:milestone` with an id, fired from
+  the hook where the thing happens (one line each in Navigation, FruitManager, Hits.train, Awakening, Haki, Bounties,
+  Shipyard, NavalCombat.capture, SeaKing.die, CrewManager.recruit, Quests.finish, SeaFishing, Meals, TreasureMaps,
+  CharacterManager.create, ShipEntity helm and Reverse Mountain canal; arrival in the White Sea by the dimension
+  event); entering a sea rides Navigation's existing two-second check. Tree: root → the route (Set Sail → Landfall
+  → the four Blues and All Four Blues; Reverse Mountain → Paradise → Alabasta → Water 7 → Sabaody → coating →
+  Fish-Man Island → New World → Laugh Tale, Sabaody → Holy Land, Paradise → Calm Belt and the Knock Up Stream);
+  ships under Set Sail (buy → upgrade → customise, prize, Sea King); Devil Fruit (eat → mastery 50 → awaken); Haki
+  (Observation → Future Sight, Armament → Emission → Internal Destruction, Conqueror's → Infusion); bounty (poster
+  1M → 10M → 100M → 1B, and Survived the Buster Call); crew (first mate → five → every post filled: navigator, cook,
+  doctor, shipwright, musician, sniper, helmsman, swordsman or swordswoman, archaeologist); the saga (Parts I–IV, the
+  five endings, hidden); sea activities (treasure map, giant catch, signature dish); Den Den Mushi (call → crew,
+  black snail); races (Born of the Sea → one per playable race, 18, and Many Lives for three).
+- Advancements belong to the player account: a permadeath keeps them and each new life can add its race. On login
+  (and when a character is made) the saved data is credited retroactively: discovered islands in every sea's plan,
+  fruit, mastery and awakening, Haki, bounty (also of fallen characters, read from the permadeath archive), story
+  quests (any faction variant) and ending flags, the crew, and the account's ships in the registry (bought, upgraded,
+  coated, customised, prizes).
+- Den Den Mushi (`journey/DenDenMushi`, four snail items; crafted from bone/kelp/copper/string or bought from general
+  stores and merchants; `/den`): a personal snail calls anyone online who carries one (a bell rings for 20 s; answer
+  or decline with clickable buttons, `/den accept|decline` or the snail); while connected everything either party types
+  in chat goes only to the other, prefixed with a snail glyph (a bitmap font, U+E000..E003). A crew snail speaks to
+  the player's crew (`/crew invite|join|leave|list` now set the `crewId` the friendly-fire rules already used), a Baby
+  Den Den carries one message to anyone and is used up, a black snail (dropped by Marine officers, captains, Vice
+  Admirals and Admirals; half the Marine prizes hold one) mutters Marine and bounty-hunter ship positions, headings and
+  patrols on foot about once a minute (`/den listen` every 30 s) and overhears Marine reports and Buster Call orders.
+  All server-side: no client code.
+- Buster Call (`ship/BusterCall`, config section `busterCall`, `/bustercall status|issue|cancel`): a player whose
+  bounty passed 500M can be reported by a crime (any bounty raise) within 300 blocks of a Marine-held island or by a
+  Vice Admiral/Admiral who traded blows with them and is alive 20 s later; a report becomes a call with 35% chance,
+  one call at a time, 60 min cooldown per player, ocean world only. Warning: server-wide announcement, title, horn,
+  countdown (60 s). Then up to five warships with a Vice Admiral each (never more than the room under the shared NPC
+  ship cap; paddle wheels, AI captained by the call) appear 170 blocks out, converge to stations off the target's
+  ship or island and lob mortar shells for 90 s. Shells hurt everyone in the blast (never Marines, World Government,
+  the story cast, a downed or jailed player) and hole every ship but the fleet's own, and crater only the wild (outside every
+  settlement's bounds, through TerrainChanges, never under a plant, sand or water so every change reverts). Ends:
+  survived the bombardment, sank/beat the fleet, or slipped away (advancement + bounty raise of 10%, at least 50M);
+  knocked down (the Vice Admiral's shell: the Marines jail you) or gone. The fleet then withdraws and despawns.
+  The fleet spawns inside the simulation distance (like the living sea's ships) and keeps reinforcing for 30 s where
+  the first look found too little open water.
+- Shared files touched (one call each unless noted): `GrandLine` (registry), `GLConfig` (busterCall section),
+  `Navigation` (2), `FruitManager`, `Awakening`, `Hits.train`, `Haki.announce`, `Bounties.raise` (2), `Shipyard` (3),
+  `NavalCombat.capture` (2), `SeaKing.die`, `CrewManager.recruit`, `Quests.finish`, `SeaFishing`, `Meals`,
+  `TreasureMaps`, `CharacterManager.create`, `ShipEntity` (helm, canal), `Shops` (snail offers), `SelfTest` (3),
+  `tools/gen_assets.py`, `tools/assetgen/source.py`, README.
+- Verified (`test/JourneyTests`, 38 checks; quick run `GL_SELFTEST=journey` 38/38): all 78 advancement files load
+  (counted against the resource listing), translated, in one tab under the root with the sea background, mod-item
+  icons, only the milestone criterion, and every id the game fires has an advancement; the real hooks grant them
+  (creation, Navigation at Orange Town and Alabasta, eating a fruit, mastery 50 via Hits.train, the Awakening Trial,
+  Haki unlocks, Bounties.raise 12M/162M/1.16B, the shipwright buying/upgrading/customising a sloop, capturing a beaten
+  sloop, a Sea King's death, recruiting Odile, logue_3 and laughtale_2 finishing, a giant catch, a signature dish, a
+  solved treasure map; not for a small fish or a plain dish); a permadeath keeps them and a third race grants Many
+  Lives; the real login event credits a doctored old character (38 milestones from islands, fruit, Haki, bounty,
+  quests and variants, an ending flag, a coated customised ship in the registry, a fallen Mink) and nothing unearned;
+  calls between three account players (fake players with real advancement stores, outside the player list): no snail
+  there, decline, accept, chat cancelled and routed only to the other party, hang up, ring-out after 20 s, crew snail
+  reaches only the crewmate, Baby Den Den used up, black snail names a Marine caravel 21 m off (nothing without one);
+  Buster Call refused below the threshold and when disabled, issued by a crime near Shells Town (one at a time) and by
+  a Vice Admiral who lived (not by one who died), then a full call at a village dock: warning with no ships, 4
+  warships (room 4 under the cap 4, a Vice Admiral each), converge 125 → 88 blocks, 21 shells/18 bursts (the pirate
+  bystander hurt, the moored rowboat sunk), survived → advancement and bounty 700M → 770M, fleet withdrawn and gone,
+  0 of 1,331 town blocks broken; direct bursts hurt a pirate (35 → 21) and a sloop (140 → 95) but not a Marine,
+  change no block in town, and crater the wild (34 blocks) which TerrainChanges restores exactly. Phase 2: the
+  account's advancements are read back after the restart. Full run on one fresh world: phase 1 482/482, phase 2
+  14/14.
+- Not done / not verified: nothing seen in a real client yet (the tab and its background, toasts, item sprites, the
+  snail glyph in chat, the clickable buttons, the bombardment); the helm (Set Sail), Reverse Mountain canal and Knock
+  Up Stream hooks are not driven by the tests (fake players cannot ride), only credited from saved data; the ring is
+  a note-block bell (no custom sound); NPC crew members only count as "hands" for the crew snail; Buster Call ships
+  fire their own mortar shells (no gun crews, rams or boarding) and a server restart mid-call drops the call.
+
 ## Work in flight (background agents)
 - Endgame boss encounters (Emperors, Admirals, Warlords: boss bars, phases, telegraphed signature attacks).
 - Advancement journey, Den Den Mushi snails, Buster Call.

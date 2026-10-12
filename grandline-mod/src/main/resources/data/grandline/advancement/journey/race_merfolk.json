@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/races",
+  "display": {
+    "icon": {
+      "id": "grandline:ghost_ray"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.race_merfolk.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.race_merfolk.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "race_merfolk": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "race_merfolk"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "race_merfolk"
+    ]
+  ]
+}

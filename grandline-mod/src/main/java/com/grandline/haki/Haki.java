@@ -211,6 +211,7 @@ public final class Haki {
         sp.sendSystemMessage(Component.translatable(key).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         com.grandline.combat.Loadouts.refresh(sp, Characters.get(sp));
         CharacterManager.markDirty(sp);
+        com.grandline.journey.Journey.onHaki(sp, key);
     }
 
     private Haki() {}

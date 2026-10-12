@@ -96,6 +96,7 @@ public final class SelfTest {
             IslandStoryTests.phase1(steps);
         }
         else if (PHASE.equals("activities")) ActivityTests.phase1(steps); // quick run: treasure maps, fishing, cooking
+        else if (PHASE.equals("journey")) JourneyTests.phase1(steps); // quick run: advancements, Den Den Mushi, Buster Call
         else phase2();
     }
 
@@ -781,6 +782,7 @@ public final class SelfTest {
         storySteps();
         StoryTestsExtra.phase1(steps); // Skypiea, Fish-Man Island, local stories, sky/deep notables
         IslandStoryTests.phase1(steps); // procedural stories on original islands, the richer job board (test/IslandStoryTests.java)
+        JourneyTests.phase1(steps); // journey advancements, Den Den Mushi, Buster Call (test/JourneyTests.java; runs last)
     }
 
     // ============================================================== story cast, crews and quests (Saltfire Saga)
@@ -966,6 +968,7 @@ public final class SelfTest {
         LivingSeaTests.phase2(steps);
         IslandStoryTests.phase2(steps); // generated stories regenerate identically; generated people's fates persist
         ActivityTests.phase2(steps); // looted island secrets persist
+        JourneyTests.phase2(steps); // journey advancements belong to the account and are saved with it
         final String[] fx = new String[1];
         steps.add(s -> {
             fx[0] = Files.readString(Path.of("selftest-fixtures.txt")).trim();
