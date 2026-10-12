@@ -504,7 +504,16 @@ First run of a real client against the dedicated server. Result: no client crash
   roars/phase changes/wind-ups/enrage use the new sounds. Subtitles in `lang/en_us/sounds.json`.
 - Music discs: four tracks (east_blue, grand_line, wano, boss) as jukebox songs with mono copies, in treasure and
   wreck chests and the creative tab.
-- Verified: `check_assets.py` checks every registered event against `sounds.json`, the files and the subtitles.
+- Verified: `check_assets.py` checks every registered event against `sounds.json`, the files and the subtitles;
+  phase 1 checks every event is registered and every disc resolves to its jukebox song. Real client (run 10:10–10:23,
+  73 shots, no failures): the game's own Vorbis decoder read all 61 files (11.6 minutes of audio), 40/40 events
+  resolved, and the music picked was right at six places (island town, at sea in East Blue, Wano, the sky, the
+  deep sea, the boss fight). The client's actual audio output was captured with OpenAL Soft's wave-file device
+  (`ALSOFT_CONF` with `drivers = wave`) and matched against the tracks by cross-correlation: the Grand Line theme
+  on the title screen and later, the East Blue shanty at sea, the battle theme starting 0.2 s after cannon fire,
+  the boss theme in the Emperor fight, and the discovery jingle, bounty fanfare and cannon effects. The regional
+  tracks for islands, Wano, sky and deep sea were picked but not heard in that run because another track was still
+  playing (regional tracks do not cut in, like vanilla); entering the sky or the deep sea now switches at once.
 
 ## Work in flight (background agents)
 - Faction careers (ranks, titles, perks for every path).

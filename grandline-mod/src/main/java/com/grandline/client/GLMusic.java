@@ -53,8 +53,9 @@ public final class GLMusic {
         grandLine = region(ModSounds.MUSIC_GRAND_LINE);
         newWorld = region(ModSounds.MUSIC_NEW_WORLD);
         island = region(ModSounds.MUSIC_ISLAND);
-        sky = region(ModSounds.MUSIC_SKY);
-        deep = region(ModSounds.MUSIC_DEEP_SEA);
+        // another world: the sky islands and the deep sea take over at once (the sea and island themes wait their turn)
+        sky = ModSounds.music(ModSounds.MUSIC_SKY, 1200, 3600, true);
+        deep = ModSounds.music(ModSounds.MUSIC_DEEP_SEA, 1200, 3600, true);
         wano = region(ModSounds.MUSIC_WANO);
     }
 
