@@ -295,6 +295,7 @@ public class ShipEntity extends Entity {
         double dx = getX() - ox, dz = getZ() - oz;
         float dyaw = Mth.wrapDegrees(getYRot() - oyaw);
         if (Math.abs(dx) + Math.abs(dz) + Math.abs(dyaw) > 1e-5) carry(dx, getY() - yo, dz, dyaw, ox, oz);
+        if (level().isClientSide) ShipClientHooks.anchor(this); // no creeping across a moving deck while standing still
     }
 
     private void carry(double dx, double dy, double dz, float dyaw, double cx, double cz) {
