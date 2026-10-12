@@ -15,6 +15,9 @@ public final class CombatState {
     public final Map<String, Long> cooldowns = new HashMap<>();
     public int comboStep = 0;
     public long lastAttack = -100;
+    /** Last ability that executed and when (credits fruit kills for the awakening trial). */
+    public String lastAbility = "";
+    public long lastAbilityAt = -1000;
     public long nextAttackAllowed = 0;
     public boolean blocking = false;
     public long blockStart = -100;

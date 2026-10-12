@@ -77,7 +77,12 @@ public final class SelfTest {
         steps = new ArrayDeque<>();
         REPORT.add("Grand Line Odyssey self-test, phase " + PHASE + ", " + new Date());
         if (PHASE.equals("1")) phase1();
-        else if (PHASE.equals("dims")) DimensionTests.phase1(steps);
+        else if (PHASE.equals("dims")) {
+            DimensionTests.ferry(steps);
+            DimensionTests.awakening(steps);
+            DimensionTests.shipClasses(steps);
+            DimensionTests.phase1(steps);
+        }
         else phase2();
     }
 
@@ -260,6 +265,8 @@ public final class SelfTest {
             check("all 12 chest loot tables load and roll items", ok == 12, ok + "/12; treasure roll " + sample);
             return 0;
         });
+        // landmarks: every registered set piece builds deterministically inside its footprint (see LandmarkCheck)
+        steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
         // NPC markers & spawning
         steps.add(s -> {
             WorldPlan p = WorldPlan.of(s);
@@ -701,6 +708,9 @@ public final class SelfTest {
             }
             return 40;
         });
+        DimensionTests.awakening(steps);
+        DimensionTests.shipClasses(steps);
+        DimensionTests.ferry(steps);
         DimensionTests.phase1(steps);
         // ---------- persistence fixtures for phase 2 ----------
         steps.add(s -> {

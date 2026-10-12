@@ -88,10 +88,16 @@ public final class InventoryDump {
         for (QuestDef q : QuestRegistry.all()) if (q.island() != null && !q.island().isEmpty()) questsByIsland.merge(q.island(), 1, Integer::sum);
 
         JsonArray islands = new JsonArray();
-        if (plan != null) {
-            for (Island isl : plan.islands) {
+        java.util.List<WorldPlan> plans = new java.util.ArrayList<>();
+        for (var level : server.getAllLevels()) {
+            WorldPlan lp = WorldPlan.forLevel(level);
+            if (lp != null && !plans.contains(lp)) plans.add(lp);
+        }
+        for (WorldPlan pl : plans) {
+            for (Island isl : pl.islands) {
                 JsonObject o = new JsonObject();
                 o.addProperty("id", isl.id);
+                o.addProperty("plan", pl.kind.name().toLowerCase(Locale.ROOT));
                 o.addProperty("name", isl.name);
                 o.addProperty("canon", isl.canon);
                 o.addProperty("zone", isl.zone.name());

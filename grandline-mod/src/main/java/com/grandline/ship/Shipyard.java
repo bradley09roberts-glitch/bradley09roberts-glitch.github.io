@@ -224,6 +224,11 @@ public final class Shipyard {
     }
 
     @Nullable
+    public static Vec3 findWaterPublic(ServerLevel l, BlockPos near) {
+        return findWater(l, near);
+    }
+
+    @Nullable
     static Vec3 findWater(ServerLevel l, BlockPos near) {
         for (int r = 8; r < 96; r += 4)
             for (int a = 0; a < 16; a++) {

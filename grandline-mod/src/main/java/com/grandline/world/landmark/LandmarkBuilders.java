@@ -104,7 +104,16 @@ final class LandmarkBuilders {
         for (int i = 0; i < 6; i++) b.set(1 + b.rand(i, 9), 1, 1 + b.rand(i + 9, 9), Blocks.ALLIUM);
     }
 
+    /** Windmill on a 13×11 plot: the 9×9 mill sits inset so its sails (which overhang the mill by 2) stay in the footprint. */
     static void windmill(Builder b, Island island, BuildStyle st) {
+        b.foundation(0, 0, b.w - 1, b.d - 1, Blocks.DIRT, 6);
+        b.fill(0, 0, 0, b.w - 1, 0, b.d - 1, Blocks.GRASS_BLOCK);
+        b.clear(0, 1, 0, b.w - 1, 22, b.d - 1);
+        b.fill(6, 0, 0, 6, 0, 1, Blocks.DIRT_PATH);
+        windmillCore(LandmarkKit.sub(b, 2, 0, 2, 9, 9, net.minecraft.world.level.block.Rotation.NONE));
+    }
+
+    private static void windmillCore(Builder b) {
         b.foundation(0, 0, 8, 8, Blocks.COBBLESTONE, 10);
         b.clear(0, 1, 0, 8, 22, 8);
         b.fill(0, 0, 0, 8, 0, 8, Blocks.COBBLESTONE);
@@ -176,7 +185,7 @@ final class LandmarkBuilders {
         b.marker("npc", w / 2, 2, z2 - 3, role("head_chef"));
         b.marker("npc", w / 2 - 3, 2, z2 - 3, role("cook"));
         b.marker("npc", w / 2 + 3, 2, z2 - 3, role("cook"));
-        b.marker("npc", w / 2, 2, z1 + 3, role("waiter"));
+        b.marker("npc", w / 2, 2, z1 + 2, role("waiter"));
         b.marker("dock", w / 2, 1, 0, new CompoundTag());
     }
 
@@ -457,7 +466,10 @@ final class LandmarkBuilders {
     }
 
     static void swordDojo(Builder b, Island island, BuildStyle st) {
-        Buildings.house(b, BuildStyle.WANO, 1, Buildings.Interior.DOJO);
+        // the generic house overhangs its plot by one block (entrance step, eaves): inset it so the landmark footprint holds
+        b.foundation(0, 0, b.w - 1, b.d - 1, Blocks.STONE_BRICKS, 8);
+        b.fill(0, 0, 0, b.w - 1, 0, b.d - 1, Blocks.GRAVEL);
+        Buildings.house(LandmarkKit.sub(b, 1, 0, 1, b.w - 2, b.d - 2, net.minecraft.world.level.block.Rotation.NONE), BuildStyle.WANO, 1, Buildings.Interior.DOJO);
     }
 
     static void knockUpMarker(Builder b, Island island, BuildStyle st) {
@@ -497,6 +509,7 @@ final class LandmarkBuilders {
                     b.set(c + x, y, c + z, Blocks.SPRUCE_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true));
                 }
         b.fill(c - 6, 96, c - 6, c + 6, 96, c + 6, Blocks.SPRUCE_PLANKS);
+        b.clear(c - 6, 97, c - 6, c + 6, 99, c + 6);
         b.chest(c, 97, c, Direction.NORTH, Buildings.LOOT_TREASURE);
         b.marker("npc", c + 2, 97, c, role("giant_elder"));
         b.marker("npc", c, 3, c - 10, role("giant_warrior"));
@@ -515,7 +528,7 @@ final class LandmarkBuilders {
         b.set(c, 1, c, ModBlocks.PONEGLYPH.get());
         b.marker("poneglyph", c, 1, c, tag("kind", "historical"));
         b.chest(c + 3, 1, c + 3, Direction.WEST, Buildings.LOOT_RUIN);
-        b.marker("npc", c - 3, 1, c, role("scholar"));
+        b.marker("npc", c - 3, 2, c, role("scholar"));
     }
 
     static void laughTaleRuins(Builder b, Island island, BuildStyle st) {

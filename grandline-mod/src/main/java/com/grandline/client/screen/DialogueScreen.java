@@ -27,8 +27,12 @@ public class DialogueScreen extends Screen {
         int y = height / 2 + 10;
         for (int i = 0; i < opts.size(); i++) {
             String opt = opts.getString(i);
-            Component label = opt.startsWith("quest:") ? Component.translatable("dialogue.grandline.option.quest", Component.translatable("quest.grandline." + opt.substring(6)))
-                    : Component.translatable("dialogue.grandline.option." + opt);
+            Component label;
+            if (opt.startsWith("quest:")) label = Component.translatable("dialogue.grandline.option.quest", Component.translatable("quest.grandline." + opt.substring(6)));
+            else if (opt.startsWith("ferry|") || opt.startsWith("seatrain|")) {
+                String[] p = opt.split("\\|");
+                label = Component.translatable("dialogue.grandline.option." + p[0], p.length > 3 ? p[3] : p[1], p.length > 2 ? p[2] : "?");
+            } else label = Component.translatable("dialogue.grandline.option." + opt);
             addRenderableWidget(Button.builder(label, b -> choose(opt)).bounds(width / 2 - 110, y, 220, 18).build());
             y += 21;
         }

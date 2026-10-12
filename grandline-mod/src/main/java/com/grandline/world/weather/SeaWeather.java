@@ -113,6 +113,7 @@ public final class SeaWeather {
         WorldPlan plan = WorldPlan.of(sl.getServer());
         if (plan == null) return Here.CLEAR;
         long seed = plan.seed;
+        if (WorldLayout.zoneAt((int) x, (int) z) == SeaZone.CALM_BELT) return Here.CLEAR; // no wind, no weather — ever
         // island climates
         if (plan != null) {
             Island isl = plan.islandAt((int) x, (int) z);
@@ -155,7 +156,7 @@ public final class SeaWeather {
         WorldPlan plan = WorldPlan.of(server);
         if (plan == null) return;
         long t = ow.getGameTime();
-        if (t % 200 == 0 && ow.getGameRules().getBoolean(GameRules.RULE_WEATHER_CYCLE)) {
+        if (ow.getGameRules().getBoolean(GameRules.RULE_WEATHER_CYCLE)) {
             // local weather replaces the global cycle in the ocean world
             ow.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE).set(false, server);
             ow.setWeatherParameters(24000 * 100, 0, false, false);
