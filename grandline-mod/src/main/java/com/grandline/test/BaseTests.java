@@ -661,13 +661,7 @@ final class BaseTests {
             String how0 = sailedIn ? "sailed in and landed after " + waited[0] + " ticks" : "phase " + raid.phase + " after " + waited[0] + " ticks (" + raid.outcome + "), landed by hand";
             String how = how0;
             if (raid.phase == BaseRaids.APPROACH && !raid.ship.isRemoved()) {
-                int loaded = 0, able = 0;
-                for (java.util.UUID u : raid.ship.naval.crew)
-                    if (l.getEntity(u) instanceof GLNpc g) {
-                        loaded++;
-                        if (g.isAlive() && !g.isRemoved()) able++;
-                    }
-                how += " [" + BaseRaids.landingSpots(l, c1, raid.dock).size() + " landing spots, crew " + raid.ship.naval.crew.size() + ", loaded " + loaded + ", alive " + able + "]";
+                how += " [" + BaseRaids.landingReport(l, c1, raid) + "]";
                 BaseRaids.land(raid, l, c1, l.getGameTime());
             }
             List<GLNpc> rs = raiders(l, raid);
