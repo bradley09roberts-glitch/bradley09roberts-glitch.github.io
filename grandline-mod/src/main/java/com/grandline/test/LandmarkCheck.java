@@ -142,6 +142,7 @@ public final class LandmarkCheck {
         final Long2ObjectOpenHashMap<BlockState> blocks = new Long2ObjectOpenHashMap<>();
         final List<Object[]> markers = new ArrayList<>();
         final List<BlockPos> chests = new ArrayList<>();
+        final Map<BlockPos, String> lootOf = new HashMap<>();
         int outside;
         String firstOutside;
         int maxY = Integer.MIN_VALUE;
@@ -184,7 +185,10 @@ public final class LandmarkCheck {
         @Override
         public void lootChest(int x, int y, int z, BlockState chest, String lootTable) {
             set(x, y, z, chest);
-            if (!(x < minX || x > maxX || z < minZ || z > maxZ)) chests.add(new BlockPos(x, y, z));
+            if (!(x < minX || x > maxX || z < minZ || z > maxZ)) {
+                chests.add(new BlockPos(x, y, z));
+                lootOf.put(new BlockPos(x, y, z), lootTable);
+            }
         }
     }
 
@@ -276,9 +280,56 @@ public final class LandmarkCheck {
             if (npcs == 0) problems.add("no NPC markers");
             if (!unreachable.isEmpty()) problems.add("NPCs not reachable on foot from outside " + unreachable);
             if (reach.interior < 20) problems.add("no enterable interior (" + reach.interior + " roofed walkable cells reachable)");
+            List<String> boxes = containerProblems(m, reach);
+            if (!boxes.isEmpty()) problems.add("loot containers a player cannot use " + boxes);
         }
         return spec.width() + "x" + spec.depth() + (spec.atSeaLevel() ? " (sea level)" : "") + ", " + nonAir + " blocks, " + npcs + " NPCs (" + reachable + " reachable), "
                 + chests + " chests, " + m.markers.size() + " markers, interior " + reach.interior + " cells, 4 rotations in footprint";
+    }
+
+    /**
+     * Loot containers a player can actually use: an open face (side or top) within the 4.5-block interaction range of
+     * a spot the player can walk to from outside, and for chests a lid that can lift (Minecraft refuses to open a chest
+     * under a solid block). Treasure chests at a "treasure" marker are exempt: they are dug up on purpose. Returns one
+     * entry per container that fails, as local offsets. Barrels open whatever stands around them.
+     */
+    static List<String> containerProblems(MemSink m, Reach reach) {
+        List<String> out = new ArrayList<>();
+        List<BlockPos> dig = new ArrayList<>();
+        for (Object[] mk : m.markers) if ("treasure".equals(mk[0])) dig.add((BlockPos) mk[1]);
+        for (BlockPos c : m.chests) {
+            // a treasure chest at a "treasure" marker is buried on purpose: story quests and maps send players to dig
+            if (m.lootOf.getOrDefault(c, "").endsWith("/treasure") && dig.stream().anyMatch(t -> t.distManhattan(c) <= 2)) continue;
+            BlockState st = m.get(c.getX(), c.getY(), c.getZ());
+            String at = name(st) + "@" + (c.getX() - m.minX) + "," + (c.getY() - m.groundY) + "," + (c.getZ() - m.minZ);
+            if (st.getBlock() instanceof ChestBlock && m.get(c.getX(), c.getY() + 1, c.getZ()).isRedstoneConductor(EmptyBlockGetter.INSTANCE, BlockPos.ZERO)) {
+                out.add(at + " lid blocked by " + name(m.get(c.getX(), c.getY() + 1, c.getZ())) + " (" + m.lootOf.getOrDefault(c, "") + ")");
+                continue;
+            }
+            boolean usable = false, open = false;
+            for (Direction dir : Direction.values()) {
+                if (dir == Direction.DOWN) continue;
+                if (!passable(m.get(c.getX() + dir.getStepX(), c.getY() + dir.getStepY(), c.getZ() + dir.getStepZ()))) continue;
+                open = true;
+                // a walkable cell whose eye (1.62 above the feet) is within the 4.5-block interaction range of the
+                // container and on the side its open face looks to
+                for (int dx = -5; dx <= 5 && !usable; dx++)
+                    for (int dz = -5; dz <= 5 && !usable; dz++)
+                        for (int dy = -6; dy <= 4 && !usable; dy++) {
+                            int sx = c.getX() + dx, sy = c.getY() + dy, sz = c.getZ() + dz;
+                            if (!reach.reached(sx, sy, sz)) continue;
+                            double ex = sx + 0.5 - (c.getX() + 0.5), ey = sy + 1.62 - (c.getY() + 0.5), ez = sz + 0.5 - (c.getZ() + 0.5);
+                            double toFace = ex * dir.getStepX() + ey * dir.getStepY() + ez * dir.getStepZ();
+                            double cx = Math.max(0, Math.abs(ex) - 0.5), cy = Math.max(0, Math.abs(ey) - 0.5), cz = Math.max(0, Math.abs(ez) - 0.5);
+                            if (toFace > 0.5 && cx * cx + cy * cy + cz * cz <= 4.5 * 4.5) usable = true;
+                        }
+                if (usable) break;
+            }
+            String loot = m.lootOf.getOrDefault(c, "");
+            if (!open) out.add(at + " sealed in on every side (" + loot + ")");
+            else if (!usable) out.add(at + " out of reach of every walkable spot (" + loot + ")");
+        }
+        return out;
     }
 
     /** Writes ASCII slices around an unreachable NPC to landmark-debug.txt (server dir): '@' NPC, '*' reached, '#' solid, 'H' climbable, '.' air. */

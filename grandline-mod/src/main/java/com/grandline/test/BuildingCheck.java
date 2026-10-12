@@ -17,7 +17,8 @@ import java.util.*;
  * (the settlement counterpart of {@link LandmarkCheck}): builds into memory over flat ground and checks that it does
  * not throw, stays within three blocks of its plot (porch steps, eaves and the stilts' front steps may stand outside;
  * the town layout keeps three blocks between plots), rebuilds identically, keeps its NPC markers on a floor with
- * headroom, uses known NPC roles, and that every NPC can be walked to from outside. One report line per type.
+ * headroom, uses known NPC roles, that every NPC can be walked to from outside, and that every loot container can be
+ * opened by a player who walks up to it. One report line per type.
  */
 public final class BuildingCheck {
     private static final int ORIGIN_Y = 80, MARGIN = 4;
@@ -40,7 +41,7 @@ public final class BuildingCheck {
                 }
             }
             r.check("building " + t.name().toLowerCase(Locale.ROOT), problems.isEmpty(),
-                    problems.isEmpty() ? variants + " style/rotation variants, " + npcs + " NPC markers all on a floor and reachable"
+                    problems.isEmpty() ? variants + " style/rotation variants, " + npcs + " NPC markers all on a floor and reachable, loot containers usable"
                             : problems.size() + " problems: " + String.join("; ", problems.subList(0, Math.min(6, problems.size()))));
         }
         return 0;
@@ -66,6 +67,7 @@ public final class BuildingCheck {
         boolean swap = rot == Rotation.CLOCKWISE_90 || rot == Rotation.COUNTERCLOCKWISE_90;
         int sx = swap ? t.d : t.w, sz = swap ? t.w : t.d;
         LandmarkCheck.Reach reach = new LandmarkCheck.Reach(m, sx + 2 * MARGIN, sz + 2 * MARGIN);
+        for (String box : LandmarkCheck.containerProblems(m, reach)) problems.add(tag + ": loot container " + box);
         int n = 0;
         for (Object[] mk : m.markers) {
             if (!"npc".equals(mk[0])) continue;

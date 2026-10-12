@@ -1151,6 +1151,10 @@ final class NewWorldLandmarks {
         flight(b, S(Blocks.CHERRY_STAIRS), c + 3, 11, c + 4, Direction.NORTH, 9, 2, S(Blocks.CHERRY_PLANKS));
         // ---- top tier: the private chamber, stairs up to the roof terrace and the keep
         b.cylinder(c, c, 20, 20, 7, Blocks.CHERRY_PLANKS, false);
+        // the stairwell of the flight from the throne room (its top three steps rise through this floor), railed
+        b.clear(c + 3, 20, c - 4, c + 4, 20, c - 2);
+        line(b, c + 2, 21, c - 4, c + 2, c - 1, Blocks.CHERRY_FENCE);
+        line(b, c + 3, 21, c - 1, c + 4, c - 1, Blocks.CHERRY_FENCE);
         b.bed(c + 4, 21, c + 2, Blocks.PINK_BED, Direction.SOUTH);
         b.chest(c - 5, 21, c + 1, Direction.EAST, Buildings.LOOT_HOUSE);
         b.set(c - 1, 21, c - 5, facing(Blocks.LOOM, Direction.SOUTH));
