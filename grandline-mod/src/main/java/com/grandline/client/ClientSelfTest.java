@@ -205,9 +205,9 @@ public final class ClientSelfTest {
 
         // NPC line-up, facing south, on a stone stage above the town: the town's layout changes with the world seed and
         // stepping along the line must never put the tester inside a wall (suffocating while knocked down ends the story)
-        cmd("fill ~-10 ~40 ~-14 ~24 ~40 ~14 minecraft:smooth_stone", 10);
-        cmd("fill ~-10 ~41 ~-14 ~24 ~46 ~14 minecraft:air", 10);
-        cmd("tp @s ~ ~41 ~ 0 0", 20);
+        cmd("fill 35990 150 19986 36024 150 20014 minecraft:smooth_stone", 10);
+        cmd("fill 35990 151 19986 36024 156 20014 minecraft:air", 10);
+        cmd("tp @s 36000 151 20000 0 0", 20);
         cmd("effect give @s minecraft:resistance 900 3 true", 5);
         cmd("effect give @s minecraft:regeneration 900 2 true", 5);
         for (String role : new String[]{"marine_captain", "pirate_captain", "fishman_brute", "giant_warrior", "kuja_warrior"}) {
@@ -268,6 +268,7 @@ public final class ClientSelfTest {
         }, 10);
         cmd("kill @e[type=grandline:npc,distance=..60]", 20);
         cmd("grandline terrain revert", 20);
+        cmd("fill 35990 150 19986 36024 156 20014 minecraft:air", 10); // take the stage down again
 
         // ships
         cmd("grandline island tp shiokaze_isle", 60);
@@ -283,12 +284,12 @@ public final class ClientSelfTest {
         // canon set pieces and terrain (spectator fly-bys)
         shot2("18_baratie", "tp @s 15470 100 13440 0 40");
         shot2("19_reverse_mountain", "tp @s 80 330 200 160 30");
-        shot2("20_red_line", "tp @s 140 150 2000 90 10");
+        shot2("20_red_line", "tp @s 400 200 2000 90 -12"); // east of the wall (half-width 320), looking west and up
         shot2("21_drum_castle", "tp @s 14000 280 2130 0 40");
         shot2("22_marineford", "tp @s 54200 150 -2570 0 30");
         shot2("23_water7", "tp @s 34500 140 330 0 40");
         shot2("24_alabasta", "tp @s 19650 120 -700 0 25");
-        shot2("25_wano_cliffs", "tp @s -27400 200 1200 90 15");
+        shot2("25_wano_cliffs", "tp @s -27440 150 1200 90 12"); // just off the cliff wall (render distance is short)
         shot2("26_original_island", "grandline island tp shiokaze_isle");
         // the White Sea and the deep sea
         shot2("27_heavens_gate", "execute in grandline:sky run tp @s -960 85 -40 30 15");

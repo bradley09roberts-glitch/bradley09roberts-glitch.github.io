@@ -164,6 +164,29 @@ First run of a real client against the dedicated server. Result: no client crash
 - After the merge, the tests had to generate their test areas before looking for water (game code no longer blocks on
   chunks); dims suite 112/112 again.
 
+### World polish and 10 more canon islands (agent, merged 06:45)
+- Terrain: theme-aware surface patches (coarse dirt, moss, podzol, red sand, calcite/diorite, basalt/tuff/magma),
+  rock on slopes and banded cliff faces, about a block of micro-relief (no more long contour lines on gentle slopes;
+  pads, coasts and towns untouched), snow layers on snow and cloud islands, forests restored around towns.
+- Decoration on a deterministic grid by theme: palms, boulders, outcrops, logs and driftwood, flowers and bushes,
+  ruins, cacti, ice spikes, basalt columns, dead trees, Wano lanterns, graves, candy, cloud puffs; Fish-Man Island
+  coral gardens; Skypiea houses coloured to stand out on the cloud.
+- New canon islands with hand-built set pieces and a local job each: Tequila Wolf (400-block endless bridge), Germa
+  Kingdom (castle flagship and escorts at sea), Rommel, Oykot, God Valley (ruined crater), Kyuka (resort), Lulusia
+  (sea-filled blast crater), Prodence, Karai Bari (mercenary guild hall), Mogaro. Existing worlds keep every old
+  island's seed, coastline and town (checked by an A/B run and a self-test).
+- Verified by the agent: phase 1 343/343 on the merged tree; client shots of the new terrain and islands.
+
+### Real client, full run (06:20–06:40)
+- After fixing the test script (the tester had been killed in the NPC line-up: first suffocated in a wall, then
+  finished by five elite NPCs at once), the whole solo script ran on a real client against the dedicated server:
+  58 screenshots, no client exception. Seen working: creation backdrop, Captain's Handbook in hand, wanted poster with
+  the player's face, parchment sea chart, the ten paintings on a wall, combat and fruit effects, the galleon at helm
+  and under sail, set pieces, Heaven's Gate and Upper Yard, all three Sea Kings around the galleon, the 11 Zoan beasts
+  for players and NPCs, the four wildlife creatures, figureheads, sail emblems, gun crews, grappled boarding and the
+  shipyard customise page. Camera positions fixed afterwards for the Red Line and Wano shots (the camera was inside
+  the wall / beyond render distance).
+
 ### Devil Fruit wave 4 (agent, merged 06:10)
 - 15 more original fruits (originals 25 → 40, 78 fruits, 96 new abilities), each with an awakening-only ability:
   Logia Hai (ash), Yako (glow), Shinku (vacuum); Paramecia Kai (dials), Fusen (balloon), Shinju (pearl), Kagi (key,
@@ -215,10 +238,8 @@ First run of a real client against the dedicated server. Result: no client crash
 - Paintings: merchants sell three per island; treasure chests and wrecks may hold one.
 
 ## Work in flight (background agents)
-- World polish and missing canon islands.
+- Living sea: NPC ships fighting each other, merchant traffic, harbour raids.
 
 ## Known gaps (next priorities)
-- Client re-run with the merged textures, animations and new dimensions (screenshots).
 - Full phase 1/2 runs keep getting OOM-killed (exit 137) while the agents' test servers share the container's 15 GB;
   they are re-run with a capped heap.
-- Large flat surfaces show regular terrain contour steps (cosmetic).
