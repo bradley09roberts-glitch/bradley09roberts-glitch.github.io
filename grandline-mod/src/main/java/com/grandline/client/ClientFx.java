@@ -131,10 +131,16 @@ public final class ClientFx {
             ClientWeather.update((int) a, b, c);
             return;
         }
+        if (kind.equals("music_place")) { // where we are, for the situational music (Navigation)
+            GLMusic.place = (int) a;
+            return;
+        }
+        FxSounds.play(l, kind, x, y, z); // the mod's own sound for this effect, if it has one
         if (canonWave3(l, kind, x, y, z, a, b, c)) return; // fruit wave 3 (canon), see block below
         if (originalWave3(l, kind, x, y, z, a, b, c)) return; // Devil Fruits wave 3, ORIGINAL fruits (block at the end of this class)
         if (originalWave4(l, kind, x, y, z, a, b, c)) return; // Devil Fruits wave 4, ORIGINAL fruits (block at the end of this class)
         if (raceFx(l, kind, x, y, z, a, b, c)) return; // race powers, see block below
+        if (bossFx(l, kind, x, y, z, a, b, c)) return; // boss fights (block at the end of this class)
         if (kind.startsWith("hit_")) {
             String el = kind.substring(4);
             ParticleOptions p = switch (el) {
@@ -2434,6 +2440,240 @@ public final class ClientFx {
         return true;
     }
     // ======================== end of Devil Fruits wave 4 — ORIGINAL fruits ========================
+
+    // =====================================================================================================
+    // Bosses (com.grandline.boss). Ground markers of telegraphed attacks — boss_mark_circle/ring/cone/line, red,
+    // "_hot" for the last half second before the hit — and the hits in each boss's palette
+    // (boss_hit_/ring_/cone_/line_/dash_/hazard_<style>), phase roars, the enrage, a broken foresight and the
+    // Conqueror's clash. Parameters: circle (radius, progress), ring (outer, inner, progress), cone (dir.x*len,
+    // dir.z*len, arc degrees), line (end x, end z, half-width), dash (end x, y, z), hazard (radius, cage).
+    // Self-contained; returns false for kinds it does not own.
+
+    private static final int BOSS_MARK = 0xFF3A2A, BOSS_MARK_FILL = 0xFF9A3A, BOSS_MARK_HOT = 0xFFF0D0;
+
+    private static boolean bossFx(ClientLevel l, String kind, double x, double y, double z, float a, float b, float c) {
+        if (!kind.startsWith("boss_")) return false;
+        RandomSource r = l.random;
+        if (kind.startsWith("boss_mark_")) {
+            boolean hot = kind.endsWith("_hot");
+            String shape = kind.substring(10, hot ? kind.length() - 4 : kind.length());
+            DustParticleOptions edge = dust(hot ? BOSS_MARK_HOT : BOSS_MARK, hot ? 1.7f : 1.3f), fill = dust(hot ? BOSS_MARK : BOSS_MARK_FILL, 0.9f);
+            switch (shape) {
+                case "circle" -> {
+                    bossCircle(l, edge, x, y, z, a, 0.7);
+                    double inner = a * Math.max(0.15, Math.min(1, b)); // the fill grows towards the edge as the hit nears
+                    bossDisc(l, fill, x, y, z, 0, inner, (int) (inner * inner * (hot ? 1.2 : 0.5)) + 4);
+                }
+                case "ring" -> {
+                    bossCircle(l, edge, x, y, z, a, 0.7);
+                    bossCircle(l, dust(0x6AE06A, 1.1f), x, y, z, b, 0.9); // the safe circle
+                    bossDisc(l, fill, x, y, z, b, a, (int) ((a * a - b * b) * (hot ? 0.8 : 0.3)) + 6);
+                }
+                case "cone" -> {
+                    double len = Math.sqrt(a * a + b * b), half = Math.toRadians(c / 2), base = Math.atan2(b, a);
+                    for (int sd = -1; sd <= 1; sd += 2) {
+                        double ang = base + sd * half;
+                        line(l, edge, new Vec3(x, y, z), new Vec3(x + Math.cos(ang) * len, y, z + Math.sin(ang) * len), 0.7);
+                    }
+                    int arc = (int) Math.max(6, len * half * 2 / 0.7);
+                    for (int i = 0; i <= arc; i++) {
+                        double ang = base - half + 2 * half * i / arc;
+                        l.addParticle(edge, x + Math.cos(ang) * len, y, z + Math.sin(ang) * len, 0, 0, 0);
+                    }
+                    int n = (int) (len * len * half * (hot ? 0.6 : 0.25)) + 6;
+                    for (int i = 0; i < n; i++) {
+                        double ang = base + (r.nextDouble() * 2 - 1) * half, d = Math.sqrt(r.nextDouble()) * len;
+                        l.addParticle(fill, x + Math.cos(ang) * d, y, z + Math.sin(ang) * d, 0, 0, 0);
+                    }
+                }
+                case "line" -> {
+                    double dx = a - x, dz = b - z, len = Math.sqrt(dx * dx + dz * dz);
+                    if (len < 1e-3) return true;
+                    double ux = dx / len, uz = dz / len, px = -uz * c, pz = ux * c;
+                    line(l, edge, new Vec3(x + px, y, z + pz), new Vec3(a + px, y, b + pz), 0.7);
+                    line(l, edge, new Vec3(x - px, y, z - pz), new Vec3(a - px, y, b - pz), 0.7);
+                    line(l, edge, new Vec3(a + px, y, b + pz), new Vec3(a - px, y, b - pz), 0.5);
+                    int n = (int) (len * c * (hot ? 1.0 : 0.4)) + 4;
+                    for (int i = 0; i < n; i++) {
+                        double t = r.nextDouble() * len, w = (r.nextDouble() * 2 - 1) * c;
+                        l.addParticle(fill, x + ux * t - uz * w, y, z + uz * t + ux * w, 0, 0, 0);
+                    }
+                }
+                default -> {}
+            }
+            if (hot && r.nextInt(2) == 0) l.addParticle(ParticleTypes.CRIT, x, y + 0.4, z, 0, 0.25, 0);
+            return true;
+        }
+        int under = kind.indexOf('_', 5);
+        String what = under < 0 ? kind.substring(5) : kind.substring(5, under), style = under < 0 ? "" : kind.substring(under + 1);
+        int[] col = bossColors(style);
+        ParticleOptions p = bossParticle(style);
+        DustParticleOptions d1 = dust(col[0], 1.6f), d2 = dust(col[1], 1.2f);
+        switch (what) {
+            case "hit" -> {
+                bossDisc(l, d1, x, y, z, 0, a, (int) (a * a * 1.5) + 12);
+                bossDisc(l, p, x, y + 0.3, z, 0, a, (int) (a * a * 0.6) + 6);
+                ring(l, d2, x, y + 0.2, z, a / 0.3, (int) (24 + a * 6), 0.35);
+                for (int i = 0; i < (int) (6 + a * 2); i++) l.addParticle(d1, x + (r.nextDouble() - 0.5) * a, y + 0.2, z + (r.nextDouble() - 0.5) * a, 0, 0.3 + r.nextDouble() * 0.4, 0);
+                if (a >= 6) shake(5);
+            }
+            case "ring" -> {
+                bossDisc(l, d1, x, y, z, b, a, (int) ((a * a - b * b) * 0.8) + 12);
+                bossDisc(l, p, x, y + 0.3, z, b, a, (int) ((a * a - b * b) * 0.3) + 6);
+                bossCircle(l, d2, x, y + 0.6, z, a, 0.5);
+                shake(6);
+            }
+            case "cone" -> {
+                double len = Math.sqrt(a * a + b * b), half = Math.toRadians(c / 2), base = Math.atan2(b, a);
+                int n = (int) (len * len * half * 1.2) + 20;
+                for (int i = 0; i < n; i++) {
+                    double ang = base + (r.nextDouble() * 2 - 1) * half, dd = Math.sqrt(r.nextDouble()) * len;
+                    double vx = Math.cos(ang) * 0.25, vz = Math.sin(ang) * 0.25;
+                    l.addParticle(i % 3 == 0 ? p : d1, x + Math.cos(ang) * dd, y + r.nextDouble() * 1.5, z + Math.sin(ang) * dd, vx, 0.02, vz);
+                }
+                if (len >= 10) shake(4);
+            }
+            case "line" -> {
+                Vec3 from = new Vec3(x, y, z), to = new Vec3(a, y, b);
+                line(l, d1, from, to, 0.25);
+                line(l, p, from, to, 0.9);
+                double len = from.distanceTo(to);
+                for (int i = 0; i < (int) (len * Math.max(1, c) * 1.5); i++) {
+                    Vec3 q = from.add(to.subtract(from).scale(r.nextDouble()));
+                    l.addParticle(d2, q.x + (r.nextDouble() - 0.5) * c * 2, q.y + (r.nextDouble() - 0.5) * 1.2, q.z + (r.nextDouble() - 0.5) * c * 2, 0, 0.05, 0);
+                }
+            }
+            case "dash" -> {
+                line(l, d1, new Vec3(x, y, z), new Vec3(a, b, c), 0.3);
+                line(l, p, new Vec3(x, y, z), new Vec3(a, b, c), 1.0);
+                burst(l, d2, a, b, c, 16, 1.2, 0.2);
+            }
+            case "hazard" -> {
+                if (b > 0) { // a closing cage: walls of strings
+                    int n = (int) (a * 3);
+                    for (int i = 0; i < n; i++) {
+                        double ang = i * Math.PI * 2 / n;
+                        double px = x + Math.cos(ang) * a, pz = z + Math.sin(ang) * a;
+                        for (int h = 0; h < 6; h++) l.addParticle(d1, px, y + h * 1.2 + r.nextDouble() * 0.6, pz, 0, 0, 0);
+                    }
+                } else {
+                    bossCircle(l, d2, x, y, z, a, 1.2);
+                    bossDisc(l, d1, x, y, z, 0, a, (int) (a * a * 0.5) + 4);
+                    bossDisc(l, p, x, y + 0.2, z, 0, a, (int) (a * a * 0.15) + 2);
+                }
+            }
+            case "roar" -> {
+                for (int k = 1; k <= 3; k++) ring(l, dust(k == 2 ? 0xFFD24A : 0xFFFFFF, 2.0f), x, y + 0.3 * k, z, a * k / 3.0 / 0.3, 50 + k * 10, 0.5 * k);
+                l.addParticle(ParticleTypes.FLASH, x, y + 1.5, z, 0, 0, 0);
+                l.addParticle(ParticleTypes.SONIC_BOOM, x, y + 1.5, z, 0, 0, 0);
+                cracks(l, x, y + 0.1, z, a * 0.6, 10);
+                shake(12 + (int) b * 2);
+            }
+            case "enrage" -> {
+                burst(l, dust(0xC81A1A, 2.2f), x, y, z, 60, a, 0.15);
+                burst(l, ParticleTypes.LARGE_SMOKE, x, y, z, 30, a, 0.08);
+                burst(l, ParticleTypes.ANGRY_VILLAGER, x, y + 1, z, 8, a, 0.1);
+                shake(10);
+            }
+            case "foresight" -> { // boss_foresight_break
+                burst(l, dust(0xC8A2FF, 1.4f), x, y, z, 40, Math.max(1, a), 0.25);
+                burst(l, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.PURPLE_STAINED_GLASS.defaultBlockState()), x, y, z, 24, Math.max(1, a), 0.2);
+                l.addParticle(ParticleTypes.FLASH, x, y, z, 0, 0, 0);
+            }
+            case "clash" -> {
+                Vec3 from = new Vec3(x, y, z), to = new Vec3(a, b, c), mid = from.add(to).scale(0.5);
+                for (int bolt = 0; bolt < 3; bolt++) {
+                    Vec3 at = from;
+                    int segs = 8;
+                    for (int sg = 1; sg <= segs; sg++) {
+                        Vec3 next = sg == segs ? to : from.add(to.subtract(from).scale(sg / (double) segs)).add((r.nextDouble() - 0.5) * 1.4, (r.nextDouble() - 0.5) * 1.4, (r.nextDouble() - 0.5) * 1.4);
+                        line(l, dust(bolt == 1 ? 0xB02AE0 : 0x111111, 1.5f), at, next, 0.2);
+                        at = next;
+                    }
+                }
+                burst(l, ParticleTypes.ELECTRIC_SPARK, mid.x, mid.y, mid.z, 40, 1.5, 0.5);
+                l.addParticle(ParticleTypes.FLASH, mid.x, mid.y, mid.z, 0, 0, 0);
+                shake(15);
+            }
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Outline of a circle on the ground, one particle every {@code step} blocks. */
+    private static void bossCircle(ClientLevel l, ParticleOptions p, double x, double y, double z, double r, double step) {
+        int n = (int) Math.max(8, Math.PI * 2 * r / step);
+        for (int i = 0; i < n; i++) {
+            double ang = i * Math.PI * 2 / n;
+            l.addParticle(p, x + Math.cos(ang) * r, y, z + Math.sin(ang) * r, 0, 0, 0);
+        }
+    }
+
+    /** Random points spread evenly over a disc (or the band between two radii). */
+    private static void bossDisc(ClientLevel l, ParticleOptions p, double x, double y, double z, double r0, double r1, int n) {
+        RandomSource rnd = l.random;
+        for (int i = 0; i < n; i++) {
+            double ang = rnd.nextDouble() * Math.PI * 2, d = Math.sqrt(r0 * r0 + rnd.nextDouble() * (r1 * r1 - r0 * r0));
+            l.addParticle(p, x + Math.cos(ang) * d, y, z + Math.sin(ang) * d, 0, 0.02, 0);
+        }
+    }
+
+    private static int[] bossColors(String style) {
+        return switch (style) {
+            case "quake" -> new int[] {0xF0F0F8, 0x8ABAE0};
+            case "haki" -> new int[] {0x111111, 0xB02AE0};
+            case "slash" -> new int[] {0xE8E8F4, 0x7A7A90};
+            case "fire" -> new int[] {0xFF8A2A, 0xFFD24A};
+            case "magma" -> new int[] {0xE0401A, 0x3A1A0A};
+            case "light" -> new int[] {0xFFF59A, 0xFFFFFF};
+            case "star" -> new int[] {0xF0E08A, 0x2A2A6A};
+            case "dark" -> new int[] {0x1A0F24, 0x5A2A7A};
+            case "lightning" -> new int[] {0xF2E14A, 0x8AA0FF};
+            case "whirl" -> new int[] {0x2A6AB0, 0x8AD0F0};
+            case "ink" -> new int[] {0x111111, 0x8A2A4A};
+            case "toy" -> new int[] {0xF0E0A0, 0xC090D0};
+            case "venom" -> new int[] {0x6ACB3A, 0x2A5A1A};
+            case "gas" -> new int[] {0x7E3FA8, 0x5A2A7A};
+            case "salt" -> new int[] {0xF4F4F4, 0xBFD8E0};
+            case "mirror" -> new int[] {0xC0E8FF, 0xFFFFFF};
+            case "spiral" -> new int[] {0xE0A04A, 0x8A4A2A};
+            case "string" -> new int[] {0xF4F4F4, 0xE07AE0};
+            case "phoenix" -> new int[] {0x3AB0FF, 0xFFE04A};
+            case "time" -> new int[] {0xD0D0FF, 0xE8D08A};
+            case "soul" -> new int[] {0xF5C04A, 0xFF6A6A};
+            case "barrier" -> new int[] {0x9AE0FF, 0xFFFFFF};
+            case "swamp" -> new int[] {0x4A3A22, 0x6A5A3A};
+            case "gold" -> new int[] {0xF0D060, 0x6A5A3A};
+            case "wind" -> new int[] {0xE0FFF8, 0x9AE8C8};
+            default -> new int[] {0xB0A090, 0x6A5A4A}; // blunt
+        };
+    }
+
+    private static ParticleOptions bossParticle(String style) {
+        return switch (style) {
+            case "fire" -> ParticleTypes.FLAME;
+            case "magma" -> ParticleTypes.LAVA;
+            case "light", "star", "mirror", "barrier" -> ParticleTypes.END_ROD;
+            case "dark", "ink" -> ParticleTypes.SQUID_INK;
+            case "lightning" -> ParticleTypes.ELECTRIC_SPARK;
+            case "whirl" -> ParticleTypes.SPLASH;
+            case "toy" -> ParticleTypes.TOTEM_OF_UNDYING;
+            case "venom" -> ParticleTypes.ITEM_SLIME;
+            case "gas" -> ParticleTypes.WITCH;
+            case "phoenix" -> ParticleTypes.SOUL_FIRE_FLAME;
+            case "soul" -> ParticleTypes.SOUL;
+            case "time" -> ParticleTypes.REVERSE_PORTAL;
+            case "swamp" -> ParticleTypes.BUBBLE_POP;
+            case "slash", "string" -> ParticleTypes.CRIT;
+            case "haki" -> ParticleTypes.SMOKE;
+            case "gold" -> ParticleTypes.WAX_ON;
+            case "salt" -> ParticleTypes.WHITE_ASH;
+            default -> ParticleTypes.CLOUD;
+        };
+    }
+    // ===================================================================== end bosses
 
     private ClientFx() {}
 }

@@ -120,7 +120,28 @@ public final class Careers {
     /** CharacterManager.create: a new character starts its career at the bottom rank (pay counted from today). */
     public static void onCreated(ServerPlayer sp, CharacterData d) {
         ensure(sp, d);
+        // boss fights are recorded per account: Emperors beaten by an earlier life do not count for this one
+        var rec = com.grandline.boss.BossRecords.get(sp.server);
+        for (String id : emperors()) if (rec.claimed(sp.getUUID(), id)) d.career.add("old:" + id, 1);
         changed(sp);
+    }
+
+    /** The Emperors of the cast (notables of the EMPEROR group). */
+    static List<String> emperors() {
+        List<String> out = new ArrayList<>();
+        for (var n : NotableCharacters.all()) if (n.group() == NotableCharacters.Group.EMPEROR) out.add(n.id());
+        return out;
+    }
+
+    /**
+     * Boss fights (boss/BossRewards) reward everyone who fought a boss, not only whoever landed the last blow: an
+     * Emperor this character helped bring down counts as beaten (read from the fights' records).
+     */
+    static void bossRecords(ServerPlayer sp, CharacterData d) {
+        if (!d.created || d.faction != Faction.PIRATE || d.career.emperorDeed) return;
+        var rec = com.grandline.boss.BossRecords.get(sp.server);
+        for (String id : emperors())
+            if (rec.claimed(sp.getUUID(), id) && d.career.count("old:" + id) == 0 && d.career.count("beat:" + id) == 0) onNotableDefeated(sp, id, 12);
     }
 
     /** The character's career, started (or started over after a change of faction) as needed; null without one. */
@@ -639,6 +660,7 @@ public final class Careers {
         if (ensure(sp, d) != null) {
             CareerPerks.payDay(sp, d);
             Warlords.tick(sp, d);
+            bossRecords(sp, d);
             check(sp);
         }
         changed(sp);
@@ -655,6 +677,7 @@ public final class Careers {
             if (ensure(sp, d) == null) continue;
             CareerPerks.payDay(sp, d);
             Warlords.tick(sp, d);
+            bossRecords(sp, d);
         }
         Warlords.envoys(s);
     }

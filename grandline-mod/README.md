@@ -89,7 +89,12 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
   for meal buffs (stamina, strength, Haki, swimming, cold/heat resistance); a crew cook cooks better and feeds you at sea.
 - **The journey**: an advancement tab tracks your voyage (seas, fruit, Haki, bounty, ships, crew, saga, endings, races); it belongs to your account and survives a permadeath.
 - **Den Den Mushi**: use a snail to call anyone carrying one (`/den`); crew snails talk to your crew (`/crew invite`), Baby Den Den carry one message, black snails from Marine officers overhear the Marines.
+- **Music and sound**: nine original tracks follow where you are and what you do (a shanty in the Blues, a march in
+  Paradise, the New World, island towns, Wano, the sky islands, the deep sea, battles and bosses); Haki, Devil Fruits,
+  cannons, the Den Den Mushi and bosses have their own sounds. Four tracks are music discs hidden in treasure and
+  wrecks. All of it is synthesised by `tools/gen_sounds.py`.
 - **Buster Call**: past 500M Beli, a crime by a Marine base or a Vice Admiral who lived may bring a rare, announced fleet bombardment; outlast, outrun or sink it (config `busterCall`).
+- **Crew bases**: plant a crew flag (shipwrights sell it) at the heart of an uninhabited original island to claim it for your crew (on everyone's sea chart); only your crew builds there, a base chest is your shared warehouse, the dock repairs your ships for free, `/base` builds a watchtower, dojo, galley, medical bay, shipyard slip and quarters for hired hands; raiders may come while you are near, and an undefended flag can be captured (config `bases`).
 - **Careers** (`/career`): every path has ranks and a title shown in chat and the tab list. Marines earn merit (arrests, pirates brought in, sea battles, the saga) and report to an officer for promotion, Seaman Recruit to Fleet Admiral (pay, supplies, the coat, a squad, a warship, Buster Call requests; crimes demote, then desert); pirates rise from Rookie to Supernova and Emperor with bounty and deeds, may accept the Government's letter of marque (Warlord) and claim territory; revolutionaries run missions; bounty hunters earn licences (better payouts, poster tracking); civilians make a name charting, reading and trading.
 
 ## Admin and test commands (op)
@@ -97,7 +102,7 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
 `/grandline island list|here|tp <id>`, `/grandline fruit give|set|remove|awaken|ledger`, `/grandline char info|level|
 mastery|style|haki|conqueror|beli|reset`, `/grandline npc <role> [tier]`, `/grandline quest <id>`,
 `/grandline terrain revert`, `/grandline test env|ship <class> [helm]|sail <0-3>|anchor <bool>|ability <id>|storm|
-inventory`, `/bustercall status|issue <player>|cancel <player>`, `/career admin merit <n>|rank <n>|envoy|seats`.
+inventory`, `/bustercall status|issue <player>|cancel <player>`, `/base raid|remove <island>`, `/career admin merit <n>|rank <n>|envoy|seats`.
 
 ## Building from source
 

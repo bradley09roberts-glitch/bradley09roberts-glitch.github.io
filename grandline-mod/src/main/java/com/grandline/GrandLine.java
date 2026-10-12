@@ -26,10 +26,14 @@ public final class GrandLine {
         ModItems.register(modBus);
         ModEntities.register(modBus);
         ModEffects.register(modBus);
+        ModSounds.register(modBus); // original synthesised sound effects and music (tools/gen_sounds.py)
         ModWorldgen.register(modBus);
         ModCreativeTabs.register(modBus);
         com.grandline.activity.ActivityRegistry.register(modBus); // sea activities: treasure maps, fishing, cooking
         com.grandline.journey.JourneyRegistry.register(modBus); // journey advancements (milestone trigger), Den Den Mushi
+        com.grandline.boss.BossItems.register(modBus); // boss fights: the Haki scroll (relics are named weapon stacks)
+        MusicDiscs.register(modBus); // music discs of the mod's own tracks
+        com.grandline.base.BaseRegistry.register(modBus); // crew bases: the crew flag and the base chest
         com.grandline.career.CareerRegistry.register(modBus); // careers: the Marine coat, the letter of marque
         GLNetwork.register(modBus);
         modBus.addListener(this::setup);

@@ -1,0 +1,5 @@
+{
+  "type": "minecraft:block",
+  "random_sequence": "grandline:blocks/crew_flag",
+  "pools": []
+}

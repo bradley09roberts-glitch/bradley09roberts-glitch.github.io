@@ -1,0 +1,8 @@
+{
+  "comparator_output": 2,
+  "description": {
+    "translate": "jukebox_song.grandline.east_blue"
+  },
+  "length_in_seconds": 63.0,
+  "sound_event": "grandline:disc.east_blue"
+}

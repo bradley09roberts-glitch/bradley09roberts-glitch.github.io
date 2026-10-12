@@ -412,8 +412,172 @@ First run of a real client against the dedicated server. Result: no client crash
 - Full run on the merged tree with the journey: phase 1 483/483, phase 2 14/14, no exceptions; inventory regenerated
   from it (240 tested, 373 playable, 0 partial).
 
+### Endgame boss fights (agent, merged 09:45)
+- Framework (`boss/`): the top of the cast are now boss fights. `BossManager` tracks boss entities (notables listed
+  in `Bosses`) and starts a `BossFight` as soon as one is engaged. A fight has a vanilla boss bar (`ServerBossEvent`)
+  for the players within 48 blocks and everyone engaged; three phases split at 70% and 35% health: damage that would
+  cross a threshold stops on it and starts a 2.5 s invulnerable transition (a roar, or the boss's Conqueror's Haki:
+  weak wills black out briefly, equals reel), then the move set changes, phase powers run (existing fruit abilities:
+  Orochi regrowth, phoenix rebirth flames, barrier ball, Zoan forms, Haki hardening and black-lightning infusion) and
+  the arena changes. Signature attacks are telegraphed (`Telegraph`): a red ground marker (circle at the target,
+  slam around the boss, ring with a safe centre, cone, line, rain of circles on every foe, cross), the boss rooted
+  in its wind-up animation with a sound and the attack's name on the action bar, markers turning "hot" for the last
+  half second; the hit lands on whoever is still inside (dodge i-frames, Observation and guard still apply; most
+  are unblockable). Enrage after 6 minutes (+50% damage, faster wind-ups, darkened bar). Haki: Logia bosses are
+  intangible to blows without Armament, through the combat system and vanilla melee/arrows alike; bosses with
+  advanced Observation (80+) read blows (~30-50%, even unblockable ones) until a stagger breaks their foresight for
+  8 s; no boss can be knocked out (Conqueror's, sleep), harmful effects are cut to 2 s and amplifier 1, staggers to
+  1 s, knockback resistance 0.75. Players with Conqueror's Haki clash with the boss's (at a phase roar, or when
+  they unleash it nearby): holding 70% of its pressure makes the boss reel and breaks its foresight. Scaling for 1-4
+  players in the fight: incoming damage divided by 1 / 1.75 / 2.5 / 3.25 (health is capped at 1024), +10% damage
+  and faster attacks per extra player, and rain attacks mark every foe. Fair permadeath: while another player still
+  fights, a boss neither finishes, robs nor arrests a player it knocked down (it turns to the next foe; the boss and
+  its arena cannot hurt the downed player); the usual outcome applies once nobody is left standing. A boss's
+  awakened fruit powers are no longer part of its random technique use: they only come as telegraphed attacks.
+- 24 bosses (`Bosses`), 3 signature attacks each (phase 1 uses two, phase 2 swaps one for a stronger one, phase 3
+  all three), arena scripts and rewards: the Four Emperors (Hrolf's giant shockwaves; Kurogane's tentacles and ink,
+  turning Kraken; Barnum's toy bombs and Toy Kingdom; Aurelia's falling stars and supernova), the Fleet Admiral and
+  the Three Compass Admirals (Constance's whirlpools, Zenith's light pillars, Nadir's spreading darkness, Meridian
+  turning the ground or the sea around his ship into a burning lava crust and raining volcanic bombs), the Seven
+  Warlords (Sterling's tilted scales, Hisui's venom pools, Jinpachi's lingering cuts, Leonhart's thunderstorm and
+  Sulong, Saltmarsh's salt flats, Lucrezia's reflected beams, Pipistrello's drills), the final arcs (Nox's gas
+  clouds, Vespera's closing birdcage, Sigrun's blue flames, Hagane's storm) and the Five Stewards (pockets of slowed
+  time, Zeus and Prometheus, tremors and an island tilt, barrier walls, the spreading swamp). Lines per phase, move
+  names and relic names in `lang/en_us/bosses.json`.
+- Rewards (`BossRewards`, `BossRecords`): each boss's relic, a named, unbreakable, stronger stack of a weapon tagged
+  with its boss, drops once per world where it fell (death, yield of a rival, or arrest: seastone cuffs only close on
+  a boss at a quarter of its health or yielded); everyone in the fight gets a style scroll and a new Haki scroll
+  (`haki_scroll`: awakens that Haki or trains it), once per player per boss, and a large bounty (150 M for the early
+  Warlords up to 1.5 B for an Emperor; Marines, agents and bounty hunters who bring down an outlaw are paid instead).
+  The existing kill / yield / arrest credit for story objectives is untouched, and the whole group is credited too.
+- Client: a "bosses" block at the end of `ClientFx` (markers, hits per palette, roar, enrage, broken foresight,
+  Conqueror's clash) with one hook line in `play()`; the Haki scroll sprite in `tools/assetgen/misc_items.py`.
+- Shared files touched (hook lines): `GrandLine` (item registration), `NotableHooks.hostility` (everyone engaged is
+  the boss's foe), `GLNpc.onKnockedDownPlayer` (deferred outcome), `NpcCombatGoal.tick` (the ordinary AI waits during
+  a wind-up), `Haki.tryObservationDodge` (foresight), `HumanoidNpc.techniques` (no unannounced awakened powers or
+  random Conqueror's bursts for bosses), `SelfTest` (phase 1, phase 2, quick phase), `ClientFx` (the block at the end
+  and its `play()` line), `tools/assetgen/source.py` (item id) and `misc_items.py` (the scroll sprite).
+- Verified (`test/BossTests`): `GL_SELFTEST=bosses` 61/61 — the roster and its translations, the bar, both
+  thresholds with the invulnerable roar and the move-set swap and arena change, a telegraph that hits the one who
+  stayed and misses the one who left, marker shapes, the boss rooted in its wind-up and, left to its AI, using its
+  signature attacks, Logia vs plain/vanilla/Armament blows, no unannounced awakened powers or Conqueror's bursts,
+  1-vs-3-player scaling (exactly 2.5x), the reset when everyone leaves, the deferred finishing blow and arrest (the
+  damage event itself is cancelled while another player fights and not once nobody does), knock-out immunity and
+  effect caps, foresight (28/60 dodged, 0/60 once staggered), the enrage, a Conqueror's clash, death (relic, scrolls,
+  +1.5 B bounty for both players, `oni_2` completed for the killer and the group, DEFEATED), a rival's yield, cuffs
+  refused then an arrest, the Haki scroll, and all 24 bosses' 168 phase/attack runs plus their arena and phase moves
+  with no exception and damage from every boss. Full phase 1 with the final game code, three runs: 504/504, 503/504
+  and 503/505 (the last also with the final tests; all 61 boss checks passed every time). The FAILs are existing
+  timing-dependent tests that passed in the other runs: "crew disbands" (2 of 3 runs: Petra's entity is not yet
+  tracked when the test disbands the crew if the Shells Town chunk loads slowly) and the ferry landing within 3000
+  ticks (1 of 3, on a heavily loaded container). Phase 2 on the last run's world: 15/15 (relic records and the
+  defeated boss persist).
+- After the merge (the crew test now waits up to 30 s for the Shells Town area to load before it recruits): full
+  phase 1 on the merged tree 544/544, phase 2 16/16, no exception in either server log (09:20–09:36). The
+  inventory was regenerated from that run (261 tested, 350 playable, no partial or planned rows).
+  `/grandline test boss <id>` spawns a boss next to the caller for manual fights; the client run's shot 35g uses it.
+- Not done: nothing has been seen in a real client (markers, hit effects, boss music and the bar colours are only
+  checked as packets/state); bosses fight on their home islands as notables, there are no purpose-built arenas or
+  ship encounters that bring an Admiral to the player at sea (the sea arena behaviours trigger when a fight happens
+  near water); relics are named stacks of existing weapons rather than items with their own models.
+
+### Sound effects and music, synthesised (09:45–10:40)
+- Everything is original and computed: `tools/audio/synth.py` is a small numpy synthesiser (additive and
+  Karplus-Strong instruments, drums, FFT filters, a convolution reverb with a synthetic room, a bus mixer and master
+  chain), `tools/audio/music.py` composes nine tracks as code (melodies in a bar-checked notation, chord
+  progressions, accompaniment patterns), `tools/audio/sfx.py` designs 31 effects, and `tools/gen_sounds.py` renders
+  them to OGG Vorbis with ffmpeg and writes `sounds.json` (mono effects, stereo streamed music). No samples, no
+  transcriptions: the melodies are new.
+- Music (about 10 minutes, 6.5 MB): "Wind in the Sails" (a jig-time shanty, the Blues at sea), "Bound for the Grand
+  Line" (march, Paradise and the title screen), "Into the New World", "Harbour Town" (calypso, on islands), "Clash on
+  the Waves" (battle), "The Emperor's Wrath" (bosses), "Above the Clouds" (Lydian waltz, sky islands), "Beneath the
+  Waves" (deep sea, Fish-Man Island) and "Land of Wano" (koto, shakuhachi, shamisen and taiko on the miyako-bushi
+  scale). Loudness matches the newer vanilla tracks (about -18 LUFS); effects match vanilla effects (-14 to -19
+  LUFS), measured with ffmpeg's EBU R128 meter against the game's own assets.
+- `client/GLMusic` (NeoForge `SelectMusicEvent`): a boss bar that asks for boss music plays the boss theme, a fight
+  (you hit or were hit by a foe, or a cannon, boss roar or Sea King call within 48 blocks, in the last 12 s) the
+  battle theme; otherwise the sea zone from the biome, the island you stand on (the server sends 0 sea / 1 island /
+  2 Wano from `Navigation`), the sky or the deep sea. Other dimensions keep vanilla music.
+- Effects: `client/FxSounds` layers a sound onto ~90 fruit, Haki and boss visual effects (rate-limited per kind);
+  server-side, ship cannons, the Den Den Mushi ring and pick-up, the Buster Call horn, ferry bells, island
+  discovery, quest completion, a new bounty poster, knockdowns, Sea King spawns, Armament Haki and boss
+  roars/phase changes/wind-ups/enrage use the new sounds. Subtitles in `lang/en_us/sounds.json`.
+- Music discs: four tracks (east_blue, grand_line, wano, boss) as jukebox songs with mono copies, in treasure and
+  wreck chests and the creative tab.
+- Verified: `check_assets.py` checks every registered event against `sounds.json`, the files and the subtitles;
+  phase 1 checks every event is registered and every disc resolves to its jukebox song. Real client (run 10:10–10:23,
+  73 shots, no failures): the game's own Vorbis decoder read all 61 files (11.6 minutes of audio), 40/40 events
+  resolved, and the music picked was right at six places (island town, at sea in East Blue, Wano, the sky, the
+  deep sea, the boss fight). The client's actual audio output was captured with OpenAL Soft's wave-file device
+  (`ALSOFT_CONF` with `drivers = wave`) and matched against the tracks by cross-correlation: the Grand Line theme
+  on the title screen and later, the East Blue shanty at sea, the battle theme starting 0.2 s after cannon fire,
+  the boss theme in the Emperor fight, and the discovery jingle, bounty fanfare and cannon effects. The regional
+  tracks for islands, Wano, sky and deep sea were picked but not heard in that run because another track was still
+  playing (regional tracks do not cut in, like vanilla); entering the sky or the deep sea now switches at once.
+
+### Crew bases on claimed islands (agent, merged 10:45)
+- Claiming (`base/CrewBases`, `base/CrewFlagItem`): a crew flag (new block + item; crafted from sticks and leather,
+  sold by shipwrights and general stores) planted at the heart of an uninhabited original island claims it for the
+  player's crew (`CharacterData.crewId`, or the character alone as a crew of one). Refused: canon and starter islands,
+  islands with a settlement, the shore (outside the inner 70% of the radius; 95% for rings and atolls), within reach
+  of the island's story places (set pieces, island secrets, the local story's sites and people), with a hostile within
+  24 blocks ("clear the threat"), anywhere but the ocean world's overworld (never the sky or the deep sea), an island
+  someone holds, and more than `claimsPerCrew` (1) per crew. Claims are a SavedData (`grandline_bases`); the claim is
+  announced server-wide and every sea chart shows a flag with the crew's name (an anvil-named flag names the crew;
+  `/base name`), the viewer's own in gold. `/base abandon` and `/base transfer <player>` (founder, captain or op).
+- Building (`CrewBases.onBreak/onPlace/onUseBlock/onExplosion`): inside the claim (a circle of `claimRadius` 64 round
+  the flag, story places and secrets left open) only the crew may break and place blocks, open containers, pour
+  buckets or light fires, and blasts by outsiders leave the blocks; the flag cannot be broken by hand (an op in
+  creative strikes it). `TownProtection` is untouched and still applies everywhere.
+- The base: the base chest (new block) opens one 54-slot warehouse per base, shared by the crew, saved with the claim;
+  the dock (nearest open water, found at claim time or set with `/base dock`) repairs crew ships within 40 blocks for
+  free (5% hull and rigging every 6 s). `/base` (or using the flag) is a clickable chat menu; upgrades cost Beli plus
+  materials from the pack and then the warehouse: watchtower (raid ships sighted far out, every crew member online
+  warned, raiders glow), dojo (style/Haki training inside the base x1.5, through `Hits.train`), galley (dishes cooked
+  inside +1 quality, through `Meals.onCooked`; a hot meal every minute), medical bay (a heart every 2 s), shipyard
+  slip (ship upgrades for your ship at the dock at 75%, no coating) and quarters (up to four hired hands: guard,
+  sailor, sword master, existing humanoid roles who live at the flag while crew are near, never turn on the crew,
+  fight raiders; a dead hand is gone).
+- Raids (`ship/BaseRaids`, after `HarbourRaids`/`BusterCall`): every 5 s, a base with a crew member within 160 blocks,
+  past its cooldown (40 min; 20 min after the claim) may draw a raid (chance 0.002 per check; config `bases`): a pirate
+  ship, or for a wanted/pirate crew a Marine ship, within the shared NPC ship cap, never in the Calm Belt, on open water
+  off the shore nearest the flag, captained from here (sails in, anchors) and landing at most six raiders at the
+  base's edge. Beaten: repelled, the crew members who fought are paid. Raiders by the flag with no defender (crew
+  member up and about, or hand) within 16 blocks for `captureSeconds` (20): the flag is taken (server-wide), retake it
+  within `graceSeconds` (60) or the claim is removed (flag down, half the warehouse carried off, the rest spilled).
+  Still standing after 3 min: they plunder a few stacks and leave. Raids live in memory (a restart drops one).
+- Shared files touched: `GrandLine` (registry line), `GLConfig` (`bases` section), `Navigation` (chart data split out
+  as `chartData`, bases list), `ChartScreen` (flags), `Hits.train` (1), `Meals.onCooked` (1), `GLNpc.isHostileTo` (1
+  hook), `Shops` (1), `SelfTest` (3), `tools/gen_assets.py`, `tools/assetgen/source.py` (+ new `assetgen/base_items.py`),
+  README, lang fragment `bases.json`.
+- Verified (`test/BaseTests`, 30 checks in phase 1 and 2 in phase 2; quick run `GL_SELFTEST=bases` 30/30), with
+  fake players counted as online: refusals on a canon island, a village island, a story place, the shore, the sky and
+  with a bandit near (allowed once it is gone); the real flag item, anvil-named, claims the island (block placed, item
+  used, announced, on a rival's chart under the crew's name, a dock found); a crewmate cannot claim a second island, a
+  rival cannot claim a held one and a transfer to a crew at its limit is refused; the real block events: captain and
+  mate break and place, the rival cannot, nor open a chest, nobody breaks the flag, outside the claim the rival may,
+  an Orange Town plot stays protected for the base's captain too; the warehouse is shared (the mate sees the captain's
+  gold through a chest menu) and refused to the rival; the dojo upgrade refused poor and short, then built from the
+  pack's iron and the warehouse's planks (Beli 100,000 -> 65,000); style and Haki training +15 instead of +10 inside
+  only (weapon +10); a dish quality 1 inside, 0 outside; medical bay 8 -> 10 hp inside only; the hot meal; a crew
+  sloop at the dock 70 -> 140 hull for free, the rival's untouched; the slip fits fine sails for 9,000; four hands
+  hired, the fifth and the rival refused, none hostile to the crew, a killed hand is struck off; no raid without room
+  under the ship cap, then exactly one ship; it sails in and lands two raiders inside the base, who fight the crew and
+  the hands (and the hands them); killed, the raid is repelled and the captain who fought is paid (the mate not); a
+  Marine raid with a watchtower warns both crew members (not the rival), its raiders glow; undefended, the flag is
+  taken after 397 ticks (announced), retaken when the captain returns, taken again, and when the grace runs out the
+  claim is removed, the flag block gone, the gold carried off, off the chart; a claim transferred to another crew
+  (who may build there, the old crew not) and abandoned by its new founder (a non-member refused). Phase 2: the
+  fixture claim (crew, flag block, name, dojo and quarters, 7 diamonds in the warehouse, a sailor) and its chart flag
+  are back after the restart. Full run on one fresh world: phase 1 513/513, phase 2 16/16, no exceptions.
+- Not done / not verified: nothing seen in a real client (flag model and textures, the chart flag, the chat menu);
+  the menu is chat buttons, not a screen; the boats rowing in and the march up from a distant beach are not played out
+  (the party appears at the base's edge); fruit terrain changes and Buster Call craters inside a base are not blocked
+  (they revert anyway); hands get a new name each time they are put down; crew ships are repaired at the dock but not
+  otherwise kept (no recall or mooring); a claim whose founder and captain are both gone needs an operator to transfer.
+
 ## Work in flight (background agents)
-- Endgame boss encounters (Emperors, Admirals, Warlords: boss bars, phases, telegraphed signature attacks).
+- Faction careers (ranks, titles, perks for every path).
 
 ## Known gaps (next priorities)
 - 20 TPS with 20 players is not proven on dedicated hardware (the load test ran on a heavily shared machine; the
@@ -424,7 +588,7 @@ First run of a real client against the dedicated server. Result: no client crash
 - Living sea: convoys never cross the Calm Belt; harbour raids plunder only Beli; no quests hook into sea battles.
 - NPC ships never fight from hired NPC gunners on player ships (only your recruited crew man the guns).
 - Balance (damage, bounty, rewards, spawn rates) is tuned only as far as the automated tests; it needs real play.
-- No custom music or sound effects (vanilla sounds throughout); Higgsfield's available audio models here are speech
-  only.
+- Sound: the music and effects are synthesised, judged by measurement (tuning, loudness, spectra) and by the game
+  decoding and playing them, not by ear; nobody has listened to them yet. Many abilities still use vanilla sounds.
 - Everything client-visual is checked under software OpenGL at render distance 7: lighting, distance and frame rate
   on a real GPU are untested.

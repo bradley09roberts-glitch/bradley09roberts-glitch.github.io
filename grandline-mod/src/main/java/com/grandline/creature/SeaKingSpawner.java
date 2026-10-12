@@ -163,6 +163,7 @@ public final class SeaKingSpawner {
         k.setYHeadRot(yaw);
         k.yBodyRot = yaw;
         l.addFreshEntity(k);
+        l.playSound(null, x, headY, z, com.grandline.registry.ModSounds.SEA_KING_CALL.get(), net.minecraft.sounds.SoundSource.HOSTILE, 8f, 0.8f + l.random.nextFloat() * 0.3f);
         return k;
     }
 

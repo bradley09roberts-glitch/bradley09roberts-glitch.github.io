@@ -259,6 +259,7 @@ final class CareerTests {
         marine(steps);
         crimes(steps);
         pirate(steps);
+        bossCredit(steps);
         revolutionary(steps);
         hunter(steps);
         civilian(steps);
@@ -728,6 +729,34 @@ final class CareerTests {
             place(p, a);
             check("an Emperor claims an island of the Grand Line: titled Emperor of it, tribute paid each day",
                     claimed && tribute, (target == null ? "no island" : target.id) + ", why " + (why == null ? "-" : JourneyTests.flat(why)) + ", tribute " + tribute);
+            return 0;
+        });
+    }
+
+    /** Boss fights reward every fighter in their records: an Emperor fought counts (for this life only). */
+    private static void bossCredit(Deque<SelfTest.Step> steps) {
+        steps.add(s -> {
+            var e = account(s, "CareerE");
+            CharacterData d = create(e, "Edda Stormcrown", "pirate");
+            Careers.ensure(e, d);
+            d.factionRank = 1;
+            d.bounty = 1_200_000_000L;
+            d.level = 50;
+            com.grandline.boss.BossRecords.get(s).claim(e.getUUID(), "kurogane"); // as BossRewards does for everyone who fought
+            NeoForge.EVENT_BUS.post(new PlayerEvent.PlayerLoggedInEvent(e));
+            boolean emperor = Careers.rank(d) == 2 && d.career.emperorDeed;
+            // an earlier life's fight does not count for a new character
+            var o = account(s, "CareerE2");
+            com.grandline.boss.BossRecords.get(s).claim(o.getUUID(), "barnum");
+            CharacterData od = create(o, "Olin Latecomer", "pirate");
+            Careers.ensure(o, od);
+            od.factionRank = 1;
+            od.bounty = 1_200_000_000L;
+            od.level = 50;
+            NeoForge.EVENT_BUS.post(new PlayerEvent.PlayerLoggedInEvent(o));
+            boolean notInherited = Careers.rank(od) == 1 && !od.career.emperorDeed;
+            check("an Emperor fought in a boss fight (the fight's reward records) makes a billion-Beli Supernova an Emperor; an earlier life's fight does not count",
+                    emperor && notInherited, "rank " + rankId(d) + ", deed " + d.career.emperorDeed + "; earlier life: rank " + rankId(od) + ", deed " + od.career.emperorDeed);
             return 0;
         });
     }

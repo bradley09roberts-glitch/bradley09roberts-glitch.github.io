@@ -46,6 +46,7 @@ public final class Shops {
         // sea activities: treasure maps from shady dealers, catches and dishes from cooks, fishing rods
         for (var x : com.grandline.activity.ActivityShops.extras(npc)) l.add(new Offer(x.item(), x.count(), x.price()));
         for (var x : com.grandline.journey.JourneyRegistry.shopExtras(npc.role())) l.add(new Offer(x.item(), x.count(), x.price())); // Den Den Mushi
+        for (var x : com.grandline.base.BaseRegistry.shopExtras(npc.role())) l.add(new Offer(x.item(), x.count(), x.price())); // crew flag, base chest
         if (!npc.role().equals("merchant") && !npc.role().equals("shopkeeper")) return l;
         int h = Math.floorMod(npc.islandId().hashCode(), PAINTINGS.length);
         for (int k = 0; k < 3; k++) l.add(new Offer("minecraft:painting", 1, 2500 + k * 1500L, PAINTINGS[(h + k * 3) % PAINTINGS.length]));

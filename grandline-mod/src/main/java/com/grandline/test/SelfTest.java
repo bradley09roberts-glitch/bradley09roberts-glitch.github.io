@@ -97,6 +97,8 @@ public final class SelfTest {
         }
         else if (PHASE.equals("activities")) ActivityTests.phase1(steps); // quick run: treasure maps, fishing, cooking
         else if (PHASE.equals("journey")) JourneyTests.phase1(steps); // quick run: advancements, Den Den Mushi, Buster Call
+        else if (PHASE.equals("bosses")) BossTests.phase1(steps); // quick run: boss fights
+        else if (PHASE.equals("bases")) BaseTests.phase1(steps); // quick run: crew bases on claimed islands
         else if (PHASE.equals("careers")) CareerTests.phase1(steps); // quick run: faction careers
         else phase2();
     }
@@ -783,6 +785,22 @@ public final class SelfTest {
         storySteps();
         StoryTestsExtra.phase1(steps); // Skypiea, Fish-Man Island, local stories, sky/deep notables
         IslandStoryTests.phase1(steps); // procedural stories on original islands, the richer job board (test/IslandStoryTests.java)
+        BossTests.phase1(steps); // boss fights: bars, phases, telegraphs, Haki rules, scaling, fair knockdowns, rewards (test/BossTests.java)
+        steps.add(s -> { // the mod's own sounds and music discs (registry/ModSounds, registry/MusicDiscs)
+            int missing = 0;
+            for (String id : com.grandline.registry.ModSounds.IDS)
+                if (!net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.containsKey(com.grandline.GrandLine.id(id))) missing++;
+            check("sound events registered", missing == 0, (com.grandline.registry.ModSounds.IDS.length - missing) + "/" + com.grandline.registry.ModSounds.IDS.length);
+            int discs = 0;
+            for (var d : List.of(com.grandline.registry.MusicDiscs.DISC_EAST_BLUE, com.grandline.registry.MusicDiscs.DISC_GRAND_LINE,
+                    com.grandline.registry.MusicDiscs.DISC_WANO, com.grandline.registry.MusicDiscs.DISC_BOSS)) {
+                var jp = new net.minecraft.world.item.ItemStack(d.get()).get(net.minecraft.core.component.DataComponents.JUKEBOX_PLAYABLE);
+                if (jp != null && jp.song().unwrap(s.registryAccess()).filter(h -> h.value().lengthInSeconds() > 60).isPresent()) discs++;
+            }
+            check("music discs play their jukebox songs", discs == 4, discs + "/4 discs resolve to a jukebox song over a minute long");
+            return 0;
+        });
+        BaseTests.phase1(steps); // crew bases: claims, building rights, warehouse, upgrades, dock, hands, raids (test/BaseTests.java)
         CareerTests.phase1(steps); // faction careers: ranks, perks, titles, the Warlord letter (test/CareerTests.java)
         JourneyTests.phase1(steps); // journey advancements, Den Den Mushi, Buster Call (test/JourneyTests.java; runs last)
     }
@@ -902,13 +920,18 @@ public final class SelfTest {
             return 0;
         });
         // ---------- recruiting a crew member ----------
+        final int[] crewWait = {0};
         steps.add(s -> {
-            // keep the crew candidate's home loaded and ticking, as it would be with a player nearby
+            // keep the crew candidate's home loaded and ticking, as it would be with a player nearby; wait until it has
+            // actually finished loading (a fixed wait was too short on a busy machine and the NPC was not yet tracked)
             var n = com.grandline.npc.notable.NotableCharacters.get("petra");
             Island isl = WorldPlan.of(s).byId(n.island());
             ChunkPos cp = new ChunkPos((isl.x + n.dx()) >> 4, (isl.z + n.dz()) >> 4);
-            ow(s).getChunkSource().addRegionTicket(TicketType.FORCED, cp, 3, cp);
-            return 40;
+            if (crewWait[0]++ == 0) ow(s).getChunkSource().addRegionTicket(TicketType.FORCED, cp, 3, cp);
+            boolean ready = true;
+            for (int dx = -1; dx <= 1; dx++)
+                for (int dz = -1; dz <= 1; dz++) if (ow(s).getChunkSource().getChunkNow(cp.x + dx, cp.z + dz) == null) ready = false;
+            return ready && crewWait[0] > 40 || crewWait[0] > 600 ? 20 : -1;
         });
         steps.add(s -> {
             ServerLevel l = ow(s);
@@ -971,6 +994,8 @@ public final class SelfTest {
         IslandStoryTests.phase2(steps); // generated stories regenerate identically; generated people's fates persist
         ActivityTests.phase2(steps); // looted island secrets persist
         JourneyTests.phase2(steps); // journey advancements belong to the account and are saved with it
+        BossTests.phase2(steps); // boss relic records and fates persist
+        BaseTests.phase2(steps); // a claimed island with its upgrades, warehouse and hands survives the restart
         CareerTests.phase2(steps); // careers are saved with the character
         final String[] fx = new String[1];
         steps.add(s -> {

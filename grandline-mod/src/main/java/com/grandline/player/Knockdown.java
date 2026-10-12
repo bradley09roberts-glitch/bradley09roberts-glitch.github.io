@@ -48,6 +48,7 @@ public final class Knockdown {
         sp.stopUsingItem();
         sp.sendSystemMessage(Component.translatable("grandline.knockdown.you", GLConfig.KNOCKDOWN_SECONDS.get()).withStyle(ChatFormatting.RED));
         GLNetwork.anim(sp, "knocked_down");
+        sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.grandline.registry.ModSounds.PLAYER_KNOCKDOWN.get(), net.minecraft.sounds.SoundSource.PLAYERS, 1f, 1f);
         CharacterManager.markVisualsDirty(sp);
         // last: an outlaw may rob and release the player at once (standUp plays get_up after knocked_down)
         if (src.getEntity() instanceof GLNpc npc) npc.onKnockedDownPlayer(sp);

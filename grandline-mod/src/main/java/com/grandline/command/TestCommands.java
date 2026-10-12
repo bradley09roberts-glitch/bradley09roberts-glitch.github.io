@@ -45,6 +45,18 @@ public final class TestCommands {
                     ship.setAnchored(com.mojang.brigadier.arguments.BoolArgumentType.getBool(c, "on"));
                     return GLCommands.ok(c, "Anchored " + ship.anchored());
                 })))
+                .then(Commands.literal("boss").then(Commands.argument("id", StringArgumentType.word()).executes(c -> {
+                    // stage a boss fight ten blocks in front of the player (client test of the boss bar and telegraphs)
+                    ServerPlayer sp = c.getSource().getPlayerOrException();
+                    String id = StringArgumentType.getString(c, "id");
+                    if (com.grandline.boss.Bosses.get(id) == null) return GLCommands.fail(c, "Not a boss: " + id);
+                    var at = net.minecraft.core.BlockPos.containing(sp.position().add(sp.getLookAngle().multiply(1, 0, 1).normalize().scale(10)));
+                    var boss = com.grandline.test.BossTests.boss(sp.serverLevel(), id, at);
+                    var fight = com.grandline.boss.BossManager.start(boss);
+                    if (fight == null) return GLCommands.fail(c, "Fight did not start");
+                    fight.engage(sp);
+                    return GLCommands.ok(c, "Boss " + id + " engaged");
+                })))
                 .then(Commands.literal("board").executes(c -> {
                     // open the notice board of the island the player is on (client test of the board screen)
                     ServerPlayer sp = c.getSource().getPlayerOrException();

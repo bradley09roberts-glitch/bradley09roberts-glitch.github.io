@@ -19,6 +19,7 @@ from assetgen import skins, npcs                        # noqa: E402,F401  (npcs
 from assetgen import naval_items                        # noqa: E402  (registers sprites; recipes merged below)
 from assetgen import activity_items                     # noqa: E402  (sea activities: sprites, recipes, tags, loot modifier)
 from assetgen import journey_items                      # noqa: E402  (Den Den Mushi sprites/recipes, chat glyphs, journey tab background)
+from assetgen import base_items                         # noqa: E402  (crew bases: the crew flag and base chest blocks)
 from assetgen import career_items                       # noqa: E402  (careers: Marine coat sprite and armour layer, letter of marque)
 
 RES = source.RES
@@ -66,7 +67,7 @@ def main(prune=False):
         js(A, f'models/item/{iid}.json', data.item_model(iid, set(weapons), set(block_ids)))
 
     # ------------------------------------------------------------------ blocks
-    bm = data.block_models()
+    bm = {**data.block_models(), **base_items.block_models()}
     for b in block_ids:
         if b not in bm:
             missing.append(f'block model: {b}')
@@ -103,7 +104,7 @@ def main(prune=False):
             missing.append(f'loot table: grandline:{lid}')
     for name, table in chests.items():
         js(D, f'grandline/loot_table/chests/{name}.json', table)
-    for name, table in data.block_loot().items():
+    for name, table in {**data.block_loot(), **base_items.block_loot()}.items():
         js(D, f'grandline/loot_table/blocks/{name}.json', table)
     for rel, canvas in journey_items.textures().items():
         png(rel, canvas)
@@ -111,13 +112,13 @@ def main(prune=False):
         js(A, rel, obj)
     for rel, canvas in career_items.textures().items():
         png(rel, canvas)
-    for name, r in {**data.recipes(), **naval_items.recipes(), **activity_items.recipes(), **journey_items.recipes()}.items():
+    for name, r in {**data.recipes(), **naval_items.recipes(), **activity_items.recipes(), **journey_items.recipes(), **base_items.recipes()}.items():
         js(D, f'grandline/recipe/{name}.json', r)
     for rel, obj in activity_items.data_files().items():
         js(D, rel, obj)
     for name, t in data.item_tags(weapons).items():
         js(D, f'minecraft/tags/item/{name}.json', t)
-    for name, t in data.block_tags().items():
+    for name, t in {**data.block_tags(), **base_items.block_tags()}.items():
         js(D, f'minecraft/tags/block/{name}.json', t)
 
     if prune:

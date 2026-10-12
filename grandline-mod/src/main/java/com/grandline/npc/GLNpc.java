@@ -130,6 +130,8 @@ public abstract class GLNpc extends PathfinderMob {
         if (e == this) return false;
         if (e instanceof net.minecraft.server.level.ServerPlayer sp && PrisonSystem.isJailed(sp)) return false;
         if (getLastHurtByMob() == e || getTarget() == e) return true;
+        Boolean base = com.grandline.base.CrewBases.hostility(this, e); // crew bases: hired hands and raiders
+        if (base != null) return base;
         Boolean career = com.grandline.career.Careers.hostility(this, e); // careers: squads, Warlords, safe houses, pirates' respect
         if (career != null) return career;
         Boolean story = com.grandline.npc.notable.NotableHooks.hostility(this, e); // story cast & crews
@@ -150,6 +152,7 @@ public abstract class GLNpc extends PathfinderMob {
 
     /** A player was knocked down by this NPC: Marines arrest, outlaws rob and leave, beasts finish. */
     public void onKnockedDownPlayer(ServerPlayer sp) {
+        if (com.grandline.boss.BossManager.deferKnockdown(this, sp)) return; // boss fights: no finishing blow while others still fight
         CharacterData d = Characters.get(sp);
         if (killsDowned()) return;
         setTarget(null);

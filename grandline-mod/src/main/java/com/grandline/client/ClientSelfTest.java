@@ -60,6 +60,45 @@ public final class ClientSelfTest {
         }, 10);
     }
 
+    /** Checks the situational music the client would pick now (client/GLMusic). */
+    private static void music(String expected) {
+        add("music " + expected, () -> {
+            net.minecraft.sounds.Music m = GLMusic.current();
+            String got = m == null ? "none" : m.getEvent().value().getLocation().getPath();
+            LOG.add((got.equals("music." + expected) ? "  music ok: " : "FAIL music: expected music." + expected + ", got ") + got + " (place " + GLMusic.place + ")");
+        }, 5);
+    }
+
+    /** Decodes every one of the mod's .ogg files with the game's own Vorbis decoder. */
+    private static void decodeSounds() {
+        add("decode sounds", () -> {
+            Minecraft mc = Minecraft.getInstance();
+            int n = 0;
+            long samples = 0;
+            for (var e : mc.getResourceManager().listResources("sounds", r -> r.getNamespace().equals(GrandLine.MODID) && r.getPath().endsWith(".ogg")).entrySet()) {
+                try (var in = e.getValue().open(); var ogg = new net.minecraft.client.sounds.JOrbisAudioStream(in)) {
+                    var fmt = ogg.getFormat();
+                    var buf = ogg.readAll();
+                    samples += buf.limit() / 2 / fmt.getChannels();
+                    n++;
+                    if (buf.limit() == 0) LOG.add("FAIL sound " + e.getKey() + ": no samples");
+                    if (e.getKey().getPath().startsWith("sounds/music/") == (fmt.getChannels() == 1))
+                        LOG.add("FAIL sound " + e.getKey() + ": " + fmt.getChannels() + " channels (effects must be mono, music stereo)");
+                } catch (Exception ex) {
+                    LOG.add("FAIL sound " + e.getKey() + ": " + ex);
+                }
+            }
+            LOG.add(String.format("  decoded %d sound files, %.1f minutes of audio", n, samples / 44100.0 / 60));
+            int missing = 0;
+            for (String id : com.grandline.registry.ModSounds.IDS)
+                if (mc.getSoundManager().getSoundEvent(GrandLine.id(id)) == null) {
+                    LOG.add("FAIL sound event grandline:" + id + " has no sounds.json entry");
+                    missing++;
+                }
+            LOG.add("  sound events resolved: " + (com.grandline.registry.ModSounds.IDS.length - missing) + "/" + com.grandline.registry.ModSounds.IDS.length);
+        }, 5);
+    }
+
     private static void camera(CameraType t) {
         add("camera " + t, () -> Minecraft.getInstance().options.setCameraType(t), 10);
     }
@@ -201,6 +240,8 @@ public final class ClientSelfTest {
         cmd("grandline island tp shiokaze_isle", 200);
         cmd("tp @s ~ ~ ~ 0 5", 20);
         shot("04_town_street");
+        decodeSounds();
+        music("island"); // on Shiokaze Isle, an East Blue town
         cmd("gamemode spectator", 10);
         cmd("tp @s ~ ~45 ~-70 0 30", 220);
         shot("05_town_aerial");
@@ -292,6 +333,10 @@ public final class ClientSelfTest {
         shot("15_ship_at_helm");
         add("wait while sailing", () -> {}, 300);
         shot("16_ship_sailing");
+        add("music at sea", () -> {
+            var m = GLMusic.current();
+            LOG.add("  music at sea: " + (m == null ? "none" : m.getEvent().value().getLocation().getPath()) + " (place " + GLMusic.place + ")");
+        }, 5);
         cmd("gamemode spectator", 10);
         cmd("tp @s ~-25 ~22 ~-25 -45 35", 60);
         shot("17_ship_from_above");
@@ -308,12 +353,15 @@ public final class ClientSelfTest {
         cmd("grandline island tp wano_country", 200); // safe ground on the island, then up and back for a view
         cmd("tp @s ~ ~35 ~ 0 25", 160);
         shot("25_wano_cliffs");
+        music("wano");
         shot2("26_original_island", "grandline island tp shiokaze_isle");
         // the White Sea and the deep sea
         shot2("27_heavens_gate", "execute in grandline:sky run tp @s -960 85 -40 30 15");
         shot2("28_angel_island", "execute in grandline:sky run tp @s -450 120 -20 0 30");
         shot2("29_upper_yard", "execute in grandline:sky run tp @s 300 150 -330 20 20");
+        music("sky");
         shot2("30_fishman_island_inside", "execute in grandline:deep_sea run tp @s 170 110 40 110 15");
+        music("deep_sea");
         shot2("31_fishman_island_bubble", "execute in grandline:deep_sea run tp @s 330 160 0 90 15");
         shot2("32_deep_sea_route", "execute in grandline:deep_sea run tp @s -1400 70 10 -90 0");
         islandPolishShots();
@@ -344,6 +392,12 @@ public final class ClientSelfTest {
         shot("35c_hanabi_chrysanthemum");
         cmd("grandline test ability fruit/hanabi/star_mine", 25);
         shot("35d_hanabi_star_mine");
+        cmd("kill @e[type=grandline:npc,distance=..30]", 10);
+        cmd("tp @s 36000 151 20000 0 5", 20);
+        cmd("grandline test boss hrolf", 120); // an Emperor on the stage: boss bar, phases, telegraphed attacks
+        shot("35g_boss_fight");
+        music("boss");
+        cmd("kill @e[type=grandline:npc,distance=..40]", 10);
         cmd("grandline fruit remove", 10);
         cmd("kill @e[type=grandline:npc,distance=..30]", 10);
         cmd("fill 35990 150 19986 36024 150 20014 minecraft:air", 10);

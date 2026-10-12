@@ -208,6 +208,7 @@ public final class Meals {
         CharacterData d = Characters.get(player);
         boolean cook = player instanceof ServerPlayer sp && hasCrewCook(sp);
         int q = cookedQuality(best, d.mastery(COOKING), cook);
+        if (player instanceof ServerPlayer gp && com.grandline.base.CrewBases.galleyAt(gp)) q = Math.min(2, q + 1); // a base galley
         if (q > 0) stack.set(ActivityRegistry.QUALITY.get(), q);
         if (d.created) {
             if (d.addMastery(COOKING, 6) && player instanceof ServerPlayer sp)

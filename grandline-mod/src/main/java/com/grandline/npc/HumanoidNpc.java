@@ -135,7 +135,9 @@ public class HumanoidNpc extends GLNpc {
         FightingStyle st = FightingStyles.get(styleId);
         if (st != null) for (Ability a : st.abilities) if (a.unlockMastery() <= mastery) out.add(a);
         DevilFruit f = fruit();
-        if (f != null) for (Ability a : f.abilities()) if (a.unlockMastery() <= mastery && (!a.awakened() || tier() >= 9)) out.add(a);
+        // a boss's awakened powers come only as telegraphed signature attacks (com.grandline.boss), never unannounced
+        boolean boss = com.grandline.boss.BossManager.isBoss(this);
+        if (f != null) for (Ability a : f.abilities()) if (a.unlockMastery() <= mastery && (!a.awakened() || tier() >= 9 && !boss)) out.add(a);
         var wc = com.grandline.combat.CombatManager.weaponOf(getMainHandItem());
         if (wc != null) for (Ability a : Abilities.of(Ability.Source.WEAPON, wc.id())) if (a.unlockMastery() <= mastery) out.add(a);
         for (Ability a : Abilities.of(Ability.Source.RACE, raceId())) if (a.unlockMastery() <= mastery) out.add(a);
@@ -143,7 +145,7 @@ public class HumanoidNpc extends GLNpc {
             Ability em = Abilities.get("haki/armament/emission");
             if (em != null) out.add(em);
         }
-        if (hakiCoq > 0) {
+        if (hakiCoq > 0 && !boss) { // a boss unleashes its Conqueror's Haki as each phase begins instead
             Ability b = Abilities.get("haki/conqueror/burst");
             if (b != null) out.add(b);
         }

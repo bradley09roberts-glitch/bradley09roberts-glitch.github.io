@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "grandline:block/base_chest_top",
+    "bottom": "grandline:block/base_chest_top",
+    "side": "grandline:block/base_chest"
+  }
+}
