@@ -166,7 +166,13 @@ public final class Ferries {
             ship.discard();
             return 0;
         }
-        if (dist < 26) {
+        // close in, the coast near a dock can hold a hull off the exact dock point (rocks, piers, driftwood): a ferry
+        // that is pinned near the dock, or has worked about the destination's waters for half a minute, lands its
+        // passengers anyway (they are set down on the dock itself)
+        WorldPlan fplan = WorldPlan.forLevel(l);
+        Island fdest = fplan == null ? null : fplan.byId(ship.ferryIsland);
+        if (fdest != null && fdest.distance((int) ship.getX(), (int) ship.getZ()) < fdest.radius * 1.25 + 40) ship.ferryNear++;
+        if (dist < 26 || (dist < 70 && ship.ferryStuck > 40) || ship.ferryNear > 600) {
             arrive(ship, l);
             return 0;
         }
