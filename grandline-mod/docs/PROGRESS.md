@@ -4,24 +4,24 @@ Durable log of the overnight build. Newest entries at the bottom of each section
 Every "verified" claim names the check that verified it; anything not listed as verified has not been tested.
 Per-item status (planned / partial / playable / tested) lives in [INVENTORY.md](INVENTORY.md), generated from the code.
 
-## Handover summary (12 October, early afternoon UTC)
+## Handover summary (12 October, 14:00 UTC)
 
 - **What it is**: an original One Piece RPG mod for Minecraft Java 1.21.1 / NeoForge 21.1.259 (+ GeckoLib 4.9.3).
-  The Overworld is an ocean world of ~240 islands (104 canon/starter at fixed places, ~140 generated originals, the
+  The Overworld is an ocean world of ~245 islands (104 canon/starter at fixed places, ~140 generated originals, the
   count varies with the seed), plus a sky dimension and a deep-sea dimension. 21 races, 78 Devil Fruits, Haki,
-  27 weapons and 19 fighting styles, 7 ship classes with crews and naval combat, ~214 named characters and NPC roles,
-  a story saga, island stories and notice-board jobs, bounties and permadeath with a knockdown, 24 boss fights,
-  faction careers, crew bases, sea jobs, a journey advancement tab, Den Den Mushi, Buster Calls, treasure maps,
-  fishing and cooking, and an original synthesised soundtrack with sound effects and sea ambience.
+  27 weapons and 19 fighting styles, 7 ship classes with crews, hired gunners and naval combat, ~214 named
+  characters and NPC roles, a story saga, island stories and notice-board jobs (escorts, named pirate ships,
+  convoys), bounties and permadeath with a knockdown, 24 boss fights, faction careers, crew bases, a journey
+  advancement tab, Den Den Mushi, Buster Calls, treasure maps, fishing and cooking, and an original synthesised
+  soundtrack (9 tracks, 4 music discs) with 40 sound effects and sea ambience.
 - **Install**: see README (client: NeoForge 21.1.259 + `dist/grandline-0.1.0.jar` + `dist/geckolib-neoforge-1.21.1-4.9.3.jar`
   in `mods/`; server: the same two jars, `level-type=grandline:ocean_world`, at least 4 GB).
-- **Last verification** (all on a dedicated server; the test world has a random seed every run):
-  full phase 1 640/641 and phase 2 20/20 with no exception (the one FAIL was a Buster Call check that did not
-  allow for warships already on station; the check was fixed and the journey quick phase then passed 38/38 on a
-  random seed and on seed 20261012); real client 79 shots with no failures (crew base, careers, ambience, music
-  picked at six places, every sound decoded by the game); two real clients on one ship; the built jar on a
-  production NeoForge server with a real client: 80 shots, no failures, no server exception (12:15–12:35).
-- **Status per item**: [INVENTORY.md](INVENTORY.md) — no item is "partial" or "planned"; 272 tested, 336 playable.
+- **Last verification** (dedicated server; the test world has a random seed every run): full phase 1 660/660 and
+  phase 2 22/22 with no exception on the final code (ffc3b35, 13:25–13:50); two real clients on one ship with a
+  merchant passing alongside (the mate stayed on deck, no "moved wrongly"); real client runs with 79-80 shots and no
+  failures; the jar built from ffc3b35 on a production NeoForge server with a real client (result at the end of
+  this log).
+- **Status per item**: [INVENTORY.md](INVENTORY.md) — no item is "partial" or "planned"; 265 tested, 346 playable.
 - **Known gaps**: listed at the end of this log.
 
 ## How things are verified
