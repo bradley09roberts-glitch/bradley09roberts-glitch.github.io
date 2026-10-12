@@ -65,7 +65,7 @@ import java.util.*;
  * for the target, a countdown (config, 60 s); black snails overhear the order. Then a squadron of Marine warships
  * (one Vice Admiral aboard each; never more than the room left under the shared NPC ship cap) appears on the open
  * sea around the target, converges on their ship or island and bombards it with mortar shells for the configured
- * time. Shells hurt ships and anyone the Marines would hit (never Marines, the story cast, or a downed player), and
+ * time. Shells hurt ships and everyone in the blast (never Marines, the story cast, or a downed or jailed player), and
  * crater only the wild (never a town; craters revert through {@link TerrainChanges}). The call ends when the
  * bombardment runs out, the fleet is sunk or beaten, the target slips away or leaves the sea (all count as
  * surviving: a journey advancement and a higher bounty), or when the target is knocked down (the Vice Admiral's
@@ -79,7 +79,9 @@ public final class BusterCall {
     public static final int BASE_REACH = 300;
     /** A Vice Admiral reports a player once they have not traded blows for this long (and is still alive). */
     public static final long WITNESS_QUIET = 20 * 20;
-    static final double SHELL_RADIUS = 4.5, SPREAD = 9, RANGE = 150, LOST = 650, GRAVITY = 0.02;
+    static final double SHELL_RADIUS = 4.5, SPREAD = 9, RANGE = 120, LOST = 650, GRAVITY = 0.02;
+    /** For this long after the first warship appears, the rest of the squadron keeps arriving as open water allows. */
+    static final int REINFORCE_TICKS = 20 * 30;
     static final float SHELL_DAMAGE = 16, SHELL_HULL = 45;
     static final int SHELL_PERIOD = 50;
 
@@ -99,9 +101,11 @@ public final class BusterCall {
         public final long issuedAt, warnUntil;
         public long sailFrom, bombardFrom, bombardUntil, withdrawUntil;
         public final List<ShipEntity> ships = new ArrayList<>();
-        final List<Double> bearings = new ArrayList<>();
+        final Map<UUID, Double> bearings = new HashMap<>();
+        /** Warships sunk, beaten or taken (as opposed to left behind when the target sailed out of the loaded world). */
+        final Set<UUID> beaten = new HashSet<>();
         public Vec3 focus;
-        public int shells, impacts, spawned, room, hurt, hulls;
+        public int shells, impacts, spawned, wanted, room, hurt, hulls;
         public boolean survived;
         public String outcome = "";
         final int bombardTicks, maxShips, spawnDist, withdrawTicks, sailTicks;
@@ -115,7 +119,7 @@ public final class BusterCall {
             this.warnUntil = now + (r.warnTicks >= 0 ? r.warnTicks : GLConfig.BUSTER_CALL_WARNING_SECONDS.get() * 20L);
             this.bombardTicks = r.bombardTicks >= 0 ? r.bombardTicks : GLConfig.BUSTER_CALL_SECONDS.get() * 20;
             this.maxShips = r.ships > 0 ? r.ships : GLConfig.BUSTER_CALL_SHIPS.get();
-            this.spawnDist = r.spawnDist > 0 ? r.spawnDist : 170;
+            this.spawnDist = r.spawnDist; // <= 0: inside the simulation distance, like the living sea's ships
             this.withdrawTicks = r.withdrawTicks >= 0 ? r.withdrawTicks : 20 * 12;
             this.sailTicks = r.sailTicks > 0 ? r.sailTicks : 20 * 150;
             this.focus = target.position();
@@ -293,7 +297,8 @@ public final class BusterCall {
                 if (now % 20 != 0) return; // the fleet looks for open water once a second
                 c.focus = focusOf(c.target);
                 c.room = SeaEncounters.cap(l.players().size()) - SeaEncounters.countNpcShips(l);
-                spawnFleet(l, c, Math.min(c.maxShips, c.room));
+                c.wanted = Math.min(c.maxShips, c.room);
+                spawnFleet(l, c, c.wanted);
                 if (!c.ships.isEmpty()) {
                     c.phase = Phase.SAILING;
                     c.sailFrom = now;
@@ -312,11 +317,12 @@ public final class BusterCall {
                     return;
                 }
                 if (now % 10 == 0) c.focus = focusOf(c.target);
+                for (ShipEntity sh : c.ships) if (sh.isSinking() || sh.naval.crewGone || !sh.flag(ShipEntity.F_NPC)) c.beaten.add(sh.getUUID());
                 c.ships.removeIf(sh -> sh.isRemoved() || !sh.flag(ShipEntity.F_NPC));
                 List<ShipEntity> fighting = new ArrayList<>();
                 for (ShipEntity sh : c.ships) if (!sh.isSinking() && !sh.naval.crewGone) fighting.add(sh);
                 if (fighting.isEmpty()) {
-                    finish(s, c, "fleet_beaten", true);
+                    finish(s, c, c.beaten.isEmpty() ? "escaped" : "fleet_beaten", true);
                     return;
                 }
                 double nearest = Double.MAX_VALUE;
@@ -325,10 +331,12 @@ public final class BusterCall {
                     finish(s, c, "escaped", true); // outran the fleet (or it never got within range)
                     return;
                 }
-                for (int i = 0; i < c.ships.size(); i++) {
-                    ShipEntity sh = c.ships.get(i);
-                    if (!fighting.contains(sh)) continue;
-                    steer(l, c, sh, i);
+                if (c.spawned < c.wanted && now - c.sailFrom < REINFORCE_TICKS && now % 20 == 0) { // the rest of the squadron
+                    int room = SeaEncounters.cap(l.players().size()) - SeaEncounters.countNpcShips(l);
+                    spawnFleet(l, c, Math.min(c.wanted - c.spawned, room));
+                }
+                for (ShipEntity sh : fighting) {
+                    steer(l, c, sh);
                     if (now % 10 == Math.floorMod(sh.getId(), 10)) LivingSea.deckDiscipline(sh, l);
                 }
                 if (c.phase == Phase.SAILING && nearest <= RANGE) {
@@ -364,17 +372,21 @@ public final class BusterCall {
         }
     }
 
-    /** Warships on open water in a ring round the target (one Vice Admiral aboard each), as many as there is room for. */
-    static void spawnFleet(ServerLevel l, Call c, int n) {
-        if (n <= 0) return;
+    /**
+     * Up to {@code n} more warships on open water in a ring round the target (one Vice Admiral aboard each), tried at a
+     * spread of bearings and, where the near water is crowded with land, a little closer in. Returns how many came.
+     */
+    static int spawnFleet(ServerLevel l, Call c, int n) {
+        if (n <= 0) return 0;
         RandomSource r = l.random;
         SeaZone zone = WorldLayout.zoneAt(Mth.floor(c.focus.x), Mth.floor(c.focus.z));
         int tier = Math.max(1, zone.dangerTier) + 3;
-        double base = r.nextDouble() * Math.PI * 2;
-        for (int k = 0; k < n * 4 && c.ships.size() < n; k++) {
-            double ang = base + k * (Math.PI * 2 / n) + (k >= n ? r.nextGaussian() * 0.3 : 0);
-            double dist = c.spawnDist + (k / n) * 25;
-            ShipClass cls = c.ships.isEmpty() ? ShipClass.GALLEON : ShipClass.BRIGANTINE;
+        double base = r.nextDouble() * Math.PI * 2, far = c.spawnDist > 0 ? c.spawnDist : LivingSea.spawnDist(l);
+        int added = 0, slots = Math.max(6, n * 2);
+        for (int k = 0; k < slots * 3 && added < n; k++) {
+            double ang = base + (k % slots) * (Math.PI * 2 / slots) + r.nextGaussian() * 0.1;
+            double dist = far * (1 - 0.15 * (k / slots)); // the outer ring first, then closer in
+            ShipClass cls = c.spawned == 0 ? ShipClass.GALLEON : ShipClass.BRIGANTINE;
             Vec3 at = LivingSea.openWater(l, c.focus.x + Math.cos(ang) * dist, c.focus.z + Math.sin(ang) * dist, cls.length / 2 + 4);
             if (at == null) continue;
             ShipEntity s = SeaEncounters.spawnShip(l, at, LivingSea.yawTo(at, c.focus), cls, LivingSea.MARINE, tier, "Marine HQ Warship");
@@ -382,17 +394,19 @@ public final class BusterCall {
             s.npcAiOff = true; // captained from here: converge and bombard (no despawning while the call lasts)
             s.addTag(TAG);
             s.addUpgrade("paddle_wheel"); // Marine warships keep way in any wind
-            s.setShipName("Buster Call Warship " + (c.ships.size() + 1));
+            s.setShipName("Buster Call Warship " + (c.spawned + 1));
             for (UUID u : s.naval.crew) if (l.getEntity(u) instanceof GLNpc m) m.addTag(TAG);
             c.ships.add(s);
-            c.bearings.add(Math.atan2(at.z - c.focus.z, at.x - c.focus.x));
+            c.bearings.put(s.getUUID(), Math.atan2(at.z - c.focus.z, at.x - c.focus.x));
             c.spawned++;
+            added++;
         }
+        return added;
     }
 
     /** Each warship keeps to its own bearing from the target, closing to its station off the target. */
-    private static void steer(ServerLevel l, Call c, ShipEntity sh, int i) {
-        double b = i < c.bearings.size() ? c.bearings.get(i) : 0;
+    private static void steer(ServerLevel l, Call c, ShipEntity sh) {
+        double b = c.bearings.getOrDefault(sh.getUUID(), 0.0);
         double station = 60 + sh.cls.length / 2.0;
         Vec3 st = c.focus.add(Math.cos(b) * station, 0, Math.sin(b) * station);
         double d = horiz(sh.position(), st);
@@ -449,9 +463,9 @@ public final class BusterCall {
     public record Impact(int hurt, int hulls, int blocks) {}
 
     /**
-     * A shell bursts at {@code pos}: everyone in {@link #SHELL_RADIUS} the Marines would hit takes damage (falling off
-     * with distance), every ship but the fleet's own whose hull is within reach is holed, and in the wild (never in or
-     * at the edge of a settlement) a small crater is blasted that reverts later.
+     * A shell bursts at {@code pos}: everyone within {@link #SHELL_RADIUS} but the {@link #spared} takes damage
+     * (falling off with distance), every ship but the fleet's own whose hull is within reach is holed, and in the wild
+     * (never in or at the edge of a settlement) a small crater is blasted that reverts later.
      */
     public static Impact burst(ServerLevel l, Vec3 pos, @Nullable Entity shell, @Nullable LivingEntity gunner) {
         l.sendParticles(ParticleTypes.EXPLOSION_EMITTER, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
