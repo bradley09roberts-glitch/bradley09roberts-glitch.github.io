@@ -114,3 +114,15 @@ the distance fog is closer than on a real PC) against a dedicated server on 2026
 ### Multiplayer: the mate's own view, standing on deck while the captain sails
 
 ![Multiplayer: the mate's own view, standing on deck while the captain sails](mp_b_deck_while_sailing.jpg)
+
+### Wano: cherry blossom and black-roofed houses
+
+![Wano: cherry blossom and black-roofed houses](25_wano_cliffs.jpg)
+
+### Skypiea houses on the cloud
+
+![Skypiea houses on the cloud](52_skypiea_houses.jpg)
+
+### Fish-Man Island coral gardens
+
+![Fish-Man Island coral gardens](51_terrain_fishman_coral.jpg)
