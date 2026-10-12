@@ -416,6 +416,15 @@ First run of a real client against the dedicated server. Result: no client crash
 - Full run on the merged tree with the journey: phase 1 483/483, phase 2 14/14, no exceptions; inventory regenerated
   from it (240 tested, 373 playable, 0 partial).
 
+### Buster Call fleets that circled the island (12:10–12:45)
+- Two agents saw "the warships converge on the target" fail (always on seed 20261012, sometimes under load). With a
+  report of each warship's way and what lay ahead (`BusterCall.Call.fleetReport`, `ShipEntity.aheadReport`), the
+  fleet was found sailing at speed 150-180 blocks out, out of firing range: the ferry helm rounds any island whose
+  waters a course crosses unless it is the destination, and the warships had none, so they orbited the target's
+  island. The helm is now told the target's island; warships also take stations on open water (a ship that came
+  in behind the island no longer gets a station inland). Seed 20261012: 125 -> 113 before, 120 -> 86 after, journey
+  quick phase 38/38 (it failed 37/38 on the code before the fix).
+
 ### Endgame boss fights (agent, merged 09:45)
 - Framework (`boss/`): the top of the cast are now boss fights. `BossManager` tracks boss entities (notables listed
   in `Bosses`) and starts a `BossFight` as soon as one is engaged. A fight has a vanilla boss bar (`ServerBossEvent`)
