@@ -35,15 +35,21 @@ class Rcon:
         return rid, kind, data[8:-2].decode("utf-8", "replace")
 
     def cmd(self, command):
+        """Vanilla RCON handles one packet per read and splits long replies into 4096-byte fragments."""
         rid = self._write(2, command)
-        marker = self._write(0, "")  # vanilla answers unknown request types: marks the end of the reply
         parts = []
-        while True:
-            got, _, text = self._read()
-            if got == marker:
-                break
-            if got == rid:
+        got, _, text = self._read()
+        parts.append(text)
+        while len(text.encode("utf-8")) >= 4096:
+            old = self.sock.gettimeout()
+            self.sock.settimeout(2.0)
+            try:
+                got, _, text = self._read()
                 parts.append(text)
+            except socket.timeout:
+                break
+            finally:
+                self.sock.settimeout(old)
         return "".join(parts)
 
     def close(self):

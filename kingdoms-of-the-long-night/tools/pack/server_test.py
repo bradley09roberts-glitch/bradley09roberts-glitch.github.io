@@ -11,8 +11,12 @@ scan logs for missing deps, mod-loading errors, mixin failures, world-gen errors
 Usage:
     python3 tools/pack/server_test.py [--preset performance|rich] [--workdir DIR] [--port 25599]
         [--xmx 4G] [--with-longnight auto|yes|no] [--no-worldgen-probe] [--timeout 900]
+        [--seed S] [--extra-command "locate structure longnight:..."]... [--keep-running SECONDS]
+        [--manifest other_manifest.json]
 
-Prints PASS/FAIL, boot time, loaded mods and the log path. Exit code 0 = PASS.
+Prints PASS/FAIL, boot time, loaded mods and the log path, and writes
+<workdir>/<preset>/server_test_summary.json. Exit code 0 = PASS. Default workdir:
+$KOTLN_CACHE/server-test (KOTLN_CACHE defaults to $TMPDIR/kotln-pack-cache).
 """
 import argparse
 import json

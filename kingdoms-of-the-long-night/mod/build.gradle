@@ -30,6 +30,12 @@ neoForge {
             programArgument '--nogui'
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
+        // headless visual test: joins run/saves/longnight-test-world, flies to a settlement, takes screenshots, quits
+        clientAutoshot {
+            client()
+            systemProperty 'longnight.autoshot', 'true'
+            programArguments.addAll '--quickPlaySingleplayer', 'longnight-test-world', '--width', '1280', '--height', '720'
+        }
         gameTestServer {
             type = 'gameTestServer'
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id

@@ -43,6 +43,26 @@ public class ServerHooks implements WorldHooks {
     }
 
     @Override
+    public boolean plotLooksBuildable(net.minecraft.core.BlockPos origin, int w, int d) {
+        ServerLevel level = level();
+        var gen = level.getChunkSource().getGenerator();
+        var rs = level.getChunkSource().randomState();
+        int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE, wet = 0, n = 0;
+        for (int x = 0; x <= w; x += Math.max(1, w / 2)) {
+            for (int z = 0; z <= d; z += Math.max(1, d / 2)) {
+                int wx = origin.getX() + Math.min(x, w - 1), wz = origin.getZ() + Math.min(z, d - 1);
+                int surface = gen.getBaseHeight(wx, wz, net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, level, rs);
+                int floor = gen.getBaseHeight(wx, wz, net.minecraft.world.level.levelgen.Heightmap.Types.OCEAN_FLOOR_WG, level, rs);
+                if (floor < surface - 1) wet++;
+                min = Math.min(min, floor);
+                max = Math.max(max, floor);
+                n++;
+            }
+        }
+        return max - min <= Placer.MAX_SPREAD && wet * 2 <= n;
+    }
+
+    @Override
     public void personMoved(WorldSim sim, Person p) {
         Embodiment.discardBody(level(), p.id);
     }

@@ -63,6 +63,8 @@ public final class LongNightCommand {
                         .then(Commands.argument("good", StringArgumentType.word())
                                 .then(Commands.argument("count", IntegerArgumentType.integer(1, 64)).executes(LongNightCommand::buy)))))
                 .then(Commands.literal("realms").executes(LongNightCommand::realms))
+                .then(Commands.literal("accept").then(Commands.argument("id", StringArgumentType.word())
+                        .then(Commands.argument("contract", StringArgumentType.word()).executes(LongNightCommand::accept))))
                 .then(Commands.literal("plan").then(Commands.argument("building", StringArgumentType.word()).executes(LongNightCommand::plan)))
                 .then(Commands.literal("rename").then(Commands.argument("name", StringArgumentType.greedyString()).executes(LongNightCommand::rename)))
                 .then(Commands.literal("admin").requires(s -> s.hasPermission(2))
@@ -184,6 +186,32 @@ public final class LongNightCommand {
             return 0;
         }
         return Trade.buy(p, sim, s, good, IntegerArgumentType.getInteger(c, "count")) ? 1 : 0;
+    }
+
+    static int accept(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer p = c.getSource().getPlayerOrException();
+        WorldSim sim = sim(c);
+        Settlement s = sim.settlement(uuid(StringArgumentType.getString(c, "id")));
+        UUID cid = uuid(StringArgumentType.getString(c, "contract"));
+        if (s == null || cid == null) return 0;
+        int mine = 0;
+        for (Settlement x : sim.settlements.values()) for (var k : x.contracts) if (p.getUUID().equals(k.takenBy)) mine++;
+        for (var k : s.contracts) {
+            if (!k.id.equals(cid)) continue;
+            if (!k.open()) {
+                Ui.msg(p, "Someone has already taken that work.");
+                return 0;
+            }
+            if (mine >= 3) {
+                Ui.msg(p, "You already have three contracts; finish one first.");
+                return 0;
+            }
+            k.takenBy = p.getUUID();
+            sim.setDirty();
+            Ui.msg(p, "Agreed. " + k.describe(sim) + (k.kind.equals("deliver") ? " Bring it to the storehouse of " + s.name + "." : ""));
+            return 1;
+        }
+        return 0;
     }
 
     static void join(ServerPlayer p, WorldSim sim, Settlement s) {

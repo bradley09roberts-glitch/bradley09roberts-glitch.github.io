@@ -92,6 +92,22 @@ public final class Crime {
         sim.setDirty();
     }
 
+    /** When the last outlaw of a band falls, bounties posted against it are paid. */
+    public static void afterOutlawDeath(ServerLevel level, ServerPlayer p, WorldSim sim, UUID campId) {
+        Settlement camp = sim.settlement(campId);
+        if (camp == null || camp.kind != Settlement.Kind.BANDIT_CAMP || !sim.residents(camp).isEmpty()) return;
+        int total = 0;
+        for (String paid : com.longnight.sim.Contracts.campDestroyed(sim, camp, p.getUUID())) total += Integer.parseInt(paid.split(":")[1]);
+        if (total > 0) {
+            com.longnight.game.Coins.give(p, total);
+            p.sendSystemMessage(Component.literal("\u00a76The outlaws of " + camp.name + " are broken. Bounties paid: " + com.longnight.game.Coins.format(total) + "."));
+        } else {
+            p.sendSystemMessage(Component.literal("\u00a76The outlaws of " + camp.name + " are broken."));
+        }
+        sim.addNews(WorldSim.dayOf(level.getServer().overworld()), "bandit_camp", p.getGameProfile().getName() + " broke the outlaw band of " + camp.name + ".",
+                sim.nearestSettlement(camp.center, Settlement.Kind.SETTLEMENT), 3, "person", p.getGameProfile().getName());
+    }
+
     /** Breaking a settlement's buildings in front of witnesses is vandalism and theft. */
     public static void vandalism(ServerLevel level, ServerPlayer p, BlockPos pos) {
         WorldSim sim = WorldSim.get(level.getServer());

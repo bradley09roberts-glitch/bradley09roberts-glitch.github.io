@@ -1,5 +1,7 @@
 package com.longnight.sim;
 
+import net.minecraft.core.BlockPos;
+
 /**
  * The simulation's window onto the physical world. The server implementation places graves,
  * spawns raiders and messages players; tests use {@link #NONE}.
@@ -22,6 +24,11 @@ public interface WorldHooks {
 
     /** Tell nearby/citizen players something important. */
     default void announce(WorldSim sim, Settlement s, String message, int importance) {}
+
+    /** Cheap terrain check from the world generator (no chunk loading): is this plot plausibly buildable? */
+    default boolean plotLooksBuildable(BlockPos origin, int width, int depth) {
+        return true;
+    }
 
     /** A person arrived in or left a settlement (refresh their body). */
     default void personMoved(WorldSim sim, Person p) {}

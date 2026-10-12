@@ -162,6 +162,13 @@ public final class Ui {
                 break;
             }
         }
+        for (com.longnight.sim.Contracts.Contract k : s.contracts) {
+            MutableComponent line = Component.literal(" > " + k.describe(sim) + " (until day " + k.expiresDay + ") ");
+            if (k.open()) line.append(button("Accept", "/longnight accept " + s.id + " " + k.id, "Take on this work"));
+            else if (p.getUUID().equals(k.takenBy)) line.append(Component.literal("[yours]").withStyle(ChatFormatting.GREEN));
+            else line.append(Component.literal("[taken]").withStyle(ChatFormatting.DARK_GRAY));
+            p.sendSystemMessage(line);
+        }
     }
 
     public static void people(ServerPlayer p, WorldSim sim, Settlement s) {

@@ -50,6 +50,8 @@ public final class Placer {
 
     private static final Set<UUID> PREPARED = new HashSet<>();
     private static final Set<UUID> DECAYED = new HashSet<>();
+    /** largest height difference (blocks) a plot may have; terraces and foundations absorb the rest */
+    public static final int MAX_SPREAD = 9;
     /** GameTests only: the test arena is roofed with barriers, so tests state where the ground is. */
     public static Integer testGroundY;
 
@@ -86,8 +88,8 @@ public final class Placer {
         boolean waterOk = b.type == BuildingType.FISHERY || b.type == BuildingType.WELL;
         String problem = null;
         if (built > 0) problem = "Something built by other hands stands on that plot.";
-        else if (spread > 6) problem = "The ground there is too steep.";
-        else if (!waterOk && water > cols / 4) problem = "That plot is under water.";
+        else if (spread > MAX_SPREAD) problem = "The ground there is too steep.";
+        else if (!waterOk && water * 2 > cols) problem = "That plot is under water.";
         else if (sim.claimed(b.origin, Math.max(w, d))) problem = "That land is claimed by someone else.";
         Blueprint bp = Construction.blueprint(s, b);
         if (problem == null) {
@@ -114,6 +116,7 @@ public final class Placer {
         // clear the volume and lay a foundation down to firm ground
         Culture c = Content.culture(s.culture);
         BlockState fill = Blocks.DIRT.defaultBlockState();
+        BlockState footing = pathBlock(c).is(Blocks.DIRT_PATH) ? Blocks.COBBLESTONE.defaultBlockState() : Blocks.STONE_BRICKS.defaultBlockState();
         for (int x = -1; x <= w; x++) {
             for (int z = -1; z <= d; z++) {
                 int wx = b.origin.getX() + x, wz = b.origin.getZ() + z;
@@ -122,11 +125,12 @@ public final class Placer {
                     if (!level.getBlockState(p).isAir()) level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
                 }
                 boolean inside = x >= 0 && z >= 0 && x < w && z < d;
-                for (int yy = y; yy >= y - 6; yy--) {
+                for (int yy = y; yy >= y - 10; yy--) {
                     BlockPos p = new BlockPos(wx, yy, wz);
                     BlockState st = level.getBlockState(p);
-                    if (st.isAir() || st.canBeReplaced() || !level.getFluidState(p).isEmpty() && b.type != BuildingType.FISHERY) {
-                        level.setBlock(p, yy == y && !inside ? grassOrDirt(level, p) : fill, 2);
+                    boolean wet = !level.getFluidState(p).isEmpty();
+                    if (st.isAir() || st.canBeReplaced() || wet && b.type != BuildingType.FISHERY) {
+                        level.setBlock(p, wet ? footing : yy == y && !inside ? grassOrDirt(level, p) : fill, 2);
                     } else break;
                 }
                 if (!inside && (x == -1 || z == -1 || x == w || z == d)) {

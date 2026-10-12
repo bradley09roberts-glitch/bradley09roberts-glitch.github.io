@@ -23,3 +23,11 @@ description='''${mod_description}'''
     versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"
+
+# Load after worldgen packs so our "no vanilla villages" overrides win (one society: longnight owns every person)
+[[dependencies.${mod_id}]]
+    modId="terralith"
+    type="optional"
+    versionRange="*"
+    ordering="AFTER"
+    side="BOTH"

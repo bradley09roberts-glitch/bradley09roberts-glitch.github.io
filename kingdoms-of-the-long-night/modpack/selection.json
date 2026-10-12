@@ -420,7 +420,7 @@
     {
       "name": "IceAndFire Community Edition",
       "slug": "iceandfire-ce",
-      "reason": "Exists for NeoForge 1.21.1 (2.0 release 18 Jul 2026, 2.1-beta.1 the same day) but not clearly stable: brand-new major line whose own page warns that version swaps corrupt saves (dangerous for a long hardcore world), heavy world-gen (roosts, caves, graveyards) and terrain-griefing dragons, plus 2 extra libs (Uranus, Jupiter). Dragons: not available as clearly stable - longnight will provide later."
+      "reason": "Exists for NeoForge 1.21.1 (2.0 release 18 Jul 2026; 2.1-beta.1 the same day) and a side boot test of it passed (fresh world + structure probe; it needs Architectury, which its library Uranus requires but Modrinth does not declare). Still not 'clearly stable' for a long hardcore world: brand-new major line whose own page warns that swapping versions corrupts saves, heavy world-gen (roosts, caves, graveyards), terrain-griefing dragons and 3 extra libraries. Decision for v0.1: no dragon mod - longnight will provide dragons later."
     },
     {
       "name": "Dragon Mounts Remastered",

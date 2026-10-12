@@ -56,6 +56,10 @@ public final class Planner {
                     for (Person bd : builders) if (bd.activity.contains(b.type.displayName.toLowerCase())) bd.blocked = b.problem;
                 }
             }
+            // a project whose plot cannot be resolved is abandoned and its materials returned to the stores
+            for (Building b : new ArrayList<>(s.buildings)) {
+                if (b.underConstruction() && b.placed == 0 && b.problem.contains("No other plot")) cancel(sim, s, b, day);
+            }
             int maxProjects = Math.max(1, builders.size());
             if (s.activeProjects() < maxProjects) {
                 BuildingType next = next(sim, s, day);
@@ -172,7 +176,7 @@ public final class Planner {
             int[] c = cellOf(s, b.centre());
             used.add(cellKey(c[0], c[1]));
         }
-        int maxRing = Math.max(2, s.radius / CELL);
+        int maxRing = Math.max(2, s.radius / CELL) + 1;
         List<int[]> candidates = new ArrayList<>();
         for (int ring = 0; ring <= maxRing; ring++) {
             for (int cx = -ring; cx <= ring; cx++) {
@@ -191,11 +195,18 @@ public final class Planner {
         }));
         for (int[] c : candidates) {
             if (type != BuildingType.WELL && c[0] == 0 && c[1] == 0) continue;
-            if (type == BuildingType.WELL && (c[0] != 0 || c[1] != 0)) continue;
+            if (type == BuildingType.WELL && c[2] > 1) continue; // the well stays at the heart of things
             long key = cellKey(c[0], c[1]);
             if (used.contains(key) || s.badCells.contains(key)) continue;
             BlockPos mid = s.center.offset(c[0] * CELL, 0, c[1] * CELL);
             if (sim.claimed(mid, CELL)) continue;
+            Building probe = new Building(null, type);
+            probe.rotation = rotationFor(c[0], c[1]);
+            BlockPos plotOrigin = originFor(s, c[0], c[1], probe);
+            if (!sim.hooks.plotLooksBuildable(plotOrigin, probe.width(), probe.depth())) {
+                s.badCells.add(key);
+                continue;
+            }
             boolean clash = false;
             for (Settlement o : sim.settlements.values()) {
                 if (o == s || o.center == null) continue;
@@ -223,13 +234,39 @@ public final class Planner {
         return new BlockPos(ox, s.center.getY(), oz);
     }
 
+    /** Abandon an unstarted project, refunding exactly what was paid for it. */
+    public static void cancel(WorldSim sim, Settlement s, Building b, long day) {
+        if (b.placed > 0) return;
+        com.longnight.world.Blueprint bp = Construction.blueprint(s, b);
+        for (int i = 0; i < b.progress && i < bp.steps.size(); i++) bp.stepCost(i).forEach(s.stock::add);
+        s.buildings.remove(b);
+        s.chronicle(day, "Plans for a " + b.type.displayName.toLowerCase() + " were abandoned: " + b.problem);
+        sim.setDirty();
+    }
+
     /** Move a not-yet-started building to another plot (site turned out unusable). */
     public static boolean relocate(WorldSim sim, Settlement s, Building b, String reason) {
         int[] old = cellOf(s, b.centre());
         s.badCells.add(cellKey(old[0], old[1]));
         int[] cell = findCell(sim, s, b.type);
+        for (int grow = 0; cell == null && grow < 3 && s.radius < 150; grow++) {
+            s.radius += CELL; // spread outward along the land
+            cell = findCell(sim, s, b.type);
+        }
         if (cell == null) {
             b.problem = reason + " No other plot is free.";
+            if (b.state == Building.State.COMPLETE && b.placed == 0) {
+                // a building from before the player's time that the land cannot hold: it never stood here
+                s.buildings.remove(b);
+                for (UUID id : b.residents) {
+                    Person p = sim.person(id);
+                    if (p != null) p.home = null;
+                }
+                for (UUID id : b.workers) {
+                    Person p = sim.person(id);
+                    if (p != null) p.workplace = null;
+                }
+            }
             return false;
         }
         b.rotation = rotationFor(cell[0], cell[1]);

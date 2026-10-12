@@ -49,6 +49,7 @@ public class Settlement {
     public final Map<UUID, Integer> reputation = new HashMap<>();   // player uuid -> -100..100
     public final Set<UUID> citizenPlayers = new HashSet<>();
     public final Set<UUID> visitors = new HashSet<>();
+    public final List<Contracts.Contract> contracts = new ArrayList<>();
     public final LinkedHashMap<Long, Long> knownNews = new LinkedHashMap<>();  // news id -> day learned
     public final List<String> chronicle = new ArrayList<>();
     public final Set<Long> badCells = new HashSet<>();
@@ -163,6 +164,7 @@ public class Settlement {
         t.put("rep", rep);
         t.put("citizens", Nbt.uuidList(citizenPlayers));
         t.put("visitors", Nbt.uuidList(visitors));
+        t.put("contracts", Contracts.save(contracts));
         long[] newsIds = new long[knownNews.size()];
         long[] newsDays = new long[knownNews.size()];
         int i = 0;
@@ -207,6 +209,7 @@ public class Settlement {
         }
         s.citizenPlayers.addAll(Nbt.readUuidList(t, "citizens"));
         s.visitors.addAll(Nbt.readUuidList(t, "visitors"));
+        s.contracts.addAll(Contracts.load(t.getList("contracts", Tag.TAG_COMPOUND)));
         long[] ids = t.getLongArray("newsIds");
         long[] days = t.getLongArray("newsDays");
         for (int i = 0; i < Math.min(ids.length, days.length); i++) s.knownNews.put(ids[i], days[i]);

@@ -355,6 +355,7 @@ public class CitizenEntity extends PathfinderMob {
                     cause = source.getMsgId().replace('.', ' ');
                 }
                 sim.kill(p, WorldSim.dayOf(sl.getServer().overworld()), cause);
+                if (isHostile() && killer instanceof ServerPlayer sp) Crime.afterOutlawDeath(sl, sp, sim, settlementId);
             }
         }
         super.die(source);

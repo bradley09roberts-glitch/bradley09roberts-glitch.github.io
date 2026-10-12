@@ -1,0 +1,268 @@
+PASS server boots with longnight loaded - 24s
+> longnight admin status
+[longnight] day=0 people alive=206 dead=0 settlements=9 outlawCamps=2 ruins=3 realms=6 wars=0 caravans=0 news=7 bodies=0 nightStage=0
+
+PASS world history generated - [longnight] day=0 people alive=206 dead=0 settlements=9 outlawCamps=2 ruins=3 realms=6 wars=0 caravans=0 news=7 bodies=0 nightStage=0
+
+> longnight admin list
+[longnight] SETTLEMENT TOWN Ondoano pop=36 buildings=40/40 food=493 at -578 65 948 
+[longnight] SETTLEMENT TOWN Saeorra pop=36 buildings=39/39 food=493 at -428 67 89 
+[longnight] SETTLEMENT VILLAGE Savstrand pop=15 buildings=24/24 food=206 at -766 66 458 
+[longnight] SETTLEMENT VILLAGE Taerelle pop=21 buildings=28/28 food=288 at -702 66 -492 
+[longnight] SETTLEMENT VILLAGE Lirorin pop=16 buildings=26/26 food=219 at -839 67 -176 
+[longnight] SETTLEMENT VILLAGE Okka pop=33 buildings=37/37 food=452 at -951 69 -664 
+[longnight] SETTLEMENT VILLAGE Taerorin pop=31 buildings=36/36 food=425 at 227 71 406 
+[longnight] SETTLEMENT CAMP Fernshade pop=6 buildings=1/1 food=29 at -928 68 609 
+[longnight] SETTLEMENT CAMP Watcher's Clearing pop=5 buildings=1/1 food=24 at 796 68 -619 
+[longnight] BANDIT_CAMP CAMP Waystone of Dawn pop=3 buildings=1/1 food=33 at -1168 66 -111 
+[longnight] BANDIT_CAMP CAMP Spear Stand pop=4 buildings=1/1 food=30 at 901 67 251 
+[longnight] RUIN CAMP Hethmoor pop=0 buildings=0/4 food=0 at -355 71 -194 
+[longnight] RUIN CAMP Duskwater pop=0 buildings=0/4 food=0 at -430 71 790 
+[longnight] RUIN CAMP Morrowgate pop=0 buildings=0/4 food=0 at -1021 73 60 
+
+> longnight admin validate
+[longnight] VALIDATE OK people=206 settlements=14
+
+PASS invariants hold after generation
+PASS at least one living settlement - ['Ondoano', 'Saeorra', 'Savstrand', 'Taerelle', 'Lirorin', 'Okka', 'Taerorin', 'Fernshade', "Watcher's Clearing"]
+> longnight admin observe Ondoano
+[longnight] observing Ondoano
+
+> time set 1000
+Set the time to 1000
+
+> longnight admin inspect Ondoano
+[longnight] Ondoano SETTLEMENT TOWN pop=36 housing=47 treasury=319 materialized=true active=true
+ stock: grain=216 bread=108 meat=72 vegetables=108 logs=30 planks=80 stone=90 glass=10 iron=6 fuel=20 tools=4 wool=6
+ buildings:
+  well COMPLETE paid=81 placed=0/81 problem=The ground there is too steep. No other plot is free.
+  large_house COMPLETE paid=308 placed=308/308
+  house COMPLETE paid=252 placed=252/252
+  house COMPLETE paid=252 placed=252/252
+  house COMPLETE paid=252 placed=252/252
+  large_house COMPLETE paid=308 placed=308/308
+  house COMPLETE paid=252 placed=0/252 problem=The ground there is too steep. No other plot is free.
+  house COMPLETE paid=252 placed=0/252 problem=That plot is under water. No other plot is free.
+  large_house COMPLETE paid=308 placed=0/308 problem=The ground there is too steep. No other plot is free.
+  fishery COMPLETE paid=244 placed=244/244
+  farm COMPLETE paid=341 placed=0/341 problem=That plot is under water. No other plot is free.
+  farm COMPLETE paid=341 placed=0/341 problem=The ground there is too steep. No other plot is free.
+  farm COMPLETE paid=341 placed=0/341 problem=The ground there is too steep. No other plot is free.
+  farm COMPLETE paid=341 placed=0/341 problem=The ground there is too steep. No other plot is free.
+  farm COMPLETE paid=341 placed=0/341 problem=That plot is under water. No other plot is free.
+  farm COMPLETE paid=341 placed=341/341
+  lumber_camp COMPLETE paid=93 placed=0/93 problem=The ground there is too steep. No other plot is free.
+  storehouse COMPLETE paid=277 placed=0/277 problem=The ground there is too steep. No other plot is free.
+  quarry COMPLETE paid=140 placed=140/140
+  shrine COMPLETE paid=90 placed=90/90
+  builders_yard COMPLETE paid=90 placed=0/90 problem=The ground there is too steep. No other plot is free.
+  carpentry COMPLETE paid=243 placed=0/243 problem=The ground there is too steep. No other plot is free.
+  graveyard COMPLETE paid=115 placed=0/115 problem=The ground there is too steep. No other plot is free.
+  mill COMPLETE paid=290 placed=0/290 problem=The ground there is too steep. No other plot is free.
+  bakery COMPLETE paid=248 placed=0/248 problem=That plot is under water. No other plot is free.
+  pasture COMPLETE paid=285 placed=0/285 problem=The ground there is too steep. No other plot is free.
+  tavern COMPLETE paid=430 placed=430/430
+  hunting_lodge COMPLETE paid=248 placed=248/248
+  mine COMPLETE paid=101 placed=0/101 problem=That plot is under water. No other plot is free.
+  smithy COMPLETE paid=235 placed=235/235
+  market COMPLETE paid=132 placed=0/132 problem=That plot is under water. No other plot is free.
+  granary COMPLETE paid=277 placed=277/277
+  healer_house COMPLETE paid=245 placed=245/245
+  weavery COMPLETE paid=243 placed=0/243 problem=That plot is under water. No other plot is free.
+  town_hall COMPLETE paid=532 placed=532/532
+  school COMPLETE paid=303 placed=0/303 problem=The ground there is too steep. No other plot is free.
+  temple COMPLETE paid=563 placed=0/563 problem=That plot is under water. No other plot is free.
+  barracks COMPLETE paid=304 placed=0/304 problem=That plot is under water. No other plot is free.
+  library COMPLETE paid=357 placed=0/357 problem=That plot is under water. No other plot is free.
+  farm COMPLETE paid=341 placed=0/341 problem=That plot is under water. No other plot is free.
+ people:
+  Lauro Navarelli age=20 farmer mood=content [body] doing=waiting for the fields to be laid out
+  Estrel Marrowmouth age=22 farmer mood=content [body] doing=waiting for the fields to be laid out
+  Edovar Navarelli age=3 labourer mood=content [body]
+  Elvessa Navarelli age=0 labourer mood=content [body]
+  Rinato Brinoli age=20 lumberjack mood=content [body] doing=waiting for the lumber camp
+  Coralba Corvesso age=18 builder mood=content [body] doing=waiting for the next project
+  Lusco Brinoli age=1 labourer mood=content [body]
+  Marrin Brinoli age=1 labourer mood=content [body]
+  Gilo Spumaro age=25 farmer mood=content [body] doing=working the fields
+  Celsa Spumaro age=25 farmer mood=content [body] doing=waiting for the fields to be laid out
+  Severo Ostrello age=38 builder mood=content [body] doing=waiting for the next project
+  Estrel Delfara age=35 ruler mood=content [body] doing=holding court
+  Ottessa Ostrello age=18 farmer mood=content [body] doing=waiting for the fields to be laid out
+  Spumella Ostrello age=14 labourer mood=content [body]
+  Lenzo Ostrello age=10 labourer mood=content [body]
+  Ambro Delfara age=35 guard mood=content [body] doing=keeping watch
+  Fenna Delfara age=32 builder mood=content [body] doing=waiting for the next project
+  Severo Conchetti age=26 fisher mood=content [body] doing=fishing
+  Velia Ropewell age=27 lumberjack mood=content [body] doing=waiting for the lumber camp
+  Tavio Vescari age=43 farmer mood=content [body] doing=waiting for the fields to be laid out
+  Teodo Vescari age=41 farmer mood=content [body] doing=waiting for the fields to be laid out
+  Sando Torrenza age=40 carpenter mood=content [body] doing=looking for work
+  Elvessa Rennetti age=39 farmer mood=content [body] doing=waiting for the fields to be laid out
+  Coralba Spumaro age=42 farmer mood=content [body] doing=waiting for the fields to be laid out
+  Pieto Rennetti age=44 quarrier mood=content [body] doing=cutting stone
+  Ottessa Rennetti age=47 farmer mood=content [body] doing=working the fields
+  Brisa Rennetti age=16 miller mood=content [body] doing=looking for work
+  Brevo Uvello age=23 fisher mood=content [body] doing=fishing
+  Ondessa Tidewell age=23 farmer mood=content [body] doing=waiting for the fields to be laid out
+  Vella Uvello age=4 labourer mood=content [body]
+  Perlina Uvello age=3 labourer mood=content [body]
+  Vesco Rocamare age=38 farmer mood=content [body] doing=waiting for the fields to be laid out
+  Ilaren Rocamare age=41 guard mood=content [body] doing=keeping watch
+  Pellina Rocamare age=7 labourer mood=content [body]
+  Bastio Rocamare age=18 priest mood=content [body] doing=tending the shrine
+  Vessa Rocamare age=23 carpenter mood=content [body] doing=looking for work
+
+PASS observed settlement materialized
+PASS people have bodies near an observer - 36 bodies
+PASS pre-existing buildings raised in the world - 15 buildings fully placed
+> longnight admin status
+[longnight] day=0 people alive=206 dead=0 settlements=9 outlawCamps=2 ruins=3 realms=6 wars=0 caravans=0 news=7 bodies=36 nightStage=0
+
+> longnight admin validate
+[longnight] VALIDATE OK people=206 settlements=14
+
+PASS invariants hold with bodies in the world
+> longnight admin skip 1
+[longnight] skipped 1 days; now day 1
+
+> longnight admin skip 1
+[longnight] skipped 1 days; now day 2
+
+> longnight admin skip 1
+[longnight] skipped 1 days; now day 3
+
+> longnight admin skip 1
+[longnight] skipped 1 days; now day 4
+
+> longnight admin status
+[longnight] day=4 people alive=216 dead=2 settlements=9 outlawCamps=2 ruins=3 realms=6 wars=0 caravans=10 news=21 bodies=38 nightStage=0
+
+> longnight admin validate
+[longnight] VALIDATE OK people=218 settlements=14
+
+PASS invariants hold after 4 simulated days
+> longnight admin raid Ondoano
+[longnight] raid on Ondoano by Waystone of Dawn scheduled for dusk
+
+> time set 12500
+Set the time to 12500
+
+> longnight admin inspect Ondoano
+[longnight] Ondoano SETTLEMENT TOWN pop=37 housing=47 treasury=455 materialized=true active=true
+ stock: grain=369 flour=11 bread=20 meat=71 fish=16 vegetables=147 logs=40 planks=126 stone=105 glass=10 iron=6 fuel=20 wool=6
+ buildings:
+  well COMPLETE paid=81 placed=0/81 problem=The ground there is too steep. No other plot is free.
+  large_house COMPLETE paid=308 placed=308/308
+  house COMPLETE paid=252 placed=252/252
+  house COMPLETE paid=252 placed=252/252
+  house COMPLETE paid=252 placed=252/252
+  large_house COMPLETE paid=308 placed=308/308
+  house COMPLETE paid=252 placed=0/252 problem=The ground there is too steep. No other plot is free.
+  house COMPLETE paid=252 placed=0/252 problem=That plot is under water. No other plot is free.
+  large_house COMPLETE paid=308 placed=0/308 problem=The ground there is too steep. No other plot is free.
+  fishery COMPLETE paid=244 placed=244/244
+  farm COMPLETE paid=341 placed=0/341 problem=That plot is under water. No other plot is free.
+  farm COMPLETE paid=341 placed=0/341 problem=The ground there is too steep. No other plot is free.
+  farm COMPLETE paid=341 placed=0/341 problem=The ground there is too steep. No other plot is free.
+  farm COMPLETE paid=341 placed=0/341 problem=The ground there is too steep. No other plot is free.
+  farm COMPLETE paid=341 placed=0/341 problem=That plot is under water. No other plot is free.
+  farm COMPLETE paid=341 placed=341/341
+  lumber_camp COMPLETE paid=93 placed=0/93 problem=The ground there is too steep. No other plot is free.
+  storehouse COMPLETE paid=277 placed=0/277 problem=The ground there is too steep. No other plot is free.
+  quarry COMPLETE paid=140 placed=140/140
+  shrine COMPLETE paid=90 placed=90/90
+  builders_yard COMPLETE paid=90 placed=0/90 problem=The ground there is too steep. No other plot is free.
+  carpentry COMPLETE paid=243 placed=0/243 problem=The ground there is too steep. No other plot is free.
+  graveyard COMPLETE paid=115 placed=0/115 problem=The ground there is too steep. No other plot is free.
+  mill COMPLETE paid=290 placed=0/290 problem=The ground there is too steep. No other plot is free.
+  bakery COMPLETE paid=248 placed=0/248 problem=That plot is under water. No other plot is free.
+  pasture COMPLETE paid=285 placed=0/285 problem=The ground there is too steep. No other plot is free.
+  tavern COMPLETE paid=430 placed=430/430
+  hunting_lodge COMPLETE paid=248 placed=248/248
+  mine COMPLETE paid=101 placed=0/101 problem=That plot is under water. No other plot is free.
+  smithy COMPLETE paid=235 placed=235/235
+  market COMPLETE paid=132 placed=0/132 problem=That plot is under water. No other plot is free.
+  granary COMPLETE paid=277 placed=277/277
+  healer_house COMPLETE paid=245 placed=245/245
+  weavery COMPLETE paid=243 placed=0/243 problem=That plot is under water. No other plot is free.
+  town_hall COMPLETE paid=532 placed=532/532
+  school COMPLETE paid=303 placed=0/303 problem=The ground there is too steep. No other plot is free.
+  temple COMPLETE paid=563 placed=0/563 problem=That plot is under water. No other plot is free.
+  barracks COMPLETE paid=304 placed=0/304 problem=That plot is under water. No other plot is free.
+  library COMPLETE paid=357 placed=0/357 problem=That plot is under water. No other plot is free.
+  farm COMPLETE paid=341 placed=0/341 problem=That plot is under water. No other plot is free.
+ people:
+  Lauro Navarelli age=20 farmer mood=content [body] doing=sheltering from danger
+  Estrel Marrowmouth age=22 farmer mood=content [body] doing=sheltering from danger
+  Edovar Navarelli age=3 labourer mood=content [body] doing=sheltering from danger
+  Elvessa Navarelli age=0 labourer mood=content [body] doing=sheltering from danger
+  Rinato Brinoli age=20 lumberjack mood=content [body] doing=sheltering from danger
+  Coralba Corvesso age=18 builder mood=content [body] doing=sheltering from danger
+  Lusco Brinoli age=1 labourer mood=content [body] doing=sheltering from danger
+  Marrin Brinoli age=1 labourer mood=content [body] doing=sheltering from danger
+  Gilo Spumaro age=25 farmer mood=content [body] doing=sheltering from danger
+  Celsa Spumaro age=25 farmer mood=content [body] doing=sheltering from danger
+  Severo Ostrello age=38 builder mood=content [body] doing=sheltering from danger
+  Estrel Delfara age=35 ruler mood=content [body] doing=sheltering from danger
+  Ottessa Ostrello age=18 farmer mood=content [body] doing=sheltering from danger
+  Spumella Ostrello age=14 labourer mood=content [body] doing=sheltering from danger
+  Lenzo Ostrello age=10 labourer mood=content [body] doing=sheltering from danger
+  Fenna Delfara age=32 builder mood=content [body] doing=sheltering from danger
+  Severo Conchetti age=26 fisher mood=content [body] doing=sheltering from danger
+  Velia Ropewell age=27 lumberjack mood=content [body] doing=sheltering from danger
+  Tavio Vescari age=43 farmer mood=content [body] doing=sheltering from danger
+  Teodo Vescari age=41 farmer mood=content [body] doing=sheltering from danger
+  Sando Torrenza age=40 carpenter mood=content [body] doing=sheltering from danger
+  Elvessa Rennetti age=39 farmer mood=content [body] doing=sheltering from danger
+  Coralba Spumaro age=42 farmer mood=content [body] doing=sheltering from danger
+  Pieto Rennetti age=44 quarrier mood=content [body] doing=sheltering from danger
+  Ottessa Rennetti age=47 farmer mood=content [body] doing=sheltering from danger
+  Brisa Rennetti age=16 miller mood=content [body] doing=sheltering from danger
+  Brevo Uvello age=23 fisher mood=content [body] doing=sheltering from danger
+  Ondessa Tidewell age=23 farmer mood=content [body] doing=sheltering from danger
+  Vella Uvello age=4 labourer mood=content [body] doing=sheltering from danger
+  Perlina Uvello age=3 labourer mood=content [body] doing=sheltering from danger
+  Vesco Rocamare age=38 farmer mood=content [body] doing=sheltering from danger
+  Ilaren Rocamare age=41 guard mood=content [body] doing=sleeping rough
+  Pellina Rocamare age=7 labourer mood=content [body] doing=sheltering from danger
+  Bastio Rocamare age=18 priest mood=content [body] doing=sheltering from danger
+  Vessa Rocamare age=23 carpenter mood=content [body] doing=sheltering from danger
+  Davro Uvello age=0 labourer mood=content [body] doing=sheltering from danger
+  Esteo Uvello age=0 labourer mood=content [body] doing=sheltering from danger
+
+> time set 23500
+Set the time to 23500
+
+> longnight admin validate
+[longnight] VALIDATE OK people=218 settlements=14
+
+PASS invariants hold after a raid
+> longnight admin history
+Year 402: Red Steppe of Okka and Serene League of Ondoano fought the War of the Salt Road; neither side has forgotten it.
+Before the Reckoning: Hethmoor fell, and no living folk remember why.
+Before the Reckoning: Duskwater fell, and no living folk remember why.
+Before the Reckoning: Morrowgate fell, and no living folk remember why.
+Day 0: The chronicle of the world begins. 4 realms, 7 settlements, 2 camps of settlers, 2 outlaw bands.
+Day 0: Outlaws from Waystone of Dawn ransacked part of Ondoano.
+
+> longnight admin status
+[longnight] day=0 people alive=215 dead=3 settlements=9 outlawCamps=2 ruins=3 realms=6 wars=0 caravans=10 news=22 bodies=37 nightStage=0
+
+> save-all flush
+Saving the game (this may take a moment!)
+Saved the game
+
+PASS server restarts on the saved world - 21s
+> longnight admin status
+[longnight] day=0 people alive=215 dead=3 settlements=9 outlawCamps=2 ruins=3 realms=6 wars=0 caravans=10 news=22 bodies=0 nightStage=0
+
+PASS people/deaths/settlements identical after reload - ('215', '3', '9') vs ('215', '3', '9')
+> longnight admin validate
+[longnight] VALIDATE OK people=218 settlements=14
+
+PASS invariants hold after reload
+PASS no longnight errors in second-server1.log
+PASS no longnight errors in second-server2.log
+
+SUMMARY: 15/15 checks passed

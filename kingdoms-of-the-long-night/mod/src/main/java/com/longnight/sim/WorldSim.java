@@ -480,6 +480,7 @@ public class WorldSim extends SavedData {
         Politics.daily(this, day);
         NewsSystem.daily(this, day);
         Growth.daily(this, day);
+        Contracts.daily(this, day);
         LongNightArc.daily(this, day);
     }
 
