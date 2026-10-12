@@ -54,6 +54,64 @@ public final class QuestRegistry {
         q("board_marines", "bounty_board", "*", List.of(o("kill", "marine", 4)), 300, 1200, 3_000_000, Map.of("pirate", 10), List.of(), List.of(), null, null, true, "board");
         q("board_explore", "bounty_board", "*", List.of(o("discover", "any", 2)), 400, 1000, 0, Map.of(), List.of(), List.of(), null, null, true, "board");
         q("board_ruins", "bounty_board", "*", List.of(o("poneglyph", "any", 1)), 600, 2000, 0, Map.of(), List.of(), List.of(), null, null, true, "board");
+        // ---------------- The Saltfire Saga: island arcs, faction variants, crew quests (docs/STORY.md) ----------------
+        StoryQuests.register(ALL);
+    }
+
+    // ------------------------------------------------------------------ faction variants & requirements
+
+    private static final Set<String> PATHS = Set.of("pirate", "marine", "revolutionary", "bounty_hunter", "civilian");
+
+    /** Faction of a variant id ("alabasta_2.marine" → "marine"), or null for a base quest. */
+    @Nullable
+    public static String variantFaction(String id) {
+        int dot = id.lastIndexOf('.');
+        if (dot < 0) return null;
+        String f = id.substring(dot + 1);
+        return PATHS.contains(f) ? f : null;
+    }
+
+    /** Base id of a quest, without any faction suffix. */
+    public static String baseId(String id) {
+        return variantFaction(id) == null ? id : id.substring(0, id.lastIndexOf('.'));
+    }
+
+    /** The version of a quest this character gets: "<id>.<faction>" when such a variant exists, else the base. */
+    public static String resolve(String id, com.grandline.player.CharacterData d) {
+        String v = baseId(id) + "." + d.faction.id();
+        return ALL.containsKey(v) ? v : baseId(id);
+    }
+
+    /** Whether this quest, or any faction variant of it, has been completed. */
+    public static boolean isDone(com.grandline.player.CharacterData d, String id) {
+        String base = baseId(id);
+        if (d.completedQuests.contains(id) || d.completedQuests.contains(base)) return true;
+        for (String c : d.completedQuests) if (c.startsWith(base + ".") && variantFaction(c) != null) return true;
+        return false;
+    }
+
+    /**
+     * Requirements: every listed quest done (any variant counts), a variant only for its own faction, and the
+     * base version hidden from factions that have their own variant.
+     */
+    public static boolean requirementsMet(com.grandline.player.CharacterData d, QuestDef q) {
+        String vf = variantFaction(q.id());
+        if (vf != null && !vf.equals(d.faction.id())) return false;
+        if (vf == null && ALL.containsKey(q.id() + "." + d.faction.id())) return false;
+        for (String r : q.requires()) if (!isDone(d, r)) return false;
+        return true;
+    }
+
+    /** Ids of the Saltfire Saga quests (StoryQuests), in registration order. */
+    public static Set<String> storyQuestIds() {
+        return Collections.unmodifiableSet(StoryQuests.IDS);
+    }
+
+    /** Whether a giver may offer this quest to the character right now. */
+    public static boolean canOffer(com.grandline.player.CharacterData d, QuestDef q) {
+        if (d.questProgress.containsKey(q.id())) return false;
+        if (!q.repeatable() && isDone(d, q.id())) return false;
+        return requirementsMet(d, q);
     }
 
     @Nullable

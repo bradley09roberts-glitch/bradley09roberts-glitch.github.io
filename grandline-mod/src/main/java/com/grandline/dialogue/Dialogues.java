@@ -54,6 +54,7 @@ public final class Dialogues {
             if (ok) opts.add(StringTag.valueOf("quest:" + q.id()));
         }
         if (role.equals("elder") && d.completedQuests.contains("first_voyage") && !d.flags.contains("path_chosen")) opts.add(StringTag.valueOf("path"));
+        com.grandline.npc.notable.NotableHooks.decorate(sp, npc, d, t, opts, starter); // story cast: greetings, quests, recruitment
         opts.add(StringTag.valueOf("leave"));
         t.put("options", opts);
         GLNetwork.toPlayer(sp, new GLNetwork.OpenScreen("dialogue", t));
@@ -86,8 +87,12 @@ public final class Dialogues {
             Quests.start(sp, option.substring(6));
             return;
         }
+        if (com.grandline.npc.notable.NotableHooks.choose(sp, npc, option)) return; // recruit / crew orders
         switch (option) {
-            case "rumor" -> sp.sendSystemMessage(Component.translatable("rumor.grandline." + (1 + sp.getRandom().nextInt(24))).withStyle(ChatFormatting.ITALIC));
+            case "rumor" -> {
+                sp.sendSystemMessage(Component.translatable("rumor.grandline." + (1 + sp.getRandom().nextInt(24))).withStyle(ChatFormatting.ITALIC));
+                com.grandline.npc.notable.NotableHooks.localRumor(sp, npc);
+            }
             case "trade" -> Shops.open(sp, npc);
             case "shipyard" -> com.grandline.ship.Shipyard.open(sp, npc);
             case "rest" -> {

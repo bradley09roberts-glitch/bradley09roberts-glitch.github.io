@@ -103,7 +103,8 @@ public abstract class GLNpc extends PathfinderMob {
 
     /** Whether the NPC kills downed players (beasts, ruthless bosses) rather than robbing/arresting. */
     public boolean killsDowned() {
-        return archetype().killsDowned();
+        Boolean story = com.grandline.npc.notable.NotableHooks.killsDowned(this);
+        return story != null ? story : archetype().killsDowned();
     }
 
     // ------------------------------------------------------------------ relations
@@ -128,6 +129,8 @@ public abstract class GLNpc extends PathfinderMob {
     public boolean isHostileTo(LivingEntity e) {
         if (e == this) return false;
         if (getLastHurtByMob() == e || getTarget() == e) return true;
+        Boolean story = com.grandline.npc.notable.NotableHooks.hostility(this, e); // story cast & crews
+        if (story != null) return story;
         Archetype.Hostility h = archetype().hostility();
         int att = attitudeTo(e);
         return switch (h) {
@@ -236,5 +239,36 @@ public abstract class GLNpc extends PathfinderMob {
 
     public CombatState combat() {
         return CombatState.of(this);
+    }
+
+    // ------------------------------------------------------------------ story cast & crews
+
+    /** Turn this NPC into a named story character (see {@link com.grandline.npc.notable.NotableCharacters}). */
+    public void makeNotable(String id, @Nullable String fruit, int obs, int arm, int coq, String style) {
+        notableId = id;
+        entityData.set(FRUIT, fruit == null ? "" : fruit);
+        hakiObs = obs;
+        hakiArm = arm;
+        hakiCoq = coq;
+        if (style != null && !style.isEmpty()) styleId = style;
+        setFlag(FLAG_NOTABLE, true);
+        setPersistenceRequired();
+    }
+
+    /** Explicit tier and race for a notable (archetype defaults are only a starting point). */
+    public void setNotableBody(int tier, String race) {
+        entityData.set(TIER, Math.max(1, tier));
+        entityData.set(RACE, race);
+    }
+
+    /** Change allegiance and home: joining a crew (home ZERO = no leash), waiting somewhere, going back home. */
+    public void setAllegiance(Faction f, BlockPos newHome) {
+        faction = f;
+        home = newHome;
+    }
+
+    @Override
+    public boolean isAlliedTo(net.minecraft.world.entity.Entity other) {
+        return super.isAlliedTo(other) || com.grandline.npc.crew.CrewManager.allied(this, other);
     }
 }
