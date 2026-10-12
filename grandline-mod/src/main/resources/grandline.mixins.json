@@ -6,7 +6,7 @@
   "mixins": [
     "LevelPartEntitiesMixin",
     "ServerChunkCacheSpawnMixin",
-    "ShipDeckPlayerMixin"
+    "ShipDeckMoveMixin"
   ],
   "client": [
     "HumanoidModelMixin",

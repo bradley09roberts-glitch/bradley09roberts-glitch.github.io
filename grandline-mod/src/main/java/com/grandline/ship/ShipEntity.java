@@ -269,6 +269,15 @@ public class ShipEntity extends Entity {
         return carries(e, 0);
     }
 
+    /** Is the player on, or right beside, some ship's deck (server movement checks: mixin/ShipDeckMoveMixin)? */
+    public static boolean nearDeck(Entity p) {
+        AABB box = p.getBoundingBox();
+        for (ShipEntity s : p.level().getEntitiesOfClass(ShipEntity.class, box.inflate(48)))
+            for (ShipPart part : s.parts)
+                if (part.getBoundingBox().inflate(2.0, 3.0, 2.0).intersects(box)) return true;
+        return false;
+    }
+
     /** As {@link #carries(Entity)}, judged against the deck as it was before this tick's rise of {@code dy}. */
     boolean carries(Entity e, double dy) {
         if (e == this || e.isPassenger() || e instanceof ShipPart || e instanceof ShipEntity) return false;
