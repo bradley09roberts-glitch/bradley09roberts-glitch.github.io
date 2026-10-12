@@ -235,18 +235,26 @@ public final class NavalCombat {
     }
 
     private static Vec3 ram(ShipEntity ship, ServerLevel sl, Vec3 next, @Nullable ShipEntity partner) {
+        if (ship.ferryTarget != null) return next; // ferry / Sea Train services keep their timetable (no rams, no bumps)
         Vec3 move = next.subtract(ship.position());
         if (move.horizontalDistanceSqr() < 1e-6) return next;
         double half = ship.cls.length / 2.0;
         Vec3 bowNow = ship.toWorld(0, 0.2, half), bowNext = bowNow.add(move.x, 0, move.z);
-        for (ShipEntity o : sl.getEntitiesOfClass(ShipEntity.class, ship.getBoundingBox().inflate(half + 22, 6, half + 22), o -> o != ship && o != partner && !o.isSinking())) {
+        for (ShipEntity o : sl.getEntitiesOfClass(ShipEntity.class, ship.getBoundingBox().inflate(half + 22, 6, half + 22),
+                o -> o != ship && o != partner && !o.isSinking() && o.ferryTarget == null)) {
             if (!inside(o, bowNext) || inside(o, bowNow)) continue; // only a bow entering a hull counts (overlaps may slide apart)
             Vec3 vel = new Vec3(move.x, 0, move.z);
             Vec3 ovel = o.heading().scale(o.speedNow()).add(o.naval.push);
             double closing = vel.subtract(ovel).dot(ship.heading());
-            if (closing > RAM_MIN && sl.getGameTime() >= ship.naval.ramCooldown) impact(ship, o, (float) closing, bowNext, sl);
-            else ship.setSpeed(0);
-            return ship.position();
+            if (closing > RAM_MIN && sl.getGameTime() >= ship.naval.ramCooldown) {
+                impact(ship, o, (float) closing, bowNext, sl);
+                return ship.position();
+            }
+            // a gentle bump: lose way and glance off sideways, away from the other hull, instead of sticking to it
+            Vec3 rel = ship.toLocal(o.position());
+            ship.setSpeed(ship.speedNow() * 0.5f);
+            ship.naval.push = ship.naval.push.add(localDir(ship, rel.x >= 0 ? -1 : 1, 0).scale(0.06));
+            return ship.position().add(ship.naval.push.x, 0, ship.naval.push.z);
         }
         return next;
     }

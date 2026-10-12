@@ -303,10 +303,20 @@ public final class ClientSelfTest {
     /** The ship the scripted player sails in the naval section (remembered while at its helm). */
     private static int navalShip = -1;
 
+    /** Fallback: the ship ridden, else the nearest ship named after the tester. */
+    private static int ownShip(Minecraft mc) {
+        if (mc.player.getVehicle() instanceof com.grandline.ship.ShipEntity s) return s.getId();
+        com.grandline.ship.ShipEntity best = null;
+        for (var e : mc.level.entitiesForRendering())
+            if (e instanceof com.grandline.ship.ShipEntity s && s.shipName().startsWith("Tester") && (best == null || s.distanceToSqr(mc.player) < best.distanceToSqr(mc.player))) best = s;
+        return best == null ? -1 : best.getId();
+    }
+
     /** Spectator camera at a point in the remembered ship's frame, looking at another point in that frame. */
     private static void shipCam(String name, double lx, double ly, double lz, double tx, double ty, double tz, int after) {
         add("camera " + name, () -> {
             Minecraft mc = Minecraft.getInstance();
+            if (!(mc.level.getEntity(navalShip) instanceof com.grandline.ship.ShipEntity)) navalShip = ownShip(mc);
             if (!(mc.level.getEntity(navalShip) instanceof com.grandline.ship.ShipEntity s)) {
                 LOG.add("  naval ship not visible for " + name);
                 return;
@@ -322,6 +332,7 @@ public final class ClientSelfTest {
     private static void battleCam(int after) {
         add("battle camera", () -> {
             Minecraft mc = Minecraft.getInstance();
+            if (!(mc.level.getEntity(navalShip) instanceof com.grandline.ship.ShipEntity)) navalShip = ownShip(mc);
             if (!(mc.level.getEntity(navalShip) instanceof com.grandline.ship.ShipEntity s)) return;
             com.grandline.ship.ShipEntity other = s.linkedId() >= 0 && mc.level.getEntity(s.linkedId()) instanceof com.grandline.ship.ShipEntity o ? o : null;
             if (other == null) for (var e : mc.level.entitiesForRendering())
@@ -342,7 +353,9 @@ public final class ClientSelfTest {
         cmd("gamemode survival", 10);
         cmd("grandline island tp shiokaze_isle", 120);
         cmd("grandline test ship galleon helm", 80);
-        add("remember ship", () -> navalShip = mc.player.getVehicle() instanceof com.grandline.ship.ShipEntity s ? s.getId() : -1, 5);
+        // wait until the client knows it is riding the new ship (the passenger packet can lag behind on a slow client)
+        steps.add(new Step("remember ship", () -> mc.player.getVehicle() instanceof com.grandline.ship.ShipEntity,
+                () -> navalShip = mc.player.getVehicle() instanceof com.grandline.ship.ShipEntity s ? s.getId() : -1, 5));
         double bow = 31 / 2.0; // galleon
         cmd("ship test look lion skull 0,0,0,5", 20);
         cmd("grandline test anchor false", 5);
@@ -351,12 +364,12 @@ public final class ClientSelfTest {
         cmd("grandline test sail 3", 60); // anchored with sails set: the emblem shows on the main sail
         cmd("ship test parade", 60);
         cmd("gamemode spectator", 10);
-        shipCam("34_figurehead_lion", 4.5, 4.2, bow + 7, 0, 3.4, bow + 1, 80);
-        shot("34_figurehead_lion");
-        shipCam("35_sail_emblem_flag", -9, 9, bow + 15, 0, 11, 0, 80);
-        shot("35_sail_emblem_flag");
-        shipCam("36_figurehead_parade", 0, 9, bow + 2, 0, 1, bow + 30, 80);
-        shot("36_figurehead_parade");
+        shipCam("41_figurehead_lion", 4.5, 4.2, bow + 7, 0, 3.4, bow + 1, 80);
+        shot("41_figurehead_lion");
+        shipCam("42_sail_emblem_flag", -9, 9, bow + 15, 0, 11, 0, 80);
+        shot("42_sail_emblem_flag");
+        shipCam("43_figurehead_parade", 0, 9, bow + 2, 0, 1, bow + 30, 80);
+        shot("43_figurehead_parade");
         cmd("ship test clear", 20);
         cmd("gamemode creative", 10); // boarders go for the hired gun crew, not a creative captain
         cmd("ship test helm", 20);
@@ -365,16 +378,16 @@ public final class ClientSelfTest {
         cmd("ship ammo chain_shot", 5); // shred her rigging rather than sink her before the boarding
         cmd("ship test enemy galleon pirate", 140);
         camera(CameraType.THIRD_PERSON_BACK);
-        shot("37_naval_gun_crews");
+        shot("44_naval_gun_crews");
         camera(CameraType.FIRST_PERSON);
         cmd("ship status", 5);
         cmd("ship test grapple", 120);
         cmd("ship status", 5);
         cmd("gamemode spectator", 10);
         battleCam(50);
-        shot("38_grappled_boarding");
-        shipCam("39_boarders_on_deck", 10, 8, -8, 0, 2, 3, 50);
-        shot("39_boarders_on_deck");
+        shot("45_grappled_boarding");
+        shipCam("46_boarders_on_deck", 10, 8, -8, 0, 2, 3, 50);
+        shot("46_boarders_on_deck");
         cmd("ship test clear", 10);
         cmd("kill @e[type=grandline:npc,distance=..120]", 10);
         cmd("grandline island tp shiokaze_isle", 60);
@@ -392,7 +405,7 @@ public final class ClientSelfTest {
             d.put("current", cur);
             mc.setScreen(new com.grandline.client.screen.ShipyardScreen(d));
         }, 20);
-        shot("40_shipyard_customise");
+        shot("47_shipyard_customise");
         add("close screen", () -> mc.setScreen(null), 10);
     }
 

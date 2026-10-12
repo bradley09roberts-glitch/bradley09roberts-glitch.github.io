@@ -305,10 +305,12 @@ final class NavalTests {
             load(srv.overworld(), Integer.parseInt(p[1]), Integer.parseInt(p[2]), 3);
             return 80;
         });
+        final int[] waited = {0};
         steps.add(srv -> {
             if (fx[0] == null) return 0;
             String[] p = fx[0].split(" ");
             var e = srv.overworld().getEntity(UUID.fromString(p[0]));
+            if (e == null && ++waited[0] < 400) return -1; // entities load asynchronously
             boolean ok = e instanceof ShipEntity c && c.look().encode().equals(p[3]) && c.sailColor() == 0xC9483B && c.hullColor() == 0x2A4E8A;
             SelfTest.check("ship customisation persisted across restart", ok, e instanceof ShipEntity c ? c.look().encode() + " sail " + Integer.toHexString(c.sailColor()) : "ship missing");
             var rec = ShipRegistry.get(srv).get(UUID.fromString(p[4]));

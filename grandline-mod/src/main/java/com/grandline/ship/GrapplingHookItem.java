@@ -77,7 +77,7 @@ public class GrapplingHookItem extends Item {
         Vec3 eye = p.getEyePosition(), end = eye.add(p.getLookAngle().scale(RANGE));
         ShipEntity best = null;
         double bd = Double.MAX_VALUE;
-        for (ShipEntity s : level.getEntitiesOfClass(ShipEntity.class, new AABB(eye, eye).inflate(RANGE + 40), s -> s != own && s.isAlive() && !s.isSinking())) {
+        for (ShipEntity s : level.getEntitiesOfClass(ShipEntity.class, new AABB(eye, eye).inflate(RANGE + 40), s -> s != own && s.isAlive() && !s.isSinking() && s.ferryTarget == null)) {
             for (var part : s.getParts()) {
                 Optional<Vec3> hit = part.getBoundingBox().inflate(0.4).clip(eye, end);
                 if (hit.isPresent() && hit.get().distanceToSqr(eye) < bd) {
