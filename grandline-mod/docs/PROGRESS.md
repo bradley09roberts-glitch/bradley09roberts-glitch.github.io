@@ -331,8 +331,19 @@ First run of a real client against the dedicated server. Result: no client crash
 - Not seen in a client yet: the treasure map screen, chart marks and the new sprites in game.
 
 ## Work in flight (background agents)
-- None (all merged).
+- Endgame boss encounters (Emperors, Admirals, Warlords: boss bars, phases, telegraphed signature attacks).
+- Advancement journey, Den Den Mushi snails, Buster Call.
 
 ## Known gaps (next priorities)
-- Full phase 1/2 runs keep getting OOM-killed (exit 137) while the agents' test servers share the container's 15 GB;
-  they are re-run with a capped heap.
+- 20 TPS with 20 players is not proven on dedicated hardware (the load test ran on a heavily shared machine; the
+  server-thread stalls it found are fixed). Give the server at least 4 GB.
+- Seen only in the server test, not yet in a real client: the treasure map screen, the notice board screen, named
+  quest titles and the poster's "last seen" line (client shots added, pending the final client run).
+- The escorted merchant of a board escort job is not a real follower (it waits at the destination behind an ambush).
+- Living sea: convoys never cross the Calm Belt; harbour raids plunder only Beli; no quests hook into sea battles.
+- NPC ships never fight from hired NPC gunners on player ships (only your recruited crew man the guns).
+- Balance (damage, bounty, rewards, spawn rates) is tuned only as far as the automated tests; it needs real play.
+- No custom music or sound effects (vanilla sounds throughout); Higgsfield's available audio models here are speech
+  only.
+- Everything client-visual is checked under software OpenGL at render distance 7: lighting, distance and frame rate
+  on a real GPU are untested.
