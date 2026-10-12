@@ -821,6 +821,7 @@ public final class NavalCombat {
         ship.life.raidIsland = "";
         ship.owner = p.getUUID();
         ship.ownerName = Characters.get(p).name;
+        String taken = ship.shipName(); // her name as the captor knew her (the prize is renamed below)
         ship.setShipName(Component.translatable("grandline.naval.prize_name", ship.shipName()).getString());
         ship.setSail(0);
         ship.setAnchored(true);
@@ -833,7 +834,7 @@ public final class NavalCombat {
         }
         if (p instanceof ServerPlayer sp) {
             CharacterData d = Characters.get(sp);
-            sp.sendSystemMessage(Component.translatable("grandline.naval.captured", ship.shipName()).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+            sp.sendSystemMessage(Component.translatable("grandline.naval.captured", taken).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             if (from.equals("marine") && d.faction != Faction.MARINE)
                 com.grandline.npc.Bounties.raise(sp, d, 3_000_000L * (ship.cls.ordinal() + 1), Component.translatable("grandline.naval.captured_marine"));
             else if (from.equals("pirate") && Faction.isLaw(d.faction)) d.addReputation(Faction.MARINE.id(), 20 + 10 * ship.cls.ordinal());
