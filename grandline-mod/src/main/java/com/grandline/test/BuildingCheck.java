@@ -44,6 +44,23 @@ public final class BuildingCheck {
                     problems.isEmpty() ? variants + " style/rotation variants, " + npcs + " NPC markers all on a floor and reachable, loot containers usable"
                             : problems.size() + " problems: " + String.join("; ", problems.subList(0, Math.min(6, problems.size()))));
         }
+        // island secrets: treasure maps compute the chest's position without building (TreasureMaps.chestPos), so the
+        // builder must keep its chest exactly there, in every rotation
+        List<String> bad = new ArrayList<>();
+        int n = 0;
+        for (BuildingType t : List.of(BuildingType.BURIED_TREASURE, BuildingType.HIDDEN_CACHE, BuildingType.LOST_SHRINE, BuildingType.SHIPWRECK))
+            for (Rotation rot : Rotation.values()) {
+                long seed = 0x5EEDL + t.ordinal() * 131L + rot.ordinal();
+                boolean swap = rot == Rotation.CLOCKWISE_90 || rot == Rotation.COUNTERCLOCKWISE_90;
+                int sx = swap ? t.d : t.w, sz = swap ? t.w : t.d;
+                LandmarkCheck.MemSink m = build(t, BuildStyle.VILLAGE, rot, seed);
+                BlockPos want = com.grandline.activity.TreasureMaps.chestPos(new Plot(t, 0, ORIGIN_Y, 0, sx, sz, rot, seed, "", true));
+                n++;
+                if (want == null || !m.chests.contains(want))
+                    bad.add(t.name().toLowerCase(Locale.ROOT) + "/" + rot.name().toLowerCase(Locale.ROOT) + ": map points at " + want + ", chests at " + m.chests);
+            }
+        r.check("secrets: every chest is where treasure maps point", bad.isEmpty(),
+                bad.isEmpty() ? n + " secret/rotation variants" : String.join("; ", bad));
         return 0;
     }
 

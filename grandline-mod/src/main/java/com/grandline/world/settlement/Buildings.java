@@ -1510,11 +1510,12 @@ public final class Buildings {
         rm.roofSlab = Blocks.MOSSY_STONE_BRICK_SLAB.defaultBlockState();
         rm.eaveBrackets = false;
         Arch.hip(b, rm, 1, 1, 5, 5, 5, 1);
-        b.set(3, 2, 4, Blocks.CHISELED_STONE_BRICKS);
-        b.set(3, 3, 4, Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.CANDLES, 3));
-        b.set(2, 2, 2, Blocks.CANDLE);
-        b.set(4, 2, 2, Blocks.CANDLE);
-        b.chest(3, 2, 3, Direction.NORTH, LOOT_SHRINE);
+        // the offering chest stays where treasure maps point (TreasureMaps.chestPos: 3,2,4), the altar stone behind it
+        b.set(3, 2, 5, Blocks.CHISELED_STONE_BRICKS);
+        b.set(3, 3, 5, Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.CANDLES, 3));
+        b.set(2, 2, 4, Blocks.CANDLE);
+        b.set(4, 2, 4, Blocks.CANDLE);
+        b.chest(3, 2, 4, Direction.NORTH, LOOT_SHRINE);
         b.hanging(3, 4, 3, ArchBlocks.WHITE_PAPER_LANTERN.get());
         b.set(0, 1, 3, Blocks.FERN);
         b.set(6, 1, 2, Blocks.FERN);
