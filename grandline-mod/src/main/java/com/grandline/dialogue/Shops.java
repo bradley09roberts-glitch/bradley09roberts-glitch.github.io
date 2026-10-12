@@ -30,7 +30,9 @@ public final class Shops {
                     new Offer("grandline:flintlock", 1, 1500), new Offer("grandline:musket", 1, 2200), new Offer("grandline:slingshot", 1, 400),
                     new Offer("grandline:bullet", 16, 300), new Offer("grandline:pellet", 32, 100), new Offer("grandline:cannonball", 4, 500),
                     new Offer("minecraft:iron_chestplate", 1, 1800), new Offer("grandline:fine_katana", 1, 9000));
-            case "shipwright" -> List.of(new Offer("minecraft:oak_planks", 32, 120), new Offer("grandline:cannonball", 8, 900));
+            case "shipwright" -> List.of(new Offer("minecraft:oak_planks", 32, 120), new Offer("grandline:cannonball", 8, 900),
+                    new Offer("grandline:chain_shot", 4, 1200), new Offer("grandline:grape_shot", 4, 1000), new Offer("grandline:grappling_hook", 1, 2500),
+                    new Offer("minecraft:white_wool", 8, 160));
             default -> List.of(new Offer("minecraft:bread", 8, 60), new Offer("grandline:meat_on_bone", 4, 200), new Offer("minecraft:cooked_cod", 8, 80),
                     new Offer("grandline:log_pose", 1, 3000), new Offer("grandline:sea_chart", 1, 800), new Offer("grandline:bullet", 16, 320),
                     new Offer("minecraft:torch", 16, 40), new Offer("minecraft:lead", 2, 60), new Offer("minecraft:potion", 1, 300),

@@ -78,6 +78,7 @@ public final class SelfTest {
         REPORT.add("Grand Line Odyssey self-test, phase " + PHASE + ", " + new Date());
         if (PHASE.equals("1")) phase1();
         else if (PHASE.equals("dims")) DimensionTests.phase1(steps);
+        else if (PHASE.equals("naval")) NavalTests.phase1(steps);
         else phase2();
     }
 
@@ -701,6 +702,7 @@ public final class SelfTest {
             }
             return 40;
         });
+        NavalTests.phase1(steps); // naval combat (test/NavalTests.java)
         DimensionTests.phase1(steps);
         // ---------- persistence fixtures for phase 2 ----------
         steps.add(s -> {
@@ -902,6 +904,7 @@ public final class SelfTest {
 
     private static void phase2() {
         DimensionTests.phase2(steps);
+        NavalTests.phase2(steps);
         final String[] fx = new String[1];
         steps.add(s -> {
             fx[0] = Files.readString(Path.of("selftest-fixtures.txt")).trim();

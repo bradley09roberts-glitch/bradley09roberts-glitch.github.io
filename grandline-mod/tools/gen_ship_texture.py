@@ -84,7 +84,43 @@ def marine(x, y):
     if y in (0, 15): c = (40, 90, 190, 255)
     return c
 tile(9, marine)
-out = os.path.join(os.path.dirname(__file__), '..', 'src/main/resources/assets/grandline/textures/entity/ship')
+# ---- naval customisation tiles (light greyscale: the renderer tints them per figurehead / flag colour) ----
+# 10 paint: flat light carving paint with a faint grain
+def paint(x, y):
+    v = 236 + random.randint(-5, 5) - (6 if (x * 3 + y) % 11 == 0 else 0)
+    return (clamp(v), clamp(v), clamp(v), 255)
+tile(10, paint)
+# 11 scales: overlapping scale rows
+def scales(x, y):
+    row = y // 4
+    cx = (x + (2 if row % 2 else 0)) % 4
+    d = (cx - 1.5) ** 2 + ((y % 4) - 0.5) ** 2
+    v = 228 - int(d * 9) + random.randint(-4, 4)
+    if y % 4 == 3: v -= 40
+    return (clamp(v), clamp(v), clamp(v), 255)
+tile(11, scales)
+# 12 mane: wavy fur strands
+def mane(x, y):
+    v = 214 + int(22 * ((x + (y // 3)) % 3 == 0)) - int(30 * ((x * 2 + y) % 7 == 0)) + random.randint(-6, 6)
+    return (clamp(v), clamp(v), clamp(v), 255)
+tile(12, mane)
+# 13 feathers: layered barbs
+def feather(x, y):
+    v = 246 - (18 if (x + y // 2) % 5 == 0 else 0) - (10 if y % 4 == 0 else 0) + random.randint(-3, 3)
+    return (clamp(v), clamp(v), clamp(v), 255)
+tile(13, feather)
+# 14 bone: ivory with hairline cracks
+def bone(x, y):
+    v = 238 + random.randint(-6, 4)
+    if (x * 7 + y * 3) % 23 == 0 or (x == 11 and 3 < y < 9): v -= 45
+    return (clamp(v), clamp(v - 6), clamp(v - 22), 255)
+tile(14, bone)
+# 15 dark: eye sockets, nostrils, mouths
+def dark(x, y):
+    v = 22 + random.randint(-4, 4)
+    return (v, v, v, 255)
+tile(15, dark)
+out =os.path.join(os.path.dirname(__file__), '..', 'src/main/resources/assets/grandline/textures/entity/ship')
 os.makedirs(out, exist_ok=True)
 write_png(os.path.join(out, 'ship.png'), W, H, img)
 print('ship.png written')

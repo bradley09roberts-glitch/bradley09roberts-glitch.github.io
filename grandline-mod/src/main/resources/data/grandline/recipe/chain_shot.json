@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": {
+      "item": "grandline:cannonball"
+    },
+    "N": {
+      "item": "minecraft:iron_nugget"
+    }
+  },
+  "pattern": [
+    "CNC"
+  ],
+  "result": {
+    "count": 2,
+    "id": "grandline:chain_shot"
+  }
+}

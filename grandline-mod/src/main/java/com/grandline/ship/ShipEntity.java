@@ -46,7 +46,13 @@ public class ShipEntity extends Entity {
     private static final EntityDataAccessor<Integer> HULL_COLOR = SynchedEntityData.defineId(ShipEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> SPEED = SynchedEntityData.defineId(ShipEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<String> UPGRADES = SynchedEntityData.defineId(ShipEntity.class, EntityDataSerializers.STRING);
-    public static final byte F_ANCHOR = 1, F_SINKING = 2, F_CANAL = 4, F_NPC = 8;
+    /** Figurehead, emblem and flag colours ({@link ShipLook#encode()}). */
+    private static final EntityDataAccessor<String> LOOK = SynchedEntityData.defineId(ShipEntity.class, EntityDataSerializers.STRING);
+    /** Rigging condition 0..1 (chain shot tears it; slows the ship). */
+    private static final EntityDataAccessor<Float> RIGGING = SynchedEntityData.defineId(ShipEntity.class, EntityDataSerializers.FLOAT);
+    /** Grapple/tow line: -1, or (partner entity id << 1 | 1 when towing that partner). See {@link NavalCombat}. */
+    private static final EntityDataAccessor<Integer> LINK = SynchedEntityData.defineId(ShipEntity.class, EntityDataSerializers.INT);
+    public static final byte F_ANCHOR = 1, F_SINKING = 2, F_CANAL = 4, F_NPC = 8, F_FIRE_AT_WILL = 16, F_PRIZE = 32;
 
     public final ShipClass cls;
     private final ShipPart[] parts;
@@ -71,6 +77,8 @@ public class ShipEntity extends Entity {
     /** Active special route ride (see {@link SpecialRoutes}); -1 when sailing normally. Not saved. */
     public int ride = -1;
     public double rideT;
+    /** Naval combat state (see {@link NavalCombat} / {@link NpcShipAi}); NPC crew, squadron and prize origin are saved. */
+    final NavalCombat.State naval = new NavalCombat.State();
 
     // client interpolation
     private int lerpSteps;
@@ -141,6 +149,9 @@ public class ShipEntity extends Entity {
         b.define(HULL_COLOR, 0x8A5A32);
         b.define(SPEED, 0f);
         b.define(UPGRADES, "");
+        b.define(LOOK, ShipLook.DEFAULT.encode());
+        b.define(RIGGING, 1f);
+        b.define(LINK, -1);
     }
 
     // ------------------------------------------------------------------ accessors
@@ -170,6 +181,26 @@ public class ShipEntity extends Entity {
         Set<String> s = new TreeSet<>(upgrades());
         s.add(id);
         entityData.set(UPGRADES, String.join(",", s));
+    }
+    public ShipLook look() { return ShipLook.decode(entityData.get(LOOK)); }
+    public void setLook(ShipLook l) { entityData.set(LOOK, l.valid().encode()); }
+    public float rigging() { return entityData.get(RIGGING); }
+    public void setRigging(float r) { entityData.set(RIGGING, Mth.clamp(r, 0f, 1f)); }
+    int linkRaw() { return entityData.get(LINK); }
+    void setLinkRaw(int v) { entityData.set(LINK, v); }
+    /** Entity id of the ship this one is grappled to / towing / towed by, or -1. */
+    public int linkedId() { int v = linkRaw(); return v < 0 ? -1 : v >> 1; }
+    /** True when this ship tows its linked partner. */
+    public boolean towing() { int v = linkRaw(); return v >= 0 && (v & 1) != 0; }
+    /** Current speed along the heading (server). */
+    public float speedNow() { return speed; }
+    public void setSpeed(float s) {
+        speed = s;
+        entityData.set(SPEED, s);
+    }
+    void steer(float r) {
+        rudder = Mth.clamp(r, -1, 1);
+        lastHelmInput = level().getGameTime();
     }
     public Vec3 seatLocal(int i) { return seats[Math.max(0, Math.min(seats.length - 1, i))]; }
     public int seatCount() { return seats.length; }
@@ -276,71 +307,14 @@ public class ShipEntity extends Entity {
 
     /** NPC ships: "marine" or "pirate". */
     public String npcFaction = "";
-    private int npcFireTimer;
-
-    private void npcAi(ServerLevel sl) {
-        Player near = sl.getNearestPlayer(getX(), getY(), getZ(), 320, false);
-        if (near == null) {
-            for (Entity e : sl.getEntitiesOfClass(com.grandline.npc.GLNpc.class, getBoundingBox().inflate(cls.length), this::carries)) e.discard();
-            discard();
-            return;
-        }
-        // pick a target: the nearest player ship, else the nearest player at sea
-        Entity target = null;
-        double bd = 220 * 220;
-        for (ShipEntity s : sl.getEntitiesOfClass(ShipEntity.class, getBoundingBox().inflate(220), s -> s != this && !s.flag(F_NPC))) {
-            double d = s.distanceToSqr(this);
-            if (d < bd && hostileToShip(s)) {
-                bd = d;
-                target = s;
-            }
-        }
-        if (target == null && near.distanceToSqr(this) < 160 * 160 && hostileToPlayer(near)) target = near;
-        setFlag(F_ANCHOR, false);
-        if (target == null) {
-            setSail(1);
-            rudder = (float) Math.sin(sl.getGameTime() / 400.0) * 0.3f;
-            lastHelmInput = sl.getGameTime();
-            return;
-        }
-        Vec3 to = target.position().subtract(position());
-        double dist = to.horizontalDistance();
-        float want;
-        if (dist > 40) want = (float) Math.toDegrees(Math.atan2(-to.x, to.z));          // close in
-        else want = (float) Math.toDegrees(Math.atan2(-to.x, to.z)) + 90;               // circle to bring a broadside to bear
-        float diff = Mth.wrapDegrees(want - getYRot());
-        rudder = Mth.clamp(diff / 30f, -1, 1);
-        lastHelmInput = sl.getGameTime();
-        setSail(dist > 25 ? 3 : 2);
-        if (--npcFireTimer <= 0 && dist < 70 && cls.cannons > 0) {
-            npcFireTimer = 50 - Math.min(30, cls.cannons * 2);
-            Vec3 aim = target.position().add(0, 1.5, 0).add(target.getDeltaMovement().scale(dist / 2.2)).subtract(position());
-            Vec3 starboard = toWorld(1, 0, 0).subtract(position()).normalize();
-            boolean right = aim.normalize().dot(starboard) > 0;
-            for (int seat = 1; seat <= cls.cannons; seat++) {
-                if ((seatLocal(seat).x >= 0) != right) continue;
-                if (sl.random.nextInt(3) != 0) continue;
-                fireFrom(seat, aim.add(sl.random.nextGaussian() * 2, 0, sl.random.nextGaussian() * 2), null, 10f + cls.ordinal() * 3f);
-            }
-        }
-    }
-
-    private boolean hostileToShip(ShipEntity s) {
-        if (s.owner == null) return false;
-        Player p = level().getPlayerByUUID(s.owner);
-        return p == null || hostileToPlayer(p);
-    }
-
-    private boolean hostileToPlayer(Player p) {
-        var d = Characters.get(p);
-        if (npcFaction.equals("marine")) return d.bounty > 0 || d.faction == com.grandline.player.Faction.PIRATE || d.faction == com.grandline.player.Faction.REVOLUTIONARY;
-        return d.faction != com.grandline.player.Faction.PIRATE || d.bounty < 1_000_000 || level().random.nextBoolean();
-    }
+    /** Testing: an NPC ship that never despawns / never acts on its own. */
+    public boolean noDespawn, npcAiOff;
 
     private void tickServer() {
         ServerLevel sl = (ServerLevel) level();
-        if (flag(F_NPC) && !isSinking() && canalLeg < 0) npcAi(sl);
+        if (flag(F_NPC) && !isSinking() && canalLeg < 0) NpcShipAi.tick(this, sl);
         if (isRemoved()) return;
+        NavalCombat.shipTick(this, sl);
         if (isSinking()) {
             sinkTicks++;
             setPos(getX(), getY() - 0.04, getZ());
@@ -372,13 +346,14 @@ public class ShipEntity extends Entity {
             for (Entity p : getPassengers()) if (p instanceof LivingEntity le && com.grandline.combat.CombatState.of(le).hasBuff("tailwind")) target = Math.max(target, cls.speed * 1.25f);
             for (LivingEntity le : sl.getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(cls.length / 2.0), this::carries))
                 if (com.grandline.combat.CombatState.of(le).hasBuff("tailwind")) target = Math.max(target, cls.speed * 1.25f);
+            target *= NavalCombat.speedFactor(this);
         }
         if (sl.getGameTime() - lastHelmInput > 40) rudder *= 0.8f;
         speed += Mth.clamp(target - speed, -0.01f, 0.006f * testSpeedMult);
         if (speed < 0.002f && target == 0) speed = 0;
         float turn = rudder * cls.turnRate * (0.25f + Math.min(1f, speed / Math.max(0.05f, cls.speed)));
         setYRot(Mth.wrapDegrees(getYRot() + turn));
-        Vec3 next = position().add(heading().scale(speed));
+        Vec3 next = NavalCombat.adjustMove(this, sl, position().add(heading().scale(speed)));
         // keep afloat at sea level; leave the world only through ReverseMountain rides
         double y = WorldPlan.SEA_LEVEL + 1 - 0.1;
         if (speed > 0) {
@@ -531,32 +506,40 @@ public class ShipEntity extends Entity {
         if (seat <= 0 || seat > cls.cannons) return;
         long now = level().getGameTime();
         if (cannonCooldown.getOrDefault(seat, 0L) > now) return;
-        boolean creative = sp.isCreative();
-        ItemStack ammo = ItemStack.EMPTY;
-        if (!creative) {
-            for (ItemStack s : sp.getInventory().items) if (s.is(ModItems.CANNONBALL.get())) { ammo = s; break; }
-            if (ammo.isEmpty()) {
-                sp.displayClientMessage(Component.translatable("grandline.combat.no_ammo"), true);
-                return;
-            }
-            ammo.shrink(1);
+        String kind = NavalCombat.takeAmmo(sp, sp.getMainHandItem());
+        if (kind == null) {
+            sp.displayClientMessage(Component.translatable("grandline.combat.no_ammo"), true);
+            return;
         }
         cannonCooldown.put(seat, now + 50);
-        fireFrom(seat, sp.getLookAngle(), sp, (14f + (com.grandline.player.Characters.get(sp).mastery("weapon/hand_cannon") * 0.1f)) * crewCannon);
+        fireShot(seat, sp.getLookAngle(), sp, (14f + (com.grandline.player.Characters.get(sp).mastery("weapon/hand_cannon") * 0.1f)) * crewCannon, kind, false);
     }
 
     public void fireFrom(int seat, Vec3 aim, @Nullable Entity shooter, float damage) {
+        fireShot(seat, aim, shooter, damage, NavalCombat.CANNONBALL, false);
+    }
+
+    /** Muzzle of the cannon at a seat (world position). */
+    public Vec3 muzzle(int seat) {
+        Vec3 local = seatLocal(seat);
+        int side = local.x >= 0 ? 1 : -1;
+        return toWorld(local.x + side * 1.2, local.y + 0.6, local.z);
+    }
+
+    /**
+     * Fire the cannon at a seat. The aim is clamped to that side's broadside; {@code exact} aims (gun crews that
+     * already solved the ballistics) skip the small upward lift given to hand-aimed shots. Ammo kinds: see
+     * {@link NavalCombat#CANNONBALL}, {@link NavalCombat#CHAIN_SHOT}, {@link NavalCombat#GRAPE_SHOT}.
+     */
+    public void fireShot(int seat, Vec3 aim, @Nullable Entity shooter, float damage, String ammo, boolean exact) {
         Vec3 local = seatLocal(seat);
         int side = local.x >= 0 ? 1 : -1;
         Vec3 sideDir = toWorld(side, 0, 0).subtract(toWorld(0, 0, 0)).normalize();
         Vec3 dir = aim.normalize();
         if (dir.dot(sideDir) < 0.3) dir = dir.add(sideDir.scale(0.6)).normalize();
-        Vec3 muzzle = toWorld(local.x + side * 1.2, local.y + 0.6, local.z);
-        var p = com.grandline.entity.AbilityProjectile.shoot(level(), shooter instanceof LivingEntity le ? le : null, "cannonball", 0.5f, muzzle, dir.add(0, 0.06, 0), 2.2, damage,
-                com.grandline.combat.Hits.Info.of(com.grandline.combat.Element.IMPACT, 1.5f));
-        p.gravity = 0.02;
-        p.explosion = 2.5f;
-        p.life = 120;
+        if (!exact) dir = dir.add(0, 0.06, 0);
+        Vec3 muzzle = muzzle(seat);
+        NavalCombat.launch(this, shooter instanceof LivingEntity le ? le : null, muzzle, dir, damage, ammo);
         level().playSound(null, BlockPos.containing(muzzle), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.NEUTRAL, 1.2f, 1.3f);
         ((ServerLevel) level()).sendParticles(ParticleTypes.LARGE_SMOKE, muzzle.x, muzzle.y, muzzle.z, 8, 0.3, 0.3, 0.3, 0.02);
     }
@@ -567,7 +550,9 @@ public class ShipEntity extends Entity {
         if (level().isClientSide || isSinking()) return false;
         boolean heavy = src.is(DamageTypeTags.IS_EXPLOSION) || src.is(com.grandline.registry.ModDamageTypes.CANNON) || src.getDirectEntity() instanceof com.grandline.entity.AbilityProjectile;
         if (!heavy && !(src.getEntity() instanceof Player)) return false;
-        hurtHull(heavy ? amount * 1.5f : amount * 0.1f, src.getEntity());
+        float hull = heavy ? amount * 1.5f : amount * 0.1f;
+        if (src.getDirectEntity() instanceof com.grandline.entity.AbilityProjectile ap) hull = NavalCombat.shotHit(this, ap, hull);
+        hurtHull(hull, src.getEntity());
         return true;
     }
 
@@ -600,6 +585,13 @@ public class ShipEntity extends Entity {
         if (level().isClientSide) return InteractionResult.SUCCESS;
         ServerPlayer sp = (ServerPlayer) player;
         ItemStack held = player.getItemInHand(hand);
+        if (held.getItem() instanceof GrapplingHookItem) return InteractionResult.PASS; // thrown, not used on the deck
+        if (held.is(ItemTags.WOOL) && rigging() < 1f) {
+            setRigging(rigging() + 0.15f);
+            if (!player.isCreative()) held.shrink(1);
+            level().playSound(null, part.blockPosition(), SoundEvents.WOOL_PLACE, SoundSource.PLAYERS, 1, 1);
+            return InteractionResult.CONSUME;
+        }
         if (held.is(ItemTags.PLANKS) && hull() < maxHull()) {
             repair(8);
             if (!player.isCreative()) held.shrink(1);
@@ -643,9 +635,17 @@ public class ShipEntity extends Entity {
 
     /** Seat a player at a station (used by tests and crew commands); returns false when the seat is taken. */
     public boolean seatPlayer(ServerPlayer sp, int seat) {
+        return seatEntity(sp, seat);
+    }
+
+    /** Seat any entity (gun crews, tests) at a station; returns false when the seat is taken. */
+    public boolean seatEntity(Entity e, int seat) {
         if (seat < 0 || seat >= seats.length || getFirstPassengerAtSeat(seat) != null) return false;
-        seatOf.put(sp.getUUID(), seat);
-        return sp.startRiding(this, true);
+        if (e.getVehicle() == this) e.stopRiding();
+        seatOf.put(e.getUUID(), seat);
+        if (e.startRiding(this, true)) return true;
+        seatOf.remove(e.getUUID());
+        return false;
     }
 
     public float hatchZ() {
@@ -674,7 +674,7 @@ public class ShipEntity extends Entity {
     protected void addPassenger(Entity e) {
         super.addPassenger(e);
         if (!seatOf.containsKey(e.getUUID())) {
-            for (int i = 0; i < seats.length; i++) {
+            for (int i = e instanceof Player ? 0 : 1; i < seats.length; i++) { // only players take the helm
                 if (getFirstPassengerAtSeat(i) == null) {
                     seatOf.put(e.getUUID(), i);
                     break;
@@ -741,6 +741,11 @@ public class ShipEntity extends Entity {
         entityData.set(UPGRADES, t.getString("Upgrades"));
         speed = t.getFloat("Speed");
         npcFaction = t.getString("NpcFaction");
+        entityData.set(LOOK, t.contains("Look") ? ShipLook.decode(t.getString("Look")).encode() : ShipLook.DEFAULT.encode());
+        entityData.set(RIGGING, t.contains("Rigging") ? t.getFloat("Rigging") : 1f);
+        CompoundTag st = t.getCompound("Stations"); // passengers reload after their vehicle: keep their stations
+        for (String k : st.getAllKeys()) seatOf.put(UUID.fromString(k), st.getInt(k));
+        naval.load(t.getCompound("Naval"));
     }
 
     @Override
@@ -758,6 +763,12 @@ public class ShipEntity extends Entity {
         t.putString("Upgrades", entityData.get(UPGRADES));
         t.putFloat("Speed", speed);
         t.putString("NpcFaction", npcFaction);
+        t.putString("Look", entityData.get(LOOK));
+        t.putFloat("Rigging", rigging());
+        CompoundTag st = new CompoundTag();
+        for (Entity p : getPassengers()) if (!(p instanceof Player) && seatOf.containsKey(p.getUUID())) st.putInt(p.getUUID().toString(), seatOf.get(p.getUUID()));
+        t.put("Stations", st);
+        t.put("Naval", naval.save());
     }
 
     @Override

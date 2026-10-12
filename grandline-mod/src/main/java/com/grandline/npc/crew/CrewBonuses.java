@@ -50,7 +50,10 @@ public final class CrewBonuses {
                 continue;
             }
             CharacterData d = Characters.get(sp);
-            if (roles.contains("shipwright") || roles.contains("engineer")) ship.repair(roles.contains("shipwright") && roles.contains("engineer") ? 6 : 3);
+            if (roles.contains("shipwright") || roles.contains("engineer")) {
+                ship.repair(roles.contains("shipwright") && roles.contains("engineer") ? 6 : 3);
+                if (ship.rigging() < 1f) ship.setRigging(ship.rigging() + 0.01f); // splice torn rigging
+            }
             ship.crewSpeed = roles.contains("helmsman") ? 1.15f : 1f;
             ship.crewCannon = (roles.contains("sniper") ? 1.3f : 1f) * (roles.contains("quartermaster") ? 1.1f : 1f);
             if (roles.contains("cook") && sp.getFoodData().getFoodLevel() < 20) sp.getFoodData().eat(1, 0.5f);

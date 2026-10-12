@@ -14,7 +14,8 @@ def _read(rel):
 
 
 def item_ids():
-    src = _read('registry/ModItems.java')
+    # feature registers that add their items to ModItems.ITEMS from their own class
+    src = _read('registry/ModItems.java') + _read('ship/NavalItems.java')
     plain = re.findall(r'ITEMS\.register\("([a-z0-9_]+)"', src)
     weapons = re.findall(r'\bweapon\("([a-z0-9_]+)"', src)
     return plain, weapons

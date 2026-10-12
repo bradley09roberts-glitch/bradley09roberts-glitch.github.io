@@ -109,8 +109,7 @@ public final class ShipMesh {
             }
             prevHb = hb;
         }
-        // figurehead
-        m.box(-0.3f, top - 0.4f, half, 0.3f, top + 0.6f, half + 1.2f, T_GOLD, TINT_NONE);
+        // (the figurehead is drawn per ship from ShipDecor: it is chosen at the shipyard)
         // masts and yards
         for (int mi = 0; mi < c.masts; mi++) {
             float mz = mastZ(c, mi);

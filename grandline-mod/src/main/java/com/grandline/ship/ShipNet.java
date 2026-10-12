@@ -4,11 +4,16 @@ import com.grandline.net.GLNetwork;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 
-/** Ship packet handlers: helm input, cannon fire, shipyard actions. */
+/** Ship packet handlers: helm input, cannon fire, gun-crew orders, shipyard actions. */
 public final class ShipNet {
     public static final byte ANCHOR = 1, FIRE = 2, BURST = 4, SAIL_UP = 8, SAIL_DOWN = 16;
 
     public static void handle(ServerPlayer sp, CompoundTag t) {
+        String op = t.getString("op");
+        if (op.equals("order")) { // gun-crew orders from the helm keys (no shipwright involved)
+            NavalCombat.order(sp, t.getString("order"), t.getString("arg"));
+            return;
+        }
         Shipyard.action(sp, t);
     }
 
