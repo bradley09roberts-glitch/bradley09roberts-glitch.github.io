@@ -85,6 +85,7 @@ public final class SelfTest {
             DimensionTests.shipClasses(steps);
             DimensionTests.phase1(steps);
         }
+        else if (PHASE.equals("creatures")) CreatureSelfTest.phase1(steps); // quick run of the creature steps only
         else phase2();
     }
 
@@ -741,6 +742,7 @@ public final class SelfTest {
         DimensionTests.ferry(steps);
         DimensionTests.holyLand(steps);
         DimensionTests.phase1(steps);
+        CreatureSelfTest.phase1(steps); // Sea Kings, Calm Belt, Zoan beast forms
         // ---------- persistence fixtures for phase 2 ----------
         steps.add(s -> {
             ServerLevel l = ow(s);

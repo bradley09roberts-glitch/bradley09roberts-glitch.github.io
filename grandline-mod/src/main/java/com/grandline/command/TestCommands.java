@@ -65,6 +65,11 @@ public final class TestCommands {
                     sp.teleportTo(ow, bx, 90, bz, sp.getYRot(), 10);
                     return GLCommands.ok(c, "Storm at " + (int) bx + ", " + (int) bz + " intensity " + best);
                 }))
+                .then(com.grandline.creature.CreatureTestCommands.seaKing())
+                .then(com.grandline.creature.CreatureTestCommands.zoan())
+                .then(com.grandline.creature.CreatureTestCommands.beastNpc())
+                .then(com.grandline.creature.CreatureTestCommands.wildlife())
+                .then(com.grandline.creature.CreatureTestCommands.calmBelt())
                 .then(Commands.literal("inventory").executes(c -> {
                     try {
                         var out = com.grandline.test.InventoryDump.write(c.getSource().getServer());

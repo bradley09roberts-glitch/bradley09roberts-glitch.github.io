@@ -128,12 +128,16 @@ public class AbilityProjectile extends Projectile {
             if (getOwner() != null && ship instanceof com.grandline.ship.ShipEntity se && se.carries(getOwner())) return false;
             return !hitIds.contains(e.getId());
         }
+        // body segments of multipart creatures (Sea Kings) are hits on the creature
+        if (e instanceof net.neoforged.neoforge.entity.PartEntity<?> pe && pe.getParent() instanceof LivingEntity owner)
+            return owner.isAlive() && owner != getOwner() && !hitIds.contains(owner.getId());
         return super.canHitEntity(e) && e instanceof LivingEntity && !hitIds.contains(e.getId()) && e != getOwner();
     }
 
     @Override
     protected void onHitEntity(EntityHitResult r) {
         if (r.getEntity() instanceof LivingEntity le) hitEntity(le);
+        else if (r.getEntity() instanceof net.neoforged.neoforge.entity.PartEntity<?> pe && pe.getParent() instanceof LivingEntity owner) hitEntity(owner);
         else if (r.getEntity() instanceof com.grandline.ship.ShipPart part && hitIds.add(part.getId())) {
             part.hurt(com.grandline.registry.ModDamageTypes.source(level(), com.grandline.registry.ModDamageTypes.CANNON, this, getOwner()), damage);
             impact(null, position());

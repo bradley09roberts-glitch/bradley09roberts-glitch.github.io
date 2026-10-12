@@ -1,0 +1,15 @@
+{
+ "entity.grandline.sea_king": "Sea King",
+ "entity.grandline.sea_king.serpent": "Serpent Sea King",
+ "entity.grandline.sea_king.maw": "Gape-Jaw Sea King",
+ "entity.grandline.sea_king.horned": "Horned Sea King",
+ "entity.grandline.sea_king.colossal": "Colossal %s",
+ "grandline.seaking.approach": "The water darkens... something enormous is circling beneath the hull.",
+ "grandline.seaking.approach_colossal": "The sea rises like a wall: a colossal Sea King has found you!",
+ "grandline.seaking.slain": "You slew the %s! Its meat will feed a crew for weeks.",
+ "entity.grandline.kungfu_dugong": "Kung-Fu Dugong",
+ "entity.grandline.lapahn": "Lapahn",
+ "entity.grandline.banana_gator": "Banana-gator",
+ "entity.grandline.sea_cat": "Sea Cat",
+ "grandline.wildlife.dugong_bows": "The Kung-Fu Dugong bows deeply: it acknowledges you as its master!"
+}
