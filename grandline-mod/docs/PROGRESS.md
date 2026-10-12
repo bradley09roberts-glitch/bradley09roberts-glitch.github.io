@@ -537,6 +537,10 @@ First run of a real client against the dedicated server. Result: no client crash
   roars/phase changes/wind-ups/enrage use the new sounds. Subtitles in `lang/en_us/sounds.json`.
 - Music discs: four tracks (east_blue, grand_line, wano, boss) as jukebox songs with mono copies, in treasure and
   wreck chests and the creative tab.
+- 12:40: five more effect families (blade swish, string twang, bubbles, squelch, barrier chime) on about 50 more fruit
+  and sword effects (53 sound events in all). Many effects are sent again and again while they last, so each kind
+  now sounds at most once per 1.5 s and lingering zones (birdcage, domes, storms, clouds) once per 5 s; the
+  Conqueror's Haki aura, sent every second while it is on, no longer roars.
 - Sea ambience (`client/SeaAmbience`, Ambient slider): a seamless 20 s surf loop that swells with the share of open
   water within 32 blocks, a storm-wind loop with the rain/thunder level, gulls by day along shores, and creaking
   timbers aboard a ship (more under way). Ocean world only, above water. The first client run measured open sea as 0
