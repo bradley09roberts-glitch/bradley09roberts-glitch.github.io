@@ -472,6 +472,10 @@ First run of a real client against the dedicated server. Result: no client crash
   tracked when the test disbands the crew if the Shells Town chunk loads slowly) and the ferry landing within 3000
   ticks (1 of 3, on a heavily loaded container). Phase 2 on the last run's world: 15/15 (relic records and the
   defeated boss persist).
+- After the merge (the crew test now waits up to 30 s for the Shells Town area to load before it recruits): full
+  phase 1 on the merged tree 544/544, phase 2 16/16, no exception in either server log (09:20–09:36). The
+  inventory was regenerated from that run (261 tested, 350 playable, no partial or planned rows).
+  `/grandline test boss <id>` spawns a boss next to the caller for manual fights; the client run's shot 35g uses it.
 - Not done: nothing has been seen in a real client (markers, hit effects, boss music and the bar colours are only
   checked as packets/state); bosses fight on their home islands as notables, there are no purpose-built arenas or
   ship encounters that bring an Admiral to the player at sea (the sea arena behaviours trigger when a fight happens
