@@ -45,6 +45,20 @@ public final class TestCommands {
                     ship.setAnchored(com.mojang.brigadier.arguments.BoolArgumentType.getBool(c, "on"));
                     return GLCommands.ok(c, "Anchored " + ship.anchored());
                 })))
+                .then(Commands.literal("board").executes(c -> {
+                    // open the notice board of the island the player is on (client test of the board screen)
+                    ServerPlayer sp = c.getSource().getPlayerOrException();
+                    var plan = com.grandline.world.WorldPlan.forLevel(sp.level());
+                    var isl = plan == null ? null : plan.nearest(sp.getBlockX(), sp.getBlockZ(), 400);
+                    if (isl == null) return GLCommands.fail(c, "No island here");
+                    for (var p : isl.settlement().plots)
+                        for (var m : com.grandline.npc.MarkerCollector.markers(isl, p))
+                            if (m.kind().equals("bounty_board")) {
+                                com.grandline.quest.story.JobBoard.open(sp, isl, m.pos());
+                                return GLCommands.ok(c, "Board at " + m.pos().toShortString());
+                            }
+                    return GLCommands.fail(c, "No notice board on " + isl.id);
+                }))
                 .then(Commands.literal("storm").executes(c -> {
                     // fly to the nearest violent weather (testing the weather system)
                     ServerPlayer sp = c.getSource().getPlayerOrException();

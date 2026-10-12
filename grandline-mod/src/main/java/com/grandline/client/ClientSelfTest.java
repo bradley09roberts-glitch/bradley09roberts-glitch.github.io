@@ -267,6 +267,14 @@ public final class ClientSelfTest {
         add("open sea chart", () -> PacketDistributor.sendToServer(new GLNetwork.UiAction("open_chart", new net.minecraft.nbt.CompoundTag())), 40);
         shot("14c_sea_chart");
         add("close screen", () -> mc.setScreen(null), 10);
+        cmd("grandline test board", 40);
+        shot("14d_notice_board");
+        add("close screen", () -> mc.setScreen(null), 10);
+        cmd("item replace entity @s weapon.mainhand with grandline:treasure_map", 40); // drawn once in the inventory
+        add("read the map", () -> mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND), 40);
+        shot("14e_treasure_map");
+        add("close screen", () -> mc.setScreen(null), 10);
+        cmd("item replace entity @s weapon.mainhand with minecraft:air", 5);
         add("combat mode off", () -> {
             ClientState.combatMode = false;
             PacketDistributor.sendToServer(new GLNetwork.CombatInput(CombatInput.TOGGLE_COMBAT, (byte) 0, (byte) 0, 0, 0));
