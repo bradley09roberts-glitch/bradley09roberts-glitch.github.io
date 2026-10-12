@@ -164,6 +164,19 @@ First run of a real client against the dedicated server. Result: no client crash
 - After the merge, the tests had to generate their test areas before looking for water (game code no longer blocks on
   chunks); dims suite 112/112 again.
 
+### Sea Kings, Zoan beasts, wildlife (agent, merged 05:40)
+- Sea Kings: three variants (serpent, maw, horned) in three tiers (25–80 blocks long, 180–1000 HP), the head is the
+  entity and 14 body segments follow its path (cannons, fruits and melee hit anywhere on the body). They swim deep,
+  surface near prey, circle ships, bite hulls and slam their tails; Conqueror's Haki knocks out or scares the weaker
+  ones. Calm Belt (windless) is their home with nests every 3,000 blocks; rare in the Grand Line, very rare in the
+  Blues; never near Reverse Mountain, the Red Line or settled harbours.
+- Zoan full forms: 11 GeckoLib beasts (wolf, leopard, bison, phoenix, elephant, allosaurus, pteranodon, spinosaurus,
+  seiryu, orochi, kraken) for players and NPCs, with the beast's hitbox; wildlife: Kung-Fu Dugongs, Lapahns,
+  Banana-gators, Sea Cats by island theme.
+- Verified by the agent: its phase 1 89/89 (Sea King finds a galleon in the Calm Belt and takes its hull 760 → 460,
+  a cannonball on a body segment kills it, Conqueror's Haki knocks out a tier 1 and not a tier 3, wolf form hitbox
+  0.60×1.80 → 1.44×1.52 and back); client shots of all three Sea Kings and all 11 beasts.
+
 ### Extras (04:20–05:00)
 - Captain's Handbook (written book, 10 translated pages naming the player's own key bindings) for every new character.
 - 43 new projectile sprites (every fruit and race projectile now has its own).
@@ -171,7 +184,6 @@ First run of a real client against the dedicated server. Result: no client crash
 - Paintings: merchants sell three per island; treasure chests and wrecks may hold one.
 
 ## Work in flight (background agents)
-- Sea Kings and Calm Belt nests, Zoan full-beast models (GeckoLib), island wildlife.
 - Naval combat and ship customisation.
 - World polish and missing canon islands.
 - Devil Fruit wave 4: 15 more original fruits (originals 25 → 40).
