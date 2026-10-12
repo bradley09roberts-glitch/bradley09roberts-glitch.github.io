@@ -344,6 +344,11 @@ public final class ClientSelfTest {
         shot("35c_hanabi_chrysanthemum");
         cmd("grandline test ability fruit/hanabi/star_mine", 25);
         shot("35d_hanabi_star_mine");
+        cmd("kill @e[type=grandline:npc,distance=..30]", 10);
+        cmd("tp @s 36000 151 20000 0 5", 20);
+        cmd("grandline test boss hrolf", 120); // an Emperor on the stage: boss bar, phases, telegraphed attacks
+        shot("35g_boss_fight");
+        cmd("kill @e[type=grandline:npc,distance=..40]", 10);
         cmd("grandline fruit remove", 10);
         cmd("kill @e[type=grandline:npc,distance=..30]", 10);
         cmd("fill 35990 150 19986 36024 150 20014 minecraft:air", 10);

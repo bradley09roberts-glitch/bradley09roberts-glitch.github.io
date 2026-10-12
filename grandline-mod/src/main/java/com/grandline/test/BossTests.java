@@ -62,7 +62,7 @@ import static com.grandline.test.SelfTest.check;
  * the enrage timer; Conqueror's clashes; defeat (death, yield, arrest) drops the boss's one relic, pays scrolls and
  * bounty and credits the story; and every boss's signature attacks, arena and phase powers run without errors.
  */
-final class BossTests {
+public final class BossTests {
     private static final UUID A_ID = UUID.fromString("b0550000-0000-4000-8000-0000000000a1");
     private static final UUID B_ID = UUID.fromString("b0550000-0000-4000-8000-0000000000b2");
     private static final UUID C_ID = UUID.fromString("b0550000-0000-4000-8000-0000000000c3");
@@ -750,7 +750,7 @@ final class BossTests {
     }
 
     /** A boss as the story spawns it (its notable data), at a spot of the test platform, without AI. */
-    static HumanoidNpc boss(ServerLevel l, String id, BlockPos at) {
+    public static HumanoidNpc boss(ServerLevel l, String id, BlockPos at) {
         MinecraftServer s = l.getServer();
         NotableCharacters.Notable n = NotableCharacters.get(id);
         NotableState st = NotableState.get(s);
