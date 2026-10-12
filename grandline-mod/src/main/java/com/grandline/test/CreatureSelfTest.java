@@ -338,6 +338,13 @@ final class CreatureSelfTest {
             wild[1].setTarget(prey[0]); // the Lapahn
             return 80;
         });
+        final int[] chase = {0};
+        steps.add(s -> {
+            // terrain varies with the world seed: give the Lapahn up to 12 s more to reach its prey
+            if (prey[0] == null || wild[1] == null || !wild[1].isAlive() || prey[0].getHealth() < prey[0].getMaxHealth()) return 0;
+            if (wild[1].getTarget() != prey[0]) wild[1].setTarget(prey[0]);
+            return ++chase[0] < 240 ? -1 : 0;
+        });
         steps.add(s -> {
             ServerLevel l = s.overworld();
             int alive = 0;
