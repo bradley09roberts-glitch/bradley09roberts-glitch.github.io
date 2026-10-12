@@ -33,8 +33,7 @@ public final class Quests {
         CompoundTag prog = new CompoundTag();
         d.questProgress.put(questId, prog);
         sp.sendSystemMessage(Component.translatable("grandline.quest.started", QuestRegistry.title(q)).withStyle(ChatFormatting.AQUA));
-        Component desc = QuestRegistry.generatedDescription(q);
-        if (desc != null) sp.sendSystemMessage(desc.copy().withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+        QuestText.send(sp, q, null); // what the quest is about and what to do, objective by objective
         com.grandline.quest.story.IslandStories.onQuestStarted(sp, q); // wanted posters, letters, parcels for generated jobs
         // islands discovered before the quest began still count
         boolean credited = false;

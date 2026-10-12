@@ -99,6 +99,7 @@ public final class SelfTest {
         else if (PHASE.equals("journey")) JourneyTests.phase1(steps); // quick run: advancements, Den Den Mushi, Buster Call
         else if (PHASE.equals("bosses")) BossTests.phase1(steps); // quick run: boss fights
         else if (PHASE.equals("structures")) StructureDump.steps(steps); // dev aid: every structure to structdump/*.json
+        else if (PHASE.equals("quests")) steps.add(SelfTest::questTextCheck); // quick run: quest descriptions and objective text
         else if (PHASE.equals("landmarks")) { // quick run: every landmark builder and every settlement building
             steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
             steps.add(s -> BuildingCheck.run(SelfTest::check));
@@ -151,6 +152,28 @@ public final class SelfTest {
         steps = null;
         s.saveEverything(true, true, true);
         s.halt(false);
+    }
+
+    /** Every quest has a description and every objective reads as words (shown when it starts and by /quests). */
+    static int questTextCheck(MinecraftServer s) {
+        List<String> noDesc = new ArrayList<>(), rawObj = new ArrayList<>();
+        int quests = 0;
+        for (com.grandline.quest.QuestDef q : com.grandline.quest.QuestRegistry.all()) {
+            quests++;
+            if (com.grandline.quest.QuestText.description(q) == null) noDesc.add(q.id());
+            for (com.grandline.quest.QuestDef.Objective o : q.objectives()) {
+                String text = com.grandline.quest.QuestText.objective(s, o).getString();
+                if (text.startsWith("grandline.quest.obj") || !(com.grandline.quest.QuestText.objective(s, o).getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents))
+                    rawObj.add(q.id() + ":" + o.type() + "=" + text);
+            }
+        }
+        check("every quest has a description and readable objectives", quests > 100 && noDesc.isEmpty() && rawObj.isEmpty(),
+                quests + " quests" + (noDesc.isEmpty() ? "" : "; no description: " + noDesc.subList(0, Math.min(15, noDesc.size())) + (noDesc.size() > 15 ? " +" + (noDesc.size() - 15) : ""))
+                        + (rawObj.isEmpty() ? "" : "; untranslated objectives: " + rawObj.subList(0, Math.min(10, rawObj.size()))));
+        net.minecraft.network.chat.Component desc = com.grandline.quest.QuestText.description(com.grandline.quest.QuestRegistry.get("ember_east_1"));
+        String line = com.grandline.quest.QuestText.objective(s, com.grandline.quest.QuestRegistry.get("ember_east_1").objectives().get(0)).getString();
+        check("the Rigger's Lesson reads: description and 'Defeat Bandit x3'", desc != null && desc.getString().contains("bandits") && line.equals("Defeat Bandit \u00d73"), (desc == null ? "no description" : desc.getString()) + " | " + line);
+        return 0;
     }
 
     static ServerLevel ow(MinecraftServer s) {
@@ -928,6 +951,7 @@ public final class SelfTest {
             CharacterData d = Characters.get(fp);
             com.grandline.npc.notable.NotableHooks.decorate(fp, npc, d, t, opts, true);
             check("notable dialogue: own greeting and quest offer", t.getString("greeting").equals("dialogue.grandline.notable.fumio") && opts.toString().contains("quest:ember_east_1"), opts.toString());
+            questTextCheck(s); // every quest tells the player what it is about and what to do
             npc.hurt(fp.damageSources().playerAttack(fp), 100000);
             check("beaten friendly notable yields instead of dying", npc.isAlive() && npc.getHealth() > 0 && npc.flag(com.grandline.npc.GLNpc.FLAG_SURRENDER), "hp " + npc.getHealth());
             npc.kill();

@@ -24,8 +24,9 @@ Private distribution.
 3. Copy both jars from `dist/` into your `.minecraft/mods` folder:
    - `grandline-0.2.0.jar` — the mod (it replaces `grandline-0.1.0.jar`: remove the old jar)
    - `geckolib-neoforge-1.21.1-4.9.3.jar` — required library (animated creature/beast models)
-4. Start the NeoForge 1.21.1 profile. Create a new world and under **World Type** pick **Grand Line Ocean World**
-   (the mod's ocean world replaces the normal Overworld; the Nether and End stay vanilla).
+4. Start the NeoForge 1.21.1 profile and create a new world. **World Type** already shows **Grand Line Ocean World**
+   (leave it; a world made with "Default" is ordinary Minecraft and cannot be converted). The mod's ocean world
+   replaces the normal Overworld; the Nether and End stay vanilla.
 5. On first join you create your character (name, race, height/build, colours, marks, home Blue and path). You start
    with the **Captain's Handbook**, a book that explains the controls (with your own key bindings) and the systems.
 
@@ -71,6 +72,7 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
 | At a ship's helm: W/S, A/D, X, B | Raise/lower sails, rudder, anchor, Coup de Burst |
 | At a cannon: left click | Fire |
 | Sneak + use on a downed ally | Revive |
+| `/quests` | Your active quests: what each is about and every objective with its progress |
 
 ## Playing in brief
 

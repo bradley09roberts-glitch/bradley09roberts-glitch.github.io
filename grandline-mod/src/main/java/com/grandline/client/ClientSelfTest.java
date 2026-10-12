@@ -170,6 +170,7 @@ public final class ClientSelfTest {
 
     private static void build() {
         steps = new ArrayDeque<>();
+        if ("newworld".equals(MODE)) return; // driven by NewWorldTest from the menus
         if ("mp_a".equals(MODE)) buildCaptain();
         else if ("mp_b".equals(MODE)) buildMate();
         else if ("tour".equals(MODE)) buildTour();
