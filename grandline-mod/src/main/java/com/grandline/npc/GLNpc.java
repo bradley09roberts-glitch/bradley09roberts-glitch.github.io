@@ -229,6 +229,11 @@ public abstract class GLNpc extends PathfinderMob {
         return f == null ? null : DevilFruits.get(f);
     }
 
+    /** Testing/story hook: give this NPC a specific fruit without the world ledger. */
+    public void forceFruitForTest(String fruit) {
+        entityData.set(FRUIT, fruit);
+    }
+
     public CombatState combat() {
         return CombatState.of(this);
     }
