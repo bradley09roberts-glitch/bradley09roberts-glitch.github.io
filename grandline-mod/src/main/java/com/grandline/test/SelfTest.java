@@ -77,7 +77,14 @@ public final class SelfTest {
         steps = new ArrayDeque<>();
         REPORT.add("Grand Line Odyssey self-test, phase " + PHASE + ", " + new Date());
         if (PHASE.equals("1")) phase1();
-        else if (PHASE.equals("dims")) DimensionTests.phase1(steps);
+        else if (PHASE.equals("dims")) {
+            steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
+            DimensionTests.ferry(steps);
+            DimensionTests.holyLand(steps);
+            DimensionTests.awakening(steps);
+            DimensionTests.shipClasses(steps);
+            DimensionTests.phase1(steps);
+        }
         else if (PHASE.equals("naval")) NavalTests.phase1(steps);
         else phase2();
     }
@@ -261,6 +268,8 @@ public final class SelfTest {
             check("all 12 chest loot tables load and roll items", ok == 12, ok + "/12; treasure roll " + sample);
             return 0;
         });
+        // landmarks: every registered set piece builds deterministically inside its footprint (see LandmarkCheck)
+        steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
         // NPC markers & spawning
         steps.add(s -> {
             WorldPlan p = WorldPlan.of(s);
@@ -315,6 +324,12 @@ public final class SelfTest {
             check("race size clamped to giant max", Math.abs(d.appearance.scale - Race.GIANT.maxScale) < 1e-3, "scale=" + d.appearance.scale);
             check("scale attribute applied (hitbox)", Math.abs(fp.getScale() - Race.GIANT.maxScale) < 0.01, "getScale=" + fp.getScale() + " height=" + fp.getBbHeight());
             check("giant reach bonus applied", fp.entityInteractionRange() > 4.5, "reach=" + fp.entityInteractionRange());
+            int bookPages = -1;
+            for (var st : fp.getInventory().items) {
+                var wb = st.get(net.minecraft.core.component.DataComponents.WRITTEN_BOOK_CONTENT);
+                if (wb != null) bookPages = wb.pages().size();
+            }
+            check("a new character starts with the Captain's Handbook", bookPages == com.grandline.player.Handbook.PAGES, bookPages + " pages");
             fp.setGameMode(GameType.CREATIVE);
             return 0;
         });
@@ -359,6 +374,7 @@ public final class SelfTest {
             d.conquerorTrait = d.conquerorAwakened = d.conquerorInfusion = true;
             d.fruitAwakened = true;
             for (FightingStyle st : FightingStyles.all()) d.knownStyles.add(st.id);
+            Race raceBefore = d.race;
             int ok = 0, total = 0;
             float dealt = 0;
             Map<String, Float> perFruit = new TreeMap<>();
@@ -388,6 +404,7 @@ public final class SelfTest {
                         if (st != null && !st.unarmed()) fp.setItemSlot(EquipmentSlot.MAINHAND, weaponFor(st.weapons.iterator().next()));
                     }
                     case WEAPON -> fp.setItemSlot(EquipmentSlot.MAINHAND, weaponFor(WeaponClass.valueOf(a.owner().toUpperCase(Locale.ROOT))));
+                    case RACE -> d.race = Race.byId(a.owner());
                     default -> {}
                 }
                 try {
@@ -404,6 +421,7 @@ public final class SelfTest {
                 dealt += took;
                 if (a.source() == Ability.Source.FRUIT) perFruit.merge(a.owner(), took, Float::sum);
             }
+            d.race = raceBefore;
             for (var p : l.getEntitiesOfClass(com.grandline.entity.AbilityProjectile.class, new AABB(c).inflate(80))) p.discard();
             check("all " + total + " abilities execute", errors.isEmpty(), ok + "/" + total + (errors.isEmpty() ? "" : " problems: " + String.join(", ", errors.subList(0, Math.min(12, errors.size())))));
             check("ability dummy took damage", dealt > 0, String.format("%.0f damage dealt in total", dealt));
@@ -596,6 +614,7 @@ public final class SelfTest {
             return 0;
         });
         SelfTestOriginals.phase1(steps); // Devil Fruits wave 3 — ORIGINAL fruit mechanics (test/SelfTestOriginals.java)
+        RaceTests.phase1(steps); // racial powers
         // ---------- knockdown/permadeath data rules ----------
         steps.add(s -> {
             CharacterData d = new CharacterData();
@@ -703,6 +722,10 @@ public final class SelfTest {
             return 40;
         });
         NavalTests.phase1(steps); // naval combat (test/NavalTests.java)
+        DimensionTests.awakening(steps);
+        DimensionTests.shipClasses(steps);
+        DimensionTests.ferry(steps);
+        DimensionTests.holyLand(steps);
         DimensionTests.phase1(steps);
         // ---------- persistence fixtures for phase 2 ----------
         steps.add(s -> {
@@ -724,6 +747,7 @@ public final class SelfTest {
             return 20;
         });
         storySteps();
+        StoryTestsExtra.phase1(steps); // Skypiea, Fish-Man Island, local stories, sky/deep notables
     }
 
     // ============================================================== story cast, crews and quests (Saltfire Saga)
@@ -744,7 +768,7 @@ public final class SelfTest {
             List<String> bad = new ArrayList<>();
             Set<String> fruits = new HashSet<>();
             for (var n : all) {
-                if (p.byId(n.island()) == null) bad.add(n.id() + ": island " + n.island());
+                if (StoryTestsExtra.planOf(s, n.island()) == null) bad.add(n.id() + ": island " + n.island()); // ocean, sky or deep sea
                 if (n.fruit() != null && (DevilFruits.get(n.fruit()) == null || !fruits.add(n.fruit()))) bad.add(n.id() + ": fruit " + n.fruit());
                 if (FightingStyles.get(n.style()) == null) bad.add(n.id() + ": style " + n.style());
                 if (!com.grandline.npc.Archetypes.has(n.role())) bad.add(n.id() + ": role " + n.role());
@@ -765,15 +789,16 @@ public final class SelfTest {
                 if (!story.contains(q.id())) continue;
                 if (q.giverRole().startsWith("notable:") && com.grandline.npc.notable.NotableCharacters.get(q.giverRole().substring(8)) == null) bad.add(q.id() + " giver " + q.giverRole());
                 if (!q.giverRole().startsWith("notable:") && !com.grandline.npc.Archetypes.has(q.giverRole())) bad.add(q.id() + " giver " + q.giverRole());
-                if (!q.island().equals("*") && p.byId(q.island()) == null) bad.add(q.id() + " island " + q.island());
+                if (!q.island().equals("*") && StoryTestsExtra.planOf(s, q.island()) == null) bad.add(q.id() + " island " + q.island());
                 if (q.objectives().isEmpty()) bad.add(q.id() + " has no objectives");
                 for (var o : q.objectives()) {
                     boolean ok = switch (o.type()) {
                         case "defeat" -> com.grandline.npc.notable.NotableCharacters.get(o.target()) != null;
                         case "talk" -> com.grandline.npc.notable.NotableCharacters.get(o.target()) != null || com.grandline.npc.Archetypes.has(o.target());
                         case "kill" -> com.grandline.npc.Archetypes.has(o.target());
-                        case "discover" -> p.byId(o.target()) != null || o.target().equals("any") || o.target().equals("any_canon");
+                        case "discover" -> StoryTestsExtra.planOf(s, o.target()) != null || o.target().equals("any") || o.target().equals("any_canon");
                         case "poneglyph" -> true;
+                        case "arrest", "collect" -> StoryTestsExtra.progresses(s, o);
                         default -> false;
                     };
                     if (!ok) bad.add(q.id() + " objective " + o.type() + ":" + o.target());

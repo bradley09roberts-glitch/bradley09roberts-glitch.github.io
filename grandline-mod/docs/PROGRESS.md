@@ -109,12 +109,54 @@ First run of a real client against the dedicated server. Result: no client crash
   plus fog banks.
 - Crew role bonuses at sea (shipwright repairs, helmsman speed, cook, doctor, musician, sniper cannons, lookout).
 
+### Two real clients on one ship
+- Two clients (`GL_CLIENTTEST=mp_a` captain and `mp_b` mate) joined the same dedicated server. The captain launched
+  a galleon and sailed it about 90 blocks with the mate standing on deck; the mate stayed aboard, seen from both the
+  mate's own view and the captain's (screenshots `mp_a_sailing_with_mate`, `mp_b_deck_while_sailing`). Fixes it
+  needed: test characters are civilians (Marine raids derailed it), no raids inside harbours, and a ship render
+  fallback so a ship in not-yet-compiled chunk sections is still drawn.
+
+### Ferries and the Sea Train (03:00–03:50)
+- Dockworkers sell passage to discovered islands in the same sea; station masters on the Water 7 line run the Sea
+  Train. Both are real ships that sail through the world: they round islands on the way (waypoints from the world
+  plan), work their way out of harbour round the home island, sweep the hull's width for docks and rocks, and land
+  passengers on the destination dock. You pay only once you are aboard. Ships no longer lose way while waiting for
+  a chunk ahead to load.
+- Verified (GL_SELFTEST=dims, 111/111): 6 routes offered at Shiokaze Isle; all six ferries launched with a
+  passenger; 6/6 cleared the harbour and closed 150 blocks within 532 ticks at real ferry speed; the first landed
+  its passenger on the destination's dock. (NeoForge's FakePlayer refuses to ride, so townsfolk are the test
+  passengers.)
+
+### Merges (03:20–04:10)
+- **Landmarks** (agent): the 34 placeholder set pieces are now hand-built; `LandmarkCheck` builds every landmark in
+  all four rotations and checks footprint, floors and headroom for NPC markers, chests and interiors. It caught four
+  of mine (sky chapel, weather lab, Mermaid Cove, Punk Hazard lab) which are fixed.
+- **Race powers** (agent): 82 racial abilities (3–4 for each of the 21 races), racial passives (swim speed, evasion,
+  damage traits), a fourth "Race" ability set, NPCs fight with their race's moves. Its own run: 448/448 abilities
+  execute, race checks pass.
+- **Story** (agent): the Skypiea arc "The Storm Throne" and the Fish-Man Island arc "The Lantern in the Abyss"
+  (8 quests + faction variants each), a local story on every canon island (71/71 now have a quest), 44 more
+  characters (155) and 61 more quests (217 story quests), `collect` objectives; story characters live in the sky
+  and the deep sea too.
+- Fixed after the story merge: role givers offered faction-variant quests wrongly (now `QuestRegistry.canOffer`);
+  Mary Geoise (a point on top of the Red Line) was never built, peopled, protected or discoverable — point-sized
+  places are now included everywhere except terrain sampling (self-test "Mary Geoise is built on the Red Line,
+  protected, peopled and discoverable").
+
+### Painted art (04:00–04:20)
+- Higgsfield (agreed "mix of code and higgsfield"): mod logo, wanted poster (now opens a poster screen with the
+  wanted player's face, name, bounty and faction), parchment sea chart, character-creation backdrop and ten
+  paintings of the seas that hang from the vanilla painting item. Sources in [ART.md](ART.md).
+- Not yet seen in a real client (client test extended with poster, chart and painting shots; run pending).
+
 ## Work in flight (background agents)
-- Hand-built set pieces for the 34 placeholder landmarks.
-- Devil Fruit wave 3: the remaining 19 canon fruits; 20 more original fruits (7 on the roster + 13 new designs).
 - Sea Kings and Calm Belt nests, Zoan full-beast models (GeckoLib), island wildlife.
+- Naval combat and ship customisation.
+- World polish and missing canon islands.
+- Server load test with ~20 simulated players.
 
 ## Known gaps (next priorities)
 - Client re-run with the merged textures, animations and new dimensions (screenshots).
-- Multiplayer with two real clients at once has not been run (server-authoritative design; dedicated server verified).
+- Full phase 1/2 runs keep getting OOM-killed (exit 137) while the agents' test servers share the container's 15 GB;
+  they are re-run with a capped heap.
 - Large flat surfaces show regular terrain contour steps (cosmetic).

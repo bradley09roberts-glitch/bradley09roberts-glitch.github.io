@@ -72,6 +72,20 @@ public class ShipEntity extends Entity {
     // canal (Reverse Mountain) ride
     int canalLeg = -1;
     private double canalT;
+    /** Ferry / Sea Train service (see navigation.Ferries): transient, never saved. */
+    @Nullable public Vec3 ferryTarget;
+    public String ferryIsland = "";
+    public float ferrySpeed = 1.8f;
+    public int ferryIdle;
+    public float ferryDetour;
+    public int ferryDetourT;
+    @Nullable public Vec3 ferryWaypoint;
+
+    @Override
+    public boolean shouldBeSaved() {
+        return ferryTarget == null && super.shouldBeSaved();
+    }
+
     /** Crew bonuses (set every 2 s by CrewBonuses while the captain is aboard). */
     public float crewSpeed = 1f, crewCannon = 1f;
     /** Active special route ride (see {@link SpecialRoutes}); -1 when sailing normally. Not saved. */
@@ -339,7 +353,11 @@ public class ShipEntity extends Entity {
         Vec3 wind = Wind.at(sl, getX(), getZ());
         double windF = Wind.factor(wind, getYRot());
         boolean helmed = getFirstPassengerAtSeat(helmSeat) != null || flag(F_NPC) || autopilot;
-        if (!anchored() && helmed) {
+        if (ferryTarget != null) {
+            target = com.grandline.navigation.Ferries.steer(this, sl);
+            if (isRemoved()) return;
+            lastHelmInput = sl.getGameTime();
+        } else if (!anchored() && helmed) {
             float sailMult = hasUpgrade("fine_sails") ? 1.15f : 1f;
             target = (float) (cls.speed * sail() / 3f * windF * sailMult) * testSpeedMult * crewSpeed;
             if (hasUpgrade("paddle_wheel") && sail() > 0) target = Math.max(target, cls.speed * 0.55f);
@@ -359,8 +377,7 @@ public class ShipEntity extends Entity {
         if (speed > 0) {
             Vec3 bow = toWorldAt(next, 0, cls.length / 2.0 + 0.5);
             if (!sl.hasChunkAt(BlockPos.containing(bow))) {
-                speed = 0;
-                next = position();
+                next = position(); // wait for the chunk ahead without losing way
             } else if (solidAt(sl, bow) || solidAt(sl, toWorldAt(next, cls.beam / 2.0, cls.length * 0.25)) || solidAt(sl, toWorldAt(next, -cls.beam / 2.0, cls.length * 0.25))) {
                 if (speed > cls.speed * 0.6f) hurtHull(speed * 40, null);
                 speed = 0;
@@ -633,8 +650,8 @@ public class ShipEntity extends Entity {
         return InteractionResult.PASS;
     }
 
-    /** Seat a player at a station (used by tests and crew commands); returns false when the seat is taken. */
-    public boolean seatPlayer(ServerPlayer sp, int seat) {
+    /** Seat a player (or any passenger: crew, pets) on a given seat; false if it is taken or the ride is refused. */
+    public boolean seatPlayer(Entity sp, int seat) {
         return seatEntity(sp, seat);
     }
 

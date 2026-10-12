@@ -39,10 +39,15 @@ def skin_ids():
 
 
 def projectile_kinds():
-    src = _read('client/render/ProjectileRenderer.java')
-    m = re.search(r'KINDS\s*=\s*Set\.of\(([^;]*)\);', src, re.S)
-    kinds = re.findall(r'"([a-z0-9_]+)"', m.group(1)) if m else []
-    return kinds + ['energy']
+    """Every projectile kind the Java code fires (the string literal in a shoot(...) / projectile(...) call)."""
+    kinds = set()
+    for dirpath, _, files in os.walk(JAVA):
+        for fn in files:
+            if fn.endswith('.java'):
+                with open(os.path.join(dirpath, fn), encoding='utf-8') as f:
+                    src = f.read()
+                kinds.update(re.findall(r'(?:shoot|projectile)\([^"();]{0,60}"([a-z0-9_]+)"', src))
+    return sorted(kinds) + ['energy']
 
 
 def loot_table_ids():

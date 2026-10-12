@@ -14,7 +14,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from assetgen import source, data                      # noqa: E402
-from assetgen import items, misc_items, blocks, fx      # noqa: E402,F401  (misc_items registers sprites)
+from assetgen import items, misc_items, blocks, fx, fx_extra  # noqa: E402,F401  (misc_items, fx_extra register sprites)
 from assetgen import skins, npcs                        # noqa: E402,F401  (npcs registers skins)
 from assetgen import naval_items                        # noqa: E402  (registers sprites; recipes merged below)
 
@@ -80,7 +80,7 @@ def main(prune=False):
             missing.append(f'npc skin: {sid}')
             continue
         png(f'textures/entity/npc/{sid}.png', skins.SKINS[sid]())
-    for kind in source.projectile_kinds():
+    for kind in sorted(set(source.projectile_kinds()) | set(fx.PROJECTILES)):
         if kind not in fx.PROJECTILES:
             missing.append(f'projectile texture: {kind}')
             continue

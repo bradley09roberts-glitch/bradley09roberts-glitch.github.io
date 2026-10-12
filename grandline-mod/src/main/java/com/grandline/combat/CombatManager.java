@@ -262,6 +262,10 @@ public final class CombatManager {
             if (!p.isCreative() && d.mastery(a.masteryKey()) < a.unlockMastery()) return false;
             if (a.source() == Ability.Source.HAKI && !HakiAbilities.canUse(user, a)) return false;
         }
+        if (a.source() == Ability.Source.RACE) {
+            com.grandline.player.Race r = com.grandline.race.RaceKit.raceOf(user);
+            if (r == null || !r.id().equals(a.owner())) return false;
+        }
         if (a.source() == Ability.Source.WEAPON) {
             WeaponClass wc = weaponOf(user.getMainHandItem());
             if (wc == null || !wc.id().equals(a.owner())) return false;
@@ -300,6 +304,8 @@ public final class CombatManager {
         if (!a.anim().isEmpty()) GLNetwork.anim(user, a.anim());
         boolean ok = a.exec().run(user, ctx);
         if (!ok) return false;
+        s.lastAbility = a.id();
+        s.lastAbilityAt = now;
         s.startCooldown(a.id(), now, Math.max(4, Math.round(a.cooldown() * (d != null ? 1f - Math.min(0.3f, d.stat(com.grandline.player.Stat.TECHNIQUE) * 0.006f) : 1f))));
         s.nextAttackAllowed = Math.max(s.nextAttackAllowed, now + 6);
         Hits.train(user, a.masteryKey(), 3);

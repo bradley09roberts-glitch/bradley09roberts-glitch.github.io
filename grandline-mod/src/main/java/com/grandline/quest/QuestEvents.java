@@ -8,6 +8,10 @@ import net.minecraft.server.level.ServerPlayer;
 public final class QuestEvents {
     public static void onKill(ServerPlayer sp, GLNpc npc) {
         Quests.progress(sp, "kill", npc.role(), 1);
+        // the awakening trial counts strong foes brought down with the user's own fruit
+        var cs = com.grandline.combat.CombatState.of(sp);
+        if (npc.tier() >= 6 && cs.lastAbility.startsWith("fruit/") && sp.level().getGameTime() - cs.lastAbilityAt < 100)
+            Quests.progress(sp, "fruit_kill", "any", 1);
         if (!npc.notableId().isEmpty()) Quests.progress(sp, "defeat", npc.notableId(), 1);
     }
 

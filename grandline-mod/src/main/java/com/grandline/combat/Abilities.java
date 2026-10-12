@@ -34,6 +34,7 @@ public final class Abilities {
         com.grandline.combat.weapon.WeaponArts.bootstrap();
         com.grandline.haki.HakiAbilities.bootstrap();
         com.grandline.fruit.DevilFruits.bootstrap();
+        com.grandline.race.RaceAbilities.bootstrap();
     }
 
     private Abilities() {}

@@ -18,7 +18,7 @@ public final class TownProtection {
     }
 
     public static boolean protectedAt(WorldPlan plan, int x, int z) {
-        for (Island isl : plan.candidates(x, z)) {
+        for (Island isl : plan.around(x, z)) {
             if (isl.settlementType == SettlementType.NONE && isl.landmarks.isEmpty()) continue;
             Settlement s = isl.settlement();
             if (!s.bounds(x, z)) continue;

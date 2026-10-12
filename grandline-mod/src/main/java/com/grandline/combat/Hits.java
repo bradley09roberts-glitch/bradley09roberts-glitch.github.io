@@ -105,6 +105,8 @@ public final class Hits {
             GLNetwork.anim(victim, "dodge_side");
             return Result.DODGED;
         }
+        // racial evasion (Three-Eye foresight, Snakeneck sway, Tontatta size)
+        if (com.grandline.race.RacePowers.tryEvade(victim, attacker, info)) return Result.DODGED;
         // Logia intangibility
         boolean attackerHaki = info.imbued() || Haki.armamentActive(attacker);
         if (FruitRules.intangibleTo(victim, attacker, info, attackerHaki)) {
@@ -144,6 +146,7 @@ public final class Hits {
         // Devil fruit passives (rubber vs blunt, etc.)
         damage = FruitRules.modifyIncoming(victim, attacker, damage, info);
         damage = FruitRules.modifyOutgoing(attacker, victim, damage, info);
+        damage = com.grandline.race.RacePowers.modifyDamage(attacker, victim, damage, info); // racial traits
         // Attacker's imbued strike against Logia that is otherwise intangible already handled; Armament adds damage
         if (attackerHaki) damage *= 1.15f + Haki.armamentLevel(attacker) * 0.004f;
         if (damage <= 0) return Result.IGNORED;

@@ -236,6 +236,18 @@ public final class ClientSelfTest {
         add("open character screen", () -> mc.setScreen(new CharacterScreen()), 20);
         shot("14_character_screen");
         add("close screen", () -> mc.setScreen(null), 10);
+        add("open wanted poster", () -> {
+            var t = new net.minecraft.nbt.CompoundTag();
+            t.putString("name", "Selftest");
+            t.putLong("bounty", 120_000_000L);
+            t.putString("faction", "pirate");
+            t.putUUID("uuid", mc.player.getUUID());
+            com.grandline.client.screen.WantedPosterScreen.open(t);
+        }, 20);
+        shot("14b_wanted_poster");
+        add("open sea chart", () -> PacketDistributor.sendToServer(new GLNetwork.UiAction("open_chart", new net.minecraft.nbt.CompoundTag())), 40);
+        shot("14c_sea_chart");
+        add("close screen", () -> mc.setScreen(null), 10);
         add("combat mode off", () -> {
             ClientState.combatMode = false;
             PacketDistributor.sendToServer(new GLNetwork.CombatInput(CombatInput.TOGGLE_COMBAT, (byte) 0, (byte) 0, 0, 0));
@@ -275,6 +287,16 @@ public final class ClientSelfTest {
         cmd("execute in minecraft:overworld run tp @s 36000 120 20000", 60);
         cmd("grandline test storm", 260);
         shot("33_storm_at_sea");
+        // the painted paintings on a wall over the sea
+        cmd("execute in minecraft:overworld run tp @s 36025 104 20044 0 5", 120);
+        cmd("fill 36000 99 20060 36052 106 20060 minecraft:spruce_planks", 20);
+        String[] ps = {"red_line", "reverse_mountain", "knock_up_stream", "white_sea", "bubble_city", "sabaody_grove", "calm_belt", "last_island", "sea_train", "cyclone"};
+        for (int i = 0; i < ps.length; i++)
+            cmd("summon minecraft:painting " + (36002 + i * 5) + " 101 20059 {facing:2b,variant:\"grandline:" + ps[i] + "\"}", 4);
+        cmd("tp @s 36014 103 20046 0 5", 60);
+        shot("34_paintings_a");
+        cmd("tp @s 36039 103 20046 0 5", 40);
+        shot("35_paintings_b");
         add("done", ClientSelfTest::finish, 0);
     }
 

@@ -170,6 +170,7 @@ public final class CharacterManager {
         player.setHealth(player.getMaxHealth());
         markVisualsDirty(player);
         StartLocations.sendToStart(player, d);
+        Handbook.give(player);
         GrandLine.LOGGER.info("Character created for {}: {} the {} ({} from {} Blue), conqueror={}", player.getGameProfile().getName(), name, race.id(), faction.id(), origin.id(), d.conquerorTrait);
         return null;
     }

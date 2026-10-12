@@ -15,6 +15,16 @@ import java.util.Map;
  * Progress per objective is stored in the character's questProgress compound.
  */
 public final class Quests {
+    private static boolean discoveredNewWorld(ServerPlayer sp, CharacterData d) {
+        var plan = com.grandline.world.WorldPlan.of(sp.server);
+        if (plan == null) return false;
+        for (String id : d.discoveredIslands) {
+            var isl = plan.byId(id);
+            if (isl != null && isl.zone == com.grandline.world.SeaZone.NEW_WORLD) return true;
+        }
+        return false;
+    }
+
     public static boolean start(ServerPlayer sp, String questId) {
         QuestDef q = QuestRegistry.get(questId);
         CharacterData d = Characters.get(sp);
@@ -27,7 +37,7 @@ public final class Quests {
         boolean credited = false;
         for (int i = 0; i < q.objectives().size(); i++) {
             QuestDef.Objective o = q.objectives().get(i);
-            if (o.type().equals("discover") && d.discoveredIslands.contains(o.target())) {
+            if (o.type().equals("discover") && (d.discoveredIslands.contains(o.target()) || o.target().equals("any_new_world") && discoveredNewWorld(sp, d))) {
                 prog.putInt("o" + i, o.count());
                 credited = true;
             }
@@ -65,6 +75,7 @@ public final class Quests {
     }
 
     static void finish(ServerPlayer sp, CharacterData d, QuestDef q) {
+        QuestCollect.handOver(sp, q); // "collect" objectives: the goods go to the giver
         d.questProgress.remove(q.id());
         d.completedQuests.add(q.id());
         int lv = d.addXp(q.xp());

@@ -47,14 +47,12 @@ public final class Dialogues {
         if (Faction.isLaw(npc.faction()) && d.bounty == 0) opts.add(StringTag.valueOf("bounty_turn_in"));
         boolean starter = isStarter(sp, npc);
         for (QuestDef q : QuestRegistry.offeredBy(role, npc.islandId(), starter)) {
-            if (d.completedQuests.contains(q.id()) && !q.repeatable()) continue;
-            if (d.questProgress.containsKey(q.id())) continue;
-            boolean ok = true;
-            for (String r : q.requires()) if (!d.completedQuests.contains(r)) ok = false;
-            if (ok) opts.add(StringTag.valueOf("quest:" + q.id()));
+            // faction variants: any variant of a prerequisite counts, and each faction sees only its own version
+            if (QuestRegistry.canOffer(d, q)) opts.add(StringTag.valueOf("quest:" + q.id()));
         }
         if (role.equals("elder") && d.completedQuests.contains("first_voyage") && !d.flags.contains("path_chosen")) opts.add(StringTag.valueOf("path"));
         com.grandline.npc.notable.NotableHooks.decorate(sp, npc, d, t, opts, starter); // story cast: greetings, quests, recruitment
+        com.grandline.navigation.Ferries.addOptions(sp, npc, opts); // ferries and the Sea Train
         opts.add(StringTag.valueOf("leave"));
         t.put("options", opts);
         GLNetwork.toPlayer(sp, new GLNetwork.OpenScreen("dialogue", t));
@@ -88,6 +86,7 @@ public final class Dialogues {
             return;
         }
         if (com.grandline.npc.notable.NotableHooks.choose(sp, npc, option)) return; // recruit / crew orders
+        if (com.grandline.navigation.Ferries.choose(sp, npc, option)) return; // passage booked
         switch (option) {
             case "rumor" -> {
                 sp.sendSystemMessage(Component.translatable("rumor.grandline." + (1 + sp.getRandom().nextInt(24))).withStyle(ChatFormatting.ITALIC));

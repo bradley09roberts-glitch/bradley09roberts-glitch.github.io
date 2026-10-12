@@ -33,5 +33,14 @@
   "grandline.weather.rain": "rain",
   "grandline.weather.clear": "clear skies",
   "grandline.prison.escaped": "You broke out of the cell! Your bounty rises and the Marines are after you.",
-  "generator.grandline.ocean_world": "Grand Line Ocean World"
+  "generator.grandline.ocean_world": "Grand Line Ocean World",
+  "quest.grandline.awakening_trial": "The Awakening Trial",
+  "quest.grandline.awakening_trial.desc": "Your Devil Fruit stirs. Prove your mastery: bring down twelve formidable foes with your fruit's own power, and set foot in the New World.",
+  "grandline.awakening.stirs": "Your Devil Fruit stirs... a power deeper than you knew is waiting. (Quest: The Awakening Trial)",
+  "grandline.awakening.done": "Your Devil Fruit has AWAKENED! Its hidden powers are yours to command.",
+  "dialogue.grandline.option.ferry": "Ferry to %s (%s Beli)",
+  "dialogue.grandline.option.seatrain": "Sea Train to %s (%s Beli)",
+  "grandline.ferry.board": "All aboard for %s! Sit back \u2014 the ferry knows the way.",
+  "grandline.ferry.seatrain_board": "The Puffing Tom whistles and pulls out for %s!",
+  "grandline.ferry.arrived": "You've arrived. Mind the gap."
 }

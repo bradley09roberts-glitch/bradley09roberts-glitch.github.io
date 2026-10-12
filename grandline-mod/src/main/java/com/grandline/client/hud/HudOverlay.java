@@ -13,7 +13,7 @@ import net.minecraft.world.entity.Entity;
 
 /** Stamina + Haki gauges, ability bar in Combat Mode, knockdown timer, lock-on readout. */
 public final class HudOverlay {
-    private static final String[] SET_NAMES = {"hud.grandline.set.martial", "hud.grandline.set.fruit", "hud.grandline.set.haki"};
+    private static final String[] SET_NAMES = {"hud.grandline.set.martial", "hud.grandline.set.fruit", "hud.grandline.set.haki", "hud.grandline.set.race"};
 
     public static void render(GuiGraphics g, DeltaTracker delta) {
         Minecraft mc = Minecraft.getInstance();

@@ -101,7 +101,7 @@ final class DimensionLandmarks {
         }
         b.hanging(9, 7, 9, Blocks.PEARLESCENT_FROGLIGHT);
         b.marker("npc", 9, 1, 13, role("priest"));
-        b.marker("npc", 4, 1, 4, role("merchant"));
+        b.marker("npc", 4, 1, 9, role("merchant"));
         b.marker("npc", 14, 1, 5, role("resident"));
         b.chest(5, 1, 13, Direction.EAST, Buildings.LOOT_SHRINE);
     }
@@ -232,7 +232,7 @@ final class DimensionLandmarks {
         b.marker("npc", 8, 1, 12, role("scholar"));
         b.marker("npc", 12, 1, 8, role("scholar"));
         // weather balloons tethered around the lab
-        for (int[] c : new int[][]{{1, 1}, {19, 1}, {1, 19}, {19, 19}}) {
+        for (int[] c : new int[][]{{2, 2}, {18, 2}, {2, 18}, {18, 18}}) {
             b.fill(c[0], 1, c[1], c[0], 8, c[1], Blocks.BIRCH_FENCE);
             b.dome(c[0], 10, c[1], 2, (c[0] + c[1]) % 3 == 0 ? Blocks.LIGHT_BLUE_WOOL : Blocks.WHITE_WOOL);
             b.fill(c[0] - 1, 9, c[1] - 1, c[0] + 1, 9, c[1] + 1, Blocks.WHITE_WOOL);
@@ -343,7 +343,7 @@ final class DimensionLandmarks {
         b.hanging(22, 4, 22, Blocks.SEA_LANTERN);
         b.marker("npc", 23, 2, 23, role("bartender"));
         b.marker("npc", 10, 2, 10, role("resident"));
-        b.marker("npc", 16, 2, 9, role("resident"));
+        b.marker("npc", 17, 2, 10, role("resident"));
         b.marker("npc", 13, 2, 18, role("child"));
         b.barrel(24, 2, 24, Buildings.LOOT_TAVERN);
     }
@@ -417,6 +417,9 @@ final class DimensionLandmarks {
         b.chest(18, 1, 31, Direction.NORTH, Buildings.LOOT_SHRINE);
         b.marker("treasure", 18, 1, 31);
         b.marker("npc", 14, 1, 26, role("keeper"));
+        // the stone the late queen died defending (Fish-Man Island arc, quest fmi_5)
+        b.fill(10, 1, 14, 10, 3, 14, ModBlocks.PONEGLYPH.get());
+        b.marker("poneglyph", 10, 1, 14);
     }
 
     private DimensionLandmarks() {}

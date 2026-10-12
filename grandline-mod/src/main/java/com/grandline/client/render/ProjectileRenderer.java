@@ -19,8 +19,6 @@ import java.util.Set;
 
 /** Camera-facing glowing billboard per projectile kind (textures/entity/projectile/<kind>.png). */
 public class ProjectileRenderer extends EntityRenderer<AbilityProjectile> {
-    private static final Set<String> KINDS = Set.of("fire_fist", "fire_bullet", "flame_emperor", "ice_spear", "lightning_bolt", "water_shot", "wind_blade", "tempest",
-            "air_blade", "air_blade_big", "crescent", "haki_wave", "cannonball", "bullet", "pellet", "flying_fist", "fire_bird", "knife", "arrow", "spear", "weather_ball", "impact_wave");
     private static final Map<String, ResourceLocation> TEX = new HashMap<>();
 
     public ProjectileRenderer(EntityRendererProvider.Context ctx) {
@@ -29,8 +27,11 @@ public class ProjectileRenderer extends EntityRenderer<AbilityProjectile> {
 
     @Override
     public ResourceLocation getTextureLocation(AbilityProjectile e) {
-        String k = KINDS.contains(e.kind()) ? e.kind() : "energy";
-        return TEX.computeIfAbsent(k, kk -> GrandLine.id("textures/entity/projectile/" + kk + ".png"));
+        // each kind has its own sprite (tools/assetgen/fx*.py); an unknown kind falls back to the generic energy orb
+        return TEX.computeIfAbsent(e.kind(), k -> {
+            ResourceLocation rl = GrandLine.id("textures/entity/projectile/" + k + ".png");
+            return net.minecraft.client.Minecraft.getInstance().getResourceManager().getResource(rl).isPresent() ? rl : GrandLine.id("textures/entity/projectile/energy.png");
+        });
     }
 
     @Override

@@ -129,6 +129,17 @@ public class CharacterCreationScreen extends Screen {
         }
     }
 
+    /** Painted dawn seascape (Higgsfield art) behind the creation form, darkened so the text stays readable. */
+    private static final net.minecraft.resources.ResourceLocation BACKGROUND = com.grandline.GrandLine.id("textures/gui/creation_bg.png");
+
+    @Override
+    public void renderBackground(GuiGraphics g, int mx, int my, float pt) {
+        float k = Math.max(width / 1024f, height / 576f);
+        int pw = (int) (1024 * k), ph = (int) (576 * k);
+        g.blit(BACKGROUND, (width - pw) / 2, (height - ph) / 2, pw, ph, 0, 0, 1024, 576, 1024, 576);
+        g.fill(0, 0, width, height, 0x88000000);
+    }
+
     @Override
     public void render(GuiGraphics g, int mx, int my, float pt) {
         super.render(g, mx, my, pt);

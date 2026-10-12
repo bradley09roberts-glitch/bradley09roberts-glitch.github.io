@@ -118,8 +118,14 @@ public final class WorldPlan {
         GrandLine.LOGGER.info("World plan {}: {} islands ({} canon/starter, {} original)", seed, list.size(), CanonIslands.all().size(), list.size() - CanonIslands.all().size());
     }
 
+    /** Point-sized places (Mary Geoise on the Red Line): no terrain of their own, but a set piece and people. */
+    private final List<Island> points = new ArrayList<>();
+
     private void index(Island island) {
-        if (island.radius < 10) return;
+        if (island.radius < 10) {
+            points.add(island);
+            return;
+        }
         int r = island.influenceRadius();
         for (int cx = Math.floorDiv(island.x - r, CELL); cx <= Math.floorDiv(island.x + r, CELL); cx++)
             for (int cz = Math.floorDiv(island.z - r, CELL); cz <= Math.floorDiv(island.z + r, CELL); cz++) {
@@ -143,6 +149,29 @@ public final class WorldPlan {
     public Island[] candidates(int x, int z) {
         Island[] a = grid.get(key(Math.floorDiv(x, CELL), Math.floorDiv(z, CELL)));
         return a == null ? NONE : a;
+    }
+
+    /**
+     * Islands whose settlements, set pieces and people may reach (x, z): the terrain index plus point-sized places
+     * within {@code POINT_REACH} blocks. Terrain sampling keeps using {@link #candidates} so points shape no land.
+     */
+    public Island[] around(int x, int z) {
+        Island[] a = candidates(x, z);
+        for (Island p : points) {
+            if (Math.abs(p.x - x) > POINT_REACH || Math.abs(p.z - z) > POINT_REACH) continue;
+            a = Arrays.copyOf(a, a.length + 1);
+            a[a.length - 1] = p;
+        }
+        return a;
+    }
+
+    public static final int POINT_REACH = 160;
+
+    /** A point-sized place within {@code r} blocks (for discovery), or null. */
+    @Nullable
+    public Island pointAt(int x, int z, int r) {
+        for (Island p : points) if (p.distance(x, z) <= r) return p;
+        return null;
     }
 
     @Nullable

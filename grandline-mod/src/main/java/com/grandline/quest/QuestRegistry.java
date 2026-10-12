@@ -26,6 +26,9 @@ public final class QuestRegistry {
     }
 
     static {
+        // ---------------- Awakening trial (offered by Awakening when fruit mastery and level allow) ----------------
+        q("awakening_trial", "any", "", List.of(o("fruit_kill", "any", 12), o("discover", "any_new_world", 1)), 4000, 0, 0, Map.of(), List.of(), List.of(),
+                null, Awakening.TRIAL_FLAG, false, "awakening");
         // ---------------- Arc 1: "Embers of the Blue" (every starter island) ----------------
         q("first_steps", "elder", "*starter", List.of(o("talk", "elder", 1)), 60, 100, 0, Map.of(), List.of(() -> new ItemStack(ModItems.LOG_POSE.get()), () -> new ItemStack(Items.BREAD, 6)),
                 List.of(), "bandit_trouble", null, false, "embers");
@@ -56,6 +59,7 @@ public final class QuestRegistry {
         q("board_ruins", "bounty_board", "*", List.of(o("poneglyph", "any", 1)), 600, 2000, 0, Map.of(), List.of(), List.of(), null, null, true, "board");
         // ---------------- The Saltfire Saga: island arcs, faction variants, crew quests (docs/STORY.md) ----------------
         StoryQuests.register(ALL);
+        StoryQuestsExtra.register(ALL); // Skypiea, Fish-Man Island and a local story on every other canon island
     }
 
     // ------------------------------------------------------------------ faction variants & requirements

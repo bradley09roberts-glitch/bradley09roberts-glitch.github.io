@@ -60,7 +60,7 @@ public final class NotableCharacters {
 
     // ------------------------------------------------------------------ builder
 
-    private static final class B {
+    static final class B {
         final String id, role, island;
         final Group group;
         final Faction faction;
@@ -91,11 +91,11 @@ public final class NotableCharacters {
         B crew(String role) { crewRole = role; return this; }
     }
 
-    private static B n(String id, Group g, Faction f, String role, int tier, String island, int dx, int dz) {
+    static B n(String id, Group g, Faction f, String role, int tier, String island, int dx, int dz) {
         return new B(id, g, f, role, tier, island, dx, dz);
     }
 
-    private static void add(B b) {
+    static void add(B b) {
         Race r = Race.byId(b.race);
         float scale = b.scale > 0 ? b.scale : r.baseScale;
         Notable n = new Notable(b.id, b.group, b.faction, b.role, b.tier, b.island, b.dx, b.dz, b.fruit, b.style, b.obs, b.arm, b.coq,
@@ -246,6 +246,7 @@ public final class NotableCharacters {
         add(n("pashmina", CREW, CIV, "kuja_warrior", 8, "zou", -20, 10).style("electro").weapon("steel_spear").haki(70, 60, 0).race("mink").disp(FRIENDLY).crew("warrior"));
         add(n("bolt", CREW, CIV, "lookout", 7, "green_bit", -5, 5).style("sniper").weapon("slingshot").haki(50, 40, 0).race("tontatta").disp(FRIENDLY).crew("engineer"));
         add(n("elowen", CREW, CIV, "scholar", 9, "egghead", 20, -20).style("sniper").weapon("war_bow").haki(80, 60, 0).race("lunarian").disp(FRIENDLY).crew("stargazer"));
+        NotableCharactersExtra.register(); // Skypiea, Fish-Man Island and the islanders of every other canon island
     }
 
     // ------------------------------------------------------------------ queries
