@@ -91,7 +91,47 @@ public final class LandmarkCheck {
                 r.check("landmark " + id + " stamped into the world", false, t.toString());
             }
         }
+        // 4) every placed set piece fits between the build limits of its level (a chunk write above the limit is
+        //    dropped silently: Mary Geoise's domes at y 326+ were never generated before 0.2.0)
+        ceiling(server, r);
         return 0;
+    }
+
+    private static void ceiling(MinecraftServer server, Reporter r) {
+        List<String> over = new ArrayList<>();
+        int placed = 0, top = Integer.MIN_VALUE;
+        String topId = "";
+        for (ServerLevel lv : server.getAllLevels()) {
+            WorldPlan plan = WorldPlan.forLevel(lv);
+            if (plan == null) continue;
+            for (Island isl : plan.islands) {
+                if (isl.landmarks.isEmpty()) continue;
+                for (Plot p : isl.settlement().plots) {
+                    String id = p.landmark();
+                    if (id == null || id.isEmpty() || !Landmarks.implemented(id)) continue;
+                    Landmarks.Spec spec = Landmarks.spec(id);
+                    MemSink m = new MemSink(p.x(), p.z(), p.x() + p.sizeX() - 1, p.z() + p.sizeZ() - 1, p.y(), spec.atSeaLevel());
+                    Landmarks.build(p, isl, new Builder(m, p.x(), p.y(), p.z(), spec.width(), spec.depth(), p.rotation(), p.seed()));
+                    int hi = Integer.MIN_VALUE, lo = Integer.MAX_VALUE;
+                    for (var e : m.blocks.long2ObjectEntrySet()) {
+                        if (e.getValue().isAir()) continue;
+                        int y = BlockPos.getY(e.getLongKey());
+                        hi = Math.max(hi, y);
+                        lo = Math.min(lo, y);
+                    }
+                    placed++;
+                    if (lv.getMaxBuildHeight() - 1 - hi < (top == Integer.MIN_VALUE ? Integer.MAX_VALUE : top)) {
+                        top = lv.getMaxBuildHeight() - 1 - hi;
+                        topId = id + " on " + isl.id + " (top y " + hi + ")";
+                    }
+                    if (hi >= lv.getMaxBuildHeight() || lo < lv.getMinBuildHeight())
+                        over.add(id + " on " + isl.id + " in " + lv.dimension().location().getPath() + ": y " + lo + ".." + hi
+                                + " outside " + lv.getMinBuildHeight() + ".." + (lv.getMaxBuildHeight() - 1));
+                }
+            }
+        }
+        r.check("landmarks: every placed set piece is inside its level's build height", placed > 0 && over.isEmpty(),
+                over.isEmpty() ? placed + " placements; least headroom " + top + " blocks: " + topId : String.join("; ", over));
     }
 
     // ------------------------------------------------------------------ in-memory build
