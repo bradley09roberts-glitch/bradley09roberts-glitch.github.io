@@ -4,9 +4,10 @@
     {
       "rolls": {
         "type": "minecraft:uniform",
-        "min": 3,
-        "max": 5
+        "min": 3.0,
+        "max": 5.0
       },
+      "bonus_rolls": 0.0,
       "entries": [
         {
           "type": "minecraft:item",
@@ -17,9 +18,10 @@
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 1,
-                "max": 4
-              }
+                "min": 1.0,
+                "max": 4.0
+              },
+              "add": false
             }
           ]
         },
@@ -32,9 +34,10 @@
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 4,
-                "max": 16
-              }
+                "min": 4.0,
+                "max": 16.0
+              },
+              "add": false
             }
           ]
         },
@@ -47,26 +50,24 @@
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 1,
-                "max": 3
-              }
+                "min": 1.0,
+                "max": 3.0
+              },
+              "add": false
             }
           ]
         },
         {
           "type": "minecraft:item",
           "name": "minecraft:diamond",
-          "weight": 1
-        },
-        {
-          "type": "minecraft:item",
-          "name": "grandline:fine_cutlass",
-          "weight": 1
-        },
-        {
-          "type": "minecraft:item",
-          "name": "grandline:eternal_pose",
-          "weight": 2
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": 1.0,
+              "add": false
+            }
+          ]
         },
         {
           "type": "minecraft:item",
@@ -77,34 +78,94 @@
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 4,
-                "max": 12
-              }
+                "min": 4.0,
+                "max": 12.0
+              },
+              "add": false
             }
           ]
         },
         {
           "type": "minecraft:item",
           "name": "minecraft:map",
-          "weight": 4
+          "weight": 4,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": 1.0,
+              "add": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "grandline:fine_cutlass",
+          "weight": 1
         },
         {
           "type": "minecraft:item",
-          "name": "grandline:beli_pouch",
-          "weight": 12,
+          "name": "grandline:eternal_pose",
+          "weight": 1,
           "functions": [
             {
               "function": "minecraft:set_components",
               "components": {
-                "grandline:beli": 700
+                "grandline:pose_target": "water_7"
               }
-            },
+            }
+          ]
+        },
+        {
+          "type": "minecraft:empty",
+          "weight": 6
+        }
+      ]
+    },
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "grandline:beli_pouch",
+          "weight": 1,
+          "functions": [
             {
-              "function": "minecraft:set_count",
-              "count": {
-                "type": "minecraft:uniform",
-                "min": 1,
-                "max": 3
+              "function": "minecraft:set_components",
+              "components": {
+                "grandline:beli": 300
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:beli_pouch",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "grandline:beli": 750
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:beli_pouch",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "grandline:beli": 1200
               }
             }
           ]

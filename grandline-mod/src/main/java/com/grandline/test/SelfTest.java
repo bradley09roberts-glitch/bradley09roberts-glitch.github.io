@@ -630,6 +630,7 @@ public final class SelfTest {
             }
             return 40;
         });
+        DimensionTests.phase1(steps);
         // ---------- persistence fixtures for phase 2 ----------
         steps.add(s -> {
             ServerLevel l = ow(s);
@@ -654,6 +655,7 @@ public final class SelfTest {
     // ============================================================== PHASE 2
 
     private static void phase2() {
+        DimensionTests.phase2(steps);
         final String[] fx = new String[1];
         steps.add(s -> {
             fx[0] = Files.readString(Path.of("selftest-fixtures.txt")).trim();

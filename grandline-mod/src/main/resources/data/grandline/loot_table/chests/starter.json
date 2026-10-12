@@ -161,6 +161,25 @@
           "weight": 1
         }
       ]
+    },
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "grandline:beli_pouch",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "grandline:beli": 200
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "random_sequence": "grandline:chests/starter"

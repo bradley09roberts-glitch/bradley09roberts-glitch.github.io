@@ -1,5 +1,25 @@
 {
   "item.grandline.beli_pouch": "Beli Pouch",
   "item.grandline.beli_pouch.amount": "Holds %s Beli (use to add to your purse)",
-  "grandline.beli.gained": "+%s Beli"
+  "grandline.beli.gained": "+%s Beli",
+  "block.grandline.island_cloud": "Island Cloud",
+  "block.grandline.bubble_membrane": "Bubble Membrane",
+  "zone.grandline.sky_sea": "The White Sea",
+  "zone.grandline.deep_sea": "The Deep Sea, 10,000 m down",
+  "biome.grandline.white_sea": "White Sea",
+  "biome.grandline.sky_island": "Island Cloud",
+  "biome.grandline.deep_sea": "Deep Sea",
+  "biome.grandline.fishman_island": "Fish-Man Island",
+  "ship_upgrade.grandline.coating": "Coating (one dive to the deep sea)",
+  "grandline.knock_up.warning": "The sea is starting to boil... the Knock Up Stream erupts in %s s!",
+  "grandline.knock_up.launch": "The Knock Up Stream! Hold on \u2014 we're going up!",
+  "grandline.sky.arrived": "Welcome to the White Sea, 10,000 metres above the Blue Sea.",
+  "grandline.sky.cloud_end": "The Cloud End \u2014 the long way down!",
+  "grandline.sky.landed": "Splashdown! You're back on the Blue Sea, east of Jaya.",
+  "grandline.sky.fell": "You fell through the sea of clouds...",
+  "grandline.deep.need_coating": "Your ship needs a coating to dive \u2014 the coaters of Sabaody can do it.",
+  "grandline.deep.dive": "The coated ship sinks beneath the waves...",
+  "grandline.deep.arrived": "10,000 metres down. Somewhere ahead lies Fish-Man Island.",
+  "grandline.deep.ascend": "The current carries the ship up toward the surface...",
+  "grandline.deep.new_world": "You've surfaced in the New World!"
 }

@@ -183,6 +183,10 @@ def block_models():
                       'textures': {'end': f'{NS}:block/poneglyph_top', 'side': f'{NS}:block/poneglyph'}},
         'fruit_bloom': {'parent': 'minecraft:block/cross', 'textures': {'cross': f'{NS}:block/fruit_bloom'},
                         'render_type': 'minecraft:cutout'},
+        'island_cloud': cube('island_cloud'),
+        'bubble_membrane': {'parent': 'minecraft:block/cube_all', 'textures': {'all': f'{NS}:block/bubble_membrane'},
+                            'render_type': 'minecraft:translucent'},
+        'ship_hatch': cube('ship_hatch'),
     }
 
 
@@ -297,8 +301,8 @@ def chest_tables():
         pool([item('gold_ingot', 14, 2, 7), item('gold_nugget', 10, 6, 18), item('emerald', 10, 2, 6), item('diamond', 6, 1, 3),
               item('gold_block', 2, 1, 1), item('golden_apple', 3, 1, 1)], 4, 8),
         pool([gl('eternal_pose', 1, None, None, comp('pose_target', t_)) for t_ in POSE_TARGETS] + [empty(10)], 1),
-        pool([gl('fine_katana', 6), gl('fine_cutlass', 6), gl('steel_spear', 4), gl('iron_kanabo', 3), gl('yubashiri', 2),
-              gl('wado_ichimonji', 1), gl('sandai_kitetsu', 1), gl('kurenai_shigure', 1), gl('abyssal_fang', 2), empty(40)], 1),
+        # named swords are unique per world and never come from random loot
+        pool([gl('fine_katana', 6), gl('fine_cutlass', 6), gl('steel_spear', 4), gl('iron_kanabo', 3), empty(30)], 1),
         pool([gl('style_scroll', 2, None, None, comp('style', s)) for s in STYLES_COMMON]
              + [gl('style_scroll', 1, None, None, comp('style', s)) for s in STYLES_RARE] + [empty(30)], 1),
     ])
@@ -310,6 +314,33 @@ def chest_tables():
         pool([item('oak_planks', 3, 8, 16), item('torch', 3, 6, 12), item('apple', 3, 2, 4), item('string', 2, 2, 4),
               item('cooked_cod', 2, 2, 4), gl('sea_chart', 1)], 2, 3),
     ])
+    t['wreck'] = chest('wreck', [
+        pool([gl('cannonball', 10, 2, 8), gl('bullet', 8, 4, 16), item('gold_nugget', 8, 3, 12), item('rotten_flesh', 4, 1, 3),
+              item('nautilus_shell', 4, 1, 2), item('iron_ingot', 4, 1, 3), item('gunpowder', 5, 1, 4)], 3, 6),
+        pool([gl('cutlass', 4, None, None, worn(0.4, 0.9)), gl('musket', 2, None, None, worn(0.4, 0.9)),
+              gl('flintlock', 3, None, None, worn(0.4, 0.9)), gl('sea_chart', 4), gl('log_pose', 2), item('heart_of_the_sea', 1), empty(8)], 1),
+    ])
+    t['shrine'] = chest('shrine', [
+        pool([item('candle', 8, 1, 3), item('gold_nugget', 8, 2, 8), item('amethyst_shard', 6, 1, 4), item('experience_bottle', 6, 1, 4),
+              item('emerald', 4, 1, 2)], 2, 4),
+        pool([gl('style_scroll', 2, None, None, comp('style', s)) for s in STYLES_COMMON]
+             + [gl('style_scroll', 1, None, None, comp('style', s)) for s in STYLES_RARE] + [empty(20)], 1),
+        pool([gl('eternal_pose', 1, None, None, comp('pose_target', t_)) for t_ in POSE_TARGETS] + [gl('poneglyph_rubbing', 1), empty(16)], 1),
+    ])
+    t['cache'] = chest('cache', [
+        pool([item('gold_ingot', 6, 1, 4), item('gold_nugget', 10, 4, 16), item('emerald', 4, 1, 3), item('diamond', 1, 1, 1),
+              gl('bullet', 6, 4, 12), item('map', 4, 1, 1)], 3, 5),
+        pool([gl('fine_cutlass', 1), gl('eternal_pose', 1, None, None, comp('pose_target', 'water_7')), empty(6)], 1),
+    ])
+    # Beli pouches in every chest (amount scales with the chest)
+    for name, (lo, hi, chance) in {'house': (20, 120, 0.5), 'tavern': (30, 200, 0.6), 'shop': (60, 300, 0.7), 'blacksmith': (40, 220, 0.5),
+                                    'marine': (60, 300, 0.6), 'warehouse': (40, 250, 0.5), 'ruin': (80, 400, 0.6), 'starter': (200, 200, 1.0),
+                                    'treasure': (600, 3000, 1.0), 'wreck': (100, 800, 0.8), 'shrine': (100, 600, 0.6), 'cache': (300, 1200, 1.0)}.items():
+        amounts = sorted({lo, (lo + hi) // 2, hi})
+        entries = [gl('beli_pouch', 1, None, None, comp('beli', a)) for a in amounts]
+        if chance < 1:
+            entries.append(empty(max(1, round(len(amounts) * (1 - chance) / chance))))
+        t[name]['pools'].append(pool(entries, 1))
     return t
 
 
@@ -333,6 +364,9 @@ def block_loot():
         'seastone_bricks': self_drop('seastone_bricks'),
         'seastone_ore': ore,
         'fruit_bloom': {'type': 'minecraft:block', 'random_sequence': f'{NS}:blocks/fruit_bloom', 'pools': []},
+        'island_cloud': self_drop('island_cloud'),
+        'bubble_membrane': {'type': 'minecraft:block', 'random_sequence': f'{NS}:blocks/bubble_membrane', 'pools': []},
+        'ship_hatch': {'type': 'minecraft:block', 'random_sequence': f'{NS}:blocks/ship_hatch', 'pools': []},
     }
 
 

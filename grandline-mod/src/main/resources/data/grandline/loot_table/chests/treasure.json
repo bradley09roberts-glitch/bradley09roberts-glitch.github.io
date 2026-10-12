@@ -238,33 +238,8 @@
           "weight": 3
         },
         {
-          "type": "minecraft:item",
-          "name": "grandline:yubashiri",
-          "weight": 2
-        },
-        {
-          "type": "minecraft:item",
-          "name": "grandline:wado_ichimonji",
-          "weight": 1
-        },
-        {
-          "type": "minecraft:item",
-          "name": "grandline:sandai_kitetsu",
-          "weight": 1
-        },
-        {
-          "type": "minecraft:item",
-          "name": "grandline:kurenai_shigure",
-          "weight": 1
-        },
-        {
-          "type": "minecraft:item",
-          "name": "grandline:abyssal_fang",
-          "weight": 2
-        },
-        {
           "type": "minecraft:empty",
-          "weight": 40
+          "weight": 30
         }
       ]
     },
@@ -457,6 +432,51 @@
         {
           "type": "minecraft:empty",
           "weight": 30
+        }
+      ]
+    },
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "grandline:beli_pouch",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "grandline:beli": 600
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:beli_pouch",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "grandline:beli": 1800
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:beli_pouch",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "grandline:beli": 3000
+              }
+            }
+          ]
         }
       ]
     }

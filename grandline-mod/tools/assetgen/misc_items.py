@@ -391,3 +391,28 @@ def _rubbing():
         '................',
     ])
     return render(g, {'p': M(PAPER), 'k': Fixed('#1e1c22'), 'g': Fixed('#6e6a78'), 'r': Fixed('#8a2a2a')})
+
+
+@item('beli_pouch')
+def _beli_pouch():
+    g = art([
+        '................',
+        '......kkkk......',
+        '.....kSSSSk.....',
+        '......kccK......',
+        '.....pppppp.....',
+        '....pppppppp....',
+        '...pppppppppp...',
+        '...ppppGGpppp...',
+        '..pppppGpGpppp..',
+        '..ppppGGGGpppp..',
+        '..pppppGpGpppp..',
+        '..ppppGGGGpppp..',
+        '...pppppGpppp...',
+        '....pppppppp....',
+        '.....pppppp.....',
+        '................',
+    ])
+    leather = M(['#3a2412', '#5a3a1e', '#7a5028', '#946436', '#b07c46', '#cc9a5e'])
+    return render(g, {'p': leather, 'k': Fixed('#3a2412'), 'S': Fixed('#7a5028'), 'c': Fixed('#d8b04a'), 'K': Fixed('#3a2412'),
+                      'G': Fixed('#f2d25a')})

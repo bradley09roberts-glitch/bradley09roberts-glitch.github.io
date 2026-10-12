@@ -1,7 +1,7 @@
 """16x16 block textures: seastone, seastone bricks, seastone ore, poneglyph (side/top), fruit bloom (cross plant)."""
 import math
 
-from .canvas import Canvas, C, mix, fbm, hash01, shade
+from .canvas import Canvas, C, mix, fbm, hash01, shade, with_alpha
 from .sprite import Grid, Mat, Fixed, Force, render, OD, OL, DK, MD, LT, HL
 
 BLOCKS = {}
@@ -230,3 +230,56 @@ def _fruit_bloom():
     stem = Mat(None, ramp=['#0c2408', '#1a4210', '#2a6418', '#3c8624', '#58a836', '#86d05a'], outline=False)
     leaf = Mat(None, ramp=['#0a2a0c', '#18501a', '#2a7a28', '#3e9a36', '#62bc4e', '#9ae07a'])
     return render(g, {'p': petal, 'w': swirl, 's': stem, 'l': leaf, 'b': Mat(None, ramp=['#0c2408', '#1a4210', '#2a6418', '#3c8624', '#58a836', '#86d05a'], outline=False)})
+
+
+# ------------------------------------------------------------------------------------------- sky and deep sea
+
+CLOUD = ['#c9d6e3', '#d9e3ee', '#e6eef6', '#f1f6fb', '#fafcff']
+
+
+@block('island_cloud')
+def _island_cloud():
+    """Soft, puffy white with faint blue-grey hollows (tileable)."""
+    lv = stone_levels(41, sx=5.5, sy=5.0, levels=5, bias=0.05)
+    c = Canvas(16, 16)
+    for y in range(16):
+        for x in range(16):
+            c.set(x, y, C(CLOUD[lv[y][x]]))
+    return c
+
+
+@block('bubble_membrane')
+def _bubble_membrane():
+    """Mostly clear skin with a faint cyan tint and iridescent highlights."""
+    c = Canvas(16, 16)
+    for y in range(16):
+        for x in range(16):
+            sheen = 0.5 + 0.5 * math.sin((x + y) * 0.55 + 1.3)
+            a = 46 + int(24 * sheen)
+            col = mix(C('#9fe3ff'), C('#e8d2ff'), 0.5 + 0.5 * math.sin(x * 0.4 - y * 0.3))
+            c.set(x, y, with_alpha(col, a))
+    for i in range(3, 9):
+        c.set(i, 3 + (i - 3) // 3, with_alpha(C('#ffffff'), 150))
+    c.set(11, 11, with_alpha(C('#ffffff'), 120))
+    c.set(12, 12, with_alpha(C('#ffffff'), 90))
+    return c
+
+
+@block('ship_hatch')
+def _ship_hatch():
+    """Dark planks bound with iron, a ring pull in the middle."""
+    c = Canvas(16, 16)
+    planks = ['#4a3220', '#56392a', '#624330', '#6e4c36']
+    for y in range(16):
+        for x in range(16):
+            band = (x // 4) % 2
+            shade_i = (band + (1 if hash01(x, y, 5) > 0.7 else 0) + (1 if y % 4 == 0 else 0)) % 4
+            c.set(x, y, C(planks[shade_i]))
+    for x in range(16):
+        c.set(x, 0, C('#2a1c12'))
+        c.set(x, 15, C('#2a1c12'))
+        for y in (3, 12):
+            c.set(x, y, C('#5c5f66') if x % 5 else C('#8a8e96'))
+    for x, y in ((7, 7), (8, 7), (6, 8), (9, 8), (7, 9), (8, 9)):
+        c.set(x, y, C('#a7abb3'))
+    return c
