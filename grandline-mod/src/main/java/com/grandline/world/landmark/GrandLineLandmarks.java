@@ -794,6 +794,7 @@ final class GrandLineLandmarks {
         }
         npc(b, "kuja_warrior", c - 3, 1, 9);
         npc(b, "kuja_warrior", c + 3, 1, 9);
+        npc(b, "snakeneck_lancer", c, 1, 9); // the Snakeneck tribe serve the Kuja at the gate
         // training targets on the flanks
         for (int z = 4; z <= 14; z += 5) {
             b.set(2, 1, z, Blocks.TARGET);

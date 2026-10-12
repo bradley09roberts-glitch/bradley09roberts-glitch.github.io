@@ -236,6 +236,9 @@ final class NewWorldLandmarks {
         }
         npc(b, "guard", c - 2, 1, 0);
         npc(b, "guard", c + 2, 1, 0);
+        // gladiators of every people warming up on the arena sand
+        npc(b, "lunarian_warrior", c - 5, 1, c - 5);
+        npc(b, "buccaneer_brawler", c + 5, 1, c - 5);
         b.marker("arc_anchor", c, 1, c, tag("arc", "colosseum_tournament"));
         // ticket booth in the north-west corner
         for (int[] p : new int[][]{{1, 1}, {5, 1}, {1, 4}, {5, 4}}) b.fill(p[0], 1, p[1], p[0], 3, p[1], Blocks.OAK_FENCE);

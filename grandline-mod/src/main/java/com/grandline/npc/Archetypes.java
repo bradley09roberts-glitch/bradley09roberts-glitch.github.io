@@ -54,6 +54,10 @@ public final class Archetypes {
         a("giant_elder", Faction.CIVILIAN, 9, List.of("iron_kanabo"), "hasshoken", List.of("giant_1"), Hostility.PASSIVE, false, 0, 1.0, 300, 14, Race.GIANT, false, false);
         a("revolutionary", Faction.REVOLUTIONARY, 4, List.of("cutlass", "musket"), "brawler", List.of("revolutionary_1"), Hostility.DEFENSIVE, false, 0.1, 0.2, 45, 6, Race.HUMAN, false, false);
         a("kuja_warrior", Faction.CIVILIAN, 6, List.of("war_bow", "spear"), "brawler", List.of("kuja_1"), Hostility.DEFENSIVE, false, 0, 0.9, 70, 6, Race.HUMAN, false, false);
+        // the rarer peoples: gladiators of the Corrida Colosseum, Snakeneck lancers serving the Kuja
+        a("lunarian_warrior", Faction.PIRATE, 7, List.of("iron_kanabo", "fine_katana"), "brawler", List.of("pirate_captain_1"), Hostility.DEFENSIVE, false, 0, 0.7, 160, 12, Race.LUNARIAN, false, false);
+        a("buccaneer_brawler", Faction.PIRATE, 6, List.of("brass_knuckles", "war_hammer"), "brawler", List.of("pirate_1", "pirate_2"), Hostility.DEFENSIVE, false, 0, 0.4, 130, 10, Race.BUCCANEER, false, false);
+        a("snakeneck_lancer", Faction.CIVILIAN, 4, List.of("spear", "war_bow"), "brawler", List.of("kuja_1"), Hostility.DEFENSIVE, false, 0, 0.3, 55, 5, Race.SNAKENECK, false, false);
     }
 
     public static Archetype get(String role) {
