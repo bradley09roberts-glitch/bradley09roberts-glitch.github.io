@@ -70,6 +70,7 @@ final class SelfTestWave4 {
         HumanoidNpc n = SelfTest.npc(l, role, 3, at);
         n.setNoAi(true);
         n.forceFruitForTest("");
+        n.clearHakiForTest(); // a tier-3 NPC may roll Armament, which it uses whenever it has a target
         return n;
     }
 

@@ -246,6 +246,11 @@ public abstract class GLNpc extends PathfinderMob {
         entityData.set(FRUIT, fruit);
     }
 
+    /** Self-tests: this NPC knows no Haki (a "plain" blow must not carry Armament the NPC rolled at random). */
+    public void clearHakiForTest() {
+        hakiObs = hakiArm = hakiCoq = 0;
+    }
+
     public CombatState combat() {
         return CombatState.of(this);
     }
