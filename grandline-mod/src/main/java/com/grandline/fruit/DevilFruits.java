@@ -54,13 +54,13 @@ public final class DevilFruits {
         def("ushi_bison", FruitType.ZOAN, 3, true, 0x7A4A2A, 0xC09A6A, Element.BLUNT);
         def("inu_wolf", FruitType.ZOAN, 4, true, 0x8A8A9A, 0xD0D0E0, Element.SLASH).zoanModel = "wolf";
         def("neko_leopard", FruitType.ZOAN, 5, true, 0xE0B04A, 0x3A2A1A, Element.SLASH).zoanModel = "leopard";
-        def("zou_elephant", FruitType.ZOAN, 4, true, 0x9A9AA8, 0x6A6A7A, Element.BLUNT);
-        def("ryu_allosaurus", FruitType.ANCIENT_ZOAN, 6, true, 0x6A8A4A, 0x3A5A2A, Element.SLASH);
-        def("ryu_pteranodon", FruitType.ANCIENT_ZOAN, 6, true, 0x8A6A4A, 0xC09A6A, Element.SLASH);
-        def("ryu_spinosaurus", FruitType.ANCIENT_ZOAN, 6, true, 0x4A6A6A, 0xC04A3A, Element.SLASH);
+        def("zou_elephant", FruitType.ZOAN, 4, true, 0x9A9AA8, 0x6A6A7A, Element.BLUNT).zoanModel = "elephant";
+        def("ryu_allosaurus", FruitType.ANCIENT_ZOAN, 6, true, 0x6A8A4A, 0x3A5A2A, Element.SLASH).zoanModel = "allosaurus";
+        def("ryu_pteranodon", FruitType.ANCIENT_ZOAN, 6, true, 0x8A6A4A, 0xC09A6A, Element.SLASH).zoanModel = "pteranodon";
+        def("ryu_spinosaurus", FruitType.ANCIENT_ZOAN, 6, true, 0x4A6A6A, 0xC04A3A, Element.SLASH).zoanModel = "spinosaurus";
         def("tori_phoenix", FruitType.MYTHICAL_ZOAN, 9, true, 0x3AB0FF, 0xFFE04A, Element.FIRE);
-        def("uo_seiryu", FruitType.MYTHICAL_ZOAN, 10, true, 0x2A5AD0, 0xC0E0FF, Element.FIRE);
-        def("hebi_orochi", FruitType.MYTHICAL_ZOAN, 7, true, 0x5A2A6A, 0xA04AC0, Element.PIERCE);
+        def("uo_seiryu", FruitType.MYTHICAL_ZOAN, 10, true, 0x2A5AD0, 0xC0E0FF, Element.FIRE).zoanModel = "seiryu";
+        def("hebi_orochi", FruitType.MYTHICAL_ZOAN, 7, true, 0x5A2A6A, 0xA04AC0, Element.PIERCE).zoanModel = "orochi";
         // ---------------- Original fruits (this mod's new powers) ----------------
         def("kaze", FruitType.LOGIA, 7, false, 0x9AE8C8, 0xF0FFF8, Element.WIND);
         def("shio", FruitType.PARAMECIA, 5, false, 0xF4F4F4, 0xBFD8E0, Element.PHYSICAL);
@@ -105,6 +105,26 @@ public final class DevilFruits {
         com.grandline.fruit.impl.KagamiFruit.init(get("kagami"));
         com.grandline.fruit.impl.UzuFruit.init(get("uzu"));
         com.grandline.fruit.impl.KaneFruit.init(get("kane"));
+        // ---- third wave: remaining canon fruits ----
+        com.grandline.fruit.impl.YukiFruit.init(get("yuki"));
+        com.grandline.fruit.impl.GasuFruit.init(get("gasu"));
+        com.grandline.fruit.impl.NumaFruit.init(get("numa"));
+        com.grandline.fruit.impl.MoriFruit.init(get("mori"));
+        com.grandline.fruit.impl.BomuFruit.init(get("bomu"));
+        com.grandline.fruit.impl.SupaFruit.init(get("supa"));
+        com.grandline.fruit.impl.NikyuFruit.init(get("nikyu"));
+        com.grandline.fruit.impl.MochiFruit.init(get("mochi"));
+        com.grandline.fruit.impl.HoroFruit.init(get("horo"));
+        com.grandline.fruit.impl.DoruFruit.init(get("doru"));
+        com.grandline.fruit.impl.SoruFruit.init(get("soru"));
+        com.grandline.fruit.impl.HobiFruit.init(get("hobi"));
+        com.grandline.fruit.impl.TokiFruit.init(get("toki"));
+        com.grandline.fruit.impl.ElephantFruit.init(get("zou_elephant"));
+        com.grandline.fruit.impl.AllosaurusFruit.init(get("ryu_allosaurus"));
+        com.grandline.fruit.impl.PteranodonFruit.init(get("ryu_pteranodon"));
+        com.grandline.fruit.impl.SpinosaurusFruit.init(get("ryu_spinosaurus"));
+        com.grandline.fruit.impl.SeiryuFruit.init(get("uo_seiryu"));
+        com.grandline.fruit.impl.OrochiFruit.init(get("hebi_orochi"));
     }
 
     @Nullable

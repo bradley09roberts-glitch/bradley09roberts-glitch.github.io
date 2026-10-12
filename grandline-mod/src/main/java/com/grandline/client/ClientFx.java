@@ -131,6 +131,7 @@ public final class ClientFx {
             ClientWeather.update((int) a, b, c);
             return;
         }
+        if (canonWave3(l, kind, x, y, z, a, b, c)) return; // fruit wave 3 (canon), see block below
         if (kind.startsWith("hit_")) {
             String el = kind.substring(4);
             ParticleOptions p = switch (el) {
@@ -552,6 +553,7 @@ public final class ClientFx {
         ClientLevel l = Minecraft.getInstance().level;
         if (l == null) return;
         double x = p.getX(), y = p.getY() + size / 2, z = p.getZ();
+        if (canonWave3Trail(l, p, kind, x, y, z, size)) return; // fruit wave 3 (canon), see block below
         switch (kind) {
             case "fire_fist", "fire_bullet", "flame_emperor", "fire_bird" -> burst(l, ParticleTypes.FLAME, x, y, z, 2 + (int) (size * 6), size, 0.02);
             case "ice_spear" -> burst(l, ParticleTypes.SNOWFLAKE, x, y, z, 2, size, 0.01);
@@ -583,6 +585,357 @@ public final class ClientFx {
             default -> burst(l, ParticleTypes.ENCHANTED_HIT, x, y, z, 1, size, 0.0);
         }
     }
+
+    // ===================================================================== fruit wave 3 (canon)
+    // Effects and projectile trails for Yuki, Gasu, Numa, Mori, Bomu, Supa, Nikyu, Mochi, Horo, Doru, Soru, Hobi, Toki
+    // and the Elephant / Allosaurus / Pteranodon / Spinosaurus / Seiryu / Orochi Zoans. Return true when handled;
+    // anything else falls through to the shared effects above. (Projectile textures fall back to "energy".)
+
+    private static boolean canonWave3(ClientLevel l, String kind, double x, double y, double z, float a, float b, float c) {
+        RandomSource r = l.random;
+        Vec3 from = new Vec3(x, y, z), to = new Vec3(a, b, c);
+        if (kind.startsWith("impact_")) {
+            switch (kind.substring(7)) {
+                case "snow_shuriken" -> {
+                    burst(l, ParticleTypes.SNOWFLAKE, x, y, z, 10, 0.4, 0.2);
+                    burst(l, ParticleTypes.ITEM_SNOWBALL, x, y, z, 6, 0.3, 0.1);
+                }
+                case "mud_ball" -> burst(l, dust(0x4A3A22, 1.4f), x, y, z, 12, 0.5, 0.2);
+                case "wood_stake" -> burst(l, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.OAK_PLANKS.defaultBlockState()), x, y, z, 10, 0.3, 0.15);
+                case "bomb_pellet", "toy_soldier" -> burst(l, ParticleTypes.SMOKE, x, y, z, 8, 0.4, 0.05);
+                case "steel_crescent", "wing_crescent" -> {
+                    burst(l, ParticleTypes.SWEEP_ATTACK, x, y, z, 2, 0.4, 0);
+                    burst(l, ParticleTypes.CRIT, x, y, z, 8, 0.4, 0.3);
+                }
+                case "paw_bubble" -> {
+                    ring(l, ParticleTypes.POOF, x, y, z, 1.5, 16, 0.25);
+                    burst(l, dust(0xFFD0E0, 1.3f), x, y, z, 12, 0.6, 0.1);
+                }
+                case "mochi_fist" -> burst(l, dust(0xF5EEDC, 1.8f), x, y, z, 22, 0.8, 0.15);
+                case "negative_hollow", "mini_hollow", "toku_hollow" -> {
+                    burst(l, dust(0xF0D0F0, 1.4f), x, y, z, kind.endsWith("toku_hollow") ? 50 : 14, Math.max(0.5, a), 0.15);
+                    burst(l, ParticleTypes.SOUL, x, y, z, 6, 0.6, 0.05);
+                }
+                case "wax_harpoon" -> burst(l, ParticleTypes.WAX_ON, x, y, z, 12, 0.5, 0.1);
+                case "prometheus_sun" -> {
+                    burst(l, ParticleTypes.FLAME, x, y, z, 40, 1.5, 0.3);
+                    burst(l, ParticleTypes.LAVA, x, y, z, 10, 1.2, 0.2);
+                }
+                case "toy_box" -> burst(l, ParticleTypes.TOTEM_OF_UNDYING, x, y, z, 30, 1.2, 0.3);
+                default -> {
+                    return false;
+                }
+            }
+            return true;
+        }
+        switch (kind) {
+            case "intangible_gasu" -> burst(l, dust(0xB98AD6, 1.4f), x, y, z, 20, 1.0, 0.1);
+            case "intangible_numa" -> burst(l, dust(0x4A3A22, 1.4f), x, y, z, 18, 0.9, 0.1);
+            case "intangible_mori" -> {
+                burst(l, ParticleTypes.COMPOSTER, x, y, z, 12, 0.9, 0.1);
+                burst(l, dust(0x2E7A2E, 1.2f), x, y, z, 10, 0.9, 0.1);
+            }
+            case "intangible_mochi" -> burst(l, dust(0xF5EEDC, 1.6f), x, y, z, 22, 1.0, 0.12);
+            case "hit_poison" -> burst(l, dust(0x7E3FA8, 1.2f), x, y, z, 8 + (int) Math.min(12, a), 0.5, 0.3);
+            // Yuki
+            case "snow_blade" -> {
+                ring(l, ParticleTypes.SNOWFLAKE, x, y, z, a, 40, 0.45);
+                burst(l, ParticleTypes.ITEM_SNOWBALL, x, y, z, 16, a * 0.6, 0.1);
+            }
+            case "blizzard" -> {
+                spiral(l, ParticleTypes.SNOWFLAKE, x, y, z, a, 5, (int) (30 + a * 8), 0.4, 0.05);
+                burst(l, dust(0xF4FAFF, 1.8f), x, y + 2, z, 20, a * 1.5, 0.05);
+            }
+            case "kamakura" -> {
+                dome(l, dust(0xF4FAFF, 1.6f), x, y, z, a, 90);
+                dome(l, ParticleTypes.SNOWFLAKE, x, y, z, a, 20);
+            }
+            case "whiteout" -> {
+                burst(l, dust(0xF4FAFF, 2.5f), x, y + 2, z, (int) (40 + a * 4), a * 1.6, 0.04);
+                spiral(l, ParticleTypes.SNOWFLAKE, x, y, z, a, 6, 40, 0.5, 0.05);
+            }
+            // Gasu
+            case "gas_jet" -> {
+                line(l, ParticleTypes.FLAME, from, to, 0.5);
+                line(l, dust(0xB98AD6, 1.1f), from, to, 0.6);
+            }
+            case "gas_explosion" -> {
+                l.addParticle(ParticleTypes.EXPLOSION, x, y, z, 0, 0, 0);
+                burst(l, ParticleTypes.FLAME, x, y, z, 30, a, 0.25);
+                burst(l, dust(0x7E3FA8, 1.6f), x, y, z, 20, a, 0.1);
+            }
+            case "gas_cloud" -> {
+                burst(l, dust(0x7E3FA8, 2.0f), x, y + 1, z, (int) (20 + a * 6), a * 1.6, 0.02);
+                disc(l, ParticleTypes.WITCH, x, y, z, a, 12, 0.05, 0.03);
+            }
+            case "gas_robe" -> {
+                column(l, ParticleTypes.FLAME, x, y - 1, z, a, 2, 20);
+                column(l, dust(0xB98AD6, 1.0f), x, y - 1, z, a, 2, 10);
+            }
+            case "shinokuni" -> {
+                burst(l, dust(0x5A2A7A, 2.5f), x, y + 1.5, z, (int) (30 + a * 6), a * 1.7, 0.02);
+                burst(l, dust(0x9A5AC0, 2.0f), x, y + 3, z, 20, a, 0.02);
+                disc(l, ParticleTypes.WITCH, x, y, z, a, 16, 0.05, 0.05);
+            }
+            // Numa
+            case "swamp_gulp" -> burst(l, dust(0x4A3A22, 1.3f), x, y, z, 10, 0.6, 0.15);
+            case "mud_grab" -> {
+                column(l, dust(0x4A3A22, 1.6f), x, y, z, a, b, 30);
+                burst(l, ParticleTypes.BUBBLE_POP, x, y + 0.2, z, 8, Math.max(0.6, a), 0.05);
+            }
+            case "swamp" -> {
+                disc(l, dust(0x4A3A22, 1.6f), x, y, z, a, (int) (a * 8), 0.05 + b * 0.1, -0.01);
+                disc(l, ParticleTypes.BUBBLE_POP, x, y, z, a, 10, 0, 0.05);
+            }
+            case "mud_burst" -> burst(l, dust(0x5A4A2A, 1.8f), x, y, z, (int) (20 + a * 8), Math.max(1, a), 0.3);
+            // Mori
+            case "roots" -> {
+                column(l, dust(0x6A4A2A, 1.6f), x, y, z, a * 0.5, 2.5, 30);
+                burst(l, ParticleTypes.COMPOSTER, x, y + 0.5, z, 10, a, 0.1);
+            }
+            case "life_drain" -> {
+                line(l, dust(0x8AC94A, 1.0f), from, to, 0.4);
+                burst(l, ParticleTypes.COMPOSTER, x, y, z, 8, 0.6, 0.05);
+            }
+            case "forest_burst" -> {
+                disc(l, ParticleTypes.COMPOSTER, x, y, z, a, (int) (a * 8), -0.05, 0.15);
+                burst(l, dust(0x2E7A2E, 1.8f), x, y + 2, z, 30, a, 0.05);
+                if (b > 0) shake(6);
+            }
+            case "leaf_heal" -> burst(l, ParticleTypes.HAPPY_VILLAGER, x, y, z, 6, 0.8, 0.02);
+            // Bomu
+            case "breath_trail" -> line(l, ParticleTypes.SMOKE, from, to, 0.6);
+            // Supa
+            case "blade_sweep" -> {
+                ring(l, dust(0xC0C0C8, 1.2f), x, y, z, a, 40, 0.5);
+                for (int i = 0; i < 3; i++) l.addParticle(ParticleTypes.SWEEP_ATTACK, x + (r.nextDouble() - 0.5) * a * 0.6, y, z + (r.nextDouble() - 0.5) * a * 0.6, 0, 0, 0);
+            }
+            case "steel_body" -> {
+                column(l, dust(0xC0C0C8, 1.3f), x, y - 1, z, a, 2, 30);
+                burst(l, ParticleTypes.CRIT, x, y, z, 10, 0.8, 0.2);
+            }
+            case "blade_trail" -> {
+                line(l, dust(0xC0C0C8, 1.2f), from, to, 0.3);
+                line(l, ParticleTypes.SWEEP_ATTACK, from, to, 1.5);
+            }
+            case "blade_storm" -> {
+                sphere(l, dust(0xC0C0C8, 1.2f), x, y, z, a * 0.7, 60);
+                for (int i = 0; i < 8; i++) l.addParticle(ParticleTypes.SWEEP_ATTACK, x + (r.nextDouble() - 0.5) * a, y + (r.nextDouble() - 0.5) * 2, z + (r.nextDouble() - 0.5) * a, 0, 0, 0);
+            }
+            // Nikyu
+            case "paw_burst" -> {
+                line(l, dust(0xFFD0E0, 1.2f), from, to, 0.5);
+                burst(l, ParticleTypes.POOF, x, y, z, 10, 0.6, 0.1);
+            }
+            case "pain_bubble" -> {
+                sphere(l, dust(0xAA2A40, 1.2f), x, y, z, Math.max(0.5, a) * 0.6, 40);
+                sphere(l, dust(0xFFD0E0, 0.8f), x, y, z, Math.max(0.5, a) * 0.6, 20);
+            }
+            case "ursus_charge" -> sphere(l, dust(0xFFD0E0, 1.6f), x, y, z, a, 80);
+            case "ursus_shock" -> {
+                l.addParticle(ParticleTypes.EXPLOSION_EMITTER, x, y, z, 0, 0, 0);
+                sphere(l, dust(0xFFD0E0, 2.0f), x, y, z, a * 0.6, 120);
+                ring(l, ParticleTypes.CLOUD, x, y - 0.8, z, a, 80, 0.8);
+                shake(16);
+            }
+            // Mochi
+            case "mogura" -> line(l, dust(0xF5EEDC, 1.6f), from, to, 0.3);
+            case "mochi_bind" -> column(l, dust(0xF5EEDC, 1.8f), x, y - 1, z, a, b, 40);
+            case "mochi_fists" -> {
+                for (int i = 0; i < 4; i++) {
+                    double ox = (r.nextDouble() - 0.5) * a * 1.4, oz = (r.nextDouble() - 0.5) * a * 1.4;
+                    line(l, dust(0xF5EEDC, 2.0f), new Vec3(x + ox, y + 5, z + oz), new Vec3(x + ox, y + 0.3, z + oz), 0.4);
+                }
+                ring(l, dust(0xF5EEDC, 1.4f), x, y + 0.2, z, a, 30, 0.3);
+            }
+            case "mochi_donut" -> ring(l, dust(0xF5EEDC, 1.5f), x, y, z, Math.max(1, a) / 0.3, 24, 0.05);
+            case "mochi_flood" -> {
+                disc(l, dust(0xF5EEDC, 2.0f), x, y, z, a, (int) (a * 10), -0.05, 0.05 + b * 0.3);
+                if (b > 0) shake(8);
+            }
+            // Horo
+            case "negative_hollow" -> {
+                column(l, dust(0xF0D0F0, 1.4f), x, y - 1, z, a, b, 30);
+                burst(l, ParticleTypes.SOUL, x, y, z, 6, 0.6, 0.02);
+            }
+            case "ghost_body" -> {
+                burst(l, dust(0xF0D0F0, 1.6f), x, y, z, 30, 1.0, 0.05);
+                burst(l, ParticleTypes.SOUL, x, y, z, 10, 0.8, 0.05);
+            }
+            case "hollow_parade" -> {
+                ring(l, dust(0xF0D0F0, 2.0f), x, y, z, a, 120, 0.7);
+                burst(l, ParticleTypes.SOUL, x, y + 1, z, 30, a * 0.8, 0.05);
+            }
+            // Doru
+            case "wax_bind" -> {
+                column(l, dust(0xF0F0E0, 1.6f), x, y, z, a, Math.max(0.8, b), 30);
+                burst(l, ParticleTypes.WAX_ON, x, y + 0.5, z, 8, Math.max(0.6, a), 0.05);
+            }
+            case "wax_wall" -> {
+                plane(l, dust(0xF0F0E0, 1.6f), x, y, z, a, b, Math.max(1, c), 3.0, 70);
+                plane(l, ParticleTypes.WAX_ON, x, y, z, a, b, Math.max(1, c), 3.0, 12);
+            }
+            case "wax_armour" -> {
+                column(l, dust(0xF0F0E0, 1.4f), x, y - 1, z, a, 2, 40);
+                burst(l, ParticleTypes.WAX_ON, x, y, z, 12, 1, 0.05);
+            }
+            case "wax_spiral" -> {
+                spiral(l, dust(0xF0F0E0, 1.5f), x, y, z, a, 1.5, (int) (30 + a * 6), 0.35, 0.05);
+                disc(l, ParticleTypes.WAX_ON, x, y, z, a, 10, 0, 0.05);
+            }
+            // Soru
+            case "soul_resist" -> burst(l, ParticleTypes.ENCHANTED_HIT, x, y, z, 10, 0.8, 0.1);
+            case "soul_pull" -> {
+                line(l, ParticleTypes.SOUL, from, to, 0.6);
+                burst(l, dust(0xF5C04A, 1.2f), x, y, z, 10, 0.6, 0.1);
+            }
+            case "soul_pocus" -> {
+                ring(l, dust(0xFF6A6A, 1.6f), x, y, z, a, (int) (40 + a * 6), 0.6);
+                burst(l, ParticleTypes.SOUL, x, y + 1, z, 20, a * 0.6, 0.05);
+                if (b > 0) shake(10);
+            }
+            case "zeus_cloud" -> {
+                burst(l, dust(0x3A3A4A, 3f), x, y, z, 50, a * 1.5, 0.02);
+                burst(l, ParticleTypes.ELECTRIC_SPARK, x, y - 0.5, z, 16, a, 0.2);
+            }
+            case "ikoku" -> {
+                line(l, dust(0xF5C04A, 1.4f), from, to, 0.35);
+                line(l, ParticleTypes.SWEEP_ATTACK, from, to, 2);
+                line(l, ParticleTypes.CLOUD, from, to, 0.8);
+                shake(6);
+            }
+            case "homie_land" -> {
+                if (c > 0) disc(l, ParticleTypes.COMPOSTER, x, y, z, 10, 60, 0, 0.1);
+                else {
+                    column(l, dust(0x6A4A2A, 1.5f), x, y, z, a, b, 24);
+                    burst(l, ParticleTypes.HAPPY_VILLAGER, x, y + b, z, 4, 0.5, 0.05);
+                }
+            }
+            // Hobi
+            case "toy_poof" -> {
+                burst(l, ParticleTypes.POOF, x, y, z, 12, 0.6 * Math.max(1, a), 0.05);
+                burst(l, ParticleTypes.TOTEM_OF_UNDYING, x, y, z, 10, 0.6, 0.15);
+            }
+            case "confetti" -> {
+                burst(l, ParticleTypes.TOTEM_OF_UNDYING, x, y, z, (int) (20 + a * 8), a, 0.3);
+                for (int i = 0; i < 12; i++) l.addParticle(dust(rainbow(r), 1.2f), x + (r.nextDouble() - 0.5) * a, y + r.nextDouble(), z + (r.nextDouble() - 0.5) * a, 0, 0.05, 0);
+                if (b > 0) shake(4);
+            }
+            // Toki
+            case "time_vanish", "time_return" -> {
+                column(l, dust(0xD0D0FF, 1.4f), x, y - 1, z, a, b, 36);
+                burst(l, ParticleTypes.REVERSE_PORTAL, x, y, z, 24, 0.8, 0.2);
+                if (kind.endsWith("return")) l.addParticle(ParticleTypes.FLASH, x, y, z, 0, 0, 0);
+            }
+            case "time_trail" -> {
+                line(l, dust(0xD0D0FF, 1.1f), from, to, 0.4);
+                line(l, ParticleTypes.REVERSE_PORTAL, from, to, 0.8);
+            }
+            case "hourglass" -> {
+                ring(l, dust(0xD0D0FF, 1.6f), x, y + 0.2, z, a / 0.3, (int) (30 + a * 6), 0);
+                spiral(l, dust(0xE8D08A, 1.2f), x, y, z, a, 3, 30, -0.3, 0.05);
+                if (b > 0) shake(8);
+            }
+            // Zoans: Elephant
+            case "trunk_sweep" -> {
+                ring(l, dust(0x9A9AA8, 1.4f), x, y, z, a, 30, 0.5);
+                l.addParticle(ParticleTypes.SWEEP_ATTACK, x, y, z, 0, 0, 0);
+            }
+            case "water_jet" -> {
+                line(l, ParticleTypes.SPLASH, from, to, 0.3);
+                line(l, ParticleTypes.FALLING_WATER, from, to, 0.5);
+                burst(l, ParticleTypes.SPLASH, a, b, c, 20, 1.2, 0.3);
+            }
+            // Ancient Zoans
+            case "bite" -> {
+                for (int i = -1; i <= 1; i += 2) l.addParticle(ParticleTypes.SWEEP_ATTACK, x, y + i * 0.3, z, 0, 0, 0);
+                burst(l, ParticleTypes.CRIT, x, y, z, 10 + (int) (a * 6), 0.4 * Math.max(1, a), 0.3);
+                burst(l, dust(0x8A0A0A, 1.0f), x, y, z, 6, 0.5, 0.1);
+            }
+            case "tail_sweep", "sail_spin" -> {
+                ring(l, ParticleTypes.CLOUD, x, y, z, a, 40, 0.5);
+                if (kind.equals("sail_spin")) ring(l, dust(0xC04A3A, 1.4f), x, y + 0.6, z, a, 40, 0.5);
+                for (int i = 0; i < 6; i++) {
+                    double ang = i * Math.PI / 3;
+                    l.addParticle(ParticleTypes.SWEEP_ATTACK, x + Math.cos(ang) * a * 0.6, y, z + Math.sin(ang) * a * 0.6, 0, 0, 0);
+                }
+            }
+            case "wing_gust" -> {
+                ring(l, ParticleTypes.CLOUD, x, y, z, a, 30, 0.6);
+                burst(l, ParticleTypes.SMALL_GUST, x, y + 0.5, z, 4, a * 0.5, 0);
+            }
+            case "dive_trail" -> {
+                line(l, ParticleTypes.CLOUD, from, to, 0.5);
+                l.addParticle(ParticleTypes.GUST, a, b, c, 0, 0, 0);
+            }
+            // Mythical Zoans: Seiryu, Orochi
+            case "dragon_cloud" -> {
+                disc(l, ParticleTypes.CLOUD, x, y, z, a, 30, -0.05, 0.02);
+                burst(l, dust(0xC0E0FF, 1.6f), x, y, z, 16, a, 0.05);
+            }
+            case "bolo_breath" -> {
+                line(l, ParticleTypes.FLAME, from, to, 0.35);
+                line(l, dust(0xFFC23A, 1.6f), from, to, 0.5);
+                line(l, ParticleTypes.LAVA, from, to, 2.5);
+                shake(5);
+            }
+            case "serpent_strike" -> {
+                line(l, dust(0x5A2A6A, 1.3f), from, to, 0.35);
+                burst(l, ParticleTypes.CRIT, a, b, c, 6, 0.4, 0.2);
+            }
+            case "venom" -> {
+                burst(l, dust(0x6ACB3A, 1.2f), x, y, z, 14, Math.max(0.6, a), 0.1);
+                burst(l, ParticleTypes.ITEM_SLIME, x, y, z, 6, 0.6, 0.1);
+                if (b > 0) burst(l, ParticleTypes.HEART, x, y + 0.5, z, 4, 0.8, 0.05);
+            }
+            case "coil" -> {
+                double rr = Math.max(0.5, a * 0.8), hh = Math.max(1.5, b);
+                for (int i = 0; i < 40; i++) {
+                    double t = i / 40.0, ang = t * Math.PI * 6;
+                    l.addParticle(dust(0x5A2A6A, 1.4f), x + Math.cos(ang) * rr, y - 1 + t * hh, z + Math.sin(ang) * rr, 0, 0, 0);
+                }
+            }
+            case "head_lost" -> {
+                burst(l, dust(0x5A2A6A, 1.6f), x, y, z, 30, 1.2, 0.3);
+                burst(l, ParticleTypes.SOUL, x, y, z, 10, 0.8, 0.1);
+            }
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean canonWave3Trail(ClientLevel l, Entity p, String kind, double x, double y, double z, float size) {
+        switch (kind) {
+            case "snow_shuriken" -> l.addParticle(ParticleTypes.SNOWFLAKE, x, y, z, 0, 0, 0);
+            case "mud_ball" -> l.addParticle(dust(0x4A3A22, 1.2f), x, y, z, 0, 0, 0);
+            case "wood_stake" -> l.addParticle(dust(0x8A6A3A, 0.8f), x, y, z, 0, 0, 0);
+            case "bomb_pellet" -> l.addParticle(ParticleTypes.SMOKE, x, y, z, 0, 0, 0);
+            case "steel_crescent" -> burst(l, dust(0xC0C0C8, 1.0f), x, y, z, 2, size, 0);
+            case "wing_crescent" -> burst(l, dust(0xC09A6A, 1.0f), x, y, z, 2, size, 0);
+            case "paw_bubble" -> burst(l, dust(0xFFD0E0, 1.2f), x, y, z, 2, size, 0);
+            case "mochi_fist" -> burst(l, dust(0xF5EEDC, 1.6f), x, y, z, 3, size, 0);
+            case "negative_hollow", "mini_hollow", "toku_hollow" -> {
+                burst(l, dust(0xF0D0F0, 1.2f), x, y, z, kind.startsWith("toku") ? 4 : 1, size, 0);
+                if (p.tickCount % 4 == 0) l.addParticle(ParticleTypes.SOUL, x, y, z, 0, 0.01, 0);
+            }
+            case "wax_harpoon" -> l.addParticle(dust(0xF0F0E0, 0.9f), x, y, z, 0, 0, 0);
+            case "prometheus_sun" -> {
+                burst(l, ParticleTypes.FLAME, x, y, z, 4, size, 0.02);
+                if (l.random.nextInt(3) == 0) l.addParticle(ParticleTypes.LAVA, x, y, z, 0, 0, 0);
+            }
+            case "toy_soldier" -> l.addParticle(dust(rainbow(l.random), 0.8f), x, y, z, 0, 0, 0);
+            case "toy_box" -> {
+                if (p.tickCount % 2 == 0) l.addParticle(ParticleTypes.TOTEM_OF_UNDYING, x, y, z, 0, 0, 0);
+            }
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+    // ===================================================================== end fruit wave 3 (canon)
 
     public static int shakeTicks = 0;
 

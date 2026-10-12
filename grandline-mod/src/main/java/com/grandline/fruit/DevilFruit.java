@@ -23,6 +23,8 @@ public class DevilFruit {
     final List<Ability> abilities = new ArrayList<>();
     /** Zoan model id for transformations (GeckoLib), empty if none. */
     public String zoanModel = "";
+    /** A non-Logia body that can still let attacks pass (Mochi); {@link #intangibleHook} decides when. */
+    public boolean intangibleBody = false;
 
     public DevilFruit(String id, FruitType type, int tier, boolean canon, int color, int color2, Element element) {
         this.id = id;
@@ -78,7 +80,7 @@ public class DevilFruit {
 
     /** Logia: physical damage passes through unless Haki/seastone/water. */
     public boolean intangible(LivingEntity user, LivingEntity attacker, Hits.Info info) {
-        if (type != FruitType.LOGIA || info.element() == Element.WATER) return false;
+        if ((type != FruitType.LOGIA && !intangibleBody) || info.element() == Element.WATER) return false;
         return intangibleHook == null || intangibleHook.test(user, attacker, info);
     }
 
