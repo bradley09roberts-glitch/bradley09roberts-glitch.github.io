@@ -98,6 +98,8 @@ public final class SelfTest {
         else if (PHASE.equals("activities")) ActivityTests.phase1(steps); // quick run: treasure maps, fishing, cooking
         else if (PHASE.equals("journey")) JourneyTests.phase1(steps); // quick run: advancements, Den Den Mushi, Buster Call
         else if (PHASE.equals("bosses")) BossTests.phase1(steps); // quick run: boss fights
+        else if (PHASE.equals("structures")) StructureDump.steps(steps); // dev aid: every structure to structdump/*.json
+        else if (PHASE.equals("landmarks")) steps.add(s -> LandmarkCheck.run(s, SelfTest::check)); // quick run: every landmark builder
         else if (PHASE.equals("bases")) BaseTests.phase1(steps); // quick run: crew bases on claimed islands
         else if (PHASE.equals("careers")) CareerTests.phase1(steps); // quick run: faction careers
         else if (PHASE.equals("seapolish")) SeaPolishTests.phase1(steps); // quick run: hired gunners, raid plunder, sea-job chart marks, convoy cap

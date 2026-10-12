@@ -133,6 +133,11 @@ public final class ShipInteriors {
                 return l.getBlockState(m.set(x, y, z));
             }
         };
+        build(sink, o, cls);
+    }
+
+    /** The rooms written into any sink (the structure dump renders them offline). */
+    public static void build(BlockSink sink, BlockPos o, ShipClass cls) {
         int len = Math.max(9, cls.length - 2), w = Math.max(5, cls.beam - 1);
         Builder b = new Builder(sink, o.getX(), o.getY() - 1, o.getZ(), w + 2, len + 2, Rotation.NONE, 7);
         b.fill(0, 0, 0, w + 1, 5, len + 1, Blocks.DARK_OAK_PLANKS);
