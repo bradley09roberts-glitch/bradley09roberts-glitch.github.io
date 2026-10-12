@@ -20,7 +20,8 @@ Private distribution.
    - `geckolib-neoforge-1.21.1-4.9.3.jar` — required library (animated creature/beast models)
 4. Start the NeoForge 1.21.1 profile. Create a new world and under **World Type** pick **Grand Line Ocean World**
    (the mod's ocean world replaces the normal Overworld; the Nether and End stay vanilla).
-5. On first join you create your character (name, race, height/build, colours, marks, home Blue and path).
+5. On first join you create your character (name, race, height/build, colours, marks, home Blue and path). You start
+   with the **Captain's Handbook**, a book that explains the controls (with your own key bindings) and the systems.
 
 Recommended: 8–12 GB RAM allocated for a smooth time in big cities; render distance 12–16 on a high-end PC.
 
@@ -30,7 +31,8 @@ Recommended: 8–12 GB RAM allocated for a smooth time in big cities; render dis
 2. Put both jars from `dist/` into the server's `mods` folder.
 3. In `server.properties` set `level-type=grandline\:ocean_world` **before the first start** (an existing vanilla
    world keeps its old generator). Accept the EULA in `eula.txt`.
-4. Start the server; every player needs the same two jars. Sized for ~20 players.
+4. Start the server with at least **4 GB** (`-Xmx4G`; the load test measured a 0.8–1.2 GB live heap with 20 players,
+   and 1.8 GB thrashes the garbage collector). Every player needs the same two jars. Sized for ~20 players.
 
 Server options live in `config/grandline-server.toml` (permadeath, knockdown time, Conqueror's chance, PvP, town
 protection, fruit terrain changes and reversion, number of generated islands, NPC simulation radius, etc.).
@@ -64,6 +66,8 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
   squalls and cyclones roam the Grand Line.
 - **Ships**: buy at any shipwright; walk the deck while it sails; go below deck through the hatch; upgrade, repair,
   recover sunk ships; get a coating at Sabaody to dive.
+- **Bounties**: crimes raise your bounty; at each threshold you get your wanted poster (use it to look at it).
+- **Paintings**: ten painted scenes of the seas; merchants sell three on each island and treasure hides more.
 - **Crew**: recruit named characters through their quests; they follow you, fight with you, revive you and give ship
   bonuses (shipwright, helmsman, cook, doctor, navigator, musician, sniper...).
 
@@ -95,6 +99,7 @@ python3 -I tools/gen_animations.py
 | Sky/deep-sea quick test | `GL_SELFTEST=dims ./gradlew runServer` |
 | Real client (software GL) | server: `GL_SELFTEST=client ./gradlew runServer`; client: `GL_CLIENTTEST=1 xvfb-run -a ./gradlew runClient` → `run-client/screenshots/` |
 | Two clients on one ship | as above with `GL_CLIENTTEST=mp_a ./gradlew runClient` and `GL_CLIENTTEST=mp_b ./gradlew runClient2` |
+| Server load (20 simulated players) | `GL_SELFTEST=load ./gradlew runServer` (`GL_LOADTEST_PLAYERS`, `GL_LOADTEST_SECONDS`) → `run/loadtest-report.txt` |
 | Inventory document | after phase 1: `python3 tools/gen_inventory.py` |
 
 `run/server.properties` must contain `level-type=grandline\:ocean_world` (the test harness uses port 25570).
