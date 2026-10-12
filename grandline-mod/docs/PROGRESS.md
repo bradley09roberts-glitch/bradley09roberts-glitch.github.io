@@ -330,7 +330,7 @@ First run of a real client against the dedicated server. Result: no client crash
 - Verified: `GL_SELFTEST=activities` 34/34; full phase 1 377/377 and phase 2 10/10 on the same world.
 - Not seen in a client yet: the treasure map screen, chart marks and the new sprites in game.
 
-### The journey: advancements, Den Den Mushi, Buster Call (agent)
+### The journey: advancements, Den Den Mushi, Buster Call (agent, merged 08:25)
 - Advancements (`journey/Journey`, `journey/MilestoneTrigger`; data from `tools/gen_journey.py` into
   `data/grandline/advancement/journey/`): 78 vanilla advancements in their own tab with a code-drawn sea background
   and mod-item icons. Every one is granted through one custom criterion, `grandline:milestone` with an id, fired from
@@ -404,9 +404,16 @@ First run of a real client against the dedicated server. Result: no client crash
   a note-block bell (no custom sound); NPC crew members only count as "hands" for the crew snail; Buster Call ships
   fire their own mortar shells (no gun crews, rams or boarding) and a server restart mid-call drops the call.
 
+### Empty towns and the full run after the journey (08:10–08:40)
+- A few generated islands were given a settlement but their first town layout placed nothing (archipelagos, crags):
+  such islands now search the island on a grid for buildable ground and lay the town out once more ("every settled
+  island has buildings": 178/178). Other towns are unchanged (the first pass draws the same random numbers).
+- Ferries also land their passengers when pinned near the dock or after half a minute in the destination's waters.
+- Full run on the merged tree with the journey: phase 1 483/483, phase 2 14/14, no exceptions; inventory regenerated
+  from it (240 tested, 373 playable, 0 partial).
+
 ## Work in flight (background agents)
 - Endgame boss encounters (Emperors, Admirals, Warlords: boss bars, phases, telegraphed signature attacks).
-- Advancement journey, Den Den Mushi snails, Buster Call.
 
 ## Known gaps (next priorities)
 - 20 TPS with 20 players is not proven on dedicated hardware (the load test ran on a heavily shared machine; the
