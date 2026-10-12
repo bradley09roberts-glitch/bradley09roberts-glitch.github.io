@@ -88,6 +88,7 @@ public final class HakiAbilities {
         for (LivingEntity e : Hits.sphere(user, c, radius)) {
             if (!Hits.hostileTo(user, e)) continue;
             int will = Haki.willpower(e);
+            if (e instanceof com.grandline.creature.SeaKing sk) sk.onConquerorPressure(user, will * 1.3 < power, will < power);
             if (will * 1.3 < power) {
                 e.addEffect(new MobEffectInstance(ModEffects.KNOCKED_OUT, burst ? 20 * 12 : 20 * 4, 0));
                 if (e instanceof GLNpc n) n.onConquerorKnockout(user);

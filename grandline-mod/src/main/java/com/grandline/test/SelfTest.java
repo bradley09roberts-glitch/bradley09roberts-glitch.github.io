@@ -77,6 +77,7 @@ public final class SelfTest {
         steps = new ArrayDeque<>();
         REPORT.add("Grand Line Odyssey self-test, phase " + PHASE + ", " + new Date());
         if (PHASE.equals("1")) phase1();
+        else if (PHASE.equals("creatures")) CreatureSelfTest.phase1(steps); // quick run of the creature steps only
         else phase2();
     }
 
@@ -626,6 +627,7 @@ public final class SelfTest {
             }
             return 40;
         });
+        CreatureSelfTest.phase1(steps); // Sea Kings, Calm Belt, Zoan beast forms
         // ---------- persistence fixtures for phase 2 ----------
         steps.add(s -> {
             ServerLevel l = ow(s);

@@ -33,6 +33,10 @@ public final class TestCommands {
                         .suggests((c, b) -> SharedSuggestionProvider.suggest(Arrays.stream(ShipClass.values()).map(ShipClass::id), b))
                         .executes(c -> ship(c.getSource(), StringArgumentType.getString(c, "class"), false))
                         .then(Commands.literal("helm").executes(c -> ship(c.getSource(), StringArgumentType.getString(c, "class"), true)))))
+                .then(com.grandline.creature.CreatureTestCommands.seaKing())
+                .then(com.grandline.creature.CreatureTestCommands.zoan())
+                .then(com.grandline.creature.CreatureTestCommands.beastNpc())
+                .then(com.grandline.creature.CreatureTestCommands.wildlife())
                 .then(Commands.literal("inventory").executes(c -> {
                     try {
                         var out = com.grandline.test.InventoryDump.write(c.getSource().getServer());

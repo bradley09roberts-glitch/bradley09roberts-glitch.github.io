@@ -261,6 +261,11 @@ public final class Hits {
             if (dist > 1.2 && dir.dot(look) < cos) continue;
             out.add(e);
         }
+        addPartOwners(user, box, out, p -> {
+            Vec3 to = p.getBoundingBox().getCenter().subtract(eye);
+            double dist = to.length() - p.getBbWidth() * 0.5;
+            return dist <= reach && (dist <= 1.2 || to.normalize().dot(look) >= cos);
+        });
         out.sort(Comparator.comparingDouble(e -> e.distanceToSqr(user)));
         return out;
     }
@@ -271,6 +276,7 @@ public final class Hits {
         for (LivingEntity e : user.level().getEntitiesOfClass(LivingEntity.class, box, e -> e != user && e.isAlive() && !e.isSpectator())) {
             if (e.getBoundingBox().getCenter().distanceTo(center) <= radius + e.getBbWidth() * 0.5) out.add(e);
         }
+        addPartOwners(user, box, out, p -> p.getBoundingBox().getCenter().distanceTo(center) <= radius + p.getBbWidth() * 0.5);
         return out;
     }
 
@@ -283,7 +289,17 @@ public final class Hits {
         for (LivingEntity e : user.level().getEntitiesOfClass(LivingEntity.class, box, e -> e != user && e.isAlive() && !e.isSpectator())) {
             if (e.getBoundingBox().inflate(width).clip(from, to).isPresent() || e.getBoundingBox().inflate(width).contains(from)) out.add(e);
         }
+        addPartOwners(user, box, out, p -> p.getBoundingBox().inflate(width).clip(from, to).isPresent() || p.getBoundingBox().inflate(width).contains(from));
         return out;
+    }
+
+    /** Multipart creatures (Sea Kings): a body segment inside the area counts as a hit on the creature itself. */
+    private static void addPartOwners(LivingEntity user, AABB box, List<LivingEntity> out, java.util.function.Predicate<Entity> test) {
+        for (Entity p : user.level().getEntities(user, box, en -> en instanceof net.neoforged.neoforge.entity.PartEntity<?> pe && pe.getParent() instanceof LivingEntity)) {
+            LivingEntity owner = (LivingEntity) ((net.neoforged.neoforge.entity.PartEntity<?>) p).getParent();
+            if (owner == user || !owner.isAlive() || out.contains(owner)) continue;
+            if (test.test(p)) out.add(owner);
+        }
     }
 
     public static void particles(ServerLevel level, net.minecraft.core.particles.ParticleOptions p, Vec3 pos, int count, double spread, double speed) {
