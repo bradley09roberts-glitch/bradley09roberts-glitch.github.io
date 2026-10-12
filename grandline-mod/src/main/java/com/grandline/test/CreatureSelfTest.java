@@ -354,7 +354,13 @@ final class CreatureSelfTest {
                 if (b != null) sb.append(b.kind.id()).append(String.format(" %.1fx%.1f ", b.getBbWidth(), b.getBbHeight()));
             }
             check("island wildlife spawns and lives (Kung-Fu Dugong, Lapahn, Banana-gator, Sea Cat)", alive == wild.length, sb.toString().trim());
-            check("a Lapahn mauls its prey", prey[0] != null && prey[0].getHealth() < prey[0].getMaxHealth(), prey[0] == null ? "" : String.format("villager hp %.1f/%.1f", prey[0].getHealth(), prey[0].getMaxHealth()));
+            String diag = "";
+            if (prey[0] != null && wild[1] != null && prey[0].getHealth() >= prey[0].getMaxHealth()) {
+                var direct = com.grandline.combat.Hits.hit(wild[1], prey[0], 2f, com.grandline.combat.Hits.Info.of(com.grandline.combat.Element.SLASH, 0));
+                diag = String.format("; lapahn at %.1f blocks, target=%s, alive=%s, direct hit=%s, hp after %.1f", wild[1].distanceTo(prey[0]),
+                        wild[1].getTarget() == null ? "none" : wild[1].getTarget().getType().toShortString(), wild[1].isAlive(), direct, prey[0].getHealth());
+            }
+            check("a Lapahn mauls its prey", prey[0] != null && prey[0].getHealth() < prey[0].getMaxHealth() && diag.isEmpty(), prey[0] == null ? "" : String.format("villager hp %.1f/%.1f", prey[0].getHealth(), prey[0].getMaxHealth()) + diag);
             WildBeast dugong = wild[0];
             FakePlayer sailor = sailor(l);
             dugong.hurt(l.damageSources().playerAttack(sailor), dugong.getMaxHealth() * 0.75f);
