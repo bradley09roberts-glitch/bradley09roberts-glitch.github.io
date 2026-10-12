@@ -72,12 +72,12 @@ final class StoryTestsExtra {
             case "talk" -> NotableCharacters.get(t) != null || Archetypes.has(t) || t.equals("path_contact");
             case "arrest" -> NotableCharacters.get(t) != null || Archetypes.has(t) || FACTIONS.contains(t);
             case "discover" -> {
-                if (t.equals("any") || t.equals("any_canon")) yield true;
+                if (t.equals("any") || t.equals("any_canon") || t.equals("any_new_world")) yield true;
                 WorldPlan p = planOf(s, t);
                 Island i = p == null ? null : p.byId(t);
                 yield i != null && i.radius >= 10; // smaller islands are not indexed, so nobody can stand "on" them
             }
-            case "poneglyph", "ship", "arrested" -> t.equals("any");
+            case "poneglyph", "ship", "arrested", "fruit_kill" -> t.equals("any");
             case "collect" -> QuestCollect.valid(t);
             default -> false;
         };
