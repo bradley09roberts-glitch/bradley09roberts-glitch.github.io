@@ -578,12 +578,13 @@ First run of a real client against the dedicated server. Result: no client crash
 
 ## Work in flight (background agents)
 - Faction careers (ranks, titles, perks for every path).
+- Sea jobs: a real escort follower, "sink the ship" and convoy board jobs, quest hooks into sea battles.
 
 ## Known gaps (next priorities)
 - 20 TPS with 20 players is not proven on dedicated hardware (the load test ran on a heavily shared machine; the
   server-thread stalls it found are fixed). Give the server at least 4 GB.
-- Seen only in the server test, not yet in a real client: the treasure map screen, the notice board screen, named
-  quest titles and the poster's "last seen" line (client shots added, pending the final client run).
+- The treasure map and notice board screens and the boss bar are now seen in a real client (shots 14d, 14e, 35g);
+  crew bases (flag, chart marks, chat menu) are verified only on the server so far.
 - The escorted merchant of a board escort job is not a real follower (it waits at the destination behind an ambush).
 - Living sea: convoys never cross the Calm Belt; harbour raids plunder only Beli; no quests hook into sea battles.
 - NPC ships never fight from hired NPC gunners on player ships (only your recruited crew man the guns).
