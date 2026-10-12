@@ -86,6 +86,7 @@ public final class SelfTest {
             DimensionTests.phase1(steps);
         }
         else if (PHASE.equals("naval")) NavalTests.phase1(steps);
+        else if (PHASE.equals("livingsea")) LivingSeaTests.phase1(steps); // quick run of the living-sea steps only
         else if (PHASE.equals("creatures")) CreatureSelfTest.phase1(steps); // quick run of the creature steps only
         else phase2();
     }
@@ -741,6 +742,7 @@ public final class SelfTest {
             return 40;
         });
         NavalTests.phase1(steps); // naval combat (test/NavalTests.java)
+        LivingSeaTests.phase1(steps); // sea battles, merchant traffic, harbour raids (test/LivingSeaTests.java)
         DimensionTests.awakening(steps);
         DimensionTests.shipClasses(steps);
         DimensionTests.ferry(steps);
@@ -950,6 +952,7 @@ public final class SelfTest {
     private static void phase2() {
         DimensionTests.phase2(steps);
         NavalTests.phase2(steps);
+        LivingSeaTests.phase2(steps);
         final String[] fx = new String[1];
         steps.add(s -> {
             fx[0] = Files.readString(Path.of("selftest-fixtures.txt")).trim();

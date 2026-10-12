@@ -53,6 +53,7 @@ public final class Dialogues {
         if (role.equals("elder") && d.completedQuests.contains("first_voyage") && !d.flags.contains("path_chosen")) opts.add(StringTag.valueOf("path"));
         com.grandline.npc.notable.NotableHooks.decorate(sp, npc, d, t, opts, starter); // story cast: greetings, quests, recruitment
         com.grandline.navigation.Ferries.addOptions(sp, npc, opts); // ferries and the Sea Train
+        com.grandline.ship.LivingSea.addOptions(sp, npc, opts); // join a harbour raid
         opts.add(StringTag.valueOf("leave"));
         t.put("options", opts);
         GLNetwork.toPlayer(sp, new GLNetwork.OpenScreen("dialogue", t));
@@ -87,6 +88,7 @@ public final class Dialogues {
         }
         if (com.grandline.npc.notable.NotableHooks.choose(sp, npc, option)) return; // recruit / crew orders
         if (com.grandline.navigation.Ferries.choose(sp, npc, option)) return; // passage booked
+        if (com.grandline.ship.LivingSea.choose(sp, npc, option)) return; // joined a raid
         switch (option) {
             case "rumor" -> {
                 sp.sendSystemMessage(Component.translatable("rumor.grandline." + (1 + sp.getRandom().nextInt(24))).withStyle(ChatFormatting.ITALIC));

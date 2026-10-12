@@ -645,3 +645,87 @@ def _kuja():
     s.set('head', 'right', 4, 6, '#e0b030')  # earrings
     s.set('head', 'left', 3, 6, '#e0b030')
     return finish(s)
+
+
+# ============================================================================================ the living sea
+@npc('trader_1')
+def _trader():
+    """Sea merchant captain: tricorn, long blue coat with gold trim over a waistcoat."""
+    s = Skin(91)
+    base_body(s, 'tan')
+    face(s, eyes='#3a2a1a', brows='#5a3a20')
+    hair(s, '#5a3a20', 'short')
+    beard(s, '#5a3a20', 'stubble')
+    shirt(s, '#f0ece2', sleeves='long', neck='crew', buttons='#c8b070')
+    vest(s, '#7a4a2a', trim='#d8b44a')
+    pants(s, '#4a3a2e')
+    belt(s, '#3a2416', buckle='#d8b44a')
+    shoes(s, '#2a1a10', boots=True)
+    coat(s, '#23417e', lining='#162a52', length=9, sleeves=True, open_front=True, trim='#d8b44a')
+    tricorn(s, '#1c1a1e', trim='#d8b44a')
+    return finish(s)
+
+
+@npc('sailor_1')
+def _sailor1():
+    """Merchant deckhand: striped jersey, knit cap, rolled trousers."""
+    s = Skin(92)
+    base_body(s, 'light')
+    face(s, eyes='#2a3a5a')
+    hair(s, '#8a5a2a', 'short')
+    beard(s, '#8a5a2a', 'stubble')
+    shirt(s, '#f2f0ea', sleeves='long', stripes='#2a5a9a', neck='crew')
+    neckerchief(s, '#c42a2a')
+    pants(s, '#5a6a7a', cuff='#4a5866')
+    belt(s, '#3a2a1e', buckle=None)
+    shoes(s, '#3a2a1e')
+    hat_cap(s, '#3a4a6a', peak=False)
+    return finish(s)
+
+
+@npc('sailor_2')
+def _sailor2():
+    s = Skin(93)
+    base_body(s, 'brown')
+    face(s, eyes='#1a1008')
+    hair(s, '#141010', 'buzz')
+    bandana(s, '#2e6e46', knot='back')
+    shirt(s, '#d8ccb0', sleeves='rolled', neck='v')
+    vest(s, '#4a3a2a')
+    pants(s, '#3a4a5a', cuff='#2e3a48')
+    belt(s, '#2a1e14', buckle='#8a8a8a')
+    shoes(s, '#2a1e14', boots=True)
+    return finish(s)
+
+
+@npc('bounty_hunter_1')
+def _hunter1():
+    """Bounty hunter: dark duster, red scarf, battered tricorn."""
+    s = Skin(94)
+    base_body(s, 'olive')
+    face(s, eyes='#2a2a2a', frown=True)
+    hair(s, '#1a1410', 'short')
+    scar(s, 2, 2, 5)
+    shirt(s, '#3a3430', sleeves='long', neck='crew')
+    neckerchief(s, '#9e2222')
+    pants(s, '#2a2622')
+    belt(s, '#1a1410', buckle='#b0b0b0')
+    shoes(s, '#1a1410', boots=True)
+    coat(s, '#4a3a2a', lining='#2a1e14', length=10, sleeves=True, open_front=True)
+    tricorn(s, '#2a2018', trim='#9e2222')
+    return finish(s)
+
+
+@npc('bounty_hunter_2')
+def _hunter2():
+    s = Skin(95)
+    base_body(s, 'pale')
+    face(s, eyes='#6a2a2a', lashes=True)
+    hair(s, '#c8c8c8', 'ponytail')
+    sunglasses(s)
+    shirt(s, '#1e1e24', sleeves='long', neck='crew')
+    pants(s, '#1e1e24')
+    belt(s, '#9e2222', y=9, buckle=None, sash=True)
+    shoes(s, '#141418', boots=True)
+    coat(s, '#5a1e1e', lining='#2a0e0e', length=8, sleeves=True, open_front=True, trim='#d8b44a')
+    return finish(s)

@@ -37,26 +37,33 @@ public final class SeaEncounters {
         for (ServerPlayer sp : l.players()) {
             if (!(sp.getVehicle() instanceof ShipEntity) && !isAtSea(sp)) continue;
             if (sp.isCreative() || sp.isSpectator()) continue;
-            if (!l.getEntitiesOfClass(ShipEntity.class, sp.getBoundingBox().inflate(250), s -> s.flag(ShipEntity.F_NPC)).isEmpty()) continue;
+            // passing merchant traffic is no company: patrols and raiders may still find you
+            if (!l.getEntitiesOfClass(ShipEntity.class, sp.getBoundingBox().inflate(250), s -> s.flag(ShipEntity.F_NPC) && !s.npcFaction.equals("merchant")).isEmpty()) continue;
             SeaZone z = WorldLayout.zoneAt(sp.getBlockX(), sp.getBlockZ());
             if (z == SeaZone.CALM_BELT || z == SeaZone.RED_LINE) continue;
             if (inHarbour(sp)) continue; // patrols and raiders strike on the open sea, not in a town's harbour
             if (npcShips < 0) npcShips = countNpcShips(l);
-            if (npcShips >= CAP_BASE + CAP_PER_PLAYER * l.players().size()) return;
+            int room = cap(l.players().size()) - npcShips; // one cap for every NPC ship (living-sea traffic included)
+            if (room <= 0) return;
             var d = Characters.get(sp);
             boolean hq = d.bounty >= WANTED && nearHeadquarters(server, sp.getX(), sp.getZ());
             double chance = 0.12 + (d.bounty > 0 ? 0.1 + Math.min(0.25, Math.log10(d.bounty + 1) / 40) : 0) + z.dangerTier * 0.02 + (hq ? 0.3 : 0);
             if (l.random.nextDouble() > chance) continue;
             boolean marine = hq || (d.bounty > 0 ? l.random.nextFloat() < 0.65f : l.random.nextFloat() < 0.3f);
-            if (marine && (hq || (z.isGrandLine() && l.random.nextFloat() < 0.45f))) npcShips += spawnSquadron(l, sp, z, hq).size();
+            if (marine && room >= 2 && (hq || (z.isGrandLine() && l.random.nextFloat() < 0.45f))) npcShips += spawnSquadron(l, sp, z, hq, room).size();
             else if (spawnRaider(l, sp, marine, z) != null) npcShips++;
         }
     }
 
-    static int countNpcShips(ServerLevel l) {
+    public static int countNpcShips(ServerLevel l) {
         int n = 0;
-        for (var e : l.getAllEntities()) if (e instanceof ShipEntity s && s.flag(ShipEntity.F_NPC)) n++;
+        for (var e : l.getAllEntities()) if (e instanceof ShipEntity s && s.flag(ShipEntity.F_NPC) && !s.isRemoved()) n++;
         return n;
+    }
+
+    /** Server-wide limit on NPC ships of every kind (patrols, raiders, merchants, battles, raids) for this many players. */
+    public static int cap(int players) {
+        return CAP_BASE + CAP_PER_PLAYER * players;
     }
 
     /** Within reach of Marine Headquarters (Marineford) or New Marineford. */
@@ -110,10 +117,15 @@ public final class SeaEncounters {
      * (for wanted pirates near Marineford / New Marineford) are bigger ships with tougher crews and a Vice Admiral.
      */
     public static List<ShipEntity> spawnSquadron(ServerLevel l, ServerPlayer near, SeaZone zone, boolean headquarters) {
+        return spawnSquadron(l, near, zone, headquarters, 3);
+    }
+
+    /** As above with at most {@code maxShips} ships (the room left under the server-wide cap). */
+    public static List<ShipEntity> spawnSquadron(ServerLevel l, ServerPlayer near, SeaZone zone, boolean headquarters, int maxShips) {
         double ang = l.random.nextDouble() * Math.PI * 2;
         Vec3 pos = openWaterAround(l, near.getX(), near.getZ(), 130, ang);
         if (pos == null) return new ArrayList<>();
-        List<ShipEntity> out = spawnSquadronAt(l, pos, (float) Math.toDegrees(ang) + 180, zone, headquarters);
+        List<ShipEntity> out = spawnSquadronAt(l, pos, (float) Math.toDegrees(ang) + 180, zone, headquarters, maxShips);
         if (!out.isEmpty()) near.sendSystemMessage(net.minecraft.network.chat.Component.translatable(headquarters ? "grandline.sea.hq_squadron" : "grandline.sea.marine_squadron", out.size())
                 .withStyle(headquarters ? net.minecraft.ChatFormatting.RED : net.minecraft.ChatFormatting.YELLOW));
         return out;
@@ -121,13 +133,18 @@ public final class SeaEncounters {
 
     /** A squadron with its flagship at {@code pos} heading {@code yaw} (escorts placed on open water astern). */
     public static List<ShipEntity> spawnSquadronAt(ServerLevel l, Vec3 pos, float yaw, SeaZone zone, boolean headquarters) {
+        return spawnSquadronAt(l, pos, yaw, zone, headquarters, 3);
+    }
+
+    public static List<ShipEntity> spawnSquadronAt(ServerLevel l, Vec3 pos, float yaw, SeaZone zone, boolean headquarters, int maxShips) {
         List<ShipEntity> out = new ArrayList<>();
+        if (maxShips <= 0) return out;
         int tier = Math.max(1, zone.dangerTier) + (headquarters ? 2 : 0);
         ShipClass flag = headquarters ? (zone == SeaZone.NEW_WORLD || l.random.nextBoolean() ? ShipClass.FLAGSHIP : ShipClass.GALLEON) : zone.dangerTier >= 6 ? ShipClass.GALLEON : ShipClass.BRIGANTINE;
         ShipEntity lead = spawnShip(l, pos, yaw, flag, true, tier, headquarters ? "Marine HQ Flagship" : "Marine Squadron Flagship");
         if (lead == null) return out;
         out.add(lead);
-        int escorts = headquarters ? 2 : 1 + l.random.nextInt(2);
+        int escorts = Math.min(maxShips - 1, headquarters ? 2 : 1 + l.random.nextInt(2));
         ShipClass ec = headquarters ? ShipClass.BRIGANTINE : zone.dangerTier >= 6 ? ShipClass.BRIGANTINE : ShipClass.CARAVEL;
         for (int i = 1; i <= escorts; i++) {
             int side = i % 2 == 1 ? -1 : 1;
@@ -146,26 +163,59 @@ public final class SeaEncounters {
     /** One NPC ship with its crew (tracked by the ship; sailors man about half the guns). */
     @Nullable
     public static ShipEntity spawnShip(ServerLevel l, Vec3 pos, float yaw, ShipClass c, boolean marine, int tier, String name) {
+        return spawnShip(l, pos, yaw, c, marine ? LivingSea.MARINE : LivingSea.PIRATE, tier, name);
+    }
+
+    /**
+     * One NPC ship of a faction ("marine", "pirate", "bounty_hunter" or "merchant") with its crew. NPC ships and
+     * their crews are transient: they despawn when nobody is near and are not restored from disk (see LivingSea).
+     */
+    @Nullable
+    public static ShipEntity spawnShip(ServerLevel l, Vec3 pos, float yaw, ShipClass c, String faction, int tier, String name) {
         ShipEntity ship = ModEntities.SHIPS.get(c).get().create(l);
         if (ship == null) return null;
+        boolean marine = faction.equals(LivingSea.MARINE);
         ship.moveTo(pos.x, pos.y, pos.z, yaw, 0);
         ship.setFlag(ShipEntity.F_NPC, true);
-        ship.npcFaction = marine ? "marine" : "pirate";
+        ship.npcFaction = faction;
         ship.setHull(c.hull);
-        ship.setColors(marine ? 0xF4F4F4 : 0x2A2A2A, marine ? 0xE8E8E8 : 0x5A3A22);
-        ship.setLook(marine ? ShipLook.MARINE : ShipLook.randomPirate(l.random));
+        switch (faction) {
+            case LivingSea.MARINE -> {
+                ship.setColors(0xF4F4F4, 0xE8E8E8);
+                ship.setLook(ShipLook.MARINE);
+            }
+            case LivingSea.MERCHANT -> {
+                ship.setColors(l.random.nextBoolean() ? 0xF4EEDC : 0xE8B04A, l.random.nextBoolean() ? 0x8A5A32 : 0x2E6E46);
+                ship.setLook(new ShipLook(l.random.nextBoolean() ? "swan" : "classic", l.random.nextBoolean() ? "anchor" : "star", 0xE8C040, l.random.nextBoolean() ? 0x23417E : 0x2E6E46));
+            }
+            case LivingSea.HUNTER -> {
+                ship.setColors(0xC9483B, 0x2A2A2A);
+                ship.setLook(new ShipLook("lion", "swords", 0xE8C040, 0x9E2222));
+            }
+            default -> {
+                ship.setColors(0x2A2A2A, 0x5A3A22);
+                ship.setLook(ShipLook.randomPirate(l.random));
+            }
+        }
         ship.setShipName(name);
+        ship.addTag(LivingSea.TRANSIENT);
         l.addFreshEntity(ship);
-        int crew = 2 + c.ordinal() + l.random.nextInt(3) + (name.startsWith("Marine HQ") ? 3 : 0);
+        boolean merchant = faction.equals(LivingSea.MERCHANT);
+        int crew = merchant ? 2 + c.ordinal() / 2 + l.random.nextInt(2) : 2 + c.ordinal() + l.random.nextInt(3) + (name.startsWith("Marine HQ") ? 3 : 0);
         for (int i = 0; i < crew; i++) {
             HumanoidNpc n = ModEntities.HUMANOID_NPC.get().create(l);
             if (n == null) continue;
             double lz = (l.random.nextDouble() - 0.5) * c.length * 0.6, lx = (l.random.nextDouble() - 0.5) * (c.beam - 2);
             Vec3 w = ship.toWorld(lx, c.freeboard + 0.1, lz);
             n.moveTo(w.x, w.y, w.z, 0, 0);
-            String role = marine ? (i == 0 ? (name.startsWith("Marine HQ") ? "vice_admiral" : c.ordinal() >= ShipClass.GALLEON.ordinal() ? "marine_captain" : "marine_officer") : "marine")
-                    : (i == 0 ? "pirate_captain" : "pirate");
+            String role = switch (faction) {
+                case LivingSea.MARINE -> i == 0 ? (name.startsWith("Marine HQ") ? "vice_admiral" : c.ordinal() >= ShipClass.GALLEON.ordinal() ? "marine_captain" : "marine_officer") : "marine";
+                case LivingSea.MERCHANT -> i == 0 ? "sea_merchant" : "sailor";
+                case LivingSea.HUNTER -> "bounty_hunter";
+                default -> i == 0 ? "pirate_captain" : "pirate";
+            };
             n.configure(role, Math.max(1, tier + (i == 0 ? 1 : 0)), "", BlockPos.ZERO, "", l.random);
+            LivingSea.enlist(ship, n);
             l.addFreshEntity(n);
             ship.naval.crew.add(n.getUUID());
         }

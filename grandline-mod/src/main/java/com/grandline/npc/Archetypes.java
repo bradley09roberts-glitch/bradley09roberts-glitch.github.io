@@ -44,6 +44,10 @@ public final class Archetypes {
         a("bandit", Faction.WILD, 1, List.of("knife", "cutlass", "bo_staff"), "brawler", List.of("bandit_1", "bandit_2"), Hostility.AGGRESSIVE, false, 0, 0, 22, 1, Race.HUMAN, false, true);
         a("pirate", Faction.PIRATE, 2, List.of("cutlass", "flintlock", "knife", "dual_blades"), "brawler", List.of("pirate_1", "pirate_2", "pirate_3"), Hostility.AGGRESSIVE, false, 0.02, 0.02, 26, 2, Race.HUMAN, false, true);
         a("pirate_captain", Faction.PIRATE, 4, List.of("fine_cutlass", "anchor_chain", "nodachi"), "brawler", List.of("pirate_captain_1"), Hostility.AGGRESSIVE, true, 0.35, 0.3, 70, 6, Race.HUMAN, false, false);
+        // the living sea: merchant crews and bounty hunters (ship/LivingSea)
+        a("sea_merchant", Faction.CIVILIAN, 2, List.of("flintlock", "fine_cutlass"), "brawler", List.of("trader_1"), Hostility.DEFENSIVE, false, 0, 0.05, 34, 2, Race.HUMAN, true, false);
+        a("sailor", Faction.CIVILIAN, 2, List.of("cutlass", "knife", "flintlock"), "brawler", List.of("sailor_1", "sailor_2"), Hostility.DEFENSIVE, false, 0, 0, 28, 1, Race.HUMAN, false, false);
+        a("bounty_hunter", Faction.BOUNTY_HUNTER, 3, List.of("katana", "musket", "spear", "flintlock"), "brawler", List.of("bounty_hunter_1", "bounty_hunter_2"), Hostility.LAWFUL, false, 0.05, 0.1, 36, 4, Race.HUMAN, false, false);
         a("ruin_guardian", Faction.WILD, 4, List.of("spear"), "brawler", List.of("guardian_1"), Hostility.AGGRESSIVE, true, 0, 0.2, 60, 8, Race.HUMAN, false, false);
         // fish-men
         a("fishman_guard", Faction.PIRATE, 3, none, "fishman_karate", List.of("fishman_1", "fishman_2"), Hostility.AGGRESSIVE, false, 0, 0, 40, 4, Race.FISHMAN, false, false);

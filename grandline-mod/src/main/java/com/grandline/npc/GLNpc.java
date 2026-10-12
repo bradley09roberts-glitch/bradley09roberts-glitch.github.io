@@ -132,6 +132,8 @@ public abstract class GLNpc extends PathfinderMob {
         if (getLastHurtByMob() == e || getTarget() == e) return true;
         Boolean story = com.grandline.npc.notable.NotableHooks.hostility(this, e); // story cast & crews
         if (story != null) return story;
+        Boolean sea = com.grandline.ship.LivingSea.hostility(this, e); // ship crews keep to their deck; harbour raids
+        if (sea != null) return sea;
         Archetype.Hostility h = archetype().hostility();
         int att = attitudeTo(e);
         return switch (h) {

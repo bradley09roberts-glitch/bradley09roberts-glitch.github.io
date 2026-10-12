@@ -22,6 +22,7 @@ public final class GLConfig {
     public static final ModConfigSpec.IntValue NPC_SIM_RADIUS;
     public static final ModConfigSpec.IntValue MAX_NPCS_PER_SETTLEMENT;
     public static final ModConfigSpec.BooleanValue ALLOW_DUPLICATE_FRUITS;
+    public static final ModConfigSpec.BooleanValue LIVING_SEA;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -48,6 +49,8 @@ public final class GLConfig {
                 .defineInRange("proceduralIslands", 170, 0, 600);
         NPC_SIM_RADIUS = b.defineInRange("npcSimulationRadius", 160, 48, 512);
         MAX_NPCS_PER_SETTLEMENT = b.defineInRange("maxNpcsPerSettlement", 14, 0, 64);
+        LIVING_SEA = b.comment("Merchant traffic, NPC sea battles and harbour raids around players (all NPC ships share one server-wide cap).")
+                .define("livingSea", true);
         b.pop();
         b.push("fruits");
         FRUIT_TERRAIN_CHANGES = b.define("terrainChanges", true);

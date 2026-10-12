@@ -53,6 +53,12 @@ public final class Shops {
 
     static List<Offer> offers(String role) {
         return switch (role) {
+            // a merchant ship's cargo, sold over the rail at sea (hailed: see ship/LivingSea)
+            case "sea_merchant" -> List.of(new Offer("grandline:sea_king_steak", 2, 900), new Offer("grandline:meat_on_bone", 6, 280),
+                    new Offer("minecraft:cooked_cod", 12, 110), new Offer("minecraft:oak_planks", 32, 150), new Offer("minecraft:white_wool", 8, 200),
+                    new Offer("grandline:cannonball", 8, 1000), new Offer("grandline:chain_shot", 4, 1400), new Offer("grandline:grappling_hook", 1, 2900),
+                    new Offer("grandline:pop_green", 4, 1200), new Offer("grandline:sea_chart", 1, 900), new Offer("grandline:log_pose", 1, 3400),
+                    new Offer("grandline:bullet", 24, 450), new Offer("minecraft:gold_ingot", 4, 2400));
             case "blacksmith" -> List.of(new Offer("grandline:katana", 1, 1200), new Offer("grandline:cutlass", 1, 900), new Offer("grandline:spear", 1, 900),
                     new Offer("grandline:dual_blades", 1, 1100), new Offer("grandline:brass_knuckles", 1, 700), new Offer("grandline:kanabo", 1, 1500),
                     new Offer("grandline:flintlock", 1, 1500), new Offer("grandline:musket", 1, 2200), new Offer("grandline:slingshot", 1, 400),

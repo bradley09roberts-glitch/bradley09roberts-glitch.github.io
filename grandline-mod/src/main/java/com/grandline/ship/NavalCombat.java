@@ -451,7 +451,9 @@ public final class NavalCombat {
     // ================================================================== hostility
 
     public static void noteAggression(ShipEntity victim, ShipEntity by) {
+        if (LivingSea.allied(victim, by)) return; // a stray shot between NPC ships of one side (a convoy and her escorts) starts no feud
         victim.naval.aggressors.put(by.getId(), victim.level().getGameTime());
+        LivingSea.onAggression(victim, by); // a player's ship firing on, ramming or hooking an NPC ship
     }
 
     static boolean attackedBy(ShipEntity victim, ShipEntity by) {
@@ -466,9 +468,10 @@ public final class NavalCombat {
         if (b.flag(ShipEntity.F_NPC)) {
             if (b.naval.crewGone) return false;
             if (b.naval.targetId == a.getId()) return true;
-            if (b.npcFaction.equals("pirate")) return true;
             Player cap = a.owner == null ? null : a.level().getPlayerByUUID(a.owner);
-            if (cap == null) return false;
+            // merchants and bounty hunters are fired on only when they started it (above); raiders spare their allies
+            if (b.npcFaction.equals("pirate")) return cap == null || !b.life.raidAlly(cap);
+            if (!b.npcFaction.equals("marine") || cap == null) return false;
             CharacterData d = Characters.get(cap);
             return d.faction == Faction.PIRATE || d.faction == Faction.REVOLUTIONARY || d.bounty > 0;
         }
@@ -778,11 +781,15 @@ public final class NavalCombat {
     private static void captureCheck(ShipEntity ship, ServerLevel sl) {
         boolean was = ship.naval.crewGone;
         ship.naval.crewGone = crewDefeated(ship);
-        if (!ship.naval.crewGone) return;
+        if (!ship.naval.crewGone) {
+            ship.life.beatenAt = 0;
+            return;
+        }
         if (!was) {
             ship.setSail(0);
             Component msg = Component.translatable("grandline.naval.crew_beaten", ship.shipName()).withStyle(ChatFormatting.GOLD);
             for (ServerPlayer p : sl.players()) if (p.distanceToSqr(ship) < 80 * 80) p.displayClientMessage(msg, true);
+            LivingSea.onCrewBeaten(ship); // rewards; an unclaimed hulk founders later and leaves salvage
         }
         for (ServerPlayer p : sl.players()) {
             if (p.isSpectator() || p.distanceToSqr(ship) > Math.pow(ship.cls.length + 8, 2)) continue;
@@ -808,6 +815,9 @@ public final class NavalCombat {
         ship.setFlag(ShipEntity.F_PRIZE, true);
         ship.setFlag(ShipEntity.F_FIRE_AT_WILL, false);
         ship.npcFaction = "";
+        ship.removeTag(LivingSea.TRANSIENT); // a prize is kept across restarts
+        ship.life.route = "";
+        ship.life.raidIsland = "";
         ship.owner = p.getUUID();
         ship.ownerName = Characters.get(p).name;
         ship.setShipName(Component.translatable("grandline.naval.prize_name", ship.shipName()).getString());
