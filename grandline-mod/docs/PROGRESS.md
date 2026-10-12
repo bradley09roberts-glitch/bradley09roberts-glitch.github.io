@@ -504,6 +504,9 @@ First run of a real client against the dedicated server. Result: no client crash
   roars/phase changes/wind-ups/enrage use the new sounds. Subtitles in `lang/en_us/sounds.json`.
 - Music discs: four tracks (east_blue, grand_line, wano, boss) as jukebox songs with mono copies, in treasure and
   wreck chests and the creative tab.
+- Sea ambience (`client/SeaAmbience`, Ambient slider): a seamless 20 s surf loop that swells with the share of open
+  water within 32 blocks, a storm-wind loop with the rain/thunder level, gulls by day along shores, and creaking
+  timbers aboard a ship (more under way). Ocean world only, above water.
 - Verified: `check_assets.py` checks every registered event against `sounds.json`, the files and the subtitles;
   phase 1 checks every event is registered and every disc resolves to its jukebox song. Real client (run 10:10–10:23,
   73 shots, no failures): the game's own Vorbis decoder read all 61 files (11.6 minutes of audio), 40/40 events
@@ -677,13 +680,13 @@ First run of a real client against the dedicated server. Result: no client crash
   shop entry are untested; balance (merit and pay) needs real play; NPC ships do not follow a called ship's caller.
 
 ## Work in flight (background agents)
-- None.
+- Sea jobs: a real escort follower, "sink the ship" and convoy board jobs, quest hooks into sea battles.
 
 ## Known gaps (next priorities)
 - 20 TPS with 20 players is not proven on dedicated hardware (the load test ran on a heavily shared machine; the
   server-thread stalls it found are fixed). Give the server at least 4 GB.
-- Seen only in the server test, not yet in a real client: the treasure map screen, the notice board screen, named
-  quest titles and the poster's "last seen" line (client shots added, pending the final client run).
+- The treasure map and notice board screens and the boss bar are now seen in a real client (shots 14d, 14e, 35g);
+  crew bases (flag, chart marks, chat menu) are verified only on the server so far.
 - The escorted merchant of a board escort job is not a real follower (it waits at the destination behind an ambush).
 - Living sea: convoys never cross the Calm Belt; harbour raids plunder only Beli; no quests hook into sea battles.
 - NPC ships never fight from hired NPC gunners on player ships (only your recruited crew man the guns).

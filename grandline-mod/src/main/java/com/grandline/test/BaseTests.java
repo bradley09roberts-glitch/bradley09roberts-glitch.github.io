@@ -632,6 +632,7 @@ final class BaseTests {
             ServerLevel l = s.overworld();
             C.moveTo(heart1.getX() - 2.5, heart1.getY(), heart1.getZ() + 2.5);
             loadNow(l, c1.hasDock ? c1.dockX : heart1.getX(), c1.hasDock ? c1.dockZ : heart1.getZ(), 6);
+            loadNow(l, heart1.getX(), heart1.getZ(), 4); // the landing party comes up at the base's edge, near the flag: keep it loaded
             BaseRaids.Rules r = new BaseRaids.Rules();
             r.force = true;
             r.faction = LivingSea.PIRATE;
@@ -657,8 +658,12 @@ final class BaseTests {
             keep(l, raid.ship);
             if (raid.phase == BaseRaids.APPROACH && !raid.ship.isRemoved() && ++waited[0] < 1200) return -1;
             boolean sailedIn = raid.phase == BaseRaids.ASHORE;
-            String how = sailedIn ? "sailed in and landed after " + waited[0] + " ticks" : "phase " + raid.phase + " after " + waited[0] + " ticks (" + raid.outcome + "), landed by hand";
-            if (raid.phase == BaseRaids.APPROACH && !raid.ship.isRemoved()) BaseRaids.land(raid, l, c1, l.getGameTime());
+            String how0 = sailedIn ? "sailed in and landed after " + waited[0] + " ticks" : "phase " + raid.phase + " after " + waited[0] + " ticks (" + raid.outcome + "), landed by hand";
+            String how = how0;
+            if (raid.phase == BaseRaids.APPROACH && !raid.ship.isRemoved()) {
+                how += " [" + BaseRaids.landingReport(l, c1, raid) + "]";
+                BaseRaids.land(raid, l, c1, l.getGameTime());
+            }
             List<GLNpc> rs = raiders(l, raid);
             boolean ashore = !rs.isEmpty() && rs.stream().allMatch(m -> m.getY() > WorldPlan.SEA_LEVEL && CrewBases.within(c1, m.getX(), m.getZ()) || m.position().distanceTo(Vec3.atCenterOf(heart1)) < CrewBases.radius() * 1.5);
             check("bases: the raid ship lands at most six raiders at the base",

@@ -319,6 +319,18 @@ public final class BaseRaids {
         return b;
     }
 
+    /** Why a landing could or could not happen: landing spots and the state of the ship's crew (self-test). */
+    public static String landingReport(ServerLevel l, Claim c, Raid r) {
+        int loaded = 0, alive = 0, fit = 0;
+        for (UUID u : r.ship.naval.crew)
+            if (l.getEntity(u) instanceof GLNpc m) {
+                loaded++;
+                if (m.isAlive() && !m.isRemoved()) alive++;
+                if (able(m)) fit++;
+            }
+        return landingSpots(l, c, r.dock).size() + " landing spots, crew " + r.ship.naval.crew.size() + ", loaded " + loaded + ", alive " + alive + ", able " + fit;
+    }
+
     static boolean able(GLNpc m) {
         return HarbourRaids.able(m);
     }

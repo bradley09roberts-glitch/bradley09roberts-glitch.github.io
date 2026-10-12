@@ -1,4 +1,39 @@
 {
+  "ambient.creak": {
+    "subtitle": "subtitles.grandline.ambient.creak",
+    "sounds": [
+      "grandline:ambient/creak_1",
+      "grandline:ambient/creak_2",
+      "grandline:ambient/creak_3",
+      "grandline:ambient/creak_4"
+    ]
+  },
+  "ambient.gull": {
+    "subtitle": "subtitles.grandline.ambient.gull",
+    "sounds": [
+      "grandline:ambient/gull_1",
+      "grandline:ambient/gull_2",
+      "grandline:ambient/gull_3"
+    ]
+  },
+  "ambient.sea": {
+    "subtitle": "subtitles.grandline.ambient.sea",
+    "sounds": [
+      {
+        "name": "grandline:ambient/sea",
+        "stream": true
+      }
+    ]
+  },
+  "ambient.wind": {
+    "subtitle": "subtitles.grandline.ambient.wind",
+    "sounds": [
+      {
+        "name": "grandline:ambient/wind",
+        "stream": true
+      }
+    ]
+  },
   "boss.enrage": {
     "subtitle": "subtitles.grandline.boss.enrage",
     "sounds": [

@@ -37,5 +37,9 @@
   "jukebox_song.grandline.east_blue": "Grand Line Odyssey - Wind in the Sails",
   "jukebox_song.grandline.grand_line": "Grand Line Odyssey - Bound for the Grand Line",
   "jukebox_song.grandline.wano": "Grand Line Odyssey - Land of Wano",
-  "jukebox_song.grandline.boss": "Grand Line Odyssey - The Emperor's Wrath"
+  "jukebox_song.grandline.boss": "Grand Line Odyssey - The Emperor's Wrath",
+  "subtitles.grandline.ambient.sea": "Waves wash",
+  "subtitles.grandline.ambient.wind": "Wind howls",
+  "subtitles.grandline.ambient.gull": "Gull cries",
+  "subtitles.grandline.ambient.creak": "Timbers creak"
 }
