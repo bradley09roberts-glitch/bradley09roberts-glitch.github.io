@@ -150,3 +150,11 @@ the distance fog is closer than on a real PC) against a dedicated server on 2026
 ### The claim on the sea chart, under the crew's name
 
 ![A claimed island on the sea chart](59_chart_base_mark.jpg)
+
+### Careers: the rank on the character sheet (an Emperor of the Sea)
+
+![The career line on the character sheet](60_career_sheet.jpg)
+
+### The career title in chat, and the Marine coat on the player model
+
+![The Marine coat and the title in chat](62_marine_coat.jpg)

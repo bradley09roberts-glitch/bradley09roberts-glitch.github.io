@@ -510,7 +510,10 @@ First run of a real client against the dedicated server. Result: no client crash
   wreck chests and the creative tab.
 - Sea ambience (`client/SeaAmbience`, Ambient slider): a seamless 20 s surf loop that swells with the share of open
   water within 32 blocks, a storm-wind loop with the rain/thunder level, gulls by day along shores, and creaking
-  timbers aboard a ship (more under way). Ocean world only, above water.
+  timbers aboard a ship (more under way). Ocean world only, above water. The first client run measured open sea as 0
+  (the scan looked one block below the water surface, which in the ocean world is at sea level); fixed. Next run:
+  "openness 1.00, surf 0.55 playing" aboard at sea, and the captured audio holds the surf loop (it repeats every
+  20 s). Gulls and creaks were not identified in the capture (short, pitch-varied sounds under the music).
 - Verified: `check_assets.py` checks every registered event against `sounds.json`, the files and the subtitles;
   phase 1 checks every event is registered and every disc resolves to its jukebox song. Real client (run 10:10–10:23,
   73 shots, no failures): the game's own Vorbis decoder read all 61 files (11.6 minutes of audio), 40/40 events
@@ -693,6 +696,9 @@ First run of a real client against the dedicated server. Result: no client crash
   movement and called ships fighting are driven only in the server test; the Marine base rest and the black snail
   shop entry are untested; balance (merit and pay) needs real play; NPC ships do not follow a called ship's caller.
 - After the merge (with bases, sound and ambience): full phase 1 614/614, phase 2 19/19, no exception (11:05–11:28).
+- Real client (79 shots, no failures): the title shows in chat ("<Emperor of the Sea Tester> ...") and on the character
+  sheet ("Career: Emperor of the Sea"), and the Marine coat renders on the player model (screenshots 60, 62). Name
+  tags over other players need two clients and were not looked at.
 
 ## Work in flight (background agents)
 - Sea jobs: a real escort follower, "sink the ship" and convoy board jobs, quest hooks into sea battles.
