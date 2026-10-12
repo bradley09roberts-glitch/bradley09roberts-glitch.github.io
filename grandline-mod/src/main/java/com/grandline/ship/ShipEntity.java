@@ -684,6 +684,15 @@ public class ShipEntity extends Entity {
         return null;
     }
 
+    /**
+     * Vanilla logs a vehicle out together with its only player passenger (like a boat). A ship stays in the world when
+     * its captain logs out: crewmates standing on deck (not riding) would otherwise fall into the sea.
+     */
+    @Override
+    public boolean hasExactlyOnePlayerPassenger() {
+        return false;
+    }
+
     @Override
     protected boolean canAddPassenger(Entity e) {
         return getPassengers().size() < seats.length;

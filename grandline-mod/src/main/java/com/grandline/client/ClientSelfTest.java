@@ -175,6 +175,8 @@ public final class ClientSelfTest {
         }
         camera(CameraType.THIRD_PERSON_BACK);
         shot("mp_b_third_person");
+        // the captain logs out at the end of their script: the ship must stay, with the mate still on deck
+        for (int i = 0; i < 4; i++) add("after the captain leaves", () -> logRelative("mate (captain gone=" + (other() == null) + ")", Minecraft.getInstance().player), 100);
         add("done", ClientSelfTest::finish, 0);
     }
 
