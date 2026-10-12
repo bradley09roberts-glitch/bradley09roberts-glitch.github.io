@@ -1076,8 +1076,9 @@ public final class Buildings {
         site(b, m, 0, 0, 6, 6, 26);
         b.cylinder(3, 3, 0, 0, 3, Blocks.STONE_BRICKS, false);
         b.cylinder(3, 3, 1, 2, 3, m.base.getBlock(), true);
+        Block[] bands = lighthouseBands(m.style);
         for (int y = 3; y <= 15; y++) {
-            Block band = (y / 3) % 2 == 0 ? ArchBlocks.WHITE_PLASTER.get() : Blocks.RED_TERRACOTTA;
+            Block band = (y / 3) % 2 == 0 ? bands[0] : bands[1];
             b.cylinder(3, 3, y, y, 3, band, true);
         }
         for (int y = 5; y <= 13; y += 4) {
@@ -1094,12 +1095,31 @@ public final class Buildings {
         b.cylinder(3, 3, 17, 18, 1, Blocks.GLASS, true);
         b.set(3, 17, 3, Blocks.SEA_LANTERN);
         b.set(3, 18, 3, Blocks.GLOWSTONE);
-        b.cylinder(3, 3, 19, 19, 2, Blocks.RED_TERRACOTTA, false);
-        b.cylinder(3, 3, 20, 20, 1, Blocks.RED_TERRACOTTA, false);
+        b.cylinder(3, 3, 19, 19, 2, bands[2], false);
+        b.cylinder(3, 3, 20, 20, 1, bands[2], false);
         b.set(3, 21, 3, Blocks.LIGHTNING_ROD);
         b.ladderUp(3, 1, 5, 16, Direction.NORTH); // against the back wall, through a hatch in the gallery floor
         b.door(3, 1, 0, Blocks.SPRUCE_DOOR, Direction.NORTH);
         b.marker("npc", 3, 1, 3, npc("keeper"));
+    }
+
+    /** The lighthouse's daymark: its two alternating tower bands and the lantern cap, so each sea reads differently. */
+    static Block[] lighthouseBands(BuildStyle style) {
+        return switch (style) {
+            case DESERT -> new Block[]{ArchBlocks.DRESSED_SANDSTONE.get(), ArchBlocks.OCHRE_PLASTER.get(), Blocks.ORANGE_TERRACOTTA};
+            case WANO -> new Block[]{ArchBlocks.WHITE_PLASTER.get(), Blocks.STRIPPED_DARK_OAK_LOG, ArchBlocks.KAWARA_ROOF_TILES.get()};
+            case SNOW -> new Block[]{ArchBlocks.WHITE_PLASTER.get(), Blocks.BLACK_TERRACOTTA, Blocks.BLACK_TERRACOTTA};
+            case MARINE -> new Block[]{ArchBlocks.WHITE_PLASTER.get(), Blocks.BLUE_TERRACOTTA, Blocks.BLUE_TERRACOTTA};
+            case CANDY -> new Block[]{ArchBlocks.WHITE_PLASTER.get(), Blocks.PINK_TERRACOTTA, Blocks.MAGENTA_TERRACOTTA};
+            case VENETIAN -> new Block[]{ArchBlocks.CREAM_PLASTER.get(), ArchBlocks.SALMON_PLASTER.get(), Blocks.TERRACOTTA};
+            case GOTHIC -> new Block[]{Blocks.DEEPSLATE_BRICKS, Blocks.POLISHED_BLACKSTONE_BRICKS, Blocks.BLACKSTONE};
+            case FUTURE -> new Block[]{Blocks.WHITE_CONCRETE, Blocks.CYAN_CONCRETE, Blocks.LIGHT_GRAY_CONCRETE};
+            case PALACE -> new Block[]{ArchBlocks.PALE_MASONRY.get(), Blocks.SMOOTH_QUARTZ, Blocks.GOLD_BLOCK};
+            case CLOUD -> new Block[]{ArchBlocks.WHITE_PLASTER.get(), ArchBlocks.SKY_PLASTER.get(), Blocks.LIGHT_BLUE_TERRACOTTA};
+            case CORAL -> new Block[]{ArchBlocks.WHITE_PLASTER.get(), ArchBlocks.MINT_PLASTER.get(), Blocks.DARK_PRISMARINE};
+            case JUNGLE, GIANT -> new Block[]{ArchBlocks.WHITE_PLASTER.get(), Blocks.GREEN_TERRACOTTA, Blocks.GREEN_TERRACOTTA};
+            default -> new Block[]{ArchBlocks.WHITE_PLASTER.get(), Blocks.RED_TERRACOTTA, Blocks.RED_TERRACOTTA};
+        };
     }
 
     /** Warehouse (13x9): long store with big loading doors, a hoist beam at the gable, racked cargo inside. */

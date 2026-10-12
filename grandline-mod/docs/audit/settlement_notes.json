@@ -84,7 +84,7 @@
  "lighthouse": {
   "role": "Lighthouse (7x7); NPC: keeper.",
   "before": "Banded cylinder with a glass top.",
-  "after": "Stone plinth, red/white banded tower with small windows, gallery with iron railing, glazed lamp room with sea lantern and glowstone, red cap with lightning rod; ladder all the way up.",
+  "after": "Stone plinth, red/white banded tower with small windows, gallery with iron railing, glazed lamp room with sea lantern and glowstone, red cap with lightning rod; ladder all the way up. Each style paints its own daymark (tower bands and lantern cap): red and white in the Blues, black and white on Drum, blue and white for the Marines, sandstone and ochre in Alabasta, white and dark timber under a kawara cap in Wano, and so on.",
   "anchors": "npc:keeper.",
   "status": "improved"
  },
