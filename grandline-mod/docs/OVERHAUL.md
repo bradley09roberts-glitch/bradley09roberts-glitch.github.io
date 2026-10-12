@@ -36,7 +36,18 @@ that were actually run.
 5. **Architectural block kit:** 91 new blocks (`registry/ArchBlocks.java`). See `docs/BUILDING_KIT.md`. Their textures,
    models, loot, recipes and tags ship inside the mod, so no extra resource pack is needed.
 6. **Shader pack:** "Grand Line Shaders", an original Iris pack, is distributed separately as
-   `dist/GrandLineShaders-1.0.0.zip`. Source: `shaderpack/GrandLineShaders/`.
+   `dist/GrandLineShaders-1.0.0.zip`. Source: `shaderpack/GrandLineShaders/` (its README documents every feature,
+   option and profile). In short:
+   - **Water first:** world-anchored swell and chop waves with animated normals, Fresnel sky and cloud reflections
+     (plus guarded screen-space reflections on HIGH), refraction that never bleeds above-water pixels, per-channel
+     depth absorption from turquoise shallows to deep blue, shore and contact foam, caustics, and an underwater
+     look with Snell's window and a wet lens after surfacing.
+   - **Light and sky:** filtered sun and moon shadows, warm sun and cool shade, readable interiors and nights,
+     glowing lanterns (including the kit's paper and brass lanterns), soft bloom, hue-preserving tone mapping,
+     painted clouds, sky-matched distance haze, and looks for the sky, deep-sea and ship-interior dimensions.
+   - **Profiles:** LOW, BALANCED (default) and HIGH; a Stylisation slider (default 0.15) and optional outlines.
+   - The pack's `block.properties` classifies every `grandline:` block, the 91 kit blocks included (materials,
+     emissive lanterns, swaying foliage, non-moving thatch and beams).
 7. **Developer tools**
    - **Structure dumps:** `GL_SELFTEST=structures`.
    - **Offline renderer:** `tools/render_structure.py`.
@@ -54,17 +65,25 @@ that were actually run.
 |---|---|
 | `dist/grandline-0.2.0.jar` | the mod; **replaces** `grandline-0.1.0.jar` (remove the old one) |
 | `dist/geckolib-neoforge-1.21.1-4.9.3.jar` | required dependency, unchanged |
-| `dist/GrandLineShaders-1.0.0.zip` | the optional shader pack |
+| `dist/GrandLineShaders-1.0.0.zip` | the optional shader pack (needs Sodium 0.6.13 and Iris 1.8.12, see below) |
+| no resource pack | every texture and model of the new blocks ships inside the mod jar |
 | source | `grandline-mod/` (Java, assets, tools, shader source) |
 
 ## Installing
 
 1. Use Minecraft Java 1.21.1 with NeoForge 21.1.259. Client and server both need the mod.
 2. Put `grandline-0.2.0.jar` and `geckolib-neoforge-1.21.1-4.9.3.jar` in `mods/`. Delete `grandline-0.1.0.jar`.
-3. **Optional shaders:**
-   1. Install Sodium and Iris for NeoForge 1.21.1 (exact versions in the shader README).
-   2. Put `GrandLineShaders-1.0.0.zip` in `shaderpacks/`.
-   3. Pick it under Options → Video Settings → Shader Packs.
+3. **Optional shaders** (client only; a server needs nothing):
+   1. Put these two jars in `mods/` too (they are not redistributed here):
+      - **Sodium 0.6.13** for NeoForge 1.21.1, `sodium-neoforge-0.6.13+mc1.21.1.jar`:
+        <https://modrinth.com/mod/sodium/version/Pb3OXVqC>
+      - **Iris 1.8.12** for NeoForge 1.21.1, `iris-neoforge-1.8.12+mc1.21.1.jar`:
+        <https://modrinth.com/mod/iris/version/t3ruzodq>
+
+      Iris 1.8.12 declares exactly this Sodium version as its dependency on Modrinth, and the jar asks for Sodium
+      0.6. The newer Iris 1.8.14 beta pairs with Sodium 0.8 and was not tested.
+   2. Put `GrandLineShaders-1.0.0.zip` in `shaderpacks/` (don't unzip it).
+   3. Pick it under Options → Video Settings → Shader Packs, and choose a profile under Shader Pack Settings.
 4. No resource pack is required. If you use one, put it above the default pack as usual. The mod's own textures stay
    available underneath.
 

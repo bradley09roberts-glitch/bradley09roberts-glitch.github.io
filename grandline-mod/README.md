@@ -29,6 +29,10 @@ Private distribution.
 5. On first join you create your character (name, race, height/build, colours, marks, home Blue and path). You start
    with the **Captain's Handbook**, a book that explains the controls (with your own key bindings) and the systems.
 
+Optional shaders: put **Sodium 0.6.13** and **Iris 1.8.12** for NeoForge 1.21.1 in `mods/` and
+`dist/GrandLineShaders-1.0.0.zip` in `shaderpacks/` (details and links in [docs/OVERHAUL.md](docs/OVERHAUL.md) and the
+[pack README](shaderpack/GrandLineShaders/README.md)).
+
 Recommended: 8–12 GB RAM allocated for a smooth time in big cities; render distance 12–16 on a high-end PC.
 
 ## Install (dedicated server, LAN)
