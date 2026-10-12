@@ -762,6 +762,7 @@ public final class ClientSelfTest {
         cmd("gamerule doDaylightCycle false", 5);
         cmd("time set 6000", 5);
         cmd("gamerule doWeatherCycle false", 5);
+        cmd("grandline test calm true", 5);
         cmd("weather clear", 5);
         cmd("gamerule doMobSpawning false", 5);
         add("hide the HUD", () -> Minecraft.getInstance().options.hideGui = true, 5);

@@ -108,7 +108,11 @@ public final class SeaWeather {
         return out;
     }
 
+    /** Test switch (/grandline test calm): holds every sea and island clear, for screenshots and captures. Not saved. */
+    public static volatile boolean calm;
+
     public static Here at(Level level, double x, double z) {
+        if (calm) return Here.CLEAR;
         if (level.dimension() != Level.OVERWORLD || !(level instanceof ServerLevel sl)) return Here.CLEAR; // server-side only
         WorldPlan plan = WorldPlan.of(sl.getServer());
         if (plan == null) return Here.CLEAR;

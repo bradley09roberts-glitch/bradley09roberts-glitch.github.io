@@ -29,6 +29,10 @@ public final class TestCommands {
                     s.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE).set(false, s);
                     return GLCommands.ok(c, "Test environment: noon, clear, cycles frozen");
                 }))
+                .then(Commands.literal("calm").then(Commands.argument("on", com.mojang.brigadier.arguments.BoolArgumentType.bool()).executes(c -> {
+                    com.grandline.world.weather.SeaWeather.calm = com.mojang.brigadier.arguments.BoolArgumentType.getBool(c, "on");
+                    return GLCommands.ok(c, com.grandline.world.weather.SeaWeather.calm ? "Sea weather held calm (until restart or /grandline test calm false)" : "Sea weather live");
+                })))
                 .then(Commands.literal("ship").then(Commands.argument("class", StringArgumentType.word())
                         .suggests((c, b) -> SharedSuggestionProvider.suggest(Arrays.stream(ShipClass.values()).map(ShipClass::id), b))
                         .executes(c -> ship(c.getSource(), StringArgumentType.getString(c, "class"), false))
