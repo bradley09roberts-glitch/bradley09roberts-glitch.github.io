@@ -291,13 +291,28 @@ First run of a real client against the dedicated server. Result: no client crash
 - Lunarian, Buccaneer and Snakeneck now have NPC roles (Corrida Colosseum gladiators, a Snakeneck lancer at the Kuja
   gate), so every race appears in the world.
 
+### Island stories and notice boards (agent, merged 07:40)
+- Every original island (140+) has its own 2–4 step story generated from its seed by one of 20 templates chosen by
+  sea, tier, theme, settlement, dock, hidden spots, landmarks and controlling faction (bandit toll, beast of the bay,
+  missing child, crooked officer, two houses, cursed shrine, contraband, lost heirloom, rookie crew, fever season,
+  festival, Warlord's due, castaway, the nest, under the black flag, hidden cell, deserter, dead man's map, who did
+  it?, stones that speak), with named people (sea-flavoured names) who live on the island, gossip, faction versions
+  (Marines arrest, bounty hunters collect, pirates take a cut) and tiered rewards. About 2,600 quests and 740 people
+  per world, rebuilt from the seed at start (~300 ms); only progress and who is dead are saved.
+- Notice boards open with a right click: letters to other islands, escorts with an ambush at the destination dock,
+  three named outlaws per board with wanted posters saying where they hide, beast nests or bandit camps, wreck
+  salvage, fish/meals/timber. Townsfolk get sea-flavoured names.
+- Verified by the agent: phase 1 386/386, phase 2 11/11, `GL_SELFTEST=stories` 73/73 — all 20 templates played end
+  to end (and Marine/pirate versions), determinism across plans, every objective progressable, posters and payouts.
+- Not done: the escorted merchant is not a real follower (waits at the destination behind the ambush); the board
+  screen and named quest titles have not been seen in a real client.
+
 ### Production install (07:05–07:25)
 - The built jars were installed on a clean NeoForge 21.1.259 dedicated server (`--installServer`, `mods/`,
   `user_jvm_args.txt`, `run.sh`): no errors, world plan built, "Done" in ~5 s. The real client (Xvfb) then ran the
   whole solo script against that production server: 69 screenshots, no timeout, no server exception.
 
 ## Work in flight (background agents)
-- Procedural stories and named people for the original islands; a richer job board.
 - Treasure maps, fishing, cooking.
 
 ## Known gaps (next priorities)
