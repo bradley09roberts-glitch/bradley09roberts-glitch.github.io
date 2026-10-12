@@ -233,6 +233,7 @@ public final class ClientSelfTest {
     private static void buildCaptain() {
         createCharacter("Captain", "human");
         cmd("grandline test env", 10);
+        cmd("career admin rank 3", 20); // a career title the mate should see over the captain's head
         // open water south of the starter island (a harbour's coastline changes with the world seed and can run the
         // galleon aground within a few blocks)
         cmd("execute in minecraft:overworld run tp @s 36000 66 21400", 160);
@@ -271,6 +272,21 @@ public final class ClientSelfTest {
         for (int i = 0; i < 14; i++) {
             add("stand on deck", () -> logRelative("mate", Minecraft.getInstance().player), 50);
             if (i == 7) shot("mp_b_deck_while_sailing");
+            if (i == 9) { // turn to the captain at the helm: the name tag carries the career title
+                add("look at the captain", () -> {
+                    var me = Minecraft.getInstance().player;
+                    var o = other();
+                    if (o == null) {
+                        LOG.add("  captain not in sight");
+                        return;
+                    }
+                    Vec3 d = o.getEyePosition().subtract(me.getEyePosition());
+                    me.setYRot((float) Math.toDegrees(Math.atan2(-d.x, d.z)));
+                    me.setXRot((float) -Math.toDegrees(Math.atan2(d.y, Math.hypot(d.x, d.z))));
+                    LOG.add("  the captain's name as the mate sees it: " + o.getDisplayName().getString() + " (" + (int) d.length() + " blocks away)");
+                }, 5);
+                shot("mp_b_captain_nametag");
+            }
         }
         camera(CameraType.THIRD_PERSON_BACK);
         shot("mp_b_third_person");
