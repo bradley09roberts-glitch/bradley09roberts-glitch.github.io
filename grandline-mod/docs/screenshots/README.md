@@ -142,3 +142,11 @@ the distance fog is closer than on a real PC) against a dedicated server on 2026
 ### An Emperor boss fight: boss bar with title, giant boss (`/grandline test boss hrolf`)
 
 ![An Emperor boss fight](35g_boss_fight.jpg)
+
+### A crew base: the flag planted on an uninhabited island and the `/base` menu (upgrades, hands, dock, warehouse)
+
+![The crew base menu](58_crew_base_menu.jpg)
+
+### The claim on the sea chart, under the crew's name
+
+![A claimed island on the sea chart](59_chart_base_mark.jpg)

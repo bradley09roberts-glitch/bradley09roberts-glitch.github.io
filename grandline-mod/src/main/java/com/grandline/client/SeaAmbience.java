@@ -123,7 +123,7 @@ public final class SeaAmbience {
     /** Share of sample points within 32 blocks whose surface is open sea. */
     private static float scan(ClientLevel l, LocalPlayer p) {
         int water = 0, n = 0;
-        int y = WorldPlan.SEA_LEVEL - 1;
+        int y = WorldPlan.SEA_LEVEL; // the ocean world fills water up to and including sea level
         for (int ring = 1; ring <= 2; ring++) {
             int r = ring * 16;
             for (int k = 0; k < 12; k++) {

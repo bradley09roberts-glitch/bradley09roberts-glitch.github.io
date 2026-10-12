@@ -136,8 +136,12 @@ public final class ClientSelfTest {
                     samples += buf.limit() / 2 / fmt.getChannels();
                     n++;
                     if (buf.limit() == 0) LOG.add("FAIL sound " + e.getKey() + ": no samples");
-                    if (e.getKey().getPath().startsWith("sounds/music/") == (fmt.getChannels() == 1))
-                        LOG.add("FAIL sound " + e.getKey() + ": " + fmt.getChannels() + " channels (effects must be mono, music stereo)");
+                    String path = e.getKey().getPath();
+                    // stereo: the background music and the ambience loops; mono: effects and the music discs (positional)
+                    boolean stereo = (path.startsWith("sounds/music/") && !path.startsWith("sounds/music/disc/")) || path.equals("sounds/ambient/sea.ogg")
+                            || path.equals("sounds/ambient/wind.ogg");
+                    if (stereo != (fmt.getChannels() == 2))
+                        LOG.add("FAIL sound " + e.getKey() + ": " + fmt.getChannels() + " channels (expected " + (stereo ? "stereo" : "mono") + ")");
                 } catch (Exception ex) {
                     LOG.add("FAIL sound " + e.getKey() + ": " + ex);
                 }
