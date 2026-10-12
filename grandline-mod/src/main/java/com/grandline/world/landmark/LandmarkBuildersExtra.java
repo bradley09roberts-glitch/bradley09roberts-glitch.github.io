@@ -818,7 +818,7 @@ final class LandmarkBuildersExtra {
                 if (r < 13) {
                     int depth = (int) Math.round(3 * (1 - r / 13));
                     b.clear(x, 1 - depth, z, x, 0, z);
-                    Block bed = (hh % 7 == 0) ? Blocks.MAGMA_BLOCK : (hh % 5 == 0) ? Blocks.TINTED_GLASS : (hh % 3 == 0) ? Blocks.BASALT : Blocks.BLACKSTONE;
+                    Block bed = (hh % 17 == 0) ? Blocks.MAGMA_BLOCK : (hh % 5 == 0) ? Blocks.TINTED_GLASS : (hh % 3 == 0) ? Blocks.BASALT : Blocks.BLACKSTONE;
                     b.set(x, -depth, z, bed);
                 } else {
                     Block g = r < 16 ? ((hh & 1) == 0 ? Blocks.COARSE_DIRT : Blocks.BLACKSTONE) : (hh % 4 == 0 ? Blocks.COARSE_DIRT : hh % 7 == 0 ? Blocks.GRAVEL : Blocks.PODZOL);

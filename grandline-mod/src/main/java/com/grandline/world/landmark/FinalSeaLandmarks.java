@@ -549,9 +549,10 @@ final class FinalSeaLandmarks {
             longTableX(b, c - 12, c - 4, 1, tz, Blocks.DARK_OAK_SLAB, Blocks.DARK_OAK_STAIRS, true);
             longTableX(b, c + 4, c + 12, 1, tz, Blocks.DARK_OAK_SLAB, Blocks.DARK_OAK_STAIRS, true);
         }
-        for (int z = 19; z <= 35; z += 4) {
-            b.barrel(c - 14, 1, z, Buildings.LOOT_TAVERN);
-            b.barrel(c + 14, 1, z, Buildings.LOOT_TAVERN);
+        // sake stores: a stack of barrels in each back corner of the hall, beside the stage
+        for (int[] p : new int[][]{{11, 35}, {11, 36}, {10, 36}, {11, 37}, {10, 37}, {9, 37}}) {
+            b.barrel(c - p[0], 1, p[1], Buildings.LOOT_TAVERN);
+            b.barrel(c + p[0], 1, p[1], Buildings.LOOT_TAVERN);
         }
         npc(b, "pirate", c - 8, 1, 23);
         npc(b, "pirate", c + 7, 1, 23);
@@ -1235,7 +1236,7 @@ final class FinalSeaLandmarks {
         BlockState planks = s(Blocks.DARK_OAK_PLANKS), weathered = k(ArchBlocks.WEATHERED_PLANKS), comb = s(Blocks.HONEYCOMB_BLOCK);
         BlockState stairs = s(Blocks.DARK_OAK_STAIRS), fence = s(Blocks.DARK_OAK_FENCE);
         site(b, Blocks.BLACKSTONE, Blocks.STONE, 40);
-        patchGround(b, 251, 0, Blocks.COBBLESTONE, Blocks.GRAVEL, Blocks.BLACKSTONE, Blocks.COBBLESTONE);
+        patchGround(b, 251, 0, Blocks.COBBLESTONE, Blocks.GRAVEL, Blocks.ANDESITE);
         // ---- the skull rock (face cut at z = 16), hollow inside behind z = 18
         for (int x = 0; x < w; x++)
             for (int z = 16; z < d; z++)
