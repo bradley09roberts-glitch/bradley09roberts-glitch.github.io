@@ -174,6 +174,7 @@ public final class ClientSelfTest {
         else if ("mp_b".equals(MODE)) buildMate();
         else if ("tour".equals(MODE)) buildTour();
         else if ("arch".equals(MODE)) buildArch();
+        else if ("shaders".equals(MODE) || "shaders_quick".equals(MODE)) buildShaderTour();
         else if ("naval".equals(MODE)) {
             createCharacter("Tester", "human");
             cmd("grandline test env", 10);
@@ -818,8 +819,15 @@ public final class ClientSelfTest {
 
     @SubscribeEvent
     public static void onChat(ClientChatReceivedEvent e) {
-        if (ACTIVE) LOG.add("  chat: " + e.getMessage().getString());
+        if (!ACTIVE) return;
+        String m = e.getMessage().getString();
+        LOG.add("  chat: " + m);
+        // shader tour: the island's centre and radius from "/grandline island here"
+        var im = java.util.regex.Pattern.compile("r=([0-9.]+)\\) at (-?\\d+),(-?\\d+)").matcher(m);
+        if (im.find()) islandInfo = new double[]{Double.parseDouble(im.group(2)), Double.parseDouble(im.group(3)), Double.parseDouble(im.group(1))};
     }
+
+    private static double[] islandInfo;
 
     @SubscribeEvent
     public static void onTick(ClientTickEvent.Post e) {
@@ -865,6 +873,250 @@ public final class ClientSelfTest {
         }
         GrandLine.LOGGER.info("[clienttest] finished, {} log lines", LOG.size());
         mc.stop();
+    }
+
+    // ------------------------------------------------------------------------------------------------ shader pack tour
+
+    /**
+     * Shader pack tour (GL_CLIENTTEST=shaders; shaders_quick = the short run used per profile): fixed times, weather and
+     * viewpoints for the Grand Line Shaders pack, run with Iris + Sodium in run-client/mods. Comparison shots with the
+     * pack switched off go through the Iris API (reflection, so the mod does not depend on Iris). Screenshots are named
+     * clienttest_shaders_[GL_SHADER_TAG]*.png. The window is resized to 960x540 and back once.
+     */
+    private static void buildShaderTour() {
+        Minecraft mc = Minecraft.getInstance();
+        boolean quick = "shaders_quick".equals(MODE);
+        String tag = "shaders_" + System.getenv().getOrDefault("GL_SHADER_TAG", "");
+        createCharacter("Tester", "human");
+        add("hide the HUD", () -> mc.options.hideGui = true, 5);
+        cmd("gamemode spectator", 10);
+        cmd("gamerule doDaylightCycle false", 5);
+        cmd("grandline test calm", 10);
+        cmd("time set 6000", 5);
+        add("iris state", () -> LOG.add("  iris: " + irisState()), 5);
+
+        // the open sea at noon, then the same view with the pack switched off
+        shaderShot(tag + "01_ocean_noon", "execute in minecraft:overworld run tp @s 36000 72 21400 0 8");
+        if (!quick) {
+            irisCompare(tag + "01_ocean_noon");
+            cmd("time set 9000", 5);
+            shaderShot(tag + "02_ocean_afternoon_glint", "tp @s 36000 70 21400 90 6");
+            cmd("time set 6000", 5);
+        }
+        // island: shoreline (from the island radius), harbour (nearest settlement dock), the town from above
+        cmd("execute in minecraft:overworld run tp @s 36000 90 20000", 20);
+        shoreViewpoint();
+        shot(tag + "03_shoreline");
+        // harbour: the nearest settlement dock (located by the server half of the harness, /gltest_dock)
+        cmd("gltest_dock", 40);
+        waitForChunks(7, 2200, 120);
+        shot(tag + "04_harbour");
+        if (!quick) {
+            irisCompare(tag + "04_harbour");
+            // piers standing in the sea: contact foam (Tequila Wolf's bridge, a canon landmark at fixed coordinates)
+            shaderShot(tag + "04c_bridge_piers", "execute in minecraft:overworld run tp @s 8850 80 24548 -105 18");
+            cmd("grandline island tp shiokaze_isle", 40);
+            cmd("tp @s ~ ~40 ~-65 0 28", 40);
+            waitForChunks(7, 2200, 120);
+            shot(tag + "05_town_aerial");
+            // a small pool and a lantern-lit room on a stone platform out at sea
+            buildPoolAndRoom();
+            shaderShot(tag + "06_pool", "tp @s 36041 72 21428 135 32");
+            shaderShot(tag + "07_interior_lanterns", "tp @s 36046.7 67.0 21406.7 -45 -4");
+            irisCompare(tag + "07_interior_lanterns");
+        }
+        // under water, looking up at the surface
+        shaderShot(tag + "08_underwater_up", "execute in minecraft:overworld run tp @s 36000 57 21400 0 -55");
+        if (!quick) shaderShot(tag + "08b_underwater_level", "tp @s 36000 58 21400 30 -5");
+        // sunset and night
+        cmd("time set 12650", 5);
+        shaderShot(tag + "09_sunset", "tp @s 36000 70 21400 90 4");
+        if (!quick) {
+            cmd("time set 18000", 5);
+            cmd("grandline island tp shiokaze_isle", 40);
+            cmd("tp @s ~ ~40 ~-65 0 28", 40);
+            waitForChunks(7, 2200, 120);
+            shot(tag + "10_night_town");
+            shaderShot(tag + "11_night_room", "tp @s 36046.7 67.0 21406.7 -45 -4");
+            cmd("time set 6000", 5);
+            // resolution change: the pipeline must rebuild its buffers
+            cmd("execute in minecraft:overworld run tp @s 36000 72 21400 0 8", 40);
+            waitForChunks(7, 2200, 60);
+            add("resize to 960x540", () -> org.lwjgl.glfw.GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), 960, 540), 200);
+            add("log size", () -> LOG.add("  window now " + mc.getWindow().getWidth() + "x" + mc.getWindow().getHeight() + ", " + irisState()), 5);
+            shot(tag + "12_resized_960x540");
+            add("resize back to 1280x720", () -> org.lwjgl.glfw.GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), 1280, 720), 200);
+            add("log size", () -> LOG.add("  window now " + mc.getWindow().getWidth() + "x" + mc.getWindow().getHeight() + ", " + irisState()), 5);
+        }
+        // the mod's dimensions
+        cmd("time set 6000", 5);
+        shaderShot(tag + "13_sky_angel_island", "execute in grandline:sky run tp @s -450 120 -20 0 30");
+        if (!quick) shaderShot(tag + "14_sky_cloud_sea", "execute in grandline:sky run tp @s -450 175 -20 0 8");
+        shaderShot(tag + "15_deep_fishman_island", "execute in grandline:deep_sea run tp @s 170 110 40 110 15");
+        if (!quick) shaderShot(tag + "16_deep_bubble", "execute in grandline:deep_sea run tp @s 262 120 0 90 5");
+        shaderShot(tag + "17_ship_interiors_dim", "execute in grandline:ship_interiors run tp @s 0.5 101 0.5 -45 10");
+        cmd("fill -5 99 -5 5 105 5 minecraft:spruce_planks hollow", 10);
+        cmd("setblock 0 104 0 minecraft:lantern[hanging=true]", 5);
+        cmd("setblock 3 100 3 minecraft:barrel", 5);
+        cmd("setblock -3 100 3 minecraft:chest", 5);
+        cmd("setblock 3 104 -3 minecraft:lantern[hanging=true]", 5);
+        cmd("tp @s -3.5 101 -3.5 -45 10", 200);
+        shot(tag + "17_ship_interiors_dim");
+        // vanilla dimensions (fallback folders)
+        shaderShot(tag + "18_nether", "execute in minecraft:the_nether run tp @s 0 80 0 0 10");
+        shaderShot(tag + "19_end", "execute in minecraft:the_end run tp @s 0 80 0 0 10");
+        // rain and storm last (the mod's weather is local; this flies to the nearest storm)
+        cmd("execute in minecraft:overworld run tp @s 36000 72 21400 0 8", 200);
+        cmd("grandline test storm", 40);
+        waitForChunks(7, 2200, 200);
+        shot(tag + "20_storm");
+        add("iris state", () -> LOG.add("  iris at the end: " + irisState()), 5);
+        add("done", ClientSelfTest::finish, 0);
+    }
+
+    private static String tourCmd = "tp @s ~ ~30 ~-40 0 30";
+
+    /** Waits (at most maxTicks) until the client holds every chunk within 'radius' chunks of the camera, then 'after'
+     *  more ticks for the chunk meshes; a fresh world generates slowly on this machine. */
+    private static void waitForChunks(int radius, int maxTicks, int after) {
+        int[] waited = {0, 0};
+        // software rendering is slow and Sodium schedules chunk meshing per frame: render small while waiting
+        add("small window while chunks load", () -> org.lwjgl.glfw.GLFW.glfwSetWindowSize(Minecraft.getInstance().getWindow().getWindow(), 480, 270), 5);
+        steps.add(new Step("wait for chunks", () -> {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null || mc.level == null) return false;
+            if (++waited[0] >= maxTicks) {
+                LOG.add("  chunks still loading after " + maxTicks + " ticks: " + mc.levelRenderer.getSectionStatistics());
+                return true;
+            }
+            int cx = mc.player.getBlockX() >> 4, cz = mc.player.getBlockZ() >> 4;
+            for (int dx = -radius; dx <= radius; dx++)
+                for (int dz = -radius; dz <= radius; dz++)
+                    if (!mc.level.getChunkSource().hasChunk(cx + dx, cz + dz)) return false;
+            // then every section meshed and uploaded (Sodium reports this through the vanilla method), for 2 seconds
+            waited[1] = mc.levelRenderer.hasRenderedAllSections() ? waited[1] + 1 : 0;
+            return waited[1] >= 40;
+        }, () -> {
+            Minecraft mc = Minecraft.getInstance();
+            LOG.add("  sections ready after " + waited[0] + " ticks: " + mc.levelRenderer.getSectionStatistics());
+            org.lwjgl.glfw.GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), 1280, 720);
+            // a camera that stands still is not re-culled when chunks arrive later: ask for a fresh visibility pass
+            mc.levelRenderer.needsUpdate();
+        }, after));
+        // and turn the camera by a hair every tick for two seconds (ends where it started): a moving camera re-culls
+        int[] n = {0};
+        steps.add(new Step("refresh visibility", () -> {
+            var pl = Minecraft.getInstance().player;
+            if (pl != null) pl.setYRot(pl.getYRot() + (n[0] % 2 == 0 ? 0.05f : -0.05f));
+            return ++n[0] >= 40;
+        }, () -> n[0] = 0, 20));
+        add("visible sections", () -> LOG.add("  before the shot: " + Minecraft.getInstance().levelRenderer.getSectionStatistics()), 5);
+    }
+
+    private static void shaderShot(String name, String tp) {
+        cmd(tp, 40);
+        waitForChunks(7, 2200, 120);
+        add("weather here", () -> LOG.add(String.format(java.util.Locale.ROOT, "  %s: rain %.2f, dimension %s", name,
+                Minecraft.getInstance().level.getRainLevel(1f), Minecraft.getInstance().level.dimension().location())), 2);
+        shot(name);
+    }
+
+    /** The current view with the pack switched off, then back on (waits for Iris to rebuild the pipeline). */
+    private static void irisCompare(String name) {
+        add("shaders off", () -> irisEnable(false), 10);
+        steps.add(new Step("wait for vanilla", () -> !irisInUse(), () -> {}, 120));
+        add("vanilla sections", () -> LOG.add("  shaders off: " + Minecraft.getInstance().levelRenderer.getSectionStatistics()), 5);
+        shot(name + "_shaders_off");
+        add("shaders on", () -> irisEnable(true), 10);
+        steps.add(new Step("wait for the pack", ClientSelfTest::irisInUse, () -> LOG.add("  iris: " + irisState()), 260));
+    }
+
+    private static Object irisApi() throws ReflectiveOperationException {
+        return Class.forName("net.irisshaders.iris.api.v0.IrisApi").getMethod("getInstance").invoke(null);
+    }
+
+    private static boolean irisInUse() {
+        try {
+            return (boolean) Class.forName("net.irisshaders.iris.api.v0.IrisApi").getMethod("isShaderPackInUse").invoke(irisApi());
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    private static void irisEnable(boolean on) {
+        try {
+            Object config = Class.forName("net.irisshaders.iris.api.v0.IrisApi").getMethod("getConfig").invoke(irisApi());
+            Class.forName("net.irisshaders.iris.api.v0.IrisApiConfig").getMethod("setShadersEnabledAndApply", boolean.class).invoke(config, on);
+            LOG.add("  iris: shaders " + (on ? "enabled" : "disabled"));
+        } catch (Throwable t) {
+            LOG.add("FAIL iris toggle: " + t);
+        }
+    }
+
+    private static String irisState() {
+        try {
+            String pack = "?";
+            try {
+                pack = String.valueOf(Class.forName("net.irisshaders.iris.Iris").getMethod("getCurrentPackName").invoke(null));
+            } catch (Throwable ignored) {
+            }
+            return "shader pack in use=" + irisInUse() + ", pack=" + pack;
+        } catch (Throwable t) {
+            return "Iris not present (" + t + ")";
+        }
+    }
+
+    /** The island's coast seen from the sea: just past its radius ("/grandline island here"), south of its centre,
+     *  looking back north; sets tourCmd and waits for the chunks there. */
+    private static void shoreViewpoint() {
+        Minecraft mc = Minecraft.getInstance();
+        cmd("grandline island tp shiokaze_isle", 40);
+        waitForChunks(6, 2000, 40);
+        add("island info", () -> {
+            islandInfo = null;
+            mc.player.connection.sendCommand("grandline island here");
+        }, 40);
+        add("aim at the shore", () -> {
+            if (islandInfo == null) {
+                tourCmd = "tp @s ~ ~40 ~-65 0 28";
+                LOG.add("  no island info; aerial view instead");
+                return;
+            }
+            tourCmd = String.format(java.util.Locale.ROOT, "tp @s %.1f 71 %.1f 180 7", islandInfo[0], islandInfo[1] + islandInfo[2] + 16);
+            LOG.add("  island centre " + (int) islandInfo[0] + "," + (int) islandInfo[1] + " radius " + islandInfo[2] + "; shore camera: " + tourCmd);
+        }, 5);
+        add("go there", () -> mc.player.connection.sendCommand(tourCmd), 40);
+        waitForChunks(7, 2200, 120);
+    }
+
+    /** A stone platform out at sea with a 7x7 pool (2 deep, its surface 4 blocks above sea level) and a closed room lit
+     *  by torches and lanterns (vanilla and, when present, the mod's building kit). */
+    private static void buildPoolAndRoom() {
+        cmd("execute in minecraft:overworld run tp @s 36035 80 21420 0 40", 40);
+        waitForChunks(3, 2000, 40);
+        cmd("fill 36025 58 21405 36060 65 21430 minecraft:smooth_stone", 20);
+        cmd("fill 36028 66 21416 36036 67 21424 minecraft:white_concrete", 10);
+        cmd("fill 36029 66 21417 36035 67 21423 minecraft:water", 20);
+        cmd("fill 36029 65 21417 36035 65 21423 minecraft:sand", 10);
+        cmd("setblock 36028 68 21416 minecraft:lantern", 2);
+        cmd("setblock 36036 68 21424 minecraft:lantern", 2);
+        cmd("setblock 36028 68 21424 minecraft:oak_leaves[persistent=true]", 2);
+        cmd("setblock 36036 68 21416 minecraft:poppy", 2);
+        // room: plaster walls, plank floor, dark roof, a window
+        cmd("fill 36045 66 21405 36058 72 21418 minecraft:white_concrete hollow", 20);
+        cmd("fill 36046 66 21406 36057 66 21417 minecraft:spruce_planks", 10);
+        cmd("fill 36045 72 21405 36058 72 21418 minecraft:dark_oak_planks", 10);
+        cmd("fill 36058 68 21410 36058 69 21412 minecraft:glass_pane", 5);
+        cmd("setblock 36051 71 21411 minecraft:lantern[hanging=true]", 2);
+        cmd("setblock 36046 68 21411 minecraft:wall_torch[facing=east]", 2);
+        cmd("setblock 36057 68 21415 minecraft:wall_torch[facing=west]", 2);
+        cmd("setblock 36054 71 21407 grandline:red_paper_lantern[hanging=true]", 2);
+        cmd("setblock 36048 71 21415 grandline:brass_lantern[hanging=true]", 2);
+        cmd("setblock 36055 67 21416 minecraft:bookshelf", 2);
+        cmd("setblock 36056 67 21416 minecraft:copper_block", 2);
+        cmd("setblock 36054 67 21416 minecraft:barrel", 2);
+        cmd("fill 36049 67 21409 36053 67 21413 minecraft:red_carpet", 5);
+        cmd("setblock 36050 67 21416 minecraft:campfire", 2);
     }
 
     private ClientSelfTest() {}
