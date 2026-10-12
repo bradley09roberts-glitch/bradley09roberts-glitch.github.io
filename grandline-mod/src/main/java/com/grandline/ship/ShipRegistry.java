@@ -18,6 +18,10 @@ public final class ShipRegistry extends SavedData {
         public double x, y, z;
         public boolean sunk;
         public int sailColor = 0xF4EEDC, hullColor = 0x8A5A32;
+        /** Figurehead/emblem/flag ({@link ShipLook#encode()}). */
+        public String look = ShipLook.DEFAULT.encode();
+        /** A captured ship not yet sold or refitted at a shipwright. */
+        public boolean prize;
 
         CompoundTag save() {
             CompoundTag t = new CompoundTag();
@@ -35,6 +39,8 @@ public final class ShipRegistry extends SavedData {
             t.putBoolean("sunk", sunk);
             t.putInt("sail", sailColor);
             t.putInt("hullc", hullColor);
+            t.putString("look", look);
+            t.putBoolean("prize", prize);
             return t;
         }
 
@@ -54,6 +60,8 @@ public final class ShipRegistry extends SavedData {
             r.sunk = t.getBoolean("sunk");
             r.sailColor = t.getInt("sail");
             r.hullColor = t.getInt("hullc");
+            r.look = t.contains("look") ? t.getString("look") : ShipLook.DEFAULT.encode();
+            r.prize = t.getBoolean("prize");
             return r;
         }
     }
@@ -89,6 +97,8 @@ public final class ShipRegistry extends SavedData {
         r.upgrades = String.join(",", ship.upgrades());
         r.sailColor = ship.sailColor();
         r.hullColor = ship.hullColor();
+        r.look = ship.look().encode();
+        r.prize = ship.flag(ShipEntity.F_PRIZE);
         r.sunk = false;
         setDirty();
     }
@@ -96,10 +106,18 @@ public final class ShipRegistry extends SavedData {
     public void markSunk(ShipEntity ship) {
         Record r = ships.get(ship.shipId);
         if (r == null) return;
+        if (r.prize) { // a prize that goes down is lost for good (no salvaging someone else's ship)
+            remove(ship.shipId);
+            return;
+        }
         r.sunk = true;
         r.x = ship.getX();
         r.z = ship.getZ();
         setDirty();
+    }
+
+    public void remove(UUID id) {
+        if (ships.remove(id) != null) setDirty();
     }
 
     @Nullable

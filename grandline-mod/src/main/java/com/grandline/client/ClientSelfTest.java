@@ -74,7 +74,13 @@ public final class ClientSelfTest {
         steps = new ArrayDeque<>();
         if ("mp_a".equals(MODE)) buildCaptain();
         else if ("mp_b".equals(MODE)) buildMate();
-        else buildSolo();
+        else if ("naval".equals(MODE)) {
+            createCharacter("Tester", "human");
+            cmd("grandline test env", 10);
+            cmd("grandline char level 60", 10);
+            buildNaval();
+            add("done", ClientSelfTest::finish, 0);
+        } else buildSolo();
     }
 
     private static void createCharacter(String name, String race) {
@@ -264,6 +270,7 @@ public final class ClientSelfTest {
         cmd("gamemode spectator", 10);
         cmd("tp @s ~-25 ~22 ~-25 -45 35", 60);
         shot("17_ship_from_above");
+        buildNaval();
 
         // canon set pieces and terrain (spectator fly-bys)
         shot2("18_baratie", "tp @s 15470 100 13440 0 40");
@@ -298,6 +305,115 @@ public final class ClientSelfTest {
         shot("35_paintings_b");
         creatureShots();
         add("done", ClientSelfTest::finish, 0);
+    }
+
+    /** The ship the scripted player sails in the naval section (remembered while at its helm). */
+    private static int navalShip = -1;
+
+    /** Fallback: the ship ridden, else the nearest ship named after the tester. */
+    private static int ownShip(Minecraft mc) {
+        if (mc.player.getVehicle() instanceof com.grandline.ship.ShipEntity s) return s.getId();
+        com.grandline.ship.ShipEntity best = null;
+        for (var e : mc.level.entitiesForRendering())
+            if (e instanceof com.grandline.ship.ShipEntity s && s.shipName().startsWith("Tester") && (best == null || s.distanceToSqr(mc.player) < best.distanceToSqr(mc.player))) best = s;
+        return best == null ? -1 : best.getId();
+    }
+
+    /** Spectator camera at a point in the remembered ship's frame, looking at another point in that frame. */
+    private static void shipCam(String name, double lx, double ly, double lz, double tx, double ty, double tz, int after) {
+        add("camera " + name, () -> {
+            Minecraft mc = Minecraft.getInstance();
+            if (!(mc.level.getEntity(navalShip) instanceof com.grandline.ship.ShipEntity)) navalShip = ownShip(mc);
+            if (!(mc.level.getEntity(navalShip) instanceof com.grandline.ship.ShipEntity s)) {
+                LOG.add("  naval ship not visible for " + name);
+                return;
+            }
+            Vec3 c = s.toWorld(lx, ly, lz), t = s.toWorld(tx, ty, tz);
+            double dx = t.x - c.x, dy = t.y - c.y, dz = t.z - c.z;
+            float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz)), pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz)));
+            mc.player.connection.sendCommand(String.format(java.util.Locale.ROOT, "tp @s %.2f %.2f %.2f %.1f %.1f", c.x, c.y, c.z, yaw, pitch));
+        }, after);
+    }
+
+    /** Spectator camera astern of a grappled pair (or the player's ship and the nearest other), looking down at the gap. */
+    private static void battleCam(int after) {
+        add("battle camera", () -> {
+            Minecraft mc = Minecraft.getInstance();
+            if (!(mc.level.getEntity(navalShip) instanceof com.grandline.ship.ShipEntity)) navalShip = ownShip(mc);
+            if (!(mc.level.getEntity(navalShip) instanceof com.grandline.ship.ShipEntity s)) return;
+            com.grandline.ship.ShipEntity other = s.linkedId() >= 0 && mc.level.getEntity(s.linkedId()) instanceof com.grandline.ship.ShipEntity o ? o : null;
+            if (other == null) for (var e : mc.level.entitiesForRendering())
+                if (e instanceof com.grandline.ship.ShipEntity o && o != s && (other == null || o.distanceToSqr(s) < other.distanceToSqr(s))) other = o;
+            Vec3 mid = other == null ? s.position() : s.position().add(other.position()).scale(0.5);
+            Vec3 c = mid.subtract(s.heading().scale(24)).add(0, 13, 0);
+            double dx = mid.x - c.x, dy = mid.y + 2 - c.y, dz = mid.z - c.z;
+            float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz)), pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz)));
+            mc.player.connection.sendCommand(String.format(java.util.Locale.ROOT, "tp @s %.2f %.2f %.2f %.1f %.1f", c.x, c.y, c.z, yaw, pitch));
+            LOG.add(String.format("  battle: %s hull %.0f rig %.0f%% vs %s hull %.0f rig %.0f%%, linked=%s", s.shipName(), s.hull(), s.rigging() * 100,
+                    other == null ? "-" : other.shipName(), other == null ? 0 : other.hull(), other == null ? 0 : other.rigging() * 100, s.linkedId() >= 0));
+        }, after);
+    }
+
+    /** Naval combat and customisation: figurehead and emblem close-ups, a figurehead parade, a gun duel, grapple and boarders. */
+    private static void buildNaval() {
+        Minecraft mc = Minecraft.getInstance();
+        cmd("gamemode survival", 10);
+        cmd("grandline island tp shiokaze_isle", 120);
+        cmd("grandline test ship galleon helm", 80);
+        // wait until the client knows it is riding the new ship (the passenger packet can lag behind on a slow client)
+        steps.add(new Step("remember ship", () -> mc.player.getVehicle() instanceof com.grandline.ship.ShipEntity,
+                () -> navalShip = mc.player.getVehicle() instanceof com.grandline.ship.ShipEntity s ? s.getId() : -1, 5));
+        double bow = 31 / 2.0; // galleon
+        cmd("ship test look lion skull 0,0,0,5", 20);
+        cmd("grandline test anchor false", 5);
+        cmd("grandline test sail 2", 260);
+        cmd("grandline test anchor true", 5);
+        cmd("grandline test sail 3", 60); // anchored with sails set: the emblem shows on the main sail
+        cmd("ship test parade", 60);
+        cmd("gamemode spectator", 10);
+        shipCam("41_figurehead_lion", 4.5, 4.2, bow + 7, 0, 3.4, bow + 1, 80);
+        shot("41_figurehead_lion");
+        shipCam("42_sail_emblem_flag", -9, 9, bow + 15, 0, 11, 0, 80);
+        shot("42_sail_emblem_flag");
+        shipCam("43_figurehead_parade", 0, 9, bow + 2, 0, 1, bow + 30, 80);
+        shot("43_figurehead_parade");
+        cmd("ship test clear", 20);
+        cmd("gamemode creative", 10); // boarders go for the hired gun crew, not a creative captain
+        cmd("ship test helm", 20);
+        cmd("grandline test sail 0", 10);
+        cmd("ship test gunners 6", 20);
+        cmd("ship ammo chain_shot", 5); // shred her rigging rather than sink her before the boarding
+        cmd("ship test enemy galleon pirate", 140);
+        camera(CameraType.THIRD_PERSON_BACK);
+        shot("44_naval_gun_crews");
+        camera(CameraType.FIRST_PERSON);
+        cmd("ship status", 5);
+        cmd("ship test grapple", 120);
+        cmd("ship status", 5);
+        cmd("gamemode spectator", 10);
+        battleCam(50);
+        shot("45_grappled_boarding");
+        shipCam("46_boarders_on_deck", 10, 8, -8, 0, 2, 3, 50);
+        shot("46_boarders_on_deck");
+        cmd("ship test clear", 10);
+        cmd("kill @e[type=grandline:npc,distance=..120]", 10);
+        cmd("grandline island tp shiokaze_isle", 60);
+        cmd("gamemode spectator", 10); // the solo script continues with spectator fly-bys
+        add("open shipyard customise page", () -> {
+            CompoundTag d = new CompoundTag();
+            d.putLong("beli", 125000);
+            d.putBoolean("customisePage", true);
+            CompoundTag cur = new CompoundTag();
+            cur.putString("name", "Tester's Galleon");
+            cur.putString("cls", "galleon");
+            cur.putString("look", "dragon|flame|ff8a20|5a2a7a");
+            cur.putInt("sail", 0xF4EEDC);
+            cur.putInt("hullc", 0x2A2A2A);
+            d.put("current", cur);
+            mc.setScreen(new com.grandline.client.screen.ShipyardScreen(d));
+        }, 20);
+        shot("47_shipyard_customise");
+        add("close screen", () -> mc.setScreen(null), 10);
     }
 
     /** Sea Kings beside a ship in the Calm Belt, a Sea King attack, and Zoan full-beast forms (players and NPCs). */

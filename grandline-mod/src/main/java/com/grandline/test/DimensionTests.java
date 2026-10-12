@@ -525,10 +525,12 @@ final class DimensionTests {
             load(sky, x, z, 3);
             return 40;
         });
+        final int[] waited = {0};
         steps.add(s -> {
             String[] p = Files.readString(Path.of("selftest-sky.txt")).trim().split(" ");
             UUID id = UUID.fromString(p[0]);
             ShipEntity found = findShip(s.getLevel(SkyWorld.LEVEL), id, Integer.parseInt(p[1]), Integer.parseInt(p[2]), 40);
+            if (found == null && ++waited[0] < 400) return -1; // entities load asynchronously (slow on a busy machine)
             SelfTest.check("ship left on the White Sea is still there after restart", found != null, found == null ? "not found" : found.shipName() + " at " + found.blockPosition().toShortString());
             return 0;
         });

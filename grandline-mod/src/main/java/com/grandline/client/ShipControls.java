@@ -62,7 +62,7 @@ public final class ShipControls {
         ShipEntity ship = mc.player.getVehicle() instanceof ShipEntity s ? s : null;
         if (ship == null) return;
         int x = g.guiWidth() - 150, y = 8;
-        g.fill(x - 4, y - 4, x + 146, y + 54, 0x88000000);
+        g.fill(x - 4, y - 4, x + 146, y + 76, 0x88000000);
         g.drawString(mc.font, ship.shipName(), x, y, 0xFFFFD34A, true);
         g.drawString(mc.font, Component.translatable("hud.grandline.hull", (int) ship.hull(), (int) ship.maxHull()), x, y + 11, 0xFFFFFFFF, true);
         g.drawString(mc.font, Component.translatable("hud.grandline.sail", ship.sail(), ship.anchored() ? Component.translatable("hud.grandline.anchored") : Component.empty()), x, y + 22, 0xFFFFFFFF, true);
@@ -70,6 +70,7 @@ public final class ShipControls {
         Vec3 w = Wind.at(mc.level, ship.getX(), ship.getZ());
         String dir = com.grandline.navigation.Navigation.compass(w.x, w.z);
         g.drawString(mc.font, Component.translatable("hud.grandline.wind", dir, String.format("%.1f", w.length())), x, y + 44, 0xFF9AD8FF, true);
+        NavalClient.hudLines(g, mc, ship, x, y + 55);
     }
 
     private ShipControls() {}

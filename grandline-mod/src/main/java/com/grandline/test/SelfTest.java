@@ -85,6 +85,7 @@ public final class SelfTest {
             DimensionTests.shipClasses(steps);
             DimensionTests.phase1(steps);
         }
+        else if (PHASE.equals("naval")) NavalTests.phase1(steps);
         else if (PHASE.equals("creatures")) CreatureSelfTest.phase1(steps); // quick run of the creature steps only
         else phase2();
     }
@@ -737,6 +738,7 @@ public final class SelfTest {
             }
             return 40;
         });
+        NavalTests.phase1(steps); // naval combat (test/NavalTests.java)
         DimensionTests.awakening(steps);
         DimensionTests.shipClasses(steps);
         DimensionTests.ferry(steps);
@@ -945,6 +947,7 @@ public final class SelfTest {
 
     private static void phase2() {
         DimensionTests.phase2(steps);
+        NavalTests.phase2(steps);
         final String[] fx = new String[1];
         steps.add(s -> {
             fx[0] = Files.readString(Path.of("selftest-fixtures.txt")).trim();
@@ -955,10 +958,12 @@ public final class SelfTest {
             check("fruit ledger survived restart", FruitWorldData.get(s).state("goro") == FruitWorldData.State.OWNED, "goro=" + FruitWorldData.get(s).state("goro") + " owner=" + FruitWorldData.get(s).ownerName("goro"));
             return 60; // let entities load
         });
+        final int[] npcWait = {0};
         steps.add(s -> {
             String[] parts = fx[0].split(" ");
             UUID id = UUID.fromString(parts[0]);
             var e = ow(s).getEntity(id);
+            if (e == null && ++npcWait[0] < 400) return -1; // entities load asynchronously (slow on a busy machine)
             check("NPC entity persisted across restart", e instanceof HumanoidNpc, e == null ? "missing" : e.getName().getString() + " at " + e.blockPosition());
             return 0;
         });

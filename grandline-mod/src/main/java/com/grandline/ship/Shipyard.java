@@ -35,6 +35,7 @@ public final class Shipyard {
         UPGRADES.put("paddle_wheel", 30000L);
         UPGRADES.put("seastone_keel", 80000L);
         UPGRADES.put("coup_de_burst", 60000L);
+        UPGRADES.put("ram_bow", 40000L);
         UPGRADES.put(SpecialRoutes.COATING, 25000L);
     }
 
@@ -46,9 +47,14 @@ public final class Shipyard {
     }
 
     public static void open(ServerPlayer sp, GLNpc npc) {
+        open(sp, npc, false);
+    }
+
+    static void open(ServerPlayer sp, GLNpc npc, boolean customisePage) {
         CharacterData d = Characters.get(sp);
         CompoundTag t = new CompoundTag();
         t.putInt("npc", npc.getId());
+        t.putBoolean("customisePage", customisePage);
         t.putLong("beli", d.beli);
         ListTag classes = new ListTag();
         for (ShipClass c : ShipClass.values()) {
@@ -81,6 +87,29 @@ public final class Shipyard {
             owned.add(e);
         }
         t.put("owned", owned);
+        // the ship moored here: its current look for the customisation page, and any prizes to sell or refit
+        ShipEntity here = nearestOwned(sp);
+        if (here != null && !here.flag(ShipEntity.F_PRIZE)) {
+            CompoundTag cur = new CompoundTag();
+            cur.putString("name", here.shipName());
+            cur.putString("cls", here.cls.id());
+            cur.putString("look", here.look().encode());
+            cur.putInt("sail", here.sailColor());
+            cur.putInt("hullc", here.hullColor());
+            t.put("current", cur);
+        }
+        ListTag prizes = new ListTag();
+        for (ShipEntity s : sp.serverLevel().getEntitiesOfClass(ShipEntity.class, sp.getBoundingBox().inflate(80), s -> s.flag(ShipEntity.F_PRIZE) && sp.getUUID().equals(s.owner))) {
+            CompoundTag e = new CompoundTag();
+            e.putString("id", s.shipId.toString());
+            e.putString("name", s.shipName());
+            e.putString("cls", s.cls.id());
+            e.putLong("value", NavalCombat.prizeValue(s));
+            e.putLong("refit", NavalCombat.refitFee(s));
+            prizes.add(e);
+        }
+        t.put("prizes", prizes);
+        t.putBoolean("marine", d.faction == com.grandline.player.Faction.MARINE);
         GLNetwork.toPlayer(sp, new GLNetwork.OpenScreen("shipyard", t));
     }
 
@@ -131,6 +160,30 @@ public final class Shipyard {
                 if (d.beli < cost && !sp.isCreative()) return;
                 if (!sp.isCreative()) d.beli -= cost;
                 ship.repair(ship.maxHull());
+                ship.setRigging(1f);
+            }
+            case "customise" -> {
+                ShipEntity ship = nearestOwned(sp);
+                if (ship == null || ship.flag(ShipEntity.F_PRIZE)) {
+                    sp.sendSystemMessage(Component.translatable("grandline.ship.bring_ship"));
+                    return;
+                }
+                ShipLook look = new ShipLook(t.getString("figurehead"), t.getString("emblem"), t.getInt("emblemc"), t.getInt("flagc")).valid();
+                if (look.emblem().equals("marine") && d.faction != com.grandline.player.Faction.MARINE) look = new ShipLook(look.figurehead(), "skull", look.emblemColor(), look.flagColor());
+                long fee = customiseFee(ship, look);
+                if (d.beli < fee && !sp.isCreative()) {
+                    sp.sendSystemMessage(Component.translatable("grandline.shop.poor").withStyle(ChatFormatting.RED));
+                    return;
+                }
+                if (!sp.isCreative()) d.beli -= fee;
+                customise(ship, look, t.getInt("sail") & 0xFFFFFF, t.getInt("hullc") & 0xFFFFFF);
+                sp.sendSystemMessage(Component.translatable("grandline.naval.customised", ship.shipName()).withStyle(ChatFormatting.GOLD));
+            }
+            case "sell_prize", "claim_prize" -> {
+                ShipEntity prize = prizeById(sp, t.getString("ship"));
+                if (prize == null) return;
+                if (t.getString("op").equals("sell_prize")) sellPrize(sp, prize);
+                else claimPrize(sp, prize);
             }
             case "recover" -> {
                 ShipRegistry reg = ShipRegistry.get(sp.server);
@@ -156,7 +209,65 @@ public final class Shipyard {
             default -> {}
         }
         CharacterManager.markDirty(sp);
-        open(sp, npc);
+        open(sp, npc, t.getString("op").equals("customise"));
+    }
+
+    /** 2,000 Beli for paint and flags, plus 8,000 to carve a new figurehead. */
+    public static long customiseFee(ShipEntity ship, ShipLook look) {
+        return 2000L + (look.figurehead().equals(ship.look().figurehead()) ? 0 : 8000L);
+    }
+
+    /** Apply a look and paint to a ship and record it (synced to clients by the entity, saved in the registry). */
+    public static void customise(ShipEntity ship, ShipLook look, int sail, int hull) {
+        ship.setLook(look);
+        ship.setColors(sail, hull);
+        if (ship.getServer() != null) ShipRegistry.get(ship.getServer()).update(ship);
+    }
+
+    @Nullable
+    private static ShipEntity prizeById(ServerPlayer sp, String id) {
+        for (ShipEntity s : sp.serverLevel().getEntitiesOfClass(ShipEntity.class, sp.getBoundingBox().inflate(80), s -> s.flag(ShipEntity.F_PRIZE) && sp.getUUID().equals(s.owner)))
+            if (s.shipId.toString().equals(id)) return s;
+        return null;
+    }
+
+    /** The shipwright buys a prize: Beli for the captain, the ship is broken up. */
+    public static boolean sellPrize(ServerPlayer sp, ShipEntity prize) {
+        if (!prize.flag(ShipEntity.F_PRIZE) || !sp.getUUID().equals(prize.owner)) return false;
+        long value = NavalCombat.prizeValue(prize);
+        CharacterData d = Characters.get(sp);
+        d.beli += value;
+        CharacterManager.markDirty(sp);
+        NavalCombat.unlink(prize);
+        prize.ejectPassengers();
+        ShipRegistry.get(sp.server).remove(prize.shipId);
+        prize.discard();
+        sp.sendSystemMessage(Component.translatable("grandline.naval.prize_sold", prize.shipName(), String.format("%,d", value)).withStyle(ChatFormatting.GOLD));
+        return true;
+    }
+
+    /** Refit a prize into the captain's fleet (fee: a tenth of its class price). */
+    public static boolean claimPrize(ServerPlayer sp, ShipEntity prize) {
+        if (!prize.flag(ShipEntity.F_PRIZE) || !sp.getUUID().equals(prize.owner)) return false;
+        long fee = NavalCombat.refitFee(prize);
+        CharacterData d = Characters.get(sp);
+        if (d.beli < fee && !sp.isCreative()) {
+            sp.sendSystemMessage(Component.translatable("grandline.shop.poor").withStyle(ChatFormatting.RED));
+            return false;
+        }
+        if (!sp.isCreative()) d.beli -= fee;
+        CharacterManager.markDirty(sp);
+        prize.setFlag(ShipEntity.F_PRIZE, false);
+        prize.setShipName(d.name + "'s " + Component.translatable("ship_class.grandline." + prize.cls.id()).getString());
+        prize.setLook(ShipLook.DEFAULT);
+        prize.setColors(0xF4EEDC, 0x8A5A32);
+        prize.repair(prize.maxHull());
+        prize.setRigging(1f);
+        ShipRegistry reg = ShipRegistry.get(sp.server);
+        if (reg.get(prize.shipId) == null) reg.register(prize);
+        reg.update(prize);
+        sp.sendSystemMessage(Component.translatable("grandline.naval.prize_claimed", prize.shipName()).withStyle(ChatFormatting.GOLD));
+        return true;
     }
 
     @Nullable
@@ -165,6 +276,7 @@ public final class Shipyard {
         double bd = 80 * 80;
         for (ShipEntity s : sp.serverLevel().getEntitiesOfClass(ShipEntity.class, sp.getBoundingBox().inflate(80))) {
             if (!sp.getUUID().equals(s.owner) && !sp.isCreative()) continue;
+            if (s.flag(ShipEntity.F_PRIZE) || s.flag(ShipEntity.F_NPC)) continue; // prizes are sold or refitted first
             double d = s.distanceToSqr(sp);
             if (d < bd) {
                 bd = d;
@@ -211,6 +323,7 @@ public final class Shipyard {
             ship.interiorIndex = restore.interior;
             ship.setShipName(restore.name);
             ship.setColors(restore.sailColor, restore.hullColor);
+            ship.setLook(ShipLook.decode(restore.look));
             for (String u : restore.upgrades.split(",")) if (!u.isEmpty()) ship.addUpgrade(u);
             ship.setHull(ship.maxHull());
             l.addFreshEntity(ship);
