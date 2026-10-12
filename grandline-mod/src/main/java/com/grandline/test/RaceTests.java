@@ -178,6 +178,16 @@ final class RaceTests {
             check("Fish-Man swims faster under water, Merfolk fastest", Math.abs(human - 1) < 1e-6 && fish >= 1.8 && mer > fish,
                     String.format("swim speed human %.2f, fish-man %.2f, merfolk %.2f", human, fish, mer));
 
+            // NPCs of the sea races swim like the players of those races
+            HumanoidNpc fishNpc = npc(l, "resident", 1, at.offset(3, 0, 0));
+            fishNpc.setRace(Race.FISHMAN);
+            fishNpc.tickCount = 20;
+            com.grandline.race.RacePowers.tickNpc(fishNpc);
+            var npcSwim = fishNpc.getAttribute(net.neoforged.neoforge.common.NeoForgeMod.SWIM_SPEED);
+            double npcSwimV = npcSwim == null ? 0 : npcSwim.getValue();
+            check("Fish-Man NPCs get the racial swim speed", npcSwimV >= 1.8, String.format("swim speed %.2f", npcSwimV));
+            fishNpc.discard();
+
             // Three-Eye foresight: every hit in the window is dodged; without it the same hit lands
             HumanoidNpc att = npc(l, "marine", 3, at.offset(0, 0, 2));
             att.setTarget(fp);

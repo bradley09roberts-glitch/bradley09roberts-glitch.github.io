@@ -179,6 +179,7 @@ public abstract class GLNpc extends PathfinderMob {
         if (level().isClientSide) return;
         if (stamina < 100 + tier() * 10) stamina += 0.5f;
         com.grandline.fruit.FruitRules.tick(this);
+        if (this instanceof HumanoidNpc) com.grandline.race.RacePowers.tickNpc(this); // swim speed and racial passives (Fish-Men, Sky People...)
         if (hasEffect(ModEffects.KNOCKED_OUT)) {
             getNavigation().stop();
             setTarget(null);

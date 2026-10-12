@@ -76,6 +76,19 @@ public final class RacePowers {
             sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 200, 0, false, true));
             RaceKit.tell(sp, "grandline.race.sulong_end");
         }
+        passives(sp, r, s);
+    }
+
+    /** Racial passives for NPCs of other races (swim speed and the status-effect passives; no Sulong cycle). */
+    public static void tickNpc(LivingEntity e) {
+        if (e.tickCount % 20 != 0) return;
+        Race r = RaceKit.raceOf(e);
+        if (r == null) return;
+        applySwim(e, r);
+        passives(e, r, CombatState.of(e));
+    }
+
+    private static void passives(LivingEntity sp, Race r, CombatState s) {
         switch (r) {
             case HUMAN -> {
                 // Indomitable: humans fight hardest with their backs to the wall
@@ -111,7 +124,7 @@ public final class RacePowers {
         }
     }
 
-    private static void eff(ServerPlayer sp, net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> e, int amp) {
+    private static void eff(LivingEntity sp, net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> e, int amp) {
         sp.addEffect(new MobEffectInstance(e, 60, amp, true, false));
     }
 
