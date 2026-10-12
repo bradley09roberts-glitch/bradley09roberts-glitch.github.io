@@ -838,6 +838,19 @@ First run of a real client against the dedicated server. Result: no client crash
   ("The merchant Matano Hoshino joins you, bound for San Norvence"), career titles in chat, 74 sound files decoded
   and 48/48 events resolved, the ambience reading open sea (no audio device in that run, so nothing was heard).
 
+### A mate overboard in one two-client run (12:45–13:40)
+- One two-client run of four today had the mate drop off the captain's deck while sailing (the deck slid away,
+  the mate fell about 5 blocks and stayed behind; that client ran at 2 fps on the shared container, and a merchant
+  ship hailed at about that time, but she was 47 blocks off and her deck never under the mate). The cause is not
+  established. The commit that added a "one deck at a time" guard (`ShipClientHooks.claim`: a player is carried
+  only by the deck they were already on) describes the merchant as the cause; that was wrong. The guard is kept as
+  a safeguard for boarding actions and ships side by side, but it is not proven to fix that run.
+- To test it, `/grandline test passing [offset]` launches a merchant ship sailing past the player's ship the other
+  way; the two-client test runs it with the passer's hull aimed right under the mate. With the guard switched off
+  the mate still stayed on deck (the ships' collision handling bumps them apart before the decks overlap), so the
+  staging does not reproduce the incident either. The mate's log now FAILs whenever they leave the deck while the
+  captain sails, so a recurrence is caught.
+
 ## Work in flight (background agents)
 - None.
 
