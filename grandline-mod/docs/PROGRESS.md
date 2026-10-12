@@ -579,10 +579,12 @@ First run of a real client against the dedicated server. Result: no client crash
   (they revert anyway); hands get a new name each time they are put down; crew ships are repaired at the dock but not
   otherwise kept (no recall or mooring); a claim whose founder and captain are both gone needs an operator to transfer.
 - After the merge (with the boss fights, sound and ambience): the first full run had 7 FAILs, all raid checks after
-  the landing: the landing party's spots at the base's edge lie up to 221 blocks from the dock on a big island,
-  outside the area the test loaded, so the ship arrived and could not land. The test now keeps the flag area
-  loaded (a crew member within 160 blocks keeps it loaded in real play) and reports spots and crew if a landing
-  fails (`BaseRaids.landingReport`). Full phase 1 576/576, phase 2 18/18, no exception (11:00-11:30).
+  the landing: the ship reached her anchorage but never put raiders ashore (a landing by hand failed too). The
+  landing spots are at the base's edge, up to 221 blocks from the dock on a big island; with the flag area loaded
+  explicitly in that step the ship lands within 8 ticks, so the spots were most likely not loaded (an earlier step
+  had forced them; why they were not ready then is not established). The test now loads the flag area there and
+  reports spots and crew if a landing fails (`BaseRaids.landingReport`); in real play a crew member within 160
+  blocks keeps the base loaded. Full phase 1 576/576, phase 2 18/18, no exception (11:00-11:30).
 
 ## Work in flight (background agents)
 - Faction careers (ranks, titles, perks for every path).
