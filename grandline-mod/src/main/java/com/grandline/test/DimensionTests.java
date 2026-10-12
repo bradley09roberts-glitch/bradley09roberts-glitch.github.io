@@ -75,6 +75,56 @@ final class DimensionTests {
         return ship;
     }
 
+    /** A ferry booked at a dockworker sails the passenger to another island of the same sea and lands them on its dock. */
+    static void ferry(Deque<SelfTest.Step> steps) {
+        final ShipEntity[] ferry = new ShipEntity[1];
+        final String[] dest = new String[1];
+        final int[] waited = {0};
+        steps.add(s -> {
+            ServerLevel ow = s.overworld();
+            WorldPlan plan = WorldPlan.of(s);
+            Island home = plan.byId("shiokaze_isle");
+            var sp = SelfTest.fake(s);
+            var d = com.grandline.player.Characters.get(sp);
+            for (Island i : plan.islands) if (i.zone == home.zone) d.discoveredIslands.add(i.id);
+            var st = home.settlement();
+            BlockPos dock = new BlockPos(st.dockX, 0, st.dockZ);
+            load(ow, dock.getX(), dock.getZ(), 3);
+            dock = dock.atY(ow.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, dock.getX(), dock.getZ()));
+            HumanoidNpc worker = ModEntities.HUMANOID_NPC.get().create(ow);
+            worker.moveTo(dock.getX() + 0.5, dock.getY(), dock.getZ() + 0.5, 0, 0);
+            worker.configure("dockworker", 1, home.id, dock, "", ow.random);
+            ow.addFreshEntity(worker);
+            sp.teleportTo(dock.getX() + 1.5, dock.getY(), dock.getZ() + 0.5);
+            var opts = new net.minecraft.nbt.ListTag();
+            com.grandline.navigation.Ferries.addOptions(sp, worker, opts);
+            SelfTest.check("dockworkers offer ferries to discovered islands of the same sea", !opts.isEmpty(), opts.size() + " routes, first: " + (opts.isEmpty() ? "" : opts.getString(0)));
+            if (opts.isEmpty()) return 0;
+            String opt = opts.getString(0);
+            dest[0] = opt.split("\\|")[1];
+            d.beli = Math.max(d.beli, 100000);
+            com.grandline.navigation.Ferries.choose(sp, worker, opt);
+            ferry[0] = sp.getVehicle() instanceof ShipEntity f ? f : null;
+            SelfTest.check("booking a passage puts you aboard the ferry", ferry[0] != null && ferry[0].ferryTarget != null, ferry[0] == null ? "not aboard" : "aboard, bound for " + dest[0]);
+            if (ferry[0] != null) ferry[0].ferrySpeed = 9f; // test speed
+            worker.discard();
+            return 1;
+        });
+        steps.add(s -> {
+            if (ferry[0] == null) return 0;
+            var sp = SelfTest.fake(s);
+            follow(ferry[0]);
+            ChunkPos ahead = new ChunkPos(BlockPos.containing(ferry[0].position().add(ferry[0].heading().scale(48))));
+            s.overworld().getChunkSource().addRegionTicket(TicketType.FORCED, ahead, 2, ahead);
+            if (!ferry[0].isRemoved() && ++waited[0] < 4000) return -1;
+            Island d = WorldPlan.of(s).byId(dest[0]);
+            double away = d.distance(sp.getBlockX(), sp.getBlockZ()) - d.radius;
+            SelfTest.check("the ferry sails there through the world and lands you on the destination's dock", ferry[0].isRemoved() && !sp.isPassenger() && away < 120,
+                    String.format("after %d ticks: %s, passenger %.0f blocks from %s's shore", waited[0], ferry[0].isRemoved() ? "arrived" : "still sailing at " + ferry[0].blockPosition().toShortString(), away, dest[0]));
+            return 0;
+        });
+    }
+
     /** Fruit awakening: mastery + level start the trial; fruit kills and the New World complete it. */
     static void awakening(Deque<SelfTest.Step> steps) {
         steps.add(s -> {

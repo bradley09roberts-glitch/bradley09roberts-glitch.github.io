@@ -78,6 +78,7 @@ public final class SelfTest {
         REPORT.add("Grand Line Odyssey self-test, phase " + PHASE + ", " + new Date());
         if (PHASE.equals("1")) phase1();
         else if (PHASE.equals("dims")) {
+            DimensionTests.ferry(steps);
             DimensionTests.awakening(steps);
             DimensionTests.shipClasses(steps);
             DimensionTests.phase1(steps);
@@ -707,6 +708,7 @@ public final class SelfTest {
         });
         DimensionTests.awakening(steps);
         DimensionTests.shipClasses(steps);
+        DimensionTests.ferry(steps);
         DimensionTests.phase1(steps);
         // ---------- persistence fixtures for phase 2 ----------
         steps.add(s -> {
