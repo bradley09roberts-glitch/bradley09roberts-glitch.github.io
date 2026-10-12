@@ -219,6 +219,23 @@ final class CareerTests {
         }
     }
 
+    /** A rowboat registered to the player (a record in the ship registry, as after a purchase) flying the given colours. */
+    private static ShipEntity registeredBoat(MinecraftServer s, ServerPlayer p, ShipLook look) {
+        ShipEntity boat = ModEntities.SHIPS.get(ShipClass.ROWBOAT).get().create(s.overworld());
+        boat.owner = p.getUUID();
+        boat.ownerName = Characters.get(p).name;
+        boat.moveTo(p.getX(), WorldPlan.SEA_LEVEL + 1, p.getZ());
+        boat.setLook(look);
+        ShipRegistry.get(s).register(boat);
+        ShipRegistry.get(s).update(boat);
+        return boat;
+    }
+
+    private static ShipLook lookOf(MinecraftServer s, ShipEntity boat) {
+        var r = ShipRegistry.get(s).get(boat.shipId);
+        return r == null ? ShipLook.DEFAULT : ShipLook.decode(r.look);
+    }
+
     /** Sink an NPC ship through the hull hook (the player fought it): LivingSea rewards and careers follow. */
     private static void sink(ShipEntity ship, ServerPlayer by) {
         ship.hurtHull(ship.hull() + 1, by);
@@ -547,17 +564,22 @@ final class CareerTests {
             d.career.merit = 100;
             for (int i = 0; i < 3; i++) npc(l, "marine", 2, a.offset(2, 0, i - 1)).hurt(x.damageSources().playerAttack(x), 1f);
             boolean demoted = Careers.rank(d) == 1 && d.career.demerits == 2 && told(x, "grandline.career.demoted") && d.career.merit <= 30;
+            String demotedTo = rankId(d) + " (merit " + d.career.merit + ")";
             npc(l, "villager", 1, a.offset(-2, 0, 0)).hurt(x.damageSources().playerAttack(x), 1f);
             int afterCivilian = d.career.demerits;
+            ShipEntity gull = registeredBoat(s, x, ShipLook.MARINE);
             Bounties.raise(x, d, 3_000_000L, Component.literal("test crime"));
             boolean recruit = Careers.rank(d) == 0 && d.faction == Faction.MARINE && d.bounty == 0;
             long news0 = news("grandline.career.announce.deserter");
             Bounties.raise(x, d, 3_000_000L, Component.literal("test crime"));
             boolean deserted = d.faction == Faction.PIRATE && d.flags.contains(Careers.DESERTER) && d.bounty >= 5_000_000L && d.career.track.equals("pirate")
-                    && news("grandline.career.announce.deserter") == news0 + 1 && name(x).contains("career.grandline.pirate.deserter");
+                    && news("grandline.career.announce.deserter") == news0 + 1 && name(x).contains("career.grandline.pirate.deserter")
+                    && lookOf(s, gull).emblem().equals("skull");
+            ShipRegistry.get(s).remove(gull.shipId);
             check("striking Marines and civilians earns demerits: a Petty Officer is demoted (merit cut back)", demoted && afterCivilian == 5,
-                    "rank " + rankId(d) + ", demerits after civilian " + afterCivilian);
-            check("further crimes demote to Seaman Recruit, then the recruit deserts: a pirate with a bounty, announced, titled Deserter", recruit && deserted,
+                    "demoted to " + demotedTo + ", demerits after civilian " + afterCivilian);
+            check("further crimes demote to Seaman Recruit, then the recruit deserts: a pirate with a bounty, announced, titled Deserter, the gull struck from their ship",
+                    recruit && deserted,
                     "recruit " + recruit + ", faction " + d.faction.id() + ", bounty " + d.bounty + ", flags deserter " + d.flags.contains(Careers.DESERTER));
             // the old rule still holds: a Marine whose standing collapses deserts (now with the career's bounty)
             var y = account(s, "CareerY");
@@ -673,10 +695,14 @@ final class CareerTests {
             d.level = 50;
             Careers.check(p);
             boolean waits = Careers.rank(d) == 1 && Careers.missing(p, d, CareerTrack.PIRATE, 2).stream().anyMatch(c -> JourneyTests.flat(c).contains("career.grandline.req.emperor_deed"));
+            ShipEntity flagship = registeredBoat(s, p, new ShipLook("skull", "flame", 0xF0F0F0, 0x1A1A1A));
             beat(l, p, "hrolf", a.offset(3, 0, 3));
-            boolean emperor = Careers.rank(d) == 2 && d.career.emperorDeed && name(p).contains("career.grandline.pirate.emperor") && Journey.done(p, "career_pirate_emperor");
-            check("a billion-Beli Supernova waits for an Emperor-class deed; beating an Emperor (Hrolf yields) makes an Emperor of the Sea", waits && emperor,
-                    "waits " + waits + ", rank " + rankId(d) + ", deed " + d.career.emperorDeed);
+            ShipLook colours = lookOf(s, flagship);
+            ShipRegistry.get(s).remove(flagship.shipId);
+            boolean emperor = Careers.rank(d) == 2 && d.career.emperorDeed && name(p).contains("career.grandline.pirate.emperor") && Journey.done(p, "career_pirate_emperor")
+                    && colours.emblem().equals("flame") && colours.flagColor() == 0x9E2222 && colours.emblemColor() == 0xE8C040;
+            check("a billion-Beli Supernova waits for an Emperor-class deed; beating an Emperor (Hrolf yields) makes an Emperor of the Sea; their ships fly their Jolly Roger in gold on crimson",
+                    waits && emperor, "waits " + waits + ", rank " + rankId(d) + ", deed " + d.career.emperorDeed + ", flag " + colours.encode());
             // territory: a settled island of the Grand Line
             WorldPlan plan = WorldPlan.of(s);
             Island target = null;
