@@ -127,6 +127,18 @@ public final class BusterCall {
             this.focus = target.position();
         }
 
+        /** Each warship: distance to the target now, her station's distance, sail and speed (self-test). */
+        public String fleetReport() {
+            StringBuilder b = new StringBuilder();
+            for (ShipEntity sh : ships) {
+                Vec3 st = stations.get(sh.getUUID());
+                b.append(String.format(" [%s %.0f from target, station %s, sail %d%s, speed %.2f]", sh.cls.name().toLowerCase(), horiz(sh.position(), focus),
+                        st == null ? "-" : String.format("%.0f", horiz(st, focus)), sh.sail(), sh.isRemoved() ? " removed" : "",
+                        sh.getDeltaMovement().horizontalDistance()));
+            }
+            return b.toString();
+        }
+
         public boolean active() {
             return phase == Phase.WARNING || phase == Phase.SAILING || phase == Phase.BOMBARD;
         }
