@@ -17,6 +17,7 @@ from assetgen import source, data                      # noqa: E402
 from assetgen import items, misc_items, blocks, fx, fx_extra  # noqa: E402,F401  (misc_items, fx_extra register sprites)
 from assetgen import skins, npcs                        # noqa: E402,F401  (npcs registers skins)
 from assetgen import naval_items                        # noqa: E402  (registers sprites; recipes merged below)
+from assetgen import activity_items                     # noqa: E402  (sea activities: sprites, recipes, tags, loot modifier)
 
 RES = source.RES
 A = os.path.join(RES, 'assets/grandline')
@@ -102,8 +103,10 @@ def main(prune=False):
         js(D, f'grandline/loot_table/chests/{name}.json', table)
     for name, table in data.block_loot().items():
         js(D, f'grandline/loot_table/blocks/{name}.json', table)
-    for name, r in {**data.recipes(), **naval_items.recipes()}.items():
+    for name, r in {**data.recipes(), **naval_items.recipes(), **activity_items.recipes()}.items():
         js(D, f'grandline/recipe/{name}.json', r)
+    for rel, obj in activity_items.data_files().items():
+        js(D, rel, obj)
     for name, t in data.item_tags(weapons).items():
         js(D, f'minecraft/tags/item/{name}.json', t)
     for name, t in data.block_tags().items():

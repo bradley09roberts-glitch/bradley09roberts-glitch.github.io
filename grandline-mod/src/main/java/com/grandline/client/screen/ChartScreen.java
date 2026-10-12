@@ -63,6 +63,21 @@ public class ChartScreen extends Screen {
                 g.drawString(font, name, x + r + 2, z - 4, known ? INK : INK_FADED, false);
             }
         }
+        // treasure map targets the player knows: a red ink X (faded once the treasure has been found)
+        ListTag tr = data.getList("treasures", Tag.TAG_COMPOUND);
+        for (int i = 0; i < tr.size(); i++) {
+            CompoundTag e = tr.getCompound(i);
+            int x = sx(e.getInt("x")), z = sz(e.getInt("z"));
+            int col = e.getBoolean("solved") ? 0xA07A6A55 : 0xFFC0201C;
+            for (int q = -2; q <= 2; q++) {
+                g.fill(x + q, z + q, x + q + 1, z + q + 1, col);
+                g.fill(x + q, z - q, x + q + 1, z - q + 1, col);
+            }
+            if (zoom > 6) {
+                Component isl = e.getString("name").isEmpty() ? Component.translatable("island.grandline." + e.getString("island")) : Component.literal(e.getString("name"));
+                g.drawString(font, Component.translatable("screen.grandline.chart_treasure", isl), x + 4, z + 3, col, false);
+            }
+        }
         int px = sx(data.getInt("px")), pz = sz(data.getInt("pz"));
         for (int i = -3; i <= 3; i++) { // you are here: a red ink cross
             g.fill(px + i, pz + i, px + i + 1, pz + i + 1, 0xFFB01818);

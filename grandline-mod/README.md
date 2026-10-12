@@ -70,6 +70,11 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
 - **Paintings**: ten painted scenes of the seas; merchants sell three on each island and treasure hides more.
 - **Crew**: recruit named characters through their quests; they follow you, fight with you, revive you and give ship
   bonuses (shipwright, helmsman, cook, doctor, navigator, musician, sniper...).
+- **Treasure, fishing, cooking**: treasure maps (chest loot, shady dealers, quests; two torn halves make a grand map)
+  lead to a real island secret: use one to see the island and its X, which the sea chart marks; opening the chest
+  solves it. A rod cast at sea lands that sea's own fish (a fishing skill raises their quality; storms and a navigator
+  bring up giants and Sea King fry). Cook them at a campfire, smoker or furnace, or into dishes in the crafting grid,
+  for meal buffs (stamina, strength, Haki, swimming, cold/heat resistance); a crew cook cooks better and feeds you at sea.
 
 ## Admin and test commands (op)
 
@@ -97,6 +102,7 @@ python3 -I tools/gen_animations.py
 | Dedicated-server gameplay self-test | `rm -rf run/world run/selftest-*.txt && GL_SELFTEST=1 ./gradlew runServer` → `run/selftest-phase1.txt` |
 | Restart persistence | then `GL_SELFTEST=2 ./gradlew runServer` → `run/selftest-phase2.txt` |
 | Sky/deep-sea quick test | `GL_SELFTEST=dims ./gradlew runServer` |
+| Treasure maps, fishing, cooking quick test | `GL_SELFTEST=activities ./gradlew runServer` → `run/selftest-phaseactivities.txt` |
 | Real client (software GL) | server: `GL_SELFTEST=client ./gradlew runServer`; client: `GL_CLIENTTEST=1 xvfb-run -a ./gradlew runClient` → `run-client/screenshots/` |
 | Two clients on one ship | as above with `GL_CLIENTTEST=mp_a ./gradlew runClient` and `GL_CLIENTTEST=mp_b ./gradlew runClient2` |
 | Server load (20 simulated players) | `GL_SELFTEST=load ./gradlew runServer` (`GL_LOADTEST_PLAYERS`, `GL_LOADTEST_SECONDS`) → `run/loadtest-report.txt` |

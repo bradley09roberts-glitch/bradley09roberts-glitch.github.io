@@ -25,7 +25,8 @@ import java.util.UUID;
 public final class CrewBonuses {
     public static Set<String> activeRoles(ServerPlayer sp) {
         Set<String> roles = new HashSet<>();
-        UUID cid = CrewManager.captainCharacter(sp);
+        // crews are kept per character id (CrewManager.captainCharacter only answers for crew NPCs)
+        UUID cid = Characters.get(sp).characterId;
         if (cid == null) return roles;
         List<String> members = CrewManager.members(sp.server, cid);
         for (String id : members) {

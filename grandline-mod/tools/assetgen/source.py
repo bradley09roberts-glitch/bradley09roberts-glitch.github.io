@@ -17,6 +17,8 @@ def item_ids():
     # feature registers that add their items to ModItems.ITEMS from their own class
     src = _read('registry/ModItems.java') + _read('ship/NavalItems.java')
     plain = re.findall(r'ITEMS\.register\("([a-z0-9_]+)"', src)
+    # sea activities: treasure maps, catches (fish("...")) and dishes (dish("..."))
+    plain += re.findall(r'(?:ITEMS\.register|\bfish|\bdish)\("([a-z0-9_]+)"', _read('activity/ActivityItems.java'))
     weapons = re.findall(r'\bweapon\("([a-z0-9_]+)"', src)
     return plain, weapons
 

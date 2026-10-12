@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "grandline:meat_on_bone"
+    },
+    {
+      "item": "grandline:meat_on_bone"
+    },
+    {
+      "item": "grandline:sea_king_roast"
+    },
+    {
+      "item": "grandline:grilled_fish"
+    },
+    {
+      "item": "minecraft:bread"
+    },
+    {
+      "item": "minecraft:apple"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "grandline:pirates_feast"
+  }
+}

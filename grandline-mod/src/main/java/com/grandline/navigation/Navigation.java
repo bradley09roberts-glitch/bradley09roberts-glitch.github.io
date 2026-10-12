@@ -163,6 +163,7 @@ public final class Navigation {
             l.add(e);
         }
         t.put("islands", l);
+        t.put("treasures", com.grandline.activity.TreasureMaps.chartMarks(sp)); // X marks of the treasure maps read
         t.putInt("px", sp.getBlockX());
         t.putInt("pz", sp.getBlockZ());
         t.putInt("total", plan.islands.size());

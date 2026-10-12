@@ -416,6 +416,47 @@
           "weight": 2
         }
       ]
+    },
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "grandline:treasure_map",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:torn_map",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "grandline:map_half": 0
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:torn_map",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "grandline:map_half": 1
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:empty",
+          "weight": 12
+        }
+      ]
     }
   ],
   "random_sequence": "grandline:chests/ruin"

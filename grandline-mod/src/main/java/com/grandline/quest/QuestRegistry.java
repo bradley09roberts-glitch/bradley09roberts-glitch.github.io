@@ -61,6 +61,7 @@ public final class QuestRegistry {
         StoryQuests.register(ALL);
         StoryQuestsExtra.register(ALL); // Skypiea, Fish-Man Island and a local story on every other canon island
         IslandQuestsExtra.register(ALL); // a local job on each canon island added by CanonIslands.additions
+        com.grandline.activity.ActivityQuests.register(ALL); // sea activities: fishing errands, treasure board job
     }
 
     // ------------------------------------------------------------------ faction variants & requirements
