@@ -202,8 +202,13 @@ public final class ClientSelfTest {
         cmd("gamemode survival", 10);
         cmd("grandline island tp shiokaze_isle", 80);
 
-        // NPC line-up, facing south
-        cmd("tp @s ~ ~ ~ 0 0", 10);
+        // NPC line-up, facing south, on a stone stage above the town: the town's layout changes with the world seed and
+        // stepping along the line must never put the tester inside a wall (suffocating while knocked down ends the story)
+        cmd("fill ~-10 ~40 ~-14 ~24 ~40 ~14 minecraft:smooth_stone", 10);
+        cmd("fill ~-10 ~41 ~-14 ~24 ~46 ~14 minecraft:air", 10);
+        cmd("tp @s ~ ~41 ~ 0 0", 20);
+        cmd("effect give @s minecraft:resistance 900 3 true", 5);
+        cmd("effect give @s minecraft:regeneration 900 2 true", 5);
         for (String role : new String[]{"marine_captain", "pirate_captain", "fishman_brute", "giant_warrior", "kuja_warrior"}) {
             cmd("grandline npc " + role + " 5", 5);
             cmd("tp @s ~3 ~ ~ 0 0", 5);
