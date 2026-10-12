@@ -152,7 +152,7 @@ public final class WorldBuilder {
         pool.removeAll(campSites);
         for (Site site : campSites) {
             NameSet ns = Content.names(site.culture());
-            Settlement camp = newSettlement(sim, site.culture(), site.pos(), -(long) (dpy * 0.5), ns.campName(r));
+            Settlement camp = newSettlement(sim, site.culture(), site.pos(), -(long) (dpy * 0.5), uniqueCamp(sim, ns, r));
             camp.radius = 30;
             populate(sim, camp, 4 + r.nextInt(4), r);
             stock(camp, r, 0.35);
@@ -184,7 +184,7 @@ public final class WorldBuilder {
         for (Site site : wild) {
             String culture = pickOutlawCulture(r);
             NameSet ns = Content.names(culture);
-            Settlement camp = newSettlement(sim, culture, site.pos(), -(long) (dpy * 2), ns.campName(r));
+            Settlement camp = newSettlement(sim, culture, site.pos(), -(long) (dpy * 2), uniqueCamp(sim, ns, r));
             camp.kind = Settlement.Kind.BANDIT_CAMP;
             camp.radius = 24;
             Faction band = new Faction(UUID.randomUUID());
@@ -267,6 +267,16 @@ public final class WorldBuilder {
             if (dx * dx + dz * dz < min * min) return false;
         }
         return true;
+    }
+
+    public static String uniqueCamp(WorldSim sim, NameSet ns, Random r) {
+        for (int i = 0; i < 20; i++) {
+            String n = ns.campName(r);
+            boolean dup = false;
+            for (Settlement s : sim.settlements.values()) if (s.name.equalsIgnoreCase(n)) dup = true;
+            if (!dup) return n;
+        }
+        return uniqueName(sim, ns, r);
     }
 
     static String uniqueName(WorldSim sim, NameSet ns, Random r) {
@@ -377,9 +387,8 @@ public final class WorldBuilder {
             b.progress = b.total;
             b.state = Building.State.COMPLETE;
             b.completedDay = s.foundedDay + r.nextInt(Math.max(1, (int) -s.foundedDay));
-            // as buildings appear, people take up work there and the stores reflect a working town
+            // as buildings appear, people take up work there
             Jobs.assign(sim, s, 0);
-            stock(s, r, 0.2);
         }
         Life.house(sim, s, sim.residents(s));
         Jobs.assign(sim, s, 0);

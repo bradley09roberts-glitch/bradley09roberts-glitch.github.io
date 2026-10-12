@@ -26,3 +26,13 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
 
 ### Progress log
 - 23:30 BST env inspection, version research, decisions D1–D6.
+- 00:20 BST core mod compiles (sim, world, entity, game, commands, client). Lore agent done (docs/WORLD_BIBLE.md: world = the Haldmarch;
+  Ender Dragon = Nahire, the Sun's chained twin star). Art agent done (79 textures, tools/art). Modpack agent still working.
+- Decisions D7: chat-based UI (clickable /longnight commands) for v0.1 instead of custom screens: works on dedicated servers, scriptable, testable.
+  D8: 1 in-game day = 1 month, 8-day year by default (bible suggests 32; too slow for generations) - configurable daysPerYear.
+  D9: The Long Night beyond stage 2 (blight) only advances after Nahire (Ender Dragon) is slain.
+  D10: Embodied workers produce via the SAME recipes in 8 "work cycles" per day; abstract production is scaled by
+  (1 - embodied work-hours fraction) so a watched settlement never double-produces.
+  D11: No coin-exchange crafting recipes (9-slot grid vs 10p mark would mint money); trades give exact change.
+- Test harness: tools/test/server_scenario.py (RCON-driven dedicated server, fresh hardcore world, restart+reload check);
+  mod/src/test (JUnit via MDG unitTest: sim invariants, pay-once construction, 60-day run, save round-trip).

@@ -26,7 +26,7 @@
       ]
     }
   },
-  "resolved_at": "2026-10-12T23:00:05Z",
+  "resolved_at": "2026-10-12T23:22:45Z",
   "resolver": "tools/pack/resolve_manifest.py (Modrinth API v2; newest release, else beta; never alpha; pins honoured)",
   "warnings": [],
   "files": [
@@ -1192,7 +1192,7 @@
       ],
       "required_by": [],
       "category": "worldgen",
-      "reason": "~100 vanilla-block biomes; Tectonic's documented companion. Adds no NPCs or villages.",
+      "reason": "~100 vanilla-block biomes; Tectonic's documented companion (Tectonic ships the Terralith compat). Terralith's own structure sets - including 'fortified villages' full of villagers - are switched off in config/terralith.json (custom_structures=false) because longnight owns all NPCs.",
       "presets": [
         "performance",
         "rich"

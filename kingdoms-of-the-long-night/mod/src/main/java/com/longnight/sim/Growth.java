@@ -134,7 +134,7 @@ public final class Growth {
         }
         if (site == null) return;
         sim.spareSites.remove(site);
-        Settlement camp = WorldBuilder.newSettlement(sim, parent.culture, site, day, Content.names(parent.culture).campName(r));
+        Settlement camp = WorldBuilder.newSettlement(sim, parent.culture, site, day, WorldBuilder.uniqueCamp(sim, Content.names(parent.culture), r));
         camp.tier = Settlement.Tier.CAMP;
         camp.radius = 30;
         // settlers: the leader's household plus a few young adults

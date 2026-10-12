@@ -86,7 +86,7 @@ public class CitizenEntity extends PathfinderMob {
                 .add(Attributes.MAX_HEALTH, 20)
                 .add(Attributes.MOVEMENT_SPEED, 0.5)
                 .add(Attributes.ATTACK_DAMAGE, 2.0)
-                .add(Attributes.FOLLOW_RANGE, 32)
+                .add(Attributes.FOLLOW_RANGE, 48)
                 .add(Attributes.ARMOR, 0);
     }
 
@@ -168,6 +168,13 @@ public class CitizenEntity extends PathfinderMob {
         entityData.set(HOSTILE, hostile);
         fighter = hostile || p.profession == Profession.GUARD || p.profession == Profession.SOLDIER;
         entityData.set(ARMOR, p.armorTier >= 2 ? "plate" : p.armorTier == 1 && fighter ? "mail" : "");
+        // hoods and helmets sit in the hat layer: only some hairstyles fit under them
+        if (entityData.get(CLOTHES).equals("traveller") || !entityData.get(ARMOR).isEmpty()) {
+            String h = entityData.get(HAIR);
+            if (!h.equals("bald") && !h.equals("braided") && !h.startsWith("beard") && !h.equals("hood_short")) {
+                entityData.set(HAIR, p.sex == Person.Sex.MALE && c.people.equals("dwarf") ? "beard_short" : "hood_short");
+            }
+        }
         setCustomName(Component.literal(p.fullName()));
         setCustomNameVisible(false);
         equip(p, sim.isAdult(p, day));

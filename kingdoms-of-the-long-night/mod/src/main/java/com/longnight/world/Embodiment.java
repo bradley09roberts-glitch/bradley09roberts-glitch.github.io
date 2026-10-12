@@ -37,7 +37,15 @@ public final class Embodiment {
 
     private static final Map<UUID, UUID> BODIES = new HashMap<>();      // person -> entity
     private static final Set<UUID> ACTIVE = new HashSet<>();            // settlements with bodies
-    private static final Map<UUID, Long> FIRST_SEEN = new HashMap<>();
+    /** settlements watched by an admin/test "observer" (chunks force-loaded), treated as if a player stood there */
+    private static final Set<UUID> OBSERVED = new HashSet<>();
+
+    public static boolean observe(ServerLevel level, Settlement s, boolean on) {
+        int r = (s.radius + 32) >> 4;
+        int cx = s.center.getX() >> 4, cz = s.center.getZ() >> 4;
+        for (int x = cx - r; x <= cx + r; x++) for (int z = cz - r; z <= cz + r; z++) level.setChunkForced(x, z, on);
+        return on ? OBSERVED.add(s.id) : OBSERVED.remove(s.id);
+    }
 
     public static boolean isActive(Settlement s) {
         return ACTIVE.contains(s.id);
@@ -58,6 +66,7 @@ public final class Embodiment {
     public static void clear() {
         BODIES.clear();
         ACTIVE.clear();
+        OBSERVED.clear();
     }
 
     public static void tick(ServerLevel level, WorldSim sim) {
@@ -82,7 +91,7 @@ public final class Embodiment {
                 double dx = p.getX() - s.center.getX(), dz = p.getZ() - s.center.getZ();
                 best = Math.min(best, Math.sqrt(dx * dx + dz * dz));
             }
-            boolean near = best <= range + s.radius;
+            boolean near = best <= range + s.radius || OBSERVED.contains(s.id);
             if (near && level.isLoaded(s.center)) {
                 nowActive.add(s.id);
                 if (!s.materialized) materialize(level, sim, s);
@@ -171,7 +180,7 @@ public final class Embodiment {
         s.center = new BlockPos(s.center.getX(), top.getY() - 1, s.center.getZ());
         for (Building b : s.buildings) if (b.origin != null && b.placed == 0) b.origin = new BlockPos(b.origin.getX(), s.center.getY(), b.origin.getZ());
         if (s.kind == Settlement.Kind.SETTLEMENT && !sim.claimed(s.center, 0)) {
-            BlockPos hearth = s.center.above();
+            BlockPos hearth = s.center.offset(0, 1, -4); // in front of the well, which occupies the centre plot
             if (level.getBlockState(hearth).canBeReplaced() || level.getBlockState(hearth).isAir()) {
                 level.setBlock(hearth, ModBlocks.HEARTHSTONE.get().defaultBlockState(), 3);
             }

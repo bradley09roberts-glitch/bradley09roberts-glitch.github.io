@@ -50,6 +50,8 @@ public final class Placer {
 
     private static final Set<UUID> PREPARED = new HashSet<>();
     private static final Set<UUID> DECAYED = new HashSet<>();
+    /** GameTests only: the test arena is roofed with barriers, so tests state where the ground is. */
+    public static Integer testGroundY;
 
     public static boolean areaLoaded(ServerLevel level, Building b) {
         BlockPos o = b.origin;
@@ -62,16 +64,18 @@ public final class Placer {
         if (b.origin == null || !areaLoaded(level, b)) return false;
         int w = b.width(), d = b.depth();
         List<Integer> hs = new ArrayList<>();
-        int water = 0, cols = 0;
+        int water = 0, cols = 0, built = 0;
         for (int x = 0; x < w; x++) {
             for (int z = 0; z < d; z++) {
                 int wx = b.origin.getX() + x, wz = b.origin.getZ() + z;
-                int h = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, wx, wz) - 1;
+                int h = testGroundY != null ? testGroundY + 8 : level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, wx, wz) - 1;
                 // look through tree trunks and plants to the real ground
                 BlockPos p = new BlockPos(wx, h, wz);
                 while (p.getY() > level.getMinBuildHeight() + 1 && isSurfaceClutter(level.getBlockState(p))) p = p.below();
                 hs.add(p.getY());
                 cols++;
+                BlockState surface = level.getBlockState(p);
+                if (!Materials.isNaturalOrReplaceable(surface) && !surface.is(net.minecraft.tags.BlockTags.LOGS)) built++;
                 if (!level.getFluidState(p.above()).isEmpty() || !level.getFluidState(p).isEmpty()) water++;
             }
         }
@@ -81,7 +85,8 @@ public final class Placer {
         int spread = arr[(int) (arr.length * 0.9)] - arr[(int) (arr.length * 0.1)];
         boolean waterOk = b.type == BuildingType.FISHERY || b.type == BuildingType.WELL;
         String problem = null;
-        if (spread > 6) problem = "The ground there is too steep.";
+        if (built > 0) problem = "Something built by other hands stands on that plot.";
+        else if (spread > 6) problem = "The ground there is too steep.";
         else if (!waterOk && water > cols / 4) problem = "That plot is under water.";
         else if (sim.claimed(b.origin, Math.max(w, d))) problem = "That land is claimed by someone else.";
         Blueprint bp = Construction.blueprint(s, b);

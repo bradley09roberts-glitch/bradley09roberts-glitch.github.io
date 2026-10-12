@@ -123,7 +123,7 @@ public class CitizenBrain {
 
     // ------------------------------------------------------------------ movement
 
-    /** Walk towards pos; true when within reach. Detects being stuck and gives up with a reason. */
+    /** Walk towards pos; true when within reach. Long trips go via waypoints; being stuck is detected and explained. */
     boolean goTo(CitizenEntity e, BlockPos pos, double speed, double reach, Person p, String what) {
         double d = Math.sqrt(e.distanceToSqr(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
         if (d <= reach) {
@@ -132,27 +132,41 @@ public class CitizenBrain {
             lastDist = Double.MAX_VALUE;
             return true;
         }
-        if (e.getNavigation().isDone() || e.tickCount % 40 == 0) {
-            if (e.tickCount % 40 == 0) {
-                if (d > lastDist - 0.4) stuck++;
-                else {
-                    stuck = 0;
-                    failures = 0;
-                }
-                lastDist = d;
+        if (e.tickCount % 40 == 0) {
+            // progress check every two seconds
+            if (d > lastDist - 0.5) stuck++;
+            else {
+                stuck = 0;
+                failures = 0;
             }
-            boolean ok = e.getNavigation().moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, speed);
-            if (!ok) stuck++;
+            lastDist = d;
         }
-        if (stuck >= 6) {
+        if (e.getNavigation().isDone() || e.tickCount % 60 == 0) {
+            BlockPos step = pos;
+            if (d > 24 && e.level() instanceof ServerLevel sl) {
+                // pathfinding has a limited range: head for a waypoint on the way
+                double f = 20 / d;
+                int wx = (int) Math.round(e.getX() + (pos.getX() - e.getX()) * f + (stuck > 1 ? rng.nextInt(9) - 4 : 0));
+                int wz = (int) Math.round(e.getZ() + (pos.getZ() - e.getZ()) * f + (stuck > 1 ? rng.nextInt(9) - 4 : 0));
+                step = Places.ground(sl, new BlockPos(wx, pos.getY(), wz));
+            }
+            if (!e.getNavigation().moveTo(step.getX() + 0.5, step.getY(), step.getZ() + 0.5, speed) && e.tickCount % 40 == 0) stuck++;
+        }
+        if (stuck >= 8) {
             stuck = 0;
             failures++;
             p.blocked = "I can't find a way to " + what + ".";
             target = null;
             lastDist = Double.MAX_VALUE;
-            pause(40 + rng.nextInt(60));
+            if (failures >= 3 && e.level() instanceof ServerLevel sl && d < 64) {
+                // truly boxed in (e.g. by a player's wall): step over the obstacle rather than starve
+                BlockPos g = Places.ground(sl, pos);
+                e.teleportTo(g.getX() + 0.5, g.getY(), g.getZ() + 0.5);
+                failures = 0;
+            } else pause(40 + rng.nextInt(60));
             return false;
         }
+        if (stuck == 0 && p.blocked.startsWith("I can't find a way")) p.blocked = "";
         return false;
     }
 

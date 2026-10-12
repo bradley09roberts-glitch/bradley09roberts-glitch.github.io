@@ -31,6 +31,14 @@ import packlib  # noqa: E402
 
 FML_VERSION = "4.0.45"   # net.neoforged.fancymodloader:loader for NeoForge 21.1.259
 
+# (mod, dependency) pairs whose declared range is violated on paper but which were verified to load
+# on the real game; reported as KNOWN instead of ERROR. Re-verify with client_test.py when versions change.
+KNOWN_EXCEPTIONS = {
+    ("iris", "minecraft"): "Iris 1.8.x NeoForge builds declare minecraft [1.21,1.21.1) (excludes 1.21.1 by Maven "
+                           "rules) but NeoForge 21.1.259 loads it and renders shaders - verified by "
+                           "tools/pack/client_test.py --preset rich (see modpack/VERIFICATION.md).",
+}
+
 
 # ---------------------------------------------------------------- Maven ComparableVersion port
 QUALIFIERS = ["alpha", "beta", "milestone", "rc", "snapshot", "", "sp"]
@@ -275,7 +283,11 @@ def check_side(jars, side, mc, neo):
                 if have is None:
                     errors.append(f"[{side}] {where} REQUIRES '{did}' {rng.spec} - missing")
                 elif not rng.contains(have[0]):
-                    errors.append(f"[{side}] {where} requires '{did}' {rng.spec} but {have[0]} is present")
+                    msg = f"[{side}] {where} requires '{did}' {rng.spec} but {have[0]} is present"
+                    if (m["modId"], did) in KNOWN_EXCEPTIONS:
+                        warnings.append("KNOWN: " + msg + " -- " + KNOWN_EXCEPTIONS[(m["modId"], did)])
+                    else:
+                        errors.append(msg)
             elif t == "optional":
                 if have is not None and not rng.contains(have[0]):
                     errors.append(f"[{side}] {where} supports optional '{did}' only in {rng.spec}, but {have[0]} is present")

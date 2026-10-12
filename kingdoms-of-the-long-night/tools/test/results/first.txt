@@ -1,0 +1,257 @@
+PASS server boots with longnight loaded - 78s
+> longnight admin status
+[longnight] day=0 people alive=192 dead=0 settlements=9 outlawCamps=2 ruins=3 realms=6 wars=0 caravans=0 news=7 bodies=0 nightStage=0
+
+PASS world history generated - [longnight] day=0 people alive=192 dead=0 settlements=9 outlawCamps=2 ruins=3 realms=6 wars=0 caravans=0 news=7 bodies=0 nightStage=0
+
+> longnight admin list
+[longnight] SETTLEMENT TOWN Ilvaiath pop=36 buildings=35/35 food=3946 at -557 69 39 
+[longnight] SETTLEMENT VILLAGE Brinestrand pop=26 buildings=31/31 food=2565 at -578 65 948 
+[longnight] SETTLEMENT VILLAGE Savstrand pop=16 buildings=26/26 food=1359 at -766 66 458 
+[longnight] SETTLEMENT VILLAGE Taerelle pop=18 buildings=28/28 food=1628 at -702 66 -492 
+[longnight] SETTLEMENT VILLAGE Lirorin pop=22 buildings=30/30 food=2110 at -839 67 -176 
+[longnight] SETTLEMENT VILLAGE Kingsleigh pop=28 buildings=33/33 food=2915 at -1168 66 -111 
+[longnight] SETTLEMENT VILLAGE Taerorin pop=27 buildings=29/29 food=2515 at -498 69 -324 
+[longnight] SETTLEMENT CAMP Ash Hollow pop=6 buildings=1/1 food=29 at -951 69 -664 
+[longnight] SETTLEMENT CAMP Silverleaf Camp pop=7 buildings=1/1 food=34 at -928 68 609 
+[longnight] BANDIT_CAMP CAMP Oxcart Camp pop=3 buildings=1/1 food=14 at -986 73 145 
+[longnight] BANDIT_CAMP CAMP Oxcart Camp pop=3 buildings=1/1 food=31 at 227 71 406 
+[longnight] RUIN CAMP Ystrel pop=0 buildings=0/4 food=0 at 159 120 -970 
+[longnight] RUIN CAMP Hethmoor pop=0 buildings=0/4 food=0 at 796 68 -619 
+[longnight] RUIN CAMP Kar Vethis pop=0 buildings=0/4 food=0 at 867 65 -761 
+
+> longnight admin validate
+[longnight] VALIDATE OK people=192 settlements=14
+
+PASS invariants hold after generation
+PASS at least one living settlement - ['Ilvaiath', 'Brinestrand', 'Savstrand', 'Taerelle', 'Lirorin', 'Kingsleigh', 'Taerorin', 'Ash Hollow', 'Silverleaf Camp']
+> longnight admin observe Ilvaiath
+[longnight] observing Ilvaiath
+
+> time set 1000
+Set the time to 1000
+
+> longnight admin inspect Ilvaiath
+[longnight] Ilvaiath SETTLEMENT TOWN pop=36 housing=46 treasury=291 materialized=true active=true
+ stock: grain=1728 bread=864 meat=576 vegetables=864 logs=240 planks=640 stone=720 glass=80 iron=48 fuel=160 tools=32 wool=48
+ buildings:
+  well COMPLETE paid=81 placed=0/81 problem=Something built by other hands stands on that plot. No other plot is free.
+  house COMPLETE paid=252 placed=252/252
+  large_house COMPLETE paid=308 placed=308/308
+  house COMPLETE paid=252 placed=252/252
+  large_house COMPLETE paid=308 placed=308/308
+  large_house COMPLETE paid=308 placed=308/308
+  large_house COMPLETE paid=308 placed=308/308
+  house COMPLETE paid=252 placed=252/252
+  farm COMPLETE paid=341 placed=341/341
+  lumber_camp COMPLETE paid=93 placed=93/93
+  storehouse COMPLETE paid=277 placed=277/277
+  quarry COMPLETE paid=140 placed=140/140
+  shrine COMPLETE paid=90 placed=90/90
+  builders_yard COMPLETE paid=90 placed=90/90
+  carpentry COMPLETE paid=243 placed=243/243
+  graveyard COMPLETE paid=115 placed=115/115
+  storehouse COMPLETE paid=277 placed=277/277
+  storehouse COMPLETE paid=277 placed=277/277
+  storehouse COMPLETE paid=277 placed=277/277
+  mill COMPLETE paid=290 placed=290/290
+  bakery COMPLETE paid=248 placed=248/248
+  pasture COMPLETE paid=285 placed=285/285
+  tavern COMPLETE paid=430 placed=430/430
+  hunting_lodge COMPLETE paid=248 placed=248/248
+  mine COMPLETE paid=101 placed=101/101
+  smithy COMPLETE paid=235 placed=235/235
+  market COMPLETE paid=132 placed=132/132
+  granary COMPLETE paid=277 placed=277/277
+  healer_house COMPLETE paid=245 placed=245/245
+  weavery COMPLETE paid=243 placed=243/243
+  town_hall COMPLETE paid=532 placed=532/532
+  school COMPLETE paid=303 placed=303/303
+  temple COMPLETE paid=563 placed=563/563
+  barracks COMPLETE paid=304 placed=304/304
+  library COMPLETE paid=357 placed=357/357
+ people:
+  Paelias Elvayne age=74 quarrier mood=content [body] doing=looking for work BLOCKED=I can't find a way to the quarry.
+  Lysaelle Naerith age=81 merchant mood=content [body] doing=looking for work BLOCKED=I can't find a way to the market.
+  Meriath Elvayne age=11 labourer mood=content [body]
+  Haelia Elvayne age=7 labourer mood=content [body]
+  Zaelis Iriassae age=74 lumberjack mood=content [body] doing=waiting for the lumber camp BLOCKED=I can't find a way to the trees.
+  Thaliss Ysthaval age=66 miner mood=content [body] doing=working the mine BLOCKED=The stores are full; we need another storehouse.
+  Eilthas Iriassae age=3 labourer mood=content [body]
+  Oriaval Iriassae age=3 labourer mood=content [body]
+  Caelvas Quessaril age=92 innkeeper mood=content [body] doing=looking for work BLOCKED=I can't find a way to the tavern.
+  Eiraveth Quessaril age=92 builder mood=content [body] doing=waiting for the next project
+  Jaesrith Ysthaval age=141 carpenter mood=content [body] doing=looking for work BLOCKED=I can't find a way to the carpentry.
+  Lysaelle Caerith the Last Singer age=130 ruler mood=content [body] doing=holding court BLOCKED=I can't find a way to the town hall.
+  Tiriae Ysthaval age=66 shepherd mood=content [body] doing=looking for work BLOCKED=I can't find a way to the pasture.
+  Ilsabeth Ysthaval age=52 miner mood=content [body] doing=working the mine BLOCKED=The stores are full; we need another storehouse.
+  Caelvas Ysthaval age=37 brewer mood=content [body] doing=brewing ale BLOCKED=The stores are full; we need another storehouse.
+  Saerith Liravel age=130 guard mood=content [body] doing=keeping watch BLOCKED=I can't find a way to my post.
+  Myrae Liravel age=118 hunter mood=content [body] doing=hunting and gathering BLOCKED=I can't find a way to the hunting lodge.
+  Meriath Phaerys age=96 quarrier mood=content [body] doing=looking for work BLOCKED=I can't find a way to the quarry.
+  Sivmae Thaelmyr age=100 builder mood=content [body] doing=waiting for the next project
+  Jaesrith Rhaevenne age=159 miller mood=content [body] doing=looking for work BLOCKED=I can't find a way to the mill.
+  Orrithas Rhaevenne age=152 farmer mood=content [body] doing=working the fields BLOCKED=I can't find a way to
+PASS observed settlement materialized
+PASS people have bodies near an observer - 21 bodies
+PASS pre-existing buildings raised in the world - 34 buildings fully placed
+> longnight admin status
+ the fields.
+  Lysaen Caelmorre age=148 blacksmith mood=content [body] doing=looking for work BLOCKED=I can't find a way to the smithy.
+  Haelia Saevaris age=144 farmer mood=content [body] doing=working the fields BLOCKED=I can't find a way to the fields.
+  Thaliss Caelmorre age=171 lumberjack mood=content [body] doing=waiting for the lumber camp BLOCKED=I can't find a way to the trees.
+  Saervhal Brialloth age=163 baker mood=content [body] doing=looking for work BLOCKED=I can't find a way to the bakery.
+  Tiriae Brialloth age=174 builder mood=content [body] doing=waiting for the next project
+  Daesira Brialloth age=37 merchant mood=content [body] doing=looking for work BLOCKED=I can't find a way to the market.
+  Aelrith Thaelmyr age=85 priest mood=content [body] doing=looking for work BLOCKED=I can't find a way to the shrine.
+  Saevia Caelmorre age=85 gravedigger mood=content [body] doing=tending the graves
+  Vaelyra Thaelmyr age=14 labourer mood=content [body]
+  Quaelyss Thaelmyr age=7 labourer mood=content [body]
+  Riavel Aevirel age=141 healer mood=content [body] doing=looking for work BLOCKED=I can't find a way to the house of healing.
+  Caelysse Oriassen age=152 guard mood=content [body] doing=keeping watch BLOCKED=I can't find a way to my post.
+  Vessaril Aevirel age=3 labourer mood=content [body]
+  Ylvaris Aevirel age=11 labourer mood=content [body]
+  Briallae Aevirel age=70 blacksmith mood=content [body] doing=working the forge BLOCKED=The stores are full; we need another storehouse.
+
+> longnight admin validate
+[longnight] day=0 people alive=192 dead=0 settlements=9 outlawCamps=2 ruins=3 realms=6 wars=0 caravans=0 news=7 bodies=36 nightStage=0
+
+FAIL invariants hold with bodies in the world
+> longnight admin skip 1
+[longnight] VALIDATE OK people=192 settlements=14
+
+> longnight admin skip 1
+[longnight] skipped 1 days; now day 1
+
+> longnight admin skip 1
+[longnight] skipped 1 days; now day 2
+
+> longnight admin skip 1
+[longnight] skipped 1 days; now day 3
+
+> longnight admin status
+[longnight] skipped 1 days; now day 4
+
+> longnight admin validate
+[longnight] day=4 people alive=200 dead=0 settlements=9 outlawCamps=2 ruins=3 realms=6 wars=0 caravans=15 news=25 bodies=37 nightStage=0
+
+FAIL invariants hold after 4 simulated days
+> longnight admin raid Ilvaiath
+[longnight] VALIDATE OK people=200 settlements=14
+
+> time set 12500
+[longnight] raid on Ilvaiath by Oxcart Camp scheduled for dusk
+
+> longnight admin inspect Ilvaiath
+Set the time to 12500
+
+> time set 23500
+[longnight] Ilvaiath SETTLEMENT TOWN pop=35 housing=46 treasury=466 materialized=true active=true
+ stock: grain=1728 bread=711 meat=567 vegetables=864 logs=200 planks=640 stone=720 glass=40 iron=12 fuel=160 tools=11 wool=48
+ buildings:
+  well COMPLETE paid=81 placed=0/81 problem=Something built by other hands stands on that plot. No other plot is free.
+  house COMPLETE paid=252 placed=252/252
+  large_house COMPLETE paid=308 placed=308/308
+  house COMPLETE paid=252 placed=252/252
+  large_house COMPLETE paid=308 placed=308/308
+  large_house COMPLETE paid=308 placed=308/308
+  large_house COMPLETE paid=308 placed=308/308
+  house COMPLETE paid=252 placed=252/252
+  farm COMPLETE paid=341 placed=341/341
+  lumber_camp COMPLETE paid=93 placed=93/93
+  storehouse COMPLETE paid=277 placed=277/277
+  quarry COMPLETE paid=140 placed=140/140
+  shrine COMPLETE paid=90 placed=90/90
+  builders_yard COMPLETE paid=90 placed=90/90
+  carpentry COMPLETE paid=243 placed=243/243
+  graveyard COMPLETE paid=115 placed=115/115
+  storehouse COMPLETE paid=277 placed=277/277
+  storehouse COMPLETE paid=277 placed=277/277
+  storehouse COMPLETE paid=277 placed=277/277
+  mill COMPLETE paid=290 placed=290/290
+  bakery COMPLETE paid=248 placed=248/248
+  pasture COMPLETE paid=285 placed=285/285
+  tavern COMPLETE paid=430 placed=430/430
+  hunting_lodge COMPLETE paid=248 placed=248/248
+  mine COMPLETE paid=101 placed=101/101
+  smithy COMPLETE paid=235 placed=235/235
+  market COMPLETE paid=132 placed=132/132
+  granary COMPLETE paid=277 placed=277/277
+  healer_house COMPLETE paid=245 placed=245/245
+  weavery COMPLETE paid=243 placed=243/243
+  town_hall COMPLETE paid=532 placed=532/532
+  school COMPLETE paid=303 placed=303/303
+  temple COMPLETE paid=563 placed=563/563
+  barracks COMPLETE paid=304 placed=304/304
+  library COMPLETE paid=357 placed=357/357
+ people:
+  Paelias Elvayne age=74 quarrier mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Lysaelle Naerith age=81 merchant mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Meriath Elvayne age=11 labourer mood=content [body] doing=sheltering from danger
+  Haelia Elvayne age=7 labourer mood=content [body] doing=sheltering from danger
+  Zaelis Iriassae age=74 lumberjack mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Thaliss Ysthaval age=66 miner mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Eilthas Iriassae age=3 labourer mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Oriaval Iriassae age=3 labourer mood=content [body] doing=sheltering from danger
+  Caelvas Quessaril age=92 innkeeper mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Eiraveth Quessaril age=92 builder mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Jaesrith Ysthaval age=141 carpenter mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Lysaelle Caerith the Last Singer age=130 ruler mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to the town hall.
+  Tiriae Ysthaval age=66 shepherd mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Ilsabeth Ysthaval age=52 miner mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Caelvas Ysthaval age=37 brewer mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Saerith Liravel age=130 guard mood=content [body] doing=keeping watch BLOCKED=I can't find a way to my post.
+  Myrae Liravel age=118 hunter mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Meriath Phaerys age=96 quarrier mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to the quarry.
+  Sivmae Thaelmyr age=100 builder mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Orrithas Rhaevenne age=152 
+> longnight admin validate
+farmer mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Lysaen Caelmorre age=148 blacksmith mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Haelia Saevaris age=144 farmer mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Thaliss Caelmorre age=171 lumberjack mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to the trees.
+  Saervhal Brialloth age=163 baker mood=content [body] doing=looking for work BLOCKED=I can't find a way to the bakery.
+  Tiriae Brialloth age=174 builder mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Daesira Brialloth age=37 merchant mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Aelrith Thaelmyr age=85 priest mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Saevia Caelmorre age=85 gravedigger mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Vaelyra Thaelmyr age=14 labourer mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Quaelyss Thaelmyr age=7 labourer mood=content [body] doing=sheltering from danger
+  Riavel Aevirel age=141 healer mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Vessaril Aevirel age=3 labourer mood=content [body] doing=sheltering from danger
+  Ylvaris Aevirel age=11 labourer mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Briallae Aevirel age=70 blacksmith mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+  Oriavae Quessaril age=0 labourer mood=content [body] doing=sheltering from danger BLOCKED=I can't find a way to shelter.
+
+FAIL invariants hold after a raid
+> longnight admin history
+Set the time to 23500
+
+> longnight admin status
+[longnight] VALIDATE OK people=200 settlements=14
+
+> save-all flush
+Year 380: Harbour-Commune of Brinestrand and Houses of Taerorin fought the War of the Burning Barns; neither side has forgotten it.
+Before the Reckoning: Ystrel fell, and no living folk remember why.
+Before the Reckoning: Hethmoor fell, and no living folk remember why.
+Before the Reckoning: Kar Vethis fell, and no living folk remember why.
+Day 0: The chronicle of the world begins. 4 realms, 7 settlements, 2 camps of settlers, 2 outlaw bands.
+Day 0: Outlaws from Oxcart Camp ransacked part of Ilvaiath.
+
+PASS server restarts on the saved world - 27s
+> longnight admin status
+[longnight] day=1 people alive=199 dead=2 settlements=9 outlawCamps=2 ruins=3 realms=6 wars=0 caravans=22 news=27 bodies=0 nightStage=0
+
+FAIL people/deaths/settlements identical after reload - None vs ('199', '2', '9')
+> longnight admin validate
+[longnight] VALIDATE OK people=201 settlements=14
+
+PASS invariants hold after reload
+PASS no longnight errors in first-server1.log
+PASS no longnight errors in first-server2.log
+
+SUMMARY: 11/15 checks passed
+  failed: invariants hold with bodies in the world
+  failed: invariants hold after 4 simulated days
+  failed: invariants hold after a raid
+  failed: people/deaths/settlements identical after reload

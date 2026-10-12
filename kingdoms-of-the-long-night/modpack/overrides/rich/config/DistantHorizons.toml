@@ -1,0 +1,22 @@
+# Kingdoms of the Long Night (rich preset) - only the Distant Horizons keys we change.
+# DH fills in every other key with its default on first launch.
+_version = 5
+
+[common.worldGenerator]
+	# Generate LODs for unexplored terrain without structures (DH default). Structures appear as you approach.
+	chunkGeneratorMode = "FEATURES"
+
+[client]
+	showDhOptionsButtonInMinecraftUi = true
+
+		[client.advanced.autoUpdater]
+			# A modpack must not update its own mods: versions are pinned by the .mrpack.
+			enableAutoUpdater = false
+			enableSilentUpdates = false
+
+		[client.advanced.graphics.quality]
+			# 128 chunks = ~2 km of far terrain (DH default is 256). Tectonic mountain ranges stay visible
+			# while generation/VRAM cost is about a quarter of the default. Raise it in the DH menu on a strong PC.
+			lodChunkRenderDistanceRadius = 128
+			horizontalQuality = "MEDIUM"
+			verticalQuality = "MEDIUM"

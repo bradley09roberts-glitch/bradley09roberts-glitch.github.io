@@ -57,6 +57,10 @@ garbage-collection pauses.
    Leave *Allow Commands* OFF for a fair hardcore run (you can still use `/locate` etc. only with commands on).
 4. Optional: type a seed. Create. The first chunks take longer than vanilla because the terrain is
    continent-scale; that is normal.
+   If Minecraft shows **"Worlds using Experimental Settings are not supported"** when creating or
+   opening the world, choose **"I know what I'm doing!"** (or *Create Backup and Load*). It is a vanilla
+   notice triggered by the custom terrain data of Tectonic/Terralith, not an error, and it is shown only
+   once per world.
 5. Tips: AppleSkin shows saturation in the HUD; Xaero's World Map opens with **M** and a new
    waypoint is **B**; EMI (recipe viewer) appears beside the inventory; the Ars Nouveau magic path
    starts with the *Worn Notebook* - search for it in EMI to see its recipe. Check all keybinds under

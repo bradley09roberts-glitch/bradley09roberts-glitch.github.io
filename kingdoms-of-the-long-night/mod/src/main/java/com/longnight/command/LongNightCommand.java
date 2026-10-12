@@ -71,6 +71,15 @@ public final class LongNightCommand {
                         .then(Commands.literal("validate").executes(LongNightCommand::validate))
                         .then(Commands.literal("skip").then(Commands.argument("days", IntegerArgumentType.integer(1, 30)).executes(LongNightCommand::skip)))
                         .then(Commands.literal("tp").then(Commands.argument("name", StringArgumentType.greedyString()).executes(LongNightCommand::tp)))
+                        .then(Commands.literal("observe").then(Commands.argument("name", StringArgumentType.greedyString()).executes(c -> {
+                            WorldSim sim = sim(c);
+                            Settlement s = byName(sim, StringArgumentType.getString(c, "name"));
+                            if (s == null) return 0;
+                            Embodiment.observe(c.getSource().getServer().overworld(), s, true);
+                            c.getSource().sendSuccess(() -> Component.literal("[longnight] observing " + s.name), false);
+                            return 1;
+                        })))
+                        .then(Commands.literal("inspect").then(Commands.argument("name", StringArgumentType.greedyString()).executes(LongNightCommand::inspect)))
                         .then(Commands.literal("raid").then(Commands.argument("name", StringArgumentType.greedyString()).executes(LongNightCommand::raid)))
                         .then(Commands.literal("charter").executes(c -> {
                             ServerPlayer p = c.getSource().getPlayerOrException();
@@ -359,6 +368,30 @@ public final class LongNightCommand {
         s.raidStrength = camp.residents.size();
         sim.hooks.spawnRaid(sim, s, camp, s.raidStrength);
         c.getSource().sendSuccess(() -> Component.literal("[longnight] raid on " + s.name + " by " + camp.name + " scheduled for dusk"), true);
+        return 1;
+    }
+
+    static int inspect(CommandContext<CommandSourceStack> c) {
+        WorldSim sim = sim(c);
+        Settlement s = byName(sim, StringArgumentType.getString(c, "name"));
+        if (s == null) return 0;
+        long day = WorldSim.dayOf(c.getSource().getServer().overworld());
+        StringBuilder sb = new StringBuilder("[longnight] " + s.name + " " + s.kind + " " + s.tier + " pop=" + s.residents.size()
+                + " housing=" + s.housingCapacity() + " treasury=" + s.treasury + " materialized=" + s.materialized + " active="
+                + Embodiment.isActive(s) + "\n stock:");
+        for (Commodity cm : Commodity.values()) if (s.stock.get(cm) >= 0.5) sb.append(' ').append(cm.id()).append('=').append(Math.round(s.stock.get(cm)));
+        sb.append("\n buildings:");
+        for (Building b : s.buildings) sb.append("\n  ").append(b.type.id()).append(' ').append(b.state).append(" paid=").append(b.progress)
+                .append(" placed=").append(b.placed).append('/').append(b.total).append(b.problem.isEmpty() ? "" : " problem=" + b.problem);
+        sb.append("\n people:");
+        for (Person p : sim.residents(s)) {
+            UUID body = Embodiment.bodyOf(p.id);
+            sb.append("\n  ").append(p.fullName()).append(" age=").append((int) sim.ageOf(p, day)).append(' ').append(p.profession.id())
+                    .append(" mood=").append(p.moodWord()).append(body != null ? " [body]" : "").append(p.activity.isEmpty() ? "" : " doing=" + p.activity)
+                    .append(p.blocked.isEmpty() ? "" : " BLOCKED=" + p.blocked);
+        }
+        String out = sb.toString();
+        c.getSource().sendSuccess(() -> Component.literal(out), false);
         return 1;
     }
 
