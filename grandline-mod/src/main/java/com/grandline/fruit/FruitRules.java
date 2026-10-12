@@ -47,7 +47,7 @@ public final class FruitRules {
 
     public static boolean intangibleTo(LivingEntity victim, LivingEntity attacker, Hits.Info info, boolean attackerHaki) {
         DevilFruit f = fruitOf(victim);
-        if (f == null || f.type != FruitType.LOGIA) return false;
+        if (f == null || (f.type != FruitType.LOGIA && !f.intangibleBody)) return false;
         if (attackerHaki || info.seastone()) return false;
         if (weakened(victim)) return false;
         if (CombatState.of(victim).staggered(victim.level().getGameTime())) return false;

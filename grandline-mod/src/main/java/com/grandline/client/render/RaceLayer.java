@@ -56,6 +56,13 @@ public class RaceLayer<T extends LivingEntity, M extends HumanoidModel<T>> exten
         root.addOrReplaceChild("plates", CubeListBuilder.create().texOffs(34, 36).addBox(-4.5f, -0.5f, -2.5f, 9, 3, 5), PartPose.ZERO);
         root.addOrReplaceChild("tail_fin", CubeListBuilder.create().texOffs(22, 40).addBox(-4f, 11f, -1f, 8, 2, 6), PartPose.ZERO);
         root.addOrReplaceChild("neck", CubeListBuilder.create().texOffs(40, 14).addBox(-1.5f, -6f, -1.5f, 3, 6, 3), PartPose.ZERO);
+        // fruit wave 3 (canon) Zoan hybrid extras; texture offsets reuse the regions of similar parts above
+        root.addOrReplaceChild("trunk", CubeListBuilder.create().texOffs(12, 28).addBox(-1f, -3f, -6f, 2, 8, 2), PartPose.ZERO);
+        root.addOrReplaceChild("tusk_l", CubeListBuilder.create().texOffs(34, 0).addBox(1.5f, -1.5f, -7f, 1, 1, 4), PartPose.ZERO);
+        root.addOrReplaceChild("tusk_r", CubeListBuilder.create().texOffs(34, 0).mirror().addBox(-2.5f, -1.5f, -7f, 1, 1, 4), PartPose.ZERO);
+        root.addOrReplaceChild("big_ear_l", CubeListBuilder.create().texOffs(20, 0).addBox(4f, -8f, -1f, 1, 6, 5), PartPose.ZERO);
+        root.addOrReplaceChild("big_ear_r", CubeListBuilder.create().texOffs(20, 0).mirror().addBox(-5f, -8f, -1f, 1, 6, 5), PartPose.ZERO);
+        root.addOrReplaceChild("crest", CubeListBuilder.create().texOffs(0, 0).addBox(-0.5f, -10f, 1f, 1, 3, 7), PartPose.ZERO);
         return LayerDefinition.create(mesh, 64, 64);
     }
 
@@ -71,7 +78,12 @@ public class RaceLayer<T extends LivingEntity, M extends HumanoidModel<T>> exten
         boolean phoenix = zoan && info.fruit().equals("tori_phoenix");
         boolean beast = wolf || leopard;   // ears, snout and tail
         int fur = leopard ? 0xFFE0B04A : 0xFF8A8A9A;
-        if (race.parts == 0 && !beast && !bison && !phoenix) return;
+        // fruit wave 3 (canon) Zoans
+        String zf = zoan ? info.fruit() : "";
+        boolean elephant = zf.equals("zou_elephant"), allo = zf.equals("ryu_allosaurus"), ptera = zf.equals("ryu_pteranodon");
+        boolean spino = zf.equals("ryu_spinosaurus"), seiryu = zf.equals("uo_seiryu"), orochi = zf.equals("hebi_orochi");
+        boolean canon3 = elephant || allo || ptera || spino || seiryu || orochi;
+        if (race.parts == 0 && !beast && !bison && !phoenix && !canon3) return;
         M m = getParentModel();
         int col = 0xFF000000 | info.appearance().featureColor;
         int col2 = 0xFF000000 | info.appearance().secondaryColor;
@@ -100,6 +112,7 @@ public class RaceLayer<T extends LivingEntity, M extends HumanoidModel<T>> exten
         }
         if (race.has(LEAF_HAIR)) draw("leaf_hair", ps, vc, light, ov, col);
         if (race.has(BLOWHOLE)) draw("blowhole", ps, vc, light, ov, col2);
+        if (canon3) canonWave3Head(ps, vc, light, ov, elephant, allo, ptera, spino, seiryu, orochi);
         ps.popPose();
 
         // ----- body features -----
@@ -128,7 +141,61 @@ public class RaceLayer<T extends LivingEntity, M extends HumanoidModel<T>> exten
         if (race.has(STONE_SKIN)) draw("plates", ps, vc, light, ov, 0xFF6A6A70);
         if (race.has(LONG_NECK)) draw("neck", ps, vc, light, ov, col2);
         if (race.has(TAIL_FIN) && e.isInWater()) draw("tail_fin", ps, vc, light, ov, col);
+        if (canon3) {
+            boolean raceTail = race.has(TAIL) || beast, raceWings = race.has(SMALL_WINGS) || race.has(FEATHER_WINGS) || race.has(BLACK_WINGS);
+            canonWave3Body(e, ps, vc, light, ov, age, limbSwing, limbSwingAmount, raceTail, raceWings, allo, ptera, spino, seiryu, orochi);
+        }
         ps.popPose();
+    }
+
+    // ---------------- fruit wave 3 (canon): Zoan hybrid features ----------------
+
+    private void canonWave3Head(PoseStack ps, VertexConsumer vc, int light, int ov, boolean elephant, boolean allo, boolean ptera, boolean spino, boolean seiryu, boolean orochi) {
+        int ivory = 0xFFE8E0C8;
+        if (elephant) {
+            draw("big_ear_l", ps, vc, light, ov, 0xFF9A9AA8);
+            draw("big_ear_r", ps, vc, light, ov, 0xFF9A9AA8);
+            draw("trunk", ps, vc, light, ov, 0xFF8A8A98);
+            draw("tusk_l", ps, vc, light, ov, ivory);
+            draw("tusk_r", ps, vc, light, ov, ivory);
+        }
+        if (allo || spino) draw("snout", ps, vc, light, ov, allo ? 0xFF6A8A4A : 0xFF4A6A6A);
+        if (allo) {
+            draw("horn_l", ps, vc, light, ov, 0xFF3A5A2A);
+            draw("horn_r", ps, vc, light, ov, 0xFF3A5A2A);
+        }
+        if (ptera) {
+            draw("crest", ps, vc, light, ov, 0xFFC09A6A);
+            draw("snout", ps, vc, light, ov, 0xFFC09A6A);
+        }
+        if (seiryu) {
+            draw("horn_l", ps, vc, light, ov, ivory);
+            draw("horn_r", ps, vc, light, ov, ivory);
+            draw("crest", ps, vc, light, ov, 0xFFC0E0FF);
+        }
+        if (orochi) draw("snout", ps, vc, light, ov, 0xFF5A2A6A);
+    }
+
+    private void canonWave3Body(T e, PoseStack ps, VertexConsumer vc, int light, int ov, float age, float limbSwing, float limbSwingAmount,
+                                boolean raceTail, boolean raceWings, boolean allo, boolean ptera, boolean spino, boolean seiryu, boolean orochi) {
+        if ((allo || spino || seiryu || orochi) && !raceTail) {
+            float sway = Mth.sin(age * 0.12f) * 0.3f + limbSwingAmount * Mth.sin(limbSwing * 0.6f) * 0.4f;
+            ModelPart t = parts.getChild("tail");
+            t.yRot = sway;
+            t.xRot = orochi ? -0.1f : -0.35f;
+            int tc = allo ? 0xFF6A8A4A : spino ? 0xFF4A6A6A : seiryu ? 0xFF2A5AD0 : 0xFF5A2A6A;
+            draw("tail", ps, vc, light, ov, tc);
+        }
+        if (spino || seiryu) draw("back_fin", ps, vc, light, ov, spino ? 0xFFC04A3A : 0xFFC0E0FF); // sail / dorsal spines
+        if (ptera && !raceWings) {
+            float flap = Mth.sin(age * (e.onGround() ? 0.08f : 0.5f)) * (e.onGround() ? 0.08f : 0.45f);
+            ModelPart l = parts.getChild("wing_l"), r = parts.getChild("wing_r");
+            l.yRot = -0.5f - flap;
+            r.yRot = 0.5f + flap;
+            l.xScale = l.yScale = r.xScale = r.yScale = 1.5f;
+            draw("wing_l", ps, vc, light, ov, 0xFF8A6A4A);
+            draw("wing_r", ps, vc, light, ov, 0xFF8A6A4A);
+        }
     }
 
     private void draw(String name, PoseStack ps, VertexConsumer vc, int light, int ov, int argb) {

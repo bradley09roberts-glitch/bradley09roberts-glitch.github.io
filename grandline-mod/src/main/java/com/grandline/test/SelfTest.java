@@ -520,6 +520,75 @@ public final class SelfTest {
             user.discard();
             return 0;
         });
+        // ---------- third-wave (canon) fruit mechanics ----------
+        steps.add(s -> {
+            ServerLevel l = ow(s);
+            BlockPos c = arena(l);
+            TerrainChanges.revertAll(s);
+            HumanoidNpc att = npc(l, "marine", 3, c.offset(6, 0, -8));
+            HumanoidNpc vic = npc(l, "pirate", 3, c.offset(6, 0, -3));
+            att.setNoAi(true);
+            vic.setNoAi(true);
+            att.forceFruitForTest("");
+            Hits.Info punch = Hits.Info.physical(0.1f);
+            // Mochi: the body only opens around attacks the user sees coming (Observation Haki); Haki still connects
+            vic.forceFruitForTest("mochi");
+            CombatState vs = CombatState.of(vic);
+            Hits.Result blind = Hits.hit(att, vic, 5, punch);
+            vs.observation = true;
+            boolean opens = FruitRules.intangibleTo(vic, att, punch, false), hakiLands = !FruitRules.intangibleTo(vic, att, punch, true);
+            vs.observation = false;
+            check("Mochi passes attacks only with Observation Haki", blind == Hits.Result.HIT && opens && hakiLands, "noObs=" + blind + " obs=" + opens + " hakiLands=" + hakiLands);
+            // Numa: a projectile reaching the swamp body is swallowed (and stored for Swamp Spit)
+            vic.forceFruitForTest("numa");
+            vic.setTarget(att);
+            int before = com.grandline.fruit.impl.NumaFruit.stored(vic);
+            var shot = com.grandline.entity.AbilityProjectile.shoot(att, "bullet", 0.25f, vic.getBoundingBox().getCenter().add(0, 0, -1.2), new net.minecraft.world.phys.Vec3(0, 0, 1), 0.5, 4, punch);
+            FruitRules.tick(vic);
+            check("Numa swamp body swallows a projectile", shot.isRemoved() && com.grandline.fruit.impl.NumaFruit.stored(vic) > before, "removed=" + shot.isRemoved() + " stored=" + com.grandline.fruit.impl.NumaFruit.stored(vic));
+            // Bomu: explosions cannot hurt a bomb body (control: the same blast hurts once the fruit is gone)
+            vic.forceFruitForTest("bomu");
+            vic.invulnerableTime = 0;
+            float h0 = vic.getHealth();
+            vic.hurt(l.damageSources().explosion(null, null), 6);
+            float bomb = h0 - vic.getHealth();
+            vic.forceFruitForTest("");
+            vic.invulnerableTime = 0;
+            h0 = vic.getHealth();
+            vic.hurt(l.damageSources().explosion(null, null), 6);
+            check("Bomu body is immune to explosions", bomb == 0 && vic.getHealth() < h0, "bomu took " + bomb + ", plain took " + (h0 - vic.getHealth()));
+            // Toki: no second time leap in a row while fighting; another technique in between allows it again
+            vic.forceFruitForTest("toki");
+            Ability leap = Abilities.get("fruit/toki/time_leap");
+            boolean first = CombatManager.useAbility(vic, leap, att);
+            vs.cooldowns.clear();
+            com.grandline.fruit.impl.CanonKit.enable(vic); // back from the future
+            boolean second = CombatManager.useAbility(vic, leap, att);
+            boolean other = CombatManager.useAbility(vic, Abilities.get("fruit/toki/hourglass"), att);
+            vs.cooldowns.clear();
+            boolean third = CombatManager.useAbility(vic, leap, att);
+            check("Toki cannot time-leap twice in a row in combat", first && !second && other && third, "first=" + first + " second=" + second + " between=" + other + " after=" + third);
+            // Seiryu: Cloud Ride gives a transformed (survival) player real flight, and reverting the form takes it away
+            FakePlayer fp = fake(s);
+            CharacterData d = Characters.get(fp);
+            fp.moveTo(c.getX() + 0.5, c.getY(), c.getZ() + 0.5, 0, 0);
+            fp.setGameMode(GameType.SURVIVAL);
+            d.fruit = "uo_seiryu";
+            d.zoanForm = "hybrid";
+            d.stamina = 100;
+            CombatState.of(fp).toggles.remove(com.grandline.fruit.impl.SeiryuFruit.FLIGHT);
+            CombatState.of(fp).cooldowns.clear();
+            boolean grounded = !fp.getAbilities().mayfly;
+            boolean flies = CombatManager.useAbility(fp, Abilities.get("fruit/uo_seiryu/cloud_ride"), null) && fp.getAbilities().mayfly;
+            d.zoanForm = "";
+            com.grandline.fruit.impl.SeiryuFruit.updateFlight(fp);
+            boolean landed = !fp.getAbilities().mayfly;
+            fp.setGameMode(GameType.CREATIVE);
+            check("Seiryu Cloud Ride flight in form, revoked on reverting", grounded && flies && landed, "before=" + !grounded + " on=" + flies + " afterRevert=" + !landed);
+            att.discard();
+            vic.discard();
+            return 0;
+        });
         // ---------- knockdown/permadeath data rules ----------
         steps.add(s -> {
             CharacterData d = new CharacterData();
