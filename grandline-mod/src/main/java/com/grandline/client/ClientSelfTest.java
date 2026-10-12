@@ -255,7 +255,7 @@ public final class ClientSelfTest {
         for (int i = 0; i < 12; i++) {
             add("observe mate", () -> logRelative("captain sees mate", other()), 50);
             if (i == 6) shot("mp_a_sailing_with_mate");
-            if (i == 2) cmd("grandline test passing", 5); // a merchant passes close alongside: the mate must stay on our deck
+            if (i == 2) cmd("grandline test passing 1", 5); // a merchant's hull passes right under the mate: they must stay on our deck
         }
         cmd("grandline test sail 0", 60);
         shot("mp_a_end");
