@@ -947,8 +947,10 @@ First run of a real client against the dedicated server. Result: no client crash
   server-thread stalls it found are fixed). Give the server at least 4 GB.
 - Seen in a real client since the morning: the treasure map and notice board screens, the boss bar (14d, 14e, 35g),
   a crew flag planted by a real right-click with its `/base` menu and chart mark (58, 59), career titles and the
-  Marine coat (60, 62). Career titles on other players' name tags need two clients and were not looked at.
-- Sea jobs (escort follower, named pirate ships, convoys) are verified on the server only; nothing seen in a client.
+  Marine coat (60, 62). In the two-client test the mate's client shows the captain as "Master Cartographer Tester"
+  (the display name the name tag draws); the screenshot itself had the captain behind the mast.
+- Sea jobs: the escorted merchant joining and following is seen in a real client (14g); named pirate ships and
+  convoys are verified on the server only.
 - Living sea: convoys never cross the Calm Belt. Harbour raids now carry off market goods as well as Beli, but only
   from the shops' stock (town chests are never emptied).
 - Hired gunners on player ships (sea polish) are verified on the server only: they man guns and never fight hand to
