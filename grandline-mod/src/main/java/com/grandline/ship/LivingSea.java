@@ -663,6 +663,7 @@ public final class LivingSea {
     /** An NPC ship has started to go down: rewards, then her cargo floats free. */
     static void onSinking(ShipEntity ship) {
         if (!(ship.level() instanceof ServerLevel sl)) return;
+        com.grandline.quest.story.SeaJobs.onShipSinking(sl, ship); // sea jobs: a named pirate ship sunk, a convoy lost
         defeated(ship);
         // survivors and boarders are ordinary folk again (they despawn by the usual rules once nobody is near)
         for (UUID u : ship.naval.crew) if (sl.getEntity(u) instanceof GLNpc m) m.removeTag(CREW);
@@ -687,6 +688,7 @@ public final class LivingSea {
             if (now - en.getValue() > 2400) continue;
             ServerPlayer sp = resolve(sl, en.getKey(), ship.life);
             if (sp == null) continue;
+            if (!ship.life.raidAlly(sp)) com.grandline.quest.QuestEvents.onSeaBattleWon(sp, ship.npcFaction); // "sea_battle" quest objectives
             CharacterData d = Characters.get(sp);
             switch (ship.npcFaction) {
                 case PIRATE -> {

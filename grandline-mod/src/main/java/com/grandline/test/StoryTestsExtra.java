@@ -85,6 +85,7 @@ final class StoryTestsExtra {
             // sea activities: a sea catch (SeaFishing.onCatch), a treasure map's secret found (TreasureMaps.opened)
             case "fish" -> t.equals("any") || com.grandline.activity.ActivityItems.FISH.stream().anyMatch(f -> f.getId().getPath().equals(t));
             case "treasure" -> t.equals("any");
+            case "escort", "sink", "convoy", "sea_battle" -> com.grandline.quest.story.SeaJobs.progresses(o.type(), t); // sea jobs (quest/story/SeaJobs)
             default -> false;
         };
     }

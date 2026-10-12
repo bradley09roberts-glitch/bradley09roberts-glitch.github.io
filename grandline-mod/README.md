@@ -94,6 +94,11 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
   cannons, the Den Den Mushi and bosses have their own sounds. Four tracks are music discs hidden in treasure and
   wrecks. All of it is synthesised by `tools/gen_sounds.py`.
 - **Buster Call**: past 500M Beli, a crime by a Marine base or a Vice Admiral who lived may bring a rare, announced fleet bombardment; outlast, outrun or sink it (config `busterCall`).
+- **Sea jobs**: an escorted merchant walks at your side, rides your ship and must reach the destination's dock alive
+  (talk to them there); "Sink the ..." jobs name a pirate ship last seen in a stretch of open sea (sink her or take her;
+  Marines get a prize bonus); convoys need your ship beside a merchantman until she makes port, pirates fall on her
+  partway; the Privateer's Commission pays for any pirate ship beaten. `/jobs` lists your jobs, `/jobs abandon <id>`
+  drops one.
 - **Crew bases**: plant a crew flag (shipwrights sell it) at the heart of an uninhabited original island to claim it for your crew (on everyone's sea chart); only your crew builds there, a base chest is your shared warehouse, the dock repairs your ships for free, `/base` builds a watchtower, dojo, galley, medical bay, shipyard slip and quarters for hired hands; raiders may come while you are near, and an undefended flag can be captured (config `bases`).
 - **Careers** (`/career`): every path has ranks and a title shown in chat and the tab list. Marines earn merit (arrests, pirates brought in, sea battles, the saga) and report to an officer for promotion, Seaman Recruit to Fleet Admiral (pay, supplies, the coat, a squad, a warship, Buster Call requests; crimes demote, then desert); pirates rise from Rookie to Supernova and Emperor with bounty and deeds, may accept the Government's letter of marque (Warlord) and claim territory; revolutionaries run missions; bounty hunters earn licences (better payouts, poster tracking); civilians make a name charting, reading and trading.
 
@@ -128,6 +133,7 @@ Generated files (textures, models, data, sounds) are committed, so a plain `./gr
 | Sky/deep-sea quick test | `GL_SELFTEST=dims ./gradlew runServer` |
 | Treasure maps, fishing, cooking quick test | `GL_SELFTEST=activities ./gradlew runServer` → `run/selftest-phaseactivities.txt` |
 | Careers quick test | `GL_SELFTEST=careers ./gradlew runServer` → `run/selftest-phasecareers.txt` |
+| Sea jobs quick test (escort follower, named pirate ships, convoys) | `GL_SELFTEST=seajobs ./gradlew runServer` → `run/selftest-phaseseajobs.txt` |
 | Real client (software GL) | server: `GL_SELFTEST=client ./gradlew runServer`; client: `GL_CLIENTTEST=1 xvfb-run -a ./gradlew runClient` → `run-client/screenshots/` |
 | Two clients on one ship | as above with `GL_CLIENTTEST=mp_a ./gradlew runClient` and `GL_CLIENTTEST=mp_b ./gradlew runClient2` |
 | Server load (20 simulated players) | `GL_SELFTEST=load ./gradlew runServer` (`GL_LOADTEST_PLAYERS`, `GL_LOADTEST_SECONDS`) → `run/loadtest-report.txt` |

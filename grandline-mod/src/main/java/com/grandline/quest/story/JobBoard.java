@@ -56,7 +56,7 @@ public final class JobBoard {
     /** Dialogue "npc" id that means "the notice board you are reading". */
     public static final int BOARD_ID = -1;
     public static final String GIVER = "bounty_board";
-    public static final String[] TYPES = {"deliver", "escort", "hunt", "nest", "camp", "wreck", "fish", "cook", "supply"};
+    public static final String[] TYPES = {"deliver", "escort", "hunt", "nest", "camp", "wreck", "fish", "cook", "supply", "sink", "convoy"};
 
     /** What a job hands over when it starts: a wanted poster (hunts) or a sealed letter (deliveries). */
     public record StartGift(String kind, String name, Component where, int x, int z, long bounty, String target) {}
@@ -86,7 +86,7 @@ public final class JobBoard {
         }
     }
 
-    private static final class Gen {
+    static final class Gen {
         final WorldPlan plan;
         final Island isl;
         final StoryContext c;
@@ -159,19 +159,20 @@ public final class JobBoard {
                 gifts.put(id, new StartGift("letter", to.name(), StoryContext.islandName(y), y.x, y.z, 0, to.id()));
                 if (++k >= 2) break;
             }
-            // ---- escort: a merchant goes ahead to another island's dock; pirates wait there
+            // ---- escort: a merchant travels with you (a real follower, SeaJobs) to another island's dock; pirates wait there
             Island dest = null;
             for (Island y : near) if (y.settlement().hasDock) { dest = y; break; }
             if (dest != null) {
                 StoryContext dc = new StoryContext(plan, dest, "", 0x10B5L);
                 Spot dock = dc.dock();
-                Person merchant = person("merchant", "merchant", Faction.CIVILIAN, Disposition.FRIENDLY, 2, dest, dock, PeopleNames.person(c.culture, c.r), true,
-                        Component.translatable("job.grandline.who.merchant", c.islandName()));
+                String merchant = PeopleNames.person(c.culture, c.r);
                 Site ambush = site("ambush", dest, dock, SiteKind.ROLE, "pirate", null);
                 String id = id("escort", -1);
-                quest(id, "escort", List.of(new QuestDef.Objective("kill", "pirate", 3), new QuestDef.Objective("talk", merchant.id(), 1)), 1.4, Map.of("civilian", 10),
-                        List.of(), List.of(), true, new Object[]{merchant.name(), StoryContext.islandName(dest)}, null);
+                double w = 1.4 + Math.min(1.0, dest.distance(isl.x, isl.z) / 5000);
+                quest(id, "escort", List.of(new QuestDef.Objective("kill", "pirate", 3), new QuestDef.Objective("escort", id, 1)), w, Map.of("civilian", 10),
+                        List.of(), List.of(), true, new Object[]{merchant, StoryContext.islandName(dest)}, "follow");
                 qs.put(id, List.of(new SiteRef(0, ambush.key(), 3)));
+                gifts.put(id, new StartGift(SeaJobs.ESCORT, merchant, StoryContext.islandName(dest), dock.x(), dock.z(), 0, dest.id));
             }
             // ---- three named outlaws, one after another, each with a wanted poster
             for (int g = 0; g < 3; g++) {
@@ -249,6 +250,7 @@ public final class JobBoard {
             int logs = 8 + 2 * t;
             quest(id("supply", -1), "supply", List.of(new QuestDef.Objective("collect", "#minecraft:logs", logs)), 0.7, Map.of("island/" + isl.id, 5), List.of(), List.of(), true,
                     new Object[]{c.islandName(), logs}, null);
+            SeaJobs.generate(this, near); // sea battles: a named pirate ship to sink, a merchantman to convoy
         }
     }
 
@@ -351,6 +353,7 @@ public final class JobBoard {
     static void onStarted(ServerPlayer sp, QuestDef q) {
         StartGift g = GIFTS.get(q.id());
         if (g == null) return;
+        if (SeaJobs.onStarted(sp, q, g)) return; // escorts, named pirate ships, convoys
         ItemStack stack;
         if (g.kind().equals("poster")) {
             stack = new ItemStack(com.grandline.registry.ModItems.WANTED_POSTER.get());

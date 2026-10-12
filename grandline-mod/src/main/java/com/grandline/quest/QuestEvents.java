@@ -25,6 +25,15 @@ public final class QuestEvents {
         Quests.progress(sp, "talk", npc.role(), 1);
         if (!npc.notableId().isEmpty()) Quests.progress(sp, "talk", npc.notableId(), 1);
         com.grandline.career.Careers.onTalk(sp, npc); // careers: missions that rouse an island
+        com.grandline.quest.story.SeaJobs.onTalk(sp, npc); // an escorted merchant brought to the dock
+    }
+
+    /**
+     * An NPC ship of the living sea that this player fought was beaten or sunk (LivingSea.defeated): counts for
+     * "sea_battle" objectives whose target is the ship's side ("pirate", "marine", "bounty_hunter", "merchant") or "any".
+     */
+    public static void onSeaBattleWon(ServerPlayer sp, String faction) {
+        Quests.progress(sp, "sea_battle", faction.isEmpty() ? "any" : faction, 1);
     }
 
     public static void onPoneglyph(ServerPlayer sp, BlockPos pos) {

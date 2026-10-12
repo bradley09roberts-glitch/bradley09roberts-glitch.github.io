@@ -700,16 +700,114 @@ First run of a real client against the dedicated server. Result: no client crash
   sheet ("Career: Emperor of the Sea"), and the Marine coat renders on the player model (screenshots 60, 62). Name
   tags over other players need two clients and were not looked at.
 
+### Sea jobs: escorts and sea battles (agent, merged 12:00)
+- Escort, now a real follower (`quest/story/EscortJobs`, `SeaJobs`): the board's escort job no longer leaves the
+  merchant waiting at the destination. Taking it brings the merchant (a named `merchant` humanoid, stouter than a
+  townsman) to the player's side. A follow goal of its own (added to that NPC only; combat and fleeing still come
+  first, the town stroll never does) walks after the player; it never paths through water (water is impassable for
+  it) and only follows a player on firm ground, waiting on the shore when they swim off. Left more than 16 blocks
+  behind on land, or fallen into the sea, the merchant is put beside the player (as a tamed animal teleports); a
+  merchant in the water while the player swims is lifted onto the nearest dry footing. When the player is aboard a
+  ship (a station or the deck; any ship, ferries too) and the merchant is within 48 blocks, they take a passenger's
+  seat (`ShipEntity.seatPlayer`, the benches after the guns; the deck if every seat is taken) and stay seated while
+  she sails; when the player stands on land again they step ashore beside them. Beyond 160 blocks (a different
+  dimension, a teleport) they are stowed with the job and step off again next to the player. At the destination's
+  dock (within 24 blocks of the dock or the job's dock spot) they say so; the ambush at the dock stays (three
+  pirates, `kill pirate 3`), and talking to them there completes the new `escort` objective (before the pirates
+  are beaten they ask you to clear the dock). Then they stay on the dock for half a minute and leave. Their death
+  fails the job (a message, the merchant gone; told on return if it happened while the player was away);
+  `/jobs abandon <id>` drops it (the merchant goes); a player logged out for more than 10 minutes of server time
+  finds the job lapsed (`SeaJobs.abandonTicks`). Persistence: the escort lives in a SavedData (`grandline_seajobs`):
+  the merchant entity is transient in the world (tagged like the living sea's ships, refused when a chunk reloads
+  it) but a snapshot is kept every 5 s and the merchant is stowed when the player logs out (the server stopping logs
+  everyone out first), then stepped off beside the player when they return; a merchant lost in an unloaded chunk is
+  rebuilt from the snapshot. The merchant's name is still drawn from the island's seed exactly where the old notable
+  was (the rest of the board's generation is unchanged), but the merchant is no longer a notable.
+- "Sink the &lt;ship&gt;" board jobs (`SeaBattleJobs`): every board on an open sea posts a named pirate ship (a crew name
+  from the seed), her class by sea (sloop/caravel in the Blues, caravel/brigantine in Paradise, galleon in the New
+  World) and her last-seen point, open sea 320–760 blocks off the island (plan-sampled clear of land, harbours and
+  Reverse Mountain). She is put to sea from the living sea's own ships (`SeaEncounters.spawnShip`, crew, gun crews,
+  AI) when a player with the job comes within 240 blocks of that point, on loaded open water inside the simulation
+  distance, between them and the point, and only when there is room under the shared NPC ship cap (tried every
+  5 s). One ship per job at a time; she despawns like any NPC ship when nobody is near and is put to sea again on
+  return. Sinking her (hull to nothing, or a beaten hulk that founders) completes the job for every hunter within
+  320 blocks or who fought her; taking her as a prize completes it for the taker. Versions: base (civilians,
+  pirates, revolutionaries), Marine (x1.2 pay, Marine standing, and a prize bonus of half the pay when she is
+  captured rather than sunk), bounty hunter (x1.5). Pay scales with the island's tier, the distance out and her
+  class (`StoryBuilder.BELI[tier] * weight`, like the other jobs).
+- Convoys (`SeaBattleJobs`): a board on an island with a dock posts a merchantman bound for a port of the same sea
+  300–3600 blocks away on a straight course that never leaves that sea. Taking the job puts her to sea at the
+  anchorage beyond the island's waters, out along the dock where the ferries lie (so she never threads the harbour;
+  the chat gives the spot), once the player is within 200 blocks of it; she waits at anchor until the player is
+  aboard a ship within 110 blocks of her, then sails for the destination's dock with the ferries' course-keeping
+  (`Ferries.helm`, rounding islands), her merchant AI switched off (her hands are kept aboard as the living sea's
+  deck discipline does); she heaves to whenever her escort falls behind.
+  Once 35% of the way is behind her a pirate ship comes at her from ahead and abeam (under the NPC ship cap; tried
+  for a minute) and the pirates' own AI picks her or the escort to fight. She makes port within 34 blocks of the
+  dock point (or pinned near it, or after half a minute in its waters, as ferries do): the job pays and she goes
+  about her trade as ordinary traffic. The job fails if she sinks, her crew is cut down, she is taken as a prize, or
+  the player stays more than 400 blocks away for two minutes. Her position, heading, hull, stage and whether the
+  pirates came are saved; when her ship is gone (an unloaded chunk, a restart) she is rebuilt where she lay once the
+  player is within 200 blocks. Versions: base and Marine (x1.25).
+- Sea battles count for quests in general: `QuestEvents.onSeaBattleWon(player, faction)` (called for every player
+  who fought an NPC ship when it is beaten or sunk, `LivingSea.defeated`) progresses `sea_battle` objectives whose
+  target is the ship's side (`pirate`, `marine`, `bounty_hunter`, `merchant`) or `any`. The classic board uses it:
+  "Privateer's Commission" (beat a pirate ship, 4,000 Beli, Marine standing) and, for pirates, "Run the Blockade"
+  (beat a Marine ship, bounty). `/jobs` lists your notice-board jobs, `/jobs abandon <id>` drops one.
+- Shared files touched (hook lines): `JobBoard` (escort generation now gives the follower's spec and the `escort`
+  objective; `Gen` package-visible; one call to `SeaJobs.generate` at the end of a board; one line in `onStarted`;
+  `TYPES`), `QuestEvents` (one line in `onTalk`, new `onSeaBattleWon`), `QuestRegistry` (one `register` line),
+  `LivingSea` (one line in `defeated`, one in `onSinking`), `NavalCombat.capture` (one line), tests:
+  `SelfTest` (phase 1 x2, phase 2, quick phase), `IslandStoryTests` (the escort objective in the generic job player
+  and the type list), `StoryTestsExtra.progresses` (one case), README, lang fragment `sea_jobs.json`.
+- Verified (`test/SeaJobTests`, 27 checks in phase 1 and 1 in phase 2; quick run `GL_SELFTEST=seajobs` 27/27, with
+  `level-seed=20261012`), fake players driven step by step (they cannot ride: they stand on decks, and the test
+  sails or moves their ship): boards post 117 named pirate ships, 78 convoys and 123 follower escorts, every one with
+  its spec and an objective the engine progresses; Marine/bounty-hunter versions pay more (1,183 / 1,420 / 1,774
+  Beli for a Blue Sea ship; sink pay 1,093 to 152,480 by tier and distance); every board offers the commission
+  (the blockade run to pirates); all texts translated. Escort (isle_140 → Karai Bari, 1,829 blocks): taking the job
+  brings the merchant 1.7 blocks away; they walk after the player 11 blocks off (46 ticks, no teleport); left 36
+  blocks behind on land they are put beside the player (one teleport); with the player swimming off the dock end
+  they spend 0 of 160 ticks in the water; they take a passenger seat when the player steps aboard; the ship (towed
+  out of the harbour by the test, then sailed by `Ferries.helm` at 4x speed) reaches the destination in 1,212
+  ticks with the merchant seated all 1,212; on the quay they step off 1.7 blocks from the player and say they have
+  arrived; talking before the ambush is beaten only gets "clear the dock", the three ambushers are put down and
+  talking pays the job (the merchant retires); killed, the job fails with a message; `/jobs abandon` removes job
+  and merchant (a second abandon is refused); logged out, the merchant is stowed and steps off beside the player on
+  return; with the log-out older than 10 minutes the job lapses. Named ship (Shiokaze Isle's job): nothing 600
+  blocks off; nothing with the cap (4) filled; then the sloop "Coalfist" with her crew 48 blocks from the hunter;
+  one ship while she is afloat; sunk, the job pays; a Marine kills her crew and takes her: job 1,420 + bonus 710;
+  a sunk pirate sloop completes the Privateer's Commission (`sea_battle`). Convoy (1,422 blocks): she waits at the
+  anchorage (0 blocks moved while alone), weighs anchor when the player's ship is beside her, pirates come with 62%
+  of the way left and target her or the escort, beaten off; she makes port after 3,151 ticks and the job pays;
+  with her ship gone she is rebuilt where she lay with her hull (150); sunk, the job fails with a message. Phase 2:
+  the escort stowed at the end of phase 1 comes back after the restart (the merchant steps off 1.4 blocks from the
+  returning player, same name). The generic job player (`IslandStoryTests`) still completes the escort job.
+  Full run on one fresh world (seed 20261012): phase 1 602/603, phase 2 19/19, no exception in either log. The
+  failure is "the warships converge on the target" (Buster Call, `JourneyTests`, code not touched here): mean
+  distance 125 → closest 113 (needs 15 blocks of closing); it fails identically (125 → 113) when the journey tests
+  run alone (`GL_SELFTEST=journey`, without any sea-job test before them), so it is fixed by this seed's geometry
+  rather than by the sea jobs; the base code from before this work fails it the same way (125 → 113, journey
+  quick run 37/38 on a fresh world with the same seed), so it is a pre-existing failure on this seed.
+- Not done / not verified: nothing seen in a real client (the follower walking, a merchant seated on a deck, the
+  named ship and the convoy at sea); the fake test players cannot ride, so they stand on decks and the test sails
+  their ship (the merchant's seat and the player's helm are not exercised together by a real rider); the named
+  ship's last-seen point is told in chat, not marked on the sea chart; convoys use one merchantman (no escorts of
+  her own) and one pirate attack; a convoy merchantman counts against the NPC ship cap but is put to sea even when
+  the cap is full (the pirates that attack her, and named ships, respect it); the escort's merchant does not trade
+  differently from a town merchant.
+
 ## Work in flight (background agents)
-- Sea jobs: a real escort follower, "sink the ship" and convoy board jobs, quest hooks into sea battles.
+- None.
 
 ## Known gaps (next priorities)
 - 20 TPS with 20 players is not proven on dedicated hardware (the load test ran on a heavily shared machine; the
   server-thread stalls it found are fixed). Give the server at least 4 GB.
-- The treasure map and notice board screens and the boss bar are now seen in a real client (shots 14d, 14e, 35g);
-  crew bases (flag, chart marks, chat menu) are verified only on the server so far.
-- The escorted merchant of a board escort job is not a real follower (it waits at the destination behind an ambush).
-- Living sea: convoys never cross the Calm Belt; harbour raids plunder only Beli; no quests hook into sea battles.
+- Seen in a real client since the morning: the treasure map and notice board screens, the boss bar (14d, 14e, 35g),
+  a crew flag planted by a real right-click with its `/base` menu and chart mark (58, 59), career titles and the
+  Marine coat (60, 62). Career titles on other players' name tags need two clients and were not looked at.
+- Sea jobs (escort follower, named pirate ships, convoys) are verified on the server only; nothing seen in a client.
+- Living sea: convoys never cross the Calm Belt; harbour raids plunder only Beli.
 - NPC ships never fight from hired NPC gunners on player ships (only your recruited crew man the guns).
 - Balance (damage, bounty, rewards, spawn rates) is tuned only as far as the automated tests; it needs real play.
 - Sound: the music and effects are synthesised, judged by measurement (tuning, loudness, spectra) and by the game
