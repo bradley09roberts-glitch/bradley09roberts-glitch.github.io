@@ -98,7 +98,14 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
   (talk to them there); "Sink the ..." jobs name a pirate ship last seen in a stretch of open sea (sink her or take her;
   Marines get a prize bonus); convoys need your ship beside a merchantman until she makes port, pirates fall on her
   partway; the Privateer's Commission pays for any pirate ship beaten. `/jobs` lists your jobs, `/jobs abandon <id>`
-  drops one.
+  drops one. Your sea chart (M) marks where the named ship was last seen, the convoy's port and her merchantman, and
+  the escort's destination.
+- **Hired gunners**: a shipwright or dockworker signs on gunners for your ship (talk to them, or `/gunners` beside
+  them) for a one-off fee; they man your cannons and, while your order is fire at will (V) and you are aboard or near
+  to hand out shot, fire on pirate ships (and on Marines while you are wanted), never on merchants or players.
+  `/gunners dismiss` sends them ashore.
+- **Harbour raids**: raiders who land carry off goods from the town's market (its shops run short until restocked a
+  day later); beat them and they drop what they took.
 - **Crew bases**: plant a crew flag (shipwrights sell it) at the heart of an uninhabited original island to claim it for your crew (on everyone's sea chart); only your crew builds there, a base chest is your shared warehouse, the dock repairs your ships for free, `/base` builds a watchtower, dojo, galley, medical bay, shipyard slip and quarters for hired hands; raiders may come while you are near, and an undefended flag can be captured (config `bases`).
 - **Careers** (`/career`): every path has ranks and a title shown in chat and the tab list. Marines earn merit (arrests, pirates brought in, sea battles, the saga) and report to an officer for promotion, Seaman Recruit to Fleet Admiral (pay, supplies, the coat, a squad, a warship, Buster Call requests; crimes demote, then desert); pirates rise from Rookie to Supernova and Emperor with bounty and deeds, may accept the Government's letter of marque (Warlord) and claim territory; revolutionaries run missions; bounty hunters earn licences (better payouts, poster tracking); civilians make a name charting, reading and trading.
 
@@ -134,6 +141,7 @@ Generated files (textures, models, data, sounds) are committed, so a plain `./gr
 | Treasure maps, fishing, cooking quick test | `GL_SELFTEST=activities ./gradlew runServer` → `run/selftest-phaseactivities.txt` |
 | Careers quick test | `GL_SELFTEST=careers ./gradlew runServer` → `run/selftest-phasecareers.txt` |
 | Sea jobs quick test (escort follower, named pirate ships, convoys) | `GL_SELFTEST=seajobs ./gradlew runServer` → `run/selftest-phaseseajobs.txt` |
+| Sea polish quick test (hired gunners, raid plunder, chart marks, convoy cap) | `GL_SELFTEST=seapolish ./gradlew runServer` → `run/selftest-phaseseapolish.txt`; then `GL_SELFTEST=seapolish2` for its restart check |
 | Real client (software GL) | server: `GL_SELFTEST=client ./gradlew runServer`; client: `GL_CLIENTTEST=1 xvfb-run -a ./gradlew runClient` → `run-client/screenshots/` |
 | Two clients on one ship | as above with `GL_CLIENTTEST=mp_a ./gradlew runClient` and `GL_CLIENTTEST=mp_b ./gradlew runClient2` |
 | Server load (20 simulated players) | `GL_SELFTEST=load ./gradlew runServer` (`GL_LOADTEST_PLAYERS`, `GL_LOADTEST_SECONDS`) → `run/loadtest-report.txt` |

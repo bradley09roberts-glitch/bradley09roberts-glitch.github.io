@@ -806,6 +806,84 @@ First run of a real client against the dedicated server. Result: no client crash
   the cap is full (the pirates that attack her, and named ships, respect it); the escort's merchant does not trade
   differently from a town merchant.
 
+### Sea polish: gunners, raid plunder, chart marks (agent)
+- Hired gunners (`ship/HiredGunners`): shipwrights and dockworkers (not story characters, not ship crews) offer a
+  "gunners" dialogue option; it prints a chat menu (`/gunners`, also typed beside one of them) for the player's ship
+  (the one they are aboard and own, else their nearest own ship within 80 blocks): guns, gunners aboard, free guns and
+  buttons to hire one, man every free gun, or dismiss. A gunner costs a one-off 2,500 Beli x his skill (the hirer's
+  tier + 1, 2 to 8; no wages); as many as there are free guns and Beli are signed on (refused with a message: no ship,
+  no cannons, every gun manned, too poor). Each is a `sailor` humanoid (civilian, persistent, AI off: the ship aims
+  and fires his gun) seated at a free cannon station (`NavalCombat.freeGun`, alternating sides), tagged and marked
+  with the ship's id and his employer; hiring turns the ship's order to fire at will. Every tick of a player's ship
+  (one line in `NavalCombat.shipTick`): while the order is fire at will and the captain is within 64 blocks (to give
+  the order and hand out shot, as for the crew's gunnery), every hired gunner whose gun bears fires on the nearest
+  hostile NPC ship within 85 blocks (picked within 100, once a second) with `NavalCombat.gunnerFire` (led, ballistic
+  aim, skill spread), the crew's per-seat cooldowns (`naval.seatCd`, about 2-4 s by skill) and ammo rules (the
+  loaded kind from the captain's pack, then cannonballs, free in creative, the round given back when the gun does not
+  bear, "out of shot" otherwise). Hostile means: an NPC pirate ship (unless the captain joined her raid), a Marine
+  ship when the captain is a pirate, a revolutionary or wanted (and not a protected Warlord), and any NPC ship that
+  fired on her or is coming for her; never a player's ship, a merchantman or bounty hunter that leaves her alone, a
+  ferry, a prize, a sinking ship or a beaten hulk. The crew's own `gunnery` skips hired gunners (one line), so they
+  never fire on players' ships. A gunner knocked off his station goes back to a free gun (every 2 s); they are saved
+  with the ship as her passengers with their stations (the ship already kept NPC stations), so they come back after a
+  restart; if the ship goes down they swim for it (removed, the captain is told); `/gunners dismiss` pays them off
+  (no refund).
+- Raid plunder (`ship/RaidPlunder`, after `HarbourRaids`): once raiders have been ashore 15 s, each one still standing
+  (one a second) carries off a stack of the town market's goods (bread, meat, fish, log poses, charts, bullets,
+  cannonballs, wool, planks, cutlasses, torches, iron chestplates: all things its shops sell), at most 6 goods per
+  island. The island's shops stop offering those goods (one line in `Shops.offers`) until they are restocked a day
+  later (24,000 ticks; kept in a SavedData `grandline_plunder`, so a restart does not restock early). A raider who
+  dies drops his load (death event); when the raid is repelled every raider still carrying goods (knocked out,
+  surrendered) drops it (one line in `HarbourRaids.repelled`); raiders who get away keep it. No container is opened
+  or emptied, so no player's chest and no crew base can be touched.
+- Sea-job marks on the chart (`quest/story/SeaJobMarks`, one line in `Navigation.chartData`, a block in
+  `ChartScreen`): for the player holding the jobs only, the named pirate ship's last-seen point (red ring, "... (last
+  seen)") and, while she is afloat, where she is now; a convoy's port of destination (blue ring) and her merchantman
+  once she is at sea; an escort's destination dock (green ring). A mark goes with the job.
+- Convoy cap (`quest/story/ConvoyCap`, one line in `SeaBattleJobs.launch`): the merchantman of a convoy job is put to
+  sea (first launch, or rebuilt after a restart) only with room under the shared NPC ship cap; while it is full she
+  waits in port, the player is told why (at most once a minute) and the convoy tries again every half second.
+- Shared files touched (hook lines): `NavalCombat` (2: the tick in `shipTick`, hired gunners skipped in `gunnery`),
+  `Dialogues` (2: option, choice), `Shops` (1), `HarbourRaids` (2: `raidTick`, `repelled`), `SeaBattleJobs` (1),
+  `Navigation` (1), `ChartScreen` (the marks block), `SelfTest` (4: quick phases `seapolish` and `seapolish2`, phase 1,
+  phase 2), `SeaJobTests` (1 test line, below), README, lang fragment `sea_polish.json`.
+- Verified (`test/SeaPolishTests`, 19 checks in phase 1 and 2 in phase 2; quick run `GL_SELFTEST=seapolish` 19/19,
+  then `GL_SELFTEST=seapolish2` 2/2 on the world it left), fake players counted as online through
+  `HiredGunners.testPlayers`: a shipwright offers the option; with 7,499 Beli for a 7,500 gunner nothing is hired or
+  taken; two hired for 15,000 sit at guns 1 and 2 of a caravel's 4, fire at will on; a pirate sloop lying 34 blocks
+  abeam is fired on twice in about 70 ticks (hull 140 -> 114) and exactly two cannonballs leave the captain's pack;
+  a merchantman, a Marine sloop (civilian captain) and another player's sloop around her: 0 shots in 260 ticks, hulls
+  untouched; the captain turned pirate with a 5,000,000 bounty: the Marine is fired on (140 -> 113), the merchantman
+  still not; "hold fire": 0 shots in 200 ticks; a gunner taken off his station is back at a gun 60 ticks later; a
+  rowboat gets none (Beli unchanged); dismissal removes both, no refund. Raid: a raid ship whose party is landed at once
+  in the nearest raidable town in Shiokaze Isle's sea takes two goods within a second or so (the test sets the 15 s
+  delay to 0; e.g. 32 planks and 8 wool); the real shop lists of a
+  general store, shipwright and blacksmith of that island (`Shops.offers`, read by reflection) drop from 35 goods to
+  33, exactly those two; the raiders cut down, the raid is repelled and both stacks lie on the ground (no raider
+  still carries any); one good aged past its restock time is back in the shops, the other still missing. Chart: a
+  sink job's last-seen point (x, z, ship name) is on the holder's chart data and not on another player's; it goes
+  when the job is abandoned. Convoy: with 4/4 NPC ships at sea the merchantman is held (stage 0, no ship, the "waits
+  in port" message), her port is on the holder's chart (x, z, island) and she is not; one filler scrapped, she puts
+  out (stage 1) and is marked where she lies. Phase 2: the caravel's two hired gunners are back at guns 1 and 2 after
+  the restart, and the village market still lacks the good that was not restocked.
+- Full runs on fresh random worlds: first run phase 1 658/660, phase 2 22/22, no exception in either log. Its two
+  FAILs were both in `SeaJobTests` (code and tests not touched by this work): "the escorted merchant walks after you
+  — no level spot near the dock to walk to" (the test found no level dry footing 11 blocks round that seed's quay:
+  terrain only, decided before any game logic runs) and "pirates fall on the convoy ... had a target for 0 ticks":
+  the test kept only the merchantman's and the escort's chunks entity-ticking, and the pirate is spawned 60 blocks
+  ahead and 45-75 abeam, so on one side she can lie in a chunk that never ticks and never picks a target. Fixed in
+  the test (`keep(l, r)` for the raider, one line). The first run's world was deleted before its level seed was read
+  (the "World plan" number in the log is a hash of it), so neither failure was reproduced on that seed. Second run
+  (level seed 7592376532618670497, with the fix): phase 1 660/660, phase 2 22/22, no exception; both sea-job checks
+  passed (the raider had a target for 41 ticks).
+- Not done / not verified: nothing seen in a real client (the dialogue option and `/gunners` chat menu, gunners at
+  their guns, the chart's rings and labels); no bosun and no wages (a one-off fee); hired gunners never fight hand to
+  hand (AI off: boarders can cut them down unopposed) and do not follow the captain across to a grappled ship; a
+  ship carried to another dimension (Knock Up Stream, the coated dive) with hired gunners aboard was not tested;
+  raiders take from the shops' stock only (town chests are never touched), raiders who get away share no goods with
+  players who joined the raid, and recovered goods do not restock the market early; the filter applies to every shop NPC registered to the plundered
+  island (not checked for a merchant ship's own sea merchant); the escort's destination mark is not covered by a test.
+
 ## Work in flight (background agents)
 - None.
 
@@ -816,8 +894,11 @@ First run of a real client against the dedicated server. Result: no client crash
   a crew flag planted by a real right-click with its `/base` menu and chart mark (58, 59), career titles and the
   Marine coat (60, 62). Career titles on other players' name tags need two clients and were not looked at.
 - Sea jobs (escort follower, named pirate ships, convoys) are verified on the server only; nothing seen in a client.
-- Living sea: convoys never cross the Calm Belt; harbour raids plunder only Beli.
-- NPC ships never fight from hired NPC gunners on player ships (only your recruited crew man the guns).
+- Living sea: convoys never cross the Calm Belt. Harbour raids now carry off market goods as well as Beli, but only
+  from the shops' stock (town chests are never emptied).
+- Hired gunners on player ships (sea polish) are verified on the server only: they man guns and never fight hand to
+  hand (boarders cut them down unopposed), there is no bosun or wage, and nothing has been seen in a client (the
+  chat menu, the gunners at the guns, the chart's sea-job marks).
 - Balance (damage, bounty, rewards, spawn rates) is tuned only as far as the automated tests; it needs real play.
 - Sound: the music and effects are synthesised, judged by measurement (tuning, loudness, spectra) and by the game
   decoding and playing them, not by ear; nobody has listened to them yet. Many abilities still use vanilla sounds.
