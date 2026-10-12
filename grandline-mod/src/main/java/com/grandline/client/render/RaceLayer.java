@@ -54,7 +54,7 @@ public class RaceLayer<T extends LivingEntity, M extends HumanoidModel<T>> exten
         root.addOrReplaceChild("wing_r", CubeListBuilder.create().texOffs(0, 40).mirror().addBox(-10f, 0f, 2f, 9, 10, 1), PartPose.ZERO);
         root.addOrReplaceChild("coral", CubeListBuilder.create().texOffs(34, 28).addBox(-4f, -1f, 2f, 2, 3, 2).addBox(2f, -1f, 2f, 2, 4, 2).addBox(-1f, 3f, 2f, 2, 2, 2), PartPose.ZERO);
         root.addOrReplaceChild("plates", CubeListBuilder.create().texOffs(34, 36).addBox(-4.5f, -0.5f, -2.5f, 9, 3, 5), PartPose.ZERO);
-        root.addOrReplaceChild("tail_fin", CubeListBuilder.create().texOffs(22, 40).addBox(-4f, 11f, -1f, 8, 2, 6), PartPose.ZERO);
+        root.addOrReplaceChild("tail_fin", CubeListBuilder.create().texOffs(0, 52).addBox(-4f, 11f, -1f, 8, 2, 6), PartPose.ZERO);
         root.addOrReplaceChild("neck", CubeListBuilder.create().texOffs(40, 14).addBox(-1.5f, -6f, -1.5f, 3, 6, 3), PartPose.ZERO);
         // fruit wave 3 (canon) Zoan hybrid extras; texture offsets reuse the regions of similar parts above
         root.addOrReplaceChild("trunk", CubeListBuilder.create().texOffs(12, 28).addBox(-1f, -3f, -6f, 2, 8, 2), PartPose.ZERO);

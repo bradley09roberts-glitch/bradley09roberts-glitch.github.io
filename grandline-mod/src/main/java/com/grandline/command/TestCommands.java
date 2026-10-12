@@ -33,6 +33,18 @@ public final class TestCommands {
                         .suggests((c, b) -> SharedSuggestionProvider.suggest(Arrays.stream(ShipClass.values()).map(ShipClass::id), b))
                         .executes(c -> ship(c.getSource(), StringArgumentType.getString(c, "class"), false))
                         .then(Commands.literal("helm").executes(c -> ship(c.getSource(), StringArgumentType.getString(c, "class"), true)))))
+                .then(Commands.literal("sail").then(Commands.argument("level", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 3)).executes(c -> {
+                    ServerPlayer sp = c.getSource().getPlayerOrException();
+                    if (!(sp.getVehicle() instanceof ShipEntity ship)) return GLCommands.fail(c, "Not at a ship station");
+                    ship.setSail(com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "level"));
+                    return GLCommands.ok(c, "Sail " + ship.sail());
+                })))
+                .then(Commands.literal("anchor").then(Commands.argument("on", com.mojang.brigadier.arguments.BoolArgumentType.bool()).executes(c -> {
+                    ServerPlayer sp = c.getSource().getPlayerOrException();
+                    if (!(sp.getVehicle() instanceof ShipEntity ship)) return GLCommands.fail(c, "Not at a ship station");
+                    ship.setAnchored(com.mojang.brigadier.arguments.BoolArgumentType.getBool(c, "on"));
+                    return GLCommands.ok(c, "Anchored " + ship.anchored());
+                })))
                 .then(Commands.literal("storm").executes(c -> {
                     // fly to the nearest violent weather (testing the weather system)
                     ServerPlayer sp = c.getSource().getPlayerOrException();

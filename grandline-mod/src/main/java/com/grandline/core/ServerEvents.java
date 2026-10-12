@@ -49,6 +49,7 @@ public final class ServerEvents {
         com.grandline.ship.SpecialRoutes.tick(e.getServer());
         com.grandline.world.weather.SeaWeather.tick(e.getServer());
         com.grandline.npc.crew.CrewBonuses.tick(e.getServer());
+        com.grandline.npc.PrisonSystem.tick(e.getServer());
         com.grandline.npc.notable.NotableSpawner.tick(e.getServer());
     }
 

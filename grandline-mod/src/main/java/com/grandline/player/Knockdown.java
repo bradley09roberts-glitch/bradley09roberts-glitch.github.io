@@ -40,6 +40,7 @@ public final class Knockdown {
     public static void knockDown(ServerPlayer sp, DamageSource src) {
         CharacterData d = Characters.get(sp);
         d.knockdownTicks = GLConfig.KNOCKDOWN_SECONDS.get() * 20;
+        sp.stopRiding(); // a downed sailor drops from the helm or cannon
         d.knockedBy = src.getEntity() == null ? null : src.getEntity().getUUID();
         sp.setHealth(1.0f);
         sp.removeAllEffects();

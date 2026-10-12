@@ -31,5 +31,6 @@
   "grandline.weather.fog": "a fog bank",
   "grandline.weather.snow": "a snow squall",
   "grandline.weather.rain": "rain",
-  "grandline.weather.clear": "clear skies"
+  "grandline.weather.clear": "clear skies",
+  "grandline.prison.escaped": "You broke out of the cell! Your bounty rises and the Marines are after you."
 }

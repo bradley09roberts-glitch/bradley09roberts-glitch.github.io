@@ -26,12 +26,21 @@ public final class SeaEncounters {
             if (!l.getEntitiesOfClass(ShipEntity.class, sp.getBoundingBox().inflate(250), s -> s.flag(ShipEntity.F_NPC)).isEmpty()) continue;
             SeaZone z = WorldLayout.zoneAt(sp.getBlockX(), sp.getBlockZ());
             if (z == SeaZone.CALM_BELT || z == SeaZone.RED_LINE) continue;
+            if (inHarbour(sp)) continue; // patrols and raiders strike on the open sea, not in a town's harbour
             var d = Characters.get(sp);
             double chance = 0.12 + (d.bounty > 0 ? 0.1 + Math.min(0.25, Math.log10(d.bounty + 1) / 40) : 0) + z.dangerTier * 0.02;
             if (l.random.nextDouble() > chance) continue;
             boolean marine = d.bounty > 0 ? l.random.nextFloat() < 0.65f : l.random.nextFloat() < 0.3f;
             spawnRaider(l, sp, marine, z);
         }
+    }
+
+    static boolean inHarbour(ServerPlayer sp) {
+        WorldPlan plan = WorldPlan.of(sp.server);
+        if (plan == null) return false;
+        for (var isl : plan.candidates(sp.getBlockX(), sp.getBlockZ()))
+            if (isl.settlementType != com.grandline.world.settlement.SettlementType.NONE && isl.t(sp.getBlockX(), sp.getBlockZ()) < 1.35) return true;
+        return false;
     }
 
     static boolean isAtSea(ServerPlayer sp) {

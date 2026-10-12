@@ -27,10 +27,20 @@ public final class NpcOutcomes {
     /** Marines arrest a downed player: confiscation is waived (agreed: gear stays with you), you're jailed instead. */
     public static void arrestPlayer(GLNpc npc, ServerPlayer sp, CharacterData d) {
         BlockPos cell = PrisonSystem.findCell(sp.serverLevel(), npc.blockPosition());
+        sp.stopRiding(); // off the ship's helm/cannon and into the cell
         Knockdown.standUp(sp, d, 0.3f);
         d.flags.add("survived_knockdown");
         d.flags.add("imprisoned");
-        if (cell != null) sp.teleportTo(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5);
+        d.flags.removeIf(f -> f.startsWith("cell:"));
+        if (cell != null) {
+            d.flags.add("cell:" + cell.getX() + "," + cell.getY() + "," + cell.getZ());
+            sp.teleportTo(cell.getX() + 0.5, cell.getY(), cell.getZ() + 0.5);
+        }
+        // the guards stand down: a prisoner in a cell is no longer a target until they break out
+        for (GLNpc g : sp.serverLevel().getEntitiesOfClass(GLNpc.class, sp.getBoundingBox().inflate(64), n -> n.getTarget() == sp || n.getLastHurtByMob() == sp)) {
+            g.setTarget(null);
+            g.setLastHurtByMob(null);
+        }
         sp.sendSystemMessage(Component.translatable("grandline.arrested", npc.getDisplayName()).withStyle(ChatFormatting.RED));
         com.grandline.quest.QuestEvents.onArrested(sp);
         CharacterManager.markDirty(sp);

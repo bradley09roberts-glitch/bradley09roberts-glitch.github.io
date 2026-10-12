@@ -39,4 +39,34 @@ public final class PrisonSystem {
     }
 
     private PrisonSystem() {}
+
+    /** A player sitting out their sentence in a cell (guards leave them alone until they break out). */
+    public static boolean isJailed(net.minecraft.server.level.ServerPlayer sp) {
+        return com.grandline.player.Characters.get(sp).flags.contains("imprisoned");
+    }
+
+    /** Every second: a prisoner who gets more than 10 blocks from their cell has escaped and is fair game again. */
+    public static void tick(net.minecraft.server.MinecraftServer server) {
+        if (server.getTickCount() % 20 != 0) return;
+        for (net.minecraft.server.level.ServerPlayer sp : server.getPlayerList().getPlayers()) {
+            var d = com.grandline.player.Characters.get(sp);
+            if (!d.flags.contains("imprisoned")) continue;
+            BlockPos cell = null;
+            for (String f : d.flags)
+                if (f.startsWith("cell:")) {
+                    String[] p = f.substring(5).split(",");
+                    cell = new BlockPos(Integer.parseInt(p[0]), Integer.parseInt(p[1]), Integer.parseInt(p[2]));
+                }
+            if (cell == null || sp.blockPosition().distSqr(cell) > 10 * 10) {
+                d.flags.remove("imprisoned");
+                d.flags.removeIf(f -> f.startsWith("cell:"));
+                d.flags.add("escaped_prison");
+                if (cell != null) {
+                    d.bounty += Math.max(5_000_000L, d.bounty / 10);
+                    sp.sendSystemMessage(net.minecraft.network.chat.Component.translatable("grandline.prison.escaped").withStyle(net.minecraft.ChatFormatting.GOLD));
+                }
+                com.grandline.player.CharacterManager.markDirty(sp);
+            }
+        }
+    }
 }

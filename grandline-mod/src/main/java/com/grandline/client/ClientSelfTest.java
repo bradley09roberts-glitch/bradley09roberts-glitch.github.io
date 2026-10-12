@@ -10,6 +10,7 @@ import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -66,8 +67,16 @@ public final class ClientSelfTest {
         add("input " + action + "/" + a0, () -> PacketDistributor.sendToServer(new GLNetwork.CombatInput(action, (byte) a0, (byte) 0, -1, 0)), 10);
     }
 
+    private static final String MODE = System.getenv("GL_CLIENTTEST");
+
     private static void build() {
         steps = new ArrayDeque<>();
+        if ("mp_a".equals(MODE)) buildCaptain();
+        else if ("mp_b".equals(MODE)) buildMate();
+        else buildSolo();
+    }
+
+    private static void createCharacter(String name, String race) {
         Minecraft mc = Minecraft.getInstance();
         steps.add(new Step("wait for world", () -> mc.player != null && mc.level != null && ClientState.hasData, () -> {}, 60));
         steps.add(new Step("wait for creation screen", () -> mc.screen instanceof CharacterCreationScreen || ClientState.LOCAL.created, () -> {}, 40));
@@ -75,15 +84,95 @@ public final class ClientSelfTest {
         add("create character", () -> {
             if (ClientState.LOCAL.created) return;
             CompoundTag t = new CompoundTag();
-            t.putString("name", "Tester");
-            t.putString("race", "fishman");
-            t.putString("faction", "pirate");
+            t.putString("name", name);
+            t.putString("race", race);
+            t.putString("faction", MODE != null && MODE.startsWith("mp") ? "civilian" : "pirate");
             t.putString("origin", "east");
             t.put("appearance", new Appearance().save());
             PacketDistributor.sendToServer(new GLNetwork.CreateCharacter(t));
             mc.setScreen(null);
         }, 60);
         steps.add(new Step("wait for created", () -> ClientState.LOCAL.created, () -> {}, 40));
+    }
+
+    private static net.minecraft.world.entity.player.Player other() {
+        Minecraft mc = Minecraft.getInstance();
+        for (var p : mc.level.players()) if (p != mc.player) return p;
+        return null;
+    }
+
+    private static com.grandline.ship.ShipEntity nearestShip(double range) {
+        Minecraft mc = Minecraft.getInstance();
+        com.grandline.ship.ShipEntity best = null;
+        double bd = range * range;
+        for (var e : mc.level.entitiesForRendering())
+            if (e instanceof com.grandline.ship.ShipEntity s && s.distanceToSqr(mc.player) < bd) {
+                bd = s.distanceToSqr(mc.player);
+                best = s;
+            }
+        return best;
+    }
+
+    private static void logRelative(String who, net.minecraft.world.entity.player.Player p) {
+        var ship = nearestShip(200);
+        if (ship == null || p == null) {
+            LOG.add("  " + who + ": ship or player not visible");
+            return;
+        }
+        double h = Math.hypot(p.getX() - ship.getX(), p.getZ() - ship.getZ());
+        LOG.add(String.format("  %s: ship at %.1f %.1f speed %.2f | player off-centre %.1f, height above ship %.2f, onDeck=%s",
+                who, ship.getX(), ship.getZ(), ship.speed(), h, p.getY() - ship.getY(), ship.carries(p)));
+    }
+
+    /** Two-player test, captain: sails a galleon with the mate standing on deck. */
+    private static void buildCaptain() {
+        createCharacter("Captain", "human");
+        cmd("grandline test env", 10);
+        cmd("grandline island tp shiokaze_isle", 120);
+        cmd("grandline test ship galleon helm", 60);
+        cmd("grandline test anchor true", 20);
+        camera(CameraType.THIRD_PERSON_BACK);
+        steps.add(new Step("wait for the mate to come aboard", () -> {
+            var o = other();
+            var ship = nearestShip(100);
+            return o != null && ship != null && ship.carries(o);
+        }, () -> {}, 60));
+        shot("mp_a_mate_aboard");
+        cmd("grandline test anchor false", 5);
+        cmd("grandline test sail 3", 20);
+        for (int i = 0; i < 12; i++) {
+            add("observe mate", () -> logRelative("captain sees mate", other()), 50);
+            if (i == 6) shot("mp_a_sailing_with_mate");
+        }
+        cmd("grandline test sail 0", 60);
+        shot("mp_a_end");
+        add("done", ClientSelfTest::finish, 0);
+    }
+
+    /** Two-player test, mate: boards the captain's ship and stands on deck while it sails. */
+    private static void buildMate() {
+        createCharacter("Mate", "mink");
+        add("let the captain launch the ship", () -> {}, 500);
+        cmd("tp @s Tester", 80); // the captain's login name (character "Captain")
+        steps.add(new Step("see the captain", () -> other() != null, () -> {}, 20));
+        steps.add(new Step("see the ship", () -> nearestShip(120) != null, () -> {
+            var ship = nearestShip(120);
+            Vec3 deck = ship.toWorld(0, ship.cls.freeboard + 0.3, -4);
+            Minecraft.getInstance().player.connection.sendCommand(String.format(java.util.Locale.ROOT, "tp @s %.2f %.2f %.2f", deck.x, deck.y, deck.z));
+        }, 60));
+        shot("mp_b_on_deck_start");
+        for (int i = 0; i < 14; i++) {
+            add("stand on deck", () -> logRelative("mate", Minecraft.getInstance().player), 50);
+            if (i == 7) shot("mp_b_deck_while_sailing");
+        }
+        camera(CameraType.THIRD_PERSON_BACK);
+        shot("mp_b_third_person");
+        add("done", ClientSelfTest::finish, 0);
+    }
+
+    private static void buildSolo() {
+        Minecraft mc = Minecraft.getInstance();
+        createCharacter("Tester", "fishman");
         cmd("grandline test env", 10);
         cmd("grandline char level 60", 10);
         cmd("tp @s ~ ~ ~ 0 5", 120);
