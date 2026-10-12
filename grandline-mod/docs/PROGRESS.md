@@ -164,6 +164,24 @@ First run of a real client against the dedicated server. Result: no client crash
 - After the merge, the tests had to generate their test areas before looking for water (game code no longer blocks on
   chunks); dims suite 112/112 again.
 
+### Devil Fruit wave 4 (agent, merged 06:10)
+- 15 more original fruits (originals 25 → 40, 78 fruits, 96 new abilities), each with an awakening-only ability:
+  Logia Hai (ash), Yako (glow), Shinku (vacuum); Paramecia Kai (dials), Fusen (balloon), Shinju (pearl), Kagi (key,
+  locks techniques), Hanabi (fireworks), Hata (flag territory), Taru (barrels); Zoans Bakekujira (mythical ghost
+  whale), Raiju (mythical thunder beast), Jaekelopterus (ancient sea scorpion), Meganeura (ancient griffinfly),
+  Hippopotamus. Designs in [FRUITS_ORIGINAL.md](FRUITS_ORIGINAL.md).
+- Verified by the agent: fixed-seed phase 1 264/0 including "all 664 abilities execute" and "every implemented fruit
+  damages the dummy (78)"; 32 wave-4 checks (Logia intangibility vs Haki and their own weaknesses, Zoan forms and
+  form-only refusals, 15/15 awakening abilities refused before and working after, Kagi locks, Fusen floats, Kai
+  soaks and releases, Shinju halves, Hata brands).
+- Not yet seen in a client: the new effects, sprites in flight and hybrid body parts.
+
+### Ferries, second pass (05:00–06:15)
+- Full runs showed ferries could still get stuck in some harbours (pinned against a quay, holed by repeated bumps,
+  circling a destination whose dock lies close in). Ferries now lie at anchor in open water beyond the home island's
+  waters, out along the dock (a launch rows you out), pole off when pinned, are never holed, and work round the
+  destination's coast to the dock point.
+
 ### Naval combat and ship customisation (agent, merged 06:00)
 - Boarding: grappling hooks haul two ships side by side (or tow a prize); NPC raiders grapple and send boarding
   parties; your crew follow you across; beat a ship's crew and stand on its deck to take it as a prize (a shipwright
@@ -198,7 +216,6 @@ First run of a real client against the dedicated server. Result: no client crash
 
 ## Work in flight (background agents)
 - World polish and missing canon islands.
-- Devil Fruit wave 4: 15 more original fruits (originals 25 → 40).
 
 ## Known gaps (next priorities)
 - Client re-run with the merged textures, animations and new dimensions (screenshots).
