@@ -126,3 +126,11 @@ the distance fog is closer than on a real PC) against a dedicated server on 2026
 ### Fish-Man Island coral gardens
 
 ![Fish-Man Island coral gardens](51_terrain_fishman_coral.jpg)
+
+### A town notice board: board jobs, letters to other islands
+
+![A town notice board: board jobs, letters to other islands](14d_notice_board.jpg)
+
+### A treasure map pointing at a real wreck off an island
+
+![A treasure map pointing at a real wreck off an island](14e_treasure_map.jpg)
