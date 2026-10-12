@@ -697,12 +697,14 @@ final class CareerTests {
             Careers.check(p);
             boolean waits = Careers.rank(d) == 1 && Careers.missing(p, d, CareerTrack.PIRATE, 2).stream().anyMatch(c -> JourneyTests.flat(c).contains("career.grandline.req.emperor_deed"));
             ShipEntity flagship = registeredBoat(s, p, new ShipLook("skull", "flame", 0xF0F0F0, 0x1A1A1A));
-            beat(l, p, "hrolf", a.offset(3, 0, 3));
+            // Hrolf is a boss: a boss fight rewards everyone who fought him through its records (boss/BossRewards)
+            com.grandline.boss.BossRecords.get(s).claim(p.getUUID(), "hrolf");
+            NeoForge.EVENT_BUS.post(new PlayerEvent.PlayerLoggedInEvent(p));
             ShipLook colours = lookOf(s, flagship);
             ShipRegistry.get(s).remove(flagship.shipId);
             boolean emperor = Careers.rank(d) == 2 && d.career.emperorDeed && name(p).contains("career.grandline.pirate.emperor") && Journey.done(p, "career_pirate_emperor")
                     && colours.emblem().equals("flame") && colours.flagColor() == 0x9E2222 && colours.emblemColor() == 0xE8C040;
-            check("a billion-Beli Supernova waits for an Emperor-class deed; beating an Emperor (Hrolf yields) makes an Emperor of the Sea; their ships fly their Jolly Roger in gold on crimson",
+            check("a billion-Beli Supernova waits for an Emperor-class deed; an Emperor beaten in a boss fight (Hrolf, from the fight's records) makes an Emperor of the Sea; their ships fly their Jolly Roger in gold on crimson",
                     waits && emperor, "waits " + waits + ", rank " + rankId(d) + ", deed " + d.career.emperorDeed + ", flag " + colours.encode());
             // territory: a settled island of the Grand Line
             WorldPlan plan = WorldPlan.of(s);
