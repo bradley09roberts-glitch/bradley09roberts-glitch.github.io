@@ -64,6 +64,7 @@ that were actually run.
 | File | What it is |
 |---|---|
 | `dist/grandline-0.2.0.jar` | the mod; **replaces** `grandline-0.1.0.jar` (remove the old one) |
+| `dist/previous/grandline-0.1.0.jar` | the previous release, kept only for rollback (never install both) |
 | `dist/geckolib-neoforge-1.21.1-4.9.3.jar` | required dependency, unchanged |
 | `dist/GrandLineShaders-1.0.0.zip` | the optional shader pack (needs Sodium 0.6.13 and Iris 1.8.12, see below) |
 | no resource pack | every texture and model of the new blocks ships inside the mod jar |
@@ -104,7 +105,8 @@ that were actually run.
 ## Rollback
 
 - Back up your world before upgrading.
-- To go back, put `grandline-0.1.0.jar` back in place of `grandline-0.2.0.jar`.
+- To go back, put `grandline-0.1.0.jar` (kept in `dist/previous/`) back in place of `grandline-0.2.0.jar`, and
+  remove Sodium and Iris if you added them only for the shader pack.
 - A world created or explored with 0.2.0 contains kit blocks. When 0.1.0 loads it, Minecraft removes the blocks it doesn't know: they turn into air, which damages the new buildings. So roll back only with a backup taken before 0.2.0.
 - The shader pack can be switched off at any time from the Shader Packs screen.
 
