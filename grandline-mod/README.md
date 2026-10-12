@@ -9,6 +9,8 @@ Private distribution.
 - Inventory of islands, races, fruits, weapons, styles, ships and characters (each planned / partial / playable /
   tested): [docs/INVENTORY.md](docs/INVENTORY.md)
 - Story bible: [docs/STORY.md](docs/STORY.md)
+- Screenshots from the automated real-client test: [docs/screenshots](docs/screenshots/README.md)
+- Art sources (Higgsfield): [docs/ART.md](docs/ART.md)
 
 ## Install (client)
 
