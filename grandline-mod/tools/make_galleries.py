@@ -90,13 +90,14 @@ def main():
         if img is not None and os.path.exists(pb):
             b = iso(pb, 0, 4)
             if b is not None:
-                b = fit(b, 260, 200)
-                canvas = Image.new('RGB', (img.width, img.height + 0), (40, 44, 52))
+                b = fit(b, 300, max(160, img.height - 30))
+                # the BEFORE render in its own panel to the right of the AFTER views and plans
+                canvas = Image.new('RGB', (img.width + b.width + 24, max(img.height, b.height + 30)), (40, 44, 52))
                 canvas.paste(img, (0, 0))
                 dr = ImageDraw.Draw(canvas)
-                bx, by = canvas.width - b.width - 8, canvas.height - b.height - 8
-                dr.rectangle([bx - 4, by - 18, bx + b.width + 4, by + b.height + 4], fill=(28, 30, 36))
-                dr.text((bx, by - 16), 'before', fill=(255, 180, 120))
+                bx, by = img.width + 12, 24
+                dr.rectangle([bx - 6, 4, bx + b.width + 6, by + b.height + 4], fill=(28, 30, 36))
+                dr.text((bx, 8), 'before (0.1.0)', fill=(255, 180, 120))
                 canvas.paste(b, (bx, by), b)
                 img = canvas
         if img is not None:
