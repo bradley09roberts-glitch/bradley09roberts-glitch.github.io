@@ -75,17 +75,50 @@ final class DimensionTests {
         return ship;
     }
 
+    /** Fruit awakening: mastery + level start the trial; fruit kills and the New World complete it. */
+    static void awakening(Deque<SelfTest.Step> steps) {
+        steps.add(s -> {
+            var sp = SelfTest.fake(s);
+            if (sp == null) return 0;
+            var d = com.grandline.player.Characters.get(sp);
+            String before = d.fruit;
+            boolean wasAwake = d.fruitAwakened;
+            d.fruitAwakened = false;
+            d.questProgress.remove("awakening_trial");
+            d.completedQuests.remove("awakening_trial");
+            d.flags.remove(com.grandline.quest.Awakening.TRIAL_FLAG);
+            if (d.fruit == null) d.fruit = "mera";
+            int lvl = d.level;
+            d.level = Math.max(d.level, com.grandline.quest.Awakening.LEVEL);
+            d.masteryXp.put("fruit/" + d.fruit, 1_000_000);
+            com.grandline.quest.Awakening.check(sp, d);
+            boolean started = d.questProgress.containsKey("awakening_trial");
+            com.grandline.quest.Quests.progress(sp, "fruit_kill", "any", 12);
+            com.grandline.quest.Quests.progress(sp, "discover", "any_new_world", 1);
+            com.grandline.quest.Awakening.check(sp, d);
+            SelfTest.check("fruit awakening: mastery + level start the trial, the trial awakens the fruit", started && d.fruitAwakened,
+                    "started=" + started + " awakened=" + d.fruitAwakened);
+            d.fruitAwakened = wasAwake;
+            d.level = lvl;
+            d.fruit = before;
+            return 0;
+        });
+    }
+
     static void phase1(Deque<SelfTest.Step> steps) {
         // ---------- local sea weather ----------
         steps.add(s -> {
             ServerLevel ow = s.overworld();
             var Type = com.grandline.world.weather.SeaWeather.Type.CLEAR;
             int calm = 0, samples = 0, rough = 0;
+            StringBuilder odd = new StringBuilder();
             for (int x = -50000; x <= 50000; x += 2500) {
                 samples++;
-                if (com.grandline.world.weather.SeaWeather.at(ow, x, 5200).type() == Type) calm++;
+                var w = com.grandline.world.weather.SeaWeather.at(ow, x, 5200);
+                if (w.type() == Type) calm++;
+                else odd.append(" x=").append(x).append(':').append(w.type()).append('/').append(String.format("%.2f", w.intensity()));
             }
-            SelfTest.check("the Calm Belt is always calm", calm == samples, calm + "/" + samples + " points clear");
+            SelfTest.check("the Calm Belt is always calm", calm == samples, calm + "/" + samples + " points clear" + odd);
             java.util.Map<String, Integer> seen = new java.util.TreeMap<>();
             for (int x = -56000; x <= 56000; x += 400)
                 for (int z = -3500; z <= 3500; z += 700) {
@@ -176,7 +209,7 @@ final class DimensionTests {
             sh[0] = ship(ow, ShipClass.SLOOP, ku.getX() + 12.5, ku.getZ() + 12.5, -90, "Selftest Skyfarer");
             id[0] = sh[0].shipId;
             hand[0] = deckHand(ow, sh[0]);
-            return 5;
+            return 60; // let the chunks finish loading, as they would around a real crew
         });
         steps.add(s -> {
             if (sh[0] == null) return 0;
@@ -189,7 +222,9 @@ final class DimensionTests {
             ServerLevel sky = s.getLevel(SkyWorld.LEVEL);
             follow(sh[0]);
             if (waited[0] % 20 == 0 && sh[0] != null && hand[0] != null)
-                com.grandline.GrandLine.LOGGER.info("[trace] ship y={} crew y={} removed={} carried={} ride={} t={}", sh[0].getY(), hand[0].getY(), hand[0].isRemoved(), sh[0].carries(hand[0]), sh[0].ride, sh[0].rideT);
+                com.grandline.GrandLine.LOGGER.info("[trace] ship {} {} {} crew {} {} {} removed={} carried={} ride={} t={} shipTicking={} crewTicking={}", sh[0].getX(), sh[0].getY(), sh[0].getZ(),
+                        hand[0].getX(), hand[0].getY(), hand[0].getZ(), hand[0].isRemoved(), sh[0].carries(hand[0]), sh[0].ride, sh[0].rideT,
+                        ((ServerLevel) sh[0].level()).isPositionEntityTicking(sh[0].blockPosition()), ((ServerLevel) hand[0].level()).isPositionEntityTicking(hand[0].blockPosition()));
             ShipEntity up = findShip(sky, id[0], SkyWorld.ARRIVAL_X, SkyWorld.ARRIVAL_Z, 80);
             if (up == null && ++waited[0] < 600) return -1;
             SelfTest.check("the Knock Up Stream carries a ship to the White Sea", up != null, up == null ? "not found after " + waited[0] + " ticks" : "arrived at " + up.blockPosition().toShortString() + " after " + waited[0] + " ticks");

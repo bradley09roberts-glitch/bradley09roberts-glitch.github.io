@@ -77,7 +77,10 @@ public final class SelfTest {
         steps = new ArrayDeque<>();
         REPORT.add("Grand Line Odyssey self-test, phase " + PHASE + ", " + new Date());
         if (PHASE.equals("1")) phase1();
-        else if (PHASE.equals("dims")) DimensionTests.phase1(steps);
+        else if (PHASE.equals("dims")) {
+            DimensionTests.awakening(steps);
+            DimensionTests.phase1(steps);
+        }
         else phase2();
     }
 
@@ -701,6 +704,7 @@ public final class SelfTest {
             }
             return 40;
         });
+        DimensionTests.awakening(steps);
         DimensionTests.phase1(steps);
         // ---------- persistence fixtures for phase 2 ----------
         steps.add(s -> {

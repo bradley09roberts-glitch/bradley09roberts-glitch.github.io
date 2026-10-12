@@ -43,6 +43,7 @@ public final class Navigation {
                 if (d.addXp(xp) > 0) CharacterManager.applyAttributes(sp);
                 QuestEvents.onDiscover(sp, isl.id);
                 if (isl.canon) QuestEvents.onDiscover(sp, "any_canon");
+                if (isl.zone == com.grandline.world.SeaZone.NEW_WORLD) QuestEvents.onDiscover(sp, "any_new_world");
                 QuestEvents.onDiscover(sp, "any");
                 CharacterManager.markDirty(sp);
             }
