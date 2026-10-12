@@ -56,7 +56,7 @@ public final class QuestCollect {
                 prog.putInt("o" + i, have);
                 changed = true;
                 if (have > cur)
-                    sp.displayClientMessage(Component.translatable("grandline.quest.progress", Component.translatable(q.titleKey()), have, o.count()), true);
+                    sp.displayClientMessage(Component.translatable("grandline.quest.progress", QuestRegistry.title(q), have, o.count()), true);
             }
             if (!changed) continue;
             CharacterManager.markDirty(sp);

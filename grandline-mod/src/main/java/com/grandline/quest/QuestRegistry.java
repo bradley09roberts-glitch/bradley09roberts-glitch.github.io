@@ -15,6 +15,10 @@ import java.util.function.Supplier;
  */
 public final class QuestRegistry {
     private static final Map<String, QuestDef> ALL = new LinkedHashMap<>();
+    /** Generated quests of the current world (see {@link #installGenerated}); declared first so lookups work during class init. */
+    private static final Map<String, QuestDef> DYNAMIC = new LinkedHashMap<>();
+    private static final Map<String, List<QuestDef>> DYNAMIC_BY_GIVER = new HashMap<>();
+    private static final Map<String, net.minecraft.network.chat.Component> TITLES = new HashMap<>(), DESCS = new HashMap<>();
 
     private static QuestDef.Objective o(String type, String target, int n) {
         return new QuestDef.Objective(type, target, n);
@@ -84,7 +88,7 @@ public final class QuestRegistry {
     /** The version of a quest this character gets: "<id>.<faction>" when such a variant exists, else the base. */
     public static String resolve(String id, com.grandline.player.CharacterData d) {
         String v = baseId(id) + "." + d.faction.id();
-        return ALL.containsKey(v) ? v : baseId(id);
+        return get(v) != null ? v : baseId(id);
     }
 
     /** Whether this quest, or any faction variant of it, has been completed. */
@@ -102,7 +106,7 @@ public final class QuestRegistry {
     public static boolean requirementsMet(com.grandline.player.CharacterData d, QuestDef q) {
         String vf = variantFaction(q.id());
         if (vf != null && !vf.equals(d.faction.id())) return false;
-        if (vf == null && ALL.containsKey(q.id() + "." + d.faction.id())) return false;
+        if (vf == null && get(q.id() + "." + d.faction.id()) != null) return false;
         for (String r : q.requires()) if (!isDone(d, r)) return false;
         return true;
     }
@@ -121,11 +125,17 @@ public final class QuestRegistry {
 
     @Nullable
     public static QuestDef get(String id) {
-        return ALL.get(id);
+        QuestDef q = ALL.get(id);
+        return q != null ? q : DYNAMIC.get(id);
     }
 
+    /** Every quest: the hand-written ones, then the ones generated for the current world (island stories, jobs). */
     public static Collection<QuestDef> all() {
-        return ALL.values();
+        if (DYNAMIC.isEmpty()) return ALL.values();
+        List<QuestDef> l = new ArrayList<>(ALL.size() + DYNAMIC.size());
+        l.addAll(ALL.values());
+        l.addAll(DYNAMIC.values());
+        return Collections.unmodifiableList(l);
     }
 
     /** Quests a giver role can offer on an island to this character. */
@@ -135,7 +145,58 @@ public final class QuestRegistry {
             if (!q.giverRole().equals(role)) continue;
             if (q.island().equals("*") || q.island().equals(islandId) || (q.island().equals("*starter") && starterIsland)) out.add(q);
         }
+        for (QuestDef q : DYNAMIC_BY_GIVER.getOrDefault(role, List.of()))
+            if (q.island().equals("*") || q.island().equals(islandId)) out.add(q);
         return out;
+    }
+
+    // ------------------------------------------------------------------ generated quests (per world)
+
+    /**
+     * Quests generated from the world seed (island stories, job-board jobs: quest/story). They are installed when a
+     * world starts and dropped when it stops, never saved: the same seed always regenerates the same quests. Their
+     * titles and descriptions are components with arguments (generated names and places) instead of fixed keys.
+     */
+
+    /** Replace the generated quests (and their texts) with these. */
+    public static void installGenerated(Collection<QuestDef> quests, Map<String, net.minecraft.network.chat.Component> titles,
+                                        Map<String, net.minecraft.network.chat.Component> descs) {
+        clearGenerated();
+        for (QuestDef q : quests) {
+            if (ALL.containsKey(q.id()) || DYNAMIC.put(q.id(), q) != null) throw new IllegalStateException("duplicate quest " + q.id());
+            DYNAMIC_BY_GIVER.computeIfAbsent(q.giverRole(), k -> new ArrayList<>()).add(q);
+        }
+        TITLES.putAll(titles);
+        DESCS.putAll(descs);
+    }
+
+    public static void clearGenerated() {
+        DYNAMIC.clear();
+        DYNAMIC_BY_GIVER.clear();
+        TITLES.clear();
+        DESCS.clear();
+    }
+
+    /** Whether this quest was generated for the current world. */
+    public static boolean isGenerated(String id) {
+        return DYNAMIC.containsKey(id);
+    }
+
+    /** Number of generated quests installed. */
+    public static int generatedCount() {
+        return DYNAMIC.size();
+    }
+
+    /** Display title of a quest (generated quests carry their own text with names and places). */
+    public static net.minecraft.network.chat.Component title(QuestDef q) {
+        net.minecraft.network.chat.Component t = TITLES.get(q.id());
+        return t != null ? t : net.minecraft.network.chat.Component.translatable(q.titleKey());
+    }
+
+    /** Description of a generated quest, or null for the hand-written ones. */
+    @Nullable
+    public static net.minecraft.network.chat.Component generatedDescription(QuestDef q) {
+        return DESCS.get(q.id());
     }
 
     private QuestRegistry() {}

@@ -32,5 +32,7 @@ public class WantedPosterItem extends Item {
         tip.add(Component.literal(t.getString("name")).withStyle(ChatFormatting.GOLD));
         tip.add(Component.translatable("grandline.tooltip.bounty", String.format("%,d", t.getLong("bounty"))).withStyle(ChatFormatting.YELLOW));
         if (t.contains("alive")) tip.add(Component.translatable("grandline.poster.dead_or_alive").withStyle(ChatFormatting.DARK_RED));
+        if (t.contains("where")) // job-board posters say where the outlaw was last seen
+            tip.add(Component.translatable("grandline.poster.last_seen", t.getString("where"), t.getInt("x"), t.getInt("z")).withStyle(ChatFormatting.GRAY));
     }
 }

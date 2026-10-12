@@ -379,6 +379,69 @@ original islander (or, on the Revolutionary commanders' islands, by the commande
 In the White Sea and the deep sea every named island has a quest given there or one that sends the player there
 (the Cloud End's guide gives `sky_8`; the Coral Hill Reef and the Sunken Ruins are destinations of `fmi_5`/`fmi_7`).
 
+### Original islands — a story on every generated island
+
+The ~140 original islands are generated from the world seed, and so are their stories (`quest/story`). Every original
+island gets one local story picked from twenty templates by what the island has: its sea and tier, theme, kind of
+settlement (none, hamlet, village, town, port, city, Marine base, fortress, ruins), dock, secrets (buried treasure,
+hidden cache, lost shrine, shipwreck), landmarks and controlling faction. The same seed always regenerates the same
+stories, people and places; nothing about them is saved except the players' progress and the people's fates.
+
+Each story has 2–4 steps chained like the Saltfire Saga's (`story_<island>_<n>`, faction variants `.<faction>`),
+offered by a named islander. The people are generated too: names flavoured by their sea (East Blue Wa names, northern
+names in the North Blue, Latin in the West, southern and island names in the South, all of them mixed on the Grand
+Line), titles, roles, fighting styles and — sometimes — one of the original peoples where the island suits them
+(Emberkin on volcanic isles, Vinefolk in the tropics, Stonehide on rock, Reefborn on atolls...). They are notables:
+they spawn once near their home when a player comes by, and stay dead when killed. Villains are a tier or two above
+the island; rivals and suspects yield instead of dying.
+
+| Template | Fits | Steps |
+|---|---|---|
+| The Bandit Toll | hamlets, villages, towns | hear the victim → break the bandit camp → bring down the chief (Marine/bounty hunter: arrest; pirate: take the toll money) |
+| The Beast of the Bay | coastal towns (Calm Belt: a Sea King) | ask the witness → find the torn nets → slay the named beast (a Sea King offshore in the Calm Belt and sometimes the Grand Line) |
+| The Missing Child | villages, towns | talk to the child's friend → find the hollow, deal with its beasts or bandits, talk to the child → back to the parent |
+| The Crooked Officer | Marine bases, big towns | find the strongbox with the ledger → defeat the corrupt captain (Marine/bounty hunter: arrest; Revolutionary: his whole squad) |
+| Two Houses | hamlets, villages, towns | hear the rival house → drive off the thugs who burnt the orchard → bring a peace gift to both heads |
+| The Cursed Shrine | lost shrines, dark/mushroom/swamp isles | reach the shrine → put down its stone guardians → bring an offering to the shrine keeper |
+| Contraband at the Docks | ports, towns with a dock | pay the informant → find the smugglers' cache and its guards → bring down the boss (Marine/BH: arrest; pirate: fence the goods) |
+| The Lost Heirloom | islands with a shipwreck | hear the old salt → dive to the wreck → return the locket to the widow |
+| A Rookie Crew | any island (most often wild ones) | beat the rookie crew → duel their captain (who yields) → earn the rival's respect (Marine/BH: arrest instead) |
+| Fever Season | villages, towns | sail to a herbalist on the nearest island → gather the herb (by that island's climate) → bring the cure home |
+| The Festival | villages, towns | gather festival goods → drive off the raiders and their captain (who only turns up for that) → open the festival |
+| The Warlord's Due | towns of the Grand Line | hear another debtor → thin out the Warlord agent's bodyguards → bring down the agent (pirates keep the ledger) |
+| The Castaway | uninhabited islands, ruins | bring food → dig up the castaway's savings → receive an Eternal Pose to their home island |
+| The Nest | snow, swamp, tropical, desert and temperate isles | find the tracks → slay the beasts at the nest → back to the hunter |
+| Under the Black Flag | pirate-held islands | break the guard post → bring down the self-styled king (Revolutionaries free the island; Marines arrest) → report |
+| The Hidden Cell | Revolutionary forts, big Grand Line towns | hear the courier → defeat the Cipher Pol agent hunting the cell → report to the cell leader |
+| The Deserter | Marine bases | find the deserter's camp → beat him (Marine/BH: arrest; pirate: take his offer) → report (pirate: dig up the payroll) |
+| Dead Man's Map | islands with buried treasure | reach the X and beat the rival treasure hunters → share the loot (pirates take more) |
+| Who Did It? | villages, towns | question three suspects → unmask the culprit (who yields; Marines arrest) and tell the guard |
+| Stones That Speak | islands with an ancient ruin | reach the ruin → get past its guardians and read the poneglyph → tell the scholar |
+
+Rewards scale with the island's tier (Beli, XP, reputation with the island and the factions involved, sometimes a
+style scroll, an Eternal Pose, gold, meat or Sea King steak); pirates who take a cut also raise their bounty.
+
+Two objective types were added for these stories: `reach` (be within ten blocks of a story place: a hideout, a
+shrine, a wreck) and `slay` (island beasts — `sea_cat`, `lapahn`, `banana_gator`, `kungfu_dugong` — or `sea_king`).
+Foes that a `kill`/`slay` objective needs appear at the story's place while a player with that step is near it, a few
+at a time, as many as the step still needs; they are ordinary creatures that leave when the player does.
+
+Text: `lang/en_us/island_stories.json`. Keys are `story.grandline.<template>.<step>` (title), `.desc` (and
+`.desc.<faction>` for variants), `.greet.<slot>` / `.thanks.<slot>` (what each person says before and after),
+`.rumor` (islanders' gossip), `story.grandline.who.<slot>` (titles) and `story.grandline.site.<place>`. All texts of a
+story share one argument list: `%1$s` is the island, then the people in order, then the template's extras (listed on
+each template in `StoryTemplate.java`).
+
+#### The notice boards
+
+Right-click a town's bounty board to read it. Besides the five classic jobs, each settled island's board carries jobs
+generated for it and scaled to its sea: a sealed letter for the story-giver of a nearby island; an escort (a merchant
+goes ahead to another island's dock, where pirates wait — the merchant only turns up for the player on the job); three
+named outlaws hunted one after another, each with a wanted poster saying where they were last seen and a bounty
+(Marines and bounty hunters bring them in alive for more; the outlaw and their guards only appear for whoever hunts
+them); a beast nest (or a bandit camp where no beasts live); salvage from a nearby wreck; and fish, hot meals and
+timber for the town. Delivering, escorting, salvage and the odd jobs repeat; the hunts move on to the next outlaw.
+
 ---
 
 ## 4. The Warlord system
@@ -668,5 +731,6 @@ planned world event (blue flame on the horizon, Log Poses spin, everyone's mood 
 - Objective types that progress: `kill` (role), `defeat` (notable; beaten, yielded or arrested), `talk` (role or
   notable), `discover` (island id, `any`, `any_canon`), `poneglyph`, `arrest` (role, faction or notable),
   `ship`, `arrested` and `collect` (item id or `#tag`: counted from the inventory on pickup and every two seconds,
-  handed over when the quest completes — `quest/QuestCollect.java`). Objectives naming a notable who is already gone
+  handed over when the quest completes — `quest/QuestCollect.java`), `reach` (a generated story place) and `slay`
+  (island beasts and Sea Kings; `quest/story/StorySites.java`). Objectives naming a notable who is already gone
   (`defeat`, `talk`, `arrest`) are credited when the player visits where they lived.

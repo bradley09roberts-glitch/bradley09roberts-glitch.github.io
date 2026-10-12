@@ -49,6 +49,11 @@ public final class WorldPlan {
         return CACHE.computeIfAbsent(planSeed ^ ((long) count << 48), k -> new WorldPlan(planSeed, count));
     }
 
+    /** A new, uncached ocean plan for a seed (determinism checks: two independent plans of one seed must agree). */
+    public static WorldPlan fresh(long planSeed) {
+        return new WorldPlan(planSeed, proceduralCount());
+    }
+
     /** Plan of a non-ocean kind (sky or deep sea) for the same world seed. */
     public static WorldPlan of(RandomState randomState, Kind kind) {
         long s = randomState.getOrCreateRandomFactory(GrandLine.id("world_plan")).at(0, 0, 0).nextLong();

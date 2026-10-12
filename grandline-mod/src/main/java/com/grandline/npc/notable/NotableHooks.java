@@ -167,7 +167,7 @@ public final class NotableHooks {
         CrewManager.onMemberGone(level.getServer(), n.id(), false);
         NotableSpawner.releaseFruit(level.getServer(), n);
         level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable("grandline.notable.fallen",
-                Component.translatable(n.nameKey()), Component.translatable(n.titleKey())).withStyle(ChatFormatting.DARK_RED), false);
+                NotableCharacters.name(n), NotableCharacters.title(n)).withStyle(ChatFormatting.DARK_RED), false);
         GrandLine.LOGGER.info("Notable {} fell ({})", n.id(), fate);
     }
 
@@ -187,7 +187,7 @@ public final class NotableHooks {
         NotableSpawner.releaseFruit(level.getServer(), n);
         if (by instanceof ServerPlayer sp) Quests.progress(sp, "defeat", n.id(), 1);
         level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable("grandline.notable.arrested",
-                Component.translatable(n.nameKey()), Component.translatable(n.titleKey())).withStyle(ChatFormatting.GOLD), false);
+                NotableCharacters.name(n), NotableCharacters.title(n)).withStyle(ChatFormatting.GOLD), false);
     }
 
     /** Recovery after yielding, and friendly/rival notables sparing players they knocked down. */
@@ -242,7 +242,7 @@ public final class NotableHooks {
         if (!any) return;
         NotableState.Entry en = NotableState.get(sp.server).entry(n.id());
         sp.sendSystemMessage(Component.translatable(en.status == Status.ARRESTED ? "grandline.notable.credit_arrested" : "grandline.notable.credit_fallen",
-                Component.translatable(n.nameKey()), en.fate).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+                NotableCharacters.name(n), en.fate).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
         Quests.progress(sp, "defeat", n.id(), 1);
         Quests.progress(sp, "talk", n.id(), 1);
         Quests.progress(sp, "arrest", n.id(), 1);
@@ -265,7 +265,7 @@ public final class NotableHooks {
         }
         Notable n = NotableCharacters.get(npc.notableId());
         if (n == null) return;
-        t.putString("name", Component.translatable(n.nameKey()).getString() + " — " + Component.translatable(n.titleKey()).getString());
+        t.putString("name", NotableCharacters.name(n).getString() + " — " + NotableCharacters.title(n).getString());
         boolean mine = CrewManager.isCrewOf(npc, sp);
         boolean taken = !mine && CrewManager.isCrew(npc);
         String g = t.getString("greeting");
@@ -274,6 +274,8 @@ public final class NotableHooks {
         if (npc.flag(GLNpc.FLAG_SURRENDER)) return;
         if (hostileGreeting && !warm) return;
         t.putString("greeting", mine && n.recruitable() ? n.crewGreetingKey() : taken ? "dialogue.grandline.crew.taken" : n.greetingKey());
+        Component generated = com.grandline.quest.story.IslandStories.greeting(n, d); // generated people: their line depends on the story so far
+        if (generated != null) t.putString("greetingText", Component.Serializer.toJson(generated, sp.registryAccess()));
         addQuests(d, opts, n, npc.islandId(), starter, mine, false);
         if (mine) {
             opts.add(StringTag.valueOf(CrewManager.isWaiting(npc) ? "crew_follow" : "crew_wait"));
@@ -310,7 +312,10 @@ public final class NotableHooks {
 
     /** After the usual gossip, islanders sometimes add something about their own island's story. */
     public static void localRumor(ServerPlayer sp, GLNpc npc) {
-        if (!RUMOR_ISLANDS.contains(npc.islandId()) || sp.getRandom().nextInt(2) != 0) return;
+        if (sp.getRandom().nextInt(2) != 0) return;
+        Component generated = RUMOR_ISLANDS.contains(npc.islandId()) ? null : com.grandline.quest.story.IslandStories.rumor(npc.islandId());
+        if (generated != null) sp.sendSystemMessage(generated.copy().withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY)); // original islands' own stories
+        if (!RUMOR_ISLANDS.contains(npc.islandId())) return;
         sp.sendSystemMessage(Component.translatable("rumor.grandline.story." + npc.islandId()).withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY));
     }
 

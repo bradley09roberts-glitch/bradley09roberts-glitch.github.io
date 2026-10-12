@@ -88,6 +88,12 @@ public final class SelfTest {
         else if (PHASE.equals("naval")) NavalTests.phase1(steps);
         else if (PHASE.equals("livingsea")) LivingSeaTests.phase1(steps); // quick run of the living-sea steps only
         else if (PHASE.equals("creatures")) CreatureSelfTest.phase1(steps); // quick run of the creature steps only
+        else if (PHASE.equals("stories")) { // quick run: the existing story checks, then island stories and jobs
+            IslandStoryTests.prelude(steps);
+            storySteps();
+            StoryTestsExtra.phase1(steps);
+            IslandStoryTests.phase1(steps);
+        }
         else phase2();
     }
 
@@ -770,6 +776,7 @@ public final class SelfTest {
         });
         storySteps();
         StoryTestsExtra.phase1(steps); // Skypiea, Fish-Man Island, local stories, sky/deep notables
+        IslandStoryTests.phase1(steps); // procedural stories on original islands, the richer job board (test/IslandStoryTests.java)
     }
 
     // ============================================================== story cast, crews and quests (Saltfire Saga)
@@ -953,6 +960,7 @@ public final class SelfTest {
         DimensionTests.phase2(steps);
         NavalTests.phase2(steps);
         LivingSeaTests.phase2(steps);
+        IslandStoryTests.phase2(steps); // generated stories regenerate identically; generated people's fates persist
         final String[] fx = new String[1];
         steps.add(s -> {
             fx[0] = Files.readString(Path.of("selftest-fixtures.txt")).trim();

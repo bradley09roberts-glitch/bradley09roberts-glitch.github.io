@@ -51,6 +51,9 @@ public class WantedPosterScreen extends Screen {
         ink(g, bounty, x0 + w / 2, y0 + (int) (BOUNTY_Y * s), Math.max(1f, h / 220f));
         if (!poster.getString("faction").isEmpty())
             ink(g, Component.translatable("faction.grandline." + poster.getString("faction")).getString(), x0 + w / 2, y0 + (int) ((BOUNTY_Y + 52) * s), Math.max(0.75f, h / 420f));
+        if (poster.contains("where")) // job-board posters: where the outlaw was last seen
+            ink(g, Component.translatable("grandline.poster.last_seen", poster.getString("where"), poster.getInt("x"), poster.getInt("z")).getString(),
+                    x0 + w / 2, y0 + (int) ((BOUNTY_Y + 92) * s), Math.max(0.6f, h / 520f));
     }
 
     private void ink(GuiGraphics g, String text, int cx, int y, float scale) {

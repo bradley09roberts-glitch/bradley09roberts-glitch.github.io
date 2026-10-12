@@ -104,7 +104,9 @@ public class HumanoidNpc extends GLNpc {
             setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(item));
             setDropChance(EquipmentSlot.MAINHAND, t >= 8 ? 0.3f : 0.05f);
         }
-        setCustomName(NpcNames.nameFor(a, r));
+        com.grandline.world.WorldPlan plan = level() instanceof ServerLevel sl0 ? com.grandline.world.WorldPlan.forLevel(sl0) : null;
+        com.grandline.world.Island home0 = plan == null || islandId.isEmpty() ? null : plan.byId(islandId);
+        setCustomName(NpcNames.nameFor(a, r, home0 == null ? null : home0.zone)); // names flavoured by the island's sea
         setCustomNameVisible(false);
         refreshDimensions();
     }
