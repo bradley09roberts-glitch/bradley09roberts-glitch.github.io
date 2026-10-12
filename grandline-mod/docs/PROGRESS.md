@@ -291,6 +291,11 @@ First run of a real client against the dedicated server. Result: no client crash
 - Lunarian, Buccaneer and Snakeneck now have NPC roles (Corrida Colosseum gladiators, a Snakeneck lancer at the Kuja
   gate), so every race appears in the world.
 
+### Production install (07:05–07:25)
+- The built jars were installed on a clean NeoForge 21.1.259 dedicated server (`--installServer`, `mods/`,
+  `user_jvm_args.txt`, `run.sh`): no errors, world plan built, "Done" in ~5 s. The real client (Xvfb) then ran the
+  whole solo script against that production server: 69 screenshots, no timeout, no server exception.
+
 ## Work in flight (background agents)
 - Procedural stories and named people for the original islands; a richer job board.
 - Treasure maps, fishing, cooking.

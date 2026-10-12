@@ -39,7 +39,9 @@ Recommended: 8–12 GB RAM allocated for a smooth time in big cities; render dis
    Every player needs the same two jars. Sized for ~20 players.
 
 These exact steps were run against the built jars on a clean NeoForge 21.1.259 server install: it starts in a few
-seconds, builds the world plan and logs no errors.
+seconds, builds the world plan and logs no errors, and the automated real-client script (69 screenshots: creation,
+combat, fruits, Haki, ships, set pieces, sky and deep sea, Sea Kings, Zoans, naval combat, the living sea) played
+through on it with no server exception.
 
 Server options live in `config/grandline-server.toml` (permadeath, knockdown time, Conqueror's chance, PvP, town
 protection, fruit terrain changes and reversion, number of generated islands, NPC simulation radius, etc.).
