@@ -158,12 +158,15 @@ public final class StructureDump {
         ServerLevel l = server.overworld();
         Set<BuildStyle> done = EnumSet.noneOf(BuildStyle.class);
         String only = System.getenv("GL_DUMP_TOWNS");
-        for (Island isl : plan.islands) {
+        List<Island> order = new ArrayList<>(plan.islands);
+        order.sort(Comparator.comparingInt((Island i) -> -i.settlement().plots.size()));
+        for (Island isl : order) {
             Settlement st = isl.settlement();
             if (st.plots.size() < 6 || !st.hasCenter) continue;
-            if (only.length() > 1 ? !Arrays.asList(only.split(",")).contains(isl.id) : !done.add(isl.style)) continue;
             int x0 = st.minX - 4, z0 = st.minZ - 4, x1 = st.maxX + 4, z1 = st.maxZ + 4;
-            if ((long) (x1 - x0) * (z1 - z0) > 260L * 260L) continue;
+            if ((long) (x1 - x0) * (z1 - z0) > 330L * 330L) continue;
+            GrandLine.LOGGER.info("[DUMP] town candidate {} style {} type {} plots {} size {}x{}", isl.id, isl.style, isl.settlementType, st.plots.size(), x1 - x0, z1 - z0);
+            if (only.length() > 1 ? !Arrays.asList(only.split(",")).contains(isl.id) : !done.add(isl.style)) continue;
             for (int cx = x0 >> 4; cx <= x1 >> 4; cx++)
                 for (int cz = z0 >> 4; cz <= z1 >> 4; cz++) l.getChunk(cx, cz);
             Sink sink = new Sink(x0, z0, false);

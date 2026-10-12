@@ -413,67 +413,175 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
 
     private static void stampRoads(Island isl, Settlement st, ChunkSink sink, int minX, int minZ, int maxX, int maxZ) {
         BlockState road = switch (isl.style) {
-            case DESERT -> Blocks.SMOOTH_SANDSTONE.defaultBlockState();
+            case DESERT -> com.grandline.registry.ArchBlocks.DRESSED_SANDSTONE.get().defaultBlockState();
             case SNOW -> Blocks.PACKED_ICE.defaultBlockState();
             case VENETIAN, PALACE, MARINE, FUTURE -> Blocks.STONE_BRICKS.defaultBlockState();
             case CANDY -> Blocks.PINK_TERRACOTTA.defaultBlockState();
             case WANO -> Blocks.GRAVEL.defaultBlockState();
-            case STONE_TOWN -> Blocks.COBBLESTONE.defaultBlockState();
+            case STONE_TOWN, GOTHIC -> Blocks.COBBLESTONE.defaultBlockState();
+            case CLOUD -> Blocks.WHITE_CONCRETE.defaultBlockState();
+            case CORAL -> Blocks.PRISMARINE_BRICKS.defaultBlockState();
             default -> Blocks.DIRT_PATH.defaultBlockState();
+        };
+        // a second surface mixed in so long streets are not one flat colour
+        BlockState road2 = switch (isl.style) {
+            case DESERT -> Blocks.SMOOTH_SANDSTONE.defaultBlockState();
+            case SNOW -> Blocks.SNOW_BLOCK.defaultBlockState();
+            case VENETIAN, PALACE, MARINE -> Blocks.POLISHED_ANDESITE.defaultBlockState();
+            case FUTURE -> Blocks.SMOOTH_STONE.defaultBlockState();
+            case CANDY -> Blocks.WHITE_TERRACOTTA.defaultBlockState();
+            case WANO -> Blocks.STONE_BRICKS.defaultBlockState();
+            case STONE_TOWN, GOTHIC -> Blocks.MOSSY_COBBLESTONE.defaultBlockState();
+            case CLOUD -> Blocks.LIGHT_BLUE_CONCRETE.defaultBlockState();
+            case CORAL -> Blocks.DARK_PRISMARINE.defaultBlockState();
+            default -> Blocks.COARSE_DIRT.defaultBlockState();
         };
         for (int[] r : st.roads) {
             int ax = r[0], az = r[1], bx = r[2], bz = r[3];
-            if (Math.max(ax, bx) + 2 < minX || Math.min(ax, bx) - 2 > maxX || Math.max(az, bz) + 2 < minZ || Math.min(az, bz) - 2 > maxZ) continue;
+            int w = r.length > 4 ? r[4] : 2, lo = -(w - 1) / 2, hi = w / 2;
+            if (Math.max(ax, bx) + w + 2 < minX || Math.min(ax, bx) - w - 2 > maxX || Math.max(az, bz) + w + 2 < minZ || Math.min(az, bz) - w - 2 > maxZ) continue;
             int steps = Math.max(Math.abs(bx - ax), Math.abs(bz - az));
             for (int i = 0; i <= steps; i++) {
                 int x = ax + (bx - ax) * i / Math.max(1, steps);
                 int z = az + (bz - az) * i / Math.max(1, steps);
-                for (int ox = 0; ox <= 1; ox++)
-                    for (int oz = 0; oz <= 1; oz++) {
+                for (int ox = lo; ox <= hi; ox++)
+                    for (int oz = lo; oz <= hi; oz++) {
                         int px = x + ox, pz = z + oz;
                         if (px < minX || px > maxX || pz < minZ || pz > maxZ) continue;
-                        double h = isl.height(px, pz);
-                        if (Double.isNaN(h) || h < WorldPlan.SEA_LEVEL) continue;
-                        int y = (int) Math.floor(h);
-                        BlockState cur = sink.get(px, y, pz);
-                        if (cur == null || cur.isAir() || cur.liquid()) continue;
-                        if (!(cur.is(Blocks.GRASS_BLOCK) || cur.is(Blocks.DIRT) || cur.is(Blocks.SAND) || cur.is(Blocks.SNOW_BLOCK) || cur.is(Blocks.PODZOL)
-                                || cur.is(Blocks.COARSE_DIRT) || cur.is(Blocks.RED_SAND) || cur.is(Blocks.MUD) || cur.is(Blocks.MYCELIUM) || cur.is(Blocks.PINK_CONCRETE_POWDER)
-                                || cur.is(Blocks.STONE) || cur.is(Blocks.CALCITE) || cur.is(Blocks.BLACKSTONE) || cur.is(Blocks.GRAVEL) || SurfacePalette.NATURAL.contains(cur.getBlock()))) continue;
-                        sink.set(px, y, pz, road);
+                        int y = roadSurface(isl, sink, px, pz);
+                        if (y == Integer.MIN_VALUE) continue;
+                        long h = (px * 73856093L) ^ (pz * 19349663L);
+                        sink.set(px, y, pz, Math.floorMod(h, 7) == 0 ? road2 : road);
                         for (int k = 1; k <= 3; k++) {
                             BlockState above = sink.get(px, y + k, pz);
                             if (above != null && !above.isAir() && (above.canBeReplaced() || above.is(net.minecraft.tags.BlockTags.FLOWERS) || above.is(net.minecraft.tags.BlockTags.LEAVES) || above.is(net.minecraft.tags.BlockTags.LOGS))) sink.set(px, y + k, pz, AIR);
                         }
                     }
             }
+            // street lamps every twelve blocks, alternating sides, on open ground beside the road
+            boolean alongX = bz == az;
+            for (int i = 6, side = 0; i < steps - 2; i += 12, side ^= 1) {
+                int x = ax + (bx - ax) * i / Math.max(1, steps), z = az + (bz - az) * i / Math.max(1, steps);
+                int off = side == 0 ? hi + 1 : lo - 1;
+                int px = alongX ? x : x + off, pz = alongX ? z + off : z;
+                if (px < minX || px > maxX || pz < minZ || pz > maxZ) continue;
+                int y = roadSurface(isl, sink, px, pz);
+                if (y == Integer.MIN_VALUE) continue;
+                boolean clear = true;
+                for (int k = 1; k <= 3; k++) {
+                    BlockState above = sink.get(px, y + k, pz);
+                    if (above == null || !(above.isAir() || above.canBeReplaced())) clear = false;
+                }
+                for (com.grandline.world.settlement.Plot p : st.plots) if (p.contains(px, pz, 1)) clear = false;
+                if (clear) streetLamp(isl, sink, px, y + 1, pz);
+            }
         }
     }
 
+    /** Height of the natural ground a road may pave at (x, z), or MIN_VALUE when it is water, built or missing. */
+    private static int roadSurface(Island isl, ChunkSink sink, int px, int pz) {
+        double h = isl.height(px, pz);
+        if (Double.isNaN(h) || h < WorldPlan.SEA_LEVEL) return Integer.MIN_VALUE;
+        int y = (int) Math.floor(h);
+        BlockState cur = sink.get(px, y, pz);
+        if (cur == null || cur.isAir() || cur.liquid()) return Integer.MIN_VALUE;
+        if (!(cur.is(Blocks.GRASS_BLOCK) || cur.is(Blocks.DIRT) || cur.is(Blocks.SAND) || cur.is(Blocks.SNOW_BLOCK) || cur.is(Blocks.PODZOL)
+                || cur.is(Blocks.COARSE_DIRT) || cur.is(Blocks.RED_SAND) || cur.is(Blocks.MUD) || cur.is(Blocks.MYCELIUM) || cur.is(Blocks.PINK_CONCRETE_POWDER)
+                || cur.is(Blocks.STONE) || cur.is(Blocks.CALCITE) || cur.is(Blocks.BLACKSTONE) || cur.is(Blocks.GRAVEL) || SurfacePalette.NATURAL.contains(cur.getBlock())))
+            return Integer.MIN_VALUE;
+        return y;
+    }
+
+    /** A lamp post in the island's style at (x, y, z) (y = first block above the ground). */
+    private static void streetLamp(Island isl, ChunkSink sink, int x, int y, int z) {
+        BlockState post, light;
+        switch (isl.style) {
+            case WANO -> {
+                post = Blocks.STONE_BRICK_WALL.defaultBlockState();
+                light = com.grandline.registry.ArchBlocks.WHITE_PAPER_LANTERN.get().defaultBlockState();
+            }
+            case DESERT -> {
+                post = com.grandline.registry.ArchBlocks.DRESSED_SANDSTONE_WALL.get().defaultBlockState();
+                light = com.grandline.registry.ArchBlocks.BRASS_LANTERN.get().defaultBlockState();
+            }
+            case MARINE, PALACE, FUTURE, CLOUD -> {
+                post = Blocks.IRON_BARS.defaultBlockState();
+                light = isl.style == com.grandline.world.build.BuildStyle.FUTURE ? Blocks.SEA_LANTERN.defaultBlockState() : com.grandline.registry.ArchBlocks.BRASS_LANTERN.get().defaultBlockState();
+            }
+            case CORAL -> {
+                post = Blocks.PRISMARINE_WALL.defaultBlockState();
+                light = Blocks.SEA_LANTERN.defaultBlockState();
+            }
+            case JUNGLE -> {
+                post = Blocks.BAMBOO_FENCE.defaultBlockState();
+                light = com.grandline.registry.ArchBlocks.RED_PAPER_LANTERN.get().defaultBlockState();
+            }
+            case GOTHIC -> {
+                post = Blocks.DARK_OAK_FENCE.defaultBlockState();
+                light = Blocks.SOUL_LANTERN.defaultBlockState();
+            }
+            default -> {
+                post = Blocks.SPRUCE_FENCE.defaultBlockState();
+                light = com.grandline.registry.ArchBlocks.BRASS_LANTERN.get().defaultBlockState();
+            }
+        }
+        if (post.hasProperty(net.minecraft.world.level.block.WallBlock.UP)) post = post.setValue(net.minecraft.world.level.block.WallBlock.UP, true);
+        sink.set(x, y, z, post);
+        sink.set(x, y + 1, z, post);
+        sink.set(x, y + 2, z, light);
+    }
+
+    /**
+     * The harbour pier: dock planks on pilings at sea level + 1, from the shore out to a T-head where ships tie up,
+     * with mooring bollards, lamp posts, a ladder down to the water and cargo waiting on the head.
+     */
     private static void stampDock(Island isl, Settlement st, ChunkSink sink, int minX, int minZ, int maxX, int maxZ) {
         if (!st.hasDock) return;
         int len = Settlement.DOCK_LENGTH;
         double ux = st.dockDirX / 1000.0, uz = st.dockDirZ / 1000.0;
         double px = -uz, pz = ux; // perpendicular
-        BlockState plank = Blocks.SPRUCE_PLANKS.defaultBlockState();
-        BlockState post = Blocks.SPRUCE_LOG.defaultBlockState();
+        BlockState plank = com.grandline.registry.ArchBlocks.DOCK_PLANKS.get().defaultBlockState();
+        BlockState pile = com.grandline.registry.ArchBlocks.WEATHERED_BEAM.get().defaultBlockState();
+        BlockState bollard = com.grandline.registry.ArchBlocks.BOLLARD.get().defaultBlockState();
         BlockState fence = Blocks.SPRUCE_FENCE.defaultBlockState();
+        BlockState lantern = com.grandline.registry.ArchBlocks.BRASS_LANTERN.get().defaultBlockState();
         int y = WorldPlan.SEA_LEVEL + 1;
         for (int i = -4; i <= len; i++) {
-            for (int w = -2; w <= 2; w++) {
+            int half = i >= len - 5 ? 4 : 2; // the T-head
+            for (int w = -half; w <= half; w++) {
                 int x = (int) Math.round(st.dockX + ux * i + px * w);
                 int z = (int) Math.round(st.dockZ + uz * i + pz * w);
                 if (x < minX || x > maxX || z < minZ || z > maxZ) continue;
                 sink.set(x, y, z, plank);
                 for (int k = 1; k <= 3; k++) sink.set(x, y + k, z, AIR);
-                if ((w == -2 || w == 2) && i % 4 == 0) {
-                    for (int d = y - 1; d > y - 14; d--) {
+                boolean edge = Math.abs(w) == half;
+                boolean pileHere = edge && Math.floorMod(i, 3) == 0 || i == len && Math.floorMod(w, 2) == 0 || i == len - 5 && edge;
+                if (pileHere) {
+                    for (int d = y - 1; d > y - 16; d--) {
                         BlockState cur = sink.get(x, d, z);
                         if (cur != null && !cur.isAir() && !cur.liquid()) break;
-                        sink.set(x, d, z, post);
+                        sink.set(x, d, z, pile);
                     }
+                }
+                if (edge && i > 0 && Math.floorMod(i, 8) == 0) {
                     sink.set(x, y + 1, z, fence);
-                    if (i % 8 == 0) sink.set(x, y + 2, z, Blocks.LANTERN.defaultBlockState());
+                    sink.set(x, y + 2, z, fence);
+                    sink.set(x, y + 3, z, lantern);
+                } else if (edge && i > 1 && Math.floorMod(i, 8) == 4) sink.set(x, y + 1, z, bollard);
+                // cargo waiting on the T-head
+                if (i == len - 3 && (w == -2 || w == -3)) sink.set(x, y + 1, z, w == -2 ? com.grandline.registry.ArchBlocks.CARGO_CRATE.get().defaultBlockState()
+                        : Blocks.BARREL.defaultBlockState().setValue(net.minecraft.world.level.block.BarrelBlock.FACING, net.minecraft.core.Direction.UP));
+                if (i == len - 2 && w == -3) sink.set(x, y + 1, z, com.grandline.registry.ArchBlocks.CARGO_SACKS.get().defaultBlockState());
+                if (i == len - 3 && w == 3) sink.set(x, y + 1, z, com.grandline.registry.ArchBlocks.ROPE_COIL.get().defaultBlockState());
+            }
+            // a ladder down to the water on the left side, against a piling
+            if (i == 6) {
+                int x = (int) Math.round(st.dockX + ux * i + px * -3);
+                int z = (int) Math.round(st.dockZ + uz * i + pz * -3);
+                if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
+                    net.minecraft.core.Direction out = net.minecraft.core.Direction.getNearest(-px, 0, -pz);
+                    for (int d = y; d >= y - 3; d--)
+                        sink.set(x, d, z, Blocks.LADDER.defaultBlockState().setValue(net.minecraft.world.level.block.LadderBlock.FACING, out));
                 }
             }
         }

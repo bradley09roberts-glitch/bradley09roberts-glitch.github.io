@@ -17,8 +17,10 @@ public final class Settlement {
     public final List<Plot> plots = new ArrayList<>();
     /** Island secrets (buried treasure, caches, shrines, wrecks); kept out of {@link #plots} so towns stay compact. */
     public final List<Plot> secrets = new ArrayList<>();
-    /** Road segments {x1, z1, x2, z2}. */
+    /** Road segments {x1, z1, x2, z2, width}: axis-aligned streets joining every door into one network. */
     public final List<int[]> roads = new ArrayList<>();
+    /** Door fronts (where each building's road starts), in placement order. */
+    final List<int[]> doors = new ArrayList<>();
     public int centerX, centerZ;
     public boolean hasCenter;
     /** Dock: start (on the coast) and direction (unit cardinal-ish vector *1000). */
@@ -242,7 +244,6 @@ public final class Settlement {
                 s.dockZ = bz;
                 s.dockDirX = bdx;
                 s.dockDirZ = bdz;
-                s.roads.add(new int[]{bx, bz, cx, cz});
                 if (st != SettlementType.HAMLET) {
                     // shipwright yard beside the dock root, inland
                     BuildingType t = BuildingType.SHIPWRIGHT;
@@ -263,6 +264,72 @@ public final class Settlement {
                 }
             }
         }
+        streets(s);
+    }
+
+    /**
+     * Streets: a minimum spanning tree over the town centre, every door and the dock root (Manhattan distance), each
+     * edge drawn as an L of two axis-aligned segments (the elbow chosen to cross fewer plots). The street from the
+     * centre to the dock is the three-wide main street; the rest are two wide.
+     */
+    private static void streets(Settlement s) {
+        List<int[]> nodes = new ArrayList<>();
+        nodes.add(new int[]{s.centerX, s.centerZ});
+        nodes.addAll(s.doors);
+        int dock = -1;
+        if (s.hasDock) {
+            dock = nodes.size();
+            nodes.add(new int[]{s.dockX, s.dockZ});
+        }
+        int n = nodes.size();
+        boolean[] in = new boolean[n];
+        int[] best = new int[n], from = new int[n];
+        java.util.Arrays.fill(best, Integer.MAX_VALUE);
+        best[0] = 0;
+        from[0] = -1;
+        int[] parent = new int[n];
+        for (int k = 0; k < n; k++) {
+            int u = -1;
+            for (int i = 0; i < n; i++) if (!in[i] && (u < 0 || best[i] < best[u])) u = i;
+            in[u] = true;
+            parent[u] = from[u];
+            for (int i = 0; i < n; i++) {
+                if (in[i]) continue;
+                int dd = Math.abs(nodes.get(i)[0] - nodes.get(u)[0]) + Math.abs(nodes.get(i)[1] - nodes.get(u)[1]);
+                if (dd < best[i]) {
+                    best[i] = dd;
+                    from[i] = u;
+                }
+            }
+        }
+        // the main street: the tree path from the dock back to the centre
+        java.util.Set<Long> main = new java.util.HashSet<>();
+        for (int i = dock; i > 0; i = parent[i]) main.add(((long) i << 32) | parent[i]);
+        for (int i = 1; i < n; i++) {
+            int j = parent[i];
+            if (j < 0) continue;
+            int[] a = nodes.get(i), b = nodes.get(j);
+            int width = main.contains(((long) i << 32) | j) ? 3 : 2;
+            int hitsXFirst = crossings(s, a[0], a[1], b[0], a[1]) + crossings(s, b[0], a[1], b[0], b[1]);
+            int hitsZFirst = crossings(s, a[0], a[1], a[0], b[1]) + crossings(s, a[0], b[1], b[0], b[1]);
+            if (hitsXFirst <= hitsZFirst) {
+                s.roads.add(new int[]{a[0], a[1], b[0], a[1], width});
+                s.roads.add(new int[]{b[0], a[1], b[0], b[1], width});
+            } else {
+                s.roads.add(new int[]{a[0], a[1], a[0], b[1], width});
+                s.roads.add(new int[]{a[0], b[1], b[0], b[1], width});
+            }
+        }
+    }
+
+    /** How many plots an axis-aligned segment passes through (sampled every two blocks). */
+    private static int crossings(Settlement s, int ax, int az, int bx, int bz) {
+        int steps = Math.max(Math.abs(bx - ax), Math.abs(bz - az)), hits = 0;
+        for (int i = 0; i <= steps; i += 2) {
+            int x = ax + (bx - ax) * i / Math.max(1, steps), z = az + (bz - az) * i / Math.max(1, steps);
+            for (Plot p : s.plots) if (p.type() != BuildingType.PLAZA && p.contains(x, z, 0)) hits++;
+        }
+        return hits;
     }
 
     /** Lay out {@code wanted} on a spiral round (cx, cz); returns how many fitted. */
@@ -293,7 +360,7 @@ public final class Settlement {
                 // road from door to centre
                 int doorX = px + (rot == Rotation.CLOCKWISE_90 ? sx / 2 + 1 : rot == Rotation.COUNTERCLOCKWISE_90 ? -sx / 2 - 1 : 0);
                 int doorZ = pz + (rot == Rotation.NONE ? -sz / 2 - 1 : rot == Rotation.CLOCKWISE_180 ? sz / 2 + 1 : 0);
-                if (rad > 0) s.roads.add(new int[]{doorX, doorZ, cx, cz});
+                if (rad > 0) s.doors.add(new int[]{doorX, doorZ});
                 ok = true;
                 placed++;
             }

@@ -40,6 +40,7 @@ public final class Buildings {
 
     public static void build(Plot plot, BuildStyle style, Builder b) {
         Mats m = Mats.of(style, b.seed);
+        if (m.stilts && STILTED.contains(plot.type())) b = stilts(b, m, plot.type());
         switch (plot.type()) {
             case HOUSE_SMALL -> cottage(b, m);
             case HOUSE -> townhouse(b, m);
@@ -49,7 +50,10 @@ public final class Buildings {
             case SHOP -> shop(b, m);
             case BLACKSMITH -> smithy(b, m);
             case INN -> inn(b, m);
-            case CHURCH -> church(b, m);
+            case CHURCH -> {
+                if (style == BuildStyle.WANO) shrine(b, m);
+                else church(b, m);
+            }
             case MARINE_POST -> marinePost(b);
             case WATCHTOWER -> watchtower(b, m);
             case LIGHTHOUSE -> lighthouse(b, m);
@@ -136,7 +140,7 @@ public final class Buildings {
 
     /** Foundation down to the terrain, a solid plinth layer at y = 0 and clear air above (for the roof too). */
     static void site(Builder b, Mats m, int x1, int z1, int x2, int z2, int clearH) {
-        b.foundation(x1, z1, x2, z2, m.base.getBlock(), 14);
+        if (!m.stilts) b.foundation(x1, z1, x2, z2, m.base.getBlock(), 14);
         b.clear(x1 - 1, 1, z1 - 1, x2 + 1, clearH, z2 + 1);
         b.fill(x1, 0, z1, x2, 0, z2, m.base);
         b.fill(x1 + 1, 0, z1 + 1, x2 - 1, 0, z2 - 1, m.floor);
@@ -168,6 +172,10 @@ public final class Buildings {
             }
         }
         for (int[] c : new int[][]{{x1, z1}, {x2, z1}, {x1, z2}, {x2, z2}}) b.fill(c[0], 1, c[1], c[0], top, c[1], m.frame);
+        if (m.style == BuildStyle.FUTURE) // rounded-off glass corners
+            for (int[] c : new int[][]{{x1, z1}, {x2, z1}, {x1, z2}, {x2, z2}}) b.fill(c[0], 2, c[1], c[0], top - 1, c[1], Blocks.LIGHT_BLUE_STAINED_GLASS.defaultBlockState());
+        if (m.style == BuildStyle.WANO) // a skirt roof at every inner floor line
+            for (int f = 1; f < floors; f++) Arch.skirt(b, m, x1, z1, x2, z2, f * H);
     }
 
     private static void wallsState(Builder b, int x1, int y1, int z1, int x2, int y2, int z2, BlockState s) {
@@ -191,12 +199,79 @@ public final class Buildings {
     static int roof(Builder b, Mats m, int x1, int z1, int x2, int z2, int y, boolean alongX) {
         return switch (m.roofKind) {
             case FLAT -> {
-                Arch.flat(b, m, x1, z1, x2, z2, y - 1, m.style == BuildStyle.DESERT, true);
+                Arch.flat(b, m, x1, z1, x2, z2, y - 1, false, true);
+                terrace(b, m, x1, z1, x2, z2, y);
                 yield y + 1;
+            }
+            case STEEP -> {
+                int across = alongX ? z2 - z1 + 1 : x2 - x1 + 1;
+                if (across <= 9) yield Arch.gable(b, m, x1, z1, x2, z2, y, alongX, 1, m.upperWall);
+                Mats g = Mats.of(m.style, b.seed);
+                g.roofKind = RoofKind.GABLE;
+                yield Arch.gable(b, g, x1, z1, x2, z2, y, alongX, 1, m.upperWall);
             }
             case HIP, FLARED -> Arch.hip(b, m, x1, z1, x2, z2, y, m.roofKind == RoofKind.FLARED ? 2 : 1);
             default -> Arch.gable(b, m, x1, z1, x2, z2, y, alongX, 1, m.upperWall);
         };
+    }
+
+    /** Types raised on stilts in jungle towns (floor two blocks up, posts and a stair to the door). */
+    static final java.util.EnumSet<BuildingType> STILTED = java.util.EnumSet.of(BuildingType.HOUSE_SMALL, BuildingType.HOUSE,
+            BuildingType.HOUSE_LARGE, BuildingType.TAVERN, BuildingType.SHOP, BuildingType.INN, BuildingType.HUT, BuildingType.MANSION, BuildingType.DOJO);
+
+    /** Posts under the footprint, a landing and steps up to the door; returns the builder two blocks higher. */
+    static Builder stilts(Builder b, Mats m, BuildingType t) {
+        int w = b.w, d = b.d;
+        Block post = m.frame.getBlock();
+        for (int x = 0; x < w; x++)
+            for (int z = 0; z < d; z++) {
+                boolean ns = z == 0 || z == d - 1, we = x == 0 || x == w - 1;
+                boolean isPost = ns && (x % 3 == 0 || x == w - 1) || we && (z % 3 == 0 || z == d - 1);
+                if (!isPost) continue;
+                b.clear(x, 0, z, x, 1, z);
+                b.set(x, 0, z, m.frame);
+                b.set(x, 1, z, m.frame);
+                b.foundation(x, z, x, z, post, 10);
+            }
+        int dx = t == BuildingType.SHOP || t == BuildingType.HUT ? 2 : w / 2;
+        b.set(dx, 2, -1, m.floor);
+        b.foundation(dx, -1, dx, -1, post, 10);
+        b.fill(dx, 0, -1, dx, 1, -1, m.frame);
+        b.clear(dx, 1, -3, dx, 4, -2);
+        b.set(dx, 1, -2, Arch.stair(stairsOf(m), Direction.SOUTH, Half.BOTTOM));
+        b.set(dx, 0, -3, Arch.stair(stairsOf(m), Direction.SOUTH, Half.BOTTOM));
+        b.foundation(dx, -2, dx, -2, post, 10);
+        b.foundation(dx, -3, dx, -3, post, 10);
+        b.set(dx, 0, -2, m.frame);
+        return new Builder(b.sink, b.ox, b.oy + 2, b.oz, w, d, b.rot, b.seed);
+    }
+
+    /** Flat-roof terraces: a pergola with an awning canopy, a bench and planters (desert); solar panels and a mast (future). */
+    static void terrace(Builder b, Mats m, int x1, int z1, int x2, int z2, int y) {
+        if (x2 - x1 < 5 || z2 - z1 < 5) return;
+        if (m.style == BuildStyle.FUTURE) {
+            for (int x = x1 + 2; x <= x1 + 4; x++)
+                for (int z = z1 + 2; z <= z1 + 3; z++) b.set(x, y, z, Blocks.DAYLIGHT_DETECTOR.defaultBlockState());
+            b.fill(x2 - 2, y, z2 - 2, x2 - 2, y + 2, z2 - 2, Arch.connect(Blocks.IRON_BARS.defaultBlockState(), false, false, false, false));
+            b.set(x2 - 2, y + 3, z2 - 2, Blocks.LIGHTNING_ROD.defaultBlockState());
+            return;
+        }
+        if (m.style != BuildStyle.DESERT) return;
+        int px = x2 - 3, pz = z2 - 3;
+        for (int[] c : new int[][]{{px, pz}, {px + 2, pz}, {px, pz + 2}, {px + 2, pz + 2}})
+            b.fill(c[0], y, c[1], c[0], y + 1, c[1], Arch.connect(m.fence, false, false, false, false));
+        BlockState aw = Arch.facing((m.awning != null ? m.awning : ArchBlocks.YELLOW_AWNING.get()).defaultBlockState(), Direction.NORTH);
+        for (int x = px; x <= px + 2; x++)
+            for (int z = pz; z <= pz + 2; z++) b.set(x, y + 2, z, z == pz ? aw : Arch.slab(Blocks.WHITE_WOOL.defaultBlockState(), SlabType.BOTTOM));
+        b.set(px + 1, y, pz + 1, Arch.decor(ArchBlocks.PLANK_BENCH, Direction.NORTH));
+        b.set(x1 + 1, y, z1 + 1, Arch.decor(ArchBlocks.FLOWER_PLANTER, Direction.NORTH));
+        b.set(x1 + 2, y, z1 + 1, Blocks.POTTED_CACTUS.defaultBlockState());
+    }
+
+    /** A white plaster dome with a brass finial on a flat roof (Alabasta). */
+    static void desertDome(Builder b, Mats m, int cx, int cz, int y, int r) {
+        b.cylinder(cx, cz, y, y, r, m.wall.getBlock(), false);
+        Arch.dome(b, cx, y + 1, cz, r, ArchBlocks.WHITE_PLASTER.get().defaultBlockState(), Blocks.GOLD_BLOCK.defaultBlockState(), true);
     }
 
     /** Front door at (x, z) in a wall facing {@code out}: three-tall doorway, a step, a lantern and, if wanted, a hood. */
@@ -302,7 +377,11 @@ public final class Buildings {
         b.bed(1, 1, d - 3, Blocks.RED_BED, Direction.SOUTH);
         b.set(1, 1, d - 4, Blocks.BARREL.defaultBlockState().setValue(BarrelBlock.FACING, Direction.UP));
         stove(b, m, w - 2, 1, d - 2, Direction.NORTH);
-        if (m.roofKind != RoofKind.FLAT) Arch.chimney(b, m, w - 1, d - 1, 1, top + 1, true);
+        if (m.roofKind != RoofKind.FLAT) Arch.chimney(b, m, w - 1, b.rand(4, 2) == 0 ? d - 1 : d / 2 + 1, 1, top + 1, true);
+        if (b.rand(8, 3) == 0 && m.roofKind != RoofKind.FLAT) { // a woodshed lean-to on the west side
+            Arch.leanTo(b, m, -1, 2, -1, d - 2, H, Direction.WEST);
+            for (int z = 3; z <= d - 3; z++) b.fill(-1, 1, z, -1, 2, z, Arch.axis(Blocks.OAK_LOG.defaultBlockState(), Direction.Axis.Z));
+        }
         b.set(w - 2, 1, d - 3, Blocks.CRAFTING_TABLE);
         b.chest(1, 1, 1, Direction.EAST, LOOT_HOUSE);
         b.set(w - 2, 1, 1, Arch.stair(chair(m), Direction.WEST, Half.BOTTOM));
@@ -328,6 +407,8 @@ public final class Buildings {
         int top = roof(b, m, 0, 0, w - 1, d - 1, 2 * H + 1, alongX);
         door(b, m, w / 2, 0, Direction.NORTH, true);
         windows(b, m, 0, 0, w - 1, d - 1, 2, w / 2);
+        if (m.roofKind == RoofKind.GABLE && alongX && b.rand(5, 2) == 0) Arch.dormer(b, m, w / 2, 0, 2 * H + 1);
+        if (m.style == BuildStyle.DESERT && b.rand(6, 3) == 0) desertDome(b, m, w / 2, d / 2, 2 * H + 1, 2);
         stairsUp(b, m, 1, 2, Direction.SOUTH, 2);
         // ground floor: kitchen and parlour
         stove(b, m, w - 2, 1, d - 2, Direction.NORTH);
@@ -414,6 +495,7 @@ public final class Buildings {
         b.set(cx, H + 2, z1, Blocks.AIR);
         b.door(cx, H + 1, z1, m.door.getBlock(), Direction.NORTH); // balcony door
         windows(b, m, 0, z1, w - 1, d - 1, 2, cx);
+        if (m.style == BuildStyle.DESERT) desertDome(b, m, cx, (z1 + d) / 2, 2 * H + 1, 3);
         // chimneys at both ends
         if (m.roofKind != RoofKind.FLAT) {
             Arch.chimney(b, m, 1, d - 3, 1, top, true);
@@ -590,6 +672,11 @@ public final class Buildings {
         int top = roof(b, m, 0, 0, w - 1, d - 1, 2 * H + 1, true);
         door(b, m, w / 2, 0, Direction.NORTH, true);
         windows(b, m, 0, 0, w - 1, d - 1, 2, w / 2);
+        if (m.style == BuildStyle.DESERT) desertDome(b, m, w / 2, d / 2, 2 * H + 1, 2);
+        else if (m.roofKind == RoofKind.GABLE) {
+            Arch.dormer(b, m, 3, 0, 2 * H + 1);
+            Arch.dormer(b, m, w - 4, 0, 2 * H + 1);
+        }
         // a hanging sign: banner by the door
         b.set(w / 2 + 2, H, -1, Blocks.BLUE_WALL_BANNER.defaultBlockState().setValue(WallBannerBlock.FACING, Direction.NORTH));
         b.set(w / 2 + 2, H, 0, m.wall);
@@ -660,7 +747,10 @@ public final class Buildings {
         shell(b, m, 0, tz, w - 1, d - 1, 1);
         b.walls(0, H, tz, w - 1, H + 1, d - 1, m.wall.getBlock());
         for (int[] c : new int[][]{{0, tz}, {w - 1, tz}, {0, d - 1}, {w - 1, d - 1}}) b.fill(c[0], 1, c[1], c[0], H + 1, c[1], m.frame);
-        if (m.roofKind == RoofKind.FLAT) Arch.flat(b, m, 0, tz, w - 1, d - 1, H + 2, true, true);
+        if (m.roofKind == RoofKind.FLAT) {
+            Arch.flat(b, m, 0, tz, w - 1, d - 1, H + 2, false, true);
+            if (m.style == BuildStyle.DESERT) desertDome(b, m, w / 2, (tz + d) / 2 + 1, H + 3, 3);
+        }
         else {
             Mats rm = m;
             if (m.roofKind != RoofKind.GABLE) {
@@ -719,6 +809,70 @@ public final class Buildings {
         b.set(w / 2 + 2, 2, d - 2, Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.LIT, true));
         b.hanging(w / 2, H + 1, (tz + d) / 2, m.lantern.getBlock());
         b.marker("npc", w / 2, 1, d - 4, npc("priest"));
+    }
+
+    /**
+     * Wano shrine (9x15, the CHURCH plot in Wano towns): a vermilion torii over a stone path between stone lanterns,
+     * then a hall on a raised stone base with a veranda, dark timber and white plaster, under a flared kawara roof.
+     */
+    static void shrine(Builder b, Mats m) {
+        int w = b.w, d = b.d, hz = 6;
+        site(b, m, 0, 0, w - 1, d - 1, 16);
+        b.fill(0, 0, 0, w - 1, 0, hz - 1, Blocks.GRAVEL.defaultBlockState());
+        b.fill(w / 2 - 1, 0, 0, w / 2 + 1, 0, hz - 1, Blocks.STONE_BRICKS.defaultBlockState());
+        // torii
+        BlockState red = Blocks.RED_TERRACOTTA.defaultBlockState();
+        b.fill(1, 1, 1, 1, 5, 1, red);
+        b.fill(w - 2, 1, 1, w - 2, 5, 1, red);
+        b.fill(1, 4, 1, w - 2, 4, 1, red);
+        b.fill(0, 6, 1, w - 1, 6, 1, red);
+        b.fill(0, 7, 1, w - 1, 7, 1, Arch.slab(Blocks.BLACKSTONE_SLAB.defaultBlockState(), SlabType.BOTTOM));
+        b.set(0, 7, 1, Arch.stair(Blocks.BLACKSTONE_STAIRS.defaultBlockState(), Direction.EAST, Half.BOTTOM));
+        b.set(w - 1, 7, 1, Arch.stair(Blocks.BLACKSTONE_STAIRS.defaultBlockState(), Direction.WEST, Half.BOTTOM));
+        b.set(w / 2, 5, 1, red);
+        // stone lanterns along the path
+        for (int z : new int[]{3}) for (int x : new int[]{1, w - 2}) {
+            b.set(x, 1, z, Blocks.STONE_BRICK_WALL.defaultBlockState());
+            b.set(x, 2, z, ArchBlocks.WHITE_PAPER_LANTERN.get().defaultBlockState());
+            b.set(x, 3, z, Arch.slab(Blocks.STONE_BRICK_SLAB.defaultBlockState(), SlabType.BOTTOM));
+        }
+        // raised base and veranda
+        b.fill(0, 0, hz, w - 1, 1, d - 1, Blocks.STONE_BRICKS.defaultBlockState());
+        b.fill(0, 1, hz, w - 1, 1, d - 1, Blocks.SPRUCE_PLANKS.defaultBlockState());
+        for (int x = w / 2 - 1; x <= w / 2 + 1; x++) b.set(x, 1, hz - 1, Arch.stair(Blocks.STONE_BRICK_STAIRS.defaultBlockState(), Direction.SOUTH, Half.BOTTOM));
+        b.foundation(w / 2 - 1, hz - 1, w / 2 + 1, hz - 1, Blocks.STONE_BRICKS, 6);
+        // hall: posts, plaster panels between beams, lattice screens at the front
+        int x1 = 1, x2 = w - 2, z1 = hz + 1, z2 = d - 2;
+        for (int x = x1; x <= x2; x++)
+            for (int z = z1; z <= z2; z++) {
+                boolean edge = x == x1 || x == x2 || z == z1 || z == z2;
+                if (!edge) continue;
+                boolean post = (x == x1 || x == x2) && (z == z1 || z == z2 || (z - z1) % 3 == 0) || (z == z1 || z == z2) && (x - x1) % 3 == 0;
+                for (int y = 2; y <= 5; y++) b.set(x, y, z, post ? m.frame : y == 2 ? m.base : m.wall);
+            }
+        band(b, m, x1, z1, x2, z2, 6);
+        for (int x = x1 + 1; x < x2; x++) b.fill(x, 2, z1, x, 4, z1, Arch.along(m.window, Direction.Axis.X));
+        b.clear(w / 2, 2, z1, w / 2, 4, z1);
+        for (int z = z1 + 2; z < z2; z += 3) {
+            b.fill(x1, 3, z, x1, 4, z, Arch.along(m.window, Direction.Axis.Z));
+            b.fill(x2, 3, z, x2, 4, z, Arch.along(m.window, Direction.Axis.Z));
+        }
+        // veranda railing
+        for (int z = hz; z <= d - 1; z++) {
+            b.set(0, 2, z, Arch.along(m.fence, Direction.Axis.Z));
+            b.set(w - 1, 2, z, Arch.along(m.fence, Direction.Axis.Z));
+        }
+        Mats rm = Mats.of(BuildStyle.WANO, b.seed);
+        Arch.hip(b, rm, x1, z1, x2, z2, 7, 2);
+        // inside: altar, offerings, candles
+        b.fill(x1 + 1, 2, z2 - 1, x2 - 1, 2, z2 - 1, Arch.slab(Blocks.SPRUCE_SLAB.defaultBlockState(), SlabType.TOP));
+        b.set(w / 2, 3, z2 - 1, Blocks.CHISELED_STONE_BRICKS.defaultBlockState());
+        b.set(w / 2 - 1, 3, z2 - 1, Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.CANDLES, 2).setValue(CandleBlock.LIT, true));
+        b.set(w / 2 + 1, 3, z2 - 1, Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.CANDLES, 2).setValue(CandleBlock.LIT, true));
+        b.set(w / 2, 2, z1 + 1, Blocks.BARREL.defaultBlockState().setValue(BarrelBlock.FACING, Direction.UP));
+        b.set(w / 2, 6, z1 + 1, Blocks.BELL.defaultBlockState().setValue(BellBlock.ATTACHMENT, net.minecraft.world.level.block.state.properties.BellAttachType.CEILING));
+        b.hanging(w / 2, 5, (z1 + z2) / 2, ArchBlocks.RED_PAPER_LANTERN.get());
+        b.marker("npc", w / 2, 2, z2 - 3, npc("priest"));
     }
 
     /**

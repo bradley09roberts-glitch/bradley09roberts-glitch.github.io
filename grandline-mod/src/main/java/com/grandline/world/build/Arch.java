@@ -26,7 +26,7 @@ public final class Arch {
     public static final class Mats {
         public BlockState wall, upperWall, frame, base, floor, roof, roofStairs, roofSlab, window, door, fence, lantern, trim, chimney, sill;
         public Block shutter, awning;
-        public boolean planters, eaveBrackets;
+        public boolean planters, eaveBrackets, stilts;
         public RoofKind roofKind = RoofKind.GABLE;
         public int pitchSteps = 1;
         public BuildStyle style;
@@ -102,9 +102,11 @@ public final class Arch {
                     m.door = Blocks.SPRUCE_DOOR.defaultBlockState();
                     m.trim = ArchBlocks.DARK_BEAM.get().defaultBlockState();
                     m.eaveBrackets = true;
+                    m.roofKind = RoofKind.STEEP;
                     m.chimney = ArchBlocks.FIELDSTONE.get().defaultBlockState();
                 }
                 case JUNGLE -> {
+                    m.stilts = true;
                     m.wall = Blocks.BAMBOO_PLANKS.defaultBlockState();
                     m.upperWall = m.wall;
                     m.frame = log(Blocks.JUNGLE_LOG);
@@ -192,6 +194,7 @@ public final class Arch {
                     m.fence = Blocks.DARK_OAK_FENCE.defaultBlockState();
                     m.trim = log(ArchBlocks.DARK_BEAM.get());
                     m.lantern = Blocks.SOUL_LANTERN.defaultBlockState();
+                    m.roofKind = RoofKind.STEEP;
                     m.chimney = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
                 }
                 case FUTURE -> {
@@ -250,7 +253,7 @@ public final class Arch {
                     m.window = Blocks.LIGHT_BLUE_STAINED_GLASS_PANE.defaultBlockState();
                     m.door = Blocks.BIRCH_DOOR.defaultBlockState();
                     m.fence = Blocks.BIRCH_FENCE.defaultBlockState();
-                    m.trim = Blocks.GOLD_BLOCK.defaultBlockState();
+                    m.trim = Blocks.LIGHT_BLUE_CONCRETE.defaultBlockState();
                     m.lantern = Blocks.PEARLESCENT_FROGLIGHT.defaultBlockState();
                     m.chimney = ArchBlocks.WHITE_PLASTER.get().defaultBlockState();
                 }
@@ -542,6 +545,50 @@ public final class Arch {
         }
         b.set(cx, y + top + 1, cz, shell);
         b.set(cx, y + top + 2, cz, tip);
+    }
+
+    /**
+     * A gabled dormer on the north slope of a gable roof whose ridge runs along x: a three-wide window bay standing on
+     * the wall plate at height y (the roof's first course) at x, with its own little gable roof and a window facing
+     * north. Clears the main roof inside it.
+     */
+    public static void dormer(Builder b, Mats m, int x, int z, int y) {
+        b.clear(x, y, z, x, y + 1, z + 2);
+        for (int dz = 0; dz <= 2; dz++) {
+            b.set(x - 1, y, z + dz, m.upperWall);
+            b.set(x + 1, y, z + dz, m.upperWall);
+            b.set(x - 1, y + 1, z + dz, m.upperWall);
+            b.set(x + 1, y + 1, z + dz, m.upperWall);
+        }
+        b.set(x, y, z, along(m.window, Direction.Axis.X));
+        b.set(x, y + 1, z, m.upperWall);
+        for (int dz = -1; dz <= 2; dz++) {
+            b.set(x - 2, y + 1, z + dz, stair(m.roofStairs, Direction.EAST, Half.BOTTOM));
+            b.set(x + 2, y + 1, z + dz, stair(m.roofStairs, Direction.WEST, Half.BOTTOM));
+            b.set(x - 1, y + 2, z + dz, stair(m.roofStairs, Direction.EAST, Half.BOTTOM));
+            b.set(x + 1, y + 2, z + dz, stair(m.roofStairs, Direction.WEST, Half.BOTTOM));
+            b.set(x, y + 2, z + dz, m.roof);
+            b.set(x, y + 3, z + dz, slab(m.roofSlab, SlabType.BOTTOM));
+        }
+    }
+
+    /**
+     * A skirt roof (Japanese hisashi / pent roof) round a box at height y: one course of roof stairs one block outside
+     * the walls, sloping outward, with outer corners.
+     */
+    public static void skirt(Builder b, Mats m, int x1, int z1, int x2, int z2, int y) {
+        for (int x = x1; x <= x2; x++) {
+            b.set(x, y, z1 - 1, stair(m.roofStairs, Direction.SOUTH, Half.BOTTOM));
+            b.set(x, y, z2 + 1, stair(m.roofStairs, Direction.NORTH, Half.BOTTOM));
+        }
+        for (int z = z1; z <= z2; z++) {
+            b.set(x1 - 1, y, z, stair(m.roofStairs, Direction.EAST, Half.BOTTOM));
+            b.set(x2 + 1, y, z, stair(m.roofStairs, Direction.WEST, Half.BOTTOM));
+        }
+        b.set(x1 - 1, y, z1 - 1, stair(m.roofStairs, Direction.SOUTH, Half.BOTTOM, StairsShape.OUTER_LEFT));
+        b.set(x2 + 1, y, z1 - 1, stair(m.roofStairs, Direction.SOUTH, Half.BOTTOM, StairsShape.OUTER_RIGHT));
+        b.set(x1 - 1, y, z2 + 1, stair(m.roofStairs, Direction.NORTH, Half.BOTTOM, StairsShape.OUTER_RIGHT));
+        b.set(x2 + 1, y, z2 + 1, stair(m.roofStairs, Direction.NORTH, Half.BOTTOM, StairsShape.OUTER_LEFT));
     }
 
     /** Single-pitch lean-to (porches, sheds) sloping down toward {@code low} from height yHigh; [x1..x2]x[z1..z2]. */
