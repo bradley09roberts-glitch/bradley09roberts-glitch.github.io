@@ -688,6 +688,7 @@ First run of a real client against the dedicated server. Result: no client crash
   character sheet lines, the letter's tooltip); the envoy's daily visit, the duty period, squads following in real
   movement and called ships fighting are driven only in the server test; the Marine base rest and the black snail
   shop entry are untested; balance (merit and pay) needs real play; NPC ships do not follow a called ship's caller.
+- After the merge (with bases, sound and ambience): full phase 1 614/614, phase 2 19/19, no exception (11:05–11:28).
 
 ## Work in flight (background agents)
 - Sea jobs: a real escort follower, "sink the ship" and convoy board jobs, quest hooks into sea battles.
