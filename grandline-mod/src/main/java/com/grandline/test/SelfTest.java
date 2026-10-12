@@ -162,7 +162,11 @@ public final class SelfTest {
         // a generated original island
         steps.add(s -> {
             WorldPlan p = WorldPlan.of(s);
-            Island orig = p.islands.stream().filter(i -> !i.canon && i.radius > 300).findFirst().orElse(null);
+            // a solid-centred shape (ring/atoll/crater/archipelago centres are lagoons by design)
+            Island orig = p.islands.stream().filter(i -> !i.canon && i.radius > 300 && switch (i.shape) {
+                case RING, ATOLL, CRATER, ARCHIPELAGO, SEA -> false;
+                default -> true;
+            }).findFirst().orElse(null);
             check("original island exists", orig != null, orig == null ? "" : orig.id + " '" + orig.name + "' " + orig.zone.id());
             if (orig != null) {
                 int y = surface(ow(s), orig.x, orig.z);
