@@ -1,0 +1,76 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "grandline:item/kanabo"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        55
+      ],
+      "translation": [
+        0.0,
+        5.302,
+        0.27
+      ],
+      "scale": [
+        1.02,
+        1.02,
+        1.02
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0,
+        90,
+        -55
+      ],
+      "translation": [
+        0.0,
+        5.302,
+        0.27
+      ],
+      "scale": [
+        1.02,
+        1.02,
+        1.02
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        25
+      ],
+      "translation": [
+        1.13,
+        3.796,
+        1.347
+      ],
+      "scale": [
+        0.762,
+        0.762,
+        0.762
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        90,
+        -25
+      ],
+      "translation": [
+        1.13,
+        3.796,
+        1.347
+      ],
+      "scale": [
+        0.762,
+        0.762,
+        0.762
+      ]
+    }
+  }
+}

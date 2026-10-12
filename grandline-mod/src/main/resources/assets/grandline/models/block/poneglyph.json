@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "grandline:block/poneglyph_top",
+    "side": "grandline:block/poneglyph"
+  }
+}

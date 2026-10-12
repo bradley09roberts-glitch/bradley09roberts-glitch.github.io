@@ -1,0 +1,76 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "grandline:item/hand_cannon"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "translation": [
+        0.0,
+        1.764,
+        0.223
+      ],
+      "scale": [
+        0.95,
+        0.95,
+        0.95
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0.0,
+        -90.0,
+        0
+      ],
+      "translation": [
+        0.0,
+        1.764,
+        0.223
+      ],
+      "scale": [
+        0.95,
+        0.95,
+        0.95
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "translation": [
+        1.13,
+        1.65,
+        -1.819
+      ],
+      "scale": [
+        0.76,
+        0.76,
+        0.76
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0.0,
+        -90.0,
+        0
+      ],
+      "translation": [
+        1.13,
+        1.65,
+        -1.819
+      ],
+      "scale": [
+        0.76,
+        0.76,
+        0.76
+      ]
+    }
+  }
+}

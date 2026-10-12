@@ -1,0 +1,76 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "grandline:item/bazooka"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0.0,
+        90.0,
+        -45.0
+      ],
+      "translation": [
+        0.0,
+        2.368,
+        0.022
+      ],
+      "scale": [
+        1.15,
+        1.15,
+        1.15
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0.0,
+        -90.0,
+        45.0
+      ],
+      "translation": [
+        0.0,
+        2.368,
+        0.022
+      ],
+      "scale": [
+        1.15,
+        1.15,
+        1.15
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0.0,
+        90.0,
+        -45.0
+      ],
+      "translation": [
+        1.13,
+        2.133,
+        -1.98
+      ],
+      "scale": [
+        0.92,
+        0.92,
+        0.92
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0.0,
+        -90.0,
+        45.0
+      ],
+      "translation": [
+        1.13,
+        2.133,
+        -1.98
+      ],
+      "scale": [
+        0.92,
+        0.92,
+        0.92
+      ]
+    }
+  }
+}

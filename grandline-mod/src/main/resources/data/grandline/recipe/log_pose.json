@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "L": {
+      "item": "minecraft:leather"
+    },
+    "C": {
+      "item": "minecraft:compass"
+    }
+  },
+  "pattern": [
+    " G ",
+    "LCL"
+  ],
+  "result": {
+    "count": 1,
+    "id": "grandline:log_pose"
+  }
+}

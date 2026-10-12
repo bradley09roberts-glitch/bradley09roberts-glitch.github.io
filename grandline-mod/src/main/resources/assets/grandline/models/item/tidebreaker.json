@@ -1,0 +1,76 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "grandline:item/tidebreaker"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        55
+      ],
+      "translation": [
+        0.0,
+        6.131,
+        0.124
+      ],
+      "scale": [
+        1.105,
+        1.105,
+        1.105
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0,
+        90,
+        -55
+      ],
+      "translation": [
+        0.0,
+        6.131,
+        0.124
+      ],
+      "scale": [
+        1.105,
+        1.105,
+        1.105
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        25
+      ],
+      "translation": [
+        1.13,
+        4.176,
+        1.485
+      ],
+      "scale": [
+        0.802,
+        0.802,
+        0.802
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        90,
+        -25
+      ],
+      "translation": [
+        1.13,
+        4.176,
+        1.485
+      ],
+      "scale": [
+        0.802,
+        0.802,
+        0.802
+      ]
+    }
+  }
+}

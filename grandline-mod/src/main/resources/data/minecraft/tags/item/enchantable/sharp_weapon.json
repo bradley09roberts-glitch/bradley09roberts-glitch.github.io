@@ -1,0 +1,27 @@
+{
+  "replace": false,
+  "values": [
+    "grandline:katana",
+    "grandline:cutlass",
+    "grandline:rapier",
+    "grandline:nodachi",
+    "grandline:dual_blades",
+    "grandline:knife",
+    "grandline:fine_katana",
+    "grandline:fine_cutlass",
+    "grandline:enma",
+    "grandline:ame_no_habakiri",
+    "grandline:yoru",
+    "grandline:shusui",
+    "grandline:wado_ichimonji",
+    "grandline:sandai_kitetsu",
+    "grandline:yubashiri",
+    "grandline:kurenai_shigure",
+    "grandline:abyssal_fang",
+    "grandline:naginata",
+    "grandline:murakumogiri",
+    "grandline:spear",
+    "grandline:steel_spear",
+    "grandline:war_trident"
+  ]
+}

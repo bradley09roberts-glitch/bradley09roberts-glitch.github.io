@@ -1,0 +1,76 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "grandline:item/nodachi"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        55
+      ],
+      "translation": [
+        0.0,
+        5.953,
+        0.156
+      ],
+      "scale": [
+        1.105,
+        1.105,
+        1.105
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0,
+        90,
+        -55
+      ],
+      "translation": [
+        0.0,
+        5.953,
+        0.156
+      ],
+      "scale": [
+        1.105,
+        1.105,
+        1.105
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        25
+      ],
+      "translation": [
+        1.13,
+        4.095,
+        1.456
+      ],
+      "scale": [
+        0.802,
+        0.802,
+        0.802
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        90,
+        -25
+      ],
+      "translation": [
+        1.13,
+        4.095,
+        1.456
+      ],
+      "scale": [
+        0.802,
+        0.802,
+        0.802
+      ]
+    }
+  }
+}
