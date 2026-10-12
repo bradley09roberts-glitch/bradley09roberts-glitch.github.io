@@ -293,7 +293,9 @@ public final class ClientSelfTest {
         shot2("22_marineford", "tp @s 54200 150 -2570 0 30");
         shot2("23_water7", "tp @s 34500 140 330 0 40");
         shot2("24_alabasta", "tp @s 19650 120 -700 0 25");
-        shot2("25_wano_cliffs", "tp @s -27440 150 1200 90 12"); // just off the cliff wall (render distance is short)
+        cmd("grandline island tp wano_country", 200); // safe ground on the island, then up and back for a view
+        cmd("tp @s ~ ~35 ~ 0 25", 160);
+        shot("25_wano_cliffs");
         shot2("26_original_island", "grandline island tp shiokaze_isle");
         // the White Sea and the deep sea
         shot2("27_heavens_gate", "execute in grandline:sky run tp @s -960 85 -40 30 15");
