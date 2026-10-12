@@ -20,7 +20,7 @@ Per-item status (planned / partial / playable / tested) lives in [INVENTORY.md](
   allow for warships already on station; the check was fixed and the journey quick phase then passed 38/38 on a
   random seed and on seed 20261012); real client 79 shots with no failures (crew base, careers, ambience, music
   picked at six places, every sound decoded by the game); two real clients on one ship; the built jar on a
-  production NeoForge server with a real client (see the end of this log for the latest run).
+  production NeoForge server with a real client: 80 shots, no failures, no server exception (12:15–12:35).
 - **Status per item**: [INVENTORY.md](INVENTORY.md) — no item is "partial" or "planned"; 272 tested, 336 playable.
 - **Known gaps**: listed at the end of this log.
 
@@ -825,6 +825,14 @@ First run of a real client against the dedicated server. Result: no client crash
   her own) and one pirate attack; a convoy merchantman counts against the NPC ship cap but is put to sea even when
   the cap is full (the pirates that attack her, and named ships, respect it); the escort's merchant does not trade
   differently from a town merchant.
+
+### Final production check (12:15–12:35)
+- `dist/grandline-0.1.0.jar` built from the tip (f80c564) and installed with GeckoLib on the production NeoForge
+  21.1.259 server (`scratchpad/prodserver`, installed with the official installer, `-Xmx3G`), fresh random-seed
+  world; a real client ran the whole client script against it: 80 screenshots, no FAIL or timeout, no exception in
+  the server log. It covered the crew flag planted by a right-click, the escorted merchant joining and following
+  ("The merchant Matano Hoshino joins you, bound for San Norvence"), career titles in chat, 74 sound files decoded
+  and 48/48 events resolved, the ambience reading open sea (no audio device in that run, so nothing was heard).
 
 ## Work in flight (background agents)
 - None.

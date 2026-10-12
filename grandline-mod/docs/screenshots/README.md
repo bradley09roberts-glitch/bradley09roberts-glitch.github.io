@@ -158,3 +158,7 @@ the distance fog is closer than on a real PC) against a dedicated server on 2026
 ### The career title in chat, and the Marine coat on the player model
 
 ![The Marine coat and the title in chat](62_marine_coat.jpg)
+
+### Sea jobs: an escorted merchant joins the player, bound for another island (production server)
+
+![An escorted merchant](14g_escort_merchant.jpg)
