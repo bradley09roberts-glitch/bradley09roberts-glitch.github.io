@@ -201,7 +201,8 @@ public final class ClientSelfTest {
         steps.add(new Step("wait for character", () -> ClientState.LOCAL.created && Minecraft.getInstance().player.isAlive(), () -> Minecraft.getInstance().setScreen(null), 20));
         cmd("gamemode creative", 10);
         cmd("grandline test env", 10);
-        cmd("tp @s 20000 70 5250 0 10", 260);
+        cmd("grandline test calmbelt", 10);
+        cmd("tp @s ~ ~ ~ 0 10", 260);
         cmd("grandline test ship galleon helm", 80);   // seated at the helm; the ship's bow points south
         look(0, 4);
         cmd("grandline test seaking serpent 2 hold 36", 80);
@@ -224,9 +225,8 @@ public final class ClientSelfTest {
         cmd("kill @e[type=grandline:sea_king]", 10);
         if (CREATURES_ONLY) { // head close-ups of each variant
             for (String v : new String[]{"serpent", "maw", "horned"}) {
-                cmd("tp @s ~ 69 ~ 0 0", 10);
-                cmd("grandline test seaking " + v + " 1 hold 13", 40);
-                cmd("tp @s ~ ~ ~ 42 24", 30);
+                cmd("grandline test seaking " + v + " 1 hold 20", 40);
+                cmd("execute at @e[type=grandline:sea_king,limit=1] run tp @s ~-6 ~6 ~7 facing entity @e[type=grandline:sea_king,limit=1] feet", 30);
                 shot("closeup_seaking_" + v);
                 cmd("kill @e[type=grandline:sea_king]", 10);
             }

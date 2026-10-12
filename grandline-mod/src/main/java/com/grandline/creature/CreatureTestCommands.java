@@ -29,6 +29,7 @@ import java.util.stream.Stream;
  *   <li>{@code seaking <variant|random> <tier> [hold] [distance]} — a Sea King broadside in front of you; "hold" keeps it
  *   surfaced and passive for inspection</li>
  *   <li>{@code zoan <none|hybrid|full>} — set your Zoan form directly (skips the mastery requirement)</li>
+ *   <li>{@code calmbelt} — teleport to open Calm Belt water far from islands</li>
  *   <li>{@code wildlife <kind> <offset> <distance>} — a still wild beast in front of you</li>
  *   <li>{@code beastnpc <fruit> <offset> [distance]} — a still NPC in that fruit's full beast form, offset sideways in front of you</li>
  * </ul>
@@ -63,6 +64,40 @@ public final class CreatureTestCommands {
                             + String.format("%.2fx%.2f", sp.getBbWidth(), sp.getBbHeight())), false);
                     return 1;
                 }));
+    }
+
+    /** Teleport to deep open Calm Belt water, far from any island (so a test ship launches there, not at a dock). */
+    public static LiteralArgumentBuilder<CommandSourceStack> calmBelt() {
+        return Commands.literal("calmbelt").executes(c -> {
+            ServerPlayer sp = c.getSource().getPlayerOrException();
+            Vec3 spot = openCalmBelt(WorldPlan.of(sp.server));
+            if (spot == null) {
+                c.getSource().sendFailure(Component.literal("No open Calm Belt water found"));
+                return 0;
+            }
+            sp.teleportTo(sp.serverLevel(), spot.x, 70, spot.z, sp.getYRot(), sp.getXRot());
+            c.getSource().sendSuccess(() -> Component.literal(String.format("Calm Belt open water at %.0f, %.0f", spot.x, spot.z)), false);
+            return 1;
+        });
+    }
+
+    /** Deep water in the Calm Belt with no island within 650 blocks, or null. */
+    @org.jetbrains.annotations.Nullable
+    public static Vec3 openCalmBelt(WorldPlan plan) {
+        if (plan == null) return null;
+        WorldPlan.Sample smp = new WorldPlan.Sample();
+        for (int x = 20000; x < 56000; x += 400)
+            for (int z : new int[]{5250, -5250, 4800, -4800, 5800, -5800}) {
+                if (plan.nearest(x, z, 650) != null) continue;
+                boolean ok = true;
+                for (int dx = -120; dx <= 120 && ok; dx += 40)
+                    for (int dz = -120; dz <= 120 && ok; dz += 40) {
+                        plan.sample(x + dx, z + dz, smp);
+                        if (smp.height > WorldPlan.SEA_LEVEL - 16 || SeaKingSpawner.isSafe(plan, x + dx, z + dz)) ok = false;
+                    }
+                if (ok) return new Vec3(x + 0.5, WorldPlan.SEA_LEVEL, z + 0.5);
+            }
+        return null;
     }
 
     public static LiteralArgumentBuilder<CommandSourceStack> wildlife() {

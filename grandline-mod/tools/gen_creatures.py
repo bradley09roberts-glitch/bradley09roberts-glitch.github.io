@@ -225,7 +225,14 @@ def sea_king_anims():
 def gen_sea_kings():
     for v in SK_PALETTES:
         out(sea_king(v), 'sea_king', v)
-    sea_king_anims().write(f'{A}/animations/sea_king/sea_king.anim.json')
+    a = sea_king_anims()
+    # canon Sea Kings have enormous heads: every animation scales the head up
+    for an in a.anims.values():
+        an['bones']['head_roll'] = {'scale': {'0.0': [HEAD_SCALE] * 3}}
+    a.write(f'{A}/animations/sea_king/sea_king.anim.json')
+
+
+HEAD_SCALE = 1.35
 
 
 if __name__ == '__main__':

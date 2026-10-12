@@ -802,6 +802,7 @@ public class SeaKing extends Mob implements GeoEntity, Enemy {
 
     @Override
     public void die(DamageSource src) {
+        com.grandline.GrandLine.LOGGER.debug("Sea King {} ({} m) slain: {} by {}", getId(), (int) length(), src.getMsgId(), src.getEntity());
         super.die(src);
         if (level() instanceof ServerLevel sl) {
             setState(FAINT);
