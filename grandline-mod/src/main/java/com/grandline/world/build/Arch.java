@@ -280,7 +280,7 @@ public final class Arch {
                 case STONE_TOWN, SNOW -> Blocks.STONE_BRICK_STAIRS.defaultBlockState();
                 case GOTHIC -> Blocks.DEEPSLATE_BRICK_STAIRS.defaultBlockState();
                 case CORAL -> Blocks.PRISMARINE_BRICK_STAIRS.defaultBlockState();
-                case FUTURE -> null;
+                case FUTURE, WANO -> null; // flush modern glazing; Japanese screens have no sills
                 case CANDY -> Blocks.CHERRY_STAIRS.defaultBlockState();
                 default -> Blocks.SPRUCE_STAIRS.defaultBlockState();
             };
@@ -692,7 +692,6 @@ public final class Arch {
         b.fill(x, y1, z, x, y2, z, m.chimney);
         if (smoke) {
             b.set(x, y2 + 1, z, Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, true).setValue(CampfireBlock.SIGNAL_FIRE, false));
-            b.set(x, y2, z, Blocks.HAY_BLOCK.defaultBlockState());
         } else {
             b.set(x, y2 + 1, z, slab(Blocks.STONE_BRICK_SLAB.defaultBlockState(), SlabType.BOTTOM));
         }
