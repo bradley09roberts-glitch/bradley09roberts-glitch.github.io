@@ -12,7 +12,7 @@ latest self-test reports. Do not edit by hand; re-run the self-test and the scri
 
 ## Islands
 
-248 islands in the current world plan: 104 canon/starter at fixed positions, 144 original
+249 islands in the current world plan: 104 canon/starter at fixed positions, 145 original
 (procedurally generated from themed templates; count configurable). Every island has generated terrain, biome
 theme, beaches and resources; columns show what the real builders place (counted by running them).
 Sky islands (Skypiea, Weatheria) and Fish-Man Island belong to their own dimensions and are listed separately.
@@ -22,7 +22,7 @@ Sky islands (Skypiea, Weatheria) and Fish-Man Island belong to their own dimensi
 | Island | Sea | Settlement | Buildings | NPC spawns | Chests | Secrets | Landmarks | Story quests | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Rusukaina | calm_belt | none | 0 | 0 | 4 | 3 | — | 2 | playable |  |
-| Amazon Lily | calm_belt | town | 22 | 36 | 35 | 4 | kuja_palace | 1 | playable |  |
+| Amazon Lily | calm_belt | town | 18 | 30 | 31 | 4 | kuja_palace | 1 | playable |  |
 | Impel Down | calm_belt | none | 0 | 6 | 1 | 1 | impel_down | 2 | tested | self-test: landmark impel_down |
 | Coral Hill Reef | deep_sea | none | 0 | 0 | 2 | 2 | treasure_cache | 0 | playable | no quests yet |
 | Sea Forest | deep_sea | none | 0 | 1 | 4 | 3 | sea_forest_graveyard | 1 | tested | self-test: landmark sea_forest_graveyard |
@@ -30,268 +30,269 @@ Sky islands (Skypiea, Weatheria) and Fish-Man Island belong to their own dimensi
 | Sunken Ruins | deep_sea | none | 0 | 1 | 3 | 3 | ancient_ruin, treasure_cache | 0 | playable | no quests yet |
 | Loguetown | east_blue | city | 30 | 47 | 63 | 3 | execution_platform, marine_base | 9 | tested | self-test: canon island present: loguetown; terrain is land at loguetown; Loguetown is a city with many plots; map targets have their chest in the generated world |
 | Tequila Wolf | east_blue | hamlet | 6 | 12 | 12 | 2 | endless_bridge | 1 | tested | self-test: added island tequila_wolf has land at its centre; landmark endless_bridge built on tequila_wolf |
-| Cocoyasi (Conomi Islands) | east_blue | village | 12 | 23 | 23 | 4 | arlong_park, tangerine_grove | 4 | playable |  |
+| Cocoyasi (Conomi Islands) | east_blue | village | 13 | 24 | 27 | 4 | arlong_park, tangerine_grove | 4 | playable |  |
 | Baratie | east_blue | none | 0 | 4 | 1 | 0 | baratie | 4 | tested | self-test: Baratie restaurant ship built on the water; landmark baratie |
-| Mirror Ball Island | east_blue | hamlet | 6 | 6 | 10 | 2 | — | 2 | playable |  |
+| Mirror Ball Island | east_blue | hamlet | 5 | 5 | 8 | 2 | — | 2 | playable |  |
 | Syrup Village (Gecko Islands) | east_blue | village | 12 | 21 | 29 | 4 | hilltop_mansion | 3 | playable |  |
-| Orange Town | east_blue | town | 20 | 24 | 27 | 2 | — | 3 | tested | self-test: discovering islands (Navigation) grants Landfall, the Blue, Paradise and its islands |
+| Orange Town | east_blue | town | 17 | 21 | 23 | 2 | — | 3 | tested | self-test: discovering islands (Navigation) grants Landfall, the Blue, Paradise and its islands |
 | Island of Rare Animals | east_blue | none | 0 | 0 | 3 | 3 | treasure_cache | 1 | playable |  |
-| Shells Town | east_blue | town | 17 | 28 | 27 | 3 | marine_base | 5 | tested | self-test: booking a passage puts you aboard the ferry; a crime near a Marine base reports the player and may bring a Buster Call (one at a time) |
-| Dawn Island | east_blue | village | 8 | 22 | 29 | 5 | windmill, gray_terminal | 1 | tested | self-test: island chunks generate quickly; island surfaces mix several ground blocks; canon island present: dawn_island; terrain is land at dawn_island; booking a passage puts you aboard the ferry; map targets have their chest in the generated world; every kind of secret (buried treasure, cache, shrine, wreck) has its chest where the map says |
-| Shimotsuki Village | east_blue | village | 9 | 14 | 15 | 2 | sword_dojo | 1 | tested | self-test: a merchant ship sails for her port and rounds the island in the way; pirates sail in to raid a harbour; living-sea ships never appear in the Calm Belt, a harbour or the sky; they do on the open sea; dockworkers offer ferries to discovered islands of the same sea; booking a passage puts you aboard the ferry; the ferry sails there through the world and lands you on the destination's dock; a found secret is not handed out again while others remain |
-| Shiokaze Isle | east_blue | village | 8 | 12 | 15 | 2 | starter_shrine | 2 | tested | self-test: canon island present: shiokaze_isle; terrain is land at shiokaze_isle; a merchant ship sails for her port and rounds the island in the way; a convoy sails as a merchantman with Marine escorts on her quarters; maps prefer secrets nobody has looted; a blank treasure map is drawn for the player carrying it; looted island secrets persist across a restart |
-| New World Gate | new_world | port | 18 | 23 | 52 | 2 | port_beacon | 1 | playable |  |
-| New Marineford (G-1) | new_world | marine_base | 7 | 15 | 26 | 3 | marine_headquarters | 2 | playable |  |
-| Punk Hazard | new_world | ruins | 5 | 14 | 12 | 4 | abandoned_lab | 1 | playable |  |
-| G-5 Base | new_world | marine_base | 9 | 12 | 25 | 2 | — | 4 | playable |  |
-| Dressrosa | new_world | city | 43 | 76 | 97 | 7 | corrida_colosseum, royal_plateau | 2 | playable |  |
-| Green Bit | new_world | none | 0 | 6 | 5 | 3 | tontatta_village | 2 | playable |  |
-| Prodence Kingdom | new_world | city | 23 | 37 | 56 | 3 | prodence_castle | 1 | tested | self-test: added island prodence_kingdom has land at its centre; landmark prodence_castle built on prodence_kingdom |
-| Zou | new_world | village | 13 | 23 | 26 | 5 | giant_legs | 2 | playable |  |
-| Sphinx | new_world | hamlet | 6 | 6 | 8 | 2 | — | 1 | playable |  |
-| Jam Island | new_world | town | 16 | 20 | 23 | 2 | — | 1 | playable |  |
-| Whole Cake Island | new_world | city | 43 | 62 | 87 | 7 | cake_chateau | 2 | tested | self-test: island chunks generate quickly |
-| Cacao Island | new_world | town | 18 | 22 | 25 | 2 | — | 1 | playable |  |
-| Foodvalten | new_world | town | 19 | 23 | 24 | 2 | — | 1 | playable |  |
+| Shells Town | east_blue | town | 23 | 34 | 32 | 3 | marine_base | 5 | tested | self-test: booking a passage puts you aboard the ferry; two torn halves piece together into a grand treasure map; a crime near a Marine base reports the player and may bring a Buster Call (one at a time) |
+| Dawn Island | east_blue | village | 11 | 25 | 30 | 5 | windmill, gray_terminal | 1 | tested | self-test: island chunks generate quickly; island surfaces mix several ground blocks; canon island present: dawn_island; terrain is land at dawn_island; booking a passage puts you aboard the ferry; map targets have their chest in the generated world; every kind of secret (buried treasure, cache, shrine, wreck) has its chest where the map says; a found secret is not handed out again while others remain |
+| Shimotsuki Village | east_blue | village | 11 | 16 | 16 | 2 | sword_dojo | 1 | tested | self-test: booking a passage puts you aboard the ferry |
+| Shiokaze Isle | east_blue | village | 8 | 12 | 16 | 2 | starter_shrine | 2 | tested | self-test: canon island present: shiokaze_isle; terrain is land at shiokaze_isle; a merchant ship sails for her port and rounds the island in the way; a convoy sails as a merchantman with Marine escorts on her quarters; a treasure map points at a real island secret; the map's target is deterministic for the same place and salt; maps prefer secrets nobody has looted |
+| New World Gate | new_world | port | 17 | 22 | 50 | 2 | port_beacon | 1 | playable |  |
+| New Marineford (G-1) | new_world | marine_base | 9 | 17 | 28 | 3 | marine_headquarters | 2 | playable |  |
+| Punk Hazard | new_world | ruins | 5 | 16 | 14 | 4 | abandoned_lab | 1 | playable |  |
+| G-5 Base | new_world | marine_base | 7 | 10 | 21 | 2 | — | 4 | playable |  |
+| Dressrosa | new_world | city | 43 | 76 | 90 | 7 | corrida_colosseum, royal_plateau | 2 | playable |  |
+| Green Bit | new_world | none | 0 | 6 | 7 | 3 | tontatta_village | 2 | playable |  |
+| Prodence Kingdom | new_world | city | 23 | 37 | 57 | 3 | prodence_castle | 1 | tested | self-test: added island prodence_kingdom has land at its centre; landmark prodence_castle built on prodence_kingdom |
+| Zou | new_world | village | 14 | 24 | 29 | 5 | giant_legs | 2 | playable |  |
+| Sphinx | new_world | hamlet | 5 | 5 | 6 | 2 | — | 1 | playable |  |
+| Jam Island | new_world | town | 16 | 20 | 24 | 2 | — | 1 | playable |  |
+| Whole Cake Island | new_world | city | 53 | 72 | 95 | 7 | cake_chateau | 2 | tested | self-test: island chunks generate quickly |
+| Cacao Island | new_world | town | 18 | 24 | 26 | 2 | — | 1 | playable |  |
+| Foodvalten | new_world | town | 21 | 27 | 28 | 2 | — | 1 | playable |  |
 | Mogaro Kingdom | new_world | city | 23 | 36 | 53 | 3 | mogaro_royal_gate | 1 | tested | self-test: added island mogaro_kingdom has land at its centre; landmark mogaro_royal_gate built on mogaro_kingdom |
-| Wano Country | new_world | city | 54 | 77 | 98 | 8 | flower_capital_castle, waterfall_gate | 4 | tested | self-test: canon island present: wano_country; terrain is land at wano_country; landmark flower_capital_castle stamped into the world; map targets have their chest in the generated world |
-| Onigashima | new_world | fortress | 9 | 19 | 44 | 4 | skull_dome | 1 | playable |  |
-| Baltigo | new_world | fortress | 6 | 20 | 36 | 4 | revolutionary_hq | 3 | playable |  |
-| Karai Bari Island | new_world | town | 18 | 26 | 27 | 2 | mercenary_guild_hall | 1 | tested | self-test: added island karai_bari_island has land at its centre; landmark mercenary_guild_hall built on karai_bari_island |
-| Egghead | new_world | town | 26 | 36 | 38 | 4 | future_lab | 2 | playable |  |
-| Hachinosu | new_world | fortress | 8 | 18 | 37 | 4 | pirate_hive | 1 | playable |  |
-| Lulusia Kingdom | new_world | none | 0 | 1 | 6 | 3 | lulusia_memorial | 1 | tested | self-test: added island lulusia_kingdom is a sea-filled crater with a sheer rim; landmark lulusia_memorial built on lulusia_kingdom |
-| Elbaph | new_world | city | 59 | 71 | 99 | 6 | treasure_tree | 1 | tested | self-test: canon island present: elbaph |
-| Lodestar Island | new_world | none | 0 | 0 | 6 | 3 | — | 7 | playable |  |
-| Laugh Tale | new_world | none | 0 | 0 | 7 | 4 | laugh_tale_ruins | 1 | tested | self-test: canon island present: laugh_tale; landmark laugh_tale_ruins |
-| Swallow Island | north_blue | village | 11 | 14 | 16 | 2 | — | 2 | playable |  |
-| Rommel Kingdom | north_blue | town | 24 | 32 | 36 | 3 | rommel_keep | 1 | tested | self-test: added island rommel_kingdom has land at its centre; landmark rommel_keep built on rommel_kingdom |
-| Lvneel Kingdom | north_blue | city | 28 | 42 | 61 | 4 | explorers_monument | 2 | playable |  |
-| Minion Island | north_blue | none | 0 | 0 | 2 | 2 | — | 1 | playable |  |
+| Wano Country | new_world | city | 38 | 61 | 82 | 8 | flower_capital_castle, waterfall_gate | 4 | tested | self-test: canon island present: wano_country; terrain is land at wano_country; landmark flower_capital_castle stamped into the world; map targets have their chest in the generated world |
+| Onigashima | new_world | fortress | 8 | 18 | 43 | 4 | skull_dome | 1 | playable |  |
+| Baltigo | new_world | fortress | 9 | 23 | 40 | 4 | revolutionary_hq | 3 | tested | self-test: map targets have their chest in the generated world |
+| Karai Bari Island | new_world | town | 22 | 30 | 31 | 2 | mercenary_guild_hall | 1 | tested | self-test: added island karai_bari_island has land at its centre; landmark mercenary_guild_hall built on karai_bari_island |
+| Egghead | new_world | town | 21 | 31 | 30 | 4 | future_lab | 2 | playable |  |
+| Hachinosu | new_world | fortress | 5 | 15 | 34 | 4 | pirate_hive | 1 | playable |  |
+| Lulusia Kingdom | new_world | none | 0 | 1 | 7 | 3 | lulusia_memorial | 1 | tested | self-test: added island lulusia_kingdom is a sea-filled crater with a sheer rim; landmark lulusia_memorial built on lulusia_kingdom |
+| Elbaph | new_world | city | 40 | 52 | 81 | 6 | treasure_tree | 1 | tested | self-test: canon island present: elbaph |
+| Lodestar Island | new_world | none | 0 | 0 | 5 | 3 | — | 7 | playable |  |
+| Laugh Tale | new_world | none | 0 | 0 | 5 | 4 | laugh_tale_ruins | 1 | tested | self-test: canon island present: laugh_tale; landmark laugh_tale_ruins |
+| Swallow Island | north_blue | village | 12 | 15 | 17 | 2 | — | 2 | playable |  |
+| Rommel Kingdom | north_blue | town | 24 | 34 | 36 | 3 | rommel_keep | 1 | tested | self-test: added island rommel_kingdom has land at its centre; landmark rommel_keep built on rommel_kingdom |
+| Lvneel Kingdom | north_blue | city | 28 | 42 | 63 | 4 | explorers_monument | 2 | playable |  |
+| Minion Island | north_blue | none | 0 | 0 | 3 | 2 | — | 1 | playable |  |
 | Germa Kingdom | north_blue | none | 0 | 8 | 1 | 0 | germa_fleet | 1 | tested | self-test: added island germa_kingdom rides on the open sea; landmark germa_fleet built on germa_kingdom |
-| Flevance | north_blue | ruins | 6 | 15 | 15 | 4 | white_city | 1 | tested | self-test: landmark white_city stamped into the world |
+| Flevance | north_blue | ruins | 5 | 12 | 16 | 4 | white_city | 1 | tested | self-test: landmark white_city stamped into the world |
 | Spider Miles | north_blue | fortress | 5 | 14 | 32 | 3 | junkyard_fort | 1 | playable |  |
-| Fuyugane Isle | north_blue | village | 12 | 16 | 19 | 2 | starter_shrine | 2 | tested | self-test: terrain is land at fuyugane_isle |
-| Twin Capes | paradise | hamlet | 6 | 7 | 8 | 2 | twin_capes_lighthouse | 3 | tested | self-test: landmark twin_capes_lighthouse |
-| Whisky Peak (Cactus Island) | paradise | town | 22 | 36 | 45 | 4 | welcome_arch | 5 | playable |  |
-| Little Garden | paradise | none | 0 | 4 | 13 | 6 | giant_duel_ground, volcano_vent | 3 | playable |  |
-| Drum Island | paradise | village | 9 | 14 | 18 | 4 | drum_castle | 3 | tested | self-test: terrain is land at drum_island; map targets have their chest in the generated world |
-| Kyuka Island | paradise | town | 20 | 28 | 29 | 2 | kyuka_resort | 1 | tested | self-test: added island kyuka_island has land at its centre; landmark kyuka_resort built on kyuka_island |
-| Alabasta Kingdom | paradise | city | 37 | 90 | 125 | 11 | alubarna_palace, nanohana_port, rainbase_casino, yuba_oasis | 9 | tested | self-test: island chunks generate quickly; island surfaces mix several ground blocks; canon island present: alabasta; terrain is land at alabasta; landmark alubarna_palace stamped into the world; map targets have their chest in the generated world; discovering islands (Navigation) grants Landfall, the Blue, Paradise and its islands |
-| Jaya | paradise | town | 16 | 23 | 26 | 4 | knock_up_marker, cricket_house | 3 | tested | self-test: Knock Up Stream located off Jaya |
-| Long Ring Long Land | paradise | hamlet | 5 | 5 | 11 | 3 | — | 2 | playable |  |
-| San Faldo | paradise | town | 17 | 22 | 23 | 2 | sea_train_station | 1 | playable |  |
-| St. Poplar | paradise | town | 16 | 23 | 23 | 2 | sea_train_station | 1 | playable |  |
+| Fuyugane Isle | north_blue | village | 13 | 17 | 21 | 2 | starter_shrine | 2 | tested | self-test: terrain is land at fuyugane_isle |
+| Twin Capes | paradise | hamlet | 5 | 6 | 7 | 2 | twin_capes_lighthouse | 3 | tested | self-test: landmark twin_capes_lighthouse |
+| Whisky Peak (Cactus Island) | paradise | town | 23 | 37 | 48 | 4 | welcome_arch | 5 | playable |  |
+| Little Garden | paradise | none | 0 | 4 | 17 | 6 | giant_duel_ground, volcano_vent | 3 | playable |  |
+| Drum Island | paradise | village | 13 | 18 | 25 | 4 | drum_castle | 3 | tested | self-test: terrain is land at drum_island; map targets have their chest in the generated world |
+| Kyuka Island | paradise | town | 20 | 28 | 28 | 2 | kyuka_resort | 1 | tested | self-test: added island kyuka_island has land at its centre; landmark kyuka_resort built on kyuka_island |
+| Alabasta Kingdom | paradise | city | 37 | 90 | 124 | 11 | alubarna_palace, nanohana_port, rainbase_casino, yuba_oasis | 9 | tested | self-test: island chunks generate quickly; island surfaces mix several ground blocks; canon island present: alabasta; terrain is land at alabasta; landmark alubarna_palace stamped into the world; map targets have their chest in the generated world; discovering islands (Navigation) grants Landfall, the Blue, Paradise and its islands |
+| Jaya | paradise | town | 25 | 32 | 38 | 4 | knock_up_marker, cricket_house | 3 | tested | self-test: Knock Up Stream located off Jaya |
+| Long Ring Long Land | paradise | hamlet | 5 | 5 | 8 | 3 | — | 2 | playable |  |
+| San Faldo | paradise | town | 17 | 22 | 24 | 2 | sea_train_station | 1 | playable |  |
+| St. Poplar | paradise | town | 16 | 23 | 28 | 2 | sea_train_station | 1 | playable |  |
 | Water 7 | paradise | city | 39 | 60 | 79 | 5 | water7_fountain, galley_la_docks, sea_train_station | 5 | tested | self-test: canon island present: water_7; landmark galley_la_docks stamped into the world |
-| Pucci | paradise | town | 16 | 21 | 22 | 2 | sea_train_station | 1 | playable |  |
-| Enies Lobby | paradise | fortress | 7 | 18 | 35 | 3 | tower_of_justice, gates_of_justice | 10 | playable |  |
+| Pucci | paradise | town | 16 | 23 | 23 | 2 | sea_train_station | 1 | playable |  |
+| Enies Lobby | paradise | fortress | 8 | 19 | 33 | 3 | tower_of_justice, gates_of_justice | 10 | playable |  |
 | Boin Archipelago | paradise | none | 0 | 0 | 3 | 2 | — | 1 | playable |  |
-| Thriller Bark | paradise | fortress | 9 | 19 | 35 | 4 | haunted_mansion | 3 | playable |  |
+| Thriller Bark | paradise | fortress | 7 | 17 | 34 | 4 | haunted_mansion | 3 | playable |  |
 | Namakura Island | paradise | hamlet | 5 | 5 | 6 | 2 | — | 1 | playable |  |
-| Banaro Island | paradise | ruins | 6 | 11 | 10 | 2 | — | 1 | playable |  |
-| Momoiro Island | paradise | hamlet | 6 | 6 | 7 | 2 | — | 1 | playable |  |
-| Kuraigana Island | paradise | ruins | 10 | 22 | 24 | 4 | ruined_castle | 1 | playable |  |
-| Karakuri Island | paradise | hamlet | 5 | 5 | 8 | 2 | — | 1 | playable |  |
-| Marineford | paradise | marine_base | 9 | 17 | 26 | 3 | marine_headquarters | 11 | tested | self-test: island surfaces mix several ground blocks |
-| Sabaody Archipelago | paradise | city | 36 | 60 | 82 | 7 | mangrove_grove, auction_house | 7 | tested | self-test: canon island present: sabaody_archipelago |
+| Banaro Island | paradise | ruins | 7 | 12 | 9 | 2 | — | 1 | playable |  |
+| Momoiro Island | paradise | hamlet | 5 | 5 | 7 | 2 | — | 1 | playable |  |
+| Kuraigana Island | paradise | ruins | 8 | 19 | 23 | 4 | ruined_castle | 1 | playable |  |
+| Karakuri Island | paradise | hamlet | 6 | 6 | 7 | 2 | — | 1 | playable |  |
+| Marineford | paradise | marine_base | 9 | 17 | 27 | 3 | marine_headquarters | 11 | tested | self-test: island surfaces mix several ground blocks |
+| Sabaody Archipelago | paradise | city | 42 | 67 | 86 | 7 | mangrove_grove, auction_house | 7 | tested | self-test: canon island present: sabaody_archipelago |
 | Mary Geoise | red_line | none | 0 | 1 | 0 | 0 | mary_geoise | 1 | tested | self-test: landmark mary_geoise; no loot/secrets |
-| New Lorrano | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
-| Saint Varrora | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
-| Konejima | sky_sea | hamlet | 6 | 6 | 7 | 1 | — | 0 | playable | no quests yet |
-| Mokogawa Island | sky_sea | none | 0 | 0 | 1 | 1 | — | 0 | playable | no quests yet |
-| Neura | sky_sea | hamlet | 5 | 5 | 4 | 0 | — | 0 | playable | no quests yet |
-| Fort Norvia | sky_sea | none | 0 | 0 | 1 | 1 | — | 0 | playable | no quests yet |
+| Fort Belleria | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
+| Rosmeria Archipelago | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
 | Heaven's Gate | sky_sea | none | 0 | 2 | 2 | 1 | heavens_gate | 1 | tested | self-test: landmark heavens_gate |
-| Brinenne Island | sky_sea | hamlet | 6 | 6 | 6 | 1 | — | 0 | playable | no quests yet |
-| Hikasato | sky_sea | none | 0 | 0 | 1 | 1 | — | 0 | playable | no quests yet |
-| Kiyayama | sky_sea | none | 0 | 0 | 1 | 1 | — | 0 | playable | no quests yet |
-| Hizeyama Island | sky_sea | hamlet | 5 | 5 | 5 | 1 | — | 0 | playable | no quests yet |
+| Old Harlenne | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
+| Sorresse Kingdom | sky_sea | none | 0 | 0 | 1 | 1 | — | 0 | playable | no quests yet |
+| Port Galdhaven | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
 | Angel Island | sky_sea | town | 12 | 19 | 18 | 1 | cloud_chapel | 2 | playable |  |
-| Fort Kestia | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
-| Cape Ostmouth | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
 | Weatheria | sky_sea | none | 0 | 2 | 3 | 1 | weather_lab | 2 | playable |  |
-| Furuyama | sky_sea | hamlet | 5 | 5 | 5 | 1 | — | 0 | playable | no quests yet |
+| Kukadake | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
+| Togaoka Island | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
+| Old Ulvesse | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
 | Upper Yard | sky_sea | none | 0 | 5 | 12 | 6 | shandora_ruins, golden_belfry, sacrificial_altar | 8 | playable |  |
-| Neneoka Island | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
+| Yakiura Island | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
+| San Tambora | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
+| Mihama | sky_sea | none | 0 | 0 | 1 | 1 | — | 0 | playable | no quests yet |
+| Cape Grisia | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
+| Dornano Rock | sky_sea | none | 0 | 0 | 0 | 0 | — | 0 | playable | no loot/secrets; no quests yet |
+| Fort Fenneria | sky_sea | hamlet | 5 | 5 | 5 | 1 | — | 0 | playable | no quests yet |
 | Cloud End | sky_sea | none | 0 | 1 | 0 | 0 | cloud_end_gate | 1 | tested | self-test: landmark cloud_end_gate; no loot/secrets |
-| Hinata Isle | south_blue | village | 14 | 18 | 20 | 2 | starter_shrine | 2 | tested | self-test: canon island present: hinata_isle |
-| Baterilla | south_blue | village | 14 | 17 | 24 | 3 | — | 2 | playable |  |
-| Karate Island | south_blue | village | 12 | 17 | 17 | 2 | sword_dojo | 1 | playable |  |
-| Sorbet Kingdom | south_blue | town | 21 | 25 | 31 | 3 | — | 1 | playable |  |
-| Torino Kingdom | south_blue | hamlet | 5 | 5 | 8 | 3 | — | 1 | playable |  |
-| Kirinoha Isle | west_blue | village | 12 | 16 | 20 | 2 | starter_shrine | 2 | playable |  |
-| Oykot Kingdom | west_blue | city | 28 | 42 | 60 | 3 | oykot_palace | 1 | tested | self-test: added island oykot_kingdom has land at its centre; landmark oykot_palace built on oykot_kingdom |
-| Ohara | west_blue | ruins | 7 | 14 | 12 | 4 | tree_of_knowledge | 1 | playable |  |
-| Ilisia Kingdom | west_blue | city | 28 | 52 | 65 | 4 | royal_castle | 1 | playable |  |
-| God Valley | west_blue | ruins | 10 | 23 | 15 | 3 | god_valley_ruins | 1 | tested | self-test: added island god_valley has land at its centre; landmark god_valley_ruins built on god_valley; landmark god_valley_ruins |
-| Kano Country | west_blue | town | 23 | 29 | 32 | 3 | sword_dojo | 1 | playable |  |
+| Hinata Isle | south_blue | village | 10 | 14 | 17 | 2 | starter_shrine | 2 | tested | self-test: canon island present: hinata_isle |
+| Baterilla | south_blue | village | 12 | 15 | 19 | 3 | — | 2 | playable |  |
+| Karate Island | south_blue | village | 9 | 14 | 17 | 2 | sword_dojo | 1 | playable |  |
+| Sorbet Kingdom | south_blue | town | 24 | 28 | 33 | 3 | — | 1 | playable |  |
+| Torino Kingdom | south_blue | hamlet | 5 | 5 | 9 | 3 | — | 1 | playable |  |
+| Kirinoha Isle | west_blue | village | 10 | 14 | 18 | 2 | starter_shrine | 2 | playable |  |
+| Oykot Kingdom | west_blue | city | 28 | 42 | 62 | 3 | oykot_palace | 1 | tested | self-test: added island oykot_kingdom has land at its centre; landmark oykot_palace built on oykot_kingdom |
+| Ohara | west_blue | ruins | 5 | 10 | 12 | 4 | tree_of_knowledge | 1 | playable |  |
+| Ilisia Kingdom | west_blue | city | 28 | 52 | 68 | 4 | royal_castle | 1 | playable |  |
+| God Valley | west_blue | ruins | 6 | 15 | 13 | 3 | god_valley_ruins | 1 | tested | self-test: added island god_valley has land at its centre; landmark god_valley_ruins built on god_valley; landmark god_valley_ruins |
+| Kano Country | west_blue | town | 19 | 25 | 29 | 3 | sword_dojo | 1 | playable |  |
 
-Canon/starter island status: playable 68, tested 36.
+Canon/starter island status: playable 67, tested 37.
 
 ### Original islands (generated)
 
 | Sea zone | Islands | Settled | NPC spawns | Chests | Secrets | Local stories | Board jobs |
 |---|---|---|---|---|---|---|---|
-| calm_belt | 12 | 10 | 133 | 192 | 24 | 12 | 64 |
-| east_blue | 18 | 10 | 82 | 114 | 31 | 18 | 0 |
-| new_world | 26 | 21 | 239 | 325 | 44 | 26 | 120 |
-| north_blue | 17 | 10 | 114 | 176 | 31 | 17 | 76 |
-| paradise | 35 | 22 | 242 | 319 | 57 | 35 | 162 |
-| south_blue | 18 | 16 | 138 | 212 | 31 | 18 | 44 |
-| west_blue | 18 | 13 | 162 | 221 | 37 | 18 | 76 |
+| calm_belt | 12 | 10 | 102 | 159 | 22 | 12 | 44 |
+| east_blue | 17 | 13 | 141 | 193 | 32 | 17 | 87 |
+| new_world | 30 | 23 | 232 | 375 | 47 | 30 | 120 |
+| north_blue | 18 | 8 | 75 | 136 | 38 | 18 | 33 |
+| paradise | 32 | 25 | 272 | 410 | 58 | 32 | 151 |
+| south_blue | 18 | 11 | 128 | 160 | 41 | 18 | 22 |
+| west_blue | 18 | 17 | 220 | 323 | 35 | 18 | 109 |
 
-Original island status: playable 117, tested 27. 144/144 original islands have a local story generated from the
-world seed (quest/story, docs/STORY.md, "Original islands"): The Bandit Toll 7, The Nest 14, The Castaway 18, The Crooked Officer 4, The Cursed Shrine 6, The Warlord's Due 3, The Deserter 2, Two Houses 8, The Festival 5, Fever Season 8, The Lost Heirloom 10, The Missing Child 10, Under the Black Flag 3, The Hidden Cell 1, A Rookie Crew 15, Stones That Speak 3, The Beast of the Bay 5, Contraband at the Docks 3, Dead Man's Map 16, Who Did It? 3.
+Original island status: playable 116, tested 29. 145/145 original islands have a local story generated from the
+world seed (quest/story, docs/STORY.md, "Original islands"): The Bandit Toll 10, The Nest 16, The Castaway 14, The Crooked Officer 3, The Cursed Shrine 9, The Warlord's Due 4, The Deserter 3, Two Houses 13, The Festival 1, Fever Season 3, The Lost Heirloom 7, The Missing Child 6, Under the Black Flag 4, A Rookie Crew 9, Stones That Speak 5, The Beast of the Bay 13, Contraband at the Docks 5, Dead Man's Map 18, Who Did It? 2.
 Settled islands' notice boards also offer generated jobs (deliveries, escorts, outlaw hunts, nests or camps, salvage, fish, meals, timber).
 
 <details><summary>Full list of original islands</summary>
 
 | Id | Name | Sea | Shape | Theme | Settlement | Buildings | NPC spawns | Chests | Secrets | Story | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| isle_110_kigugawa | Kigugawa | calm_belt | crater | rocky | village | 10 | 13 | 19 | 2 | Dead Man's Map | playable |
-| isle_113_nakayamaisland | Nakayama Island | calm_belt | mountain | tropical | hamlet | 5 | 5 | 7 | 2 | The Missing Child | playable |
-| isle_119_oldvellville | Old Vellville | calm_belt | plateau | mushroom | city | 25 | 35 | 59 | 3 | The Festival | playable |
-| isle_112_santarrenne | San Tarrenne | calm_belt | spires | rocky | hamlet | 5 | 5 | 7 | 3 | The Cursed Shrine | playable |
-| isle_118_portdorneria | Port Dorneria | calm_belt | crater | rocky | hamlet | 6 | 6 | 8 | 2 | The Lost Heirloom | playable |
-| isle_117_fortcorvano | Fort Corvano | calm_belt | terraces | tropical | none | 0 | 0 | 6 | 3 | The Lost Heirloom | playable |
-| isle_116_portlorrano | Port Lorrano | calm_belt | mountain | swamp | marine_base | 9 | 12 | 23 | 1 | The Crooked Officer | playable |
-| isle_109_oldbelluga | Old Belluga | calm_belt | hills | mushroom | none | 0 | 0 | 1 | 1 | Dead Man's Map | playable |
-| isle_115_todohamaisland | Todohama Island | calm_belt | cliff_wall | mushroom | village | 9 | 12 | 14 | 2 | The Warlord's Due | playable |
-| isle_108_motamoriisland | Motamori Island | calm_belt | cliff_wall | tropical | town | 23 | 29 | 31 | 3 | A Rookie Crew | playable |
-| isle_111_kakosatoisland | Kakosato Island | calm_belt | ring | tropical | hamlet | 5 | 5 | 5 | 1 | The Nest | playable |
-| isle_114_calviaarchipelago | Calvia Archipelago | calm_belt | hills | swamp | village | 8 | 11 | 12 | 1 | Fever Season | playable |
-| isle_10_bellvilleisland | Bellville Island | east_blue | ring | tropical | hamlet | 6 | 6 | 8 | 2 | The Bandit Toll | tested |
-| isle_15_newraveria | New Raveria | east_blue | ring | meadow | none | 0 | 0 | 1 | 1 | A Rookie Crew | tested |
-| isle_2_newquillano | New Quillano | east_blue | terraces | temperate | none | 0 | 0 | 3 | 2 | The Lost Heirloom | tested |
-| isle_17_tasamori | Tasamori | east_blue | cliff_wall | flower | ruins | 8 | 16 | 9 | 1 | The Castaway | tested |
-| isle_8_youraisland | Youra Island | east_blue | hills | tropical | ruins | 10 | 17 | 12 | 2 | The Cursed Shrine | tested |
-| isle_9_capebellora | Cape Bellora | east_blue | ring | savanna | hamlet | 5 | 5 | 5 | 1 | The Beast of the Bay | tested |
-| isle_14_quillaroarchipelago | Quillaro Archipelago | east_blue | atoll | tropical | hamlet | 5 | 5 | 5 | 1 | Dead Man's Map | tested |
-| isle_7_saintzephano | Saint Zephano | east_blue | atoll | savanna | hamlet | 6 | 6 | 8 | 2 | The Lost Heirloom | playable |
-| isle_6_saintharlano | Saint Harlano | east_blue | hills | temperate | none | 0 | 1 | 2 | 2 | The Castaway | playable |
-| isle_0_capedornhaven | Cape Dornhaven | east_blue | spires | meadow | hamlet | 5 | 5 | 5 | 1 | The Nest | tested |
-| isle_3_brinaroreef | Brinaro Reef | east_blue | hills | temperate | fortress | 7 | 9 | 27 | 2 | The Nest | tested |
-| isle_5_capebrinosa | Cape Brinosa | east_blue | hills | savanna | none | 0 | 0 | 2 | 2 | The Castaway | playable |
-| isle_11_neshiura | Neshiura | east_blue | archipelago | temperate | none | 0 | 0 | 3 | 2 | The Castaway | playable |
-| isle_4_fortnorvola | Fort Norvola | east_blue | plateau | meadow | none | 0 | 0 | 1 | 1 | The Castaway | tested |
-| isle_13_sanfennmouth | San Fennmouth | east_blue | atoll | savanna | hamlet | 5 | 5 | 7 | 2 | Fever Season | tested |
-| isle_16_saintjarnence | Saint Jarnence | east_blue | cliff_wall | tropical | hamlet | 6 | 7 | 8 | 3 | The Beast of the Bay | tested |
-| isle_1_maroraisland | Marora Island | east_blue | mountain | savanna | none | 0 | 0 | 7 | 3 | The Nest | tested |
-| isle_12_haura | Haura | east_blue | atoll | meadow | none | 0 | 0 | 1 | 1 | The Castaway | playable |
-| isle_136_rogawa | Rogawa | new_world | terraces | desert | marine_base | 7 | 10 | 22 | 2 | The Deserter | playable |
-| isle_146_kudake | Kudake | new_world | archipelago | future | fortress | 7 | 9 | 26 | 1 | The Hidden Cell | tested |
-| isle_141_brinardearchipelago | Brinarde Archipelago | new_world | plateau | mushroom | village | 9 | 12 | 14 | 1 | The Missing Child | playable |
-| isle_125_kuura | Kuura | new_world | ring | badlands | none | 0 | 0 | 1 | 1 | The Castaway | playable |
-| isle_134_aoshima | Aoshima | new_world | plateau | badlands | hamlet | 6 | 6 | 7 | 2 | The Missing Child | playable |
-| isle_121_aorukawa | Aorukawa | new_world | archipelago | mushroom | town | 17 | 18 | 17 | 1 | The Warlord's Due | playable |
-| isle_137_hogawaisland | Hogawa Island | new_world | dunes | desert | fortress | 7 | 9 | 28 | 3 | The Cursed Shrine | playable |
-| isle_127_fukisato | Fukisato | new_world | atoll | dark | none | 0 | 0 | 2 | 2 | The Castaway | playable |
-| isle_133_rinejima | Rinejima | new_world | crater | ice | none | 0 | 0 | 2 | 2 | Dead Man's Map | playable |
-| isle_140_capequillano | Cape Quillano | new_world | archipelago | ice | hamlet | 5 | 5 | 5 | 1 | Two Houses | playable |
-| isle_120_saintbrinesse | Saint Brinesse | new_world | flat | ice | hamlet | 5 | 5 | 6 | 2 | Fever Season | playable |
-| isle_123_quillolaatoll | Quillola Atoll | new_world | ring | cherry | hamlet | 6 | 7 | 8 | 3 | The Beast of the Bay | playable |
-| isle_144_naokaisland | Naoka Island | new_world | archipelago | cherry | ruins | 10 | 19 | 13 | 3 | Dead Man's Map | playable |
-| isle_131_newtarrington | New Tarrington | new_world | crater | cherry | village | 11 | 15 | 17 | 2 | The Missing Child | playable |
-| isle_147_tasatoisland | Tasato Island | new_world | terraces | desert | village | 13 | 16 | 20 | 2 | The Festival | playable |
-| isle_124_portharlesse | Port Harlesse | new_world | crater | cherry | ruins | 9 | 17 | 12 | 2 | Under the Black Flag | tested |
-| isle_145_kikizakiisland | Kikizaki Island | new_world | plateau | mushroom | village | 11 | 14 | 17 | 2 | Contraband at the Docks | playable |
-| isle_143_nehamaisland | Nehama Island | new_world | terraces | future | village | 8 | 11 | 13 | 1 | Under the Black Flag | playable |
-| isle_130_nekajimaisland | Nekajima Island | new_world | flat | mushroom | village | 10 | 13 | 14 | 1 | Dead Man's Map | playable |
-| isle_148_rokoshimaisland | Rokoshima Island | new_world | spires | dark | village | 8 | 11 | 12 | 1 | A Rookie Crew | playable |
-| isle_122_fennarorock | Fennaro Rock | new_world | flat | swamp | village | 9 | 12 | 13 | 1 | Contraband at the Docks | playable |
-| isle_128_yaneyamaisland | Yaneyama Island | new_world | cliff_wall | giant_forest | hamlet | 5 | 5 | 5 | 1 | The Missing Child | playable |
-| isle_129_sugawa | Sugawa | new_world | flat | swamp | village | 12 | 15 | 18 | 2 | The Cursed Shrine | playable |
-| isle_132_portnorvosa | Port Norvosa | new_world | archipelago | future | none | 0 | 0 | 1 | 1 | The Castaway | playable |
-| isle_138_saneokaisland | Saneoka Island | new_world | plateau | giant_forest | fortress | 8 | 10 | 28 | 1 | Under the Black Flag | playable |
-| isle_135_meguhamaisland | Meguhama Island | new_world | crater | ice | none | 0 | 0 | 4 | 3 | The Castaway | playable |
-| isle_29_islalorria | Isla Lorria | north_blue | hills | taiga | none | 0 | 1 | 2 | 2 | The Castaway | playable |
-| isle_32_moshimaisland | Moshima Island | north_blue | archipelago | meadow | marine_base | 7 | 11 | 20 | 2 | The Deserter | tested |
-| isle_23_saintvellhaven | Saint Vellhaven | north_blue | archipelago | temperate | port | 4 | 7 | 8 | 0 | The Bandit Toll | playable |
-| isle_19_yoruhama | Yoruhama | north_blue | archipelago | rocky | none | 0 | 0 | 1 | 1 | The Castaway | playable |
-| isle_25_miraokaisland | Miraoka Island | north_blue | mountain | taiga | village | 11 | 14 | 16 | 2 | Who Did It? | tested |
-| isle_31_toshiyama | Toshiyama | north_blue | spires | snow | marine_base | 9 | 12 | 23 | 1 | The Crooked Officer | playable |
-| isle_33_nenasatoisland | Nenasato Island | north_blue | hills | dark | none | 0 | 0 | 3 | 2 | The Castaway | playable |
-| isle_30_hotashima | Hotashima | north_blue | ring | rocky | none | 0 | 0 | 3 | 3 | The Castaway | playable |
-| isle_35_tarrennearchipelago | Tarrenne Archipelago | north_blue | terraces | meadow | none | 0 | 0 | 1 | 1 | The Nest | playable |
-| isle_22_yonemori | Yonemori | north_blue | terraces | temperate | town | 28 | 32 | 38 | 3 | The Festival | tested |
-| isle_27_homoriisland | Homori Island | north_blue | archipelago | snow | marine_base | 7 | 11 | 23 | 3 | The Crooked Officer | tested |
-| isle_21_ridodakeisland | Ridodake Island | north_blue | atoll | dark | none | 0 | 1 | 5 | 4 | A Rookie Crew | playable |
-| isle_26_fortgrisuga | Fort Grisuga | north_blue | ring | dark | hamlet | 5 | 5 | 7 | 2 | The Lost Heirloom | playable |
-| isle_28_kijima | Kijima | north_blue | spires | snow | hamlet | 5 | 5 | 10 | 3 | The Lost Heirloom | playable |
-| isle_20_rojima | Rojima | north_blue | cliff_wall | temperate | none | 0 | 0 | 1 | 1 | The Nest | playable |
-| isle_34_lumanoarchipelago | Lumano Archipelago | north_blue | archipelago | snow | hamlet | 4 | 4 | 3 | 0 | A Rookie Crew | playable |
-| isle_18_fortorrenne | Fort Orrenne | north_blue | cliff_wall | snow | village | 8 | 11 | 12 | 1 | The Nest | tested |
-| isle_103_tokouraisland | Tokoura Island | paradise | terraces | cherry | village | 9 | 12 | 13 | 1 | Fever Season | playable |
-| isle_102_newcorvence | New Corvence | paradise | mountain | coral | village | 10 | 13 | 14 | 1 | A Rookie Crew | playable |
-| isle_76_newpellenne | New Pellenne | paradise | mountain | candy | none | 0 | 0 | 1 | 1 | Dead Man's Map | playable |
-| isle_89_yokookaisland | Yokooka Island | paradise | spires | ice | village | 11 | 14 | 15 | 1 | Who Did It? | playable |
-| isle_104_najima | Najima | paradise | ring | volcanic | none | 0 | 0 | 1 | 1 | A Rookie Crew | playable |
-| isle_107_meura | Meura | paradise | archipelago | taiga | none | 0 | 0 | 1 | 1 | The Nest | playable |
-| isle_79_capetambenne | Cape Tambenne | paradise | hills | cherry | none | 0 | 0 | 2 | 2 | The Castaway | playable |
-| isle_106_portgrisano | Port Grisano | paradise | mountain | meadow | none | 0 | 1 | 2 | 2 | The Nest | playable |
-| isle_73_oldzephence | Old Zephence | paradise | ring | ice | none | 0 | 0 | 1 | 1 | A Rookie Crew | playable |
-| isle_98_fortzepheria | Fort Zepheria | paradise | archipelago | snow | hamlet | 4 | 4 | 5 | 1 | The Bandit Toll | playable |
-| isle_80_fujima | Fujima | paradise | plateau | future | none | 0 | 0 | 1 | 1 | A Rookie Crew | playable |
-| isle_92_taoka | Taoka | paradise | crater | cloud | village | 6 | 7 | 6 | 2 | The Missing Child | playable |
-| isle_100_midokawa | Midokawa | paradise | spires | future | none | 0 | 0 | 1 | 1 | A Rookie Crew | tested |
-| isle_74_hokizaki | Hokizaki | paradise | terraces | rocky | village | 10 | 13 | 15 | 2 | Fever Season | playable |
-| isle_91_kokawa | Kokawa | paradise | spires | meadow | none | 0 | 0 | 3 | 2 | The Nest | playable |
-| isle_94_kiyamori | Kiyamori | paradise | cliff_wall | flower | village | 10 | 13 | 16 | 2 | Two Houses | playable |
-| isle_82_hotasato | Hotasato | paradise | hills | candy | village | 10 | 13 | 16 | 2 | The Missing Child | playable |
-| isle_81_iverolaatoll | Iverola Atoll | paradise | cliff_wall | ice | none | 0 | 0 | 2 | 2 | Dead Man's Map | playable |
-| isle_84_bellardereef | Bellarde Reef | paradise | dunes | desert | village | 9 | 13 | 15 | 2 | The Festival | playable |
-| isle_78_mezekawa | Mezekawa | paradise | cliff_wall | rocky | village | 11 | 14 | 16 | 2 | The Festival | playable |
-| isle_83_harlanoisland | Harlano Island | paradise | hills | temperate | ruins | 6 | 12 | 9 | 3 | A Rookie Crew | playable |
-| isle_86_namoshima | Namoshima | paradise | mountain | cherry | village | 8 | 11 | 14 | 1 | Who Did It? | playable |
-| isle_77_neshidakeisland | Neshidake Island | paradise | flat | rocky | village | 11 | 14 | 15 | 1 | Dead Man's Map | playable |
-| isle_93_ostoraarchipelago | Ostora Archipelago | paradise | spires | volcanic | marine_base | 6 | 10 | 19 | 2 | The Crooked Officer | playable |
-| isle_90_taura | Taura | paradise | atoll | cloud | hamlet | 6 | 6 | 8 | 2 | The Missing Child | playable |
-| isle_85_calvorareef | Calvora Reef | paradise | atoll | cloud | hamlet | 6 | 6 | 7 | 2 | The Cursed Shrine | playable |
-| isle_95_harlosareef | Harlosa Reef | paradise | atoll | taiga | hamlet | 5 | 5 | 7 | 2 | The Beast of the Bay | playable |
-| isle_101_menedake | Menedake | paradise | terraces | rocky | none | 0 | 0 | 1 | 1 | The Castaway | playable |
-| isle_99_kukawaisland | Kukawa Island | paradise | dunes | badlands | village | 12 | 15 | 18 | 2 | The Lost Heirloom | playable |
-| isle_105_capejarnarde | Cape Jarnarde | paradise | mountain | meadow | village | 14 | 18 | 21 | 3 | The Warlord's Due | tested |
-| isle_87_yoshimaisland | Yoshima Island | paradise | mountain | temperate | hamlet | 5 | 5 | 7 | 2 | A Rookie Crew | playable |
-| isle_75_miradake | Miradake | paradise | dunes | desert | none | 0 | 0 | 3 | 2 | Dead Man's Map | playable |
-| isle_97_newwynosa | New Wynosa | paradise | hills | temperate | village | 8 | 11 | 12 | 1 | Two Houses | playable |
-| isle_88_kuneshima | Kuneshima | paradise | archipelago | tropical | fortress | 10 | 12 | 30 | 1 | The Nest | playable |
-| isle_72_kuyayama | Kuyayama | paradise | dunes | desert | none | 0 | 0 | 2 | 2 | A Rookie Crew | playable |
-| isle_59_oldvarrmouth | Old Varrmouth | south_blue | mountain | temperate | hamlet | 5 | 5 | 8 | 3 | Two Houses | playable |
-| isle_71_toyagawa | Toyagawa | south_blue | ring | temperate | hamlet | 5 | 5 | 5 | 1 | The Cursed Shrine | playable |
-| isle_61_saintcorvesse | Saint Corvesse | south_blue | spires | temperate | ruins | 9 | 15 | 12 | 1 | The Castaway | playable |
-| isle_62_aomooka | Aomooka | south_blue | spires | temperate | ruins | 7 | 12 | 12 | 2 | Dead Man's Map | playable |
-| isle_54_saintbrinarde | Saint Brinarde | south_blue | atoll | meadow | hamlet | 5 | 5 | 6 | 2 | Fever Season | playable |
-| isle_64_kogawaisland | Kogawa Island | south_blue | plateau | temperate | ruins | 9 | 17 | 12 | 2 | The Lost Heirloom | playable |
-| isle_69_namomori | Namomori | south_blue | spires | temperate | none | 0 | 0 | 1 | 1 | The Castaway | playable |
-| isle_56_fushimori | Fushimori | south_blue | atoll | temperate | hamlet | 6 | 6 | 9 | 3 | Fever Season | playable |
-| isle_70_vellhavenisland | Vellhaven Island | south_blue | hills | tropical | hamlet | 6 | 6 | 14 | 4 | The Lost Heirloom | playable |
-| isle_66_yakihama | Yakihama | south_blue | atoll | temperate | none | 0 | 1 | 5 | 3 | Stones That Speak | playable |
-| isle_57_nanegawa | Nanegawa | south_blue | spires | temperate | village | 12 | 15 | 17 | 2 | The Missing Child | playable |
-| isle_58_ronashimaisland | Ronashima Island | south_blue | mountain | temperate | village | 10 | 13 | 14 | 1 | Two Houses | playable |
-| isle_55_neoka | Neoka | south_blue | ring | temperate | hamlet | 5 | 5 | 5 | 1 | Two Houses | playable |
-| isle_68_quillmoutharchipelago | Quillmouth Archipelago | south_blue | archipelago | meadow | marine_base | 4 | 3 | 15 | 0 | A Rookie Crew | playable |
-| isle_60_varrardeislet | Varrarde Islet | south_blue | plateau | tropical | fortress | 5 | 7 | 24 | 1 | Dead Man's Map | playable |
-| isle_67_samodakeisland | Samodake Island | south_blue | plateau | meadow | hamlet | 5 | 5 | 5 | 1 | Two Houses | playable |
-| isle_65_aokayamaisland | Aokayama Island | south_blue | flat | temperate | hamlet | 5 | 5 | 7 | 2 | The Bandit Toll | playable |
-| isle_63_forttambaro | Fort Tambaro | south_blue | cliff_wall | temperate | port | 9 | 13 | 41 | 1 | The Beast of the Bay | playable |
-| isle_53_galdvilleisle | Galdville Isle | west_blue | cliff_wall | dark | village | 13 | 16 | 20 | 2 | Fever Season | playable |
-| isle_51_ulvugaarchipelago | Ulvuga Archipelago | west_blue | hills | dark | fortress | 7 | 10 | 28 | 3 | Stones That Speak | playable |
-| isle_41_belleriarock | Belleria Rock | west_blue | ring | rocky | hamlet | 5 | 5 | 5 | 1 | The Missing Child | tested |
-| isle_50_nasagawaisland | Nasagawa Island | west_blue | plateau | temperate | village | 12 | 15 | 17 | 2 | The Nest | playable |
-| isle_45_mikosatoisland | Mikosato Island | west_blue | ring | dark | none | 0 | 0 | 1 | 1 | Dead Man's Map | playable |
-| isle_42_islagrisuga | Isla Grisuga | west_blue | crater | rocky | none | 0 | 0 | 1 | 1 | The Nest | playable |
-| isle_36_fushima | Fushima | west_blue | cliff_wall | rocky | hamlet | 6 | 6 | 7 | 2 | The Bandit Toll | playable |
-| isle_37_rosmanoarchipelago | Rosmano Archipelago | west_blue | mountain | meadow | village | 9 | 13 | 14 | 2 | Stones That Speak | tested |
-| isle_39_hirukawa | Hirukawa | west_blue | cliff_wall | rocky | ruins | 10 | 17 | 13 | 1 | The Nest | playable |
-| isle_47_sashizaki | Sashizaki | west_blue | crater | temperate | village | 9 | 12 | 16 | 2 | Contraband at the Docks | tested |
-| isle_44_moura | Moura | west_blue | crater | dark | village | 10 | 13 | 17 | 2 | Two Houses | tested |
-| isle_49_homori | Homori | west_blue | archipelago | meadow | town | 24 | 28 | 39 | 4 | The Bandit Toll | playable |
-| isle_48_hozaki | Hozaki | west_blue | atoll | temperate | none | 0 | 0 | 1 | 1 | A Rookie Crew | playable |
-| isle_46_sanulvano | San Ulvano | west_blue | mountain | dark | village | 13 | 16 | 19 | 2 | Dead Man's Map | tested |
-| isle_52_yoyama | Yoyama | west_blue | terraces | dark | none | 0 | 0 | 5 | 4 | The Lost Heirloom | playable |
-| isle_40_fortquillarde | Fort Quillarde | west_blue | terraces | dark | hamlet | 6 | 6 | 9 | 3 | The Bandit Toll | playable |
-| isle_43_islazephesse | Isla Zephesse | west_blue | mountain | taiga | none | 0 | 0 | 3 | 2 | Dead Man's Map | playable |
-| isle_38_newulvville | New Ulvville | west_blue | ring | meadow | hamlet | 5 | 5 | 6 | 2 | Dead Man's Map | playable |
+| isle_108_newkestuga | New Kestuga | calm_belt | cliff_wall | tropical | ruins | 9 | 15 | 11 | 1 | Dead Man's Map | playable |
+| isle_107_norvosareef | Norvosa Reef | calm_belt | atoll | mushroom | none | 0 | 0 | 1 | 1 | The Castaway | playable |
+| isle_113_islalumora | Isla Lumora | calm_belt | mountain | swamp | hamlet | 5 | 5 | 5 | 1 | The Nest | playable |
+| isle_116_kugawa | Kugawa | calm_belt | mountain | mushroom | none | 0 | 0 | 2 | 2 | Dead Man's Map | playable |
+| isle_106_sumori | Sumori | calm_belt | mountain | swamp | village | 12 | 15 | 16 | 1 | The Beast of the Bay | playable |
+| isle_112_neguokaisland | Neguoka Island | calm_belt | flat | mushroom | hamlet | 5 | 5 | 6 | 2 | The Beast of the Bay | playable |
+| isle_105_mokawaisland | Mokawa Island | calm_belt | ring | tropical | hamlet | 5 | 5 | 7 | 2 | Dead Man's Map | playable |
+| isle_115_yogawa | Yogawa | calm_belt | archipelago | swamp | village | 12 | 15 | 21 | 4 | The Nest | playable |
+| isle_111_portquillarde | Port Quillarde | calm_belt | ring | mushroom | hamlet | 5 | 5 | 5 | 1 | Two Houses | playable |
+| isle_114_kokiura | Kokiura | calm_belt | crater | mushroom | marine_base | 10 | 13 | 28 | 3 | The Deserter | playable |
+| isle_110_capewynmouth | Cape Wynmouth | calm_belt | crater | rocky | hamlet | 5 | 5 | 6 | 2 | The Missing Child | playable |
+| isle_109_kiyadakeisland | Kiyadake Island | calm_belt | mountain | tropical | port | 15 | 19 | 51 | 2 | The Beast of the Bay | playable |
+| isle_15_yorigawaisland | Yorigawa Island | east_blue | mountain | temperate | none | 0 | 0 | 2 | 2 | Dead Man's Map | tested |
+| isle_6_portzephuga | Port Zephuga | east_blue | ring | flower | none | 0 | 0 | 3 | 2 | The Castaway | tested |
+| isle_4_tsuzeyama | Tsuzeyama | east_blue | plateau | temperate | village | 12 | 16 | 19 | 3 | Stones That Speak | tested |
+| isle_11_homoriisland | Homori Island | east_blue | hills | temperate | ruins | 10 | 19 | 13 | 2 | The Nest | tested |
+| isle_1_varranokingdom | Varrano Kingdom | east_blue | crater | temperate | village | 12 | 15 | 18 | 2 | The Lost Heirloom | tested |
+| isle_7_memoriisland | Memori Island | east_blue | atoll | savanna | none | 0 | 0 | 3 | 2 | Dead Man's Map | tested |
+| isle_2_quillanoarchipelago | Quillano Archipelago | east_blue | flat | flower | village | 9 | 12 | 13 | 1 | The Beast of the Bay | tested |
+| isle_12_islagaldola | Isla Galdola | east_blue | hills | temperate | hamlet | 5 | 5 | 7 | 2 | Fever Season | tested |
+| isle_10_capeiveruga | Cape Iveruga | east_blue | archipelago | temperate | village | 6 | 8 | 12 | 1 | The Festival | tested |
+| isle_16_sukoshima | Sukoshima | east_blue | cliff_wall | savanna | village | 8 | 11 | 14 | 1 | The Bandit Toll | playable |
+| isle_17_hikakawa | Hikakawa | east_blue | cliff_wall | temperate | village | 11 | 14 | 17 | 2 | Contraband at the Docks | tested |
+| isle_3_kibekawa | Kibekawa | east_blue | crater | meadow | village | 8 | 11 | 15 | 2 | The Bandit Toll | tested |
+| isle_9_grisenceisland | Grisence Island | east_blue | spires | savanna | fortress | 6 | 8 | 25 | 1 | Under the Black Flag | tested |
+| isle_0_konejima | Konejima | east_blue | spires | temperate | village | 9 | 12 | 14 | 2 | Dead Man's Map | tested |
+| isle_13_newzepheria | New Zepheria | east_blue | crater | meadow | none | 0 | 0 | 4 | 2 | A Rookie Crew | tested |
+| isle_14_yorazaki | Yorazaki | east_blue | spires | temperate | hamlet | 5 | 5 | 6 | 2 | The Beast of the Bay | tested |
+| isle_5_sannorvuga | San Norvuga | east_blue | mountain | tropical | hamlet | 5 | 5 | 8 | 3 | The Bandit Toll | tested |
+| isle_121_yamidake | Yamidake | new_world | terraces | cherry | village | 8 | 11 | 13 | 1 | The Beast of the Bay | playable |
+| isle_146_zephennearchipelago | Zephenne Archipelago | new_world | mountain | dark | village | 10 | 14 | 15 | 2 | The Warlord's Due | playable |
+| isle_127_newlorrarde | New Lorrarde | new_world | crater | badlands | village | 12 | 16 | 21 | 3 | Stones That Speak | playable |
+| isle_139_kogasato | Kogasato | new_world | ring | mushroom | none | 0 | 0 | 1 | 1 | Dead Man's Map | playable |
+| isle_144_portquillarde | Port Quillarde | new_world | cliff_wall | mushroom | hamlet | 5 | 5 | 5 | 1 | Under the Black Flag | playable |
+| isle_150_newpellville | New Pellville | new_world | archipelago | candy | none | 0 | 0 | 1 | 1 | A Rookie Crew | playable |
+| isle_117_orresseisland | Orresse Island | new_world | spires | swamp | none | 0 | 0 | 1 | 1 | The Castaway | playable |
+| isle_149_togujimaisland | Togujima Island | new_world | cliff_wall | ice | ruins | 7 | 13 | 8 | 1 | The Nest | playable |
+| isle_118_kijima | Kijima | new_world | flat | mushroom | ruins | 5 | 8 | 7 | 1 | The Castaway | playable |
+| isle_151_capeorrington | Cape Orrington | new_world | mountain | giant_forest | village | 11 | 14 | 18 | 2 | Under the Black Flag | playable |
+| isle_135_haura | Haura | new_world | ring | candy | none | 0 | 0 | 2 | 2 | Dead Man's Map | playable |
+| isle_122_pellmouthislet | Pellmouth Islet | new_world | terraces | desert | none | 0 | 0 | 1 | 1 | The Castaway | playable |
+| isle_142_oldtarrano | Old Tarrano | new_world | mountain | ice | hamlet | 5 | 5 | 5 | 1 | Two Houses | playable |
+| isle_131_tasatoisland | Tasato Island | new_world | ring | future | none | 0 | 0 | 1 | 1 | Dead Man's Map | playable |
+| isle_124_kigawa | Kigawa | new_world | hills | dark | village | 12 | 16 | 22 | 4 | The Warlord's Due | tested |
+| isle_141_kinazakiisland | Kinazaki Island | new_world | mountain | volcanic | hamlet | 5 | 5 | 6 | 2 | Fever Season | playable |
+| isle_119_fortlumosa | Fort Lumosa | new_world | spires | dark | port | 14 | 20 | 47 | 2 | Contraband at the Docks | playable |
+| isle_128_roshijima | Roshijima | new_world | hills | giant_forest | hamlet | 5 | 5 | 7 | 2 | Fever Season | playable |
+| isle_143_capegrisesse | Cape Grisesse | new_world | hills | cherry | village | 8 | 11 | 12 | 1 | The Beast of the Bay | playable |
+| isle_133_islavarria | Isla Varria | new_world | mountain | cherry | village | 8 | 11 | 14 | 1 | Who Did It? | playable |
+| isle_148_harlardeisland | Harlarde Island | new_world | mountain | cherry | port | 9 | 13 | 41 | 1 | The Warlord's Due | playable |
+| isle_130_capeostington | Cape Ostington | new_world | mountain | dark | marine_base | 9 | 12 | 22 | 1 | The Crooked Officer | playable |
+| isle_145_hirukawa | Hirukawa | new_world | spires | badlands | none | 0 | 0 | 1 | 1 | A Rookie Crew | playable |
+| isle_140_hamozaki | Hamozaki | new_world | flat | mushroom | fortress | 8 | 10 | 29 | 2 | Under the Black Flag | playable |
+| isle_138_yodake | Yodake | new_world | terraces | future | hamlet | 5 | 5 | 5 | 1 | Two Houses | playable |
+| isle_137_yodakeisland | Yodake Island | new_world | ring | candy | hamlet | 6 | 7 | 7 | 2 | The Bandit Toll | playable |
+| isle_147_newostola | New Ostola | new_world | hills | future | port | 10 | 16 | 42 | 1 | The Warlord's Due | playable |
+| isle_136_marmouthisle | Marmouth Isle | new_world | atoll | candy | hamlet | 5 | 5 | 8 | 2 | Two Houses | playable |
+| isle_123_dornoraatoll | Dornora Atoll | new_world | plateau | swamp | hamlet | 5 | 5 | 7 | 3 | Two Houses | playable |
+| isle_125_calvesseatoll | Calvesse Atoll | new_world | mountain | cherry | hamlet | 5 | 5 | 6 | 2 | The Cursed Shrine | playable |
+| isle_26_sutasatoisland | Sutasato Island | north_blue | ring | dark | hamlet | 5 | 5 | 7 | 2 | The Beast of the Bay | playable |
+| isle_18_oldzephington | Old Zephington | north_blue | atoll | taiga | hamlet | 6 | 6 | 9 | 3 | The Lost Heirloom | tested |
+| isle_24_rikajimaisland | Rikajima Island | north_blue | mountain | meadow | hamlet | 5 | 6 | 8 | 3 | Two Houses | tested |
+| isle_31_maresseisland | Maresse Island | north_blue | hills | taiga | none | 0 | 1 | 2 | 2 | Dead Man's Map | playable |
+| isle_23_fortlorrence | Fort Lorrence | north_blue | crater | dark | hamlet | 5 | 5 | 5 | 1 | The Beast of the Bay | playable |
+| isle_35_nashima | Nashima | north_blue | atoll | snow | none | 0 | 0 | 5 | 4 | The Cursed Shrine | playable |
+| isle_29_hobeyama | Hobeyama | north_blue | ring | dark | none | 0 | 0 | 1 | 1 | The Castaway | playable |
+| isle_33_sanpellia | San Pellia | north_blue | mountain | dark | none | 0 | 0 | 3 | 2 | A Rookie Crew | playable |
+| isle_20_kukomoriisland | Kukomori Island | north_blue | flat | dark | village | 12 | 15 | 18 | 2 | The Bandit Toll | playable |
+| isle_22_yobegawaisland | Yobegawa Island | north_blue | terraces | rocky | none | 0 | 0 | 3 | 3 | Dead Man's Map | playable |
+| isle_30_saintpellola | Saint Pellola | north_blue | atoll | temperate | none | 0 | 1 | 1 | 1 | Stones That Speak | playable |
+| isle_19_sanlumarde | San Lumarde | north_blue | terraces | taiga | none | 0 | 0 | 1 | 1 | Dead Man's Map | playable |
+| isle_27_hamoriisland | Hamori Island | north_blue | terraces | meadow | fortress | 5 | 7 | 26 | 2 | The Lost Heirloom | playable |
+| isle_34_tarreriaarchipelago | Tarreria Archipelago | north_blue | cliff_wall | snow | none | 0 | 0 | 1 | 1 | Dead Man's Map | playable |
+| isle_32_fortjarnesse | Fort Jarnesse | north_blue | plateau | temperate | none | 0 | 0 | 7 | 4 | Dead Man's Map | tested |
+| isle_25_newlumville | New Lumville | north_blue | terraces | taiga | village | 14 | 17 | 20 | 2 | The Cursed Shrine | tested |
+| isle_28_sanlumenne | San Lumenne | north_blue | hills | taiga | none | 0 | 0 | 2 | 2 | The Nest | playable |
+| isle_21_kutadake | Kutadake | north_blue | hills | snow | village | 9 | 12 | 17 | 2 | Contraband at the Docks | playable |
+| isle_97_newbrinola | New Brinola | paradise | archipelago | badlands | ruins | 9 | 13 | 14 | 2 | The Castaway | playable |
+| isle_93_sanivermouth | San Ivermouth | paradise | ring | cherry | hamlet | 5 | 5 | 5 | 1 | Two Houses | playable |
+| isle_104_miura | Miura | paradise | terraces | desert | village | 8 | 11 | 13 | 2 | The Nest | playable |
+| isle_76_aohama | Aohama | paradise | spires | giant_forest | none | 0 | 0 | 4 | 3 | The Castaway | playable |
+| isle_96_rikawaisland | Rikawa Island | paradise | ring | dark | hamlet | 5 | 5 | 6 | 2 | The Cursed Shrine | playable |
+| isle_102_nedogawa | Nedogawa | paradise | hills | desert | port | 16 | 20 | 49 | 2 | The Cursed Shrine | playable |
+| isle_77_yookaisland | Yooka Island | paradise | spires | swamp | none | 0 | 0 | 2 | 2 | The Castaway | playable |
+| isle_103_sorrardeisle | Sorrarde Isle | paradise | crater | savanna | village | 12 | 15 | 17 | 1 | Contraband at the Docks | playable |
+| isle_74_islafennenne | Isla Fennenne | paradise | plateau | meadow | village | 10 | 13 | 15 | 1 | Dead Man's Map | playable |
+| isle_89_essmouthkingdom | Essmouth Kingdom | paradise | cliff_wall | coral | marine_base | 8 | 11 | 25 | 2 | The Deserter | playable |
+| isle_92_furuyamaisland | Furuyama Island | paradise | terraces | badlands | none | 0 | 0 | 5 | 3 | The Castaway | tested |
+| isle_94_yanogawa | Yanogawa | paradise | ring | candy | hamlet | 6 | 6 | 7 | 2 | The Cursed Shrine | tested |
+| isle_98_kigahama | Kigahama | paradise | atoll | swamp | hamlet | 5 | 5 | 9 | 3 | The Beast of the Bay | playable |
+| isle_87_harlanoisland | Harlano Island | paradise | hills | flower | village | 8 | 11 | 14 | 2 | The Lost Heirloom | playable |
+| isle_95_rosmeriaarchipelago | Rosmeria Archipelago | paradise | plateau | white_rock | hamlet | 6 | 6 | 7 | 2 | Two Houses | playable |
+| isle_72_kajima | Kajima | paradise | archipelago | tropical | marine_base | 6 | 9 | 20 | 2 | The Deserter | tested |
+| isle_100_saintmaria | Saint Maria | paradise | hills | savanna | village | 12 | 15 | 17 | 2 | The Beast of the Bay | playable |
+| isle_99_sanvelluga | San Velluga | paradise | ring | snow | none | 0 | 1 | 2 | 2 | Stones That Speak | playable |
+| isle_79_tokishima | Tokishima | paradise | hills | savanna | hamlet | 6 | 6 | 6 | 1 | The Nest | playable |
+| isle_81_islavarrenne | Isla Varrenne | paradise | cliff_wall | coral | port | 10 | 14 | 42 | 1 | The Crooked Officer | playable |
+| isle_101_capebrinesse | Cape Brinesse | paradise | archipelago | cloud | hamlet | 2 | 2 | 2 | 0 | Two Houses | playable |
+| isle_82_torasato | Torasato | paradise | dunes | desert | town | 20 | 24 | 26 | 3 | Who Did It? | tested |
+| isle_91_oldbrinington | Old Brinington | paradise | cliff_wall | rocky | none | 0 | 0 | 1 | 1 | Dead Man's Map | tested |
+| isle_80_calvenceisland | Calvence Island | paradise | spires | snow | ruins | 9 | 17 | 10 | 1 | A Rookie Crew | playable |
+| isle_88_tobesato | Tobesato | paradise | spires | mushroom | none | 0 | 0 | 6 | 3 | The Lost Heirloom | playable |
+| isle_90_kiura | Kiura | paradise | spires | temperate | village | 10 | 13 | 15 | 1 | The Missing Child | playable |
+| isle_78_sasamori | Sasamori | paradise | atoll | flower | hamlet | 6 | 6 | 7 | 2 | The Cursed Shrine | playable |
+| isle_75_miyadake | Miyadake | paradise | flat | snow | village | 11 | 14 | 17 | 2 | Two Houses | playable |
+| isle_83_newdornesse | New Dornesse | paradise | dunes | desert | village | 12 | 15 | 17 | 1 | Contraband at the Docks | playable |
+| isle_84_fortgaldia | Fort Galdia | paradise | plateau | ice | hamlet | 5 | 5 | 6 | 2 | The Nest | playable |
+| isle_86_koshidake | Koshidake | paradise | cliff_wall | candy | marine_base | 7 | 10 | 23 | 3 | The Lost Heirloom | playable |
+| isle_85_grisaroisland | Grisaro Island | paradise | archipelago | future | none | 0 | 0 | 1 | 1 | A Rookie Crew | playable |
+| isle_55_newiverville | New Iverville | south_blue | ring | temperate | none | 0 | 0 | 4 | 4 | The Cursed Shrine | playable |
+| isle_62_hasaura | Hasaura | south_blue | atoll | temperate | none | 0 | 0 | 4 | 2 | The Castaway | playable |
+| isle_69_mobejimaisland | Mobejima Island | south_blue | terraces | temperate | hamlet | 6 | 6 | 7 | 2 | Two Houses | playable |
+| isle_56_wynenceisland | Wynence Island | south_blue | spires | temperate | hamlet | 6 | 6 | 7 | 2 | The Missing Child | playable |
+| isle_58_misadakeisland | Misadake Island | south_blue | crater | temperate | none | 0 | 0 | 4 | 3 | The Castaway | playable |
+| isle_54_tosayama | Tosayama | south_blue | ring | meadow | none | 0 | 0 | 3 | 2 | The Nest | playable |
+| isle_60_mezaki | Mezaki | south_blue | atoll | temperate | none | 0 | 0 | 4 | 2 | The Nest | playable |
+| isle_67_ulvesseisland | Ulvesse Island | south_blue | atoll | flower | none | 0 | 0 | 2 | 2 | The Castaway | playable |
+| isle_70_ulvolaisland | Ulvola Island | south_blue | plateau | temperate | town | 22 | 26 | 29 | 2 | The Nest | playable |
+| isle_59_ostesseatoll | Ostesse Atoll | south_blue | plateau | meadow | hamlet | 5 | 5 | 9 | 3 | The Beast of the Bay | playable |
+| isle_64_newcalvence | New Calvence | south_blue | spires | savanna | hamlet | 5 | 5 | 6 | 2 | The Bandit Toll | playable |
+| isle_57_fennugakingdom | Fennuga Kingdom | south_blue | hills | meadow | ruins | 6 | 11 | 8 | 1 | A Rookie Crew | playable |
+| isle_71_capebrinuga | Cape Brinuga | south_blue | hills | meadow | hamlet | 6 | 6 | 6 | 1 | Two Houses | playable |
+| isle_63_oldkestia | Old Kestia | south_blue | hills | meadow | ruins | 9 | 16 | 11 | 2 | The Nest | playable |
+| isle_61_sukiuraisland | Sukiura Island | south_blue | mountain | temperate | none | 0 | 1 | 4 | 3 | The Lost Heirloom | playable |
+| isle_68_newostaro | New Ostaro | south_blue | hills | flower | ruins | 7 | 14 | 11 | 3 | Stones That Speak | playable |
+| isle_65_sakauraisland | Sakaura Island | south_blue | spires | tropical | town | 22 | 26 | 31 | 2 | Two Houses | playable |
+| isle_66_oldgrismouth | Old Grismouth | south_blue | ring | savanna | hamlet | 6 | 6 | 10 | 3 | The Bandit Toll | playable |
+| isle_40_kizaki | Kizaki | west_blue | spires | snow | port | 12 | 16 | 44 | 1 | The Missing Child | tested |
+| isle_46_portcorvaro | Port Corvaro | west_blue | hills | taiga | town | 21 | 27 | 29 | 3 | The Nest | tested |
+| isle_36_lumencerock | Lumence Rock | west_blue | atoll | meadow | hamlet | 5 | 5 | 8 | 2 | The Nest | playable |
+| isle_45_sanessington | San Essington | west_blue | plateau | snow | hamlet | 5 | 5 | 9 | 3 | The Missing Child | playable |
+| isle_53_portulvhaven | Port Ulvhaven | west_blue | hills | dark | marine_base | 8 | 11 | 22 | 1 | The Crooked Officer | tested |
+| isle_49_islanorvence | Isla Norvence | west_blue | cliff_wall | rocky | village | 13 | 17 | 22 | 3 | The Bandit Toll | playable |
+| isle_39_tomojimaisland | Tomojima Island | west_blue | mountain | snow | hamlet | 5 | 5 | 7 | 2 | The Nest | playable |
+| isle_43_tsurajima | Tsurajima | west_blue | archipelago | temperate | town | 18 | 20 | 26 | 2 | Dead Man's Map | playable |
+| isle_48_kunadake | Kunadake | west_blue | cliff_wall | taiga | ruins | 7 | 12 | 10 | 1 | The Castaway | playable |
+| isle_51_fortvarrington | Fort Varrington | west_blue | flat | snow | marine_base | 6 | 9 | 21 | 2 | Dead Man's Map | playable |
+| isle_52_yogawa | Yogawa | west_blue | crater | dark | village | 12 | 15 | 20 | 2 | The Bandit Toll | playable |
+| isle_47_sanharlola | San Harlola | west_blue | terraces | temperate | village | 10 | 13 | 15 | 2 | The Missing Child | playable |
+| isle_41_kodakeisland | Kodake Island | west_blue | cliff_wall | dark | city | 21 | 32 | 50 | 3 | The Cursed Shrine | playable |
+| isle_37_saintravola | Saint Ravola | west_blue | ring | taiga | hamlet | 6 | 6 | 8 | 2 | The Nest | playable |
+| isle_44_saintgaldhaven | Saint Galdhaven | west_blue | terraces | meadow | none | 0 | 0 | 1 | 1 | A Rookie Crew | playable |
+| isle_50_fortmaresse | Fort Maresse | west_blue | ring | snow | hamlet | 5 | 5 | 5 | 1 | The Beast of the Bay | playable |
+| isle_42_misaoka | Misaoka | west_blue | crater | taiga | village | 14 | 17 | 20 | 2 | The Bandit Toll | playable |
+| isle_38_oldtambano | Old Tambano | west_blue | cliff_wall | taiga | hamlet | 5 | 5 | 6 | 2 | A Rookie Crew | playable |
 
 </details>
 
@@ -493,9 +494,9 @@ Ship status: tested 6.
 | Vespera Kagenui | "the Shadow-Stitcher", Head of CP0 | cipher_pol | cipher_pol | egghead | 11 | ito | rokushiki |  | tested | boss roster: Emperors, Admirals, Warlords, Stewards and final-arc villains |
 | Gregor Hanzaki | "Iron Jury", Director of CP9 | cipher_pol | cipher_pol | enies_lobby | 9 | hari | rokushiki |  | playable |  |
 | Nimue Kitsunebi | Guild Secretary of Water 7 | cipher_pol | cipher_pol | water_7 | 8 | ryu_pteranodon | rokushiki |  | playable |  |
-| Brick Tsuchiya | Foreman of the Water 7 Docks | cipher_pol | cipher_pol | water_7 | 8 | tsuchi | rokushiki |  | tested | added island rommel_kingdom has land at its centre; landmark rommel_keep built on rommel_kingdom; added island oykot_kingdom has land at its centre; landmark god_valley_ruins built on god_valley; added island kyuka_island has land at its centre; added island prodence_kingdom has land at its centre; added island mogaro_kingdom has land at its centre; terrain is land at shiokaze_isle; terrain is land at alabasta; terrain is land at wano_country; terrain is land at fuyugane_isle |
+| Brick Tsuchiya | Foreman of the Water 7 Docks | cipher_pol | cipher_pol | water_7 | 8 | tsuchi | rokushiki |  | tested | added island rommel_kingdom has land at its centre; landmark rommel_keep built on rommel_kingdom; added island oykot_kingdom has land at its centre; landmark god_valley_ruins built on god_valley; added island kyuka_island has land at its centre; added island prodence_kingdom has land at its centre; added island mogaro_kingdom has land at its centre; terrain is land at shiokaze_isle; terrain is land at dawn_island; terrain is land at alabasta; terrain is land at wano_country; terrain is land at fuyugane_isle |
 | Elowen Hoshizora | Lunarian Stargazer | crew | civilian | egghead | 9 | — | sniper | stargazer | playable |  |
-| Rin Tsukishiro | "the Moonlit", Ronin of Wano | crew | civilian | wano_country | 8 | — | iaido | swordswoman | tested | island surfaces mix several ground blocks; islands carry secrets (treasure, caches, shrines, wrecks); landmark abandoned_lab; landmark alubarna_palace; landmark ancient_ruin; landmark arlong_park; landmark auction_house; landmark baratie; landmark cake_chateau; landmark cloud_chapel; landmark cloud_end_gate; landmark corrida_colosseum; landmark cricket_house; landmark drum_castle; landmark endless_bridge; landmark execution_platform; landmark explorers_monument; landmark flower_capital_castle; landmark fruit_tree_grove; landmark future_lab; landmark galley_la_docks; landmark gates_of_justice; landmark germa_fleet; landmark giant_duel_ground; landmark giant_legs; landmark god_valley_ruins; landmark golden_belfry; landmark gray_terminal; landmark gyoncorde_plaza; landmark haunted_mansion; landmark heavens_gate; landmark hilltop_mansion; landmark impel_down; landmark junkyard_fort; landmark knock_up_marker; landmark kuja_palace; landmark kyuka_resort; landmark laugh_tale_ruins; landmark lulusia_memorial; landmark mangrove_grove; landmark marine_base; landmark marine_headquarters; landmark mary_geoise; landmark mercenary_guild_hall; landmark mermaid_cove; landmark mogaro_royal_gate; landmark nanohana_port; landmark oykot_palace; landmark pirate_hive; landmark port_beacon; landmark prodence_castle; landmark rainbase_casino; landmark revolutionary_hq; landmark rommel_keep; landmark royal_castle; landmark royal_plateau; landmark ruined_castle; landmark ryugu_palace; landmark sacrificial_altar; landmark sea_forest_graveyard; landmark sea_train_station; landmark shandora_ruins; landmark skull_dome; landmark starter_shrine; landmark sword_dojo; landmark tangerine_grove; landmark tontatta_village; landmark tower_of_justice; landmark treasure_cache; landmark treasure_tree; landmark tree_of_knowledge; landmark twin_capes_lighthouse; landmark volcano_vent; landmark water7_fountain; landmark waterfall_gate; landmark weather_lab; landmark welcome_arch; landmark white_city; landmark windmill; landmark yuba_oasis; spawned Marine vs pirate duel; NPCs fight each other with the combat system; capturing a ship adds it to the player's registry as a prize; Grand Line Marines sail as a squadron with a flagship; Marine Headquarters waters are recognised; a Marine ship and a pirate ship put to sea 60 blocks apart; NPC ships of hostile factions sight each other (no player involved); the sea battle is decided without a player (one ship sunk or her crew beaten); a beaten ship goes down and leaves a salvage boat with loot; pirates sail in to raid a harbour; the town's guards respond to the raiders; with too few guards a Marine detachment turns out against raiders; living-sea ships never appear in the Calm Belt, a harbour or the sky; they do on the open sea; a convoy sails as a merchantman with Marine escorts on her quarters; booking a passage puts you aboard the ferry; a treasure map points at a real island secret; the map's target is deterministic for the same place and salt; map targets have their chest in the generated world; every kind of secret (buried treasure, cache, shrine, wreck) has its chest where the map says; maps prefer secrets nobody has looted; chest loot tables with treasure maps load and roll them; fishing at sea in east_blue yields its own catches; fishing at sea in north_blue yields its own catches; fishing at sea in paradise yields its own catches; fishing at sea in calm_belt yields its own catches; fishing at sea in new_world yields its own catches; fishing at sea in deep_sea yields its own catches; an island pond keeps the vanilla catch; storms and a crew navigator bring up giants and Sea King fry; a crew cook raises quality; crew disbands (captain's permadeath); Fish-Man Island Marine variant: resolve, arrest credit, chain on; every original island has a local story; story generation is deterministic (two independent plans of the same seed agree); story faction variants resolve (Marine arrests, pirate cuts); story 'cursed_shrine' plays end to end; story 'bandit_toll' plays end to end (marine variant); story 'whodunit' plays end to end (marine variant); story people spawn on their own islands when a player comes near; a named-bounty job: the outlaw hides until hunted, the wanted poster says where, they turn up there; marker shapes: slam around the feet, cone in front, ring with a safe centre; a Marine boss does not arrest a downed player while another still fights; it does once nobody does; discovering islands (Navigation) grants Landfall, the Blue, Paradise and its islands; eating a fruit, mastering it and the Awakening Trial grant the fruit milestones; bounty thresholds (Bounties.raise) grant the poster, 10M, 100M and 1B in turn; a bounty raise far from any Marine base brings no Buster Call; a Den Den Mushi call rings only someone carrying a snail, and a declined call ends; an unanswered call rings out (missed call on both sides); a black snail overhears a Marine ship nearby (none without one); black snails are taken from Marine officers only; a crime near a Marine base reports the player and may bring a Buster Call (one at a time); a Buster Call gives warning first (no ships during the countdown); a shell burst hurts a pirate and a ship but spares a Marine |
+| Rin Tsukishiro | "the Moonlit", Ronin of Wano | crew | civilian | wano_country | 8 | — | iaido | swordswoman | tested | island surfaces mix several ground blocks; islands carry secrets (treasure, caches, shrines, wrecks); landmark abandoned_lab; landmark alubarna_palace; landmark ancient_ruin; landmark arlong_park; landmark auction_house; landmark baratie; landmark cake_chateau; landmark cloud_chapel; landmark cloud_end_gate; landmark corrida_colosseum; landmark cricket_house; landmark drum_castle; landmark endless_bridge; landmark execution_platform; landmark explorers_monument; landmark flower_capital_castle; landmark fruit_tree_grove; landmark future_lab; landmark galley_la_docks; landmark gates_of_justice; landmark germa_fleet; landmark giant_duel_ground; landmark giant_legs; landmark god_valley_ruins; landmark golden_belfry; landmark gray_terminal; landmark gyoncorde_plaza; landmark haunted_mansion; landmark heavens_gate; landmark hilltop_mansion; landmark impel_down; landmark junkyard_fort; landmark knock_up_marker; landmark kuja_palace; landmark kyuka_resort; landmark laugh_tale_ruins; landmark lulusia_memorial; landmark mangrove_grove; landmark marine_base; landmark marine_headquarters; landmark mary_geoise; landmark mercenary_guild_hall; landmark mermaid_cove; landmark mogaro_royal_gate; landmark nanohana_port; landmark oykot_palace; landmark pirate_hive; landmark port_beacon; landmark prodence_castle; landmark rainbase_casino; landmark revolutionary_hq; landmark rommel_keep; landmark royal_castle; landmark royal_plateau; landmark ruined_castle; landmark ryugu_palace; landmark sacrificial_altar; landmark sea_forest_graveyard; landmark sea_train_station; landmark shandora_ruins; landmark skull_dome; landmark starter_shrine; landmark sword_dojo; landmark tangerine_grove; landmark tontatta_village; landmark tower_of_justice; landmark treasure_cache; landmark treasure_tree; landmark tree_of_knowledge; landmark twin_capes_lighthouse; landmark volcano_vent; landmark water7_fountain; landmark waterfall_gate; landmark weather_lab; landmark welcome_arch; landmark white_city; landmark windmill; landmark yuba_oasis; spawned Marine vs pirate duel; NPCs fight each other with the combat system; capturing a ship adds it to the player's registry as a prize; Grand Line Marines sail as a squadron with a flagship; Marine Headquarters waters are recognised; a Marine ship and a pirate ship put to sea 60 blocks apart; NPC ships of hostile factions sight each other (no player involved); the sea battle is decided without a player (one ship sunk or her crew beaten); pirates sail in to raid a harbour; the town's guards respond to the raiders; with too few guards a Marine detachment turns out against raiders; a convoy sails as a merchantman with Marine escorts on her quarters; every kind of secret (buried treasure, cache, shrine, wreck) has its chest where the map says; chest loot tables with treasure maps load and roll them; fishing at sea in east_blue yields its own catches; fishing at sea in paradise yields its own catches; fishing at sea in new_world yields its own catches; fishing at sea in deep_sea yields its own catches; fishing at sea in sky_sea yields its own catches; storms and a crew navigator bring up giants and Sea King fry; a crew cook raises quality; crew disbands (captain's permadeath); Fish-Man Island Marine variant: resolve, arrest credit, chain on; every original island has a local story; story generation is deterministic (two independent plans of the same seed agree); story faction variants resolve (Marine arrests, pirate cuts); story 'cursed_shrine' plays end to end; story 'bandit_toll' plays end to end (marine variant); story 'whodunit' plays end to end (marine variant); marker shapes: slam around the feet, cone in front, ring with a safe centre; a Marine boss does not arrest a downed player while another still fights; it does once nobody does; bases: uninhabited original islands to claim; bases: a watchtower sights the raid far out and warns the whole crew; bases: raiders holding an undefended flag take it (announced, grace period); discovering islands (Navigation) grants Landfall, the Blue, Paradise and its islands; eating a fruit, mastering it and the Awakening Trial grant the fruit milestones; bounty thresholds (Bounties.raise) grant the poster, 10M, 100M and 1B in turn; a bounty raise far from any Marine base brings no Buster Call; a Den Den Mushi call rings only someone carrying a snail, and a declined call ends; an unanswered call rings out (missed call on both sides); a black snail overhears a Marine ship nearby (none without one); black snails are taken from Marine officers only; a crime near a Marine base reports the player and may bring a Buster Call (one at a time); a Buster Call gives warning first (no ships during the countdown); a shell burst hurts a pirate and a ship but spares a Marine |
 | Pashmina Torafu | "Tigerlily", Mink Warrior of Zou | crew | civilian | zou | 8 | — | electro | warrior | playable |  |
 | Nimbus Kasumi | "Ninefold", CP9 Trainee | crew | civilian | enies_lobby | 7 | kiri | rokushiki | spy | playable |  |
 | Bolt Nejimaki | Tontatta Engineer | crew | civilian | green_bit | 7 | — | sniper | engineer | playable |  |
@@ -549,7 +550,7 @@ Ship status: tested 6.
 | Juniper "Ashfoot" Kurai | the Runaway of the Holy Land | patron | revolutionary | mary_geoise | 7 | — | black_leg |  | playable |  |
 | Old Gonzaburo Sumikura | Pit-Miner of Onigashima | patron | civilian | onigashima | 7 | — | anchor_brawl |  | playable |  |
 | Moll "Pinchpenny" Hachiya | Barkeep of Pirate Island | patron | civilian | hachinosu | 7 | — | gunslinger |  | playable |  |
-| Ume Shabondama | Bubble-Coater of Sabaody | patron | civilian | sabaody_archipelago | 6 | — | brawler |  | tested | landmark explorers_monument |
+| Ume Shabondama | Bubble-Coater of Sabaody | patron | civilian | sabaody_archipelago | 6 | — | brawler |  | tested | landmark explorers_monument; bases: planting the crew flag at the heart claims the island for the crew |
 | Professor Minerva Tensai | the Government's Greatest Scientist | patron | world_government | egghead | 6 | — | brawler |  | playable |  |
 | Tidwell Kaisō | Keeper of the Sea Forest | patron | civilian | sea_forest | 6 | — | fishman_karate |  | tested | a deep-sea notable spawns when a player is near (Sea Forest) |
 | Duchess Peony Momozono | Queen of the Pink Pageant | patron | civilian | momoiro_island | 6 | — | okama_kenpo |  | playable |  |
@@ -562,7 +563,7 @@ Ship status: tested 6.
 | Amarante Kumoi | Gatekeeper of Heaven's Gate | patron | civilian | heavens_gate | 5 | — | brawler |  | tested | a sky notable spawns when a player is near (Heaven's Gate) |
 | Professor Isidore Kumoyomi | Eldest Scholar of Weatheria | patron | civilian | weatheria | 5 | — | brawler |  | playable |  |
 | Penelope "Pinwheel" Kazaguruma | Weathercaster of Weatheria | patron | civilian | weatheria | 5 | — | brawler |  | playable |  |
-| Master Ren Shimoyama | the One-Armed Sensei of Frost-Moon Dojo | patron | civilian | shimotsuki_village | 5 | — | ittoryu |  | tested | a merchant caught by a stronger ship strikes her colours (crew surrender, cargo over the side); eating a dish applies its buffs; a prime dish lasts twice as long and strengthens every meal effect; meal strength adds damage; cold and heat resistance halve ice and fire damage; island story and job texts render with their names and places; story 'whodunit' plays end to end (marine variant); story 'smugglers' plays end to end (pirate variant); a notice board offers the classic and the generated jobs, outlaws one at a time; a named-bounty job: the outlaw hides until hunted, the wanted poster says where, they turn up there; phase 2 changes the arena (Nadir's darkness spreads); phase 3 changes the arena again; every boss's signature attacks, phase powers and arena run without errors; a generated outlaw's fate survives the restart |
+| Master Ren Shimoyama | the One-Armed Sensei of Frost-Moon Dojo | patron | civilian | shimotsuki_village | 5 | — | ittoryu |  | tested | a merchant caught by a stronger ship strikes her colours (crew surrender, cargo over the side); eating a dish applies its buffs; a prime dish lasts twice as long and strengthens every meal effect; meal strength adds damage; cold and heat resistance halve ice and fire damage; island story and job texts render with their names and places; phase 2 changes the arena (Nadir's darkness spreads); phase 3 changes the arena again; every boss's signature attacks, phase powers and arena run without errors |
 | Hattie Tatara | the Hermit Smith of Namakura | patron | civilian | namakura_island | 5 | — | brawler |  | playable |  |
 | Professor Linnea Zenmai | Clockmaker of Karakuri Island | patron | civilian | karakuri_island | 5 | — | brawler |  | playable |  |
 | Ferris Kaigara | the Dial-Smith of Angel Island | patron | civilian | angel_island | 4 | — | brawler |  | playable |  |
@@ -646,7 +647,7 @@ Ship status: tested 6.
 | Pipistrello Minimaro | "the Drill Lord", Warlord of the Sea | warlord | pirate | green_bit | 8 | rasen | brawler |  | tested | boss roster: Emperors, Admirals, Warlords, Stewards and final-arc villains |
 | Saint Pompadour Gildenstern | World Noble | world_noble | world_government | sabaody_archipelago | 3 | — | brawler |  | playable |  |
 
-Plus 709 people generated from the world seed for the island stories and the notice boards (givers, witnesses, villains, outlaws, couriers), named by sea; they spawn and die like the cast above.
+Plus 712 people generated from the world seed for the island stories and the notice boards (givers, witnesses, villains, outlaws, couriers), named by sea; they spawn and die like the cast above.
 
 ### NPC roles (archetypes)
 
@@ -698,7 +699,7 @@ Plus 709 people generated from the world seed for the island stories and the not
 | resident | civilian | 1 | human | brawler | passive | 0% | 0% | tested |
 | revolutionary | revolutionary | 4 | human | brawler | defensive | 10% | 20% | tested |
 | ruin_guardian | wild | 4 | human | brawler | aggressive | 0% | 20% | playable |
-| sailor | civilian | 2 | human | brawler | defensive | 0% | 0% | playable |
+| sailor | civilian | 2 | human | brawler | defensive | 0% | 0% | tested |
 | scholar | civilian | 1 | human | brawler | passive | 0% | 0% | tested |
 | sea_merchant | civilian | 2 | human | brawler | defensive | 0% | 5% | tested |
 | shipwright | civilian | 1 | human | brawler | defensive | 0% | 0% | tested |
@@ -725,8 +726,8 @@ Plus 709 people generated from the world seed for the island stories and the not
 | finale | 6 | lodestar_island |
 | fishman_island | 15 | fishman_island, sabaody_archipelago, sea_forest |
 | gate | 3 | loguetown, twin_capes, whisky_peak |
-| island_story | 572 | 144 islands (generated from the seed) |
-| job_board | 1890 | 112 islands (generated from the seed) |
+| island_story | 566 | 145 islands (generated from the seed) |
+| job_board | 1926 | 114 islands (generated from the seed) |
 | local | 42 | banaro_island, baterilla, boin_archipelago, cacao_island, dawn_island, flevance, foodvalten, germa_kingdom, god_valley, hachinosu, island_of_rare_animals, jam_island, karai_bari_island, karakuri_island, kyuka_island, laugh_tale, lulusia_kingdom, mary_geoise, minion_island, mirror_ball_island, mogaro_kingdom, momoiro_island, namakura_island, new_world_gate, ohara, onigashima, oykot_kingdom, prodence_kingdom, pucci, punk_hazard, rommel_kingdom, san_faldo, shimotsuki_village, sphinx, spider_miles, st_poplar, swallow_island, tequila_wolf, torino_kingdom |
 | new_world | 21 | baltigo, dressrosa, egghead, elbaph, g5_base, green_bit, lodestar_island, new_marineford, wano_country, whole_cake_island, zou |
 | north_blue | 2 | lvneel |

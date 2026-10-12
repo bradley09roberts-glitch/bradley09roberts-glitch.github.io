@@ -584,7 +584,7 @@ First run of a real client against the dedicated server. Result: no client crash
   explicitly in that step the ship lands within 8 ticks, so the spots were most likely not loaded (an earlier step
   had forced them; why they were not ready then is not established). The test now loads the flag area there and
   reports spots and crew if a landing fails (`BaseRaids.landingReport`); in real play a crew member within 160
-  blocks keeps the base loaded. Full phase 1 576/576, phase 2 18/18, no exception (11:00-11:30).
+  blocks keeps the base loaded. Full phase 1 576/576, phase 2 18/18, no exception (10:30–10:57).
 
 ## Work in flight (background agents)
 - Faction careers (ranks, titles, perks for every path).
