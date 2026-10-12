@@ -144,7 +144,7 @@ public final class Ferries {
     }
 
     /** A point off the destination's dock tip (or its nearest shore). */
-    static Vec3 dockOf(Island i) {
+    public static Vec3 dockOf(Island i) {
         Settlement s = i.settlement();
         if (s.hasDock) {
             double ux = s.dockDirX / 1000.0, uz = s.dockDirZ / 1000.0;
@@ -157,8 +157,7 @@ public final class Ferries {
 
     /**
      * Steer toward the target, around land; returns the speed to hold this tick. Arrives and lands passengers.
-     * Two layers: islands on the way (from the world plan) are rounded through a waypoint off their flank, and the
-     * hull's width is swept ahead for docks, rocks and coastline the plan does not know about.
+     * The course itself is kept by {@link #helm}, shared with the merchant traffic and raiders of the living sea.
      */
     public static float steer(ShipEntity ship, ServerLevel l) {
         Vec3 to = ship.ferryTarget.subtract(ship.position());
@@ -171,8 +170,26 @@ public final class Ferries {
             arrive(ship, l);
             return 0;
         }
-        if (ship.ferryWaypoint == null || l.getGameTime() % 20 == 0) ship.ferryWaypoint = waypoint(ship, l);
-        Vec3 aim = ship.ferryWaypoint != null ? ship.ferryWaypoint.subtract(ship.position()) : to;
+        float diff = helm(ship, l, ship.ferryTarget, ship.ferryIsland);
+        if (ship.shipName().equals("Puffing Tom") && l.getGameTime() % 3 == 0) {
+            Vec3 stack = ship.toWorld(0, 6, ship.cls.length * 0.3);
+            l.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, stack.x, stack.y, stack.z, 2, 0.2, 0.3, 0.2, 0.01);
+        }
+        float slow = dist < 90 ? (float) Math.max(0.3, dist / 90) : 1f;
+        if (Math.abs(diff) > 70) slow = Math.min(slow, 0.35f); // come about before making way
+        return ship.cls.speed * ship.ferrySpeed * slow;
+    }
+
+    /**
+     * Keep a course for {@code target} (bound for island {@code islandId}, or "" for open water) around land and set
+     * the rudder; returns how far (degrees) the heading still is from the wanted one. Two layers: islands on the way
+     * (from the world plan) are rounded through a waypoint off their flank, and the hull's width is swept ahead for
+     * docks, rocks and coastline the plan does not know about. A ship that stays stopped is poled off. Uses the ship's
+     * ferry* course fields; ferries call it every tick, and so does the living sea's traffic while under way.
+     */
+    public static float helm(ShipEntity ship, ServerLevel l, Vec3 target, String islandId) {
+        if (ship.ferryWaypoint == null || l.getGameTime() % 20 == 0) ship.ferryWaypoint = waypoint(ship, l, target, islandId);
+        Vec3 aim = ship.ferryWaypoint != null ? ship.ferryWaypoint.subtract(ship.position()) : target.subtract(ship.position());
         float want = (float) Math.toDegrees(Math.atan2(-aim.x, aim.z));
         int look = 40 + (int) ship.cls.length;
         if (ship.ferryDetourT > 0) {
@@ -203,22 +220,16 @@ public final class Ferries {
         } else ship.ferryStuck = 0;
         float diff = Mth.wrapDegrees(want - ship.getYRot());
         ship.setRudder(Mth.clamp(diff / 25f, -1, 1));
-        if (ship.shipName().equals("Puffing Tom") && l.getGameTime() % 3 == 0) {
-            Vec3 stack = ship.toWorld(0, 6, ship.cls.length * 0.3);
-            l.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, stack.x, stack.y, stack.z, 2, 0.2, 0.3, 0.2, 0.01);
-        }
-        float slow = dist < 90 ? (float) Math.max(0.3, dist / 90) : 1f;
-        if (Math.abs(diff) > 70) slow = Math.min(slow, 0.35f); // come about before making way
-        return ship.cls.speed * ship.ferrySpeed * slow;
+        return diff;
     }
 
     /** A point off the flank of the first island between the ship and its target (null if the way is open). */
     @Nullable
-    private static Vec3 waypoint(ShipEntity ship, ServerLevel l) {
+    private static Vec3 waypoint(ShipEntity ship, ServerLevel l, Vec3 target, String islandId) {
         WorldPlan plan = WorldPlan.forLevel(l);
         if (plan == null) return null;
         double px = ship.getX(), pz = ship.getZ();
-        double dx = ship.ferryTarget.x - px, dz = ship.ferryTarget.z - pz;
+        double dx = target.x - px, dz = target.z - pz;
         double len2 = dx * dx + dz * dz;
         if (len2 < 1) return null;
         // inside an island's waters (leaving port, arriving, or pushed in by a detour) with the course running over the
@@ -229,10 +240,10 @@ public final class Ferries {
             if (cx * cx + cz * cz >= r * r) continue;
             double t = Mth.clamp((cx * dx + cz * dz) / len2, 0, 1);
             double qx = dx * t - cx, qz = dz * t - cz;
-            double core = core(i, ship);
+            double core = core(i, target, islandId);
             if (qx * qx + qz * qz >= core * core) continue;
             double ang = Math.atan2(pz - i.z, px - i.x);
-            double delta = Mth.wrapDegrees(Math.toDegrees(Math.atan2(ship.ferryTarget.z - i.z, ship.ferryTarget.x - i.x) - ang));
+            double delta = Mth.wrapDegrees(Math.toDegrees(Math.atan2(target.z - i.z, target.x - i.x) - ang));
             double a2 = ang + Math.toRadians(Math.copySign(Math.min(Math.abs(delta), 45), delta));
             return new Vec3(i.x + Math.cos(a2) * (r + 10), ship.getY(), i.z + Math.sin(a2) * (r + 10));
         }
@@ -241,8 +252,8 @@ public final class Ferries {
         Island first = null;
         double firstT = 2, firstR = 0;
         for (Island i : plan.islands) {
-            boolean dest = i.id.equals(ship.ferryIsland);
-            double r = dest ? core(i, ship) : i.radius * 1.25 + 24;
+            boolean dest = i.id.equals(islandId);
+            double r = dest ? core(i, target, islandId) : i.radius * 1.25 + 24;
             double cx = i.x - px, cz = i.z - pz;
             if (cx * cx + cz * cz < r * r) continue;
             double t = (cx * dx + cz * dz) / len2;
@@ -270,7 +281,7 @@ public final class Ferries {
         double yaw = Math.toRadians(best);
         double nx = ship.getX() - Math.sin(yaw) * 2.0, nz = ship.getZ() + Math.cos(yaw) * 2.0;
         BlockPos p = BlockPos.containing(nx, WorldPlan.SEA_LEVEL, nz);
-        if (!l.getBlockState(p).getFluidState().isSource()) return;
+        if (!com.grandline.core.Chunks.ready(l, p.getX(), p.getZ()) || !l.getBlockState(p).getFluidState().isSource()) return;
         ship.setPos(nx, ship.getY(), nz);
         ship.setYRot(best);
         ship.ferryDetour = best;
@@ -278,9 +289,9 @@ public final class Ferries {
     }
 
     /** The island's solid core; for the destination it stops short of the dock point, which may lie close in. */
-    private static double core(Island i, ShipEntity ship) {
+    private static double core(Island i, Vec3 target, String islandId) {
         double core = i.radius * 1.05 + 8;
-        if (i.id.equals(ship.ferryIsland)) core = Math.min(core, i.distance((int) ship.ferryTarget.x, (int) ship.ferryTarget.z) - 8);
+        if (i.id.equals(islandId)) core = Math.min(core, i.distance((int) target.x, (int) target.z) - 8);
         return core;
     }
 
@@ -296,7 +307,7 @@ public final class Ferries {
             for (double side = -half; side <= half + 0.01; side += half) {
                 double x = ship.getX() + side * c - d * s, z = ship.getZ() + side * s + d * c;
                 p.set(Mth.floor(x), WorldPlan.SEA_LEVEL, Mth.floor(z));
-                if (!l.hasChunkAt(p)) return max;
+                if (!com.grandline.core.Chunks.ready(l, p.getX(), p.getZ())) return max; // never wait for a chunk still generating
                 var at = l.getBlockState(p);
                 if (!at.getCollisionShape(l, p).isEmpty() || (!at.getFluidState().isSource() && !at.isAir())) return d;
                 p.move(0, 1, 0);

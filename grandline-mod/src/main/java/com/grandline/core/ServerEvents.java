@@ -57,6 +57,8 @@ public final class ServerEvents {
         t = Perf.lap("shipInteriors", t);
         com.grandline.ship.SeaEncounters.tick(s);
         t = Perf.lap("seaEncounters", t);
+        com.grandline.ship.LivingSea.tick(s);
+        t = Perf.lap("livingSea", t);
         com.grandline.ship.SpecialRoutes.tick(s);
         t = Perf.lap("specialRoutes", t);
         com.grandline.world.weather.SeaWeather.tick(s);

@@ -94,6 +94,8 @@ public class ShipEntity extends Entity {
     public double rideT;
     /** Naval combat state (see {@link NavalCombat} / {@link NpcShipAi}); NPC crew, squadron and prize origin are saved. */
     final NavalCombat.State naval = new NavalCombat.State();
+    /** Living-sea role of an NPC ship (merchant route, harbour raid, who wronged it; see {@link LivingSea}). */
+    public final SeaLife life = new SeaLife();
 
     // client interpolation
     private int lerpSteps;
@@ -377,9 +379,10 @@ public class ShipEntity extends Entity {
         double y = WorldPlan.SEA_LEVEL + 1 - 0.1;
         if (speed > 0) {
             Vec3 bow = toWorldAt(next, 0, cls.length / 2.0 + 0.5);
-            if (!sl.hasChunkAt(BlockPos.containing(bow))) {
-                next = position(); // wait for the chunk ahead without losing way
-            } else if (solidAt(sl, bow) || solidAt(sl, toWorldAt(next, cls.beam / 2.0, cls.length * 0.25)) || solidAt(sl, toWorldAt(next, -cls.beam / 2.0, cls.length * 0.25))) {
+            Vec3 port = toWorldAt(next, -cls.beam / 2.0, cls.length * 0.25), star = toWorldAt(next, cls.beam / 2.0, cls.length * 0.25);
+            if (!ready(sl, bow) || !ready(sl, port) || !ready(sl, star)) {
+                next = position(); // wait for the chunk ahead without losing way (never read a chunk still generating)
+            } else if (solidAt(sl, bow) || solidAt(sl, star) || solidAt(sl, port)) {
                 if (speed > cls.speed * 0.6f) hurtHull(speed * 40, null);
                 speed = 0;
                 next = position();
@@ -401,6 +404,10 @@ public class ShipEntity extends Entity {
         double yaw = Math.toRadians(getYRot());
         double c = Math.cos(yaw), s = Math.sin(yaw);
         return new Vec3(origin.x + lx * c - lz * s, WorldPlan.SEA_LEVEL + 0.5, origin.z + lx * s + lz * c);
+    }
+
+    private static boolean ready(ServerLevel l, Vec3 p) {
+        return com.grandline.core.Chunks.ready(l, Mth.floor(p.x), Mth.floor(p.z));
     }
 
     private static boolean solidAt(ServerLevel l, Vec3 p) {
@@ -581,10 +588,12 @@ public class ShipEntity extends Entity {
 
     public void hurtHull(float amount, @Nullable Entity by) {
         if (ferryTarget != null) return; // ferries and the Sea Train are run by the harbour masters: never sunk
+        if (by != null && flag(F_NPC)) LivingSea.onHullHit(this, by); // piracy, attacks on the Marines, who fought whom
         float h = hull() - amount;
         entityData.set(HULL, Math.max(0, h));
         if (h <= 0 && !isSinking()) {
             setFlag(F_SINKING, true);
+            if (flag(F_NPC)) LivingSea.onSinking(this); // rewards and salvage
             level().playSound(null, blockPosition(), SoundEvents.WOOD_BREAK, SoundSource.NEUTRAL, 2f, 0.5f);
             for (Entity p : getPassengers()) if (p instanceof ServerPlayer sp) sp.sendSystemMessage(Component.translatable("grandline.ship.sinking").withStyle(net.minecraft.ChatFormatting.RED));
         }
@@ -765,6 +774,7 @@ public class ShipEntity extends Entity {
         CompoundTag st = t.getCompound("Stations"); // passengers reload after their vehicle: keep their stations
         for (String k : st.getAllKeys()) seatOf.put(UUID.fromString(k), st.getInt(k));
         naval.load(t.getCompound("Naval"));
+        life.load(t.getCompound("Life"));
     }
 
     @Override
@@ -788,6 +798,7 @@ public class ShipEntity extends Entity {
         for (Entity p : getPassengers()) if (!(p instanceof Player) && seatOf.containsKey(p.getUUID())) st.putInt(p.getUUID().toString(), seatOf.get(p.getUUID()));
         t.put("Stations", st);
         t.put("Naval", naval.save());
+        t.put("Life", life.save());
     }
 
     @Override

@@ -31,6 +31,7 @@ public class NpcSurrenderGoal extends Goal {
     public void tick() {
         npc.getNavigation().stop();
         npc.setTarget(null);
-        if (npc.getHealth() > npc.getMaxHealth() * 0.6f) npc.setFlag(GLNpc.FLAG_SURRENDER, false);
+        // a crew that struck its colours (a merchant yielding at sea, see ship/LivingSea) stays yielded however healthy
+        if (npc.getHealth() > npc.getMaxHealth() * 0.6f && !npc.getTags().contains("gl_yielded")) npc.setFlag(GLNpc.FLAG_SURRENDER, false);
     }
 }

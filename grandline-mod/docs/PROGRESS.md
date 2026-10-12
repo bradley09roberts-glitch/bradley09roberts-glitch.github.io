@@ -214,6 +214,40 @@ First run of a real client against the dedicated server. Result: no client crash
 - Racial passives (swim speed, status passives) also for humanoid NPCs.
 - Paintings: merchants sell three per island; treasure chests and wrecks may hold one.
 
+### The living sea (agent)
+- NPC ships fight each other with nobody watching: Marine ships engage the pirate ships they sight (180 blocks),
+  pirates take on Marines or bounty hunters only when their side is at least 80% as strong (otherwise they run, and
+  fight only when cornered), bounty hunters (new `bounty_hunter` crews and ships) run down pirate ships and wanted
+  players, pirates fall on merchantmen. They use the existing gun crews, rams and boarding parties; a chaser yaws off
+  every few seconds to bring a broadside to bear. Crews keep to their deck (no more walking off into the sea after a
+  foe on another ship; hands who fall overboard climb back), boarders leap home once their prize is beaten, and
+  shipmates never turn on each other. A beaten hulk founders after 15 s unless a player is close enough to claim her,
+  and every NPC ship that goes down leaves a salvage boat (a chest boat with `chests/wreck`, `chests/marine` or
+  `chests/warehouse` loot, sneak-use to open, rots after a day) plus floating wreckage.
+- Players may join either side: firing on (or hooking, ramming, striking the crew of) a Marine ship raises your bounty
+  once per ship; helping beat a pirate ship earns Marine reputation and a Beli reward; helping beat Marines earns
+  pirate standing.
+- Merchant traffic: merchantmen sail between settled islands of one sea with the ferries' course-keeping (now a
+  shared `Ferries.helm`), never across the Calm Belt or a Red Line; in the Grand Line some sail as convoys with Marine
+  escorts on their quarters. A merchant heaves to for anyone alongside or aboard; her captain (`sea_merchant`) sells
+  her cargo. Attacking her is piracy (bounty, civilian and Marine reputation); a boarder has her crew to fight, a
+  stronger ship makes her strike her colours (crew surrender, cargo over the side as salvage, she can be taken as a
+  prize), otherwise she runs or fights back; escorts turn on the pirate.
+- Harbour raids: now and then a pirate ship sails into a settled harbour near a player (not starter islands, Marine
+  or pirate strongholds), anchors off the dock and lands raiders on the quay. Guards and Marines in town go for them;
+  with too few defenders a Marine detachment turns out. After two minutes the survivors row back with their plunder.
+  Defenders earn the island's thanks (+40 island reputation, Beli); talking to a raider lets you join the raid
+  (bounty, island reputation down, a share of the plunder). The raid ship never fires on the town; nothing breaks
+  blocks.
+- Fairness and cost: decisions every 5 s per player (a cheap roll first), events spawn inside the simulation distance
+  on loaded chunks only, never in the Calm Belt, on the Red Line, near Reverse Mountain, in a harbour (raids aside) or
+  in the sky/deep dimensions; at most one event per player every 90 s; every NPC ship counts against the one
+  server-wide cap (4 + 1 per player; Marine squadrons now respect it too). NPC ships and crews are transient: they
+  despawn with no player within 320 blocks and are refused when a chunk reloads them (a prize you take is kept). Sea
+  crews no longer vanish by the vanilla 128-block despawn rule while their ship sails on. `livingSea` config toggle;
+  `/ship sea <merchant|battle|hunt|plunder|convoy|raid|status>` for operators.
+- Verified (GL_SELFTEST=livingsea, 24/24): see the self-test report; full phase 1/2 results below.
+
 ## Work in flight (background agents)
 - World polish and missing canon islands.
 

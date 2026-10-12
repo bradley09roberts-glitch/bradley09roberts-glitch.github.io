@@ -165,7 +165,8 @@ public class HumanoidNpc extends GLNpc {
 
     @Override
     public boolean removeWhenFarAway(double d) {
-        return markerKey.isEmpty() && notableId.isEmpty();
+        // an NPC ship's crew comes and goes with the ship (ship/LivingSea), not by the vanilla distance rules
+        return markerKey.isEmpty() && notableId.isEmpty() && !getTags().contains(com.grandline.ship.LivingSea.CREW);
     }
 
     @Override
