@@ -1,0 +1,101 @@
+{
+  "hearth": [
+    "Here lies {name}. Keep the candle lit.",
+    "{name}, warm by the First Flame.",
+    "Their hearth is cold. Ours is not.",
+    "Gone home to the Kindled Hearth.",
+    "{name}. Remembered at every Vigil.",
+    "Light a candle. Say my name.",
+    "Banked, not put out.",
+    "{name}, beloved of this house.",
+    "A coal from home lies with them."
+  ],
+  "sun": [
+    "{name}. Facing the dawn.",
+    "Sealed in light. {name}.",
+    "Azhir keeps what night cannot.",
+    "{name}, who dealt honestly by day.",
+    "May Nahire's dawn find you.",
+    "Here the sun rises first.",
+    "Unshadowed, {name} rests.",
+    "No darkness holds the honest.",
+    "{name}. The Unfading remembers."
+  ],
+  "tide": [
+    "{name}, given to the Mother.",
+    "Home with the tide.",
+    "The sea keeps {name}.",
+    "Gone to the Mother's deep halls.",
+    "Fair winds forever, {name}.",
+    "The tide brought. The tide took.",
+    "Salt to salt. {name}.",
+    "Light a storm candle for {name}.",
+    "Loved by the sea, and by us."
+  ],
+  "grove": [
+    "{name} grows here now.",
+    "Root and branch, {name} returns.",
+    "Do not cut this tree. It is {name}.",
+    "Seed, leaf, fall, seed again.",
+    "Under this bough sleeps {name}.",
+    "Given back to the roots.",
+    "{name}. The cycle turns.",
+    "Rest in the green, {name}.",
+    "Leaf-Wake will speak your name."
+  ],
+  "ancestors": [
+    "{name}. Remembered.",
+    "Name, deeds and debts: balanced.",
+    "{name}, sealed in stone.",
+    "Read on Hall Night: {name}.",
+    "Graven true. {name}.",
+    "The forefathers have a new voice.",
+    "Let no hand unname {name}.",
+    "Debts paid. Deeds carved. Rest.",
+    "{name}, of an unbroken line."
+  ],
+  "stars": [
+    "{name} watches now.",
+    "Under the open sky, {name}.",
+    "Look up. {name} looks down.",
+    "Gone to join the first watchers.",
+    "{name}. Their star is named.",
+    "The sky remembers {name}.",
+    "A lamp in the star-sea.",
+    "Here {name} reads the heavens.",
+    "What was is written above."
+  ],
+  "ember": [
+    "{name} burns with the grandfathers.",
+    "Ember returned to the clan fire.",
+    "Shout {name} into the flames.",
+    "{name}, warm in the Ember Below.",
+    "The ember goes on.",
+    "Never cold. Never forgotten.",
+    "{name}, who fed the fire well.",
+    "Sparks rising. {name} rises.",
+    "Ash to paint, ember to fire."
+  ],
+  "veiled_choir": [
+    "Hush.",
+    "Kept, not buried.",
+    "{name} sings below.",
+    "The Quiet holds {name}.",
+    "No light. No grief. No end.",
+    "Waiting for the door.",
+    "Unremembered, and glad of it.",
+    "{name}. The silence answers.",
+    "Do not light a candle here."
+  ],
+  "default": [
+    "Here lies {name}.",
+    "Rest well, {name}.",
+    "{name}. Gone, not forgotten.",
+    "Loved and missed.",
+    "{name}, at peace at last.",
+    "In memory of {name}.",
+    "Remember me.",
+    "Sleep sound, {name}.",
+    "{name}. Gone before us."
+  ]
+}

@@ -1,0 +1,100 @@
+package com.longnight.world;
+
+import com.longnight.Config;
+import com.longnight.LongNight;
+import com.longnight.content.Content;
+import com.longnight.content.Culture;
+import com.longnight.sim.WorldBuilder;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.QuartPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.RandomState;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+/**
+ * Surveys terrain without generating chunks (noise heights and biomes only) to find places
+ * people would actually settle: fairly level ground, near water, with a biome suited to a culture.
+ */
+public final class SiteFinder {
+    private SiteFinder() {}
+
+    public static List<WorldBuilder.Site> survey(ServerLevel level, BlockPos origin, long seed) {
+        long t0 = System.currentTimeMillis();
+        ChunkGenerator gen = level.getChunkSource().getGenerator();
+        RandomState rs = level.getChunkSource().randomState();
+        int sea = gen.getSeaLevel();
+        int maxR = Config.WORLD_RADIUS.get();
+        int minR = Config.SAFE_SPAWN_RADIUS.get();
+        Random r = new Random(seed ^ 0x51735L);
+        List<WorldBuilder.Site> out = new ArrayList<>();
+        int samples = 260;
+        for (int i = 0; i < samples; i++) {
+            double ang = r.nextDouble() * Math.PI * 2;
+            double dist = minR + Math.sqrt(r.nextDouble()) * (maxR - minR);
+            int x = origin.getX() + (int) (Math.cos(ang) * dist);
+            int z = origin.getZ() + (int) (Math.sin(ang) * dist);
+            int[] hs = new int[9];
+            int k = 0;
+            int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE;
+            for (int dx = -28; dx <= 28; dx += 28) {
+                for (int dz = -28; dz <= 28; dz += 28) {
+                    int h = gen.getBaseHeight(x + dx, z + dz, Heightmap.Types.WORLD_SURFACE_WG, level, rs);
+                    hs[k++] = h;
+                    min = Math.min(min, h);
+                    max = Math.max(max, h);
+                }
+            }
+            int centre = hs[4];
+            if (centre <= sea + 1) continue;                  // in water
+            int spread = max - min;
+            Holder<Biome> biome = level.getUncachedNoiseBiome(QuartPos.fromBlock(x), QuartPos.fromBlock(centre), QuartPos.fromBlock(z));
+            String bid = biome.unwrapKey().map(key -> key.location().getPath()).orElse("plains");
+            boolean water = false;
+            for (int dx = -64; dx <= 64 && !water; dx += 32) {
+                for (int dz = -64; dz <= 64; dz += 32) {
+                    if (gen.getBaseHeight(x + dx, z + dz, Heightmap.Types.OCEAN_FLOOR_WG, level, rs)
+                            < gen.getBaseHeight(x + dx, z + dz, Heightmap.Types.WORLD_SURFACE_WG, level, rs) - 1) {
+                        water = true;
+                        break;
+                    }
+                }
+            }
+            boolean hills = centre > sea + 30 || spread > 10;
+            boolean forest = bid.contains("forest") || bid.contains("taiga") || bid.contains("grove") || bid.contains("jungle");
+            String culture = bestCulture(bid, hills, water, r);
+            double flat = Math.max(0, 1.0 - spread / 14.0);
+            if (spread > (culture.equals("dunmar") ? 22 : 14)) continue;
+            if (bid.contains("ocean") || bid.contains("river") && spread > 6) continue;
+            double quality = flat * 2 + (water ? 0.8 : 0) + (forest ? 0.2 : 0) + r.nextDouble() * 0.5;
+            out.add(new WorldBuilder.Site(new BlockPos(x, centre, z), culture, water, forest, hills, quality));
+        }
+        LongNight.LOG.info("Surveyed {} candidate sites in {} ms", out.size(), System.currentTimeMillis() - t0);
+        return out;
+    }
+
+    static String bestCulture(String biome, boolean hills, boolean water, Random r) {
+        String best = "valemen";
+        double bestScore = -1;
+        for (Culture c : Content.CULTURES.values()) {
+            double score = 0;
+            for (String k : c.biomeKeywords) if (biome.contains(k)) score += 1;
+            for (String k : c.avoidBiomeKeywords) if (biome.contains(k)) score -= 2;
+            if (c.id.equals("dunmar") && hills) score += 1.5;
+            if (c.id.equals("tidefolk") && water) score += 0.8;
+            if (c.id.equals("skrell")) score -= 0.8; // goblin tribes are rarer settlers
+            score += r.nextDouble() * 0.9;
+            if (score > bestScore) {
+                bestScore = score;
+                best = c.id;
+            }
+        }
+        return best;
+    }
+}

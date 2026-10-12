@@ -1,0 +1,87 @@
+{
+  "name": "Ashborn",
+  "people": "orc",
+  "scale": 1.08,
+  "lifespan": 55,
+  "description": "Orc clans of the scorched badlands and savanna; some raid, some trade, many sell their spears; they burn their dead and speak to ember-spirits.",
+  "faiths": {
+    "ember": 0.9,
+    "ancestors": 0.1
+  },
+  "governments": [
+    "CLAN"
+  ],
+  "biomes": [
+    "savanna",
+    "badlands",
+    "mesa",
+    "windswept_savanna",
+    "eroded",
+    "stony",
+    "desert"
+  ],
+  "avoid_biomes": [
+    "ocean",
+    "cherry",
+    "flower",
+    "mushroom"
+  ],
+  "bodies": [
+    "orc_1",
+    "orc_2",
+    "orc_3"
+  ],
+  "hair_styles": [
+    "wild",
+    "topknot",
+    "bald",
+    "braided"
+  ],
+  "hair_colors": [
+    "#1e1712",
+    "#2a2420",
+    "#3b2a1d",
+    "#7a7a7a"
+  ],
+  "cloth_colors": [
+    "#5a3a2a",
+    "#3a2a1a",
+    "#7a2a1a",
+    "#4a4a3a",
+    "#6b5a3a"
+  ],
+  "palette": {
+    "foundation": "minecraft:blackstone",
+    "floor": "minecraft:spruce_planks",
+    "wall": "minecraft:mud_bricks",
+    "frame": "minecraft:dark_oak_log",
+    "roof": "minecraft:dark_oak_stairs",
+    "roof_slab": "minecraft:dark_oak_slab",
+    "roof_block": "minecraft:dark_oak_planks",
+    "window": "minecraft:air",
+    "door": "minecraft:dark_oak_door",
+    "light": "minecraft:lantern",
+    "fence": "minecraft:dark_oak_fence",
+    "gate": "minecraft:dark_oak_fence_gate",
+    "path": "minecraft:coarse_dirt",
+    "bed": "minecraft:brown_bed",
+    "accent": "minecraft:bone_block",
+    "chimney": "minecraft:blackstone",
+    "crop": "minecraft:beetroots",
+    "log": "minecraft:dark_oak_log",
+    "sapling": "minecraft:dark_oak_sapling"
+  },
+  "roof_style": "gable",
+  "temperament": {
+    "bravery": 0.75,
+    "diligence": 0.5,
+    "sociability": 0.5,
+    "ambition": 0.6,
+    "piety": 0.55,
+    "kindness": 0.4,
+    "greed": 0.5
+  },
+  "outlaw_prone": true,
+  "banner_color": 15,
+  "banner_accent": 14
+}

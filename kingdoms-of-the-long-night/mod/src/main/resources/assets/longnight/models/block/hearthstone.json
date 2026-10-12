@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "longnight:block/hearthstone_top",
+    "bottom": "longnight:block/hearthstone_side",
+    "side": "longnight:block/hearthstone_side"
+  }
+}

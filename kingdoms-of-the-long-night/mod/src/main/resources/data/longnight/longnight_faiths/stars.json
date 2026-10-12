@@ -1,0 +1,13 @@
+{
+  "name": "The Watchers of the Star-Sea",
+  "adherent": "Watcher",
+  "clergy": "Star-Reader",
+  "description": "The stars are the lamps of those who came before the world. Watchers chart them, read omens, and fear the night when they go out.",
+  "burial": "sky",
+  "burial_text": "laid upon a high platform beneath the open sky until the stars take them",
+  "festival": "the Long Watch",
+  "festival_month": 5,
+  "shrine_block": "minecraft:amethyst_block",
+  "strictness": 0.5,
+  "charity": 0.35
+}

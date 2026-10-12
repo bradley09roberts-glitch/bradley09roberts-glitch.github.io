@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "longnight:block/storehouse_top",
+    "front": "longnight:block/storehouse_front",
+    "side": "longnight:block/storehouse_side"
+  }
+}

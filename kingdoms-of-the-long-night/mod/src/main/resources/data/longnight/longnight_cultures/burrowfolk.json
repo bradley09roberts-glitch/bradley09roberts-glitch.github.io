@@ -1,0 +1,91 @@
+{
+  "name": "Burrowfolk",
+  "people": "smallfolk",
+  "scale": 0.68,
+  "lifespan": 95,
+  "description": "Small, round-cheeked hill folk of gardens, hives and brewhouses, living in turf-roofed burrows and settling quarrels at the village moot.",
+  "faiths": {
+    "hearth": 0.6,
+    "grove": 0.4
+  },
+  "governments": [
+    "COUNCIL",
+    "LORDSHIP"
+  ],
+  "biomes": [
+    "plains",
+    "meadow",
+    "flower",
+    "forest",
+    "sunflower",
+    "cherry"
+  ],
+  "avoid_biomes": [
+    "desert",
+    "badlands",
+    "ocean",
+    "peak",
+    "frozen",
+    "dark_forest"
+  ],
+  "bodies": [
+    "halfling_1",
+    "halfling_2",
+    "halfling_3"
+  ],
+  "hair_styles": [
+    "short",
+    "wild",
+    "bun",
+    "long"
+  ],
+  "hair_colors": [
+    "#5a3a22",
+    "#8b5a2b",
+    "#c9a35b",
+    "#3b2a1d",
+    "#a0522d"
+  ],
+  "cloth_colors": [
+    "#6b8a3a",
+    "#b58a3a",
+    "#8a5a3a",
+    "#7a3a2e",
+    "#d8c08a",
+    "#5a7a3a"
+  ],
+  "palette": {
+    "foundation": "minecraft:cobblestone",
+    "floor": "minecraft:oak_planks",
+    "wall": "minecraft:packed_mud",
+    "frame": "minecraft:stripped_oak_log",
+    "roof": "minecraft:grass_block",
+    "roof_slab": "minecraft:moss_carpet",
+    "roof_block": "minecraft:grass_block",
+    "window": "minecraft:glass_pane",
+    "door": "minecraft:jungle_door",
+    "light": "minecraft:lantern",
+    "fence": "minecraft:oak_fence",
+    "gate": "minecraft:oak_fence_gate",
+    "path": "minecraft:dirt_path",
+    "bed": "minecraft:yellow_bed",
+    "accent": "minecraft:oak_planks",
+    "chimney": "minecraft:cobblestone",
+    "crop": "minecraft:carrots",
+    "log": "minecraft:oak_log",
+    "sapling": "minecraft:oak_sapling"
+  },
+  "roof_style": "turf",
+  "temperament": {
+    "bravery": 0.35,
+    "diligence": 0.6,
+    "sociability": 0.75,
+    "ambition": 0.3,
+    "piety": 0.5,
+    "kindness": 0.7,
+    "greed": 0.35
+  },
+  "outlaw_prone": false,
+  "banner_color": 5,
+  "banner_accent": 4
+}

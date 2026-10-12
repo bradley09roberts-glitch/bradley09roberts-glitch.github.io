@@ -1,0 +1,92 @@
+{
+  "name": "Dunmar",
+  "people": "dwarf",
+  "scale": 0.82,
+  "lifespan": 180,
+  "description": "Stout clan-folk of the mountain holds; miners, masons and runesmiths who carve their ancestors' names into living rock.",
+  "faiths": {
+    "ancestors": 0.85,
+    "hearth": 0.15
+  },
+  "governments": [
+    "CLAN",
+    "MONARCHY"
+  ],
+  "biomes": [
+    "mountain",
+    "peak",
+    "slope",
+    "grove",
+    "windswept",
+    "stony",
+    "jagged",
+    "meadow",
+    "taiga"
+  ],
+  "avoid_biomes": [
+    "ocean",
+    "swamp",
+    "jungle",
+    "beach"
+  ],
+  "bodies": [
+    "dwarf_1",
+    "dwarf_2",
+    "dwarf_3"
+  ],
+  "hair_styles": [
+    "beard_long",
+    "beard_short",
+    "braided",
+    "bald"
+  ],
+  "hair_colors": [
+    "#8b3a1a",
+    "#a0522d",
+    "#3b2a1d",
+    "#c9a35b",
+    "#7a7a7a",
+    "#2a2420"
+  ],
+  "cloth_colors": [
+    "#6b3a2a",
+    "#4a4a4a",
+    "#7a5a2a",
+    "#3a4a5a",
+    "#5a2a2a"
+  ],
+  "palette": {
+    "foundation": "minecraft:deepslate_bricks",
+    "floor": "minecraft:polished_andesite",
+    "wall": "minecraft:stone_bricks",
+    "frame": "minecraft:polished_deepslate",
+    "roof": "minecraft:deepslate_brick_stairs",
+    "roof_slab": "minecraft:deepslate_brick_slab",
+    "roof_block": "minecraft:deepslate_bricks",
+    "window": "minecraft:iron_bars",
+    "door": "minecraft:dark_oak_door",
+    "light": "minecraft:lantern",
+    "fence": "minecraft:dark_oak_fence",
+    "gate": "minecraft:dark_oak_fence_gate",
+    "path": "minecraft:cobblestone",
+    "bed": "minecraft:brown_bed",
+    "accent": "minecraft:chiseled_stone_bricks",
+    "chimney": "minecraft:deepslate_bricks",
+    "crop": "minecraft:potatoes",
+    "log": "minecraft:spruce_log",
+    "sapling": "minecraft:spruce_sapling"
+  },
+  "roof_style": "gable",
+  "temperament": {
+    "bravery": 0.65,
+    "diligence": 0.75,
+    "sociability": 0.45,
+    "ambition": 0.5,
+    "piety": 0.6,
+    "kindness": 0.45,
+    "greed": 0.55
+  },
+  "outlaw_prone": false,
+  "banner_color": 7,
+  "banner_accent": 1
+}

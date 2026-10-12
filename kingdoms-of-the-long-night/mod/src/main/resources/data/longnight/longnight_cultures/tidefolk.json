@@ -1,0 +1,92 @@
+{
+  "name": "Tidefolk",
+  "people": "human",
+  "scale": 1.0,
+  "lifespan": 65,
+  "description": "Fishers, sailors and merchant-princes of the grey coasts; slate-roofed harbour towns and councils of shipmasters.",
+  "faiths": {
+    "tide": 0.7,
+    "hearth": 0.2,
+    "stars": 0.1
+  },
+  "governments": [
+    "REPUBLIC",
+    "LORDSHIP"
+  ],
+  "biomes": [
+    "beach",
+    "ocean",
+    "stony_shore",
+    "river",
+    "plains"
+  ],
+  "avoid_biomes": [
+    "desert",
+    "badlands",
+    "peak",
+    "jungle"
+  ],
+  "bodies": [
+    "human_1",
+    "human_2",
+    "human_3",
+    "human_5"
+  ],
+  "hair_styles": [
+    "short",
+    "long",
+    "braided",
+    "beard_short",
+    "bald",
+    "topknot"
+  ],
+  "hair_colors": [
+    "#2a2420",
+    "#5a3a22",
+    "#c9a35b",
+    "#d8c08a",
+    "#7a7a7a"
+  ],
+  "cloth_colors": [
+    "#2e4a6b",
+    "#4a6b7a",
+    "#7a7a6b",
+    "#2e3a3a",
+    "#8a6b4a",
+    "#3a5a5a"
+  ],
+  "palette": {
+    "foundation": "minecraft:stone_bricks",
+    "floor": "minecraft:oak_planks",
+    "wall": "minecraft:birch_planks",
+    "frame": "minecraft:stripped_dark_oak_log",
+    "roof": "minecraft:deepslate_tile_stairs",
+    "roof_slab": "minecraft:deepslate_tile_slab",
+    "roof_block": "minecraft:deepslate_tiles",
+    "window": "minecraft:glass_pane",
+    "door": "minecraft:dark_oak_door",
+    "light": "minecraft:lantern",
+    "fence": "minecraft:dark_oak_fence",
+    "gate": "minecraft:dark_oak_fence_gate",
+    "path": "minecraft:gravel",
+    "bed": "minecraft:blue_bed",
+    "accent": "minecraft:stone_bricks",
+    "chimney": "minecraft:stone_bricks",
+    "crop": "minecraft:potatoes",
+    "log": "minecraft:oak_log",
+    "sapling": "minecraft:oak_sapling"
+  },
+  "roof_style": "gable",
+  "temperament": {
+    "bravery": 0.55,
+    "diligence": 0.55,
+    "sociability": 0.6,
+    "ambition": 0.55,
+    "piety": 0.5,
+    "kindness": 0.5,
+    "greed": 0.55
+  },
+  "outlaw_prone": true,
+  "banner_color": 11,
+  "banner_accent": 0
+}

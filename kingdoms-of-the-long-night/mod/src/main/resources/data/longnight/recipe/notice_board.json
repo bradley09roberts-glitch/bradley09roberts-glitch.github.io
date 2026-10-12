@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PPP",
+    "PXP",
+    " S "
+  ],
+  "key": {
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "X": {
+      "item": "minecraft:paper"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "longnight:notice_board",
+    "count": 1
+  }
+}

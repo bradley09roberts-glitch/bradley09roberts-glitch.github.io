@@ -1,0 +1,87 @@
+{
+  "name": "Skrell",
+  "people": "goblin",
+  "scale": 0.72,
+  "lifespan": 45,
+  "description": "Quick-fingered goblin tribes of caves, bogs and mangroves: tinkerers, scavengers, sometimes bandits, sometimes the best traders on the road.",
+  "faiths": {
+    "ember": 0.4,
+    "veiled_choir": 0.1,
+    "hearth": 0.2,
+    "tide": 0.3
+  },
+  "governments": [
+    "CLAN",
+    "OUTLAWS"
+  ],
+  "biomes": [
+    "swamp",
+    "mangrove",
+    "dripstone",
+    "lush",
+    "jungle",
+    "taiga",
+    "dark_forest"
+  ],
+  "avoid_biomes": [
+    "desert",
+    "ocean",
+    "peak"
+  ],
+  "bodies": [
+    "goblin_1",
+    "goblin_2"
+  ],
+  "hair_styles": [
+    "wild",
+    "bald",
+    "topknot"
+  ],
+  "hair_colors": [
+    "#1e1712",
+    "#3b2a1d",
+    "#5a5a3a",
+    "#7a7a7a"
+  ],
+  "cloth_colors": [
+    "#5a5a3a",
+    "#4a3a2a",
+    "#3a4a2a",
+    "#6b4a2a",
+    "#7a6b3a"
+  ],
+  "palette": {
+    "foundation": "minecraft:mossy_cobblestone",
+    "floor": "minecraft:mangrove_planks",
+    "wall": "minecraft:mossy_cobblestone",
+    "frame": "minecraft:stripped_mangrove_log",
+    "roof": "minecraft:mangrove_stairs",
+    "roof_slab": "minecraft:mangrove_slab",
+    "roof_block": "minecraft:mangrove_planks",
+    "window": "minecraft:air",
+    "door": "minecraft:mangrove_door",
+    "light": "minecraft:lantern",
+    "fence": "minecraft:mangrove_fence",
+    "gate": "minecraft:mangrove_fence_gate",
+    "path": "minecraft:coarse_dirt",
+    "bed": "minecraft:lime_bed",
+    "accent": "minecraft:mangrove_roots",
+    "chimney": "minecraft:mossy_cobblestone",
+    "crop": "minecraft:potatoes",
+    "log": "minecraft:mangrove_log",
+    "sapling": "minecraft:oak_sapling"
+  },
+  "roof_style": "gable",
+  "temperament": {
+    "bravery": 0.4,
+    "diligence": 0.5,
+    "sociability": 0.6,
+    "ambition": 0.55,
+    "piety": 0.35,
+    "kindness": 0.4,
+    "greed": 0.7
+  },
+  "outlaw_prone": true,
+  "banner_color": 5,
+  "banner_accent": 15
+}

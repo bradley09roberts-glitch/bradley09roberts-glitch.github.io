@@ -1,0 +1,139 @@
+{
+  "templates": {
+    "raid_warning": [
+      "Smoke over the hills toward {other_settlement}. Bar your door tonight.",
+      "A shepherd from {other_settlement} says riders were seen {days} days back, heading this way.",
+      "The dogs have barked at the treeline every night this week. Something's out there.",
+      "They say {other_realm} is gathering spears near the border. Keep your bow strung.",
+      "Crops trampled flat in straight lines east of {settlement}. That's Forsworn work, mark me.",
+      "A pedlar was asking how many keep the walls. Never saw him buy a thing.",
+      "Raiders hit a farm near {other_settlement}. Took the {item} and the cattle, left the old folk crying."
+    ],
+    "bandit_camp": [
+      "There's a bandit camp in the woods past {other_settlement}. Three carts gone this month.",
+      "Outlaws on the road to {other_settlement}. Travel in company or not at all.",
+      "My cousin was robbed of his {item} not {days} days ago. Masked folk, laughing.",
+      "Skrell or men, nobody knows, but someone's been raiding the stores at night.",
+      "The Wardens of the Road have given up on the west road. Bandits own it now.",
+      "They say the bandits are unpaid soldiers from {other_realm}. Desperate men are the worst kind.",
+      "If someone cleared out that camp, {settlement} would owe them a feast."
+    ],
+    "death": [
+      "Did you hear? {person} has passed. We'll keep the candle lit.",
+      "{person} is gone. Took ill and never woke. The whole street turned out.",
+      "We buried {person} {days} days ago. Say their name if you pass the yard.",
+      "{person} died, poor soul. No kin left to tend the grave, they say. That's how the cold ones start.",
+      "They found {person} on the road outside {settlement}. No marks. Just cold.",
+      "{person} has gone back to the roots. The sapling's already in.",
+      "Grief in {settlement} today. {person} was well loved."
+    ],
+    "marriage": [
+      "{person} is to be wed! The whole of {settlement} is invited, or so they say.",
+      "There's to be a wedding. {person} has found someone at last.",
+      "Did you hear? {person} married into a family from {other_settlement}. Two hearths into one.",
+      "The lot came up favourable and {person} is wed. The ancestors approve, apparently.",
+      "{person} and their sweetheart planted a marriage-tree by the well. Lovely thing.",
+      "A match between {realm} and {other_realm}, they say. Sealed with a wedding and a lot of ale.",
+      "{person} is wed. Mind you, their birth-charts didn't agree. Paid the Watchers to look again."
+    ],
+    "birth": [
+      "{person} has had a baby! Healthy and loud, by all accounts.",
+      "There's a new child in {settlement}. The Flamekeeper's added a name to the roll.",
+      "{person} is a parent now. Born under a clear sky, which the Watchers like.",
+      "A baby, born in {settlement} {days} days ago. They named it after a grandparent.",
+      "New life at {person}'s house. Good. We need more of it.",
+      "The child came while the stars were falling. Omen-born, the old women say.",
+      "{person}'s little one has arrived. Ask for a slice of the naming-cake, they're handing it out."
+    ],
+    "building": [
+      "They're building a new {item} in {settlement}. Hammering all day.",
+      "{settlement} has finished its new walls. Took them all summer.",
+      "{person} is raising a house by the mill. Good timber too.",
+      "Masons from {other_settlement} came to build the Kindlehall. Fine work.",
+      "They've raised a new tower at {settlement}. Lords do love a tower.",
+      "The bridge to {other_settlement} is mended at last. Trade will pick up.",
+      "Builders want paying in bread these days. Grain's that dear."
+    ],
+    "war": [
+      "{realm} has declared war on {other_realm}. The levies march in {days} days.",
+      "War. Again. My boy's been called to the banners.",
+      "{other_realm} burned the fields near {other_settlement}. There'll be blood for that.",
+      "Every smith in {settlement} is making spearheads. The price of {item} has doubled.",
+      "The Ashborn companies are hiring out to {realm}. Costly, but they win.",
+      "Soldiers passed through and ate us bare. Whose side are they on? Their own stomachs.",
+      "They say the war's over a dead lord's inheritance. Thousands to die for one chair."
+    ],
+    "peace": [
+      "Peace between {realm} and {other_realm}! Signed on Moot-day, so they say.",
+      "The war's over. My boy's coming home, if he's still walking.",
+      "{realm} and {other_realm} have made terms. Hostages swapped, a wedding promised.",
+      "The roads are open again. First caravan from {other_settlement} came in this morning.",
+      "Peace, for now. Plant while you can, I say.",
+      "The lords have shaken hands. We'll see how long that lasts.",
+      "They're holding a feast in {settlement} for the peace. Free ale, if you're quick."
+    ],
+    "shortage": [
+      "There's no {item} to be had in {settlement}. Not for love nor money.",
+      "Grain's dear and getting dearer. Grey ear in the fields, they say.",
+      "The Honey Lane's cut. Candles are three times the price. How will the poor light their graves?",
+      "No {item} came in this week. Caravans are late, or taken.",
+      "We'll be eating acorns by Deepnight if the stores don't hold.",
+      "Someone's been buying up all the {item}. Hoarders, or worse.",
+      "{settlement} opened the Common Pot early. Things are that bad."
+    ],
+    "ruler_death": [
+      "The ruler of {realm} is dead. The bells rang all night.",
+      "{person} is dead, and {realm} has no clear heir. Trouble's coming.",
+      "They say {person} was poisoned. Nobody says it loudly.",
+      "Our lord {person} has gone to the ancestors. The hall will read the name tonight.",
+      "{person} fell in battle. A good death, the soldiers say. Small comfort to the rest of us.",
+      "Mourning in {realm}. Black banners on every gate.",
+      "{person} died in their sleep. Peaceful, they say. Rare, for a ruler."
+    ],
+    "succession": [
+      "{person} has taken the throne of {realm}. Long may they reign, or long enough.",
+      "The lords acclaimed {person} at the crown-moot. Not everyone cheered.",
+      "{person} holds {realm} now. The old ruler's cousins are sulking in their castles.",
+      "The ancestor-lot fell on {person}. The clans accept it. Mostly.",
+      "{person} has been confirmed sun-touched. The priests smiled. That smile cost something.",
+      "There are two claimants to {realm}. Pick a side, or keep your head down.",
+      "{person} took the Rattle and held it three days! Long live the Rattle-King, until someone steals it."
+    ],
+    "dragon_sighting": [
+      "Goats came down off the peaks in daylight. My gran says that means a wyrm is waking.",
+      "Something huge flew over {other_settlement} {days} days ago. Blotted out the moon.",
+      "The hot springs are boiling and there's sulphur on the wind. Cindermaw stirs, mark me.",
+      "Frost in high summer near {other_settlement}. That's white wyrm weather.",
+      "Burnt hay and no lightning. Drakes, taking sheep from the high fields.",
+      "{realm} is talking of paying tribute to the wyrm. Shameful, but cheaper than burying people.",
+      "A knight from {settlement} rode out to hunt the wyrm. We'll know soon whether we need a new knight."
+    ],
+    "long_night": [
+      "Stars fell three nights running. The Watchers have gone white as milk.",
+      "The nights are longer. Don't tell me they aren't. I've been counting candles.",
+      "The Tall Ones were seen in daylight near {settlement}. That's never good.",
+      "Graves opened in {other_settlement}. The unremembered ones. They walked.",
+      "Can't sleep either? Nobody can. Shut your shutters, the mares are thick tonight.",
+      "A quiet stranger is feeding folk by the old chapel. Asks nothing. I don't trust kindness that cheap.",
+      "The sun-priests swore the twin dawn would come. It hasn't. Folk are drifting from the temples."
+    ],
+    "refugees": [
+      "Folk from {other_settlement} are on the road. Blight took their fields.",
+      "Refugees at the gate. The Flamekeeper says Bowl-Right. The reeve says the stores won't stretch.",
+      "Whole families walking out of {other_realm}. War, or hunger, or both.",
+      "{person} took in a family from the south. Hearth-kind, that one.",
+      "The camp outside {settlement} grows every day. Somebody will have to decide something.",
+      "They say {other_settlement} shut its gates on the hungry. The Grovewardens won't bless them now.",
+      "Some of the newcomers are good with a plough. Others are just hungry. Most are both."
+    ],
+    "trade": [
+      "A caravan from {other_settlement} came in loaded with {item}. Prices dropped by half.",
+      "The Tidefolk want {item}, and they'll pay in silver. Good time to sell.",
+      "{settlement} is buying all the {item} it can get. Someone knows something.",
+      "Trade's good on the Kingsway this month. The Wardens have cleared the road.",
+      "Burrowfolk waggons came through with honey and candles. I bought a year's worth.",
+      "There's a skrell night-market down by the river. Good prices, no questions. Keep your purse close.",
+      "{realm} has raised its tolls. Merchants are grumbling and taking the long road."
+    ]
+  }
+}

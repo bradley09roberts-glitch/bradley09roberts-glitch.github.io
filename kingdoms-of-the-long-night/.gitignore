@@ -1,0 +1,10 @@
+# build outputs and local runs
+mod/build/
+mod/.gradle/
+mod/run/
+mod/runs/
+mod/out/
+**/__pycache__/
+*.log
+# downloaded jars are referenced by the .mrpack, never committed
+modpack/cache/

@@ -1,0 +1,50 @@
+{
+  "given_male": [
+    "Zikka", "Tiksk", "Snekk", "Krit", "Tazzik", "Skeet", "Grikk", "Nixxet", "Pikk", "Rakket",
+    "Skritch", "Tekk", "Vizz", "Zett", "Kikko", "Skabb", "Sprikk", "Twikk", "Zakk", "Krekk",
+    "Snikk", "Tazk", "Ritt", "Skizz", "Kretch", "Fizzek", "Gnekk", "Jikk", "Klikk", "Mizzik",
+    "Nakk", "Pettik", "Quik", "Skrit", "Teek", "Vrikk", "Wizzet", "Yekk", "Zizz", "Brikk",
+    "Chukk", "Frizzik", "Hekk", "Lukket", "Tzokk"
+  ],
+  "given_female": [
+    "Tiksa", "Zissa", "Kikki", "Snessa", "Rikka", "Skeela", "Vixxa", "Twissa", "Zekka", "Nitta",
+    "Prikka", "Sikka", "Tazza", "Kreeta", "Glissa", "Fizza", "Jissa", "Lekka", "Nekki", "Quessa",
+    "Rizza", "Skitta", "Tekka", "Vessk", "Wikka", "Yissa", "Zazza", "Brissa", "Chikka", "Dizzet",
+    "Ekka", "Grissa", "Hikka", "Ikkit", "Kizzet", "Missk", "Okka", "Rattka", "Sneeka", "Zirra",
+    "Kekka", "Lissik", "Tzikki", "Skrissa"
+  ],
+  "family": [
+    "Drainmouth", "Mudwallow", "Rattlecave", "Sludgecrack", "Gutterhole", "Bonepit", "Cogsmire", "Scrapheap", "Leakditch", "Rustpipe",
+    "Mosspit", "Tinkerdeep", "Ratwarren", "Bogwhistle", "Snailrock", "Crackwater", "Sootchimney", "Muckhollow", "Gloomfen", "Junkhill",
+    "Gearbog", "Bitterpool", "Spitrock", "Shardgully", "Saltgutter", "Wormcellar", "Copperdrip", "Tikkarak", "Zikmarsh", "Skrattlehole",
+    "Underkettle", "Brokenbridge", "Grimewell", "Dripcave", "Snarlroot", "Tarpit", "Midgefen", "Puddlepit", "Leechwater", "Ratchetcave",
+    "Blackbog", "Rotstump", "Tik-Tazzik"
+  ],
+  "family_style": "place",
+  "patronymic_male": "",
+  "patronymic_female": "",
+  "epithets": [
+    "the Clever", "Sticky-Fingers", "the Twice-Hanged", "Big-Ears", "the Tinker", "Gear-Grinner", "the Loud", "Shiny-Eyes", "the Untrappable", "Boom-Hand",
+    "Three-Fingers", "the Haggler", "Rat-King", "the Sneak", "the Lucky", "Spark-Tongue", "Gutter-Prince", "the Honest (Really)", "Ratchet-Jaw", "the Unbitten",
+    "Who Stole the Bell", "the Unexploded", "Pie-Thief"
+  ],
+  "settlement_prefix": [
+    "Zik", "Tik", "Skra", "Snek", "Krit", "Taz", "Grik", "Rakk", "Vizz", "Kekk",
+    "Skab", "Spri", "Nitt", "Pik", "Mizz", "Klak", "Drik", "Fizz", "Gnek", "Jik",
+    "Twik", "Zett", "Krek", "Chik", "Brik", "Yek", "Lukk", "Ratch", "Skit", "Tekk",
+    "Quik", "Zizz"
+  ],
+  "settlement_suffix": [
+    "hole", "pit", "zik", "ak", "tak", "ett", "warren", "sump", "drip", "skit",
+    "mire", "krak", "izz", "heap", "ditch", "cave", "ik", "gut", "nook", "tikk",
+    "rattle", ""
+  ],
+  "realm_patterns": [
+    "Tribe of {name}", "Rattle-Kingdom of {name}", "Big Warren of {name}", "Scrap-Lords of {name}",
+    "Junk-Throne of {name}", "Gutter-Council of {name}", "Sneak-Band of {name}"
+  ],
+  "camp_names": [
+    "Shiny Pile", "Dripping Hole", "First Stash", "Rat Camp", "Tinker Tent", "Muck Nest",
+    "Loot Heap", "Snare Ring", "Rusty Hut", "Quiet Pit", "Boom Shed"
+  ]
+}

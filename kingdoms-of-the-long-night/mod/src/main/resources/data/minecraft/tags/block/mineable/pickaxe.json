@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "longnight:hearthstone",
+    "longnight:gravestone",
+    "longnight:boundary_stone",
+    "longnight:ward_stone"
+  ]
+}

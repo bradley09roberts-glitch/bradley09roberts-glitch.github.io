@@ -1,0 +1,99 @@
+{
+  "name": "Valemen",
+  "people": "human",
+  "scale": 1.0,
+  "lifespan": 70,
+  "description": "Farmers and lords of the green vales and forest edges; timber-framed villages under steep roofs, ruled by hereditary lords and kings.",
+  "faiths": {
+    "hearth": 0.65,
+    "sun": 0.15,
+    "grove": 0.12,
+    "stars": 0.08
+  },
+  "governments": [
+    "MONARCHY",
+    "LORDSHIP"
+  ],
+  "biomes": [
+    "plains",
+    "meadow",
+    "forest",
+    "flower",
+    "birch",
+    "sunflower",
+    "river"
+  ],
+  "avoid_biomes": [
+    "desert",
+    "badlands",
+    "ocean",
+    "peak",
+    "frozen",
+    "swamp"
+  ],
+  "bodies": [
+    "human_1",
+    "human_2",
+    "human_3",
+    "human_4"
+  ],
+  "hair_styles": [
+    "short",
+    "long",
+    "braided",
+    "beard_short",
+    "bun",
+    "bald"
+  ],
+  "hair_colors": [
+    "#3b2a1d",
+    "#5a3a22",
+    "#8b5a2b",
+    "#c9a35b",
+    "#2a2420",
+    "#a0522d",
+    "#d8c08a"
+  ],
+  "cloth_colors": [
+    "#7a5c3a",
+    "#5f7a3a",
+    "#8a3b2e",
+    "#3e5a7a",
+    "#a08a5a",
+    "#6b4f7a"
+  ],
+  "palette": {
+    "foundation": "minecraft:cobblestone",
+    "floor": "minecraft:spruce_planks",
+    "wall": "minecraft:white_terracotta",
+    "frame": "minecraft:stripped_spruce_log",
+    "roof": "minecraft:dark_oak_stairs",
+    "roof_slab": "minecraft:dark_oak_slab",
+    "roof_block": "minecraft:dark_oak_planks",
+    "window": "minecraft:glass_pane",
+    "door": "minecraft:spruce_door",
+    "light": "minecraft:lantern",
+    "fence": "minecraft:spruce_fence",
+    "gate": "minecraft:spruce_fence_gate",
+    "path": "minecraft:dirt_path",
+    "bed": "minecraft:red_bed",
+    "accent": "minecraft:oak_planks",
+    "chimney": "minecraft:cobblestone",
+    "crop": "minecraft:wheat",
+    "log": "minecraft:spruce_log",
+    "sapling": "minecraft:spruce_sapling"
+  },
+  "roof_style": "gable",
+  "temperament": {
+    "bravery": 0.5,
+    "diligence": 0.6,
+    "sociability": 0.55,
+    "ambition": 0.5,
+    "piety": 0.55,
+    "kindness": 0.55,
+    "greed": 0.4
+  },
+  "outlaw_prone": true,
+  "banner_color": 14,
+  "banner_accent": 4
+}

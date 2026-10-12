@@ -1,0 +1,50 @@
+{
+  "given_male": [
+    "Haldric", "Osgar", "Wendel", "Cedwin", "Brannoc", "Tobrin", "Edwic", "Garrow", "Leowin", "Merrin",
+    "Aldwick", "Wyrstan", "Rowle", "Cuthwin", "Dunric", "Hamwold", "Jorrin", "Brammet", "Colric", "Gilbard",
+    "Hewet", "Ansric", "Thurwin", "Wilbrand", "Radwin", "Egmund", "Harlow", "Kenric", "Morrick", "Penwald",
+    "Sedwy", "Tamrick", "Orrin", "Fennick", "Garthwin", "Bertwold", "Aelwin", "Dorric", "Ludwic", "Osbeorn",
+    "Wendric", "Hadwin", "Cyneric", "Elmund", "Stannard", "Ricwald"
+  ],
+  "given_female": [
+    "Aldith", "Edlyn", "Hildra", "Mildry", "Osgyth", "Wenna", "Elfrin", "Bertilde", "Cwenna", "Tamsy",
+    "Maudry", "Agnet", "Ellyn", "Merrith", "Sunnild", "Leofrun", "Eadlin", "Wilmet", "Ethelind", "Brysa",
+    "Cyneth", "Ebbet", "Fridwyth", "Hawlin", "Jennick", "Letta", "Nelda", "Oriel", "Pernel", "Rosmer",
+    "Sabeth", "Tildry", "Ursel", "Wendred", "Avelin", "Clemmet", "Dorra", "Edony", "Hesper", "Isbet",
+    "Kenna", "Godlin", "Aelfry", "Wynnet"
+  ],
+  "family": [
+    "Ashwick", "Coldridge", "Fallowmere", "Greyhame", "Harrowfield", "Longstave", "Millbrook", "Oakenhurst", "Pellwood", "Redmane",
+    "Stonebridge", "Thatchwell", "Wainfold", "Whitmoor", "Yarrowby", "Brackenhale", "Candlewright", "Dunmere", "Elderwick", "Fernlow",
+    "Gorsebrook", "Haywold", "Kingsmere", "Lambsfold", "Mossgrave", "Nettleford", "Penhale", "Quarrell", "Rushmoor", "Sallowby",
+    "Tollbridge", "Upwold", "Vanecroft", "Wethermarch", "Ashlow", "Blackthorn", "Cropley", "Dewmarsh", "Fairholt", "Goldhayes",
+    "Hollystead", "Larkwood", "Merrivane", "Swiftbrook", "Thornwick", "Wendmere"
+  ],
+  "family_style": "surname",
+  "patronymic_male": "",
+  "patronymic_female": "",
+  "epithets": [
+    "the Bold", "the Just", "the Grey", "the Lame", "Oakheart", "the Fair", "the Young", "the Old", "the Peacemaker", "the Pious",
+    "the Cruel", "the Red", "Ironhand", "the Wise", "the Stout", "the Hearth-Kind", "Sheaf-Giver", "the Builder", "the Twice-Crowned", "the Lanternbearer",
+    "the Usurper", "the Mild", "the Grim", "Wyrmsbane", "the Bridge-Maker", "the Unlucky", "the Long-Reigning", "Kingsway-Mender"
+  ],
+  "settlement_prefix": [
+    "Ash", "Bram", "Cold", "Dun", "Elm", "Fallow", "Gorse", "Hart", "Hay", "Kings",
+    "Lark", "Mill", "Nettle", "Oak", "Pen", "Red", "Rush", "Stone", "Thorn", "Wend",
+    "Whit", "Yarrow", "Barley", "Bracken", "Crow", "Deer", "Ewe", "Fern", "Gold", "Long",
+    "Marl", "Rye", "Sallow", "Tan", "Wether", "Alder", "Brook", "Cress"
+  ],
+  "settlement_suffix": [
+    "ford", "ham", "ton", "wick", "by", "stead", "hurst", "field", "well", "mere",
+    "bury", "leigh", "dale", "den", "worth", "brook", "bridge", "thorpe", "cote", "hold",
+    "wold", "ley", ""
+  ],
+  "realm_patterns": [
+    "Kingdom of {name}", "Earldom of {name}", "March of {name}", "Barony of {name}",
+    "Crown of {name}", "Lordship of {name}", "Principality of {name}", "The {name} Marches"
+  ],
+  "camp_names": [
+    "Firstfire", "Settlers' Rest", "Oxcart Camp", "Furrowfirst", "Woodcutters' Clearing", "Haystack Camp",
+    "Ploughstead", "Kindling Camp", "Newhearth", "Wayfarers' Ring", "Stakefield", "Thatch Camp"
+  ]
+}

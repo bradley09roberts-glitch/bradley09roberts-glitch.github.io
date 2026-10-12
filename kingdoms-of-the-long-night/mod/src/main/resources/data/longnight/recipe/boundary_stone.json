@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "M",
+    "S"
+  ],
+  "key": {
+    "M": {
+      "item": "minecraft:mossy_cobblestone"
+    },
+    "S": {
+      "item": "minecraft:stone_bricks"
+    }
+  },
+  "result": {
+    "id": "longnight:boundary_stone",
+    "count": 1
+  }
+}

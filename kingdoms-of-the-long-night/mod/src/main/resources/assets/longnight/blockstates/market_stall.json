@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "longnight:block/market_stall",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "longnight:block/market_stall",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "longnight:block/market_stall",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "longnight:block/market_stall",
+      "y": 270
+    }
+  }
+}

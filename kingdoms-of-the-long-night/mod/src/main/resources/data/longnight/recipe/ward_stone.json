@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "DAD",
+    "DAD",
+    "DDD"
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:polished_deepslate"
+    },
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    }
+  },
+  "result": {
+    "id": "longnight:ward_stone",
+    "count": 1
+  }
+}

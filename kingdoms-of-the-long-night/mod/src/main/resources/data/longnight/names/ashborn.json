@@ -1,0 +1,50 @@
+{
+  "given_male": [
+    "Ukhtar", "Gorrask", "Druzak", "Murrog", "Varkuth", "Rhozgar", "Thukka", "Zharuk", "Bruhkar", "Krovash",
+    "Ognarr", "Tarrukh", "Urshak", "Hurgath", "Mazrok", "Grevvuk", "Zukhar", "Drogvar", "Okkhan", "Ruzhak",
+    "Barghul", "Khorrun", "Uzzakh", "Sarrug", "Torvukh", "Gharrok", "Yorrakh", "Krumhar", "Durvash", "Nogrukh",
+    "Rakhaz", "Brokhul", "Zhagrun", "Ulkhor", "Morruk", "Gazzuk", "Throkkar", "Vuzhor", "Akhrun", "Bharzok",
+    "Krozhak", "Ghurrum", "Varrakh", "Oshgun"
+  ],
+  "given_female": [
+    "Ukha", "Grazhna", "Shurra", "Vrukha", "Mazhra", "Zhenna", "Durgha", "Khezra", "Tazhra", "Ogga",
+    "Urzha", "Brakha", "Yazgha", "Hurra", "Zukha", "Gharna", "Morrha", "Shakha", "Varzha", "Krosha",
+    "Ozzha", "Rakkha", "Thurga", "Bhorra", "Ulzha", "Drukha", "Grunna", "Haggra", "Zarra", "Ushka",
+    "Vokhra", "Ashra", "Burzha", "Khalla", "Marrukha", "Orrha", "Rhuzga", "Tukha", "Zhurra", "Gorra",
+    "Ekhra", "Kaggra", "Durzha", "Okhra"
+  ],
+  "family": [
+    "Emberfang", "Redtusk", "Cindermane", "Bonecairn", "Scorchhide", "Ashstrider", "Blackpyre", "Smokewalker", "Flintgut", "Gravelhide",
+    "Brandscar", "Coalteeth", "Dustspear", "Sunscorch", "Ironhowl", "Thornhide", "Bloodember", "Greyhearth", "Ashjaw", "Wolfember",
+    "Skullpyre", "Redmesa", "Tuskbreaker", "Mesarunner", "Dryriver", "Charhand", "Hoofthunder", "Bonedrum", "Ochrehand", "Stonetusk",
+    "Firewalker", "Longspear", "Burntgrass", "Kilnback", "Scarbrow", "Smokehollow", "Redwind", "Ashenmane", "Duskfang", "Goldtusk",
+    "Ironember", "Dunehide", "Ukhmar", "Varrogh"
+  ],
+  "family_style": "clan",
+  "patronymic_male": "",
+  "patronymic_female": "",
+  "epithets": [
+    "the Unburnt", "Ember-Eyed", "the Tusked", "Ash-Walker", "the Peacebringer", "Truebond", "the Red", "Bone-Crowned", "Who Laughed at Fire", "the Scarred",
+    "Trader-Chief", "the Hired Blade", "Wolf-Friend", "Smoke-Speaker", "the Old Mothers' Chosen", "Breaker of Walls", "the Patient Flame", "the Many-Scarred", "Gold-Tusk", "the Returner",
+    "Last Ember", "the Grey Hand", "Storm-Hide", "Horse-Father"
+  ],
+  "settlement_prefix": [
+    "Ukh", "Gor", "Druz", "Varr", "Zhar", "Khor", "Brukh", "Rakh", "Mazr", "Tarr",
+    "Urz", "Ogn", "Grev", "Thrak", "Zukh", "Barg", "Durv", "Krum", "Ruzh", "Yorr",
+    "Hurg", "Akhr", "Bhar", "Gazz", "Morr", "Sarr", "Torv", "Vuzh", "Nogr", "Okk",
+    "Ghar", "Zhag"
+  ],
+  "settlement_suffix": [
+    "ukh", "gor", "azh", "ar", "rok", "umm", "akka", "a", "ghul", "ash",
+    "uz", "rukh", "ga", "oth", "zza", "arr", "ug", "hol", "ruk", "akh",
+    "ur", ""
+  ],
+  "realm_patterns": [
+    "Horde of {name}", "Clans of {name}", "Ember-Moot of {name}", "Warband of {name}",
+    "Burning Banner of {name}", "Chiefdom of {name}", "Free Company of {name}", "Red Steppe of {name}"
+  ],
+  "camp_names": [
+    "Ember Ring", "First Pyre", "Tusk Camp", "Smoke Hill", "War-Fire Camp", "Bone Totem Rest",
+    "Red Rock Camp", "Ash Hollow", "Hide-Tent Ring", "Water-Hole Camp", "Spear Stand"
+  ]
+}

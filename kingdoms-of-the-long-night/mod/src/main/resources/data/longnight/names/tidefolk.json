@@ -1,0 +1,50 @@
+{
+  "given_male": [
+    "Ambro", "Bastio", "Corradin", "Davro", "Edovar", "Faro", "Genno", "Iasco", "Lauro", "Marrin",
+    "Nerio", "Orsel", "Pellan", "Quillo", "Rinato", "Salvo", "Tavio", "Vesco", "Zanno", "Alesso",
+    "Brevo", "Cassel", "Dorio", "Esteo", "Fiano", "Gilo", "Ivro", "Lusco", "Maffio", "Nunzo",
+    "Olmar", "Pieto", "Raffo", "Sando", "Teodo", "Varrel", "Brizzo", "Carvo", "Delvo", "Ermano",
+    "Ferro", "Lenzo", "Oddo", "Pasco", "Severo", "Tullo", "Zeffo", "Morvo"
+  ],
+  "given_female": [
+    "Marella", "Ondessa", "Liria", "Corvina", "Vessa", "Ilaren", "Brisa", "Celsa", "Davella", "Elvessa",
+    "Fiolessa", "Gessa", "Iola", "Lucella", "Marrabel", "Nerilla", "Orsola", "Perlina", "Quinta", "Rosmara",
+    "Salvina", "Tessaly", "Undessa", "Vella", "Zarella", "Amaria", "Belcora", "Cassola", "Delfia", "Estrel",
+    "Fenna", "Gavina", "Isola", "Lenzia", "Marisca", "Nevia", "Ottessa", "Pellina", "Rissa", "Spumella",
+    "Tarina", "Velia", "Coralba", "Saldra"
+  ],
+  "family": [
+    "Velaro", "Ancoretto", "Corvesso", "Brinoli", "Remolo", "Salvane", "Scallio", "Conchetti", "Rocamare", "Spumaro",
+    "Pellaccio", "Marrowmouth", "Delfara", "Nettari", "Gavrossi", "Tidewell", "Saltreach", "Brevicci", "Calvane", "Ondaro",
+    "Portessa", "Lanterna", "Vescari", "Ruddermark", "Fiorsale", "Gullstone", "Keelwright", "Navarelli", "Ostrello", "Pescaro",
+    "Quaymont", "Rennetti", "Sargasti", "Torrenza", "Uvello", "Vascona", "Zannetti", "Amberline", "Bellacorda", "Driftmere",
+    "Ropewell", "Sailsworth", "Cormorel", "Lisseri"
+  ],
+  "family_style": "surname",
+  "patronymic_male": "",
+  "patronymic_female": "",
+  "epithets": [
+    "the Navigator", "Saltbeard", "the Lucky", "the Drowned-and-Returned", "Stormcaller", "the Shrewd", "Silver-Tongue", "the Fair Wind", "Wreck-Finder", "the Honest Weight",
+    "the Smuggler", "Tidewise", "the Old Helm", "Gull-Eye", "the Generous", "the Twice-Wrecked", "Ropehand", "the Pearl", "Harbour-Builder", "the Merchant Prince",
+    "Fog-Walker", "the Unsinkable", "Coin-Counter"
+  ],
+  "settlement_prefix": [
+    "Vess", "Marr", "Cael", "Sal", "Orsa", "Porth", "Liss", "Brev", "Cors", "Tren",
+    "Ondo", "Pell", "Rocc", "Scal", "Vel", "Zann", "Amar", "Bell", "Cast", "Dov",
+    "Fiar", "Gav", "Lun", "Mor", "Nav", "Pesc", "Ren", "Sav", "Tor", "Vasc",
+    "Gull", "Brine", "Coral"
+  ],
+  "settlement_suffix": [
+    "a", "ona", "ezza", "port", "haven", "ello", "mare", "ano", "essa", "ino",
+    "oria", "cove", "mouth", "strand", "ara", "eto", "quay", "isca", "ora", "enna",
+    "reach", ""
+  ],
+  "realm_patterns": [
+    "Free Port of {name}", "Republic of {name}", "Serene League of {name}", "Merchant Isles of {name}",
+    "Harbour-Commune of {name}", "Most Serene Republic of {name}", "Sea-Lords of {name}", "Free Company of {name}"
+  ],
+  "camp_names": [
+    "Driftwood Landing", "Netmenders' Beach", "Saltpan Camp", "Wreckers' Cove", "Gull Rock", "First Mooring",
+    "Tarpaulin Camp", "Lantern Point", "Shell Strand", "Keel Camp", "Anchor Rest"
+  ]
+}

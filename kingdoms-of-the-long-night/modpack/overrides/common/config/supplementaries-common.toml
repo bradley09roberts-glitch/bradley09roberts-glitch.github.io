@@ -1,0 +1,5 @@
+# Kingdoms of the Long Night: only the keys we change. NeoForge fills in every other key with
+# its default on first launch ("Configuration file ... is not correct. Correcting").
+[general]
+	# 0.0 = the Red Merchant (a wandering NPC trader) never spawns. The longnight core mod owns all NPCs.
+	red_merchant_spawn_multiplier = 0.0

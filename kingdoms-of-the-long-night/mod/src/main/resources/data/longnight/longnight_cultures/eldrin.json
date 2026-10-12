@@ -1,0 +1,92 @@
+{
+  "name": "Eldrin",
+  "people": "elf",
+  "scale": 1.06,
+  "lifespan": 260,
+  "description": "An old and dwindling elven people of the deep woods; councils of ancient houses, star-lore, and a long memory of what was lost.",
+  "faiths": {
+    "stars": 0.55,
+    "grove": 0.45
+  },
+  "governments": [
+    "COUNCIL",
+    "MONARCHY"
+  ],
+  "biomes": [
+    "dark_forest",
+    "birch",
+    "old_growth",
+    "forest",
+    "taiga",
+    "cherry",
+    "flower"
+  ],
+  "avoid_biomes": [
+    "desert",
+    "badlands",
+    "ocean",
+    "swamp"
+  ],
+  "bodies": [
+    "elf_1",
+    "elf_2",
+    "elf_3"
+  ],
+  "hair_styles": [
+    "long",
+    "braided",
+    "bun",
+    "topknot",
+    "short"
+  ],
+  "hair_colors": [
+    "#e8e0c8",
+    "#d8c08a",
+    "#2a2420",
+    "#9a9aa8",
+    "#c9a35b",
+    "#5a3a22"
+  ],
+  "cloth_colors": [
+    "#3a5a3a",
+    "#5a7a5a",
+    "#7a8a9a",
+    "#d8d0b0",
+    "#4a4a6b",
+    "#6b8a7a"
+  ],
+  "palette": {
+    "foundation": "minecraft:mossy_stone_bricks",
+    "floor": "minecraft:birch_planks",
+    "wall": "minecraft:stripped_birch_wood",
+    "frame": "minecraft:stripped_dark_oak_wood",
+    "roof": "minecraft:warped_stairs",
+    "roof_slab": "minecraft:warped_slab",
+    "roof_block": "minecraft:warped_planks",
+    "window": "minecraft:glass_pane",
+    "door": "minecraft:birch_door",
+    "light": "minecraft:lantern",
+    "fence": "minecraft:birch_fence",
+    "gate": "minecraft:birch_fence_gate",
+    "path": "minecraft:coarse_dirt",
+    "bed": "minecraft:green_bed",
+    "accent": "minecraft:moss_block",
+    "chimney": "minecraft:mossy_stone_bricks",
+    "crop": "minecraft:carrots",
+    "log": "minecraft:birch_log",
+    "sapling": "minecraft:birch_sapling"
+  },
+  "roof_style": "gable",
+  "temperament": {
+    "bravery": 0.5,
+    "diligence": 0.55,
+    "sociability": 0.4,
+    "ambition": 0.35,
+    "piety": 0.65,
+    "kindness": 0.55,
+    "greed": 0.25
+  },
+  "outlaw_prone": false,
+  "banner_color": 13,
+  "banner_accent": 0
+}

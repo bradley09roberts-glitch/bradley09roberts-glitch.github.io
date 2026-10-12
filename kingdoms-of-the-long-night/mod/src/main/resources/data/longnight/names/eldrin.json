@@ -1,0 +1,50 @@
+{
+  "given_male": [
+    "Aelrith", "Caelvas", "Daevrin", "Eilthas", "Faelor", "Haelis", "Ilvaen", "Ivaren", "Jaesrith", "Kaelis",
+    "Laethir", "Maelrin", "Naevis", "Oriaval", "Quaelis", "Raevas", "Saerith", "Taelvar", "Thaemis", "Uvaelin",
+    "Vaesrin", "Yllaren", "Zaelis", "Brivael", "Caeloris", "Ylvaris", "Myrrath", "Nyssar", "Paelias", "Riavel",
+    "Sevaen", "Thalirin", "Viraeth", "Lysaen", "Orrithas", "Taerys", "Meriath", "Aevandris", "Isthavel", "Saervhal",
+    "Elvaeth", "Nimvael", "Caethis", "Ilmaeren"
+  ],
+  "given_female": [
+    "Ilyra", "Saevia", "Nimaeth", "Aelyss", "Briallae", "Caelysse", "Daesira", "Eiraveth", "Faelira", "Haelia",
+    "Isvae", "Jaelith", "Kaeryss", "Liraeth", "Maeliss", "Naevra", "Oriavae", "Quaelyss", "Rhaeva", "Silissae",
+    "Taelira", "Thessae", "Uvaelle", "Vaelyra", "Yllia", "Zaessa", "Aevarae", "Caliveth", "Elysse", "Lysaelle",
+    "Myrae", "Nissaveth", "Ondrae", "Phaelia", "Rinavel", "Sariveth", "Tiriae", "Vessaril", "Yvaeth", "Ilsabeth",
+    "Aerivae", "Sivmae", "Thaliss", "Eilavae"
+  ],
+  "family": [
+    "Ilvareth", "Saevaris", "Thaelmyr", "Nyvaleth", "Oriassen", "Caelmorre", "Ysthaval", "Maervaine", "Liravel", "Faeloris",
+    "Haelvarre", "Quessaril", "Vaelithar", "Thessavel", "Aeloryn", "Iriassae", "Sivareth", "Naemoris", "Caerith", "Elvayne",
+    "Lysmaren", "Myrevael", "Ondraeth", "Phaerys", "Rhaevenne", "Saelorys", "Taervaine", "Uthaelis", "Vessarin", "Yllandrae",
+    "Aevirel", "Brialloth", "Daesmoryn", "Eilvane", "Ivaelith", "Kaelvoris", "Maethyss", "Naerith", "Orivaine", "Syvaerin",
+    "Thaevorn", "Ysmaere"
+  ],
+  "family_style": "house",
+  "patronymic_male": "",
+  "patronymic_female": "",
+  "epithets": [
+    "the Starlit", "Last of Thaevalis", "the Far-Seeing", "the Long-Remembering", "the Silent", "Leafborn", "the Unwearied", "the Dreaming", "Star-Crowned", "the Wanderer",
+    "the Pale Bough", "the Elder Voice", "Who Saw the Fall", "the Last Singer", "Thousand-Winters", "the Fading", "the Bright Arrow", "Dawn-Eyed", "the Mourner", "Keeper of Lights",
+    "the Unbowed", "of the Long Vigil", "Friend of Small Folk"
+  ],
+  "settlement_prefix": [
+    "Ael", "Cael", "Eil", "Ilva", "Iria", "Lir", "Mae", "Nyv", "Oria", "Quess",
+    "Sae", "Thae", "Ysth", "Vaer", "Lys", "Myr", "Siv", "Taer", "Ival", "Fael",
+    "Hael", "Rhae", "Nim", "Ess", "Ulva", "Aev", "Bria", "Elys", "Thal", "Yll",
+    "Sael", "Ondr"
+  ],
+  "settlement_suffix": [
+    "avel", "ith", "aeth", "ys", "orin", "essa", "ival", "iath", "elle", "areth",
+    "mae", "ess", "aris", "orra", "yss", "ivae", "althe", "aveth", "ondra", "ivel",
+    "avaine", ""
+  ],
+  "realm_patterns": [
+    "Concord of {name}", "Houses of {name}", "Starwood of {name}", "Realm of {name}",
+    "Elder Council of {name}", "Hidden Wood of {name}", "Vigil of {name}", "Glades of {name}"
+  ],
+  "camp_names": [
+    "Starfall Glade", "First Bough", "Moonwell Rest", "The Quiet Ring", "Lantern Glade", "Silverleaf Camp",
+    "Watcher's Clearing", "The Singing Spring", "Fernshade", "Hearth of Branches", "Dewlight Hollow"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "WWW",
+    "P P",
+    "PBP"
+  ],
+  "key": {
+    "W": {
+      "tag": "minecraft:wool"
+    },
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "B": {
+      "item": "minecraft:barrel"
+    }
+  },
+  "result": {
+    "id": "longnight:market_stall",
+    "count": 1
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "name": "Aszari",
+  "people": "human",
+  "scale": 1.0,
+  "lifespan": 68,
+  "description": "Sun-worshipping city builders of the dunes and red mesas; domed sandstone cities, caravanserais and great markets.",
+  "faiths": {
+    "sun": 0.85,
+    "stars": 0.1,
+    "hearth": 0.05
+  },
+  "governments": [
+    "THEOCRACY",
+    "MONARCHY",
+    "REPUBLIC"
+  ],
+  "biomes": [
+    "desert",
+    "savanna",
+    "badlands",
+    "mesa"
+  ],
+  "avoid_biomes": [
+    "snow",
+    "frozen",
+    "taiga",
+    "ocean"
+  ],
+  "bodies": [
+    "human_3",
+    "human_4",
+    "human_5",
+    "human_6"
+  ],
+  "hair_styles": [
+    "short",
+    "long",
+    "braided",
+    "topknot",
+    "beard_short",
+    "bun"
+  ],
+  "hair_colors": [
+    "#1e1712",
+    "#2a2420",
+    "#3b2a1d",
+    "#5a3a22"
+  ],
+  "cloth_colors": [
+    "#c9a35b",
+    "#b5562e",
+    "#e0d2b0",
+    "#7a3b5a",
+    "#2e6b6b",
+    "#d8b04a"
+  ],
+  "palette": {
+    "foundation": "minecraft:cut_sandstone",
+    "floor": "minecraft:smooth_sandstone",
+    "wall": "minecraft:smooth_sandstone",
+    "frame": "minecraft:cut_sandstone",
+    "roof": "minecraft:smooth_sandstone_stairs",
+    "roof_slab": "minecraft:smooth_sandstone_slab",
+    "roof_block": "minecraft:smooth_sandstone",
+    "window": "minecraft:orange_stained_glass_pane",
+    "door": "minecraft:acacia_door",
+    "light": "minecraft:lantern",
+    "fence": "minecraft:acacia_fence",
+    "gate": "minecraft:acacia_fence_gate",
+    "path": "minecraft:smooth_sandstone",
+    "bed": "minecraft:orange_bed",
+    "accent": "minecraft:orange_terracotta",
+    "chimney": "minecraft:cut_sandstone",
+    "crop": "minecraft:beetroots",
+    "log": "minecraft:acacia_log",
+    "sapling": "minecraft:acacia_sapling"
+  },
+  "roof_style": "flat",
+  "temperament": {
+    "bravery": 0.55,
+    "diligence": 0.6,
+    "sociability": 0.6,
+    "ambition": 0.6,
+    "piety": 0.75,
+    "kindness": 0.5,
+    "greed": 0.5
+  },
+  "outlaw_prone": true,
+  "banner_color": 4,
+  "banner_accent": 1
+}

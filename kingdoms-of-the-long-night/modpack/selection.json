@@ -1,0 +1,486 @@
+{
+  "_comment": "Hand-maintained input. tools/pack/resolve_manifest.py turns this into manifest.json (exact versions, hashes, URLs, licences) by querying the Modrinth API. Edit this file, never manifest.json by hand.",
+  "pack": {
+    "id": "kingdoms-of-the-long-night",
+    "name": "Kingdoms of the Long Night",
+    "summary": "Hardcore-survival fantasy kingdoms on NeoForge 1.21.1. Vast Tectonic/Terralith lands, medieval building, Ars Nouveau magic, and the longnight core mod that owns every person in the world.",
+    "minecraft": "1.21.1",
+    "loader": "neoforge",
+    "loader_version": "21.1.259"
+  },
+  "presets": {
+    "performance": {
+      "title": "Performance",
+      "description": "Default preset. No shaders, no Distant Horizons. Recommended 6 GB RAM.",
+      "overrides": [
+        "common",
+        "performance"
+      ]
+    },
+    "rich": {
+      "title": "Rich",
+      "description": "Adds Iris + Complementary Reimagined shaders, Distant Horizons and Sound Physics Remastered. Recommended 8 GB RAM and a mid/high-end GPU.",
+      "overrides": [
+        "common",
+        "rich"
+      ]
+    }
+  },
+  "env_policy": "client is always 'required' (singleplayer runs an integrated server, so world-gen/content mods are needed on the client too). server is 'unsupported' when the Modrinth project says server_side=unsupported, otherwise 'required', unless the entry sets server_env explicitly. Explicit server_env: 'optional' for mods that merely add extras when also on a dedicated server (maps, Jade, EMI, AppleSkin, Distant Horizons); 'unsupported' for Sound Physics (client feature).",
+  "mods": [
+    {
+      "slug": "sodium",
+      "category": "performance",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Modern chunk renderer; the single biggest client FPS win."
+    },
+    {
+      "slug": "lithium",
+      "category": "performance",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Server/game-logic optimisations (AI, physics, chunk ticking) without changing vanilla behaviour."
+    },
+    {
+      "slug": "ferrite-core",
+      "category": "performance",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Cuts memory use (blockstate/model dedup); important with 40 mods on 6 GB."
+    },
+    {
+      "slug": "modernfix",
+      "category": "performance",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Faster launch, lower memory, many bug fixes for modded NeoForge."
+    },
+    {
+      "slug": "entityculling",
+      "category": "performance",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Skips rendering hidden entities/block entities (helps in dense settlements)."
+    },
+    {
+      "slug": "immediatelyfast",
+      "category": "performance",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Speeds up immediate-mode rendering (HUD, text, maps, signs)."
+    },
+    {
+      "slug": "ambientsounds",
+      "category": "atmosphere",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Biome/time/weather ambience (wind, night insects, caves) for a lonely long-night mood."
+    },
+    {
+      "slug": "particle-rain",
+      "category": "atmosphere",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Particle rain/snow and storm fog; cheap, strong weather atmosphere."
+    },
+    {
+      "slug": "sound-physics-remastered",
+      "category": "atmosphere",
+      "presets": [
+        "rich"
+      ],
+      "reason": "Reverb/occlusion for caves and halls. Rich preset only: costs CPU and the newest NeoForge 1.21.1 build is beta (1.5.x are alpha).",
+      "server_env": "unsupported"
+    },
+    {
+      "slug": "tectonic",
+      "category": "worldgen",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Continent-scale terrain, real mountain ranges and rivers: the 'long journey' Middle-earth scale. Ships built-in Terralith compatibility."
+    },
+    {
+      "slug": "terralith",
+      "category": "worldgen",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "~100 vanilla-block biomes; Tectonic's documented companion (Tectonic ships the Terralith compat). Terralith's own structure sets - including 'fortified villages' full of villagers - are switched off in config/terralith.json (custom_structures=false) because longnight owns all NPCs."
+    },
+    {
+      "slug": "yungs-better-dungeons",
+      "category": "worldgen-structures",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Exploration: catacombs and fortresses with loot; no NPCs."
+    },
+    {
+      "slug": "yungs-better-mineshafts",
+      "category": "worldgen-structures",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Exploration: varied, atmospheric abandoned mines; no NPCs."
+    },
+    {
+      "slug": "yungs-better-strongholds",
+      "category": "worldgen-structures",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Exploration: a real underground fortress; no NPCs."
+    },
+    {
+      "slug": "yungs-better-desert-temples",
+      "category": "worldgen-structures",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Exploration: ruined temples worth raiding; no NPCs."
+    },
+    {
+      "slug": "macaws-roofs",
+      "category": "building",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Pitched/attic/thatch-style roofs: the core of medieval silhouettes."
+    },
+    {
+      "slug": "macaws-windows",
+      "category": "building",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Arrow slits, gothic and parapet windows, shutters."
+    },
+    {
+      "slug": "macaws-doors",
+      "category": "building",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Wooden, barn, portcullis-style and stable doors."
+    },
+    {
+      "slug": "macaws-bridges",
+      "category": "building",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Rope/log/stone bridges for roads across Tectonic rivers and gorges."
+    },
+    {
+      "slug": "macaws-fences-and-walls",
+      "category": "building",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Castle walls, palisades and hedges for settlement defences."
+    },
+    {
+      "slug": "macaws-paths-and-pavings",
+      "category": "building",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Cobbled roads and paving between settlements."
+    },
+    {
+      "slug": "supplementaries",
+      "category": "building",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pin": "1.21.1-3.9.9",
+      "pin_reason": "4.0.0/4.0.1 were released hours ago (11 Oct 2026, new major, hotfix after 90 min); 3.9.9 is the last month-old 3.x release. Re-evaluate 4.0.x in a later pack update.",
+      "reason": "Medieval-feeling decor and utility (sacks, jars, signposts, flags, lanterns, hourglass, ropes). Its Red Merchant trader is disabled by our config because longnight owns all NPCs."
+    },
+    {
+      "slug": "handcrafted",
+      "category": "building",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Rustic furniture (benches, tables, shelves, cupboards) for halls and homes."
+    },
+    {
+      "slug": "farmers-delight",
+      "category": "food",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Cooking, crops and preserved food: deeper hardcore food loop; official NeoForge 1.21.1 build."
+    },
+    {
+      "slug": "ars-nouveau",
+      "category": "magic",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "The single player-facing arcane path (glyph spellcrafting, rituals). Chosen over Iron's Spells: 2 external deps (GeckoLib, Curios) vs 4 incl. a beta playerAnimator + Iron's Lib, and no humanoid NPC traders (Iron's adds Priest/Apothecarist/Wandering Magician/Pyromancer etc.)."
+    },
+    {
+      "slug": "geckolib",
+      "category": "library",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Animation library required by Ars Nouveau (declared in its neoforge.mods.toml, NOT declared on Modrinth, so listed explicitly)."
+    },
+    {
+      "slug": "curios",
+      "category": "library",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Accessory-slot API required by Ars Nouveau (declared in its neoforge.mods.toml, NOT declared on Modrinth, so listed explicitly)."
+    },
+    {
+      "slug": "emi",
+      "category": "qol",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Recipe viewer. Chosen over JEI: release channel on 1.21.1 (JEI 1.21.1 builds are beta and now need MezzConfig), no deps; Farmer's Delight and Ars Nouveau ship EMI plugins.",
+      "server_env": "optional"
+    },
+    {
+      "slug": "jade",
+      "category": "qol",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "What-am-I-looking-at tooltip (blocks, mobs, growth stages).",
+      "server_env": "optional"
+    },
+    {
+      "slug": "appleskin",
+      "category": "qol",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Shows hunger/saturation values: essential for a hardcore food loop.",
+      "server_env": "optional"
+    },
+    {
+      "slug": "xaeros-minimap",
+      "category": "qol",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Minimap + waypoints for continent-scale travel (Fair-Play edition has no NeoForge 1.21.1 build).",
+      "server_env": "optional"
+    },
+    {
+      "slug": "xaeros-world-map",
+      "category": "qol",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Full-screen world map that pairs with the minimap.",
+      "server_env": "optional"
+    },
+    {
+      "slug": "mouse-tweaks",
+      "category": "qol",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "reason": "Inventory drag/scroll handling; pure client QoL."
+    },
+    {
+      "slug": "iris",
+      "category": "visual",
+      "presets": [
+        "rich"
+      ],
+      "pin": "1.8.14-beta.1+1.21.1-neoforge",
+      "pin_reason": "Only Iris build for 1.21.1 NeoForge that targets Sodium 0.8 (the newest release, 1.8.12, targets Sodium 0.6 and Supplementaries declares Sodium < 0.8.12-beta.1 incompatible).",
+      "reason": "Shader loader (works on top of Sodium)."
+    },
+    {
+      "slug": "distanthorizons",
+      "category": "visual",
+      "presets": [
+        "rich"
+      ],
+      "server_env": "optional",
+      "reason": "Level-of-detail terrain far beyond render distance: see mountain ranges days away. Config ships a moderate quality profile."
+    },
+    {
+      "slug": "complementary-reimagined",
+      "type": "shader",
+      "category": "visual",
+      "presets": [
+        "rich"
+      ],
+      "reason": "Shader pack (Complementary License 1.7: modpack use allowed when added via Modrinth/CurseForge systems, unmodified, credited). Enabled by default in the rich preset."
+    }
+  ],
+  "rejected": [
+    {
+      "name": "MineColonies",
+      "slug": null,
+      "reason": "Adds its own colonists/NPC society; longnight owns all NPCs (decision D2). (Its official builds are on CurseForge; the Modrinth 'minecolonies' project is an old 1.18.2 upload with no NeoForge 1.21.1 build.)"
+    },
+    {
+      "name": "Millénaire",
+      "slug": null,
+      "reason": "Adds NPC villages and cultures; longnight owns all NPCs (D2). (Also not on Modrinth for NeoForge 1.21.1.)"
+    },
+    {
+      "name": "Guard Villagers",
+      "slug": "guard-villagers",
+      "reason": "Adds NPC guards; longnight owns all NPCs (D2)."
+    },
+    {
+      "name": "Villager Recruits / Recruits & Workers",
+      "slug": "villager-recruits",
+      "reason": "Recruitable NPC armies; longnight owns all NPCs (D2). (No NeoForge 1.21.1 build on Modrinth either.)"
+    },
+    {
+      "name": "Towns and Towers",
+      "slug": "towns-and-towers",
+      "reason": "Adds villages/outposts with villager NPCs; settlements and people come from longnight (D2/D3)."
+    },
+    {
+      "name": "ChoiceTheorem's Overhauled Village (CTOV)",
+      "slug": "ct-overhaul-village",
+      "reason": "Village overhaul; villages are disabled and settlements come from longnight (D3)."
+    },
+    {
+      "name": "Easy NPC",
+      "slug": "easy-npc",
+      "reason": "Generic NPC framework; longnight owns all NPCs (D2)."
+    },
+    {
+      "name": "Human Companions",
+      "slug": null,
+      "reason": "Recruitable human NPCs; longnight owns all NPCs (D2). (Not on Modrinth for NeoForge 1.21.1.)"
+    },
+    {
+      "name": "Minecraft Comes Alive (MCA Reborn)",
+      "slug": "minecraft-comes-alive-reborn",
+      "reason": "Replaces villagers with a full NPC society (families, marriage); directly conflicts with longnight (D2). (Its NeoForge 1.21.1 file is a beta despite the 'release' tag.)"
+    },
+    {
+      "name": "Terralith fortified villages (structure set terralith:rare_village)",
+      "slug": null,
+      "reason": "Terralith itself is kept, but it ships fortified villages full of villagers. The pack disables Terralith's custom structures (config/terralith.json custom_structures=false) until longnight overrides data/terralith/worldgen/structure_set/rare_village.json itself; see VERIFICATION.md."
+    },
+    {
+      "name": "Iron's Spells 'n Spellbooks",
+      "slug": "irons-spells-n-spellbooks",
+      "reason": "Magic: only one magic mod; Ars Nouveau chosen (fewer/lighter deps, no beta deps, no humanoid NPC traders such as Priest/Apothecarist/Wandering Magician)."
+    },
+    {
+      "name": "IceAndFire Community Edition",
+      "slug": "iceandfire-ce",
+      "reason": "Exists for NeoForge 1.21.1 (2.0 release 18 Jul 2026, 2.1-beta.1 the same day) but not clearly stable: brand-new major line whose own page warns that version swaps corrupt saves (dangerous for a long hardcore world), heavy world-gen (roosts, caves, graveyards) and terrain-griefing dragons, plus 2 extra libs (Uranus, Jupiter). Dragons: not available as clearly stable - longnight will provide later."
+    },
+    {
+      "name": "Dragon Mounts Remastered",
+      "slug": "dmr",
+      "reason": "Available (1.9.2) but PolyForm-Noncommercial, last update Sep 2025, tame-a-pet-dragon design rather than world threat; longnight will provide dragons later."
+    },
+    {
+      "name": "Ice and Fire (original)",
+      "slug": "ice-and-fire-dragons",
+      "reason": "No NeoForge 1.21.1 version on Modrinth."
+    },
+    {
+      "name": "Noisium",
+      "slug": "noisium",
+      "reason": "Last NeoForge 1.21.1 build Aug 2024 (project no longer actively updated for this branch) and it patches noise generation that Tectonic also reshapes; not worth the world-gen risk."
+    },
+    {
+      "name": "C2ME (NeoForge)",
+      "slug": "c2me-neoforge",
+      "reason": "Only alpha builds for NeoForge 1.21.1."
+    },
+    {
+      "name": "Visuality",
+      "slug": "visuality",
+      "reason": "No NeoForge 1.21.1 version on Modrinth."
+    },
+    {
+      "name": "Falling Leaves",
+      "slug": "fallingleaves",
+      "reason": "No NeoForge 1.21.1 version on Modrinth. (A different 'falling-leaves' project exists: All-Rights-Reserved, ~8k downloads, unknown author - not trusted.)"
+    },
+    {
+      "name": "JEI",
+      "slug": "jei",
+      "reason": "EMI chosen instead (JEI's NeoForge 1.21.1 builds are beta and now require MezzConfig)."
+    },
+    {
+      "name": "JourneyMap",
+      "slug": "journeymap",
+      "reason": "Xaero's Minimap + World Map chosen instead (lighter, vanilla look)."
+    },
+    {
+      "name": "Xaero's Minimap (Fair-Play)",
+      "slug": "xaeros-minimap-fair",
+      "reason": "No NeoForge 1.21.1 build on Modrinth; full edition used."
+    },
+    {
+      "name": "Controlling + Searchables",
+      "slug": "controlling",
+      "reason": "Optional keybind-search QoL; cut to keep the pack at <=40 mods."
+    },
+    {
+      "name": "Macaw's Furniture",
+      "slug": "macaws-furniture",
+      "reason": "Handcrafted chosen for furniture (more rustic); one furniture mod is enough."
+    },
+    {
+      "name": "Complementary Unbound / BSL / Bliss",
+      "slug": null,
+      "reason": "One shader is enough: BSL and Bliss are All-Rights-Reserved with no explicit modpack grant; Complementary Reimagined has an explicit modpack grant and is lighter than Unbound."
+    }
+  ]
+}

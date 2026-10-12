@@ -1,0 +1,1619 @@
+{
+  "schema": 1,
+  "pack": {
+    "id": "kingdoms-of-the-long-night",
+    "name": "Kingdoms of the Long Night",
+    "summary": "Hardcore-survival fantasy kingdoms on NeoForge 1.21.1. Vast Tectonic/Terralith lands, medieval building, Ars Nouveau magic, and the longnight core mod that owns every person in the world.",
+    "minecraft": "1.21.1",
+    "loader": "neoforge",
+    "loader_version": "21.1.259"
+  },
+  "presets": {
+    "performance": {
+      "title": "Performance",
+      "description": "Default preset. No shaders, no Distant Horizons. Recommended 6 GB RAM.",
+      "overrides": [
+        "common",
+        "performance"
+      ]
+    },
+    "rich": {
+      "title": "Rich",
+      "description": "Adds Iris + Complementary Reimagined shaders, Distant Horizons and Sound Physics Remastered. Recommended 8 GB RAM and a mid/high-end GPU.",
+      "overrides": [
+        "common",
+        "rich"
+      ]
+    }
+  },
+  "resolved_at": "2026-10-12T23:00:05Z",
+  "resolver": "tools/pack/resolve_manifest.py (Modrinth API v2; newest release, else beta; never alpha; pins honoured)",
+  "warnings": [],
+  "files": [
+    {
+      "slug": "ambientsounds",
+      "title": "AmbientSounds",
+      "project_id": "fM515JnW",
+      "project_type": "mod",
+      "version_id": "P48d3fOf",
+      "version_number": "6.3.10",
+      "version_type": "release",
+      "date_published": "2026-10-08T14:29:21.434558Z",
+      "filename": "AmbientSounds_NEOFORGE_v6.3.10_mc1.21.1.jar",
+      "path": "mods/AmbientSounds_NEOFORGE_v6.3.10_mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/fM515JnW/versions/P48d3fOf/AmbientSounds_NEOFORGE_v6.3.10_mc1.21.1.jar",
+      "sha1": "aaf9b0a6e193aef8e0c57a25211a6ef02da1602e",
+      "sha512": "4cc8e10a28f346cd4d08831a95f0225473f1377777cbc490300315d99a8cdb35f42135c388d5d041c633e354fc1bba985c59f6ac4a52cb9c2f947f904090cdd9",
+      "size": 84814817,
+      "license": "LGPL-3.0-only",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "unsupported",
+      "env": {
+        "client": "required",
+        "server": "unsupported"
+      },
+      "required_deps": [
+        "creativecore"
+      ],
+      "required_by": [],
+      "category": "atmosphere",
+      "reason": "Biome/time/weather ambience (wind, night insects, caves) for a lonely long-night mood.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/ambientsounds"
+    },
+    {
+      "slug": "appleskin",
+      "title": "AppleSkin",
+      "project_id": "EsAfCjCV",
+      "project_type": "mod",
+      "version_id": "uAKA6Laj",
+      "version_number": "3.0.9+mc1.21",
+      "version_type": "release",
+      "date_published": "2026-04-01T04:50:54.655459Z",
+      "filename": "appleskin-neoforge-mc1.21-3.0.9.jar",
+      "path": "mods/appleskin-neoforge-mc1.21-3.0.9.jar",
+      "url": "https://cdn.modrinth.com/data/EsAfCjCV/versions/uAKA6Laj/appleskin-neoforge-mc1.21-3.0.9.jar",
+      "sha1": "81cf0e668f991f83ac8820c386fbd6c9c3602246",
+      "sha512": "f4ea46273e407334b63e262e2555c9a8204f7b5e60f23f272fbaa83ad9e88800e0ee186aca840710df2dbe0a18b37758695fef2ae1a902c10b3706e3de772937",
+      "size": 75804,
+      "license": "Unlicense",
+      "license_url": null,
+      "project_client_side": "optional",
+      "project_server_side": "optional",
+      "env": {
+        "client": "required",
+        "server": "optional"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "qol",
+      "reason": "Shows hunger/saturation values: essential for a hardcore food loop.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/appleskin"
+    },
+    {
+      "slug": "ars-nouveau",
+      "title": "Ars Nouveau",
+      "project_id": "TKB6INcv",
+      "project_type": "mod",
+      "version_id": "yWDnir1o",
+      "version_number": "5.13.3",
+      "version_type": "release",
+      "date_published": "2026-10-03T21:59:44.363453Z",
+      "filename": "ars_nouveau-1.21.1-5.13.3.jar",
+      "path": "mods/ars_nouveau-1.21.1-5.13.3.jar",
+      "url": "https://cdn.modrinth.com/data/TKB6INcv/versions/yWDnir1o/ars_nouveau-1.21.1-5.13.3.jar",
+      "sha1": "541b3286d187deeb9a1297a509d0d3539d8af0f6",
+      "sha512": "30f188cfc932bd58c95740488732df7e92d98e7345e271b1a223e41a43fc3dd52284d0ff07fc3e8a95e914082f899394eff3a0f37c174d317e6e37fb68b083df",
+      "size": 19841105,
+      "license": "LicenseRef-All-Rights-Reserved",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "magic",
+      "reason": "The single player-facing arcane path (glyph spellcrafting, rituals). Chosen over Iron's Spells: 2 external deps (GeckoLib, Curios) vs 4 incl. a beta playerAnimator + Iron's Lib, and no humanoid NPC traders (Iron's adds Priest/Apothecarist/Wandering Magician/Pyromancer etc.).",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/ars-nouveau"
+    },
+    {
+      "slug": "creativecore",
+      "title": "CreativeCore",
+      "project_id": "OsZiaDHq",
+      "project_type": "mod",
+      "version_id": "vRMtFt35",
+      "version_number": "2.13.51",
+      "version_type": "release",
+      "date_published": "2026-10-09T13:48:39.104547Z",
+      "filename": "CreativeCore_NEOFORGE_v2.13.51_mc1.21.1.jar",
+      "path": "mods/CreativeCore_NEOFORGE_v2.13.51_mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/OsZiaDHq/versions/vRMtFt35/CreativeCore_NEOFORGE_v2.13.51_mc1.21.1.jar",
+      "sha1": "eb2242b3d4442ad4017ba0624a7f9588e778b157",
+      "sha512": "864301fa1229511203fc291e9b683db5af3cb4aa4faed0ef1eb54112491b3c97f9b5006b42d41fb2c169f7fc93ad13459f5079c6ffc73dc4b145ee61b7687997",
+      "size": 1236490,
+      "license": "LGPL-3.0-only",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "optional",
+      "env": {
+        "client": "required",
+        "server": "unsupported"
+      },
+      "required_deps": [],
+      "required_by": [
+        "ambientsounds"
+      ],
+      "category": "library",
+      "reason": "Required library for ambientsounds.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/creativecore"
+    },
+    {
+      "slug": "curios",
+      "title": "Curios API",
+      "project_id": "vvuO3ImH",
+      "project_type": "mod",
+      "version_id": "yohfFbgD",
+      "version_number": "9.5.1+1.21.1",
+      "version_type": "release",
+      "date_published": "2025-05-14T13:34:47.415840Z",
+      "filename": "curios-neoforge-9.5.1+1.21.1.jar",
+      "path": "mods/curios-neoforge-9.5.1+1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/vvuO3ImH/versions/yohfFbgD/curios-neoforge-9.5.1%2B1.21.1.jar",
+      "sha1": "418fcd42e3a7844c9bdc71c9b6401fdb3894e0c4",
+      "sha512": "5981a267686b744e7e3c227f78cbcd5267c14ac6979a28e814695f4589273998563147207fef4a5cdb7cdbdc39797cd95d9e4abadb55869f18e02a38d0654ae5",
+      "size": 410690,
+      "license": "LGPL-3.0-or-later",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "library",
+      "reason": "Accessory-slot API required by Ars Nouveau (declared in its neoforge.mods.toml, NOT declared on Modrinth, so listed explicitly).",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/curios"
+    },
+    {
+      "slug": "distanthorizons",
+      "title": "Distant Horizons",
+      "project_id": "uCdwusMi",
+      "project_type": "mod",
+      "version_id": "9w34y8ai",
+      "version_number": "3.3.3-1.21.1",
+      "version_type": "release",
+      "date_published": "2026-09-29T00:04:31.528515Z",
+      "filename": "DistantHorizons-3.3.3-1.21.1-fabric-neoforge.jar",
+      "path": "mods/DistantHorizons-3.3.3-1.21.1-fabric-neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/uCdwusMi/versions/9w34y8ai/DistantHorizons-3.3.3-1.21.1-fabric-neoforge.jar",
+      "sha1": "4357b4d19fab818780c94f0e43dad1cc931634b2",
+      "sha512": "d14b32d3fd143a06514d6ad388eee11e9d657c84e1a937aaf8d033b1137fb43ef8b05cff1011a994cc42f3106823c51234f8bc18d72bb05bc317a20ea83c50ed",
+      "size": 28289212,
+      "license": "LGPL-3.0-only",
+      "license_url": null,
+      "project_client_side": "optional",
+      "project_server_side": "optional",
+      "env": {
+        "client": "required",
+        "server": "optional"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "visual",
+      "reason": "Level-of-detail terrain far beyond render distance: see mountain ranges days away. Config ships a moderate quality profile.",
+      "presets": [
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/distanthorizons"
+    },
+    {
+      "slug": "emi",
+      "title": "EMI",
+      "project_id": "fRiHVvU7",
+      "project_type": "mod",
+      "version_id": "5sIPA1To",
+      "version_number": "1.1.24+1.21.1+neoforge",
+      "version_type": "release",
+      "date_published": "2026-05-13T06:21:14.878169Z",
+      "filename": "emi-1.1.24+1.21.1+neoforge.jar",
+      "path": "mods/emi-1.1.24+1.21.1+neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/fRiHVvU7/versions/5sIPA1To/emi-1.1.24%2B1.21.1%2Bneoforge.jar",
+      "sha1": "3fd494b37027dfbc7f78414d7cbf251c9eb6738a",
+      "sha512": "f4c45ed686fe617311d6debadcb6ace5963e66f8cfe0cfed398231f081f87407070efc7a73c8b695d158f1d87a97180737b9107a46771e77df2bc9a7dc715ebd",
+      "size": 1111538,
+      "license": "MIT",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "optional",
+      "env": {
+        "client": "required",
+        "server": "optional"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "qol",
+      "reason": "Recipe viewer. Chosen over JEI: release channel on 1.21.1 (JEI 1.21.1 builds are beta and now need MezzConfig), no deps; Farmer's Delight and Ars Nouveau ship EMI plugins.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/emi"
+    },
+    {
+      "slug": "entityculling",
+      "title": "Entity Culling",
+      "project_id": "NNAgCjsB",
+      "project_type": "mod",
+      "version_id": "eieYbWYb",
+      "version_number": "1.11.3",
+      "version_type": "release",
+      "date_published": "2026-10-08T16:52:03.416509Z",
+      "filename": "entityculling-neoforge-1.11.3-mc1.21.1.jar",
+      "path": "mods/entityculling-neoforge-1.11.3-mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/NNAgCjsB/versions/eieYbWYb/entityculling-neoforge-1.11.3-mc1.21.1.jar",
+      "sha1": "f122f84f329793675b2625d51b77f990d7de3579",
+      "sha512": "93e83dd690b91d610be29451b34836c9daa7e08bd952f88ffa07c62d8774bbaac2ff0c6768d2cbf1b14f47d0b86f98cef9fd341e0d29bd37207eaf4aa2abea63",
+      "size": 1510075,
+      "license": "LicenseRef-tr7zw-Protective-License",
+      "license_url": "https://github.com/tr7zw/EntityCulling/blob/1.18/LICENSE-EntityCulling",
+      "project_client_side": "required",
+      "project_server_side": "unsupported",
+      "env": {
+        "client": "required",
+        "server": "unsupported"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "performance",
+      "reason": "Skips rendering hidden entities/block entities (helps in dense settlements).",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/entityculling"
+    },
+    {
+      "slug": "farmers-delight",
+      "title": "Farmer's Delight",
+      "project_id": "R2OftAxM",
+      "project_type": "mod",
+      "version_id": "XTVZDOol",
+      "version_number": "1.21.1-1.3.4",
+      "version_type": "release",
+      "date_published": "2026-08-29T23:21:15.190939Z",
+      "filename": "FarmersDelight-1.21.1-1.3.4.jar",
+      "path": "mods/FarmersDelight-1.21.1-1.3.4.jar",
+      "url": "https://cdn.modrinth.com/data/R2OftAxM/versions/XTVZDOol/FarmersDelight-1.21.1-1.3.4.jar",
+      "sha1": "27675ddfcb8cc37e6ea1ab6c15051c7949d94657",
+      "sha512": "1f6f8796469f747cff36f477b4f589a3d69613882399f9ee7f86db36c7bca9aa4828731f43db15dc6c7f5a4c1bbe3d4092a232e8cef010b09cec0581848fda90",
+      "size": 3160490,
+      "license": "MIT",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "food",
+      "reason": "Cooking, crops and preserved food: deeper hardcore food loop; official NeoForge 1.21.1 build.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/farmers-delight"
+    },
+    {
+      "slug": "ferrite-core",
+      "title": "FerriteCore",
+      "project_id": "uXXizFIs",
+      "project_type": "mod",
+      "version_id": "x7kQWVju",
+      "version_number": "7.0.3-neoforge",
+      "version_type": "release",
+      "date_published": "2026-01-25T12:59:45.271417Z",
+      "filename": "ferritecore-7.0.3-neoforge.jar",
+      "path": "mods/ferritecore-7.0.3-neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/uXXizFIs/versions/x7kQWVju/ferritecore-7.0.3-neoforge.jar",
+      "sha1": "9563692efb708b6b568df27a01ec52f6311928ef",
+      "sha512": "19af89a2075bb10a63884fa853ebf84b02c79dc3242430ecdad056fd764fdcde367a7303276b329df01b0736e2ef264c5d80c7dc92c6aebd244f556a230bb417",
+      "size": 121559,
+      "license": "MIT",
+      "license_url": null,
+      "project_client_side": "optional",
+      "project_server_side": "optional",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "performance",
+      "reason": "Cuts memory use (blockstate/model dedup); important with 40 mods on 6 GB.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/ferrite-core"
+    },
+    {
+      "slug": "geckolib",
+      "title": "Geckolib",
+      "project_id": "8BmcQJ2H",
+      "project_type": "mod",
+      "version_id": "Grwn5rUB",
+      "version_number": "4.9.3",
+      "version_type": "release",
+      "date_published": "2026-09-16T07:34:19.892008Z",
+      "filename": "geckolib-neoforge-1.21.1-4.9.3.jar",
+      "path": "mods/geckolib-neoforge-1.21.1-4.9.3.jar",
+      "url": "https://cdn.modrinth.com/data/8BmcQJ2H/versions/Grwn5rUB/geckolib-neoforge-1.21.1-4.9.3.jar",
+      "sha1": "5cfe835472a5c5457ae9ac192d9d7b317454d5ac",
+      "sha512": "8dfa5f8c57224a5e34e5098367ea9819ca6dc9c11357cd3062c16da3455c8bd1a483098af7383debc4b9ce8e4d7ab3fdc799b415644eb829da83eb72a7335dfd",
+      "size": 634531,
+      "license": "MIT",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "optional",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "library",
+      "reason": "Animation library required by Ars Nouveau (declared in its neoforge.mods.toml, NOT declared on Modrinth, so listed explicitly).",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/geckolib"
+    },
+    {
+      "slug": "handcrafted",
+      "title": "Handcrafted",
+      "project_id": "pJmCFF0p",
+      "project_type": "mod",
+      "version_id": "JfqnpP2Z",
+      "version_number": "4.0.3",
+      "version_type": "release",
+      "date_published": "2025-03-22T00:24:01.545752Z",
+      "filename": "handcrafted-neoforge-1.21.1-4.0.3.jar",
+      "path": "mods/handcrafted-neoforge-1.21.1-4.0.3.jar",
+      "url": "https://cdn.modrinth.com/data/pJmCFF0p/versions/JfqnpP2Z/handcrafted-neoforge-1.21.1-4.0.3.jar",
+      "sha1": "8ecd27f1d66f9b742cfae3c8ffa773765f574b52",
+      "sha512": "4ff5fb2aa9582b886d03f647fe9b8c12a828d29a1787e9c9b463be18192ea798e6a4ac83479623042791bce0bacbf6e3e2c2e9ef086640aeeb6970d3404e7ee4",
+      "size": 7132842,
+      "license": "LicenseRef-Terrarium-Licence",
+      "license_url": "https://github.com/terrarium-earth/Handcrafted/blob/1.19.2/LICENSE",
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [
+        "resourceful-lib"
+      ],
+      "required_by": [],
+      "category": "building",
+      "reason": "Rustic furniture (benches, tables, shelves, cupboards) for halls and homes.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/handcrafted"
+    },
+    {
+      "slug": "immediatelyfast",
+      "title": "ImmediatelyFast",
+      "project_id": "5ZwdcRci",
+      "project_type": "mod",
+      "version_id": "OUpXxw4n",
+      "version_number": "1.6.14+1.21.1-neoforge",
+      "version_type": "release",
+      "date_published": "2026-09-13T22:28:12.689713Z",
+      "filename": "ImmediatelyFast-NeoForge-1.6.14+1.21.1.jar",
+      "path": "mods/ImmediatelyFast-NeoForge-1.6.14+1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/5ZwdcRci/versions/OUpXxw4n/ImmediatelyFast-NeoForge-1.6.14%2B1.21.1.jar",
+      "sha1": "fee59af2f39c66d09c4c09f441c799e76af70f97",
+      "sha512": "7d1c2e6ce306f4bb9aa155f64ba87732dc2443d57fde249467a99e0ed90fec89a706252888b97f882efbc55d6044971519db704125f27ae53cd9ae40424f9b2c",
+      "size": 365195,
+      "license": "LGPL-3.0-or-later",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "unsupported",
+      "env": {
+        "client": "required",
+        "server": "unsupported"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "performance",
+      "reason": "Speeds up immediate-mode rendering (HUD, text, maps, signs).",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/immediatelyfast"
+    },
+    {
+      "slug": "iris",
+      "title": "Iris Shaders",
+      "project_id": "YL57xq9U",
+      "project_type": "mod",
+      "version_id": "KduFYu4t",
+      "version_number": "1.8.14-beta.1+1.21.1-neoforge",
+      "version_type": "beta",
+      "date_published": "2026-06-13T15:57:14.116693Z",
+      "filename": "iris-neoforge-1.8.14-beta.1+mc1.21.1.jar",
+      "path": "mods/iris-neoforge-1.8.14-beta.1+mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/YL57xq9U/versions/KduFYu4t/iris-neoforge-1.8.14-beta.1%2Bmc1.21.1.jar",
+      "sha1": "1bd129cf7bce65d6b1c0543045f0620c98a0f885",
+      "sha512": "33fddb430e16222902eac75b8b3d57c381b0f3cc729f3b56c4628df12ca108f23a0b11e2feb167923d6d14d1fc7e8ee1a977ec421b19d1951bdca74c4092b9c5",
+      "size": 2540723,
+      "license": "LGPL-3.0-only",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "unsupported",
+      "env": {
+        "client": "required",
+        "server": "unsupported"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "visual",
+      "reason": "Shader loader (works on top of Sodium).",
+      "presets": [
+        "rich"
+      ],
+      "pinned": true,
+      "pin_reason": "Only Iris build for 1.21.1 NeoForge that targets Sodium 0.8 (the newest release, 1.8.12, targets Sodium 0.6 and Supplementaries declares Sodium < 0.8.12-beta.1 incompatible).",
+      "homepage": "https://modrinth.com/mod/iris"
+    },
+    {
+      "slug": "jade",
+      "title": "Jade 🔍",
+      "project_id": "nvQzSEkH",
+      "project_type": "mod",
+      "version_id": "eYz2YBGT",
+      "version_number": "15.10.6+neoforge",
+      "version_type": "release",
+      "date_published": "2026-08-06T23:11:55.577664Z",
+      "filename": "Jade-1.21.1-NeoForge-15.10.6.jar",
+      "path": "mods/Jade-1.21.1-NeoForge-15.10.6.jar",
+      "url": "https://cdn.modrinth.com/data/nvQzSEkH/versions/eYz2YBGT/Jade-1.21.1-NeoForge-15.10.6.jar",
+      "sha1": "88ee316e68900080b017f60c12162e2731924cf8",
+      "sha512": "dad9755dce8d85d914fc4df2baa0211f13e5839a71c1925fdd01f69081a95e30a2934e6273f8b01f0169adebe7a9dae57a8d904de0c4cb36dc17369bb474f0f2",
+      "size": 726853,
+      "license": "CC-BY-NC-SA-4.0",
+      "license_url": null,
+      "project_client_side": "optional",
+      "project_server_side": "optional",
+      "env": {
+        "client": "required",
+        "server": "optional"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "qol",
+      "reason": "What-am-I-looking-at tooltip (blocks, mobs, growth stages).",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/jade"
+    },
+    {
+      "slug": "lithium",
+      "title": "Lithium",
+      "project_id": "gvQqBUqZ",
+      "project_type": "mod",
+      "version_id": "DDUrRVCA",
+      "version_number": "mc1.21.1-0.15.4-neoforge",
+      "version_type": "release",
+      "date_published": "2026-06-27T17:11:51.285886Z",
+      "filename": "lithium-neoforge-0.15.4+mc1.21.1.jar",
+      "path": "mods/lithium-neoforge-0.15.4+mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/gvQqBUqZ/versions/DDUrRVCA/lithium-neoforge-0.15.4%2Bmc1.21.1.jar",
+      "sha1": "97212e45c963730bbfc7c44780df99317814c21b",
+      "sha512": "2735da2088b88a8bdcd4ad02a2b6fffbfd3925557cefd4fa54b5477dfb9e582ea7f521300c060f57dff1325dd21bff276b7333363ad3371ed6893e3de9eca9cd",
+      "size": 774220,
+      "license": "LGPL-3.0-only",
+      "license_url": null,
+      "project_client_side": "optional",
+      "project_server_side": "optional",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "performance",
+      "reason": "Server/game-logic optimisations (AI, physics, chunk ticking) without changing vanilla behaviour.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/lithium"
+    },
+    {
+      "slug": "lithostitched",
+      "title": "Lithostitched",
+      "project_id": "XaDC71GB",
+      "project_type": "mod",
+      "version_id": "sPmtDq1X",
+      "version_number": "1.8.0-neoforge-21.1",
+      "version_type": "release",
+      "date_published": "2026-09-22T03:18:49.456663Z",
+      "filename": "lithostitched-1.8.0-neoforge-21.1.jar",
+      "path": "mods/lithostitched-1.8.0-neoforge-21.1.jar",
+      "url": "https://cdn.modrinth.com/data/XaDC71GB/versions/sPmtDq1X/lithostitched-1.8.0-neoforge-21.1.jar",
+      "sha1": "fe7eb612a0fa0c41ce94d914162d298755bb25a3",
+      "sha512": "0ba80383039270dec739f669fe936d091b87027c350972c88085729333e73e723e0c722d734c0592c08ffd6c5a21c16099f2e54cf7cfbcbd3061f5e3cbd62cb4",
+      "size": 979783,
+      "license": "MIT",
+      "license_url": null,
+      "project_client_side": "unsupported",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [
+        "tectonic",
+        "terralith"
+      ],
+      "category": "library",
+      "reason": "Required library for tectonic, terralith.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/lithostitched"
+    },
+    {
+      "slug": "macaws-bridges",
+      "title": "Macaw's Bridges",
+      "project_id": "GURcjz8O",
+      "project_type": "mod",
+      "version_id": "aQ7rY7ng",
+      "version_number": "3.1.2",
+      "version_type": "release",
+      "date_published": "2026-02-15T11:33:06.067724Z",
+      "filename": "mcw-bridges-3.1.2-mc1.21.1neoforge.jar",
+      "path": "mods/mcw-bridges-3.1.2-mc1.21.1neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/GURcjz8O/versions/aQ7rY7ng/mcw-bridges-3.1.2-mc1.21.1neoforge.jar",
+      "sha1": "71ece28129789a2123cf07e79938f488d8675bb2",
+      "sha512": "e98e476324229564132288f0a59bfcc897cff4cda7d12fe218563ca48d382d880662375687c69d1b4619144262ae09cbef130f4330474d8eacd37a21e8e9afb4",
+      "size": 661387,
+      "license": "LicenseRef-All-Rights-Reserved",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "building",
+      "reason": "Rope/log/stone bridges for roads across Tectonic rivers and gorges.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/macaws-bridges"
+    },
+    {
+      "slug": "macaws-doors",
+      "title": "Macaw's Doors",
+      "project_id": "kNxa8z3e",
+      "project_type": "mod",
+      "version_id": "u7BRX44F",
+      "version_number": "1.1.5",
+      "version_type": "release",
+      "date_published": "2026-02-13T13:51:27.989750Z",
+      "filename": "mcw-doors-1.1.5-mc1.21.1neoforge.jar",
+      "path": "mods/mcw-doors-1.1.5-mc1.21.1neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/kNxa8z3e/versions/u7BRX44F/mcw-doors-1.1.5-mc1.21.1neoforge.jar",
+      "sha1": "c127904f23db1a641dd9e065ec51c5c177cb4cd7",
+      "sha512": "43ddf00be46af91c009a95392a094f05017155214c46c7980042cbcf871864dc792416497019e688eb558897c87848bd70c282ec4a6d7b268e1ba30389ba987a",
+      "size": 1190404,
+      "license": "MIT",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "building",
+      "reason": "Wooden, barn, portcullis-style and stable doors.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/macaws-doors"
+    },
+    {
+      "slug": "macaws-fences-and-walls",
+      "title": "Macaw's Fences and Walls",
+      "project_id": "GmwLse2I",
+      "project_type": "mod",
+      "version_id": "jVdb0r4W",
+      "version_number": "1.2.1",
+      "version_type": "release",
+      "date_published": "2025-12-08T16:10:28.785465Z",
+      "filename": "mcw-mcwfences-1.2.1-mc1.21.1neoforge.jar",
+      "path": "mods/mcw-mcwfences-1.2.1-mc1.21.1neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/GmwLse2I/versions/jVdb0r4W/mcw-mcwfences-1.2.1-mc1.21.1neoforge.jar",
+      "sha1": "b5580c3fc521ed8bf4db3e407bd590efc317f74d",
+      "sha512": "9bf496a8db8c6074ab32374042ae15e87fe87d897e21de29d459556fa8d7d0e73f2718f28a0236181cfb3c1bc66c776b4d079f0a7084696ad490275ab1b9eb6e",
+      "size": 673871,
+      "license": "MIT",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "building",
+      "reason": "Castle walls, palisades and hedges for settlement defences.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/macaws-fences-and-walls"
+    },
+    {
+      "slug": "macaws-paths-and-pavings",
+      "title": "Macaw's Paths and Pavings",
+      "project_id": "VRLhWB91",
+      "project_type": "mod",
+      "version_id": "tlymsxUG",
+      "version_number": "1.1.1",
+      "version_type": "release",
+      "date_published": "2025-09-24T16:16:28.358769Z",
+      "filename": "mcw-mcwpaths-1.1.1-mc1.21.1neoforge.jar",
+      "path": "mods/mcw-mcwpaths-1.1.1-mc1.21.1neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/VRLhWB91/versions/tlymsxUG/mcw-mcwpaths-1.1.1-mc1.21.1neoforge.jar",
+      "sha1": "4bb7e1d28eef19f87438881b0f582a15297b95ae",
+      "sha512": "8a7bc0100e57369fdcfbb65164fdf97cd7f6a931882d0f63aae15fd3db8975a78cc8734f34f640a5790dddaca5883d8e97117e7966dab50de479b1a8f3662678",
+      "size": 777742,
+      "license": "MIT",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "building",
+      "reason": "Cobbled roads and paving between settlements.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/macaws-paths-and-pavings"
+    },
+    {
+      "slug": "macaws-windows",
+      "title": "Macaw's Windows",
+      "project_id": "C7I0BCni",
+      "project_type": "mod",
+      "version_id": "rQUE4LCz",
+      "version_number": "2.4.2",
+      "version_type": "release",
+      "date_published": "2025-12-10T21:36:00.508125Z",
+      "filename": "mcw-mcwwindows-2.4.2-mc1.21.1neoforge.jar",
+      "path": "mods/mcw-mcwwindows-2.4.2-mc1.21.1neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/C7I0BCni/versions/rQUE4LCz/mcw-mcwwindows-2.4.2-mc1.21.1neoforge.jar",
+      "sha1": "eb1d3c118acb450cc2fe14c2ce7ce247a1bca60c",
+      "sha512": "7628aa390a689a211013e5856cca1c695729b1faa7e20da16fa1f8a3822d5b569631829e91222caa8f1b27c4a7d28ab49110502551551216de2fb471b6f2549f",
+      "size": 1261268,
+      "license": "LicenseRef-All-Rights-Reserved",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "building",
+      "reason": "Arrow slits, gothic and parapet windows, shutters.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/macaws-windows"
+    },
+    {
+      "slug": "macaws-roofs",
+      "title": "Macaw's Roofs",
+      "project_id": "B8jaH3P1",
+      "project_type": "mod",
+      "version_id": "jiXRXiSt",
+      "version_number": "2.3.2",
+      "version_type": "release",
+      "date_published": "2025-05-04T09:46:30.048612Z",
+      "filename": "mcw-roofs-2.3.2-mc1.21.1neoforge.jar",
+      "path": "mods/mcw-roofs-2.3.2-mc1.21.1neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/B8jaH3P1/versions/jiXRXiSt/mcw-roofs-2.3.2-mc1.21.1neoforge.jar",
+      "sha1": "05806ff152fab56f7c1b4b215d772ea73611283d",
+      "sha512": "c0e82a3d0a3ab2f2fac5fb0bdd7c7c228f084feaa816540d3d9524f341c8b108c3bb1afecadae2e8118e6c93f0e73280c62da1af4349aca87b6aa337e5e22ae4",
+      "size": 1784829,
+      "license": "LicenseRef-All-Rights-Reserved",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "building",
+      "reason": "Pitched/attic/thatch-style roofs: the core of medieval silhouettes.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/macaws-roofs"
+    },
+    {
+      "slug": "modernfix",
+      "title": "ModernFix",
+      "project_id": "nmDcB62a",
+      "project_type": "mod",
+      "version_id": "7Jy58lnT",
+      "version_number": "5.27.26+mc1.21.1",
+      "version_type": "release",
+      "date_published": "2026-10-08T20:28:04.556303Z",
+      "filename": "modernfix-neoforge-5.27.26+mc1.21.1.jar",
+      "path": "mods/modernfix-neoforge-5.27.26+mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/nmDcB62a/versions/7Jy58lnT/modernfix-neoforge-5.27.26%2Bmc1.21.1.jar",
+      "sha1": "69d468b70e53f6a014c778a81116a41a38fbab33",
+      "sha512": "37c76fc5bc72cfc1035260f891ffeb45b4f32651d2e490c5eb8c60f3b5686deca3145b32d4fab9036f65f5277b0ac66f4ad3855e52cd973e791b09e9c4b896d8",
+      "size": 611043,
+      "license": "LGPL-3.0-only",
+      "license_url": null,
+      "project_client_side": "optional",
+      "project_server_side": "optional",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "performance",
+      "reason": "Faster launch, lower memory, many bug fixes for modded NeoForge.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/modernfix"
+    },
+    {
+      "slug": "moonlight",
+      "title": "Moonlight Lib",
+      "project_id": "twkfQtEc",
+      "project_type": "mod",
+      "version_id": "fAIfWX6M",
+      "version_number": "1.21.1-3.7.2",
+      "version_type": "release",
+      "date_published": "2026-10-10T21:22:30.558612Z",
+      "filename": "moonlight-1.21.1-3.7.2-neoforge.jar",
+      "path": "mods/moonlight-1.21.1-3.7.2-neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/twkfQtEc/versions/fAIfWX6M/moonlight-1.21.1-3.7.2-neoforge.jar",
+      "sha1": "0da45e6bc941f4b9b18dda24f8d047431ddc7226",
+      "sha512": "b4e8efba91e5f46729928335cce8952ad70af3e33b851e8cf4887a24346f7bbdfe3609f8cc482f76a715aa050bf39e7048ee97b33183e5c358f149bc3678183c",
+      "size": 2299162,
+      "license": "LicenseRef-LGPL-with-additional-dependency-clause",
+      "license_url": "https://github.com/MehVahdJukaar/Moonlight/blob/1.20/license.md",
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [
+        "supplementaries"
+      ],
+      "category": "library",
+      "reason": "Required library for supplementaries.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/moonlight"
+    },
+    {
+      "slug": "mouse-tweaks",
+      "title": "Mouse Tweaks",
+      "project_id": "aC3cM3Vq",
+      "project_type": "mod",
+      "version_id": "9I21YYxf",
+      "version_number": "1.21-2.26.1-neoforge",
+      "version_type": "release",
+      "date_published": "2024-08-17T15:54:27.801812Z",
+      "filename": "MouseTweaks-neoforge-mc1.21-2.26.1.jar",
+      "path": "mods/MouseTweaks-neoforge-mc1.21-2.26.1.jar",
+      "url": "https://cdn.modrinth.com/data/aC3cM3Vq/versions/9I21YYxf/MouseTweaks-neoforge-mc1.21-2.26.1.jar",
+      "sha1": "6dae57f4f50f7808d2ed9a18f6cd1c0d4640c6bc",
+      "sha512": "f95c0cc881211ee0442434976775e07aae40b4a2ba4e3a85455bc57ca9d3c991e239cd98374a8abd442dc9c378dcd9001e2caa1bf69991d424b5652dd7f3483b",
+      "size": 73938,
+      "license": "BSD-3-Clause",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "unsupported",
+      "env": {
+        "client": "required",
+        "server": "unsupported"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "qol",
+      "reason": "Inventory drag/scroll handling; pure client QoL.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/mouse-tweaks"
+    },
+    {
+      "slug": "particle-rain",
+      "title": "Particle Rain",
+      "project_id": "nrikgvxm",
+      "project_type": "mod",
+      "version_id": "RxfaR4ud",
+      "version_number": "v4.0.2+1.21.1-neoforge",
+      "version_type": "release",
+      "date_published": "2026-10-10T01:09:55.312130Z",
+      "filename": "particlerain-4.0.2+1.21.1-neoforge.jar",
+      "path": "mods/particlerain-4.0.2+1.21.1-neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/nrikgvxm/versions/RxfaR4ud/particlerain-4.0.2%2B1.21.1-neoforge.jar",
+      "sha1": "444c6f221e57cca8e433702b18c4643faa82545a",
+      "sha512": "dc5fd6224dbd58079d9c82ef318ba2b945e5aa58f3476daea371ca86bb9ce976db5f4893a7093a990c0c1a8ddb7716089b24cced176f30cb253c2696b0cfd5b2",
+      "size": 623257,
+      "license": "MIT",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "unsupported",
+      "env": {
+        "client": "required",
+        "server": "unsupported"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "atmosphere",
+      "reason": "Particle rain/snow and storm fog; cheap, strong weather atmosphere.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/particle-rain"
+    },
+    {
+      "slug": "resourceful-lib",
+      "title": "Resourceful Lib",
+      "project_id": "G1hIVOrD",
+      "project_type": "mod",
+      "version_id": "x99nCLTm",
+      "version_number": "3.0.12",
+      "version_type": "release",
+      "date_published": "2024-12-08T04:44:13.631452Z",
+      "filename": "resourcefullib-neoforge-1.21-3.0.12.jar",
+      "path": "mods/resourcefullib-neoforge-1.21-3.0.12.jar",
+      "url": "https://cdn.modrinth.com/data/G1hIVOrD/versions/x99nCLTm/resourcefullib-neoforge-1.21-3.0.12.jar",
+      "sha1": "24389c8e48ff0e8594e4686b750c494c66a5f8df",
+      "sha512": "a9d20e345faa9bcb297bd95ac9524205834804d1bb13518397dd4f7f62b352b08c3339ee7f7870d3669078ceeb33d5c31ea527aecce4b31d62ec1ff7d8b562c8",
+      "size": 484332,
+      "license": "MIT",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [
+        "handcrafted"
+      ],
+      "category": "library",
+      "reason": "Required library for handcrafted.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/resourceful-lib"
+    },
+    {
+      "slug": "sodium",
+      "title": "Sodium",
+      "project_id": "AANobbMI",
+      "project_type": "mod",
+      "version_id": "uMOpc5uV",
+      "version_number": "mc1.21.1-0.8.13-neoforge",
+      "version_type": "release",
+      "date_published": "2026-08-28T20:55:02.593669Z",
+      "filename": "sodium-neoforge-0.8.13+mc1.21.1.jar",
+      "path": "mods/sodium-neoforge-0.8.13+mc1.21.1.jar",
+      "url": "https://cdn.modrinth.com/data/AANobbMI/versions/uMOpc5uV/sodium-neoforge-0.8.13%2Bmc1.21.1.jar",
+      "sha1": "1757289be21ed18db5b0d90703fa3db1b2de5693",
+      "sha512": "4f537696af95411e9daf15795fb5fcbc49913d488a96fa912fa8f1d7db408710995e8a1461190f3cd0f8217bf9e35e9539176592428ed587ca2d7aa84450a390",
+      "size": 1292934,
+      "license": "LicenseRef-Polyform-Shield-1.0.0",
+      "license_url": "https://github.com/CaffeineMC/sodium/blob/dev/LICENSE.md",
+      "project_client_side": "required",
+      "project_server_side": "unsupported",
+      "env": {
+        "client": "required",
+        "server": "unsupported"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "performance",
+      "reason": "Modern chunk renderer; the single biggest client FPS win.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/sodium"
+    },
+    {
+      "slug": "sound-physics-remastered",
+      "title": "Sound Physics Remastered",
+      "project_id": "qyVF9oeo",
+      "project_type": "mod",
+      "version_id": "cTTunNxQ",
+      "version_number": "neoforge-1.21.1-1.4.10",
+      "version_type": "beta",
+      "date_published": "2025-03-26T20:53:31.914128Z",
+      "filename": "sound-physics-remastered-neoforge-1.21.1-1.4.10.jar",
+      "path": "mods/sound-physics-remastered-neoforge-1.21.1-1.4.10.jar",
+      "url": "https://cdn.modrinth.com/data/qyVF9oeo/versions/cTTunNxQ/sound-physics-remastered-neoforge-1.21.1-1.4.10.jar",
+      "sha1": "48d0817ba80d733afc654d55a2d0cbba0815dbe8",
+      "sha512": "ebe5307c84571f5133251bb3e5ca01293dad94821f396cedb4084b46267396b4c36d7f956887ce883e40630b9f4ce4e4cedd20e3764eedbda6c2b635bdaa21a5",
+      "size": 199310,
+      "license": "GPL-3.0-only",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "optional",
+      "env": {
+        "client": "required",
+        "server": "unsupported"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "atmosphere",
+      "reason": "Reverb/occlusion for caves and halls. Rich preset only: costs CPU and the newest NeoForge 1.21.1 build is beta (1.5.x are alpha).",
+      "presets": [
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/sound-physics-remastered"
+    },
+    {
+      "slug": "supplementaries",
+      "title": "Supplementaries",
+      "project_id": "fFEIiSDQ",
+      "project_type": "mod",
+      "version_id": "WrZWfRjP",
+      "version_number": "1.21.1-3.9.9",
+      "version_type": "release",
+      "date_published": "2026-09-10T19:13:13.950865Z",
+      "filename": "supplementaries-1.21.1-3.9.9-neoforge.jar",
+      "path": "mods/supplementaries-1.21.1-3.9.9-neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/fFEIiSDQ/versions/WrZWfRjP/supplementaries-1.21.1-3.9.9-neoforge.jar",
+      "sha1": "06ed05381a5653d90398dc6ebf3ad1154add6374",
+      "sha512": "f341d0971e644255c063f0cb363bb93e312f4f005304f8af76d7249c3cbc0c258f415cf6e7bddcdf02115ade9ba9a205ec6d062e2626b414afaef5725667f079",
+      "size": 13548968,
+      "license": "LicenseRef-Supplementaries-Team-License",
+      "license_url": "https://github.com/MehVahdJukaar/Supplementaries-Team-License/blob/main/LICENSE.md",
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [
+        "moonlight"
+      ],
+      "required_by": [],
+      "category": "building",
+      "reason": "Medieval-feeling decor and utility (sacks, jars, signposts, flags, lanterns, hourglass, ropes). Its Red Merchant trader is disabled by our config because longnight owns all NPCs.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": true,
+      "pin_reason": "4.0.0/4.0.1 were released hours ago (11 Oct 2026, new major, hotfix after 90 min); 3.9.9 is the last month-old 3.x release. Re-evaluate 4.0.x in a later pack update.",
+      "homepage": "https://modrinth.com/mod/supplementaries"
+    },
+    {
+      "slug": "tectonic",
+      "title": "Tectonic",
+      "project_id": "lWDHr9jE",
+      "project_type": "mod",
+      "version_id": "n4iyW7aB",
+      "version_number": "3.0.28-neoforge-21.1",
+      "version_type": "release",
+      "date_published": "2026-09-11T03:42:57.590112Z",
+      "filename": "tectonic-3.0.28-neoforge-21.1.jar",
+      "path": "mods/tectonic-3.0.28-neoforge-21.1.jar",
+      "url": "https://cdn.modrinth.com/data/lWDHr9jE/versions/n4iyW7aB/tectonic-3.0.28-neoforge-21.1.jar",
+      "sha1": "db15156eec4320c2997c4dd4948119472de01224",
+      "sha512": "e07b9cb54f078b7bf74c925c5cebd6643f0b4c210b8f94474e68659b69468ece7d61432f70eafe7abaa1dfa798e4638aad297987c121dc127588c2623b7f7a81",
+      "size": 451757,
+      "license": "MIT",
+      "license_url": null,
+      "project_client_side": "optional",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [
+        "lithostitched"
+      ],
+      "required_by": [],
+      "category": "worldgen",
+      "reason": "Continent-scale terrain, real mountain ranges and rivers: the 'long journey' Middle-earth scale. Ships built-in Terralith compatibility.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/tectonic"
+    },
+    {
+      "slug": "terralith",
+      "title": "Terralith",
+      "project_id": "8oi3bsk5",
+      "project_type": "mod",
+      "version_id": "IY93YaEe",
+      "version_number": "2.6.2",
+      "version_type": "release",
+      "date_published": "2026-06-09T17:51:45.710718Z",
+      "filename": "Terralith_1.21.1_v2.6.2_Neoforge.jar",
+      "path": "mods/Terralith_1.21.1_v2.6.2_Neoforge.jar",
+      "url": "https://cdn.modrinth.com/data/8oi3bsk5/versions/IY93YaEe/Terralith_1.21.1_v2.6.2_Neoforge.jar",
+      "sha1": "d4a9fe71b841f70edfb4b280f9bf5c58e4a28224",
+      "sha512": "35298f1682567f63dc16658b04cee5498b30819f1c05f9712b4480d7f5eb17059db3b13ab14f81a05fe257149d11ced2cce2030d3727c1747edd8657c53e2a85",
+      "size": 2814865,
+      "license": "LicenseRef-Stardust-Labs-License",
+      "license_url": "https://github.com/Stardust-Labs-MC/license/blob/main/license.txt",
+      "project_client_side": "optional",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [
+        "lithostitched"
+      ],
+      "required_by": [],
+      "category": "worldgen",
+      "reason": "~100 vanilla-block biomes; Tectonic's documented companion. Adds no NPCs or villages.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/terralith"
+    },
+    {
+      "slug": "xaeros-minimap",
+      "title": "Xaero's Minimap",
+      "project_id": "1bokaNcj",
+      "project_type": "mod",
+      "version_id": "irjR7dHk",
+      "version_number": "neoforge-1.21.1-26.6.0",
+      "version_type": "release",
+      "date_published": "2026-10-05T07:41:58.151551Z",
+      "filename": "xaerominimap-neoforge-1.21.1-26.6.0.jar",
+      "path": "mods/xaerominimap-neoforge-1.21.1-26.6.0.jar",
+      "url": "https://cdn.modrinth.com/data/1bokaNcj/versions/irjR7dHk/xaerominimap-neoforge-1.21.1-26.6.0.jar",
+      "sha1": "551e8e2aa3498b506cc949a74606cdc0380e5e00",
+      "sha512": "d56b93ddb921285624b491d6a85aba23748bec9974867399c881c257eb25a746df92a735473adf3a6875e0928a56ff78245d5238eb9207b0e45c3fec20c896dc",
+      "size": 2186351,
+      "license": "LicenseRef-All-Rights-Reserved",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "optional",
+      "env": {
+        "client": "required",
+        "server": "optional"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "qol",
+      "reason": "Minimap + waypoints for continent-scale travel (Fair-Play edition has no NeoForge 1.21.1 build).",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/xaeros-minimap"
+    },
+    {
+      "slug": "xaeros-world-map",
+      "title": "Xaero's World Map",
+      "project_id": "NcUtCpym",
+      "project_type": "mod",
+      "version_id": "SnQ4SoDe",
+      "version_number": "neoforge-1.21.1-1.47.0",
+      "version_type": "release",
+      "date_published": "2026-10-05T07:28:39.529512Z",
+      "filename": "xaeroworldmap-neoforge-1.21.1-1.47.0.jar",
+      "path": "mods/xaeroworldmap-neoforge-1.21.1-1.47.0.jar",
+      "url": "https://cdn.modrinth.com/data/NcUtCpym/versions/SnQ4SoDe/xaeroworldmap-neoforge-1.21.1-1.47.0.jar",
+      "sha1": "2936c9cb9dfbdab145fe6f1e8ae2c68915246a5f",
+      "sha512": "4d2d78bc85afa002f682ef344b7284cf1baa4903cc5a11cd1d7bd260ac63952580ae717bab47079540ead633cdd5d8e4fdf230dc99a68bcb7a269500e7dada13",
+      "size": 1427078,
+      "license": "LicenseRef-All-Rights-Reserved",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "optional",
+      "env": {
+        "client": "required",
+        "server": "optional"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "qol",
+      "reason": "Full-screen world map that pairs with the minimap.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/xaeros-world-map"
+    },
+    {
+      "slug": "yungs-api",
+      "title": "YUNG's API",
+      "project_id": "Ua7DFN59",
+      "project_type": "mod",
+      "version_id": "2prKITKh",
+      "version_number": "1.21.1-NeoForge-5.1.9",
+      "version_type": "release",
+      "date_published": "2026-09-16T11:24:46.968948Z",
+      "filename": "YungsApi-1.21.1-NeoForge-5.1.9.jar",
+      "path": "mods/YungsApi-1.21.1-NeoForge-5.1.9.jar",
+      "url": "https://cdn.modrinth.com/data/Ua7DFN59/versions/2prKITKh/YungsApi-1.21.1-NeoForge-5.1.9.jar",
+      "sha1": "2c4b740c8ad27bbcb2a21b85b64f011b809aed91",
+      "sha512": "7e3cf0b429e8a1c51dca094c2d8eabf12245bb42cbcd8b6e3e54959f931bef93201b81a08d200b417059aaa438e8eb445c3978a09568597bfb588199b7775967",
+      "size": 413763,
+      "license": "LGPL-3.0-only",
+      "license_url": null,
+      "project_client_side": "required",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [],
+      "required_by": [
+        "yungs-better-desert-temples",
+        "yungs-better-dungeons",
+        "yungs-better-mineshafts",
+        "yungs-better-strongholds"
+      ],
+      "category": "library",
+      "reason": "Required library for yungs-better-dungeons, yungs-better-mineshafts, yungs-better-strongholds, yungs-better-desert-temples.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/yungs-api"
+    },
+    {
+      "slug": "yungs-better-desert-temples",
+      "title": "YUNG's Better Desert Temples",
+      "project_id": "XNlO7sBv",
+      "project_type": "mod",
+      "version_id": "GQ9iNWkI",
+      "version_number": "1.21.1-NeoForge-4.1.5",
+      "version_type": "release",
+      "date_published": "2025-03-07T22:28:41.372038Z",
+      "filename": "YungsBetterDesertTemples-1.21.1-NeoForge-4.1.5.jar",
+      "path": "mods/YungsBetterDesertTemples-1.21.1-NeoForge-4.1.5.jar",
+      "url": "https://cdn.modrinth.com/data/XNlO7sBv/versions/GQ9iNWkI/YungsBetterDesertTemples-1.21.1-NeoForge-4.1.5.jar",
+      "sha1": "90529257dbd92558998c65178294bc7b2fd16a64",
+      "sha512": "6454c955f75f66104810e967a59ae032ddf1ccc5a854346af6bfba6e44cd456e755cd8feb1e0968be4e9132ea6c5d1cb2126fe5e85d3eb18c8d3ea3c81ffdf9a",
+      "size": 905839,
+      "license": "LGPL-3.0-only",
+      "license_url": null,
+      "project_client_side": "unsupported",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [
+        "yungs-api"
+      ],
+      "required_by": [],
+      "category": "worldgen-structures",
+      "reason": "Exploration: ruined temples worth raiding; no NPCs.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/yungs-better-desert-temples"
+    },
+    {
+      "slug": "yungs-better-dungeons",
+      "title": "YUNG's Better Dungeons",
+      "project_id": "o1C1Dkj5",
+      "project_type": "mod",
+      "version_id": "D6aZn0Em",
+      "version_number": "1.21.1-NeoForge-5.1.4",
+      "version_type": "release",
+      "date_published": "2024-12-01T22:09:34.329782Z",
+      "filename": "YungsBetterDungeons-1.21.1-NeoForge-5.1.4.jar",
+      "path": "mods/YungsBetterDungeons-1.21.1-NeoForge-5.1.4.jar",
+      "url": "https://cdn.modrinth.com/data/o1C1Dkj5/versions/D6aZn0Em/YungsBetterDungeons-1.21.1-NeoForge-5.1.4.jar",
+      "sha1": "73a660c13063450e555e5e2c015ae24d606b32b4",
+      "sha512": "40513bacd13fa9860abcab507b1fc09dc51649af4b615ce466e0ec361557f02d35e6e44bea1cc17cb4120805f862aad01394eb185f46611e7be63dfd97f272df",
+      "size": 782160,
+      "license": "LGPL-3.0-only",
+      "license_url": null,
+      "project_client_side": "unsupported",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [
+        "yungs-api"
+      ],
+      "required_by": [],
+      "category": "worldgen-structures",
+      "reason": "Exploration: catacombs and fortresses with loot; no NPCs.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/yungs-better-dungeons"
+    },
+    {
+      "slug": "yungs-better-mineshafts",
+      "title": "YUNG's Better Mineshafts",
+      "project_id": "HjmxVlSr",
+      "project_type": "mod",
+      "version_id": "Go3nbneL",
+      "version_number": "1.21.1-NeoForge-5.1.1",
+      "version_type": "release",
+      "date_published": "2024-10-14T18:45:00.790338Z",
+      "filename": "YungsBetterMineshafts-1.21.1-NeoForge-5.1.1.jar",
+      "path": "mods/YungsBetterMineshafts-1.21.1-NeoForge-5.1.1.jar",
+      "url": "https://cdn.modrinth.com/data/HjmxVlSr/versions/Go3nbneL/YungsBetterMineshafts-1.21.1-NeoForge-5.1.1.jar",
+      "sha1": "6a14e1d8201f068ca87ef8333e471c5378955906",
+      "sha512": "8b01b386f53feeaa55f0c62697578b82e00501e45e428b2a68df6bda34efb6a4b3b4e3582abf13fe767ebcb61aef9368186f53c03999958bef38f31c41a7f8b2",
+      "size": 493967,
+      "license": "LGPL-3.0-only",
+      "license_url": null,
+      "project_client_side": "unsupported",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [
+        "yungs-api"
+      ],
+      "required_by": [],
+      "category": "worldgen-structures",
+      "reason": "Exploration: varied, atmospheric abandoned mines; no NPCs.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/yungs-better-mineshafts"
+    },
+    {
+      "slug": "yungs-better-strongholds",
+      "title": "YUNG's Better Strongholds",
+      "project_id": "kidLKymU",
+      "project_type": "mod",
+      "version_id": "8U0dIfSM",
+      "version_number": "1.21.1-NeoForge-5.1.3",
+      "version_type": "release",
+      "date_published": "2025-03-06T20:03:51.120457Z",
+      "filename": "YungsBetterStrongholds-1.21.1-NeoForge-5.1.3.jar",
+      "path": "mods/YungsBetterStrongholds-1.21.1-NeoForge-5.1.3.jar",
+      "url": "https://cdn.modrinth.com/data/kidLKymU/versions/8U0dIfSM/YungsBetterStrongholds-1.21.1-NeoForge-5.1.3.jar",
+      "sha1": "5d06a5850af7c577612d4592706a8e156bbe1cbf",
+      "sha512": "385d67e07f2c67af5ea387d92d92949d8f671e8f99204457b6396dbe987ac3b14c2bff765df5fcbaa68016604f82a1fc6ec5a69c012ca22ad088d1a7c9bc135d",
+      "size": 461244,
+      "license": "LGPL-3.0-only",
+      "license_url": null,
+      "project_client_side": "unsupported",
+      "project_server_side": "required",
+      "env": {
+        "client": "required",
+        "server": "required"
+      },
+      "required_deps": [
+        "yungs-api"
+      ],
+      "required_by": [],
+      "category": "worldgen-structures",
+      "reason": "Exploration: a real underground fortress; no NPCs.",
+      "presets": [
+        "performance",
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/mod/yungs-better-strongholds"
+    },
+    {
+      "slug": "complementary-reimagined",
+      "title": "Complementary Shaders - Reimagined",
+      "project_id": "HVnmMxH1",
+      "project_type": "shader",
+      "version_id": "Bqen1mJX",
+      "version_number": "r5.9.3",
+      "version_type": "release",
+      "date_published": "2026-09-15T06:35:41.918796Z",
+      "filename": "ComplementaryReimagined_r5.9.3.zip",
+      "path": "shaderpacks/ComplementaryReimagined_r5.9.3.zip",
+      "url": "https://cdn.modrinth.com/data/HVnmMxH1/versions/Bqen1mJX/ComplementaryReimagined_r5.9.3.zip",
+      "sha1": "838139b54cddb56b2e83cd260d8efd960ac536d6",
+      "sha512": "45304b1d7862afdb2177b7e6226fc9c6737911d17a4ad46cc9c519ca4deb935f05072cd337cd8b19a15bb8062b57b54eceec7bdee4cd572d94858e2946d37d85",
+      "size": 553397,
+      "license": "LicenseRef-Custom",
+      "license_url": "https://github.com/ComplementaryDevelopment/ComplementaryReimagined/blob/main/License.txt",
+      "project_client_side": "required",
+      "project_server_side": "unsupported",
+      "env": {
+        "client": "required",
+        "server": "unsupported"
+      },
+      "required_deps": [],
+      "required_by": [],
+      "category": "visual",
+      "reason": "Shader pack (Complementary License 1.7: modpack use allowed when added via Modrinth/CurseForge systems, unmodified, credited). Enabled by default in the rich preset.",
+      "presets": [
+        "rich"
+      ],
+      "pinned": false,
+      "pin_reason": null,
+      "homepage": "https://modrinth.com/shader/complementary-reimagined"
+    }
+  ],
+  "rejected": [
+    {
+      "name": "MineColonies",
+      "slug": null,
+      "reason": "Adds its own colonists/NPC society; longnight owns all NPCs (decision D2). (Its official builds are on CurseForge; the Modrinth 'minecolonies' project is an old 1.18.2 upload with no NeoForge 1.21.1 build.)"
+    },
+    {
+      "name": "Millénaire",
+      "slug": null,
+      "reason": "Adds NPC villages and cultures; longnight owns all NPCs (D2). (Also not on Modrinth for NeoForge 1.21.1.)"
+    },
+    {
+      "name": "Guard Villagers",
+      "slug": "guard-villagers",
+      "reason": "Adds NPC guards; longnight owns all NPCs (D2)."
+    },
+    {
+      "name": "Villager Recruits / Recruits & Workers",
+      "slug": "villager-recruits",
+      "reason": "Recruitable NPC armies; longnight owns all NPCs (D2). (No NeoForge 1.21.1 build on Modrinth either.)"
+    },
+    {
+      "name": "Towns and Towers",
+      "slug": "towns-and-towers",
+      "reason": "Adds villages/outposts with villager NPCs; settlements and people come from longnight (D2/D3)."
+    },
+    {
+      "name": "ChoiceTheorem's Overhauled Village (CTOV)",
+      "slug": "ct-overhaul-village",
+      "reason": "Village overhaul; villages are disabled and settlements come from longnight (D3)."
+    },
+    {
+      "name": "Easy NPC",
+      "slug": "easy-npc",
+      "reason": "Generic NPC framework; longnight owns all NPCs (D2)."
+    },
+    {
+      "name": "Human Companions",
+      "slug": null,
+      "reason": "Recruitable human NPCs; longnight owns all NPCs (D2). (Not on Modrinth for NeoForge 1.21.1.)"
+    },
+    {
+      "name": "Minecraft Comes Alive (MCA Reborn)",
+      "slug": "minecraft-comes-alive-reborn",
+      "reason": "Replaces villagers with a full NPC society (families, marriage); directly conflicts with longnight (D2). (Its NeoForge 1.21.1 file is a beta despite the 'release' tag.)"
+    },
+    {
+      "name": "Terralith fortified villages (structure set terralith:rare_village)",
+      "slug": null,
+      "reason": "Terralith itself is kept, but it ships fortified villages full of villagers. The pack disables Terralith's custom structures (config/terralith.json custom_structures=false) until longnight overrides data/terralith/worldgen/structure_set/rare_village.json itself; see VERIFICATION.md."
+    },
+    {
+      "name": "Iron's Spells 'n Spellbooks",
+      "slug": "irons-spells-n-spellbooks",
+      "reason": "Magic: only one magic mod; Ars Nouveau chosen (fewer/lighter deps, no beta deps, no humanoid NPC traders such as Priest/Apothecarist/Wandering Magician)."
+    },
+    {
+      "name": "IceAndFire Community Edition",
+      "slug": "iceandfire-ce",
+      "reason": "Exists for NeoForge 1.21.1 (2.0 release 18 Jul 2026, 2.1-beta.1 the same day) but not clearly stable: brand-new major line whose own page warns that version swaps corrupt saves (dangerous for a long hardcore world), heavy world-gen (roosts, caves, graveyards) and terrain-griefing dragons, plus 2 extra libs (Uranus, Jupiter). Dragons: not available as clearly stable - longnight will provide later."
+    },
+    {
+      "name": "Dragon Mounts Remastered",
+      "slug": "dmr",
+      "reason": "Available (1.9.2) but PolyForm-Noncommercial, last update Sep 2025, tame-a-pet-dragon design rather than world threat; longnight will provide dragons later."
+    },
+    {
+      "name": "Ice and Fire (original)",
+      "slug": "ice-and-fire-dragons",
+      "reason": "No NeoForge 1.21.1 version on Modrinth."
+    },
+    {
+      "name": "Noisium",
+      "slug": "noisium",
+      "reason": "Last NeoForge 1.21.1 build Aug 2024 (project no longer actively updated for this branch) and it patches noise generation that Tectonic also reshapes; not worth the world-gen risk."
+    },
+    {
+      "name": "C2ME (NeoForge)",
+      "slug": "c2me-neoforge",
+      "reason": "Only alpha builds for NeoForge 1.21.1."
+    },
+    {
+      "name": "Visuality",
+      "slug": "visuality",
+      "reason": "No NeoForge 1.21.1 version on Modrinth."
+    },
+    {
+      "name": "Falling Leaves",
+      "slug": "fallingleaves",
+      "reason": "No NeoForge 1.21.1 version on Modrinth. (A different 'falling-leaves' project exists: All-Rights-Reserved, ~8k downloads, unknown author - not trusted.)"
+    },
+    {
+      "name": "JEI",
+      "slug": "jei",
+      "reason": "EMI chosen instead (JEI's NeoForge 1.21.1 builds are beta and now require MezzConfig)."
+    },
+    {
+      "name": "JourneyMap",
+      "slug": "journeymap",
+      "reason": "Xaero's Minimap + World Map chosen instead (lighter, vanilla look)."
+    },
+    {
+      "name": "Xaero's Minimap (Fair-Play)",
+      "slug": "xaeros-minimap-fair",
+      "reason": "No NeoForge 1.21.1 build on Modrinth; full edition used."
+    },
+    {
+      "name": "Controlling + Searchables",
+      "slug": "controlling",
+      "reason": "Optional keybind-search QoL; cut to keep the pack at <=40 mods."
+    },
+    {
+      "name": "Macaw's Furniture",
+      "slug": "macaws-furniture",
+      "reason": "Handcrafted chosen for furniture (more rustic); one furniture mod is enough."
+    },
+    {
+      "name": "Complementary Unbound / BSL / Bliss",
+      "slug": null,
+      "reason": "One shader is enough: BSL and Bliss are All-Rights-Reserved with no explicit modpack grant; Complementary Reimagined has an explicit modpack grant and is lighter than Unbound."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "given_male": [
+    "Bardek", "Brumgar", "Dagrund", "Dorvek", "Drummok", "Gardrik", "Glomrak", "Grundvar", "Haldrek", "Harrok",
+    "Hrumdal", "Jorvek", "Kaldrum", "Karrag", "Krundal", "Magrok", "Mordek", "Norvrak", "Oskrum", "Ragnvek",
+    "Rurdok", "Skaldrek", "Stromgar", "Throvak", "Torvrek", "Uldrik", "Urgrim", "Vargrund", "Vorkhal", "Brakkar",
+    "Drumvek", "Gulvrek", "Hakkran", "Kherrok", "Ottvar", "Rugdrek", "Strakki", "Tunvak", "Vulgrund", "Yrdek",
+    "Bolvrund", "Grimmek", "Haskrund", "Dravvok", "Korgund"
+  ],
+  "given_female": [
+    "Asvra", "Brakka", "Dagra", "Drumhild", "Gardra", "Grunhild", "Hakra", "Helvra", "Hrodda", "Ingvra",
+    "Jorna", "Kaldra", "Karrvi", "Kethra", "Magdrun", "Morra", "Norvra", "Orskra", "Ragnvi", "Runvra",
+    "Skalda", "Sigvra", "Thurra", "Torgild", "Udra", "Ulvra", "Vandra", "Vorra", "Yrdra", "Bergtha",
+    "Daggra", "Embra", "Frekka", "Gudvra", "Hildrak", "Ketta", "Lofra", "Midra", "Nessra", "Otka",
+    "Rokka", "Starra", "Tovra", "Vigdra", "Brumvra"
+  ],
+  "family": [
+    "Anvilsong", "Ashdelve", "Blackseam", "Brasshand", "Coalbrow", "Copperjaw", "Cragmantle", "Deepseam", "Emberforge", "Flintmark",
+    "Gravelheart", "Greyvein", "Hammerhold", "Ironvein", "Leadfist", "Lodebearer", "Marrowstone", "Oregrim", "Pickmorrow", "Quartzhand",
+    "Runecleft", "Saltpick", "Slatebrow", "Stonesong", "Tinmantle", "Tuffjaw", "Underbell", "Veinwatcher", "Bellowsbrand", "Cinderdeep",
+    "Deepbell", "Forgecrown", "Kilnmark", "Shalehelm", "Thundergrind", "Vaultkeeper", "Whetstone", "Grumhalm", "Drakvald", "Thurgrund",
+    "Korrvak", "Bardrumm", "Hrimvald", "Skarnhold", "Vorgrund"
+  ],
+  "family_style": "clan",
+  "patronymic_male": "",
+  "patronymic_female": "",
+  "epithets": [
+    "the Unbent", "Hammerhand", "the Deep-Delver", "Oath-True", "the Grim", "Ironjaw", "the Rune-Wise", "Wyrmfoe", "the Unyielding", "Old Granite",
+    "the Last of Varnkhar", "Forge-Father", "the Silent Anvil", "Twice-Buried", "the Weigher", "Ledger-Keeper", "Shieldbreaker", "the Black", "the Patient", "Deepking",
+    "Who Walked Out of the Fire", "the Balanced", "Seam-Finder"
+  ],
+  "settlement_prefix": [
+    "Grund", "Khal", "Brak", "Dorn", "Grim", "Kar", "Thur", "Varn", "Skar", "Hald",
+    "Krag", "Mor", "Brum", "Drak", "Gor", "Hrim", "Kol", "Rund", "Stor", "Tor",
+    "Urd", "Vor", "Bard", "Dag", "Glom", "Harr", "Jor", "Krum", "Rag", "Strom",
+    "Ulf", "Bolv"
+  ],
+  "settlement_suffix": [
+    "hald", "grund", "khar", "helm", "vak", "holm", "delve", "deep", "rak", "dun",
+    "vald", "drum", "krag", "thal", "grim", "mund", "hold", "gate", "fell", "stane",
+    "vorn", ""
+  ],
+  "realm_patterns": [
+    "Hold of {name}", "Deep Kingdom of {name}", "Under-Realm of {name}", "Clanhold of {name}",
+    "Throne-Under-{name}", "Graven Crown of {name}", "Thanedom of {name}", "Halls of {name}"
+  ],
+  "camp_names": [
+    "First Shaft", "Pick Camp", "Lantern Cut", "Prospector's Ledge", "Cold Forge", "Stonecamp",
+    "Ore Notch", "Bellows Camp", "Adit Camp", "Delver's Rest", "Waystone Cut"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "given_male": [
+    "Tobble", "Wimbly", "Dobkin", "Pumble", "Hemble", "Gumble", "Obble", "Tumwick", "Bodlin", "Crispet",
+    "Dimble", "Elbie", "Figgin", "Gubble", "Hamwell", "Ivvet", "Jemble", "Kippet", "Lumbert", "Mosswin",
+    "Nubbin", "Olwick", "Panlet", "Quillam", "Rumbly", "Simbly", "Tibbet", "Umble", "Wedgewick", "Abbit",
+    "Cobble", "Ebbin", "Hubbet", "Jobbet", "Ketch", "Merriwick", "Noddle", "Oddkin", "Podge", "Rolly",
+    "Tolly", "Wobbet", "Bartlemy", "Chumble", "Fubbet", "Grumbit"
+  ],
+  "given_female": [
+    "Tansy", "Sorrel", "Quince", "Clover", "Nutmeg", "Saffy", "Mallow", "Betony", "Fennel", "Chervil",
+    "Juniper", "Bramble", "Comfrey", "Rue", "Yarrow", "Hyssa", "Dilly", "Cammy", "Marjy", "Nettie",
+    "Oxlip", "Pennet", "Honey", "Whortle", "Cress", "Damson", "Elda", "Fig", "Lovage", "Medlar",
+    "Sage", "Thymmie", "Wren", "Linnet", "Mavis", "Bryony", "Campion", "Teasel", "Woodruff", "Cicely",
+    "Burnet", "Pottie", "Bettle", "Mufflet"
+  ],
+  "family": [
+    "Bramblewick", "Kettlebrook", "Honeycombe", "Mossbank", "Applewhistle", "Puddlecombe", "Turnipseed", "Hedgepenny", "Tumbledown", "Crumblecake",
+    "Goodwhistle", "Thistledown", "Bumbleroot", "Ferncake", "Gorsebottom", "Plumtree", "Merrybrook", "Oatcake", "Whistlewood", "Pennywhistle",
+    "Honeydew", "Fiddlewick", "Crabapple", "Sweetwater", "Hearthbrook", "Dimpledown", "Puddingstone", "Kettlewhistle", "Spindlewood", "Quillbottom",
+    "Warrensby", "Snugbury", "Mosswhistle", "Wickerbee", "Bramblebelly", "Applethorpe", "Larkspur", "Mugwort", "Pottle", "Fennelby",
+    "Hivewright", "Nutbury", "Pickleton", "Toadflax", "Osierbrook", "Cosyhedge"
+  ],
+  "family_style": "surname",
+  "patronymic_male": "",
+  "patronymic_female": "",
+  "epithets": [
+    "the Well-Fed", "the Hospitable", "Honeytongue", "the Hedge-Wise", "the Surprisingly Brave", "the Unflustered", "Big-Kettle", "Mushroom-Finder", "the Long-Walker", "the Beekeeper",
+    "the Stout", "Pie-Judge", "the Neighbourly", "Moot-Talker", "Who Shut the Door", "the Root-Wise", "Lantern-Keeper", "the Untroubled", "the Plump", "Seed-Sharer",
+    "the Wanderer-Home", "the Unhurried", "Cellar-Keeper", "the Unstung"
+  ],
+  "settlement_prefix": [
+    "Bramble", "Honey", "Kettle", "Moss", "Apple", "Puddle", "Thistle", "Clover", "Mallow", "Hazel",
+    "Oat", "Plum", "Burrow", "Fern", "Whistle", "Crumb", "Dimple", "Hive", "Snug", "Warren",
+    "Osier", "Nut", "Tansy", "Bumble", "Pottle", "Quill", "Cosey", "Muddle", "Teasel", "Wren",
+    "Cress", "Pudding", "Sorrel"
+  ],
+  "settlement_suffix": [
+    "combe", "bottom", "bank", "holt", "wick", "den", "ley", "burrow", "hay", "mead",
+    "dell", "brook", "knoll", "cot", "hythe", "sett", "warren", "mound", "ridge", "green",
+    "by", ""
+  ],
+  "realm_patterns": [
+    "The Combes of {name}", "Moot of {name}", "Free Downs of {name}", "Hundred of {name}",
+    "Kettle-Moot of {name}", "Good Neighbours of {name}", "Green Country of {name}"
+  ],
+  "camp_names": [
+    "First Furrow", "Picnic Hill", "Hedge-Camp", "The Kettle Stop", "Mushroom Ring", "Wagon Rest",
+    "Sett-Camp", "Bramble Shelter", "Honeypot Camp", "Last Biscuit", "Dig-Here", "Tea-Tree Camp"
+  ]
+}

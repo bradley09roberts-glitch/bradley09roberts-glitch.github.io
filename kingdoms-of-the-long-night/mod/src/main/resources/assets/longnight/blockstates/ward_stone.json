@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "active=false": {
+      "model": "longnight:block/ward_stone"
+    },
+    "active=true": {
+      "model": "longnight:block/ward_stone_active"
+    }
+  }
+}

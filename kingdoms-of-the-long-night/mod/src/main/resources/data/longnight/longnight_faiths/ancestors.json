@@ -1,0 +1,13 @@
+{
+  "name": "The Halls of the Forefathers",
+  "adherent": "Hall-sworn",
+  "clergy": "Lorekeeper",
+  "description": "The dead are not gone; they are deeper in the stone. Names carved true keep the ancestors near, and an uncarved name is a soul lost.",
+  "burial": "tomb",
+  "burial_text": "laid in a carved stone tomb, the name cut deep so the forefathers can find them",
+  "festival": "the Naming of Names",
+  "festival_month": 7,
+  "shrine_block": "minecraft:chiseled_stone_bricks",
+  "strictness": 0.75,
+  "charity": 0.4
+}

@@ -1,0 +1,50 @@
+{
+  "given_male": [
+    "Azhemir", "Qadrun", "Tazim", "Sharez", "Ruhar", "Khalvan", "Imzar", "Darzun", "Fazhir", "Hazrun",
+    "Jirad", "Kasmun", "Malzir", "Nazhar", "Orzan", "Qasimel", "Sahrun", "Tamzir", "Uzmar", "Zahrid",
+    "Bashran", "Dalim", "Ezhan", "Ghaszur", "Hamzar", "Iqrun", "Jazem", "Kharun", "Luzhir", "Mazhad",
+    "Nirzan", "Ozrim", "Qamrel", "Razhan", "Shirzun", "Tahzar", "Yazrun", "Zarim", "Ashkaz", "Behzir",
+    "Dazhir", "Fahrun", "Sazhem", "Kaszir"
+  ],
+  "given_female": [
+    "Nahira", "Esrah", "Ilsara", "Zahrine", "Shirah", "Qamira", "Ruzhel", "Azhira", "Dalziah", "Fazria",
+    "Hessira", "Ishal", "Jazrin", "Khalira", "Lazhra", "Meshara", "Nazrah", "Ozhra", "Parzine", "Qadhessa",
+    "Rashira", "Saffira", "Tazrine", "Umara", "Vashira", "Yasmeh", "Zafra", "Amzeh", "Benzira", "Darhiya",
+    "Ezhrin", "Ghazira", "Hazzah", "Imrah", "Kesra", "Lirzah", "Mahzira", "Nirah", "Razhel", "Simrah",
+    "Talzah", "Zuhrel", "Sahriya", "Azmeh"
+  ],
+  "family": [
+    "Azhirani", "Qasmeri", "Darzuni", "Khalvari", "Sahruni", "Tamzeni", "Ruhari", "Zahrimi", "Imzeri", "Ghaszari",
+    "Nazhrani", "Orzani", "Bashrani", "Hazruni", "Kharuni", "Luzhari", "Malziri", "Qadruni", "Shirzani", "Tahzari",
+    "Uzmari", "Yazruni", "Zarimi", "Behziri", "Fahruni", "Iqruni", "Jazemi", "Mazhadi", "Ozrimi", "Razhani",
+    "Sazhemi", "Ashkazi", "Dalimi", "Ezhani", "Kasmuni", "Nirzani", "Qamreli", "Tazimi", "Dazhiri", "Hamzari",
+    "Fazhiri", "Kasziri"
+  ],
+  "family_style": "patronymic",
+  "patronymic_male": "sar-{father}",
+  "patronymic_female": "sari-{father}",
+  "epithets": [
+    "the Radiant", "Sun-Touched", "the Glass-Eyed", "the Generous", "Lord of Wells", "the Patient", "the Merciless", "Dune-Walker", "the Gilded", "Mirror of Azhir",
+    "the Just Scale", "Breaker of Caravans", "the Scholar", "the Golden-Tongued", "Keeper of the Salt Road", "the Unshadowed", "the Twice-Exiled", "the Falcon", "the Burning", "the Lamp of Noon",
+    "Well-Digger", "the Poet", "Friend of Horses"
+  ],
+  "settlement_prefix": [
+    "Qas", "Zah", "Azh", "Sar", "Khal", "Tazm", "Iskar", "Darz", "Esh", "Mir",
+    "Nazh", "Ruh", "Bah", "Ghaz", "Hazr", "Imz", "Kesh", "Luz", "Marz", "Orz",
+    "Qad", "Raz", "Sahr", "Tir", "Ush", "Yaz", "Zir", "Amz", "Behz", "Fazh",
+    "Jiz", "Shar"
+  ],
+  "settlement_suffix": [
+    "ar", "abar", "iyah", "ir", "un", "esh", "ara", "imar", "um", "aqa",
+    "ai", "andar", "ush", "ira", "azra", "ekh", "imun", "arra", "an", "eth",
+    "ul", ""
+  ],
+  "realm_patterns": [
+    "Sunthrone of {name}", "Sunlands of {name}", "Radiant Dominion of {name}", "Caravan-League of {name}",
+    "Glass Throne of {name}", "Qadhirate of {name}", "Wells of {name}", "Mirror Court of {name}"
+  ],
+  "camp_names": [
+    "Palm Rest", "First Well", "Dune Camp", "Caravan Halt", "Tent of Morning", "Shade of Three Palms",
+    "Salt Camp", "Mirror Camp", "Waystone of Dawn", "Cistern Camp", "Noon Shelter"
+  ]
+}
