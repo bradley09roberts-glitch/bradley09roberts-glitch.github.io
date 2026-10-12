@@ -13,6 +13,10 @@ Per-item status (planned / partial / playable / tested) lives in [INVENTORY.md](
 | Server self-test, phase 2 | `GL_SELFTEST=2 ./gradlew runServer` (same world, after phase 1) | Restart persistence: fruit ledger, NPCs, ships, ship registry; writes `run/selftest-phase2.txt` |
 | Client test | start the server with `GL_SELFTEST=client ./gradlew runServer`, then `GL_CLIENTTEST=1 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClient` | A real client (software OpenGL under Xvfb) joins the dedicated server, creates a character, fights NPCs, uses fruits/Haki, sails a ship, visits set pieces and saves `run-client/screenshots/clienttest_*.png` plus `run-client/clienttest-report.txt` |
 | Inventory | `python3 tools/gen_inventory.py` (after phase 1) | Regenerates `docs/INVENTORY.md` from `run/inventory.json` and the self-test reports |
+| Audio in the real client | client test with `ALSOFT_CONF` pointing at an OpenAL Soft config with `drivers = wave` | The client's mixed audio output is written to a WAV file; matching it against the tracks shows what the game actually played |
+
+The test server leaves `level-seed` empty, so every fresh phase-1 world has a new random seed: each full run checks a
+different world (original islands, their towns and the island counts in the inventory differ from run to run).
 
 ## Milestones
 
