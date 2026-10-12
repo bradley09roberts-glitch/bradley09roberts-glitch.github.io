@@ -225,9 +225,9 @@ quest_text = {
  'path_marine': ('Enlistment', 'Serve justice: defeat 5 pirates and 5 bandits.'),
  'path_revolutionary': ('Whispers of Revolution', 'Strike at Cipher Pol and travel the seas.'),
  'path_bounty_hunter': ('Licensed Hunter', 'Arrest two pirates with seastone cuffs.'),
- 'board_bandits': ('Board Job: Bandits', 'Defeat 5 bandits.'), 'board_pirates': ('Board Job: Pirates', 'Defeat 4 pirates.'),
- 'board_marines': ('Board Job: Marines', 'Defeat 4 Marines (raises your bounty).'), 'board_explore': ('Board Job: Charting', 'Discover 2 islands.'),
- 'board_ruins': ('Board Job: Ruins', 'Read a poneglyph.'),
+ 'board_bandits': ('Bandits on the Roads', 'Defeat 5 bandits.'), 'board_pirates': ('Pirate Trouble', 'Defeat 4 pirates.'),
+ 'board_marines': ('Thin the Marines', 'Defeat 4 Marines (raises your bounty).'), 'board_explore': ('Charting the Sea', 'Discover 2 islands.'),
+ 'board_ruins': ('Old Ruins', 'Read a poneglyph.'),
 }
 for q, (t, d) in quest_text.items():
     lang[f'quest.grandline.{q}'] = t
