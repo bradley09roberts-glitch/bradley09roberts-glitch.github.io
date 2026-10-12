@@ -114,6 +114,35 @@ adv('den_call', 'root', 'den_den_mushi', 'task', 'Puru Puru Puru', 'Get through 
 adv('den_crew', 'den_call', 'crew_den_den_mushi', 'task', 'All Hands', 'Speak to a crewmate on a crew Den Den Mushi')
 adv('den_eavesdrop', 'den_call', 'black_den_den_mushi', 'task', 'On the Marine Wavelength', 'Overhear the Marines on a black Den Den Mushi')
 
+# ------------------------------------------------------------------ careers (rank-ups: com.grandline.career.Careers.MILESTONES)
+FIRST_RANKS = {'marine': 'career_marine_seaman', 'pirate': 'career_pirate_supernova', 'revolutionary': 'career_revolutionary_officer',
+               'hunter': 'career_hunter_licensed', 'civilian': 'career_civilian_apprentice'}
+adv('career_path', 'root', 'marine_coat', 'task', 'A Calling',
+    'Earn your first rank on your path: Seaman, Supernova, Revolutionary Officer, a hunter\'s licence or an apprentice\'s name',
+    criteria=FIRST_RANKS, any=[list(FIRST_RANKS)])
+adv('career_marine_seaman', 'career_path', 'marine_coat', 'task', 'Swabbie No More', 'Rise from Seaman Recruit to Seaman in the Marines')
+adv('career_marine_ensign', 'career_marine_seaman', 'seastone_jitte', 'task', 'Commissioned', 'Earn an officer\'s commission: Ensign')
+adv('career_marine_captain', 'career_marine_ensign', 'fine_katana', 'goal', 'Captain of the Marines', 'Make Captain: a sword of your own and a squad to command')
+adv('career_marine_vice_admiral', 'career_marine_captain', 'black_den_den_mushi', 'goal', 'Vice Admiral',
+    'Rise to Vice Admiral: Headquarters will hear your request for a Buster Call')
+adv('career_marine_admiral', 'career_marine_vice_admiral', 'seastone_cuffs', 'challenge', 'The Compass of the Sky', 'Take one of the three Admirals\' seats')
+adv('career_marine_fleet_admiral', 'career_marine_admiral', 'enma', 'challenge', 'Fleet Admiral', 'Command every Marine from the Fleet Admiral\'s seat')
+adv('career_pirate_supernova', 'career_path', 'wanted_poster', 'goal', 'One of the Supernovas',
+    'Make your name in Paradise: a bounty of 100,000,000 Beli and deeds to match')
+adv('career_pirate_warlord', 'career_pirate_supernova', 'letter_of_marque', 'goal', 'Warlord of the Sea', 'Accept the World Government\'s letter of marque')
+adv('career_pirate_emperor', 'career_pirate_supernova', 'beli_pouch', 'challenge', 'Emperor of the Sea',
+    'Rise to Emperor: a billion-Beli head who has beaten an Emperor or holds territory')
+adv('career_revolutionary_officer', 'career_path', 'flintlock', 'task', 'Revolutionary Officer', 'Run missions for your cell and report for promotion')
+adv('career_revolutionary_commander', 'career_revolutionary_officer', 'musket', 'goal', 'Army Commander', 'Command a revolutionary army')
+adv('career_revolutionary_chief', 'career_revolutionary_commander', 'eternal_pose', 'challenge', 'Chief of Staff',
+    'Become the Revolutionary Army\'s Chief of Staff')
+adv('career_hunter_licensed', 'career_path', 'seastone_cuffs', 'task', 'Licensed', 'Hold a bounty hunter\'s licence')
+adv('career_hunter_gold', 'career_hunter_licensed', 'grappling_hook', 'goal', 'Gold Licence', 'Collect 2,500,000 Beli of bounties and bring in a notable outlaw alive')
+adv('career_hunter_black', 'career_hunter_gold', 'wanted_poster', 'challenge', 'Black Licence', 'The Lodge\'s highest licence: 10,000,000 Beli collected, five notable heads')
+adv('career_civilian_apprentice', 'career_path', 'sea_chart', 'task', 'Making a Name', 'Make a name in your trade: charting islands, reading poneglyphs or trading')
+adv('career_civilian_master', 'career_civilian_apprentice', 'poneglyph_rubbing', 'goal', 'Master of the Trade', 'Become a master cartographer, scholar or merchant')
+adv('career_civilian_grand', 'career_civilian_master', 'eternal_pose', 'challenge', 'Legend of the Seas', 'Become a grand cartographer, scholar or merchant')
+
 # ------------------------------------------------------------------ races (each life may add one)
 adv('races', 'root', 'meat_on_bone', 'task', 'Born of the Sea', 'Begin a life at sea. Each new character after a death can add their race below',
     criteria={'begin': 'begin'}, toast=False, chat=False)

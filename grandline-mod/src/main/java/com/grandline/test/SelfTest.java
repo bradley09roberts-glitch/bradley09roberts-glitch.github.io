@@ -99,6 +99,7 @@ public final class SelfTest {
         else if (PHASE.equals("journey")) JourneyTests.phase1(steps); // quick run: advancements, Den Den Mushi, Buster Call
         else if (PHASE.equals("bosses")) BossTests.phase1(steps); // quick run: boss fights
         else if (PHASE.equals("bases")) BaseTests.phase1(steps); // quick run: crew bases on claimed islands
+        else if (PHASE.equals("careers")) CareerTests.phase1(steps); // quick run: faction careers
         else phase2();
     }
 
@@ -800,6 +801,7 @@ public final class SelfTest {
             return 0;
         });
         BaseTests.phase1(steps); // crew bases: claims, building rights, warehouse, upgrades, dock, hands, raids (test/BaseTests.java)
+        CareerTests.phase1(steps); // faction careers: ranks, perks, titles, the Warlord letter (test/CareerTests.java)
         JourneyTests.phase1(steps); // journey advancements, Den Den Mushi, Buster Call (test/JourneyTests.java; runs last)
     }
 
@@ -994,6 +996,7 @@ public final class SelfTest {
         JourneyTests.phase2(steps); // journey advancements belong to the account and are saved with it
         BossTests.phase2(steps); // boss relic records and fates persist
         BaseTests.phase2(steps); // a claimed island with its upgrades, warehouse and hands survives the restart
+        CareerTests.phase2(steps); // careers are saved with the character
         final String[] fx = new String[1];
         steps.add(s -> {
             fx[0] = Files.readString(Path.of("selftest-fixtures.txt")).trim();

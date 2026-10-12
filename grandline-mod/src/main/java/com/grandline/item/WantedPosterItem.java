@@ -21,6 +21,7 @@ public class WantedPosterItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         CustomData cd = stack.get(DataComponents.CUSTOM_DATA);
         if (cd != null && level.isClientSide) com.grandline.client.screen.WantedPosterScreen.open(cd.copyTag()); // client-only class, never reached on a server
+        if (cd != null && player instanceof net.minecraft.server.level.ServerPlayer sp) com.grandline.career.CareerPerks.track(sp, cd.copyTag()); // careers: tracking hints
         return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
 

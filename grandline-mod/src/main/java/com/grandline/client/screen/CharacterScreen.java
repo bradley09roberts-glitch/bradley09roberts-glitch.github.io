@@ -91,6 +91,22 @@ public class CharacterScreen extends Screen {
         }
         g.drawString(font, Component.translatable("screen.grandline.styles", Component.translatable("style.grandline." + d.activeStyle)), width / 2 + 20, 46, 0xFFFFD34A);
         g.drawString(font, Component.translatable("screen.grandline.discovered", d.discoveredIslands.size()), width / 2 + 20, height - 46, 0xFFAAAAAA);
+        careerLines(g, d, width / 2 + 20, height - 72);
+    }
+
+    /** The career: title, and the next rank with the progress toward it (merit, bounty, Beli collected or trade points). */
+    private void careerLines(GuiGraphics g, CharacterData d, int x, int y) {
+        var title = com.grandline.career.CareerTrack.title(d);
+        var t = com.grandline.career.CareerTrack.of(d.faction);
+        if (title == null || t == null) return;
+        g.drawString(font, Component.translatable("screen.grandline.career", title), x, y, 0xFFFFD34A);
+        int r = com.grandline.career.CareerTrack.rankOf(d);
+        if (r >= t.top()) return;
+        Component next = t == com.grandline.career.CareerTrack.CIVILIAN
+                ? Component.translatable(t.rankKey(r + 1), Component.translatable("career.grandline.civilian.spec." + com.grandline.career.CareerTrack.specialty(d)))
+                : Component.translatable(t.rankKey(r + 1));
+        g.drawString(font, Component.translatable("screen.grandline.career_next", next, String.format("%,d", t.progress(d)), String.format("%,d", t.rank(r + 1).need())),
+                x, y + 12, 0xFFAAAAAA);
     }
 
     private Component flag(boolean b) {

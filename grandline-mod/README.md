@@ -95,13 +95,14 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
   wrecks. All of it is synthesised by `tools/gen_sounds.py`.
 - **Buster Call**: past 500M Beli, a crime by a Marine base or a Vice Admiral who lived may bring a rare, announced fleet bombardment; outlast, outrun or sink it (config `busterCall`).
 - **Crew bases**: plant a crew flag (shipwrights sell it) at the heart of an uninhabited original island to claim it for your crew (on everyone's sea chart); only your crew builds there, a base chest is your shared warehouse, the dock repairs your ships for free, `/base` builds a watchtower, dojo, galley, medical bay, shipyard slip and quarters for hired hands; raiders may come while you are near, and an undefended flag can be captured (config `bases`).
+- **Careers** (`/career`): every path has ranks and a title shown in chat and the tab list. Marines earn merit (arrests, pirates brought in, sea battles, the saga) and report to an officer for promotion, Seaman Recruit to Fleet Admiral (pay, supplies, the coat, a squad, a warship, Buster Call requests; crimes demote, then desert); pirates rise from Rookie to Supernova and Emperor with bounty and deeds, may accept the Government's letter of marque (Warlord) and claim territory; revolutionaries run missions; bounty hunters earn licences (better payouts, poster tracking); civilians make a name charting, reading and trading.
 
 ## Admin and test commands (op)
 
 `/grandline island list|here|tp <id>`, `/grandline fruit give|set|remove|awaken|ledger`, `/grandline char info|level|
 mastery|style|haki|conqueror|beli|reset`, `/grandline npc <role> [tier]`, `/grandline quest <id>`,
 `/grandline terrain revert`, `/grandline test env|ship <class> [helm]|sail <0-3>|anchor <bool>|ability <id>|storm|
-inventory`, `/bustercall status|issue <player>|cancel <player>`, `/base raid|remove <island>`.
+inventory`, `/bustercall status|issue <player>|cancel <player>`, `/base raid|remove <island>`, `/career admin merit <n>|rank <n>|envoy|seats`.
 
 ## Building from source
 
@@ -123,6 +124,7 @@ python3 -I tools/gen_animations.py
 | Restart persistence | then `GL_SELFTEST=2 ./gradlew runServer` → `run/selftest-phase2.txt` |
 | Sky/deep-sea quick test | `GL_SELFTEST=dims ./gradlew runServer` |
 | Treasure maps, fishing, cooking quick test | `GL_SELFTEST=activities ./gradlew runServer` → `run/selftest-phaseactivities.txt` |
+| Careers quick test | `GL_SELFTEST=careers ./gradlew runServer` → `run/selftest-phasecareers.txt` |
 | Real client (software GL) | server: `GL_SELFTEST=client ./gradlew runServer`; client: `GL_CLIENTTEST=1 xvfb-run -a ./gradlew runClient` → `run-client/screenshots/` |
 | Two clients on one ship | as above with `GL_CLIENTTEST=mp_a ./gradlew runClient` and `GL_CLIENTTEST=mp_b ./gradlew runClient2` |
 | Server load (20 simulated players) | `GL_SELFTEST=load ./gradlew runServer` (`GL_LOADTEST_PLAYERS`, `GL_LOADTEST_SECONDS`) → `run/loadtest-report.txt` |

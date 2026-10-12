@@ -471,7 +471,7 @@ public final class NavalCombat {
             Player cap = a.owner == null ? null : a.level().getPlayerByUUID(a.owner);
             // merchants and bounty hunters are fired on only when they started it (above); raiders spare their allies
             if (b.npcFaction.equals("pirate")) return cap == null || !b.life.raidAlly(cap);
-            if (!b.npcFaction.equals("marine") || cap == null) return false;
+            if (!b.npcFaction.equals("marine") || cap == null || com.grandline.career.Careers.protectedAtSea(cap)) return false; // careers: a Warlord
             CharacterData d = Characters.get(cap);
             return d.faction == Faction.PIRATE || d.faction == Faction.REVOLUTIONARY || d.bounty > 0;
         }

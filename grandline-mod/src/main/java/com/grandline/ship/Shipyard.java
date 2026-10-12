@@ -134,6 +134,7 @@ public final class Shipyard {
                     return;
                 }
                 if (!sp.isCreative()) d.beli -= c.price;
+                com.grandline.career.CareerPerks.dressShip(sp, ship); // careers: a Marine's gull, an Emperor's colours
                 Quests.progress(sp, "ship", "any", 1);
                 com.grandline.journey.Journey.onShipBought(sp);
                 sp.sendSystemMessage(Component.translatable("grandline.ship.bought", Component.translatable("ship_class.grandline." + c.id())).withStyle(ChatFormatting.GOLD));

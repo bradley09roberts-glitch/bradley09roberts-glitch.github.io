@@ -34,6 +34,7 @@ public final class GrandLine {
         com.grandline.boss.BossItems.register(modBus); // boss fights: the Haki scroll (relics are named weapon stacks)
         MusicDiscs.register(modBus); // music discs of the mod's own tracks
         com.grandline.base.BaseRegistry.register(modBus); // crew bases: the crew flag and the base chest
+        com.grandline.career.CareerRegistry.register(modBus); // careers: the Marine coat, the letter of marque
         GLNetwork.register(modBus);
         modBus.addListener(this::setup);
     }

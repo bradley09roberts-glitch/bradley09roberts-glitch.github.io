@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_marine_vice_admiral",
+  "display": {
+    "icon": {
+      "id": "grandline:seastone_cuffs"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_marine_admiral.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_marine_admiral.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_marine_admiral": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_marine_admiral"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_marine_admiral"
+    ]
+  ]
+}

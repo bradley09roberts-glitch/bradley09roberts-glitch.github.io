@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_marine_seaman",
+  "display": {
+    "icon": {
+      "id": "grandline:seastone_jitte"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_marine_ensign.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_marine_ensign.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_marine_ensign": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_marine_ensign"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_marine_ensign"
+    ]
+  ]
+}

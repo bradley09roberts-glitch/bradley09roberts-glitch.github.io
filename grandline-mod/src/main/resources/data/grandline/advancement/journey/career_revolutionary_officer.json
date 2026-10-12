@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_path",
+  "display": {
+    "icon": {
+      "id": "grandline:flintlock"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_revolutionary_officer.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_revolutionary_officer.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_revolutionary_officer": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_revolutionary_officer"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_revolutionary_officer"
+    ]
+  ]
+}

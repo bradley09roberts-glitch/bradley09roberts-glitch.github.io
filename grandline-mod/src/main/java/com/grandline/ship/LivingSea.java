@@ -704,6 +704,7 @@ public final class LivingSea {
                 case HUNTER -> d.addReputation(Faction.PIRATE.id(), 5 + 2 * size);
                 default -> {}
             }
+            com.grandline.career.Careers.onShipDefeated(sp, ship.npcFaction, size); // careers: sea battles won
             CharacterManager.markDirty(sp);
         }
     }

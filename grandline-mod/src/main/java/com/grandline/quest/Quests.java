@@ -88,6 +88,7 @@ public final class Quests {
         for (var item : q.rewardItems()) sp.getInventory().add(item.get());
         if (q.flag() != null) d.flags.add(q.flag());
         com.grandline.journey.Journey.onQuestDone(sp, q); // journey: the Parts of the saga and its endings
+        com.grandline.career.Careers.onQuestDone(sp, d, q); // careers: story deeds and path quests
         sp.sendSystemMessage(Component.translatable("grandline.quest.complete", QuestRegistry.title(q), q.xp(), q.beli()).withStyle(ChatFormatting.GOLD));
         sp.playNotifySound(com.grandline.registry.ModSounds.UI_QUEST.get(), net.minecraft.sounds.SoundSource.PLAYERS, 1f, 1f);
         if (lv > 0) {

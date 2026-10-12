@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_civilian_apprentice",
+  "display": {
+    "icon": {
+      "id": "grandline:poneglyph_rubbing"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_civilian_master.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_civilian_master.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_civilian_master": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_civilian_master"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_civilian_master"
+    ]
+  ]
+}

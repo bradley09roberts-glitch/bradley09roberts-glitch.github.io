@@ -23,6 +23,8 @@ def item_ids():
     plain += re.findall(r'ITEMS\.register\("([a-z0-9_]+)"', _read('journey/JourneyRegistry.java'))
     plain += re.findall(r'ITEMS\.register\("([a-z0-9_]+)"', _read('boss/BossItems.java'))  # boss fights: the Haki scroll
     plain += [f'music_disc_{s}' for s in re.findall(r'disc\("music_disc_[a-z_]+", "([a-z_]+)"\)', _read('registry/MusicDiscs.java'))]
+    # careers: the Marine coat, the letter of marque
+    plain += re.findall(r'ITEMS\.register\("([a-z0-9_]+)"', _read('career/CareerRegistry.java'))
     weapons = re.findall(r'\bweapon\("([a-z0-9_]+)"', src)
     return plain, weapons
 

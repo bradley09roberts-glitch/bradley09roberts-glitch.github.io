@@ -20,6 +20,7 @@ from assetgen import naval_items                        # noqa: E402  (registers
 from assetgen import activity_items                     # noqa: E402  (sea activities: sprites, recipes, tags, loot modifier)
 from assetgen import journey_items                      # noqa: E402  (Den Den Mushi sprites/recipes, chat glyphs, journey tab background)
 from assetgen import base_items                         # noqa: E402  (crew bases: the crew flag and base chest blocks)
+from assetgen import career_items                       # noqa: E402  (careers: Marine coat sprite and armour layer, letter of marque)
 
 RES = source.RES
 A = os.path.join(RES, 'assets/grandline')
@@ -109,6 +110,8 @@ def main(prune=False):
         png(rel, canvas)
     for rel, obj in journey_items.asset_files().items():
         js(A, rel, obj)
+    for rel, canvas in career_items.textures().items():
+        png(rel, canvas)
     for name, r in {**data.recipes(), **naval_items.recipes(), **activity_items.recipes(), **journey_items.recipes(), **base_items.recipes()}.items():
         js(D, f'grandline/recipe/{name}.json', r)
     for rel, obj in activity_items.data_files().items():

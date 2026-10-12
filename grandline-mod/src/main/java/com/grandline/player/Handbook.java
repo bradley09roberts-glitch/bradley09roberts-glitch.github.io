@@ -16,7 +16,7 @@ import java.util.List;
  * the player's language) and name the player's own key bindings through keybind components.
  */
 public final class Handbook {
-    public static final int PAGES = 11;
+    public static final int PAGES = 12; // page 11: careers (career/Careers)
 
     public static ItemStack create() {
         List<Filterable<Component>> pages = new ArrayList<>();

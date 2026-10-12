@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_revolutionary_officer",
+  "display": {
+    "icon": {
+      "id": "grandline:musket"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_revolutionary_commander.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_revolutionary_commander.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_revolutionary_commander": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_revolutionary_commander"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_revolutionary_commander"
+    ]
+  ]
+}

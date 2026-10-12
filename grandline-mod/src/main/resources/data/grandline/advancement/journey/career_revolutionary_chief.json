@@ -1,0 +1,31 @@
+{
+  "parent": "grandline:journey/career_revolutionary_commander",
+  "display": {
+    "icon": {
+      "id": "grandline:eternal_pose"
+    },
+    "title": {
+      "translate": "advancements.grandline.journey.career_revolutionary_chief.title"
+    },
+    "description": {
+      "translate": "advancements.grandline.journey.career_revolutionary_chief.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "career_revolutionary_chief": {
+      "trigger": "grandline:milestone",
+      "conditions": {
+        "id": "career_revolutionary_chief"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "career_revolutionary_chief"
+    ]
+  ]
+}

@@ -25,7 +25,8 @@ public final class CharacterData implements INBTSerializable<CompoundTag> {
     public Appearance appearance = new Appearance();
     public Blue origin = Blue.EAST;
     public Faction faction = Faction.PIRATE;
-    public int factionRank = 0;
+    public int factionRank = 0;            // rank in the career of this faction (see career.CareerTrack)
+    public final com.grandline.career.CareerState career = new com.grandline.career.CareerState(); // ranks, merit, perks
     public int generation = 0;              // how many characters this player has had (permadeath legacy)
     public final List<String> fallenCharacters = new ArrayList<>();
 
@@ -185,6 +186,7 @@ public final class CharacterData implements INBTSerializable<CompoundTag> {
         t.putString("origin", origin.id());
         t.putString("faction", faction.id());
         t.putInt("factionRank", factionRank);
+        t.put("career", career.save());
         t.putInt("generation", generation);
         t.put("fallen", strings(fallenCharacters));
 
@@ -252,6 +254,7 @@ public final class CharacterData implements INBTSerializable<CompoundTag> {
         origin = Blue.byId(t.getString("origin"));
         faction = Faction.byId(t.getString("faction"));
         factionRank = t.getInt("factionRank");
+        career.load(t.getCompound("career"));
         generation = t.getInt("generation");
         fallenCharacters.clear();
         readStrings(t, "fallen", fallenCharacters);

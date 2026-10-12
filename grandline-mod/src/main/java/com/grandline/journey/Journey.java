@@ -104,6 +104,7 @@ public final class Journey {
         for (int i = 1; i <= 4; i++) s.add(STORY_PART + i);
         s.addAll(ENDINGS);
         for (Race r : Race.playableRaces()) s.add(RACE + r.id());
+        s.addAll(com.grandline.career.Careers.MILESTONES.values()); // careers: rank-ups
         return s;
     }
 
@@ -180,6 +181,7 @@ public final class Journey {
         bounty(d.bounty, out);
         for (var e : PART_ENDS.entrySet()) if (QuestRegistry.isDone(d, e.getKey())) out.add(STORY_PART + e.getValue());
         for (String f : ENDINGS) if (d.flags.contains(f)) out.add(f);
+        out.addAll(com.grandline.career.Careers.earnedMilestones(d)); // careers: ranks reached
         crew(CrewManager.members(server, d.characterId), out);
         boolean ownsShip = false;
         for (ShipRegistry.Record r : ShipRegistry.get(server).ownedBy(sp.getUUID())) {

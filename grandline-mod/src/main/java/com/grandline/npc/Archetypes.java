@@ -39,6 +39,7 @@ public final class Archetypes {
         a("jailer_beast", Faction.WILD, 6, none, "brawler", List.of("beast_1"), Hostility.AGGRESSIVE, true, 0, 0, 90, 8, Race.GIANT, false, false);
         a("cp_agent", Faction.CIPHER_POL, 6, none, "rokushiki", List.of("cp_agent_1"), Hostility.LAWFUL, true, 0.2, 0.5, 90, 10, Race.HUMAN, false, false);
         a("cp_leader", Faction.CIPHER_POL, 8, none, "rokushiki", List.of("cp_leader_1"), Hostility.LAWFUL, true, 0.8, 0.9, 180, 12, Race.HUMAN, false, false);
+        a("wg_envoy", Faction.WORLD_GOVERNMENT, 5, none, "rokushiki", List.of("cp_agent_1"), Hostility.PASSIVE, false, 0, 0.3, 60, 6, Race.HUMAN, false, false); // careers: the letter of marque
         a("celestial_guard", Faction.WORLD_GOVERNMENT, 9, List.of("fine_katana"), "rokushiki", List.of("cp_leader_1"), Hostility.LAWFUL, true, 0.3, 1.0, 220, 16, Race.HUMAN, false, false);
         // outlaws
         a("bandit", Faction.WILD, 1, List.of("knife", "cutlass", "bo_staff"), "brawler", List.of("bandit_1", "bandit_2"), Hostility.AGGRESSIVE, false, 0, 0, 22, 1, Race.HUMAN, false, true);

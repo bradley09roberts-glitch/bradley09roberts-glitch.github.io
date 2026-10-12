@@ -586,8 +586,110 @@ First run of a real client against the dedicated server. Result: no client crash
   reports spots and crew if a landing fails (`BaseRaids.landingReport`); in real play a crew member within 160
   blocks keeps the base loaded. Full phase 1 576/576, phase 2 18/18, no exception (10:30–10:57).
 
+### Faction careers (agent, merged 11:15)
+- Every starting path is a career with ranks (`career/`: `CareerTrack` ladders, `CareerState` inside `CharacterData`,
+  `Careers` rules and hooks, `CareerPerks`, `Squads`, `Warlords`, `Missions`, `CareerWorldData` seats and territory,
+  `/career`). The rank is the character's `factionRank` (unused until now); the career belongs to the character, so a
+  permadeath starts it over and frees any seat or island it held (the real Clone event).
+- **Marines** (Seaman Recruit, Seaman, Petty Officer, Chief Petty Officer, Ensign, Lieutenant, Commander, Captain,
+  Commodore, Rear Admiral, Vice Admiral, Admiral, Fleet Admiral): merit from arrests (more for notables, and for the
+  bounty brought in), pirates beaten, sea battles won against pirate ships (LivingSea's defeat hook), story quests
+  (more for the Marine variant), the enlistment path quest and board jobs; plus a level per rank. Gates from Ensign
+  up: the enlistment (path quest), sea victories (Captain 1, Commodore 3), Part II (Rear Admiral), Observation or
+  Armament (Vice Admiral), Part III and both Haki (Admiral, three seats per world), Part IV and Conqueror's (Fleet
+  Admiral, one seat). Once qualified the Marine is told to report; the promotion talk is a dialogue option with a
+  Marine officer senior enough (tier 4 up to Captain, 5 to Vice Admiral, 8 for the Admirals), one rank per talk.
+  Perks: rank pay once a day on login or at the turn of the day (200 + 300 per rank); any Marine NPC is a
+  quartermaster for Marines (coat, cuffs, ammunition, snails, black snail from Lieutenant, seastone jitte from Ensign,
+  a fine sword from Captain; prices through the shop's tier and reputation rules); rest at a Marine base; issued kit
+  (the Marine coat at Seaman, a named seastone jitte at Ensign, a named rank sword at Captain, a black snail at Vice
+  Admiral); a squad from Commander (`/career squad`: 2–6 Marines, officers and a Vice Admiral at the top; they follow,
+  take up the leader's fight, never turn on the leader; five minutes, ten-minute cooldown); a warship from Commodore
+  (`/career ship`: an NPC Marine ship of the rank's class on open water nearby, under the NPC ship cap); a Buster Call
+  request from Vice Admiral (`/career bustercall <player>`: granted through `BusterCall.report` when the target is
+  eligible; once an hour). New ships bought by a Marine fly the gull on white. Crimes: striking a Marine or a
+  civilian (first blow, per NPC) and anything that raises the bounty earn demerits; every ten cost a rank (merit cut
+  back to the new rank); a Seaman Recruit who keeps at it deserts. The old rule (standing below -300) still makes a
+  deserter. Desertion: a pirate with a bounty of 5M per rank held (announced), seats lost, squad sent home, the gull
+  struck from their ships, titled "Deserter" until the pirate makes a name.
+- **Pirates** (Rookie, Supernova, Emperor of the Sea; Warlord of the Sea as a status): Supernova at 100M with an island
+  of Paradise discovered and two deeds (named foes beaten, killed or yielded; Marine ships beaten; the Parts of the
+  saga; the path quest); Emperor at 1B, level 50 and an Emperor-tier foe beaten (an Emperor or tier 12) or territory
+  held. Promotions are automatic and announced. A Supernova who has not finished the war is visited by a World
+  Government envoy (a passive `wg_envoy` NPC, once a day on land; declining keeps them away three days): the letter
+  of marque (seven seats) freezes the bounty and makes Marine NPCs, bases and warships stand down (GLNpc, NpcShipAi,
+  NavalCombat); duty: three pirates (a pirate ship counts three) every three days, paid with a 10,000 Beli share;
+  revoked for a missed quota, any crime or striking the law (the bounty comes back, at least 50M; no second letter);
+  the end of the war abolishes it, an Emperor renounces it. Perks: generic pirates respect a Supernova and join their
+  banner in conversation (3, a Warlord 4, an Emperor 8; twenty minutes); on pirate-held islands any pirate with a
+  poster is welcome and the fence sells supplies (port of call); a Supernova claims an island of the Grand Line with
+  `/career claim` (settled, not Marine-held, no defenders near; one, an Emperor three): tribute 4,000 a day and the
+  title "Emperor of <island>" (settled islands; crew bases are the uninhabited ones); an Emperor's ships fly their
+  Jolly Roger in gold on crimson. An Emperor fought in a boss fight counts for everyone the fight rewards (read from
+  the boss records, never an earlier life's).
+- **Revolutionaries** (Cell Member, Revolutionary Officer, Army Commander, Chief of Staff — one per world): merit from
+  missions, blows against the Government, Marine ships beaten, story deeds; promotion in person with a revolutionary
+  (Chief of Staff with a named one); gates: the contact path quest, missions (2, 6, 15), Part III. Missions in turn
+  from any revolutionary: incite (talk to three people of a non-Marine island, then its elder), sabotage (three
+  Marines near a base, or a Marine ship), liberate (two guards of the Sabaody auction house; three captives freed).
+  Perks: safe houses (rest; the law looks away for five minutes), contacts from Officer (supplies, the nearest Marine
+  base), funding 250 a rank a day, a cell of three or four from Commander.
+- **Bounty hunters** (Apprentice, Licensed, Bronze, Silver, Gold, Black licence) by Beli collected (outlaws arrested,
+  half for killed ones, pirate ships beaten); the licence needs the path quest (or 50,000 collected), Gold one notable
+  head brought in alive, Black five. Perks: 10% more per licence tier on every outlaw brought in alive; a wanted
+  poster used from Bronze tells how far, which way and near which island its target is (exact from Gold; Marines from
+  Lieutenant/Commodore read it too); a hunter ship from Gold.
+- **Civilians** (Townsfolk, Apprentice, Journeyman, Master, Grand): points in the best of three trades — islands
+  charted (explorer, 10 each), poneglyphs read (scholar, 40 each), Beli traded in shops (merchant, 1 per 500); the
+  title names the trade ("Master Cartographer"). Perks: the Gazette buys each new chart (150 a rank) and rubbing
+  (1,000 a rank and XP), a merchant pays 3% less a rank everywhere, a retainer from Journeyman, a purse on each rank.
+- Titles: before the name in chat (`PlayerEvent.NameFormat`) and the tab list (`TabListNameFormat`), on name tags
+  (sent with the visuals, applied by the client's NameFormat), on the character sheet with the next rank and the
+  progress toward it, and in `/career` with what is still missing and the perks. Big promotions are announced to the
+  server. 19 journey advancements (A Calling, then six Marine ranks, Supernova, Warlord, Emperor, three revolutionary,
+  three hunter and three civilian ranks) are fired from the promotions and credited from saved data on login.
+- Items: the Marine coat (a light chest piece with its own armour material and layer texture: open front, the mark of
+  justice on the back, gold epaulettes, blue cuffs) and the letter of marque; sprites from `tools/assetgen/career_items.py`.
+  A Captain's Handbook page on careers. Text in `src/main/lang/en_us/careers.json`.
+- Shared files touched (one call each unless noted): `CharacterData` (the career field, 3 lines), `CharacterManager`
+  (creation, visuals), `GrandLine` (registry), `Bounties.raise` (3), `NpcOutcomes.npcArrested`, `QuestEvents` (4),
+  `Quests.finish`, `LivingSea.defeated`, `GLNpc.isHostileTo`, `Dialogues` (2), `Shops` (offers per player, price,
+  trade), `WantedPosterItem`, `NpcShipAi`, `NavalCombat`, `Shipyard`, `Archetypes` (the envoy), `Journey` (2),
+  `Handbook` (page count; page 11 moved to 12 in handbook.json), `ClientNet`, `CharacterScreen`, `SelfTest` (3),
+  `tools/gen_journey.py`, `tools/gen_assets.py`, `tools/assetgen/source.py`, README.
+- Verified (`test/CareerTests`, 38 checks in phase 1 and 1 in phase 2; quick run `GL_SELFTEST=careers`: 38/38): ladders and translations; the coat
+  (chest armour with its layer texture) and letter; 19 career advancements, every rank milestone an advancement;
+  a Marine: Seaman Recruit in chat and tab names, merit from three real arrests, told to report, the talk with an
+  officer makes a Seaman (coat, title, milestone; a plain Marine cannot promote); arrests and a kill climb to Chief
+  Petty Officer one talk at a time; Ensign refused until the path quest (enlisted), then the jitte; Captain waits for
+  a sea battle (a pirate sloop sunk through the hull hook: +30 merit), then announced with the sword; a squad of
+  three (loyal, cooldown, dismissed); 2,300 Beli rank pay on login, once a day; the supply shop (coat bought; none
+  for a pirate); a junior officer cannot promote a Commodore, Part II/III and Haki gates, Admiral and Fleet Admiral
+  seats (a second Marine finds the seat taken); a Buster Call request granted for a 600M pirate (refused for a
+  Captain, then on cooldown); a warship called at sea. Crimes: three blows on Marines demote a Petty Officer, more
+  crimes make a Seaman Recruit, then a deserter (bounty, announcement, "Deserter", the gull struck); standing below
+  -300 deserts with 5M per rank. A pirate: not Supernova at 120M until Navigation at Alabasta and two rivals yield;
+  banner and port of call; the envoy's letter (Marines stand down), duty paid, a crime revokes it (bounty back, seat
+  freed, hostile again, no second letter); Emperor from a boss fight's record (gold on crimson); a claimed island
+  (title, tribute); boss records credit this life only. A revolutionary: path quest, incite, sabotage (a Marine
+  ship sunk), liberation at the Sabaody auction house, Officer and Army Commander in person, a cell of three, the
+  safe house, contacts, funding. A hunter: licence, +10% payout, a poster tracking a player 1,500 blocks east,
+  Gold for a notable head, a hunter ship. A civilian: Apprentice Cartographer from charts, chart and rubbing fees, a
+  Grand Merchant's 12% discount. Persistence: two players written to the world's playerdata and read back by the
+  player list after the restart (rank, merit, tallies, seat, territory, title). Permadeath through the real Clone
+  event frees the Admiral's seat and leaves no career. Full run on one fresh world of the tree merged with the boss fights, sounds and crew
+  bases: phase 1 614/614, phase 2 19/19, no exceptions; after the next dev commits (sea ambience, base raid test
+  fixes) phase 1 613/614, phase 2 19/19. Flaky under load, not career code: that last run's one FAIL was the Buster
+  Call convergence check (warships 106 → 98 blocks, it wants 15 closer; the server ran up to 89 ticks behind) — the
+  journey quick run on the same tree passed it (111 → 72, 38/38); a run before the first merge failed the three
+  harbour-raid checks (the raid ship 98 blocks off the dock after 1,799 ticks) — the living-sea quick run on that code
+  passed all 24, and both later full runs passed them.
+- Not done / not verified: nothing seen in a real client yet (titles on name tags, the coat on a player model, the
+  character sheet lines, the letter's tooltip); the envoy's daily visit, the duty period, squads following in real
+  movement and called ships fighting are driven only in the server test; the Marine base rest and the black snail
+  shop entry are untested; balance (merit and pay) needs real play; NPC ships do not follow a called ship's caller.
+
 ## Work in flight (background agents)
-- Faction careers (ranks, titles, perks for every path).
 - Sea jobs: a real escort follower, "sink the ship" and convoy board jobs, quest hooks into sea battles.
 
 ## Known gaps (next priorities)
