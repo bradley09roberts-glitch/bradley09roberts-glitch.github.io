@@ -317,6 +317,29 @@ public final class ClientSelfTest {
         shot("34_paintings_a");
         cmd("tp @s 36039 103 20046 0 5", 40);
         shot("35_paintings_b");
+        // Devil Fruit wave 4 on the stone stage above the town
+        cmd("gamemode creative", 10);
+        cmd("fill 35990 150 19986 36024 150 20014 minecraft:smooth_stone", 10);
+        cmd("tp @s 36000 151 20000 180 10", 40);
+        cmd("grandline fruit remove", 10);
+        cmd("grandline fruit set hanabi", 20);
+        cmd("grandline npc pirate 1", 10);
+        cmd("execute as @e[type=grandline:npc,distance=..10] run data merge entity @s {NoAI:1b}", 5);
+        cmd("tp @s 36000 151 20006 180 5", 20);
+        cmd("grandline test ability fruit/hanabi/chrysanthemum", 30);
+        shot("35c_hanabi_chrysanthemum");
+        cmd("grandline test ability fruit/hanabi/star_mine", 25);
+        shot("35d_hanabi_star_mine");
+        cmd("grandline fruit remove", 10);
+        cmd("kill @e[type=grandline:npc,distance=..30]", 10);
+        cmd("fill 35990 150 19986 36024 150 20014 minecraft:air", 10);
+        // the living sea: a Marine ship and a pirate ship fight it out in open water
+        cmd("execute in minecraft:overworld run tp @s 36000 90 21500 0 30", 200);
+        cmd("ship sea battle", 300);
+        cmd("tp @s ~ ~25 ~ 0 50", 60);
+        shot("35e_sea_battle");
+        cmd("ship sea merchant", 200);
+        shot("35f_merchant_traffic");
         creatureShots();
         add("done", ClientSelfTest::finish, 0);
     }
