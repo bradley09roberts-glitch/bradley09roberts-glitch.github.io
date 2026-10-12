@@ -14,22 +14,22 @@ Textures are original pixel art painted by code (`tools/assetgen/arch_textures.p
 | family | block | kind | used in |
 |---|---|---|---|
 | white_plaster | `white_plaster` (White Plaster) | cube | 142 structures (e.g. inn__village, church__village, church__cloud, church__snow) |
-| white_plaster | `white_plaster_stairs` (White Plaster Stairs) | stairs | kit only (available to players) |
-| white_plaster | `white_plaster_slab` (White Plaster Slab) | slab | kit only (available to players) |
+| white_plaster | `white_plaster_stairs` (White Plaster Stairs) | stairs | 25 structures (e.g. tavern__snow, tavern__desert, tavern__cloud, mansion__cloud) |
+| white_plaster | `white_plaster_slab` (White Plaster Slab) | slab | 15 structures (e.g. mansion__future, dojo__future, warehouse__future, tavern__desert) |
 | cream_plaster | `cream_plaster` (Cream Plaster) | cube | 9 structures (e.g. church__desert, mansion__desert, inn__desert, mansion__venetian) |
-| cream_plaster | `cream_plaster_stairs` (Cream Plaster Stairs) | stairs | kit only (available to players) |
-| cream_plaster | `cream_plaster_slab` (Cream Plaster Slab) | slab | kit only (available to players) |
+| cream_plaster | `cream_plaster_stairs` (Cream Plaster Stairs) | stairs | 4 structures (e.g. mansion__desert, inn__desert, dojo__desert, warehouse__desert) |
+| cream_plaster | `cream_plaster_slab` (Cream Plaster Slab) | slab | 5 structures (e.g. mansion__desert, dojo__desert, inn__desert, warehouse__desert) |
 | ochre_plaster | `ochre_plaster` (Ochre Plaster) | cube | 9 structures (e.g. church__venetian, house_large__desert, warehouse__venetian, shop__desert) |
-| ochre_plaster | `ochre_plaster_stairs` (Ochre Plaster Stairs) | stairs | kit only (available to players) |
-| ochre_plaster | `ochre_plaster_slab` (Ochre Plaster Slab) | slab | kit only (available to players) |
+| ochre_plaster | `ochre_plaster_stairs` (Ochre Plaster Stairs) | stairs | 4 structures (e.g. shop__desert, house_large__desert, house_small__desert, hut__desert) |
+| ochre_plaster | `ochre_plaster_slab` (Ochre Plaster Slab) | slab | 4 structures (e.g. house_large__desert, shop__desert, house_small__desert, hut__desert) |
 | salmon_plaster | `salmon_plaster` (Salmon Plaster) | cube | 15 structures (e.g. tavern__candy, inn__venetian, mansion__candy, house__candy) |
-| salmon_plaster | `salmon_plaster_stairs` (Salmon Plaster Stairs) | stairs | kit only (available to players) |
+| salmon_plaster | `salmon_plaster_stairs` (Salmon Plaster Stairs) | stairs | 5 structures (e.g. house_large__coral, shop__coral, inn__coral, house_small__coral) |
 | salmon_plaster | `salmon_plaster_slab` (Salmon Plaster Slab) | slab | kit only (available to players) |
 | sky_plaster | `sky_plaster` (Sky Blue Plaster) | cube | 28 structures (e.g. mansion__coral, warehouse__candy, tavern__venetian, house__venetian) |
-| sky_plaster | `sky_plaster_stairs` (Sky Blue Plaster Stairs) | stairs | kit only (available to players) |
+| sky_plaster | `sky_plaster_stairs` (Sky Blue Plaster Stairs) | stairs | 1 structures (e.g. mansion__coral) |
 | sky_plaster | `sky_plaster_slab` (Sky Blue Plaster Slab) | slab | kit only (available to players) |
 | mint_plaster | `mint_plaster` (Mint Plaster) | cube | 12 structures (e.g. inn__candy, church__coral, church__candy, house_large__candy) |
-| mint_plaster | `mint_plaster_stairs` (Mint Plaster Stairs) | stairs | kit only (available to players) |
+| mint_plaster | `mint_plaster_stairs` (Mint Plaster Stairs) | stairs | 5 structures (e.g. tavern__coral, house__coral, dojo__coral, warehouse__coral) |
 | mint_plaster | `mint_plaster_slab` (Mint Plaster Slab) | slab | kit only (available to players) |
 | timber_frame | `timber_frame` (Timber Frame) | cube | 3 structures (e.g. mansion__snow, house_large__stone_town, house_small__stone_town) |
 | timber_frame | `timber_frame_cross` (Crossed Timber Frame) | cube | 8 structures (e.g. inn__stone_town, tavern__snow, house__snow, warehouse__snow) |
@@ -42,8 +42,8 @@ Textures are original pixel art painted by code (`tools/assetgen/arch_textures.p
 | weathered_planks | `weathered_plank_stairs` (Weathered Plank Stairs) | stairs | 7 structures (e.g. shipwright__palace, shipwright__future, shipwright__coral, shipwright__wano) |
 | weathered_planks | `weathered_plank_slab` (Weathered Plank Slab) | slab | 7 structures (e.g. shipwright__palace, shipwright__future, shipwright__coral, shipwright__wano) |
 | dock_planks | `dock_planks` (Dock Planks) | cube | 28 structures (e.g. mansion__jungle, tavern__jungle, inn__jungle, shipwright__palace) |
-| dock_planks | `dock_plank_stairs` (Dock Plank Stairs) | stairs | kit only (available to players) |
-| dock_planks | `dock_plank_slab` (Dock Plank Slab) | slab | kit only (available to players) |
+| dock_planks | `dock_plank_stairs` (Dock Plank Stairs) | stairs | 21 structures (e.g. shipwright__palace, shipwright__future, shipwright__giant, shipwright__coral) |
+| dock_planks | `dock_plank_slab` (Dock Plank Slab) | slab | 15 structures (e.g. shipwright__palace, shipwright__future, shipwright__giant, shipwright__coral) |
 | terracotta_roof_tiles | `terracotta_roof_tiles` (Terracotta Roof Tiles) | cube | 14 structures (e.g. inn__village, house_large__village, warehouse__village, inn__venetian) |
 | terracotta_roof_tiles | `terracotta_roof_tile_stairs` (Terracotta Roof Tile Stairs) | stairs | 19 structures (e.g. mansion__venetian, dojo__venetian, inn__village, house_large__village) |
 | terracotta_roof_tiles | `terracotta_roof_tile_slab` (Terracotta Roof Tile Slab) | slab | 24 structures (e.g. tavern__venetian, shipwright__venetian, inn__venetian, warehouse__venetian) |
@@ -63,21 +63,21 @@ Textures are original pixel art painted by code (`tools/assetgen/arch_textures.p
 | thatch | `thatch_stairs` (Thatch Stairs) | stairs | 35 structures (e.g. mansion__giant, mansion__jungle, dojo__giant, shipwright__giant) |
 | thatch | `thatch_slab` (Thatch Slab) | slab | 35 structures (e.g. blacksmith__giant, blacksmith__jungle, tavern__giant, tavern__jungle) |
 | dressed_sandstone | `dressed_sandstone` (Dressed Sandstone) | cube | 18 structures (e.g. mansion__desert, church__desert, inn__desert, tavern__desert) |
-| dressed_sandstone | `dressed_sandstone_stairs` (Dressed Sandstone Stairs) | stairs | 16 structures (e.g. mansion__desert, tavern__desert, inn__desert, dojo__desert) |
+| dressed_sandstone | `dressed_sandstone_stairs` (Dressed Sandstone Stairs) | stairs | 16 structures (e.g. mansion__desert, dojo__desert, watchtower__desert, inn__desert) |
 | dressed_sandstone | `dressed_sandstone_slab` (Dressed Sandstone Slab) | slab | 4 structures (e.g. bounty_board__desert, well__desert, ruined_house__desert, watchtower__desert) |
-| dressed_sandstone | `dressed_sandstone_wall` (Dressed Sandstone Wall) | wall | kit only (available to players) |
+| dressed_sandstone | `dressed_sandstone_wall` (Dressed Sandstone Wall) | wall | 1 structures (e.g. mansion__desert) |
 | pale_masonry | `pale_masonry` (Pale Masonry) | cube | 46 structures (e.g. church__marine, church__palace, mansion__marine, dojo__marine) |
-| pale_masonry | `pale_masonry_stairs` (Pale Masonry Stairs) | stairs | 26 structures (e.g. marine_post__cloud, marine_post__giant, marine_post__stone_town, marine_post__jungle) |
+| pale_masonry | `pale_masonry_stairs` (Pale Masonry Stairs) | stairs | 33 structures (e.g. marine_post__cloud, marine_post__giant, marine_post__stone_town, marine_post__jungle) |
 | pale_masonry | `pale_masonry_slab` (Pale Masonry Slab) | slab | 15 structures (e.g. marine_post__cloud, marine_post__giant, marine_post__stone_town, marine_post__jungle) |
-| pale_masonry | `pale_masonry_wall` (Pale Masonry Wall) | wall | kit only (available to players) |
+| pale_masonry | `pale_masonry_wall` (Pale Masonry Wall) | wall | 3 structures (e.g. mansion__marine, mansion__cloud, mansion__palace) |
 | fieldstone | `fieldstone` (Fieldstone) | cube | 66 structures (e.g. church__stone_town, mansion__giant, mansion__snow, mansion__village) |
-| fieldstone | `fieldstone_stairs` (Fieldstone Stairs) | stairs | kit only (available to players) |
+| fieldstone | `fieldstone_stairs` (Fieldstone Stairs) | stairs | 24 structures (e.g. dojo__stone_town, house__village, house__snow, inn__village) |
 | fieldstone | `fieldstone_slab` (Fieldstone Slab) | slab | kit only (available to players) |
-| fieldstone | `fieldstone_wall` (Fieldstone Wall) | wall | kit only (available to players) |
+| fieldstone | `fieldstone_wall` (Fieldstone Wall) | wall | 9 structures (e.g. mansion__jungle, mansion__stone_town, mansion__giant, mansion__candy) |
 | harbour_stone | `harbour_stone` (Harbour Stone) | cube | 45 structures (e.g. mansion__marine, mansion__venetian, marine_post__cloud, marine_post__giant) |
-| harbour_stone | `harbour_stone_stairs` (Harbour Stone Stairs) | stairs | kit only (available to players) |
+| harbour_stone | `harbour_stone_stairs` (Harbour Stone Stairs) | stairs | 6 structures (e.g. inn__venetian, house_large__venetian, dojo__venetian, house_small__venetian) |
 | harbour_stone | `harbour_stone_slab` (Harbour Stone Slab) | slab | kit only (available to players) |
-| harbour_stone | `harbour_stone_wall` (Harbour Stone Wall) | wall | kit only (available to players) |
+| harbour_stone | `harbour_stone_wall` (Harbour Stone Wall) | wall | 2 structures (e.g. mansion__coral, mansion__venetian) |
 | sandstone_column | `sandstone_column` (Sandstone Column) | pillar | 1 structures (e.g. mansion__desert) |
 | marble_column | `marble_column` (Marble Column) | pillar | 42 structures (e.g. mansion__palace, tavern__palace, inn__palace, house_large__palace) |
 | shutters | `green_shutter` (Green Shutter) | trapdoor | 9 structures (e.g. tavern__village, tavern__venetian, mansion__venetian, inn__venetian) |
@@ -90,16 +90,16 @@ Textures are original pixel art painted by code (`tools/assetgen/arch_textures.p
 | awnings | `blue_awning` (Blue Striped Awning) | decor | 25 structures (e.g. market_stall__desert, market_stall__marine, shop__village, shop__marine) |
 | awnings | `green_awning` (Green Striped Awning) | decor | 10 structures (e.g. market_stall__candy, shop__stone_town, house_small__desert, inn__desert) |
 | awnings | `yellow_awning` (Yellow Striped Awning) | decor | 5 structures (e.g. blacksmith__desert, blacksmith__future, shop__desert, shop__candy) |
-| cargo | `cargo_crate` (Cargo Crate) | cube | 51 structures (e.g. warehouse__village, warehouse__future, warehouse__jungle, warehouse__giant) |
-| cargo | `cargo_sacks` (Cargo Sacks) | decor | 50 structures (e.g. warehouse__village, warehouse__future, warehouse__jungle, warehouse__giant) |
-| cargo | `rope_coil` (Rope Coil) | decor | 35 structures (e.g. warehouse__village, warehouse__future, warehouse__jungle, warehouse__giant) |
+| cargo | `cargo_crate` (Cargo Crate) | cube | 51 structures (e.g. ship_flagship, warehouse__village, warehouse__future, ship_galleon) |
+| cargo | `cargo_sacks` (Cargo Sacks) | decor | 50 structures (e.g. ship_flagship, ship_galleon, warehouse__village, warehouse__future) |
+| cargo | `rope_coil` (Rope Coil) | decor | 20 structures (e.g. shipwright__palace, ship_sloop, shipwright__future, shipwright__giant) |
 | dock | `bollard` (Mooring Bollard) | decor | 15 structures (e.g. shipwright__palace, shipwright__future, shipwright__giant, shipwright__coral) |
 | dock | `deck_cannon` (Deck Cannon) | decor | 1 structures (e.g. shipwreck) |
 | dock | `fishing_net` (Fishing Net) | decor | kit only (available to players) |
 | furniture | `shop_counter` (Shop Counter) | decor | 75 structures (e.g. tavern__palace, tavern__snow, tavern__stone_town, tavern__coral) |
 | furniture | `goods_shelf` (Goods Shelf) | decor | 15 structures (e.g. shop__coral, shop__future, shop__palace, shop__candy) |
 | furniture | `plank_table` (Plank Table) | decor | 125 structures (e.g. tavern__palace, tavern__snow, tavern__stone_town, tavern__coral) |
-| furniture | `plank_bench` (Plank Bench) | decor | 61 structures (e.g. plaza__village, plaza__coral, plaza__marine, plaza__palace) |
+| furniture | `plank_bench` (Plank Bench) | decor | 62 structures (e.g. plaza__village, plaza__coral, plaza__marine, plaza__palace) |
 | furniture | `flower_planter` (Window Planter) | decor | 98 structures (e.g. mansion__candy, mansion__palace, mansion__venetian, mansion__village) |
 | lanterns | `red_paper_lantern` (Red Paper Lantern) | lantern | 17 structures (e.g. tavern__wano, plaza__wano, dojo__wano, house_large__wano) |
 | lanterns | `white_paper_lantern` (White Paper Lantern) | lantern | 19 structures (e.g. tavern__jungle, dojo__jungle, plaza__jungle, mansion__jungle) |
