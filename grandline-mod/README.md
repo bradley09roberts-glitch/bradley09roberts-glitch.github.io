@@ -29,12 +29,17 @@ Recommended: 8–12 GB RAM allocated for a smooth time in big cities; render dis
 
 ## Install (dedicated server, LAN)
 
-1. Run the NeoForge installer with "Install server" into an empty folder (Java 21).
-2. Put both jars from `dist/` into the server's `mods` folder.
-3. In `server.properties` set `level-type=grandline\:ocean_world` **before the first start** (an existing vanilla
-   world keeps its old generator). Accept the EULA in `eula.txt`.
-4. Start the server with at least **4 GB** (`-Xmx4G`; the load test measured a 0.8–1.2 GB live heap with 20 players,
-   and 1.8 GB thrashes the garbage collector). Every player needs the same two jars. Sized for ~20 players.
+1. Run the NeoForge 21.1.259 installer with "Install server" into an empty folder (Java 21), or headless:
+   `java -jar neoforge-21.1.259-installer.jar --installServer .`
+2. Make a `mods` folder there and put both jars from `dist/` into it.
+3. Create `server.properties` with `level-type=grandline\:ocean_world` **before the first start** (an existing vanilla
+   world keeps its old generator), and `eula.txt` with `eula=true`.
+4. Put `-Xmx4G` (at least 4 GB) in `user_jvm_args.txt`, then start with `run.sh` (Linux/macOS) or `run.bat`
+   (Windows). The load test measured a 0.8–1.2 GB live heap with 20 players; 1.8 GB thrashes the garbage collector.
+   Every player needs the same two jars. Sized for ~20 players.
+
+These exact steps were run against the built jars on a clean NeoForge 21.1.259 server install: it starts in a few
+seconds, builds the world plan and logs no errors.
 
 Server options live in `config/grandline-server.toml` (permadeath, knockdown time, Conqueror's chance, PvP, town
 protection, fruit terrain changes and reversion, number of generated islands, NPC simulation radius, etc.).
