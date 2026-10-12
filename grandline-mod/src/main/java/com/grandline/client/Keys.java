@@ -19,7 +19,10 @@ public final class Keys {
     public static final KeyMapping CHART = new KeyMapping("key.grandline.chart", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, CAT);
     public static final KeyMapping NEXT_SET = new KeyMapping("key.grandline.next_set", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_TAB, CAT);
 
-    public static final KeyMapping[] ALL = {COMBAT_MODE, DODGE, OBSERVATION, ARMAMENT, CONQUEROR, TRANSFORM, LOCK_ON, CHARACTER, CHART, NEXT_SET};
+    public static final KeyMapping ANCHOR = new KeyMapping("key.grandline.anchor", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_X, CAT);
+    public static final KeyMapping BURST = new KeyMapping("key.grandline.coup_de_burst", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, CAT);
+
+    public static final KeyMapping[] ALL = {COMBAT_MODE, DODGE, OBSERVATION, ARMAMENT, CONQUEROR, TRANSFORM, LOCK_ON, CHARACTER, CHART, NEXT_SET, ANCHOR, BURST};
 
     private Keys() {}
 }

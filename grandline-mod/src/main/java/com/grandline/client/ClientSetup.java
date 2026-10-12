@@ -43,6 +43,7 @@ public final class ClientSetup {
     @SubscribeEvent
     public static void hud(RegisterGuiLayersEvent e) {
         e.registerAbove(VanillaGuiLayers.HOTBAR, GrandLine.id("hud"), HudOverlay::render);
+        e.registerAbove(VanillaGuiLayers.HOTBAR, GrandLine.id("ship_hud"), ShipControls::hud);
     }
 
     @SubscribeEvent

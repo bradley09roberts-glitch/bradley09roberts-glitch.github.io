@@ -378,7 +378,7 @@ public final class FightingStyles {
         }));
         anchor.abilities.add(anchor.ability("chain_sweep").unlock(10).cooldown(90).stamina(20).anim("chain_spin").exec(burst(6, 7, Element.BLUNT, 2.2f, 0)));
         anchor.abilities.add(anchor.ability("harbor_pull").unlock(20).cooldown(80).stamina(14).anim("chain_swing").exec((u, c) -> {
-            LivingEntity t = Hits.cone(u, 10, 30).stream().findFirst().orElse(null);
+            LivingEntity t = c.target != null && c.target.distanceTo(u) < 11 ? c.target : Hits.cone(u, 10, 30).stream().findFirst().orElse(null);
             if (t == null) return false;
             FruitKit.impulse(t, u.position().subtract(t.position()).normalize().scale(1.5).add(0, 0.3, 0), true);
             Hits.hit(u, t, FruitKit.dmg(c, 4), Hits.Info.of(Element.BLUNT, 0).withStun(20));

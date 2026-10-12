@@ -19,6 +19,15 @@ public final class ModEntities {
     public static final DeferredHolder<EntityType<?>, EntityType<HumanoidNpc>> HUMANOID_NPC = TYPES.register("npc",
             () -> EntityType.Builder.of(HumanoidNpc::new, MobCategory.CREATURE).sized(0.6f, 1.8f).eyeHeight(1.62f).clientTrackingRange(10).build("npc"));
 
+    public static final java.util.Map<com.grandline.ship.ShipClass, DeferredHolder<EntityType<?>, EntityType<com.grandline.ship.ShipEntity>>> SHIPS = new java.util.EnumMap<>(com.grandline.ship.ShipClass.class);
+
+    static {
+        for (com.grandline.ship.ShipClass c : com.grandline.ship.ShipClass.values()) {
+            SHIPS.put(c, TYPES.register("ship_" + c.id(), () -> EntityType.Builder.<com.grandline.ship.ShipEntity>of((t, l) -> new com.grandline.ship.ShipEntity(t, l, c), MobCategory.MISC)
+                    .sized(Math.min(4f, c.beam), c.freeboard + c.draft).clientTrackingRange(16).updateInterval(1).build("ship_" + c.id())));
+        }
+    }
+
     public static void register(IEventBus bus) {
         TYPES.register(bus);
         bus.addListener(ModEntities::attributes);

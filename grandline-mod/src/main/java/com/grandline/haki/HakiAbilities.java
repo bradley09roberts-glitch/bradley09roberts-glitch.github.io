@@ -47,7 +47,7 @@ public final class HakiAbilities {
         });
         Ability.builder("haki/armament/internal_destruction", Ability.Source.HAKI, "armament").unlock(70).cooldown(200).stamina(15).haki(35).anim("palm_strike").exec((u, c) -> {
             CombatState.of(u).buffs.put("internal_destruction", 10);
-            LivingEntity t = Hits.cone(u, 3.6, 60).stream().findFirst().orElse(null);
+            LivingEntity t = c.target != null && c.target.distanceTo(u) < 4.5 + u.getBbWidth() ? c.target : Hits.cone(u, 3.6, 60).stream().findFirst().orElse(null);
             if (t == null) return false;
             Hits.hit(u, t, FruitKit.dmg(c, 16), Hits.Info.of(Element.IMPACT, 2.5f).imbue(true).asUnblockable().withStun(30));
             FruitKit.fx(u, "ryuo_burst", t.position().add(0, 1, 0), 0, 0, 0);

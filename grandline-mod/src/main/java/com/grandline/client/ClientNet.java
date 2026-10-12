@@ -48,6 +48,7 @@ public final class ClientNet {
                 case "dialogue" -> mc.setScreen(new DialogueScreen(p.data()));
                 case "shop" -> mc.setScreen(new ShopScreen(p.data()));
                 case "chart" -> mc.setScreen(new ChartScreen(p.data()));
+                case "shipyard" -> mc.setScreen(new ShipyardScreen(p.data()));
                 case "close" -> {
                     if (mc.screen != null) mc.setScreen(null);
                 }

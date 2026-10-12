@@ -38,6 +38,8 @@ public class AbilityProjectile extends Projectile {
     public float explosion = 0;
     public boolean breaksBlocks = false;
     @Nullable public OnHit onHit;
+    /** A ship this projectile must not hit (the one that fired it). */
+    @Nullable public Entity ignoreShip;
     private final java.util.Set<Integer> hitIds = new java.util.HashSet<>();
 
     @FunctionalInterface
@@ -51,8 +53,12 @@ public class AbilityProjectile extends Projectile {
     }
 
     public static AbilityProjectile shoot(LivingEntity owner, String kind, float size, Vec3 from, Vec3 dir, double speed, float damage, Hits.Info info) {
-        AbilityProjectile p = new AbilityProjectile(ModEntities.ABILITY_PROJECTILE.get(), owner.level());
-        p.setOwner(owner);
+        return shoot(owner.level(), owner, kind, size, from, dir, speed, damage, info);
+    }
+
+    public static AbilityProjectile shoot(Level level, @Nullable LivingEntity owner, String kind, float size, Vec3 from, Vec3 dir, double speed, float damage, Hits.Info info) {
+        AbilityProjectile p = new AbilityProjectile(ModEntities.ABILITY_PROJECTILE.get(), level);
+        if (owner != null) p.setOwner(owner);
         p.setKind(kind);
         p.setSize(size);
         p.damage = damage;
@@ -60,7 +66,7 @@ public class AbilityProjectile extends Projectile {
         p.setPos(from.x, from.y, from.z);
         p.setDeltaMovement(dir.normalize().scale(speed));
         p.updateRotation();
-        owner.level().addFreshEntity(p);
+        level.addFreshEntity(p);
         return p;
     }
 
@@ -116,12 +122,22 @@ public class AbilityProjectile extends Projectile {
 
     @Override
     protected boolean canHitEntity(Entity e) {
+        if (e instanceof com.grandline.ship.ShipPart part) {
+            Entity ship = part.getParent();
+            if (ship == ignoreShip || (getOwner() != null && getOwner().getVehicle() == ship)) return false;
+            if (getOwner() != null && ship instanceof com.grandline.ship.ShipEntity se && se.carries(getOwner())) return false;
+            return !hitIds.contains(e.getId());
+        }
         return super.canHitEntity(e) && e instanceof LivingEntity && !hitIds.contains(e.getId()) && e != getOwner();
     }
 
     @Override
     protected void onHitEntity(EntityHitResult r) {
         if (r.getEntity() instanceof LivingEntity le) hitEntity(le);
+        else if (r.getEntity() instanceof com.grandline.ship.ShipPart part && hitIds.add(part.getId())) {
+            part.hurt(com.grandline.registry.ModDamageTypes.source(level(), com.grandline.registry.ModDamageTypes.CANNON, this, getOwner()), damage);
+            impact(null, position());
+        }
     }
 
     private void hitEntity(LivingEntity le) {

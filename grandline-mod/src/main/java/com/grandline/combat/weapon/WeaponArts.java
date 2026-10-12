@@ -81,7 +81,7 @@ public final class WeaponArts {
                         return true;
                     });
                     if (wc == WeaponClass.JITTE) art(wc, "seastone_bind").unlock(10).cooldown(120).stamina(14).anim("thrust").exec((u, c) -> {
-                        LivingEntity t = Hits.cone(u, 3, 50).stream().findFirst().orElse(null);
+                        LivingEntity t = c.target != null && c.target.distanceTo(u) < 4 + u.getBbWidth() ? c.target : Hits.cone(u, 3, 50).stream().findFirst().orElse(null);
                         if (t == null) return false;
                         Hits.hit(u, t, d(u, 1.2f), Hits.Info.of(Element.BLUNT, 0.2f).asSeastone().withStun(30));
                         com.grandline.fruit.FruitRules.applySeastoneContact(t, 120);

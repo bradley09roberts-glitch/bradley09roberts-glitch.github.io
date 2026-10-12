@@ -1,13 +1,231 @@
 package com.grandline.ship;
 
+import com.grandline.net.GLNetwork;
 import com.grandline.npc.GLNpc;
+import com.grandline.player.CharacterData;
+import com.grandline.player.CharacterManager;
+import com.grandline.player.Characters;
+import com.grandline.player.Race;
+import com.grandline.quest.Quests;
+import com.grandline.registry.ModEntities;
+import com.grandline.world.Island;
+import com.grandline.world.WorldPlan;
+import com.grandline.world.settlement.Settlement;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
-/** Shipwright services (buy, upgrade, repair, recover sunk ships). Replaced with the full UI in the ships milestone. */
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/** Shipwright services: buy ships, buy upgrades, repair, recover sunk ships, rename/recolour. */
 public final class Shipyard {
+    public static final Map<String, Long> UPGRADES = new LinkedHashMap<>();
+
+    static {
+        UPGRADES.put("reinforced_hull", 15000L);
+        UPGRADES.put("fine_sails", 12000L);
+        UPGRADES.put("paddle_wheel", 30000L);
+        UPGRADES.put("seastone_keel", 80000L);
+        UPGRADES.put("coup_de_burst", 60000L);
+    }
+
     public static void open(ServerPlayer sp, GLNpc npc) {
-        sp.sendSystemMessage(Component.translatable("grandline.shipyard.soon"));
+        CharacterData d = Characters.get(sp);
+        CompoundTag t = new CompoundTag();
+        t.putInt("npc", npc.getId());
+        t.putLong("beli", d.beli);
+        ListTag classes = new ListTag();
+        for (ShipClass c : ShipClass.values()) {
+            CompoundTag e = new CompoundTag();
+            e.putString("id", c.id());
+            e.putLong("price", c.price);
+            e.putInt("cannons", c.cannons);
+            e.putInt("hull", c.hull);
+            classes.add(e);
+        }
+        t.put("classes", classes);
+        ListTag ups = new ListTag();
+        UPGRADES.forEach((k, v) -> {
+            CompoundTag e = new CompoundTag();
+            e.putString("id", k);
+            e.putLong("price", v);
+            ups.add(e);
+        });
+        t.put("upgrades", ups);
+        ListTag owned = new ListTag();
+        for (ShipRegistry.Record r : ShipRegistry.get(sp.server).ownedBy(sp.getUUID())) {
+            CompoundTag e = new CompoundTag();
+            e.putString("id", r.shipId.toString());
+            e.putString("name", r.name);
+            e.putString("cls", r.cls);
+            e.putBoolean("sunk", r.sunk);
+            e.putInt("dist", (int) Math.sqrt(sp.distanceToSqr(r.x, r.y, r.z)));
+            owned.add(e);
+        }
+        t.put("owned", owned);
+        GLNetwork.toPlayer(sp, new GLNetwork.OpenScreen("shipyard", t));
+    }
+
+    public static void action(ServerPlayer sp, CompoundTag t) {
+        Entity e = sp.level().getEntity(t.getInt("npc"));
+        if (!(e instanceof GLNpc npc) || npc.distanceTo(sp) > 10 || !npc.role().equals("shipwright")) return;
+        CharacterData d = Characters.get(sp);
+        switch (t.getString("op")) {
+            case "buy" -> {
+                ShipClass c = ShipClass.byId(t.getString("cls"));
+                if (c == ShipClass.ROWBOAT && d.race.isLarge()) {
+                    sp.sendSystemMessage(Component.translatable("grandline.ship.too_big").withStyle(ChatFormatting.RED));
+                    return;
+                }
+                if (d.beli < c.price && !sp.isCreative()) {
+                    sp.sendSystemMessage(Component.translatable("grandline.shop.poor").withStyle(ChatFormatting.RED));
+                    return;
+                }
+                ShipEntity ship = spawnAtDock(sp, npc, c);
+                if (ship == null) {
+                    sp.sendSystemMessage(Component.translatable("grandline.ship.no_berth"));
+                    return;
+                }
+                if (!sp.isCreative()) d.beli -= c.price;
+                Quests.progress(sp, "ship", "any", 1);
+                sp.sendSystemMessage(Component.translatable("grandline.ship.bought", Component.translatable("ship_class.grandline." + c.id())).withStyle(ChatFormatting.GOLD));
+            }
+            case "upgrade" -> {
+                String up = t.getString("upgrade");
+                Long price = UPGRADES.get(up);
+                ShipEntity ship = nearestOwned(sp);
+                if (price == null || ship == null) {
+                    sp.sendSystemMessage(Component.translatable("grandline.ship.bring_ship"));
+                    return;
+                }
+                if (ship.hasUpgrade(up) || (d.beli < price && !sp.isCreative())) return;
+                if (!sp.isCreative()) d.beli -= price;
+                ship.addUpgrade(up);
+                if (up.equals("reinforced_hull")) ship.repair(ship.maxHull());
+                ShipRegistry.get(sp.server).update(ship);
+                sp.sendSystemMessage(Component.translatable("grandline.ship.upgraded", Component.translatable("ship_upgrade.grandline." + up)).withStyle(ChatFormatting.GOLD));
+            }
+            case "repair" -> {
+                ShipEntity ship = nearestOwned(sp);
+                if (ship == null) return;
+                long cost = (long) ((ship.maxHull() - ship.hull()) * 20);
+                if (d.beli < cost && !sp.isCreative()) return;
+                if (!sp.isCreative()) d.beli -= cost;
+                ship.repair(ship.maxHull());
+            }
+            case "recover" -> {
+                ShipRegistry reg = ShipRegistry.get(sp.server);
+                ShipRegistry.Record r = reg.get(java.util.UUID.fromString(t.getString("ship")));
+                if (r == null || !sp.getUUID().equals(r.owner)) return;
+                if (!r.sunk && sp.serverLevel().getEntity(r.shipId) != null) return;
+                ShipClass c = ShipClass.byId(r.cls);
+                long fee = c.price / 5;
+                if (d.beli < fee && !sp.isCreative()) return;
+                ShipEntity ship = spawnAtDock(sp, npc, c, r);
+                if (ship == null) return;
+                if (!sp.isCreative()) d.beli -= fee;
+                sp.sendSystemMessage(Component.translatable("grandline.ship.recovered").withStyle(ChatFormatting.GOLD));
+            }
+            case "rename" -> {
+                ShipEntity ship = nearestOwned(sp);
+                if (ship == null) return;
+                String n = t.getString("name").replaceAll("[^\\p{L}\\p{N} .'\\-]", "");
+                ship.setShipName(n.length() > 24 ? n.substring(0, 24) : n);
+                if (t.contains("sail")) ship.setColors(t.getInt("sail") & 0xFFFFFF, t.getInt("hullc") & 0xFFFFFF);
+                ShipRegistry.get(sp.server).update(ship);
+            }
+            default -> {}
+        }
+        CharacterManager.markDirty(sp);
+        open(sp, npc);
+    }
+
+    @Nullable
+    static ShipEntity nearestOwned(ServerPlayer sp) {
+        ShipEntity best = null;
+        double bd = 80 * 80;
+        for (ShipEntity s : sp.serverLevel().getEntitiesOfClass(ShipEntity.class, sp.getBoundingBox().inflate(80))) {
+            if (!sp.getUUID().equals(s.owner) && !sp.isCreative()) continue;
+            double d = s.distanceToSqr(sp);
+            if (d < bd) {
+                bd = d;
+                best = s;
+            }
+        }
+        return best;
+    }
+
+    @Nullable
+    public static ShipEntity spawnAtDock(ServerPlayer sp, Entity near, ShipClass c) {
+        return spawnAtDock(sp, near, c, null);
+    }
+
+    @Nullable
+    static ShipEntity spawnAtDock(ServerPlayer sp, Entity near, ShipClass c, @Nullable ShipRegistry.Record restore) {
+        ServerLevel l = sp.serverLevel();
+        Vec3 pos = null;
+        float yaw = 0;
+        WorldPlan plan = WorldPlan.of(sp.server);
+        if (plan != null) {
+            Island isl = plan.nearest(near.getBlockX(), near.getBlockZ(), 600);
+            if (isl != null) {
+                Settlement s = isl.settlement();
+                if (s.hasDock) {
+                    double ux = s.dockDirX / 1000.0, uz = s.dockDirZ / 1000.0;
+                    // berth alongside the dock tip, bow pointing out to sea
+                    pos = new Vec3(s.dockTipX() + ux * (c.length / 2.0 + 3) - uz * (c.beam / 2.0 + 3.5), WorldPlan.SEA_LEVEL + 0.9, s.dockTipZ() + uz * (c.length / 2.0 + 3) + ux * (c.beam / 2.0 + 3.5));
+                    yaw = (float) Math.toDegrees(Math.atan2(-ux, uz));
+                }
+            }
+        }
+        if (pos == null) pos = findWater(l, near.blockPosition());
+        if (pos == null) return null;
+        ShipEntity ship = ModEntities.SHIPS.get(c).get().create(l);
+        if (ship == null) return null;
+        ship.moveTo(pos.x, pos.y, pos.z, yaw, 0);
+        ship.owner = sp.getUUID();
+        ship.ownerName = Characters.get(sp).name;
+        ship.setHull(c.hull);
+        ShipRegistry reg = ShipRegistry.get(sp.server);
+        if (restore != null) {
+            ship.shipId = restore.shipId;
+            ship.interiorIndex = restore.interior;
+            ship.setShipName(restore.name);
+            ship.setColors(restore.sailColor, restore.hullColor);
+            for (String u : restore.upgrades.split(",")) if (!u.isEmpty()) ship.addUpgrade(u);
+            ship.setHull(ship.maxHull());
+            l.addFreshEntity(ship);
+            reg.update(ship);
+        } else {
+            ship.setShipName(Characters.get(sp).name + "'s " + Component.translatable("ship_class.grandline." + c.id()).getString());
+            l.addFreshEntity(ship);
+            reg.register(ship);
+        }
+        return ship;
+    }
+
+    @Nullable
+    static Vec3 findWater(ServerLevel l, BlockPos near) {
+        for (int r = 8; r < 96; r += 4)
+            for (int a = 0; a < 16; a++) {
+                double ang = a * Math.PI / 8;
+                int x = near.getX() + (int) (Math.cos(ang) * r), z = near.getZ() + (int) (Math.sin(ang) * r);
+                boolean ok = true;
+                for (int dx = -6; dx <= 6 && ok; dx += 3)
+                    for (int dz = -6; dz <= 6 && ok; dz += 3)
+                        if (!l.getBlockState(new BlockPos(x + dx, WorldPlan.SEA_LEVEL, z + dz)).is(net.minecraft.world.level.block.Blocks.WATER)
+                                || !l.getBlockState(new BlockPos(x + dx, WorldPlan.SEA_LEVEL + 1, z + dz)).isAir()) ok = false;
+                if (ok) return new Vec3(x + 0.5, WorldPlan.SEA_LEVEL + 0.9, z + 0.5);
+            }
+        return null;
     }
 
     private Shipyard() {}

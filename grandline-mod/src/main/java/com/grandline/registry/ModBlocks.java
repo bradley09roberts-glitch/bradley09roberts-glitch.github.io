@@ -30,9 +30,12 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> FRUIT_BLOOM = BLOCKS.register("fruit_bloom", () -> new FruitBloomBlock(BlockBehaviour.Properties.of()
             .mapColor(MapColor.COLOR_PURPLE).strength(0.6f).noOcclusion().sound(SoundType.AZALEA_LEAVES).lightLevel(s -> 6)));
 
+    public static final DeferredBlock<Block> SHIP_HATCH = BLOCKS.register("ship_hatch", () -> new com.grandline.block.ShipHatchBlock(BlockBehaviour.Properties.of()
+            .mapColor(MapColor.WOOD).strength(-1f, 3600000f).noLootTable().sound(SoundType.WOOD)));
+
     public static void register(IEventBus bus) {
         BLOCKS.register(bus);
-        for (DeferredBlock<Block> b : java.util.List.of(SEASTONE, SEASTONE_BRICKS, SEASTONE_ORE, PONEGLYPH, FRUIT_BLOOM)) {
+        for (DeferredBlock<Block> b : java.util.List.of(SEASTONE, SEASTONE_BRICKS, SEASTONE_ORE, PONEGLYPH, FRUIT_BLOOM, SHIP_HATCH)) {
             ModItems.ITEMS.registerSimpleBlockItem(b);
         }
     }

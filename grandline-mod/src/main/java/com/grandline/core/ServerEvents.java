@@ -44,6 +44,8 @@ public final class ServerEvents {
         TerrainChanges.tick(e.getServer());
         PopulationManager.tick(e.getServer());
         com.grandline.world.Encounters.tick(e.getServer());
+        com.grandline.ship.ShipInteriors.tick(e.getServer());
+        com.grandline.ship.SeaEncounters.tick(e.getServer());
     }
 
     @SubscribeEvent

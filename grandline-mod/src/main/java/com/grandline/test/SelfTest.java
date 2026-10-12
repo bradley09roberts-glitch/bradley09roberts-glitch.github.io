@@ -409,6 +409,101 @@ public final class SelfTest {
             check("permadeath archives the character", !d.created && d.generation == 1 && d.fruit == null && d.level == 1 && d.fallenCharacters.size() == 1, d.fallenCharacters.toString());
             return 0;
         });
+        // ---------- ships ----------
+        final com.grandline.ship.ShipEntity[] voyage = new com.grandline.ship.ShipEntity[1];
+        final double[] start = new double[2];
+        final HumanoidNpc[] deckHand = new HumanoidNpc[1];
+        steps.add(s -> {
+            FakePlayer fp = fake(s);
+            ServerLevel l = ow(s);
+            Island home = WorldPlan.of(s).byId("shiokaze_isle");
+            var st = home.settlement();
+            fp.moveTo(st.dockX + 0.5, WorldPlan.SEA_LEVEL + 2, st.dockZ + 0.5);
+            l.getChunk(st.dockTipX() >> 4, st.dockTipZ() >> 4);
+            var ship = com.grandline.ship.Shipyard.spawnAtDock(fp, fp, com.grandline.ship.ShipClass.SLOOP);
+            check("shipyard launches a sloop at the dock", ship != null, ship == null ? "" : "at " + ship.blockPosition() + " dock tip " + st.dockTipX() + "," + st.dockTipZ());
+            if (ship == null) return 0;
+            var rec = com.grandline.ship.ShipRegistry.get(s).get(ship.shipId);
+            check("ship registered with owner and interior", rec != null && FAKE_ID.equals(rec.owner) && rec.interior >= 0, rec == null ? "" : "interior #" + rec.interior);
+            check("ship has a walkable deck (collidable parts)", ship.getParts().length > 4 && ship.getParts()[0].canBeCollidedWith(), ship.getParts().length + " hull parts");
+            // (a FakePlayer cannot change dimension, so the interior is checked structurally)
+            BlockPos io = com.grandline.ship.ShipInteriors.prepare(s, ship);
+            ServerLevel dim = s.getLevel(com.grandline.ship.ShipInteriors.DIM);
+            boolean hatch = dim != null && io != null && dim.getBlockState(io.offset(2, 3, 1)).is(com.grandline.registry.ModBlocks.SHIP_HATCH.get());
+            check("below-deck interior built in the pocket dimension", hatch, io == null ? "no interior" : "origin " + io);
+            var exit = com.grandline.ship.ShipInteriors.deckExit(ship);
+            check("hatch exit lands on the ship's deck", ship.carries(fp) || exit.distanceTo(ship.position()) < ship.cls.length, "exit " + exit + " ship " + ship.position());
+            return 0;
+        });
+        steps.add(s -> {
+            ServerLevel l = ow(s);
+            WorldPlan p = WorldPlan.of(s);
+            Island home = p.byId("shiokaze_isle");
+            // find a heading with 1800 blocks of open sea
+            int bestDir = -1;
+            int sx = home.x, sz = home.z + home.radius + 400;
+            for (int dir = 0; dir < 16 && bestDir < 0; dir++) {
+                double a = dir * Math.PI / 8;
+                boolean open = true;
+                for (int d = 0; d <= 1900 && open; d += 40) {
+                    WorldPlan.Sample smp = new WorldPlan.Sample();
+                    p.sample(sx + (int) (Math.cos(a) * d), sz + (int) (Math.sin(a) * d), smp);
+                    if (smp.height > WorldPlan.SEA_LEVEL - 6) open = false;
+                }
+                if (open) bestDir = dir;
+            }
+            check("found open sea for a voyage", bestDir >= 0, "dir " + bestDir);
+            if (bestDir < 0) return 0;
+            double a = bestDir * Math.PI / 8;
+            l.getChunkSource().addRegionTicket(TicketType.FORCED, new ChunkPos(sx >> 4, sz >> 4), 3, new ChunkPos(sx >> 4, sz >> 4));
+            l.getChunk(sx >> 4, sz >> 4);
+            var ship = com.grandline.registry.ModEntities.SHIPS.get(com.grandline.ship.ShipClass.GALLEON).get().create(l);
+            float yaw = (float) Math.toDegrees(Math.atan2(-Math.cos(a), Math.sin(a)));
+            ship.moveTo(sx + 0.5, WorldPlan.SEA_LEVEL + 0.9, sz + 0.5, yaw, 0);
+            ship.setShipName("Selftest Voyager");
+            ship.setHull(ship.cls.hull);
+            l.addFreshEntity(ship);
+            ship.autopilot = true;
+            ship.testSpeedMult = 5f;
+            ship.setAnchored(false);
+            ship.setSail(3);
+            voyage[0] = ship;
+            start[0] = ship.getX();
+            start[1] = ship.getZ();
+            var deck = ship.toWorld(0, ship.cls.freeboard + 0.05, 0);
+            deckHand[0] = npc(l, "villager", 1, BlockPos.containing(deck));
+            deckHand[0].moveTo(deck.x, deck.y, deck.z);
+            deckHand[0].setNoAi(true);
+            return 2;
+        });
+        final int[] voyageTicks = {0};
+        steps.add(s -> {
+            var ship = voyage[0];
+            if (ship == null || !ship.isAlive()) {
+                check("voyage ship stayed afloat", false, "ship removed");
+                return 0;
+            }
+            ServerLevel l = ow(s);
+            ChunkPos cp = new ChunkPos(ship.blockPosition());
+            l.getChunkSource().addRegionTicket(TicketType.FORCED, cp, 3, cp);
+            ChunkPos ahead = new ChunkPos(BlockPos.containing(ship.position().add(ship.heading().scale(40))));
+            l.getChunkSource().addRegionTicket(TicketType.FORCED, ahead, 2, ahead);
+            double dist = Math.hypot(ship.getX() - start[0], ship.getZ() - start[1]);
+            if (dist < 1600 && ++voyageTicks[0] < 3000) return -1;
+            check("ship sails into newly generated chunks", dist >= 1600, String.format("travelled %.0f blocks in %d ticks, speed %.2f b/t, now at %s", dist, voyageTicks[0], ship.speed(), ship.blockPosition()));
+            check("chunk under the ship is generated ocean", l.getBlockState(ship.blockPosition().below()).is(Blocks.WATER) || l.getBlockState(ship.blockPosition()).is(Blocks.WATER), l.getBlockState(ship.blockPosition().below()).toString());
+            boolean onDeck = deckHand[0] != null && deckHand[0].isAlive() && ship.carries(deckHand[0]) && deckHand[0].distanceTo(ship) < ship.cls.length;
+            check("crew standing on deck is carried along", onDeck, deckHand[0] == null ? "" : "npc " + (int) deckHand[0].distanceTo(ship) + " blocks from ship centre");
+            ship.autopilot = false;
+            ship.setAnchored(true);
+            ship.setSail(0);
+            try {
+                Files.writeString(Path.of("selftest-ship.txt"), ship.getUUID() + " " + ship.blockPosition().getX() + " " + ship.blockPosition().getZ() + " " + ship.shipName());
+            } catch (IOException ex) {
+                check("write ship fixture", false, ex.toString());
+            }
+            return 40;
+        });
         // ---------- persistence fixtures for phase 2 ----------
         steps.add(s -> {
             ServerLevel l = ow(s);
@@ -450,7 +545,27 @@ public final class SelfTest {
             check("NPC entity persisted across restart", e instanceof HumanoidNpc, e == null ? "missing" : e.getName().getString() + " at " + e.blockPosition());
             return 0;
         });
+        final String[] sf = new String[1];
+        steps.add(s -> {
+            sf[0] = Files.readString(Path.of("selftest-ship.txt")).trim();
+            String[] parts = sf[0].split(" ", 4);
+            int x = Integer.parseInt(parts[1]), z = Integer.parseInt(parts[2]);
+            ow(s).getChunkSource().addRegionTicket(TicketType.FORCED, new ChunkPos(x >> 4, z >> 4), 3, new ChunkPos(x >> 4, z >> 4));
+            ow(s).getChunk(x >> 4, z >> 4);
+            return 80;
+        });
+        steps.add(s -> {
+            String[] parts = sf[0].split(" ", 4);
+            var e = ow(s).getEntity(UUID.fromString(parts[0]));
+            boolean ok = e instanceof com.grandline.ship.ShipEntity ship && ship.shipName().equals(parts[3]) && ship.cls == com.grandline.ship.ShipClass.GALLEON && ship.hull() > 0;
+            check("ship persisted across restart where it was left", ok, e == null ? "missing" : e.blockPosition() + " name=" + ((com.grandline.ship.ShipEntity) e).shipName());
+            var rec = com.grandline.ship.ShipRegistry.get(s).all().stream().filter(r -> FAKE_ID.equals(r.owner)).findFirst().orElse(null);
+            check("ship registry persisted", rec != null && rec.interior >= 0, rec == null ? "" : rec.name);
+            return 0;
+        });
     }
+
+    static void phase2Ships(Deque<Step> steps) {}
 
     // ============================================================== helpers
 
