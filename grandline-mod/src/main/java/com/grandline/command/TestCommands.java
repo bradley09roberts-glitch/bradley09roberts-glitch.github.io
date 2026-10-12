@@ -57,6 +57,25 @@ public final class TestCommands {
                     fight.engage(sp);
                     return GLCommands.ok(c, "Boss " + id + " engaged");
                 })))
+                .then(Commands.literal("passing").executes(c -> {
+                    // a merchant ship sails past the player's ship close alongside, the other way (two-client test:
+                    // the player on deck must stay on their own deck)
+                    ServerPlayer sp = c.getSource().getPlayerOrException();
+                    var l = sp.serverLevel();
+                    var mine = l.getEntitiesOfClass(com.grandline.ship.ShipEntity.class, sp.getBoundingBox().inflate(40)).stream()
+                            .min(java.util.Comparator.comparingDouble(s -> s.distanceToSqr(sp))).orElse(null);
+                    if (mine == null) return GLCommands.fail(c, "No ship near you");
+                    var cls = com.grandline.ship.ShipClass.CARAVEL;
+                    var at = mine.toWorld(mine.cls.beam / 2.0 + cls.beam / 2.0 + 0.6, 0, mine.cls.length + cls.length);
+                    var m = com.grandline.ship.SeaEncounters.spawnShip(l, new net.minecraft.world.phys.Vec3(at.x, mine.getY(), at.z), mine.getYRot() + 180, cls,
+                            com.grandline.ship.LivingSea.MERCHANT, 1, "Test Passer");
+                    if (m == null) return GLCommands.fail(c, "Could not spawn the passing ship");
+                    m.npcAiOff = true;
+                    m.noDespawn = true;
+                    m.autopilot = true;
+                    m.setSail(3);
+                    return GLCommands.ok(c, "Passing ship launched alongside");
+                }))
                 .then(Commands.literal("base").executes(c -> {
                     // stand on a claimable island heart holding a crew flag (client test of planting it, the base and the chart)
                     ServerPlayer sp = c.getSource().getPlayerOrException();

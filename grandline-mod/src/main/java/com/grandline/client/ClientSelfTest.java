@@ -219,14 +219,18 @@ public final class ClientSelfTest {
     }
 
     private static void logRelative(String who, net.minecraft.world.entity.player.Player p) {
-        var ship = nearestShip(200);
+        var ship = p == null ? null : Minecraft.getInstance().level.getEntitiesOfClass(com.grandline.ship.ShipEntity.class, p.getBoundingBox().inflate(40))
+                .stream().filter(s -> s.carries(p)).findFirst().orElse(null);
+        if (ship == null) ship = nearestShip(200);
         if (ship == null || p == null) {
             LOG.add("  " + who + ": ship or player not visible");
             return;
         }
         double h = Math.hypot(p.getX() - ship.getX(), p.getZ() - ship.getZ());
+        boolean onDeck = ship.carries(p);
         LOG.add(String.format("  %s: ship at %.1f %.1f speed %.2f | player off-centre %.1f, height above ship %.2f, onDeck=%s",
-                who, ship.getX(), ship.getZ(), ship.speed(), h, p.getY() - ship.getY(), ship.carries(p)));
+                who, ship.getX(), ship.getZ(), ship.speed(), h, p.getY() - ship.getY(), onDeck));
+        if (who.equals("mate") && !onDeck && other() != null) LOG.add("FAIL the mate is off the deck while the captain sails");
     }
 
     /** Two-player test, captain: sails a galleon with the mate standing on deck. */
@@ -251,6 +255,7 @@ public final class ClientSelfTest {
         for (int i = 0; i < 12; i++) {
             add("observe mate", () -> logRelative("captain sees mate", other()), 50);
             if (i == 6) shot("mp_a_sailing_with_mate");
+            if (i == 2) cmd("grandline test passing", 5); // a merchant passes close alongside: the mate must stay on our deck
         }
         cmd("grandline test sail 0", 60);
         shot("mp_a_end");

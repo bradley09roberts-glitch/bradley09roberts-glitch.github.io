@@ -11,6 +11,21 @@ public final class ShipClientHooks {
         return p == Minecraft.getInstance().player;
     }
 
+    /** The ship whose deck the local player is on: one deck at a time, even when another ship passes close by. */
+    private static int deckShip = -1;
+
+    /**
+     * May {@code ship} carry the local player this tick? Two ships side by side can both find the player above their
+     * hull (a merchant coming alongside, a boarding action); only the deck the player was already on carries them,
+     * until it no longer does (they stepped across).
+     */
+    static boolean claim(ShipEntity ship, Player p) {
+        if (deckShip == ship.getId()) return true;
+        if (deckShip != -1 && ship.level().getEntity(deckShip) instanceof ShipEntity cur && !cur.isRemoved() && cur.carries(p)) return false;
+        deckShip = ship.getId();
+        return true;
+    }
+
     /** Ship the local player was standing still on, and where on it (ship-local coordinates). */
     private static int anchorShip = -1;
     private static Vec3 anchorLocal;
@@ -22,7 +37,7 @@ public final class ShipClientHooks {
      */
     static void anchor(ShipEntity ship) {
         LocalPlayer p = Minecraft.getInstance().player;
-        if (p == null || p.isPassenger() || !ship.carries(p)) {
+        if (p == null || p.isPassenger() || !ship.carries(p) || !claim(ship, p)) {
             if (anchorShip == ship.getId()) anchorShip = -1;
             return;
         }

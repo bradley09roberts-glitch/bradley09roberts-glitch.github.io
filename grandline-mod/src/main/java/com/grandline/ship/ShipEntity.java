@@ -310,6 +310,7 @@ public class ShipEntity extends Entity {
                 if (!level().isClientSide || !ShipClientHooks.isLocalPlayer(p)) continue;
             } else if (level().isClientSide) continue;
             if (!carries(e, dy)) continue;
+            if (e instanceof Player p && !ShipClientHooks.claim(this, p)) continue; // another ship's deck holds this player
             double rx = e.getX() - cx, rz = e.getZ() - cz;
             double nx = rx * c - rz * s, nz = rx * s + rz * c;
             e.setPos(cx + nx + dx, e.getY() + dy, cz + nz + dz);
