@@ -99,6 +99,10 @@ public final class SelfTest {
         else if (PHASE.equals("journey")) JourneyTests.phase1(steps); // quick run: advancements, Den Den Mushi, Buster Call
         else if (PHASE.equals("bosses")) BossTests.phase1(steps); // quick run: boss fights
         else if (PHASE.equals("bases")) BaseTests.phase1(steps); // quick run: crew bases on claimed islands
+        else if (PHASE.equals("seajobs")) { // quick run: escorts, named pirate ships, convoys
+            SeaJobTests.phase1(steps);
+            SeaJobTests.fixture(steps);
+        }
         else phase2();
     }
 
@@ -800,7 +804,9 @@ public final class SelfTest {
             return 0;
         });
         BaseTests.phase1(steps); // crew bases: claims, building rights, warehouse, upgrades, dock, hands, raids (test/BaseTests.java)
+        SeaJobTests.phase1(steps); // sea jobs: escort follower, named pirate ships, convoys, sea-battle objectives (test/SeaJobTests.java)
         JourneyTests.phase1(steps); // journey advancements, Den Den Mushi, Buster Call (test/JourneyTests.java; runs last)
+        SeaJobTests.fixture(steps); // an escort stowed for phase 2 (after the last test, so its away time stays short)
     }
 
     // ============================================================== story cast, crews and quests (Saltfire Saga)
@@ -986,6 +992,7 @@ public final class SelfTest {
     // ============================================================== PHASE 2
 
     private static void phase2() {
+        SeaJobTests.phase2(steps); // a stowed escort comes back after the restart (first: the job lapses after ten minutes away)
         DimensionTests.phase2(steps);
         NavalTests.phase2(steps);
         LivingSeaTests.phase2(steps);

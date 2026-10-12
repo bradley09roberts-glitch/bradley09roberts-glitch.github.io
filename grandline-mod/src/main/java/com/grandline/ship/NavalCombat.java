@@ -838,6 +838,7 @@ public final class NavalCombat {
             else if (from.equals("pirate") && Faction.isLaw(d.faction)) d.addReputation(Faction.MARINE.id(), 20 + 10 * ship.cls.ordinal());
             CharacterManager.markDirty(sp);
             com.grandline.quest.Quests.progress(sp, "capture", from.isEmpty() ? "any" : from, 1);
+            com.grandline.quest.story.SeaJobs.onShipCaptured(sp, ship); // sea jobs: a named ship taken (Marine prize bonus), a convoy lost
             com.grandline.journey.Journey.onPrize(sp);
             com.grandline.journey.DenDenMushi.onPrizeTaken(sp, from); // a Marine prize may hold her captain's black snail
         }

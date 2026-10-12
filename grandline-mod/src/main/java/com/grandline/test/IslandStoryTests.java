@@ -213,7 +213,7 @@ final class IslandStoryTests {
 
     private static int validity(MinecraftServer s) {
         WorldPlan plan = WorldPlan.of(s);
-        Set<String> types = Set.of("talk", "defeat", "arrest", "kill", "slay", "reach", "collect", "discover", "poneglyph");
+        Set<String> types = Set.of("talk", "defeat", "arrest", "kill", "slay", "reach", "collect", "discover", "poneglyph", "escort", "sink", "convoy");
         List<String> stuck = new ArrayList<>();
         Map<String, Integer> used = new TreeMap<>();
         for (QuestDef q : world.quests())
@@ -498,6 +498,10 @@ final class IslandStoryTests {
                     if (st.isEmpty()) return "no item for " + o.target();
                     fp.getInventory().add(st);
                     QuestCollect.sync(fp);
+                }
+                case "escort" -> { // the merchant brought to the dock and spoken to (SeaJobTests plays the real journey)
+                    String p = com.grandline.quest.story.SeaJobs.deliverForTest(fp, id);
+                    if (p != null) return p;
                 }
                 case "discover" -> Quests.progress(fp, "discover", o.target(), 1);
                 case "poneglyph" -> Quests.progress(fp, "poneglyph", "any", 1);
