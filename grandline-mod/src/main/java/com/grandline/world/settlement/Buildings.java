@@ -596,7 +596,7 @@ public final class Buildings {
     /** The tavern's bar room: counter with stools, kegs behind, tables, markers (bartender, two patrons, quest board). */
     static void barRoom(Builder b, Mats m, int w, int d) {
         for (int x = 2; x < w - 3; x++) b.set(x, 1, d - 4, Arch.decor(ArchBlocks.SHOP_COUNTER, Direction.NORTH));
-        for (int x = 2; x < w - 3; x += 2) {
+        for (int x = 2; x <= w - 3; x += 2) {
             b.barrel(x, 1, d - 2, LOOT_TAVERN);
             b.set(x + 1, 1, d - 2, Blocks.BARREL.defaultBlockState().setValue(BarrelBlock.FACING, Direction.NORTH));
             b.set(x, 2, d - 2, Blocks.BARREL.defaultBlockState().setValue(BarrelBlock.FACING, Direction.NORTH));
@@ -1050,16 +1050,17 @@ public final class Buildings {
         for (int x = 2; x < w - 2; x += 4) Arch.window(b, m, x, H, d - 1, Direction.SOUTH, 1, false);
         Arch.window(b, m, 0, H, d / 2, Direction.WEST, 1, false);
         Arch.window(b, m, w - 1, H, d / 2, Direction.EAST, 1, false);
-        // racks along both long walls: beam uprights with slab shelves and cargo
+        // a rack along the back wall: slab shelf over goods, sealed barrels (the warehouse's loot) on both levels
         for (int x = 1; x < w - 1; x++) {
             if (Math.abs(x - w / 2) <= 1) continue;
-            for (int z : new int[]{d - 2}) {
-                b.set(x, 3, z, Arch.slab(Blocks.SPRUCE_SLAB.defaultBlockState(), SlabType.BOTTOM));
-                Arch.cargo(b, x, 1, z, x * 3 + z);
-                if (x % 3 == 0) Arch.cargo(b, x, 4, z, x + 7);
-            }
+            int z = d - 2;
+            b.set(x, 3, z, Arch.slab(Blocks.SPRUCE_SLAB.defaultBlockState(), SlabType.BOTTOM));
+            if (x % 2 == 1) b.barrel(x, 1, z, LOOT_WAREHOUSE);
+            else Arch.cargo(b, x, 1, z, x * 3 + z);
+            if (x % 3 == 0 || x % 4 == 0) b.barrel(x, 4, z, LOOT_WAREHOUSE);
         }
-        for (int x = 1; x < w - 1; x += 2) if (Math.abs(x - w / 2) > 2) Arch.cargo(b, x, 1, 2, x + 1);
+        for (int x = 1; x < w - 1; x += 2) if (Math.abs(x - w / 2) > 2) b.barrel(x, 1, 2, LOOT_WAREHOUSE);
+        for (int x = 2; x < w - 1; x += 4) if (Math.abs(x - w / 2) > 2) Arch.cargo(b, x, 1, 2, x + 1);
         b.barrel(1, 1, d / 2, LOOT_WAREHOUSE);
         b.barrel(w - 2, 1, d / 2, LOOT_WAREHOUSE);
         b.barrel(w - 2, 1, d / 2 + 1, LOOT_WAREHOUSE);

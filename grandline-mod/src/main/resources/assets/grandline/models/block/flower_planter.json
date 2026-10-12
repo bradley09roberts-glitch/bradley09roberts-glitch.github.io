@@ -2,6 +2,9 @@
   "parent": "minecraft:block/block",
   "textures": {
     "wood": "grandline:block/prop_wood",
+    "soil": "minecraft:block/rooted_dirt",
+    "flower_a": "minecraft:block/poppy",
+    "flower_b": "minecraft:block/cornflower",
     "particle": "grandline:block/prop_wood"
   },
   "elements": [
@@ -50,22 +53,22 @@
       ],
       "faces": {
         "down": {
-          "texture": "minecraft:block/rooted_dirt"
+          "texture": "#soil"
         },
         "up": {
-          "texture": "minecraft:block/rooted_dirt"
+          "texture": "#soil"
         },
         "north": {
-          "texture": "minecraft:block/rooted_dirt"
+          "texture": "#soil"
         },
         "south": {
-          "texture": "minecraft:block/rooted_dirt"
+          "texture": "#soil"
         },
         "west": {
-          "texture": "minecraft:block/rooted_dirt"
+          "texture": "#soil"
         },
         "east": {
-          "texture": "minecraft:block/rooted_dirt"
+          "texture": "#soil"
         }
       }
     },
@@ -82,10 +85,10 @@
       ],
       "faces": {
         "north": {
-          "texture": "minecraft:block/poppy"
+          "texture": "#flower_a"
         },
         "south": {
-          "texture": "minecraft:block/poppy"
+          "texture": "#flower_a"
         }
       },
       "rotation": {
@@ -113,10 +116,10 @@
       ],
       "faces": {
         "west": {
-          "texture": "minecraft:block/cornflower"
+          "texture": "#flower_b"
         },
         "east": {
-          "texture": "minecraft:block/cornflower"
+          "texture": "#flower_b"
         }
       },
       "rotation": {

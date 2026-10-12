@@ -133,7 +133,8 @@ add(id='plank_bench', kind='decor', shape='BENCH', copy='OAK_PLANKS', tool='axe'
 add(id='fishing_net', kind='decor', shape='WALL_PANEL', copy='WHITE_WOOL', tool=None, name='Fishing Net', model='panel', recipe=('net', None), family='dock',
     render='cutout', nocollide=True, tex={'panel': tex('fishing_net', lambda: T.net(1))})
 add(id='flower_planter', kind='decor', shape='PLANTER', copy='OAK_PLANKS', tool='axe', name='Window Planter', model='planter', recipe=('planter', None), family='furniture',
-    render='cutout', tex={'wood': WOODTEX['wood']})
+    render='cutout', tex={'wood': WOODTEX['wood'], 'soil': 'minecraft:block/rooted_dirt', 'flower_a': 'minecraft:block/poppy',
+                          'flower_b': 'minecraft:block/cornflower'})
 
 # lanterns
 PAPER = ('BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.COLOR_RED).strength(0.6f).sound(SoundType.WOOL)'
@@ -190,10 +191,10 @@ DECOR_ELEMENTS = {
     'table': lambda: [box((0, 13, 0), (16, 16, 16), '#top'), box((6, 1, 6), (10, 13, 10), '#wood'), box((2, 0, 7), (14, 1, 9), '#wood'), box((7, 0, 2), (9, 1, 14), '#wood')],
     'bench': lambda: [box((0, 6, 3), (16, 8, 13), '#top'), box((1, 0, 4), (3, 6, 12), '#wood'), box((13, 0, 4), (15, 6, 12), '#wood')],
     'panel': lambda: [el((0, 0, 15.2), (16, 16, 15.2), {'north': {'texture': '#panel'}, 'south': {'texture': '#panel', 'uv': [16, 0, 0, 16]}})],
-    'planter': lambda: [box((1, 0, 1), (15, 6, 15), '#wood'), box((2, 6, 2), (14, 7, 14), 'minecraft:block/rooted_dirt'),
-                        el((3, 7, 3), (13, 13, 13), {'north': {'texture': 'minecraft:block/poppy'}, 'south': {'texture': 'minecraft:block/poppy'}},
+    'planter': lambda: [box((1, 0, 1), (15, 6, 15), '#wood'), box((2, 6, 2), (14, 7, 14), '#soil'),
+                        el((3, 7, 3), (13, 13, 13), {'north': {'texture': '#flower_a'}, 'south': {'texture': '#flower_a'}},
                            rot={'origin': [8, 8, 8], 'axis': 'y', 'angle': 45, 'rescale': True}, shade=False),
-                        el((3, 7, 3), (13, 13, 13), {'west': {'texture': 'minecraft:block/cornflower'}, 'east': {'texture': 'minecraft:block/cornflower'}},
+                        el((3, 7, 3), (13, 13, 13), {'west': {'texture': '#flower_b'}, 'east': {'texture': '#flower_b'}},
                            rot={'origin': [8, 8, 8], 'axis': 'y', 'angle': 45, 'rescale': True}, shade=False)],
     'awning': lambda: [el((0, 11.5, 0), (16, 12.5, 16), {'up': {'texture': '#canvas'}, 'down': {'texture': '#canvas'},
                                                           'north': {'texture': '#canvas', 'uv': [0, 0, 16, 1]}, 'west': {'texture': '#canvas', 'uv': [0, 0, 16, 1]},

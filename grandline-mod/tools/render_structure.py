@@ -123,10 +123,17 @@ def resolve_model(rid):
 
 
 def resolve_tex(tex, ref, depth=0):
-    while ref.startswith('#') and depth < 10:
-        ref = tex.get(ref[1:], '')
+    # like the game: a face's texture is always a variable name ("#x" or "x"), looked up in the model's textures;
+    # a literal path in a face is NOT a texture, it renders as the magenta missing texture
+    while depth < 10:
+        key = ref[1:] if ref.startswith('#') else ref
+        if key not in tex:
+            return 'grandline:missing' if depth == 0 or ref.startswith('#') else ref
+        ref = tex[key]
         depth += 1
-    return ref or 'minecraft:block/stone'
+        if not ref.startswith('#'):
+            return ref
+    return 'grandline:missing'
 
 
 @lru_cache(maxsize=None)
