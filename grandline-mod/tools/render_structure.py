@@ -355,6 +355,19 @@ def is_full_opaque(state):
     return all(opaque_texture(resolve_tex(tex, fd.get('texture', ''))) for fd in el['faces'].values())
 
 
+@lru_cache(maxsize=None)
+def full_cube_shape(state):
+    """A single full-cube element (glass, leaves, ice...) or a fluid: faces between two of these can be culled."""
+    name, props = parse_state(state)
+    if name in FLUID:
+        return True
+    ms = models_for(state)
+    if len(ms) != 1:
+        return False
+    tex, elements, special = resolve_model(ms[0][0])
+    return bool(elements) and len(elements) == 1 and elements[0]['from'] == [0, 0, 0] and elements[0]['to'] == [16, 16, 16]
+
+
 # ------------------------------------------------------------------ projection
 
 class View:
@@ -529,7 +542,7 @@ def render_iso(d, v, s, ycut=None):
             nb = blocks.get((x + dx, y + dy, z + dz))
             if nb is None or (ycut is not None and y + dy > ycut):
                 continue
-            if is_full_opaque(nb) or nb.split('[')[0] == name:
+            if is_full_opaque(nb) or (nb.split('[')[0] == name and full_cube_shape(st)):
                 mask |= 1 << i
         up = blocks.get((x, y + 1, z))
         if up is not None and (up.split('[')[0] in FLUID or 'waterlogged=true' in up):
