@@ -35,6 +35,7 @@ import java.util.function.BooleanSupplier;
 @EventBusSubscriber(modid = GrandLine.MODID, value = Dist.CLIENT)
 public final class ClientSelfTest {
     private static final boolean ACTIVE = System.getenv("GL_CLIENTTEST") != null;
+    private static final boolean CREATURES_ONLY = "creatures".equals(System.getenv("GL_CLIENTTEST"));
     private static final List<String> LOG = new ArrayList<>();
     private static Deque<Step> steps;
     private static int wait;
@@ -181,6 +182,11 @@ public final class ClientSelfTest {
         createCharacter("Tester", "fishman");
         cmd("grandline test env", 10);
         cmd("grandline char level 60", 10);
+        if (CREATURES_ONLY) { // GL_CLIENTTEST=creatures: just the creature shots
+            creatureShots();
+            add("done", ClientSelfTest::finish, 0);
+            return;
+        }
         cmd("tp @s ~ ~ ~ 0 5", 120);
         shot("02_spawn_first_person");
         camera(CameraType.THIRD_PERSON_FRONT);
@@ -297,6 +303,7 @@ public final class ClientSelfTest {
         shot("34_paintings_a");
         cmd("tp @s 36039 103 20046 0 5", 40);
         shot("35_paintings_b");
+        creatureShots();
         add("done", ClientSelfTest::finish, 0);
     }
 
@@ -407,6 +414,128 @@ public final class ClientSelfTest {
         }, 20);
         shot("47_shipyard_customise");
         add("close screen", () -> mc.setScreen(null), 10);
+    }
+
+    /** Sea Kings beside a ship in the Calm Belt, a Sea King attack, and Zoan full-beast forms (players and NPCs). */
+    private static void creatureShots() {
+        // the earlier fights can leave the tester dead or knocked down: respawn and recreate the character if needed
+        add("respawn for creature shots", () -> {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player.isDeadOrDying() || mc.screen instanceof net.minecraft.client.gui.screens.DeathScreen) mc.player.respawn();
+        }, 60);
+        add("recreate character if needed", () -> {
+            Minecraft mc = Minecraft.getInstance();
+            if (!ClientState.LOCAL.created) {
+                CompoundTag t = new CompoundTag();
+                t.putString("name", "Tester");
+                t.putString("race", "fishman");
+                t.putString("faction", "pirate");
+                t.putString("origin", "east");
+                t.put("appearance", new Appearance().save());
+                PacketDistributor.sendToServer(new GLNetwork.CreateCharacter(t));
+            }
+            mc.setScreen(null);
+        }, 60);
+        steps.add(new Step("wait for character", () -> ClientState.LOCAL.created && Minecraft.getInstance().player.isAlive(), () -> Minecraft.getInstance().setScreen(null), 20));
+        cmd("gamemode creative", 10);
+        cmd("grandline test env", 10);
+        cmd("grandline test calmbelt", 10);
+        cmd("tp @s ~ ~ ~ 0 10", 260);
+        cmd("grandline test ship galleon helm", 80);   // seated at the helm; the ship's bow points south
+        look(0, 4);
+        cmd("grandline test seaking serpent 2 hold 36", 80);
+        shot("27_seaking_from_helm");
+        cmd("gamemode spectator", 10);
+        cmd("tp @s ~30 ~18 ~-14 0 26", 50);            // off the starboard beam, clear of the sails
+        shot("28_seaking_and_ship_aerial");
+        cmd("kill @e[type=grandline:sea_king]", 10);
+        cmd("tp @s ~ 82 ~ 0 28", 20);
+        cmd("grandline test seaking maw 3 hold 44", 80);
+        shot("29_seaking_maw_colossal");
+        cmd("kill @e[type=grandline:sea_king]", 10);
+        cmd("tp @s ~ 74 ~ 0 26", 20);
+        cmd("grandline test seaking horned 1 hold 22", 80);
+        shot("30_seaking_horned");
+        cmd("kill @e[type=grandline:sea_king]", 10);
+        cmd("tp @s ~ 63.6 ~ 0 -8", 20);                // just under the surface
+        cmd("grandline test seaking serpent 3 hold 40", 80);
+        shot("31_seaking_from_below");
+        cmd("kill @e[type=grandline:sea_king]", 10);
+        if (CREATURES_ONLY) { // head close-ups of each variant
+            for (String v : new String[]{"serpent", "maw", "horned"}) {
+                cmd("grandline test seaking " + v + " 1 hold 20", 40);
+                cmd("execute at @e[type=grandline:sea_king,limit=1] run tp @s ~-6 ~6 ~7 facing entity @e[type=grandline:sea_king,limit=1] feet", 30);
+                shot("closeup_seaking_" + v);
+                cmd("kill @e[type=grandline:sea_king]", 10);
+            }
+        }
+        cmd("tp @s @e[type=grandline:ship_galleon,limit=1,sort=nearest]", 10);
+        cmd("tp @s ~-22 ~30 ~-22 -45 48", 20);
+        cmd("grandline test seaking horned 2", 240);
+        shot("32_seaking_attack_1");
+        add("wait", () -> {}, 90);
+        shot("33_seaking_attack_2");
+        cmd("kill @e[type=grandline:sea_king]", 10);
+        // Zoan full-beast forms, on a flat stage above Shiokaze Isle
+        cmd("gamemode creative", 10);
+        cmd("grandline island tp shiokaze_isle", 220);
+        cmd("tp @s ~ ~30 ~ 0 0", 20);
+        cmd("fill ~-26 ~-1 ~-6 ~26 ~-1 ~30 minecraft:smooth_stone", 10);
+        cmd("fill ~-26 ~ ~-6 ~26 ~14 ~30 minecraft:air", 20);
+        cmd("tp @s ~ ~ ~ 0 0", 10);
+        camera(CameraType.THIRD_PERSON_FRONT);
+        for (String[] z : new String[][]{{"inu_wolf", "34_zoan_wolf"}, {"ryu_allosaurus", "35_zoan_allosaurus"}, {"uo_seiryu", "36_zoan_seiryu"}}) {
+            cmd("grandline test zoan none", 5);
+            cmd("grandline fruit set " + z[0], 10);
+            cmd("grandline test zoan full", 30);
+            look(-35, -4);
+            add("wait", () -> {}, 20);
+            shot(z[1]);
+        }
+        cmd("grandline test zoan none", 10);
+        cmd("grandline fruit remove", 10);
+        camera(CameraType.FIRST_PERSON);
+        cmd("tp @s ~ ~ ~ 0 14", 10);
+        String[][] lineups = {{"tori_phoenix", "zou_elephant", "tako_kraken", "hebi_orochi"}, {"neko_leopard", "ushi_bison", "ryu_pteranodon", "ryu_spinosaurus"},
+                {"inu_wolf", "ryu_allosaurus", "uo_seiryu"}};
+        String[] names = {"37_zoan_npcs_mythical", "38_zoan_npcs_beasts", "39_zoan_npcs_more"};
+        for (int li = 0; li < lineups.length; li++) {
+            int off = lineups[li].length == 4 ? -12 : -9;
+            for (String f : lineups[li]) {
+                cmd("grandline test beastnpc " + f + " " + off, 5);
+                off += lineups[li].length == 4 ? 8 : 9;
+            }
+            add("wait", () -> {}, 40);
+            shot(names[li]);
+            cmd("kill @e[type=grandline:npc,distance=..40]", 10);
+        }
+        // island wildlife
+        cmd("tp @s ~ ~ ~ 0 10", 10);
+        String[] wild = {"kungfu_dugong", "lapahn", "banana_gator", "sea_cat"};
+        for (int i = 0; i < wild.length; i++) cmd("grandline test wildlife " + wild[i] + " " + (-9 + i * 6) + " 9", 5);
+        add("wait", () -> {}, 40);
+        shot("40_island_wildlife");
+        cmd("kill @e[type=!minecraft:player,distance=..40]", 10);
+        if (CREATURES_ONLY) { // close-up of every beast form
+            String[] all = {"inu_wolf", "neko_leopard", "ushi_bison", "tori_phoenix", "zou_elephant", "ryu_allosaurus", "ryu_pteranodon", "ryu_spinosaurus", "uo_seiryu", "hebi_orochi", "tako_kraken"};
+            int[] dist = {4, 4, 5, 5, 7, 8, 6, 9, 9, 7, 7};
+            look(0, 8);
+            for (int i = 0; i < all.length; i++) {
+                cmd("grandline test beastnpc " + all[i] + " 0 " + dist[i], 40);
+                shot("zoo_" + all[i]);
+                cmd("kill @e[type=grandline:npc,distance=..40]", 30);
+            }
+        }
+    }
+
+    private static void look(float yaw, float pitch) {
+        add("look " + yaw + "/" + pitch, () -> {
+            var p = Minecraft.getInstance().player;
+            p.setYRot(yaw);
+            p.setXRot(pitch);
+            p.yRotO = yaw;
+            p.xRotO = pitch;
+        }, 10);
     }
 
     private static void shot2(String name, String tp) {

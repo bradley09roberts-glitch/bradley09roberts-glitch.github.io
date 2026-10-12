@@ -212,10 +212,9 @@ public final class Ferries {
         double dx = ship.ferryTarget.x - px, dz = ship.ferryTarget.z - pz;
         double len2 = dx * dx + dz * dz;
         if (len2 < 1) return null;
-        // inside an island's waters (leaving port, or pushed in by a detour) with the course running over the island:
-        // work round it, a quarter-step at a time toward the side the target lies on
+        // inside an island's waters (leaving port, arriving, or pushed in by a detour) with the course running over the
+        // island itself: work round it, a quarter-step at a time toward the side the target lies on
         for (Island i : plan.islands) {
-            if (i.id.equals(ship.ferryIsland)) continue;
             double r = i.radius * 1.25 + 24;
             double cx = i.x - px, cz = i.z - pz;
             if (cx * cx + cz * cz >= r * r) continue;
@@ -228,13 +227,15 @@ public final class Ferries {
             double a2 = ang + Math.toRadians(Math.copySign(Math.min(Math.abs(delta), 45), delta));
             return new Vec3(i.x + Math.cos(a2) * (r + 10), ship.getY(), i.z + Math.sin(a2) * (r + 10));
         }
+        // islands on the way: round the first one the course crosses (the destination's own core only: its dock lies
+        // inside its waters)
         Island first = null;
         double firstT = 2, firstR = 0;
         for (Island i : plan.islands) {
-            if (i.id.equals(ship.ferryIsland)) continue;
-            double r = i.radius * 1.25 + 24;
+            boolean dest = i.id.equals(ship.ferryIsland);
+            double r = dest ? i.radius * 1.05 + 8 : i.radius * 1.25 + 24;
             double cx = i.x - px, cz = i.z - pz;
-            if (cx * cx + cz * cz < r * r) continue; // inside its waters but the course is clear of the island itself
+            if (cx * cx + cz * cz < r * r) continue;
             double t = (cx * dx + cz * dz) / len2;
             if (t <= 0 || t >= 1) continue;
             double qx = dx * t - cx, qz = dz * t - cz;

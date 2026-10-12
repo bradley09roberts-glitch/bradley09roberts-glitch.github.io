@@ -49,6 +49,7 @@ public final class Haki {
             return d.level + d.stat(com.grandline.player.Stat.WILLPOWER) * 2 + (d.conquerorAwakened ? 40 : 0);
         }
         if (e instanceof GLNpc n) return n.tier() * 10 + n.hakiConqueror();
+        if (e instanceof com.grandline.creature.SeaKing sk) return sk.willpower();
         return (int) (e.getMaxHealth() / 2);
     }
 

@@ -28,7 +28,7 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
             // Automated client verification: GL_CLIENTTEST=1 joins a local dedicated server and runs ClientSelfTest
             if (System.getenv('GL_CLIENTTEST') != null) {
-                programArguments.addAll('--quickPlayMultiplayer', 'localhost:25570', '--username', 'Tester', '--width', '1280', '--height', '720')
+                programArguments.addAll('--quickPlayMultiplayer', 'localhost:' + (System.getenv('GL_PORT') ?: '25570'), '--username', 'Tester', '--width', '1280', '--height', '720')
             }
         }
         // second client for the two-player test (GL_CLIENTTEST=mp_b), separate game directory and name
@@ -37,7 +37,7 @@ neoForge {
             gameDirectory = project.file('run-client2')
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
             if (System.getenv('GL_CLIENTTEST') != null) {
-                programArguments.addAll('--quickPlayMultiplayer', 'localhost:25570', '--username', 'Mate', '--width', '960', '--height', '540')
+                programArguments.addAll('--quickPlayMultiplayer', 'localhost:' + (System.getenv('GL_PORT') ?: '25570'), '--username', 'Mate', '--width', '960', '--height', '540')
             }
         }
         server {

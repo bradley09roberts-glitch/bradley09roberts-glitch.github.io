@@ -580,6 +580,7 @@ public class ShipEntity extends Entity {
     }
 
     public void hurtHull(float amount, @Nullable Entity by) {
+        if (ferryTarget != null) return; // ferries and the Sea Train are run by the harbour masters: never sunk
         float h = hull() - amount;
         entityData.set(HULL, Math.max(0, h));
         if (h <= 0 && !isSinking()) {

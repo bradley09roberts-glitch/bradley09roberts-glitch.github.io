@@ -65,6 +65,8 @@ public final class ServerEvents {
         t = Perf.lap("crewBonuses", t);
         com.grandline.npc.PrisonSystem.tick(s);
         t = Perf.lap("prison", t);
+        com.grandline.creature.CreatureSpawns.tick(s);
+        t = Perf.lap("creatures", t);
         com.grandline.npc.notable.NotableSpawner.tick(s);
         Perf.lap("notables+crew", t);
     }

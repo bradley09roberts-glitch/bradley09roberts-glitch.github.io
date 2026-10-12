@@ -18,6 +18,9 @@ public final class ModEntities {
             () -> EntityType.Builder.<AbilityProjectile>of(AbilityProjectile::new, MobCategory.MISC).sized(0.4f, 0.4f).clientTrackingRange(8).updateInterval(1).build("ability_projectile"));
     public static final DeferredHolder<EntityType<?>, EntityType<HumanoidNpc>> HUMANOID_NPC = TYPES.register("npc",
             () -> EntityType.Builder.of(HumanoidNpc::new, MobCategory.CREATURE).sized(0.6f, 1.8f).eyeHeight(1.62f).clientTrackingRange(10).build("npc"));
+    public static final DeferredHolder<EntityType<?>, EntityType<com.grandline.creature.SeaKing>> SEA_KING = TYPES.register("sea_king",
+            () -> EntityType.Builder.of(com.grandline.creature.SeaKing::new, MobCategory.WATER_CREATURE).sized(com.grandline.creature.SeaKing.HEAD_W, com.grandline.creature.SeaKing.HEAD_H)
+                    .clientTrackingRange(16).updateInterval(2).build("sea_king"));
 
     public static final java.util.Map<com.grandline.ship.ShipClass, DeferredHolder<EntityType<?>, EntityType<com.grandline.ship.ShipEntity>>> SHIPS = new java.util.EnumMap<>(com.grandline.ship.ShipClass.class);
 
@@ -28,6 +31,15 @@ public final class ModEntities {
         }
     }
 
+    public static final java.util.Map<com.grandline.creature.WildBeast.Kind, DeferredHolder<EntityType<?>, EntityType<com.grandline.creature.WildBeast>>> WILDLIFE = new java.util.EnumMap<>(com.grandline.creature.WildBeast.Kind.class);
+
+    static {
+        for (com.grandline.creature.WildBeast.Kind k : com.grandline.creature.WildBeast.Kind.values()) {
+            WILDLIFE.put(k, TYPES.register(k.id(), () -> EntityType.Builder.<com.grandline.creature.WildBeast>of((t, l) -> new com.grandline.creature.WildBeast(t, l, k), MobCategory.CREATURE)
+                    .sized(k.width, k.height).clientTrackingRange(10).build(k.id())));
+        }
+    }
+
     public static void register(IEventBus bus) {
         TYPES.register(bus);
         bus.addListener(ModEntities::attributes);
@@ -35,6 +47,8 @@ public final class ModEntities {
 
     private static void attributes(EntityAttributeCreationEvent e) {
         e.put(HUMANOID_NPC.get(), HumanoidNpc.createAttributes().build());
+        e.put(SEA_KING.get(), com.grandline.creature.SeaKing.createAttributes().build());
+        WILDLIFE.forEach((k, t) -> e.put(t.get(), com.grandline.creature.WildBeast.createAttributes(k).build()));
     }
 
     private ModEntities() {}
