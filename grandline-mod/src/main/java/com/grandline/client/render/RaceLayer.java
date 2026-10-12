@@ -83,7 +83,11 @@ public class RaceLayer<T extends LivingEntity, M extends HumanoidModel<T>> exten
         boolean elephant = zf.equals("zou_elephant"), allo = zf.equals("ryu_allosaurus"), ptera = zf.equals("ryu_pteranodon");
         boolean spino = zf.equals("ryu_spinosaurus"), seiryu = zf.equals("uo_seiryu"), orochi = zf.equals("hebi_orochi");
         boolean canon3 = elephant || allo || ptera || spino || seiryu || orochi;
-        if (race.parts == 0 && !beast && !bison && !phoenix && !canon3) return;
+        // fruit wave 4 (original) Zoans
+        boolean whale = zf.equals("kujira_bakekujira"), raiju = zf.equals("itachi_raiju"), scorpion = zf.equals("sasori_seascorpion");
+        boolean griffinfly = zf.equals("tonbo_meganeura"), hippo = zf.equals("kaba_hippo");
+        boolean orig4 = whale || raiju || scorpion || griffinfly || hippo;
+        if (race.parts == 0 && !beast && !bison && !phoenix && !canon3 && !orig4) return;
         M m = getParentModel();
         int col = 0xFF000000 | info.appearance().featureColor;
         int col2 = 0xFF000000 | info.appearance().secondaryColor;
@@ -113,6 +117,7 @@ public class RaceLayer<T extends LivingEntity, M extends HumanoidModel<T>> exten
         if (race.has(LEAF_HAIR)) draw("leaf_hair", ps, vc, light, ov, col);
         if (race.has(BLOWHOLE)) draw("blowhole", ps, vc, light, ov, col2);
         if (canon3) canonWave3Head(ps, vc, light, ov, elephant, allo, ptera, spino, seiryu, orochi);
+        if (orig4) originalWave4Head(ps, vc, light, ov, race.has(EARS) || beast, whale, raiju, scorpion, hippo);
         ps.popPose();
 
         // ----- body features -----
@@ -144,6 +149,10 @@ public class RaceLayer<T extends LivingEntity, M extends HumanoidModel<T>> exten
         if (canon3) {
             boolean raceTail = race.has(TAIL) || beast, raceWings = race.has(SMALL_WINGS) || race.has(FEATHER_WINGS) || race.has(BLACK_WINGS);
             canonWave3Body(e, ps, vc, light, ov, age, limbSwing, limbSwingAmount, raceTail, raceWings, allo, ptera, spino, seiryu, orochi);
+        }
+        if (orig4) {
+            boolean raceTail = race.has(TAIL) || beast, raceWings = race.has(SMALL_WINGS) || race.has(FEATHER_WINGS) || race.has(BLACK_WINGS);
+            originalWave4Body(e, ps, vc, light, ov, age, limbSwing, limbSwingAmount, raceTail, raceWings, race.has(TAIL_FIN) && e.isInWater(), whale, raiju, scorpion, griffinfly);
         }
         ps.popPose();
     }
@@ -195,6 +204,61 @@ public class RaceLayer<T extends LivingEntity, M extends HumanoidModel<T>> exten
             l.xScale = l.yScale = r.xScale = r.yScale = 1.5f;
             draw("wing_l", ps, vc, light, ov, 0xFF8A6A4A);
             draw("wing_r", ps, vc, light, ov, 0xFF8A6A4A);
+        }
+    }
+
+    // ---------------- fruit wave 4 (original): Zoan hybrid features (same parts, own tints) ----------------
+
+    private void originalWave4Head(PoseStack ps, VertexConsumer vc, int light, int ov, boolean raceEars, boolean whale, boolean raiju, boolean scorpion, boolean hippo) {
+        if (whale) draw("blowhole", ps, vc, light, ov, 0xFFD8E0E8);
+        if (raiju) {
+            if (!raceEars) {
+                draw("ear_l", ps, vc, light, ov, 0xFF3A5AD8);
+                draw("ear_r", ps, vc, light, ov, 0xFF3A5AD8);
+            }
+            draw("snout", ps, vc, light, ov, 0xFF3A5AD8);
+        }
+        if (scorpion) { // chelicerae
+            draw("tusk_l", ps, vc, light, ov, 0xFF7A3A2A);
+            draw("tusk_r", ps, vc, light, ov, 0xFF7A3A2A);
+        }
+        if (hippo) {
+            draw("snout", ps, vc, light, ov, 0xFF8A6A7A);
+            draw("tusk_l", ps, vc, light, ov, 0xFFF4F0E0);
+            draw("tusk_r", ps, vc, light, ov, 0xFFF4F0E0);
+            if (!raceEars) {
+                draw("ear_l", ps, vc, light, ov, 0xFF8A6A7A);
+                draw("ear_r", ps, vc, light, ov, 0xFF8A6A7A);
+            }
+        }
+    }
+
+    private void originalWave4Body(T e, PoseStack ps, VertexConsumer vc, int light, int ov, float age, float limbSwing, float limbSwingAmount,
+                                   boolean raceTail, boolean raceWings, boolean raceFin, boolean whale, boolean raiju, boolean scorpion, boolean griffinfly) {
+        if (whale) {
+            draw("back_fin", ps, vc, light, ov, 0xFFD8E0E8);
+            if (!raceFin) draw("tail_fin", ps, vc, light, ov, 0xFFD8E0E8); // flukes
+        }
+        if ((raiju || scorpion) && !raceTail) {
+            ModelPart t = parts.getChild("tail");
+            if (raiju) {
+                t.yRot = Mth.sin(age * 0.2f) * 0.35f + limbSwingAmount * Mth.sin(limbSwing * 0.6f) * 0.4f;
+                t.xRot = -0.35f;
+            } else { // the sea scorpion's tail curls up over the back, spike forward
+                t.yRot = Mth.sin(age * 0.08f) * 0.1f;
+                t.xRot = -1.15f;
+            }
+            draw("tail", ps, vc, light, ov, raiju ? 0xFFF2E14A : 0xFFD8A060);
+        }
+        if (scorpion) draw("plates", ps, vc, light, ov, 0xFF7A3A2A); // carapace
+        if (griffinfly && !raceWings) {
+            float buzz = Mth.sin(age * (e.onGround() ? 0.3f : 1.6f)) * (e.onGround() ? 0.1f : 0.35f);
+            ModelPart l = parts.getChild("wing_l"), r = parts.getChild("wing_r");
+            l.yRot = -0.35f - buzz;
+            r.yRot = 0.35f + buzz;
+            l.xScale = l.yScale = r.xScale = r.yScale = 1.4f;
+            draw("wing_l", ps, vc, light, ov, 0xFFC8F0E8);
+            draw("wing_r", ps, vc, light, ov, 0xFFC8F0E8);
         }
     }
 

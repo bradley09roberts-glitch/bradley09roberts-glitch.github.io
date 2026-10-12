@@ -133,6 +133,7 @@ public final class ClientFx {
         }
         if (canonWave3(l, kind, x, y, z, a, b, c)) return; // fruit wave 3 (canon), see block below
         if (originalWave3(l, kind, x, y, z, a, b, c)) return; // Devil Fruits wave 3, ORIGINAL fruits (block at the end of this class)
+        if (originalWave4(l, kind, x, y, z, a, b, c)) return; // Devil Fruits wave 4, ORIGINAL fruits (block at the end of this class)
         if (raceFx(l, kind, x, y, z, a, b, c)) return; // race powers, see block below
         if (kind.startsWith("hit_")) {
             String el = kind.substring(4);
@@ -557,6 +558,7 @@ public final class ClientFx {
         double x = p.getX(), y = p.getY() + size / 2, z = p.getZ();
         if (canonWave3Trail(l, p, kind, x, y, z, size)) return; // fruit wave 3 (canon), see block below
         if (originalWave3Trail(l, kind, x, y, z, size, p.tickCount)) return; // Devil Fruits wave 3, ORIGINAL fruits
+        if (originalWave4Trail(l, kind, x, y, z, size, p.tickCount)) return; // Devil Fruits wave 4, ORIGINAL fruits
         if (raceTrail(l, p, kind, x, y, z, size)) return; // race powers, see block below
         switch (kind) {
             case "fire_fist", "fire_bullet", "flame_emperor", "fire_bird" -> burst(l, ParticleTypes.FLAME, x, y, z, 2 + (int) (size * 6), size, 0.02);
@@ -1845,6 +1847,593 @@ public final class ClientFx {
         return true;
     }
     // ======================== end of Devil Fruits wave 3 — ORIGINAL fruits ========================
+
+    // =====================================================================================================
+    // Devil Fruits wave 4 — ORIGINAL fruits (hai, yako, shinku, kai, fusen, shinju, kagi, hanabi, hata, taru,
+    // kujira_bakekujira, itachi_raiju, sasori_seascorpion, tonbo_meganeura, kaba_hippo).
+    // Self-contained like the wave 3 block (one hook line each at the top of play()/trail()). Every kind is prefixed
+    // with its fruit's short name (or "intangible_"/"impact_" + it). Returns false for kinds it does not own.
+    // =====================================================================================================
+
+    private static final BlockParticleOption W4_TUFF = new BlockParticleOption(ParticleTypes.BLOCK, Blocks.TUFF.defaultBlockState());
+    private static final BlockParticleOption W4_QUARTZ = new BlockParticleOption(ParticleTypes.BLOCK, Blocks.SMOOTH_QUARTZ.defaultBlockState());
+    private static final BlockParticleOption W4_BLACK = new BlockParticleOption(ParticleTypes.BLOCK, Blocks.BLACKSTONE.defaultBlockState());
+    private static final BlockParticleOption W4_MUD = new BlockParticleOption(ParticleTypes.BLOCK, Blocks.MUD.defaultBlockState());
+    private static final BlockParticleOption W4_BARREL = new BlockParticleOption(ParticleTypes.BLOCK, Blocks.BARREL.defaultBlockState());
+    private static final BlockParticleOption W4_BONE = new BlockParticleOption(ParticleTypes.BLOCK, Blocks.BONE_BLOCK.defaultBlockState());
+    private static final int[] W4_FIREWORK = {0xFF4A6A, 0xFFD24A, 0x4AC8FF, 0x7AFF6A, 0xC86AFF, 0xFFFFFF};
+
+    /** Jagged bolt from a to b (thunder beast). */
+    private static void w4bolt(ClientLevel l, ParticleOptions p, Vec3 a, Vec3 b, double jag) {
+        RandomSource r = l.random;
+        Vec3 prev = a;
+        int segs = (int) Math.max(3, a.distanceTo(b) / 1.5);
+        for (int i = 1; i <= segs; i++) {
+            Vec3 q = a.add(b.subtract(a).scale(i / (double) segs));
+            if (i < segs) q = q.add((r.nextDouble() - 0.5) * jag, (r.nextDouble() - 0.5) * jag, (r.nextDouble() - 0.5) * jag);
+            line(l, p, prev, q, 0.25);
+            prev = q;
+        }
+    }
+
+    /** A firework shell opening into a sphere of coloured sparks. */
+    private static void w4shell(ClientLevel l, double x, double y, double z, double r, int colour, int n) {
+        RandomSource rnd = l.random;
+        int col = W4_FIREWORK[Math.floorMod(colour, W4_FIREWORK.length)];
+        for (int i = 0; i < n; i++) {
+            double u = rnd.nextDouble() * 2 - 1, th = rnd.nextDouble() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+            double vx = s * Math.cos(th), vy = u, vz = s * Math.sin(th);
+            l.addParticle(dust(col, 1.4f), x + vx * r * 0.3, y + vy * r * 0.3, z + vz * r * 0.3, vx * r * 0.08, vy * r * 0.08, vz * r * 0.08);
+            if (i % 4 == 0) l.addParticle(ParticleTypes.FIREWORK, x, y, z, vx * r * 0.06, vy * r * 0.06, vz * r * 0.06);
+        }
+        l.addParticle(ParticleTypes.FLASH, x, y, z, 0, 0, 0);
+    }
+
+    /** A little flag (pole + cloth) at a point. */
+    private static void w4flag(ClientLevel l, double x, double y, double z, double h, int cloth, int mark) {
+        line(l, dust(0x6A4A2A, 1.0f), new Vec3(x, y, z), new Vec3(x, y + h, z), 0.2);
+        for (int i = 0; i < 6; i++)
+            for (int j = 0; j < 4; j++) {
+                boolean centre = i >= 2 && i <= 3 && j >= 1 && j <= 2;
+                l.addParticle(dust(centre ? mark : cloth, 1.2f), x + 0.15 + i * 0.18, y + h - 0.1 - j * 0.18, z, 0, 0, 0);
+            }
+    }
+
+    private static boolean originalWave4(ClientLevel l, String kind, double x, double y, double z, float a, float b, float c) {
+        RandomSource r = l.random;
+        Vec3 at = new Vec3(x, y, z), to = new Vec3(a, b, c);
+        switch (kind) {
+            // ---------------- Hai Hai no Mi (ash) ----------------
+            case "hai_cloud" -> {
+                disc(l, ParticleTypes.LARGE_SMOKE, x, y + 0.5, z, a, (int) (a * 6), 0, 0.02);
+                disc(l, ParticleTypes.ASH, x, y + 1.5, z, a, (int) (a * 10), 0, 0);
+                disc(l, dust(0x5A5A60, 2.2f), x, y + 1, z, a, (int) (a * 6), 0, 0.01);
+            }
+            case "hai_surge" -> {
+                Vec3 d = to.subtract(at);
+                int n = (int) Math.max(4, d.length() / 0.5);
+                for (int i = 0; i <= n; i++) {
+                    Vec3 q = at.add(d.scale(i / (double) n));
+                    burst(l, ParticleTypes.LARGE_SMOKE, q.x, q.y + 0.6, q.z, 2, 1.4, 0.05);
+                    burst(l, ParticleTypes.FLAME, q.x, q.y + 0.3, q.z, 1, 1.0, 0.04);
+                    if (i % 2 == 0) l.addParticle(W4_TUFF, q.x, q.y + 0.2, q.z, 0, 0.15, 0);
+                }
+            }
+            case "hai_cast" -> {
+                column(l, W4_TUFF, x, y, z, a, b, 30);
+                column(l, dust(0x6A6A70, 1.6f), x, y, z, a, b, 30);
+            }
+            case "hai_fall" -> {
+                w3fall(l, ParticleTypes.ASH, x, y, z, a, 7, (int) (a * 14), -0.2);
+                w3fall(l, ParticleTypes.WHITE_ASH, x, y, z, a, 7, (int) (a * 6), -0.15);
+                disc(l, dust(0x4A4A50, 3.0f), x, y + 7, z, a, (int) (a * 3), 0, 0);
+            }
+            case "hai_winter" -> {
+                disc(l, dust(0x2A2A30, 3.5f), x, y + 9, z, a, (int) (a * 6), 0, 0);
+                w3fall(l, ParticleTypes.ASH, x, y, z, a, 9, (int) (a * 16), -0.2);
+                disc(l, ParticleTypes.LARGE_SMOKE, x, y + 0.8, z, a, (int) (a * 3), 0, 0.01);
+            }
+            case "intangible_hai" -> {
+                burst(l, dust(0x5A5A60, 1.8f), x, y, z, 22, 1.0, 0.1);
+                burst(l, ParticleTypes.ASH, x, y, z, 12, 1.0, 0.05);
+            }
+            case "impact_hai_cinder" -> {
+                burst(l, ParticleTypes.LARGE_SMOKE, x, y, z, 10, 1.2, 0.05);
+                burst(l, ParticleTypes.FLAME, x, y, z, 10, 0.6, 0.15);
+                burst(l, ParticleTypes.ASH, x, y, z, 16, 1.5, 0.05);
+            }
+            // ---------------- Yako Yako no Mi (sea sparkle) ----------------
+            case "yako_lure" -> {
+                sphere(l, dust(0x5AF0FF, 1.0f), x, y, z, 0.35, 10);
+                l.addParticle(ParticleTypes.GLOW, x, y, z, 0, 0, 0);
+                line(l, dust(0x10305A, 0.6f), at, at.add(0, 1.2, 0), 0.2);
+            }
+            case "yako_burst" -> {
+                burst(l, ParticleTypes.GLOW, x, y, z, 30, a, 0.15);
+                burst(l, dust(0x5AF0FF, 1.4f), x, y, z, 30, a, 0.2);
+                l.addParticle(ParticleTypes.FLASH, x, y, z, 0, 0, 0);
+            }
+            case "yako_flash" -> {
+                w3spray(l, ParticleTypes.END_ROD, x, y, z, a, b, c, 40, 0.6, 0.35);
+                w3spray(l, dust(0x5AF0FF, 1.6f), x, y, z, a, b, c, 30, 0.5, 0.35);
+                l.addParticle(ParticleTypes.FLASH, x + a * 2, y + b * 2, z + c * 2, 0, 0, 0);
+            }
+            case "yako_sparkle" -> {
+                disc(l, ParticleTypes.GLOW, x, y + 0.5, z, a, (int) (a * 8), 0, 0.03);
+                disc(l, dust(0x5AF0FF, 1.0f), x, y + 1.2, z, a, (int) (a * 6), 0, 0.02);
+            }
+            case "yako_swarm" -> {
+                line(l, dust(0x5AF0FF, 1.2f), at.add(0, 1, 0), to.add(0, 1, 0), 0.3);
+                burst(l, ParticleTypes.GLOW, a, b + 1, c, 20, 1.2, 0.1);
+                burst(l, ParticleTypes.GLOW, x, y + 1, z, 14, 1.2, 0.1);
+            }
+            case "yako_milky" -> {
+                disc(l, dust(0xE8FFFF, 1.6f), x, y + 0.1, z, a, (int) (a * 10), 0, 0.01);
+                disc(l, ParticleTypes.GLOW, x, y + 0.3, z, a, (int) (a * 4), 0, 0.02);
+            }
+            case "intangible_yako" -> {
+                burst(l, ParticleTypes.GLOW, x, y, z, 20, 1.0, 0.12);
+                burst(l, dust(0x5AF0FF, 1.2f), x, y, z, 14, 1.0, 0.1);
+            }
+            case "impact_yako_spark" -> {
+                burst(l, ParticleTypes.GLOW, x, y, z, 14, 0.6, 0.15);
+                burst(l, dust(0x5AF0FF, 1.2f), x, y, z, 10, 0.5, 0.15);
+            }
+            // ---------------- Shinku Shinku no Mi (vacuum) ----------------
+            case "shinku_pop" -> {
+                sphere(l, dust(0xDCE6F0, 1.2f), x, y, z, Math.max(0.6, a), (int) (16 + a * 8));
+                if (b > 0) {
+                    l.addParticle(ParticleTypes.SONIC_BOOM, x, y, z, 0, 0, 0);
+                    shake(4);
+                }
+            }
+            case "shinku_gasp" -> {
+                for (int i = 0; i < 10; i++) {
+                    double ang = r.nextDouble() * Math.PI * 2;
+                    l.addParticle(ParticleTypes.BUBBLE_POP, x + Math.cos(ang) * 0.3, y, z + Math.sin(ang) * 0.3, -Math.cos(ang) * 0.05, 0.02, -Math.sin(ang) * 0.05);
+                }
+                burst(l, dust(0x2A2A3E, 0.8f), x, y, z, 6, Math.max(0.4, a), 0);
+            }
+            case "shinku_implode" -> {
+                // particles on a shell rushing inwards
+                int n = (int) (20 + a * 6);
+                for (int i = 0; i < n; i++) {
+                    double u = r.nextDouble() * 2 - 1, th = r.nextDouble() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+                    double px = s * Math.cos(th) * a, py = u * a, pz = s * Math.sin(th) * a;
+                    l.addParticle(b > 0 ? ParticleTypes.REVERSE_PORTAL : ParticleTypes.CLOUD, x + px, y + py, z + pz, -px * 0.12, -py * 0.12, -pz * 0.12);
+                }
+                burst(l, dust(0x2A2A3E, 1.6f), x, y, z, 6, 0.4, 0);
+            }
+            case "shinku_dome" -> {
+                dome(l, dust(0xDCE6F0, 1.0f), x, y, z, a, (int) (a * 10));
+                dome(l, dust(0x2A2A3E, 0.8f), x, y, z, a, (int) (a * 4));
+            }
+            case "shinku_blast" -> {
+                ring(l, ParticleTypes.CLOUD, x, y + 0.5, z, a, (int) (40 + a * 6), 0.8);
+                ring(l, dust(0xDCE6F0, 2.0f), x, y + 1.2, z, a, (int) (30 + a * 4), 0.7);
+                if (b > 0) l.addParticle(ParticleTypes.EXPLOSION_EMITTER, x, y, z, 0, 0, 0);
+                shake(b > 0 ? 10 : 4);
+            }
+            case "intangible_shinku" -> {
+                ring(l, dust(0xDCE6F0, 1.0f), x, y, z, 1.4, 20, -0.05);
+                burst(l, ParticleTypes.BUBBLE_POP, x, y, z, 8, 0.8, 0.02);
+            }
+            case "impact_shinku_bullet" -> sphere(l, dust(0x2A2A3E, 1.0f), x, y, z, 0.8, 16);
+            // ---------------- Kai Kai no Mi (Dials) ----------------
+            case "kai_breath" -> {
+                w3spray(l, ParticleTypes.CLOUD, x, y, z, a, b, c, 40, 0.8, 0.25);
+                w3spray(l, dust(0xF0E2C8, 1.0f), x, y, z, a, b, c, 14, 0.6, 0.2);
+            }
+            case "kai_flash" -> {
+                w3spray(l, ParticleTypes.END_ROD, x, y, z, a, b, c, 36, 0.6, 0.3);
+                l.addParticle(ParticleTypes.FLASH, x + a * 1.5, y + b * 1.5, z + c * 1.5, 0, 0, 0);
+            }
+            case "kai_shell" -> {
+                spiral(l, dust(0xF0E2C8, 1.3f), x, y - 1, z, Math.max(0.6, a), 2, 40, 0.15, 0.05);
+                spiral(l, dust(0xD8907A, 1.1f), x, y - 1, z, Math.max(0.6, a), 2, 20, -0.15, 0.05);
+            }
+            case "kai_impact" -> {
+                ring(l, dust(0xF0E2C8, 2.0f), x, y, z, a, (int) (20 + a * 6), 0.6);
+                burst(l, ParticleTypes.CRIT, x, y, z, (int) (10 + a * 4), a * 0.5, 0.4);
+                l.addParticle(ParticleTypes.EXPLOSION, x, y, z, 0, 0, 0);
+                if (a > 4) shake(5);
+            }
+            case "kai_jet" -> {
+                line(l, ParticleTypes.CLOUD, at, to, 0.4);
+                line(l, ParticleTypes.FLAME, at, to, 0.9);
+            }
+            case "kai_milky" -> {
+                for (int i = 1; i <= 16; i++) {
+                    double t = i / 16.0;
+                    burst(l, ParticleTypes.CLOUD, x + a * t, y + b * t, z + c * t, 2, 1.5, 0.01);
+                }
+            }
+            case "kai_reject" -> {
+                l.addParticle(ParticleTypes.EXPLOSION_EMITTER, x, y, z, 0, 0, 0);
+                ring(l, dust(0xD8907A, 2.2f), x, y, z, a, 40, 0.9);
+                cracks(l, x, y, z, a, 8);
+                shake(12);
+            }
+            case "impact_kai_flame" -> {
+                burst(l, ParticleTypes.FLAME, x, y, z, 24, 0.8, 0.2);
+                burst(l, dust(0xF0E2C8, 1.0f), x, y, z, 8, 0.6, 0.1);
+            }
+            // ---------------- Fusen Fusen no Mi (balloon) ----------------
+            case "fusen_pop", "impact_fusen_balloon" -> {
+                burst(l, dust(0xE8405A, 1.4f), x, y, z, (int) (16 + a * 6), Math.max(0.6, a), 0.25);
+                burst(l, ParticleTypes.POOF, x, y, z, 8, Math.max(0.6, a), 0.1);
+                l.addParticle(ParticleTypes.EXPLOSION, x, y, z, 0, 0, 0);
+            }
+            case "fusen_inflate" -> {
+                double rad = Math.max(0.8, a * 0.9 + 0.4);
+                sphere(l, dust(c > 0 ? 0xFFE04A : 0xE8405A, 1.4f), x, y + b * 0.55, z, rad, 40);
+                line(l, dust(0xF4F4F4, 0.6f), new Vec3(x, y + b * 0.55 + rad, z), new Vec3(x, y + b + 1.6, z), 0.2);
+            }
+            case "fusen_body" -> sphere(l, dust(0xE8405A, 1.3f), x, y, z, Math.max(0.9, a), 50);
+            case "fusen_ascend" -> {
+                for (int i = 0; i < 24; i++) {
+                    double ang = r.nextDouble() * Math.PI * 2, d = Math.sqrt(r.nextDouble()) * a;
+                    l.addParticle(dust(W4_FIREWORK[r.nextInt(W4_FIREWORK.length)], 2.2f), x + Math.cos(ang) * d, y + 1, z + Math.sin(ang) * d, 0, 0.3, 0);
+                }
+            }
+            // ---------------- Shinju Shinju no Mi (pearl) ----------------
+            case "shinju_layer" -> {
+                sphere(l, dust(0xF4F0EA, 1.2f), x, y, z, Math.max(0.8, a), (int) (20 + b * 6));
+                sphere(l, dust(0xC8B4E0, 1.0f), x, y, z, Math.max(0.8, a), 12);
+            }
+            case "shinju_prison" -> {
+                column(l, W4_QUARTZ, x, y, z, a, b, 30);
+                column(l, dust(0xC8B4E0, 1.2f), x, y, z, a, b, 20);
+            }
+            case "shinju_lustre" -> {
+                int[] lustre = {0xF4F0EA, 0xC8B4E0, 0xA8E0F0, 0xF0C8E0};
+                for (int i = 0; i < 40 + b * 8; i++) {
+                    double u = r.nextDouble() * 2 - 1, th = r.nextDouble() * Math.PI * 2, s = Math.sqrt(1 - u * u);
+                    l.addParticle(dust(lustre[i % 4], 1.4f), x, y, z, s * Math.cos(th) * a * 0.12, u * a * 0.12, s * Math.sin(th) * a * 0.12);
+                }
+                l.addParticle(ParticleTypes.FLASH, x, y, z, 0, 0, 0);
+            }
+            case "shinju_black" -> {
+                sphere(l, dust(0x1A1A24, 2.0f), x, y + b * 0.5, z, Math.max(1.0, a + 0.6), 50);
+                sphere(l, dust(0x6A5A8A, 1.2f), x, y + b * 0.5, z, Math.max(1.0, a + 0.6), 14);
+                if (c > 0) {
+                    burst(l, W4_BLACK, x, y + b * 0.5, z, 30, 1.5, 0.3);
+                    shake(5);
+                }
+            }
+            case "shinju_crack" -> burst(l, W4_QUARTZ, x, y, z, 10, Math.max(0.6, a), 0.15);
+            case "impact_shinju_pearl" -> {
+                burst(l, dust(0xF4F0EA, 1.2f), x, y, z, 10, 0.4, 0.2);
+                burst(l, ParticleTypes.CRIT, x, y, z, 4, 0.3, 0.2);
+            }
+            // ---------------- Kagi Kagi no Mi (keys) ----------------
+            case "kagi_lock" -> {
+                ring(l, dust(0xC8A040, 1.2f), x, y + 0.3, z, Math.max(1.2, a + 0.6), 18, 0);
+                ring(l, dust(0xC8A040, 1.2f), x, y + Math.max(0.6, b * 0.5), z, Math.max(1.2, a + 0.6), 18, 0);
+                burst(l, ParticleTypes.CRIT, x, y + 0.5, z, 6, 0.6, 0.1);
+            }
+            case "kagi_seal" -> {
+                // a padlock floating over the target: shackle arc and body
+                double s = c > 0 ? 0.6 : 0.45;
+                for (int i = 0; i < 12; i++) {
+                    double ang = Math.PI * i / 11;
+                    l.addParticle(dust(0x3A2A1A, 1.0f), x + Math.cos(ang) * s, y + 1.0 + Math.sin(ang) * s, z, 0, 0, 0);
+                }
+                sphere(l, dust(0xC8A040, 1.3f), x, y + 0.6, z, s, 14);
+                column(l, dust(0xC8A040, 0.8f), x, y - b * 0.6, z, a, b, 14);
+            }
+            case "kagi_unlock" -> {
+                column(l, dust(0xFFE08A, 1.0f), x, y - b * 0.5, z, a, b, 20);
+                burst(l, ParticleTypes.WAX_OFF, x, y, z, 10, 0.8, 0.1);
+            }
+            case "kagi_ring" -> {
+                ring(l, dust(0xC8A040, 1.6f), x, y + 0.3, z, a, (int) (30 + a * 4), 0.5);
+                ring(l, dust(0x3A2A1A, 1.2f), x, y + 0.6, z, a, (int) (20 + a * 3), 0.4);
+                if (b > 0) shake(5);
+            }
+            case "impact_kagi_key" -> burst(l, dust(0xC8A040, 1.0f), x, y, z, 10, 0.4, 0.2);
+            // ---------------- Hanabi Hanabi no Mi (fireworks) ----------------
+            case "hanabi_burst", "impact_hanabi_rocket" -> w4shell(l, x, y, z, Math.max(1.5, a), (int) b, (int) (24 + a * 10));
+            case "hanabi_sparkler" -> {
+                w3spray(l, ParticleTypes.FIREWORK, x, y, z, a, b, c, 24, 0.5, 0.4);
+                w3spray(l, dust(0xFFD24A, 0.8f), x, y, z, a, b, c, 16, 0.4, 0.4);
+            }
+            case "hanabi_trail" -> {
+                for (int i = 0; i < 20; i++) {
+                    double t = i / 20.0;
+                    l.addParticle(ParticleTypes.FIREWORK, x - a * t * 3, y + t * 4 * b, z - c * t * 3, 0, -0.05, 0);
+                    if (i % 3 == 0) l.addParticle(ParticleTypes.SMOKE, x - a * t * 3, y + t * 4 * b, z - c * t * 3, 0, 0, 0);
+                }
+            }
+            case "hanabi_kiku" -> {
+                // the great chrysanthemum: a big shell high up, sparks drooping down over the circle
+                w4shell(l, x, y + 7, z, a * 0.9, r.nextInt(6), (int) (60 + a * 12));
+                w3fall(l, ParticleTypes.FLAME, x, y, z, a, 7, (int) (a * 6), -0.25);
+                w3fall(l, dust(0xFFD24A, 1.0f), x, y, z, a, 7, (int) (a * 6), -0.2);
+                if (b > 0) shake(8);
+            }
+            // ---------------- Hata Hata no Mi (flags) ----------------
+            case "hata_pole" -> {
+                line(l, dust(0x6A4A2A, 1.2f), at, to, 0.25);
+                w4flag(l, a, b - 0.2, c, 0.6, 0x1A1A1A, 0xF4F4F4);
+            }
+            case "hata_brand" -> {
+                // a skull mark: white on black, two dark eyes
+                sphere(l, dust(0x1A1A1A, 1.2f), x, y, z, 0.45, 14);
+                sphere(l, dust(0xF4F4F4, 1.2f), x, y, z, 0.25, 10);
+                l.addParticle(dust(0x1A1A1A, 0.8f), x - 0.1, y + 0.05, z, 0, 0, 0);
+                l.addParticle(dust(0x1A1A1A, 0.8f), x + 0.1, y + 0.05, z, 0, 0, 0);
+            }
+            case "hata_territory" -> {
+                ring(l, dust(b > 0 ? 0xF0C040 : 0xF4F4F4, 1.2f), x, y + 0.2, z, a, (int) (24 + a * 4), 0);
+                ring(l, dust(0x1A1A1A, 1.0f), x, y + 0.25, z, a, (int) (16 + a * 2), 0);
+            }
+            case "hata_flag" -> {
+                w4flag(l, x, y, z, a > 0 ? 6 : 3.5, 0x1A1A1A, 0xF4F4F4);
+                if (a > 0) {
+                    w4flag(l, x + 0.05, y + 4, z, 2, 0xC02A2A, 0xF0C040);
+                    shake(4);
+                }
+                burst(l, ParticleTypes.CLOUD, x, y + 0.2, z, 10, 1.2, 0.05);
+            }
+            case "hata_wave" -> {
+                w3spray(l, ParticleTypes.CLOUD, x, y, z, a, b, c, 30, 0.8, 0.3);
+                w3spray(l, dust(0x1A1A1A, 1.6f), x, y, z, a, b, c, 20, 0.5, 0.3);
+            }
+            case "hata_white" -> w4flag(l, x, y - 0.6, z, 1.2, 0xFFFFFF, 0xFFFFFF);
+            // ---------------- Taru Taru no Mi (barrels) ----------------
+            case "taru_roll" -> {
+                Vec3 d = to.subtract(at);
+                int n = (int) Math.max(4, d.length() / 0.6);
+                for (int i = 0; i <= n; i++) {
+                    Vec3 q = at.add(d.scale(i / (double) n));
+                    l.addParticle(W4_BARREL, q.x, q.y + 0.4, q.z, 0, 0.1, 0);
+                    if (i % 2 == 0) l.addParticle(ParticleTypes.POOF, q.x, q.y + 0.2, q.z, 0, 0.02, 0);
+                }
+            }
+            case "taru_bunker" -> {
+                column(l, W4_BARREL, x, y, z, a, b, 30);
+                ring(l, dust(0x5A5A5A, 1.4f), x, y + b * 0.3, z, a + 0.4, 18, 0);
+                ring(l, dust(0x5A5A5A, 1.4f), x, y + b * 0.75, z, a + 0.4, 18, 0);
+            }
+            case "taru_grog" -> {
+                burst(l, ParticleTypes.HAPPY_VILLAGER, x, y, z, 8, Math.max(0.6, a), 0.05);
+                burst(l, dust(0xC08A3A, 1.0f), x, y, z, 8, Math.max(0.6, a), 0.05);
+            }
+            case "taru_fall" -> {
+                w3fall(l, W4_BARREL, x, y, z, a, 6, (int) (a * 4), -0.6);
+                if (b > 0) {
+                    l.addParticle(ParticleTypes.EXPLOSION_EMITTER, x + (r.nextDouble() - 0.5) * a, y + 0.5, z + (r.nextDouble() - 0.5) * a, 0, 0, 0);
+                    shake(4);
+                }
+            }
+            case "impact_taru_barrel" -> {
+                burst(l, W4_BARREL, x, y, z, 24, 0.8, 0.25);
+                burst(l, ParticleTypes.SPLASH, x, y, z, 12, 0.8, 0.2);
+            }
+            case "impact_taru_keg" -> {
+                burst(l, W4_BARREL, x, y, z, 30, 1.2, 0.35);
+                burst(l, ParticleTypes.LARGE_SMOKE, x, y, z, 12, 1.2, 0.1);
+            }
+            // ---------------- Kujira Kujira no Mi, Model: Bakekujira (ghost whale) ----------------
+            case "kujira_breach" -> {
+                ring(l, W4_BONE, x, y + 0.3, z, a, (int) (30 + a * 6), 0.4);
+                for (int i = 0; i < 8; i++) {
+                    double ang = i * Math.PI * 2 / 8, rr = a * 0.7;
+                    line(l, dust(0xD8E0E8, 1.4f), new Vec3(x + Math.cos(ang) * rr, y, z + Math.sin(ang) * rr),
+                            new Vec3(x + Math.cos(ang) * rr * 0.4, y + 2.4, z + Math.sin(ang) * rr * 0.4), 0.3);
+                }
+                shake(4);
+            }
+            case "kujira_song" -> {
+                for (int k = 1; k <= 3; k++) ring(l, dust(0x6A8AC0, 1.4f), x, y, z, a * k / 3.0, 24 + k * 8, 0.15 * k);
+                burst(l, ParticleTypes.SCULK_SOUL, x, y + 0.5, z, 10, 2, 0.05);
+            }
+            case "kujira_swim" -> {
+                burst(l, ParticleTypes.SOUL, x, y + 0.5, z, 16, 1.6, 0.05);
+                ring(l, dust(0xD8E0E8, 1.2f), x, y + 0.2, z, 2, 20, 0.2);
+            }
+            case "kujira_engulf" -> {
+                for (int i = 0; i < 7; i++) {
+                    double ang = Math.PI * i / 6;
+                    line(l, dust(0xD8E0E8, 1.3f), new Vec3(x - 1.2, y + 0.2 + Math.sin(ang) * (b + 0.6), z + Math.cos(ang) * 0.9),
+                            new Vec3(x + 1.2, y + 0.2 + Math.sin(ang) * (b + 0.6), z + Math.cos(ang) * 0.9), 0.3);
+                }
+                burst(l, ParticleTypes.SOUL, x, y + b * 0.5, z, 4, a + 0.4, 0.02);
+            }
+            case "kujira_requiem" -> {
+                if (b == 0) {
+                    // the ghost whale's shadow forming high above
+                    disc(l, dust(0x2A3A5A, 3.0f), x, y + 14, z, a, (int) (a * 8), 0, -0.4);
+                    disc(l, ParticleTypes.SOUL, x, y + 12, z, a, (int) (a * 3), 0, -0.3);
+                } else {
+                    l.addParticle(ParticleTypes.EXPLOSION_EMITTER, x, y + 1, z, 0, 0, 0);
+                    ring(l, W4_BONE, x, y + 0.3, z, a, 60, 0.7);
+                    disc(l, ParticleTypes.SCULK_SOUL, x, y + 0.5, z, a, (int) (a * 4), 0, 0.15);
+                    shake(14);
+                }
+            }
+            case "impact_kujira_bone" -> burst(l, W4_BONE, x, y, z, 14, 0.5, 0.2);
+            // ---------------- Itachi Itachi no Mi, Model: Raiju (thunder beast) ----------------
+            case "raiju_arc" -> w4bolt(l, ParticleTypes.ELECTRIC_SPARK, at, to, 0.6);
+            case "raiju_claw" -> {
+                Vec3 side = new Vec3(-c, 0, a);
+                side = side.lengthSqr() < 1e-4 ? new Vec3(1, 0, 0) : side.normalize();
+                for (int k = -1; k <= 1; k++) {
+                    Vec3 s = at.add(side.scale(k * 0.35)).add(a * 0.8, b * 0.8 + 0.4, c * 0.8);
+                    w4bolt(l, ParticleTypes.ELECTRIC_SPARK, s, s.add(a * 2.5, b * 2.5 - 0.9, c * 2.5), 0.25);
+                }
+                w3spray(l, dust(0xF2E14A, 1.0f), x, y, z, a, b, c, 12, 0.4, 0.3);
+            }
+            case "raiju_bolt" -> {
+                w4bolt(l, ParticleTypes.ELECTRIC_SPARK, at, to, 0.9);
+                w4bolt(l, dust(0xF2E14A, 1.3f), at, to, 0.6);
+            }
+            case "raiju_zap" -> {
+                burst(l, ParticleTypes.ELECTRIC_SPARK, x, y + 0.5, z, (int) (20 + a * 8), a, 0.4);
+                ring(l, dust(0x3A5AD8, 1.6f), x, y + 0.3, z, a, (int) (20 + a * 4), 0.5);
+                if (b > 0) {
+                    l.addParticle(ParticleTypes.FLASH, x, y + 1, z, 0, 0, 0);
+                    shake(6);
+                }
+            }
+            case "raiju_static" -> {
+                column(l, ParticleTypes.ELECTRIC_SPARK, x, y - b * 0.5, z, a, b, 30);
+                column(l, dust(0xF2E14A, 0.8f), x, y - b * 0.5, z, a, b, 14);
+            }
+            case "impact_raiju_ball" -> {
+                burst(l, ParticleTypes.ELECTRIC_SPARK, x, y, z, 26, 1.0, 0.4);
+                l.addParticle(ParticleTypes.FLASH, x, y, z, 0, 0, 0);
+            }
+            // ---------------- Sasori Sasori no Mi, Model: Jaekelopterus (sea scorpion) ----------------
+            case "sasori_pincer" -> {
+                double s = Math.max(0.6, a);
+                for (int k = -1; k <= 1; k += 2)
+                    for (int i = 0; i < 10; i++) {
+                        double ang = Math.PI * i / 9;
+                        l.addParticle(dust(0x7A3A2A, 1.4f), x + Math.cos(ang) * s, y + k * Math.sin(ang) * s * 0.6, z + Math.sin(ang) * s * 0.3, 0, 0, 0);
+                    }
+                if (b > 0) burst(l, ParticleTypes.CRIT, x, y, z, 12, s, 0.3);
+            }
+            case "sasori_sting" -> {
+                line(l, dust(0xD8A060, 1.2f), at, to, 0.25);
+                burst(l, dust(0x6AE04A, 1.2f), a, b, c, 10, 0.4, 0.1);
+            }
+            case "sasori_scuttle" -> {
+                Vec3 d = to.subtract(at);
+                int n = (int) Math.max(4, d.length() / 0.4);
+                for (int i = 0; i <= n; i += 2) {
+                    Vec3 q = at.add(d.scale(i / (double) n));
+                    l.addParticle(ParticleTypes.POOF, q.x, q.y + 0.1, q.z, 0, 0.02, 0);
+                }
+            }
+            case "sasori_shell" -> {
+                dome(l, dust(0x7A3A2A, 1.8f), x, y - 1, z, Math.max(1.0, a), 50);
+                dome(l, dust(0xD8A060, 1.1f), x, y - 1, z, Math.max(1.0, a), 16);
+            }
+            case "sasori_reign" -> {
+                for (int k = -1; k <= 1; k += 2)
+                    for (int i = 0; i < 12; i++) {
+                        double ang = Math.PI * i / 11.0;
+                        l.addParticle(dust(i % 3 == 0 ? 0xD8A060 : 0x7A3A2A, 2.0f), x + k * Math.cos(ang) * a * 0.6, y + Math.sin(ang) * a, z + k * Math.sin(ang) * 0.4, 0, 0, 0);
+                    }
+                burst(l, W3_DIRT, x, y + 0.3, z, 20, a, 0.3);
+                shake(3);
+            }
+            case "impact_sasori_spine" -> burst(l, dust(0x6AE04A, 1.1f), x, y, z, 8, 0.3, 0.15);
+            // ---------------- Tonbo Tonbo no Mi, Model: Meganeura (griffinfly) ----------------
+            case "tonbo_wings" -> {
+                w3spray(l, dust(0xC8F0E8, 1.2f), x, y, z, a, b, c, 30, 0.6, 0.45);
+                l.addParticle(ParticleTypes.SWEEP_ATTACK, x + a * 2, y + b * 2, z + c * 2, 0, 0, 0);
+            }
+            case "tonbo_dart" -> {
+                line(l, dust(0x2A8A7A, 1.0f), at, to, 0.3);
+                line(l, dust(0xC8F0E8, 0.8f), at.add(0, 0.2, 0), to.add(0, 0.2, 0), 0.5);
+            }
+            case "tonbo_hover" -> ring(l, ParticleTypes.CLOUD, x, y + 0.1, z, a, 28, 0.5);
+            case "tonbo_snatch" -> {
+                column(l, dust(0x2A8A7A, 1.2f), x, y, z, a, b, 20);
+                if (c > 0) line(l, dust(0xC8F0E8, 1.0f), at.add(0, b, 0), at.add(0, b + 6, 0), 0.4);
+            }
+            case "tonbo_eyes" -> {
+                for (int i = 0; i < 30; i++) {
+                    double ang = i * Math.PI * 2 / 30;
+                    l.addParticle(dust(i % 2 == 0 ? 0x2A8A7A : 0xC8F0E8, 1.0f), x + Math.cos(ang) * 0.6, y + 0.2, z + Math.sin(ang) * 0.6, Math.cos(ang) * 0.3, 0, Math.sin(ang) * 0.3);
+                }
+            }
+            case "tonbo_swarm" -> {
+                for (int i = 0; i < (int) (a * 2); i++) {
+                    double ang = r.nextDouble() * Math.PI * 2, d = 1 + r.nextDouble() * a;
+                    double px = x + Math.cos(ang) * d, pz = z + Math.sin(ang) * d, py = y + 1 + r.nextDouble() * 3;
+                    line(l, dust(0x2A8A7A, 0.9f), new Vec3(px, py, pz), new Vec3(px - Math.sin(ang) * 0.8, py, pz + Math.cos(ang) * 0.8), 0.2);
+                }
+            }
+            // ---------------- Kaba Kaba no Mi, Model: Hippopotamus ----------------
+            case "kaba_jaws" -> {
+                for (int i = 0; i < 12; i++) {
+                    double t = i / 11.0 * Math.PI;
+                    l.addParticle(dust(0xF4F0E0, 1.3f), x + Math.cos(t) * a, y + 0.7 + Math.sin(t) * 0.4, z, 0, -0.2, 0);
+                    l.addParticle(dust(0xF4F0E0, 1.3f), x + Math.cos(t) * a, y - 0.7 - Math.sin(t) * 0.4, z, 0, 0.2, 0);
+                }
+                burst(l, dust(0xE87A7A, 1.4f), x, y, z, 8, 0.8, 0.1);
+            }
+            case "kaba_charge" -> {
+                Vec3 d = to.subtract(at);
+                int n = (int) Math.max(4, d.length() / 0.5);
+                for (int i = 0; i <= n; i++) {
+                    Vec3 q = at.add(d.scale(i / (double) n));
+                    l.addParticle(W3_DIRT, q.x, q.y + 0.2, q.z, 0, 0.2, 0);
+                    if (i % 2 == 0) l.addParticle(ParticleTypes.POOF, q.x, q.y + 0.3, q.z, 0, 0.03, 0);
+                }
+            }
+            case "kaba_sweat" -> {
+                column(l, dust(0xC0302A, 1.2f), x, y - b * 0.5, z, a, b, 24);
+                burst(l, ParticleTypes.DRIPPING_WATER, x, y, z, 6, Math.max(0.6, a), 0);
+            }
+            case "kaba_mud" -> {
+                disc(l, W4_MUD, x, y + 0.2, z, a, (int) (a * 5), 0, 0.15);
+                disc(l, ParticleTypes.SPLASH, x, y + 0.3, z, a, (int) (a * 2), 0, 0.1);
+            }
+            case "kaba_bellow" -> {
+                for (int k = 1; k <= 3; k++) ring(l, dust(0x8A6A7A, 1.6f), x, y, z, a * k / 3.0, 20 + k * 8, 0.2 * k);
+                l.addParticle(ParticleTypes.SONIC_BOOM, x, y, z, 0, 0, 0);
+            }
+            case "kaba_quake" -> {
+                ring(l, W3_DIRT, x, y + 0.3, z, a, (int) (40 + a * 6), 0.6);
+                cracks(l, x, y + 0.1, z, a * 0.6, 6);
+                if (b >= 2) l.addParticle(ParticleTypes.EXPLOSION_EMITTER, x, y + 0.5, z, 0, 0, 0);
+                shake(6 + (int) b * 3);
+            }
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean originalWave4Trail(ClientLevel l, String kind, double x, double y, double z, float size, int age) {
+        switch (kind) {
+            case "hai_cinder" -> {
+                l.addParticle(ParticleTypes.SMOKE, x, y, z, 0, 0.01, 0);
+                if (age % 2 == 0) l.addParticle(ParticleTypes.ASH, x, y, z, 0, 0, 0);
+                if (age % 3 == 0) l.addParticle(ParticleTypes.SMALL_FLAME, x, y, z, 0, 0, 0);
+            }
+            case "yako_spark" -> {
+                l.addParticle(ParticleTypes.GLOW, x, y, z, 0, 0, 0);
+                burst(l, dust(0x5AF0FF, 0.8f), x, y, z, 1, size, 0);
+            }
+            case "shinku_bullet" -> {
+                if (age % 2 == 0) ring(l, dust(0xDCE6F0, 0.6f), x, y, z, size * 3, 6, -0.02);
+            }
+            case "kai_flame" -> burst(l, ParticleTypes.FLAME, x, y, z, 2 + (int) (size * 4), size, 0.02);
+            case "fusen_balloon" -> {
+                if (age % 2 == 0) l.addParticle(dust(0xF4F4F4, 0.5f), x, y - size, z, 0, 0, 0);
+            }
+            case "shinju_pearl" -> l.addParticle(dust(0xF4F0EA, 0.6f), x, y, z, 0, 0, 0);
+            case "kagi_key" -> l.addParticle(dust(0xC8A040, 0.6f), x, y, z, 0, 0, 0);
+            case "hanabi_rocket" -> {
+                l.addParticle(ParticleTypes.FIREWORK, x, y, z, 0, -0.02, 0);
+                if (age % 2 == 0) l.addParticle(ParticleTypes.SMOKE, x, y, z, 0, 0, 0);
+            }
+            case "taru_barrel", "taru_keg" -> {
+                if (kind.equals("taru_keg")) l.addParticle(ParticleTypes.SMOKE, x, y + size * 0.6, z, 0, 0.02, 0);
+                if (age % 3 == 0) l.addParticle(W4_BARREL, x, y, z, 0, 0, 0);
+            }
+            case "kujira_bone" -> {
+                if (age % 2 == 0) l.addParticle(ParticleTypes.SOUL, x, y, z, 0, 0, 0);
+            }
+            case "raiju_ball" -> {
+                burst(l, ParticleTypes.ELECTRIC_SPARK, x, y, z, 3, size, 0.1);
+                if (age % 3 == 0) l.addParticle(dust(0xF2E14A, 1.0f), x, y, z, 0, 0, 0);
+            }
+            case "sasori_spine" -> l.addParticle(dust(0x6AE04A, 0.5f), x, y, z, 0, 0, 0);
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+    // ======================== end of Devil Fruits wave 4 — ORIGINAL fruits ========================
 
     private ClientFx() {}
 }

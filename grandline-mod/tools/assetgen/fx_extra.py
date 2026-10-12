@@ -518,3 +518,195 @@ def _white_snake():
     for x, y in ((27, 5), (25, 5)):
         c.set(x, y, '#c82a2a')  # eyes
     return c
+
+
+# ============================================================================================ Devil Fruits wave 4 (original)
+@projectile('hai_cinder')
+def _hai_cinder():
+    """A smouldering clot of ash with ember cracks, trailing grey smoke."""
+    c = Canvas(N, N)
+    for i in range(7):  # smoke tail behind (down-left)
+        t = i / 6
+        banded(c, 8 + t * 6, 24 - t * 6, 3.5 - t * 1.2, ['#8a8a9070', '#5a5a6050'])
+    r = rock('#5a5a60', '#3a3a40', '#7a7a80', 31, r=8.5, cracks='#ff7a2a', glow='#ff6a2a80', lumps=6)
+    c.paste(r, 3, -3)
+    return c
+
+
+@projectile('yako_spark')
+def _yako_spark():
+    c = orb(['#ffffff', '#e0ffff', '#9af8ff', '#5af0ff', '#2ab0d8c0'], ['#5af0ff50', '#2a90c030', '#10305a18'], r=6.0, halo_r=13.0)
+    for i in range(8):  # drifting plankton motes
+        x, y = 5 + hash01(i, 41) * 22, 5 + hash01(i, 42) * 22
+        c.blend(int(x), int(y), C('#9af8ffc0'))
+    return c
+
+
+@projectile('shinku_bullet')
+def _shinku_bullet():
+    """A sphere of nothing: a clear centre with a thin, dark-edged rim."""
+    c = Canvas(N, N)
+    for y in range(N):
+        for x in range(N):
+            d = math.hypot(x + 0.5 - CX, y + 0.5 - CY)
+            if 9.0 <= d <= 10.6:
+                c.blend(x, y, C('#2a2a3ee0'))
+            elif 10.6 < d <= 12.5:
+                c.blend(x, y, C('#dce6f080'))
+            elif 6.5 <= d < 9.0:
+                c.blend(x, y, C('#dce6f030'))
+            elif d < 6.5:
+                c.blend(x, y, C('#10101860'))
+    for i in range(6):  # air streaks pulled inward
+        a = i * math.pi / 3 + 0.3
+        for k in range(3):
+            c.blend(int(CX + math.cos(a) * (13.5 + k)), int(CY + math.sin(a) * (13.5 + k)), C('#ffffffa0'))
+    return c
+
+
+@projectile('kai_flame')
+def _kai_flame():
+    """A Flame Dial's burst: a spiral shell spitting flame."""
+    c = Canvas(N, N)
+    flame_licks(c, CX + 3, CY - 3, 7.0, n=7, seed=13, length=7.0)
+    banded(c, CX + 3, CY - 3, 7.5, ['#fffbe0', '#fff2a0', '#ffd24a', '#ff9a2a'])
+    for i in range(40):  # the shell's spiral at the back
+        t = i / 39
+        a = t * math.pi * 3.2
+        rr = 1.0 + t * 6.0
+        c.set(int(9 + math.cos(a) * rr * 0.8), int(23 + math.sin(a) * rr * 0.8), '#f0e2c8' if i % 3 else '#d8907a')
+    return c
+
+
+@projectile('fusen_balloon')
+def _fusen_balloon():
+    c = Canvas(N, N)
+    banded(c, CX, CY - 3, 10.5, ['#ff8a9a', '#f05a70', '#e8405a', '#c02a44', '#8a1a30'], sx=0.9, sy=1.05)
+    for x, y in ((12, 8), (13, 8), (12, 9), (13, 7)):
+        c.set(x, y, '#ffe0e8')  # shine
+    c.set(16, 24, '#c02a44')  # knot
+    c.set(15, 25, '#c02a44')
+    c.set(17, 25, '#c02a44')
+    for i in range(6):  # string
+        c.set(16 + (1 if i % 2 else 0), 26 + i, '#f4f4f4')
+    glow_around(c, '#ffe04a', radius=1.8, strength=110, steps=2)
+    return c
+
+
+@projectile('shinju_pearl')
+def _shinju_pearl():
+    c = orb(['#ffffff', '#f8f4ff', '#f0e8f4', '#e0d0ec', '#c8b4e0', '#a890c8'], ['#c8b4e040', '#a8e0f020'], r=7.5, halo_r=11.0)
+    for x, y, col in ((12, 11, '#ffffff'), (13, 11, '#ffffff'), (12, 12, '#ffffff'), (19, 19, '#f0c8e0c0'), (20, 18, '#a8e0f0c0')):
+        c.set(x, y, col)
+    return c
+
+
+@projectile('kagi_key')
+def _kagi_key():
+    rows = [
+        '................',
+        '.........bbbb...',
+        '........bBBBBb..',
+        '........bB..Bb..',
+        '........bB..Bb..',
+        '........bBBBBb..',
+        '.........bbBb...',
+        '..........bBb...',
+        '.........bBb....',
+        '........bBb.....',
+        '.......bBb......',
+        '......bBbbb.....',
+        '.....bBbBBb.....',
+        '....bBb.bb......',
+        '.....bbBb.......',
+        '......bb........',
+    ]
+    return grid(rows, {'b': '#6a4a14', 'B': '#f0c850'}, glow='#ffe08a')
+
+
+@projectile('hanabi_rocket')
+def _hanabi_rocket():
+    c = Canvas(N, N)
+    for i in range(10):  # sparkling exhaust
+        t = i / 9
+        banded(c, 5 + t * 8, 27 - t * 8, 2.6 - t, ['#ffd24ac0', '#ff9a2a80'])
+        c.set(int(4 + hash01(i, 51) * 10), int(18 + hash01(i, 52) * 10), '#ffffff')
+    c.paste(lance('#8a1a2a', '#ff8a9a', '#e83a5a', '#ff6a8a', width=2.6, tip=0.72, ax=12.0, ay=20.0, bx=28.5, by=3.5), 0, 0)
+    for k, col in enumerate(('#4ac8ff', '#ffd24a')):  # coloured bands on the tube
+        for j in range(3):
+            c.set(18 + k * 3 + j // 2, 14 - k * 3 - j // 2, col)
+    return c
+
+
+@projectile('taru_barrel')
+def _taru_barrel():
+    rows = [
+        '................',
+        '....oooooooo....',
+        '...owwwwwwwwo...',
+        '...oiiiiiiiio...',
+        '..owwWwwwWwwwo..',
+        '..owwWwwwWwwwo..',
+        '..oiiiiiiiiiio..',
+        '..owwWwwwWwwwo..',
+        '..owwWwwwWwwwo..',
+        '..oiiiiiiiiiio..',
+        '..owwWwwwWwwwo..',
+        '...owwwwwwwwo...',
+        '...oiiiiiiiio...',
+        '....oooooooo....',
+        '................',
+        '................',
+    ]
+    return grid(rows, {'o': '#3a2410', 'w': '#a0703a', 'W': '#7a5228', 'i': '#6a6a72'}, glow='#e0c090')
+
+
+@projectile('taru_keg')
+def _taru_keg():
+    rows = [
+        '..........fF....',
+        '.........f..F...',
+        '....oooooof.....',
+        '...owwwwwwwo....',
+        '..oiiiiiiiiio...',
+        '..owwKKKKwwwo...',
+        '..owwKKKKwwwo...',
+        '..oiiiiiiiiio...',
+        '..owwwwwwwwwo...',
+        '..owwwwwwwwwo...',
+        '..oiiiiiiiiio...',
+        '...owwwwwwwo....',
+        '....ooooooo.....',
+        '................',
+        '................',
+        '................',
+    ]
+    c = grid(rows, {'o': '#2a1a0a', 'w': '#6a4a24', 'i': '#4a4a52', 'K': '#1a1a1a', 'f': '#c8a878', 'F': '#ffd24a'}, glow='#ff9a2a', glow_r=1.6)
+    banded(c, 23, 2, 2.4, ['#ffffff', '#fff2a0', '#ff9a2a', '#ff5a1a80'])  # lit fuse
+    return c
+
+
+@projectile('kujira_bone')
+def _kujira_bone():
+    """A whale rib hurled like a harpoon, wrapped in ghost-light."""
+    c = lance('#8a96a8', '#ffffff', '#d8e0e8', '#8aa8d8', width=2.2, tip=0.88)
+    for (x, y) in ((6, 25), (5, 26), (7, 26), (6, 27)):
+        c.set(x, y, '#e8eef4')  # the knobbed end of the rib
+    return c
+
+
+@projectile('raiju_ball')
+def _raiju_ball():
+    c = orb(['#ffffff', '#fff8c0', '#f2e14a', '#8aa0ff', '#3a5ad8'], ['#6a8aff60', '#3a5ad830', '#2a3a9018'], r=7.5)
+    bolt_path([(3, 9), (8, 12), (6, 15), (11, 17)], c, C('#fff8a0'), '#f2e14a', hw=0.5, glow_r=1.6)
+    bolt_path([(29, 22), (24, 20), (26, 17), (21, 15)], c, C('#fff8a0'), '#f2e14a', hw=0.5, glow_r=1.6)
+    bolt_path([(18, 2), (17, 6), (20, 8)], c, C('#ffffff'), '#8aa0ff', hw=0.5, glow_r=1.4)
+    return c
+
+
+@projectile('sasori_spine')
+def _sasori_spine():
+    c = lance('#4a1a10', '#e8b878', '#a8602a', '#d8a060', width=1.4, tip=0.82)
+    for (x, y) in ((25, 6), (26, 5), (27, 4), (24, 7)):
+        c.set(x, y, '#9aff6a')  # venom at the point
+    return c
