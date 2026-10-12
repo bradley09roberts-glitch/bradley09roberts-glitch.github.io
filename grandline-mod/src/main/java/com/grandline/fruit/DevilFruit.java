@@ -58,8 +58,18 @@ public class DevilFruit {
     @FunctionalInterface
     public interface IncomingHook { float modify(LivingEntity user, LivingEntity attacker, float amount, Hits.Info info); }
 
+    /** Overrides Logia intangibility (e.g. Yami cannot pass attacks through; wet Suna loses its sand body). */
+    @FunctionalInterface
+    public interface IntangibleHook { boolean test(LivingEntity user, LivingEntity attacker, Hits.Info info); }
+
+    /** Modifies damage the user deals to others (e.g. Shio vs Fish-Men, Pika light sword on melee hits). */
+    @FunctionalInterface
+    public interface OutgoingHook { float modify(LivingEntity user, LivingEntity victim, float amount, Hits.Info info); }
+
     public TickHook tickHook;
     public IncomingHook incomingHook;
+    public IntangibleHook intangibleHook;
+    public OutgoingHook outgoingHook;
 
     /** Called every server tick for the user while not weakened. */
     public void tick(LivingEntity user) {
@@ -68,7 +78,13 @@ public class DevilFruit {
 
     /** Logia: physical damage passes through unless Haki/seastone/water. */
     public boolean intangible(LivingEntity user, LivingEntity attacker, Hits.Info info) {
-        return type == FruitType.LOGIA && info.element() != Element.WATER;
+        if (type != FruitType.LOGIA || info.element() == Element.WATER) return false;
+        return intangibleHook == null || intangibleHook.test(user, attacker, info);
+    }
+
+    /** Modify damage the user deals (only while the user is not weakened). */
+    public float modifyOutgoing(LivingEntity user, LivingEntity victim, float amount, Hits.Info info) {
+        return outgoingHook != null ? outgoingHook.modify(user, victim, amount, info) : amount;
     }
 
     /** Modify damage that reaches the user (resistances like rubber vs blunt). */

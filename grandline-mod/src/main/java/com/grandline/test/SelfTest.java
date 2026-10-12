@@ -319,9 +319,14 @@ public final class SelfTest {
             d.fruitAwakened = true;
             for (FightingStyle st : FightingStyles.all()) d.knownStyles.add(st.id);
             int ok = 0, total = 0;
+            float dealt = 0;
+            Map<String, Float> perFruit = new TreeMap<>();
             List<String> errors = new ArrayList<>();
             for (Ability a : Abilities.all()) {
                 total++;
+                // MAX_HEALTH is capped at 1024, so the dummy is topped up before every ability (otherwise it dies
+                // part-way through the list and every later targeted ability is refused for lack of a target)
+                dummy.setHealth(dummy.getMaxHealth());
                 // set up prerequisites for this ability
                 fp.moveTo(c.getX() + 0.5, c.getY(), c.getZ() + 0.5, 0, 0);
                 dummy.teleportTo(c.getX() + 0.5, c.getY(), c.getZ() + 2.5);
@@ -354,10 +359,16 @@ public final class SelfTest {
                     errors.add(a.id() + " threw " + t);
                     GrandLine.LOGGER.error("[SELFTEST] ability {} failed", a.id(), t);
                 }
+                float took = dummy.getMaxHealth() - dummy.getHealth();
+                dealt += took;
+                if (a.source() == Ability.Source.FRUIT) perFruit.merge(a.owner(), took, Float::sum);
             }
             for (var p : l.getEntitiesOfClass(com.grandline.entity.AbilityProjectile.class, new AABB(c).inflate(80))) p.discard();
             check("all " + total + " abilities execute", errors.isEmpty(), ok + "/" + total + (errors.isEmpty() ? "" : " problems: " + String.join(", ", errors.subList(0, Math.min(12, errors.size())))));
-            check("ability dummy took damage", dummy.getHealth() < dummy.getMaxHealth(), String.format("%.0f damage dealt in total", dummy.getMaxHealth() - dummy.getHealth()));
+            check("ability dummy took damage", dealt > 0, String.format("%.0f damage dealt in total", dealt));
+            List<String> harmless = new ArrayList<>();
+            for (var e : perFruit.entrySet()) if (e.getValue() <= 0) harmless.add(e.getKey());
+            check("every implemented fruit damages the dummy", harmless.isEmpty(), perFruit.size() + " fruits" + (harmless.isEmpty() ? "" : ", no damage from: " + String.join(", ", harmless)));
             dummy.discard();
             d.zoanForm = "";
             return 0;
@@ -396,6 +407,82 @@ public final class SelfTest {
             for (var n : l.getEntitiesOfClass(HumanoidNpc.class, new AABB(arena(l)).inflate(12))) n.discard();
             l.setBlock(logia.blockPosition(), Blocks.AIR.defaultBlockState(), 3);
             l.setBlock(logia.blockPosition().above(), Blocks.AIR.defaultBlockState(), 3);
+            return 0;
+        });
+        // ---------- second-wave fruit mechanics: passives and defences ----------
+        steps.add(s -> {
+            ServerLevel l = ow(s);
+            BlockPos c = arena(l);
+            TerrainChanges.revertAll(s); // clean the arena after the ability sweep
+            HumanoidNpc att = npc(l, "marine", 3, c.offset(-6, 0, -8));
+            HumanoidNpc vic = npc(l, "pirate", 3, c.offset(-6, 0, -1)); // 7 blocks apart: a ranged attacker
+            att.setNoAi(true);
+            vic.setNoAi(true);
+            att.forceFruitForTest("");
+            Hits.Info punch = Hits.Info.physical(0.1f);
+            // Yami: the darkness can never let an attack pass through
+            vic.forceFruitForTest("yami");
+            float h0 = vic.getHealth();
+            Hits.Result r = Hits.hit(att, vic, 5, punch);
+            check("Yami user cannot turn intangible", r == Hits.Result.HIT && vic.getHealth() < h0, "result=" + r);
+            // Suna: intangible while dry, solid once wet
+            vic.forceFruitForTest("suna");
+            Hits.Result dry = Hits.hit(att, vic, 5, punch);
+            CombatState.of(vic).buffs.put("suna_wet", 100);
+            Hits.Result wet = Hits.hit(att, vic, 5, punch);
+            check("Suna is intangible when dry, solid when wet", dry == Hits.Result.INTANGIBLE && wet == Hits.Result.HIT, "dry=" + dry + " wet=" + wet);
+            // Bari: the barrier ball absorbs a hit completely
+            vic.forceFruitForTest("bari");
+            boolean ball = CombatManager.useAbility(vic, Abilities.get("fruit/bari/barrier_ball"), null);
+            h0 = vic.getHealth();
+            r = Hits.hit(att, vic, 5, punch);
+            check("Barrier Ball absorbs damage", ball && vic.getHealth() >= h0, "used=" + ball + " result=" + r + " hp " + h0 + " -> " + vic.getHealth());
+            // Kagami: a ranged hit is turned back at the attacker as a mirror beam
+            vic.forceFruitForTest("kagami");
+            boolean mirror = CombatManager.useAbility(vic, Abilities.get("fruit/kagami/reflect"), null);
+            h0 = vic.getHealth();
+            r = Hits.hit(att, vic, 5, punch);
+            int beams = l.getEntitiesOfClass(com.grandline.entity.AbilityProjectile.class, new AABB(vic.blockPosition()).inflate(4),
+                    p -> p.kind().equals("mirror_beam") && p.getOwner() == vic).size();
+            check("Kagami mirror reflects a ranged hit", mirror && vic.getHealth() >= h0 && beams > 0, "used=" + mirror + " result=" + r + " beams=" + beams);
+            // Shio: salt does +50% to creatures of the sea, normal damage to others
+            att.forceFruitForTest("shio");
+            var cod = net.minecraft.world.entity.EntityType.COD.create(l);
+            var pig = net.minecraft.world.entity.EntityType.PIG.create(l);
+            float vsFish = cod == null ? 0 : FruitRules.modifyOutgoing(att, cod, 10, punch);
+            float vsLand = pig == null ? 0 : FruitRules.modifyOutgoing(att, pig, 10, punch);
+            check("Shio salt hurts sea creatures more", Math.abs(vsFish - 15) < 0.01 && Math.abs(vsLand - 10) < 0.01, "vs cod " + vsFish + ", vs pig " + vsLand);
+            // Yami: the darkness grasp shuts off the target's own Devil Fruit
+            att.forceFruitForTest("yami");
+            vic.forceFruitForTest("mera");
+            vic.teleportTo(att.getX(), att.getY(), att.getZ() + 2);
+            boolean grasp = CombatManager.useAbility(att, Abilities.get("fruit/yami/dark_grasp"), vic);
+            check("Darkness grasp nullifies the target's Devil Fruit", grasp && FruitRules.weakened(vic), "used=" + grasp + " weakened=" + FruitRules.weakened(vic));
+            att.discard();
+            vic.discard();
+            if (cod != null) cod.discard();
+            if (pig != null) pig.discard();
+            return 0;
+        });
+        // ---------- overlapping temporary terrain still reverts to the true original ----------
+        steps.add(s -> {
+            ServerLevel l = ow(s);
+            BlockPos at = arena(l).offset(7, 0, 7);
+            HumanoidNpc user = npc(l, "pirate", 3, at);
+            user.setNoAi(true);
+            BlockPos under = at.below();
+            var original = l.getBlockState(under);
+            user.forceFruitForTest("shio");
+            boolean salt = CombatManager.useAbility(user, Abilities.get("fruit/shio/salt_flats"), null);
+            boolean saltPlaced = l.getBlockState(under).is(Blocks.CALCITE);
+            user.forceFruitForTest("magu");
+            boolean magma = CombatManager.useAbility(user, Abilities.get("fruit/magu/magma_floor"), null);
+            boolean magmaPlaced = l.getBlockState(under).is(Blocks.MAGMA_BLOCK);
+            TerrainChanges.revertAll(s);
+            boolean restored = l.getBlockState(under).equals(original);
+            check("fruit terrain (salt, then magma on top) reverts to the original block", salt && magma && saltPlaced && magmaPlaced && restored,
+                    "salt=" + saltPlaced + " magma=" + magmaPlaced + " restored=" + restored + " (" + l.getBlockState(under).getBlock().getName().getString() + ")");
+            user.discard();
             return 0;
         });
         // ---------- knockdown/permadeath data rules ----------
