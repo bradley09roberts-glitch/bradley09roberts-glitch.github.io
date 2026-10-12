@@ -236,7 +236,7 @@ public final class NotableHooks {
             if (def == null) continue;
             for (int i = 0; i < def.objectives().size(); i++) {
                 QuestDef.Objective o = def.objectives().get(i);
-                if (o.target().equals(n.id()) && (o.type().equals("defeat") || o.type().equals("talk")) && q.getValue().getInt("o" + i) < o.count()) any = true;
+                if (o.target().equals(n.id()) && (o.type().equals("defeat") || o.type().equals("talk") || o.type().equals("arrest")) && q.getValue().getInt("o" + i) < o.count()) any = true;
             }
         }
         if (!any) return;
@@ -245,6 +245,7 @@ public final class NotableHooks {
                 Component.translatable(n.nameKey()), en.fate).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
         Quests.progress(sp, "defeat", n.id(), 1);
         Quests.progress(sp, "talk", n.id(), 1);
+        Quests.progress(sp, "arrest", n.id(), 1);
     }
 
     // ================================================================== dialogue (called from Dialogues)

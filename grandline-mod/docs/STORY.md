@@ -7,8 +7,10 @@ this document is original.** No canon character appears, is named or is alluded 
 King, Emperor, Admiral, Warlord, Steward...) is held by someone new.
 
 Implementation status is noted inline: cast entries are data in
-`src/main/java/com/grandline/npc/notable/NotableCharacters.java`; quests are in
-`src/main/java/com/grandline/quest/StoryQuests.java`; all text is in `src/main/lang/en_us/story.json`.
+`src/main/java/com/grandline/npc/notable/NotableCharacters.java` (plus `NotableCharactersExtra.java` for the Sky
+People, Fish-Man Island and the islanders of §3.5); quests are in `src/main/java/com/grandline/quest/StoryQuests.java`
+(plus `StoryQuestsExtra.java` for Skypiea, Fish-Man Island and the local stories); all text is in
+`src/main/lang/en_us/story.json` and `story_extra.json`.
 
 Tone: adventurous, comedic, sincere. Fights end in defeat, surrender, capture or a fall from which nobody gets up —
 never in gore.
@@ -191,6 +193,35 @@ from a sky island as a child and has been building balloon-ships to go home ever
 Burn the ledgers, ride the Knock Up Stream (or her balloon). Aria joins as **lookout**. Rival Supernova **Felicity
 "Grand Larceny" Nekomata** steals from everyone involved. `[jaya_1, jaya_2, recruit_aria]`
 
+**Skypiea — "The Storm Throne"** (the White Sea, dimension `grandline:sky`; optional branch after Jaya, reached by
+the Knock Up Stream). Ten thousand metres up, the Sky People have lived for six years under **"God" Cirrus Tenjōin,
+the Storm Throne**, who ate the Weather-Weather Fruit (original) and calls every thunderclap a divine judgment. He
+has sealed the ruins of Shandora on Upper Yard, forbidden the Shandian guardians their own forest and set four
+priests on its trails, each holding a **trial**:
+
+| Trial | Priest | Power |
+|---|---|---|
+| Snares | **Ilse Wanazawa** | Trap-Trap Fruit (original) — every root a snare |
+| Links | **Garamond Kusabi** | Chain-Chain Fruit (original) — paid by the link |
+| Slumber | **Lulla Yumeshiro** | Sleep-Sleep Fruit (original) — pilgrims who sleep never wake to face the god |
+| Gales | **Oswin Fūkyō** | no fruit: an Impact Dial, a Breath Dial and forty years of practice |
+
+The gatekeeper **Amarante Kumoi** waves the player through Heaven's Gate ("one billion extol... nobody ever has").
+On Angel Island the dial-smith **Ferris Kaigara** holds a Tone Dial that caught the god plotting, and the waver
+courier **Lumi Hanegumo** knows every rumour. On Upper Yard **Chief Wakiza Ōtori** leads the Shandian guardians, and
+his mother **Ayasha Ōtori** has polished the golden bell of Shandora on top of the Giant Jack beanstalk every morning
+for sixty years without being allowed to ring it. On Weatheria the old **Professor Isidore Kumoyomi** and the young
+weathercaster **Penelope "Pinwheel" Kazaguruma** have proof that every "judgment" arrived exactly when their
+forecasts said a storm would: lightning is not a god, it is a timetable — and a gold-wire conductor made from
+Shandora's gold will ground it. With the forecast in hand the player takes the Storm Throne; the Shandians ring the
+golden bell, the Blue Sea hears it, and the poneglyph of Shandora can be read again. On the Cloud End the guide has a
+message for a Sky People girl who fell to the Blue Sea years ago — Aria "Skylark" Fuusen.
+Variants: civilians interview the island for the Gazette and print the forecast instead of fighting the god;
+Marines (no jurisdiction above the clouds, "but kidnapping is kidnapping") arrest the priests and the god;
+Revolutionaries give Upper Yard back to the Shandians; bounty hunters bring in the first god ever to have a price.
+`[sky_1, sky_2 (+.civilian), sky_3 (+.marine), sky_4, sky_5, sky_6 (+.marine, .revolutionary, .bounty_hunter,
+.civilian), sky_7, sky_8]`
+
 **Long Ring Long Land — "Tug-of-Tides".** A nomad island of long stretched plains hosts the Tug-of-Tides, a crew vs.
 crew contest. Supernova **Ayame "Thousand Knots" Musubi** cheats; the island's champion **Gunnar "Mossback"
 Iwakoke**, a Stonehide wrestler, would like to see her lose fairly. He joins as **bodyguard**.
@@ -223,6 +254,26 @@ who coated the Saltfire King's ship, coats yours for the deep. In the chaos the 
 Tsukuyomi** reveals he has been CP0's informant all along — he sold the Lamplighter's hiding place. The World
 Government announces her public execution at Marineford.
 `[sabaody_1, sabaody_2 (+.marine, .civilian), sabaody_3 (+.marine)]`
+
+#### Fish-Man Island — "The Lantern in the Abyss"
+(the deep sea, dimension `grandline:deep_sea`; a branch from Sabaody that leads to the New World Gate.) Ume coats
+the player's ship and sends it ten thousand metres down to **Ryugu Kingdom** in its air bubble. **King Nereo
+Umisachi, the Tidecrown**, a huge and gentle merman, rules it; his late wife, **Queen Amaya**, gathered a hundred
+thousand names on the **Sunlit Petition** to bring the island into the sun and was shot for it in Gyoncorde Plaza ten
+years ago — the island blamed a human. Her daughter **Princess Marisol, the Pearl of Ryugu**, carries her pen and
+the petition on. The truth: the Fish-Man supremacist crew **the Abyssal Tide** of **Captain Lorcan Ankō, "the Lantern
+of the Abyss"**, killed the queen, and has bought half the palace guard with the "Abyss Pearls" brewed by its
+druggist **Doctor Sculpin Okoze** (Medicine-Medicine Fruit, original — a Fish-Man who gave up swimming for it). That
+is why the Coral Guard's own soldiers attack visitors: **General Tetsuo "Ironfin" Sawara** cannot tell which half is
+loyal. **Madame Perla Sango** of Mermaid Cove welcomes the player on Ume's word; in the **Sea Forest** the old keeper
+**Tidwell Kaisō** tends the queen's grave, the wrecks and the poneglyph she died defending ("a promise someone
+carved and could not keep"). The player clears the turncoats, carries the petition to the king, lights the graves
+with sea pickles from the Coral Hill Reef, breaks the Abyssal Tide, reads the stone of the Sunken Ruins and rises to
+the New World Gate as the island's ally. Variants: Marines arrest the druggist and the captain (the queen's murder is
+finally a case); bounty hunters bring them in alive; Revolutionaries break the hatred "handed down like a chain";
+civilians gather the petition for the Gazette and evacuate the plaza.
+`[fmi_1, fmi_2, fmi_3 (+.marine, .bounty_hunter), fmi_4 (+.civilian), fmi_5, fmi_6 (+.marine, .revolutionary,
+.bounty_hunter, .civilian), fmi_7, fmi_8]`
 
 #### Calm Belt interlude
 - **Amazon Lily — "The Jade Camellia".** The Kuja empress and Warlord **Hisui Benitsubaki** (the Mythical Zoan
@@ -288,6 +339,45 @@ by the most powerful people in the sea, and then the last bearing from Lodestar 
 `[nw_gate_1, punk_1, dress_1, dress_2, greenbit_1, recruit_bolt, zou_1, recruit_pashmina, cake_1, cake_2, wano_1,
 recruit_rin, oni_1, oni_2, egghead_1, recruit_elowen, baltigo_1 (+.revolutionary, .marine), hachinosu_1 (+.marine), elbaph_1, lodestar_1,
 laughtale_1, laughtale_2 (+ all variants)]`
+
+### Local stories — every other canon island
+Every canon island has something to do. Islands without an arc of their own have a short local story told by an
+original islander (or, on the Revolutionary commanders' islands, by the commander), offered on that island:
+
+| Island | Islander | Story | Quest |
+|---|---|---|---|
+| Dawn Island | Granny Wren Kazamaki, barkeep | The Gray Terminal gang stole the harvest money. | `dawn_1` |
+| Shimotsuki Village | Master Ren Shimoyama, one-armed sensei | Bandits stole the Frost-Moon Dojo's blade. | `shimotsuki_1` |
+| Island of Rare Animals | Philippa "Fern" Hakobune, naturalist | Poachers before the full moon. | `rare_animals_1` |
+| Mirror Ball Island | Commander Tamsin Kujira | Lanterns on the water (Revolutionaries: a Marine patrol). | `mirror_ball_1` (+.revolutionary) |
+| Flevance | Sister Agnes Shiraishi | Grave robbers in the White City. | `flevance_1` |
+| Minion Island | Sigvald "Snowshoe" Yukibana, trapper | Firewood for a winter that never ends (16 logs). | `minion_1` |
+| Swallow Island | Commander Bjorn Sekka | The North Army's forge. | `swallow_1` (+.revolutionary) |
+| Spider Miles | Nell "Sprocket" Kuzuya, junk-picker | Salvage iron before the Scrap Baron melts it. | `spider_1` |
+| Ohara | Commander Oleander Hisame | Books for the hidden library of the burnt scholars. | `ohara_1` |
+| Baterilla | Commander Mireille Taiyō | The South Army's soup kitchen. | `baterilla_1` (+.revolutionary) |
+| Torino Kingdom | Mother Kestrel Torigai, bird-keeper | Feathers for the Nest Festival. | `torino_1` |
+| San Faldo | Livia Kamenya, mask-maker | Thieves in her masks rob the carnival. | `san_faldo_1` |
+| St. Poplar | Rosalind Hanakago, florist | A bouquet for the Spring Queen (12 flowers). | `st_poplar_1` |
+| Pucci | Chef Gustave Ajimi | Cod for the gourmet market. | `pucci_1` |
+| Boin Archipelago | Ivo Tsurukusa, botanist | Pirates raid the Pop Green beds. | `boin_1` |
+| Namakura Island | Hattie Tatara, hermit smith | Iron for a fine blade. | `namakura_1` |
+| Banaro Island | Corvin Yakeno, last baker | Looters in the burnt town. | `banaro_1` |
+| Momoiro Island | Duchess Peony Momozono | The Pink Pageant: beat her, then bring pink. | `momoiro_1` |
+| Karakuri Island | Professor Linnea Zenmai, clockmaker | Redstone for a self-winding heart. | `karakuri_1` |
+| Mary Geoise | Juniper "Ashfoot" Kurai, runaway | The back stairs of the Holy Land (passage via Ume and Princess Marisol). | `holy_land_1` |
+| New World Gate | Harbourmaster Agathe Minatoya | Pirates preying on fresh arrivals. | `nw_harbour_1` |
+| Punk Hazard | Rook Hiyamizu, runaway lab assistant | Galvani's hired guns want him back. | `punk_rook_1` |
+| Sphinx | Nana Sabaku | Rookies who don't know the Cloudbridge's flag. | `sphinx_1` |
+| Cacao Island | Praline Kakaoyama, chocolatier | Cocoa for the Carnival's tithe. | `cacao_1` |
+| Jam Island | Bramble Ichigoya, jam-maker | Berries for the Carnival's tithe. | `jam_1` |
+| Foodvalten | Hansel Komugi, mill-master | The Carnival's bread tax. | `foodvalten_1` |
+| Onigashima | Old Gonzaburo Sumikura, pit-miner | Free the Kraken's miners. | `oni_miners_1` |
+| Hachinosu | Moll "Pinchpenny" Hachiya, barkeep | Smuggle debtors out before the Fence collects. | `hachinosu_moll_1` |
+| Laugh Tale | Old Cinder Tomoshibi, the King's ship's boy | He stayed to keep the pilot light company. | `laughtale_cinder_1` |
+
+In the White Sea and the deep sea every named island has a quest given there or one that sends the player there
+(the Cloud End's guide gives `sky_8`; the Coral Hill Reef and the Sunken Ruins are destinations of `fmi_5`/`fmi_7`).
 
 ---
 
@@ -525,6 +615,38 @@ cell; bounty hunters a hunting party; civilians a travelling company. The mechan
 
 ---
 
+### 7.10 The White Sea (Skypiea)
+| Character | Title | Race | Fruit / style | Home |
+|---|---|---|---|---|
+| Cirrus Tenjōin | "God", the Storm Throne | Sky People | Weather-Weather (original), Storm Dance, weather staff | Upper Yard |
+| Ilse Wanazawa | Priestess of the Trial of Snares | Sky People | Trap-Trap (original), spear | Upper Yard |
+| Garamond Kusabi | Priest of the Trial of Links | Sky People | Chain-Chain (original), anchor chain | Upper Yard |
+| Lulla Yumeshiro | Priestess of the Trial of Slumber | Sky People | Sleep-Sleep (original), bo staff | Upper Yard |
+| Oswin Fūkyō | Priest of the Trial of Gales | Sky People | Impact Dial, Storm Dance | Upper Yard |
+| Wakiza Ōtori | Chief of the Shandian guardians | Sky People | Storm Dance spear (teaches it) | Upper Yard (Shandora) |
+| Ayasha Ōtori | Bell-Ringer of Shandora | Sky People | Life Return | Upper Yard (Giant Jack) |
+| Amarante Kumoi | Gatekeeper of Heaven's Gate | Sky People | — | Heaven's Gate |
+| Ferris Kaigara | Dial-Smith of Angel Island | Sky People | — (sells dials) | Angel Island |
+| Lumi Hanegumo | Waver courier | Sky People | Storm Dance staff | Angel Island |
+| Isidore Kumoyomi | Eldest scholar of Weatheria | Sky People | — | Weatheria |
+| Penelope "Pinwheel" Kazaguruma | Weathercaster | Sky People | weather staff | Weatheria |
+
+### 7.11 Fish-Man Island (Ryugu Kingdom)
+| Character | Title | Race | Fruit / style | Home |
+|---|---|---|---|---|
+| King Nereo Umisachi | the Tidecrown | Merfolk | Fish-Man Jujutsu, trident | Ryugu Palace |
+| Princess Marisol Umisachi | the Pearl of Ryugu | Merfolk | — | Ryugu Palace |
+| General Tetsuo Sawara | "Ironfin", Commander of the Coral Guard | Fish-Man (swordfish) | one-sword style | Ryugu Palace |
+| Madame Perla Sango | Proprietress of Mermaid Cove | Merfolk | — | Mermaid Cove |
+| Tidwell Kaisō | Keeper of the Sea Forest | Fish-Man | Fish-Man Karate | Sea Forest |
+| Captain Lorcan Ankō | "the Lantern of the Abyss", Abyssal Tide | Fish-Man (anglerfish) | Fish-Man Karate, trident | Fish-Man Island outskirts |
+| Doctor Sculpin Okoze | the Venom-Druggist | Fish-Man (stonefish) | Medicine-Medicine (original) | Fish-Man Island outskirts |
+| Queen Amaya Umisachi | the late queen (never appears, like the Saltfire King) | Merfolk | — | her grave is in the Sea Forest |
+
+### 7.12 Islanders
+The 25 original islanders of §3 "Local stories" (Granny Wren to Old Cinder) are friendly notables living on their
+islands; Duchess Peony is a rival who yields when beaten in the pageant ring.
+
 ## 8. Rumours and world texture
 
 Every island with an arc has local rumours (`rumor.grandline.story.<island>`) that NPCs there tell after their usual
@@ -541,3 +663,10 @@ planned world event (blue flame on the horizon, Log Poses spin, everyone's mood 
   credited when the player visits where they lived.
 - Crew membership is stored per character id (`grandline_crews`), survives restarts, and follows the captain
   across the sea (members far behind are "aboard" and step off when the captain is back on land).
+- Notables live in whichever plan holds their home island: the ocean world, the White Sea (`grandline:sky`) or the
+  deep sea (`grandline:deep_sea`). `NotableSpawner` scans every level that has players with that level's own plan.
+- Objective types that progress: `kill` (role), `defeat` (notable; beaten, yielded or arrested), `talk` (role or
+  notable), `discover` (island id, `any`, `any_canon`), `poneglyph`, `arrest` (role, faction or notable),
+  `ship`, `arrested` and `collect` (item id or `#tag`: counted from the inventory on pickup and every two seconds,
+  handed over when the quest completes — `quest/QuestCollect.java`). Objectives naming a notable who is already gone
+  (`defeat`, `talk`, `arrest`) are credited when the player visits where they lived.

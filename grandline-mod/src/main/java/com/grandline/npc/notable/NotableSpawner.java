@@ -48,42 +48,54 @@ public final class NotableSpawner {
         NotableHooks.tick(server);
         ServerLevel level = server.overworld();
         if (level.getGameTime() % 40 != 7) return;
-        WorldPlan plan = WorldPlan.of(server);
-        if (plan == null) return;
         NotableState st = NotableState.get(server);
         Set<String> missingChecked = new HashSet<>();
-        for (ServerPlayer sp : level.players()) {
-            if (sp.isSpectator()) continue;
-            int px = sp.getBlockX(), pz = sp.getBlockZ();
-            for (String islandId : NotableCharacters.islands()) {
-                Island isl = plan.byId(islandId);
-                if (isl == null || isl.distance(px, pz) > isl.radius + SPAWN_RADIUS + 64) continue;
-                for (Notable n : NotableCharacters.onIsland(islandId)) {
-                    int hx = isl.x + n.dx(), hz = isl.z + n.dz();
-                    double d = Math.sqrt((double) (hx - px) * (hx - px) + (double) (hz - pz) * (hz - pz));
-                    NotableState.Entry e = st.entry(n.id());
-                    switch (e.status) {
-                        case UNSPAWNED -> {
-                            if (d <= SPAWN_RADIUS) spawn(level, n, isl);
-                        }
-                        case ALIVE -> {
-                            if (d <= 48 && missingChecked.add(n.id())) checkMissing(level, st, n, e, hx, hz);
-                        }
-                        case DEFEATED, ARRESTED -> {
-                            if (d <= FALLEN_CREDIT_RADIUS) NotableHooks.creditFallen(sp, n);
-                        }
-                        default -> {}
+        // the ocean world, the White Sea and the deep sea each have their own plan, and their own residents
+        for (ServerLevel l : server.getAllLevels()) {
+            if (l.players().isEmpty()) continue;
+            WorldPlan plan = WorldPlan.forLevel(l);
+            if (plan == null) continue;
+            for (ServerPlayer sp : l.players())
+                if (!sp.isSpectator()) scan(l, plan, st, sp.getBlockX(), sp.getBlockZ(), sp, missingChecked);
+        }
+    }
+
+    /** Spawn, check on or credit the notables whose homes are near (px, pz) in this level. */
+    private static void scan(ServerLevel level, WorldPlan plan, NotableState st, int px, int pz, @Nullable ServerPlayer sp, Set<String> missingChecked) {
+        for (String islandId : NotableCharacters.islands()) {
+            Island isl = plan.byId(islandId);
+            if (isl == null || isl.distance(px, pz) > isl.radius + SPAWN_RADIUS + 64) continue;
+            for (Notable n : NotableCharacters.onIsland(islandId)) {
+                int hx = isl.x + n.dx(), hz = isl.z + n.dz();
+                double d = Math.sqrt((double) (hx - px) * (hx - px) + (double) (hz - pz) * (hz - pz));
+                NotableState.Entry e = st.entry(n.id());
+                switch (e.status) {
+                    case UNSPAWNED -> {
+                        if (d <= SPAWN_RADIUS) spawn(level, n, isl);
                     }
+                    case ALIVE -> {
+                        if (d <= 48 && missingChecked.add(n.id())) checkMissing(level, st, n, e, hx, hz);
+                    }
+                    case DEFEATED, ARRESTED -> {
+                        if (sp != null && d <= FALLEN_CREDIT_RADIUS) NotableHooks.creditFallen(sp, n);
+                    }
+                    default -> {}
                 }
             }
         }
+    }
+
+    /** Run the proximity rules as if a player stood at (x, z) of this level (self-test hook; works in any sea). */
+    public static void scanAt(ServerLevel level, int x, int z) {
+        WorldPlan plan = WorldPlan.forLevel(level);
+        if (plan != null) scan(level, plan, NotableState.get(level.getServer()), x, z, null, new HashSet<>());
     }
 
     /** Spawn a notable at its home now if it has not been spawned yet (story/test hook). */
     @Nullable
     public static HumanoidNpc spawnNow(ServerLevel level, String id) {
         Notable n = NotableCharacters.get(id);
-        WorldPlan plan = WorldPlan.of(level.getServer());
+        WorldPlan plan = WorldPlan.forLevel(level); // the sea this level holds (ocean, sky or deep)
         if (n == null || plan == null) return null;
         Island isl = plan.byId(n.island());
         if (isl == null || NotableState.get(level.getServer()).status(id) != Status.UNSPAWNED) return null;

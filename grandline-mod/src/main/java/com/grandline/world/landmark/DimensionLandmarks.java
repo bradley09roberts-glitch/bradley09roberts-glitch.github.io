@@ -417,6 +417,9 @@ final class DimensionLandmarks {
         b.chest(18, 1, 31, Direction.NORTH, Buildings.LOOT_SHRINE);
         b.marker("treasure", 18, 1, 31);
         b.marker("npc", 14, 1, 26, role("keeper"));
+        // the stone the late queen died defending (Fish-Man Island arc, quest fmi_5)
+        b.fill(10, 1, 14, 10, 3, 14, ModBlocks.PONEGLYPH.get());
+        b.marker("poneglyph", 10, 1, 14);
     }
 
     private DimensionLandmarks() {}

@@ -722,6 +722,7 @@ public final class SelfTest {
             return 20;
         });
         storySteps();
+        StoryTestsExtra.phase1(steps); // Skypiea, Fish-Man Island, local stories, sky/deep notables
     }
 
     // ============================================================== story cast, crews and quests (Saltfire Saga)
@@ -742,7 +743,7 @@ public final class SelfTest {
             List<String> bad = new ArrayList<>();
             Set<String> fruits = new HashSet<>();
             for (var n : all) {
-                if (p.byId(n.island()) == null) bad.add(n.id() + ": island " + n.island());
+                if (StoryTestsExtra.planOf(s, n.island()) == null) bad.add(n.id() + ": island " + n.island()); // ocean, sky or deep sea
                 if (n.fruit() != null && (DevilFruits.get(n.fruit()) == null || !fruits.add(n.fruit()))) bad.add(n.id() + ": fruit " + n.fruit());
                 if (FightingStyles.get(n.style()) == null) bad.add(n.id() + ": style " + n.style());
                 if (!com.grandline.npc.Archetypes.has(n.role())) bad.add(n.id() + ": role " + n.role());
@@ -763,15 +764,16 @@ public final class SelfTest {
                 if (!story.contains(q.id())) continue;
                 if (q.giverRole().startsWith("notable:") && com.grandline.npc.notable.NotableCharacters.get(q.giverRole().substring(8)) == null) bad.add(q.id() + " giver " + q.giverRole());
                 if (!q.giverRole().startsWith("notable:") && !com.grandline.npc.Archetypes.has(q.giverRole())) bad.add(q.id() + " giver " + q.giverRole());
-                if (!q.island().equals("*") && p.byId(q.island()) == null) bad.add(q.id() + " island " + q.island());
+                if (!q.island().equals("*") && StoryTestsExtra.planOf(s, q.island()) == null) bad.add(q.id() + " island " + q.island());
                 if (q.objectives().isEmpty()) bad.add(q.id() + " has no objectives");
                 for (var o : q.objectives()) {
                     boolean ok = switch (o.type()) {
                         case "defeat" -> com.grandline.npc.notable.NotableCharacters.get(o.target()) != null;
                         case "talk" -> com.grandline.npc.notable.NotableCharacters.get(o.target()) != null || com.grandline.npc.Archetypes.has(o.target());
                         case "kill" -> com.grandline.npc.Archetypes.has(o.target());
-                        case "discover" -> p.byId(o.target()) != null || o.target().equals("any") || o.target().equals("any_canon");
+                        case "discover" -> StoryTestsExtra.planOf(s, o.target()) != null || o.target().equals("any") || o.target().equals("any_canon");
                         case "poneglyph" -> true;
+                        case "arrest", "collect" -> StoryTestsExtra.progresses(s, o);
                         default -> false;
                     };
                     if (!ok) bad.add(q.id() + " objective " + o.type() + ":" + o.target());

@@ -65,6 +65,7 @@ public final class Quests {
     }
 
     static void finish(ServerPlayer sp, CharacterData d, QuestDef q) {
+        QuestCollect.handOver(sp, q); // "collect" objectives: the goods go to the giver
         d.questProgress.remove(q.id());
         d.completedQuests.add(q.id());
         int lv = d.addXp(q.xp());
