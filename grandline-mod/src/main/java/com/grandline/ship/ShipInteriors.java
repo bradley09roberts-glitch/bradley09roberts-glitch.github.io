@@ -81,14 +81,14 @@ public final class ShipInteriors {
             rec = reg.byInterior(idx);
             if (rec != null) shipId = rec.shipId;
         } else rec = reg.get(shipId);
-        Entity e = shipId == null ? null : ow.getEntity(shipId);
-        if (e instanceof ShipEntity ship) {
-            Vec3 hatch = deckExit(ship);
-            sp.teleportTo(ow, hatch.x, hatch.y, hatch.z, sp.getYRot(), sp.getXRot());
+        ShipEntity found = shipId == null ? null : ShipTravel.find(sp.server, shipId);
+        if (found != null) {
+            Vec3 hatch = deckExit(found);
+            sp.teleportTo((ServerLevel) found.level(), hatch.x, hatch.y, hatch.z, sp.getYRot(), sp.getXRot());
             return;
         }
         if (rec != null) {
-            sp.teleportTo(ow, rec.x, rec.y + 3, rec.z, sp.getYRot(), sp.getXRot());
+            sp.teleportTo(ShipTravel.level(sp.server, rec.dim), rec.x, rec.y + 3, rec.z, sp.getYRot(), sp.getXRot());
             if (rec.sunk) sp.sendSystemMessage(Component.translatable("grandline.ship.sunk_exit"));
             return;
         }
@@ -111,7 +111,10 @@ public final class ShipInteriors {
             ServerPlayer p = server.getPlayerList().getPlayer(en.getKey());
             return p == null || p.level().dimension() != DIM;
         });
-        for (UUID id : OCCUPANTS.values()) if (ow.getEntity(id) instanceof ShipEntity ship) keepLoaded(ship);
+        for (UUID id : OCCUPANTS.values()) {
+            ShipEntity ship = ShipTravel.find(server, id);
+            if (ship != null) keepLoaded(ship);
+        }
     }
 
     /** Build the rooms for a ship class: hold, galley, crew quarters, captain's cabin, ladder up to the hatch. */

@@ -20,6 +20,8 @@ public final class IslandSpec {
     public String faction = "civilian";
     public com.grandline.world.build.BuildStyle style;
     public IslandTheme altTheme;
+    /** Sea zone override (islands outside the main ocean world). */
+    public SeaZone zone;
 
     public static IslandSpec canon(String id, int x, int z, int radius) {
         IslandSpec s = new IslandSpec();
@@ -64,6 +66,11 @@ public final class IslandSpec {
 
     public IslandSpec landmark(String id, int dx, int dz, int rot) {
         landmarks.add(new Island.LandmarkPlacement(id, dx, dz, rot));
+        return this;
+    }
+
+    public IslandSpec zone(SeaZone zone) {
+        this.zone = zone;
         return this;
     }
 

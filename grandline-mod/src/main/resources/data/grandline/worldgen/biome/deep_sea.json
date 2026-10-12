@@ -1,0 +1,85 @@
+{
+  "downfall": 0.4,
+  "effects": {
+    "fog_color": 398378,
+    "sky_color": 133140,
+    "water_color": 731722,
+    "water_fog_color": 133656,
+    "mood_sound": {
+      "block_search_extent": 8,
+      "offset": 2.0,
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000
+    }
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "minecraft:ore_dirt",
+      "minecraft:ore_gravel",
+      "minecraft:ore_coal_upper",
+      "minecraft:ore_coal_lower",
+      "minecraft:ore_iron_upper",
+      "minecraft:ore_iron_middle",
+      "minecraft:ore_iron_small",
+      "minecraft:ore_gold",
+      "minecraft:ore_gold_lower",
+      "minecraft:ore_redstone",
+      "minecraft:ore_diamond",
+      "minecraft:ore_diamond_medium",
+      "minecraft:ore_lapis",
+      "minecraft:ore_copper",
+      "minecraft:disk_sand",
+      "minecraft:disk_clay",
+      "minecraft:disk_gravel"
+    ],
+    [],
+    [],
+    [
+      "minecraft:seagrass_deep_cold",
+      "minecraft:kelp_cold",
+      "minecraft:sea_pickle"
+    ],
+    []
+  ],
+  "has_precipitation": false,
+  "spawn_costs": {},
+  "spawners": {
+    "ambient": [],
+    "axolotls": [],
+    "creature": [],
+    "misc": [],
+    "monster": [],
+    "underground_water_creature": [
+      {
+        "type": "minecraft:glow_squid",
+        "weight": 10,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ],
+    "water_ambient": [
+      {
+        "type": "minecraft:cod",
+        "weight": 10,
+        "minCount": 3,
+        "maxCount": 6
+      }
+    ],
+    "water_creature": [
+      {
+        "type": "minecraft:squid",
+        "weight": 6,
+        "minCount": 1,
+        "maxCount": 3
+      }
+    ]
+  },
+  "temperature": 0.4,
+  "carvers": {}
+}

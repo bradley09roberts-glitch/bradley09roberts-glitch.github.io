@@ -28,7 +28,11 @@ public final class WorldPlan {
     private static final int CELL = 2048;
     private static final Map<Long, WorldPlan> CACHE = new ConcurrentHashMap<>();
 
+    /** Which world this plan describes: the main ocean, the White Sea in the sky, or the deep sea. */
+    public enum Kind { OCEAN, SKY, DEEP }
+
     public final long seed;
+    public final Kind kind;
     public final List<Island> islands;
     private final Map<String, Island> byId = new HashMap<>();
     private final Long2ObjectOpenHashMap<Island[]> grid = new Long2ObjectOpenHashMap<>();
@@ -43,6 +47,22 @@ public final class WorldPlan {
     public static WorldPlan of(long planSeed) {
         int count = proceduralCount();
         return CACHE.computeIfAbsent(planSeed ^ ((long) count << 48), k -> new WorldPlan(planSeed, count));
+    }
+
+    /** Plan of a non-ocean kind (sky or deep sea) for the same world seed. */
+    public static WorldPlan of(RandomState randomState, Kind kind) {
+        long s = randomState.getOrCreateRandomFactory(GrandLine.id("world_plan")).at(0, 0, 0).nextLong();
+        if (kind == Kind.OCEAN) return of(s);
+        return CACHE.computeIfAbsent(s * 31 + kind.ordinal() * 0x632BE59BD9B4E019L, k -> new WorldPlan(s, kind));
+    }
+
+    /** Plan of the level's generator (ocean, sky or deep sea), or null for other levels. */
+    @Nullable
+    public static WorldPlan forLevel(net.minecraft.world.level.Level level) {
+        if (!(level instanceof ServerLevel sl)) return null;
+        if (sl.getChunkSource().getGenerator() instanceof com.grandline.world.gen.ArchipelagoChunkGenerator g)
+            return of(sl.getChunkSource().randomState(), g.kind());
+        return null;
     }
 
     /** Plan for the overworld of a running server (null if the overworld is not our generator). */
@@ -61,8 +81,27 @@ public final class WorldPlan {
         }
     }
 
+    private WorldPlan(long seed, Kind kind) {
+        this.seed = seed;
+        this.kind = kind;
+        this.floorNoise = new SimplexNoise(new LegacyRandomSource(seed ^ 0x51F1L ^ kind.ordinal()));
+        this.wallNoise = new SimplexNoise(new LegacyRandomSource(seed ^ 0xBEEFL));
+        List<IslandSpec> specs = kind == Kind.SKY ? SkyWorld.islands(seed) : DeepWorld.islands(seed);
+        List<Island> list = new ArrayList<>();
+        long i = 0;
+        for (IslandSpec spec : specs) {
+            Island island = new Island(this, spec, seed * 37 + (spec.id.hashCode() * 0x9E3779B97F4A7C15L) + i++);
+            list.add(island);
+            byId.put(island.id, island);
+            index(island);
+        }
+        this.islands = Collections.unmodifiableList(list);
+        GrandLine.LOGGER.info("{} plan {}: {} islands", kind, seed, list.size());
+    }
+
     private WorldPlan(long seed, int proceduralCount) {
         this.seed = seed;
+        this.kind = Kind.OCEAN;
         this.floorNoise = new SimplexNoise(new LegacyRandomSource(seed ^ 0x51F1L));
         this.wallNoise = new SimplexNoise(new LegacyRandomSource(seed ^ 0xBEEFL));
         List<IslandSpec> specs = new ArrayList<>(CanonIslands.all());
@@ -163,6 +202,21 @@ public final class WorldPlan {
         out.redLine = false;
         out.canal = false;
         out.waterTop = SEA_LEVEL;
+        if (kind != Kind.OCEAN) {
+            out.zone = kind == Kind.SKY ? SeaZone.SKY_SEA : SeaZone.DEEP_SEA;
+            double best = kind == Kind.SKY ? SkyWorld.FLOOR_Y : DeepWorld.floor(floorNoise, x, z);
+            Island owner = null;
+            for (Island i : candidates(x, z)) {
+                double h = i.height(x, z);
+                if (!Double.isNaN(h) && h > best) {
+                    best = h;
+                    owner = i;
+                }
+            }
+            out.height = (int) Math.floor(best);
+            out.island = owner;
+            return;
+        }
         SeaZone zone = WorldLayout.zoneAt(x, z);
         out.zone = zone;
         double floor = oceanFloor(x, z, zone);

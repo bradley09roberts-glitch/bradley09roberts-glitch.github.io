@@ -12,7 +12,11 @@ public enum SeaZone {
     PARADISE(3, 32, 0x2A6FBE),
     NEW_WORLD(6, 26, 0x1D4F94),
     RED_LINE(5, 40, 0x3D8FD8),
-    WORLD_EDGE(1, 30, 0x2E6FB0);
+    WORLD_EDGE(1, 30, 0x2E6FB0),
+    /** The White Sea above the clouds (sky dimension). */
+    SKY_SEA(5, 47, 0xE8F4FF),
+    /** The deep sea 10,000 m down (deep-sea dimension, Fish-Man Island). */
+    DEEP_SEA(7, -20, 0x0B2A4A);
 
     /** Base danger tier (1..10) used to scale encounters and island difficulty. */
     public final int dangerTier;

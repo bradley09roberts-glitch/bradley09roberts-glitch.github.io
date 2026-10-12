@@ -28,10 +28,13 @@ public final class ArchipelagoBiomeSource extends BiomeSource {
 
     public static final ResourceKey<Biome> EAST_BLUE = key("east_blue"), WEST_BLUE = key("west_blue"), NORTH_BLUE = key("north_blue"),
             SOUTH_BLUE = key("south_blue"), PARADISE = key("paradise_sea"), CALM_BELT = key("calm_belt"), NEW_WORLD = key("new_world_sea"),
-            WORLD_EDGE = key("world_edge"), RED_LINE = key("red_line"), REVERSE_MOUNTAIN = key("reverse_mountain");
+            WORLD_EDGE = key("world_edge"), RED_LINE = key("red_line"), REVERSE_MOUNTAIN = key("reverse_mountain"),
+            WHITE_SEA = key("white_sea"), DEEP_SEA = key("deep_sea");
 
     /** Plan used by plan-unaware callers (locate, spawn search). Set by the chunk generator / server start. */
     static volatile WorldPlan activePlan;
+    /** Plan of the generator owning this biome source (each dimension has its own). */
+    volatile WorldPlan plan;
 
     private final HolderGetter<Biome> biomes;
     private final Map<ResourceKey<Biome>, Holder<Biome>> cache = new HashMap<>();
@@ -57,7 +60,7 @@ public final class ArchipelagoBiomeSource extends BiomeSource {
 
     @Override
     protected Stream<Holder<Biome>> collectPossibleBiomes() {
-        Set<ResourceKey<Biome>> keys = new LinkedHashSet<>(List.of(EAST_BLUE, WEST_BLUE, NORTH_BLUE, SOUTH_BLUE, PARADISE, CALM_BELT, NEW_WORLD, WORLD_EDGE, RED_LINE, REVERSE_MOUNTAIN, Biomes.BEACH));
+        Set<ResourceKey<Biome>> keys = new LinkedHashSet<>(List.of(EAST_BLUE, WEST_BLUE, NORTH_BLUE, SOUTH_BLUE, PARADISE, CALM_BELT, NEW_WORLD, WORLD_EDGE, RED_LINE, REVERSE_MOUNTAIN, Biomes.BEACH, Biomes.SNOWY_BEACH, WHITE_SEA, DEEP_SEA));
         for (IslandTheme t : IslandTheme.values()) {
             keys.add(t.wildBiome);
             keys.add(t.settledBiome);
@@ -67,7 +70,7 @@ public final class ArchipelagoBiomeSource extends BiomeSource {
 
     @Override
     public Holder<Biome> getNoiseBiome(int qx, int qy, int qz, Climate.Sampler sampler) {
-        WorldPlan plan = activePlan;
+        WorldPlan plan = this.plan != null ? this.plan : activePlan;
         if (plan == null) return holder(PARADISE);
         return biomeAt(plan, qx << 2, qz << 2, new WorldPlan.Sample());
     }
@@ -81,8 +84,10 @@ public final class ArchipelagoBiomeSource extends BiomeSource {
         if (s.canal) return REVERSE_MOUNTAIN;
         if (s.redLine || (s.island == null && s.height > WorldPlan.SEA_LEVEL + 20)) return RED_LINE;
         Island isl = s.island;
+        if (s.zone == SeaZone.DEEP_SEA && com.grandline.world.DeepWorld.domeAt(x, z) != null) return IslandTheme.SkyBiomes.FISHMAN_ISLAND;
         if (isl != null && s.height >= WorldPlan.SEA_LEVEL) {
             IslandTheme theme = isl.themeAt(x, z);
+            if (theme == IslandTheme.CLOUD || theme == IslandTheme.CORAL) return theme.wildBiome;
             if (s.height <= WorldPlan.SEA_LEVEL + 2 && isl.t(x, z) > 0.88) return theme == IslandTheme.SNOW || theme == IslandTheme.ICE ? Biomes.SNOWY_BEACH : Biomes.BEACH;
             Settlement st = isl.settlement();
             if (st.bounds(x, z)) return theme.settledBiome;
@@ -102,6 +107,8 @@ public final class ArchipelagoBiomeSource extends BiomeSource {
             case NEW_WORLD -> NEW_WORLD;
             case RED_LINE -> RED_LINE;
             case WORLD_EDGE -> WORLD_EDGE;
+            case SKY_SEA -> WHITE_SEA;
+            case DEEP_SEA -> DEEP_SEA;
         };
     }
 }

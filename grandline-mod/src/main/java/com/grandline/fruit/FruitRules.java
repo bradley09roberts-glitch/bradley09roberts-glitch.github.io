@@ -29,6 +29,7 @@ public final class FruitRules {
     /** Waist-deep water (or more) drains a fruit user; rain does not. */
     public static boolean inSea(LivingEntity e) {
         if (!e.isInWater()) return false;
+        if (com.grandline.ship.SpecialRoutes.inShipBubble(e)) return false; // inside a coated ship's air bubble
         double depth = e.getFluidTypeHeight(net.neoforged.neoforge.common.NeoForgeMod.WATER_TYPE.value());
         return depth >= e.getBbHeight() * 0.45;
     }

@@ -29,8 +29,8 @@ public final class Navigation {
 
     public static void tick(ServerPlayer sp, CharacterData d) {
         if (sp.tickCount % 40 != 0) return;
-        WorldPlan plan = WorldPlan.of(sp.server);
-        if (plan == null || sp.level() != sp.server.overworld()) return;
+        WorldPlan plan = WorldPlan.forLevel(sp.level()); // ocean world, White Sea or deep sea
+        if (plan == null) return;
         Island isl = plan.islandAt(sp.getBlockX(), sp.getBlockZ());
         if (isl != null && isl.t(sp.getBlockX(), sp.getBlockZ()) < 1.0) {
             if (d.discoveredIslands.add(isl.id)) {

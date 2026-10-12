@@ -44,7 +44,7 @@ public final class Island {
         this.peak = spec.peak;
         this.shape = spec.shape;
         this.theme = spec.theme;
-        this.zone = WorldLayout.zoneAt(spec.x, spec.z);
+        this.zone = spec.zone != null ? spec.zone : WorldLayout.zoneAt(spec.x, spec.z);
         this.tier = spec.tier > 0 ? spec.tier : zone.dangerTier;
         this.settlementType = spec.settlement;
         this.landmarks = List.copyOf(spec.landmarks);

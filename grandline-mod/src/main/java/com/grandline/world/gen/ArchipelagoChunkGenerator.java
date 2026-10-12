@@ -45,7 +45,9 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class ArchipelagoChunkGenerator extends ChunkGenerator {
     public static final MapCodec<ArchipelagoChunkGenerator> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
-            BiomeSource.CODEC.fieldOf("biome_source").forGetter(g -> g.biomeSource)).apply(i, ArchipelagoChunkGenerator::new));
+            BiomeSource.CODEC.fieldOf("biome_source").forGetter(g -> g.biomeSource),
+            com.mojang.serialization.Codec.STRING.optionalFieldOf("plan", "ocean").forGetter(g -> g.kind.name().toLowerCase(java.util.Locale.ROOT))
+    ).apply(i, ArchipelagoChunkGenerator::new));
 
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
     private static final BlockState WATER = Blocks.WATER.defaultBlockState();
@@ -53,8 +55,20 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
     private static final BlockState DEEPSLATE = Blocks.DEEPSLATE.defaultBlockState();
     private static final BlockState BEDROCK = Blocks.BEDROCK.defaultBlockState();
 
+    private final WorldPlan.Kind kind;
+
     public ArchipelagoChunkGenerator(BiomeSource biomeSource) {
+        this(biomeSource, "ocean");
+    }
+
+    public ArchipelagoChunkGenerator(BiomeSource biomeSource, String plan) {
         super(biomeSource);
+        this.kind = WorldPlan.Kind.valueOf(plan.toUpperCase(java.util.Locale.ROOT));
+    }
+
+    /** Ocean world, White Sea (sky) or deep sea. */
+    public WorldPlan.Kind kind() {
+        return kind;
     }
 
     @Override
@@ -63,8 +77,9 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
     }
 
     private WorldPlan plan(RandomState rs) {
-        WorldPlan p = WorldPlan.of(rs);
-        ArchipelagoBiomeSource.activePlan = p;
+        WorldPlan p = WorldPlan.of(rs, kind);
+        if (biomeSource instanceof ArchipelagoBiomeSource src) src.plan = p;
+        if (kind == WorldPlan.Kind.OCEAN) ArchipelagoBiomeSource.activePlan = p;
         return p;
     }
 
@@ -100,7 +115,11 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
         LevelChunkSection[] sections = chunk.getSections();
         for (LevelChunkSection sec : sections) sec.acquire();
         try {
-            fill(plan, chunk);
+            switch (kind) {
+                case OCEAN -> fill(plan, chunk);
+                case SKY -> fillSky(plan, chunk);
+                case DEEP -> fillDeep(plan, chunk);
+            }
         } finally {
             for (LevelChunkSection sec : sections) sec.release();
         }
@@ -173,6 +192,92 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
             }
     }
 
+    // ------------------------------------------------------------------ the White Sea (sky)
+
+    private void fillSky(WorldPlan plan, ChunkAccess chunk) {
+        Heightmap ocean = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
+        Heightmap surface = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
+        int x0 = chunk.getPos().getMinBlockX(), z0 = chunk.getPos().getMinBlockZ();
+        BlockState cloud = com.grandline.registry.ModBlocks.ISLAND_CLOUD.get().defaultBlockState();
+        WorldPlan.Sample s = new WorldPlan.Sample();
+        int floorBottom = com.grandline.world.SkyWorld.FLOOR_Y - 1;
+        for (int lx = 0; lx < 16; lx++)
+            for (int lz = 0; lz < 16; lz++) {
+                int x = x0 + lx, z = z0 + lz;
+                plan.sample(x, z, s);
+                int h = Math.max(com.grandline.world.SkyWorld.FLOOR_Y, Math.min(chunk.getMaxBuildHeight() - 2, s.height));
+                Island isl = s.island;
+                IslandTheme theme = isl != null ? isl.themeAt(x, z) : null;
+                boolean cloudCol = theme == null || theme == IslandTheme.CLOUD || h < WorldPlan.SEA_LEVEL;
+                BlockState top, sub, mid;
+                if (cloudCol) top = sub = mid = cloud;
+                else {
+                    boolean steep = isSteep(plan, s, x, z, h);
+                    top = (steep ? theme.stone : theme.surface).defaultBlockState();
+                    sub = theme.subsurface.defaultBlockState();
+                    mid = theme.stone.defaultBlockState();
+                }
+                for (int y = floorBottom; y <= Math.max(h, WorldPlan.SEA_LEVEL); y++) {
+                    BlockState st;
+                    if (y <= h) {
+                        int depth = h - y;
+                        st = depth == 0 ? top : depth < 4 ? sub : y <= floorBottom + 1 ? cloud : mid;
+                    } else st = WATER; // Sea Cloud (tinted by the white_sea biome)
+                    chunk.getSection(chunk.getSectionIndex(y)).setBlockState(lx, y & 15, lz, st, false);
+                }
+                ocean.update(lx, h, lz, top);
+                surface.update(lx, Math.max(h, WorldPlan.SEA_LEVEL), lz, h >= WorldPlan.SEA_LEVEL ? top : WATER);
+            }
+    }
+
+    // ------------------------------------------------------------------ the deep sea
+
+    private void fillDeep(WorldPlan plan, ChunkAccess chunk) {
+        Heightmap ocean = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
+        Heightmap surface = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
+        int minY = chunk.getMinBuildHeight();
+        int x0 = chunk.getPos().getMinBlockX(), z0 = chunk.getPos().getMinBlockZ();
+        BlockState membrane = com.grandline.registry.ModBlocks.BUBBLE_MEMBRANE.get().defaultBlockState();
+        WorldPlan.Sample s = new WorldPlan.Sample();
+        for (int lx = 0; lx < 16; lx++)
+            for (int lz = 0; lz < 16; lz++) {
+                int x = x0 + lx, z = z0 + lz;
+                plan.sample(x, z, s);
+                int h = Math.max(minY + 2, s.height);
+                Island isl = s.island;
+                IslandTheme theme = isl != null ? isl.themeAt(x, z) : null;
+                BlockState top, sub, mid;
+                if (theme != null) {
+                    boolean steep = isSteep(plan, s, x, z, h);
+                    top = (steep ? theme.stone : theme.surface).defaultBlockState();
+                    sub = theme.subsurface.defaultBlockState();
+                    mid = theme.stone.defaultBlockState();
+                } else {
+                    int v = Math.floorMod((x * 31 + z * 17) ^ (x >> 3) ^ (z >> 2), 19);
+                    top = (v < 3 ? Blocks.CLAY : v < 7 ? Blocks.GRAVEL : v < 9 ? Blocks.MAGMA_BLOCK : Blocks.SAND).defaultBlockState();
+                    sub = Blocks.SAND.defaultBlockState();
+                    mid = Blocks.DEEPSLATE.defaultBlockState();
+                }
+                com.grandline.world.DeepWorld.Dome dome = com.grandline.world.DeepWorld.domeAt(x, z);
+                int highestAir = -1;
+                for (int y = minY; y <= com.grandline.world.DeepWorld.WATER_TOP; y++) {
+                    BlockState st;
+                    if (y == minY || (y < minY + 4 && ((x ^ z ^ y) & 3) == 0)) st = BEDROCK;
+                    else if (y <= h) {
+                        int depth = h - y;
+                        st = depth == 0 ? top : depth < 4 ? sub : depth < 8 ? mid : y < 0 ? DEEPSLATE : STONE;
+                    } else if (dome != null && y > WorldPlan.SEA_LEVEL && com.grandline.world.DeepWorld.inAnyDome(x, y, z)) {
+                        highestAir = y;
+                        continue;
+                    } else if (dome != null && y > WorldPlan.SEA_LEVEL && com.grandline.world.DeepWorld.isMembrane(x, y, z)) st = membrane;
+                    else st = WATER;
+                    chunk.getSection(chunk.getSectionIndex(y)).setBlockState(lx, y & 15, lz, st, false);
+                }
+                ocean.update(lx, h, lz, top);
+                surface.update(lx, com.grandline.world.DeepWorld.WATER_TOP, lz, WATER);
+            }
+    }
+
     private static boolean isSteep(WorldPlan plan, WorldPlan.Sample s, int x, int z, int h) {
         Island isl = s.island;
         if (isl == null) return false;
@@ -188,7 +293,8 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
         super.applyBiomeDecoration(level, chunk, structureManager);
         ServerLevel server = level.getLevel();
         WorldPlan plan = plan(server.getChunkSource().randomState());
-        ChunkSink sink = new ChunkSink(level, chunk);
+        ChunkSink chunkSink = new ChunkSink(level, chunk);
+        com.grandline.world.build.BlockSink sink = kind == WorldPlan.Kind.DEEP ? new com.grandline.world.build.FloodedSink(chunkSink) : chunkSink;
         int cx = chunk.getPos().getMiddleBlockX(), cz = chunk.getPos().getMiddleBlockZ();
         int minX = chunk.getPos().getMinBlockX(), minZ = chunk.getPos().getMinBlockZ();
         int maxX = minX + 15, maxZ = minZ + 15;
@@ -200,8 +306,8 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
             }
             if (st.plots.isEmpty() && !st.hasDock) continue;
             if (st.maxX < minX || st.minX > maxX || st.maxZ < minZ || st.minZ > maxZ) continue;
-            stampRoads(isl, st, sink, minX, minZ, maxX, maxZ);
-            stampDock(isl, st, sink, minX, minZ, maxX, maxZ);
+            stampRoads(isl, st, chunkSink, minX, minZ, maxX, maxZ);
+            stampDock(isl, st, chunkSink, minX, minZ, maxX, maxZ);
             for (Plot p : st.plots) {
                 if (p.x() - 2 > maxX || p.x() + p.sizeX() + 2 < minX || p.z() - 2 > maxZ || p.z() + p.sizeZ() + 2 < minZ) continue;
                 if (p.type() == com.grandline.world.settlement.BuildingType.LANDMARK) {
@@ -327,6 +433,7 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
         plan(random).sample(x, z, s);
         int h = s.height;
         if (type == Heightmap.Types.OCEAN_FLOOR || type == Heightmap.Types.OCEAN_FLOOR_WG) return h + 1;
+        if (kind == WorldPlan.Kind.DEEP && com.grandline.world.DeepWorld.domeAt(x, z) == null) return com.grandline.world.DeepWorld.WATER_TOP + 1;
         return Math.max(h, Math.max(s.waterTop, WorldPlan.SEA_LEVEL)) + 1;
     }
 
@@ -339,7 +446,10 @@ public final class ArchipelagoChunkGenerator extends ChunkGenerator {
         int waterTop = Math.max(s.waterTop, WorldPlan.SEA_LEVEL);
         for (int i = 0; i < states.length; i++) {
             int y = min + i;
-            states[i] = y <= s.height ? STONE : y <= waterTop ? WATER : AIR;
+            if (kind == WorldPlan.Kind.DEEP)
+                states[i] = y <= s.height ? STONE : com.grandline.world.DeepWorld.inAnyDome(x, y, z) ? AIR : y <= com.grandline.world.DeepWorld.WATER_TOP ? WATER : AIR;
+            else if (kind == WorldPlan.Kind.SKY && y < com.grandline.world.SkyWorld.FLOOR_Y - 1) states[i] = AIR;
+            else states[i] = y <= s.height ? STONE : y <= waterTop ? WATER : AIR;
         }
         return new NoiseColumn(min, states);
     }

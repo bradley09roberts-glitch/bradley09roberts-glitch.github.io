@@ -46,6 +46,7 @@ public final class ServerEvents {
         com.grandline.world.Encounters.tick(e.getServer());
         com.grandline.ship.ShipInteriors.tick(e.getServer());
         com.grandline.ship.SeaEncounters.tick(e.getServer());
+        com.grandline.ship.SpecialRoutes.tick(e.getServer());
     }
 
     @SubscribeEvent

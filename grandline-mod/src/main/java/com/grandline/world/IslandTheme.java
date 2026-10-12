@@ -28,7 +28,17 @@ public enum IslandTheme {
     MUSHROOM(Biomes.MUSHROOM_FIELDS, Biomes.MUSHROOM_FIELDS, Blocks.MYCELIUM, Blocks.DIRT, Blocks.SAND, Blocks.STONE, BuildStyle.GOTHIC),
     FUTURE(Biomes.SNOWY_PLAINS, Biomes.PLAINS, Blocks.GRASS_BLOCK, Blocks.DIRT, Blocks.SAND, Blocks.CALCITE, BuildStyle.FUTURE),
     ICE(Biomes.ICE_SPIKES, Biomes.SNOWY_PLAINS, Blocks.SNOW_BLOCK, Blocks.PACKED_ICE, Blocks.SNOW_BLOCK, Blocks.PACKED_ICE, BuildStyle.SNOW),
-    WHITE_ROCK(Biomes.STONY_PEAKS, Biomes.STONY_SHORE, Blocks.CALCITE, Blocks.DIORITE, Blocks.SAND, Blocks.DIORITE, BuildStyle.STONE_TOWN);
+    WHITE_ROCK(Biomes.STONY_PEAKS, Biomes.STONY_SHORE, Blocks.CALCITE, Blocks.DIORITE, Blocks.SAND, Blocks.DIORITE, BuildStyle.STONE_TOWN),
+    /** Island Cloud of the White Sea (blocks are swapped for grandline:island_cloud at generation time). */
+    CLOUD(SkyBiomes.SKY_ISLAND, SkyBiomes.SKY_ISLAND, Blocks.WHITE_WOOL, Blocks.WHITE_WOOL, Blocks.WHITE_WOOL, Blocks.WHITE_WOOL, BuildStyle.CLOUD),
+    /** Fish-Man Island: coral sand and reef rock under the bubble. */
+    CORAL(SkyBiomes.FISHMAN_ISLAND, SkyBiomes.FISHMAN_ISLAND, Blocks.SAND, Blocks.SANDSTONE, Blocks.SAND, Blocks.PRISMARINE, BuildStyle.CORAL);
+
+    /** Biome keys for the sky and deep-sea dimensions (kept here so enum constants can reference them). */
+    public static final class SkyBiomes {
+        public static final ResourceKey<Biome> SKY_ISLAND = ResourceKey.create(net.minecraft.core.registries.Registries.BIOME, com.grandline.GrandLine.id("sky_island"));
+        public static final ResourceKey<Biome> FISHMAN_ISLAND = ResourceKey.create(net.minecraft.core.registries.Registries.BIOME, com.grandline.GrandLine.id("fishman_island"));
+    }
 
     public final ResourceKey<Biome> wildBiome;
     public final ResourceKey<Biome> settledBiome;

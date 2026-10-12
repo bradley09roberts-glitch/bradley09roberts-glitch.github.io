@@ -13,6 +13,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.HashMap;
@@ -33,19 +34,29 @@ public final class PopulationManager extends SavedData {
     }
 
     public static void tick(MinecraftServer server) {
-        ServerLevel level = server.overworld();
-        if (level.getGameTime() % 40 != 0) return;
-        WorldPlan plan = WorldPlan.of(server);
-        if (plan == null) return;
+        if (server.overworld().getGameTime() % 40 != 0) return;
         PopulationManager pm = get(server);
         int radius = GLConfig.NPC_SIM_RADIUS.get();
-        for (ServerPlayer sp : level.players()) {
-            for (Island isl : plan.candidates(sp.getBlockX(), sp.getBlockZ())) {
-                if (isl.distance(sp.getBlockX(), sp.getBlockZ()) > isl.radius + radius) continue;
-                if (isl.settlementType == com.grandline.world.settlement.SettlementType.NONE && isl.landmarks.isEmpty()) continue;
-                pm.populate(level, isl, sp, radius);
+        // the ocean world, the White Sea and the deep sea each have their own plan
+        for (ServerLevel level : server.getAllLevels()) {
+            if (level.players().isEmpty()) continue;
+            WorldPlan plan = WorldPlan.forLevel(level);
+            if (plan == null) continue;
+            for (ServerPlayer sp : level.players()) {
+                for (Island isl : plan.candidates(sp.getBlockX(), sp.getBlockZ())) {
+                    if (isl.distance(sp.getBlockX(), sp.getBlockZ()) > isl.radius + radius) continue;
+                    if (isl.settlementType == com.grandline.world.settlement.SettlementType.NONE && isl.landmarks.isEmpty()) continue;
+                    pm.populate(level, isl, sp, radius);
+                }
             }
         }
+    }
+
+    /** Locals of the sky and the deep sea are of the peoples who live there. */
+    private static void localRace(HumanoidNpc npc, Island isl, RandomSource r) {
+        if (!npc.raceId().equals("human")) return;
+        if (isl.zone == com.grandline.world.SeaZone.SKY_SEA) npc.setRace(com.grandline.player.Race.SKY_PEOPLE);
+        else if (isl.zone == com.grandline.world.SeaZone.DEEP_SEA) npc.setRace(r.nextInt(4) == 0 ? com.grandline.player.Race.MERFOLK : com.grandline.player.Race.FISHMAN);
     }
 
     private void populate(ServerLevel level, Island isl, ServerPlayer near, int radius) {
@@ -70,6 +81,7 @@ public final class PopulationManager extends SavedData {
                 if (npc == null) continue;
                 npc.moveTo(m.pos().getX() + 0.5, m.pos().getY(), m.pos().getZ() + 0.5, level.random.nextFloat() * 360, 0);
                 npc.configure(role, isl.tier, isl.id, m.pos(), key, level.random);
+                localRace(npc, isl, level.random);
                 level.addFreshEntity(npc);
                 markers.put(key, Long.MAX_VALUE);
                 setDirty();

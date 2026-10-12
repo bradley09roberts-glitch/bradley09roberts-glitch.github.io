@@ -64,8 +64,11 @@ public class ShipEntity extends Entity {
     private long lastHelmInput;
     private final Map<Integer, Long> cannonCooldown = new HashMap<>();
     // canal (Reverse Mountain) ride
-    private int canalLeg = -1;
+    int canalLeg = -1;
     private double canalT;
+    /** Active special route ride (see {@link SpecialRoutes}); -1 when sailing normally. Not saved. */
+    public int ride = -1;
+    public double rideT;
 
     // client interpolation
     private int lerpSteps;
@@ -155,6 +158,12 @@ public class ShipEntity extends Entity {
     public boolean anchored() { return flag(F_ANCHOR); }
     public Set<String> upgrades() { String u = entityData.get(UPGRADES); return u.isEmpty() ? Set.of() : new HashSet<>(Arrays.asList(u.split(","))); }
     public boolean hasUpgrade(String id) { return upgrades().contains(id); }
+    public void removeUpgrade(String id) {
+        Set<String> s = new TreeSet<>(upgrades());
+        s.remove(id);
+        entityData.set(UPGRADES, String.join(",", s));
+    }
+
     public void addUpgrade(String id) {
         Set<String> s = new TreeSet<>(upgrades());
         s.add(id);
@@ -335,10 +344,15 @@ public class ShipEntity extends Entity {
             }
             return;
         }
+        if (ride >= 0) {
+            SpecialRoutes.tickRide(this, sl);
+            return;
+        }
         if (canalLeg >= 0) {
             tickCanal();
             return;
         }
+        if (ShipTravel.isDeep(sl)) SpecialRoutes.bubble(this, sl);
         float target = 0;
         Vec3 wind = Wind.at(sl, getX(), getZ());
         double windF = Wind.factor(wind, getYRot());
@@ -372,6 +386,7 @@ public class ShipEntity extends Entity {
         }
         entityData.set(SPEED, speed);
         setPos(next.x, y, next.z);
+        SpecialRoutes.afterMove(this, sl);
         // enter Reverse Mountain canals
         if (speed > 0.05f && Math.abs(getX()) < 1300 && Math.abs(getZ()) < 1300) tryStartCanal();
         if (sl.getGameTime() % 100 == 0) ShipRegistry.get(sl.getServer()).update(this);

@@ -56,6 +56,14 @@ public class HumanoidNpc extends GLNpc {
                 .add(Attributes.ATTACK_SPEED, 4);
     }
 
+    /** Re-race a configured NPC (Sky People on the White Sea, Fish-Men and Merfolk in the deep sea). */
+    public void setRace(Race race) {
+        entityData.set(RACE, race.id());
+        float scale = race == Race.GIANT ? 2.2f : race.baseScale;
+        getAttribute(Attributes.SCALE).setBaseValue(scale);
+        refreshDimensions();
+    }
+
     /** Initialise from an archetype. Tier is the island/encounter difficulty. */
     public void configure(String role, int tier, String islandId, BlockPos home, String markerKey, RandomSource r) {
         Archetype a = Archetypes.get(role);

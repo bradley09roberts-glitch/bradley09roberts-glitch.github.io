@@ -48,6 +48,7 @@ public final class Landmarks {
         reg("laugh_tale_ruins", new Spec(25, 25, true, false, 0), LandmarkBuilders::laughTaleRuins);
         reg("mary_geoise", new Spec(41, 41, false, false, 301), LandmarkBuilders::maryGeoise);
         reg("port_beacon", new Spec(7, 7, true, false, 0), LandmarkBuilders::twinCapesLighthouse);
+        DimensionLandmarks.registerAll(Landmarks::reg); // White Sea and deep-sea set pieces
     }
 
     private static void reg(String id, Spec spec, LandmarkBuilder builder) {

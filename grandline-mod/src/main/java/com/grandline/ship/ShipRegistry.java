@@ -13,7 +13,7 @@ import java.util.*;
 public final class ShipRegistry extends SavedData {
     public static final class Record {
         public UUID shipId, owner;
-        public String ownerName = "", name = "", cls = "sloop", upgrades = "";
+        public String ownerName = "", name = "", cls = "sloop", upgrades = "", dim = "minecraft:overworld";
         public int interior = -1;
         public double x, y, z;
         public boolean sunk;
@@ -27,6 +27,7 @@ public final class ShipRegistry extends SavedData {
             t.putString("name", name);
             t.putString("cls", cls);
             t.putString("upgrades", upgrades);
+            t.putString("dim", dim);
             t.putInt("interior", interior);
             t.putDouble("x", x);
             t.putDouble("y", y);
@@ -45,6 +46,7 @@ public final class ShipRegistry extends SavedData {
             r.name = t.getString("name");
             r.cls = t.getString("cls");
             r.upgrades = t.getString("upgrades");
+            r.dim = t.contains("dim") ? t.getString("dim") : "minecraft:overworld";
             r.interior = t.getInt("interior");
             r.x = t.getDouble("x");
             r.y = t.getDouble("y");
@@ -82,6 +84,7 @@ public final class ShipRegistry extends SavedData {
         r.x = ship.getX();
         r.y = ship.getY();
         r.z = ship.getZ();
+        r.dim = ship.level().dimension().location().toString();
         r.name = ship.shipName();
         r.upgrades = String.join(",", ship.upgrades());
         r.sailColor = ship.sailColor();

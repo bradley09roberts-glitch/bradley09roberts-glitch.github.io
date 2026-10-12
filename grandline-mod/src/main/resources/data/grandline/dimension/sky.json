@@ -1,0 +1,10 @@
+{
+  "type": "grandline:sky",
+  "generator": {
+    "type": "grandline:archipelago",
+    "plan": "sky",
+    "biome_source": {
+      "type": "grandline:archipelago"
+    }
+  }
+}

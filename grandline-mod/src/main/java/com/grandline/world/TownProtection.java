@@ -12,8 +12,7 @@ import net.minecraft.world.level.Level;
 public final class TownProtection {
     public static boolean canModify(ServerLevel level, BlockPos pos) {
         if (!GLConfig.PROTECT_TOWNS.get()) return true;
-        if (level.dimension() != Level.OVERWORLD) return true;
-        WorldPlan plan = WorldPlan.of(level.getServer());
+        WorldPlan plan = WorldPlan.forLevel(level);
         if (plan == null) return true;
         return !protectedAt(plan, pos.getX(), pos.getZ());
     }

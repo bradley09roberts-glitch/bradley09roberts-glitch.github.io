@@ -33,9 +33,15 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> SHIP_HATCH = BLOCKS.register("ship_hatch", () -> new com.grandline.block.ShipHatchBlock(BlockBehaviour.Properties.of()
             .mapColor(MapColor.WOOD).strength(-1f, 3600000f).noLootTable().sound(SoundType.WOOD)));
 
+    public static final DeferredBlock<Block> ISLAND_CLOUD = BLOCKS.register("island_cloud", () -> new com.grandline.block.IslandCloudBlock(BlockBehaviour.Properties.of()
+            .mapColor(MapColor.SNOW).strength(0.4f).sound(SoundType.WOOL)));
+    public static final DeferredBlock<Block> BUBBLE_MEMBRANE = BLOCKS.register("bubble_membrane", () -> new com.grandline.block.BubbleMembraneBlock(BlockBehaviour.Properties.of()
+            .mapColor(MapColor.COLOR_LIGHT_BLUE).strength(-1f, 3600000f).noLootTable().noCollission().noOcclusion().sound(SoundType.HONEY_BLOCK)
+            .isViewBlocking((s, l, p) -> false).isSuffocating((s, l, p) -> false).lightLevel(s -> 4)));
+
     public static void register(IEventBus bus) {
         BLOCKS.register(bus);
-        for (DeferredBlock<Block> b : java.util.List.of(SEASTONE, SEASTONE_BRICKS, SEASTONE_ORE, PONEGLYPH, FRUIT_BLOOM, SHIP_HATCH)) {
+        for (DeferredBlock<Block> b : java.util.List.of(SEASTONE, SEASTONE_BRICKS, SEASTONE_ORE, PONEGLYPH, FRUIT_BLOOM, SHIP_HATCH, ISLAND_CLOUD, BUBBLE_MEMBRANE)) {
             ModItems.ITEMS.registerSimpleBlockItem(b);
         }
     }

@@ -35,6 +35,14 @@ public final class Shipyard {
         UPGRADES.put("paddle_wheel", 30000L);
         UPGRADES.put("seastone_keel", 80000L);
         UPGRADES.put("coup_de_burst", 60000L);
+        UPGRADES.put(SpecialRoutes.COATING, 25000L);
+    }
+
+    /** Ship coating (for the dive to the deep sea) is only done by the coaters of Sabaody and Fish-Man Island. */
+    static boolean coatingYard(ServerPlayer sp) {
+        WorldPlan plan = WorldPlan.forLevel(sp.level());
+        Island isl = plan == null ? null : plan.nearest(sp.getBlockX(), sp.getBlockZ(), 400);
+        return isl != null && (isl.id.equals("sabaody_archipelago") || isl.id.equals("fishman_island"));
     }
 
     public static void open(ServerPlayer sp, GLNpc npc) {
@@ -53,7 +61,9 @@ public final class Shipyard {
         }
         t.put("classes", classes);
         ListTag ups = new ListTag();
+        boolean coaters = coatingYard(sp);
         UPGRADES.forEach((k, v) -> {
+            if (k.equals(SpecialRoutes.COATING) && !coaters) return;
             CompoundTag e = new CompoundTag();
             e.putString("id", k);
             e.putLong("price", v);
@@ -106,6 +116,7 @@ public final class Shipyard {
                     sp.sendSystemMessage(Component.translatable("grandline.ship.bring_ship"));
                     return;
                 }
+                if (up.equals(SpecialRoutes.COATING) && !coatingYard(sp)) return;
                 if (ship.hasUpgrade(up) || (d.beli < price && !sp.isCreative())) return;
                 if (!sp.isCreative()) d.beli -= price;
                 ship.addUpgrade(up);
@@ -173,7 +184,7 @@ public final class Shipyard {
         ServerLevel l = sp.serverLevel();
         Vec3 pos = null;
         float yaw = 0;
-        WorldPlan plan = WorldPlan.of(sp.server);
+        WorldPlan plan = WorldPlan.forLevel(sp.level());
         if (plan != null) {
             Island isl = plan.nearest(near.getBlockX(), near.getBlockZ(), 600);
             if (isl != null) {

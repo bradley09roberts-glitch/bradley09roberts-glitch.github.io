@@ -13,6 +13,9 @@ import net.minecraft.world.phys.Vec3;
 public final class Wind {
     /** Wind vector (direction * strength 0..1.5) at a position. */
     public static Vec3 at(Level level, double x, double z) {
+        // the White Sea has a steady westerly toward the Cloud End; the deep sea a steady eastward current
+        if (level.dimension() == com.grandline.world.SkyWorld.LEVEL) return new Vec3(0.95, 0, Math.sin(level.getGameTime() / 4000.0) * 0.2);
+        if (level.dimension() == com.grandline.world.DeepWorld.LEVEL) return new Vec3(0.85, 0, 0);
         SeaZone zone = WorldLayout.zoneAt((int) x, (int) z);
         long t = level.getGameTime();
         double ang, str;

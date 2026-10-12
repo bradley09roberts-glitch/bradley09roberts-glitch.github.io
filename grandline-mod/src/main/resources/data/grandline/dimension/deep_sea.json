@@ -1,0 +1,10 @@
+{
+  "type": "grandline:deep_sea",
+  "generator": {
+    "type": "grandline:archipelago",
+    "plan": "deep",
+    "biome_source": {
+      "type": "grandline:archipelago"
+    }
+  }
+}
