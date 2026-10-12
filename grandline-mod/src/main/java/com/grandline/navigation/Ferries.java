@@ -107,10 +107,19 @@ public final class Ferries {
     public static ShipEntity launch(Entity passenger, Entity near, Island dest, boolean train) {
         if (!(passenger.level() instanceof ServerLevel l)) return null;
         ShipClass cls = train ? ShipClass.BRIGANTINE : ShipClass.CARAVEL;
-        // berth off the local dock tip (open water, bow to the sea) when there is one, else beside the NPC
+        // the ferry lies at anchor in open water just beyond the island's waters, out along the dock (a launch rows the
+        // passengers out), so it never has to thread the harbour; failing that, off the dock tip or beside the NPC
         WorldPlan plan = WorldPlan.forLevel(l);
         Island here = plan == null ? null : plan.nearest(near.getBlockX(), near.getBlockZ(), 300);
-        Vec3 pos = here != null && here.settlement().hasDock ? Shipyard.findWaterPublic(l, BlockPos.containing(dockOf(here))) : null;
+        Vec3 pos = null;
+        if (here != null) {
+            Settlement st = here.settlement();
+            double ux = st.hasDock ? st.dockDirX / 1000.0 : near.getX() - here.x, uz = st.hasDock ? st.dockDirZ / 1000.0 : near.getZ() - here.z;
+            double ul = Math.max(1e-6, Math.sqrt(ux * ux + uz * uz));
+            double out = here.radius * 1.25 + 40;
+            pos = Shipyard.findWaterPublic(l, BlockPos.containing(here.x + ux / ul * out, WorldPlan.SEA_LEVEL, here.z + uz / ul * out));
+            if (pos == null && st.hasDock) pos = Shipyard.findWaterPublic(l, BlockPos.containing(dockOf(here)));
+        }
         if (pos == null) pos = Shipyard.findWaterPublic(l, near.blockPosition());
         if (pos == null) return null;
         ShipEntity ship = ModEntities.SHIPS.get(cls).get().create(l);

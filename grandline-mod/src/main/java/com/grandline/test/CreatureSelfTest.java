@@ -175,7 +175,8 @@ final class CreatureSelfTest {
                     Vec3 dir = c.subtract(muzzle);
                     Vec3 sideDir = sh.toWorld(Math.signum(local.x), 0, 0).subtract(sh.toWorld(0, 0, 0)).normalize();
                     if (dir.normalize().dot(sideDir) < 0.35) continue;
-                    if (dir.length() < bestD) {
+                    // not point-blank: a shell spawned inside or against a segment's box can pass through it
+                    if (dir.length() >= 10 && dir.length() < bestD) {
                         bestD = dir.length();
                         bestSeat = seat;
                         aim = dir.add(0, dir.length() * 0.012, 0);

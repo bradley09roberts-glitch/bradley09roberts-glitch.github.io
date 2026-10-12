@@ -40,7 +40,7 @@
   "grandline.awakening.done": "Your Devil Fruit has AWAKENED! Its hidden powers are yours to command.",
   "dialogue.grandline.option.ferry": "Ferry to %s (%s Beli)",
   "dialogue.grandline.option.seatrain": "Sea Train to %s (%s Beli)",
-  "grandline.ferry.board": "All aboard for %s! Sit back \u2014 the ferry knows the way.",
+  "grandline.ferry.board": "A launch rows you out to the ferry lying off the island. All aboard for %s!",
   "grandline.ferry.seatrain_board": "The Puffing Tom whistles and pulls out for %s!",
   "grandline.ferry.arrived": "You've arrived. Mind the gap."
 }

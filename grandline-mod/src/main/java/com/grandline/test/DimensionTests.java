@@ -97,7 +97,7 @@ final class DimensionTests {
             for (Island i : plan.islands) if (i.zone == home.zone) d.discoveredIslands.add(i.id);
             var st = home.settlement();
             BlockPos dock = new BlockPos(st.dockX, 0, st.dockZ);
-            load(ow, dock.getX(), dock.getZ(), 5);
+            load(ow, dock.getX(), dock.getZ(), 8); // the ferries lie off the island, out along the dock
             dock = dock.atY(ow.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, dock.getX(), dock.getZ()));
             HumanoidNpc worker = ModEntities.HUMANOID_NPC.get().create(ow);
             worker.moveTo(dock.getX() + 0.5, dock.getY(), dock.getZ() + 0.5, 0, 0);
