@@ -1,0 +1,76 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "grandline:item/bo_staff"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        55
+      ],
+      "translation": [
+        0.0,
+        6.93,
+        -0.017
+      ],
+      "scale": [
+        1.232,
+        1.232,
+        1.232
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0,
+        90,
+        -55
+      ],
+      "translation": [
+        0.0,
+        6.93,
+        -0.017
+      ],
+      "scale": [
+        1.232,
+        1.232,
+        1.232
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        25
+      ],
+      "translation": [
+        1.13,
+        4.542,
+        1.618
+      ],
+      "scale": [
+        0.864,
+        0.864,
+        0.864
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        90,
+        -25
+      ],
+      "translation": [
+        1.13,
+        4.542,
+        1.618
+      ],
+      "scale": [
+        0.864,
+        0.864,
+        0.864
+      ]
+    }
+  }
+}

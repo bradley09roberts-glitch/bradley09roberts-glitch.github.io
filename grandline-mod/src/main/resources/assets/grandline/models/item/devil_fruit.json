@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "grandline:item/devil_fruit",
+    "layer1": "grandline:item/devil_fruit_swirl"
+  }
+}

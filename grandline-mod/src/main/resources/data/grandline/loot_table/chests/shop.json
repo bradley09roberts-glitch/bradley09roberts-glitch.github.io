@@ -4,22 +4,88 @@
     {
       "rolls": {
         "type": "minecraft:uniform",
-        "min": 3,
-        "max": 6
+        "min": 3.0,
+        "max": 6.0
       },
+      "bonus_rolls": 0.0,
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "minecraft:bread",
-          "weight": 8,
+          "name": "minecraft:paper",
+          "weight": 10,
           "functions": [
             {
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 2,
-                "max": 6
-              }
+                "min": 2.0,
+                "max": 6.0
+              },
+              "add": false
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:string",
+          "weight": 10,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2.0,
+                "max": 5.0
+              },
+              "add": false
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:torch",
+          "weight": 10,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 4.0,
+                "max": 10.0
+              },
+              "add": false
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:leather",
+          "weight": 6,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1.0,
+                "max": 3.0
+              },
+              "add": false
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:iron_ingot",
+          "weight": 5,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1.0,
+                "max": 3.0
+              },
+              "add": false
             }
           ]
         },
@@ -32,137 +98,118 @@
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 1,
-                "max": 2
-              }
+                "min": 1.0,
+                "max": 2.0
+              },
+              "add": false
             }
           ]
         },
         {
           "type": "minecraft:item",
-          "name": "minecraft:name_tag",
-          "weight": 2
+          "name": "minecraft:lantern",
+          "weight": 3,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": 1.0,
+              "add": false
+            }
+          ]
         },
         {
           "type": "minecraft:item",
-          "name": "grandline:bullet",
+          "name": "minecraft:emerald",
           "weight": 6,
           "functions": [
             {
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 4,
-                "max": 16
-              }
+                "min": 1.0,
+                "max": 4.0
+              },
+              "add": false
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "grandline:bullet",
+          "weight": 9,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 4.0,
+                "max": 12.0
+              },
+              "add": false
             }
           ]
         },
         {
           "type": "minecraft:item",
           "name": "grandline:pellet",
-          "weight": 6,
+          "weight": 8,
           "functions": [
             {
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 8,
-                "max": 24
-              }
+                "min": 8.0,
+                "max": 20.0
+              },
+              "add": false
             }
           ]
         },
         {
           "type": "minecraft:item",
           "name": "grandline:sea_chart",
-          "weight": 2
-        },
-        {
-          "type": "minecraft:item",
-          "name": "grandline:log_pose",
-          "weight": 1
+          "weight": 2,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": 1.0,
+              "add": false
+            }
+          ]
         },
         {
           "type": "minecraft:item",
           "name": "minecraft:compass",
-          "weight": 3
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:map",
-          "weight": 3
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:lantern",
-          "weight": 4,
+          "weight": 2,
           "functions": [
             {
               "function": "minecraft:set_count",
-              "count": {
-                "type": "minecraft:uniform",
-                "min": 1,
-                "max": 2
-              }
+              "count": 1.0,
+              "add": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "grandline:log_pose",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": 1.0,
+              "add": false
             }
           ]
         },
         {
-          "type": "minecraft:item",
-          "name": "minecraft:spyglass",
-          "weight": 2
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:string",
-          "weight": 6,
-          "functions": [
-            {
-              "function": "minecraft:set_count",
-              "count": {
-                "type": "minecraft:uniform",
-                "min": 2,
-                "max": 8
-              }
-            }
-          ]
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:paper",
-          "weight": 6,
-          "functions": [
-            {
-              "function": "minecraft:set_count",
-              "count": {
-                "type": "minecraft:uniform",
-                "min": 2,
-                "max": 8
-              }
-            }
-          ]
-        },
-        {
-          "type": "minecraft:item",
-          "name": "grandline:beli_pouch",
-          "weight": 10,
-          "functions": [
-            {
-              "function": "minecraft:set_components",
-              "components": {
-                "grandline:beli": 175
-              }
-            },
-            {
-              "function": "minecraft:set_count",
-              "count": {
-                "type": "minecraft:uniform",
-                "min": 1,
-                "max": 3
-              }
-            }
-          ]
+          "type": "minecraft:empty",
+          "weight": 14
         }
       ]
     }

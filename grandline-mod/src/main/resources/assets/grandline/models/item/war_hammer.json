@@ -1,0 +1,76 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "grandline:item/war_hammer"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        55
+      ],
+      "translation": [
+        0.0,
+        5.628,
+        0.213
+      ],
+      "scale": [
+        1.062,
+        1.062,
+        1.062
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0,
+        90,
+        -55
+      ],
+      "translation": [
+        0.0,
+        5.628,
+        0.213
+      ],
+      "scale": [
+        1.062,
+        1.062,
+        1.062
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        25
+      ],
+      "translation": [
+        1.13,
+        3.946,
+        1.401
+      ],
+      "scale": [
+        0.782,
+        0.782,
+        0.782
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        90,
+        -25
+      ],
+      "translation": [
+        1.13,
+        3.946,
+        1.401
+      ],
+      "scale": [
+        0.782,
+        0.782,
+        0.782
+      ]
+    }
+  }
+}

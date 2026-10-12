@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "grandline:block/fruit_bloom"
+  },
+  "render_type": "minecraft:cutout"
+}
