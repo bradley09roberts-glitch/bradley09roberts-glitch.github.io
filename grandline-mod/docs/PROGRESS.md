@@ -246,7 +246,19 @@ First run of a real client against the dedicated server. Result: no client crash
   despawn with no player within 320 blocks and are refused when a chunk reloads them (a prize you take is kept). Sea
   crews no longer vanish by the vanilla 128-block despawn rule while their ship sails on. `livingSea` config toggle;
   `/ship sea <merchant|battle|hunt|plunder|convoy|raid|status>` for operators.
-- Verified (GL_SELFTEST=livingsea, 24/24): see the self-test report; full phase 1/2 results below.
+- Verified (`test/LivingSeaTests`, GL_SELFTEST=livingsea 24/24; full phase 1 329/0 and phase 2 10/0 with
+  `level-seed=20261012`): a Marine and a pirate brigantine 60 blocks apart sight each other at once and the battle is
+  decided in 400–1000 ticks with nobody near (one sunk or her crew beaten), the loser leaves a salvage boat whose loot
+  rolls; bounty hunters chase a pirate sloop (she runs); a merchantman bound for a port behind Shiokaze Isle rounds
+  it without ever passing over land; hailing her captain sells cargo; striking her from her deck raises the bounty and
+  turns her crew; three shots from a galleon make a sloop strike her colours (crew surrender, cargo boat) and she can
+  be taken as a prize; a raid ship sails into a village harbour and lands raiders, holds her fire, guards respond (and
+  with no guards a Marine detachment turns out), a joining player takes a bounty and is spared, beating the raiders
+  repels the raid and the defender gains 40 island reputation; an NPC ship with nobody near despawns with her crew;
+  forced spawn rounds put nothing in the Calm Belt, a harbour or the sky but do on the open sea; 8 forced rounds for 3
+  players stop at the cap of 7; a convoy sails with two Marine escorts; phase 2: the merchant and her crew are not
+  restored after a restart while a plain rowboat beside them is.
+- Not seen in a real client yet (skins, salvage boat, the flow of a battle at 120 blocks).
 
 ## Work in flight (background agents)
 - World polish and missing canon islands.
