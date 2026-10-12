@@ -1058,7 +1058,7 @@ final class ParadiseLandmarks {
         counterRow(b, 13, 20, 2, 28, Direction.NORTH);
         for (int x = 13; x <= 19; x += 2) {
             b.barrel(x, 2, 31, Buildings.LOOT_TAVERN);
-            b.set(x + 1, 2, 31, s(Blocks.BARREL));
+            b.barrel(x + 1, 2, 31, Buildings.LOOT_TAVERN); // the old tavern's cellar stock (6 loot barrels) lives on here
             b.set(x, 3, 31, s(Blocks.BARREL));
         }
         for (int x = 14; x <= 20; x += 3) b.set(x, 2, 27, Arch.stair(s(Blocks.SPRUCE_STAIRS), Direction.NORTH, Half.BOTTOM));
@@ -1097,7 +1097,12 @@ final class ParadiseLandmarks {
         awningsX(b, 26, 32, 7, 20, ArchBlocks.GREEN_AWNING, Direction.NORTH);
         for (int x = 26; x <= 32; x++) {
             if (x >= 28 && x <= 30) continue;
-            for (int z = 22; z <= 31; z += 3) Arch.cargo(b, x, 2, z, x * 7 + z);
+            for (int z = 22; z <= 31; z += 3) {
+                if (x == 26 || x == 32) { // sealed goods stacked two high along the walls: the warehouse's loot
+                    b.barrel(x, 2, z, Buildings.LOOT_WAREHOUSE);
+                    b.barrel(x, 3, z, Buildings.LOOT_WAREHOUSE);
+                } else Arch.cargo(b, x, 2, z, x * 7 + z);
+            }
         }
         b.barrel(26, 2, 32, Buildings.LOOT_WAREHOUSE);
         b.barrel(32, 2, 32, Buildings.LOOT_WAREHOUSE);
