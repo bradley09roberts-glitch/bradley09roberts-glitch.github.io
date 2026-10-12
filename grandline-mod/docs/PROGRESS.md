@@ -671,9 +671,12 @@ First run of a real client against the dedicated server. Result: no client crash
   Grand Merchant's 12% discount. Persistence: two players written to the world's playerdata and read back by the
   player list after the restart (rank, merit, tallies, seat, territory, title). Permadeath through the real Clone
   event frees the Admiral's seat and leaves no career. Full run on one fresh world of the tree merged with the boss fights, sounds and crew
-  bases: phase 1 614/614, phase 2 19/19, no exceptions. (A full run before that merge showed 3 harbour-raid FAILs —
-  the raid ship still 98 blocks off the dock after 1,799 ticks on a loaded machine; the living-sea quick run on the
-  same code passed all 24, and the merged full run passed them.)
+  bases: phase 1 614/614, phase 2 19/19, no exceptions; after the next dev commits (sea ambience, base raid test
+  fixes) phase 1 613/614, phase 2 19/19. Flaky under load, not career code: that last run's one FAIL was the Buster
+  Call convergence check (warships 106 → 98 blocks, it wants 15 closer; the server ran up to 89 ticks behind) — the
+  journey quick run on the same tree passed it (111 → 72, 38/38); a run before the first merge failed the three
+  harbour-raid checks (the raid ship 98 blocks off the dock after 1,799 ticks) — the living-sea quick run on that code
+  passed all 24, and both later full runs passed them.
 - Not done / not verified: nothing seen in a real client yet (titles on name tags, the coat on a player model, the
   character sheet lines, the letter's tooltip); the envoy's daily visit, the duty period, squads following in real
   movement and called ships fighting are driven only in the server test; the Marine base rest and the black snail
