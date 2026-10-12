@@ -663,7 +663,8 @@ First run of a real client against the dedicated server. Result: no client crash
   failure is "the warships converge on the target" (Buster Call, `JourneyTests`, code not touched here): mean
   distance 125 → closest 113 (needs 15 blocks of closing); it fails identically (125 → 113) when the journey tests
   run alone (`GL_SELFTEST=journey`, without any sea-job test before them), so it is fixed by this seed's geometry
-  rather than by the sea jobs. BASELINE_PLACEHOLDER
+  rather than by the sea jobs; the base code from before this work fails it the same way (125 → 113, journey
+  quick run 37/38 on a fresh world with the same seed), so it is a pre-existing failure on this seed.
 - Not done / not verified: nothing seen in a real client (the follower walking, a merchant seated on a deck, the
   named ship and the convoy at sea); the fake test players cannot ride, so they stand on decks and the test sails
   their ship (the merchant's seat and the player's helm are not exercised together by a real rider); the named
