@@ -207,16 +207,7 @@ public final class SeaWeather {
     }
 
     private static boolean hasNavigator(ServerPlayer sp) {
-        try {
-            UUID cid = com.grandline.npc.crew.CrewManager.captainCharacter(sp);
-            if (cid == null) return false;
-            for (String id : com.grandline.npc.crew.CrewManager.members(sp.server, cid)) {
-                var n = com.grandline.npc.notable.NotableCharacters.get(id);
-                if (n != null && "navigator".equals(n.crewRole())) return true;
-            }
-        } catch (Exception ignored) {
-        }
-        return false;
+        return com.grandline.npc.crew.CrewBonuses.activeRoles(sp).contains("navigator"); // crews are kept per character id
     }
 
     public static float fogFor(Here w) {

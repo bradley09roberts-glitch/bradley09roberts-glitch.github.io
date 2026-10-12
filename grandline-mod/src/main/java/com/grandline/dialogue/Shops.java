@@ -33,9 +33,10 @@ public final class Shops {
             "calm_belt", "last_island", "sea_train", "cyclone"};
 
     static List<Offer> offers(GLNpc npc) {
-        List<Offer> base = offers(npc.role());
-        if (!npc.role().equals("merchant") && !npc.role().equals("shopkeeper")) return base;
-        List<Offer> l = new java.util.ArrayList<>(base);
+        List<Offer> l = new java.util.ArrayList<>(offers(npc.role()));
+        // sea activities: treasure maps from shady dealers, catches and dishes from cooks, fishing rods
+        for (var x : com.grandline.activity.ActivityShops.extras(npc)) l.add(new Offer(x.item(), x.count(), x.price()));
+        if (!npc.role().equals("merchant") && !npc.role().equals("shopkeeper")) return l;
         int h = Math.floorMod(npc.islandId().hashCode(), PAINTINGS.length);
         for (int k = 0; k < 3; k++) l.add(new Offer("minecraft:painting", 1, 2500 + k * 1500L, PAINTINGS[(h + k * 3) % PAINTINGS.length]));
         return l;

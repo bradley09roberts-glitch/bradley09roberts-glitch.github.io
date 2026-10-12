@@ -28,6 +28,7 @@ apple arrow baked_potato barrel blue_dye bone bread carrot coal cobblestone comp
 diamond emerald flint glass glass_bottle gold_block gold_ingot gold_nugget golden_apple gravel gunpowder honey_bottle iron_chestplate
 iron_helmet iron_ingot iron_nugget lantern lead leather oak_log oak_planks paper potato potion spruce_planks stick string sugar torch wheat
 rotten_flesh nautilus_shell heart_of_the_sea prismarine_shard prismarine_crystals feather amethyst_shard candle experience_bottle map  painting
+bowl kelp red_mushroom brown_mushroom fishing_rod
 '''.split())
 VANILLA_TAGS = {'minecraft:logs', 'minecraft:planks', 'minecraft:swords'}
 
@@ -181,16 +182,21 @@ def main():
         known_item(r['result']['id'], ctx)
         if r['result']['id'] in never_craftable:
             err(f'{ctx}: {r["result"]["id"]} must not be craftable')
-        for ing in r.get('key', {}).values():
+        ings = list(r.get('key', {}).values()) + list(r.get('ingredients', [])) + ([r['ingredient']] if 'ingredient' in r else [])
+        for ing in [x for i in ings for x in (i if isinstance(i, list) else [i])]:
             if 'item' in ing:
                 known_item(ing['item'], ctx)
             elif 'tag' in ing and ing['tag'].startswith('minecraft:') and ing['tag'] not in VANILLA_TAGS:
                 warnings.append(f'{ctx}: unverified tag {ing["tag"]}')
+            elif 'tag' in ing and ing['tag'].startswith('grandline:') and not os.path.isfile(
+                    os.path.join(D, 'grandline/tags/item', ing['tag'].split(':', 1)[1] + '.json')):
+                err(f'{ctx}: missing item tag {ing["tag"]}')
         if 'pattern' in r:
             keys = set(''.join(r['pattern'])) - {' '}
             if keys != set(r['key']):
                 err(f'{ctx}: pattern keys {keys} != key map {set(r["key"])}')
-    for p in glob.glob(os.path.join(D, 'minecraft/tags/item/**/*.json'), recursive=True):
+    for p in glob.glob(os.path.join(D, 'minecraft/tags/item/**/*.json'), recursive=True) + \
+            glob.glob(os.path.join(D, 'grandline/tags/item/**/*.json'), recursive=True):
         for v in json.load(open(p)).get('values', []):
             if not v.startswith('#'):
                 known_item(v, os.path.relpath(p, D))

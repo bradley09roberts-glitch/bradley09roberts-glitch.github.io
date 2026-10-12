@@ -311,9 +311,27 @@ First run of a real client against the dedicated server. Result: no client crash
 - The built jars were installed on a clean NeoForge 21.1.259 dedicated server (`--installServer`, `mods/`,
   `user_jvm_args.txt`, `run.sh`): no errors, world plan built, "Done" in ~5 s. The real client (Xvfb) then ran the
   whole solo script against that production server: 69 screenshots, no timeout, no server exception.
+### Sea activities: treasure maps, fishing, cooking (agent, merged 07:50)
+- Treasure maps (`activity/TreasureMaps`): each points at one real island secret (buried treasure, hidden cache, lost
+  shrine, shipwreck), chosen deterministically from the world plan near where the map turns up, unlooted secrets
+  first; in chest loot (house, tavern, ruin, wreck, cache, shrine, treasure), sold by barkeeps and by merchants on
+  pirate/outlaw islands, quest rewards (`ActivityQuests.treasureMap()`); a painted map screen (island, X, compass,
+  rough bearing and distance), X marks on the sea chart; opening or breaking the target chest solves it (XP, quest
+  objective `treasure`); two torn halves (fishing, wrecks, caches) piece together into a grand map.
+- Fishing (`activity/SeaFishing`): a loot modifier on vanilla fishing turns fish into the catch of the sea under the
+  bobber (11 catches: Blues small fry, Paradise exotics, Calm Belt/New World giants, deep-sea and White Sea fish, rare
+  Sea King fry); island ponds stay vanilla; storms and a crew navigator raise giants and fry, a crew cook and the
+  fishing skill (mastery `activity/fishing`) raise quality.
+- Cooking (`activity/Meals`): 8 dishes (4 signature) from the smoker/campfire/furnace and the crafting grid; meal buffs
+  in the combat buff system (stamina, +15% strength, Haki, swimming, cold and heat resistance; prime dishes 25%
+  stronger); dish quality from ingredients, cooking skill and a crew cook, who also runs a galley at sea.
+- Fixed on the way: `CrewBonuses.activeRoles` looked crews up by NPC id and so never found a player's crew (crew
+  ship bonuses never applied to players); the navigator's storm warning had the same lookup and now uses it too.
+- Verified: `GL_SELFTEST=activities` 34/34; full phase 1 377/377 and phase 2 10/10 on the same world.
+- Not seen in a client yet: the treasure map screen, chart marks and the new sprites in game.
 
 ## Work in flight (background agents)
-- Treasure maps, fishing, cooking.
+- None (all merged).
 
 ## Known gaps (next priorities)
 - Full phase 1/2 runs keep getting OOM-killed (exit 137) while the agents' test servers share the container's 15 GB;

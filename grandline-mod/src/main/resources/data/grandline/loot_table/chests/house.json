@@ -279,6 +279,21 @@
           "weight": 3
         }
       ]
+    },
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "grandline:treasure_map",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:empty",
+          "weight": 30
+        }
+      ]
     }
   ],
   "random_sequence": "grandline:chests/house"

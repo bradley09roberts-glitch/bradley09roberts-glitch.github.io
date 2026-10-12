@@ -94,6 +94,7 @@ public final class SelfTest {
             StoryTestsExtra.phase1(steps);
             IslandStoryTests.phase1(steps);
         }
+        else if (PHASE.equals("activities")) ActivityTests.phase1(steps); // quick run: treasure maps, fishing, cooking
         else phase2();
     }
 
@@ -755,6 +756,7 @@ public final class SelfTest {
         DimensionTests.holyLand(steps);
         DimensionTests.phase1(steps);
         CreatureSelfTest.phase1(steps); // Sea Kings, Calm Belt, Zoan beast forms
+        ActivityTests.phase1(steps); // sea activities: treasure maps, fishing, cooking (test/ActivityTests.java)
         // ---------- persistence fixtures for phase 2 ----------
         steps.add(s -> {
             ServerLevel l = ow(s);
@@ -961,6 +963,7 @@ public final class SelfTest {
         NavalTests.phase2(steps);
         LivingSeaTests.phase2(steps);
         IslandStoryTests.phase2(steps); // generated stories regenerate identically; generated people's fates persist
+        ActivityTests.phase2(steps); // looted island secrets persist
         final String[] fx = new String[1];
         steps.add(s -> {
             fx[0] = Files.readString(Path.of("selftest-fixtures.txt")).trim();

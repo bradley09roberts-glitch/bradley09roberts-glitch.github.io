@@ -353,6 +353,13 @@ def chest_tables():
         if chance < 1:
             entries.append(empty(max(1, round(len(amounts) * (1 - chance) / chance))))
         t[name]['pools'].append(pool(entries, 1))
+    # treasure maps (drawn for one real island secret when they reach a player) and torn map halves (activity_items)
+    for name, (maps, torn, none) in {'house': (1, 0, 30), 'tavern': (2, 1, 20), 'ruin': (2, 1, 12), 'wreck': (3, 2, 8),
+                                     'cache': (3, 1, 6), 'shrine': (1, 1, 14), 'treasure': (0, 2, 12)}.items():
+        entries = [gl('treasure_map', maps)] if maps else []
+        if torn:
+            entries += [gl('torn_map', torn, None, None, comp('map_half', h)) for h in (0, 1)]
+        t[name]['pools'].append(pool(entries + [empty(none)], 1))
     return t
 
 
@@ -392,6 +399,26 @@ def shaped(pattern, key, result, n=1, category='equipment', group=None):
     if group:
         r['group'] = group
     return r
+
+
+def ingredient(v):
+    """'#ns:tag' -> tag, 'ns:item' / vanilla 'item' -> item, a list -> any of them."""
+    if isinstance(v, list):
+        return [ingredient(x) for x in v]
+    if v.startswith('#'):
+        return {'tag': v[1:]}
+    return {'item': v if ':' in v else f'minecraft:{v}'}
+
+
+def shapeless(ingredients, result, n=1, category='misc'):
+    return {'type': 'minecraft:crafting_shapeless', 'category': category, 'ingredients': [ingredient(i) for i in ingredients],
+            'result': {'count': n, 'id': f'{NS}:{result}'}}
+
+
+def cooking(kind, ingr, result, time, xp, category='food'):
+    """Furnace-type recipe: kind is smelting, smoking, blasting or campfire_cooking."""
+    return {'type': f'minecraft:{kind}', 'category': category, 'cookingtime': time, 'experience': xp,
+            'ingredient': ingredient(ingr), 'result': {'count': 1, 'id': f'{NS}:{result}'}}
 
 
 def recipes():

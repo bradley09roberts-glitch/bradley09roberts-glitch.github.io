@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "tag": "grandline:grand_line_fish"
+    },
+    {
+      "tag": "grandline:grand_line_fish"
+    },
+    {
+      "item": "minecraft:kelp"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "grandline:tidewater_sashimi"
+  }
+}

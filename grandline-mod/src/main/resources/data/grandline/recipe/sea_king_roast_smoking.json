@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:smoking",
+  "category": "food",
+  "cookingtime": 100,
+  "experience": 0.5,
+  "ingredient": {
+    "item": "grandline:sea_king_steak"
+  },
+  "result": {
+    "count": 1,
+    "id": "grandline:sea_king_roast"
+  }
+}

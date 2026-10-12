@@ -28,6 +28,7 @@ public final class GrandLine {
         ModEffects.register(modBus);
         ModWorldgen.register(modBus);
         ModCreativeTabs.register(modBus);
+        com.grandline.activity.ActivityRegistry.register(modBus); // sea activities: treasure maps, fishing, cooking
         GLNetwork.register(modBus);
         modBus.addListener(this::setup);
     }
