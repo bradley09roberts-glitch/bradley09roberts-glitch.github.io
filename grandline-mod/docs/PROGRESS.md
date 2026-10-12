@@ -504,6 +504,9 @@ First run of a real client against the dedicated server. Result: no client crash
   roars/phase changes/wind-ups/enrage use the new sounds. Subtitles in `lang/en_us/sounds.json`.
 - Music discs: four tracks (east_blue, grand_line, wano, boss) as jukebox songs with mono copies, in treasure and
   wreck chests and the creative tab.
+- Sea ambience (`client/SeaAmbience`, Ambient slider): a seamless 20 s surf loop that swells with the share of open
+  water within 32 blocks, a storm-wind loop with the rain/thunder level, gulls by day along shores, and creaking
+  timbers aboard a ship (more under way). Ocean world only, above water.
 - Verified: `check_assets.py` checks every registered event against `sounds.json`, the files and the subtitles;
   phase 1 checks every event is registered and every disc resolves to its jukebox song. Real client (run 10:10–10:23,
   73 shots, no failures): the game's own Vorbis decoder read all 61 files (11.6 minutes of audio), 40/40 events

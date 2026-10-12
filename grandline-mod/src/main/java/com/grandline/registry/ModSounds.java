@@ -47,6 +47,11 @@ public final class ModSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> PLAYER_KNOCKDOWN = sfx("player.knockdown");
     public static final DeferredHolder<SoundEvent, SoundEvent> COMBAT_SORU = sfx("combat.soru");
     public static final DeferredHolder<SoundEvent, SoundEvent> COMBAT_GEPPO = sfx("combat.geppo");
+    // ambience (client/SeaAmbience): looping surf and storm wind, gulls near shore, creaking timbers aboard
+    public static final DeferredHolder<SoundEvent, SoundEvent> AMBIENT_SEA = sfx("ambient.sea");
+    public static final DeferredHolder<SoundEvent, SoundEvent> AMBIENT_WIND = sfx("ambient.wind");
+    public static final DeferredHolder<SoundEvent, SoundEvent> AMBIENT_GULL = sfx("ambient.gull");
+    public static final DeferredHolder<SoundEvent, SoundEvent> AMBIENT_CREAK = sfx("ambient.creak");
 
     // music (streamed; picked by client/GLMusic)
     public static final DeferredHolder<SoundEvent, SoundEvent> MUSIC_EAST_BLUE = sfx("music.east_blue");
@@ -70,7 +75,8 @@ public final class ModSounds {
             "fruit.transform", "fruit.drums", "boss.roar", "boss.phase", "boss.telegraph", "boss.enrage", "ship.cannon", "ship.bell",
             "ship.horn", "sea_king.call", "den_den.ring", "den_den.pickup", "ui.bounty", "ui.quest", "ui.discover", "player.knockdown",
             "combat.soru", "combat.geppo", "music.east_blue", "music.grand_line", "music.new_world", "music.island", "music.battle",
-            "music.boss", "music.sky", "music.deep_sea", "music.wano", "disc.east_blue", "disc.grand_line", "disc.wano", "disc.boss"};
+            "music.boss", "music.sky", "music.deep_sea", "music.wano", "disc.east_blue", "disc.grand_line", "disc.wano", "disc.boss",
+            "ambient.sea", "ambient.wind", "ambient.gull", "ambient.creak"};
 
     private static DeferredHolder<SoundEvent, SoundEvent> sfx(String name) {
         return SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(GrandLine.id(name)));

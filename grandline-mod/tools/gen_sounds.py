@@ -28,9 +28,9 @@ from synth import SR, drive, ffilter  # noqa: E402
 LEVEL = {'haki.observation': 0.6, 'den_den.pickup': 0.55, 'ui.quest': 0.7, 'ui.discover': 0.7,
          'combat.soru': 0.7, 'combat.geppo': 0.7, 'fruit.shambles': 0.75, 'fruit.room': 0.8, 'player.knockdown': 0.8,
          'boss.telegraph': 0.7, 'den_den.ring': 0.35, 'ship.horn': 0.6, 'fruit.transform': 0.7,
-         'fruit.quake': 0.66, 'fruit.thunder': 0.66}
+         'fruit.quake': 0.66, 'fruit.thunder': 0.66, 'ambient.gull': 0.5, 'ambient.creak': 0.8}
 # impacts whose energy sits in a few transients: saturate them so they are as loud as vanilla explosions
-DENSE = {'ship.cannon': 3.0, 'fruit.quake': 4.0, 'fruit.thunder': 5.0, 'haki.conqueror': 2.0, 'fruit.flame': 1.6}
+DENSE = {'ambient.creak': 4.0, 'ship.cannon': 3.0, 'fruit.quake': 4.0, 'fruit.thunder': 5.0, 'haki.conqueror': 2.0, 'fruit.flame': 1.6}
 
 # tracks that are also music discs: a mono copy (a jukebox is a positional source and only mono sounds attenuate)
 DISCS = ['east_blue', 'grand_line', 'wano', 'boss']
@@ -96,6 +96,22 @@ def render_discs(defs):
         print('  disc', name)
 
 
+def render_ambient(defs):
+    """Stereo ambience loops (streamed; the client loops them)."""
+    tmp = tempfile.mkdtemp()
+    for name, fn in sfx.AMBIENT.items():
+        rng = np.random.default_rng(zlib.crc32(name.encode()))
+        st = fn(rng)
+        st = np.stack([ffilter(c, hp=35) for c in st])
+        st = st * (0.5 / max(1e-9, np.abs(st).max()))
+        wav = os.path.join(tmp, 'a.wav')
+        music.write_wav(wav, st)
+        rel = name.replace('.', '/')
+        encode(wav, os.path.join(SOUNDS, rel + '.ogg'), 3)
+        defs[name] = {'subtitle': 'subtitles.grandline.' + name, 'sounds': [{'name': 'grandline:' + rel, 'stream': True}]}
+        print(f'  ambient {rel}: {st.shape[1] / SR:.1f} s')
+
+
 def render_music(defs, only):
     tmp = tempfile.mkdtemp()
     for name, fn in music.SONGS.items():
@@ -121,6 +137,7 @@ def main():
             defs = json.load(f)
     if not args or args[0] == 'sfx':
         render_sfx(defs)
+        render_ambient(defs)
     if not args or args[0] == 'music':
         render_music(defs, set(args[1:]))
     if args and args[0] == 'discs':

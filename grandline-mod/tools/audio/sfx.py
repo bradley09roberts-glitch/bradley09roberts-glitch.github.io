@@ -380,3 +380,86 @@ SFX = {
     'ui.discover': (ui_discover, 1), 'player.knockdown': (player_knockdown, 1), 'combat.soru': (combat_soru, 2),
     'combat.geppo': (combat_geppo, 2),
 }
+
+
+# ------------------------------------------------------------------------------------------------- ambience (client)
+def _loop(st, xfade):
+    """Make a stereo buffer loop seamlessly: crossfade its last `xfade` seconds into its start."""
+    k = secs(xfade)
+    head, body, tail = st[:, :k], st[:, k:-k], st[:, -k:]
+    w = np.linspace(0, 1, k)
+    return np.concatenate([tail * (1 - w) + head * w, body], axis=1)
+
+
+def ambient_sea(rng):
+    """Open sea: slow swells of surf over a low rumble, wide stereo (20 s loop)."""
+    total = 22.0
+    n = secs(total)
+    t = tt(n)
+    chans = []
+    for c in range(2):
+        base = ffilter(noise(n, rng, 'pink'), lp=900, hp=60)
+        swell = np.zeros(n)
+        at = rng.uniform(0, 2)
+        while at < total:  # waves every 4-8 s, each a rise and a long wash
+            period = rng.uniform(4, 8)
+            env = np.exp(-0.5 * ((t - at - 1.2) / 0.9) ** 2) + 0.5 * np.exp(-np.maximum(0, t - at - 1.2) / 2.5) * (t > at + 1.2)
+            swell += env * rng.uniform(0.6, 1.0)
+            at += period
+        wash = ffilter(rng.standard_normal(n), hp=1500, lp=7000) * swell * 0.25
+        rumble = ffilter(noise(n, rng, 'brown'), lp=120) * 0.8
+        chans.append(base * (0.35 + 0.65 * swell) + wash + rumble)
+    st = np.stack(chans)
+    return _loop(st, 2.0)
+
+
+def ambient_wind(rng):
+    """Storm wind: gusting, whistling, wide stereo (20 s loop)."""
+    total = 22.0
+    n = secs(total)
+    t = tt(n)
+    gust = 0.55 + 0.45 * np.sin(TAU * 0.11 * t + rng.uniform(0, TAU)) * np.sin(TAU * 0.037 * t + rng.uniform(0, TAU))
+    chans = []
+    for c in range(2):
+        w = sweep_bp(noise(n, rng, 'pink'), lambda s: 500 + 700 * (0.5 + 0.5 * np.sin(TAU * 0.09 * s + c)), q=1.2)
+        whistle = sweep_bp(rng.standard_normal(n), lambda s: 1400 + 500 * np.sin(TAU * 0.13 * s + 2 * c), q=14) * 0.35
+        chans.append((w + whistle) * gust + ffilter(noise(n, rng, 'brown'), lp=200) * 0.5)
+    return _loop(np.stack(chans), 2.0)
+
+
+def ambient_gull(rng):
+    """A gull's call: two or three falling squawks."""
+    parts = []
+    at = 0.0
+    for k in range(int(rng.integers(2, 4))):
+        n = secs(rng.uniform(0.18, 0.3))
+        t = tt(n)
+        f0 = rng.uniform(1500, 2000)
+        f = f0 * (1 + 0.25 * np.sin(np.pi * t / t[-1])) * (1 - 0.3 * t / t[-1])
+        ph = phase(f, n)
+        y = np.sin(ph) + 0.5 * np.sin(2 * ph) + 0.3 * np.sin(3 * ph) + 0.15 * np.sin(4 * ph)
+        y += bandpass(rng.standard_normal(n), 2000, 6000) * 0.3
+        y *= np.sin(np.pi * t / t[-1]) ** 0.7
+        parts.append((at, y * (1 - 0.15 * k)))
+        at += len(y) / SR + rng.uniform(0.05, 0.12)
+    return room(place(at + 0.4, *parts), rng, 1.2, 0.25)
+
+
+def ambient_creak(rng):
+    """Ship timbers: a slow, rough creak (stick-slip friction on a resonant body)."""
+    n = secs(rng.uniform(0.6, 1.1))
+    t = tt(n)
+    rate = rng.uniform(25, 60) * (1 + 0.4 * np.sin(np.pi * t / t[-1]))
+    clicks = np.zeros(n)
+    pos = 0.0
+    while pos < t[-1]:
+        i = int(pos * SR)
+        clicks[i] = rng.uniform(0.5, 1.0)
+        pos += 1.0 / np.interp(pos, t, rate) * rng.uniform(0.85, 1.15)
+    body = ffilter(clicks, peaks=((rng.uniform(220, 320), 18, 6), (rng.uniform(600, 900), 12, 6), (1500, 6, 4)), lp=2500, hp=120)
+    env = np.sin(np.pi * t / t[-1]) ** 0.6
+    return body * env
+
+
+AMBIENT = {'ambient.sea': ambient_sea, 'ambient.wind': ambient_wind}  # stereo loops
+SFX.update({'ambient.gull': (ambient_gull, 3), 'ambient.creak': (ambient_creak, 4)})

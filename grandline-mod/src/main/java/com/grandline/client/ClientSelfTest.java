@@ -336,6 +336,8 @@ public final class ClientSelfTest {
         add("music at sea", () -> {
             var m = GLMusic.current();
             LOG.add("  music at sea: " + (m == null ? "none" : m.getEvent().value().getLocation().getPath()) + " (place " + GLMusic.place + ")");
+            LOG.add("  ambience at sea: " + SeaAmbience.state());
+            if (SeaAmbience.openness < 0.3f) LOG.add("FAIL ambience: open sea measured as " + SeaAmbience.openness);
         }, 5);
         cmd("gamemode spectator", 10);
         cmd("tp @s ~-25 ~22 ~-25 -45 35", 60);
