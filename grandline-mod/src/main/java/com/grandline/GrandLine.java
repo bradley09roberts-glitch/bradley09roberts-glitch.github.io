@@ -29,6 +29,7 @@ public final class GrandLine {
         ModWorldgen.register(modBus);
         ModCreativeTabs.register(modBus);
         com.grandline.activity.ActivityRegistry.register(modBus); // sea activities: treasure maps, fishing, cooking
+        com.grandline.boss.BossItems.register(modBus); // boss fights: the Haki scroll (relics are named weapon stacks)
         GLNetwork.register(modBus);
         modBus.addListener(this::setup);
     }

@@ -63,6 +63,8 @@ public final class Haki {
     }
 
     public static boolean tryObservationDodge(LivingEntity victim, LivingEntity attacker, Hits.Info info) {
+        Boolean boss = com.grandline.boss.BossCombat.observationDodge(victim, attacker, info); // bosses: foresight until staggered
+        if (boss != null) return boss;
         CombatState s = CombatState.of(victim);
         boolean futureSight = s.hasBuff("future_sight");
         if (!s.observation && !futureSight && !(victim instanceof GLNpc n && n.usesObservation())) return false;

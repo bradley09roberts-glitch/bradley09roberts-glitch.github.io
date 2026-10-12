@@ -66,7 +66,7 @@ public class NpcCombatGoal extends Goal {
     @Override
     public void tick() {
         LivingEntity t = npc.getTarget();
-        if (t == null) return;
+        if (t == null || com.grandline.boss.BossManager.busy(npc)) return; // a boss winding up a signature attack stands still
         long now = npc.level().getGameTime();
         CombatState s = npc.combat();
         npc.getLookControl().setLookAt(t, 30, 30);

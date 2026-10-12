@@ -330,6 +330,71 @@ First run of a real client against the dedicated server. Result: no client crash
 - Verified: `GL_SELFTEST=activities` 34/34; full phase 1 377/377 and phase 2 10/10 on the same world.
 - Not seen in a client yet: the treasure map screen, chart marks and the new sprites in game.
 
+### Endgame boss fights (agent)
+- Framework (`boss/`): the top of the cast are now boss fights. `BossManager` tracks boss entities (notables listed
+  in `Bosses`) and starts a `BossFight` as soon as one is engaged. A fight has a vanilla boss bar (`ServerBossEvent`)
+  for the players within 48 blocks and everyone engaged; three phases split at 70% and 35% health: damage that would
+  cross a threshold stops on it and starts a 2.5 s invulnerable transition (a roar, or the boss's Conqueror's Haki:
+  weak wills black out briefly, equals reel), then the move set changes, phase powers run (existing fruit abilities:
+  Orochi regrowth, phoenix rebirth flames, barrier ball, Zoan forms, Haki hardening and black-lightning infusion) and
+  the arena changes. Signature attacks are telegraphed (`Telegraph`): a red ground marker (circle at the target,
+  slam around the boss, ring with a safe centre, cone, line, rain of circles on every foe, cross), the boss rooted
+  in its wind-up animation with a sound and the attack's name on the action bar, markers turning "hot" for the last
+  half second; the hit lands on whoever is still inside (dodge i-frames, Observation and guard still apply; most
+  are unblockable). Enrage after 6 minutes (+50% damage, faster wind-ups, darkened bar). Haki: Logia bosses are
+  intangible to blows without Armament, through the combat system and vanilla melee/arrows alike; bosses with
+  advanced Observation (80+) read blows (~30-50%, even unblockable ones) until a stagger breaks their foresight for
+  8 s; no boss can be knocked out (Conqueror's, sleep), harmful effects are cut to 2 s and amplifier 1, staggers to
+  1 s, knockback resistance 0.75. Players with Conqueror's Haki clash with the boss's (at a phase roar, or when
+  they unleash it nearby): holding 70% of its pressure makes the boss reel and breaks its foresight. Scaling for 1-4
+  players in the fight: incoming damage divided by 1 / 1.75 / 2.5 / 3.25 (health is capped at 1024), +10% damage
+  and faster attacks per extra player, and rain attacks mark every foe. Fair permadeath: while another player still
+  fights, a boss neither finishes, robs nor arrests a player it knocked down (it turns to the next foe; the boss and
+  its arena cannot hurt the downed player); the usual outcome applies once nobody is left standing. A boss's
+  awakened fruit powers are no longer part of its random technique use: they only come as telegraphed attacks.
+- 24 bosses (`Bosses`), 3 signature attacks each (phase 1 uses two, phase 2 swaps one for a stronger one, phase 3
+  all three), arena scripts and rewards: the Four Emperors (Hrolf's giant shockwaves; Kurogane's tentacles and ink,
+  turning Kraken; Barnum's toy bombs and Toy Kingdom; Aurelia's falling stars and supernova), the Fleet Admiral and
+  the Three Compass Admirals (Constance's whirlpools, Zenith's light pillars, Nadir's spreading darkness, Meridian
+  turning the ground or the sea around his ship into a burning lava crust and raining volcanic bombs), the Seven
+  Warlords (Sterling's tilted scales, Hisui's venom pools, Jinpachi's lingering cuts, Leonhart's thunderstorm and
+  Sulong, Saltmarsh's salt flats, Lucrezia's reflected beams, Pipistrello's drills), the final arcs (Nox's gas
+  clouds, Vespera's closing birdcage, Sigrun's blue flames, Hagane's storm) and the Five Stewards (pockets of slowed
+  time, Zeus and Prometheus, tremors and an island tilt, barrier walls, the spreading swamp). Lines per phase, move
+  names and relic names in `lang/en_us/bosses.json`.
+- Rewards (`BossRewards`, `BossRecords`): each boss's relic, a named, unbreakable, stronger stack of a weapon tagged
+  with its boss, drops once per world where it fell (death, yield of a rival, or arrest: seastone cuffs only close on
+  a boss at a quarter of its health or yielded); everyone in the fight gets a style scroll and a new Haki scroll
+  (`haki_scroll`: awakens that Haki or trains it), once per player per boss, and a large bounty (150 M for the early
+  Warlords up to 1.5 B for an Emperor; Marines, agents and bounty hunters who bring down an outlaw are paid instead).
+  The existing kill / yield / arrest credit for story objectives is untouched, and the whole group is credited too.
+- Client: a "bosses" block at the end of `ClientFx` (markers, hits per palette, roar, enrage, broken foresight,
+  Conqueror's clash) with one hook line in `play()`; the Haki scroll sprite in `tools/assetgen/misc_items.py`.
+- Shared files touched (hook lines): `GrandLine` (item registration), `NotableHooks.hostility` (everyone engaged is
+  the boss's foe), `GLNpc.onKnockedDownPlayer` (deferred outcome), `NpcCombatGoal.tick` (the ordinary AI waits during
+  a wind-up), `Haki.tryObservationDodge` (foresight), `HumanoidNpc.techniques` (no unannounced awakened powers or
+  random Conqueror's bursts for bosses), `SelfTest` (phase 1, phase 2, quick phase), `ClientFx` (the block at the end
+  and its `play()` line), `tools/assetgen/source.py` (item id) and `misc_items.py` (the scroll sprite).
+- Verified (`test/BossTests`): `GL_SELFTEST=bosses` 61/61 — the roster and its translations, the bar, both
+  thresholds with the invulnerable roar and the move-set swap and arena change, a telegraph that hits the one who
+  stayed and misses the one who left, marker shapes, the boss rooted in its wind-up and, left to its AI, using its
+  signature attacks, Logia vs plain/vanilla/Armament blows, no unannounced awakened powers or Conqueror's bursts,
+  1-vs-3-player scaling (exactly 2.5x), the reset when everyone leaves, the deferred finishing blow and arrest (the
+  damage event itself is cancelled while another player fights and not once nobody does), knock-out immunity and
+  effect caps, foresight (28/60 dodged, 0/60 once staggered), the enrage, a Conqueror's clash, death (relic, scrolls,
+  +1.5 B bounty for both players, `oni_2` completed for the killer and the group, DEFEATED), a rival's yield, cuffs
+  refused then an arrest, the Haki scroll, and all 24 bosses' 168 phase/attack runs plus their arena and phase moves
+  with no exception and damage from every boss. Full phase 1 with the final game code, three runs: 504/504, 503/504
+  and 503/505 (the last also with the final tests; all 61 boss checks passed every time). The FAILs are existing
+  timing-dependent tests that passed in the other runs: "crew disbands" (2 of 3 runs: Petra's entity is not yet
+  tracked when the test disbands the crew if the Shells Town chunk loads slowly) and the ferry landing within 3000
+  ticks (1 of 3, on a heavily loaded container). Phase 2 on the last run's world: 15/15 (relic records and the
+  defeated boss persist).
+- Not done: nothing has been seen in a real client (markers, hit effects, boss music and the bar colours are only
+  checked as packets/state); bosses fight on their home islands as notables, there are no purpose-built arenas or
+  ship encounters that bring an Admiral to the player at sea (the sea arena behaviours trigger when a fight happens
+  near water); relics are named stacks of existing weapons rather than items with their own models.
+
 ## Work in flight (background agents)
 - None (all merged).
 

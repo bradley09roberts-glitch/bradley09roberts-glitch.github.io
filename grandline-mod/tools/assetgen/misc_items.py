@@ -209,6 +209,27 @@ def _style_scroll():
                       'c': M(CLOTH_RED), 't': M(CLOTH_RED, outline=False)})
 
 
+# A boss's Haki notes (boss fights): the same scroll in black lacquer and violet.
+HAKI_PAPER = ['#1e1428', '#3a2a4a', '#6a5a7a', '#8a7a9a', '#b0a4c0', '#d8d0e4']
+HAKI_LACQUER = ['#050508', '#101018', '#1c1c28', '#2c2c3c', '#40405a', '#5a5a7a']
+HAKI_VIOLET = ['#14061e', '#2a0c3e', '#4a1a6a', '#6a2a9a', '#9a4ac8', '#c88af0']
+
+
+@item('haki_scroll')
+def _haki_scroll():
+    g = Grid()
+    g.band(2.5, 12.0, -2, 2, 'p')
+    g.band(1.5, 2.0, -1, 1, 'k')
+    g.band(12.5, 13.5, -1, 1, 'k')
+    g.axis_ellipse(12.0, 0, 0.6, 2.3, 'e')
+    g.band(7.0, 7.5, -2, 2, 'c')
+    for x, y in ((8, 10), (9, 11), (8, 11), (9, 12), (10, 12)):
+        g.put(x, y, 't')
+    lines = lambda x, y, i: DK if i == MD and (x - y) % 4 == 0 else i
+    paper = M(HAKI_PAPER, pattern=lines)
+    return render(g, {'p': paper, 'k': M(HAKI_LACQUER), 'e': Force(paper, LT), 'c': M(HAKI_VIOLET), 't': M(HAKI_VIOLET, outline=False)})
+
+
 # ============================================================================================ ammo & materials
 @item('bullet')
 def _bullet():

@@ -95,6 +95,7 @@ public final class SelfTest {
             IslandStoryTests.phase1(steps);
         }
         else if (PHASE.equals("activities")) ActivityTests.phase1(steps); // quick run: treasure maps, fishing, cooking
+        else if (PHASE.equals("bosses")) BossTests.phase1(steps); // quick run: boss fights
         else phase2();
     }
 
@@ -779,6 +780,7 @@ public final class SelfTest {
         storySteps();
         StoryTestsExtra.phase1(steps); // Skypiea, Fish-Man Island, local stories, sky/deep notables
         IslandStoryTests.phase1(steps); // procedural stories on original islands, the richer job board (test/IslandStoryTests.java)
+        BossTests.phase1(steps); // boss fights: bars, phases, telegraphs, Haki rules, scaling, fair knockdowns, rewards (test/BossTests.java)
     }
 
     // ============================================================== story cast, crews and quests (Saltfire Saga)
@@ -964,6 +966,7 @@ public final class SelfTest {
         LivingSeaTests.phase2(steps);
         IslandStoryTests.phase2(steps); // generated stories regenerate identically; generated people's fates persist
         ActivityTests.phase2(steps); // looted island secrets persist
+        BossTests.phase2(steps); // boss relic records and fates persist
         final String[] fx = new String[1];
         steps.add(s -> {
             fx[0] = Files.readString(Path.of("selftest-fixtures.txt")).trim();
