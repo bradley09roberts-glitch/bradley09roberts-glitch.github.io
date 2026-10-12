@@ -107,6 +107,7 @@ public class HumanoidNpc extends GLNpc {
         goalSelector.addGoal(1, new NpcSurrenderGoal(this));
         goalSelector.addGoal(2, new NpcFleeGoal(this));
         goalSelector.addGoal(3, new NpcCombatGoal(this));
+        goalSelector.addGoal(4, new com.grandline.npc.crew.CrewFollowGoal(this));
         goalSelector.addGoal(5, new NpcHomeGoal(this));
         goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.6));
         goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8f));

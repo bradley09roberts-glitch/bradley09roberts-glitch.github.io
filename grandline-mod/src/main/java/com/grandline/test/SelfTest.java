@@ -428,6 +428,181 @@ public final class SelfTest {
             check("persistence fixture written", true, "NPC " + keeper.getUUID() + " at " + x + "," + z);
             return 20;
         });
+        storySteps();
+    }
+
+    // ============================================================== story cast, crews and quests (Saltfire Saga)
+
+    private static void storySteps() {
+        // ---------- cast data ----------
+        steps.add(s -> {
+            WorldPlan p = WorldPlan.of(s);
+            var all = com.grandline.npc.notable.NotableCharacters.all();
+            check("story cast registered", all.size() >= 100, all.size() + " notables");
+            java.util.function.ToIntFunction<com.grandline.npc.notable.NotableCharacters.Group> c = com.grandline.npc.notable.NotableCharacters::count;
+            check("cast groups", c.applyAsInt(com.grandline.npc.notable.NotableCharacters.Group.EMPEROR) == 4 && c.applyAsInt(com.grandline.npc.notable.NotableCharacters.Group.STEWARD) == 5
+                            && c.applyAsInt(com.grandline.npc.notable.NotableCharacters.Group.WARLORD) == 7 && c.applyAsInt(com.grandline.npc.notable.NotableCharacters.Group.SUPERNOVA) >= 9
+                            && com.grandline.npc.notable.NotableCharacters.recruitable().size() >= 14,
+                    "emperors " + c.applyAsInt(com.grandline.npc.notable.NotableCharacters.Group.EMPEROR) + ", stewards " + c.applyAsInt(com.grandline.npc.notable.NotableCharacters.Group.STEWARD)
+                            + ", warlords " + c.applyAsInt(com.grandline.npc.notable.NotableCharacters.Group.WARLORD) + ", supernovas " + c.applyAsInt(com.grandline.npc.notable.NotableCharacters.Group.SUPERNOVA)
+                            + ", crew " + com.grandline.npc.notable.NotableCharacters.recruitable().size());
+            List<String> bad = new ArrayList<>();
+            Set<String> fruits = new HashSet<>();
+            for (var n : all) {
+                if (p.byId(n.island()) == null) bad.add(n.id() + ": island " + n.island());
+                if (n.fruit() != null && (DevilFruits.get(n.fruit()) == null || !fruits.add(n.fruit()))) bad.add(n.id() + ": fruit " + n.fruit());
+                if (FightingStyles.get(n.style()) == null) bad.add(n.id() + ": style " + n.style());
+                if (!com.grandline.npc.Archetypes.has(n.role())) bad.add(n.id() + ": role " + n.role());
+                if (!n.raceEnum().id().equals(n.race())) bad.add(n.id() + ": race " + n.race());
+                if (!n.weapon().isEmpty() && net.minecraft.core.registries.BuiltInRegistries.ITEM.get(GrandLine.id(n.weapon())) == net.minecraft.world.item.Items.AIR) bad.add(n.id() + ": weapon " + n.weapon());
+            }
+            check("every notable's island, fruit (unique), style, role, race and weapon exist", bad.isEmpty(), bad.isEmpty() ? fruits.size() + " fruits held by the cast" : String.join("; ", bad.subList(0, Math.min(10, bad.size()))));
+            return 0;
+        });
+        // ---------- quest graph ----------
+        steps.add(s -> {
+            WorldPlan p = WorldPlan.of(s);
+            List<String> bad = new ArrayList<>();
+            Set<String> story = com.grandline.quest.QuestRegistry.storyQuestIds();
+            for (var q : com.grandline.quest.QuestRegistry.all()) {
+                if (q.next() != null && com.grandline.quest.QuestRegistry.get(com.grandline.quest.QuestRegistry.baseId(q.next())) == null) bad.add(q.id() + " next " + q.next());
+                for (String r : q.requires()) if (com.grandline.quest.QuestRegistry.get(com.grandline.quest.QuestRegistry.baseId(r)) == null) bad.add(q.id() + " requires " + r);
+                if (!story.contains(q.id())) continue;
+                if (q.giverRole().startsWith("notable:") && com.grandline.npc.notable.NotableCharacters.get(q.giverRole().substring(8)) == null) bad.add(q.id() + " giver " + q.giverRole());
+                if (!q.giverRole().startsWith("notable:") && !com.grandline.npc.Archetypes.has(q.giverRole())) bad.add(q.id() + " giver " + q.giverRole());
+                if (!q.island().equals("*") && p.byId(q.island()) == null) bad.add(q.id() + " island " + q.island());
+                if (q.objectives().isEmpty()) bad.add(q.id() + " has no objectives");
+                for (var o : q.objectives()) {
+                    boolean ok = switch (o.type()) {
+                        case "defeat" -> com.grandline.npc.notable.NotableCharacters.get(o.target()) != null;
+                        case "talk" -> com.grandline.npc.notable.NotableCharacters.get(o.target()) != null || com.grandline.npc.Archetypes.has(o.target());
+                        case "kill" -> com.grandline.npc.Archetypes.has(o.target());
+                        case "discover" -> p.byId(o.target()) != null || o.target().equals("any") || o.target().equals("any_canon");
+                        case "poneglyph" -> true;
+                        default -> false;
+                    };
+                    if (!ok) bad.add(q.id() + " objective " + o.type() + ":" + o.target());
+                }
+                String vf = com.grandline.quest.QuestRegistry.variantFaction(q.id());
+                if (q.bounty() > 0 && (vf == null ? com.grandline.quest.QuestRegistry.get(q.id() + ".marine") == null : vf.equals("marine"))) bad.add(q.id() + " grants a bounty without a Marine variant");
+            }
+            for (var n : com.grandline.npc.notable.NotableCharacters.recruitable()) {
+                if (com.grandline.quest.QuestRegistry.get(n.recruitQuest()) == null) bad.add(n.id() + " has no " + n.recruitQuest());
+                if (com.grandline.quest.QuestRegistry.get(n.personalQuest()) == null) bad.add(n.id() + " has no " + n.personalQuest());
+            }
+            Set<String> islands = new HashSet<>();
+            for (String id : story) {
+                var q = com.grandline.quest.QuestRegistry.get(id);
+                if (q != null && !q.island().equals("*")) islands.add(q.island());
+            }
+            check("story quest graph is consistent", bad.isEmpty(), bad.isEmpty() ? story.size() + " story quests across " + islands.size() + " islands" : String.join("; ", bad.subList(0, Math.min(10, bad.size()))));
+            return 0;
+        });
+        // ---------- faction variants ----------
+        steps.add(s -> {
+            CharacterData m = new CharacterData();
+            m.faction = Faction.MARINE;
+            CharacterData pi = new CharacterData();
+            pi.faction = Faction.PIRATE;
+            var base = com.grandline.quest.QuestRegistry.get("shells_2");
+            var marine = com.grandline.quest.QuestRegistry.get("shells_2.marine");
+            m.completedQuests.add("shells_1.marine");
+            pi.completedQuests.add("shells_1");
+            boolean ok = com.grandline.quest.QuestRegistry.resolve("shells_2", m).equals("shells_2.marine") && com.grandline.quest.QuestRegistry.resolve("shells_2", pi).equals("shells_2")
+                    && !com.grandline.quest.QuestRegistry.requirementsMet(m, base) && com.grandline.quest.QuestRegistry.requirementsMet(m, marine)
+                    && com.grandline.quest.QuestRegistry.requirementsMet(pi, base) && !com.grandline.quest.QuestRegistry.requirementsMet(pi, marine);
+            m.completedQuests.add("shells_2.marine");
+            ok &= com.grandline.quest.QuestRegistry.isDone(m, "shells_2") && com.grandline.quest.QuestRegistry.requirementsMet(m, com.grandline.quest.QuestRegistry.get("recruit_petra"));
+            check("faction variants resolve and gate correctly", ok, "");
+            return 0;
+        });
+        // ---------- spawning a notable, yielding, permanent death ----------
+        steps.add(s -> {
+            ServerLevel l = ow(s);
+            WorldPlan p = WorldPlan.of(s);
+            var n = com.grandline.npc.notable.NotableCharacters.get("fumio");
+            Island isl = p.byId(n.island());
+            l.getChunk((isl.x + n.dx()) >> 4, (isl.z + n.dz()) >> 4);
+            HumanoidNpc npc = com.grandline.npc.notable.NotableSpawner.spawnNow(l, "fumio");
+            var st = com.grandline.npc.notable.NotableState.get(s);
+            check("notable spawns on its home island", npc != null && npc.isAlive() && "fumio".equals(npc.notableId()) && npc.flag(com.grandline.npc.GLNpc.FLAG_NOTABLE)
+                            && npc.isPersistenceRequired() && npc.tier() == n.tier() && "black_leg".equals(npc.styleId()) && st.status("fumio") == com.grandline.npc.notable.NotableState.Status.ALIVE,
+                    npc == null ? "no stand spot / not spawned" : npc.getName().getString() + " at " + npc.blockPosition() + ", hp " + (int) npc.getMaxHealth());
+            if (npc == null) return 0;
+            FakePlayer fp = fake(s);
+            check("friendly notable does not attack players", !npc.isHostileTo(fp), "");
+            CompoundTag t = new CompoundTag();
+            t.putString("greeting", "dialogue.grandline.greet.elder");
+            net.minecraft.nbt.ListTag opts = new net.minecraft.nbt.ListTag();
+            CharacterData d = Characters.get(fp);
+            com.grandline.npc.notable.NotableHooks.decorate(fp, npc, d, t, opts, true);
+            check("notable dialogue: own greeting and quest offer", t.getString("greeting").equals("dialogue.grandline.notable.fumio") && opts.toString().contains("quest:ember_east_1"), opts.toString());
+            npc.hurt(fp.damageSources().playerAttack(fp), 100000);
+            check("beaten friendly notable yields instead of dying", npc.isAlive() && npc.getHealth() > 0 && npc.flag(com.grandline.npc.GLNpc.FLAG_SURRENDER), "hp " + npc.getHealth());
+            npc.kill();
+            check("killed notable is gone for good", st.status("fumio") == com.grandline.npc.notable.NotableState.Status.DEFEATED
+                    && com.grandline.npc.notable.NotableSpawner.spawnNow(l, "fumio") == null, "status " + st.status("fumio"));
+            return 0;
+        });
+        // ---------- recruiting a crew member ----------
+        steps.add(s -> {
+            // keep the crew candidate's home loaded and ticking, as it would be with a player nearby
+            var n = com.grandline.npc.notable.NotableCharacters.get("petra");
+            Island isl = WorldPlan.of(s).byId(n.island());
+            ChunkPos cp = new ChunkPos((isl.x + n.dx()) >> 4, (isl.z + n.dz()) >> 4);
+            ow(s).getChunkSource().addRegionTicket(TicketType.FORCED, cp, 3, cp);
+            return 40;
+        });
+        steps.add(s -> {
+            ServerLevel l = ow(s);
+            HumanoidNpc petra = com.grandline.npc.notable.NotableSpawner.spawnNow(l, "petra");
+            if (petra == null) {
+                check("crew candidate spawned", false, "petra not spawned");
+                return 0;
+            }
+            FakePlayer fp = fake(s);
+            CharacterData d = Characters.get(fp);
+            CompoundTag t = new CompoundTag();
+            net.minecraft.nbt.ListTag opts = new net.minecraft.nbt.ListTag();
+            com.grandline.npc.notable.NotableHooks.decorate(fp, petra, d, t, opts, false);
+            boolean noRecruitYet = !opts.toString().contains("recruit");
+            d.completedQuests.add("recruit_petra");
+            opts = new net.minecraft.nbt.ListTag();
+            com.grandline.npc.notable.NotableHooks.decorate(fp, petra, d, t, opts, false);
+            boolean recruitOffered = opts.toString().contains("\"recruit\"");
+            boolean joined = com.grandline.npc.crew.CrewManager.recruit(fp, petra);
+            check("recruit option appears only after the recruitment quest", noRecruitYet && recruitOffered && joined, opts.toString());
+            float hp = petra.getHealth();
+            petra.hurt(fp.damageSources().playerAttack(fp), 5);
+            boolean crewOk = com.grandline.npc.crew.CrewManager.isCrewOf(petra, fp) && petra.isAlliedTo(fp) && !petra.isHostileTo(fp) && petra.getHealth() == hp
+                    && com.grandline.npc.crew.CrewManager.members(s, d.characterId).contains("petra")
+                    && com.grandline.npc.notable.NotableState.get(s).status("petra") == com.grandline.npc.notable.NotableState.Status.RECRUITED;
+            check("crew member is allied, protected from friendly fire and saved per character", crewOk, "members " + com.grandline.npc.crew.CrewManager.members(s, d.characterId));
+            CompoundTag saved = com.grandline.npc.crew.CrewManager.data(s).save(new CompoundTag(), s.registryAccess());
+            check("crew data round trip", saved.toString().contains("petra") && saved.getList("crews", 10).size() >= 1, "");
+            com.grandline.npc.crew.CrewManager.disband(s, d.characterId);
+            check("crew disbands (captain's permadeath)", com.grandline.npc.crew.CrewManager.members(s, d.characterId).isEmpty() && !com.grandline.npc.crew.CrewManager.isCrew(petra)
+                    && petra.faction() == Faction.MARINE, "status " + com.grandline.npc.notable.NotableState.get(s).status("petra") + ", faction " + petra.faction()
+                    + ", tracked " + (l.getEntity(petra.getUUID()) != null));
+            d.completedQuests.remove("recruit_petra");
+            return 0;
+        });
+        // ---------- quest chain with retroactive discovery and auto-advance ----------
+        steps.add(s -> {
+            FakePlayer fp = fake(s);
+            CharacterData d = Characters.get(fp);
+            Faction before = d.faction;
+            d.faction = Faction.PIRATE;
+            d.discoveredIslands.add("shells_town");
+            boolean started = com.grandline.quest.Quests.start(fp, "ember_east_1");
+            com.grandline.quest.Quests.progress(fp, "kill", "bandit", 3);
+            boolean ok = started && d.completedQuests.contains("ember_east_1") && d.completedQuests.contains("ember_east_2") && d.questProgress.containsKey("shells_1");
+            check("story chain advances (pre-discovered island credited, next arc auto-started)", ok, "active " + d.questProgress.keySet());
+            for (String id : List.of("ember_east_1", "ember_east_2")) d.completedQuests.remove(id);
+            d.questProgress.remove("shells_1");
+            d.faction = before;
+            return 0;
+        });
     }
 
     // ============================================================== PHASE 2

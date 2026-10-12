@@ -18,10 +18,21 @@ public final class Quests {
     public static boolean start(ServerPlayer sp, String questId) {
         QuestDef q = QuestRegistry.get(questId);
         CharacterData d = Characters.get(sp);
-        if (q == null || d.questProgress.containsKey(questId) || (d.completedQuests.contains(questId) && !q.repeatable())) return false;
-        for (String req : q.requires()) if (!d.completedQuests.contains(req)) return false;
-        d.questProgress.put(questId, new CompoundTag());
+        if (q == null || d.questProgress.containsKey(questId) || (QuestRegistry.isDone(d, questId) && !q.repeatable())) return false;
+        if (!QuestRegistry.requirementsMet(d, q)) return false;
+        CompoundTag prog = new CompoundTag();
+        d.questProgress.put(questId, prog);
         sp.sendSystemMessage(Component.translatable("grandline.quest.started", Component.translatable(q.titleKey())).withStyle(ChatFormatting.AQUA));
+        // islands discovered before the quest began still count
+        boolean credited = false;
+        for (int i = 0; i < q.objectives().size(); i++) {
+            QuestDef.Objective o = q.objectives().get(i);
+            if (o.type().equals("discover") && d.discoveredIslands.contains(o.target())) {
+                prog.putInt("o" + i, o.count());
+                credited = true;
+            }
+        }
+        if (credited && complete(q, prog)) finish(sp, d, q);
         CharacterManager.markDirty(sp);
         return true;
     }
@@ -67,7 +78,7 @@ public final class Quests {
             sp.sendSystemMessage(Component.translatable("grandline.level.up", d.level).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
             CharacterManager.applyAttributes(sp);
         }
-        if (q.next() != null) start(sp, q.next());
+        if (q.next() != null) start(sp, QuestRegistry.resolve(q.next(), d));
         CharacterManager.markDirty(sp);
     }
 

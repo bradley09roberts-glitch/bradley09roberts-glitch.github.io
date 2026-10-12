@@ -44,6 +44,7 @@ public final class ServerEvents {
         TerrainChanges.tick(e.getServer());
         PopulationManager.tick(e.getServer());
         com.grandline.world.Encounters.tick(e.getServer());
+        com.grandline.npc.notable.NotableSpawner.tick(e.getServer());
     }
 
     @SubscribeEvent
