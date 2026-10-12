@@ -385,7 +385,7 @@ final class StoryQuests {
                 .req("laughtale_1").flag("ending_saltfire_kindled").add();
         q("laughtale_2.marine", "aurelia", "lodestar_island", "finale").poneglyph(1).reward(300000, 1_000_000).rep("marine", 1000)
                 .req("laughtale_1").flag("ending_true_justice").add();
-        q("laughtale_2.revolutionary", "aurelia", "lodestar_island", "finale").poneglyph(1).discover("mary_geoise").reward(300000, 1_000_000)
+        q("laughtale_2.revolutionary", "aurelia", "lodestar_island", "finale").poneglyph(1).talk("juniper").reward(300000, 1_000_000)
                 .rep("revolutionary", 1000).req("laughtale_1").flag("ending_dawn").add();
         q("laughtale_2.bounty_hunter", "aurelia", "lodestar_island", "finale").poneglyph(1).reward(300000, 3_000_000).rep("bounty_hunter", 1000)
                 .req("laughtale_1").flag("ending_last_bounty").add();
