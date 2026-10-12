@@ -264,6 +264,25 @@ public final class InventoryDump {
             quests.add(o);
         }
         root.add("quests", quests);
+
+        JsonArray notables = new JsonArray();
+        for (var n : com.grandline.npc.notable.NotableCharacters.all()) {
+            JsonObject o = new JsonObject();
+            o.addProperty("id", n.id());
+            o.addProperty("nameKey", n.nameKey());
+            o.addProperty("titleKey", n.titleKey());
+            o.addProperty("group", n.group().name().toLowerCase(Locale.ROOT));
+            o.addProperty("faction", n.faction().name().toLowerCase(Locale.ROOT));
+            o.addProperty("island", n.island());
+            o.addProperty("tier", n.tier());
+            o.addProperty("fruit", n.fruit() == null ? "" : n.fruit());
+            o.addProperty("style", n.style());
+            o.addProperty("race", n.race());
+            o.addProperty("recruitable", n.recruitable());
+            o.addProperty("crewRole", n.crewRole() == null ? "" : n.crewRole());
+            notables.add(o);
+        }
+        root.add("notables", notables);
         root.addProperty("abilities", Abilities.all().size());
 
         Path out = server.getServerDirectory().resolve("inventory.json");

@@ -35,7 +35,16 @@ final class DimensionTests {
     private static void load(ServerLevel l, double x, double z, int radius) {
         ChunkPos cp = new ChunkPos(BlockPos.containing(x, 0, z));
         l.getChunkSource().addRegionTicket(TicketType.FORCED, cp, radius, cp);
+        l.setChunkForced(cp.x, cp.z, true); // a dimension with no players only ticks entities while it has forced chunks
         l.getChunk(cp.x, cp.z);
+    }
+
+    /** Keep the chunks under a moving ship ticking (players aboard would do this in real play). */
+    private static void follow(ShipEntity ship) {
+        if (ship == null || ship.isRemoved() || !(ship.level() instanceof ServerLevel l)) return;
+        ChunkPos cp = new ChunkPos(ship.blockPosition());
+        l.getChunkSource().addRegionTicket(TicketType.FORCED, cp, 3, cp);
+        l.setChunkForced(cp.x, cp.z, true);
     }
 
     private static ShipEntity findShip(ServerLevel l, UUID shipId, double x, double z, double r) {
@@ -148,16 +157,24 @@ final class DimensionTests {
         steps.add(s -> {
             if (id[0] == null) return 0;
             ServerLevel sky = s.getLevel(SkyWorld.LEVEL);
+            follow(sh[0]);
+            if (waited[0] % 20 == 0 && sh[0] != null && hand[0] != null)
+                com.grandline.GrandLine.LOGGER.info("[trace] ship y={} crew y={} removed={} carried={} ride={} t={}", sh[0].getY(), hand[0].getY(), hand[0].isRemoved(), sh[0].carries(hand[0]), sh[0].ride, sh[0].rideT);
             ShipEntity up = findShip(sky, id[0], SkyWorld.ARRIVAL_X, SkyWorld.ARRIVAL_Z, 80);
             if (up == null && ++waited[0] < 600) return -1;
             SelfTest.check("the Knock Up Stream carries a ship to the White Sea", up != null, up == null ? "not found after " + waited[0] + " ticks" : "arrived at " + up.blockPosition().toShortString() + " after " + waited[0] + " ticks");
+            sh[0] = up;
+            return 5; // let the new ship lay out its deck before judging who stands on it
+        });
+        steps.add(s -> {
+            ShipEntity up = sh[0];
             if (up == null) return 0;
+            ServerLevel sky = (ServerLevel) up.level();
             HumanoidNpc crew = null;
             for (HumanoidNpc n : sky.getEntitiesOfClass(HumanoidNpc.class, up.getBoundingBox().inflate(12))) if (n.getUUID().equals(hand[0].getUUID())) crew = n;
             SelfTest.check("crew on deck travels with the ship", crew != null && up.carries(crew), crew == null ? "crew member missing" : "on deck " + (int) crew.distanceTo(up) + " blocks from centre");
             var rec = ShipRegistry.get(s).get(id[0]);
             SelfTest.check("ship registry records the new dimension", rec != null && rec.dim.equals("grandline:sky"), rec == null ? "no record" : rec.dim);
-            sh[0] = up;
             BlockPos ku = SpecialRoutes.knockUpPoint(s);
             load(s.overworld(), ku.getX() + 1400, ku.getZ(), 3);
             SpecialRoutes.startRide(up, SpecialRoutes.CLOUD_FALL);
@@ -167,6 +184,7 @@ final class DimensionTests {
         steps.add(s -> {
             if (id[0] == null) return 0;
             BlockPos ku = SpecialRoutes.knockUpPoint(s);
+            follow(sh[0]);
             ShipEntity down = findShip(s.overworld(), id[0], ku.getX() + 1400, ku.getZ(), 80);
             if (down == null && ++waited[0] < 400) return -1;
             SelfTest.check("the Cloud End drops the ship back to the Blue Sea", down != null, down == null ? "not found" : "splashed down at " + down.blockPosition().toShortString());
@@ -197,6 +215,7 @@ final class DimensionTests {
         steps.add(s -> {
             if (did[0] == null) return 0;
             ServerLevel deep = s.getLevel(DeepWorld.LEVEL);
+            follow(dv[0]);
             ShipEntity down = findShip(deep, did[0], DeepWorld.ENTRY_X, DeepWorld.ENTRY_Z, 80);
             if (down == null && ++waited[0] < 700) return -1;
             SelfTest.check("a coated ship sailing onto the dive point sinks to the deep sea", down != null, down == null ? "not found after " + waited[0] + " ticks" : "arrived after " + waited[0] + " ticks at " + down.blockPosition().toShortString());
@@ -229,6 +248,7 @@ final class DimensionTests {
         steps.add(s -> {
             if (did[0] == null) return 0;
             Vec3 out = SpecialRoutes.newWorldSurface(s);
+            follow(dv[0]);
             ShipEntity up = findShip(s.overworld(), did[0], out.x, out.z, 80);
             if (up == null && ++waited[0] < 500) return -1;
             SelfTest.check("sailing out of the deep sea surfaces in the New World", up != null, up == null ? "not found" : "surfaced at " + up.blockPosition().toShortString());

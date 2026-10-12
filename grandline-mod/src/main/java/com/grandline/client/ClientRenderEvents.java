@@ -47,14 +47,29 @@ public final class ClientRenderEvents {
     public static void hand(RenderHandEvent e) {
         var p = Minecraft.getInstance().player;
         if (p == null) return;
+        PoseStack ps = e.getPoseStack();
+        // both hands share one pose stack: the main hand's transform must be undone before the off hand renders
+        if (e.getHand() == net.minecraft.world.InteractionHand.OFF_HAND) {
+            if (lastHand != null) {
+                ps.mulPose(Axis.ZP.rotationDegrees(-lastHand[5]));
+                ps.mulPose(Axis.YP.rotationDegrees(-lastHand[4]));
+                ps.mulPose(Axis.XP.rotationDegrees(-lastHand[3]));
+                ps.translate(-lastHand[0], -lastHand[1], -lastHand[2]);
+                lastHand = null;
+            }
+            return;
+        }
+        lastHand = null;
         float[] f = Animator.firstPerson(p, e.getPartialTick());
         if (f == null) return;
-        PoseStack ps = e.getPoseStack();
         ps.translate(f[0], f[1], f[2]);
         ps.mulPose(Axis.XP.rotationDegrees(f[3]));
         ps.mulPose(Axis.YP.rotationDegrees(f[4]));
         ps.mulPose(Axis.ZP.rotationDegrees(f[5]));
+        lastHand = f;
     }
+
+    private static float[] lastHand;
 
     @SubscribeEvent
     public static void camera(ViewportEvent.ComputeCameraAngles e) {

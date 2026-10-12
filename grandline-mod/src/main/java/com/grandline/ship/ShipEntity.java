@@ -215,12 +215,17 @@ public class ShipEntity extends Entity {
 
     /** True when an entity stands on (or just above) this ship's deck. */
     public boolean carries(Entity e) {
+        return carries(e, 0);
+    }
+
+    /** As {@link #carries(Entity)}, judged against the deck as it was before this tick's rise of {@code dy}. */
+    boolean carries(Entity e, double dy) {
         if (e == this || e.isPassenger() || e instanceof ShipPart || e instanceof ShipEntity) return false;
         AABB box = e.getBoundingBox();
         for (ShipPart p : parts) {
             AABB pb = p.getBoundingBox();
             if (box.maxX < pb.minX || box.minX > pb.maxX || box.maxZ < pb.minZ || box.minZ > pb.maxZ) continue;
-            double above = box.minY - pb.maxY;
+            double above = box.minY - (pb.maxY - dy);
             if (above > -0.35 && above < 2.0) return true;
         }
         return false;
@@ -252,10 +257,11 @@ public class ShipEntity extends Entity {
                 // players are client-authoritative: their own client applies the carry
                 if (!level().isClientSide || !ShipClientHooks.isLocalPlayer(p)) continue;
             } else if (level().isClientSide) continue;
-            if (!carries(e)) continue;
+            if (!carries(e, dy)) continue;
             double rx = e.getX() - cx, rz = e.getZ() - cz;
             double nx = rx * c - rz * s, nz = rx * s + rz * c;
-            e.setPos(cx + nx + dx, e.getY() + Math.max(0, dy), cz + nz + dz);
+            e.setPos(cx + nx + dx, e.getY() + dy, cz + nz + dz);
+            if (dy < 0) e.fallDistance = 0;
             e.setYRot(e.getYRot() + dyaw);
             e.setYHeadRot(e.getYHeadRot() + dyaw);
             if (e instanceof LivingEntity le) le.yBodyRot += dyaw;

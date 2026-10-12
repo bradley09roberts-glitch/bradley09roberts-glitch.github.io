@@ -37,7 +37,7 @@ public final class QuestRegistry {
                 List.of("shipwrights_favor"), "path_choice", null, false, "embers");
         q("path_choice", "elder", "*", List.of(o("talk", "path_contact", 1)), 150, 0, 0, Map.of(), List.of(), List.of("first_voyage"), null, "path_chosen", false, "embers");
         // ---------------- Arc 2: "The Gate of Reverse Mountain" ----------------
-        q("execution_town", "station_master", "loguetown", List.of(o("discover", "loguetown", 1), o("talk", "legend", 1)), 600, 2000, 0, Map.of(), List.of(), List.of(), "reverse_mountain", null, false, "gate");
+        q("execution_town", "station_master", "loguetown", List.of(o("discover", "loguetown", 1), o("talk", "bartolo", 1)), 600, 2000, 0, Map.of(), List.of(), List.of(), "reverse_mountain", null, false, "gate");
         q("reverse_mountain", "lighthouse_keeper", "twin_capes", List.of(o("discover", "twin_capes", 1)), 1200, 3000, 0, Map.of(), List.of(() -> new ItemStack(ModItems.LOG_POSE.get())), List.of(), "whisky_welcome", null, false, "gate");
         q("whisky_welcome", "bartender", "whisky_peak", List.of(o("discover", "whisky_peak", 1), o("kill", "bounty_hunter_ambusher", 0), o("kill", "pirate", 6)), 1500, 5000, 2_000_000, Map.of("bounty_hunter", -50), List.of(), List.of(), null, null, false, "gate");
         // ---------------- Arc 1 side: Arlong Park liberation (East Blue) ----------------

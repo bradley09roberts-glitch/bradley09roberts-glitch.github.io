@@ -18,13 +18,28 @@ import java.util.Map;
 public final class Animator {
     private record Playing(AnimDef def, float start, float speed) {}
 
+    private record State(String name, float start) {}
+
     private static final Map<Integer, Playing> ACTIVE = new HashMap<>();
-    private static final Map<Integer, String> STATE = new HashMap<>();
+    private static final Map<Integer, State> STATE = new HashMap<>();
+    /** > 0 while the first-person hand is being rendered: animations must not pose that arm. */
+    public static int firstPersonHand;
+
+    /** Looping states that expire on their own unless replayed (seconds); others last until replaced. */
+    private static float stateTimeout(String name) {
+        return switch (name) {
+            case "iai_stance", "stance" -> 8f;
+            case "surrender" -> 20f;
+            case "meditate", "sit_ground" -> 120f;
+            default -> Float.MAX_VALUE;
+        };
+    }
 
     public static void play(int entityId, String name, float speed) {
         switch (name) {
-            case "guard", "knocked_down", "surrender", "iai_stance" -> {
-                STATE.put(entityId, name);
+            case "guard", "knocked_down", "surrender", "iai_stance", "stance", "meditate", "sit_ground" -> {
+                State cur = STATE.get(entityId);
+                if (cur == null || !cur.name().equals(name)) STATE.put(entityId, new State(name, ClientState.clientTicks));
                 return;
             }
             case "guard_end", "get_up", "stance_exit" -> {
@@ -46,13 +61,18 @@ public final class Animator {
     public static AnimDef current(int id, float partial, float[] timeOut) {
         Playing p = ACTIVE.get(id);
         if (p == null) {
-            String st = STATE.get(id);
+            State st = STATE.get(id);
             if (st == null) return null;
-            AnimDef def = AnimLibrary.get(st);
+            float age = (ClientState.clientTicks + partial - st.start()) / 20f;
+            if (age > stateTimeout(st.name())) {
+                STATE.remove(id);
+                return null;
+            }
+            AnimDef def = AnimLibrary.get(st.name());
             if (def == null) return null;
-            float t = ((ClientState.clientTicks + partial) / 20f) % Math.max(0.05f, def.length());
+            float t = age % Math.max(0.05f, def.length());
             timeOut[0] = t;
-            timeOut[1] = 1f;
+            timeOut[1] = Mth.clamp(age / 0.15f, 0, 1); // blend into the state
             return def;
         }
         float t = (ClientState.clientTicks + partial - p.start) / 20f * p.speed;
@@ -76,6 +96,7 @@ public final class Animator {
         float arm = com.grandline.client.render.RaceVisuals.armScale(race), leg = com.grandline.client.render.RaceVisuals.legScale(race);
         model.rightArm.yScale = model.leftArm.yScale = arm;
         model.rightLeg.yScale = model.leftLeg.yScale = leg;
+        if (firstPersonHand > 0) return; // the first-person arm keeps its vanilla pose; the item gets fp_right instead
         float partial = ageInTicks - (float) Math.floor(ageInTicks);
         float[] tw = new float[2];
         AnimDef def = current(entity.getId(), partial, tw);
@@ -117,7 +138,9 @@ public final class Animator {
         float[] r = tr.sampleRot(tw[0]);
         float[] p = tr.samplePos(tw[0]);
         float w = tw[1];
-        return new float[]{p == null ? 0 : p[0] * w / 16f, p == null ? 0 : p[1] * w / 16f, p == null ? 0 : p[2] * w / 16f,
+        // lunges and hops scale with body size (giants cover more ground, Tontatta less)
+        float k = w / 16f * (e instanceof LivingEntity le ? le.getScale() : 1f);
+        return new float[]{p == null ? 0 : p[0] * k, p == null ? 0 : p[1] * k, p == null ? 0 : p[2] * k,
                 r == null ? 0 : r[0] * w, r == null ? 0 : r[1] * w, r == null ? 0 : r[2] * w};
     }
 

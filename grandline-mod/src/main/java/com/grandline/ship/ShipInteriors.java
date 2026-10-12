@@ -113,7 +113,10 @@ public final class ShipInteriors {
         });
         for (UUID id : OCCUPANTS.values()) {
             ShipEntity ship = ShipTravel.find(server, id);
-            if (ship != null) keepLoaded(ship);
+            if (ship != null) {
+                keepLoaded(ship);
+                ((ServerLevel) ship.level()).resetEmptyTime(); // keep the ship's sea ticking while its crew is below deck
+            }
         }
     }
 

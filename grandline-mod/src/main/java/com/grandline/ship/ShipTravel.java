@@ -55,8 +55,11 @@ public final class ShipTravel {
         List<Rider> riders = new ArrayList<>();
         for (Entity p : ship.getPassengers()) riders.add(new Rider(p, ship.seatIndex(p), ship.toLocal(p.position()), p.getYRot() - ship.getYRot()));
         double reach = ship.cls.length / 2.0 + 2;
-        for (Entity e : from.getEntities(ship, ship.getBoundingBox().inflate(reach, 6, reach), en -> !(en instanceof ShipPart) && !en.isPassenger() && ship.carries(en)))
-            riders.add(new Rider(e, -1, ship.toLocal(e.position()), e.getYRot() - ship.getYRot()));
+        // transfers run mid-tick: the deck parts and the crew are both still where the last tick left them
+        for (Entity e : from.getEntities(ship, ship.getBoundingBox().inflate(reach, 8, reach), en -> !(en instanceof ShipPart) && !en.isPassenger() && ship.carries(en, 0))) {
+            Vec3 l = ship.toLocal(e.position());
+            riders.add(new Rider(e, -1, new Vec3(l.x, ship.cls.freeboard + 0.05, l.z), e.getYRot() - ship.getYRot()));
+        }
 
         CompoundTag tag = new CompoundTag();
         ship.saveWithoutId(tag);
@@ -69,7 +72,7 @@ public final class ShipTravel {
         ShipRegistry.get(to.getServer()).update(n);
 
         for (Rider r : riders) {
-            Vec3 w = n.toWorld(r.local().x, Math.max(0.6, r.local().y), r.local().z);
+            Vec3 w = r.seat() >= 0 ? n.toWorld(r.local().x, Math.max(0.6, r.local().y), r.local().z) : n.toWorld(r.local().x, r.local().y, r.local().z);
             float ry = yaw + r.relYaw();
             Entity e = r.entity();
             if (e instanceof ServerPlayer sp) {

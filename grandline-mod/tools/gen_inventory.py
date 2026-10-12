@@ -260,12 +260,18 @@ named = inv.get("notables", [])
 if named:
     w("### Named original characters")
     w("")
-    w("| Character | Title / role | Faction | Home | Status | Notes |")
-    w("|---|---|---|---|---|---|")
-    for n in named:
+    w(f"{len(named)} original characters (no canon characters appear). Each spawns once per world on its home island; "
+      "killed characters stay dead and their fruit returns to the world. Recruitable ones can join your crew.")
+    w("")
+    w("| Character | Title | Group | Faction | Home | Tier | Fruit | Style | Crew | Status | Notes |")
+    w("|---|---|---|---|---|---|---|---|---|---|---|")
+    for n in sorted(named, key=lambda n: (n["group"], -n["tier"])):
         hits = mentioned(n["id"])
-        st = n.get("status") or ("tested" if hits else "playable")
-        w(f"| {n['name']} | {n.get('title', '')} | {n.get('faction', '')} | {n.get('island', '')} | {st} | {'; '.join(hits)} |")
+        st = "tested" if hits else "playable"
+        name = LANG.get(n["nameKey"], n["id"])
+        title = LANG.get(n["titleKey"], "")
+        crew = n["crewRole"] if n["recruitable"] else ""
+        w(f"| {name} | {title} | {n['group']} | {n['faction']} | {n['island']} | {n['tier']} | {n['fruit'] or '—'} | {n['style']} | {crew} | {st} | {'; '.join(hits)} |")
     w("")
 w("### NPC roles (archetypes)")
 w("")

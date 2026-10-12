@@ -38,6 +38,11 @@ public final class NpcOutcomes {
 
     public static void npcArrested(GLNpc npc, ServerPlayer by) {
         CharacterData d = Characters.get(by);
+        // "arrest" objectives name a role ("pirate_captain"), a faction ("pirate") or a notable
+        com.grandline.quest.Quests.progress(by, "arrest", npc.role(), 1);
+        String faction = npc.faction().name().toLowerCase(java.util.Locale.ROOT);
+        if (!faction.equals(npc.role())) com.grandline.quest.Quests.progress(by, "arrest", faction, 1);
+        if (!npc.notableId().isEmpty()) com.grandline.quest.Quests.progress(by, "arrest", npc.notableId(), 1);
         long reward = rewardFor(npc);
         if (npc.faction() == Faction.PIRATE || npc.faction() == Faction.WILD) {
             d.beli += reward;

@@ -140,6 +140,7 @@ public final class SpecialRoutes {
     public static void startRide(ShipEntity ship, int ride) {
         ship.ride = ride;
         ship.rideT = 0;
+        com.grandline.GrandLine.LOGGER.info("Ship {} starts route {} at {}", ship.shipName(), ride, ship.blockPosition().toShortString());
         String key = switch (ride) {
             case KNOCK_UP -> "grandline.knock_up.launch";
             case CLOUD_FALL -> "grandline.sky.cloud_end";

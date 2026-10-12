@@ -46,7 +46,8 @@ public final class DeepWorld {
     /** Water-tight skin: outside every dome but touching one. */
     public static boolean isMembrane(int x, int y, int z) {
         if (y <= 63 || inAnyDome(x, y, z)) return false;
-        return inAnyDome(x + 1, y, z) || inAnyDome(x - 1, y, z) || inAnyDome(x, y + 1, z) || inAnyDome(x, y, z + 1) || inAnyDome(x, y, z - 1);
+        return inAnyDome(x + 1, y, z) || inAnyDome(x - 1, y, z) || inAnyDome(x, y + 1, z) || inAnyDome(x, y - 1, z)
+                || inAnyDome(x, y, z + 1) || inAnyDome(x, y, z - 1);
     }
 
     /** Dome whose footprint covers (x, z), or null. */
