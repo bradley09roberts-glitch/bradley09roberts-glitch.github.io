@@ -64,6 +64,32 @@ public final class NpcOutcomes {
         CharacterManager.markDirty(by);
     }
 
+    /** Players outlaws have just robbed: the gang leaves them alone until this game time. And when each was last robbed. */
+    private static final java.util.Map<java.util.UUID, Long> SPARED = new java.util.concurrent.ConcurrentHashMap<>(), ROBBED = new java.util.concurrent.ConcurrentHashMap<>();
+    public static final int SPARE_TICKS = 20 * 60, ROB_COOLDOWN = 20 * 180;
+
+    public static boolean spared(ServerPlayer sp) {
+        return SPARED.getOrDefault(sp.getUUID(), 0L) > sp.level().getGameTime();
+    }
+
+    /** Whether outlaws may take Beli now (once per three minutes); records the robbery. */
+    public static boolean mayRob(ServerPlayer sp) {
+        long now = sp.level().getGameTime();
+        if (ROBBED.getOrDefault(sp.getUUID(), Long.MIN_VALUE / 2) + ROB_COOLDOWN > now) return false;
+        ROBBED.put(sp.getUUID(), now);
+        return true;
+    }
+
+    /** The robbers and every outlaw near them stop fighting the player and leave them be for a minute. */
+    public static void spare(ServerPlayer sp) {
+        SPARED.put(sp.getUUID(), sp.level().getGameTime() + SPARE_TICKS);
+        for (GLNpc n : sp.serverLevel().getEntitiesOfClass(GLNpc.class, sp.getBoundingBox().inflate(48),
+                n -> n.faction() == Faction.WILD || n.faction() == Faction.PIRATE)) {
+            if (n.getTarget() == sp) n.setTarget(null);
+            if (n.getLastHurtByMob() == sp) n.setLastHurtByMob(null);
+        }
+    }
+
     public static long rewardFor(GLNpc npc) {
         return (long) (Math.pow(npc.tier(), 2.3) * 400);
     }

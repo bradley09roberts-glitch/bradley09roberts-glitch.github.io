@@ -20,6 +20,48 @@ public class ChartScreen extends Screen {
         panZ = data.getInt("pz");
     }
 
+    /** Close-up terrain around the player (loaded chunks, one pixel per block), shown when zoomed in. */
+    private static final net.minecraft.resources.ResourceLocation LOCAL_ID = com.grandline.GrandLine.id("chart_local");
+    private net.minecraft.client.renderer.texture.DynamicTexture local;
+    private int localSize, localX, localZ;
+    private boolean framed;
+
+    @Override
+    protected void init() {
+        var mc = net.minecraft.client.Minecraft.getInstance();
+        if (local == null && mc.level != null && mc.player != null) {
+            localSize = Math.min(512, (mc.options.getEffectiveRenderDistance() * 2 + 1) * 16);
+            localX = mc.player.getBlockX();
+            localZ = mc.player.getBlockZ();
+            local = new net.minecraft.client.renderer.texture.DynamicTexture(localSize, localSize, true);
+            com.grandline.client.TerrainSampler.sample(mc.level, localX, localZ, localSize, local.getPixels());
+            local.upload();
+            mc.getTextureManager().register(LOCAL_ID, local);
+        }
+        if (!framed) { // open on the route: zoomed so the player and the target both fit, like a GPS
+            framed = true;
+            double minX = panX, maxX = panX, minZ = panZ, maxZ = panZ;
+            if (com.grandline.client.Guidance.here()) {
+                minX = Math.min(minX, com.grandline.client.Guidance.tx);
+                maxX = Math.max(maxX, com.grandline.client.Guidance.tx);
+                minZ = Math.min(minZ, com.grandline.client.Guidance.tz);
+                maxZ = Math.max(maxZ, com.grandline.client.Guidance.tz);
+                panX = (minX + maxX) / 2;
+                panZ = (minZ + maxZ) / 2;
+            }
+            double span = Math.max(300, Math.max(maxX - minX, maxZ - minZ) * 1.4);
+            zoom = Math.max(1, Math.min(MAX_ZOOM, 70000.0 / span));
+        }
+    }
+
+    @Override
+    public void removed() {
+        if (local != null) net.minecraft.client.Minecraft.getInstance().getTextureManager().release(LOCAL_ID);
+        super.removed();
+    }
+
+    private static final double MAX_ZOOM = 4000;
+
     private double scale() {
         return Math.min(width, height) / 70000.0 * zoom;
     }
@@ -50,14 +92,33 @@ public class ChartScreen extends Screen {
             int a = sx(rl - WorldLayout.RED_LINE_HALF_WIDTH), b = sx(rl + WorldLayout.RED_LINE_HALF_WIDTH);
             g.fill(a, 0, Math.max(a + 2, b), height, 0xC08E2A1E);
         }
+        boolean close = scale() > 0.35;
+        if (close) { // island land under the terrain close-up, so unloaded parts still read as land
+            ListTag land = data.getList("islands", Tag.TAG_COMPOUND);
+            for (int i = 0; i < land.size(); i++) {
+                CompoundTag e = land.getCompound(i);
+                int x = sx(e.getInt("x")), z = sz(e.getInt("z"));
+                int r = Math.max(2, (int) (e.getInt("r") * scale()));
+                if (x + r < 0 || x - r > width || z + r < 0 || z - r > height) continue;
+                g.fill(Math.max(0, x - r), Math.max(0, z - r), Math.min(width, x + r), Math.min(height, z + r), 0xC08FA25A);
+            }
+        }
+        if (close && local != null) { // the real terrain around the player
+            int a = sx(localX - localSize / 2.0), b = sz(localZ - localSize / 2.0), c = sx(localX + localSize / 2.0), d = sz(localZ + localSize / 2.0);
+            g.blit(LOCAL_ID, a, b, c - a, d - b, 0, 0, localSize, localSize, localSize, localSize);
+        }
         ListTag l = data.getList("islands", Tag.TAG_COMPOUND);
         for (int i = 0; i < l.size(); i++) {
             CompoundTag e = l.getCompound(i);
             int x = sx(e.getInt("x")), z = sz(e.getInt("z"));
             int r = Math.max(2, (int) (e.getInt("r") * scale()));
             boolean known = e.getBoolean("known");
-            g.fill(x - r - 1, z - r - 1, x + r + 1, z + r + 1, known ? INK : 0x807A6A55);
-            g.fill(x - r, z - r, x + r, z + r, known ? 0xFF8FA25A : 0x60B8A880);
+            if (close) {
+                if (zoom < 400) g.renderOutline(x - r, z - r, 2 * r, 2 * r, known ? 0x902B1D0E : 0x607A6A55);
+            } else {
+                g.fill(x - r - 1, z - r - 1, x + r + 1, z + r + 1, known ? INK : 0x807A6A55);
+                g.fill(x - r, z - r, x + r, z + r, known ? 0xFF8FA25A : 0x60B8A880);
+            }
             if (zoom > 1.8 || known) {
                 Component name = e.getString("name").isEmpty() ? Component.translatable("island.grandline." + e.getString("id")) : Component.literal(e.getString("name"));
                 g.drawString(font, name, x + r + 2, z - 4, known ? INK : INK_FADED, false);
@@ -109,6 +170,16 @@ public class ChartScreen extends Screen {
                     : e.getString("islandName").isEmpty() ? Component.translatable("island.grandline." + e.getString("island")) : Component.literal(e.getString("islandName"));
             g.drawString(font, Component.translatable("screen.grandline.chart_job." + kind, e.getString("name"), isl), x + r + 3, z - 4, col, false);
         }
+        // the tracked quest's route (GPS trail) and its target
+        if (com.grandline.client.Guidance.here()) {
+            int[] rt = com.grandline.client.Guidance.route;
+            for (int i = 0; i + 3 < rt.length; i += 2) line(g, sx(rt[i]), sz(rt[i + 1]), sx(rt[i + 2]), sz(rt[i + 3]));
+            if (rt.length < 4) line(g, sx(data.getInt("px")), sz(data.getInt("pz")), sx(com.grandline.client.Guidance.tx), sz(com.grandline.client.Guidance.tz));
+            int tx = sx(com.grandline.client.Guidance.tx), tz = sz(com.grandline.client.Guidance.tz);
+            com.grandline.client.Minimap.marker(g, tx, tz);
+            if (com.grandline.client.Guidance.label != null)
+                g.drawString(font, com.grandline.client.Guidance.label, tx + 8, tz - 4, 0xFFFFD23C, true);
+        }
         int px = sx(data.getInt("px")), pz = sz(data.getInt("pz"));
         for (int i = -3; i <= 3; i++) { // you are here: a red ink cross
             g.fill(px + i, pz + i, px + i + 1, pz + i + 1, 0xFFB01818);
@@ -116,7 +187,30 @@ public class ChartScreen extends Screen {
         }
         Component title = Component.translatable("screen.grandline.chart_title", data.getInt("discovered"), data.getInt("total"));
         g.drawString(font, title, (width - font.width(title)) / 2, 8, INK, false);
+        if (com.grandline.client.Guidance.active()) { // what the trail leads to
+            Component obj = com.grandline.client.Guidance.objective != null ? com.grandline.client.Guidance.objective : com.grandline.client.Guidance.title;
+            Component q = Component.translatable("screen.grandline.chart_guide", com.grandline.client.Guidance.title, obj);
+            g.fill((width - font.width(q)) / 2 - 4, 19, (width + font.width(q)) / 2 + 4, 31, 0xA0201810);
+            g.drawString(font, q, (width - font.width(q)) / 2, 21, 0xFFFFD23C, false);
+        }
+        Component help = Component.translatable("screen.grandline.chart_help");
+        g.drawString(font, help, (width - font.width(help)) / 2, height - 12, INK_FADED, false);
         super.render(g, mx, my, pt);
+    }
+
+    /** A leg of the route: a thick yellow line with a dark edge (marched in screen pixels, clipped to the screen). */
+    private void line(GuiGraphics g, int ax, int az, int bx, int bz) {
+        if (Math.max(ax, bx) < -4 || Math.min(ax, bx) > width + 4 || Math.max(az, bz) < -4 || Math.min(az, bz) > height + 4) return;
+        double len = Math.hypot(bx - ax, bz - az);
+        int steps = (int) Math.min(6000, Math.max(1, len));
+        for (int pass = 0; pass < 2; pass++)
+            for (int i = 0; i <= steps; i++) {
+                double t = i / (double) steps;
+                int x = (int) (ax + (bx - ax) * t), y = (int) (az + (bz - az) * t);
+                if (x < -2 || x > width + 2 || y < -2 || y > height + 2) continue;
+                if (pass == 0) g.fill(x - 2, y - 2, x + 3, y + 3, com.grandline.client.Minimap.TRAIL_EDGE);
+                else g.fill(x - 1, y - 1, x + 2, y + 2, com.grandline.client.Minimap.TRAIL);
+            }
     }
 
     @Override
@@ -124,7 +218,7 @@ public class ChartScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mx, double my, double sxv, double syv) {
-        zoom = Math.max(0.5, Math.min(40, zoom * (syv > 0 ? 1.25 : 0.8)));
+        zoom = Math.max(0.5, Math.min(MAX_ZOOM, zoom * (syv > 0 ? 1.25 : 0.8)));
         return true;
     }
 

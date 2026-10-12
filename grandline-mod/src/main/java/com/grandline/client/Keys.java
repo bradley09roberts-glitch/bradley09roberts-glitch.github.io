@@ -22,7 +22,9 @@ public final class Keys {
     public static final KeyMapping ANCHOR = new KeyMapping("key.grandline.anchor", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_X, CAT);
     public static final KeyMapping BURST = new KeyMapping("key.grandline.coup_de_burst", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, CAT);
 
-    public static final KeyMapping[] ALL = {COMBAT_MODE, DODGE, OBSERVATION, ARMAMENT, CONQUEROR, TRANSFORM, LOCK_ON, CHARACTER, CHART, NEXT_SET, ANCHOR, BURST};
+    public static final KeyMapping QUEST_LOG = new KeyMapping("key.grandline.quest_log", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_U, CAT);
+    public static final KeyMapping MINIMAP = new KeyMapping("key.grandline.minimap", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, CAT);
+    public static final KeyMapping[] ALL = {COMBAT_MODE, DODGE, OBSERVATION, ARMAMENT, CONQUEROR, TRANSFORM, LOCK_ON, CHARACTER, CHART, NEXT_SET, ANCHOR, BURST, QUEST_LOG, MINIMAP};
 
     private Keys() {}
 }

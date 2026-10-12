@@ -129,6 +129,9 @@ public abstract class GLNpc extends PathfinderMob {
     public boolean isHostileTo(LivingEntity e) {
         if (e == this) return false;
         if (e instanceof net.minecraft.server.level.ServerPlayer sp && PrisonSystem.isJailed(sp)) return false;
+        // outlaws who just robbed a player leave them be for a while (unless the player starts a new fight)
+        if ((faction == Faction.WILD || faction == Faction.PIRATE) && e instanceof net.minecraft.server.level.ServerPlayer sp
+                && NpcOutcomes.spared(sp) && getLastHurtByMob() != e) return false;
         if (getLastHurtByMob() == e || getTarget() == e) return true;
         Boolean base = com.grandline.base.CrewBases.hostility(this, e); // crew bases: hired hands and raiders
         if (base != null) return base;
@@ -159,10 +162,16 @@ public abstract class GLNpc extends PathfinderMob {
         if (Faction.isLaw(faction)) {
             NpcOutcomes.arrestPlayer(this, sp, d);
         } else if (faction == Faction.WILD || faction == Faction.PIRATE) {
-            long taken = d.beli * 3 / 10;
-            d.beli -= taken;
-            sp.sendSystemMessage(Component.translatable("grandline.knockdown.robbed", getDisplayName(), taken).withStyle(ChatFormatting.GOLD));
-            Knockdown.standUp(sp, d, 0.15f);
+            // outlaws rob once, then the whole gang lets the player go (no robbing again for three minutes)
+            if (NpcOutcomes.mayRob(sp)) {
+                long taken = d.beli * 3 / 10;
+                d.beli -= taken;
+                sp.sendSystemMessage(Component.translatable("grandline.knockdown.robbed", getDisplayName(), taken).withStyle(ChatFormatting.GOLD));
+            } else {
+                sp.sendSystemMessage(Component.translatable("grandline.knockdown.spared", getDisplayName()).withStyle(ChatFormatting.GOLD));
+            }
+            NpcOutcomes.spare(sp);
+            Knockdown.standUp(sp, d, 0.3f);
             d.flags.add("survived_knockdown");
         }
     }

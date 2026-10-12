@@ -74,6 +74,11 @@ public final class ServerNet {
                     sp.sendSystemMessage(Component.translatable(d.pvpFlag ? "grandline.pvp.on" : "grandline.pvp.off"));
                 }
                 case "open_chart" -> com.grandline.navigation.Navigation.openChart(sp);
+                case "quest_log" -> com.grandline.quest.QuestGuide.openLog(sp);
+                case "quest_track" -> {
+                    com.grandline.quest.QuestGuide.track(sp, t.getString("id"));
+                    com.grandline.quest.QuestGuide.openLog(sp);
+                }
                 case "ship" -> com.grandline.ship.ShipNet.handle(sp, t);
                 default -> {}
             }

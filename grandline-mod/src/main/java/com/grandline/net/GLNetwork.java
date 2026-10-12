@@ -82,6 +82,13 @@ public final class GLNetwork {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
+    /** Quest guidance for the HUD: the tracked quest, its objective, the target and the route to it (see QuestGuide). */
+    public record Guidance(CompoundTag data) implements CustomPacketPayload {
+        public static final Type<Guidance> TYPE = payloadType("guidance");
+        public static final StreamCodec<ByteBuf, Guidance> CODEC = ByteBufCodecs.COMPOUND_TAG.map(Guidance::new, Guidance::data);
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+
     // ------------------------------------------------------------------ C2S
 
     public record CreateCharacter(CompoundTag data) implements CustomPacketPayload {
@@ -124,6 +131,7 @@ public final class GLNetwork {
         r.playToClient(OpenScreen.TYPE, OpenScreen.CODEC, (p, c) -> ClientNet.openScreen(p, c));
         r.playToClient(Fx.TYPE, Fx.CODEC, (p, c) -> ClientNet.fx(p, c));
         r.playToClient(Impulse.TYPE, Impulse.CODEC, (p, c) -> ClientNet.impulse(p, c));
+        r.playToClient(Guidance.TYPE, Guidance.CODEC, (p, c) -> ClientNet.guidance(p, c));
 
         r.playToServer(CreateCharacter.TYPE, CreateCharacter.CODEC, ServerNet::createCharacter);
         r.playToServer(CombatInput.TYPE, CombatInput.CODEC, ServerNet::combatInput);

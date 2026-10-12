@@ -172,6 +172,29 @@ public final class SelfTest {
                         + (rawObj.isEmpty() ? "" : "; untranslated objectives: " + rawObj.subList(0, Math.min(10, rawObj.size()))));
         net.minecraft.network.chat.Component desc = com.grandline.quest.QuestText.description(com.grandline.quest.QuestRegistry.get("ember_east_1"));
         String line = com.grandline.quest.QuestText.objective(s, com.grandline.quest.QuestRegistry.get("ember_east_1").objectives().get(0)).getString();
+        { // the quest guide: a route from Shiokaze Isle's town to Shells Town runs to this pier, across the sea, to that pier
+            com.grandline.world.WorldPlan plan = com.grandline.world.WorldPlan.of(s);
+            com.grandline.world.Island from = plan.byId("shiokaze_isle"), to = plan.byId("shells_town");
+            FakePlayer gp = fake(s);
+            var fs = from.settlement();
+            gp.moveTo(fs.centerX + 0.5, 90, fs.centerZ + 0.5);
+            var tg = com.grandline.quest.QuestGuide.island(gp, plan, Characters.get(gp), "shells_town");
+            int[] r = tg == null ? new int[0] : com.grandline.quest.QuestGuide.route(gp, tg);
+            boolean viaPiers = r.length >= 8 && Math.abs(r[r.length - 2] - tg.x()) <= 1 && Math.abs(r[r.length - 1] - tg.z()) <= 1;
+            boolean throughFromPier = false;
+            for (int i = 0; i + 1 < r.length; i += 2) if (r[i] == fs.dockTipX() && r[i + 1] == fs.dockTipZ()) throughFromPier = true;
+            check("quest guide: route to another island runs through both piers", tg != null && viaPiers && throughFromPier,
+                    (tg == null ? "no target" : "target " + tg.x() + "," + tg.z()) + ", " + r.length / 2 + " points");
+            var tgt = com.grandline.quest.QuestGuide.person(gp, plan, from, "shipwright", false);
+            int[] town = tgt == null ? new int[0] : com.grandline.quest.QuestGuide.route(gp, tgt);
+            check("quest guide: the shipwright is found on the island and the route follows the streets", tgt != null && town.length >= 6,
+                    (tgt == null ? "no shipwright marker" : "at " + tgt.x() + "," + tgt.z() + ", " + town.length / 2 + " points")
+                            + "; plots " + fs.plots.size() + ", shipwright plots " + fs.plots.stream().filter(p -> p.type() == com.grandline.world.settlement.BuildingType.SHIPWRIGHT).count()
+                            + ", dock " + fs.hasDock + ", pier shipwright " + fs.hasDockShipwright);
+            java.util.List<String> noWright = plan.islands.stream().filter(i -> i.settlement().hasDock && i.settlementType != com.grandline.world.settlement.SettlementType.HAMLET
+                    && !i.settlement().hasDockShipwright && i.settlement().plots.stream().noneMatch(p -> p.type() == com.grandline.world.settlement.BuildingType.SHIPWRIGHT)).map(i -> i.id).toList();
+            check("every town with a pier has a shipwright (a yard, or one at the pier's landing)", noWright.isEmpty(), noWright.isEmpty() ? "" : noWright.toString());
+        }
         check("the Rigger's Lesson reads: description and 'Defeat Bandit x3'", desc != null && desc.getString().contains("bandits") && line.equals("Defeat Bandit \u00d73"), (desc == null ? "no description" : desc.getString()) + " | " + line);
         return 0;
     }

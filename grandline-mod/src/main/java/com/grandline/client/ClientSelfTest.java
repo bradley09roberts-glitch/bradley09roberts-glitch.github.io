@@ -175,6 +175,7 @@ public final class ClientSelfTest {
         else if ("mp_b".equals(MODE)) buildMate();
         else if ("tour".equals(MODE)) buildTour();
         else if ("arch".equals(MODE)) buildArch();
+        else if ("guide".equals(MODE)) buildGuide();
         else if ("shaders".equals(MODE) || "shaders_quick".equals(MODE)) buildShaderTour();
         else if ("naval".equals(MODE)) {
             createCharacter("Tester", "human");
@@ -810,6 +811,29 @@ public final class ClientSelfTest {
         shot2("61_rommel_keep", "execute in minecraft:overworld run tp @s 12000 110 -27175 0 28");
         shot2("62_prodence_castle", "execute in minecraft:overworld run tp @s -45500 110 410 0 25");
         shot2("63_lulusia_memorial", "execute in minecraft:overworld run tp @s -15570 100 -1640 0 30");
+        add("done", ClientSelfTest::finish, 0);
+    }
+
+    /** GL_CLIENTTEST=guide: the minimap with a quest's route trail, the quest log (U) and the sea chart (M) with the route. */
+    private static void buildGuide() {
+        Minecraft mc = Minecraft.getInstance();
+        createCharacter("Tester", "human");
+        cmd("grandline test env", 10);
+        cmd("grandline test calm true", 5);
+        cmd("grandline island tp shiokaze_isle", 200);
+        cmd("grandline quest ember_east_1", 100); // the Rigger's Lesson: bandits out in the wilds beyond town
+        add("guidance arrived", () -> LOG.add("  guidance: " + (Guidance.active() ? Guidance.title.getString() + " / "
+                + (Guidance.objective == null ? "-" : Guidance.objective.getString()) + " / target " + Guidance.hasTarget + " at " + Guidance.tx + "," + Guidance.tz
+                + " route points " + Guidance.route.length / 2 : "none")), 60);
+        shot("guide_01_minimap");
+        add("open the quest log", () -> PacketDistributor.sendToServer(new GLNetwork.UiAction("quest_log", new CompoundTag())), 60);
+        add("quest log open", () -> LOG.add("  screen: " + (mc.screen == null ? "none" : mc.screen.getClass().getSimpleName())), 5);
+        shot("guide_02_quest_log");
+        add("close", () -> mc.setScreen(null), 20);
+        add("open the sea chart", () -> PacketDistributor.sendToServer(new GLNetwork.UiAction("open_chart", new CompoundTag())), 80);
+        add("chart open", () -> LOG.add("  screen: " + (mc.screen == null ? "none" : mc.screen.getClass().getSimpleName())), 5);
+        shot("guide_03_chart");
+        add("close", () -> mc.setScreen(null), 20);
         add("done", ClientSelfTest::finish, 0);
     }
 

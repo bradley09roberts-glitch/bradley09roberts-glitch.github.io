@@ -26,6 +26,9 @@ public final class Settlement {
     /** Dock: start (on the coast) and direction (unit cardinal-ish vector *1000). */
     public int dockX, dockZ, dockDirX, dockDirZ;
     public boolean hasDock;
+    /** A town whose shipwright's yard did not fit beside the pier: the shipwright stands at the pier's landing. */
+    public boolean hasDockShipwright;
+    public int dockShipwrightX, dockShipwrightZ;
     public int minX, minZ, maxX, maxZ;
 
     private Settlement(Island island) {
@@ -260,6 +263,12 @@ public final class Settlement {
                         int y = Math.max(WorldPlan.SEA_LEVEL + 2, (int) Math.round(avgNatural(island, x0, z0, sx, sz)) + 1);
                         s.plots.add(new Plot(t, x0, y, z0, sx, sz, rot, island.seed * 17 + side, "", true));
                         break;
+                    }
+                    if (s.plots.stream().noneMatch(p -> p.type() == BuildingType.SHIPWRIGHT)) {
+                        // no room for the yard beside the pier: the shipwright works from the pier's landing instead
+                        s.hasDockShipwright = true;
+                        s.dockShipwrightX = bx - bdx * 3 / 1000 - bdz * 2 / 1000;
+                        s.dockShipwrightZ = bz - bdz * 3 / 1000 + bdx * 2 / 1000;
                     }
                 }
             }

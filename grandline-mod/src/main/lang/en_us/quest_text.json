@@ -1,4 +1,10 @@
 {
+ "grandline.guide.hint.explore": "No fixed place: explore",
+ "grandline.guide.hint.fight": "Win fights using your Devil Fruit",
+ "grandline.guide.hint.gather": "Gather what's asked anywhere; it counts while you carry it",
+ "grandline.guide.hint.sea": "Out at sea: check the sea chart (M) for the mark",
+ "grandline.guide.shipwright": "the shipwright's yard",
+ "grandline.guide.wilds": "%s territory, outside town",
  "grandline.quest.obj.any_fish": "fish",
  "grandline.quest.obj.arrest": "Arrest %s",
  "grandline.quest.obj.arrested": "Be arrested and taken in",
@@ -23,5 +29,21 @@
  "grandline.quest.obj.talk": "Talk to %s",
  "grandline.quest.obj.treasure": "Dig up buried treasure ×%s",
  "grandline.quests.header": "Quests: %s active, %s completed",
- "grandline.quests.none": "No active quests (%s completed). Talk to people in towns or check a notice board for work."
+ "grandline.quests.none": "No active quests (%s completed). Talk to people in towns or check a notice board for work.",
+ "hud.grandline.guide.dist": "%s m",
+ "hud.grandline.guide.elsewhere": "%s (in another realm)",
+ "hud.grandline.guide.keys": "U quests • M map • Z hide",
+ "hud.grandline.guide.where": "%s • %s m",
+ "key.grandline.minimap": "Toggle Minimap",
+ "key.grandline.quest_log": "Quest Log",
+ "screen.grandline.chart_guide": "%s: %s",
+ "screen.grandline.chart_help": "Scroll to zoom • drag to pan • the yellow trail leads to your tracked quest",
+ "screen.grandline.quests": "Quest Log",
+ "screen.grandline.quests.completed": "Completed: %s",
+ "screen.grandline.quests.objectives": "Objectives",
+ "screen.grandline.quests.rewards": "Rewards: %s XP, %s Beli",
+ "screen.grandline.quests.track": "Track on map",
+ "screen.grandline.quests.tracking": "Tracking ✔",
+ "screen.grandline.quests.where": "Where: %s",
+ "screen.grandline.quests.where_dist": "Where: %s • %s m away"
 }

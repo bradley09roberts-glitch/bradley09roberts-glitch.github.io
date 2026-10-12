@@ -35,6 +35,7 @@ public final class ClientEvents {
     @SubscribeEvent
     public static void onLogout(ClientPlayerNetworkEvent.LoggingOut e) {
         ClientState.reset();
+        Guidance.reset();
     }
 
     @SubscribeEvent
@@ -60,6 +61,8 @@ public final class ClientEvents {
         while (Keys.TRANSFORM.consumeClick()) send(CombatInput.TRANSFORM, 0, 0, 0, 0);
         while (Keys.CHART.consumeClick()) PacketDistributor.sendToServer(new GLNetwork.UiAction("open_chart", new CompoundTag()));
         while (Keys.CHARACTER.consumeClick()) mc.setScreen(new com.grandline.client.screen.CharacterScreen());
+        while (Keys.QUEST_LOG.consumeClick()) PacketDistributor.sendToServer(new GLNetwork.UiAction("quest_log", new CompoundTag()));
+        while (Keys.MINIMAP.consumeClick()) Minimap.toggle();
         while (Keys.NEXT_SET.consumeClick()) if (ClientState.combatMode) ClientState.abilitySet = (ClientState.abilitySet + 1) % com.grandline.player.CharacterData.LOADOUT_SETS;
         while (Keys.DODGE.consumeClick()) {
             float lx = p.input.leftImpulse, lz = p.input.forwardImpulse;

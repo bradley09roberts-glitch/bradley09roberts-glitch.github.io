@@ -49,6 +49,7 @@ public final class ClientNet {
                 case "dialogue" -> mc.setScreen(new DialogueScreen(p.data()));
                 case "shop" -> mc.setScreen(new ShopScreen(p.data()));
                 case "chart" -> mc.setScreen(new ChartScreen(p.data()));
+                case "quests" -> mc.setScreen(new com.grandline.client.screen.QuestLogScreen(p.data()));
                 case "treasure_map" -> mc.setScreen(new com.grandline.client.screen.TreasureMapScreen(p.data()));
                 case "shipyard" -> mc.setScreen(new ShipyardScreen(p.data()));
                 case "close" -> {
@@ -61,6 +62,10 @@ public final class ClientNet {
 
     public static void fx(GLNetwork.Fx p, IPayloadContext ctx) {
         ctx.enqueueWork(() -> ClientFx.play(p.kind(), p.x(), p.y(), p.z(), p.a(), p.b(), p.c()));
+    }
+
+    public static void guidance(GLNetwork.Guidance p, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> Guidance.accept(p.data()));
     }
 
     public static void impulse(GLNetwork.Impulse p, IPayloadContext ctx) {

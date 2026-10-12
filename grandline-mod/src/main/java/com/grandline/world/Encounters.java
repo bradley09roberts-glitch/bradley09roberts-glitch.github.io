@@ -23,12 +23,13 @@ public final class Encounters {
             Island isl = plan.islandAt(sp.getBlockX(), sp.getBlockZ());
             if (isl == null || TownProtection.protectedAt(plan, sp.getBlockX(), sp.getBlockZ())) continue;
             if (isl.settlement().bounds(sp.getBlockX(), sp.getBlockZ()) && isl.settlementType != com.grandline.world.settlement.SettlementType.RUINS) continue;
+            if (com.grandline.npc.NpcOutcomes.spared(sp)) continue; // just robbed: no fresh gang straight away
             int nearby = level.getEntitiesOfClass(HumanoidNpc.class, sp.getBoundingBox().inflate(48)).size();
             if (nearby > 6) continue;
             boolean night = !level.isDay();
             String role = isl.zone.isBlue() ? "bandit" : (night || level.random.nextBoolean()) ? "pirate" : "bandit";
             if (isl.faction.equals("marine")) role = "marine";
-            int count = 1 + level.random.nextInt(isl.tier >= 5 ? 4 : 3);
+            int count = 1 + level.random.nextInt(isl.tier >= 5 ? 4 : isl.tier <= 1 ? 2 : 3); // starter islands: 1-2
             double ang = level.random.nextDouble() * Math.PI * 2;
             int bx = sp.getBlockX() + (int) (Math.cos(ang) * 28), bz = sp.getBlockZ() + (int) (Math.sin(ang) * 28);
             for (int i = 0; i < count; i++) {

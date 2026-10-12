@@ -110,6 +110,9 @@ public final class CharacterEvents {
             }
             return;
         }
+        // foes from the gentle seas (tier 1-3 NPCs) hit softer, so a new character can take on a bandit gang
+        if (src.getEntity() instanceof com.grandline.npc.GLNpc npc && npc.tier() <= 3)
+            e.setAmount(e.getAmount() * (npc.tier() <= 1 ? 0.45f : npc.tier() == 2 ? 0.65f : 0.85f));
         float health = sp.getHealth() + sp.getAbsorptionAmount();
         if (e.getAmount() >= health && Knockdown.canBeKnockedDown(sp, src)) {
             e.setCanceled(true);

@@ -46,12 +46,13 @@ public final class Knockdown {
         sp.removeAllEffects();
         sp.setSprinting(false);
         sp.stopUsingItem();
-        sp.sendSystemMessage(Component.translatable("grandline.knockdown.you", GLConfig.KNOCKDOWN_SECONDS.get()).withStyle(ChatFormatting.RED));
         GLNetwork.anim(sp, "knocked_down");
         sp.level().playSound(null, sp.getX(), sp.getY(), sp.getZ(), com.grandline.registry.ModSounds.PLAYER_KNOCKDOWN.get(), net.minecraft.sounds.SoundSource.PLAYERS, 1f, 1f);
         CharacterManager.markVisualsDirty(sp);
         // last: an outlaw may rob and release the player at once (standUp plays get_up after knocked_down)
         if (src.getEntity() instanceof GLNpc npc) npc.onKnockedDownPlayer(sp);
+        if (d.knockdownTicks > 0) // still down (not robbed and released): the bleed-out warning
+            sp.sendSystemMessage(Component.translatable("grandline.knockdown.you", GLConfig.KNOCKDOWN_SECONDS.get()).withStyle(ChatFormatting.RED));
     }
 
     static void tick(ServerPlayer sp, CharacterData d) {

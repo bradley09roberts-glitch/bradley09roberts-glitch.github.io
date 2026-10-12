@@ -68,7 +68,9 @@ protection, fruit terrain changes and reversion, number of generated islands, NP
 | H / J / K | Observation / Armament / Conqueror's Haki |
 | G | Zoan transform |
 | C | Character sheet (stats, styles, fruit, Haki, PvP flag) |
-| M | Sea chart |
+| M | Sea chart: zoom in for the real terrain around you; the yellow trail leads to your tracked quest |
+| U | Quest log: every active quest with its description, objectives, rewards and where to go; Track on map |
+| Z | Show or hide the minimap (top right: terrain, the route to your tracked quest, the objective and distance) |
 | At a ship's helm: W/S, A/D, X, B | Raise/lower sails, rudder, anchor, Coup de Burst |
 | At a cannon: left click | Fire |
 | Sneak + use on a downed ally | Revive |

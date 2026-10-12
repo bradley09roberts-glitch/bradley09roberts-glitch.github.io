@@ -61,6 +61,7 @@ public final class PopulationManager extends SavedData {
 
     private void populate(ServerLevel level, Island isl, ServerPlayer near, int radius) {
         long now = level.getGameTime();
+        dockShipwright(level, isl, near, radius, now);
         int budget = 4;
         int perSettlement = GLConfig.MAX_NPCS_PER_SETTLEMENT.get();
         int spawnedHere = 0;
@@ -89,6 +90,27 @@ public final class PopulationManager extends SavedData {
                 if (--budget <= 0) return;
             }
         }
+    }
+
+    /** The shipwright of a town with no yard: on the ground at the pier's landing (works in worlds made before too). */
+    private void dockShipwright(ServerLevel level, Island isl, ServerPlayer near, int radius, long now) {
+        var s = isl.settlement();
+        if (!s.hasDockShipwright) return;
+        int x = s.dockShipwrightX, z = s.dockShipwrightZ;
+        if (near.distanceToSqr(x, near.getY(), z) > (double) radius * radius || !level.isLoaded(new net.minecraft.core.BlockPos(x, 64, z))) return;
+        String key = isl.id + "@dock_shipwright";
+        Long state = markers.get(key);
+        if (state != null && (state == Long.MAX_VALUE || state > now)) return;
+        int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        var pos = new net.minecraft.core.BlockPos(x, y, z);
+        HumanoidNpc npc = ModEntities.HUMANOID_NPC.get().create(level);
+        if (npc == null) return;
+        npc.moveTo(x + 0.5, y, z + 0.5, level.random.nextFloat() * 360, 0);
+        npc.configure("shipwright", isl.tier, isl.id, pos, key, level.random);
+        localRace(npc, isl, level.random);
+        level.addFreshEntity(npc);
+        markers.put(key, Long.MAX_VALUE);
+        setDirty();
     }
 
     public static void onNpcGone(ServerLevel level, GLNpc npc) {

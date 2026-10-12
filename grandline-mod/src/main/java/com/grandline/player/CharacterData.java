@@ -68,6 +68,8 @@ public final class CharacterData implements INBTSerializable<CompoundTag> {
     public final Set<String> discoveredIslands = new LinkedHashSet<>();
     public final Map<String, CompoundTag> questProgress = new HashMap<>();
     public final Set<String> completedQuests = new LinkedHashSet<>();
+    /** The quest the map, minimap and route guide to ("" = none; a newly started quest is tracked automatically). */
+    public String trackedQuest = "";
     public final Set<String> flags = new HashSet<>();
     @Nullable public UUID crewId = null;
     public boolean pvpFlag = false;
@@ -235,6 +237,7 @@ public final class CharacterData implements INBTSerializable<CompoundTag> {
         questProgress.forEach(qp::put);
         t.put("quests", qp);
         t.put("completed", strings(completedQuests));
+        t.putString("tracked", trackedQuest);
         t.put("flags", strings(flags));
         if (crewId != null) t.putUUID("crew", crewId);
         t.putBoolean("pvp", pvpFlag);
@@ -311,6 +314,7 @@ public final class CharacterData implements INBTSerializable<CompoundTag> {
         for (String k : qp.getAllKeys()) questProgress.put(k, qp.getCompound(k));
         completedQuests.clear();
         readStrings(t, "completed", completedQuests);
+        trackedQuest = t.getString("tracked");
         flags.clear();
         readStrings(t, "flags", flags);
         crewId = t.hasUUID("crew") ? t.getUUID("crew") : null;
