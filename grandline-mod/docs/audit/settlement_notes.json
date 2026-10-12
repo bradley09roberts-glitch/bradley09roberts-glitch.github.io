@@ -1,0 +1,177 @@
+{
+ "house_small": {
+  "role": "Cottage (7x7); the commonest home in hamlets and villages; NPC: resident.",
+  "before": "A 7x7 plank box, 4-high walls with log corners, pane holes every 3 blocks, a flat gable of the style's stairs with no overhang, same bed/chest/crafting table in every house.",
+  "after": "One storey on a fieldstone plinth course, corner posts, framed windows with shutters and planters on all sides, steep roof with overhang, eave brackets and ridge cap (ridge direction varies), a smoking chimney placed by seed, a door hood with lantern, a bench by the door, a woodshed lean-to on some; interior: bed, barrel, stove, table and chair, chest, lantern.",
+  "anchors": "npc:resident, loot house.",
+  "status": "rebuilt"
+ },
+ "house": {
+  "role": "Townhouse (9x9), the default town filler; NPC: resident.",
+  "before": "Same box as the cottage scaled to 9x9, ladder in a corner, roof as a single stair gable.",
+  "after": "Two storeys: stone plinth + main walls below, the style's upper wall (timber framing in East Blue/Loguetown/Drum) over a beam band; straight staircase with a railing instead of the ladder; kitchen/parlour below, two bedrooms above; dormer window on some, desert domes on some; chimney.",
+  "anchors": "npc:resident, loot house x2.",
+  "status": "rebuilt"
+ },
+ "house_large": {
+  "role": "Large house (11x9); NPC: resident.",
+  "before": "Two-storey box with a ladder, 2 beds upstairs.",
+  "after": "Two storeys with a cross-gabled entrance bay facing the street (window in the gable), half wall dividing dining room and kitchen, cauldron, two table sets, three beds upstairs, chimney stack on the side wall.",
+  "anchors": "npc:resident, loot house x2.",
+  "status": "rebuilt"
+ },
+ "mansion": {
+  "role": "Noble's mansion (15x13) in cities; NPCs: noble, guard.",
+  "before": "Two-storey box with a row of bookshelves and a carpet; treasure chest upstairs.",
+  "after": "Symmetrical two storeys set back behind a four-column portico (marble, sandstone or timber by style) carrying a balcony with a door; hip roof (domes in Alabasta), chimneys at both ends; grand two-wide staircase in a carpeted hall, study with bookshelves and lectern, dining room, master bedroom with the treasure chest; planters along the front.",
+  "anchors": "npc:noble, npc:guard, loot treasure.",
+  "status": "rebuilt"
+ },
+ "tavern": {
+  "role": "Tavern (13x11), every village and town; NPCs: bartender, 2 patrons; quest board anchor.",
+  "before": "One-storey box with a log counter, barrels and fence-post tables.",
+  "after": "Two storeys behind a covered terrace (lean-to roof on posts, or awnings in flat-roof styles) with tables and benches; wide double doors, banner sign; bar of shop counters with stools, kegs racked behind, two table sets, hearth and chimney; guest rooms upstairs.",
+  "anchors": "npc:bartender, npc:patron x2, quest_board, loot tavern.",
+  "status": "rebuilt"
+ },
+ "shop": {
+  "role": "Shop (9x9); NPC: shopkeeper.",
+  "before": "Box with a plank counter and two barrels.",
+  "after": "Shopfront: door to one side, a three-wide display window with planters and a striped awning across the front, counter, two rows of goods shelves, crates and sacks; stair up to the shopkeeper's room.",
+  "anchors": "npc:shopkeeper, loot shop x2, loot house.",
+  "status": "rebuilt"
+ },
+ "blacksmith": {
+  "role": "Smithy (9x9); NPC: blacksmith.",
+  "before": "Box with an anvil, blast furnace and a campfire on the floor.",
+  "after": "Enclosed forge at the back (blast furnace and furnace under a smoking chimney, coal) and an open workshop in front under a lean-to on posts: anvil, grindstone, smithing table, quench cauldron, crate.",
+  "anchors": "npc:blacksmith, loot blacksmith.",
+  "status": "rebuilt"
+ },
+ "inn": {
+  "role": "Inn (11x11); NPC: innkeeper.",
+  "before": "Two-storey box, beds in a row upstairs, one barrel.",
+  "after": "Two storeys with two dormers (or a dome in Alabasta), banner sign; reception counter with lectern, dining tables, kitchen; six guest beds with chests upstairs; chimney.",
+  "anchors": "npc:innkeeper, loot house x2.",
+  "status": "rebuilt"
+ },
+ "church": {
+  "role": "Church (9x15); NPC: priest. In Wano the plot is a shrine.",
+  "before": "The generic house with pews and a 3x3 block steeple stuck on the roof.",
+  "after": "Nave under a steep gable with tall windows and a round back window, a real 5-wide bell tower with belfry openings, bell and spire (dome in flat-roof styles), pews and a raised altar with candles. Alabasta: domed nave. Wano: vermilion torii, stone lanterns, raised hall with veranda under a flared kawara roof.",
+  "anchors": "npc:priest.",
+  "status": "rebuilt",
+  "expected_lost": [
+   "npc:resident",
+   "house"
+  ],
+  "expected_why": "The old church called the generic house builder (resident NPC + house chest) and then cleared the interior: the chest block was removed in the world (only the dump recorded it) and a stray 'resident' spawned in the church. The new church has only its priest."
+ },
+ "marine_post": {
+  "role": "Marine post (13x13) in Marine bases and towns; NPCs: 2 marines, marine officer; bounty board, jail cell.",
+  "before": "White concrete box with a blue stripe, flat roof, iron door, bars as the cell.",
+  "after": "Symmetrical two-storey barracks in pale masonry with blue bands and quoins, slate hip roof, columned entrance porch with a blue awning, two flag masts with Marine banners, roof mast; front desk, records, bounty board sign, barred cell with an iron door, barracks beds and officer's desk upstairs.",
+  "anchors": "npc:marine x2, npc:marine_officer, bounty_board, cell, loot marine.",
+  "status": "rebuilt"
+ },
+ "watchtower": {
+  "role": "Watchtower (5x5) in Marine bases and fortresses; NPC: lookout.",
+  "before": "Four log posts and a fence ring with a slab lid.",
+  "after": "Stone base room with a door, timber legs with cross beams every four blocks, lookout platform with railings, hip roof (flared in Wano), hanging lantern, ladder inside a post.",
+  "anchors": "npc:lookout.",
+  "status": "rebuilt"
+ },
+ "lighthouse": {
+  "role": "Lighthouse (7x7); NPC: keeper.",
+  "before": "Banded cylinder with a glass top.",
+  "after": "Stone plinth, red/white banded tower with small windows, gallery with iron railing, glazed lamp room with sea lantern and glowstone, red cap with lightning rod; ladder all the way up.",
+  "anchors": "npc:keeper.",
+  "status": "improved"
+ },
+ "warehouse": {
+  "role": "Warehouse (13x9) in ports, cities and Marine bases; NPC: dockworker.",
+  "before": "Box filled with a grid of loot barrels.",
+  "after": "Tall store with a loft: three-wide loading door under a beam lintel, hoist beam with chain and a hanging cargo load, wall lanterns; cargo racked along the back wall on beam shelves, crates/sacks/barrels/rope by the door, loot barrels kept.",
+  "anchors": "npc:dockworker, loot warehouse x3.",
+  "status": "rebuilt"
+ },
+ "market_stall": {
+  "role": "Market stall (5x5) in cities; NPC: merchant.",
+  "before": "Fence posts with a red/white wool lid.",
+  "after": "Timber posts, striped awning valances front and back, canvas roof, counter with produce and sacks, loot barrels behind, hanging lantern.",
+  "anchors": "npc:merchant, loot shop x2.",
+  "status": "rebuilt"
+ },
+ "well": {
+  "role": "Well (3x3) at hamlet centres; NPC: villager.",
+  "before": "Fence posts and a slab lid over a water hole.",
+  "after": "Stone kerb, two posts and a crossbeam with a winch chain, small pitched roof of the style's tiles.",
+  "anchors": "npc:villager.",
+  "status": "rebuilt"
+ },
+ "plaza": {
+  "role": "Town square (9x9), the town centre; NPCs: 2 villagers, child; town_center anchor.",
+  "before": "Stone-floored square with a wall-block fountain and four fence lamps.",
+  "after": "Concentric patterned paving in the style's stones, a tiered fountain with basin, lamp posts at the corners, benches facing the fountain, planters.",
+  "anchors": "npc:villager x2, npc:child, town_center.",
+  "status": "rebuilt"
+ },
+ "farm": {
+  "role": "Farm (9x9) in villages; NPC: farmer.",
+  "before": "Log-edged field.",
+  "after": "Fenced field with a gate, wheat and carrots or potatoes either side of an irrigation channel, scarecrow, composter, hay bale.",
+  "anchors": "npc:farmer.",
+  "status": "improved"
+ },
+ "ruined_house": {
+  "role": "Ruin (9x9) on ruin islands; NPCs: 2 bandits.",
+  "before": "Random-height mossy stone ring with a cobweb.",
+  "after": "Legible shell of a house of the island's style: corners standing highest, door and window gaps, fallen roof beams and tiles inside, moss, ferns, vines, berry bush; a bandit campfire and bedroll.",
+  "anchors": "npc:bandit x2, loot ruin.",
+  "status": "rebuilt"
+ },
+ "bounty_board": {
+  "role": "Bounty board (3x3) in towns; bounty_board anchor (JobBoard matches clicks within 3 blocks).",
+  "before": "Two fence posts with planks and a slab.",
+  "after": "Two beams framing a weathered plank board with a notice sign, a little tiled roof and a lantern, on paving.",
+  "anchors": "bounty_board (same position).",
+  "status": "rebuilt"
+ },
+ "dojo": {
+  "role": "Training hall (13x11) in cities; NPCs: master, student.",
+  "before": "The generic house with birch floor and targets.",
+  "after": "A taller one-storey hall with a hip roof (flared in Wano), polished floor, windows high on three sides, a raised dais with a banner for the master, targets and weapon racks, three lanterns.",
+  "anchors": "npc:master, npc:student.",
+  "status": "rebuilt"
+ },
+ "shipwright": {
+  "role": "Shipwright's yard (13x11) beside the dock; NPC: shipwright; ship_spawn anchor.",
+  "before": "Open-front log shed with scaffolding.",
+  "after": "Boat shed on heavy beam posts open to the water, weathered plank walls, gable roof; a hull on the slip (keel and ribs) with scaffolding, workbenches, timber stacks, rope, mooring bollards at the opening.",
+  "anchors": "npc:shipwright, ship_spawn (same position), loot warehouse.",
+  "status": "rebuilt"
+ },
+ "hut": {
+  "role": "Hut (5x5) in hamlets; NPC: resident.",
+  "before": "Tiny box with a gable.",
+  "after": "One room under a pyramid roof (thatch in East Blue/Elbaf/jungle, style tiles elsewhere, flared in Wano), side windows, bed, barrel, hearth, lantern; on stilts in jungle hamlets.",
+  "anchors": "npc:resident, loot house.",
+  "status": "rebuilt"
+ },
+ "buried_treasure": {
+  "after": "Unchanged X of coarse soil over the chest (the treasure-map system reads its position); a weathered marker stake added."
+ },
+ "hidden_cache": {
+  "after": "Boulder, trapdoor and ladder kept; cellar now fieldstone with a beam, weathered plank floor, crate and sacks beside the loot."
+ },
+ "lost_shrine": {
+  "after": "Stepped base with a stair, weathered beam posts under a mossy stone hip roof, altar candles, paper lantern; chest and marker kept."
+ },
+ "shipwreck": {
+  "after": "Hull kept; a waterlogged deck cannon and a cargo crate added among the wreckage; chest, barrel and marker kept."
+ },
+ "ship_sloop": {
+  "after": "Below-deck rooms (pocket dimension): see ShipInteriors."
+ },
+ "_streets": "Before: every building's door was joined to the town centre by its own straight 2-wide diagonal path (a star of spokes), and the dock was a plain 5-wide spruce pier with fence posts. After: streets form a minimum spanning tree over the centre, every door and the dock root, drawn as axis-aligned L-shaped streets (the elbow chosen to cross fewer plots); the street from the centre to the harbour is 3 wide; paving mixes two materials per style; lamp posts in the island's style stand every 12 blocks, alternating sides, only on open ground. Piers are dock planks on weathered-beam pilings with a 9-wide T-head where ships tie up (dock tip unchanged), mooring bollards, lamp posts, a ladder down to the water and cargo waiting on the head. Jungle buildings stand on stilts with steps to the door. Plot positions are unchanged, so towns keep their layout and every system that refers to a building still finds it."
+}

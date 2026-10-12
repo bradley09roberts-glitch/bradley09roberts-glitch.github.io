@@ -123,6 +123,10 @@ public final class TestCommands {
                 .then(com.grandline.creature.CreatureTestCommands.beastNpc())
                 .then(com.grandline.creature.CreatureTestCommands.wildlife())
                 .then(com.grandline.creature.CreatureTestCommands.calmBelt())
+                .then(StructureCommands.view())
+                .then(StructureCommands.place())
+                .then(StructureCommands.showcase())
+                .then(StructureCommands.kit())
                 .then(Commands.literal("inventory").executes(c -> {
                     try {
                         var out = com.grandline.test.InventoryDump.write(c.getSource().getServer());

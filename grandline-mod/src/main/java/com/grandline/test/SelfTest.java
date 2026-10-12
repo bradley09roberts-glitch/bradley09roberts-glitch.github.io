@@ -99,7 +99,10 @@ public final class SelfTest {
         else if (PHASE.equals("journey")) JourneyTests.phase1(steps); // quick run: advancements, Den Den Mushi, Buster Call
         else if (PHASE.equals("bosses")) BossTests.phase1(steps); // quick run: boss fights
         else if (PHASE.equals("structures")) StructureDump.steps(steps); // dev aid: every structure to structdump/*.json
-        else if (PHASE.equals("landmarks")) steps.add(s -> LandmarkCheck.run(s, SelfTest::check)); // quick run: every landmark builder
+        else if (PHASE.equals("landmarks")) { // quick run: every landmark builder and every settlement building
+            steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
+            steps.add(s -> BuildingCheck.run(SelfTest::check));
+        }
         else if (PHASE.equals("bases")) BaseTests.phase1(steps); // quick run: crew bases on claimed islands
         else if (PHASE.equals("careers")) CareerTests.phase1(steps); // quick run: faction careers
         else if (PHASE.equals("seapolish")) SeaPolishTests.phase1(steps); // quick run: hired gunners, raid plunder, sea-job chart marks, convoy cap
@@ -308,6 +311,8 @@ public final class SelfTest {
         });
         // landmarks: every registered set piece builds deterministically inside its footprint (see LandmarkCheck)
         steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
+        // settlement buildings: every type in every style and rotation (see BuildingCheck)
+        steps.add(s -> BuildingCheck.run(SelfTest::check));
         // NPC markers & spawning
         steps.add(s -> {
             WorldPlan p = WorldPlan.of(s);

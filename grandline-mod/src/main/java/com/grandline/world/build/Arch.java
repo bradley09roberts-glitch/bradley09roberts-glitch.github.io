@@ -24,7 +24,7 @@ public final class Arch {
 
     /** The blocks one building is made of (a style plus per-building variation). */
     public static final class Mats {
-        public BlockState wall, upperWall, frame, base, floor, roof, roofStairs, roofSlab, window, door, fence, lantern, trim, chimney, sill;
+        public BlockState wall, upperWall, frame, base, floor, roof, roofStairs, roofSlab, window, door, fence, lantern, trim, chimney, sill, step, gardenWall;
         public Block shutter, awning;
         public boolean planters, eaveBrackets, stilts;
         public RoofKind roofKind = RoofKind.GABLE;
@@ -284,8 +284,49 @@ public final class Arch {
                 case CANDY -> Blocks.CHERRY_STAIRS.defaultBlockState();
                 default -> Blocks.SPRUCE_STAIRS.defaultBlockState();
             };
+            // sills in the colour of plastered walls, and a plaster-stair door step where the walls are plaster
+            BlockState plasterStair = plasterStairs(m.wall);
+            if (plasterStair != null && st != BuildStyle.WANO && st != BuildStyle.FUTURE) m.sill = plasterStair;
+            m.step = switch (st) {
+                case VILLAGE, SNOW, STONE_TOWN, GIANT -> ArchBlocks.FIELDSTONE_STAIRS.get().defaultBlockState();
+                case VENETIAN -> ArchBlocks.HARBOUR_STONE_STAIRS.get().defaultBlockState();
+                case MARINE, PALACE -> ArchBlocks.PALE_MASONRY_STAIRS.get().defaultBlockState();
+                case DESERT -> ArchBlocks.DRESSED_SANDSTONE_STAIRS.get().defaultBlockState();
+                case JUNGLE -> ArchBlocks.DOCK_PLANK_STAIRS.get().defaultBlockState();
+                default -> null;
+            };
+            m.gardenWall = switch (st) {
+                case MARINE, PALACE, CLOUD -> ArchBlocks.PALE_MASONRY_WALL.get().defaultBlockState();
+                case DESERT -> ArchBlocks.DRESSED_SANDSTONE_WALL.get().defaultBlockState();
+                case VENETIAN, CORAL -> ArchBlocks.HARBOUR_STONE_WALL.get().defaultBlockState();
+                default -> ArchBlocks.FIELDSTONE_WALL.get().defaultBlockState();
+            };
             if (m.roof == null) roof(m, 0, new Block[][]{{ArchBlocks.TERRACOTTA_ROOF_TILES.get(), ArchBlocks.TERRACOTTA_ROOF_TILE_STAIRS.get(), ArchBlocks.TERRACOTTA_ROOF_TILE_SLAB.get()}});
             return m;
+        }
+
+        /** The stairs of a kit plaster (for sills in the wall's colour), or null for other walls. */
+        static BlockState plasterStairs(BlockState wall) {
+            Block b = wall.getBlock();
+            if (b == ArchBlocks.WHITE_PLASTER.get()) return ArchBlocks.WHITE_PLASTER_STAIRS.get().defaultBlockState();
+            if (b == ArchBlocks.CREAM_PLASTER.get()) return ArchBlocks.CREAM_PLASTER_STAIRS.get().defaultBlockState();
+            if (b == ArchBlocks.OCHRE_PLASTER.get()) return ArchBlocks.OCHRE_PLASTER_STAIRS.get().defaultBlockState();
+            if (b == ArchBlocks.SALMON_PLASTER.get()) return ArchBlocks.SALMON_PLASTER_STAIRS.get().defaultBlockState();
+            if (b == ArchBlocks.SKY_PLASTER.get()) return ArchBlocks.SKY_PLASTER_STAIRS.get().defaultBlockState();
+            if (b == ArchBlocks.MINT_PLASTER.get()) return ArchBlocks.MINT_PLASTER_STAIRS.get().defaultBlockState();
+            return null;
+        }
+
+        /** The matching slab of a kit plaster (parapet copings, ledges), or null. */
+        public static BlockState plasterSlab(BlockState wall) {
+            Block b = wall.getBlock();
+            if (b == ArchBlocks.WHITE_PLASTER.get()) return ArchBlocks.WHITE_PLASTER_SLAB.get().defaultBlockState();
+            if (b == ArchBlocks.CREAM_PLASTER.get()) return ArchBlocks.CREAM_PLASTER_SLAB.get().defaultBlockState();
+            if (b == ArchBlocks.OCHRE_PLASTER.get()) return ArchBlocks.OCHRE_PLASTER_SLAB.get().defaultBlockState();
+            if (b == ArchBlocks.SALMON_PLASTER.get()) return ArchBlocks.SALMON_PLASTER_SLAB.get().defaultBlockState();
+            if (b == ArchBlocks.SKY_PLASTER.get()) return ArchBlocks.SKY_PLASTER_SLAB.get().defaultBlockState();
+            if (b == ArchBlocks.MINT_PLASTER.get()) return ArchBlocks.MINT_PLASTER_SLAB.get().defaultBlockState();
+            return null;
         }
 
         private static void roof(Mats m, int v, Block[][] options) {
@@ -511,6 +552,7 @@ public final class Arch {
                 b.set(x, y + 1, z, m.wall);
                 boolean corner = (x == x1 || x == x2) && (z == z1 || z == z2);
                 if (crenels && (corner || (x + z) % 2 == 0)) b.set(x, y + 2, z, m.wall);
+                else if (!crenels && Mats.plasterSlab(m.wall) != null) b.set(x, y + 2, z, Mats.plasterSlab(m.wall));
             }
         if (cornice) {
             for (int x = x1; x <= x2; x++) {

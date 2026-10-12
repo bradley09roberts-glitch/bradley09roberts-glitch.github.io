@@ -173,6 +173,7 @@ public final class ClientSelfTest {
         if ("mp_a".equals(MODE)) buildCaptain();
         else if ("mp_b".equals(MODE)) buildMate();
         else if ("tour".equals(MODE)) buildTour();
+        else if ("arch".equals(MODE)) buildArch();
         else if ("naval".equals(MODE)) {
             createCharacter("Tester", "human");
             cmd("grandline test env", 10);
@@ -748,6 +749,45 @@ public final class ClientSelfTest {
         shot2("54_germa_fleet", "execute in minecraft:overworld run tp @s 23950 100 -27440 -140 32");
         shot2("55_lulusia_crater", "execute in minecraft:overworld run tp @s -16000 84 -1300 0 4");
         shot2("56_kyuka_resort", "execute in minecraft:overworld run tp @s 16990 86 3088 0 22");
+    }
+
+    /**
+     * Architecture captures (GL_CLIENTTEST=arch): fixed noon, clear weather, spectator; for each entry of
+     * GL_ARCH_TARGETS ("name=target@n;..." with targets of /grandline test view) the camera is placed and a screenshot
+     * clienttest_arch_<name>.png taken after the chunks have loaded. Used for before/after comparisons on a fixed seed.
+     */
+    private static void buildArch() {
+        createCharacter("Tester", "human");
+        cmd("gamemode spectator", 10);
+        cmd("gamerule doDaylightCycle false", 5);
+        cmd("time set 6000", 5);
+        cmd("gamerule doWeatherCycle false", 5);
+        cmd("weather clear", 5);
+        cmd("gamerule doMobSpawning false", 5);
+        add("hide the HUD", () -> Minecraft.getInstance().options.hideGui = true, 5);
+        String list = System.getenv("GL_ARCH_TARGETS");
+        if (list != null)
+            for (String e : list.split(";")) {
+                if (e.isBlank() || !e.contains("=")) continue;
+                String name = e.substring(0, e.indexOf('=')).trim(), t = e.substring(e.indexOf('=') + 1).trim();
+                if (name.equals("cmd")) { // a plain command (placing a showcase, moving the camera) without a shot
+                    cmd(t.startsWith("/") ? t.substring(1) : t, 200);
+                    continue;
+                }
+                if (name.startsWith("tp_")) { // a screenshot from an explicit camera: name=tp x y z yaw pitch
+                    cmd(t.startsWith("/") ? t.substring(1) : t, 200);
+                    shot("arch_" + name.substring(3));
+                    continue;
+                }
+                int n = 0;
+                if (t.contains("@")) {
+                    n = Integer.parseInt(t.substring(t.indexOf('@') + 1));
+                    t = t.substring(0, t.indexOf('@'));
+                }
+                cmd("grandline test view \"" + t + "\" " + n, 340);
+                shot("arch_" + name);
+            }
+        add("done", ClientSelfTest::finish, 0);
     }
 
     /** Quick world tour (GL_CLIENTTEST=tour): terrain and island shots only, for iterating on world generation. */

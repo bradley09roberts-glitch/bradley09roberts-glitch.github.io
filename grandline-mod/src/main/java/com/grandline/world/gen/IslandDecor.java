@@ -613,10 +613,11 @@ public final class IslandDecor {
         }
     }
 
+    /** A stone toro (cherry isles): post, shelf, a paper lantern and a little stone cap. */
     private static void stoneLantern(BlockSink k, int x, int y, int z) {
-        put(k, x, y + 1, z, Blocks.ANDESITE_WALL);
-        put(k, x, y + 2, z, Blocks.ANDESITE_WALL);
-        put(k, x, y + 3, z, Blocks.LANTERN);
+        put(k, x, y + 1, z, Blocks.ANDESITE_WALL.defaultBlockState().setValue(net.minecraft.world.level.block.WallBlock.UP, true));
+        put(k, x, y + 2, z, Blocks.POLISHED_ANDESITE_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP));
+        put(k, x, y + 3, z, com.grandline.registry.ArchBlocks.WHITE_PAPER_LANTERN.get().defaultBlockState());
         put(k, x, y + 4, z, Blocks.STONE_BRICK_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM));
     }
 

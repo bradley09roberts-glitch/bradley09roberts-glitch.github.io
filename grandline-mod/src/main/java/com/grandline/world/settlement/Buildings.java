@@ -90,45 +90,61 @@ public final class Buildings {
     public static void house(Builder b, BuildStyle st, int floors, Interior in) {
         Mats m = Mats.of(st, b.seed);
         int w = b.w, d = b.d;
-        site(b, m, 0, 0, w - 1, d - 1, floors * H + w / 2 + 4);
-        shell(b, m, 0, 0, w - 1, d - 1, floors);
-        roof(b, m, 0, 0, w - 1, d - 1, floors * H + 1, w >= d);
-        door(b, m, w / 2, 0, Direction.NORTH, true);
-        windows(b, m, 0, 0, w - 1, d - 1, floors, w / 2);
-        if (floors > 1) stairsUp(b, m, 1, d - 5, Direction.SOUTH, floors);
+        // walls inset by one so the eaves, sills and the door step stay inside the footprint a landmark gives it
+        int x1 = 1, z1 = 1, x2 = w - 2, z2 = d - 2, ix = x1 + 1, iz = z1 + 1, ax = x2 - 1, az = z2 - 1;
+        site(b, m, x1, z1, x2, z2, floors * H + w / 2 + 4);
+        shell(b, m, x1, z1, x2, z2, floors);
+        roof(b, m, x1, z1, x2, z2, floors * H + 1, x2 - x1 >= z2 - z1);
+        door(b, m, w / 2, z1, Direction.NORTH, m.roofKind != RoofKind.FLAT);
+        windows(b, m, x1, z1, x2, z2, floors, w / 2);
+        if (floors > 1) stairsUp(b, m, ix, az - 3, Direction.SOUTH, floors);
         switch (in) {
-            case TAVERN -> barRoom(b, m, w, d);
-            case SHOP -> shopRoom(b, m, w, d);
+            case TAVERN -> {
+                for (int x = ix + 1; x < ax; x++) b.set(x, 1, az - 2, Arch.decor(ArchBlocks.SHOP_COUNTER, Direction.NORTH));
+                for (int x = ix + 1; x < ax; x += 2) b.barrel(x, 1, az, LOOT_TAVERN);
+                b.marker("npc", w / 2, 1, az - 1, npc("bartender"));
+                Arch.tableSet(b, ix + 1, 1, iz + 1, chair(m));
+                b.marker("npc", ix + 1, 1, iz + 2, npc("patron"));
+                b.marker("npc", ax - 1, 1, iz + 1, npc("patron"));
+                b.marker("quest_board", ix, 2, iz + 1, new CompoundTag());
+            }
+            case SHOP -> {
+                for (int x = ix + 1; x <= ax; x++) b.set(x, 1, az - 2, Arch.decor(ArchBlocks.SHOP_COUNTER, Direction.NORTH));
+                for (int x = ix; x <= ax; x++) b.set(x, 1, az, Arch.decor(ArchBlocks.GOODS_SHELF, Direction.NORTH));
+                b.barrel(ix, 1, iz, LOOT_SHOP);
+                b.barrel(ax, 1, iz, LOOT_SHOP);
+                b.marker("npc", w / 2, 1, az - 1, npc("shopkeeper"));
+            }
             case SMITH -> {
-                b.set(2, 1, d - 2, Blocks.ANVIL);
-                b.set(w - 2, 1, d - 2, Blocks.BLAST_FURNACE.defaultBlockState().setValue(BlastFurnaceBlock.FACING, Direction.NORTH));
-                b.chest(1, 1, 1, Direction.EAST, LOOT_SMITH);
-                b.marker("npc", w / 2, 1, d - 3, npc("blacksmith"));
+                b.set(ix, 1, az, Blocks.ANVIL);
+                b.set(ax, 1, az, Blocks.BLAST_FURNACE.defaultBlockState().setValue(BlastFurnaceBlock.FACING, Direction.NORTH));
+                b.chest(ix, 1, iz, Direction.EAST, LOOT_SMITH);
+                b.marker("npc", w / 2, 1, az - 1, npc("blacksmith"));
             }
             case INN -> {
-                b.set(w - 3, 1, d - 3, Arch.decor(ArchBlocks.SHOP_COUNTER, Direction.NORTH));
-                b.marker("npc", w / 2, 1, d - 3, npc("innkeeper"));
+                b.set(ax, 1, az - 1, Arch.decor(ArchBlocks.SHOP_COUNTER, Direction.NORTH));
+                b.marker("npc", w / 2, 1, az - 1, npc("innkeeper"));
             }
             case MANSION -> {
-                b.chest(w - 2, 1, d - 2, Direction.WEST, LOOT_TREASURE);
+                b.chest(ax, 1, az, Direction.WEST, LOOT_TREASURE);
                 b.marker("npc", w / 2, 1, d / 2, npc("noble"));
-                b.marker("npc", 2, 1, 2, npc("guard"));
+                b.marker("npc", ix, 1, iz, npc("guard"));
             }
             case WAREHOUSE -> {
-                for (int x = 1; x < w - 1; x += 2) for (int z = d - 3; z < d - 1; z++) Arch.cargo(b, x, 1, z, x + z);
-                b.barrel(w - 2, 1, 2, LOOT_WAREHOUSE);
-                b.barrel(1, 1, 2, LOOT_WAREHOUSE);
-                b.marker("npc", w / 2, 1, 3, npc("dockworker"));
+                for (int x = ix; x <= ax; x += 2) for (int z = az - 1; z <= az; z++) Arch.cargo(b, x, 1, z, x + z);
+                b.barrel(ax, 1, iz, LOOT_WAREHOUSE);
+                b.barrel(ix, 1, iz, LOOT_WAREHOUSE);
+                b.marker("npc", w / 2, 1, iz + 1, npc("dockworker"));
             }
             case DOJO -> {
-                b.fill(1, 0, 1, w - 2, 0, d - 2, Blocks.BIRCH_PLANKS.defaultBlockState());
-                for (int x = 2; x < w - 2; x += 3) b.set(x, 1, d - 2, Blocks.TARGET);
-                b.marker("npc", w / 2, 1, d - 3, npc("master"));
-                b.marker("npc", 3, 1, 4, npc("student"));
+                b.fill(ix, 0, iz, ax, 0, az, Blocks.BIRCH_PLANKS.defaultBlockState());
+                for (int x = ix + 1; x < ax; x += 3) b.set(x, 1, az, Blocks.TARGET);
+                b.marker("npc", w / 2, 1, az - 1, npc("master"));
+                b.marker("npc", ix + 1, 1, iz + 2, npc("student"));
             }
             default -> {
-                b.bed(1, 1, d - 3, Blocks.RED_BED, Direction.SOUTH);
-                b.chest(w - 2, 1, 1, Direction.WEST, LOOT_HOUSE);
+                b.bed(ix, 1, az - 1, Blocks.RED_BED, Direction.SOUTH);
+                b.chest(ax, 1, iz, Direction.WEST, LOOT_HOUSE);
                 Arch.tableSet(b, w / 2, 1, d / 2, chair(m));
                 b.marker("npc", w / 2, 1, d / 2 + 1, npc("resident"));
             }
@@ -280,7 +296,7 @@ public final class Buildings {
         b.set(x, 3, z, Blocks.AIR);
         int ox = x + out.getStepX(), oz = z + out.getStepZ();
         b.foundation(ox, oz, ox, oz, m.base.getBlock(), 6);
-        b.set(ox, 0, oz, Arch.stair(stairsOf(m), out.getOpposite(), Half.BOTTOM));
+        b.set(ox, 0, oz, Arch.stair(m.step != null ? m.step : stairsOf(m), out.getOpposite(), Half.BOTTOM));
         b.clear(ox, 1, oz, ox, 3, oz);
         Direction.Axis along = out.getAxis() == Direction.Axis.Z ? Direction.Axis.X : Direction.Axis.Z;
         int sx = along == Direction.Axis.X ? 1 : 0, sz = along == Direction.Axis.Z ? 1 : 0;
@@ -526,8 +542,14 @@ public final class Buildings {
         b.set(w - 2, u, d - 2, Blocks.BOOKSHELF);
         b.bed(w - 3, u, d - 3, Blocks.WHITE_BED, Direction.SOUTH);
         b.hanging(cx, u + H - 2, z1 + 4, m.lantern.getBlock());
-        // garden planters along the front
-        for (int x : new int[]{1, 2, w - 3, w - 2}) b.set(x, 1, 0, Arch.decor(ArchBlocks.FLOWER_PLANTER, Direction.NORTH));
+        // a low garden wall either side of the portico with planters behind it
+        for (int x = 0; x < w; x++) {
+            if (Math.abs(x - cx) <= 3) continue;
+            boolean end = x == 0 || x == w - 1 || Math.abs(x - cx) == 4;
+            b.set(x, 1, 0, Arch.connect(m.gardenWall, false, x < w - 1 && Math.abs(x + 1 - cx) > 3, false, x > 0 && Math.abs(x - 1 - cx) > 3)
+                    .setValue(WallBlock.UP, end));
+            if (!end) b.set(x, 1, 1, Arch.decor(ArchBlocks.FLOWER_PLANTER, Direction.NORTH));
+        }
     }
 
     // ================================================================== trades
@@ -967,10 +989,9 @@ public final class Buildings {
         rm.roofKind = m.roofKind == RoofKind.FLARED ? RoofKind.FLARED : RoofKind.HIP;
         rm.eaveBrackets = false;
         Arch.hip(b, rm, 0, 0, 4, 4, h + 4, 1);
-        b.ladderUp(2, 1, 3, h, Direction.NORTH);
         b.set(2, 1, 4, m.base);
         b.fill(2, 3, 4, 2, h - 1, 4, m.frame);
-        b.clear(2, h, 3, 2, h, 3);
+        b.ladderUp(2, 1, 3, h, Direction.NORTH); // the top rung fills the hatch in the platform
         b.hanging(2, h + 3, 2, m.lantern.getBlock());
         b.marker("npc", 1, h + 1, 1, npc("lookout"));
     }
@@ -984,7 +1005,10 @@ public final class Buildings {
             Block band = (y / 3) % 2 == 0 ? ArchBlocks.WHITE_PLASTER.get() : Blocks.RED_TERRACOTTA;
             b.cylinder(3, 3, y, y, 3, band, true);
         }
-        for (int y = 5; y <= 13; y += 4) b.set(3, y, 6, Arch.along(Blocks.GLASS_PANE.defaultBlockState(), Direction.Axis.X));
+        for (int y = 5; y <= 13; y += 4) {
+            b.set(0, y, 3, Arch.along(Blocks.GLASS_PANE.defaultBlockState(), Direction.Axis.Z));
+            b.set(6, y + 2, 3, Arch.along(Blocks.GLASS_PANE.defaultBlockState(), Direction.Axis.Z));
+        }
         // gallery
         b.cylinder(3, 3, 16, 16, 3, Blocks.SMOOTH_STONE, false);
         for (int x = 0; x <= 6; x++)
@@ -998,8 +1022,7 @@ public final class Buildings {
         b.cylinder(3, 3, 19, 19, 2, Blocks.RED_TERRACOTTA, false);
         b.cylinder(3, 3, 20, 20, 1, Blocks.RED_TERRACOTTA, false);
         b.set(3, 21, 3, Blocks.LIGHTNING_ROD);
-        b.ladderUp(3, 1, 1, 15, Direction.SOUTH);
-        b.clear(3, 16, 1, 3, 16, 1);
+        b.ladderUp(3, 1, 5, 16, Direction.NORTH); // against the back wall, through a hatch in the gallery floor
         b.door(3, 1, 0, Blocks.SPRUCE_DOOR, Direction.NORTH);
         b.marker("npc", 3, 1, 3, npc("keeper"));
     }
@@ -1085,7 +1108,7 @@ public final class Buildings {
             b.set(x, 5, 2, Arch.stair(m.roofStairs, Direction.NORTH, Half.BOTTOM));
             b.set(x, 5, 1, Arch.slab(m.roofSlab, SlabType.TOP));
         }
-        b.marker("npc", 1, 1, -1, npc("villager"));
+        b.marker("npc", 1, 0, -1, npc("villager"));
     }
 
     /** Plaza (9x9): patterned paving, a tiered fountain, lamp posts, benches and planters; the town centre marker. */
@@ -1186,7 +1209,7 @@ public final class Buildings {
         b.set(3, 2, d - 2, Blocks.OAK_FENCE.defaultBlockState());
         b.set(1, 1, 1, Blocks.COMPOSTER.defaultBlockState());
         b.set(w - 2, 1, 1, Blocks.HAY_BLOCK.defaultBlockState());
-        b.marker("npc", 0, 1, -1, npc("farmer"));
+        b.marker("npc", 0, 0, -1, npc("farmer"));
     }
 
     /** Ruined house (9x9): the legible shell of a house of the style, its roof fallen in, overgrown, bandits camping. */
@@ -1205,7 +1228,8 @@ public final class Buildings {
                 if (!edge) continue;
                 boolean corner = (x == 0 || x == w - 1) && (z == 0 || z == d - 1);
                 int h = corner ? 5 : 1 + b.rand(x * 13 + z * 7, 4);
-                if (!corner && ((x == w / 2 && z == 0) || (x % 4 == 2 && z == d - 1))) h = Math.min(h, 1);
+                if (!corner && x == w / 2 && z == 0) continue; // the old doorway, open
+                if (!corner && x % 4 == 2 && z == d - 1) h = Math.min(h, 1);
                 for (int y = 1; y <= h; y++) {
                     BlockState s = y == 1 ? m.base : corner ? m.frame : (b.rand(x + y * 3 + z, 4) == 0 ? Blocks.MOSSY_COBBLESTONE.defaultBlockState() : m.wall);
                     b.set(x, y, z, s);
@@ -1297,6 +1321,11 @@ public final class Buildings {
         b.hanging(w / 2, H + 1, 2, m.lantern.getBlock());
         b.set(1, 1, 0, ArchBlocks.BOLLARD.get().defaultBlockState());
         b.set(w - 2, 1, 0, ArchBlocks.BOLLARD.get().defaultBlockState());
+        for (int x = w / 2 - 1; x <= w / 2 + 1; x++) { // the slipway's end: dock-plank steps down toward the water
+            b.set(x, 0, -1, Arch.stair(ArchBlocks.DOCK_PLANK_STAIRS.get().defaultBlockState(), Direction.SOUTH, Half.BOTTOM));
+            b.set(x, -1, -2, Arch.slab(ArchBlocks.DOCK_PLANK_SLAB.get().defaultBlockState(), SlabType.TOP));
+        }
+        b.foundation(w / 2 - 1, -1, w / 2 + 1, -1, ArchBlocks.WEATHERED_BEAM.get(), 8);
         b.marker("npc", w / 2 - 3, 1, 2, npc("shipwright"));
         b.marker("ship_spawn", w / 2, 0, -8, new CompoundTag());
     }
