@@ -274,6 +274,9 @@ public final class ClientSelfTest {
         add("read the map", () -> mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND), 40);
         shot("14e_treasure_map");
         add("close screen", () -> mc.setScreen(null), 10);
+        add("open advancements", () -> mc.setScreen(new net.minecraft.client.gui.screens.advancements.AdvancementsScreen(mc.player.connection.getAdvancements())), 40);
+        shot("14f_journey_advancements");
+        add("close screen", () -> mc.setScreen(null), 10);
         cmd("item replace entity @s weapon.mainhand with minecraft:air", 5);
         add("combat mode off", () -> {
             ClientState.combatMode = false;
