@@ -220,7 +220,7 @@ public final class Ferries {
             if (cx * cx + cz * cz >= r * r) continue;
             double t = Mth.clamp((cx * dx + cz * dz) / len2, 0, 1);
             double qx = dx * t - cx, qz = dz * t - cz;
-            double core = i.radius * 1.05 + 8;
+            double core = core(i, ship);
             if (qx * qx + qz * qz >= core * core) continue;
             double ang = Math.atan2(pz - i.z, px - i.x);
             double delta = Mth.wrapDegrees(Math.toDegrees(Math.atan2(ship.ferryTarget.z - i.z, ship.ferryTarget.x - i.x) - ang));
@@ -233,7 +233,7 @@ public final class Ferries {
         double firstT = 2, firstR = 0;
         for (Island i : plan.islands) {
             boolean dest = i.id.equals(ship.ferryIsland);
-            double r = dest ? i.radius * 1.05 + 8 : i.radius * 1.25 + 24;
+            double r = dest ? core(i, ship) : i.radius * 1.25 + 24;
             double cx = i.x - px, cz = i.z - pz;
             if (cx * cx + cz * cz < r * r) continue;
             double t = (cx * dx + cz * dz) / len2;
@@ -266,6 +266,13 @@ public final class Ferries {
         ship.setYRot(best);
         ship.ferryDetour = best;
         ship.ferryDetourT = 60;
+    }
+
+    /** The island's solid core; for the destination it stops short of the dock point, which may lie close in. */
+    private static double core(Island i, ShipEntity ship) {
+        double core = i.radius * 1.05 + 8;
+        if (i.id.equals(ship.ferryIsland)) core = Math.min(core, i.distance((int) ship.ferryTarget.x, (int) ship.ferryTarget.z) - 8);
+        return core;
     }
 
     /** Clear water ahead on a heading, swept across the hull's beam: blocks until the first obstacle (max if none). */
