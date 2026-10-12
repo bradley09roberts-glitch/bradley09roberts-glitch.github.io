@@ -475,7 +475,10 @@ public final class BusterCall {
             return;
         }
         sh.setSail(d > 50 ? 3 : 2);
-        com.grandline.navigation.Ferries.helm(sh, l, new Vec3(st.x, sh.getY(), st.z), "");
+        // the target's island is the destination: the helm then comes in to it instead of rounding it for ever
+        WorldPlan plan = WorldPlan.forLevel(l);
+        Island isl = plan == null ? null : plan.nearest(Mth.floor(c.focus.x), Mth.floor(c.focus.z), 600);
+        com.grandline.navigation.Ferries.helm(sh, l, new Vec3(st.x, sh.getY(), st.z), isl == null ? "" : isl.id);
     }
 
     /** A mortar shell from a warship onto the target (lobbed high over the town and the trees). */
