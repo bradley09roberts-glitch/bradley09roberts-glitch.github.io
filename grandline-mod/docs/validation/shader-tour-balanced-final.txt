@@ -1,0 +1,178 @@
+ok wait for world
+ok wait for creation screen
+  shot 01_creation_screen at 41401 90 12101 fps=2 entities=9
+ok shot 01_creation_screen
+ok create character
+ok wait for created
+ok hide the HUD
+ok /gamemode spectator
+ok /gamerule doDaylightCycle false
+  chat: Gamerule doDaylightCycle is now set to: false
+ok /grandline test calm
+  chat: Living sea paused; 0 NPC ships cleared
+ok /time set 6000
+  iris: shader pack in use=true, pack=GrandLineShaders-1.0.0.zip
+ok iris state
+  chat: Set the time to 6000
+ok /execute in minecraft:overworld run tp @s 36000 72 21400 0 8
+  chat: Teleported Rookie Tester to 36000.500000, 72.000000, 21400.500000
+ok small window while chunks load
+  sections ready after 46 ticks: C: 30/3744 D: 8
+ok wait for chunks
+ok refresh visibility
+  before the shot: C: 99/5784 D: 8
+ok visible sections
+  shaders_balanced_01_ocean_noon: rain 0.00, dimension minecraft:overworld
+ok weather here
+  shot shaders_balanced_01_ocean_noon at 36001 72 21401 fps=3 entities=1
+ok shot shaders_balanced_01_ocean_noon
+ok /execute in minecraft:overworld run tp @s 36000 90 20000
+  chat: Teleported Rookie Tester to 36000.500000, 90.000000, 20000.500000
+ok /grandline island tp shiokaze_isle
+  chat: Teleported to shiokaze_isle
+ok small window while chunks load
+  sections ready after 40 ticks: C: 29/3816 D: 8
+ok wait for chunks
+ok refresh visibility
+  before the shot: C: 68/5784 D: 8
+ok visible sections
+ok island info
+  chat: shiokaze_isle (east_blue, tier 1, VILLAGE, r=380) at 36000,20000 dist 5
+  island centre 36000,20000 radius 380.0; shore camera: tp @s 36000.0 71 20396.0 180 7
+ok aim at the shore
+ok go there
+  chat: Teleported Rookie Tester to 36000.000000, 71.000000, 20396.000000
+ok small window while chunks load
+  sections ready after 76 ticks: C: 46/4632 D: 8
+ok wait for chunks
+ok refresh visibility
+  before the shot: C: 121/5784 D: 8
+ok visible sections
+  shot shaders_balanced_03_shoreline at 36000 71 20396 fps=2 entities=14
+ok shot shaders_balanced_03_shoreline
+ok /gltest_dock
+  chat: Dock at 35667,20000 tip 35639,20000
+ok small window while chunks load
+  sections ready after 40 ticks: C: 42/4728 D: 8
+ok wait for chunks
+ok refresh visibility
+  before the shot: C: 114/5784 D: 8
+ok visible sections
+  shot shaders_balanced_04_harbour at 35627 74 19988 fps=2 entities=3
+ok shot shaders_balanced_04_harbour
+ok /execute in minecraft:overworld run tp @s 36000 57 21400 0 -55
+  chat: Teleported Rookie Tester to 36000.500000, 57.000000, 21400.500000
+ok small window while chunks load
+  sections ready after 40 ticks: C: 12/4704 D: 8
+ok wait for chunks
+ok refresh visibility
+  before the shot: C: 12/5784 D: 8
+ok visible sections
+  shaders_balanced_08_underwater_up: rain 0.00, dimension minecraft:overworld
+ok weather here
+  shot shaders_balanced_08_underwater_up at 36001 57 21401 fps=4 entities=1
+ok shot shaders_balanced_08_underwater_up
+ok /time set 12650
+ok /tp @s 36000 70 21400 90 4
+  chat: Set the time to 12650
+  chat: Teleported Rookie Tester to 36000.500000, 70.000000, 21400.500000
+ok small window while chunks load
+  sections ready after 40 ticks: C: 78/5784 D: 8
+ok wait for chunks
+ok refresh visibility
+  before the shot: C: 154/5784 D: 8
+ok visible sections
+  shaders_balanced_09_sunset: rain 0.00, dimension minecraft:overworld
+ok weather here
+  shot shaders_balanced_09_sunset at 36001 70 21401 fps=2 entities=1
+ok shot shaders_balanced_09_sunset
+ok /time set 6000
+  chat: Set the time to 6000
+ok /execute in grandline:sky run tp @s -450 120 -20 0 30
+  chat: Teleported Rookie Tester to -449.500000, 120.000000, -19.500000
+ok small window while chunks load
+  sections ready after 40 ticks: C: 59/5784 D: 8
+ok wait for chunks
+ok refresh visibility
+  before the shot: C: 116/5784 D: 8
+ok visible sections
+  shaders_balanced_13_sky_angel_island: rain 0.00, dimension grandline:sky
+ok weather here
+  shot shaders_balanced_13_sky_angel_island at -450 120 -20 fps=3 entities=9
+ok shot shaders_balanced_13_sky_angel_island
+ok /execute in grandline:deep_sea run tp @s 170 110 40 110 15
+  chat: Teleported Rookie Tester to 170.500000, 110.000000, 40.500000
+ok small window while chunks load
+  sections ready after 40 ticks: C: 102/5784 D: 8
+ok wait for chunks
+ok refresh visibility
+  before the shot: C: 137/5784 D: 8
+ok visible sections
+  shaders_balanced_15_deep_fishman_island: rain 0.00, dimension grandline:deep_sea
+ok weather here
+  shot shaders_balanced_15_deep_fishman_island at 171 110 41 fps=4 entities=12
+ok shot shaders_balanced_15_deep_fishman_island
+ok /execute in grandline:ship_interiors run tp @s 0.5 101 0.5 -45 10
+  chat: Teleported Rookie Tester to 0.500000, 101.000000, 0.500000
+ok small window while chunks load
+  sections ready after 40 ticks: C: 4/3856 D: 8
+ok wait for chunks
+ok refresh visibility
+  before the shot: C: 4/3856 D: 8
+ok visible sections
+  shaders_balanced_17_ship_interiors_dim: rain 0.00, dimension grandline:ship_interiors
+ok weather here
+  shot shaders_balanced_17_ship_interiors_dim at 1 101 1 fps=3 entities=1
+ok shot shaders_balanced_17_ship_interiors_dim
+ok /fill -5 99 -5 5 105 5 minecraft:spruce_planks hollow
+  chat: Successfully filled 4 block(s)
+ok /setblock 0 104 0 minecraft:lantern[hanging=true]
+  chat: Changed the block at 0, 104, 0
+ok /setblock 3 100 3 minecraft:barrel
+  chat: Changed the block at 3, 100, 3
+ok /setblock -3 100 3 minecraft:chest
+  chat: Changed the block at -3, 100, 3
+ok /setblock 3 104 -3 minecraft:lantern[hanging=true]
+  chat: Changed the block at 3, 104, -3
+ok /tp @s -3.5 101 -3.5 -45 10
+  chat: Teleported Rookie Tester to -3.500000, 101.000000, -3.500000
+  shot shaders_balanced_17_ship_interiors_dim at -4 101 -4 fps=4 entities=1
+ok shot shaders_balanced_17_ship_interiors_dim
+ok /execute in minecraft:the_nether run tp @s 0 80 0 0 10
+  chat: Teleported Rookie Tester to 0.500000, 80.000000, 0.500000
+ok small window while chunks load
+  sections ready after 40 ticks: C: 81/3856 D: 8
+ok wait for chunks
+ok refresh visibility
+  before the shot: C: 172/3856 D: 8
+ok visible sections
+  shaders_balanced_18_nether: rain 0.00, dimension minecraft:the_nether
+ok weather here
+  shot shaders_balanced_18_nether at 1 80 1 fps=3 entities=6
+ok shot shaders_balanced_18_nether
+ok /execute in minecraft:the_end run tp @s 0 80 0 0 10
+  chat: Teleported Rookie Tester to 0.500000, 80.000000, 0.500000
+ok small window while chunks load
+  sections ready after 40 ticks: C: 108/3856 D: 8
+ok wait for chunks
+ok refresh visibility
+  before the shot: C: 150/3856 D: 8
+ok visible sections
+  shaders_balanced_19_end: rain 0.00, dimension minecraft:the_end
+ok weather here
+  shot shaders_balanced_19_end at 1 80 1 fps=4 entities=12
+ok shot shaders_balanced_19_end
+ok /execute in minecraft:overworld run tp @s 36000 72 21400 0 8
+  chat: Teleported Rookie Tester to 36000.500000, 72.000000, 21400.500000
+ok /grandline test storm
+  chat: Storm at 35700, 13300 intensity 0.78376514
+ok small window while chunks load
+  sections ready after 113 ticks: C: 53/3912 D: 8
+ok wait for chunks
+ok refresh visibility
+  before the shot: C: 137/5784 D: 8
+ok visible sections
+  shot shaders_balanced_20_storm at 35701 90 13301 fps=2 entities=1
+ok shot shaders_balanced_20_storm
+  iris at the end: shader pack in use=true, pack=GrandLineShaders-1.0.0.zip
+ok iris state

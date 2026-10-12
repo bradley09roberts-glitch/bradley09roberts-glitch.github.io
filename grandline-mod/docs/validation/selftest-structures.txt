@@ -1,0 +1,110 @@
+Grand Line Odyssey self-test, phase landmarks, Mon Oct 12 18:41:06 UTC 2026
+PASS landmarks: no placeholder set pieces remain — 78 registered builders
+PASS landmark abandoned_lab — 41x35, 5835 blocks, 6 NPCs (6 reachable), 4 chests, 8 markers, interior 1005 cells, 4 rotations in footprint
+PASS landmark alubarna_palace — 55x55, 20877 blocks, 16 NPCs (16 reachable), 7 chests, 19 markers, interior 1585 cells, 4 rotations in footprint
+PASS landmark ancient_ruin — 15x15, 571 blocks, 1 NPCs (1 reachable), 1 chests, 2 markers, interior 6 cells, 4 rotations in footprint
+PASS landmark arlong_park — 31x31, 5582 blocks, 5 NPCs (5 reachable), 1 chests, 6 markers, interior 611 cells, 4 rotations in footprint
+PASS landmark auction_house — 33x35, 5749 blocks, 9 NPCs (9 reachable), 2 chests, 14 markers, interior 595 cells, 4 rotations in footprint
+PASS landmark baratie — 23x45 (sea level), 5660 blocks, 4 NPCs (4 reachable), 1 chests, 5 markers, interior 2854 cells, 4 rotations in footprint
+PASS landmark cake_chateau — 51x51, 9064 blocks, 9 NPCs (9 reachable), 5 chests, 11 markers, interior 1700 cells, 4 rotations in footprint
+PASS landmark cloud_chapel — 19x19, 1700 blocks, 3 NPCs (3 reachable), 1 chests, 3 markers, interior 185 cells, 4 rotations in footprint
+PASS landmark cloud_end_gate — 13x11, 478 blocks, 1 NPCs (1 reachable), 0 chests, 1 markers, interior 62 cells, 4 rotations in footprint
+PASS landmark corrida_colosseum — 51x51, 15810 blocks, 12 NPCs (12 reachable), 5 chests, 18 markers, interior 937 cells, 4 rotations in footprint
+PASS landmark cricket_house — 21x19, 1470 blocks, 3 NPCs (3 reachable), 4 chests, 5 markers, interior 62 cells, 4 rotations in footprint
+PASS landmark drum_castle — 25x25, 3471 blocks, 2 NPCs (2 reachable), 1 chests, 3 markers, interior 566 cells, 4 rotations in footprint
+PASS landmark endless_bridge — 11x400 (sea level), 29494 blocks, 6 NPCs (6 reachable), 4 chests, 7 markers, interior 30355 cells, 4 rotations in footprint
+PASS landmark execution_platform — 13x13, 750 blocks, 2 NPCs (2 reachable), 0 chests, 3 markers, interior 80 cells, 4 rotations in footprint
+PASS landmark explorers_monument — 27x27, 2285 blocks, 4 NPCs (4 reachable), 2 chests, 6 markers, interior 255 cells, 4 rotations in footprint
+PASS landmark flower_capital_castle — 45x45, 12200 blocks, 9 NPCs (9 reachable), 6 chests, 11 markers, interior 933 cells, 4 rotations in footprint
+PASS landmark fruit_tree_grove — 11x11, 272 blocks, 0 NPCs (0 reachable), 0 chests, 1 markers, interior 36 cells, 4 rotations in footprint
+PASS landmark future_lab — 41x41, 7776 blocks, 6 NPCs (6 reachable), 2 chests, 8 markers, interior 1562 cells, 4 rotations in footprint
+PASS landmark galley_la_docks — 45x41 (sea level), 23181 blocks, 9 NPCs (9 reachable), 6 chests, 13 markers, interior 1402 cells, 4 rotations in footprint
+PASS landmark gates_of_justice — 47x17 (sea level), 17481 blocks, 5 NPCs (5 reachable), 4 chests, 6 markers, interior 1597 cells, 4 rotations in footprint
+PASS landmark germa_fleet — 61x61 (sea level), 16294 blocks, 8 NPCs (8 reachable), 1 chests, 9 markers, interior 6802 cells, 4 rotations in footprint
+PASS landmark giant_duel_ground — 45x45, 4095 blocks, 3 NPCs (3 reachable), 7 chests, 6 markers, interior 442 cells, 4 rotations in footprint
+PASS landmark giant_legs — 41x41, 7478 blocks, 7 NPCs (7 reachable), 5 chests, 9 markers, interior 450 cells, 4 rotations in footprint
+PASS landmark god_valley_ruins — 45x45, 3047 blocks, 3 NPCs (3 reachable), 1 chests, 4 markers, interior 83 cells, 4 rotations in footprint
+PASS landmark golden_belfry — 17x17, 6441 blocks, 1 NPCs (1 reachable), 1 chests, 2 markers, interior 658 cells, 4 rotations in footprint
+PASS landmark gray_terminal — 37x33, 5927 blocks, 10 NPCs (10 reachable), 10 chests, 12 markers, interior 408 cells, 4 rotations in footprint
+PASS landmark gyoncorde_plaza — 29x29, 1736 blocks, 4 NPCs (4 reachable), 0 chests, 6 markers, interior 168 cells, 4 rotations in footprint
+PASS landmark haunted_mansion — 45x45, 11609 blocks, 9 NPCs (9 reachable), 4 chests, 11 markers, interior 1481 cells, 4 rotations in footprint
+PASS landmark heavens_gate — 23x17, 2352 blocks, 2 NPCs (2 reachable), 1 chests, 2 markers, interior 121 cells, 4 rotations in footprint
+PASS landmark hilltop_mansion — 33x29, 3813 blocks, 6 NPCs (6 reachable), 7 chests, 7 markers, interior 534 cells, 4 rotations in footprint
+PASS landmark impel_down — 31x31, 11241 blocks, 6 NPCs (6 reachable), 0 chests, 12 markers, interior 1319 cells, 4 rotations in footprint
+PASS landmark junkyard_fort — 37x37, 4157 blocks, 7 NPCs (7 reachable), 6 chests, 10 markers, interior 293 cells, 4 rotations in footprint
+PASS landmark knock_up_marker — 5x5 (sea level), 106 blocks, 0 NPCs (0 reachable), 0 chests, 1 markers, interior 41 cells, 4 rotations in footprint
+PASS landmark kuja_palace — 45x45, 9164 blocks, 8 NPCs (8 reachable), 3 chests, 10 markers, interior 788 cells, 4 rotations in footprint
+PASS landmark kyuka_resort — 33x27, 4420 blocks, 4 NPCs (4 reachable), 2 chests, 4 markers, interior 1072 cells, 4 rotations in footprint
+PASS landmark laugh_tale_ruins — 25x25, 2707 blocks, 0 NPCs (0 reachable), 1 chests, 2 markers, interior 182 cells, 4 rotations in footprint
+PASS landmark lulusia_memorial — 15x15, 484 blocks, 1 NPCs (1 reachable), 1 chests, 2 markers, interior 6 cells, 4 rotations in footprint
+PASS landmark mangrove_grove — 37x37, 7395 blocks, 6 NPCs (6 reachable), 6 chests, 9 markers, interior 474 cells, 4 rotations in footprint
+PASS landmark marine_base — 27x27, 3514 blocks, 5 NPCs (5 reachable), 1 chests, 7 markers, interior 471 cells, 4 rotations in footprint
+PASS landmark marine_headquarters — 41x41, 10857 blocks, 5 NPCs (5 reachable), 1 chests, 6 markers, interior 2373 cells, 4 rotations in footprint
+PASS landmark mary_geoise — 41x41, 5455 blocks, 1 NPCs (1 reachable), 0 chests, 2 markers, interior 500 cells, 4 rotations in footprint
+PASS landmark mercenary_guild_hall — 31x25, 2895 blocks, 4 NPCs (4 reachable), 3 chests, 4 markers, interior 557 cells, 4 rotations in footprint
+PASS landmark mermaid_cove — 27x27 (sea level), 5911 blocks, 4 NPCs (4 reachable), 1 chests, 4 markers, interior 350 cells, 4 rotations in footprint
+PASS landmark mogaro_royal_gate — 27x21, 2281 blocks, 3 NPCs (3 reachable), 1 chests, 3 markers, interior 197 cells, 4 rotations in footprint
+PASS landmark nanohana_port — 41x35 (sea level), 13495 blocks, 14 NPCs (14 reachable), 32 chests, 19 markers, interior 1062 cells, 4 rotations in footprint
+PASS landmark oykot_palace — 35x29, 4608 blocks, 4 NPCs (4 reachable), 1 chests, 4 markers, interior 908 cells, 4 rotations in footprint
+PASS landmark pirate_hive — 41x41, 8731 blocks, 9 NPCs (9 reachable), 8 chests, 12 markers, interior 1640 cells, 4 rotations in footprint
+PASS landmark port_beacon — 7x7, 465 blocks, 1 NPCs (1 reachable), 0 chests, 2 markers, interior 54 cells, 4 rotations in footprint
+PASS landmark prodence_castle — 31x31, 5732 blocks, 4 NPCs (4 reachable), 1 chests, 4 markers, interior 394 cells, 4 rotations in footprint
+PASS landmark rainbase_casino — 37x37, 9388 blocks, 10 NPCs (10 reachable), 12 chests, 15 markers, interior 2807 cells, 4 rotations in footprint
+PASS landmark revolutionary_hq — 41x41, 10504 blocks, 12 NPCs (12 reachable), 7 chests, 14 markers, interior 1267 cells, 4 rotations in footprint
+PASS landmark rommel_keep — 29x29, 5270 blocks, 4 NPCs (4 reachable), 2 chests, 4 markers, interior 373 cells, 4 rotations in footprint
+PASS landmark royal_castle — 51x51, 16569 blocks, 14 NPCs (14 reachable), 8 chests, 16 markers, interior 2830 cells, 4 rotations in footprint
+PASS landmark royal_plateau — 45x45, 23598 blocks, 11 NPCs (11 reachable), 8 chests, 13 markers, interior 1686 cells, 4 rotations in footprint
+PASS landmark ruined_castle — 41x41, 8225 blocks, 5 NPCs (5 reachable), 13 chests, 7 markers, interior 760 cells, 4 rotations in footprint
+PASS landmark ryugu_palace — 43x43, 10373 blocks, 5 NPCs (5 reachable), 2 chests, 6 markers, interior 474 cells, 4 rotations in footprint
+PASS landmark sacrificial_altar — 17x17, 884 blocks, 1 NPCs (1 reachable), 1 chests, 2 markers, interior 21 cells, 4 rotations in footprint
+PASS landmark sea_forest_graveyard — 37x37, 3167 blocks, 1 NPCs (1 reachable), 3 chests, 3 markers, interior 341 cells, 4 rotations in footprint
+PASS landmark sea_train_station — 15x11, 663 blocks, 1 NPCs (1 reachable), 0 chests, 2 markers, interior 85 cells, 4 rotations in footprint
+PASS landmark shandora_ruins — 47x47, 9446 blocks, 3 NPCs (3 reachable), 6 chests, 5 markers, interior 413 cells, 4 rotations in footprint
+PASS landmark skull_dome — 51x51, 15615 blocks, 9 NPCs (9 reachable), 14 chests, 12 markers, interior 1105 cells, 4 rotations in footprint
+PASS landmark starter_shrine — 9x9, 191 blocks, 1 NPCs (1 reachable), 1 chests, 2 markers, interior 42 cells, 4 rotations in footprint
+PASS landmark sword_dojo — 15x13, 729 blocks, 2 NPCs (2 reachable), 0 chests, 2 markers, interior 85 cells, 4 rotations in footprint
+PASS landmark tangerine_grove — 25x21, 1411 blocks, 3 NPCs (3 reachable), 3 chests, 5 markers, interior 219 cells, 4 rotations in footprint
+PASS landmark tontatta_village — 29x29, 4441 blocks, 6 NPCs (6 reachable), 3 chests, 8 markers, interior 132 cells, 4 rotations in footprint
+PASS landmark tower_of_justice — 17x17, 3849 blocks, 4 NPCs (4 reachable), 1 chests, 4 markers, interior 913 cells, 4 rotations in footprint
+PASS landmark treasure_cache — 7x7, 85 blocks, 0 NPCs (0 reachable), 1 chests, 1 markers, interior 0 cells, 4 rotations in footprint
+PASS landmark treasure_tree — 41x41, 22725 blocks, 2 NPCs (2 reachable), 1 chests, 2 markers, interior 585 cells, 4 rotations in footprint
+PASS landmark tree_of_knowledge — 31x31, 5367 blocks, 1 NPCs (1 reachable), 1 chests, 2 markers, interior 200 cells, 4 rotations in footprint
+PASS landmark twin_capes_lighthouse — 9x9, 530 blocks, 1 NPCs (1 reachable), 0 chests, 2 markers, interior 54 cells, 4 rotations in footprint
+PASS landmark volcano_vent — 27x27, 3237 blocks, 1 NPCs (1 reachable), 2 chests, 3 markers, interior 141 cells, 4 rotations in footprint
+PASS landmark water7_fountain — 21x21, 1926 blocks, 1 NPCs (1 reachable), 0 chests, 2 markers, interior 380 cells, 4 rotations in footprint
+PASS landmark waterfall_gate — 25x23, 4380 blocks, 4 NPCs (4 reachable), 3 chests, 6 markers, interior 296 cells, 4 rotations in footprint
+PASS landmark weather_lab — 21x21, 1982 blocks, 2 NPCs (2 reachable), 2 chests, 2 markers, interior 158 cells, 4 rotations in footprint
+PASS landmark welcome_arch — 27x25, 3526 blocks, 10 NPCs (10 reachable), 13 chests, 14 markers, interior 552 cells, 4 rotations in footprint
+PASS landmark white_city — 47x47, 7449 blocks, 4 NPCs (4 reachable), 5 chests, 6 markers, interior 1014 cells, 4 rotations in footprint
+PASS landmark windmill — 13x11, 579 blocks, 1 NPCs (1 reachable), 0 chests, 1 markers, interior 77 cells, 4 rotations in footprint
+PASS landmark yuba_oasis — 29x29, 3058 blocks, 3 NPCs (3 reachable), 5 chests, 5 markers, interior 281 cells, 4 rotations in footprint
+PASS landmark alubarna_palace stamped into the world — NONE on alabasta at 19623,74,-627: 4169/4169 sampled blocks match (100.0%)
+PASS landmark galley_la_docks stamped into the world — NONE on water_7 at 34898,63,640: 6576/6576 sampled blocks match (100.0%)
+PASS landmark flower_capital_castle stamped into the world — NONE on wano_country at -29022,100,978: 5059/5059 sampled blocks match (100.0%)
+PASS landmark white_city stamped into the world — NONE on flevance at 27977,79,-24023: 4789/4789 sampled blocks match (100.0%)
+PASS landmarks: every placed set piece is inside its level's build height — 163 placements; least headroom 1 blocks: mary_geoise on mary_geoise (top y 318)
+PASS building house_small — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building house — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building house_large — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building tavern — 60 style/rotation variants, 180 NPC markers all on a floor and reachable, loot containers usable
+PASS building shop — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building blacksmith — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building inn — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building shipwright — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building church — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building marine_post — 60 style/rotation variants, 180 NPC markers all on a floor and reachable, loot containers usable
+PASS building watchtower — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building lighthouse — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building warehouse — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building mansion — 60 style/rotation variants, 120 NPC markers all on a floor and reachable, loot containers usable
+PASS building market_stall — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building well — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building plaza — 60 style/rotation variants, 180 NPC markers all on a floor and reachable, loot containers usable
+PASS building farm — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building ruined_house — 60 style/rotation variants, 120 NPC markers all on a floor and reachable, loot containers usable
+PASS building bounty_board — 60 style/rotation variants, 0 NPC markers all on a floor and reachable, loot containers usable
+PASS building dojo — 60 style/rotation variants, 120 NPC markers all on a floor and reachable, loot containers usable
+PASS building hut — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building lost_shrine — 60 style/rotation variants, 0 NPC markers all on a floor and reachable, loot containers usable
+PASS secrets: every chest is where treasure maps point — 16 secret/rotation variants
+TOTAL: 108 passed, 0 failed

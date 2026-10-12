@@ -1,0 +1,687 @@
+Grand Line Odyssey self-test, phase 1, Mon Oct 12 18:42:37 UTC 2026
+PASS island chunks generate quickly — 43.1 ms/chunk wall over 75 fresh chunks (incl. neighbours); dawn_island 48.2 alabasta 34.1 whole_cake_island 46.9 | CPU per chunk: terrain fill 2.72 ms (243 chunks), island decoration 0.10 ms (147 chunks)
+PASS island surfaces mix several ground blocks — kinds of natural top block (3+ columns): dawn_island=3 alabasta=4 marineford=7
+PASS settlement pads stay flat — 0/2789 pad cells off level
+PASS beaches and coasts keep their height — 0/15732 low coastal cells changed
+PASS added canon islands present — 10 added
+PASS original islands keep clear of added canon islands — 230 islands in plan
+PASS core islands keep their plan order and seeds — 71 core canon islands
+PASS added island tequila_wolf has land at its centre — surface y=75 block=Slate Roof Tile Slab
+PASS landmark endless_bridge built on tequila_wolf — 3268 Polished Andesite blocks
+PASS added island germa_kingdom rides on the open sea
+PASS landmark germa_fleet built on germa_kingdom — 1155 Blue Concrete blocks
+PASS added island rommel_kingdom has land at its centre — surface y=90 block=Chiseled Stone Bricks
+PASS landmark rommel_keep built on rommel_kingdom — 114 Stone Brick Wall blocks
+PASS added island oykot_kingdom has land at its centre — surface y=87 block=Chiseled Stone Bricks
+PASS landmark oykot_palace built on oykot_kingdom — 52 Quartz Pillar blocks
+PASS added island god_valley has land at its centre — surface y=91 block=Tinted Glass
+PASS landmark god_valley_ruins built on god_valley — 57 Chiseled Stone Bricks blocks
+PASS added island kyuka_island has land at its centre — surface y=80 block=Chiseled Stone Bricks
+PASS landmark kyuka_resort built on kyuka_island — 385 White Terracotta blocks
+PASS added island lulusia_kingdom is a sea-filled crater with a sheer rim — centre y=32 rim y=82 inside wall y=45
+PASS landmark lulusia_memorial built on lulusia_kingdom — 17 Polished Deepslate blocks
+PASS added island prodence_kingdom has land at its centre — surface y=91 block=Chiseled Stone Bricks
+PASS landmark prodence_castle built on prodence_kingdom — 8 Target blocks
+PASS added island karai_bari_island has land at its centre — surface y=100 block=Slate Roof Tile Stairs
+PASS landmark mercenary_guild_hall built on karai_bari_island — 173 Red Wool blocks
+PASS added island mogaro_kingdom has land at its centre — surface y=96 block=Chiseled Stone Bricks
+PASS landmark mogaro_royal_gate built on mogaro_kingdom — 65 Block of Gold blocks
+PASS Fish-Man Island has coral gardens, greenery and lamps — {coral_tips=21, ground=3631, lamps=37, pools=42, vines=239}
+PASS ocean world active
+PASS island count >= 150 — 230 islands, 81 canon/starter
+PASS canon island present: dawn_island
+PASS canon island present: loguetown
+PASS canon island present: alabasta
+PASS canon island present: water_7
+PASS canon island present: sabaody_archipelago
+PASS canon island present: wano_country
+PASS canon island present: elbaph
+PASS canon island present: laugh_tale
+PASS canon island present: shiokaze_isle
+PASS canon island present: hinata_isle
+PASS terrain is land at shiokaze_isle — surface y=89 block=Chiseled Stone Bricks
+PASS terrain is land at dawn_island — surface y=143 block=Chiseled Stone Bricks
+PASS terrain is land at loguetown — surface y=95 block=Dark Oak Planks
+PASS terrain is land at drum_island — surface y=249 block=Lightning Rod
+PASS terrain is land at alabasta — surface y=81 block=Chiseled Stone Bricks
+PASS terrain is land at wano_country — surface y=104 block=Chiseled Stone Bricks
+PASS terrain is land at fuyugane_isle — surface y=94 block=Chiseled Stone Bricks
+PASS original island exists — isle_0_sangrisington 'San Grisington' east_blue
+PASS original island terrain — y=119
+PASS open ocean is water — floor y=41
+PASS Red Line wall is tall — y=302
+PASS Red Line B (Mary Geoise side) is tall — y=300
+PASS Reverse Mountain canal holds water high up
+PASS settlement buildings generated — 4/4 sampled plots have floors
+PASS Loguetown is a city with many plots — 32 plots, dock=true
+PASS Baratie restaurant ship built on the water — 321 deck planks
+PASS islands carry secrets (treasure, caches, shrines, wrecks) — 472 secrets on 224/230 islands
+PASS buried treasure chest generated under its X — at 30655, 76, 23787
+PASS all 12 chest loot tables load and roll items — 12/12; treasure roll [6 minecraft:gold_ingot, 6 minecraft:emerald, 4 minecraft:emerald, 7 minecraft:gold_ingot, 6 minecraft:emerald, 1 minecraft:painting, 1 grandline:beli_pouch, 1 grandline:torn_map]
+PASS ten sea paintings are registered, placeable and sold as their scene — 10 registered, 10 placeable, shop item {id:"minecraft:painting",variant:"grandline:red_line"}
+PASS landmarks: no placeholder set pieces remain — 78 registered builders
+PASS landmark abandoned_lab — 41x35, 5835 blocks, 6 NPCs (6 reachable), 4 chests, 8 markers, interior 1005 cells, 4 rotations in footprint
+PASS landmark alubarna_palace — 55x55, 20877 blocks, 16 NPCs (16 reachable), 7 chests, 19 markers, interior 1585 cells, 4 rotations in footprint
+PASS landmark ancient_ruin — 15x15, 571 blocks, 1 NPCs (1 reachable), 1 chests, 2 markers, interior 6 cells, 4 rotations in footprint
+PASS landmark arlong_park — 31x31, 5582 blocks, 5 NPCs (5 reachable), 1 chests, 6 markers, interior 611 cells, 4 rotations in footprint
+PASS landmark auction_house — 33x35, 5749 blocks, 9 NPCs (9 reachable), 2 chests, 14 markers, interior 595 cells, 4 rotations in footprint
+PASS landmark baratie — 23x45 (sea level), 5660 blocks, 4 NPCs (4 reachable), 1 chests, 5 markers, interior 2854 cells, 4 rotations in footprint
+PASS landmark cake_chateau — 51x51, 9064 blocks, 9 NPCs (9 reachable), 5 chests, 11 markers, interior 1700 cells, 4 rotations in footprint
+PASS landmark cloud_chapel — 19x19, 1700 blocks, 3 NPCs (3 reachable), 1 chests, 3 markers, interior 185 cells, 4 rotations in footprint
+PASS landmark cloud_end_gate — 13x11, 478 blocks, 1 NPCs (1 reachable), 0 chests, 1 markers, interior 62 cells, 4 rotations in footprint
+PASS landmark corrida_colosseum — 51x51, 15810 blocks, 12 NPCs (12 reachable), 5 chests, 18 markers, interior 937 cells, 4 rotations in footprint
+PASS landmark cricket_house — 21x19, 1470 blocks, 3 NPCs (3 reachable), 4 chests, 5 markers, interior 62 cells, 4 rotations in footprint
+PASS landmark drum_castle — 25x25, 3471 blocks, 2 NPCs (2 reachable), 1 chests, 3 markers, interior 566 cells, 4 rotations in footprint
+PASS landmark endless_bridge — 11x400 (sea level), 29494 blocks, 6 NPCs (6 reachable), 4 chests, 7 markers, interior 30355 cells, 4 rotations in footprint
+PASS landmark execution_platform — 13x13, 750 blocks, 2 NPCs (2 reachable), 0 chests, 3 markers, interior 80 cells, 4 rotations in footprint
+PASS landmark explorers_monument — 27x27, 2285 blocks, 4 NPCs (4 reachable), 2 chests, 6 markers, interior 255 cells, 4 rotations in footprint
+PASS landmark flower_capital_castle — 45x45, 12200 blocks, 9 NPCs (9 reachable), 6 chests, 11 markers, interior 933 cells, 4 rotations in footprint
+PASS landmark fruit_tree_grove — 11x11, 272 blocks, 0 NPCs (0 reachable), 0 chests, 1 markers, interior 36 cells, 4 rotations in footprint
+PASS landmark future_lab — 41x41, 7776 blocks, 6 NPCs (6 reachable), 2 chests, 8 markers, interior 1562 cells, 4 rotations in footprint
+PASS landmark galley_la_docks — 45x41 (sea level), 23181 blocks, 9 NPCs (9 reachable), 6 chests, 13 markers, interior 1402 cells, 4 rotations in footprint
+PASS landmark gates_of_justice — 47x17 (sea level), 17481 blocks, 5 NPCs (5 reachable), 4 chests, 6 markers, interior 1597 cells, 4 rotations in footprint
+PASS landmark germa_fleet — 61x61 (sea level), 16294 blocks, 8 NPCs (8 reachable), 1 chests, 9 markers, interior 6802 cells, 4 rotations in footprint
+PASS landmark giant_duel_ground — 45x45, 4095 blocks, 3 NPCs (3 reachable), 7 chests, 6 markers, interior 442 cells, 4 rotations in footprint
+PASS landmark giant_legs — 41x41, 7478 blocks, 7 NPCs (7 reachable), 5 chests, 9 markers, interior 450 cells, 4 rotations in footprint
+PASS landmark god_valley_ruins — 45x45, 3047 blocks, 3 NPCs (3 reachable), 1 chests, 4 markers, interior 83 cells, 4 rotations in footprint
+PASS landmark golden_belfry — 17x17, 6441 blocks, 1 NPCs (1 reachable), 1 chests, 2 markers, interior 658 cells, 4 rotations in footprint
+PASS landmark gray_terminal — 37x33, 5927 blocks, 10 NPCs (10 reachable), 10 chests, 12 markers, interior 408 cells, 4 rotations in footprint
+PASS landmark gyoncorde_plaza — 29x29, 1736 blocks, 4 NPCs (4 reachable), 0 chests, 6 markers, interior 168 cells, 4 rotations in footprint
+PASS landmark haunted_mansion — 45x45, 11609 blocks, 9 NPCs (9 reachable), 4 chests, 11 markers, interior 1481 cells, 4 rotations in footprint
+PASS landmark heavens_gate — 23x17, 2352 blocks, 2 NPCs (2 reachable), 1 chests, 2 markers, interior 121 cells, 4 rotations in footprint
+PASS landmark hilltop_mansion — 33x29, 3813 blocks, 6 NPCs (6 reachable), 7 chests, 7 markers, interior 534 cells, 4 rotations in footprint
+PASS landmark impel_down — 31x31, 11241 blocks, 6 NPCs (6 reachable), 0 chests, 12 markers, interior 1319 cells, 4 rotations in footprint
+PASS landmark junkyard_fort — 37x37, 4157 blocks, 7 NPCs (7 reachable), 6 chests, 10 markers, interior 293 cells, 4 rotations in footprint
+PASS landmark knock_up_marker — 5x5 (sea level), 106 blocks, 0 NPCs (0 reachable), 0 chests, 1 markers, interior 41 cells, 4 rotations in footprint
+PASS landmark kuja_palace — 45x45, 9164 blocks, 8 NPCs (8 reachable), 3 chests, 10 markers, interior 788 cells, 4 rotations in footprint
+PASS landmark kyuka_resort — 33x27, 4420 blocks, 4 NPCs (4 reachable), 2 chests, 4 markers, interior 1072 cells, 4 rotations in footprint
+PASS landmark laugh_tale_ruins — 25x25, 2707 blocks, 0 NPCs (0 reachable), 1 chests, 2 markers, interior 182 cells, 4 rotations in footprint
+PASS landmark lulusia_memorial — 15x15, 484 blocks, 1 NPCs (1 reachable), 1 chests, 2 markers, interior 6 cells, 4 rotations in footprint
+PASS landmark mangrove_grove — 37x37, 7395 blocks, 6 NPCs (6 reachable), 6 chests, 9 markers, interior 474 cells, 4 rotations in footprint
+PASS landmark marine_base — 27x27, 3514 blocks, 5 NPCs (5 reachable), 1 chests, 7 markers, interior 471 cells, 4 rotations in footprint
+PASS landmark marine_headquarters — 41x41, 10857 blocks, 5 NPCs (5 reachable), 1 chests, 6 markers, interior 2373 cells, 4 rotations in footprint
+PASS landmark mary_geoise — 41x41, 5455 blocks, 1 NPCs (1 reachable), 0 chests, 2 markers, interior 500 cells, 4 rotations in footprint
+PASS landmark mercenary_guild_hall — 31x25, 2895 blocks, 4 NPCs (4 reachable), 3 chests, 4 markers, interior 557 cells, 4 rotations in footprint
+PASS landmark mermaid_cove — 27x27 (sea level), 5911 blocks, 4 NPCs (4 reachable), 1 chests, 4 markers, interior 350 cells, 4 rotations in footprint
+PASS landmark mogaro_royal_gate — 27x21, 2281 blocks, 3 NPCs (3 reachable), 1 chests, 3 markers, interior 197 cells, 4 rotations in footprint
+PASS landmark nanohana_port — 41x35 (sea level), 13495 blocks, 14 NPCs (14 reachable), 32 chests, 19 markers, interior 1062 cells, 4 rotations in footprint
+PASS landmark oykot_palace — 35x29, 4608 blocks, 4 NPCs (4 reachable), 1 chests, 4 markers, interior 908 cells, 4 rotations in footprint
+PASS landmark pirate_hive — 41x41, 8731 blocks, 9 NPCs (9 reachable), 8 chests, 12 markers, interior 1640 cells, 4 rotations in footprint
+PASS landmark port_beacon — 7x7, 465 blocks, 1 NPCs (1 reachable), 0 chests, 2 markers, interior 54 cells, 4 rotations in footprint
+PASS landmark prodence_castle — 31x31, 5732 blocks, 4 NPCs (4 reachable), 1 chests, 4 markers, interior 394 cells, 4 rotations in footprint
+PASS landmark rainbase_casino — 37x37, 9388 blocks, 10 NPCs (10 reachable), 12 chests, 15 markers, interior 2807 cells, 4 rotations in footprint
+PASS landmark revolutionary_hq — 41x41, 10504 blocks, 12 NPCs (12 reachable), 7 chests, 14 markers, interior 1267 cells, 4 rotations in footprint
+PASS landmark rommel_keep — 29x29, 5270 blocks, 4 NPCs (4 reachable), 2 chests, 4 markers, interior 373 cells, 4 rotations in footprint
+PASS landmark royal_castle — 51x51, 16569 blocks, 14 NPCs (14 reachable), 8 chests, 16 markers, interior 2830 cells, 4 rotations in footprint
+PASS landmark royal_plateau — 45x45, 23598 blocks, 11 NPCs (11 reachable), 8 chests, 13 markers, interior 1686 cells, 4 rotations in footprint
+PASS landmark ruined_castle — 41x41, 8225 blocks, 5 NPCs (5 reachable), 13 chests, 7 markers, interior 760 cells, 4 rotations in footprint
+PASS landmark ryugu_palace — 43x43, 10373 blocks, 5 NPCs (5 reachable), 2 chests, 6 markers, interior 474 cells, 4 rotations in footprint
+PASS landmark sacrificial_altar — 17x17, 884 blocks, 1 NPCs (1 reachable), 1 chests, 2 markers, interior 21 cells, 4 rotations in footprint
+PASS landmark sea_forest_graveyard — 37x37, 3167 blocks, 1 NPCs (1 reachable), 3 chests, 3 markers, interior 341 cells, 4 rotations in footprint
+PASS landmark sea_train_station — 15x11, 663 blocks, 1 NPCs (1 reachable), 0 chests, 2 markers, interior 85 cells, 4 rotations in footprint
+PASS landmark shandora_ruins — 47x47, 9446 blocks, 3 NPCs (3 reachable), 6 chests, 5 markers, interior 413 cells, 4 rotations in footprint
+PASS landmark skull_dome — 51x51, 15615 blocks, 9 NPCs (9 reachable), 14 chests, 12 markers, interior 1105 cells, 4 rotations in footprint
+PASS landmark starter_shrine — 9x9, 191 blocks, 1 NPCs (1 reachable), 1 chests, 2 markers, interior 42 cells, 4 rotations in footprint
+PASS landmark sword_dojo — 15x13, 729 blocks, 2 NPCs (2 reachable), 0 chests, 2 markers, interior 85 cells, 4 rotations in footprint
+PASS landmark tangerine_grove — 25x21, 1411 blocks, 3 NPCs (3 reachable), 3 chests, 5 markers, interior 219 cells, 4 rotations in footprint
+PASS landmark tontatta_village — 29x29, 4441 blocks, 6 NPCs (6 reachable), 3 chests, 8 markers, interior 132 cells, 4 rotations in footprint
+PASS landmark tower_of_justice — 17x17, 3849 blocks, 4 NPCs (4 reachable), 1 chests, 4 markers, interior 913 cells, 4 rotations in footprint
+PASS landmark treasure_cache — 7x7, 85 blocks, 0 NPCs (0 reachable), 1 chests, 1 markers, interior 0 cells, 4 rotations in footprint
+PASS landmark treasure_tree — 41x41, 22725 blocks, 2 NPCs (2 reachable), 1 chests, 2 markers, interior 585 cells, 4 rotations in footprint
+PASS landmark tree_of_knowledge — 31x31, 5367 blocks, 1 NPCs (1 reachable), 1 chests, 2 markers, interior 200 cells, 4 rotations in footprint
+PASS landmark twin_capes_lighthouse — 9x9, 530 blocks, 1 NPCs (1 reachable), 0 chests, 2 markers, interior 54 cells, 4 rotations in footprint
+PASS landmark volcano_vent — 27x27, 3237 blocks, 1 NPCs (1 reachable), 2 chests, 3 markers, interior 141 cells, 4 rotations in footprint
+PASS landmark water7_fountain — 21x21, 1926 blocks, 1 NPCs (1 reachable), 0 chests, 2 markers, interior 380 cells, 4 rotations in footprint
+PASS landmark waterfall_gate — 25x23, 4380 blocks, 4 NPCs (4 reachable), 3 chests, 6 markers, interior 296 cells, 4 rotations in footprint
+PASS landmark weather_lab — 21x21, 1982 blocks, 2 NPCs (2 reachable), 2 chests, 2 markers, interior 158 cells, 4 rotations in footprint
+PASS landmark welcome_arch — 27x25, 3526 blocks, 10 NPCs (10 reachable), 13 chests, 14 markers, interior 552 cells, 4 rotations in footprint
+PASS landmark white_city — 47x47, 7449 blocks, 4 NPCs (4 reachable), 5 chests, 6 markers, interior 1014 cells, 4 rotations in footprint
+PASS landmark windmill — 13x11, 579 blocks, 1 NPCs (1 reachable), 0 chests, 1 markers, interior 77 cells, 4 rotations in footprint
+PASS landmark yuba_oasis — 29x29, 3058 blocks, 3 NPCs (3 reachable), 5 chests, 5 markers, interior 281 cells, 4 rotations in footprint
+PASS landmark alubarna_palace stamped into the world — NONE on alabasta at 19623,74,-627: 4169/4169 sampled blocks match (100.0%)
+PASS landmark galley_la_docks stamped into the world — NONE on water_7 at 34898,63,640: 6576/6576 sampled blocks match (100.0%)
+PASS landmark flower_capital_castle stamped into the world — NONE on wano_country at -29022,100,978: 5059/5059 sampled blocks match (100.0%)
+PASS landmark white_city stamped into the world — NONE on flevance at 27977,79,-24023: 4789/4789 sampled blocks match (100.0%)
+PASS landmarks: every placed set piece is inside its level's build height — 163 placements; least headroom 1 blocks: mary_geoise on mary_geoise (top y 318)
+PASS building house_small — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building house — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building house_large — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building tavern — 60 style/rotation variants, 180 NPC markers all on a floor and reachable, loot containers usable
+PASS building shop — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building blacksmith — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building inn — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building shipwright — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building church — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building marine_post — 60 style/rotation variants, 180 NPC markers all on a floor and reachable, loot containers usable
+PASS building watchtower — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building lighthouse — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building warehouse — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building mansion — 60 style/rotation variants, 120 NPC markers all on a floor and reachable, loot containers usable
+PASS building market_stall — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building well — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building plaza — 60 style/rotation variants, 180 NPC markers all on a floor and reachable, loot containers usable
+PASS building farm — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building ruined_house — 60 style/rotation variants, 120 NPC markers all on a floor and reachable, loot containers usable
+PASS building bounty_board — 60 style/rotation variants, 0 NPC markers all on a floor and reachable, loot containers usable
+PASS building dojo — 60 style/rotation variants, 120 NPC markers all on a floor and reachable, loot containers usable
+PASS building hut — 60 style/rotation variants, 60 NPC markers all on a floor and reachable, loot containers usable
+PASS building lost_shrine — 60 style/rotation variants, 0 NPC markers all on a floor and reachable, loot containers usable
+PASS secrets: every chest is where treasure maps point — 16 secret/rotation variants
+PASS Shells Town has NPC spawn markers — 31 markers, e.g. resident
+PASS spawned Marine vs pirate duel
+PASS NPCs fight each other with the combat system — marine hp 100%, pirate hp 0%
+PASS character creation accepted
+PASS race size clamped to giant max — scale=2.0
+PASS scale attribute applied (hitbox) — getScale=2.0 height=3.6
+PASS giant reach bonus applied — reach=6.5
+PASS a new character starts with the Captain's Handbook — 12 pages
+PASS character NBT round trip — level 6, bounty 12345678
+PASS fruit uniqueness: second copy refused — first=true second=false
+PASS eating a fruit grants it and marks it OWNED — state=OWNED
+PASS all 664 abilities execute — 664/664
+PASS ability dummy took damage — 10446 damage dealt in total
+PASS every implemented fruit damages the dummy — 78 fruits
+PASS Logia ignores un-imbued physical hits — result=INTANGIBLE
+PASS Armament Haki hits a Logia — result=HIT
+PASS Devil Fruit user is weakened in the sea — inWater=true
+PASS Logia submerged in sea water can be hit — result=HIT
+PASS Yami user cannot turn intangible — result=HIT
+PASS Suna is intangible when dry, solid when wet — dry=INTANGIBLE wet=HIT
+PASS Barrier Ball absorbs damage — used=true result=IGNORED hp 34.18 -> 34.18
+PASS Kagami mirror reflects a ranged hit — used=true result=IGNORED beams=1
+PASS Shio salt hurts sea creatures more — vs cod 15.0, vs pig 10.0
+PASS Darkness grasp nullifies the target's Devil Fruit — used=true weakened=true
+PASS fruit terrain (salt, then magma on top) reverts to the original block — salt=true magma=true restored=true (Stone)
+PASS Mochi passes attacks only with Observation Haki — noObs=HIT obs=true hakiLands=true
+PASS Numa swamp body swallows a projectile — removed=true stored=1
+PASS Bomu body is immune to explosions — bomu took 0.0, plain took 5.5200005
+PASS Toki cannot time-leap twice in a row in combat — first=true second=false between=true after=true
+PASS Seiryu Cloud Ride flight in form, revoked on reverting — before=false on=true afterRevert=false
+PASS Tenbin Equilibrium moves health from the healthier target to the hurt user — used=true user 12.0->25.1, target 22.0->13.3
+PASS Kusari Shackle Link echoes damage onto the chained partner — used=true hit 10.9, echoed 7.4
+PASS Nemu sleep knocks the target out until it is hurt — used=true asleep=true woke=true
+PASS Funa Hull Mend repairs the user's ship — used=true hull 40 -> 105 / 140
+PASS Tsuchi is intangible on the ground, solid in the air — grounded=INTANGIBLE airborne=HIT
+PASS Abura oil makes fire hit 75% harder — fire 5.52, on oil 10.08
+PASS Wave 4 fruit hai damages a dummy — 6/6 abilities used, 100 damage
+PASS Wave 4 fruit yako damages a dummy — 6/6 abilities used, 104 damage
+PASS Wave 4 fruit shinku damages a dummy — 6/6 abilities used, 108 damage
+PASS Wave 4 fruit kai damages a dummy — 7/7 abilities used, 88 damage
+PASS Wave 4 fruit fusen damages a dummy — 6/6 abilities used, 85 damage
+PASS Wave 4 fruit shinju damages a dummy — 6/6 abilities used, 92 damage
+PASS Wave 4 fruit kagi damages a dummy — 6/6 abilities used, 60 damage
+PASS Wave 4 fruit hanabi damages a dummy — 6/6 abilities used, 212 damage
+PASS Wave 4 fruit hata damages a dummy — 6/6 abilities used, 83 damage
+PASS Wave 4 fruit taru damages a dummy — 6/6 abilities used, 117 damage
+PASS Wave 4 fruit kujira_bakekujira damages a dummy — 7/7 abilities used, 106 damage
+PASS Wave 4 fruit itachi_raiju damages a dummy — 7/7 abilities used, 197 damage
+PASS Wave 4 fruit sasori_seascorpion damages a dummy — 7/7 abilities used, 86 damage
+PASS Wave 4 fruit tonbo_meganeura damages a dummy — 7/7 abilities used, 90 damage
+PASS Wave 4 fruit kaba_hippo damages a dummy — 7/7 abilities used, 111 damage
+PASS Wave 4 Logia hai is intangible to plain hits, Haki connects — plain=INTANGIBLE haki=HIT
+PASS Wave 4 Logia yako is intangible to plain hits, Haki connects — plain=INTANGIBLE haki=HIT
+PASS Wave 4 Logia shinku is intangible to plain hits, Haki connects — plain=INTANGIBLE haki=HIT
+PASS Hai: fire cannot burn ash, water makes it solid slurry — fire=IGNORED took 0.0, water=HIT, plain after water=HIT
+PASS Yako: darkness always connects — darkness=HIT
+PASS Shinku: impact always connects, sound cannot reach the void — impact=HIT sound=IGNORED hp 40.91875 -> 40.91875
+PASS Wave 4 Zoan kujira_bakekujira transforms; bone_breach needs the form — refusedHuman=true transformed=true (form=hybrid) inForm=true hurt=true
+PASS Wave 4 Zoan itachi_raiju transforms; thunder_claw needs the form — refusedHuman=true transformed=true (form=hybrid) inForm=true hurt=true
+PASS Wave 4 Zoan sasori_seascorpion transforms; pincer_crush needs the form — refusedHuman=true transformed=true (form=hybrid) inForm=true hurt=true
+PASS Wave 4 Zoan tonbo_meganeura transforms; wing_slash needs the form — refusedHuman=true transformed=true (form=hybrid) inForm=true hurt=true
+PASS Wave 4 Zoan kaba_hippo transforms; gaping_jaws needs the form — refusedHuman=true transformed=true (form=hybrid) inForm=true hurt=true
+PASS Wave 4 awakening abilities refused before awakening, work after — 15/15
+PASS Kagi Lock Away locks the target's fruit techniques — used=true onCooldown=true refused=true
+PASS Fusen Inflate makes the target float — used=true levitating=true
+PASS Kai Impact Dial soaks a blow and releases it — used=true took 1.7 of 8, released 19.1
+PASS Shinju nacre layers halve a blow — used=true layers=3, bare 7.7 vs armoured 3.5
+PASS Hata Jolly Roger brand makes everyone hit harder — plain 7.68, branded 9.22
+PASS every race has 2-4 racial abilities — 82 race abilities for 21 races
+PASS race ability animations exist
+PASS race abilities and masteries are translated
+PASS Mink Sulong only at night under a full moon — noon=false gibbousNight=false fullMoonNight=true buffed=true
+PASS Long-Arm grab pulls a foe from beyond melee reach — humanCanUse=false from 8.0 to 2.1 blocks, at 21 blocks used=false
+PASS Fish-Man swims faster under water, Merfolk fastest — swim speed human 1.00, fish-man 1.90, merfolk 2.60
+PASS Fish-Man NPCs get the racial swim speed — swim speed 1.90
+PASS Three-Eye Foresight dodges every hit in its window — without=HIT used=true with=DODGED,DODGED
+PASS race loadout set holds unlocked racial abilities — mastery 0: [race/fishman/riptide_dash]; mastery 25: [race/fishman/riptide_dash, race/fishman/droplet_volley, race/fishman/buraikan]
+PASS Fish-Man NPCs use Fish-Man racial moves — tier 5 techniques [race/fishman/riptide_dash, race/fishman/droplet_volley, race/fishman/buraikan, race/fishman/inner_ripple], volley=true, human NPC refused=true
+PASS Stonehide Living Fortress cuts damage and punishes melee — took 24.4 -> 7.3, attacker hp 47.6 -> 42.6
+PASS Human Last Stand survives a killing blow — used=true hp=3.2079842
+PASS Merfolk Call of the Sea turns sea creatures on the foe — drowned target=HumanoidNpc['Yonee Cinderhand'/434, l='ServerLevel[world]', x=36106.50, y=200.00, z=20057.50]
+PASS permadeath archives the character — [Doomed (human, Lv 30, bounty 0)]
+PASS shipyard launches a sloop at the dock — at BlockPos{x=35746, y=63, z=19739} dock tip 35749,19749
+PASS ship registered with owner and interior — interior #0
+PASS ship has a walkable deck (collidable parts) — 10 hull parts
+PASS below-deck interior built in the pocket dimension — origin BlockPos{x=0, y=64, z=0}
+PASS hatch exit lands on the ship's deck — exit (35746.59615730438, 65.20000004768372, 19738.819157304384) ship (35746.879, 63.9, 19739.102)
+PASS found open sea for a voyage — dir 0
+PASS ship sails into newly generated chunks — travelled 1601 blocks in 782 ticks, speed 2.23 b/t, now at BlockPos{x=37601, y=63, z=20780}
+PASS chunk under the ship is generated ocean — Block{minecraft:water}[level=0]
+PASS crew standing on deck is carried along — npc 2 blocks from ship centre
+PASS naval test waters loaded — after 1 ticks at 36300,20900
+PASS grapple hauls two ships alongside — beam offset 17.0 -> 8.3 (gap 2.3), along 0.5, heading diff 0 deg after 34 ticks
+PASS cutting the lines frees both ships
+PASS bow impact rams the target harder than the rammer — brigantine at 0.70 b/t into a caravel's side: target -133 hull, rammer -20 (after 22 ticks)
+PASS ramming knocks the target ship back and stops the rammer — target shoved 1.9 blocks, rammer speed now 0.26
+PASS an NPC takes a gun station — seat 1
+PASS NPC gunner fires on a moving hostile ship and hits (aim leading) — 1 shots, 1 hits, target hull 460 -> 430, target speed 0.09 b/t, 13 ticks
+PASS chain shot tears rigging (the ship slows) — rigging 100% -> 53%
+PASS raider crew mans the guns — 3 of 6 crew at the guns
+PASS boarding party leaps across and lands on the player's deck — 2 boarders on deck after 15 ticks
+PASS a ship can't be taken while its crew still fights
+PASS capturing a ship adds it to the player's registry as a prize — Captured Selftest Raider (brigantine), prize=true, sale value ฿36000
+PASS a shipwright buys a prize for Beli — ฿500 -> ฿5000
+PASS Grand Line Marines sail as a squadron with a flagship — 2 ships: [brigantine, caravel]
+PASS Marine Headquarters waters are recognised
+PASS escorts keep station on their flagship — escort 31 blocks from the flagship
+PASS ship customisation applies (figurehead, emblem, flag, paint) — dragon|crescent|e8c040|23417e, fee ฿10000
+PASS living-sea test waters loaded — after 0 ticks at 37300,21080 and 38300,21080
+PASS a Marine ship and a pirate ship put to sea 60 blocks apart — 6 vs 5 crew
+PASS NPC ships of hostile factions sight each other (no player involved) — after 0 ticks: Marine target the pirate, pirate engages
+PASS the sea battle is decided without a player (one ship sunk or her crew beaten) — after 569 ticks: Selftest Corsair sunk; Marine hull 460->176, 14 shots, 14 hits, 6 crew standing; pirate hull 460->0, 11 shots, 10 hits, 1 crew standing
+PASS a beaten ship goes down and leaves a salvage boat with loot — 1 salvage boat(s) after 0 ticks, loot table grandline:chests/wreck, 10 stacks; loser sinking
+PASS bounty hunters chase a pirate ship — after 0 ticks; the outgunned pirate sloop runs
+PASS a merchant ship sails for her port and rounds the island in the way — bound for shimotsuki_village; the straight course passes 0 blocks from shiokaze_isle's centre (radius 380); after 1329 ticks 632 blocks closer, 0 past the island, at 36356, 63, 19747, stopped 0 ticks
+PASS the merchant ship never sails over land — 0 ticks with land under the hull
+PASS hailing a merchant ship at sea opens her captain's trade — Mariko (sea_merchant) sold 2 sea king steak for 1035 Beli
+PASS attacking a merchant ship raises the attacker's bounty and her crew fight back — aboard=true, bounty 2000000, 1 of the crew turned on the attacker
+PASS a merchant caught by a stronger ship strikes her colours (crew surrender, cargo over the side) — captain aboard the galleon=true, 1 shot hits, yielded=true after 6 ticks, 2/2 crew surrendered, 1 cargo boat(s), captain's bounty 2000000
+PASS a merchant that struck her colours can be taken as a prize — prize=true transient=false
+PASS pirates sail in to raid a harbour — shimotsuki_village (VILLAGE, tier 1): 10 landing spots, raid ship Red Tide at 33872, 63, 15272
+PASS the raid ship sails into the harbour and lands raiders — phase 1 after 515 ticks, 5 raiders, 5 ashore, ship 30 blocks from the dock point
+PASS the raid ship holds her fire on the town (town protection) — 0 shots fired
+PASS the town's guards respond to the raiders — 2 defenders on the raiders after 0 ticks (2 guards, 0 Marines turned out)
+PASS joining a raid raises your bounty and the raiders take you for one of theirs — offered=true, bounty 1500000, raider hostile=false
+PASS beating the raiders repels the raid and the island thanks its defenders — phase 2 after 5 ticks, island reputation 0 -> 40
+PASS with too few guards a Marine detachment turns out against raiders — 2 Marines on the raiders after 580 ticks (raid phase 1)
+PASS an NPC ship with no player within 320 blocks despawns with her crew — removed=true after 0 ticks, 0 of 3 crew left
+PASS living-sea ships never appear in the Calm Belt, a harbour or the sky; they do on the open sea — Calm Belt (zone calm_belt) 0, harbour of shimotsuki_village (in harbour waters=true) 0, sky 0, open sea 1 [merchant]
+PASS all NPC ships share one server-wide cap with several players — 0 NPC ships before, 7 spawned over 8 forced rounds for 3 players, 7 now (cap 7); with 1 player (cap 5) 0 more
+PASS a convoy sails as a merchantman with Marine escorts on her quarters — [Merry Tern (merchant, brigantine), Convoy Escort (marine, caravel), Convoy Escort (marine, caravel)] bound for shiokaze_isle
+PASS living-sea fixture written — transient merchant beside a plain rowboat
+PASS fruit awakening: mastery + level start the trial, the trial awakens the fruit — started=true awakened=true
+PASS ship class rowboat launches and sails — moved 30.9 blocks in 120 ticks, 3 seats, 0 cannons, hold=n/a
+PASS ship class sloop launches and sails — moved 37.4 blocks in 120 ticks, 6 seats, 2 cannons, hold=true
+PASS ship class caravel launches and sails — moved 25.8 blocks in 120 ticks, 10 seats, 4 cannons, hold=true
+PASS ship class brigantine launches and sails — moved 34.0 blocks in 120 ticks, 16 seats, 8 cannons, hold=true
+PASS ship class galleon launches and sails — moved 37.4 blocks in 120 ticks, 24 seats, 14 cannons, hold=true
+PASS ship class flagship launches and sails — moved 28.7 blocks in 120 ticks, 32 seats, 20 cannons, hold=true
+PASS dockworkers offer ferries to discovered islands of the same sea — 6 routes, first: ferry|shimotsuki_village|169|Shimotsuki Village
+PASS booking a passage puts you aboard the ferry — 6/6 passengers aboard, bound for [shimotsuki_village, dawn_island, shells_town, isle_7_newwynora, isle_15_hajima, orange_town]
+PASS every ferry gets under way toward its destination — 6/6 left the harbour (200 blocks from the berth or 150 closer) within 287 ticks
+PASS the ferry sails there through the world and lands you on the destination's dock — after 249 ticks: arrived, passenger -55 blocks from shimotsuki_village's shore
+PASS Mary Geoise is built on the Red Line, protected, peopled and discoverable — 908 quartz floor blocks at y301, 1 NPC markers, protected=true, discovered=true
+PASS every settled island has buildings — 182 settled islands, empty: []
+PASS the Calm Belt is always calm — 41/41 points clear
+PASS storms, fog and squalls roam the Grand Line — 108 rough points: {cyclone=16, fog=14, rain=14, snow=30, storm=34}
+PASS winter islands keep their own snowfall — Here[type=SNOW, intensity=0.45, eyeX=0.0, eyeZ=0.0]
+PASS desert islands stay dry — Here[type=CLEAR, intensity=0.0, eyeX=0.0, eyeZ=0.0]
+PASS global weather cycle is replaced by local weather
+PASS sky and deep-sea dimensions are loaded
+PASS White Sea plan has its islands — 19 sky islands
+PASS deep-sea plan has Fish-Man Island — 4 deep islands
+PASS White Sea: Sea Cloud over an Island Cloud floor — y55=Water y47=Island Cloud
+PASS White Sea biome tints the sea white — grandline:white_sea
+PASS Angel Island stands on Island Cloud above the sea — top y=78 Water
+PASS Skypiea town has residents to spawn — 19 NPC markers
+PASS deep sea is water far above the ships
+PASS Fish-Man Island lies in an air bubble with a membrane skin — inside=Air skin=true above=true
+PASS the bubble holds the sea back (no leak after fluid ticks) — Block{minecraft:air}
+PASS Knock Up Stream located off Jaya — 26020, 63, 2900
+PASS the Knock Up Stream carries a ship to the White Sea — arrived at -880, 63, 0 after 259 ticks
+PASS crew on deck travels with the ship — on deck 1 blocks from centre
+PASS ship registry records the new dimension — grandline:sky
+PASS the Cloud End drops the ship back to the Blue Sea — splashed down at 27420, 63, 2900
+PASS dive point found between Sabaody and the Red Line — 59050, 63, 0
+PASS a coated ship sailing onto the dive point sinks to the deep sea — arrived after 201 ticks at -1500, 63, 0
+PASS the coating bubble keeps the crew breathing 10,000 m down — air=300 effects=3
+PASS the ship travels under the sea — Block{minecraft:water}[level=0]
+PASS sailing out of the deep sea surfaces in the New World — surfaced at -57820, 63, 0
+PASS the coating is spent after the ascent — []
+PASS sky persistence fixture written — a9c44fa8-62f1-4294-b25c-0c6a617e20a7
+PASS Calm Belt is windless — calm 0.000, Grand Line 1.11, East Blue 0.88
+PASS Sea King spawn rates: Calm Belt >> Grand Line >> Blues — per 5 s at sea: calm 0.2, nest 0.45, paradise 0.004, blues 7.0E-4
+PASS Reverse Mountain and settled harbours are Sea King-safe
+PASS Calm Belt has Sea King nests — (20373.0, 63.0, 5271.0)
+PASS found deep open water in the Calm Belt — (20000.5, 63.9, 5250.5)
+PASS Sea King spawns near a ship in the Calm Belt — horned tier 1, 35 blocks long, 180 hp, 59 blocks from the ship, head y=52.1
+PASS Sea King hunts the ship and damages its hull — hull 760 -> 710 after 133 ticks (target=ship_galleon, attacks seen: 1 looms, 1 bites, 1 tail slams, state 3 age 24, head 20 blocks from ship)
+PASS Sea King bites and tail-slams — 1 bites, 1 tail slams; hull now 710/760
+PASS Sea King body segments follow the head (multipart) — 14 collidable parts strung 15.0 blocks along its path (expected 15.0); head-to-tail 25.5 of 35 blocks
+PASS melee cone hits a Sea King body segment — segment 8 at 18.8 blocks from the head
+PASS cannon fire damages the Sea King — ship broadside cannon, 10 blocks: hp 180 -> 161
+PASS Sea King dies (killing blow on a body segment) — health 0.0, removed KILLED, killing blow: cannonball on a body segment
+PASS Sea King drops Sea King steak and Beli pouches — 6 steaks, 2236 Beli in pouches
+PASS Conqueror's Haki knocks out a weaker Sea King — state 4, will 25
+PASS a colossal Sea King resists Conqueror's Haki — state 0, will 115
+PASS Zoan full form takes the beast's hitbox (player) — wolf: 0.60x1.80 -> 1.44x1.52 (scale 1.60, eyes 1.25)
+PASS reverting restores the humanoid hitbox — 0.60x1.80
+PASS Zoan full form takes the beast's hitbox (NPC) — allosaurus NPC 1.92x3.04 at scale 1.60
+PASS every Zoan fruit maps to a beast form — 11 Zoan fruits with beast forms
+PASS wildlife follows island themes — snow: Lapahn, swamp: Banana-gator, desert coast: 31/40 Kung-Fu Dugongs (rest Sea Cats)
+PASS island wildlife spawns and lives (Kung-Fu Dugong, Lapahn, Banana-gator, Sea Cat) — kungfu_dugong 0.9x1.1 lapahn 1.3x2.4 banana_gator 1.4x1.0 sea_cat 1.6x1.9
+PASS a Lapahn mauls its prey — villager hp 2.1/20.0
+PASS a beaten Kung-Fu Dugong bows to its master — hp 6.8/26.0
+PASS every sea activity item has a model, a texture and a name — 21 items
+PASS a treasure map points at a real island secret — dawn_island#1 hidden_cache at 30847,96,23334 (east_blue)
+PASS the map's target is deterministic for the same place and salt — TreasureTarget[island=dawn_island, index=1, name=, kind=hidden_cache, x=30847, y=96, z=23334, solved=false, grand=false] / TreasureTarget[island=dawn_island, index=1, name=, kind=hidden_cache, x=30847, y=96, z=23334, solved=false, grand=false]
+PASS map targets have their chest in the generated world — 10/10 [buried_treasure, lost_shrine, shipwreck] — dawn_island#2 ok; dawn_island#3 ok; loguetown#2 ok; isle_12_hishima#0 ok; alabasta#3 ok; isle_89_oldessola#1 ok; wano_country#5 ok; wano_country#3 ok; isle_90_quilleriaisland#0 ok; drum_island#0 ok; 
+PASS every kind of secret (buried treasure, cache, shrine, wreck) has its chest where the map says — buried_treasure dawn_island#0 ok; hidden_cache dawn_island#1 ok; lost_shrine shiokaze_isle#1 ok; shipwreck dawn_island#2 ok; 
+PASS maps prefer secrets nobody has looted — dawn_island#1 looted -> dawn_island#2
+PASS chest loot tables with treasure maps load and roll them — 7/7 (maps/torn halves in 400 rolls: house 13/0; tavern 32/28; ruin 59/50; wreck 95/95; cache 109/65; shrine 26/37; treasure 0/90; )
+PASS a blank treasure map is drawn for the player carrying it — TreasureTarget[island=dawn_island, index=0, name=, kind=buried_treasure, x=30655, y=76, z=23787, solved=false, grand=false]
+PASS the painted map shows the island and the X — 1845 land cells of 4096, X inside=true
+PASS the sea chart marks the map's X (carried, and remembered once read) — carried=true read=true
+PASS opening the target chest solves the map — solved=true looted=true xp 1382 -> 1562 (level 8 -> 8)
+PASS a found secret is not handed out again while others remain — TreasureTarget[island=dawn_island, index=3, name=, kind=shipwreck, x=30551, y=58, z=24022, solved=false, grand=false]
+PASS two torn halves piece together into a grand treasure map — TreasureTarget[island=island_of_rare_animals, index=0, name=, kind=buried_treasure, x=25550, y=68, z=27183, solved=false, grand=true]
+PASS shady dealers sell treasure maps, cooks sell dishes — bartender=true pirate merchant=true honest merchant clean=true cook=true
+PASS quests give treasure maps and ask for treasure
+PASS a fishing errand counts sea catches and pays in dishes — started=true done=true curry=2
+PASS fishing at sea in east_blue yields its own catches — 161 own, 0 foreign in 300 rolls at 20000,17000: cod=56 salmon=23 blue_sardine=97 tripwire_hook=2 harbor_bream=64 pufferfish=12 bow=2 stick=5 leather=5 bowl=4 lily_pad=7 torn_map=5 nautilus_shell=1 tropical_fish=3 name_tag=2 string=3 potion=4 bone=1 fishing_rod=1 rotten_flesh=3 enchanted_book=1 leather_boots=4
+PASS fishing at sea in north_blue yields its own catches — 153 own, 0 foreign in 300 rolls at 20000,-16999: blue_sardine=91 salmon=19 cod=64 harbor_bream=62 pufferfish=15 torn_map=3 string=3 stick=2 rotten_flesh=4 leather_boots=3 enchanted_book=2 lily_pad=7 bone=2 saddle=2 bowl=3 potion=4 name_tag=4 nautilus_shell=2 fishing_rod=4 tropical_fish=3 tripwire_hook=2 bow=1 leather=1
+PASS fishing at sea in paradise yields its own catches — 146 own, 0 foreign in 300 rolls at 20000,900: rainbow_tuna=70 needlenose_gar=76 cod=60 sea_king_fry=4 leather_boots=4 salmon=30 bowl=2 nautilus_shell=3 saddle=3 bone=6 stick=2 fishing_rod=5 tropical_fish=3 pufferfish=21 enchanted_book=4 torn_map=4 string=1 bow=1 lily_pad=2 tripwire_hook=2 name_tag=1
+PASS fishing at sea in calm_belt yields its own catches — 140 own, 0 foreign in 300 rolls at 20000,5300: behemoth_carp=92 cod=64 needlenose_gar=48 leather_boots=7 nautilus_shell=4 sea_king_fry=8 bone=5 torn_map=3 leather=3 pufferfish=11 name_tag=3 potion=3 fishing_rod=3 salmon=24 string=2 bow=1 tripwire_hook=7 stick=3 rotten_flesh=2 tropical_fish=2 saddle=2 lily_pad=4 bowl=1 enchanted_book=1
+PASS fishing at sea in new_world yields its own catches — 155 own, 0 foreign in 300 rolls at -19999,0: rotten_flesh=5 saddle=3 crimson_marlin=78 pufferfish=12 cod=59 thunder_eel=77 nautilus_shell=1 salmon=31 sea_king_fry=4 torn_map=3 bone=3 potion=2 tropical_fish=2 enchanted_book=1 name_tag=3 stick=3 leather_boots=4 leather=1 lily_pad=2 bowl=3 bow=2 tripwire_hook=3 fishing_rod=1
+PASS fishing at sea in deep_sea yields its own catches — 149 own, 0 foreign in 300 rolls at 0,900: enchanted_book=4 ghost_ray=76 stick=2 abyss_lanternfish=73 cod=71 pufferfish=11 fishing_rod=6 name_tag=4 salmon=24 torn_map=5 potion=4 rotten_flesh=4 bow=2 saddle=1 bone=4 tropical_fish=1 nautilus_shell=3 bowl=2 tripwire_hook=2 lily_pad=4 leather=1 string=1
+PASS fishing at sea in sky_sea yields its own catches — 144 own, 0 foreign in 300 rolls at 0,1500: cloud_skipper=144 cod=68 string=4 salmon=27 bow=3 bowl=4 rotten_flesh=2 nautilus_shell=2 pufferfish=14 lily_pad=5 leather_boots=6 fishing_rod=5 tripwire_hook=3 torn_map=4 potion=4 tropical_fish=2 enchanted_book=2 bone=1 saddle=1 leather=3
+PASS an island pond keeps the vanilla catch — salmon=32 pufferfish=18 cod=72 name_tag=3 bone=2 nautilus_shell=1 leather_boots=3 tripwire_hook=2 enchanted_book=1 potion=2 lily_pad=4 leather=2 fishing_rod=4 tropical_fish=1 rotten_flesh=1 bow=2
+PASS fishing skill raises catch quality — avg quality 0.07 at skill 0, 0.97 at skill 35
+PASS landing a sea catch trains the fishing skill — 0 -> 10
+PASS storms and a crew navigator bring up giants and Sea King fry; a crew cook raises quality — fry clear 0.025 storm 0.047 navigator 0.050; fine clear 0.04 cook 0.14
+PASS dishes cook in the smoker, furnace and campfire and come together in the crafting grid — 11 recipes
+PASS eating a dish applies its buffs — strength 3000 ticks, cold resistance 4800 ticks, left 1 grandline:saltfire_curry
+PASS a prime dish lasts twice as long and strengthens every meal effect — heat resistance 9600 ticks, prime=true
+PASS stamina and Haki meals regenerate the gauges — stamina 10 -> 17.0, haki 10 -> 16.0 in 20 ticks
+PASS meal strength adds damage; cold and heat resistance halve ice and fire damage — strike 4.00 -> 4.60, ice 4.00 -> 2.00, fire 4.00 -> 2.00
+PASS a crew cook makes better dishes — recruited=true cook in crew=true quality 0 -> 1 (home loaded after 77 ticks, cook in the world=true)
+PASS the crew cook's galley cooks the catch and feeds the crew — cooked 1 grandline:grilled_fish q2, stamina meal=true
+PASS persistence fixture written — NPC 901b7ac5-3b75-4d39-9874-ce48098ade04 at 23003,22003
+PASS story cast registered — 799 notables
+PASS cast groups — emperors 4, stewards 5, warlords 7, supernovas 10, crew 18
+PASS every notable's island, fruit (unique), style, role, race and weapon exist — 44 fruits held by the cast
+PASS story quest graph is consistent — 217 story quests across 78 islands
+PASS faction variants resolve and gate correctly
+PASS notable spawns on its home island — Fumio Tsunatori at BlockPos{x=36030, y=79, z=19952}, hp 584
+PASS friendly notable does not attack players
+PASS notable dialogue: own greeting and quest offer — ["quest:ember_east_1"]
+PASS beaten friendly notable yields instead of dying — hp 116.96
+PASS killed notable is gone for good — status DEFEATED
+PASS recruit option appears only after the recruitment quest — ["quest:shells_1","recruit"]
+PASS crew member is allied, protected from friendly fire and saved per character — members [petra]
+PASS crew data round trip
+PASS crew disbands (captain's permadeath) — status ALIVE, faction MARINE, tracked true
+PASS story chain advances (pre-discovered island credited, next arc auto-started) — active [shells_1]
+PASS every notable's home island exists in a plan (ocean/sky/deep) — 799 notables {OCEAN=780, SKY=12, DEEP=7}
+PASS every canon island has at least one quest — 81/81 canon islands (before the extra stories: 72)
+PASS every named sky and deep-sea island has a quest — 9/9
+PASS every quest objective uses a type and target that progresses — 3406 quests, 3970 objectives {arrest=834, collect=427, convoy=156, defeat=507, discover=108, escort=123, fish=3, fruit_kill=1, kill=394, poneglyph=17, reach=216, sea_battle=2, ship=1, sink=351, slay=117, talk=712, treasure=1}
+PASS notable quest givers live on their quests' islands — []
+PASS Shandora and the Sea Forest each hold a poneglyph — 2 poneglyph markers
+PASS a sky notable spawns when a player is near (Heaven's Gate) — Amarante Kumoi at BlockPos{x=-996, y=68, z=16} race sky_people
+PASS far-away sky notables stay unspawned — cirrus UNSPAWNED
+PASS a deep-sea notable spawns when a player is near (Sea Forest) — Tidwell Kaisō at BlockPos{x=-628, y=69, z=270}
+PASS Fish-Man Island's court spawns inside the bubble — King Nereo Umisachi at BlockPos{x=2, y=109, z=-24}, marisol ALIVE, sawara ALIVE, lorcan UNSPAWNED
+PASS the Gatekeeper greets and offers the Skypiea arc — ["quest:sky_1"]
+PASS Skypiea arc plays end to end (discover, talk, kill, defeat, collect, poneglyph) — 1:true 2:true 3:true 4:true 5:true (gold left 1, staff true) 6:true 7:true
+PASS Fish-Man Island Marine variant: resolve, arrest credit, chain on — resolve true, started true, active [fmi_7]
+PASS collect objectives accept item tags — 3 small flowers counted
+PASS every original island has a local story — 149/149 original islands; 18 templates used {BANDIT_TOLL=13, SEA_BEAST=9, LOST_CHILD=11, CROOKED_OFFICER=4, FAMILY_FEUD=7, CURSED_SHRINE=9, SMUGGLERS=7, HEIRLOOM=9, RIVAL_CREW=7, FEVER=8, FESTIVAL=5, CASTAWAY=13, BEAST_NEST=14, OCCUPATION=2, DESERTER=1, TREASURE_MAP=21, WHODUNIT=4, RUIN_SCHOLAR=5}
+PASS every story has 2-4 steps and a giver living on its island — 149 stories
+PASS stories use many templates — 18 of 20
+PASS story people and job board generated — 275 story people, 567 story quests, 644 generated people in all, 2587 jobs {camp=36, convoy=156, cook=123, deliver=246, escort=123, fish=123, hunt=1107, nest=87, sink=351, supply=123, wreck=112}
+PASS story generation is deterministic (two independent plans of the same seed agree) — 340202 chars of fingerprint; regenerated in 308 ms
+PASS another seed gives other stories — 144 stories on seed+1; 0 people's names shared by chance
+PASS every generated objective uses a type and target the engine progresses — 3154 generated quests {arrest=824, collect=411, convoy=156, defeat=438, discover=8, escort=123, kill=257, poneglyph=5, reach=216, sink=351, slay=117, talk=605}
+PASS objective places match their objectives — 1658 quests with places
+PASS generated people have valid roles, styles, weapons, races and homes on their islands — 644 people
+PASS story faction variants resolve (Marine arrests, pirate cuts) — 614 Marine variants, 43 pirate variants
+PASS every island story and job text exists (titles, descriptions, greetings, rumours, places) — 389 keys used
+PASS island story and job texts render with their names and places — 9334 texts rendered, e.g. "The Grinback Pirates" / "A rookie crew, the Grinback Pirates, camps on San Grisington and picks fights with everyone. Neneko Yukisawa wants them humbled. Start with the crew."
+PASS a playable story exists for every template — 20 templates (5 made for the test on fitting islands), 3 variant runs
+PASS story 'bandit_toll' plays end to end — isle_5_capeulvaro: 1 → 2 → 3; +6084 Beli
+PASS story 'sea_beast' plays end to end — isle_25_hashima: 1 → 2 → 3; +1450 Beli
+PASS story 'lost_child' plays end to end — isle_3_karakawa: 1 → 2 → 3; +2610 Beli
+PASS story 'crooked_officer' plays end to end — isle_18_rosmhavenisland: 1 → 2; +1100 Beli
+PASS story 'family_feud' plays end to end — isle_7_newwynora: 1 → 2 → 3; +2000 Beli
+PASS story 'cursed_shrine' plays end to end — isle_22_saintkesthaven: 1 → 2 → 3; +11250 Beli
+PASS story 'smugglers' plays end to end — isle_15_hajima: 1 → 2 → 3; +5436 Beli
+PASS story 'heirloom' plays end to end — isle_12_hishima: 1 → 2 → 3; +1350 Beli
+PASS story 'rival_crew' plays end to end — isle_0_sangrisington: 1 → 2 → 3; +4602 Beli
+PASS story 'fever' plays end to end — isle_14_sashijimaisland: 1 → 2 → 3; +1450 Beli
+PASS story 'festival' plays end to end — isle_19_narikawa: 1 → 2 → 3; +9228 Beli
+PASS story 'debt_collector' plays end to end — isle_72_motadakeisland: 1 → 2 → 3; +40374 Beli
+PASS story 'castaway' plays end to end — isle_1_zepharoisle: 1 → 2 → 3; +1350 Beli
+PASS story 'beast_nest' plays end to end — isle_9_newjarnosa: 1 → 2 → 3; +1500 Beli
+PASS story 'occupation' plays end to end — isle_101_kaokaisland: 1 → 2 → 3; +31113 Beli
+PASS story 'rebel_cell' plays end to end — isle_71_nenedake: 1 → 2 → 3; +2700 Beli
+PASS story 'deserter' plays end to end — isle_115_hazemoriisland: 1 → 2 → 3; +18600 Beli
+PASS story 'treasure_map' plays end to end — isle_2_kinamori: 1 → 2; +4202 Beli
+PASS story 'whodunit' plays end to end — isle_32_morahama: 1 → 2; +1100 Beli
+PASS story 'ruin_scholar' plays end to end — isle_8_saintsorrmouth: 1 → 2 → 3; +11350 Beli
+PASS story 'bandit_toll' plays end to end (marine variant) — isle_0_sangrisington: 1 → 2 → 3.marine; +4069 Beli
+PASS story 'whodunit' plays end to end (marine variant) — isle_2_kinamori: 1 → 2.marine; +1100 Beli
+PASS story 'smugglers' plays end to end (pirate variant) — isle_2_kinamori: 1 → 2 → 3.pirate; +6336 Beli
+PASS story people spawn on their own islands when a player comes near — 10/10 [Ushimi Kirimoto@isle_17_yosayama at BlockPos{x=34745, y=67, z=27437}, Kjastein Torvstrand@isle_31_kuoka at BlockPos{x=39220, y=70, z=-11648}, Steessa Marroni@isle_45_memogawaisland at BlockPos{x=-3677, y=68, z=-28216}]
+PASS a notice board offers the classic and the generated jobs, outlaws one at a time — isle_2_kinamori: 18 notices, types [convoy, cook, deliver, escort, fish, hunt, nest, sink, supply, wreck]
+PASS right-clicking the town's notice board finds it — marker BlockPos{x=3294, y=89, z=25409}, found BlockPos{x=3294, y=89, z=25409}
+PASS a named-bounty job: the outlaw hides until hunted, the wanted poster says where, they turn up there — Maeji "Half-Hitch" Hamagaki on isle_2_kinamori: before job UNSPAWNED, poster {alive:1b,bounty:750L,faction:"pirate",name:'Maeji "Half-Hitch" Hamagaki',target:"job_isle_2_kinamori@outlaw0",where:"Kinamori",x:3296,z:25340}, body BlockPos{x=3296, y=76, z=25340}
+PASS defeating the hunted outlaw completes the job and pays the bounty; the next poster goes up — paid 4734 Beli (job 750), guards at the hideout 2, next outlaw offered true
+PASS every other job type completes with real NPCs, beasts, places and goods — done [deliver, escort, nest, wreck, fish, cook, supply]
+PASS story givers greet in their own words and offer their story (labelled with names) — Kahoji Funasawa on isle_4_ulvhavenisland: options ["quest:story_isle_4_ulvhavenisland_1"], name 'Kahoji Funasawa — Retired Pirate'
+PASS boss roster: Emperors, Admirals, Warlords, Stewards and final-arc villains — 24 bosses [aldric, aurelia, barnum, cassius, constance, hagane, hisui, hrolf, jinpachi, kurogane, leonhart, leopold, lucrezia, meridian, morwenna, nadir, nox, ottavia, pipistrello, saltmarsh, sigrun, sterling, vespera, zenith]
+PASS every boss has 2-3 signature attacks per phase, a new set in phase 2, names, relic and lines — 72 signature attacks
+PASS a boss fight starts for a boss
+PASS the boss bar shows to the players in the fight nearby — near=true far=false name=Kurogane Shiomaru — "the Kraken", Emperor of the Sea progress=1.0
+PASS the boss bar names the boss and title — grandline.boss.bar [notable.grandline.kurogane, notable.grandline.kurogane.title]
+PASS the boss bar follows the boss's health — progress 0.5
+PASS the boss bar goes away with the boss
+PASS a fresh boss starts in phase 1 — phase 1
+PASS damage stops on the 70% threshold — health 716.8 / 1024.0
+PASS crossing the threshold starts the phase transition — transitioning=true
+PASS the boss is untouchable while it roars — health 716.8 after vanilla + HIT
+PASS after the roar the boss is in phase 2 — phase 2
+PASS phase 2 swaps the move set — [nadir/black_hole, nadir/kurouzu] -> [nadir/black_hole, nadir/liberation]
+PASS phase 2 changes the arena (Nadir's darkness spreads) — 1 hazards
+PASS damage stops on the 35% threshold — health 358.4
+PASS after the second roar the boss is in phase 3 with its full move set — [nadir/black_hole, nadir/kurouzu, nadir/liberation]
+PASS phase 3 changes the arena again — 2 hazards
+PASS the boss stands rooted while it winds up — movement speed 0.0
+PASS a telegraphed attack marks its area before it lands — both inside=true windup=28 busy=true
+PASS the telegraphed attack hits the one who stayed in the marker — hp 600.0 -> 565.8, results [HIT]
+PASS ...and misses the one who moved out before the hit — hp 600.0 -> 600.0
+PASS the boss is free again after its attack
+PASS left to its AI, a boss uses its telegraphed signature attacks — 1 attacks started, foe at 0/600
+PASS marker shapes: slam around the feet, cone in front, ring with a safe centre
+PASS a Logia boss is intangible to blows without Haki (combat system) — result INTANGIBLE
+PASS ...and to plain vanilla blows — 1024.0 -> 1024.0
+PASS Armament Haki lands on a Logia boss — 1024.0 -> 1019.6
+PASS a boss never uses its awakened powers unannounced (only as telegraphed attacks) — 0 awakened among 17 techniques
+PASS the fight counts the players in it (1-4) — 1 then 3
+PASS a boss takes less damage per blow with more players (health scaling) — solo 20.00, three players 8.00, ratio 2.50 (expected 2.5)
+PASS a boss hits harder with more players — 1.00 -> 1.20
+PASS when everyone has left, the boss recovers and its fight ends — phase was 2, ended=true health 1024.0
+PASS Kurogane is a killer (finishes downed players when alone)
+PASS a player knocked down by the boss while another still fights is left for later — deferred 1
+PASS the boss turns to the next foe still standing — target BossTesterB
+PASS the boss cannot finish the downed player while another fights
+PASS once nobody is left standing, the usual rules apply again — finish canceled=false deferred=0
+PASS a Marine boss does not arrest a downed player while another still fights; it does once nobody does — held back=true both arrested after=true
+PASS a boss cannot be knocked out
+PASS a boss never bursts its Conqueror's Haki at random (only as a phase begins) — coq 92
+PASS long, strong crowd control is cut short on a boss — 40 ticks, amplifier 1
+PASS advanced Observation: the boss reads blows coming — 29/60 dodged, 31 landed
+PASS a stagger breaks the boss's foresight — 0/60 dodged after the stagger (60 landed), breaks 1
+PASS the enrage timer runs out: the boss hits harder — enraged=true 1.00 -> 1.50 grandline.boss.bar.enraged
+PASS a phase begins with the boss's Conqueror's Haki — transitioning=true other player affected=true
+PASS a player with Conqueror's Haki meets it in a clash — clashes 1
+PASS a wounded boss picks up in the matching phase — phase 3
+PASS defeating a boss drops its unique relic — 1 relics, The Kraken's Wager
+PASS the relic is stronger than its base weapon — 17.0 vs 11.0
+PASS everyone in the fight gets a Haki scroll and a style scroll — A haki 1, B haki 1
+PASS defeating an Emperor raises the bounty a lot — A +1,500,000,000, B +1,500,000,000
+PASS the story objective is credited (killer and group) — started=true A done=true B done=true
+PASS the boss is gone for good in the story — DEFEATED
+PASS a rival boss yields and pays out its relic — alive=true yielded=true relics=1
+PASS seastone cuffs do not close on a boss that is not beaten down
+PASS arresting a beaten boss counts as defeating it (relic, reward) — arrested=true relics=1 beli 261194 -> 1341004
+PASS a Haki scroll awakens a sleeping Haki, then trains it — mastery 0 -> 11
+PASS every boss's signature attacks, phase powers and arena run without errors — 168 attacks, 15 arena/phase moves
+PASS every boss's signature attacks land on a foe in the marker — 24 bosses
+PASS story fates the tests produced are kept — kurogane DEFEATED, sterling ARRESTED
+PASS boss fights leave no errors behind
+PASS sound events registered — 53/53
+PASS music discs play their jukebox songs — 4/4 discs resolve to a jukebox song over a minute long
+PASS bases: uninhabited original islands to claim — 40 claimable islands of 230; picked isle_86_hinashimaisland (PLATEAU, r176) and isle_77_rokimoriisland
+PASS bases: no flag on a canon island, a settled island, a story place, the shore or the sky — canon grandline.base.refuse.canon, isle_2_kinamori grandline.base.refuse.settled, story (isle_1_zepharoisle @9699,9936) grandline.base.refuse.story, shore grandline.base.refuse.not_heart, sky grandline.base.refuse.wrong_world
+PASS bases: a hostile near the heart must be dealt with first — with a bandit grandline.base.refuse.threat, without allowed
+PASS bases: planting the crew flag at the heart claims the island for the crew — use CONSUME, claim Test Crew flag 42493, 108, 552 dock 42383,662, flag block true, flag item left false
+PASS bases: the claim is announced and on everyone's sea chart under the crew's name — news [grandline.base.claimed_announce], chart (rival) true
+PASS bases: the claim finds a dock in open water off the island — dock 42383,662, 155 blocks from the flag
+PASS bases: one claim per crew, and an island already claimed is taken — crewmate elsewhere grandline.base.refuse.limit, rival on the claimed island grandline.base.refuse.taken, rival elsewhere claimed isle_77_rokimoriisland, transfer to a crew at its limit refused true
+PASS bases: the crew may break and place inside the base, an outsider may not — at 42497, 106, 552: break captain/mate/rival cancelled false/false/true, place captain/rival cancelled false/true
+PASS bases: outsiders cannot open containers in the base, and nobody breaks the flag by hand — chest opened by rival cancelled true, by the crew false; flag break cancelled (crew/rival) true/true
+PASS bases: outside the claim nothing changes and town protection is unchanged — wild 42587, 70, 552 rival cancelled false; Orange Town plot 23000, 76, 22000 cancelled for the base's captain true and the rival true; the base is not town protection true
+PASS bases: the base chest opens one warehouse shared by the crew, closed to outsiders — captain true, mate true, rival false, mate sees the captain's gold true
+PASS bases: upgrades cost Beli and materials from the pack and the warehouse — refused poor true, short true, built true, Beli 65000, iron left 0, planks left 0, mate told true
+PASS bases: the dojo trains style and Haki half again, inside the base only — style +15 inside / +10 outside, Haki +15, weapon +10
+PASS bases: the galley cooks a step better inside, the medical bay heals, a hot meal is served — dish quality inside 1 / outside 0, healed 1 (hp 8 -> 10.0), outside 0, meal 1 buff true
+PASS bases: crew ships at the base dock are repaired for free (an outsider's are not) — hull 70 -> 77 -> 140 of 140, rigging 1.00, rival's 70, Beli 65000 -> 65000; ship at 42383, 63, 662 (present, in level true), dock 42383,662, 1 crew ship(s) moored, 2 ships near
+PASS bases: the slip fits ship upgrades at the base dock for three quarters of the price — price 9000, fitted true, paid 9000
+PASS bases: crew quarters take four hired hands who live at the base and never turn on the crew — hired [guard, sailor, sailor, sailor], fifth refused true, rival refused true, on the ground 4, tagged true, friendly true
+PASS bases: a hand who dies is gone for good — hands [guard, sailor, sailor], crew told true
+PASS bases: a raid on a base waits for room under the NPC ship cap, then one ship sets out — no room: no raid; room for one: Bloody Mary Ann (pirate) at 42346, 63, 699, 49 blocks from the dock, NPC ships 0 -> 1
+PASS bases: the raid ship lands at most six raiders at the base — sailed in and landed after 51 ticks: 2 raiders ashore true, ship 34 blocks from the dock
+PASS bases: raiders fight the crew and the hands, the hands fight the raiders — raider vs captain true, vs hand true, hand vs raider true
+PASS bases: beaten raiders mean the raid is repelled and those who fought are paid — outcome repelled after 8 ticks, repelled 1, captain's Beli 185000 -> 187000, mate (did not fight) 100000 -> 100000
+PASS bases: the raid ship is gone once dismissed
+PASS bases: a watchtower sights the raid far out and warns the whole crew — Marine Raider 291 blocks from the flag, warned true
+PASS bases: with a watchtower the raiders glow — 2 raiders
+PASS bases: raiders holding an undefended flag take it (announced, grace period) — phase 2 after 397 ticks, news [grandline.base.raid.flag_taken_marines]
+PASS bases: a taken flag can be retaken within the grace period — phase 1 after 18 ticks
+PASS bases: when the grace period runs out the flag is captured: the claim is removed and the raiders carry off goods — claim gone true, flag block Block{minecraft:air}, plunder [5 minecraft:gold_ingot], on the chart false
+PASS bases: a claim can be handed to another crew and abandoned by its leader — outsider refused true, transferred true, new crew builds true, old crew builds false, abandoned true, news [grandline.base.transferred, grandline.base.removed.abandoned]
+PASS bases: a claim is kept for the restart — isle_77_rokimoriisland flag 51511, 69, -1756
+PASS career ladders: Marine 13 ranks (Seaman Recruit to Fleet Admiral, rising merit and level), pirate 3, revolutionary 4, hunter 6, civilian 5; all translated
+PASS the Marine coat (chest armour with its own layer texture) and the letter of marque exist; 19 career advancements, every rank milestone fired — coat true, 19 advancements, ids true
+PASS career sea station loaded — 34300,20980 after 0 ticks
+PASS a Marine starts as Seaman Recruit (title in chat and tab names), earns merit from arrests and is told to report — start true, merit 30, arrests 3, brought in 15015, due false
+PASS the promotion talk with a Marine officer makes a Seaman (coat issued, title, milestone); a plain Marine cannot promote — options [career_supply, career_promote], rank seaman, coat 1, milestone true, plain true
+PASS merit from arrests and a kill climbs Seaman → Petty Officer → Chief Petty Officer, one rank per talk — kill merit true, 13 arrests, 2 talks, rank ensign, merit 340
+PASS Ensign is gated on the enlistment: refused, then the path quest (enlisted) and the talk make an Ensign (seastone jitte issued) — gated true, enlisted true, rank ensign
+PASS Captain waits for a sea battle won: a pirate sloop sunk through the hull hook counts (merit +30), then the talk makes Captain (announced, sword) — blocked at captain=true, won true (wins 1), rank captain
+PASS a Captain calls a squad of three Marines who stand by their leader; the call has a cooldown; dismissed they leave — called 3, loyal true, again -2, gone true
+PASS rank pay on login: a Captain is paid 2,300 Beli once a day (a second login the same day pays nothing) — paid 2300, once true
+PASS Marine quartermasters sell to Marines by rank (coat bought from an officer); a pirate gets no Marine supply — offers 12, bought true
+PASS the top ranks are gated hard: a Lieutenant's officer cannot promote a Commodore, Rear Admiral needs Part II, Admiral Part III and both Haki — junior true, part true, vice admiral true (black snail), haki gate true
+PASS Admiral and Fleet Admiral take limited seats (the Admiral's seat freed on promotion); a second qualified Marine finds the Fleet Admiral's seat taken — admiral true, fleet true, second [{career.grandline.req.seat}]
+PASS a Fleet Admiral's Buster Call request on a 600M pirate is granted (a Captain's refused; one request an hour) — captain refused true, granted true, call true, again refused true
+PASS a Marine flag officer calls a warship to the open sea nearby (once in a while) — Mara Seawall's Escort flagship 40 blocks
+PASS striking Marines and civilians earns demerits: a Petty Officer is demoted (merit cut back) — demoted to seaman (merit 30), demerits after civilian 5
+PASS further crimes demote to Seaman Recruit, then the recruit deserts: a pirate with a bounty, announced, titled Deserter, the gull struck from their ship — recruit true, faction pirate, bounty 8000000, flags deserter true
+PASS a Marine whose standing falls below -300 deserts (Bounties' rule) with the career's deserter bounty (5M per rank held) — faction pirate, bounty 31000000
+PASS pirate infamy: a Rookie with 120M is not yet a Supernova; Paradise (Navigation at Alabasta) and two named rivals beaten (yields) make one, announced — rookie true, deeds 2, rank supernova, paradise true
+PASS a Supernova's banner: a pirate joins when asked (and is gone when dismissed); a pirate-held island's port of call sells to a known pirate — asked true, joined true, haven spider_miles, port true
+PASS a World Government envoy offers a Supernova the letter of marque; accepted: Warlord of the Sea (seat, letter, title, milestone, announced) — options [career_marque, career_marque_decline], warlord true
+PASS a Warlord is protected: a Marine captain hostile before stands down (and Marine ships at sea) — before true, now hostile false
+PASS a Warlord's duty (three pirates hunted) is paid at the end of the period; a crime revokes the letter: bounty back, seat freed, Marines hostile, no second letter — duty 3, paid true, revoked true, bounty 120000000 -> 181000000
+PASS a billion-Beli Supernova waits for an Emperor-class deed; an Emperor beaten in a boss fight (Hrolf, from the fight's records) makes an Emperor of the Sea; their ships fly their Jolly Roger in gold on crimson — waits true, rank emperor, deed true, flag skull|flame|e8c040|9e2222
+PASS an Emperor claims an island of the Grand Line: titled Emperor of it, tribute paid each day — isle_75_tomokawa, why -, tribute true
+PASS an Emperor fought in a boss fight (the fight's reward records) makes a billion-Beli Supernova an Emperor; an earlier life's fight does not count — rank emperor, deed true; earlier life: rank supernova, deed false
+PASS a revolutionary: Cell Member, the path quest makes contact; missions from a revolutionary (incite: three islanders, then the elder) — options [career_safe_house, career_mission], contact true, early true, missions 1
+PASS revolutionary missions: sabotage (a Marine ship sunk) and liberation (two auction-house guards at Sabaody beaten, three captives freed) — sabotage true, liberate true, missions 3, merit 360
+PASS revolutionary promotions in person: Officer, then Army Commander (announced) who calls a cell of three — officer true, commander true, cell 3
+PASS a safe house hides a wanted revolutionary from the law for a while; contacts sell supplies and name the nearest Marine base; the Army pays — hunted true, hidden true, contacts true, pay 500
+PASS a bounty hunter's licence: the path quest and two captains brought in alive; then 10% more per licence tier on the reward — rank licensed, collected 112440, reward 38651 for base 35138
+PASS a Bronze-licence hunter reads where a wanted player is from the poster (1,500 blocks east); a civilian reads nothing — rank gold, tracked true, {grandline.career.track.rough}Tess Wanted 1,500 {grandline.career.dir.e} Shiokaze Isle 
+PASS Silver waits for a notable head; a notable outlaw brought in alive makes Gold (announced) — waits true, rank gold, heads 1
+PASS a Gold-licence hunter calls a hunter ship — Hale Ironwrit's Hunter
+PASS a civilian makes a name: charted islands make an Apprentice Cartographer (title with the trade, milestone); charts and a poneglyph read pay — towns true, rank apprentice, chart true, scholar true
+PASS trade in shops counts for a merchant; a Grand Merchant (announced) pays 12% less — traded true, rank grand, factor 0.88
+PASS career players written to the world's playerdata for phase 2 — CareerM fleet_admiral, CareerP emperor
+PASS careers belong to the character: a permadeath frees the Admiral's seat and the next life starts with no career — admiral true, created false, track '', rank 0, seat false
+PASS sea jobs: notice boards post named pirate ships, convoys and follower escorts — 117 sink jobs, 78 convoys, 123 escorts; 0 without a sea objective or job spec
+PASS sea jobs: Marine and bounty-hunter versions pay more; pay scales with tier and distance — [ok: pay 1183 / 1420 / 1774], sink pay ranges 1093 (isle_47_robezaki) to 152480 (elbaph)
+PASS sea jobs: every board offers a sea-battle commission (pirates get the blockade run instead) — civilian true, pirate true
+PASS sea jobs: every message and title is translated — []
+PASS sea jobs: taking an escort job brings the merchant to your side — job_escort_isle_140_katayamaisland (isle_140_katayamaisland -> karai_bari_island, 1829 blocks): merchant Rakane Embermere 1.7 blocks away, role merchant
+PASS sea jobs: the escorted merchant walks after you — 3.4 blocks after 50 ticks (0 teleports)
+PASS sea jobs: left far behind on land, the merchant catches up at once — 36 blocks -> 1.4 blocks, 1 teleport
+PASS sea jobs: the merchant never follows you into the sea — 0 of 160 ticks in the water; 42.6 blocks from the swimmer
+PASS sea jobs: the merchant boards your ship as a passenger — 1 blocks from the deck; vehicle Caravel, seat 5
+PASS sea jobs: the merchant stays aboard the whole voyage to the destination — 1280 ticks under sail, merchant seated 1280 of them (0 boardings after the first); 44 blocks from karai_bari_island's dock point at the end
+PASS sea jobs: ashore at the destination, the merchant steps off beside you — 1.7 blocks from you, vehicle null, at the dock true
+PASS sea jobs: with the ambush beaten, talking to the merchant on the dock pays the escort — talked early: told to wait true; 3 ambushers beaten; paid 96474 of 43767 Beli; Rakane Embermere retired true
+PASS sea jobs: if the merchant dies the escort fails, with a message — started true, merchant alive=false, job dropped true, messages [job.grandline.escort.meet, job.grandline.escort.died, job.grandline.failed]
+PASS sea jobs: /jobs abandon ends an escort cleanly — started true, merchant removed true, job dropped true
+PASS sea jobs: an escort survives a log-out (the merchant is stowed and steps off beside you again) — stowed true, back 1.7 blocks away as Rakane Embermere
+PASS sea jobs: away too long, the escort lapses cleanly — job dropped true, record null
+PASS sea jobs: the named pirate ship is put to sea only near where she was seen and only with room under the NPC ship cap — job job_sink_shiokaze_isle; 600 blocks off: none true; cap 4 full true: refused true; then the Coalfist sloop with 5 crew, 48 blocks from the hunter (simulation distance 5 chunks)
+PASS sea jobs: sinking the named pirate ship completes the job and pays — one ship true, sinking true, paid 4183 of 1183 Beli (and the Marines' standing reward)
+PASS sea jobs: a Marine who takes the named ship as a prize is paid a bonus — job_sink_shiokaze_isle.marine: taken true, paid 2130 Beli (job 1420 + bonus 710)
+PASS sea jobs: beating a pirate ship counts for sea-battle objectives (Privateer's Commission) — started true, paid 7000 Beli (commission 4000)
+PASS sea jobs: a convoy's merchantman waits off the dock for her escort — job_convoy_isle_140_katayamaisland (isle_140_katayamaisland -> karai_bari_island, 1422 blocks): the Restless Albatross (brigantine) 1 blocks off the anchorage beyond the harbour, stage 1
+PASS sea jobs: with the player's ship alongside she weighs anchor — moved 0.0 blocks while waiting alone; stage 2
+PASS sea jobs: pirates fall on the convoy partway and target her or her escort — pirates came with 60% of the way left; raider Stormbrow, had a target for 41 ticks (merchant or escort: true)
+PASS sea jobs: the convoy makes port and the job pays — after 1901 ticks; arrived true, job done true; reward 62689 Beli; her hull fell to 460 on the way; messages [job.grandline.convoy.start, job.grandline.convoy.ready, job.grandline.convoy.under_way, job.grandline.convoy.pirates, job.grandline.convoy.arrived]
+PASS sea jobs: a convoy is rebuilt from her saved state when her ship is gone (restart, unloaded chunk) — hull 150, stage 1, 1 blocks from where she lay
+PASS sea jobs: if the convoy's merchantman sinks the job fails, with a message — sinking true, job dropped true, messages [job.grandline.convoy.start, job.grandline.convoy.ready, job.grandline.convoy.back, job.grandline.convoy.sunk, job.grandline.failed]
+PASS sea polish: a shipwright offers gunners; too poor for one, nothing is taken — option offered=true, poor hire 0 (fee 7500), gunners 2
+PASS sea polish: hiring takes the Beli and puts the gunners at the guns — 2 hired for 15000 Beli (fee 7500 each), seats 1 2 of 4 guns, fire at will true
+PASS sea polish: hired gunners fire on a pirate ship within range, with the captain's shot — 2 shots in 76 ticks, pirate hull 140 -> 114, 2 cannonballs taken from the captain
+PASS sea polish: hired gunners hold fire on a merchantman, a Marine ship and another player's ship — 0 shots in 260 ticks; hulls 140/140/140
+PASS sea polish: for a wanted pirate captain the hired gunners fire on a Marine ship (still not on the merchantman) — 1 shots after 27 ticks; merchant hull 140, Marine hull 140 -> 113
+PASS sea polish: "hold fire" stands the hired gunners down — 0 shots in 200 ticks after the order
+PASS sea polish: a hired gunner knocked off his station goes back to a gun — off the gun: true, 60 ticks later seat 1
+PASS sea polish: no gunners for a ship without cannons — hired 0, Beli 45000 -> 45000
+PASS sea polish: dismissed gunners leave the ship (no refund) — 2 dismissed, 0 left aboard, 0 at the guns, Beli 45000 -> 45000
+PASS sea polish: raiders carry off goods from the town's market (its shops stop selling them) — shimotsuki_village: 4 grandline:meat_on_bone, 1 grandline:sea_chart, 2 raiders still carrying, shop goods 35 -> 33 after 12 ticks
+PASS sea polish: the beaten raiders drop the goods they carried off — raid phase 2 after 18 ticks; taken 2 goods, on the ground {grandline:meat_on_bone=4, grandline:sea_chart=1, grandline:knife=1}, still carried by 0
+PASS sea polish: the market restocks a plundered good once its time is up — grandline:meat_on_bone back in the shops: true, 1 others still missing: true
+PASS sea polish: a named ship's last-seen point is on the job holder's chart only — job_sink_shiokaze_isle: holder marks [{island:"",islandName:"",kind:"sink",name:"Coalfist",x:35322,z:20170}], other player's sea-job marks 0
+PASS sea polish: the mark goes with the job — 0 sea-job marks after abandoning
+PASS sea polish: a convoy waits in port while the NPC ship cap is full (with a message) — job_convoy_syrup_village: started true, stage 0, ship none, held 2 times, 4/4 NPC ships
+PASS sea polish: the convoy's port is on the job holder's chart — port marks [{island:"isle_10_ravencerock",islandName:"Ravence Rock",kind:"convoy_port",name:"Honest Comet",x:21628,z:15089}], merchantman marks before she sails 0
+PASS sea polish: with room under the cap she puts out — the Honest Comet at 19487, 63, 16987, stage 1
+PASS sea polish: the convoy's merchantman is marked where she lies — marks [{island:"isle_10_ravencerock",islandName:"Ravence Rock",kind:"convoy_ship",name:"Honest Comet",x:19487,z:16987}], ship at 19487, 63, 16987
+PASS sea polish: phase-2 fixture (a caravel with two hired gunners) — 2 gunners at seats [1,2]; market short of goods: shimotsuki_village grandline:sea_chart,
+PASS all journey advancement JSON loads, translated, one tab, only the milestone trigger — 97 loaded of 97 files, 103 milestone ids
+PASS the journey tab has its nautical background — Optional[grandline:textures/gui/advancements/backgrounds/sea.png]
+PASS Den Den Mushi items: models, textures, names, recipes (black one not craftable), chat glyph font, sold in shops — 4 snails, sold=true
+PASS making a character grants the journey root, Born of the Sea and the race — root=true races=true race_human=true
+PASS discovering islands (Navigation) grants Landfall, the Blue, Paradise and its islands — discovered [orange_town, alabasta]  four_blues/east=true
+PASS eating a fruit, mastering it and the Awakening Trial grant the fruit milestones — mera eat=true mastery 50 master=true awakened=true 
+PASS Haki unlocks grant the three colours and the advanced forms — all seven
+PASS bounty thresholds (Bounties.raise) grant the poster, 10M, 100M and 1B in turn — bounty 1162000000 poster/10M=true 100M=true 1B=true (marine base near: none)
+PASS a bounty raise far from any Marine base brings no Buster Call
+PASS the shipwright (buy, upgrade, customise) grants the ship milestones — isle_15_hajima: ships owned 1 buy=true upgrade=true customise=true
+PASS taking a prize and slaying a Sea King grant their milestones — prize spawned=true taken=true sea king=true 
+PASS recruiting (CrewManager) grants First Mate and the crew post — odile (navigator) joined=true 
+PASS finishing story quests (Quests) grants the Part and the ending — logue_3 started=true part1=true laughtale_2 started=true done=true 
+PASS a giant catch, a signature dish and a solved treasure map grant their milestones (a small fish and a plain dish do not) — small fish=false plain dish=false map solved=1 
+PASS milestones for a plain fake player are a harmless no-op
+PASS advancements belong to the account: a permadeath keeps them, and a third race makes Many Lives — kept [root, bounty_1b, fruit_awaken, haki_conqueror, ship_buy, story_part1]=true generation 2 fishman=true 
+PASS logging in credits a character's saved data retroactively (islands, fruit, Haki, bounty, saga, ships, earlier lives) — 38 expected, 1 before login; all granted; nothing unearned=true
+PASS a Den Den Mushi call rings only someone carrying a snail, and a declined call ends — to snail-less=NO_SNAIL_THERE ring=RINGING declined=true ended=true
+PASS an accepted call connects both and chat goes only down the line — accepted=true chat cancelled=true B heard=1 A heard=1 C heard=0 C's own chat stays public=true 
+PASS hanging up ends the call for both — hung=true silent after=true
+PASS the crew snail reaches crewmates (and only them) — invited=true joined=true heard by 1 B=1 C=0
+PASS a Baby Den Den carries one message and is used up — sent=true left=1
+PASS an unanswered call rings out (missed call on both sides) — caller told=1 callee told=1
+PASS a black snail overhears a Marine ship nearby (none without one) — patrol=true without=0 with=[{grandline.den.black_ship}Marine Patrol Kestrel {grandline.den.side.marine} 25 S W ]
+PASS black snails are taken from Marine officers only
+PASS a Buster Call needs the bounty threshold and can be disabled in the config — below threshold refused=true disabled refused=true
+PASS a crime near a Marine base reports the player and may bring a Buster Call (one at a time) — call=crime:shells_town second refused=true cancelled=true
+PASS a Vice Admiral who fought the player and lived reports them (a beaten one does not) — witnessed=true reports=1 call=vice_admiral silenced=true
+PASS a Buster Call is issued past the threshold with a report — bounty 700000000 room under the cap 4/4
+PASS a Buster Call gives warning first (no ships during the countdown) — phase WARNING ships 0 warning 60 ticks
+PASS the Buster Call fleet sails within the NPC ship cap, a Vice Admiral aboard each — 4 warships (asked 6, room 4, cap 4), NPC ships now 4, vice admirals=true after 46 ticks, phase SAILING
+PASS the warships converge on the target; reinforcements stay within the cap — mean distance 116 -> closest 81 over the first 4 ships; 4 of 4 wanted in all (room 4), on station
+PASS the fleet bombards the target (shells fired and bursting) — 23 shells, 19 bursts, hurt 6 creatures and 1 hulls (pirate bystander hurt=true, rowboat hull=0/40)
+PASS the Buster Call ends; surviving it is an advancement and raises the bounty — phase WITHDRAW outcome survived bounty 770000000 
+PASS the fleet withdraws and is gone; no town block was broken by the bombardment — phase DONE, warships left 0, town blocks changed 0/5324
+PASS a shell burst hurts a pirate and a ship but spares a Marine — pirate 35.100002 -> 21.160803, marine 37.8 -> 37.8, sloop hull 95.0/140
+PASS a shell burst in town never changes a block — town at 28778, 97, 28463: blocks changed 0, wild=false
+PASS a shell burst in the wild craters it through TerrainChanges, which reverts it — at 28740, 68, 28545: 24 blocks blasted, 24 changed, 73 reverted, 24 restored
+PASS sea jobs: an escort in progress is stowed for the restart — merchant Rakane Embermere, stowed true
+TOTAL: 685 passed, 0 failed

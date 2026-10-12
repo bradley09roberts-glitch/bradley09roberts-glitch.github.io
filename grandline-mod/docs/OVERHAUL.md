@@ -4,8 +4,8 @@ This release changes how the world is built and how it looks. Combat, Devil Frui
 other game systems are unchanged. The only exceptions are the integration points that buildings need: plots,
 gameplay markers and loot tables keep their meaning.
 
-**Status of this document:** it's filled in as the work lands. The validation report at the end lists only checks
-that were actually run.
+The validation report at the end lists only checks that were actually run, with their raw output in
+`docs/validation/`.
 
 ## What changed
 
@@ -112,4 +112,49 @@ that were actually run.
 
 ## Validation report
 
-(Filled in from the actual runs; see the bottom of PROGRESS.md for the log.)
+Every line below comes from a run on the final tree. Raw outputs are in `docs/validation/`. The machine had 4 CPU
+cores and no GPU: every client image was rendered by Mesa llvmpipe (software OpenGL) under Xvfb.
+
+### Passed
+
+| Check | Result | Evidence |
+|---|---|---|
+| Build | `./gradlew build dist` succeeds; the jar reports version 0.2.0 and contains the kit classes, textures, models and names | `dist/grandline-0.2.0.jar` |
+| Assets | `tools/check_assets.py` against the vanilla models: 194 items, 101 blocks, every texture, model, loot table and sound present. The asset generators are idempotent (a re-run leaves no diff) | — |
+| Every settlement building | `BuildingCheck`: 22 types × 15 styles × 4 rotations: deterministic, inside the plot margin, NPC markers on a floor and reachable on foot, every loot container openable by a player who walks up to it | `validation/selftest-structures.txt` |
+| Every landmark | `LandmarkCheck`: all 78 builders × 4 rotations: inside the footprint, markers identical with and without terrain, NPCs reachable, enterable interiors, loot containers usable | same file |
+| Island secrets | each chest of the four secret kinds sits exactly where treasure maps point, in every rotation (16 variants) | same file |
+| Build height | all 163 landmark placements, in every dimension, fit inside their level's build limits (the least headroom is Mary Geoise, 1 block) | same file |
+| Built into a real world | Alubarna, White City, Galley-La and the Flower Capital castle sampled after real chunk generation: 100 % of sampled blocks match | same file |
+| Gameplay anchors | `tools/gen_structure_audit.py` over 417 structures and variants: every marker kind, NPC role and loot table count kept or increased; **0 flags** | `STRUCTURE_AUDIT.md` |
+| Gameplay regression, phase 1 | **685 / 685 passed** on a fresh world (combat, fruits, Haki, ships, NPCs, quests, story, treasure maps, settlements, landmarks, dimensions, careers, sea jobs...) | `validation/selftest-phase1.txt` |
+| Persistence, phase 2 | **22 / 22 passed** after the restart | `validation/selftest-phase2.txt` |
+| Existing 0.1.0 save | the clean NeoForge 21.1.259 production server install, with its world made by 0.1.0, started with the 0.2.0 jar: NeoForge logged `grandline (version 0.1.0 -> 0.2.0)`, the server came up in 1.1 s, no ERROR or exception, clean stop | `validation/production-upgrade-0.1.0-world.log` |
+| Real client, towns and landmarks | 54 in-game screenshots on the fixed seed: the 32 views of the 0.1.0 before set plus 22 more landmarks | `captures/after/`, `captures/before_after_*.jpg` |
+| Shader pack | (shader agent) every program compiles and links for all six dimension folders under LOW, BALANCED and HIGH; offline, 134 programs under all three profiles. **Final code:** the BALANCED tour with the shipped zip built pipelines for the overworld, sky, deep sea, ship interiors, Nether and End and kept the pack in use to the end; the only ERROR in the log is the sound device this machine lacks | `shaderpack/GrandLineShaders/README.md`, `validation/shader-*.txt`, `shaders/` |
+
+### Failed, then fixed during validation
+
+- **Lost shrine treasure:** the rebuild had moved the shrine's chest one block from where treasure maps point. Phase 1
+  caught it ("map targets have their chest" 9/10). The chest is back at the map position, and a new check pins every
+  secret's chest to `TreasureMaps.chestPos`.
+- **Nanohana Port loot:** the rebuilt tavern and warehouse had 15 fewer loot containers than before. The audit
+  caught it, and they are restored.
+- **Cake chateau:** the top tier's floor was laid after its stair and sealed the stairwell, so the chamber and its
+  chest could not be reached. The new container check caught it; the stairwell is open and railed.
+- **Mary Geoise (a 0.1.0 bug):** at a fixed height of 301, its domes reached past the world's build limit and were
+  never generated. The rebuild keeps it under the limit, and a build-height check now covers every placement.
+- **Deep-sea landmark views:** the camera command stood on the water surface in the deep-sea dimension, so those
+  screenshots showed only water. It now stands on the sea floor.
+
+### Not run or not verified
+
+- **No real GPU.** All rendering, with and without shaders, ran on software OpenGL at 2–4 fps with the pack
+  (14–20 without). Frame rates, shadow quality and driver behaviour on real graphics cards are unknown.
+- **Shader combinations not tried:** Iris 1.8.14 beta with Sodium 0.8, Distant Horizons, OptiFine.
+- **Not seen in a client:** shader foliage and cloth motion (stills only), the moment of entering or leaving water,
+  wet surfaces in rain up close, the shader option screens, and many interiors (they are verified by the
+  reachability checks and floor-plan renders, not by screenshots).
+- **No human play-through.** Nobody has walked through the new towns and landmarks; judgement of the look comes from
+  renders and screenshots.
+- **Rollback was not run.** It is documented above: 0.1.0 turns the new kit blocks into air.

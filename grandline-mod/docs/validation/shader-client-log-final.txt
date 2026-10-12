@@ -1,0 +1,33 @@
+[12Oct2026 18:25:29.829] [pool-2-thread-1/INFO] [EARLYDISPLAY/]: GL info: llvmpipe (LLVM 20.1.2, 256 bits) GL version 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4, Mesa
+		Iris 1.8.12-snapshot+mc1.21.1-local (iris)
+[12Oct2026 18:25:45.781] [Render thread/INFO] [com.mojang.blaze3d.platform.Window/]: OpenGL Version: 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4
+[12Oct2026 18:25:45.960] [Render thread/INFO] [Iris/]: Debug functionality is disabled.
+[12Oct2026 18:25:45.965] [Render thread/INFO] [Iris/]: OpenGL 4.5 detected, enabling DSA.
+[12Oct2026 18:25:46.194] [Render thread/INFO] [Iris/]: Profile: BALANCED (+0 options changed by user)
+[12Oct2026 18:25:46.491] [Render thread/INFO] [Iris/]: Using shaderpack: GrandLineShaders-1.0.0.zip
+[12Oct2026 18:25:46.673] [ForkJoinPool.commonPool-worker-1/WARN] [Iris/]: [Iris Update Check] This version doesn't have an update index, skipping.
+[12Oct2026 18:25:48.619] [Render thread/INFO] [Iris/]: Hardware information:
+[12Oct2026 18:25:48.620] [Render thread/INFO] [Iris/]: CPU: 4x Intel(R) Xeon(R) Processor @ 2.10GHz
+[12Oct2026 18:25:48.620] [Render thread/INFO] [Iris/]: GPU: llvmpipe (LLVM 20.1.2, 256 bits) (Supports OpenGL 4.5 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.4)
+[12Oct2026 18:25:48.621] [Render thread/INFO] [Iris/]: OS: Linux (6.18.44-fc-v114)
+[12Oct2026 18:25:53.826] [Render thread/ERROR] [net.minecraft.client.sounds.SoundEngine/SOUNDS]: Error starting SoundSystem. Turning off sounds & music
+[12Oct2026 18:25:57.958] [Render thread/INFO] [Iris/]: Reloading pipeline on dimension change: null => minecraft:overworld
+[12Oct2026 18:25:57.959] [Render thread/INFO] [Iris/]: Creating pipeline for dimension minecraft:overworld
+[12Oct2026 18:27:47.755] [Render thread/INFO] [Iris/]: Reloading pipeline on dimension change: minecraft:overworld => grandline:sky
+[12Oct2026 18:27:47.756] [Render thread/INFO] [Iris/]: Destroying pipeline minecraft:overworld
+[12Oct2026 18:27:47.777] [Render thread/INFO] [Iris/]: Creating pipeline for dimension grandline:sky
+[12Oct2026 18:28:03.507] [Render thread/INFO] [Iris/]: Reloading pipeline on dimension change: grandline:sky => grandline:deep_sea
+[12Oct2026 18:28:03.508] [Render thread/INFO] [Iris/]: Destroying pipeline grandline:sky
+[12Oct2026 18:28:03.527] [Render thread/INFO] [Iris/]: Creating pipeline for dimension grandline:deep_sea
+[12Oct2026 18:28:18.821] [Render thread/INFO] [Iris/]: Reloading pipeline on dimension change: grandline:deep_sea => grandline:ship_interiors
+[12Oct2026 18:28:18.822] [Render thread/INFO] [Iris/]: Destroying pipeline grandline:deep_sea
+[12Oct2026 18:28:18.829] [Render thread/INFO] [Iris/]: Creating pipeline for dimension grandline:ship_interiors
+[12Oct2026 18:28:46.698] [Render thread/INFO] [Iris/]: Reloading pipeline on dimension change: grandline:ship_interiors => minecraft:the_nether
+[12Oct2026 18:28:46.699] [Render thread/INFO] [Iris/]: Destroying pipeline grandline:ship_interiors
+[12Oct2026 18:28:46.710] [Render thread/INFO] [Iris/]: Creating pipeline for dimension minecraft:the_nether
+[12Oct2026 18:29:02.560] [Render thread/INFO] [Iris/]: Reloading pipeline on dimension change: minecraft:the_nether => minecraft:the_end
+[12Oct2026 18:29:02.560] [Render thread/INFO] [Iris/]: Destroying pipeline minecraft:the_nether
+[12Oct2026 18:29:02.566] [Render thread/INFO] [Iris/]: Creating pipeline for dimension minecraft:the_end
+[12Oct2026 18:29:18.149] [Render thread/INFO] [Iris/]: Reloading pipeline on dimension change: minecraft:the_end => minecraft:overworld
+[12Oct2026 18:29:18.149] [Render thread/INFO] [Iris/]: Destroying pipeline minecraft:the_end
+[12Oct2026 18:29:18.157] [Render thread/INFO] [Iris/]: Creating pipeline for dimension minecraft:overworld
