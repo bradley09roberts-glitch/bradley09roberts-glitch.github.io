@@ -149,7 +149,7 @@ First run of a real client against the dedicated server. Result: no client crash
   paintings of the seas that hang from the vanilla painting item. Sources in [ART.md](ART.md).
 - Not yet seen in a real client (client test extended with poster, chart and painting shots; run pending).
 
-### Server load test (agent, merged 05:00)
+### Server load test (agent, merged 04:30)
 - `GL_SELFTEST=load`: 20 simulated players join a dedicated server (town walkers, sailors into new chunks, fighters
   using techniques and fruits, players in storms) for 3 minutes; the report has tick time (avg/p95/max), per-subsystem
   and per-entity-type cost, chunk generation, heap and GC, and the slowest ticks with their causes.
@@ -164,7 +164,7 @@ First run of a real client against the dedicated server. Result: no client crash
 - After the merge, the tests had to generate their test areas before looking for water (game code no longer blocks on
   chunks); dims suite 112/112 again.
 
-### World polish and 10 more canon islands (agent, merged 06:45)
+### World polish and 10 more canon islands (agent, merged 06:05)
 - Terrain: theme-aware surface patches (coarse dirt, moss, podzol, red sand, calcite/diorite, basalt/tuff/magma),
   rock on slopes and banded cliff faces, about a block of micro-relief (no more long contour lines on gentle slopes;
   pads, coasts and towns untouched), snow layers on snow and cloud islands, forests restored around towns.
@@ -177,7 +177,7 @@ First run of a real client against the dedicated server. Result: no client crash
   island's seed, coastline and town (checked by an A/B run and a self-test).
 - Verified by the agent: phase 1 343/343 on the merged tree; client shots of the new terrain and islands.
 
-### Real client, full run (06:20–06:40)
+### Real client, full run (05:40–06:05)
 - After fixing the test script (the tester had been killed in the NPC line-up: first suffocated in a wall, then
   finished by five elite NPCs at once), the whole solo script ran on a real client against the dedicated server:
   58 screenshots, no client exception. Seen working: creation backdrop, Captain's Handbook in hand, wanted poster with
@@ -187,7 +187,7 @@ First run of a real client against the dedicated server. Result: no client crash
   shipyard customise page. Camera positions fixed afterwards for the Red Line and Wano shots (the camera was inside
   the wall / beyond render distance).
 
-### Devil Fruit wave 4 (agent, merged 06:10)
+### Devil Fruit wave 4 (agent, merged 05:32)
 - 15 more original fruits (originals 25 → 40, 78 fruits, 96 new abilities), each with an awakening-only ability:
   Logia Hai (ash), Yako (glow), Shinku (vacuum); Paramecia Kai (dials), Fusen (balloon), Shinju (pearl), Kagi (key,
   locks techniques), Hanabi (fireworks), Hata (flag territory), Taru (barrels); Zoans Bakekujira (mythical ghost
@@ -199,13 +199,13 @@ First run of a real client against the dedicated server. Result: no client crash
   soaks and releases, Shinju halves, Hata brands).
 - Not yet seen in a client: the new effects, sprites in flight and hybrid body parts.
 
-### Ferries, second pass (05:00–06:15)
+### Ferries, second pass (04:40–05:35)
 - Full runs showed ferries could still get stuck in some harbours (pinned against a quay, holed by repeated bumps,
   circling a destination whose dock lies close in). Ferries now lie at anchor in open water beyond the home island's
   waters, out along the dock (a launch rows you out), pole off when pinned, are never holed, and work round the
   destination's coast to the dock point.
 
-### Naval combat and ship customisation (agent, merged 06:00)
+### Naval combat and ship customisation (agent, merged 05:26)
 - Boarding: grappling hooks haul two ships side by side (or tow a prize); NPC raiders grapple and send boarding
   parties; your crew follow you across; beat a ship's crew and stand on its deck to take it as a prize (a shipwright
   buys or refits it; taking a Marine ship raises your bounty).
@@ -218,7 +218,7 @@ First run of a real client against the dedicated server. Result: no client crash
   phase 2 9/9 (look, registry copy and captured prize survive a restart); naval client shots 41–47 read by eye.
 - Not built: NPC ships fighting each other; hired NPC gunners outside your recruited crew.
 
-### Sea Kings, Zoan beasts, wildlife (agent, merged 05:40)
+### Sea Kings, Zoan beasts, wildlife (agent, merged 05:15)
 - Sea Kings: three variants (serpent, maw, horned) in three tiers (25–80 blocks long, 180–1000 HP), the head is the
   entity and 14 body segments follow its path (cannons, fruits and melee hit anywhere on the body). They swim deep,
   surface near prey, circle ships, bite hulls and slam their tails; Conqueror's Haki knocks out or scares the weaker
@@ -231,13 +231,13 @@ First run of a real client against the dedicated server. Result: no client crash
   a cannonball on a body segment kills it, Conqueror's Haki knocks out a tier 1 and not a tier 3, wolf form hitbox
   0.60×1.80 → 1.44×1.52 and back); client shots of all three Sea Kings and all 11 beasts.
 
-### Extras (04:20–05:00)
+### Extras (04:10–04:40)
 - Captain's Handbook (written book, 10 translated pages naming the player's own key bindings) for every new character.
 - 43 new projectile sprites (every fruit and race projectile now has its own).
 - Racial passives (swim speed, status passives) also for humanoid NPCs.
 - Paintings: merchants sell three per island; treasure chests and wrecks may hold one.
 
-### The living sea (agent)
+### The living sea (agent, merged 06:42)
 - NPC ships fight each other with nobody watching: Marine ships engage the pirate ships they sight (180 blocks),
   pirates take on Marines or bounty hunters only when their side is at least 80% as strong (otherwise they run, and
   fight only when cornered), bounty hunters (new `bounty_hunter` crews and ships) run down pirate ships and wanted
@@ -283,8 +283,17 @@ First run of a real client against the dedicated server. Result: no client crash
   restored after a restart while a plain rowboat beside them is.
 - Not seen in a real client yet (skins, salvage boat, the flow of a battle at 120 blocks).
 
+### Multiplayer fixes (06:20–06:45)
+- Two real clients again on the full tree: when the captain logged out the ship vanished under the mate (vanilla logs
+  a vehicle out with its only rider) — ships now stay in the world; on a slow client a mate standing still could
+  creep across the deck and over the stern — an idle player is now held at their spot in ship coordinates. Verified:
+  the mate stayed on deck for ~240 blocks at full sail and after the captain left (`mp_a`/`mp_b`).
+- Lunarian, Buccaneer and Snakeneck now have NPC roles (Corrida Colosseum gladiators, a Snakeneck lancer at the Kuja
+  gate), so every race appears in the world.
+
 ## Work in flight (background agents)
-- Living sea: NPC ships fighting each other, merchant traffic, harbour raids.
+- Procedural stories and named people for the original islands; a richer job board.
+- Treasure maps, fishing, cooking.
 
 ## Known gaps (next priorities)
 - Full phase 1/2 runs keep getting OOM-killed (exit 137) while the agents' test servers share the container's 15 GB;
