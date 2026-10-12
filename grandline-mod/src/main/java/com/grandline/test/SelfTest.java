@@ -323,6 +323,12 @@ public final class SelfTest {
             check("race size clamped to giant max", Math.abs(d.appearance.scale - Race.GIANT.maxScale) < 1e-3, "scale=" + d.appearance.scale);
             check("scale attribute applied (hitbox)", Math.abs(fp.getScale() - Race.GIANT.maxScale) < 0.01, "getScale=" + fp.getScale() + " height=" + fp.getBbHeight());
             check("giant reach bonus applied", fp.entityInteractionRange() > 4.5, "reach=" + fp.entityInteractionRange());
+            int bookPages = -1;
+            for (var st : fp.getInventory().items) {
+                var wb = st.get(net.minecraft.core.component.DataComponents.WRITTEN_BOOK_CONTENT);
+                if (wb != null) bookPages = wb.pages().size();
+            }
+            check("a new character starts with the Captain's Handbook", bookPages == com.grandline.player.Handbook.PAGES, bookPages + " pages");
             fp.setGameMode(GameType.CREATIVE);
             return 0;
         });
