@@ -66,6 +66,8 @@ public class ShipEntity extends Entity {
     // canal (Reverse Mountain) ride
     int canalLeg = -1;
     private double canalT;
+    /** Crew bonuses (set every 2 s by CrewBonuses while the captain is aboard). */
+    public float crewSpeed = 1f, crewCannon = 1f;
     /** Active special route ride (see {@link SpecialRoutes}); -1 when sailing normally. Not saved. */
     public int ride = -1;
     public double rideT;
@@ -365,7 +367,7 @@ public class ShipEntity extends Entity {
         boolean helmed = getFirstPassengerAtSeat(helmSeat) != null || flag(F_NPC) || autopilot;
         if (!anchored() && helmed) {
             float sailMult = hasUpgrade("fine_sails") ? 1.15f : 1f;
-            target = (float) (cls.speed * sail() / 3f * windF * sailMult) * testSpeedMult;
+            target = (float) (cls.speed * sail() / 3f * windF * sailMult) * testSpeedMult * crewSpeed;
             if (hasUpgrade("paddle_wheel") && sail() > 0) target = Math.max(target, cls.speed * 0.55f);
             for (Entity p : getPassengers()) if (p instanceof LivingEntity le && com.grandline.combat.CombatState.of(le).hasBuff("tailwind")) target = Math.max(target, cls.speed * 1.25f);
             for (LivingEntity le : sl.getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(cls.length / 2.0), this::carries))
@@ -540,7 +542,7 @@ public class ShipEntity extends Entity {
             ammo.shrink(1);
         }
         cannonCooldown.put(seat, now + 50);
-        fireFrom(seat, sp.getLookAngle(), sp, 14f + (com.grandline.player.Characters.get(sp).mastery("weapon/hand_cannon") * 0.1f));
+        fireFrom(seat, sp.getLookAngle(), sp, (14f + (com.grandline.player.Characters.get(sp).mastery("weapon/hand_cannon") * 0.1f)) * crewCannon);
     }
 
     public void fireFrom(int seat, Vec3 aim, @Nullable Entity shooter, float damage) {

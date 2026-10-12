@@ -33,6 +33,26 @@ public final class TestCommands {
                         .suggests((c, b) -> SharedSuggestionProvider.suggest(Arrays.stream(ShipClass.values()).map(ShipClass::id), b))
                         .executes(c -> ship(c.getSource(), StringArgumentType.getString(c, "class"), false))
                         .then(Commands.literal("helm").executes(c -> ship(c.getSource(), StringArgumentType.getString(c, "class"), true)))))
+                .then(Commands.literal("storm").executes(c -> {
+                    // fly to the nearest violent weather (testing the weather system)
+                    ServerPlayer sp = c.getSource().getPlayerOrException();
+                    var ow = sp.serverLevel();
+                    double bx = 0, bz = 0;
+                    float best = 0;
+                    for (int dx = -12000; dx <= 12000; dx += 300)
+                        for (int dz = -12000; dz <= 12000; dz += 300) {
+                            var w = com.grandline.world.weather.SeaWeather.at(ow, sp.getX() + dx, sp.getZ() + dz);
+                            boolean violent = w.type() == com.grandline.world.weather.SeaWeather.Type.STORM || w.type() == com.grandline.world.weather.SeaWeather.Type.CYCLONE;
+                            if (violent && w.intensity() > best) {
+                                best = w.intensity();
+                                bx = sp.getX() + dx;
+                                bz = sp.getZ() + dz;
+                            }
+                        }
+                    if (best == 0) return GLCommands.fail(c, "No storm within 12,000 blocks");
+                    sp.teleportTo(ow, bx, 90, bz, sp.getYRot(), 10);
+                    return GLCommands.ok(c, "Storm at " + (int) bx + ", " + (int) bz + " intensity " + best);
+                }))
                 .then(Commands.literal("inventory").executes(c -> {
                     try {
                         var out = com.grandline.test.InventoryDump.write(c.getSource().getServer());

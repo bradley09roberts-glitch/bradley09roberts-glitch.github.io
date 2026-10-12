@@ -37,7 +37,7 @@ public final class Wind {
                 if (level.isRaining()) str += 0.2;
             }
         }
-        return new Vec3(Math.cos(ang) * str, 0, Math.sin(ang) * str);
+        return com.grandline.world.weather.SeaWeather.gust(level, x, z, new Vec3(Math.cos(ang) * str, 0, Math.sin(ang) * str));
     }
 
     /** 0..1.5 effective push for a heading (fair winds behind or abeam help; head winds barely do). */

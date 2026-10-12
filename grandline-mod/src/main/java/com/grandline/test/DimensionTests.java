@@ -76,6 +76,36 @@ final class DimensionTests {
     }
 
     static void phase1(Deque<SelfTest.Step> steps) {
+        // ---------- local sea weather ----------
+        steps.add(s -> {
+            ServerLevel ow = s.overworld();
+            var Type = com.grandline.world.weather.SeaWeather.Type.CLEAR;
+            int calm = 0, samples = 0, rough = 0;
+            for (int x = -50000; x <= 50000; x += 2500) {
+                samples++;
+                if (com.grandline.world.weather.SeaWeather.at(ow, x, 5200).type() == Type) calm++;
+            }
+            SelfTest.check("the Calm Belt is always calm", calm == samples, calm + "/" + samples + " points clear");
+            java.util.Map<String, Integer> seen = new java.util.TreeMap<>();
+            for (int x = -56000; x <= 56000; x += 400)
+                for (int z = -3500; z <= 3500; z += 700) {
+                    var w = com.grandline.world.weather.SeaWeather.at(ow, x, z);
+                    if (w.intensity() > 0.3f) {
+                        rough++;
+                        seen.merge(w.type().name().toLowerCase(java.util.Locale.ROOT), 1, Integer::sum);
+                    }
+                }
+            SelfTest.check("storms, fog and squalls roam the Grand Line", rough > 0, rough + " rough points: " + seen);
+            WorldPlan plan = WorldPlan.of(s);
+            Island drum = plan.byId("drum_island");
+            var dw = com.grandline.world.weather.SeaWeather.at(ow, drum.x, drum.z);
+            SelfTest.check("winter islands keep their own snowfall", dw.type() == com.grandline.world.weather.SeaWeather.Type.SNOW, dw.toString());
+            Island ala = plan.byId("alabasta");
+            var aw = com.grandline.world.weather.SeaWeather.at(ow, ala.x, ala.z);
+            SelfTest.check("desert islands stay dry", aw.type() == Type, aw.toString());
+            SelfTest.check("global weather cycle is replaced by local weather", !ow.getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_WEATHER_CYCLE), "");
+            return 0;
+        });
         // ---------- the dimensions exist and generate as designed ----------
         steps.add(s -> {
             ServerLevel sky = s.getLevel(SkyWorld.LEVEL), deep = s.getLevel(DeepWorld.LEVEL);

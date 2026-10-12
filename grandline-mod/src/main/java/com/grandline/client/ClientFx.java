@@ -127,6 +127,10 @@ public final class ClientFx {
     public static void play(String kind, double x, double y, double z, float a, float b, float c) {
         ClientLevel l = Minecraft.getInstance().level;
         if (l == null) return;
+        if (kind.equals("weather")) {
+            ClientWeather.update((int) a, b, c);
+            return;
+        }
         if (kind.startsWith("hit_")) {
             String el = kind.substring(4);
             ParticleOptions p = switch (el) {

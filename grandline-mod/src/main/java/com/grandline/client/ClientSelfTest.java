@@ -168,6 +168,17 @@ public final class ClientSelfTest {
         shot2("24_alabasta", "tp @s 19650 120 -700 0 25");
         shot2("25_wano_cliffs", "tp @s -27400 200 1200 90 15");
         shot2("26_original_island", "grandline island tp shiokaze_isle");
+        // the White Sea and the deep sea
+        shot2("27_heavens_gate", "execute in grandline:sky run tp @s -960 85 -40 30 15");
+        shot2("28_angel_island", "execute in grandline:sky run tp @s -450 120 -20 0 30");
+        shot2("29_upper_yard", "execute in grandline:sky run tp @s 300 150 -330 20 20");
+        shot2("30_fishman_island_inside", "execute in grandline:deep_sea run tp @s 170 110 40 110 15");
+        shot2("31_fishman_island_bubble", "execute in grandline:deep_sea run tp @s 330 160 0 90 15");
+        shot2("32_deep_sea_route", "execute in grandline:deep_sea run tp @s -1400 70 10 -90 0");
+        // weather
+        cmd("execute in minecraft:overworld run tp @s 36000 120 20000", 60);
+        cmd("grandline test storm", 260);
+        shot("33_storm_at_sea");
         add("done", ClientSelfTest::finish, 0);
     }
 

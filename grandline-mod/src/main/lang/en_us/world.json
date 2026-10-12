@@ -22,5 +22,14 @@
   "grandline.deep.arrived": "10,000 metres down. Somewhere ahead lies Fish-Man Island.",
   "grandline.deep.ascend": "The current carries the ship up toward the surface...",
   "grandline.deep.new_world": "You've surfaced in the New World!",
-  "quest.grandline.execution_town.desc": "Reach Loguetown and hear Bartolo the merchant tell how the old Pirate King's last words began the Saltfire Age."
+  "quest.grandline.execution_town.desc": "Reach Loguetown and hear Bartolo the merchant tell how the old Pirate King's last words began the Saltfire Age.",
+  "grandline.weather.waves": "Waves crash over the deck \u2014 reef the sails!",
+  "grandline.weather.ahead": "Dark skies ahead: %s.",
+  "grandline.weather.navigator": "Your navigator reads the sky: %s about %s blocks ahead. Change course or reef the sails.",
+  "grandline.weather.storm": "a storm",
+  "grandline.weather.cyclone": "a cyclone",
+  "grandline.weather.fog": "a fog bank",
+  "grandline.weather.snow": "a snow squall",
+  "grandline.weather.rain": "rain",
+  "grandline.weather.clear": "clear skies"
 }
