@@ -68,10 +68,10 @@ The validation report at the end lists only checks that were actually run, with 
 | `dist/geckolib-neoforge-1.21.1-4.9.3.jar` | required dependency, unchanged |
 | `dist/GrandLineShaders-1.0.0.zip` | the optional shader pack (needs Sodium 0.6.13 and Iris 1.8.12, see below) |
 | no resource pack | every texture and model of the new blocks ships inside the mod jar |
+| source | `grandline-mod/` (Java, assets, tools, shader source) |
 
 SHA-256: `grandline-0.2.0.jar` `dadced32abc755619c14c424d34756434df4d7ddcb657abac18456b22cba9f32`,
 `GrandLineShaders-1.0.0.zip` `ca15c2a4ee8e5f8109c6872f3d66e6734c2d39b8273f8ff6db63bfb816352777`.
-| source | `grandline-mod/` (Java, assets, tools, shader source) |
 
 ## Installing
 
@@ -115,7 +115,9 @@ SHA-256: `grandline-0.2.0.jar` `dadced32abc755619c14c424d34756434df4d7ddcb657aba
 
 ## Validation report
 
-Every line below comes from a run on the final tree. Raw outputs are in `docs/validation/`. The machine had 4 CPU
+Every line below comes from an actual run. The gameplay and structure runs used commit `b984dc5`; the only later
+code change is the deep-sea camera in the test-only `view` command, which the last capture tour exercised. The jar
+was rebuilt from the final source and checked on the production install. Raw outputs are in `docs/validation/`. The machine had 4 CPU
 cores and no GPU: every client image was rendered by Mesa llvmpipe (software OpenGL) under Xvfb.
 
 ### Passed
@@ -134,9 +136,9 @@ cores and no GPU: every client image was rendered by Mesa llvmpipe (software Ope
 | Persistence, phase 2 | **22 / 22 passed** after the restart | `validation/selftest-phase2.txt` |
 | Release jar on a clean server | the clean NeoForge 21.1.259 production server install with the final `grandline-0.2.0.jar` and GeckoLib: on its world made by 0.1.0, NeoForge logged `grandline (version 0.1.0 -> 0.2.0)` and the server came up with no ERROR or exception; on a fresh world it built the world plan (220 islands) and came up the same way; clean stop both times | `validation/production-upgrade-0.1.0-world.log` |
 | Existing 0.1.0 save in the real client | the world from the 0.1.0 before tour, opened with 0.2.0: the towns and landmarks explored under 0.1.0 (Foodvalten, the Baratie) keep their old buildings, while a town and a landmark never visited (Shells Town, the Twin Capes lighthouse) generate with the new ones; no ERROR or exception on the server | `captures/upgrade_0.1.0_save.jpg` |
-| Real client, towns and landmarks | in-game screenshots on the fixed seed: the 32 views of the 0.1.0 before set, 22 more landmarks and 2 alternate angles; every rebuilt building renders with its textures (no missing-texture blocks) | `captures/after/`, `captures/before_after_*.jpg` |
+| Real client, towns and landmarks | in-game screenshots on the fixed seed: the 32 views of the 0.1.0 before set, 22 more landmarks and 2 alternate angles; no missing-texture (magenta) block appears in any of them | `captures/after/`, `captures/before_after_*.jpg` |
 | Real client, every building type in every style | `/grandline test showcase` for all 15 styles (5 framed shots and a street close-up each) and `/grandline test kit`: 94 screenshots | `captures/showcase/` |
-| Shader pack | (shader agent) every program compiles and links for all six dimension folders under LOW, BALANCED and HIGH; offline, 134 programs under all three profiles. **Final code:** the BALANCED tour with the shipped zip built pipelines for the overworld, sky, deep sea, ship interiors, Nether and End and kept the pack in use to the end; the only ERROR in the log is the sound device this machine lacks | `shaderpack/GrandLineShaders/README.md`, `validation/shader-*.txt`, `shaders/` |
+| Shader pack | (shader agent) every program compiles and links for all six dimension folders under LOW, BALANCED and HIGH; offline, 134 programs under all three profiles. **On the merged 0.2.0 tree** (commit `0f93819`): the BALANCED tour with the shipped zip built pipelines for the overworld, sky, deep sea, ship interiors, Nether and End and kept the pack in use to the end; the only ERROR in the log is the sound device this machine lacks | `shaderpack/GrandLineShaders/README.md`, `validation/shader-*.txt`, `shaders/` |
 
 ### Failed, then fixed during validation
 
