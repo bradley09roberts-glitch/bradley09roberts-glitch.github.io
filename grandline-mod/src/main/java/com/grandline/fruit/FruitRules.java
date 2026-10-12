@@ -79,6 +79,13 @@ public final class FruitRules {
         return f.modifyIncoming(victim, attacker, amount, info);
     }
 
+    /** Attacker-side fruit passives (bonus damage against certain targets, melee buffs). */
+    public static float modifyOutgoing(LivingEntity attacker, LivingEntity victim, float amount, Hits.Info info) {
+        DevilFruit f = fruitOf(attacker);
+        if (f == null || weakened(attacker)) return amount;
+        return f.modifyOutgoing(attacker, victim, amount, info);
+    }
+
     /** Called every server tick for fruit users (players and NPCs). */
     public static void tick(LivingEntity user) {
         DevilFruit f = fruitOf(user);

@@ -64,8 +64,14 @@ public class RaceLayer<T extends LivingEntity, M extends HumanoidModel<T>> exten
         if (e.isInvisible()) return;
         RaceVisuals.Info info = RaceVisuals.of(e);
         Race race = info.race();
-        boolean wolf = info.fruit().equals("inu_wolf") && !info.zoanForm().isEmpty();
-        if (race.parts == 0 && !wolf) return;
+        boolean zoan = !info.zoanForm().isEmpty();
+        boolean wolf = zoan && info.fruit().equals("inu_wolf");
+        boolean leopard = zoan && info.fruit().equals("neko_leopard");
+        boolean bison = zoan && info.fruit().equals("ushi_bison");
+        boolean phoenix = zoan && info.fruit().equals("tori_phoenix");
+        boolean beast = wolf || leopard;   // ears, snout and tail
+        int fur = leopard ? 0xFFE0B04A : 0xFF8A8A9A;
+        if (race.parts == 0 && !beast && !bison && !phoenix) return;
         M m = getParentModel();
         int col = 0xFF000000 | info.appearance().featureColor;
         int col2 = 0xFF000000 | info.appearance().secondaryColor;
@@ -77,11 +83,16 @@ public class RaceLayer<T extends LivingEntity, M extends HumanoidModel<T>> exten
         ps.pushPose();
         m.head.translateAndRotate(ps);
         if (race.has(FINS)) draw("head_fin", ps, vc, light, ov, col);
-        if (race.has(EARS) || wolf) {
-            draw("ear_l", ps, vc, light, ov, wolf ? 0xFF8A8A9A : hair);
-            draw("ear_r", ps, vc, light, ov, wolf ? 0xFF8A8A9A : hair);
+        if (race.has(EARS) || beast) {
+            draw("ear_l", ps, vc, light, ov, beast ? fur : hair);
+            draw("ear_r", ps, vc, light, ov, beast ? fur : hair);
         }
-        if (wolf) draw("snout", ps, vc, light, ov, 0xFF8A8A9A);
+        if (beast) draw("snout", ps, vc, light, ov, fur);
+        if (bison) {
+            draw("horn_l", ps, vc, light, ov, 0xFFE8E0C8);
+            draw("horn_r", ps, vc, light, ov, 0xFFE8E0C8);
+            draw("snout", ps, vc, light, ov, 0xFF7A4A2A);
+        }
         if (race.has(THIRD_EYE)) draw("third_eye", ps, vc, 0xF000F0, ov, 0xFF000000 | info.appearance().eyeColor);
         if (race.has(HORNS)) {
             draw("horn_l", ps, vc, light, ov, col2);
@@ -95,17 +106,17 @@ public class RaceLayer<T extends LivingEntity, M extends HumanoidModel<T>> exten
         ps.pushPose();
         m.body.translateAndRotate(ps);
         if (race.has(FINS)) draw("back_fin", ps, vc, light, ov, col);
-        if (race.has(TAIL) || wolf) {
+        if (race.has(TAIL) || beast) {
             float sway = Mth.sin(age * 0.15f) * 0.25f + limbSwingAmount * Mth.sin(limbSwing * 0.6f) * 0.4f;
             ModelPart t = parts.getChild("tail");
             t.yRot = sway;
             t.xRot = -0.35f;
-            draw("tail", ps, vc, light, ov, wolf ? 0xFF8A8A9A : hair);
+            draw("tail", ps, vc, light, ov, beast ? fur : hair);
         }
-        if (race.has(SMALL_WINGS) || race.has(FEATHER_WINGS) || race.has(BLACK_WINGS)) {
+        if (race.has(SMALL_WINGS) || race.has(FEATHER_WINGS) || race.has(BLACK_WINGS) || phoenix) {
             float flap = Mth.sin(age * (e.onGround() ? 0.08f : 0.5f)) * (e.onGround() ? 0.08f : 0.45f);
-            float size = race.has(SMALL_WINGS) ? 0.6f : 1.2f;
-            int wc = race.has(BLACK_WINGS) ? 0xFF1A1A1A : race.has(FEATHER_WINGS) ? col : 0xFFF4F4F4;
+            float size = phoenix ? 1.6f : race.has(SMALL_WINGS) ? 0.6f : 1.2f;
+            int wc = phoenix ? 0xFF3AB0FF : race.has(BLACK_WINGS) ? 0xFF1A1A1A : race.has(FEATHER_WINGS) ? col : 0xFFF4F4F4;
             ModelPart l = parts.getChild("wing_l"), r = parts.getChild("wing_r");
             l.yRot = -0.5f - flap;
             r.yRot = 0.5f + flap;

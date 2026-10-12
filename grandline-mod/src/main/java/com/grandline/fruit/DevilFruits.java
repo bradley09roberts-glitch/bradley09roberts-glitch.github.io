@@ -88,6 +88,23 @@ public final class DevilFruits {
         com.grandline.fruit.impl.OpeFruit.init(get("ope"));
         com.grandline.fruit.impl.WolfFruit.init(get("inu_wolf"));
         com.grandline.fruit.impl.KazeFruit.init(get("kaze"));
+        // ---- second wave ----
+        com.grandline.fruit.impl.PikaFruit.init(get("pika"));
+        com.grandline.fruit.impl.MaguFruit.init(get("magu"));
+        com.grandline.fruit.impl.SunaFruit.init(get("suna"));
+        com.grandline.fruit.impl.MokuFruit.init(get("moku"));
+        com.grandline.fruit.impl.YamiFruit.init(get("yami"));
+        com.grandline.fruit.impl.GuraFruit.init(get("gura"));
+        com.grandline.fruit.impl.ItoFruit.init(get("ito"));
+        com.grandline.fruit.impl.HanaFruit.init(get("hana"));
+        com.grandline.fruit.impl.BariFruit.init(get("bari"));
+        com.grandline.fruit.impl.PhoenixFruit.init(get("tori_phoenix"));
+        com.grandline.fruit.impl.BisonFruit.init(get("ushi_bison"));
+        com.grandline.fruit.impl.LeopardFruit.init(get("neko_leopard"));
+        com.grandline.fruit.impl.ShioFruit.init(get("shio"));
+        com.grandline.fruit.impl.KagamiFruit.init(get("kagami"));
+        com.grandline.fruit.impl.UzuFruit.init(get("uzu"));
+        com.grandline.fruit.impl.KaneFruit.init(get("kane"));
     }
 
     @Nullable

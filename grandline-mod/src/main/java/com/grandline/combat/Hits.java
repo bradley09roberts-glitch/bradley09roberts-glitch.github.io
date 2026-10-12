@@ -143,6 +143,7 @@ public final class Hits {
         damage *= Haki.defenseMultiplier(victim, attacker);
         // Devil fruit passives (rubber vs blunt, etc.)
         damage = FruitRules.modifyIncoming(victim, attacker, damage, info);
+        damage = FruitRules.modifyOutgoing(attacker, victim, damage, info);
         // Attacker's imbued strike against Logia that is otherwise intangible already handled; Armament adds damage
         if (attackerHaki) damage *= 1.15f + Haki.armamentLevel(attacker) * 0.004f;
         if (damage <= 0) return Result.IGNORED;
@@ -275,7 +276,8 @@ public final class Hits {
 
     /** Entities along a ray (beam / thrust / dash path). */
     public static List<LivingEntity> line(LivingEntity user, Vec3 from, Vec3 dir, double length, double width) {
-        Vec3 to = from.add(dir.scale(length));
+        // dir may be an unnormalised displacement (dash start -> end); the line is always exactly `length` long
+        Vec3 to = from.add(dir.normalize().scale(length));
         AABB box = new AABB(from, to).inflate(width + 1);
         List<LivingEntity> out = new ArrayList<>();
         for (LivingEntity e : user.level().getEntitiesOfClass(LivingEntity.class, box, e -> e != user && e.isAlive() && !e.isSpectator())) {

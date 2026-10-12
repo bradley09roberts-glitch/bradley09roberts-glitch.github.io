@@ -32,6 +32,10 @@ public final class TerrainChanges extends SavedData {
     private record Change(ResourceKey<Level> dim, BlockPos pos, BlockState original, long revertAt) {}
 
     private final Deque<Change> pending = new ArrayDeque<>();
+    /** Positions with a pending revert: a second change there must not record the temporary block as "original". */
+    private final java.util.Set<Key> changed = new java.util.HashSet<>();
+
+    private record Key(ResourceKey<Level> dim, BlockPos pos) {}
 
     public static TerrainChanges get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(
@@ -49,6 +53,11 @@ public final class TerrainChanges extends SavedData {
         BlockState cur = level.getBlockState(pos);
         if (cur.equals(state)) return false;
         TerrainChanges d = get(level.getServer());
+        if (!d.changed.add(new Key(level.dimension(), pos.immutable()))) {
+            // already temporary: the earlier pending change restores the true original block
+            level.setBlock(pos, state, 3);
+            return true;
+        }
         long at = level.getGameTime() + GLConfig.FRUIT_TERRAIN_REVERT_SECONDS.get() * 20L + level.random.nextInt(60);
         d.pending.add(new Change(level.dimension(), pos.immutable(), cur, at));
         d.setDirty();
@@ -89,8 +98,11 @@ public final class TerrainChanges extends SavedData {
             ServerLevel level = server.getLevel(c.dim);
             if (level != null && level.isLoaded(c.pos)) {
                 level.setBlock(c.pos, c.original, 3);
+                d.changed.remove(new Key(c.dim, c.pos));
             } else if (level != null) {
                 d.pending.addLast(new Change(c.dim, c.pos, c.original, now + 200)); // retry when loaded
+            } else {
+                d.changed.remove(new Key(c.dim, c.pos)); // dimension gone: the change is dropped
             }
             d.setDirty();
         }
@@ -108,6 +120,7 @@ public final class TerrainChanges extends SavedData {
                 n++;
             }
         }
+        d.changed.clear();
         d.setDirty();
         return n;
     }
@@ -135,7 +148,9 @@ public final class TerrainChanges extends SavedData {
             var pos = NbtUtils.readBlockPos(t, "pos").orElse(null);
             if (pos == null) continue;
             BlockState st = NbtUtils.readBlockState(provider.lookupOrThrow(Registries.BLOCK), t.getCompound("state"));
-            d.pending.add(new Change(ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(t.getString("dim"))), pos, st, t.getLong("at")));
+            ResourceKey<Level> dim = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(t.getString("dim")));
+            if (!d.changed.add(new Key(dim, pos))) continue; // keep only the first (true original) entry per position
+            d.pending.add(new Change(dim, pos, st, t.getLong("at")));
         }
         return d;
     }
