@@ -3,7 +3,10 @@
   "minVersion": "0.8",
   "package": "com.grandline.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [],
+  "mixins": [
+    "LevelPartEntitiesMixin",
+    "ServerChunkCacheSpawnMixin"
+  ],
   "client": [
     "HumanoidModelMixin",
     "PlayerRendererMixin",

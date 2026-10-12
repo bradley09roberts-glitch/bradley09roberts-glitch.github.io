@@ -185,6 +185,13 @@ public final class Ferries {
             ship.ferryDetourT = 80;
             want = best;
         }
+        // aground or pinned against a quay: the crew poles her off toward the most open water
+        if (ship.speed() < 0.02f) {
+            if (++ship.ferryStuck > 60) {
+                pushOff(ship, l, look);
+                ship.ferryStuck = 0;
+            }
+        } else ship.ferryStuck = 0;
         float diff = Mth.wrapDegrees(want - ship.getYRot());
         ship.setRudder(Mth.clamp(diff / 25f, -1, 1));
         if (ship.shipName().equals("Puffing Tom") && l.getGameTime() % 3 == 0) {
@@ -243,13 +250,32 @@ public final class Ferries {
         return new Vec3(first.x + qx / ql * off, ship.getY(), first.z + qz / ql * off);
     }
 
+    private static void pushOff(ShipEntity ship, ServerLevel l, int look) {
+        float best = ship.getYRot();
+        int bestFree = -1;
+        for (int a = 0; a < 360; a += 15) {
+            int f = free(l, ship, a, look);
+            if (f > bestFree) { bestFree = f; best = a; }
+        }
+        double yaw = Math.toRadians(best);
+        double nx = ship.getX() - Math.sin(yaw) * 2.0, nz = ship.getZ() + Math.cos(yaw) * 2.0;
+        BlockPos p = BlockPos.containing(nx, WorldPlan.SEA_LEVEL, nz);
+        if (!l.getBlockState(p).getFluidState().isSource()) return;
+        ship.setPos(nx, ship.getY(), nz);
+        ship.setYRot(best);
+        ship.ferryDetour = best;
+        ship.ferryDetourT = 60;
+    }
+
     /** Clear water ahead on a heading, swept across the hull's beam: blocks until the first obstacle (max if none). */
     private static int free(ServerLevel l, ShipEntity ship, float yawDeg, int max) {
         double yaw = Math.toRadians(yawDeg);
         double c = Math.cos(yaw), s = Math.sin(yaw);
         double half = ship.cls.beam / 2.0 + 1;
         BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
-        for (int d = (int) (ship.cls.length / 2) + 1; d <= max; d += 3)
+        // from the flanks forward: the hull's own collision checks a quarter-length back, so a ship with a flank on the
+        // quay must not see "clear ahead"
+        for (int d = (int) (ship.cls.length / 4); d <= max; d += 3)
             for (double side = -half; side <= half + 0.01; side += half) {
                 double x = ship.getX() + side * c - d * s, z = ship.getZ() + side * s + d * c;
                 p.set(Mth.floor(x), WorldPlan.SEA_LEVEL, Mth.floor(z));

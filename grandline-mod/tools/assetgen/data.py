@@ -242,6 +242,16 @@ def potion(pid, weight):
             'functions': [{'function': 'minecraft:set_potion', 'id': f'minecraft:{pid}'}]}
 
 
+PAINTINGS = ['red_line', 'reverse_mountain', 'knock_up_stream', 'white_sea', 'bubble_city', 'sabaody_grove',
+             'calm_belt', 'last_island', 'sea_train', 'cyclone']
+
+
+def painting(variant, weight=1):
+    """A painting item that hangs one of the painted sea scenes (docs/ART.md)."""
+    return item('painting', weight, None, None, {'function': 'minecraft:set_components', 'components': {
+        'minecraft:entity_data': {'id': 'minecraft:painting', 'variant': f'{NS}:{variant}'}}})
+
+
 STYLES_COMMON = ['black_leg', 'ittoryu', 'nitoryu', 'gunslinger', 'sniper', 'storm_dance', 'anchor_brawl', 'tide_grapple']
 STYLES_RARE = ['rokushiki', 'fishman_karate', 'santoryu', 'iaido', 'hasshoken', 'ryuo']
 POSE_TARGETS = ['alabasta', 'water_7', 'drum_island', 'jaya', 'sabaody_archipelago', 'enies_lobby', 'thriller_bark', 'whisky_peak']
@@ -305,6 +315,7 @@ def chest_tables():
         pool([gl('fine_katana', 6), gl('fine_cutlass', 6), gl('steel_spear', 4), gl('iron_kanabo', 3), empty(30)], 1),
         pool([gl('style_scroll', 2, None, None, comp('style', s)) for s in STYLES_COMMON]
              + [gl('style_scroll', 1, None, None, comp('style', s)) for s in STYLES_RARE] + [empty(30)], 1),
+        pool([painting(p) for p in PAINTINGS] + [empty(30)], 1),
     ])
     t['starter'] = chest('starter', [
         pool([item('bread', 1, 6, 8)], 1),
@@ -319,6 +330,7 @@ def chest_tables():
               item('nautilus_shell', 4, 1, 2), item('iron_ingot', 4, 1, 3), item('gunpowder', 5, 1, 4)], 3, 6),
         pool([gl('cutlass', 4, None, None, worn(0.4, 0.9)), gl('musket', 2, None, None, worn(0.4, 0.9)),
               gl('flintlock', 3, None, None, worn(0.4, 0.9)), gl('sea_chart', 4), gl('log_pose', 2), item('heart_of_the_sea', 1), empty(8)], 1),
+        pool([painting(p) for p in PAINTINGS] + [empty(40)], 1),
     ])
     t['shrine'] = chest('shrine', [
         pool([item('candle', 8, 1, 3), item('gold_nugget', 8, 2, 8), item('amethyst_shard', 6, 1, 4), item('experience_bottle', 6, 1, 4),

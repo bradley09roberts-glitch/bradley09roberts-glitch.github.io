@@ -79,6 +79,7 @@ public final class SeaEncounters {
     }
 
     static boolean isAtSea(ServerPlayer sp) {
+        if (!com.grandline.core.Chunks.ready(sp.level(), sp.getBlockX(), sp.getBlockZ())) return false; // not loaded yet: do not wait for it
         return sp.level().getBlockState(sp.blockPosition().below()).is(net.minecraft.world.level.block.Blocks.WATER) && sp.getY() < WorldPlan.SEA_LEVEL + 4;
     }
 

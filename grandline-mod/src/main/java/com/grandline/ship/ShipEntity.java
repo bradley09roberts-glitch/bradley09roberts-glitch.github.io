@@ -79,6 +79,7 @@ public class ShipEntity extends Entity {
     public int ferryIdle;
     public float ferryDetour;
     public int ferryDetourT;
+    public int ferryStuck;
     @Nullable public Vec3 ferryWaypoint;
 
     @Override

@@ -149,11 +149,32 @@ First run of a real client against the dedicated server. Result: no client crash
   paintings of the seas that hang from the vanilla painting item. Sources in [ART.md](ART.md).
 - Not yet seen in a real client (client test extended with poster, chart and painting shots; run pending).
 
+### Server load test (agent, merged 05:00)
+- `GL_SELFTEST=load`: 20 simulated players join a dedicated server (town walkers, sailors into new chunks, fighters
+  using techniques and fruits, players in storms) for 3 minutes; the report has tick time (avg/p95/max), per-subsystem
+  and per-entity-type cost, chunk generation, heap and GC, and the slowest ticks with their causes.
+- Fixed: the server thread froze for 2–6 s at a time waiting for chunks still generating (notable spawning, island
+  discovery at join, race traits, the at-sea check, shipyard water search, encounters, storm lightning) — these now
+  only read fully loaded chunks and try again later (worst ticks 4.2–5.8 s → 35–112 ms); every entity query tested
+  every ship hull part in the level (now indexed); the ocean world built and threw away natural monsters every tick
+  (that category is skipped).
+- Not proven: 20 TPS with 20 players. The test machine was shared by several agents (load average 15–58, memory
+  kills), so its wall-clock numbers are not representative; it needs a run on a dedicated machine. Give the server at
+  least 4 GB.
+- After the merge, the tests had to generate their test areas before looking for water (game code no longer blocks on
+  chunks); dims suite 112/112 again.
+
+### Extras (04:20–05:00)
+- Captain's Handbook (written book, 10 translated pages naming the player's own key bindings) for every new character.
+- 43 new projectile sprites (every fruit and race projectile now has its own).
+- Racial passives (swim speed, status passives) also for humanoid NPCs.
+- Paintings: merchants sell three per island; treasure chests and wrecks may hold one.
+
 ## Work in flight (background agents)
 - Sea Kings and Calm Belt nests, Zoan full-beast models (GeckoLib), island wildlife.
 - Naval combat and ship customisation.
 - World polish and missing canon islands.
-- Server load test with ~20 simulated players.
+- Devil Fruit wave 4: 15 more original fruits (originals 25 → 40).
 
 ## Known gaps (next priorities)
 - Client re-run with the merged textures, animations and new dimensions (screenshots).

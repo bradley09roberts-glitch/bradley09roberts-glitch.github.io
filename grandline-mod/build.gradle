@@ -52,6 +52,8 @@ neoForge {
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
             logLevel = org.slf4j.event.Level.INFO
+            // heap for the game process only (GL_XMX=3g ./gradlew runServer); JAVA_TOOL_OPTIONS would also grow Gradle
+            if (System.getenv('GL_XMX')) jvmArgument "-Xmx${System.getenv('GL_XMX')}"
         }
     }
 

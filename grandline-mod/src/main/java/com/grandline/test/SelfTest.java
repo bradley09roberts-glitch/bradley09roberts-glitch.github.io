@@ -73,7 +73,7 @@ public final class SelfTest {
 
     @SubscribeEvent
     public static void onStart(ServerStartedEvent e) {
-        if (PHASE == null || PHASE.equals("client")) return;
+        if (PHASE == null || PHASE.equals("client") || PHASE.equals("load")) return; // "load" is LoadTest
         steps = new ArrayDeque<>();
         REPORT.add("Grand Line Odyssey self-test, phase " + PHASE + ", " + new Date());
         if (PHASE.equals("1")) phase1();
@@ -266,6 +266,21 @@ public final class SelfTest {
                 if (n.equals("treasure")) sample = items.toString();
             }
             check("all 12 chest loot tables load and roll items", ok == 12, ok + "/12; treasure roll " + sample);
+            // the painted sea scenes: registered painting variants, placeable, sold by merchants, in treasure loot
+            var variants = s.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.PAINTING_VARIANT);
+            int reg = 0, placeable = 0;
+            for (String v : com.grandline.dialogue.Shops.PAINTINGS) {
+                var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.PAINTING_VARIANT, GrandLine.id(v));
+                var h = variants.getHolder(key);
+                if (h.isPresent()) {
+                    reg++;
+                    if (h.get().is(net.minecraft.tags.PaintingVariantTags.PLACEABLE)) placeable++;
+                }
+            }
+            var stack = com.grandline.dialogue.Shops.painting("red_line");
+            var ed = stack.get(net.minecraft.core.component.DataComponents.ENTITY_DATA);
+            check("ten sea paintings are registered, placeable and sold as their scene", reg == 10 && placeable == 10 && ed != null && ed.copyTag().getString("variant").equals("grandline:red_line"),
+                    reg + " registered, " + placeable + " placeable, shop item " + (ed == null ? "-" : ed.copyTag()));
             return 0;
         });
         // landmarks: every registered set piece builds deterministically inside its footprint (see LandmarkCheck)
@@ -636,7 +651,8 @@ public final class SelfTest {
             Island home = WorldPlan.of(s).byId("shiokaze_isle");
             var st = home.settlement();
             fp.moveTo(st.dockX + 0.5, WorldPlan.SEA_LEVEL + 2, st.dockZ + 0.5);
-            l.getChunk(st.dockTipX() >> 4, st.dockTipZ() >> 4);
+            for (int cx = -3; cx <= 3; cx++) // game code only reads fully loaded chunks: generate the harbour first
+                for (int cz = -3; cz <= 3; cz++) l.getChunk((st.dockTipX() >> 4) + cx, (st.dockTipZ() >> 4) + cz);
             var ship = com.grandline.ship.Shipyard.spawnAtDock(fp, fp, com.grandline.ship.ShipClass.SLOOP);
             check("shipyard launches a sloop at the dock", ship != null, ship == null ? "" : "at " + ship.blockPosition() + " dock tip " + st.dockTipX() + "," + st.dockTipZ());
             if (ship == null) return 0;
