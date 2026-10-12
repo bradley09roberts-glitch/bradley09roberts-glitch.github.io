@@ -893,9 +893,11 @@ final class JourneyTests {
                 closest += dd[1];
             }
             int n = Math.max(1, DIST.size());
-            check("the warships converge on the target; reinforcements stay within the cap", closest / n < start / n - 15 && c.spawned <= Math.max(0, ROOM[0]),
+            // closing in, or already on station where the coast keeps the open water further out
+            boolean onStation = !DIST.isEmpty() && DIST.entrySet().stream().allMatch(en -> en.getValue()[1] <= c.stationDistance(en.getKey()) + 20);
+            check("the warships converge on the target; reinforcements stay within the cap", (closest / n < start / n - 15 || onStation) && c.spawned <= Math.max(0, ROOM[0]),
                     String.format("mean distance %.0f -> closest %.0f over the first %d ships; %d of %d wanted in all (room %d)", start / n, closest / n, DIST.size(),
-                            c.spawned, c.wanted, ROOM[0]) + (closest / n < start / n - 15 ? "" : "; during the bombardment:" + FLEET[0]));
+                            c.spawned, c.wanted, ROOM[0]) + (onStation ? ", on station" : "") + (closest / n < start / n - 15 ? "" : "; during the bombardment:" + FLEET[0]));
             check("the fleet bombards the target (shells fired and bursting)", c.shells > 0 && c.impacts > 0 && c.bombardFrom > 0,
                     c.shells + " shells, " + c.impacts + " bursts, hurt " + c.hurt + " creatures and " + c.hulls + " hulls (pirate bystander hurt="
                             + (BYSTANDERS[0] instanceof GLNpc g && (g.getHealth() < g.getMaxHealth() || !g.isAlive())) + ", rowboat hull="

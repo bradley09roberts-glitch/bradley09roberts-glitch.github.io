@@ -127,6 +127,12 @@ public final class BusterCall {
             this.focus = target.position();
         }
 
+        /** How far from the target a warship's station lies (NaN if she has none). */
+        public double stationDistance(UUID ship) {
+            Vec3 st = stations.get(ship);
+            return st == null ? Double.NaN : horiz(st, focus);
+        }
+
         /** Each warship: distance to the target now, her station's distance, sail and speed (self-test). */
         public String fleetReport() {
             StringBuilder b = new StringBuilder();
