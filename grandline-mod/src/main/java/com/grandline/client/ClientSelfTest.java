@@ -93,6 +93,27 @@ public final class ClientSelfTest {
         cmd("gamemode spectator", 10);
     }
 
+    /** Careers: the Emperor's title on the character sheet and in chat, and the Marine coat on the player model. */
+    private static void careerShots() {
+        Minecraft mc = Minecraft.getInstance();
+        cmd("gamemode survival", 10);
+        cmd("career admin rank 2", 30);
+        add("open character screen", () -> mc.setScreen(new CharacterScreen()), 30);
+        shot("60_career_sheet");
+        add("close screen", () -> mc.setScreen(null), 10);
+        add("say in chat", () -> mc.player.connection.sendChat("Ahoy from the Grand Line"), 30);
+        add("open chat", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen("")), 20);
+        shot("61_career_title_chat");
+        add("close chat", () -> mc.setScreen(null), 10);
+        cmd("item replace entity @s armor.chest with grandline:marine_coat", 20);
+        camera(CameraType.THIRD_PERSON_FRONT);
+        shot("62_marine_coat");
+        camera(CameraType.FIRST_PERSON);
+        cmd("item replace entity @s armor.chest with minecraft:air", 10);
+        cmd("career admin rank 0", 10);
+        cmd("gamemode spectator", 10);
+    }
+
     /** Checks the situational music the client would pick now (client/GLMusic). */
     private static void music(String expected) {
         add("music " + expected, () -> {
@@ -400,6 +421,7 @@ public final class ClientSelfTest {
         shot2("31_fishman_island_bubble", "execute in grandline:deep_sea run tp @s 330 160 0 90 15");
         shot2("32_deep_sea_route", "execute in grandline:deep_sea run tp @s -1400 70 10 -90 0");
         crewBaseShots();
+        careerShots();
         islandPolishShots();
         // weather
         cmd("execute in minecraft:overworld run tp @s 36000 120 20000", 60);
