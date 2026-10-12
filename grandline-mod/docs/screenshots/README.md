@@ -134,3 +134,7 @@ the distance fog is closer than on a real PC) against a dedicated server on 2026
 ### A treasure map pointing at a real wreck off an island
 
 ![A treasure map pointing at a real wreck off an island](14e_treasure_map.jpg)
+
+### The journey: the mod's own advancement tab
+
+![The journey: the mod's own advancement tab](14f_journey_advancements.jpg)
