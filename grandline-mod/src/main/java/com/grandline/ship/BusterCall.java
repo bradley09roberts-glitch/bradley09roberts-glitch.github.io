@@ -132,9 +132,8 @@ public final class BusterCall {
             StringBuilder b = new StringBuilder();
             for (ShipEntity sh : ships) {
                 Vec3 st = stations.get(sh.getUUID());
-                b.append(String.format(" [%s %.0f from target, station %s, sail %d%s, speed %.2f]", sh.cls.name().toLowerCase(), horiz(sh.position(), focus),
-                        st == null ? "-" : String.format("%.0f", horiz(st, focus)), sh.sail(), sh.isRemoved() ? " removed" : "",
-                        sh.getDeltaMovement().horizontalDistance()));
+                b.append(String.format(" [%s %.0f from target, station %s, sail %d%s, %s]", sh.cls.name().toLowerCase(), horiz(sh.position(), focus),
+                        st == null ? "-" : String.format("%.0f", horiz(st, focus)), sh.sail(), sh.isRemoved() ? " removed" : "", sh.aheadReport()));
             }
             return b.toString();
         }

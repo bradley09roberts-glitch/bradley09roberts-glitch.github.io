@@ -798,6 +798,7 @@ final class JourneyTests {
     private static final BusterCall.Call[] CALL = new BusterCall.Call[1];
     private static final int[] WAITED = new int[1], ROOM = new int[3];
     private static final Map<UUID, double[]> DIST = new HashMap<>();
+    private static final String[] FLEET = {""}; // the fleet as it stood at the end of the bombardment
     private static final Map<BlockPos, BlockState> TOWN = new HashMap<>();
     private static final Entity[] BYSTANDERS = new Entity[2];
 
@@ -883,6 +884,7 @@ final class JourneyTests {
                     double[] dd = DIST.get(sh.getUUID());
                     if (dd != null && !sh.isRemoved()) dd[1] = Math.min(dd[1], Math.hypot(sh.getX() - c.focus.x, sh.getZ() - c.focus.z));
                 }
+            if (c.phase == BusterCall.Phase.BOMBARD && s.overworld().getGameTime() % 10 == 0) FLEET[0] = c.fleetReport();
             boolean over = c.phase == BusterCall.Phase.WITHDRAW || c.phase == BusterCall.Phase.DONE;
             if (!over && ++WAITED[0] < 20 * 120) return -1;
             double start = 0, closest = 0;
@@ -893,7 +895,7 @@ final class JourneyTests {
             int n = Math.max(1, DIST.size());
             check("the warships converge on the target; reinforcements stay within the cap", closest / n < start / n - 15 && c.spawned <= Math.max(0, ROOM[0]),
                     String.format("mean distance %.0f -> closest %.0f over the first %d ships; %d of %d wanted in all (room %d)", start / n, closest / n, DIST.size(),
-                            c.spawned, c.wanted, ROOM[0]) + (closest / n < start / n - 15 ? "" : ";" + c.fleetReport()));
+                            c.spawned, c.wanted, ROOM[0]) + (closest / n < start / n - 15 ? "" : "; during the bombardment:" + FLEET[0]));
             check("the fleet bombards the target (shells fired and bursting)", c.shells > 0 && c.impacts > 0 && c.bombardFrom > 0,
                     c.shells + " shells, " + c.impacts + " bursts, hurt " + c.hurt + " creatures and " + c.hulls + " hulls (pirate bystander hurt="
                             + (BYSTANDERS[0] instanceof GLNpc g && (g.getHealth() < g.getMaxHealth() || !g.isAlive())) + ", rowboat hull="

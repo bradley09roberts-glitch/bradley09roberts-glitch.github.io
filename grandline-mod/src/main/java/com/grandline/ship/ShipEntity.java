@@ -408,6 +408,16 @@ public class ShipEntity extends Entity {
         return new Vec3(origin.x + lx * c - lz * s, WorldPlan.SEA_LEVEL + 0.5, origin.z + lx * s + lz * c);
     }
 
+    /** Why the ship may be held: loaded/solid at bow, port and starboard one step ahead (self-test diagnostics). */
+    public String aheadReport() {
+        if (!(level() instanceof ServerLevel sl)) return "";
+        Vec3 next = position().add(heading().scale(Math.max(0.3, speed)));
+        Vec3 bow = toWorldAt(next, 0, cls.length / 2.0 + 0.5);
+        Vec3 port = toWorldAt(next, -cls.beam / 2.0, cls.length * 0.25), star = toWorldAt(next, cls.beam / 2.0, cls.length * 0.25);
+        return String.format("speed %.2f rudder %.1f anchored %s; ahead loaded %s/%s/%s solid %s/%s/%s", speed, rudder, anchored(),
+                ready(sl, bow), ready(sl, port), ready(sl, star), solidAt(sl, bow), solidAt(sl, port), solidAt(sl, star));
+    }
+
     private static boolean ready(ServerLevel l, Vec3 p) {
         return com.grandline.core.Chunks.ready(l, Mth.floor(p.x), Mth.floor(p.z));
     }
