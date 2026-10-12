@@ -60,7 +60,7 @@ public final class ClientEvents {
         while (Keys.TRANSFORM.consumeClick()) send(CombatInput.TRANSFORM, 0, 0, 0, 0);
         while (Keys.CHART.consumeClick()) PacketDistributor.sendToServer(new GLNetwork.UiAction("open_chart", new CompoundTag()));
         while (Keys.CHARACTER.consumeClick()) mc.setScreen(new com.grandline.client.screen.CharacterScreen());
-        while (Keys.NEXT_SET.consumeClick()) if (ClientState.combatMode) ClientState.abilitySet = (ClientState.abilitySet + 1) % 3;
+        while (Keys.NEXT_SET.consumeClick()) if (ClientState.combatMode) ClientState.abilitySet = (ClientState.abilitySet + 1) % com.grandline.player.CharacterData.LOADOUT_SETS;
         while (Keys.DODGE.consumeClick()) {
             float lx = p.input.leftImpulse, lz = p.input.forwardImpulse;
             send(CombatInput.DODGE, 0, 0, -lx, lz);
@@ -141,7 +141,7 @@ public final class ClientEvents {
         Minecraft mc = Minecraft.getInstance();
         if (!ClientState.combatMode || mc.screen != null) return;
         int dir = e.getScrollDeltaY() > 0 ? -1 : 1;
-        ClientState.abilitySet = Math.floorMod(ClientState.abilitySet + dir, 3);
+        ClientState.abilitySet = Math.floorMod(ClientState.abilitySet + dir, com.grandline.player.CharacterData.LOADOUT_SETS);
         e.setCanceled(true);
     }
 

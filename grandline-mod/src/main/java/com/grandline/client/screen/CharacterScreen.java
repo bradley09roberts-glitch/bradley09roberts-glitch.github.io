@@ -73,8 +73,8 @@ public class CharacterScreen extends Screen {
         y += 12;
         g.drawString(font, Component.translatable("screen.grandline.mastery_obs_arm", d.mastery("haki/observation"), d.mastery("haki/armament")), x, y, 0xFFAAAAAA);
         y += 16;
-        String[] sets = {"hud.grandline.set.martial", "hud.grandline.set.fruit", "hud.grandline.set.haki"};
-        for (int s = 0; s < 3; s++) {
+        String[] sets = {"hud.grandline.set.martial", "hud.grandline.set.fruit", "hud.grandline.set.haki", "hud.grandline.set.race"};
+        for (int s = 0; s < sets.length; s++) {
             g.drawString(font, Component.translatable(sets[s]), x, y, 0xFFFFD34A);
             y += 10;
             StringBuilder sb = new StringBuilder();

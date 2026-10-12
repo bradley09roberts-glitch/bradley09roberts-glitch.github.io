@@ -42,7 +42,9 @@ public final class CharacterData implements INBTSerializable<CompoundTag> {
     public float hakiGauge = 100f;
     public final Set<String> knownStyles = new LinkedHashSet<>();
     public String activeStyle = "brawler";
-    public final String[][] loadout = new String[3][9];
+    /** Ability sets: martial, Devil Fruit, Haki, race. */
+    public static final int LOADOUT_SETS = 4;
+    public final String[][] loadout = new String[LOADOUT_SETS][9];
 
     // ---- devil fruit ----
     @Nullable public String fruit = null;

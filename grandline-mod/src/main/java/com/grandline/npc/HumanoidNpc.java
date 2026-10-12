@@ -126,7 +126,7 @@ public class HumanoidNpc extends GLNpc {
         targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false, e -> archetype().hostility() != Archetype.Hostility.PASSIVE));
     }
 
-    /** Techniques this NPC can use (style + fruit + haki), scaled by tier as "mastery". */
+    /** Techniques this NPC can use (style + fruit + weapon + race + haki), scaled by tier as "mastery". */
     public List<Ability> techniques() {
         List<Ability> out = new ArrayList<>();
         int mastery = Math.min(100, tier() * 10);
@@ -136,6 +136,7 @@ public class HumanoidNpc extends GLNpc {
         if (f != null) for (Ability a : f.abilities()) if (a.unlockMastery() <= mastery && (!a.awakened() || tier() >= 9)) out.add(a);
         var wc = com.grandline.combat.CombatManager.weaponOf(getMainHandItem());
         if (wc != null) for (Ability a : Abilities.of(Ability.Source.WEAPON, wc.id())) if (a.unlockMastery() <= mastery) out.add(a);
+        for (Ability a : Abilities.of(Ability.Source.RACE, raceId())) if (a.unlockMastery() <= mastery) out.add(a);
         if (hakiArm > 40) {
             Ability em = Abilities.get("haki/armament/emission");
             if (em != null) out.add(em);

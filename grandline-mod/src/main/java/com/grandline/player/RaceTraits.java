@@ -18,6 +18,7 @@ public final class RaceTraits {
         com.grandline.fruit.FruitRules.tick(sp);
         com.grandline.navigation.Navigation.tick(sp, d);
         com.grandline.quest.Awakening.tick(sp, d);
+        com.grandline.race.RacePowers.tick(sp, d); // swim speed, racial passives, Sulong exhaustion
         if (sp.tickCount % 20 != 0) return;
         Race r = d.race;
         boolean inWater = sp.isInWater();

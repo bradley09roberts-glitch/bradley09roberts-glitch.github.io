@@ -366,6 +366,7 @@ public final class SelfTest {
             d.conquerorTrait = d.conquerorAwakened = d.conquerorInfusion = true;
             d.fruitAwakened = true;
             for (FightingStyle st : FightingStyles.all()) d.knownStyles.add(st.id);
+            Race raceBefore = d.race;
             int ok = 0, total = 0;
             float dealt = 0;
             Map<String, Float> perFruit = new TreeMap<>();
@@ -395,6 +396,7 @@ public final class SelfTest {
                         if (st != null && !st.unarmed()) fp.setItemSlot(EquipmentSlot.MAINHAND, weaponFor(st.weapons.iterator().next()));
                     }
                     case WEAPON -> fp.setItemSlot(EquipmentSlot.MAINHAND, weaponFor(WeaponClass.valueOf(a.owner().toUpperCase(Locale.ROOT))));
+                    case RACE -> d.race = Race.byId(a.owner());
                     default -> {}
                 }
                 try {
@@ -411,6 +413,7 @@ public final class SelfTest {
                 dealt += took;
                 if (a.source() == Ability.Source.FRUIT) perFruit.merge(a.owner(), took, Float::sum);
             }
+            d.race = raceBefore;
             for (var p : l.getEntitiesOfClass(com.grandline.entity.AbilityProjectile.class, new AABB(c).inflate(80))) p.discard();
             check("all " + total + " abilities execute", errors.isEmpty(), ok + "/" + total + (errors.isEmpty() ? "" : " problems: " + String.join(", ", errors.subList(0, Math.min(12, errors.size())))));
             check("ability dummy took damage", dealt > 0, String.format("%.0f damage dealt in total", dealt));
@@ -603,6 +606,7 @@ public final class SelfTest {
             return 0;
         });
         SelfTestOriginals.phase1(steps); // Devil Fruits wave 3 — ORIGINAL fruit mechanics (test/SelfTestOriginals.java)
+        RaceTests.phase1(steps); // racial powers
         // ---------- knockdown/permadeath data rules ----------
         steps.add(s -> {
             CharacterData d = new CharacterData();

@@ -64,7 +64,7 @@ public final class ServerNet {
                 case "set_slot" -> {
                     int set = t.getInt("set"), slot = t.getInt("slot");
                     String id = t.getString("ability");
-                    if (set >= 0 && set < 3 && slot >= 0 && slot < 9) d.loadout[set][slot] = id.isEmpty() ? null : id;
+                    if (set >= 0 && set < d.loadout.length && slot >= 0 && slot < 9) d.loadout[set][slot] = id.isEmpty() ? null : id;
                 }
                 case "refresh_loadout" -> Loadouts.refresh(sp, d);
                 case "dialogue" -> Dialogues.choose(sp, t.getInt("npc"), t.getString("option"));
