@@ -32,8 +32,8 @@ required dependency on Modrinth; the jar's `neoforge.mods.toml` asks for Sodium 
 ### Water (the priority)
 - **World-space waves**: three long, slow swell trains (45–62 blocks) and four shorter chop trains (8–15 blocks) with
   sharpened crests, plus two drifting octaves of ripple noise. All of them are anchored to the world through Iris'
-  exact integer camera position and tile every 4096 blocks, so they stay stable when the camera moves or turns and stay
-  precise 50,000 blocks from the origin.
+  exact integer camera position and tile every 4096 blocks, so they stay stable when the camera moves or turns and keep
+  their precision far from the origin (the tour's views lie 8,000–48,000 blocks out).
 - **Animated normals** from the analytic wave slopes plus the ripples, softened with distance to avoid shimmer.
 - **Fresnel reflections** of the sky (gradient, sun/moon glow and the painted clouds) with a stable fallback:
   reflections never point below the horizon, and water with little sky light (a pool under a roof) reflects its dim
@@ -54,7 +54,7 @@ required dependency on Modrinth; the jar's `neoforge.mods.toml` asks for Sodium 
   surface) with total internal reflection outside it. Entering water starts murky and clears in ~0.35 s; after
   surfacing, water runs off the "lens" for ~1.6 s (smoothed custom uniforms `inWater` / `wetLens`).
 - **Time of day and weather**: the water's light follows the sun, twilight and night colours; rain adds ripples and
-  roughness; storms add whitecaps.
+  raises the waves; storms add broken whitecaps.
 - **Sun glint**: a sharp sparkle plus a broader, dim glitter path, restrained so it blooms only a little.
 - **Optional vertex displacement** (on by default in Balanced/High): only the upper vertices of water quads move, by
   the same function in `gbuffers_water` and the shadow pass. Amplitude is a fraction of a block (sum of the swell and
@@ -67,7 +67,7 @@ required dependency on Modrinth; the jar's `neoforge.mods.toml` asks for Sodium 
 - Sun/moon **shadow mapping** with radial distortion (focus slider), normal-offset bias, and a rotated golden-angle
   PCF with hardware comparison (4/8/16 samples by profile). Light through stained glass is tinted.
 - **Warm direct sun** and gently cooler sky shade; twilight turns the sun orange and the shade lilac; night is a
-  readable moonlit blue (exposure opens up at night and under roofs, driven by `eyeBrightnessSmooth`).
+  readable moonlit blue (exposure opens up outdoors at night and under roofs, driven by `eyeBrightnessSmooth`).
 - **Interiors stay readable**: softer sky-light curve, warm torch/lantern light from the block lightmap, a minimum
   light level, vanilla ambient occlusion on ambient light only (`separateAo`), optional handheld light.
 - **Material response** from `block.properties`: metal (tinted, glossy, reflects the sky), glass and ice, polished stone
@@ -192,7 +192,56 @@ to 960x540 for one shot and back, and during every chunk wait it is rendered at 
 Profiles were selected through `run-client/shaderpacks/GrandLineShaders-1.0.0.zip.txt` (Iris logged
 `Profile: LOW`, `Profile: HIGH` and `Profile: BALANCED (+0 options changed by user)`).
 
-<!-- VERIFICATION -->
+### What was verified (final runs)
+
+The zip used in these runs had byte-identical `shaders/` files to the committed
+`dist/GrandLineShaders-1.0.0.zip`; only this README differs.
+
+- **Every program compiles and links for every dimension folder and every profile.** For each of LOW, BALANCED and
+  HIGH, Iris created the pipeline for `minecraft:overworld`, `grandline:sky`, `grandline:deep_sea`,
+  `grandline:ship_interiors`, `minecraft:the_nether` and `minecraft:the_end` with no shader error in
+  `logs/latest.log` (the only ERROR line in all three logs is the sound engine, which has no audio device here), and
+  `IrisApi.isShaderPackInUse()` was still true at the end of every run (Iris switches a failing pack off).
+  Before that, `tools/check_shaders.py` compiled and linked all 134 programs × 3 profiles with glslangValidator.
+- **The pack loads from the zip** (`Using shaderpack: GrandLineShaders-1.0.0.zip`) and Iris recognises the profiles.
+- **Shaders on/off comparisons** of the same view (Iris API toggle, pack reloaded afterwards without errors).
+- **Window resize** to 960x540 and back (and 480x270 during every chunk wait): the pack kept rendering
+  (`12_resized_960x540.png` is a 960x540 frame), no errors.
+- Frame rate, for the record only: llvmpipe software rendering at 1280x720 gave **2–4 fps with the pack** and
+  14–20 fps without it at the same views. This says nothing about real GPUs.
+
+Evidence in `grandline-mod/docs/shaders/` (BALANCED unless named; downscaled to 800 px wide except the 960x540 one):
+
+| File | What it shows |
+|---|---|
+| `01_ocean_noon.png` / `01_ocean_noon_shaders_off.png` | open sea at noon, pack on / off |
+| `low_01_ocean_noon.png`, `high_01_ocean_noon.png` | the same view on LOW (flat water, sky-only reflection, vanilla clouds) and HIGH |
+| `02_ocean_afternoon_glint.png` | afternoon sea, painted clouds |
+| `03_shoreline.png` | turquoise shallows, caustics, shore foam, sandy islet |
+| `04_harbour.png` / `04_harbour_shaders_off.png` | a settlement dock: contact foam on the posts, shallows, beach; pack on / off |
+| `low_04_harbour.png`, `high_04_harbour.png` | the dock on LOW and HIGH |
+| `04c_bridge_piers.png` | bridge piers standing in deep water (Tequila Wolf): depth colour, contact foam |
+| `05_town_aerial.png` | the town of Shiokaze Isle from above: roofs, shadows, haze |
+| `06_pool.png` | a small pool 4 blocks above sea level: calm, turquoise, caustics; the sea beyond swells |
+| `07_interior_lanterns.png` / `07_interior_lanterns_shaders_off.png` | closed room lit by torches, lanterns, a campfire and the mod's paper and brass lanterns |
+| `08_underwater_up.png`, `08b_underwater_level.png` | under water: Snell's window and the reef in the water fog |
+| `09_sunset.png` | sunset over the sea, glitter path |
+| `10_night_town.png`, `11_night_room.png` | night: moonlit town with lanterns; the room at night |
+| `12_resized_960x540.png` | after resizing the window to 960x540 |
+| `13_sky_angel_island.png`, `14_sky_cloud_sea.png` | `grandline:sky`: Angel Island and the cloud sea below the horizon |
+| `15_deep_fishman_island.png`, `16_deep_bubble.png` | `grandline:deep_sea`: Fish-Man Island inside the dome; the bubble seen from the water |
+| `17_ship_interiors_dim.png` | `grandline:ship_interiors`: a lantern-lit test room in the pocket dimension |
+| `18_nether.png`, `19_end.png` | the fallback folders |
+| `20_storm.png` | a storm at sea: overcast sky, soft rain, broken whitecaps |
+
+### Not verified
+
+- Real GPUs and drivers (see below); Iris 1.8.14-beta.1 with Sodium 0.8.x; Distant Horizons; OptiFine (not on NeoForge).
+- Things a still screenshot cannot show or the tour did not stage: foliage and cloth motion (the code paths compiled;
+  motion was not filmed), the underwater enter/leave transition, wet surfaces during rain up close, tinted shadows of
+  stained glass, the hand and held items (the HUD was hidden), entities beyond a few villagers, and the options screen
+  itself (the options, sliders and profiles were exercised through the option file, not by clicking the menu).
+
 
 ## Known limitations and honest notes
 
