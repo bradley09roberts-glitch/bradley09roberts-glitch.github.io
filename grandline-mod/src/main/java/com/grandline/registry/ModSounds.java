@@ -31,6 +31,11 @@ public final class ModSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> FRUIT_SHAMBLES = sfx("fruit.shambles");
     public static final DeferredHolder<SoundEvent, SoundEvent> FRUIT_TRANSFORM = sfx("fruit.transform");
     public static final DeferredHolder<SoundEvent, SoundEvent> FRUIT_DRUMS = sfx("fruit.drums");
+    public static final DeferredHolder<SoundEvent, SoundEvent> FRUIT_SLASH = sfx("fruit.slash");
+    public static final DeferredHolder<SoundEvent, SoundEvent> FRUIT_STRING = sfx("fruit.string");
+    public static final DeferredHolder<SoundEvent, SoundEvent> FRUIT_BUBBLE = sfx("fruit.bubble");
+    public static final DeferredHolder<SoundEvent, SoundEvent> FRUIT_SQUISH = sfx("fruit.squish");
+    public static final DeferredHolder<SoundEvent, SoundEvent> FRUIT_BARRIER = sfx("fruit.barrier");
     public static final DeferredHolder<SoundEvent, SoundEvent> BOSS_ROAR = sfx("boss.roar");
     public static final DeferredHolder<SoundEvent, SoundEvent> BOSS_PHASE = sfx("boss.phase");
     public static final DeferredHolder<SoundEvent, SoundEvent> BOSS_TELEGRAPH = sfx("boss.telegraph");
@@ -76,7 +81,8 @@ public final class ModSounds {
             "ship.horn", "sea_king.call", "den_den.ring", "den_den.pickup", "ui.bounty", "ui.quest", "ui.discover", "player.knockdown",
             "combat.soru", "combat.geppo", "music.east_blue", "music.grand_line", "music.new_world", "music.island", "music.battle",
             "music.boss", "music.sky", "music.deep_sea", "music.wano", "disc.east_blue", "disc.grand_line", "disc.wano", "disc.boss",
-            "ambient.sea", "ambient.wind", "ambient.gull", "ambient.creak"};
+            "ambient.sea", "ambient.wind", "ambient.gull", "ambient.creak", "fruit.slash", "fruit.string", "fruit.bubble", "fruit.squish",
+            "fruit.barrier"};
 
     private static DeferredHolder<SoundEvent, SoundEvent> sfx(String name) {
         return SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(GrandLine.id(name)));

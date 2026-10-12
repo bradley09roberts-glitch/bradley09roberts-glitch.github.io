@@ -11,23 +11,31 @@ import java.util.Map;
 
 /**
  * The mod's own sounds layered onto visual effects: when a Devil Fruit, Haki or boss effect plays on the client
- * (ClientFx), its signature sound plays at the same spot. Each kind is limited to one sound per 4 ticks so effects
- * that repeat every tick (trails, auras) do not stack.
+ * (ClientFx), its signature sound plays at the same spot. Many effects are sent again and again while they last
+ * (pulses, trails, zones), so each kind sounds at most once per 1.5 s, and lingering zones once per 5 s (a Devil
+ * Fruit exists once per world, so per kind is per user).
  */
 public final class FxSounds {
-    private record S(DeferredHolder<SoundEvent, SoundEvent> sound, float volume, float pitch) {}
+    private record S(DeferredHolder<SoundEvent, SoundEvent> sound, float volume, float pitch, int gap) {}
 
     private static final Map<String, S> MAP = new HashMap<>();
     private static final Map<String, Long> LAST = new HashMap<>();
 
     private static void put(DeferredHolder<SoundEvent, SoundEvent> s, float vol, float pitch, String... kinds) {
-        for (String k : kinds) MAP.put(k, new S(s, vol, pitch));
+        for (String k : kinds) MAP.put(k, new S(s, vol, pitch, 30));
+    }
+
+    /** Zones that pulse for many seconds: their sound comes back at most every 5 s. */
+    private static void lingering(String... kinds) {
+        for (String k : kinds) {
+            S s = MAP.get(k);
+            if (s != null) MAP.put(k, new S(s.sound(), s.volume(), s.pitch(), 100));
+        }
     }
 
     static {
         // Haki
         put(ModSounds.HAKI_CONQUEROR, 2.5f, 1.0f, "conqueror_burst", "boss_clash", "ryuo_burst");
-        put(ModSounds.HAKI_CONQUEROR, 1.2f, 1.25f, "conqueror_pulse");
         put(ModSounds.HAKI_OBSERVATION, 0.9f, 1.0f, "observation_dodge", "future_sight", "boss_foresight_break");
         put(ModSounds.HAKI_ARMAMENT, 1.0f, 1.0f, "steel_body");
         // Devil Fruits, by element
@@ -49,11 +57,21 @@ public final class FxSounds {
         put(ModSounds.FRUIT_ROOM, 1.0f, 1.0f, "room");
         put(ModSounds.FRUIT_SHAMBLES, 1.0f, 1.0f, "shambles", "time_vanish", "time_return", "mirror_step");
         put(ModSounds.FRUIT_TRANSFORM, 1.2f, 1.0f, "transform");
+        put(ModSounds.FRUIT_SLASH, 1.0f, 1.0f, "wind_blade", "air_blade", "air_blade_big", "crescent", "blade_sweep", "blade_storm", "steel_crescent",
+                "wing_crescent", "light_sword", "snow_blade", "room_slash", "chop_festival", "sasori_pincer", "raiju_claw", "claw");
+        put(ModSounds.FRUIT_STRING, 1.0f, 1.0f, "string_lines", "birdcage", "string_bullet", "kusari_chain", "kusari_bind", "wana_wire", "hari_pin");
+        put(ModSounds.FRUIT_BUBBLE, 1.0f, 1.0f, "bubbles", "paw_bubble", "pain_bubble", "fusen_pop", "kaeru_splash", "mitsu_pool", "shinku_pop");
+        put(ModSounds.FRUIT_SQUISH, 1.0f, 1.0f, "mochi_fist", "mochi_bind", "mochi_donut", "mud_grab", "swamp_gulp", "mud_ball", "wax_bind", "nendo_fist",
+                "kabi_rot", "abura_slick");
+        put(ModSounds.FRUIT_BARRIER, 1.0f, 1.0f, "barrier", "barrier_ball", "mirror_shield", "salt_wall", "mirror_dome", "wax_wall", "shinju_layer",
+                "kai_shell", "genbu_shell", "bell_dome");
         // movement arts
         put(ModSounds.COMBAT_SORU, 0.8f, 1.0f, "dash_line", "blur", "vanish");
         put(ModSounds.COMBAT_GEPPO, 0.8f, 1.0f, "sky_walk");
         // bosses
         put(ModSounds.BOSS_ENRAGE, 2.5f, 1.0f, "boss_enrage");
+        lingering("birdcage", "mirror_dome", "black_world", "blizzard", "sandstorm", "smoke_screen", "smoke_cage", "gas_cloud", "shinokuni",
+                "magma_floor", "whiteout", "mitsu_pool", "eruption", "island_tilt", "black_hole", "storm_cloud", "kiri_fog", "hai_cloud", "kabi_cloud");
     }
 
     /** Called by ClientFx for every effect; plays the matching sound, if any. */
@@ -62,7 +80,7 @@ public final class FxSounds {
         if (s == null) return;
         long now = l.getGameTime();
         Long last = LAST.get(kind);
-        if (last != null && now - last < 4 && now >= last) return;
+        if (last != null && now - last < s.gap() && now >= last) return;
         LAST.put(kind, now);
         float pitch = s.pitch() * (0.95f + l.random.nextFloat() * 0.1f);
         l.playLocalSound(x, y, z, s.sound().get(), SoundSource.PLAYERS, s.volume(), pitch, false);

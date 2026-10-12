@@ -117,6 +117,20 @@
       }
     ]
   },
+  "fruit.barrier": {
+    "subtitle": "subtitles.grandline.fruit.barrier",
+    "sounds": [
+      "grandline:fruit/barrier_1",
+      "grandline:fruit/barrier_2"
+    ]
+  },
+  "fruit.bubble": {
+    "subtitle": "subtitles.grandline.fruit.bubble",
+    "sounds": [
+      "grandline:fruit/bubble_1",
+      "grandline:fruit/bubble_2"
+    ]
+  },
   "fruit.dark": {
     "subtitle": "subtitles.grandline.fruit.dark",
     "sounds": [
@@ -185,6 +199,28 @@
     "sounds": [
       "grandline:fruit/shambles_1",
       "grandline:fruit/shambles_2"
+    ]
+  },
+  "fruit.slash": {
+    "subtitle": "subtitles.grandline.fruit.slash",
+    "sounds": [
+      "grandline:fruit/slash_1",
+      "grandline:fruit/slash_2",
+      "grandline:fruit/slash_3"
+    ]
+  },
+  "fruit.squish": {
+    "subtitle": "subtitles.grandline.fruit.squish",
+    "sounds": [
+      "grandline:fruit/squish_1",
+      "grandline:fruit/squish_2"
+    ]
+  },
+  "fruit.string": {
+    "subtitle": "subtitles.grandline.fruit.string",
+    "sounds": [
+      "grandline:fruit/string_1",
+      "grandline:fruit/string_2"
     ]
   },
   "fruit.thunder": {

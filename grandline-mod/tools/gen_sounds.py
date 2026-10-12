@@ -28,9 +28,9 @@ from synth import SR, drive, ffilter  # noqa: E402
 LEVEL = {'haki.observation': 0.6, 'den_den.pickup': 0.55, 'ui.quest': 0.7, 'ui.discover': 0.7,
          'combat.soru': 0.7, 'combat.geppo': 0.7, 'fruit.shambles': 0.75, 'fruit.room': 0.8, 'player.knockdown': 0.8,
          'boss.telegraph': 0.7, 'den_den.ring': 0.35, 'ship.horn': 0.6, 'fruit.transform': 0.7,
-         'fruit.quake': 0.66, 'fruit.thunder': 0.66, 'ambient.gull': 0.5, 'ambient.creak': 0.8}
+         'fruit.quake': 0.66, 'fruit.thunder': 0.66, 'fruit.bubble': 0.55, 'fruit.barrier': 0.6, 'ambient.gull': 0.5, 'ambient.creak': 0.8}
 # impacts whose energy sits in a few transients: saturate them so they are as loud as vanilla explosions
-DENSE = {'ambient.creak': 4.0, 'ship.cannon': 3.0, 'fruit.quake': 4.0, 'fruit.thunder': 5.0, 'haki.conqueror': 2.0, 'fruit.flame': 1.6}
+DENSE = {'fruit.string': 2.5, 'ambient.creak': 4.0, 'ship.cannon': 3.0, 'fruit.quake': 4.0, 'fruit.thunder': 5.0, 'haki.conqueror': 2.0, 'fruit.flame': 1.6}
 
 # tracks that are also music discs: a mono copy (a jukebox is a positional source and only mono sounds attenuate)
 DISCS = ['east_blue', 'grand_line', 'wano', 'boss']

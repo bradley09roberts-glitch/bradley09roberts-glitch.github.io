@@ -463,3 +463,60 @@ def ambient_creak(rng):
 
 AMBIENT = {'ambient.sea': ambient_sea, 'ambient.wind': ambient_wind}  # stereo loops
 SFX.update({'ambient.gull': (ambient_gull, 3), 'ambient.creak': (ambient_creak, 4)})
+
+
+# ------------------------------------------------------------------------------------------------ more fruit families
+def fruit_slash(rng):
+    """A blade or an air blade: a fast swish with a bright metallic edge."""
+    n = secs(0.45)
+    t = tt(n)
+    sw = sweep_bp(rng.standard_normal(n), lambda s: 7000 * np.exp(-s / 0.12) + 900, q=2.5) * np.exp(-t / 0.12) * 1.3
+    ring = sum(np.sin(TAU * f * t + rng.uniform(0, TAU)) * np.exp(-t / 0.18) * a for f, a in ((3150, 0.25), (4720, 0.15), (6280, 0.08)))
+    return sw * np.clip(t / 0.01, 0, 1) + ring * np.clip((t - 0.03) / 0.01, 0, 1)
+
+
+def fruit_string(rng):
+    """Strings drawn taut: a bright twang that bends down."""
+    from synth import pluck, pitch_mod
+    y = pluck(rng.uniform(520, 700), 0.8, rng, bright=0.95, t60=0.6)
+    m = len(y)
+    ratio = 1 - 0.25 * np.clip(tt(m) / 0.5, 0, 1)
+    y = pitch_mod(y, ratio)
+    zip_ = sweep_bp(rng.standard_normal(secs(0.15)), lambda s: 3000 + 9000 * s / 0.15, q=6) * 0.5
+    return place(0.8, (0, zip_), (0.05, y))
+
+
+def fruit_bubble(rng):
+    """Bubbles: a cluster of rising pops."""
+    parts = []
+    for _ in range(int(rng.integers(6, 10))):
+        m = secs(rng.uniform(0.04, 0.09))
+        t = tt(m)
+        f = rng.uniform(500, 1400) * (1 + 2.5 * t / t[-1])
+        parts.append((rng.uniform(0, 0.35), np.sin(phase(f, m)) * np.sin(np.pi * t / t[-1]) * rng.uniform(0.5, 1)))
+    return place(0.55, *parts)
+
+
+def fruit_squish(rng):
+    """Mochi, mud, wax: a wet squelch."""
+    n = secs(0.5)
+    t = tt(n)
+    body = sweep_lp(noise(n, rng, 'pink'), lambda s: 1800 * np.exp(-s / 0.15) + 200) * np.exp(-t / 0.15)
+    wob = np.sin(phase(140 * (1 + 0.5 * np.sin(TAU * 18 * t)) * np.exp(-t / 0.3), n)) * np.exp(-t / 0.12) * 0.6
+    return (body + wob) * np.clip(t / 0.01, 0, 1)
+
+
+def fruit_barrier(rng):
+    """A barrier or a mirror going up: a glassy chime with a soft shimmer."""
+    n = secs(1.0)
+    t = tt(n)
+    y = np.zeros(n)
+    f0 = rng.uniform(1100, 1400)
+    for r, a, tau in ((1, 1, 0.5), (2.32, 0.5, 0.35), (4.25, 0.3, 0.2), (6.63, 0.15, 0.12)):
+        y += a * np.sin(TAU * f0 * r * t + rng.uniform(0, TAU)) * np.exp(-t / tau)
+    tick = ffilter(rng.standard_normal(n), hp=4000) * np.exp(-t / 0.004) * 0.4
+    return room(y * 0.5 + tick, rng, 0.8, 0.3)
+
+
+SFX.update({'fruit.slash': (fruit_slash, 3), 'fruit.string': (fruit_string, 2), 'fruit.bubble': (fruit_bubble, 2),
+            'fruit.squish': (fruit_squish, 2), 'fruit.barrier': (fruit_barrier, 2)})

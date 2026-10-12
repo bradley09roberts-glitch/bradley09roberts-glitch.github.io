@@ -41,5 +41,10 @@
   "subtitles.grandline.ambient.sea": "Waves wash",
   "subtitles.grandline.ambient.wind": "Wind howls",
   "subtitles.grandline.ambient.gull": "Gull cries",
-  "subtitles.grandline.ambient.creak": "Timbers creak"
+  "subtitles.grandline.ambient.creak": "Timbers creak",
+  "subtitles.grandline.fruit.slash": "Blade swishes",
+  "subtitles.grandline.fruit.string": "Strings twang",
+  "subtitles.grandline.fruit.bubble": "Bubbles pop",
+  "subtitles.grandline.fruit.squish": "Something squelches",
+  "subtitles.grandline.fruit.barrier": "A barrier chimes"
 }
