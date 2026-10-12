@@ -136,7 +136,9 @@ public final class ClientSelfTest {
     private static void buildCaptain() {
         createCharacter("Captain", "human");
         cmd("grandline test env", 10);
-        cmd("grandline island tp shiokaze_isle", 120);
+        // open water south of the starter island (a harbour's coastline changes with the world seed and can run the
+        // galleon aground within a few blocks)
+        cmd("execute in minecraft:overworld run tp @s 36000 66 21400", 160);
         cmd("grandline test ship galleon helm", 60);
         cmd("grandline test anchor true", 20);
         camera(CameraType.THIRD_PERSON_BACK);
