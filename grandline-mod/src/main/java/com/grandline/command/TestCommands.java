@@ -57,6 +57,13 @@ public final class TestCommands {
                     fight.engage(sp);
                     return GLCommands.ok(c, "Boss " + id + " engaged");
                 })))
+                .then(Commands.literal("base").executes(c -> {
+                    // stand on a claimable island heart holding a crew flag (client test of planting it, the base and the chart)
+                    ServerPlayer sp = c.getSource().getPlayerOrException();
+                    var at = com.grandline.test.BaseTests.stageClaim(sp);
+                    if (at == null) return GLCommands.fail(c, "No claimable island heart found");
+                    return GLCommands.ok(c, "Claim staged at " + at.getX() + " " + at.getY() + " " + at.getZ());
+                }))
                 .then(Commands.literal("board").executes(c -> {
                     // open the notice board of the island the player is on (client test of the board screen)
                     ServerPlayer sp = c.getSource().getPlayerOrException();

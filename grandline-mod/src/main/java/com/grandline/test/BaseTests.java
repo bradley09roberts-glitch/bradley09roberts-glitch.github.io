@@ -96,7 +96,7 @@ import static com.grandline.test.SelfTest.check;
  * </ul>
  * Players are fake players outside the player list (counted as online through {@link CrewBases#testPlayers}).
  */
-final class BaseTests {
+public final class BaseTests {
     private static final Map<UUID, List<String>> INBOX = new HashMap<>();
     private static final List<String> NEWS = new ArrayList<>();
     private static final Set<Long> FORCED = new HashSet<>(), TICKETS = new HashSet<>();
@@ -200,6 +200,33 @@ final class BaseTests {
                 }
             }
         return best;
+    }
+
+    /**
+     * Client test (/grandline test base): the nearest claimable island heart to Shiokaze Isle, made ready, with the
+     * player standing on it holding a crew flag. Returns the heart, or null if no island qualifies.
+     */
+    public static BlockPos stageClaim(ServerPlayer p) {
+        MinecraftServer s = p.server;
+        ServerLevel l = s.overworld();
+        WorldPlan plan = WorldPlan.of(s);
+        if (plan == null) return null;
+        Island home = plan.byId("shiokaze_isle");
+        List<Island> cands = new ArrayList<>();
+        for (Island isl : plan.islands)
+            if (CrewBases.claimable(isl) && isl.radius >= 120 && isl.radius <= 600 && CrewBases.claimOn(s, isl.id) == null) cands.add(isl);
+        cands.sort(Comparator.comparingDouble(i -> i.distance(home.x, home.z)));
+        for (Island isl : cands) {
+            BlockPos h = heartSpot(s, plan, isl);
+            if (h == null) continue;
+            loadNow(l, h.getX(), h.getZ(), 3);
+            BlockPos at = prepare(l, h.getX(), h.getZ());
+            clearThreats(l, p, at);
+            p.teleportTo(l, at.getX() + 0.5, at.getY(), at.getZ() + 2.5, 180, 60);
+            p.getInventory().setItem(p.getInventory().selected, new ItemStack(BaseRegistry.CREW_FLAG_ITEM.get()));
+            return at;
+        }
+        return null;
     }
 
     /** Hostiles near a spot are dealt with (the player "clears the threat"). */

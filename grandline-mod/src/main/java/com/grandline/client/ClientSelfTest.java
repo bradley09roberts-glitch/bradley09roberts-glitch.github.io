@@ -60,6 +60,39 @@ public final class ClientSelfTest {
         }, 10);
     }
 
+    /** A crew base: plant the crew flag with a real right-click, then the flag, the /base menu and the chart's mark. */
+    private static void crewBaseShots() {
+        cmd("execute in minecraft:overworld run tp @s 36000 120 20000", 40);
+        cmd("gamemode survival", 10);
+        cmd("grandline test base", 120);
+        add("plant the crew flag", () -> {
+            Minecraft mc = Minecraft.getInstance();
+            var p = mc.player;
+            net.minecraft.core.BlockPos target = new net.minecraft.core.BlockPos(p.getBlockX(), p.getBlockY() - 1, p.getBlockZ() - 2);
+            var hit = new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(target).add(0, 0.5, 0), net.minecraft.core.Direction.UP, target, false);
+            var r = mc.gameMode.useItemOn(p, net.minecraft.world.InteractionHand.MAIN_HAND, hit);
+            LOG.add("  planted the crew flag on " + target.toShortString() + ": " + r + ", holding " + p.getMainHandItem());
+        }, 40);
+        add("check the flag", () -> {
+            Minecraft mc = Minecraft.getInstance();
+            var p = mc.player;
+            var at = new net.minecraft.core.BlockPos(p.getBlockX(), p.getBlockY(), p.getBlockZ() - 2);
+            boolean flag = mc.level.getBlockState(at).is(com.grandline.base.BaseRegistry.CREW_FLAG.get());
+            LOG.add((flag ? "  crew flag standing at " : "FAIL no crew flag at ") + at.toShortString() + " (" + mc.level.getBlockState(at) + ")");
+        }, 5);
+        cmd("tp @s ~ ~1 ~3 180 12", 40);
+        shot("57_crew_base_flag");
+        cmd("base", 30);
+        add("open chat", () -> Minecraft.getInstance().setScreen(new net.minecraft.client.gui.screens.ChatScreen("")), 20);
+        shot("58_crew_base_menu");
+        add("close chat", () -> Minecraft.getInstance().setScreen(null), 10);
+        add("open sea chart", () -> PacketDistributor.sendToServer(new GLNetwork.UiAction("open_chart", new net.minecraft.nbt.CompoundTag())), 40);
+        shot("59_chart_base_mark");
+        add("close chart", () -> Minecraft.getInstance().setScreen(null), 10);
+        cmd("base abandon confirm", 20);
+        cmd("gamemode spectator", 10);
+    }
+
     /** Checks the situational music the client would pick now (client/GLMusic). */
     private static void music(String expected) {
         add("music " + expected, () -> {
@@ -366,6 +399,7 @@ public final class ClientSelfTest {
         music("deep_sea");
         shot2("31_fishman_island_bubble", "execute in grandline:deep_sea run tp @s 330 160 0 90 15");
         shot2("32_deep_sea_route", "execute in grandline:deep_sea run tp @s -1400 70 10 -90 0");
+        crewBaseShots();
         islandPolishShots();
         // weather
         cmd("execute in minecraft:overworld run tp @s 36000 120 20000", 60);
