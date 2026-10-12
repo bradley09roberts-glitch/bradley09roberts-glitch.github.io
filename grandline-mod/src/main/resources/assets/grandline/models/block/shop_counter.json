@@ -1,0 +1,72 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "front": "grandline:block/counter_front",
+    "top": "grandline:block/counter_top",
+    "wood": "grandline:block/prop_wood",
+    "particle": "grandline:block/counter_front"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        2
+      ],
+      "to": [
+        16,
+        13,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#front"
+        },
+        "south": {
+          "texture": "#wood"
+        },
+        "west": {
+          "texture": "#wood"
+        },
+        "east": {
+          "texture": "#wood"
+        },
+        "down": {
+          "texture": "#wood"
+        }
+      }
+    },
+    {
+      "from": [
+        0,
+        13,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "down": {
+          "texture": "#top"
+        },
+        "up": {
+          "texture": "#top"
+        },
+        "north": {
+          "texture": "#top"
+        },
+        "south": {
+          "texture": "#top"
+        },
+        "west": {
+          "texture": "#top"
+        },
+        "east": {
+          "texture": "#top"
+        }
+      }
+    }
+  ]
+}

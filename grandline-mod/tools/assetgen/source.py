@@ -34,6 +34,11 @@ def block_ids():
     return re.findall(r'BLOCKS\.register\("([a-z0-9_]+)"', _read('registry/ModBlocks.java') + _read('base/BaseRegistry.java'))
 
 
+def arch_block_ids():
+    """The architectural kit (registry/ArchBlocks.java, generated from assetgen/arch_blocks.py)."""
+    return re.findall(r'block\("([a-z0-9_]+)"', _read('registry/ArchBlocks.java'))
+
+
 def skin_ids():
     src = _read('npc/Archetypes.java')
     out = []

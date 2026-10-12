@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "grandline:block/cargo_sacks"
+    },
+    "facing=east": {
+      "model": "grandline:block/cargo_sacks",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "grandline:block/cargo_sacks",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "grandline:block/cargo_sacks",
+      "y": 270
+    }
+  }
+}

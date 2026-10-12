@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:fieldstone"
+    }
+  },
+  "result": {
+    "id": "grandline:fieldstone_wall",
+    "count": 6
+  }
+}

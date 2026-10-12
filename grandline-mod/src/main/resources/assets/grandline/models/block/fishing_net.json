@@ -1,0 +1,36 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "panel": "grandline:block/fishing_net",
+    "particle": "grandline:block/fishing_net"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        15.2
+      ],
+      "to": [
+        16,
+        16,
+        15.2
+      ],
+      "faces": {
+        "north": {
+          "texture": "#panel"
+        },
+        "south": {
+          "texture": "#panel",
+          "uv": [
+            16,
+            0,
+            0,
+            16
+          ]
+        }
+      }
+    }
+  ],
+  "render_type": "minecraft:cutout"
+}

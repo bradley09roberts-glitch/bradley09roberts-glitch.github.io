@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "CWC"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:green_wool"
+    },
+    "W": {
+      "item": "minecraft:white_wool"
+    }
+  },
+  "result": {
+    "id": "grandline:green_awning",
+    "count": 3
+  }
+}

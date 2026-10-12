@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "grandline:block/goods_shelf"
+    },
+    "facing=east": {
+      "model": "grandline:block/goods_shelf",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "grandline:block/goods_shelf",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "grandline:block/goods_shelf",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "minecraft:cyan_terracotta"
+  },
+  "result": {
+    "id": "grandline:teal_roof_tiles",
+    "count": 1
+  }
+}

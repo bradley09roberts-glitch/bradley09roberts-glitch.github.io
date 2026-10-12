@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:cream_plaster"
+    }
+  },
+  "result": {
+    "id": "grandline:cream_plaster_slab",
+    "count": 6
+  }
+}

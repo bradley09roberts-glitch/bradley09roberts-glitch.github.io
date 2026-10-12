@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "grandline:green_shutter",
+    "grandline:blue_shutter",
+    "grandline:red_shutter",
+    "grandline:oak_shutter"
+  ]
+}

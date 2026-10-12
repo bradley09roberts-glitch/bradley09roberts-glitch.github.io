@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "grandline:block/harbour_stone_slab"
+    },
+    "type=top": {
+      "model": "grandline:block/harbour_stone_slab_top"
+    },
+    "type=double": {
+      "model": "grandline:block/harbour_stone"
+    }
+  }
+}

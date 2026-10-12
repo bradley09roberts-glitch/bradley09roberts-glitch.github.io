@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "minecraft:gray_terracotta"
+  },
+  "result": {
+    "id": "grandline:kawara_roof_tiles",
+    "count": 1
+  }
+}

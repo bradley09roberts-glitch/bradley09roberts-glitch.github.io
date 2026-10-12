@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "grandline:dressed_sandstone_wall",
+    "grandline:pale_masonry_wall",
+    "grandline:fieldstone_wall",
+    "grandline:harbour_stone_wall"
+  ]
+}

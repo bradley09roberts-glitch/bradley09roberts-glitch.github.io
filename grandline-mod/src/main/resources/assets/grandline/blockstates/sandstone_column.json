@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "grandline:block/sandstone_column"
+    },
+    "axis=z": {
+      "model": "grandline:block/sandstone_column_horizontal",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "grandline:block/sandstone_column_horizontal",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

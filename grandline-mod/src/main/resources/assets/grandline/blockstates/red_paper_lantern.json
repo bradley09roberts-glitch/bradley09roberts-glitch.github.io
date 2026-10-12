@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "hanging=false": {
+      "model": "grandline:block/red_paper_lantern"
+    },
+    "hanging=true": {
+      "model": "grandline:block/red_paper_lantern_hanging"
+    }
+  }
+}

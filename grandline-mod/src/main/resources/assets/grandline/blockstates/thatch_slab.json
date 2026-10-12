@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "grandline:block/thatch_slab"
+    },
+    "type=top": {
+      "model": "grandline:block/thatch_slab_top"
+    },
+    "type=double": {
+      "model": "grandline:block/thatch"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "grandline:block/plank_bench"
+    },
+    "facing=east": {
+      "model": "grandline:block/plank_bench",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "grandline:block/plank_bench",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "grandline:block/plank_bench",
+      "y": 270
+    }
+  }
+}

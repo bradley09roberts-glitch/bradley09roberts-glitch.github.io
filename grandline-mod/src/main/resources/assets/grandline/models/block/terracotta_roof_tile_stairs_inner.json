@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "bottom": "grandline:block/terracotta_roof_tiles",
+    "top": "grandline:block/terracotta_roof_tiles",
+    "side": "grandline:block/terracotta_roof_tiles"
+  }
+}

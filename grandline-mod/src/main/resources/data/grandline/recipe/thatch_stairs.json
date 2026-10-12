@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "#  ",
+    "## ",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:thatch"
+    }
+  },
+  "result": {
+    "id": "grandline:thatch_stairs",
+    "count": 4
+  }
+}

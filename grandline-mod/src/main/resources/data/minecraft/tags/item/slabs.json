@@ -1,0 +1,23 @@
+{
+  "replace": false,
+  "values": [
+    "grandline:white_plaster_slab",
+    "grandline:cream_plaster_slab",
+    "grandline:ochre_plaster_slab",
+    "grandline:salmon_plaster_slab",
+    "grandline:sky_plaster_slab",
+    "grandline:mint_plaster_slab",
+    "grandline:weathered_plank_slab",
+    "grandline:dock_plank_slab",
+    "grandline:terracotta_roof_tile_slab",
+    "grandline:slate_roof_tile_slab",
+    "grandline:teal_roof_tile_slab",
+    "grandline:kawara_roof_tile_slab",
+    "grandline:sky_roof_tile_slab",
+    "grandline:thatch_slab",
+    "grandline:dressed_sandstone_slab",
+    "grandline:pale_masonry_slab",
+    "grandline:fieldstone_slab",
+    "grandline:harbour_stone_slab"
+  ]
+}

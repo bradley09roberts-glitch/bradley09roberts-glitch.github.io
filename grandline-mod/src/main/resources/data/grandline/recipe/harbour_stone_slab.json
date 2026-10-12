@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:harbour_stone"
+    }
+  },
+  "result": {
+    "id": "grandline:harbour_stone_slab",
+    "count": 6
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "P P",
+    "PFP",
+    "P P"
+  ],
+  "key": {
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "F": {
+      "item": "minecraft:flower_pot"
+    }
+  },
+  "result": {
+    "id": "grandline:goods_shelf",
+    "count": 2
+  }
+}

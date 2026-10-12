@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    {
+      "item": "minecraft:spruce_planks"
+    },
+    {
+      "item": "minecraft:spruce_planks"
+    },
+    {
+      "item": "minecraft:bone_meal"
+    }
+  ],
+  "result": {
+    "id": "grandline:weathered_planks",
+    "count": 2
+  }
+}

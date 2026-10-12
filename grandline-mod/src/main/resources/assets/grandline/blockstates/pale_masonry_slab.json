@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "grandline:block/pale_masonry_slab"
+    },
+    "type=top": {
+      "model": "grandline:block/pale_masonry_slab_top"
+    },
+    "type=double": {
+      "model": "grandline:block/pale_masonry"
+    }
+  }
+}

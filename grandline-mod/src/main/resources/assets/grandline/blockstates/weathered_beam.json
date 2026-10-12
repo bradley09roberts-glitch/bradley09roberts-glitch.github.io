@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "grandline:block/weathered_beam"
+    },
+    "axis=z": {
+      "model": "grandline:block/weathered_beam_horizontal",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "grandline:block/weathered_beam_horizontal",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "#  ",
+    "## ",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:white_plaster"
+    }
+  },
+  "result": {
+    "id": "grandline:white_plaster_stairs",
+    "count": 4
+  }
+}

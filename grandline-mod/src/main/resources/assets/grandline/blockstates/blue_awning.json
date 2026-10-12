@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "grandline:block/blue_awning"
+    },
+    "facing=east": {
+      "model": "grandline:block/blue_awning",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "grandline:block/blue_awning",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "grandline:block/blue_awning",
+      "y": 270
+    }
+  }
+}

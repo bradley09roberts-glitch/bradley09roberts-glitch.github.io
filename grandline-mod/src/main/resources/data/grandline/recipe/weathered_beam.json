@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "L",
+    "L"
+  ],
+  "key": {
+    "L": {
+      "item": "minecraft:stripped_spruce_log"
+    }
+  },
+  "result": {
+    "id": "grandline:weathered_beam",
+    "count": 2
+  }
+}

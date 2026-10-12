@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column_horizontal",
+  "textures": {
+    "side": "grandline:block/marble_column",
+    "end": "grandline:block/marble_column_top"
+  }
+}

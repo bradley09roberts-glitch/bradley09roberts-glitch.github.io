@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "grandline:block/sandstone_column",
+    "end": "grandline:block/sandstone_column_top"
+  }
+}

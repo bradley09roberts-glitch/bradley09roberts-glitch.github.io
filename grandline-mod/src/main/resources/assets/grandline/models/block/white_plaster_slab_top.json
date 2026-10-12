@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "bottom": "grandline:block/white_plaster",
+    "top": "grandline:block/white_plaster",
+    "side": "grandline:block/white_plaster"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "PPP",
+    "PDP",
+    "PPP"
+  ],
+  "key": {
+    "P": {
+      "item": "grandline:white_plaster"
+    },
+    "D": {
+      "item": "minecraft:orange_dye"
+    }
+  },
+  "result": {
+    "id": "grandline:ochre_plaster",
+    "count": 8
+  }
+}

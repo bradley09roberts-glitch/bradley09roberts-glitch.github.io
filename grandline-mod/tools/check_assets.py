@@ -30,7 +30,7 @@ iron_helmet iron_ingot iron_nugget lantern lead leather oak_log oak_planks paper
 rotten_flesh nautilus_shell heart_of_the_sea prismarine_shard prismarine_crystals feather amethyst_shard candle experience_bottle map  painting
 bowl kelp red_mushroom brown_mushroom fishing_rod
 '''.split())
-VANILLA_TAGS = {'minecraft:logs', 'minecraft:planks', 'minecraft:swords'}
+VANILLA_TAGS = {'minecraft:logs', 'minecraft:planks', 'minecraft:swords', 'minecraft:wooden_slabs', 'minecraft:small_flowers'}
 
 problems = []
 warnings = []
@@ -96,7 +96,7 @@ def main():
         print(f'validating against {len(vanilla_items)} vanilla item models from {root}')
 
     plain, weapons = source.item_ids()
-    blocks = source.block_ids()
+    blocks = source.block_ids() + source.arch_block_ids()
     items = set(plain) | set(weapons) | set(blocks)
     gl_items = {f'grandline:{i}' for i in items}
 
@@ -108,10 +108,15 @@ def main():
         if not os.path.isfile(bs):
             err(f'block {b}: missing blockstate')
             continue
-        for v in json.load(open(bs)).get('variants', {}).values():
+        state = json.load(open(bs))
+        for v in state.get('variants', {}).values():
             for var in (v if isinstance(v, list) else [v]):
                 check_model(var['model'], ctx=f'block {b}')
-        check_model(f'grandline:block/{b}', ctx=f'block {b}')
+        for part in state.get('multipart', []):
+            for var in (part['apply'] if isinstance(part['apply'], list) else [part['apply']]):
+                check_model(var['model'], ctx=f'block {b}')
+        if 'variants' in state and '' in state['variants']:
+            check_model(f'grandline:block/{b}', ctx=f'block {b}')
 
     # ---------------------------------------------------------------- entities
     for sid in source.skin_ids():

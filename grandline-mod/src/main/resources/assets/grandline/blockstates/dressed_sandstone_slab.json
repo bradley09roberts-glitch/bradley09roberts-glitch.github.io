@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "grandline:block/dressed_sandstone_slab"
+    },
+    "type=top": {
+      "model": "grandline:block/dressed_sandstone_slab_top"
+    },
+    "type=double": {
+      "model": "grandline:block/dressed_sandstone"
+    }
+  }
+}

@@ -21,6 +21,7 @@ from assetgen import activity_items                     # noqa: E402  (sea activ
 from assetgen import journey_items                      # noqa: E402  (Den Den Mushi sprites/recipes, chat glyphs, journey tab background)
 from assetgen import base_items                         # noqa: E402  (crew bases: the crew flag and base chest blocks)
 from assetgen import career_items                       # noqa: E402  (careers: Marine coat sprite and armour layer, letter of marque)
+from assetgen import arch_blocks                        # noqa: E402  (the architectural building kit: blocks, textures, data, ArchBlocks.java)
 
 RES = source.RES
 A = os.path.join(RES, 'assets/grandline')
@@ -116,10 +117,21 @@ def main(prune=False):
         js(D, f'grandline/recipe/{name}.json', r)
     for rel, obj in activity_items.data_files().items():
         js(D, rel, obj)
-    for name, t in data.item_tags(weapons).items():
+    def merged(*dicts):
+        out = {}
+        for d in dicts:
+            for name, t in d.items():
+                if name in out:
+                    out[name] = {'replace': False, 'values': out[name]['values'] + [v for v in t['values'] if v not in out[name]['values']]}
+                else:
+                    out[name] = t
+        return out
+    for name, t in merged(data.item_tags(weapons), arch_blocks.item_tags()).items():
         js(D, f'minecraft/tags/item/{name}.json', t)
-    for name, t in {**data.block_tags(), **base_items.block_tags()}.items():
+    for name, t in merged(data.block_tags(), base_items.block_tags(), arch_blocks.block_tags()).items():
         js(D, f'minecraft/tags/block/{name}.json', t)
+    # the architectural kit writes its own textures, models, states, loot and recipes (tags merged above)
+    arch_blocks.generate(png, js, A, D, source.JAVA, tags=False)
 
     if prune:
         owned = [os.path.join(A, d) for d in ('textures/item', 'textures/block', 'textures/entity/npc', 'textures/entity/projectile',

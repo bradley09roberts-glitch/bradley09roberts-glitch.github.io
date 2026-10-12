@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "side": "grandline:block/cargo_crate",
+    "top": "grandline:block/cargo_crate_top",
+    "bottom": "grandline:block/cargo_crate_top"
+  }
+}

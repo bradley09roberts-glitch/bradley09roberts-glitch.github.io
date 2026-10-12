@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "SC",
+    "CS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:sand"
+    },
+    "C": {
+      "item": "minecraft:clay_ball"
+    }
+  },
+  "result": {
+    "id": "grandline:white_plaster",
+    "count": 4
+  }
+}

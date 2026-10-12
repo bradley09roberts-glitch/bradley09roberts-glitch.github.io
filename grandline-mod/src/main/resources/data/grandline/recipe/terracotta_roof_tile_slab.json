@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:terracotta_roof_tiles"
+    }
+  },
+  "result": {
+    "id": "grandline:terracotta_roof_tile_slab",
+    "count": 6
+  }
+}

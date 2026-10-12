@@ -38,6 +38,14 @@ public final class ModCreativeTabs {
                 out.accept(ModBlocks.FRUIT_BLOOM.get());
             }).build());
 
+    /** The architectural building kit (ArchBlocks): plasters, timber, roof tiles, stone, shutters, windows, props, lanterns. */
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> ARCHITECTURE = TABS.register("architecture", () -> CreativeModeTab.builder()
+            .title(Component.translatable("itemGroup.grandline.architecture"))
+            .icon(() -> new ItemStack(ArchBlocks.TERRACOTTA_ROOF_TILES.get()))
+            .displayItems((params, out) -> {
+                for (var b : ArchBlocks.ALL) out.accept(b.get());
+            }).build());
+
     /** Creative-only fruit tab (bypasses the world ledger; for testing and creative building). */
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FRUITS = TABS.register("fruits", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.grandline.fruits"))

@@ -22,6 +22,7 @@ public final class GrandLine {
         container.registerConfig(ModConfig.Type.SERVER, GLConfig.SPEC);
         ModAttachments.register(modBus);
         ModDataComponents.register(modBus);
+        com.grandline.registry.ArchBlocks.init(); // the architectural kit registers into ModBlocks.BLOCKS / ModItems.ITEMS
         ModBlocks.register(modBus);
         ModItems.register(modBus);
         ModEntities.register(modBus);

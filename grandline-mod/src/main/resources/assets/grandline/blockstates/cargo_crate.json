@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "grandline:block/cargo_crate"
+    }
+  }
+}

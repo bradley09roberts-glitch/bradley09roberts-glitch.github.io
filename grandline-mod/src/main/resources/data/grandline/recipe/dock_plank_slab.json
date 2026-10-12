@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:dock_planks"
+    }
+  },
+  "result": {
+    "id": "grandline:dock_plank_slab",
+    "count": 6
+  }
+}

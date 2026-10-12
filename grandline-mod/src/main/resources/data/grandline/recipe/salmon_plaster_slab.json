@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:salmon_plaster"
+    }
+  },
+  "result": {
+    "id": "grandline:salmon_plaster_slab",
+    "count": 6
+  }
+}

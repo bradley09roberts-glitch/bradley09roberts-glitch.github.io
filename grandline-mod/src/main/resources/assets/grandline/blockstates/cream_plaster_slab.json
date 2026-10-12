@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "grandline:block/cream_plaster_slab"
+    },
+    "type=top": {
+      "model": "grandline:block/cream_plaster_slab_top"
+    },
+    "type=double": {
+      "model": "grandline:block/cream_plaster"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "grandline:block/oak_beam"
+    },
+    "axis=z": {
+      "model": "grandline:block/oak_beam_horizontal",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "grandline:block/oak_beam_horizontal",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

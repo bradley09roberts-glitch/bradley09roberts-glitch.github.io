@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "grandline:block/weathered_plank_slab"
+    },
+    "type=top": {
+      "model": "grandline:block/weathered_plank_slab_top"
+    },
+    "type=double": {
+      "model": "grandline:block/weathered_planks"
+    }
+  }
+}

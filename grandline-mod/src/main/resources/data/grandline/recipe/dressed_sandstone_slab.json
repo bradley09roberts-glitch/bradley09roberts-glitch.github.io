@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:dressed_sandstone"
+    }
+  },
+  "result": {
+    "id": "grandline:dressed_sandstone_slab",
+    "count": 6
+  }
+}

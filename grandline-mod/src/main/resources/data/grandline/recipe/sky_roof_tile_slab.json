@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:sky_roof_tiles"
+    }
+  },
+  "result": {
+    "id": "grandline:sky_roof_tile_slab",
+    "count": 6
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "replace": false,
+  "values": [
+    "grandline:white_plaster_stairs",
+    "grandline:cream_plaster_stairs",
+    "grandline:ochre_plaster_stairs",
+    "grandline:salmon_plaster_stairs",
+    "grandline:sky_plaster_stairs",
+    "grandline:mint_plaster_stairs",
+    "grandline:weathered_plank_stairs",
+    "grandline:dock_plank_stairs",
+    "grandline:terracotta_roof_tile_stairs",
+    "grandline:slate_roof_tile_stairs",
+    "grandline:teal_roof_tile_stairs",
+    "grandline:kawara_roof_tile_stairs",
+    "grandline:sky_roof_tile_stairs",
+    "grandline:thatch_stairs",
+    "grandline:dressed_sandstone_stairs",
+    "grandline:pale_masonry_stairs",
+    "grandline:fieldstone_stairs",
+    "grandline:harbour_stone_stairs"
+  ]
+}

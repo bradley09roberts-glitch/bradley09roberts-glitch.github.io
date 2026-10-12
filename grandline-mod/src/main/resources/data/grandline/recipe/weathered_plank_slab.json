@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:weathered_planks"
+    }
+  },
+  "result": {
+    "id": "grandline:weathered_plank_slab",
+    "count": 6
+  }
+}

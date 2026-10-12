@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "grandline:block/bollard"
+    },
+    "facing=east": {
+      "model": "grandline:block/bollard",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "grandline:block/bollard",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "grandline:block/bollard",
+      "y": 270
+    }
+  }
+}

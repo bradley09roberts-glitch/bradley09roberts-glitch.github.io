@@ -1,0 +1,136 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "wood": "grandline:block/prop_wood",
+    "particle": "grandline:block/prop_wood"
+  },
+  "elements": [
+    {
+      "from": [
+        1,
+        0,
+        1
+      ],
+      "to": [
+        15,
+        6,
+        15
+      ],
+      "faces": {
+        "down": {
+          "texture": "#wood"
+        },
+        "up": {
+          "texture": "#wood"
+        },
+        "north": {
+          "texture": "#wood"
+        },
+        "south": {
+          "texture": "#wood"
+        },
+        "west": {
+          "texture": "#wood"
+        },
+        "east": {
+          "texture": "#wood"
+        }
+      }
+    },
+    {
+      "from": [
+        2,
+        6,
+        2
+      ],
+      "to": [
+        14,
+        7,
+        14
+      ],
+      "faces": {
+        "down": {
+          "texture": "minecraft:block/rooted_dirt"
+        },
+        "up": {
+          "texture": "minecraft:block/rooted_dirt"
+        },
+        "north": {
+          "texture": "minecraft:block/rooted_dirt"
+        },
+        "south": {
+          "texture": "minecraft:block/rooted_dirt"
+        },
+        "west": {
+          "texture": "minecraft:block/rooted_dirt"
+        },
+        "east": {
+          "texture": "minecraft:block/rooted_dirt"
+        }
+      }
+    },
+    {
+      "from": [
+        3,
+        7,
+        3
+      ],
+      "to": [
+        13,
+        13,
+        13
+      ],
+      "faces": {
+        "north": {
+          "texture": "minecraft:block/poppy"
+        },
+        "south": {
+          "texture": "minecraft:block/poppy"
+        }
+      },
+      "rotation": {
+        "origin": [
+          8,
+          8,
+          8
+        ],
+        "axis": "y",
+        "angle": 45,
+        "rescale": true
+      },
+      "shade": false
+    },
+    {
+      "from": [
+        3,
+        7,
+        3
+      ],
+      "to": [
+        13,
+        13,
+        13
+      ],
+      "faces": {
+        "west": {
+          "texture": "minecraft:block/cornflower"
+        },
+        "east": {
+          "texture": "minecraft:block/cornflower"
+        }
+      },
+      "rotation": {
+        "origin": [
+          8,
+          8,
+          8
+        ],
+        "axis": "y",
+        "angle": 45,
+        "rescale": true
+      },
+      "shade": false
+    }
+  ],
+  "render_type": "minecraft:cutout"
+}

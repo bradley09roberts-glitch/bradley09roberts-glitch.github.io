@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "grandline:block/fishing_net"
+    },
+    "facing=east": {
+      "model": "grandline:block/fishing_net",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "grandline:block/fishing_net",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "grandline:block/fishing_net",
+      "y": 270
+    }
+  }
+}

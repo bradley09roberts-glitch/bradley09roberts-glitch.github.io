@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "grandline:block/slate_roof_tiles",
+    "top": "grandline:block/slate_roof_tiles",
+    "side": "grandline:block/slate_roof_tiles"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "grandline:block/weathered_beam",
+    "end": "grandline:block/weathered_beam_top"
+  }
+}

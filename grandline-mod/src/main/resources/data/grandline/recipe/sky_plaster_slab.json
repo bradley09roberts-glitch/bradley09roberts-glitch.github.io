@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:sky_plaster"
+    }
+  },
+  "result": {
+    "id": "grandline:sky_plaster_slab",
+    "count": 6
+  }
+}

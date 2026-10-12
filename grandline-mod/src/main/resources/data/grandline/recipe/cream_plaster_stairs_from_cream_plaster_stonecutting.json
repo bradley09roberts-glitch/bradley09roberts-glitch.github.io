@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "grandline:cream_plaster"
+  },
+  "result": {
+    "id": "grandline:cream_plaster_stairs",
+    "count": 1
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/stairs",
+  "textures": {
+    "bottom": "grandline:block/mint_plaster",
+    "top": "grandline:block/mint_plaster",
+    "side": "grandline:block/mint_plaster"
+  }
+}

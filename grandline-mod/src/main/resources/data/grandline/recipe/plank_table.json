@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "WWW",
+    " F ",
+    " F "
+  ],
+  "key": {
+    "W": {
+      "tag": "minecraft:wooden_slabs"
+    },
+    "F": {
+      "item": "minecraft:oak_fence"
+    }
+  },
+  "result": {
+    "id": "grandline:plank_table",
+    "count": 1
+  }
+}

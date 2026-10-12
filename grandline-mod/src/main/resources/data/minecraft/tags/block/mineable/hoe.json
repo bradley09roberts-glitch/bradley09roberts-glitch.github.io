@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "grandline:thatch",
+    "grandline:thatch_stairs",
+    "grandline:thatch_slab"
+  ]
+}

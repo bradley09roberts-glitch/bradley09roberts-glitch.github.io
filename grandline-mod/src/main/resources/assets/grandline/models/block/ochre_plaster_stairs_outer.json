@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "grandline:block/ochre_plaster",
+    "top": "grandline:block/ochre_plaster",
+    "side": "grandline:block/ochre_plaster"
+  }
+}

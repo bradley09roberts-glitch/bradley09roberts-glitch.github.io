@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/stairs",
+  "textures": {
+    "bottom": "grandline:block/kawara_roof_tiles",
+    "top": "grandline:block/kawara_roof_tiles",
+    "side": "grandline:block/kawara_roof_tiles"
+  }
+}

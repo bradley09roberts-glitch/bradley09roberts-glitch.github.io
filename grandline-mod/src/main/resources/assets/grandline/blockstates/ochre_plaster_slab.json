@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "grandline:block/ochre_plaster_slab"
+    },
+    "type=top": {
+      "model": "grandline:block/ochre_plaster_slab_top"
+    },
+    "type=double": {
+      "model": "grandline:block/ochre_plaster"
+    }
+  }
+}

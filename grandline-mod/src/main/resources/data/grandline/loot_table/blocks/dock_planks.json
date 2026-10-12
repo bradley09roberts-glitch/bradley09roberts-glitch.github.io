@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:block",
+  "random_sequence": "grandline:blocks/dock_planks",
+  "pools": [
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "grandline:dock_planks"
+        }
+      ]
+    }
+  ]
+}

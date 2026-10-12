@@ -1,6 +1,30 @@
 {
   "replace": false,
   "values": [
-    "grandline:base_chest"
+    "grandline:base_chest",
+    "grandline:timber_frame",
+    "grandline:timber_frame_cross",
+    "grandline:timber_frame_diagonal",
+    "grandline:timber_frame_studs",
+    "grandline:oak_beam",
+    "grandline:dark_beam",
+    "grandline:weathered_beam",
+    "grandline:weathered_planks",
+    "grandline:weathered_plank_stairs",
+    "grandline:weathered_plank_slab",
+    "grandline:dock_planks",
+    "grandline:dock_plank_stairs",
+    "grandline:dock_plank_slab",
+    "grandline:green_shutter",
+    "grandline:blue_shutter",
+    "grandline:red_shutter",
+    "grandline:oak_shutter",
+    "grandline:lattice_window",
+    "grandline:cargo_crate",
+    "grandline:shop_counter",
+    "grandline:goods_shelf",
+    "grandline:plank_table",
+    "grandline:plank_bench",
+    "grandline:flower_planter"
   ]
 }

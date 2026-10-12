@@ -1,0 +1,99 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "canvas": "grandline:block/red_awning",
+    "edge": "grandline:block/red_awning_edge",
+    "particle": "grandline:block/red_awning"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        11.5,
+        0
+      ],
+      "to": [
+        16,
+        12.5,
+        16
+      ],
+      "faces": {
+        "up": {
+          "texture": "#canvas"
+        },
+        "down": {
+          "texture": "#canvas"
+        },
+        "north": {
+          "texture": "#canvas",
+          "uv": [
+            0,
+            0,
+            16,
+            1
+          ]
+        },
+        "west": {
+          "texture": "#canvas",
+          "uv": [
+            0,
+            0,
+            16,
+            1
+          ]
+        },
+        "east": {
+          "texture": "#canvas",
+          "uv": [
+            0,
+            0,
+            16,
+            1
+          ]
+        }
+      },
+      "rotation": {
+        "origin": [
+          8,
+          12,
+          8
+        ],
+        "axis": "x",
+        "angle": -22.5,
+        "rescale": true
+      }
+    },
+    {
+      "from": [
+        0,
+        4.5,
+        0.0
+      ],
+      "to": [
+        16,
+        8.7,
+        0.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#edge",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#edge",
+          "uv": [
+            16,
+            0,
+            0,
+            16
+          ]
+        }
+      }
+    }
+  ]
+}

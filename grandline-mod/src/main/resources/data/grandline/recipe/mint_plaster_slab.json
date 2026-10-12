@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "grandline:mint_plaster"
+    }
+  },
+  "result": {
+    "id": "grandline:mint_plaster_slab",
+    "count": 6
+  }
+}

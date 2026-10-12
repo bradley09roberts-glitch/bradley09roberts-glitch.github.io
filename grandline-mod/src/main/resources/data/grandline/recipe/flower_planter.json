@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "F F",
+    "PDP"
+  ],
+  "key": {
+    "F": {
+      "tag": "minecraft:small_flowers"
+    },
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "D": {
+      "item": "minecraft:dirt"
+    }
+  },
+  "result": {
+    "id": "grandline:flower_planter",
+    "count": 2
+  }
+}

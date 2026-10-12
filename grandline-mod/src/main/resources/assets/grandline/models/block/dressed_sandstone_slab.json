@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "grandline:block/dressed_sandstone",
+    "top": "grandline:block/dressed_sandstone",
+    "side": "grandline:block/dressed_sandstone"
+  }
+}

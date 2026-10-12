@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "grandline:sky_roof_tiles"
+  },
+  "result": {
+    "id": "grandline:sky_roof_tile_stairs",
+    "count": 1
+  }
+}
