@@ -1,7 +1,10 @@
-[18:59:27.990] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "grandline-0.2.0.jar" [locator: {mods folder locator at /tmp/claude-0/-home-user-bradley09roberts-glitch-github-io/562dafd6-0799-5370-a
-		Grand Line Odyssey 0.2.0 (grandline)
-[18:59:41] [modloading-worker-0/INFO] [co.gr.GrandLine/]: Grand Line Odyssey loading
+[19:20:09.434] [main/INFO] [loading.moddiscovery.ModDiscoverer/SCAN]: Found mod file "grandline-0.2.0.jar" [locator: {mods folder locator at <scratch>/prodserver/mods}, reader: mod manifest] 
 grandline (version 0.1.0 -> 0.2.0)
-[18:59:47] [Server thread/INFO] [minecraft/DedicatedServer]: Done (1.144s)! For help, type "help"
-[19:00:07] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping the server
+[19:20:21] [Server thread/INFO] [minecraft/DedicatedServer]: Done (0.885s)! For help, type "help"
+[19:20:41] [Server thread/INFO] [minecraft/MinecraftServer]: Stopping the server
 server exit 0
+--- fresh world, same install and jar
+[19:20:55] [Server thread/INFO] [co.gr.GrandLine/]: World plan 7075145950172670859: 220 islands (81 canon/starter, 139 original)
+[19:20:57] [Server thread/INFO] [minecraft/DedicatedServer]: Done (2.574s)! For help, type "help"
+server exit 0
+jar sha256 dadced32abc755619c14c424d34756434df4d7ddcb657abac18456b22cba9f32
