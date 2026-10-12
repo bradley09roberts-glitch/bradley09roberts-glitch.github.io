@@ -79,6 +79,7 @@ public final class SelfTest {
         if (PHASE.equals("1")) phase1();
         else if (PHASE.equals("dims")) {
             DimensionTests.awakening(steps);
+            DimensionTests.shipClasses(steps);
             DimensionTests.phase1(steps);
         }
         else phase2();
@@ -705,6 +706,7 @@ public final class SelfTest {
             return 40;
         });
         DimensionTests.awakening(steps);
+        DimensionTests.shipClasses(steps);
         DimensionTests.phase1(steps);
         // ---------- persistence fixtures for phase 2 ----------
         steps.add(s -> {

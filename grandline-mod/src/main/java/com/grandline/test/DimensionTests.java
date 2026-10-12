@@ -105,6 +105,53 @@ final class DimensionTests {
         });
     }
 
+    /** Every ship class launches in open water, has a deck and seats, sails under way and (if it has one) a hold below. */
+    static void shipClasses(Deque<SelfTest.Step> steps) {
+        final ShipEntity[] fleet = new ShipEntity[ShipClass.values().length];
+        final double[][] start = new double[fleet.length][2];
+        steps.add(s -> {
+            ServerLevel ow = s.overworld();
+            // open water in the East Blue, south of the starter island
+            int bx = 36000, bz = 21400;
+            for (ShipClass c : ShipClass.values()) {
+                int i = c.ordinal();
+                double x = bx + i * 90, z = bz;
+                load(ow, x, z, 3);
+                Vec3 water = com.grandline.ship.Shipyard.findWaterPublic(ow, BlockPos.containing(x, 63, z));
+                if (water != null) {
+                    x = water.x;
+                    z = water.z;
+                }
+                Vec3 wind = com.grandline.ship.Wind.at(ow, x, z);
+                float yaw = wind.lengthSqr() < 1e-4 ? -90 : (float) Math.toDegrees(Math.atan2(-wind.x, wind.z)); // run before the wind
+                fleet[i] = ship(ow, c, x, z, yaw, "Selftest " + c.id());
+                fleet[i].autopilot = true;
+                fleet[i].testSpeedMult = 3f;
+                fleet[i].setAnchored(false);
+                fleet[i].setSail(3);
+                start[i][0] = fleet[i].getX();
+                start[i][1] = fleet[i].getZ();
+            }
+            return 120;
+        });
+        steps.add(s -> {
+            for (ShipClass c : ShipClass.values()) {
+                ShipEntity sh = fleet[c.ordinal()];
+                if (sh == null || sh.isRemoved()) {
+                    SelfTest.check("ship class " + c.id() + " launches and sails", false, "ship missing");
+                    continue;
+                }
+                follow(sh);
+                double moved = Math.hypot(sh.getX() - start[c.ordinal()][0], sh.getZ() - start[c.ordinal()][1]);
+                boolean hold = !c.interior || com.grandline.ship.ShipInteriors.prepare(s, sh) != null;
+                SelfTest.check("ship class " + c.id() + " launches and sails", moved > 3 && sh.seatCount() >= c.cannons + 1 && hold,
+                        String.format("moved %.1f blocks in 120 ticks, %d seats, %d cannons, hold=%s", moved, sh.seatCount(), c.cannons, c.interior ? hold : "n/a"));
+                sh.discard();
+            }
+            return 0;
+        });
+    }
+
     static void phase1(Deque<SelfTest.Step> steps) {
         // ---------- local sea weather ----------
         steps.add(s -> {
@@ -206,7 +253,8 @@ final class DimensionTests {
             if (ku == null) return 0;
             ServerLevel sky = s.getLevel(SkyWorld.LEVEL);
             load(sky, SkyWorld.ARRIVAL_X, SkyWorld.ARRIVAL_Z, 3);
-            sh[0] = ship(ow, ShipClass.SLOOP, ku.getX() + 12.5, ku.getZ() + 12.5, -90, "Selftest Skyfarer");
+            // outside the eruption column (it erupts by itself during the first 30 s of server time); the ride is started below
+            sh[0] = ship(ow, ShipClass.SLOOP, ku.getX() + 70.5, ku.getZ() + 12.5, -90, "Selftest Skyfarer");
             id[0] = sh[0].shipId;
             hand[0] = deckHand(ow, sh[0]);
             return 60; // let the chunks finish loading, as they would around a real crew
