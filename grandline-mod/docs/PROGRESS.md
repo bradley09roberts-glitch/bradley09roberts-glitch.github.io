@@ -850,6 +850,16 @@ First run of a real client against the dedicated server. Result: no client crash
   the mate still stayed on deck (the ships' collision handling bumps them apart before the decks overlap), so the
   staging does not reproduce the incident either. The mate's log now FAILs whenever they leave the deck while the
   captain sails, so a recurrence is caught.
+- Found (13:00): the next run lost the mate again, before any other ship came near, and the server log said "Mate
+  moved wrongly!" at that moment. Vanilla re-plays each player move on the server against the server's ship parts,
+  which stand a little ahead of or behind the client's on a moving deck; it called the move wrong and snapped the
+  mate back to where the deck had been. A first fix (players do not collide with ship parts on the server) got the
+  mate kicked for floating (a deck is not blocks); it was replaced by `mixin/ShipDeckMoveMixin`: for a player on or
+  right beside a deck (`ShipEntity.nearDeck`) the "moved wrongly" check allows two blocks and ignores new collisions
+  with ship parts, while the parts still collide. One more run had a chance sea battle board the galleon at launch
+  (the captain was knocked down and drowned); the test now pauses the living sea first (`/grandline test calm`).
+  Two-client run after both: the mate on deck at all 14 checks (also while the staged merchant came alongside and
+  was rammed), no "moved wrongly", no kick, the captain's title seen by the mate ("Master Cartographer Tester").
 
 ### Sea polish: gunners, raid plunder, chart marks (agent, merged 13:10)
 - Hired gunners (`ship/HiredGunners`): shipwrights and dockworkers (not story characters, not ship crews) offer a
