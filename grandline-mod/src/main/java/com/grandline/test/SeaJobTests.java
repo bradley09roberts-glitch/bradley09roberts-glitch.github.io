@@ -951,6 +951,7 @@ final class SeaJobTests {
             }
             ShipEntity r = get(b, 7);
             if (r != null && !r.isRemoved() && !r.isSinking()) {
+                keep(l, r); // the raider's own chunk must tick too, or she never sights anyone (she may lie outside the convoy's chunks)
                 int t = LivingSea.targetOf(r);
                 if (t >= 0) {
                     num[3]++;

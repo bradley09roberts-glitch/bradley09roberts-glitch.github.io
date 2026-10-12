@@ -100,6 +100,8 @@ public final class SelfTest {
         else if (PHASE.equals("bosses")) BossTests.phase1(steps); // quick run: boss fights
         else if (PHASE.equals("bases")) BaseTests.phase1(steps); // quick run: crew bases on claimed islands
         else if (PHASE.equals("careers")) CareerTests.phase1(steps); // quick run: faction careers
+        else if (PHASE.equals("seapolish")) SeaPolishTests.phase1(steps); // quick run: hired gunners, raid plunder, sea-job chart marks, convoy cap
+        else if (PHASE.equals("seapolish2")) SeaPolishTests.phase2(steps); // its restart check, on the world the quick run left
         else if (PHASE.equals("seajobs")) { // quick run: escorts, named pirate ships, convoys
             SeaJobTests.phase1(steps);
             SeaJobTests.fixture(steps);
@@ -807,6 +809,7 @@ public final class SelfTest {
         BaseTests.phase1(steps); // crew bases: claims, building rights, warehouse, upgrades, dock, hands, raids (test/BaseTests.java)
         CareerTests.phase1(steps); // faction careers: ranks, perks, titles, the Warlord letter (test/CareerTests.java)
         SeaJobTests.phase1(steps); // sea jobs: escort follower, named pirate ships, convoys, sea-battle objectives (test/SeaJobTests.java)
+        SeaPolishTests.phase1(steps); // hired gunners, raid plunder, sea-job chart marks, convoy cap (test/SeaPolishTests.java)
         JourneyTests.phase1(steps); // journey advancements, Den Den Mushi, Buster Call (test/JourneyTests.java; runs last)
         SeaJobTests.fixture(steps); // an escort stowed for phase 2 (after the last test, so its away time stays short)
     }
@@ -1003,6 +1006,7 @@ public final class SelfTest {
         JourneyTests.phase2(steps); // journey advancements belong to the account and are saved with it
         BossTests.phase2(steps); // boss relic records and fates persist
         BaseTests.phase2(steps); // a claimed island with its upgrades, warehouse and hands survives the restart
+        SeaPolishTests.phase2(steps); // hired gunners back at their guns, a market still short of plundered goods
         CareerTests.phase2(steps); // careers are saved with the character
         final String[] fx = new String[1];
         steps.add(s -> {

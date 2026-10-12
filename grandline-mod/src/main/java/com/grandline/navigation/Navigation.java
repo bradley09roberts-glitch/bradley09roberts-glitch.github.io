@@ -180,6 +180,7 @@ public final class Navigation {
         t.put("islands", l);
         t.put("treasures", com.grandline.activity.TreasureMaps.chartMarks(sp)); // X marks of the treasure maps read
         t.put("bases", com.grandline.base.CrewBases.chartMarks(sp)); // claimed islands, under their crews' names
+        t.put("seajobs", com.grandline.quest.story.SeaJobMarks.chartMarks(sp)); // this player's sea-job targets
         t.putInt("px", sp.getBlockX());
         t.putInt("pz", sp.getBlockZ());
         t.putInt("total", plan.islands.size());

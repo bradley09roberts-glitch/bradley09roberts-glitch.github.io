@@ -54,6 +54,7 @@ public final class Dialogues {
         com.grandline.npc.notable.NotableHooks.decorate(sp, npc, d, t, opts, starter); // story cast: greetings, quests, recruitment
         com.grandline.navigation.Ferries.addOptions(sp, npc, opts); // ferries and the Sea Train
         com.grandline.ship.LivingSea.addOptions(sp, npc, opts); // join a harbour raid
+        com.grandline.ship.HiredGunners.addOptions(sp, npc, opts); // shipwrights and dockworkers sign on gunners
         com.grandline.career.CareerPerks.addOptions(sp, npc, opts); // careers: promotion talk, supply, banner, safe house, missions, the letter
         opts.add(StringTag.valueOf("leave"));
         t.put("options", opts);
@@ -111,6 +112,7 @@ public final class Dialogues {
         if (com.grandline.npc.notable.NotableHooks.choose(sp, npc, option)) return; // recruit / crew orders
         if (com.grandline.navigation.Ferries.choose(sp, npc, option)) return; // passage booked
         if (com.grandline.ship.LivingSea.choose(sp, npc, option)) return; // joined a raid
+        if (com.grandline.ship.HiredGunners.choose(sp, npc, option)) return; // hired gunners menu
         if (com.grandline.career.CareerPerks.choose(sp, npc, option)) return; // careers
         switch (option) {
             case "rumor" -> {
