@@ -19,8 +19,8 @@ Per-item status (planned / partial / playable / tested) lives in [INVENTORY.md](
 - **Last verification** (dedicated server; the test world has a random seed every run): full phase 1 660/660 and
   phase 2 22/22 with no exception on the final code (ffc3b35, 13:25–13:50); two real clients on one ship with a
   merchant passing alongside (the mate stayed on deck, no "moved wrongly"); real client runs with 79-80 shots and no
-  failures; the jar built from ffc3b35 on a production NeoForge server with a real client (result at the end of
-  this log).
+  failures; the final jar on a production NeoForge server with a real client: 80 shots, no failure, no server
+  exception (14:00–14:20).
 - **Status per item**: [INVENTORY.md](INVENTORY.md) — no item is "partial" or "planned"; 265 tested, 346 playable.
 - **Known gaps**: listed at the end of this log.
 
@@ -938,6 +938,19 @@ First run of a real client against the dedicated server. Result: no client crash
   raiders take from the shops' stock only (town chests are never touched), raiders who get away share no goods with
   players who joined the raid, and recovered goods do not restock the market early; the filter applies to every shop NPC registered to the plundered
   island (not checked for a merchant ship's own sea merchant); the escort's destination mark is not covered by a test.
+
+### Final verification (13:25–14:20)
+- Full phase 1 660/660 and phase 2 22/22, no exception, on ffc3b35 (the code of the final jar; a random-seed world).
+  The run before it had 3 FAILs, all "Wave 4 Logia ... intangible to plain hits": the test's attacking dummy, a
+  tier-3 NPC, may roll Armament and uses it whenever it has a target, so its "plain" punch carried Haki; the dummy
+  now knows no Haki (`GLNpc.clearHakiForTest`).
+- Two real clients on one ship (21352ab, calm sea, a merchant rammed alongside): mate on deck at all 14 checks, no
+  "moved wrongly", the captain's title seen by the mate.
+- `dist/grandline-0.1.0.jar` from a17ad0a (ffc3b35 plus a client-test script change) on the production NeoForge
+  21.1.259 server with a real client: 80 screenshots, no FAIL, timeout or error, no exception in the server log;
+  85 sound files decoded, 53/53 sound events, the crew flag planted, the escorted merchant joining, the music picked
+  right at five places. (The run before it had one FAIL: mobs had wandered up to the island heart after the test
+  staged the claim, and the claim was rightly refused; the script now clears the heart right before planting.)
 
 ## Work in flight (background agents)
 - None.
