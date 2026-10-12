@@ -650,7 +650,8 @@ public final class SelfTest {
             Island home = WorldPlan.of(s).byId("shiokaze_isle");
             var st = home.settlement();
             fp.moveTo(st.dockX + 0.5, WorldPlan.SEA_LEVEL + 2, st.dockZ + 0.5);
-            l.getChunk(st.dockTipX() >> 4, st.dockTipZ() >> 4);
+            for (int cx = -3; cx <= 3; cx++) // game code only reads fully loaded chunks: generate the harbour first
+                for (int cz = -3; cz <= 3; cz++) l.getChunk((st.dockTipX() >> 4) + cx, (st.dockTipZ() >> 4) + cz);
             var ship = com.grandline.ship.Shipyard.spawnAtDock(fp, fp, com.grandline.ship.ShipClass.SLOOP);
             check("shipyard launches a sloop at the dock", ship != null, ship == null ? "" : "at " + ship.blockPosition() + " dock tip " + st.dockTipX() + "," + st.dockTipZ());
             if (ship == null) return 0;

@@ -38,7 +38,9 @@ final class DimensionTests {
         ChunkPos cp = new ChunkPos(BlockPos.containing(x, 0, z));
         l.getChunkSource().addRegionTicket(TicketType.FORCED, cp, radius, cp);
         l.setChunkForced(cp.x, cp.z, true); // a dimension with no players only ticks entities while it has forced chunks
-        l.getChunk(cp.x, cp.z);
+        // generate the whole area now: game code only reads fully loaded chunks (core/Chunks) and would see nothing yet
+        for (int dx = -radius; dx <= radius; dx++)
+            for (int dz = -radius; dz <= radius; dz++) l.getChunk(cp.x + dx, cp.z + dz);
     }
 
     /** Keep the chunks under a moving ship ticking (players aboard would do this in real play). */
@@ -95,7 +97,7 @@ final class DimensionTests {
             for (Island i : plan.islands) if (i.zone == home.zone) d.discoveredIslands.add(i.id);
             var st = home.settlement();
             BlockPos dock = new BlockPos(st.dockX, 0, st.dockZ);
-            load(ow, dock.getX(), dock.getZ(), 3);
+            load(ow, dock.getX(), dock.getZ(), 5);
             dock = dock.atY(ow.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, dock.getX(), dock.getZ()));
             HumanoidNpc worker = ModEntities.HUMANOID_NPC.get().create(ow);
             worker.moveTo(dock.getX() + 0.5, dock.getY(), dock.getZ() + 0.5, 0, 0);
