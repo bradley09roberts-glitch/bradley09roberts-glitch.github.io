@@ -233,5 +233,11 @@ for q, (t, d) in quest_text.items():
     lang[f'quest.grandline.{q}'] = t
     lang[f'quest.grandline.{q}.desc'] = d
 
+# keys defined by hand in other fragments (messages.json, story.json, fruits_*.json ...) win over generated ones
+for frag in glob.glob(os.path.join(OUT, '*.json')):
+    if frag.endswith('generated.json'):
+        continue
+    for k in json.load(open(frag)):
+        lang.pop(k, None)
 json.dump(lang, open(os.path.join(OUT, 'generated.json'), 'w'), indent=1, sort_keys=True, ensure_ascii=False)
 print(len(lang), 'generated keys')
