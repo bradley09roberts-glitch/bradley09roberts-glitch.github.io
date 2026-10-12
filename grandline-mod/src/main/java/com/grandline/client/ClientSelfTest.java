@@ -376,6 +376,17 @@ public final class ClientSelfTest {
         add("open advancements", () -> mc.setScreen(new net.minecraft.client.gui.screens.advancements.AdvancementsScreen(mc.player.connection.getAdvancements())), 40);
         shot("14f_journey_advancements");
         add("close screen", () -> mc.setScreen(null), 10);
+        // sea jobs: the escorted merchant follows the player
+        cmd("grandline quest job_escort_shiokaze_isle", 60);
+        cmd("tp @s ~6 ~ ~", 80);
+        add("who walks with us", () -> {
+            var near = mc.level.getEntitiesOfClass(com.grandline.npc.GLNpc.class, mc.player.getBoundingBox().inflate(10));
+            LOG.add("  NPCs within 10 blocks after the escort started: " + near.stream().map(n -> n.getDisplayName().getString()).toList());
+        }, 5);
+        camera(CameraType.THIRD_PERSON_FRONT);
+        shot("14g_escort_merchant");
+        camera(CameraType.FIRST_PERSON);
+        cmd("jobs abandon job_escort_shiokaze_isle", 10);
         cmd("item replace entity @s weapon.mainhand with minecraft:air", 5);
         add("combat mode off", () -> {
             ClientState.combatMode = false;
