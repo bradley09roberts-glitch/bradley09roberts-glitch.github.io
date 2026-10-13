@@ -109,3 +109,11 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   provisional yes (not cached) that Placer.prepare surveys on real ground before building.
 - Daily cost in the full pack (Tectonic), 5 skipped days on a 220-person world: day 1 179 ms (planner 145: first
   blueprints and plots), days 2-5 < 100 ms each (only days over 100 ms are logged, with a per-system breakdown).
+- 03:40 Full-pack client run 5 (world of the sea-heavy seed, town among Terralith giant mushrooms): PASS, NO slow ticks;
+  worst longnight tick 244 ms on a CPU-starved integrated server. Screenshot shows Jade naming a citizen and the
+  look-at hint on the action bar.
+- 03:50 Run14 (final code at the time): JUnit 10/10, GameTests 7/7, scenario 17/17. The survey change moved the dev
+  world's sample town to Ilvaiath, where citizens cost 7.9 ms/tick (0.3 ms each): path re-requests now back off for
+  citizens who make no progress (10 ticks -> up to 100). Run15 same town: 3.0 ms (0.11 ms each), 17/17.
+- 04:00 Final release built (hashes in modpack/VERIFICATION.md); final chain: run16 (all automated tests), full-pack
+  server (random seed, 2 skipped days, validate), full-pack client.

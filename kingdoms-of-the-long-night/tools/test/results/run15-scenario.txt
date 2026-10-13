@@ -143,3 +143,104 @@ PASS invariants hold after 4 simulated days
 > time set 12500
 Set the time to 12500
 
+> longnight admin inspect Ilvaiath
+[longnight] Ilvaiath SETTLEMENT VILLAGE pop=27 housing=30 treasury=233 materialized=true active=true
+ stock: grain=185 flour=4 bread=4 meat=38 vegetables=128 logs=46 planks=110 stone=119 glass=17 iron=5 fuel=17 wool=9 leather=1
+ buildings:
+  lumber_camp COMPLETE paid=93 placed=93/93
+  house COMPLETE paid=252 placed=252/252
+  house COMPLETE paid=252 placed=252/252
+  house COMPLETE paid=252 placed=252/252
+  house COMPLETE paid=252 placed=252/252
+  house COMPLETE paid=252 placed=252/252
+  house COMPLETE paid=252 placed=252/252
+  house COMPLETE paid=252 placed=252/252
+  farm DAMAGED paid=341 placed=341/341
+  farm COMPLETE paid=341 placed=341/341
+  farm COMPLETE paid=341 placed=341/341
+  farm COMPLETE paid=341 placed=341/341
+  farm COMPLETE paid=341 placed=341/341
+  storehouse COMPLETE paid=277 placed=277/277
+  quarry COMPLETE paid=140 placed=140/140
+  shrine COMPLETE paid=90 placed=90/90
+  builders_yard COMPLETE paid=90 placed=90/90
+  carpentry COMPLETE paid=243 placed=243/243
+  graveyard COMPLETE paid=115 placed=115/115
+  mill COMPLETE paid=290 placed=290/290
+  bakery COMPLETE paid=248 placed=248/248
+  pasture COMPLETE paid=285 placed=285/285
+  tavern COMPLETE paid=430 placed=430/430
+  hunting_lodge COMPLETE paid=248 placed=248/248
+  mine COMPLETE paid=101 placed=101/101
+  smithy COMPLETE paid=235 placed=235/235
+  market COMPLETE paid=132 placed=132/132
+  granary COMPLETE paid=277 placed=277/277
+  healer_house COMPLETE paid=245 placed=245/245
+  weavery COMPLETE paid=243 placed=243/243
+  town_hall COMPLETE paid=532 placed=532/532
+  farm COMPLETE paid=341 placed=341/341
+ people:
+  Briallae Brialloth age=89 farmer mood=content [body] doing=going home to bed
+  Myrrath Saevaris age=159 builder mood=content [body] doing=going home to bed
+  Isvae Saevaris age=152 builder mood=content [body] doing=going home to bed
+  Viraeth Saevaris age=33 baker mood=content [body] doing=going home to bed
+  Nimaeth Saevaris age=29 miller mood=content [body] doing=going home to bed
+  Kaelis Saevaris age=18 builder mood=content [body] doing=going home to bed
+  Raevas Caerith age=163 farmer mood=content [body] doing=going home to bed
+  Saevia Myrevael age=152 shepherd mood=content [body] doing=going home to bed
+  Caliveth Caerith age=40 farmer mood=content [body] doing=going home to bed
+  Saerith Sivareth age=107 quarrier mood=content [body] doing=going home to bed
+  Vaelyra Sivareth age=115 lumberjack mood=content [body] doing=going home to bed
+  Ilvaen Maethyss age=167 guard mood=content [body] doing=keeping watch
+  Briallae Kaelvoris age=156 farmer mood=content [body] doing=going home to bed
+  Vessaril Maervaine age=204 farmer mood=content [body] doing=going home to bed
+  Caethis Vaelithar age=89 lumberjack mood=content [body] doing=going home to bed BLOCKED=I can't find a way to my bed.
+  Saevia Naemoris age=166 guard mood=content [body] doing=keeping watch
+  Vessaril Thaelmyr Dawn-Eyed age=199 ruler mood=content [body] doing=going home to bed
+  Oriaval Quessaril age=89 farmer mood=content [body] doing=going home to bed
+  Yllaren Ysmaere age=152 farmer mood=content [body] doing=going home to bed BLOCKED=I can't find a way to my bed.
+  Isvae Ysmaere age=141 quarrier mood=content [body] doing=going home to bed
+  Liraeth Ysmaere age=29 hunter mood=content [body] doing=going home to bed
+  Maelrin Ysmaere age=59 priest mood=content [body] doing=going home to bed
+  Orrithas Ysmaere age=18 farmer mood=content [body] doing=going home to bed
+  Saerith Thessavel age=107 carpenter mood=content [body] doing=going home to bed
+  Maeliss Thessavel age=115 farmer mood=content [body] doing=going home to bed
+  Ilyra Aeloryn age=74 farmer mood=content [body] doing=going home to bed
+  Naevis Faeloris age=28 farmer mood=content [body] doing=going home to bed
+
+> time set 23500
+Set the time to 23500
+
+> longnight admin validate
+[longnight] VALIDATE OK people=209 settlements=14
+
+PASS invariants hold after a raid
+> longnight admin history
+Year 2298: Realm of Iriavel and Republic of Moressa fought the War of the Broken Ford; neither side has forgotten it.
+In the Age of Crowns: Aelmarch fell, and no living folk remember why.
+In the Age of Crowns: Ystrel fell, and no living folk remember why.
+In the Age of Crowns: Ystrel fell, and no living folk remember why.
+Day 0: The chronicle of the world begins. 5 realms, 7 settlements, 2 camps of settlers, 2 outlaw bands.
+Day 0: Outlaws from Keel Camp plundered Ilvaiath.
+Day 0: Outlaws from Keel Camp were beaten back from Ilvaiath.
+
+> longnight admin status
+[longnight] day=0 people alive=207 dead=2 settlements=9 outlawCamps=2 ruins=3 realms=7 wars=0 caravans=11 news=38 bodies=27 nightStage=0
+
+> save-all flush
+Saving the game (this may take a moment!)
+Saved the game
+
+PASS server restarts on the saved world - 21s
+> longnight admin status
+[longnight] day=0 people alive=207 dead=2 settlements=9 outlawCamps=2 ruins=3 realms=7 wars=0 caravans=11 news=38 bodies=0 nightStage=0
+
+PASS people/deaths/settlements identical after reload - ('207', '2', '9') vs ('207', '2', '9')
+> longnight admin validate
+[longnight] VALIDATE OK people=209 settlements=14
+
+PASS invariants hold after reload
+PASS no longnight errors in run15-scenario-server1.log
+PASS no longnight errors in run15-scenario-server2.log
+
+SUMMARY: 17/17 checks passed

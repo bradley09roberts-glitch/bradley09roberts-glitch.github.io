@@ -34,10 +34,10 @@ The rich preset's server-side mods are the performance preset's plus Distant Hor
 | Crash reports / mixin failures / missing deps | none | none |
 | `.mrpack` builds deterministic | yes: two consecutive builds byte-identical | yes |
 
-Final release files (built with the core mod, 13 Oct 2026 ~02:45 BST; these are the files in `dist/`):
-- `KingdomsOfTheLongNight-0.1.0-performance.mrpack` `4e0fdb8e1ccc12b26316787262937dae0022562682328f85f279febdb418f9e5`
-- `KingdomsOfTheLongNight-0.1.0-rich.mrpack` `7255e13227131098c16c8a624804fe196bd20bf9c201a2af2831f0430c2bea63`
-- `longnight-0.1.0.jar` `49742db50c7d20c453cbfafd4461ab3f89b07f1f3dd2b7c805c5a1a5b1a59b36`
+Final release files (built with the core mod, 13 Oct 2026 ~04:00 BST; these are the files in `dist/`):
+- `KingdomsOfTheLongNight-0.1.0-performance.mrpack` `575c177bf430b373ccceecf24d3f6ceebadfa325f6abb5507db7b1e5bcee365b`
+- `KingdomsOfTheLongNight-0.1.0-rich.mrpack` `2479b4aef964e67f966159136394f477193ff984b42f2c7eb0d2a74e5cbcf0ad`
+- `longnight-0.1.0.jar` `212a2d22227af33c8e613a3f8e46c72727630d944e9dd5bd377d492e5cc75779`
 
 Earlier `.mrpack` sha256 (built without the core mod, for the first round of runs below):
 - `KingdomsOfTheLongNight-0.1.0-performance.mrpack` `e2232070111249f67d7ce6494add85a8a9bbb7ed9be0b7c56711d388d59d558c`
