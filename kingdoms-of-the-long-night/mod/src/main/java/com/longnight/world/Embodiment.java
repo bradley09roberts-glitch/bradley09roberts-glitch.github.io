@@ -137,7 +137,7 @@ public final class Embodiment {
                         continue;
                     }
                 }
-                if (p.activity.startsWith("leading a caravan")) continue; // away on the road
+                if (p.activity.startsWith("leading a caravan") || p.activity.startsWith("returning home")) continue; // away on the road
                 if (spawnBody(level, sim, s, p, day) != null) {
                     total++;
                     spawned++;

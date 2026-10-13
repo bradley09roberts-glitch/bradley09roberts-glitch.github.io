@@ -121,6 +121,19 @@ public class WorldSim extends SavedData {
         return false;
     }
 
+    /** A road between two settlements; {@code done} records the chunks where it has been laid. */
+    public static final class Road {
+        public final UUID a, b;
+        public final java.util.Set<Long> done = new java.util.HashSet<>();
+
+        public Road(UUID a, UUID b) {
+            this.a = a;
+            this.b = b;
+        }
+    }
+
+    public final List<Road> roads = new ArrayList<>();
+
     public static final class War {
         public UUID attacker, defender;
         public UUID target;          // settlement the attacker wants
@@ -548,6 +561,15 @@ public class WorldSim extends SavedData {
             known.add(x);
         });
         t.put("known", known);
+        ListTag rl = new ListTag();
+        for (Road r : roads) {
+            CompoundTag x = new CompoundTag();
+            x.putUUID("a", r.a);
+            x.putUUID("b", r.b);
+            x.putLongArray("done", r.done.stream().mapToLong(Long::longValue).toArray());
+            rl.add(x);
+        }
+        t.put("roads", rl);
         return t;
     }
 
@@ -584,6 +606,12 @@ public class WorldSim extends SavedData {
             w.claims.add(new Claim(c.getUUID("o"), c.getString("n"), Nbt.getPos(c, "c"), c.getInt("r")));
         }
         for (long l : t.getLongArray("spare")) w.spareSites.add(BlockPos.of(l));
+        for (Tag x : t.getList("roads", Tag.TAG_COMPOUND)) {
+            CompoundTag c = (CompoundTag) x;
+            Road r = new Road(c.getUUID("a"), c.getUUID("b"));
+            for (long l : c.getLongArray("done")) r.done.add(l);
+            w.roads.add(r);
+        }
         long[] wp = t.getLongArray("wardPos"), wd = t.getLongArray("wardDay");
         for (int i = 0; i < Math.min(wp.length, wd.length); i++) w.wards.put(wp[i], wd[i]);
         for (Tag x : t.getList("known", Tag.TAG_COMPOUND)) {

@@ -94,6 +94,24 @@ public final class AutoShot {
             ticks = 0;
         } else if (step == 4 && ticks > 300) {
             shot(mc, "longnight_night");
+            // then follow a road out of town
+            WorldSim sim0 = WorldSim.get(server);
+            for (WorldSim.Road r : sim0.roads) {
+                Settlement other = r.a.equals(target.id) ? sim0.settlement(r.b) : r.b.equals(target.id) ? sim0.settlement(r.a) : null;
+                if (other == null) continue;
+                double dx = other.center.getX() - target.center.getX(), dz = other.center.getZ() - target.center.getZ();
+                double len = Math.sqrt(dx * dx + dz * dz);
+                int ox = (int) (dx / len * (target.radius + 30)), oz = (int) (dz / len * (target.radius + 30));
+                float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
+                run(server, "time set 4000");
+                view(server, ox, 14, oz, yaw, 25f);
+                LongNight.LOG.info("[autoshot] road towards {}", other.name);
+                break;
+            }
+            step = 9;
+            ticks = 0;
+        } else if (step == 9 && ticks > 400) {
+            shot(mc, "longnight_road");
             WorldSim sim = WorldSim.get(server);
             LongNight.LOG.info("[autoshot] done: settlement {} materialized={} bodies={} buildings={}", target.name, target.materialized,
                     com.longnight.world.Embodiment.bodyCount(), target.buildings.size());
@@ -101,7 +119,7 @@ public final class AutoShot {
             ticks = 0;
         } else if (step == 5 && ticks > 60) {
             step = 6;
-            mc.stop();
+            if (!"false".equals(System.getProperty("longnight.autoshot.quit"))) mc.stop();
         }
     }
 

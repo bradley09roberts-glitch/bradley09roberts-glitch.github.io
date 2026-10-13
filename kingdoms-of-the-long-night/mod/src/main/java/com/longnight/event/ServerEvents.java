@@ -74,6 +74,7 @@ public final class ServerEvents {
             startGeneration(server, sim);
         } else {
             LongNight.LOG.info("Loaded the world of the Long Night: day {}, {} settlements, {} people", sim.lastDay, sim.settlements.size(), sim.people.size());
+            if (sim.roads.isEmpty()) com.longnight.world.Roads.plan(sim); // worlds made before roads existed
         }
     }
 
@@ -124,6 +125,7 @@ public final class ServerEvents {
         sim.news.addAll(temp.news);
         sim.history.addAll(temp.history);
         sim.spareSites.addAll(temp.spareSites);
+        sim.roads.addAll(temp.roads);
         sim.nextNewsId = Math.max(sim.nextNewsId, temp.nextNewsId);
         sim.lastDay = WorldSim.dayOf(server.overworld());
         sim.generated = true;
@@ -136,6 +138,7 @@ public final class ServerEvents {
     @SubscribeEvent
     public void stopping(ServerStoppingEvent e) {
         RaidManager.endAllOnStop(WorldSim.get(e.getServer()));
+        com.longnight.world.CaravanBodies.clear();
         Embodiment.clear();
         Crime.clear();
     }
@@ -149,6 +152,8 @@ public final class ServerEvents {
         sim.tick(server);
         Embodiment.tick(ow, sim);
         RaidManager.tick(ow, sim);
+        if (ow.getGameTime() % 40 == 7) com.longnight.world.Roads.tick(ow, sim);
+        if (ow.getGameTime() % 20 == 11) com.longnight.world.CaravanBodies.tick(ow, sim);
         long day = WorldSim.dayOf(ow);
         if (day != lastWardDay) {
             lastWardDay = day;
@@ -197,6 +202,11 @@ public final class ServerEvents {
 
     @SubscribeEvent
     public void join(EntityJoinLevelEvent e) {
+        // caravan pack mules exist only while their caravan is on the road in sight
+        if (!e.getLevel().isClientSide && com.longnight.world.CaravanBodies.stray(e.getEntity()) && e.loadedFromDisk()) {
+            e.setCanceled(true);
+            return;
+        }
         // the walking dead hunt townsfolk caught outdoors at night
         if (!e.getLevel().isClientSide && e.getEntity() instanceof Zombie z && Config.MONSTERS_HUNT_CITIZENS.get()) {
             z.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(z, CitizenEntity.class, 10, true, false,

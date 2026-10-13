@@ -244,6 +244,7 @@ public final class WorldBuilder {
             pool.remove(site);
             ruins++;
         }
+        com.longnight.world.Roads.plan(sim);
         // remaining good sites are left for future settlers
         for (Site s : pool) if (sim.spareSites.size() < 40) sim.spareSites.add(s.pos());
         sim.generated = true;
