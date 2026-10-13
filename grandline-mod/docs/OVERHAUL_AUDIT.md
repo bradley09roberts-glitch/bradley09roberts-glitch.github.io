@@ -68,7 +68,22 @@ in them (lava floors, poison mists). Nothing else is exempt.
 
 STORY_SECTION
 
-CREW_SECTION
+### Crew companions (details: CREW.md)
+
+| # | Sev | Finding | Fix |
+|---|---|---|---|
+| R1 | S1 | Recruits followed and fought but had no distinct job; up to 18 could follow at once | three roles from each recruit's crew job: fighter (holds attention, steps in front), marksman (keeps back, shoots only with a clear line, focuses your target), support (limited healing, faster revives); at most two active, the rest in reserve; swaps only in a settlement or aboard your ship, never mid-fight |
+| R2 | S2 | No way to direct them | roster (V) with Follow / Hold / Focus / Regroup / Swap; quick order (N): focus the foe you look at, else regroup; every order answered |
+| R3 | S1 | A companion could be killed for good | downed instead: kneels at 1 health, foes ignore it; you help it up (hold use 1.5 s, 35 %) or it gets up 10 s after the fight (30 %) |
+| R4 | S2 | Companions hit like elite enemies (named characters were elites) | `CompanionTuning`: 40 % of the reference blow at the captain's level, health from the captain's level; never an elite rank; techniques sparingly (none in the first 8 s, then one per 12–18 s) |
+| R5 | S2 | A companion's kill gave the captain nothing (or twice, through two hooks) | one credit path: counts once for quests, careers, bounty and reward; XP full if the captain struck too, half otherwise |
+| R6 | S2 | A companion re-materialising into a chunk still loading could be counted missing and rebuilt twice | step off / teleport only into chunks with live entities |
+| R7 | S3 | No growth | bond ranks 1–5 from fights won and story quests together: +4 % blows, +5 % health per rank, a role technique at rank 3 |
+| R8 | S2 | Crew V/N clashed with the helm's gun orders | separate key contexts (at the helm / elsewhere) |
+
+Measured (crew self-test, captain level 16): a standard foe (53 health) falls in 13 ticks to the captain alone and 8 ticks
+with Petra and Kenji (companions dealt 17 of 56); the companions alone need 32 ticks.
+
 
 ## Tests
 
