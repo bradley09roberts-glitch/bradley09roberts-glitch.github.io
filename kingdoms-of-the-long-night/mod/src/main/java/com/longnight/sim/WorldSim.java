@@ -492,16 +492,35 @@ public class WorldSim extends SavedData {
     /** One day of the world. Order matters: people eat what was produced yesterday. */
     public void daily(long day) {
         rng.setSeed(day * 0x9E3779B97F4A7C15L ^ people.size());
+        long[] t = new long[11];
+        t[0] = System.nanoTime();
         Life.daily(this, day);
+        t[1] = System.nanoTime();
         Economy.daily(this, day);
+        t[2] = System.nanoTime();
         Planner.daily(this, day);
+        t[3] = System.nanoTime();
         Threats.daily(this, day);
+        t[4] = System.nanoTime();
         Politics.daily(this, day);
+        t[5] = System.nanoTime();
         NewsSystem.daily(this, day);
+        t[6] = System.nanoTime();
         Growth.daily(this, day);
+        t[7] = System.nanoTime();
         Contracts.daily(this, day);
+        t[8] = System.nanoTime();
         Festivals.daily(this, day);
+        t[9] = System.nanoTime();
         LongNightArc.daily(this, day);
+        t[10] = System.nanoTime();
+        long total = (t[10] - t[0]) / 1_000_000;
+        if (total > 100) {
+            String[] names = {"life", "economy", "planner", "threats", "politics", "news", "growth", "contracts", "festivals", "night"};
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < names.length; i++) b.append(' ').append(names[i]).append('=').append((t[i + 1] - t[i]) / 1_000_000);
+            LongNight.LOG.info("longnight: day {} took {} ms:{}", day, total, b);
+        }
     }
 
     /** fraction (0..1) of the current day during which a settlement had bodies */

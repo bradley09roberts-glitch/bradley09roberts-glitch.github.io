@@ -30,6 +30,11 @@ public interface WorldHooks {
         return true;
     }
 
+    /** True if the last plotLooksBuildable answer was a provisional "yes" given without surveying (time budget spent). */
+    default boolean lastSurveyWasGuess() {
+        return false;
+    }
+
     /** A person arrived in or left a settlement (refresh their body). */
     default void personMoved(WorldSim sim, Person p) {}
 }

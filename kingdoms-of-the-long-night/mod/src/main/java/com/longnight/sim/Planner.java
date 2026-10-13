@@ -226,7 +226,7 @@ public final class Planner {
                     s.badCells.add(key);
                     continue;
                 }
-                s.goodCells.add(key);
+                if (!sim.hooks.lastSurveyWasGuess()) s.goodCells.add(key); // a provisional yes is checked again on the ground
             }
             boolean clash = false;
             for (Settlement o : sim.settlements.values()) {
