@@ -52,7 +52,7 @@ public final class Loot {
     }
 
     public static void ruinChest(ServerLevel level, BlockPos p, Settlement s, Random r) {
-        if (!level.isLoaded(p)) return;
+        if (!Places.ready(level, p)) return;
         level.setBlock(p, Blocks.CHEST.defaultBlockState(), 3);
         if (level.getBlockEntity(p) instanceof ChestBlockEntity chest) {
             int slot = 0;

@@ -54,7 +54,7 @@ public class ServerHooks implements WorldHooks {
         for (int i = 0; i < pts.length; i++) {
             int wx = origin.getX() + pts[i][0], wz = origin.getZ() + pts[i][1];
             int floor, surface;
-            if (onThread && level.isLoaded(new net.minecraft.core.BlockPos(wx, 0, wz))) {
+            if (onThread && Places.ready(level, new net.minecraft.core.BlockPos(wx, 0, wz))) {
                 // real terrain is available: use it (cheap)
                 floor = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.OCEAN_FLOOR, wx, wz);
                 surface = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE, wx, wz);

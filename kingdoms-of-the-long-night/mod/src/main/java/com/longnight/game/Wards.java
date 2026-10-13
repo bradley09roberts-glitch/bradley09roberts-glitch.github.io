@@ -41,7 +41,7 @@ public final class Wards {
             Map.Entry<Long, Long> e = it.next();
             if (e.getValue() >= day) continue;
             BlockPos p = BlockPos.of(e.getKey());
-            if (level.isLoaded(p) && level.getBlockState(p).is(ModBlocks.WARD_STONE.get())) {
+            if (com.longnight.world.Places.ready(level, p) && level.getBlockState(p).is(ModBlocks.WARD_STONE.get())) {
                 level.setBlock(p, level.getBlockState(p).setValue(WardStoneBlock.ACTIVE, false), 3);
             }
             it.remove();

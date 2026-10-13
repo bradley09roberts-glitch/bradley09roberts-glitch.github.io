@@ -102,7 +102,7 @@ public final class RaidManager {
         double len = Math.max(1, Math.sqrt(dx * dx + dz * dz));
         int dist = s.radius + 18;
         BlockPos entry = Places.ground(level, s.center.offset((int) (dx / len * dist), 0, (int) (dz / len * dist)));
-        if (!level.isLoaded(entry) || !level.isPositionEntityTicking(entry)) {
+        if (!Places.ready(level, entry) || !level.isPositionEntityTicking(entry)) {
             Threats.resolveAbstract(sim, s, camp, WorldSim.dayOf(level));
             r.spawned = true;
             r.startCount = 0;

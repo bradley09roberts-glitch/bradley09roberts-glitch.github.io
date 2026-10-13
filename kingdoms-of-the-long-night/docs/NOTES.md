@@ -88,3 +88,8 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   finish loading in any order). Reading a block in an unloaded chunk makes the server thread generate it and wait
   for the whole generation queue. FIX: `Places.loadedAround` before materializing and tree searches; `areaLoaded`
   checks every chunk under a plot; signposts check their chunk.
+- 02:55 Run12: JUnit 10/10, GameTests 7/7, scenario 17/17, avg tick 3.2 ms; but the slow-tick log still showed one
+  6.9 s stall. Second sampling: the same reads, now behind `isLoaded` guards. ROOT CAUSE: `Level.isLoaded` /
+  `hasChunk` are true as soon as a chunk is *scheduled* to be full (ticket level), not when it is generated; a read
+  then blocks until generation finishes. FIX: `Places.ready` = `getChunkNow(x, z) != null` (non-blocking, true only for
+  a complete chunk) replaces every isLoaded/hasChunk guard in world/ and game/.

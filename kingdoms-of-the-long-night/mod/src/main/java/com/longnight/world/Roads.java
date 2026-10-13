@@ -73,7 +73,7 @@ public final class Roads {
                     int x = (int) Math.round(a.center.getX() + (b.center.getX() - a.center.getX()) * s / len);
                     int z = (int) Math.round(a.center.getZ() + (b.center.getZ() - a.center.getZ()) * s / len);
                     long chunk = ChunkPos.asLong(x >> 4, z >> 4);
-                    if (r.done.contains(chunk) || !level.hasChunk(x >> 4, z >> 4)) continue;
+                    if (r.done.contains(chunk) || !Places.ready(level, x >> 4, z >> 4)) continue;
                     pave(level, sim, r, a, b, x >> 4, z >> 4, len);
                     r.done.add(chunk);
                     budget--;
@@ -117,7 +117,7 @@ public final class Roads {
                 if (Math.abs(w) == 2 && !bridge) continue;
                 int wx = (int) Math.round(x - dz * w), wz = (int) Math.round(z + dx * w);
                 // the edge of a road may spill into the next chunk; only touch it if that chunk is already loaded
-                if ((wx >> 4 != cx || wz >> 4 != cz) && !level.isLoaded(new BlockPos(wx, 0, wz))) continue;
+                if ((wx >> 4 != cx || wz >> 4 != cz) && !Places.ready(level, new BlockPos(wx, 0, wz))) continue;
                 BlockPos top = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(wx, 0, wz)).below();
                 if (sim.claimed(top, 0)) continue;
                 BlockState st = level.getBlockState(top);
@@ -155,7 +155,7 @@ public final class Roads {
     /** A post at a settlement's edge, its sign naming where the road goes and how far. */
     static void signpost(ServerLevel level, WorldSim sim, int x, int z, double dirX, double dirZ, Settlement to, int distance) {
         int ox = (int) Math.round(x + dirZ * 2), oz = (int) Math.round(z - dirX * 2); // beside the road
-        if (!level.isLoaded(new BlockPos(ox, 0, oz))) return;
+        if (!Places.ready(level, new BlockPos(ox, 0, oz))) return;
         BlockPos top = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(ox, 0, oz));
         if (sim.claimed(top, 0) || !level.getBlockState(top).isAir()) return;
         BlockState below = level.getBlockState(top.below());

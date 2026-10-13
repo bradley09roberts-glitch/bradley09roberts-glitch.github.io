@@ -109,7 +109,7 @@ public final class Embodiment {
                 if (!s.materialized) materialize(level, sim, s);
                 VISIBLE.add(s.id);
             } else VISIBLE.remove(s.id);
-            if (near && level.isLoaded(s.center)) {
+            if (near && Places.ready(level, s.center)) {
                 nowActive.add(s.id);
                 if (workHours) sim.embodiedTicksToday.merge(s.id, 20 * 24000 / 10000, Integer::sum);
                 for (ServerPlayer p : players) {
@@ -173,7 +173,7 @@ public final class Embodiment {
         if (at == null) at = s.center.offset(level.random.nextInt(9) - 4, 0, level.random.nextInt(9) - 4);
         // only where the chunk's entities are loaded and ticking: a body added to a chunk whose entities are still
         // loading is invisible to getEntity, which would make it look missing and get the person a second body
-        if (!level.isLoaded(at) || !level.isPositionEntityTicking(at)) return null;
+        if (!Places.ready(level, at) || !level.isPositionEntityTicking(at)) return null;
         if (home == null || home.placed < home.total) at = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, at);
         CitizenEntity e = ModEntities.CITIZEN.get().create(level);
         if (e == null) return null;

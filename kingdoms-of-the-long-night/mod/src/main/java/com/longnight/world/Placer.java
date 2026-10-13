@@ -60,7 +60,7 @@ public final class Placer {
         BlockPos o = b.origin;
         for (int cx = (o.getX() - 2) >> 4; cx <= (o.getX() + b.width() + 2) >> 4; cx++) {
             for (int cz = (o.getZ() - 2) >> 4; cz <= (o.getZ() + b.depth() + 2) >> 4; cz++) {
-                if (!level.hasChunk(cx, cz)) return false;
+                if (!Places.ready(level, cx, cz)) return false;
             }
         }
         return true;
@@ -185,7 +185,7 @@ public final class Placer {
         if (b.placed >= bp.steps.size()) return false;
         Blueprint.Step st = bp.steps.get(b.placed);
         BlockPos wp = Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, st.x(), st.y(), st.z());
-        if (!level.isLoaded(wp)) return false;
+        if (!Places.ready(level, wp)) return false;
         BlockState state = st.state().rotate(level, wp, Blueprint.rotation(b.rotation));
         BlockState cur = level.getBlockState(wp);
         // after the survey the plot held only natural blocks; anything else was put there by a player since
@@ -242,7 +242,7 @@ public final class Placer {
             Blueprint.Step st = bp.steps.get(i);
             if (st.state().isAir() || st.y() < 0) continue;
             BlockPos wp = Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, st.x(), st.y(), st.z());
-            if (!level.isLoaded(wp)) return -1;
+            if (!Places.ready(level, wp)) return -1;
             if (sim.claimed(wp, 0)) continue;
             BlockState cur = level.getBlockState(wp);
             if (cur.isAir() && !(st.state().getBlock() instanceof net.minecraft.world.level.block.CropBlock)
@@ -306,7 +306,7 @@ public final class Placer {
         for (int i = 0; i < b.placed && i < bp.steps.size(); i++) {
             Blueprint.Step st = bp.steps.get(i);
             BlockPos wp = Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, st.x(), st.y(), st.z());
-            if (!level.isLoaded(wp)) continue;
+            if (!Places.ready(level, wp)) continue;
             BlockState cur = level.getBlockState(wp);
             if (cur.isAir()) continue;
             float roll = r.nextFloat();
@@ -334,7 +334,7 @@ public final class Placer {
         Blueprint bp = Construction.blueprint(s, yard);
         for (int[] plot : BlueprintGen.gravePlots(bp.width, bp.depth)) {
             BlockPos wp = Blueprint.toWorld(yard.origin, yard.rotation, bp.width, bp.depth, plot[0], 1, plot[1]);
-            if (!level.isLoaded(wp)) return false;
+            if (!Places.ready(level, wp)) return false;
             if (!level.getBlockState(wp).isAir()) continue;
             BlockState stone = ModBlocks.GRAVESTONE.get().defaultBlockState()
                     .setValue(HorizontalDirectionalBlock.FACING, Blueprint.rotation(yard.rotation).rotate(Direction.NORTH));
@@ -361,7 +361,7 @@ public final class Placer {
                 case "tomb" -> Blocks.CHISELED_STONE_BRICKS.defaultBlockState();
                 default -> Blocks.CANDLE.defaultBlockState().setValue(BlockStateProperties.LIT, true);
             };
-            if (level.getBlockState(beside).isAir() && level.isLoaded(beside)) {
+            if (level.getBlockState(beside).isAir() && Places.ready(level, beside)) {
                 if (mark.is(Blocks.OAK_SAPLING) && !level.getBlockState(beside.below()).is(net.minecraft.tags.BlockTags.DIRT)) {
                     mark = Blocks.POPPY.defaultBlockState();
                 }

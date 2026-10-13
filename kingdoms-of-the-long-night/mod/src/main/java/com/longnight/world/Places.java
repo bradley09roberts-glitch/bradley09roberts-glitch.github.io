@@ -30,16 +30,28 @@ public final class Places {
     }
 
     /**
+     * True only if the chunk is already loaded and complete. Level.isLoaded is NOT that: it is true as soon as a chunk is
+     * scheduled to load, and reading a block there makes the server thread wait until it has been generated.
+     */
+    public static boolean ready(ServerLevel level, BlockPos p) {
+        return ready(level, p.getX() >> 4, p.getZ() >> 4);
+    }
+
+    public static boolean ready(ServerLevel level, int chunkX, int chunkZ) {
+        return level.getChunkSource().getChunkNow(chunkX, chunkZ) != null;
+    }
+
+    /**
      * True if every chunk within r blocks (r up to 7) of p is loaded. Reading a block in an unloaded chunk makes the
      * server thread generate it on the spot and wait for everything queued before it: seconds, on fresh land.
      */
     public static boolean loadedAround(ServerLevel level, BlockPos p, int r) {
-        return level.isLoaded(p.offset(-r, 0, -r)) && level.isLoaded(p.offset(r, 0, -r))
-                && level.isLoaded(p.offset(-r, 0, r)) && level.isLoaded(p.offset(r, 0, r));
+        return ready(level, p.offset(-r, 0, -r)) && ready(level, p.offset(r, 0, -r))
+                && ready(level, p.offset(-r, 0, r)) && ready(level, p.offset(r, 0, r));
     }
 
     public static BlockPos ground(ServerLevel level, BlockPos p) {
-        if (!level.isLoaded(p)) return p;
+        if (!ready(level, p)) return p;
         return level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p);
     }
 
@@ -84,7 +96,7 @@ public final class Places {
         for (int x = 0; x < w; x++) {
             for (int z = 0; z < d; z++) {
                 BlockPos p = farm.origin.offset(x, 1, z);
-                if (!level.isLoaded(p)) continue;
+                if (!ready(level, p)) continue;
                 BlockState st = level.getBlockState(p);
                 if (st.getBlock() instanceof CropBlock crop) {
                     crops.add(p);

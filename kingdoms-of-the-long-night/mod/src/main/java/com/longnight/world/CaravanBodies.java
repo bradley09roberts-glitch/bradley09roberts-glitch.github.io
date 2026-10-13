@@ -63,7 +63,7 @@ public final class CaravanBodies {
                 double dx = p.getX() - x, dz = p.getZ() - z;
                 if (dx * dx + dz * dz < 96 * 96) near = true;
             }
-            if (!near || !level.hasChunk(x >> 4, z >> 4)) continue;
+            if (!near || !Places.ready(level, x >> 4, z >> 4)) continue;
             seen.add(cv.id);
             Bodies b = ACTIVE.get(cv.id);
             Entity e = b == null ? null : level.getEntity(b.leader());

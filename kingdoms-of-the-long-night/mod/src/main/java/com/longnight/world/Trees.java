@@ -95,7 +95,7 @@ public final class Trees {
     }
 
     public static void replant(ServerLevel level, Settlement s, BlockPos base) {
-        if (base == null || !level.isLoaded(base)) return;
+        if (base == null || !Places.ready(level, base)) return;
         if (!level.getBlockState(base).isAir() || !level.getBlockState(base.below()).is(BlockTags.DIRT)) return;
         String id = Content.culture(s.culture).block("sapling", "minecraft:oak_sapling");
         Block sapling = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(id));
