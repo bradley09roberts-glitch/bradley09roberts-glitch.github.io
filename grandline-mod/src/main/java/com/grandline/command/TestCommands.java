@@ -29,6 +29,17 @@ public final class TestCommands {
                     s.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE).set(false, s);
                     return GLCommands.ok(c, "Test environment: noon, clear, cycles frozen");
                 }))
+                // /grandline test recruit <notable>: bring a recruitable story character to you and sign them on (skips their story)
+                .then(Commands.literal("recruit").then(Commands.argument("id", StringArgumentType.word()).executes(c -> {
+                    var sp = c.getSource().getPlayerOrException();
+                    String id = StringArgumentType.getString(c, "id");
+                    var n = com.grandline.npc.notable.NotableSpawner.spawnNow(sp.serverLevel(), id);
+                    if (n == null) n = freshNotable(sp, id); // already out in the world: a fresh body here (the old one becomes a stale copy)
+                    if (n == null) return GLCommands.ok(c, "No such character: " + id);
+                    n.teleportTo(sp.getX() + 1.5, sp.getY(), sp.getZ() + 1.5);
+                    boolean ok = com.grandline.npc.crew.CrewManager.recruit(sp, n);
+                    return GLCommands.ok(c, ok ? "Recruited " + n.getDisplayName().getString() : "Could not recruit " + n.getDisplayName().getString());
+                })))
                 // /grandline test npc <role> <tier> <distance> <still>: someone standing in front of you, facing you
                 .then(Commands.literal("npc").then(Commands.argument("role", StringArgumentType.word()).then(Commands.argument("tier", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 10))
                         .then(Commands.argument("distance", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 32)).then(Commands.argument("still", com.mojang.brigadier.arguments.BoolArgumentType.bool()).executes(c -> {
@@ -220,5 +231,31 @@ public final class TestCommands {
         m.autopilot = true;
         m.setSail(3);
         return GLCommands.ok(c, "Passing ship launched " + String.format(java.util.Locale.ROOT, "%.1f", side) + " blocks off the centreline");
+    }
+
+    /** A story character's body built here and registered as the live one (test only). */
+    private static com.grandline.npc.HumanoidNpc freshNotable(net.minecraft.server.level.ServerPlayer sp, String id) {
+        var n = com.grandline.npc.notable.NotableCharacters.get(id);
+        if (n == null) return null;
+        var l = sp.serverLevel();
+        var at = sp.blockPosition();
+        var npc = com.grandline.registry.ModEntities.HUMANOID_NPC.get().create(l);
+        if (npc == null) return null;
+        npc.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, 0, 0);
+        npc.configure(n.role(), n.tier(), "", at, "", l.random);
+        var fruits = com.grandline.fruit.FruitWorldData.get(l.getServer());
+        if (npc.fruitId() != null) fruits.release(l.getServer(), npc.fruitId(), npc.getUUID());
+        npc.makeNotable(id, null, n.obs(), n.arm(), n.coq(), n.style());
+        npc.setNotableBody(n.tier(), n.race());
+        npc.setAllegiance(n.faction(), at);
+        npc.retune();
+        npc.setHealth(npc.getMaxHealth());
+        var w = n.weapon().isEmpty() ? net.minecraft.world.item.Items.AIR
+                : net.minecraft.core.registries.BuiltInRegistries.ITEM.get(com.grandline.GrandLine.id(n.weapon()));
+        npc.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, w == net.minecraft.world.item.Items.AIR ? net.minecraft.world.item.ItemStack.EMPTY : new net.minecraft.world.item.ItemStack(w));
+        npc.setCustomName(com.grandline.npc.notable.NotableCharacters.name(n));
+        com.grandline.npc.notable.NotableState.get(l.getServer()).set(id, com.grandline.npc.notable.NotableState.Status.ALIVE, npc.getUUID(), "", l.getGameTime());
+        l.addFreshEntity(npc);
+        return npc;
     }
 }

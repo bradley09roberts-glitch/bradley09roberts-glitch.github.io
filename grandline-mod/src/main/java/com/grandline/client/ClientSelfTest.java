@@ -868,6 +868,19 @@ public final class ClientSelfTest {
         cmd("tp @s ~ ~ ~ 0 10", 10);
         cmd("spar", 30);
         shot("combat_04_sparring");
+        // the crew: three recruits (the third goes to reserve), the roster screen
+        cmd("grandline test recruit petra", 40);
+        cmd("grandline test recruit carmen", 40);
+        cmd("grandline test recruit kenji", 60);
+        add("roster", () -> {
+            CompoundTag t = new CompoundTag();
+            t.putString("op", "roster");
+            PacketDistributor.sendToServer(new GLNetwork.UiAction("crew", t));
+        }, 40);
+        add("roster open", () -> LOG.add("  screen: " + (mc.screen == null ? "none" : mc.screen.getClass().getSimpleName())), 5);
+        shot("combat_05_crew_roster");
+        add("close", () -> mc.setScreen(null), 40);
+        shot("combat_06_crew_following");
         add("done", ClientSelfTest::finish, 0);
     }
 
