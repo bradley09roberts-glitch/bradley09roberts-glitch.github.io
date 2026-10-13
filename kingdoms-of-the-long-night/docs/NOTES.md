@@ -101,3 +101,11 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   tick in the full pack, but the slow-tick log showed 0.8-2.1 s ticks in "raids and roads" (no raid was possible):
   road blocks set at a chunk edge update their neighbours, which may sit in a chunk still generating. FIX: a road chunk
   is paved only when all 8 neighbour chunks are ready; signposts and repairs check their neighbourhood too.
+- 03:15 Sea-heavy seed re-test: survey now 57 sites within 4,050 blocks (4 rounds) -> 14 settlements, 214 people,
+  9 realms; history written in the background in 52-60 s. Full-pack client on that world (coastal Eldrin town
+  Bellisca): no road slow ticks any more, but 250-920 ms ticks while raising it. A 10 ms catch-up budget alone only
+  trimmed them (270-540 ms); stack samples: Planner.findCell -> plotLooksBuildable -> Tectonic noise (getBaseHeight)
+  for many candidate plots during relocation. FIX: server-thread noise budget 20 ms/tick; past it a plot is a
+  provisional yes (not cached) that Placer.prepare surveys on real ground before building.
+- Daily cost in the full pack (Tectonic), 5 skipped days on a 220-person world: day 1 179 ms (planner 145: first
+  blueprints and plots), days 2-5 < 100 ms each (only days over 100 ms are logged, with a per-system breakdown).
