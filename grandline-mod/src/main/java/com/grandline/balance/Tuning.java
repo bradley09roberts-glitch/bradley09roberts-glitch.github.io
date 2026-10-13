@@ -33,6 +33,8 @@ public final class Tuning {
 
     /** Trained fists (an unarmed fighting style with empty hands) hit like a common blade: +5, as a cutlass adds. */
     public static final float UNARMED_BONUS = 5f;
+    /** A player's typical technique (base damage 7) in light blows of their own, before mastery. */
+    public static final float TECHNIQUE_BLOWS = 1.8f;
     /** Bumped whenever NPC health or armour rules change; NPCs saved with an older version are re-tuned when they load. */
     public static final int VERSION = 1;
 

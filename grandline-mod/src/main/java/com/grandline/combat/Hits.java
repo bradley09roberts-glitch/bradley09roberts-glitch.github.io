@@ -117,8 +117,9 @@ public final class Hits {
     /** Scaling for abilities: level and stats for players, tier for NPCs. */
     public static float abilityPower(LivingEntity e) {
         if (e instanceof Player p) {
-            CharacterData d = Characters.get(p);
-            return 1f + d.level * 0.03f;
+            // a typical technique (base 7) lands for about two of the player's own light blows, growing to about 2.25
+            // with full mastery: techniques keep pace with blows (and foes' health) at every level
+            return com.grandline.balance.Tuning.TECHNIQUE_BLOWS * power(p) / 7f;
         }
         if (e instanceof GLNpc npc) return com.grandline.balance.Tuning.npcTechniquePower(npc);
         return 1f;

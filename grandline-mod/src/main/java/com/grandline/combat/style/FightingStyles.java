@@ -48,7 +48,7 @@ public final class FightingStyles {
             Vec3 start = u.position();
             Vec3 end = FruitKit.blink(u, c.look().multiply(1, 0.2, 1), dist);
             for (LivingEntity t : Hits.line(u, start.add(0, 1, 0), end.subtract(start), start.distanceTo(end) + 1.5, 1.1))
-                Hits.hit(u, t, FruitKit.dmg(c, dmg) * Hits.power(u) / 4f, Hits.Info.of(e, kb).withPoise(40));
+                Hits.hit(u, t, FruitKit.dmg(c, dmg), Hits.Info.of(e, kb).withPoise(40));
             FruitKit.fx(u, "dash_line", start.add(0, 1, 0), (float) end.x, (float) end.y + 1, (float) end.z);
             return true;
         };
@@ -56,7 +56,7 @@ public final class FightingStyles {
 
     private static Ability.Executor burst(double radius, float dmg, Element e, float kb, int stun) {
         return (u, c) -> {
-            FruitKit.aoe(c, u.position().add(0, 1, 0), radius, FruitKit.dmg(c, dmg) * Hits.power(u) / 4f, Hits.Info.of(e, kb).withStun(stun).withPoise(45));
+            FruitKit.aoe(c, u.position().add(0, 1, 0), radius, FruitKit.dmg(c, dmg), Hits.Info.of(e, kb).withStun(stun).withPoise(45));
             FruitKit.fx(u, "shockwave", u.position().add(0, 0.2, 0), (float) radius, 0, 0);
             return true;
         };
@@ -64,7 +64,7 @@ public final class FightingStyles {
 
     private static Ability.Executor coneHit(double range, double arc, float dmg, Element e, float kb, int stun) {
         return (u, c) -> {
-            FruitKit.cone(c, range, arc, FruitKit.dmg(c, dmg) * Hits.power(u) / 4f, Hits.Info.of(e, kb).withStun(stun).withPoise(40));
+            FruitKit.cone(c, range, arc, FruitKit.dmg(c, dmg), Hits.Info.of(e, kb).withStun(stun).withPoise(40));
             FruitKit.fx(u, "swing_arc", u.position().add(0, 1, 0), (float) range, (float) arc, 0);
             return true;
         };
@@ -72,7 +72,7 @@ public final class FightingStyles {
 
     private static Ability.Executor projectile(String kind, float size, double speed, float dmg, Element e, boolean pierce) {
         return (u, c) -> {
-            AbilityProjectile p = FruitKit.shoot(c, kind, size, speed, FruitKit.dmg(c, dmg) * Hits.power(u) / 4f, Hits.Info.of(e, 0.8f).withPoise(30));
+            AbilityProjectile p = FruitKit.shoot(c, kind, size, speed, FruitKit.dmg(c, dmg), Hits.Info.of(e, 0.8f).withPoise(30));
             p.pierce = pierce;
             return true;
         };
@@ -107,7 +107,7 @@ public final class FightingStyles {
         blackLeg.abilities.add(blackLeg.ability("party_table").unlock(8).cooldown(90).stamina(22).anim("handstand_spin").exec(burst(4, 6, Element.BLUNT, 1.6f, 0)));
         blackLeg.abilities.add(blackLeg.ability("concasse").unlock(15).cooldown(80).stamina(18).anim("axe_kick").exec((u, c) -> {
             FruitKit.impulse(u, new Vec3(c.look().x * 0.6, 0.9, c.look().z * 0.6), true);
-            CombatState.of(u).schedule(c.level.getGameTime() + 14, () -> FruitKit.aoe(c, u.position().add(0, 0.5, 0), 3.2, FruitKit.dmg(c, 10) * Hits.power(u) / 4f, Hits.Info.of(Element.BLUNT, 2f).withStun(25)));
+            CombatState.of(u).schedule(c.level.getGameTime() + 14, () -> FruitKit.aoe(c, u.position().add(0, 0.5, 0), 3.2, FruitKit.dmg(c, 10), Hits.Info.of(Element.BLUNT, 2f).withStun(25)));
             return true;
         }));
         blackLeg.abilities.add(blackLeg.ability("diable_jambe").unlock(40).cooldown(400).stamina(30).anim("spin_kick").exec(buff("diable_jambe", 20 * 25, new MobEffectInstance(MobEffects.DAMAGE_BOOST, 20 * 25, 1, false, false))));
@@ -135,7 +135,7 @@ public final class FightingStyles {
         roku.abilities.add(roku.ability("rankyaku").unlock(20).cooldown(60).stamina(16).anim("kick_high").exec(projectile("air_blade", 1.2f, 2.0, 9, Element.SLASH, true)));
         roku.abilities.add(roku.ability("kami_e").unlock(30).cooldown(200).stamina(15).anim("sway").exec(buff("kami_e", 20 * 5)));
         roku.abilities.add(roku.ability("rokuogan").unlock(80).cooldown(600).stamina(50).anim("double_palm").exec((u, c) -> {
-            FruitKit.cone(c, 4, 40, FruitKit.dmg(c, 22) * Hits.power(u) / 4f, Hits.Info.of(Element.IMPACT, 3f).asUnblockable().withStun(40));
+            FruitKit.cone(c, 4, 40, FruitKit.dmg(c, 22), Hits.Info.of(Element.IMPACT, 3f).asUnblockable().withStun(40));
             FruitKit.fx(u, "shockwave", u.getEyePosition().add(u.getLookAngle().scale(2)), 3, 0, 0);
             return true;
         }));
@@ -146,14 +146,14 @@ public final class FightingStyles {
                 Strike.of(1.6f, 3.0, 80, 1.4f, 4, 9, "palm_strike"));
         fmk.abilities.add(fmk.ability("water_heart").cooldown(80).stamina(18).anim("palm_strike").exec((u, c) -> {
             float bonus = u.isInWaterOrRain() ? 1.6f : 1f;
-            FruitKit.cone(c, 4.5, 60, FruitKit.dmg(c, 9 * bonus) * Hits.power(u) / 4f, Hits.Info.of(Element.WATER, 2f).withStun(20).asUnblockable());
+            FruitKit.cone(c, 4.5, 60, FruitKit.dmg(c, 9 * bonus), Hits.Info.of(Element.WATER, 2f).withStun(20).asUnblockable());
             FruitKit.fx(u, "water_ripple", u.getEyePosition().add(u.getLookAngle().scale(2)), 2, 0, 0);
             return true;
         }));
         fmk.abilities.add(fmk.ability("shark_tile_fist").unlock(10).cooldown(60).stamina(16).anim("heavy_punch").exec(coneHit(3.2, 60, 10, Element.BLUNT, 2.5f, 15)));
         fmk.abilities.add(fmk.ability("water_shot").unlock(15).cooldown(40).stamina(12).anim("throw").exec(projectile("water_shot", 0.5f, 2.6, 7, Element.WATER, true)));
         fmk.abilities.add(fmk.ability("thousand_brick_fist").unlock(40).cooldown(240).stamina(35).anim("heavy_punch").exec((u, c) -> {
-            FruitKit.cone(c, 4, 50, FruitKit.dmg(c, 18) * Hits.power(u) / 4f, Hits.Info.of(Element.IMPACT, 3.5f).asUnblockable().withPoise(100));
+            FruitKit.cone(c, 4, 50, FruitKit.dmg(c, 18), Hits.Info.of(Element.IMPACT, 3.5f).asUnblockable().withPoise(100));
             return true;
         }));
 
@@ -162,13 +162,13 @@ public final class FightingStyles {
                 Strike.of(1.1f, 2.8, 80, 0.5f, 3, 5, "palm_strike"), Strike.of(1.2f, 2.8, 80, 0.6f, 3, 6, "hook_right"));
         fmj.abilities.add(fmj.ability("uchimizu").cooldown(30).stamina(10).anim("throw").exec((u, c) -> {
             for (int i = 0; i < 3; i++) {
-                AbilityProjectile p = FruitKit.shoot(c, "water_shot", 0.3f, 2.8, FruitKit.dmg(c, 3) * Hits.power(u) / 4f, Hits.Info.of(Element.WATER, 0.4f));
+                AbilityProjectile p = FruitKit.shoot(c, "water_shot", 0.3f, 2.8, FruitKit.dmg(c, 3), Hits.Info.of(Element.WATER, 0.4f));
                 p.setDeltaMovement(p.getDeltaMovement().add((i - 1) * 0.15, 0, (i - 1) * 0.15));
             }
             return true;
         }));
         fmj.abilities.add(fmj.ability("water_whip").unlock(10).cooldown(60).stamina(14).anim("whip_crack").exec((u, c) -> {
-            FruitKit.line(c, 8, 0.8, FruitKit.dmg(c, 6) * Hits.power(u) / 4f, Hits.Info.of(Element.WATER, 1f).withStun(10));
+            FruitKit.line(c, 8, 0.8, FruitKit.dmg(c, 6), Hits.Info.of(Element.WATER, 1f).withStun(10));
             return true;
         }));
         fmj.abilities.add(fmj.ability("undertow_grip").unlock(20).cooldown(100).stamina(18).anim("grab").exec((u, c) -> {
@@ -215,11 +215,11 @@ public final class FightingStyles {
                 Strike.of(1.3f, 2.8, 60, 0.6f, 3, 5, "palm_strike"), Strike.of(1.4f, 2.8, 60, 0.8f, 3, 6, "palm_strike"));
         ryuo.abilities.add(ryuo.ability("flowing_palm").cooldown(60).stamina(16).haki(10).anim("palm_strike").exec((u, c) -> {
             CombatState.of(u).buffs.put("internal_destruction", 6);
-            FruitKit.cone(c, 3.4, 50, FruitKit.dmg(c, 10) * Hits.power(u) / 4f, Hits.Info.of(Element.IMPACT, 2.2f).imbue(true).withStun(20));
+            FruitKit.cone(c, 3.4, 50, FruitKit.dmg(c, 10), Hits.Info.of(Element.IMPACT, 2.2f).imbue(true).withStun(20));
             return true;
         }));
         ryuo.abilities.add(ryuo.ability("dragon_flow_burst").unlock(30).cooldown(160).stamina(25).haki(20).anim("double_palm").exec((u, c) -> {
-            FruitKit.aoe(c, u.position().add(0, 1, 0), 4.5, FruitKit.dmg(c, 10) * Hits.power(u) / 4f, Hits.Info.of(Element.IMPACT, 2.8f).imbue(true).withPoise(70));
+            FruitKit.aoe(c, u.position().add(0, 1, 0), 4.5, FruitKit.dmg(c, 10), Hits.Info.of(Element.IMPACT, 2.8f).imbue(true).withPoise(70));
             FruitKit.fx(u, "ryuo_burst", u.position().add(0, 1, 0), 4.5f, 0, 0);
             return true;
         }));
@@ -228,7 +228,7 @@ public final class FightingStyles {
                 Strike.of(2.6f, 3.0, 70, 2.2f, 8, 15, "heavy_punch"),
                 Strike.of(1.2f, 2.8, 70, 0.6f, 3, 5, "jab_right"), Strike.of(1.4f, 2.8, 70, 1.0f, 3, 6, "heavy_punch"));
         hasshoken.abilities.add(hasshoken.ability("vibration_strike").cooldown(50).stamina(15).anim("heavy_punch").exec((u, c) -> {
-            FruitKit.cone(c, 3.2, 50, FruitKit.dmg(c, 9) * Hits.power(u) / 4f, Hits.Info.of(Element.IMPACT, 1.5f).asUnblockable().withPoise(50));
+            FruitKit.cone(c, 3.2, 50, FruitKit.dmg(c, 9), Hits.Info.of(Element.IMPACT, 1.5f).asUnblockable().withPoise(50));
             return true;
         }));
         hasshoken.abilities.add(hasshoken.ability("quake_palm").unlock(20).cooldown(150).stamina(25).anim("ground_slam").exec(burst(5, 8, Element.IMPACT, 2f, 25)));
@@ -263,7 +263,7 @@ public final class FightingStyles {
         nito.abilities.add(nito.ability("rhino_charge").cooldown(60).stamina(18).anim("dual_dash").exec(dashStrike(8, 10, Element.SLASH, 1.2f)));
         nito.abilities.add(nito.ability("twin_flying_slash").unlock(12).cooldown(60).stamina(18).anim("dual_cross").exec((u, c) -> {
             for (int i = -1; i <= 1; i += 2) {
-                AbilityProjectile p = FruitKit.shoot(c, "air_blade", 0.9f, 2.2, FruitKit.dmg(c, 6) * Hits.power(u) / 4f, Hits.Info.of(Element.SLASH, 0.6f));
+                AbilityProjectile p = FruitKit.shoot(c, "air_blade", 0.9f, 2.2, FruitKit.dmg(c, 6), Hits.Info.of(Element.SLASH, 0.6f));
                 p.setDeltaMovement(p.getDeltaMovement().add(-c.look().z * 0.12 * i, 0, c.look().x * 0.12 * i));
                 p.pierce = true;
             }
@@ -277,7 +277,7 @@ public final class FightingStyles {
                 Strike.of(1.6f, 3.6, 140, 0.8f, 4, 9, "triple_cut").element(Element.SLASH));
         santo.abilities.add(santo.ability("oni_giri").cooldown(60).stamina(18).anim("triple_dash").exec(dashStrike(8, 12, Element.SLASH, 1.0f)));
         santo.abilities.add(santo.ability("tatsumaki").unlock(15).cooldown(120).stamina(26).anim("spin_slash").exec((u, c) -> {
-            FruitKit.aoe(c, u.position().add(0, 1, 0), 5, FruitKit.dmg(c, 9) * Hits.power(u) / 4f, Hits.Info.of(Element.SLASH, 0.5f).withPoise(50));
+            FruitKit.aoe(c, u.position().add(0, 1, 0), 5, FruitKit.dmg(c, 9), Hits.Info.of(Element.SLASH, 0.5f).withPoise(50));
             for (LivingEntity e : Hits.sphere(u, u.position(), 5)) if (Hits.hostileTo(u, e)) FruitKit.impulse(e, new Vec3(0, 1.0, 0), false);
             FruitKit.fx(u, "tornado", u.position(), 5, 0, 0);
             return true;
@@ -319,7 +319,7 @@ public final class FightingStyles {
                 Strike.of(1.0f, 2.6, 70, 0.5f, 4, 8, "jab_right"), Strike.of(0.8f, 2.6, 70, 0.3f, 3, 6, "jab_right"));
         sniper.abilities.add(sniper.ability("lead_star").cooldown(30).stamina(8).anim("aim").exec(projectile("pellet", 0.2f, 3.2, 7, Element.IMPACT, false)));
         sniper.abilities.add(sniper.ability("fire_bird_star").unlock(15).cooldown(100).stamina(18).anim("aim").exec((u, c) -> {
-            AbilityProjectile p = FruitKit.shoot(c, "fire_bird", 0.9f, 2.0, FruitKit.dmg(c, 10) * Hits.power(u) / 4f, Hits.Info.of(Element.FIRE, 1f));
+            AbilityProjectile p = FruitKit.shoot(c, "fire_bird", 0.9f, 2.0, FruitKit.dmg(c, 10), Hits.Info.of(Element.FIRE, 1f));
             p.explosion = 2.5f;
             return true;
         }));
@@ -341,7 +341,7 @@ public final class FightingStyles {
         tide.abilities.add(tide.ability("riptide_throw").cooldown(70).stamina(18).anim("throw_grab").exec((u, c) -> {
             LivingEntity t = Hits.cone(u, 3, 60).stream().findFirst().orElse(null);
             if (t == null) return false;
-            Hits.hit(u, t, FruitKit.dmg(c, 7) * Hits.power(u) / 4f, Hits.Info.of(Element.BLUNT, 0).withStun(25));
+            Hits.hit(u, t, FruitKit.dmg(c, 7), Hits.Info.of(Element.BLUNT, 0).withStun(25));
             FruitKit.impulse(t, c.look().scale(-1.4).add(0, 0.8, 0), true);
             return true;
         }));
@@ -362,7 +362,7 @@ public final class FightingStyles {
         storm.abilities.add(storm.ability("gale_lunge").cooldown(50).stamina(15).anim("heavy_thrust").exec(dashStrike(9, 9, Element.PIERCE, 1.2f)));
         storm.abilities.add(storm.ability("whirl_dance").unlock(10).cooldown(100).stamina(22).anim("polearm_spin").exec(burst(5.2, 8, Element.WIND, 1.8f, 0)));
         storm.abilities.add(storm.ability("lightning_rod_thrust").unlock(30).cooldown(200).stamina(30).anim("spear_thrust").exec((u, c) -> {
-            FruitKit.line(c, 10, 1.0, FruitKit.dmg(c, 13) * Hits.power(u) / 4f, Hits.Info.of(Element.LIGHTNING, 1.4f).withStun(30));
+            FruitKit.line(c, 10, 1.0, FruitKit.dmg(c, 13), Hits.Info.of(Element.LIGHTNING, 1.4f).withStun(30));
             FruitKit.fx(u, "lightning_trail", c.eye(), (float) (c.eye().x + c.look().x * 10), (float) (c.eye().y + c.look().y * 10), (float) (c.eye().z + c.look().z * 10));
             return true;
         }));
@@ -372,7 +372,7 @@ public final class FightingStyles {
                 Strike.of(1.4f, 4.6, 120, 1.2f, 6, 11, "chain_swing"), Strike.of(1.6f, 4.6, 360, 1.4f, 7, 12, "chain_spin"));
         anchor.abilities.add(anchor.ability("anchor_drop").cooldown(80).stamina(20).anim("ground_slam").exec((u, c) -> {
             Vec3 at = FruitKit.aimPoint(c, 8);
-            FruitKit.aoe(c, at, 3.5, FruitKit.dmg(c, 12) * Hits.power(u) / 4f, Hits.Info.of(Element.BLUNT, 2.4f).withStun(25));
+            FruitKit.aoe(c, at, 3.5, FruitKit.dmg(c, 12), Hits.Info.of(Element.BLUNT, 2.4f).withStun(25));
             FruitKit.fx(u, "shockwave", at, 3.5f, 0, 0);
             return true;
         }));

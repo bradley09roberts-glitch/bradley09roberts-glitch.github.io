@@ -1,7 +1,7 @@
 {
  "grandline.handbook.title": "Captain's Handbook",
  "grandline.handbook.p1": "§lCaptain's Handbook§r\n\nThe sea is wide and it does not forgive. You get one life: when you fall you are knocked down, and if no friend lifts you before the clock runs out, your story ends.\n\nThe world remembers: your grave, your bounty, and the fruit you leave behind.",
- "grandline.handbook.p2": "§lFighting§r\n\n%1$s: Combat Mode. Number keys 1-9 become abilities.\n%2$s: next ability set (weapon, fruit, Haki, race).\nLeft click: combo. Hold: heavy.\nRight click: guard; tap on the hit to parry.\n%3$s: dodge.\n%4$s: lock on.",
+ "grandline.handbook.p2": "§lFighting§r\n\nClick: strike. Hold: heavy blow.\n%1$s: Combat Mode. Then right click guards (on the hit: parry), 1-9 are techniques, %2$s next set, %4$s lock on.\n%3$s: dodge.\nRed flash on a foe: a heavy blow is coming. Walls stop blows.\n/controls: every key.",
  "grandline.handbook.p3": "§lHaki§r\n\n%1$s: Observation. Sense foes through walls and sidestep blows.\n%2$s: Armament. Harden your fists and blade; it is the only way to strike a Logia.\n%3$s: Conqueror's, if you were born with it. Few are.\n\nHaki grows by using it.",
  "grandline.handbook.p4": "§lDevil Fruits§r\n\nOne fruit to a person; a second one kills. Eat one and the sea becomes your enemy: water and seastone drain you. When a user dies, the fruit is reborn somewhere in the world.\n\n%1$s: transform (Zoan).\nMaster your fruit and survive its trial to awaken it.",
  "grandline.handbook.p5": "§lShips§r\n\nShipwrights sell and upgrade ships and raise sunk ones. At the helm: W/S sails, A/D rudder, %1$s anchor, %2$s Coup de Burst.\nWalk the deck while she sails; the hatch leads below to the hold.\nA coating from Sabaody lets a ship dive.",
