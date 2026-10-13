@@ -95,12 +95,15 @@ public final class NpcOutcomes {
     }
 
     public static void onNpcDeath(GLNpc npc, DamageSource src, ServerLevel level) {
-        if (!(src.getEntity() instanceof ServerPlayer sp)) {
+        // crew overhaul: a companion's kill counts as its captain's own (once: the final blow decides who is credited)
+        ServerPlayer sp = src.getEntity() instanceof ServerPlayer p ? p : com.grandline.npc.crew.CompanionCredit.captainFor(npc, src.getEntity());
+        if (sp == null) {
             PopulationManager.onNpcGone(level, npc);
             return;
         }
         CharacterData d = Characters.get(sp);
-        int xp = 20 + npc.tier() * npc.tier() * 12;
+        float share = src.getEntity() == sp ? 1f : com.grandline.npc.crew.CompanionCredit.xpShare(npc, sp); // crew overhaul
+        int xp = Math.round((20 + npc.tier() * npc.tier() * 12) * share);
         int levels = d.addXp(xp);
         if (levels > 0) {
             sp.sendSystemMessage(Component.translatable("grandline.level.up", d.level).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));

@@ -112,14 +112,15 @@ public class HumanoidNpc extends GLNpc {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new com.grandline.npc.crew.CompanionGoal(this)); // active crew companions: follow, fight, revive (before the surrender goal)
         goalSelector.addGoal(1, new NpcSurrenderGoal(this));
         goalSelector.addGoal(2, new NpcFleeGoal(this));
         goalSelector.addGoal(3, new NpcCombatGoal(this));
-        goalSelector.addGoal(4, new com.grandline.npc.crew.CrewFollowGoal(this));
         goalSelector.addGoal(5, new NpcHomeGoal(this));
         goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.6));
         goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8f));
         goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        targetSelector.addGoal(0, new com.grandline.npc.crew.CompanionTargetGoal(this)); // crew: only foes of the captain's party
         targetSelector.addGoal(1, new HurtByTargetGoal(this).setAlertOthers(HumanoidNpc.class));
         targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, e -> isHostileTo(e) && !(e instanceof Player p && (p.isCreative() || p.isSpectator()))));
         targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, HumanoidNpc.class, 10, true, false, e -> isHostileTo(e) && archetype().hostility() != Archetype.Hostility.PASSIVE));

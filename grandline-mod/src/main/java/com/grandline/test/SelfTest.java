@@ -106,6 +106,7 @@ public final class SelfTest {
         }
         else if (PHASE.equals("bases")) BaseTests.phase1(steps); // quick run: crew bases on claimed islands
         else if (PHASE.equals("careers")) CareerTests.phase1(steps); // quick run: faction careers
+        else if (PHASE.equals("crew")) CrewTests.phase1(steps); // quick run: crew companions (roles, orders, swaps, downed, credit, saves)
         else if (PHASE.equals("seapolish")) SeaPolishTests.phase1(steps); // quick run: hired gunners, raid plunder, sea-job chart marks, convoy cap
         else if (PHASE.equals("seapolish2")) SeaPolishTests.phase2(steps); // its restart check, on the world the quick run left
         else if (PHASE.equals("seajobs")) { // quick run: escorts, named pirate ships, convoys

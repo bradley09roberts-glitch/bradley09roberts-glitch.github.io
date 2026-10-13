@@ -80,6 +80,7 @@ public final class ServerNet {
                     com.grandline.quest.QuestGuide.openLog(sp);
                 }
                 case "ship" -> com.grandline.ship.ShipNet.handle(sp, t);
+                case "crew" -> com.grandline.npc.crew.CompanionOrders.handle(sp, t); // crew roster (V) and quick order (N)
                 default -> {}
             }
             CharacterManager.markDirty(sp);
