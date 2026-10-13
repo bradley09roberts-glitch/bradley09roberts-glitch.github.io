@@ -71,3 +71,12 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   command itself taking 9.4 s: vanilla `setChunkForced` generates each forced chunk synchronously (~80 chunks of a
   fresh world). Admin/test-only path; players load chunks asynchronously through their own tickets. Full-pack client: the integrated server shares 4 vCPUs with
   software rendering (llvmpipe), so it runs well below 20 TPS; not representative of a PC with a GPU.
+- 02:35 Run10 caught a REAL BUG (14/17): with chunks loading asynchronously, 8 people got two bodies. A body added to a
+  chunk whose entities are still loading is invisible to `getEntity`, so Embodiment thought it missing and spawned
+  another; both appeared later. A player walking into a town could hit the same race. FIX: bodies (and caravan
+  leaders, raiders) spawn only where `isPositionEntityTicking`; and any CitizenEntity that is not the registered body
+  of its person discards itself (checked every second). Also: async forcing of every chunk made an observer-only
+  world stop ticking entities after 300 ticks (vanilla's empty-level rule reads the saved forced-chunk list), so run10's
+  tick time (0.9 ms, 0 bodies ticking) was not a real measurement; observe now forces the centre chunk the vanilla way.
+- Slow-tick diagnostics: any longnight tick over 250 ms logs where the time went (daily simulation / bodies and
+  building / raids and roads).

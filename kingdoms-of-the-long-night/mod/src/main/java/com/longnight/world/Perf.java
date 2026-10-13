@@ -16,6 +16,15 @@ public final class Perf {
     static long citizenNanos;
     static int citizenTicks;
     static long ticks;
+    static long simN, embodyN, roadsN;
+    static long worstEver;
+
+    /** time spent in the daily simulation, embodiment (bodies + raising buildings) and raids/roads this tick */
+    public static void sections(long sim, long embody, long raidsRoads) {
+        simN = sim;
+        embodyN = embody;
+        roadsN = raidsRoads;
+    }
 
     public static void addCitizen(long nanos) {
         citizenNanos += nanos;
@@ -23,6 +32,13 @@ public final class Perf {
     }
 
     public static void endTick(long handlerNanos) {
+        if (handlerNanos > 250_000_000L) {
+            // a long tick of our own: say where it went, so a stall is never a mystery
+            com.longnight.LongNight.LOG.warn("longnight: slow tick {} ms (daily simulation {} ms, bodies and building {} ms, raids and roads {} ms)",
+                    handlerNanos / 1_000_000, simN / 1_000_000, embodyN / 1_000_000, roadsN / 1_000_000);
+        }
+        worstEver = Math.max(worstEver, handlerNanos);
+        simN = embodyN = roadsN = 0;
         handler[at] = handlerNanos;
         citizens[at] = citizenNanos;
         citizenCount[at] = citizenTicks;
@@ -43,7 +59,7 @@ public final class Perf {
             bodies += citizenCount[i];
         }
         return String.format(java.util.Locale.ROOT,
-                "longnight per tick (last %d): world %.2f ms + citizens %.2f ms (%.0f bodies) = %.2f ms avg, worst %.2f ms",
-                n, sumH / 1e6 / n, sumC / 1e6 / n, (double) bodies / n, (sumH + sumC) / 1e6 / n, worst / 1e6);
+                "longnight per tick (last %d): world %.2f ms + citizens %.2f ms (%.0f bodies) = %.2f ms avg, worst %.2f ms; worst world tick since start %.0f ms",
+                n, sumH / 1e6 / n, sumC / 1e6 / n, (double) bodies / n, (sumH + sumC) / 1e6 / n, worst / 1e6, worstEver / 1e6);
     }
 }

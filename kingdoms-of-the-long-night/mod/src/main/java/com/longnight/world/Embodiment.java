@@ -39,17 +39,20 @@ public final class Embodiment {
     private static final Set<UUID> ACTIVE = new HashSet<>();            // settlements with bodies
     private static final Set<UUID> VISIBLE = new HashSet<>();           // settlements being raised before the player arrives
     /**
-     * Settlements watched by an admin/test "observer", treated as if a player stood there. Their chunks are kept loaded
-     * with forced tickets that load asynchronously, like a player's (vanilla setChunkForced generates them on the
-     * server thread, a ~10 s stall on a fresh world), and that are not written into the save.
+     * Settlements watched by an admin/test "observer", treated as if a player stood there. The centre chunk is forced the
+     * vanilla way (that keeps an empty world ticking); the rest load asynchronously, like a player's chunks (forcing them
+     * all with setChunkForced generates them on the server thread: a ~10 s stall on a fresh world).
      */
     private static final Set<UUID> OBSERVED = new HashSet<>();
 
     public static boolean observe(ServerLevel level, Settlement s, boolean on) {
         int r = (s.radius + 32) >> 4;
         int cx = s.center.getX() >> 4, cz = s.center.getZ() >> 4;
+        level.setChunkForced(cx, cz, on);
         for (int x = cx - r; x <= cx + r; x++) {
-            for (int z = cz - r; z <= cz + r; z++) level.getChunkSource().updateChunkForced(new net.minecraft.world.level.ChunkPos(x, z), on);
+            for (int z = cz - r; z <= cz + r; z++) {
+                if (x != cx || z != cz) level.getChunkSource().updateChunkForced(new net.minecraft.world.level.ChunkPos(x, z), on);
+            }
         }
         return on ? OBSERVED.add(s.id) : OBSERVED.remove(s.id);
     }
@@ -168,7 +171,9 @@ public final class Embodiment {
             if (work != null && work.origin != null && work.placed >= work.total) at = Places.mark(level, s, work, "work");
         }
         if (at == null) at = s.center.offset(level.random.nextInt(9) - 4, 0, level.random.nextInt(9) - 4);
-        if (!level.isLoaded(at)) return null;
+        // only where the chunk's entities are loaded and ticking: a body added to a chunk whose entities are still
+        // loading is invisible to getEntity, which would make it look missing and get the person a second body
+        if (!level.isLoaded(at) || !level.isPositionEntityTicking(at)) return null;
         if (home == null || home.placed < home.total) at = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, at);
         CitizenEntity e = ModEntities.CITIZEN.get().create(level);
         if (e == null) return null;

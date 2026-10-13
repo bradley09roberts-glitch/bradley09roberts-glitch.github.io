@@ -150,10 +150,14 @@ public final class ServerEvents {
         if (!sim.generated) return;
         long t0 = System.nanoTime();
         sim.tick(server);
+        long t1 = System.nanoTime();
         Embodiment.tick(ow, sim);
+        long t2 = System.nanoTime();
         RaidManager.tick(ow, sim);
         if (ow.getGameTime() % 40 == 7) com.longnight.world.Roads.tick(ow, sim);
+        long t3 = System.nanoTime();
         if (ow.getGameTime() % 20 == 11) com.longnight.world.CaravanBodies.tick(ow, sim);
+        com.longnight.world.Perf.sections(t1 - t0, t2 - t1, t3 - t2);
         if (ow.getGameTime() % 10 == 3) for (ServerPlayer p : server.getPlayerList().getPlayers()) lookHint(p, sim);
         long day = WorldSim.dayOf(ow);
         if (day != lastWardDay) {

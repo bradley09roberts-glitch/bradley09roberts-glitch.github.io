@@ -79,6 +79,7 @@ public final class CaravanBodies {
             }
             Embodiment.discardBody(level, leader.id);
             BlockPos at = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(x, 0, z));
+            if (!level.isPositionEntityTicking(at)) continue; // see Embodiment.spawnBody
             CitizenEntity body = ModEntities.CITIZEN.get().create(level);
             if (body == null) continue;
             body.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, 0, 0);

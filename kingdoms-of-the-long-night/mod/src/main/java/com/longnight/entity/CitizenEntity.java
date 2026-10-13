@@ -305,6 +305,11 @@ public class CitizenEntity extends PathfinderMob {
     @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
+        // a person has one body: any other (left over from a race with chunk loading) quietly leaves
+        if (tickCount % 20 == 7 && personId != null && !getUUID().equals(com.longnight.world.Embodiment.bodyOf(personId))) {
+            discard();
+            return;
+        }
         if (tickCount % 100 == 0 && level() instanceof ServerLevel sl) {
             WorldSim sim = WorldSim.get(sl.getServer());
             Person p = sim.person(personId);

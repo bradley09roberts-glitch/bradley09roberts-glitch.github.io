@@ -1,3 +1,8 @@
 JUNIT PASS
 GAMETEST PASS
 [01:19:30] [Server thread/INFO] [minecraft/GameTestServer]: All 7 required tests passed :)
+SCENARIO FAIL
+SUMMARY: 14/17 checks passed
+  failed: invariants hold with bodies in the world
+  failed: invariants hold after 4 simulated days
+  failed: invariants hold after a raid
