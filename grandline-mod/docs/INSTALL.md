@@ -8,6 +8,23 @@
   - `grandline-0.3.0.jar` — the mod (SHA-256 `c879b8bce615fc0eb054a9c0b4ba94b7de786dbed317ac3c7f6064680608aee2`)
   - `geckolib-neoforge-1.21.1-4.9.3.jar` — required library (unchanged since 0.1.0)
 
+## Easiest: the Modrinth modpack (shaders included)
+
+`dist/Grand-Line-Odyssey-0.3.0.mrpack` is a ready-made instance: NeoForge 21.1.259, the mod, GeckoLib, Sodium 0.6.13,
+Iris 1.8.12 and the Grand Line Shaders, switched on from the first launch.
+
+- **Modrinth App:** *Library → Create new instance → Import from file* (or drag the `.mrpack` onto the window), pick
+  the file, then Play. The app downloads Minecraft, NeoForge, GeckoLib, Sodium and Iris itself.
+- **Prism Launcher:** *Add Instance → Import → Browse*, pick the `.mrpack`, OK, then Launch.
+- **CurseForge App / others** that do not read `.mrpack`: use the manual install below.
+
+The shaders can be switched off or changed under *Options → Video Settings → Shader Packs*; on a weak PC choose the
+pack's *Low* profile there (or turn shaders off). Dedicated servers do not use the pack: install the server as below
+(Sodium and Iris are client-only).
+
+Upgrading from an earlier instance: back up `saves/` first, import the new pack as a new instance, then copy your
+world folder into its `saves/`.
+
 ## New install (single player)
 
 1. Run the NeoForge installer and choose **Install client**.

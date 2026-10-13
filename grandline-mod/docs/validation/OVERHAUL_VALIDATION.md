@@ -39,6 +39,17 @@ screenshot was looked at.
   quest in progress, so the quest mapping itself is covered by the `story_arcs` migration checks rather than by this
   save.
 
+### The Modrinth modpack (`dist/Grand-Line-Odyssey-0.3.0.mrpack`)
+
+- Installed the way a launcher does (`tools/check_mrpack.py`): GeckoLib 4.9.3, Sodium 0.6.13 and Iris 1.8.12
+  downloaded from `cdn.modrinth.com` and matched their size, SHA-1 and SHA-512; the mod, the shader pack and the Iris
+  setting unpacked from the overrides.
+- A real client with that instance's Sodium, Iris, shader pack and the pack's own `iris.properties` logged
+  `Using shaderpack: GrandLineShaders-1.0.0.zip` (Balanced profile) and rendered with the shaders on
+  (`docs/captures/overhaul/modpack_shaders_on.jpg`). The mod itself ran from source in that client (same code as the
+  jar in the pack).
+- Not run: an import through the Modrinth App or Prism Launcher themselves (neither runs here).
+
 ### Measured balance (Standard difficulty)
 
 See [BALANCE.md](../BALANCE.md): at every tier a minion falls to 3 light blows of the reference character, a standard

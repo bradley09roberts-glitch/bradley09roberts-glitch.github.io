@@ -24,6 +24,9 @@ Private distribution.
 
 ## Install (client)
 
+**Easiest:** import `dist/Grand-Line-Odyssey-0.3.0.mrpack` into the Modrinth App or Prism Launcher (mod, GeckoLib,
+Sodium, Iris and the shaders, ready to play). Details: [docs/INSTALL.md](docs/INSTALL.md). Manual install:
+
 1. Install **Java 21** (the Minecraft launcher bundles it).
 2. Install **NeoForge 21.1.259 or newer for Minecraft 1.21.1** with the installer from https://neoforged.net
    (choose "Install client").
