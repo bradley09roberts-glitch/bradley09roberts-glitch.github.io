@@ -122,7 +122,9 @@ public class HumanoidNpc extends GLNpc {
         goalSelector.addGoal(8, new RandomLookAroundGoal(this));
         targetSelector.addGoal(0, new com.grandline.npc.crew.CompanionTargetGoal(this)); // crew: only foes of the captain's party
         targetSelector.addGoal(1, new HurtByTargetGoal(this).setAlertOthers(HumanoidNpc.class));
-        targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, e -> isHostileTo(e) && !(e instanceof Player p && (p.isCreative() || p.isSpectator()))));
+        targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, e -> isHostileTo(e) && !(e instanceof Player p && (p.isCreative() || p.isSpectator()))
+                // nobody picks a fight with someone in the middle of a conversation (an ongoing fight carries on)
+                && !(e instanceof ServerPlayer talker && Conversations.talking(talker))));
         targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, HumanoidNpc.class, 10, true, false, e -> isHostileTo(e) && archetype().hostility() != Archetype.Hostility.PASSIVE));
         targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, Monster.class, 10, true, false, e -> archetype().hostility() != Archetype.Hostility.PASSIVE));
     }
