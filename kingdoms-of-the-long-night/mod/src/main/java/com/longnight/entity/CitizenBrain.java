@@ -341,6 +341,16 @@ public class CitizenBrain {
 
     void work(CitizenEntity e, ServerLevel level, WorldSim sim, Person p, Settlement s, long day) {
         Building w = s.building(p.workplace);
+        // the lord's orders come first
+        if ("build".equals(p.order)) {
+            if (hasProject(s)) build(e, level, sim, p, s, day);
+            else fell(e, level, sim, p, s); // nothing to build: they clear land instead of standing about
+            return;
+        }
+        if ("fell".equals(p.order)) {
+            fell(e, level, sim, p, s);
+            return;
+        }
         switch (p.profession) {
             case BUILDER -> build(e, level, sim, p, s, day);
             case FARMER -> farm(e, level, sim, p, s, w, day);
@@ -349,7 +359,7 @@ public class CitizenBrain {
                 if (p.profession == Profession.SOLDIER && w != null && rng.nextBoolean()) station(e, level, sim, p, s, w, day, "drilling");
                 else patrol(e, level, s, p);
             }
-            case LABOURER -> haul(e, level, sim, p, s);
+            case LABOURER -> haul(e, level, sim, p, s, day);
             case RULER -> {
                 Building hall = first(s, BuildingType.TOWN_HALL);
                 if (hall != null) station(e, level, sim, p, s, hall, day, "holding court");
@@ -359,7 +369,9 @@ public class CitizenBrain {
             default -> {
                 if (w != null && w.usable() && w.placed >= w.total) station(e, level, sim, p, s, w, day, verb(p.profession));
                 else if (p.profession == Profession.HUNTER) forage(e, level, sim, p, s, day);
-                else {
+                else if (hasProject(s)) {
+                    build(e, level, sim, p, s, day); // until their own workplace stands, everyone pitches in
+                } else {
                     p.activity = "looking for work";
                     if (w != null && w.underConstruction()) p.blocked = "My " + w.type.displayName.toLowerCase() + " is not built yet.";
                     wander(e, level, s.center, 10, 0.5);
@@ -508,27 +520,27 @@ public class CitizenBrain {
         return true;
     }
 
-    void haul(CitizenEntity e, ServerLevel level, WorldSim sim, Person p, Settlement s) {
-        Building site = null;
-        for (Building b : s.buildings) if (b.underConstruction() && b.origin != null) site = b;
-        BlockPos store = Places.storeOrCentre(level, s);
-        if (site == null) {
-            p.activity = "doing odd jobs";
-            wander(e, level, s.center, 10, 0.5);
+    static boolean hasProject(Settlement s) {
+        for (Building b : s.buildings) if (b.underConstruction() && b.origin != null) return true;
+        return false;
+    }
+
+    /** Labourers lend a hand wherever something is being built (they lay blocks too); otherwise they do odd jobs. */
+    void haul(CitizenEntity e, ServerLevel level, WorldSim sim, Person p, Settlement s, long day) {
+        if (hasProject(s)) {
+            build(e, level, sim, p, s, day);
             return;
         }
-        if (target == null) target = (rng.nextBoolean() ? store : Places.ground(level, site.centre()));
-        p.activity = "hauling materials to the " + site.type.displayName.toLowerCase();
-        if (goTo(e, target, 0.55, 2.5, p, "the stores")) {
-            if (waitTicks++ > 40) {
-                target = target.equals(store) ? Places.ground(level, site.centre()) : store;
-                waitTicks = 0;
-            }
-        }
+        p.activity = "doing odd jobs";
+        wander(e, level, s.center, 10, 0.5);
     }
 
     void farm(CitizenEntity e, ServerLevel level, WorldSim sim, Person p, Settlement s, Building w, long day) {
         if (w == null || !w.usable() || w.placed < w.total) {
+            if (hasProject(s)) {
+                build(e, level, sim, p, s, day); // the fields are not laid out yet: help lay them out
+                return;
+            }
             p.activity = "waiting for the fields to be laid out";
             wander(e, level, s.center, 8, 0.5);
             return;
@@ -566,8 +578,7 @@ public class CitizenBrain {
 
     void chop(CitizenEntity e, ServerLevel level, WorldSim sim, Person p, Settlement s, Building w, long day) {
         if (w == null || !w.usable() || w.placed < w.total) {
-            p.activity = "waiting for the lumber camp";
-            wander(e, level, s.center, 8, 0.5);
+            fell(e, level, sim, p, s); // no lumber camp yet: clear the trees around the camp, by hand
             return;
         }
         if (chopQueue.isEmpty()) {
@@ -602,6 +613,52 @@ public class CitizenBrain {
             }
         }
         progressCycle(e, level, sim, p, s, day, 18);
+    }
+
+    /**
+     * Fell natural trees near the settlement (or its lumber camp) and bring the wood to the stores: each log block
+     * felled is one log in the ledger. Used by the lord's "fell trees" order and by lumberjacks before their camp stands.
+     */
+    void fell(CitizenEntity e, ServerLevel level, WorldSim sim, Person p, Settlement s) {
+        Building camp = first(s, BuildingType.LUMBER_CAMP);
+        BlockPos base = camp != null && camp.origin != null ? camp.centre() : s.center;
+        if (chopQueue.isEmpty()) {
+            if (chopBase == null && e.tickCount % 40 == 0) {
+                chopBase = Trees.findNaturalTree(level, sim, s, base, 36, rng);
+                if (chopBase == null) {
+                    p.activity = "looking for trees to fell";
+                    p.blocked = "There are no more trees near here that we may fell.";
+                    wander(e, level, base, 10, 0.5);
+                    return;
+                }
+                p.blocked = "";
+            }
+            if (chopBase == null) {
+                p.activity = "looking for trees to fell";
+                return;
+            }
+            p.activity = "going to fell a tree";
+            if (goTo(e, chopBase, 0.55, 2.5, p, "the trees")) {
+                chopQueue.addAll(Trees.trunk(level, chopBase));
+                if (chopQueue.isEmpty()) chopBase = null;
+            }
+            return;
+        }
+        p.activity = "felling a tree";
+        if (e.tickCount % 18 == 0) {
+            BlockPos log = chopQueue.remove(chopQueue.size() - 1);
+            e.getLookControl().setLookAt(log.getX() + 0.5, log.getY() + 0.5, log.getZ() + 0.5);
+            e.swing(InteractionHand.MAIN_HAND);
+            if (Trees.isLog(level.getBlockState(log))) {
+                level.destroyBlock(log, false, e);
+                s.stock.add(com.longnight.sim.Commodity.LOGS, 1); // the wood goes to the stores, not on the ground
+                sim.setDirty();
+            }
+            if (chopQueue.isEmpty()) {
+                Trees.replant(level, s, chopBase);
+                chopBase = null;
+            }
+        }
     }
 
     void gather(CitizenEntity e, ServerLevel level, Person p, Settlement s, BlockPos place, String doing) {

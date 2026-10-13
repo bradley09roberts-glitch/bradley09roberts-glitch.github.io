@@ -30,7 +30,8 @@ public final class Founding {
 
     public static void found(ServerPlayer player, ServerLevel level, BlockPos pos) {
         WorldSim sim = WorldSim.get(level.getServer());
-        if (com.longnight.sim.Band.of(sim, player.getUUID()) != null) {
+        Settlement company = com.longnight.sim.Band.of(sim, player.getUUID());
+        if (company != null && !company.residents.isEmpty()) {
             // the leader of a company sets down a hearthstone: their own people settle here
             settleBand(player, level, pos.below(), false);
             return;

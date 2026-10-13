@@ -229,6 +229,24 @@ public final class AutoShot {
         } else if (step >= 20 && step < 30) {
             clicks(mc, server);
         } else if (step == 30) {
+            // a minute of real time with the whole company at work (everyone pitches in while the first buildings go up)
+            server.execute(() -> {
+                placedBefore = 0;
+                for (var b : target.buildings) placedBefore += b.placed;
+            });
+            step = 31;
+            ticks = 0;
+        } else if (step == 31 && ticks > 1200) {
+            server.execute(() -> {
+                int now = 0;
+                for (var b : target.buildings) now += b.placed;
+                StringBuilder doing = new StringBuilder();
+                for (var x : WorldSim.get(server).residents(target)) doing.append(x.given).append(": ").append(x.activity).append("; ");
+                LongNight.LOG.info("[autoshot] blocks laid by the company in 60 s of real time: {} ({} -> {}). {}", now - placedBefore, placedBefore, now, doing);
+            });
+            step = 32;
+            ticks = 0;
+        } else if (step == 32 && ticks > 20) {
             run(server, "longnight admin skip 5");
             view(server, 0, 36, 22, 180f, 58f);
             step = 6;
@@ -263,6 +281,7 @@ public final class AutoShot {
     static java.util.UUID clickedPerson, clickedEntity;
     static net.minecraft.core.BlockPos hearth;
     static double logsBefore;
+    static int placedBefore;
 
     /** Real client-side clicks (the same calls the mouse makes): a companion, the hearthstone, and a sneak-give of logs. */
     static void clicks(Minecraft mc, IntegratedServer server) {

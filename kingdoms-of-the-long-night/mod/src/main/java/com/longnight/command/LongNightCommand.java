@@ -66,6 +66,20 @@ public final class LongNightCommand {
                 .then(Commands.literal("accept").then(Commands.argument("id", StringArgumentType.word())
                         .then(Commands.argument("contract", StringArgumentType.word()).executes(LongNightCommand::accept))))
                 .then(Commands.literal("plan").then(Commands.argument("building", StringArgumentType.word()).executes(LongNightCommand::plan)))
+                .then(Commands.literal("order").then(Commands.argument("person", StringArgumentType.word())
+                        .then(Commands.argument("what", StringArgumentType.word()).executes(c -> {
+                            ServerPlayer sp = c.getSource().getPlayerOrException();
+                            WorldSim sim = sim(c);
+                            com.longnight.sim.Person x;
+                            try {
+                                x = sim.person(java.util.UUID.fromString(StringArgumentType.getString(c, "person")));
+                            } catch (IllegalArgumentException ex) {
+                                x = null;
+                            }
+                            String answer = com.longnight.game.Orders.give(sp, sim, x, StringArgumentType.getString(c, "what"));
+                            Ui.msg(sp, (x != null ? x.given + ": " : "") + answer);
+                            return 1;
+                        }))))
                 .then(Commands.literal("settle").executes(c -> {
                     ServerPlayer sp = c.getSource().getPlayerOrException();
                     return com.longnight.game.Founding.settleBand(sp, sp.serverLevel(), sp.blockPosition().below(), true) ? 1 : 0;
@@ -140,6 +154,7 @@ public final class LongNightCommand {
                 " here     - about the settlement you stand in",
                 " realms   - the realms you have heard of",
                 " settle   - your company makes its home where you stand (needs the Founding Charter)",
+                " Talk to your own people for orders: help build, fell trees, own trade, come with me, go home",
                 " plan <building> / rename <name> - for founders of a settlement",
                 "Right-click people to talk, hearthstones for the settlement, storehouses to trade,",
                 "notice boards for news. Carry a Founding Charter and place a hearthstone to found your own.",

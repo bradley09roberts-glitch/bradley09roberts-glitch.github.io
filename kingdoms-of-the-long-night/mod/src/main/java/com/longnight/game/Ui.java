@@ -238,6 +238,20 @@ public final class Ui {
             row.append(" ").append(button("Settle here", "/longnight settle", "Make your home here, where you stand (uses the Founding Charter)"));
         }
         p.sendSystemMessage(row);
+        if (s != null && adult && p.getUUID().equals(s.founderPlayer)) {
+            // you are their lord: you can tell them what to do
+            if (!x.order.isEmpty()) msg(p, "Your orders: " + ("build".equals(x.order) ? "help the builders" : "fell trees") + ".");
+            MutableComponent orders = Component.literal("Orders: ").withStyle(ChatFormatting.GRAY);
+            if (s.kind == Settlement.Kind.SETTLEMENT) {
+                orders.append(button("Help build", "/longnight order " + id + " build", "Lay blocks with the builders"))
+                        .append(" ").append(button("Fell trees", "/longnight order " + id + " fell", "Clear trees nearby; the wood goes to the stores"))
+                        .append(" ").append(button("Own trade", "/longnight order " + id + " trade", "Go back to their own work"))
+                        .append(" ").append(button("Come with me", "/longnight order " + id + " follow", "Travel with you"));
+            } else {
+                orders.append(button("Go home", "/longnight order " + id + " home", "Go back to your village"));
+            }
+            p.sendSystemMessage(orders);
+        }
     }
 
     public static void talk(ServerPlayer p, WorldSim sim, Person x, String topic) {

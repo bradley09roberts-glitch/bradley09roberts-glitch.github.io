@@ -73,6 +73,8 @@ public class Person {
 
     // what the person is doing / why they are stuck (shown to players)
     public String activity = "";
+    /** a standing order from their lord: "" (their own trade), "build" (help the builders), "fell" (clear trees) */
+    public String order = "";
     public String blocked = "";
 
     public static final class Relation {
@@ -284,6 +286,7 @@ public class Person {
         t.put("mem", mem);
         t.putString("act", activity);
         t.putString("blocked", blocked);
+        t.putString("order", order);
         return t;
     }
 
@@ -341,6 +344,7 @@ public class Person {
         for (Tag x : t.getList("mem", Tag.TAG_COMPOUND)) p.memories.add(Memory.load((CompoundTag) x));
         p.activity = t.getString("act");
         p.blocked = t.getString("blocked");
+        p.order = t.getString("order");
         return p;
     }
 }

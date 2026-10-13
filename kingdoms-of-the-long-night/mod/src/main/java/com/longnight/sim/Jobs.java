@@ -70,7 +70,7 @@ public final class Jobs {
         // even a camp needs someone to build and someone to keep watch
         boolean projects = s.activeProjects() > 0;
         if (projects && !s.hasUsable(BuildingType.BUILDERS_YARD)) {
-            int n = adults.size() >= 10 ? 2 : 1;
+            int n = adults.size() >= 10 ? 3 : adults.size() >= 4 ? 2 : 1;
             for (int i = 0; i < n; i++) slots.add(new Slot(null, Profession.BUILDER, priority(Profession.BUILDER, hungry, s)));
         }
         if (!s.hasUsable(BuildingType.WATCHTOWER) && adults.size() >= 6) {

@@ -49,6 +49,12 @@ Full step-by-step guide: [modpack/INSTALL.md](modpack/INSTALL.md).
   and click **Settle here**. They pitch tents and start making a village with you: fields first, then a lumber camp,
   houses and a quarry, block by block, each doing their own job. More settlers come once there is food and shelter.
   (World setting `startingCompany`: 0 starts you alone as a stranger instead.)
+* **Giving orders.** Your people work on their own (in daylight; they sleep at night), and until their own workplace
+  stands everyone helps the builders. To steer them, right-click one of your people: below their answer in the chat
+  you get **Orders: [Help build] [Fell trees] [Own trade] [Come with me]** (and **[Go home]** for those travelling with
+  you). Help build: they lay blocks with the builders. Fell trees: they clear trees nearby and the wood goes to the
+  stores. Come with me: they leave the village and follow you. To choose *what* gets built, use
+  `/longnight plan <building>`; to speed it up, sneak + right-click the hearthstone with logs, planks, stone or food.
 * You also have a **Traveller's Journal** and **A Traveller's Primer** (a short in-world guide to everything below).
   Right-click the journal: it lists the places you have heard of, with distance and direction. You know two
   settlements to begin with; you learn of more by asking people for news.

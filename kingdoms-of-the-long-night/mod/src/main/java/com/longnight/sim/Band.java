@@ -66,6 +66,21 @@ public final class Band {
         return s;
     }
 
+    /** The player's travelling party: their company if they have one, else a new, empty one people can join. */
+    public static Settlement party(WorldSim sim, UUID leader, String leaderName, BlockPos at, long day) {
+        Settlement b = of(sim, leader);
+        if (b != null) return b;
+        Settlement near = sim.nearestSettlement(at, Settlement.Kind.SETTLEMENT);
+        b = WorldBuilder.newSettlement(sim, near != null ? near.culture : "valemen", at, day, "the company of " + leaderName);
+        b.kind = Settlement.Kind.BAND;
+        b.playerFounded = true;
+        b.founderPlayer = leader;
+        b.radius = 8;
+        b.reputation.put(leader, 50);
+        sim.setDirty();
+        return b;
+    }
+
     /** On the road the company hunts and gathers as it goes: not a feast, but enough to stretch the packs. */
     static void forage(WorldSim sim, Settlement s) {
         int n = s.residents.size();

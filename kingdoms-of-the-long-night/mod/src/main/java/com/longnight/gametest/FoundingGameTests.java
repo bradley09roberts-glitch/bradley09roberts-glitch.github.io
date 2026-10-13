@@ -97,6 +97,21 @@ public class FoundingGameTests {
             BlockPos hearth = ground.offset(0, 1, -4);
             h.assertTrue(level.getBlockState(hearth).is(ModBlocks.HEARTHSTONE.get()), "hearthstone set down: found " + level.getBlockState(hearth)
                     + " ready=" + com.longnight.world.Places.ready(level, hearth) + " at " + hearth + " centre " + band.center);
+            // the lord's orders
+            Person worker = sim.residents(band).get(0);
+            com.longnight.game.Orders.give(p, sim, worker, "build");
+            h.assertTrue("build".equals(worker.order), "ordered to help build");
+            com.longnight.game.Orders.give(p, sim, worker, "fell");
+            h.assertTrue("fell".equals(worker.order), "ordered to fell trees");
+            com.longnight.game.Orders.give(p, sim, worker, "trade");
+            h.assertTrue(worker.order.isEmpty(), "back to their trade");
+            com.longnight.game.Orders.give(p, sim, worker, "follow");
+            Settlement party = com.longnight.sim.Band.of(sim, p.getUUID());
+            h.assertTrue(party != null && party.residents.contains(worker.id) && !band.residents.contains(worker.id), "comes along on the road");
+            h.assertTrue(com.longnight.command.Invariants.checkData(sim).isEmpty(), "rolls consistent: " + com.longnight.command.Invariants.checkData(sim));
+            com.longnight.game.Orders.give(p, sim, worker, "home");
+            h.assertTrue(band.residents.contains(worker.id) && !party.residents.contains(worker.id), "goes home again");
+            sim.settlements.remove(party.id);
             for (Person x : sim.residents(band)) com.longnight.world.Embodiment.discardBody(level, x.id);
             Placer.testGroundY = null;
             sim.settlements.remove(band.id);
