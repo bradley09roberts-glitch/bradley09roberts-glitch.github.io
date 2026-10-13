@@ -69,6 +69,10 @@ public final class QuestText {
             case "slay" -> Component.translatable(key, Component.literal(pretty(t)), o.count());
             case "escort", "reach", "poneglyph", "ship", "arrested", "sink", "convoy" -> Component.translatable(key);
             case "capture", "sea_battle", "fruit_kill", "treasure" -> Component.translatable(key, o.count());
+            // the combat lesson (com.grandline.combat.Lessons reports each part): the keys to press are shown as bound
+            case "lesson" -> Component.translatable(key + "." + t, Component.keybind(t.equals("dodge") ? "key.grandline.dodge" : "key.grandline.combat_mode"));
+            // a decision in a story chapter: what is being decided
+            case "choice" -> Component.translatable(key, Component.translatable("arc.grandline.decision." + t));
             default -> Component.literal(pretty(type) + (t.equals("any") ? "" : ": " + pretty(t)));
         };
     }

@@ -67,6 +67,7 @@ public final class QuestRegistry {
         IslandQuestsExtra.register(ALL); // a local job on each canon island added by CanonIslands.additions
         com.grandline.activity.ActivityQuests.register(ALL); // sea activities: fishing errands, treasure board job
         com.grandline.quest.story.SeaJobs.register(ALL); // board jobs won in sea battles ("sea_battle" objectives)
+        com.grandline.quest.arc.Arcs.registerListed(); // the later chapters, for the journal (their quests are registered above)
     }
 
     // ------------------------------------------------------------------ faction variants & requirements
@@ -122,7 +123,7 @@ public final class QuestRegistry {
     public static boolean canOffer(com.grandline.player.CharacterData d, QuestDef q) {
         if (d.questProgress.containsKey(q.id())) return false;
         if (!q.repeatable() && isDone(d, q.id())) return false;
-        return requirementsMet(d, q);
+        return requirementsMet(d, q) && com.grandline.quest.arc.Arcs.inOrder(d, q); // story chapters are offered in order
     }
 
     @Nullable

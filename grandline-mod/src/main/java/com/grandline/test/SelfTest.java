@@ -101,6 +101,7 @@ public final class SelfTest {
         else if (PHASE.equals("structures")) StructureDump.steps(steps); // dev aid: every structure to structdump/*.json
         else if (PHASE.equals("quests")) steps.add(SelfTest::questTextCheck); // quick run: quest descriptions and objective text
         else if (PHASE.equals("overhaul")) OverhaulTests.phase1(steps); // quick run: line of effect, fair foes, the balance table
+        else if (PHASE.equals("story_arcs")) StoryOverhaulTests.phase1(steps); // quick run: story chapters, scenes, decisions, journal, migration
         else if (PHASE.equals("landmarks")) { // quick run: every landmark builder and every settlement building
             steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
             steps.add(s -> BuildingCheck.run(SelfTest::check));
@@ -921,7 +922,7 @@ public final class SelfTest {
                         case "kill" -> com.grandline.npc.Archetypes.has(o.target());
                         case "discover" -> StoryTestsExtra.planOf(s, o.target()) != null || o.target().equals("any") || o.target().equals("any_canon");
                         case "poneglyph" -> true;
-                        case "arrest", "collect" -> StoryTestsExtra.progresses(s, o);
+                        case "arrest", "collect", "lesson", "choice", "reach" -> StoryTestsExtra.progresses(s, o);
                         default -> false;
                     };
                     if (!ok) bad.add(q.id() + " objective " + o.type() + ":" + o.target());
@@ -1044,6 +1045,7 @@ public final class SelfTest {
             d.faction = Faction.PIRATE;
             d.discoveredIslands.add("shells_town");
             boolean started = com.grandline.quest.Quests.start(fp, "ember_east_1");
+            for (String l : com.grandline.quest.arc.Arcs.LESSONS) com.grandline.quest.Quests.progress(fp, "lesson", l, 1); // the elder's combat lesson
             com.grandline.quest.Quests.progress(fp, "kill", "bandit", 3);
             boolean ok = started && d.completedQuests.contains("ember_east_1") && d.completedQuests.contains("ember_east_2") && d.questProgress.containsKey("shells_1");
             check("story chain advances (pre-discovered island credited, next arc auto-started)", ok, "active " + d.questProgress.keySet());

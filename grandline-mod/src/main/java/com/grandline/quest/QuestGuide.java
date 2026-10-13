@@ -49,7 +49,11 @@ import java.util.*;
 @EventBusSubscriber(modid = GrandLine.MODID)
 public final class QuestGuide {
     /** A place to go: block x/z, the dimension it is in, what it is, and the island it belongs to (if any). */
-    public record Target(int x, int z, String dim, Component label, @Nullable Island island) {}
+    public record Target(int x, int z, String dim, Component label, @Nullable Island island, boolean area) {
+        public Target(int x, int z, String dim, Component label, @Nullable Island island) {
+            this(x, z, dim, label, island, false);
+        }
+    }
 
     private static final String OVERWORLD = "minecraft:overworld";
 
@@ -130,6 +134,11 @@ public final class QuestGuide {
     }
 
     static int currentObjective(QuestDef q, CompoundTag prog) {
+        // a lesson or a decision comes before the rest of its step (learn to fight, then fight; decide, then act)
+        for (int i = 0; i < q.objectives().size(); i++) {
+            QuestDef.Objective o = q.objectives().get(i);
+            if ((o.type().equals("lesson") || o.type().equals("choice")) && (prog == null || prog.getInt("o" + i) < o.count())) return i;
+        }
         for (int i = 0; i < q.objectives().size(); i++)
             if (prog == null || prog.getInt("o" + i) < q.objectives().get(i).count()) return i;
         return q.objectives().isEmpty() ? -1 : q.objectives().size() - 1;
@@ -167,6 +176,13 @@ public final class QuestGuide {
         Island home = questIsland(sp, plan, q);
         return switch (o.type()) {
             case "talk", "defeat", "arrest", "kill" -> person(sp, plan, home, o.target(), o.type().equals("kill"));
+            // the combat lesson: the teacher who gave it (elders and masters offer a sparring bout)
+            case "lesson" -> q.giverRole().startsWith("notable:") ? person(sp, plan, home, q.giverRole().substring(8), false) : null;
+            // a decision: whoever puts it to the player
+            case "choice" -> {
+                var dec = com.grandline.quest.arc.Arcs.decision(o.target());
+                yield dec == null ? null : person(sp, plan, home, dec.presenter(), false);
+            }
             case "discover" -> island(sp, plan, d, o.target());
             case "ship" -> {
                 Target yard = building(sp, plan, home, BuildingType.SHIPWRIGHT, Component.translatable("grandline.guide.shipwright"));
@@ -235,11 +251,11 @@ public final class QuestGuide {
         if (at != null) return new Target(at.getX(), at.getZ(), OVERWORLD, name, home);
         if (!foe) return null;
         int[] w = wilds(home);
-        return new Target(w[0], w[1], OVERWORLD, Component.translatable("grandline.guide.wilds", name), home);
+        return new Target(w[0], w[1], OVERWORLD, Component.translatable("grandline.guide.wilds", name), home, true);
     }
 
     /** A spot in the island's wilds, away from the town (where wild encounters come from). */
-    static int[] wilds(Island isl) {
+    public static int[] wilds(Island isl) {
         Settlement s = isl.settlement();
         double best = -1;
         int[] out = {isl.x, isl.z};
@@ -440,7 +456,13 @@ public final class QuestGuide {
 
     // ------------------------------------------------------------------ quest log
 
-    /** Data for the quest log: every active quest with its text, objectives, rewards and where to go. */
+    /**
+     * Data for the quest log (the journal): every active quest with its text, objectives, rewards and where to go,
+     * grouped as the story (the saga's chapters, recruitment and crew quests), side stories, and jobs (generated island
+     * stories, notice-board and sea jobs, anything repeatable). Story steps also carry their chapter, who is who, why it
+     * matters, the next step, how dangerous its foes are for this player and a recap of the chapter so far
+     * ({@link com.grandline.quest.arc.ArcJournal}).
+     */
     public static CompoundTag log(ServerPlayer sp) {
         CharacterData d = Characters.get(sp);
         CompoundTag t = new CompoundTag();
@@ -448,12 +470,24 @@ public final class QuestGuide {
         t.putString("tracked", tracked == null ? "" : tracked);
         t.putInt("completed", d.completedQuests.size());
         ListTag list = new ListTag();
-        for (String id : new TreeSet<>(d.questProgress.keySet())) {
+        List<String> ids = new ArrayList<>(new TreeSet<>(d.questProgress.keySet()));
+        Map<String, Integer> rank = new HashMap<>();
+        for (String id : ids) {
+            QuestDef q = QuestRegistry.get(id);
+            rank.put(id, q == null ? 3 : switch (com.grandline.quest.arc.ArcJournal.group(q)) {
+                case "story" -> 0;
+                case "side" -> 1;
+                default -> 2;
+            });
+        }
+        ids.sort(Comparator.comparingInt(rank::get)); // stable: by id within each group
+        for (String id : ids) {
             QuestDef q = QuestRegistry.get(id);
             if (q == null) continue;
             CompoundTag prog = d.questProgress.get(id);
             CompoundTag e = new CompoundTag();
             e.putString("id", id);
+            e.putString("group", com.grandline.quest.arc.ArcJournal.group(q));
             e.putString("title", json(sp, QuestRegistry.title(q)));
             Component desc = QuestText.description(q);
             if (desc != null) e.putString("desc", json(sp, desc));
@@ -477,15 +511,22 @@ public final class QuestGuide {
             e.put("items", items);
             int oi = currentObjective(q, prog);
             if (oi >= 0) {
+                QuestDef.Objective o = q.objectives().get(oi);
+                MutableComponent next = QuestText.objective(sp.server, o);
+                if (o.count() > 1) next.append(" (" + Math.min(o.count(), prog.getInt("o" + oi)) + "/" + o.count() + ")");
+                e.putString("next", json(sp, next));
                 Target tg = target(sp, d, q, oi);
                 if (tg != null) {
                     e.putString("where", json(sp, tg.label()));
+                    e.putBoolean("area", tg.area());
                     if (tg.dim().equals(sp.level().dimension().location().toString()))
                         e.putInt("dist", (int) Math.hypot(tg.x() - sp.getX(), tg.z() - sp.getZ()));
                 } else {
-                    e.putString("where", json(sp, hint(q.objectives().get(oi))));
+                    e.putString("where", json(sp, hint(o)));
+                    e.putBoolean("area", true);
                 }
             }
+            com.grandline.quest.arc.ArcJournal.fill(sp, d, q, prog, e, c -> json(sp, c));
             list.add(e);
         }
         t.put("quests", list);

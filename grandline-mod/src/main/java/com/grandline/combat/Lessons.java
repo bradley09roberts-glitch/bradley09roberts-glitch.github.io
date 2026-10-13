@@ -25,11 +25,20 @@ public final class Lessons {
     private Lessons() {}
 
     public static void done(ServerPlayer sp, String lesson) {
-        Quests.progress(sp, "lesson", lesson, 1);
         CharacterData d = Characters.get(sp);
-        if (d.flags.add("lesson_" + lesson)) {
+        boolean taught = inLesson(d); // a teacher's lesson is running: the teacher comments instead (quest/arc/LessonCoach)
+        Quests.progress(sp, "lesson", lesson, 1);
+        if (d.flags.add("lesson_" + lesson) && !taught) {
             sp.sendSystemMessage(Component.translatable("grandline.lesson." + lesson).withStyle(ChatFormatting.YELLOW));
-            CharacterManager.markDirty(sp);
         }
+        CharacterManager.markDirty(sp);
+    }
+
+    private static boolean inLesson(CharacterData d) {
+        for (String id : d.questProgress.keySet()) {
+            var q = com.grandline.quest.QuestRegistry.get(id);
+            if (q != null && q.objectives().stream().anyMatch(o -> o.type().equals("lesson"))) return true;
+        }
+        return false;
     }
 }

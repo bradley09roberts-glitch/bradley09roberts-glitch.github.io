@@ -81,6 +81,9 @@ final class StoryTestsExtra {
             case "collect" -> QuestCollect.valid(t);
             // generated island stories and jobs (quest/story): places to reach, beasts and Sea Kings to slay
             case "reach" -> com.grandline.quest.story.IslandStories.site(t) != null;
+            // story chapters (quest/arc): the combat lesson and a chapter's decision
+            case "lesson" -> com.grandline.quest.arc.Arcs.LESSONS.contains(t);
+            case "choice" -> com.grandline.quest.arc.Arcs.decision(t) != null;
             case "slay" -> com.grandline.quest.story.StorySites.slayable(t);
             // sea activities: a sea catch (SeaFishing.onCatch), a treasure map's secret found (TreasureMaps.opened)
             case "fish" -> t.equals("any") || com.grandline.activity.ActivityItems.FISH.stream().anyMatch(f -> f.getId().getPath().equals(t));

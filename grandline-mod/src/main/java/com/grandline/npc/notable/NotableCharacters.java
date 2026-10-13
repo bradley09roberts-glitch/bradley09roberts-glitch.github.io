@@ -214,6 +214,13 @@ public final class NotableCharacters {
         add(n("gizmo", VIL, PIRATE, "pirate_captain", 3, "syrup_village", -80, 60).style("gunslinger").weapon("flintlock").haki(10, 0, 0).disp(VILLAIN));
         add(n("fosco", VIL, PIRATE, "pirate_captain", 4, "baratie", -4, -14).weapon("kanabo").haki(10, 20, 0).disp(VILLAIN));
         add(n("gorgo", VIL, PIRATE, "fishman_boss", 5, "cocoyasi", 322, -52).style("fishman_karate").weapon("war_trident").haki(20, 30, 0).race("fishman").disp(VILLAIN));
+        // ---------------- Part I chapters (quest/arc): the missing skipper, the honest lieutenant, the mayor, two new villains ----------------
+        add(n("mio", PATRON, CIV, "dockworker", 2, "shells_town", 78, -44).disp(FRIENDLY));
+        add(n("hayashi", MAR, MARINE, "marine_officer", 3, "shells_town", 104, -26).weapon("cutlass").haki(10, 10, 0).disp(FRIENDLY));
+        add(n("clementine", PATRON, CIV, "farmer", 2, "orange_town", -10, -22).disp(FRIENDLY));
+        add(n("corvel", VIL, CIV, "noble", 2, "ilisia_kingdom", -16, -128).weapon("rapier").haki(10, 0, 0).disp(VILLAIN));
+        add(n("brinicle", VIL, PIRATE, "pirate_captain", 3, "sorbet_kingdom", 64, -36).style("tide_grapple").haki(10, 10, 0).disp(VILLAIN));
+        add(n("orrin", VIL, PIRATE, "pirate_captain", 4, "twin_capes", -50, 40).weapon("cutlass").haki(20, 20, 0).disp(VILLAIN));
         // ---------------- Paradise rulers and villains ----------------
         add(n("doubloon", VIL, PIRATE, "pirate_captain", 4, "whisky_peak", -190, 10).style("gunslinger").weapon("flintlock").haki(20, 20, 0).disp(VILLAIN));
         add(n("farthing", VIL, PIRATE, "pirate_captain", 4, "whisky_peak", -210, -10).weapon("dual_blades").haki(20, 20, 0).disp(VILLAIN));

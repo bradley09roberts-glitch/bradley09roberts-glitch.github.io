@@ -35,7 +35,13 @@ public final class Shops {
     /** What this NPC sells this player: a career shop (Marine supply, a pirate port's fence, revolutionary contacts) or the usual. */
     static List<Offer> offers(ServerPlayer sp, GLNpc npc) {
         var career = com.grandline.career.CareerPerks.shop(sp, npc);
-        if (career == null) { List<Offer> l = offers(npc); l.removeIf(o -> !com.grandline.ship.RaidPlunder.available(npc, o.item())); return l; } // goods carried off by harbour raiders (ship/RaidPlunder)
+        if (career == null) {
+            List<Offer> l = offers(npc);
+            l.removeIf(o -> !com.grandline.ship.RaidPlunder.available(npc, o.item())); // goods carried off by harbour raiders (ship/RaidPlunder)
+            // goods a story chapter brought back to this island for this player (an orchard saved, a kitchen's thanks)
+            for (var x : com.grandline.quest.arc.Consequences.stock(Characters.get(sp), npc.islandId())) l.add(new Offer(x.item(), x.count(), x.price()));
+            return l;
+        }
         List<Offer> l = new java.util.ArrayList<>();
         for (var o : career) l.add(new Offer(o.item(), o.count(), o.price()));
         return l;
@@ -111,6 +117,7 @@ public final class Shops {
         int rep = d.reputation("island/" + npc.islandId()) + d.reputation(npc.faction().id());
         mult *= Math.max(0.6, 1 - rep / 2000.0);
         mult *= com.grandline.career.CareerPerks.priceFactor(d); // careers: a merchant's discount
+        mult *= com.grandline.quest.arc.Consequences.priceFactor(d, npc.islandId()); // story: a town that owes this player
         return Math.max(1, Math.round(o.price * mult));
     }
 
