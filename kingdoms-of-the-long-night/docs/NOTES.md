@@ -117,3 +117,7 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   citizens who make no progress (10 ticks -> up to 100). Run15 same town: 3.0 ms (0.11 ms each), 17/17.
 - 04:00 Final release built (hashes in modpack/VERIFICATION.md); final chain: run16 (all automated tests), full-pack
   server (random seed, 2 skipped days, validate), full-pack client.
+- 04:15 FINAL (released files): run16 JUnit 10/10, GameTests 7/7, scenario 17/17 (avg tick 5.7 ms, 26 people, worst
+  longnight tick 77 ms); full-pack server PASS (random seed: 61 sites in one round, 14 settlements, 175 people,
+  6 realms; 2 days skipped, VALIDATE OK; day 1 130 ms); full-pack client PASS (Dunmar town Ulfkhar, 40 buildings,
+  34 people, raised in 1,318 ticks; one 284 ms tick on the CPU-starved integrated server). Work stops here.
