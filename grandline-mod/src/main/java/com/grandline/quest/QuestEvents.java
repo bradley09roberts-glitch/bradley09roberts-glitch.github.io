@@ -6,7 +6,17 @@ import net.minecraft.server.level.ServerPlayer;
 
 /** Hooks from gameplay into the quest system. */
 public final class QuestEvents {
+    /** player → the last foes credited to them (a foe brought down by a crew member may be reported by more than one hook). */
+    private static final java.util.Map<java.util.UUID, java.util.LinkedHashSet<java.util.UUID>> CREDITED = new java.util.HashMap<>();
+
+    /**
+     * A foe fell to the player or to their crew (crew kills are reported here for the captain). Each foe counts once
+     * per player, whichever hook reports it first.
+     */
     public static void onKill(ServerPlayer sp, GLNpc npc) {
+        var seen = CREDITED.computeIfAbsent(sp.getUUID(), k -> new java.util.LinkedHashSet<>());
+        if (!seen.add(npc.getUUID())) return;
+        if (seen.size() > 64) seen.remove(seen.iterator().next());
         Quests.progress(sp, "kill", npc.role(), 1);
         // the awakening trial counts strong foes brought down with the user's own fruit
         var cs = com.grandline.combat.CombatState.of(sp);

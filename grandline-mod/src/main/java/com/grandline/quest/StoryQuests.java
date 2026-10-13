@@ -21,9 +21,9 @@ final class StoryQuests {
 
     static void register(Map<String, QuestDef> all) {
         out = all;
-        embers();
-        eastBlue();
-        otherBlues();
+        // Part I (the Four Embers' openings, the East Blue, the North, West and South Blue) is written as chapters with
+        // scenes, decisions and consequences: quest/arc/EastBlueArcs.java and BluesArcs.java
+        com.grandline.quest.arc.Arcs.register(all, IDS);
         paradise();
         calmBelt();
         war();
@@ -122,88 +122,6 @@ final class StoryQuests {
 
     private static Supplier<ItemStack> cuffs(int n) {
         return () -> new ItemStack(ModItems.SEASTONE_CUFFS.get(), n);
-    }
-
-    // ================================================================== Part I — the Four Embers (starter isles)
-
-    private static void embers() {
-        String A = "embers";
-        q("ember_east_1", "fumio", "shiokaze_isle", A).kill("bandit", 3).reward(120, 300).item(meat(3)).next("ember_east_2").add();
-        q("ember_east_2", "fumio", "shiokaze_isle", A).discover("shells_town").reward(250, 500).req("ember_east_1").next("shells_1").add();
-        q("ember_north_1", "solveig", "fuyugane_isle", A).kill("bandit", 3).reward(120, 300).item(meat(3)).next("ember_north_2").add();
-        q("ember_north_2", "solveig", "fuyugane_isle", A).discover("spider_miles").reward(250, 500).req("ember_north_1").next("north_scrap_baron").add();
-        q("ember_west_1", "percival", "kirinoha_isle", A).kill("bandit", 3).reward(120, 300).item(meat(3)).next("ember_west_2").add();
-        q("ember_west_2", "percival", "kirinoha_isle", A).discover("kano_country").reward(250, 500).req("ember_west_1").next("west_kano_trial").add();
-        q("ember_south_1", "mahina", "hinata_isle", A).kill("bandit", 3).reward(120, 300).item(meat(3)).next("ember_south_2").add();
-        q("ember_south_2", "mahina", "hinata_isle", A).discover("karate_island").reward(250, 500).req("ember_south_1").next("south_karate_cup").add();
-    }
-
-    // ================================================================== Part I — East Blue
-
-    private static void eastBlue() {
-        String A = "east_blue";
-        // Shells Town — "The Justice Levy"
-        q("shells_1", "petra", "shells_town", A).discover("shells_town").kill("marine", 4).reward(400, 800)
-                .rep("civilian", 20).rep("island/shells_town", 80).rep("marine", -40).next("shells_2").add();
-        q("shells_1.marine", "petra", "shells_town", A).discover("shells_town").talk("resident").kill("bandit", 4).reward(400, 800)
-                .rep("marine", 40).rep("island/shells_town", 80).next("shells_2").add();
-        q("shells_2", "petra", "shells_town", A).defeat("gallowgate").reward(700, 1500).bounty(5_000_000)
-                .rep("island/shells_town", 150).rep("civilian", 30).req("shells_1").next("orange_1").add();
-        q("shells_2.marine", "petra", "shells_town", A).defeat("gallowgate").reward(700, 3000)
-                .rep("island/shells_town", 150).rep("marine", 100).req("shells_1").flag("exposed_gallowgate").next("orange_1").add();
-        q("recruit_petra", "petra", "shells_town", "recruit").kill("bandit", 3).reward(300, 0).item(item("bullet", 32)).req("shells_2").add();
-        // Orange Town — "The Marmalade Siege"
-        q("orange_1", "carmen", "orange_town", A).discover("orange_town").kill("bandit", 6).reward(500, 1000).next("orange_2").add();
-        q("orange_2", "carmen", "orange_town", A).defeat("rotgut").reward(800, 2000).rep("island/orange_town", 150).rep("civilian", 30)
-                .req("orange_1").next("syrup_1").add();
-        q("recruit_carmen", "carmen", "orange_town", "recruit").talk("resident", 2).kill("bandit", 3).reward(300, 500).req("orange_2").add();
-        // Syrup Village — "The Clockwork Regatta"
-        q("syrup_1", "tomas", "syrup_village", A).discover("syrup_village").kill("bandit", 5).reward(550, 1200).next("syrup_2").add();
-        q("syrup_2", "tomas", "syrup_village", A).defeat("gizmo").reward(900, 2500).rep("island/syrup_village", 150)
-                .req("syrup_1").next("baratie_1").add();
-        q("recruit_tomas", "tomas", "syrup_village", "recruit").discover("mirror_ball_island").reward(400, 500).item(SEA_CHART).req("syrup_2").add();
-        // Baratie — "A Feast Under Siege"
-        q("baratie_1", "kenji", "baratie", A).discover("baratie").kill("bandit", 6).reward(600, 1500).next("baratie_2").add();
-        q("baratie_1.marine", "kenji", "baratie", A).discover("baratie").talk("horatio").kill("bandit", 6).reward(600, 2500).rep("marine", 60).next("baratie_2").add();
-        q("baratie_2", "kenji", "baratie", A).defeat("fosco").reward(1000, 3000).rep("island/baratie", 150).rep("civilian", 40)
-                .item(steak(2)).req("baratie_1").next("cocoyasi_1").add();
-        q("recruit_kenji", "kenji", "baratie", "recruit").talk("horatio").kill("bandit", 4).reward(400, 800).req("baratie_2").add();
-        // Cocoyasi — "The Coral Keep"
-        q("cocoyasi_1", "kaimon", "cocoyasi", A).discover("cocoyasi").kill("fishman_guard", 2).reward(700, 1500).next("cocoyasi_2").add();
-        q("cocoyasi_2", "kaimon", "cocoyasi", A).kill("fishman_brute", 2).defeat("gorgo").reward(1400, 4000)
-                .rep("island/cocoyasi", 300).rep("civilian", 60).item(pose("loguetown")).req("cocoyasi_1").next("logue_1").add();
-        q("recruit_kaimon", "kaimon", "cocoyasi", "recruit").talk("resident", 2).kill("bandit", 3).reward(500, 500).req("cocoyasi_2").add();
-        // Loguetown — "The Town of Beginnings and Endings"
-        q("logue_1", "odile", "loguetown", A).discover("loguetown").talk("bartolo").reward(800, 2000).next("logue_2").add();
-        q("logue_2", "odile", "loguetown", A).defeat("tobias").kill("marine", 5).reward(1500, 4000).bounty(10_000_000)
-                .rep("pirate", 100).req("logue_1").next("logue_3").add();
-        q("logue_2.marine", "valka", "loguetown", A).defeat("tobias").kill("bandit", 5).reward(1500, 6000).rep("marine", 150)
-                .req("logue_1").next("logue_3").add();
-        q("logue_2.revolutionary", "pim", "loguetown", A).talk("pim").kill("marine", 3).reward(1500, 3000).bounty(6_000_000)
-                .rep("revolutionary", 150).req("logue_1").next("logue_3").add();
-        q("logue_2.bounty_hunter", "odile", "loguetown", A).defeat("tobias").kill("bandit", 5).reward(1500, 8000).rep("bounty_hunter", 150)
-                .req("logue_1").next("logue_3").add();
-        q("logue_2.civilian", "bartolo", "loguetown", A).talk("valka").talk("tobias").talk("pim").reward(1500, 5000).rep("civilian", 150)
-                .req("logue_1").next("logue_3").add();
-        q("logue_3", "odile", "loguetown", A).discover("twin_capes").reward(2000, 3000).item(LOG_POSE).req("logue_2").flag("saw_the_saltfire").next("capes_1").add();
-        q("recruit_odile", "odile", "loguetown", "recruit").kill("bandit", 5).reward(500, 500).item(SEA_CHART).req("logue_1").add();
-    }
-
-    // ================================================================== Part I — North, West and South Blue prologues
-
-    private static void otherBlues() {
-        q("north_scrap_baron", "haakon", "lvneel", "north_blue").discover("spider_miles").defeat("rusty").kill("bandit", 4).reward(600, 1500)
-                .next("north_lvneel_passage").add();
-        q("north_lvneel_passage", "haakon", "lvneel", "north_blue").discover("lvneel").talk("haakon").reward(800, 2000).item(LOG_POSE)
-                .req("north_scrap_baron").next("capes_1").add();
-        q("west_kano_trial", "kagerou", "kano_country", "west_blue").discover("kano_country").defeat("kagerou").reward(600, 1000).item(scroll("ittoryu"))
-                .next("west_ilisia_audience").add();
-        q("west_ilisia_audience", "isadora", "ilisia_kingdom", "west_blue").discover("ilisia_kingdom").kill("bandit", 5).talk("isadora").reward(800, 2000)
-                .item(LOG_POSE).req("west_kano_trial").next("capes_1").add();
-        q("south_karate_cup", "kiko", "karate_island", "south_blue").discover("karate_island").defeat("kiko").kill("bandit", 3).reward(600, 1000)
-                .item(scroll("tide_grapple")).next("south_sorbet_royal").add();
-        q("south_sorbet_royal", "gelato", "sorbet_kingdom", "south_blue").discover("sorbet_kingdom").kill("bandit", 5).talk("gelato").reward(800, 2000)
-                .item(LOG_POSE).req("south_karate_cup").next("capes_1").add();
     }
 
     // ================================================================== Part II — the Paradise Gauntlet

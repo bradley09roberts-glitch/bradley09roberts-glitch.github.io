@@ -100,6 +100,7 @@ public final class SelfTest {
         else if (PHASE.equals("bosses")) BossTests.phase1(steps); // quick run: boss fights
         else if (PHASE.equals("structures")) StructureDump.steps(steps); // dev aid: every structure to structdump/*.json
         else if (PHASE.equals("quests")) steps.add(SelfTest::questTextCheck); // quick run: quest descriptions and objective text
+        else if (PHASE.equals("story_arcs")) StoryOverhaulTests.phase1(steps); // quick run: story chapters, scenes, decisions, journal, migration
         else if (PHASE.equals("landmarks")) { // quick run: every landmark builder and every settlement building
             steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
             steps.add(s -> BuildingCheck.run(SelfTest::check));

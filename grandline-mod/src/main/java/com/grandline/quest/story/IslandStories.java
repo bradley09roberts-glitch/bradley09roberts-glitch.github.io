@@ -173,6 +173,7 @@ public final class IslandStories {
         }
         QUEST_SITES.putAll(g.questSites());
         for (Site s : g.sites()) SITES.put(s.key(), s);
+        com.grandline.quest.arc.ArcSites.install(plan, QUEST_SITES, SITES); // the saga's chapters use the same places machinery
         for (QuestDef q : g.quests())
             for (QuestDef.Objective o : q.objectives()) {
                 Person p = PEOPLE.get(o.target());

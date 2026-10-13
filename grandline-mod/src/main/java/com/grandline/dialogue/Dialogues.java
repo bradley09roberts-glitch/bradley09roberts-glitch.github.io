@@ -30,6 +30,7 @@ public final class Dialogues {
     public static void open(ServerPlayer sp, GLNpc npc) {
         CharacterData d = Characters.get(sp);
         QuestEvents.onTalk(sp, npc);
+        com.grandline.quest.arc.Scenes.onTalk(sp, npc); // a decision this person puts to the player, or their step's own scene
         int att = npc.attitudeTo(sp);
         String role = npc.role();
         CompoundTag t = new CompoundTag();
@@ -44,6 +45,7 @@ public final class Dialogues {
         if (role.equals("shipwright")) opts.add(StringTag.valueOf("shipyard"));
         if (role.equals("innkeeper")) opts.add(StringTag.valueOf("rest"));
         if (role.equals("master")) opts.add(StringTag.valueOf("train"));
+        if (role.equals("elder") || role.equals("master")) opts.add(StringTag.valueOf("spar")); // a practice bout (combat lessons)
         if (Faction.isLaw(npc.faction()) && d.bounty == 0) opts.add(StringTag.valueOf("bounty_turn_in"));
         boolean starter = isStarter(sp, npc);
         for (QuestDef q : QuestRegistry.offeredBy(role, npc.islandId(), starter)) {
@@ -59,6 +61,8 @@ public final class Dialogues {
         opts.add(StringTag.valueOf("leave"));
         t.put("options", opts);
         labelGenerated(sp, t, opts);
+        CompoundTag scene = com.grandline.quest.arc.Scenes.drain(sp); // story scenes play first, inside this conversation
+        if (scene != null) t.put("scene", scene);
         GLNetwork.toPlayer(sp, new GLNetwork.OpenScreen("dialogue", t));
     }
 
@@ -98,6 +102,11 @@ public final class Dialogues {
 
     /** Handle a chosen dialogue option. */
     public static void choose(ServerPlayer sp, int npcId, String option) {
+        if (option.startsWith("scene:")) { // a decision in a story scene ("scene:<decision>:<choice>"); no one need be near
+            String[] p = option.split(":");
+            if (p.length == 3) com.grandline.quest.arc.Scenes.choose(sp, p[1], p[2]);
+            return;
+        }
         if (npcId == com.grandline.quest.story.JobBoard.BOARD_ID) { // a notice board, not a person
             com.grandline.quest.story.JobBoard.choose(sp, option);
             return;
@@ -120,6 +129,10 @@ public final class Dialogues {
                 com.grandline.npc.notable.NotableHooks.localRumor(sp, npc);
             }
             case "trade" -> Shops.open(sp, npc);
+            case "spar" -> { // a practice bout with a partner who never hurts the player (com.grandline.combat.Sparring)
+                if (!com.grandline.combat.Sparring.start(sp, npc))
+                    sp.sendSystemMessage(Component.translatable("dialogue.grandline.spar.unavailable", npc.getDisplayName()).withStyle(ChatFormatting.GRAY));
+            }
             case "shipyard" -> com.grandline.ship.Shipyard.open(sp, npc);
             case "rest" -> {
                 if (d.beli >= 50) {

@@ -69,6 +69,8 @@ public final class NotableHooks {
         if (crew != null) return crew;
         Boolean boss = com.grandline.boss.BossManager.hostility(npc, e); // boss fights: everyone engaged is a foe
         if (boss != null) return boss;
+        Boolean staged = com.grandline.quest.arc.ArcGuard.hostility(npc, e); // a chapter's villain waits for the player's fight step
+        if (staged != null) return staged;
         boolean otherNotable = e instanceof GLNpc o && !o.notableId().isEmpty();
         if (npc.notableId().isEmpty()) return otherNotable ? Boolean.FALSE : null;
         Notable n = NotableCharacters.get(npc.notableId());
@@ -104,7 +106,38 @@ public final class NotableHooks {
         if (!current) {
             e.setCanceled(true);
             GrandLine.LOGGER.debug("Rejected stale copy of notable {}", npc.notableId());
+            return;
         }
+        applyLook(npc);
+    }
+
+    /**
+     * Story characters with a fixed look wear the same skin in every world (an archetype otherwise picks one of its
+     * skins at random): Petra the Marine dock-hand's whites, Carmen's orange-striped shirt, Kenji's waiter's bow tie...
+     */
+    static void applyLook(GLNpc npc) {
+        String look = LOOKS.get(npc.notableId());
+        if (look == null || look.equals(npc.skin())) return;
+        CompoundTag t = new CompoundTag();
+        npc.addAdditionalSaveData(t);
+        t.putString("Skin", look);
+        npc.readAdditionalSaveData(t);
+    }
+
+    /** notable id → skin (textures/entity/npc/<skin>.png). */
+    private static final Map<String, String> LOOKS = Map.of(
+            "petra", "marine_1", // white base uniform and blue kerchief
+            "carmen", "villager_4", // red hair, orange-striped festival shirt
+            "kenji", "merchant_1", // white shirt, red bow tie, black trousers: the Baratie's head waiter
+            "fumio", "villager_5", // grey beard, rigger's linen
+            "mio", "sailor_1", // striped sailor's shirt of the supply sloop
+            "hayashi", "marine_officer_1",
+            "gallowgate", "marine_captain_1");
+
+    /** The fixed look of a story character, or null (self-test). */
+    @Nullable
+    public static String look(String notableId) {
+        return LOOKS.get(notableId);
     }
 
     /** Yielding: friendly characters, rivals and crew are beaten, not killed — the first time. */
@@ -120,7 +153,22 @@ public final class NotableHooks {
         if (!(victim instanceof GLNpc npc) || npc.notableId().isEmpty()) return;
         if (e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
         Notable n = NotableCharacters.get(npc.notableId());
-        if (n == null || !(n.yields() || CrewManager.isCrew(npc))) return;
+        if (n == null) return;
+        // the people a later scene needs: never killed by stray blows, and a villain only falls in the player's fight step
+        switch (com.grandline.quest.arc.ArcGuard.verdict(npc, e.getSource(), attacker)) {
+            case BLOCK -> {
+                e.setCanceled(true);
+                return;
+            }
+            case YIELD -> {
+                if (e.getAmount() < npc.getHealth() + npc.getAbsorptionAmount()) return;
+                e.setCanceled(true);
+                if (!npc.flag(GLNpc.FLAG_SURRENDER)) yieldNow(npc, n, attacker, npc.level().getGameTime());
+                return;
+            }
+            default -> {}
+        }
+        if (!(n.yields() || CrewManager.isCrew(npc))) return;
         if (e.getAmount() < npc.getHealth() + npc.getAbsorptionAmount()) return;
         long now = npc.level().getGameTime();
         Long last = YIELDED.get(npc.getUUID());
@@ -259,6 +307,11 @@ public final class NotableHooks {
      */
     public static void decorate(ServerPlayer sp, GLNpc npc, CharacterData d, CompoundTag t, ListTag opts, boolean starter) {
         if (npc.notableId().isEmpty()) {
+            // townsfolk and the local Marines talk about the chapter this player lived on their island
+            String g0 = t.getString("greeting");
+            boolean hostile0 = g0.equals("dialogue.grandline.hostile") || g0.equals("dialogue.grandline.law_hostile") || g0.equals("dialogue.grandline.surrender");
+            String arcLine = hostile0 ? null : com.grandline.quest.arc.Consequences.greeting(npc, d);
+            if (arcLine != null && npc.getRandom().nextInt(3) != 0) t.putString("greeting", arcLine);
             Archetype.Hostility h = npc.archetype().hostility();
             if (h != Archetype.Hostility.PASSIVE && h != Archetype.Hostility.DEFENSIVE) return;
             NotableState st = NotableState.get(sp.server);
@@ -276,6 +329,10 @@ public final class NotableHooks {
         if (npc.flag(GLNpc.FLAG_SURRENDER)) return;
         if (hostileGreeting && !warm) return;
         t.putString("greeting", mine && n.recruitable() ? n.crewGreetingKey() : taken ? "dialogue.grandline.crew.taken" : n.greetingKey());
+        if (!mine && !taken) { // the story so far changes what the cast says to this player
+            String arcLine = com.grandline.quest.arc.Consequences.greeting(npc, d);
+            if (arcLine != null) t.putString("greeting", arcLine);
+        }
         Component generated = com.grandline.quest.story.IslandStories.greeting(n, d); // generated people: their line depends on the story so far
         if (generated != null) t.putString("greetingText", Component.Serializer.toJson(generated, sp.registryAccess()));
         addQuests(d, opts, n, npc.islandId(), starter, mine, false);
