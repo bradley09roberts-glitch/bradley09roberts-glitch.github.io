@@ -222,7 +222,7 @@ public class WorldSim extends SavedData {
         Settlement best = null;
         double bestD = Double.MAX_VALUE;
         for (Settlement s : settlements.values()) {
-            if (s.center == null) continue;
+            if (s.center == null || s.kind == Settlement.Kind.BAND) continue; // a travelling company is not a place
             double d = Math.sqrt(s.center.distSqr(new BlockPos(pos.getX(), s.center.getY(), pos.getZ())));
             if (d <= s.radius + margin && d < bestD) {
                 best = s;

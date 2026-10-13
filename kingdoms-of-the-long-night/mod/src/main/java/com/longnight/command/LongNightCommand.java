@@ -66,6 +66,10 @@ public final class LongNightCommand {
                 .then(Commands.literal("accept").then(Commands.argument("id", StringArgumentType.word())
                         .then(Commands.argument("contract", StringArgumentType.word()).executes(LongNightCommand::accept))))
                 .then(Commands.literal("plan").then(Commands.argument("building", StringArgumentType.word()).executes(LongNightCommand::plan)))
+                .then(Commands.literal("settle").executes(c -> {
+                    ServerPlayer sp = c.getSource().getPlayerOrException();
+                    return com.longnight.game.Founding.settleBand(sp, sp.serverLevel(), sp.blockPosition().below(), true) ? 1 : 0;
+                }))
                 .then(Commands.literal("rename").then(Commands.argument("name", StringArgumentType.greedyString()).executes(LongNightCommand::rename)))
                 .then(Commands.literal("admin").requires(s -> s.hasPermission(2))
                         .then(Commands.literal("status").executes(LongNightCommand::status))
@@ -135,6 +139,7 @@ public final class LongNightCommand {
                 " journal  - places you know of",
                 " here     - about the settlement you stand in",
                 " realms   - the realms you have heard of",
+                " settle   - your company makes its home where you stand (needs the Founding Charter)",
                 " plan <building> / rename <name> - for founders of a settlement",
                 "Right-click people to talk, hearthstones for the settlement, storehouses to trade,",
                 "notice boards for news. Carry a Founding Charter and place a hearthstone to found your own.",

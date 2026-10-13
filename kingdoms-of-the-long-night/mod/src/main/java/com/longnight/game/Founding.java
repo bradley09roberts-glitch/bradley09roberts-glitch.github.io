@@ -30,6 +30,11 @@ public final class Founding {
 
     public static void found(ServerPlayer player, ServerLevel level, BlockPos pos) {
         WorldSim sim = WorldSim.get(level.getServer());
+        if (com.longnight.sim.Band.of(sim, player.getUUID()) != null) {
+            // the leader of a company sets down a hearthstone: their own people settle here
+            settleBand(player, level, pos.below(), false);
+            return;
+        }
         Settlement near = sim.settlementAt(pos, 48);
         if (near != null) {
             if (near.kind == Settlement.Kind.SETTLEMENT) Ui.msg(player, "This hearthstone now stands in " + near.name + ". (Settlements need room: found yours further away.)");
@@ -104,6 +109,77 @@ public final class Founding {
         Ui.msg(player, "You set down the hearthstone and read out the charter. " + s.name + " is founded! Three settlers have answered your call.");
         player.sendSystemMessage(Ui.hint("Settlers need food and shelter. Bring logs, planks, stone and food to a storehouse (they will build one); "
                 + "use /longnight plan <building> to ask for a building, /longnight rename <name> to rename the place."));
+    }
+
+    /**
+     * The player's travelling company makes its home where the player stands (ground = the block under their feet).
+     * Uses up a Founding Charter if the player carries one (the company's own charter needs none in creative).
+     * Returns true if they settled.
+     */
+    public static boolean settleBand(ServerPlayer player, ServerLevel level, BlockPos ground, boolean placeHearth) {
+        WorldSim sim = WorldSim.get(level.getServer());
+        Settlement band = com.longnight.sim.Band.of(sim, player.getUUID());
+        if (band == null) {
+            Ui.msg(player, "You have no company with you. (Carry a Founding Charter and set down a hearthstone to call settlers.)");
+            return false;
+        }
+        if (band.residents.isEmpty()) {
+            Ui.msg(player, "There is no one left of your company to settle with you.");
+            return false;
+        }
+        if (level != level.getServer().overworld()) {
+            Ui.msg(player, "Your company will not make a home in this place.");
+            return false;
+        }
+        String why = com.longnight.sim.Band.unsuitable(sim, ground, player.getUUID());
+        if (why != null) {
+            Ui.msg(player, why);
+            return false;
+        }
+        int charter = -1;
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            if (player.getInventory().getItem(i).is(ModItems.FOUNDING_CHARTER.get())) charter = i;
+        }
+        if (charter < 0 && !player.isCreative()) {
+            Ui.msg(player, "You need the Founding Charter to claim this land for your company.");
+            return false;
+        }
+        if (charter >= 0) player.getInventory().getItem(charter).shrink(1);
+        long day = WorldSim.dayOf(level.getServer().overworld());
+        String leader = player.getGameProfile().getName();
+        Settlement s = com.longnight.sim.Band.settle(sim, band, ground, leader, day);
+        if (placeHearth) {
+            BlockPos hearth = ground.offset(0, 1, -4); // where every settlement's hearthstone stands
+            for (int up = 0; up <= 3 && com.longnight.world.Places.ready(level, hearth); up++, hearth = hearth.above()) {
+                // on a slope, step up to the first open spot with ground under it
+                net.minecraft.world.level.block.state.BlockState at = level.getBlockState(hearth);
+                if ((at.isAir() || at.canBeReplaced()) && level.getBlockState(hearth.below()).isSolid()) {
+                    level.setBlock(hearth, com.longnight.registry.ModBlocks.HEARTHSTONE.get().defaultBlockState(), 3);
+                    break;
+                }
+            }
+        }
+        Ui.msg(player, "You read out the charter and your company sets down their packs. " + s.name + " is founded, and you are its lord.");
+        player.sendSystemMessage(Ui.hint("They pitch tents first, then plan and build for themselves: a lumber camp, houses, fields. "
+                + "Watch them work, bring logs, planks, stone and food to help, and use /longnight plan <building> to ask for something."));
+        return true;
+    }
+
+    /** First arrival: the player sets out with a company of settlers who follow them until they choose a place. */
+    public static void startBand(ServerPlayer player, WorldSim sim, int size) {
+        if (size <= 0 || com.longnight.sim.Band.of(sim, player.getUUID()) != null) return;
+        long day = WorldSim.dayOf(player.serverLevel().getServer().overworld());
+        Settlement band = com.longnight.sim.Band.create(sim, player.getUUID(), player.getGameProfile().getName(), player.blockPosition(), day, size);
+        player.getInventory().add(charter());
+        StringBuilder who = new StringBuilder();
+        for (Person p : sim.residents(band)) {
+            if (who.length() > 0) who.append(", ");
+            who.append(p.given).append(" the ").append(p.profession.displayName.toLowerCase());
+        }
+        player.sendSystemMessage(net.minecraft.network.chat.Component.literal("§7You do not travel alone. " + size + " people have chosen to follow you and make a new home "
+                + "wherever you choose: §f" + who + "§7.§r"));
+        player.sendSystemMessage(Ui.hint("Lead them somewhere good: flat land, water, trees, away from other towns. When you find it, right-click with the "
+                + "Founding Charter (or talk to one of them and choose Settle here). They carry food, tools and timber for a start."));
     }
 
     public static ItemStack charter() {

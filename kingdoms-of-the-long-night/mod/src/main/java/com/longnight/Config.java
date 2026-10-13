@@ -15,6 +15,7 @@ public final class Config {
     public static final ModConfigSpec.IntValue START_SETTLEMENTS;
     public static final ModConfigSpec.IntValue START_CAMPS;
     public static final ModConfigSpec.IntValue START_BANDIT_CAMPS;
+    public static final ModConfigSpec.IntValue STARTING_COMPANY;
     public static final ModConfigSpec.IntValue WORLD_RADIUS;
     public static final ModConfigSpec.IntValue SAFE_SPAWN_RADIUS;
     public static final ModConfigSpec.IntValue EMBODY_DISTANCE;
@@ -44,6 +45,9 @@ public final class Config {
                 .defineInRange("startingSettlements", 7, 0, 40);
         START_CAMPS = b.comment("Small founding camps of settlers looking for a home.").defineInRange("startingCamps", 2, 0, 20);
         START_BANDIT_CAMPS = b.comment("Outlaw camps in the wilds.").defineInRange("startingBanditCamps", 2, 0, 20);
+        STARTING_COMPANY = b.comment("People who set out with each new player and follow them until the player settles (with the",
+                "Founding Charter they are given) and builds a village with them. 0 = start alone as a stranger.")
+                .defineInRange("startingCompany", 6, 0, 12);
         WORLD_RADIUS = b.comment("Settlements are placed within this many blocks of world spawn.").defineInRange("worldRadius", 1200, 300, 10000);
         SAFE_SPAWN_RADIUS = b.comment("No settlement or bandit camp is placed this close to world spawn.").defineInRange("safeSpawnRadius", 160, 32, 2000);
         b.pop();

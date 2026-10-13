@@ -50,6 +50,20 @@ public final class Places {
                 && ready(level, p.offset(-r, 0, r)) && ready(level, p.offset(r, 0, r));
     }
 
+    /**
+     * A spot a few blocks from p where someone can stand (solid below, room for head), at about p's height, so a company
+     * appears beside its leader even underground or on a mountainside. Null if there is nowhere to stand (the leader is
+     * flying, falling or swimming): then nobody is put there.
+     */
+    public static BlockPos standNear(ServerLevel level, BlockPos p, net.minecraft.util.RandomSource r) {
+        for (int i = 0; i < 16; i++) {
+            BlockPos q = p.offset(r.nextInt(7) - 3, r.nextInt(3) - 1, r.nextInt(7) - 3);
+            if (!ready(level, q)) continue;
+            if (level.getBlockState(q).isAir() && level.getBlockState(q.above()).isAir() && level.getBlockState(q.below()).isSolid()) return q;
+        }
+        return null;
+    }
+
     public static BlockPos ground(ServerLevel level, BlockPos p) {
         if (!ready(level, p)) return p;
         return level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p);

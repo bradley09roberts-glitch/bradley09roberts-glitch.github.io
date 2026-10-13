@@ -24,10 +24,17 @@ public final class Life {
             if (s.kind == Settlement.Kind.RUIN) continue;
             List<Person> people = sim.residents(s);
             if (people.isEmpty()) continue;
+            // a company on the road, and a young camp until its first fields stand, live by hunting and gathering
+            if (s.kind == Settlement.Kind.BAND || (s.kind == Settlement.Kind.SETTLEMENT && s.tier == Settlement.Tier.CAMP
+                    && !s.hasUsable(BuildingType.FARM) && !s.hasUsable(BuildingType.FISHERY))) Band.forage(sim, s);
             feed(sim, s, people, day);
             house(sim, s, people);
             health(sim, s, people, day, r);
             if (s.kind == Settlement.Kind.BANDIT_CAMP) continue;
+            if (s.kind == Settlement.Kind.BAND) {
+                socialise(sim, s, sim.residents(s), day, r); // friendships form on the road; homes, trades and families wait
+                continue;
+            }
             socialise(sim, s, sim.residents(s), day, r);
             courtship(sim, s, sim.residents(s), day, r);
             births(sim, s, sim.residents(s), day, r);

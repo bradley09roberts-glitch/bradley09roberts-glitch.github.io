@@ -34,26 +34,30 @@ public final class Planner {
             double share = 1.0 - sim.embodiedFraction(s);
             List<Building> projects = new ArrayList<>();
             for (Building b : s.buildings) if (b.underConstruction()) projects.add(b);
+            // builders go first to work that can move; projects waiting for materials get whoever is left
+            projects.sort(java.util.Comparator.comparingInt(b -> b.problem.startsWith("Waiting for") ? 1 : 0));
             // labourers help: each idle adult adds a little building capacity
             int labourers = 0;
             for (Person p : sim.residents(s)) if (sim.isAdult(p, day) && p.profession == Profession.LABOURER) labourers++;
-            int i = 0;
-            for (Building b : projects) {
-                double crew = 0;
-                if (i < builders.size()) {
-                    Person bd = builders.get(i);
-                    crew = 0.55 + bd.skill(Profession.BUILDER) / 100.0 * 0.9;
-                    bd.activity = "building the " + b.type.displayName.toLowerCase();
-                } else if (i == 0 && builders.isEmpty() && adults > 0) {
-                    crew = 0.5; // everyone pitches in when there is no builder yet
-                }
-                if (i == 0) crew += Math.min(3, labourers) * 0.15;
-                i++;
-                if (crew <= 0) continue;
+            // each crew (a builder, or everyone at once while there is no builder) works one project a day; a crew whose
+            // project cannot move for want of materials goes on to the next one instead of standing idle
+            List<Person> crewLeads = new ArrayList<>(builders);
+            if (crewLeads.isEmpty() && adults > 0) crewLeads.add(null); // everyone pitches in when there is no builder yet
+            int nextProject = 0;
+            for (int c = 0; c < crewLeads.size() && nextProject < projects.size(); c++) {
+                Person bd = crewLeads.get(c);
+                double crew = bd != null ? 0.55 + bd.skill(Profession.BUILDER) / 100.0 * 0.9 : 0.5;
+                if (c == 0) crew += Math.min(3, labourers) * 0.15;
                 int steps = (int) Math.round(STEPS_PER_BUILDER_DAY * crew * share);
-                if (steps > 0) Construction.advance(sim, s, b, steps, day);
-                if (!b.problem.isEmpty()) {
-                    for (Person bd : builders) if (bd.activity.contains(b.type.displayName.toLowerCase())) bd.blocked = b.problem;
+                while (nextProject < projects.size()) {
+                    Building b = projects.get(nextProject++);
+                    if (bd != null) bd.activity = "building the " + b.type.displayName.toLowerCase();
+                    int done = steps > 0 ? Construction.advance(sim, s, b, steps, day) : 0;
+                    if (!b.problem.isEmpty() && bd != null) bd.blocked = b.problem;
+                    if (done > 0 || steps <= 0) {
+                        if (bd != null && b.problem.isEmpty()) bd.blocked = "";
+                        break;
+                    }
                 }
             }
             // a project whose plot cannot be resolved is abandoned and its materials returned to the stores
@@ -74,7 +78,11 @@ public final class Planner {
                 }
             }
             int maxProjects = Math.max(1, builders.size());
-            if (s.activeProjects() < maxProjects) {
+            BuildingType supply = supplyFor(s);
+            if (supply != null && s.activeProjects() <= maxProjects) {
+                // every project waits for something nobody here makes: build the place that makes it (one extra project)
+                plan(sim, s, supply, day);
+            } else if (s.activeProjects() < maxProjects) {
                 BuildingType next = next(sim, s, day);
                 if (next != null) plan(sim, s, next, day);
             }
@@ -98,7 +106,12 @@ public final class Planner {
         int farms = n.getOrDefault(BuildingType.FARM, 0) + n.getOrDefault(BuildingType.FISHERY, 0);
         boolean threatened = s.raidWarning > 0 || s.raidsSurvived > 0 || agenda == Faction.Agenda.FORTIFY;
 
+        // a camp feeds itself before anything else: foraging keeps people alive, it does not let them grow
+        if (s.tier == Settlement.Tier.CAMP && farms == 0 && foodDays < 20 && pop >= 2) {
+            return s.culture.equals("tidefolk") ? BuildingType.FISHERY : BuildingType.FARM;
+        }
         if (s.tier == Settlement.Tier.CAMP && !has(n, BuildingType.LUMBER_CAMP) && pop >= 3) return BuildingType.LUMBER_CAMP;
+        if (s.stock.total() > s.storageCapacity() * 0.9 && !has(n, BuildingType.STOREHOUSE) && pop >= 3) return BuildingType.STOREHOUSE;
         if (s.tier == Settlement.Tier.CAMP && s.housingCapacity() < pop + 1) return BuildingType.HOUSE;
         if (!has(n, BuildingType.WELL)) return BuildingType.WELL;
         if (s.housingCapacity() < pop + 1) return pop > 20 && sim.rng.nextBoolean() ? BuildingType.LARGE_HOUSE : BuildingType.HOUSE;
@@ -138,6 +151,37 @@ public final class Planner {
         if (foodDays < 8 && farms < pop / 5 + 1) return BuildingType.FARM;
         if (s.housingCapacity() < pop + 4) return BuildingType.HOUSE;
         return null;
+    }
+
+    /**
+     * If every project under way is stuck waiting for one material and the settlement has (and is building) nothing that
+     * makes it, the building that does: glass and stone come from a quarry, logs and fuel from a lumber camp, planks
+     * from a carpentry, iron and tools from a smithy, ore from a mine, wool from a pasture, cloth from a weavery.
+     */
+    static BuildingType supplyFor(Settlement s) {
+        Commodity wanted = null;
+        int active = 0;
+        for (Building b : s.buildings) {
+            if (!b.underConstruction()) continue;
+            active++;
+            if (!b.problem.startsWith("Waiting for ")) return null; // something is still moving
+            String what = b.problem.substring("Waiting for ".length()).replace(".", "").trim();
+            for (Commodity c : Commodity.values()) if (c.displayName.equalsIgnoreCase(what)) wanted = c;
+        }
+        if (active == 0 || wanted == null) return null;
+        BuildingType maker = switch (wanted) {
+            case STONE, GLASS -> BuildingType.QUARRY;
+            case LOGS, FUEL -> BuildingType.LUMBER_CAMP;
+            case PLANKS -> BuildingType.CARPENTRY;
+            case IRON, TOOLS, WEAPONS, ARMOR -> BuildingType.SMITHY;
+            case ORE -> BuildingType.MINE;
+            case WOOL -> BuildingType.PASTURE;
+            case CLOTH -> BuildingType.WEAVERY;
+            default -> null;
+        };
+        if (maker == null) return null;
+        for (Building b : s.buildings) if (b.type == maker && b.state != Building.State.RUINED) return null; // has one, or building it
+        return maker;
     }
 
     static boolean has(Map<BuildingType, Integer> n, BuildingType t) {

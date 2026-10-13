@@ -16,7 +16,8 @@ import java.util.UUID;
 
 /** A community of people with a ledger, buildings, and plans. Also used for bandit camps and ruins. */
 public class Settlement {
-    public enum Kind { SETTLEMENT, BANDIT_CAMP, RUIN }
+    /** BAND: a player's company travelling with them before they settle (no land, no buildings; its centre follows its leader). */
+    public enum Kind { SETTLEMENT, BANDIT_CAMP, RUIN, BAND }
 
     public enum Tier {
         CAMP("Camp", 0), HAMLET("Hamlet", 5), VILLAGE("Village", 14), TOWN("Town", 36), CITY("City", 90);
@@ -135,6 +136,7 @@ public class Settlement {
             case SETTLEMENT -> name;
             case BANDIT_CAMP -> name + " (outlaws)";
             case RUIN -> "Ruins of " + name;
+            case BAND -> name;
         };
     }
 

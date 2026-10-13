@@ -110,6 +110,9 @@ public final class Jobs {
                 boolean idle = p.profession == Profession.LABOURER;
                 // in a famine, low-priority workers may be pulled into the fields
                 boolean poachable = hungry && sl.priority >= 9 && priority(p.profession, hungry, s) < 5;
+                // an urgent trade may take one of two people doing a less urgent one (never someone's only worker)
+                if (!poachable && sl.priority >= 8 && p.profession != sl.profession && priority(p.profession, hungry, s) < sl.priority
+                        && have.getOrDefault(p.profession, 0) >= 2) poachable = true;
                 if (!idle && !poachable) continue;
                 double score = p.skill(sl.profession) + (idle ? 30 : 0) + p.diligence * 10;
                 if (p.mentor != null) {
@@ -131,6 +134,15 @@ public final class Jobs {
         for (Person p : adults) {
             if (p.profession == Profession.LABOURER) p.activity = "labouring";
         }
+    }
+
+    static boolean waitsFor(Settlement s, String... materials) {
+        if (s == null) return false;
+        for (Building b : s.buildings) {
+            if (!b.underConstruction()) continue;
+            for (String m : materials) if (b.problem.equals("Waiting for " + m + ".")) return true;
+        }
+        return false;
     }
 
     static int countIn(Building b, Profession p, List<Person> people) {
@@ -159,7 +171,9 @@ public final class Jobs {
             case FARMER, FISHER, HUNTER -> hungry ? 10 : 7;
             case SHEPHERD -> 5;
             case BUILDER -> 8;
-            case LUMBERJACK, QUARRIER -> 6;
+            // a trade whose goods the builders are waiting for is wanted urgently
+            case LUMBERJACK -> waitsFor(s, "logs", "fuel") ? 8 : 6;
+            case QUARRIER -> waitsFor(s, "stone", "glass") ? 8 : 6;
             case MILLER, BAKER -> hungry ? 9 : 6;
             case GUARD -> s.raidWarning > 0 ? 9 : 5;
             case SOLDIER -> s.raidWarning > 0 ? 8 : 4;

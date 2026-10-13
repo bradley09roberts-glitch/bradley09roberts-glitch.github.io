@@ -34,7 +34,7 @@ import java.util.Random;
  * site", "no stone in the stores") and turns to something else instead of walking into walls.
  */
 public class CitizenBrain {
-    public enum Mode { IDLE, SLEEP, WORK, SOCIAL, PLAY, SHELTER, PATROL, CAMP, RAID, FESTIVAL, FUNERAL }
+    public enum Mode { IDLE, SLEEP, WORK, SOCIAL, PLAY, SHELTER, PATROL, CAMP, RAID, FESTIVAL, FUNERAL, FOLLOW }
 
     public static final int CYCLE_TICKS = 1250;
 
@@ -96,6 +96,7 @@ public class CitizenBrain {
             case PLAY -> wander(e, level, homeOrCentre(level, s, p), 12, 0.7);
             case SHELTER -> shelter(e, level, sim, p, s);
             case PATROL -> patrol(e, level, s, p);
+            case FOLLOW -> follow(e, level, p, s);
             case CAMP -> wander(e, level, s.center, 10, 0.5);
             case RAID -> raid(e, level, sim, p, s);
             case FESTIVAL -> gather(e, level, p, s, holyPlace(level, s), "celebrating " + s.festival);
@@ -110,6 +111,7 @@ public class CitizenBrain {
     Mode decide(CitizenEntity e, WorldSim sim, Person p, Settlement s, long day, long time) {
         if (e.raidTarget != null) return Mode.RAID;
         if (p.profession == Profession.BANDIT) return Mode.CAMP;
+        if (s.kind == Settlement.Kind.BAND) return Mode.FOLLOW; // on the road with their leader, day and night
         boolean night = time >= 12600 && time < 23400;
         boolean fighter = e.isFighter();
         if (!fighter && danger(e, s)) return Mode.SHELTER;
@@ -187,6 +189,41 @@ public class CitizenBrain {
         }
         if (stuck == 0 && p.blocked.startsWith("I can't find a way")) p.blocked = "";
         return false;
+    }
+
+    /**
+     * A travelling company keeps close to its leader: they walk after them, spread out a little, and catch up (as a
+     * pet would) when the leader rides off or is carried far away. Without their leader in the world, they wait.
+     */
+    void follow(CitizenEntity e, ServerLevel level, Person p, Settlement s) {
+        net.minecraft.server.level.ServerPlayer leader = s.founderPlayer == null ? null : level.getServer().getPlayerList().getPlayer(s.founderPlayer);
+        if (leader == null || leader.serverLevel() != level || leader.isSpectator()) {
+            p.activity = "waiting for their leader";
+            wander(e, level, s.center, 5, 0.45);
+            return;
+        }
+        String name = leader.getGameProfile().getName();
+        double d = e.distanceTo(leader);
+        int slot = Math.max(0, s.residents.indexOf(p.id));
+        if (d > 40) {
+            BlockPos to = Places.standNear(level, leader.blockPosition(), level.random);
+            if (to != null && Places.ready(level, to)) { // never into the air: they catch up once the leader stands somewhere
+                e.getNavigation().stop();
+                e.teleportTo(to.getX() + 0.5, to.getY(), to.getZ() + 0.5);
+                stuck = 0;
+                failures = 0;
+            }
+            return;
+        }
+        double keep = 3.0 + slot % 4; // not all in one heap
+        if (d > keep + 2) {
+            p.activity = "travelling with " + name;
+            goTo(e, leader.blockPosition(), d > 14 ? 0.8 : 0.6, keep, p, name);
+            if (e.tickCount % 40 == 0 && d > 8) p.blocked = "";
+        } else {
+            p.activity = leader.isSleeping() ? "resting by the fire" : "keeping close to " + name;
+            if (e.tickCount % 120 == slot * 7 % 120) wander(e, level, leader.blockPosition(), 3, 0.4);
+        }
     }
 
     void wander(CitizenEntity e, ServerLevel level, BlockPos around, int radius, double speed) {

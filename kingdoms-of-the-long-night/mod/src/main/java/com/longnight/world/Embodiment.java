@@ -94,6 +94,12 @@ public final class Embodiment {
         if (gameTime % 20 != 0) return;
         long day = WorldSim.dayOf(level);
         Set<UUID> nowActive = new HashSet<>();
+        // a travelling company is wherever its leader is (while the leader is in this world)
+        for (Settlement s : sim.settlements.values()) {
+            if (s.kind != Settlement.Kind.BAND || s.founderPlayer == null) continue;
+            ServerPlayer leader = level.getServer().getPlayerList().getPlayer(s.founderPlayer);
+            if (leader != null && leader.serverLevel() == level && !leader.isSpectator()) s.center = leader.blockPosition();
+        }
         for (Settlement s : sim.settlements.values()) {
             if (s.center == null) continue;
             double best = Double.MAX_VALUE;
@@ -104,7 +110,7 @@ public final class Embodiment {
             }
             boolean near = best <= range + s.radius || OBSERVED.contains(s.id);
             boolean visible = near || best <= Math.max(range, 176) + s.radius;
-            if (visible && Places.loadedAround(level, s.center, 6)) { // the hearth stands 4 blocks from the centre
+            if (visible && s.kind != Settlement.Kind.BAND && Places.loadedAround(level, s.center, 6)) { // the hearth stands 4 blocks from the centre
                 // raise the place a little before the traveller arrives, so it is already there when seen
                 if (!s.materialized) materialize(level, sim, s);
                 VISIBLE.add(s.id);
@@ -114,7 +120,7 @@ public final class Embodiment {
                 if (workHours) sim.embodiedTicksToday.merge(s.id, 20 * 24000 / 10000, Integer::sum);
                 for (ServerPlayer p : players) {
                     double dx = p.getX() - s.center.getX(), dz = p.getZ() - s.center.getZ();
-                    if (Math.sqrt(dx * dx + dz * dz) < s.radius + 24) Arrival.visit(p, sim, s, day);
+                    if (s.kind != Settlement.Kind.BAND && Math.sqrt(dx * dx + dz * dz) < s.radius + 24) Arrival.visit(p, sim, s, day);
                 }
             }
         }
@@ -170,11 +176,17 @@ public final class Embodiment {
             Building work = s.building(p.workplace);
             if (work != null && work.origin != null && work.placed >= work.total) at = Places.mark(level, s, work, "work");
         }
+        if (s.kind == Settlement.Kind.BAND) {
+            at = Places.standNear(level, s.center, level.random);
+            if (at == null) return null; // the leader is in the air or the water: they appear when the leader is on foot
+        }
         if (at == null) at = s.center.offset(level.random.nextInt(9) - 4, 0, level.random.nextInt(9) - 4);
         // only where the chunk's entities are loaded and ticking: a body added to a chunk whose entities are still
         // loading is invisible to getEntity, which would make it look missing and get the person a second body
         if (!Places.ready(level, at) || !level.isPositionEntityTicking(at)) return null;
-        if (home == null || home.placed < home.total) at = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, at);
+        if (s.kind != Settlement.Kind.BAND && (home == null || home.placed < home.total)) {
+            at = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, at);
+        }
         CitizenEntity e = ModEntities.CITIZEN.get().create(level);
         if (e == null) return null;
         e.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, level.random.nextFloat() * 360f, 0);

@@ -171,14 +171,14 @@ public class SimulationTest {
         com.longnight.sim.Economy.daily(unwatched, 1);
         for (Settlement s : watched.settlements.values()) {
             for (Commodity c : Commodity.values()) {
-                if (c == Commodity.LOGS || c == Commodity.STONE || c == Commodity.FUEL) continue; // hand-gathering is never embodied
+                if (c == Commodity.LOGS || c == Commodity.STONE || c == Commodity.FUEL || c == Commodity.PLANKS) continue; // hand-gathering and hewing are never embodied
                 assertTrue(s.stock.get(c) <= w0.get(s.id).get(c) + 1e-9, s.name + " produced " + c + " twice");
             }
         }
         boolean produced = false;
         for (Settlement s : unwatched.settlements.values()) {
             for (Commodity c : Commodity.values()) {
-                if (c != Commodity.LOGS && c != Commodity.STONE && c != Commodity.FUEL && s.stock.get(c) > u0.get(s.id).get(c) + 1e-9) produced = true;
+                if (c != Commodity.LOGS && c != Commodity.STONE && c != Commodity.FUEL && c != Commodity.PLANKS && s.stock.get(c) > u0.get(s.id).get(c) + 1e-9) produced = true;
             }
         }
         assertTrue(produced, "the unwatched world worked its day abstractly");
@@ -192,6 +192,50 @@ public class SimulationTest {
             out.put(s.id, m);
         }
         return out;
+    }
+
+    @Test
+    void companyTravelsThenSettlesAndBuildsItsVillage() {
+        WorldSim sim = world(21);
+        java.util.UUID leader = java.util.UUID.randomUUID();
+        BlockPos road = new BlockPos(5000, 70, 5000); // far from every generated settlement
+        Settlement band = com.longnight.sim.Band.create(sim, leader, "Tester", road, 0, 6);
+        assertEquals(6, band.residents.size());
+        assertEquals(null, sim.settlementAt(road, 50), "a company on the road is not a place");
+        for (long d = 1; d <= 10; d++) sim.daily(d); // ten days on the road
+        assertEquals(List.of(), Invariants.checkData(sim));
+        long alive = band.residents.stream().map(sim::person).filter(p -> p != null && p.alive).count();
+        assertTrue(alive >= 5, "the company survives the road (packs and foraging): " + alive);
+        assertTrue(band.buildings.isEmpty(), "nothing is built on the road");
+        assertEquals(null, com.longnight.sim.Band.unsuitable(sim, road, leader));
+        Settlement s = com.longnight.sim.Band.settle(sim, band, road, "Tester", 10);
+        assertEquals(Settlement.Kind.SETTLEMENT, s.kind);
+        com.longnight.sim.Faction f = sim.faction(s.faction);
+        assertTrue(f.playerRealm && leader.equals(f.playerRuler));
+        for (long d = 11; d <= 60; d++) { // fifty days of making a home
+            sim.daily(d);
+            if (d % 10 == 0) {
+                double food = s.stock.foodUnits();
+                double hunger = sim.residents(s).stream().mapToDouble(p -> p.food).average().orElse(0);
+                System.out.printf("day %d: pop=%d food=%.0f hunger=%.2f stone=%.0f logs=%.0f planks=%.0f stored=%.0f/%d buildings=%s%n", d, s.residents.size(), food, hunger,
+                        s.stock.get(Commodity.STONE), s.stock.get(Commodity.LOGS), s.stock.get(Commodity.PLANKS), s.stock.total(), s.storageCapacity(),
+                        s.buildings.stream().map(b -> b.type.id() + (b.underConstruction() ? "(" + b.progress + "/" + b.total + ")" : "")).toList());
+                System.out.println("   jobs: " + sim.residents(s).stream().map(p -> p.profession.id() + (p.workplace != null && s.building(p.workplace) != null ? "@" + s.building(p.workplace).type.id() : "")).toList());
+            }
+        }
+        assertEquals(null, f.ruler, "a player's lordship is never handed to an NPC");
+        long built = s.buildings.stream().filter(b -> b.completedDay > 0 && b.type != BuildingType.CAMPSITE).count();
+        for (com.longnight.sim.Building b : s.buildings) System.out.println("  " + b.type.id() + " progress=" + b.progress + "/" + b.total + " placed=" + b.placed + " state=" + b.state + " problem=" + b.problem);
+        for (com.longnight.sim.Person p : sim.residents(s)) System.out.println("  " + p.given + " " + p.profession + " blocked=" + p.blocked + " food=" + p.food);
+        StringBuilder st = new StringBuilder();
+        for (Commodity c : Commodity.values()) if (s.stock.get(c) > 0.01) st.append(c).append('=').append(String.format("%.1f ", s.stock.get(c)));
+        System.out.println("  stock: " + st + " treasury=" + s.treasury);
+        System.out.println("  stone produced=" + s.stock.producedTotal(Commodity.STONE) + " consumed=" + s.stock.consumedTotal(Commodity.STONE)
+                + " quarry=" + s.hasUsable(BuildingType.QUARRY));
+        assertTrue(built >= 2, "they build their village themselves: " + built + " buildings");
+        assertEquals(List.of(), Invariants.checkData(sim));
+        System.out.println("company village after 50 days: " + s.tier + " pop=" + s.residents.size() + " buildings=" + s.buildings.size()
+                + " complete=" + built + " " + s.buildings.stream().map(b -> b.type.id() + (b.completedDay > 0 ? "" : "*")).toList());
     }
 
     @Test

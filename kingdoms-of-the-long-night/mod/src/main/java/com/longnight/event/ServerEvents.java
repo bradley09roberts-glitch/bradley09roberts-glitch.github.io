@@ -203,6 +203,10 @@ public final class ServerEvents {
                     + " blocks to the " + com.longnight.game.Journal.compass(dx, dz) + ".§r"));
         }
         p.sendSystemMessage(Ui.hint("Right-click with the journal to see places you know. /longnight help for more."));
+        // (not on the GameTest server, whose mock players log in like real ones; the tests set up companies themselves)
+        if (!(p.getServer() instanceof net.minecraft.gametest.framework.GameTestServer)) {
+            com.longnight.game.Founding.startBand(p, sim, com.longnight.Config.STARTING_COMPANY.get());
+        }
     }
 
     /** Looking at a person shows who they are and what they are doing, on the action bar. */

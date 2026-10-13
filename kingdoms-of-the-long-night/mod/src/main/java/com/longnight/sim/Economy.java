@@ -28,7 +28,9 @@ public final class Economy {
                 }
                 // without a lumber camp or quarry, idle hands gather deadwood and fieldstone (how camps bootstrap);
                 // bodies never gather physically, so this is always the abstract amount
-                if (p.profession == Profession.LABOURER) gather(s, 1.0);
+                if (p.profession == Profession.LABOURER) gather(sim, s, 1.0);
+                // builders whose work waits for materials go and fetch what they can by hand
+                else if (p.profession == Profession.BUILDER && waitingForMaterials(s)) gather(sim, s, 1.0);
                 // professions that serve rather than produce still earn a little and practise
                 if (!p.profession.producesGoods() && p.profession != Profession.LABOURER) {
                     p.addSkill(p.profession, 0.25f * (0.5f + p.diligence));
@@ -40,10 +42,27 @@ public final class Economy {
         Caravans.daily(sim, day);
     }
 
-    static void gather(Settlement s, double share) {
-        if (!s.hasUsable(BuildingType.LUMBER_CAMP) && s.stock.get(Commodity.LOGS) < 40) s.stock.add(Commodity.LOGS, 2.5 * share);
-        if (!s.hasUsable(BuildingType.LUMBER_CAMP) && s.stock.get(Commodity.FUEL) < 15) s.stock.add(Commodity.FUEL, 1.0 * share);
-        if (!s.hasUsable(BuildingType.QUARRY) && s.stock.get(Commodity.STONE) < 60) s.stock.add(Commodity.STONE, 3.0 * share);
+    static boolean waitingForMaterials(Settlement s) {
+        for (Building b : s.buildings) if (b.underConstruction() && b.problem.startsWith("Waiting for")) return true;
+        return false;
+    }
+
+    /** Someone actually works this kind of place (a quarry with no quarrier yields nothing). */
+    static boolean staffed(WorldSim sim, Settlement s, BuildingType t, Profession worker) {
+        if (!s.hasUsable(t)) return false;
+        for (Person p : sim.residents(s)) if (p.profession == worker && p.workplace != null) return true;
+        return false;
+    }
+
+    static void gather(WorldSim sim, Settlement s, double share) {
+        // without a carpentry, logs are split and hewn into rough planks by hand: slow and wasteful (a carpenter gets 4 a log)
+        if (!s.hasUsable(BuildingType.CARPENTRY) && s.stock.get(Commodity.PLANKS) < 30 && s.stock.take(Commodity.LOGS, 2.0 * share)) {
+            s.stock.add(Commodity.PLANKS, 4.0 * share);
+        }
+        boolean lumber = staffed(sim, s, BuildingType.LUMBER_CAMP, Profession.LUMBERJACK);
+        if (!lumber && s.stock.get(Commodity.LOGS) < 40) s.stock.add(Commodity.LOGS, 2.5 * share);
+        if (!lumber && s.stock.get(Commodity.FUEL) < 15) s.stock.add(Commodity.FUEL, 1.0 * share);
+        if (!staffed(sim, s, BuildingType.QUARRY, Profession.QUARRIER) && s.stock.get(Commodity.STONE) < 60) s.stock.add(Commodity.STONE, 3.0 * share);
     }
 
     static void equipTools(Settlement s, Person p, WorldSim sim) {
@@ -68,12 +87,13 @@ public final class Economy {
             p.blocked = "My workplace is damaged or gone.";
             return null;
         }
-        if (s.stock.total() >= s.storageCapacity()) {
+        double share = cycles / CYCLES_PER_DAY;
+        Map<Commodity, Double> targets = targets(sim, s);
+        // full stores stop surplus piling up, never the food people eat or the goods the builders are short of
+        if (s.stock.total() >= s.storageCapacity() && !feedsPeople(recipes) && !shortOfAny(s, targets, recipes)) {
             p.blocked = "The stores are full; we need another storehouse.";
             return null;
         }
-        double share = cycles / CYCLES_PER_DAY;
-        Map<Commodity, Double> targets = targets(sim, s);
         String missing = null;
         for (Profession.Recipe r : recipes) {
             boolean wanted = false;
@@ -103,6 +123,18 @@ public final class Economy {
         }
         p.blocked = missing != null ? "I have no " + missing + " to work with." : "We have plenty already; I am helping where I can.";
         return null;
+    }
+
+    static boolean shortOfAny(Settlement s, Map<Commodity, Double> targets, List<Profession.Recipe> recipes) {
+        for (Profession.Recipe r : recipes) {
+            for (Commodity out : r.outputs().keySet()) if (s.stock.get(out) < targets.getOrDefault(out, 0.0)) return true;
+        }
+        return false;
+    }
+
+    static boolean feedsPeople(List<Profession.Recipe> recipes) {
+        for (Profession.Recipe r : recipes) for (Commodity out : r.outputs().keySet()) if (out.nourishment > 0) return true;
+        return false;
     }
 
     public static double productivity(WorldSim sim, Settlement s, Person p, long day) {

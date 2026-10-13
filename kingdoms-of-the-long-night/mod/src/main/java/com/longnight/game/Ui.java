@@ -227,6 +227,9 @@ public final class Ui {
                 .append(" ").append(button("Family", "/longnight talk " + id + " family", "Ask about their family"))
                 .append(" ").append(button("Life", "/longnight talk " + id + " life", "Ask how life is"));
         if (s != null && s.kind == Settlement.Kind.SETTLEMENT) row.append(" ").append(button("Town", "/longnight town " + s.id, "Ask about " + s.name));
+        if (s != null && s.kind == Settlement.Kind.BAND && p.getUUID().equals(s.founderPlayer)) {
+            row.append(" ").append(button("Settle here", "/longnight settle", "Make your home here, where you stand (uses the Founding Charter)"));
+        }
         p.sendSystemMessage(row);
     }
 
