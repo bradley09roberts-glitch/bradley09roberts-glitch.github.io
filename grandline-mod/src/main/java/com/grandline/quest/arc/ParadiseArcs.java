@@ -11,8 +11,7 @@ import static com.grandline.quest.arc.ArcBuilder.*;
 
 /**
  * Part II of the saga, the Paradise Gauntlet, written as chapters: the Twin Capes, Whisky Peak, Little Garden, Drum
- * Island and Alabasta. Text: lang/en_us/story_overhaul_paradise.json. (Jaya onwards keep their earlier shape for now
- * and are listed for the journal in {@link LaterArcs}.)
+ * Island and Alabasta. Text: lang/en_us/story_overhaul_paradise.json. (Jaya to Sabaody: {@link SabaodyRoadArcs}.)
  */
 final class ParadiseArcs {
     private ParadiseArcs() {}

@@ -543,11 +543,24 @@ final class StoryOverhaulTests {
         StoryMigration.migrate(e);
         if (!QuestRegistry.isDone(de, "south_sorbet_royal") || !de.questProgress.containsKey("capes_1")) bad.add("sorbet audience (talked already) did not complete: " + de.questProgress.keySet());
         for (String id : List.of("south_freezers", "south_choice", "south_brinicle")) if (!QuestRegistry.isDone(de, id)) bad.add(id + " not passed");
-        // 5) every quest a migrated character has under way exists, and old completions are all still there
-        for (CharacterData x : List.of(d, db, dc, de))
+        // 5) the old Long Ring quest finished (it held the duel with Ayame): the duel, now a later step, counts as won, the
+        //    steps in front of it are passed, and Gunnar's recruitment is on offer
+        FakePlayer g = player(s, "OldSaveRing", Faction.PIRATE);
+        CharacterData dg = Characters.get(g);
+        dg.flags.remove(Arcs.MIGRATED);
+        dg.completedQuests.add("ring_1");
+        dg.discoveredIslands.add("long_ring_long_land");
+        StoryMigration.migrate(g);
+        for (String id : List.of("ring_round1", "ring_knots", "ring_pledge", "ring_choice", "ring_final"))
+            if (!QuestRegistry.isDone(dg, id)) bad.add("ring: " + id + " not passed");
+        if (QuestRegistry.isDone(dg, "ring_expose") || QuestRegistry.isDone(dg, "ring_quiet")) bad.add("ring: a decision branch was marked done");
+        if (!dg.flags.contains("beat:ayame")) bad.add("ring: the old duel was not remembered");
+        if (QuestRegistry.isDone(dg, "recruit_gunnar") || !QuestRegistry.canOffer(dg, QuestRegistry.get("recruit_gunnar"))) bad.add("ring: recruitment not on offer");
+        // 6) every quest a migrated character has under way exists, and old completions are all still there
+        for (CharacterData x : List.of(d, db, dc, de, dg))
             for (String id : x.questProgress.keySet()) if (QuestRegistry.get(id) == null) bad.add("under way but unknown: " + id);
         if (!db.completedQuests.isEmpty() && !db.completedQuests.contains("orange_1")) bad.add("orange: completions lost");
-        // 6) migration runs once
+        // 7) migration runs once
         int again = StoryMigration.migrate(a);
         if (again != 0) bad.add("migrated twice");
         SelfTest.check("save migration: old quest ids land on the equivalent step, nobody sent back or stuck, once per character", bad.isEmpty(),

@@ -23,8 +23,8 @@ final class StoryQuests {
         out = all;
         // Part I (the Four Embers' openings, the East Blue, the North, West and South Blue) is written as chapters with
         // scenes, decisions and consequences: quest/arc/EastBlueArcs.java and BluesArcs.java
+        // Part II up to Sabaody likewise: quest/arc/ParadiseArcs.java and SabaodyRoadArcs.java
         com.grandline.quest.arc.Arcs.register(all, IDS);
-        paradise();
         calmBelt();
         war();
         newWorld();
@@ -124,59 +124,7 @@ final class StoryQuests {
         return () -> new ItemStack(ModItems.SEASTONE_CUFFS.get(), n);
     }
 
-    // ================================================================== Part II — the Paradise Gauntlet
-
-    private static void paradise() {
-        String A = "paradise";
-        // Jaya — "The Debt and the Sky"
-        q("jaya_1", "aria", "jaya", A).discover("jaya").talk("felicity").kill("pirate", 8).reward(5000, 10000).next("jaya_2").add();
-        q("jaya_2", "aria", "jaya", A).defeat("usurio").reward(6500, 15000).rep("island/jaya", 200).req("jaya_1").next("water7_1").add();
-        q("recruit_aria", "aria", "jaya", "recruit").kill("pirate", 5).discover("long_ring_long_land").reward(2500, 2000).req("jaya_2").add();
-        // Long Ring Long Land — "Tug-of-Tides"
-        q("ring_1", "gunnar", "long_ring_long_land", A).discover("long_ring_long_land").defeat("ayame").kill("pirate", 4).reward(5000, 8000).add();
-        q("recruit_gunnar", "gunnar", "long_ring_long_land", "recruit").talk("ayame").reward(2000, 1000).req("ring_1").add();
-        // Water 7 — "The Three Guilds"
-        q("water7_1", "hollis", "water_7", A).discover("water_7").talk("kanna").talk("matthias").reward(6000, 12000).next("water7_2").add();
-        q("water7_2", "hollis", "water_7", A).defeat("nimue").defeat("brick").reward(9000, 20000).bounty(40_000_000).req("water7_1").next("water7_3").add();
-        q("water7_2.marine", "hollis", "water_7", A).defeat("nimue").defeat("brick").reward(9000, 25000).rep("marine", 200)
-                .req("water7_1").next("water7_3").add();
-        q("water7_3", "hollis", "water_7", A).talk("kanna").kill("pirate", 6).reward(6000, 10000).rep("island/water_7", 250).req("water7_2").next("enies_1").add();
-        q("recruit_kanna", "kanna", "water_7", "recruit").talk("hollis").kill("pirate", 5).reward(3000, 3000).req("water7_2").add();
-        // Enies Lobby — "The Gates of Justice"
-        q("enies_1", "nimbus", "enies_lobby", A).discover("enies_lobby").kill("cp_agent", 3).reward(9000, 15000).bounty(60_000_000).next("enies_2").add();
-        q("enies_1.marine", "dmitri", "enies_lobby", A).discover("enies_lobby").talk("dmitri").kill("pirate", 6).reward(9000, 20000).rep("marine", 200)
-                .next("enies_2").add();
-        q("enies_2", "nimbus", "enies_lobby", A).defeat("gregor").reward(12000, 25000).bounty(80_000_000).req("enies_1").next("enies_3").add();
-        q("enies_2.marine", "dmitri", "enies_lobby", A).talk("nimbus").talk("dmitri").kill("pirate", 6).reward(12000, 30000).rep("marine", 250)
-                .flag("chose_evacuation").req("enies_1").next("enies_3").add();
-        q("enies_3", "nimbus", "enies_lobby", A).kill("marine", 6).reward(8000, 15000).bounty(50_000_000).req("enies_2").next("thriller_1").add();
-        q("enies_3.marine", "dmitri", "enies_lobby", A).talk("dmitri").kill("pirate", 6).reward(8000, 20000).rep("marine", 200).req("enies_2").next("thriller_1").add();
-        q("enies_3.revolutionary", "nimbus", "enies_lobby", A).kill("marine", 6).reward(8000, 15000).bounty(40_000_000)
-                .rep("revolutionary", 250).req("enies_2").next("thriller_1").add();
-        q("enies_3.bounty_hunter", "nimbus", "enies_lobby", A).kill("pirate", 6).reward(8000, 30000).rep("bounty_hunter", 200).req("enies_2").next("thriller_1").add();
-        q("enies_3.civilian", "nimbus", "enies_lobby", A).talk("nimbus").talk("dmitri").reward(8000, 12000).rep("civilian", 200).req("enies_2").next("thriller_1").add();
-        q("recruit_nimbus", "nimbus", "enies_lobby", "recruit").kill("cp_agent", 2).reward(3000, 3000).req("enies_2").add();
-        // Thriller Bark — "The Mirror-Monger"
-        q("thriller_1", "mortimer", "thriller_bark", A).discover("thriller_bark").kill("pirate", 8).reward(9000, 15000).next("thriller_2").add();
-        q("thriller_2", "mortimer", "thriller_bark", A).defeat("lucrezia").reward(13000, 30000).bounty(70_000_000).rep("civilian", 80)
-                .req("thriller_1").next("sabaody_1").add();
-        q("thriller_2.marine", "mortimer", "thriller_bark", A).defeat("lucrezia").reward(13000, 40000).rep("marine", 200)
-                .req("thriller_1").next("sabaody_1").add();
-        // Sabaody — "The Auction of Souls"
-        q("sabaody_1", "ume", "sabaody_archipelago", A).discover("sabaody_archipelago").talk("coralie").talk("edison").reward(10000, 20000).next("sabaody_2").add();
-        q("sabaody_2", "coralie", "sabaody_archipelago", A).defeat("augustin").kill("pirate", 6).reward(14000, 30000).bounty(100_000_000)
-                .rep("civilian", 100).req("sabaody_1").next("sabaody_3").add();
-        q("sabaody_2.marine", "zenith", "sabaody_archipelago", A).talk("zenith").talk("pompadour").kill("pirate", 8).reward(14000, 40000).rep("marine", 250)
-                .req("sabaody_1").next("sabaody_3").add();
-        q("sabaody_2.civilian", "coralie", "sabaody_archipelago", A).talk("coralie").talk("ume").kill("pirate", 6).reward(14000, 20000).rep("civilian", 250)
-                .req("sabaody_1").next("sabaody_3").add();
-        q("sabaody_3", "ume", "sabaody_archipelago", A).kill("marine", 8).talk("ume").reward(15000, 20000).bounty(50_000_000)
-                .req("sabaody_2").flag("lamplighter_captured").next("lily_1").add();
-        q("sabaody_3.marine", "zenith", "sabaody_archipelago", A).talk("zenith").kill("pirate", 8).reward(15000, 30000).rep("marine", 200)
-                .req("sabaody_2").flag("lamplighter_captured").next("lily_1").add();
-    }
-
-    // ================================================================== Part II — the Calm Belt interlude
+    // ================================================================== Part II — the Calm Belt (after Sabaody)
 
     private static void calmBelt() {
         String A = "calm_belt";

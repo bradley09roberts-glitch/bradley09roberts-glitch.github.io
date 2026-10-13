@@ -41,6 +41,7 @@ public final class Arcs {
             EastBlueArcs.register();
             BluesArcs.register();
             ParadiseArcs.register();
+            SabaodyRoadArcs.register();
         } finally {
             ArcBuilder.out = null;
             ArcBuilder.storyIds = null;
