@@ -37,10 +37,10 @@ the rich client was verified without longnight below, and longnight adds no rend
 | Crash reports / mixin failures / missing deps | none | none |
 | `.mrpack` builds deterministic | yes: two consecutive builds byte-identical | yes |
 
-Current release files (with the company start, 13 Oct 2026 ~13:00 BST; these are the files in `dist/`):
-- `KingdomsOfTheLongNight-0.1.0-performance.mrpack` `d6166a2b0658ccd7d8889a03e7b2241091d3a1769143289b3e6980c09167b3b1`
-- `KingdomsOfTheLongNight-0.1.0-rich.mrpack` `29997ceb171062687ed24de232a4ce1fba99a1d2bd65ce2fec65c62ae7128a7e`
-- `longnight-0.1.0.jar` `e0a4395e94f0275dca26f2659b5cc0e9c8eb6221236b7a4cff00fe8ffb3b3e18`
+Current release files (with the company start, 13 Oct 2026 ~13:15 BST; these are the files in `dist/`; they differ from the ~13:00 build only in the dev-only screenshot pilot, which is off unless started with -Dlongnight.autoshot):
+- `KingdomsOfTheLongNight-0.1.0-performance.mrpack` `9bb177714d347adb36d94d9a1d48275c1ccff2e949bbf6cccd35f505a12a5d5f`
+- `KingdomsOfTheLongNight-0.1.0-rich.mrpack` `0bebad0bec43658582087bb2cd874076d60919d08f7ce570f1014b01787df6b5`
+- `longnight-0.1.0.jar` `180b45e82aab07b1b7fec1eed64d39875ed14f04feb33c7ce3efae53ba4a096e`
 
 Earlier `.mrpack` sha256 (built without the core mod, for the first round of runs below):
 - `KingdomsOfTheLongNight-0.1.0-performance.mrpack` `e2232070111249f67d7ce6494add85a8a9bbb7ed9be0b7c56711d388d59d558c`

@@ -129,3 +129,8 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   a single builder stuck on one project; quarry unstaffed because every adult had a job; full stores blocking the
   quarry). All fixed in the economy/planner/jobs (see STATUS "Camps bootstrap themselves"). Company now: camp -> hamlet
   of 10-11 with 5-7 buildings in 50 days; 200-day world: ~580 alive, 28 settlements, ~290 buildings (was ~510 / ~200).
+- 13:15 Company start in the full-pack client, two runs (AutoShot company mode: start, settle, skip days, overhead shots):
+  PASS; Cael (run 1) and Ulvaessa (run 2) built farm, lumber camp, house, carpentry, quarry (+ storehouse, 2nd house in
+  run 1) by day 25 with every block placed in the world. Run 1 logged a ConcurrentModificationException in
+  NewsSystem: the pilot ran /longnight admin skip from the render thread; AutoShot.run now hands commands to the server
+  thread; run 2 has no longnight errors.
