@@ -135,6 +135,11 @@ final class ArcBuilder {
         S discover(String island) { return o("discover", island, 1); }
         S poneglyph(int n) { return o("poneglyph", "any", n); }
         S collect(String item, int n) { return o("collect", item, n); }
+        /** Go to a place of the step's island (a "reach" objective on a chapter place, see {@link #site}). */
+        S reach(String name, String anchor) {
+            ArcSites.declare(id, island, obj.size(), name, anchor, null);
+            return o("reach", "arc." + name, 1);
+        }
         S slay(String kind, int n) { return o("slay", kind, n); }
         /** The four parts of the combat lesson (land a blow, guard, dodge, use a technique). */
         S lesson() {

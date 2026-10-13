@@ -123,7 +123,7 @@ public final class QuestRegistry {
     public static boolean canOffer(com.grandline.player.CharacterData d, QuestDef q) {
         if (d.questProgress.containsKey(q.id())) return false;
         if (!q.repeatable() && isDone(d, q.id())) return false;
-        return requirementsMet(d, q);
+        return requirementsMet(d, q) && com.grandline.quest.arc.Arcs.inOrder(d, q); // story chapters are offered in order
     }
 
     @Nullable

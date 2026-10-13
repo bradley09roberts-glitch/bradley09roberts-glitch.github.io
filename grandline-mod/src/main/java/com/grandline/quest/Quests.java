@@ -154,6 +154,13 @@ public final class Quests {
         }
         Scenes.play(sp, q, "end"); // a story step closes with its scene
         String next = Arcs.next(q, d); // a decision sends the chapter down the branch the player chose
+        // a step already done (taken early from its giver, or passed in an older save) is skipped, so the chain never stops short
+        for (int hops = 0; next != null && hops < 12; hops++) {
+            String id = QuestRegistry.resolve(next, d);
+            QuestDef nq = QuestRegistry.get(id);
+            if (nq == null || nq.repeatable() || !QuestRegistry.isDone(d, id) || d.questProgress.containsKey(id)) break;
+            next = Arcs.next(nq, d);
+        }
         if (next != null) start(sp, QuestRegistry.resolve(next, d));
         CharacterManager.markDirty(sp);
     }

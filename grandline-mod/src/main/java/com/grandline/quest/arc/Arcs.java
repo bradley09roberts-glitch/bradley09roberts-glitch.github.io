@@ -40,6 +40,7 @@ public final class Arcs {
         try {
             EastBlueArcs.register();
             BluesArcs.register();
+            ParadiseArcs.register();
         } finally {
             ArcBuilder.out = null;
             ArcBuilder.storyIds = null;
@@ -61,6 +62,7 @@ public final class Arcs {
         }
         for (Arc.Cast c : a.cast()) BY_CAST.computeIfAbsent(c.who(), k -> new ArrayList<>()).add(a);
         fightSteps = null;
+        predecessors = null;
     }
 
     // ================================================================== lookups
@@ -127,6 +129,40 @@ public final class Arcs {
             if (ch != null && ch.next() != null) return ch.next();
         }
         return q.next();
+    }
+
+    /** step (base id) → the steps of its chapter that lead to it (by next, in any variant, or by a decision's branch). */
+    private static Map<String, Set<String>> predecessors;
+
+    /** The steps of the same chapter whose chain leads straight to this one (empty for a chapter's first step). */
+    public static Set<String> predecessors(String questId) {
+        Map<String, Set<String>> m = predecessors;
+        if (m == null) {
+            m = new HashMap<>();
+            for (QuestDef q : QuestRegistry.all()) {
+                Arc a = arcOf(q.id());
+                if (a == null) continue;
+                String base = QuestRegistry.baseId(q.id());
+                if (q.next() != null && arcOf(q.next()) == a) m.computeIfAbsent(QuestRegistry.baseId(q.next()), k -> new HashSet<>()).add(base);
+                Decision dec = decisionAt(q.id());
+                if (dec != null) for (Arc.Choice c : dec.choices()) if (c.next() != null) m.computeIfAbsent(c.next(), k -> new HashSet<>()).add(base);
+            }
+            predecessors = m;
+        }
+        return m.getOrDefault(QuestRegistry.baseId(questId), Set.of());
+    }
+
+    /**
+     * Whether a chapter step may be offered in conversation: a step that requires earlier ones is offered only once the
+     * step leading to it is done, so nobody skips a chapter's middle by asking its giver (recruitment steps keep their
+     * own rule: they stay on offer from the recruit once the climax is over).
+     */
+    public static boolean inOrder(CharacterData d, QuestDef q) {
+        if (q.requires().isEmpty() || q.arc().equals("recruit") || arcOf(q.id()) == null) return true;
+        Set<String> pre = predecessors(q.id());
+        if (pre.isEmpty()) return true;
+        for (String p : pre) if (QuestRegistry.isDone(d, p)) return true;
+        return false;
     }
 
     /** The active quest id (exact variant) of a step for this character, or null. */

@@ -128,42 +128,6 @@ final class StoryQuests {
 
     private static void paradise() {
         String A = "paradise";
-        // Twin Capes
-        q("capes_1", "wilhelmina", "twin_capes", A).talk("wilhelmina").kill("pirate", 3).reward(2000, 3000).item(LOG_POSE).next("capes_2").add();
-        q("capes_2", "wilhelmina", "twin_capes", A).discover("whisky_peak").reward(1500, 2000).req("capes_1").next("whisky_1").add();
-        // Whisky Peak — "The Gilded Welcome"
-        q("whisky_1", "hugo", "whisky_peak", A).discover("whisky_peak").kill("pirate", 6).reward(2500, 5000).next("whisky_2").add();
-        q("whisky_1.bounty_hunter", "hugo", "whisky_peak", A).discover("whisky_peak").talk("hugo").kill("pirate", 6).reward(2500, 8000)
-                .rep("bounty_hunter", 150).item(cuffs(4)).next("whisky_2").add();
-        q("whisky_2", "hugo", "whisky_peak", A).defeat("doubloon").defeat("farthing").reward(3500, 8000).rep("island/whisky_peak", 150)
-                .req("whisky_1").next("garden_1").add();
-        q("recruit_ignatz", "ignatz", "whisky_peak", "recruit").kill("pirate", 4).reward(1200, 2000).req("whisky_2").add();
-        // Little Garden — "The Seventy-Year Bake-Off"
-        q("garden_1", "astrid", "little_garden", A).discover("little_garden").talk("ylva").kill("pirate", 5).reward(3000, 5000).next("garden_2").add();
-        q("garden_2", "astrid", "little_garden", A).defeat("shilling").reward(4000, 9000).rep("island/little_garden", 200).item(steak(4))
-                .req("garden_1").next("drum_1").add();
-        q("recruit_hilde", "hilde", "little_garden", "recruit").talk("astrid").kill("pirate", 4).reward(1500, 1000).req("garden_2").add();
-        // Drum Island — "Panacea"
-        q("drum_1", "pippa", "drum_island", A).discover("drum_island").talk("raven").kill("pirate", 4).reward(3500, 6000).next("drum_2").add();
-        q("drum_2", "pippa", "drum_island", A).defeat("panacea").reward(5000, 10000).rep("island/drum_island", 200).rep("civilian", 50)
-                .req("drum_1").next("alabasta_1").add();
-        q("recruit_pippa", "pippa", "drum_island", "recruit").talk("resident", 2).kill("pirate", 3).reward(1500, 1000).req("drum_2").add();
-        // Alabasta — "Salt in the Wells"
-        q("alabasta_1", "sefa", "alabasta", A).discover("alabasta").talk("rashid").kill("pirate", 6).reward(4000, 8000).next("alabasta_2").add();
-        q("alabasta_2", "sefa", "alabasta", A).defeat("celestine").reward(5000, 12000).bounty(30_000_000).req("alabasta_1").next("alabasta_3").add();
-        q("alabasta_2.marine", "rashid", "alabasta", A).defeat("celestine").talk("rashid").reward(5000, 15000).rep("marine", 150)
-                .req("alabasta_1").next("alabasta_3").add();
-        q("alabasta_2.revolutionary", "sefa", "alabasta", A).talk("rashid").kill("pirate", 8).reward(5000, 8000).bounty(20_000_000)
-                .rep("revolutionary", 200).req("alabasta_1").next("alabasta_3").add();
-        q("alabasta_3", "sefa", "alabasta", A).defeat("saltmarsh").reward(8000, 20000).bounty(80_000_000).rep("island/alabasta", 300).rep("civilian", 80)
-                .req("alabasta_2").flag("saltmarsh_toppled").next("jaya_1").add();
-        q("alabasta_3.marine", "rashid", "alabasta", A).defeat("saltmarsh").reward(8000, 30000).rep("island/alabasta", 300).rep("marine", 250)
-                .req("alabasta_2").flag("saltmarsh_toppled").next("jaya_1").add();
-        q("alabasta_3.bounty_hunter", "sefa", "alabasta", A).defeat("saltmarsh").reward(8000, 60000).rep("island/alabasta", 300).rep("bounty_hunter", 200)
-                .req("alabasta_2").flag("saltmarsh_toppled").next("jaya_1").add();
-        q("alabasta_3.civilian", "rashid", "alabasta", A).talk("rashid").kill("pirate", 6).reward(8000, 15000).rep("island/alabasta", 300).rep("civilian", 200)
-                .req("alabasta_2").flag("saltmarsh_toppled").next("jaya_1").add();
-        q("recruit_sefa", "sefa", "alabasta", "recruit").poneglyph(1).talk("rashid").reward(2500, 2000).req("alabasta_2").add();
         // Jaya — "The Debt and the Sky"
         q("jaya_1", "aria", "jaya", A).discover("jaya").talk("felicity").kill("pirate", 8).reward(5000, 10000).next("jaya_2").add();
         q("jaya_2", "aria", "jaya", A).defeat("usurio").reward(6500, 15000).rep("island/jaya", 200).req("jaya_1").next("water7_1").add();

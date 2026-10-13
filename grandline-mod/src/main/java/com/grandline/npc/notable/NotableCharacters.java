@@ -220,6 +220,7 @@ public final class NotableCharacters {
         add(n("clementine", PATRON, CIV, "farmer", 2, "orange_town", -10, -22).disp(FRIENDLY));
         add(n("corvel", VIL, CIV, "noble", 2, "ilisia_kingdom", -16, -128).weapon("rapier").haki(10, 0, 0).disp(VILLAIN));
         add(n("brinicle", VIL, PIRATE, "pirate_captain", 3, "sorbet_kingdom", 64, -36).style("tide_grapple").haki(10, 10, 0).disp(VILLAIN));
+        add(n("orrin", VIL, PIRATE, "pirate_captain", 4, "twin_capes", -50, 40).weapon("cutlass").haki(20, 20, 0).disp(VILLAIN));
         // ---------------- Paradise rulers and villains ----------------
         add(n("doubloon", VIL, PIRATE, "pirate_captain", 4, "whisky_peak", -190, 10).style("gunslinger").weapon("flintlock").haki(20, 20, 0).disp(VILLAIN));
         add(n("farthing", VIL, PIRATE, "pirate_captain", 4, "whisky_peak", -210, -10).weapon("dual_blades").haki(20, 20, 0).disp(VILLAIN));
