@@ -93,3 +93,11 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   `hasChunk` are true as soon as a chunk is *scheduled* to be full (ticket level), not when it is generated; a read
   then blocks until generation finishes. FIX: `Places.ready` = `getChunkNow(x, z) != null` (non-blocking, true only for
   a complete chunk) replaces every isLoaded/hasChunk guard in world/ and game/.
+- 03:00 Run13: JUnit 10/10, GameTests 7/7, scenario 17/17; worst longnight tick 92 ms (was 6.9 s). Rebuilt dist.
+  Full-pack server (random seed): PASS, 40 mod ids, 0 ERROR; but that seed (325732621701581716) is sea-heavy: the survey
+  found only 4 sites -> a 4-settlement world. FIX: SiteFinder samples further rings (x1.5, up to 4 rounds) until it has
+  twice the sites needed. Full-pack client: PASS (Skrell town Kekkrattle on a mangrove coast, 32 buildings, 29 bodies;
+  portrait camera fix works; screenshots tools/test/screenshots/fullpack-skrell-*). Raising the town caused no slow
+  tick in the full pack, but the slow-tick log showed 0.8-2.1 s ticks in "raids and roads" (no raid was possible):
+  road blocks set at a chunk edge update their neighbours, which may sit in a chunk still generating. FIX: a road chunk
+  is paved only when all 8 neighbour chunks are ready; signposts and repairs check their neighbourhood too.

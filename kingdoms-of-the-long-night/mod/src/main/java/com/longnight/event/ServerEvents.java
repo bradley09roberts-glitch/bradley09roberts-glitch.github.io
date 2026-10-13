@@ -154,8 +154,10 @@ public final class ServerEvents {
         Embodiment.tick(ow, sim);
         long t2 = System.nanoTime();
         RaidManager.tick(ow, sim);
+        long tr = System.nanoTime();
         if (ow.getGameTime() % 40 == 7) com.longnight.world.Roads.tick(ow, sim);
         long t3 = System.nanoTime();
+        if (t3 - t2 > 250_000_000L) LongNight.LOG.warn("longnight: raids {} ms, roads {} ms", (tr - t2) / 1_000_000, (t3 - tr) / 1_000_000);
         if (ow.getGameTime() % 20 == 11) com.longnight.world.CaravanBodies.tick(ow, sim);
         com.longnight.world.Perf.sections(t1 - t0, t2 - t1, t3 - t2);
         if (ow.getGameTime() % 10 == 3) for (ServerPlayer p : server.getPlayerList().getPlayers()) lookHint(p, sim);

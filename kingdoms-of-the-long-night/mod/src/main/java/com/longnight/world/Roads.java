@@ -73,7 +73,9 @@ public final class Roads {
                     int x = (int) Math.round(a.center.getX() + (b.center.getX() - a.center.getX()) * s / len);
                     int z = (int) Math.round(a.center.getZ() + (b.center.getZ() - a.center.getZ()) * s / len);
                     long chunk = ChunkPos.asLong(x >> 4, z >> 4);
-                    if (r.done.contains(chunk) || !Places.ready(level, x >> 4, z >> 4)) continue;
+                    // the chunk and all eight neighbours: setting a block updates its neighbours, and a neighbour in a
+                    // chunk that is still generating would make the server thread wait for it
+                    if (r.done.contains(chunk) || !readyAround(level, x >> 4, z >> 4)) continue;
                     pave(level, sim, r, a, b, x >> 4, z >> 4, len);
                     r.done.add(chunk);
                     budget--;
@@ -81,6 +83,11 @@ public final class Roads {
                 }
             }
         }
+    }
+
+    static boolean readyAround(ServerLevel level, int cx, int cz) {
+        for (int x = cx - 1; x <= cx + 1; x++) for (int z = cz - 1; z <= cz + 1; z++) if (!Places.ready(level, x, z)) return false;
+        return true;
     }
 
     static double project(double x, double z, BlockPos a, BlockPos b) {
@@ -155,7 +162,7 @@ public final class Roads {
     /** A post at a settlement's edge, its sign naming where the road goes and how far. */
     static void signpost(ServerLevel level, WorldSim sim, int x, int z, double dirX, double dirZ, Settlement to, int distance) {
         int ox = (int) Math.round(x + dirZ * 2), oz = (int) Math.round(z - dirX * 2); // beside the road
-        if (!Places.ready(level, new BlockPos(ox, 0, oz))) return;
+        if (!Places.loadedAround(level, new BlockPos(ox, 0, oz), 1)) return;
         BlockPos top = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(ox, 0, oz));
         if (sim.claimed(top, 0) || !level.getBlockState(top).isAir()) return;
         BlockState below = level.getBlockState(top.below());

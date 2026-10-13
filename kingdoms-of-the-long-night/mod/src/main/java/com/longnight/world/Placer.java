@@ -257,6 +257,7 @@ public final class Placer {
         Blueprint bp = Construction.blueprint(s, b);
         Blueprint.Step st = bp.steps.get(i);
         BlockPos wp = Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, st.x(), st.y(), st.z());
+        if (!Places.loadedAround(level, wp, 1)) return true; // try again when the neighbourhood is loaded; no charge
         if (sim.claimed(wp, 0) || !level.getBlockState(wp).isAir()) return true; // nothing to mend here: no charge
         var cost = bp.stepCost(i);
         if (!s.stock.takeAll(cost, 1)) {
