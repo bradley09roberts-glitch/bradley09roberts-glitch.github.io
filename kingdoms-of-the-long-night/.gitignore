@@ -8,3 +8,6 @@ mod/out/
 *.log
 # downloaded jars are referenced by the .mrpack, never committed
 modpack/cache/
+
+# diagnostic probe runs (evidence summarised in docs/NOTES.md)
+tools/test/results/probe-*
