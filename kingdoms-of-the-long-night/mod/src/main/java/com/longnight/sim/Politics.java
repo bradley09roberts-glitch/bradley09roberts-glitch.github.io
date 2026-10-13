@@ -28,6 +28,11 @@ public final class Politics {
                 sim.log(day, f.name + " has fallen; no settlement flies its banner.");
                 continue;
             }
+            if (f.playerRealm) {
+                f.agenda = Faction.Agenda.CONSOLIDATE; // a player's realm acts only through its player
+                taxes(f);
+                continue;
+            }
             Person ruler = sim.person(f.ruler);
             if (ruler == null || !ruler.alive) succession(sim, f, day);
             ruler = sim.person(f.ruler);
@@ -139,6 +144,7 @@ public final class Politics {
     }
 
     public static void succession(WorldSim sim, Faction f, long day) {
+        if (f.playerRealm) return;
         Person old = sim.person(f.ruler);
         if (old != null) {
             f.pastRulers.add(old.id);

@@ -85,8 +85,10 @@ public enum Profession {
     public List<Recipe> recipes() {
         return switch (this) {
             case FARMER -> List.of(Recipe.of("->", Commodity.GRAIN, 7.0, Commodity.VEGETABLES, 3.0));
-            case LUMBERJACK -> List.of(Recipe.of("->", Commodity.LOGS, 6.0));
-            case QUARRIER -> List.of(Recipe.of("->", Commodity.STONE, 10.0));
+            case LUMBERJACK -> List.of(Recipe.of("->", Commodity.LOGS, 6.0, Commodity.FUEL, 1.0));
+            // the quarry yard digs sand too and fires a little glass in its kiln when there is fuel
+            case QUARRIER -> List.of(Recipe.of("<-", Commodity.FUEL, 0.5, "->", Commodity.STONE, 8.0, Commodity.GLASS, 1.5),
+                    Recipe.of("->", Commodity.STONE, 10.0));
             case MINER -> List.of(Recipe.of("->", Commodity.ORE, 3.0, Commodity.FUEL, 2.0, Commodity.STONE, 2.0));
             case FISHER -> List.of(Recipe.of("->", Commodity.FISH, 5.0));
             case HUNTER -> List.of(Recipe.of("->", Commodity.MEAT, 3.0, Commodity.LEATHER, 1.0));

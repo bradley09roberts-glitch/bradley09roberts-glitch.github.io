@@ -35,7 +35,7 @@ def prepare(seed, keep):
         "online-mode": "false", "enable-rcon": "true", "rcon.port": "25575", "rcon.password": "longnight-test",
         "server-port": "25566", "level-name": "longnight-test-world", "level-seed": str(seed), "hardcore": "true",
         "difficulty": "hard", "spawn-protection": "0", "view-distance": "6", "simulation-distance": "6",
-        "max-tick-time": "-1", "sync-chunk-writes": "false",
+        "sync-chunk-writes": "false",  # default watchdog (60 s) stays ON: a long tick is a failure
     }
     with open(os.path.join(RUN, "server.properties"), "w") as f:
         for k, v in props.items():
@@ -116,7 +116,13 @@ def main():
         note(f"> {c}\n{res}")
         return res
 
+    # the world's history is written on a background thread; wait for it
+    t0 = time.time()
     status0 = run("longnight admin status")
+    while "settlements=0 " in status0 and time.time() - t0 < 300:
+        time.sleep(5)
+        status0 = r.cmd("longnight admin status")
+    note(f"history ready after {time.time() - t0:.0f}s: {status0}")
     check("world history generated", "settlements=" in status0 and not re.search(r"settlements=0\b", status0), status0)
     listing = run("longnight admin list")
     v = run("longnight admin validate")

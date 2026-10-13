@@ -16,7 +16,7 @@ public final class Calendar {
     }
 
     public static long year(long day, int daysPerYear) {
-        return Math.floorDiv(day, daysPerYear) + 412; // the Reckoning began 412 years before the first day
+        return Math.floorDiv(day, daysPerYear) + 2317; // the world opens in the 2317th year After the Binding (AB)
     }
 
     public static Season season(long day, int daysPerYear) {
@@ -32,7 +32,7 @@ public final class Calendar {
     }
 
     public static String describe(long day, int daysPerYear) {
-        return monthName(day, daysPerYear) + ", year " + year(day, daysPerYear) + " of the Reckoning";
+        return monthName(day, daysPerYear) + ", " + year(day, daysPerYear) + " AB";
     }
 
     /** Multiplier for field and pasture yields. */

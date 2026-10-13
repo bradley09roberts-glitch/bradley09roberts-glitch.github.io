@@ -92,7 +92,7 @@ public final class WorldBuilder {
             stock(s, r, 1.0);
             s.treasury = 60 + pop * 6 + r.nextInt(100);
             s.materialized = false;
-            s.chronicle(0, s.name + " was founded in the year " + Calendar.year(s.foundedDay, sim.rules.daysPerYear) + " of the Reckoning.");
+            s.chronicle(0, s.name + " was founded in the year " + Calendar.year(s.foundedDay, sim.rules.daysPerYear) + " AB.");
         }
         // ---- rulers and heirs
         for (Faction f : realms) {
@@ -239,8 +239,8 @@ public final class WorldBuilder {
                 b.progress = (int) (b.total * (0.45 + r.nextDouble() * 0.35));
                 b.state = Building.State.RUINED;
             }
-            ruin.chronicle(0, "Here stood " + ruin.name + ", in the years before the Reckoning.");
-            sim.history.add("Before the Reckoning: " + ruin.name + " fell, and no living folk remember why.");
+            ruin.chronicle(0, "Here stood " + ruin.name + ", in the Age of Crowns.");
+            sim.history.add("In the Age of Crowns: " + ruin.name + " fell, and no living folk remember why.");
             pool.remove(site);
             ruins++;
         }

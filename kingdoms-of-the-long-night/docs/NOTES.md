@@ -36,3 +36,13 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   D11: No coin-exchange crafting recipes (9-slot grid vs 10p mark would mint money); trades give exact change.
 - Test harness: tools/test/server_scenario.py (RCON-driven dedicated server, fresh hardcore world, restart+reload check);
   mod/src/test (JUnit via MDG unitTest: sim invariants, pay-once construction, 60-day run, save round-trip).
+- 00:35 BST GameTests 6/6 after fixing: plot survey must see natural ground (barrier/roof would have been "ground").
+- 00:45 BST scenario 2: RCON client fixed (vanilla RCON reads one packet per read; long replies fragment at 4096 B). 15/15.
+- 00:55 BST BIG FIX: coastal/rugged towns placed only 15/40 buildings. Added generator-noise plot pre-check
+  (WorldHooks.plotLooksBuildable), terraces (spread<=9), shoreline footings (<=50% water), outward growth,
+  cancel+refund unplaceable projects, drop unplaceable historic buildings. Same seed now 35/35. Scenario 3: 15/15.
+- 01:00 BST contracts (notice board) + outlaw bounties; vanilla villages disabled via structure_set frequency 0 + load after Terralith.
+- 01:10 BST headless client (Xvfb + llvmpipe GL 4.5) loads the saved world; screenshots in tools/test/screenshots show an Eldrin town
+  materialized (teal roofs, chimney smoke, farm, a citizen). AutoShot fixed to fly (creative falls) + re-aim after materialization.
+- Modpack agent: 37-mod performance / 40-mod rich presets, server+client verified without longnight. Now testing with longnight jar.
+- Design agent writing docs/DESIGN.md + docs/ROADMAP.md.

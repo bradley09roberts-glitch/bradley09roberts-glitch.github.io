@@ -37,6 +37,8 @@ public class Building {
     public String problem = "";
     /** faith whose shrine block/decor the building uses */
     public String faith = "";
+    /** ruins: the decay pass (and its loot chest) has been applied */
+    public boolean decayed;
 
     public Building(UUID id, BuildingType type) {
         this.id = id;
@@ -91,6 +93,7 @@ public class Building {
         t.put("residents", Nbt.uuidList(residents));
         t.putString("problem", problem);
         t.putString("faith", faith);
+        t.putBoolean("decayed", decayed);
         return t;
     }
 
@@ -118,6 +121,7 @@ public class Building {
         b.residents.addAll(Nbt.readUuidList(t, "residents"));
         b.problem = t.getString("problem");
         b.faith = t.getString("faith");
+        b.decayed = t.getBoolean("decayed");
         return b;
     }
 }

@@ -28,7 +28,10 @@ public class LongNight {
         ModEntities.ENTITIES.register(modBus);
         ModEntities.TABS.register(modBus);
         modBus.addListener(this::attributes);
-        modBus.addListener((net.neoforged.neoforge.event.RegisterGameTestsEvent e) -> e.register(com.longnight.gametest.LongNightGameTests.class));
+        modBus.addListener((net.neoforged.neoforge.event.RegisterGameTestsEvent e) -> {
+            e.register(com.longnight.gametest.LongNightGameTests.class);
+            e.register(com.longnight.gametest.FoundingGameTests.class);
+        });
         container.registerConfig(ModConfig.Type.SERVER, Config.SPEC);
         NeoForge.EVENT_BUS.register(new ServerEvents());
         LOG.info("Kingdoms of the Long Night initialising");

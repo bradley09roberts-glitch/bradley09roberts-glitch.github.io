@@ -37,6 +37,7 @@ public final class Embodiment {
 
     private static final Map<UUID, UUID> BODIES = new HashMap<>();      // person -> entity
     private static final Set<UUID> ACTIVE = new HashSet<>();            // settlements with bodies
+    private static final Set<UUID> VISIBLE = new HashSet<>();           // settlements being raised before the player arrives
     /** settlements watched by an admin/test "observer" (chunks force-loaded), treated as if a player stood there */
     private static final Set<UUID> OBSERVED = new HashSet<>();
 
@@ -66,6 +67,7 @@ public final class Embodiment {
     public static void clear() {
         BODIES.clear();
         ACTIVE.clear();
+        VISIBLE.clear();
         OBSERVED.clear();
     }
 
@@ -76,9 +78,9 @@ public final class Embodiment {
         int range = Config.EMBODY_DISTANCE.get();
         int budget = Config.PLACE_BLOCKS_PER_TICK.get();
         List<ServerPlayer> players = level.players();
-        // catch-up placement runs every tick for active settlements
+        // catch-up placement runs every tick for settlements a player can (nearly) see
         for (Settlement s : sim.settlements.values()) {
-            if (ACTIVE.contains(s.id) && s.materialized && Placer.pending(s)) Placer.catchUp(level, sim, s, budget);
+            if (VISIBLE.contains(s.id) && s.materialized && Placer.pending(s)) Placer.catchUp(level, sim, s, budget);
         }
         if (gameTime % 20 != 0) return;
         long day = WorldSim.dayOf(level);
@@ -92,9 +94,14 @@ public final class Embodiment {
                 best = Math.min(best, Math.sqrt(dx * dx + dz * dz));
             }
             boolean near = best <= range + s.radius || OBSERVED.contains(s.id);
+            boolean visible = near || best <= Math.max(range, 176) + s.radius;
+            if (visible && level.isLoaded(s.center)) {
+                // raise the place a little before the traveller arrives, so it is already there when seen
+                if (!s.materialized) materialize(level, sim, s);
+                VISIBLE.add(s.id);
+            } else VISIBLE.remove(s.id);
             if (near && level.isLoaded(s.center)) {
                 nowActive.add(s.id);
-                if (!s.materialized) materialize(level, sim, s);
                 if (workHours) sim.embodiedTicksToday.merge(s.id, 20 * 24000 / 10000, Integer::sum);
                 for (ServerPlayer p : players) {
                     double dx = p.getX() - s.center.getX(), dz = p.getZ() - s.center.getZ();

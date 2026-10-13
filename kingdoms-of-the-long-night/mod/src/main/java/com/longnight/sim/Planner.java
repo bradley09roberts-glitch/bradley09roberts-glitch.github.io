@@ -91,6 +91,8 @@ public final class Planner {
             return s.culture.equals("tidefolk") && !has(n, BuildingType.FISHERY) ? BuildingType.FISHERY : BuildingType.FARM;
         }
         if (pop >= 4 && !has(n, BuildingType.LUMBER_CAMP)) return BuildingType.LUMBER_CAMP;
+        if (s.culture.equals("dunmar") && pop >= 5 && !has(n, BuildingType.MINE)) return BuildingType.MINE;
+        if (s.culture.equals("dunmar") && pop >= 6 && !has(n, BuildingType.SMITHY)) return BuildingType.SMITHY;
         if (pop >= 5 && !has(n, BuildingType.STOREHOUSE)) return BuildingType.STOREHOUSE;
         if (pop >= 6 && !has(n, BuildingType.QUARRY)) return BuildingType.QUARRY;
         if (threatened && pop >= 6 && !has(n, BuildingType.WATCHTOWER)) return BuildingType.WATCHTOWER;
@@ -196,6 +198,7 @@ public final class Planner {
         for (int[] c : candidates) {
             if (type != BuildingType.WELL && c[0] == 0 && c[1] == 0) continue;
             if (type == BuildingType.WELL && c[2] > 1) continue; // the well stays at the heart of things
+            if (type == BuildingType.WELL && s.playerFounded && c[2] == 0) continue; // the founder's hearthstone stands there
             long key = cellKey(c[0], c[1]);
             if (used.contains(key) || s.badCells.contains(key)) continue;
             BlockPos mid = s.center.offset(c[0] * CELL, 0, c[1] * CELL);

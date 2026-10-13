@@ -31,16 +31,17 @@ public final class Materials {
                 || id.equals("bookshelf") || id.equals("chiseled_bookshelf")) {
             m.put(Commodity.PLANKS, id.equals("bookshelf") ? 2.0 : scale);
         } else if (state.is(BlockTags.BEDS)) {
-            m.put(Commodity.PLANKS, 2.0);
-            m.put(Commodity.WOOL, 1.0);
+            m.put(Commodity.PLANKS, 3.0); // straw-stuffed bed: no wool needed before a settlement keeps sheep
         } else if (id.contains("glass")) {
             m.put(Commodity.GLASS, id.contains("pane") ? 0.4 : 1.0);
-        } else if (id.equals("lantern") || id.equals("soul_lantern") || id.equals("iron_bars") || id.equals("chain")) {
+        } else if (id.equals("lantern") || id.equals("soul_lantern")) {
+            m.put(Commodity.FUEL, 0.25); // a horn lantern burning tallow or charcoal
+        } else if (id.equals("iron_bars") || id.equals("chain")) {
             m.put(Commodity.IRON, 0.25);
         } else if (id.equals("anvil") || id.equals("blast_furnace") || id.equals("smithing_table") || id.equals("cauldron")
                 || id.equals("bell")) {
-            m.put(Commodity.IRON, 3.0);
-            m.put(Commodity.STONE, 1.0);
+            m.put(Commodity.IRON, 1.0);
+            m.put(Commodity.STONE, 2.0);
         } else if (state.is(BlockTags.WOOL) || state.is(BlockTags.WOOL_CARPETS) || state.is(BlockTags.BANNERS)) {
             m.put(Commodity.WOOL, state.is(BlockTags.WOOL_CARPETS) ? 0.5 : 1.0);
         } else if (id.contains("stone") || id.contains("cobble") || id.contains("brick") || id.contains("sandstone")

@@ -34,37 +34,29 @@ public final class SiteFinder {
         int minR = Config.SAFE_SPAWN_RADIUS.get();
         Random r = new Random(seed ^ 0x51735L);
         List<WorldBuilder.Site> out = new ArrayList<>();
-        int samples = 220;
+        int samples = 150;
         for (int i = 0; i < samples; i++) {
             double ang = r.nextDouble() * Math.PI * 2;
             double dist = minR + Math.sqrt(r.nextDouble()) * (maxR - minR);
             int x = origin.getX() + (int) (Math.cos(ang) * dist);
             int z = origin.getZ() + (int) (Math.sin(ang) * dist);
-            int[] hs = new int[9];
-            int k = 0;
-            int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE;
-            for (int dx = -28; dx <= 28; dx += 28) {
-                for (int dz = -28; dz <= 28; dz += 28) {
-                    int h = gen.getBaseHeight(x + dx, z + dz, Heightmap.Types.WORLD_SURFACE_WG, level, rs);
-                    hs[k++] = h;
-                    min = Math.min(min, h);
-                    max = Math.max(max, h);
-                }
+            int[][] offs = {{0, 0}, {-28, -28}, {28, -28}, {-28, 28}, {28, 28}};
+            int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE, centre = 0;
+            for (int o = 0; o < offs.length; o++) {
+                int h = gen.getBaseHeight(x + offs[o][0], z + offs[o][1], Heightmap.Types.WORLD_SURFACE_WG, level, rs);
+                if (o == 0) centre = h;
+                min = Math.min(min, h);
+                max = Math.max(max, h);
             }
-            int centre = hs[4];
             if (centre <= sea + 1) continue;                  // in water
             int spread = max - min;
             Holder<Biome> biome = level.getUncachedNoiseBiome(QuartPos.fromBlock(x), QuartPos.fromBlock(centre), QuartPos.fromBlock(z));
             String bid = biome.unwrapKey().map(key -> key.location().getPath()).orElse("plains");
-            boolean water = false;
-            for (int dx = -56; dx <= 56 && !water; dx += 56) {
-                for (int dz = -56; dz <= 56; dz += 56) {
-                    if (gen.getBaseHeight(x + dx, z + dz, Heightmap.Types.OCEAN_FLOOR_WG, level, rs)
-                            < gen.getBaseHeight(x + dx, z + dz, Heightmap.Types.WORLD_SURFACE_WG, level, rs) - 1) {
-                        water = true;
-                        break;
-                    }
-                }
+            boolean water = bid.contains("river") || bid.contains("beach") || bid.contains("swamp") || bid.contains("shore");
+            int[][] wo = {{-56, 0}, {56, 0}, {0, -56}, {0, 56}};
+            for (int o = 0; o < wo.length && !water; o++) {
+                int sx = x + wo[o][0], sz = z + wo[o][1];
+                if (gen.getBaseHeight(sx, sz, Heightmap.Types.WORLD_SURFACE_WG, level, rs) <= sea + 1) water = true;
             }
             boolean hills = centre > sea + 30 || spread > 10;
             boolean forest = bid.contains("forest") || bid.contains("taiga") || bid.contains("grove") || bid.contains("jungle");

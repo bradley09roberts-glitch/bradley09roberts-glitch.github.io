@@ -186,7 +186,12 @@ public final class Growth {
 
     static void abandon(WorldSim sim, Settlement s, long day) {
         s.kind = Settlement.Kind.RUIN;
-        for (Building b : s.buildings) if (b.underConstruction()) b.state = Building.State.RUINED;
+        for (Building b : s.buildings) {
+            // empty houses fall into ruin; what was never raised in the world appears as a ruin when found
+            b.state = Building.State.RUINED;
+            if (b.placed == 0) b.progress = (int) (b.total * 0.6);
+            else b.progress = b.placed;
+        }
         s.chronicle(day, s.name + " was abandoned.");
         sim.addNews(day, "abandoned", s.name + " stands empty; the last of its people are gone.", s, 3);
     }

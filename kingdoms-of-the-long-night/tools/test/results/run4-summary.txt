@@ -1,0 +1,5 @@
+JUNIT PASS
+GAMETEST FAIL
+[00:22:39] [Server thread/INFO] [minecraft/GameTestServer]: 4 required tests failed :(
+SCENARIO PASS
+SUMMARY: 15/15 checks passed

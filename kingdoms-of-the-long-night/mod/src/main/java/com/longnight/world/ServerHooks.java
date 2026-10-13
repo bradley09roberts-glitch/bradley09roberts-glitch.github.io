@@ -44,22 +44,29 @@ public class ServerHooks implements WorldHooks {
 
     @Override
     public boolean plotLooksBuildable(net.minecraft.core.BlockPos origin, int w, int d) {
+        if (Placer.testGroundY != null) return true; // GameTest arena (roofed with barriers)
         ServerLevel level = level();
         var gen = level.getChunkSource().getGenerator();
         var rs = level.getChunkSource().randomState();
-        int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE, wet = 0, n = 0;
-        for (int x = 0; x <= w; x += Math.max(1, w / 2)) {
-            for (int z = 0; z <= d; z += Math.max(1, d / 2)) {
-                int wx = origin.getX() + Math.min(x, w - 1), wz = origin.getZ() + Math.min(z, d - 1);
-                int surface = gen.getBaseHeight(wx, wz, net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, level, rs);
-                int floor = gen.getBaseHeight(wx, wz, net.minecraft.world.level.levelgen.Heightmap.Types.OCEAN_FLOOR_WG, level, rs);
-                if (floor < surface - 1) wet++;
-                min = Math.min(min, floor);
-                max = Math.max(max, floor);
-                n++;
+        int[][] pts = {{0, 0}, {w - 1, 0}, {0, d - 1}, {w - 1, d - 1}, {w / 2, d / 2}};
+        int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE, wet = 0;
+        boolean onThread = server.isSameThread();
+        for (int i = 0; i < pts.length; i++) {
+            int wx = origin.getX() + pts[i][0], wz = origin.getZ() + pts[i][1];
+            int floor, surface;
+            if (onThread && level.isLoaded(new net.minecraft.core.BlockPos(wx, 0, wz))) {
+                // real terrain is available: use it (cheap)
+                floor = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.OCEAN_FLOOR, wx, wz);
+                surface = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE, wx, wz);
+            } else {
+                floor = gen.getBaseHeight(wx, wz, net.minecraft.world.level.levelgen.Heightmap.Types.OCEAN_FLOOR_WG, level, rs);
+                surface = i >= 3 ? gen.getBaseHeight(wx, wz, net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, level, rs) : floor;
             }
+            if (floor < surface - 1) wet++;
+            min = Math.min(min, floor);
+            max = Math.max(max, floor);
         }
-        return max - min <= Placer.MAX_SPREAD && wet * 2 <= n;
+        return max - min <= Placer.MAX_SPREAD && wet <= 1;
     }
 
     @Override

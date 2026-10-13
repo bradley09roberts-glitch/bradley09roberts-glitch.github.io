@@ -46,20 +46,43 @@ public final class AutoShot {
             if (list.isEmpty()) return;
             target = list.get(0);
             LongNight.LOG.info("[autoshot] flying to {}", target.name);
-            run(server, "gamemode spectator @a");
+            run(server, "gamemode creative @a");
+            run(server, "effect give @a minecraft:night_vision 99999 0 true");
             run(server, "time set 2000");
             run(server, "weather clear");
             run(server, "gamerule doDaylightCycle false");
             view(server, 0, 34, 46, 180f, 35f);
             step = 1;
             ticks = 0;
-        } else if (step == 1 && ticks > 900) {
+        } else if (step == 1 && ticks > 400 && (ticks > 4000 || target.materialized && !com.longnight.world.Placer.pending(target))) {
+            LongNight.LOG.info("[autoshot] {} materialized={} after {} ticks", target.name, target.materialized, ticks);
+            step = 8; // give chunk rendering a moment after the last block
+            ticks = 0;
+            view(server, 0, 30, 44, 180f, 32f); // re-aim: the town's real ground height is known now
+        } else if (step == 8 && ticks > 200) {
             shot(mc, "longnight_overview");
             view(server, 0, 3, 12, 180f, 10f);
             step = 2;
             ticks = 0;
         } else if (step == 2 && ticks > 300) {
             shot(mc, "longnight_street");
+            // close-up of a real person
+            var level = server.overworld();
+            var people = level.getEntitiesOfClass(com.longnight.entity.CitizenEntity.class,
+                    new net.minecraft.world.phys.AABB(target.center).inflate(48), c -> !c.isSleeping());
+            if (!people.isEmpty()) {
+                var c = people.get(0);
+                c.brain.pause(400);
+                c.getNavigation().stop();
+                double px = c.getX() + 3, pz = c.getZ() + 3;
+                float yaw = (float) Math.toDegrees(Math.atan2(-(c.getX() - px), c.getZ() - pz));
+                run(server, String.format(java.util.Locale.ROOT, "tp @a %.1f %.1f %.1f %.1f 15", px, c.getY() + 0.5, pz, yaw));
+                LongNight.LOG.info("[autoshot] portrait of {}", c.getCustomName() == null ? "?" : c.getCustomName().getString());
+            }
+            step = 7;
+            ticks = 0;
+        } else if (step == 7 && ticks > 100) {
+            shot(mc, "longnight_person");
             view(server, -20, 18, -20, -45f, 30f);
             step = 3;
             ticks = 0;
@@ -84,6 +107,11 @@ public final class AutoShot {
 
     static void view(IntegratedServer server, int dx, int dy, int dz, float yaw, float pitch) {
         var c = target.center;
+        for (var p : server.getPlayerList().getPlayers()) {
+            p.getAbilities().mayfly = true;
+            p.getAbilities().flying = true; // hover where the camera is put
+            p.onUpdateAbilities();
+        }
         run(server, String.format("tp @a %d %d %d %.1f %.1f", c.getX() + dx, c.getY() + dy, c.getZ() + dz, yaw, pitch));
     }
 

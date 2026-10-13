@@ -236,9 +236,10 @@ public final class Placer {
                 if (!placeNext(level, sim, s, b)) break;
                 done++;
             }
-            if (b.state == Building.State.RUINED && b.placed >= b.progress && b.progress > 0 && !DECAYED.contains(b.id)) {
+            if (b.state == Building.State.RUINED && b.placed >= b.progress && b.progress > 0 && !b.decayed) {
+                b.decayed = true; // once, ever: no loot refill after restarts
                 decay(level, s, b, new Random(b.seed));
-                DECAYED.add(b.id);
+                sim.setDirty();
             }
         }
         return done;

@@ -156,7 +156,17 @@ public final class RaidManager {
         }
     }
 
+    /** Server stopping: a raid in progress ends with the raiders withdrawing, so it is never fought twice. */
     public static void clear() {
+        RAIDS.clear();
+    }
+
+    public static void endAllOnStop(WorldSim sim) {
+        for (Raid r : RAIDS.values()) {
+            Settlement s = sim.settlement(r.target);
+            if (s != null && r.spawned) Threats.endPhysicalRaid(sim, s, sim.settlement(r.source), sim.lastDay, false, r.plundered);
+            else if (s != null) Threats.clearRaid(s);
+        }
         RAIDS.clear();
     }
 }

@@ -69,22 +69,74 @@ public final class ServerEvents {
         sim.hooks = new ServerHooks(server);
         ServerLevel ow = server.overworld();
         if (!sim.generated) {
-            long t0 = System.currentTimeMillis();
-            BlockPos spawn = ow.getSharedSpawnPos();
-            List<WorldBuilder.Site> sites = SiteFinder.survey(ow, spawn, ow.getSeed());
-            WorldBuilder.generate(sim, sites, Config.START_SETTLEMENTS.get(), Config.START_CAMPS.get(), Config.START_BANDIT_CAMPS.get(), ow.getSeed());
-            sim.lastDay = WorldSim.dayOf(ow);
-            LongNight.LOG.info("Generated the world of the Long Night in {} ms: {} settlements, {} people, {} realms",
-                    System.currentTimeMillis() - t0, sim.settlements.size(), sim.people.size(), sim.factions.size());
+            // one society: no wandering traders outside longnight's own people
+            server.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DO_TRADER_SPAWNING).set(false, server);
+            startGeneration(server, sim);
         } else {
             LongNight.LOG.info("Loaded the world of the Long Night: day {}, {} settlements, {} people", sim.lastDay, sim.settlements.size(), sim.people.size());
         }
     }
 
+    private static volatile Thread generator;
+
+    /**
+     * Writing the world's history needs thousands of terrain-noise samples (slow with continent-scale terrain mods),
+     * so it runs on a background thread into a separate WorldSim and is merged on the server thread when done.
+     * Nothing touches the live world from the worker: it only reads generator noise.
+     */
+    static void startGeneration(MinecraftServer server, WorldSim sim) {
+        if (generator != null && generator.isAlive()) return;
+        ServerLevel ow = server.overworld();
+        BlockPos spawn = ow.getSharedSpawnPos();
+        long seed = ow.getSeed();
+        int settlements = Config.START_SETTLEMENTS.get(), camps = Config.START_CAMPS.get(), bandits = Config.START_BANDIT_CAMPS.get();
+        SimRules rules = sim.rules;
+        ServerHooks real = new ServerHooks(server);
+        generator = new Thread(() -> {
+            long t0 = System.currentTimeMillis();
+            try {
+                WorldSim temp = new WorldSim();
+                temp.rules = rules;
+                temp.hooks = new com.longnight.sim.WorldHooks() {
+                    @Override
+                    public boolean plotLooksBuildable(BlockPos origin, int w, int d) {
+                        return real.plotLooksBuildable(origin, w, d);
+                    }
+                };
+                List<WorldBuilder.Site> sites = SiteFinder.survey(ow, spawn, seed);
+                WorldBuilder.generate(temp, sites, settlements, camps, bandits, seed);
+                server.execute(() -> merge(server, temp, t0));
+            } catch (Throwable ex) {
+                LongNight.LOG.error("World history generation failed", ex);
+            }
+        }, "longnight-worldgen");
+        generator.setDaemon(true);
+        generator.start();
+        LongNight.LOG.info("Writing the chronicle of the world in the background...");
+    }
+
+    static void merge(MinecraftServer server, WorldSim temp, long t0) {
+        WorldSim sim = WorldSim.get(server);
+        if (sim.generated) return;
+        sim.people.putAll(temp.people);
+        sim.settlements.putAll(temp.settlements);
+        sim.factions.putAll(temp.factions);
+        sim.news.addAll(temp.news);
+        sim.history.addAll(temp.history);
+        sim.spareSites.addAll(temp.spareSites);
+        sim.nextNewsId = Math.max(sim.nextNewsId, temp.nextNewsId);
+        sim.lastDay = WorldSim.dayOf(server.overworld());
+        sim.generated = true;
+        sim.setDirty();
+        LongNight.LOG.info("Generated the world of the Long Night in {} ms: {} settlements, {} people, {} realms",
+                System.currentTimeMillis() - t0, sim.settlements.size(), sim.people.size(), sim.factions.size());
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) welcome(p, sim);
+    }
+
     @SubscribeEvent
     public void stopping(ServerStoppingEvent e) {
+        RaidManager.endAllOnStop(WorldSim.get(e.getServer()));
         Embodiment.clear();
-        RaidManager.clear();
         Crime.clear();
     }
 
@@ -108,6 +160,14 @@ public final class ServerEvents {
     public void login(PlayerEvent.PlayerLoggedInEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer p)) return;
         WorldSim sim = WorldSim.get(p.serverLevel().getServer());
+        if (!sim.generated) {
+            p.sendSystemMessage(Ui.hint("The chronicle of the Haldmarch is still being written. People and places will appear in a moment."));
+            return;
+        }
+        welcome(p, sim);
+    }
+
+    static void welcome(ServerPlayer p, WorldSim sim) {
         if (sim.knownPlaces.containsKey(p.getUUID())) {
             p.sendSystemMessage(Ui.hint("The Haldmarch remembers you. (Use your journal or /longnight journal.)"));
             return;
