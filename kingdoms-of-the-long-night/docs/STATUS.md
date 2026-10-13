@@ -57,8 +57,12 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
 - **Prices from supply and demand** (targets from population, construction bills and workers); buy at 125%,
   sell at 75%; treasury limits what a settlement can buy from you.
 - **Coins** (penny, mark = 10p, crown = 100p) enter the world only through trade; exact change; no minting.
-- **Caravans** between settlements (abstract): carry surplus to shortages, are paid at the destination, carry news
-  both ways, can be robbed by outlaws on roads near their camps.
+- **Caravans** between settlements: carry surplus to shortages, are paid at the destination, carry news both ways,
+  can be robbed by outlaws on roads near their camps. When a caravan's position on its route comes within ~96 blocks
+  of a player, its real leader appears walking the road with a pack mule (bodies vanish again out of sight).
+- **Roads**: every settlement is linked to its two nearest neighbours; roads are laid lazily as chunks load near
+  players (three-wide dirt path over natural ground only, never through claims, water or anything built), with a
+  signpost at each settlement's edge naming the destination and distance.
 - **Taxes** from settlements to realms; soldiers cost upkeep; working people earn a little coin.
 
 ### Settlements and construction
@@ -132,7 +136,8 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
   the world. Miners, quarriers, fishers etc. do not dig or fish physically.
 - **Hauling is mostly abstract**: the ledger is shared by the whole settlement; labourers walk between stores and
   sites but carry nothing.
-- **Caravans, battles between realms and distant raids are abstract** (no walking traders or armies yet).
+- **Battles between realms and distant raids are abstract** (no armies on the march yet). Caravan bodies follow the
+  straight route toward their destination; roads are straight lines with no bridges (water gaps are left open).
 - **No task planner** beyond per-profession routines; multi-step needs are handled by the economy (e.g. a smith
   without ore reports it; the settlement plans a mine) rather than by an individual planning a chain.
 - **Pathfinding** uses vanilla navigation with waypoints for long trips; if someone is truly boxed in for ~40 s they
@@ -161,8 +166,10 @@ bring-your-own-key AI dialogue that only rephrases (never decides).
 | JUnit simulation tests (8): content loads; generation consistent; stockpile atomic; construction charged exactly once; construction stops and explains when short; 60-day run keeps all invariants (births, deaths, marriages, trade, raids); kill is final and idempotent and conserves coin; save data round-trips and keeps running | `./gradlew test` | **8/8 pass** (60 days: ~300 alive, 46 dead, 63 born, 301 news) |
 | GameTests (6, in a real server world): builder pays once per block and the blocks exist; never builds over a player's chest; trade conserves goods and coin and refuses impossible purchases; the dead stay dead, are buried under their name and get no body; wards block natural spawns; every blueprint for every culture generates inside its footprint | `./gradlew runGameTestServer` | **6/6 pass** |
 | Dedicated server scenario (RCON, fresh hardcore world): boot; world history; invariants; observed settlement materializes, bodies spawn, pre-existing buildings raised; 4 simulated days; a physical raid; save; **restart**; identical people/death/settlement counts; invariants after reload; no mod errors in logs | `python3 -I tools/test/server_scenario.py` | **15/15 pass** (runs 2 and 3) |
-| Headless client (Xvfb + Mesa llvmpipe, real Minecraft client): loads the saved world, flies to a settlement, waits for it to materialize, screenshots | `./gradlew runClientAutoshot` (under `xvfb-run`) | see below |
-| Modpack: both presets boot a dedicated server and a client from the built .mrpack | `tools/pack/server_test.py`, `client_test.py` | see [modpack/VERIFICATION.md](../modpack/VERIFICATION.md) |
+| Headless dev client (Xvfb + Mesa llvmpipe GL 4.5, real Minecraft client with longnight only): loads the scenario's saved world, flies to the largest settlement, waits for it to materialize, screenshots day/street/person/night | `xvfb-run -a ./gradlew runClientAutoshot` | an Eldrin town materialized (36 bodies, 38 buildings); screenshots `tools/test/screenshots/dev-client-*.png` |
+| **Full modpack + longnight, dedicated server** (performance preset, Tectonic+Terralith terrain, watchdog on) | `tools/pack/server_test.py --with-longnight yes` | **PASS**: 40 mod ids loaded, 0 ERROR lines, 0 exceptions; world history (14 places, 219 people, 8 realms) written in the background in 38 s while the server stayed responsive; `VALIDATE OK` |
+| **Full modpack + longnight, real client** (installed from the built .mrpack like a launcher; Xvfb + Mesa software GL) | `LONGNIGHT_AUTOSHOT=1 tools/pack/client_test.py --mrpack ...` | Joined the world, a 39-building Dunmar town materialized, screenshots in `tools/test/screenshots/fullpack-*.png`; 0 fatal, 2 known-cosmetic ERROR lines (GeckoLib animation, Xaero's offline version check). The harness marked the first run FAIL only because the autopilot quit the game early (fixed: it now stays running under the harness). |
+| Modpack without longnight: both presets boot a dedicated server and a client | `tools/pack/server_test.py`, `client_test.py` | PASS, see [modpack/VERIFICATION.md](../modpack/VERIFICATION.md) |
 
 Tests **not** possible here: real-time human play, multiplayer with several real players, performance on your
 hardware (this container has no GPU: rendering used Mesa software GL), and long campaigns (dozens of hours).
@@ -173,5 +180,8 @@ hardware (this container has no GPU: rendering used Mesa software GL), and long 
 - A few citizens on very rugged terrain report "I can't find a way to ..." and wait or step over the obstacle.
 - Courtship only happens within a settlement; cross-settlement marriages need travellers (planned).
 - Wars are rare (by design); in test runs of 60 days none broke out. Realm rivalry is visible in relations and news.
-- Server start on a new world spends ~15-20 s surveying terrain (once per world).
+- A new world's history is written in the background after the server starts (~15 s vanilla terrain, ~40 s with
+  Tectonic/Terralith); players who join meanwhile are told so and greeted when it is ready.
+- Settlements in dense forests (e.g. Terralith giant-spruce taiga) keep the trees between their plots until
+  lumberjacks fell them, so such towns look very wooded.
 - Sound engine errors in the test logs come from the container having no audio device.

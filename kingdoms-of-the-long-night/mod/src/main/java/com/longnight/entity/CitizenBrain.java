@@ -34,7 +34,7 @@ import java.util.Random;
  * site", "no stone in the stores") and turns to something else instead of walking into walls.
  */
 public class CitizenBrain {
-    public enum Mode { IDLE, SLEEP, WORK, SOCIAL, PLAY, SHELTER, PATROL, CAMP, RAID }
+    public enum Mode { IDLE, SLEEP, WORK, SOCIAL, PLAY, SHELTER, PATROL, CAMP, RAID, FESTIVAL, FUNERAL }
 
     public static final int CYCLE_TICKS = 1250;
 
@@ -95,6 +95,11 @@ public class CitizenBrain {
             case PATROL -> patrol(e, level, s, p);
             case CAMP -> wander(e, level, s.center, 10, 0.5);
             case RAID -> raid(e, level, sim, p, s);
+            case FESTIVAL -> gather(e, level, p, s, holyPlace(level, s), "celebrating " + s.festival);
+            case FUNERAL -> {
+                Person dead = sim.person(s.funeralFor);
+                gather(e, level, p, s, burialGround(level, s), "mourning " + (dead == null ? "the dead" : dead.given));
+            }
             default -> wander(e, level, s.center, 8, 0.5);
         }
     }
@@ -106,6 +111,8 @@ public class CitizenBrain {
         boolean fighter = e.isFighter();
         if (!fighter && danger(e, s)) return Mode.SHELTER;
         if (night) return fighter && (p.id.getLeastSignificantBits() & 1) == 0 ? Mode.PATROL : Mode.SLEEP;
+        if (time >= 5000 && time < 10000 && com.longnight.sim.Festivals.mourns(sim, p, s, day)) return Mode.FUNERAL;
+        if (time >= 4000 && time < 11000 && s.festivalDay == day && !s.festival.isEmpty()) return Mode.FESTIVAL;
         if (!sim.isAdult(p, day)) return Mode.PLAY;
         if (time < 1000 || time >= 11000) return Mode.SOCIAL;
         return Mode.WORK;
@@ -506,6 +513,35 @@ public class CitizenBrain {
             }
         }
         progressCycle(e, level, sim, p, s, day, 18);
+    }
+
+    void gather(CitizenEntity e, ServerLevel level, Person p, Settlement s, BlockPos place, String doing) {
+        p.activity = doing;
+        if (place == null) place = s.center;
+        if (target == null) target = Places.ground(level, place.offset(rng.nextInt(7) - 3, 0, rng.nextInt(7) - 3));
+        if (goTo(e, target, 0.55, 2.0, p, "the gathering") && e.tickCount % 80 == 0) {
+            e.getLookControl().setLookAt(place.getX() + 0.5, place.getY() + 1, place.getZ() + 0.5);
+            if (doing.startsWith("celebrating") && rng.nextInt(3) == 0) {
+                e.swing(InteractionHand.MAIN_HAND);
+                level.sendParticles(ParticleTypes.NOTE, e.getX(), e.getY() + 2.2, e.getZ(), 1, 0.2, 0.1, 0.2, 0.5);
+            }
+        }
+    }
+
+    BlockPos holyPlace(ServerLevel level, Settlement s) {
+        for (BuildingType t : new BuildingType[]{BuildingType.TEMPLE, BuildingType.SHRINE, BuildingType.WELL, BuildingType.CAMPSITE}) {
+            Building b = first(s, t);
+            if (b != null && b.placed >= b.total) {
+                BlockPos m = Places.mark(level, s, b, t == BuildingType.TEMPLE ? "social" : "work");
+                if (m != null) return m;
+            }
+        }
+        return s.center;
+    }
+
+    BlockPos burialGround(ServerLevel level, Settlement s) {
+        Building g = first(s, BuildingType.GRAVEYARD);
+        return g != null && g.placed >= g.total ? Places.mark(level, s, g, "work") : s.center;
     }
 
     static Building first(Settlement s, BuildingType t) {

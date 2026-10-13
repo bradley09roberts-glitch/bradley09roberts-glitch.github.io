@@ -24,6 +24,8 @@ public final class Economy {
                 if (p.profession.producesGoods() && abstractShare > 0.01) {
                     work(sim, s, p, CYCLES_PER_DAY * abstractShare, day);
                 }
+                // without a lumber camp or quarry, idle hands gather deadwood and fieldstone (how camps bootstrap)
+                if (p.profession == Profession.LABOURER && abstractShare > 0.01) gather(s, abstractShare);
                 // professions that serve rather than produce still earn a little and practise
                 if (!p.profession.producesGoods() && p.profession != Profession.LABOURER) {
                     p.addSkill(p.profession, 0.25f * (0.5f + p.diligence));
@@ -33,6 +35,12 @@ public final class Economy {
             income(sim, s);
         }
         Caravans.daily(sim, day);
+    }
+
+    static void gather(Settlement s, double share) {
+        if (!s.hasUsable(BuildingType.LUMBER_CAMP) && s.stock.get(Commodity.LOGS) < 40) s.stock.add(Commodity.LOGS, 2.5 * share);
+        if (!s.hasUsable(BuildingType.LUMBER_CAMP) && s.stock.get(Commodity.FUEL) < 15) s.stock.add(Commodity.FUEL, 1.0 * share);
+        if (!s.hasUsable(BuildingType.QUARRY) && s.stock.get(Commodity.STONE) < 60) s.stock.add(Commodity.STONE, 3.0 * share);
     }
 
     static void equipTools(Settlement s, Person p, WorldSim sim) {

@@ -5,8 +5,8 @@
   "description": "Fire is memory. The dead are burned so their courage rises as embers to join the warband of the ancestors.",
   "burial": "cremation",
   "burial_text": "burned on a great pyre, the ashes scattered and a scorched stone set up to mark the place",
-  "festival": "the Night of a Hundred Fires",
-  "festival_month": 3,
+  "festival": "the Great Burning",
+  "festival_month": 5,
   "shrine_block": "minecraft:magma_block",
   "strictness": 0.45,
   "charity": 0.3

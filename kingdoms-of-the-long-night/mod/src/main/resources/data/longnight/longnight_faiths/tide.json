@@ -5,8 +5,8 @@
   "description": "The sea gives and the sea keeps. The Drowned Mother takes the dead home and returns the patient fisher their catch.",
   "burial": "sea",
   "burial_text": "given to the water on a small burning boat, a marker stone left on the shore",
-  "festival": "the Turning of the Tide",
-  "festival_month": 4,
+  "festival": "the Blessing of the Boats",
+  "festival_month": 2,
   "shrine_block": "minecraft:prismarine",
   "strictness": 0.4,
   "charity": 0.55

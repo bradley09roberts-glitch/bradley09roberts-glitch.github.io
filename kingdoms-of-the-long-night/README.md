@@ -45,7 +45,8 @@ Full step-by-step guide: [modpack/INSTALL.md](modpack/INSTALL.md).
 
 * You start with a **Traveller's Journal**. Right-click it: it lists the places you have heard of, with distance and
   direction. You know two settlements to begin with; you learn of more by talking to people.
-* Walk to a settlement. When you arrive you are told what it is, who rules it and how many souls live there.
+* Walk to a settlement (roads link neighbouring settlements; signposts at a town's edge name where each road goes).
+  When you arrive you are told what it is, who rules it and how many souls live there.
 * **Right-click people** to talk. Click the topics in chat: **News** (what they have heard, and only what they have
   heard), **Work** (their trade, what blocks them, what the town needs), **Family**, **Life**, **Town**.
 * **Hearthstone** (the carved stone by the well): the settlement's overview, its chronicle and its people.

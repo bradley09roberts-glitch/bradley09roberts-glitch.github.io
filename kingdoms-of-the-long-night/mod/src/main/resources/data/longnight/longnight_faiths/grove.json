@@ -5,8 +5,8 @@
   "description": "The forest remembers what kingdoms forget. Every tree is a long prayer; the druids keep the balance between the axe and the root.",
   "burial": "tree",
   "burial_text": "buried in the open earth with a sapling planted above the heart",
-  "festival": "Greenwaking",
-  "festival_month": 0,
+  "festival": "Greenvow",
+  "festival_month": 1,
   "shrine_block": "minecraft:moss_block",
   "strictness": 0.3,
   "charity": 0.5

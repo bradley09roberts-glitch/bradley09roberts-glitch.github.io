@@ -5,8 +5,8 @@
   "description": "The Sun is the eye that never closes. Truth, law and fire belong to it; darkness is a debt that must be repaid in light.",
   "burial": "burial",
   "burial_text": "buried facing the dawn, beneath a stone marked with the solar ring",
-  "festival": "Day of the High Disc",
-  "festival_month": 2,
+  "festival": "the Day Without Shadow",
+  "festival_month": 3,
   "shrine_block": "minecraft:gold_block",
   "strictness": 0.7,
   "charity": 0.5

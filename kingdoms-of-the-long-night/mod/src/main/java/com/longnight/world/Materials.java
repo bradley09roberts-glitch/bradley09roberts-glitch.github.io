@@ -36,8 +36,10 @@ public final class Materials {
             m.put(Commodity.GLASS, id.contains("pane") ? 0.4 : 1.0);
         } else if (id.equals("lantern") || id.equals("soul_lantern")) {
             m.put(Commodity.FUEL, 0.25); // a horn lantern burning tallow or charcoal
-        } else if (id.equals("iron_bars") || id.equals("chain")) {
-            m.put(Commodity.IRON, 0.25);
+        } else if (id.equals("iron_bars")) {
+            m.put(Commodity.STONE, 0.5); // stone mullions until there is iron to spare
+        } else if (id.equals("chain")) {
+            m.put(Commodity.PLANKS, 0.25); // rope and pulley
         } else if (id.equals("anvil") || id.equals("blast_furnace") || id.equals("smithing_table") || id.equals("cauldron")
                 || id.equals("bell")) {
             m.put(Commodity.IRON, 1.0);

@@ -5,7 +5,7 @@
   "description": "A forbidden sect that sings to what waits beyond the last star. They believe the Long Night is a gate, and that those who open it will not die.",
   "burial": "tomb",
   "burial_text": "sealed in an unmarked vault; the Choir tells no one where",
-  "festival": "the Unsung Hour",
+  "festival": "the Unlit Mass",
   "festival_month": 7,
   "shrine_block": "minecraft:crying_obsidian",
   "forbidden": true,

@@ -5,8 +5,8 @@
   "description": "The dead are not gone; they are deeper in the stone. Names carved true keep the ancestors near, and an uncarved name is a soul lost.",
   "burial": "tomb",
   "burial_text": "laid in a carved stone tomb, the name cut deep so the forefathers can find them",
-  "festival": "the Naming of Names",
-  "festival_month": 7,
+  "festival": "Hall Night",
+  "festival_month": 5,
   "shrine_block": "minecraft:chiseled_stone_bricks",
   "strictness": 0.75,
   "charity": 0.4

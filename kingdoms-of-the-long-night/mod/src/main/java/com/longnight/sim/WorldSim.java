@@ -423,6 +423,7 @@ public class WorldSim extends SavedData {
             if (p.id.equals(f.ruler)) Politics.succession(this, f, day);
             if (p.id.equals(f.heir)) f.heir = null;
         }
+        Festivals.funeral(this, s, p, day);
         hooks.personDied(this, p, s);
         setDirty();
     }
@@ -494,6 +495,7 @@ public class WorldSim extends SavedData {
         NewsSystem.daily(this, day);
         Growth.daily(this, day);
         Contracts.daily(this, day);
+        Festivals.daily(this, day);
         LongNightArc.daily(this, day);
     }
 

@@ -5,8 +5,8 @@
   "description": "Every home holds a small fire-spirit, and the Kindled Flame binds them all. Hospitality is sacred; the household is the first temple.",
   "burial": "burial",
   "burial_text": "laid in the family plot beside the old hearthstones, with a candle left burning",
-  "festival": "Kindling Night",
-  "festival_month": 6,
+  "festival": "the Lantern Vigil",
+  "festival_month": 7,
   "shrine_block": "minecraft:campfire",
   "strictness": 0.35,
   "charity": 0.7

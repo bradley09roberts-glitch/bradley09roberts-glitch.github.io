@@ -71,7 +71,7 @@ public final class Politics {
         Faction.Agenda old = f.agenda;
         if (food < pop * 3) f.agenda = Faction.Agenda.RECOVER;
         else if (atWar || (threatened && ruler.bravery < 0.55f)) f.agenda = Faction.Agenda.FORTIFY;
-        else if (ruler.ambition > 0.7f && ruler.bravery > 0.55f && strength(sim, f) > 6) f.agenda = Faction.Agenda.CONQUER;
+        else if ((ruler.ambition > 0.62f && ruler.bravery > 0.45f || ruler.greed > 0.72f && ruler.ambition > 0.5f) && strength(sim, f) > 4) f.agenda = Faction.Agenda.CONQUER;
         else if (ruler.ambition > 0.6f) f.agenda = Faction.Agenda.EXPAND;
         else if (ruler.greed > 0.65f) f.agenda = Faction.Agenda.TAX;
         else if (ruler.piety > 0.7f) f.agenda = Faction.Agenda.PIETY;
@@ -230,10 +230,12 @@ public final class Politics {
                 }
                 if (sim.rules.wars && day > 12 && st == Faction.Stance.PEACE && dist < 1100) {
                     Faction aggressor = a.agenda == Faction.Agenda.CONQUER ? a : b.agenda == Faction.Agenda.CONQUER ? b : null;
+                    // an old, bitter grudge can drive an expanding realm to war as well
+                    if (aggressor == null && rel < -60) aggressor = a.agenda == Faction.Agenda.EXPAND ? a : b.agenda == Faction.Agenda.EXPAND ? b : null;
                     if (aggressor != null) {
                         Faction victim = aggressor == a ? b : a;
-                        if (aggressor.relation(victim.id) < -35 && strength(sim, aggressor) > strength(sim, victim) * 1.3 + 2
-                                && r.nextFloat() < 0.08f) {
+                        if (aggressor.relation(victim.id) < -35 && strength(sim, aggressor) > strength(sim, victim) * 1.15 + 1
+                                && r.nextFloat() < 0.06f && !victim.playerRealm) {
                             Settlement target = nearestOf(sim, victim, aggressor);
                             if (target != null) declareWar(sim, aggressor, victim, target, causeFor(sim, aggressor, victim, target, r), day);
                         }

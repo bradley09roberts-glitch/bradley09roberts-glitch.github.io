@@ -85,6 +85,8 @@ public final class Planner {
         int farms = n.getOrDefault(BuildingType.FARM, 0) + n.getOrDefault(BuildingType.FISHERY, 0);
         boolean threatened = s.raidWarning > 0 || s.raidsSurvived > 0 || agenda == Faction.Agenda.FORTIFY;
 
+        if (s.tier == Settlement.Tier.CAMP && !has(n, BuildingType.LUMBER_CAMP) && pop >= 3) return BuildingType.LUMBER_CAMP;
+        if (s.tier == Settlement.Tier.CAMP && s.housingCapacity() < pop + 1) return BuildingType.HOUSE;
         if (!has(n, BuildingType.WELL)) return BuildingType.WELL;
         if (s.housingCapacity() < pop + 1) return pop > 20 && sim.rng.nextBoolean() ? BuildingType.LARGE_HOUSE : BuildingType.HOUSE;
         if (farms == 0 || (foodDays < 6 && farms < pop / 6 + 1)) {
