@@ -55,11 +55,14 @@ Full step-by-step guide: [modpack/INSTALL.md](modpack/INSTALL.md).
 * **Look at a person** to see their name, trade and what they are doing on the action bar.
 * Walk to a settlement (roads link neighbouring settlements; signposts at a town's edge name where each road goes).
   When you arrive you are told what it is, who rules it and how many souls live there.
-* **Right-click people** to talk. Click the topics in chat: **News** (what they have heard, and only what they have
+* **Right-click people** to talk (whatever you are holding). Their answer appears in the **chat** (bottom left; press
+  T to open it and click), and the bar above your hotbar says who you are talking with. Click the topics in chat: **News** (what they have heard, and only what they have
   heard), **Work** (their trade, what blocks them, what the town needs), **Family**, **Life**, **Town**.
-* **Hearthstone** (the carved stone by the well): the settlement's overview, its chronicle and its people.
-* **Storehouse ledger**: right-click to see stock and prices and buy; **use an item on it to sell**, **sneak-use to
-  give** it freely. Prices follow supply and demand; nothing can be duplicated by trading back and forth.
+* **Hearthstone** (the carved stone by the well): right-click for the settlement's overview, its chronicle and its
+  people (in the chat). **Sneak + right-click while holding logs, planks, stone, food etc. to give them** to the
+  settlement: this is how you help your own village build faster.
+* **Storehouse ledger**: right-click with an empty hand to see stock and prices and buy; right-click holding goods to
+  **sell** them; **sneak + right-click to give** them freely. Prices follow supply and demand; nothing can be duplicated by trading back and forth.
 * **Notice board**: local news, wanted goods, and **contracts** (deliveries a stalled build needs, winter fuel...) and
   **bounties** on outlaw bands. Click [Accept], then deliver through the storehouse.
 * **Outlaws** raid settlements, but always with warning: rumours first, then scouts and smoke a day ahead, then the

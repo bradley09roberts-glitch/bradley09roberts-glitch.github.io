@@ -10,6 +10,7 @@ import com.longnight.game.Ui;
 import com.longnight.game.Wards;
 import com.longnight.registry.ModItems;
 import com.longnight.sim.LongNightArc;
+import com.longnight.registry.ModBlocks;
 import com.longnight.sim.Settlement;
 import com.longnight.sim.SimRules;
 import com.longnight.sim.WorldBuilder;
@@ -211,6 +212,8 @@ public final class ServerEvents {
 
     /** Looking at a person shows who they are and what they are doing, on the action bar. */
     static void lookHint(ServerPlayer p, WorldSim sim) {
+        Long until = TALKING.get(p.getUUID());
+        if (until != null && until > p.serverLevel().getGameTime()) return; // keep "talking with ..." on screen a moment
         net.minecraft.world.phys.Vec3 eye = p.getEyePosition(), look = p.getViewVector(1f);
         CitizenEntity best = null;
         double bestDot = 0.985;
@@ -231,6 +234,81 @@ public final class ServerEvents {
         String what = best.isHostile() ? "outlaw" : sim.isAdult(x, day) ? x.profession.displayName.toLowerCase() : "child";
         String doing = x.activity.isEmpty() ? "" : " - " + x.activity;
         p.displayClientMessage(Component.literal((best.isHostile() ? "\u00a7c" : "\u00a7e") + x.fullName() + "\u00a77, " + what + doing), true);
+    }
+
+    /** players who just spoke to someone: the action bar keeps saying so for a moment instead of the look-at hint */
+    static final java.util.Map<java.util.UUID, Long> TALKING = new java.util.HashMap<>();
+
+    /**
+     * Right-click on a hearthstone, storehouse or market stall, handled before vanilla: it works whatever the player
+     * holds (vanilla would try to use the item) and when sneaking (vanilla skips blocks for a sneaking player with an item).
+     * Hearthstone: the settlement's overview; sneak with an item to give it. Storehouse/stall: sell what you hold, sneak
+     * to give it, empty hand for the market.
+     */
+    @SubscribeEvent
+    public void rightClickBlock(net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock e) {
+        if (e.getHand() != net.minecraft.world.InteractionHand.MAIN_HAND) {
+            if (isOurs(e.getLevel().getBlockState(e.getPos()))) {
+                e.setCanceled(true);
+                e.setCancellationResult(net.minecraft.world.InteractionResult.SUCCESS);
+            }
+            return;
+        }
+        var st = e.getLevel().getBlockState(e.getPos());
+        if (!isOurs(st)) return;
+        e.setCanceled(true);
+        e.setCancellationResult(net.minecraft.world.InteractionResult.SUCCESS);
+        if (!(e.getEntity() instanceof ServerPlayer sp) || !(e.getLevel() instanceof ServerLevel sl)) return;
+        WorldSim sim = WorldSim.get(sl.getServer());
+        boolean hearth = st.is(ModBlocks.HEARTHSTONE.get());
+        Settlement s = sim.settlementAt(e.getPos(), hearth ? 8 : 16);
+        ItemStack held = sp.getMainHandItem();
+        boolean goods = !held.isEmpty() && com.longnight.game.TradeGoods.of(held) != null || com.longnight.game.Coins.valueOf(held.getItem()) > 0;
+        if (s == null) {
+            Ui.msg(sp, hearth ? "This hearthstone belongs to no settlement." : "This ledger belongs to no settlement.");
+            return;
+        }
+        if (hearth) {
+            if (sp.isShiftKeyDown() && goods && s.kind == Settlement.Kind.SETTLEMENT) com.longnight.game.Trade.handIn(sp, sim, s, e.getHand(), true);
+            else {
+                Ui.settlement(sp, sim, s);
+                sim.learnOf(sp.getUUID(), s);
+                say(sp, "§6" + s.name + "§7 - see the chat for the settlement's state");
+            }
+        } else {
+            if (goods && s.kind == Settlement.Kind.SETTLEMENT) com.longnight.game.Trade.handIn(sp, sim, s, e.getHand(), sp.isShiftKeyDown());
+            else {
+                Ui.market(sp, sim, s);
+                say(sp, "§6The stores of " + s.name + "§7 - see the chat");
+            }
+        }
+    }
+
+    static boolean isOurs(net.minecraft.world.level.block.state.BlockState st) {
+        return st.is(ModBlocks.HEARTHSTONE.get()) || st.is(ModBlocks.STOREHOUSE.get()) || st.is(ModBlocks.MARKET_STALL.get());
+    }
+
+    /** Right-click on a person always talks to them, whatever the player holds (handled before items and other mods). */
+    @SubscribeEvent
+    public void rightClickPerson(net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.EntityInteract e) {
+        if (!(e.getTarget() instanceof CitizenEntity c)) return;
+        e.setCanceled(true);
+        e.setCancellationResult(net.minecraft.world.InteractionResult.SUCCESS);
+        if (e.getHand() != net.minecraft.world.InteractionHand.MAIN_HAND || !(e.getEntity() instanceof ServerPlayer sp)) return;
+        WorldSim sim = WorldSim.get(sp.serverLevel().getServer());
+        com.longnight.sim.Person x = sim.person(c.personId);
+        if (x == null || !x.alive) return;
+        c.getNavigation().stop();
+        c.getLookControl().setLookAt(sp);
+        c.brain.pause(80);
+        Ui.citizen(sp, sim, x);
+        say(sp, "§eTalking with " + x.fullName() + "§7 - their words and the topics to ask about are in the chat");
+        sp.serverLevel().playSound(null, c.blockPosition(), net.minecraft.sounds.SoundEvents.VILLAGER_AMBIENT, net.minecraft.sounds.SoundSource.NEUTRAL, 0.6f, 1.1f);
+    }
+
+    static void say(ServerPlayer sp, String text) {
+        sp.displayClientMessage(Component.literal(text), true);
+        TALKING.put(sp.getUUID(), sp.serverLevel().getGameTime() + 80);
     }
 
     @SubscribeEvent

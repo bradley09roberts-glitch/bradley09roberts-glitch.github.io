@@ -224,6 +224,11 @@ public final class AutoShot {
             ticks = 0;
         } else if (step == 5 && ticks > 120) {
             shot(mc, "company_camp");
+            step = 20; // first, click on things like a player would
+            ticks = 0;
+        } else if (step >= 20 && step < 30) {
+            clicks(mc, server);
+        } else if (step == 30) {
             run(server, "longnight admin skip 5");
             view(server, 0, 36, 22, 180f, 58f);
             step = 6;
@@ -253,6 +258,122 @@ public final class AutoShot {
             report();
             step = 11;
         }
+    }
+
+    static java.util.UUID clickedPerson;
+    static net.minecraft.core.BlockPos hearth;
+    static double logsBefore;
+
+    /** Real client-side clicks (the same calls the mouse makes): a companion, the hearthstone, and a sneak-give of logs. */
+    static void clicks(Minecraft mc, IntegratedServer server) {
+        if (step == 20 && ticks > 20) {
+            server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                var level = server.overworld();
+                var near = level.getEntitiesOfClass(com.longnight.entity.CitizenEntity.class, new net.minecraft.world.phys.AABB(target.center).inflate(24));
+                if (near.isEmpty()) return;
+                var c = near.get(0);
+                c.brain.pause(200);
+                c.getNavigation().stop();
+                clickedPerson = c.personId;
+                double px = c.getX() + 1.6, pz = c.getZ();
+                float yaw = (float) Math.toDegrees(Math.atan2(-(c.getX() - px), c.getZ() - pz));
+                sp.teleportTo(px, c.getY(), pz);
+                run(server, String.format(java.util.Locale.ROOT, "tp @a %.2f %.2f %.2f %.1f 20", px, c.getY(), pz, yaw));
+                select(sp, com.longnight.registry.ModItems.SETTLEMENT_LEDGER.get());
+            });
+            step = 21;
+            ticks = 0;
+        } else if (step == 21 && ticks > 30) {
+            var c = mc.level.getEntitiesOfClass(com.longnight.entity.CitizenEntity.class, mc.player.getBoundingBox().inflate(4)).stream()
+                    .min(java.util.Comparator.comparingDouble(x -> x.distanceToSqr(mc.player))).orElse(null);
+            if (c != null) {
+                var r = mc.gameMode.interact(mc.player, c, net.minecraft.world.InteractionHand.MAIN_HAND);
+                LongNight.LOG.info("[autoshot] right-clicked a person holding {}: {}", mc.player.getMainHandItem().getHoverName().getString(), r);
+            } else LongNight.LOG.info("[autoshot] no person within reach to click");
+            step = 22;
+            ticks = 0;
+        } else if (step == 22 && ticks > 30) {
+            shot(mc, "company_talk");
+            server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                WorldSim sim = WorldSim.get(server);
+                var x = clickedPerson == null ? null : sim.person(clickedPerson);
+                int fam = x == null ? -1 : x.relate(sp.getUUID()).familiarity;
+                LongNight.LOG.info("[autoshot] CHECK talk: {} familiarity with the player now {} ({})", x == null ? "?" : x.fullName(), fam, fam > 0 ? "PASS" : "FAIL");
+                var level = server.overworld();
+                for (var q : net.minecraft.core.BlockPos.betweenClosed(target.center.offset(-8, -3, -8), target.center.offset(8, 5, 8))) {
+                    if (level.getBlockState(q).is(com.longnight.registry.ModBlocks.HEARTHSTONE.get())) hearth = q.immutable();
+                }
+                if (hearth == null) {
+                    LongNight.LOG.info("[autoshot] CHECK hearthstone: none found near the centre (FAIL)");
+                    return;
+                }
+                sp.teleportTo(hearth.getX() + 0.5, hearth.getY(), hearth.getZ() + 2.5);
+                run(server, String.format(java.util.Locale.ROOT, "tp @a %.2f %d %.2f 180 35", hearth.getX() + 0.5, hearth.getY(), hearth.getZ() + 2.5));
+            });
+            step = 23;
+            ticks = 0;
+        } else if (step == 23 && ticks > 30) {
+            if (hearth != null) {
+                var r = mc.gameMode.useItemOn(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND,
+                        new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(hearth), net.minecraft.core.Direction.SOUTH, hearth, false));
+                LongNight.LOG.info("[autoshot] right-clicked the hearthstone holding {}: {}", mc.player.getMainHandItem().getHoverName().getString(), r);
+            }
+            step = 24;
+            ticks = 0;
+        } else if (step == 24 && ticks > 30) {
+            server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                WorldSim sim = WorldSim.get(server);
+                boolean known = sim.knownPlaces.getOrDefault(sp.getUUID(), java.util.Set.of()).contains(target.id);
+                LongNight.LOG.info("[autoshot] CHECK hearthstone overview shown (place now in the journal): {}", known ? "PASS" : "FAIL");
+                sp.getInventory().add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.OAK_LOG, 16));
+                select(sp, net.minecraft.world.item.Items.OAK_LOG);
+                logsBefore = target.stock.get(com.longnight.sim.Commodity.LOGS);
+            });
+            step = 25;
+            ticks = 0;
+        } else if (step == 25 && ticks > 30) {
+            mc.options.keyShift.setDown(true);
+            step = 26;
+            ticks = 0;
+        } else if (step == 26 && ticks > 10) {
+            if (hearth != null) {
+                var r = mc.gameMode.useItemOn(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND,
+                        new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(hearth), net.minecraft.core.Direction.SOUTH, hearth, false));
+                LongNight.LOG.info("[autoshot] sneak-right-clicked the hearthstone holding {} (sneaking={}): {}", mc.player.getMainHandItem().getHoverName().getString(),
+                        mc.player.isShiftKeyDown(), r);
+            }
+            step = 27;
+            ticks = 0;
+        } else if (step == 27 && ticks > 30) {
+            mc.options.keyShift.setDown(false);
+            server.execute(() -> {
+                double after = target.stock.get(com.longnight.sim.Commodity.LOGS);
+                LongNight.LOG.info("[autoshot] CHECK sneak-give logs: stores {} -> {} ({})", (int) logsBefore, (int) after, after >= logsBefore + 15.9 ? "PASS" : "FAIL");
+            });
+            step = 30;
+            ticks = 0;
+        }
+    }
+
+    /** Put the first stack of this item into the hand (the server tells the client which slot is selected). */
+    static void select(net.minecraft.server.level.ServerPlayer sp, net.minecraft.world.item.Item item) {
+        var inv = sp.getInventory();
+        int slot = -1;
+        for (int i = 0; i < inv.getContainerSize(); i++) if (inv.getItem(i).is(item)) { slot = i; break; }
+        if (slot < 0) return;
+        if (slot >= 9) { // move it into the hotbar
+            var tmp = inv.getItem(8);
+            inv.setItem(8, inv.getItem(slot));
+            inv.setItem(slot, tmp);
+            slot = 8;
+        }
+        inv.selected = slot;
+        sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket(slot));
+        sp.containerMenu.broadcastChanges();
+        sp.inventoryMenu.broadcastChanges();
     }
 
     static int companions(IntegratedServer server) {
