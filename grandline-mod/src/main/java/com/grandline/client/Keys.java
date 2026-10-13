@@ -27,7 +27,11 @@ public final class Keys {
 
     public static final KeyMapping QUEST_LOG = new KeyMapping("key.grandline.quest_log", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_U, CAT);
     public static final KeyMapping MINIMAP = new KeyMapping("key.grandline.minimap", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, CAT);
-    public static final KeyMapping[] ALL = {COMBAT_MODE, DODGE, OBSERVATION, ARMAMENT, CONQUEROR, TRANSFORM, LOCK_ON, CHARACTER, CHART, NEXT_SET, ANCHOR, BURST, QUEST_LOG, MINIMAP};
+    /** Crew roster (companions: active and reserve, orders, swaps) and the quick order (focus what you look at, else regroup). At the helm V/N stay the gun orders. */
+    public static final KeyMapping CREW_ROSTER = new KeyMapping("key.grandline.crew_roster", HelmKeyContext.ELSEWHERE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, CAT);
+    public static final KeyMapping CREW_ORDER = new KeyMapping("key.grandline.crew_order", HelmKeyContext.ELSEWHERE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_N, CAT);
+    public static final KeyMapping[] ALL = {COMBAT_MODE, DODGE, OBSERVATION, ARMAMENT, CONQUEROR, TRANSFORM, LOCK_ON, CHARACTER, CHART, NEXT_SET, ANCHOR, BURST, QUEST_LOG, MINIMAP,
+            CREW_ROSTER, CREW_ORDER};
 
     private Keys() {}
 }

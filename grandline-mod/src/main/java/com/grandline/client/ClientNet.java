@@ -52,6 +52,7 @@ public final class ClientNet {
                 case "quests" -> mc.setScreen(new com.grandline.client.screen.QuestLogScreen(p.data()));
                 case "treasure_map" -> mc.setScreen(new com.grandline.client.screen.TreasureMapScreen(p.data()));
                 case "shipyard" -> mc.setScreen(new ShipyardScreen(p.data()));
+                case "crew" -> mc.setScreen(new com.grandline.client.screen.CrewScreen(p.data()));
                 case "close" -> {
                     if (mc.screen != null) mc.setScreen(null);
                 }

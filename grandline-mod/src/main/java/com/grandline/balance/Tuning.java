@@ -120,6 +120,7 @@ public final class Tuning {
 
     public static Rank rank(LivingEntity e) {
         if (e instanceof GLNpc n) {
+            if (com.grandline.npc.crew.CrewManager.isCrew(n)) return CompanionTuning.rank(n); // crew overhaul: companions are never elites
             if (BossManager.isBoss(n)) return Rank.BOSS;
             if (n.flag(GLNpc.FLAG_NOTABLE) || ELITE_ROLES.contains(n.role())) return Rank.ELITE;
             Archetype a = n.archetype();
@@ -191,7 +192,10 @@ public final class Tuning {
         return 1;
     }
 
-    /** Maximum health of an NPC: the rank's blow count of the reference character, flavoured by its archetype (±25 %). */
+    /**
+     * Maximum health of an NPC: the rank's blow count of the reference character, flavoured by its archetype (±25 %).
+     * Crew overhaul: a recruited companion's health comes from {@link #npcHealth(GLNpc, float)} instead.
+     */
     public static float npcHealth(Archetype a, int tier, Rank r) {
         float flavour = Math.max(0.8f, Math.min(1.25f, a.health() / r.healthRef));
         return Math.max(4, r.hits * referenceBlow(tier) * flavour * difficulty().enemyHealth);
@@ -202,8 +206,18 @@ public final class Tuning {
         return Math.max(10, r.hits * referenceBlow(encounterTier) * difficulty().enemyHealth);
     }
 
+    /**
+     * Crew overhaul: the health an NPC should have: a companion's from {@link CompanionTuning} (its captain's level and
+     * bond), anyone else's {@code tuned} value. The crew system calls this after any retune of a companion
+     * (GLNpc.retune knows only the tier and rank) and whenever the captain's level or the bond changes.
+     */
+    public static float npcHealth(GLNpc n, float tuned) {
+        return com.grandline.npc.crew.CrewManager.isCrew(n) ? CompanionTuning.health(n) : tuned;
+    }
+
     /** Base power of an NPC's blows (a light blow is about 1x, a heavy about 2.2x). Weapons only flavour it (+10 %). */
     public static float npcPower(GLNpc n) {
+        if (com.grandline.npc.crew.CrewManager.isCrew(n)) return CompanionTuning.power(n); // crew overhaul: from the captain's level
         int t = encounterTier(n);
         Rank r = rank(n);
         float weapon = n.getMainHandItem().isEmpty() ? 1f : 1.1f;

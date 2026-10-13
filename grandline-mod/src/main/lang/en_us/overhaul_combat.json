@@ -74,5 +74,6 @@
   "hud.grandline.tips.dodge": "Dodge: %s",
   "hud.grandline.tips.techniques": "Techniques: 1-9 in Combat Mode",
   "hud.grandline.tips.tells": "Red flash = heavy blow coming · gold ring = technique",
-  "hud.grandline.tips.more": "All controls: /controls (or the Controls button on the Character screen)"
+  "hud.grandline.tips.more": "All controls: /controls (or the Controls button on the Character screen)",
+  "screen.grandline.controls.guns": "At the helm: gun orders / shot type"
 }

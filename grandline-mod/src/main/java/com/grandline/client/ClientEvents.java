@@ -67,6 +67,10 @@ public final class ClientEvents {
         while (Keys.CHARACTER.consumeClick()) mc.setScreen(new com.grandline.client.screen.CharacterScreen());
         while (Keys.QUEST_LOG.consumeClick()) PacketDistributor.sendToServer(new GLNetwork.UiAction("quest_log", new CompoundTag()));
         while (Keys.MINIMAP.consumeClick()) Minimap.toggle();
+        // crew: V roster, N quick order (at a ship's helm the same keys are the gun orders, see NavalClient)
+        boolean helm = p.getVehicle() instanceof com.grandline.ship.ShipEntity;
+        while (Keys.CREW_ROSTER.consumeClick()) if (!helm) crewOp("roster");
+        while (Keys.CREW_ORDER.consumeClick()) if (!helm) crewOp("quick");
         while (Keys.NEXT_SET.consumeClick()) if (ClientState.combatMode) ClientState.abilitySet = (ClientState.abilitySet + 1) % com.grandline.player.CharacterData.LOADOUT_SETS;
         while (Keys.DODGE.consumeClick()) {
             float lx = p.input.leftImpulse, lz = p.input.forwardImpulse;
@@ -175,6 +179,12 @@ public final class ClientEvents {
     @SubscribeEvent
     public static void onHotbar(RenderGuiLayerEvent.Pre e) {
         if (ClientState.combatMode && e.getName().equals(VanillaGuiLayers.HOTBAR)) e.setCanceled(true);
+    }
+
+    private static void crewOp(String op) {
+        CompoundTag t = new CompoundTag();
+        t.putString("op", op);
+        PacketDistributor.sendToServer(new GLNetwork.UiAction("crew", t));
     }
 
     /** The technique's target when not locked on: whoever the player looks at in plain sight, up to 32 blocks. */

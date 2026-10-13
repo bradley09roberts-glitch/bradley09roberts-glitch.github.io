@@ -216,6 +216,7 @@ public abstract class GLNpc extends PathfinderMob {
         var rank = com.grandline.balance.Tuning.rank(this);
         float hp = notableId.isEmpty() ? com.grandline.balance.Tuning.npcHealth(archetype(), tier, rank)
                 : com.grandline.balance.Tuning.notableHealth(tier, rank);
+        hp = com.grandline.balance.Tuning.npcHealth(this, hp); // a crew companion's health follows its captain instead
         float share = getMaxHealth() > 0 ? getHealth() / getMaxHealth() : 1f;
         var maxHp = getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
         if (maxHp != null) maxHp.setBaseValue(Math.min(1024, hp));

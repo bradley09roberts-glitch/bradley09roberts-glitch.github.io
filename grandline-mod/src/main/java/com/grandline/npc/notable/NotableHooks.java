@@ -153,10 +153,7 @@ public final class NotableHooks {
             return;
         }
         if (!(dead instanceof GLNpc npc)) return;
-        if (e.getSource().getEntity() instanceof GLNpc killer && CrewManager.isCrew(killer)) {
-            ServerPlayer cap = CrewManager.captainOf(killer);
-            if (cap != null && cap.distanceToSqr(npc) < 64 * 64) QuestEvents.onKill(cap, npc);
-        }
+        // crew kills count for the captain in NpcOutcomes.onNpcDeath (crew/CompanionCredit), exactly once
         if (npc.notableId().isEmpty()) return;
         Notable n = NotableCharacters.get(npc.notableId());
         NotableState st = NotableState.get(level.getServer());
@@ -280,8 +277,7 @@ public final class NotableHooks {
         if (generated != null) t.putString("greetingText", Component.Serializer.toJson(generated, sp.registryAccess()));
         addQuests(d, opts, n, npc.islandId(), starter, mine, false);
         if (mine) {
-            opts.add(StringTag.valueOf(CrewManager.isWaiting(npc) ? "crew_follow" : "crew_wait"));
-            opts.add(StringTag.valueOf("crew_dismiss"));
+            com.grandline.npc.crew.CompanionOrders.dialogueOptions(sp, npc, opts); // crew_follow / crew_wait / crew_rest / crew_join / crew_dismiss
         } else if (n.recruitable() && !taken && d.created && QuestRegistry.isDone(d, n.recruitQuest())) {
             opts.add(StringTag.valueOf("recruit"));
         }
@@ -304,6 +300,8 @@ public final class NotableHooks {
             case "recruit" -> CrewManager.recruit(sp, npc);
             case "crew_wait" -> CrewManager.setWaiting(sp, npc, true);
             case "crew_follow" -> CrewManager.setWaiting(sp, npc, false);
+            case "crew_rest" -> com.grandline.npc.crew.CompanionOrders.toReserve(sp, npc.notableId());
+            case "crew_join" -> com.grandline.npc.crew.CompanionOrders.join(sp, npc.notableId());
             case "crew_dismiss" -> CrewManager.dismiss(sp, npc);
             default -> {
                 return false;

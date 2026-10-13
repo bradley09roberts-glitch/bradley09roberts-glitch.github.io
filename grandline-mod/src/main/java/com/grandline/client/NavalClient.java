@@ -24,8 +24,8 @@ import org.lwjgl.glfw.GLFW;
  * Also the naval lines of the ship HUD (orders, ammo, rigging, grapple/tow lines).
  */
 public final class NavalClient {
-    public static final KeyMapping GUN_ORDERS = new KeyMapping("key.grandline.gun_orders", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, Keys.CAT);
-    public static final KeyMapping AMMO = new KeyMapping("key.grandline.gun_ammo", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_N, Keys.CAT);
+    public static final KeyMapping GUN_ORDERS = new KeyMapping("key.grandline.gun_orders", HelmKeyContext.AT_HELM, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, Keys.CAT);
+    public static final KeyMapping AMMO = new KeyMapping("key.grandline.gun_ammo", HelmKeyContext.AT_HELM, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_N, Keys.CAT);
 
     @EventBusSubscriber(modid = GrandLine.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
     public static final class Setup {

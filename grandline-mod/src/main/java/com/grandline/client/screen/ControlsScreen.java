@@ -53,6 +53,7 @@ public class ControlsScreen extends Screen {
         r.add(new Row(Component.translatable("screen.grandline.controls.minimap"), key(Keys.MINIMAP)));
         r.add(new Row(Component.translatable("screen.grandline.controls.character"), key(Keys.CHARACTER)));
         r.add(new Row(Component.translatable("screen.grandline.controls.ship"), Component.literal("").append(key(Keys.ANCHOR)).append(" / ").append(key(Keys.BURST))));
+        r.add(new Row(Component.translatable("screen.grandline.controls.guns"), Component.literal("").append(key(com.grandline.client.NavalClient.GUN_ORDERS)).append(" / ").append(key(com.grandline.client.NavalClient.AMMO))));
         for (KeyMapping k : Keys.ALL) {
             // keys added later (crew orders and the like) appear here by themselves
             if (k == Keys.COMBAT_MODE || k == Keys.DODGE || k == Keys.LOCK_ON || k == Keys.NEXT_SET || k == Keys.OBSERVATION || k == Keys.ARMAMENT
