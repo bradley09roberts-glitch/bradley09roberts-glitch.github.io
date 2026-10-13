@@ -219,13 +219,13 @@ public final class AutoShot {
             }
             ticks = 0;
         } else if (step == 4 && ticks > 500 && target != null) {
-            view(server, 0, 14, 20, 180f, 30f);
+            view(server, 0, 30, 18, 180f, 58f); // high and steep: forests hide anything seen from the side
             step = 5;
             ticks = 0;
         } else if (step == 5 && ticks > 120) {
             shot(mc, "company_camp");
             run(server, "longnight admin skip 5");
-            view(server, 0, 24, 32, 180f, 35f);
+            view(server, 0, 36, 22, 180f, 58f);
             step = 6;
             ticks = 0;
         } else if (step == 6 && ticks > 1200) {
@@ -235,7 +235,7 @@ public final class AutoShot {
             step = 7;
             ticks = 0;
         } else if (step == 7 && ticks > 1500) {
-            view(server, 0, 26, 34, 180f, 35f);
+            view(server, 0, 40, 24, 180f, 58f);
             step = 8;
             ticks = 0;
         } else if (step == 8 && ticks > 120) {
@@ -245,7 +245,7 @@ public final class AutoShot {
             step = 9;
             ticks = 0;
         } else if (step == 9 && ticks > 1500) {
-            view(server, -24, 26, 24, -135f, 35f);
+            view(server, -26, 44, 26, -135f, 55f);
             step = 10;
             ticks = 0;
         } else if (step == 10 && ticks > 120) {
@@ -293,7 +293,12 @@ public final class AutoShot {
         return y + 48;
     }
 
+    /** Commands always run on the server thread (the pilot itself ticks on the client's render thread). */
     static void run(IntegratedServer server, String cmd) {
+        if (!server.isSameThread()) {
+            server.execute(() -> run(server, cmd));
+            return;
+        }
         CommandSourceStack src = server.createCommandSourceStack().withPermission(4).withSuppressedOutput();
         server.getCommands().performPrefixedCommand(src, cmd);
     }
