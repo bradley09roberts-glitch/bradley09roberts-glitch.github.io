@@ -593,6 +593,8 @@ public final class CrewManager {
                     m.hold = e.blockPosition().asLong();
                     cd.setDirty();
                 }
+                // a member put in reserve by an old save while following has no anchor: it waits right where it stands
+                if (e.home().equals(BlockPos.ZERO)) e.setAllegiance(e.faction(), m.holding() ? BlockPos.of(m.hold) : e.blockPosition());
                 upkeep(cd, cap, m, e, now);
             }
             return;
