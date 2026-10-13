@@ -134,3 +134,10 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   run 1) by day 25 with every block placed in the world. Run 1 logged a ConcurrentModificationException in
   NewsSystem: the pilot ran /longnight admin skip from the render thread; AutoShot.run now hands commands to the server
   thread; run 2 has no longnight errors.
+- 13:40 USER REPORT: "can't right click the hearthstone or the people". Found: (1) with an item in hand (new players
+  hold the journal) the hearthstone tried to sell it; (2) vanilla skips block use for a sneaking player holding an item,
+  so "sneak to give" never worked (the trade GameTest called Trade directly); (3) on a slope / unloaded ground the
+  company's hearthstone was never placed. FIX: PlayerInteractEvent.RightClickBlock/EntityInteract handle our blocks and
+  people first; hearthstone ground search (several spots, up and down) and deferred placement on materialize; action-bar
+  "Talking with ..." so the chat answer is noticed. VERIFIED with real client clicks (AutoShot company mode): talk PASS,
+  hearthstone overview PASS, sneak-give logs PASS.

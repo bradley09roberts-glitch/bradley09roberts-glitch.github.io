@@ -62,6 +62,7 @@ public final class Trade {
             count = affordable;
         }
         double units = count * u.perItem();
+        String what = count + " " + stack.getHoverName().getString().toLowerCase();
         stack.shrink(count);
         s.stock.add(u.commodity(), units);
         int bonus = com.longnight.sim.Contracts.delivered(sim, s, player.getUUID(), u.commodity(), units);
@@ -71,8 +72,8 @@ public final class Trade {
         }
         if (donate) {
             s.changeReputation(player.getUUID(), Math.max(1, (int) (units * u.commodity().basePrice / 15)));
-            Ui.msg(player, "You give " + count + " to the stores of " + s.name + " (" + fmt(units) + " " + u.commodity().displayName.toLowerCase()
-                    + "). Folk here will remember your generosity.");
+            Ui.msg(player, "You give " + what + " to the stores of " + s.name + ". Folk here will remember your generosity. (Their "
+                    + u.commodity().displayName.toLowerCase() + " in store: " + fmt(s.stock.get(u.commodity())) + ")");
         } else {
             int pay = (int) Math.round(units * unitPrice);
             pay = Math.min(pay, s.treasury);
