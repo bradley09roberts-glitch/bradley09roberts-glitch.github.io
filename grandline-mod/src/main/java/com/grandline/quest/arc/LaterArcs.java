@@ -8,7 +8,8 @@ import static com.grandline.quest.arc.ArcBuilder.listed;
 /**
  * Chapters whose quests keep their earlier shape (StoryQuests / StoryQuestsExtra): the two branches into the other seas
  * (Skypiea above Jaya, Fish-Man Island below Sabaody), the Calm Belt, the war and the New World. They are listed here so
- * the journal can show their chapter, cast, problem and recap; they have no scenes, decisions or consequences yet.
+ * the journal can show their chapter, cast, problem and recap. The two branches also have scenes on every step (their
+ * quests and objectives are unchanged); none of them has a decision or consequences yet.
  * Text: lang/en_us/story_overhaul_later.json.
  *
  * <p>Cast roles here only protect people who are never fought (a giver or ally yields instead of dying); everyone who is

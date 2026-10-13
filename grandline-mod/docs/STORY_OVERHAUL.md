@@ -72,7 +72,8 @@ is tracked at a time.
 
 Twenty chapters are written to the **full standard** (scenes on every step, a decision, consequences, places,
 protected cast, journal text). Eighteen later chapters are **listed**: the journal shows their chapter, cast, problem
-and recap, but their quests keep their earlier shape (no scenes, decisions or consequences yet).
+and recap, but their quests keep their earlier shape (no decisions or consequences; Skypiea and Fish-Man Island also
+have scenes on every step).
 
 ### Part I — the Blues (full standard)
 
@@ -114,8 +115,8 @@ scenes, and a few have their own (the Marine side of Enies Lobby and Sabaody).
 
 | # | Chapter | Where | Why it is listed only |
 |---|---|---|---|
-| 13 | The Storm Throne | Skypiea (White Sea) | Another dimension: the place machinery (sites, foes turning up) works on the ocean world only, and the existing Skypiea self-test checks its exact chain. |
-| 19 | The Lantern in the Abyss | Fish-Man Island (deep sea) | Same as Skypiea. |
+| 13 | The Storm Throne | Skypiea (White Sea) | Has scenes on every step, but no decision: it is in another dimension, where the place machinery (sites, foes turning up) does not run, and the existing Skypiea self-test checks its exact chain. |
+| 19 | The Lantern in the Abyss | Fish-Man Island (deep sea) | Same as Skypiea (scenes on every step, no decision). |
 | 20–24 | The Jade Camellia, The Hermit's Silence, Descent, The Lamplighter's Execution, The Last Blade | Calm Belt, Impel Down, Marineford, Kuraigana | Not reached in this pass. |
 | 25–37 | The Counterfeit Flame … The Saltfire | the New World | Not reached in this pass. |
 
@@ -226,8 +227,9 @@ plays it to the end on each option.
 
 `GL_SELFTEST=story_arcs` (StoryOverhaulTests) checks, on a fresh world:
 
-- every chapter's data and text (title, problem, part, cast lines, beats in order, scene speakers, decision labels,
-  recaps, place labels, consequence lines) and that every kill objective of a full chapter has a place;
+- every chapter's data and text (title, problem, part, cast lines, beats in order, scene speakers in every chapter and
+  faction version, decision labels, recaps, place labels, consequence lines) and that every kill objective of a full
+  chapter has a place;
 - the combat lesson's objective wording, and every quest's description (`questTextCheck`);
 - the opening played by a fake player: lesson first in line, kills counted once each, progress through an NBT round
   trip (logout) and a knockdown, early completion and rewards paid once, the decision offered in a scene and only
@@ -237,9 +239,9 @@ plays it to the end on each option.
 - every full chapter played end to end on each option, with a scene on every step and a recap afterwards;
 - save migration (old Shells Town, Orange Town, Ember, Sorbet and Long Ring saves).
 
-Last run (this branch): `story_arcs` 19 passed, 0 failed — 40 chapters (20 at full standard), 403 scenes, 905 scene
+Last run (this branch): `story_arcs` 19 passed, 0 failed — 40 chapters (20 at full standard), 445 scenes, 974 scene
 lines, 20 decisions, 106 consequences; 40 playthroughs, 316 steps; 32 changed quests mapped. `quests` 5 passed, 0
-failed.
+failed. `stories` 75 passed, 3 failed: the three checks that predate the `lesson`/`choice` objective types (section 8).
 
 ---
 
@@ -249,7 +251,13 @@ failed.
 - The practice bout (`com.grandline.combat.Sparring`) is a stub on this branch that always says "can't spar right
   now"; the combat branch provides the real one.
 - The `stories` self-test phase (SelfTest/StoryTestsExtra, outside this work's files) predates the `lesson` and
-  `choice` objective types; three of its checks need a line each to know them (see the branch report).
+  `choice` objective types; three of its checks need a line each to know them:
+  - `SelfTest` "story quest graph is consistent" (objective switch): add
+    `case "lesson", "choice", "reach" -> StoryTestsExtra.progresses(s, o);`
+  - `StoryTestsExtra.progresses`: add `case "lesson" -> com.grandline.quest.arc.Arcs.LESSONS.contains(t);` and
+    `case "choice" -> com.grandline.quest.arc.Arcs.decision(t) != null;`
+  - `SelfTest` "story chain advances": before the bandit kills, add
+    `for (String l : com.grandline.quest.arc.Arcs.LESSONS) com.grandline.quest.Quests.progress(fp, "lesson", l, 1);`
 - Dimension travel is covered by the character data being saved on the player, but no test travels between
   dimensions mid-step.
 - Consequences change greetings, prices, stock, rewards and help in fights; no notable moves to a new place because of

@@ -118,11 +118,13 @@ final class StoryOverhaulTests {
                 if (dec != null) {
                     for (Arc.Choice c : dec.choices()) if (!has("recap.grandline." + st.quest() + "." + c.id())) bad.add(st.quest() + ": no recap for " + c.id());
                 } else if (!has("recap.grandline." + st.quest())) bad.add(st.quest() + ": no recap");
-                if (!a.full()) continue;
-                // scenes of this step (every variant of every event) are well formed
+                // scenes of this step (every faction version, every event, every choice) are well formed, in every chapter
                 for (String ev : List.of("start", "end", "talk")) {
-                    List<String> prefixes = new ArrayList<>(List.of("scene.grandline." + st.quest() + "." + ev));
-                    for (Arc.Decision d2 : a.decisions()) for (Arc.Choice c : d2.choices()) prefixes.add("scene.grandline." + st.quest() + "." + ev + "." + c.id());
+                    List<String> prefixes = new ArrayList<>();
+                    for (String id : List.of(st.quest(), st.quest() + ".marine", st.quest() + ".revolutionary", st.quest() + ".bounty_hunter", st.quest() + ".civilian")) {
+                        prefixes.add("scene.grandline." + id + "." + ev);
+                        for (Arc.Decision d2 : a.decisions()) for (Arc.Choice c : d2.choices()) prefixes.add("scene.grandline." + id + "." + ev + "." + c.id());
+                    }
                     for (String p : prefixes) {
                         int n = Scenes.lines(p);
                         if (n == 0) continue;
@@ -138,6 +140,7 @@ final class StoryOverhaulTests {
                         }
                     }
                 }
+                if (!a.full()) continue;
                 // kill objectives of the chapter's steps have a place where their foes turn up
                 for (String id : List.of(st.quest(), st.quest() + ".marine", st.quest() + ".revolutionary", st.quest() + ".bounty_hunter", st.quest() + ".civilian")) {
                     QuestDef v = QuestRegistry.get(id);
