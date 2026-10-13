@@ -104,7 +104,7 @@ public final class Embodiment {
             }
             boolean near = best <= range + s.radius || OBSERVED.contains(s.id);
             boolean visible = near || best <= Math.max(range, 176) + s.radius;
-            if (visible && level.isLoaded(s.center)) {
+            if (visible && Places.loadedAround(level, s.center, 6)) { // the hearth stands 4 blocks from the centre
                 // raise the place a little before the traveller arrives, so it is already there when seen
                 if (!s.materialized) materialize(level, sim, s);
                 VISIBLE.add(s.id);

@@ -55,10 +55,15 @@ public final class Placer {
     /** GameTests only: the test arena is roofed with barriers, so tests state where the ground is. */
     public static Integer testGroundY;
 
+    /** Every chunk under the plot and its margin is loaded (chunks load in any order, so the corners are not enough). */
     public static boolean areaLoaded(ServerLevel level, Building b) {
         BlockPos o = b.origin;
-        return level.isLoaded(o.offset(-2, 0, -2)) && level.isLoaded(o.offset(b.width() + 2, 0, -2))
-                && level.isLoaded(o.offset(-2, 0, b.depth() + 2)) && level.isLoaded(o.offset(b.width() + 2, 0, b.depth() + 2));
+        for (int cx = (o.getX() - 2) >> 4; cx <= (o.getX() + b.width() + 2) >> 4; cx++) {
+            for (int cz = (o.getZ() - 2) >> 4; cz <= (o.getZ() + b.depth() + 2) >> 4; cz++) {
+                if (!level.hasChunk(cx, cz)) return false;
+            }
+        }
+        return true;
     }
 
     /** Survey and ready the plot. Returns false if not ready (unloaded) or relocated. */

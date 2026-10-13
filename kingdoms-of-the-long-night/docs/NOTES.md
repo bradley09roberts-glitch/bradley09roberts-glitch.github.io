@@ -80,3 +80,11 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   tick time (0.9 ms, 0 bodies ticking) was not a real measurement; observe now forces the centre chunk the vanilla way.
 - Slow-tick diagnostics: any longnight tick over 250 ms logs where the time went (daily simulation / bodies and
   building / raids and roads).
+- 02:45 Run11: JUnit 10/10, GameTests 7/7, scenario 17/17; avg tick 3.3 ms with 24 bodies (citizens 0.06 ms each, was
+  0.33 ms before path rationing). The new slow-tick log then showed a REAL 6-7 s stall in "bodies and building" when a
+  town materializes. Stack sampling (jstack every 0.25 s) pinned it: synchronous chunk loads from our own code:
+  `Embodiment.materialize` read the hearth block 4 blocks from the centre (maybe another, unloaded chunk) and
+  `Placer.prepare` read columns in a chunk that was not loaded although the plot's four corner chunks were (chunks
+  finish loading in any order). Reading a block in an unloaded chunk makes the server thread generate it and wait
+  for the whole generation queue. FIX: `Places.loadedAround` before materializing and tree searches; `areaLoaded`
+  checks every chunk under a plot; signposts check their chunk.

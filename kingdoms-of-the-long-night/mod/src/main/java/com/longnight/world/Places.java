@@ -29,6 +29,15 @@ public final class Places {
         return Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, m.getX(), m.getY(), m.getZ());
     }
 
+    /**
+     * True if every chunk within r blocks (r up to 7) of p is loaded. Reading a block in an unloaded chunk makes the
+     * server thread generate it on the spot and wait for everything queued before it: seconds, on fresh land.
+     */
+    public static boolean loadedAround(ServerLevel level, BlockPos p, int r) {
+        return level.isLoaded(p.offset(-r, 0, -r)) && level.isLoaded(p.offset(r, 0, -r))
+                && level.isLoaded(p.offset(-r, 0, r)) && level.isLoaded(p.offset(r, 0, r));
+    }
+
     public static BlockPos ground(ServerLevel level, BlockPos p) {
         if (!level.isLoaded(p)) return p;
         return level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p);

@@ -155,6 +155,7 @@ public final class Roads {
     /** A post at a settlement's edge, its sign naming where the road goes and how far. */
     static void signpost(ServerLevel level, WorldSim sim, int x, int z, double dirX, double dirZ, Settlement to, int distance) {
         int ox = (int) Math.round(x + dirZ * 2), oz = (int) Math.round(z - dirX * 2); // beside the road
+        if (!level.isLoaded(new BlockPos(ox, 0, oz))) return;
         BlockPos top = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(ox, 0, oz));
         if (sim.claimed(top, 0) || !level.getBlockState(top).isAir()) return;
         BlockState below = level.getBlockState(top.below());

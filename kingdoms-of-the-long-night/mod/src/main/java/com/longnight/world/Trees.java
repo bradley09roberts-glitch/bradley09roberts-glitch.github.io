@@ -40,7 +40,7 @@ public final class Trees {
             int x = around.getX() + r.nextInt(radius * 2 + 1) - radius;
             int z = around.getZ() + r.nextInt(radius * 2 + 1) - radius;
             BlockPos col = new BlockPos(x, around.getY(), z);
-            if (!level.isLoaded(col)) continue;
+            if (!Places.loadedAround(level, col, 4)) continue; // the crown and trunk are read up to 4 blocks away
             int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
             BlockPos p = new BlockPos(x, top, z);
             if (!isLog(level.getBlockState(p))) continue;
