@@ -1,10 +1,9 @@
 {
- "grandline.quest.obj.lesson.strike": "Lesson: land a light blow on a foe (left click in combat mode, %s toggles it)",
- "grandline.quest.obj.lesson.guard": "Lesson: guard a blow (hold right click as it lands; tap it on the hit to parry)",
+ "grandline.quest.obj.lesson.strike": "Lesson: land a blow on a foe (tap left click; hold it for a heavy blow)",
+ "grandline.quest.obj.lesson.guard": "Lesson: guard a blow (Combat Mode with %s, then hold right click as it lands; just before the hit = parry)",
  "grandline.quest.obj.lesson.dodge": "Lesson: dodge an attack (%s as the blow comes)",
- "grandline.quest.obj.lesson.technique": "Lesson: use a technique (number keys 1-9 in combat mode, %s)",
+ "grandline.quest.obj.lesson.technique": "Lesson: use a technique (Combat Mode with %s, then a number key 1-9)",
  "grandline.quest.obj.choice": "Decide %s",
-
  "lesson.grandline.good.strike": "That's a hit!",
  "lesson.grandline.good.guard": "Good guard!",
  "lesson.grandline.good.dodge": "Nice dodge!",
@@ -27,11 +26,9 @@
  "lesson.grandline.percival.done": "The wind says you're ready. The wind is usually right. Usually.",
  "lesson.grandline.mahina.done": "Lesson's over. You've earned a second helping. Then go chase those thieves.",
  "arc.grandline.teacher": "Your teacher",
-
  "dialogue.grandline.option.spar": "Spar with me (a practice bout that can't hurt you).",
  "dialogue.grandline.spar.unavailable": "%s can't spar with you right now.",
  "arc.grandline.chose": "You chose: %s",
-
  "screen.grandline.scene.next": "Click or press Space to continue",
  "screen.grandline.scene.decide": "Choose: click an answer, or press its number",
  "screen.grandline.quests.group.story": "Story",
@@ -60,7 +57,6 @@
  "journal.grandline.foe.many": "%s ×%s",
  "journal.grandline.foe.boss": "%s (boss)",
  "journal.grandline.foe.named": "%s",
-
  "arc.grandline.part.east_blue": "East Blue",
  "arc.grandline.part.north_blue": "North Blue",
  "arc.grandline.part.west_blue": "West Blue",
@@ -71,14 +67,12 @@
  "arc.grandline.part.calm_belt": "the Calm Belt",
  "arc.grandline.part.war": "the War",
  "arc.grandline.part.new_world": "the New World",
-
  "notable.grandline.mio": "Mio Tsunatori",
  "notable.grandline.mio.title": "Skipper of the Shiokaze Supply Sloop",
  "dialogue.grandline.notable.mio": "If my grandfather sent you, tell him I'm fine. Also tell him the levy is robbery. Also — you wouldn't happen to have a key?",
  "notable.grandline.hayashi": "Tadashi Hayashi",
  "notable.grandline.hayashi.title": "Lieutenant, Accounts and Discipline, Shells Town Base",
  "dialogue.grandline.notable.hayashi": "Lieutenant Hayashi, accounts. If you have a complaint, there is a form. There is always a form.",
-
  "arc.grandline.justice_levy": "The Justice Levy",
  "arc.grandline.justice_levy.why": "Shells Town's Marine captain taxes every crate that crosses his harbour and collars anyone who refuses. Shiokaze's supply sloop came home a third short — and its skipper didn't come home at all.",
  "arc.grandline.justice_levy.cast.fumio": "the East Ember. Rigged the Saltfire King's ship for eleven years and still kicks like a mule. Your teacher on Shiokaze Isle.",
@@ -92,7 +86,6 @@
  "arc.grandline.site.shells_levy_thugs": "Gallowgate's hired thugs at the harbour",
  "arc.grandline.site.shells_cell_block": "the cell block under the base's north wall",
  "arc.grandline.site.shells_square": "Shells Town's square",
-
  "quest.grandline.shells_petra": "Pocket",
  "quest.grandline.shells_petra.desc": "A Marine dock-hand is whistling at you from behind the base's yard fence. Talk to Petra Marlinspike.",
  "quest.grandline.shells_rescue": "The Cell Block",
@@ -105,7 +98,6 @@
  "quest.grandline.shells_ledger.desc": "Take the levy ledger to Lieutenant Hayashi in the base. Once he reads it, the regulars should stand down.",
  "quest.grandline.shells_after": "Full Holds",
  "quest.grandline.shells_after.desc": "Shells Town is waking up without a levy. Find Mio, who is loading the supply sloop for Shiokaze Isle.",
-
  "scene.grandline.ember_east_1.start.1": "fumio|Hmph. So you're the one who's been staring at the horizon all week. Every kid on this rock does it. Most of them never leave.",
  "scene.grandline.ember_east_1.start.2": "fumio|I rigged the Saltfire King's ship for eleven years. I know that look. Doesn't mean you're ready for what's out there.",
  "scene.grandline.ember_east_1.start.3": "you|Ready for what, exactly?",
@@ -202,7 +194,6 @@
  "scene.grandline.recruit_petra.end.ledger.3": "petra|I'm a sniper. I don't take a shot unless it saves someone — that's my rule, and it isn't changing. If that works for you, ask me. Properly.",
  "scene.grandline.recruit_petra.end.ledger.4": "mio|Before you two run off — the sloop's crew picked up news at sea. Orange Town's harvest festival is under siege. A distiller-pirate called Rotgut is turning the whole crop into liquor, and the town band has scattered.",
  "scene.grandline.recruit_petra.end.ledger.5": "petra|Orange Town's south-west of here. If we're collecting lost causes, that one's ripe.",
-
  "recap.grandline.ember_east_1": "Took Shiokaze's stolen supplies back from the bandits in the hills, while Old Fumio taught you to fight.",
  "recap.grandline.ember_east_2": "Learned that the supply sloop's skipper, Fumio's granddaughter Mio, never came home from Shells Town — and sailed there to find her.",
  "recap.grandline.shells_1": "Broke up the levy line at the harbour and found the ledger: the 'Justice Levy' goes into Captain Gallowgate's own strongbox, and Mio is on his list of the collared.",
@@ -217,7 +208,6 @@
  "recap.grandline.shells_2.ledger": "Brought Iron-Collar down. Lieutenant Hayashi relieved him of command and impounded the strongbox as evidence.",
  "recap.grandline.shells_after": "Watched the supply sloop load up full for Shiokaze Isle, with Mio at the helm.",
  "recap.grandline.recruit_petra": "Petra turned down her old post. She'll sail with you if you ask — and the sloop's crew brought news of trouble in Orange Town.",
-
  "arc.grandline.justice_levy.bonus.square": "The whole town saw Iron-Collar fall. Shells Town's shopkeepers won't forget it (15% off in Shells Town) — and neither will the Marines.",
  "arc.grandline.justice_levy.bonus.ledger": "Lieutenant Hayashi impounds the strongbox as evidence, then quietly hands you two pairs of seastone cuffs 'for the next one'. The Marines will remember you kindly.",
  "arc.grandline.justice_levy.aid.square": "The square is chanting your name. Every blow lands harder for it.",
