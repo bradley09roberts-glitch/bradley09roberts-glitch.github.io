@@ -15,8 +15,11 @@ modpack alone. The runs **with `longnight`** came later in the night and are sum
 | Real client, performance preset + `longnight`, installed from the built `.mrpack` (`LONGNIGHT_AUTOSHOT=1 client_test.py`) | **PASS**: joined the world, flew to the largest town (a Dunmar town of 38-39 buildings and 35 people among Terralith giant spruces), waited for it to be raised, screenshots of the town, a person, night and the road to the next town (`tools/test/screenshots/fullpack-*.png`). 0 fatal; the same 2 cosmetic ERROR lines as without longnight. |
 | Village disabling with Terralith present | `longnight` loads after Terralith and empties the village structure set, so no vanilla or Terralith villages generate; only longnight's people exist. |
 
-Not run with `longnight`: the rich preset's client (shaders + Distant Horizons in software GL is very slow here).
-The rich preset's server-side mods are the performance preset's plus Distant Horizons; see the results below.
+| Dedicated server, **rich** preset + `longnight` (final release, 13 Oct 04:05 BST) | **PASS**: 41 mod ids (incl. Distant Horizons), 0 ERROR lines, 0 exceptions; history 14 settlements, 207 people, 8 realms in 48 s (background); 1 simulated day, `VALIDATE OK`. |
+| Performance preset + `longnight`, final release | server PASS (2 simulated days, `VALIDATE OK`), real client PASS (a 40-building Dunmar town raised in 1,318 ticks). |
+
+Not run with `longnight`: the rich preset's **client** (shaders + Distant Horizons in software GL are very slow here;
+the rich client was verified without longnight below, and longnight adds no rendering beyond its citizen model).
 
 ## Result summary
 
