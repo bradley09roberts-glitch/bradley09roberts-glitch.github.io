@@ -11,9 +11,9 @@ screenshot was looked at.
 
 | Suite | Result | What it covers |
 |---|---|---|
-| Full regression, phase 1 (`GL_SELFTEST=1`, fresh world) | REGRESSION_P1 | every system of the mod, the overhaul checks included |
-| Full regression, phase 2 (`GL_SELFTEST=2`, after a restart) | REGRESSION_P2 | persistence after a real server restart |
-| `overhaul` | 16 / 16 | line of effect with real blocks (open ground, stone wall, closed and open door, corner, waist-high cover, glass pane, floor between levels), sight for lock-on, blasts, beams, projectiles (wall, fast shot at a pane, piercing then a wall), an NPC never hurting a target it cannot reach and giving up, at most two melee attackers, no stun-lock, the per-blow cap, the target frame's identity/relationship/threat, guarding counts for the lesson, sparring, the measured balance table, the registries |
+| Full regression, phase 1 (`GL_SELFTEST=1`, fresh world) | 706 / 706 | every system of the mod, the overhaul checks included |
+| Full regression, phase 2 (`GL_SELFTEST=2`, after a restart) | 21 / 21 (one more check runs only when a random market raid in phase 1 leaves a second good missing; this run it did not) | persistence after a real server restart |
+| `overhaul` | 17 / 17 | line of effect with real blocks (open ground, stone wall, closed and open door, corner, waist-high cover, glass pane, floor between levels), sight for lock-on, blasts, beams, projectiles (wall, fast shot at a pane, piercing then a wall), an NPC never hurting a target it cannot reach and giving up, at most two melee attackers, no stun-lock, the per-blow cap, the target frame's identity/relationship/threat, guarding counts for the lesson, sparring, the measured balance table, the registries, the cost of the cover check |
 | `crew` | 34 / 34 | roles, active limit and reserve, swaps (refused at sea and mid-fight, accepted in town), follow/hold/focus/regroup, no attack on neutrals, kill credit once, XP sharing, downed and revived, getting up alone, healing limit, no friendly fire, no hit through a wall, stuck recovery, old-format crew data, bond saved, dismiss and re-recruit, logout and return, Nether and back, recall without duplicates, disband |
 | `story_arcs` | 19 / 19 | 40 chapters (20 at full standard), 445 scenes, 974 lines, 20 decisions, 106 consequences; every full chapter played to the end on each choice (40 playthroughs, 316 steps); early completion; idempotent rewards; journal fields; save migration (32 changed quests) |
 | `stories` | 78 / 78 | the earlier story, island-story and job checks |
@@ -67,4 +67,8 @@ health; no unannounced blow takes more than the rank's cap.
 - **Server load test** was not re-run for 0.3.0 (the shared machine makes it too noisy to compare); the cost of the
   cover check itself is measured below.
 
-COVER_COST
+## Cost of line of effect
+
+Measured in the `overhaul` suite (20 000 checks each, after warm-up): **2.0 µs** for one exposure check in the open
+(one ray) and **7.4 µs** behind full cover (every ray tried). An NPC re-checks its target four to five times a second,
+so a hundred NPCs in fights at once cost well under 0.2 ms per server tick.

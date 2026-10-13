@@ -1,67 +1,67 @@
 ## Enemy and NPC archetypes
 
-| Role | Faction | Base tier | Hostility | Rank | Health at base tier | Light blow at base tier |
+| Role | Faction | Tier (calmest island) | Hostility | Rank | Health there | Light blow there |
 |---|---|---|---|---|---|---|
-| admiral | marine | 17 | lawful | elite | 558 | 19.5 |
+| admiral | marine | 10 | lawful | elite | 558 | 19.5 |
 | apprentice_doctor | civilian | 1 | defensive | standard | 23 | 2.3 |
 | bandit | wild | 1 | aggressive | minion | 14 | 2.1 |
 | bartender | civilian | 1 | defensive | standard | 23 | 2.3 |
 | blacksmith | civilian | 1 | defensive | standard | 23 | 2.5 |
 | bounty_hunter | bounty_hunter | 3 | lawful | standard | 65 | 5.1 |
-| buccaneer_brawler | pirate | 9 | defensive | elite | 496 | 17.4 |
+| buccaneer_brawler | pirate | 6 | defensive | elite | 292 | 11.1 |
 | canal_guide | civilian | 1 | passive | minion | 13 | 1.9 |
-| celestial_guard | world_government | 15 | lawful | elite | 558 | 19.5 |
+| celestial_guard | world_government | 9 | lawful | elite | 496 | 17.4 |
 | child | civilian | 1 | passive | minion | 13 | 1.9 |
 | cook | civilian | 1 | defensive | standard | 23 | 2.5 |
-| cp_agent | cipher_pol | 9 | lawful | elite | 496 | 15.8 |
-| cp_leader | cipher_pol | 13 | lawful | elite | 558 | 17.8 |
+| cp_agent | cipher_pol | 6 | lawful | elite | 292 | 10.1 |
+| cp_leader | cipher_pol | 8 | lawful | elite | 391 | 13.7 |
 | dockworker | civilian | 1 | passive | minion | 13 | 1.9 |
 | doctor | civilian | 1 | defensive | standard | 23 | 2.3 |
 | elder | civilian | 1 | defensive | standard | 23 | 2.3 |
 | farmer | civilian | 1 | passive | minion | 13 | 1.9 |
-| fishman_boss | pirate | 9 | aggressive | elite | 496 | 17.4 |
-| fishman_brute | pirate | 5 | aggressive | elite | 157 | 9.2 |
+| fishman_boss | pirate | 6 | aggressive | elite | 292 | 11.1 |
+| fishman_brute | pirate | 4 | aggressive | elite | 129 | 7.4 |
 | fishman_guard | pirate | 3 | aggressive | standard | 68 | 4.6 |
 | giant_elder | civilian | 1 | passive | elite | 78 | 2.8 |
-| giant_warrior | civilian | 11 | defensive | elite | 558 | 19.5 |
+| giant_warrior | civilian | 7 | defensive | elite | 336 | 12.9 |
 | guard | civilian | 2 | lawful | standard | 37 | 3.6 |
 | head_chef | civilian | 1 | defensive | standard | 23 | 2.5 |
 | innkeeper | civilian | 1 | defensive | standard | 23 | 2.3 |
-| jailer | world_government | 5 | lawful | standard | 103 | 8.5 |
-| jailer_beast | wild | 9 | aggressive | elite | 496 | 15.8 |
+| jailer | world_government | 4 | lawful | standard | 85 | 6.8 |
+| jailer_beast | wild | 6 | aggressive | elite | 292 | 10.1 |
 | keeper | civilian | 1 | passive | minion | 13 | 1.9 |
-| kuja_warrior | civilian | 9 | defensive | elite | 397 | 17.4 |
+| kuja_warrior | civilian | 6 | defensive | elite | 233 | 11.1 |
 | lighthouse_keeper | civilian | 1 | passive | minion | 13 | 1.9 |
 | lookout | pirate | 2 | aggressive | standard | 29 | 3.6 |
-| lunarian_warrior | pirate | 11 | defensive | elite | 558 | 19.5 |
+| lunarian_warrior | pirate | 7 | defensive | elite | 336 | 12.9 |
 | marine | marine | 2 | lawful | standard | 34 | 3.6 |
-| marine_captain | marine | 7 | lawful | elite | 307 | 12.9 |
-| marine_officer | marine | 5 | lawful | elite | 146 | 9.2 |
-| master | civilian | 9 | defensive | elite | 453 | 17.4 |
+| marine_captain | marine | 5 | lawful | elite | 209 | 9.2 |
+| marine_officer | marine | 4 | lawful | elite | 121 | 7.4 |
+| master | civilian | 6 | defensive | elite | 267 | 11.1 |
 | merchant | civilian | 1 | defensive | standard | 23 | 2.3 |
 | miller | civilian | 1 | passive | minion | 13 | 1.9 |
 | noble | civilian | 1 | defensive | standard | 23 | 2.3 |
 | patron | civilian | 1 | passive | minion | 13 | 1.9 |
 | pirate | pirate | 2 | aggressive | minion | 22 | 3.0 |
-| pirate_captain | pirate | 5 | aggressive | elite | 183 | 9.2 |
+| pirate_captain | pirate | 4 | aggressive | elite | 151 | 7.4 |
 | priest | civilian | 1 | defensive | standard | 23 | 2.3 |
 | resident | civilian | 1 | passive | minion | 13 | 1.9 |
-| revolutionary | revolutionary | 5 | defensive | standard | 103 | 8.5 |
-| ruin_guardian | wild | 5 | aggressive | elite | 157 | 9.2 |
+| revolutionary | revolutionary | 4 | defensive | standard | 85 | 6.8 |
+| ruin_guardian | wild | 4 | aggressive | elite | 129 | 7.4 |
 | sailor | civilian | 2 | defensive | standard | 34 | 3.6 |
 | scholar | civilian | 1 | passive | minion | 13 | 1.9 |
 | sea_merchant | civilian | 2 | defensive | standard | 42 | 3.6 |
 | shipwright | civilian | 1 | defensive | standard | 23 | 2.5 |
 | shopkeeper | civilian | 1 | defensive | standard | 23 | 2.3 |
-| snakeneck_lancer | civilian | 5 | defensive | standard | 103 | 8.5 |
+| snakeneck_lancer | civilian | 4 | defensive | standard | 85 | 6.8 |
 | sparring_partner | civilian | 1 | defensive | standard | 35 | 2.3 |
 | station_master | civilian | 1 | passive | minion | 13 | 1.9 |
 | student | civilian | 1 | passive | minion | 13 | 1.9 |
-| vice_admiral | marine | 13 | lawful | elite | 558 | 19.5 |
+| vice_admiral | marine | 8 | lawful | elite | 391 | 15.0 |
 | villager | civilian | 1 | passive | minion | 13 | 1.9 |
 | waiter | civilian | 1 | defensive | standard | 23 | 2.3 |
-| warden | world_government | 13 | lawful | elite | 558 | 19.5 |
-| wg_envoy | world_government | 7 | passive | minion | 84 | 8.8 |
+| warden | world_government | 8 | lawful | elite | 391 | 15.0 |
+| wg_envoy | world_government | 5 | passive | minion | 57 | 6.3 |
 
 Wild beasts and Sea Kings keep their own health; their blows to players go through the same per-blow caps (wild beasts as elites, Sea Kings as bosses).
 
@@ -253,24 +253,39 @@ Wild beasts and Sea Kings keep their own health; their blows to players go throu
 | Arc / line | Quests |
 |---|---|
 | activities | 3 |
+| auction_of_souls | 12 |
 | awakening | 1 |
+| bake_off | 8 |
+| beginnings_endings | 12 |
 | board | 8 |
 | calm_belt | 5 |
+| clockwork_regatta | 7 |
+| coral_keep | 7 |
 | crew | 18 |
-| east_blue | 20 |
-| embers | 14 |
+| debt_and_sky | 8 |
+| embers | 6 |
+| feast_under_siege | 8 |
 | finale | 6 |
 | fishman_island | 15 |
 | gate | 3 |
+| gates_of_justice | 14 |
+| gilded_welcome | 9 |
+| ice_house | 9 |
+| justice_levy | 12 |
 | local | 42 |
+| marmalade_siege | 7 |
+| mirror_monger | 10 |
 | new_world | 21 |
-| north_blue | 2 |
-| paradise | 42 |
+| panacea | 8 |
 | paths | 4 |
 | recruit | 18 |
+| salt_wells | 12 |
+| scrap_baron | 9 |
 | skypiea | 14 |
-| south_blue | 2 |
+| swallow_crown | 10 |
+| three_guilds | 10 |
+| tug_of_tides | 8 |
+| upward_mountain | 8 |
 | war | 12 |
-| west_blue | 2 |
 
 3154 generated optional jobs (island stories, job boards, sea jobs) are not listed one by one.

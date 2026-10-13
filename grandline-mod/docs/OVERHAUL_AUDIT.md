@@ -105,6 +105,19 @@ with Petra and Kenji (companions dealt 17 of 56); the companions alone need 32 t
 
 ## Tests
 
-`GL_SELFTEST=overhaul` (also part of phase 1) — see the validation report for results. Covered: cover scenarios with
-real blocks, projectiles, blasts, beams, NPC reach and give-up, melee slots, stun-lock, per-blow cap, target info,
-sparring, the combat lesson, the measured balance table, the registries.
+Results: [validation/OVERHAUL_VALIDATION.md](validation/OVERHAUL_VALIDATION.md) — full regression 706/706 and 21/21,
+`overhaul` 17/17, `crew` 34/34, `story_arcs` 19/19, `stories` 78/78, `quests` 5/5, `careers` 38/38; real-client
+captures of every new screen; 0.1.0 and 0.2.0 worlds upgraded on a clean server. No human playtest yet.
+
+## Open items (continuation notes)
+
+1. **Play it.** Nothing here has been played by a person; follow [TEST_ROUTE.md](TEST_ROUTE.md) and adjust
+   `balance/Tuning.java` (one file) if fights feel too easy or too hard: `Rank.hits` (health), `Rank.blowShare`
+   (foes' blows), `Rank.cap` (per-blow caps), `Difficulty`.
+2. **Story:** chapters 20–37 keep their earlier quest shape (journal text only); Skypiea and Fish-Man Island have
+   scenes but no decision. The chapter framework (`quest/arc`) is ready for them.
+3. **Crew:** untested in a live session — companions reviving a downed captain, door opening, fighting at a hold
+   spot, the rank-3 techniques, a real server restart with a crew aboard.
+4. **Multiplayer** was not re-run for this overhaul (two clients, crews, PvP with line of effect).
+5. **Load test** not re-run (the shared machine is too noisy to compare); the cover check costs 2–7 µs.
+6. Observation Haki still senses foes through walls by design (perception, not damage).

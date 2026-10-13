@@ -989,6 +989,28 @@ Full write-up, install, rollback and validation report: [OVERHAUL.md](OVERHAUL.m
   - the 0.1.0 production world loads under 0.2.0 without errors;
   - 54 town and landmark screenshots, plus the kit and style showcases.
 
+### Gameplay overhaul, 0.3.0 (13 Oct)
+
+Playtest report: combat confusing, quests generic, some foes unfair, attacks through walls, nobody's side or danger
+readable, a crew wanted. What changed (ledger: [OVERHAUL_AUDIT.md](OVERHAUL_AUDIT.md)):
+
+- **Line of effect** (`combat/Cover`): every blow, blast, beam, shot and boss attack needs an open line through real
+  block shapes; swept projectiles; lock-on and targets only in sight; name tags not through walls.
+- **Fair foes** (`npc/NpcCombatGoal`, `npc/AttackSlots`): strike only when they can reach, search and give up, two
+  melee attackers at once, no stun-locks, announced heavy blows and techniques, a warning before a dangerous foe.
+- **One balance source** (`balance/Tuning`): health and blows from sea tier and rank, per-blow caps, story bosses one
+  tier above their island, Adventure/Standard/Hard following the world difficulty; measured table in
+  [BALANCE.md](BALANCE.md).
+- **Clarity**: target frame (rank, name, role, faction, health, relationship, threat), one strike in or out of Combat
+  Mode, `/controls`, a first-fight card, combat lessons and `/spar`.
+- **Story** (agent, merged): the saga as chapters with scenes, decisions and consequences; 20 chapters at full
+  standard; journal with chapter, who, why, next, where, danger and recap; migration of old progress
+  ([STORY_OVERHAUL.md](STORY_OVERHAUL.md)).
+- **Crew** (agent, merged): fighter, marksman and support roles, two active plus reserve, orders, downed not dead,
+  credit, bond ([CREW.md](CREW.md)).
+
+Verified: [validation/OVERHAUL_VALIDATION.md](validation/OVERHAUL_VALIDATION.md). Jar: `dist/grandline-0.3.0.jar`.
+
 ## Work in flight (background agents)
 - None.
 

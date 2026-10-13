@@ -75,25 +75,29 @@ modifiers, line of effect), and takes one light and one heavy blow from it.
 | Tier | Ref. level | Rank | Role | NPC health | Light blows to fell | Ref. light blow | Ref. health | Foe light blow | Foe heavy blow |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | 1 | MINION | bandit | 14 | 3 | 6.3 | 21 | 10 % | 22 % |
-| 1 | 1 | STANDARD | marine | 26 | 5 | 6.3 | 21 | 12 % | 16 % |
-| 1 | 1 | ELITE | pirate_captain | 63 | 11 | 6.3 | 21 | 17 % | 32 % |
+| 1 | 1 | STANDARD | marine | 26 | 5 | 6.3 | 21 | 12 % | 25 % |
+| 1 | 1 | ELITE | pirate_captain | 63 | 11 | 6.3 | 21 | 18 % | 32 % |
 | 2 | 8 | MINION | bandit | 19 | 3 | 8.2 | 30 | 10 % | 22 % |
 | 2 | 8 | STANDARD | marine | 34 | 5 | 8.2 | 30 | 12 % | 16 % |
-| 2 | 8 | ELITE | pirate_captain | 82 | 11 | 8.2 | 30 | 17 % | 32 % |
+| 2 | 8 | ELITE | pirate_captain | 82 | 11 | 8.2 | 30 | 13 % | 32 % |
 | 3 | 16 | MINION | bandit | 28 | 3 | 12.1 | 42 | 8 % | 22 % |
 | 3 | 16 | STANDARD | marine | 51 | 5 | 12.1 | 42 | 12 % | 16 % |
-| 3 | 16 | ELITE | pirate_captain | 121 | 11 | 12.1 | 42 | 13 % | 32 % |
-| 5 | 36 | MINION | bandit | 42 | 3 | 18.3 | 70 | 10 % | 22 % |
+| 3 | 16 | ELITE | pirate_captain | 121 | 11 | 12.1 | 42 | 17 % | 32 % |
+| 5 | 36 | MINION | bandit | 42 | 3 | 18.3 | 70 | 7 % | 22 % |
 | 5 | 36 | STANDARD | marine | 77 | 5 | 18.3 | 70 | 12 % | 25 % |
 | 5 | 36 | ELITE | pirate_captain | 183 | 11 | 18.3 | 70 | 17 % | 32 % |
 | 7 | 56 | MINION | bandit | 62 | 3 | 26.9 | 98 | 8 % | 22 % |
-| 7 | 56 | STANDARD | marine | 113 | 5 | 26.9 | 98 | 12 % | 25 % |
+| 7 | 56 | STANDARD | marine | 113 | 5 | 26.9 | 98 | 12 % | 16 % |
 | 7 | 56 | ELITE | pirate_captain | 269 | 11 | 26.9 | 98 | 17 % | 32 % |
-| 10 | 92 | MINION | bandit | 102 | 3 | 44.7 | 148 | 7 % | 22 % |
-| 10 | 92 | STANDARD | marine | 188 | 5 | 44.7 | 148 | 12 % | 25 % |
+| 10 | 92 | MINION | bandit | 102 | 3 | 44.7 | 148 | 8 % | 22 % |
+| 10 | 92 | STANDARD | marine | 188 | 5 | 44.7 | 148 | 12 % | 16 % |
 | 10 | 92 | ELITE | pirate_captain | 447 | 12 | 44.7 | 148 | 17 % | 32 % |
 
 Boss estimate (computed, not measured): a story boss has 45.0 light blows of the reference character of its encounter tier; at one landed blow per 1.5-3 s with its guard and phases that is roughly 1-2.5 minutes for a prepared character.
+
+The two foe-blow columns vary by a few points between runs: each foe rolls a weapon from its role's list, and weapons
+have different strike strengths (the probe takes one light and one heavy blow). Heavy blows show the rank's cap where
+the raw blow would be larger.
 
 ## Before the overhaul
 

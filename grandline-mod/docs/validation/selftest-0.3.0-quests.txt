@@ -1,0 +1,7 @@
+Grand Line Odyssey self-test, phase quests, Tue Oct 13 18:38:14 UTC 2026
+PASS every quest has a description and readable objectives — 3518 quests
+PASS quest guide: route to another island runs through both piers — target 27000,18500, 19 points
+PASS quest guide: the shipwright is found on the island and the route follows the streets — at 35771,19769, 8 points; plots 11, shipwright plots 0, dock true, pier shipwright true
+PASS every town with a pier has a shipwright (a yard, or one at the pier's landing)
+PASS the Rigger's Lesson reads: description and 'Defeat Bandit x3' — Bandits raided Shiokaze's harbour shed and carried the island's supplies into the hills. Old Fumio sends you after them and watches how you fight: land a blow, guard one, dodge one and use a technique (ask him for a practice bout first if you like) — and drive off 3 bandits. | Defeat Bandit ×3
+TOTAL: 5 passed, 0 failed

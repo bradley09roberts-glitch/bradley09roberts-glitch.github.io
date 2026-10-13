@@ -5,7 +5,7 @@
 - Minecraft Java Edition **1.21.1** with **NeoForge 21.1.259 or newer** (installer: https://neoforged.net).
 - Java 21 (the Minecraft launcher bundles it).
 - Two jars from `dist/`:
-  - `grandline-0.3.0.jar` — the mod
+  - `grandline-0.3.0.jar` — the mod (SHA-256 `c879b8bce615fc0eb054a9c0b4ba94b7de786dbed317ac3c7f6064680608aee2`)
   - `geckolib-neoforge-1.21.1-4.9.3.jar` — required library (unchanged since 0.1.0)
 
 ## New install (single player)

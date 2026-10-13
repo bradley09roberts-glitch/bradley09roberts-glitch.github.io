@@ -1,0 +1,19 @@
+Grand Line Odyssey self-test, phase overhaul, Tue Oct 13 20:26:26 UTC 2026
+PASS cover: melee through walls, doors, corners, partial cover and floors — open ground=HIT; stone wall=COVERED; closed door=COVERED; open door=HIT; waist-high cover (head exposed)=HIT; glass pane=COVERED; round a corner=COVERED; floor between levels=COVERED; 
+PASS cover: sight for lock-on and targets is blocked by walls only — open=true wall=false underCeiling=true
+PASS cover: a blast reaches bodies in the open and not those behind a wall — caught 1
+PASS cover: a beam hits up to the first wall and stops there — hit 1
+PASS fair foes: an NPC never hurts a target it cannot reach — victim hp 1000.0/1000.0
+PASS fair foes: an NPC that lost sight gives up after a while — target=null
+PASS cover: shots hit in the open, stop at walls, never skip through a thin pane, and a piercing shot stops at the wall behind its victim — open=true wall=true fastThroughPane=false pierce1=true pierce2Blocked=true
+PASS fair foes: five bandits on one victim, at most two press a melee attack at once — most slot holders at once: 2, still engaged 5
+PASS fair foes: a stagger holds a player at most 1.5 s and cannot be chained — first stagger 30 ticks, after a second stunning blow 30
+PASS fair foes: no single unannounced blow takes more than the elite cap (32 %) of a player's health — lost 6.7 of 21.0 (32%)
+PASS clarity: the target frame tells role, faction, relationship, rank and threat apart — bandit hostile/minion/matched; villager neutral; captain T10 elite/overwhelming
+PASS clarity: guarding a blow counts for the combat lesson — result BLOCKED
+PASS training: a sparring partner fights but never hurts, and bows out instead of dying — hit HIT, player lost 0.010000229, partner alive true
+PASS training: the bout ends and the partner leaves (the probe is not an online player)
+PASS balance: measured blows to fell and blow sizes meet the targets at every tier (table in balance-table.md) — 18 rows
+PASS audit: registries of archetypes, bosses, abilities and quest lines written — 60 roles, 664 abilities, 35 quest lines
+PASS cost: line of effect stays cheap (under 50 µs per check even behind full cover) — one check in the open 2.0 µs, behind full cover (every ray tried) 7.4 µs
+TOTAL: 17 passed, 0 failed

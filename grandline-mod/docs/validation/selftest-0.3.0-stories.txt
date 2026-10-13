@@ -1,0 +1,80 @@
+Grand Line Odyssey self-test, phase stories, Tue Oct 13 18:36:38 UTC 2026
+PASS test character created (quick phase)
+PASS story cast registered — 805 notables
+PASS cast groups — emperors 4, stewards 5, warlords 7, supernovas 10, crew 18
+PASS every notable's island, fruit (unique), style, role, race and weapon exist — 44 fruits held by the cast
+PASS story quest graph is consistent — 329 story quests across 78 islands
+PASS faction variants resolve and gate correctly
+PASS notable spawns on its home island — Fumio Tsunatori at BlockPos{x=36030, y=79, z=19952}, hp 233
+PASS friendly notable does not attack players
+PASS notable dialogue: own greeting and quest offer — ["quest:ember_east_1"]
+PASS every quest has a description and readable objectives — 3518 quests
+PASS quest guide: route to another island runs through both piers — target 27000,18500, 19 points
+PASS quest guide: the shipwright is found on the island and the route follows the streets — at 35771,19769, 8 points; plots 11, shipwright plots 0, dock true, pier shipwright true
+PASS every town with a pier has a shipwright (a yard, or one at the pier's landing)
+PASS the Rigger's Lesson reads: description and 'Defeat Bandit x3' — Bandits raided Shiokaze's harbour shed and carried the island's supplies into the hills. Old Fumio sends you after them and watches how you fight: land a blow, guard one, dodge one and use a technique (ask him for a practice bout first if you like) — and drive off 3 bandits. | Defeat Bandit ×3
+PASS beaten friendly notable yields instead of dying — hp 46.658
+PASS killed notable is gone for good — status DEFEATED
+PASS recruit option appears only after the recruitment quest — ["quest:shells_1","recruit"]
+PASS crew member is allied, protected from friendly fire and saved per character — members [petra]
+PASS crew data round trip
+PASS crew disbands (captain's permadeath) — status ALIVE, faction MARINE, tracked true
+PASS story chain advances (pre-discovered island credited, next arc auto-started) — active [shells_1]
+PASS every notable's home island exists in a plan (ocean/sky/deep) — 805 notables {OCEAN=786, SKY=12, DEEP=7}
+PASS every canon island has at least one quest — 81/81 canon islands (before the extra stories: 72)
+PASS every named sky and deep-sea island has a quest — 9/9
+PASS every quest objective uses a type and target that progresses — 3518 quests, 4083 objectives {arrest=834, choice=20, collect=427, convoy=156, defeat=510, discover=105, escort=123, fish=3, fruit_kill=1, kill=410, lesson=16, poneglyph=17, reach=227, sea_battle=2, ship=1, sink=351, slay=117, talk=762, treasure=1}
+PASS notable quest givers live on their quests' islands — []
+PASS Shandora and the Sea Forest each hold a poneglyph — 2 poneglyph markers
+PASS a sky notable spawns when a player is near (Heaven's Gate) — Amarante Kumoi at BlockPos{x=-996, y=68, z=16} race sky_people
+PASS far-away sky notables stay unspawned — cirrus UNSPAWNED
+PASS a deep-sea notable spawns when a player is near (Sea Forest) — Tidwell Kaisō at BlockPos{x=-628, y=69, z=270}
+PASS Fish-Man Island's court spawns inside the bubble — King Nereo Umisachi at BlockPos{x=2, y=109, z=-24}, marisol ALIVE, sawara ALIVE, lorcan UNSPAWNED
+PASS the Gatekeeper greets and offers the Skypiea arc — ["quest:sky_1"]
+PASS Skypiea arc plays end to end (discover, talk, kill, defeat, collect, poneglyph) — 1:true 2:true 3:true 4:true 5:true (gold left 1, staff true) 6:true 7:true
+PASS Fish-Man Island Marine variant: resolve, arrest credit, chain on — resolve true, started true, active [fmi_7]
+PASS collect objectives accept item tags — 3 small flowers counted
+PASS every original island has a local story — 149/149 original islands; 18 templates used {BANDIT_TOLL=13, SEA_BEAST=9, LOST_CHILD=11, CROOKED_OFFICER=4, FAMILY_FEUD=7, CURSED_SHRINE=9, SMUGGLERS=7, HEIRLOOM=9, RIVAL_CREW=7, FEVER=8, FESTIVAL=5, CASTAWAY=13, BEAST_NEST=14, OCCUPATION=2, DESERTER=1, TREASURE_MAP=21, WHODUNIT=4, RUIN_SCHOLAR=5}
+PASS every story has 2-4 steps and a giver living on its island — 149 stories
+PASS stories use many templates — 18 of 20
+PASS story people and job board generated — 275 story people, 567 story quests, 644 generated people in all, 2587 jobs {camp=36, convoy=156, cook=123, deliver=246, escort=123, fish=123, hunt=1107, nest=87, sink=351, supply=123, wreck=112}
+PASS story generation is deterministic (two independent plans of the same seed agree) — 340202 chars of fingerprint; regenerated in 207 ms
+PASS another seed gives other stories — 144 stories on seed+1; 0 people's names shared by chance
+PASS every generated objective uses a type and target the engine progresses — 3154 generated quests {arrest=824, collect=411, convoy=156, defeat=438, discover=8, escort=123, kill=257, poneglyph=5, reach=216, sink=351, slay=117, talk=605}
+PASS objective places match their objectives — 1658 quests with places
+PASS generated people have valid roles, styles, weapons, races and homes on their islands — 644 people
+PASS story faction variants resolve (Marine arrests, pirate cuts) — 614 Marine variants, 43 pirate variants
+PASS every island story and job text exists (titles, descriptions, greetings, rumours, places) — 389 keys used
+PASS island story and job texts render with their names and places — 9334 texts rendered, e.g. "The Grinback Pirates" / "A rookie crew, the Grinback Pirates, camps on San Grisington and picks fights with everyone. Neneko Yukisawa wants them humbled. Start with the crew."
+PASS a playable story exists for every template — 20 templates (5 made for the test on fitting islands), 3 variant runs
+PASS story 'bandit_toll' plays end to end — isle_5_capeulvaro: 1 → 2 → 3; +3084 Beli
+PASS story 'sea_beast' plays end to end — isle_25_hashima: 1 → 2 → 3; +1450 Beli
+PASS story 'lost_child' plays end to end — isle_3_karakawa: 1 → 2 → 3; +2610 Beli
+PASS story 'crooked_officer' plays end to end — isle_18_rosmhavenisland: 1 → 2; +1100 Beli
+PASS story 'family_feud' plays end to end — isle_7_newwynora: 1 → 2 → 3; +2000 Beli
+PASS story 'cursed_shrine' plays end to end — isle_22_saintkesthaven: 1 → 2 → 3; +11250 Beli
+PASS story 'smugglers' plays end to end — isle_15_hajima: 1 → 2 → 3; +5436 Beli
+PASS story 'heirloom' plays end to end — isle_12_hishima: 1 → 2 → 3; +1350 Beli
+PASS story 'rival_crew' plays end to end — isle_0_sangrisington: 1 → 2 → 3; +4602 Beli
+PASS story 'fever' plays end to end — isle_14_sashijimaisland: 1 → 2 → 3; +1450 Beli
+PASS story 'festival' plays end to end — isle_19_narikawa: 1 → 2 → 3; +9228 Beli
+PASS story 'debt_collector' plays end to end — isle_72_motadakeisland: 1 → 2 → 3; +40374 Beli
+PASS story 'castaway' plays end to end — isle_1_zepharoisle: 1 → 2 → 3; +1350 Beli
+PASS story 'beast_nest' plays end to end — isle_9_newjarnosa: 1 → 2 → 3; +1500 Beli
+PASS story 'occupation' plays end to end — isle_101_kaokaisland: 1 → 2 → 3; +31113 Beli
+PASS story 'rebel_cell' plays end to end — isle_71_nenedake: 1 → 2 → 3; +2700 Beli
+PASS story 'deserter' plays end to end — isle_115_hazemoriisland: 1 → 2 → 3; +18600 Beli
+PASS story 'treasure_map' plays end to end — isle_2_kinamori: 1 → 2; +4202 Beli
+PASS story 'whodunit' plays end to end — isle_32_morahama: 1 → 2; +1100 Beli
+PASS story 'ruin_scholar' plays end to end — isle_8_saintsorrmouth: 1 → 2 → 3; +11350 Beli
+PASS story 'bandit_toll' plays end to end (marine variant) — isle_0_sangrisington: 1 → 2 → 3.marine; +4069 Beli
+PASS story 'whodunit' plays end to end (marine variant) — isle_2_kinamori: 1 → 2.marine; +1100 Beli
+PASS story 'smugglers' plays end to end (pirate variant) — isle_2_kinamori: 1 → 2 → 3.pirate; +6336 Beli
+PASS story people spawn on their own islands when a player comes near — 10/10 [Ushimi Kirimoto@isle_17_yosayama at BlockPos{x=34745, y=67, z=27437}, Kjastein Torvstrand@isle_31_kuoka at BlockPos{x=39220, y=70, z=-11648}, Steessa Marroni@isle_45_memogawaisland at BlockPos{x=-3677, y=68, z=-28216}]
+PASS a notice board offers the classic and the generated jobs, outlaws one at a time — isle_2_kinamori: 18 notices, types [convoy, cook, deliver, escort, fish, hunt, nest, sink, supply, wreck]
+PASS right-clicking the town's notice board finds it — marker BlockPos{x=3294, y=89, z=25409}, found BlockPos{x=3294, y=89, z=25409}
+PASS a named-bounty job: the outlaw hides until hunted, the wanted poster says where, they turn up there — Maeji "Half-Hitch" Hamagaki on isle_2_kinamori: before job UNSPAWNED, poster {alive:1b,bounty:750L,faction:"pirate",name:'Maeji "Half-Hitch" Hamagaki',target:"job_isle_2_kinamori@outlaw0",where:"Kinamori",x:3296,z:25340}, body BlockPos{x=3296, y=76, z=25340}
+PASS defeating the hunted outlaw completes the job and pays the bounty; the next poster goes up — paid 1734 Beli (job 750), guards at the hideout 2, next outlaw offered true
+PASS every other job type completes with real NPCs, beasts, places and goods — done [deliver, escort, nest, wreck, fish, cook, supply]
+PASS story givers greet in their own words and offer their story (labelled with names) — Kahoji Funasawa on isle_4_ulvhavenisland: options ["quest:story_isle_4_ulvhavenisland_1"], name 'Kahoji Funasawa — Retired Pirate'
+TOTAL: 78 passed, 0 failed

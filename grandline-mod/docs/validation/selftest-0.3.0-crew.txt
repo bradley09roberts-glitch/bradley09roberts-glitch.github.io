@@ -1,0 +1,36 @@
+Grand Line Odyssey self-test, phase crew, Tue Oct 13 18:38:40 UTC 2026
+PASS crew: recruit three companions with their roles (Petra marksman, Carmen support, Kenji fighter) — joined true/true/true
+PASS crew: at most two active; the third recruit waits in reserve (roster limit stays 18) — active [petra, carmen], roster [petra, carmen, kenji]
+PASS crew: companion numbers come from the captain's level (40 % of the reference blow), never an elite rank — rank STANDARD, power 4.82 vs reference blow 12.05, health 54.6 (want 54.6, reference 42.0); elite power would be 7.39
+PASS crew: companion numbers by captain level (companion blow / reference blow, health by role) — L1: blow 2.5/6.3 hp F27 R21 S21; L8: blow 3.3/8.2 hp F39 R30 S30; L16: blow 4.8/12.1 hp F55 R42 S42; L26: blow 6.0/15.1 hp F73 R56 S56; L46: blow 9.3/23.3 hp F109 R84 S84; L68: blow 12.5/31.3 hp F148 R114 S114; L92: blow 17.9/44.7 hp F192 R148 S148; rank 5: +16% blows, +20% health
+PASS crew: support heal restores 25 % of the most hurt ally, 30 s cooldown, at most 3 per fight; a marksman does not heal — fight=true heals true/false(cooldown)/true/true/false(4th) gain 5.0 of 20.0, marksman false
+PASS crew: a new fight brings the songs back
+PASS crew follow: companions come back to the captain and keep formation (marksman behind, support close) — petra 1.8 blocks (-0.8 0.0 -6.8), carmen 0.8 blocks (1.2 0.0 -5.3), captain (0.5 0.0 -5.5)
+PASS crew hold: a companion told to hold stays at its spot while the captain walks away (the other follows) — petra 0.4 from her spot, 17.3 from the captain; carmen 3.2 from the captain
+PASS crew follow again: back at the captain's side — 4.8 blocks
+PASS crew swap refused outside a safe place (open sea, no ship) — active [petra, carmen]
+PASS crew swap refused mid-fight even in town; accepted in town out of combat (Kenji in, Carmen to reserve) — safe=true midFightRefused=true swapped=true active [petra, kenji]
+PASS crew focus: both active companions attack the foe the captain is looking at — petra -> Koueo Thunderbeard, kenji -> Koueo Thunderbeard
+PASS crew regroup: they break off at once and come back to the captain — broke off=true, petra 1.7, kenji 2.4 blocks
+PASS crew regroup brings a companion that is far away and out of sight — hidden=true, 1.4 blocks after the order
+PASS crew never attack a neutral: a villager the captain shoved is no foe, blows are ignored, nobody targets it, N regroups instead of focusing — foe=false hit=IGNORED target taken=false quick=regroup villager health 12.535833 -> 12.535833
+PASS crew kill credit: a companion's kill counts for the captain's kill objective exactly once (also when both struck) — bandit_trouble objective 'bandit': 1 then 2
+PASS crew kill credit: half the experience for a companion's solo kill, all of it when the captain struck too; the outlaw reward is paid — xp 16 then 32, beli +400
+PASS crew downed, not dead: kneels at 1 health, takes no damage, foes drop it; the captain helps it up with a short hold (35 %) — downed=true spared=true foe ignores=true early=false up=true health 19.109999/54.6
+PASS crew: a downed companion gets up on its own about 10 s after the fight, with 30 % health — after 201 ticks, health 16.380001/54.6
+PASS crew no friendly fire: a companion's area technique hits the foe but never the captain, a crewmate or a bystander — technique=true foe 400.0->386.3365, crewmate 42.0->42.0, villager 13.020833->13.020833, captain hit IGNORED health 20.0->20.0
+PASS crew no friendly fire: the captain's fire blow on a companion leaves no damage, no burning and no stagger — result HIT, burning=false, staggered=false
+PASS crew cover: a companion cannot hit a foe behind a wall (no damage in 5 s; a direct blow is COVERED) — foe health 400.0 -> 400.0, blow COVERED, petra's target Breulf the Spindrift
+PASS crew stuck recovery: a companion walled in with no path to the captain is brought over after a few seconds — after 120 ticks, (-0.5 0.0 -6.5)
+PASS crew save: an old-format crew loads (the followers active, up to two; the rest in reserve; defaults for new fields) and round-trips — migrated=true roundTrip=true
+PASS crew bond: rank 3 after 9 points (a small boost, the role technique), saved with the crew — rank 3, health 42.0 -> 46.2, saved rank 3
+PASS crew dismissal: a dismissed companion goes home (no longer crew) and can be recruited again, remembering the bond — after dismissal ALIVE, rejoined=true, bond 9
+PASS crew logout: the active pair goes aboard as data while the captain is away and steps off next to them on return (one body each) — aboard at logout=true, still aboard while away=true, back: petra (0.7 0.0 -7.6) kenji (-0.9 0.0 -5.1)
+PASS crew dimension travel: the active pair follows the captain into another dimension (one body each) — minecraft:the_nether after 46 ticks (petra: 20:aboard 46:the_nether ): petra minecraft:the_nether (-36052.4 0.0 -20052.5), kenji minecraft:the_nether
+PASS crew dimension travel: and back again with the captain — petra (0.7 0.0 -7.6), kenji (-0.9 0.0 -5.1)
+PASS crew travel: far from the platform the companion is taken aboard and steps off next to the captain, one body only — body 2.1 blocks, bodies 1
+PASS crew recall: a companion lost with an unloaded chunk comes back with a fresh body and the stale copy is refused (no duplicates) — recalled=true staleAdded=false bodies 1
+PASS crew contribution (measured, captain level 16 with the reference blow): two companions make the fight shorter — standard foe (tier-3 Marine), 51 health: captain alone 13 ticks (4 captain blows; damage captain 54); captain + Petra + Kenji 8 ticks (3 captain blows; damage captain 37, petra 17); Petra + Kenji, captain idle 32 ticks (0 captain blows; damage petra 33, kenji 20) | sturdy foe (10 reference blows), 121 health: captain alone 40 ticks (10 captain blows; damage captain 130); captain + Petra + Kenji 28 ticks (7 captain blows; damage captain 91, petra 17, kenji 20); Petra + Kenji, captain idle 86 ticks (0 captain blows; damage petra 50, kenji 72)
+PASS crew contribution: the companions alone are slower than the captain alone against a sturdy foe (they help, they do not carry) — companions alone 86 ticks vs captain alone 40
+PASS crew: disbanding (the captain's permadeath) sends everyone home: no longer crew, story state alive or unspawned — petra=ALIVE carmen=ALIVE kenji=ALIVE 
+TOTAL: 34 passed, 0 failed

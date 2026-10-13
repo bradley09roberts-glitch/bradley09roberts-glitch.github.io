@@ -138,6 +138,32 @@ final class OverhaulTests {
         claritySteps(steps);
         balanceSteps(steps);
         steps.add(OverhaulTests::registries);
+        steps.add(OverhaulTests::coverCost);
+    }
+
+    /** What line of effect costs: the time of one exposure check in the open (one ray) and behind full cover (every ray). */
+    private static int coverCost(MinecraftServer s) throws Exception {
+        ServerLevel l = SelfTest.ow(s);
+        BlockPos c = coverArena(l);
+        clear(l, c);
+        HumanoidNpc a = dummy(l, "marine", c.getX() - 0.5, c.getY(), c.getZ() + 0.5);
+        HumanoidNpc b = dummy(l, "bandit", c.getX() + 2.0, c.getY(), c.getZ() + 0.5);
+        int n = 20000;
+        for (int i = 0; i < 2000; i++) Cover.reachable(a, b); // warm up
+        long t0 = System.nanoTime();
+        for (int i = 0; i < n; i++) Cover.reachable(a, b);
+        double open = (System.nanoTime() - t0) / (double) n;
+        wallX(l, c, 0, -3, 3, 4, Blocks.STONE);
+        for (int i = 0; i < 2000; i++) Cover.reachable(a, b);
+        t0 = System.nanoTime();
+        for (int i = 0; i < n; i++) Cover.reachable(a, b);
+        double covered = (System.nanoTime() - t0) / (double) n;
+        a.discard();
+        b.discard();
+        String line = String.format("one check in the open %.1f µs, behind full cover (every ray tried) %.1f µs", open / 1000, covered / 1000);
+        Files.write(Path.of("cover-cost.txt"), List.of(line));
+        SelfTest.check("cost: line of effect stays cheap (under 50 µs per check even behind full cover)", covered < 50_000, line);
+        return 0;
     }
 
     /**

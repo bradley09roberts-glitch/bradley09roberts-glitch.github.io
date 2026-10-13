@@ -1,0 +1,23 @@
+Grand Line Odyssey self-test, phase 2, Tue Oct 13 19:20:55 UTC 2026
+PASS sea jobs: an escort in progress survives a restart (the merchant steps off beside the returning player) — saved true, stowed true, merchant Rakane Embermere 1.4 blocks away (phase 1: Rakane Embermere)
+PASS sky ship's registry entry survived restart — grandline:sky
+PASS ship left on the White Sea is still there after restart — Selftest Sky Anchor at -820, 63, -41
+PASS ship customisation persisted across restart — dragon|crescent|e8c040|23417e sail c9483b
+PASS registry keeps the ship's look — dragon|crescent|e8c040|23417e
+PASS captured prize still registered after restart — Captured Selftest Raider
+PASS living-sea ships and crews are not restored after a restart (a plain ship beside them is) — control rowboat back, merchant gone, crew gone
+PASS island stories regenerate identically after a restart (nothing about them is saved) — 149 stories, 3154 quests (phase 1: 3154)
+PASS a generated outlaw's fate survives the restart — job_isle_2_kinamori@outlaw0: DEFEATED (phase 1: DEFEATED)
+PASS looted island secrets persist across a restart — 2 looted: [dawn_island#0, isle_17_yosayama#1]
+PASS journey advancements persist with the account across a restart — all present
+PASS boss relic records persist across a restart — kurogane=true hrolf=true
+PASS a defeated boss stays defeated after a restart — DEFEATED
+PASS bases: claims persist across a restart (crew, flag, upgrades, warehouse, hands) — Persist Crew [dojo, quarters] warehouse 7 minecraft:diamond hands [sailor], flag block Block{grandline:crew_flag}
+PASS bases: the claim is still on the sea chart after the restart
+PASS sea polish: hired gunners are back at their guns after the restart — 2 hired gunners at seats [1,2] (before the restart 2 at [1,2])
+PASS careers survive a restart: the Fleet Admiral (rank, merit, tallies, seat) and the Emperor (territory, revoked letter) read back with their titles — M loaded true rank fleet_admiral seat true; P loaded true rank emperor territory true
+PASS fruit ledger survived restart — goro=OWNED owner=Kaito the Tester
+PASS NPC entity persisted across restart — Persistence Keeper at BlockPos{x=23003, y=77, z=22003}
+PASS ship persisted across restart where it was left — BlockPos{x=37649, y=63, z=20780} name=Selftest Voyager
+PASS ship registry persisted — Captured Selftest Raider
+TOTAL: 21 passed, 0 failed
