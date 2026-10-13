@@ -153,8 +153,10 @@ public class CitizenBrain {
         }
         // ask for a new path when the old one is used up (at most every half second) or every three seconds to refresh it;
         // an unreachable target used to be re-planned every tick, which cost more than everything else a town does
+        // someone who keeps making no progress asks less and less often (up to every 5 s) until they get somewhere
         int since = e.tickCount - lastPathTick;
-        if (since < 0 || since >= (e.getNavigation().isDone() ? 10 : 60)) {
+        int wait = e.getNavigation().isDone() ? Math.min(100, 10 + stuck * 15) : 60;
+        if (since < 0 || since >= wait) {
             lastPathTick = e.tickCount;
             BlockPos step = pos;
             if (d > 24 && e.level() instanceof ServerLevel sl) {
