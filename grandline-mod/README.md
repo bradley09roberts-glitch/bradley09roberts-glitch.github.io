@@ -11,6 +11,12 @@ Private distribution.
 - Story bible: [docs/STORY.md](docs/STORY.md)
 - Screenshots from the automated real-client test: [docs/screenshots](docs/screenshots/README.md)
 - Art sources (Higgsfield): [docs/ART.md](docs/ART.md)
+- **0.3.0 gameplay overhaul** (combat, fairness, balance, story, crew): the audit ledger with every finding and fix
+  [docs/OVERHAUL_AUDIT.md](docs/OVERHAUL_AUDIT.md); controls [docs/CONTROLS.md](docs/CONTROLS.md); balance table
+  [docs/BALANCE.md](docs/BALANCE.md); story and recruits [docs/STORY_OVERHAUL.md](docs/STORY_OVERHAUL.md); crew
+  [docs/CREW.md](docs/CREW.md); install and upgrade [docs/INSTALL.md](docs/INSTALL.md); saves
+  [docs/SAVE_COMPAT.md](docs/SAVE_COMPAT.md); validation [docs/validation/OVERHAUL_VALIDATION.md](docs/validation/OVERHAUL_VALIDATION.md);
+  a one-hour test route [docs/TEST_ROUTE.md](docs/TEST_ROUTE.md)
 - **0.2.0 building, texture and shader overhaul**: what changed, install, rollback and the validation report:
   [docs/OVERHAUL.md](docs/OVERHAUL.md). Structure ledger: [docs/STRUCTURE_AUDIT.md](docs/STRUCTURE_AUDIT.md); block kit:
   [docs/BUILDING_KIT.md](docs/BUILDING_KIT.md); art direction: [docs/ART_DIRECTION.md](docs/ART_DIRECTION.md); asset list:
@@ -55,26 +61,31 @@ through on it with no server exception.
 Server options live in `config/grandline-server.toml` (permadeath, knockdown time, Conqueror's chance, PvP, town
 protection, fruit terrain changes and reversion, number of generated islands, NPC simulation radius, etc.).
 
-## Controls (rebindable under Options → Controls → Grand Line)
+## Controls (rebindable under Options → Controls → Grand Line Odyssey; `/controls` in game)
 
 | Key | Action |
 |---|---|
-| R | Combat Mode on/off (1–9 become ability slots; over-the-shoulder camera) |
-| Tab | Next ability set (weapon/style, fruit, Haki) |
-| Left click / hold | Light combo / charged heavy strike |
-| Right click (hold) | Guard; tap at the right moment to parry |
-| Left Alt | Dodge (i-frames) |
-| Middle mouse | Lock on |
+| Left click (tap / hold) | Strike / heavy blow — on anyone you look at, in or out of Combat Mode |
+| R | Combat Mode on/off: guard, techniques on 1–9, lock-on |
+| Right click (hold, Combat Mode) | Guard; start just before a blow lands to parry |
+| Left Alt | Dodge |
+| 1–9 (Combat Mode) | Techniques; Tab or the mouse wheel for the next set |
+| Middle mouse (Combat Mode) | Lock on (only someone in sight) |
 | H / J / K | Observation / Armament / Conqueror's Haki |
 | G | Zoan transform |
-| C | Character sheet (stats, styles, fruit, Haki, PvP flag) |
-| M | Sea chart: zoom in for the real terrain around you; the yellow trail leads to your tracked quest |
-| U | Quest log: every active quest with its description, objectives, rewards and where to go; Track on map |
-| Z | Show or hide the minimap (top right: terrain, the route to your tracked quest, the objective and distance) |
-| At a ship's helm: W/S, A/D, X, B | Raise/lower sails, rudder, anchor, Coup de Burst |
+| C | Character sheet (stats, styles, fruit, Haki, PvP flag, Controls) |
+| U | Quest log |
+| M | Sea chart (the yellow trail leads to your tracked quest) |
+| Z | Minimap on/off |
+| V | Crew roster and orders (at a ship's helm: gun orders) |
+| N | Crew quick order: focus the foe you look at, else regroup (at the helm: shot type) |
+| At a ship's helm: W/S, A/D, X, B | Sails, rudder, anchor, Coup de Burst |
 | At a cannon: left click | Fire |
-| Sneak + use on a downed ally | Revive |
-| `/quests` | Your active quests: what each is about and every objective with its progress |
+| Sneak + use on a downed ally | Revive (hold use on a downed companion) |
+| `/quests`, `/controls`, `/spar` | Active quests; every control; a training bout |
+
+The target frame (top left) shows who you face: rank, name, role and faction, health, how they stand towards you and
+how dangerous they are for you. Details: [docs/CONTROLS.md](docs/CONTROLS.md).
 
 ## Playing in brief
 
