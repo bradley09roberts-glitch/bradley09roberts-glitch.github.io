@@ -1,1 +1,5 @@
 JUNIT PASS
+GAMETEST PASS
+[01:24:33] [Server thread/INFO] [minecraft/GameTestServer]: All 7 required tests passed :)
+SCENARIO PASS
+SUMMARY: 17/17 checks passed

@@ -1,0 +1,4 @@
+PASS server boots with longnight loaded - 30s
+> longnight admin status
+[longnight] day=-9223372036854775808 people alive=0 dead=0 settlements=0 outlawCamps=0 ruins=0 realms=0 wars=0 caravans=0 news=0 bodies=0 nightStage=0
+
