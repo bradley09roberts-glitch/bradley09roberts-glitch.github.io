@@ -510,6 +510,8 @@ public final class SelfTest {
                 float took = dummy.getMaxHealth() - dummy.getHealth();
                 dealt += took;
                 if (a.source() == Ability.Source.FRUIT) perFruit.merge(a.owner(), took, Float::sum);
+                // walls, ice and sand an ability leaves behind would (rightly) shelter the dummy from the next one
+                TerrainChanges.revertAll(s);
             }
             d.race = raceBefore;
             for (var p : l.getEntitiesOfClass(com.grandline.entity.AbilityProjectile.class, new AABB(c).inflate(80))) p.discard();
@@ -525,6 +527,7 @@ public final class SelfTest {
         // ---------- Logia intangibility vs Haki ----------
         steps.add(s -> {
             ServerLevel l = ow(s);
+            TerrainChanges.revertAll(s); // nothing left standing between the two from the ability sweep
             BlockPos c = arena(l);
             HumanoidNpc logia = npc(l, "pirate", 3, c.offset(0, 0, 3));
             HumanoidNpc attacker = npc(l, "marine", 3, c.offset(0, 0, 1));

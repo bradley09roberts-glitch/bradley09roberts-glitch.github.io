@@ -166,9 +166,17 @@ public class NpcCombatGoal extends Goal {
             bestDist = Math.min(bestDist, dist);
         }
 
-        // ---- defence: react to the target's wind-up ----
+        // ---- defence: react to the target's wind-up (elites and bosses read it far more often: they are beaten with
+        // timing, not by trading blows; rabble hardly ever) ----
         CombatState ts = CombatState.of(t);
-        if (dist < 5 && now - ts.lastAttack <= 2 && !s.blocking && npc.getRandom().nextFloat() < 0.12f + tier * 0.05f) {
+        var rank = com.grandline.balance.Tuning.rank(npc);
+        float read = switch (rank) {
+            case MINION -> 0.05f + tier * 0.02f;
+            case STANDARD -> 0.10f + tier * 0.04f;
+            case ELITE -> 0.30f + tier * 0.03f;
+            case BOSS -> 0.35f + tier * 0.03f;
+        };
+        if (dist < 5 && now - ts.lastAttack <= 2 && !s.blocking && npc.getRandom().nextFloat() < Math.min(0.7f, read)) {
             if (npc.getRandom().nextFloat() < 0.4f + tier * 0.03f) {
                 float side = npc.getRandom().nextBoolean() ? 1 : -1;
                 CombatManager.dodge(npc, side, -0.3f);
@@ -181,7 +189,12 @@ public class NpcCombatGoal extends Goal {
 
         // ---- techniques: only with a clear line and the target within technique range ----
         if (--abilityDelay <= 0) {
-            abilityDelay = Math.max(30, 90 - tier * 6) + npc.getRandom().nextInt(40);
+            int cadence = Math.max(30, 90 - tier * 6) + npc.getRandom().nextInt(40);
+            abilityDelay = switch (rank) { // elites mix in techniques more often; rabble rarely has any
+                case MINION -> cadence * 3 / 2;
+                case ELITE, BOSS -> cadence * 3 / 4;
+                default -> cadence;
+            };
             List<Ability> list = npc.techniques();
             if (!list.isEmpty() && canStrike && dist <= 18) {
                 Ability a = list.get(npc.getRandom().nextInt(list.size()));
