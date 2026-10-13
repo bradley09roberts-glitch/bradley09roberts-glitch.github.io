@@ -151,7 +151,7 @@ final class OverhaulTests {
         BlockPos c = coverArena(l);
         out.add("## Enemy and NPC archetypes");
         out.add("");
-        out.add("| Role | Faction | Base tier | Hostility | Rank | Health at base tier | Light blow at base tier |");
+        out.add("| Role | Faction | Tier (calmest island) | Hostility | Rank | Health there | Light blow there |");
         out.add("|---|---|---|---|---|---|---|");
         List<String> roles = new ArrayList<>(com.grandline.npc.Archetypes.roles());
         Collections.sort(roles);
@@ -159,8 +159,8 @@ final class OverhaulTests {
             var a = com.grandline.npc.Archetypes.get(role);
             HumanoidNpc n = ModEntities.HUMANOID_NPC.get().create(l);
             n.moveTo(c.getX() + 0.5, c.getY(), c.getZ() + 0.5);
-            n.configure(role, a.baseTier(), "", BlockPos.ZERO, "", l.random);
-            out.add(String.format("| %s | %s | %d | %s | %s | %.0f | %.1f |", role, a.faction().id(), n.tier(), a.hostility().name().toLowerCase(Locale.ROOT),
+            n.configure(role, 1, "", BlockPos.ZERO, "", l.random); // as met on the calmest island (its tier rises with the island's)
+            out.add(String.format("| %s | %s | %d | %s | %s | %.0f | %.1f |", role, a.faction().id(), Tuning.tierClamp(n.tier()), a.hostility().name().toLowerCase(Locale.ROOT),
                     Tuning.rank(n).id(), n.getMaxHealth(), Tuning.npcPower(n)));
             n.discard();
         }
