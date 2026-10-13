@@ -66,7 +66,25 @@ in them (lava floors, poison mists). Nothing else is exempt.
 | U5 | S2 | No lesson | first-fight card once per character; lesson objectives for strike/guard/dodge/technique; /spar training bouts |
 | U6 | S3 | Technique set name drawn over the hearts | moved beside the bar |
 
-STORY_SECTION
+### Story and quests (details: STORY_OVERHAUL.md)
+
+| # | Sev | Finding | Fix |
+|---|---|---|---|
+| Q1 | S1 | The story was told as bare objective lists ("kill 3 bandits", "discover X") | the saga as chapters (`quest/arc`): arrival → cast → problem → discovery → escalation → decision → climax → aftermath, with scenes on every step (speaker by speaker, one line at a time) |
+| Q2 | S1 | No choices, no consequences | one honest decision per full chapter (two options, each with a cost); consequences per player: who helps in the climax, rewards, prices and stock, greetings, cross-chapter pay-offs |
+| Q3 | S1 | A needed character could die before its scene; a villain could be killed before its fight | protected cast (`ArcGuard`): givers, allies, the missing and recruits never die to stray blows; a villain cannot be killed before its fight step |
+| Q4 | S2 | Steps waited on random encounters; the guide only knew a whole island | places (`ArcSites`): a step's fight happens at its place while you are near; the journal and minimap point at that spot |
+| Q5 | S2 | Already-met goals (an island discovered, a boss beaten) did not count; rewards could be paid twice | early completion; idempotent rewards; skip forward over done steps; one kill reported by several hooks counts once; crew kills count for you |
+| Q6 | S2 | The journal said what to do but not why, who or how dangerous | journal: chapter, who, why, next step, where (marker or search area), danger (threat for you), recap; story and jobs listed apart; one tracked objective |
+| Q7 | S2 | No opening lesson | the elder's combat lesson on all four starter isles (strike, guard, dodge, technique) with a teacher's running commentary and a sparring option |
+| Q8 | S1 | Old saves would meet changed quests | `StoryMigration` (once per character): progress kept objective by objective, fights already won remembered, inserted steps marked done without rewards; 32 changed quests mapped, no quest id removed |
+
+At full standard: East Blue chapters 1–6 (Shiokaze → Shells Town with Petra, Orange Town with Carmen, Syrup Village,
+the Baratie with Kenji, Cocoyasi, Loguetown), the North, West and South Blue openings, and Paradise chapters 7–12 and
+14–18 (Twin Capes to Sabaody) — 20 chapters. Skypiea and Fish-Man Island have scenes on every step but no decision
+(they run in other dimensions); chapters 20–37 are listed in the journal with their cast, problem and recap but keep
+their earlier quest shape. Optional jobs (job boards, island stories, sea jobs) are unchanged and shown as Jobs.
+
 
 ### Crew companions (details: CREW.md)
 

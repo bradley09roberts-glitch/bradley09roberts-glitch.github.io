@@ -28,7 +28,8 @@ Private distribution.
 2. Install **NeoForge 21.1.259 or newer for Minecraft 1.21.1** with the installer from https://neoforged.net
    (choose "Install client").
 3. Copy both jars from `dist/` into your `.minecraft/mods` folder:
-   - `grandline-0.2.0.jar` — the mod (it replaces `grandline-0.1.0.jar`: remove the old jar)
+   - `grandline-0.3.0.jar` — the mod (it replaces `grandline-0.2.0.jar` / `0.1.0`: remove the old jar; back up your
+     world first — upgrading is covered in [docs/INSTALL.md](docs/INSTALL.md) and [docs/SAVE_COMPAT.md](docs/SAVE_COMPAT.md))
    - `geckolib-neoforge-1.21.1-4.9.3.jar` — required library (animated creature/beast models)
 4. Start the NeoForge 1.21.1 profile and create a new world. **World Type** already shows **Grand Line Ocean World**
    (leave it; a world made with "Default" is ordinary Minecraft and cannot be converted). The mod's ocean world
