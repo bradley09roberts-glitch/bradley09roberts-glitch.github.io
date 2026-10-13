@@ -34,10 +34,27 @@ public final class SiteFinder {
         int minR = Config.SAFE_SPAWN_RADIUS.get();
         Random r = new Random(seed ^ 0x51735L);
         List<WorldBuilder.Site> out = new ArrayList<>();
+        // a sea-heavy world may offer few dry, level sites near spawn: then look further out, ring by ring
+        int needed = 2 * (Config.START_SETTLEMENTS.get() + Config.START_CAMPS.get() + Config.START_BANDIT_CAMPS.get() + 3);
+        int inner = minR, outer = maxR, rounds = 0;
+        while (rounds < 4) {
+            rounds++;
+            sample(level, gen, rs, sea, origin, inner, outer, r, out);
+            if (out.size() >= needed) break;
+            inner = outer;
+            outer = outer * 3 / 2;
+        }
+        LongNight.LOG.info("Surveyed {} candidate sites within {} blocks ({} round(s)) in {} ms", out.size(), outer, rounds,
+                System.currentTimeMillis() - t0);
+        return out;
+    }
+
+    static void sample(ServerLevel level, ChunkGenerator gen, RandomState rs, int sea, BlockPos origin, int inner, int outer, Random r,
+                       List<WorldBuilder.Site> out) {
         int samples = 150;
         for (int i = 0; i < samples; i++) {
             double ang = r.nextDouble() * Math.PI * 2;
-            double dist = minR + Math.sqrt(r.nextDouble()) * (maxR - minR);
+            double dist = Math.sqrt((double) inner * inner + r.nextDouble() * ((double) outer * outer - (double) inner * inner)); // even over the ring's area
             int x = origin.getX() + (int) (Math.cos(ang) * dist);
             int z = origin.getZ() + (int) (Math.sin(ang) * dist);
             int[][] offs = {{0, 0}, {-28, -28}, {28, -28}, {-28, 28}, {28, 28}};
@@ -67,8 +84,6 @@ public final class SiteFinder {
             double quality = flat * 2 + (water ? 0.8 : 0) + (forest ? 0.2 : 0) + r.nextDouble() * 0.5;
             out.add(new WorldBuilder.Site(new BlockPos(x, centre, z), culture, water, forest, hills, quality));
         }
-        LongNight.LOG.info("Surveyed {} candidate sites in {} ms", out.size(), System.currentTimeMillis() - t0);
-        return out;
     }
 
     static String bestCulture(String biome, boolean hills, boolean water, Random r) {
