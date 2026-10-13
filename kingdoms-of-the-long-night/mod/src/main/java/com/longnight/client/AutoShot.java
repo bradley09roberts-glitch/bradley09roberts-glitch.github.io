@@ -216,8 +216,8 @@ public final class AutoShot {
             });
             if (target != null || tries >= 6) {
                 step = 4;
-            }
-            ticks = 0;
+                ticks = 0;
+            } else ticks = -200; // after walking on, let the land there load before trying again
         } else if (step == 4 && ticks > 500 && target != null) {
             view(server, 0, 30, 18, 180f, 58f); // high and steep: forests hide anything seen from the side
             step = 5;
@@ -260,7 +260,7 @@ public final class AutoShot {
         }
     }
 
-    static java.util.UUID clickedPerson;
+    static java.util.UUID clickedPerson, clickedEntity;
     static net.minecraft.core.BlockPos hearth;
     static double logsBefore;
 
@@ -288,17 +288,19 @@ public final class AutoShot {
             var c = mc.level.getEntitiesOfClass(com.longnight.entity.CitizenEntity.class, mc.player.getBoundingBox().inflate(4)).stream()
                     .min(java.util.Comparator.comparingDouble(x -> x.distanceToSqr(mc.player))).orElse(null);
             if (c != null) {
+                clickedEntity = c.getUUID();
                 var r = mc.gameMode.interact(mc.player, c, net.minecraft.world.InteractionHand.MAIN_HAND);
                 LongNight.LOG.info("[autoshot] right-clicked a person holding {}: {}", mc.player.getMainHandItem().getHoverName().getString(), r);
             } else LongNight.LOG.info("[autoshot] no person within reach to click");
             step = 22;
             ticks = 0;
-        } else if (step == 22 && ticks > 30) {
+        } else if (step == 22 && ticks > 30 && (target == null || target.materialized)) { // the hearthstone is down once the place has materialized
             shot(mc, "company_talk");
             server.execute(() -> {
                 var sp = server.getPlayerList().getPlayers().get(0);
                 WorldSim sim = WorldSim.get(server);
-                var x = clickedPerson == null ? null : sim.person(clickedPerson);
+                var clicked = clickedEntity == null ? null : server.overworld().getEntity(clickedEntity);
+                var x = clicked instanceof com.longnight.entity.CitizenEntity ce ? sim.person(ce.personId) : null;
                 int fam = x == null ? -1 : x.relate(sp.getUUID()).familiarity;
                 LongNight.LOG.info("[autoshot] CHECK talk: {} familiarity with the player now {} ({})", x == null ? "?" : x.fullName(), fam, fam > 0 ? "PASS" : "FAIL");
                 var level = server.overworld();

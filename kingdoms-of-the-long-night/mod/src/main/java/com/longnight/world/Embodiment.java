@@ -206,13 +206,18 @@ public final class Embodiment {
 
     /** First approach: the settlement's long-standing buildings rise (progressively) and its hearth is set. */
     static void materialize(ServerLevel level, WorldSim sim, Settlement s) {
-        BlockPos top = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, s.center);
-        s.center = new BlockPos(s.center.getX(), top.getY() - 1, s.center.getZ());
-        for (Building b : s.buildings) if (b.origin != null && b.placed == 0) b.origin = new BlockPos(b.origin.getX(), s.center.getY(), b.origin.getZ());
+        if (!s.playerFounded) { // a player's settlement was founded where they stood: its ground is already known
+            BlockPos top = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, s.center);
+            s.center = new BlockPos(s.center.getX(), top.getY() - 1, s.center.getZ());
+            for (Building b : s.buildings) if (b.origin != null && b.placed == 0) b.origin = new BlockPos(b.origin.getX(), s.center.getY(), b.origin.getZ());
+        }
         if (s.kind == Settlement.Kind.SETTLEMENT && !sim.claimed(s.center, 0)) {
-            BlockPos hearth = s.center.offset(0, 1, -4); // in front of the well, which occupies the centre plot
-            if (level.getBlockState(hearth).canBeReplaced() || level.getBlockState(hearth).isAir()) {
-                level.setBlock(hearth, ModBlocks.HEARTHSTONE.get().defaultBlockState(), 3);
+            // in front of the well, which occupies the centre plot, or the nearest real ground around it
+            BlockPos hearth = com.longnight.game.Founding.placeHearthstone(level, s.center);
+            ServerPlayer founder = s.founderPlayer == null ? null : level.getServer().getPlayerList().getPlayer(s.founderPlayer);
+            if (hearth != null && founder != null) {
+                founder.sendSystemMessage(com.longnight.game.Ui.hint("The hearthstone of " + s.name + " stands " + com.longnight.game.Ui.where(founder, hearth)
+                        + ". Right-click it to see how the village is doing; sneak + right-click with logs, planks, stone or food to give them."));
             }
         }
         s.materialized = true;

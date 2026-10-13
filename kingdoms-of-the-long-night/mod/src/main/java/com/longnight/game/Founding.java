@@ -153,6 +153,8 @@ public final class Founding {
             if (hearth != null) {
                 player.sendSystemMessage(Ui.hint("Your hearthstone stands " + Ui.where(player, hearth)
                         + ". Right-click it to see how the village is doing; sneak + right-click with logs, planks, stone or food to give them."));
+            } else {
+                s.materialized = false; // the ground around is still loading: it is set down as soon as it is there
             }
         }
         Ui.msg(player, "You read out the charter and your company sets down their packs. " + s.name + " is founded, and you are its lord.");
