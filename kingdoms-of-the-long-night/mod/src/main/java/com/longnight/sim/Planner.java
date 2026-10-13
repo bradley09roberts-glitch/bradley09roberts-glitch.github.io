@@ -221,9 +221,12 @@ public final class Planner {
             Building probe = new Building(null, type);
             probe.rotation = rotationFor(c[0], c[1]);
             BlockPos plotOrigin = originFor(s, c[0], c[1], probe);
-            if (!sim.hooks.plotLooksBuildable(plotOrigin, probe.width(), probe.depth())) {
-                s.badCells.add(key);
-                continue;
+            if (!s.goodCells.contains(key)) {
+                if (!sim.hooks.plotLooksBuildable(plotOrigin, probe.width(), probe.depth())) {
+                    s.badCells.add(key);
+                    continue;
+                }
+                s.goodCells.add(key);
             }
             boolean clash = false;
             for (Settlement o : sim.settlements.values()) {

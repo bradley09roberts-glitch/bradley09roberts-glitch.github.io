@@ -57,6 +57,8 @@ public class Settlement {
     public final LinkedHashMap<Long, Long> knownNews = new LinkedHashMap<>();  // news id -> day learned
     public final List<String> chronicle = new ArrayList<>();
     public final Set<Long> badCells = new HashSet<>();
+    /** cells whose terrain already passed the survey (not saved: only spares re-sampling terrain noise this session) */
+    public final transient Set<Long> goodCells = new HashSet<>();
     public double morale = 0.6;
     public int raidsSurvived;
 

@@ -280,10 +280,12 @@ public final class Placer {
     /** Catch the world up with progress made while nobody watched (also raises pre-existing towns). */
     public static int catchUp(ServerLevel level, WorldSim sim, Settlement s, int budget) {
         int done = 0;
+        // surveying, clearing and relocating plots can be costly (dense jungle, rugged coasts): at most ~10 ms a tick
+        long deadline = System.nanoTime() + 10_000_000L;
         for (Building b : new ArrayList<>(s.buildings)) {
-            if (done >= budget) break;
+            if (done >= budget || System.nanoTime() > deadline) break;
             if (b.origin == null) continue;
-            while (b.placed < b.progress && done < budget) {
+            while (b.placed < b.progress && done < budget && System.nanoTime() <= deadline) {
                 if (!placeNext(level, sim, s, b)) break;
                 done++;
             }
