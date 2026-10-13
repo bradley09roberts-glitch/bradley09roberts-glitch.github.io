@@ -540,8 +540,10 @@ public final class BusterCall {
         l.playSound(null, BlockPos.containing(pos), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 3f, 0.7f + l.random.nextFloat() * 0.3f);
         DamageSource src = ModDamageTypes.source(l, ModDamageTypes.CANNON, shell, gunner != null && gunner.isAlive() ? gunner : null);
         int hurt = 0, hulls = 0, blocks = 0;
+        // a roof or a wall between the burst and someone shelters them (line of effect, as for every blow)
+        Vec3 from = com.grandline.combat.Cover.freeOrigin(l, pos, pos.add(0, 1, 0));
         for (LivingEntity e : l.getEntitiesOfClass(LivingEntity.class, new AABB(pos, pos).inflate(SHELL_RADIUS + 1))) {
-            if (!e.isAlive() || spared(e)) continue;
+            if (!e.isAlive() || spared(e) || !com.grandline.combat.Cover.exposed(l, from, e)) continue;
             double dist = e.getBoundingBox().getCenter().distanceTo(pos) - e.getBbWidth() * 0.5;
             if (dist > SHELL_RADIUS) continue;
             float dmg = (float) (SHELL_DAMAGE * (1 - Math.max(0, dist) / (SHELL_RADIUS + 1.5)));

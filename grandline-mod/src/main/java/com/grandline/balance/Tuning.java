@@ -132,8 +132,8 @@ public final class Tuning {
 
     /** Level a character is meant to have when the seas of each tier open up (East Blue 1-2, Paradise 3-5, New World 6-10). */
     private static final int[] LEVEL = {1, 8, 16, 26, 36, 46, 56, 68, 80, 92};
-    /** Common weapon damage of each sea (cutlass 6, fine blades 7.5, skilful 9, great grade 11). */
-    private static final float[] WEAPON = {6, 6, 7.5f, 7.5f, 7.5f, 9, 9, 9, 11, 11};
+    /** Common weapon damage of each sea (cutlass 6, fine blades 7.5, skilful 9, supreme blades 12). */
+    private static final float[] WEAPON = {6, 6, 7.5f, 7.5f, 7.5f, 9, 9, 9, 12, 12};
 
     public static int tierClamp(int t) {
         return Math.max(1, Math.min(10, t));

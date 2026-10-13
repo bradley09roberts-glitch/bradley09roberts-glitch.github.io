@@ -176,6 +176,7 @@ public final class ClientSelfTest {
         else if ("tour".equals(MODE)) buildTour();
         else if ("arch".equals(MODE)) buildArch();
         else if ("guide".equals(MODE)) buildGuide();
+        else if ("combat".equals(MODE)) buildCombat();
         else if ("shaders".equals(MODE) || "shaders_quick".equals(MODE)) buildShaderTour();
         else if ("naval".equals(MODE)) {
             createCharacter("Tester", "human");
@@ -834,6 +835,39 @@ public final class ClientSelfTest {
         add("chart open", () -> LOG.add("  screen: " + (mc.screen == null ? "none" : mc.screen.getClass().getSimpleName())), 5);
         shot("guide_03_chart");
         add("close", () -> mc.setScreen(null), 20);
+        add("done", ClientSelfTest::finish, 0);
+    }
+
+    /** Combat clarity: the target frame, the first-fight card, a dangerous foe's frame, the controls page, a sparring bout. */
+    private static void buildCombat() {
+        Minecraft mc = Minecraft.getInstance();
+        createCharacter("Tester", "human");
+        cmd("grandline test env", 10);
+        cmd("grandline test calm true", 5);
+        cmd("grandline island tp shiokaze_isle", 200);
+        // a flat stone yard to fight on, the player facing south and looking slightly down
+        cmd("fill ~-8 ~-1 ~-8 ~8 ~-1 ~8 minecraft:smooth_stone", 10);
+        cmd("fill ~-8 ~ ~-8 ~8 ~5 ~8 minecraft:air", 10);
+        cmd("tp @s ~ ~ ~ 0 12", 20);
+        cmd("grandline test npc bandit 1 4 true", 60);
+        add("focus", () -> LOG.add("  crosshair: " + (mc.crosshairPickEntity == null ? "none" : mc.crosshairPickEntity.getName().getString())), 40);
+        add("combat mode", () -> {
+            ClientState.combatMode = true;
+            PacketDistributor.sendToServer(new GLNetwork.CombatInput(com.grandline.combat.CombatInput.TOGGLE_COMBAT, (byte) 1, (byte) 0, 0, 0));
+            com.grandline.client.hud.CombatTips.onFirstFight();
+        }, 40);
+        shot("combat_01_target_frame_and_tips");
+        cmd("kill @e[type=grandline:npc,distance=..8]", 20);
+        cmd("tp @s ~ ~ ~ 0 8", 10);
+        cmd("grandline test npc marine_captain 10 6 true", 80);
+        shot("combat_02_overwhelming_foe");
+        cmd("kill @e[type=grandline:npc,distance=..10]", 20);
+        add("controls page", () -> mc.setScreen(new com.grandline.client.screen.ControlsScreen(null)), 30);
+        shot("combat_03_controls");
+        add("close", () -> mc.setScreen(null), 20);
+        cmd("tp @s ~ ~ ~ 0 10", 10);
+        cmd("spar", 30);
+        shot("combat_04_sparring");
         add("done", ClientSelfTest::finish, 0);
     }
 

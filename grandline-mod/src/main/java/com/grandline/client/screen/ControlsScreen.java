@@ -85,7 +85,9 @@ public class ControlsScreen extends Screen {
         for (Row r : rows()) {
             if (y > py + ph - 36) break;
             g.drawString(font, r.action, px + 10, y, TEXT, false);
-            g.drawString(font, r.key, px + colW - 4 - font.width(r.key), y, KEY, false);
+            int kw = font.width(r.key);
+            if (10 + font.width(r.action) + 8 + kw > colW - 4) y += 10; // no room beside it: the key goes under the action
+            g.drawString(font, r.key, px + colW - 4 - kw, y, KEY, false);
             y += 11;
         }
         // right: the loop and the tells

@@ -144,6 +144,8 @@ public abstract class GLNpc extends PathfinderMob {
         if (com.grandline.combat.Sparring.isPartner(this)) return com.grandline.combat.Sparring.spars(this, e);
         if (com.grandline.combat.Sparring.isPartner(e)) return false;
         if (e.getId() == calmId && level().getGameTime() < calmUntil && getLastHurtByMob() != e) return false;
+        // nobody starts a fight with someone in the middle of a conversation
+        if (e instanceof net.minecraft.server.level.ServerPlayer talker && getTarget() != e && getLastHurtByMob() != e && Conversations.talking(talker)) return false;
         if (e instanceof net.minecraft.server.level.ServerPlayer sp && PrisonSystem.isJailed(sp)) return false;
         // outlaws who just robbed a player leave them be for a while (unless the player starts a new fight)
         if ((faction == Faction.WILD || faction == Faction.PIRATE) && e instanceof net.minecraft.server.level.ServerPlayer sp

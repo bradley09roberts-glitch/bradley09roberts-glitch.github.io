@@ -37,11 +37,15 @@ public final class Encounters {
                 if (!com.grandline.core.Chunks.ready(level, x, z)) continue; // loaded now (not still generating)
                 int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
                 if (y <= WorldPlan.SEA_LEVEL) continue;
+                if (!level.getBlockState(new BlockPos(x, y - 1, z)).getFluidState().isEmpty()) continue; // never on a pond or lava
+                if (TownProtection.protectedAt(plan, x, z) || isl.settlement().bounds(x, z) && isl.settlementType != com.grandline.world.settlement.SettlementType.RUINS)
+                    continue; // never inside a town, even when the player stands at its edge
                 HumanoidNpc npc = ModEntities.HUMANOID_NPC.get().create(level);
                 if (npc == null) continue;
                 npc.moveTo(x + 0.5, y, z + 0.5, level.random.nextFloat() * 360, 0);
                 String r = (i == 0 && isl.tier >= 3 && role.equals("pirate")) ? "pirate_captain" : role;
                 npc.configure(r, isl.tier, isl.id, new BlockPos(x, y, z), "", level.random);
+                if (!level.noCollision(npc)) continue; // never inside a block (a giant under a ledge, a bandit in a wall)
                 level.addFreshEntity(npc);
             }
         }

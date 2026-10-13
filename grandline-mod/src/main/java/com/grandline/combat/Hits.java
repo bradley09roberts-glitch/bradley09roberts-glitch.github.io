@@ -211,7 +211,7 @@ public final class Hits {
         if (!victim.isAlive() && attacker instanceof ServerPlayer sp && !(victim instanceof Player))
             sp.displayClientMessage(net.minecraft.network.chat.Component.translatable("grandline.combat.fb.defeated", victim.getDisplayName())
                     .withStyle(net.minecraft.ChatFormatting.GOLD), true);
-        knockback(attacker, victim, info.knockback());
+        knockback(attacker, victim, Sparring.isPartner(attacker) ? info.knockback() * 0.25f : info.knockback());
         // poise & stagger
         // poise & stagger: a stagger is followed by a short window in which the victim cannot be staggered again, and a
         // player is never held for more than 1.5 s by one blow (2.5 s by a boss's announced attack): no stun-locks

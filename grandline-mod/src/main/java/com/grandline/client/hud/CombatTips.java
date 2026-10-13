@@ -49,12 +49,19 @@ public final class CombatTips {
                 Component.translatable("hud.grandline.tips.tells"),
                 Component.translatable("hud.grandline.tips.more")
         };
-        int w = 0;
-        for (Component c : lines) w = Math.max(w, font.width(c));
-        int x = g.guiWidth() / 2 - w / 2, y = g.guiHeight() / 2 + 30;
+        // a narrow card on the right, under the minimap: clear of the crosshair, the hotbar, the hearts and the chat
+        int w = Math.min(220, g.guiWidth() / 2 - 40);
+        java.util.List<net.minecraft.util.FormattedCharSequence> rows = new java.util.ArrayList<>();
+        java.util.List<Integer> colors = new java.util.ArrayList<>();
+        for (int i = 0; i < lines.length; i++) {
+            for (var r : font.split(lines[i], w)) {
+                rows.add(r);
+                colors.add(i == 0 ? 0xFFE8C060 : i == lines.length - 1 ? 0xFFA09A8C : 0xFFE6E0D2);
+            }
+        }
+        int x = g.guiWidth() - w - 10, y = Math.max(170, g.guiHeight() / 2 - rows.size() * 5);
         int alpha = age > 260 ? (int) (0xC0 * (300 - age) / 40f) : 0xC0;
-        g.fill(x - 6, y - 5, x + w + 6, y + lines.length * 11 + 2, (alpha << 24) | 0x101418);
-        for (int i = 0; i < lines.length; i++)
-            g.drawString(font, lines[i], x, y + i * 11, i == 0 ? 0xFFE8C060 : i == lines.length - 1 ? 0xFFA09A8C : 0xFFE6E0D2, true);
+        g.fill(x - 6, y - 5, x + w + 6, y + rows.size() * 10 + 3, (alpha << 24) | 0x101418);
+        for (int i = 0; i < rows.size(); i++) g.drawString(font, rows.get(i), x, y + i * 10, colors.get(i), true);
     }
 }

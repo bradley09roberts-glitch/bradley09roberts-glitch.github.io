@@ -177,9 +177,10 @@ public final class ClientEvents {
         if (ClientState.combatMode && e.getName().equals(VanillaGuiLayers.HOTBAR)) e.setCanceled(true);
     }
 
+    /** The technique's target when not locked on: whoever the player looks at in plain sight, up to 32 blocks. */
     private static float crosshairTarget(Minecraft mc) {
-        if (mc.crosshairPickEntity instanceof LivingEntity le) return le.getId();
-        return -1;
+        LivingEntity le = com.grandline.client.hud.TargetFrame.looked(mc, 32);
+        return le == null ? -1 : le.getId();
     }
 
     private static void toggleLock(Minecraft mc, LocalPlayer p) {

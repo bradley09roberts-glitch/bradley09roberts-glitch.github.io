@@ -29,6 +29,26 @@ public final class TestCommands {
                     s.getGameRules().getRule(GameRules.RULE_WEATHER_CYCLE).set(false, s);
                     return GLCommands.ok(c, "Test environment: noon, clear, cycles frozen");
                 }))
+                // /grandline test npc <role> <tier> <distance> <still>: someone standing in front of you, facing you
+                .then(Commands.literal("npc").then(Commands.argument("role", StringArgumentType.word()).then(Commands.argument("tier", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 10))
+                        .then(Commands.argument("distance", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 32)).then(Commands.argument("still", com.mojang.brigadier.arguments.BoolArgumentType.bool()).executes(c -> {
+                            var sp = c.getSource().getPlayerOrException();
+                            var l = sp.serverLevel();
+                            var look = sp.getLookAngle().multiply(1, 0, 1).normalize();
+                            var at = sp.position().add(look.scale(com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "distance")));
+                            var ground = l.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, net.minecraft.core.BlockPos.containing(at));
+                            var n = com.grandline.registry.ModEntities.HUMANOID_NPC.get().create(l);
+                            int tier = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "tier");
+                            n.moveTo(at.x, ground.getY(), at.z, sp.getYRot() + 180, 0);
+                            n.configure(StringArgumentType.getString(c, "role"), tier, "", net.minecraft.core.BlockPos.ZERO, "", l.random);
+                            n.setNotableBody(tier, n.raceId());
+                            n.retune();
+                            n.setHealth(n.getMaxHealth());
+                            n.setYHeadRot(sp.getYRot() + 180);
+                            if (com.mojang.brigadier.arguments.BoolArgumentType.getBool(c, "still")) n.setNoAi(true);
+                            l.addFreshEntity(n);
+                            return GLCommands.ok(c, "Spawned " + n.getDisplayName().getString());
+                        }))))))
                 .then(Commands.literal("calm").then(Commands.argument("on", com.mojang.brigadier.arguments.BoolArgumentType.bool()).executes(c -> {
                     com.grandline.world.weather.SeaWeather.calm = com.mojang.brigadier.arguments.BoolArgumentType.getBool(c, "on");
                     return GLCommands.ok(c, com.grandline.world.weather.SeaWeather.calm ? "Sea weather held calm (until restart or /grandline test calm false)" : "Sea weather live");

@@ -53,7 +53,7 @@ public final class TargetFrame {
         long now = ClientState.clientTicks;
         LivingEntity pick = null;
         if (ClientState.lockTarget >= 0 && mc.level.getEntity(ClientState.lockTarget) instanceof LivingEntity le && le.isAlive()) pick = le;
-        else if (mc.crosshairPickEntity instanceof LivingEntity le && le.isAlive() && !(le instanceof ArmorStand) && !le.isInvisible()) pick = le;
+        else pick = looked(mc, 24);
         if (pick != null && pick.distanceToSqr(mc.player) < 32 * 32) {
             lastSeen = now;
             if (pick.getId() != focused) {
@@ -77,12 +77,30 @@ public final class TargetFrame {
         }
     }
 
+    /**
+     * Whoever the player is looking at, up to {@code range} blocks (vanilla only picks within arm's reach): the nearest
+     * living body the view ray meets before the first solid block, and some part of it must be in plain sight.
+     */
+    public static LivingEntity looked(Minecraft mc, double range) {
+        var p = mc.player;
+        var eye = p.getEyePosition();
+        var look = p.getLookAngle();
+        var end = eye.add(look.scale(range));
+        var wall = mc.level.clip(new net.minecraft.world.level.ClipContext(eye, end, net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                net.minecraft.world.level.ClipContext.Fluid.NONE, p));
+        if (wall.getType() != net.minecraft.world.phys.HitResult.Type.MISS) end = wall.getLocation();
+        var box = p.getBoundingBox().expandTowards(end.subtract(eye)).inflate(1);
+        var hit = net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(mc.level, p, eye, end, box,
+                en -> en instanceof LivingEntity le && le.isAlive() && !(le instanceof ArmorStand) && !le.isInvisible() && !le.isSpectator());
+        return hit != null && hit.getEntity() instanceof LivingEntity le ? le : null;
+    }
+
     public static void render(GuiGraphics g, DeltaTracker dt) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || mc.options.hideGui || focused < 0 || info == null || mc.getDebugOverlay().showDebugScreen()) return;
         if (!(mc.level.getEntity(focused) instanceof LivingEntity e) || !e.isAlive()) return;
         Font font = mc.font;
-        int x = 6, y = 6, w = 168;
+        int x = 6, y = 6, w = 180;
         String rel = info.getString("rel"), rank = info.getString("rank"), threat = info.getString("threat");
         int relColor = switch (rel) {
             case "hostile" -> 0xFFFF5A4A;
@@ -114,10 +132,11 @@ public final class TargetFrame {
         // health
         float hp = e.getHealth(), max = Math.max(1, e.getMaxHealth());
         int by = y + 23;
-        g.fill(x + 2, by, x + w - 2, by + 6, 0xFF000000);
-        g.fill(x + 3, by + 1, x + 3 + (int) ((w - 6) * Math.min(1f, hp / max)), by + 5, rel.equals("hostile") ? 0xFFD03A2A : 0xFF4CB04C);
         String hpText = (int) Math.ceil(hp) + " / " + (int) Math.ceil(max);
-        g.drawString(font, hpText, x + w - 2 - font.width(hpText), by - 9 + 0, 0xFFE0E0E0, false);
+        int barEnd = x + w - 6 - font.width(hpText); // the numbers sit beside the bar, never over the text above
+        g.fill(x + 2, by, barEnd, by + 6, 0xFF000000);
+        g.fill(x + 3, by + 1, x + 3 + (int) ((barEnd - x - 4) * Math.min(1f, hp / max)), by + 5, rel.equals("hostile") ? 0xFFD03A2A : 0xFF4CB04C);
+        g.drawString(font, hpText, x + w - 2 - font.width(hpText), by - 1, 0xFFE0E0E0, false);
         // relationship + threat, in words
         Component relText = Component.translatable("hud.grandline.target.rel." + rel);
         g.drawString(font, relText, x + 2, y + 34, relColor, true);

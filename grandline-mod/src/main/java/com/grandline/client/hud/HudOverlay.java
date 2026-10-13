@@ -58,7 +58,7 @@ public final class HudOverlay {
                 }
                 g.drawString(font, String.valueOf(i + 1), bx + 1, sy + 1, 0xFF9999AA, false);
             }
-            g.drawCenteredString(font, Component.translatable(SET_NAMES[ClientState.abilitySet]), w / 2, sy - 11, 0xFFFFD34A);
+            g.drawString(font, Component.translatable(SET_NAMES[ClientState.abilitySet]), sx + 188, sy + 6, 0xFFFFD34A, true); // beside the bar, clear of the hearts
             // hovered ability name
             if (ClientState.lockTarget >= 0 && mc.level != null) {
                 Entity t = mc.level.getEntity(ClientState.lockTarget);
