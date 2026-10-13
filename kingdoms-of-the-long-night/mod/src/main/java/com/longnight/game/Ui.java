@@ -57,6 +57,13 @@ public final class Ui {
 
     // ------------------------------------------------------------------ settlement
 
+    /** "5 blocks to the north-east" from the player's point of view (or "right here"). */
+    public static String where(ServerPlayer p, net.minecraft.core.BlockPos pos) {
+        double dx = pos.getX() + 0.5 - p.getX(), dz = pos.getZ() + 0.5 - p.getZ();
+        int d = (int) Math.round(Math.sqrt(dx * dx + dz * dz));
+        return d <= 1 ? "right here" : d + " blocks to the " + Journal.compass(dx, dz);
+    }
+
     public static void settlement(ServerPlayer p, WorldSim sim, Settlement s) {
         long day = day(p);
         Culture c = Content.culture(s.culture);

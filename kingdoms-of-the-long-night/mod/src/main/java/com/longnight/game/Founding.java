@@ -149,20 +149,37 @@ public final class Founding {
         String leader = player.getGameProfile().getName();
         Settlement s = com.longnight.sim.Band.settle(sim, band, ground, leader, day);
         if (placeHearth) {
-            BlockPos hearth = ground.offset(0, 1, -4); // where every settlement's hearthstone stands
-            for (int up = 0; up <= 3 && com.longnight.world.Places.ready(level, hearth); up++, hearth = hearth.above()) {
-                // on a slope, step up to the first open spot with ground under it
-                net.minecraft.world.level.block.state.BlockState at = level.getBlockState(hearth);
-                if ((at.isAir() || at.canBeReplaced()) && level.getBlockState(hearth.below()).isSolid()) {
-                    level.setBlock(hearth, com.longnight.registry.ModBlocks.HEARTHSTONE.get().defaultBlockState(), 3);
-                    break;
-                }
+            BlockPos hearth = placeHearthstone(level, ground);
+            if (hearth != null) {
+                player.sendSystemMessage(Ui.hint("Your hearthstone stands " + Ui.where(player, hearth)
+                        + ". Right-click it to see how the village is doing; sneak + right-click with logs, planks, stone or food to give them."));
             }
         }
         Ui.msg(player, "You read out the charter and your company sets down their packs. " + s.name + " is founded, and you are its lord.");
         player.sendSystemMessage(Ui.hint("They pitch tents first, then plan and build for themselves: a lumber camp, houses, fields. "
                 + "Watch them work, bring logs, planks, stone and food to help, and use /longnight plan <building> to ask for something."));
         return true;
+    }
+
+    /**
+     * Sets the hearthstone down near a settlement's centre on real ground: the usual spot 4 blocks north first, then a few
+     * others around it, each searched from 4 blocks above to 4 below the centre (slopes, hollows, tall grass, snow).
+     * Never in water, never on leaves, never replacing anything but grass and the like. Returns where, or null.
+     */
+    public static BlockPos placeHearthstone(ServerLevel level, BlockPos ground) {
+        int[][] spots = {{0, -4}, {3, -3}, {-3, -3}, {4, 0}, {-4, 0}, {0, 4}, {3, 3}, {-3, 3}, {0, -2}, {2, 0}};
+        for (int[] o : spots) {
+            for (int dy = 5; dy >= -3; dy--) {
+                BlockPos q = ground.offset(o[0], dy, o[1]);
+                if (!com.longnight.world.Places.ready(level, q)) continue;
+                net.minecraft.world.level.block.state.BlockState at = level.getBlockState(q), below = level.getBlockState(q.below());
+                if (!(at.isAir() || at.canBeReplaced()) || !at.getFluidState().isEmpty()) continue;
+                if (!below.isSolid() || below.is(net.minecraft.tags.BlockTags.LEAVES) || !below.getFluidState().isEmpty()) continue;
+                level.setBlock(q, com.longnight.registry.ModBlocks.HEARTHSTONE.get().defaultBlockState(), 3);
+                return q;
+            }
+        }
+        return null;
     }
 
     /** First arrival: the player sets out with a company of settlers who follow them until they choose a place. */
