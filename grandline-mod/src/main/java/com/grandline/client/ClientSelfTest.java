@@ -177,6 +177,8 @@ public final class ClientSelfTest {
         else if ("arch".equals(MODE)) buildArch();
         else if ("guide".equals(MODE)) buildGuide();
         else if ("combat".equals(MODE)) buildCombat();
+        else if ("upgrade".equals(MODE)) buildUpgrade();
+        else if ("story".equals(MODE)) buildStory();
         else if ("shaders".equals(MODE) || "shaders_quick".equals(MODE)) buildShaderTour();
         else if ("naval".equals(MODE)) {
             createCharacter("Tester", "human");
@@ -835,6 +837,47 @@ public final class ClientSelfTest {
         add("chart open", () -> LOG.add("  screen: " + (mc.screen == null ? "none" : mc.screen.getClass().getSimpleName())), 5);
         shot("guide_03_chart");
         add("close", () -> mc.setScreen(null), 20);
+        add("done", ClientSelfTest::finish, 0);
+    }
+
+    /** The opening chapter: the scene when its first step starts, the journal (chapter, who, why, next, where, danger, recap). */
+    private static void buildStory() {
+        Minecraft mc = Minecraft.getInstance();
+        createCharacter("Tester", "human");
+        cmd("grandline test env", 10);
+        cmd("grandline test calm true", 5);
+        cmd("grandline island tp shiokaze_isle", 200);
+        cmd("grandline quest ember_east_1", 80);
+        add("scene", () -> LOG.add("  screen: " + (mc.screen == null ? "none" : mc.screen.getClass().getSimpleName())), 5);
+        shot("story_01_opening_scene");
+        add("next line", () -> {
+            if (mc.screen != null) mc.screen.keyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE, 0, 0);
+        }, 20);
+        shot("story_02_scene_next_line");
+        add("close", () -> mc.setScreen(null), 20);
+        add("open the quest log", () -> PacketDistributor.sendToServer(new GLNetwork.UiAction("quest_log", new CompoundTag())), 60);
+        add("quest log open", () -> LOG.add("  screen: " + (mc.screen == null ? "none" : mc.screen.getClass().getSimpleName())), 5);
+        shot("story_03_journal");
+        add("close", () -> mc.setScreen(null), 20);
+        add("done", ClientSelfTest::finish, 0);
+    }
+
+    /** An old save (0.1.0) opened with this version: the character as it loads, its quests after the migration, the journal. */
+    private static void buildUpgrade() {
+        Minecraft mc = Minecraft.getInstance();
+        steps.add(new Step("wait for world", () -> mc.player != null && mc.level != null && ClientState.hasData, () -> {}, 60));
+        add("character", () -> {
+            var d = ClientState.LOCAL;
+            LOG.add("  character: created=" + d.created + " name=" + d.name + " level=" + d.level + " race=" + d.race + " generation=" + d.generation);
+            LOG.add("  active quests: " + d.questProgress.keySet() + " | completed: " + d.completedQuests.size() + " " + d.completedQuests);
+            LOG.add("  migrated (story_v2): " + d.flags.contains("story_v2") + " | flags: " + d.flags);
+        }, 60);
+        shot("upgrade_01_world");
+        add("open the quest log", () -> PacketDistributor.sendToServer(new GLNetwork.UiAction("quest_log", new CompoundTag())), 60);
+        add("quest log open", () -> LOG.add("  screen: " + (mc.screen == null ? "none" : mc.screen.getClass().getSimpleName())), 5);
+        shot("upgrade_02_quest_log");
+        add("close", () -> mc.setScreen(null), 20);
+        cmd("quests", 40);
         add("done", ClientSelfTest::finish, 0);
     }
 

@@ -109,7 +109,7 @@ public class QuestLogScreen extends Screen {
         g.fill(px - 2, py - 2, px + pw + 2, py + ph + 2, EDGE);
         g.fill(px, py, px + pw, py + ph, PANEL);
         g.drawString(font, Component.translatable("screen.grandline.quests").withStyle(ChatFormatting.BOLD), px + 8, py + 7, GOLD, false);
-        g.fill(px + listW, py + 20, px + listW + 1, py + ph - 6, EDGE);
+        if (!quests.isEmpty()) g.fill(px + listW, py + 20, px + listW + 1, py + ph - 6, EDGE); // the list divider, only when there is a list
         if (quests.isEmpty()) {
             for (FormattedCharSequence l : font.split(Component.translatable("grandline.quests.none", completed), pw - 24)) {
                 g.drawString(font, l, px + 12, py + 34, TEXT, false);
