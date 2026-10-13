@@ -123,6 +123,13 @@ public final class GLNetwork {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
+    /** Who the focused target is (combat/TargetInfo): name, role, faction, relationship, rank, threat. */
+    public record TargetInfo(CompoundTag data) implements CustomPacketPayload {
+        public static final Type<TargetInfo> TYPE = payloadType("target_info");
+        public static final StreamCodec<ByteBuf, TargetInfo> CODEC = ByteBufCodecs.COMPOUND_TAG.map(TargetInfo::new, TargetInfo::data);
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+
     private static void onRegister(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar r = event.registrar(VERSION);
         r.playToClient(SyncCharacter.TYPE, SyncCharacter.CODEC, (p, c) -> ClientNet.syncCharacter(p, c));
@@ -132,6 +139,7 @@ public final class GLNetwork {
         r.playToClient(Fx.TYPE, Fx.CODEC, (p, c) -> ClientNet.fx(p, c));
         r.playToClient(Impulse.TYPE, Impulse.CODEC, (p, c) -> ClientNet.impulse(p, c));
         r.playToClient(Guidance.TYPE, Guidance.CODEC, (p, c) -> ClientNet.guidance(p, c));
+        r.playToClient(TargetInfo.TYPE, TargetInfo.CODEC, (p, c) -> ClientNet.targetInfo(p, c));
 
         r.playToServer(CreateCharacter.TYPE, CreateCharacter.CODEC, ServerNet::createCharacter);
         r.playToServer(CombatInput.TYPE, CombatInput.CODEC, ServerNet::combatInput);

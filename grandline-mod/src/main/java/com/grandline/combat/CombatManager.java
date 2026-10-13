@@ -149,6 +149,13 @@ public final class CombatManager {
         s.blocking = false;
         float speed = attackSpeedScale(user);
         int windup = Math.max(1, Math.round(st.windup() / speed));
+        if (heavy && user instanceof GLNpc) {
+            // a foe's heavy blow is always announced: a red flash over its head and a growl, 0.6 s before it lands
+            windup = Math.max(windup, 12);
+            Vec3 h = user.getEyePosition();
+            GLNetwork.fx(user, "tell_heavy", h.x, h.y + 0.6, h.z, user.getBbWidth(), 0, 0);
+            level.playSound(null, user.blockPosition(), SoundEvents.RAVAGER_ROAR, SoundSource.HOSTILE, 0.35f, 1.8f);
+        }
         s.nextAttackAllowed = now + windup + Math.max(2, Math.round(st.recovery() / speed));
         GLNetwork.anim(user, st.anim(), speed);
         if (st.lunge() > 0) FruitKit.impulse(user, user.getLookAngle().multiply(1, 0, 1).normalize().scale(st.lunge() * 0.6), false);
@@ -167,6 +174,7 @@ public final class CombatManager {
                 if (st.arc() < 60 && hits > 0) break; // thrusts hit one target
             }
             if (hits > 0) {
+                if (user instanceof ServerPlayer sp) Lessons.done(sp, Lessons.STRIKE);
                 Hits.train(user, mastery, 2 + (heavy ? 2 : 0));
                 Hits.train(user, "combat/hits", 1);
                 if (imbued) Hits.train(user, Haki.ARM, 1);
@@ -303,7 +311,11 @@ public final class CombatManager {
             if (user instanceof ServerPlayer sp) sp.displayClientMessage(Component.translatable("grandline.fruit.weakened").withStyle(ChatFormatting.AQUA), true);
             return false;
         }
-        if (s.onCooldown(a.id(), now)) return false;
+        if (s.onCooldown(a.id(), now)) {
+            if (user instanceof ServerPlayer sp)
+                sp.displayClientMessage(Component.translatable("grandline.ability.cooldown", a.name(), String.format("%.1f", s.cooldownLeft(a.id(), now) / 20f)).withStyle(ChatFormatting.GRAY), true);
+            return false;
+        }
         if (a.haki() > 0 && !Haki.spendGauge(user, a.haki())) return false;
         if (!Hits.spendStamina(user, a.stamina())) {
             if (user instanceof ServerPlayer sp) sp.displayClientMessage(Component.translatable("grandline.combat.no_stamina").withStyle(ChatFormatting.RED), true);
@@ -322,7 +334,10 @@ public final class CombatManager {
         s.startCooldown(a.id(), now, Math.max(4, Math.round(a.cooldown() * (d != null ? 1f - Math.min(0.3f, d.stat(com.grandline.player.Stat.TECHNIQUE) * 0.006f) : 1f))));
         s.nextAttackAllowed = Math.max(s.nextAttackAllowed, now + 6);
         Hits.train(user, a.masteryKey(), 3);
-        if (user instanceof ServerPlayer sp) CharacterManager.markDirty(sp);
+        if (user instanceof ServerPlayer sp) {
+            Lessons.done(sp, Lessons.TECHNIQUE);
+            CharacterManager.markDirty(sp);
+        }
         return true;
     }
 

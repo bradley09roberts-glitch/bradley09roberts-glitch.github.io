@@ -50,6 +50,8 @@ public class CharacterScreen extends Screen {
             PacketDistributor.sendToServer(new GLNetwork.UiAction("pvp_flag", t));
             onClose();
         }).bounds(width / 2 - 190, height - 30, 120, 20).build());
+        addRenderableWidget(Button.builder(Component.translatable("screen.grandline.controls"), b -> minecraft.setScreen(new ControlsScreen(this)))
+                .bounds(width / 2 - 64, height - 30, 100, 20).build());
     }
 
     @Override

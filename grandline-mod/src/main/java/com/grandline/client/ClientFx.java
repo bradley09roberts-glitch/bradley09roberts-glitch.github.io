@@ -219,6 +219,11 @@ public final class ClientFx {
                 burst(l, ParticleTypes.CRIT, x, y, z, 10, 0.4, 0.6);
             }
             case "block" -> burst(l, ParticleTypes.CRIT, x, y, z, 6, 0.4, 0.3);
+            case "tell_heavy" -> { // a foe winds up a heavy blow: a red flash over its head (always the same tell)
+                burst(l, dust(0xFF2A2A, 1.6f), x, y, z, 14, 0.25 + a * 0.15, 0.02);
+                burst(l, ParticleTypes.CRIT, x, y, z, 6, 0.2, 0.15);
+            }
+            case "tell_technique" -> ring(l, dust(0xFFC83C, 1.3f), x, y, z, 0.8 + a * 0.5, 24, 0.0); // a technique is coming: a gold ring at its feet
             case "cover_spark" -> { // a blow stopped by a wall: chips off the wall where it struck
                 burst(l, ParticleTypes.CRIT, x, y, z, 4, 0.15, 0.15);
                 burst(l, ParticleTypes.SMOKE, x, y, z, 3, 0.1, 0.02);

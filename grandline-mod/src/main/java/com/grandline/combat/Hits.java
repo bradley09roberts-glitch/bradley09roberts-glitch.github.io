@@ -144,6 +144,8 @@ public final class Hits {
         // knocked-down players are only finished by lethal attackers (handled in Knockdown)
         if (vs.invulnerable(now)) {
             GLNetwork.fx(victim, "dodge", vp.x, vp.y + 1, vp.z, 0, 0, 0);
+            if (victim instanceof ServerPlayer sp) Lessons.done(sp, Lessons.DODGE);
+            feedback(attacker, victim, "dodged");
             return Result.DODGED;
         }
         // Observation Haki: chance to sidestep
@@ -158,6 +160,7 @@ public final class Hits {
         boolean attackerHaki = info.imbued() || Haki.armamentActive(attacker);
         if (FruitRules.intangibleTo(victim, attacker, info, attackerHaki)) {
             FruitRules.intangibleFx(victim);
+            feedback(attacker, victim, "intangible");
             return Result.INTANGIBLE;
         }
         // Guard / parry
@@ -171,6 +174,8 @@ public final class Hits {
                 GLNetwork.anim(victim, "parry");
                 GLNetwork.anim(attacker, "staggered");
                 train(victim, "combat/parry", 4);
+                if (victim instanceof ServerPlayer sp) Lessons.done(sp, Lessons.GUARD);
+                feedback(attacker, victim, "parried");
                 return Result.PARRIED;
             }
             float guardCost = damage * 2.2f + info.poiseDamage() * 0.5f;
@@ -178,8 +183,11 @@ public final class Hits {
                 damage *= 0.25f;
                 level.playSound(null, victim.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.8f, 1.0f);
                 GLNetwork.fx(victim, "block", vp.x, vp.y + 1.2, vp.z, 0, 0, 0);
+                if (Sparring.isPartner(attacker) && victim instanceof Player) damage = 0.01f; // practice blows
                 applyDamage(level, attacker, victim, damage, info);
                 knockback(attacker, victim, info.knockback() * 0.3f);
+                if (victim instanceof ServerPlayer sp) Lessons.done(sp, Lessons.GUARD);
+                feedback(attacker, victim, "blocked");
                 return Result.BLOCKED;
             } else {
                 vs.blocking = false;
@@ -197,7 +205,12 @@ public final class Hits {
         // Attacker's imbued strike against Logia that is otherwise intangible already handled; Armament adds damage
         if (attackerHaki) damage *= 1.15f + Haki.armamentLevel(attacker) * 0.004f;
         if (damage <= 0) return Result.IGNORED;
+        if (Sparring.isPartner(attacker) && victim instanceof Player) damage = 0.01f; // practice blows land but do not hurt
+        if (Sparring.isPartner(victim)) damage = Math.min(damage, Math.max(0, victim.getHealth() - 1)); // a partner bows out, never dies
         applyDamage(level, attacker, victim, damage, info);
+        if (!victim.isAlive() && attacker instanceof ServerPlayer sp && !(victim instanceof Player))
+            sp.displayClientMessage(net.minecraft.network.chat.Component.translatable("grandline.combat.fb.defeated", victim.getDisplayName())
+                    .withStyle(net.minecraft.ChatFormatting.GOLD), true);
         knockback(attacker, victim, info.knockback());
         // poise & stagger
         // poise & stagger: a stagger is followed by a short window in which the victim cannot be staggered again, and a
@@ -221,6 +234,25 @@ public final class Hits {
     }
 
     private static final java.util.Map<java.util.UUID, Long> COVER_MSG = new java.util.HashMap<>();
+    private static final java.util.Map<java.util.UUID, Long> FEEDBACK = new java.util.HashMap<>();
+
+    /**
+     * One short line over the hotbar when a blow did not simply land: for the player who struck ("Blocked",
+     * "Parried — you're open!", "Dodged", "No effect — Logia") and for the player who defended ("Guarded", "Parry!",
+     * "Dodged!"). At most one line every 0.75 s each.
+     */
+    private static void feedback(LivingEntity attacker, LivingEntity victim, String what) {
+        if (attacker instanceof ServerPlayer sp) say(sp, "grandline.combat.fb." + what);
+        if (victim instanceof ServerPlayer sp) say(sp, "grandline.combat.fb.you_" + what);
+    }
+
+    private static void say(ServerPlayer sp, String key) {
+        long now = sp.level().getGameTime();
+        Long last = FEEDBACK.get(sp.getUUID());
+        if (last != null && now - last < 15) return;
+        FEEDBACK.put(sp.getUUID(), now);
+        sp.displayClientMessage(net.minecraft.network.chat.Component.translatable(key).withStyle(net.minecraft.ChatFormatting.GRAY), true);
+    }
 
     /** A spark where the blow met the wall, and a short note for a player who swung into cover. */
     private static void coverFeedback(ServerLevel level, LivingEntity attacker, LivingEntity victim) {

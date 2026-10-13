@@ -25,6 +25,8 @@ public final class Archetypes {
         for (String r : List.of("shopkeeper", "merchant", "bartender", "innkeeper", "blacksmith", "shipwright", "head_chef", "cook", "waiter", "priest", "noble", "doctor", "apprentice_doctor", "elder"))
             a(r, Faction.CIVILIAN, 1, r.equals("blacksmith") || r.equals("shipwright") ? List.of("war_hammer") : r.contains("chef") || r.equals("cook") ? List.of("knife") : none,
                     r.contains("chef") || r.equals("cook") ? "black_leg" : "brawler", List.of("merchant_1", "merchant_2", "villager_3"), Hostility.DEFENSIVE, false, 0, 0, 24, 0, Race.HUMAN, true, false);
+        // training: a sparring partner that only fights the player who asked for the bout and never hurts them (combat/Sparring)
+        a("sparring_partner", Faction.CIVILIAN, 1, none, "brawler", List.of("guard_1"), Hostility.DEFENSIVE, false, 0, 0, 40, 0, Race.HUMAN, false, false);
         a("guard", Faction.CIVILIAN, 2, List.of("spear", "cutlass"), "brawler", List.of("guard_1"), Hostility.LAWFUL, false, 0, 0.05, 30, 4, Race.HUMAN, false, false);
         a("lookout", Faction.PIRATE, 2, List.of("musket", "flintlock"), "sniper", List.of("pirate_1", "pirate_2"), Hostility.AGGRESSIVE, false, 0, 0, 24, 2, Race.HUMAN, false, false);
         a("master", Faction.CIVILIAN, 6, List.of("katana"), "ittoryu", List.of("master_1"), Hostility.DEFENSIVE, false, 0, 0.8, 80, 6, Race.HUMAN, false, false);

@@ -45,6 +45,8 @@ public final class ClientSetup {
         e.registerAbove(VanillaGuiLayers.HOTBAR, GrandLine.id("hud"), HudOverlay::render);
         e.registerAbove(VanillaGuiLayers.HOTBAR, GrandLine.id("ship_hud"), ShipControls::hud);
         e.registerAbove(VanillaGuiLayers.HOTBAR, GrandLine.id("minimap"), Minimap::render);
+        e.registerAbove(VanillaGuiLayers.HOTBAR, GrandLine.id("target_frame"), com.grandline.client.hud.TargetFrame::render);
+        e.registerAbove(VanillaGuiLayers.HOTBAR, GrandLine.id("combat_tips"), com.grandline.client.hud.CombatTips::render);
     }
 
     @SubscribeEvent

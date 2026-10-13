@@ -81,6 +81,8 @@ public class NpcCombatGoal extends Goal {
         bestDist = Double.MAX_VALUE;
         stuckChecks = 0;
         nextProgressCheck = now + 40;
+        // a foe that is dangerous for this player says so before the first blow
+        if (npc.getTarget() instanceof net.minecraft.server.level.ServerPlayer sp) com.grandline.combat.TargetInfo.warnIfDangerous(sp, npc);
     }
 
     @Override
@@ -184,7 +186,14 @@ public class NpcCombatGoal extends Goal {
             if (!list.isEmpty() && canStrike && dist <= 18) {
                 Ability a = list.get(npc.getRandom().nextInt(list.size()));
                 if (!a.id().endsWith("/toggle") && !a.id().endsWith("/transform") && !s.onCooldown(a.id(), now)) {
-                    CombatManager.useAbility(npc, a, t);
+                    // announced: a gold ring at its feet, then the technique 0.6 s later if the target is still in reach
+                    Vec3 p = npc.position();
+                    com.grandline.net.GLNetwork.fx(npc, "tell_technique", p.x, p.y + 0.1, p.z, npc.getBbWidth(), 0, 0);
+                    s.nextAttackAllowed = Math.max(s.nextAttackAllowed, now + 14);
+                    s.schedule(now + 12, () -> {
+                        if (npc.isAlive() && npc.getTarget() == t && t.isAlive() && !npc.hasEffect(ModEffects.KNOCKED_OUT) && Cover.reachable(npc, t))
+                            CombatManager.useAbility(npc, a, t);
+                    });
                 }
             }
         }

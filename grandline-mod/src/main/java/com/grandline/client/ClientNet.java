@@ -64,6 +64,10 @@ public final class ClientNet {
         ctx.enqueueWork(() -> ClientFx.play(p.kind(), p.x(), p.y(), p.z(), p.a(), p.b(), p.c()));
     }
 
+    public static void targetInfo(GLNetwork.TargetInfo p, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> com.grandline.client.hud.TargetFrame.accept(p.data()));
+    }
+
     public static void guidance(GLNetwork.Guidance p, IPayloadContext ctx) {
         ctx.enqueueWork(() -> Guidance.accept(p.data()));
     }

@@ -25,6 +25,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
 @EventBusSubscriber(modid = GrandLine.MODID, value = Dist.CLIENT)
 public final class ClientEvents {
     private static int attackHeld = 0;
+    /** Outside Combat Mode a click on someone is still a combat strike (the same light/heavy blows), not a vanilla punch. */
+    private static boolean strikeHeld = false;
     private static boolean wasBlocking = false;
     private static boolean gliding = false;
 
@@ -36,6 +38,7 @@ public final class ClientEvents {
     public static void onLogout(ClientPlayerNetworkEvent.LoggingOut e) {
         ClientState.reset();
         Guidance.reset();
+        com.grandline.client.hud.CombatTips.reset();
     }
 
     @SubscribeEvent
@@ -54,6 +57,7 @@ public final class ClientEvents {
             ClientState.combatMode = !ClientState.combatMode;
             send(CombatInput.TOGGLE_COMBAT, ClientState.combatMode ? 1 : 0, 0, 0, 0);
             if (!ClientState.combatMode) ClientState.lockTarget = -1;
+            else com.grandline.client.hud.CombatTips.onFirstFight();
         }
         while (Keys.OBSERVATION.consumeClick()) send(CombatInput.HAKI_TOGGLE, 0, 0, 0, 0);
         while (Keys.ARMAMENT.consumeClick()) send(CombatInput.HAKI_TOGGLE, 1, 0, 0, 0);
@@ -84,13 +88,7 @@ public final class ClientEvents {
                 }
             }
             // light (tap) / heavy (hold and release) attacks
-            boolean atk = mc.options.keyAttack.isDown();
-            if (atk) attackHeld++;
-            else if (attackHeld > 0) {
-                if (attackHeld >= 8) send(CombatInput.HEAVY, Math.min(10, (attackHeld - 8) / 3), 0, 0, 0);
-                else send(CombatInput.LIGHT, 0, 0, 0, 0);
-                attackHeld = 0;
-            }
+            strikeInput(mc);
             // guard while holding use (unless holding something usable like food or a ranged weapon)
             var main = p.getMainHandItem();
             boolean usable = main.getUseAnimation() != net.minecraft.world.item.UseAnim.NONE || (main.getItem() instanceof com.grandline.item.GLWeaponItem w && w.weaponClass.ranged);
@@ -102,7 +100,8 @@ public final class ClientEvents {
             }
             softLock(mc, p);
         } else {
-            attackHeld = 0;
+            if (strikeHeld) strikeInput(mc);
+            else attackHeld = 0;
             if (wasBlocking) {
                 send(CombatInput.BLOCK, 0, 0, 0, 0);
                 wasBlocking = false;
@@ -130,12 +129,37 @@ public final class ClientEvents {
         }
     }
 
+    /** Tap = light strike, hold and release = heavy blow (the longer the hold, the stronger, up to 1.5 s). */
+    private static void strikeInput(Minecraft mc) {
+        boolean atk = mc.options.keyAttack.isDown();
+        if (atk) attackHeld++;
+        else if (attackHeld > 0) {
+            if (attackHeld >= 8) send(CombatInput.HEAVY, Math.min(10, (attackHeld - 8) / 3), 0, 0, 0);
+            else send(CombatInput.LIGHT, 0, 0, 0, 0);
+            attackHeld = 0;
+            strikeHeld = false;
+        }
+    }
+
     @SubscribeEvent
     public static void onInteractionKey(InputEvent.InteractionKeyMappingTriggered e) {
-        if (!ClientState.combatMode) return;
-        if (e.isAttack()) {
+        Minecraft mc = Minecraft.getInstance();
+        if (ClientState.combatMode) {
+            if (e.isAttack()) {
+                e.setCanceled(true);
+                e.setSwingHand(false);
+            }
+            if (e.isPickBlock()) e.setCanceled(true); // the middle button is lock-on in Combat Mode
+            return;
+        }
+        // outside Combat Mode a click on a living target is the same combat strike, so there is only one way to fight
+        if (e.isAttack() && mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult eh && eh.getEntity() instanceof LivingEntity
+                && !(eh.getEntity() instanceof net.minecraft.world.entity.decoration.ArmorStand) && ClientState.hasData && ClientState.LOCAL.created) {
             e.setCanceled(true);
             e.setSwingHand(false);
+            strikeHeld = true;
+            attackHeld = 0;
+            com.grandline.client.hud.CombatTips.onFirstFight();
         }
     }
 
@@ -205,6 +229,16 @@ public final class ClientEvents {
         float dp = pitch - p.getXRot();
         p.setYRot(p.getYRot() + dy * 0.25f);
         p.setXRot(net.minecraft.util.Mth.clamp(p.getXRot() + dp * 0.15f, -80, 80));
+    }
+
+    /** /controls: every control with its current key, the combat loop and how to read a foe's wind-up. */
+    @SubscribeEvent
+    public static void onClientCommands(net.neoforged.neoforge.client.event.RegisterClientCommandsEvent e) {
+        e.getDispatcher().register(net.minecraft.commands.Commands.literal("controls").executes(c -> {
+            Minecraft mc = Minecraft.getInstance();
+            mc.tell(() -> mc.setScreen(new com.grandline.client.screen.ControlsScreen(null)));
+            return 1;
+        }));
     }
 
     private ClientEvents() {}

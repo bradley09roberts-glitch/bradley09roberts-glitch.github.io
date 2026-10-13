@@ -75,6 +75,10 @@ public final class ServerNet {
                 }
                 case "open_chart" -> com.grandline.navigation.Navigation.openChart(sp);
                 case "quest_log" -> com.grandline.quest.QuestGuide.openLog(sp);
+                case "target_info" -> com.grandline.combat.TargetInfo.request(sp, t.getInt("id"));
+                case "seen_controls" -> {
+                    if (d.flags.add("seen_controls")) CharacterManager.markDirty(sp);
+                }
                 case "quest_track" -> {
                     com.grandline.quest.QuestGuide.track(sp, t.getString("id"));
                     com.grandline.quest.QuestGuide.openLog(sp);

@@ -51,9 +51,10 @@ public final class GLConfig {
         MASTERY_MULTIPLIER = b.defineInRange("masteryMultiplier", 1.0, 0.0, 100.0);
         b.pop();
         b.push("balance");
-        DIFFICULTY = b.comment("Combat difficulty: adventure (gentler foes, one melee attacker at a time), standard (the intended experience),",
+        DIFFICULTY = b.comment("Combat difficulty: auto (follows the world's difficulty: Peaceful/Easy = adventure, Normal = standard, Hard = hard),",
+                        "adventure (gentler foes, one melee attacker at a time), standard (the intended experience),",
                         "hard (foes hit harder, have more health and up to three press you at once). Numbers live in com.grandline.balance.Tuning.")
-                .define("difficulty", "standard", v -> v instanceof String s && (s.equalsIgnoreCase("adventure") || s.equalsIgnoreCase("standard") || s.equalsIgnoreCase("hard")));
+                .define("difficulty", "auto", v -> v instanceof String s && (s.equalsIgnoreCase("auto") || s.equalsIgnoreCase("adventure") || s.equalsIgnoreCase("standard") || s.equalsIgnoreCase("hard")));
         b.pop();
         b.push("pvp");
         PVP_DAMAGE_MULTIPLIER = b.defineInRange("pvpDamageMultiplier", 0.6, 0.0, 10.0);

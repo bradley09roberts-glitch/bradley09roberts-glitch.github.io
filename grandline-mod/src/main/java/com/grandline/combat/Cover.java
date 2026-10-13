@@ -192,10 +192,15 @@ public final class Cover {
     static boolean lineOfEffect(LivingEntity attacker, LivingEntity victim) {
         Level l = attacker.level();
         Long t = CLEARED.get(key(attacker, victim));
-        if (t != null && t >= l.getGameTime() - 1) return true;
+        if (t != null && t == l.getGameTime()) return true;
         Vec3 o = ORIGIN.get();
         if (o != null) return exposed(l, freeOrigin(l, o, victim.getBoundingBox().getCenter()), victim);
         return reachable(attacker, victim);
+    }
+
+    /** Self-tests that rebuild cover within one tick start each scenario fresh. */
+    public static void forgetCleared() {
+        CLEARED.clear();
     }
 
     /** Diagnostics for the self-test: how many exposure checks ran and how many found full cover. */

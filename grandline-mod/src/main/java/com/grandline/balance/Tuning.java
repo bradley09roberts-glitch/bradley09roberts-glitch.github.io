@@ -21,7 +21,7 @@ import java.util.Locale;
  * <li>a reference character of the level a sea is meant for, with a common weapon of that sea, fells a minion in 2-3
  * light blows, a standard foe in 4-5, an elite in about 10 (elites are meant to be beaten with guard, dodges and
  * techniques, not by trading blows), and a boss in about 45 light-blow equivalents (one to three minutes);</li>
- * <li>an ordinary foe's light blow takes 8-15 % of that character's health, a heavy one about twice that;</li>
+ * <li>an ordinary foe's light blow takes 8-15 % of that character's health (an elite's 12-18 %), a heavy one about twice that;</li>
  * <li>no single blow that was not announced by a boss's ground marker can take more than a quarter (minions and
  * standard foes) to two fifths (bosses) of a character's health; announced boss attacks are capped at 55 %.</li>
  * </ul>
@@ -63,12 +63,26 @@ public final class Tuning {
         }
     }
 
+    /**
+     * The difficulty in force: the config value, or with "auto" (the default) the world's own difficulty setting
+     * (Peaceful and Easy = Adventure, Normal = Standard, Hard = Hard). The mod's damage types do not scale with the
+     * vanilla difficulty themselves, so this is the only difficulty multiplier on foes' blows.
+     */
     public static Difficulty difficulty() {
+        String v;
         try {
-            return Difficulty.byId(GLConfig.DIFFICULTY.get());
+            v = GLConfig.DIFFICULTY.get();
         } catch (IllegalStateException notLoaded) {
-            return Difficulty.STANDARD;
+            v = "auto";
         }
+        if (!v.equalsIgnoreCase("auto")) return Difficulty.byId(v);
+        var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
+        if (server == null) return Difficulty.STANDARD;
+        return switch (server.getWorldData().getDifficulty()) {
+            case PEACEFUL, EASY -> Difficulty.ADVENTURE;
+            case NORMAL -> Difficulty.STANDARD;
+            case HARD -> Difficulty.HARD;
+        };
     }
 
     // ------------------------------------------------------------------ ranks
@@ -79,7 +93,7 @@ public final class Tuning {
         /** Marines, guards, Fish-Man soldiers, bounty hunters. */
         STANDARD(4.5f, 0.11f, 0.25f, 30f),
         /** Officers, captains, named characters, giants: guard and dodge more, use techniques; marked with a silver icon. */
-        ELITE(10f, 0.14f, 0.32f, 70f),
+        ELITE(10f, 0.12f, 0.32f, 70f),
         /** Story bosses with phases and ground-marked signature attacks; marked with a gold icon and a boss bar. */
         BOSS(45f, 0.13f, 0.40f, 150f);
 
@@ -135,11 +149,16 @@ public final class Tuning {
         return 20 + l + (l / 5) * 2f;
     }
 
-    /** Light blow of that character: weapon + a third of their points in Strength, with the mastery bonus of their level. */
+    /** Weapon mastery of the reference character: half its level (mastery grows by use; a character who fights with one weapon). */
+    public static int referenceMastery(int tier) {
+        return Math.min(100, referenceLevel(tier) / 2);
+    }
+
+    /** Light blow of that character: weapon + a third of their points in Strength, with the bonus of its weapon mastery. */
     public static float referenceBlow(int tier) {
         int l = referenceLevel(tier);
         float power = WEAPON[tierClamp(tier) - 1] + l * 0.25f;
-        return power * (1 + Math.min(100, l) * 0.006f);
+        return power * (1 + referenceMastery(tier) * 0.006f);
     }
 
     /** The tier a character of this level is "at" (the highest sea tier whose reference level they have reached). */

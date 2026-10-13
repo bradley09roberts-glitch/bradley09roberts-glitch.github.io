@@ -100,6 +100,7 @@ public final class SelfTest {
         else if (PHASE.equals("bosses")) BossTests.phase1(steps); // quick run: boss fights
         else if (PHASE.equals("structures")) StructureDump.steps(steps); // dev aid: every structure to structdump/*.json
         else if (PHASE.equals("quests")) steps.add(SelfTest::questTextCheck); // quick run: quest descriptions and objective text
+        else if (PHASE.equals("overhaul")) OverhaulTests.phase1(steps); // quick run: line of effect, fair foes, the balance table
         else if (PHASE.equals("landmarks")) { // quick run: every landmark builder and every settlement building
             steps.add(s -> LandmarkCheck.run(s, SelfTest::check));
             steps.add(s -> BuildingCheck.run(SelfTest::check));
@@ -863,6 +864,7 @@ public final class SelfTest {
         CareerTests.phase1(steps); // faction careers: ranks, perks, titles, the Warlord letter (test/CareerTests.java)
         SeaJobTests.phase1(steps); // sea jobs: escort follower, named pirate ships, convoys, sea-battle objectives (test/SeaJobTests.java)
         SeaPolishTests.phase1(steps); // hired gunners, raid plunder, sea-job chart marks, convoy cap (test/SeaPolishTests.java)
+        OverhaulTests.phase1(steps); // gameplay overhaul: line of effect with real blocks, fair foes, the balance table (test/OverhaulTests.java)
         JourneyTests.phase1(steps); // journey advancements, Den Den Mushi, Buster Call (test/JourneyTests.java; runs last)
         SeaJobTests.fixture(steps); // an escort stowed for phase 2 (after the last test, so its away time stays short)
     }
