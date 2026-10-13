@@ -43,7 +43,13 @@ Full step-by-step guide: [modpack/INSTALL.md](modpack/INSTALL.md).
 
 ## Your first hour
 
-* You start with a **Traveller's Journal** and **A Traveller's Primer** (a short in-world guide to everything below).
+* **You do not start alone.** Six people (a couple of builders, farmers, a lumberjack, a quarry worker, a guard) set out
+  with you, carrying food, tools and timber. They follow you wherever you go. When you find good land (flat, near
+  water and trees, away from other towns), **right-click with the Founding Charter** you carry, or talk to one of them
+  and click **Settle here**. They pitch tents and start making a village with you: fields first, then a lumber camp,
+  houses and a quarry, block by block, each doing their own job. More settlers come once there is food and shelter.
+  (World setting `startingCompany`: 0 starts you alone as a stranger instead.)
+* You also have a **Traveller's Journal** and **A Traveller's Primer** (a short in-world guide to everything below).
   Right-click the journal: it lists the places you have heard of, with distance and direction. You know two
   settlements to begin with; you learn of more by asking people for news.
 * **Look at a person** to see their name, trade and what they are doing on the action bar.

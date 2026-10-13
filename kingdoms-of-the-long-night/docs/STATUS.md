@@ -77,8 +77,12 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
   smithy, weavery, tavern, storehouse, granary, market (stalls + bell), shrine and temple (faith-specific altar and
   stained glass), watchtower (ladder, bell), barracks, town hall, school, library, house of healing, graveyard,
   well (with notice board), builder's yard, campsite. Signboards carry names ("The Drowsy Kettle").
-- **Camps bootstrap themselves**: until they have a lumber camp and a quarry, idle hands gather deadwood, fieldstone
-  and kindling; camps build a lumber camp and houses first. (Found by the 200-day test: camps used to stall forever.)
+- **Camps bootstrap themselves**: a camp builds its fields first and lives by hunting and gathering until they stand;
+  until a lumber camp and a quarry have workers, idle hands (and builders waiting for materials) gather deadwood,
+  fieldstone and kindling and hew rough planks; full stores never stop food or the goods builders are short of; when
+  every project waits for one material, the planner builds whatever makes it (glass and stone -> quarry, planks ->
+  carpentry ...) and that trade becomes urgent; a builder whose project is stuck moves on to the next. (Found by the
+  200-day test and the company test: camps used to starve or stall forever.)
 - **What to build is decided from needs**: housing, food, materials, storage, faith, safety (watchtowers after
   raids), then institutions as the population grows; the ruler's agenda shifts priorities. Tier grows from camp to
   hamlet, village, town and city when population and institutions allow.
@@ -135,6 +139,13 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
   or heard of (you learn of places by asking for news).
 
 ### Player paths
+- **Start with a company** (new): every new player sets out with a company of settlers (default 6, setting
+  `startingCompany`, 0 = alone): real people with trades and packs (food, seed grain, tools, timber, stone, a few panes
+  of glass) who follow the player, forage on the road, appear beside the leader (never in mid-air) and catch up if left
+  behind. The player settles them with the Founding Charter (right-click), the Settle here button, `/longnight settle`
+  or by placing a hearthstone: the same people become the player's lordship, pitch tents, and plan and build the
+  village themselves (tested: a company grows from a camp to a hamlet of 10-11 people with 5-7 finished buildings in
+  50 simulated days).
 - **Onboarding**: a new player gets the Traveller's Journal and *A Traveller's Primer*, a short in-world book that
   explains talking, trading, contracts, raids, claims, founding and wards. Looking at a person shows their name,
   trade and current activity on the action bar.
@@ -183,8 +194,8 @@ bring-your-own-key AI dialogue that only rephrases (never decides).
 | Test | Command | Result |
 |---|---|---|
 | Compilation | `./gradlew build` | passes |
-| JUnit simulation tests (9): content loads; generation consistent; stockpile atomic; construction charged exactly once; construction stops and explains when short; 60-day run keeps all invariants (births, deaths, marriages, trade, raids); kill is final and idempotent and conserves coin; save data round-trips (including warrants) and keeps running; work a body did in front of a player is not produced again by the daily update | `./gradlew test` | **9/9 pass** (60 days: ~300 alive, 46 dead, 63 born, 301 news) |
-| GameTests (7, in a real server world): builder pays once per block and the blocks exist; never builds over a player's chest; trade conserves goods and coin and refuses impossible purchases; the dead stay dead, are buried under their name and get no body; wards block natural spawns; every blueprint for every culture generates inside its footprint; a player founds a settlement (charter consumed, 3 settlers, player realm never gets an NPC ruler, the well avoids the hearthstone); a broken block of a finished building is found and repaired at its block cost, nothing else is reported missing, and a hole inside a player's claim is neither reported nor charged | `./gradlew runGameTestServer` | **7/7 pass** |
+| JUnit simulation tests (10): content loads; generation consistent; stockpile atomic; construction charged exactly once; construction stops and explains when short; 60-day run keeps all invariants (births, deaths, marriages, trade, raids); kill is final and idempotent and conserves coin; save data round-trips (including warrants) and keeps running; work a body did in front of a player is not produced again by the daily update; a player's company survives 10 days on the road, settles and builds its own village in 50 days | `./gradlew test` | **10/10 pass** (60 days: ~300 alive, 46 dead, 63 born, 301 news) |
+| GameTests (8, in a real server world): builder pays once per block and the blocks exist; never builds over a player's chest; trade conserves goods and coin and refuses impossible purchases; the dead stay dead, are buried under their name and get no body; wards block natural spawns; every blueprint for every culture generates inside its footprint; a player founds a settlement (charter consumed, 3 settlers, player realm never gets an NPC ruler, the well avoids the hearthstone); a broken block of a finished building is found and repaired at its block cost, nothing else is reported missing, and a hole inside a player's claim is neither reported nor charged; a new player's company appears beside its leader, is not treated as a place, and settles into the player's lordship with tents and a hearthstone | `./gradlew runGameTestServer` | **8/8 pass** |
 | Long-run test: 200 simulated days (25 years at default pacing) | `./gradlew test --tests com.longnight.LongRunTest` | **pass**: population ~250 -> ~510 (no collapse/explosion), ~110 children grew up, ~200 married, 200+ buildings completed by the settlements themselves, ~15 new camps founded (several became hamlets, some as breakaway realms), 1-2 wars, invariants hold every 25 days, save ~470 KiB compressed, reloads cleanly |
 | Dedicated server scenario (RCON, fresh hardcore world, watchdog on): boot; world history; invariants; observed settlement materializes, bodies spawn, pre-existing buildings raised; invariants with bodies (one body per person); **tick time with a town embodied**; **cost of a simulated day**; 4 simulated days; a physical raid; save; **restart**; identical people/death/settlement counts; invariants after reload; no mod errors in logs | `python3 -I tools/test/server_scenario.py` | **17/17 pass** (runs 11-16; run16 on the released code: avg tick 5.7 ms with 26 people, worst longnight tick 77 ms). Run10 failed 3/17 and caught a real bug (people getting a second body when chunks load asynchronously), fixed in run11. |
 | Performance on this container (4 vCPU Xeon 2.8 GHz, no GPU), dedicated server, one town of 24 embodied people | scenario + `/longnight admin perf` | average tick **3.2-5.8 ms** over runs 11-15 on two different towns (P95 7-18 ms, P99 10-24 ms; 20 TPS needs < 50); longnight's share 1.1-3.0 ms (citizens 0.05-0.11 ms each, world handler 0.02 ms). Path-finding dominates: before rationing path requests (run9) citizens cost 0.33 ms each; on a rugged town (Ilvaiath) they still cost 0.3 ms each until citizens who make no progress were made to re-plan less often (run15: 7.9 -> 3.0 ms for 26 people). **Worst single longnight tick: 92 ms** (run13), down from 6.9 s when a town was first raised (it read blocks in chunks that were still generating; found with the slow-tick log and stack sampling, fixed). A simulated day of the whole world (~200 people, 14 places): 0.06-0.18 s. |

@@ -38,6 +38,10 @@ public final class AutoShot {
         IntegratedServer server = mc.getSingleplayerServer();
         if (server == null) return;
         ticks++;
+        if (COMPANY) {
+            company(mc, server);
+            return;
+        }
         if (step == 0 && ticks > 100) {
             WorldSim sim = WorldSim.get(server);
             List<Settlement> list = new ArrayList<>();
@@ -135,6 +139,132 @@ public final class AutoShot {
             step = 6;
             if (!"false".equals(System.getProperty("longnight.autoshot.quit"))) mc.stop();
         }
+    }
+
+    static final boolean COMPANY = Boolean.getBoolean("longnight.autoshot.company");
+    static int tries;
+
+    /**
+     * Company mode: the new player sets out with their company, settles, and the pilot watches the village rise
+     * (skipping days in steps), taking a picture at each stage.
+     */
+    static void company(Minecraft mc, IntegratedServer server) {
+        if (step == 0 && ticks > 200) {
+            server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                WorldSim sim = WorldSim.get(server);
+                if (com.longnight.sim.Band.of(sim, sp.getUUID()) == null) com.longnight.game.Founding.startBand(sp, sim, 6);
+                run(server, "gamemode creative @a"); // the pilot must not die on the road; the company does not care
+                sp.getAbilities().flying = false;
+                sp.onUpdateAbilities();
+                run(server, "time set 2000");
+                run(server, "weather clear");
+                run(server, "gamerule doDaylightCycle false");
+                var top = server.overworld().getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, sp.blockPosition());
+                sp.teleportTo(top.getX() + 0.5, top.getY(), top.getZ() + 0.5);
+                LongNight.LOG.info("[autoshot] company of {} people sets out", com.longnight.sim.Band.of(sim, sp.getUUID()).residents.size());
+            });
+            step = 1;
+            ticks = 0;
+        } else if (step == 1 && ticks > 200 && (ticks > 1600 || companions(server) >= 3)) {
+            server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                var level = server.overworld();
+                var near = level.getEntitiesOfClass(com.longnight.entity.CitizenEntity.class, sp.getBoundingBox().inflate(16));
+                if (near.isEmpty()) return;
+                double cx = 0, cz = 0, cy = 0;
+                for (var c : near) {
+                    cx += c.getX();
+                    cy += c.getY();
+                    cz += c.getZ();
+                }
+                cx /= near.size();
+                cy /= near.size();
+                cz /= near.size();
+                float yaw = (float) Math.toDegrees(Math.atan2(-(cx - sp.getX()), cz - sp.getZ()));
+                run(server, String.format(java.util.Locale.ROOT, "tp @a %.1f %.1f %.1f %.1f 12", sp.getX(), sp.getY(), sp.getZ(), yaw));
+                LongNight.LOG.info("[autoshot] {} companions in view", near.size());
+            });
+            step = 2;
+            ticks = 0;
+        } else if (step == 2 && ticks > 80) {
+            shot(mc, "company_road");
+            step = 3;
+            ticks = 0;
+        } else if (step == 3 && ticks > 40) {
+            server.execute(() -> {
+                var sp = server.getPlayerList().getPlayers().get(0);
+                WorldSim sim = WorldSim.get(server);
+                var band = com.longnight.sim.Band.of(sim, sp.getUUID());
+                if (band == null) return;
+                String why = com.longnight.sim.Band.unsuitable(sim, sp.blockPosition().below(), sp.getUUID());
+                if (why != null && tries++ < 6) {
+                    // too close to a town: walk on, away from it (the company catches up)
+                    var near = sim.nearestSettlement(sp.blockPosition(), com.longnight.sim.Settlement.Kind.SETTLEMENT);
+                    double dx = near == null ? 1 : sp.getX() - near.center.getX(), dz = near == null ? 0 : sp.getZ() - near.center.getZ();
+                    double len = Math.max(1, Math.sqrt(dx * dx + dz * dz));
+                    int x = (int) (sp.getX() + dx / len * 160), z = (int) (sp.getZ() + dz / len * 160);
+                    run(server, "forceload add " + x + " " + z);
+                    var top = server.overworld().getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new net.minecraft.core.BlockPos(x, 0, z));
+                    sp.teleportTo(x + 0.5, top.getY(), z + 0.5);
+                    LongNight.LOG.info("[autoshot] {} Walking on to {} {}", why, x, z);
+                    return;
+                }
+                boolean ok = com.longnight.game.Founding.settleBand(sp, server.overworld(), sp.blockPosition().below(), true);
+                target = band;
+                LongNight.LOG.info("[autoshot] settled={} as {} at {}", ok, band.name, band.center);
+            });
+            if (target != null || tries >= 6) {
+                step = 4;
+            }
+            ticks = 0;
+        } else if (step == 4 && ticks > 500 && target != null) {
+            view(server, 0, 14, 20, 180f, 30f);
+            step = 5;
+            ticks = 0;
+        } else if (step == 5 && ticks > 120) {
+            shot(mc, "company_camp");
+            run(server, "longnight admin skip 5");
+            view(server, 0, 24, 32, 180f, 35f);
+            step = 6;
+            ticks = 0;
+        } else if (step == 6 && ticks > 1200) {
+            shot(mc, "company_day5");
+            report();
+            run(server, "longnight admin skip 10");
+            step = 7;
+            ticks = 0;
+        } else if (step == 7 && ticks > 1500) {
+            view(server, 0, 26, 34, 180f, 35f);
+            step = 8;
+            ticks = 0;
+        } else if (step == 8 && ticks > 120) {
+            shot(mc, "company_day15");
+            report();
+            run(server, "longnight admin skip 10");
+            step = 9;
+            ticks = 0;
+        } else if (step == 9 && ticks > 1500) {
+            view(server, -24, 26, 24, -135f, 35f);
+            step = 10;
+            ticks = 0;
+        } else if (step == 10 && ticks > 120) {
+            shot(mc, "company_day25");
+            report();
+            step = 11;
+        }
+    }
+
+    static int companions(IntegratedServer server) {
+        var sp = server.getPlayerList().getPlayers().get(0);
+        return server.overworld().getEntitiesOfClass(com.longnight.entity.CitizenEntity.class, sp.getBoundingBox().inflate(16)).size();
+    }
+
+    static void report() {
+        if (target == null) return;
+        StringBuilder b = new StringBuilder();
+        for (var x : target.buildings) b.append(x.type.id()).append(x.usable() ? "" : "(" + x.progress + "/" + x.total + ")").append(" placed=").append(x.placed).append(' ');
+        LongNight.LOG.info("[autoshot] {} {} pop={} buildings: {}", target.name, target.tier, target.residents.size(), b);
     }
 
     static void view(IntegratedServer server, int dx, int dy, int dz, float yaw, float pitch) {

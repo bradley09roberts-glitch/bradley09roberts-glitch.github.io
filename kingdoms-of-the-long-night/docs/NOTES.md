@@ -121,3 +121,11 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   longnight tick 77 ms); full-pack server PASS (random seed: 61 sites in one round, 14 settlements, 175 people,
   6 realms; 2 days skipped, VALIDATE OK; day 1 130 ms); full-pack client PASS (Dunmar town Ulfkhar, 40 buildings,
   34 people, raised in 1,318 ticks; one 284 ms tick on the CPU-starved integrated server). Work stops here.
+- 12:00 (user request after the handoff: "I have people with me, then I am in the village and they slowly build it and do
+  their jobs") START WITH A COMPANY: new players set out with 6 settlers (Settlement.Kind.BAND: no land, centre = leader,
+  FOLLOW routine, forage on the road, teleport-catch-up only onto solid ground, not a place for settlementAt) and settle
+  them with the charter / Settle here / /longnight settle / a hearthstone. The new JUnit test exposed a chain of camp
+  deadlocks (starvation: no farm first; full stores blocking farms; no stone without labourers; glass without a quarry;
+  a single builder stuck on one project; quarry unstaffed because every adult had a job; full stores blocking the
+  quarry). All fixed in the economy/planner/jobs (see STATUS "Camps bootstrap themselves"). Company now: camp -> hamlet
+  of 10-11 with 5-7 buildings in 50 days; 200-day world: ~580 alive, 28 settlements, ~290 buildings (was ~510 / ~200).

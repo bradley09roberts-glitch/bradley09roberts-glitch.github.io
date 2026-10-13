@@ -234,6 +234,8 @@ def build_command(install_dir, game_dir, neo_json, mc_json, asset_index, xmx, qu
     jvm = [f"-Xmx{xmx}", "-Xms2G"] + expand(mc_json["arguments"]["jvm"]) + expand(neo_json["arguments"]["jvm"])
     if os.environ.get("LONGNIGHT_AUTOSHOT"):
         jvm[0:0] = ["-Dlongnight.autoshot=true", "-Dlongnight.autoshot.quit=false"]  # longnight's dev-only visual test pilot (screenshots of a settlement)
+        if os.environ.get("LONGNIGHT_AUTOSHOT_COMPANY"):
+            jvm[0:0] = ["-Dlongnight.autoshot.company=true"]  # the pilot settles the new player's company and watches the village rise
     game = expand(mc_json["arguments"]["game"]) + expand(neo_json["arguments"]["game"])
     game += ["--width", "1280", "--height", "720"]
     if quickplay:
