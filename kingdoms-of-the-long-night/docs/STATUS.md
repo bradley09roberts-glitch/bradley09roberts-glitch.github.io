@@ -9,7 +9,8 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
 
 ### World and history
 - **World generation of a living world** (`WorldBuilder`, `SiteFinder`): on a new world the mod surveys terrain from
-  generator noise (no chunk generation), picks sites by flatness, water and biome, and creates 7 established
+  generator noise (no chunk generation), picks sites by flatness, water and biome (looking further out, ring by ring,
+  when a sea-heavy seed offers too few dry sites near spawn), and creates 7 established
   settlements grouped into realms, 2 small camps of settlers who start with only tents, 2 outlaw bands, and 3 ruins
   of lost kingdoms. Settlements have backdated founding years; realms have rulers, heirs, predecessors and one
   remembered war. Typical result: ~190-210 people, 6 realms (incl. outlaw bands).
@@ -188,8 +189,8 @@ bring-your-own-key AI dialogue that only rephrases (never decides).
 | Dedicated server scenario (RCON, fresh hardcore world, watchdog on): boot; world history; invariants; observed settlement materializes, bodies spawn, pre-existing buildings raised; invariants with bodies (one body per person); **tick time with a town embodied**; **cost of a simulated day**; 4 simulated days; a physical raid; save; **restart**; identical people/death/settlement counts; invariants after reload; no mod errors in logs | `python3 -I tools/test/server_scenario.py` | **17/17 pass** (runs 11, 12 and 13; run13 on the final code). Run10 failed 3/17 and caught a real bug (people getting a second body when chunks load asynchronously), fixed in run11. |
 | Performance on this container (4 vCPU Xeon 2.8 GHz, no GPU), dedicated server, one town of 24 embodied people | scenario + `/longnight admin perf` | average tick **3.2-4.2 ms** over runs 11-13 (P95 7-13 ms, P99 10-18 ms; 20 TPS needs < 50); longnight's share 1.1-2.1 ms (citizens 0.05-0.09 ms each, world handler 0.02 ms). Before rationing path requests (run9): 10.3 ms, citizens 0.33 ms each. **Worst single longnight tick: 92 ms** (run13), down from 6.9 s when a town was first raised (it read blocks in chunks that were still generating; found with the slow-tick log and stack sampling, fixed). A simulated day of the whole world (~200 people, 14 places): 0.06-0.18 s. |
 | Headless dev client (Xvfb + Mesa llvmpipe GL 4.5, real Minecraft client with longnight only): loads the scenario's saved world, flies to the largest settlement, waits for it to materialize, screenshots day/street/person/night | `xvfb-run -a ./gradlew runClientAutoshot` | an Eldrin town materialized (36 bodies, 38 buildings); screenshots `tools/test/screenshots/dev-client-*.png` |
-| **Full modpack + longnight, dedicated server** (performance preset, Tectonic+Terralith terrain, watchdog on) | `tools/pack/server_test.py --with-longnight yes` | **PASS**: 40 mod ids loaded, 0 ERROR lines, 0 exceptions; world history (14 places, 219 people, 8 realms) written in the background in 38 s while the server stayed responsive; `VALIDATE OK` |
-| **Full modpack + longnight, real client** (installed from the built .mrpack like a launcher; Xvfb + Mesa software GL) | `LONGNIGHT_AUTOSHOT=1 tools/pack/client_test.py --mrpack ...` | Joined the world, a 39-building Dunmar town materialized, screenshots in `tools/test/screenshots/fullpack-*.png`; 0 fatal, 2 known-cosmetic ERROR lines (GeckoLib animation, Xaero's offline version check). The harness marked the first run FAIL only because the autopilot quit the game early (fixed: it now stays running under the harness). |
+| **Full modpack + longnight, dedicated server** (performance preset, Tectonic+Terralith terrain, watchdog on) | `tools/pack/server_test.py --with-longnight yes` | **PASS** (three runs, final release included): 40 mod ids loaded, 0 ERROR lines, 0 exceptions; world history (14 places, ~215 people, 8-9 realms) written in the background in 38-52 s while the server stayed responsive; `VALIDATE OK`. One random seed (325732621701581716, mostly sea) first gave only 4 settlements; after the survey fix the same seed gives 14 settlements, 214 people, 9 realms. |
+| **Full modpack + longnight, real client** (installed from the built .mrpack like a launcher; Xvfb + Mesa software GL) | `LONGNIGHT_AUTOSHOT=1 tools/pack/client_test.py --mrpack ...` | **PASS** (three runs): joined the world; a 39-building Dunmar town among Terralith giant spruces and a 32-building Skrell town on a mangrove coast materialized with 29-35 people; screenshots in `tools/test/screenshots/fullpack-*.png` and `fullpack-skrell-*.png`; 0 fatal, 2 known-cosmetic ERROR lines (GeckoLib animation, Xaero's offline version check). The integrated server shares 4 vCPUs with software rendering here, so it runs slower than on a PC with a GPU. |
 | Modpack without longnight: both presets boot a dedicated server and a client | `tools/pack/server_test.py`, `client_test.py` | PASS, see [modpack/VERIFICATION.md](../modpack/VERIFICATION.md) |
 
 Tests **not** possible here: real-time human play, multiplayer with several real players, performance on your
@@ -205,6 +206,8 @@ hardware (this container has no GPU: rendering used Mesa software GL), and long 
   and what notice-board contracts ask players for.
 - A new world's history is written in the background after the server starts (~15 s vanilla terrain, ~40 s with
   Tectonic/Terralith); players who join meanwhile are told so and greeted when it is ready.
+- On a sea-heavy seed the survey may reach ~4,000 blocks from spawn to find enough sites, so settlements can be far
+  apart (roads only link neighbours within 1,400 blocks) and the first world takes up to a minute to write.
 - Settlements in dense forests (e.g. Terralith giant-spruce taiga) keep the trees between their plots until
   lumberjacks fell them, so such towns look very wooded.
 - Sound engine errors in the test logs come from the container having no audio device.
