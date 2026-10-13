@@ -2,3 +2,34 @@ PASS server boots with longnight loaded - 30s
 > longnight admin status
 [longnight] day=-9223372036854775808 people alive=0 dead=0 settlements=0 outlawCamps=0 ruins=0 realms=0 wars=0 caravans=0 news=0 bodies=0 nightStage=0
 
+history ready after 15s: [longnight] day=0 people alive=196 dead=0 settlements=9 outlawCamps=2 ruins=3 realms=8 wars=0 caravans=0 news=7 bodies=0 nightStage=0
+
+PASS world history generated - [longnight] day=0 people alive=196 dead=0 settlements=9 outlawCamps=2 ruins=3 realms=8 wars=0 caravans=0 news=7 bodies=0 nightStage=0
+
+> longnight admin list
+[longnight] SETTLEMENT VILLAGE Ondoano pop=24 buildings=8/8 food=329 at -578 65 948 
+[longnight] SETTLEMENT VILLAGE Brinestrand pop=24 buildings=33/33 food=329 at -980 65 -659 
+[longnight] SETTLEMENT VILLAGE Faelorra pop=26 buildings=33/33 food=356 at -834 67 -163 
+[longnight] SETTLEMENT VILLAGE Cressmere pop=26 buildings=34/34 food=356 at -1168 66 -111 
+[longnight] SETTLEMENT VILLAGE Ondrith pop=17 buildings=26/26 food=233 at -557 69 39 
+[longnight] SETTLEMENT VILLAGE Taerorin pop=35 buildings=40/40 food=480 at -928 68 609 
+[longnight] SETTLEMENT VILLAGE Ysthavaine pop=22 buildings=31/31 food=301 at 227 71 406 
+[longnight] SETTLEMENT CAMP The Singing Spring pop=7 buildings=1/1 food=34 at 796 68 -619 
+[longnight] SETTLEMENT CAMP Oxcart Camp pop=6 buildings=1/1 food=29 at -355 71 -194 
+[longnight] BANDIT_CAMP CAMP First Well pop=4 buildings=1/1 food=21 at 159 120 -970 
+[longnight] BANDIT_CAMP CAMP War-Fire Camp pop=5 buildings=1/1 food=14 at -496 67 -606 
+[longnight] RUIN CAMP Morrowgate pop=0 buildings=0/4 food=0 at -866 67 403 
+[longnight] RUIN CAMP Old Corrow pop=0 buildings=0/4 food=0 at -630 68 496 
+[longnight] RUIN CAMP Aelmarch pop=0 buildings=0/4 food=0 at 623 89 -268 
+
+> longnight admin validate
+[longnight] VALIDATE OK people=196 settlements=14
+
+PASS invariants hold after generation
+PASS at least one living settlement - ['Ondoano', 'Brinestrand', 'Faelorra', 'Cressmere', 'Ondrith', 'Taerorin', 'Ysthavaine', 'The Singing Spring', 'Oxcart Camp']
+> longnight admin observe Ondoano   [1.6 s: the server thread was busy]
+[longnight] observing Ondoano
+
+> time set 1000
+Set the time to 1000
+
