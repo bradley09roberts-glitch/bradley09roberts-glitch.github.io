@@ -31,9 +31,17 @@ import java.util.List;
 /** Server-side hit resolution shared by players, NPCs, weapons, styles, Haki and fruits. */
 public final class Hits {
 
-    /** Parameters of one hit. */
+    /**
+     * Parameters of one hit. {@code penetrating} skips the line-of-effect check (see {@link Cover}); it is reserved for
+     * the narrow exceptions listed in OVERHAUL_AUDIT.md.
+     */
     public record Info(Element element, float knockback, float poiseDamage, int stunTicks, boolean imbued, boolean seastone,
-                       boolean unblockable, String reaction) {
+                       boolean unblockable, String reaction, boolean penetrating) {
+        public Info(Element element, float knockback, float poiseDamage, int stunTicks, boolean imbued, boolean seastone,
+                    boolean unblockable, String reaction) {
+            this(element, knockback, poiseDamage, stunTicks, imbued, seastone, unblockable, reaction, false);
+        }
+
         public static Info physical(float knockback) {
             return new Info(Element.PHYSICAL, knockback, 12, 0, false, false, false, "hit");
         }
@@ -43,32 +51,67 @@ public final class Hits {
         }
 
         public Info withStun(int ticks) {
-            return new Info(element, knockback, poiseDamage, ticks, imbued, seastone, unblockable, reaction);
+            return new Info(element, knockback, poiseDamage, ticks, imbued, seastone, unblockable, reaction, penetrating);
         }
 
         public Info withPoise(float p) {
-            return new Info(element, knockback, p, stunTicks, imbued, seastone, unblockable, reaction);
+            return new Info(element, knockback, p, stunTicks, imbued, seastone, unblockable, reaction, penetrating);
         }
 
         public Info imbue(boolean b) {
-            return new Info(element, knockback, poiseDamage, stunTicks, b, seastone, unblockable, reaction);
+            return new Info(element, knockback, poiseDamage, stunTicks, b, seastone, unblockable, reaction, penetrating);
         }
 
         public Info asUnblockable() {
-            return new Info(element, knockback, poiseDamage, stunTicks, imbued, seastone, true, reaction);
+            return new Info(element, knockback, poiseDamage, stunTicks, imbued, seastone, true, reaction, penetrating);
         }
 
         public Info asSeastone() {
-            return new Info(element, knockback, poiseDamage, stunTicks, imbued, true, unblockable, reaction);
+            return new Info(element, knockback, poiseDamage, stunTicks, imbued, true, unblockable, reaction, penetrating);
+        }
+
+        /** Works through walls by design (a documented exception to line of effect). */
+        public Info asPenetrating() {
+            return new Info(element, knockback, poiseDamage, stunTicks, imbued, seastone, unblockable, reaction, true);
         }
     }
 
-    public enum Result { HIT, BLOCKED, PARRIED, DODGED, INTANGIBLE, IGNORED }
+    /** {@code COVERED}: something solid stood between the blow and every part of the victim. */
+    /** Set while a boss's ground-marked (announced) attack or a visible hazard resolves: those may hit harder. */
+    private static final ThreadLocal<Boolean> ANNOUNCED = ThreadLocal.withInitial(() -> false);
+
+    public static boolean announced() {
+        return ANNOUNCED.get();
+    }
+
+    /** Resolve hits as an announced attack (boss ground markers, hazard zones). */
+    public static Result announced(java.util.function.Supplier<Result> body) {
+        boolean prev = ANNOUNCED.get();
+        ANNOUNCED.set(true);
+        try {
+            return body.get();
+        } finally {
+            ANNOUNCED.set(prev);
+        }
+    }
+
+    public enum Result { HIT, BLOCKED, PARRIED, DODGED, INTANGIBLE, IGNORED, COVERED }
 
     /** Base physical power of an entity (its attack damage attribute). */
     public static float power(LivingEntity e) {
+        if (e instanceof GLNpc n) return com.grandline.balance.Tuning.npcPower(n); // NPC blows come from the central tuning
         var inst = e.getAttribute(Attributes.ATTACK_DAMAGE);
-        return inst == null ? 2f : (float) inst.getValue();
+        float p = inst == null ? 2f : (float) inst.getValue();
+        if (e instanceof Player pl && unarmedFighter(pl)) p += com.grandline.balance.Tuning.UNARMED_BONUS; // trained fists count as a weapon
+        return p;
+    }
+
+    /** Bare hands (or a non-weapon item) with an unarmed fighting style. */
+    private static boolean unarmedFighter(Player p) {
+        var main = p.getMainHandItem();
+        if (CombatManager.weaponOf(main) != null) return false;
+        var st = com.grandline.combat.style.FightingStyles.get(Characters.get(p).activeStyle);
+        return st == null || st.unarmed();
     }
 
     /** Scaling for abilities: level and stats for players, tier for NPCs. */
@@ -77,7 +120,7 @@ public final class Hits {
             CharacterData d = Characters.get(p);
             return 1f + d.level * 0.03f;
         }
-        if (e instanceof GLNpc npc) return npc.powerScale();
+        if (e instanceof GLNpc npc) return com.grandline.balance.Tuning.npcTechniquePower(npc);
         return 1f;
     }
 
@@ -85,6 +128,10 @@ public final class Hits {
         if (!(attacker.level() instanceof ServerLevel level)) return Result.IGNORED;
         if (victim == attacker || !victim.isAlive() || victim.isInvulnerable()) return Result.IGNORED;
         if (!hostileTo(attacker, victim)) return Result.IGNORED;
+        if (!info.penetrating() && !Cover.lineOfEffect(attacker, victim)) {
+            coverFeedback(level, attacker, victim);
+            return Result.COVERED;
+        }
         long now = level.getGameTime();
         CombatState vs = CombatState.of(victim);
         Vec3 vp = victim.position();
@@ -153,18 +200,41 @@ public final class Hits {
         applyDamage(level, attacker, victim, damage, info);
         knockback(attacker, victim, info.knockback());
         // poise & stagger
+        // poise & stagger: a stagger is followed by a short window in which the victim cannot be staggered again, and a
+        // player is never held for more than 1.5 s by one blow (2.5 s by a boss's announced attack): no stun-locks
         vs.poise -= info.poiseDamage();
-        if (vs.poise <= 0 || info.stunTicks() > 0) {
+        boolean canStagger = now >= vs.staggerImmuneUntil;
+        if (canStagger && (vs.poise <= 0 || info.stunTicks() > 0)) {
             int stun = Math.max(info.stunTicks(), vs.poise <= 0 ? 24 : 0);
+            if (victim instanceof Player) stun = Math.min(stun, announced() ? 50 : 30);
             vs.poise = 60;
             vs.staggeredUntil = now + stun;
+            vs.staggerImmuneUntil = vs.staggeredUntil + (victim instanceof Player || victim instanceof GLNpc gn && com.grandline.npc.crew.CrewManager.captainOf(gn) != null ? 40 : 20);
             victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, stun, 4, false, false));
             GLNetwork.anim(victim, "staggered");
         } else {
+            if (vs.poise <= 0) vs.poise = 20;
             GLNetwork.anim(victim, info.reaction().equals("hit") ? hitReaction(attacker, victim) : info.reaction());
         }
         GLNetwork.fx(victim, "hit_" + info.element().name().toLowerCase(java.util.Locale.ROOT), vp.x, vp.y + victim.getBbHeight() * 0.6, vp.z, damage, attackerHaki ? 1 : 0, 0);
         return Result.HIT;
+    }
+
+    private static final java.util.Map<java.util.UUID, Long> COVER_MSG = new java.util.HashMap<>();
+
+    /** A spark where the blow met the wall, and a short note for a player who swung into cover. */
+    private static void coverFeedback(ServerLevel level, LivingEntity attacker, LivingEntity victim) {
+        Vec3 at = Cover.obstruction(attacker, victim);
+        if (at != null) GLNetwork.fx(attacker, "cover_spark", at.x, at.y, at.z, 0, 0, 0);
+        if (attacker instanceof ServerPlayer sp) {
+            long now = level.getGameTime();
+            Long last = COVER_MSG.get(sp.getUUID());
+            if (last == null || now - last > 40) {
+                COVER_MSG.put(sp.getUUID(), now);
+                sp.displayClientMessage(net.minecraft.network.chat.Component.translatable("grandline.combat.covered")
+                        .withStyle(net.minecraft.ChatFormatting.GRAY), true);
+            }
+        }
     }
 
     private static void applyDamage(ServerLevel level, LivingEntity attacker, LivingEntity victim, float damage, Info info) {
@@ -250,6 +320,11 @@ public final class Hits {
 
     // ------------------------------------------------------------------ target selection
 
+    /**
+     * Melee and close techniques: living things within reach in front of the user, nearest first. Reach is measured to
+     * the nearest point of the victim's body (so big foes are as easy to reach as small ones) and only victims with
+     * some part of their body in the open from the user's eyes or body count (see {@link Cover}).
+     */
     public static List<LivingEntity> cone(LivingEntity user, double range, double arcDegrees) {
         Vec3 eye = user.getEyePosition();
         Vec3 look = user.getLookAngle();
@@ -258,44 +333,67 @@ public final class Hits {
         AABB box = user.getBoundingBox().inflate(reach);
         List<LivingEntity> out = new ArrayList<>();
         for (LivingEntity e : user.level().getEntitiesOfClass(LivingEntity.class, box, e -> e != user && e.isAlive() && !e.isSpectator())) {
-            Vec3 c = e.getBoundingBox().getCenter();
-            Vec3 to = c.subtract(eye);
-            double dist = to.length() - e.getBbWidth() * 0.5;
-            if (dist > reach) continue;
-            Vec3 dir = to.normalize();
-            if (dist > 1.2 && dir.dot(look) < cos) continue;
-            out.add(e);
+            if (inCone(eye, look, cos, reach, e.getBoundingBox()) && Cover.reachable(user, e)) out.add(e);
         }
-        addPartOwners(user, box, out, p -> {
-            Vec3 to = p.getBoundingBox().getCenter().subtract(eye);
-            double dist = to.length() - p.getBbWidth() * 0.5;
-            return dist <= reach && (dist <= 1.2 || to.normalize().dot(look) >= cos);
-        });
+        addPartOwners(user, box, out, p -> inCone(eye, look, cos, reach, p.getBoundingBox()) && Cover.reachable(user, p));
         out.sort(Comparator.comparingDouble(e -> e.distanceToSqr(user)));
+        for (LivingEntity e : out) Cover.markCleared(user, e);
         return out;
     }
 
+    private static boolean inCone(Vec3 eye, Vec3 look, double cos, double reach, AABB b) {
+        Vec3 near = new Vec3(Math.max(b.minX, Math.min(b.maxX, eye.x)), Math.max(b.minY, Math.min(b.maxY, eye.y)), Math.max(b.minZ, Math.min(b.maxZ, eye.z)));
+        double dist = near.distanceTo(eye);
+        if (dist > reach) return false;
+        if (dist <= 1.2) return true;
+        Vec3 toCentre = b.getCenter().subtract(eye).normalize(), toNear = near.subtract(eye).normalize();
+        return toCentre.dot(look) >= cos || toNear.dot(look) >= cos;
+    }
+
+    /** Areas (explosions, shockwaves, zones): living things within a radius that the centre has a clear line to. */
     public static List<LivingEntity> sphere(LivingEntity user, Vec3 center, double radius) {
         AABB box = new AABB(center, center).inflate(radius);
+        Vec3 from = Cover.freeOrigin(user.level(), center, user.getEyePosition());
         List<LivingEntity> out = new ArrayList<>();
         for (LivingEntity e : user.level().getEntitiesOfClass(LivingEntity.class, box, e -> e != user && e.isAlive() && !e.isSpectator())) {
-            if (e.getBoundingBox().getCenter().distanceTo(center) <= radius + e.getBbWidth() * 0.5) out.add(e);
+            if (e.getBoundingBox().getCenter().distanceTo(center) <= radius + e.getBbWidth() * 0.5 && Cover.exposed(user.level(), from, e)) out.add(e);
         }
-        addPartOwners(user, box, out, p -> p.getBoundingBox().getCenter().distanceTo(center) <= radius + p.getBbWidth() * 0.5);
+        addPartOwners(user, box, out, p -> p.getBoundingBox().getCenter().distanceTo(center) <= radius + p.getBbWidth() * 0.5 && Cover.exposed(user.level(), from, p));
+        for (LivingEntity e : out) Cover.markCleared(user, e);
         return out;
     }
 
-    /** Entities along a ray (beam / thrust / dash path). */
+    /**
+     * Entities along a ray (beam / thrust / dash path). The ray stops at the first solid block, and a victim beside the
+     * ray must also be in the open from the nearest point of the ray (wide beams do not curl round corners).
+     */
     public static List<LivingEntity> line(LivingEntity user, Vec3 from, Vec3 dir, double length, double width) {
-        // dir may be an unnormalised displacement (dash start -> end); the line is always exactly `length` long
-        Vec3 to = from.add(dir.normalize().scale(length));
-        AABB box = new AABB(from, to).inflate(width + 1);
+        // dir may be an unnormalised displacement (dash start -> end); the line is at most `length` long
+        Vec3 n = dir.normalize();
+        net.minecraft.world.level.Level level = user.level();
+        Vec3 start = Cover.freeOrigin(level, from, from.add(n));
+        Vec3 to = start.add(n.scale(length));
+        var block = level.clip(new net.minecraft.world.level.ClipContext(start, to, net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                net.minecraft.world.level.ClipContext.Fluid.NONE, net.minecraft.world.phys.shapes.CollisionContext.empty()));
+        if (block.getType() != net.minecraft.world.phys.HitResult.Type.MISS) to = block.getLocation().subtract(n.scale(0.05));
+        final Vec3 end = to;
+        AABB box = new AABB(start, end).inflate(width + 1);
         List<LivingEntity> out = new ArrayList<>();
-        for (LivingEntity e : user.level().getEntitiesOfClass(LivingEntity.class, box, e -> e != user && e.isAlive() && !e.isSpectator())) {
-            if (e.getBoundingBox().inflate(width).clip(from, to).isPresent() || e.getBoundingBox().inflate(width).contains(from)) out.add(e);
+        for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, box, e -> e != user && e.isAlive() && !e.isSpectator())) {
+            if (onLine(level, start, end, width, e.getBoundingBox())) out.add(e);
         }
-        addPartOwners(user, box, out, p -> p.getBoundingBox().inflate(width).clip(from, to).isPresent() || p.getBoundingBox().inflate(width).contains(from));
+        addPartOwners(user, box, out, p -> onLine(level, start, end, width, p.getBoundingBox()));
+        for (LivingEntity e : out) Cover.markCleared(user, e);
         return out;
+    }
+
+    private static boolean onLine(net.minecraft.world.level.Level level, Vec3 a, Vec3 b, double width, AABB body) {
+        AABB wide = body.inflate(width);
+        if (!wide.clip(a, b).isPresent() && !wide.contains(a)) return false;
+        if (body.inflate(0.3).clip(a, b).isPresent() || body.inflate(0.3).contains(a)) return true; // the ray itself meets the body
+        Vec3 c = body.getCenter(), ab = b.subtract(a);
+        double t = ab.lengthSqr() < 1e-6 ? 0 : Math.max(0, Math.min(1, c.subtract(a).dot(ab) / ab.lengthSqr()));
+        return Cover.exposed(level, a.add(ab.scale(t)), body);
     }
 
     /** Multipart creatures (Sea Kings): a body segment inside the area counts as a hit on the creature itself. */

@@ -6,6 +6,7 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public final class GLConfig {
     public static final ModConfigSpec SPEC;
 
+    public static final ModConfigSpec.ConfigValue<String> DIFFICULTY;
     public static final ModConfigSpec.BooleanValue PERMADEATH;
     public static final ModConfigSpec.IntValue KNOCKDOWN_SECONDS;
     public static final ModConfigSpec.DoubleValue CONQUEROR_CHANCE;
@@ -48,6 +49,11 @@ public final class GLConfig {
         MAX_LEVEL = b.defineInRange("maxLevel", 100, 10, 1000);
         XP_MULTIPLIER = b.defineInRange("xpMultiplier", 1.0, 0.0, 100.0);
         MASTERY_MULTIPLIER = b.defineInRange("masteryMultiplier", 1.0, 0.0, 100.0);
+        b.pop();
+        b.push("balance");
+        DIFFICULTY = b.comment("Combat difficulty: adventure (gentler foes, one melee attacker at a time), standard (the intended experience),",
+                        "hard (foes hit harder, have more health and up to three press you at once). Numbers live in com.grandline.balance.Tuning.")
+                .define("difficulty", "standard", v -> v instanceof String s && (s.equalsIgnoreCase("adventure") || s.equalsIgnoreCase("standard") || s.equalsIgnoreCase("hard")));
         b.pop();
         b.push("pvp");
         PVP_DAMAGE_MULTIPLIER = b.defineInRange("pvpDamageMultiplier", 0.6, 0.0, 10.0);

@@ -153,7 +153,7 @@ public final class BossFight {
      * bonus on top), so that a telegraphed blow hurts badly but stays survivable at full health.
      */
     public float strike() {
-        return 3f + boss.tier() * 1.1f;
+        return com.grandline.balance.Tuning.bossStrike(boss);
     }
 
     /** Ticks between two signature attacks. */

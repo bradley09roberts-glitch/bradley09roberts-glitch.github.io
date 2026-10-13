@@ -91,13 +91,9 @@ public class HumanoidNpc extends GLNpc {
                 FruitWorldData.get(sl.getServer()).eaten(fruit, getUUID(), "NPC " + a.id());
             }
         }
-        float hp = a.health() * (1 + (t - 1) * 0.35f);
-        getAttribute(Attributes.MAX_HEALTH).setBaseValue(hp);
-        getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(2 + t * 1.2);
-        getAttribute(Attributes.ARMOR).setBaseValue(a.armor() + t);
+        retune();
         float scale = a.race() == Race.GIANT ? (role.startsWith("giant") ? 4.5f : 2.2f) : a.race() == Race.FISHMAN ? 1.15f : 1f;
         if (a.race() == Race.GIANT || a.race() == Race.FISHMAN) getAttribute(Attributes.SCALE).setBaseValue(scale);
-        setHealth(getMaxHealth());
         if (!a.weapons().isEmpty()) {
             String w = a.weapons().get(r.nextInt(a.weapons().size()));
             Item item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("grandline", w));
@@ -109,6 +105,8 @@ public class HumanoidNpc extends GLNpc {
         setCustomName(NpcNames.nameFor(a, r, home0 == null ? null : home0.zone)); // names flavoured by the island's sea
         setCustomNameVisible(false);
         refreshDimensions();
+        retune();
+        setHealth(getMaxHealth());
     }
 
     @Override

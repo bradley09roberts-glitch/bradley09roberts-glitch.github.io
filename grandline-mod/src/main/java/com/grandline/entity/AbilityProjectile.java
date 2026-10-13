@@ -92,6 +92,12 @@ public class AbilityProjectile extends Projectile {
         entityData.set(SIZE, s);
     }
 
+    /**
+     * Flight is swept: this tick's path is first cut short at the first solid block, then everything the projectile
+     * meets along the remaining segment is hit in order, so fast shots never skip through a wall or a body, and a
+     * piercing shot stops at the wall behind its last victim. Wide projectiles also catch bodies beside the path, but
+     * only those in the open from the path (see {@link com.grandline.combat.Cover}).
+     */
     @Override
     public void tick() {
         super.tick();
@@ -101,15 +107,19 @@ public class AbilityProjectile extends Projectile {
                 impact(null, position());
                 return;
             }
-            HitResult hr = ProjectileUtil.getHitResultOnMoveVector(this, this::canHitEntity);
-            if (hr.getType() != HitResult.Type.MISS) onHit(hr);
-            if (isRemoved()) return;
-            // wide projectiles also sweep nearby entities
-            if (size() > 0.6f) {
-                for (LivingEntity e : level().getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(size() * 0.5), this::canHitEntity)) {
-                    hitEntity(e);
+            Vec3 from = position(), to = from.add(motion);
+            BlockHitResult wall = level().clip(new net.minecraft.world.level.ClipContext(from, to, net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                    net.minecraft.world.level.ClipContext.Fluid.NONE, this));
+            Vec3 end = wall.getType() == HitResult.Type.MISS ? to : wall.getLocation();
+            for (Entity e : struck(from, end)) {
+                if (e instanceof LivingEntity || e instanceof net.neoforged.neoforge.entity.PartEntity<?> || e instanceof com.grandline.ship.ShipPart) {
+                    onHitEntity(new EntityHitResult(e));
                     if (isRemoved()) return;
                 }
+            }
+            if (wall.getType() != HitResult.Type.MISS) {
+                onHitBlock(wall);
+                if (isRemoved()) return;
             }
         }
         if (level().isClientSide && tickCount > 1) com.grandline.client.ClientFx.trail(this, kind(), size());
@@ -118,6 +128,36 @@ public class AbilityProjectile extends Projectile {
         if (gravity != 0) setDeltaMovement(motion.add(0, -gravity, 0));
         if (isInWater() && !kind().startsWith("water")) setDeltaMovement(getDeltaMovement().scale(0.8));
         updateRotation();
+    }
+
+    /** Hit radius: thin shots use the vanilla arrow margin, wide ones half their visual size. */
+    private double radius() {
+        return Math.max(0.3, size() * 0.5);
+    }
+
+    /** Everything this tick's segment meets, nearest first. */
+    private java.util.List<Entity> struck(Vec3 from, Vec3 end) {
+        double r = radius();
+        java.util.List<Entity> out = new java.util.ArrayList<>();
+        java.util.Map<Entity, Double> at = new java.util.HashMap<>();
+        for (Entity e : level().getEntities(this, new net.minecraft.world.phys.AABB(from, end).inflate(r + 1), this::canHitEntity)) {
+            net.minecraft.world.phys.AABB body = e.getBoundingBox().inflate(r);
+            var clip = body.clip(from, end);
+            double d;
+            if (clip.isPresent()) d = clip.get().distanceToSqr(from);
+            else if (body.contains(from)) d = 0;
+            else continue;
+            // a wide shot grazing a body round a corner: the body must be in the open from the path
+            if (r > 0.3 && !e.getBoundingBox().inflate(0.3).clip(from, end).isPresent() && !e.getBoundingBox().inflate(0.3).contains(from)) {
+                Vec3 c = e.getBoundingBox().getCenter(), ab = end.subtract(from);
+                double t = ab.lengthSqr() < 1e-6 ? 0 : Math.max(0, Math.min(1, c.subtract(from).dot(ab) / ab.lengthSqr()));
+                if (!com.grandline.combat.Cover.exposed(level(), from.add(ab.scale(t)), e)) continue;
+            }
+            at.put(e, d);
+            out.add(e);
+        }
+        out.sort(java.util.Comparator.comparingDouble(at::get));
+        return out;
     }
 
     @Override
@@ -147,8 +187,11 @@ public class AbilityProjectile extends Projectile {
     private void hitEntity(LivingEntity le) {
         if (!hitIds.add(le.getId())) return;
         Entity owner = getOwner();
-        if (owner instanceof LivingEntity lo) Hits.hit(lo, le, damage, info);
-        else le.hurt(damageSources().magic(), damage);
+        // the swept flight already proved the path from the muzzle to this body is open
+        if (owner instanceof LivingEntity lo) {
+            com.grandline.combat.Cover.markCleared(lo, le);
+            com.grandline.combat.Cover.from(position(), () -> Hits.hit(lo, le, damage, info));
+        } else le.hurt(damageSources().magic(), damage);
         if (onHit != null) onHit.apply(this, le, position());
         if (!pierce) impact(le, position());
     }
@@ -167,9 +210,16 @@ public class AbilityProjectile extends Projectile {
         if (level() instanceof ServerLevel sl) {
             if (explosion > 0) {
                 Entity owner = getOwner();
+                // the blast spreads from just in front of the wall it struck, and walls shelter those behind them
+                Vec3 back = getDeltaMovement().lengthSqr() > 1e-6 ? getDeltaMovement().normalize().scale(-0.3) : Vec3.ZERO;
+                Vec3 centre = com.grandline.combat.Cover.freeOrigin(sl, pos.add(back), null);
                 for (LivingEntity e : level().getEntitiesOfClass(LivingEntity.class, new net.minecraft.world.phys.AABB(pos, pos).inflate(explosion))) {
-                    if (e == owner || e == hit) continue;
-                    if (owner instanceof LivingEntity lo) Hits.hit(lo, e, damage * 0.7f, info);
+                    if (e == owner || e == hit || !e.isAlive()) continue;
+                    if (!com.grandline.combat.Cover.exposed(sl, centre, e)) continue;
+                    if (owner instanceof LivingEntity lo) {
+                        com.grandline.combat.Cover.markCleared(lo, e);
+                        Hits.hit(lo, e, damage * 0.7f, info);
+                    }
                 }
                 GLNetwork.fx(this, "explosion", pos.x, pos.y, pos.z, explosion, 0, 0);
                 sl.playSound(null, BlockPos.containing(pos), net.minecraft.sounds.SoundEvents.GENERIC_EXPLODE.value(), net.minecraft.sounds.SoundSource.PLAYERS, 1f, 1f);

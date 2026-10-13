@@ -23,6 +23,8 @@ public final class CombatState {
     public long blockStart = -100;
     public long iframesUntil = 0;
     public long staggeredUntil = 0;
+    /** After a stagger ends the victim cannot be staggered again until this tick (no stun-locks). */
+    public long staggerImmuneUntil = 0;
     public float poise = 100;
     public boolean combatMode = false;
     public boolean gliding = false;

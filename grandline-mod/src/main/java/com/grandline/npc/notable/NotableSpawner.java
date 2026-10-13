@@ -154,10 +154,8 @@ public final class NotableSpawner {
     // ------------------------------------------------------------------ setup helpers
 
     static void applyStats(HumanoidNpc npc, Notable n) {
-        setBase(npc.getAttribute(Attributes.MAX_HEALTH), Math.min(1024, n.maxHealth()));
-        setBase(npc.getAttribute(Attributes.ATTACK_DAMAGE), 2 + n.tier() * 1.4);
-        setBase(npc.getAttribute(Attributes.ARMOR), Math.min(30, 2 + n.tier() * 1.6));
         if (Math.abs(n.scale() - 1f) > 1e-3) setBase(npc.getAttribute(Attributes.SCALE), n.scale());
+        npc.retune(); // health, armour and blows from the central tuning (com.grandline.balance.Tuning)
         npc.setHealth(npc.getMaxHealth());
         npc.refreshDimensions();
     }

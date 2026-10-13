@@ -95,7 +95,8 @@ public final class BossArena {
             for (LivingEntity e : f.inBox(new AABB(center, center).inflate(reach, 8, reach))) {
                 if (!f.isFoe(e) || !catches(e, now)) continue;
                 if (power > 0 && pulses % 2 == 0) {
-                    Hits.hit(f.boss, e, f.strike() * power * f.damageScale(), new Hits.Info(element, 0f, 6, 0, imbued, false, true, "hit"));
+                    // a hazard hurts whoever stands in it, walls or not (a documented line-of-effect exception)
+                    Hits.announced(() -> Hits.hit(f.boss, e, f.strike() * power * f.damageScale(), new Hits.Info(element, 0f, 6, 0, imbued, false, true, "hit").asPenetrating()));
                 }
                 for (MobEffectInstance m : effects) e.addEffect(new MobEffectInstance(m));
                 if (pull > 0) PowerKit.pull(e, center, pull, 0);

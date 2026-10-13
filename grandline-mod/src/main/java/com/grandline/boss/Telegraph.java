@@ -196,7 +196,8 @@ public final class Telegraph {
         for (LivingEntity e : candidates) {
             if (move.power <= 0) break; // the marker announces a reused power, which does its own hitting below
             if (!fight.isFoe(e) || !contains(e)) continue;
-            Hits.Result r = Hits.hit(boss, e, dmg, info);
+            // the marker showed where it lands; the blow comes from the marked area itself (see originFor)
+            Hits.Result r = Hits.announced(() -> com.grandline.combat.Cover.from(originFor(e), () -> Hits.hit(boss, e, dmg, info)));
             results.put(e, r);
             if (r != Hits.Result.HIT && r != Hits.Result.BLOCKED) continue;
             Vec3 from = pushFrom(e);
@@ -209,6 +210,22 @@ public final class Telegraph {
         if (!move.reuse.isEmpty()) BossManager.runAbility(fight, move.reuse, fight.boss.getTarget());
         if (move.after != null) move.after.apply(fight, this);
         fight.onResolved(this);
+    }
+
+    /**
+     * Where a marked attack comes from, for line of effect: the nearest marked circle (a little above the ground) for
+     * ground eruptions and falling strikes, the boss's body for sweeps, rings, cones and lines. A wall between that
+     * point and the target shelters it, exactly as for a player's blows.
+     */
+    private Vec3 originFor(LivingEntity e) {
+        return switch (move.shape) {
+            case CIRCLE, RAIN, CROSS -> {
+                Vec3 best = centers.get(0);
+                for (Vec3 c : centers) if (flatDist(e.position(), c) < flatDist(e.position(), best)) best = c;
+                yield best.add(0, 1.0, 0);
+            }
+            default -> origin.add(0, Math.max(1.0, fight.boss.getBbHeight() * 0.5), 0);
+        };
     }
 
     /** Knockback direction: away from the marker's centre for ground circles, away from the boss otherwise. */

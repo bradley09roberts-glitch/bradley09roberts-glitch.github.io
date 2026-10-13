@@ -219,6 +219,10 @@ public final class ClientFx {
                 burst(l, ParticleTypes.CRIT, x, y, z, 10, 0.4, 0.6);
             }
             case "block" -> burst(l, ParticleTypes.CRIT, x, y, z, 6, 0.4, 0.3);
+            case "cover_spark" -> { // a blow stopped by a wall: chips off the wall where it struck
+                burst(l, ParticleTypes.CRIT, x, y, z, 4, 0.15, 0.15);
+                burst(l, ParticleTypes.SMOKE, x, y, z, 3, 0.1, 0.02);
+            }
             case "guard_break" -> l.addParticle(ParticleTypes.EXPLOSION, x, y, z, 0, 0, 0);
             case "explosion" -> {
                 l.addParticle(a > 4 ? ParticleTypes.EXPLOSION_EMITTER : ParticleTypes.EXPLOSION, x, y, z, 0, 0, 0);

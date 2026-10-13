@@ -110,9 +110,10 @@ public final class CharacterEvents {
             }
             return;
         }
-        // foes from the gentle seas (tier 1-3 NPCs) hit softer, so a new character can take on a bandit gang
-        if (src.getEntity() instanceof com.grandline.npc.GLNpc npc && npc.tier() <= 3)
-            e.setAmount(e.getAmount() * (npc.tier() <= 1 ? 0.45f : npc.tier() == 2 ? 0.65f : 0.85f));
+        // foes' blows: the difficulty setting, then the per-blow cap of the attacker's rank (com.grandline.balance.Tuning),
+        // so nothing that was not announced by a boss's ground marker takes more than a set share of the player's health
+        if (src.getEntity() instanceof LivingEntity attacker && attacker != sp)
+            e.setAmount(com.grandline.balance.Tuning.incomingToPlayer(sp, attacker, e.getAmount(), com.grandline.combat.Hits.announced()));
         float health = sp.getHealth() + sp.getAbsorptionAmount();
         if (e.getAmount() >= health && Knockdown.canBeKnockedDown(sp, src)) {
             e.setCanceled(true);

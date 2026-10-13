@@ -172,7 +172,7 @@ public final class ClientEvents {
             Vec3 to = le.getBoundingBox().getCenter().subtract(eye);
             double dist = to.length();
             double dot = to.normalize().dot(look);
-            if (dot < 0.8 || dist > 24) continue;
+            if (dot < 0.8 || dist > 24 || !com.grandline.combat.Cover.canSee(p, le)) continue; // never through walls
             double score = dist * (2 - dot);
             if (score < bestScore) {
                 bestScore = score;
@@ -185,12 +185,17 @@ public final class ClientEvents {
         }
     }
 
-    /** Soft lock-on: ease the camera toward the locked target. */
+    private static int lockHidden;
+
+    /** Soft lock-on: ease the camera toward the locked target; the lock drops a second after the target goes out of sight. */
     private static void softLock(Minecraft mc, LocalPlayer p) {
         if (ClientState.lockTarget < 0) return;
         Entity t = mc.level.getEntity(ClientState.lockTarget);
-        if (!(t instanceof LivingEntity le) || !le.isAlive() || le.distanceTo(p) > 32) {
+        if (t instanceof LivingEntity le0 && ClientState.clientTicks % 5 == 0) lockHidden = com.grandline.combat.Cover.canSee(p, le0) ? 0 : lockHidden + 5;
+        if (!(t instanceof LivingEntity le) || !le.isAlive() || le.distanceTo(p) > 32 || lockHidden >= 20) {
             ClientState.lockTarget = -1;
+            lockHidden = 0;
+            send(CombatInput.LOCK, 0, 0, -1, 0);
             return;
         }
         Vec3 to = le.getBoundingBox().getCenter().subtract(p.getEyePosition());

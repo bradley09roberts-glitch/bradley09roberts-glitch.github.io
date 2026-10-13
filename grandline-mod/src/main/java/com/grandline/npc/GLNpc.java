@@ -42,6 +42,8 @@ public abstract class GLNpc extends PathfinderMob {
     String markerKey = "";
     protected String notableId = "";
     protected int hakiObs, hakiArm, hakiCoq;
+    /** Version of the central tuning this NPC's health and armour were set with (older saves are re-tuned on load). */
+    protected int balance;
 
     protected GLNpc(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -79,8 +81,9 @@ public abstract class GLNpc extends PathfinderMob {
     public boolean flag(byte f) { return (entityData.get(FLAGS) & f) != 0; }
     public void setFlag(byte f, boolean on) { entityData.set(FLAGS, (byte) (on ? entityData.get(FLAGS) | f : entityData.get(FLAGS) & ~f)); }
 
+    /** Ability scale for this NPC (from the central tuning). */
     public float powerScale() {
-        return 1f + (tier() - 1) * 0.22f;
+        return com.grandline.balance.Tuning.npcTechniquePower(this);
     }
 
     public boolean usesArmament() {
@@ -126,8 +129,18 @@ public abstract class GLNpc extends PathfinderMob {
         return 0;
     }
 
+    /** Someone this NPC gave up chasing (lost sight, too far from home, could not reach): left alone for a while. */
+    private int calmId = -1;
+    private long calmUntil;
+
+    public void calmTowards(LivingEntity e, int ticks) {
+        calmId = e.getId();
+        calmUntil = level().getGameTime() + ticks;
+    }
+
     public boolean isHostileTo(LivingEntity e) {
         if (e == this) return false;
+        if (e.getId() == calmId && level().getGameTime() < calmUntil && getLastHurtByMob() != e) return false;
         if (e instanceof net.minecraft.server.level.ServerPlayer sp && PrisonSystem.isJailed(sp)) return false;
         // outlaws who just robbed a player leave them be for a while (unless the player starts a new fight)
         if ((faction == Faction.WILD || faction == Faction.PIRATE) && e instanceof net.minecraft.server.level.ServerPlayer sp
@@ -187,12 +200,35 @@ public abstract class GLNpc extends PathfinderMob {
         if (p instanceof ServerPlayer sp) NpcOutcomes.npcArrested(this, sp);
     }
 
+    // ------------------------------------------------------------------ balance
+
+    /**
+     * Set health and armour from the central tuning (com.grandline.balance.Tuning) for this NPC's encounter tier and
+     * rank, keeping its current share of health. Blows need nothing stored: Hits.power reads the tuning directly.
+     */
+    public void retune() {
+        int tier = com.grandline.balance.Tuning.encounterTier(this);
+        var rank = com.grandline.balance.Tuning.rank(this);
+        float hp = notableId.isEmpty() ? com.grandline.balance.Tuning.npcHealth(archetype(), tier, rank)
+                : com.grandline.balance.Tuning.notableHealth(tier, rank);
+        float share = getMaxHealth() > 0 ? getHealth() / getMaxHealth() : 1f;
+        var maxHp = getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+        if (maxHp != null) maxHp.setBaseValue(Math.min(1024, hp));
+        var armor = getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR);
+        if (armor != null) armor.setBaseValue(Math.min(20, archetype().armor() * 0.5 + tier));
+        var atk = getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
+        if (atk != null) atk.setBaseValue(com.grandline.balance.Tuning.npcPower(this));
+        setHealth(Math.max(1f, getMaxHealth() * Math.min(1f, share)));
+        balance = com.grandline.balance.Tuning.VERSION;
+    }
+
     // ------------------------------------------------------------------ ticking
 
     @Override
     public void aiStep() {
         super.aiStep();
         if (level().isClientSide) return;
+        if (balance < com.grandline.balance.Tuning.VERSION && tickCount > 2) retune(); // saves from before the overhaul
         if (stamina < 100 + tier() * 10) stamina += 0.5f;
         com.grandline.fruit.FruitRules.tick(this);
         if (this instanceof HumanoidNpc) com.grandline.race.RacePowers.tickNpc(this); // swim speed and racial passives (Fish-Men, Sky People...)
@@ -222,6 +258,7 @@ public abstract class GLNpc extends PathfinderMob {
         t.putInt("HakiArm", hakiArm);
         t.putInt("HakiCoq", hakiCoq);
         t.putByte("Flags", entityData.get(FLAGS));
+        t.putInt("Balance", balance);
     }
 
     @Override
@@ -242,6 +279,7 @@ public abstract class GLNpc extends PathfinderMob {
         hakiObs = t.getInt("HakiObs");
         hakiArm = t.getInt("HakiArm");
         hakiCoq = t.getInt("HakiCoq");
+        balance = t.getInt("Balance");
     }
 
     @Nullable

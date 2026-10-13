@@ -56,7 +56,8 @@ public final class CombatManager {
                 Ability a = id == null ? null : Abilities.get(id);
                 if (a == null) return;
                 Entity t = in.x() >= 0 ? sp.level().getEntity((int) in.x()) : null;
-                useAbility(sp, a, t instanceof LivingEntity le && le.distanceTo(sp) < 64 ? le : null);
+                // a client-chosen target only counts when the player could actually see and reach it
+                useAbility(sp, a, t instanceof LivingEntity le && le.distanceTo(sp) < 64 && Cover.canSee(sp, le) ? le : null);
             }
             case CombatInput.DODGE -> dodge(sp, in.x(), in.z());
             case CombatInput.BLOCK -> {
@@ -68,7 +69,10 @@ public final class CombatManager {
             case CombatInput.GLIDE -> {
                 s.gliding = in.arg0() != 0 && canGlide(d);
             }
-            case CombatInput.LOCK -> s.lockTarget = (int) in.x();
+            case CombatInput.LOCK -> {
+                Entity t = in.x() >= 0 ? sp.level().getEntity((int) in.x()) : null;
+                s.lockTarget = t instanceof LivingEntity le && Cover.canSee(sp, le) ? le.getId() : -1;
+            }
             case CombatInput.TRANSFORM -> {
                 if (d.fruit != null && com.grandline.fruit.DevilFruits.get(d.fruit) != null && com.grandline.fruit.DevilFruits.get(d.fruit).type.isZoan()) Zoan.cycle(sp);
             }
@@ -149,13 +153,10 @@ public final class CombatManager {
         GLNetwork.anim(user, st.anim(), speed);
         if (st.lunge() > 0) FruitKit.impulse(user, user.getLookAngle().multiply(1, 0, 1).normalize().scale(st.lunge() * 0.6), false);
         String mastery = masteryKey(user, wc);
-        int masteryLvl = user instanceof Player p ? Characters.get(p).mastery(mastery) : (user instanceof GLNpc n ? n.tier() * 8 : 0);
         s.schedule(now + windup, () -> {
             if (!user.isAlive()) return;
             boolean imbued = Haki.armamentActive(user) || s.hasBuff("infusion");
-            float base = Hits.power(user) * st.damage() * chargeMult * (1 + masteryLvl * 0.006f);
-            if (s.hasBuff("diable_jambe")) base *= 1.25f;
-            if (s.hasBuff("infusion")) base *= 1.3f;
+            float base = blowDamage(user, st, chargeMult);
             double reach = st.range() * Math.max(0.6, user.getScale()) + (user instanceof Player p ? Characters.get(p).race.reachBonus * 0.5 : 0);
             Element el = s.hasBuff("diable_jambe") ? Element.FIRE : (st.element() == Element.PHYSICAL && wc != null ? wc.element : st.element());
             Hits.Info info = new Hits.Info(el, st.knockback() * (heavy ? 1.4f : 1f), st.poise() * (heavy ? 1.5f : 1f), 0, imbued, isSeastone(user.getMainHandItem()), false, "hit");
@@ -174,6 +175,18 @@ public final class CombatManager {
             level.playSound(null, user.blockPosition(), hits > 0 ? SoundEvents.PLAYER_ATTACK_STRONG : SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.7f, 0.9f + user.getRandom().nextFloat() * 0.3f);
         });
         return true;
+    }
+
+    /** Damage of one melee strike before the victim's defences (also used by the balance measurements). */
+    public static float blowDamage(LivingEntity user, Strike st, float chargeMult) {
+        WeaponClass wc = weaponOf(user.getMainHandItem());
+        String mastery = masteryKey(user, wc);
+        int masteryLvl = user instanceof Player p ? Characters.get(p).mastery(mastery) : 0; // NPC blows are already set by tier in the central tuning;
+        CombatState s = CombatState.of(user);
+        float base = Hits.power(user) * st.damage() * chargeMult * (1 + masteryLvl * 0.006f);
+        if (s.hasBuff("diable_jambe")) base *= 1.25f;
+        if (s.hasBuff("infusion")) base *= 1.3f;
+        return base;
     }
 
     private static String masteryKey(LivingEntity user, @Nullable WeaponClass wc) {

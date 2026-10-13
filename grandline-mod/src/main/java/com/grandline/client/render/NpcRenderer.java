@@ -24,6 +24,13 @@ public class NpcRenderer extends HumanoidMobRenderer<HumanoidNpc, PlayerModel<Hu
         addLayer(new RaceLayer<>(this, ctx));
     }
 
+    /** Name tags never show through walls: the one under the crosshair, or an always-on one in plain sight. */
+    @Override
+    protected boolean shouldShowName(HumanoidNpc e) {
+        if (!super.shouldShowName(e)) return false;
+        return e == entityRenderDispatcher.crosshairPickEntity || com.grandline.client.NameplateSight.visible(e);
+    }
+
     @Override
     public ResourceLocation getTextureLocation(HumanoidNpc e) {
         return TEX.computeIfAbsent(e.skin(), s -> GrandLine.id("textures/entity/npc/" + s + ".png"));
