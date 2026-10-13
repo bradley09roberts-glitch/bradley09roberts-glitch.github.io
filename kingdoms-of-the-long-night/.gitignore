@@ -10,4 +10,4 @@ mod/out/
 modpack/cache/
 
 # diagnostic probe runs (evidence summarised in docs/NOTES.md)
-tools/test/results/probe-*
+tools/test/results/probe*
