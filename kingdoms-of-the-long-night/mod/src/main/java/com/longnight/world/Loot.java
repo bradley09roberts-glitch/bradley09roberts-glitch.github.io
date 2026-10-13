@@ -37,6 +37,7 @@ public final class Loot {
         for (Content.LoreBook b : Content.LORE.values()) {
             boolean fits = b.cultures().isEmpty() || b.cultures().contains(culture);
             if (!fits && r.nextFloat() > 0.2f) continue;
+            if (b.rarity().equals("starter")) continue;
             int weight = switch (b.rarity()) {
                 case "common" -> 6;
                 case "uncommon" -> 3;

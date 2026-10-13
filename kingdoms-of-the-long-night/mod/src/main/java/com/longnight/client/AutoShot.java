@@ -66,19 +66,31 @@ public final class AutoShot {
             ticks = 0;
         } else if (step == 2 && ticks > 300) {
             shot(mc, "longnight_street");
-            // close-up of a real person
-            var level = server.overworld();
-            var people = level.getEntitiesOfClass(com.longnight.entity.CitizenEntity.class,
-                    new net.minecraft.world.phys.AABB(target.center).inflate(48), c -> !c.isSleeping());
-            if (!people.isEmpty()) {
+            // close-up of a real person, from a spot with open air around the camera
+            server.execute(() -> {
+                var level = server.overworld();
+                var people = level.getEntitiesOfClass(com.longnight.entity.CitizenEntity.class,
+                        new net.minecraft.world.phys.AABB(target.center).inflate(48), c -> !c.isSleeping());
+                if (people.isEmpty()) return;
                 var c = people.get(0);
                 c.brain.pause(400);
                 c.getNavigation().stop();
-                double px = c.getX() + 3, pz = c.getZ() + 3;
+                double px = c.getX() + 3, pz = c.getZ() + 3, py = c.getY() + 0.5;
+                for (int i = 0; i < 8; i++) {
+                    double a = i * Math.PI / 4;
+                    double x = c.getX() + Math.cos(a) * 3, z = c.getZ() + Math.sin(a) * 3;
+                    if (open(level, net.minecraft.core.BlockPos.containing(x, c.getY() + 0.5, z))) {
+                        px = x;
+                        pz = z;
+                        break;
+                    }
+                }
+                py = clearY(level, (int) Math.floor(px), (int) Math.floor(py), (int) Math.floor(pz));
                 float yaw = (float) Math.toDegrees(Math.atan2(-(c.getX() - px), c.getZ() - pz));
-                run(server, String.format(java.util.Locale.ROOT, "tp @a %.1f %.1f %.1f %.1f 15", px, c.getY() + 0.5, pz, yaw));
+                float pitch = (float) Math.toDegrees(Math.atan2(py - c.getY(), 3));
+                run(server, String.format(java.util.Locale.ROOT, "tp @a %.1f %.1f %.1f %.1f %.1f", px, py, pz, yaw, pitch));
                 LongNight.LOG.info("[autoshot] portrait of {}", c.getCustomName() == null ? "?" : c.getCustomName().getString());
-            }
+            });
             step = 7;
             ticks = 0;
         } else if (step == 7 && ticks > 100) {
@@ -124,13 +136,29 @@ public final class AutoShot {
     }
 
     static void view(IntegratedServer server, int dx, int dy, int dz, float yaw, float pitch) {
-        var c = target.center;
-        for (var p : server.getPlayerList().getPlayers()) {
-            p.getAbilities().mayfly = true;
-            p.getAbilities().flying = true; // hover where the camera is put
-            p.onUpdateAbilities();
+        server.execute(() -> {
+            var c = target.center;
+            for (var p : server.getPlayerList().getPlayers()) {
+                p.getAbilities().mayfly = true;
+                p.getAbilities().flying = true; // hover where the camera is put
+                p.onUpdateAbilities();
+            }
+            int y = clearY(server.overworld(), c.getX() + dx, c.getY() + dy, c.getZ() + dz);
+            run(server, String.format("tp @a %d %d %d %.1f %.1f", c.getX() + dx, y, c.getZ() + dz, yaw, pitch));
+        });
+    }
+
+    /** True if a camera standing here would see out: feet and eyes in air, not in a tree or a wall. */
+    static boolean open(net.minecraft.server.level.ServerLevel level, net.minecraft.core.BlockPos p) {
+        return level.getBlockState(p).isAir() && level.getBlockState(p.above()).isAir();
+    }
+
+    /** The lowest height at or above y where the camera is not buried in terrain, a trunk or a roof. */
+    static int clearY(net.minecraft.server.level.ServerLevel level, int x, int y, int z) {
+        for (int i = 0; i < 48; i++) {
+            if (open(level, new net.minecraft.core.BlockPos(x, y + i, z))) return y + i;
         }
-        run(server, String.format("tp @a %d %d %d %.1f %.1f", c.getX() + dx, c.getY() + dy, c.getZ() + dz, yaw, pitch));
+        return y + 48;
     }
 
     static void run(IntegratedServer server, String cmd) {

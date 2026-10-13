@@ -46,3 +46,15 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   materialized (teal roofs, chimney smoke, farm, a citizen). AutoShot fixed to fly (creative falls) + re-aim after materialization.
 - Modpack agent: 37-mod performance / 40-mod rich presets, server+client verified without longnight. Now testing with longnight jar.
 - Design agent writing docs/DESIGN.md + docs/ROADMAP.md.
+- 01:15 BST FULL PACK + longnight server test FAILED: watchdog killed the server (history generation >60 s on the server
+  thread with Tectonic/Terralith noise). My scenario had max-tick-time=-1 which hid it. FIX D12: history is generated on a
+  background thread into a temp WorldSim and merged on the server thread; players joining meanwhile are greeted when ready.
+  Harness now keeps the watchdog on. Re-test: PASS (40 mod ids, 0 errors, history in 38 s in background, VALIDATE OK).
+- Design agent's code review bugs fixed: player realm NPC ruler, ruin loot refill (Building.decayed saved), glass/iron/wool
+  deadlocks, wandering trader (gamerule off at creation), interrupted raids, abandoned settlements -> ruins, 2317 AB calendar.
+- 01:40 BST full pack real client: joined, Dunmar town materialized among Terralith giant spruces (tools/test/screenshots/fullpack-*).
+- 01:50 roads (planned at creation, laid lazily near players, signposts) + embodied caravans (leader + pack mule on the road).
+- 02:10 200-day LongRunTest found: camps deadlocked (no stone/logs/fuel) and zero wars. FIX: hand-gathering until lumber camp/quarry,
+  camp build order, rope/stone instead of iron fittings, war conditions loosened (grudge + advantage). Now ~15 camps grow, 1-2 wars.
+- 02:20 festivals (bible names/months, feasts from stores) + funerals (mourners gather next day); primer book + look-at hint.
+- Test status at 02:30: JUnit 9/9, GameTests 7/7, scenario 15/15 (run7), full-pack server PASS.

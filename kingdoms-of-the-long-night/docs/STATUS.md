@@ -62,7 +62,8 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
   of a player, its real leader appears walking the road with a pack mule (bodies vanish again out of sight).
 - **Roads**: every settlement is linked to its two nearest neighbours; roads are laid lazily as chunks load near
   players (three-wide dirt path over natural ground only, never through claims, water or anything built), with a
-  signpost at each settlement's edge naming the destination and distance.
+  signpost at each settlement's edge naming the destination and distance. Worlds created before roads existed get
+  their roads planned on the next start.
 - **Taxes** from settlements to realms; soldiers cost upkeep; working people earn a little coin.
 
 ### Settlements and construction
@@ -73,6 +74,8 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
   smithy, weavery, tavern, storehouse, granary, market (stalls + bell), shrine and temple (faith-specific altar and
   stained glass), watchtower (ladder, bell), barracks, town hall, school, library, house of healing, graveyard,
   well (with notice board), builder's yard, campsite. Signboards carry names ("The Drowsy Kettle").
+- **Camps bootstrap themselves**: until they have a lumber camp and a quarry, idle hands gather deadwood, fieldstone
+  and kindling; camps build a lumber camp and houses first. (Found by the 200-day test: camps used to stall forever.)
 - **What to build is decided from needs**: housing, food, materials, storage, faith, safety (watchtowers after
   raids), then institutions as the population grows; the ruler's agenda shifts priorities. Tier grows from camp to
   hamlet, village, town and city when population and institutions allow.
@@ -84,6 +87,10 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
   only fell natural trees (trunk on soil, crowned by naturally grown leaves) and replant.
 - Terrain handling: plots are pre-checked from generator noise, terraced foundations on slopes, stone footings on
   shorelines, unusable plots relocate, settlements spread outward when crowded.
+- **Repair**: when a builder has no project, they look for blocks missing from finished buildings (broken by
+  raiders, creepers or players) and walk over to put them back, paying the materials again from the ledger (the
+  block really was lost). If the stores lack them, they say so ("We need materials to mend the tavern"). Distant
+  settlements mend raid damage abstractly for a fifth of the building's bill. Never inside a claim.
 
 ### Life, death and families
 - Daily: friendships and rivalries from compatibility (temperament, faith, culture, kindness), courtship, proposals,
@@ -94,6 +101,12 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
   remember; coins are inherited; offices pass on; the body is removed; a **gravestone** with name, dates, cause,
   faith rite and epitaph is placed in the burial ground, with the faith's mark beside it.
 - Generational pacing is configurable (`daysPerYear`, default 8: one in-game day is one month).
+- **Funerals**: the day after a death, family, friends, the priest and the gravedigger gather at the burial ground
+  around midday ("mourning Aldric").
+- **Festivals**: each faith keeps its holy day in its month (the Lantern Vigil, the Day Without Shadow, Greenvow,
+  Hall Night, the Great Burning ...) and every settlement keeps the Harvest Home in Reaping. A feast uses the
+  stores (a poor town keeps a thin feast), lifts spirits, is remembered, and draws people to the shrine or temple.
+  The Veiled Choir keeps its rites in secret.
 
 ### Politics, threats and war
 - Realms: monarchy, lordship, council, clan, republic, theocracy, outlaw band; rulers' temperaments become agendas
@@ -119,6 +132,9 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
   or heard of (you learn of places by asking for news).
 
 ### Player paths
+- **Onboarding**: a new player gets the Traveller's Journal and *A Traveller's Primer*, a short in-world book that
+  explains talking, trading, contracts, raids, claims, founding and wards. Looking at a person shows their name,
+  trade and current activity on the action bar.
 - Stranger, trader (storehouse market), benefactor (gifts), citizen (`Join` at standing 20), contractor (notice-board
   contracts), bounty hunter (outlaw bounties), land-holder (Boundary Stone), founder and lord of a new settlement
   (Founding Charter + Hearthstone; three settlers arrive; `/longnight plan`, `/longnight rename`).
@@ -146,14 +162,14 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
 - **Diplomacy** is automatic between NPC realms; the player cannot yet negotiate, take titles or serve a ruler.
 - **Player realm**: the founder steers by giving materials and requesting buildings; there are no laws, taxes or
   appointments to set yet.
-- **Religion** affects burial, marriage, shrines/temples and buildings; festivals, pilgrimages and schisms are not
-  simulated yet.
+- **Religion** affects burial, marriage, festivals, shrines/temples and buildings; pilgrimages, conversion
+  campaigns and schisms are not simulated yet.
 - **Long Night stages 3-5** (undead hosts, failing sun) have news only; their world effects are planned.
 - **Culture "style" of player-founded settlements** is taken from the nearest realm.
 
 ## Planned (designed, not implemented)
-See [ROADMAP.md](ROADMAP.md) and [DESIGN.md](DESIGN.md): proper GUI screens; embodied caravans, haulers and armies;
-individual task planning; walls, gates, upgrades and repair; festivals and holidays; titles, fiefs, laws, trials and
+See [ROADMAP.md](ROADMAP.md) and [DESIGN.md](DESIGN.md): proper GUI screens; embodied haulers and armies on the march;
+individual task planning; walls, gates and building upgrades; pilgrimages and schisms; titles, fiefs, laws, trials and
 player diplomacy; dragons and great beasts; runesmithing, druidry, ember-shamanism and dark powers with costs;
 Long Night late stages; optional continue-as-heir dynasty mode (separate from strict hardcore); optional
 bring-your-own-key AI dialogue that only rephrases (never decides).
@@ -164,7 +180,8 @@ bring-your-own-key AI dialogue that only rephrases (never decides).
 |---|---|---|
 | Compilation | `./gradlew build` | passes |
 | JUnit simulation tests (8): content loads; generation consistent; stockpile atomic; construction charged exactly once; construction stops and explains when short; 60-day run keeps all invariants (births, deaths, marriages, trade, raids); kill is final and idempotent and conserves coin; save data round-trips and keeps running | `./gradlew test` | **8/8 pass** (60 days: ~300 alive, 46 dead, 63 born, 301 news) |
-| GameTests (6, in a real server world): builder pays once per block and the blocks exist; never builds over a player's chest; trade conserves goods and coin and refuses impossible purchases; the dead stay dead, are buried under their name and get no body; wards block natural spawns; every blueprint for every culture generates inside its footprint | `./gradlew runGameTestServer` | **6/6 pass** |
+| GameTests (7, in a real server world): builder pays once per block and the blocks exist; never builds over a player's chest; trade conserves goods and coin and refuses impossible purchases; the dead stay dead, are buried under their name and get no body; wards block natural spawns; every blueprint for every culture generates inside its footprint; a player founds a settlement (charter consumed, 3 settlers, player realm never gets an NPC ruler, the well avoids the hearthstone); a broken block of a finished building is found and repaired at its block cost, and nothing else is reported missing | `./gradlew runGameTestServer` | **7/7 pass** |
+| Long-run test: 200 simulated days (25 years at default pacing) | `./gradlew test --tests com.longnight.LongRunTest` | **pass**: population ~250 -> ~510 (no collapse/explosion), ~110 children grew up, ~200 married, 200+ buildings completed by the settlements themselves, ~15 new camps founded (several became hamlets, some as breakaway realms), 1-2 wars, invariants hold every 25 days, save ~470 KiB compressed, reloads cleanly |
 | Dedicated server scenario (RCON, fresh hardcore world): boot; world history; invariants; observed settlement materializes, bodies spawn, pre-existing buildings raised; 4 simulated days; a physical raid; save; **restart**; identical people/death/settlement counts; invariants after reload; no mod errors in logs | `python3 -I tools/test/server_scenario.py` | **15/15 pass** (runs 2 and 3) |
 | Headless dev client (Xvfb + Mesa llvmpipe GL 4.5, real Minecraft client with longnight only): loads the scenario's saved world, flies to the largest settlement, waits for it to materialize, screenshots day/street/person/night | `xvfb-run -a ./gradlew runClientAutoshot` | an Eldrin town materialized (36 bodies, 38 buildings); screenshots `tools/test/screenshots/dev-client-*.png` |
 | **Full modpack + longnight, dedicated server** (performance preset, Tectonic+Terralith terrain, watchdog on) | `tools/pack/server_test.py --with-longnight yes` | **PASS**: 40 mod ids loaded, 0 ERROR lines, 0 exceptions; world history (14 places, 219 people, 8 realms) written in the background in 38 s while the server stayed responsive; `VALIDATE OK` |
@@ -179,7 +196,9 @@ hardware (this container has no GPU: rendering used Mesa software GL), and long 
   (it places ~10,000 blocks at 48 per tick once its chunks are loaded).
 - A few citizens on very rugged terrain report "I can't find a way to ..." and wait or step over the obstacle.
 - Courtship only happens within a settlement; cross-settlement marriages need travellers (planned).
-- Wars are rare (by design); in test runs of 60 days none broke out. Realm rivalry is visible in relations and news.
+- Wars are rare by design: about one or two in 200 simulated days in the long-run test, none in most 60-day runs.
+- Stone is the usual bottleneck for young camps and growing towns ("Waiting for stone"): a natural pacing limit,
+  and what notice-board contracts ask players for.
 - A new world's history is written in the background after the server starts (~15 s vanilla terrain, ~40 s with
   Tectonic/Terralith); players who join meanwhile are told so and greeted when it is ready.
 - Settlements in dense forests (e.g. Terralith giant-spruce taiga) keep the trees between their plots until

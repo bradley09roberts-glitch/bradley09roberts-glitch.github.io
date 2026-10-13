@@ -226,6 +226,49 @@ public final class Placer {
         }
     }
 
+    /** Index of a blueprint step whose block is missing from a finished building (air where something should be), or -1. */
+    public static int findMissing(ServerLevel level, Settlement s, Building b, int from, int max) {
+        if (b.origin == null || !b.usable() || b.placed < b.total) return -1;
+        Blueprint bp = Construction.blueprint(s, b);
+        int n = bp.steps.size();
+        for (int k = 0; k < Math.min(max, n); k++) {
+            int i = (from + k) % n;
+            Blueprint.Step st = bp.steps.get(i);
+            if (st.state().isAir() || st.y() < 0) continue;
+            BlockPos wp = Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, st.x(), st.y(), st.z());
+            if (!level.isLoaded(wp)) return -1;
+            BlockState cur = level.getBlockState(wp);
+            if (cur.isAir() && !(st.state().getBlock() instanceof net.minecraft.world.level.block.CropBlock)
+                    && !(st.state().getBlock() instanceof net.minecraft.world.level.block.SaplingBlock)
+                    && !st.state().is(Blocks.WATER)) return i;
+        }
+        return -1;
+    }
+
+    /** Re-place one missing step, charging its materials again (it was lost). Returns false if the stores lack them. */
+    public static boolean repairStep(ServerLevel level, WorldSim sim, Settlement s, Building b, int i) {
+        Blueprint bp = Construction.blueprint(s, b);
+        Blueprint.Step st = bp.steps.get(i);
+        var cost = bp.stepCost(i);
+        if (!s.stock.takeAll(cost, 1)) {
+            b.problem = "Repairs wait for materials.";
+            return false;
+        }
+        BlockPos wp = Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, st.x(), st.y(), st.z());
+        if (sim.claimed(wp, 0) || !level.getBlockState(wp).isAir()) return true;
+        level.setBlock(wp, st.state().rotate(level, wp, Blueprint.rotation(b.rotation)), 3);
+        if (b.state == Building.State.DAMAGED) b.state = Building.State.COMPLETE;
+        b.problem = "";
+        sim.setDirty();
+        return true;
+    }
+
+    public static BlockPos stepPos(Settlement s, Building b, int i) {
+        Blueprint bp = Construction.blueprint(s, b);
+        Blueprint.Step st = bp.steps.get(i);
+        return Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, st.x(), st.y(), st.z());
+    }
+
     /** Catch the world up with progress made while nobody watched (also raises pre-existing towns). */
     public static int catchUp(ServerLevel level, WorldSim sim, Settlement s, int budget) {
         int done = 0;

@@ -108,6 +108,26 @@ public class LongNightGameTests {
             if (!level.getBlockState(p).isAir()) solid++;
         }
         h.assertTrue(solid > bp.steps.size() * 0.9, "blocks present in world: " + solid + "/" + bp.steps.size());
+        // a wall block goes missing (taken by a player, burned in a raid): builders find it and mend it at its cost
+        int wallStep = -1;
+        for (int i = 0; i < bp.steps.size(); i++) {
+            Blueprint.Step st = bp.steps.get(i);
+            if (st.y() == 2 && !st.state().isAir() && !Construction.blueprint(s, b).stepCost(i).isEmpty()) {
+                wallStep = i;
+                break;
+            }
+        }
+        BlockPos hole = Placer.stepPos(s, b, wallStep);
+        level.setBlock(hole, Blocks.AIR.defaultBlockState(), 3);
+        int found = Placer.findMissing(level, s, b, 0, 1000);
+        h.assertTrue(found == wallStep, "the missing block is found: " + found + " vs " + wallStep);
+        h.assertFalse(Placer.repairStep(level, sim, s, b, found), "no repair without materials");
+        h.assertTrue(level.getBlockState(hole).isAir(), "still missing");
+        bp.stepCost(found).forEach(s.stock::add);
+        h.assertTrue(Placer.repairStep(level, sim, s, b, found), "repaired");
+        h.assertFalse(level.getBlockState(hole).isAir(), "block is back");
+        h.assertTrue(s.stock.total() < 1e-6, "charged exactly the missing block's cost");
+        h.assertTrue(Placer.findMissing(level, s, b, 0, 1000) == -1, "nothing else missing");
         cleanup(h, s);
         h.succeed();
     }

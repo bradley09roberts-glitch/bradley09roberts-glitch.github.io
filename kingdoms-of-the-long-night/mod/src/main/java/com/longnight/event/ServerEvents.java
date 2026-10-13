@@ -154,6 +154,7 @@ public final class ServerEvents {
         RaidManager.tick(ow, sim);
         if (ow.getGameTime() % 40 == 7) com.longnight.world.Roads.tick(ow, sim);
         if (ow.getGameTime() % 20 == 11) com.longnight.world.CaravanBodies.tick(ow, sim);
+        if (ow.getGameTime() % 10 == 3) for (ServerPlayer p : server.getPlayerList().getPlayers()) lookHint(p, sim);
         long day = WorldSim.dayOf(ow);
         if (day != lastWardDay) {
             lastWardDay = day;
@@ -183,6 +184,8 @@ public final class ServerEvents {
                 .sorted(Comparator.comparingDouble(s -> s.center.distSqr(p.blockPosition()))).limit(2).toList();
         for (Settlement s : near) sim.learnOf(p.getUUID(), s);
         p.getInventory().add(new ItemStack(ModItems.SETTLEMENT_LEDGER.get()));
+        var primer = Content.LORE.get("travellers_primer");
+        if (primer != null) p.getInventory().add(com.longnight.world.Loot.book(primer));
         p.sendSystemMessage(Component.literal("§6§lKingdoms of the Long Night§r"));
         p.sendSystemMessage(Component.literal("§7You wake on the road with little but a journal. The Haldmarch is old: its realms have kings and grudges, "
                 + "its people have names and memories, and the night is longer than it used to be.§r"));
@@ -193,6 +196,30 @@ public final class ServerEvents {
                     + " blocks to the " + com.longnight.game.Journal.compass(dx, dz) + ".§r"));
         }
         p.sendSystemMessage(Ui.hint("Right-click with the journal to see places you know. /longnight help for more."));
+    }
+
+    /** Looking at a person shows who they are and what they are doing, on the action bar. */
+    static void lookHint(ServerPlayer p, WorldSim sim) {
+        net.minecraft.world.phys.Vec3 eye = p.getEyePosition(), look = p.getViewVector(1f);
+        CitizenEntity best = null;
+        double bestDot = 0.985;
+        for (CitizenEntity c : p.serverLevel().getEntitiesOfClass(CitizenEntity.class, p.getBoundingBox().inflate(8))) {
+            net.minecraft.world.phys.Vec3 to = c.getBoundingBox().getCenter().subtract(eye);
+            double dist = to.length();
+            if (dist > 8 || dist < 0.1) continue;
+            double dot = to.normalize().dot(look);
+            if (dot > bestDot && p.hasLineOfSight(c)) {
+                bestDot = dot;
+                best = c;
+            }
+        }
+        if (best == null) return;
+        com.longnight.sim.Person x = sim.person(best.personId);
+        if (x == null) return;
+        long day = WorldSim.dayOf(p.serverLevel().getServer().overworld());
+        String what = best.isHostile() ? "outlaw" : sim.isAdult(x, day) ? x.profession.displayName.toLowerCase() : "child";
+        String doing = x.activity.isEmpty() ? "" : " - " + x.activity;
+        p.displayClientMessage(Component.literal((best.isHostile() ? "\u00a7c" : "\u00a7e") + x.fullName() + "\u00a77, " + what + doing), true);
     }
 
     @SubscribeEvent

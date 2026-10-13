@@ -43,8 +43,10 @@ Full step-by-step guide: [modpack/INSTALL.md](modpack/INSTALL.md).
 
 ## Your first hour
 
-* You start with a **Traveller's Journal**. Right-click it: it lists the places you have heard of, with distance and
-  direction. You know two settlements to begin with; you learn of more by talking to people.
+* You start with a **Traveller's Journal** and **A Traveller's Primer** (a short in-world guide to everything below).
+  Right-click the journal: it lists the places you have heard of, with distance and direction. You know two
+  settlements to begin with; you learn of more by asking people for news.
+* **Look at a person** to see their name, trade and what they are doing on the action bar.
 * Walk to a settlement (roads link neighbouring settlements; signposts at a town's edge name where each road goes).
   When you arrive you are told what it is, who rules it and how many souls live there.
 * **Right-click people** to talk. Click the topics in chat: **News** (what they have heard, and only what they have

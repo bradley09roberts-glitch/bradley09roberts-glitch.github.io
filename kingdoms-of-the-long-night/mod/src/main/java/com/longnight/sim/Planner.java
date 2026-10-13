@@ -60,6 +60,19 @@ public final class Planner {
             for (Building b : new ArrayList<>(s.buildings)) {
                 if (b.underConstruction() && b.placed == 0 && b.problem.contains("No other plot")) cancel(sim, s, b, day);
             }
+            // damage from raids and battles is mended when builders are free (a fifth of the bill)
+            if (s.activeProjects() == 0 && !builders.isEmpty()) {
+                for (Building b : s.buildings) {
+                    if (b.state != Building.State.DAMAGED) continue;
+                    java.util.Map<Commodity, Double> bill = new java.util.EnumMap<>(Commodity.class);
+                    b.cost.forEach((k, v) -> bill.put(k, v * 0.2));
+                    if (s.stock.takeAll(bill, 1)) {
+                        b.state = Building.State.COMPLETE;
+                        s.chronicle(day, "The " + b.type.displayName.toLowerCase() + " was repaired.");
+                    } else b.problem = "Repairs wait for materials.";
+                    break;
+                }
+            }
             int maxProjects = Math.max(1, builders.size());
             if (s.activeProjects() < maxProjects) {
                 BuildingType next = next(sim, s, day);

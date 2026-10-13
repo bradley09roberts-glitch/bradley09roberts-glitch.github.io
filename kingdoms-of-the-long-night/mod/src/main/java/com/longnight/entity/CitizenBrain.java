@@ -382,6 +382,7 @@ public class CitizenBrain {
         if (b == null) {
             for (Building x : s.buildings) if (x.underConstruction() && x.origin != null) b = x;
         }
+        if (b == null && repair(e, level, sim, p, s)) return;
         if (b == null) {
             p.activity = "waiting for the next project";
             p.blocked = "";
@@ -417,6 +418,44 @@ public class CitizenBrain {
             p.blocked = b.problem.isEmpty() ? "We lack materials." : b.problem;
             pause(100);
         }
+    }
+
+    Building repairing;
+    int repairStep = -1;
+    int repairScan;
+
+    /** With nothing new to build, builders mend what is broken: missing blocks are replaced at full material cost. */
+    boolean repair(CitizenEntity e, ServerLevel level, WorldSim sim, Person p, Settlement s) {
+        if (repairing == null || repairStep < 0) {
+            if (e.tickCount % 60 != 0) return repairing != null;
+            repairing = null;
+            for (Building x : s.buildings) {
+                int i = Placer.findMissing(level, s, x, repairScan, 400);
+                if (i >= 0) {
+                    repairing = x;
+                    repairStep = i;
+                    break;
+                }
+            }
+            repairScan += 400;
+            if (repairing == null) return false;
+        }
+        BlockPos at = Placer.stepPos(s, repairing, repairStep);
+        p.activity = "repairing the " + repairing.type.displayName.toLowerCase();
+        if (!goTo(e, Places.ground(level, at), 0.6, 4.5, p, "the damaged " + repairing.type.displayName.toLowerCase())) return true;
+        e.getLookControl().setLookAt(at.getX() + 0.5, at.getY() + 0.5, at.getZ() + 0.5);
+        if (e.tickCount % 20 != 0) return true;
+        e.swing(InteractionHand.MAIN_HAND);
+        if (Placer.repairStep(level, sim, s, repairing, repairStep)) {
+            repairStep = Placer.findMissing(level, s, repairing, repairStep + 1, 400);
+            if (repairStep < 0) repairing = null;
+        } else {
+            p.blocked = "We need materials to mend the " + repairing.type.displayName.toLowerCase() + ".";
+            repairing = null;
+            repairStep = -1;
+            pause(200);
+        }
+        return true;
     }
 
     void haul(CitizenEntity e, ServerLevel level, WorldSim sim, Person p, Settlement s) {

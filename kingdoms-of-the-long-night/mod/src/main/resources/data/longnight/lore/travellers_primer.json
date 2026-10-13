@@ -1,0 +1,21 @@
+{
+  "title": "A Traveller's Primer",
+  "author": "The Wayfarers' Guild",
+  "rarity": "starter",
+  "cultures": [],
+  "tags": [
+    "practical"
+  ],
+  "pages": [
+    "Welcome to the Haldmarch. This land is old, and full of people who live without you: they farm, build, marry, grieve and remember. Your journal lists the places you know of.",
+    "PEOPLE. Right-click anyone to talk, then click a topic: News (only what has reached them), Work (and what blocks them), Family, Life, Town. Look at someone to see their name and trade.",
+    "SETTLEMENTS. The hearthstone by the well tells a town's state. The storehouse ledger sells goods; use an item on it to sell it, sneak-use to give it freely.",
+    "NOTICES. The notice board holds news, wanted goods, contracts and bounties. Accept work there, then deliver to the storehouse. Bounties pay when an outlaw band is broken.",
+    "DANGER. Outlaws raid, but never without warning: first rumours, then scouts and smoke a day ahead, then bells at dusk. Towns keep their streets watched at night; the wilds do not.",
+    "STANDING. Trade, give and defend to earn standing. Once welcome, you may Join a town as a citizen. Crimes are remembered by those who saw them, and the watch has a long memory.",
+    "LAND. A Boundary Stone keeps settlement builders and woodcutters out of the land around it: 32 blocks in every direction.",
+    "FOUNDING. Carry a Founding Charter (3 paper, gold ingot, ink sac, wool) and set down a Hearthstone (8 stone bricks around a campfire) far from any town. Settlers will come.",
+    "WARDS. Kindle a Ward Stone with Ward Chalk (bone meal and flint) and the restless dead will not rise near it for three days.",
+    "The nights are longer than they were. The star-readers say it began in the Hollow beneath the world. Read what you find in ruins, but remember: not every book tells the truth."
+  ]
+}
