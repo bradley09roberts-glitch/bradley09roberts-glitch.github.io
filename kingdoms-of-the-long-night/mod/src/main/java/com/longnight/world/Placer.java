@@ -230,6 +230,7 @@ public final class Placer {
     public static int findMissing(ServerLevel level, Settlement s, Building b, int from, int max) {
         if (b.origin == null || !b.usable() || b.placed < b.total) return -1;
         Blueprint bp = Construction.blueprint(s, b);
+        WorldSim sim = WorldSim.get(level.getServer());
         int n = bp.steps.size();
         for (int k = 0; k < Math.min(max, n); k++) {
             int i = (from + k) % n;
@@ -237,6 +238,7 @@ public final class Placer {
             if (st.state().isAir() || st.y() < 0) continue;
             BlockPos wp = Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, st.x(), st.y(), st.z());
             if (!level.isLoaded(wp)) return -1;
+            if (sim.claimed(wp, 0)) continue;
             BlockState cur = level.getBlockState(wp);
             if (cur.isAir() && !(st.state().getBlock() instanceof net.minecraft.world.level.block.CropBlock)
                     && !(st.state().getBlock() instanceof net.minecraft.world.level.block.SaplingBlock)
@@ -249,13 +251,13 @@ public final class Placer {
     public static boolean repairStep(ServerLevel level, WorldSim sim, Settlement s, Building b, int i) {
         Blueprint bp = Construction.blueprint(s, b);
         Blueprint.Step st = bp.steps.get(i);
+        BlockPos wp = Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, st.x(), st.y(), st.z());
+        if (sim.claimed(wp, 0) || !level.getBlockState(wp).isAir()) return true; // nothing to mend here: no charge
         var cost = bp.stepCost(i);
         if (!s.stock.takeAll(cost, 1)) {
             b.problem = "Repairs wait for materials.";
             return false;
         }
-        BlockPos wp = Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, st.x(), st.y(), st.z());
-        if (sim.claimed(wp, 0) || !level.getBlockState(wp).isAir()) return true;
         level.setBlock(wp, st.state().rotate(level, wp, Blueprint.rotation(b.rotation)), 3);
         if (b.state == Building.State.DAMAGED) b.state = Building.State.COMPLETE;
         b.problem = "";

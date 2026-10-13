@@ -112,8 +112,10 @@ def main():
     r = rcon.connect()
 
     def run(c):
+        t = time.time()
         res = r.cmd(c)
-        note(f"> {c}\n{res}")
+        took = time.time() - t
+        note(f"> {c}" + (f"   [{took:.1f} s: the server thread was busy]" if took > 1.0 else "") + f"\n{res}")
         return res
 
     # the world's history is written on a background thread; wait for it
@@ -146,9 +148,26 @@ def main():
         st = run("longnight admin status")
         v = run("longnight admin validate")
         check("invariants hold with bodies in the world", "VALIDATE OK" in v)
+        # performance with a town embodied: vanilla's tick statistics over the last 100 ticks
+        time.sleep(6)
+        tq = run("tick query")
+        m = re.search(r"Average time per tick: ([\d.]+)\s*ms", tq)
+        pct = re.search(r"P50: ([\d.]+)\s*ms.*?P95: ([\d.]+)\s*ms.*?P99: ([\d.]+)\s*ms", tq, re.S)
+        mspt = float(m.group(1)) if m else None
+        detail = f"avg {mspt} ms/tick" + (f", P50 {pct.group(1)} / P95 {pct.group(2)} / P99 {pct.group(3)} ms" if pct else "") + f", {bodies} bodies"
+        own = re.search(r"longnight per tick.*", run("longnight admin perf"))
+        if own:
+            detail += "; " + own.group(0).strip()
+        check("server holds 20 TPS with a town embodied (avg tick < 50 ms)", mspt is not None and mspt < 50, detail)
+    day_costs = []
     for d in range(a.days):
+        t0 = time.time()
         run("longnight admin skip 1")
+        day_costs.append(time.time() - t0)
         time.sleep(2)
+    if day_costs:
+        check("a simulated day of the whole world costs under 5 s", max(day_costs) < 5,
+              "wall time per skipped day incl. RCON: " + ", ".join(f"{c:.2f} s" for c in day_costs))
     st1 = run("longnight admin status")
     v = run("longnight admin validate")
     check(f"invariants hold after {a.days} simulated days", "VALIDATE OK" in v)

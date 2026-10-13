@@ -20,16 +20,16 @@ These are listed without softening, grouped by severity.
 
 1. **[FIXED in v0.1.0 final]** **Player realms appear to get an NPC ruler.** `game/Founding` creates a LORDSHIP faction with `playerRealm = true` and `ruler = null`. `Politics.daily` runs `succession()` for any realm whose ruler is null and does not skip player realms. So the most prestigious settler becomes "Lord of Lordship of X" with `profession = RULER`, and the realm's agenda (including CONQUER, which declares wars) follows that NPC's temperament. `diplomacy()` and `wars()` also treat the player realm as an ordinary AI realm. Only `rebellions()` excludes it.
 2. **[FIXED in v0.1.0 final: `Building.decayed` is saved]** **Ruin chests re-roll on every restart.** `Placer.DECAYED` and `PREPARED` are in-memory sets. After a restart, `catchUp` decays every RUINED building again (more holes) and `Loot.ruinChest` re-places the chest with fresh loot. This is a repeatable loot exploit.
-3. **Wanted state is not persisted.** `Crime.WANTED` is a static map cleared on stop, so a murderer is forgiven by a restart.
+3. **[FIXED in v0.1.0 final: warrants live in `WorldSim.wanted`, saved with the world and expired on use]** **Wanted state is not persisted.** `Crime.WANTED` is a static map cleared on stop, so a murderer is forgiven by a restart.
 4. **[MITIGATED in v0.1.0 final: a raid in progress at shutdown ends as a withdrawal and is not refought]** **Embodied raids are lost on restart.** `RaidManager.RAIDS` is in memory. A raid in progress during a stop vanishes without an outcome. Because `raidSource`/`raidDay` persist, the next day's `Threats.daily` re-schedules the same raid and it is fought again from the start. The interrupted raid's plunder and deaths still stand, so the village is effectively hit twice.
 5. **[FIXED in v0.1.0 final: quarry kilns fire glass when there is fuel; lumber camps yield charcoal; beds no longer need wool; lanterns cost fuel, not iron]** **Glass deadlock.** Most culture palettes and every temple use glass panes. Nothing produces `GLASS`: it comes only from the initial stock of 10 units, trade between settlements that also cannot make it, or players. Construction of any building with windows stalls ("Waiting for glass.") once that stock is spent.
 6. **Dead-end commodities.** `CLOTH` is produced by weavers but consumed by nothing. Flour, ale and cloth cannot be bought by players (`TradeGoods.itemFor` returns null).
 7. **[FIXED in v0.1.0 final: abandoned settlements' buildings become decaying ruins]** **Abandoned settlements look inhabited.** `Growth.abandon` sets `kind = RUIN` but leaves completed buildings COMPLETE, so they never decay. Only buildings created as RUINED decay.
-8. **Production share is settlement-wide.** `embodiedFraction` counts work hours per settlement whenever a player is near, not per person. A body that never reaches its workplace (stuck, talking, blocked by a player's wall) produces nothing, and its abstract share is also removed. Watching a settlement can lower its output.
+8. **[FIXED in v0.1.0 final for goods: each person's body-worked cycles are counted and the daily update works only the rest, so watching neither adds nor loses output; construction still uses the settlement-wide share]** **Production share is settlement-wide.** `embodiedFraction` counts work hours per settlement whenever a player is near, not per person. A body that never reaches its workplace (stuck, talking, blocked by a player's wall) produces nothing, and its abstract share is also removed. Watching a settlement can lower its output.
 9. **Calendar does not match the bible.**
    - [FIXED] `Calendar.year` now opens in 2317 AB.
    - With the default 1 day per month (D8), the bible's Fairday and Moot-day cannot occur.
-   - Faith JSON festival names and months and clergy titles differ from the bible (e.g. hearth "Hearth-Warden" and "Kindling Night" vs Flamekeepers, Rekindling and the Lantern Vigil).
+   - [PARTLY FIXED: festival names and months now follow the bible, e.g. the Lantern Vigil] Faith JSON clergy titles still differ from the bible (e.g. hearth "Hearth-Warden" vs Flamekeepers).
 10. **Long Night numbering differs from the bible.**
     - Code stage 5 is "The Long Night has come", where the bible's stage 4 is the Long Night and stage 5 is Resolution.
     - The bible's triggers (first Seeker's Eye, End portal lit, Hush, 20 days without Rekindling) are not implemented.
@@ -50,7 +50,7 @@ These are listed without softening, grouped by severity.
   - "Blocked" is a free-text string.
   - There is no multi-step planning, no reservation of materials and no explanation of settlement choices.
 - **Knowledge is per settlement, not per person.** There are no secrets, private knowledge or rumour distortion.
-- **`Building.level` never changes** (the blueprint generator ignores it). `DAMAGED` is a flag with no physical effect and no repair. There are no walls, gates or roads, only a path ring around each building.
+- **`Building.level` never changes** (the blueprint generator ignores it). `DAMAGED` is a flag with no physical effect. There are no walls or gates. *(Since v0.1.0 final: idle builders replace missing blocks of finished buildings at their block cost, distant settlements mend DAMAGED buildings abstractly for a fifth of the bill, and roads with plank bridges over rivers and shallow water link neighbouring settlements.)*
 - **Families are thin.**
   - Births require a married male-female couple, with no adoption.
   - Inheritance moves coins only.

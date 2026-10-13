@@ -22,12 +22,9 @@ import java.util.UUID;
 public final class Crime {
     private Crime() {}
 
-    /** settlement -> player -> game time until which the watch hunts them */
-    private static final Map<UUID, Map<UUID, Long>> WANTED = new HashMap<>();
-
     public static boolean isWanted(CitizenEntity guard, Player p) {
-        if (guard.settlementId == null) return false;
-        Map<UUID, Long> m = WANTED.get(guard.settlementId);
+        if (guard.settlementId == null || guard.level().getServer() == null) return false;
+        Map<UUID, Long> m = WorldSim.get(guard.level().getServer()).wanted.get(guard.settlementId);
         if (m == null) return false;
         Long until = m.get(p.getUUID());
         return until != null && until > guard.level().getGameTime();
@@ -39,7 +36,12 @@ public final class Crime {
     }
 
     static void want(ServerLevel level, UUID settlement, ServerPlayer p, long ticks) {
-        WANTED.computeIfAbsent(settlement, k -> new HashMap<>()).merge(p.getUUID(), level.getGameTime() + ticks, Math::max);
+        WorldSim sim = WorldSim.get(level.getServer());
+        long now = level.getGameTime();
+        for (Map<UUID, Long> m : sim.wanted.values()) m.values().removeIf(until -> until <= now); // forget old warrants
+        sim.wanted.values().removeIf(Map::isEmpty);
+        sim.wanted.computeIfAbsent(settlement, k -> new HashMap<>()).merge(p.getUUID(), now + ticks, Math::max);
+        sim.setDirty();
     }
 
     public static void assault(ServerLevel level, ServerPlayer p, CitizenEntity victim) {
@@ -122,9 +124,5 @@ public final class Crime {
             if (s.reputationOf(p.getUUID()) < -25) want(level, s.id, p, 2400);
             sim.setDirty();
         }
-    }
-
-    public static void clear() {
-        WANTED.clear();
     }
 }

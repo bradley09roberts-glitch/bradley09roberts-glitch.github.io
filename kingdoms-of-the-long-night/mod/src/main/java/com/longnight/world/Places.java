@@ -38,12 +38,15 @@ public final class Places {
         List<BlockPos> out = new ArrayList<>();
         if (b.origin == null) return out;
         Blueprint bp = Construction.blueprint(s, b);
-        for (Blueprint.Step st : bp.steps) {
-            BlockState state = st.state();
-            if (state.getBlock() instanceof BedBlock && state.getValue(BedBlock.PART) == BedPart.HEAD) {
-                out.add(Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, st.x(), st.y(), st.z()));
+        if (bp.bedHeads == null) {
+            List<Blueprint.Step> heads = new ArrayList<>();
+            for (Blueprint.Step st : bp.steps) {
+                BlockState state = st.state();
+                if (state.getBlock() instanceof BedBlock && state.getValue(BedBlock.PART) == BedPart.HEAD) heads.add(st);
             }
+            bp.bedHeads = heads;
         }
+        for (Blueprint.Step st : bp.bedHeads) out.add(Blueprint.toWorld(b.origin, b.rotation, bp.width, bp.depth, st.x(), st.y(), st.z()));
         return out;
     }
 

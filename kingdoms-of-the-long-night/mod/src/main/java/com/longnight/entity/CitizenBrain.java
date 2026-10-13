@@ -46,6 +46,9 @@ public class CitizenBrain {
     int waitTicks;
     int cycleTicks;
     int failures;
+    /** when the last path was asked for: path-finding is the costliest thing a citizen does, so it is rationed */
+    int lastPathTick = -1000;
+    int lastPathFail = -1000;
     BlockPos chopBase;
     final List<BlockPos> chopQueue = new ArrayList<>();
     BlockPos tendTarget;
@@ -148,7 +151,11 @@ public class CitizenBrain {
             }
             lastDist = d;
         }
-        if (e.getNavigation().isDone() || e.tickCount % 60 == 0) {
+        // ask for a new path when the old one is used up (at most every half second) or every three seconds to refresh it;
+        // an unreachable target used to be re-planned every tick, which cost more than everything else a town does
+        int since = e.tickCount - lastPathTick;
+        if (since < 0 || since >= (e.getNavigation().isDone() ? 10 : 60)) {
+            lastPathTick = e.tickCount;
             BlockPos step = pos;
             if (d > 24 && e.level() instanceof ServerLevel sl) {
                 // pathfinding has a limited range: head for a waypoint on the way
@@ -157,7 +164,10 @@ public class CitizenBrain {
                 int wz = (int) Math.round(e.getZ() + (pos.getZ() - e.getZ()) * f + (stuck > 1 ? rng.nextInt(9) - 4 : 0));
                 step = Places.ground(sl, new BlockPos(wx, pos.getY(), wz));
             }
-            if (!e.getNavigation().moveTo(step.getX() + 0.5, step.getY(), step.getZ() + 0.5, speed) && e.tickCount % 40 == 0) stuck++;
+            if (!e.getNavigation().moveTo(step.getX() + 0.5, step.getY(), step.getZ() + 0.5, speed) && e.tickCount - lastPathFail >= 40) {
+                lastPathFail = e.tickCount;
+                stuck++;
+            }
         }
         if (stuck >= 8) {
             stuck = 0;
@@ -360,6 +370,7 @@ public class CitizenBrain {
         if (cycleTicks < CYCLE_TICKS) return;
         cycleTicks = 0;
         if (p.profession.producesGoods()) {
+            sim.workedCyclesToday.merge(p.id, 1, Integer::sum);
             Commodity c = Economy.work(sim, s, p, 1, day);
             if (c != null) {
                 level.sendParticles(ParticleTypes.HAPPY_VILLAGER, e.getX(), e.getY() + 1.8, e.getZ(), 4, 0.3, 0.2, 0.3, 0);

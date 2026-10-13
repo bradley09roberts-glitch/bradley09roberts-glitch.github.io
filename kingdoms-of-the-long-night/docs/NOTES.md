@@ -58,3 +58,16 @@ Purpose: let work resume after interruptions/context limits. Update at every mil
   camp build order, rope/stone instead of iron fittings, war conditions loosened (grudge + advantage). Now ~15 camps grow, 1-2 wars.
 - 02:20 festivals (bible names/months, feasts from stores) + funerals (mourners gather next day); primer book + look-at hint.
 - Test status at 02:30: JUnit 9/9, GameTests 7/7, scenario 15/15 (run7), full-pack server PASS.
+- 02:05 BST full-pack client run with roads/caravans/festivals/primer: CLIENT TEST PASS (process alive, 0 fatal, 2 known
+  cosmetic ERRORs); Brumvorn (38 buildings, 35 bodies); road screenshot toward Dorndeep. Two shots had the camera inside a
+  trunk/hill: AutoShot now lifts the camera to open air and picks a clear side for the portrait.
+- 02:10 builders repair missing blocks of finished buildings (charged per block; never inside a claim, never charged
+  when nothing is placed); abstract repair of DAMAGED buildings at 20% of the bill. Run8: JUnit, GameTests 7/7, scenario 15/15.
+- 02:15 warrants (wanted status) saved in WorldSim.wanted (ROADMAP gap 3); railed plank bridges over rivers and shallow
+  water; `/longnight admin perf` (longnight's own server cost per tick: world handler + citizen entity ticks);
+  scenario now checks tick time with a town embodied (vanilla `tick query`) and the cost of a simulated day, and flags
+  any RCON command that waited > 1 s on a busy server thread.
+- Observed: "Can't keep up" warnings. Dedicated scenario: one ~10 s stall, measured (run9) as the admin `observe`
+  command itself taking 9.4 s: vanilla `setChunkForced` generates each forced chunk synchronously (~80 chunks of a
+  fresh world). Admin/test-only path; players load chunks asynchronously through their own tickets. Full-pack client: the integrated server shares 4 vCPUs with
+  software rendering (llvmpipe), so it runs well below 20 TPS; not representative of a PC with a GPU.

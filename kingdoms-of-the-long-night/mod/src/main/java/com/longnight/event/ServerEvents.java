@@ -140,7 +140,6 @@ public final class ServerEvents {
         RaidManager.endAllOnStop(WorldSim.get(e.getServer()));
         com.longnight.world.CaravanBodies.clear();
         Embodiment.clear();
-        Crime.clear();
     }
 
     @SubscribeEvent
@@ -149,6 +148,7 @@ public final class ServerEvents {
         ServerLevel ow = server.overworld();
         WorldSim sim = WorldSim.get(server);
         if (!sim.generated) return;
+        long t0 = System.nanoTime();
         sim.tick(server);
         Embodiment.tick(ow, sim);
         RaidManager.tick(ow, sim);
@@ -160,6 +160,7 @@ public final class ServerEvents {
             lastWardDay = day;
             Wards.daily(ow, sim, day);
         }
+        com.longnight.world.Perf.endTick(System.nanoTime() - t0);
     }
 
     @SubscribeEvent

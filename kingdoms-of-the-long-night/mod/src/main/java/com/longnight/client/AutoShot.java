@@ -55,7 +55,8 @@ public final class AutoShot {
             step = 1;
             ticks = 0;
         } else if (step == 1 && ticks > 400 && (ticks > 4000 || target.materialized && !com.longnight.world.Placer.pending(target))) {
-            LongNight.LOG.info("[autoshot] {} materialized={} after {} ticks", target.name, target.materialized, ticks);
+            LongNight.LOG.info("[autoshot] {} materialized={} after {} ticks; while raising it: {}", target.name, target.materialized, ticks,
+                    com.longnight.world.Perf.report());
             step = 8; // give chunk rendering a moment after the last block
             ticks = 0;
             view(server, 0, 30, 44, 180f, 32f); // re-aim: the town's real ground height is known now
@@ -127,6 +128,7 @@ public final class AutoShot {
             WorldSim sim = WorldSim.get(server);
             LongNight.LOG.info("[autoshot] done: settlement {} materialized={} bodies={} buildings={}", target.name, target.materialized,
                     com.longnight.world.Embodiment.bodyCount(), target.buildings.size());
+            LongNight.LOG.info("[autoshot] {}", com.longnight.world.Perf.report());
             step = 5;
             ticks = 0;
         } else if (step == 5 && ticks > 60) {

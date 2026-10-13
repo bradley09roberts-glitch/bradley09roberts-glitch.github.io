@@ -24,6 +24,8 @@ public class Blueprint {
     private Map<Commodity, Double> total;
     /** local position of special spots (work spot, bed, sign) for AI */
     public final Map<String, BlockPos> marks = new java.util.HashMap<>();
+    /** head halves of the beds, found once (citizens look for their bed every tick at night) */
+    List<Step> bedHeads;
     public int height;
 
     public Blueprint(int width, int depth) {

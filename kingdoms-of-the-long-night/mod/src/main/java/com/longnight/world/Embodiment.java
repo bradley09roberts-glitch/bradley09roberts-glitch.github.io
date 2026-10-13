@@ -38,13 +38,19 @@ public final class Embodiment {
     private static final Map<UUID, UUID> BODIES = new HashMap<>();      // person -> entity
     private static final Set<UUID> ACTIVE = new HashSet<>();            // settlements with bodies
     private static final Set<UUID> VISIBLE = new HashSet<>();           // settlements being raised before the player arrives
-    /** settlements watched by an admin/test "observer" (chunks force-loaded), treated as if a player stood there */
+    /**
+     * Settlements watched by an admin/test "observer", treated as if a player stood there. Their chunks are kept loaded
+     * with forced tickets that load asynchronously, like a player's (vanilla setChunkForced generates them on the
+     * server thread, a ~10 s stall on a fresh world), and that are not written into the save.
+     */
     private static final Set<UUID> OBSERVED = new HashSet<>();
 
     public static boolean observe(ServerLevel level, Settlement s, boolean on) {
         int r = (s.radius + 32) >> 4;
         int cx = s.center.getX() >> 4, cz = s.center.getZ() >> 4;
-        for (int x = cx - r; x <= cx + r; x++) for (int z = cz - r; z <= cz + r; z++) level.setChunkForced(x, z, on);
+        for (int x = cx - r; x <= cx + r; x++) {
+            for (int z = cz - r; z <= cz + r; z++) level.getChunkSource().updateChunkForced(new net.minecraft.world.level.ChunkPos(x, z), on);
+        }
         return on ? OBSERVED.add(s.id) : OBSERVED.remove(s.id);
     }
 

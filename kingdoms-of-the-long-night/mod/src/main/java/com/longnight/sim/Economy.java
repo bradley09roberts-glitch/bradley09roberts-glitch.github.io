@@ -17,15 +17,18 @@ public final class Economy {
     public static void daily(WorldSim sim, long day) {
         for (Settlement s : sim.settlements.values()) {
             if (s.kind != Settlement.Kind.SETTLEMENT) continue;
-            double abstractShare = 1.0 - sim.embodiedFraction(s);
             for (Person p : sim.residents(s)) {
                 if (!sim.isAdult(p, day)) continue;
                 equipTools(s, p, sim);
-                if (p.profession.producesGoods() && abstractShare > 0.01) {
-                    work(sim, s, p, CYCLES_PER_DAY * abstractShare, day);
+                // whatever part of the working day a body did not work (unwatched, walking, stuck) is worked here,
+                // so watching a settlement neither adds to nor takes from what its people make
+                int worked = Math.min(CYCLES_PER_DAY, sim.workedCyclesToday.getOrDefault(p.id, 0));
+                if (p.profession.producesGoods() && worked < CYCLES_PER_DAY) {
+                    work(sim, s, p, CYCLES_PER_DAY - worked, day);
                 }
-                // without a lumber camp or quarry, idle hands gather deadwood and fieldstone (how camps bootstrap)
-                if (p.profession == Profession.LABOURER && abstractShare > 0.01) gather(s, abstractShare);
+                // without a lumber camp or quarry, idle hands gather deadwood and fieldstone (how camps bootstrap);
+                // bodies never gather physically, so this is always the abstract amount
+                if (p.profession == Profession.LABOURER) gather(s, 1.0);
                 // professions that serve rather than produce still earn a little and practise
                 if (!p.profession.producesGoods() && p.profession != Profession.LABOURER) {
                     p.addSkill(p.profession, 0.25f * (0.5f + p.diligence));

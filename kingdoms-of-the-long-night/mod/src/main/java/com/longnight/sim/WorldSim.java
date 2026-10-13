@@ -44,6 +44,8 @@ public class WorldSim extends SavedData {
     public final Map<Long, Long> wards = new HashMap<>();
     /** what each player has heard of: player -> settlements */
     public final Map<UUID, java.util.Set<UUID>> knownPlaces = new HashMap<>();
+    /** settlement -> player -> game time until which its watch hunts them (saved: a restart is no pardon) */
+    public final Map<UUID, Map<UUID, Long>> wanted = new HashMap<>();
     /** good unused sites found when the world was generated, for future camps */
     public final List<BlockPos> spareSites = new ArrayList<>();
     public long nextNewsId = 1;
@@ -59,6 +61,8 @@ public class WorldSim extends SavedData {
     public WorldHooks hooks = WorldHooks.NONE;
     public final Random rng = new Random();
     public final Map<UUID, Integer> embodiedTicksToday = new HashMap<>();
+    /** work cycles each person's body really worked today; the daily update produces only the rest (never twice, never lost) */
+    public final Map<UUID, Integer> workedCyclesToday = new HashMap<>();
 
     public static final class Caravan {
         public UUID id = UUID.randomUUID();
@@ -478,6 +482,7 @@ public class WorldSim extends SavedData {
             } catch (Exception e) {
                 LongNight.LOG.error("Simulation error on day {}", d, e);
             }
+            workedCyclesToday.clear(); // a catch-up of several days credits the bodies' work once
         }
         lastDay = day;
         embodiedTicksToday.clear();
@@ -572,6 +577,15 @@ public class WorldSim extends SavedData {
             rl.add(x);
         }
         t.put("roads", rl);
+        ListTag warrants = new ListTag();
+        wanted.forEach((settlement, m) -> m.forEach((player, until) -> {
+            CompoundTag x = new CompoundTag();
+            x.putUUID("s", settlement);
+            x.putUUID("p", player);
+            x.putLong("u", until);
+            warrants.add(x);
+        }));
+        t.put("wanted", warrants);
         return t;
     }
 
@@ -619,6 +633,10 @@ public class WorldSim extends SavedData {
         for (Tag x : t.getList("known", Tag.TAG_COMPOUND)) {
             CompoundTag c = (CompoundTag) x;
             w.knownPlaces.put(c.getUUID("p"), new java.util.HashSet<>(Nbt.readUuidList(c, "s")));
+        }
+        for (Tag x : t.getList("wanted", Tag.TAG_COMPOUND)) {
+            CompoundTag c = (CompoundTag) x;
+            w.wanted.computeIfAbsent(c.getUUID("s"), k -> new HashMap<>()).put(c.getUUID("p"), c.getLong("u"));
         }
         return w;
     }

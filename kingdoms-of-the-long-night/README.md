@@ -72,6 +72,16 @@ Full step-by-step guide: [modpack/INSTALL.md](modpack/INSTALL.md).
 All chat buttons are ordinary commands (`/longnight ...`, alias `/ln`), so they work with commands disabled.
 `/longnight help` lists the player commands.
 
+## Settings and performance
+
+Each world has its own settings file, `saves/<world>/serverconfig/longnight-server.toml` (created on first start;
+edit it with the game closed). The useful ones: `daysPerYear` (default 8: one in-game day is a month; raise it for
+slower lives), `raids` and `firstRaidDay`, `wars`, `embodyDistance` (how near you must be for townsfolk to have
+bodies, default 112 blocks), `maxBodiesPerSettlement` (40) and `maxBodiesTotal` (160). On a slow PC lower the body
+caps first. Settings that shape a new world (`startingSettlements`, `worldRadius`, ...) must be in place before
+the world is created: copy the file into the instance's `defaultconfigs/` folder and every new world starts with it.
+`/longnight admin perf` (operators) shows what the mod costs per server tick.
+
 ## Building from source
 
 ```

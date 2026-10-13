@@ -70,6 +70,10 @@ public final class LongNightCommand {
                 .then(Commands.literal("admin").requires(s -> s.hasPermission(2))
                         .then(Commands.literal("status").executes(LongNightCommand::status))
                         .then(Commands.literal("list").executes(LongNightCommand::list))
+                        .then(Commands.literal("perf").executes(c -> {
+                            c.getSource().sendSuccess(() -> Component.literal("[longnight] " + com.longnight.world.Perf.report()), false);
+                            return 1;
+                        }))
                         .then(Commands.literal("validate").executes(LongNightCommand::validate))
                         .then(Commands.literal("skip").then(Commands.argument("days", IntegerArgumentType.integer(1, 30)).executes(LongNightCommand::skip)))
                         .then(Commands.literal("tp").then(Commands.argument("name", StringArgumentType.greedyString()).executes(LongNightCommand::tp)))

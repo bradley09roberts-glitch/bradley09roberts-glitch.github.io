@@ -292,6 +292,17 @@ public class CitizenEntity extends PathfinderMob {
     }
 
     @Override
+    public void tick() {
+        if (level().isClientSide) {
+            super.tick();
+            return;
+        }
+        long t0 = System.nanoTime();
+        super.tick();
+        com.longnight.world.Perf.addCitizen(System.nanoTime() - t0);
+    }
+
+    @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
         if (tickCount % 100 == 0 && level() instanceof ServerLevel sl) {

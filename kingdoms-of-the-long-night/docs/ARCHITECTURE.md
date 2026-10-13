@@ -34,9 +34,12 @@ biome tags; the mod loads after Terralith). Pillagers, zombies etc. remain as mo
 * **Identity across levels**: a body stores only `personId`/`settlementId`. `CitizenEntity.shouldBeSaved()` is
   false, so bodies never persist in chunks; `Embodiment` keeps a person -> entity map and never spawns a second body
   or a body for the dead. Death always goes through `WorldSim.kill` (idempotent).
-* **Work accounting**: `Embodiment` counts work-hour ticks a settlement spent embodied; `Economy.daily` and
-  `Planner.daily` only simulate the remaining share abstractly. Embodied workers produce one of 8 daily "work cycles"
-  per 1250 ticks at their station (`CitizenBrain.progressCycle -> Economy.work`). No double production.
+* **Work accounting**: embodied workers produce one of 8 daily "work cycles" per 1250 ticks at their station
+  (`CitizenBrain.progressCycle -> Economy.work`) and each cycle is counted per person in
+  `WorldSim.workedCyclesToday`; `Economy.daily` then works only each person's remaining cycles. Construction still
+  uses a settlement-wide share: `Embodiment` counts work-hour ticks a settlement spent embodied and `Planner.daily`
+  simulates the rest abstractly. No double production, no lost production (JUnit
+  `bodiesWorkReplacesTheDailyWorkInsteadOfAddingToIt`).
 
 ## Key invariants (checked by `command/Invariants`, the GameTests and the server scenario)
 
@@ -86,6 +89,10 @@ threats (`raids`, `firstRaidDay` 5, `raidWarningDays` 2, `monstersHuntCitizens`,
 * Daily simulation cost is linear in people with small constants; relationships are capped at 32 per person,
   memories at 24, news at 600 items, known news at 120 per settlement.
 * Bodies exist only near players and are capped; long walks use waypoints (vanilla pathfinding range 48).
+  Path requests are rationed (at most every 10 ticks when a path is used up, else every 60), because a citizen with
+  an unreachable target used to re-run A* every tick. Bed positions are cached per blueprint.
+* `/longnight admin perf` reports the mod's own server cost per tick (the world handler: simulation, embodiment,
+  raids, roads, caravans; and the citizens' entity ticks) over the last 100 ticks, from `world/Perf`.
 * Materializing a settlement places blocks at `catchUpBlocksPerTick` only while its chunks are loaded.
 * Terrain survey at world creation (~15-20 s once) uses generator noise only; no chunks are generated.
 * Save size grows with the dead (people records are kept for graves and family trees). Archiving the long dead into

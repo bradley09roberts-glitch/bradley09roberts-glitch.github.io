@@ -110,13 +110,24 @@ public final class Roads {
                 }
                 continue;
             }
-            for (int w = -1; w <= 1; w++) {
+            // rivers and shallow water are crossed on a plank bridge with rails; deep lakes and the sea are not
+            BlockPos mid = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(x, 0, z)).below();
+            boolean bridge = crossable(level, mid);
+            for (int w = -2; w <= 2; w++) {
+                if (Math.abs(w) == 2 && !bridge) continue;
                 int wx = (int) Math.round(x - dz * w), wz = (int) Math.round(z + dx * w);
-                if (wx >> 4 != cx || wz >> 4 != cz) continue;
+                // the edge of a road may spill into the next chunk; only touch it if that chunk is already loaded
+                if ((wx >> 4 != cx || wz >> 4 != cz) && !level.isLoaded(new BlockPos(wx, 0, wz))) continue;
                 BlockPos top = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(wx, 0, wz)).below();
                 if (sim.claimed(top, 0)) continue;
                 BlockState st = level.getBlockState(top);
                 BlockState above = level.getBlockState(top.above());
+                if (bridge) {
+                    if (top.getY() != mid.getY() || !st.is(Blocks.WATER) || !above.isAir()) continue;
+                    level.setBlock(top, Blocks.SPRUCE_PLANKS.defaultBlockState(), 2);
+                    if (Math.abs(w) == 2) level.setBlock(top.above(), Blocks.SPRUCE_FENCE.defaultBlockState(), 3);
+                    continue;
+                }
                 if (!above.isAir() && !above.canBeReplaced()) continue;
                 if (st.is(Blocks.GRASS_BLOCK) || st.is(Blocks.DIRT) || st.is(Blocks.COARSE_DIRT) || st.is(Blocks.PODZOL) || st.is(Blocks.MYCELIUM)
                         || st.is(Blocks.ROOTED_DIRT)) {
@@ -127,6 +138,18 @@ public final class Roads {
                 }
             }
         }
+    }
+
+    /** Water a road may bridge: a river, or water no more than three blocks deep. Never the sea or a deep lake. */
+    static boolean crossable(ServerLevel level, BlockPos surface) {
+        if (!level.getBlockState(surface).is(Blocks.WATER) || !level.getFluidState(surface).isSource()) return false;
+        var biome = level.getBiome(surface);
+        if (biome.is(net.minecraft.tags.BiomeTags.IS_OCEAN) || biome.is(net.minecraft.tags.BiomeTags.IS_DEEP_OCEAN)) return false;
+        if (biome.is(net.minecraft.tags.BiomeTags.IS_RIVER)) return true;
+        for (int d = 1; d <= 3; d++) {
+            if (!level.getFluidState(surface.below(d)).is(net.minecraft.tags.FluidTags.WATER)) return true;
+        }
+        return false;
     }
 
     /** A post at a settlement's edge, its sign naming where the road goes and how far. */

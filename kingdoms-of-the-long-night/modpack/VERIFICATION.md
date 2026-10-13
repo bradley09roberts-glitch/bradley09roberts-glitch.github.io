@@ -4,9 +4,19 @@ Date: 12 Oct 2026, 22:30-23:45 UTC. Everything below was run in the cloud build 
 (4 vCPU Xeon @ 2.8 GHz, 15 GB RAM, **no GPU** - Mesa llvmpipe software OpenGL 4.5, OpenJDK 21.0.12).
 This machine says nothing about the player's PC; timings are for comparison between runs only.
 
-**Not covered yet:** the `longnight` core mod. `mod/build/libs/longnight-*.jar` did not exist during these
-runs, so every test ran without it (each tool printed a warning). Re-run the commands in "How to re-run"
-with `--with-longnight yes` once the jar is built.
+The first round of runs below (22:30-23:45 UTC) was made **before the `longnight` jar existed**, so it checks the
+modpack alone. The runs **with `longnight`** came later in the night and are summarised in the next section.
+
+## With the longnight core mod (13 Oct 2026, 00:15-02:30 UTC)
+
+| Check | Result |
+|---|---|
+| Dedicated server, performance preset + `longnight`, fresh hardcore world, **watchdog on** (`server_test.py --with-longnight yes`) | **PASS**: 40 mod ids, 0 ERROR lines, 0 exceptions. The world's history (14 places, ~220 people, 8 realms) is written on a background thread in ~38 s with Tectonic + Terralith terrain while the server keeps ticking; `/longnight admin validate` -> `VALIDATE OK`. (The first attempt, with history written on the server thread, was killed by the watchdog after 60 s: that is why generation now runs in the background.) |
+| Real client, performance preset + `longnight`, installed from the built `.mrpack` (`LONGNIGHT_AUTOSHOT=1 client_test.py`) | **PASS**: joined the world, flew to the largest town (a Dunmar town of 38-39 buildings and 35 people among Terralith giant spruces), waited for it to be raised, screenshots of the town, a person, night and the road to the next town (`tools/test/screenshots/fullpack-*.png`). 0 fatal; the same 2 cosmetic ERROR lines as without longnight. |
+| Village disabling with Terralith present | `longnight` loads after Terralith and empties the village structure set, so no vanilla or Terralith villages generate; only longnight's people exist. |
+
+Not run with `longnight`: the rich preset's client (shaders + Distant Horizons in software GL is very slow here).
+The rich preset's server-side mods are the performance preset's plus Distant Horizons; see the results below.
 
 ## Result summary
 

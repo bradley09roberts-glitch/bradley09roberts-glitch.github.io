@@ -51,8 +51,9 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
 - Chains: grain -> flour -> bread; logs -> planks/fuel; ore + fuel -> iron -> tools/weapons/armour; wool -> cloth.
 - Productivity = skill x tools (tools wear out and are restocked from the ledger) x mood x health x season.
 - **Single source of truth**: each settlement's ledger. Embodied workers produce through the *same* recipe in 8
-  "work cycles" a day; distant settlements produce abstractly for the share of the working day that had no
-  bodies. A watched settlement never double-produces.
+  "work cycles" a day; the daily update works, for each person, only the cycles their body did not work (unwatched,
+  walking, stuck). Watching a settlement neither adds to nor takes from what its people make, and nothing is
+  produced twice.
 - **Storage limits** (storehouses, granary), spoilage of perishables, food consumption with variety, ale.
 - **Prices from supply and demand** (targets from population, construction bills and workers); buy at 125%,
   sell at 75%; treasury limits what a settlement can buy from you.
@@ -61,8 +62,9 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
   can be robbed by outlaws on roads near their camps. When a caravan's position on its route comes within ~96 blocks
   of a player, its real leader appears walking the road with a pack mule (bodies vanish again out of sight).
 - **Roads**: every settlement is linked to its two nearest neighbours; roads are laid lazily as chunks load near
-  players (three-wide dirt path over natural ground only, never through claims, water or anything built), with a
-  signpost at each settlement's edge naming the destination and distance. Worlds created before roads existed get
+  players (three-wide dirt path over natural ground only, never through claims or anything built; rivers and
+  shallow water are crossed on a railed plank bridge, deep lakes and the sea are not), with a signpost at each
+  settlement's edge naming the destination and distance. Worlds created before roads existed get
   their roads planned on the next start.
 - **Taxes** from settlements to realms; soldiers cost upkeep; working people earn a little coin.
 
@@ -123,7 +125,7 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
 - Monsters hunt townsfolk who are outdoors at night; natural monster spawns are suppressed inside settlements
   (lit, watched streets).
 - **Crime**: witnesses matter. Assault and vandalism cost standing; murder makes the watch hunt you for days and
-  becomes news; killing outlaws earns gratitude.
+  becomes news; killing outlaws earns gratitude. Warrants are saved with the world, so a restart is no pardon.
 
 ### News and knowledge
 - Every event is news at its origin; travellers spread important news to neighbours (taverns help); caravans carry
@@ -153,7 +155,8 @@ Versions: Minecraft **1.21.1**, NeoForge **21.1.259**, Java 21, mod `longnight` 
 - **Hauling is mostly abstract**: the ledger is shared by the whole settlement; labourers walk between stores and
   sites but carry nothing.
 - **Battles between realms and distant raids are abstract** (no armies on the march yet). Caravan bodies follow the
-  straight route toward their destination; roads are straight lines with no bridges (water gaps are left open).
+  straight route toward their destination; roads are straight lines (no curves around hills; gaps over deep water
+  and the sea). Roads and bridges are laid by the world, not built by people, and cost the ledger nothing.
 - **No task planner** beyond per-profession routines; multi-step needs are handled by the economy (e.g. a smith
   without ore reports it; the settlement plans a mine) rather than by an individual planning a chain.
 - **Pathfinding** uses vanilla navigation with waypoints for long trips; if someone is truly boxed in for ~40 s they

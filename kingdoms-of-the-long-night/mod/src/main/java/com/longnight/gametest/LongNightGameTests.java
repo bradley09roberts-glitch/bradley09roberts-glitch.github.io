@@ -128,6 +128,16 @@ public class LongNightGameTests {
         h.assertFalse(level.getBlockState(hole).isAir(), "block is back");
         h.assertTrue(s.stock.total() < 1e-6, "charged exactly the missing block's cost");
         h.assertTrue(Placer.findMissing(level, s, b, 0, 1000) == -1, "nothing else missing");
+        // inside a player's claim, builders leave holes alone and charge nothing
+        WorldSim.Claim claim = new WorldSim.Claim(UUID.randomUUID(), "tester", hole, 2);
+        sim.claims.add(claim);
+        level.setBlock(hole, Blocks.AIR.defaultBlockState(), 3);
+        h.assertTrue(Placer.findMissing(level, s, b, 0, 1000) == -1, "claimed hole not reported");
+        bp.stepCost(found).forEach(s.stock::add);
+        double before = s.stock.total();
+        h.assertTrue(Placer.repairStep(level, sim, s, b, found), "claimed step skipped");
+        h.assertTrue(level.getBlockState(hole).isAir() && Math.abs(s.stock.total() - before) < 1e-9, "no block and no charge in a claim");
+        sim.claims.remove(claim);
         cleanup(h, s);
         h.succeed();
     }

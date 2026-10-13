@@ -162,11 +162,48 @@ public class SimulationTest {
     }
 
     @Test
+    void bodiesWorkReplacesTheDailyWorkInsteadOfAddingToIt() {
+        WorldSim watched = world(11), unwatched = world(11);
+        // in one world every producer's body already worked the whole day in front of a player
+        for (Person p : watched.people.values()) if (p.alive && p.profession.producesGoods()) watched.workedCyclesToday.put(p.id, 8);
+        Map<java.util.UUID, Map<Commodity, Double>> w0 = stocks(watched), u0 = stocks(unwatched);
+        com.longnight.sim.Economy.daily(watched, 1);
+        com.longnight.sim.Economy.daily(unwatched, 1);
+        for (Settlement s : watched.settlements.values()) {
+            for (Commodity c : Commodity.values()) {
+                if (c == Commodity.LOGS || c == Commodity.STONE || c == Commodity.FUEL) continue; // hand-gathering is never embodied
+                assertTrue(s.stock.get(c) <= w0.get(s.id).get(c) + 1e-9, s.name + " produced " + c + " twice");
+            }
+        }
+        boolean produced = false;
+        for (Settlement s : unwatched.settlements.values()) {
+            for (Commodity c : Commodity.values()) {
+                if (c != Commodity.LOGS && c != Commodity.STONE && c != Commodity.FUEL && s.stock.get(c) > u0.get(s.id).get(c) + 1e-9) produced = true;
+            }
+        }
+        assertTrue(produced, "the unwatched world worked its day abstractly");
+    }
+
+    static Map<java.util.UUID, Map<Commodity, Double>> stocks(WorldSim sim) {
+        Map<java.util.UUID, Map<Commodity, Double>> out = new java.util.HashMap<>();
+        for (Settlement s : sim.settlements.values()) {
+            Map<Commodity, Double> m = new EnumMap<>(Commodity.class);
+            for (Commodity c : Commodity.values()) m.put(c, s.stock.get(c));
+            out.put(s.id, m);
+        }
+        return out;
+    }
+
+    @Test
     void saveDataRoundTrips() {
         WorldSim sim = world(6);
         for (long d = 1; d <= 15; d++) sim.daily(d);
         sim.lastDay = 15;
+        // a murderer's warrant survives a restart
+        java.util.UUID town = sim.settlements.keySet().iterator().next(), player = java.util.UUID.randomUUID();
+        sim.wanted.computeIfAbsent(town, k -> new java.util.HashMap<>()).put(player, 72000L);
         WorldSim copy = sim.roundTrip();
+        assertEquals(72000L, copy.wanted.get(town).get(player));
         assertEquals(sim.people.size(), copy.people.size());
         assertEquals(sim.settlements.size(), copy.settlements.size());
         assertEquals(sim.factions.size(), copy.factions.size());

@@ -41,7 +41,8 @@ import java.util.Random;
 public final class BlueprintGen {
     private BlueprintGen() {}
 
-    private static final Map<String, Blueprint> CACHE = new HashMap<>();
+    // shared by the server thread and the background history writer
+    private static final Map<String, Blueprint> CACHE = new java.util.concurrent.ConcurrentHashMap<>();
 
     public static Blueprint get(BuildingType type, String culture, int level, long seed, String faith) {
         String key = type.id() + "|" + culture + "|" + level + "|" + seed + "|" + faith;
