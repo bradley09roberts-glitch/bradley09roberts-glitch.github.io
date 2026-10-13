@@ -29,6 +29,16 @@ Full guide: [modpack/INSTALL.md](modpack/INSTALL.md). First hour of play: [READM
 people get bodies). To shape new worlds, copy it into the instance's `defaultconfigs/` folder.
 **Source:** `mod/` (build with `./gradlew build`).
 
+## New: start with your own people
+
+Every new player sets out with **6 companions** (builders, farmers, a lumberjack, a quarry worker, a guard) who carry
+food, tools and timber and follow you wherever you go. Find good land (flat, near water and trees, away from other
+towns), then **right-click with the Founding Charter** (or talk to one of them and click **Settle here**). They pitch
+tents and build the village themselves, block by block, each doing their own job: fields first, then a lumber camp,
+houses, a quarry, a storehouse, a well. More settlers come once there is food and shelter. Tested: a company grows
+from tents to a hamlet of 10-11 people with 5-7 finished buildings in 50 game days. Prefer to start alone? Set
+`startingCompany = 0` in the world's `serverconfig/longnight-server.toml`.
+
 ## What works
 
 - A new world gets a history: 7 settlements grouped into realms, settler camps, outlaw bands and ruins, about 200
@@ -45,8 +55,8 @@ people get bodies). To shape new worlds, copy it into the instance's `defaultcon
 | Kind | Result |
 |---|---|
 | Compilation | passes |
-| Unit tests (JUnit) | **10/10**, including a 200-day run: no population collapse, rules hold, clean save/reload |
-| In-world GameTests | **7/7**: builders pay once per block and repairs are charged correctly; nothing built over player blocks; trading neither duplicates nor destroys goods; the dead never respawn; wards work; founding a settlement works |
+| Unit tests (JUnit) | **11/11**, including a 200-day run (no population collapse, rules hold, clean save/reload) and a company that survives the road, settles and builds its own village |
+| In-world GameTests | **8/8** (the company appears beside you and settles into your lordship); builders pay once per block and repairs are charged correctly; nothing built over player blocks; trading neither duplicates nor destroys goods; the dead never respawn; wards work; founding a settlement works |
 | Dedicated-server scenario | **17/17**: fresh hardcore world, townsfolk with bodies, a raid, simulated days, restart with identical counts, no person ever has two bodies |
 | Full modpack, dedicated server | **pass** on both packs, 0 errors |
 | Full modpack, real game client | **pass** on the performance pack, screenshots in `tools/test/screenshots/` |
