@@ -1,16 +1,16 @@
 # STATUS
 
-_Last updated: 2026-10-19 (end of M0). Every session starts from this file._
+_Last updated: 2026-10-19 (end of M1). Every session starts from this file._
 
 ## Current milestone
 
-**M0 Setup: complete, awaiting owner review.** Next: M1 Data (do not start until M0 is
-approved).
+**M1 Data: complete, awaiting owner review.** Next: M2 Baselines for the Premier League (do not
+start until M1 is approved).
 
 | Milestone | State |
 | --- | --- |
-| M0 Setup | Done, awaiting review |
-| M1 Data | Not started |
+| M0 Setup | Done (reviewed: owner replied "Do what's best" to the open decisions) |
+| M1 Data | Done, awaiting review |
 | M2 Baselines (Premier League) | Not started |
 | M3 Score model (Premier League) | Not started |
 | M4 Remaining four leagues | Not started |
@@ -28,57 +28,79 @@ approved).
 
 ```bash
 cd football
-uv sync                    # Python 3.12 env from uv.lock
-uv run footy migrate       # creates/updates data/footy.sqlite3 (git-ignored)
-make check                 # lint, format check, pytest, frontend typecheck + build
-uv run footy serve         # API http://127.0.0.1:8000/api/health
+uv sync                         # Python 3.12 env from uv.lock
+uv run footy fd-update          # migrate, download (polite, cached) and import football-data
+uv run footy coverage --markdown docs/coverage/coverage.md
+uv run footy spot-check -n 20 --markdown docs/m1/spot-check.md
+make check                      # lint, format check, pytest, frontend typecheck + build
+uv run footy serve              # API: /api/health /api/coverage /api/refresh-history /api/import-issues
 cd frontend && npm ci && npm run dev    # site http://127.0.0.1:5173
 ```
 
-## Data coverage
+`data/` (database and raw store) is git-ignored. A fresh session rebuilds it with
+`fd-update`: 90 files at one request every 2 s, about 3 minutes, then about 45 s to import.
 
-None imported yet. The database has only the baseline schema (Alembic revision `0001`).
+## Data coverage (19 Oct 2026)
 
-## M0 acceptance results (run 2026-10-19)
+Full tables: [docs/coverage/coverage.md](docs/coverage/coverage.md).
+
+- 90 season files (10 divisions × 2018/19–2026/27), 31,347 matches, 433,184 prices.
+- 28 matches excluded from models as bare or awarded results (D-018); 1 row rejected (no score).
+- Earliest and latest matches, top divisions:
+
+  | League | Earliest | Latest |
+  | --- | --- | --- |
+  | Premier League | 2018-08-10 | 2026-10-12 |
+  | La Liga | 2018-08-17 | 2026-10-12 |
+  | Serie A | 2018-08-18 | 2026-10-12 |
+  | Bundesliga | 2018-08-24 | 2026-10-11 |
+  | Ligue 1 | 2018-08-10 | 2026-10-11 |
+
+- Every completed season has the full round-robin count, except:
+  - Ligue 1 and Ligue 2 2019/20 (cut short);
+  - Ligue 2 2023/24 (Troyes v Valenciennes absent from the source);
+  - Ligue 2 2025/26 (one row with no score).
+- 2018/19 has no kickoff times and no closing prices except Pinnacle's (burn-in season only).
+
+Price coverage for the market benchmark (D-014):
+
+| Closing prices | 2023/24 | 2024/25 | 2025/26 | 2026/27 |
+| --- | --- | --- | --- | --- |
+| Pinnacle 1X2 | 100% | 100% | 49–55% | 0% |
+| Betfair Exchange 1X2 | 0% | 100% | 92–95% | 100% |
+
+## M1 acceptance results (run 2026-10-19)
 
 | Test | Result |
 | --- | --- |
-| `uv run pytest` | 6 passed (health ok after migration; degraded when unmigrated; no data/provider reported; secrets never rendered; provider needs matching key; `.env.example` lists every setting) |
-| `ruff check` / `ruff format --check` | Clean |
-| `npm run typecheck` / `npm run build` | Clean |
-| App boots | `footy serve` + `npm run dev`; `/api/health` returned `status: ok`, schema `0001`, both direct and through the Vite proxy |
-| Visual check | Playwright screenshots at 390 px and 1280 px: no horizontal scroll; API-down error state renders with a retry button |
-| CI | `football-ci` passed on GitHub Actions for commit `924fcc9` (lint, format, pytest, typecheck, build) |
-| Provider research | Written: DECISIONS.md D-009 to D-015, `docs/research/providers.md`, `docs/research/historical-data.md`. Sportmonks verified from its own pages; API-Football unverifiable from here |
-
-## M1 plan (for the next session, after review)
-
-1. Raw store: `data/raw/<source>/` files kept with source, URL, retrieval time, SHA-256 and
-   revision; never overwritten.
-2. football-data importer for E0, SP1, I1, D1, F1 and E1, SP2, I2, D2, F2, seasons 1819 to
-   2627, reading from `data/inbox/football-data/` (D-013); idempotent re-runs.
-3. Team mapping table with tests; coverage report per league, season and field, including
-   Pinnacle and Betfair Exchange columns by season (D-014).
-4. Provider adapter interface plus a Sportmonks implementation, tested against recorded real
-   responses once a free-plan key exists (D-010); odds-capture job built and unit-tested, run
-   only on an always-on host (D-009).
-5. Acceptance: manual spot-check of 20 matches against source; re-import creates no duplicates.
+| Spot-check of 20 matches against source | 874 values (teams, date, kickoff, score, half-time, stats, every stored price) re-read from the raw CSVs with a separate code path: **0 mismatches** ([docs/m1/spot-check.md](docs/m1/spot-check.md)). Independent check against other public sources: see the same file |
+| Re-running imports creates no duplicates | Plain re-run imported nothing; a forced re-parse of all 90 files changed 0 matches and 0 prices; table counts identical. Also covered by `test_import_then_rerun_creates_no_duplicates` |
+| `uv run pytest` | 76 passed, 1 skipped (Sportmonks contract test: no recorded responses until a key exists) |
+| Lint, format, typecheck, build | Clean |
+| App on real data | `/api/health` reports 31,347 matches, 10 divisions; phone (390 px) and desktop screenshots, no horizontal scroll |
 
 ## Known problems and open dependencies
 
-The "Open: needs the owner" table at the top of DECISIONS.md is the master list. Summary:
+1. **Sportmonks key** (D-010): the adapter and capture job are built and unit-tested, but they
+   are unverified against live responses and capture nothing until the owner adds a key.
+2. **Always-on host** (D-009): the capture job is meant to run every 5 minutes from cron on
+   it; it can't run in these coding sessions.
+3. **2026/27 is under way.** The genuine pre-match record starts only when M7 is live; earlier
+   2026/27 matches are retrospective.
+4. **Pinnacle's 2025/26 gaps** are handled by D-014 (Betfair Exchange closing from 23 Jul 2025).
+   Betfair Exchange prices don't exist in the data before 2024/25.
+5. **Referees** are only in English files; **xG** only in 2026/27 (undocumented; not used).
 
-1. **football-data.co.uk terms** (D-013): its data page says use is "intended for private
-   individuals only, NOT commerical or data training products using automated
-   bots/scrapers/AI". Until the owner decides, M1 imports from a local drop folder the owner
-   fills by hand; the automatic downloader stays off.
-2. **Pinnacle unreliable from 23 Jul 2025** and absent from 2026/27 files (D-014): proposed
-   Betfair Exchange closing as the benchmark from that date; needs owner sign-off.
-3. **Live provider key** (D-010): Sportmonks recommended, starting with its free plan.
-   API-Football could not be verified (HTTP 403 to every fetch method).
-4. **Always-on host for scheduled jobs** (D-009): coding sessions are ephemeral and GitHub
-   Pages is static, so neither can run odds capture or settlement.
-5. **2026/27 has already started.** football-data's 2026/27 files, probed (not imported) on
-   19 Oct 2026, already hold 60 Premier League, 78 La Liga, 60 Serie A, 45 Bundesliga and
-   54 Ligue 1 matches, the latest on 11–12 Oct 2026. The genuine pre-match record can only
-   begin when M7 is live; earlier 2026/27 matches are retrospective and will be labelled so.
+## M2 plan (for the next session, after review)
+
+1. Walk-forward harness for the Premier League:
+   - burn-in 2018/19–2019/20, training through 2022/23, validation 2023/24, test 2024/25 and
+     2025/26;
+   - predictions in matchweek batches, using only results final before each batch's D-012
+     cutoff.
+2. Baselines: league frequency, Elo with home advantage and a draw model, and independent
+   Poisson.
+3. Per-fixture ledger (CSV and JSON) and run manifest. Metrics: RPS for 1X2, log loss for
+   O/U 1.5 / 2.5 / 3.5 and BTTS, plus Brier score, accuracy and calibration.
+4. A leakage test for every guard in the brief. Acceptance: headline metrics recompute exactly
+   from the exported ledger.

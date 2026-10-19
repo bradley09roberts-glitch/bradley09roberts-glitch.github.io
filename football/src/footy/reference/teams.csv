@@ -1,0 +1,280 @@
+team_key,name,country
+deu-augsburg,Augsburg,DEU
+deu-bayern-munich,Bayern Munich,DEU
+deu-bielefeld,Bielefeld,DEU
+deu-bochum,Bochum,DEU
+deu-braunschweig,Braunschweig,DEU
+deu-cottbus,Cottbus,DEU
+deu-darmstadt,Darmstadt,DEU
+deu-dortmund,Dortmund,DEU
+deu-dresden,Dresden,DEU
+deu-duisburg,Duisburg,DEU
+deu-ein-frankfurt,Ein Frankfurt,DEU
+deu-elversberg,Elversberg,DEU
+deu-erzgebirge-aue,Erzgebirge Aue,DEU
+deu-fc-koln,FC Koln,DEU
+deu-fortuna-dusseldorf,Fortuna Dusseldorf,DEU
+deu-freiburg,Freiburg,DEU
+deu-greuther-furth,Greuther Furth,DEU
+deu-hamburg,Hamburg,DEU
+deu-hannover,Hannover,DEU
+deu-hansa-rostock,Hansa Rostock,DEU
+deu-heidenheim,Heidenheim,DEU
+deu-hertha,Hertha,DEU
+deu-hoffenheim,Hoffenheim,DEU
+deu-holstein-kiel,Holstein Kiel,DEU
+deu-ingolstadt,Ingolstadt,DEU
+deu-kaiserslautern,Kaiserslautern,DEU
+deu-karlsruhe,Karlsruhe,DEU
+deu-leverkusen,Leverkusen,DEU
+deu-m-gladbach,M'gladbach,DEU
+deu-magdeburg,Magdeburg,DEU
+deu-mainz,Mainz,DEU
+deu-nurnberg,Nurnberg,DEU
+deu-osnabruck,Osnabruck,DEU
+deu-paderborn,Paderborn,DEU
+deu-preussen-munster,Preußen Münster,DEU
+deu-rb-leipzig,RB Leipzig,DEU
+deu-regensburg,Regensburg,DEU
+deu-sandhausen,Sandhausen,DEU
+deu-schalke-04,Schalke 04,DEU
+deu-st-pauli,St Pauli,DEU
+deu-stuttgart,Stuttgart,DEU
+deu-ulm,Ulm,DEU
+deu-union-berlin,Union Berlin,DEU
+deu-wehen,Wehen,DEU
+deu-werder-bremen,Werder Bremen,DEU
+deu-wolfsburg,Wolfsburg,DEU
+deu-wurzburger-kickers,Wurzburger Kickers,DEU
+eng-arsenal,Arsenal,ENG
+eng-aston-villa,Aston Villa,ENG
+eng-barnsley,Barnsley,ENG
+eng-birmingham,Birmingham,ENG
+eng-blackburn,Blackburn,ENG
+eng-blackpool,Blackpool,ENG
+eng-bolton,Bolton,ENG
+eng-bournemouth,Bournemouth,ENG
+eng-brentford,Brentford,ENG
+eng-brighton,Brighton,ENG
+eng-bristol-city,Bristol City,ENG
+eng-burnley,Burnley,ENG
+eng-cardiff,Cardiff,ENG
+eng-charlton,Charlton,ENG
+eng-chelsea,Chelsea,ENG
+eng-coventry,Coventry,ENG
+eng-crystal-palace,Crystal Palace,ENG
+eng-derby,Derby,ENG
+eng-everton,Everton,ENG
+eng-fulham,Fulham,ENG
+eng-huddersfield,Huddersfield,ENG
+eng-hull,Hull,ENG
+eng-ipswich,Ipswich,ENG
+eng-leeds,Leeds,ENG
+eng-leicester,Leicester,ENG
+eng-lincoln,Lincoln,ENG
+eng-liverpool,Liverpool,ENG
+eng-luton,Luton,ENG
+eng-man-city,Man City,ENG
+eng-man-united,Man United,ENG
+eng-middlesbrough,Middlesbrough,ENG
+eng-millwall,Millwall,ENG
+eng-newcastle,Newcastle,ENG
+eng-norwich,Norwich,ENG
+eng-nott-m-forest,Nott'm Forest,ENG
+eng-oxford,Oxford,ENG
+eng-peterboro,Peterboro,ENG
+eng-plymouth,Plymouth,ENG
+eng-portsmouth,Portsmouth,ENG
+eng-preston,Preston,ENG
+eng-qpr,QPR,ENG
+eng-reading,Reading,ENG
+eng-rotherham,Rotherham,ENG
+eng-sheffield-united,Sheffield United,ENG
+eng-sheffield-weds,Sheffield Weds,ENG
+eng-southampton,Southampton,ENG
+eng-stoke,Stoke,ENG
+eng-sunderland,Sunderland,ENG
+eng-swansea,Swansea,ENG
+eng-tottenham,Tottenham,ENG
+eng-watford,Watford,ENG
+eng-west-brom,West Brom,ENG
+eng-west-ham,West Ham,ENG
+eng-wigan,Wigan,ENG
+eng-wolves,Wolves,ENG
+eng-wrexham,Wrexham,ENG
+eng-wycombe,Wycombe,ENG
+esp-alaves,Alaves,ESP
+esp-albacete,Albacete,ESP
+esp-alcorcon,Alcorcon,ESP
+esp-almeria,Almeria,ESP
+esp-amorebieta,Amorebieta,ESP
+esp-andorra,Andorra,ESP
+esp-ath-bilbao,Ath Bilbao,ESP
+esp-ath-madrid,Ath Madrid,ESP
+esp-barcelona,Barcelona,ESP
+esp-betis,Betis,ESP
+esp-burgos,Burgos,ESP
+esp-cadiz,Cadiz,ESP
+esp-cartagena,Cartagena,ESP
+esp-castellon,Castellon,ESP
+esp-celta,Celta,ESP
+esp-celta-b,Celta B,ESP
+esp-ceuta,Ceuta,ESP
+esp-cordoba,Cordoba,ESP
+esp-cultural-leonesa,Cultural Leonesa,ESP
+esp-eibar,Eibar,ESP
+esp-elche,Elche,ESP
+esp-eldense,Eldense,ESP
+esp-espanol,Espanol,ESP
+esp-extremadura-ud,Extremadura UD,ESP
+esp-ferrol,Ferrol,ESP
+esp-fuenlabrada,Fuenlabrada,ESP
+esp-getafe,Getafe,ESP
+esp-gimnastic,Gimnastic,ESP
+esp-girona,Girona,ESP
+esp-granada,Granada,ESP
+esp-huesca,Huesca,ESP
+esp-ibiza,Ibiza,ESP
+esp-la-coruna,La Coruna,ESP
+esp-las-palmas,Las Palmas,ESP
+esp-leganes,Leganes,ESP
+esp-levante,Levante,ESP
+esp-logrones,Logrones,ESP
+esp-lugo,Lugo,ESP
+esp-malaga,Malaga,ESP
+esp-mallorca,Mallorca,ESP
+esp-mirandes,Mirandes,ESP
+esp-numancia,Numancia,ESP
+esp-osasuna,Osasuna,ESP
+esp-oviedo,Oviedo,ESP
+esp-ponferradina,Ponferradina,ESP
+esp-rayo-majadahonda,Rayo Majadahonda,ESP
+esp-real-madrid,Real Madrid,ESP
+esp-reus-deportiu,Reus Deportiu,ESP
+esp-sabadell,Sabadell,ESP
+esp-santander,Santander,ESP
+esp-sevilla,Sevilla,ESP
+esp-sociedad,Sociedad,ESP
+esp-sociedad-b,Sociedad B,ESP
+esp-sp-gijon,Sp Gijon,ESP
+esp-tenerife,Tenerife,ESP
+esp-valencia,Valencia,ESP
+esp-valladolid,Valladolid,ESP
+esp-vallecano,Vallecano,ESP
+esp-villarreal,Villarreal,ESP
+esp-villarreal-b,Villarreal B,ESP
+esp-zaragoza,Zaragoza,ESP
+fra-ajaccio,Ajaccio,FRA
+fra-ajaccio-gfco,Ajaccio GFCO,FRA
+fra-amiens,Amiens,FRA
+fra-angers,Angers,FRA
+fra-annecy,Annecy,FRA
+fra-auxerre,Auxerre,FRA
+fra-bastia,Bastia,FRA
+fra-beziers,Beziers,FRA
+fra-bordeaux,Bordeaux,FRA
+fra-boulogne,Boulogne,FRA
+fra-brest,Brest,FRA
+fra-caen,Caen,FRA
+fra-chambly,Chambly,FRA
+fra-chateauroux,Chateauroux,FRA
+fra-clermont,Clermont,FRA
+fra-concarneau,Concarneau,FRA
+fra-dijon,Dijon,FRA
+fra-dunkerque,Dunkerque,FRA
+fra-grenoble,Grenoble,FRA
+fra-guingamp,Guingamp,FRA
+fra-laval,Laval,FRA
+fra-le-havre,Le Havre,FRA
+fra-le-mans,Le Mans,FRA
+fra-lens,Lens,FRA
+fra-lille,Lille,FRA
+fra-lorient,Lorient,FRA
+fra-lyon,Lyon,FRA
+fra-marseille,Marseille,FRA
+fra-martigues,Martigues,FRA
+fra-metz,Metz,FRA
+fra-monaco,Monaco,FRA
+fra-montpellier,Montpellier,FRA
+fra-nancy,Nancy,FRA
+fra-nantes,Nantes,FRA
+fra-nice,Nice,FRA
+fra-nimes,Nimes,FRA
+fra-niort,Niort,FRA
+fra-orleans,Orleans,FRA
+fra-paris-fc,Paris FC,FRA
+fra-paris-sg,Paris SG,FRA
+fra-pau-fc,Pau FC,FRA
+fra-quevilly-rouen,Quevilly Rouen,FRA
+fra-red-star,Red Star,FRA
+fra-reims,Reims,FRA
+fra-rennes,Rennes,FRA
+fra-rodez,Rodez,FRA
+fra-sochaux,Sochaux,FRA
+fra-st-etienne,St Etienne,FRA
+fra-strasbourg,Strasbourg,FRA
+fra-toulouse,Toulouse,FRA
+fra-troyes,Troyes,FRA
+fra-valenciennes,Valenciennes,FRA
+ita-alessandria,Alessandria,ITA
+ita-arezzo,Arezzo,ITA
+ita-ascoli,Ascoli,ITA
+ita-atalanta,Atalanta,ITA
+ita-avellino,Avellino,ITA
+ita-bari,Bari,ITA
+ita-benevento,Benevento,ITA
+ita-bologna,Bologna,ITA
+ita-brescia,Brescia,ITA
+ita-cagliari,Cagliari,ITA
+ita-carpi,Carpi,ITA
+ita-carrarese,Carrarese,ITA
+ita-catanzaro,Catanzaro,ITA
+ita-cesena,Cesena,ITA
+ita-chievo,Chievo,ITA
+ita-cittadella,Cittadella,ITA
+ita-como,Como,ITA
+ita-cosenza,Cosenza,ITA
+ita-cremonese,Cremonese,ITA
+ita-crotone,Crotone,ITA
+ita-empoli,Empoli,ITA
+ita-feralpisalo,FeralpiSalo,ITA
+ita-fiorentina,Fiorentina,ITA
+ita-foggia,Foggia,ITA
+ita-frosinone,Frosinone,ITA
+ita-genoa,Genoa,ITA
+ita-inter,Inter,ITA
+ita-juve-stabia,Juve Stabia,ITA
+ita-juventus,Juventus,ITA
+ita-lazio,Lazio,ITA
+ita-lecce,Lecce,ITA
+ita-lecco,Lecco,ITA
+ita-livorno,Livorno,ITA
+ita-mantova,Mantova,ITA
+ita-milan,Milan,ITA
+ita-modena,Modena,ITA
+ita-monza,Monza,ITA
+ita-napoli,Napoli,ITA
+ita-padova,Padova,ITA
+ita-palermo,Palermo,ITA
+ita-parma,Parma,ITA
+ita-perugia,Perugia,ITA
+ita-pescara,Pescara,ITA
+ita-pisa,Pisa,ITA
+ita-pordenone,Pordenone,ITA
+ita-reggiana,Reggiana,ITA
+ita-reggina,Reggina,ITA
+ita-roma,Roma,ITA
+ita-salernitana,Salernitana,ITA
+ita-sampdoria,Sampdoria,ITA
+ita-sassuolo,Sassuolo,ITA
+ita-spal,Spal,ITA
+ita-spezia,Spezia,ITA
+ita-sudtirol,Sudtirol,ITA
+ita-ternana,Ternana,ITA
+ita-torino,Torino,ITA
+ita-trapani,Trapani,ITA
+ita-udinese,Udinese,ITA
+ita-venezia,Venezia,ITA
+ita-verona,Verona,ITA
+ita-vicenza,Vicenza,ITA
+ita-virtus-entella,Virtus Entella,ITA

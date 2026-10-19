@@ -2,6 +2,7 @@ from logging.config import fileConfig
 
 from alembic import context
 
+import footy.models  # noqa: F401  (registers tables on Base.metadata)
 from footy.config import get_settings
 from footy.db import Base, make_engine
 

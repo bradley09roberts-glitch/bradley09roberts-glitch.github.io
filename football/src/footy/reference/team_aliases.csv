@@ -1,0 +1,280 @@
+source,alias,team_key
+football-data,Ajaccio,fra-ajaccio
+football-data,Ajaccio GFCO,fra-ajaccio-gfco
+football-data,Alaves,esp-alaves
+football-data,Albacete,esp-albacete
+football-data,Alcorcon,esp-alcorcon
+football-data,Alessandria,ita-alessandria
+football-data,Almeria,esp-almeria
+football-data,Amiens,fra-amiens
+football-data,Amorebieta,esp-amorebieta
+football-data,Andorra,esp-andorra
+football-data,Angers,fra-angers
+football-data,Annecy,fra-annecy
+football-data,Arezzo,ita-arezzo
+football-data,Arsenal,eng-arsenal
+football-data,Ascoli,ita-ascoli
+football-data,Aston Villa,eng-aston-villa
+football-data,Atalanta,ita-atalanta
+football-data,Ath Bilbao,esp-ath-bilbao
+football-data,Ath Madrid,esp-ath-madrid
+football-data,Augsburg,deu-augsburg
+football-data,Auxerre,fra-auxerre
+football-data,Avellino,ita-avellino
+football-data,Barcelona,esp-barcelona
+football-data,Bari,ita-bari
+football-data,Barnsley,eng-barnsley
+football-data,Bastia,fra-bastia
+football-data,Bayern Munich,deu-bayern-munich
+football-data,Benevento,ita-benevento
+football-data,Betis,esp-betis
+football-data,Beziers,fra-beziers
+football-data,Bielefeld,deu-bielefeld
+football-data,Birmingham,eng-birmingham
+football-data,Blackburn,eng-blackburn
+football-data,Blackpool,eng-blackpool
+football-data,Bochum,deu-bochum
+football-data,Bologna,ita-bologna
+football-data,Bolton,eng-bolton
+football-data,Bordeaux,fra-bordeaux
+football-data,Boulogne,fra-boulogne
+football-data,Bournemouth,eng-bournemouth
+football-data,Braunschweig,deu-braunschweig
+football-data,Brentford,eng-brentford
+football-data,Brescia,ita-brescia
+football-data,Brest,fra-brest
+football-data,Brighton,eng-brighton
+football-data,Bristol City,eng-bristol-city
+football-data,Burgos,esp-burgos
+football-data,Burnley,eng-burnley
+football-data,Cadiz,esp-cadiz
+football-data,Caen,fra-caen
+football-data,Cagliari,ita-cagliari
+football-data,Cardiff,eng-cardiff
+football-data,Carpi,ita-carpi
+football-data,Carrarese,ita-carrarese
+football-data,Cartagena,esp-cartagena
+football-data,Castellon,esp-castellon
+football-data,Catanzaro,ita-catanzaro
+football-data,Celta,esp-celta
+football-data,Celta B,esp-celta-b
+football-data,Cesena,ita-cesena
+football-data,Ceuta,esp-ceuta
+football-data,Chambly,fra-chambly
+football-data,Charlton,eng-charlton
+football-data,Chateauroux,fra-chateauroux
+football-data,Chelsea,eng-chelsea
+football-data,Chievo,ita-chievo
+football-data,Cittadella,ita-cittadella
+football-data,Clermont,fra-clermont
+football-data,Como,ita-como
+football-data,Concarneau,fra-concarneau
+football-data,Cordoba,esp-cordoba
+football-data,Cosenza,ita-cosenza
+football-data,Cottbus,deu-cottbus
+football-data,Coventry,eng-coventry
+football-data,Cremonese,ita-cremonese
+football-data,Crotone,ita-crotone
+football-data,Crystal Palace,eng-crystal-palace
+football-data,Cultural Leonesa,esp-cultural-leonesa
+football-data,Darmstadt,deu-darmstadt
+football-data,Derby,eng-derby
+football-data,Dijon,fra-dijon
+football-data,Dortmund,deu-dortmund
+football-data,Dresden,deu-dresden
+football-data,Duisburg,deu-duisburg
+football-data,Dunkerque,fra-dunkerque
+football-data,Eibar,esp-eibar
+football-data,Ein Frankfurt,deu-ein-frankfurt
+football-data,Elche,esp-elche
+football-data,Eldense,esp-eldense
+football-data,Elversberg,deu-elversberg
+football-data,Empoli,ita-empoli
+football-data,Erzgebirge Aue,deu-erzgebirge-aue
+football-data,Espanol,esp-espanol
+football-data,Everton,eng-everton
+football-data,Extremadura UD,esp-extremadura-ud
+football-data,FC Koln,deu-fc-koln
+football-data,FeralpiSalo,ita-feralpisalo
+football-data,Ferrol,esp-ferrol
+football-data,Fiorentina,ita-fiorentina
+football-data,Foggia,ita-foggia
+football-data,Fortuna Dusseldorf,deu-fortuna-dusseldorf
+football-data,Freiburg,deu-freiburg
+football-data,Frosinone,ita-frosinone
+football-data,Fuenlabrada,esp-fuenlabrada
+football-data,Fulham,eng-fulham
+football-data,Genoa,ita-genoa
+football-data,Getafe,esp-getafe
+football-data,Gimnastic,esp-gimnastic
+football-data,Girona,esp-girona
+football-data,Granada,esp-granada
+football-data,Grenoble,fra-grenoble
+football-data,Greuther Furth,deu-greuther-furth
+football-data,Guingamp,fra-guingamp
+football-data,Hamburg,deu-hamburg
+football-data,Hannover,deu-hannover
+football-data,Hansa Rostock,deu-hansa-rostock
+football-data,Heidenheim,deu-heidenheim
+football-data,Hertha,deu-hertha
+football-data,Hoffenheim,deu-hoffenheim
+football-data,Holstein Kiel,deu-holstein-kiel
+football-data,Huddersfield,eng-huddersfield
+football-data,Huesca,esp-huesca
+football-data,Hull,eng-hull
+football-data,Ibiza,esp-ibiza
+football-data,Ingolstadt,deu-ingolstadt
+football-data,Inter,ita-inter
+football-data,Ipswich,eng-ipswich
+football-data,Juve Stabia,ita-juve-stabia
+football-data,Juventus,ita-juventus
+football-data,Kaiserslautern,deu-kaiserslautern
+football-data,Karlsruhe,deu-karlsruhe
+football-data,La Coruna,esp-la-coruna
+football-data,Las Palmas,esp-las-palmas
+football-data,Laval,fra-laval
+football-data,Lazio,ita-lazio
+football-data,Le Havre,fra-le-havre
+football-data,Le Mans,fra-le-mans
+football-data,Lecce,ita-lecce
+football-data,Lecco,ita-lecco
+football-data,Leeds,eng-leeds
+football-data,Leganes,esp-leganes
+football-data,Leicester,eng-leicester
+football-data,Lens,fra-lens
+football-data,Levante,esp-levante
+football-data,Leverkusen,deu-leverkusen
+football-data,Lille,fra-lille
+football-data,Lincoln,eng-lincoln
+football-data,Liverpool,eng-liverpool
+football-data,Livorno,ita-livorno
+football-data,Logrones,esp-logrones
+football-data,Lorient,fra-lorient
+football-data,Lugo,esp-lugo
+football-data,Luton,eng-luton
+football-data,Lyon,fra-lyon
+football-data,M'gladbach,deu-m-gladbach
+football-data,Magdeburg,deu-magdeburg
+football-data,Mainz,deu-mainz
+football-data,Malaga,esp-malaga
+football-data,Mallorca,esp-mallorca
+football-data,Man City,eng-man-city
+football-data,Man United,eng-man-united
+football-data,Mantova,ita-mantova
+football-data,Marseille,fra-marseille
+football-data,Martigues,fra-martigues
+football-data,Metz,fra-metz
+football-data,Middlesbrough,eng-middlesbrough
+football-data,Milan,ita-milan
+football-data,Millwall,eng-millwall
+football-data,Mirandes,esp-mirandes
+football-data,Modena,ita-modena
+football-data,Monaco,fra-monaco
+football-data,Montpellier,fra-montpellier
+football-data,Monza,ita-monza
+football-data,Nancy,fra-nancy
+football-data,Nantes,fra-nantes
+football-data,Napoli,ita-napoli
+football-data,Newcastle,eng-newcastle
+football-data,Nice,fra-nice
+football-data,Nimes,fra-nimes
+football-data,Niort,fra-niort
+football-data,Norwich,eng-norwich
+football-data,Nott'm Forest,eng-nott-m-forest
+football-data,Numancia,esp-numancia
+football-data,Nurnberg,deu-nurnberg
+football-data,Orleans,fra-orleans
+football-data,Osasuna,esp-osasuna
+football-data,Osnabruck,deu-osnabruck
+football-data,Oviedo,esp-oviedo
+football-data,Oxford,eng-oxford
+football-data,Paderborn,deu-paderborn
+football-data,Padova,ita-padova
+football-data,Palermo,ita-palermo
+football-data,Paris FC,fra-paris-fc
+football-data,Paris SG,fra-paris-sg
+football-data,Parma,ita-parma
+football-data,Pau FC,fra-pau-fc
+football-data,Perugia,ita-perugia
+football-data,Pescara,ita-pescara
+football-data,Peterboro,eng-peterboro
+football-data,Pisa,ita-pisa
+football-data,Plymouth,eng-plymouth
+football-data,Ponferradina,esp-ponferradina
+football-data,Pordenone,ita-pordenone
+football-data,Portsmouth,eng-portsmouth
+football-data,Preston,eng-preston
+football-data,Preußen Münster,deu-preussen-munster
+football-data,QPR,eng-qpr
+football-data,Quevilly Rouen,fra-quevilly-rouen
+football-data,RB Leipzig,deu-rb-leipzig
+football-data,Rayo Majadahonda,esp-rayo-majadahonda
+football-data,Reading,eng-reading
+football-data,Real Madrid,esp-real-madrid
+football-data,Red Star,fra-red-star
+football-data,Regensburg,deu-regensburg
+football-data,Reggiana,ita-reggiana
+football-data,Reggina,ita-reggina
+football-data,Reims,fra-reims
+football-data,Rennes,fra-rennes
+football-data,Reus Deportiu,esp-reus-deportiu
+football-data,Rodez,fra-rodez
+football-data,Roma,ita-roma
+football-data,Rotherham,eng-rotherham
+football-data,Sabadell,esp-sabadell
+football-data,Salernitana,ita-salernitana
+football-data,Sampdoria,ita-sampdoria
+football-data,Sandhausen,deu-sandhausen
+football-data,Santander,esp-santander
+football-data,Sassuolo,ita-sassuolo
+football-data,Schalke 04,deu-schalke-04
+football-data,Sevilla,esp-sevilla
+football-data,Sheffield United,eng-sheffield-united
+football-data,Sheffield Weds,eng-sheffield-weds
+football-data,Sochaux,fra-sochaux
+football-data,Sociedad,esp-sociedad
+football-data,Sociedad B,esp-sociedad-b
+football-data,Southampton,eng-southampton
+football-data,Sp Gijon,esp-sp-gijon
+football-data,Spal,ita-spal
+football-data,Spezia,ita-spezia
+football-data,St Etienne,fra-st-etienne
+football-data,St Pauli,deu-st-pauli
+football-data,Stoke,eng-stoke
+football-data,Strasbourg,fra-strasbourg
+football-data,Stuttgart,deu-stuttgart
+football-data,Sudtirol,ita-sudtirol
+football-data,Sunderland,eng-sunderland
+football-data,Swansea,eng-swansea
+football-data,Tenerife,esp-tenerife
+football-data,Ternana,ita-ternana
+football-data,Torino,ita-torino
+football-data,Tottenham,eng-tottenham
+football-data,Toulouse,fra-toulouse
+football-data,Trapani,ita-trapani
+football-data,Troyes,fra-troyes
+football-data,Udinese,ita-udinese
+football-data,Ulm,deu-ulm
+football-data,Union Berlin,deu-union-berlin
+football-data,Valencia,esp-valencia
+football-data,Valenciennes,fra-valenciennes
+football-data,Valladolid,esp-valladolid
+football-data,Vallecano,esp-vallecano
+football-data,Venezia,ita-venezia
+football-data,Verona,ita-verona
+football-data,Vicenza,ita-vicenza
+football-data,Villarreal,esp-villarreal
+football-data,Villarreal B,esp-villarreal-b
+football-data,Virtus Entella,ita-virtus-entella
+football-data,Watford,eng-watford
+football-data,Wehen,deu-wehen
+football-data,Werder Bremen,deu-werder-bremen
+football-data,West Brom,eng-west-brom
+football-data,West Ham,eng-west-ham
+football-data,Wigan,eng-wigan
+football-data,Wolfsburg,deu-wolfsburg
+football-data,Wolves,eng-wolves
+football-data,Wrexham,eng-wrexham
+football-data,Wurzburger Kickers,deu-wurzburger-kickers
+football-data,Wycombe,eng-wycombe
+football-data,Zaragoza,esp-zaragoza

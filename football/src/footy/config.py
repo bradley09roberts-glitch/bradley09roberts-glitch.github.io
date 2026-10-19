@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     data_dir: Path = Field(default=PROJECT_ROOT / "data", validation_alias="FOOTY_DATA_DIR")
     display_timezone: str = Field(default="Europe/London", validation_alias="FOOTY_DISPLAY_TZ")
     log_level: str = Field(default="INFO", validation_alias="FOOTY_LOG_LEVEL")
+    fd_download: bool = Field(default=True, validation_alias="FOOTY_FD_DOWNLOAD")
 
     live_provider: Literal["none", "sportmonks", "api_football"] = Field(
         default="none", validation_alias="FOOTY_LIVE_PROVIDER"
@@ -41,6 +42,11 @@ class Settings(BaseSettings):
     def raw_dir(self) -> Path:
         """Append-only store for raw downloaded files and API responses."""
         return self.data_dir / "raw"
+
+    @property
+    def fd_inbox_dir(self) -> Path:
+        """Hand-downloaded football-data CSVs, named <season>_<division>.csv (e.g. 2526_E0.csv)."""
+        return self.data_dir / "inbox" / "football-data"
 
     def live_provider_configured(self) -> bool:
         if self.live_provider == "sportmonks":

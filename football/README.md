@@ -3,9 +3,10 @@
 Prediction and backtesting for the Premier League, La Liga, Serie A, Bundesliga and Ligue 1,
 covering match result (1X2), total goals (O/U 1.5 / 2.5 / 3.5) and both teams to score.
 
-> **Status: M0 (setup).** No data has been imported and no model has been fitted. The site
-> shows no predictions, accuracy or profit figures, and will not until those numbers come
-> from real data through the milestones in [STATUS.md](STATUS.md).
+> **Status: M1 (data) complete.** football-data.co.uk results, stats and prices for ten
+> divisions, 2018/19 to date, are imported with a coverage report. No model has been fitted, so
+> the site shows no predictions, accuracy or profit figures; they will come only from real data
+> through the milestones in [STATUS.md](STATUS.md).
 
 ## What this is (and isn't)
 
@@ -18,7 +19,9 @@ covering match result (1X2), total goals (O/U 1.5 / 2.5 / 3.5) and both teams to
 
 | Path | What |
 | --- | --- |
-| `src/footy/` | Python package: config, database, API (more arrives per milestone) |
+| `src/footy/` | Python package: config, database, API, ingest, providers, capture |
+| `src/footy/reference/` | Team mapping tables (`teams.csv`, `team_aliases.csv`) |
+| `docs/coverage/` | Generated coverage report (counts only) |
 | `migrations/` | Alembic migrations (SQLite by default, Postgres via `FOOTY_DATABASE_URL`) |
 | `tests/` | pytest suite |
 | `frontend/` | React + Vite + TypeScript site (mobile-first) |
@@ -34,8 +37,10 @@ Needs Python 3.12, [uv](https://docs.astral.sh/uv/) and Node 20+.
 cd football
 cp .env.example .env            # optional; defaults work without it
 uv sync                         # Python deps into .venv
-uv run footy migrate            # create/upgrade data/footy.sqlite3
+uv run footy fd-update          # migrate, download (polite, cached) and import football-data
+uv run footy coverage           # coverage per division, season and field
 uv run footy serve              # API on http://127.0.0.1:8000  (GET /api/health)
+uv run footy capture-odds       # forward odds snapshots (needs a provider key; cron every 5 min)
 
 cd frontend
 npm ci

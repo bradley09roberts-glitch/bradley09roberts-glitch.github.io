@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchHealth, formatLondon, type Health } from "./api";
+import { fetchHealth, formatDate, formatLondon, type Health } from "./api";
 
 type State =
   | { kind: "loading" }
@@ -26,13 +26,13 @@ export function App() {
     <>
       <header className="bar">
         <strong>Football model</strong>
-        <span className="tag">Setup</span>
+        <span className="tag">Data import</span>
       </header>
       <main className="page">
         <section className="card notice">
-          <h1>Nothing to show yet</h1>
+          <h1>No predictions yet</h1>
           <p>
-            No match data has been imported and no model has been fitted, so there are no
+            Match data is being imported, but no model has been fitted, so there are no
             predictions, accuracy figures or profit numbers on this site. They appear only once
             they come from real data and reproducible backtests.
           </p>
@@ -71,11 +71,27 @@ function StatusList({ health }: { health: Health }) {
         {!schemaOk && ` (expected ${health.schema_head})`}
       </dd>
       <dt>Match data</dt>
-      <dd className="muted">{health.data_imported ? "Imported" : "None imported"}</dd>
+      <dd className={health.data_imported ? undefined : "muted"}>
+        {health.data_imported
+          ? `${health.data.matches.toLocaleString("en-GB")} matches, ${health.data.divisions} divisions`
+          : "None imported"}
+      </dd>
+      {health.data.latest_match_date && (
+        <>
+          <dt>Latest match</dt>
+          <dd>{formatDate(health.data.latest_match_date)}</dd>
+        </>
+      )}
+      <dt>Last refresh</dt>
+      <dd className={health.data.last_refresh?.status === "ok" ? undefined : "bad"}>
+        {health.data.last_refresh
+          ? `${formatLondon(health.data.last_refresh.started_at)} (${health.data.last_refresh.status})`
+          : "Never"}
+      </dd>
       <dt>Live provider</dt>
       <dd className="muted">
         {health.live_provider === "none"
-          ? "Not chosen"
+          ? "Not configured (no key)"
           : `${health.live_provider}${health.live_provider_configured ? "" : " (no key)"}`}
       </dd>
       <dt>Server time</dt>
