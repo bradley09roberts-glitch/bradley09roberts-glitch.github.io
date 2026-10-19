@@ -73,7 +73,7 @@ Price coverage for the market benchmark (D-014):
 
 | Test | Result |
 | --- | --- |
-| Spot-check of 20 matches against source | 874 values (teams, date, kickoff, score, half-time, stats, every stored price) re-read from the raw CSVs with a separate code path: **0 mismatches** ([docs/m1/spot-check.md](docs/m1/spot-check.md)). Independent check against other public sources: see the same file |
+| Spot-check of 20 matches against source | 874 values (teams, date, kickoff, score, half-time, stats, every stored price) re-read from the raw CSVs with a separate code path: **0 mismatches** ([docs/m1/spot-check.md](docs/m1/spot-check.md)). Against independent public sources: **20/20 dates and scores confirmed, 18/18 recorded kick-offs match the scheduled UK time** ([docs/m1/independent-check.md](docs/m1/independent-check.md)) |
 | Re-running imports creates no duplicates | Plain re-run imported nothing; a forced re-parse of all 90 files changed 0 matches and 0 prices; table counts identical. Also covered by `test_import_then_rerun_creates_no_duplicates` |
 | `uv run pytest` | 76 passed, 1 skipped (Sportmonks contract test: no recorded responses until a key exists) |
 | Lint, format, typecheck, build | Clean |

@@ -49,8 +49,13 @@ components. **Why:** type-checking catches API-shape drift between backend and f
 ## D-005 Time handling
 
 All timestamps are stored as timezone-aware UTC and converted to Europe/London only for
-display. football-data's `Date`/`Time` columns will be checked in M1 against a few known
-kickoffs before being treated as UK local time.
+display.
+
+**Checked in M1:** football-data's `Time` column is the scheduled kick-off in UK local time.
+All 18 timed matches in the spot-check agreed with independent sources
+([docs/m1/independent-check.md](docs/m1/independent-check.md)). It is the scheduled time, not
+the actual start: Brighton v Liverpool on 21 Mar 2026 was listed for 12:30 and kicked off at
+12:45. "Closing at kickoff" therefore means closing at the scheduled kickoff.
 
 ## D-006 Secrets
 
@@ -246,7 +251,9 @@ columns exist, is flagged `result_without_stats`. The match gets
 It is still shown in coverage, and still counts for anything that needs the official result.
 There were 28 such rows on 19 Oct 2026. Their pattern fits results decided off the pitch:
 21 bare 1–0 / 0–1 scores in Segunda 2018/19, consistent with Reus Deportiu's expulsion, plus
-Serie B and Ligue 2 forfeits and Union Berlin 0–2 Bochum (14 Dec 2024).
+Serie B and Ligue 2 forfeits and Union Berlin 0–2 Bochum (14 Dec 2024). The Bochum match is
+independently confirmed as awarded: it finished 1–1 on the pitch, and the DFB sports court
+awarded it 0–2 ([docs/m1/independent-check.md](docs/m1/independent-check.md)).
 
 ## D-019 Corrections and revisions (M1)
 
