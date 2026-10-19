@@ -48,7 +48,7 @@ None imported yet. The database has only the baseline schema (Alembic revision `
 | `npm run typecheck` / `npm run build` | Clean |
 | App boots | `footy serve` + `npm run dev`; `/api/health` returned `status: ok`, schema `0001`, both direct and through the Vite proxy |
 | Visual check | Playwright screenshots at 390 px and 1280 px: no horizontal scroll; API-down error state renders with a retry button |
-| CI | Workflow added (`.github/workflows/football-ci.yml`); first run happens on push |
+| CI | `football-ci` passed on GitHub Actions for commit `924fcc9` (lint, format, pytest, typecheck, build) |
 | Provider research | Written: DECISIONS.md D-009 to D-015, `docs/research/providers.md`, `docs/research/historical-data.md`. Sportmonks verified from its own pages; API-Football unverifiable from here |
 
 ## M1 plan (for the next session, after review)
