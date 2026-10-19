@@ -49,16 +49,36 @@ None imported yet. The database has only the baseline schema (Alembic revision `
 | App boots | `footy serve` + `npm run dev`; `/api/health` returned `status: ok`, schema `0001`, both direct and through the Vite proxy |
 | Visual check | Playwright screenshots at 390 px and 1280 px: no horizontal scroll; API-down error state renders with a retry button |
 | CI | Workflow added (`.github/workflows/football-ci.yml`); first run happens on push |
-| Provider research | Written: DECISIONS.md D-010 and `docs/research/` |
+| Provider research | Written: DECISIONS.md D-009 to D-015, `docs/research/providers.md`, `docs/research/historical-data.md`. Sportmonks verified from its own pages; API-Football unverifiable from here |
+
+## M1 plan (for the next session, after review)
+
+1. Raw store: `data/raw/<source>/` files kept with source, URL, retrieval time, SHA-256 and
+   revision; never overwritten.
+2. football-data importer for E0, SP1, I1, D1, F1 and E1, SP2, I2, D2, F2, seasons 1819 to
+   2627, reading from `data/inbox/football-data/` (D-013); idempotent re-runs.
+3. Team mapping table with tests; coverage report per league, season and field, including
+   Pinnacle and Betfair Exchange columns by season (D-014).
+4. Provider adapter interface plus a Sportmonks implementation, tested against recorded real
+   responses once a free-plan key exists (D-010); odds-capture job built and unit-tested, run
+   only on an always-on host (D-009).
+5. Acceptance: manual spot-check of 20 matches against source; re-import creates no duplicates.
 
 ## Known problems and open dependencies
 
-See the "Open dependencies" section of DECISIONS.md. Summary:
+The "Open: needs the owner" table at the top of DECISIONS.md is the master list. Summary:
 
-1. **Live provider key**: owner to choose and supply (D-010).
-2. **Always-on host for scheduled jobs** (odds capture, refreshes, settlement): cloud coding
-   sessions are ephemeral and GitHub Pages is static, so neither can run them (D-009).
-3. **2026/27 has already started.** football-data's 2026/27 files, probed (not imported) on
+1. **football-data.co.uk terms** (D-013): its data page says use is "intended for private
+   individuals only, NOT commerical or data training products using automated
+   bots/scrapers/AI". Until the owner decides, M1 imports from a local drop folder the owner
+   fills by hand; the automatic downloader stays off.
+2. **Pinnacle unreliable from 23 Jul 2025** and absent from 2026/27 files (D-014): proposed
+   Betfair Exchange closing as the benchmark from that date; needs owner sign-off.
+3. **Live provider key** (D-010): Sportmonks recommended, starting with its free plan.
+   API-Football could not be verified (HTTP 403 to every fetch method).
+4. **Always-on host for scheduled jobs** (D-009): coding sessions are ephemeral and GitHub
+   Pages is static, so neither can run odds capture or settlement.
+5. **2026/27 has already started.** football-data's 2026/27 files, probed (not imported) on
    19 Oct 2026, already hold 60 Premier League, 78 La Liga, 60 Serie A, 45 Bundesliga and
    54 Ligue 1 matches, the latest on 11–12 Oct 2026. The genuine pre-match record can only
    begin when M7 is live; earlier 2026/27 matches are retrospective and will be labelled so.
