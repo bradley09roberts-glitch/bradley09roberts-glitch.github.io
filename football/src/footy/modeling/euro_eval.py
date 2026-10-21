@@ -53,8 +53,10 @@ def make_factory(config: dict | None):
     if family == "elo":
         return lambda: PanEuropeanElo(**cfg)
     if family == "mix":
-        dc, elo, w = cfg["dc"], cfg["elo"], cfg["w_dc"]
-        return lambda: EuroMixture([PanEuropeanDC(**dc), PanEuropeanElo(**elo)], [w, 1 - w])
+        dc, elo, w, name = cfg["dc"], cfg["elo"], cfg["w_dc"], cfg.get("name")
+        return lambda: EuroMixture(
+            [PanEuropeanDC(**dc), PanEuropeanElo(**elo)], [w, 1 - w], name=name
+        )
     return lambda: PanEuropeanDC(**cfg)
 
 

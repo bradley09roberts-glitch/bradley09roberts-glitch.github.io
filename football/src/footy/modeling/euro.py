@@ -100,12 +100,17 @@ class PanEuropeanDC:
         euro_weight: float = 1.5,
         history_days: int = 3 * 365,
         name: str | None = None,
+        market_alpha: float | None = None,
     ):
+        """`market_alpha`: for domestic matches with closing prices, fit to
+        alpha * goals + (1 - alpha) * market-implied expected goals (footy.modeling.market_xg)
+        instead of the goals alone. None: goals only."""
         self.xi, self.reg_team, self.reg_league = xi, reg_team, reg_league
         self.euro_weight, self.history_days = euro_weight, history_days
+        self.market_alpha = market_alpha
         self.name = (
             name or f"pan_euro_dc_xi{xi:g}_ew{euro_weight:g}_rt{reg_team:g}_rl{reg_league:g}"
-        )
+        ) + ("" if market_alpha is None or name else f"_ma{market_alpha:g}")
         self._x: dict[str, float] = {}
         self.team_country: dict[str, str] = {}
 
@@ -116,6 +121,7 @@ class PanEuropeanDC:
             "reg_league": self.reg_league,
             "euro_weight": self.euro_weight,
             "history_days": self.history_days,
+            "market_alpha": self.market_alpha,
         }
 
     def fit(self, history: pd.DataFrame, cutoff_date: pd.Timestamp) -> None:
@@ -139,6 +145,15 @@ class PanEuropeanDC:
         w = np.exp(-self.xi * days) * np.where(h.kind.to_numpy() == "euro", self.euro_weight, 1.0)
         yh, ya = h.home_goals.to_numpy(float), h.away_goals.to_numpy(float)
         gh, ga = yh.astype(int), ya.astype(int)
+        if self.market_alpha is not None:
+            from footy.modeling.market_xg import default_market_xg
+
+            xg = default_market_xg()
+            dom = (h.kind.to_numpy() == "domestic") & h.id.isin(xg.index).to_numpy()
+            ids = h.id.to_numpy()[dom]
+            al = self.market_alpha
+            yh[dom] = al * yh[dom] + (1 - al) * xg.xg_home.reindex(ids).to_numpy()
+            ya[dom] = al * ya[dom] + (1 - al) * xg.xg_away.reindex(ids).to_numpy()
 
         names = (
             [f"a:{t}" for t in teams]
