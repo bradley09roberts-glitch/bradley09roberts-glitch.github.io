@@ -1,54 +1,66 @@
 """Goal-based Elo ratings mapped to score grids (model-lab family `elo_goals`).
 
-World Football Elo style ratings, run jointly over a league and its second tier:
+**Ratings.** Elo ratings replayed over the history, jointly over a league and its second
+tier. Two update rules:
 
-    E_home = 1 / (1 + 10^(−(R_home + H_div − R_away) / 400))
-    R_home += K · G(margin) · (W − E_home),   R_away −= the same
+- "elo" (World Football Elo): E = 1 / (1 + 10^(−(R_home + H_div − R_away) / 400)) and
+  R_home += K·G·(W − E), R_away −= the same, with W = 1, ½ or 0 and the goal-difference
+  index G = 1, 1, 1.5, (11 + N)/8 for margins 0, 1, 2, N ≥ 3 (`margin_scale` stretches it;
+  `margin="pow"` gives Hvattum & Arntzen's (1 + N)^p; `autocorr` damps it for heavy
+  favourites, FiveThirtyEight style). The home advantage H learns per division (`hfa_lr`).
+- "gd": a goal-difference Elo, R_home += K·(GD − gd_slope·edge/400): every goal of the
+  margin counts, not just who won (an online least-squares rating, close to pi-ratings).
 
-with W = 1, ½ or 0, a goal-difference multiplier G (World Football Elo: 1, 1.5, (11 + N)/8
-for margins of ≤1, 2 and N ≥ 3 goals, scaled by `margin_scale`; or (1 + N)^p as in Hvattum &
-Arntzen's goal-based Elo), an optional FiveThirtyEight-style damping of the multiplier for
-heavy favourites (`autocorr`), and a home advantage H per division that learns online (plus
-one shared closed-doors term).
+Both divisions share one scale: second-tier sides start `tier2_offset` points lower and
+promoted or relegated teams carry their ratings across, so the exchange of teams keeps the
+offset calibrated. Summer regression towards the division mean (`carry`), a provisional K
+boost for a side's first matches, a newcomer rule for sides arriving from below the data,
+and a smaller K after a red card (`red_k`) complete the replay.
 
-The two divisions share one rating scale: second-tier sides start `tier2_offset` points
-below the top flight, and promoted or relegated teams carry their ratings across, so the
-exchange of teams keeps the offset calibrated. Summer regression towards the division mean
-(`carry`), a provisional K boost for a team's first matches in the history, and a newcomer
-rule for sides arriving from below the data complete the replay.
+**Goal-count ratings** learnt by the same replay:
+- tempo (`tempo_lr`): each side's share of the goal total above the division's mean;
+- attack / defence (`ad_lr`): stochastic gradient steps on the Poisson likelihood of the
+  goals scored and conceded, a goal-count analogue of Elo;
+- the division's scoring level (`level_lr`): a fast running mean of the goal total, used
+  as an offset log(level / 2.7)·`level_weight` on both goal means (`level_offset`). This was
+  the largest single gain: the time-weighted intercepts lag a league-wide change in
+  scoring, such as 2023/24's added time.
 
-The rating difference (home advantage included) is mapped to home and away goal means by
-two weighted Poisson regressions fitted on the history's own pre-match ratings:
+**Shots on target** (`sot_blend`, `tempo_sot`, `ad_sot`, `level_sot`): expected goals =
+SoT × the division's goals-per-SoT rate in the history; each rating learns from
+(1 − a)·goals + a·expected goals (for "elo", W becomes the Poisson win probability plus half
+the draw probability of the blended goals). Where SoT is missing (NaN) the goals are used,
+so without shot data the model is goals-only.
 
-    log E[goals] = a_div + b·d + c·|d| (+ extra rating features),   d = diff / 400
+**Goal means.** Poisson regressions on the history's own pre-match features (after a
+warm-up while the ratings settle), with division intercepts:
 
-Extra features, each a goal-based rating learnt by the same online replay:
-- a goal-total ("tempo") rating per team (`tempo_lr`): the sum for the two sides moves both
-  goal means, which is what the totals and BTTS markets need;
-- attack / defence ratings learnt by stochastic gradient steps on the Poisson likelihood
-  (`ad_lr`), a goal-count analogue of Elo;
-- a second Elo with its own K, carry and shots blend (`k2`), so the regression can weigh
-  fast against slow form, or results against chances;
-- a fast-moving division scoring level (`level_lr`).
+    log E[goals] = a_div (+ h_div for the home side) ± b·d + c·|d| + e·tempo sum
+                   (+ f·own attack − opponent defence) + log-level offset,   d = edge / 400
 
-Shots on target can stand in for part of each result (`sot_blend`, `tempo_sot`, `ad_sot`,
-`sot_blend2`): expected goals = SoT × the division's goals-per-SoT rate in the history, the
-"deserved" result W is the Poisson win probability (plus half the draw probability) of those
-expected goals, and the margin is the blended goal difference. Where SoT is missing the
-goals are used.
+`tied` fits one regression for home and away goals (shared slopes, d sign-flipped), which
+halves the parameters; the separate pair is the default.
 
-Grids are `poisson_grid` with the Dixon-Coles rho fitted by weighted maximum likelihood on
-the training matches given the regression's rates. Every fit replays the history it is
-given (no state is carried between fits), uses only the DataFrames passed to it and no
-randomness. The closed-doors calendar is the core one (footy.modeling.closed_doors), as in
-the core Dixon-Coles model.
+**Grids.** `poisson_grid` with the Dixon-Coles rho fitted by weighted maximum likelihood on
+the training matches given the fitted rates (plus `rho_shift`), so every market comes from
+one coherent grid. `EloBlend` mixes the grids of several models.
+
+Explored and left off in the registered candidates (they did not help on 2022/23 or
+2023/24): a second Elo as an extra feature (`k2`), Glicko-style rating variances
+(`glicko`), separate home and away ratings (`gamma`), a log-goal-ratio update ("lgr"),
+season-start K boosts, promoted / relegated flags, d², a rho linear in |d|, and an
+expected-goals proxy that adds off-target shots and corners (it moved xG by ~0.02 goals).
+
+Every fit replays the history it is given (no state is carried between fits), uses only
+the DataFrames passed to it and no randomness. The closed-doors calendar is the core one
+(footy.modeling.closed_doors), as in the core Dixon-Coles model.
 """
 
 import math
 
 import numpy as np
 import pandas as pd
-from scipy.optimize import minimize_scalar
+from scipy.optimize import minimize, minimize_scalar
 from scipy.stats import poisson
 
 from footy.modeling.base import ALL_MARKETS
@@ -84,9 +96,22 @@ DEFAULTS = {
     "provisional_n": 10.0,
     "season_boost": 0.0,  # K·(1 + boost·exp(−n / season_boost_n)) for a side's n-th match
     "season_boost_n": 8.0,  # of the season
+    "update": "elo",  # "elo": K·G·(W − E); "gd": K·(goal difference − expected)
+    "gd_slope": 1.5,  # gd: expected goal difference per 400 points of rating edge
+    "gd_cap": 0.0,  # gd: cap on the error (0: none)
+    "gd_psi": False,  # gd: compress the error as log2(1 + |error|)
+    "gamma": 1.0,  # < 1: separate home and away ratings (pi-rating style); a result moves
+    # the side's rating at the other venue gamma times as much
+    "glicko": False,  # Glicko-style rating variances set each side's own K (Kalman gain)
+    "v0": 22500.0,  # glicko: starting variance (points²)
+    "q_day": 3.0,  # glicko: variance added per day
+    "v_season": 2500.0,  # glicko: variance added every summer
+    "obs_var": 2.8,  # glicko: noise variance of the result (goals² for "gd", W² for "elo")
+    "red_k": 1.0,  # K multiplier for matches with a red card
     "sot_blend": 0.0,  # Elo result and margin from (1 − a)·goals + a·SoT expected goals
     # extra rating features
     "k2": 0.0,  # a second Elo with this K (0: off)
+    "update2": "elo",
     "carry2": 0.9,
     "sot_blend2": 0.0,
     "tempo_lr": 0.0,  # goal-total rating learning rate (0: off)
@@ -95,7 +120,10 @@ DEFAULTS = {
     "ad_lr": 0.0,  # attack / defence SGD learning rate (0: off)
     "ad_carry": 0.8,
     "ad_sot": 0.0,
-    "level_lr": 0.0,  # fast division scoring level as a feature (0: off)
+    "level_lr": 0.0,  # fast running division scoring level (0: off) ...
+    "level_offset": False,  # ... as an offset of both log goal means (else a feature)
+    "level_sot": 0.0,  # ... learnt from (1 − a)·total goals + a·SoT expected total
+    "level_weight": 1.0,  # ... the offset is this share of log(level / 2.7)
     "promo_decay": 0.0,  # promoted (+1) / relegated (−1) flags fading over this many
     # matches of the new season, as regression features (0: off)
     # goal regression
@@ -106,6 +134,8 @@ DEFAULTS = {
     "tier2_weight": 1.0,  # regression weight of second-tier matches
     "ridge": 0.1,  # ridge on the non-intercept coefficients
     "rho_shift": 0.0,  # added to the fitted rho
+    "rho_abs": False,  # rho = r0 + r1·|d| per fixture (both fitted) instead of one rho
+    "tied": False,  # one regression for home and away goals (shared slopes, sign-flipped d)
 }
 
 
@@ -121,7 +151,25 @@ def wfe_index(margin: float) -> float:
     return (11.0 + margin) / 8.0
 
 
-def poisson_points(xh: np.ndarray, xa: np.ndarray, max_goals: int = 12) -> np.ndarray:
+def expected_goals(h: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+    """Shots-on-target expected goals per side: SoT × the division's goals per SoT in `h`
+    itself; the goals where SoT is missing. (Adding off-target shots and corners by
+    non-negative least squares changed these by about 0.02 goals: not worth it.)"""
+    gh, ga = h.home_goals.to_numpy(float), h.away_goals.to_numpy(float)
+    xh, xa = gh.copy(), ga.copy()
+    if "home_sot" not in h or "away_sot" not in h:
+        return xh, xa
+    sh, sa = h.home_sot.to_numpy(float), h.away_sot.to_numpy(float)
+    ok = ~(np.isnan(sh) | np.isnan(sa))
+    div = h.division.to_numpy()
+    for d in np.unique(div[ok]):
+        m = ok & (div == d)
+        rate = (gh[m].sum() + ga[m].sum()) / max(sh[m].sum() + sa[m].sum(), 1.0)
+        xh[m], xa[m] = rate * sh[m], rate * sa[m]
+    return xh, xa
+
+
+def poisson_points(xh: np.ndarray, xa: np.ndarray, max_goals: int = 15) -> np.ndarray:
     """P(home win) + ½·P(draw) for independent Poisson goals with means xh, xa."""
     k = np.arange(max_goals + 1)
     ph = poisson.pmf(k[None, :], np.maximum(xh, 1e-6)[:, None])
@@ -155,15 +203,7 @@ class EloGoals:
         each blending goals with SoT expected goals by its own weight."""
         c = self.cfg
         gh, ga = h.home_goals.to_numpy(float), h.away_goals.to_numpy(float)
-        xh, xa = gh.copy(), ga.copy()
-        if "home_sot" in h and "away_sot" in h:
-            sh, sa = h.home_sot.to_numpy(float), h.away_sot.to_numpy(float)
-            ok = ~(np.isnan(sh) | np.isnan(sa))
-            div = h.division.to_numpy()
-            for d in np.unique(div[ok]):
-                m = ok & (div == d)
-                rate = (gh[m].sum() + ga[m].sum()) / max(sh[m].sum() + sa[m].sum(), 1.0)
-                xh[m], xa[m] = rate * sh[m], rate * sa[m]
+        xh, xa = expected_goals(h)
         w_goals = np.where(gh > ga, 1.0, np.where(gh == ga, 0.5, 0.0))
         need_w = c["sot_blend"] > 0 or (c["k2"] > 0 and c["sot_blend2"] > 0)
         w_xg = poisson_points(xh, xa) if need_w and len(h) else w_goals
@@ -171,8 +211,13 @@ class EloGoals:
         for key, a in (("1", c["sot_blend"]), ("2", c["sot_blend2"])):
             out[f"w{key}"] = ((1 - a) * w_goals + a * w_xg).tolist()
             out[f"gd{key}"] = ((1 - a) * (gh - ga) + a * (xh - xa)).tolist()
+            lgr = np.log((gh + 0.5) / (ga + 0.5))
+            lgr_x = np.log((xh + 0.5) / (xa + 0.5))
+            out[f"lgr{key}"] = ((1 - a) * lgr + a * lgr_x).tolist()
         a = c["tempo_sot"]
         out["tot"] = ((1 - a) * (gh + ga) + a * (xh + xa)).tolist()
+        a = c["level_sot"]
+        out["lev"] = ((1 - a) * (gh + ga) + a * (xh + xa)).tolist()
         a = c["ad_sot"]
         out["yh"] = ((1 - a) * gh + a * xh).tolist()
         out["ya"] = ((1 - a) * ga + a * xa).tolist()
@@ -198,6 +243,20 @@ class EloGoals:
             g *= 2.2 / max(2.2 + c["autocorr"] * 0.001 * winner_edge, 0.5)
         return g
 
+    def _step(self, mode: str, w: float, gd: float, diff: float) -> float:
+        """Rating change per unit of K. "elo": G(margin)·(W − E); "gd": the error of the
+        expected goal difference gd_slope·diff/400, optionally compressed (pi-rating style
+        ψ = log2(1 + |error|))."""
+        if mode == "elo":
+            return self._g(gd, diff) * (w - 1.0 / (1.0 + 10.0 ** (-diff / 400.0)))
+        c = self.cfg
+        err = gd - c["gd_slope"] * diff / 400.0
+        if c["gd_cap"]:
+            err = max(-c["gd_cap"], min(c["gd_cap"], err))
+        if c["gd_psi"]:
+            err = math.copysign(math.log2(1.0 + abs(err)), err)
+        return err
+
     def fit(self, history: pd.DataFrame, cutoff) -> None:
         c = self.cfg
         h = history[history.division.isin(TIER1 | TIER2)].sort_values(["date", "id"])
@@ -211,12 +270,27 @@ class EloGoals:
         w = w * np.where(h.division.isin(TIER2).to_numpy(), c["tier2_weight"], 1.0)
         di = h.division.map(DIDX).to_numpy()
         Zh, Za = self._design(di, feats)
+        off = self._offset(feats)
         yh, ya = h.home_goals.to_numpy(float), h.away_goals.to_numpy(float)
-        self.beta_h_ = _poisson_irls(Zh, yh, w, len(DIVS), c["ridge"])
-        self.beta_a_ = _poisson_irls(Za, ya, w, len(DIVS), c["ridge"])
-        lh, la = np.exp(Zh @ self.beta_h_), np.exp(Za @ self.beta_a_)
-        rho = _fit_rho(yh, ya, lh, la, w) + c["rho_shift"]
-        self.rho_ = float(np.clip(rho, -RHO_LIMIT, RHO_LIMIT))
+        if c["tied"]:
+            beta = _poisson_irls(
+                np.vstack([Zh, Za]),
+                np.r_[yh, ya],
+                np.r_[w, w],
+                2 * len(DIVS),
+                c["ridge"],
+                np.r_[off, off],
+            )
+            self.beta_h_ = self.beta_a_ = beta
+        else:
+            self.beta_h_ = _poisson_irls(Zh, yh, w, len(DIVS), c["ridge"], off)
+            self.beta_a_ = _poisson_irls(Za, ya, w, len(DIVS), c["ridge"], off)
+        lh, la = np.exp(Zh @ self.beta_h_ + off), np.exp(Za @ self.beta_a_ + off)
+        if c["rho_abs"]:
+            r0, r1 = _fit_rho_linear(yh, ya, lh, la, w, np.abs(feats["d"]))
+        else:
+            r0, r1 = _fit_rho(yh, ya, lh, la, w), 0.0
+        self.rho_, self.rho_slope_ = r0 + c["rho_shift"], r1
 
     def _replay(self, h: pd.DataFrame, T: int) -> dict[str, np.ndarray]:
         """Run every rating over `h` (sorted by date); return each match's pre-match
@@ -229,9 +303,22 @@ class EloGoals:
         seasons = h.season.to_numpy().tolist()
         cd = closed_doors_mask(h).tolist() if c["closed_doors"] and N else [False] * N
         res = self._results(h)
-        w1, gd1, w2, gd2 = res["w1"], res["gd1"], res["w2"], res["gd2"]
-        tot, yht, yat = res["tot"], res["yh"], res["ya"]
-        R, R2, Tm, O, Df = ([0.0] * T for _ in range(5))
+        if c["red_k"] != 1.0 and "home_red" in h:
+            red = (h.home_red.fillna(0).to_numpy() + h.away_red.fillna(0).to_numpy()) > 0
+            kred = np.where(red, c["red_k"], 1.0).tolist()
+        else:
+            kred = [1.0] * N
+        w1, w2 = res["w1"], res["w2"]
+        gd1 = res["lgr1"] if c["update"] == "lgr" else res["gd1"]
+        gd2 = res["lgr2"] if c["update2"] == "lgr" else res["gd2"]
+        tot, yht, yat, lev = res["tot"], res["yh"], res["ya"], res["lev"]
+        R, R2, Tm, Att, Df, RA = ([0.0] * T for _ in range(6))
+        split = c["gamma"] != 1.0
+        gam = c["gamma"]
+        days = (h["date"] - EPOCH).dt.days.to_numpy().tolist()
+        V = [c["v0"]] * T
+        vday = [0] * T
+        gl, q_day, obs_var = c["glicko"], c["q_day"], c["obs_var"]
         ng = [0] * T
         ns = [0] * T  # matches this season
         prev_div = [-1] * T  # division last season
@@ -253,7 +340,8 @@ class EloGoals:
         for j in range(N):
             s = seasons[j]
             if cur is not None and s != cur:
-                self._summer(R, R2, Tm, O, Df, seen, last_div)
+                self._summer(R, R2, Tm, Att, Df, seen, last_div, RA)
+                V = [v + c["v_season"] for v in V]
                 prev_div = list(last_div)
                 ns = [0] * T
             cur = s
@@ -261,15 +349,19 @@ class EloGoals:
             for t in (i_h, i_a):
                 if not seen[t]:
                     start = self._start_rating(R, seen, last_div, dv, s == first_season)
-                    R[t] = R2[t] = start
+                    R[t] = R2[t] = RA[t] = start
                     seen[t] = True
+                    V[t] = c["v0"]
+                else:
+                    V[t] += q_day * (days[j] - vday[t])
+                vday[t] = days[j]
                 last_div[t] = dv
             hadv = Hcd if cd[j] else H[dv]
-            diff = R[i_h] + hadv - R[i_a]
+            diff = R[i_h] + hadv - (RA[i_a] if split else R[i_a])
             f_d[j] = diff / 400.0
             f_ts[j] = Tm[i_h] + Tm[i_a]
-            f_adh[j] = O[i_h] - Df[i_a]
-            f_ada[j] = O[i_a] - Df[i_h]
+            f_adh[j] = Att[i_h] - Df[i_a]
+            f_ada[j] = Att[i_a] - Df[i_h]
             f_lv[j] = math.log(lv[dv])
             f_cd[j] = cd[j]
             if pdec:
@@ -280,12 +372,28 @@ class EloGoals:
             if sb:
                 mh *= 1.0 + sb * math.exp(-ns[i_h] / sb_n)
                 ma *= 1.0 + sb * math.exp(-ns[i_a] / sb_n)
-            kd = kt2 if IS_T2[dv] else 1.0
+            kd = (kt2 if IS_T2[dv] else 1.0) * kred[j]
             # main Elo
-            e_h = 1.0 / (1.0 + 10.0 ** (-diff / 400.0))
-            delta = kd * self._g(gd1[j], diff) * (w1[j] - e_h)
-            R[i_h] += k * mh * delta
-            R[i_a] -= k * ma * delta
+            delta = kd * self._step(c["update"], w1[j], gd1[j], diff)
+            if gl:
+                if c["update"] != "elo":
+                    hd = c["gd_slope"] / 400.0
+                else:
+                    e = 1.0 / (1.0 + 10.0 ** (-diff / 400.0))
+                    hd = math.log(10.0) / 400.0 * e * (1.0 - e)
+                S = hd * hd * (V[i_h] + V[i_a]) + obs_var
+                R[i_h] += V[i_h] * hd / S * delta
+                R[i_a] -= V[i_a] * hd / S * delta
+                V[i_h] -= (V[i_h] * hd) ** 2 / S
+                V[i_a] -= (V[i_a] * hd) ** 2 / S
+            elif split:
+                R[i_h] += k * mh * delta
+                RA[i_h] += gam * k * mh * delta
+                RA[i_a] -= k * ma * delta
+                R[i_a] -= gam * k * ma * delta
+            else:
+                R[i_h] += k * mh * delta
+                R[i_a] -= k * ma * delta
             if cd[j]:
                 Hcd += hfa_lr * k * delta
             else:
@@ -293,8 +401,7 @@ class EloGoals:
             if k2:
                 diff2 = R2[i_h] + hadv - R2[i_a]
                 f_d2[j] = diff2 / 400.0
-                e2 = 1.0 / (1.0 + 10.0 ** (-diff2 / 400.0))
-                delta2 = kd * self._g(gd2[j], diff2) * (w2[j] - e2)
+                delta2 = kd * self._step(c["update2"], w2[j], gd2[j], diff2)
                 R2[i_h] += k2 * mh * delta2
                 R2[i_a] -= k2 * ma * delta2
             if tl:
@@ -303,23 +410,23 @@ class EloGoals:
                 Tm[i_a] += tl * resid / 2.0
             if al:
                 base = math.log(mt[dv] / 2.0)
-                lam_h = math.exp(base + hadv / 400.0 + O[i_h] - Df[i_a])
-                lam_a = math.exp(base + O[i_a] - Df[i_h])
+                lam_h = math.exp(base + hadv / 400.0 + Att[i_h] - Df[i_a])
+                lam_a = math.exp(base + Att[i_a] - Df[i_h])
                 r_h, r_a = min(yht[j], 6.0) - lam_h, min(yat[j], 6.0) - lam_a
-                O[i_h] += al * r_h
+                Att[i_h] += al * r_h
                 Df[i_a] -= al * r_h
-                O[i_a] += al * r_a
+                Att[i_a] += al * r_a
                 Df[i_h] -= al * r_a
             mt[dv] += 0.01 * (tot[j] - mt[dv])
             if ll:
-                lv[dv] += ll * (tot[j] - lv[dv])
+                lv[dv] += ll * (lev[j] - lv[dv])
             ng[i_h] += 1
             ng[i_a] += 1
             ns[i_h] += 1
             ns[i_a] += 1
-        self.R_, self.R2_, self.Tm_ = R, R2, Tm
+        self.R_, self.R2_, self.Tm_, self.RA_ = R, R2, Tm, (RA if split else R)
         self.ns_, self.prev_div_ = ns, prev_div
-        self.O_, self.D_ = O, Df
+        self.att_, self.dfn_ = Att, Df
         self.seen_, self.last_div_ = seen, last_div
         self.H_, self.Hcd_, self.lv_ = H, Hcd, lv
         self.last_season_ = cur
@@ -333,19 +440,19 @@ class EloGoals:
                 return sum(members) / len(members) - c["newcomer"]
         return -c["tier2_offset"] if IS_T2[dv] else 0.0
 
-    def _summer(self, R, R2, Tm, O, Df, seen, last_div) -> None:
+    def _summer(self, R, R2, Tm, Att, Df, seen, last_div, RA) -> None:
         """New season: Elo ratings regress towards their division's mean; the goal-count
         ratings shrink towards zero."""
         c = self.cfg
         for dv in {last_div[t] for t in range(len(R)) if seen[t]}:
             members = [t for t in range(len(R)) if seen[t] and last_div[t] == dv]
-            for arr, carry in ((R, c["carry"]), (R2, c["carry2"])):
+            for arr, carry in ((R, c["carry"]), (R2, c["carry2"]), (RA, c["carry"])):
                 m = sum(arr[t] for t in members) / len(members)
                 for t in members:
                     arr[t] = m + carry * (arr[t] - m)
         for t in range(len(R)):
             Tm[t] *= c["tempo_carry"]
-            O[t] *= c["ad_carry"]
+            Att[t] *= c["ad_carry"]
             Df[t] *= c["ad_carry"]
 
     # ---- regression ------------------------------------------------------------------
@@ -364,12 +471,14 @@ class EloGoals:
             common.append(f["d2"])
         if c["tempo_lr"]:
             common.append(f["tsum"])
-        if c["level_lr"]:
+        if c["level_lr"] and not c["level_offset"]:
             common.append(f["lvl"])
         if c["closed_doors"]:
             common.append(f["cd"])
         if c["promo_decay"]:
             common += [f["ph"], f["pa"]]
+        if c["tied"]:
+            return self._design_tied(dummies, f)
         base = np.column_stack([dummies, *common])
         if c["ad_lr"]:
             return (
@@ -378,19 +487,62 @@ class EloGoals:
             )
         return base, base
 
+    def _design_tied(self, dummies: np.ndarray, f: dict[str, np.ndarray]):
+        """Rows for home goals and for away goals with the same columns: division levels,
+        division home advantages (home rows only), the rating edges with their sign flipped
+        for the away side, and the symmetric features shared."""
+        c = self.cfg
+        signed = [f["d"]] + ([f["d2"]] if c["k2"] else [])
+        sym = []
+        if c["abs_term"]:
+            sym.append(np.abs(f["d"]))
+        if c["sq_term"]:
+            sym.append(f["d"] ** 2)
+        if c["tempo_lr"]:
+            sym.append(f["tsum"])
+        if c["level_lr"] and not c["level_offset"]:
+            sym.append(f["lvl"])
+        zero = np.zeros_like(f["d"])
+        home_only = [f["cd"]] if c["closed_doors"] else []
+        own_h, own_a = [], []
+        if c["promo_decay"]:
+            own_h += [f["ph"], f["pa"]]
+            own_a += [f["pa"], f["ph"]]
+        if c["ad_lr"]:
+            own_h.append(f["adh"])
+            own_a.append(f["ada"])
+        zh = np.column_stack([dummies, dummies, *signed, *sym, *home_only, *own_h])
+        za = np.column_stack(
+            [dummies, dummies * 0, *(-x for x in signed), *sym, *(zero for _ in home_only), *own_a]
+        )
+        return zh, za
+
     # ---- prediction ------------------------------------------------------------------
 
     def _state_for(self, season: str):
         """Ratings as they stand for a fixture in `season` (summer step if it is new)."""
         R, R2, Tm = list(self.R_), list(self.R2_), list(self.Tm_)
-        O, Df = list(self.O_), list(self.D_)
+        Att, Df, RA = list(self.att_), list(self.dfn_), list(self.RA_)
         ns, prev_div = self.ns_, self.prev_div_
         if self.last_season_ is not None and season != self.last_season_:
-            self._summer(R, R2, Tm, O, Df, self.seen_, self.last_div_)
+            self._summer(R, R2, Tm, Att, Df, self.seen_, self.last_div_, RA)
             ns, prev_div = [0] * len(R), list(self.last_div_)
-        return R, R2, Tm, O, Df, ns, prev_div
+        return R, R2, Tm, Att, Df, ns, prev_div, RA
+
+    def _offset(self, f: dict[str, np.ndarray]) -> np.ndarray:
+        """log of the running scoring level relative to 2.7 goals, when used as an offset."""
+        c = self.cfg
+        if c["level_lr"] and c["level_offset"]:
+            return c["level_weight"] * (f["lvl"] - math.log(2.7))
+        return np.zeros(len(f["d"]))
 
     def rates(self, fixtures: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+        di, f = self._fixture_features(fixtures)
+        Zh, Za = self._design(di, f)
+        off = self._offset(f)
+        return np.exp(Zh @ self.beta_h_ + off), np.exp(Za @ self.beta_a_ + off)
+
+    def _fixture_features(self, fixtures: pd.DataFrame):
         c = self.cfg
         n = len(fixtures)
         f = {key: np.zeros(n) for key in FEATURES}
@@ -402,13 +554,13 @@ class EloGoals:
         for j, (ht, at, dvn, s) in enumerate(rows):
             if s not in states:
                 states[s] = self._state_for(s)
-            R, R2, Tm, O, Df, ns, prev_div = states[s]
+            R, R2, Tm, Att, Df, ns, prev_div, RA = states[s]
             dv = DIDX[dvn]
             vals = []
-            for t in (ht, at):
+            for t, own in ((ht, R), (at, RA)):
                 i = self.tidx_.get(t)
                 if i is not None and self.seen_[i]:
-                    vals.append((R[i], R2[i], Tm[i], O[i], Df[i]))
+                    vals.append((own[i], R2[i], Tm[i], Att[i], Df[i]))
                 else:
                     r0 = self._start_rating(R, self.seen_, self.last_div_, dv, False)
                     vals.append((r0, r0, 0.0, 0.0, 0.0))
@@ -426,13 +578,15 @@ class EloGoals:
                     i = self.tidx_.get(t)
                     if i is not None:
                         f[key][j] = _promo(prev_div[i], dv, ns[i], c["promo_decay"])
-        di = fixtures.division.map(DIDX).to_numpy()
-        Zh, Za = self._design(di, f)
-        return np.exp(Zh @ self.beta_h_), np.exp(Za @ self.beta_a_)
+        return fixtures.division.map(DIDX).to_numpy(), f
 
     def predict(self, fixtures: pd.DataFrame) -> MarketProbs:
-        lh, la = self.rates(fixtures)
-        return markets_from_grid(poisson_grid(lh, la, self.rho_), lh, la)
+        di, f = self._fixture_features(fixtures)
+        Zh, Za = self._design(di, f)
+        off = self._offset(f)
+        lh, la = np.exp(Zh @ self.beta_h_ + off), np.exp(Za @ self.beta_a_ + off)
+        rho = np.clip(self.rho_ + self.rho_slope_ * np.abs(f["d"]), -RHO_LIMIT, RHO_LIMIT)
+        return markets_from_grid(poisson_grid(lh, la, rho), lh, la)
 
 
 class EloBlend:
@@ -471,17 +625,18 @@ def _promo(prev: int, dv: int, n: int, decay: float) -> float:
     return sign * math.exp(-n / decay)
 
 
-def _poisson_irls(X, y, w, n_free, ridge, iters=30) -> np.ndarray:
+def _poisson_irls(X, y, w, n_free, ridge, offset=None, iters=30) -> np.ndarray:
     """Weighted Poisson regression by Newton steps; the first `n_free` columns (division
     intercepts) are all but unpenalised, the rest carry a ridge penalty."""
     p = X.shape[1]
     beta = np.zeros(p)
+    off = np.zeros(len(y)) if offset is None else offset
     mean = max(float(np.average(y, weights=w)) if w.sum() > 0 else 1.0, 0.1)
     beta[:n_free] = math.log(mean)
     pen = np.full(p, float(ridge))
     pen[:n_free] = 1e-4
     for _ in range(iters):
-        mu = np.exp(np.clip(X @ beta, -5, 3))
+        mu = np.exp(np.clip(X @ beta + off, -5, 3))
         grad = X.T @ (w * (y - mu)) - pen * beta
         hess = (X * (w * mu)[:, None]).T @ X + np.diag(pen)
         step = np.linalg.solve(hess, grad)
@@ -489,6 +644,29 @@ def _poisson_irls(X, y, w, n_free, ridge, iters=30) -> np.ndarray:
         if np.abs(step).max() < 1e-9:
             break
     return beta
+
+
+def _fit_rho_linear(yh, ya, lh, la, w, x) -> tuple[float, float]:
+    """rho_i = r0 + r1·x_i maximising the weighted likelihood of the low scores."""
+    if w.sum() <= 0:
+        return 0.0, 0.0
+    low = (yh <= 1) & (ya <= 1) & (w > 0)
+    yh, ya, lh, la, w, x = yh[low], ya[low], lh[low], la[low], w[low], x[low]
+    m00, m01 = (yh == 0) & (ya == 0), (yh == 0) & (ya == 1)
+    m10, m11 = (yh == 1) & (ya == 0), (yh == 1) & (ya == 1)
+
+    def nll(r):
+        rho = np.clip(r[0] + r[1] * x, -RHO_LIMIT, RHO_LIMIT)
+        tau = np.ones_like(rho)
+        tau[m00] = 1 - lh[m00] * la[m00] * rho[m00]
+        tau[m01] = 1 + lh[m01] * rho[m01]
+        tau[m10] = 1 + la[m10] * rho[m10]
+        tau[m11] = 1 - rho[m11]
+        return -(w * np.log(np.clip(tau, 1e-10, None))).sum()
+
+    r0 = _fit_rho(yh, ya, lh, la, w)
+    res = minimize(nll, np.array([r0, 0.0]), method="Nelder-Mead", options={"xatol": 1e-5})
+    return float(res.x[0]), float(res.x[1])
 
 
 def _fit_rho(yh, ya, lh, la, w) -> float:
@@ -511,6 +689,35 @@ def _fit_rho(yh, ya, lh, la, w) -> float:
     return float(minimize_scalar(nll, bounds=(-RHO_LIMIT, RHO_LIMIT), method="bounded").x)
 
 
+# Settings found by coordinate search on the mean D-022 composite of 2022/23 and 2023/24
+# (five leagues, real walk-forward). Shared chassis: tempo, attack / defence and level
+# ratings, tied regression, all history after the warm-up weighted equally.
+CHASSIS = {
+    "tempo_lr": 0.045,
+    "tempo_sot": 0.5,
+    "ad_lr": 0.0025,
+    "ad_sot": 0.5,
+    "level_offset": True,
+    "level_lr": 0.02,
+    "level_sot": 0.5,
+    "level_weight": 0.5,
+    "tied": True,
+    "xi": 0.0,
+    "newcomer": 100.0,
+    "red_k": 0.6,
+    "rho_shift": -0.05,
+}
+GD = CHASSIS | {"update": "gd", "k": 10.0, "gd_slope": 1.5, "sot_blend": 0.4, "hfa_lr": 0.0}
+WFE = CHASSIS | {"update": "elo", "k": 25.0, "margin_scale": 2.0, "sot_blend": 0.4}
+GOALS_ONLY = GD | {"sot_blend": 0.0, "tempo_sot": 0.0, "ad_sot": 0.0, "level_sot": 0.0}
+CLASSIC = {"update": "elo", "k": 20.0}  # World Football Elo + |d| regression, nothing else
+
 CANDIDATES = {
-    "elo_goals_wfe": lambda: EloGoals("elo_goals_wfe", tempo_lr=0.03),
+    "elo_goals_gd": lambda: EloGoals("elo_goals_gd", **GD),
+    "elo_goals_wfe": lambda: EloGoals("elo_goals_wfe", **WFE),
+    "elo_goals_blend": lambda: EloBlend(
+        [EloGoals(**GD), EloGoals(**WFE)], [0.6, 0.4], name="elo_goals_blend"
+    ),
+    "elo_goals_goals_only": lambda: EloGoals("elo_goals_goals_only", **GOALS_ONLY),
+    "elo_goals_classic": lambda: EloGoals("elo_goals_classic", **CLASSIC),
 }

@@ -212,6 +212,10 @@ class ShotsXG:
                 lo[j] = hi_[j] = x0[j] = fixed
         for k in S:
             if not has[k]:  # no data for this statistic: freeze its parameters
+                # Its team factors must be zero, not warm-start values from an earlier fit
+                # that had the data: they would still reach the goal rates (transfer 1.0).
+                x0[sl[f"s_{k}"]] = 0.0
+                x0[sl[f"t_{k}"]] = 0.0
                 for key in (f"C_{k}", f"H_{k}", f"s_{k}", f"t_{k}"):
                     lo[sl[key]] = hi_[sl[key]] = x0[sl[key]]
         x0 = np.clip(x0, lo, hi_)

@@ -136,3 +136,55 @@ def test_same_inputs_same_outputs():
     a = run_backtest(df, BacktestSpec(CANDIDATES["shots_xg_sot_joint"], "E0", ["2324"]))
     b = run_backtest(df, BacktestSpec(CANDIDATES["shots_xg_sot_joint"], "E0", ["2324"]))
     pd.testing.assert_frame_equal(a, b)
+
+
+def test_a_statistic_without_data_ignores_stale_warm_start_factors():
+    """A refit with no shot data must not reuse SoT factors from an earlier fit that had
+    them: they would still reach the goal rates through the frozen transfer of 1.0."""
+    df = synthetic_league(seed=4)
+    cut = sorted(df[df.season == "2324"].cutoff_utc.unique())[5]
+    batch = df[df.cutoff_utc == cut]
+    hist = history_before(df, batch.cutoff_date.iloc[0])
+    hist_shots = history_before(with_shots(df), batch.cutoff_date.iloc[0])
+    warm = CANDIDATES["shots_xg_sot_joint"]()
+    warm.fit(hist_shots, pd.Timestamp(cut))
+    warm.fit(hist, pd.Timestamp(cut))
+    fresh = CANDIDATES["shots_xg_sot_joint"]()
+    fresh.fit(hist, pd.Timestamp(cut))
+    assert not warm.x_[warm.layout_["sl"]["s_sot"]].any()
+    np.testing.assert_allclose(warm.rates(batch), fresh.rates(batch), rtol=1e-3)
+
+
+@pytest.mark.parametrize("name", ["shots_xg_sot_joint_rw", "shots_xg_two_process"])
+def test_predictions_ignore_future_results_and_shots(name):
+    """The shared leakage test runs without shots; here later goals AND shot counts are
+    scrambled, in the league and its second tier, and earlier predictions must not move."""
+    seasons = ("2122", "2223", "2324")
+    top = with_shots(synthetic_league(seed=7, seasons=seasons))
+    tier2 = with_shots(synthetic_league(seed=17, seasons=seasons), seed=3)
+    tier2["division"] = "E1"
+    for col in ("home_team", "away_team"):
+        tier2[col] = tier2[col].str.replace("eng-", "eng2-")
+    tier2["id"] += 100_000
+    df = pd.concat([top, tier2]).sort_values(["date", "id"]).reset_index(drop=True)
+    split = df[df.season == "2324"].cutoff_date.min() + pd.Timedelta(days=60)
+    later = df.date >= split
+    rng = np.random.default_rng(0)
+    scrambled = df.copy()
+    for col, hi in [("home_goals", 6), ("away_goals", 6), ("home_sot", 15), ("away_sot", 15)]:
+        scrambled.loc[later, col] = rng.integers(0, hi, later.sum())
+    for col in ("home_shots", "away_shots"):
+        scrambled.loc[later, col] = rng.integers(15, 40, later.sum()).astype(float)
+    scrambled["outcome"] = np.where(
+        scrambled.home_goals > scrambled.away_goals,
+        0,
+        np.where(scrambled.home_goals == scrambled.away_goals, 1, 2),
+    )
+    scrambled["total_goals"] = scrambled.home_goals + scrambled.away_goals
+    a = run_backtest(df, BacktestSpec(CANDIDATES[name], "E0", ["2324"]))
+    b = run_backtest(scrambled, BacktestSpec(CANDIDATES[name], "E0", ["2324"]))
+    early = (pd.to_datetime(a.date) < split).to_numpy()
+    pa, pb = a[PROB_COLS].to_numpy(float), b[PROB_COLS].to_numpy(float)
+    assert early.sum() > 20
+    np.testing.assert_allclose(pa[early], pb[early])
+    assert np.abs(pa[~early] - pb[~early]).max() > 1e-3  # the scrambled data is really used
