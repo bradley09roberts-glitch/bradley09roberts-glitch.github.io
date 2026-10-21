@@ -101,6 +101,11 @@ def main(argv: list[str] | None = None) -> int:
     cap = sub.add_parser("capture-odds", help="take any due pre-match odds snapshots (cron: 5 min)")
     cap.add_argument("--horizon-days", type=int, default=3)
 
+    fx = sub.add_parser(
+        "fd-fixtures", help="fetch football-data's fixtures.csv (this week's prices; D-024)"
+    )
+    fx.add_argument("--force", action="store_true", help="ignore the 6-hour refresh limit")
+
     args = parser.parse_args(argv)
     settings = get_settings()
 
@@ -268,6 +273,35 @@ def main(argv: list[str] | None = None) -> int:
         detail = run_capture(get_engine(), settings, horizon_days=args.horizon_days)
         print(json.dumps(detail, indent=2, default=str))
         return 0 if detail.get("status") in ("ok", "no_provider") else 1
+    elif args.command == "fd-fixtures":
+        from sqlalchemy.orm import Session
+
+        from footy.db import get_engine, upgrade_to_head
+        from footy.ingest import fd_fixtures
+        from footy.ingest.fd_download import PoliteClient
+        from footy.ingest.jobs import job_run
+
+        upgrade_to_head()
+        if not settings.fd_download:
+            print("football-data downloads are switched off (FOOTY_FD_DOWNLOAD=false)")
+            return 1
+        engine = get_engine()
+        with job_run(engine, "fd_fixtures") as ctx:
+            with Session(engine) as s:
+                res = fd_fixtures.fetch(
+                    s, PoliteClient(), settings.raw_dir, force=args.force, job_run_id=ctx.run_id
+                )
+                s.commit()
+            snap = fd_fixtures.latest_snapshot(engine)
+            ctx.detail.update(fetch=res.outcome, error=res.error)
+            if snap is not None:
+                ctx.detail.update(
+                    retrieved_at=snap.attrs["retrieved_at"],
+                    raw_sha256=snap.attrs["raw_sha256"],
+                    **snap.attrs["report"],
+                )
+        print(json.dumps(ctx.detail, indent=2, default=str))
+        return 0 if res.outcome != "error" else 1
     return 0
 
 

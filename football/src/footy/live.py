@@ -50,6 +50,8 @@ def predict_domestic(
         if not fx_list:
             continue
         model = factory()
+        if hasattr(model, "decision_time"):  # model + market: prices quoted up to now
+            model.decision_time = now
         cutoff = pd.Timestamp(datetime(today.year, today.month, today.day, tzinfo=UK)).tz_convert(
             "UTC"
         )
@@ -68,8 +70,23 @@ def predict_domestic(
         mp = model.predict(frame)
         counts = pd.concat([hist.home_team, hist.away_team]).value_counts()
         fresh = {d: str(g["date"].max().date()) for d, g in hist.groupby("division")}
+        used = getattr(model, "last_used", None)
+        prov = model.provenance() if hasattr(model, "provenance") else None
         fixtures = []
-        for x, h, a in fx_list:
+        for j, (x, h, a) in enumerate(fx_list):
+            market, missing = None, ["lineups", "injuries", "odds"]
+            if used is not None and (used.used_1x2[j] or used.used_ou[j]):
+                r = used.iloc[j]
+                market = {
+                    "p_H": None if pd.isna(r.p_H) else float(r.p_H),
+                    "p_D": None if pd.isna(r.p_D) else float(r.p_D),
+                    "p_A": None if pd.isna(r.p_A) else float(r.p_A),
+                    "p_over_2.5": None if pd.isna(r.p_O) else float(r.p_O),
+                    "books": list(model.params()["books"]),
+                    "quote_time_utc": str(r.quote_time_utc),
+                    "provenance": prov,
+                }
+                missing = ["lineups", "injuries"]
             fixtures.append(
                 FixtureIn(
                     competition=div,
@@ -84,13 +101,18 @@ def predict_domestic(
                         "fixture_source": f"openfootball schedule line {x.line_no}",
                         "team_mapping_verified_on": check["checked_results"],
                         "model_params": model.params(),
-                    },
-                    missing_fields=["lineups", "injuries", "odds"],
+                    }
+                    | ({"market_prices_used": market} if market else {}),
+                    missing_fields=missing,
                 )
             )
         if dry_run:
             out.extend(
-                {"fixture": f.ref, "p1x2": mp.p1x2[j].round(3).tolist()}
+                {
+                    "fixture": f.ref,
+                    "p1x2": mp.p1x2[j].round(3).tolist(),
+                    "market_used": "market_prices_used" in f.features,
+                }
                 for j, f in enumerate(fixtures)
             )
             continue

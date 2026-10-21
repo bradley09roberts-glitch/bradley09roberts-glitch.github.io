@@ -476,3 +476,24 @@ keys (matched by a hand-checked list); 200 new clubs from countries without a fo
 league get `<country>-<slug>` keys. A club takes its league's country (Monaco `fra-monaco`,
 Vaduz `che-vaduz`). `prt-torreense` is the one club of a football-data country with no
 football-data alias (a second-division club in the 2026/27 Europa League).
+
+## D-024 football-data `fixtures.csv` for live model + market predictions (2026-10-21)
+
+**Why:** football-data's pre-closing prices (collected Friday 17:00 or Tuesday 13:00 UK,
+D-012) predict results much better than any model built here (validation 2023/24, five
+leagues: RPS 0.1873–0.1876 for Bet365, Pinnacle and the market average, against 0.1948 for
+Dixon-Coles and 0.1928 for the best lab model). A model that blends them in can only be used
+live if the same kind of price is available before kickoff. football-data publishes exactly
+that in `fixtures.csv`, on the same page and under the same terms as the season files.
+
+**Decision:** extend D-013 to this one file, with the same safeguards: the polite client,
+fetched at most once every 6 hours unless forced (`uv run footy fd-fixtures`), stored once
+in the raw store, never committed or published raw. A published prediction that used the
+prices records the raw file's SHA-256, its retrieval time and the consensus probabilities
+it used, not the prices themselves. The pure model keeps its own records, so the
+model-against-market comparison stays meaningful.
+
+**Note on the back-up domestic records of 21 October:** their `notes` field cites "D-020" for
+the rule that the current primary domestic model publishes while the lab runs. That number
+is wrong (D-020 is the odds-capture schedule); the rule is the one in this entry's
+"Primary models" section below. The records are immutable, so the note stays as written.
