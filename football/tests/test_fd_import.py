@@ -143,3 +143,17 @@ def test_failed_job_is_recorded(migrated_engine):
         run = s.scalar(select(JobRun).where(JobRun.job == "boom"))
         assert run.status == "failed" and "source unreachable" in run.error
         assert run.finished_at is not None
+
+
+def test_european_main_layout_division_has_results_but_no_prices(migrated_engine, settings):
+    rows = [replace_field(r, "Div", "SC0") for r in ROWS]
+    repeat = replace_field(rows[0], "Date", "14/02/2026")
+    drop(settings, csv_bytes([*rows, repeat]), name="2526_SC0.csv")
+    detail = update(migrated_engine, settings)
+    assert detail["import"]["matches_inserted"] == 3
+    assert detail["import"]["odds_inserted"] == 0
+    assert detail["import"]["rows_rejected"] == 1
+    with Session(migrated_engine) as s:
+        assert {m.division for m in s.scalars(select(Match))} == {"SC0"}
+        issue = s.scalar(select(ImportIssue).where(ImportIssue.code == "repeat_pairing"))
+        assert issue.source_row == 4 and issue.severity == "error"

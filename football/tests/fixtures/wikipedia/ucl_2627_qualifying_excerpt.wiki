@@ -1,0 +1,53 @@
+<!--
+EXCERPT FROM ENGLISH WIKIPEDIA, for parser tests only. Licence: CC BY-SA 4.0
+(https://creativecommons.org/licenses/by-sa/4.0/). Authors: Wikipedia contributors.
+Page: "2026–27 UEFA Champions League qualifying phase and play-off round", revision 1380434887
+(https://en.wikipedia.org/w/index.php?oldid=1380434887), retrieved 2026-10-21 via the MediaWiki API.
+Contents: the time-basis sentence, the First qualifying round heading, the Sports series summary
+cut down to its Vardar v KuPS row, and both legs of Vardar v KuPS (second leg after extra time).
+Lines are copied verbatim; everything between them is omitted.
+-->
+Times are [[Central European Summer Time|CEST]] ([[UTC+02:00|UTC+2]]), as listed by UEFA (local times, if different, are in parentheses).
+
+==First qualifying round==
+===Summary===
+{{#invoke:Sports series|main|bold_winner=y|caption=First qualifying round|generate_links=y
+|[[FK Vardar|Vardar]]|MKD|3–4|[[Kuopion Palloseura|KuPS]]|FIN|0–2|3–2 {{aet}}
+}}
+
+===Matches===
+{{#invoke:football box|main
+|date      = {{Start date|2026|7|7|df=y}}
+|time      = 19:00
+|team1     = [[FK Vardar|Vardar]] {{fbaicon|MKD}}
+|score     = 0–2
+|team2     = {{fbaicon|FIN}} [[Kuopion Palloseura|KuPS]]
+|goals1    = 
+|goals2    = 
+*[[Brahima Magassa|Magassa]] {{goal|45}}
+*[[Bob Nii Armah|Armah]] {{goal|49}}
+|stadium   = [[Toše Proeski Arena]], [[Skopje]]
+|attendance= 3,512<ref>{{UEFA match attendance|2048627|Vardar vs. KuPS|date=7 July 2026|access-date=7 July 2026}}</ref>
+|referee   = {{ill|Kadir Sağlam|nl}} ([[Turkish Football Federation|Turkey]])
+|report    = Report<ref>[https://www.uefa.com/uefachampionsleague/match/2048627/ "Vardar vs KuPS"]. ''UEFA.com''. Union of European Football Associations. Retrieved 22 June 2026.</ref>
+}}
+{{#invoke:football box|main
+|date      = {{Start date|2026|7|14|df=y}}
+|time      = 17:00 {{small|(18:00 [[UTC+03:00|UTC+3]])}}
+|team1     = KuPS {{fbaicon|FIN}}
+|score     = 2–3
+|team2     = {{fbaicon|MKD}} Vardar
+|aet       = y
+|goals1    = 
+*[[Bob Nii Armah|Armah]] {{goal|100}}
+*[[Piotr Parzyszek|Parzyszek]] {{goal|105+1|pen.}}
+|goals2    = 
+*[[Azer Omeragić|Omeragikj]] {{goal|59}}
+*[[Goran Zakarić|Zakarić]] {{goal|90+1|pen.}}
+*[[Ian Puleio|Puleio]] {{goal|102}}
+|stadium   = [[Kuopio Football Stadium]], [[Kuopio]]
+|attendance= 2,887<ref>{{UEFA match attendance|2048641|KuPS vs. Vardar|date=14 July 2026|access-date=14 July 2026}}</ref>
+|referee   = {{ill|Matthew MacDermid|nl}} ([[Scottish Football Association|Scotland]])
+|report    = Report<ref>[https://www.uefa.com/uefachampionsleague/match/2048641/ "KuPS vs Vardar"]. ''UEFA.com''. Union of European Football Associations. Retrieved 22 June 2026.</ref>
+}}
+''KuPS won 4–3 on aggregate.''

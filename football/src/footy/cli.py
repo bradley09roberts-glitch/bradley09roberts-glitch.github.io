@@ -23,6 +23,12 @@ def main(argv: list[str] | None = None) -> int:
     fd.add_argument("--force", action="store_true", help="re-download even if cached")
     fd.add_argument("--reimport", action="store_true", help="re-parse the latest revisions")
     fd.add_argument("--no-download", action="store_true", help="use stored and inbox files only")
+    fd.add_argument(
+        "--scope",
+        choices=["all", "core", "europe"],
+        default="all",
+        help="core: the ten M1 divisions; europe: the extra European leagues (default all)",
+    )
 
     cov = sub.add_parser("coverage", help="coverage report per division, season and field")
     cov.add_argument("--markdown", help="also write the report as Markdown to this path")
@@ -37,6 +43,32 @@ def main(argv: list[str] | None = None) -> int:
     lab.add_argument("--seasons", default="2324", help="comma-separated, default 2324")
     lab.add_argument("--workers", type=int, default=2)
     lab.add_argument("--baseline", default="baseline_frequency")
+
+    pd_ = sub.add_parser("predict-domestic", help="publish early-edition league predictions")
+    pd_.add_argument(
+        "--model", required=True, help="registered model name (footy.modeling.registry)"
+    )
+    pd_.add_argument("--divisions", default="E0,SP1,I1,D1,F1,E1")
+    pd_.add_argument("--days", type=int, default=7)
+    pd_.add_argument("--dry-run", action="store_true")
+    pd_.add_argument("--notes")
+
+    pe = sub.add_parser("predict-euro", help="publish early-edition UEFA predictions")
+    pe.add_argument("--config", default="{}", help="PanEuropeanDC keyword arguments as JSON")
+    pe.add_argument("--model-name", default="pan_euro_dc")
+    pe.add_argument("--comps", default="UCL,UEL,UECL")
+    pe.add_argument("--days", type=int, default=3)
+    pe.add_argument("--dry-run", action="store_true")
+    pe.add_argument("--notes")
+
+    sub.add_parser("settle", help="settle published predictions whose results are in")
+
+    fr = sub.add_parser(
+        "final-report", help="validation selection, one test run, benchmark, profit"
+    )
+    fr.add_argument("--selected", required=True)
+    fr.add_argument("--candidates", default="", help="comma-separated lab candidates to compare")
+    fr.add_argument("--workers", type=int, default=3)
 
     cap = sub.add_parser("capture-odds", help="take any due pre-match odds snapshots (cron: 5 min)")
     cap.add_argument("--horizon-days", type=int, default=3)
@@ -70,6 +102,7 @@ def main(argv: list[str] | None = None) -> int:
             force=args.force,
             reimport=args.reimport,
             allow_download=not args.no_download,
+            scope=args.scope,
         )
         print(json.dumps(detail, indent=2, default=str))
         return 1 if detail.get("import_failures") or detail.get("download_problems") else 0
@@ -115,6 +148,52 @@ def main(argv: list[str] | None = None) -> int:
         with pd.option_context("display.width", 250, "display.max_columns", 40):
             print(table.to_string())
         print(f"saved {out}")
+    elif args.command == "predict-domestic":
+        from footy.db import get_engine
+        from footy.live import predict_domestic
+        from footy.modeling.registry import candidates
+
+        factory = candidates()[args.model]
+        out = predict_domestic(
+            get_engine(),
+            factory,
+            args.model,
+            args.divisions.split(","),
+            days=args.days,
+            dry_run=args.dry_run,
+            notes=args.notes,
+        )
+        print(json.dumps(out, indent=1, default=str))
+    elif args.command == "predict-euro":
+        from footy.db import get_engine
+        from footy.live import predict_euro
+        from footy.modeling.euro import PanEuropeanDC
+
+        config = json.loads(args.config)
+        out = predict_euro(
+            get_engine(),
+            lambda: PanEuropeanDC(**config, name=args.model_name),
+            args.model_name,
+            tuple(args.comps.split(",")),
+            days=args.days,
+            dry_run=args.dry_run,
+            notes=args.notes,
+        )
+        print(json.dumps(out, indent=1, default=str))
+    elif args.command == "final-report":
+        from footy.modeling.report import run
+
+        cands = [c for c in args.candidates.split(",") if c]
+        print(
+            json.dumps(run(args.selected, cands, workers=args.workers), indent=1, default=str)[
+                :4000
+            ]
+        )
+    elif args.command == "settle":
+        from footy.db import get_engine
+        from footy.publish import settle
+
+        print(json.dumps(settle(get_engine())))
     elif args.command == "capture-odds":
         from footy.capture import run_capture
         from footy.db import get_engine, upgrade_to_head

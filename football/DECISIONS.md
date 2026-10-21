@@ -295,3 +295,137 @@ Written from the documentation fetched on 19 Oct 2026, not yet against live resp
   labels are skipped and counted.
 - **Contract test:** `tests/test_sportmonks_contract.py` runs against real responses saved in
   `tests/recorded/sportmonks/`. It is skipped until the owner's key exists.
+
+## D-022 European domestic leagues (2026-10-21)
+
+**Why:** a pan-European club model needs league form for Champions League clubs from outside
+the big five. These divisions have `scope = "europe"` in `reference.py`; the core ten have
+`scope = "core"` and nothing about them changes (`TOP_DIVISIONS` is still the five core top
+divisions, and prices are still parsed for those five only, D-016).
+
+**What is imported (results only, 2018/19 or 2018 onwards):**
+
+| Layout | Source | Divisions |
+| --- | --- | --- |
+| Main (same columns as E0, one file per season) | `mmz4281/{season}/{code}.csv` | SC0 Scotland, N1 Netherlands, B1 Belgium, P1 Portugal, T1 Turkey, G1 Greece |
+| Extra leagues (one file per league, every season) | `new/{code}.csv` | AUT, DNK, SWZ (Switzerland), NOR, SWE, POL, ROU, RUS, FIN, IRL |
+
+- The extra-league list is every European league linked from `all_new_data.php` on
+  21 Oct 2026 (the others there are Argentina, Brazil, China, Japan, Mexico and the USA).
+  Russia is included: its clubs left UEFA competitions in 2022, but its matches still rate
+  them, and they faced European clubs until then.
+- Extra-league columns: Country, League, Season, Date, Time, Home, Away, HG, AG, Res, then
+  closing prices, which are left in the raw file. Main-layout files also give half-time
+  scores and match statistics.
+- Fetching follows D-013. robots.txt allows a generic User-Agent (it blocks named AI
+  crawlers, which these requests are not). Each extra-league file always holds the current
+  season, so it is re-fetched at most every 12 hours, with conditional requests. 64 files
+  were downloaded on 21 Oct 2026; hand-downloaded copies can go in the inbox as
+  `new_<CODE>.csv`.
+- Division codes are football-data's. Countries are ISO 3166-1 alpha-3, except Scotland
+  (SCO); SWZ is CHE. A club takes its league's country, so Vaduz (Liechtenstein, Swiss
+  league) is `che-vaduz`, as Monaco is `fra-monaco`.
+- `uv run footy fd-update` covers everything; `--scope core` or `--scope europe` narrows it.
+
+**Season keys for calendar-year leagues** (NOR, SWE, FIN, IRL): the same four characters
+with equal halves, so `2525` is the 2025 season, labelled "2025". Split-year keys always have
+halves one apart (`2526`), so the two kinds can't collide, and `2525` sorts between 2024/25
+and 2025/26.
+
+**Kick-off times** are read as UK local time, as in the main layout (D-005). football-data
+doesn't say so for these files, but the data fits it and nothing else. Austrian and Swiss
+kick-off slots are the same in summer and winter (e.g. 16:00 and 13:30 for 17:00 and 14:30
+local), so the times aren't UTC. Russian slots move by exactly one hour between summer and
+winter (17:00 to 16:00), which is what fixed Moscow times (no daylight saving) do in UK time.
+There was no independent check against published kick-offs: the Wikipedia API returned
+HTTP 429 on 21 Oct 2026.
+
+**Repeat meetings: the schema can't hold them yet (needs a migration).** `matches` is unique
+on (division, season, home team, away team). In split leagues, three- and four-round formats
+and play-offs, the same home and away teams meet more than once in a season. Those later
+meetings are real matches, but they can't be stored. Each is held back with a `repeat_pairing`
+error in `import_issues` and stays in the raw files. The same pairing on the same date is still
+a `duplicate_fixture`.
+
+On 21 Oct 2026, 4,815 rows were held back:
+
+| Division | Held back | Share of rows |
+| --- | ---: | ---: |
+| SC0 | 720 | 39% |
+| SWZ | 738 | 45% |
+| IRL | 710 | 46% |
+| ROU | 623 | 24% |
+| AUT | 498 | 31% |
+| DNK | 490 | 29% |
+| G1 | 395 | 20% |
+| FIN | 314 | 21% |
+| B1 (from 2023/24) | 215 | 9% |
+| POL (2018/19 and 2019/20) | 112 | 5% |
+
+N1, P1, T1, NOR, SWE and RUS lose nothing.
+
+What this means for the data:
+
+- In the affected leagues, past seasons stop early. Scottish Premiership seasons end in
+  January, for example.
+- 2026/27 is complete so far in every split-year league.
+- The calendar-year 2026 seasons are not: Finland (33 rows) and Ireland (80 rows) are already
+  missing their most recent matches.
+
+The fix needs a migration, which was out of scope for this task:
+
+1. Add `matches.meeting`: the 1st, 2nd or 3rd meeting of the pairing in that season, in file
+   order, default 1.
+2. Make the unique key (division, season, home_team, away_team, meeting).
+3. Let both parsers keep repeat meetings, then run
+   `uv run footy fd-update --no-download --reimport --scope europe`.
+
+The core ten would not change, since their meeting is always 1.
+
+**Play-off visitors.** The extra-league files also hold promotion and relegation play-offs
+against lower-division clubs, and, in Ireland, the First Division's own play-offs. A visitor
+is a club with at most 4 matches in a season, and at most a fifth of the median club's count,
+in a season where the median club has played at least 10. Its matches are stored, flagged
+`playoff_vs_outside_club` (a warning) and excluded from models
+(`model_exclusion = "playoff_vs_outside_club"`). The reason is that the source doesn't say
+whether play-off scores include extra time. 116 matches were flagged on 21 Oct 2026, and all
+65 visitor club-seasons were checked by hand to be lower-division clubs.
+
+Two limits remain:
+
+- European play-offs between clubs of the same league can't be told apart from league
+  matches, and they are kept. Examples are Austria until 2023/24, Denmark and Finland. Most of
+  them are repeat meetings, so they are held back anyway.
+- Two Swiss rows carry the League label "Challenge League" (the 2020/21 relegation play-off).
+  This is a file-level warning only.
+
+D-017 and D-018 apply unchanged otherwise. For example, 31 bare Süper Lig results in 2022/23
+(matches awarded after Hatayspor and Gaziantep withdrew following the earthquake) are excluded
+as `result_without_stats`.
+
+**Team mapping.** There are 394 new teams and 401 football-data aliases, keyed
+`<country>-<slug of the name>` as for the core leagues.
+
+The near-duplicate review used difflib (ratio at least 0.6, or one name contained in the
+other) within each country. That flagged 128 pairs. Each was checked against the fixtures:
+did the two names ever meet, and did they appear in the same season?
+
+Seven were merged as the same club:
+
+| Names | Kept as | Reason |
+| --- | --- | --- |
+| Ham-Kam / HamKam | `nor-hamkam` | Spelling |
+| Gornik Z. / Gornik Zabrze | `pol-gornik-zabrze` | Spelling; both appear in 2022/23 and never meet |
+| Din. Bucuresti / Dinamo Bucuresti | `rou-dinamo-bucuresti` | Spelling; both appear in 2025/26 and never meet |
+| U Craiova / Univ. Craiova | `rou-univ-craiova` | Name switches on 14 Feb 2021, mid-season |
+| Viitorul Constanta / Farul Constanta | `rou-farul-constanta` | Viitorul took the Farul name in 2021 |
+| Waasland-Beveren / Beveren | `bel-beveren` | Renamed SK Beveren in 2022 |
+| Erzurum BB / Erzurumspor | `tur-erzurumspor` | Renamed Erzurumspor FK in 2022 |
+
+Similar names kept apart as different clubs: U Craiova 1948 and Univ. Craiova (they met 6
+times), Lausanne and Lausanne Ouchy, Wisla (Kraków) and Wisla Plock, Zaglebie (Lubin) and
+Zaglebie Sosnowiec, AVS and Aves, HIFK and HJK, Oster and Ostersunds, Farense and Feirense,
+Dundee and Dundee United, Cercle Brugge and Club Brugge, Dynamo Makhachkala and Anzhi.
+
+A merged club can appear under both names in one season. Where that would repeat a pairing
+of teams, the importer holds the row back as `repeat_pairing` too.

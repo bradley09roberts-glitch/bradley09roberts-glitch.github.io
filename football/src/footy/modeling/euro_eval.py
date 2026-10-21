@@ -18,6 +18,7 @@ from footy.modeling.euro import (
     EuroFrequency,
     EuroSpec,
     PanEuropeanDC,
+    PanEuropeanElo,
     load_combined,
     run_euro_backtest,
 )
@@ -38,8 +39,19 @@ def _run(args):
 
     engine = make_engine(get_settings().database_url)
     df = load_combined(engine)
-    factory = (lambda: EuroFrequency()) if config is None else (lambda: PanEuropeanDC(**config))
+    factory = make_factory(config)
     return run_euro_backtest(df, EuroSpec(factory, seasons, comps), team_countries(engine))
+
+
+def make_factory(config: dict | None):
+    """None -> frequency baseline; {"family": "elo", ...} -> Elo; otherwise Dixon-Coles."""
+    if config is None:
+        return lambda: EuroFrequency()
+    cfg = dict(config)
+    family = cfg.pop("family", "dc")
+    if family == "elo":
+        return lambda: PanEuropeanElo(**cfg)
+    return lambda: PanEuropeanDC(**cfg)
 
 
 def evaluate(configs: list[dict | None], seasons: list[str], comps=COMPS, workers: int = 3) -> dict:

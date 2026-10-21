@@ -125,13 +125,29 @@ def decode(content: bytes) -> tuple[str, str]:
         return content.decode("cp1252"), "cp1252"
 
 
-def parse_fd_csv(content: bytes, division: str, *, with_odds: bool) -> ParsedFile:
+def uk_kickoff(match_date: date, hhmm: str) -> tuple[str, datetime]:
+    """football-data's "HH:MM" UK local kick-off as (normalised "HH:MM", UTC datetime).
+    Raises ValueError for anything else."""
+    t = datetime.strptime(hhmm, "%H:%M").time()  # noqa: DTZ007 (UK time-of-day)
+    return t.strftime("%H:%M"), datetime.combine(match_date, t, tzinfo=UK).astimezone(
+        ZoneInfo("UTC")
+    )
+
+
+def parse_fd_csv(
+    content: bytes, division: str, *, with_odds: bool, repeats_expected: bool = False
+) -> ParsedFile:
+    """`repeats_expected` is for leagues where a pairing legitimately recurs in a season
+    (split formats, play-offs; D-022): a repeat on a different date is then reported as
+    `repeat_pairing` (held back) instead of `duplicate_fixture`. Either way only the first
+    row of a pairing is returned, since `matches` holds one row per pairing per season."""
     text, encoding = decode(content)
     reader = csv.reader(io.StringIO(text))
     header = [h.strip() for h in next(reader)]
     issues: list[Issue] = []
     matches: list[ParsedMatch] = []
     seen: dict[tuple[str, str], int] = {}
+    first_date: dict[tuple[str, str], date] = {}
 
     for n, values in enumerate(reader, start=1):
         if not any(v.strip() for v in values):
@@ -142,11 +158,24 @@ def parse_fd_csv(content: bytes, division: str, *, with_odds: bool) -> ParsedFil
             continue
         pair = (parsed.home_name, parsed.away_name)
         if pair in seen:
-            issues.append(
-                Issue(n, "error", "duplicate_fixture", f"same pairing as row {seen[pair]}")
-            )
+            if repeats_expected and first_date[pair] != parsed.match_date:
+                issues.append(
+                    Issue(
+                        n,
+                        "error",
+                        "repeat_pairing",
+                        f"{parsed.home_name} v {parsed.away_name} on {parsed.match_date} "
+                        f"repeats row {seen[pair]} ({first_date[pair]}); held back, one row "
+                        "per pairing per season in matches",
+                    )
+                )
+            else:
+                issues.append(
+                    Issue(n, "error", "duplicate_fixture", f"same pairing as row {seen[pair]}")
+                )
             continue
         seen[pair] = n
+        first_date[pair] = parsed.match_date
         matches.append(parsed)
     return ParsedFile(matches, issues, header, encoding)
 
@@ -192,9 +221,7 @@ def _parse_row(n, row, division, with_odds, issues) -> ParsedMatch | None:
     kickoff_local, kickoff_utc = None, None
     if row.get("Time"):
         try:
-            t = datetime.strptime(row["Time"], "%H:%M").time()  # noqa: DTZ007 (UK time-of-day)
-            kickoff_local = t.strftime("%H:%M")
-            kickoff_utc = datetime.combine(match_date, t, tzinfo=UK).astimezone(ZoneInfo("UTC"))
+            kickoff_local, kickoff_utc = uk_kickoff(match_date, row["Time"])
         except ValueError:
             issues.append(Issue(n, "warning", "bad_time", f"Time={row['Time']!r}"))
 

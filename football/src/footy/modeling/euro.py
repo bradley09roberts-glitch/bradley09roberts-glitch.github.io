@@ -352,3 +352,125 @@ def _scored(fx, mp: MarketProbs, cutoff_date) -> list[dict]:
             row["lam_h"], row["lam_a"] = mp.lam_h[j], mp.lam_a[j]
         out.append(row)
     return out
+
+
+class PanEuropeanElo:
+    """World Football Elo over every domestic and UEFA match, then a Poisson mapping from the
+    rating gap to each side's expected goals, fitted on UEFA matches in the window.
+
+    Ratings are updated incrementally as the cutoff advances (history only ever grows in a
+    walk-forward), and rebuilt from scratch if the cutoff moves backwards. New clubs start at
+    a level set by where they are first seen (core top flight, other top flights, second
+    tiers, or UEFA-only clubs from leagues we don't hold).
+    """
+
+    markets = ALL_MARKETS
+    START = {"core_top": 1500.0, "europe_top": 1450.0, "tier2": 1400.0, "uefa_only": 1400.0}
+
+    def __init__(
+        self,
+        k_domestic: float = 20.0,
+        k_euro: float = 30.0,
+        home: float = 65.0,
+        map_days: int = 4 * 365,
+        name: str | None = None,
+    ):
+        self.k_domestic, self.k_euro, self.home, self.map_days = k_domestic, k_euro, home, map_days
+        self.name = name or f"pan_euro_elo_kd{k_domestic:g}_ke{k_euro:g}_h{home:g}"
+        self.team_country: dict[str, str] = {}
+        self._reset()
+
+    def _reset(self):
+        self.r: dict[str, float] = {}
+        self._done_until = pd.Timestamp.min
+        self._seen_ids: set[int] = set()
+        self._pre: list[tuple] = []  # (date, kind, neutral, dr, hg, ag) for the goal mapping
+
+    def params(self) -> dict:
+        return {
+            "k_domestic": self.k_domestic,
+            "k_euro": self.k_euro,
+            "home": self.home,
+            "map_days": self.map_days,
+        }
+
+    def _start(self, comp: str) -> float:
+        from footy.reference import DIVISIONS
+
+        d = DIVISIONS.get(comp)
+        if d is None:
+            return self.START["uefa_only"]
+        if d.tier == 2:
+            return self.START["tier2"]
+        return self.START["core_top"] if d.scope == "core" else self.START["europe_top"]
+
+    def fit(self, history: pd.DataFrame, cutoff_date: pd.Timestamp) -> None:
+        if cutoff_date < self._done_until:
+            self._reset()
+        new = history[(history.date >= self._done_until) & ~history.id.isin(self._seen_ids)]
+        new = new[new.home_goals.notna() & new.model_exclusion.isna()].sort_values(["date", "id"])
+        for m in new.itertuples():
+            rh = self.r.setdefault(m.home_team, self._start(m.comp))
+            ra = self.r.setdefault(m.away_team, self._start(m.comp))
+            neutral = bool(m.neutral)
+            dr = rh - ra + (0.0 if neutral else self.home)
+            we = 1 / (10 ** (-dr / 400) + 1)
+            gd = abs(int(m.home_goals) - int(m.away_goals))
+            g = 1.0 if gd <= 1 else 1.5 if gd == 2 else (11 + gd) / 8
+            w = 1.0 if m.home_goals > m.away_goals else 0.5 if m.home_goals == m.away_goals else 0.0
+            k = self.k_euro if m.kind == "euro" else self.k_domestic
+            delta = k * g * (w - we)
+            self.r[m.home_team], self.r[m.away_team] = rh + delta, ra - delta
+            self._pre.append((m.date, m.kind, neutral, dr, int(m.home_goals), int(m.away_goals)))
+            self._seen_ids.add(int(m.id))
+        self._done_until = cutoff_date
+        self._fit_mapping(cutoff_date)
+
+    def _fit_mapping(self, cutoff_date):
+        pre = [
+            p
+            for p in self._pre
+            if p[1] == "euro" and p[0] >= cutoff_date - pd.Timedelta(days=self.map_days)
+        ]
+        if len(pre) < 50:  # too few UEFA matches yet: fall back to all matches
+            pre = [p for p in self._pre if p[0] >= cutoff_date - pd.Timedelta(days=self.map_days)]
+        dr = np.array([p[3] for p in pre]) / 400.0
+        hg = np.array([p[4] for p in pre], float)
+        ag = np.array([p[5] for p in pre], float)
+
+        def nll(t):
+            a, b = t
+            lh, la = np.exp(a + b * dr), np.exp(a - b * dr)
+            return -(hg * np.log(lh) - lh + ag * np.log(la) - la).sum()
+
+        res = minimize(nll, x0=np.array([0.2, 0.5]), method="L-BFGS-B")
+        self.a, self.b = float(res.x[0]), float(res.x[1])
+        lh, la = np.exp(self.a + self.b * dr), np.exp(self.a - self.b * dr)
+
+        def nll_rho(rho):
+            tau = _tau_terms(hg.astype(int), ag.astype(int), lh, la, rho[0])[0]
+            return -np.log(tau).sum()
+
+        self.rho_ = float(minimize(nll_rho, x0=np.array([-0.05]), bounds=[(-0.2, 0.2)]).x[0])
+
+    def rating(self, team: str) -> float | None:
+        return self.r.get(team)
+
+    def strength(self, team: str):
+        r = self.r.get(team)
+        return None if r is None else (round(r, 1), round(r, 1))
+
+    @property
+    def league_of(self) -> dict:
+        return {}
+
+    def predict(self, fixtures: pd.DataFrame) -> MarketProbs:
+        lh, la = [], []
+        for f in fixtures.itertuples():
+            rh = self.r.get(f.home_team, self.START["uefa_only"])
+            ra = self.r.get(f.away_team, self.START["uefa_only"])
+            dr = (rh - ra + (0.0 if getattr(f, "neutral", 0) else self.home)) / 400.0
+            lh.append(np.exp(self.a + self.b * dr))
+            la.append(np.exp(self.a - self.b * dr))
+        lh, la = np.array(lh), np.array(la)
+        return markets_from_grid(poisson_grid(lh, la, self.rho_), lh, la)

@@ -69,6 +69,28 @@ Price coverage for the market benchmark (D-014):
 | Pinnacle 1X2 | 100% | 100% | 49–55% | 0% |
 | Betfair Exchange 1X2 | 0% | 100% | 92–95% | 100% |
 
+## European leagues (21 Oct 2026, D-022)
+
+Sixteen extra domestic leagues, results only, for rating Champions League clubs from outside
+the big five. They cover 2018/19 (or 2018) to date.
+
+- **Main layout:** Scotland, Netherlands, Belgium, Portugal, Turkey and Greece (54 season
+  files).
+- **Extra-league files:** Austria, Denmark, Switzerland, Norway, Sweden, Poland, Romania,
+  Russia, Finland and Ireland (10 files, one per league with every season).
+
+**Totals:** 28,432 matches stored and 153 excluded from models. 394 new teams.
+
+**Gap:** 4,815 repeat meetings (the same home and away teams twice in a season) are held back,
+because `matches` allows one row per pairing per season. This affects split and multi-round
+leagues: Scotland, Switzerland, Ireland, Romania, Austria, Denmark, Greece, Finland, Belgium
+and Poland. Their past seasons stop early. A migration is needed (D-022 has the fix).
+
+Commands:
+
+- `uv run footy fd-update` covers everything.
+- `--scope core` or `--scope europe` narrows it.
+
 ## M1 acceptance results (run 2026-10-19)
 
 | Test | Result |
@@ -90,6 +112,8 @@ Price coverage for the market benchmark (D-014):
 4. **Pinnacle's 2025/26 gaps** are handled by D-014 (Betfair Exchange closing from 23 Jul 2025).
    Betfair Exchange prices don't exist in the data before 2024/25.
 5. **Referees** are only in English files; **xG** only in 2026/27 (undocumented; not used).
+6. **European leagues: repeat meetings held back** (D-022). The fix needs a migration: a
+   `matches.meeting` column in the unique key, then a re-import.
 
 ## M2 plan (for the next session, after review)
 

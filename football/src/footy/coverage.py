@@ -1,11 +1,18 @@
-"""Coverage per division, season and field. Counts only: no source rows or prices leave here."""
+"""Coverage per division, season and field. Counts only: no source rows or prices leave here.
 
+The core ten divisions keep the M1 report. The European leagues (scope "europe", D-022) get
+their own section: results only, with the rows held back because `matches` has one row per
+pairing per season.
+"""
+
+import re
+from collections import Counter
 from datetime import datetime
 
 import pandas as pd
 from sqlalchemy import Engine, text
 
-from footy.reference import DIVISIONS
+from footy.reference import DIVISIONS, TOP_DIVISIONS
 from footy.seasons import season_label
 
 STAT_FIELDS = {
@@ -56,8 +63,25 @@ def coverage_rows(engine: Engine) -> list[dict]:
             ),
             conn,
         )
+        latest_issues = pd.read_sql(
+            text(
+                "SELECT r.source, r.logical_key, r.revision, i.severity, i.code, i.detail "
+                "FROM import_issues i JOIN raw_files r ON r.id = i.raw_file_id "
+                "WHERE r.revision = (SELECT max(r2.revision) FROM raw_files r2 "
+                "WHERE r2.source = r.source AND r2.logical_key = r.logical_key)"
+            ),
+            conn,
+        )
+        latest_extra = pd.read_sql(
+            text(
+                "SELECT logical_key, max(revision) AS revision, max(retrieved_at) AS retrieved_at "
+                "FROM raw_files WHERE source = 'football-data-extra' GROUP BY 1"
+            ),
+            conn,
+        )
     if matches.empty:
         return []
+    europe_issues = _europe_issue_counts(latest_issues)
 
     complete = {}
     for label, book, market, phase, need in ODDS_SETS:
@@ -72,14 +96,18 @@ def coverage_rows(engine: Engine) -> list[dict]:
     issue_map = {(r.logical_key, r.severity): int(r.n) for r in issues.itertuples()}
     raw_map = {r.logical_key: r for r in latest_raw.itertuples()}
     rows = []
+    extra_map = {r.logical_key: r for r in latest_extra.itertuples()}
     for (division, season), g in matches.groupby(["division", "season"], sort=False):
         teams = set(g.home_team) | set(g.away_team)
+        info = DIVISIONS[division]
         key = f"{season}/{division}"
         n = len(g)
         row = {
             "division": division,
-            "division_name": DIVISIONS[division].name,
-            "tier": DIVISIONS[division].tier,
+            "division_name": info.name,
+            "tier": info.tier,
+            "scope": info.scope,
+            "layout": info.layout,
             "season": season,
             "season_label": season_label(season),
             "matches": n,
@@ -98,13 +126,56 @@ def coverage_rows(engine: Engine) -> list[dict]:
         for label, *_ in ODDS_SETS:
             row[f"odds::{label}"] = (
                 round(100 * len(ids & complete[label]) / n, 1)
-                if DIVISIONS[division].tier == 1
+                if division in TOP_DIVISIONS
                 else None
             )
+        if info.scope != "core":
+            counts = europe_issues.get((division, season), Counter())
+            row["held_back"] = counts["repeat_pairing"]
+            row["model_excluded"] = int(g.model_exclusion.notna().sum())
+            row["issues_error"] = counts["error"]
+            row["issues_warning"] = counts["warning"]
+            if info.layout == "extra":
+                raw = extra_map.get(f"new/{division}")
+                row["raw_revision"] = int(raw.revision) if raw is not None else None
+                row["retrieved_at"] = str(raw.retrieved_at) if raw is not None else None
         rows.append(row)
     order = {code: i for i, code in enumerate(DIVISIONS)}
     rows.sort(key=lambda r: (order[r["division"]], r["season"]))
     return rows
+
+
+_SEASON_PREFIX = re.compile(r"^(\d{4}(?:/\d{2})?): ")
+
+
+def _europe_issue_counts(issues: pd.DataFrame) -> dict[tuple[str, str], Counter]:
+    """Issue counts per (division, season) for the latest revision of each European file.
+    Main-layout files are one season each; extra-league issues carry their season as a
+    "2024/25: " or "2024: " prefix (fd_extra_parse)."""
+    out: dict[tuple[str, str], Counter] = {}
+    for r in issues.itertuples():
+        if r.source == "football-data":
+            season, division = r.logical_key.split("/")
+            if DIVISIONS.get(division) is None or DIVISIONS[division].scope == "core":
+                continue
+        elif r.source == "football-data-extra":
+            division = r.logical_key.split("/")[1]
+            m = _SEASON_PREFIX.match(r.detail or "")
+            if m is None:
+                continue  # file-level, not tied to a season
+            season = _season_from_label(m.group(1))
+        else:
+            continue
+        c = out.setdefault((division, season), Counter())
+        c[r.severity] += 1
+        c[r.code] += 1
+    return out
+
+
+def _season_from_label(label: str) -> str:
+    if "/" in label:  # "2024/25"
+        return f"{label[2:4]}{label[5:7]}"
+    return f"{label[2:4]}{label[2:4]}"  # calendar season "2024" -> "2424"
 
 
 def coverage_markdown(rows: list[dict], generated_at: datetime) -> str:
@@ -117,6 +188,8 @@ def coverage_markdown(rows: list[dict], generated_at: datetime) -> str:
     ]
     if not rows:
         return "\n".join(out + ["No matches imported."])
+    europe = [r for r in rows if r.get("scope", "core") != "core"]
+    rows = [r for r in rows if r.get("scope", "core") == "core"]
 
     out += [
         "## Matches",
@@ -161,7 +234,51 @@ def coverage_markdown(rows: list[dict], generated_at: datetime) -> str:
         cells = " | ".join(_pct(r[f"odds::{lab}"]) for lab in labels)
         out.append(f"| {r['division']} | {r['season_label']} | {cells} |")
     out.append("")
+    if europe:
+        out += _europe_markdown(europe)
     return "\n".join(out)
+
+
+def _europe_markdown(rows: list[dict]) -> list[str]:
+    out = [
+        "## European leagues (results only)",
+        "",
+        "Extra domestic leagues for rating clubs in UEFA competitions (D-022). Results and",
+        "kick-off times only (plus half-time scores and statistics in the main-layout files);",
+        "no prices. Seasons are split-year (2024/25) or calendar-year (2024).",
+        "",
+        "- **Stored**: rows in `matches`. **Held back**: genuine repeat meetings of the same",
+        "  home and away teams in one season (split leagues, three- and four-round formats,",
+        "  play-offs). `matches` allows one row per pairing per season, so these stay in the",
+        "  raw files and `import_issues` until the schema allows them.",
+        "- **Excluded**: stored but left out of models (bare or awarded results, D-018; play-off",
+        "  matches against a lower-division visitor, whose score basis is not stated).",
+        "- Errors include the held-back rows.",
+        "",
+        "| Division | Season | Stored | Held back | Teams | First | Last | Excluded | Errors "
+        "| Warnings | Kick-off % | HT score % | Shots % |",
+        "| --- | --- | ---: | ---: | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    order = {code: i for i, code in enumerate(DIVISIONS)}
+    totals: Counter = Counter()
+    for r in sorted(rows, key=lambda r: (order[r["division"]], r["season"])):
+        totals["stored"] += r["matches"]
+        totals["held_back"] += r["held_back"]
+        totals["excluded"] += r["model_excluded"]
+        out.append(
+            f"| {r['division']} {r['division_name']} | {r['season_label']} | {r['matches']} "
+            f"| {r['held_back']} | {r['teams']} | {r['first_date']} | {r['last_date']} "
+            f"| {r['model_excluded']} | {r['issues_error']} | {r['issues_warning']} "
+            f"| {_pct(r['pct_kickoff_time'])} | {_pct(r['pct_ht_score'])} "
+            f"| {_pct(r['pct_shots'])} |"
+        )
+    out += [
+        "",
+        f"Totals: {totals['stored']:,} stored, {totals['held_back']:,} held back, "
+        f"{totals['excluded']:,} stored but excluded from models.",
+        "",
+    ]
+    return out
 
 
 def _pct(v) -> str:

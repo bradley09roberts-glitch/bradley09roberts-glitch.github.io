@@ -1,0 +1,63 @@
+<!--
+EXCERPT FROM ENGLISH WIKIPEDIA, for parser tests only. Licence: CC BY-SA 4.0
+(https://creativecommons.org/licenses/by-sa/4.0/). Authors: Wikipedia contributors.
+Page: "2026–27 UEFA Champions League league phase", revision 1381234244
+(https://en.wikipedia.org/w/index.php?oldid=1381234244), retrieved 2026-10-21 via the MediaWiki API.
+Contents: the time-basis sentence, one Matchday 2 box (Shakhtar Donetsk v AEK Athens at a neutral venue), two Matchday 3 boxes (Liverpool v Villarreal, played; Bayern Munich v Arsenal, scheduled for 21 October 2026). Lines are copied verbatim; everything between them is omitted.
+-->
+==Matches==
+Times are [[Central European Time|CET]] or [[Central European Summer Time|CEST]],{{refn|group=note|[[Central European Summer Time|CEST]] ([[UTC+02:00|UTC+2]]) for dates up to 24 October 2026 (matchdays 1–3), and [[Central European Time|CET]] ([[UTC+01:00|UTC+1]]) for dates thereafter (matchdays 4–8).}} as listed by UEFA (local times, if different, are in parentheses).
+
+===Matchday 2===
+{{#invoke:Football box|main
+|date       = {{Start date|2026|10|14|df=y}}
+|time       = 21:00&nbsp;{{small|(20:00 [[UTC+00:00|UTC+0]])}}
+|team1      = [[FC Shakhtar Donetsk|Shakhtar Donetsk]] {{fbaicon|UKR}}
+|score      = 3–1
+|team2      = {{fbaicon|GRE}} [[AEK Athens F.C.|AEK Athens]]
+|goals1     =
+*[[Pedrinho (footballer, born April 1998)|Pedrinho]] {{goal|34|pen.}}
+*[[Vinicius Tobias]] {{goal|80}}
+*[[Gleiker Mendoza|Mendoza]] {{goal|86}}
+|goals2     =
+*[[Lovro Majer|Majer]] {{goal|28}}
+|stadium    = [[Stamford Bridge (stadium)|Stamford Bridge]], [[London]], England{{refn|group=note|name=Ukraine|Due to the [[2022 Russian invasion of Ukraine|Russian invasion of Ukraine]], Ukrainian teams are required to play their home matches at neutral venues until further notice.<ref>{{cite news |url=https://www.uefa.com/insideuefa/mediaservices/mediareleases/news/0272-148740475a92-1b97baa3e9d7-1000/|title=Decisions from today's extraordinary UEFA Executive Committee meeting |work=UEFA.com |publisher=Union of European Football Associations |date=25 February 2022 |access-date=25 February 2022}}</ref> Therefore, Shakhtar Donetsk will play their home matches at Stamford Bridge, London, England, instead of their regular stadium, [[Donbas Arena]], [[Donetsk]].<ref>{{cite news|title=UEFA Champions League comes to London|url=https://shakhtar.com/en/news/2026/august/21_news/21_shakhtar_stamford_bridge/|publisher=FC Shakhtar Donetsk|date=21 August 2026|access-date=27 August 2026|archive-date=27 August 2026|archive-url=https://web.archive.org/web/20260827170355/https://shakhtar.com/en/news/2026/august/21_news/21_shakhtar_stamford_bridge/|url-status=live}}</ref>}}
+|attendance = 21,119<ref>{{cite web |url=https://www.uefa.com/newsfiles/UCL/2027/2049586_FR.pdf |title=Full Time Summary Matchday 2 – Shakhtar Donetsk v AEK Athens |work=[[UEFA]] |publisher=Union of European Football Associations |date=14 October 2026 |access-date=14 October 2026}}</ref>
+|referee    = [[Chris Kavanagh (referee)|Chris Kavanagh]] ([[The Football Association|England]])
+|report     = Report<ref>{{cite web |url=https://www.uefa.com/uefachampionsleague/match/2049586/ |title=Shakhtar vs. AEK Athens |publisher=UEFA |access-date=14 October 2026}}</ref>
+}}
+----
+===Matchday 3===
+{{#invoke:Football box|main
+|date       = {{Start date|2026|10|20|df=y}}
+|time       = 21:00&nbsp;{{small|(20:00 [[UTC+01:00|UTC+1]])}}
+|team1      = [[Liverpool F.C.|Liverpool]] {{fbaicon|ENG}}
+|score      = 4−3
+|team2      = {{fbaicon|ESP}} [[Villarreal CF|Villarreal]]
+|goals1     =
+*[[Alexis Mac Allister|Mac Allister]] {{goal|36||65}}
+*[[Ronald Araújo|Araújo]] {{goal|45+2}}
+*[[Florian Wirtz|Wirtz]] {{goal|69}}
+|goals2     =
+*[[Georges Mikautadze|Mikautadze]] {{goal|4}}
+*[[Sergi Cardona|Cardona]] {{goal|29}}
+*[[Tani Oluwaseyi|Oluwaseyi]] {{goal|87}}
+|stadium    = [[Anfield]], [[Liverpool]]
+|attendance = 59,610<ref>{{cite web |url=https://www.uefa.com/newsfiles/UCL/2027/2049590_FR.pdf |title=Full Time Summary Matchday 3 – Liverpool v Villarreal |work=[[UEFA]] |publisher=Union of European Football Associations |date=20 October 2026 |access-date=20 October 2026}}</ref>
+|referee    = [[Szymon Marciniak]] ([[Polish Football Association|Poland]])
+|report     = Report<ref>{{cite web |url=https://www.uefa.com/uefachampionsleague/match/2049590/ |title=Liverpool vs. Villarreal |publisher=UEFA |access-date=20 October 2026}}</ref>
+}}
+----
+{{#invoke:Football box|main
+|date       = {{Start date|2026|10|21|df=y}}
+|time       = 21:00
+|team1      = [[FC Bayern Munich|Bayern Munich]] {{fbaicon|GER}}
+|score      =
+|team2      = {{fbaicon|ENG}} [[Arsenal F.C.|Arsenal]]
+|goals1     =
+|goals2     =
+|stadium    = [[Allianz Arena]], [[Munich]]
+|attendance = <!-- <ref>{{cite web |url=https://www.uefa.com/newsfiles/UCL/2027/2049598_FR.pdf |title=Full Time Summary Matchday 3 – Bayern Munich v Arsenal |work=[[UEFA]] |publisher=Union of European Football Associations |date=21 October 2026 |access-date=21 October 2026}}</ref> -->
+|referee    = [[Davide Massa]] ([[Italian Football Federation|Italy]])
+|report     = Report<ref>{{cite web |url=https://www.uefa.com/uefachampionsleague/match/2049598/ |title=Bayern München vs. Arsenal |publisher=UEFA |access-date=29 August 2026}}</ref>
+}}

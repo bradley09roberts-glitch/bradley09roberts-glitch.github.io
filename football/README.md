@@ -38,6 +38,7 @@ cd football
 cp .env.example .env            # optional; defaults work without it
 uv sync                         # Python deps into .venv
 uv run footy fd-update          # migrate, download (polite, cached) and import football-data
+                                #   (core ten + European leagues; --scope core|europe)
 uv run footy coverage           # coverage per division, season and field
 uv run footy serve              # API on http://127.0.0.1:8000  (GET /api/health)
 uv run footy capture-odds       # forward odds snapshots (needs a provider key; cron every 5 min)

@@ -139,3 +139,23 @@ def test_cp1252_file_decodes():
 def test_wrong_division_rejected():
     pf = parse_fd_csv(csv_bytes([ROWS[0]]), "SP1", with_odds=False)
     assert not pf.matches and pf.issues[0].code == "wrong_division"
+
+
+def test_repeat_meeting_held_back_only_where_expected():
+    first = replace_field(ROWS[0], "Div", "SC0")
+    again = replace_field(first, "Date", "14/02/2026")
+    same_day = first
+    pf = parse_fd_csv(
+        csv_bytes([first, again, same_day]), "SC0", with_odds=False, repeats_expected=True
+    )
+    assert len(pf.matches) == 1
+    assert [(i.source_row, i.code) for i in pf.issues] == [
+        (2, "repeat_pairing"),
+        (3, "duplicate_fixture"),
+    ]
+    assert "on 2026-02-14 repeats row 1 (2025-09-13)" in pf.issues[0].detail
+    # Core divisions keep the M1 rule: any second row of a pairing is a duplicate.
+    pf = parse_fd_csv(
+        csv_bytes([ROWS[0], replace_field(ROWS[0], "Date", "14/02/2026")]), "E0", with_odds=False
+    )
+    assert [i.code for i in pf.issues] == ["duplicate_fixture"]

@@ -18,7 +18,7 @@ from footy.config import Settings
 from footy.ingest.fd_parse import decode
 from footy.ingest.raw_store import read_raw
 from footy.models import FdOdds, Match, RawFile, Team, TeamAlias
-from footy.reference import DIVISIONS
+from footy.reference import CORE_DIVISIONS, DIVISIONS
 from footy.seasons import season_label
 
 UK = ZoneInfo("Europe/London")
@@ -47,7 +47,10 @@ PER_SECOND_TIER = 1
 def sample_matches(session: Session, seed: int, n: int) -> list[Match]:
     rng = random.Random(seed)
     picked: list[Match] = []
-    for code, d in DIVISIONS.items():
+    # The M1 acceptance sample covers the core ten divisions only, so the seeded sample stays
+    # the same as divisions are added.
+    for code in CORE_DIVISIONS:
+        d = DIVISIONS[code]
         ids = sorted(session.scalars(select(Match.id).where(Match.division == code)))
         k = PER_TOP_DIVISION if d.tier == 1 else PER_SECOND_TIER
         picked += [session.get(Match, i) for i in rng.sample(ids, min(k, len(ids)))]

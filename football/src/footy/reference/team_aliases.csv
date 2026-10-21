@@ -1,213 +1,498 @@
 source,alias,team_key
+football-data,A. Klagenfurt,aut-a-klagenfurt
+football-data,A. Lustenau,aut-a-lustenau
+football-data,AC Oulu,fin-ac-oulu
+football-data,AEK,grc-aek
+football-data,AFC Eskilstuna,swe-afc-eskilstuna
+football-data,AIK,swe-aik
+football-data,AVS,prt-avs
+football-data,AZ Alkmaar,nld-az-alkmaar
+football-data,Aalborg,dnk-aalborg
+football-data,Aalesund,nor-aalesund
+football-data,Aarau,che-aarau
+football-data,Aarhus,dnk-aarhus
+football-data,Aberdeen,sco-aberdeen
+football-data,Academica Clinceni,rou-academica-clinceni
+football-data,Academico Viseu,prt-academico-viseu
+football-data,Ad. Demirspor,tur-ad-demirspor
+football-data,Admira,aut-admira
 football-data,Ajaccio,fra-ajaccio
 football-data,Ajaccio GFCO,fra-ajaccio-gfco
+football-data,Ajax,nld-ajax
+football-data,Akhisar Belediyespor,tur-akhisar-belediyespor
+football-data,Akhmat Grozny,rus-akhmat-grozny
+football-data,Akron Togliatti,rus-akron-togliatti
+football-data,Alanyaspor,tur-alanyaspor
 football-data,Alaves,esp-alaves
 football-data,Albacete,esp-albacete
 football-data,Alcorcon,esp-alcorcon
 football-data,Alessandria,ita-alessandria
+football-data,Almere City,nld-almere-city
 football-data,Almeria,esp-almeria
+football-data,Altach,aut-altach
+football-data,Altay,tur-altay
+football-data,Alverca,prt-alverca
+football-data,Amedspor,tur-amedspor
 football-data,Amiens,fra-amiens
 football-data,Amorebieta,esp-amorebieta
+football-data,Anderlecht,bel-anderlecht
 football-data,Andorra,esp-andorra
 football-data,Angers,fra-angers
+football-data,Ankaragucu,tur-ankaragucu
 football-data,Annecy,fra-annecy
+football-data,Antalyaspor,tur-antalyaspor
+football-data,Antwerp,bel-antwerp
+football-data,Apollon,grc-apollon
 football-data,Arezzo,ita-arezzo
+football-data,Aris,grc-aris
+football-data,Arka Gdynia,pol-arka-gdynia
+football-data,Arouca,prt-arouca
 football-data,Arsenal,eng-arsenal
+football-data,Arsenal Tula,rus-arsenal-tula
 football-data,Ascoli,ita-ascoli
+football-data,Asteras Tripolis,grc-asteras-tripolis
 football-data,Aston Villa,eng-aston-villa
+football-data,Astra,rou-astra
 football-data,Atalanta,ita-atalanta
 football-data,Ath Bilbao,esp-ath-bilbao
 football-data,Ath Madrid,esp-ath-madrid
+football-data,Athens Kallithea,grc-athens-kallithea
+football-data,Atromitos,grc-atromitos
 football-data,Augsburg,deu-augsburg
+football-data,Austria Vienna,aut-austria-vienna
 football-data,Auxerre,fra-auxerre
 football-data,Avellino,ita-avellino
+football-data,Aves,prt-aves
+football-data,BW Linz,aut-bw-linz
+football-data,Baltika,rus-baltika
 football-data,Barcelona,esp-barcelona
 football-data,Bari,ita-bari
 football-data,Barnsley,eng-barnsley
+football-data,Basel,che-basel
 football-data,Bastia,fra-bastia
 football-data,Bayern Munich,deu-bayern-munich
+football-data,Beerschot VA,bel-beerschot-va
+football-data,Belenenses,prt-belenenses
 football-data,Benevento,ita-benevento
+football-data,Benfica,prt-benfica
+football-data,Besiktas,tur-besiktas
 football-data,Betis,esp-betis
+football-data,Beveren,bel-beveren
 football-data,Beziers,fra-beziers
 football-data,Bielefeld,deu-bielefeld
 football-data,Birmingham,eng-birmingham
 football-data,Blackburn,eng-blackburn
 football-data,Blackpool,eng-blackpool
+football-data,Boavista,prt-boavista
 football-data,Bochum,deu-bochum
+football-data,Bodo/Glimt,nor-bodo-glimt
+football-data,Bodrumspor,tur-bodrumspor
+football-data,Bohemians,irl-bohemians
 football-data,Bologna,ita-bologna
 football-data,Bolton,eng-bolton
 football-data,Bordeaux,fra-bordeaux
 football-data,Boulogne,fra-boulogne
 football-data,Bournemouth,eng-bournemouth
+football-data,Brage,swe-brage
+football-data,Brann,nor-brann
 football-data,Braunschweig,deu-braunschweig
+football-data,Bray,irl-bray
 football-data,Brentford,eng-brentford
 football-data,Brescia,ita-brescia
 football-data,Brest,fra-brest
 football-data,Brighton,eng-brighton
 football-data,Bristol City,eng-bristol-city
+football-data,Brommapojkarna,swe-brommapojkarna
+football-data,Brondby,dnk-brondby
+football-data,Bryne,nor-bryne
 football-data,Burgos,esp-burgos
 football-data,Burnley,eng-burnley
+football-data,Bursaspor,tur-bursaspor
+football-data,Buyuksehyr,tur-buyuksehyr
+football-data,CFR Cluj,rou-cfr-cluj
+football-data,CSKA Moscow,rus-cska-moscow
+football-data,Cabinteely,irl-cabinteely
 football-data,Cadiz,esp-cadiz
 football-data,Caen,fra-caen
 football-data,Cagliari,ita-cagliari
+football-data,Calarasi,rou-calarasi
+football-data,Cambuur,nld-cambuur
 football-data,Cardiff,eng-cardiff
 football-data,Carpi,ita-carpi
 football-data,Carrarese,ita-carrarese
 football-data,Cartagena,esp-cartagena
+football-data,Casa Pia,prt-casa-pia
 football-data,Castellon,esp-castellon
 football-data,Catanzaro,ita-catanzaro
 football-data,Celta,esp-celta
 football-data,Celta B,esp-celta-b
+football-data,Celtic,sco-celtic
+football-data,Cercle Brugge,bel-cercle-brugge
 football-data,Cesena,ita-cesena
 football-data,Ceuta,esp-ceuta
 football-data,Chambly,fra-chambly
+football-data,Charleroi,bel-charleroi
 football-data,Charlton,eng-charlton
 football-data,Chateauroux,fra-chateauroux
+football-data,Chaves,prt-chaves
 football-data,Chelsea,eng-chelsea
 football-data,Chievo,ita-chievo
+football-data,Chindia Targoviste,rou-chindia-targoviste
 football-data,Cittadella,ita-cittadella
 football-data,Clermont,fra-clermont
+football-data,Club Brugge,bel-club-brugge
 football-data,Como,ita-como
 football-data,Concarneau,fra-concarneau
+football-data,Concordia,rou-concordia
 football-data,Cordoba,esp-cordoba
+football-data,Cork City,irl-cork-city
+football-data,Corum,tur-corum
+football-data,Corvinul,rou-corvinul
 football-data,Cosenza,ita-cosenza
 football-data,Cottbus,deu-cottbus
 football-data,Coventry,eng-coventry
+football-data,Cracovia,pol-cracovia
 football-data,Cremonese,ita-cremonese
 football-data,Crotone,ita-crotone
 football-data,Crystal Palace,eng-crystal-palace
+football-data,Csikszereda M. Ciuc,rou-csikszereda-m-ciuc
 football-data,Cultural Leonesa,esp-cultural-leonesa
+football-data,Dalkurd,swe-dalkurd
 football-data,Darmstadt,deu-darmstadt
+football-data,Degerfors,swe-degerfors
+football-data,Den Haag,nld-den-haag
+football-data,Dender,bel-dender
+football-data,Denizlispor,tur-denizlispor
 football-data,Derby,eng-derby
+football-data,Derry City,irl-derry-city
 football-data,Dijon,fra-dijon
+football-data,Din. Bucuresti,rou-dinamo-bucuresti
+football-data,Dinamo Bucuresti,rou-dinamo-bucuresti
+football-data,Djurgarden,swe-djurgarden
 football-data,Dortmund,deu-dortmund
 football-data,Dresden,deu-dresden
+football-data,Drogheda,irl-drogheda
 football-data,Duisburg,deu-duisburg
+football-data,Dundalk,irl-dundalk
+football-data,Dundee,sco-dundee
+football-data,Dundee United,sco-dundee-united
 football-data,Dunkerque,fra-dunkerque
+football-data,Dynamo Makhachkala,rus-dynamo-makhachkala
+football-data,Dynamo Moscow,rus-dynamo-moscow
 football-data,Eibar,esp-eibar
 football-data,Ein Frankfurt,deu-ein-frankfurt
+football-data,Ekenas,fin-ekenas
 football-data,Elche,esp-elche
 football-data,Eldense,esp-eldense
+football-data,Elfsborg,swe-elfsborg
 football-data,Elversberg,deu-elversberg
 football-data,Empoli,ita-empoli
 football-data,Erzgebirge Aue,deu-erzgebirge-aue
+football-data,Erzurum BB,tur-erzurumspor
+football-data,Erzurumspor,tur-erzurumspor
+football-data,Esbjerg,dnk-esbjerg
 football-data,Espanol,esp-espanol
+football-data,Estoril,prt-estoril
+football-data,Estrela,prt-estrela
+football-data,Eupen,bel-eupen
 football-data,Everton,eng-everton
+football-data,Excelsior,nld-excelsior
 football-data,Extremadura UD,esp-extremadura-ud
+football-data,Eyupspor,tur-eyupspor
+football-data,FC Arges,rou-fc-arges
+football-data,FC Botosani,rou-fc-botosani
+football-data,FC Copenhagen,dnk-fc-copenhagen
+football-data,FC Emmen,nld-fc-emmen
+football-data,FC Hermannstadt,rou-fc-hermannstadt
 football-data,FC Koln,deu-fc-koln
+football-data,FC Rapid Bucuresti,rou-fc-rapid-bucuresti
+football-data,FC Voluntari,rou-fc-voluntari
+football-data,FCSB,rou-fcsb
+football-data,FK Anzi Makhackala,rus-fk-anzi-makhackala
+football-data,FK Rostov,rus-fk-rostov
+football-data,Fakel Voronezh,rus-fakel-voronezh
+football-data,Falkenbergs,swe-falkenbergs
+football-data,Falkirk,sco-falkirk
+football-data,Famalicao,prt-famalicao
+football-data,Farense,prt-farense
+football-data,Farul Constanta,rou-farul-constanta
+football-data,Feirense,prt-feirense
+football-data,Fenerbahce,tur-fenerbahce
 football-data,FeralpiSalo,ita-feralpisalo
 football-data,Ferrol,esp-ferrol
+football-data,Feyenoord,nld-feyenoord
+football-data,Finn Harps,irl-finn-harps
 football-data,Fiorentina,ita-fiorentina
 football-data,Foggia,ita-foggia
+football-data,For Sittard,nld-for-sittard
 football-data,Fortuna Dusseldorf,deu-fortuna-dusseldorf
+football-data,Fredericia,dnk-fredericia
+football-data,Fredrikstad,nor-fredrikstad
 football-data,Freiburg,deu-freiburg
 football-data,Frosinone,ita-frosinone
 football-data,Fuenlabrada,esp-fuenlabrada
 football-data,Fulham,eng-fulham
+football-data,GAIS,swe-gais
+football-data,GKS Katowice,pol-gks-katowice
+football-data,Galatasaray,tur-galatasaray
+football-data,Galway,irl-galway
+football-data,Gaz Metan Medias,rou-gaz-metan-medias
+football-data,Gaziantep,tur-gaziantep
+football-data,Genclerbirligi,tur-genclerbirligi
+football-data,Genk,bel-genk
 football-data,Genoa,ita-genoa
+football-data,Gent,bel-gent
 football-data,Getafe,esp-getafe
+football-data,Giannina,grc-giannina
+football-data,Gil Vicente,prt-gil-vicente
 football-data,Gimnastic,esp-gimnastic
+football-data,Giresunspor,tur-giresunspor
 football-data,Girona,esp-girona
+football-data,Gloria Buzau,rou-gloria-buzau
+football-data,Gnistan,fin-gnistan
+football-data,Go Ahead Eagles,nld-go-ahead-eagles
+football-data,Gornik Z.,pol-gornik-zabrze
+football-data,Gornik Zabrze,pol-gornik-zabrze
+football-data,Goteborg,swe-goteborg
+football-data,Goztep,tur-goztep
+football-data,Graafschap,nld-graafschap
 football-data,Granada,esp-granada
+football-data,Grasshoppers,che-grasshoppers
+football-data,Grazer AK,aut-grazer-ak
 football-data,Grenoble,fra-grenoble
 football-data,Greuther Furth,deu-greuther-furth
+football-data,Groningen,nld-groningen
+football-data,Guimaraes,prt-guimaraes
 football-data,Guingamp,fra-guingamp
+football-data,HIFK,fin-hifk
+football-data,HJK,fin-hjk
+football-data,Hacken,swe-hacken
+football-data,Haka,fin-haka
+football-data,Halmstad,swe-halmstad
+football-data,Ham-Kam,nor-hamkam
+football-data,HamKam,nor-hamkam
 football-data,Hamburg,deu-hamburg
+football-data,Hamilton,sco-hamilton
+football-data,Hammarby,swe-hammarby
 football-data,Hannover,deu-hannover
 football-data,Hansa Rostock,deu-hansa-rostock
+football-data,Hartberg,aut-hartberg
+football-data,Hatayspor,tur-hatayspor
+football-data,Haugesund,nor-haugesund
+football-data,Hearts,sco-hearts
+football-data,Heerenveen,nld-heerenveen
 football-data,Heidenheim,deu-heidenheim
+football-data,Helsingborg,swe-helsingborg
+football-data,Heracles,nld-heracles
 football-data,Hertha,deu-hertha
+football-data,Hibernian,sco-hibernian
+football-data,Hobro,dnk-hobro
 football-data,Hoffenheim,deu-hoffenheim
 football-data,Holstein Kiel,deu-holstein-kiel
+football-data,Honka,fin-honka
+football-data,Horsens,dnk-horsens
 football-data,Huddersfield,eng-huddersfield
 football-data,Huesca,esp-huesca
 football-data,Hull,eng-hull
+football-data,Hvidovre IF,dnk-hvidovre-if
 football-data,Ibiza,esp-ibiza
+football-data,Ilves,fin-ilves
 football-data,Ingolstadt,deu-ingolstadt
 football-data,Inter,ita-inter
+football-data,Inter Turku,fin-inter-turku
+football-data,Ionikos,grc-ionikos
 football-data,Ipswich,eng-ipswich
+football-data,Iraklis,grc-iraklis
+football-data,Istanbulspor,tur-istanbulspor
+football-data,Jagiellonia,pol-jagiellonia
+football-data,Jaro,fin-jaro
+football-data,Jerv,nor-jerv
+football-data,Jonkopings,swe-jonkopings
 football-data,Juve Stabia,ita-juve-stabia
 football-data,Juventus,ita-juventus
+football-data,KFUM Oslo,nor-kfum-oslo
+football-data,KPV Kokkola,fin-kpv-kokkola
+football-data,KTP,fin-ktp
 football-data,Kaiserslautern,deu-kaiserslautern
+football-data,Kalamata,grc-kalamata
+football-data,Kalmar,swe-kalmar
+football-data,Karagumruk,tur-karagumruk
 football-data,Karlsruhe,deu-karlsruhe
+football-data,Kasimpasa,tur-kasimpasa
+football-data,Kayserispor,tur-kayserispor
+football-data,Khimki,rus-khimki
+football-data,Kifisia,grc-kifisia
+football-data,Kilmarnock,sco-kilmarnock
+football-data,Kocaelispor,tur-kocaelispor
+football-data,Kongsvinger,nor-kongsvinger
+football-data,Konyaspor,tur-konyaspor
+football-data,Korona Kielce,pol-korona-kielce
+football-data,Kortrijk,bel-kortrijk
+football-data,Krasnodar,rus-krasnodar
+football-data,Kristiansund,nor-kristiansund
+football-data,Krylya Sovetov,rus-krylya-sovetov
+football-data,KuPS,fin-kups
+football-data,LASK,aut-lask
+football-data,LKS Lodz,pol-lks-lodz
 football-data,La Coruna,esp-la-coruna
+football-data,Lahti,fin-lahti
+football-data,Lamia,grc-lamia
+football-data,Landskrona,swe-landskrona
+football-data,Larisa,grc-larisa
 football-data,Las Palmas,esp-las-palmas
+football-data,Lausanne,che-lausanne
+football-data,Lausanne Ouchy,che-lausanne-ouchy
 football-data,Laval,fra-laval
 football-data,Lazio,ita-lazio
 football-data,Le Havre,fra-le-havre
 football-data,Le Mans,fra-le-mans
 football-data,Lecce,ita-lecce
 football-data,Lecco,ita-lecco
+football-data,Lech Poznan,pol-lech-poznan
+football-data,Lechia Gdansk,pol-lechia-gdansk
+football-data,Leczna,pol-leczna
 football-data,Leeds,eng-leeds
 football-data,Leganes,esp-leganes
+football-data,Legia,pol-legia
+football-data,Legnica,pol-legnica
 football-data,Leicester,eng-leicester
 football-data,Lens,fra-lens
+football-data,Levadeiakos,grc-levadeiakos
 football-data,Levante,esp-levante
 football-data,Leverkusen,deu-leverkusen
 football-data,Lille,fra-lille
+football-data,Lillestrom,nor-lillestrom
+football-data,Limerick,irl-limerick
 football-data,Lincoln,eng-lincoln
 football-data,Liverpool,eng-liverpool
+football-data,Livingston,sco-livingston
 football-data,Livorno,ita-livorno
 football-data,Logrones,esp-logrones
+football-data,Lokeren,bel-lokeren
+football-data,Lokomotiv Moscow,rus-lokomotiv-moscow
+football-data,Lommel SK,bel-lommel-sk
+football-data,Longford,irl-longford
 football-data,Lorient,fra-lorient
+football-data,Lugano,che-lugano
 football-data,Lugo,esp-lugo
 football-data,Luton,eng-luton
+football-data,Luzern,che-luzern
+football-data,Lyngby,dnk-lyngby
 football-data,Lyon,fra-lyon
 football-data,M'gladbach,deu-m-gladbach
 football-data,Magdeburg,deu-magdeburg
 football-data,Mainz,deu-mainz
 football-data,Malaga,esp-malaga
 football-data,Mallorca,esp-mallorca
+football-data,Malmo FF,swe-malmo-ff
 football-data,Man City,eng-man-city
 football-data,Man United,eng-man-united
 football-data,Mantova,ita-mantova
+football-data,Mariehamn,fin-mariehamn
+football-data,Maritimo,prt-maritimo
 football-data,Marseille,fra-marseille
 football-data,Martigues,fra-martigues
+football-data,Mattersburg,aut-mattersburg
+football-data,Mechelen,bel-mechelen
+football-data,Metaloglobus Bucharest,rou-metaloglobus-bucharest
 football-data,Metz,fra-metz
 football-data,Middlesbrough,eng-middlesbrough
+football-data,Midtjylland,dnk-midtjylland
 football-data,Milan,ita-milan
 football-data,Millwall,eng-millwall
+football-data,Mioveni,rou-mioveni
 football-data,Mirandes,esp-mirandes
+football-data,Mjallby,swe-mjallby
+football-data,Mjondalen,nor-mjondalen
 football-data,Modena,ita-modena
+football-data,Molde,nor-molde
 football-data,Monaco,fra-monaco
 football-data,Montpellier,fra-montpellier
 football-data,Monza,ita-monza
+football-data,Moreirense,prt-moreirense
+football-data,Moss,nor-moss
+football-data,Motherwell,sco-motherwell
+football-data,Motor Lublin,pol-motor-lublin
+football-data,Mouscron,bel-mouscron
+football-data,NAC Breda,nld-nac-breda
+football-data,Nacional,prt-nacional
 football-data,Nancy,fra-nancy
 football-data,Nantes,fra-nantes
 football-data,Napoli,ita-napoli
 football-data,Newcastle,eng-newcastle
 football-data,Nice,fra-nice
+football-data,Nijmegen,nld-nijmegen
 football-data,Nimes,fra-nimes
 football-data,Niort,fra-niort
+football-data,Nordsjaelland,dnk-nordsjaelland
+football-data,Norrkoping,swe-norrkoping
 football-data,Norwich,eng-norwich
 football-data,Nott'm Forest,eng-nott-m-forest
 football-data,Numancia,esp-numancia
 football-data,Nurnberg,deu-nurnberg
+football-data,OFI Crete,grc-ofi-crete
+football-data,Odd,nor-odd
+football-data,Odense,dnk-odense
+football-data,Olympiakos,grc-olympiakos
+football-data,Oostende,bel-oostende
+football-data,Orebro,swe-orebro
+football-data,Orenburg,rus-orenburg
+football-data,Orgryte,swe-orgryte
 football-data,Orleans,fra-orleans
 football-data,Osasuna,esp-osasuna
 football-data,Osnabruck,deu-osnabruck
+football-data,Oster,swe-oster
+football-data,Ostersunds,swe-ostersunds
+football-data,Otelul,rou-otelul
+football-data,Oud-Heverlee Leuven,bel-oud-heverlee-leuven
 football-data,Oviedo,esp-oviedo
 football-data,Oxford,eng-oxford
+football-data,PAOK,grc-paok
+football-data,PS Kemi,fin-ps-kemi
+football-data,PSV Eindhoven,nld-psv-eindhoven
+football-data,Pacos Ferreira,prt-pacos-ferreira
 football-data,Paderborn,deu-paderborn
 football-data,Padova,ita-padova
 football-data,Palermo,ita-palermo
+football-data,Panathinaikos,grc-panathinaikos
+football-data,Panetolikos,grc-panetolikos
+football-data,Panionios,grc-panionios
+football-data,Panserraikos,grc-panserraikos
+football-data,Pari NN,rus-pari-nn
 football-data,Paris FC,fra-paris-fc
 football-data,Paris SG,fra-paris-sg
 football-data,Parma,ita-parma
 football-data,Pau FC,fra-pau-fc
+football-data,Pendikspor,tur-pendikspor
 football-data,Perugia,ita-perugia
 football-data,Pescara,ita-pescara
 football-data,Peterboro,eng-peterboro
+football-data,Petrolul,rou-petrolul
+football-data,Piast Gliwice,pol-piast-gliwice
 football-data,Pisa,ita-pisa
 football-data,Plymouth,eng-plymouth
+football-data,Podbeskidzie,pol-podbeskidzie
+football-data,Pogon Szczecin,pol-pogon-szczecin
+football-data,Poli Iasi,rou-poli-iasi
 football-data,Ponferradina,esp-ponferradina
 football-data,Pordenone,ita-pordenone
+football-data,Portimonense,prt-portimonense
+football-data,Porto,prt-porto
 football-data,Portsmouth,eng-portsmouth
 football-data,Preston,eng-preston
 football-data,Preußen Münster,deu-preussen-munster
+football-data,Puszcza,pol-puszcza
 football-data,QPR,eng-qpr
 football-data,Quevilly Rouen,fra-quevilly-rouen
+football-data,R. Volgograd,rus-r-volgograd
+football-data,RAAL La Louviere,bel-raal-la-louviere
 football-data,RB Leipzig,deu-rb-leipzig
+football-data,RWD Molenbeek,bel-rwd-molenbeek
+football-data,Radomiak Radom,pol-radomiak-radom
+football-data,Rakow,pol-rakow
+football-data,Randers FC,dnk-randers-fc
+football-data,Rangers,sco-rangers
+football-data,Ranheim,nor-ranheim
 football-data,Rayo Majadahonda,esp-rayo-majadahonda
 football-data,Reading,eng-reading
 football-data,Real Madrid,esp-real-madrid
@@ -218,63 +503,179 @@ football-data,Reggina,ita-reggina
 football-data,Reims,fra-reims
 football-data,Rennes,fra-rennes
 football-data,Reus Deportiu,esp-reus-deportiu
+football-data,Ried,aut-ried
+football-data,Rio Ave,prt-rio-ave
+football-data,Rizespor,tur-rizespor
 football-data,Rodez,fra-rodez
+football-data,Rodina Moscow,rus-rodina-moscow
 football-data,Roma,ita-roma
+football-data,Rosenborg,nor-rosenborg
+football-data,Ross County,sco-ross-county
 football-data,Rotherham,eng-rotherham
+football-data,Rovaniemi,fin-rovaniemi
+football-data,Rubin Kazan,rus-rubin-kazan
+football-data,Ruch Chorzow,pol-ruch-chorzow
+football-data,SJK,fin-sjk
+football-data,SK Rapid,aut-sk-rapid
+football-data,SKA Khabarovsk,rus-ska-khabarovsk
 football-data,Sabadell,esp-sabadell
 football-data,Salernitana,ita-salernitana
+football-data,Salzburg,aut-salzburg
 football-data,Sampdoria,ita-sampdoria
+football-data,Samsunspor,tur-samsunspor
+football-data,Sandefjord,nor-sandefjord
 football-data,Sandhausen,deu-sandhausen
+football-data,Santa Clara,prt-santa-clara
 football-data,Santander,esp-santander
+football-data,Sarpsborg 08,nor-sarpsborg-08
 football-data,Sassuolo,ita-sassuolo
+football-data,Schaffhausen,che-schaffhausen
 football-data,Schalke 04,deu-schalke-04
+football-data,Sepsi Sf. Gheorghe,rou-sepsi-sf-gheorghe
+football-data,Seraing,bel-seraing
+football-data,Servette,che-servette
+football-data,Setubal,prt-setubal
 football-data,Sevilla,esp-sevilla
+football-data,Shamrock Rovers,irl-shamrock-rovers
 football-data,Sheffield United,eng-sheffield-united
 football-data,Sheffield Weds,eng-sheffield-weds
+football-data,Shelbourne,irl-shelbourne
+football-data,Silkeborg,dnk-silkeborg
+football-data,Sion,che-sion
+football-data,Sirius,swe-sirius
+football-data,Sivasspor,tur-sivasspor
+football-data,Slask Wroclaw,pol-slask-wroclaw
+football-data,Sligo Rovers,irl-sligo-rovers
 football-data,Sochaux,fra-sochaux
+football-data,Sochi,rus-sochi
 football-data,Sociedad,esp-sociedad
 football-data,Sociedad B,esp-sociedad-b
+football-data,Sonderjyske,dnk-sonderjyske
 football-data,Southampton,eng-southampton
+football-data,Sp Braga,prt-sp-braga
 football-data,Sp Gijon,esp-sp-gijon
+football-data,Sp Lisbon,prt-sp-lisbon
 football-data,Spal,ita-spal
+football-data,Sparta Rotterdam,nld-sparta-rotterdam
+football-data,Spartak Moscow,rus-spartak-moscow
 football-data,Spezia,ita-spezia
 football-data,St Etienne,fra-st-etienne
+football-data,St Johnstone,sco-st-johnstone
+football-data,St Mirren,sco-st-mirren
 football-data,St Pauli,deu-st-pauli
+football-data,St Truiden,bel-st-truiden
+football-data,St. Gallen,che-st-gallen
+football-data,St. Gilloise,bel-st-gilloise
+football-data,St. Patricks,irl-st-patricks
+football-data,St. Polten,aut-st-polten
+football-data,Stabaek,nor-stabaek
+football-data,Stal Mielec,pol-stal-mielec
+football-data,Standard,bel-standard
+football-data,Start,nor-start
 football-data,Stoke,eng-stoke
 football-data,Strasbourg,fra-strasbourg
+football-data,Stromsgodset,nor-stromsgodset
+football-data,Sturm Graz,aut-sturm-graz
 football-data,Stuttgart,deu-stuttgart
 football-data,Sudtirol,ita-sudtirol
 football-data,Sunderland,eng-sunderland
+football-data,Sundsvall,swe-sundsvall
 football-data,Swansea,eng-swansea
+football-data,TPS,fin-tps
+football-data,Tambov,rus-tambov
+football-data,Telstar,nld-telstar
 football-data,Tenerife,esp-tenerife
+football-data,Termalica B-B.,pol-termalica-b-b
 football-data,Ternana,ita-ternana
+football-data,Thun,che-thun
+football-data,Tirol,aut-tirol
+football-data,Tomsk,rus-tomsk
+football-data,Tondela,prt-tondela
 football-data,Torino,ita-torino
+football-data,Torpedo Moscow,rus-torpedo-moscow
 football-data,Tottenham,eng-tottenham
 football-data,Toulouse,fra-toulouse
+football-data,Trabzonspor,tur-trabzonspor
 football-data,Trapani,ita-trapani
+football-data,Treaty United,irl-treaty-united
+football-data,Trelleborgs,swe-trelleborgs
+football-data,Tromso,nor-tromso
 football-data,Troyes,fra-troyes
+football-data,Twente,nld-twente
+football-data,U Craiova,rou-univ-craiova
+football-data,U Craiova 1948,rou-u-craiova-1948
+football-data,U. Cluj,rou-u-cluj
+football-data,UC Dublin,irl-uc-dublin
+football-data,UTA Arad,rou-uta-arad
 football-data,Udinese,ita-udinese
+football-data,Ufa,rus-ufa
 football-data,Ulm,deu-ulm
+football-data,Umraniyespor,tur-umraniyespor
 football-data,Union Berlin,deu-union-berlin
+football-data,Unirea Slobozia,rou-unirea-slobozia
+football-data,Univ. Craiova,rou-univ-craiova
+football-data,Ural,rus-ural
+football-data,Utrecht,nld-utrecht
+football-data,VPS,fin-vps
+football-data,VVV Venlo,nld-vvv-venlo
+football-data,Vaduz,che-vaduz
 football-data,Valencia,esp-valencia
 football-data,Valenciennes,fra-valenciennes
+football-data,Valerenga,nor-valerenga
 football-data,Valladolid,esp-valladolid
 football-data,Vallecano,esp-vallecano
+football-data,Varberg,swe-varberg
+football-data,Varnamo,swe-varnamo
+football-data,Vasteras SK,swe-vasteras-sk
+football-data,Vejle,dnk-vejle
+football-data,Vendsyssel,dnk-vendsyssel
 football-data,Venezia,ita-venezia
 football-data,Verona,ita-verona
+football-data,Viborg,dnk-viborg
 football-data,Vicenza,ita-vicenza
+football-data,Viitorul Constanta,rou-farul-constanta
+football-data,Viking,nor-viking
 football-data,Villarreal,esp-villarreal
 football-data,Villarreal B,esp-villarreal-b
 football-data,Virtus Entella,ita-virtus-entella
+football-data,Vitesse,nld-vitesse
+football-data,Vizela,prt-vizela
+football-data,Volendam,nld-volendam
+football-data,Volos NFC,grc-volos-nfc
+football-data,Waalwijk,nld-waalwijk
+football-data,Waasland-Beveren,bel-beveren
+football-data,Wacker Innsbruck,aut-wacker-innsbruck
+football-data,Waregem,bel-waregem
+football-data,Warta Poznan,pol-warta-poznan
+football-data,Waterford,irl-waterford
 football-data,Watford,eng-watford
 football-data,Wehen,deu-wehen
 football-data,Werder Bremen,deu-werder-bremen
 football-data,West Brom,eng-west-brom
 football-data,West Ham,eng-west-ham
+football-data,Westerlo,bel-westerlo
+football-data,Widzew Lodz,pol-widzew-lodz
+football-data,Wieczysta Krakow,pol-wieczysta-krakow
 football-data,Wigan,eng-wigan
+football-data,Willem II,nld-willem-ii
+football-data,Winterthur,che-winterthur
+football-data,Wisla,pol-wisla
+football-data,Wisla Plock,pol-wisla-plock
+football-data,Wolfsberger AC,aut-wolfsberger-ac
 football-data,Wolfsburg,deu-wolfsburg
 football-data,Wolves,eng-wolves
 football-data,Wrexham,eng-wrexham
 football-data,Wurzburger Kickers,deu-wurzburger-kickers
 football-data,Wycombe,eng-wycombe
+football-data,Xamax,che-xamax
+football-data,Xanthi,grc-xanthi
+football-data,Yeni Malatyaspor,tur-yeni-malatyaspor
+football-data,Yenisey,rus-yenisey
+football-data,Young Boys,che-young-boys
+football-data,Yverdon,che-yverdon
+football-data,Zaglebie,pol-zaglebie
+football-data,Zaglebie Sosnowiec,pol-zaglebie-sosnowiec
 football-data,Zaragoza,esp-zaragoza
+football-data,Zenit,rus-zenit
+football-data,Zurich,che-zurich
+football-data,Zwolle,nld-zwolle

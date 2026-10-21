@@ -2,6 +2,8 @@
 
 Idempotent: re-importing the same raw revision changes nothing. When a newer revision of a
 file changes a stored value, the change is applied and written to `data_corrections`.
+Main-layout files hold one division-season each; extra-league files hold every season of
+one league and are imported season by season with the same rules (D-022).
 """
 
 from collections import Counter
@@ -11,7 +13,8 @@ from pathlib import Path
 from sqlalchemy import delete, func, insert, select
 from sqlalchemy.orm import Session
 
-from footy.ingest.fd_download import SOURCE
+from footy.ingest.fd_download import EXTRA_SOURCE, SOURCE
+from footy.ingest.fd_extra_parse import EXTRA_PARSER_VERSION, parse_fd_extra_csv
 from footy.ingest.fd_parse import PARSER_VERSION, Issue, ParsedMatch, parse_fd_csv
 from footy.ingest.raw_store import read_raw
 from footy.models import (
@@ -26,7 +29,8 @@ from footy.models import (
     TeamAlias,
     utcnow,
 )
-from footy.reference import DIVISIONS, load_aliases, load_teams
+from footy.reference import DIVISIONS, TOP_DIVISIONS, load_aliases, load_teams
+from footy.seasons import season_label
 
 MATCH_FIELDS = [
     "match_date",
@@ -111,29 +115,142 @@ def import_raw_file(
         stats.skipped = True
         return stats
 
-    parsed = parse_fd_csv(read_raw(raw_dir, raw), division, with_odds=DIVISIONS[division].tier == 1)
+    parsed = parse_fd_csv(
+        read_raw(raw_dir, raw),
+        division,
+        with_odds=division in TOP_DIVISIONS,
+        repeats_expected=DIVISIONS[division].scope != "core",
+    )
     aliases = alias_map(session)
-    unmapped = {
-        name for m in parsed.matches for name in (m.home_name, m.away_name) if name not in aliases
-    }
+    _check_mapped(session, raw.id, parsed.matches, aliases)
+
+    now = utcnow()
+    odds_by_match, found = _upsert_matches(
+        session, raw.id, division, season, parsed.matches, aliases, now, stats
+    )
+    _upsert_odds(session, raw.id, odds_by_match, now, stats)
+
+    issues = list(parsed.issues) + found
+    stats.issues = _replace_issues(session, raw.id, issues)
+    stats.rows_rejected = _rows_rejected(issues)
+    if done is None:
+        session.add(
+            RawImport(
+                raw_file_id=raw.id,
+                parser_version=PARSER_VERSION,
+                imported_at=now,
+                job_run_id=job_run_id,
+                rows_imported=len(parsed.matches) - _rows_rejected(found),
+                rows_rejected=stats.rows_rejected,
+            )
+        )
+    session.flush()
+    return stats
+
+
+def import_extra_raw_file(
+    session: Session, raw_dir: Path, raw: RawFile, *, job_run_id: int | None, reimport=False
+) -> ImportStats:
+    """Import one revision of an extra-league file (every season of one league)."""
+    division = raw.logical_key.split("/")[1]
+    stats = ImportStats(raw.id, raw.logical_key)
+    done = session.get(RawImport, (raw.id, EXTRA_PARSER_VERSION))
+    if done is not None and not reimport:
+        stats.skipped = True
+        return stats
+
+    parsed = parse_fd_extra_csv(read_raw(raw_dir, raw), division)
+    aliases = alias_map(session)
+    all_matches = [m for ms in parsed.seasons.values() for m in ms]
+    _check_mapped(session, raw.id, all_matches, aliases)
+
+    now = utcnow()
+    issues = list(parsed.issues)
+    stored_seasons = set(
+        session.scalars(select(Match.season).where(Match.division == division).distinct())
+    )
+    for season in sorted(stored_seasons | set(parsed.seasons)):
+        _, found = _upsert_matches(
+            session,
+            raw.id,
+            division,
+            season,
+            parsed.seasons.get(season, []),
+            aliases,
+            now,
+            stats,
+            prefix=f"{season_label(season)}: ",
+        )
+        issues += found
+    stats.issues = _replace_issues(session, raw.id, issues)
+    stats.rows_rejected = _rows_rejected(issues)
+    if done is None:
+        session.add(
+            RawImport(
+                raw_file_id=raw.id,
+                parser_version=EXTRA_PARSER_VERSION,
+                imported_at=now,
+                job_run_id=job_run_id,
+                rows_imported=len(all_matches) - _rows_rejected(issues[len(parsed.issues) :]),
+                rows_rejected=stats.rows_rejected,
+            )
+        )
+    session.flush()
+    return stats
+
+
+def _rows_rejected(issues: list[Issue]) -> int:
+    return sum(
+        1
+        for i in issues
+        if i.severity == "error" and i.source_row > 0 and i.code in REJECTING_CODES
+    )
+
+
+def _check_mapped(session, raw_id: int, matches: list[ParsedMatch], aliases: dict) -> None:
+    unmapped = {name for m in matches for name in (m.home_name, m.away_name) if name not in aliases}
     if unmapped:
         _record_issues(
-            session, raw.id, [Issue(0, "error", "unmapped_teams", ", ".join(sorted(unmapped)))]
+            session, raw_id, [Issue(0, "error", "unmapped_teams", ", ".join(sorted(unmapped)))]
         )
         raise UnmappedTeams(unmapped)
 
+
+def _upsert_matches(
+    session, raw_id: int, division: str, season: str, parsed, aliases, now, stats, prefix=""
+) -> tuple[list[tuple[int, ParsedMatch]], list[Issue]]:
+    """Insert or update one division-season's matches from one raw revision. Returns the
+    (match id, parsed match) pairs for the odds step, and the issues found here: a pairing
+    that recurs once names are mapped to teams (two spellings of one club in a season), and
+    a warning for each stored match that this revision no longer contains."""
     existing = {
         (m.home_team, m.away_team): m
         for m in session.scalars(
             select(Match).where(Match.division == division, Match.season == season)
         )
     }
-    now = utcnow()
     seen_ids: set[int] = set()
     odds_by_match: list[tuple[int, ParsedMatch]] = []
+    first: dict[tuple[str, str], ParsedMatch] = {}
+    issues: list[Issue] = []
 
-    for pm in parsed.matches:
+    for pm in parsed:
         home, away = aliases[pm.home_name], aliases[pm.away_name]
+        if (home, away) in first:
+            prev = first[(home, away)]
+            same_day = prev.match_date == pm.match_date
+            issues.append(
+                Issue(
+                    pm.source_row,
+                    "error",
+                    "duplicate_fixture" if same_day else "repeat_pairing",
+                    f"{prefix}{pm.home_name} v {pm.away_name} on {pm.match_date} is the same "
+                    f"pairing of teams as row {prev.source_row} ({prev.match_date}); held back, "
+                    "one row per pairing per season in matches",
+                )
+            )
+            continue
+        first[(home, away)] = pm
         values = _match_values(pm)
         current = existing.get((home, away))
         if current is None:
@@ -142,8 +259,8 @@ def import_raw_file(
                 season=season,
                 home_team=home,
                 away_team=away,
-                first_raw_file_id=raw.id,
-                last_raw_file_id=raw.id,
+                first_raw_file_id=raw_id,
+                last_raw_file_id=raw_id,
                 **values,
             )
             session.add(current)
@@ -151,53 +268,33 @@ def import_raw_file(
             stats.matches_inserted += 1
         else:
             changed = _apply_changes(
-                session, "match", current, values, current.last_raw_file_id, raw.id, now, stats
+                session, "match", current, values, current.last_raw_file_id, raw_id, now, stats
             )
-            if changed or current.last_raw_file_id != raw.id:
-                current.last_raw_file_id = raw.id
+            if changed or current.last_raw_file_id != raw_id:
+                current.last_raw_file_id = raw_id
                 stats.matches_updated += int(changed)
         seen_ids.add(current.id)
         odds_by_match.append((current.id, pm))
 
-    _upsert_odds(session, raw.id, odds_by_match, now, stats)
-
-    issues = list(parsed.issues)
-    for (home, away), m in existing.items():
-        if m.id not in seen_ids:
-            issues.append(
-                Issue(
-                    0, "warning", "match_missing_from_revision", f"{home} v {away} (match {m.id})"
-                )
-            )
-    stats.issues = _replace_issues(session, raw.id, issues)
-    stats.rows_rejected = sum(
-        1
-        for i in parsed.issues
-        if i.severity == "error" and i.source_row > 0 and i.code in REJECTING_CODES
-    )
-    if done is None:
-        session.add(
-            RawImport(
-                raw_file_id=raw.id,
-                parser_version=PARSER_VERSION,
-                imported_at=now,
-                job_run_id=job_run_id,
-                rows_imported=len(parsed.matches),
-                rows_rejected=stats.rows_rejected,
-            )
-        )
-    session.flush()
-    return stats
+    issues += [
+        Issue(0, "warning", "match_missing_from_revision", f"{home} v {away} (match {m.id})")
+        for (home, away), m in existing.items()
+        if m.id not in seen_ids
+    ]
+    return odds_by_match, issues
 
 
 # Row-level error codes that drop the whole row (others drop a single value).
 REJECTING_CODES = {
     "wrong_division",
+    "wrong_country",
     "missing_team",
     "bad_date",
+    "bad_season",
     "no_result",
     "result_mismatch",
     "duplicate_fixture",
+    "repeat_pairing",
 }
 
 
@@ -357,6 +454,19 @@ def pending_raw_files(session: Session, reimport: bool = False) -> list[RawFile]
             last[r.logical_key] = r
         return list(last.values())
     done = select(RawImport.raw_file_id).where(RawImport.parser_version == PARSER_VERSION)
+    q = q.where(RawFile.id.not_in(done))
+    return list(session.scalars(q.order_by(RawFile.logical_key, RawFile.revision)))
+
+
+def pending_extra_raw_files(session: Session, reimport: bool = False) -> list[RawFile]:
+    """As `pending_raw_files`, for the extra-league files."""
+    q = select(RawFile).where(RawFile.source == EXTRA_SOURCE)
+    if reimport:
+        last: dict[str, RawFile] = {}
+        for r in session.scalars(q.order_by(RawFile.logical_key, RawFile.revision)):
+            last[r.logical_key] = r
+        return list(last.values())
+    done = select(RawImport.raw_file_id).where(RawImport.parser_version == EXTRA_PARSER_VERSION)
     q = q.where(RawFile.id.not_in(done))
     return list(session.scalars(q.order_by(RawFile.logical_key, RawFile.revision)))
 

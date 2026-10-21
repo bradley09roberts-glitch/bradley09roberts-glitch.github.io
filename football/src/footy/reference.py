@@ -11,8 +11,18 @@ REFERENCE_DIR = Path(__file__).parent / "reference"
 class DivisionInfo:
     code: str  # football-data code
     name: str
-    country: str  # ISO 3166-1 alpha-3, England as ENG
+    country: str  # ISO 3166-1 alpha-3, except the home nations (ENG, SCO)
     tier: int
+    # core: the ten M1 divisions (results, stats; prices for the top five).
+    # europe: extra domestic leagues, results only, for rating clubs in UEFA competitions.
+    scope: str = "core"
+    # main: one file per season at mmz4281/{season}/{code}.csv (the E0 layout).
+    # extra: one file holding every season at new/{code}.csv (Country, League, Season, ...).
+    layout: str = "main"
+
+
+def _europe(code: str, name: str, country: str, layout: str = "main") -> DivisionInfo:
+    return DivisionInfo(code, name, country, 1, scope="europe", layout=layout)
 
 
 DIVISIONS: dict[str, DivisionInfo] = {
@@ -28,9 +38,33 @@ DIVISIONS: dict[str, DivisionInfo] = {
         DivisionInfo("I2", "Serie B", "ITA", 2),
         DivisionInfo("D2", "2. Bundesliga", "DEU", 2),
         DivisionInfo("F2", "Ligue 2", "FRA", 2),
+        # Main-layout European leagues (same CSV columns as E0).
+        _europe("SC0", "Scottish Premiership", "SCO"),
+        _europe("N1", "Eredivisie", "NLD"),
+        _europe("B1", "Belgian Pro League", "BEL"),
+        _europe("P1", "Primeira Liga", "PRT"),
+        _europe("T1", "Süper Lig", "TUR"),
+        _europe("G1", "Super League Greece", "GRC"),
+        # football-data's "extra leagues" (European ones only), listed on all_new_data.php
+        # on 2026-10-21. Codes are football-data's (SWZ is Switzerland, ISO CHE).
+        _europe("AUT", "Austrian Bundesliga", "AUT", "extra"),
+        _europe("DNK", "Danish Superliga", "DNK", "extra"),
+        _europe("SWZ", "Swiss Super League", "CHE", "extra"),
+        _europe("NOR", "Eliteserien", "NOR", "extra"),
+        _europe("SWE", "Allsvenskan", "SWE", "extra"),
+        _europe("POL", "Ekstraklasa", "POL", "extra"),
+        _europe("ROU", "Liga I", "ROU", "extra"),
+        _europe("RUS", "Russian Premier League", "RUS", "extra"),
+        _europe("FIN", "Veikkausliiga", "FIN", "extra"),
+        _europe("IRL", "League of Ireland Premier Division", "IRL", "extra"),
     ]
 }
-TOP_DIVISIONS = [c for c, d in DIVISIONS.items() if d.tier == 1]
+CORE_DIVISIONS = [c for c, d in DIVISIONS.items() if d.scope == "core"]
+EUROPE_DIVISIONS = [c for c, d in DIVISIONS.items() if d.scope == "europe"]
+# The five core top divisions: the only ones whose prices are parsed (D-016).
+TOP_DIVISIONS = [c for c, d in DIVISIONS.items() if d.scope == "core" and d.tier == 1]
+MAIN_LAYOUT_DIVISIONS = [c for c, d in DIVISIONS.items() if d.layout == "main"]
+EXTRA_LAYOUT_DIVISIONS = [c for c, d in DIVISIONS.items() if d.layout == "extra"]
 
 
 @dataclass(frozen=True)

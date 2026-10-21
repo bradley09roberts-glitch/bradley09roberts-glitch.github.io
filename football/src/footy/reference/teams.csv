@@ -1,4 +1,66 @@
 team_key,name,country
+aut-a-klagenfurt,A. Klagenfurt,AUT
+aut-a-lustenau,A. Lustenau,AUT
+aut-admira,Admira,AUT
+aut-altach,Altach,AUT
+aut-austria-vienna,Austria Vienna,AUT
+aut-bw-linz,BW Linz,AUT
+aut-grazer-ak,Grazer AK,AUT
+aut-hartberg,Hartberg,AUT
+aut-lask,LASK,AUT
+aut-mattersburg,Mattersburg,AUT
+aut-ried,Ried,AUT
+aut-salzburg,Salzburg,AUT
+aut-sk-rapid,SK Rapid,AUT
+aut-st-polten,St. Polten,AUT
+aut-sturm-graz,Sturm Graz,AUT
+aut-tirol,Tirol,AUT
+aut-wacker-innsbruck,Wacker Innsbruck,AUT
+aut-wolfsberger-ac,Wolfsberger AC,AUT
+bel-anderlecht,Anderlecht,BEL
+bel-antwerp,Antwerp,BEL
+bel-beerschot-va,Beerschot VA,BEL
+bel-beveren,Beveren,BEL
+bel-cercle-brugge,Cercle Brugge,BEL
+bel-charleroi,Charleroi,BEL
+bel-club-brugge,Club Brugge,BEL
+bel-dender,Dender,BEL
+bel-eupen,Eupen,BEL
+bel-genk,Genk,BEL
+bel-gent,Gent,BEL
+bel-kortrijk,Kortrijk,BEL
+bel-lokeren,Lokeren,BEL
+bel-lommel-sk,Lommel SK,BEL
+bel-mechelen,Mechelen,BEL
+bel-mouscron,Mouscron,BEL
+bel-oostende,Oostende,BEL
+bel-oud-heverlee-leuven,Oud-Heverlee Leuven,BEL
+bel-raal-la-louviere,RAAL La Louviere,BEL
+bel-rwd-molenbeek,RWD Molenbeek,BEL
+bel-seraing,Seraing,BEL
+bel-st-gilloise,St. Gilloise,BEL
+bel-st-truiden,St Truiden,BEL
+bel-standard,Standard,BEL
+bel-waregem,Waregem,BEL
+bel-westerlo,Westerlo,BEL
+che-aarau,Aarau,CHE
+che-basel,Basel,CHE
+che-grasshoppers,Grasshoppers,CHE
+che-lausanne,Lausanne,CHE
+che-lausanne-ouchy,Lausanne Ouchy,CHE
+che-lugano,Lugano,CHE
+che-luzern,Luzern,CHE
+che-schaffhausen,Schaffhausen,CHE
+che-servette,Servette,CHE
+che-sion,Sion,CHE
+che-st-gallen,St. Gallen,CHE
+che-thun,Thun,CHE
+che-vaduz,Vaduz,CHE
+che-winterthur,Winterthur,CHE
+che-xamax,Xamax,CHE
+che-young-boys,Young Boys,CHE
+che-yverdon,Yverdon,CHE
+che-zurich,Zurich,CHE
 deu-augsburg,Augsburg,DEU
 deu-bayern-munich,Bayern Munich,DEU
 deu-bielefeld,Bielefeld,DEU
@@ -46,6 +108,25 @@ deu-wehen,Wehen,DEU
 deu-werder-bremen,Werder Bremen,DEU
 deu-wolfsburg,Wolfsburg,DEU
 deu-wurzburger-kickers,Wurzburger Kickers,DEU
+dnk-aalborg,Aalborg,DNK
+dnk-aarhus,Aarhus,DNK
+dnk-brondby,Brondby,DNK
+dnk-esbjerg,Esbjerg,DNK
+dnk-fc-copenhagen,FC Copenhagen,DNK
+dnk-fredericia,Fredericia,DNK
+dnk-hobro,Hobro,DNK
+dnk-horsens,Horsens,DNK
+dnk-hvidovre-if,Hvidovre IF,DNK
+dnk-lyngby,Lyngby,DNK
+dnk-midtjylland,Midtjylland,DNK
+dnk-nordsjaelland,Nordsjaelland,DNK
+dnk-odense,Odense,DNK
+dnk-randers-fc,Randers FC,DNK
+dnk-silkeborg,Silkeborg,DNK
+dnk-sonderjyske,Sonderjyske,DNK
+dnk-vejle,Vejle,DNK
+dnk-vendsyssel,Vendsyssel,DNK
+dnk-viborg,Viborg,DNK
 eng-arsenal,Arsenal,ENG
 eng-aston-villa,Aston Villa,ENG
 eng-barnsley,Barnsley,ENG
@@ -164,6 +245,26 @@ esp-vallecano,Vallecano,ESP
 esp-villarreal,Villarreal,ESP
 esp-villarreal-b,Villarreal B,ESP
 esp-zaragoza,Zaragoza,ESP
+fin-ac-oulu,AC Oulu,FIN
+fin-ekenas,Ekenas,FIN
+fin-gnistan,Gnistan,FIN
+fin-haka,Haka,FIN
+fin-hifk,HIFK,FIN
+fin-hjk,HJK,FIN
+fin-honka,Honka,FIN
+fin-ilves,Ilves,FIN
+fin-inter-turku,Inter Turku,FIN
+fin-jaro,Jaro,FIN
+fin-kpv-kokkola,KPV Kokkola,FIN
+fin-ktp,KTP,FIN
+fin-kups,KuPS,FIN
+fin-lahti,Lahti,FIN
+fin-mariehamn,Mariehamn,FIN
+fin-ps-kemi,PS Kemi,FIN
+fin-rovaniemi,Rovaniemi,FIN
+fin-sjk,SJK,FIN
+fin-tps,TPS,FIN
+fin-vps,VPS,FIN
 fra-ajaccio,Ajaccio,FRA
 fra-ajaccio-gfco,Ajaccio GFCO,FRA
 fra-amiens,Amiens,FRA
@@ -216,6 +317,47 @@ fra-strasbourg,Strasbourg,FRA
 fra-toulouse,Toulouse,FRA
 fra-troyes,Troyes,FRA
 fra-valenciennes,Valenciennes,FRA
+grc-aek,AEK,GRC
+grc-apollon,Apollon,GRC
+grc-aris,Aris,GRC
+grc-asteras-tripolis,Asteras Tripolis,GRC
+grc-athens-kallithea,Athens Kallithea,GRC
+grc-atromitos,Atromitos,GRC
+grc-giannina,Giannina,GRC
+grc-ionikos,Ionikos,GRC
+grc-iraklis,Iraklis,GRC
+grc-kalamata,Kalamata,GRC
+grc-kifisia,Kifisia,GRC
+grc-lamia,Lamia,GRC
+grc-larisa,Larisa,GRC
+grc-levadeiakos,Levadeiakos,GRC
+grc-ofi-crete,OFI Crete,GRC
+grc-olympiakos,Olympiakos,GRC
+grc-panathinaikos,Panathinaikos,GRC
+grc-panetolikos,Panetolikos,GRC
+grc-panionios,Panionios,GRC
+grc-panserraikos,Panserraikos,GRC
+grc-paok,PAOK,GRC
+grc-volos-nfc,Volos NFC,GRC
+grc-xanthi,Xanthi,GRC
+irl-bohemians,Bohemians,IRL
+irl-bray,Bray,IRL
+irl-cabinteely,Cabinteely,IRL
+irl-cork-city,Cork City,IRL
+irl-derry-city,Derry City,IRL
+irl-drogheda,Drogheda,IRL
+irl-dundalk,Dundalk,IRL
+irl-finn-harps,Finn Harps,IRL
+irl-galway,Galway,IRL
+irl-limerick,Limerick,IRL
+irl-longford,Longford,IRL
+irl-shamrock-rovers,Shamrock Rovers,IRL
+irl-shelbourne,Shelbourne,IRL
+irl-sligo-rovers,Sligo Rovers,IRL
+irl-st-patricks,St. Patricks,IRL
+irl-treaty-united,Treaty United,IRL
+irl-uc-dublin,UC Dublin,IRL
+irl-waterford,Waterford,IRL
 ita-alessandria,Alessandria,ITA
 ita-arezzo,Arezzo,ITA
 ita-ascoli,Ascoli,ITA
@@ -278,3 +420,255 @@ ita-venezia,Venezia,ITA
 ita-verona,Verona,ITA
 ita-vicenza,Vicenza,ITA
 ita-virtus-entella,Virtus Entella,ITA
+nld-ajax,Ajax,NLD
+nld-almere-city,Almere City,NLD
+nld-az-alkmaar,AZ Alkmaar,NLD
+nld-cambuur,Cambuur,NLD
+nld-den-haag,Den Haag,NLD
+nld-excelsior,Excelsior,NLD
+nld-fc-emmen,FC Emmen,NLD
+nld-feyenoord,Feyenoord,NLD
+nld-for-sittard,For Sittard,NLD
+nld-go-ahead-eagles,Go Ahead Eagles,NLD
+nld-graafschap,Graafschap,NLD
+nld-groningen,Groningen,NLD
+nld-heerenveen,Heerenveen,NLD
+nld-heracles,Heracles,NLD
+nld-nac-breda,NAC Breda,NLD
+nld-nijmegen,Nijmegen,NLD
+nld-psv-eindhoven,PSV Eindhoven,NLD
+nld-sparta-rotterdam,Sparta Rotterdam,NLD
+nld-telstar,Telstar,NLD
+nld-twente,Twente,NLD
+nld-utrecht,Utrecht,NLD
+nld-vitesse,Vitesse,NLD
+nld-volendam,Volendam,NLD
+nld-vvv-venlo,VVV Venlo,NLD
+nld-waalwijk,Waalwijk,NLD
+nld-willem-ii,Willem II,NLD
+nld-zwolle,Zwolle,NLD
+nor-aalesund,Aalesund,NOR
+nor-bodo-glimt,Bodo/Glimt,NOR
+nor-brann,Brann,NOR
+nor-bryne,Bryne,NOR
+nor-fredrikstad,Fredrikstad,NOR
+nor-hamkam,HamKam,NOR
+nor-haugesund,Haugesund,NOR
+nor-jerv,Jerv,NOR
+nor-kfum-oslo,KFUM Oslo,NOR
+nor-kongsvinger,Kongsvinger,NOR
+nor-kristiansund,Kristiansund,NOR
+nor-lillestrom,Lillestrom,NOR
+nor-mjondalen,Mjondalen,NOR
+nor-molde,Molde,NOR
+nor-moss,Moss,NOR
+nor-odd,Odd,NOR
+nor-ranheim,Ranheim,NOR
+nor-rosenborg,Rosenborg,NOR
+nor-sandefjord,Sandefjord,NOR
+nor-sarpsborg-08,Sarpsborg 08,NOR
+nor-stabaek,Stabaek,NOR
+nor-start,Start,NOR
+nor-stromsgodset,Stromsgodset,NOR
+nor-tromso,Tromso,NOR
+nor-valerenga,Valerenga,NOR
+nor-viking,Viking,NOR
+pol-arka-gdynia,Arka Gdynia,POL
+pol-cracovia,Cracovia,POL
+pol-gks-katowice,GKS Katowice,POL
+pol-gornik-zabrze,Gornik Zabrze,POL
+pol-jagiellonia,Jagiellonia,POL
+pol-korona-kielce,Korona Kielce,POL
+pol-lech-poznan,Lech Poznan,POL
+pol-lechia-gdansk,Lechia Gdansk,POL
+pol-leczna,Leczna,POL
+pol-legia,Legia,POL
+pol-legnica,Legnica,POL
+pol-lks-lodz,LKS Lodz,POL
+pol-motor-lublin,Motor Lublin,POL
+pol-piast-gliwice,Piast Gliwice,POL
+pol-podbeskidzie,Podbeskidzie,POL
+pol-pogon-szczecin,Pogon Szczecin,POL
+pol-puszcza,Puszcza,POL
+pol-radomiak-radom,Radomiak Radom,POL
+pol-rakow,Rakow,POL
+pol-ruch-chorzow,Ruch Chorzow,POL
+pol-slask-wroclaw,Slask Wroclaw,POL
+pol-stal-mielec,Stal Mielec,POL
+pol-termalica-b-b,Termalica B-B.,POL
+pol-warta-poznan,Warta Poznan,POL
+pol-widzew-lodz,Widzew Lodz,POL
+pol-wieczysta-krakow,Wieczysta Krakow,POL
+pol-wisla,Wisla,POL
+pol-wisla-plock,Wisla Plock,POL
+pol-zaglebie,Zaglebie,POL
+pol-zaglebie-sosnowiec,Zaglebie Sosnowiec,POL
+prt-academico-viseu,Academico Viseu,PRT
+prt-alverca,Alverca,PRT
+prt-arouca,Arouca,PRT
+prt-aves,Aves,PRT
+prt-avs,AVS,PRT
+prt-belenenses,Belenenses,PRT
+prt-benfica,Benfica,PRT
+prt-boavista,Boavista,PRT
+prt-casa-pia,Casa Pia,PRT
+prt-chaves,Chaves,PRT
+prt-estoril,Estoril,PRT
+prt-estrela,Estrela,PRT
+prt-famalicao,Famalicao,PRT
+prt-farense,Farense,PRT
+prt-feirense,Feirense,PRT
+prt-gil-vicente,Gil Vicente,PRT
+prt-guimaraes,Guimaraes,PRT
+prt-maritimo,Maritimo,PRT
+prt-moreirense,Moreirense,PRT
+prt-nacional,Nacional,PRT
+prt-pacos-ferreira,Pacos Ferreira,PRT
+prt-portimonense,Portimonense,PRT
+prt-porto,Porto,PRT
+prt-rio-ave,Rio Ave,PRT
+prt-santa-clara,Santa Clara,PRT
+prt-setubal,Setubal,PRT
+prt-sp-braga,Sp Braga,PRT
+prt-sp-lisbon,Sp Lisbon,PRT
+prt-tondela,Tondela,PRT
+prt-vizela,Vizela,PRT
+rou-academica-clinceni,Academica Clinceni,ROU
+rou-astra,Astra,ROU
+rou-calarasi,Calarasi,ROU
+rou-cfr-cluj,CFR Cluj,ROU
+rou-chindia-targoviste,Chindia Targoviste,ROU
+rou-concordia,Concordia,ROU
+rou-corvinul,Corvinul,ROU
+rou-csikszereda-m-ciuc,Csikszereda M. Ciuc,ROU
+rou-dinamo-bucuresti,Dinamo Bucuresti,ROU
+rou-farul-constanta,Farul Constanta,ROU
+rou-fc-arges,FC Arges,ROU
+rou-fc-botosani,FC Botosani,ROU
+rou-fc-hermannstadt,FC Hermannstadt,ROU
+rou-fc-rapid-bucuresti,FC Rapid Bucuresti,ROU
+rou-fc-voluntari,FC Voluntari,ROU
+rou-fcsb,FCSB,ROU
+rou-gaz-metan-medias,Gaz Metan Medias,ROU
+rou-gloria-buzau,Gloria Buzau,ROU
+rou-metaloglobus-bucharest,Metaloglobus Bucharest,ROU
+rou-mioveni,Mioveni,ROU
+rou-otelul,Otelul,ROU
+rou-petrolul,Petrolul,ROU
+rou-poli-iasi,Poli Iasi,ROU
+rou-sepsi-sf-gheorghe,Sepsi Sf. Gheorghe,ROU
+rou-u-cluj,U. Cluj,ROU
+rou-u-craiova-1948,U Craiova 1948,ROU
+rou-unirea-slobozia,Unirea Slobozia,ROU
+rou-univ-craiova,Univ. Craiova,ROU
+rou-uta-arad,UTA Arad,ROU
+rus-akhmat-grozny,Akhmat Grozny,RUS
+rus-akron-togliatti,Akron Togliatti,RUS
+rus-arsenal-tula,Arsenal Tula,RUS
+rus-baltika,Baltika,RUS
+rus-cska-moscow,CSKA Moscow,RUS
+rus-dynamo-makhachkala,Dynamo Makhachkala,RUS
+rus-dynamo-moscow,Dynamo Moscow,RUS
+rus-fakel-voronezh,Fakel Voronezh,RUS
+rus-fk-anzi-makhackala,FK Anzi Makhackala,RUS
+rus-fk-rostov,FK Rostov,RUS
+rus-khimki,Khimki,RUS
+rus-krasnodar,Krasnodar,RUS
+rus-krylya-sovetov,Krylya Sovetov,RUS
+rus-lokomotiv-moscow,Lokomotiv Moscow,RUS
+rus-orenburg,Orenburg,RUS
+rus-pari-nn,Pari NN,RUS
+rus-r-volgograd,R. Volgograd,RUS
+rus-rodina-moscow,Rodina Moscow,RUS
+rus-rubin-kazan,Rubin Kazan,RUS
+rus-ska-khabarovsk,SKA Khabarovsk,RUS
+rus-sochi,Sochi,RUS
+rus-spartak-moscow,Spartak Moscow,RUS
+rus-tambov,Tambov,RUS
+rus-tomsk,Tomsk,RUS
+rus-torpedo-moscow,Torpedo Moscow,RUS
+rus-ufa,Ufa,RUS
+rus-ural,Ural,RUS
+rus-yenisey,Yenisey,RUS
+rus-zenit,Zenit,RUS
+sco-aberdeen,Aberdeen,SCO
+sco-celtic,Celtic,SCO
+sco-dundee,Dundee,SCO
+sco-dundee-united,Dundee United,SCO
+sco-falkirk,Falkirk,SCO
+sco-hamilton,Hamilton,SCO
+sco-hearts,Hearts,SCO
+sco-hibernian,Hibernian,SCO
+sco-kilmarnock,Kilmarnock,SCO
+sco-livingston,Livingston,SCO
+sco-motherwell,Motherwell,SCO
+sco-rangers,Rangers,SCO
+sco-ross-county,Ross County,SCO
+sco-st-johnstone,St Johnstone,SCO
+sco-st-mirren,St Mirren,SCO
+swe-afc-eskilstuna,AFC Eskilstuna,SWE
+swe-aik,AIK,SWE
+swe-brage,Brage,SWE
+swe-brommapojkarna,Brommapojkarna,SWE
+swe-dalkurd,Dalkurd,SWE
+swe-degerfors,Degerfors,SWE
+swe-djurgarden,Djurgarden,SWE
+swe-elfsborg,Elfsborg,SWE
+swe-falkenbergs,Falkenbergs,SWE
+swe-gais,GAIS,SWE
+swe-goteborg,Goteborg,SWE
+swe-hacken,Hacken,SWE
+swe-halmstad,Halmstad,SWE
+swe-hammarby,Hammarby,SWE
+swe-helsingborg,Helsingborg,SWE
+swe-jonkopings,Jonkopings,SWE
+swe-kalmar,Kalmar,SWE
+swe-landskrona,Landskrona,SWE
+swe-malmo-ff,Malmo FF,SWE
+swe-mjallby,Mjallby,SWE
+swe-norrkoping,Norrkoping,SWE
+swe-orebro,Orebro,SWE
+swe-orgryte,Orgryte,SWE
+swe-oster,Oster,SWE
+swe-ostersunds,Ostersunds,SWE
+swe-sirius,Sirius,SWE
+swe-sundsvall,Sundsvall,SWE
+swe-trelleborgs,Trelleborgs,SWE
+swe-varberg,Varberg,SWE
+swe-varnamo,Varnamo,SWE
+swe-vasteras-sk,Vasteras SK,SWE
+tur-ad-demirspor,Ad. Demirspor,TUR
+tur-akhisar-belediyespor,Akhisar Belediyespor,TUR
+tur-alanyaspor,Alanyaspor,TUR
+tur-altay,Altay,TUR
+tur-amedspor,Amedspor,TUR
+tur-ankaragucu,Ankaragucu,TUR
+tur-antalyaspor,Antalyaspor,TUR
+tur-besiktas,Besiktas,TUR
+tur-bodrumspor,Bodrumspor,TUR
+tur-bursaspor,Bursaspor,TUR
+tur-buyuksehyr,Buyuksehyr,TUR
+tur-corum,Corum,TUR
+tur-denizlispor,Denizlispor,TUR
+tur-erzurumspor,Erzurumspor,TUR
+tur-eyupspor,Eyupspor,TUR
+tur-fenerbahce,Fenerbahce,TUR
+tur-galatasaray,Galatasaray,TUR
+tur-gaziantep,Gaziantep,TUR
+tur-genclerbirligi,Genclerbirligi,TUR
+tur-giresunspor,Giresunspor,TUR
+tur-goztep,Goztep,TUR
+tur-hatayspor,Hatayspor,TUR
+tur-istanbulspor,Istanbulspor,TUR
+tur-karagumruk,Karagumruk,TUR
+tur-kasimpasa,Kasimpasa,TUR
+tur-kayserispor,Kayserispor,TUR
+tur-kocaelispor,Kocaelispor,TUR
+tur-konyaspor,Konyaspor,TUR
+tur-pendikspor,Pendikspor,TUR
+tur-rizespor,Rizespor,TUR
+tur-samsunspor,Samsunspor,TUR
+tur-sivasspor,Sivasspor,TUR
+tur-trabzonspor,Trabzonspor,TUR
+tur-umraniyespor,Umraniyespor,TUR
+tur-yeni-malatyaspor,Yeni Malatyaspor,TUR
