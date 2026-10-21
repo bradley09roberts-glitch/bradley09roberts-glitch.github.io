@@ -9,14 +9,17 @@ import pandas as pd
 import pytest
 
 import fdextrafixtures as fx
+import fdfixtures as fd
 from footy.ingest.fd_update import run_fd_update
 from footy.modeling.grid import GOALS, markets_from_grid, poisson_grid
 from footy.modeling.market import devig_shin
 from footy.modeling.market_xg import (
     FALLBACK_RHO,
+    SCOPES,
     implied_grid,
     implied_grid_1x2,
     market_expected_goals,
+    scope_filter,
     solve_expected_goals,
 )
 
@@ -188,7 +191,7 @@ def test_market_xg_from_on_or_after_the_cutoff_never_reaches_a_uefa_prediction(m
         return xg.astype(float)
 
     def predictions(xg):
-        monkeypatch.setattr(mx, "default_market_xg", lambda: xg)
+        monkeypatch.setattr(mx, "default_market_xg", lambda scope="all": xg)
         spec = EuroSpec(
             lambda: PanEuropeanDC(xi=0.002, market_alpha=0.0), ["2324"], ("UCL",), min_history=1
         )
@@ -200,3 +203,124 @@ def test_market_xg_from_on_or_after_the_cutoff_never_reaches_a_uefa_prediction(m
     p = predictions(market_xg(1, 2))
     np.testing.assert_array_equal(predictions(market_xg(1, 3)), p)  # later values: no effect
     assert np.abs(predictions(market_xg(4, 2)) - p).max() > 1e-3  # earlier values: used
+
+
+def test_scope_filter_keeps_only_the_rows_of_its_scope():
+    """SYNTHETIC closing price rows: two top divisions, a second tier and an extra league,
+    with Pinnacle, Bet365, the average and Betfair Exchange on both sides of 23 Jul 2025."""
+    rows = []
+    for mid, (div, day) in enumerate(
+        [("E0", "2025-07-22"), ("SP1", "2025-07-23"), ("E1", "2024-03-02"), ("AUT", "2025-08-02")]
+    ):
+        for book in ("PS", "B365", "Avg", "BFE"):
+            for sel, price in (("H", 2.1), ("D", 3.4), ("A", 3.5)):
+                rows.append((mid, book, "1X2", sel, price, div, day))
+    raw = pd.DataFrame(
+        rows,
+        columns=[
+            "match_id",
+            "bookmaker",
+            "market_key",
+            "selection",
+            "price",
+            "division",
+            "match_date",
+        ],
+    )
+    pinned = scope_filter(raw, "top5_exact")
+    assert set(pinned.division) == {"E0", "SP1"}
+    assert set(pinned[pinned.division == "SP1"].bookmaker) == {"PS", "B365", "Avg", "BFE"}
+    assert len(scope_filter(raw, "all")) == len(raw)
+    d014 = scope_filter(raw, "all_d014")
+    assert set(d014.division) == {"E0", "SP1", "E1", "AUT"}
+    ps = d014[d014.bookmaker == "PS"]
+    # Pinnacle is kept up to 22 Jul 2025 and dropped from 23 Jul 2025 (D-014).
+    assert set(ps.division) == {"E0", "E1"}
+    assert len(d014) == len(raw) - 2 * 3
+
+
+def test_scope_exact_only_never_uses_the_1x2_only_solve():
+    rhos = [-0.03, -0.09, -0.06, -0.06, -0.06, -0.06]
+    one, ou, n_books = _frames([0, 1, 2], [3, 4, 5], rhos)
+    out = solve_expected_goals(one, ou, n_books, exact_only=True)
+    assert list(out.index) == [0, 1, 2] and set(out.method) == {"1x2_ou25"}
+    assert out.attrs["without_ou25_left_out"] == 3 and out.attrs["not_converged"] == 0
+    assert out.attrs["rho_1x2_only"] is None
+    full = solve_expected_goals(one, ou, n_books)
+    pd.testing.assert_frame_equal(out, full.loc[[0, 1, 2]])
+
+
+def test_market_scopes_on_imported_prices(migrated_engine, settings):
+    """End to end on SYNTHETIC files: a Premier League file (Pinnacle closing 1X2 and O/U 2.5,
+    every match after 23 Jul 2025; one match without closing O/U) and an Austrian extra-league
+    file (closing 1X2 only). The pinned scope sees only the top division's exact solves; the
+    D-014 scope drops Pinnacle after 23 Jul 2025, which leaves the Premier League matches
+    without closing prices and the Austrian ones with Bet365 and the average."""
+    settings.fd_inbox_dir.mkdir(parents=True, exist_ok=True)
+    e0 = list(fd.ROWS)
+    e0[1] = fd.replace_field(fd.replace_field(e0[1], "PC>2.5", ""), "PC<2.5", "")
+    (settings.fd_inbox_dir / "2526_E0.csv").write_bytes(fd.csv_bytes(e0))
+    (settings.fd_inbox_dir / "new_AUT.csv").write_bytes(fx.csv_bytes())
+    run_fd_update(
+        migrated_engine,
+        settings,
+        today=date(2026, 6, 10),
+        allow_download=False,
+        reference=(fd.TEAMS + fx.TEAMS, fd.ALIASES + fx.ALIASES),
+    )
+    from sqlalchemy import text
+
+    with migrated_engine.connect() as conn:
+        div = dict(conn.execute(text("SELECT id, division FROM matches")).all())
+
+    every = market_expected_goals(migrated_engine)
+    assert every.attrs["scope"] == "all"
+    by_div = every.index.map(div)
+    assert (by_div == "E0").sum() == 3 and (by_div == "AUT").sum() == 9
+    assert sorted(every[by_div == "E0"].method) == ["1x2", "1x2_ou25", "1x2_ou25"]
+    assert (every[by_div == "AUT"].n_books == 3).all()
+
+    pinned = market_expected_goals(migrated_engine, scope="top5_exact")
+    assert set(pinned.index.map(div)) == {"E0"} and set(pinned.method) == {"1x2_ou25"}
+    assert len(pinned) == 2 and pinned.attrs["without_ou25_left_out"] == 1
+    # Same exact solves as in the full table (the extra league adds no O/U 2.5 prices).
+    pd.testing.assert_frame_equal(
+        pinned[["xg_home", "xg_away", "rho"]],
+        every.loc[pinned.index, ["xg_home", "xg_away", "rho"]],
+    )
+
+    d014 = market_expected_goals(migrated_engine, scope="all_d014")
+    assert set(d014.index.map(div)) == {"AUT"} and len(d014) == 9
+    assert (d014.n_books == 2).all() and d014.attrs["rho_1x2_only"] == FALLBACK_RHO
+    odds = [float(v) for v in fx.ODDS.split(",")]
+    target = devig_shin(np.array([odds[6:9], odds[12:15]])).mean(axis=0)  # AvgC, B365C
+    _, g, _ = implied_grid_1x2(target[None, :2], FALLBACK_RHO)
+    xh, xa = _xg(g)
+    np.testing.assert_allclose(d014.xg_home, xh[0], rtol=1e-9)
+    np.testing.assert_allclose(d014.xg_away, xa[0], rtol=1e-9)
+
+
+def test_pan_european_dc_reads_the_market_xg_of_its_own_scope(monkeypatch):
+    """The model asks for its scope's market xG (SYNTHETIC two-league data), and an unknown
+    scope is refused."""
+    import footy.modeling.market_xg as mx
+    from footy.modeling.euro import PanEuropeanDC
+
+    from .test_euro_model import two_leagues
+
+    df, _ = two_leagues(n_weeks=6)
+    asked = []
+
+    def fake(scope="all"):
+        asked.append(scope)
+        return pd.DataFrame(columns=["xg_home", "xg_away"], dtype=float)
+
+    monkeypatch.setattr(mx, "default_market_xg", fake)
+    m = PanEuropeanDC(xi=0.002, market_alpha=0.25, market_scope="top5_exact")
+    m.fit(df, df.date.max() + pd.Timedelta(days=1))
+    assert asked == ["top5_exact"]
+    assert m.params()["market_scope"] == "top5_exact" and m.name.endswith("_ma0.25_top5_exact")
+    assert "market_scope" not in PanEuropeanDC().params()
+    assert set(SCOPES) >= {"all", "top5_exact", "all_d014"}
+    with pytest.raises(ValueError):
+        PanEuropeanDC(market_alpha=0.25, market_scope="top5")

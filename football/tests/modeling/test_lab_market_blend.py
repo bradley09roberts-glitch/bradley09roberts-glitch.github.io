@@ -390,3 +390,52 @@ def test_a_fixture_in_the_database_never_takes_the_live_snapshot():
     )
     m.predict(fx)
     assert m.last_used.used_1x2.tolist() == [True]
+
+
+def test_an_unknown_publication_time_stays_unknown():
+    """One book's price has no publication time (a live file without Last-Modified): the
+    fixture's publication time is unknown, not the other book's, and a live run refuses it.
+    SYNTHETIC prices."""
+    q = pd.Timestamp("2026-10-23 15:00", tz="UTC")
+    raw = _raw(_prices("eng-a", "eng-b", "2026-10-24", q))
+    raw["published_utc"] = pd.Timestamp("2026-10-23 13:00", tz="UTC")
+    raw.loc[raw.bookmaker == "Avg", "published_utc"] = pd.NaT
+    c = consensus(raw).iloc[0]
+    assert pd.isna(c.published_utc) and c.n_books_1x2 == 2
+    book, fx = _live(
+        "eng-a", "eng-b", "2026-10-24", "2026-10-23 13:00", "2026-10-23 15:00", "2026-10-24 14:00"
+    )
+    book["published_utc"] = pd.NaT
+    m = MarketTilt(Fixed, 1.0, 1.0, "t", prices=lambda: book)
+    m.fit(pd.DataFrame(), q)
+    m.decision_time = (q + pd.Timedelta(hours=1)).to_pydatetime()
+    m.predict(fx)
+    assert m.last_used.used_1x2.tolist() == [False]
+    assert m.last_used.refused.tolist() == ["publication time unknown (no readable Last-Modified)"]
+
+
+def test_database_prices_stay_usable_beside_an_unknown_snapshot():
+    """The season file's prices are published when quoted, even when combined with a live
+    snapshot whose publication time is unknown (which is refused). SYNTHETIC prices."""
+    deadline = pd.Timestamp("2026-10-23 16:00", tz="UTC")
+    db = _raw(_prices("eng-a", "eng-b", "2026-10-24", deadline))
+    snap = _raw(_prices("eng-c", "eng-d", "2026-10-24", deadline + pd.Timedelta(hours=1)))
+    snap["published_utc"] = pd.NaT
+    book = combine_prices(db, snap)
+    a = book.loc[("E0", pd.Timestamp("2026-10-24"), "eng-a", "eng-b")]
+    c = book.loc[("E0", pd.Timestamp("2026-10-24"), "eng-c", "eng-d")]
+    assert a.published_utc == deadline and pd.isna(c.published_utc)
+    m = MarketTilt(Fixed, 1.0, 1.0, "t", prices=lambda: book)
+    m.fit(pd.DataFrame(), deadline)
+    m.decision_time = (deadline + pd.Timedelta(hours=2)).to_pydatetime()
+    fx = pd.DataFrame(
+        {
+            "division": ["E0", "E0"],
+            "date": pd.to_datetime(["2026-10-24", "2026-10-24"]),
+            "home_team": ["eng-a", "eng-c"],
+            "away_team": ["eng-b", "eng-d"],
+            "kickoff_utc": pd.to_datetime(["2026-10-24 14:00"] * 2, utc=True),
+        }
+    )
+    m.predict(fx)
+    assert m.last_used.used_1x2.tolist() == [True, False]

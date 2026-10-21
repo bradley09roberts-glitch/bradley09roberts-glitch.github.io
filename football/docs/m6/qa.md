@@ -212,3 +212,55 @@ Fixes made to this strand's files:
 - **`primary_models.json` was not edited.** With the list form (`["market_tilt_dc",
   "dixon_coles"]`), Levante's card would lead with #110, and the headline record would count it.
   Fixtures without prices would keep `dixon_coles`.
+
+## Models of record, signal wording and live prices (21 October 2026, about 06:25–06:50 UK time)
+
+Real database only in the browser; no API calls intercepted. Synthetic data was used only in
+pytest, and is labelled there.
+
+### What changed
+
+- **Models of record with effective-from times** (D-026). `primary_models.json` now gives
+  each group a list of periods. A fixture takes the period in force at its kickoff, so
+  naming a new model of record never changes a fixture that has already been played.
+  - The converted file: UEFA is `pan_euro_mix` until 2026-10-21T04:30:00Z, then
+    `pan_euro_mix_mxg`; domestic is `dixon_coles` throughout.
+  - The record-of-record flag of all 155 saved records is the same before and after
+    (109 primary).
+  - `/api/performance` adds `primary_model_periods`. `primary_models` is the list in force
+    now. New command: `uv run footy set-model-of-record --group … --models … --from now`.
+- **Betting edge on a model-only record whose match has a model + market record.** It no
+  longer says "No odds available".
+  - The match page says "See the model + market record — this one uses no prices", with a
+    link and a note naming `market_tilt_dc`.
+  - The fixture card has the same words, without a link: the card's "Also predicted by" line
+    links to that record.
+- **Confidence label on model + market records.** "Model confidence" becomes "Forecast
+  confidence (bookmakers + model)", and the note says the probabilities are the bookmakers'
+  consensus blended with the model. Model-only records keep "Model confidence". The Data
+  page's description of the three signals says both.
+- **`/api/import-issues`** no longer sends rejected price cells. All 16 `invalid_price`
+  details now read like `B365H: not a valid price (value withheld)`. Only two kinds of
+  detail still quote a cell value, and neither is a price: `no_result` (`FTHG=''`) and
+  `other_league_label` (`League='Challenge League'`).
+
+### Checks and results
+
+| Check | Result |
+| --- | --- |
+| `uv run pytest -q` on `test_models_of_record`, `test_api_records`, `test_api_data`, `test_fd_fixtures`, `test_live_market`, `test_health`, `test_publish` and `modeling/test_lab_market_blend` | 110 passed |
+| `uv run pytest -q` on `modeling/test_lab_market_blend`, `test_live_market` and `modeling/test_no_future_leakage` (run after the `market_blend` change) | 69 passed |
+| `uv run ruff check` and `ruff format --check` on the 13 Python files changed | Clean |
+| `npm run typecheck`, `npm run build` | Clean |
+| Browser: production build (`vite preview`, port 4323) against `uvicorn footy.api.main:app` on port 8023, 390 px, light theme, device clock set to New York time | 18 / 18 checks pass |
+| Levante #56 (model only) | "Model confidence"; no "No odds available"; "See the model + market record", whose link goes to `#/match/110`; the note names `market_tilt_dc`; kickoff 19:00 UK; no horizontal scroll; no page or console errors |
+| Levante #110 (model + market) | "Forecast confidence (bookmakers + model)" and no "Model confidence"; "No selection published"; kickoff 19:00 UK; no horizontal scroll; no errors |
+| Fixtures, La Liga filter | The Levante card (led by `dixon_coles`, model only) points to the model + market record. The other 10 La Liga cards, which have no prices, still say "No odds available". No horizontal scroll and no errors |
+
+Screenshots (light theme, real data, 390 px, the viewport stretched to the full page height),
+in [`screenshots/`](screenshots/):
+
+- `wording-match-levante-model-390.png`: #56, the pure model's record;
+- `wording-match-levante-market-390.png`: #110, the model + market record.
+
+Both servers were stopped after the run.

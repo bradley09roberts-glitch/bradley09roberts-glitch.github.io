@@ -1,5 +1,20 @@
 {
-  "_comment": "Model of record per competition group, chosen on validation and confirmed once on test (DECISIONS.md). Other models' saved predictions stay visible but are not the headline record.",
-  "domestic": "dixon_coles",
-  "uefa": "pan_euro_mix_mxg"
+  "_comment": "Model of record per competition group, chosen on validation and confirmed once on test (DECISIONS.md D-025, D-026). Each group is a list of periods, oldest first. A fixture takes the latest period whose from_utc is at or before its kickoff (00:00 UK on its date if the kickoff is unknown); within it, the record of record is the first listed model with a genuine pre-match record for the fixture. from_utc null = from the start. Only ever append a period, from now or later: uv run footy set-model-of-record --group domestic --models a,b --from now. Other models' saved predictions stay visible but are not the headline record.",
+  "domestic": [
+    {
+      "from_utc": null,
+      "models": ["dixon_coles"]
+    }
+  ],
+  "uefa": [
+    {
+      "from_utc": null,
+      "models": ["pan_euro_mix"]
+    },
+    {
+      "from_utc": "2026-10-21T04:30:00Z",
+      "models": ["pan_euro_mix_mxg"],
+      "note": "D-026: market-trained ratings; test composite 0.9666 against 0.9686"
+    }
+  ]
 }

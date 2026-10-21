@@ -623,3 +623,22 @@ candidate `market_tilt_dc` (D-024) beats every pure model on validation (composi
 against 0.9598). It becomes the model of record, with `dixon_coles` as the fallback for
 fixtures that have no prices yet, once the website can show a model and its fallback (an
 ordered list in `primary_models.json`) and the test run is done.
+
+**Effective-from times (21 Oct 2026).** Each group in `primary_models.json` is now a list of
+periods, `{"from_utc": ..., "models": [...]}`, oldest first (`footy.models_of_record`). A
+fixture takes the latest period starting at or before its kickoff (00:00 UK on its date if
+the kickoff is unknown): the earliest kickoff saved with any of its genuine pre-match records,
+so a kickoff brought forward after the first record still counts. Within that period,
+the record of record is the first listed model with a genuine pre-match record. A plain name
+or list is still read as one period from the start.
+
+- **Converted file.** UEFA is `pan_euro_mix` until 2026-10-21T04:30:00Z, then
+  `pan_euro_mix_mxg`; domestic is `dixon_coles` throughout. All 155 saved records have the
+  same record-of-record flag as before (109 primary).
+- **Switching.** Use `uv run footy set-model-of-record --group domestic --models
+  market_tilt_dc,dixon_coles --from now`. It appends a period and refuses a start before now,
+  or one not after the group's last period. A fixture that has already kicked off keeps its
+  model of record, so a switch never changes the settled record or its accuracy.
+- **What "from now" covers.** Fixtures that haven't kicked off yet take the new period,
+  including ones whose records were published before the switch. A fixture on the day of the
+  switch whose records have no kickoff time keeps the old period (00:00 UK stands in).

@@ -60,12 +60,18 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     pe = sub.add_parser("predict-euro", help="publish early-edition UEFA predictions")
-    pe.add_argument(
-        "--config",
-        default="{}",
-        help='model config as JSON, e.g. {"family": "mix", "dc": {...}, "elo": {...}, "w_dc": 0.7}',
+    pe_model = pe.add_mutually_exclusive_group()
+    pe_model.add_argument(
+        "--model",
+        help="registered UEFA model name (footy.modeling.euro_registry), e.g. pan_euro_mix_mxg; "
+        "its records are published under that name",
     )
-    pe.add_argument("--model-name", default="pan_euro_dc")
+    pe_model.add_argument(
+        "--config",
+        help='model config as JSON, e.g. {"family": "mix", "dc": {...}, "elo": {...}, "w_dc": 0.7}'
+        " (default {}: pan-European Dixon-Coles)",
+    )
+    pe.add_argument("--model-name", help="record name for a --config model (default pan_euro_dc)")
     pe.add_argument("--comps", default="UCL,UEL,UECL")
     pe.add_argument("--days", type=int, default=3)
     pe.add_argument("--dry-run", action="store_true")
@@ -112,7 +118,29 @@ def main(argv: list[str] | None = None) -> int:
     )
     fx.add_argument("--force", action="store_true", help="ignore the 6-hour refresh limit")
 
+    mr = sub.add_parser(
+        "set-model-of-record",
+        help="append a period to a group's models of record in primary_models.json (D-026)",
+    )
+    mr.add_argument("--group", required=True, choices=["domestic", "uefa"])
+    mr.add_argument(
+        "--models",
+        required=True,
+        help="comma-separated, in order of preference, e.g. market_tilt_dc,dixon_coles",
+    )
+    mr.add_argument(
+        "--from",
+        dest="from_utc",
+        required=True,
+        help='"now" or an ISO 8601 time with an offset, e.g. 2026-10-24T11:00:00Z; never earlier '
+        "than now, so fixtures already played keep their model of record",
+    )
+    mr.add_argument("--note", help="optional reason saved with the period, e.g. a decision id")
+    mr.add_argument("--file", help="the JSON file to change (default: the reference file)")
+
     args = parser.parse_args(argv)
+    if args.command == "set-model-of-record":
+        return _set_model_of_record(args)
     settings = get_settings()
 
     if args.command == "migrate":
@@ -214,20 +242,35 @@ def main(argv: list[str] | None = None) -> int:
         from footy.ingest.jobs import job_run
         from footy.live import predict_euro
         from footy.modeling.euro_eval import make_factory
+        from footy.modeling.euro_registry import EURO_MODELS, euro_factory
 
-        config = json.loads(args.config)
+        if args.model is not None:
+            if args.model not in EURO_MODELS:
+                parser.error(
+                    f"unknown UEFA model {args.model!r}; registered: {', '.join(EURO_MODELS)}"
+                )
+            if args.model_name not in (None, args.model):
+                parser.error("--model-name can't rename a registered model")
+            if EURO_MODELS[args.model] is None:  # no team ratings: it can't fill a record
+                parser.error(f"{args.model} is a backtest baseline and doesn't publish")
+            model_name, factory = args.model, euro_factory(args.model)
+        else:
+            model_name = args.model_name or "pan_euro_dc"
+            if model_name in EURO_MODELS:  # its records must come from its pinned config
+                parser.error(f"{model_name} is a registered UEFA model: use --model {model_name}")
+            factory = _named(make_factory(json.loads(args.config or "{}")), model_name)
         with job_run(get_engine(), "predict") as ctx:
             out = predict_euro(
                 get_engine(),
-                _named(make_factory(config), args.model_name),
-                args.model_name,
+                factory,
+                model_name,
                 tuple(args.comps.split(",")),
                 days=args.days,
                 dry_run=args.dry_run,
                 notes=args.notes,
             )
             ctx.detail.update(
-                kind="uefa", model=args.model_name, published=len(out), dry_run=args.dry_run
+                kind="uefa", model=model_name, published=len(out), dry_run=args.dry_run
             )
         print(json.dumps(out, indent=1, default=str))
     elif args.command == "final-report":
@@ -304,11 +347,43 @@ def main(argv: list[str] | None = None) -> int:
             if snap is not None:
                 ctx.detail.update(
                     retrieved_at=snap.attrs["retrieved_at"],
+                    published_at=snap.attrs["published_at"],  # None: refused for live use
                     raw_sha256=snap.attrs["raw_sha256"],
                     **snap.attrs["report"],
                 )
         print(json.dumps(ctx.detail, indent=2, default=str))
         return 0 if res.outcome != "error" else 1
+    return 0
+
+
+def _set_model_of_record(args) -> int:
+    from pathlib import Path
+
+    from footy import models_of_record
+    from footy.api.routes import PRIMARY_MODELS_PATH
+
+    path = Path(args.file) if args.file else PRIMARY_MODELS_PATH
+    now = datetime.now(UTC)
+    try:
+        start = models_of_record.parse_from(args.from_utc, now)
+        periods = models_of_record.append_period(
+            path,
+            args.group,
+            [m.strip() for m in args.models.split(",")],
+            start,
+            note=args.note,
+            now=now,
+        )
+    except ValueError as e:
+        print(f"Refused, {path.name} unchanged: {e}")
+        return 1
+    print(f"{path}: {args.group} models of record")
+    for p in periods:
+        print(
+            f"  from {models_of_record.format_utc(p.from_utc) or 'the start'}: "
+            f"{', '.join(p.models)}{f'  ({p.note})' if p.note else ''}"
+        )
+    print("Fixtures kicking off before the new period keep their model of record.")
     return 0
 
 

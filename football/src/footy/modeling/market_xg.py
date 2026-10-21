@@ -18,11 +18,24 @@ so a rating model can use them as part of its targets.
   gives the goal difference of the exact solve to 0.014 goals and each side's expected
   goals to 0.05-0.06 (mean absolute error); the total is the least certain part (0.11).
 
+**Scopes** (`SCOPES`) say which closing prices are used, so that a model selected and tested
+on one set of targets keeps training on that set when more prices are imported:
+
+- "all": every division with closing prices, both solves, Pinnacle on every date. This is
+  the default and has been the behaviour since European prices were imported (D-022).
+- "top5_exact": the five top divisions only, with the exact 1X2 + O/U 2.5 solve only and
+  the same books on every date. These are the targets `pan_euro_mix_mxg` was selected and
+  tested on (D-026), before any other division had prices; it reproduces its records.
+- "all_d014": as "all", but Pinnacle is left out for matches on or after 23 Jul 2025, when
+  football-data found its prices systematically out of date (D-014). Bet365 and the market
+  average remain.
+
 A match's closing price is known at its kickoff, before any later prediction. Models only see
 matches final before their cutoff, so using these values for those matches adds no future
 information.
 """
 
+from dataclasses import dataclass
 from functools import cache
 
 import numpy as np
@@ -30,9 +43,29 @@ import pandas as pd
 from sqlalchemy import inspect, text
 
 from footy.modeling.grid import GOALS, poisson_grid
-from footy.modeling.market import devig_shin
+from footy.modeling.market import PINNACLE_UNRELIABLE_FROM, devig_shin
 
 BOOKS = ("PS", "B365", "Avg")
+
+
+@dataclass(frozen=True)
+class MarketScope:
+    """Which closing prices feed market xG (see the module notes)."""
+
+    divisions: tuple[str, ...] | None  # None: every division with closing prices
+    exact_only: bool  # True: only matches solved from 1X2 and O/U 2.5; no 1X2-only solve
+    drop_pinnacle_from: pd.Timestamp | None  # Pinnacle left out on or after this match date
+
+
+SCOPES = {
+    "all": MarketScope(None, False, None),
+    # The five top divisions, pinned by code rather than read from reference.TOP_DIVISIONS so
+    # that the scope can't drift.
+    "top5_exact": MarketScope(("E0", "SP1", "I1", "D1", "F1"), True, None),
+    "all_d014": MarketScope(None, False, PINNACLE_UNRELIABLE_FROM),
+}
+DEFAULT_SCOPE = "all"
+
 # Fixed rho for a 1X2-only solve when no match in the call has both markets (tests, a
 # database without O/U prices): the median over the five top divisions before European
 # prices were imported (21 Oct 2026, 12,797 matches).
@@ -151,12 +184,17 @@ def consensus_closing(raw: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd
 
 
 def solve_expected_goals(
-    p1x2: pd.DataFrame, pou: pd.DataFrame, n_books: pd.Series, rho_1x2_only: float | None = None
+    p1x2: pd.DataFrame,
+    pou: pd.DataFrame,
+    n_books: pd.Series,
+    rho_1x2_only: float | None = None,
+    exact_only: bool = False,
 ) -> pd.DataFrame:
     """Market expected goals for every match in `p1x2` (index match id; columns H, D, A),
     with `pou` (columns O, U) where it has the match. Columns: COLUMNS. `attrs` holds the
     rho used for the 1X2-only solve, its source and the counts per method. Matches whose
-    solve does not converge are left out (counted in attrs)."""
+    solve does not converge are left out (counted in attrs). `exact_only`: no 1X2-only
+    solve, so only matches with both markets whose exact solve converges are returned."""
     both = p1x2.join(pou, how="inner")
     frames, xg3 = [], pd.DataFrame(columns=COLUMNS)
     if len(both):
@@ -166,7 +204,9 @@ def solve_expected_goals(
             {"xg_home": xh, "xg_away": xa, "rho": x[:, 2], "method": "1x2_ou25"}, index=both.index
         )[ok]
         frames.append(xg3)
-    if rho_1x2_only is not None:
+    if exact_only:
+        rho, source = None, "exact_only"
+    elif rho_1x2_only is not None:
         rho, source = float(rho_1x2_only), "given"
     elif len(xg3):
         rho, source = float(np.median(xg3.rho.to_numpy(float))), "median_of_1x2_ou25"
@@ -174,7 +214,7 @@ def solve_expected_goals(
         rho, source = FALLBACK_RHO, "fallback_constant"
     rest = p1x2.loc[~p1x2.index.isin(xg3.index)]
     n_rest_ok = 0
-    if len(rest):
+    if len(rest) and not exact_only:
         x, g, ok = implied_grid_1x2(rest[["H", "D"]].to_numpy(), rho)
         xh, xa = _expected_goals(g)
         xg2 = pd.DataFrame(
@@ -189,6 +229,7 @@ def solve_expected_goals(
     )
     out["n_books"] = n_books.reindex(out.index)
     out = out[COLUMNS]
+    left_out = len(p1x2) - len(both) if exact_only else 0  # no O/U 2.5: not solved at all
     out.attrs = {
         "rho_1x2_only": rho,
         "rho_1x2_only_source": source,
@@ -196,32 +237,55 @@ def solve_expected_goals(
         "solved_1x2_ou25": len(xg3),
         "solved_1x2_only": n_rest_ok,
         "with_ou25_not_converged": len(both) - len(xg3),
-        "not_converged": len(p1x2) - len(out),
+        "not_converged": len(p1x2) - len(out) - left_out,
+        "without_ou25_left_out": left_out,
     }
     return out
 
 
-def market_expected_goals(engine, rho_1x2_only: float | None = None) -> pd.DataFrame:
+def scope_filter(raw: pd.DataFrame, scope: str | MarketScope) -> pd.DataFrame:
+    """The closing price rows (with `division` and `match_date` columns) that `scope` uses.
+    Filtering happens before the consensus and the solves, so the matches of a scope are
+    solved together exactly as they would be in a database holding only those prices."""
+    sc = SCOPES[scope] if isinstance(scope, str) else scope
+    keep = pd.Series(True, index=raw.index)
+    if sc.divisions is not None:
+        keep &= raw.division.isin(sc.divisions)
+    if sc.drop_pinnacle_from is not None:
+        late = pd.to_datetime(raw.match_date) >= sc.drop_pinnacle_from
+        keep &= ~((raw.bookmaker == "PS") & late)
+    return raw[keep]
+
+
+def market_expected_goals(
+    engine, rho_1x2_only: float | None = None, scope: str | MarketScope = DEFAULT_SCOPE
+) -> pd.DataFrame:
     """Index: match id. Columns: xg_home, xg_away (expected goals of the implied grid), rho,
-    n_books (1X2 books averaged) and method ("1x2_ou25" or "1x2"). Every match with a
-    closing 1X2 price from BOOKS is included unless its solve fails to converge."""
+    n_books (1X2 books averaged) and method ("1x2_ou25" or "1x2"). Every match in `scope`
+    with a closing 1X2 price from BOOKS is included unless its solve fails to converge (or,
+    for an exact-only scope, it has no closing O/U 2.5)."""
+    sc = SCOPES[scope] if isinstance(scope, str) else scope
     if not inspect(engine).has_table("fd_odds"):
         return pd.DataFrame(columns=COLUMNS)
     sql = (
-        "SELECT match_id, bookmaker, market_key, selection, price FROM fd_odds "
-        "WHERE phase = 'closing' AND market_key IN ('1X2', 'OU_2.5')"
+        "SELECT o.match_id, o.bookmaker, o.market_key, o.selection, o.price, m.division, "
+        "m.match_date FROM fd_odds o JOIN matches m ON m.id = o.match_id "
+        "WHERE o.phase = 'closing' AND o.market_key IN ('1X2', 'OU_2.5')"
     )
     with engine.connect() as conn:
         raw = pd.read_sql(text(sql), conn)
-    p1x2, pou, n_books = consensus_closing(raw)
+    p1x2, pou, n_books = consensus_closing(scope_filter(raw, sc))
     if p1x2.empty:
         return pd.DataFrame(columns=COLUMNS)
-    return solve_expected_goals(p1x2, pou, n_books, rho_1x2_only)
+    out = solve_expected_goals(p1x2, pou, n_books, rho_1x2_only, exact_only=sc.exact_only)
+    out.attrs["scope"] = scope if isinstance(scope, str) else repr(scope)
+    return out
 
 
 @cache
-def default_market_xg() -> pd.DataFrame:
+def default_market_xg(scope: str = DEFAULT_SCOPE) -> pd.DataFrame:
+    """Market xG of the configured database for a named scope (cached per process)."""
     from footy.config import get_settings
     from footy.db import make_engine
 
-    return market_expected_goals(make_engine(get_settings().database_url))
+    return market_expected_goals(make_engine(get_settings().database_url), scope=scope)

@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from footy.modeling.profit import Strategy, report, select, simulate
+from footy.modeling.profit import Strategy, candidates, report, select, simulate
 
 
 def bets(rows):
@@ -129,3 +129,108 @@ def test_filters_and_one_per_fixture():
     assert len(select(b, Strategy("edge5", min_edge=0.05))) == 2
     one = select(b, Strategy("one", one_per_fixture=True))
     assert one.match_id.is_unique and set(one.market[one.match_id == 1]) == {"OU_2.5"}
+
+
+def test_candidates_include_over_under_2_5():
+    """SYNTHETIC ledger and prices. Both 1X2 and O/U 2.5 become candidates, priced at the
+    pre-closing quote; the closing price is kept only for closing-line value. ("p_over_2.5"
+    isn't an identifier, and an itertuples loop once dropped every O/U 2.5 candidate.)"""
+    ledger = pd.DataFrame(
+        [
+            {
+                "match_id": 7,
+                "league": "E0",
+                "season": "2425",
+                "date": "2024-08-10",
+                "batch_cutoff_utc": "2024-08-08T23:00:00+00:00",
+                "home_team": "x",
+                "away_team": "y",
+                "home_goals": 2,
+                "away_goals": 1,
+                "status": "predicted",
+                "p_H": 0.5,
+                "p_D": 0.3,
+                "p_A": 0.2,
+                "p_over_2.5": 0.6,
+            }
+        ]
+    )
+    quote = "2024-08-09T16:00:00+00:00"
+    rows = [
+        (7, "1X2", "H", "pre_closing", 2.1, quote),
+        (7, "1X2", "D", "pre_closing", 3.4, quote),
+        (7, "1X2", "A", "pre_closing", 4.2, quote),
+        (7, "OU_2.5", "O", "pre_closing", 1.8, quote),
+        (7, "OU_2.5", "U", "pre_closing", 2.0, quote),
+        (7, "OU_2.5", "O", "closing", 1.7, "2024-08-10T14:00:00+00:00"),
+    ]
+    prices = pd.DataFrame(
+        rows, columns=["match_id", "market_key", "selection", "phase", "price", "quote_time_utc"]
+    )
+    prices.attrs["no_stake"] = set()
+    c = candidates(ledger, prices).set_index(["market", "selection"])
+    assert set(c.index) == {
+        ("1X2", "H"),
+        ("1X2", "D"),
+        ("1X2", "A"),
+        ("OU_2.5", "O"),
+        ("OU_2.5", "U"),
+    }
+    over, under = c.loc[("OU_2.5", "O")], c.loc[("OU_2.5", "U")]
+    assert over.p == 0.6 and over.odds == 1.8 and over.odds_close == 1.7 and over.won
+    assert abs(over.ev - (0.6 * 1.8 - 1)) < 1e-12
+    assert abs(under.p - 0.4) < 1e-12 and under.odds == 2.0 and not under.won
+    assert pd.isna(under.odds_close)
+    assert c.loc[("1X2", "H")].won and not c.loc[("1X2", "D")].won
+
+
+def test_reports_withhold_price_figures_for_few_bets():
+    """SYNTHETIC. The average odds of a single bet are its price (D-013): below the threshold
+    a published result keeps only its counts; from the threshold on it is unchanged."""
+    from footy.modeling.report import MIN_BETS_FOR_PRICE_FIGURES, withhold_prices
+
+    one = report(
+        simulate(
+            bets(
+                [(1, "b1", "2024-08-10", "2425", "E0", "x", "y", "1X2", "A", 0.3, 4.4, 4.0, False)]
+            )
+        )
+    )
+    out = withhold_prices(one)
+    assert out["bets"] == 1 and out["losses"] == 1 and out["withheld"]
+    assert 4.4 not in out.values() and not {
+        "average_odds",
+        "break_even_rate",
+        "returns_units",
+        "profit_units",
+        "closing_line_value_mean",
+        "equity_curve_units",
+        "monthly",
+        "top_teams_by_exposure",
+    } & set(out)
+    many = report(
+        simulate(
+            bets(
+                [
+                    (
+                        i,
+                        f"b{i}",
+                        "2024-08-10",
+                        "2425",
+                        "E0",
+                        "x",
+                        "y",
+                        "1X2",
+                        "H",
+                        0.6,
+                        2.0,
+                        2.0,
+                        True,
+                    )
+                    for i in range(MIN_BETS_FOR_PRICE_FIGURES)
+                ]
+            )
+        )
+    )
+    assert withhold_prices(many) is many
+    assert withhold_prices({"bets": 0}) == {"bets": 0}

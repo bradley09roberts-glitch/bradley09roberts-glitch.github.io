@@ -2,6 +2,7 @@
 had prices. SYNTHETIC fixtures, teams and prices; the database, schedule and publisher are
 stubbed out."""
 
+import json
 from datetime import UTC, date, datetime
 
 import numpy as np
@@ -30,7 +31,7 @@ class Fixed:
         return {}
 
 
-def _book():
+def _book(ou_books=("B365", "Avg"), published="2026-10-23 13:00"):
     q = pd.Timestamp("2026-10-23 15:00", tz="UTC")
     rows = []
     for book in ("B365", "Avg"):
@@ -41,6 +42,7 @@ def _book():
         rows += [
             ("E0", "2026-10-24", "eng-a", "eng-b", book, "OU_2.5", s, p, q)
             for s, p in (("O", 1.8), ("U", 2.1))
+            if book in ou_books
         ]
     raw = pd.DataFrame(
         rows,
@@ -56,7 +58,7 @@ def _book():
             "quote_time_utc",
         ],
     )
-    raw["published_utc"] = pd.Timestamp("2026-10-23 13:00", tz="UTC")
+    raw["published_utc"] = None if published is None else pd.Timestamp(published, tz="UTC")
     return consensus(raw)
 
 
@@ -100,8 +102,8 @@ def _stub(monkeypatch):
     return published
 
 
-def _market():
-    book = _book()
+def _market(**kw):
+    book = _book(**kw)
     return MarketTilt(Fixed, 1.0, 1.0, "market_test", prices=lambda: book)
 
 
@@ -123,3 +125,39 @@ def test_a_pure_model_publishes_every_fixture(monkeypatch):
     published = _stub(monkeypatch)
     live.predict_domestic(None, Fixed, "fixed", ["E0"], now=NOW)
     assert len(published) == 2
+
+
+def test_records_keep_how_many_books_each_consensus_averaged(monkeypatch):
+    """Both books quote the 1X2 but only Bet365 the over/under: the record says so."""
+    _stub(monkeypatch)
+    saved = []
+
+    def publish(engine, fixtures, mp, **kw):
+        saved.extend(fixtures)
+        return list(range(len(fixtures)))
+
+    monkeypatch.setattr(live, "publish", publish)
+    live.predict_domestic(None, lambda: _market(ou_books=("B365",)), "market_test", ["E0"], now=NOW)
+    (f,) = saved
+    m = f.features["market_prices_used"]
+    assert (m["n_books_1x2"], m["n_books_ou"]) == (2, 1)
+    assert m["books"] == ["B365", "Avg"]
+    assert type(m["n_books_1x2"]) is int  # stored as JSON numbers
+    json.dumps(f.features)
+    # what is saved are the de-vigged probabilities, not the prices
+    assert all(0 < m[k] < 1 for k in ("p_H", "p_D", "p_A", "p_over_2.5"))
+
+
+def test_a_dry_run_says_why_prices_were_refused(monkeypatch):
+    """Prices whose publication time is unknown (a live file without Last-Modified)."""
+    published = _stub(monkeypatch)
+    out = live.predict_domestic(
+        None, lambda: _market(published=None), "market_test", ["E0"], now=NOW, dry_run=True
+    )
+    assert [r["market_used"] for r in out] == [False, False]
+    assert out[0]["market_refused"] == "publication time unknown (no readable Last-Modified)"
+    assert "market_refused" not in out[1]  # no prices at all for that fixture
+    assert published == []
+    # and nothing would be published under the model + market name
+    live.predict_domestic(None, lambda: _market(published=None), "market_test", ["E0"], now=NOW)
+    assert published == []

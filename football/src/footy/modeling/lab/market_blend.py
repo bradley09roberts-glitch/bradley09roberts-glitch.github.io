@@ -16,8 +16,9 @@ Usable prices: phase 'pre_closing'; quoted no later than the prediction is made 
 fixture's `deadline_utc` in backtests, the time of the run when live); quoted before the
 kickoff where it is known; and published no earlier than 00:00 UK on the fixture's own D-012
 collection day, so a live run never uses an older file's prices (Tuesday's for a weekend
-fixture, say) where a backtest would have had that collection's. In backtests the last rule
-never binds: a season file's price is stamped at its own deadline.
+fixture, say) where a backtest would have had that collection's. A live price whose publication
+time is unknown (its file had no readable HTTP Last-Modified) is never used. In backtests the
+last two rules never bind: a season file's price is stamped at its own deadline.
 """
 
 from collections.abc import Callable
@@ -54,8 +55,10 @@ def consensus(raw: pd.DataFrame) -> pd.DataFrame:
 
     `raw` columns: division, date, home_team, away_team, bookmaker, market_key, selection,
     price, quote_time_utc, and optionally published_utc (when the prices were published, if
-    earlier than quote_time_utc; a live file's Last-Modified time). Where it is missing the
-    quote time stands in."""
+    earlier than quote_time_utc; a live file's Last-Modified time). Without that column the
+    quote time stands in (a season file's price is published when quoted). An empty value in
+    it means unknown, and stays unknown: a fixture with any such price gets an empty
+    published_utc, so the staleness rule refuses it."""
     cols = [
         *KEY,
         "p_H",
@@ -73,8 +76,7 @@ def consensus(raw: pd.DataFrame) -> pd.DataFrame:
     raw["date"] = pd.to_datetime(raw["date"])
     raw["quote_time_utc"] = pd.to_datetime(raw["quote_time_utc"], utc=True)
     if "published_utc" in raw:
-        pub = pd.to_datetime(raw["published_utc"], utc=True)
-        raw["published_utc"] = pub.fillna(raw["quote_time_utc"])
+        raw["published_utc"] = pd.to_datetime(raw["published_utc"], utc=True)
     else:
         raw["published_utc"] = raw["quote_time_utc"]
     out = []
@@ -89,7 +91,7 @@ def consensus(raw: pd.DataFrame) -> pd.DataFrame:
             index=[*KEY, "bookmaker"], columns="selection", values="price", aggfunc="first"
         )
         times = m.groupby([*KEY, "bookmaker"])
-        t, pub = times["quote_time_utc"].max(), times["published_utc"].min()
+        t, pub = times["quote_time_utc"].max(), _earliest(times["published_utc"])
         w = w.reindex(columns=sels).dropna()
         if w.empty:
             continue
@@ -101,7 +103,7 @@ def consensus(raw: pd.DataFrame) -> pd.DataFrame:
         agg = g[names].mean()
         agg[f"n_books_{'1x2' if market == '1X2' else 'ou'}"] = g.size()
         agg[f"qt_{market}"] = g["quote_time_utc"].max()
-        agg[f"pub_{market}"] = g["published_utc"].min()
+        agg[f"pub_{market}"] = _earliest(g["published_utc"])
         out.append(agg)
     if not out:
         return pd.DataFrame(columns=cols).set_index(KEY)
@@ -114,8 +116,17 @@ def consensus(raw: pd.DataFrame) -> pd.DataFrame:
     qts = [res[c] for c in ("qt_1X2", "qt_OU_2.5") if c in res]
     res["quote_time_utc"] = pd.concat(qts, axis=1).max(axis=1)
     pubs = [res[c] for c in ("pub_1X2", "pub_OU_2.5") if c in res]
-    res["published_utc"] = pd.concat(pubs, axis=1).min(axis=1)
+    unknown = pd.Series(False, index=res.index)
+    for market, n in (("1X2", "n_books_1x2"), ("OU_2.5", "n_books_ou")):
+        if f"pub_{market}" in res:  # a market that has prices but no publication time
+            unknown |= (res[n] > 0) & res[f"pub_{market}"].isna()
+    res["published_utc"] = pd.concat(pubs, axis=1).min(axis=1).mask(unknown)
     return res[cols[4:]]
+
+
+def _earliest(times) -> pd.Series:
+    """The earliest time per group, or empty (unknown) if any time in the group is."""
+    return times.min().where(times.count() == times.size())
 
 
 def load_pre_closing(engine) -> pd.DataFrame:
@@ -133,7 +144,10 @@ def combine_prices(db: pd.DataFrame, snap: pd.DataFrame | None) -> pd.DataFrame:
     """One consensus table from the database's pre-closing prices and a live snapshot. A
     fixture already in the database keeps only its season file's prices (stamped at its D-012
     deadline): the snapshot's copy is left out, so the two sources are never mixed and a
-    later retrieval time can't override the deadline stamp."""
+    later retrieval time can't override the deadline stamp. The database's prices are
+    published when quoted (stamped at their deadline)."""
+    if "quote_time_utc" in db and "published_utc" not in db:
+        db = db.assign(published_utc=db["quote_time_utc"])
     raw = [db]
     if snap is not None and not snap.empty:
         if not db.empty:
@@ -263,18 +277,32 @@ class MarketTilt:
             raise ValueError("prices found but no decision time: pass deadline_utc or set it")
         else:
             made = pd.Series(pd.NaT, index=mk.index, dtype="datetime64[ns, UTC]")
-        ok = qt.notna() & (qt <= made)
+        # Why a fixture's prices are refused: the first rule that fails (empty if they were
+        # used, or if there were none).
+        refused = pd.Series(None, index=mk.index, dtype=object)
+
+        def refuse(bad: pd.Series, reason: str) -> None:
+            refused[bad.to_numpy() & refused.isna().to_numpy() & qt.notna().to_numpy()] = reason
+
+        refuse(~(qt <= made), "quoted after the prediction was made")
         if "kickoff_utc" in fixtures.columns:
             ko = pd.to_datetime(fixtures["kickoff_utc"], utc=True).reset_index(drop=True)
-            ok &= ko.isna() | (qt < ko)
+            refuse(~(ko.isna() | (qt < ko)), "quoted at or after kickoff")
         # Staleness: only prices published on or after 00:00 UK on the fixture's own D-012
-        # collection day (the start of its decision batch), as in a backtest.
+        # collection day (the start of its decision batch), as in a backtest. A price whose
+        # publication time is unknown is refused too: it could be from any earlier collection.
         pub = mk["published_utc"] if "published_utc" in mk else mk["quote_time_utc"]
         pub = pd.to_datetime(pub, utc=True)
         days = pd.Series(idx.get_level_values("date")).dt.date
         first = {d: model_cutoff(d) for d in days.unique()}
-        ok &= pub >= pd.to_datetime(days.map(first), utc=True)
+        refuse(pub.isna(), "publication time unknown (no readable Last-Modified)")
+        refuse(
+            ~(pub >= pd.to_datetime(days.map(first), utc=True)),
+            "published before the fixture's collection day",
+        )
+        ok = qt.notna() & refused.isna()
         mk.loc[~ok.to_numpy(), ["p_H", "p_D", "p_A", "p_O"]] = np.nan
+        mk["refused"] = refused
         return mk
 
     def predict(self, fixtures: pd.DataFrame) -> MarketProbs:

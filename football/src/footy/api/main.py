@@ -113,7 +113,8 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
 
     @app.get("/api/import-issues")
     def import_issues(per_code: int = Query(0, ge=0, le=5000)) -> dict:
-        """Rows and values rejected or flagged at import, by reason, with where they occurred."""
+        """Rows and values rejected or flagged at import, by reason, with where they occurred.
+        A rejected price cell is named by its column only; its value is withheld (D-013)."""
         with Session(_engine()) as s:
             rows = s.execute(
                 select(
@@ -135,7 +136,13 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
             ],
             "issues": _limit_per_code(
                 [
-                    {"severity": sev, "code": code, "file": key, "row": row, "detail": detail}
+                    {
+                        "severity": sev,
+                        "code": code,
+                        "file": key,
+                        "row": row,
+                        "detail": public_issue_detail(code, detail),
+                    }
                     for sev, code, key, row, detail in rows
                 ],
                 per_code,
@@ -146,6 +153,21 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
 
     app.include_router(make_router(_engine, settings))
     return app
+
+
+# Issues about one price cell, saved as `<column>=<raw cell>` (e.g. "B365H='0'"). The raw cell
+# is a price from the source file, even if a faulty one, and prices are never served
+# (D-013, D-024): the column name and the reason stay, the value doesn't.
+PRICE_CELL_CODES = {"invalid_price": "not a valid price"}
+
+
+def public_issue_detail(code: str, detail: str | None) -> str | None:
+    """An import issue's detail as the API sends it: a price cell's value is withheld."""
+    if code not in PRICE_CELL_CODES or detail is None:
+        return detail
+    column, sep, _value = detail.partition("=")
+    reason = PRICE_CELL_CODES[code]
+    return f"{column.strip()}: {reason} (value withheld)" if sep else f"{reason} (value withheld)"
 
 
 def _limit_per_code(issues: list[dict], per_code: int) -> list[dict]:

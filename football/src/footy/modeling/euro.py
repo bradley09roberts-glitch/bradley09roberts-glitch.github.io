@@ -101,16 +101,25 @@ class PanEuropeanDC:
         history_days: int = 3 * 365,
         name: str | None = None,
         market_alpha: float | None = None,
+        market_scope: str = "all",
     ):
         """`market_alpha`: for domestic matches with closing prices, fit to
         alpha * goals + (1 - alpha) * market-implied expected goals (footy.modeling.market_xg)
-        instead of the goals alone. None: goals only."""
+        instead of the goals alone. None: goals only. `market_scope`: which closing prices
+        give the market xG (`market_xg.SCOPES`); a pinned model names its scope explicitly."""
+        from footy.modeling.market_xg import SCOPES
+
+        if market_scope not in SCOPES:
+            raise ValueError(f"unknown market_scope {market_scope!r}; one of {sorted(SCOPES)}")
         self.xi, self.reg_team, self.reg_league = xi, reg_team, reg_league
         self.euro_weight, self.history_days = euro_weight, history_days
-        self.market_alpha = market_alpha
+        self.market_alpha, self.market_scope = market_alpha, market_scope
+        suffix = ""
+        if market_alpha is not None and not name:
+            suffix = f"_ma{market_alpha:g}" + ("" if market_scope == "all" else f"_{market_scope}")
         self.name = (
             name or f"pan_euro_dc_xi{xi:g}_ew{euro_weight:g}_rt{reg_team:g}_rl{reg_league:g}"
-        ) + ("" if market_alpha is None or name else f"_ma{market_alpha:g}")
+        ) + suffix
         self._x: dict[str, float] = {}
         self.team_country: dict[str, str] = {}
 
@@ -122,7 +131,7 @@ class PanEuropeanDC:
             "euro_weight": self.euro_weight,
             "history_days": self.history_days,
             "market_alpha": self.market_alpha,
-        }
+        } | ({} if self.market_alpha is None else {"market_scope": self.market_scope})
 
     def fit(self, history: pd.DataFrame, cutoff_date: pd.Timestamp) -> None:
         h = history[(history.date >= cutoff_date - pd.Timedelta(days=self.history_days))]
@@ -149,7 +158,7 @@ class PanEuropeanDC:
         if self.market_alpha is not None:
             from footy.modeling.market_xg import default_market_xg
 
-            xg = default_market_xg()
+            xg = default_market_xg(self.market_scope)
             dom = (h.kind.to_numpy() == "domestic") & h.id.isin(xg.index).to_numpy()
             ids = h.id.to_numpy()[dom]
             al = self.market_alpha

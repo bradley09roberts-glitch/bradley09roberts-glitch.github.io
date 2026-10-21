@@ -46,7 +46,11 @@ def predict_domestic(
     record saved under its name without prices would be the base model's forecast, and since
     a fixture's record is never replaced it would block the real one when the prices arrive
     (the base model publishes its own records under its own name). A dry run still lists
-    every fixture, with `market_used`."""
+    every fixture, with `market_used` and, where prices were found but refused, why.
+
+    A record that used prices keeps, in `features.market_prices_used`, the consensus
+    probabilities, how many books each consensus averaged (`n_books_1x2`, `n_books_ou`), the
+    quote time and the price file's provenance. Never the prices (D-013, D-024)."""
     now = now or datetime.now(UTC)
     today = now.astimezone(UK).date()
     out = []
@@ -93,6 +97,9 @@ def predict_domestic(
                     "p_A": None if pd.isna(r.p_A) else float(r.p_A),
                     "p_over_2.5": None if pd.isna(r.p_O) else float(r.p_O),
                     "books": list(model.params()["books"]),
+                    # how many of those books' complete sets each consensus averaged
+                    "n_books_1x2": _count(r, "n_books_1x2") if used.used_1x2[j] else 0,
+                    "n_books_ou": _count(r, "n_books_ou") if used.used_ou[j] else 0,
                     "quote_time_utc": str(r.quote_time_utc),
                     "provenance": prov,
                 }
@@ -116,9 +123,16 @@ def predict_domestic(
                     missing_fields=missing,
                 )
             )
+        # why prices found for a fixture were not used (footy.modeling.lab.market_blend)
+        refused = (
+            used["refused"].tolist()
+            if used is not None and "refused" in used
+            else [None] * len(fixtures)
+        )
         if only_with_market or (market_model and not dry_run):
             keep = [j for j, f in enumerate(fixtures) if "market_prices_used" in f.features]
             fixtures = [fixtures[j] for j in keep]
+            refused = [refused[j] for j in keep]
             mp = _subset(mp, keep)
             if not fixtures:
                 continue
@@ -129,6 +143,7 @@ def predict_domestic(
                     "p1x2": mp.p1x2[j].round(3).tolist(),
                     "market_used": "market_prices_used" in f.features,
                 }
+                | ({"market_refused": refused[j]} if isinstance(refused[j], str) else {})
                 for j, f in enumerate(fixtures)
             )
             continue
@@ -145,6 +160,11 @@ def predict_domestic(
         )
         out.extend({"id": i, "fixture": f.ref} for i, f in zip(ids, fixtures, strict=True))
     return out
+
+
+def _count(row: pd.Series, column: str) -> int:
+    v = row.get(column)
+    return 0 if v is None or pd.isna(v) else int(v)
 
 
 def _subset(mp: MarketProbs, keep: list[int]) -> MarketProbs:

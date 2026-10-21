@@ -31,6 +31,27 @@ from footy.modeling.walkforward import SPLITS
 
 BASELINES = ["baseline_frequency", "baseline_poisson", "dixon_coles"]
 
+# football-data terms (D-013, D-024): no raw prices in reports. Over a handful of bets, the
+# figures computed from prices (average odds, profit, closing-line value, monthly sums...) can
+# give away an individual price, e.g. the average odds of a single bet are its price. Below
+# this many bets a result keeps only its counts.
+MIN_BETS_FOR_PRICE_FIGURES = 20
+COUNT_FIELDS = (
+    "bets",
+    "wins",
+    "losses",
+    "voids",
+    "hit_rate",
+    "hit_rate_denominator",
+    "staked_units",
+    "bankroll_start_gbp",
+    "unit_gbp",
+    "skipped_insufficient_funds",
+    "fixtures_bet",
+    "max_bets_per_fixture",
+    "closing_line_value_n",
+)
+
 
 def _reports_dir():
     d = get_settings().data_dir / "reports"
@@ -50,6 +71,18 @@ def _default(o):
     if isinstance(o, set):
         return sorted(o)
     return str(o)
+
+
+def withhold_prices(r: dict, min_bets: int = MIN_BETS_FOR_PRICE_FIGURES) -> dict:
+    """A profit result fit to publish: below `min_bets` bets only its counts are kept."""
+    if not r.get("bets") or r["bets"] >= min_bets:
+        return r
+    out = {k: r[k] for k in COUNT_FIELDS if k in r}
+    out["withheld"] = (
+        f"fewer than {min_bets} bets: figures computed from prices are withheld, since over "
+        "so few bets they can reveal an individual price (D-013)"
+    )
+    return out
 
 
 def choose_strategy(cands_val: pd.DataFrame, min_bets: int = 60) -> tuple[Strategy, list[dict]]:
@@ -129,7 +162,7 @@ def run(selected: str, lab_candidates: list[str], workers: int = 3) -> dict:
                 st = Strategy(**{**strategy_dict(s), "markets": market})
                 r = report(simulate(select(cands, st)))
                 r.pop("equity_curve_units", None) if split == "validation" else None
-                profit["results"][f"{s.name}|{split}|{'+'.join(market)}"] = r
+                profit["results"][f"{s.name}|{split}|{'+'.join(market)}"] = withhold_prices(r)
 
     selection = {
         "generated_at_utc": generated,
@@ -228,9 +261,23 @@ def _markdown(sel: dict, bench: dict, profit: dict) -> None:
         if not r.get("bets"):
             out.append(f"| {s} | {split} | {mk} | 0 | – | – | – | – | – |")
             continue
+        if r.get("withheld"):
+            w = "withheld"
+            out.append(
+                f"| {s} | {split} | {mk} | {r['bets']} | {r['hit_rate']:.3f} | {w} | {w} "
+                f"| {w} | {w} |"
+            )
+            continue
         out.append(
             f"| {s} | {split} | {mk} | {r['bets']} | {r['hit_rate']:.3f} | {r['average_odds']:.2f} "
             f"| {r['profit_units']:+.1f} | {r['yield']:+.3f} | {r['max_drawdown_units']:.1f} |"
         )
-    out += ["", "O/U 1.5, O/U 3.5 and BTTS: ROI unavailable (no historical prices).", ""]
+    out += [
+        "",
+        "O/U 1.5, O/U 3.5 and BTTS: ROI unavailable (no historical prices).",
+        "",
+        f"Withheld: with fewer than {MIN_BETS_FOR_PRICE_FIGURES} bets, figures computed from "
+        "prices could reveal an individual price (football-data terms, D-013).",
+        "",
+    ]
     (d / "domestic.md").write_text("\n".join(out))

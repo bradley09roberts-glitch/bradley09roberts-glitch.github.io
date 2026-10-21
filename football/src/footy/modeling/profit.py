@@ -67,8 +67,9 @@ def candidates(ledger: pd.DataFrame, prices: pd.DataFrame) -> pd.DataFrame:
     pre = prices[prices.phase == "pre_closing"].set_index(["match_id", "market_key", "selection"])
     close = prices[prices.phase == "closing"].set_index(["match_id", "market_key", "selection"])
     rows = []
-    for r in pred.itertuples(index=False):
-        rd = r._asdict()
+    # Records, not itertuples: itertuples renames columns that aren't identifiers
+    # ("p_over_2.5" became "_N"), which silently dropped every O/U 2.5 candidate.
+    for rd in pred.to_dict(orient="records"):
         hg, ag = rd["home_goals"], rd["away_goals"]
         for market, sels in MARKETS.items():
             for sel, col in sels.items():

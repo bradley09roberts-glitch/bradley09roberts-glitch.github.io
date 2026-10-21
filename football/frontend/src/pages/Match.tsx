@@ -143,7 +143,12 @@ function MatchDetail({ d }: { d: PredictionDetail }) {
         <MarketVersion d={d} other={d.counterpart} />
       )}
 
-      <Signals card={d} features={d.features} variant="full" />
+      <Signals
+        card={d}
+        features={d.features}
+        variant="full"
+        marketRecord={d.basis === "model_only" && d.counterpart?.basis === "model_and_market" ? d.counterpart : null}
+      />
 
       {s && <ResultSection d={d} />}
 

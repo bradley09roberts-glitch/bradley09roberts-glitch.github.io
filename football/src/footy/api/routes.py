@@ -20,8 +20,10 @@ from fastapi.responses import FileResponse
 from sqlalchemy import Engine, select, text
 from sqlalchemy.orm import Session
 
+from footy import models_of_record
 from footy.config import Settings
 from footy.models import Prediction, PredictionSettlement, Team
+from footy.models_of_record import Period
 from footy.reference import DIVISIONS, REFERENCE_DIR
 
 COMPETITION_NAMES = {
@@ -68,63 +70,89 @@ def iso_utc_text(value: object) -> str | None:
 # Model of record
 
 
-def primary_models(path: Path | None = None) -> dict[str, list[str]]:
-    """Model of record per competition group ("domestic", "uefa"), as an ordered list.
+def model_periods(path: Path | None = None) -> dict[str, list[Period]]:
+    """Every group's models of record with their effective-from times (footy.models_of_record).
 
-    reference/primary_models.json holds either one model name or a list per group, e.g.
-    `"domestic": ["market_tilt_dc", "dixon_coles"]`: for each fixture the record of record
-    is the first listed model that has a genuine pre-match record for it."""
-    path = path or PRIMARY_MODELS_PATH
-    data = json.loads(path.read_text()) if path.exists() else {}
-    out: dict[str, list[str]] = {}
-    for group, value in data.items():
-        if group.startswith("_"):
-            continue
-        names = [value] if isinstance(value, str) else value
-        # An empty list would leave the group with no record of record at all, silently.
-        if (
-            not isinstance(names, list)
-            or not names
-            or not all(isinstance(n, str) and n for n in names)
-        ):
-            raise ValueError(
-                f"{path.name}: {group!r} must be a model name or a non-empty list of names"
-            )
-        out[group] = list(dict.fromkeys(names))
-    return out
+    reference/primary_models.json gives each group ("domestic", "uefa") a list of periods,
+    e.g. `[{"from_utc": null, "models": ["dixon_coles"]}, {"from_utc": "2026-10-24T11:00:00Z",
+    "models": ["market_tilt_dc", "dixon_coles"]}]`; a plain name or a plain list of names is
+    one period from the start. A fixture takes the latest period starting at or before its
+    kickoff; within it, the record of record is the first listed model with a genuine
+    pre-match record for the fixture."""
+    return models_of_record.load(path or PRIMARY_MODELS_PATH)
+
+
+def primary_models(path: Path | None = None, at: datetime | None = None) -> dict[str, list[str]]:
+    """The ordered model list in effect at `at` (default now) per group. A group whose every
+    period starts later is left out."""
+    at = at or datetime.now(UTC)
+    out = {g: models_of_record.models_at(ps, at) for g, ps in model_periods(path).items()}
+    return {g: models for g, models in out.items() if models}
 
 
 def competition_group(competition: str) -> str:
     return "uefa" if competition in UEFA_COMPETITIONS else "domestic"
 
 
+def _as_periods(primary: dict) -> dict[str, list[Period]]:
+    """Periods per group; a plain {group: [names]} mapping is one period from the start."""
+    return {
+        g: v if v and all(isinstance(p, Period) for p in v) else [Period(None, tuple(v))]
+        for g, v in primary.items()
+    }
+
+
 def record_of_record(
-    fixture_ref: str, competition: str, genuine_models: Iterable[str], primary: dict
+    fixture_ref: str,
+    competition: str,
+    genuine_models: Iterable[str],
+    primary: dict,
+    when: datetime | None = None,
 ) -> str | None:
-    """The model whose record is the record of record for one fixture: the first model in
-    the group's list with a genuine pre-match record for it (None if no listed model has)."""
+    """The model whose record is the record of record for one fixture: the first model, in
+    the list of the period that applies at `when` (the fixture's kickoff; default now), with a
+    genuine pre-match record for it (None if no listed model has)."""
     have = set(genuine_models)
-    return next((m for m in primary.get(competition_group(competition), []) if m in have), None)
+    periods = _as_periods(primary).get(competition_group(competition), [])
+    order = models_of_record.models_at(periods, when or datetime.now(UTC))
+    return next((m for m in order if m in have), None)
 
 
 class RecordsOfRecord:
-    """Which model is the record of record for each fixture (one query per request)."""
+    """Which model is the record of record for each fixture (one query per request).
 
-    def __init__(self, s: Session, primary: dict[str, list[str]]):
-        self.primary = primary
+    The period that applies to a fixture is decided by the earliest kickoff saved with any of
+    its genuine pre-match records (00:00 UK on its date for a record that has none). A kickoff
+    brought forward after the first record is therefore honoured: a fixture that kicked off
+    before a switch never takes the new period. A genuine record can only be saved before its
+    own kickoff, so once the fixture has kicked off no new record can move that time."""
+
+    def __init__(self, s: Session, primary: dict):
+        self.periods = _as_periods(primary)
         self.genuine: dict[str, set[str]] = {}
+        self.when: dict[str, datetime] = {}
         rows = s.execute(
-            select(Prediction.fixture_ref, Prediction.model_name)
-            .where(Prediction.record_type == "genuine_prematch")
-            .distinct()
+            select(
+                Prediction.fixture_ref,
+                Prediction.model_name,
+                Prediction.kickoff_utc,
+                Prediction.match_date,
+            ).where(Prediction.record_type == "genuine_prematch")
         ).all()
-        for ref, model in rows:
+        for ref, model, kickoff, day in rows:
             self.genuine.setdefault(ref, set()).add(model)
+            t = models_of_record.fixture_time(kickoff, day)
+            self.when[ref] = min(self.when.get(ref, t), t)
+
+    def order_for(self, fixture_ref: str, competition: str) -> list[str]:
+        """The ordered model list of the period that applies to this fixture."""
+        when = self.when.get(fixture_ref)
+        periods = self.periods.get(competition_group(competition), [])
+        return models_of_record.models_at(periods, when) if when is not None else []
 
     def model_for(self, fixture_ref: str, competition: str) -> str | None:
-        return record_of_record(
-            fixture_ref, competition, self.genuine.get(fixture_ref, ()), self.primary
-        )
+        have = self.genuine.get(fixture_ref, set())
+        return next((m for m in self.order_for(fixture_ref, competition) if m in have), None)
 
     def is_primary(self, p: Prediction) -> bool:
         """True only for the genuine pre-match record(s) of the fixture's record-of-record
@@ -158,8 +186,19 @@ PROVENANCE_FIELDS = ("source", "raw_sha256", "raw_file_id", "retrieved_at")
 
 
 # The fields of a saved `market_prices_used` that the API passes on: derived probabilities,
-# the books' names, the quote time and the provenance. Nothing else, so a price can't leak.
-MARKET_FIELDS = ("p_H", "p_D", "p_A", "p_over_2.5", "books", "quote_time_utc", "provenance")
+# the books' names and how many each consensus averaged, the quote time and the provenance.
+# Nothing else, so a price can't leak.
+MARKET_FIELDS = (
+    "p_H",
+    "p_D",
+    "p_A",
+    "p_over_2.5",
+    "books",
+    "n_books_1x2",
+    "n_books_ou",
+    "quote_time_utc",
+    "provenance",
+)
 
 
 def _provenance(prov: object) -> dict:
@@ -203,9 +242,15 @@ def market_used(features: dict) -> dict | None:
         for market, key in (("1X2", "w_1x2"), ("OU_2.5", "w_ou"))
         if (w := _prob(params.get(key))) is not None
     }
+    counts = {
+        market: int(n)
+        for market, key in (("1X2", "n_books_1x2"), ("OU_2.5", "n_books_ou"))
+        if isinstance(n := m.get(key), int) and not isinstance(n, bool)
+    }
     return {
         "probabilities": probs,
         "books": [str(b) for b in m.get("books") or []],
+        "n_books": counts,  # books averaged per market; empty for older records
         "quote_time_utc": iso_utc_text(m.get("quote_time_utc")),
         "provenance": _provenance(m.get("provenance")),
         "devig": params.get("devig"),
@@ -342,7 +387,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         today = now.date()
         with Session(engine_fn()) as s:
             names, st = teams(s), settlements(s)
-            ror = RecordsOfRecord(s, primary_models())
+            ror = RecordsOfRecord(s, model_periods())
             rows = s.scalars(
                 select(Prediction)
                 .where(Prediction.match_date >= today - timedelta(days=1))
@@ -372,7 +417,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             if p is None:
                 raise HTTPException(404, "no such prediction")
             names, st = teams(s), settlements(s)
-            ror = RecordsOfRecord(s, primary_models())
+            ror = RecordsOfRecord(s, model_periods())
             out = card(p, names, st.get(p.id), ror)
             features = json.loads(p.features) if p.features else {}
             out["features"] = public_features(features)
@@ -418,7 +463,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         never mixed in one response."""
         with Session(engine_fn()) as s:
             names, st = teams(s), settlements(s)
-            ror = RecordsOfRecord(s, primary_models())
+            ror = RecordsOfRecord(s, model_periods())
             q = select(Prediction).where(Prediction.record_type == record_type)
             if competition:
                 q = q.where(Prediction.competition == competition)
@@ -431,20 +476,27 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         """The genuine pre-match record: settled predictions only, per market.
 
         Headline: by default each fixture counts once, with the first edition of its record
-        of record (the first model in primary_models.json with a genuine pre-match record for
-        it); primary_only=false counts every genuine pre-match record.
+        of record (the first model, in the primary_models.json period that applies at its
+        kickoff, with a genuine pre-match record for it); primary_only=false counts every
+        genuine pre-match record. A period appended later starts from its own time, so it
+        never changes a fixture already played.
 
         `by_basis` reports model + market and model-only records separately. By default each
-        fixture counts once per basis: the first listed model with a record of that basis, or
-        else the earliest such record, first edition. `paired` repeats both on the fixtures
-        that have both, for a like-for-like comparison.
+        fixture counts once per basis: the first listed model (same period) with a record of
+        that basis, or else the earliest such record, first edition. `paired` repeats both on
+        the fixtures that have both, for a like-for-like comparison.
+
+        `primary_models` is the list in effect now; `primary_model_periods` gives every
+        period with its start.
 
         There is no profit here: profit is reported only from real historical prices, by the
         profit simulation."""
-        primary = primary_models()
+        periods = model_periods()
+        now = datetime.now(UTC)
+        primary = {g: m for g, ps in periods.items() if (m := models_of_record.models_at(ps, now))}
         with Session(engine_fn()) as s:
             st = settlements(s)
-            ror = RecordsOfRecord(s, primary)
+            ror = RecordsOfRecord(s, periods)
             rows = s.scalars(
                 select(Prediction)
                 .where(Prediction.record_type == "genuine_prematch")
@@ -456,7 +508,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             by_fixture.setdefault(p.fixture_ref, []).append(p)
         one_per_fixture: dict[str, dict[str, Prediction]] = {b: {} for b in BASES}
         for ref, recs in by_fixture.items():
-            order = primary.get(competition_group(recs[0].competition), [])
+            order = ror.order_for(ref, recs[0].competition)
 
             def rank(x: Prediction, order: list[str] = order) -> tuple[int, int]:
                 listed = order.index(x.model_name) if x.model_name in order else len(order)
@@ -480,6 +532,10 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         return {
             "primary_only": primary_only,
             "primary_models": primary,
+            "primary_model_periods": {
+                g: [{**p.as_json(), "from_utc": iso_utc(p.from_utc)} for p in ps]
+                for g, ps in periods.items()
+            },
             **summarise(headline_rows, st),
             "by_basis": {
                 b: {**summarise(split[b], st), "models": sorted({p.model_name for p in split[b]})}

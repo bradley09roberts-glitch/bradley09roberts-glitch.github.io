@@ -63,8 +63,10 @@ same numbers: composite 0.9452, RPS 0.1875 (95% CI 0.1818 to 0.1932), accuracy 5
 `uv run footy fd-fixtures` fetches football-data's `fixtures.csv` (D-024) into the raw store.
 `footy predict-domestic --model market_tilt_dc --only-with-market` publishes only the fixtures
 with usable prices, so a later run with fresh prices can still publish the rest. Each record
-stores the consensus probabilities used and the raw file's SHA-256 in `features`. The prices
-themselves are not stored there.
+stores the consensus probabilities used and the raw file's SHA-256 in `features`. From
+21 October it also stores how many books each consensus averaged (`n_books_1x2`,
+`n_books_ou`): `books` names the books asked for, and one of them may lack a market. The
+prices themselves are not stored there.
 
 Prices arrive twice a week: Tuesday for midweek fixtures, Friday afternoon for the weekend.
 Until then a fixture has only the pure model's record.
@@ -85,8 +87,25 @@ Saturday fixture. In effect, prices are never more than four days older than the
 (Friday 00:00 to a late Monday kickoff).
 
 - **Publication time.** This is the file's HTTP `Last-Modified` time, kept with the raw
-  file. It is capped at the first retrieval, and the retrieval time is used when the header
-  is missing.
+  file. It is capped at the first retrieval (a later header is clock skew).
+- **No readable `Last-Modified`: the file is not used live** (changed 21 October 2026).
+  Until then the retrieval time stood in for a missing header. It can't: a file may sit on
+  the site for days before it is fetched, so Tuesday's prices retrieved on Friday would have
+  passed as Friday's. Now a missing, empty or unparseable header (or one without a time zone)
+  leaves the publication time unknown, and every price from that file is refused for live
+  predictions.
+  - `fd_fixtures.latest_snapshot` logs a warning naming the raw file and the reason, and puts
+    the reason in the snapshot's report (`live_use_refused`). `footy fd-fixtures` saves that
+    report, with `published_at: null`, in its job run, so it shows in the refresh history.
+  - In `market_blend.consensus`, an unknown publication time stays unknown: it is no longer
+    filled in with the quote time, and a fixture with any such price has none. The
+    staleness rule refuses it, and `predict-domestic --dry-run` lists the fixture with
+    `market_refused: "publication time unknown (no readable Last-Modified)"`. A model +
+    market candidate then publishes nothing for it.
+  - Season-file prices are unaffected: they are published when quoted (stamped at their
+    D-012 deadline). On the real database plus the stored `fixtures.csv` (which has a
+    header), the consensus table is identical before and after the change (45,398
+    fixtures, every column).
   - The file of 21 October was published on Tue 20 Oct at 10:57 UTC and first retrieved on
     Wed 21 Oct at 03:06 UTC.
   - The quote time used for the leakage checks stays the first retrieval, which is a safe
@@ -194,9 +213,12 @@ No leak was found.
 
 ### Reported, not changed
 
-- **`/api/import-issues` shows invalid cell values.** It returns import-issue details such
-  as `B365H='0'` or `AvgC>2.5='0.42'`, raw cell values from the season files (16 rows). They
-  are data faults, not usable prices, but masking them would be stricter.
+- **`/api/import-issues` showed invalid cell values** (fixed 21 October). It returned
+  import-issue details such as `B365H='0'` or `AvgC>2.5='0.42'`, raw cell values from the
+  season files (16 rows). It now sends the column and the reason only, e.g. `B365H: not a
+  valid price (value withheld)`. The stored issue is unchanged. `implausible_overround`
+  details still give the set's overround (e.g. `Avg 1X2 closing 0.837`), a derived sum
+  from which no single price can be recovered.
 - **A reverted file would not be picked up.** `latest_revision` picks the highest revision.
   If `fixtures.csv` reverted to byte-identical earlier content, the store would keep
   pointing at the newer revision. This is unlikely, since the dates change every week.

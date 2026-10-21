@@ -9,11 +9,14 @@ the raw store and never committed. The prices are quoted at the latest when the 
 first retrieved, so `quote_time_utc` is that retrieval time (identical content keeps its first
 retrieval). `published_utc` is when football-data published the file (its HTTP Last-Modified,
 if earlier than the retrieval), which says how old the prices may be: the model + market
-candidate refuses a file published before the fixture's own D-012 collection day.
+candidate refuses a file published before the fixture's own D-012 collection day. A file
+whose Last-Modified header is missing or unreadable has no known publication time, so its
+prices are not used for live predictions at all (the reason is logged and reported).
 """
 
 import csv
 import io
+import logging
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -34,6 +37,8 @@ from footy.ingest.fd_parse import (
 )
 from footy.ingest.raw_store import latest_revision, read_raw
 from footy.reference import DIVISIONS
+
+log = logging.getLogger(__name__)
 
 SOURCE = "football-data-fixtures"
 LOGICAL_KEY = "fixtures"
@@ -77,17 +82,26 @@ def fetch(
     )
 
 
-def published_time(last_modified: str | None, retrieved_at: datetime) -> datetime:
+def published_time(last_modified: str | None, retrieved_at: datetime) -> datetime | None:
     """When the file was published: its HTTP Last-Modified, but never later than the
-    retrieval (a missing, unreadable or future header gives the retrieval time)."""
+    retrieval (a header in the future is clock skew). None when the header is missing or
+    unreadable: the retrieval time can't stand in, because a file can sit on the site for
+    days before it is fetched (Tuesday's prices still there on Friday, say)."""
     ret = retrieved_at if retrieved_at.tzinfo else retrieved_at.replace(tzinfo=UTC)
     try:
         lm = parsedate_to_datetime(last_modified) if last_modified else None
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, IndexError):
         lm = None
     if lm is None or lm.tzinfo is None:
-        return ret
+        return None
     return min(lm.astimezone(UTC), ret)
+
+
+def unknown_publication(last_modified: str | None) -> str:
+    """Why a file's prices are refused for live use when its publication time is unknown."""
+    if not last_modified:
+        return "no Last-Modified header, so the publication time is unknown"
+    return f"unreadable Last-Modified header {last_modified!r}, so the publication time is unknown"
 
 
 def parse(
@@ -98,7 +112,8 @@ def parse(
 ) -> tuple[pd.DataFrame, dict]:
     """Pre-closing prices per fixture for the divisions this project covers. Returns the
     prices and a report (rows read, fixtures kept, unmapped names, unreadable dates, dropped
-    price sets). `published_at` defaults to `retrieved_at`."""
+    price sets). Without `published_at` the rows' `published_utc` is empty (unknown), and the
+    staleness rule in footy.modeling.lab.market_blend refuses them."""
     text_, _ = decode(content)
     reader = csv.DictReader(io.StringIO(text_))
     rows, unmapped, dropped, kept, read, bad_dates = [], set(), [], set(), 0, []
@@ -123,7 +138,7 @@ def parse(
             "home_team": aliases[home],
             "away_team": aliases[away],
             "quote_time_utc": retrieved_at,
-            "published_utc": published_at or retrieved_at,
+            "published_utc": published_at,
         }
         for books, market, sels in (
             (BOOKS_1X2, "1X2", {"H": "H", "D": "D", "A": "A"}),
@@ -168,7 +183,10 @@ def parse(
 
 def latest_snapshot(engine: Engine, raw_dir: Path | None = None) -> pd.DataFrame | None:
     """Prices from the latest stored `fixtures.csv`, or None if it was never fetched.
-    `attrs` carries the raw file's SHA-256, retrieval time and publication time."""
+    `attrs` carries the raw file's SHA-256, retrieval time and publication time. If the
+    publication time is unknown (no readable Last-Modified), `published_at` is None, the
+    reason is in `attrs["live_use_refused"]` and in the report, and a warning is logged: the
+    rows keep an empty `published_utc`, so no live prediction uses them."""
     from footy.config import get_settings
 
     raw_dir = raw_dir or get_settings().raw_dir
@@ -180,11 +198,23 @@ def latest_snapshot(engine: Engine, raw_dir: Path | None = None) -> pd.DataFrame
         content = read_raw(raw_dir, raw)
         published = published_time(raw.http_last_modified, raw.retrieved_at)
         df, report = parse(content, aliases, raw.retrieved_at, published)
+        refused = None if published is not None else unknown_publication(raw.http_last_modified)
+        if refused:
+            report["live_use_refused"] = refused
+            log.warning(
+                "fixtures.csv raw file %s (retrieved %s): %s; its prices will not be used "
+                "for live predictions",
+                raw.id,
+                raw.retrieved_at.isoformat(),
+                refused,
+            )
         df.attrs.update(
             raw_sha256=raw.sha256,
             retrieved_at=raw.retrieved_at.isoformat(),
-            published_at=published.isoformat(),
+            published_at=None if published is None else published.isoformat(),
             raw_file_id=raw.id,
             report=report,
         )
+        if refused:
+            df.attrs["live_use_refused"] = refused
     return df

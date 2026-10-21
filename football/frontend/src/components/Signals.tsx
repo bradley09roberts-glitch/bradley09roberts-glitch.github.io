@@ -1,10 +1,12 @@
 // Three separate things, never blended into one score:
-// - model confidence: how likely the model thinks its most likely outcome is;
+// - confidence: how likely the forecast thinks its most likely outcome is (the model's own on a
+//   model-only record; bookmakers' consensus blended with the model on a model + market one);
 // - data completeness: which inputs the prediction had and lacked;
 // - betting edge: whether a price beat the model's probability (needs odds).
 
 import type { JsonValue, PredictionCard } from "../api";
 import { formatPct, outcomeLabel } from "../format";
+import { href } from "../router";
 import { pickOf } from "./ProbBar";
 
 const FIELD_NAMES: Record<string, string> = {
@@ -45,15 +47,27 @@ function num(v: JsonValue | undefined): number | null {
   return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
+/** The confidence label: on a model + market record the probabilities are the bookmakers'
+ * consensus blended with the model, not the model's alone. */
+export function confidenceLabel(c: Pick<PredictionCard, "basis">): string {
+  return c.basis === "model_and_market" ? "Forecast confidence (bookmakers + model)" : "Model confidence";
+}
+
+/** The same fixture's model + market record, when this record is model-only. */
+export type MarketRecordRef = { id: number; model_name: string };
+
 export function Signals({
   card,
   features,
   variant = "compact",
+  marketRecord = null,
 }: {
   card: PredictionCard;
   /** The detail record's feature snapshot, for the full variant. */
   features?: Record<string, JsonValue>;
   variant?: "compact" | "full";
+  /** On a model-only record: the fixture's model + market record, if it has one. */
+  marketRecord?: MarketRecordRef | null;
 }) {
   const conf = confidenceOf(card);
   const missing = missingInputs(card);
@@ -62,11 +76,14 @@ export function Signals({
   const homeN = num(features?.home_matches_in_window);
   const awayN = num(features?.away_matches_in_window);
   const full = variant === "full";
+  const blended = card.basis === "model_and_market";
+  // Prices exist for this match, but in its model + market record rather than this one.
+  const pricesElsewhere = !vs && !odds && !blended && marketRecord !== null;
 
   return (
     <dl className={`signals signals-${variant}`}>
       <div className="signal">
-        <dt>Model confidence</dt>
+        <dt>{confidenceLabel(card)}</dt>
         <dd>
           {conf ? (
             <>
@@ -77,8 +94,9 @@ export function Signals({
           )}
           {full && (
             <p className="signal-note">
-              The probability of the single most likely result. It says how sure the model is,
-              not whether a bet is worth taking.
+              {blended
+                ? "The probability of the single most likely result, from the bookmakers' consensus blended with the model. It says how sure this forecast is, not whether a bet is worth taking."
+                : "The probability of the single most likely result. It says how sure the model is, not whether a bet is worth taking."}
             </p>
           )}
         </dd>
@@ -110,6 +128,20 @@ export function Signals({
           ) : odds ? (
             // The API has no betting-selection field for this record, so nothing can qualify.
             <strong>No qualifying bet</strong>
+          ) : pricesElsewhere && marketRecord ? (
+            // The match has prices, used by its model + market record: point there, never
+            // "no odds available".
+            <span>
+              <strong>
+                See the{" "}
+                {full ? (
+                  <a href={href(`/match/${marketRecord.id}`)}>model + market record</a>
+                ) : (
+                  "model + market record"
+                )}
+              </strong>{" "}
+              — this one uses no prices
+            </span>
           ) : (
             <span>
               <strong>No odds available</strong> — no betting selection
@@ -121,7 +153,9 @@ export function Signals({
                 ? vs.note
                 : odds
                   ? "Betting selections aren't published for this record, so none qualifies."
-                  : "An edge needs a bookmaker price to compare with. The probabilities still stand on their own."}
+                  : pricesElsewhere && marketRecord
+                    ? `Bookmakers' prices for this match went into the model + market record (${marketRecord.model_name}), not into this one, so any betting edge is shown there. The probabilities here are the model's alone.`
+                    : "An edge needs a bookmaker price to compare with. The probabilities still stand on their own."}
             </p>
           )}
         </dd>

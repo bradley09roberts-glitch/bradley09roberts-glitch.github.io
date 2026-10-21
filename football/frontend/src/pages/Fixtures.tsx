@@ -269,7 +269,10 @@ function FixtureCard({ cards }: { cards: PredictionCard[] }) {
         <p className="muted small">No match-result probabilities in this record.</p>
       )}
       <MarketGrid probabilities={card.probabilities} lines={CARD_LINES} variant="compact" />
-      <Signals card={card} />
+      <Signals
+        card={card}
+        marketRecord={card.basis === "model_only" ? (others.find((o) => o.basis === "model_and_market") ?? null) : null}
+      />
       <div className="fixture-foot">
         <FreshnessBadge
           freshness={card.data_freshness}

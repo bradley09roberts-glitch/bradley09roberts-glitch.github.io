@@ -13,6 +13,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from fdfixtures import REFERENCE
+from footy import models_of_record
 from footy.api import routes
 from footy.ingest.fd_import import sync_reference
 from footy.modeling.grid import markets_from_grid, poisson_grid
@@ -272,7 +273,14 @@ def timestamps(o, path=""):
 
 
 def test_every_timestamp_has_a_utc_offset(client, migrated_engine, records, primary_file):
-    primary_file(["tilt_m", "base_m"])
+    # The second period starts long after these fixtures, so it changes nothing; its start is
+    # sent like every other timestamp.
+    primary_file(
+        [
+            {"from_utc": None, "models": ["tilt_m", "base_m"]},
+            {"from_utc": "2030-01-01T00:00:00Z", "models": ["base_m"]},
+        ]
+    )
     settle_fixture_a(migrated_engine, 2, 2)
     urls = [
         "/api/health",
@@ -298,3 +306,146 @@ def test_iso_helpers():
     assert routes.iso_utc_text("2026-10-19 14:49:41.427434") == "2026-10-19T14:49:41.427434+00:00"
     assert routes.iso_utc_text("2026-10-21T19:00:00+01:00") == "2026-10-21T18:00:00+00:00"
     assert routes.iso_utc_text("not a time") == "not a time"
+
+
+# --- Effective-from periods (D-026). SYNTHETIC records as above. ------------------------------
+
+
+def period(start: datetime | None, *models: str) -> dict:
+    return {"from_utc": models_of_record.format_utc(start), "models": list(models)}
+
+
+def test_a_fixture_takes_the_period_in_force_at_its_kickoff(
+    client, migrated_engine, records, primary_file, tmp_path
+):
+    """Fixture A kicks off at KICKOFF; fixture C (also with both records) a day later. With a
+    switch between them, A keeps base_m and C takes tilt_m."""
+    later = KICKOFF + timedelta(days=1)
+    c = FixtureIn("E0", "2627", later.date(), later, "eng-mockford", "eng-testtown")
+    tilt_features = {"model_params": TILT_PARAMS, "market_prices_used": SYNTHETIC_MARKET}
+    (c_base,) = pub(migrated_engine, tmp_path, [c], "base_m")
+    c_tilt_fx = FixtureIn(
+        "E0", "2627", later.date(), later, "eng-mockford", "eng-testtown", features=tilt_features
+    )
+    (c_tilt,) = pub(migrated_engine, tmp_path, [c_tilt_fx], "tilt_m")
+    switch = KICKOFF + timedelta(hours=6)
+    primary_file([period(None, "base_m"), period(switch, "tilt_m", "base_m")])
+    cards = fixture_cards(client)
+    assert cards[records["a_base"]]["is_primary"] is True  # before the switch
+    assert cards[records["a_tilt"]]["is_primary"] is False
+    assert cards[c_tilt]["is_primary"] is True  # after it: the first listed model with a record
+    assert cards[c_base]["is_primary"] is False
+    # A switch exactly at a kickoff applies to that fixture.
+    primary_file([period(None, "base_m"), period(KICKOFF, "tilt_m", "base_m")])
+    assert fixture_cards(client)[records["a_tilt"]]["is_primary"] is True
+    perf = client.get("/api/performance").json()
+    assert perf["primary_model_periods"]["domestic"][1] == {
+        "from_utc": KICKOFF.isoformat(),
+        "models": ["tilt_m", "base_m"],
+    }
+
+
+def test_a_later_period_never_changes_a_settled_fixture(
+    client, migrated_engine, records, primary_file
+):
+    """The verifier's counter-example: with a plain list, naming a new model of record after a
+    fixture was played moved its headline record and so its accuracy. Appending a period from
+    the time of the switch leaves every played fixture as it was."""
+    primary_file("base_m")
+    settle_fixture_a(migrated_engine, 0, 1)  # an away win: base_m picked home, tilt_m away
+
+    def snapshot():
+        perf = client.get("/api/performance").json()
+        past = client.get("/api/past").json()["matches"]
+        return (
+            {k: perf[k] for k in ("published", "settled", "pending", "markets")},
+            perf["by_basis"],
+            perf["paired"],
+            sorted((c["id"], c["is_primary"]) for c in past),
+        )
+
+    before = snapshot()
+    assert before[0]["markets"]["1X2"]["accuracy"] == 0.0
+    switched_at = KICKOFF + timedelta(hours=3)  # after fixture A was played and settled
+    models_of_record.append_period(
+        routes.PRIMARY_MODELS_PATH, "domestic", ["tilt_m", "base_m"], switched_at, now=switched_at
+    )
+    assert snapshot() == before
+    detail = client.get(f"/api/predictions/{records['a_tilt']}").json()
+    assert detail["is_primary"] is False
+    # Fixture B (same kickoff, base_m only) keeps base_m too.
+    assert fixture_cards(client)[records["b_base"]]["is_primary"] is True
+    # The plain list (no start time) would have rewritten the played fixture: the test bites.
+    primary_file(["tilt_m", "base_m"])
+    rewritten = client.get("/api/performance").json()
+    assert rewritten["markets"]["1X2"]["accuracy"] == 1.0
+
+
+def test_a_period_starting_in_the_past_is_refused(records, primary_file):
+    primary_file("base_m")
+    with pytest.raises(ValueError, match="before now"):
+        models_of_record.append_period(
+            routes.PRIMARY_MODELS_PATH,
+            "domestic",
+            ["tilt_m", "base_m"],
+            KICKOFF - timedelta(hours=1),
+            now=KICKOFF,
+        )
+
+
+def test_appending_a_period_never_changes_a_fixture_that_kicked_off_before_it(
+    client, migrated_engine, records, primary_file, tmp_path
+):
+    """Independent check (verifier): append a period from SWITCH and compare every fixture's
+    record of record before and after. A fixture kicking off before SWITCH must not change; one
+    kicking off at or after it takes the new period. SYNTHETIC fixtures and models.
+
+    Includes a kickoff brought forward between records: the base_m record was saved with the
+    old kickoff (after SWITCH), the tilt_m record with the new one (before SWITCH). The fixture
+    kicked off before the switch was made, so it must keep base_m."""
+    switch = KICKOFF + timedelta(hours=1)
+    tilt_features = {"model_params": TILT_PARAMS, "market_prices_used": SYNTHETIC_MARKET}
+
+    def both(home, away, day, base_kickoff, tilt_kickoff=None):
+        """A base_m record, then a tilt_m record (with its own kickoff if given)."""
+        tk = base_kickoff if tilt_kickoff is None else tilt_kickoff
+        (b,) = pub(
+            migrated_engine,
+            tmp_path,
+            [FixtureIn("E0", "2627", day, base_kickoff, home, away)],
+            "base_m",
+        )
+        (t,) = pub(
+            migrated_engine,
+            tmp_path,
+            [FixtureIn("E0", "2627", day, tk, home, away, features=tilt_features)],
+            "tilt_m",
+        )
+        return b, t
+
+    nxt = DAY + timedelta(days=1)
+    cases = {
+        # name: ((base id, tilt id), kicked off before the switch?)
+        "a: 14:00, an hour before": ((records["a_base"], records["a_tilt"]), True),
+        "one second before": (
+            both("eng-mockford", "eng-testtown", DAY, switch - timedelta(seconds=1)),
+            True,
+        ),
+        "exactly at the switch": (both("eng-testtown", "eng-mockford", DAY, switch), False),
+        "brought forward to 14:00": (
+            both("eng-sampleton", "eng-testtown", DAY, KICKOFF + timedelta(hours=3), KICKOFF),
+            True,
+        ),
+        "kickoff unknown, switch day": (both("eng-mockford", "eng-sampleton", DAY, None), True),
+        "kickoff unknown, next day": (both("eng-mockford", "eng-sampleton", nxt, None), False),
+    }
+    primary_file("base_m")
+    before = {cid: c["is_primary"] for cid, c in fixture_cards(client).items()}
+    models_of_record.append_period(
+        routes.PRIMARY_MODELS_PATH, "domestic", ["tilt_m", "base_m"], switch, now=switch
+    )
+    after = {cid: c["is_primary"] for cid, c in fixture_cards(client).items()}
+    for name, ((b, t), played) in cases.items():
+        assert before[b] is True and before[t] is False, name
+        expected = (True, False) if played else (False, True)
+        assert (after[b], after[t]) == expected, name

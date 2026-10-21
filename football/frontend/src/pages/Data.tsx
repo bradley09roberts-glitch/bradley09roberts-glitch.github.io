@@ -210,7 +210,10 @@ function Method() {
       <dl className="data-signals">
         <div>
           <dt>Model confidence</dt>
-          <dd>How likely the model thinks its most likely outcome is.</dd>
+          <dd>
+            How likely the model thinks its most likely outcome is. On a model + market record it
+            is called forecast confidence (bookmakers + model), because the prices are blended in.
+          </dd>
         </div>
         <div>
           <dt>Data completeness</dt>
@@ -218,7 +221,10 @@ function Method() {
         </div>
         <div>
           <dt>Betting edge</dt>
-          <dd>Whether a bookmaker price beats the model's probability. Needs odds.</dd>
+          <dd>
+            Whether a bookmaker price beats the model's probability. Needs odds: a model-only
+            record whose match also has a model + market record points to that one.
+          </dd>
         </div>
       </dl>
       <p className="muted small">
