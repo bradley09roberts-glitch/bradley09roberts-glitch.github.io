@@ -19,7 +19,12 @@ from footy.models import FetchLog, utcnow
 
 SOURCE = "wikipedia"
 API_URL = "https://en.wikipedia.org/w/api.php"
-USER_AGENT = "footy-personal-model/0.1 (personal non-commercial research)"
+# Wikimedia's User-Agent policy asks for contact information; the project's repository is it.
+USER_AGENT = (
+    "footy-personal-model/0.1 "
+    "(https://github.com/bradley09roberts-glitch/bradley09roberts-glitch.github.io; "
+    "personal non-commercial research) python-httpx"
+)
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 
 
