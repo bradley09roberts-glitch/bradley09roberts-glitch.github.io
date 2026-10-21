@@ -119,6 +119,9 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
             ],
         }
 
+    from footy.api.routes import make_router
+
+    app.include_router(make_router(_engine, settings))
     return app
 
 
