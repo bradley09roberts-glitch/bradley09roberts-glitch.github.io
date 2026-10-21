@@ -248,5 +248,8 @@ def _base(name: str) -> Callable:
     return make
 
 
-# Weights chosen on the inner season 2022/23 only (see docs/research/market-blend.md).
-CANDIDATES: dict[str, Callable] = {}
+# Weights chosen on the inner season 2022/23 only, by a grid search over w_1x2 in 0..1 (step
+# 0.05) and w_ou in 0..1 (step 0.1) on recorded base grids (docs/research/market-blend.md).
+CANDIDATES: dict[str, Callable] = {
+    "market_tilt_dc": lambda: MarketTilt(_base("dixon_coles"), 1.0, 1.0, "market_tilt_dc"),
+}

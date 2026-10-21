@@ -16,6 +16,7 @@ from sqlalchemy import Engine, text
 
 from footy.fixtures import upcoming
 from footy.modeling.data import SECOND_TIER, load_matches
+from footy.modeling.grid import MarketProbs
 from footy.modeling.ledger import data_revision, git_commit
 from footy.publish import FixtureIn, publish
 
@@ -37,7 +38,10 @@ def predict_domestic(
     days: int = 7,
     dry_run: bool = False,
     notes: str | None = None,
+    only_with_market: bool = False,
 ) -> list[dict]:
+    """`only_with_market`: publish only the fixtures for which a model + market candidate
+    found usable prices, so a later run with fresher prices can still publish the rest."""
     now = now or datetime.now(UTC)
     today = now.astimezone(UK).date()
     out = []
@@ -106,6 +110,12 @@ def predict_domestic(
                     missing_fields=missing,
                 )
             )
+        if only_with_market:
+            keep = [j for j, f in enumerate(fixtures) if "market_prices_used" in f.features]
+            fixtures = [fixtures[j] for j in keep]
+            mp = _subset(mp, keep)
+            if not fixtures:
+                continue
         if dry_run:
             out.extend(
                 {
@@ -129,6 +139,20 @@ def predict_domestic(
         )
         out.extend({"id": i, "fixture": f.ref} for i, f in zip(ids, fixtures, strict=True))
     return out
+
+
+def _subset(mp: MarketProbs, keep: list[int]) -> MarketProbs:
+    def take(v):
+        return None if v is None else v[keep]
+
+    return MarketProbs(
+        p1x2=take(mp.p1x2),
+        p_over={k: v[keep] for k, v in mp.p_over.items()},
+        p_btts=take(mp.p_btts),
+        grid=take(mp.grid),
+        lam_h=take(mp.lam_h),
+        lam_a=take(mp.lam_a),
+    )
 
 
 def predict_euro(

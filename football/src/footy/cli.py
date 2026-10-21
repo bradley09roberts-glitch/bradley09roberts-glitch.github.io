@@ -52,6 +52,11 @@ def main(argv: list[str] | None = None) -> int:
     pd_.add_argument("--days", type=int, default=7)
     pd_.add_argument("--dry-run", action="store_true")
     pd_.add_argument("--notes")
+    pd_.add_argument(
+        "--only-with-market",
+        action="store_true",
+        help="model + market candidates: publish only fixtures with usable prices",
+    )
 
     pe = sub.add_parser("predict-euro", help="publish early-edition UEFA predictions")
     pe.add_argument(
@@ -197,6 +202,7 @@ def main(argv: list[str] | None = None) -> int:
                 days=args.days,
                 dry_run=args.dry_run,
                 notes=args.notes,
+                only_with_market=args.only_with_market,
             )
             ctx.detail.update(
                 kind="domestic", model=args.model, published=len(out), dry_run=args.dry_run
