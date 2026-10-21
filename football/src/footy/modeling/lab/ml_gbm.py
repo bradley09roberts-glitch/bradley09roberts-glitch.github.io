@@ -294,6 +294,7 @@ FEATURES = [
 ]
 BASE_FEATURES = list(FEATURES)
 FEATURES += ["gf_v", "ga_o_v", "sf_v", "sa_o_v", "ga_t_v", "gf_o_v", "on_g2", "on_s2"]
+FEATURES += ["kg", "ks", "kv"]
 
 
 def _days(s: pd.Series) -> np.ndarray:
@@ -317,6 +318,11 @@ class FeatureScan:
         "dfn": (1, 0.0, float),
         "last_day": (0, -10_000, np.int64),
         "recent": (0, -10_000, np.int64),  # the last four match days
+        "ka": (1, 0.0, float),  # Kalman attack [goals / SoT, team]: posterior means
+        "kd": (1, 0.0, float),  # Kalman defence
+        "Pa": (1, np.nan, float),  # ... and variances (NaN: not yet seen)
+        "Pd": (1, np.nan, float),
+        "k_day": (0, -1, np.int64),  # day of the team's last Kalman update
         "n": (0, 0.0, float),
         "sn": (0, 0.0, float),
         "last_season": (0, -1, np.int64),
@@ -335,9 +341,17 @@ class FeatureScan:
         eta: float = 0.05,
         hl_vlong: float = 50.0,
         eta_slow: float = 0.015,
+        k_p0: float = 0.04,
+        k_q: float = 2e-5,
+        k_season: float = 0.01,
+        k_tier: float = 0.04,
+        k_shift: float = 0.25,
+        k_phi_sot: float = 1.5,
     ):
         self.d = 0.5 ** (1 / np.array([hl_short, hl_long, hl_vlong]))
         self.etas = np.array([eta, eta, eta_slow, eta_slow])
+        self.k_p0, self.k_q, self.k_season, self.k_tier = k_p0, k_q, k_season, k_tier
+        self.k_shift, self.k_phi = k_shift, np.array([1.0, k_phi_sot])
         self.d_lg = 0.5 ** (1 / hl_league)
         self.prior_n, self.elo_k, self.elo_home = prior_n, elo_k, elo_home
         self.tid: dict[str, int] = {}
@@ -345,6 +359,7 @@ class FeatureScan:
         self.seasons: dict[str, int] = {}
         D = len(self.did)
         shapes = {"S": (3, 0, 8), "W": (3, 0, 8), "att": (4, 0), "dfn": (4, 0), "recent": (0, 4)}
+        shapes |= {"ka": (2, 0), "kd": (2, 0), "Pa": (2, 0), "Pd": (2, 0)}
         for name, (_, fill, dtype) in self.TEAM_STATE.items():
             setattr(self, name, np.full(shapes.get(name, (0,)), fill, dtype=dtype))
         lv = np.array([DEFAULT_LEVEL[k] for k in ("g", "s", "sh", "c")])
@@ -493,7 +508,31 @@ class FeatureScan:
             on_base + self.att[2, t] - self.dfn[2, o],
             sot_base + self.att[3, t] - self.dfn[3, o],
         ]
+        ka_t, _, pa_t, _ = self._k_prior(t, si, t2, day)
+        _, kd_o, _, pd_o = self._k_prior(o, si, t2, day)
+        cols += [
+            on_base + ka_t[0] - kd_o[0],
+            sot_base + ka_t[1] - kd_o[1],
+            pa_t[0] + pd_o[0],
+        ]
         return np.column_stack(cols)
+
+    def _k_prior(self, team, si, t2, day):
+        """Kalman state of `team` before a match on `day`: variance grows with the days since
+        its last match and at a new season; a change of tier shifts both ratings (a promoted
+        side meets stronger opposition) and widens them. Does not modify the state."""
+        ka, kd = self.ka[:, team].copy(), self.kd[:, team].copy()
+        pa, pdd = self.Pa[:, team].copy(), self.Pd[:, team].copy()
+        new = np.isnan(pa[0])
+        gap = np.where(self.k_day[team] >= 0, np.clip(day - self.k_day[team], 0, 400), 0)
+        infl = self.k_q * gap + np.where(self.last_season[team] != si, self.k_season, 0.0)
+        cur, last = t2 + 1, self.last_tier[team]
+        moved = (last > 0) & (last != cur)
+        shift = np.where(moved, np.where(cur < last, -self.k_shift, self.k_shift), 0.0)
+        infl = infl + np.where(moved, self.k_tier, 0.0)
+        pa = np.where(new, self.k_p0, pa + infl)
+        pdd = np.where(new, self.k_p0, pdd + infl)
+        return ka + shift, kd + shift, pa, pdd
 
     def _update(self, hi, ai, di, t2, si, day, y):
         lv, hv = self._level(di)
@@ -554,6 +593,25 @@ class FeatureScan:
             self.dfn[r, ai] -= eta * rh
             self.att[r, ai] += eta * ra
             self.dfn[r, hi] -= eta * ra
+        # Kalman ratings (time update, then one Newton step per measurement)
+        for team in (hi, ai):
+            ka, kd, pa, pdd = self._k_prior(team, si, t2, day)
+            self.ka[:, team], self.kd[:, team] = ka, kd
+            self.Pa[:, team], self.Pd[:, team] = pa, pdd
+            self.k_day[team] = day
+        for r, ((a, b), base_h, base_a, _) in enumerate((goals, sot)):
+            phi = self.k_phi[r]
+            for att_i, def_j, y_, base in ((hi, ai, a, base_h), (ai, hi, b, base_a)):
+                ok = ~np.isnan(y_)
+                ti, tj = att_i[ok], def_j[ok]
+                mu = np.exp(base[ok] + self.ka[r, ti] - self.kd[r, tj])
+                pa, pdd = self.Pa[r, ti], self.Pd[r, tj]
+                den = phi + (pa + pdd) * mu
+                g = (y_[ok] - mu) / den
+                self.ka[r, ti] += pa * g
+                self.kd[r, tj] -= pdd * g
+                self.Pa[r, ti] = pa - pa**2 * mu / den
+                self.Pd[r, tj] = pdd - pdd**2 * mu / den
         # schedule and seasons
         for team in (hi, ai):
             new_season = self.last_season[team] != si
