@@ -682,3 +682,51 @@ or list is still read as one period from the start.
 - **What "from now" covers.** Fixtures that haven't kicked off yet take the new period,
   including ones whose records were published before the switch. A fixture on the day of the
   switch whose records have no kickoff time keeps the old period (00:00 UK stands in).
+
+## D-027 Switching a model of record; the round-4 outcome (2026-10-21)
+
+**Switching rule.** A challenger replaces a model of record only if it has the lowest D-025
+composite on validation *and* is at least as good on test (composite, same fixtures) as the
+model it would replace. Otherwise the incumbent stays. The test run still happens once per
+model; this only stops a model that wins validation by chance from displacing one that has
+already been confirmed. It is the rule applied to UEFA in round 3 (D-026).
+
+**Size of the search, so the selection's optimism can be judged.** About 50 pure models have
+validation ledgers (the lab's eight families and their variants, the ensembles, the
+baselines). Five model + market candidates were compared (`market_tilt_dc`, `_shots`, `_ctx`,
+`_elo`, `_ens`). Nine UEFA configurations were compared over rounds 2 and 3.
+
+**Round 4 (model lab finished, every family audited):**
+
+| Five leagues | Validation 2023/24 | Test 2024/25+2025/26 | Decision |
+| --- | --- | --- | --- |
+| `market_tilt_ctx` (base `congestion_context_on_elo`) | 0.9441 | 0.9559 | not adopted: worse on test |
+| `market_tilt_shots` (model of record) | 0.9449 | 0.9555 | stays |
+| `congestion_context_on_elo` (pure) | 0.9517 | 0.9661 | new fallback |
+| `dixon_coles` (previous fallback) | 0.9598 | 0.9693 | last resort |
+
+- `congestion_context_on_elo` against `dixon_coles` on test: RPS −0.0019 (95% CI −0.0029 to
+  −0.0008), composite −0.0032 (−0.0068 to +0.0003). It is better in all five leagues and both
+  seasons, and on the Championship 2023/24 (0.9815 against 0.9874, not used for selection).
+- **Caveat:** its base, `elo_goals_gd`, was tuned on the mean of 2022/23 and 2023/24, against
+  D-025's rule that a family's own search stays before 2023/24. Its validation margin is
+  therefore flattering; the test result is the clean evidence, and there only the RPS gain is
+  significant. Until mid-season its context features are inactive, so it forecasts exactly
+  like `elo_goals_gd`.
+- `primary_models.json`, domestic from 2026-10-21T10:52:18Z: `market_tilt_shots`, then
+  `congestion_context_on_elo`, then `dixon_coles`. 69 fallback records were published first.
+
+**Live history window (bug fixed).** Live league predictions had been fitted on every result
+since 2018/19, while the backtests use the last three years (`walkforward.HISTORY_DAYS`), so
+live forecasts were not exactly the tested models. Live runs now use the same window
+(`walkforward.training_history`). The 64 `dixon_coles` records and the two Levante model +
+market records published on 21 Oct before the fix used all history; they stay as published.
+For the Levante records only the shape markets (O/U 1.5, 3.5, BTTS) could be affected, since
+1X2 and O/U 2.5 come from the prices. UEFA models were unaffected (their fit applies its own
+window, and the pinned model reproduces its records exactly).
+
+**Migrations.** Unattended jobs (`capture-odds`, run every 5 minutes, and `fd-fixtures`, run by
+scheduled check-ins) no longer migrate the database; they refuse to run until someone backs
+up `data/` and runs `uv run footy migrate`. Migration 0006 (distinct names for the two
+`raw_files` unique keys) had been applied by the capture loop before a backup was taken;
+row counts, raw-file hashes, integrity and the spot-check were unchanged afterwards.

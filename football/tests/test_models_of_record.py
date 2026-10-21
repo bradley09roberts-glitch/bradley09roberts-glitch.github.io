@@ -115,16 +115,25 @@ def test_missing_file_and_non_object(tmp_path):
         models_of_record.load(tmp_path / "list.json")
 
 
-def test_real_file_keeps_todays_meaning():
-    """The converted reference file: UEFA is pan_euro_mix until 21 Oct 2026, 04:30 UTC, then
-    pan_euro_mix_mxg; domestic is dixon_coles throughout."""
+def test_real_file_keeps_its_history():
+    """The real reference file is append-only: the periods recorded so far (D-026) keep their
+    meaning whatever is appended later. UEFA is pan_euro_mix until 21 Oct 2026, 04:30 UTC,
+    then pan_euro_mix_mxg; domestic is dixon_coles until 21 Oct 2026, 07:01:36 UTC, then
+    market_tilt_shots with a pure fallback. Start times only increase."""
     periods = routes.model_periods()
     assert set(periods) == {"domestic", "uefa"}
     at = models_of_record.models_at
     assert at(periods["uefa"], datetime(2026, 10, 21, 4, 29, tzinfo=UTC)) == ["pan_euro_mix"]
     assert at(periods["uefa"], SWITCH) == ["pan_euro_mix_mxg"]
-    for when in (datetime(2018, 8, 1, tzinfo=UTC), datetime(2027, 5, 1, tzinfo=UTC)):
-        assert at(periods["domestic"], when) == ["dixon_coles"]
+    assert at(periods["domestic"], datetime(2018, 8, 1, tzinfo=UTC)) == ["dixon_coles"]
+    assert at(periods["domestic"], datetime(2026, 10, 21, 7, 1, 35, tzinfo=UTC)) == ["dixon_coles"]
+    second = at(periods["domestic"], datetime(2026, 10, 21, 7, 1, 36, tzinfo=UTC))
+    assert second == ["market_tilt_shots", "dixon_coles"]
+    for group in periods.values():
+        starts = [p.from_utc for p in group]
+        assert starts[0] is None and all(
+            a < b for a, b in zip(starts[1:-1], starts[2:], strict=True)
+        )
 
 
 # --- appending a period ------------------------------------------------------------------------

@@ -317,21 +317,29 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(run_crosscheck(get_engine(), settings, fetch=args.fetch), indent=2))
     elif args.command == "capture-odds":
         from footy.capture import run_capture
-        from footy.db import get_engine, upgrade_to_head
+        from footy.db import SchemaNotCurrent, get_engine, require_head
 
-        upgrade_to_head()
+        try:  # runs unattended every 5 minutes: never migrates (see require_head)
+            require_head(get_engine())
+        except SchemaNotCurrent as e:
+            print(f"Refused: {e}")
+            return 1
         detail = run_capture(get_engine(), settings, horizon_days=args.horizon_days)
         print(json.dumps(detail, indent=2, default=str))
         return 0 if detail.get("status") in ("ok", "no_provider") else 1
     elif args.command == "fd-fixtures":
         from sqlalchemy.orm import Session
 
-        from footy.db import get_engine, upgrade_to_head
+        from footy.db import SchemaNotCurrent, get_engine, require_head
         from footy.ingest import fd_fixtures
         from footy.ingest.fd_download import PoliteClient
         from footy.ingest.jobs import job_run
 
-        upgrade_to_head()
+        try:  # run by scheduled check-ins: never migrates (see require_head)
+            require_head(get_engine())
+        except SchemaNotCurrent as e:
+            print(f"Refused: {e}")
+            return 1
         if not settings.fd_download:
             print("football-data downloads are switched off (FOOTY_FD_DOWNLOAD=false)")
             return 1

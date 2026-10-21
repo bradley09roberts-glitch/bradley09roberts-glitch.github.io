@@ -84,6 +84,22 @@ def head_revision() -> str:
     return head
 
 
+class SchemaNotCurrent(RuntimeError):
+    pass
+
+
+def require_head(engine: Engine) -> None:
+    """Refuse to work on a database that isn't at the latest migration. Unattended jobs (the
+    odds-capture loop, scheduled price fetches) call this instead of migrating, so a new
+    migration is only ever applied by someone running `footy migrate` after a backup."""
+    current, head = current_revision(engine), head_revision()
+    if current != head:
+        raise SchemaNotCurrent(
+            f"database is at migration {current}, the code expects {head}: "
+            "back up data/, then run `uv run footy migrate`"
+        )
+
+
 def upgrade_to_head(url: str | None = None) -> None:
     from alembic import command
     from alembic.config import Config
