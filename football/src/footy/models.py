@@ -8,6 +8,7 @@ migration 0002). Derived tables (`matches`, `fd_odds`) can always be rebuilt fro
 from datetime import UTC, date, datetime
 
 from sqlalchemy import (
+    Boolean,
     Date,
     DateTime,
     Float,
@@ -22,7 +23,14 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from footy.db import Base
 
-APPEND_ONLY_TABLES = ("raw_files", "data_corrections", "odds_snapshots", "capture_events")
+APPEND_ONLY_TABLES = (
+    "raw_files",
+    "data_corrections",
+    "odds_snapshots",
+    "capture_events",
+    "predictions",
+    "prediction_settlements",
+)
 
 
 class UTCDateTime(TypeDecorator):
@@ -284,6 +292,82 @@ class CaptureEvent(Base):
     lateness_seconds: Mapped[int] = mapped_column(Integer)
     raw_file_id: Mapped[int | None] = mapped_column(ForeignKey("raw_files.id"))
     error: Mapped[str | None] = mapped_column(Text)
+
+
+class EuroMatch(Base):
+    """A UEFA club competition match (Champions League, Europa League, Conference League and
+    their qualifiers). Scores are regulation time (90 minutes plus stoppage time); extra time
+    and penalties are recorded only as flags."""
+
+    __tablename__ = "euro_matches"
+    __table_args__ = (
+        UniqueConstraint("competition", "season", "match_date", "home_team", "away_team"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    competition: Mapped[str] = mapped_column(String(8))  # UCL UEL UECL UCLQ UELQ UECLQ
+    season: Mapped[str] = mapped_column(String(4))  # "2627"
+    stage: Mapped[str] = mapped_column(String(32))  # e.g. "League MD3", "Round of 16 leg 1"
+    match_date: Mapped[date] = mapped_column(Date, index=True)  # local date of the venue
+    kickoff_utc: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    home_team: Mapped[str] = mapped_column(ForeignKey("teams.team_key"))
+    away_team: Mapped[str] = mapped_column(ForeignKey("teams.team_key"))
+    home_goals: Mapped[int | None] = mapped_column(Integer)  # regulation time
+    away_goals: Mapped[int | None] = mapped_column(Integer)
+    extra_time: Mapped[bool] = mapped_column(Boolean, default=False)
+    penalties: Mapped[bool] = mapped_column(Boolean, default=False)
+    neutral: Mapped[bool] = mapped_column(Boolean, default=False)  # e.g. finals
+    status: Mapped[str] = mapped_column(String(16))  # played | scheduled | postponed
+    source: Mapped[str] = mapped_column(String(32))  # openfootball | wikipedia
+    source_ref: Mapped[str | None] = mapped_column(Text)  # file and line, or page and section
+    raw_file_id: Mapped[int | None] = mapped_column(ForeignKey("raw_files.id"))
+    model_exclusion: Mapped[str | None] = mapped_column(String(32))
+
+
+class Prediction(Base):
+    """A saved prediction. Append-only (database triggers): corrections and new editions are
+    new rows that point at what they supersede."""
+
+    __tablename__ = "predictions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fixture_ref: Mapped[str] = mapped_column(String(128), index=True)
+    competition: Mapped[str] = mapped_column(String(8))  # division code or UCL/UEL/UECL
+    season: Mapped[str] = mapped_column(String(4))
+    kickoff_utc: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    match_date: Mapped[date] = mapped_column(Date)
+    home_team: Mapped[str] = mapped_column(ForeignKey("teams.team_key"))
+    away_team: Mapped[str] = mapped_column(ForeignKey("teams.team_key"))
+    edition: Mapped[str] = mapped_column(String(16))  # early | lineup
+    # genuine_prematch | retrospective_backtest | exploratory | unavailable
+    record_type: Mapped[str] = mapped_column(String(24))
+    model_name: Mapped[str] = mapped_column(String(64))
+    model_version: Mapped[str] = mapped_column(String(64))
+    training_cutoff_utc: Mapped[datetime] = mapped_column(UTCDateTime)
+    created_at_utc: Mapped[datetime] = mapped_column(UTCDateTime)
+    probabilities: Mapped[str] = mapped_column(Text)  # JSON: every market
+    selections: Mapped[str] = mapped_column(Text)  # JSON: pick per market
+    features: Mapped[str] = mapped_column(Text)  # JSON: feature snapshot used
+    data_freshness: Mapped[str] = mapped_column(Text)  # JSON
+    missing_fields: Mapped[str] = mapped_column(Text)  # JSON list
+    notes: Mapped[str | None] = mapped_column(Text)
+    supersedes_id: Mapped[int | None] = mapped_column(ForeignKey("predictions.id"))
+    reason: Mapped[str | None] = mapped_column(Text)
+
+
+class PredictionSettlement(Base):
+    """Result of a saved prediction once the match is final. Append-only."""
+
+    __tablename__ = "prediction_settlements"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    prediction_id: Mapped[int] = mapped_column(ForeignKey("predictions.id"), index=True)
+    settled_at_utc: Mapped[datetime] = mapped_column(UTCDateTime)
+    home_goals: Mapped[int | None] = mapped_column(Integer)
+    away_goals: Mapped[int | None] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(16))  # settled | void | postponed
+    outcomes: Mapped[str] = mapped_column(Text)  # JSON: per market, correct/incorrect
+    source: Mapped[str] = mapped_column(String(64))
 
 
 def utcnow() -> datetime:

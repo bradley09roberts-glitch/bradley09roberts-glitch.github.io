@@ -32,6 +32,12 @@ def main(argv: list[str] | None = None) -> int:
     spot.add_argument("--seed", type=int, default=20261019)
     spot.add_argument("--markdown", help="write the comparison as Markdown to this path")
 
+    lab = sub.add_parser("lab-validate", help="walk-forward validation (2023/24) of named models")
+    lab.add_argument("models", nargs="+", help="model names (see footy.modeling.registry)")
+    lab.add_argument("--seasons", default="2324", help="comma-separated, default 2324")
+    lab.add_argument("--workers", type=int, default=2)
+    lab.add_argument("--baseline", default="baseline_frequency")
+
     cap = sub.add_parser("capture-odds", help="take any due pre-match odds snapshots (cron: 5 min)")
     cap.add_argument("--horizon-days", type=int, default=3)
 
@@ -87,6 +93,28 @@ def main(argv: list[str] | None = None) -> int:
                 f.write(md)
         print(md)
         return 0 if ok else 1
+    elif args.command == "lab-validate":
+        import pandas as pd
+
+        from footy.modeling.runner import compare, run_models, save, to_json
+
+        names = list(dict.fromkeys([args.baseline, *args.models]))
+        seasons = args.seasons.split(",")
+        leds = run_models(names, seasons, workers=args.workers)
+        split = "validation" if seasons == ["2324"] else "custom"
+        for m, led in leds.items():
+            save(m, led, split)
+        table = compare(leds, baseline=args.baseline)
+        out = (
+            settings.data_dir
+            / "lab"
+            / f"{'+'.join(sorted(args.models))[:120]}__{'-'.join(seasons)}.json"
+        )
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(to_json(table))
+        with pd.option_context("display.width", 250, "display.max_columns", 40):
+            print(table.to_string())
+        print(f"saved {out}")
     elif args.command == "capture-odds":
         from footy.capture import run_capture
         from footy.db import get_engine, upgrade_to_head
