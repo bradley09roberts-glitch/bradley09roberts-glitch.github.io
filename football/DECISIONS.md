@@ -541,3 +541,33 @@ seasons before 2023/24 only.
 
 **Numbering note:** the code and the lab modules written before this entry call this rule
 "D-022". D-022 is the European domestic leagues; references are being corrected to D-025.
+
+## D-026 Models of record (2026-10-21)
+
+**Rule:** each competition group has one model of record, named in
+`src/footy/reference/primary_models.json`. It is chosen by D-025 on validation and confirmed
+once on test, before the kickoff of any fixture it headlines. Other models' genuine
+pre-match records stay saved and visible; they are never deleted or re-labelled. When a
+better model is selected, it publishes its own records alongside, and the switch applies
+only to fixtures whose records were all made before their kickoffs.
+
+**UEFA competitions:** `pan_euro_mix_mxg` from 21 Oct 2026, 04:30 UTC. It is the 70/30 grid
+mixture of pan-European Dixon-Coles and Elo, as before, but the Dixon-Coles part fits each
+top-five domestic match to 0.25 × goals + 0.75 × the expected goals implied by its closing
+prices (`footy.modeling.market_xg`), with a stronger team ridge (10).
+
+| UEFA matches (all three competitions) | Validation 2023/24 composite | Test 2024/25+2025/26 composite | Test RPS | Test UCL RPS | Test 1X2 accuracy |
+| --- | --- | --- | --- | --- | --- |
+| `pan_euro_mix_mxg` | 0.9613 | 0.9666 | 0.2026 | 0.1964 | 55.5% |
+| `pan_euro_mix` (previous) | 0.9624 | 0.9686 | 0.2030 | 0.1962 | 55.4% |
+| Frequency baseline | 1.0000 | 1.0000 | 0.2313 | 0.2376 | 49.4% |
+
+Both rows use the same data (after migration 0005). Six market-trained variants scored within
+0.0005 of each other on validation, so the gain is small. It held on test, mostly in the
+totals and BTTS. The previous model's records for 21–22 October stay saved.
+
+**Domestic leagues:** `dixon_coles` until the model lab finishes. The model + market
+candidate `market_tilt_dc` (D-024) beats every pure model on validation (composite 0.9452
+against 0.9598). It becomes the model of record, with `dixon_coles` as the fallback for
+fixtures that have no prices yet, once the website can show a model and its fallback (an
+ordered list in `primary_models.json`) and the test run is done.

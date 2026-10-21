@@ -143,7 +143,8 @@ class PanEuropeanDC:
         home_on = (h.neutral.to_numpy() == 0).astype(float)
         days = (cutoff_date - h.date).dt.days.to_numpy()
         w = np.exp(-self.xi * days) * np.where(h.kind.to_numpy() == "euro", self.euro_weight, 1.0)
-        yh, ya = h.home_goals.to_numpy(float), h.away_goals.to_numpy(float)
+        # copies: the targets may be overwritten below (to_numpy can return a read-only view)
+        yh, ya = np.array(h.home_goals, dtype=float), np.array(h.away_goals, dtype=float)
         gh, ga = yh.astype(int), ya.astype(int)
         if self.market_alpha is not None:
             from footy.modeling.market_xg import default_market_xg
