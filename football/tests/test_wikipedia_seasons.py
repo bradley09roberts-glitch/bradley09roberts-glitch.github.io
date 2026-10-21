@@ -118,3 +118,71 @@ def test_crosscheck_pairs_boxes_with_openfootball_rows():
         assert c.kickoff_agrees and c.regulation_agrees and c.final_agrees and c.flags_agree
     assert result.comparisons[1].box.venue_local_time == "21:00 UTC+01:00"
     assert result.comparisons[0].of.match_date == date(2026, 3, 12)
+
+
+def test_wikipedia_corrects_a_missing_extra_time_and_marks_venues_abroad():
+    """openfootball lists a 3-1 that Wikipedia's goal minutes show was 2-1 after 90 minutes;
+    the second match's stadium line names another country (all SYNTHETIC)."""
+    from footy.europe.of_crosscheck import apply_corrections
+    from footy.europe.openfootball import check_ties
+
+    of = """\
+= UEFA Champions League 2024/25
+
+▪ Playoffs, Matchday 1
+  Tue Feb 11 2025
+    21:00  Beta SK (AUT)           v Alpha FC (GER)           2-1 (1-0)
+▪ Playoffs, Matchday 2
+  Wed Feb 19 2025
+    21:00  Alpha FC (GER)          v Beta SK (AUT)            3-1 (0-0)
+"""
+    wiki = (
+        "Times are CET, as listed by UEFA.\n==Knockout phase play-offs==\n"
+        + _box("2025-02-11", "21:00", "Beta", "AUT", "2–1", "Alpha", "GER",
+               goals1="*B {{goal|5}}\n*B {{goal|60}}", goals2="*A {{goal|70}}",
+               stadium="[[Puskás Aréna]], [[Budapest]], Hungary")
+        + _box("2025-02-19", "21:00", "Alpha", "GER", "3–1", "Beta", "AUT", aet="y",
+               goals1="*A {{goal|50}}\n*A {{goal|80}}\n*A {{goal|98}}", goals2="*B {{goal|20}}")
+    )  # fmt: skip
+    parsed = parse_openfootball(of.encode(), "cl.txt", "2425")
+    assert [m.model_exclusion for m in parsed.matches] == [None, None]
+    result = pair_boxes(parsed.matches, wiki_boxes(wiki, "Synthetic"))
+    fixes = apply_corrections(parsed.matches, result.comparisons)
+    check_ties(parsed)
+    first, second = parsed.matches
+    assert first.neutral and fixes[0].fields == ("neutral",)
+    assert (second.home_goals, second.away_goals, second.aet) == (2, 1, (3, 1))
+    assert second.extra_time and not second.penalties
+    assert fixes[1].fields == ("home_goals", "away_goals", "extra_time", "penalties")
+    assert [m.model_exclusion for m in parsed.matches] == [None, None]  # 3-3 after 90: ET
+
+
+def test_welsh_clubs_at_grounds_over_the_border_are_not_neutral():
+    from footy.europe.of_crosscheck import venue_abroad
+
+    text = _box("2024-07-11", "19:00", "Bala Town", "WAL", "1–0", "Paide", "EST",
+                stadium="[[Park Hall]], [[Oswestry]], England")  # fmt: skip
+    (box,) = wiki_boxes("Times are CEST.\n" + text, "Synthetic")
+    assert box.stadium_country == "ENG" and not venue_abroad(box)
+
+
+def test_files_listed_in_uk_time():
+    """The 2025/26 qualifying files give UK times (found by the cross-check)."""
+    text = """\
+= UEFA Champions League - Quali 2025/26
+
+▪ Play-offs
+  Tue Aug 26 2025
+    17:45  Alpha FC (KAZ)          v Beta SK (SCO)            0-0
+"""
+    m = parse_openfootball(text.encode(), "clq.txt", "2526").matches[0]
+    assert m.kickoff_utc == datetime(2025, 8, 26, 16, 45, tzinfo=UTC)
+    m = parse_openfootball(
+        text.replace("2025/26", "2024/25")
+        .replace("2025", "2024")
+        .replace("Tue Aug 26", "Mon Aug 26")
+        .encode(),
+        "clq.txt",
+        "2425",
+    ).matches[0]
+    assert m.kickoff_utc == datetime(2024, 8, 26, 15, 45, tzinfo=UTC)
