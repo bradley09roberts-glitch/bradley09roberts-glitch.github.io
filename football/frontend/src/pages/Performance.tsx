@@ -2,7 +2,16 @@
 // /api/performance, which counts settled genuine_prematch predictions; retrospective results
 // live in the backtest lab and in the retrospective list on Past matches.
 
-import { endpoints, useApi, type Performance as PerformanceData, type PerformanceMarket, type PredictionCard } from "../api";
+import {
+  endpoints,
+  useApi,
+  type Basis,
+  type Performance as PerformanceData,
+  type PerformanceMarket,
+  type PerformanceRecord,
+  type PredictionCard,
+} from "../api";
+import { BasisBadge } from "../components/Badge";
 import { ApiView, Empty } from "../components/StateViews";
 import {
   formatLondon,
@@ -88,8 +97,14 @@ export function Performance(_props: PageProps) {
             on each bar of the average probability.
           </li>
           <li>
-            Each saved prediction counts once, so a fixture predicted by two models, or in two
-            editions, counts more than once.
+            The headline counts each fixture once, using its <strong>record of record</strong>:
+            the first model in the published order that saved a pre-match prediction for it, and
+            that model's first edition.
+          </li>
+          <li>
+            <strong>Model + market</strong> records blend in bookmakers' prices collected before
+            the prediction; <strong>model only</strong> records use past results alone. They are
+            counted separately, each fixture once per kind, and neither replaces the other.
           </li>
           <li>
             With fewer than {SMALL_SAMPLE} settled matches a market's figures can move a long way
@@ -125,6 +140,7 @@ function Record({ d, latest }: { d: PerformanceData; latest: PredictionCard | un
             <dd>{formatNumber(d.pending, 0)}</dd>
           </div>
         </dl>
+        <RecordOfRecord primary={d.primary_models} />
         {latest && <LatestSettled card={latest} />}
       </section>
 
@@ -145,7 +161,120 @@ function Record({ d, latest }: { d: PerformanceData; latest: PredictionCard | un
           <MarketTable markets={markets} />
         </section>
       )}
+
+      <ByBasis d={d} />
     </>
+  );
+}
+
+const GROUP_NAMES: Record<string, string> = { domestic: "Domestic leagues", uefa: "UEFA competitions" };
+
+/** "Domestic leagues: market_tilt_dc, otherwise dixon_coles." from primary_models. */
+function RecordOfRecord({ primary }: { primary: Record<string, string[]> | undefined }) {
+  const groups = Object.entries(primary ?? {}).filter(([, models]) => models.length > 0);
+  if (groups.length === 0) return null;
+  return (
+    <p className="muted small latest-settled">
+      Record of record:{" "}
+      {groups.map(([group, models], i) => (
+        <span key={group}>
+          {i > 0 && "; "}
+          {GROUP_NAMES[group] ?? group}{" "}
+          {models.map((m, j) => (
+            <span key={m}>
+              {j > 0 && ", otherwise "}
+              <code>{m}</code>
+            </span>
+          ))}
+        </span>
+      ))}
+      .
+    </p>
+  );
+}
+
+const BASES: Basis[] = ["model_and_market", "model_only"];
+
+const BASIS_TEXT: Record<Basis, string> = {
+  model_and_market:
+    "Bookmakers' prices collected before the prediction were blended in. Prices arrive on Tuesdays and Fridays, so only fixtures priced by then have one.",
+  model_only:
+    "Past results alone, without prices. These continue for every fixture, so the pure model can still be compared with the market.",
+};
+
+function ByBasis({ d }: { d: PerformanceData }) {
+  if (!d.by_basis) return null;
+  return (
+    <section className="card" aria-labelledby="by-basis">
+      <h2 id="by-basis">Model + market and model only</h2>
+      {BASES.map((b) => (
+        <BasisBlock key={b} basis={b} r={d.by_basis[b]} />
+      ))}
+      {d.paired && <Paired p={d.paired} />}
+    </section>
+  );
+}
+
+function BasisBlock({ basis, r }: { basis: Basis; r: PerformanceRecord & { models: string[] } }) {
+  const markets = Object.entries(r.markets).sort(([a], [b]) => marketOrder(a) - marketOrder(b));
+  return (
+    <div className="basis-block">
+      <h3>
+        <BasisBadge basis={basis} />
+      </h3>
+      <p className="muted small">{BASIS_TEXT[basis]}</p>
+      <dl className="kpis">
+        <div className="kpi">
+          <dt>Published</dt>
+          <dd>{formatNumber(r.published, 0)}</dd>
+        </div>
+        <div className="kpi">
+          <dt>Settled</dt>
+          <dd>{formatNumber(r.settled, 0)}</dd>
+        </div>
+        <div className="kpi">
+          <dt>Awaiting result</dt>
+          <dd>{formatNumber(r.pending, 0)}</dd>
+        </div>
+      </dl>
+      <p className="muted small">
+        {r.models.length > 0 ? (
+          <>
+            {r.models.length === 1 ? "Model" : "Models"}:{" "}
+            {r.models.map((m, i) => (
+              <span key={m}>
+                {i > 0 && ", "}
+                <code>{m}</code>
+              </span>
+            ))}
+          </>
+        ) : (
+          "None published yet."
+        )}
+      </p>
+      {r.settled > 0 && markets.length > 0 && <MarketTable markets={markets} />}
+    </div>
+  );
+}
+
+function Paired({ p }: { p: PerformanceData["paired"] }) {
+  if (p.fixtures === 0) return null;
+  const a = p.model_and_market.markets["1X2"];
+  const b = p.model_only.markets["1X2"];
+  return (
+    <p className="small basis-paired">
+      <strong>Like for like:</strong> {formatNumber(p.fixtures, 0)}{" "}
+      {p.fixtures === 1 ? "fixture has" : "fixtures have"} both kinds of record.{" "}
+      {a && b ? (
+        <>
+          On the {formatNumber(a.n, 0)} settled, the match result's average probability of the
+          actual result was {formatPct(a.mean_p_actual)} with the market and{" "}
+          {formatPct(b.mean_p_actual)} without.
+        </>
+      ) : (
+        "None of them has been settled yet."
+      )}
+    </p>
   );
 }
 

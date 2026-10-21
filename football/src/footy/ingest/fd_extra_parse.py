@@ -1,11 +1,17 @@
 """Parse a football-data "extra leagues" CSV (new/{code}.csv). No database access.
 
 One file holds every season of one league. Layout, checked on the ten European files on
-2026-10-21: Country, League, Season, Date, Time, Home, Away, HG, AG, Res, then closing prices
-(PSC*, MaxC*, AvgC*, and BFEC*, B365C* in most files). Only results are parsed; the prices
-stay in the raw file (D-016 limits prices to the five core top divisions). Season is
+2026-10-21: Country, League, Season, Date, Time, Home, Away, HG, AG, Res, then closing 1X2
+prices only (PSC*, MaxC*, AvgC*, and BFEC*, B365C* in every file but Russia's). Season is
 "2018/2019" for split-year leagues and "2018" for calendar-year ones. Times are read as UK
 local time, as in the main layout (D-005, D-022).
+
+Prices (fdx-3): the closing 1X2 prices of the books parsed in the main layout (Pinnacle,
+Bet365, Betfair Exchange and the market average; never the maximum, D-016), stamped at
+kickoff, with the D-017 checks (a price <= 1.0 or unparseable is dropped; a set whose
+implied probabilities sum outside 0.95-1.30 is dropped and logged). The files carry no
+pre-closing or O/U prices. Pre-closing columns would not be imported even if they appeared:
+the D-012 collection times are documented for the main-layout files, not these.
 
 Rules follow D-017 where they apply, plus two that only arise in these leagues (D-022):
 
@@ -32,6 +38,7 @@ from footy.ingest.fd_parse import (
     ParsedMatch,
     _int,
     _parse_date,
+    _parse_odds,
     decode,
     uk_kickoff,
 )
@@ -44,7 +51,8 @@ from footy.seasons import (
     season_start_year,
 )
 
-EXTRA_PARSER_VERSION = "fdx-2"  # fdx-2: keep repeat meetings (matches.meeting)
+# fdx-2: keep repeat meetings (matches.meeting); fdx-3: closing 1X2 prices (D-022).
+EXTRA_PARSER_VERSION = "fdx-3"
 # football-data's Country value for each extra-league code.
 FD_COUNTRY_NAMES = {
     "AUT": "Austria",
@@ -207,7 +215,7 @@ def _parse_row(n, row, division, expected_country, label, issues) -> ParsedMatch
         except ValueError:
             issues.append(Issue(n, "warning", "bad_time", f"{label}: Time={row['Time']!r}"))
 
-    return ParsedMatch(
+    m = ParsedMatch(
         source_row=n,
         division=division,
         match_date=match_date,
@@ -226,6 +234,10 @@ def _parse_row(n, row, division, expected_country, label, issues) -> ParsedMatch
         fd_away_xg=None,
         stats={name: None for name in STAT_COLUMNS},
     )
+    odds_issues: list[Issue] = []
+    m.odds = _parse_odds(n, row, m, odds_issues, phases=("closing",))
+    issues += [Issue(i.source_row, i.severity, i.code, f"{label}: {i.detail}") for i in odds_issues]
+    return m
 
 
 def _flag_outside_clubs(

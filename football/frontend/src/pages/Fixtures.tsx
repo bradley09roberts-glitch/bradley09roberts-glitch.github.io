@@ -4,7 +4,7 @@
 
 import { useMemo } from "react";
 import { endpoints, useApi, type FixturesResponse, type PredictionCard } from "../api";
-import { EditionBadge, RecordTypeBadge } from "../components/Badge";
+import { BasisBadge, EditionBadge, RecordTypeBadge, basisLabel } from "../components/Badge";
 import { FreshnessBadge } from "../components/FreshnessBadge";
 import { MarketGrid } from "../components/MarketGrid";
 import { ProbBar } from "../components/ProbBar";
@@ -125,6 +125,8 @@ function group(data: FixturesResponse): CompetitionGroup[] {
         if (list) list.push(card);
         else byRef.set(card.fixture_ref, [card]);
       }
+      // The record of record leads; the others stay in the API's order.
+      for (const list of byRef.values()) list.sort((a, b) => Number(b.is_primary) - Number(a.is_primary));
       const byDay = new Map<string, FixtureGroup[]>();
       for (const [ref, cards] of byRef) {
         const first = cards[0];
@@ -246,6 +248,7 @@ function FixtureCard({ cards }: { cards: PredictionCard[] }) {
     <article className="card fixture">
       <div className="fixture-meta">
         <span className="kickoff">{card.kickoff_utc ? formatTime(card.kickoff_utc) : "Time TBC"}</span>
+        <BasisBadge basis={card.basis} />
         <EditionBadge edition={card.edition} />
         {card.record_type !== "genuine_prematch" && <RecordTypeBadge type={card.record_type} />}
         <KickoffStatus card={card} />
@@ -284,6 +287,7 @@ function FixtureCard({ cards }: { cards: PredictionCard[] }) {
             <span key={o.id}>
               {i > 0 && ", "}
               <a href={href(`/match/${o.id}`)}>{o.model_name}</a>
+              <span className="muted"> ({basisLabel(o.basis).toLowerCase()})</span>
             </span>
           ))}
           <span className="muted"> (shown: {card.model_name})</span>

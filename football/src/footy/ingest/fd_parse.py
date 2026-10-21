@@ -1,7 +1,8 @@
 """Parse a football-data.co.uk season CSV into matches, prices and issues. No database access.
 
 Column key: https://football-data.co.uk/notes.txt (checked 2026-10-19). Prices are parsed for
-the top divisions only (DECISIONS.md D-016); second tiers are used for results and shots.
+every main-layout division (fd-5; the five top divisions only until then, DECISIONS.md D-016
+and D-022): the same columns, books and quality rules everywhere.
 """
 
 import csv
@@ -12,8 +13,9 @@ from zoneinfo import ZoneInfo
 
 UK = ZoneInfo("Europe/London")
 # fd-2: drop implausible-overround sets; fd-3: exclude bare results; fd-4: keep repeat
-# meetings where the division allows them (matches.meeting, D-022).
-PARSER_VERSION = "fd-4"
+# meetings where the division allows them (matches.meeting, D-022); fd-5: prices for every
+# main-layout division, not only the five top divisions (D-022).
+PARSER_VERSION = "fd-5"
 
 # (bookmaker, pre-closing columns, closing columns); "{s}" is H/D/A. The first column found
 # is used. BbAv* is Betbrain's average, football-data's market average before 2019/20.
@@ -289,9 +291,13 @@ def _parse_row(n, row, division, with_odds, issues) -> ParsedMatch | None:
     return m
 
 
-def _parse_odds(n, row, m: ParsedMatch, issues) -> list[ParsedOdds]:
+def _parse_odds(
+    n, row, m: ParsedMatch, issues, phases=("pre_closing", "closing")
+) -> list[ParsedOdds]:
+    """The 1X2 and O/U 2.5 price sets of one row, in `phases`. A layout whose pre-closing
+    prices are not collected at the documented D-012 times passes `phases=("closing",)`."""
     pre_time = collection_deadline(m.match_date)
-    if m.kickoff_utc is not None and m.kickoff_utc <= pre_time:
+    if "pre_closing" in phases and m.kickoff_utc is not None and m.kickoff_utc <= pre_time:
         issues.append(
             Issue(
                 n, "warning", "kickoff_before_collection", "pre-closing time is not before kickoff"
@@ -311,6 +317,8 @@ def _parse_odds(n, row, m: ParsedMatch, issues) -> list[ParsedOdds]:
                 ("pre_closing", pre_cols, pre_time, "fd_collection_deadline"),
                 ("closing", close_cols, close_time, close_basis),
             ):
+                if phase not in phases:
+                    continue
                 found = []
                 for token, sel in selections.items():
                     col = next(

@@ -103,7 +103,8 @@ function Sources() {
           <p>
             Historical results, match statistics and bookmaker prices from 2018/19: the big five
             leagues and their second tiers, plus other European top divisions (results only) for
-            rating clubs in UEFA competitions. Prices are read for the big five only.
+            rating clubs in UEFA competitions. Prices are read for the big five only. Its fixtures
+            file gives this week's pre-match prices, used by model + market records.
           </p>
           <p className="muted small">
             Fetched politely (one request every 2 seconds, cached; the current season at most
@@ -190,6 +191,13 @@ function Method() {
           <strong>Choosing a model.</strong> Models are compared on 2023/24 (validation); the chosen
           one is then run once on 2024/25 and 2025/26 (test). See the{" "}
           <a href={href("/lab")}>backtest lab</a>.
+        </li>
+        <li>
+          <strong>Model + market.</strong> Where football-data has published bookmakers' prices
+          for a fixture (collected on Tuesdays and Fridays), a second record blends them in. It
+          keeps the de-vigged probabilities it used and the price file's fingerprint, never the
+          prices. The pure model's record continues alongside, and the two are counted
+          separately on <a href={href("/performance")}>Performance</a>.
         </li>
         <li>
           <strong>Market benchmark.</strong> The model is compared with de-vigged closing prices on

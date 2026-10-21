@@ -12,7 +12,7 @@ import {
   type Probabilities,
   type RecordType,
 } from "../api";
-import { EditionBadge, RecordTypeBadge } from "../components/Badge";
+import { BasisBadge, EditionBadge, RecordTypeBadge } from "../components/Badge";
 import { ApiView, Empty } from "../components/StateViews";
 import { sortByCompetition } from "../competitions";
 import {
@@ -479,6 +479,7 @@ function PastRow({
           {card.kickoff_utc && <span className="kickoff">{formatTime(card.kickoff_utc)}</span>}
           {showCompetition && <span className="past-comp">{card.competition_name}</span>}
           {card.edition !== "early" && <EditionBadge edition={card.edition} />}
+          {card.basis === "model_and_market" && <BasisBadge basis={card.basis} />}
           {showModel && <span className="past-model">{card.model_name}</span>}
         </div>
         <h3 className="past-teams">

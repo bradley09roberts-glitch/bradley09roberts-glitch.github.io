@@ -3,10 +3,14 @@
 Everything returned is read from saved records (predictions, settlements, ledgers, manifests)
 or the imported match data. Nothing is computed afresh for display, so the site can only
 show numbers that already exist in a record.
+
+Every timestamp is sent as ISO 8601 in UTC with an explicit offset (`+00:00`), per D-005.
+Bookmakers' prices are never sent (D-013, D-024): a model + market record exposes only the
+de-vigged consensus probabilities it used and where the prices came from.
 """
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
@@ -18,7 +22,7 @@ from sqlalchemy.orm import Session
 
 from footy.config import Settings
 from footy.models import Prediction, PredictionSettlement, Team
-from footy.reference import DIVISIONS
+from footy.reference import DIVISIONS, REFERENCE_DIR
 
 COMPETITION_NAMES = {
     **{c: d.name for c, d in DIVISIONS.items()},
@@ -26,20 +30,245 @@ COMPETITION_NAMES = {
     "UEL": "Europa League",
     "UECL": "Conference League",
 }
+UEFA_COMPETITIONS = ("UCL", "UEL", "UECL")
+PRIMARY_MODELS_PATH = REFERENCE_DIR / "primary_models.json"
+
+MODEL_AND_MARKET = "model_and_market"
+MODEL_ONLY = "model_only"
+BASES = (MODEL_AND_MARKET, MODEL_ONLY)
 
 
-def primary_models() -> dict[str, str]:
-    """Model of record per competition group (reference/primary_models.json)."""
-    from footy.reference import REFERENCE_DIR
+# ---------------------------------------------------------------------------------------------
+# Timestamps
 
-    path = REFERENCE_DIR / "primary_models.json"
+
+def iso_utc(dt: datetime | None, timespec: str = "auto") -> str | None:
+    """ISO 8601 in UTC with a `+00:00` offset. A naive value is stored UTC (D-005)."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC).isoformat(timespec=timespec)
+
+
+def iso_utc_text(value: object) -> str | None:
+    """A saved timestamp string (e.g. "2026-10-21 03:06:09+00:00") in the same form as
+    `iso_utc`. Anything that isn't a parseable timestamp is returned unchanged."""
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        return str(value)
+    try:
+        return iso_utc(datetime.fromisoformat(value.strip()))
+    except ValueError:
+        return value
+
+
+# ---------------------------------------------------------------------------------------------
+# Model of record
+
+
+def primary_models(path: Path | None = None) -> dict[str, list[str]]:
+    """Model of record per competition group ("domestic", "uefa"), as an ordered list.
+
+    reference/primary_models.json holds either one model name or a list per group, e.g.
+    `"domestic": ["market_tilt_dc", "dixon_coles"]`: for each fixture the record of record
+    is the first listed model that has a genuine pre-match record for it."""
+    path = path or PRIMARY_MODELS_PATH
     data = json.loads(path.read_text()) if path.exists() else {}
-    return {k: v for k, v in data.items() if not k.startswith("_")}
+    out: dict[str, list[str]] = {}
+    for group, value in data.items():
+        if group.startswith("_"):
+            continue
+        names = [value] if isinstance(value, str) else value
+        if not isinstance(names, list) or not all(isinstance(n, str) and n for n in names):
+            raise ValueError(f"{path.name}: {group!r} must be a model name or a list of names")
+        out[group] = list(dict.fromkeys(names))
+    return out
 
 
-def is_primary(p: Prediction, primary: dict[str, str]) -> bool:
-    group = "uefa" if p.competition in ("UCL", "UEL", "UECL") else "domestic"
-    return primary.get(group) == p.model_name
+def competition_group(competition: str) -> str:
+    return "uefa" if competition in UEFA_COMPETITIONS else "domestic"
+
+
+def record_of_record(
+    fixture_ref: str, competition: str, genuine_models: Iterable[str], primary: dict
+) -> str | None:
+    """The model whose record is the record of record for one fixture: the first model in
+    the group's list with a genuine pre-match record for it (None if no listed model has)."""
+    have = set(genuine_models)
+    return next((m for m in primary.get(competition_group(competition), []) if m in have), None)
+
+
+class RecordsOfRecord:
+    """Which model is the record of record for each fixture (one query per request)."""
+
+    def __init__(self, s: Session, primary: dict[str, list[str]]):
+        self.primary = primary
+        self.genuine: dict[str, set[str]] = {}
+        rows = s.execute(
+            select(Prediction.fixture_ref, Prediction.model_name)
+            .where(Prediction.record_type == "genuine_prematch")
+            .distinct()
+        ).all()
+        for ref, model in rows:
+            self.genuine.setdefault(ref, set()).add(model)
+
+    def model_for(self, fixture_ref: str, competition: str) -> str | None:
+        return record_of_record(
+            fixture_ref, competition, self.genuine.get(fixture_ref, ()), self.primary
+        )
+
+    def is_primary(self, p: Prediction) -> bool:
+        """True only for the genuine pre-match record(s) of the fixture's record-of-record
+        model (each of its editions)."""
+        return p.record_type == "genuine_prematch" and p.model_name == self.model_for(
+            p.fixture_ref, p.competition
+        )
+
+
+# ---------------------------------------------------------------------------------------------
+# Model + market records
+
+
+def basis_of(features: dict) -> str:
+    """MODEL_AND_MARKET when the record used bookmakers' prices, otherwise MODEL_ONLY."""
+    return MODEL_AND_MARKET if isinstance(features.get("market_prices_used"), dict) else MODEL_ONLY
+
+
+def _params(features: dict) -> dict:
+    p = features.get("model_params")
+    return p if isinstance(p, dict) else {}
+
+
+def _prob(v: object) -> float | None:
+    return float(v) if isinstance(v, int | float) and not isinstance(v, bool) else None
+
+
+# Provenance fields that may be shown. Anything else in the saved provenance is left out, so
+# nothing price-like can reach the API by accident.
+PROVENANCE_FIELDS = ("source", "raw_sha256", "raw_file_id", "retrieved_at")
+
+
+# The fields of a saved `market_prices_used` that the API passes on: derived probabilities,
+# the books' names, the quote time and the provenance. Nothing else, so a price can't leak.
+MARKET_FIELDS = ("p_H", "p_D", "p_A", "p_over_2.5", "books", "quote_time_utc", "provenance")
+
+
+def _provenance(prov: object) -> dict:
+    out = {k: prov[k] for k in PROVENANCE_FIELDS if k in prov} if isinstance(prov, dict) else {}
+    if "retrieved_at" in out:
+        out["retrieved_at"] = iso_utc_text(out["retrieved_at"])
+    return out
+
+
+def public_features(features: dict) -> dict:
+    """The saved feature snapshot as the API sends it. A model + market record's
+    `market_prices_used` keeps only MARKET_FIELDS, with its timestamps in ISO 8601 form."""
+    m = features.get("market_prices_used")
+    if not isinstance(m, dict):
+        return features
+    kept = {k: m[k] for k in MARKET_FIELDS if k in m}
+    if "quote_time_utc" in kept:
+        kept["quote_time_utc"] = iso_utc_text(kept["quote_time_utc"])
+    if "provenance" in kept:
+        kept["provenance"] = _provenance(kept["provenance"])
+    return {**features, "market_prices_used": kept}
+
+
+def market_used(features: dict) -> dict | None:
+    """What a model + market record took from the bookmakers: the de-vigged consensus
+    probabilities, the books, when the prices were collected and where they came from.
+    Never the prices themselves. None for a model-only record."""
+    m = features.get("market_prices_used")
+    if not isinstance(m, dict):
+        return None
+    probs: dict[str, dict[str, float]] = {}
+    h, d, a = (_prob(m.get(k)) for k in ("p_H", "p_D", "p_A"))
+    if h is not None and d is not None and a is not None:
+        probs["1X2"] = {"H": h, "D": d, "A": a}
+    over = _prob(m.get("p_over_2.5"))
+    if over is not None:
+        probs["OU_2.5"] = {"O": over, "U": 1 - over}
+    params = _params(features)
+    weights = {
+        market: w
+        for market, key in (("1X2", "w_1x2"), ("OU_2.5", "w_ou"))
+        if (w := _prob(params.get(key))) is not None
+    }
+    return {
+        "probabilities": probs,
+        "books": [str(b) for b in m.get("books") or []],
+        "quote_time_utc": iso_utc_text(m.get("quote_time_utc")),
+        "provenance": _provenance(m.get("provenance")),
+        "devig": params.get("devig"),
+        "phase": params.get("phase"),
+        "weights": weights,
+        "base_model": params.get("base"),
+    }
+
+
+def value_selection(basis: str) -> dict | None:
+    """Placeholder for a value selection, only on records made with real bookmakers' prices.
+    No selection rule is published yet, so it never names a bet."""
+    if basis != MODEL_AND_MARKET:
+        return None
+    return {
+        "status": "not_published",
+        "selections": [],
+        "note": "Bookmakers' prices were used for this record, but no value-selection rule "
+        "is published yet, so there is no selection.",
+    }
+
+
+# What the detail endpoint shows of the counterpart record (it has its own page for the rest).
+COUNTERPART_FIELDS = (
+    "id",
+    "is_primary",
+    "basis",
+    "edition",
+    "record_type",
+    "model_name",
+    "model_version",
+    "created_at_utc",
+    "probabilities",
+    "selections",
+)
+
+
+def counterpart(p: Prediction, features: dict, records: list[Prediction]) -> Prediction | None:
+    """The same fixture's record with the other basis: for a model + market record, its
+    base model's own record; for a model-only record, a model + market record built on it.
+    Same record type; the same edition if there is one, otherwise the latest."""
+
+    def feats(r: Prediction) -> dict:
+        return json.loads(r.features) if r.features else {}
+
+    if basis_of(features) == MODEL_AND_MARKET:
+        base = _params(features).get("base")
+        cands = [
+            r
+            for r in records
+            if r.id != p.id
+            and r.record_type == p.record_type
+            and r.model_name == base
+            and basis_of(feats(r)) == MODEL_ONLY
+        ]
+    else:
+        cands = []
+        for r in records:
+            f = feats(r)
+            if (
+                r.id != p.id
+                and r.record_type == p.record_type
+                and basis_of(f) == MODEL_AND_MARKET
+                and _params(f).get("base") == p.model_name
+            ):
+                cands.append(r)
+    if not cands:
+        return None
+    same = [r for r in cands if r.edition == p.edition]
+    return max(same or cands, key=lambda r: r.id)
 
 
 def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRouter:
@@ -51,17 +280,22 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
     def settlements(s: Session) -> dict[int, PredictionSettlement]:
         return {x.prediction_id: x for x in s.scalars(select(PredictionSettlement))}
 
-    def card(p: Prediction, names: dict, st: PredictionSettlement | None) -> dict:
+    def card(
+        p: Prediction, names: dict, st: PredictionSettlement | None, ror: RecordsOfRecord
+    ) -> dict:
         probs = json.loads(p.probabilities)
-        return {
+        features = json.loads(p.features) if p.features else {}
+        basis = basis_of(features)
+        out = {
             "id": p.id,
-            "is_primary": is_primary(p, primary_models()),
+            "is_primary": ror.is_primary(p),
+            "basis": basis,
             "fixture_ref": p.fixture_ref,
             "competition": p.competition,
             "competition_name": COMPETITION_NAMES.get(p.competition, p.competition),
             "season": p.season,
             "match_date": p.match_date.isoformat(),
-            "kickoff_utc": p.kickoff_utc.isoformat() if p.kickoff_utc else None,
+            "kickoff_utc": iso_utc(p.kickoff_utc),
             "home_team": p.home_team,
             "away_team": p.away_team,
             "home_name": names.get(p.home_team, p.home_team),
@@ -70,8 +304,8 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             "record_type": p.record_type,
             "model_name": p.model_name,
             "model_version": p.model_version,
-            "created_at_utc": p.created_at_utc.isoformat(),
-            "training_cutoff_utc": p.training_cutoff_utc.isoformat(),
+            "created_at_utc": iso_utc(p.created_at_utc),
+            "training_cutoff_utc": iso_utc(p.training_cutoff_utc),
             "probabilities": probs,
             "selections": json.loads(p.selections),
             "data_freshness": json.loads(p.data_freshness),
@@ -84,17 +318,24 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
                 "away_goals": st.away_goals,
                 "status": st.status,
                 "outcomes": json.loads(st.outcomes),
-                "settled_at_utc": st.settled_at_utc.isoformat(),
+                "settled_at_utc": iso_utc(st.settled_at_utc),
             },
         }
+        vs = value_selection(basis)
+        if vs is not None:  # only where real prices were used; never a made-up selection
+            out["value_selection"] = vs
+        return out
 
     @r.get("/fixtures")
     def fixtures(days: int = Query(8, ge=1, le=30)) -> dict:
-        """Upcoming fixtures with their saved predictions (latest edition per fixture/model)."""
+        """Upcoming fixtures with their saved predictions (latest edition per fixture/model).
+        Each card says whether it is the fixture's record of record (`is_primary`) and
+        whether it used bookmakers' prices (`basis`)."""
         now = datetime.now(UTC)
         today = now.date()
         with Session(engine_fn()) as s:
             names, st = teams(s), settlements(s)
+            ror = RecordsOfRecord(s, primary_models())
             rows = s.scalars(
                 select(Prediction)
                 .where(Prediction.match_date >= today - timedelta(days=1))
@@ -105,12 +346,12 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             latest: dict[tuple, Prediction] = {}
             for p in rows:
                 latest[(p.fixture_ref, p.model_name)] = p
-            cards = [card(p, names, st.get(p.id)) for p in latest.values()]
+            cards = [card(p, names, st.get(p.id), ror) for p in latest.values()]
         groups: dict[str, list] = {}
         for c in sorted(cards, key=lambda c: (c["kickoff_utc"] or c["match_date"], c["id"])):
             groups.setdefault(c["competition"], []).append(c)
         return {
-            "generated_at_utc": now.isoformat(timespec="seconds"),
+            "generated_at_utc": iso_utc(now, "seconds"),
             "competitions": [
                 {"code": k, "name": COMPETITION_NAMES.get(k, k), "fixtures": v}
                 for k, v in groups.items()
@@ -124,9 +365,12 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
             if p is None:
                 raise HTTPException(404, "no such prediction")
             names, st = teams(s), settlements(s)
-            out = card(p, names, st.get(p.id))
-            out["features"] = json.loads(p.features)
-            editions = s.scalars(
+            ror = RecordsOfRecord(s, primary_models())
+            out = card(p, names, st.get(p.id), ror)
+            features = json.loads(p.features) if p.features else {}
+            out["features"] = public_features(features)
+            out["market"] = market_used(features)
+            records = s.scalars(
                 select(Prediction)
                 .where(Prediction.fixture_ref == p.fixture_ref)
                 .order_by(Prediction.id)
@@ -136,12 +380,20 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
                     "id": e.id,
                     "edition": e.edition,
                     "model_name": e.model_name,
-                    "created_at_utc": e.created_at_utc.isoformat(),
+                    "basis": basis_of(json.loads(e.features) if e.features else {}),
+                    "is_primary": ror.is_primary(e),
+                    "created_at_utc": iso_utc(e.created_at_utc),
                     "record_type": e.record_type,
                     "reason": e.reason,
                 }
-                for e in editions
+                for e in records
             ]
+            other = counterpart(p, features, list(records))
+            if other is None:
+                out["counterpart"] = None
+            else:
+                full = card(other, names, st.get(other.id), ror)
+                out["counterpart"] = {k: full[k] for k in COUNTERPART_FIELDS}
             out["recent"] = {
                 "home": recent_form(s, p.home_team, p.training_cutoff_utc, names),
                 "away": recent_form(s, p.away_team, p.training_cutoff_utc, names),
@@ -159,55 +411,77 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         never mixed in one response."""
         with Session(engine_fn()) as s:
             names, st = teams(s), settlements(s)
+            ror = RecordsOfRecord(s, primary_models())
             q = select(Prediction).where(Prediction.record_type == record_type)
             if competition:
                 q = q.where(Prediction.competition == competition)
             rows = s.scalars(q.order_by(Prediction.match_date.desc(), Prediction.id.desc())).all()
-            cards = [card(p, names, st.get(p.id)) for p in rows if p.id in st][:limit]
+            cards = [card(p, names, st.get(p.id), ror) for p in rows if p.id in st][:limit]
         return {"record_type": record_type, "matches": cards}
 
     @r.get("/performance")
     def performance(primary_only: bool = True) -> dict:
-        """The genuine pre-match record: settled predictions only, per market. By default
-        only the model of record counts, and each fixture once (its first early edition)."""
+        """The genuine pre-match record: settled predictions only, per market.
+
+        Headline: by default each fixture counts once, with the first edition of its record
+        of record (the first model in primary_models.json with a genuine pre-match record for
+        it); primary_only=false counts every genuine pre-match record.
+
+        `by_basis` reports model + market and model-only records separately. By default each
+        fixture counts once per basis: the first listed model with a record of that basis, or
+        else the earliest such record, first edition. `paired` repeats both on the fixtures
+        that have both, for a like-for-like comparison.
+
+        There is no profit here: profit is reported only from real historical prices, by the
+        profit simulation."""
         primary = primary_models()
         with Session(engine_fn()) as s:
             st = settlements(s)
+            ror = RecordsOfRecord(s, primary)
             rows = s.scalars(
                 select(Prediction)
                 .where(Prediction.record_type == "genuine_prematch")
                 .order_by(Prediction.id)
             ).all()
+        basis = {p.id: basis_of(json.loads(p.features) if p.features else {}) for p in rows}
+        by_fixture: dict[str, list[Prediction]] = {}
+        for p in rows:
+            by_fixture.setdefault(p.fixture_ref, []).append(p)
+        one_per_fixture: dict[str, dict[str, Prediction]] = {b: {} for b in BASES}
+        for ref, recs in by_fixture.items():
+            order = primary.get(competition_group(recs[0].competition), [])
+
+            def rank(x: Prediction, order: list[str] = order) -> tuple[int, int]:
+                listed = order.index(x.model_name) if x.model_name in order else len(order)
+                return listed, x.id
+
+            for b in BASES:
+                cands = [x for x in recs if basis[x.id] == b]
+                if cands:
+                    one_per_fixture[b][ref] = min(cands, key=rank)
         if primary_only:
             first: dict[str, Prediction] = {}
             for p in rows:
-                if is_primary(p, primary) and p.fixture_ref not in first:
+                if ror.is_primary(p) and p.fixture_ref not in first:
                     first[p.fixture_ref] = p
-            rows = list(first.values())
-        per: dict[str, dict] = {}
-        pending = 0
-        for p in rows:
-            x = st.get(p.id)
-            if x is None:
-                pending += 1
-                continue
-            for market, o in json.loads(x.outcomes).items():
-                m = per.setdefault(market, {"n": 0, "correct": 0, "sum_p_actual": 0.0})
-                m["n"] += 1
-                m["correct"] += int(o["correct"])
-                m["sum_p_actual"] += o["p_actual"]
-        for m in per.values():
-            m["accuracy"] = m["correct"] / m["n"] if m["n"] else None
-            m["mean_p_actual"] = m.pop("sum_p_actual") / m["n"] if m["n"] else None
-        last = max((st[p.id].settled_at_utc for p in rows if p.id in st), default=None)
+            headline_rows = list(first.values())
+            split = {b: list(one_per_fixture[b].values()) for b in BASES}
+        else:
+            headline_rows = list(rows)
+            split = {b: [p for p in rows if basis[p.id] == b] for b in BASES}
+        both = [ref for ref in by_fixture if all(ref in one_per_fixture[b] for b in BASES)]
         return {
             "primary_only": primary_only,
             "primary_models": primary,
-            "published": len(rows),
-            "settled": len(rows) - pending,
-            "pending": pending,
-            "last_settled_at_utc": last.isoformat() if last else None,
-            "markets": per,
+            **summarise(headline_rows, st),
+            "by_basis": {
+                b: {**summarise(split[b], st), "models": sorted({p.model_name for p in split[b]})}
+                for b in BASES
+            },
+            "paired": {
+                "fixtures": len(both),
+                **{b: summarise([one_per_fixture[b][ref] for ref in both], st) for b in BASES},
+            },
         }
 
     @r.get("/backtests")
@@ -218,6 +492,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
                 mf = d / "manifest.json"
                 if mf.exists():
                     m = json.loads(mf.read_text())
+                    m["created_at_utc"] = iso_utc_text(m.get("created_at_utc"))
                     out.append(
                         {
                             "run_id": d.name,
@@ -301,6 +576,33 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
     return r
 
 
+def summarise(rows: list[Prediction], st: dict[int, PredictionSettlement]) -> dict:
+    """Published, settled and pending counts and per-market accuracy for these records."""
+    per: dict[str, dict] = {}
+    pending = 0
+    for p in rows:
+        x = st.get(p.id)
+        if x is None:
+            pending += 1
+            continue
+        for market, o in json.loads(x.outcomes).items():
+            m = per.setdefault(market, {"n": 0, "correct": 0, "sum_p_actual": 0.0})
+            m["n"] += 1
+            m["correct"] += int(o["correct"])
+            m["sum_p_actual"] += o["p_actual"]
+    for m in per.values():
+        m["accuracy"] = m["correct"] / m["n"] if m["n"] else None
+        m["mean_p_actual"] = m.pop("sum_p_actual") / m["n"] if m["n"] else None
+    last = max((st[p.id].settled_at_utc for p in rows if p.id in st), default=None)
+    return {
+        "published": len(rows),
+        "settled": len(rows) - pending,
+        "pending": pending,
+        "last_settled_at_utc": iso_utc(last),
+        "markets": per,
+    }
+
+
 def recent_form(s: Session, team: str, before: datetime, names: dict, n: int = 6) -> list[dict]:
     """The team's last results before the prediction's training cutoff (no hindsight)."""
     day = before.date() if isinstance(before, datetime) else before
@@ -332,22 +634,49 @@ def recent_form(s: Session, team: str, before: datetime, names: dict, n: int = 6
 def explain(c: dict) -> str:
     """Plain-English summary built only from the saved record's numbers."""
     p = c["probabilities"]
+    blended = c.get("basis") == MODEL_AND_MARKET
     parts = []
     xg = p.get("expected_goals")
     if xg:
+        # A model + market record keeps its base model's expected goals: the tilt moves the
+        # score grid to the prices, not these averages (footy.modeling.lab.market_blend).
+        lead = (
+            "Before the bookmakers' prices were blended in, the model expected"
+            if blended
+            else "The model expects"
+        )
         parts.append(
-            f"The model expects {c['home_name']} to score {xg['home']:.2f} goals and "
+            f"{lead} {c['home_name']} to score {xg['home']:.2f} goals and "
             f"{c['away_name']} {xg['away']:.2f}."
         )
     if "1X2" in p:
         x = p["1X2"]
-        parts.append(f"Home win {x['H']:.0%}, draw {x['D']:.0%}, away win {x['A']:.0%}.")
+        lead = "With the prices blended in: home win" if blended else "Home win"
+        parts.append(f"{lead} {x['H']:.0%}, draw {x['D']:.0%}, away win {x['A']:.0%}.")
     if p.get("top_scores"):
         t = p["top_scores"][0]
         parts.append(f"The single most likely score is {t['score']} ({t['p']:.0%}).")
     if "OU_2.5" in p and "BTTS" in p:
         parts.append(
             f"Over 2.5 goals {p['OU_2.5']['O']:.0%}; both teams to score {p['BTTS']['Y']:.0%}."
+        )
+    m = c.get("market")
+    if blended and m:
+        w = m.get("weights") or {}
+        if w and all(v == 1 for v in w.values()):
+            how = "are the bookmakers' consensus"
+        elif w:
+            label = {"1X2": "match result", "OU_2.5": "over/under 2.5"}
+            how = (
+                "blend the bookmakers' consensus with the model (prices weighted "
+                + ", ".join(f"{v:.0%} for the {label.get(k, k)}" for k, v in w.items())
+                + ")"
+            )
+        else:
+            how = "use the bookmakers' consensus"
+        parts.append(
+            f"The match result and over/under 2.5 goals {how}; the other goal lines, both teams "
+            "to score and the scores come from the model's score grid, moved to agree with them."
         )
     f = c.get("features") or {}
     if f.get("home_matches_in_window") is not None:

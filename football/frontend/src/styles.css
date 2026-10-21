@@ -427,6 +427,14 @@ button:disabled {
   border-color: transparent;
 }
 
+/* Model + market: solid accent, so it reads apart from the pale edition and record badges. */
+.badge-market {
+  color: var(--on-accent);
+  background: var(--accent);
+  border-color: transparent;
+  font-weight: 600;
+}
+
 .badges {
   display: flex;
   flex-wrap: wrap;
@@ -1135,6 +1143,60 @@ button:disabled {
   margin-top: 8px;
 }
 
+/* Model + market: the blend explained, beside the pure model's numbers. */
+.market-blend {
+  border-left: 4px solid var(--accent);
+}
+
+.compare {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+
+.compare-table th,
+.compare-table td {
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  vertical-align: bottom;
+  font-weight: 400;
+}
+
+.compare-table th:first-child {
+  width: 38%;
+  padding-left: 0;
+  text-align: left;
+}
+
+.compare-table thead th {
+  font-size: 0.78rem;
+  line-height: 1.25;
+  color: var(--muted);
+}
+
+.compare-table tbody td:nth-child(2) {
+  font-weight: 700;
+}
+
+.compare-table tbody tr:last-child th,
+.compare-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.compare-model {
+  display: block;
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
 .facts {
   margin: 0 0 10px;
   padding-left: 1.2em;
@@ -1618,6 +1680,28 @@ select:hover {
 
 .latest-settled {
   margin-top: 10px !important;
+}
+
+.basis-block {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.card .basis-block h3 {
+  margin: 0;
+}
+
+.basis-block p + p {
+  margin-top: 0;
+}
+
+.basis-paired {
+  margin-top: 12px !important;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 .perf-table {

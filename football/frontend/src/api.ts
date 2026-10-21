@@ -142,8 +142,23 @@ export type Settlement = {
   settled_at_utc: string;
 };
 
+/** Whether the record used bookmakers' prices ("model_and_market") or not ("model_only"). */
+export type Basis = "model_and_market" | "model_only";
+
+/** Only on records made with real bookmakers' prices. No selection rule is published yet, so
+ * `selections` is always empty for now. */
+export type ValueSelection = {
+  status: "not_published" | (string & {});
+  selections: JsonValue[];
+  note: string;
+};
+
 export type PredictionCard = {
   id: number;
+  /** The fixture's record of record: the first model in the group's list that has a genuine
+   * pre-match record for it. */
+  is_primary: boolean;
+  basis: Basis;
   fixture_ref: string;
   competition: string;
   competition_name: string;
@@ -166,12 +181,15 @@ export type PredictionCard = {
   missing_fields: string[];
   notes: string | null;
   settlement: Settlement | null;
+  value_selection?: ValueSelection;
 };
 
 export type EditionRef = {
   id: number;
   edition: Edition;
   model_name: string;
+  basis: Basis;
+  is_primary: boolean;
   created_at_utc: string;
   record_type: RecordType;
   reason: string | null;
@@ -186,9 +204,42 @@ export type RecentMatch = {
   result: "W" | "D" | "L";
 };
 
+/** What a model + market record took from the bookmakers: de-vigged consensus probabilities
+ * and where the prices came from. Never the prices themselves. */
+export type MarketUsed = {
+  probabilities: { "1X2"?: { H: number; D: number; A: number }; "OU_2.5"?: OverUnder };
+  books: string[];
+  /** When the prices were collected (UTC). */
+  quote_time_utc: string | null;
+  provenance: { source?: string; raw_sha256?: string; raw_file_id?: number; retrieved_at?: string };
+  devig: string | null;
+  phase: string | null;
+  /** Weight given to the prices, per market (1 = the prices alone). */
+  weights: Partial<Record<"1X2" | "OU_2.5", number>>;
+  base_model: string | null;
+};
+
+/** The same fixture's record with the other basis (pure model ↔ model + market). */
+export type Counterpart = Pick<
+  PredictionCard,
+  | "id"
+  | "is_primary"
+  | "basis"
+  | "edition"
+  | "record_type"
+  | "model_name"
+  | "model_version"
+  | "created_at_utc"
+  | "probabilities"
+  | "selections"
+>;
+
 export type PredictionDetail = PredictionCard & {
   /** The feature snapshot saved with the prediction (window sizes, model parameters, …). */
   features: Record<string, JsonValue>;
+  /** Model + market records only. */
+  market: MarketUsed | null;
+  counterpart: Counterpart | null;
   /** Every saved edition for this fixture, oldest first. */
   editions: EditionRef[];
   /** Each side's last results before the training cutoff (no hindsight). */
@@ -214,11 +265,22 @@ export type PerformanceMarket = {
   mean_p_actual: number | null;
 };
 
-export type Performance = {
+export type PerformanceRecord = {
   published: number;
   settled: number;
   pending: number;
+  last_settled_at_utc: string | null;
   markets: Record<string, PerformanceMarket>;
+};
+
+export type Performance = PerformanceRecord & {
+  primary_only: boolean;
+  /** Ordered preference per competition group ("domestic", "uefa"). */
+  primary_models: Record<string, string[]>;
+  /** Model + market and model-only records, each fixture once per basis. */
+  by_basis: Record<Basis, PerformanceRecord & { models: string[] }>;
+  /** Both bases on the fixtures that have both. */
+  paired: { fixtures: number } & Record<Basis, PerformanceRecord>;
 };
 
 // ---------------------------------------------------------------------------------------------

@@ -19,11 +19,15 @@ ALIASES = [AliasRow("football-data", t.name, t.team_key) for t in TEAMS] + [
 ]
 REFERENCE = (TEAMS, ALIASES)
 
+# The real column layout of the European extra-league files (checked on the stored files,
+# 21 Oct 2026): closing 1X2 prices only, Pinnacle, maximum, average, Betfair Exchange, Bet365.
 HEADER = (
     "Country,League,Season,Date,Time,Home,Away,HG,AG,Res,PSCH,PSCD,PSCA,MaxCH,MaxCD,MaxCA,"
-    "AvgCH,AvgCD,AvgCA"
+    "AvgCH,AvgCD,AvgCA,BFECH,BFECD,BFECA,B365CH,B365CD,B365CA"
 )
-ODDS = "2.10,3.40,3.50,2.20,3.50,3.60,2.05,3.30,3.40"
+ODDS = "2.10,3.40,3.50,2.20,3.50,3.60,2.05,3.30,3.40,2.16,3.55,3.65,2.00,3.25,3.60"
+# Russia's file stops after the average (no Betfair Exchange or Bet365 columns).
+HEADER_NO_BFE_B365 = HEADER.removesuffix(",BFECH,BFECD,BFECA,B365CH,B365CD,B365CA")
 
 
 def row(season, day, time, home, away, hg, ag, res=None, country="Austria", league="Bundesliga"):

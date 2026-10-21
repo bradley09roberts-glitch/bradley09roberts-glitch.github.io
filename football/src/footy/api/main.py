@@ -8,6 +8,7 @@ from sqlalchemy import Engine, func, select
 from sqlalchemy.orm import Session
 
 from footy import __version__
+from footy.api.routes import iso_utc, iso_utc_text
 from footy.config import Settings, get_settings
 from footy.db import check_connection, current_revision, get_engine, head_revision
 from footy.models import ImportIssue, JobRun, Match, RawFile
@@ -68,7 +69,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
         return {
             "status": "ok" if db_ok and revision == head else "degraded",
             "app_version": __version__,
-            "server_time_utc": datetime.now(UTC).isoformat(timespec="seconds"),
+            "server_time_utc": _iso(datetime.now(UTC)),
             "display_timezone": settings.display_timezone,
             "database": "ok" if db_ok else "error",
             "schema_revision": revision,
@@ -84,7 +85,11 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
     def coverage() -> dict:
         from footy.coverage import coverage_rows
 
-        return {"rows": coverage_rows(_engine())}
+        rows = coverage_rows(_engine())
+        for row in rows:  # stored naive UTC; sent with its offset (D-005)
+            if row.get("retrieved_at"):
+                row["retrieved_at"] = iso_utc_text(row["retrieved_at"])
+        return {"rows": rows}
 
     @app.get("/api/refresh-history")
     def refresh_history(limit: int = Query(50, ge=1, le=500)) -> dict:
@@ -158,7 +163,8 @@ def _limit_per_code(issues: list[dict], per_code: int) -> list[dict]:
 
 
 def _iso(dt: datetime | None) -> str | None:
-    return dt.isoformat(timespec="seconds") if dt else None
+    """ISO 8601 in UTC with a `+00:00` offset, to the second."""
+    return iso_utc(dt, "seconds")
 
 
 app = create_app()

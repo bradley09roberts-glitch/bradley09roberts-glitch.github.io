@@ -54,9 +54,68 @@ def test_parses_results_kickoffs_and_skips_old_seasons():
     assert first.kickoff_local == "16:00" and first.kickoff_utc == utc(2025, 8, 2, 15)  # BST
     winter = pf.seasons["2526"][3]
     assert winter.kickoff_utc == utc(2025, 12, 6, 16)  # GMT
-    # Results only: no half-time score, statistics or prices from this layout.
-    assert first.ht_home_goals is None and first.odds == []
+    # No half-time score or statistics in this layout; closing 1X2 prices only (below).
+    assert first.ht_home_goals is None
     assert set(first.stats.values()) == {None}
+    assert {o.phase for o in first.odds} == {"closing"}
+
+
+def test_closing_1x2_prices_are_parsed_without_the_maximum():
+    pf = parse_fd_extra_csv(fx.csv_bytes(), "AUT")
+    first = pf.seasons["2526"][0]
+    by_col = {o.source_column: o for o in first.odds}
+    # Pinnacle, average, Betfair Exchange and Bet365; never the maximum (D-016).
+    assert sorted(by_col) == sorted(
+        f"{b}C{s}" for b in ("PS", "Avg", "BFE", "B365") for s in ("H", "D", "A")
+    )
+    ps_home = by_col["PSCH"]
+    assert (ps_home.bookmaker, ps_home.market_key, ps_home.selection) == ("PS", "1X2", "H")
+    assert ps_home.price == 2.10 and ps_home.line is None and ps_home.phase == "closing"
+    assert ps_home.quote_time_utc == first.kickoff_utc == utc(2025, 8, 2, 15)
+    assert ps_home.quote_time_basis == "fd_closing_at_kickoff"
+    assert by_col["AvgCA"].price == 3.40 and by_col["AvgCA"].bookmaker == "Avg"
+    assert by_col["BFECD"].price == 3.55 and by_col["B365CH"].price == 2.00
+    assert not [i for i in pf.issues if i.code in ("invalid_price", "implausible_overround")]
+
+
+def test_file_without_betfair_or_bet365_columns():
+    """Russia's layout: Pinnacle, maximum and average only."""
+    odds = ",".join(fx.ODDS.split(",")[:9])
+    rows = [r.removesuffix(fx.ODDS) + odds for r in fx.ROWS]
+    pf = parse_fd_extra_csv(fx.csv_bytes(rows, header=fx.HEADER_NO_BFE_B365), "AUT")
+    first = pf.seasons["2526"][0]
+    assert {o.bookmaker for o in first.odds} == {"PS", "Avg"} and len(first.odds) == 6
+
+
+def test_closing_price_quality_rules():
+    """D-017: a bad price is dropped; a set whose implied probabilities sum outside
+    0.95-1.30 is dropped and logged; the other sets of the row are kept."""
+    odds = fx.ODDS.split(",")
+    odds[0] = "1.00"  # PSCH: not a price above evens
+    odds[6:9] = ["1.10", "1.10", "1.10"]  # average: implied sum 2.73
+    odds[9:12] = ["9.0", "9.0", "9.0"]  # Betfair Exchange: implied sum 0.33
+    bad = fx.ROWS[1].removesuffix(fx.ODDS) + ",".join(odds)
+    pf = parse_fd_extra_csv(fx.csv_bytes([bad]), "AUT")
+    (m,) = pf.seasons["2526"]
+    assert {o.bookmaker for o in m.odds} == {"PS", "B365"}
+    assert {o.source_column for o in m.odds if o.bookmaker == "PS"} == {"PSCD", "PSCA"}
+    issues = [(i.source_row, i.severity, i.code, i.detail) for i in pf.issues]
+    assert issues == [
+        (1, "error", "invalid_price", "2025/26: PSCH='1.00'"),
+        (1, "error", "implausible_overround", "2025/26: BFE 1X2 closing 0.333 (set dropped)"),
+        (1, "error", "implausible_overround", "2025/26: Avg 1X2 closing 2.727 (set dropped)"),
+    ]
+
+
+def test_pre_closing_columns_are_never_read_from_this_layout():
+    """The D-012 collection times are documented for the main layout only, so pre-closing
+    columns are ignored here even if a file carried them."""
+    header = fx.HEADER + ",PSH,PSD,PSA,B365>2.5,B365<2.5"
+    rows = [r + ",2.2,3.3,3.3,1.9,1.9" for r in fx.ROWS]
+    pf = parse_fd_extra_csv(fx.csv_bytes(rows, header=header), "AUT")
+    first = pf.seasons["2526"][0]
+    assert {(o.phase, o.market_key) for o in first.odds} == {("closing", "1X2")}
+    assert not [i for i in pf.issues if i.code == "kickoff_before_collection"]
 
 
 def test_repeat_meeting_is_kept_and_duplicate_rejected():
@@ -233,7 +292,8 @@ def test_import_from_inbox_then_rerun_changes_nothing(migrated_engine, settings)
     assert detail["inbox"] == {"inbox_new": 1}
     assert detail["import"]["matches_inserted"] == 9  # the repeat meeting included
     assert detail["import"]["rows_rejected"] == 0
-    assert detail["import"]["odds_inserted"] == 0  # prices are never parsed from this layout
+    # Closing 1X2 from four books (the maximum is not stored) for each of the 9 matches.
+    assert detail["import"]["odds_inserted"] == 9 * 4 * 3
 
     with Session(migrated_engine) as s:
         matches = s.scalars(select(Match).order_by(Match.source_row)).all()
@@ -247,9 +307,12 @@ def test_import_from_inbox_then_rerun_changes_nothing(migrated_engine, settings)
             if (m.home_team, m.away_team) == ("aut-alpendorf", "aut-bergstadt")
         ]
         assert pairing == [(1, date(2025, 8, 2), 2, 1), (2, date(2026, 3, 7), 0, 1)]
-        assert s.scalar(select(func.count()).select_from(FdOdds)) == 0
+        assert s.scalar(select(func.count()).select_from(FdOdds)) == 108
+        assert {(o.phase, o.market_key) for o in s.scalars(select(FdOdds))} == {("closing", "1X2")}
+        first_odds = s.scalars(select(FdOdds).where(FdOdds.match_id == matches[0].id)).all()
+        assert {o.quote_time_utc for o in first_odds} == {utc(2025, 8, 2, 15)}
         imp = s.scalar(select(RawImport))
-        assert imp.parser_version == "fdx-2" and imp.rows_imported == 9
+        assert imp.parser_version == "fdx-3" and imp.rows_imported == 9
         codes = {i.code for i in s.scalars(select(ImportIssue))}
         assert "repeat_pairing" not in codes and "duplicate_fixture" not in codes
 
@@ -366,4 +429,8 @@ def _snapshot(engine):
             ],
             s.scalar(select(func.count()).select_from(RawFile)),
             sorted((i.source_row, i.code) for i in s.scalars(select(ImportIssue))),
+            [
+                (o.id, o.match_id, o.bookmaker, o.selection, o.phase, o.price, o.raw_file_id)
+                for o in s.scalars(select(FdOdds).order_by(FdOdds.id))
+            ],
         )

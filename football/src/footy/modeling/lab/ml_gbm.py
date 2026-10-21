@@ -643,6 +643,7 @@ class MLGBM:
         l2_grid: tuple[float, ...] = (),
         expand: bool = False,
         holdout_days: int = 180,
+        spread: tuple[float, float] = (0.0, 0.0),
         mix_dc: float = 0.0,
         features: tuple[str, ...] | None = None,
         n_trees: int = 200,
@@ -665,6 +666,7 @@ class MLGBM:
         self.split_venue, self.stack_offset = split_venue, stack_offset
         self.free = tuple(free)
         self.l2_grid, self.expand, self.holdout_days = tuple(l2_grid), expand, holdout_days
+        self.spread = tuple(spread)
         self.features = tuple(features) if features else tuple(FEATURES)
         if "home" in self.features:  # the home flag first (SplitVenue relies on it)
             self.features = ("home", *[f for f in self.features if f != "home"])
@@ -693,6 +695,7 @@ class MLGBM:
             "l2_grid": list(self.l2_grid),
             "expand": self.expand,
             "holdout_days": self.holdout_days,
+            "spread": list(self.spread),
             "mix_dc": self.mix_dc,
             "features": list(self.features),
             **self.gbm,
@@ -883,9 +886,30 @@ class MLGBM:
         k = len(fixtures)
         return np.exp(eta[:k]), np.exp(eta[k:])
 
+    def _grid(self, lh, la) -> np.ndarray:
+        """Poisson grid with rho; with `spread`, integrated over uncertainty in the log-rates:
+        a shared tempo factor (both rates up or down, sd spread[0]) and an opposed strength
+        factor (sd spread[1]), three Gauss-Hermite points each. A mixture of grids, so still
+        one coherent score distribution."""
+        st, sd = self.spread
+        if st <= 0 and sd <= 0:
+            return poisson_grid(lh, la, self.rho_)
+        z, wz = np.array([-np.sqrt(3), 0.0, np.sqrt(3)]), np.array([1 / 6, 2 / 3, 1 / 6])
+        grids, weights = [], []
+        for u, wu in zip(z, wz, strict=True):
+            for v, wv in zip(z, wz, strict=True):
+                if (st <= 0 and u != 0) or (sd <= 0 and v != 0):
+                    continue
+                f = np.exp(st * u)
+                grids.append(
+                    poisson_grid(lh * f * np.exp(sd * v), la * f * np.exp(-sd * v), self.rho_)
+                )
+                weights.append((wu if st > 0 else 1.0) * (wv if sd > 0 else 1.0))
+        return mix_grids(grids, weights)
+
     def predict(self, fixtures: pd.DataFrame) -> MarketProbs:
         lh, la = self.rates(fixtures)
-        grid = poisson_grid(lh, la, self.rho_)
+        grid = self._grid(lh, la)
         if self.mix_dc > 0:
             dh, da = self.dc_now.rates(fixtures)
             dgrid = poisson_grid(dh, da, self.dc_now.rho_)

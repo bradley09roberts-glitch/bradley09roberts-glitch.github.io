@@ -58,6 +58,7 @@ export function Signals({
   const conf = confidenceOf(card);
   const missing = missingInputs(card);
   const odds = hasOdds(card);
+  const vs = card.value_selection;
   const homeN = num(features?.home_matches_in_window);
   const awayN = num(features?.away_matches_in_window);
   const full = variant === "full";
@@ -103,8 +104,11 @@ export function Signals({
       <div className="signal">
         <dt>Betting edge</dt>
         <dd>
-          {odds ? (
-            // The API has no betting-selection field yet, so nothing can qualify.
+          {vs ? (
+            // Real prices were used, but no selection rule is published: nothing is named.
+            <strong>No selection published</strong>
+          ) : odds ? (
+            // The API has no betting-selection field for this record, so nothing can qualify.
             <strong>No qualifying bet</strong>
           ) : (
             <span>
@@ -113,9 +117,11 @@ export function Signals({
           )}
           {full && (
             <p className="signal-note">
-              {odds
-                ? "Betting selections aren't published for this record, so none qualifies."
-                : "An edge needs a bookmaker price to compare with. The probabilities still stand on their own."}
+              {vs
+                ? vs.note
+                : odds
+                  ? "Betting selections aren't published for this record, so none qualifies."
+                  : "An edge needs a bookmaker price to compare with. The probabilities still stand on their own."}
             </p>
           )}
         </dd>

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import type { Edition, RecordType } from "../api";
+import type { Basis, Edition, RecordType } from "../api";
 
-export type Tone = "neutral" | "info" | "good" | "warn" | "bad";
+export type Tone = "neutral" | "info" | "good" | "warn" | "bad" | "market";
 
 export function Badge({
   tone = "neutral",
@@ -69,6 +69,33 @@ export function EditionBadge({ edition }: { edition: Edition }) {
   return (
     <Badge tone="info" title={info?.title}>
       {info?.label ?? `${edition} edition`}
+    </Badge>
+  );
+}
+
+const BASES: Record<Basis, { label: string; tone: Tone; title: string }> = {
+  model_and_market: {
+    label: "Model + market",
+    tone: "market",
+    title: "Bookmakers' prices, collected before the prediction was saved, were blended in",
+  },
+  model_only: {
+    label: "Model only",
+    tone: "neutral",
+    title: "Made from past results alone, without bookmakers' prices",
+  },
+};
+
+export function basisLabel(b: Basis | string): string {
+  return BASES[b as Basis]?.label ?? b;
+}
+
+/** "Model + market" or "Model only": whether the record used bookmakers' prices. */
+export function BasisBadge({ basis }: { basis: Basis }) {
+  const info = BASES[basis] ?? BASES.model_only;
+  return (
+    <Badge tone={info.tone} title={info.title}>
+      {info.label}
     </Badge>
   );
 }

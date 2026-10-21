@@ -69,7 +69,7 @@ def test_odds_phases_and_quote_times():
     assert len(m.odds) == 3 + 3 + 2 + 2
 
 
-def test_no_odds_for_second_tier():
+def test_no_odds_without_with_odds():
     m = parse_fd_csv(csv_bytes(), "E0", with_odds=False).matches[0]
     assert m.odds == []
 

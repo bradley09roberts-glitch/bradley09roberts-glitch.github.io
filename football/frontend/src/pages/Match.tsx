@@ -2,8 +2,23 @@
 // availability, uncertainty, saved editions and the API's explanation.
 
 import type { ReactNode } from "react";
-import { endpoints, useApi, type JsonValue, type PredictionDetail, type RecentMatch } from "../api";
-import { EditionBadge, RecordTypeBadge, editionLabel, recordTypeLabel } from "../components/Badge";
+import {
+  endpoints,
+  useApi,
+  type Counterpart,
+  type JsonValue,
+  type MarketUsed,
+  type PredictionDetail,
+  type RecentMatch,
+} from "../api";
+import {
+  BasisBadge,
+  EditionBadge,
+  RecordTypeBadge,
+  basisLabel,
+  editionLabel,
+  recordTypeLabel,
+} from "../components/Badge";
 import { FreshnessBadge, freshnessFacts } from "../components/FreshnessBadge";
 import { MarketGrid, totalsIn } from "../components/MarketGrid";
 import { BackLink } from "../components/Nav";
@@ -98,6 +113,7 @@ function MatchDetail({ d }: { d: PredictionDetail }) {
           {d.kickoff_utc && " (UK time)"}
         </p>
         <div className="badges">
+          <BasisBadge basis={d.basis} />
           <RecordTypeBadge type={d.record_type} />
           <EditionBadge edition={d.edition} />
           {scored && (
@@ -122,13 +138,23 @@ function MatchDetail({ d }: { d: PredictionDetail }) {
         </section>
       )}
 
+      {d.basis === "model_and_market" && <MarketBlend d={d} />}
+      {d.basis === "model_only" && d.counterpart?.basis === "model_and_market" && (
+        <MarketVersion d={d} other={d.counterpart} />
+      )}
+
       <Signals card={d} features={d.features} variant="full" />
 
       {s && <ResultSection d={d} />}
 
       {p.expected_goals && (
         <Section title="Expected goals" id="xg">
-          <ExpectedGoals home={d.home_name} away={d.away_name} xg={p.expected_goals} />
+          <ExpectedGoals
+            home={d.home_name}
+            away={d.away_name}
+            xg={p.expected_goals}
+            beforePrices={d.basis === "model_and_market" && sameXg(p.expected_goals, d.counterpart)}
+          />
         </Section>
       )}
 
@@ -176,7 +202,25 @@ function MatchDetail({ d }: { d: PredictionDetail }) {
   );
 }
 
-function ExpectedGoals({ home, away, xg }: { home: string; away: string; xg: { home: number; away: number } }) {
+/** True when the counterpart (if any) has the same expected goals: a model + market record
+ * then still carries its pure model's averages. */
+function sameXg(xg: { home: number; away: number }, other: Counterpart | null): boolean {
+  const o = other?.probabilities.expected_goals;
+  if (!o) return other === null;
+  return Math.abs(o.home - xg.home) < 1e-9 && Math.abs(o.away - xg.away) < 1e-9;
+}
+
+function ExpectedGoals({
+  home,
+  away,
+  xg,
+  beforePrices = false,
+}: {
+  home: string;
+  away: string;
+  xg: { home: number; away: number };
+  beforePrices?: boolean;
+}) {
   const scale = Math.max(3, xg.home, xg.away);
   const rows = [
     { name: home, v: xg.home, cls: "home" },
@@ -202,6 +246,12 @@ function ExpectedGoals({ home, away, xg }: { home: string; away: string; xg: { h
         The average number of goals the model expects each side to score: {formatNumber(xg.home + xg.away, 2)}{" "}
         in total. Model estimates, not shot-based xG.
       </p>
+      {beforePrices && (
+        <p className="muted small">
+          These are the pure model's averages, from before the bookmakers' prices were blended
+          in. The blend moves the score probabilities, not these figures.
+        </p>
+      )}
     </>
   );
 }
@@ -246,6 +296,159 @@ function ResultSection({ d }: { d: PredictionDetail }) {
         </ul>
       )}
     </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Model + market
+
+const BOOK_NAMES: Record<string, string> = { B365: "Bet365", Avg: "the market average", PS: "Pinnacle" };
+
+function bookList(books: string[]): string {
+  const names = books.map((b) => BOOK_NAMES[b] ?? b);
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+}
+
+/** "Levante win 37%, draw 27%, Ath Bilbao win 36%". */
+function resultText(x: { H: number; D: number; A: number }, home: string, away: string): string {
+  return `${home} win ${formatPct(x.H)}, draw ${formatPct(x.D)}, ${away} win ${formatPct(x.A)}`;
+}
+
+function MarketBlend({ d }: { d: PredictionDetail }) {
+  const m = d.market;
+  const pure = d.counterpart?.basis === "model_only" ? d.counterpart : null;
+  const pureX = pure?.probabilities["1X2"];
+  const when = m?.quote_time_utc ? formatLondon(m.quote_time_utc) : null;
+  return (
+    <section className="card market-blend" aria-labelledby="blend">
+      <h2 id="blend">Model + market</h2>
+      <p>
+        Bookmakers' prices{" "}
+        {when ? (
+          <>
+            collected <strong>{when}</strong> (UK time)
+          </>
+        ) : (
+          "(collection time not recorded)"
+        )}{" "}
+        were blended in
+        {pure && pureX ? (
+          <>
+            ; the pure model said {resultText(pureX, d.home_name, d.away_name)}.
+          </>
+        ) : (
+          <>. No pure-model record was saved for this match, so there is nothing to set beside it.</>
+        )}
+      </p>
+      {pure && <CompareTable d={d} pure={pure} />}
+      {m && <MarketSource m={m} d={d} />}
+    </section>
+  );
+}
+
+type Row = { label: string; blended: number | undefined; pure: number | undefined };
+
+function compareRows(d: PredictionDetail, pure: Counterpart): Row[] {
+  const a = d.probabilities;
+  const b = pure.probabilities;
+  const rows: Row[] = [
+    { label: `${d.home_name} win`, blended: a["1X2"]?.H, pure: b["1X2"]?.H },
+    { label: "Draw", blended: a["1X2"]?.D, pure: b["1X2"]?.D },
+    { label: `${d.away_name} win`, blended: a["1X2"]?.A, pure: b["1X2"]?.A },
+  ];
+  for (const line of ["1.5", "2.5", "3.5"]) {
+    const key = `OU_${line}` as const;
+    rows.push({ label: `Over ${line} goals`, blended: a[key]?.O, pure: b[key]?.O });
+  }
+  rows.push({ label: "Both teams to score", blended: a.BTTS?.Y, pure: b.BTTS?.Y });
+  return rows.filter((r) => r.blended !== undefined || r.pure !== undefined);
+}
+
+/** Percentage points, signed: "+9", "−4", "0". */
+function points(a: number | undefined, b: number | undefined): string {
+  if (a === undefined || b === undefined) return "—";
+  const v = Math.round((a - b) * 100);
+  return v > 0 ? `+${v}` : v < 0 ? `−${Math.abs(v)}` : "0";
+}
+
+function CompareTable({ d, pure }: { d: PredictionDetail; pure: Counterpart }) {
+  return (
+    <div className="compare">
+      <table className="compare-table">
+        <caption className="visually-hidden">
+          This model + market record beside the pure model's record for the same match
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Market</th>
+            <th scope="col">Model + market</th>
+            <th scope="col">
+              Pure model
+              <span className="compare-model">{pure.model_name}</span>
+            </th>
+            <th scope="col">
+              Change <span className="compare-model">points</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {compareRows(d, pure).map((r) => (
+            <tr key={r.label}>
+              <th scope="row">{r.label}</th>
+              <td>{formatPct(r.blended)}</td>
+              <td>{formatPct(r.pure)}</td>
+              <td className="muted">{points(r.blended, r.pure)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="muted small">
+        <a href={href(`/match/${pure.id}`)}>Open the pure model's record</a> (saved{" "}
+        {formatLondon(pure.created_at_utc)}).
+      </p>
+    </div>
+  );
+}
+
+function MarketSource({ m, d }: { m: MarketUsed; d: PredictionDetail }) {
+  const x = m.probabilities["1X2"];
+  const ou = m.probabilities["OU_2.5"];
+  const sha = m.provenance.raw_sha256;
+  const parts: string[] = [];
+  if (x) parts.push(resultText(x, d.home_name, d.away_name));
+  if (ou) parts.push(`over 2.5 goals ${formatPct(ou.O)}`);
+  return (
+    <p className="muted small">
+      {parts.length > 0 && (
+        <>
+          Bookmakers' consensus{m.books.length > 0 && <> ({bookList(m.books)}, margins removed)</>}:{" "}
+          {parts.join("; ")}.{" "}
+        </>
+      )}
+      Source: {m.provenance.source ?? "not recorded"}
+      {sha && (
+        <>
+          , file SHA-256{" "}
+          <span className="mono" title={sha}>
+            {sha.slice(0, 12)}…
+          </span>
+        </>
+      )}
+      . The prices themselves are not stored or shown.
+    </p>
+  );
+}
+
+function MarketVersion({ d, other }: { d: PredictionDetail; other: Counterpart }) {
+  return (
+    <div className="notice-info" role="note">
+      <strong>There is also a model + market record for this match.</strong> {other.model_name}{" "}
+      blended bookmakers' prices into this model's numbers (saved {formatLondon(other.created_at_utc)}
+      ).{" "}
+      {other.is_primary && !d.is_primary && "It is the record of record for this match. "}
+      <a href={href(`/match/${other.id}`)}>See the two side by side</a>.
+    </div>
   );
 }
 
@@ -319,7 +522,16 @@ function Uncertainty({ d }: { d: PredictionDetail }) {
       </>,
     );
   }
-  items.push(<>The probabilities come from past results only and have no error bars of their own.</>);
+  items.push(
+    d.basis === "model_and_market" ? (
+      <>
+        The probabilities come from past results and bookmakers' prices collected before the
+        prediction, and have no error bars of their own.
+      </>
+    ) : (
+      <>The probabilities come from past results only and have no error bars of their own.</>
+    ),
+  );
   return (
     <>
       <ul className="facts">
@@ -437,7 +649,7 @@ function Editions({ d }: { d: PredictionDetail }) {
       <ol className="editions">
         {d.editions.map((e) => {
           const current = e.id === d.id;
-          const label = `${editionLabel(e.edition)} · ${e.model_name}`;
+          const label = `${editionLabel(e.edition)} · ${e.model_name} · ${basisLabel(e.basis)}`;
           return (
             <li key={e.id} className={current ? "is-current" : undefined}>
               <div className="edition-line">
@@ -451,6 +663,7 @@ function Editions({ d }: { d: PredictionDetail }) {
               </div>
               <div className="muted small">
                 Saved {formatLondon(e.created_at_utc)} · {recordTypeLabel(e.record_type)}
+                {e.is_primary ? " · record of record" : ""}
                 {e.reason ? ` · ${e.reason}` : ""}
               </div>
             </li>
@@ -459,7 +672,7 @@ function Editions({ d }: { d: PredictionDetail }) {
       </ol>
       <p className="muted small">
         Saved predictions are never changed. A correction or a later edition is a new record that
-        says what it replaces.
+        says what it replaces. The record of record is the one the headline performance counts.
       </p>
     </>
   );

@@ -5,7 +5,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import Session
 
-from fdfixtures import REFERENCE, ROWS, csv_bytes, replace_field
+from fdfixtures import HEADER, REFERENCE, ROWS, csv_bytes, replace_field
 from footy.ingest.fd_update import run_fd_update
 from footy.ingest.jobs import job_run
 from footy.models import (
@@ -15,6 +15,7 @@ from footy.models import (
     JobRun,
     Match,
     RawFile,
+    RawImport,
 )
 
 TODAY = date(2025, 12, 10)
@@ -153,11 +154,12 @@ def sc0_rows_with_repeats() -> list[str]:
     return [*rows, *later]
 
 
-def test_european_main_layout_division_has_results_but_no_prices(migrated_engine, settings):
+def test_european_main_layout_division_has_results_and_prices(migrated_engine, settings):
     drop(settings, csv_bytes(sc0_rows_with_repeats()), name="2526_SC0.csv")
     detail = update(migrated_engine, settings)
     assert detail["import"]["matches_inserted"] == 5
-    assert detail["import"]["odds_inserted"] == 0
+    # Every main-layout division's prices are imported (fd-5): 10 per row of the fixture.
+    assert detail["import"]["odds_inserted"] == 5 * 10
     assert detail["import"]["rows_rejected"] == 1
     with Session(migrated_engine) as s:
         assert {m.division for m in s.scalars(select(Match))} == {"SC0"}
@@ -208,3 +210,45 @@ def test_core_division_keeps_one_row_per_pairing(migrated_engine, settings):
         assert {m.meeting for m in s.scalars(select(Match))} == {1}
         issue = s.scalar(select(ImportIssue).where(ImportIssue.code == "duplicate_fixture"))
         assert (issue.source_row, issue.detail) == (4, "same pairing as row 1")
+
+
+def test_second_tier_prices_are_imported_like_the_top_division(migrated_engine, settings):
+    """fd-5: a core second tier's pre-closing and closing prices go in with the same quote
+    times and checks as E0's (D-012, D-017)."""
+    e1 = [replace_field(r, "Div", "E1") for r in ROWS]
+    e1[1] = replace_field(e1[1], "PC>2.5", "1.01", header=HEADER)  # implied sum 1.58: dropped
+    drop(settings, csv_bytes(), name="2526_E0.csv")
+    drop(settings, csv_bytes(e1), name="2526_E1.csv")
+    update(migrated_engine, settings)
+    with Session(migrated_engine) as s:
+
+        def prices(division):
+            return sorted(
+                (
+                    m.source_row,
+                    o.bookmaker,
+                    o.market_key,
+                    o.selection,
+                    o.phase,
+                    o.price,
+                    o.quote_time_utc,
+                    o.quote_time_basis,
+                    o.source_column,
+                )
+                for o, m in s.execute(
+                    select(FdOdds, Match)
+                    .join(Match, Match.id == FdOdds.match_id)
+                    .where(Match.division == division)
+                )
+            )
+
+        e0, e1_prices = prices("E0"), prices("E1")
+        assert len(e0) == 30 and len(e1_prices) == 28
+        dropped = [p for p in e0 if p[0] == 2 and p[1] == "PS" and p[2] == "OU_2.5"]
+        assert e1_prices == [p for p in e0 if p not in dropped]
+        (issue,) = s.scalars(
+            select(ImportIssue).where(ImportIssue.code == "implausible_overround")
+        ).all()
+        assert issue.source_row == 2 and issue.detail.startswith("PS OU_2.5 closing 1.5")
+        assert s.scalar(select(func.count()).select_from(RawImport)) == 2
+        assert {i.parser_version for i in s.scalars(select(RawImport))} == {"fd-5"}

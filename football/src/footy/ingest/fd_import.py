@@ -3,7 +3,9 @@
 Idempotent: re-importing the same raw revision changes nothing. When a newer revision of a
 file changes a stored value, the change is applied and written to `data_corrections`.
 Main-layout files hold one division-season each; extra-league files hold every season of
-one league and are imported season by season with the same rules (D-022).
+one league and are imported season by season with the same rules (D-022). Prices are
+imported from both layouts (pre-closing and closing from main-layout files, closing only
+from extra-league files; D-022).
 
 A stored match is identified by (home team, away team, meeting) within its division-season:
 `meeting` counts the pairing's rows in file order, after names are mapped to teams. Where a
@@ -33,7 +35,7 @@ from footy.models import (
     TeamAlias,
     utcnow,
 )
-from footy.reference import DIVISIONS, TOP_DIVISIONS, load_aliases, load_teams
+from footy.reference import DIVISIONS, load_aliases, load_teams
 from footy.seasons import season_label
 
 MATCH_FIELDS = [
@@ -122,7 +124,7 @@ def import_raw_file(
     parsed = parse_fd_csv(
         read_raw(raw_dir, raw),
         division,
-        with_odds=division in TOP_DIVISIONS,
+        with_odds=True,
         repeats_expected=DIVISIONS[division].scope != "core",
         max_meetings=DIVISIONS[division].max_meetings,
     )
@@ -174,8 +176,9 @@ def import_extra_raw_file(
     stored_seasons = set(
         session.scalars(select(Match.season).where(Match.division == division).distinct())
     )
+    odds_by_match: list[tuple[int, ParsedMatch]] = []
     for season in sorted(stored_seasons | set(parsed.seasons)):
-        _, found = _upsert_matches(
+        season_odds, found = _upsert_matches(
             session,
             raw.id,
             division,
@@ -186,7 +189,9 @@ def import_extra_raw_file(
             stats,
             prefix=f"{season_label(season)}: ",
         )
+        odds_by_match += season_odds
         issues += found
+    _upsert_odds(session, raw.id, odds_by_match, now, stats)
     stats.issues = _replace_issues(session, raw.id, issues)
     stats.rows_rejected = _rows_rejected(issues)
     if done is None:
