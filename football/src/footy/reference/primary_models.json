@@ -3,17 +3,31 @@
   "domestic": [
     {
       "from_utc": null,
-      "models": ["dixon_coles"]
+      "models": [
+        "dixon_coles"
+      ]
+    },
+    {
+      "from_utc": "2026-10-21T07:01:36Z",
+      "models": [
+        "market_tilt_shots",
+        "dixon_coles"
+      ],
+      "note": "D-026: model + market selected on validation (0.9449) and tested once (0.9555 vs dixon_coles 0.9693); dixon_coles for fixtures without prices"
     }
   ],
   "uefa": [
     {
       "from_utc": null,
-      "models": ["pan_euro_mix"]
+      "models": [
+        "pan_euro_mix"
+      ]
     },
     {
       "from_utc": "2026-10-21T04:30:00Z",
-      "models": ["pan_euro_mix_mxg"],
+      "models": [
+        "pan_euro_mix_mxg"
+      ],
       "note": "D-026: market-trained ratings; test composite 0.9666 against 0.9686"
     }
   ]

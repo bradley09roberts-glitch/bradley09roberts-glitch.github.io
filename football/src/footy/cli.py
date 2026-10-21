@@ -364,12 +364,18 @@ def _set_model_of_record(args) -> int:
 
     path = Path(args.file) if args.file else PRIMARY_MODELS_PATH
     now = datetime.now(UTC)
+    models = [m.strip() for m in args.models.split(",")]
+    known = _published_model_names(args.group)
+    unknown = [m for m in models if m not in known]
+    if unknown:
+        print(f"Refused, {path.name} unchanged: not a {args.group} model: {', '.join(unknown)}")
+        return 1
     try:
         start = models_of_record.parse_from(args.from_utc, now)
         periods = models_of_record.append_period(
             path,
             args.group,
-            [m.strip() for m in args.models.split(",")],
+            models,
             start,
             note=args.note,
             now=now,
@@ -385,6 +391,17 @@ def _set_model_of_record(args) -> int:
         )
     print("Fixtures kicking off before the new period keep their model of record.")
     return 0
+
+
+def _published_model_names(group: str) -> set[str]:
+    """Names a group's records can carry: registered domestic candidates, or UEFA models."""
+    if group == "uefa":
+        from footy.modeling.euro_registry import EURO_MODELS
+
+        return set(EURO_MODELS)
+    from footy.modeling.registry import candidates
+
+    return set(candidates())
 
 
 def _named(factory, name: str):

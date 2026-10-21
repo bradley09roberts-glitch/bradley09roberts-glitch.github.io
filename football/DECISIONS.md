@@ -588,8 +588,12 @@ predicted: the mean, over 1X2 RPS and the log losses of O/U 1.5, 2.5, 3.5 and BT
 (model metric ÷ frequency-baseline metric). Lower is better; the frequency baseline scores 1.
 The model with the lowest composite on validation (2023/24) is selected and then run once on
 test (2024/25 and 2025/26). Accuracy is always reported alongside but does not decide. The
-UEFA models use the same composite over UEFA matches. Tuning inside a model family uses
-seasons before 2023/24 only.
+UEFA models use the same composite over UEFA matches. A builder's own search inside a model
+family (step sizes, priors, decay) uses seasons before 2023/24 only. Variants that are put
+forward as named candidates, such as different `market_alpha` or mixture weights, are
+compared on validation like any other candidates; the one selected is the only one tested.
+Every candidate compared on validation is listed with its number, so the size of the search
+is visible.
 
 **Numbering note:** the code and the lab modules written before this entry call this rule
 "D-022". D-022 is the European domestic leagues; references are being corrected to D-025.
@@ -618,11 +622,45 @@ Both rows use the same data (after migration 0005). Six market-trained variants 
 0.0005 of each other on validation, so the gain is small. It held on test, mostly in the
 totals and BTTS. The previous model's records for 21–22 October stay saved.
 
-**Domestic leagues:** `dixon_coles` until the model lab finishes. The model + market
-candidate `market_tilt_dc` (D-024) beats every pure model on validation (composite 0.9452
-against 0.9598). It becomes the model of record, with `dixon_coles` as the fallback for
-fixtures that have no prices yet, once the website can show a model and its fallback (an
-ordered list in `primary_models.json`) and the test run is done.
+**Domestic leagues:** `market_tilt_shots`, then `dixon_coles` where a fixture has no
+prices yet, from 21 Oct 2026, 07:01 UTC (`dixon_coles` alone before). Both model + market
+candidates (D-024) were validated officially; by D-025 the selected one is
+`market_tilt_shots` (the shots model's grid tilted fully to the pre-closing consensus), and it
+alone was tested. The fallback `dixon_coles` was tested in the same run.
+
+| Five leagues | Validation 2023/24 composite | Test composite | Test RPS (95% CI) | Test 1X2 accuracy |
+| --- | --- | --- | --- | --- |
+| `market_tilt_shots` | 0.9449 | 0.9555 | 0.1959 (0.1917–0.1999) | 53.4% |
+| `market_tilt_dc` (not tested) | 0.9452 | – | – | – |
+| `shots_xg_sot_joint_rw` (not tested) | 0.9552 | – | – | – |
+| `dixon_coles` | 0.9598 | 0.9693 | 0.2019 (0.1981–0.2057) | 52.3% |
+| Frequency baseline | 1.0000 | 1.0000 | 0.2313 | 43.0% |
+
+It beats `dixon_coles` in every league and both test seasons (paired block bootstrap on RPS:
+−0.0060, 95% CI −0.0075 to −0.0045). It does not beat the closing price: 1X2 RPS +0.0006
+(−0.0002 to +0.0013), O/U 2.5 log loss +0.0035 (+0.0011 to +0.0058). The profit simulation
+finds almost nothing to bet (one test bet), as expected for a forecast made of the same prices.
+Full report: [docs/results/domestic.md](docs/results/domestic.md).
+
+After the test run, the model lab fixed an edge case in `shots_xg.py` (frozen parameters of a
+statistic with no data). Re-running `market_tilt_shots` on Premier League 2025/26 with the
+fixed code gives identical 1X2 and O/U 2.5, and O/U 1.5, 3.5 and BTTS within 0.00002, so the
+tested model is the one in use. A record for Levante v Athletic Club (21 Oct) was published
+under `market_tilt_shots` before the switch.
+
+**UEFA, round 3 (21 Oct 2026).** `pan_euro_mix_mxg` stays the UEFA model of record. Its
+market expected goals are pinned to `market_scope="top5_exact"` (the five top divisions, the
+exact 1X2 + O/U 2.5 solve, Pinnacle, Bet365 and average closing on every date), the targets it
+was selected and tested on: a read-only refit reproduces all 45 records of 21–22 Oct exactly.
+Without the pin, all-league prices imported later would have moved its 1X2 by up to 0.031.
+UEFA models now publish by name (`footy predict-euro --model pan_euro_mix_mxg`,
+`footy.modeling.euro_registry`), and a name's configuration never changes once it has
+records. A candidate trained on every league's market expected goals, with Pinnacle dropped
+from 23 Jul 2025 (D-014), led on validation (best variant `pan_euro_mix_mxg_all_ma0_w0.8`:
+0.9588 against 0.9613) but not on test (0.9672 against 0.9666; UCL RPS 0.1972 against
+0.1964; worse on the composite in both test seasons), so nothing switches. The pinned scope
+still averages Pinnacle's closing prices after 23 Jul 2025, which D-014 calls stale; dropping
+them did not help on test, so this is accepted for this model.
 
 **Effective-from times (21 Oct 2026).** Each group in `primary_models.json` is now a list of
 periods, `{"from_utc": ..., "models": [...]}`, oldest first (`footy.models_of_record`). A
@@ -636,7 +674,7 @@ or list is still read as one period from the start.
   `pan_euro_mix_mxg`; domestic is `dixon_coles` throughout. All 155 saved records have the
   same record-of-record flag as before (109 primary).
 - **Switching.** Use `uv run footy set-model-of-record --group domestic --models
-  market_tilt_dc,dixon_coles --from now`. It appends a period and refuses a start before now,
+  market_tilt_shots,dixon_coles --from now` (names are checked against the registered models). It appends a period and refuses a start before now,
   or one not after the group's last period. A fixture that has already kicked off keeps its
   model of record, so a switch never changes the settled record or its accuracy.
 - **What "from now" covers.** Fixtures that haven't kicked off yet take the new period,

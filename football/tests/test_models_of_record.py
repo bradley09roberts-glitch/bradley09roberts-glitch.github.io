@@ -184,7 +184,8 @@ def test_append_refuses_a_malformed_file(tmp_path):
     assert json.loads(path.read_text())["domestic"] == []
 
 
-def test_cli_appends_from_now_and_refuses_the_past(tmp_path, capsys):
+def test_cli_appends_from_now_and_refuses_the_past(tmp_path, capsys, monkeypatch):
+    monkeypatch.setattr(cli, "_published_model_names", lambda group: {"tilt_x", "dixon_coles"})
     path = write(tmp_path / "p.json", domestic="dixon_coles")
     args = ["set-model-of-record", "--group", "domestic", "--models", "tilt_x, dixon_coles"]
     t0 = datetime.now(UTC)
@@ -198,6 +199,18 @@ def test_cli_appends_from_now_and_refuses_the_past(tmp_path, capsys):
     assert cli.main([*args, "--from", "2026-01-01T00:00:00Z", "--file", str(path)]) == 1
     assert cli.main([*args, "--from", "tomorrow", "--file", str(path)]) == 1
     assert "Refused" in capsys.readouterr().out
+    assert path.read_text() == before
+
+
+def test_cli_refuses_an_unregistered_model_name(tmp_path, capsys):
+    path = write(tmp_path / "p.json", domestic="dixon_coles")
+    before = path.read_text()
+    args = ["set-model-of-record", "--group", "domestic", "--from", "now", "--file", str(path)]
+    assert cli.main([*args, "--models", "market_tilt_x,dixon_coles"]) == 1
+    assert "not a domestic model: market_tilt_x" in capsys.readouterr().out
+    assert path.read_text() == before
+    uefa = ["set-model-of-record", "--group", "uefa", "--from", "now", "--file", str(path)]
+    assert cli.main([*uefa, "--models", "dixon_coles"]) == 1  # a domestic name for UEFA
     assert path.read_text() == before
 
 
