@@ -1,6 +1,6 @@
 # M6 website QA
 
-_Run on 21 October 2026, about 02:00–02:45 UK time._
+_Run on 21 October 2026, about 02:10–02:50 UK time._
 
 All six pages were checked at 390 × 844 (phone) and 1280 × 800 (desktop), in light and dark
 themes, against the real API. Pages that the real data can't fill yet were also checked with
