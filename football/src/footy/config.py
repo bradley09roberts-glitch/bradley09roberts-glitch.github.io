@@ -37,6 +37,15 @@ class Settings(BaseSettings):
         default=None, validation_alias="SPORTMONKS_API_TOKEN"
     )
     api_football_key: SecretStr | None = Field(default=None, validation_alias="API_FOOTBALL_KEY")
+    # Leagues the provider key covers, as division:provider_league_id pairs. The default is the
+    # five top divisions; the Sportmonks free plan covers only SC0:501 and DK1:271.
+    sportmonks_leagues: str = Field(
+        default="E0:8,SP1:564,I1:384,D1:82,F1:301", validation_alias="FOOTY_SPORTMONKS_LEAGUES"
+    )
+
+    def sportmonks_league_ids(self) -> dict[str, int]:
+        pairs = (p.split(":") for p in self.sportmonks_leagues.split(",") if p.strip())
+        return {code.strip(): int(i) for code, i in pairs}
 
     @property
     def raw_dir(self) -> Path:

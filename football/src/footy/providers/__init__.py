@@ -12,5 +12,5 @@ def get_provider(settings: Settings) -> LiveProvider | None:
         from footy.providers.sportmonks import SportmonksClient, SportmonksProvider
 
         token = settings.sportmonks_api_token.get_secret_value()
-        return SportmonksProvider(SportmonksClient(token))
+        return SportmonksProvider(SportmonksClient(token), settings.sportmonks_league_ids())
     raise NotImplementedError(f"provider {settings.live_provider!r} has no adapter yet")
