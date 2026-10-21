@@ -383,6 +383,34 @@ The fix needs a migration, which was out of scope for this task:
 
 The core ten would not change, since their meeting is always 1.
 
+**Fixed on 21 Oct 2026 (migration 0005).** These are the changes:
+
+- **Schema.** `matches.meeting` (default 1) is now part of the unique key (division, season,
+  home_team, away_team, meeting). Meetings are numbered 1, 2, 3 in file order, which is date
+  order for every repeated pairing in the files.
+- **Meetings per division.** Each division has `max_meetings` in `reference.py`, set from the
+  largest count in the raw files:
+  - 3 for SC0, SWZ, AUT, ROU and FIN;
+  - 2 for IRL, DNK, G1, B1 and POL;
+  - 1 elsewhere, including the core ten. There, a second row of a pairing is still a
+    `duplicate_fixture` (D-017).
+- **Rows still rejected.** A meeting beyond the division's limit is held back as
+  `repeat_pairing`. The same pairing on the date of a kept meeting is a `duplicate_fixture`.
+  The importer counts meetings after names are mapped to teams, so a merged club's two
+  spellings count as one pairing.
+- **Re-import.** Parsers are now fd-4 and fdx-2. The re-import stored all 4,815 held-back rows
+  (the table above), and none is held back now.
+- **Core ten.** Match and price counts, data hashes, import issues and the 20-match
+  spot-check are unchanged.
+- **Coverage.** "Expected" is every ordered pairing once, plus each further meeting stored,
+  plus play-off matches against visitors. Where pairs meet once, that is
+  teams × (teams − 1). For a split season in progress it is a lower bound.
+- **Settlement.** A prediction in a division with more than one meeting is settled only by the
+  meeting on its own date.
+- **Same-league European play-offs.** These were held back before only because they repeated
+  a pairing; they are now stored like the ones that weren't. An example is the one third
+  meeting in each Austrian season from 2018/19 to 2023/24, about a week before its last match.
+
 **Play-off visitors.** The extra-league files also hold promotion and relegation play-offs
 against lower-division clubs, and, in Ireland, the First Division's own play-offs. A visitor
 is a club with at most 4 matches in a season, and at most a fifth of the median club's count,
@@ -495,5 +523,21 @@ model-against-market comparison stays meaningful.
 
 **Note on the back-up domestic records of 21 October:** their `notes` field cites "D-020" for
 the rule that the current primary domestic model publishes while the lab runs. That number
-is wrong (D-020 is the odds-capture schedule); the rule is the one in this entry's
-"Primary models" section below. The records are immutable, so the note stays as written.
+is wrong (D-020 is the odds-capture schedule); the rule is D-026 (models of record).
+The records are immutable, so the note stays as written.
+
+## D-025 Model selection: one composite on validation (2026-10-20, recorded 2026-10-21)
+
+**Why:** the brief fixes the primary metrics (RPS for 1X2, log loss for the binary markets)
+but not how to choose between models that win on some and lose on others.
+
+**Decision:** one composite, pooled over the five leagues on the fixtures every compared model
+predicted: the mean, over 1X2 RPS and the log losses of O/U 1.5, 2.5, 3.5 and BTTS, of
+(model metric ÷ frequency-baseline metric). Lower is better; the frequency baseline scores 1.
+The model with the lowest composite on validation (2023/24) is selected and then run once on
+test (2024/25 and 2025/26). Accuracy is always reported alongside but does not decide. The
+UEFA models use the same composite over UEFA matches. Tuning inside a model family uses
+seasons before 2023/24 only.
+
+**Numbering note:** the code and the lab modules written before this entry call this rule
+"D-022". D-022 is the European domestic leagues; references are being corrected to D-025.

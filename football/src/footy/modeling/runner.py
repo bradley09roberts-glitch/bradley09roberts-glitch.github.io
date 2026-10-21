@@ -1,6 +1,6 @@
 """Run named models over leagues and seasons in parallel, write ledgers, compare.
 
-Model selection (DECISIONS.md D-022): a single composite of the brief's primary metrics,
+Model selection (DECISIONS.md D-025): a single composite of the brief's primary metrics,
 pooled over the five leagues on identical fixtures: the mean, over 1X2 RPS and the log losses
 of O/U 1.5, 2.5, 3.5 and BTTS, of (model metric ÷ frequency-baseline metric). Lower is
 better. Accuracy is always reported alongside.
@@ -69,7 +69,7 @@ def save(model_name: str, ledger: pd.DataFrame, split: str, root: Path | None = 
         "decision_time": "early edition: 00:00 UK on the football-data collection day (D-012)",
         "refit": "every decision batch",
         "data_revision": data_revision(get_engine()),
-        "selection_rule": "D-022 composite on validation 2023/24",
+        "selection_rule": "D-025 composite on validation 2023/24",
     }
     return write_run(root / run_id, ledger, manifest)
 
