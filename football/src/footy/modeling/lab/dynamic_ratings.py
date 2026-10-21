@@ -1,33 +1,69 @@
 """Dynamic team ratings (model-lab family `dynamic_ratings`).
 
-Draft: extended-Kalman-filter Poisson model with date-grouped updates, optional
-shots-on-target observations; pi-ratings with a Poisson regression map.
+Two rating systems that move match by match, and a mixture of the two.
+
+`DynamicPoisson`: a state-space model in which every team's ratings follow random walks,
+filtered by an extended Kalman filter on the log-rates (a Gaussian approximation to the
+Koopman & Lit dynamic Poisson model; Rue & Salvesen use the same Brownian dynamics with
+MCMC). Per team a strength s (moves the goal difference) and a tempo t (moves the goal
+total):
+
+    log E[home goals] = mu_k + h_k + (s_i − s_j)/2 + (t_i + t_j)/2
+    log E[away goals] = mu_k       + (s_j − s_i)/2 + (t_i + t_j)/2
+
+The division goal level mu_k and home advantage h_k are states too. One full covariance
+covers every team and division term, so a result also moves everyone correlated with the two
+sides, e.g. a promoted team's old division. Matches on the same day are one joint update,
+written in IRLS form: working response η + (y − λ)/λ with variance r/λ.
+
+- Shots on target, total shots and corners can be extra measurements of the same ratings:
+  log E[home SoT] = nu_k + g_k + b_s·(s_i − s_j)/2 + b_t·(t_i + t_j)/2 (+ small team SoT
+  residuals), with their own division terms and noise scale. Missing values are skipped,
+  row by row, so with no shot data at all the model reduces to the goals-only filter.
+- Summer: ratings regress towards their division's mean and gain variance. Division
+  levels get a summer shock that is shared within a country and between goals and the
+  count statistics (a rule change such as 2023/24's added time moves them together, and
+  the far more numerous shots then reveal it within weeks).
+- Prediction: the season step if the fixture is in a new season, then
+  λ = exp(E[η] + c·Var[η]/2), the Poisson grid with the Dixon-Coles rho fitted on the
+  filter's own one-step-ahead predictions over the history.
+
+`PiRatings`: pi-ratings (Constantinou & Fenton 2013): each team's home and away ratings
+move after every match by lr·ψ(error) in goal-difference units (ψ = c·log10(1 + |error|)),
+with the other venue's rating moving gamma times as much. The pre-match expected goal
+difference, a goal-total ("tempo") rating per team and fading promoted / relegated flags
+feed two weighted Poisson regressions (home goals, away goals; intercepts per division)
+fitted by IRLS on the training history. Optionally the ratings learn from a blend of the
+goal difference and a shots-on-target expected goal difference.
+
+`GridBlend`: a mixture of score grids, which stays coherent across every market.
+
+Uses only the DataFrames passed to fit/predict, and no randomness. The one fixed input is
+a public calendar of COVID-19 closed-doors periods (optional, off in the registered
+candidates). Every fit replays the filter over the history it is given, so a fit does not
+depend on earlier calls.
 """
 
 import math
 
 import numpy as np
 import pandas as pd
+from scipy.linalg import solve_triangular
+from scipy.linalg.blas import dsyrk
 from scipy.optimize import minimize_scalar
 
 from footy.modeling.base import ALL_MARKETS
 from footy.modeling.data import SECOND_TIER
-from footy.modeling.grid import (
-    MAX_GOALS,
-    MarketProbs,
-    markets_from_grid,
-    mix_grids,
-    poisson_grid,
-)
+from footy.modeling.grid import MarketProbs, markets_from_grid, mix_grids, poisson_grid
 
 TIER1 = set(SECOND_TIER)
 TIER2 = set(SECOND_TIER.values())
 DIVS = sorted(TIER1 | TIER2)
-_GRID_SHAPE = (MAX_GOALS + 1, MAX_GOALS + 1)
 DIDX = {d: i for i, d in enumerate(DIVS)}
 IS_T2 = np.array([d in TIER2 for d in DIVS])
 EPOCH = pd.Timestamp("2000-01-01")
-# extra count statistics that measure the same latent ratings: columns, starting level
+RHO_LIMIT = 0.25
+# extra count statistics that measure the same latent ratings: columns, starting log level
 STREAMS = {
     "sot": ("home_sot", "away_sot", math.log(4.3)),
     "shots": ("home_shots", "away_shots", math.log(12.0)),
@@ -35,7 +71,7 @@ STREAMS = {
 }
 
 # COVID-19 periods without spectators, by division: a fixed calendar of public facts (to
-# within days), not derived from match data. Matches in them get their own home term.
+# within days), not derived from match data. With `covid`, these get their own home term.
 NO_CROWD = {
     "E0": [("2020-06-17", "2021-05-17")],
     "E1": [("2020-06-20", "2021-05-08")],
@@ -68,77 +104,54 @@ def no_crowd_mask(df: pd.DataFrame) -> np.ndarray:
 
 
 EKF_DEFAULTS = {
+    # team dynamics (variances in strength / tempo units; per day unless "season")
     "q_s": 4e-5,  # daily random-walk variance of strength
     "q_t": 5e-6,  # ... of tempo
-    "p0_s": 0.08,  # prior variance of a new team's strength
+    "p0_s": 0.08,  # prior variance of a team's strength when it joins the filter
     "p0_t": 0.01,
     "season_var_s": 0.01,  # extra variance every summer
     "season_var_t": 0.002,
-    "season_shrink_s": 0.85,  # summer regression towards the division mean
+    "season_shrink_s": 0.85,  # summer regression towards the division mean (1: none)
     "season_shrink_t": 0.7,
-    "season_var_mu": 0.0,  # extra summer variance of division goal / count levels
-    "season_var_h": 0.0,  # ... and of division home advantages
-    "level_corr": 0.0,  # correlation of the summer level shocks within a country
+    "tier2_offset": 0.4,  # at the start of the history, tier-2 sides start this much weaker
+    "newcomer_s": -0.15,  # a side new to the data starts this far below its division's mean
+    # division terms
     "q_mu": 2e-6,  # daily drift of a division's goal level
     "q_h": 2e-6,  # ... and of its home advantage
     "p0_mu": 0.02,
     "p0_h": 0.02,
-    "tier2_offset": 0.4,  # tier-2 sides start this much weaker (strength units)
-    "newcomer_s": -0.15,  # a side new to the data starts below its division's mean
-    "r_scale": 1.0,  # measurement-noise scale (quasi-Poisson dispersion)
-    "r_tier2": 1.0,  # extra scale for second-tier matches
-    "iterations": 1,  # >1: iterated EKF (posterior mode)
-    "var_correction": 0.0,  # predict exp(eta + c·var(eta)/2)
-    "rho_days": 1000.0,
-    "warmup_days": 300.0,
+    "season_var_mu": 0.0,  # summer shock to division goal / count levels
+    "season_var_h": 0.0,  # ... and to division home advantages
+    "level_corr": 0.0,  # share of the level shock common to a country's levels
     "team_home": 0.0,  # prior variance of team-specific home advantage (0: none)
     "q_team_home": 0.0,
-    # shots on target as a second, noisier measurement of the same latent ratings
-    "r_sot": 0.0,  # SoT measurement-noise scale (0: SoT unused)
+    "covid": False,  # separate home term for matches without spectators
+    # measurement
+    "r_scale": 1.0,  # goal measurement-noise scale (quasi-Poisson dispersion)
+    "r_tier2": 1.0,  # extra scale for second-tier matches
+    "r_red": 1.0,  # extra scale for matches with a red card
+    "y_cap": 0.0,  # cap goal counts at this value in the update (0: no cap)
+    "r_sot": 0.0,  # shots-on-target noise scale (0: SoT unused)
     "sot_s": 0.67,  # loading of SoT log-rates on strength (goals load 1)
     "sot_t": 1.0,  # ... on tempo
     "sot_resid": 0.0,  # prior variance of team SoT-specific strength / tempo (0: none)
     "q_sot_resid": 0.0,
-    "r_shots": 0.0,  # total shots as a third measurement (0: unused)
+    "r_shots": 0.0,  # total shots (0: unused)
     "shots_s": 0.4,
     "shots_t": 0.6,
-    "r_corners": 0.0,  # corners as a fourth measurement (0: unused)
+    "r_corners": 0.0,  # corners (0: unused)
     "corners_s": 0.3,
     "corners_t": 0.3,
-    "covid": False,  # separate home term for matches without spectators
-    "r_red": 1.0,  # measurement-noise scale for matches with a red card
-    "y_cap": 0.0,  # cap goal counts at this value in the update (0: no cap)
-    # data-driven starting ratings: a first pass over the window's first `prewarm_days`
-    # gives each team's starting mean (variance p0 × prewarm_p) for the full pass
-    "prewarm_days": 0.0,
-    "prewarm_p": 1.0,
-    # predictive mixture: integrate the Poisson grid over the uncertainty of the two
-    # log-rates (state covariance × quad_scale, plus match-level noise) with quad² points
-    "quad": 0,
-    "quad_scale": 1.0,
-    "match_var": 0.0,  # independent match-level log-rate noise (also in the update)
-    "match_cov": 0.0,  # shared (home and away) match-level log-rate noise
+    # prediction
+    "var_correction": 0.0,  # predict exp(E[η] + c·Var[η]/2)
+    "rho_days": 1000.0,  # time scale of the weights of the rho fit
+    "rho_shift": 0.0,  # added to the fitted rho
+    "warmup_days": 300.0,  # one-step predictions this early in the history fit no rho
 }
 
 
 class DynamicPoisson:
-    """Attack / defence as random walks, filtered match by match (extended Kalman filter on
-    the log-rates, a Gaussian approximation to the Koopman & Lit state-space model).
-
-    Per team: strength s (moves the goal difference) and tempo t (moves the goal total):
-
-        log E[home goals] = mu_k + h_k + (s_i − s_j)/2 + (t_i + t_j)/2
-        log E[away goals] = mu_k       + (s_j − s_i)/2 + (t_i + t_j)/2
-
-    with division goal level mu_k and home advantage h_k also in the state (slow drift). The
-    state has one full covariance over every team and division term, so a result moves
-    everyone who is correlated with the two teams (e.g. a promoted side's old division).
-    Matches on the same day are one joint update.
-
-    With `r_sot` > 0, shots on target are a second measurement of the same ratings:
-
-        log E[home SoT] = nu_k + g_k + b_s·(s_i − s_j)/2 + b_t·(t_i + t_j)/2 (+ residuals)
-    """
+    """Extended-Kalman-filter dynamic Poisson ratings (see the module docstring)."""
 
     markets = ALL_MARKETS
 
@@ -178,25 +191,18 @@ class DynamicPoisson:
     def fit(self, history: pd.DataFrame, cutoff) -> None:
         c = self.cfg
         h = history[history.division.isin(TIER1 | TIER2)].sort_values(["date", "id"])
-        teams = sorted(set(h.home_team) | set(h.away_team))
-        warm = None
-        if c["prewarm_days"] > 0 and len(h):
-            self.start(teams)
-            self.process(h[h["date"] < h["date"].iloc[0] + pd.Timedelta(days=c["prewarm_days"])])
-            warm = (self.m_.copy(), self.seen_.copy())
-        self.start(teams, warm)
+        self.start(sorted(set(h.home_team) | set(h.away_team)))
         pre_lh, pre_la = self.process(h)
         day = (h["date"] - EPOCH).dt.days.to_numpy()
         cut_day = (cutoff.tz_convert("UTC").tz_localize(None) - EPOCH).days
         use = (day >= day[0] + c["warmup_days"]) if len(h) else np.zeros(0, bool)
         w = np.exp(-(cut_day - day) / c["rho_days"]) * use
         yh, ya = h.home_goals.to_numpy(float), h.away_goals.to_numpy(float)
-        self.rho_ = _fit_rho(yh, ya, pre_lh, pre_la, w)
-        self.pre_eta_ = (np.log(np.maximum(pre_lh, 1e-9)), np.log(np.maximum(pre_la, 1e-9)))
+        rho = _fit_rho(yh, ya, pre_lh, pre_la, w) + c["rho_shift"]
+        self.rho_ = float(np.clip(rho, -RHO_LIMIT, RHO_LIMIT))
 
-    def start(self, teams: list[str], warm=None) -> None:
-        """Empty state for these teams (each joins the filter at its first match). `warm`:
-        (state mean, seen) of an earlier pass, used for starting values."""
+    def start(self, teams: list[str]) -> None:
+        """Empty state for these teams (each joins the filter at its first match)."""
         c = self.cfg
         T, D = len(teams), len(DIVS)
         self.tidx_ = {t: i for i, t in enumerate(teams)}
@@ -235,14 +241,6 @@ class DynamicPoisson:
             if key in L:
                 q[L[key] : L[key] + size] = val
         self.q_ = q
-        self.warm_ = warm
-        if warm is not None:  # division terms start where the first pass ended
-            m[2 * T :] = warm[0][2 * T :]
-            if "th" in L:
-                m[L["th"] : L["th"] + T] = 0.0
-            for key in ("u", "v"):
-                if key in L:
-                    m[L[key] : L[key] + T] = 0.0
         self.m_, self.P_ = m, P
         self.seen_ = np.zeros(T, bool)
         self.last_div_ = np.full(T, -1)
@@ -250,9 +248,9 @@ class DynamicPoisson:
         self.last_season_ = None
 
     def process(self, h: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
-        """Filter matches `h` (sorted by date) into the state; returns the one-step-ahead
-        expected goals of each match, computed before its own update."""
-        c, L, T = self.cfg, self.L_, self.T_
+        """Filter matches `h` (sorted by date, later than anything filtered so far) into the
+        state; returns each match's one-step-ahead expected goals (before its update)."""
+        c, L = self.cfg, self.L_
         m, P, q = self.m_, self.P_, self.q_
         seen, last_div = self.seen_, self.last_div_
         n = L["n"]
@@ -281,7 +279,6 @@ class DynamicPoisson:
         pre_lh, pre_la = np.zeros(N), np.zeros(N)
         starts = np.flatnonzero(np.r_[True, day[1:] != day[:-1]]) if N else np.zeros(0, int)
         ends = np.r_[starts[1:], N]
-        mv, mc = c["match_var"], c["match_cov"]
         for s0, e0 in zip(starts, ends, strict=True):
             if self.cur_day_ is not None:
                 P[dg, dg] += q * (day[s0] - self.cur_day_)
@@ -296,11 +293,12 @@ class DynamicPoisson:
                         self._add_team(m, P, t_, IS_T2[di[k]], seen, last_div, di[k])
             last_div[hi[g]] = di[g]
             last_div[ai[g]] = di[g]
+            # observation rows: home goals, away goals, then each extra statistic
             mm = len(g)
             nobs = 2 * mm * (1 + len(streams))
             H = np.zeros((nobs, n))
             r_ = np.arange(mm)
-            gh, ga = 2 * r_, 2 * r_ + 1  # goal rows
+            gh, ga = 2 * r_, 2 * r_ + 1
             hg, ag, dv = hi[g], ai[g], di[g]
             _rows(H, gh, ga, hg, ag, L["s"], L["t"], 1.0, 1.0)
             H[gh, L["mu"] + dv] += 1.0
@@ -326,34 +324,24 @@ class DynamicPoisson:
                 H[sh_, L[f"home_{k}"] + dv] += 1.0
                 xh, xa, ok_all = stats[k]
                 ok = ok_all[g]
-                vs = np.where(ok, c[f"r_{k}"] * rw[g], 1e12)
+                vs = np.where(ok, c[f"r_{k}"] * rw[g], 1e12)  # missing: no information
                 var_scale[sh_], var_scale[sa_] = vs, vs
                 extra.append((sh_, sa_, ok, xh[g], xa[g]))
-            PHt = P @ H.T
-            HPH = H @ PHt
-            eta0 = H @ m
-            lam0 = np.exp(eta0)
-            pre_lh[g], pre_la[g] = lam0[gh], lam0[ga]
+            cols = np.flatnonzero(H.any(axis=0))  # H is sparse: the day's teams and divisions
+            Hc = H[:, cols]
+            PHt = P[:, cols] @ Hc.T
+            lam = np.exp(Hc @ m[cols])
+            pre_lh[g], pre_la[g] = lam[gh], lam[ga]
             for sh_, sa_, ok, xh, xa in extra:  # missing: the observation is its prediction
-                y[sh_] = np.where(ok, xh, lam0[sh_])
-                y[sa_] = np.where(ok, xa, lam0[sa_])
-            z = m
-            for _ in range(int(c["iterations"])):
-                eta = H @ z
-                lz = np.exp(eta)
-                # working response and its variance (IRLS form of the EKF update)
-                work = eta + (y - lz) / lz
-                R = np.diag(var_scale / lz)
-                if mv or mc:
-                    R[gh, gh] += mv + mc
-                    R[ga, ga] += mv + mc
-                    R[gh, ga] += mc
-                    R[ga, gh] += mc
-                gain = np.linalg.inv(HPH + R)
-                z = m + PHt @ (gain @ (work - eta0))
-            m = z
-            P = P - PHt @ gain @ PHt.T
-            P = 0.5 * (P + P.T)
+                y[sh_] = np.where(ok, xh, lam[sh_])
+                y[sa_] = np.where(ok, xa, lam[sa_])
+            # Kalman update on the working response (one Newton step from the prior mean):
+            # S = H P H' + R = C C', A = C⁻¹ H P, m += A' C⁻¹ e, P −= A' A
+            chol = np.linalg.cholesky(Hc @ PHt[cols] + np.diag(var_scale / lam))
+            A = solve_triangular(chol, PHt.T, lower=True)
+            m = m + A.T @ solve_triangular(chol, (y - lam) / lam, lower=True)
+            up = dsyrk(-1.0, A, beta=1.0, c=P, trans=1)  # upper triangle of P − A'A
+            P = np.triu(up) + np.triu(up, 1).T
         self.m_, self.P_ = m, P
         return pre_lh, pre_la
 
@@ -361,19 +349,15 @@ class DynamicPoisson:
         c, L = self.cfg, self.L_
         # a side first seen after the start (promoted from below the data) gets the
         # newcomer prior relative to the teams of its division; at the start of the
-        # window, tier-2 sides start below tier 1.
+        # history, tier-2 sides start below tier-1 sides
         members = np.flatnonzero(seen & (last_div == dk))
-        scale = 1.0
-        if self.warm_ is not None and self.warm_[1][t_]:
-            m[t_], m[L["t"] + t_] = self.warm_[0][t_], self.warm_[0][L["t"] + t_]
-            scale = c["prewarm_p"]
-        elif len(members) >= 6:
+        if len(members) >= 6:
             m[t_] = m[members].mean() + c["newcomer_s"]
         else:
             m[t_] = -c["tier2_offset"] if is_tier2 else 0.0
         for key, var in (
-            ("s", c["p0_s"] * scale),
-            ("t", c["p0_t"] * scale),
+            ("s", c["p0_s"]),
+            ("t", c["p0_t"]),
             ("th", c["team_home"]),
             ("u", c["sot_resid"]),
             ("v", c["sot_resid"]),
@@ -383,9 +367,10 @@ class DynamicPoisson:
         seen[t_] = True
 
     def _season_step(self, m, P, seen, last_div):
-        """Summer: ratings regress towards their division's mean and become less certain."""
+        """Summer: ratings regress towards their division's mean and become less certain;
+        division levels take a shock that is partly shared within each country."""
         c, L, T = self.cfg, self.L_, self.T_
-        n = len(m)
+        n, D = len(m), len(DIVS)
         A = np.eye(n)
         for dk in np.unique(last_div[seen]):
             members = np.flatnonzero(seen & (last_div == dk))
@@ -399,23 +384,14 @@ class DynamicPoisson:
         sv = np.zeros(n)
         sv[L["s"] : L["s"] + T] = c["season_var_s"] * seen
         sv[L["t"] : L["t"] + T] = c["season_var_t"] * seen
-        D = len(DIVS)
-        rho_l = c["level_corr"]
-        for key in ("mu", *(f"lvl_{k}" for k in STREAMS)):
-            if key in L:
-                sv[L[key] : L[key] + D] = c["season_var_mu"] * (1 - rho_l)
-        if rho_l and c["season_var_mu"]:
-            # one shared shock per country moves its goal and count levels together
+        levels = [key for key in ("mu", *(f"lvl_{k}" for k in STREAMS)) if key in L]
+        shared = c["level_corr"] * c["season_var_mu"]
+        for key in levels:
+            sv[L[key] : L[key] + D] = c["season_var_mu"] - shared
+        if shared:
             for top, second in SECOND_TIER.items():
-                idx = np.array(
-                    [
-                        L[key] + DIDX[d]
-                        for key in ("mu", *(f"lvl_{k}" for k in STREAMS))
-                        if key in L
-                        for d in (top, second)
-                    ]
-                )
-                P[np.ix_(idx, idx)] += c["season_var_mu"] * rho_l
+                idx = np.array([L[key] + DIDX[d] for key in levels for d in (top, second)])
+                P[np.ix_(idx, idx)] += shared
         for key in ("h", *(f"home_{k}" for k in STREAMS)):
             if key in L:
                 sv[L[key] : L[key] + D] = c["season_var_h"]
@@ -425,24 +401,15 @@ class DynamicPoisson:
     # ---- prediction ------------------------------------------------------------------
 
     def rates(self, fixtures: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
-        eta, cov = self._moments(fixtures)
-        c = self.cfg
-        if c["var_correction"]:
-            eta = eta + 0.5 * c["var_correction"] * np.stack([cov[:, 0, 0], cov[:, 1, 1]], 1)
-        return np.exp(eta[:, 0]), np.exp(eta[:, 1])
-
-    def _moments(self, fixtures: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
-        """Mean (N, 2) and covariance (N, 2, 2) of each fixture's (home, away) log-rates."""
-        c, L, T = self.cfg, self.L_, self.T_
+        c, L = self.cfg, self.L_
         m, P = self.m_, self.P_
         seen, last_div = self.seen_, self.last_div_
         season = fixtures.season.str[:2].astype(int).to_numpy()
         if season.max() != self.last_season_:
             m, P = self._season_step(m, P, seen, last_div)
-        n = len(m)
-        N = len(fixtures)
+        n, N = len(m), len(fixtures)
         H = np.zeros((2 * N, n))
-        extra = np.zeros(2 * N)  # newcomers' prior means (unseen teams)
+        extra = np.zeros(2 * N)  # prior means of sides the filter has never seen
         evar = np.zeros(2 * N)
         cd = no_crowd_mask(fixtures) if "hcd" in L else np.zeros(N, bool)
         for k, (ht, at, dv) in enumerate(
@@ -467,36 +434,16 @@ class DynamicPoisson:
             H[2 * k, L["mu"] + dk] += 1.0
             H[2 * k + 1, L["mu"] + dk] += 1.0
             H[2 * k, L["hcd"] if cd[k] else L["h"] + dk] += 1.0
-        eta = (H @ m + extra).reshape(N, 2)
-        H3 = H.reshape(N, 2, n)
-        cov = np.einsum("kin,nm,kjm->kij", H3, P, H3)
-        cov[:, 0, 0] += evar[0::2]
-        cov[:, 1, 1] += evar[1::2]
-        return eta, cov
+        eta = H @ m + extra
+        if c["var_correction"]:
+            var = np.einsum("ij,jk,ik->i", H, P, H) + evar
+            eta = eta + 0.5 * c["var_correction"] * var
+        lam = np.exp(eta)
+        return lam[0::2], lam[1::2]
 
     def predict(self, fixtures: pd.DataFrame) -> MarketProbs:
-        c = self.cfg
-        if not c["quad"]:
-            lh, la = self.rates(fixtures)
-            return markets_from_grid(poisson_grid(lh, la, self.rho_), lh, la)
-        eta, cov = self._moments(fixtures)
-        cov = cov * c["quad_scale"]
-        cov[:, 0, 0] += c["match_var"] + c["match_cov"]
-        cov[:, 1, 1] += c["match_var"] + c["match_cov"]
-        cov[:, 0, 1] += c["match_cov"]
-        cov[:, 1, 0] += c["match_cov"]
-        x, w = np.polynomial.hermite.hermgauss(int(c["quad"]))
-        z1, z2 = np.meshgrid(x * math.sqrt(2.0), x * math.sqrt(2.0), indexing="ij")
-        wq = (np.outer(w, w) / math.pi).ravel()
-        Z = np.stack([z1.ravel(), z2.ravel()])  # (2, Q)
-        chol = np.linalg.cholesky(cov + 1e-12 * np.eye(2))  # (N, 2, 2)
-        pts = eta[:, :, None] + chol @ Z  # (N, 2, Q)
-        lh, la = np.exp(pts[:, 0, :]).ravel(), np.exp(pts[:, 1, :]).ravel()
-        g = poisson_grid(lh, la, self.rho_).reshape(len(eta), len(wq), *_GRID_SHAPE)
-        grid = np.tensordot(g, wq, axes=([1], [0]))
-        mean_h = (np.exp(pts[:, 0, :]) * wq).sum(1)
-        mean_a = (np.exp(pts[:, 1, :]) * wq).sum(1)
-        return markets_from_grid(grid, mean_h, mean_a)
+        lh, la = self.rates(fixtures)
+        return markets_from_grid(poisson_grid(lh, la, self.rho_), lh, la)
 
 
 PI_DEFAULTS = {
@@ -509,29 +456,15 @@ PI_DEFAULTS = {
     "promo_decay": 12.0,  # promoted / relegated flags fade over this many matches
     "xi": 0.002,  # time decay of the regression weights (per day)
     "ridge": 1.0,  # ridge on the non-intercept regression coefficients
-    "warmup_days": 300.0,
+    "warmup_days": 300.0,  # matches this early in the history are not regressed on
     "rho_days": 1000.0,
-    "sot_blend": 0.0,  # pi-ratings learn from (1-a)·GD + a·(SoT-based expected GD)
+    "sot_blend": 0.0,  # ratings learn from (1-a)·GD + a·(SoT-based expected GD)
     "tempo_sot": 0.0,  # tempo learns from (1-a)·total + a·(SoT-based expected total)
-    "gd_sq": False,  # add ĝ·|ĝ| as a regressor
-    "ekf": None,  # dict of DynamicPoisson options: add its log-rates as features
 }
 
 
 class PiRatings:
-    """Pi-ratings (Constantinou & Fenton 2013) mapped to goal expectancies by a Poisson
-    regression fitted on the training history.
-
-    Every team has a home and an away rating, in goal-difference units on a log scale;
-    after each match both teams' ratings move by lr·ψ(error) (the other venue's rating by
-    gamma times that). The expected goal difference ĝ = ĝ_home − ĝ_away of a fixture, a
-    goal-total ("tempo") rating per team, and fading promoted / relegated flags are the
-    regressors of two Poisson regressions (home goals, away goals) with an intercept per
-    division, fitted by weighted IRLS on the pre-match features of every history match.
-
-    With `ekf`, the one-step-ahead log-rates of a DynamicPoisson filter are added as two
-    more regressors, so the regression stacks the two rating systems.
-    """
+    """Pi-ratings mapped to goal expectancies by Poisson regression (module docstring)."""
 
     markets = ALL_MARKETS
 
@@ -546,6 +479,7 @@ class PiRatings:
         return dict(self.cfg)
 
     def _gd(self, r: float) -> float:
+        """Expected goal difference against an average side, from one rating."""
         c = self.cfg
         x = c["b"] ** (abs(r) / c["c"]) - 1.0
         return x if r >= 0 else -x
@@ -559,8 +493,7 @@ class PiRatings:
         yh = h.home_goals.to_numpy(float)
         ya = h.away_goals.to_numpy(float)
         season = h.season.str[:2].astype(int).to_numpy()
-        gd_obs = yh - ya
-        tot_obs = yh + ya
+        gd_obs, tot_obs = yh - ya, yh + ya
         if c["sot_blend"] > 0 or c["tempo_sot"] > 0:
             sh, sa = h.home_sot.to_numpy(float), h.away_sot.to_numpy(float)
             ok = ~(np.isnan(sh) | np.isnan(sa))
@@ -575,8 +508,7 @@ class PiRatings:
         self.div_total_: dict[str, float] = {}
         self.team_div_: dict[str, dict[int, str]] = {}  # team -> season -> division
         self.n_in_season_: dict[str, int] = {}
-        feats = np.zeros((N, 4))  # ĝ, tempo sum, promoted / relegated flags (home, away)
-        flags = np.zeros((N, 4))
+        X = np.zeros((N, 4))  # ĝ, tempo sum, promoted-minus-relegated (home, away)
         cur_season = season[0] if N else 0
         lr, gam, tl = c["lr"], c["gamma"], c["tempo_lr"]
         for k in range(N):
@@ -590,8 +522,7 @@ class PiRatings:
             ra = self.ra_.get(at, 0.0)
             ghat = self._gd(rh) - self._gd(ra)
             th, ta = self.tempo_.get(ht, 0.0), self.tempo_.get(at, 0.0)
-            feats[k, 0], feats[k, 1] = ghat, th + ta
-            flags[k] = self._flags(ht, at, dv, sk)
+            X[k] = (ghat, th + ta, *self._flags(ht, at, dv, sk))
             # pi-rating update
             err = gd_obs[k] - ghat
             psi = c["c"] * math.log10(1.0 + abs(err))
@@ -601,43 +532,34 @@ class PiRatings:
             self.ra_[at] = ra - lr * ph
             self.rh_[at] = self.rh_.get(at, 0.0) - gam * lr * ph
             # tempo: goal total relative to the division's running mean
-            tot = tot_obs[k]
             dm = self.div_total_.get(dv, 2.7)
-            resid = tot - dm
+            resid = tot_obs[k] - dm
             self.div_total_[dv] = dm + 0.01 * resid
             self.tempo_[ht] = th + tl * (resid / 2.0 - th)
             self.tempo_[at] = ta + tl * (resid / 2.0 - ta)
             self.n_in_season_[ht] = self.n_in_season_.get(ht, 0) + 1
             self.n_in_season_[at] = self.n_in_season_.get(at, 0) + 1
         self.last_season_ = cur_season
-        feats[:, 2:] = flags[:, :2] - flags[:, 2:]  # promoted minus relegated, per side
-        X = self._design(feats)
-        if c["ekf"] is not None:
-            self.ekf_ = DynamicPoisson(**c["ekf"])
-            self.ekf_.fit(history, cutoff)
-            eh, ea = self.ekf_.pre_eta_
-            X = np.column_stack([X, eh, ea])
-        divs = sorted(set(div))
-        self.divs_ = divs
-        D = np.array([[d == x for x in divs] for d in div], float).reshape(N, len(divs))
+        self.divs_ = sorted(set(div))
+        Z = np.column_stack([self._dummies(div), X])
         day = (h["date"] - EPOCH).dt.days.to_numpy()
         cut_day = (cutoff.tz_convert("UTC").tz_localize(None) - EPOCH).days
         use = day >= (day[0] + c["warmup_days"] if N else 0)
         w = np.exp(-c["xi"] * (cut_day - day)) * use
-        self.beta_h_ = _poisson_irls(np.column_stack([D, X]), yh, w, len(divs), c["ridge"])
-        self.beta_a_ = _poisson_irls(np.column_stack([D, X]), ya, w, len(divs), c["ridge"])
-        Z = np.column_stack([D, X])
+        nd = len(self.divs_)
+        self.beta_h_ = _poisson_irls(Z, yh, w, nd, c["ridge"])
+        self.beta_a_ = _poisson_irls(Z, ya, w, nd, c["ridge"])
         lh, la = np.exp(Z @ self.beta_h_), np.exp(Z @ self.beta_a_)
         self.rho_ = _fit_rho(yh, ya, lh, la, np.exp(-(cut_day - day) / c["rho_days"]) * use)
 
-    def _design(self, feats: np.ndarray) -> np.ndarray:
-        if self.cfg["gd_sq"]:
-            return np.column_stack([feats, feats[:, 0] * np.abs(feats[:, 0])])
-        return feats
+    def _dummies(self, div) -> np.ndarray:
+        return np.array([[d == x for x in self.divs_] for d in div], float).reshape(
+            len(div), len(self.divs_)
+        )
 
-    def _flags(self, ht, at, dv, sk) -> np.ndarray:
-        """Promoted (home, away) and relegated (home, away) flags, fading with matches."""
-        out = np.zeros(4)
+    def _flags(self, ht, at, dv, sk) -> tuple[float, float]:
+        """Promoted (+) or relegated (−) last summer, fading with this season's matches."""
+        out = [0.0, 0.0]
         for j, t_ in enumerate((ht, at)):
             prev = self.team_div_.get(t_, {}).get(sk - 1)
             if prev is None or prev == dv:
@@ -646,8 +568,8 @@ class PiRatings:
             if dv in TIER1 and prev in TIER2:
                 out[j] = fade
             elif dv in TIER2 and prev in TIER1:
-                out[2 + j] = fade
-        return out
+                out[j] = -fade
+        return out[0], out[1]
 
     def _season_step(self) -> None:
         f = self.cfg["season_shrink"]
@@ -661,54 +583,24 @@ class PiRatings:
         if season.max() != self.last_season_:
             self._season_step()
             self.last_season_ = season.max()
-        N = len(fixtures)
-        feats = np.zeros((N, 4))
-        for k, (ht, at, dv, sk) in enumerate(
-            zip(fixtures.home_team, fixtures.away_team, fixtures.division, season, strict=True)
-        ):
-            feats[k, 0] = self._gd(self.rh_.get(ht, 0.0)) - self._gd(self.ra_.get(at, 0.0))
-            feats[k, 1] = self.tempo_.get(ht, 0.0) + self.tempo_.get(at, 0.0)
-            prev = {t_: self.team_div_.get(t_, {}) for t_ in (ht, at)}
-            # this season's division is the fixture's, whatever the history says
-            for t_ in (ht, at):
-                prev[t_] = {**prev[t_], sk: dv}
-            saved = self.team_div_
-            self.team_div_ = {**saved, **prev}
-            fl = self._flags(ht, at, dv, sk)
-            self.team_div_ = saved
-            feats[k, 2:] = fl[:2] - fl[2:]
-        X = self._design(feats)
-        if self.cfg["ekf"] is not None:
-            lh_e, la_e = self.ekf_.rates(fixtures)
-            X = np.column_stack([X, np.log(lh_e), np.log(la_e)])
-        D = np.array([[d == x for x in self.divs_] for d in fixtures.division], float)
-        Z = np.column_stack([D.reshape(N, len(self.divs_)), X])
+        X = np.array(
+            [
+                (
+                    self._gd(self.rh_.get(ht, 0.0)) - self._gd(self.ra_.get(at, 0.0)),
+                    self.tempo_.get(ht, 0.0) + self.tempo_.get(at, 0.0),
+                    *self._flags(ht, at, dv, sk),
+                )
+                for ht, at, dv, sk in zip(
+                    fixtures.home_team, fixtures.away_team, fixtures.division, season, strict=True
+                )
+            ]
+        ).reshape(len(fixtures), 4)
+        Z = np.column_stack([self._dummies(fixtures.division.to_numpy()), X])
         return np.exp(Z @ self.beta_h_), np.exp(Z @ self.beta_a_)
 
     def predict(self, fixtures: pd.DataFrame) -> MarketProbs:
         lh, la = self.rates(fixtures)
         return markets_from_grid(poisson_grid(lh, la, self.rho_), lh, la)
-
-
-def _poisson_irls(X, y, w, n_free, ridge, iters=25) -> np.ndarray:
-    """Weighted Poisson regression by Newton steps; the first `n_free` columns (division
-    intercepts) are unpenalised, the rest carry a ridge penalty."""
-    p = X.shape[1]
-    beta = np.zeros(p)
-    mean = max(float(np.average(y, weights=w)) if w.sum() > 0 else 1.0, 0.1)
-    beta[:n_free] = math.log(mean)
-    pen = np.full(p, ridge)
-    pen[:n_free] = 1e-6
-    for _ in range(iters):
-        eta = np.clip(X @ beta, -5, 3)
-        mu = np.exp(eta)
-        grad = X.T @ (w * (y - mu)) - pen * beta
-        hess = (X * (w * mu)[:, None]).T @ X + np.diag(pen)
-        step = np.linalg.solve(hess, grad)
-        beta = beta + step
-        if np.abs(step).max() < 1e-8:
-            break
-    return beta
 
 
 class GridBlend:
@@ -741,7 +633,7 @@ class GridBlend:
 
 
 def _rows(H, rh, ra, hi, ai, o_s, o_t, bs, bt):
-    """Add strength / tempo loadings for the home-side and away-side count rows."""
+    """Strength / tempo loadings of the home-side (rh) and away-side (ra) count rows."""
     H[rh, o_s + hi] += 0.5 * bs
     H[rh, o_s + ai] -= 0.5 * bs
     H[ra, o_s + ai] += 0.5 * bs
@@ -749,6 +641,26 @@ def _rows(H, rh, ra, hi, ai, o_s, o_t, bs, bt):
     for row in (rh, ra):
         H[row, o_t + hi] += 0.5 * bt
         H[row, o_t + ai] += 0.5 * bt
+
+
+def _poisson_irls(X, y, w, n_free, ridge, iters=25) -> np.ndarray:
+    """Weighted Poisson regression by Newton steps; the first `n_free` columns (division
+    intercepts) are unpenalised, the rest carry a ridge penalty."""
+    p = X.shape[1]
+    beta = np.zeros(p)
+    mean = max(float(np.average(y, weights=w)) if w.sum() > 0 else 1.0, 0.1)
+    beta[:n_free] = math.log(mean)
+    pen = np.full(p, float(ridge))
+    pen[:n_free] = 1e-6
+    for _ in range(iters):
+        mu = np.exp(np.clip(X @ beta, -5, 3))
+        grad = X.T @ (w * (y - mu)) - pen * beta
+        hess = (X * (w * mu)[:, None]).T @ X + np.diag(pen)
+        step = np.linalg.solve(hess, grad)
+        beta = beta + step
+        if np.abs(step).max() < 1e-8:
+            break
+    return beta
 
 
 def _fit_rho(yh, ya, lh, la, w) -> float:
@@ -769,10 +681,76 @@ def _fit_rho(yh, ya, lh, la, w) -> float:
         )
         return -v
 
-    res = minimize_scalar(nll, bounds=(-0.25, 0.25), method="bounded")
+    res = minimize_scalar(nll, bounds=(-RHO_LIMIT, RHO_LIMIT), method="bounded")
     return float(res.x)
 
 
+# Settings tuned by coordinate search on 2021/22, 2022/23 and 2023/24 pooled (five leagues;
+# a one-pass replay of the filter stood in for the walk-forward during the search).
+EKF_GOALS = {
+    "q_s": 9.6e-5,
+    "q_t": 4.5e-5,
+    "p0_s": 1.28,
+    "p0_t": 0.18,
+    "season_var_s": 0.01,
+    "season_var_t": 0.005,
+    "season_shrink_s": 0.98,
+    "q_mu": 2e-5,
+    "q_h": 2e-7,
+    "p0_h": 0.00125,
+    "r_scale": 1.15,
+    "y_cap": 5.0,
+    "var_correction": 1.0,
+    "rho_shift": -0.05,
+}
+EKF_SHOTS = {
+    "q_s": 1.35e-4,
+    "q_t": 4.5e-5,
+    "p0_s": 2.5,
+    "p0_t": 0.56,
+    "season_var_s": 0.0025,
+    "season_var_t": 0.0072,
+    "season_shrink_s": 1.0,
+    "q_mu": 3e-8,
+    "q_h": 3e-8,
+    "p0_mu": 0.08,
+    "p0_h": 0.00125,
+    "season_var_mu": 0.00125,
+    "level_corr": 0.8,
+    "r_scale": 1.3,
+    "y_cap": 5.0,
+    "r_sot": 2.0,
+    "sot_s": 0.92,
+    "sot_t": 0.6,
+    "sot_resid": 0.01,
+    "r_corners": 4.0,
+    "var_correction": 1.5,
+    "rho_shift": -0.05,
+}
+PI = {
+    "lr": 0.053,
+    "gamma": 0.85,
+    "tempo_lr": 0.024,
+    "promo_decay": 48.0,
+    "xi": 0.001,
+    "ridge": 1.0,
+    "warmup_days": 200.0,
+    "sot_blend": 0.6,
+    "tempo_sot": 0.5,
+}
+
+
 CANDIDATES = {
-    "dynamic_ratings_ekf": lambda: DynamicPoisson(),
+    "dynamic_ratings_ekf_goals": lambda: DynamicPoisson("dynamic_ratings_ekf_goals", **EKF_GOALS),
+    "dynamic_ratings_ekf": lambda: DynamicPoisson("dynamic_ratings_ekf", **EKF_SHOTS),
+    "dynamic_ratings_pi": lambda: PiRatings("dynamic_ratings_pi", **PI),
+    # mixture weights chosen on the pooled seasons from the components' ledgers
+    "dynamic_ratings_blend": lambda: GridBlend(
+        [DynamicPoisson(**EKF_SHOTS), PiRatings(**PI)], [0.8, 0.2], name="dynamic_ratings_blend"
+    ),
+    "dynamic_ratings_blend3": lambda: GridBlend(
+        [DynamicPoisson(**EKF_SHOTS), DynamicPoisson(**EKF_GOALS), PiRatings(**PI)],
+        [0.6, 0.2, 0.2],
+        name="dynamic_ratings_blend3",
+    ),
 }

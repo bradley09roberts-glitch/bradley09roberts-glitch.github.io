@@ -10,9 +10,10 @@ local time, as in the main layout (D-005, D-022).
 Rules follow D-017 where they apply, plus two that only arise in these leagues (D-022):
 
 - A pairing that recurs on a different date in one season (split leagues, three- and
-  four-round formats, play-offs) is a genuine match, but `matches` holds one row per
-  pairing per season, so it is held back with a `repeat_pairing` error. The same pairing
-  on the same date is a `duplicate_fixture`.
+  four-round formats, play-offs) is a genuine further meeting. It is kept with `meeting`
+  = 2, 3, ... in file order, up to the division's `max_meetings` (reference.py); a meeting
+  beyond that is held back with a `repeat_pairing` error. The same pairing on the date of a
+  kept meeting is a `duplicate_fixture`.
 - A club with only a handful of matches in a season where the others have many is a
   lower-division visitor in a promotion/relegation play-off. Its matches are kept, flagged
   and excluded from models: the source does not say whether play-off scores include extra
@@ -34,6 +35,7 @@ from footy.ingest.fd_parse import (
     decode,
     uk_kickoff,
 )
+from footy.reference import DIVISIONS
 from footy.seasons import (
     FIRST_SEASON_START,
     calendar_season_key,
@@ -42,7 +44,7 @@ from footy.seasons import (
     season_start_year,
 )
 
-EXTRA_PARSER_VERSION = "fdx-1"
+EXTRA_PARSER_VERSION = "fdx-2"  # fdx-2: keep repeat meetings (matches.meeting)
 # football-data's Country value for each extra-league code.
 FD_COUNTRY_NAMES = {
     "AUT": "Austria",
@@ -92,8 +94,15 @@ def parse_extra_season(value: str) -> str:
 
 
 def parse_fd_extra_csv(
-    content: bytes, division: str, *, first_start: int = FIRST_SEASON_START
+    content: bytes,
+    division: str,
+    *,
+    first_start: int = FIRST_SEASON_START,
+    max_meetings: int | None = None,
 ) -> ParsedExtraFile:
+    """`max_meetings` defaults to the division's value in reference.py."""
+    if max_meetings is None:
+        max_meetings = DIVISIONS[division].max_meetings
     text, encoding = decode(content)
     reader = csv.reader(io.StringIO(text))
     header = [h.strip() for h in next(reader)]
@@ -103,7 +112,7 @@ def parse_fd_extra_csv(
     expected_country = FD_COUNTRY_NAMES[division]
 
     out = ParsedExtraFile({}, [], header, encoding)
-    seen: dict[tuple[str, str, str], tuple[int, object]] = {}
+    kept: dict[tuple[str, str, str], list[ParsedMatch]] = {}  # (season, home, away) -> meetings
     # Matches per club per season, repeat meetings included (for the play-off visitor rule).
     apps: dict[str, Counter] = {}
     for n, values in enumerate(reader, start=1):
@@ -124,28 +133,35 @@ def parse_fd_extra_csv(
             continue
         out.league_labels[row["League"]] += 1
         apps.setdefault(season, Counter()).update([pm.home_name, pm.away_name])
-        pair = (season, pm.home_name, pm.away_name)
-        if pair in seen:
-            first_row, first_date = seen[pair]
-            if first_date == pm.match_date:
+        meetings = kept.setdefault((season, pm.home_name, pm.away_name), [])
+        if meetings:
+            first = meetings[0]
+            same_day = next((m for m in meetings if m.match_date == pm.match_date), None)
+            if same_day is not None:
                 out.issues.append(
                     Issue(
-                        n, "error", "duplicate_fixture", f"{label}: same match as row {first_row}"
+                        n,
+                        "error",
+                        "duplicate_fixture",
+                        f"{label}: same match as row {same_day.source_row}",
                     )
                 )
-            else:
+                continue
+            if len(meetings) >= max_meetings:
                 out.issues.append(
                     Issue(
                         n,
                         "error",
                         "repeat_pairing",
                         f"{label}: {pm.home_name} v {pm.away_name} on {pm.match_date} repeats "
-                        f"row {first_row} ({first_date}); held back, one row per pairing per "
-                        "season in matches",
+                        f"row {first.source_row} ({first.match_date}); held back, it would be "
+                        f"meeting {len(meetings) + 1} and {division} allows {max_meetings} per "
+                        "season (max_meetings)",
                     )
                 )
-            continue
-        seen[pair] = (n, pm.match_date)
+                continue
+        meetings.append(pm)
+        pm.meeting = len(meetings)
         out.seasons.setdefault(season, []).append(pm)
 
     if len(out.league_labels) > 1:

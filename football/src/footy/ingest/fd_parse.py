@@ -11,7 +11,9 @@ from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 UK = ZoneInfo("Europe/London")
-PARSER_VERSION = "fd-3"  # fd-2: drop implausible-overround sets; fd-3: exclude bare results
+# fd-2: drop implausible-overround sets; fd-3: exclude bare results; fd-4: keep repeat
+# meetings where the division allows them (matches.meeting, D-022).
+PARSER_VERSION = "fd-4"
 
 # (bookmaker, pre-closing columns, closing columns); "{s}" is H/D/A. The first column found
 # is used. BbAv* is Betbrain's average, football-data's market average before 2019/20.
@@ -87,6 +89,9 @@ class ParsedMatch:
     fd_home_xg: float | None
     fd_away_xg: float | None
     model_exclusion: str | None = None
+    # 1st, 2nd, ... time this home team hosts this away team in the season, in file order
+    # (D-022). Always 1 where a pairing meets once (max_meetings = 1, e.g. the core ten).
+    meeting: int = 1
     stats: dict[str, int | None] = field(default_factory=dict)
     odds: list[ParsedOdds] = field(default_factory=list)
 
@@ -135,19 +140,25 @@ def uk_kickoff(match_date: date, hhmm: str) -> tuple[str, datetime]:
 
 
 def parse_fd_csv(
-    content: bytes, division: str, *, with_odds: bool, repeats_expected: bool = False
+    content: bytes,
+    division: str,
+    *,
+    with_odds: bool,
+    repeats_expected: bool = False,
+    max_meetings: int = 1,
 ) -> ParsedFile:
     """`repeats_expected` is for leagues where a pairing legitimately recurs in a season
-    (split formats, play-offs; D-022): a repeat on a different date is then reported as
-    `repeat_pairing` (held back) instead of `duplicate_fixture`. Either way only the first
-    row of a pairing is returned, since `matches` holds one row per pairing per season."""
+    (split formats, three- and four-round formats; D-022). There, a repeat on a different
+    date is a further meeting and is kept with `meeting` = 2, 3, ... in file order, up to
+    `max_meetings` (reference.py); one beyond that is held back as `repeat_pairing`. The
+    same pairing on the date of a kept meeting is a `duplicate_fixture`. Without
+    `repeats_expected` (the core ten) any second row of a pairing is a `duplicate_fixture`."""
     text, encoding = decode(content)
     reader = csv.reader(io.StringIO(text))
     header = [h.strip() for h in next(reader)]
     issues: list[Issue] = []
     matches: list[ParsedMatch] = []
-    seen: dict[tuple[str, str], int] = {}
-    first_date: dict[tuple[str, str], date] = {}
+    kept: dict[tuple[str, str], list[ParsedMatch]] = {}  # pairing -> its meetings so far
 
     for n, values in enumerate(reader, start=1):
         if not any(v.strip() for v in values):
@@ -156,26 +167,31 @@ def parse_fd_csv(
         parsed = _parse_row(n, row, division, with_odds, issues)
         if parsed is None:
             continue
-        pair = (parsed.home_name, parsed.away_name)
-        if pair in seen:
-            if repeats_expected and first_date[pair] != parsed.match_date:
+        meetings = kept.setdefault((parsed.home_name, parsed.away_name), [])
+        if meetings:
+            first = meetings[0]
+            same_day = next((m for m in meetings if m.match_date == parsed.match_date), None)
+            if not repeats_expected or same_day is not None:
+                ref = first if same_day is None else same_day
+                issues.append(
+                    Issue(n, "error", "duplicate_fixture", f"same pairing as row {ref.source_row}")
+                )
+                continue
+            if len(meetings) >= max_meetings:
                 issues.append(
                     Issue(
                         n,
                         "error",
                         "repeat_pairing",
                         f"{parsed.home_name} v {parsed.away_name} on {parsed.match_date} "
-                        f"repeats row {seen[pair]} ({first_date[pair]}); held back, one row "
-                        "per pairing per season in matches",
+                        f"repeats row {first.source_row} ({first.match_date}); held back, it "
+                        f"would be meeting {len(meetings) + 1} and {division} allows "
+                        f"{max_meetings} per season (max_meetings)",
                     )
                 )
-            else:
-                issues.append(
-                    Issue(n, "error", "duplicate_fixture", f"same pairing as row {seen[pair]}")
-                )
-            continue
-        seen[pair] = n
-        first_date[pair] = parsed.match_date
+                continue
+        meetings.append(parsed)
+        parsed.meeting = len(meetings)
         matches.append(parsed)
     return ParsedFile(matches, issues, header, encoding)
 

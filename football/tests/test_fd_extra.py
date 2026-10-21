@@ -16,7 +16,7 @@ from footy.ingest.fd_extra_parse import (
     parse_fd_extra_csv,
 )
 from footy.ingest.fd_update import run_fd_update
-from footy.models import FdOdds, ImportIssue, Match, RawFile, RawImport
+from footy.models import DataCorrection, FdOdds, ImportIssue, Match, RawFile, RawImport
 
 TODAY = date(2026, 6, 10)
 
@@ -59,20 +59,47 @@ def test_parses_results_kickoffs_and_skips_old_seasons():
     assert set(first.stats.values()) == {None}
 
 
-def test_repeat_meeting_is_held_back_and_duplicate_rejected():
-    rows = [*fx.ROWS, fx.ROWS[1]]  # the same match listed twice
+def test_repeat_meeting_is_kept_and_duplicate_rejected():
+    rows = [*fx.ROWS, fx.ROWS[1], fx.ROWS[7]]  # both meetings of a pairing listed twice
     pf = parse_fd_extra_csv(fx.csv_bytes(rows), "AUT")
-    codes = [(i.source_row, i.code) for i in pf.issues if i.severity == "error"]
-    assert codes == [(8, "repeat_pairing"), (11, "duplicate_fixture")]
-    repeat = next(i for i in pf.issues if i.code == "repeat_pairing")
-    assert repeat.detail.startswith("2025/26: Alpendorf v Bergstadt on 2026-03-07")
-    assert len(pf.seasons["2526"]) == 8
+    codes = [(i.source_row, i.code, i.detail) for i in pf.issues if i.severity == "error"]
+    assert codes == [
+        (11, "duplicate_fixture", "2025/26: same match as row 2"),
+        (12, "duplicate_fixture", "2025/26: same match as row 8"),
+    ]
+    stored = pf.seasons["2526"]
+    assert len(stored) == 9
+    meetings = [(m.source_row, m.meeting) for m in stored if m.home_name == "Alpendorf"]
+    assert meetings == [(2, 1), (6, 1), (8, 2)]  # v Bergstadt twice, v Seeburg once
+    assert all(m.meeting == 1 for m in stored if m.home_name != "Alpendorf")
+
+
+PAIR = ("Alpendorf", "Bergstadt")
+
+
+def test_meeting_beyond_max_meetings_is_held_back():
+    later = [
+        fx.row("2025/2026", day, "16:00", "Alpendorf", "Bergstadt", 1, 1)
+        for day in ("04/04/2026", "02/05/2026")
+    ]
+    pf = parse_fd_extra_csv(fx.csv_bytes([*fx.ROWS, *later]), "AUT")  # AUT allows 3
+    pairing = [m for m in pf.seasons["2526"] if (m.home_name, m.away_name) == PAIR]
+    assert [(m.source_row, m.meeting) for m in pairing] == [(2, 1), (8, 2), (11, 3)]
+    (held,) = [i for i in pf.issues if i.code == "repeat_pairing"]
+    assert held.source_row == 12 and held.severity == "error"
+    assert held.detail.startswith("2025/26: Alpendorf v Bergstadt on 2026-05-02 repeats row 2")
+    assert "would be meeting 4 and AUT allows 3" in held.detail
+    # The cap can be given explicitly (here: one meeting per pairing).
+    pf = parse_fd_extra_csv(fx.csv_bytes(), "AUT", max_meetings=1)
+    assert [(i.source_row, i.code) for i in pf.issues if i.severity == "error"] == [
+        (8, "repeat_pairing")
+    ]
 
 
 def test_playoff_visitor_is_flagged_and_excluded():
     rows = list(fx.ROWS)
     # Repeat meetings count towards a club's matches, so the regular clubs reach the
-    # visitor rule's minimum (median >= 10) although only their first meetings are kept.
+    # visitor rule's minimum (median >= 10); meetings beyond AUT's three are held back.
     for i in range(5):
         rows += [
             fx.row("2025/2026", f"{10 + i:02d}/01/2026", "16:00", h, a, 1, 0)
@@ -204,8 +231,8 @@ def test_import_from_inbox_then_rerun_changes_nothing(migrated_engine, settings)
     drop(settings, fx.csv_bytes())
     detail = update(migrated_engine, settings)
     assert detail["inbox"] == {"inbox_new": 1}
-    assert detail["import"]["matches_inserted"] == 8
-    assert detail["import"]["rows_rejected"] == 1  # the repeat meeting, held back
+    assert detail["import"]["matches_inserted"] == 9  # the repeat meeting included
+    assert detail["import"]["rows_rejected"] == 0
     assert detail["import"]["odds_inserted"] == 0  # prices are never parsed from this layout
 
     with Session(migrated_engine) as s:
@@ -214,11 +241,17 @@ def test_import_from_inbox_then_rerun_changes_nothing(migrated_engine, settings)
         assert matches[0].home_team == "aut-alpendorf" and matches[0].kickoff_utc == utc(
             2025, 8, 2, 15
         )
+        pairing = [
+            (m.meeting, m.match_date, m.home_goals, m.away_goals)
+            for m in matches
+            if (m.home_team, m.away_team) == ("aut-alpendorf", "aut-bergstadt")
+        ]
+        assert pairing == [(1, date(2025, 8, 2), 2, 1), (2, date(2026, 3, 7), 0, 1)]
         assert s.scalar(select(func.count()).select_from(FdOdds)) == 0
         imp = s.scalar(select(RawImport))
-        assert imp.parser_version == "fdx-1" and imp.rows_imported == 8
+        assert imp.parser_version == "fdx-2" and imp.rows_imported == 9
         codes = {i.code for i in s.scalars(select(ImportIssue))}
-        assert "repeat_pairing" in codes
+        assert "repeat_pairing" not in codes and "duplicate_fixture" not in codes
 
     before = _snapshot(migrated_engine)
     update(migrated_engine, settings)
@@ -229,14 +262,28 @@ def test_import_from_inbox_then_rerun_changes_nothing(migrated_engine, settings)
 def test_two_spellings_of_one_club_are_one_pairing(migrated_engine, settings):
     rows = [
         fx.row("2025/2026", "02/08/2025", "16:00", "Alpendorf", "Bergstadt", 2, 1),
+        fx.row("2025/2026", "02/08/2025", "16:00", "Alpendorf FC", "Bergstadt", 2, 1),
         fx.row("2025/2026", "07/03/2026", "16:00", "Alpendorf FC", "Bergstadt", 0, 0),
+        fx.row("2025/2026", "04/04/2026", "16:00", "Alpendorf", "Bergstadt", 1, 0),
+        fx.row("2025/2026", "02/05/2026", "16:00", "Alpendorf FC", "Bergstadt", 3, 3),
     ]
     drop(settings, fx.csv_bytes(rows))
     detail = update(migrated_engine, settings)
-    assert detail["import"]["matches_inserted"] == 1
+    # Each spelling alone is within AUT's three meetings; as one club, row 2 repeats row 1's
+    # date and row 5 would be a fourth meeting.
+    assert detail["import"]["matches_inserted"] == 3
     with Session(migrated_engine) as s:
-        issue = s.scalar(select(ImportIssue).where(ImportIssue.code == "repeat_pairing"))
-        assert issue.source_row == 2 and issue.detail.startswith("2025/26: Alpendorf FC v")
+        stored = s.scalars(select(Match).order_by(Match.meeting)).all()
+        assert [(m.meeting, m.source_row) for m in stored] == [(1, 1), (2, 3), (3, 4)]
+        issues = {
+            i.source_row: i
+            for i in s.scalars(select(ImportIssue).where(ImportIssue.severity == "error"))
+        }
+        assert sorted(issues) == [2, 5]
+        assert issues[2].code == "duplicate_fixture"
+        assert issues[2].detail.startswith("2025/26: Alpendorf FC v Bergstadt on 2025-08-02")
+        assert issues[5].code == "repeat_pairing"
+        assert "would be meeting 4 and AUT allows 3" in issues[5].detail
 
 
 def test_new_revision_logs_correction_and_missing_match(migrated_engine, settings):
@@ -248,9 +295,49 @@ def test_new_revision_logs_correction_and_missing_match(migrated_engine, setting
     assert detail["import"]["corrections"] == 1
     with Session(migrated_engine) as s:
         m = s.scalar(
-            select(Match).where(Match.home_team == "aut-alpendorf", Match.season == "2526")
+            select(Match).where(
+                Match.home_team == "aut-alpendorf", Match.season == "2526", Match.meeting == 1
+            )
         )
         assert m.home_goals == 3
+
+
+def test_corrections_and_missing_rows_follow_the_meeting(migrated_engine, settings):
+    drop(settings, fx.csv_bytes())
+    update(migrated_engine, settings)
+    with Session(migrated_engine) as s:
+        ids = {
+            m.meeting: m.id
+            for m in s.scalars(
+                select(Match).where(
+                    Match.home_team == "aut-alpendorf", Match.away_team == "aut-bergstadt"
+                )
+            )
+        }
+    # A new revision changes the second meeting's score only.
+    rows = list(fx.ROWS)
+    rows[7] = fx.row("2025/2026", "07/03/2026", "16:00", "Alpendorf", "Bergstadt", 0, 2)
+    drop(settings, fx.csv_bytes(rows))
+    detail = update(migrated_engine, settings)
+    assert detail["import"]["corrections"] == 1 and detail["import"]["matches_inserted"] == 0
+    with Session(migrated_engine) as s:
+        (corr,) = s.scalars(select(DataCorrection)).all()
+        assert (corr.entity_id, corr.field, corr.old_value, corr.new_value) == (
+            ids[2],
+            "away_goals",
+            "1",
+            "2",
+        )
+        assert s.get(Match, ids[1]).away_goals == 1
+    # The next revision drops the second meeting: its row stays, with a warning naming it.
+    drop(settings, fx.csv_bytes([r for i, r in enumerate(rows) if i != 7]))
+    update(migrated_engine, settings)
+    with Session(migrated_engine) as s:
+        (missing,) = s.scalars(
+            select(ImportIssue).where(ImportIssue.code == "match_missing_from_revision")
+        ).all()
+        assert missing.detail == f"aut-alpendorf v aut-bergstadt meeting 2 (match {ids[2]})"
+        assert s.get(Match, ids[2]) is not None
 
 
 def test_scope_filters_divisions(migrated_engine, settings):
@@ -258,14 +345,23 @@ def test_scope_filters_divisions(migrated_engine, settings):
     detail = update(migrated_engine, settings, scope="core")
     assert detail["import"] == {}
     detail = update(migrated_engine, settings, scope="europe")
-    assert detail["import"]["matches_inserted"] == 8
+    assert detail["import"]["matches_inserted"] == 9
 
 
 def _snapshot(engine):
     with Session(engine) as s:
         return (
             [
-                (m.id, m.season, m.home_team, m.away_team, m.home_goals, m.away_goals, m.source_row)
+                (
+                    m.id,
+                    m.season,
+                    m.home_team,
+                    m.away_team,
+                    m.meeting,
+                    m.home_goals,
+                    m.away_goals,
+                    m.source_row,
+                )
                 for m in s.scalars(select(Match).order_by(Match.id))
             ],
             s.scalar(select(func.count()).select_from(RawFile)),

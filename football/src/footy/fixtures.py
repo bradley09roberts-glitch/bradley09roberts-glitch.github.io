@@ -11,6 +11,7 @@ score in our football-data import. A mapping that fails verification is refused.
 import difflib
 import re
 import unicodedata
+from collections import Counter
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -189,7 +190,7 @@ def map_teams(engine: Engine, division: str, season: str, schedule: list[Schedul
                 "SELECT m.home_team, m.away_team, m.home_goals, m.away_goals, th.name, ta.name "
                 "FROM matches m JOIN teams th ON th.team_key = m.home_team "
                 "JOIN teams ta ON ta.team_key = m.away_team "
-                "WHERE m.division = :d AND m.season = :s"
+                "WHERE m.division = :d AND m.season = :s ORDER BY m.meeting"
             ),
             {"d": division, "s": season},
         ).all()
@@ -203,18 +204,25 @@ def map_teams(engine: Engine, division: str, season: str, schedule: list[Schedul
     sim = np.array([[_similarity(t, ours[k]) for k in keys] for t in theirs])
     r, c = linear_sum_assignment(-sim)
     mapping = {theirs[i]: keys[j] for i, j in zip(r, c, strict=True)}
-    played = {(h, a): (hg, ag) for h, a, hg, ag, _, _ in rows}
+    # Scores of each pairing's meetings, in `meeting` order (one meeting in the core ten). The
+    # schedule's k-th played fixture of a pairing is checked against meeting k; with a single
+    # stored meeting every scheduled result of the pairing is checked against it, as before.
+    played: dict[tuple[str, str], list[tuple[int, int]]] = {}
+    for h, a, hg, ag, _, _ in rows:
+        played.setdefault((h, a), []).append((hg, ag))
+    nth: Counter = Counter()
     checked, mismatches = 0, []
     for x in schedule:
         if x.home_goals is None:
             continue
         pair = (mapping[x.home_name], mapping[x.away_name])
         if pair in played:
+            scores = played[pair]
+            stored = scores[min(nth[pair], len(scores) - 1)]
+            nth[pair] += 1
             checked += 1
-            if played[pair] != (x.home_goals, x.away_goals):
-                mismatches.append(
-                    (x.home_name, x.away_name, (x.home_goals, x.away_goals), played[pair])
-                )
+            if stored != (x.home_goals, x.away_goals):
+                mismatches.append((x.home_name, x.away_name, (x.home_goals, x.away_goals), stored))
     if checked < len(keys) or mismatches:
         raise ValueError(
             f"{division}: mapping not verified (checked {checked}, mismatches {mismatches[:5]})"

@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 from footy.config import PROJECT_ROOT
 from footy.modeling.grid import TOTAL_LINES, MarketProbs
 from footy.models import Prediction, PredictionSettlement, utcnow
+from footy.reference import DIVISIONS
 
 RECORDS_DIR = PROJECT_ROOT / "records" / "predictions"
 UK = ZoneInfo("Europe/London")
@@ -241,16 +242,32 @@ def _final_score(s: Session, p: Prediction) -> tuple[int, int] | None:
             "home_team = :h AND away_team = :a AND match_date = :d AND status = 'played'"
         )
         params = {"c": p.competition, "h": p.home_team, "a": p.away_team, "d": p.match_date}
+        r = s.execute(q, params).first()
     else:
-        q = text(
-            "SELECT home_goals, away_goals FROM matches WHERE division = :c AND season = :s AND "
-            "home_team = :h AND away_team = :a"
-        )
-        params = {"c": p.competition, "s": p.season, "h": p.home_team, "a": p.away_team}
-    r = s.execute(q, params).first()
+        r = _domestic_score(s, p)
     if r is None or r[0] is None:
         return None
     return int(r[0]), int(r[1])
+
+
+def _domestic_score(s: Session, p: Prediction):
+    """The stored match a domestic prediction is for. Where a pairing meets once a season
+    (`max_meetings` = 1, e.g. the core ten) that is the pairing's row, whatever its date (a
+    postponed match keeps its prediction). Where it can meet more than once (D-022), only
+    the meeting on the predicted date settles it: the prediction stays unsettled rather
+    than take another meeting's score."""
+    division = DIVISIONS.get(p.competition)
+    rows = s.execute(
+        text(
+            "SELECT home_goals, away_goals, match_date FROM matches WHERE division = :c AND "
+            "season = :s AND home_team = :h AND away_team = :a ORDER BY meeting"
+        ),
+        {"c": p.competition, "s": p.season, "h": p.home_team, "a": p.away_team},
+    ).all()
+    if division is None or division.max_meetings == 1:
+        return rows[0] if rows else None
+    day = p.match_date.isoformat()
+    return next((r for r in rows if str(r.match_date) == day), None)
 
 
 def now_utc() -> datetime:

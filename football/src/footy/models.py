@@ -18,6 +18,7 @@ from sqlalchemy import (
     Text,
     TypeDecorator,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -141,10 +142,14 @@ class TeamAlias(Base):
 
 
 class Match(Base):
-    """A played league match: regulation-time result and statistics from football-data."""
+    """A played league match: regulation-time result and statistics from football-data.
+
+    `meeting` numbers the times the same home team hosts the same away team in one season
+    (1, 2, 3, ... in file order, which is date order). It is always 1 in a double round robin,
+    such as the core ten; split and multi-round leagues have more (D-022)."""
 
     __tablename__ = "matches"
-    __table_args__ = (UniqueConstraint("division", "season", "home_team", "away_team"),)
+    __table_args__ = (UniqueConstraint("division", "season", "home_team", "away_team", "meeting"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     division: Mapped[str] = mapped_column(ForeignKey("divisions.code"))
@@ -154,6 +159,7 @@ class Match(Base):
     kickoff_utc: Mapped[datetime | None] = mapped_column(UTCDateTime)
     home_team: Mapped[str] = mapped_column(ForeignKey("teams.team_key"))
     away_team: Mapped[str] = mapped_column(ForeignKey("teams.team_key"))
+    meeting: Mapped[int] = mapped_column(Integer, server_default=text("1"))
     home_goals: Mapped[int] = mapped_column(Integer)
     away_goals: Mapped[int] = mapped_column(Integer)
     result: Mapped[str] = mapped_column(String(1))  # H | D | A

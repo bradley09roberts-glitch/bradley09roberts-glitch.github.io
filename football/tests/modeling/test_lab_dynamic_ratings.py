@@ -125,12 +125,12 @@ def test_shots_on_target_inform_the_ratings():
     assert not np.allclose(a.p1x2, b.p1x2, atol=1e-3)
 
 
-def test_prewarm_and_options_stay_coherent():
+def test_options_stay_coherent():
     df = _with_sot(synthetic_league(seed=11, seasons=("2122", "2223", "2324"), teams=12))
     for cfg in (
-        {"prewarm_days": 200.0, "prewarm_p": 0.5},
-        {"team_home": 0.01, "covid": True, "r_red": 2.0, "y_cap": 4.0, "iterations": 2},
-        {"r_sot": 1.0, "sot_resid": 0.01, "var_correction": 1.0},
+        {"team_home": 0.01, "covid": True, "r_red": 2.0, "y_cap": 4.0},
+        {"r_sot": 1.0, "sot_resid": 0.01, "var_correction": 1.0, "rho_shift": -0.05},
+        {"r_sot": 1.0, "season_var_mu": 0.005, "level_corr": 0.7, "season_var_h": 0.002},
     ):
         m = DynamicPoisson(**cfg)
         mp = _fit_predict(m, df)

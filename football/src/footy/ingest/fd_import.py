@@ -4,6 +4,10 @@ Idempotent: re-importing the same raw revision changes nothing. When a newer rev
 file changes a stored value, the change is applied and written to `data_corrections`.
 Main-layout files hold one division-season each; extra-league files hold every season of
 one league and are imported season by season with the same rules (D-022).
+
+A stored match is identified by (home team, away team, meeting) within its division-season:
+`meeting` counts the pairing's rows in file order, after names are mapped to teams. Where a
+division allows one meeting (`max_meetings` = 1, e.g. the core ten) it is always 1.
 """
 
 from collections import Counter
@@ -120,6 +124,7 @@ def import_raw_file(
         division,
         with_odds=division in TOP_DIVISIONS,
         repeats_expected=DIVISIONS[division].scope != "core",
+        max_meetings=DIVISIONS[division].max_meetings,
     )
     aliases = alias_map(session)
     _check_mapped(session, raw.id, parsed.matches, aliases)
@@ -221,44 +226,59 @@ def _upsert_matches(
 ) -> tuple[list[tuple[int, ParsedMatch]], list[Issue]]:
     """Insert or update one division-season's matches from one raw revision. Returns the
     (match id, parsed match) pairs for the odds step, and the issues found here: a pairing
-    that recurs once names are mapped to teams (two spellings of one club in a season), and
-    a warning for each stored match that this revision no longer contains."""
+    that recurs once names are mapped to teams (two spellings of one club in a season) on
+    the date of a kept meeting, or beyond the division's `max_meetings`, and a warning for
+    each stored match that this revision no longer contains."""
+    max_meetings = DIVISIONS[division].max_meetings
     existing = {
-        (m.home_team, m.away_team): m
+        (m.home_team, m.away_team, m.meeting): m
         for m in session.scalars(
             select(Match).where(Match.division == division, Match.season == season)
         )
     }
     seen_ids: set[int] = set()
     odds_by_match: list[tuple[int, ParsedMatch]] = []
-    first: dict[tuple[str, str], ParsedMatch] = {}
+    kept: dict[tuple[str, str], list[ParsedMatch]] = {}  # team pairing -> its meetings so far
     issues: list[Issue] = []
 
     for pm in parsed:
         home, away = aliases[pm.home_name], aliases[pm.away_name]
-        if (home, away) in first:
-            prev = first[(home, away)]
-            same_day = prev.match_date == pm.match_date
-            issues.append(
-                Issue(
-                    pm.source_row,
-                    "error",
-                    "duplicate_fixture" if same_day else "repeat_pairing",
-                    f"{prefix}{pm.home_name} v {pm.away_name} on {pm.match_date} is the same "
-                    f"pairing of teams as row {prev.source_row} ({prev.match_date}); held back, "
-                    "one row per pairing per season in matches",
+        meetings = kept.setdefault((home, away), [])
+        if meetings:
+            same_day = next((m for m in meetings if m.match_date == pm.match_date), None)
+            if same_day is not None or len(meetings) >= max_meetings:
+                prev = meetings[0] if same_day is None else same_day
+                if max_meetings == 1:
+                    why = "one row per pairing per season in matches"
+                elif same_day is not None:
+                    why = "same date"
+                else:
+                    why = (
+                        f"it would be meeting {len(meetings) + 1} and {division} allows "
+                        f"{max_meetings} per season (max_meetings)"
+                    )
+                issues.append(
+                    Issue(
+                        pm.source_row,
+                        "error",
+                        "duplicate_fixture" if same_day is not None else "repeat_pairing",
+                        f"{prefix}{pm.home_name} v {pm.away_name} on {pm.match_date} is the "
+                        f"same pairing of teams as row {prev.source_row} ({prev.match_date}); "
+                        f"held back, {why}",
+                    )
                 )
-            )
-            continue
-        first[(home, away)] = pm
+                continue
+        meetings.append(pm)
+        meeting = len(meetings)
         values = _match_values(pm)
-        current = existing.get((home, away))
+        current = existing.get((home, away, meeting))
         if current is None:
             current = Match(
                 division=division,
                 season=season,
                 home_team=home,
                 away_team=away,
+                meeting=meeting,
                 first_raw_file_id=raw_id,
                 last_raw_file_id=raw_id,
                 **values,
@@ -277,8 +297,13 @@ def _upsert_matches(
         odds_by_match.append((current.id, pm))
 
     issues += [
-        Issue(0, "warning", "match_missing_from_revision", f"{home} v {away} (match {m.id})")
-        for (home, away), m in existing.items()
+        Issue(
+            0,
+            "warning",
+            "match_missing_from_revision",
+            f"{home} v {away}{f' meeting {meeting}' if meeting > 1 else ''} (match {m.id})",
+        )
+        for (home, away, meeting), m in existing.items()
         if m.id not in seen_ids
     ]
     return odds_by_match, issues

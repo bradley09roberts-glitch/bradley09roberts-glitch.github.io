@@ -141,21 +141,40 @@ def test_wrong_division_rejected():
     assert not pf.matches and pf.issues[0].code == "wrong_division"
 
 
-def test_repeat_meeting_held_back_only_where_expected():
+def test_repeat_meetings_are_numbered_where_expected():
     first = replace_field(ROWS[0], "Div", "SC0")
-    again = replace_field(first, "Date", "14/02/2026")
-    same_day = first
+    second = replace_field(first, "Date", "14/02/2026")
+    third = replace_field(first, "Date", "18/04/2026")
+    rows = [first, second, first, second, third]  # rows 3 and 4 repeat a kept meeting's date
     pf = parse_fd_csv(
-        csv_bytes([first, again, same_day]), "SC0", with_odds=False, repeats_expected=True
+        csv_bytes(rows), "SC0", with_odds=False, repeats_expected=True, max_meetings=3
     )
-    assert len(pf.matches) == 1
-    assert [(i.source_row, i.code) for i in pf.issues] == [
-        (2, "repeat_pairing"),
-        (3, "duplicate_fixture"),
+    assert [(m.source_row, m.meeting) for m in pf.matches] == [(1, 1), (2, 2), (5, 3)]
+    assert [(i.source_row, i.code, i.detail) for i in pf.issues] == [
+        (3, "duplicate_fixture", "same pairing as row 1"),
+        (4, "duplicate_fixture", "same pairing as row 2"),
     ]
-    assert "on 2026-02-14 repeats row 1 (2025-09-13)" in pf.issues[0].detail
+    # A meeting beyond the division's max_meetings is held back.
+    pf = parse_fd_csv(
+        csv_bytes([first, second, third]),
+        "SC0",
+        with_odds=False,
+        repeats_expected=True,
+        max_meetings=2,
+    )
+    assert [m.meeting for m in pf.matches] == [1, 2]
+    assert [(i.source_row, i.code) for i in pf.issues] == [(3, "repeat_pairing")]
+    assert "on 2026-04-18 repeats row 1 (2025-09-13)" in pf.issues[0].detail
+    assert "would be meeting 3 and SC0 allows 2" in pf.issues[0].detail
+
+
+def test_core_divisions_keep_one_meeting_per_pairing():
     # Core divisions keep the M1 rule: any second row of a pairing is a duplicate.
     pf = parse_fd_csv(
         csv_bytes([ROWS[0], replace_field(ROWS[0], "Date", "14/02/2026")]), "E0", with_odds=False
     )
-    assert [i.code for i in pf.issues] == ["duplicate_fixture"]
+    assert [m.meeting for m in pf.matches] == [1]
+    assert [(i.code, i.detail) for i in pf.issues] == [
+        ("duplicate_fixture", "same pairing as row 1")
+    ]
+    assert {m.meeting for m in parse_fd_csv(csv_bytes(), "E0", with_odds=True).matches} == {1}

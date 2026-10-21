@@ -145,15 +145,66 @@ def test_failed_job_is_recorded(migrated_engine):
         assert run.finished_at is not None
 
 
-def test_european_main_layout_division_has_results_but_no_prices(migrated_engine, settings):
+def sc0_rows_with_repeats() -> list[str]:
+    """SYNTHETIC: the three E0 fixture rows as SC0, then the first pairing three more times
+    on later dates (SC0 allows three meetings, so the last is held back)."""
     rows = [replace_field(r, "Div", "SC0") for r in ROWS]
-    repeat = replace_field(rows[0], "Date", "14/02/2026")
-    drop(settings, csv_bytes([*rows, repeat]), name="2526_SC0.csv")
+    later = [replace_field(rows[0], "Date", d) for d in ("14/02/2026", "18/04/2026", "16/05/2026")]
+    return [*rows, *later]
+
+
+def test_european_main_layout_division_has_results_but_no_prices(migrated_engine, settings):
+    drop(settings, csv_bytes(sc0_rows_with_repeats()), name="2526_SC0.csv")
     detail = update(migrated_engine, settings)
-    assert detail["import"]["matches_inserted"] == 3
+    assert detail["import"]["matches_inserted"] == 5
     assert detail["import"]["odds_inserted"] == 0
     assert detail["import"]["rows_rejected"] == 1
     with Session(migrated_engine) as s:
         assert {m.division for m in s.scalars(select(Match))} == {"SC0"}
+        pairing = s.scalars(
+            select(Match).where(Match.home_team == "eng-testtown").order_by(Match.meeting)
+        ).all()
+        assert [(m.meeting, m.source_row, str(m.match_date)) for m in pairing] == [
+            (1, 1, "2025-09-13"),
+            (2, 4, "2026-02-14"),
+            (3, 5, "2026-04-18"),
+        ]
         issue = s.scalar(select(ImportIssue).where(ImportIssue.code == "repeat_pairing"))
-        assert issue.source_row == 4 and issue.severity == "error"
+        assert issue.source_row == 6 and issue.severity == "error"
+        assert "would be meeting 4 and SC0 allows 3" in issue.detail
+
+
+def test_repeat_meetings_reimport_creates_no_duplicates(migrated_engine, settings):
+    drop(settings, csv_bytes(sc0_rows_with_repeats()), name="2526_SC0.csv")
+    drop(settings, csv_bytes())  # a core division alongside
+    update(migrated_engine, settings)
+    first = counts(migrated_engine)
+    with Session(migrated_engine) as s:
+        before = sorted(
+            (m.id, m.division, m.home_team, m.away_team, m.meeting, m.home_goals)
+            for m in s.scalars(select(Match))
+        )
+        assert {m.meeting for m in s.scalars(select(Match).where(Match.division == "E0"))} == {1}
+    update(migrated_engine, settings)  # same files again
+    update(migrated_engine, settings, reimport=True)  # forced re-parse
+    assert counts(migrated_engine) == first
+    assert first["matches"] == 8 and first["data_corrections"] == 0
+    with Session(migrated_engine) as s:
+        after = sorted(
+            (m.id, m.division, m.home_team, m.away_team, m.meeting, m.home_goals)
+            for m in s.scalars(select(Match))
+        )
+    assert after == before
+
+
+def test_core_division_keeps_one_row_per_pairing(migrated_engine, settings):
+    """The core ten allow one meeting: a second row of a pairing on another date is still a
+    rejected duplicate (D-017), whatever the European leagues allow."""
+    again = replace_field(ROWS[0], "Date", "14/02/2026")
+    drop(settings, csv_bytes([*ROWS, again]))
+    detail = update(migrated_engine, settings)
+    assert detail["import"]["matches_inserted"] == 3 and detail["import"]["rows_rejected"] == 1
+    with Session(migrated_engine) as s:
+        assert {m.meeting for m in s.scalars(select(Match))} == {1}
+        issue = s.scalar(select(ImportIssue).where(ImportIssue.code == "duplicate_fixture"))
+        assert (issue.source_row, issue.detail) == (4, "same pairing as row 1")

@@ -133,3 +133,61 @@ def test_unannounced_kickoff_must_be_published_before_the_match_day(migrated_eng
     fx2 = FixtureIn("E0", "2627", date(2026, 10, 25), None, "eng-mockford", "eng-testtown")
     with pytest.raises(PublishError):
         publish(migrated_engine, [fx2], mp, now=datetime(2026, 10, 24, 23, 0, tzinfo=UTC), **kw)
+
+
+def insert_result(conn, division, day, hg, ag, meeting=1):
+    conn.execute(
+        text(
+            "INSERT OR IGNORE INTO raw_files (id, source, logical_key, revision, sha256, "
+            "size_bytes, retrieved_at, storage_path) VALUES (1, 't', 'k', 1, 'x', 1, "
+            "'2026-10-25', 'p')"
+        )
+    )
+    conn.execute(
+        text(
+            "INSERT INTO matches (division, season, match_date, home_team, away_team, meeting, "
+            "home_goals, away_goals, result, source_row, first_raw_file_id, last_raw_file_id) "
+            "VALUES (:d, '2627', :day, 'eng-testtown', 'eng-sampleton', :m, :hg, :ag, 'H', 1, "
+            "1, 1)"
+        ),
+        {"d": division, "day": day, "m": meeting, "hg": hg, "ag": ag},
+    )
+
+
+def test_repeat_meeting_settles_only_on_its_own_result(migrated_engine, tmp_path):
+    """SC0 pairings meet up to three times a season (D-022): a prediction for the second
+    meeting must not take the first meeting's score."""
+    setup(migrated_engine)
+    mp = markets_from_grid(poisson_grid([1.6], [1.1], -0.05), [1.6], [1.1])
+    second = FixtureIn("SC0", "2627", date(2026, 12, 5), None, "eng-testtown", "eng-sampleton")
+    publish(
+        migrated_engine,
+        [second],
+        mp,
+        model_name="m",
+        model_version="v1",
+        training_cutoff_utc=datetime(2026, 10, 21, tzinfo=UTC),
+        data_freshness={},
+        now=datetime(2026, 10, 21, 1, 0, tzinfo=UTC),
+        records_dir=tmp_path / "records",
+    )
+    with migrated_engine.begin() as conn:
+        insert_result(conn, "SC0", "2026-09-12", 3, 0)  # the first meeting
+    assert settle(migrated_engine)["settled"] == 0
+    with migrated_engine.begin() as conn:
+        insert_result(conn, "SC0", "2026-12-05", 1, 1, meeting=2)
+    assert settle(migrated_engine)["settled"] == 1
+    with migrated_engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT home_goals, away_goals FROM prediction_settlements")
+        ).one() == (1, 1)
+
+
+def test_single_meeting_league_settles_a_moved_match(migrated_engine, tmp_path):
+    """Core divisions meet once a season, so a match played on another date than predicted
+    (postponed) still settles, as before."""
+    setup(migrated_engine)
+    go(migrated_engine, tmp_path, datetime(2026, 10, 21, tzinfo=UTC))
+    with migrated_engine.begin() as conn:
+        insert_result(conn, "E0", "2026-11-04", 0, 1)
+    assert settle(migrated_engine)["settled"] == 1

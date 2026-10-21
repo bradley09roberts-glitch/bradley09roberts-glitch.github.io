@@ -1,8 +1,8 @@
 """Coverage per division, season and field. Counts only: no source rows or prices leave here.
 
 The core ten divisions keep the M1 report. The European leagues (scope "europe", D-022) get
-their own section: results only, with the rows held back because `matches` has one row per
-pairing per season.
+their own section: results only, with repeat meetings of a pairing (`matches.meeting`) and
+any rows held back beyond a division's `max_meetings`.
 """
 
 import re
@@ -12,6 +12,7 @@ from datetime import datetime
 import pandas as pd
 from sqlalchemy import Engine, text
 
+from footy.ingest.fd_extra_parse import PLAYOFF_EXCLUSION
 from footy.reference import DIVISIONS, TOP_DIVISIONS
 from footy.seasons import season_label
 
@@ -112,7 +113,7 @@ def coverage_rows(engine: Engine) -> list[dict]:
             "season_label": season_label(season),
             "matches": n,
             "teams": len(teams),
-            "expected_matches": len(teams) * (len(teams) - 1),
+            "expected_matches": expected_matches(g),
             "first_date": str(g.match_date.min()),
             "last_date": str(g.match_date.max()),
             "issues_error": issue_map.get((key, "error"), 0),
@@ -132,6 +133,8 @@ def coverage_rows(engine: Engine) -> list[dict]:
         if info.scope != "core":
             counts = europe_issues.get((division, season), Counter())
             row["held_back"] = counts["repeat_pairing"]
+            row["max_meeting"] = int(g.meeting.max())
+            row["repeat_meetings"] = int((g.meeting > 1).sum())
             row["model_excluded"] = int(g.model_exclusion.notna().sum())
             row["issues_error"] = counts["error"]
             row["issues_warning"] = counts["warning"]
@@ -143,6 +146,21 @@ def coverage_rows(engine: Engine) -> list[dict]:
     order = {code: i for i, code in enumerate(DIVISIONS)}
     rows.sort(key=lambda r: (order[r["division"]], r["season"]))
     return rows
+
+
+def expected_matches(g: pd.DataFrame) -> int:
+    """Matches expected in one division-season: every ordered pairing of its clubs once,
+    plus each further meeting already stored (`meeting` > 1, D-022), plus any play-off
+    matches against lower-division visitors (who are not counted as clubs). With one meeting
+    per pairing (the core ten) this is teams × (teams − 1). Split and multi-round formats
+    add meetings as they are played, so for a season in progress it is a lower bound."""
+    playoff = g.model_exclusion == PLAYOFF_EXCLUSION
+    clubs = set(g.home_team) | set(g.away_team)
+    regular = set(g.home_team[~playoff]) | set(g.away_team[~playoff])
+    visitors = clubs - regular
+    with_visitor = g.home_team.isin(visitors) | g.away_team.isin(visitors)
+    further = int((g.meeting[~with_visitor] > 1).sum())
+    return len(regular) * (len(regular) - 1) + further + int(with_visitor.sum())
 
 
 _SEASON_PREFIX = re.compile(r"^(\d{4}(?:/\d{2})?): ")
@@ -247,35 +265,48 @@ def _europe_markdown(rows: list[dict]) -> list[str]:
         "kick-off times only (plus half-time scores and statistics in the main-layout files);",
         "no prices. Seasons are split-year (2024/25) or calendar-year (2024).",
         "",
-        "- **Stored**: rows in `matches`. **Held back**: genuine repeat meetings of the same",
-        "  home and away teams in one season (split leagues, three- and four-round formats,",
-        "  play-offs). `matches` allows one row per pairing per season, so these stay in the",
-        "  raw files and `import_issues` until the schema allows them.",
+        "- **Stored**: rows in `matches`, repeat meetings included. In split leagues and",
+        "  three- and four-round formats the same home team hosts the same away team more than",
+        "  once a season; each such meeting is its own row, numbered by `meeting` in file",
+        "  (date) order. **Meetings**: the most times one pairing met that season.",
+        "- **Expected**: every ordered pairing of the season's clubs once, plus each further",
+        "  meeting stored, plus play-off matches against lower-division visitors. For leagues",
+        "  with one meeting per pairing this is teams × (teams − 1), as above. Split formats",
+        "  can't be counted from the teams alone, so for a season in progress Expected is a",
+        "  lower bound: later meetings count once they are played.",
+        "- **Held back**: a further meeting beyond the division's `max_meetings` in",
+        "  `reference.py` (the most the raw files show), kept in the raw files and",
+        "  `import_issues`.",
         "- **Excluded**: stored but left out of models (bare or awarded results, D-018; play-off",
         "  matches against a lower-division visitor, whose score basis is not stated).",
         "- Errors include the held-back rows.",
         "",
-        "| Division | Season | Stored | Held back | Teams | First | Last | Excluded | Errors "
-        "| Warnings | Kick-off % | HT score % | Shots % |",
-        "| --- | --- | ---: | ---: | ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Division | Season | Stored | Expected | Meetings | Held back | Teams | First | Last "
+        "| Excluded | Errors | Warnings | Kick-off % | HT score % | Shots % |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | ---: | ---: | ---: | ---: "
+        "| ---: | ---: |",
     ]
     order = {code: i for i, code in enumerate(DIVISIONS)}
     totals: Counter = Counter()
     for r in sorted(rows, key=lambda r: (order[r["division"]], r["season"])):
         totals["stored"] += r["matches"]
+        totals["repeat"] += r["repeat_meetings"]
         totals["held_back"] += r["held_back"]
         totals["excluded"] += r["model_excluded"]
+        flag = "" if r["matches"] == r["expected_matches"] else " ⚠"
         out.append(
-            f"| {r['division']} {r['division_name']} | {r['season_label']} | {r['matches']} "
-            f"| {r['held_back']} | {r['teams']} | {r['first_date']} | {r['last_date']} "
+            f"| {r['division']} {r['division_name']} | {r['season_label']} | {r['matches']}{flag} "
+            f"| {r['expected_matches']} | {r['max_meeting']} | {r['held_back']} | {r['teams']} "
+            f"| {r['first_date']} | {r['last_date']} "
             f"| {r['model_excluded']} | {r['issues_error']} | {r['issues_warning']} "
             f"| {_pct(r['pct_kickoff_time'])} | {_pct(r['pct_ht_score'])} "
             f"| {_pct(r['pct_shots'])} |"
         )
     out += [
         "",
-        f"Totals: {totals['stored']:,} stored, {totals['held_back']:,} held back, "
-        f"{totals['excluded']:,} stored but excluded from models.",
+        f"Totals: {totals['stored']:,} stored ({totals['repeat']:,} of them repeat meetings, "
+        f"`meeting` > 1), {totals['held_back']:,} held back, {totals['excluded']:,} stored but "
+        "excluded from models.",
         "",
     ]
     return out
