@@ -305,7 +305,11 @@ class MarketTilt:
         if move.any():
             out[move] = tilt(grid[move], target[move])
         self.last_used = mk.assign(used_1x2=has_1x2, used_ou=has_ou)
-        return markets_from_grid(out, lam_h=mp.lam_h, lam_a=mp.lam_a)
+        # expected goals of the grid actually returned (the tilted one where prices were used),
+        # so they agree with its probabilities; the last bin counts as MAX_GOALS goals
+        lam_h = (out * GOALS[None, :, None]).sum(axis=(1, 2))
+        lam_a = (out * GOALS[None, None, :]).sum(axis=(1, 2))
+        return markets_from_grid(out, lam_h=lam_h, lam_a=lam_a)
 
     def provenance(self) -> dict | None:
         """Where live prices came from (the latest fixtures.csv), if any were loaded."""
@@ -337,4 +341,7 @@ def _base(name: str) -> Callable:
 # 0.05) and w_ou in 0..1 (step 0.1) on recorded base grids (docs/research/market-blend.md).
 CANDIDATES: dict[str, Callable] = {
     "market_tilt_dc": lambda: MarketTilt(_base("dixon_coles"), 1.0, 1.0, "market_tilt_dc"),
+    "market_tilt_shots": lambda: MarketTilt(
+        _base("shots_xg_sot_joint_rw"), 1.0, 1.0, "market_tilt_shots"
+    ),
 }
