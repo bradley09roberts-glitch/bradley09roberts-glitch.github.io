@@ -1,6 +1,6 @@
 # STATUS
 
-_Last updated: 2026-10-21, 12:10 UK. Every session starts from this file._
+_Last updated: 2026-10-21, 23:30 UK. Every session starts from this file._
 
 ## Where things stand
 
@@ -54,12 +54,18 @@ challenger replaces a model of record only if it is also at least as good on tes
 | `dixon_coles` | 64 | the same league games, published first (fitted on all history; see D-027) |
 | `market_tilt_dc`, `market_tilt_shots` | 1 each | Levante v Athletic Club, 21 Oct |
 
-Nothing is settled yet. Scheduled check-ins (this session, `send_later`):
+Nothing is settled in the database yet: at 22:20 UTC on 21 Oct Wikipedia's API was
+rate-limiting this container (HTTP 403/429). A provisional scoring of the nine UCL games from
+news-reported scores, against the owner's ChatGPT app forecasts, is in
+`comparisons/scored_2026-10-21.json` (ChatGPT app ahead on RPS, 0.203 against 0.226; nine
+games say nothing yet). Levante v Athletic Club is not yet scored. Scheduled check-ins (this
+session, `send_later`):
 
 | When (UTC) | What |
 | --- | --- |
 | Wed 21 Oct 12:30 | Deadline check before the UCL kickoffs (already published) |
-| Wed 21 Oct 22:20 | Settle the Champions League |
+| Wed 21 Oct 22:20 | Settle the Champions League (done provisionally; Wikipedia rate-limited) |
+| Thu 22 Oct 07:30 | Retry the Wikipedia fetch once, settle, add Levante v Athletic Club |
 | Thu 22 Oct 22:20 | Settle the Europa League and Conference League |
 | Fri 23 Oct 12:20 | Fetch the weekend's prices (`footy fd-fixtures`), publish `market_tilt_shots` records before the 19:00 kickoffs |
 | Mon 26 Oct 08:10 | Settle the weekend's league games |
