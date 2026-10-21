@@ -81,8 +81,15 @@ def primary_models(path: Path | None = None) -> dict[str, list[str]]:
         if group.startswith("_"):
             continue
         names = [value] if isinstance(value, str) else value
-        if not isinstance(names, list) or not all(isinstance(n, str) and n for n in names):
-            raise ValueError(f"{path.name}: {group!r} must be a model name or a list of names")
+        # An empty list would leave the group with no record of record at all, silently.
+        if (
+            not isinstance(names, list)
+            or not names
+            or not all(isinstance(n, str) and n for n in names)
+        ):
+            raise ValueError(
+                f"{path.name}: {group!r} must be a model name or a non-empty list of names"
+            )
         out[group] = list(dict.fromkeys(names))
     return out
 

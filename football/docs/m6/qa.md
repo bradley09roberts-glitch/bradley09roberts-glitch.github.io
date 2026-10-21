@@ -118,3 +118,97 @@ commit `6dadbd5`, which was made while QA was running. The rest are uncommitted.
   kept in the session scratchpad, outside the repository.
 - **Nothing synthetic shipped.** A search of `frontend/src` and `frontend/dist` for `SYNTHETIC`,
   `Test Town`, `Mock FC` and `test_model` finds nothing. Nothing synthetic is in `screenshots/`.
+
+## Model + market records (21 October 2026, about 05:15–05:30 UK time)
+
+New tonight: model + market records (`market_tilt_dc`), which blend in football-data's
+pre-closing prices (D-024), sit beside the pure model's records. This pass checked the site and
+API support for them, on the real database only. No API calls were intercepted and no synthetic
+data was used in the browser.
+
+**What the real data holds.** 155 genuine pre-match records (64 `dixon_coles`, 45 `pan_euro_mix`, 45 `pan_euro_mix_mxg`, 1 `market_tilt_dc`). Levante v Ath Bilbao (La Liga, Wed
+21 Oct, 19:00 UK) has both a `dixon_coles` record (#56) and a `market_tilt_dc` record (#110);
+it is the only fixture with both. `primary_models.json` names `dixon_coles` (domestic) and
+`pan_euro_mix_mxg` (UEFA) as plain strings, so #56 is Levante's record of record and the
+Champions League cards lead with `pan_euro_mix_mxg`. Nothing is settled yet.
+
+### What changed
+
+- **API.** `primary_models.json` may give a list per group, e.g. `["market_tilt_dc",
+  "dixon_coles"]`: per fixture, the record of record is the first listed model with a genuine
+  pre-match record for it. A plain string still works. Cards carry `is_primary` and `basis`
+  (`model_and_market` or `model_only`). `/api/predictions/{id}` adds `market` (the de-vigged
+  consensus probabilities, books, collection time and provenance, never the prices) and
+  `counterpart` (the same fixture's record with the other basis). `/api/performance` adds
+  `by_basis` and `paired`. A `value_selection` placeholder appears only on records made with real
+  prices, and it names no bet. Every API timestamp now has a `+00:00` offset.
+- **Site.** A "Model + market" badge (solid accent) or a "Model only" badge (outlined) now
+  appears on every fixture card and in the match header. Past rows show the badge for model +
+  market records. On a fixture card the record of record leads, and the others are listed as
+  "Also predicted by market_tilt_dc (model + market)".
+  - **A model + market match page** gets a "Model + market" section: "Bookmakers' prices
+    collected 21 Oct 2026, 04:06 (UK time) were blended in; the pure model said Levante win 37%,
+    draw 27%, Ath Bilbao win 36%". It also has a side-by-side table (model + market, pure model,
+    change in points), the consensus probabilities and the price file's SHA-256.
+  - **A model-only match page** with a model + market counterpart links to it.
+  - **Performance** shows the record of record per group, then the model + market and model-only
+    records separately, with a like-for-like line.
+
+### Checks and results
+
+| Check | Result |
+| --- | --- |
+| `uv run pytest -q tests/test_api_data.py tests/test_health.py tests/test_api_records.py tests/test_publish.py` | 24 passed |
+| `npm run typecheck`, `npm run build` (frontend; there is no `npm test`) | Clean |
+| Browser sweep: production build (`vite preview`, port 4311) against `uv run footy serve --port 8011`, 6 views (Fixtures, Fixtures filtered to La Liga, UCL match #114, Levante #110 and #56, Performance), each at 320, 390 and 1280 px, in light and dark, with the device clock set to New York time | 222 / 222 checks pass |
+| Per view, in that sweep | The right title; no horizontal scroll; no page or console errors |
+| Fixtures | One basis badge per card. Levante card: "Model only", 19:00 UK, "Also predicted by market_tilt_dc (model + market)", "shown: dixon_coles". Bayern v Arsenal leads with `pan_euro_mix_mxg` at 20:00 UK. La Liga filter: 11 fixtures |
+| Levante #110 (model + market) | Header badge; the explanation sentence above, word for word; table rows "Levante win 28% 37% −9" and "Ath Bilbao win 45% 36% +9"; SHA-256 prefix shown and "The prices themselves are not stored or shown"; "No selection published"; expected goals labelled as the pure model's |
+| Levante #56 (model only) | "Model only" badge; a note and link to #110; "No odds available" |
+| UCL #114 | "Model only", "Wed, 21 Oct, 20:00 (UK time)", no model + market section |
+| Performance | Model + market: 1 published (`market_tilt_dc`). Model only: 109 (`dixon_coles`, `pan_euro_mix_mxg`). "Like for like: 1 fixture has both kinds of record. None of them has been settled yet." No £ figure: the betting record still says none yet |
+| API scan of 15 endpoints on the real database | 1,343 timestamps, all ISO 8601 with `T` and `+00:00`. Before: `/api/coverage` sent 234 `retrieved_at` values naive, and #110's `quote_time_utc` used a space. No price fields anywhere: the only price-like key names are `market_prices_used` (derived probabilities), job counters and coverage percentages |
+
+Screenshots (light theme, real data), in [`screenshots/`](screenshots/), each at 390 and 1280:
+
+- `mm-fixtures`: the first screen only. The full list is 56,000 px tall at 390.
+- `mm-fixtures-laliga`: the La Liga filter in full, including the Levante card.
+- `mm-match-ucl`: Bayern Munich v Arsenal.
+- `mm-match-levante-market`: #110, the model + market record.
+- `mm-match-levante-model`: #56, the pure model's record.
+- `mm-performance`.
+
+Fix made during this pass: at 390 px the pure model's name wrapped mid-word in the comparison
+table header ("dixon_cole / s"). The name now sits in the link under the table.
+
+### Not changed (for other strands)
+
+- **The saved `expected_goals` of a `market_tilt_*` record are its base model's** (1.28 and
+  1.26 for both #56 and #110). `MarketTilt` passes the base model's means to
+  `markets_from_grid` rather than the tilted grid's means. Read on their own, they disagree
+  with the blended result (an away win at 45% while the home side "expects" more goals). The
+  site and the API's explanation therefore label them as the pure model's averages, from before
+  the blend. The fix belongs in `footy.modeling.lab.market_blend`. This pass doesn't touch it,
+  and saved records can't change.
+- **`quote_time_utc` is the time `fixtures.csv` was retrieved** (04:06 UK), not football-data's
+  collection deadline (Tuesday 13:00). The record's field name stays; the site now says the
+  prices were "available by" that time and gives the file's download time beside its source
+  (verifier change, below).
+
+### Verifier pass (21 October 2026, about 05:40–06:10 UK time)
+
+Fixes made to this strand's files:
+
+- **Change column.** It was rounded from the raw difference, so two rows contradicted the
+  figures beside them (Draw 28% v 27% showed "0"; Over 1.5 74% v 72% showed "+1"). It is now the
+  difference of the whole percentages shown (+1 and +2).
+- **320 px.** "Change" in the comparison table header broke mid-word ("Chang / e"). Below
+  380 px the label column is narrower; no header word breaks at 320, 340, 360, 390 or 1280 px.
+- **Collection time wording**, as above.
+- **`primary_models.json` validation.** An empty list was accepted and left the group with no
+  record of record; it is now an error, like any other malformed value.
+- **Club display names come from the teams table:** "Ath Bilbao" is football-data's name for
+  Athletic Club.
+- **`primary_models.json` was not edited.** With the list form (`["market_tilt_dc",
+  "dixon_coles"]`), Levante's card would lead with #110, and the headline record would count it.
+  Fixtures without prices would keep `dixon_coles`.

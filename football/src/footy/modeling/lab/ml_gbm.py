@@ -1,29 +1,37 @@
 """Machine learning on leakage-safe engineered features (model-lab family `ml_gbm`).
 
 Every match in the history becomes two team-perspective rows (home side attacking, away side
-attacking). Each row's features are computed by one chronological pass over the history, from
-matches dated strictly before it: exponentially weighted goals, shots on target and shots for
-and against (short and long half-lives, shrunk towards the division level), a goal-margin Elo,
-online Poisson attack/defence ratings from goals and from shots on target, days of rest,
-matches in the previous 14 days, matches played (overall and this season), a promoted /
-relegated flag, the share of recent matches played in the other tier, and the division's
-scoring level and home advantage. Fixture features come from the same pass's final state.
+attacking). One chronological pass over the history gives each row its features from the
+matches dated strictly before it (matches on the same day never see each other):
 
-A Poisson-loss gradient booster (histogram trees, numpy only: sklearn is not a dependency)
-maps the features to the expected goals of the attacking side; the two means go into the
-Poisson grid with a Dixon-Coles rho fitted on the training rows. A Poisson GLM on the same
-features is the linear counterpart.
+- exponentially weighted goals, shots on target, shots and corners for and against, over
+  half-lives of 4, 16 and 50 matches, shrunk towards the division level;
+- a goal-margin Elo; online Poisson attack/defence ratings from goals and from shots on target
+  (fast and slow learning rates); diagonal Kalman-filter attack/defence ratings for goals and
+  SoT (variance grows with time and at a new season; a change of tier shifts and widens them)
+  and the variance of the goals rating;
+- days of rest and matches in the previous 14 days for both sides; matches played (overall,
+  this season); promoted / relegated flags; the share of recent matches in the other tier;
+- the division's EW scoring level and home advantage.
 
-Stacking: the stacked variants start every row from a Dixon-Coles log-rate and learn a
-correction. Training rows use out-of-sample Dixon-Coles rates: one DC fit per weekly grid
-date, on the history before that date, applied to the matches of the following week. The
-fixtures use a DC fit at the batch cutoff. Optionally the final grid is a mixture with the
-Dixon-Coles grid (a mixture of score grids stays coherent across every market).
+Fixture features come from the pass's final state. The pass is incremental: a walk-forward
+run processes each match once and reuses the cached features (a history that is not a clean
+extension triggers a full rescan).
 
-Uses only the DataFrames passed to fit/predict and no randomness. The booster and GLM are
-refitted every `refit_days`; between refits the fitted mapping is reused on features
-recomputed from the latest history. The DC grid fits are cached by grid date; each one only
-ever sees matches dated before its grid date.
+Learners (numpy/scipy only: sklearn is not a dependency): a ridge Poisson GLM; a Poisson
+histogram gradient booster; and the GLM followed by a few depth-1 trees on its residual. The
+target is goals blended 30% with SoT x goals-per-SoT (a cheap xG proxy), training rows are
+weighted by exp(-xi x age) and second-tier rows by `tier2_weight`. The two expected-goal
+means go into the Poisson grid with a Dixon-Coles rho fitted on the training rows. The
+learner is refitted every `refit_days`; features are recomputed every batch.
+
+Stacking: the stacked variant adds both sides' out-of-sample Dixon-Coles log-rates as
+features and boosts from the side's DC log-rate. Training rows get their DC rates from one
+DC fit per weekly grid date, on the matches before that date (cached by grid date); fixtures
+use a DC fit at the batch cutoff. `mix_dc` mixes the final grid with the DC grid (a mixture
+of score grids is still one coherent score distribution).
+
+Uses only the DataFrames passed to fit/predict and no randomness.
 """
 
 import copy
@@ -171,8 +179,8 @@ class PoissonGLM:
     offset. The linear counterpart of the booster. Columns listed in `free` are not
     penalised (e.g. a Dixon-Coles log-rate whose weight the data should set)."""
 
-    def __init__(self, l2: float = 1.0, free: tuple[int, ...] = (), expand: float = 1.0):
-        self.l2, self.free, self.expand = l2, tuple(free), expand
+    def __init__(self, l2: float = 1.0, free: tuple[int, ...] = ()):
+        self.l2, self.free = l2, tuple(free)
 
     def fit(self, X, y, w=None, offset=None) -> "PoissonGLM":
         X, y = np.asarray(X, float), np.asarray(y, float)
@@ -206,7 +214,7 @@ class PoissonGLM:
 
     def predict_log(self, X, offset=None) -> np.ndarray:
         Z = ((np.asarray(X, float) - self.mean) / self.sd)[:, self.keep]
-        out = self.coef[0] + self.expand * (Z @ self.coef[1:])
+        out = self.coef[0] + Z @ self.coef[1:]
         return out + (0.0 if offset is None else np.asarray(offset, float))
 
 
@@ -225,31 +233,6 @@ class GLMThenBoost:
 
     def predict_log(self, X, offset=None) -> np.ndarray:
         return self.gbm.predict_log(X, self.glm.predict_log(X, offset))
-
-
-class SplitVenue:
-    """Separate learners for home-side and away-side rows (column 0 is the home flag)."""
-
-    def __init__(self, make):
-        self.make = make
-
-    def fit(self, X, y, w=None, offset=None) -> "SplitVenue":
-        home = X[:, 0] > 0.5
-        w = np.ones(len(y)) if w is None else w
-        self.models = {}
-        for v, m in ((True, home), (False, ~home)):
-            off = None if offset is None else offset[m]
-            self.models[v] = self.make().fit(X[m], y[m], w[m], off)
-        return self
-
-    def predict_log(self, X, offset=None) -> np.ndarray:
-        out = np.zeros(len(X))
-        home = X[:, 0] > 0.5
-        for v, m in ((True, home), (False, ~home)):
-            if m.any():
-                off = None if offset is None else offset[m]
-                out[m] = self.models[v].predict_log(X[m], off)
-        return out
 
 
 # ---- features ------------------------------------------------------------------------------
@@ -292,7 +275,6 @@ FEATURES = [
     "cf_l",
     "ca_o_l",
 ]
-BASE_FEATURES = list(FEATURES)
 FEATURES += ["gf_v", "ga_o_v", "sf_v", "sa_o_v", "ga_t_v", "gf_o_v", "on_g2", "on_s2"]
 FEATURES += ["kg", "ks", "kv"]
 
@@ -368,8 +350,6 @@ class FeatureScan:
         self.lgW = np.full(D, 5.0)
         self.last_processed = -(10**9)
         self.ids: dict[int, int] = {}  # match id -> row in the feature cache
-        self._rows_h: list[np.ndarray] = []
-        self._rows_a: list[np.ndarray] = []
         self._Xh = np.zeros((0, len(FEATURES)))
         self._Xa = np.zeros((0, len(FEATURES)))
 
@@ -628,48 +608,42 @@ class FeatureScan:
 
 
 class MLGBM:
-    """Feature-based goals model: booster or GLM, optionally stacked on Dixon-Coles."""
+    """Feature-based goals model. `learner`: "glm" (ridge Poisson GLM), "gbm" (histogram
+    booster) or "glm_gbm" (GLM, then a few depth-1 trees on its residual). `stack` adds the
+    out-of-sample Dixon-Coles log-rates of both sides as features and (with `stack_offset`)
+    starts every row from the side's DC log-rate; `free` lists columns the GLM leaves
+    unpenalised. `mix_dc` > 0 mixes the final grid with the Dixon-Coles grid."""
 
     markets = ALL_MARKETS
 
     def __init__(
         self,
         name: str = "ml_gbm",
-        learner: str = "gbm",
-        split_venue: bool = False,
+        learner: str = "glm_gbm",
         stack: bool = False,
         stack_offset: bool = True,
         free: tuple[str, ...] = (),
-        l2_grid: tuple[float, ...] = (),
-        expand: bool = False,
-        holdout_days: int = 180,
-        spread: tuple[float, float] = (0.0, 0.0),
         mix_dc: float = 0.0,
         features: tuple[str, ...] | None = None,
-        n_trees: int = 200,
-        lr: float = 0.05,
-        max_depth: int = 3,
-        min_leaf: int = 60,
-        l2: float = 10.0,
-        glm_l2: float = 1.0,
-        xi: float = 0.0019,
+        n_trees: int = 50,
+        lr: float = 0.03,
+        max_depth: int = 1,
+        min_leaf: int = 300,
+        l2: float = 30.0,
+        glm_l2: float = 30.0,
+        xi: float = 0.001,
         tier2_weight: float = 0.7,
         burn_days: int = 150,
         refit_days: int = 28,
         dc_step: int = 7,
-        sot_target: float = 0.0,
+        sot_target: float = 0.3,
         scan: dict | None = None,
         dc: dict | None = None,
     ):
         self.name = name
-        self.learner, self.stack, self.mix_dc = learner, stack, mix_dc
-        self.split_venue, self.stack_offset = split_venue, stack_offset
-        self.free = tuple(free)
-        self.l2_grid, self.expand, self.holdout_days = tuple(l2_grid), expand, holdout_days
-        self.spread = tuple(spread)
+        self.learner, self.stack, self.stack_offset = learner, stack, stack_offset
+        self.free, self.mix_dc = tuple(free), mix_dc
         self.features = tuple(features) if features else tuple(FEATURES)
-        if "home" in self.features:  # the home flag first (SplitVenue relies on it)
-            self.features = ("home", *[f for f in self.features if f != "home"])
         self.gbm = dict(n_trees=n_trees, lr=lr, max_depth=max_depth, min_leaf=min_leaf, l2=l2)
         self.glm_l2 = glm_l2
         self.xi, self.tier2_weight, self.burn_days = xi, tier2_weight, burn_days
@@ -688,14 +662,9 @@ class MLGBM:
     def params(self) -> dict:
         return {
             "learner": self.learner,
-            "split_venue": self.split_venue,
             "stack": self.stack,
             "stack_offset": self.stack_offset,
             "free": list(self.free),
-            "l2_grid": list(self.l2_grid),
-            "expand": self.expand,
-            "holdout_days": self.holdout_days,
-            "spread": list(self.spread),
             "mix_dc": self.mix_dc,
             "features": list(self.features),
             **self.gbm,
@@ -729,10 +698,12 @@ class MLGBM:
             self.snapshots[g] = copy.copy(self.dc_grid)
 
     def _oos_rates(self, h: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+        """Each match's DC rates from the latest weekly snapshot on or before its day (NaN
+        when there is none); cached by match id."""
         anchor = int(GRID_ANCHOR.astype(np.int64))
         step = self.dc_step
         ids = h["id"].to_numpy()
-        todo = np.array([i not in self.oos for i in ids])
+        todo = np.array([i not in self.oos for i in ids], dtype=bool)
         if todo.any():
             sub = h[todo]
             g = anchor + step * ((_days(sub["date"]) - anchor) // step)
@@ -789,91 +760,42 @@ class MLGBM:
         if keep.sum() < 200:  # too little history for mature features: use everything
             keep = np.ones(len(h), bool) if dch is None else ~np.isnan(dch)
         hk = h[keep]
-        sub = self.scanner.rows(hk["id"])
-        X, off = self._design(*sub, *(() if dch is None else (dch[keep], dca[keep])))
+        X, off = self._design(
+            *self.scanner.rows(hk["id"]), *(() if dch is None else (dch[keep], dca[keep]))
+        )
         y = np.r_[self._target(hk, "home"), self._target(hk, "away")]
         age = (cutoff_day - day[keep]).astype(float)
         w = np.exp(-self.xi * age) * np.where(hk.division.isin(TIER2), self.tier2_weight, 1.0)
         w = np.r_[w, w]
-        if self.learner == "glm" and (self.l2_grid or self.expand):
-            tier1 = ~hk.division.isin(TIER2).to_numpy()
-            goals = np.r_[hk.home_goals.to_numpy(float), hk.away_goals.to_numpy(float)]
-            self._tune(X, y, w, off, np.r_[age, age], np.r_[tier1, tier1], goals)
-        model = self._make_learner().fit(X, y, w, off)
-        self.learner_ = model
+        self.learner_ = self._make_learner().fit(X, y, w, off)
         self.fitted_at = np.datetime64(cut, "D")
-        eta = model.predict_log(X, off)
+        eta = self.learner_.predict_log(X, off)
         k = len(hk)
-        self.rho_ = _fit_rho(
-            hk.home_goals.to_numpy(),
-            hk.away_goals.to_numpy(),
-            np.exp(eta[:k]),
-            np.exp(eta[k:]),
-            w[:k],
-        )
-
-    def _tune(self, X, y, w, off, age, tier1, goals) -> None:
-        """Time split inside the training window: fit on all but the last `holdout_days`,
-        score the held-out top-tier rows (Poisson deviance of the goals). Picks the ridge
-        strength from `l2_grid`, then (if `expand`) a factor on the linear predictor's
-        deviation from its mean that undoes the ridge's compression of team differences."""
-        tr = age >= self.holdout_days
-        ho = ~tr & tier1
-        if tr.sum() < 400 or ho.sum() < 100:
-            return
-        o_tr = None if off is None else off[tr]
-        o_ho = None if off is None else off[ho]
-        yh = goals[ho]
-        best = (np.inf, self.glm_l2)
-        fits = {}
-        for l2 in self.l2_grid or (self.glm_l2,):
-            m = PoissonGLM(l2, self._free_idx()).fit(X[tr], y[tr], w[tr], o_tr)
-            mu = np.exp(m.predict_log(X[ho], o_ho))
-            dev = float((mu - yh * np.log(mu)).mean())
-            fits[l2] = m
-            best = min(best, (dev, l2))
-        self.chosen_l2_ = best[1]
-        if self.expand:
-            m = fits[best[1]]
-            Z = ((X[ho] - m.mean) / m.sd)[:, m.keep]
-            dz = Z @ m.coef[1:]
-            base = m.coef[0] + (0.0 if o_ho is None else o_ho)
-
-            def nll(p):
-                eta = base + p[0] + p[1] * dz
-                return float((np.exp(eta) - yh * eta).sum())
-
-            res = minimize(nll, np.array([0.0, 1.0]), method="Nelder-Mead")
-            self.expand_ = float(np.clip(res.x[1], 0.7, 1.6))
-
-    def _free_idx(self) -> tuple[int, ...]:
-        cols = [*self.features, *(("dc_own", "dc_other") if self.stack else ())]
-        return tuple(cols.index(f) for f in self.free if f in cols)
+        gh, ga = hk.home_goals.to_numpy(), hk.away_goals.to_numpy()
+        self.rho_ = _fit_rho(gh, ga, np.exp(eta[:k]), np.exp(eta[k:]), w[:k])
 
     def _make_learner(self):
-        free = self._free_idx()
-
-        def make():
-            if self.learner == "glm":
-                l2 = getattr(self, "chosen_l2_", self.glm_l2)
-                return PoissonGLM(l2, free, getattr(self, "expand_", 1.0))
-            if self.learner == "glm_gbm":
-                return GLMThenBoost(self.glm_l2, free, **self.gbm)
-            return PoissonBooster(**self.gbm)
-
-        return SplitVenue(make) if self.split_venue else make()
+        cols = [*self.features, *(("dc_own", "dc_other") if self.stack else ())]
+        free = tuple(cols.index(f) for f in self.free if f in cols)
+        if self.learner == "glm":
+            return PoissonGLM(self.glm_l2, free)
+        if self.learner == "glm_gbm":
+            return GLMThenBoost(self.glm_l2, free, **self.gbm)
+        return PoissonBooster(**self.gbm)
 
     def _target(self, h: pd.DataFrame, side: str) -> np.ndarray:
+        """Goals, or a blend with shots on target x the training data's goals per SoT (a
+        cheap expected-goals proxy with less noise); goals where SoT is missing."""
         goals = h[f"{side}_goals"].to_numpy(float)
         if self.sot_target <= 0:
             return goals
-        sot = h[f"{side}_sot"].to_numpy(float)
-        ok = ~np.isnan(sot) & ~np.isnan(
-            h["home_sot"].to_numpy(float) + h["away_sot"].to_numpy(float)
-        )
+        hs, as_ = h["home_sot"].to_numpy(float), h["away_sot"].to_numpy(float)
+        ok = ~np.isnan(hs + as_)
+        if not ok.any():
+            return goals
         tot_g = (h.home_goals + h.away_goals).to_numpy(float)[ok].sum()
-        tot_s = (h.home_sot + h.away_sot).to_numpy(float)[ok].sum()
-        conv = tot_g / max(tot_s, 1.0)
+        conv = tot_g / max((hs + as_)[ok].sum(), 1.0)
+        sot = hs if side == "home" else as_
         return np.where(ok, (1 - self.sot_target) * goals + self.sot_target * conv * sot, goals)
 
     def rates(self, fixtures: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
@@ -886,35 +808,13 @@ class MLGBM:
         k = len(fixtures)
         return np.exp(eta[:k]), np.exp(eta[k:])
 
-    def _grid(self, lh, la) -> np.ndarray:
-        """Poisson grid with rho; with `spread`, integrated over uncertainty in the log-rates:
-        a shared tempo factor (both rates up or down, sd spread[0]) and an opposed strength
-        factor (sd spread[1]), three Gauss-Hermite points each. A mixture of grids, so still
-        one coherent score distribution."""
-        st, sd = self.spread
-        if st <= 0 and sd <= 0:
-            return poisson_grid(lh, la, self.rho_)
-        z, wz = np.array([-np.sqrt(3), 0.0, np.sqrt(3)]), np.array([1 / 6, 2 / 3, 1 / 6])
-        grids, weights = [], []
-        for u, wu in zip(z, wz, strict=True):
-            for v, wv in zip(z, wz, strict=True):
-                if (st <= 0 and u != 0) or (sd <= 0 and v != 0):
-                    continue
-                f = np.exp(st * u)
-                grids.append(
-                    poisson_grid(lh * f * np.exp(sd * v), la * f * np.exp(-sd * v), self.rho_)
-                )
-                weights.append((wu if st > 0 else 1.0) * (wv if sd > 0 else 1.0))
-        return mix_grids(grids, weights)
-
     def predict(self, fixtures: pd.DataFrame) -> MarketProbs:
         lh, la = self.rates(fixtures)
-        grid = self._grid(lh, la)
+        grid = poisson_grid(lh, la, self.rho_)
         if self.mix_dc > 0:
             dh, da = self.dc_now.rates(fixtures)
-            dgrid = poisson_grid(dh, da, self.dc_now.rho_)
             w = self.mix_dc
-            grid = mix_grids([grid, dgrid], [1 - w, w])
+            grid = mix_grids([grid, poisson_grid(dh, da, self.dc_now.rho_)], [1 - w, w])
             lh, la = (1 - w) * lh + w * dh, (1 - w) * la + w * da
         return markets_from_grid(grid, lh, la)
 
@@ -939,9 +839,15 @@ def _fit_rho(gh, ga, lh, la, w) -> float:
     return float(res.x)
 
 
+TREES = dict(learner="gbm", n_trees=250, lr=0.03, max_depth=2, min_leaf=200, l2=30.0)
+
 CANDIDATES: dict = {
-    "ml_gbm_pooled": lambda: MLGBM("ml_gbm_pooled"),
+    # GLM + depth-1 residual trees, mixed 75/25 with the Dixon-Coles grid (weight chosen on
+    # the inner seasons 2021/22 and 2022/23)
+    "ml_gbm_glm_boost_dc": lambda: MLGBM("ml_gbm_glm_boost_dc", mix_dc=0.25),
+    "ml_gbm_glm_boost": lambda: MLGBM("ml_gbm_glm_boost"),
     "ml_gbm_glm": lambda: MLGBM("ml_gbm_glm", learner="glm"),
-    "ml_gbm_stack": lambda: MLGBM("ml_gbm_stack", stack=True, n_trees=100),
-    "ml_gbm_glm_stack": lambda: MLGBM("ml_gbm_glm_stack", learner="glm", stack=True),
+    "ml_gbm_trees": lambda: MLGBM("ml_gbm_trees", **TREES),
+    # boosting from out-of-sample Dixon-Coles log-rates (offset and features)
+    "ml_gbm_stack": lambda: MLGBM("ml_gbm_stack", stack=True, burn_days=365, **TREES),
 }

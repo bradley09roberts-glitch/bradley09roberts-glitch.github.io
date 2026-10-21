@@ -1182,6 +1182,13 @@ button:disabled {
   color: var(--muted);
 }
 
+/* At 320 px the number columns were too narrow for "Change", which broke mid-word. */
+@media (max-width: 379px) {
+  .compare-table th:first-child {
+    width: 31%;
+  }
+}
+
 .compare-table tbody td:nth-child(2) {
   font-weight: 700;
 }

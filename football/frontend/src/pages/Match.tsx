@@ -327,7 +327,7 @@ function MarketBlend({ d }: { d: PredictionDetail }) {
         Bookmakers' prices{" "}
         {when ? (
           <>
-            collected <strong>{when}</strong> (UK time)
+            available by <strong>{when}</strong> (UK time)
           </>
         ) : (
           "(collection time not recorded)"
@@ -365,10 +365,11 @@ function compareRows(d: PredictionDetail, pure: Counterpart): Row[] {
   return rows.filter((r) => r.blended !== undefined || r.pure !== undefined);
 }
 
-/** Percentage points, signed: "+9", "−4", "0". */
+/** Percentage points, signed: "+9", "−4", "0". Taken from the whole percentages the table
+ * shows, so the change always matches the two figures beside it (28% v 27% is +1, not 0). */
 function points(a: number | undefined, b: number | undefined): string {
   if (a === undefined || b === undefined) return "—";
-  const v = Math.round((a - b) * 100);
+  const v = Math.round(a * 100) - Math.round(b * 100);
   return v > 0 ? `+${v}` : v < 0 ? `−${Math.abs(v)}` : "0";
 }
 
@@ -383,10 +384,7 @@ function CompareTable({ d, pure }: { d: PredictionDetail; pure: Counterpart }) {
           <tr>
             <th scope="col">Market</th>
             <th scope="col">Model + market</th>
-            <th scope="col">
-              Pure model
-              <span className="compare-model">{pure.model_name}</span>
-            </th>
+            <th scope="col">Pure model</th>
             <th scope="col">
               Change <span className="compare-model">points</span>
             </th>
@@ -404,8 +402,8 @@ function CompareTable({ d, pure }: { d: PredictionDetail; pure: Counterpart }) {
         </tbody>
       </table>
       <p className="muted small">
-        <a href={href(`/match/${pure.id}`)}>Open the pure model's record</a> (saved{" "}
-        {formatLondon(pure.created_at_utc)}).
+        <a href={href(`/match/${pure.id}`)}>Open the pure model's record</a> (
+        <code>{pure.model_name}</code>, saved {formatLondon(pure.created_at_utc)}).
       </p>
     </div>
   );
@@ -427,6 +425,7 @@ function MarketSource({ m, d }: { m: MarketUsed; d: PredictionDetail }) {
         </>
       )}
       Source: {m.provenance.source ?? "not recorded"}
+      {m.provenance.retrieved_at && <>, downloaded {formatLondon(m.provenance.retrieved_at)} (UK time)</>}
       {sha && (
         <>
           , file SHA-256{" "}

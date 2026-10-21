@@ -209,7 +209,8 @@ export type RecentMatch = {
 export type MarketUsed = {
   probabilities: { "1X2"?: { H: number; D: number; A: number }; "OU_2.5"?: OverUnder };
   books: string[];
-  /** When the prices were collected (UTC). */
+  /** The prices were quoted no later than this (UTC). For a live record it is when the price
+   * file was downloaded, not when the bookmakers' prices were collected. */
   quote_time_utc: string | null;
   provenance: { source?: string; raw_sha256?: string; raw_file_id?: number; retrieved_at?: string };
   devig: string | null;

@@ -13,8 +13,9 @@ class DivisionInfo:
     name: str
     country: str  # ISO 3166-1 alpha-3, except the home nations (ENG, SCO)
     tier: int
-    # core: the ten M1 divisions (results, stats; prices for the top five).
-    # europe: extra domestic leagues, results only, for rating clubs in UEFA competitions.
+    # core: the ten M1 divisions (results, stats, prices).
+    # europe: extra domestic leagues, for rating clubs in UEFA competitions (results and
+    # prices; statistics only in the main layout).
     scope: str = "core"
     # main: one file per season at mmz4281/{season}/{code}.csv (the E0 layout).
     # extra: one file holding every season at new/{code}.csv (Country, League, Season, ...).
@@ -70,7 +71,8 @@ DIVISIONS: dict[str, DivisionInfo] = {
 }
 CORE_DIVISIONS = [c for c, d in DIVISIONS.items() if d.scope == "core"]
 EUROPE_DIVISIONS = [c for c, d in DIVISIONS.items() if d.scope == "europe"]
-# The five core top divisions: the only ones whose prices are parsed (D-016).
+# The five core top divisions (until fd-5 the only ones whose prices were parsed; D-016,
+# D-022).
 TOP_DIVISIONS = [c for c, d in DIVISIONS.items() if d.scope == "core" and d.tier == 1]
 MAIN_LAYOUT_DIVISIONS = [c for c, d in DIVISIONS.items() if d.layout == "main"]
 EXTRA_LAYOUT_DIVISIONS = [c for c, d in DIVISIONS.items() if d.layout == "extra"]

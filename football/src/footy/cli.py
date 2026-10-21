@@ -55,7 +55,8 @@ def main(argv: list[str] | None = None) -> int:
     pd_.add_argument(
         "--only-with-market",
         action="store_true",
-        help="model + market candidates: publish only fixtures with usable prices",
+        help="publish only fixtures with usable prices (always so for model + market "
+        "candidates, except in a dry run)",
     )
 
     pe = sub.add_parser("predict-euro", help="publish early-edition UEFA predictions")

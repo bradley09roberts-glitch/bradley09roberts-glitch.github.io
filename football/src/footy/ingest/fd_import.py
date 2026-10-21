@@ -474,31 +474,41 @@ def _record_issues(session, raw_id: int, issues: list[Issue]) -> int:
 def pending_raw_files(session: Session, reimport: bool = False) -> list[RawFile]:
     """Revisions to import, oldest first per file so corrections replay in order.
 
-    Normally: every football-data revision this parser version hasn't imported yet.
-    With reimport: only the latest revision of each file (re-applying older revisions would
-    flip values back and forth and log false corrections)."""
-    q = select(RawFile).where(RawFile.source == SOURCE)
-    if reimport:
-        last: dict[str, RawFile] = {}
-        for r in session.scalars(q.order_by(RawFile.logical_key, RawFile.revision)):
-            last[r.logical_key] = r
-        return list(last.values())
-    done = select(RawImport.raw_file_id).where(RawImport.parser_version == PARSER_VERSION)
-    q = q.where(RawFile.id.not_in(done))
-    return list(session.scalars(q.order_by(RawFile.logical_key, RawFile.revision)))
+    Normally: every football-data revision this parser version hasn't imported yet, except
+    revisions older than one it has already imported (after a version bump, `--reimport`
+    imports only each file's latest revision; applying an older one afterwards would put
+    stale values back). With reimport: only the latest revision of each file (re-applying
+    older revisions would flip values back and forth and log false corrections)."""
+    return _pending(session, SOURCE, PARSER_VERSION, reimport)
 
 
 def pending_extra_raw_files(session: Session, reimport: bool = False) -> list[RawFile]:
     """As `pending_raw_files`, for the extra-league files."""
-    q = select(RawFile).where(RawFile.source == EXTRA_SOURCE)
+    return _pending(session, EXTRA_SOURCE, EXTRA_PARSER_VERSION, reimport)
+
+
+def _pending(session: Session, source: str, version: str, reimport: bool) -> list[RawFile]:
+    q = select(RawFile).where(RawFile.source == source)
     if reimport:
         last: dict[str, RawFile] = {}
         for r in session.scalars(q.order_by(RawFile.logical_key, RawFile.revision)):
             last[r.logical_key] = r
         return list(last.values())
-    done = select(RawImport.raw_file_id).where(RawImport.parser_version == EXTRA_PARSER_VERSION)
+    newest_done = dict(
+        session.execute(
+            select(RawFile.logical_key, func.max(RawFile.revision))
+            .join(RawImport, RawImport.raw_file_id == RawFile.id)
+            .where(RawFile.source == source, RawImport.parser_version == version)
+            .group_by(RawFile.logical_key)
+        ).all()
+    )
+    done = select(RawImport.raw_file_id).where(RawImport.parser_version == version)
     q = q.where(RawFile.id.not_in(done))
-    return list(session.scalars(q.order_by(RawFile.logical_key, RawFile.revision)))
+    return [
+        r
+        for r in session.scalars(q.order_by(RawFile.logical_key, RawFile.revision))
+        if r.revision > newest_done.get(r.logical_key, 0)
+    ]
 
 
 def match_count(session: Session) -> int:

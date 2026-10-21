@@ -12,9 +12,11 @@ so a rating model can use them as part of its targets.
   file, and 2018/19 in the main layout), or whose three-parameter solve does not converge.
   rho is fixed and (home rate, away rate) reproduce P(home win) and P(draw) exactly. The
   fixed rho is the median rho of the matches solved with both markets, computed on each call
-  and returned in `attrs["rho_1x2_only"]` (on 21 Oct 2026, every league imported: see
-  DECISIONS.md D-022). It is one constant for every season, so an early season borrows it
-  from later ones; it is a shape parameter, and expected goals barely move with it.
+  and returned in `attrs["rho_1x2_only"]`: -0.0797 on 21 Oct 2026, over 39,905 matches in
+  16 divisions (DECISIONS.md D-022). It is one constant for every season, so an early
+  season borrows it from later ones. On the matches that have both markets, this solve
+  gives the goal difference of the exact solve to 0.014 goals and each side's expected
+  goals to 0.05-0.06 (mean absolute error); the total is the least certain part (0.11).
 
 A match's closing price is known at its kickoff, before any later prediction. Models only see
 matches final before their cutoff, so using these values for those matches adds no future
@@ -72,15 +74,41 @@ def implied_grid(target: np.ndarray, iters: int = 40, tol: float = 1e-8):
     return x, g, np.abs(p - target).max(axis=1) < 1e-5
 
 
+# Rates searched by the 1X2-only solve (goals per match). With rho fixed, P(home) and
+# P(draw) can also be met by a second, implausible pair of very high rates (for one heavy
+# favourite, 9.7 and 5.1 goals instead of 4.6 and 0.7, the far pair resting on the grid's
+# "10 or more" cells), so the search starts from the nearest point of a table over this
+# range and stays inside it. No three-parameter solve went above 4.2 (21 Oct 2026).
+RATE_RANGE = (0.1, 7.0)
+_TABLE_POINTS = 120
+
+
+def _start_1x2(target: np.ndarray, rho: float) -> np.ndarray:
+    """Starting (log home rate, log away rate, rho) per row: the table point over RATE_RANGE
+    whose P(home) and P(draw) are nearest `target`."""
+    from scipy.spatial import cKDTree
+
+    axis = np.linspace(np.log(RATE_RANGE[0]), np.log(RATE_RANGE[1]), _TABLE_POINTS)
+    lh, la = (a.ravel() for a in np.meshgrid(axis, axis, indexing="ij"))
+    table = np.stack([lh, la, np.full(lh.size, rho)], 1)
+    p = _probs(table)[0][:, :2]
+    _, nearest = cKDTree(p).query(target)
+    return table[nearest].copy()
+
+
 def implied_grid_1x2(target: np.ndarray, rho: float, iters: int = 40, tol: float = 1e-8):
     """Solve (log home rate, log away rate) per row, with rho fixed, so that the grid's
     P(home) and P(draw) equal `target` (n, 2); P(away) follows. Damped Newton with a
-    finite-difference Jacobian. Returns (x (n, 3) with rho in the last column, grid,
+    finite-difference Jacobian, started from the nearest point of a table and kept inside
+    RATE_RANGE (see there). Returns (x (n, 3) with rho in the last column, grid,
     converged)."""
     n = len(target)
-    x = np.tile([np.log(1.45), np.log(1.15), rho], (n, 1))
+    x = _start_1x2(target, rho) if n else np.empty((0, 3))
+    lo, hi = np.log(RATE_RANGE[0]), np.log(RATE_RANGE[1])
     eps = 1e-6
     for _ in range(iters):
+        if not n:
+            break
         p, _ = _probs(x)
         r = p[:, :2] - target
         if np.abs(r).max() < tol:
@@ -91,7 +119,7 @@ def implied_grid_1x2(target: np.ndarray, rho: float, iters: int = 40, tol: float
             dx[:, k] += eps
             jac[:, :, k] = (_probs(dx)[0][:, :2] - p[:, :2]) / eps
         step = np.linalg.solve(jac + 1e-10 * np.eye(2), r[:, :, None])[:, :, 0]
-        x[:, :2] -= np.clip(step, -0.5, 0.5)
+        x[:, :2] = np.clip(x[:, :2] - np.clip(step, -0.5, 0.5), lo, hi)
     p, g = _probs(x)
     return x, g, np.abs(p[:, :2] - target).max(axis=1) < 1e-5
 

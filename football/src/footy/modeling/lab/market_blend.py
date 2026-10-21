@@ -14,7 +14,10 @@ stays coherent. A fixture without usable prices keeps the base model's grid unch
 
 Usable prices: phase 'pre_closing'; quoted no later than the prediction is made (the
 fixture's `deadline_utc` in backtests, the time of the run when live); quoted before the
-kickoff where it is known.
+kickoff where it is known; and published no earlier than 00:00 UK on the fixture's own D-012
+collection day, so a live run never uses an older file's prices (Tuesday's for a weekend
+fixture, say) where a backtest would have had that collection's. In backtests the last rule
+never binds: a season file's price is stamped at its own deadline.
 """
 
 from collections.abc import Callable
@@ -23,8 +26,10 @@ from functools import cache
 
 import numpy as np
 import pandas as pd
+from scipy.special import expit
 from sqlalchemy import inspect, text
 
+from footy.ingest.fd_parse import model_cutoff
 from footy.modeling.base import ALL_MARKETS
 from footy.modeling.grid import GOALS, MarketProbs, markets_from_grid
 from footy.modeling.market import devig_shin
@@ -44,16 +49,34 @@ FEATURES = np.stack(
 
 def consensus(raw: pd.DataFrame) -> pd.DataFrame:
     """One row per fixture: de-vigged home/draw/away and over-2.5 probabilities averaged over
-    the books that quote a complete set, and the latest quote time used.
+    the books that quote a complete set, the latest quote time used and the earliest
+    publication time (how old the oldest price used may be).
 
     `raw` columns: division, date, home_team, away_team, bookmaker, market_key, selection,
-    price, quote_time_utc."""
-    cols = [*KEY, "p_H", "p_D", "p_A", "p_O", "n_books_1x2", "n_books_ou", "quote_time_utc"]
+    price, quote_time_utc, and optionally published_utc (when the prices were published, if
+    earlier than quote_time_utc; a live file's Last-Modified time). Where it is missing the
+    quote time stands in."""
+    cols = [
+        *KEY,
+        "p_H",
+        "p_D",
+        "p_A",
+        "p_O",
+        "n_books_1x2",
+        "n_books_ou",
+        "quote_time_utc",
+        "published_utc",
+    ]
     if raw.empty:
         return pd.DataFrame(columns=cols).set_index(KEY)
     raw = raw[raw.bookmaker.isin(BOOKS)].copy()
     raw["date"] = pd.to_datetime(raw["date"])
     raw["quote_time_utc"] = pd.to_datetime(raw["quote_time_utc"], utc=True)
+    if "published_utc" in raw:
+        pub = pd.to_datetime(raw["published_utc"], utc=True)
+        raw["published_utc"] = pub.fillna(raw["quote_time_utc"])
+    else:
+        raw["published_utc"] = raw["quote_time_utc"]
     out = []
     for market, sels, names in (
         ("1X2", ["H", "D", "A"], ["p_H", "p_D", "p_A"]),
@@ -65,17 +88,20 @@ def consensus(raw: pd.DataFrame) -> pd.DataFrame:
         w = m.pivot_table(
             index=[*KEY, "bookmaker"], columns="selection", values="price", aggfunc="first"
         )
-        t = m.groupby([*KEY, "bookmaker"])["quote_time_utc"].max()
+        times = m.groupby([*KEY, "bookmaker"])
+        t, pub = times["quote_time_utc"].max(), times["published_utc"].min()
         w = w.reindex(columns=sels).dropna()
         if w.empty:
             continue
         p = devig_shin(w.to_numpy())
         d = pd.DataFrame(p, index=w.index, columns=names)
         d["quote_time_utc"] = t.reindex(w.index).to_numpy()
+        d["published_utc"] = pub.reindex(w.index).to_numpy()
         g = d.groupby(level=KEY)
         agg = g[names].mean()
         agg[f"n_books_{'1x2' if market == '1X2' else 'ou'}"] = g.size()
         agg[f"qt_{market}"] = g["quote_time_utc"].max()
+        agg[f"pub_{market}"] = g["published_utc"].min()
         out.append(agg)
     if not out:
         return pd.DataFrame(columns=cols).set_index(KEY)
@@ -87,6 +113,8 @@ def consensus(raw: pd.DataFrame) -> pd.DataFrame:
         res[c] = res[c].fillna(0).astype(int) if c in res else 0
     qts = [res[c] for c in ("qt_1X2", "qt_OU_2.5") if c in res]
     res["quote_time_utc"] = pd.concat(qts, axis=1).max(axis=1)
+    pubs = [res[c] for c in ("pub_1X2", "pub_OU_2.5") if c in res]
+    res["published_utc"] = pd.concat(pubs, axis=1).min(axis=1)
     return res[cols[4:]]
 
 
@@ -101,6 +129,23 @@ def load_pre_closing(engine) -> pd.DataFrame:
         return pd.read_sql(text(sql), conn)
 
 
+def combine_prices(db: pd.DataFrame, snap: pd.DataFrame | None) -> pd.DataFrame:
+    """One consensus table from the database's pre-closing prices and a live snapshot. A
+    fixture already in the database keeps only its season file's prices (stamped at its D-012
+    deadline): the snapshot's copy is left out, so the two sources are never mixed and a
+    later retrieval time can't override the deadline stamp."""
+    raw = [db]
+    if snap is not None and not snap.empty:
+        if not db.empty:
+
+            def keys(df: pd.DataFrame) -> pd.MultiIndex:
+                return pd.MultiIndex.from_frame(df[KEY].assign(date=pd.to_datetime(df["date"])))
+
+            snap = snap[~keys(snap).isin(keys(db))]
+        raw.append(snap)
+    return consensus(pd.concat(raw, ignore_index=True))
+
+
 @cache
 def default_prices() -> pd.DataFrame:
     """Pre-closing prices from the database plus the latest live snapshot of upcoming
@@ -111,41 +156,63 @@ def default_prices() -> pd.DataFrame:
     engine = make_engine(get_settings().database_url)
     if not inspect(engine).has_table("fd_odds"):  # an empty database (tests, CI)
         return consensus(pd.DataFrame())
-    raw = [load_pre_closing(engine)]
     from footy.ingest.fd_fixtures import latest_snapshot
 
     snap = latest_snapshot(engine)
-    if snap is not None and not snap.empty:
-        raw.append(snap)
-    book = consensus(pd.concat(raw, ignore_index=True))
+    book = combine_prices(load_pre_closing(engine), snap)
     if snap is not None:
         book.attrs["live_snapshot"] = {
-            k: snap.attrs[k] for k in ("raw_sha256", "retrieved_at", "raw_file_id")
+            k: snap.attrs[k]
+            for k in ("raw_sha256", "retrieved_at", "published_at", "raw_file_id")
+            if k in snap.attrs
         } | {"source": "football-data fixtures.csv"}
     return book
 
 
-def tilt(grid: np.ndarray, target: np.ndarray, iters: int = 60, tol: float = 1e-11) -> np.ndarray:
+# The six blocks the three indicators split a grid into: result (home, draw, away) x over 2.5.
+_RESULT = np.stack([FEATURES[0], FEATURES[1], 1.0 - FEATURES[0] - FEATURES[1]])  # (3, 11, 11)
+_OVER_BLOCK = _RESULT * FEATURES[2]
+_UNDER_BLOCK = _RESULT * (1.0 - FEATURES[2])
+
+
+def tilt(grid: np.ndarray, target: np.ndarray, iters: int = 200) -> np.ndarray:
     """Exponentially tilt each (11, 11) grid so that P(home), P(draw) and P(over 2.5) equal
-    `target` (n, 3): the minimum-KL change to the grid that hits the targets (Newton's method
-    on the convex dual)."""
-    n = grid.shape[0]
-    f = FEATURES.reshape(3, -1)  # (3, 121)
-    g = np.clip(grid.reshape(n, -1), 1e-300, None)
-    theta = np.zeros((n, 3))
+    `target` (n, 3): the minimum-KL change to the grid that hits the targets.
+
+    The tilt multiplies every cell by a factor that depends only on its result (home, draw,
+    away) and on whether it has over 2.5 goals, so it is the raking of a 3 x 2 table of block
+    masses to the target margins. Each result row is scaled exactly; the one remaining
+    unknown, the odds u of over against under, solves sum_r t_r * expit(u + c_r) = t_over
+    (c_r: the base grid's log odds of over within result r). That sum is increasing in u, so
+    bisection always finds the root, however far the targets are from the base grid (an
+    undamped Newton iteration on the dual diverged for extreme targets)."""
+    target = np.asarray(target, dtype=float)
+    t_h, t_d, t_o = target[:, 0], target[:, 1], target[:, 2]
+    t_r = np.stack([t_h, t_d, 1.0 - t_h - t_d], axis=1)  # (n, 3)
+    if not (np.isfinite(target).all() and (t_r > 0).all() and ((t_o > 0) & (t_o < 1)).all()):
+        raise ValueError("tilt targets must be probabilities strictly inside (0, 1)")
+    g = np.clip(grid, 1e-300, None)
+    m_over = np.einsum("nij,rij->nr", g, _OVER_BLOCK)  # (n, 3) block masses
+    m_under = np.einsum("nij,rij->nr", g, _UNDER_BLOCK)
+    c = np.log(m_over) - np.log(m_under)
+    logit_o = np.log(t_o) - np.log1p(-t_o)
+    lo, hi = logit_o - c.max(axis=1), logit_o - c.min(axis=1)  # brackets the root
     for _ in range(iters):
-        logw = np.log(g) + theta @ f
-        logw -= logw.max(axis=1, keepdims=True)
-        q = np.exp(logw)
-        q /= q.sum(axis=1, keepdims=True)
-        m = q @ f.T  # (n, 3)
-        r = m - target
-        if np.abs(r).max() < tol:
-            break
-        cov = np.einsum("nc,kc,lc->nkl", q, f, f) - m[:, :, None] * m[:, None, :]
-        cov += 1e-12 * np.eye(3)
-        theta -= np.linalg.solve(cov, r[:, :, None])[:, :, 0]
-    return q.reshape(grid.shape)
+        mid = 0.5 * (lo + hi)
+        below = (t_r * expit(mid[:, None] + c)).sum(axis=1) < t_o
+        lo, hi = np.where(below, mid, lo), np.where(below, hi, mid)
+    x = 0.5 * (lo + hi)[:, None] + c  # log odds of over 2.5 within each result
+    f_over, f_under = t_r * expit(x) / m_over, t_r * expit(-x) / m_under
+    factor = np.einsum("nr,rij->nij", f_over, _OVER_BLOCK) + np.einsum(
+        "nr,rij->nij", f_under, _UNDER_BLOCK
+    )
+    return g * factor
+
+
+def _inside(*probs: np.ndarray) -> np.ndarray:
+    """True where every given probability is finite and strictly between 0 and 1."""
+    a = np.stack(probs)
+    return np.isfinite(a).all(axis=0) & (a > 0).all(axis=0) & (a < 1).all(axis=0)
 
 
 class MarketTilt:
@@ -200,6 +267,13 @@ class MarketTilt:
         if "kickoff_utc" in fixtures.columns:
             ko = pd.to_datetime(fixtures["kickoff_utc"], utc=True).reset_index(drop=True)
             ok &= ko.isna() | (qt < ko)
+        # Staleness: only prices published on or after 00:00 UK on the fixture's own D-012
+        # collection day (the start of its decision batch), as in a backtest.
+        pub = mk["published_utc"] if "published_utc" in mk else mk["quote_time_utc"]
+        pub = pd.to_datetime(pub, utc=True)
+        days = pd.Series(idx.get_level_values("date")).dt.date
+        first = {d: model_cutoff(d) for d in days.unique()}
+        ok &= pub >= pd.to_datetime(days.map(first), utc=True)
         mk.loc[~ok.to_numpy(), ["p_H", "p_D", "p_A", "p_O"]] = np.nan
         return mk
 
@@ -208,13 +282,24 @@ class MarketTilt:
         grid = mp.grid
         base = markets_from_grid(grid)
         mk = self.market_for(fixtures)
-        target = np.stack([base.p1x2[:, 0], base.p1x2[:, 1], base.p_over[2.5]], axis=1)
-        has_1x2 = mk[["p_H", "p_D", "p_A"]].notna().all(axis=1).to_numpy()
-        has_ou = mk["p_O"].notna().to_numpy()
+        own = np.stack([base.p1x2[:, 0], base.p1x2[:, 1], base.p_over[2.5]], axis=1)
+        has_1x2 = np.array(mk[["p_H", "p_D", "p_A"]].notna().all(axis=1), dtype=bool)
+        has_ou = np.array(mk["p_O"].notna(), dtype=bool)
         w1, wo = self.w_1x2, self.w_ou
-        target[has_1x2, 0] = w1 * mk.p_H.to_numpy()[has_1x2] + (1 - w1) * target[has_1x2, 0]
-        target[has_1x2, 1] = w1 * mk.p_D.to_numpy()[has_1x2] + (1 - w1) * target[has_1x2, 1]
-        target[has_ou, 2] = wo * mk.p_O.to_numpy()[has_ou] + (1 - wo) * target[has_ou, 2]
+        target = own.copy()
+        target[:, 0] = w1 * mk.p_H.to_numpy(float) + (1 - w1) * own[:, 0]
+        target[:, 1] = w1 * mk.p_D.to_numpy(float) + (1 - w1) * own[:, 1]
+        target[:, 2] = wo * mk.p_O.to_numpy(float) + (1 - wo) * own[:, 2]
+        # Only probabilities strictly inside (0, 1) can be tilted to; a market whose target
+        # isn't (a price at 1, a degenerate base grid) keeps the base model's own value.
+        has_1x2 &= _inside(target[:, 0], target[:, 1], 1 - target[:, 0] - target[:, 1])
+        has_ou &= _inside(target[:, 2], 1 - target[:, 2])
+        target[~has_1x2, :2] = own[~has_1x2, :2]
+        target[~has_ou, 2] = own[~has_ou, 2]
+        t_h, t_d, t_o = target.T
+        row_ok = _inside(t_h, t_d, 1 - t_h - t_d, t_o, 1 - t_o)  # the base's part may not be
+        has_1x2 &= row_ok
+        has_ou &= row_ok
         move = has_1x2 | has_ou
         out = grid.copy()
         if move.any():

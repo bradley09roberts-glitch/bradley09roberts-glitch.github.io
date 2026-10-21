@@ -6,12 +6,16 @@ the same times as the season files' pre-closing prices (D-012): Friday afternoon
 weekend, Tuesday afternoons for midweek. It is fetched under the same rules as the season files
 (D-013, extended by D-024): politely, at most once every 6 hours unless forced, stored once in
 the raw store and never committed. The prices are quoted at the latest when the file was
-retrieved, so `quote_time_utc` is the retrieval time.
+first retrieved, so `quote_time_utc` is that retrieval time (identical content keeps its first
+retrieval). `published_utc` is when football-data published the file (its HTTP Last-Modified,
+if earlier than the retrieval), which says how old the prices may be: the model + market
+candidate refuses a file published before the fixture's own D-012 collection day.
 """
 
 import csv
 import io
-from datetime import datetime
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 import pandas as pd
@@ -20,7 +24,14 @@ from sqlalchemy.orm import Session
 
 from footy.ingest.fd_download import FetchResult, PoliteClient, _fetch_file, _looks_like_fd_csv
 from footy.ingest.fd_import import alias_map
-from footy.ingest.fd_parse import BOOKS_1X2, BOOKS_OU25, OU_SELECTIONS, OVERROUND_RANGE, decode
+from footy.ingest.fd_parse import (
+    BOOKS_1X2,
+    BOOKS_OU25,
+    OU_SELECTIONS,
+    OVERROUND_RANGE,
+    _parse_date,
+    decode,
+)
 from footy.ingest.raw_store import latest_revision, read_raw
 from footy.reference import DIVISIONS
 
@@ -38,6 +49,7 @@ COLUMNS = [
     "selection",
     "price",
     "quote_time_utc",
+    "published_utc",
 ]
 
 
@@ -65,14 +77,31 @@ def fetch(
     )
 
 
+def published_time(last_modified: str | None, retrieved_at: datetime) -> datetime:
+    """When the file was published: its HTTP Last-Modified, but never later than the
+    retrieval (a missing, unreadable or future header gives the retrieval time)."""
+    ret = retrieved_at if retrieved_at.tzinfo else retrieved_at.replace(tzinfo=UTC)
+    try:
+        lm = parsedate_to_datetime(last_modified) if last_modified else None
+    except (TypeError, ValueError):
+        lm = None
+    if lm is None or lm.tzinfo is None:
+        return ret
+    return min(lm.astimezone(UTC), ret)
+
+
 def parse(
-    content: bytes, aliases: dict[str, str], retrieved_at: datetime
+    content: bytes,
+    aliases: dict[str, str],
+    retrieved_at: datetime,
+    published_at: datetime | None = None,
 ) -> tuple[pd.DataFrame, dict]:
     """Pre-closing prices per fixture for the divisions this project covers. Returns the
-    prices and a report (rows read, fixtures kept, unmapped names, dropped price sets)."""
+    prices and a report (rows read, fixtures kept, unmapped names, unreadable dates, dropped
+    price sets). `published_at` defaults to `retrieved_at`."""
     text_, _ = decode(content)
     reader = csv.DictReader(io.StringIO(text_))
-    rows, unmapped, dropped, kept, read = [], set(), [], set(), 0
+    rows, unmapped, dropped, kept, read, bad_dates = [], set(), [], set(), 0, []
     for row in reader:
         div = (row.get("Div") or "").strip()
         if div not in DIVISIONS:
@@ -82,7 +111,11 @@ def parse(
         if home not in aliases or away not in aliases:
             unmapped |= {n for n in (home, away) if n not in aliases}
             continue
-        day = datetime.strptime(row["Date"].strip(), "%d/%m/%Y").date()  # noqa: DTZ007
+        try:
+            day = _parse_date((row.get("Date") or "").strip())
+        except ValueError:
+            bad_dates.append(f"{div} {home} v {away}: {(row.get('Date') or '').strip()!r}")
+            continue
         base = {
             "division": div,
             "date": day.isoformat(),
@@ -90,6 +123,7 @@ def parse(
             "home_team": aliases[home],
             "away_team": aliases[away],
             "quote_time_utc": retrieved_at,
+            "published_utc": published_at or retrieved_at,
         }
         for books, market, sels in (
             (BOOKS_1X2, "1X2", {"H": "H", "D": "D", "A": "A"}),
@@ -126,6 +160,7 @@ def parse(
         "rows_in_covered_divisions": read,
         "fixtures_with_prices": len(kept),
         "unmapped_names": sorted(unmapped),
+        "unreadable_dates": bad_dates,
         "dropped_price_sets": dropped,
     }
     return pd.DataFrame(rows, columns=COLUMNS), report
@@ -133,7 +168,7 @@ def parse(
 
 def latest_snapshot(engine: Engine, raw_dir: Path | None = None) -> pd.DataFrame | None:
     """Prices from the latest stored `fixtures.csv`, or None if it was never fetched.
-    `attrs` carries the raw file's SHA-256 and retrieval time."""
+    `attrs` carries the raw file's SHA-256, retrieval time and publication time."""
     from footy.config import get_settings
 
     raw_dir = raw_dir or get_settings().raw_dir
@@ -143,10 +178,12 @@ def latest_snapshot(engine: Engine, raw_dir: Path | None = None) -> pd.DataFrame
             return None
         aliases = alias_map(s)
         content = read_raw(raw_dir, raw)
-        df, report = parse(content, aliases, raw.retrieved_at)
+        published = published_time(raw.http_last_modified, raw.retrieved_at)
+        df, report = parse(content, aliases, raw.retrieved_at, published)
         df.attrs.update(
             raw_sha256=raw.sha256,
             retrieved_at=raw.retrieved_at.isoformat(),
+            published_at=published.isoformat(),
             raw_file_id=raw.id,
             report=report,
         )

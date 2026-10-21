@@ -252,3 +252,27 @@ def test_second_tier_prices_are_imported_like_the_top_division(migrated_engine, 
         assert issue.source_row == 2 and issue.detail.startswith("PS OU_2.5 closing 1.5")
         assert s.scalar(select(func.count()).select_from(RawImport)) == 2
         assert {i.parser_version for i in s.scalars(select(RawImport))} == {"fd-5"}
+
+
+def test_plain_run_after_version_bump_reimport_keeps_the_latest_revision(
+    migrated_engine, settings, monkeypatch
+):
+    """After a parser-version bump, `--reimport` imports only each file's latest revision. A
+    later plain run must not then apply the older revision on its own (it would put stale
+    values back and log false corrections)."""
+    import footy.ingest.fd_import as fd_import
+
+    monkeypatch.setattr(fd_import, "PARSER_VERSION", "fd-old")
+    drop(settings, csv_bytes())
+    update(migrated_engine, settings)
+    drop(settings, csv_bytes([replace_field(ROWS[0], "FTHG", "3"), *ROWS[1:]]))
+    update(migrated_engine, settings)  # revision 2: Testtown 3-1
+    monkeypatch.undo()
+
+    update(migrated_engine, settings, reimport=True)  # the new version, latest revision only
+    detail = update(migrated_engine, settings)  # plain run: revision 1 is superseded
+    assert detail["import"] == {}
+    with Session(migrated_engine) as s:
+        m = s.scalar(select(Match).where(Match.home_team == "eng-testtown"))
+        assert m.home_goals == 3
+        assert s.scalar(select(func.count()).select_from(DataCorrection)) == 1  # 2-1 to 3-1

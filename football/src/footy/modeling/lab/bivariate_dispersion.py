@@ -4,10 +4,12 @@ Two stages, refitted at every decision batch:
 
 1. **Expected goals.** The core time-weighted Poisson team model of
    footy.modeling.dixon_coles (shared ratings across a league and its second tier,
-   per-division home advantage, ridge shrinkage, exp(−xi·days) weights, second tier at half
-   weight), fitted with rho = 0 and without the closed-doors reference file (so the model
-   reads nothing but the DataFrames it is given). Any other score model with a
-   `rates(fixtures)` method can supply the means instead (`means_factory`).
+   per-division home advantage, a closed-doors home term from the core reference calendar
+   exactly as in the core model, ridge shrinkage, exp(−xi·days) weights, second tier at
+   half weight), fitted with rho = 0. `closed_doors=False` drops the calendar (then nothing
+   but the DataFrames passed in is read; it cost ~0.0004 composite in 2023/24). Any other
+   score model with a `rates(fixtures)` method can supply the means instead
+   (`means_factory`, e.g. the shots_xg family's model).
 2. **Shape.** A few global parameters that change the joint distribution of the two scores
    *without moving the means*, fitted by time-weighted maximum likelihood on the same
    training matches, given their fitted means.
@@ -426,7 +428,7 @@ class BivariateDispersion:
         reg: float = 2.0,
         tier2_weight: float = 0.5,
         shots_weight: float = 0.0,
-        closed_doors: bool = False,
+        closed_doors: bool = True,
         shape_xi: float | None = None,
         shape_refit_days: int | None = None,
         means_factory=None,
@@ -578,6 +580,14 @@ def _factory(name: str, cfg: dict):
     return lambda: BivariateDispersion(**cfg, name=name)
 
 
+def _shots_xg_means():
+    """Expected goals from the shots_xg lab family's validated model (shots on target and
+    goals, strength / tempo form). Imported lazily: another family's module."""
+    from footy.modeling.lab.shots_xg import CANDIDATES as SHOTS_XG
+
+    return SHOTS_XG["shots_xg_sot_joint_rw"]()
+
+
 CONFIGS: dict[str, dict] = {
     "bivariate_dispersion_birth_time": {"shape": "birth", "shape_kw": {"time_trend": True}},
     "bivariate_dispersion_birth_draw_time": {
@@ -586,5 +596,11 @@ CONFIGS: dict[str, dict] = {
     },
     "bivariate_dispersion_bp_diag": {"shape": "bp_diag"},
     "bivariate_dispersion_draw_tilt": {"shape": "draw_tilt"},
+    # The birth-process shape on top of the shots_xg family's expected goals.
+    "bivariate_dispersion_sx_birth_time": {
+        "shape": "birth",
+        "shape_kw": {"time_trend": True},
+        "means_factory": _shots_xg_means,
+    },
 }
 CANDIDATES = {name: _factory(name, cfg) for name, cfg in CONFIGS.items()}

@@ -25,14 +25,17 @@ So the most accurate forecast available before kickoff uses the prices.
    prices, Shin de-vigged and averaged. Pinnacle is left out because `fixtures.csv` no
    longer carries it, so a live run sees the same books as a backtest. Closing prices are
    never read. A price is used only if it was quoted no later than the prediction (the
-   fixture's collection deadline in backtests; the time of the run when live) and before the
-   kickoff.
+   fixture's collection deadline in backtests; the time of the run when live), before the
+   kickoff, and published no earlier than 00:00 UK on the fixture's own collection day (the
+   staleness rule below).
 2. **Targets.** target = w × market + (1 − w) × model, with one weight for 1X2 and one for
    O/U 2.5.
 3. **Tilt.** The base model's score grid is moved to the targets with the smallest possible
-   change in information: an exponential tilt on three indicators (home win, draw, over 2.5),
-   solved per fixture by Newton's method. The tilted grid's 1X2 and O/U 2.5 equal the targets
-   exactly. O/U 1.5 and 3.5, BTTS and the scorelines come from the same grid, so every market
+   change in information: an exponential tilt on three indicators (home win, draw, over 2.5).
+   Each cell is multiplied by a factor that depends only on its result and on whether it has
+   over 2.5 goals, so the tilt rakes a 3 × 2 table of block masses to the targets: the
+   result rows are scaled exactly and the one remaining unknown is found by bisection, which
+   always converges. The tilted grid's 1X2 and O/U 2.5 equal the targets exactly. O/U 1.5 and 3.5, BTTS and the scorelines come from the same grid, so every market
    stays coherent. A fixture without usable prices keeps the base grid.
 
 ## Choosing the weights (inner season 2022/23 only)
@@ -65,6 +68,145 @@ themselves are not stored there.
 
 Prices arrive twice a week: Tuesday for midweek fixtures, Friday afternoon for the weekend.
 Until then a fixture has only the pure model's record.
+
+A model + market candidate always publishes this way, with or without the flag (a dry run
+still lists every fixture). A record under its name without prices would just be the base
+model's forecast, and because a fixture's record is never replaced it would block the real
+one once the prices arrive. The base model keeps its own records under its own name.
+
+### Staleness rule (added 21 October 2026)
+
+A live price is used only if its file was published on or after 00:00 UK on the fixture's
+own D-012 collection day: the Tuesday for a Tuesday-to-Thursday fixture, the Friday for a
+Friday-to-Monday fixture. That is the start of the decision batch the fixture would belong to
+in a backtest, so a live run uses prices of the same vintage as the backtest it was validated
+on. For example, Tuesday's file still on the site on Friday morning is never used for a
+Saturday fixture. In effect, prices are never more than four days older than the kickoff
+(Friday 00:00 to a late Monday kickoff).
+
+- **Publication time.** This is the file's HTTP `Last-Modified` time, kept with the raw
+  file. It is capped at the first retrieval, and the retrieval time is used when the header
+  is missing.
+  - The file of 21 October was published on Tue 20 Oct at 10:57 UTC and first retrieved on
+    Wed 21 Oct at 03:06 UTC.
+  - The quote time used for the leakage checks stays the first retrieval, which is a safe
+    upper bound.
+- **Backtests are unaffected.** A season file's pre-closing price is stamped at its own
+  deadline, which is always on its collection day, so the rule never removes one.
+- **Clock changes.** The day boundary is computed in Europe/London. Fixtures on Sun 25 and
+  Mon 26 Oct 2026, after the clocks go back, still have Fri 23 Oct as their collection day,
+  and it starts at Thu 22 Oct 23:00 UTC (BST).
+- **Moved fixtures.** A price is matched to a fixture by division, date and teams. If a
+  fixture moves to another date after the file was published, it simply finds no price.
+
+## Audit of the market code (21 October 2026)
+
+An adversarial review of `market_blend`, `fd_fixtures`, `predict_domestic` and the
+pan-European model's `market_alpha`. Every number comes from the database or from synthetic
+stress tests.
+
+### Leakage
+
+No leak was found.
+
+- **Closing prices.** Only `phase = 'pre_closing'` rows and the `fixtures.csv` pre-closing
+  columns are read.
+- **Backtest deadline.** Every walk-forward fixture frame carries `deadline_utc` (from
+  `load_matches`), and a price is used only if it was quoted by that time and before the
+  kickoff.
+- **One refused fixture on 2023/24.** Of the 1,752 validation fixtures, 1,751 used prices.
+  The other, Newcastle v Nottingham Forest on Tue 26 Dec 2023, kicked off at 12:30 UTC,
+  before that day's 13:00 deadline, so its prices were refused (a D-012 exclusion).
+- **Kickoffs before the deadline, all ten divisions:**
+
+  | Season | 2019/20 | 2020/21 | 2021/22 | 2022/23 | 2023/24 | 2024/25 | 2025/26 |
+  | --- | --- | --- | --- | --- | --- | --- | --- |
+  | Matches | 5 | 36 | 18 | 14 | 14 | 17 | 33 |
+
+  Most are Championship fixtures on Good Friday and Boxing Day; the rest are early Friday or
+  Tuesday kickoffs, mainly in Serie B. All of them keep the base grid.
+- **New tests.** `tests/modeling/test_no_future_leakage.py` now runs the tilt on a
+  synthetic league with a synthetic price table.
+  - Scrambling the results and prices of later fixtures leaves every earlier prediction
+    identical.
+  - A price quoted one minute after the deadline is ignored, and so is a price for a fixture
+    that kicks off before its deadline.
+  - With either guard removed in memory, the second test fails, as it should.
+
+### Fixed
+
+1. **The tilt could silently miss its targets (medium).** The previous solver, an undamped
+   Newton iteration, diverged when the targets were far from the base grid. It then returned
+   a wrong grid without raising an error.
+   - It converged on every real 2023/24 fixture: the tilted 1X2 and O/U 2.5 equal the
+     consensus to within 1e-11.
+   - On synthetic stress grids it often failed:
+
+     | Synthetic stress grid | Cases | Old solver missed its targets |
+     | --- | --- | --- |
+     | Extreme targets | 37,240 | 68% |
+     | Realistic pairs of base grid and target | 26,460 | 27% |
+     | Targets within ±0.10 of the base grid | 29,186 | 307 |
+     | Targets within ±0.20 of the base grid | 17,993 | 1,388 |
+
+     The misses were up to 0.98 in probability, mostly where the base grid was extreme.
+   - The new solver (raking plus bisection) never missed: the worst error was 8e-16. Where
+     the old one had converged, the two agree to 7e-12, and the new one is about nine times
+     faster.
+   - A market whose target is not strictly between 0 and 1 now keeps the base model's value
+     for that market, instead of crashing or producing a wrong grid.
+   - **Re-run of `lab-validate market_tilt_dc dixon_coles` with the new solver.**
+     - Unchanged: composite 0.945155, RPS 0.187451 (95% CI 0.1818 to 0.1932), and every
+       probability to within 1.1e-11.
+     - The tilted 1X2 and O/U 2.5 now equal the consensus to within 4e-16.
+     - Accuracy: 55.02% (964 of 1,752) instead of 54.97% (963). The single change is
+       Lyon v Monaco (28 Apr 2024), whose consensus had exactly equal home and away
+       probabilities (0.3738), so the old solver's rounding noise had chosen the pick.
+2. **Stale live prices.** Nothing stopped an older file's prices being used. This is now the
+   staleness rule above.
+3. **A database fixture could take the snapshot's quote time.** If a fixture was both in the
+   database and in the latest `fixtures.csv`, its prices were mixed across the two sources,
+   and the later retrieval time replaced the deadline stamp. In a 2026/27 backtest the
+   fixture's price would then have been refused. The database's prices now take precedence.
+4. **Unpriced records under the market model's name.** These are now prevented, as
+   described above.
+5. **An unreadable date in `fixtures.csv` crashed the parse,** and with it every prediction
+   run. Such rows are now skipped and listed in the report, and a two-digit year is
+   accepted.
+
+### Checked, no change needed
+
+- **Shin de-vig.** It was run on 8,994 synthetic two-way and 9,035 three-way price sets
+  across the accepted overround range (0.95 to 1.30), with no solver failure; every result
+  sums to 1. An underround (below 1) is normalised in proportion.
+- **Consensus with a missing market.** When one book lacks O/U 2.5, the over/under is
+  averaged over the books that quote it (`n_books_ou` says how many).
+- **Duplicated rows in `fixtures.csv`.** The first complete set of each book is used.
+- **Venue-local and UK dates.** openfootball gives the venue's local date, football-data the
+  UK date. They differ only for a kickoff between 23:00 and 00:00 UK, which none of the five
+  leagues schedule, and a mismatch finds no price rather than a wrong one.
+- **Terms (D-013, D-024).** The only stored record so far that used prices holds the
+  consensus probabilities, the books' names, the quote time and the raw file's SHA-256,
+  retrieval time and id. It does not hold the prices.
+  - The same applies to the `predictions` table. The API passes on only those whitelisted
+    fields.
+  - `fd-fixtures` logs counts, unmapped names and overrounds, not prices.
+
+### Reported, not changed
+
+- **`/api/import-issues` shows invalid cell values.** It returns import-issue details such
+  as `B365H='0'` or `AvgC>2.5='0.42'`, raw cell values from the season files (16 rows). They
+  are data faults, not usable prices, but masking them would be stricter.
+- **A reverted file would not be picked up.** `latest_revision` picks the highest revision.
+  If `fixtures.csv` reverted to byte-identical earlier content, the store would keep
+  pointing at the newer revision. This is unlikely, since the dates change every week.
+- **`default_prices()` is cached per process.** A long-running process that fetches a new
+  `fixtures.csv` would keep the old table. The CLI runs one command per process, so this
+  does not arise today.
+- **`market_xg` (another strand's file).** The fixed rho for the 1X2-only solve is a median
+  over every match, later seasons included. That is a small look-ahead in the pan-European
+  model's market-trained targets, already noted in the module. It touches only matches
+  without closing O/U prices.
 
 ## What this does and does not show
 

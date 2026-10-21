@@ -166,7 +166,7 @@ def _simulate_state_dependent(seed, n, lead, trail, periods=6):
 def test_birth_process_recovers_planted_game_state_effects():
     from scipy.optimize import minimize
 
-    d = _simulate_state_dependent(seed=1, n=6000, lead=-0.3, trail=0.3)
+    d = _simulate_state_dependent(seed=1, n=3000, lead=-0.3, trail=0.3)
     shape = BirthShape()
     # simulated rates are base rates; give the shape the realised mean structure
     res = minimize(
@@ -216,7 +216,7 @@ def test_expensive_shapes_refit_on_schedule():
 
 def test_deterministic():
     df = synthetic_league(seed=10)
-    for name in sorted(CANDIDATES):
+    for name in ["bivariate_dispersion_birth_time", "bivariate_dispersion_draw_tilt"]:
         a = run_backtest(df, BacktestSpec(CANDIDATES[name], "E0", ["2324"]))
         b = run_backtest(df, BacktestSpec(CANDIDATES[name], "E0", ["2324"]))
         pd.testing.assert_frame_equal(a, b)

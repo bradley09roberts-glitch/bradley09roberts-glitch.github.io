@@ -121,9 +121,10 @@ def test_primary_models_string_or_list(tmp_path):
     path = tmp_path / "p.json"
     path.write_text(json.dumps({"_comment": "x", "domestic": "a", "uefa": ["b", "c", "b"]}))
     assert routes.primary_models(path) == {"domestic": ["a"], "uefa": ["b", "c"]}
-    path.write_text(json.dumps({"domestic": ["a", 3]}))
-    with pytest.raises(ValueError, match="domestic"):
-        routes.primary_models(path)
+    for bad in (["a", 3], [], [""], "", None, {"a": 1}):
+        path.write_text(json.dumps({"domestic": bad}))
+        with pytest.raises(ValueError, match="domestic"):
+            routes.primary_models(path)
     assert routes.primary_models(tmp_path / "missing.json") == {}
 
 

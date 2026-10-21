@@ -41,7 +41,12 @@ def predict_domestic(
     only_with_market: bool = False,
 ) -> list[dict]:
     """`only_with_market`: publish only the fixtures for which a model + market candidate
-    found usable prices, so a later run with fresher prices can still publish the rest."""
+    found usable prices, so a later run with fresher prices can still publish the rest.
+    A model + market candidate (one with a `decision_time`) always publishes that way: a
+    record saved under its name without prices would be the base model's forecast, and since
+    a fixture's record is never replaced it would block the real one when the prices arrive
+    (the base model publishes its own records under its own name). A dry run still lists
+    every fixture, with `market_used`."""
     now = now or datetime.now(UTC)
     today = now.astimezone(UK).date()
     out = []
@@ -54,7 +59,8 @@ def predict_domestic(
         if not fx_list:
             continue
         model = factory()
-        if hasattr(model, "decision_time"):  # model + market: prices quoted up to now
+        market_model = hasattr(model, "decision_time")
+        if market_model:  # model + market: prices quoted up to now
             model.decision_time = now
         cutoff = pd.Timestamp(datetime(today.year, today.month, today.day, tzinfo=UK)).tz_convert(
             "UTC"
@@ -110,7 +116,7 @@ def predict_domestic(
                     missing_fields=missing,
                 )
             )
-        if only_with_market:
+        if only_with_market or (market_model and not dry_run):
             keep = [j for j, f in enumerate(fixtures) if "market_prices_used" in f.features]
             fixtures = [fixtures[j] for j in keep]
             mp = _subset(mp, keep)

@@ -152,3 +152,51 @@ def test_market_expected_goals_from_imported_extra_league_prices(migrated_engine
     xh, xa = _xg(g)
     np.testing.assert_allclose(out.xg_home, xh[0], rtol=1e-9)
     np.testing.assert_allclose(out.xg_away, xa[0], rtol=1e-9)
+
+
+def test_market_xg_from_on_or_after_the_cutoff_never_reaches_a_uefa_prediction(monkeypatch):
+    """Leakage guard for `market_alpha` (SYNTHETIC two-league data and made-up market xG):
+    the walk-forward fit uses market xG only for domestic matches in its history, so
+    rewriting the market xG of every domestic match dated on or after a batch's cutoff
+    (the cutoff day itself and the match day included) leaves that batch's predictions
+    exactly as they were, while rewriting the earlier matches' market xG moves them."""
+    import footy.modeling.market_xg as mx
+    from footy.modeling.euro import EuroSpec, PanEuropeanDC, run_euro_backtest
+
+    from .test_euro_model import two_leagues
+
+    df, _ = two_leagues(n_weeks=13)
+    target = df[df.kind == "euro"].date.max()
+    cutoff = target - pd.Timedelta(days=1)
+    # Two more SYNTHETIC domestic matches on the cutoff day and on the match day itself.
+    extra = df[df.kind == "domestic"].tail(2).copy()
+    extra["id"] = [df.id.max() + 1, df.id.max() + 2]
+    extra["date"] = [cutoff, target]
+    df = pd.concat([df, extra], ignore_index=True).sort_values(["date", "id"])
+    df["outcome"] = np.select(
+        [df.home_goals > df.away_goals, df.home_goals == df.away_goals], [0, 1], 2
+    )
+    dom = df[df.kind == "domestic"]
+    later = dom.date >= cutoff
+    assert later.sum() >= 2 and (~later).sum() > 0
+
+    def market_xg(seed_before, seed_later):
+        xg = pd.DataFrame(index=pd.Index(dom.id, name="match_id"), columns=["xg_home", "xg_away"])
+        for mask, seed in ((~later, seed_before), (later, seed_later)):
+            rng = np.random.default_rng(seed)
+            xg.loc[dom.id[mask], ["xg_home", "xg_away"]] = rng.uniform(0.3, 3.0, (mask.sum(), 2))
+        return xg.astype(float)
+
+    def predictions(xg):
+        monkeypatch.setattr(mx, "default_market_xg", lambda: xg)
+        spec = EuroSpec(
+            lambda: PanEuropeanDC(xi=0.002, market_alpha=0.0), ["2324"], ("UCL",), min_history=1
+        )
+        led = run_euro_backtest(df, spec, {})
+        led = led[(led.status == "predicted") & (led.date == target.date().isoformat())]
+        assert len(led) == 1
+        return led[["p_H", "p_D", "p_A", "p_over_2.5", "p_btts"]].to_numpy(float)
+
+    p = predictions(market_xg(1, 2))
+    np.testing.assert_array_equal(predictions(market_xg(1, 3)), p)  # later values: no effect
+    assert np.abs(predictions(market_xg(4, 2)) - p).max() > 1e-3  # earlier values: used

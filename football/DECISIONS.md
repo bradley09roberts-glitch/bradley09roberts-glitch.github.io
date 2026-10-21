@@ -228,6 +228,8 @@ closing. Maximum prices are not stored, because the brief rules out best-price s
 handicap is out of scope. The raw files keep everything, so adding a bookmaker later means
 re-parsing, not re-downloading.
 
+_Amended 21 Oct 2026: prices are now imported for every division (D-022, "Prices")._
+
 ## D-017 Data-quality rules at import (M1)
 
 Every rejection or flag is written to `import_issues` with its file, row and reason, and is
@@ -302,9 +304,11 @@ Written from the documentation fetched on 19 Oct 2026, not yet against live resp
 **Why:** a pan-European club model needs league form for Champions League clubs from outside
 the big five. These divisions have `scope = "europe"` in `reference.py`; the core ten have
 `scope = "core"` and nothing about them changes (`TOP_DIVISIONS` is still the five core top
-divisions, and prices are still parsed for those five only, D-016).
+divisions, and prices are still parsed for those five only, D-016). _Amended 21 Oct 2026:
+prices are now imported for every division; see "Prices" below._
 
-**What is imported (results only, 2018/19 or 2018 onwards):**
+**What is imported (results only until the "Prices" amendment below; 2018/19 or 2018
+onwards):**
 
 | Layout | Source | Divisions |
 | --- | --- | --- |
@@ -458,6 +462,54 @@ Dundee and Dundee United, Cercle Brugge and Club Brugge, Dynamo Makhachkala and 
 
 A merged club can appear under both names in one season. Where that would repeat a pairing
 of teams, the importer holds the row back as `repeat_pairing` too.
+
+**Prices (21 Oct 2026, parsers fd-5 and fdx-3; amends D-016).** Prices are now imported for
+every division, not only the five top divisions. The reason is market-implied expected goals
+for the UEFA ratings (`footy.modeling.market_xg`).
+
+- **What is imported.** The books and markets are the same as in D-016: Bet365, Pinnacle,
+  Betfair Exchange and the market average. Maximum prices are not stored.
+  - Main-layout files (the five core second tiers and SC0, N1, B1, P1, T1, G1) have the same
+    columns as E0. Their pre-closing and closing 1X2 and O/U 2.5 prices are imported, with
+    the D-012 quote times. The D-012 collection rule covers these files: football-data's
+    collection note is about the main-layout download files, and the stored `fixtures.csv`
+    carries E1, E2, E3 and SC1 too.
+  - Extra-league files have closing 1X2 columns only (PSC, MaxC, AvgC, BFEC, B365C; Russia
+    has no BFEC or B365C). They are stamped at kickoff. They have no pre-closing or O/U
+    prices. A pre-closing column would be ignored even if one appeared, because the D-012
+    collection times are not documented for these files.
+- **Checks.** D-017 applies unchanged. The re-import dropped and logged 938 sets with
+  implausible overrounds (925 main-layout, mostly Betfair Exchange pre-closing sets from
+  thin lower-league markets; 13 extra-league market-average sets), plus 3 invalid prices.
+  282 more fixtures were flagged `kickoff_before_collection`.
+- **Rows added.** 1,038,569 price rows in total. Closing 1X2 now covers 49,999 matches outside
+  the top five.
+
+  | Divisions | Rows added | Of which closing 1X2 |
+  | --- | ---: | ---: |
+  | E1, SP2, I2, D2, F2 | 495,469 | 146,832 |
+  | SC0, N1, B1, P1, T1, G1 | 413,170 | 122,828 |
+  | AUT, DNK, SWZ, NOR, SWE, POL, ROU, RUS, FIN, IRL (closing 1X2 only) | 129,930 | 129,930 |
+
+- **Top five unchanged.** Their match and price rows (ids included) and import issues hash
+  the same before and after. The 20-match spot-check still finds 0 mismatches; its five
+  second-tier matches now also compare their prices (1,034 values).
+- **Revisions.** A plain import no longer applies a revision that is older than one already
+  imported by the current parser version. After a `--reimport`, applying the older 2026/27
+  revisions on their own would have put stale values back.
+- **Market expected goals.** Every match with a closing 1X2 price (Pinnacle, Bet365 or the
+  average) now gets market xG: 64,627 of 64,628. The exception is Sochi v Rostov, 2020, a
+  10–1 against Rostov's youth team, whose 1X2 needs more goals than the solver allows.
+  - Matches with O/U 2.5 keep the exact three-parameter solve (39,905).
+  - The other 24,722 are solved from the 1X2 alone, with rho fixed at the median of the
+    exact solves: −0.0797 over the 16 divisions with O/U prices, computed on each call. This group is the
+    extra leagues, 2018/19 in the main layout and 27 matches whose O/U can't be matched.
+  - On matches that have both markets, the 1X2-only solve gives the exact solve's goal
+    difference to 0.014 goals (mean absolute error), and each side's expected goals to
+    0.05–0.06. The total is the least certain part (0.11).
+- **UEFA validation 2023/24** (364 fixtures; test seasons not run). The composite is
+  0.9593 for `market_alpha` 0.25 and 0.9589 for 0, against 0.9613 for 0.25 with top-five
+  prices only. The goals-only mixture is unchanged at 0.9624.
 
 ## D-023 UEFA club competitions (2026-10-21)
 

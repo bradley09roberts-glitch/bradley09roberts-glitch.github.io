@@ -53,3 +53,33 @@ def test_unmapped_names_and_bad_sets_are_reported_not_used():
     assert len(report["dropped_price_sets"]) == 1  # B365 overround far outside 0.95-1.30
     assert set(df.bookmaker) == {"Avg"}
     assert set(df.market_key) == {"1X2"}
+
+
+def test_publication_time_is_last_modified_capped_at_retrieval():
+    from footy.ingest.fd_fixtures import published_time
+
+    got = published_time("Tue, 20 Oct 2026 10:57:39 GMT", WHEN)
+    assert got == datetime(2026, 10, 20, 10, 57, 39, tzinfo=UTC)
+    assert published_time(None, WHEN) == WHEN
+    assert published_time("not a date", WHEN) == WHEN
+    assert published_time("Sat, 24 Oct 2026 10:00:00 GMT", WHEN) == WHEN  # clock skew
+    naive = WHEN.replace(tzinfo=None)  # a naive UTC time, as the database may return it
+    assert published_time(None, naive) == WHEN
+
+
+def test_rows_carry_the_publication_time_and_bad_dates_are_reported():
+    published = datetime(2026, 10, 23, 12, 0, tzinfo=UTC)
+    df, report = parse(
+        _csv(
+            "E0,24/10/2026,15:00,Testtown,Sampleton,,2.10,3.40,3.50,2.05,3.30,3.60,1.90,1.95,1.88,1.97",
+            "E0,,15:00,Mockford,Testtown,,2.10,3.40,3.50,2.05,3.30,3.60,1.90,1.95,1.88,1.97",
+            "E0,25/10/26,15:00,Sampleton,Mockford,,2.10,3.40,3.50,2.05,3.30,3.60,1.90,1.95,1.88,1.97",
+        ),
+        ALIASES,
+        WHEN,
+        published,
+    )
+    assert report["unreadable_dates"] == ["E0 Mockford v Testtown: ''"]
+    assert set(df.date) == {"2026-10-24", "2026-10-25"}  # a two-digit year is read too
+    assert (df.published_utc == published).all()
+    assert (df.quote_time_utc == WHEN).all()
