@@ -1,6 +1,6 @@
 # STATUS
 
-_Last updated: 2026-10-21, 08:30 UK. Every session starts from this file._
+_Last updated: 2026-10-21, 12:10 UK. Every session starts from this file._
 
 ## Where things stand
 
@@ -19,21 +19,27 @@ none of it has had the owner's review yet.
 | M6 Website core | Done: fixtures, match, past, performance, lab, data, status pages; QA in `docs/m6/qa.md` |
 | M7 Live operations | Running: genuine pre-match records are being published and settled; see dependencies |
 
-## Models of record (D-025, D-026)
+## Models of record (D-025, D-026, D-027)
 
-Chosen by the lowest composite on validation 2023/24 and run once on test 2024/25 + 2025/26.
+Chosen by the lowest composite on validation 2023/24 and run once on test 2024/25 + 2025/26; a
+challenger replaces a model of record only if it is also at least as good on test (D-027).
 `src/footy/reference/primary_models.json` holds them as periods with start times.
 
-| Group | Model of record | Test composite | Against |
+| Group | Model of record (in order) | Test composite | Against |
 | --- | --- | --- | --- |
-| League games, five top leagues | `market_tilt_shots`, falling back to `dixon_coles` where a fixture has no prices yet (from 21 Oct, 07:01 UTC) | 0.9555 | `dixon_coles` 0.9693 |
+| League games, five top leagues | `market_tilt_shots` where the fixture has prices, else `congestion_context_on_elo`, else `dixon_coles` (from 21 Oct, 10:52 UTC) | 0.9555 / 0.9661 | `dixon_coles` 0.9693 |
 | UEFA competitions | `pan_euro_mix_mxg` (from 21 Oct, 04:30 UTC) | 0.9666 | earlier `pan_euro_mix` 0.9686 |
 
 - **`market_tilt_shots`** moves the shots model's score grid onto football-data's pre-closing
   Bet365 and market-average prices (D-024, [docs/research/market-blend.md](docs/research/market-blend.md)).
   It beats every pure model in every league and both test seasons. It does not beat the
   closing price: level on 1X2, slightly worse on O/U 2.5. Full report:
-  [docs/results/domestic.md](docs/results/domestic.md).
+  [docs/results/domestic.md](docs/results/domestic.md). A blend on the lab's best base
+  (`market_tilt_ctx`) won validation but not test, so it was not adopted.
+- **`congestion_context_on_elo`** (goal-based Elo with fixture-congestion and context effects)
+  is the pure fallback for fixtures without prices. Its base was partly tuned on 2023/24, so its
+  validation margin is flattering; on test it beats Dixon-Coles in every league and season
+  (RPS gain significant, composite gain not).
 - **`pan_euro_mix_mxg`** is the pan-European Dixon-Coles + Elo mixture, with top-five domestic
   matches fitted partly to the expected goals their closing prices implied. Its market-xG
   scope is pinned (`top5_exact`), so it reproduces its published records exactly.
@@ -44,7 +50,8 @@ Chosen by the lowest composite on validation 2023/24 and run once on test 2024/2
 | --- | --- | --- |
 | `pan_euro_mix_mxg` | 45 | UCL 21 Oct (9), UEL and UECL 22 Oct (36) |
 | `pan_euro_mix` | 45 | the same fixtures, published earlier the same night |
-| `dixon_coles` | 64 | league games 21–27 Oct (E0, SP1, I1, D1, F1, E1) |
+| `congestion_context_on_elo` | 69 | league games 21–28 Oct (E0, SP1, I1, D1, F1, E1), the fallback of record |
+| `dixon_coles` | 64 | the same league games, published first (fitted on all history; see D-027) |
 | `market_tilt_dc`, `market_tilt_shots` | 1 each | Levante v Athletic Club, 21 Oct |
 
 Nothing is settled yet. Scheduled check-ins (this session, `send_later`):
@@ -70,25 +77,23 @@ Nothing is settled yet. Scheduled check-ins (this session, `send_later`):
 - Coverage report: [docs/coverage/coverage.md](docs/coverage/coverage.md). Its European
   section still describes prices as top-five only (to regenerate).
 
-## Model lab (workflow still running)
-
-Each family is built on seasons before 2023/24 and compared on validation; the composites below
-are the builders' own and still wait for the lab's adversarial audits and its ensemble.
+## Model lab (finished 21 Oct; every family audited, no leakage found)
 
 | Family | Best candidate | Validation composite |
 | --- | --- | --- |
+| Congestion and context | `congestion_context_on_elo` | 0.9517 (test 0.9661) |
 | Goal-based Elo | `elo_goals_gd` | 0.9528 |
+| Ensembles | `ensemble_split` | 0.9529 |
 | Dynamic ratings | `dynamic_ratings_blend3` | 0.9540 |
 | Bivariate / dispersion | `bivariate_dispersion_sx_birth_time` | 0.9544 |
 | Goal calibration | `goal_calibration_tuned_level` | 0.9548 |
 | Shots as xG | `shots_xg_sot_joint_rw` | 0.9552 |
 | Dixon-Coles tuning | `dc_tuning_tilt` | 0.9560 |
 | Gradient boosting | `ml_gbm_glm_boost_dc` | 0.9564 |
-| Congestion and context | building | – |
-| Dixon-Coles (reference) | `dixon_coles` | 0.9598 |
+| Dixon-Coles (reference) | `dixon_coles` | 0.9598 (test 0.9693) |
 
-When the lab finishes: pick the best audited pure model (or the ensemble), test it once, and
-use it as the pure fallback and as the model + market base if it improves the shape markets.
+About 50 pure models have validation ledgers, so the best validation scores are optimistic; the
+test runs are the evidence (D-027).
 
 ## Resume commands
 
@@ -122,15 +127,16 @@ container lives.
 3. **UEFA.com raw files** (D-023): 147 pages fetched before the terms were checked sit in the
    local raw store, never committed or used. The owner decides whether to purge them.
 4. **No lineups or injuries**: only early editions exist.
-5. **Data fingerprint**: `ledger.data_revision` hashes the raw football-data files only, so it
-   doesn't change when parsers, UEFA sources or imported prices change.
-6. **Profit reports**: with 20 or more bets, the equity curve and one-bet rows would reveal
-   individual prices (D-013); aggregate them before a model that bets often is reported.
-7. **Harness gaps**: E1 has no entry in the runner's league map (`run_models(leagues=["E1"])`
-   fails), and `save()` run ids carry no league.
-8. **`alembic check`** fails about 1 run in 15: two unique constraints on `raw_files` get the
-   same generated name.
-9. **The fixed rho** for 1X2-only market-xG solves is a median over all seasons (a small
+5. **Profit reports**: results with fewer than 20 bets are withheld and breakdowns aggregate,
+   but two published results that differ by a few bets could still be subtracted to recover a
+   price. Nothing saved is exposed (the model of record makes about one bet in two seasons);
+   choose a publication policy before reporting a model that bets often.
+6. **Migrations**: unattended jobs (`capture-odds`, `fd-fixtures`) refuse an out-of-date
+   database; back up `data/` and run `uv run footy migrate` after pulling a new migration.
+7. **The fixed rho** for 1X2-only market-xG solves is a median over all seasons (a small
    look-ahead, measured as negligible; the UEFA model of record doesn't use it).
-10. **Lab files**: references to the selection rule as "D-022" in lab modules should read
-    D-025 once the lab stops editing them.
+8. **Data fingerprint** (`ledger.data_revision`) now covers parser versions, source revisions and
+   row counts, but not Wikipedia parser changes, applied corrections or reference CSVs.
+9. **Records published before 10:52 UTC on 21 Oct**: the 64 `dixon_coles` records and the two
+   Levante model + market records were fitted on all history, not the tested 3-year window
+   (D-027). They stay as published; the fallback of record has correctly fitted records.
