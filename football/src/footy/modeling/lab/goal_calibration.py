@@ -79,6 +79,7 @@ from footy.modeling.base import ALL_MARKETS
 from footy.modeling.closed_doors import closed_doors_mask
 from footy.modeling.dixon_coles import TIER2, DixonColes
 from footy.modeling.grid import (
+    GOALS,
     MAX_GOALS,
     MarketProbs,
     markets_from_grid,
@@ -462,7 +463,15 @@ class GoalCalibratedDC:
     def predict(self, fixtures: pd.DataFrame) -> MarketProbs:
         lh, la = self.rates(fixtures)
         draw, both = _base_tilt(self.main)
-        g = calibrated_grid(lh, la, self.main.rho_, draw + self.cal_.get("draw", 0.0), both)
+        draw += self.cal_.get("draw", 0.0)
+        g = calibrated_grid(lh, la, self.main.rho_, draw, both)
+        if draw != 0.0 or both != 0.0:
+            # A tilt moves mass between cells and so changes the expected goals: report those of
+            # the grid actually returned (published as expected goals), so they agree with its
+            # probabilities. Measured on the capped grid, the shift is exactly zero without a tilt.
+            shift = g - poisson_grid(lh, la, self.main.rho_)
+            lh = lh + (shift * GOALS[None, :, None]).sum(axis=(1, 2))
+            la = la + (shift * GOALS[None, None, :]).sum(axis=(1, 2))
         return markets_from_grid(g, lh, la)
 
 

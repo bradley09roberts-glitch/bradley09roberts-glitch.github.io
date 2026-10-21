@@ -39,6 +39,32 @@ def _with_sot(df, seed=0):
     return df
 
 
+@pytest.mark.parametrize("name", ["dynamic_ratings_ekf", "dynamic_ratings_pi"])
+def test_no_leak_through_shot_and_corner_columns(name):
+    """The shared leakage test scrambles goals only, on data without shots; here SoT, shots,
+    corners, reds and half-time goals exist and every result column is scrambled later on."""
+    df = _with_sot(synthetic_league(seed=14, seasons=("2122", "2223", "2324"), teams=10))
+    rng = np.random.default_rng(1)
+    for c in ("home_shots", "away_shots", "home_corners", "away_corners"):
+        df[c] = rng.poisson(6.0, len(df)).astype(float)
+    split = df[df.season == "2324"].cutoff_date.min() + pd.Timedelta(days=60)
+    later = df.date >= split
+    scrambled = df.copy()
+    for c in RESULT_COLUMNS[:13]:  # goals, result, HT, shots, SoT, corners, reds
+        if c == "result":
+            continue
+        scrambled.loc[later, c] = rng.integers(0, 9, later.sum()).astype(float)
+    scrambled["outcome"] = np.sign(scrambled.away_goals - scrambled.home_goals).astype(int) + 1
+    scrambled["total_goals"] = scrambled.home_goals + scrambled.away_goals
+    a = run_backtest(df, BacktestSpec(CANDIDATES[name], "E0", ["2324"]))
+    b = run_backtest(scrambled, BacktestSpec(CANDIDATES[name], "E0", ["2324"]))
+    early = pd.to_datetime(a.date) < split
+    np.testing.assert_array_equal(
+        a.loc[early, PROBS].to_numpy(float), b.loc[early, PROBS].to_numpy(float)
+    )
+    assert np.abs(a.loc[~early, "p_H"] - b.loc[~early, "p_H"]).max() > 1e-3
+
+
 def test_candidates_are_prefixed_and_few():
     assert 0 < len(CANDIDATES) <= 5
     assert all(name.startswith("dynamic_ratings_") for name in CANDIDATES)

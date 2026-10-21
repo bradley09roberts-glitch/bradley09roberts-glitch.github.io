@@ -469,17 +469,23 @@ class BivariateDispersion:
         self.converged_ = True
 
     def params(self) -> dict:
+        # With an external means model, reg / shots_weight / closed_doors configure nothing
+        # (only the core means use them), so the manifest records the means model's own
+        # hyper-parameters instead of the unused defaults.
+        core = self.means_factory is None
+        means_params = getattr(self.means, "params", None)
         return {
             "shape": self.shape_name,
             "shape_kw": self.shape_kw,
             "xi": self.xi,
-            "reg": self.reg,
+            "reg": self.reg if core else None,
             "tier2_weight": self.tier2_weight,
-            "shots_weight": self.shots_weight,
-            "closed_doors": self.closed_doors,
+            "shots_weight": self.shots_weight if core else None,
+            "closed_doors": self.closed_doors if core else None,
             "shape_xi": self.shape_xi,
             "shape_refit_days": self.shape_refit_days,
             "means": getattr(self.means, "name", type(self.means).__name__),
+            "means_params": means_params() if callable(means_params) else None,
             "inflate": self.inflate,
         }
 

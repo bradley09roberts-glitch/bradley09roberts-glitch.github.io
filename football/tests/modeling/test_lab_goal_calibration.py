@@ -84,6 +84,28 @@ def test_draw_tilt_is_coherent_and_moves_mass_to_the_diagonal():
     assert check_coherent(tilt) == []
 
 
+def test_reported_expected_goals_follow_the_tilted_grid():
+    # The tuned base's BTTS tilt moves mass between cells. The reported expected goals
+    # (published as xG) must move with it: lam − E_grid[goals] is then the same as for the
+    # untilted Dixon-Coles grid (only the capped tail differs), and the shift is non-zero.
+    df = synthetic_league(seed=5, seasons=("2122", "2223", "2324"), teams=12)
+    target = df[df.season == "2324"]
+    cutoff = sorted(target.cutoff_utc.unique())[3]
+    fx = target[target.cutoff_utc == cutoff]
+    model = GoalCalibratedDC(name="t", tuned=TUNED_TILT, calib=(), level=None)
+    model.fit(df[df.date < fx.cutoff_date.iloc[0]], cutoff)
+    mp = model.predict(fx.drop(columns=RESULT_COLUMNS))
+    lh, la = model.rates(fx)
+    g0 = poisson_grid(lh, la, model.main.rho_)
+    goals = np.arange(g0.shape[1])
+    for lam, raw, axis in ((mp.lam_h, lh, 2), (mp.lam_a, la, 1)):
+        mean = (mp.grid.sum(axis=axis) * goals).sum(axis=1)
+        mean0 = (g0.sum(axis=axis) * goals).sum(axis=1)
+        np.testing.assert_allclose(lam - mean, raw - mean0, atol=1e-12)
+    assert abs(model.main.tilt_[0]) > 1e-4
+    assert np.abs(mp.lam_h - lh).max() > 1e-6
+
+
 def test_openness_noise_is_shrunk_out_of_sample():
     # The synthetic league has team strength but no team openness, so every openness rating
     # Dixon-Coles estimates is noise: the out-of-sample scale must come out below one.

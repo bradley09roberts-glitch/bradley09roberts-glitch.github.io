@@ -46,7 +46,7 @@ from scipy.sparse.linalg import spsolve
 from footy.modeling.closed_doors import closed_doors_mask, periods
 from footy.modeling.data import season_of
 from footy.modeling.dixon_coles import TIER1, TIER2, DixonColes, _tau_terms
-from footy.modeling.grid import MAX_GOALS, MarketProbs, markets_from_grid, poisson_grid
+from footy.modeling.grid import GOALS, MAX_GOALS, MarketProbs, markets_from_grid, poisson_grid
 
 # COVID-19 crowd restrictions by division, used only when the core reference file
 # (reference/closed_doors.csv) is absent. A fixed calendar of public facts, not data-derived;
@@ -428,8 +428,15 @@ class DCTuned(DixonColes):
         g = poisson_grid(lh, la, self.rho_)
         if self.tilt:
             b, d = _tilt_masks()
-            g = g * np.exp(self.tilt_[0] * b + self.tilt_[1] * d)[None]
-            g /= g.sum(axis=(1, 2), keepdims=True)
+            t = g * np.exp(self.tilt_[0] * b + self.tilt_[1] * d)[None]
+            t /= t.sum(axis=(1, 2), keepdims=True)
+            # the tilt moves mass between cells and so changes the expected goals: report
+            # those of the grid actually returned (published as expected goals / xG), so they
+            # agree with its probabilities. The shift is measured on the capped grid, so it is
+            # exactly zero when the tilt is.
+            lh = lh + ((t - g) * GOALS[None, :, None]).sum(axis=(1, 2))
+            la = la + ((t - g) * GOALS[None, None, :]).sum(axis=(1, 2))
+            g = t
         return markets_from_grid(g, lh, la)
 
     def rates(self, fixtures: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:

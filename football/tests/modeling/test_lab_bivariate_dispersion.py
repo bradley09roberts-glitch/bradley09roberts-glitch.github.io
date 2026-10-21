@@ -235,6 +235,53 @@ def test_diagonal_inflation_finds_planted_draws():
     assert (mp.grid[:, 1, 1] > plain.grid[:, 1, 1]).all()
 
 
+def test_no_leakage_with_half_times_and_shots_present():
+    """The shared leakage test runs on synthetic data without half-time goals or shots, so the
+    half-time likelihood and the shot-based means are never exercised there. Here they are,
+    with the shape refitted inside the scrambled period: earlier predictions must not move."""
+    df = synthetic_league(seed=21, seasons=("2223", "2324"), teams=8)
+    rng = np.random.default_rng(2)
+    n = len(df)
+
+    def fill(d, r):
+        d["ht_home_goals"] = r.binomial(d.home_goals, 0.45).astype(float)
+        d["ht_away_goals"] = r.binomial(d.away_goals, 0.45).astype(float)
+        d["home_sot"] = (d.home_goals + r.poisson(3.0, len(d))).astype(float)
+        d["away_sot"] = (d.away_goals + r.poisson(2.5, len(d))).astype(float)
+        d["home_shots"] = d.home_sot + r.poisson(7.0, len(d))
+        d["away_shots"] = d.away_sot + r.poisson(6.0, len(d))
+        return d
+
+    df = fill(df, rng)
+    split = df[df.season == "2324"].cutoff_date.min() + pd.Timedelta(days=42)
+    later = (df.date >= split).to_numpy()
+    s = df.copy()
+    s.loc[later, "home_goals"] = rng.integers(0, 6, later.sum())
+    s.loc[later, "away_goals"] = rng.integers(0, 6, later.sum())
+    s.loc[later] = fill(s.loc[later].copy(), rng)
+    s["outcome"] = np.where(
+        s.home_goals > s.away_goals, 0, np.where(s.home_goals == s.away_goals, 1, 2)
+    )
+    s["total_goals"] = s.home_goals + s.away_goals
+    assert later.any() and (~later).sum() < n
+
+    def factory():
+        return BivariateDispersion(
+            "birth",
+            shape_kw={"time_trend": True, "periods": 3},
+            means_factory=lambda: DixonColes(xi=0.003, shots_weight=0.5),
+            shape_refit_days=21,
+            name="leak_probe",
+        )
+
+    a = run_backtest(df, BacktestSpec(factory, "E0", ["2324"]))
+    b = run_backtest(s, BacktestSpec(factory, "E0", ["2324"]))
+    early = pd.to_datetime(a.date) < split
+    assert early.any() and (~early).any()
+    np.testing.assert_array_equal(a.loc[early, PROBS].to_numpy(), b.loc[early, PROBS].to_numpy())
+    assert np.abs(a.loc[~early, PROBS].to_numpy() - b.loc[~early, PROBS].to_numpy()).max() > 1e-3
+
+
 def test_any_score_model_can_supply_the_means():
     df = synthetic_league(seed=14, seasons=("2223", "2324"))
     m = BivariateDispersion("draw_tilt", means_factory=lambda: DixonColes(xi=0.003))

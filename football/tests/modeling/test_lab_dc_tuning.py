@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from footy.modeling.dixon_coles import DixonColes
-from footy.modeling.grid import check_coherent
+from footy.modeling.grid import GOALS, check_coherent
 from footy.modeling.lab.dc_tuning import CANDIDATES, DCTuned, crowd_mask
 from footy.modeling.ledger import headline
 from footy.modeling.walkforward import RESULT_COLUMNS, BacktestSpec, run_backtest
@@ -145,6 +145,12 @@ def test_btts_tilt_is_fitted_and_coherent():
     assert check_coherent(mp) == []
     plain = _fit_predict(DCTuned(), df)
     assert (mp.p_btts > plain.p_btts).all()
+    # the reported expected goals move with the grid's means (more BTTS: more goals); the
+    # rates themselves are the same fit, so the shift is exactly that of the grid means
+    for lam, lam0, axis in ((mp.lam_h, plain.lam_h, 2), (mp.lam_a, plain.lam_a, 1)):
+        shift = ((mp.grid - plain.grid).sum(axis=axis) * GOALS).sum(axis=1)
+        np.testing.assert_allclose(lam - lam0, shift, atol=1e-12)
+        assert (shift > 0).all()
 
 
 def test_crowd_calendar_fallback_flags_covid_matches_only(monkeypatch):
