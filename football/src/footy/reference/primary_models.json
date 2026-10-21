@@ -1,0 +1,5 @@
+{
+  "_comment": "Model of record per competition group, chosen on validation and confirmed once on test (DECISIONS.md). Other models' saved predictions stay visible but are not the headline record.",
+  "domestic": "dixon_coles",
+  "uefa": "pan_euro_mix"
+}

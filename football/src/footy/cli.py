@@ -54,7 +54,11 @@ def main(argv: list[str] | None = None) -> int:
     pd_.add_argument("--notes")
 
     pe = sub.add_parser("predict-euro", help="publish early-edition UEFA predictions")
-    pe.add_argument("--config", default="{}", help="PanEuropeanDC keyword arguments as JSON")
+    pe.add_argument(
+        "--config",
+        default="{}",
+        help='model config as JSON, e.g. {"family": "mix", "dc": {...}, "elo": {...}, "w_dc": 0.7}',
+    )
     pe.add_argument("--model-name", default="pan_euro_dc")
     pe.add_argument("--comps", default="UCL,UEL,UECL")
     pe.add_argument("--days", type=int, default=3)
@@ -172,35 +176,45 @@ def main(argv: list[str] | None = None) -> int:
         print(f"saved {out}")
     elif args.command == "predict-domestic":
         from footy.db import get_engine
+        from footy.ingest.jobs import job_run
         from footy.live import predict_domestic
         from footy.modeling.registry import candidates
 
         factory = candidates()[args.model]
-        out = predict_domestic(
-            get_engine(),
-            factory,
-            args.model,
-            args.divisions.split(","),
-            days=args.days,
-            dry_run=args.dry_run,
-            notes=args.notes,
-        )
+        with job_run(get_engine(), "predict") as ctx:
+            out = predict_domestic(
+                get_engine(),
+                factory,
+                args.model,
+                args.divisions.split(","),
+                days=args.days,
+                dry_run=args.dry_run,
+                notes=args.notes,
+            )
+            ctx.detail.update(
+                kind="domestic", model=args.model, published=len(out), dry_run=args.dry_run
+            )
         print(json.dumps(out, indent=1, default=str))
     elif args.command == "predict-euro":
         from footy.db import get_engine
+        from footy.ingest.jobs import job_run
         from footy.live import predict_euro
-        from footy.modeling.euro import PanEuropeanDC
+        from footy.modeling.euro_eval import make_factory
 
         config = json.loads(args.config)
-        out = predict_euro(
-            get_engine(),
-            lambda: PanEuropeanDC(**config, name=args.model_name),
-            args.model_name,
-            tuple(args.comps.split(",")),
-            days=args.days,
-            dry_run=args.dry_run,
-            notes=args.notes,
-        )
+        with job_run(get_engine(), "predict") as ctx:
+            out = predict_euro(
+                get_engine(),
+                _named(make_factory(config), args.model_name),
+                args.model_name,
+                tuple(args.comps.split(",")),
+                days=args.days,
+                dry_run=args.dry_run,
+                notes=args.notes,
+            )
+            ctx.detail.update(
+                kind="uefa", model=args.model_name, published=len(out), dry_run=args.dry_run
+            )
         print(json.dumps(out, indent=1, default=str))
     elif args.command == "final-report":
         from footy.modeling.report import run
@@ -213,9 +227,13 @@ def main(argv: list[str] | None = None) -> int:
         )
     elif args.command == "settle":
         from footy.db import get_engine
+        from footy.ingest.jobs import job_run
         from footy.publish import settle
 
-        print(json.dumps(settle(get_engine())))
+        with job_run(get_engine(), "settle") as ctx:
+            res = settle(get_engine())
+            ctx.detail.update(res)
+        print(json.dumps(res))
     elif args.command == "euro-update":
         from pathlib import Path
 
@@ -249,6 +267,15 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(detail, indent=2, default=str))
         return 0 if detail.get("status") in ("ok", "no_provider") else 1
     return 0
+
+
+def _named(factory, name: str):
+    def make():
+        m = factory()
+        m.name = name
+        return m
+
+    return make
 
 
 if __name__ == "__main__":

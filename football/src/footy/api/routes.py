@@ -28,6 +28,20 @@ COMPETITION_NAMES = {
 }
 
 
+def primary_models() -> dict[str, str]:
+    """Model of record per competition group (reference/primary_models.json)."""
+    from footy.reference import REFERENCE_DIR
+
+    path = REFERENCE_DIR / "primary_models.json"
+    data = json.loads(path.read_text()) if path.exists() else {}
+    return {k: v for k, v in data.items() if not k.startswith("_")}
+
+
+def is_primary(p: Prediction, primary: dict[str, str]) -> bool:
+    group = "uefa" if p.competition in ("UCL", "UEL", "UECL") else "domestic"
+    return primary.get(group) == p.model_name
+
+
 def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRouter:
     r = APIRouter(prefix="/api")
 
@@ -41,6 +55,7 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         probs = json.loads(p.probabilities)
         return {
             "id": p.id,
+            "is_primary": is_primary(p, primary_models()),
             "fixture_ref": p.fixture_ref,
             "competition": p.competition,
             "competition_name": COMPETITION_NAMES.get(p.competition, p.competition),
@@ -152,13 +167,23 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         return {"record_type": record_type, "matches": cards}
 
     @r.get("/performance")
-    def performance() -> dict:
-        """The genuine pre-match record: settled predictions only, per market."""
+    def performance(primary_only: bool = True) -> dict:
+        """The genuine pre-match record: settled predictions only, per market. By default
+        only the model of record counts, and each fixture once (its first early edition)."""
+        primary = primary_models()
         with Session(engine_fn()) as s:
             st = settlements(s)
             rows = s.scalars(
-                select(Prediction).where(Prediction.record_type == "genuine_prematch")
+                select(Prediction)
+                .where(Prediction.record_type == "genuine_prematch")
+                .order_by(Prediction.id)
             ).all()
+        if primary_only:
+            first: dict[str, Prediction] = {}
+            for p in rows:
+                if is_primary(p, primary) and p.fixture_ref not in first:
+                    first[p.fixture_ref] = p
+            rows = list(first.values())
         per: dict[str, dict] = {}
         pending = 0
         for p in rows:
@@ -174,10 +199,14 @@ def make_router(engine_fn: Callable[[], Engine], settings: Settings) -> APIRoute
         for m in per.values():
             m["accuracy"] = m["correct"] / m["n"] if m["n"] else None
             m["mean_p_actual"] = m.pop("sum_p_actual") / m["n"] if m["n"] else None
+        last = max((st[p.id].settled_at_utc for p in rows if p.id in st), default=None)
         return {
+            "primary_only": primary_only,
+            "primary_models": primary,
             "published": len(rows),
             "settled": len(rows) - pending,
             "pending": pending,
+            "last_settled_at_utc": last.isoformat() if last else None,
             "markets": per,
         }
 

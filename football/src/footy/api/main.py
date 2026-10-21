@@ -41,6 +41,21 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
                 data["divisions"] = s.scalar(select(func.count(func.distinct(Match.division))))
                 latest = s.scalar(select(func.max(Match.match_date)))
                 data["latest_match_date"] = latest.isoformat() if latest else None
+                last_jobs = {}
+                for job in ("predict", "settle", "odds_capture", "euro_update"):
+                    jr = s.scalar(
+                        select(JobRun).where(JobRun.job == job).order_by(JobRun.id.desc())
+                    )
+                    last_jobs[job] = (
+                        None
+                        if jr is None
+                        else {
+                            "status": jr.status,
+                            "started_at": _iso(jr.started_at),
+                            "finished_at": _iso(jr.finished_at),
+                        }
+                    )
+                data["last_jobs"] = last_jobs
                 run = s.scalar(
                     select(JobRun).where(JobRun.job == "fd_update").order_by(JobRun.id.desc())
                 )
@@ -60,7 +75,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
             "schema_head": head,
             "live_provider": settings.live_provider,
             "live_provider_configured": settings.live_provider_configured(),
-            "milestone": "M1",
+            "milestone": "M7",
             "data_imported": data["matches"] > 0,
             "data": data,
         }
@@ -92,7 +107,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
             }
 
     @app.get("/api/import-issues")
-    def import_issues() -> dict:
+    def import_issues(per_code: int = Query(0, ge=0, le=5000)) -> dict:
         """Rows and values rejected or flagged at import, by reason, with where they occurred."""
         with Session(_engine()) as s:
             rows = s.execute(
@@ -113,16 +128,33 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
             "summary": [
                 {"severity": sev, "code": code, "count": n} for (sev, code), n in summary.items()
             ],
-            "issues": [
-                {"severity": sev, "code": code, "file": key, "row": row, "detail": detail}
-                for sev, code, key, row, detail in rows
-            ],
+            "issues": _limit_per_code(
+                [
+                    {"severity": sev, "code": code, "file": key, "row": row, "detail": detail}
+                    for sev, code, key, row, detail in rows
+                ],
+                per_code,
+            ),
         }
 
     from footy.api.routes import make_router
 
     app.include_router(make_router(_engine, settings))
     return app
+
+
+def _limit_per_code(issues: list[dict], per_code: int) -> list[dict]:
+    """per_code = 0 returns every issue; otherwise at most that many examples per reason."""
+    if not per_code:
+        return issues
+    seen: dict[tuple, int] = {}
+    out = []
+    for i in issues:
+        k = (i["severity"], i["code"])
+        seen[k] = seen.get(k, 0) + 1
+        if seen[k] <= per_code:
+            out.append(i)
+    return out
 
 
 def _iso(dt: datetime | None) -> str | None:
