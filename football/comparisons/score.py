@@ -88,7 +88,9 @@ def main(day: str) -> None:
         ref = g["fixture_ref"]
         r, rec = results.get(ref), ours.get(ref)
         if r is None or rec is None:
-            unscored.append({"fixture_ref": ref, "reason": "no result yet" if r is None else "no record"})
+            unscored.append(
+                {"fixture_ref": ref, "reason": "no result yet" if r is None else "no record"}
+            )
             continue
         hg, ag = r["home_goals"], r["away_goals"]
         pr = rec["probabilities"]
@@ -96,21 +98,23 @@ def main(day: str) -> None:
         gpt_p = {k: g[k] / 100 for k in ("H", "D", "A", "over_2_5", "btts_yes")}
         total = sum(gpt_p[k] for k in "HDA")  # the app's percentages are rounded
         gpt_p.update({k: gpt_p[k] / total for k in "HDA"})
-        rows.append({
-            "fixture_ref": ref,
-            "match": r["match"],
-            "score": f"{hg}-{ag}",
-            "ours": {
-                "model": rec["model_name"],
-                "record_id": rec["id"],
-                "probabilities": {k: round(v, 4) for k, v in our_p.items()},
-                "score": score(our_p, hg, ag),
-            },
-            "chatgpt_app": {
-                "probabilities": {k: round(v, 4) for k, v in gpt_p.items()},
-                "score": score(gpt_p, hg, ag),
-            },
-        })
+        rows.append(
+            {
+                "fixture_ref": ref,
+                "match": r["match"],
+                "score": f"{hg}-{ag}",
+                "ours": {
+                    "model": rec["model_name"],
+                    "record_id": rec["id"],
+                    "probabilities": {k: round(v, 4) for k, v in our_p.items()},
+                    "score": score(our_p, hg, ag),
+                },
+                "chatgpt_app": {
+                    "probabilities": {k: round(v, 4) for k, v in gpt_p.items()},
+                    "score": score(gpt_p, hg, ag),
+                },
+            }
+        )
     ucl = [r for r in rows if r["fixture_ref"].startswith("UCL:")]
     out = {
         "_note": (
@@ -122,11 +126,16 @@ def main(day: str) -> None:
         "results_status": res["status"],
         "totals": {
             "all": {"ours": totals(rows, "ours"), "chatgpt_app": totals(rows, "chatgpt_app")},
-            "champions_league": {"ours": totals(ucl, "ours"), "chatgpt_app": totals(ucl, "chatgpt_app")},
+            "champions_league": {
+                "ours": totals(ucl, "ours"),
+                "chatgpt_app": totals(ucl, "chatgpt_app"),
+            },
         },
         "lower_rps_games": {
             "ours": sum(r["ours"]["score"]["rps"] < r["chatgpt_app"]["score"]["rps"] for r in rows),
-            "chatgpt_app": sum(r["chatgpt_app"]["score"]["rps"] < r["ours"]["score"]["rps"] for r in rows),
+            "chatgpt_app": sum(
+                r["chatgpt_app"]["score"]["rps"] < r["ours"]["score"]["rps"] for r in rows
+            ),
         },
         "unscored": unscored,
         "games": rows,
