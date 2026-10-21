@@ -24,6 +24,7 @@ import {
   londonDayKey,
   outcomeLabel,
   parseUtc,
+  settlementStatusLabel,
 } from "../format";
 import { useDocumentTitle } from "../hooks";
 import { href, setQuery } from "../router";
@@ -484,7 +485,7 @@ function PastRow({
           <a className="stretched" href={href(`/match/${card.id}`)} aria-label={linkLabel}>
             <span className="past-home">{card.home_name}</span>
             <span className="past-score">
-              {scored ? `${s.home_goals}–${s.away_goals}` : (s?.status ?? "—")}
+              {scored ? `${s.home_goals}–${s.away_goals}` : s ? settlementStatusLabel(s.status) : "—"}
             </span>
             <span className="past-away">{card.away_name}</span>
           </a>

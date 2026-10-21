@@ -171,6 +171,20 @@ export function formatRelative(iso: string, now: Date = new Date()): string {
   return relative.format(Math.round(seconds / 86_400), "day");
 }
 
+const SETTLEMENT_STATUS: Record<string, string> = {
+  settled: "Settled",
+  void: "Void",
+  postponed: "Postponed",
+  abandoned: "Abandoned",
+  cancelled: "Cancelled",
+};
+
+/** A settlement status for display: "postponed" -> "Postponed"; unknown values are shown with a
+ * capital letter rather than hidden. */
+export function settlementStatusLabel(status: string): string {
+  return SETTLEMENT_STATUS[status] ?? (status ? status.charAt(0).toUpperCase() + status.slice(1) : "Unknown");
+}
+
 const OUTCOME_LABELS: Record<string, Record<string, string>> = {
   "1X2": { H: "Home win", D: "Draw", A: "Away win" },
   BTTS: { Y: "Both teams score", N: "Not both to score" },

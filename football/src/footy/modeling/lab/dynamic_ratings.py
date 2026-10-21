@@ -20,6 +20,12 @@ DIVS = sorted(TIER1 | TIER2)
 DIDX = {d: i for i, d in enumerate(DIVS)}
 IS_T2 = np.array([d in TIER2 for d in DIVS])
 EPOCH = pd.Timestamp("2000-01-01")
+# extra count statistics that measure the same latent ratings: columns, starting level
+STREAMS = {
+    "sot": ("home_sot", "away_sot", math.log(4.3)),
+    "shots": ("home_shots", "away_shots", math.log(12.0)),
+    "corners": ("home_corners", "away_corners", math.log(5.0)),
+}
 
 # COVID-19 periods without spectators, by division: a fixed calendar of public facts (to
 # within days), not derived from match data. Matches in them get their own home term.
@@ -30,8 +36,16 @@ NO_CROWD = {
     "SP2": [("2020-06-10", "2021-05-30")],
     "I1": [("2020-06-20", "2020-09-18"), ("2020-10-25", "2021-05-23")],
     "I2": [("2020-06-20", "2020-09-25"), ("2020-10-25", "2021-05-30")],
-    "D1": [("2020-05-16", "2020-09-17"), ("2020-10-31", "2021-05-22"), ("2021-12-28", "2022-02-13")],
-    "D2": [("2020-05-16", "2020-09-17"), ("2020-10-31", "2021-05-23"), ("2021-12-28", "2022-02-13")],
+    "D1": [
+        ("2020-05-16", "2020-09-17"),
+        ("2020-10-31", "2021-05-22"),
+        ("2021-12-28", "2022-02-13"),
+    ],
+    "D2": [
+        ("2020-05-16", "2020-09-17"),
+        ("2020-10-31", "2021-05-23"),
+        ("2021-12-28", "2022-02-13"),
+    ],
     "F1": [("2020-10-30", "2021-05-23")],
     "F2": [("2020-10-30", "2021-05-22")],
 }
@@ -44,6 +58,7 @@ def no_crowd_mask(df: pd.DataFrame) -> np.ndarray:
         for start, end in ranges:
             mask |= (div == d) & (day >= np.datetime64(start)) & (day <= np.datetime64(end))
     return mask
+
 
 EKF_DEFAULTS = {
     "q_s": 4e-5,  # daily random-walk variance of strength
@@ -74,9 +89,19 @@ EKF_DEFAULTS = {
     "sot_t": 1.0,  # ... on tempo
     "sot_resid": 0.0,  # prior variance of team SoT-specific strength / tempo (0: none)
     "q_sot_resid": 0.0,
+    "r_shots": 0.0,  # total shots as a third measurement (0: unused)
+    "shots_s": 0.4,
+    "shots_t": 0.6,
+    "r_corners": 0.0,  # corners as a fourth measurement (0: unused)
+    "corners_s": 0.3,
+    "corners_t": 0.3,
     "covid": False,  # separate home term for matches without spectators
     "r_red": 1.0,  # measurement-noise scale for matches with a red card
     "y_cap": 0.0,  # cap goal counts at this value in the update (0: no cap)
+    # data-driven starting ratings: a first pass over the window's first `prewarm_days`
+    # gives each team's starting mean (variance p0 × prewarm_p) for the full pass
+    "prewarm_days": 0.0,
+    "prewarm_p": 1.0,
 }
 
 
@@ -120,8 +145,8 @@ class DynamicPoisson:
             ("mu", D, True),
             ("h", D, True),
             ("th", T, c["team_home"] > 0),
-            ("nu", D, c["r_sot"] > 0),
-            ("g", D, c["r_sot"] > 0),
+            *((f"lvl_{k}", D, c[f"r_{k}"] > 0) for k in STREAMS),
+            *((f"home_{k}", D, c[f"r_{k}"] > 0) for k in STREAMS),
             ("u", T, c["r_sot"] > 0 and c["sot_resid"] > 0),
             ("v", T, c["r_sot"] > 0 and c["sot_resid"] > 0),
             ("hcd", 1, bool(c["covid"])),
@@ -137,7 +162,13 @@ class DynamicPoisson:
     def fit(self, history: pd.DataFrame, cutoff) -> None:
         c = self.cfg
         h = history[history.division.isin(TIER1 | TIER2)].sort_values(["date", "id"])
-        self.start(sorted(set(h.home_team) | set(h.away_team)))
+        teams = sorted(set(h.home_team) | set(h.away_team))
+        warm = None
+        if c["prewarm_days"] > 0 and len(h):
+            self.start(teams)
+            self.process(h[h["date"] < h["date"].iloc[0] + pd.Timedelta(days=c["prewarm_days"])])
+            warm = (self.m_.copy(), self.seen_.copy())
+        self.start(teams, warm)
         pre_lh, pre_la = self.process(h)
         day = (h["date"] - EPOCH).dt.days.to_numpy()
         cut_day = (cutoff.tz_convert("UTC").tz_localize(None) - EPOCH).days
@@ -147,8 +178,9 @@ class DynamicPoisson:
         self.rho_ = _fit_rho(yh, ya, pre_lh, pre_la, w)
         self.pre_eta_ = (np.log(np.maximum(pre_lh, 1e-9)), np.log(np.maximum(pre_la, 1e-9)))
 
-    def start(self, teams: list[str]) -> None:
-        """Empty state for these teams (each joins the filter at its first match)."""
+    def start(self, teams: list[str], warm=None) -> None:
+        """Empty state for these teams (each joins the filter at its first match). `warm`:
+        (state mean, seen) of an earlier pass, used for starting values."""
         c = self.cfg
         T, D = len(teams), len(DIVS)
         self.tidx_ = {t: i for i, t in enumerate(teams)}
@@ -166,9 +198,10 @@ class DynamicPoisson:
 
         init("mu", math.log(1.3), c["p0_mu"], D)
         init("h", 0.25, c["p0_h"], D)
-        if "nu" in L:
-            init("nu", math.log(4.3), c["p0_mu"], D)
-            init("g", 0.15, c["p0_h"], D)
+        for k, (_, _, level) in STREAMS.items():
+            if f"lvl_{k}" in L:
+                init(f"lvl_{k}", level, c["p0_mu"], D)
+                init(f"home_{k}", 0.12, c["p0_h"], D)
         if "hcd" in L:
             init("hcd", 0.05, c["p0_h"], 1)
         q = np.zeros(n)
@@ -178,14 +211,22 @@ class DynamicPoisson:
             ("mu", c["q_mu"], D),
             ("h", c["q_h"], D),
             ("th", c["q_team_home"], T),
-            ("nu", c["q_mu"], D),
-            ("g", c["q_h"], D),
+            *((f"lvl_{k}", c["q_mu"], D) for k in STREAMS),
+            *((f"home_{k}", c["q_h"], D) for k in STREAMS),
             ("u", c["q_sot_resid"], T),
             ("v", c["q_sot_resid"], T),
         ):
             if key in L:
                 q[L[key] : L[key] + size] = val
         self.q_ = q
+        self.warm_ = warm
+        if warm is not None:  # division terms start where the first pass ended
+            m[2 * T :] = warm[0][2 * T :]
+            if "th" in L:
+                m[L["th"] : L["th"] + T] = 0.0
+            for key in ("u", "v"):
+                if key in L:
+                    m[L[key] : L[key] + T] = 0.0
         self.m_, self.P_ = m, P
         self.seen_ = np.zeros(T, bool)
         self.last_div_ = np.full(T, -1)
@@ -200,15 +241,17 @@ class DynamicPoisson:
         seen, last_div = self.seen_, self.last_div_
         n = L["n"]
         dg = np.arange(n)
-        use_sot = "nu" in L
+        streams = [k for k in STREAMS if f"lvl_{k}" in L]
         hi = h.home_team.map(self.tidx_).to_numpy()
         ai = h.away_team.map(self.tidx_).to_numpy()
         di = h.division.map(DIDX).to_numpy()
         yh = h.home_goals.to_numpy(float)
         ya = h.away_goals.to_numpy(float)
-        sh = h.home_sot.to_numpy(float)
-        sa = h.away_sot.to_numpy(float)
-        sot_ok = ~(np.isnan(sh) | np.isnan(sa))
+        stats = {}
+        for k in streams:
+            xh = h[STREAMS[k][0]].to_numpy(float)
+            xa = h[STREAMS[k][1]].to_numpy(float)
+            stats[k] = (xh, xa, ~(np.isnan(xh) | np.isnan(xa)))
         day = (h["date"] - EPOCH).dt.days.to_numpy()
         season = h.season.str[:2].astype(int).to_numpy()
         rw = np.where(IS_T2[di], c["r_scale"] * c["r_tier2"], c["r_scale"])
@@ -222,7 +265,6 @@ class DynamicPoisson:
         pre_lh, pre_la = np.zeros(N), np.zeros(N)
         starts = np.flatnonzero(np.r_[True, day[1:] != day[:-1]]) if N else np.zeros(0, int)
         ends = np.r_[starts[1:], N]
-        bs, bt = c["sot_s"], c["sot_t"]
         for s0, e0 in zip(starts, ends, strict=True):
             if self.cur_day_ is not None:
                 P[dg, dg] += q * (day[s0] - self.cur_day_)
@@ -238,7 +280,7 @@ class DynamicPoisson:
             last_div[hi[g]] = di[g]
             last_div[ai[g]] = di[g]
             mm = len(g)
-            nobs = 4 * mm if use_sot else 2 * mm
+            nobs = 2 * mm * (1 + len(streams))
             H = np.zeros((nobs, n))
             r_ = np.arange(mm)
             gh, ga = 2 * r_, 2 * r_ + 1  # goal rows
@@ -256,25 +298,28 @@ class DynamicPoisson:
             y[gh], y[ga] = yh[g], ya[g]
             var_scale = np.empty(nobs)
             var_scale[gh], var_scale[ga] = rw[g], rw[g]
-            if use_sot:
-                sh_, sa_ = 2 * mm + 2 * r_, 2 * mm + 2 * r_ + 1
-                _rows(H, sh_, sa_, hg, ag, L["s"], L["t"], bs, bt)
-                if "u" in L:
+            extra = []
+            for j, k in enumerate(streams):
+                sh_, sa_ = 2 * mm * (j + 1) + 2 * r_, 2 * mm * (j + 1) + 2 * r_ + 1
+                _rows(H, sh_, sa_, hg, ag, L["s"], L["t"], c[f"{k}_s"], c[f"{k}_t"])
+                if k == "sot" and "u" in L:
                     _rows(H, sh_, sa_, hg, ag, L["u"], L["v"], 1.0, 1.0)
-                H[sh_, L["nu"] + dv] += 1.0
-                H[sa_, L["nu"] + dv] += 1.0
-                H[sh_, L["g"] + dv] += 1.0
-                ok = sot_ok[g]
-                vs = np.where(ok, c["r_sot"] * rw[g], 1e12)
+                H[sh_, L[f"lvl_{k}"] + dv] += 1.0
+                H[sa_, L[f"lvl_{k}"] + dv] += 1.0
+                H[sh_, L[f"home_{k}"] + dv] += 1.0
+                xh, xa, ok_all = stats[k]
+                ok = ok_all[g]
+                vs = np.where(ok, c[f"r_{k}"] * rw[g], 1e12)
                 var_scale[sh_], var_scale[sa_] = vs, vs
+                extra.append((sh_, sa_, ok, xh[g], xa[g]))
             PHt = P @ H.T
             HPH = H @ PHt
             eta0 = H @ m
             lam0 = np.exp(eta0)
             pre_lh[g], pre_la[g] = lam0[gh], lam0[ga]
-            if use_sot:  # missing SoT: the observation equals its prediction
-                y[sh_] = np.where(ok, sh[g], lam0[sh_])
-                y[sa_] = np.where(ok, sa[g], lam0[sa_])
+            for sh_, sa_, ok, xh, xa in extra:  # missing: the observation is its prediction
+                y[sh_] = np.where(ok, xh, lam0[sh_])
+                y[sa_] = np.where(ok, xa, lam0[sa_])
             z = m
             for _ in range(int(c["iterations"])):
                 eta = H @ z
@@ -295,13 +340,17 @@ class DynamicPoisson:
         # newcomer prior relative to the teams of its division; at the start of the
         # window, tier-2 sides start below tier 1.
         members = np.flatnonzero(seen & (last_div == dk))
-        if len(members) >= 6:
+        scale = 1.0
+        if self.warm_ is not None and self.warm_[1][t_]:
+            m[t_], m[L["t"] + t_] = self.warm_[0][t_], self.warm_[0][L["t"] + t_]
+            scale = c["prewarm_p"]
+        elif len(members) >= 6:
             m[t_] = m[members].mean() + c["newcomer_s"]
         else:
             m[t_] = -c["tier2_offset"] if is_tier2 else 0.0
         for key, var in (
-            ("s", c["p0_s"]),
-            ("t", c["p0_t"]),
+            ("s", c["p0_s"] * scale),
+            ("t", c["p0_t"] * scale),
             ("th", c["team_home"]),
             ("u", c["sot_resid"]),
             ("v", c["sot_resid"]),

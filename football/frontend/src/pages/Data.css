@@ -32,6 +32,11 @@
   margin-top: 12px;
 }
 
+/* Space between the coverage intro and its first control. */
+#data-coverage .api-view > .ctl-row:first-child {
+  margin-top: 12px;
+}
+
 /* Sources */
 .sources {
   margin: 0 0 12px;

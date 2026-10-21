@@ -16,6 +16,7 @@ from sqlalchemy import text
 from footy.config import get_settings
 from footy.modeling.euro import (
     EuroFrequency,
+    EuroMixture,
     EuroSpec,
     PanEuropeanDC,
     PanEuropeanElo,
@@ -51,6 +52,9 @@ def make_factory(config: dict | None):
     family = cfg.pop("family", "dc")
     if family == "elo":
         return lambda: PanEuropeanElo(**cfg)
+    if family == "mix":
+        dc, elo, w = cfg["dc"], cfg["elo"], cfg["w_dc"]
+        return lambda: EuroMixture([PanEuropeanDC(**dc), PanEuropeanElo(**elo)], [w, 1 - w])
     return lambda: PanEuropeanDC(**cfg)
 
 

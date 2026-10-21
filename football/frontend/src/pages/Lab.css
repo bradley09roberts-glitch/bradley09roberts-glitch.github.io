@@ -116,6 +116,8 @@
 .bench {
   display: grid;
   gap: 16px;
+  /* Space between the intro sentence and the first split's heading. */
+  margin-top: 12px;
 }
 
 .bench-split {

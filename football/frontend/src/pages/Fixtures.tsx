@@ -19,6 +19,7 @@ import {
   formatTime,
   londonDayKey,
   parseUtc,
+  settlementStatusLabel,
 } from "../format";
 import { useDocumentTitle } from "../hooks";
 import { href, setQuery } from "../router";
@@ -230,7 +231,7 @@ function KickoffStatus({ card }: { card: PredictionCard }) {
       </span>
     );
   }
-  if (s) return <span className="result-tag">{s.status}</span>;
+  if (s) return <span className="result-tag">{settlementStatusLabel(s.status)}</span>;
   if (card.kickoff_utc && parseUtc(card.kickoff_utc).getTime() <= Date.now()) {
     return <span className="muted small">Kicked off · awaiting result</span>;
   }

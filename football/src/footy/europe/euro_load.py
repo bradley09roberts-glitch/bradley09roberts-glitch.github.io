@@ -5,6 +5,8 @@ Sources:
   openfootball/champions-league are stored in the raw store (source "openfootball", key
   "<season>/<file>", e.g. "1819/cl.txt") and the latest stored revision of each is parsed
   (`footy.europe.openfootball`). Without a clone, the stored revisions are used as they are.
+- **Wikipedia**, 2025/26 Europa League and Conference League (which openfootball lacks): the
+  stored league-phase, knockout-phase and final articles (`footy.europe.wikipedia_seasons`).
 - **Wikipedia**, 2026/27: `data/europe/uefa_2627.csv`, rebuilt first from the stored pages by
   `footy.europe.build_2627.build_all` (optionally after re-fetching them). Each row's
   `raw_file_id` is the stored page revision named in its `source_ref`.
@@ -178,10 +180,31 @@ def latest_openfootball(session: Session) -> list[RawFile]:
     return [latest_revision(session, SOURCE, k) for k in sorted(keys)]
 
 
+def apply_wikipedia_checks(session: Session, raw_dir: Path, parsed_by_raw: dict) -> list:
+    """Compare the parsed files with the stored Wikipedia check pages, take Wikipedia's
+    regulation score, flags or date where the two disagree and Wikipedia's box is consistent
+    (footy.europe.of_crosscheck), then re-run the tie checks of the files changed."""
+    from footy.europe.of_crosscheck import apply_corrections, crosscheck
+    from footy.europe.openfootball import OFIssue, check_ties
+
+    by_key = {(p.competition, p.season): p.matches for p in parsed_by_raw.values()}
+    result = crosscheck(session, raw_dir, by_key)
+    corrections = []
+    for parsed in parsed_by_raw.values():
+        fixed = apply_corrections(parsed.matches, result.comparisons)
+        for c in fixed:
+            parsed.issues.append(OFIssue("warning", "corrected_from_wikipedia", c.detail, c.line))
+        if fixed:
+            check_ties(parsed)
+        corrections += fixed
+    return corrections
+
+
 def openfootball_rows(
     raw: RawFile, parsed: OFParse, aliases: dict[str, str]
 ) -> tuple[list[EuroRowIn], list[Issue]]:
     issues = [Issue(i.line, i.severity, i.code, i.detail) for i in parsed.issues]
+    corrected = {i.line for i in parsed.issues if i.code == "corrected_from_wikipedia"}
     rows = []
     folder = key_to_season_dir(parsed.season)
     file_name = raw.logical_key.split("/")[1]
@@ -206,7 +229,8 @@ def openfootball_rows(
                 neutral=m.neutral,
                 status=m.status,
                 source=SOURCE,
-                source_ref=f"{folder}/{file_name} line {m.line}",
+                source_ref=f"{folder}/{file_name} line {m.line}"
+                + ("; corrected from Wikipedia (see import_issues)" if m.line in corrected else ""),
                 raw_file_id=raw.id,
                 model_exclusion=m.model_exclusion,
             )
@@ -456,11 +480,20 @@ def run_euro_update(
         with Session(engine) as s:
             aliases = alias_map(s, SOURCE)
             raws = latest_openfootball(s)
+            parsed_by_raw = {}
+            for raw in raws:
+                season, file_name = raw.logical_key.split("/")
+                content = read_raw(settings.raw_dir, raw)
+                parsed_by_raw[raw.id] = parse_openfootball(content, file_name, season)
+            corrected = apply_wikipedia_checks(s, settings.raw_dir, parsed_by_raw)
+        ctx.detail["openfootball_corrections"] = [
+            f"{c.competition} {c.season} line {c.line}: {c.detail}" for c in corrected
+        ]
         for raw in raws:
             with Session(engine) as s:
                 raw = s.get(RawFile, raw.id)
                 season, file_name = raw.logical_key.split("/")
-                parsed = parse_openfootball(read_raw(settings.raw_dir, raw), file_name, season)
+                parsed = parsed_by_raw[raw.id]
                 rows, issues = openfootball_rows(raw, parsed, aliases)
                 has_errors = any(i.severity == "error" for i in issues)
                 issues += upsert_group(
@@ -491,7 +524,10 @@ def run_euro_update(
                     ctx.partial = True
         ctx.detail["openfootball"] = of_stats.as_dict() | {"files": len(raws)}
 
-        # 2. Wikipedia 2026/27: optionally re-fetch, rebuild the CSV, load it.
+        # 2. Seasons openfootball lacks (2025/26 UEL and UECL), from stored Wikipedia pages.
+        ctx.detail["wikipedia_gap"] = _load_gap_seasons(engine, settings, ctx, fetch_wikipedia)
+
+        # 3. Wikipedia 2026/27: optionally re-fetch, rebuild the CSV, load it.
         ctx.detail["wikipedia"] = _load_wikipedia(
             engine, settings, ctx, csv_path, rebuild_2627, fetch_wikipedia, fetch_uefa
         )
@@ -499,6 +535,79 @@ def run_euro_update(
         with Session(engine) as s:
             ctx.detail["table"] = summarise_table(s)
         return ctx.detail
+
+
+def _load_gap_seasons(engine, settings, ctx, fetch: bool) -> dict:
+    """2025/26 Europa League and Conference League from Wikipedia (footy.europe.wikipedia_seasons).
+    With `fetch`, pages not yet in the raw store are fetched first (completed seasons are
+    fetched once)."""
+    from footy.europe.wikipedia_seasons import GAP_PAGES, gap_matches
+
+    detail: dict = {}
+    if fetch:
+        from footy.europe.build_2627 import fetch_wikipedia as fetch_pages
+
+        with Session(engine) as s:
+            todo = [
+                p for p in GAP_PAGES if latest_revision(s, WIKI_SOURCE, p.page.logical_key) is None
+            ]
+        if todo:
+            detail["fetch"] = dict(
+                Counter(r.outcome for r in fetch_pages(engine, settings.raw_dir, specs=todo))
+            )
+    stats = LoadStats()
+    with Session(engine) as s:
+        result = gap_matches(s, settings.raw_dir)
+        aliases = alias_map(s, WIKI_SOURCE)
+        by_raw: dict[int, list[Issue]] = defaultdict(list)
+        for raw_id, severity, code, text in result.issues:
+            stats.issues[code] += 1
+            if raw_id is not None:
+                by_raw[raw_id].append(Issue(0, severity, code, text))
+        groups: dict[tuple[str, str], list[EuroRowIn]] = defaultdict(list)
+        for m in result.matches:
+            missing = [a for a in (m.home_alias, m.away_alias) if a not in aliases]
+            if missing:
+                by_raw[m.raw_file_id].append(Issue(0, "error", "unmapped_team", ", ".join(missing)))
+                stats.issues["unmapped_team"] += 1
+                stats.skipped_rows += 1
+                continue
+            groups[(m.competition, m.season)].append(
+                EuroRowIn(
+                    competition=m.competition,
+                    season=m.season,
+                    stage=m.stage,
+                    match_date=m.match_date,
+                    kickoff_utc=m.kickoff_utc,
+                    home_team=aliases[m.home_alias],
+                    away_team=aliases[m.away_alias],
+                    home_goals=m.home_goals,
+                    away_goals=m.away_goals,
+                    extra_time=m.extra_time,
+                    penalties=m.penalties,
+                    neutral=m.neutral,
+                    status=m.status,
+                    source=WIKI_SOURCE,
+                    source_ref=m.source_ref,
+                    raw_file_id=m.raw_file_id,
+                    model_exclusion=m.model_exclusion,
+                )
+            )
+        has_errors = any(i.severity == "error" for issues in by_raw.values() for i in issues)
+        has_errors = has_errors or any(sev == "error" for _, sev, _, _ in result.issues)
+        complete = "missing" not in result.pages.values()
+        for (comp, season), rows in sorted(groups.items()):
+            upsert_group(
+                s, WIKI_SOURCE, comp, season, rows, stats, allow_delete=complete and not has_errors
+            )
+        raw_ids = {m.raw_file_id for m in result.matches} | set(by_raw)
+        for raw_id in sorted(raw_ids):
+            _replace_issues(s, raw_id, by_raw.get(raw_id, []))
+        s.commit()
+    if has_errors:
+        ctx.partial = True
+    detail |= stats.as_dict() | {"pages": result.pages, "rows": len(result.matches)}
+    return detail
 
 
 def _load_wikipedia(engine, settings, ctx, csv_path, rebuild, fetch, fetch_uefa) -> dict:

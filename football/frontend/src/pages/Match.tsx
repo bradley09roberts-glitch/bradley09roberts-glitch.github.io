@@ -23,6 +23,7 @@ import {
   marketLabel,
   outcomeLabel,
   seasonLabel,
+  settlementStatusLabel,
   totalLine,
 } from "../format";
 import { useDocumentTitle } from "../hooks";
@@ -104,7 +105,7 @@ function MatchDetail({ d }: { d: PredictionDetail }) {
               Full time {s.home_goals}–{s.away_goals}
             </span>
           )}
-          {s && !scored && <span className="result-tag">{s.status}</span>}
+          {s && !scored && <span className="result-tag">{settlementStatusLabel(s.status)}</span>}
         </div>
         <FreshnessBadge
           freshness={d.data_freshness}
@@ -222,7 +223,7 @@ function ResultSection({ d }: { d: PredictionDetail }) {
             </strong>
           </>
         ) : (
-          <>Status: {s.status}</>
+          <>Status: {settlementStatusLabel(s.status)}</>
         )}
         <span className="muted small"> · settled {formatLondon(s.settled_at_utc)}</span>
       </p>

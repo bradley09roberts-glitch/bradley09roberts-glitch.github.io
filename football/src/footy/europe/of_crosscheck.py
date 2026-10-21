@@ -17,7 +17,7 @@ import json
 import re
 import unicodedata
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -36,13 +36,16 @@ from footy.europe.wikipedia_2627 import (
     plain_text,
     regulation_goals,
     stadium_country,
-    times_are_cet,
 )
 from footy.ingest.raw_store import latest_revision, read_raw
 
 SOURCE = "wikipedia"
-# {{fbaicon|FRA}}, also with a flag variant ({{fbaicon|FRA|1974}}) as some older pages have.
-_FLAG = re.compile(r"\{\{\s*(?:#invoke:flag\s*\|\s*)?fbaicon\s*\|\s*([A-Z]{3})\s*(?:\|[^{}]*)?\}\}")
+# {{fbaicon|FRA}}, also with a flag variant ({{fbaicon|FRA|1974}}) as some older pages have,
+# or {{flagicon|GER}} as a few boxes use instead.
+_FLAG = re.compile(
+    r"\{\{\s*(?:#invoke:flag\s*\|\s*)?(?:fbaicon|flagicon)\s*\|\s*([A-Z]{3})\s*"
+    r"(?:\|[^{}]*)?\}\}"
+)
 _VENUE_TIME = re.compile(r"\(\s*(\d{1,2}:\d{2})\s*\[\[\s*UTC\s*([+\-−±]\s*\d{1,2}(?::?\d{2})?)")
 
 
@@ -51,6 +54,7 @@ class CheckPage:
     competitions: tuple[str, ...]  # openfootball competitions the page covers
     season: str
     page: WikiPage
+    final: bool = False  # a final's own article: one box, local kick-off time (not compared)
 
 
 def _pages() -> tuple[CheckPage, ...]:
@@ -90,6 +94,18 @@ def _pages() -> tuple[CheckPage, ...]:
                 "qualifying-q3-po",
                 f"{label} UEFA Conference League qualifying (third and play-off round matches)",
             )
+    for y in range(2019, 2027):
+        season = f"{(y - 1) % 100:02d}{y % 100:02d}"
+        finals = [("UCL", "UEFA Champions League")]
+        if y >= 2021 and y <= 2025:
+            finals.append(("UEL", "UEFA Europa League"))
+        if 2022 <= y <= 2024:
+            finals.append(("UECL", "UEFA Europa Conference League"))
+        elif y == 2025:
+            finals.append(("UECL", "UEFA Conference League"))
+        for comp, name in finals:
+            key = f"{comp.lower()}/{season}/final"
+            out.append(CheckPage((comp,), season, WikiPage(key, f"{y} {name} final"), final=True))
     return tuple(out)
 
 
@@ -113,6 +129,14 @@ class WikiBox:
     stadium_country: str | None
     stadium: str
     ref: str
+    sections: tuple[str, ...] = ()
+    penalty_score: tuple[int, int] | None = None
+    home_flag: str | None = None  # ISO code of the flag shown (Vaduz: LIE), as in the CSVs
+    away_flag: str | None = None
+
+
+def _flag_iso(code: str | None) -> str | None:
+    return None if code is None else FIFA_TO_ISO.get(code, code)
 
 
 def _iso(code: str | None) -> str | None:
@@ -120,6 +144,13 @@ def _iso(code: str | None) -> str | None:
         return None
     iso = FIFA_TO_ISO.get(code) or OF_COUNTRIES.get(code) or ("MCO" if code == "MON" else None)
     return None if iso is None else LEAGUE_COUNTRY.get(iso, iso)
+
+
+def times_are_cet(wikitext: str) -> bool:
+    """True when the page states its times are (or were) CET/CEST; some season pages use the
+    past tense ("Times were CET/CEST, as listed by UEFA")."""
+    m = re.search(r"Times (?:are|were) (.{0,200})", wikitext)
+    return bool(m and re.search(r"\bCES?T\b", m.group(1)))
 
 
 def _team(value: str) -> tuple[str, str | None]:
@@ -178,6 +209,10 @@ def wiki_boxes(wikitext: str, ref: str) -> list[WikiBox]:
                 stadium_country=stadium_country(p.get("stadium", "")),
                 stadium=plain_text(p.get("stadium", "")),
                 ref=f"{ref}#{section} (line {box.line})",
+                sections=box.sections,
+                penalty_score=parse_score(p.get("penaltyscore", "")),
+                home_flag=_flag_iso(home_code),
+                away_flag=_flag_iso(away_code),
             )
         )
     return boxes
@@ -320,6 +355,15 @@ def crosscheck(
         wikitext = body.get("parse", {}).get("wikitext", "")
         revid = body.get("parse", {}).get("revid")
         total.pages[spec.page.logical_key] = f"rev {revid}"
+        if spec.final:
+            boxes = [
+                replace(b, kickoff_utc=None)
+                for b in wiki_boxes(wikitext, f"{spec.page.title} (rev {revid})")[:1]
+            ]
+            for comp in spec.competitions:
+                covered.add((comp, spec.season))
+                boxes_by.setdefault((comp, spec.season), []).extend(boxes)
+            continue
         if not times_are_cet(wikitext):
             total.pages[spec.page.logical_key] += " (times not stated as CET/CEST: skipped)"
             continue
@@ -441,3 +485,75 @@ def run_crosscheck(engine, settings, *, fetch: bool = False, out_csv: Path | Non
         "csv": str(path),
     }
     return detail
+
+
+# (club's country, stadium's country) pairs that are not neutral: Welsh clubs' UEFA home
+# grounds just over the border (Park Hall, Oswestry, is The New Saints' own ground; New
+# Meadow, Shrewsbury, is borrowed nearby).
+HOME_ABROAD = {("WAL", "ENG")}
+
+
+def venue_abroad(box: WikiBox) -> bool:
+    """The stadium line names a country other than the home club's own (its flag)."""
+    home, venue = box.home_flag, box.stadium_country
+    return bool(home and venue and venue != home and (home, venue) not in HOME_ABROAD)
+
+
+@dataclass(frozen=True)
+class Correction:
+    competition: str
+    season: str
+    line: int  # line of the openfootball file
+    fields: tuple[str, ...]
+    detail: str
+
+
+def apply_corrections(matches: list[OFMatch], comparisons: list[Comparison]) -> list[Correction]:
+    """Where Wikipedia disagrees with openfootball on the regulation score, the extra-time or
+    penalty flags, or the date, and Wikipedia's own box is consistent (its goal list adds up
+    to its score), take Wikipedia's values. A match whose stadium line names another country
+    than the home club's becomes neutral (openfootball has no venues). Kick-off times are not
+    changed (differences are reported). Returns what was changed; the caller re-runs the tie
+    checks."""
+    ids = {id(m) for m in matches}
+    out = []
+    for c in comparisons:
+        m, b = c.of, c.box
+        if id(m) not in ids or m.status != "played" or b.regulation is None:
+            continue
+        fields = []
+        before = (
+            f"{m.match_date} {m.home_goals}-{m.away_goals} et={int(m.extra_time)} "
+            f"pen={int(m.penalties)}"
+        )
+        if c.regulation_agrees is False or not c.flags_agree:
+            pens = (b.penalty_score or m.pens) if b.penalties else None
+            if b.penalties and pens is None:
+                continue  # Wikipedia's shoot-out score is unreadable: leave the row alone
+            m.home_goals, m.away_goals = b.regulation
+            m.aet = b.score if b.extra_time else None
+            m.pens = pens
+            fields += ["home_goals", "away_goals", "extra_time", "penalties"]
+        if venue_abroad(b) and not m.neutral:
+            m.neutral = True
+            fields.append("neutral")
+        if b.listed_date != m.match_date:
+            m.match_date = b.listed_date
+            m.kickoff_utc = b.kickoff_utc
+            m.kickoff_local = None
+            fields += ["match_date", "kickoff_utc"]
+        if fields:
+            after = (
+                f"{m.match_date} {m.home_goals}-{m.away_goals} et={int(m.extra_time)} "
+                f"pen={int(m.penalties)}"
+            )
+            out.append(
+                Correction(
+                    m.competition,
+                    m.season,
+                    m.line,
+                    tuple(fields),
+                    f"{before} -> {after} from {b.ref}",
+                )
+            )
+    return out

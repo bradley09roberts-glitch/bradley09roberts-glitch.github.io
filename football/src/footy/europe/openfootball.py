@@ -35,6 +35,21 @@ from footy.seasons import season_start_year
 SOURCE = "openfootball"
 PARSER_VERSION = "of-1"
 OF_TZ = ZoneInfo("Europe/Paris")  # CET/CEST
+# Files whose times are UK local time instead. Found by the Wikipedia cross-check: every match
+# of these three files was exactly one hour earlier than Wikipedia's CEST time (425 of 430;
+# the other five differ individually), and Wikipedia's venue-local times agree with its CEST
+# times, while the 2024/25 qualifying files and all other files agree with CET/CEST.
+FILE_TIMEZONES: dict[tuple[str, str], str] = {
+    ("2526", "clq.txt"): "Europe/London",
+    ("2526", "elq.txt"): "Europe/London",
+    ("2526", "confq.txt"): "Europe/London",
+}
+TIE_CHECK_CODES = {
+    "extra_time_not_level",
+    "level_without_extra_time",
+    "penalties_not_level",
+    "level_without_penalties",
+}
 
 # File name -> competition code (euro_matches.competition).
 FILES: dict[str, str] = {
@@ -129,6 +144,7 @@ class OFMatch:
     neutral: bool = False
     line: int = 0
     stage_header: str = ""
+    round: str = ""  # the stage without its leg number, e.g. "Round of 16"
 
     @property
     def extra_time(self) -> bool:
@@ -267,6 +283,7 @@ def parse_openfootball(content: bytes, file_name: str, season: str) -> OFParse:
     start = season_start_year(season)
     years = (start, start + 1)
     qualifying = competition in QUALIFYING
+    tz = ZoneInfo(FILE_TIMEZONES.get((season, file_name), "Europe/Paris"))
     stage: str | None = None
     header = ""
     day: date | None = None
@@ -334,7 +351,7 @@ def parse_openfootball(content: bytes, file_name: str, season: str) -> OFParse:
         kickoff_utc = None
         if kickoff:
             hh, mm = (int(x) for x in kickoff.split(":"))
-            local = datetime.combine(day, time(hh, mm), tzinfo=OF_TZ)
+            local = datetime.combine(day, time(hh, mm), tzinfo=tz)
             kickoff_utc = local.astimezone(UTC)
         else:
             out.issues.append(OFIssue("warning", "no_kickoff_time", stripped, n))
@@ -359,11 +376,13 @@ def parse_openfootball(content: bytes, file_name: str, season: str) -> OFParse:
             else None,
             line=n,
             stage_header=header,
+            round=stage,
         )
         out.issues += _check_match(match)
         out.matches.append(match)
 
     _assign_legs(out)
+    check_ties(out)
     if out.declared_matches is not None and out.declared_matches != len(out.matches):
         out.issues.append(
             OFIssue(
@@ -410,15 +429,19 @@ def _check_match(m: OFMatch) -> list[OFIssue]:
     return issues
 
 
-def _assign_legs(out: OFParse) -> None:
-    """Number the legs of two-legged ties, mark neutral matches and check that every tie went
-    to extra time and penalties exactly when it was level."""
+def _ties(out: OFParse) -> dict[tuple[str, frozenset], list[OFMatch]]:
     ties: dict[tuple[str, frozenset], list[OFMatch]] = defaultdict(list)
     for m in out.matches:
-        if is_knockout(m.stage):
-            ties[(m.stage, frozenset((m.home_name, m.away_name)))].append(m)
-    for (stage, _), legs in ties.items():
+        if is_knockout(m.round):
+            ties[(m.round, frozenset((m.home_name, m.away_name)))].append(m)
+    for legs in ties.values():
         legs.sort(key=lambda x: (x.match_date, x.line))
+    return ties
+
+
+def _assign_legs(out: OFParse) -> None:
+    """Number the legs of two-legged ties and mark neutral matches."""
+    for (stage, _), legs in _ties(out).items():
         if len(legs) == 2:
             first, second = legs
             if (first.home_name, first.away_name) != (second.away_name, second.home_name):
@@ -426,7 +449,6 @@ def _assign_legs(out: OFParse) -> None:
             first.stage, second.stage = f"{stage} leg 1", f"{stage} leg 2"
             if first.extra_time or first.penalties:
                 out.issues.append(OFIssue("warning", "extra_time_in_first_leg", stage, first.line))
-            _check_two_legs(out, first, second)
         elif len(legs) == 1:
             m = legs[0]
             if stage == "Final" or (m.competition, m.season) in NEUTRAL_SINGLE_MATCH:
@@ -435,13 +457,27 @@ def _assign_legs(out: OFParse) -> None:
                 out.issues.append(
                     OFIssue("warning", "single_match_tie", f"{stage}: one match only", m.line)
                 )
-            if m.status == "played":
-                _check_decided(out, [m], m.home_goals == m.away_goals, m.aet, m)
         else:
             for m in legs:
                 out.issues.append(
                     OFIssue("warning", "tie_has_more_than_two_matches", stage, m.line)
                 )
+
+
+def check_ties(out: OFParse) -> None:
+    """Check that every knockout tie went to extra time and penalties exactly when it was
+    level. Can be re-run after scores are corrected: earlier results of this check are
+    replaced."""
+    out.issues = [i for i in out.issues if i.code not in TIE_CHECK_CODES]
+    for m in out.matches:
+        if m.model_exclusion == "tie_inconsistent":
+            m.model_exclusion = None
+    for legs in _ties(out).values():
+        if len(legs) == 2:
+            _check_two_legs(out, *legs)
+        elif len(legs) == 1 and legs[0].status == "played":
+            m = legs[0]
+            _check_decided(out, [m], m.home_goals == m.away_goals, m.aet, m)
 
 
 def _check_two_legs(out: OFParse, first: OFMatch, second: OFMatch) -> None:

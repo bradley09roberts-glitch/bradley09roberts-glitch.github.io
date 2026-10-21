@@ -474,3 +474,43 @@ class PanEuropeanElo:
             la.append(np.exp(self.a - self.b * dr))
         lh, la = np.array(lh), np.array(la)
         return markets_from_grid(poisson_grid(lh, la, self.rho_), lh, la)
+
+
+class EuroMixture:
+    """Mixture of member score grids (coherent across all markets): e.g. pan-European
+    Dixon-Coles for match result strength plus Elo, whose goal mapping is better on totals."""
+
+    markets = ALL_MARKETS
+
+    def __init__(self, members: list, weights: list[float], name: str | None = None):
+        self.members, self.weights = members, weights
+        self.name = name or "euro_mix_" + "_".join(f"{w:g}" for w in weights)
+        self.team_country: dict[str, str] = {}
+
+    def params(self) -> dict:
+        return {
+            "weights": self.weights,
+            "members": [m.params() | {"name": m.name} for m in self.members],
+        }
+
+    def fit(self, history: pd.DataFrame, cutoff_date: pd.Timestamp) -> None:
+        for m in self.members:
+            m.team_country = self.team_country
+            m.fit(history, cutoff_date)
+
+    @property
+    def league_of(self) -> dict:
+        return getattr(self.members[0], "league_of", {})
+
+    def strength(self, team: str):
+        return self.members[0].strength(team)
+
+    def predict(self, fixtures: pd.DataFrame) -> MarketProbs:
+        from footy.modeling.grid import mix_grids
+
+        mps = [m.predict(fixtures) for m in self.members]
+        grid = mix_grids([mp.grid for mp in mps], self.weights)
+        w = np.asarray(self.weights) / np.sum(self.weights)
+        lh = sum(wi * mp.lam_h for wi, mp in zip(w, mps, strict=True))
+        la = sum(wi * mp.lam_a for wi, mp in zip(w, mps, strict=True))
+        return markets_from_grid(grid, lh, la)

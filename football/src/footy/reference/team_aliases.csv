@@ -1059,6 +1059,7 @@ wikipedia,AEK Athens (GRC),grc-aek
 wikipedia,AEK Larnaca (CYP),cyp-aek-larnaca
 wikipedia,AGF (DNK),dnk-aarhus
 wikipedia,AZ (NLD),nld-az-alkmaar
+wikipedia,Aberdeen (SCO),sco-aberdeen
 wikipedia,Ajax (NLD),nld-ajax
 wikipedia,Alashkert (ARM),arm-alashkert
 wikipedia,Aluminij (SVN),svn-aluminij
@@ -1075,8 +1076,10 @@ wikipedia,Atlético Madrid (ESP),esp-ath-madrid
 wikipedia,Auda (LVA),lva-auda
 wikipedia,Austria Wien (AUT),aut-austria-vienna
 wikipedia,BATE Borisov (BLR),blr-bate-borisov
+wikipedia,BK Häcken (SWE),swe-hacken
 wikipedia,Ballkani (XKX),xkx-ballkani
 wikipedia,Barcelona (ESP),esp-barcelona
+wikipedia,Basel (CHE),che-basel
 wikipedia,Bayer Leverkusen (DEU),deu-leverkusen
 wikipedia,Bayern Munich (DEU),deu-bayern-munich
 wikipedia,Beitar Jerusalem (ISR),isr-beitar-jerusalem
@@ -1084,12 +1087,14 @@ wikipedia,Benfica (PRT),prt-benfica
 wikipedia,Beşiktaş (TUR),tur-besiktas
 wikipedia,Bodø/Glimt (NOR),nor-bodo-glimt
 wikipedia,Bohemians (IRL),irl-bohemians
+wikipedia,Bologna (ITA),ita-bologna
 wikipedia,Borac Banja Luka (BIH),bih-borac-banja-luka
 wikipedia,Borussia Dortmund (DEU),deu-dortmund
 wikipedia,Bournemouth (ENG),eng-bournemouth
 wikipedia,Braga (PRT),prt-sp-braga
 wikipedia,Brann (NOR),nor-brann
 wikipedia,Bravo (SVN),svn-bravo
+wikipedia,Breiðablik (ISL),isl-breidablik
 wikipedia,Brighton & Hove Albion (ENG),eng-brighton
 wikipedia,CFR Cluj (ROU),rou-cfr-cluj
 wikipedia,CSKA 1948 (BGR),bgr-cska-1948
@@ -1127,14 +1132,17 @@ wikipedia,FCSB (ROU),rou-fcsb
 wikipedia,Fenerbahçe (TUR),tur-fenerbahce
 wikipedia,Ferencváros (HUN),hun-ferencvaros
 wikipedia,Feyenoord (NLD),nld-feyenoord
+wikipedia,Fiorentina (ITA),ita-fiorentina
 wikipedia,Flora (EST),est-flora
 wikipedia,Floriana (MLT),mlt-floriana
 wikipedia,GAIS (SWE),swe-gais
 wikipedia,GKS Katowice (POL),pol-gks-katowice
 wikipedia,Galatasaray (TUR),tur-galatasaray
+wikipedia,Genk (BEL),bel-genk
 wikipedia,Gent (BEL),bel-gent
 wikipedia,Getafe (ESP),esp-getafe
 wikipedia,Glentoran (NIR),nir-glentoran
+wikipedia,Go Ahead Eagles (NLD),nld-go-ahead-eagles
 wikipedia,Górnik Zabrze (POL),pol-gornik-zabrze
 wikipedia,HB (FRO),fro-hb-torshavn
 wikipedia,HJK (FIN),fin-hjk
@@ -1165,7 +1173,9 @@ wikipedia,LASK (AUT),aut-lask
 wikipedia,LNZ Cherkasy (UKR),ukr-lnz-cherkasy
 wikipedia,La Fiorita (SMR),smr-la-fiorita
 wikipedia,Larne (NIR),nir-larne
+wikipedia,Lausanne-Sport (CHE),che-lausanne
 wikipedia,Lech Poznań (POL),pol-lech-poznan
+wikipedia,Legia Warsaw (POL),pol-legia
 wikipedia,Lens (FRA),fra-lens
 wikipedia,Levski Sofia (BGR),bgr-levski-sofia
 wikipedia,Liepāja (LVA),lva-liepaja
@@ -1179,7 +1189,9 @@ wikipedia,Lugano (CHE),che-lugano
 wikipedia,Lyon (FRA),fra-lyon
 wikipedia,ML Vitebsk (BLR),blr-ml-vitebsk
 wikipedia,Maccabi Tel Aviv (ISR),isr-maccabi-tel-aviv
+wikipedia,Mainz 05 (DEU),deu-mainz
 wikipedia,Malisheva (XKX),xkx-malisheva
+wikipedia,Malmö FF (SWE),swe-malmo-ff
 wikipedia,Manchester City (ENG),eng-man-city
 wikipedia,Manchester United (ENG),eng-man-united
 wikipedia,Marsaxlokk (MLT),mlt-marsaxlokk
@@ -1196,8 +1208,10 @@ wikipedia,NEC (NLD),nld-nijmegen
 wikipedia,NSÍ (FRO),fro-nsi-runavik
 wikipedia,Napoli (ITA),ita-napoli
 wikipedia,Neftçi (AZE),aze-neftci
+wikipedia,Nice (FRA),fra-nice
 wikipedia,Noah (ARM),arm-noah
 wikipedia,Nordsjælland (DNK),dnk-nordsjaelland
+wikipedia,Nottingham Forest (ENG),eng-nott-m-forest
 wikipedia,Nõmme Kalju (EST),est-nomme-kalju
 wikipedia,OFI (GRC),grc-ofi-crete
 wikipedia,Olympiacos (GRC),grc-olympiakos
@@ -1223,6 +1237,7 @@ wikipedia,RFS (LVA),lva-rfs
 wikipedia,Raków Częstochowa (POL),pol-rakow
 wikipedia,Rangers (SCO),sco-rangers
 wikipedia,Rapid Wien (AUT),aut-sk-rapid
+wikipedia,Rayo Vallecano (ESP),esp-vallecano
 wikipedia,Real Betis (ESP),esp-betis
 wikipedia,Real Madrid (ESP),esp-real-madrid
 wikipedia,Real Sociedad (ESP),esp-sociedad
@@ -1234,12 +1249,14 @@ wikipedia,Rijeka (HRV),hrv-rijeka
 wikipedia,Roma (ITA),ita-roma
 wikipedia,SC Freiburg (DEU),deu-freiburg
 wikipedia,Sabah (AZE),aze-sabah
+wikipedia,Samsunspor (TUR),tur-samsunspor
 wikipedia,Sarajevo (BIH),bih-sarajevo
 wikipedia,Shakhtar Donetsk (UKR),ukr-shakhtar-donetsk
 wikipedia,Shamrock Rovers (IRL),irl-shamrock-rovers
 wikipedia,Shelbourne (IRL),irl-shelbourne
 wikipedia,Sheriff Tiraspol (MDA),mda-sheriff
 wikipedia,Shkëndija (MKD),mkd-shkendija
+wikipedia,Sigma Olomouc (CZE),cze-sigma-olomouc
 wikipedia,Sileks (MKD),mkd-sileks
 wikipedia,Sint-Truiden (BEL),bel-st-truiden
 wikipedia,Sion (CHE),che-sion
@@ -1251,6 +1268,7 @@ wikipedia,Sporting CP (PRT),prt-sp-lisbon
 wikipedia,St Joseph's (GIB),gib-st-josephs
 wikipedia,St. Gallen (CHE),che-st-gallen
 wikipedia,Stjarnan (ISL),isl-stjarnan
+wikipedia,Strasbourg (FRA),fra-strasbourg
 wikipedia,Sturm Graz (AUT),aut-sturm-graz
 wikipedia,Sunderland (ENG),eng-sunderland
 wikipedia,Sutjeska (MNE),mne-sutjeska
@@ -1268,6 +1286,7 @@ wikipedia,UNA Strassen (LUX),lux-una-strassen
 wikipedia,Union Saint-Gilloise (BEL),bel-st-gilloise
 wikipedia,Universitatea Cluj (ROU),rou-u-cluj
 wikipedia,Universitatea Craiova (ROU),rou-univ-craiova
+wikipedia,Utrecht (NLD),nld-utrecht
 wikipedia,Vaduz (LIE),che-vaduz
 wikipedia,Valletta (MLT),mlt-valletta
 wikipedia,Valur (ISL),isl-valur
@@ -1285,6 +1304,7 @@ wikipedia,Vojvodina (SRB),srb-vojvodina
 wikipedia,Víkingur (FRO),fro-vikingur-gota
 wikipedia,Víkingur Reykjavík (ISL),isl-vikingur-reykjavik
 wikipedia,Yelimay (KAZ),kaz-yelimay
+wikipedia,Young Boys (CHE),che-young-boys
 wikipedia,Zimbru Chișinău (MDA),mda-zimbru
 wikipedia,Zira (AZE),aze-zira
 wikipedia,Zrinjski Mostar (BIH),bih-zrinjski-mostar
