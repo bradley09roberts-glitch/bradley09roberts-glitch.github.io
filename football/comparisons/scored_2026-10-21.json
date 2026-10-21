@@ -1,0 +1,31 @@
+{
+ "_note": "Provisional: scores from news reports (NBC Sports, Sky Sports, TNT Sports, VAVEL) on 21 Oct 2026; official settlement waits for the Wikipedia source (rate-limited tonight). Levante v Athletic Club not yet reported, so not scored. Lower RPS and log loss are better.",
+ "games": 9,
+ "scores": {
+  "UCL:2627:2026-10-21:ita-como:eng-man-united": "4-1",
+  "UCL:2627:2026-10-21:fra-lille:tur-galatasaray": "2-4",
+  "UCL:2627:2026-10-21:esp-real-madrid:deu-rb-leipzig": "4-1",
+  "UCL:2627:2026-10-21:deu-bayern-munich:eng-arsenal": "2-2",
+  "UCL:2627:2026-10-21:ita-inter:ukr-shakhtar-donetsk": "1-0",
+  "UCL:2627:2026-10-21:eng-aston-villa:nor-viking": "3-1",
+  "UCL:2627:2026-10-21:bel-club-brugge:fra-lens": "3-0",
+  "UCL:2627:2026-10-21:esp-betis:nld-feyenoord": "1-0",
+  "UCL:2627:2026-10-21:prt-sp-lisbon:aut-lask": "2-3"
+ },
+ "ours_pan_euro_mix_mxg": {
+  "res_right": 5,
+  "ou_right": 7,
+  "btts_right": 5,
+  "rps": 0.2262,
+  "ll_ou": 0.6029,
+  "ll_btts": 0.6892
+ },
+ "chatgpt_app": {
+  "res_right": 6,
+  "ou_right": 7,
+  "btts_right": 6,
+  "rps": 0.203,
+  "ll_ou": 0.5777,
+  "ll_btts": 0.7067
+ }
+}
