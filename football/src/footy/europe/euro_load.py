@@ -486,9 +486,14 @@ def run_euro_update(
                 content = read_raw(settings.raw_dir, raw)
                 parsed_by_raw[raw.id] = parse_openfootball(content, file_name, season)
             corrected = apply_wikipedia_checks(s, settings.raw_dir, parsed_by_raw)
-        ctx.detail["openfootball_corrections"] = [
-            f"{c.competition} {c.season} line {c.line}: {c.detail}" for c in corrected
-        ]
+        ctx.detail["openfootball_corrections"] = {
+            "by_field": dict(Counter(f for c in corrected for f in c.fields)),
+            "scores_and_dates": [
+                f"{c.competition} {c.season} line {c.line}: {c.detail}"
+                for c in corrected
+                if set(c.fields) - {"neutral"}
+            ],
+        }
         for raw in raws:
             with Session(engine) as s:
                 raw = s.get(RawFile, raw.id)

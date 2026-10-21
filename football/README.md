@@ -39,6 +39,9 @@ cp .env.example .env            # optional; defaults work without it
 uv sync                         # Python deps into .venv
 uv run footy fd-update          # migrate, download (polite, cached) and import football-data
                                 #   (core ten + European leagues; --scope core|europe)
+uv run footy euro-update        # UEFA competitions into euro_matches (openfootball + Wikipedia;
+                                #   --fetch-wikipedia to refresh 2026/27 first)
+uv run footy euro-crosscheck    # openfootball against Wikipedia's match boxes (report only)
 uv run footy coverage           # coverage per division, season and field
 uv run footy serve              # API on http://127.0.0.1:8000  (GET /api/health)
 uv run footy capture-odds       # forward odds snapshots (needs a provider key; cron every 5 min)
@@ -58,5 +61,7 @@ make check        # ruff lint + format check, pytest, frontend typecheck + build
 ## Data sources
 
 Historical backbone: [football-data.co.uk](https://www.football-data.co.uk/) season CSVs.
+UEFA club competitions: [openfootball](https://github.com/openfootball/champions-league) (CC0)
+and English Wikipedia (CC BY-SA 4.0); see [docs/europe/uefa-matches.md](docs/europe/uefa-matches.md).
 Live provider: chosen in [DECISIONS.md](DECISIONS.md); key supplied by the owner.
 Details, coverage and limits: [docs/research/](docs/research/).

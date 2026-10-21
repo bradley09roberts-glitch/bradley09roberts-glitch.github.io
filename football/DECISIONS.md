@@ -429,3 +429,49 @@ Dundee and Dundee United, Cercle Brugge and Club Brugge, Dynamo Makhachkala and 
 
 A merged club can appear under both names in one season. Where that would repeat a pairing
 of teams, the importer holds the row back as `repeat_pairing` too.
+
+## D-023 UEFA club competitions (2026-10-21)
+
+**Why:** a pan-European model needs every Champions League, Europa League and Conference
+League result, with each club as the same team as in its domestic league. Details, counts and
+check results: [docs/europe/uefa-matches.md](docs/europe/uefa-matches.md).
+
+**Sources, in order of use** (all stored in the raw store before parsing; `uv run footy
+euro-update` loads them as one idempotent job):
+
+| Seasons | Source |
+| --- | --- |
+| 2018/19 to 2025/26 | openfootball/champions-league (CC0), from a local clone; source `openfootball`, keys `<season>/<file>` |
+| 2025/26 UEL and UECL main tournaments | English Wikipedia league-phase, knockout-phase and final articles (openfootball has only their qualifying rounds) |
+| 2026/27 | English Wikipedia, via `data/europe/uefa_2627.csv` (built from stored pages; [uefa-2627.md](docs/europe/uefa-2627.md)) |
+
+Not available: the Europa League before 2020/21 and qualifying rounds before 2024/25.
+
+**Rules.**
+
+- Scores are regulation time. openfootball's `a.e.t. (r, h)` gives the regulation score as
+  the first pair; on Wikipedia it is rebuilt from the goal minutes. Extra time and penalties
+  are flags.
+- openfootball times are CET/CEST, except the three 2025/26 qualifying files, which are UK
+  time. The cross-check found these files exactly one hour off in 425 of 430 matches, and
+  every other file agrees with CET/CEST.
+- Awarded results: status `awarded`, `model_exclusion = "awarded"` (4). Cancelled fixtures
+  (RB Leipzig v Spartak Moscow, 2022): status `cancelled`, no score, excluded (2). A knockout
+  tie whose extra time or penalties contradict its scores: `tie_inconsistent` (none remain).
+- Neutral: finals; the 2019/20 Lisbon final tournament; and any match whose Wikipedia stadium
+  line names another country than the home club's (relocated Ukrainian, Belarusian and Israeli
+  clubs, COVID-era moves). Welsh clubs at grounds just over the border are not neutral.
+
+**Second source.** Every openfootball match (3,371) was paired with a Wikipedia match box.
+Scores agree for all but 2, which openfootball listed without their extra time (PSV v
+Juventus and Inter v Barcelona, 2025), and flags for all but 3. Where they disagree and
+Wikipedia's box adds up, Wikipedia's regulation score, flags and date are taken; each change
+is an `import_issues` warning (`corrected_from_wikipedia`). Kick-off times are not overridden.
+
+**Team identity.** Names resolve only through `reference/team_aliases.csv` (sources
+`openfootball` and `wikipedia`, each name with its country code). There is no fuzzy matching
+at load time; an unknown name is reported and its match left out. Existing clubs keep their
+keys (matched by a hand-checked list); 200 new clubs from countries without a football-data
+league get `<country>-<slug>` keys. A club takes its league's country (Monaco `fra-monaco`,
+Vaduz `che-vaduz`). `prt-torreense` is the one club of a football-data country with no
+football-data alias (a second-division club in the 2026/27 Europa League).

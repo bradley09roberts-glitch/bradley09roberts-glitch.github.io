@@ -12,11 +12,18 @@ from scipy.optimize import minimize_scalar
 
 from footy.modeling.base import ALL_MARKETS
 from footy.modeling.data import SECOND_TIER
-from footy.modeling.grid import MarketProbs, markets_from_grid, mix_grids, poisson_grid
+from footy.modeling.grid import (
+    MAX_GOALS,
+    MarketProbs,
+    markets_from_grid,
+    mix_grids,
+    poisson_grid,
+)
 
 TIER1 = set(SECOND_TIER)
 TIER2 = set(SECOND_TIER.values())
 DIVS = sorted(TIER1 | TIER2)
+_GRID_SHAPE = (MAX_GOALS + 1, MAX_GOALS + 1)
 DIDX = {d: i for i, d in enumerate(DIVS)}
 IS_T2 = np.array([d in TIER2 for d in DIVS])
 EPOCH = pd.Timestamp("2000-01-01")
@@ -69,6 +76,9 @@ EKF_DEFAULTS = {
     "season_var_t": 0.002,
     "season_shrink_s": 0.85,  # summer regression towards the division mean
     "season_shrink_t": 0.7,
+    "season_var_mu": 0.0,  # extra summer variance of division goal / count levels
+    "season_var_h": 0.0,  # ... and of division home advantages
+    "level_corr": 0.0,  # correlation of the summer level shocks within a country
     "q_mu": 2e-6,  # daily drift of a division's goal level
     "q_h": 2e-6,  # ... and of its home advantage
     "p0_mu": 0.02,
@@ -102,6 +112,12 @@ EKF_DEFAULTS = {
     # gives each team's starting mean (variance p0 × prewarm_p) for the full pass
     "prewarm_days": 0.0,
     "prewarm_p": 1.0,
+    # predictive mixture: integrate the Poisson grid over the uncertainty of the two
+    # log-rates (state covariance × quad_scale, plus match-level noise) with quad² points
+    "quad": 0,
+    "quad_scale": 1.0,
+    "match_var": 0.0,  # independent match-level log-rate noise (also in the update)
+    "match_cov": 0.0,  # shared (home and away) match-level log-rate noise
 }
 
 
@@ -265,6 +281,7 @@ class DynamicPoisson:
         pre_lh, pre_la = np.zeros(N), np.zeros(N)
         starts = np.flatnonzero(np.r_[True, day[1:] != day[:-1]]) if N else np.zeros(0, int)
         ends = np.r_[starts[1:], N]
+        mv, mc = c["match_var"], c["match_cov"]
         for s0, e0 in zip(starts, ends, strict=True):
             if self.cur_day_ is not None:
                 P[dg, dg] += q * (day[s0] - self.cur_day_)
@@ -326,7 +343,13 @@ class DynamicPoisson:
                 lz = np.exp(eta)
                 # working response and its variance (IRLS form of the EKF update)
                 work = eta + (y - lz) / lz
-                gain = np.linalg.inv(HPH + np.diag(var_scale / lz))
+                R = np.diag(var_scale / lz)
+                if mv or mc:
+                    R[gh, gh] += mv + mc
+                    R[ga, ga] += mv + mc
+                    R[gh, ga] += mc
+                    R[ga, gh] += mc
+                gain = np.linalg.inv(HPH + R)
                 z = m + PHt @ (gain @ (work - eta0))
             m = z
             P = P - PHt @ gain @ PHt.T
@@ -376,12 +399,40 @@ class DynamicPoisson:
         sv = np.zeros(n)
         sv[L["s"] : L["s"] + T] = c["season_var_s"] * seen
         sv[L["t"] : L["t"] + T] = c["season_var_t"] * seen
+        D = len(DIVS)
+        rho_l = c["level_corr"]
+        for key in ("mu", *(f"lvl_{k}" for k in STREAMS)):
+            if key in L:
+                sv[L[key] : L[key] + D] = c["season_var_mu"] * (1 - rho_l)
+        if rho_l and c["season_var_mu"]:
+            # one shared shock per country moves its goal and count levels together
+            for top, second in SECOND_TIER.items():
+                idx = np.array(
+                    [
+                        L[key] + DIDX[d]
+                        for key in ("mu", *(f"lvl_{k}" for k in STREAMS))
+                        if key in L
+                        for d in (top, second)
+                    ]
+                )
+                P[np.ix_(idx, idx)] += c["season_var_mu"] * rho_l
+        for key in ("h", *(f"home_{k}" for k in STREAMS)):
+            if key in L:
+                sv[L[key] : L[key] + D] = c["season_var_h"]
         P[np.arange(n), np.arange(n)] += sv
         return m, P
 
     # ---- prediction ------------------------------------------------------------------
 
     def rates(self, fixtures: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+        eta, cov = self._moments(fixtures)
+        c = self.cfg
+        if c["var_correction"]:
+            eta = eta + 0.5 * c["var_correction"] * np.stack([cov[:, 0, 0], cov[:, 1, 1]], 1)
+        return np.exp(eta[:, 0]), np.exp(eta[:, 1])
+
+    def _moments(self, fixtures: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+        """Mean (N, 2) and covariance (N, 2, 2) of each fixture's (home, away) log-rates."""
         c, L, T = self.cfg, self.L_, self.T_
         m, P = self.m_, self.P_
         seen, last_div = self.seen_, self.last_div_
@@ -416,16 +467,36 @@ class DynamicPoisson:
             H[2 * k, L["mu"] + dk] += 1.0
             H[2 * k + 1, L["mu"] + dk] += 1.0
             H[2 * k, L["hcd"] if cd[k] else L["h"] + dk] += 1.0
-        eta = H @ m + extra
-        if c["var_correction"]:
-            var = np.einsum("ij,jk,ik->i", H, P, H) + evar
-            eta = eta + 0.5 * c["var_correction"] * var
-        lam = np.exp(eta)
-        return lam[0::2], lam[1::2]
+        eta = (H @ m + extra).reshape(N, 2)
+        H3 = H.reshape(N, 2, n)
+        cov = np.einsum("kin,nm,kjm->kij", H3, P, H3)
+        cov[:, 0, 0] += evar[0::2]
+        cov[:, 1, 1] += evar[1::2]
+        return eta, cov
 
     def predict(self, fixtures: pd.DataFrame) -> MarketProbs:
-        lh, la = self.rates(fixtures)
-        return markets_from_grid(poisson_grid(lh, la, self.rho_), lh, la)
+        c = self.cfg
+        if not c["quad"]:
+            lh, la = self.rates(fixtures)
+            return markets_from_grid(poisson_grid(lh, la, self.rho_), lh, la)
+        eta, cov = self._moments(fixtures)
+        cov = cov * c["quad_scale"]
+        cov[:, 0, 0] += c["match_var"] + c["match_cov"]
+        cov[:, 1, 1] += c["match_var"] + c["match_cov"]
+        cov[:, 0, 1] += c["match_cov"]
+        cov[:, 1, 0] += c["match_cov"]
+        x, w = np.polynomial.hermite.hermgauss(int(c["quad"]))
+        z1, z2 = np.meshgrid(x * math.sqrt(2.0), x * math.sqrt(2.0), indexing="ij")
+        wq = (np.outer(w, w) / math.pi).ravel()
+        Z = np.stack([z1.ravel(), z2.ravel()])  # (2, Q)
+        chol = np.linalg.cholesky(cov + 1e-12 * np.eye(2))  # (N, 2, 2)
+        pts = eta[:, :, None] + chol @ Z  # (N, 2, Q)
+        lh, la = np.exp(pts[:, 0, :]).ravel(), np.exp(pts[:, 1, :]).ravel()
+        g = poisson_grid(lh, la, self.rho_).reshape(len(eta), len(wq), *_GRID_SHAPE)
+        grid = np.tensordot(g, wq, axes=([1], [0]))
+        mean_h = (np.exp(pts[:, 0, :]) * wq).sum(1)
+        mean_a = (np.exp(pts[:, 1, :]) * wq).sum(1)
+        return markets_from_grid(grid, mean_h, mean_a)
 
 
 PI_DEFAULTS = {
@@ -441,6 +512,8 @@ PI_DEFAULTS = {
     "warmup_days": 300.0,
     "rho_days": 1000.0,
     "sot_blend": 0.0,  # pi-ratings learn from (1-a)·GD + a·(SoT-based expected GD)
+    "tempo_sot": 0.0,  # tempo learns from (1-a)·total + a·(SoT-based expected total)
+    "gd_sq": False,  # add ĝ·|ĝ| as a regressor
     "ekf": None,  # dict of DynamicPoisson options: add its log-rates as features
 }
 
@@ -487,12 +560,15 @@ class PiRatings:
         ya = h.away_goals.to_numpy(float)
         season = h.season.str[:2].astype(int).to_numpy()
         gd_obs = yh - ya
-        if c["sot_blend"] > 0:
+        tot_obs = yh + ya
+        if c["sot_blend"] > 0 or c["tempo_sot"] > 0:
             sh, sa = h.home_sot.to_numpy(float), h.away_sot.to_numpy(float)
             ok = ~(np.isnan(sh) | np.isnan(sa))
             conv = (yh[ok].sum() + ya[ok].sum()) / max(sh[ok].sum() + sa[ok].sum(), 1.0)
             xgd = np.where(ok, conv * (np.nan_to_num(sh) - np.nan_to_num(sa)), gd_obs)
+            xtot = np.where(ok, conv * (np.nan_to_num(sh) + np.nan_to_num(sa)), tot_obs)
             gd_obs = (1 - c["sot_blend"]) * gd_obs + c["sot_blend"] * xgd
+            tot_obs = (1 - c["tempo_sot"]) * tot_obs + c["tempo_sot"] * xtot
         self.rh_: dict[str, float] = {}
         self.ra_: dict[str, float] = {}
         self.tempo_: dict[str, float] = {}
@@ -525,7 +601,7 @@ class PiRatings:
             self.ra_[at] = ra - lr * ph
             self.rh_[at] = self.rh_.get(at, 0.0) - gam * lr * ph
             # tempo: goal total relative to the division's running mean
-            tot = yh[k] + ya[k]
+            tot = tot_obs[k]
             dm = self.div_total_.get(dv, 2.7)
             resid = tot - dm
             self.div_total_[dv] = dm + 0.01 * resid
@@ -535,12 +611,12 @@ class PiRatings:
             self.n_in_season_[at] = self.n_in_season_.get(at, 0) + 1
         self.last_season_ = cur_season
         feats[:, 2:] = flags[:, :2] - flags[:, 2:]  # promoted minus relegated, per side
-        X = feats
+        X = self._design(feats)
         if c["ekf"] is not None:
             self.ekf_ = DynamicPoisson(**c["ekf"])
             self.ekf_.fit(history, cutoff)
             eh, ea = self.ekf_.pre_eta_
-            X = np.column_stack([feats, eh, ea])
+            X = np.column_stack([X, eh, ea])
         divs = sorted(set(div))
         self.divs_ = divs
         D = np.array([[d == x for x in divs] for d in div], float).reshape(N, len(divs))
@@ -553,6 +629,11 @@ class PiRatings:
         Z = np.column_stack([D, X])
         lh, la = np.exp(Z @ self.beta_h_), np.exp(Z @ self.beta_a_)
         self.rho_ = _fit_rho(yh, ya, lh, la, np.exp(-(cut_day - day) / c["rho_days"]) * use)
+
+    def _design(self, feats: np.ndarray) -> np.ndarray:
+        if self.cfg["gd_sq"]:
+            return np.column_stack([feats, feats[:, 0] * np.abs(feats[:, 0])])
+        return feats
 
     def _flags(self, ht, at, dv, sk) -> np.ndarray:
         """Promoted (home, away) and relegated (home, away) flags, fading with matches."""
@@ -596,10 +677,10 @@ class PiRatings:
             fl = self._flags(ht, at, dv, sk)
             self.team_div_ = saved
             feats[k, 2:] = fl[:2] - fl[2:]
-        X = feats
+        X = self._design(feats)
         if self.cfg["ekf"] is not None:
             lh_e, la_e = self.ekf_.rates(fixtures)
-            X = np.column_stack([feats, np.log(lh_e), np.log(la_e)])
+            X = np.column_stack([X, np.log(lh_e), np.log(la_e)])
         D = np.array([[d == x for x in self.divs_] for d in fixtures.division], float)
         Z = np.column_stack([D.reshape(N, len(self.divs_)), X])
         return np.exp(Z @ self.beta_h_), np.exp(Z @ self.beta_a_)

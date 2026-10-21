@@ -499,12 +499,18 @@ def venue_abroad(box: WikiBox) -> bool:
     return bool(home and venue and venue != home and (home, venue) not in HOME_ABROAD)
 
 
+def _score_text(m: OFMatch) -> str:
+    """Regulation score with its extra-time and penalty flags, e.g. "2-1 (aet, pens)"."""
+    flags = [x for x, on in (("aet", m.extra_time), ("pens", m.penalties)) if on]
+    return f"{m.home_goals}-{m.away_goals}" + (f" ({', '.join(flags)})" if flags else "")
+
+
 @dataclass(frozen=True)
 class Correction:
     competition: str
     season: str
     line: int  # line of the openfootball file
-    fields: tuple[str, ...]
+    fields: tuple[str, ...]  # score | match_date | neutral
     detail: str
 
 
@@ -519,41 +525,28 @@ def apply_corrections(matches: list[OFMatch], comparisons: list[Comparison]) -> 
     out = []
     for c in comparisons:
         m, b = c.of, c.box
-        if id(m) not in ids or m.status != "played" or b.regulation is None:
+        if id(m) not in ids:
             continue
-        fields = []
-        before = (
-            f"{m.match_date} {m.home_goals}-{m.away_goals} et={int(m.extra_time)} "
-            f"pen={int(m.penalties)}"
-        )
-        if c.regulation_agrees is False or not c.flags_agree:
-            pens = (b.penalty_score or m.pens) if b.penalties else None
-            if b.penalties and pens is None:
-                continue  # Wikipedia's shoot-out score is unreadable: leave the row alone
-            m.home_goals, m.away_goals = b.regulation
-            m.aet = b.score if b.extra_time else None
-            m.pens = pens
-            fields += ["home_goals", "away_goals", "extra_time", "penalties"]
+        changes = []
+        if m.status == "played" and b.regulation is not None:
+            if c.regulation_agrees is False or not c.flags_agree:
+                pens = (b.penalty_score or m.pens) if b.penalties else None
+                if not (b.penalties and pens is None):  # else the shoot-out is unreadable
+                    old = _score_text(m)
+                    m.home_goals, m.away_goals = b.regulation
+                    m.aet = b.score if b.extra_time else None
+                    m.pens = pens
+                    changes.append(("score", f"{old} -> {_score_text(m)}"))
+            if b.listed_date != m.match_date:
+                changes.append(("match_date", f"{m.match_date} -> {b.listed_date}"))
+                m.match_date = b.listed_date
+                m.kickoff_utc = b.kickoff_utc
+                m.kickoff_local = None
         if venue_abroad(b) and not m.neutral:
             m.neutral = True
-            fields.append("neutral")
-        if b.listed_date != m.match_date:
-            m.match_date = b.listed_date
-            m.kickoff_utc = b.kickoff_utc
-            m.kickoff_local = None
-            fields += ["match_date", "kickoff_utc"]
-        if fields:
-            after = (
-                f"{m.match_date} {m.home_goals}-{m.away_goals} et={int(m.extra_time)} "
-                f"pen={int(m.penalties)}"
-            )
-            out.append(
-                Correction(
-                    m.competition,
-                    m.season,
-                    m.line,
-                    tuple(fields),
-                    f"{before} -> {after} from {b.ref}",
-                )
-            )
+            changes.append(("neutral", f"venue {b.stadium}"))
+        if changes:
+            text = "; ".join(f"{f}: {d}" for f, d in changes)
+            fields = tuple(f for f, _ in changes)
+            out.append(Correction(m.competition, m.season, m.line, fields, f"{text} ({b.ref})"))
     return out

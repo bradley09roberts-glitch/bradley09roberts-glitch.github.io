@@ -91,6 +91,27 @@ Commands:
 - `uv run footy fd-update` covers everything.
 - `--scope core` or `--scope europe` narrows it.
 
+## UEFA club competitions (21 Oct 2026, D-023)
+
+`euro_matches` holds 4,537 Champions League, Europa League and Conference League matches:
+4,234 played, 297 scheduled (this season's remaining league-phase fixtures), 4 awarded and
+2 cancelled. Details: [docs/europe/uefa-matches.md](docs/europe/uefa-matches.md).
+
+- **Sources.** openfootball (CC0) for 2018/19 to 2025/26; Wikipedia for the 2025/26 Europa
+  League and Conference League main tournaments (missing from openfootball) and for 2026/27.
+- **Checks.** All 3,371 openfootball matches were checked against Wikipedia's match boxes.
+  - 5 rows were corrected: 2 scores missing their extra time, 1 extra-time flag and 2 dates.
+  - 113 matches were marked neutral (relocated or COVID-era venues).
+  - The 2025/26 qualifying files turned out to give UK time, not CET.
+- **Teams.** 200 new clubs; 376 openfootball and 257 Wikipedia aliases, all explicit.
+- **Gaps.** No Europa League before 2020/21 and no qualifying rounds before 2024/25.
+
+Commands:
+
+- `uv run footy euro-update` reloads everything idempotently; add `--fetch-wikipedia` after a
+  matchday.
+- `uv run footy euro-crosscheck` re-runs the comparison.
+
 ## M1 acceptance results (run 2026-10-19)
 
 | Test | Result |

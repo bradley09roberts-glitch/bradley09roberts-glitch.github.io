@@ -153,7 +153,7 @@ def test_wikipedia_corrects_a_missing_extra_time_and_marks_venues_abroad():
     assert first.neutral and fixes[0].fields == ("neutral",)
     assert (second.home_goals, second.away_goals, second.aet) == (2, 1, (3, 1))
     assert second.extra_time and not second.penalties
-    assert fixes[1].fields == ("home_goals", "away_goals", "extra_time", "penalties")
+    assert fixes[1].fields == ("score",) and fixes[1].detail.startswith("score: 3-1 -> 2-1 (aet)")
     assert [m.model_exclusion for m in parsed.matches] == [None, None]  # 3-3 after 90: ET
 
 
