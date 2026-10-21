@@ -51,8 +51,23 @@ SPLITS = {
 }
 
 
+# Matches older than this before the cutoff day are not passed to a model. Live predictions
+# (footy.live) use the same window, so the model in use is the one validated and tested.
+HISTORY_DAYS = 3 * 365
+
+
 class LeakageError(AssertionError):
     pass
+
+
+def training_history(
+    df: pd.DataFrame, cutoff_date: pd.Timestamp, history_days: int = HISTORY_DAYS
+) -> pd.DataFrame:
+    """What a model is fitted on for a decision at `cutoff_date` (00:00 UK on the collection
+    day): matches final before that day and not excluded from models, from the last
+    `history_days` days."""
+    hist = history_before(df, cutoff_date)
+    return hist[hist["date"] >= cutoff_date - pd.Timedelta(days=history_days)]
 
 
 @dataclass
@@ -61,7 +76,7 @@ class BacktestSpec:
     league: str
     seasons: list[str]
     min_history: int = 3  # eligibility: matches per team before the cutoff (any division)
-    history_days: int = 3 * 365  # matches older than this before the cutoff are not passed
+    history_days: int = HISTORY_DAYS  # matches older than this before the cutoff are not passed
 
 
 def run_backtest(df: pd.DataFrame, spec: BacktestSpec) -> pd.DataFrame:
@@ -71,8 +86,7 @@ def run_backtest(df: pd.DataFrame, spec: BacktestSpec) -> pd.DataFrame:
     model = spec.model_factory()
     for cutoff_utc, batch in targets.groupby("cutoff_utc", sort=True):
         cutoff_date = batch["cutoff_date"].iloc[0]
-        hist = history_before(df, cutoff_date)
-        hist = hist[hist["date"] >= cutoff_date - pd.Timedelta(days=spec.history_days)]
+        hist = training_history(df, cutoff_date, spec.history_days)
         _guard(hist, batch, cutoff_date)
 
         counts = pd.concat([hist.home_team, hist.away_team]).value_counts()

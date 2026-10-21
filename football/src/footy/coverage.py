@@ -1,8 +1,9 @@
 """Coverage per division, season and field. Counts only: no source rows or prices leave here.
 
 The core ten divisions keep the M1 report. The European leagues (scope "europe", D-022) get
-their own section: results only, with repeat meetings of a pairing (`matches.meeting`) and
-any rows held back beyond a division's `max_meetings`.
+their own section, with repeat meetings of a pairing (`matches.meeting`), any rows held back
+beyond a division's `max_meetings`, and price coverage. Prices are imported for every division
+since 21 Oct 2026 (D-022, "Prices"), so price coverage is computed for all of them.
 """
 
 import re
@@ -13,7 +14,7 @@ import pandas as pd
 from sqlalchemy import Engine, text
 
 from footy.ingest.fd_extra_parse import PLAYOFF_EXCLUSION
-from footy.reference import DIVISIONS, TOP_DIVISIONS
+from footy.reference import DIVISIONS
 from footy.seasons import season_label
 
 STAT_FIELDS = {
@@ -125,11 +126,7 @@ def coverage_rows(engine: Engine) -> list[dict]:
             row[f"pct_{name}"] = round(100 * g[col].notna().mean(), 1)
         ids = set(g.id)
         for label, *_ in ODDS_SETS:
-            row[f"odds::{label}"] = (
-                round(100 * len(ids & complete[label]) / n, 1)
-                if division in TOP_DIVISIONS
-                else None
-            )
+            row[f"odds::{label}"] = round(100 * len(ids & complete[label]) / n, 1)
         if info.scope != "core":
             counts = europe_issues.get((division, season), Counter())
             row["held_back"] = counts["repeat_pairing"]
@@ -236,19 +233,18 @@ def coverage_markdown(rows: list[dict], generated_at: datetime) -> str:
 
     out += [
         "",
-        "## Prices (% of matches with a complete set), top divisions",
+        "## Prices (% of matches with a complete set)",
         "",
         "pre = pre-closing (collected by Fri 17:00 / Tue 13:00 UK, D-012); close = closing.",
         "PS = Pinnacle (unreliable from 23 Jul 2025, D-014); BFE = Betfair Exchange;",
-        "Avg = market average. Sets with implausible margins are dropped at import.",
+        "Avg = market average. Sets with implausible margins are dropped at import. The",
+        'second tiers\' prices, every season, were imported on 21 Oct 2026 (D-022, "Prices").',
         "",
     ]
     labels = [s[0] for s in ODDS_SETS]
     out.append("| Division | Season | " + " | ".join(labels) + " |")
     out.append("| --- | --- | " + " | ".join("---:" for _ in labels) + " |")
     for r in rows:
-        if r["tier"] != 1:
-            continue
         cells = " | ".join(_pct(r[f"odds::{lab}"]) for lab in labels)
         out.append(f"| {r['division']} | {r['season_label']} | {cells} |")
     out.append("")
@@ -259,11 +255,14 @@ def coverage_markdown(rows: list[dict], generated_at: datetime) -> str:
 
 def _europe_markdown(rows: list[dict]) -> list[str]:
     out = [
-        "## European leagues (results only)",
+        "## European leagues",
         "",
         "Extra domestic leagues for rating clubs in UEFA competitions (D-022). Results and",
-        "kick-off times only (plus half-time scores and statistics in the main-layout files);",
-        "no prices. Seasons are split-year (2024/25) or calendar-year (2024).",
+        "kick-off times, plus half-time scores and statistics in the main-layout files",
+        '(SC0, N1, B1, P1, T1, G1). Prices are imported for every division (D-022, "Prices"):',
+        "the main-layout files have pre-closing and closing 1X2 and O/U 2.5, the extra-league",
+        "files closing 1X2 only. They feed the market-implied expected goals of the UEFA",
+        "ratings. Seasons are split-year (2024/25) or calendar-year (2024).",
         "",
         "- **Stored**: rows in `matches`, repeat meetings included. In split leagues and",
         "  three- and four-round formats the same home team hosts the same away team more than",
@@ -280,11 +279,15 @@ def _europe_markdown(rows: list[dict]) -> list[str]:
         "- **Excluded**: stored but left out of models (bare or awarded results, D-018; play-off",
         "  matches against a lower-division visitor, whose score basis is not stated).",
         "- Errors include the held-back rows.",
+        "- **Prices**: % of stored matches with a complete set of the market average's closing",
+        "  1X2, Bet365's pre-closing 1X2 and the market average's closing O/U 2.5 (the full",
+        "  sets for every book are in the table above for the core ten).",
         "",
         "| Division | Season | Stored | Expected | Meetings | Held back | Teams | First | Last "
-        "| Excluded | Errors | Warnings | Kick-off % | HT score % | Shots % |",
+        "| Excluded | Errors | Warnings | Kick-off % | HT score % | Shots % "
+        "| Avg close 1X2 % | B365 pre 1X2 % | Avg close O/U2.5 % |",
         "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | ---: | ---: | ---: | ---: "
-        "| ---: | ---: |",
+        "| ---: | ---: | ---: | ---: | ---: |",
     ]
     order = {code: i for i, code in enumerate(DIVISIONS)}
     totals: Counter = Counter()
@@ -300,7 +303,8 @@ def _europe_markdown(rows: list[dict]) -> list[str]:
             f"| {r['first_date']} | {r['last_date']} "
             f"| {r['model_excluded']} | {r['issues_error']} | {r['issues_warning']} "
             f"| {_pct(r['pct_kickoff_time'])} | {_pct(r['pct_ht_score'])} "
-            f"| {_pct(r['pct_shots'])} |"
+            f"| {_pct(r['pct_shots'])} | {_pct(r['odds::Avg close 1X2'])} "
+            f"| {_pct(r['odds::B365 pre 1X2'])} | {_pct(r['odds::Avg close O/U2.5'])} |"
         )
     out += [
         "",

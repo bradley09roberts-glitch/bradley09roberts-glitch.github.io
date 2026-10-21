@@ -66,8 +66,8 @@ export type CoverageRow = {
   model_excluded?: number;
   /** Percentage of matches with each statistic, e.g. pct_shots. */
   [pct: `pct_${string}`]: number;
-  /** Percentage of matches with a complete price set, e.g. "odds::Pinnacle closing 1X2";
-   * null outside the top divisions. */
+  /** Percentage of matches with a complete price set, e.g. "odds::PS close 1X2" (every
+   * division since prices were imported for all of them, D-022). */
   [odds: `odds::${string}`]: number | null;
 };
 

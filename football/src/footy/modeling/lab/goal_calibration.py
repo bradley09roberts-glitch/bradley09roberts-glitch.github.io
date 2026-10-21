@@ -45,7 +45,7 @@ likelihood of the exact scores of those forecasts (never per market), with ridge
 pulling it towards "no change".
 
 Lab findings. Every setting was chosen on the inner seasons 2021/22 and 2022/23 (five leagues,
-3,652 fixtures, D-022 composite against the frequency baseline):
+3,652 fixtures, D-025 composite against the frequency baseline):
 
 | | inner 21/22–22/23 | validation 23/24 |
 | --- | --- | --- |

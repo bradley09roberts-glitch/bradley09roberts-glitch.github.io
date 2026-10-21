@@ -1,9 +1,11 @@
 """Live early-edition predictions for upcoming fixtures (M7).
 
-Domestic: the selected model is fitted per league (league + second tier) on every result
-final before today (UK), then predicts this week's fixtures from the openfootball schedules
-(team mapping verified against played results). European: the pan-European model is fitted
-on all domestic and UEFA results before today and predicts scheduled UEFA matches.
+Domestic: the selected model is fitted per league (league + second tier) on the results final
+before today (UK) from the same window as the walk-forward backtest
+(footy.modeling.walkforward.training_history, three years), then predicts this week's
+fixtures from the openfootball schedules (team mapping verified against played results).
+European: the pan-European model is fitted on all domestic and UEFA results before today
+and predicts scheduled UEFA matches.
 Early edition = no lineup or injury information. Lineup editions are not produced (no
 lineup source on the current provider plan), so they are recorded as unavailable.
 """
@@ -18,6 +20,7 @@ from footy.fixtures import upcoming
 from footy.modeling.data import SECOND_TIER, load_matches
 from footy.modeling.grid import MarketProbs
 from footy.modeling.ledger import data_revision, git_commit
+from footy.modeling.walkforward import training_history
 from footy.publish import FixtureIn, publish
 
 UK = ZoneInfo("Europe/London")
@@ -57,7 +60,10 @@ def predict_domestic(
     for div in divisions:
         top = LEAGUE_OF[div]
         df = load_matches(engine, [top, SECOND_TIER[top]])
-        hist = df[(df["date"] < pd.Timestamp(today)) & df.model_exclusion.isna()]
+        # the history the walk-forward backtest passes at the same cutoff (results final
+        # before today, not excluded, from the last three years), so the model in use is the
+        # one that was validated and tested
+        hist = training_history(df, pd.Timestamp(today))
         fx_list, check = upcoming(engine, div, "2627", today, days=days)
         fx_list = [x for x in fx_list if x[0].kickoff_utc is None or x[0].kickoff_utc > now]
         if not fx_list:

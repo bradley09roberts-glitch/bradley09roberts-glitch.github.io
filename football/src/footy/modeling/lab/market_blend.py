@@ -367,9 +367,24 @@ def _base(name: str) -> Callable:
 
 # Weights chosen on the inner season 2022/23 only, by a grid search over w_1x2 in 0..1 (step
 # 0.05) and w_ou in 0..1 (step 0.1) on recorded base grids (docs/research/market-blend.md).
-CANDIDATES: dict[str, Callable] = {
-    "market_tilt_dc": lambda: MarketTilt(_base("dixon_coles"), 1.0, 1.0, "market_tilt_dc"),
-    "market_tilt_shots": lambda: MarketTilt(
-        _base("shots_xg_sot_joint_rw"), 1.0, 1.0, "market_tilt_shots"
-    ),
+# With 1.0 / 1.0 the 1X2 and O/U 2.5 are the market's; the base sets only the grid's shape
+# (O/U 1.5, O/U 3.5, BTTS and the scores).
+_TILTS: dict[str, str] = {
+    "market_tilt_dc": "dixon_coles",
+    "market_tilt_shots": "shots_xg_sot_joint_rw",
+    # The model lab's strongest pure bases (round 4, 21 Oct 2026). On 2022/23 the weight scan
+    # chose 1.0 / 1.0 for congestion_context_on_elo, elo_goals_gd and ensemble_linear; for
+    # ensemble_split it chose 0.95 / 1.0, 0.000003 better than 1.0 / 1.0, which is kept as
+    # for every other base. ensemble_split rather than ensemble_linear: once tilted, its
+    # O/U 1.5, O/U 3.5 and BTTS log losses on 2022/23 were all lower.
+    "market_tilt_ctx": "congestion_context_on_elo",
+    "market_tilt_elo": "elo_goals_gd",
+    "market_tilt_ens": "ensemble_split",
 }
+
+
+def _tilt_factory(name: str, base: str) -> Callable:
+    return lambda: MarketTilt(_base(base), 1.0, 1.0, name)
+
+
+CANDIDATES: dict[str, Callable] = {name: _tilt_factory(name, b) for name, b in _TILTS.items()}

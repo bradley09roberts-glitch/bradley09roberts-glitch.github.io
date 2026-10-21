@@ -11,11 +11,17 @@ import pandas as pd
 from sqlalchemy import Engine, text
 
 from footy.config import PROJECT_ROOT
+from footy.europe.openfootball import PARSER_VERSION as OF_PARSER_VERSION
+from footy.ingest.fd_extra_parse import EXTRA_PARSER_VERSION
 from footy.ingest.fd_parse import PARSER_VERSION
 from footy.modeling.grid import TOTAL_LINES
 from footy.modeling.metrics import block_bootstrap_ci
 
 PRIMARY = {"1X2": "rps", **{f"OU_{k:g}": f"ll_ou_{k:g}" for k in TOTAL_LINES}, "BTTS": "ll_btts"}
+# Raw sources the modelling tables are built from: football-data season and extra-league files
+# (matches, fd_odds) and the UEFA sources of D-023 (euro_matches).
+DATA_SOURCES = ("football-data", "football-data-extra", "openfootball", "wikipedia")
+COUNTED_TABLES = ("matches", "fd_odds", "euro_matches")
 
 
 def headline(ledger: pd.DataFrame, with_ci: bool = False) -> dict:
@@ -60,17 +66,39 @@ def headline(ledger: pd.DataFrame, with_ci: bool = False) -> dict:
 
 
 def data_revision(engine: Engine) -> str:
-    """Fingerprint of the raw football-data revisions in the database."""
+    """Fingerprint of the data the models read: the first 16 hex characters of a SHA-256 over
+
+    - the parser versions in the code: football-data (`fd_parse.PARSER_VERSION`), its extra
+      leagues (`fd_extra_parse.EXTRA_PARSER_VERSION`) and openfootball
+      (`openfootball.PARSER_VERSION`);
+    - for every source in DATA_SOURCES, each file's latest raw revision (source, logical key,
+      revision number, SHA-256);
+    - the row counts of COUNTED_TABLES (matches, fd_odds, euro_matches).
+
+    So it changes with a new revision of any source file, a parser change, or a re-import that
+    adds or drops rows (prices included). Before 21 Oct 2026 it hashed every football-data
+    revision and nothing else: manifests and model versions written earlier keep those
+    values, which can't be compared with the new ones.
+    """
+    sources = ", ".join(f"'{s}'" for s in DATA_SOURCES)
     with engine.connect() as conn:
         rows = conn.execute(
             text(
-                "SELECT logical_key, revision, sha256 FROM raw_files "
-                "WHERE source = 'football-data' ORDER BY logical_key, revision"
+                "SELECT r.source, r.logical_key, r.revision, r.sha256 FROM raw_files r "
+                f"WHERE r.source IN ({sources}) AND r.revision = ("
+                "SELECT MAX(x.revision) FROM raw_files x "
+                "WHERE x.source = r.source AND x.logical_key = r.logical_key) "
+                "ORDER BY r.source, r.logical_key"
             )
         ).all()
+        counts = {
+            t: conn.execute(text(f"SELECT COUNT(*) FROM {t}")).scalar_one() for t in COUNTED_TABLES
+        }
     h = hashlib.sha256()
+    h.update(f"parsers:{PARSER_VERSION},{EXTRA_PARSER_VERSION},{OF_PARSER_VERSION};".encode())
     for r in rows:
-        h.update(f"{r[0]}:{r[1]}:{r[2]};".encode())
+        h.update(f"{r[0]}|{r[1]}|{r[2]}|{r[3]};".encode())
+    h.update(";".join(f"{t}={n}" for t, n in counts.items()).encode())
     return h.hexdigest()[:16]
 
 

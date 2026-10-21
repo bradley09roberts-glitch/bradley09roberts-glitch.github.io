@@ -689,7 +689,7 @@ def _fit_rho(yh, ya, lh, la, w) -> float:
     return float(minimize_scalar(nll, bounds=(-RHO_LIMIT, RHO_LIMIT), method="bounded").x)
 
 
-# Settings found by coordinate search on the mean D-022 composite of 2022/23 and 2023/24
+# Settings found by coordinate search on the mean D-025 composite of 2022/23 and 2023/24
 # (five leagues, real walk-forward). Shared chassis: tempo, attack / defence and level
 # ratings, tied regression, all history after the warm-up weighted equally.
 CHASSIS = {

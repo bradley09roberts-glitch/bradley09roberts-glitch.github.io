@@ -499,7 +499,7 @@ def _tau_d2(gh, ga, lh, la, rho):
     return d2
 
 
-# Selected by coordinate descent on the D-022 composite, pooled over inner validation 2022/23
+# Selected by coordinate descent on the D-025 composite, pooled over inner validation 2022/23
 # and validation 2023/24 (five leagues each). Shared base: strength/openness ridge split and a
 # faster decay for the global terms.
 SPLIT = {"reg_strength": 1.0, "reg_open": 50.0, "xi_glob": 0.004}

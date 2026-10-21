@@ -49,7 +49,7 @@ Expensive shapes (`birth`) refit their few global parameters only when the cutof
 is refitted at every batch. Everything is deterministic.
 
 Lab findings (validation 2023/24, inner seasons 2020/21–2022/23): the joint distribution is a
-second-order effect next to the expected goals; the best shapes move the D-022 composite by
+second-order effect next to the expected goals; the best shapes move the D-025 composite by
 about 0.001. The birth process gives the most consistent 1X2 gain (RPS); diagonal inflation
 the most consistent totals / BTTS gain. Shapes fitted on in-sample means over-state
 under-dispersion (the ratings were fitted to the same goals), so COM / Weibull margins that

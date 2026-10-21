@@ -596,7 +596,9 @@ Every candidate compared on validation is listed with its number, so the size of
 is visible.
 
 **Numbering note:** the code and the lab modules written before this entry call this rule
-"D-022". D-022 is the European domestic leagues; references are being corrected to D-025.
+"D-022". D-022 is the European domestic leagues. The references in the code were corrected
+to D-025 on 21 Oct 2026; backtest manifests saved before then keep "D-022 composite" in
+`selection_rule`.
 
 ## D-026 Models of record (2026-10-21)
 

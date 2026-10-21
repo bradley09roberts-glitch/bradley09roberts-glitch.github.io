@@ -67,9 +67,15 @@ class RawFile(Base):
     """One stored revision of a downloaded file or API response. Never changed or deleted."""
 
     __tablename__ = "raw_files"
+    # Named explicitly: by the naming convention (first column only) both keys would be
+    # "uq_raw_files_source", which made `alembic check` fail at random (migration 0006).
     __table_args__ = (
-        UniqueConstraint("source", "logical_key", "revision"),
-        UniqueConstraint("source", "logical_key", "sha256"),
+        UniqueConstraint(
+            "source", "logical_key", "revision", name="uq_raw_files_source_logical_key_revision"
+        ),
+        UniqueConstraint(
+            "source", "logical_key", "sha256", name="uq_raw_files_source_logical_key_sha256"
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

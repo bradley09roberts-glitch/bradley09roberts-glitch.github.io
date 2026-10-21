@@ -170,7 +170,9 @@ def report(sim: dict, bankroll_gbp: float = 1000.0, unit_gbp: float = 10.0) -> d
         longest = max(longest, losing)
     lo, hi = block_bootstrap_ci(profit, led.batch.to_numpy())
     led = led.assign(month=pd.to_datetime(led.date).dt.strftime("%Y-%m"))
-    monthly = led.groupby("month").profit_units.agg(["count", "sum"]).reset_index()
+    # By season and month: a month can hold the end of one season and the start of the next
+    # (August 2020), and the published report nests months in seasons (report.py, D-013).
+    monthly = led.groupby(["season", "month"]).profit_units.agg(["count", "sum"]).reset_index()
     seasonal = led.groupby("season").profit_units.agg(["count", "sum"]).reset_index()
     by_team = (
         pd.concat(

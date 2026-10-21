@@ -59,3 +59,35 @@ def test_known_boundaries():
     assert rows[("D1", "2020-03-11")]["end_date"] == "2020-03-11"
     # Ligue 1 was never played behind closed doors in 2019/20.
     assert not [r for r in _rows() if r["division"] == "F1" and r["start_date"] < "2020-08-01"]
+
+
+def test_missing_file_warns_once_and_flags_nothing(monkeypatch, tmp_path, caplog):
+    """SYNTHETIC one-row frame. With the file, the Premier League restart is closed doors and
+    nothing is logged; without it, no match is flagged and one warning says so."""
+    import logging
+
+    import pandas as pd
+
+    from footy.modeling import closed_doors as cd
+
+    df = pd.DataFrame({"division": ["E0"], "date": pd.to_datetime(["2020-06-20"])})
+    logger = "footy.modeling.closed_doors"
+    cd.periods.cache_clear()
+    try:
+        with caplog.at_level(logging.WARNING, logger=logger):
+            assert cd.closed_doors_mask(df).all()
+        assert not [r for r in caplog.records if r.name == logger]
+
+        monkeypatch.setattr(cd, "PATH", tmp_path / "closed_doors.csv")
+        monkeypatch.setattr(cd, "_warned_missing", False)
+        cd.periods.cache_clear()
+        with caplog.at_level(logging.WARNING, logger=logger):
+            assert not cd.closed_doors_mask(df).any()
+            assert not cd.closed_doors_mask(df, ("none", "limited")).any()
+            assert cd.periods() == {}
+        warnings = [r for r in caplog.records if r.name == logger]
+        assert len(warnings) == 1
+        assert warnings[0].levelno == logging.WARNING
+        assert "closed_doors.csv is missing" in warnings[0].getMessage()
+    finally:
+        cd.periods.cache_clear()  # later tests read the real file again

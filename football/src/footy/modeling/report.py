@@ -36,6 +36,16 @@ BASELINES = ["baseline_frequency", "baseline_poisson", "dixon_coles"]
 # give away an individual price, e.g. the average odds of a single bet are its price. Below
 # this many bets a result keeps only its counts.
 MIN_BETS_FOR_PRICE_FIGURES = 20
+# Above it, no published profit (a breakdown row, or a step of the equity curve) may sum
+# fewer bets than this; see aggregate_breakdowns.
+MIN_BETS_PER_ROW = 5
+BREAKDOWN_RULE = (
+    "Every published profit sums whole periods of at least {n} bets (D-013): the equity curve "
+    "is cumulative at the end of periods of whole months with at least {n} bets each; a month "
+    "or season shows its sum only if it is a whole period or block on its own; league and team "
+    "rows keep their counts only (sum null), since they cut across the periods and could be "
+    "subtracted from them"
+)
 COUNT_FIELDS = (
     "bets",
     "wins",
@@ -73,10 +83,91 @@ def _default(o):
     return str(o)
 
 
+def _periods(rows: list[dict], min_bets: int) -> list[list[int]]:
+    """Indices of `rows` (in time order) grouped into consecutive runs of at least `min_bets`
+    bets; a short run at the end joins the one before it."""
+    out: list[list[int]] = []
+    run: list[int] = []
+    n = 0
+    for i, row in enumerate(rows):
+        run.append(i)
+        n += row["count"]
+        if n >= min_bets:
+            out.append(run)
+            run, n = [], 0
+    if run:
+        if out:
+            out[-1].extend(run)
+        else:
+            out.append(run)
+    return out
+
+
+def aggregate_breakdowns(r: dict, min_bets: int = MIN_BETS_PER_ROW) -> dict:
+    """A profit result with enough bets to publish its overall figures, made fit to publish
+    in its breakdowns too (D-013): no published profit sums fewer than `min_bets` bets.
+
+    - Seasons are grouped, in order, into blocks of at least `min_bets` bets (a short last
+      block joins the one before). Within each block, months are grouped the same way into
+      periods. A season shows its profit only if it is a block on its own, and a month only
+      if it is a period on its own; the others keep their counts.
+    - The per-bet equity curve is replaced by `equity_curve_monthly`: the cumulative bets and
+      profit at the end of each period, so every step of the curve is a whole period.
+    - League and team rows keep their counts only. They cut across the periods, so a shown
+      league or team sum could be subtracted from a period, month or season (or from each
+      other): a September of 7 bets, 6 of them all of a league's bets, would give away the
+      seventh bet's profit and so its price, however the small rows were hidden.
+
+    So every published profit is a sum of whole periods, and no combination of them isolates
+    fewer than `min_bets` bets. This holds within one result; results of nested strategies or
+    markets published side by side can still be subtracted from each other (final_report).
+    """
+    out = {k: v for k, v in r.items() if k != "equity_curve_units"}
+    seasons = sorted(r.get("seasonal", []), key=lambda x: x["season"])
+    months = r.get("monthly", [])
+    season_rows, month_rows, curve = [], [], []
+    bets, profit = 0, 0.0
+    for block in _periods(seasons, min_bets):
+        in_block = {seasons[i]["season"] for i in block}
+        for i in block:
+            season_rows.append(
+                {**seasons[i], "sum": seasons[i]["sum"] if len(block) == 1 else None}
+            )
+        ms = sorted(
+            (m for m in months if m["season"] in in_block), key=lambda m: (m["season"], m["month"])
+        )
+        for period in _periods(ms, min_bets):
+            for i in period:
+                month_rows.append({**ms[i], "sum": ms[i]["sum"] if len(period) == 1 else None})
+            bets += sum(ms[i]["count"] for i in period)
+            profit += sum(ms[i]["sum"] for i in period)
+            end = ms[period[-1]]
+            curve.append(
+                {
+                    "season": end["season"],
+                    "month": end["month"],
+                    "bets": bets,
+                    "profit_units": profit,
+                }
+            )
+    out["seasonal"] = season_rows
+    out["monthly"] = month_rows
+    out["equity_curve_monthly"] = curve
+    out["by_league"] = [{**row, "sum": None} for row in r.get("by_league", [])]
+    out["top_teams_by_exposure"] = [
+        {**row, "sum": None} for row in r.get("top_teams_by_exposure", [])
+    ]
+    out["breakdown_rule"] = BREAKDOWN_RULE.format(n=min_bets)
+    return out
+
+
 def withhold_prices(r: dict, min_bets: int = MIN_BETS_FOR_PRICE_FIGURES) -> dict:
-    """A profit result fit to publish: below `min_bets` bets only its counts are kept."""
-    if not r.get("bets") or r["bets"] >= min_bets:
+    """A profit result fit to publish: below `min_bets` bets only its counts are kept; from
+    `min_bets` on, its breakdowns and equity curve are aggregated (aggregate_breakdowns)."""
+    if not r.get("bets"):
         return r
+    if r["bets"] >= min_bets:
+        return aggregate_breakdowns(r)
     out = {k: r[k] for k in COUNT_FIELDS if k in r}
     out["withheld"] = (
         f"fewer than {min_bets} bets: figures computed from prices are withheld, since over "

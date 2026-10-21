@@ -102,9 +102,10 @@ function Sources() {
           </div>
           <p>
             Historical results, match statistics and bookmaker prices from 2018/19: the big five
-            leagues and their second tiers, plus other European top divisions (results only) for
-            rating clubs in UEFA competitions. Prices are read for the big five only. Its fixtures
-            file gives this week's pre-match prices, used by model + market records.
+            leagues and their second tiers, plus other European top divisions for rating clubs in
+            UEFA competitions. Prices are read for every division (closing 1X2 only for the
+            one-file-per-league countries). Its fixtures file gives this week's pre-match prices,
+            used by model + market records.
           </p>
           <p className="muted small">
             Fetched politely (one request every 2 seconds, cached; the current season at most
