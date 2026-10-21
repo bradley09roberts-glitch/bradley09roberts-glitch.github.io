@@ -1,9 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Nav, PageErrorBoundary } from "./components/Nav";
+import { SnapshotBanner } from "./components/SnapshotBanner";
 import { SITE_NAME } from "./hooks";
 import { pages } from "./pages";
 import { NotFound } from "./pages/Placeholder";
 import { href, resolve, savedScrollPosition, useLocation } from "./router";
+import { SNAPSHOT } from "./snapshot";
 
 export function App() {
   const location = useLocation();
@@ -49,6 +51,7 @@ export function App() {
         <Nav pages={pages} active={active} />
       </header>
       <main className="page" ref={main} tabIndex={-1}>
+        {SNAPSHOT && <SnapshotBanner />}
         <PageErrorBoundary key={location.path}>
           {Page && match ? (
             <Page key={location.path} params={match.params} query={location.query} />

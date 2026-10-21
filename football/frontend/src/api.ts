@@ -5,6 +5,7 @@
 // describe what the API sends.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { SNAPSHOT, SnapshotError, snapshotFetch } from "./snapshot";
 
 // ---------------------------------------------------------------------------------------------
 // Shared JSON types
@@ -437,9 +438,13 @@ function isAbort(err: unknown): boolean {
 async function requestJson<T>(url: string, signal: AbortSignal): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(url, { signal, headers: { Accept: "application/json" } });
+    // A snapshot build (src/snapshot.ts) answers from its saved responses instead.
+    res = await (SNAPSHOT
+      ? snapshotFetch(url, signal)
+      : fetch(url, { signal, headers: { Accept: "application/json" } }));
   } catch (err) {
     if (isAbort(err)) throw err;
+    if (SNAPSHOT && err instanceof SnapshotError) throw new ApiError(err.message, null, url);
     throw new ApiError("Can't reach the API. Check your connection and try again.", null, url);
   }
   const type = res.headers.get("content-type") ?? "";

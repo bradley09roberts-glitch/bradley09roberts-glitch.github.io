@@ -37,6 +37,7 @@ import { ApiView, Empty, ErrorView, Loading, StaleNotice } from "../components/S
 import { formatLondon, formatNumber, formatPct, seasonLabel } from "../format";
 import { useDocumentTitle } from "../hooks";
 import { href, setQuery } from "../router";
+import { SNAPSHOT } from "../snapshot";
 import type { PageProps } from ".";
 import "./Lab.css";
 
@@ -1138,6 +1139,18 @@ function FileLink({ url, label, format }: { url: string; label: string; format: 
 }
 
 function ExportLinks({ run }: { run: BacktestRun }) {
+  if (SNAPSHOT) {
+    // A snapshot holds the API's JSON responses only; the ledger files are not in it.
+    return (
+      <section className="card" aria-labelledby="lab-export">
+        <h2 id="lab-export">Export the ledger</h2>
+        <p className="muted small">
+          Ledger downloads for <strong>{runLabel(run)}</strong> aren't included in this read-only
+          snapshot.
+        </p>
+      </section>
+    );
+  }
   return (
     <section className="card" aria-labelledby="lab-export">
       <h2 id="lab-export">Export the ledger</h2>
